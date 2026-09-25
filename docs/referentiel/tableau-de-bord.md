@@ -265,3 +265,34 @@ qu'on cesse de lire, y compris le jour où elle dit autre chose.
   colonne « Lecture » voyage avec elle (« second acte structurellement impossible, même cause de
   script que full_sim18 »). Sans cette mention, 38 se lirait comme un jugement sur le jeu alors
   qu'il porte d'abord sur une simulation tronquée.
+
+## Le KPI « Qualité de sortie », instruit (2026-09-25, tâche #837)
+
+*(Constat #226 de THE-FINAL-JUDGE — « KPI Qualité de sortie tautologique » — **relayé mais jamais
+confirmé**. La consigne de la tâche était explicite : vérifier dans `scripts/kpi-report.mjs` et
+`lib/quality-metrics.ts` avant de conclure, jamais corriger sur la foi d'un rapport.)*
+
+**Vérifié dans le code, et le verdict du juge était à côté.** Ce n'est pas une tautologie au sens
+strict : la formule `100 − (interventions ÷ tours) × 100` ne définit pas la qualité par elle-même.
+
+**Le vrai défaut est plus simple et plus grave** : le numérateur et le dénominateur ne portaient pas
+sur la même population. `recordAntiEchoIntervention()` ne peut se déclencher que sur un tour qui
+porte une **offre avec sa réplique de proposition** (`app/api/lia/route.ts`), alors que le
+dénominateur comptait **tous** les tours. Une session sans une seule offre affichait donc
+**« 100 % de qualité » sans qu'un seul tour éligible n'ait été observé** — un plein score rendu sur
+zéro mesure.
+
+**L'écart n'est pas cosmétique** : sur la même session, 2 interventions sur 10 tours donnaient 80 %,
+là où 2 interventions sur 4 tours éligibles donnent **50 %**.
+
+**Ce qui a changé** : un compteur `antiEchoEligibleTurns` compte les tours réellement éligibles, le
+score divise par lui, et le rapport **dit sur quoi il porte**. Zéro tour éligible ne rend plus 100 %
+mais « rien à mesurer ». Les anciens enregistrements qui ne portent pas ce compteur retombent sur
+l'ancien dénominateur **en le déclarant optimiste** — jamais en silence.
+
+**La limite, imprimée à côté du chiffre à chaque passage** : ce score mesure que le FILET n'a pas eu
+à intervenir, jamais que la réplique était bonne. Son plafond est la sensibilité du détecteur
+anti-écho — un détecteur aveugle rendrait 100 %.
+
+**Rien de visible pour le visiteur** : le compteur ajouté est purement observationnel, comme les
+deux autres de `lib/quality-metrics.ts`, et aucune décision de jeu n'en dépend.

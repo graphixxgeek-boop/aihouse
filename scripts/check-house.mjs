@@ -2548,10 +2548,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   console.log('Passed: fingerprint() stays byte-for-byte identical to the real diagnostic tool\'s keyLabel() (so real-traffic episodes persisted via the admin API always match the right entry in the shared experience file), never exposes the raw key, and recordKeyStatus() now also records which real model was tried alongside the key and outcome for every single attempt — the exact real gap (task #88) between manual diagnostic probes and genuine game/simulation traffic in the Smart Breaker\'s accumulated experience.');
 }
 {
-  const {recordTurn,recordAntiEchoIntervention,recordTruncation,getQualityMetrics,__resetQualityMetricsForTests}=await import('../.sites-runtime/test-quality-metrics.mjs');
+  const {recordTurn,recordAntiEchoIntervention,recordAntiEchoEligible,recordTruncation,getQualityMetrics,__resetQualityMetricsForTests}=await import('../.sites-runtime/test-quality-metrics.mjs');
   __resetQualityMetricsForTests();
-  assert.deepEqual(getQualityMetrics(),{turns:0,antiEchoInterventions:0,truncationInterventions:{1:0,2:0}},'quality/cohérence metrics must start at zero right after a reset');
+  assert.deepEqual(getQualityMetrics(),{turns:0,antiEchoInterventions:0,antiEchoEligibleTurns:0,truncationInterventions:{1:0,2:0}},'quality/cohérence metrics must start at zero right after a reset');
   recordTurn();recordTurn();recordTurn();
+  // ÉLIGIBLE ≠ INTERVENU (2026-09-25, tâche #837) : un tour est éligible dès qu'il porte une offre
+  // avec sa réplique, bien avant de savoir s'il y a eu écho. Sans ce compte, le KPI Qualité
+  // divisait par TOUS les tours et rendait 100 % sur une session qui n'en portait aucune.
+  recordAntiEchoEligible();recordAntiEchoEligible();
   recordAntiEchoIntervention();
   recordTruncation(1,true);
   recordTruncation(2,false);
@@ -2559,9 +2563,10 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   const m=getQualityMetrics();
   assert.equal(m.turns,3,'three recordTurn() calls must count as three turns');
   assert.equal(m.antiEchoInterventions,1,'exactly one anti-echo fallback substitution must be counted');
+  assert.equal(m.antiEchoEligibleTurns,2,'and the ELIGIBLE turns are counted separately: two turns could have triggered the net, one did — the ratio the KPI needs, and the one it never had');
   assert.deepEqual(m.truncationInterventions,{1:2,2:0},'truncation is only counted when it actually changed the text, per actor — a no-op call (changed=false) must never increment its actor');
   __resetQualityMetricsForTests();
-  assert.deepEqual(getQualityMetrics(),{turns:0,antiEchoInterventions:0,truncationInterventions:{1:0,2:0}},'the test reset must clear the quality/cohérence metrics, never leave a stale count bleeding into the next test');
+  assert.deepEqual(getQualityMetrics(),{turns:0,antiEchoInterventions:0,antiEchoEligibleTurns:0,truncationInterventions:{1:0,2:0}},'the test reset must clear the quality/cohérence metrics, never leave a stale count bleeding into the next test');
   console.log('Passed: the Qualité (anti-echo fallback) and Cohérence logique (per-actor groundTruncation interventions) KPI counters track a scripted sequence of real events exactly, only count a truncation when it actually changed the text, and the test reset clears them.');
 }
 {
@@ -2627,6 +2632,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(smartBreakerPerformanceScore({successes:0,attempts:0}),undefined,'zero attempts must never divide by zero');
   assert.equal(smartBreakerImprovementScore([]),undefined,'an empty capability list must never divide by zero');
   assert.equal(qualityScore({turns:0,antiEchoInterventions:0}),undefined,'zero turns must never divide by zero');
+  // LE DÉNOMINATEUR DU KPI QUALITÉ (2026-09-25, tâche #837 — constat #226 de THE-FINAL-JUDGE,
+  // relayé mais jamais confirmé, avec la consigne explicite de vérifier dans le code avant de
+  // conclure). Vérifié : ce n'est PAS une tautologie. Le défaut réel est que le numérateur ne peut
+  // naître que d'un tour portant une OFFRE avec sa réplique, quand le dénominateur comptait TOUS
+  // les tours — donc une session sans offre affichait 100 % sur zéro tour observé.
+  const {qualityDenominator,QUALITE_HORS_PORTEE}=await import('../scripts/kpi-report.mjs');
+  assert.equal(qualityScore({turns:10,antiEchoInterventions:2,antiEchoEligibleTurns:4}),50,'the score must divide by the turns that could ACTUALLY have triggered the net: the same session reads 80% on all turns and 50% on the eligible ones, and only the second says anything true');
+  assert.equal(qualityScore({turns:10,antiEchoInterventions:0,antiEchoEligibleTurns:0}),undefined,'zero eligible turns is NOT 100% quality, it is nothing measured — a full score handed out on zero observation is the exact defect this whole day was spent on');
+  assert.equal(qualityDenominator({turns:10,antiEchoInterventions:2}).exact,false,'a record predating the eligible-turns counter must SAY that its score is optimistic rather than pass for an exact one');
+  assert.ok(/optimiste/.test(qualityDenominator({turns:10,antiEchoInterventions:2}).pourquoi),'and say why in plain words: a turn with no offer could never count against it');
+  assert.equal(qualityScore({turns:10,antiEchoInterventions:2}),80,'the old denominator still works for old records — the fix must not silently reinterpret history it cannot recompute');
+  assert.ok(/plafond est la sensibilité du détecteur/.test(QUALITE_HORS_PORTEE),'the limit is stated next to the figure: this measures that the NET did not fire, never that the line was good, and a blind detector would read 100%');
   assert.equal(qualityScore(undefined),undefined);
   assert.equal(coherenceScore({turns:5}),undefined,'a missing truncationInterventions object must never crash or produce NaN');
   assert.equal(replayabilityScore({distinctBonuses:3,totalBonusTypes:0}),undefined,'zero total bonus types must never divide by zero');

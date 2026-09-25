@@ -141,6 +141,12 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   desormais « aucune, sur 171 paires comparees entre 19 principes, la plus proche a 0,189 ».
   La paire fabriquee est devenue un contre-test permanent [FAIT]
 
+#226 (KPI Qualite) : le constat du juge etait A COTE — ce n'est pas une tautologie. Le vrai defaut :
+  numerateur et denominateur sur deux populations differentes, donc une session sans offre affichait
+  100 % sur zero tour observe. Memes donnees : 80 % avant, 50 % apres. Compteur de tours ELIGIBLES
+  ajoute (purement observationnel, rien de visible pour le visiteur), zero eligible = « rien a
+  mesurer » et jamais 100 %, anciens enregistrements declares optimistes plutot que silencieux [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

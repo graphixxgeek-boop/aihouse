@@ -84,9 +84,46 @@ export function smartBreakerImprovementScore(capabilities) {
     return { score: (done / capabilities.length) * 100, done, total: capabilities.length };
 }
 
+// LE KPI QUALITÉ, INSTRUIT (2026-09-25, tâche #837 — constat #226 de THE-FINAL-JUDGE, relayé mais
+// JAMAIS confirmé : « à vérifier avant de conclure quoi que ce soit, jamais corriger sur la foi
+// d'un rapport »).
+//
+// VÉRIFIÉ DANS LE CODE, PAS DANS LE RAPPORT. Ce n'est PAS une tautologie au sens strict : la
+// formule ne définit pas la qualité par elle-même. Le défaut réel est plus simple et plus grave —
+// **le numérateur et le dénominateur ne portent pas sur la même population**. `recordAntiEcho
+// Intervention()` ne peut se déclencher que sur un tour qui porte une OFFRE avec sa réplique de
+// proposition (`app/api/lia/route.ts`), alors que le dénominateur comptait TOUS les tours. Une
+// session sans une seule offre affichait donc « 100 % de qualité » sans qu'un seul tour éligible
+// n'ait été observé : un plein score rendu sur zéro mesure.
+//
+// CORRIGÉ SANS CHANGER LE SENS DU CHIFFRE : le score se calcule désormais sur les tours ÉLIGIBLES
+// quand le compteur les fournit, et il DIT sur combien il porte. Quand un ancien enregistrement ne
+// les porte pas, il retombe sur l'ancien dénominateur en le déclarant — jamais en silence.
+//
+// CE QU'IL NE DIRA JAMAIS, et c'est à retenir avant de lire le chiffre : il mesure que le FILET
+// n'a pas eu à intervenir, jamais que la réplique était bonne. Son plafond est la sensibilité du
+// détecteur anti-écho : un détecteur aveugle rendrait 100 %.
+export const QUALITE_HORS_PORTEE = "Ce score mesure que le filet anti-écho n'a pas eu à intervenir, jamais que la réplique était bonne. Son plafond est la sensibilité du détecteur : un détecteur aveugle rendrait 100 %.";
+
 export function qualityScore(m) {
-    if (!m || !isFiniteNumber(m.antiEchoInterventions) || !isFiniteNumber(m.turns) || m.turns <= 0) return undefined;
+    if (!m || !isFiniteNumber(m.antiEchoInterventions)) return undefined;
+    const eligibles = isFiniteNumber(m.antiEchoEligibleTurns) ? m.antiEchoEligibleTurns : null;
+    if (eligibles !== null) {
+        // Zéro tour éligible n'est pas 100 % de qualité : c'est « rien à mesurer ».
+        if (eligibles <= 0) return undefined;
+        return 100 - (m.antiEchoInterventions / eligibles) * 100;
+    }
+    if (!isFiniteNumber(m.turns) || m.turns <= 0) return undefined;
     return 100 - (m.antiEchoInterventions / m.turns) * 100;
+}
+
+// Dit sur QUOI le score porte — la moitié manquante du chiffre.
+export function qualityDenominator(m) {
+    if (isFiniteNumber(m?.antiEchoEligibleTurns)) {
+        return { base: "tours éligibles", valeur: m.antiEchoEligibleTurns, exact: true };
+    }
+    return { base: "tous les tours", valeur: isFiniteNumber(m?.turns) ? m.turns : null, exact: false,
+        pourquoi: "cet enregistrement est antérieur au compteur de tours éligibles : le score porte sur TOUS les tours, donc il est optimiste — un tour sans offre ne pouvait jamais compter contre lui" };
 }
 
 export function coherenceScore(m) {
@@ -569,8 +606,11 @@ function reportMementoWeight(samples) {
 function reportQuality(m) {
     section('Qualité de sortie');
     const score = qualityScore(m);
-    if (score === undefined) { console.log('Pas de tour enregistré cette session — rien à mesurer (normal si le serveur vient de démarrer ou si aucune simulation n’a encore tourné).'); return undefined; }
-    console.log(`KPI global Qualité : ${pct(score)} des tours n’ont eu besoin d’aucune réplique de repli anti-écho (${m.antiEchoInterventions} intervention(s) sur ${m.turns} tour(s)).`);
+    if (score === undefined) { console.log('Aucun tour ÉLIGIBLE au filet anti-écho cette session (un tour ne l’est que s’il porte une offre avec sa réplique) — rien à mesurer, ce qui n’est jamais 100 %.'); return undefined; }
+    const den = qualityDenominator(m);
+    console.log(`KPI global Qualité : ${pct(score)} — ${m.antiEchoInterventions} intervention(s) de repli anti-écho sur ${den.valeur ?? "?"} ${den.base}.`);
+    if (!den.exact) console.log(`⚠️  ${den.pourquoi}`);
+    console.log(`   HORS PORTÉE : ${QUALITE_HORS_PORTEE}`);
     if (score < 90) console.log('→ Action : au-dessous de 90%, relire les transcripts récents pour voir SI un même type de proposition revient trop souvent (Article 11) — un chiffre bas et stable d’une session à l’autre justifierait une vraie variété de fond plutôt qu’un simple repli de forme.');
     else console.log('→ Lecture : le modèle varie déjà suffisamment sans avoir besoin du filet de secours la plupart du temps — rien à faire ici pour l’instant.');
     return score;

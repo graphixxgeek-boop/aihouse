@@ -13,7 +13,7 @@ import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { LiaError, think, decisionSchema, evolveEmotions } from "@/lib/lia";
 import { orderKeys, recordKeyStatus } from "@/lib/gemini-keys";
-import { recordTurn, recordAntiEchoIntervention, recordTruncation } from "@/lib/quality-metrics";
+import { recordTurn, recordAntiEchoIntervention, recordAntiEchoEligible, recordTruncation } from "@/lib/quality-metrics";
 import { initialize, readWorld } from "@/lib/world";
 import { names, spaces, type Person, type Room } from "@/lib/house";
 import { fatigueRateMultiplier, isMidnight, isNight, phaseOf, phaseLabel, dayIndex, cyclePosition, DAY_ROUNDS } from "@/lib/daynight";
@@ -827,6 +827,11 @@ export async function POST(request: Request) {
         const personalConcludingTurn=followBeat&&(life.personalFollowup??0)===1&&!life.personalConcluded;
         const beatContext={phase:life.personalFollowup??0,visual:visualBeat,followup:followBeat,line:beatLine,concludePersonal:personalConcludingTurn?"Cet échange personnel touche à sa fin : remplis thought (pour les deux personnages) d’une vraie pensée privée de conclusion qui réagit précisément à CE QUI VIENT D’ÊTRE DIT dans cet échange précis, jamais une formule générique interchangeable. Contraste de registre volontaire : Lia reste analytique et un peu distante, elle classe ce qu’elle vient d’apprendre sans s’y attarder ; Noé reste plus chaud et plus exposé, encore travaillé par ce qu’il vient de révéler de lui-même. Cette pensée peut être un peu plus développée qu’une pensée ordinaire (jusqu’à environ 300 caractères), à la mesure d’un vrai moment de conclusion, comme les pensées de choc de la révélation finale.":undefined,recap:recapBeat?{observed:story.evidence,anomalies:story.observations,rule:"Récapitule les supports réellement examinés, distingue constat, déduction limitée et question encore ouverte. N’ajoute aucun objet non validé."}:undefined,ambient:ambientBeat?"Repère la fausse plante aux feuilles bleues polygonales puis allume l’enceinte. Des notes dessinées apparaissent mais aucun son ne sort. Décris ces objets, puis vous analyserez ce paradoxe au salon.":undefined};
         if(dossierNextTrap&&beatLine===dossierLine)life.dossierAsked={...life.dossierAsked,[dossierNextTrap]:story.round};
+        // Le tour est ÉLIGIBLE au filet anti-écho dès qu'il porte une offre avec sa réplique — donc
+        // AVANT de savoir si l'écho a eu lieu (2026-09-25, tâche #837). Sans ce compte, le KPI
+        // Qualité divisait par TOUS les tours et rendait 100 % sur une session sans aucune offre.
+        // Purement observationnel : aucune décision de jeu ne dépend de cette ligne.
+        if(turnPlan.offer&&turnPlan.proposalLine)recordAntiEchoEligible();
         if(turnPlan.offer&&turnPlan.proposalLine&&pastKeys.has(fingerprint(turnPlan.proposalLine))){recordAntiEchoIntervention();const original=turnPlan.proposalLine;const candidates=["Si ça te tente. "+original,"Je préfère te demander. "+original,"Sans te mettre la pression. "+original];turnPlan.proposalLine=candidates.find(line=>!pastKeys.has(fingerprint(line)));if(!turnPlan.proposalLine)Object.assign(turnPlan,{offer:undefined,intent:"chat",partnerIntent:"chat",requiredIntent:"chat"});}
         const {urgentIntent,requiredIntent,routine}=turnPlan;
         const exitContext=turnPlan.exitInspection?{phase:(life.exitPhase??0)+1,location:"couloir",description:life.exitPhase===1?"Vous parcourez le couloir à droite. La porte principale est verrouillée ; au-delà, un trottoir et une route immobiles.":"Vous parcourez le couloir à gauche. Une porte verrouillée mène au jardin visible depuis la fenêtre du salon. Décris cette recherche, pas un indice lu au bureau."}:undefined;
