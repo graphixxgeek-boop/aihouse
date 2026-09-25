@@ -1181,6 +1181,12 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
       classes: src === null ? [] : classesDuScript(src, classes),
       importeurs: nb,
       portes,
+      // LE POIDS, demandé explicitement (#744, « indiquer le nombre de lignes de code, le poids
+      // qu'il pèse dans le projet »). Compté ici plutôt que recalculé ailleurs : le recensement lit
+      // déjà chaque fichier, et une seconde lecture pour la même question serait deux mesures
+      // faites à deux instants différents. Un fichier illisible pèse `null`, jamais zéro — zéro
+      // ligne se lit comme un fichier vide, et les deux ne veulent pas dire la même chose.
+      lignes: src === null ? null : String(src).split("\n").length,
     };
   });
 
@@ -1887,6 +1893,85 @@ export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
 // les deux côtés à l'exécution, donc une dixième famille créée demain est comparée sans qu'on
 // touche à cette fonction.
 // ============================================================================================
+// LE POIDS DE CHAQUE OUTIL, ET LE GAIN D'UNE RÉDUCTION (2026-09-25, tâche #744)
+// ============================================================================================
+// SES TROIS DEMANDES, dans ses mots : « on doit etre capable dans leur fiche complete d'indiquer le
+// nombre de lignes de code, le poids qu'il pese dans le projet [...] si demain on doit reduire
+// sensiblement la taille de l'agence et retrograder certains agents, on doit pouvoir anticiper le
+// gain ».
+//
+// POURQUOI CETTE MESURE N'A DE SENS QU'AVEC LE 5e AXE, et pourquoi elle arrive après lui : un gain
+// en lignes de code ne dit RIEN si on ignore qui perd quoi. Retirer 2 000 lignes que personne ne lit
+// et retirer 2 000 lignes dont l'utilisateur dépend sont deux décisions opposées avec le même
+// chiffre. Le poids seul est un chiffre qui a l'air d'une décision.
+//
+// TROIS ÉTATS SUR LE COÛT DU RETRAIT, jamais deux :
+//   · LIBRE       — personne d'autre ne l'importe et l'utilisateur n'en lit rien : le retirer ne
+//                   coûte que ce qu'il apportait à lui-même.
+//   · ENTRAÎNANT  — d'autres outils l'importent : le retirer les casse, et le vrai gain se calcule
+//                   sur la grappe entière, jamais sur le fichier seul.
+//   · VISIBLE     — l'utilisateur en lit la sortie : le retrait se sent tout de suite, quel que
+//                   soit le nombre de lignes.
+// Un outil peut être ENTRAÎNANT et VISIBLE à la fois — c'est le cas le plus cher, et le nommer
+// évite de le confondre avec un petit fichier anodin.
+export const COUTS_DE_RETRAIT = {
+  libre: { quoi: "personne ne l'importe, l'utilisateur n'en lit rien", consequence: "le gain est net" },
+  entrainant: { quoi: "d'autres outils l'importent", consequence: "le retirer les casse : compter la grappe, jamais le fichier seul" },
+  visible: { quoi: "l'utilisateur en lit la sortie", consequence: "le retrait se sent immédiatement, quel que soit le nombre de lignes" },
+};
+
+export function poidsDesOutils(lignesRecensement = [], { destinatairesParSlug = new Map() } = {}) {
+  if (!lignesRecensement.length) {
+    return { mesurable: false, pourquoi: "aucun script recensé — un total de zéro ligne se lit comme un dépôt vide, ce qui n'est jamais ce qu'on voulait dire" };
+  }
+  const illisibles = lignesRecensement.filter((l) => l.lignes == null).length;
+  const total = lignesRecensement.reduce((s, l) => s + (l.lignes ?? 0), 0);
+  if (!total) {
+    return { mesurable: false, pourquoi: "aucune ligne comptée — les fichiers ont été listés mais pas lus, et un poids de zéro ressemble trait pour trait à un outillage inexistant" };
+  }
+  const outils = lignesRecensement.map((l) => {
+    const slug = String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    const dest = destinatairesParSlug.get(slug) ?? [];
+    const couts = [];
+    if (dest.includes("autres-outils")) couts.push("entrainant");
+    if (dest.includes("utilisateur")) couts.push("visible");
+    if (!couts.length) couts.push("libre");
+    return { slug, chemin: l.chemin, lignes: l.lignes ?? 0, part: (100 * (l.lignes ?? 0)) / total,
+      importeurs: l.importeurs ?? 0, destinataires: dest, couts };
+  }).sort((a, b) => b.lignes - a.lignes);
+  const parCout = { libre: 0, entrainant: 0, visible: 0 };
+  const lignesParCout = { libre: 0, entrainant: 0, visible: 0 };
+  for (const o of outils) for (const c of o.couts) { parCout[c] += 1; lignesParCout[c] += o.lignes; }
+  return { mesurable: true, total, illisibles, outils: outils.filter((o) => o.lignes > 0), parCout, lignesParCout };
+}
+
+export function formatPoidsLines(p, { top = 10 } = {}) {
+  if (!p?.mesurable) return [`⚠️ NON MESURÉ — ${p?.pourquoi ?? "raison inconnue"}`];
+  const L = [`${p.outils.length} outils · ${p.total} lignes d'outillage au total.${p.illisibles ? ` ⚠️ ${p.illisibles} fichier(s) illisible(s), non comptés — jamais comptés à zéro, ce qui les aurait fait passer pour vides.` : ""}`];
+  L.push("");
+  L.push(`Les ${top} plus lourds :`);
+  for (const o of p.outils.slice(0, top)) L.push(`   ${String(o.lignes).padStart(5)} l. (${o.part.toFixed(1).padStart(4)} %)  ${o.slug.padEnd(28)} ${o.couts.join("+")}`);
+  L.push("");
+  L.push("LE GAIN D'UNE RÉDUCTION, par coût de retrait — et c'est ça qu'il demandait :");
+  for (const [c, n] of Object.entries(p.parCout)) {
+    L.push(`   ${String(n).padStart(3)} outil(s) · ${String(p.lignesParCout[c]).padStart(5)} lignes  ${c} — ${COUTS_DE_RETRAIT[c].quoi}`);
+    L.push(`        → ${COUTS_DE_RETRAIT[c].consequence}`);
+  }
+  L.push("");
+  L.push("CE QUE CE TABLEAU NE DIT PAS, et il faut le lire avec : un gain en lignes ne dit RIEN si on");
+  L.push("ignore qui perd quoi. Retirer 2 000 lignes que personne ne lit et 2 000 lignes dont");
+  L.push("l'utilisateur dépend sont deux décisions opposées avec le même chiffre. Un outil peut être");
+  L.push("ENTRAÎNANT et VISIBLE à la fois : c'est le cas le plus cher, et il est compté dans les deux.");
+  L.push("HORS PORTÉE : aucun outil n'est proposé au retrait ici. La mesure éclaire une décision, elle");
+  L.push("ne la prend jamais — retirer un membre de l'équipe est un arbitrage humain.");
+  L.push("POURQUOI CE COMPTE DIFFÈRE DE CELUI DES AXES JUSTE AU-DESSUS : le poids se calcule sur TOUT");
+  L.push("scripts/ (crochets git et .sh compris), là où les axes ne portent que sur les .mjs du");
+  L.push("dossier racine. Deux périmètres, deux questions — et les aligner aurait fait disparaître du");
+  L.push("poids réel, ou inventé des axes pour des fichiers qui n'en ont pas.");
+  return L;
+}
+
+// ============================================================================================
 // 5e DISTINCTION — À QUI le résultat est destiné (2026-09-25, tâche #741)
 // ============================================================================================
 // SES MOTS : « il y a ceux qui aident le projet en entier, ou par défaut, ceux qui aident d'autres
@@ -2568,6 +2653,12 @@ function main() {
     console.log("");
     console.log("--- 5e AXE : À QUI LE RÉSULTAT SERT (tâche #741) ---");
     for (const l of formatDestinatairesLines(dests)) console.log(l);
+    // LE POIDS ET LE GAIN D'UNE RÉDUCTION (#744) — juste après le 5e axe, parce qu'il en DÉPEND :
+    // un gain en lignes ne dit rien sans savoir qui perd quoi.
+    const destParSlug = new Map(fichiers.map((f, i) => [f.replace(/\.mjs$/, ""), dests[i].destinataires]));
+    console.log("");
+    console.log("--- LE POIDS, ET LE GAIN D'UNE RÉDUCTION (tâche #744) ---");
+    for (const l of formatPoidsLines(poidsDesOutils(recIceberg.mesurable ? recIceberg.lignes : [], { destinatairesParSlug: destParSlug }))) console.log(l);
     console.log("");
     console.log("--- LES DEUX SYSTÈMES DE FAMILLES (tâche #754) ---");
     for (const l of formatFamillesLines(comparerLesFamilles({ categories: AGENT_CATEGORIES, registres: DOC_REPORT_REGISTRIES }))) console.log(l);

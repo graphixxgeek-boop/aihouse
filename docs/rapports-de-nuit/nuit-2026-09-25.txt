@@ -55,6 +55,7 @@ LES TÂCHES, UNE PAR LIGNE
 #743 Cadrage du chantier classification : signal de fin MESURÉ (71,8 %), 4 questions posées [FAIT]
 #658 Articles 7 et 23 : le constat avait vieilli — 13 Articles sans porteur ET sans un mot, mesuré et câblé [FAIT]
 #741 5e axe « à QUI le résultat sert » construit et mesuré : 69 autres outils · 46 utilisateur · 6 projet · 4 agent [FAIT]
+#744 Poids par outil + gain chiffré d'une réduction : 49 582 lignes, 13 outils libres (1 901 l.), check-house = 24,3 % [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

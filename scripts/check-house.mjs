@@ -8234,6 +8234,26 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(famRien.mesurable, false, 'and when NOT ONE tool carries a family there is nothing to compare');
   assert.match(famRien.pourquoi, /aucun des 1 outils/, 'with the reason spelled out rather than generic — "nobody carries a family" and "the registry is unreadable" call for opposite gestures, and one shared message would send the enquiry to the wrong place');
 
+  // LE POIDS ET LE GAIN D'UNE RÉDUCTION (2026-09-25, tâche #744). Ses mots : « on doit etre capable
+  // dans leur fiche complete d'indiquer le nombre de lignes de code, le poids qu'il pese dans le
+  // projet [...] si demain on doit reduire sensiblement la taille de l'agence [...] on doit pouvoir
+  // anticiper le gain ». La mesure n'a de sens qu'APRÈS le 5e axe, et c'est pour ça qu'elle arrive
+  // après lui : un gain en lignes ne dit RIEN sans savoir qui perd quoi.
+  const { poidsDesOutils, formatPoidsLines, COUTS_DE_RETRAIT } = await import('../scripts/cassandra-rh.mjs');
+  assert.equal(poidsDesOutils([]).mesurable, false, 'no script recensed means no measure: a total of zero lines reads like an empty repository, which is never what was meant');
+  assert.equal(poidsDesOutils([{ chemin: 'scripts/a.mjs', lignes: null }]).mesurable, false, 'and files listed but never READ return "not measured" rather than a weight of zero — an unreadable file weighs null, never nothing');
+  const poids = poidsDesOutils(
+    [{ chemin: 'scripts/gros.mjs', lignes: 300, importeurs: 2 }, { chemin: 'scripts/seul.mjs', lignes: 100, importeurs: 0 }, { chemin: 'scripts/mort.mjs', lignes: null }],
+    { destinatairesParSlug: new Map([['gros', ['autres-outils', 'utilisateur']], ['seul', []]]) });
+  assert.equal(poids.total, 400, 'the unreadable file is excluded from the total rather than counted as zero');
+  assert.equal(poids.illisibles, 1, 'and its exclusion is SAID, never silent');
+  assert.deepEqual(poids.outils.find((o) => o.slug === 'gros').couts.sort(), ['entrainant', 'visible'], 'THE MOST EXPENSIVE CASE IS NAMED AS SUCH: a tool both imported elsewhere AND read by the user costs on both counts, and is deliberately counted in both');
+  assert.deepEqual(poids.outils.find((o) => o.slug === 'seul').couts, ['libre'], 'while a tool nobody imports and nobody reads is free to drop — the gain is net');
+  assert.ok(formatPoidsLines(poids).some((l) => /ne la prend jamais/.test(l)), 'no tool is ever proposed for removal: the measure informs a decision, it never takes it — dropping a team member is a human call');
+  assert.ok(formatPoidsLines(poids).some((l) => /deux décisions opposées avec le même chiffre/.test(l)), 'and the caveat travels WITH the table, because a line count alone looks exactly like a decision');
+  assert.ok(Object.keys(COUTS_DE_RETRAIT).length === 3, 'three removal costs, never two: free, entangling, visible');
+  console.log('Passed: the weight of each tool and the gain of a reduction are measurable at last (2026-09-25, task #744) — "on doit etre capable dans leur fiche complete d\'indiquer le nombre de lignes de code [...] si demain on doit reduire sensiblement la taille de l\'agence, on doit pouvoir anticiper le gain". It could only be built after the 5th axis, and that order is the point: a gain in lines says NOTHING without knowing who loses what — dropping 2 000 lines nobody reads and 2 000 lines the user depends on are opposite decisions carrying the same number, so the caveat travels with the table. Three removal costs rather than two: FREE (nobody imports it, nobody reads it), ENTANGLING (other tools import it, so the real gain is the cluster and never the file), VISIBLE (the user reads its output, so the loss is felt whatever the line count) — and a tool can be the last two at once, which is the most expensive case and is counted in both. An unreadable file weighs null and is excluded out loud, never counted as zero. Real repository right now: 86 files, 49 582 lines of tooling, of which check-house alone is 12 052 — a quarter of the whole Agency in one file.');
+
   // LE 5e AXE — À QUI LE RÉSULTAT SERT (2026-09-25, tâche #741). Ses mots : « il y a ceux qui
   // aident le projet en entier, ou par défaut, ceux qui aident d'autres outils, ceux qui aident TOI
   // et ceux qui aident MOI ». Aucun des quatre autres axes ne dit ça, et c'est le SEUL qui permette
