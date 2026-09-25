@@ -48,6 +48,8 @@ LES TÂCHES, UNE PAR LIGNE
 #776 tool-brain ne trouvait pas l'agent des noms pour un renommage : racine des mots, corrigé et mesuré [FAIT]
 #763 Vérité sur la Ronde GOAT MAX : le zéro venait du COMPTEUR, pas des outils — 4e état ajouté, 2 outils câblés [FAIT]
 #670 Historique des évaluations : la cause racine était que PERSONNE ne l'écrivait — corrigé et câblé à la Ronde [FAIT]
+#642 P0 du juge MESURÉ : 44 % des motifs de déplacement cassés à l'affichage — outil construit, correction écrite, NON appliquée (périmètre visiteur) [FAIT]
+#225 Motifs de déplacement : cause racine trouvée et correction prête — attend sa validation [AVANCÉ]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

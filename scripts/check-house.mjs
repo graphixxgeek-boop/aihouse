@@ -7135,6 +7135,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // mécaniquement (c'est une vraie lecture, jamais un calcul) — seule sa partie mécanique de
   // couverture (aucune simulation archivée sans note, aucune note orpheline) est testée ici.
   const {extractSimIds,findMissingNotes,findOrphanNotes,buildElProfessorCoverageHtml}=await import('../scripts/el-professor.mjs');
+
+  // LES MOTIFS DE DÉPLACEMENT, MESURÉS SUR CE QUI A ÉTÉ AFFICHÉ (2026-09-25, tâches #642/#225).
+  // Défaut d'Article 15 par excellence : visible par le visiteur à chaque quatrième déplacement,
+  // invisible à l'agent qui code, et il a traîné dix-neuf simulations sans qu'aucun outil du
+  // paysage ne le nomme. La couture est unique : departureLine() (lib/drama.ts) attend un FRAGMENT
+  // en minuscules sans point final, le modèle rend une PHRASE COMPLÈTE capitalisée et ponctuée.
+  // Les trois défauts sont donc la même cause vue sous trois angles, jamais trois bugs séparés.
+  const { defautsDuMotif, auditMotifsDeDeplacement, formatMotifsLines } = await import('../scripts/el-professor.mjs');
+  assert.deepEqual(defautsDuMotif('Je bouge en cuisine : Je vais voir ce qu\'il y a dans la cuisine..', 'cuisine').sort(), ['double-point', 'majuscule-en-milieu-de-phrase', 'piece-nommee-deux-fois'], 'the three defects are detected together on the real line that revealed them');
+  assert.deepEqual(defautsDuMotif('Je file au salon : je veux prendre du recul.', 'salon'), [], 'and a correct line — lowercase fragment, one final period, the room named once — reports nothing, which is what makes the count believable');
+  assert.deepEqual(defautsDuMotif('Je te suis.', 'salon'), [], 'a DÉPART À DEUX line carries no motive at all and must never be counted as defective');
+  assert.equal(auditMotifsDeDeplacement(['x.html'], {}).mesurable, false, 'with no file reader it refuses rather than returning zero defects, since an empty denominator reads exactly like a clean output');
+  const auditFaux = auditMotifsDeDeplacement(['a.html'], { lire: () => '[salon→cuisine] Je bouge en cuisine : Je vais dans la cuisine..\n[salon→cuisine] Je te suis.\n[cuisine→salon] Je file au salon : je souffle deux minutes.' });
+  assert.equal(auditFaux.lignes, 3, 'every movement line is counted');
+  assert.equal(auditFaux.avecMotif, 2, 'but only those carrying a motive form the denominator — counting the follow-me lines would lower the rate without a single defect being fixed');
+  assert.equal(auditFaux.touches, 1, 'and exactly one of the two is defective');
+  assert.ok(formatMotifsLines(auditFaux).some((l) => /il ne corrige pas/.test(l)), 'IT MEASURES AND NEVER CORRECTS: fixing this changes WHAT THE VISITOR SEES, a perimeter the user reserved for himself on 2026-09-24');
+  const auditReel = auditMotifsDeDeplacement(
+    fs.readdirSync('docs/simulations').filter((f) => f.endsWith('_transcript.html')).sort(),
+    { lire: (f) => { try { return fs.readFileSync(`docs/simulations/${f}`, 'utf8'); } catch { return undefined; } } });
+  assert.equal(auditReel.mesurable, true, 'run live against the real archived transcripts, never on fixtures alone');
+  console.log(`Passed: the movement reasons are finally measured on WHAT WAS DISPLAYED (2026-09-25, tasks #642/#225) — an Article 15 defect in its purest form: visible to the visitor on one movement in four, invisible to the agent writing the code, and it went nineteen simulations without a single tool of this landscape naming it. THE_FINAL_JUDGE found it; nothing measured it. The seam is single and explains all three defects at once: departureLine() expects a lowercase FRAGMENT with no final period, and the model returns a capitalised, punctuated FULL SENTENCE — hence a double period, a capital mid-sentence, and the destination named twice ("Je bouge dans la chambre : Je veux vérifier ce miroir dans la chambre."). The follow-me lines are excluded from the denominator on purpose, since counting them would lower the rate without one defect being fixed. THE TOOL MEASURES AND NEVER CORRECTS, because correcting changes what the visitor sees and that perimeter is the user's. Real archive right now: ${auditReel.avecMotif} displayed motives, ${auditReel.touches} carrying at least one defect — ${auditReel.taux.toFixed(1)} %, which is worse than the 24.6 % the judge estimated, not better.`);
   const simIdx='| Simulation | Round |\n|---|---|\n| full_sim (sim1) | 44 |\n| full_sim2 | 56 |\n| full_sim9 | 153 |';
   assert.deepEqual(extractSimIds(simIdx),['full_sim','full_sim2','full_sim9'],'every simulation identifier in the first column of a markdown table must be extracted in order, dropping whatever trails after it on the same line (e.g. "(sim1)")');
   assert.deepEqual(extractSimIds('| Simulation | Round |\n|---|---|'),[],'a table with no data rows yet must report zero ids, never crash');
