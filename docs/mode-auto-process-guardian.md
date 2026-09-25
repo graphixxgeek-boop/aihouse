@@ -198,6 +198,45 @@ encore) ; rattraper un document sur deux ne rattrape rien non plus, quand deux p
 même code (un demi-rattrapage affiché comme un rattrapage est pire qu'aucun) ; et le cas « code et
 document dans le même commit » reste ce qu'il a toujours été — jamais un écart.
 
+### Le détecteur au crochet post-commit (2026-09-25, tâche #436 partie 2)
+
+**Ce qui n'allait pas, et c'est mesuré, jamais supposé.** Tout ce qui précède était vrai depuis le
+2026-09-23 — et ne tournait que si quelqu'un lançait `god-of-all-process` à la main. Le crochet
+`post-commit` appelle les sept Gardiens sacrés, ecotoken et MOÏSE ; god n'y figurait pas
+(`grep -c "god-of-all-process" scripts/hooks/post-commit` rendait **0**). Le 2026-09-25, le
+détecteur affichait **9 dettes** : 7 payées en retard, 2 encore dues. Aucune n'était cachée —
+regarder demandait un geste, et un geste qu'on doit penser à faire finit par ne plus être fait
+(leçon L2 : un mécanisme qui ne sort pas du script est une intention).
+
+**Ce qui a été câblé** : `detteDuDernierCommit()`, une fenêtre à UN commit filtrée sur les impayés,
+lancée par la sous-commande `node scripts/god-of-all-process.mjs dette` dès qu'un commit touche un
+`scripts/*.mjs`.
+
+**Les quatre décisions de calibrage, chacune contre un défaut précis :**
+
+- **Un seul commit, jamais la fenêtre de quinze.** Une dette née il y a dix commits n'est plus une
+  information au moment du commit onze : c'est une liste qu'on relit sans pouvoir l'éteindre, donc
+  du décor en deux passages (leçon L6 — exactement le défaut que la distinction IMPAYÉ/RATTRAPÉ
+  avait déjà dû corriger plus haut). Ce qu'on peut encore réparer d'un `git commit --amend`, c'est
+  ce qu'on vient de faire. Le bilan complet reste chez god, à la demande et à la Ronde.
+- **Muet quand il n'a rien trouvé.** Pas de ligne « aucune dette » : un contrôle qui parle à chaque
+  commit pour dire que tout va bien cesse d'être lu au troisième, et c'est dans ce bruit-là que les
+  neuf ont pu passer.
+- **Ni bannière de fiabilité, ni compteur d'usage sur ce chemin.** La sous-commande est traitée
+  avant les deux. La bannière ferait trois lignes de bruit par commit pour zéro information dans le
+  cas normal ; le compteur, lui, mesure si l'AGENT sollicite ses outils (Article 31) — un appel
+  déclenché par un crochet n'est pas une sollicitation, et l'y compter ferait passer god pour
+  l'outil le plus consulté du dépôt sans que personne ne l'ait ouvert.
+- **Le filtre du crochet est un superset volontaire.** Il se déclenche sur n'importe quel
+  `scripts/*.mjs`, jamais sur une liste des scripts de process recopiée dans le crochet : une telle
+  liste divergerait en silence le jour où un process change de contrôleur (Article 24). La
+  précision vit dans l'outil, qui est muet quand il n'a rien trouvé.
+
+**Une conséquence assumée de la fenêtre à un** : le rattrapage ne peut pas s'y observer, puisqu'il
+vit dans les commits SUIVANTS, qui n'existent pas encore. Une dette vue par le crochet est donc
+toujours impayée par construction — ce n'est pas un jugement plus sévère, c'est une fenêtre plus
+courte, et le bilan complet continue de faire la part des deux.
+
 ## Ce que « un mécanisme du process » veut dire, exactement (2026-09-23)
 
 *(Trois resserrements de la mesure `process ↔ contrôleur`, faits la même nuit. Ils ne corrigent

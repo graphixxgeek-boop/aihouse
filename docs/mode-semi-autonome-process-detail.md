@@ -184,3 +184,25 @@ figure ci-dessous.)*
   travailler pendant que l'utilisateur est présent, jamais un programme à cocher. L'exemption est
   une déclaration, jamais une dispense obtenue par oubli — et c'est la différence que tout ce
   dispositif protège.
+
+## 2026-09-25 — La dette documentaire signalée à sa naissance : ce que ça change pour CE mode
+
+*(Tâche #436 partie 2. Le détail complet — les quatre décisions de calibrage, la fenêtre à un
+commit, le filtre superset du crochet — vit dans `docs/mode-auto-process-guardian.md`, jamais
+dupliqué ici ; seul ce qui concerne CE mode figure ci-dessous.)*
+
+`detteDuDernierCommit()` est désormais lancé par le crochet `post-commit` dès qu'un commit touche un
+`scripts/*.mjs` : quand du code de process change sans son document, l'écart est nommé dans la
+seconde qui suit, plus à la Ronde suivante.
+
+**Pourquoi ce mode-ci est celui qui en profite le plus, et ce n'est pas un détail de calendrier.**
+En semi-autonome, l'utilisateur est LÀ et les commits s'enchaînent à un rythme que rien ne ralentit.
+C'est exactement le régime dans lequel les neuf dettes du 2026-09-25 se sont accumulées : pas une
+nuit sans surveillance, une journée de travail dense où chaque commit paraissait propre. Le signal
+arrive donc là où il est le moins coûteux à traiter — tant que le commit est le dernier, le réparer
+coûte un `git commit --amend` ; découvert trois jours plus tard, il faut d'abord retrouver ce qui a
+changé et pourquoi.
+
+**Ce que ça n'enlève pas** : le bilan complet chez god reste le seul endroit qui voit la fenêtre
+longue et la distinction IMPAYÉ/RATTRAPÉ. Le crochet attrape ce qui naît, il ne remplace pas ce qui
+regarde en arrière.

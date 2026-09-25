@@ -11220,6 +11220,31 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(typeof gitFaux === 'function', 'the command shape is asserted inside gitFaux, kept here so the check is not silently dropped');
   assert.deepEqual(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: gitFaux }).map((e) => e.rattrape), ['cccc222'], 'and the same verdict holds when the history comes through a stub that also verifies the git command actually issued');
 
+  // 4ter-bis. LA DETTE SIGNALÉE À SA NAISSANCE (2026-09-25, tâche #436 partie 2) — le détecteur
+  // ci-dessus existait depuis deux jours et ne tournait QUE lancé à la main : neuf dettes s'étaient
+  // accumulées sans que personne ne regarde. Ces assertions couvrent la fenêtre à un commit posée
+  // au crochet post-commit, et surtout son silence, qui est la moitié du mécanisme.
+  {
+    const fautif = 'dddd111\tfautif\nscripts/faux-gardien.mjs\nscripts/autre.mjs';
+    let commandeVue = null;
+    const espion = (cmd) => { commandeVue = cmd; return fautif; };
+    const nes = god.detteDuDernierCommit({ processes: procFaux, shImpl: espion });
+    assert.equal(nes.length, 1, 'process code changed without its document must be caught in the very commit that creates the debt, not a week later at the Ronde');
+    assert.match(commandeVue, /git log -n 1\b/, 'the hook window is ONE commit: a debt born ten commits ago is no longer information at commit eleven, it is a list nobody can extinguish');
+    // Le silence est la moitié du mécanisme : un contrôle qui parle à chaque commit pour annoncer
+    // que tout va bien cesse d'être lu au troisième, et c'est dans ce bruit que les neuf sont passées.
+    const propre = () => 'dddd222\tpropre\nscripts/faux-gardien.mjs\ndocs/faux-process.md';
+    assert.deepEqual(god.detteDuDernierCommit({ processes: procFaux, shImpl: propre }), [], 'code and document in the same commit stays what it always was: never a finding');
+    assert.deepEqual(god.detteDuDernierCommitLines([]), [], 'and nothing at all is printed when nothing was found — a guard that speaks every commit stops being read');
+    const lignes = god.detteDuDernierCommitLines(nes);
+    assert.ok(lignes.length >= 2 && lignes[0].includes('NÉE(S) dans ce commit'), 'when it does speak, it must say the debt was born HERE — that is what makes an amend the cheap fix');
+    assert.ok(lignes.some((l) => l.includes('docs/faux-process.md')), 'and name the document left behind, so the reader knows what to write rather than what to feel guilty about');
+    // LE FILTRAGE DES RATTRAPÉS, et sa raison : sur une fenêtre à UN commit le rattrapage vit dans
+    // les commits suivants, qui n'existent pas encore. Ce filtre ne durcit donc rien — il dit la
+    // seule chose que cette fenêtre peut dire.
+    assert.ok(nes.every((e) => !e.rattrape), 'the hook reports unpaid debts only: on a one-commit window a catch-up cannot yet exist, so showing one would be a claim the data cannot support');
+  }
+
   // 4quater. LA REMISE À NIVEAU DU CODE (2026-09-23, chantier 7) — « est-ce que tout le code
   // bénéficie de la leçon que tu as apprise ? », posé tel quel par l'utilisateur.
   {

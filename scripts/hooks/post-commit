@@ -29,3 +29,20 @@ node scripts/moise-tables-de-loi.mjs || true
 if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qx "CLAUDE.md"; then
   node scripts/moise-tables-de-loi.mjs protection || true
 fi
+
+# LA DETTE DOCUMENTAIRE, SIGNALÉE À SA NAISSANCE (2026-09-25, tâche #436 partie 2) — alerte NON
+# BLOQUANTE, même calibrage que les lignes ci-dessus.
+#
+# LE DÉFAUT QU'ELLE FERME EST MESURÉ, jamais craint : god-of-all-process détecte depuis le
+# 2026-09-23 le code d'un process modifié sans son document, et il ne tournait QUE lancé à la main.
+# Neuf dettes s'étaient accumulées le 2026-09-25 — sept payées en retard, deux encore dues. Aucune
+# n'était cachée : regarder demandait un geste, et un geste qu'on doit penser à faire finit par ne
+# plus être fait (leçon L2 : un mécanisme qui ne sort pas du script est une intention).
+#
+# LE FILTRE EST UN SUPERSET VOLONTAIRE : on lance dès qu'un script a bougé, jamais une liste des
+# scripts de process recopiée ici. Une liste dans le crochet divergerait en silence du jour où un
+# process change de contrôleur (Article 24) ; la précision vit dans l'outil, qui est muet quand il
+# n'a rien trouvé.
+if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^scripts/.*\.mjs$'; then
+  node scripts/god-of-all-process.mjs dette || true
+fi

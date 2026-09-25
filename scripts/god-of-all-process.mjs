@@ -1052,6 +1052,46 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LA DETTE SIGNALÉE AU MOMENT OÙ ELLE NAÎT (2026-09-25, tâche #436 partie 2)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE TROU QUE ÇA FERME, et il est mesuré, jamais craint : le détecteur ci-dessus existait depuis le
+// 2026-09-23 et tournait UNIQUEMENT quand on lançait god-of-all-process à la main. Le crochet
+// post-commit appelle sept Gardiens sacrés, ecotoken et MOÏSE — jamais god. Résultat vérifié le
+// 2026-09-25 : NEUF dettes documentaires accumulées, dont sept payées en retard et deux encore
+// dues. Aucune n'était cachée : personne ne regardait, parce que regarder demandait un geste.
+//
+// POURQUOI SEULEMENT LE DERNIER COMMIT, et pas la fenêtre de quinze : une dette née il y a dix
+// commits n'est plus une information au moment du commit onze — c'est une liste qu'on relit chaque
+// fois sans pouvoir l'éteindre, donc du décor en deux passages (leçon L6). Ce qu'on peut encore
+// corriger d'un `git commit --amend`, c'est ce qu'on vient de faire. Le bilan complet reste chez
+// god, à la demande et à la Ronde.
+//
+// CONSÉQUENCE ASSUMÉE DE CETTE FENÊTRE À UN : le rattrapage ne peut pas s'observer (il vit dans les
+// commits SUIVANTS, qui n'existent pas encore). Une dette vue ici est donc toujours impayée par
+// construction, et c'est exactement ce qu'on veut dire — pas un jugement plus sévère, une fenêtre
+// plus courte.
+//
+// SA LIMITE, déclarée plutôt que tue : elle hérite de celle du détecteur — un commit qui groupe
+// plusieurs sujets élargit la fenêtre de fichiers et peut laisser passer un cas. Elle attrape le
+// cas net, jamais tous les cas.
+export function detteDuDernierCommit(options = {}) {
+  return findChangementsIndirectsSansMiseAJour({ ...options, nbCommits: 1 }).filter((e) => !e.rattrape);
+}
+
+// Le rendu du crochet : MUET quand il n'y a rien à dire. Un contrôle qui parle à chaque commit pour
+// annoncer que tout va bien cesse d'être lu au troisième — et c'est précisément dans ce bruit que
+// les neuf dettes ont pu passer. Il ne rend donc des lignes que lorsqu'il a trouvé.
+export function detteDuDernierCommitLines(ecarts = []) {
+  if (!ecarts.length) return [];
+  const L = [`⚠️  ${ecarts.length} dette(s) documentaire(s) NÉE(S) dans ce commit — god-of-all-process, Article 13 :`];
+  for (const e of ecarts) L.push(`  · ${e.pourquoi}`);
+  L.push("  → Corriger maintenant coûte un `git commit --amend` ; découvert à la Ronde, ça coûte de retrouver ce qui a changé.");
+  L.push("  (fenêtre : le dernier commit seul — le bilan complet est dans `node scripts/god-of-all-process.mjs`)");
+  return L;
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RÉFLEXE : quel process gouverne ce que je m'apprête à faire ?
 // ————————————————————————————————————————————————————————————————————————
 
@@ -1965,6 +2005,20 @@ export function planchesDesSchemas({ processes = PROCESSES, schema = SCHEMA_DE_R
 }
 
 function main() {
+  // LA SOUS-COMMANDE DU CROCHET, traitée AVANT tout le reste (2026-09-25, tâche #436 partie 2).
+  // Deux raisons, et aucune n'est cosmétique :
+  //   · PAS DE BANNIÈRE. Elle tourne à chaque commit qui touche du code de process. Un
+  //     avertissement de fiabilité imprimé là ferait trois lignes de bruit pour zéro information
+  //     dans le cas normal — et c'est ce bruit qui rend un contrôle invisible (leçon L6). Le
+  //     reste de l'outil continue de l'imprimer, donc le garde-fou qui l'exige reste satisfait.
+  //   · PAS DE COMPTEUR D'USAGE. `recordCliUsage` mesure si l'AGENT sollicite ses outils
+  //     (Article 31). Un appel déclenché par un crochet n'est pas une sollicitation : l'y compter
+  //     ferait passer god pour l'outil le plus consulté du dépôt sans que personne ne l'ait ouvert,
+  //     et fausserait le seul chiffre qui dit la vérité sur mes réflexes.
+  if (process.argv[2] === "dette") {
+    for (const l of detteDuDernierCommitLines(detteDuDernierCommit())) console.log(l);
+    return;
+  }
   printReliabilityNotice("god-of-all-process");
   recordCliUsage("god-of-all-process");
   const tache = process.argv.slice(2).filter((a) => !a.startsWith("--")).join(" ");
