@@ -17,7 +17,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "no
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -2418,6 +2418,106 @@ export function domainesDeLOutil(source = "") {
   return { domaines: [...domaines], chemins, mesurable: true, pourquoi: null };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA FICHE AGRÉGÉE D'UN OUTIL (2026-09-25, tâche #757)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA CIBLE, reformulée avec lui : « c'est quoi, ça sert à qui, ça pèse combien, et que coûterait
+// de s'en passer ». Et sa formule qui justifie le chantier entier : « c'est chez qui ? c'est un
+// sujet export ».
+//
+// LA RÈGLE DE CONCEPTION QUI COMMANDE TOUT : **NE PAS créer un quatorzième registre.** C'est le
+// réflexe naturel et ce serait l'erreur — sur les treize qui existent, quatre divergeaient déjà en
+// silence avant qu'un garde-fou ne les rattrape (audit d'évolutivité du 2026-09-21, Article 24).
+// Un quatorzième aurait divergé pareil, avec en plus l'autorité trompeuse d'une fiche « officielle ».
+//
+// CONSÉQUENCE DIRECTE SUR LA FORME DE CE CODE, et c'est ce qui le rend défendable : `ficheDeLOutil`
+// ne LIT RIEN elle-même. Elle reçoit les axes déjà calculés, chacun par la fonction qui le calcule
+// déjà et qui est déjà testée, et se contente de les ASSEMBLER. Elle ne peut donc pas diverger :
+// il n'y a rien en elle qui puisse être d'un autre avis que la source.
+//
+// UN CHAMP MANQUANT DIT QUEL AXE N'A PAS RÉPONDU, jamais une case vide. Une fiche à trous
+// silencieux se lit comme une fiche complète sur un outil pauvre — et c'est exactement l'inverse
+// de ce qu'elle voudrait dire.
+
+export const CHAMPS_DE_LA_FICHE = [
+  { cle: "rang", quoi: "son autorité", source: "AGENT_CATEGORIES (Article 20bis)" },
+  { cle: "famille", quoi: "son voisinage de travail", source: "AGENT_CATEGORIES" },
+  { cle: "groupe", quoi: "membre de l'équipe, oublié, ou plomberie", source: "classerIceberg()" },
+  { cle: "type", quoi: "ce que le fichier EST", source: "typeDeScript()" },
+  { cle: "classes", quoi: "ce qu'il SAIT FAIRE", source: "classesDuScript()" },
+  { cle: "destinataires", quoi: "à QUI le résultat sert", source: "destinatairesDeLOutil()" },
+  { cle: "moments", quoi: "QUAND il intervient", source: "momentsDeLOutil()" },
+  { cle: "domaines", quoi: "SUR QUOI il regarde", source: "domainesDeLOutil()" },
+  { cle: "portee", quoi: "le jeu, ou l'Agence", source: "TOOL_PORTEE" },
+  { cle: "poids", quoi: "combien de lignes il pèse", source: "poidsDesOutils()" },
+  { cle: "coutDeDepart", quoi: "ce que coûterait de s'en passer", source: "poidsDesOutils()" },
+  { cle: "version", quoi: "combien de fois il a changé de capacités", source: "versionDepuisGit()" },
+  { cle: "richesse", quoi: "ce qu'il porte aujourd'hui", source: "richesse()" },
+];
+
+function valeurLisible(v) {
+  if (v === null || v === undefined || v === "") return null;
+  if (Array.isArray(v)) return v.length ? v.join(", ") : null;
+  if (typeof v === "object") return v.mesurable === false ? null : (v.libelle ?? JSON.stringify(v));
+  return String(v);
+}
+
+export function ficheDeLOutil(slug, axes = {}, { champs = CHAMPS_DE_LA_FICHE } = {}) {
+  if (!slug) return { mesurable: false, pourquoi: "aucun outil nommé — une fiche sans sujet n'est pas une fiche vide, c'est une question mal posée" };
+  const lignes = champs.map((c) => {
+    const lu = valeurLisible(axes[c.cle]);
+    return lu === null
+      ? { ...c, renseigne: false, valeur: null, pourquoi: `l'axe « ${c.source} » n'a rien rendu pour cet outil` }
+      : { ...c, renseigne: true, valeur: lu };
+  });
+  const renseignes = lignes.filter((l) => l.renseigne).length;
+  return {
+    mesurable: renseignes > 0, slug, lignes, renseignes, total: lignes.length,
+    complete: renseignes === lignes.length,
+    pourquoi: renseignes > 0
+      ? `${renseignes} champ(s) sur ${lignes.length} renseigné(s) par les axes existants`
+      : `aucun axe n'a répondu pour « ${slug} » : soit ce script n'existe pas, soit il n'est classé nulle part — deux situations différentes que cette fiche ne sait pas départager seule`,
+    horsPortee:
+      "Cette fiche N'EST PAS un quatorzième registre : elle n'écrit rien, ne recalcule rien, et chaque " +
+      "ligne nomme l'axe qui l'a produite. Elle ne peut donc pas diverger de ses sources — il n'y a rien " +
+      "en elle qui puisse être d'un autre avis. Et elle dit ce qu'un outil EST, jamais s'il est BON.",
+  };
+}
+
+// LE TROU QUE LA FICHE A TROUVÉ À SON PREMIER PASSAGE (2026-09-25, #757 → #807), et il vaut la
+// peine de le raconter parce qu'il valide la méthode : la toute première fiche produite, celle de
+// safe-export, affichait « portée — non renseigné ». Mesuré dans la foulée : `TOOL_PORTEE` compte
+// 13 entrées pour 50 outils réels. **44 outils n'ont aucune portée déclarée**, et rien ne le
+// signalait — parce que personne n'avait jamais interrogé ce registre sur un outil qui n'y était
+// pas. C'est exactement le patron de l'Article 24 : une liste tenue à la main, sans garde-fou.
+// Ce détecteur ne casse rien (44 échecs bloqueraient le dépôt) : il COMPTE et il NOMME, et le
+// chiffre descend à mesure que le registre se remplit.
+export function findOutilsSansPortee(lignesRecensement = [], portees = {}) {
+  const outils = lignesRecensement.filter((l) => l.type === "outil")
+    .map((l) => String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, ""));
+  if (!outils.length) return { mesurable: false, pourquoi: "aucun outil dans le recensement : rien à confronter au registre des portées, ce qui n'est pas la même chose qu'un registre complet" };
+  const sans = outils.filter((s) => !portees[s]);
+  return { mesurable: true, outils: outils.length, declares: outils.length - sans.length, sans,
+    part: (sans.length / outils.length) * 100 };
+}
+
+export function formatFicheLines(f) {
+  if (!f?.mesurable) return [`PAS DE FICHE — ${f?.pourquoi ?? "aucune donnée"}`];
+  const L = [
+    `=== FICHE — ${f.slug} ===`,
+    `  ${f.pourquoi}${f.complete ? "" : "   ⚠️ fiche INCOMPLÈTE"}`,
+    "",
+  ];
+  for (const l of f.lignes) {
+    const val = l.renseigne ? l.valeur : `— non renseigné (${l.pourquoi})`;
+    L.push(`  ${l.cle.padEnd(14)} ${l.quoi.padEnd(42)} ${val}`);
+  }
+  L.push("", `  Chaque ligne vient de : ${[...new Set(f.lignes.map((l) => l.source))].join(" · ")}`);
+  L.push(`  HORS PORTÉE : ${f.horsPortee}`);
+  return L;
+}
+
 export function formatAxesLines(lignes = [], { itemsRonde } = {}) {
   const L = [];
   L.push("--- 3e AXE : QUAND il intervient (un outil peut avoir plusieurs moments) ---");
@@ -2796,6 +2896,60 @@ function main() {
     console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, QUAND il intervient et SUR QUOI il regarde — jamais s'il est BON, ni s'il regarde BIEN. C'est le travail des Gardiens, et les deux ne se remplacent pas.`);
     return;
   }
+  // `fiche <outil>` (2026-09-25, tâche #757) — « c'est quoi, ça sert à qui, ça pèse combien, et que
+  // coûterait de s'en passer ». Sous-commande à part parce qu'elle répond sur UN outil quand
+  // `iceberg` répond sur les quatre-vingts : la même information, mais on ne la cherche pas au même
+  // moment ni pour la même décision. Et surtout : elle n'écrit NULLE PART — pas de quatorzième
+  // registre, seulement une lecture des axes qui existent déjà.
+  if (sub === "fiche") {
+    const demande = (process.argv[3] ?? "").replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    if (!demande) { console.log("\nUsage : node scripts/cassandra-rh.mjs fiche <nom-de-l-outil>"); return; }
+    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
+    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
+    if (!fichiers.includes(`${demande}.mjs`)) {
+      console.log(`\nPAS DE FICHE — aucun script « scripts/${demande}.mjs » dans le dépôt. Ce n'est pas une fiche vide : c'est un nom qui ne désigne rien ici.`);
+      const proches = fichiers.map((f) => f.replace(/\.mjs$/, "")).filter((n) => n.includes(demande.slice(0, 5)) || demande.includes(n.slice(0, 5)));
+      if (proches.length) console.log(`Peut-être : ${proches.slice(0, 5).join(", ")}`);
+      return;
+    }
+    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
+      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
+    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+    const itemsRonde = new Set();
+    for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);
+    const src = lu(`scripts/${demande}.mjs`);
+    const rec = recenserLesScripts();
+    const ligneRec = (rec.mesurable ? rec.lignes : []).find((l) => l.chemin === `scripts/${demande}.mjs`);
+    const groupe = classerIceberg([`${demande}.mjs`], { lire: (f) => lu(join("scripts", f)), offert, machine })[0];
+    const moments = momentsDeLOutil(demande, { offert, machine, itemsRonde }).moments;
+    const importeurs = ligneRec?.importeurs ?? 0;
+    const dest = destinatairesDeLOutil(demande, { source: src, natureFichier: FILE_WRITER_NATURES[`scripts/${demande}.mjs`]?.nature ?? null, moments, importePar: importeurs, machine });
+    const destParSlug = new Map([[demande, dest.destinataires]]);
+    const poids = poidsDesOutils(rec.mesurable ? rec.lignes : [], { destinatairesParSlug: destParSlug });
+    const monPoids = (poids.outils ?? []).find((l) => l.slug === demande);
+    const v = versionDepuisGit(`scripts/${demande}.mjs`);
+    const r = richesse({ exports: (src.match(/^export (function|const)/gm) || []).length, classes: ligneRec?.classes,
+      couches: couchesDuScript(`scripts/${demande}.mjs`, src, { crochets: lu("scripts/hooks/post-commit"), filetDeSecurite: lu("scripts/check-house.mjs"), couteux: outilsCouteuxDuCatalogue(PRESTATIONS) }) });
+    const cat = AGENT_CATEGORIES[demande];
+    const f = ficheDeLOutil(demande, {
+      rang: rangDeLaCategorie(cat), famille: familleDeLaCategorie(cat),
+      groupe: groupe?.groupe ?? null, type: ligneRec?.type ?? null, classes: ligneRec?.classes ?? null,
+      destinataires: dest.destinataires, moments, domaines: domainesDeLOutil(src).domaines,
+      portee: TOOL_PORTEE[demande] ?? null,
+      poids: monPoids ? `${monPoids.lignes} lignes (${monPoids.part.toFixed(1)} % de l'Agence)` : (ligneRec?.lignes ? `${ligneRec.lignes} lignes` : null),
+      // LE COÛT DE DÉPART — c'est la ligne qui justifie le chantier entier, selon sa formule :
+      // « c'est chez qui ? c'est un sujet export ». Elle vient de poidsDesOutils(), jamais d'un
+      // second calcul : libre (personne ne le sent partir) · entraînant (d'autres outils le lisent)
+      // · visible (l'utilisateur le verrait disparaître).
+      coutDeDepart: monPoids?.couts?.length ? monPoids.couts.join(", ") : null,
+      version: v.mesurable ? v.version : null,
+      richesse: r ? `${r.score}/${r.sur} (${r.tenus.join(", ")})` : null,
+    });
+    console.log("");
+    for (const l of formatFicheLines(f)) console.log(l);
+    return;
+  }
   // `cadrage` (#743) — LE SIGNAL DE FIN DU CHANTIER DE CLASSIFICATION, mesuré plutôt que ressenti.
   // Sous-commande à part de `iceberg` : celle-ci ne classe personne, elle dit COMBIEN il reste.
   if (sub === "cadrage") {
@@ -2841,6 +2995,15 @@ function main() {
     });
     console.log(`\n=== CADRAGE DU CHANTIER DE CLASSIFICATION (tâche #743) ===\n`);
     for (const l of formatCadrageLines(c)) console.log(l);
+    // LE REGISTRE DES PORTÉES, confronté au recensement réel (#807) — trouvé par la toute première
+    // fiche produite, pas par une revue : safe-export affichait « portée non renseignée ».
+    const rp = recenserLesScripts();
+    const sp = findOutilsSansPortee(rp.mesurable ? rp.lignes : [], TOOL_PORTEE);
+    console.log("");
+    console.log("--- LE REGISTRE DES PORTÉES (tâche #807) ---");
+    console.log(sp.mesurable
+      ? `  ${sp.declares}/${sp.outils} outils ont une portée déclarée — ${sp.sans.length} n'en ont aucune (${sp.part.toFixed(1)} %).${sp.sans.length ? `\n  Sans portée : ${sp.sans.slice(0, 8).join(", ")}${sp.sans.length > 8 ? `, … et ${sp.sans.length - 8} autre(s)` : ""}` : ""}`
+      : `  PAS MESURÉ — ${sp.pourquoi}`);
     return;
   }
   if (sub === "recensement") {

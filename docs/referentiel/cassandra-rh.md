@@ -209,3 +209,39 @@ Aucun des deux ne se corrige sans lire le *sens* du code, ce que git ne sait pas
 déclarer là où le chiffre se lit (`VERSION_OUTIL_HORS_PORTEE`, imprimé par la sous-commande) vaut
 mieux que de les taire : un chiffre dont on connaît la marge reste utile, un chiffre qu'on croit
 exact ne l'est plus.
+
+## La fiche agrégée d'un outil (2026-09-25, tâche #757 → clôturée par #806)
+
+`node scripts/cassandra-rh.mjs fiche <nom-de-l-outil>`
+
+Sa cible, reformulée avec lui : **« c'est quoi, ça sert à qui, ça pèse combien, et que coûterait de
+s'en passer »** — et sa formule qui justifie le chantier entier : *« c'est chez qui ? c'est un sujet
+export »*.
+
+**LA RÈGLE DE CONCEPTION QUI COMMANDE TOUT : ne pas créer un quatorzième registre.** C'est le
+réflexe naturel et ce serait l'erreur — sur les treize existants, quatre divergeaient déjà en
+silence avant qu'un garde-fou ne les rattrape (audit d'évolutivité du 2026-09-21, Article 24). Un
+quatorzième aurait divergé pareil, avec en plus l'autorité trompeuse d'une fiche « officielle ».
+
+**Conséquence directe sur la forme du code, et c'est ce qui la rend défendable** : `ficheDeLOutil()`
+ne lit rien elle-même. Elle reçoit les axes déjà calculés, chacun par la fonction qui le calcule
+déjà et qui est déjà testée, et se contente de les assembler. **Elle ne peut donc pas diverger** :
+il n'y a rien en elle qui puisse être d'un autre avis que la source. Treize champs, chacun nommant
+l'axe qui l'a produit.
+
+**Un champ manquant dit quel axe n'a pas répondu, jamais une case vide.** Une fiche à trous
+silencieux se lit comme une fiche complète sur un outil pauvre — l'inverse exact de ce qu'elle veut
+dire. Un nom qui ne désigne aucun script rend « pas de fiche » avec les noms proches, jamais une
+fiche vide.
+
+### Ce qu'elle a trouvé à son tout premier passage
+
+La première fiche produite — celle de SAFE-EXPORT — affichait **« portée : non renseigné »**.
+Mesuré dans la foulée : `TOOL_PORTEE` compte **13 entrées pour 50 outils réels**, soit **44 outils
+(88 %) sans aucune portée déclarée**. Rien ne le signalait, parce que personne n'avait jamais
+interrogé ce registre sur un outil qui n'y figurait pas — le patron exact de l'Article 24, une liste
+tenue à la main sans garde-fou.
+
+`findOutilsSansPortee()` le mesure désormais à chaque `cadrage`. Il **compte et nomme**, il ne casse
+rien : 44 échecs bloqueraient le dépôt, et le chiffre descendra à mesure que le registre se
+remplira. Tâche **#807**.

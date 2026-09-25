@@ -11963,6 +11963,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // LA FICHE AGRÉGÉE D'UN OUTIL (2026-09-25, tâche #757) — « c'est quoi, ça sert à qui, ça pèse
+  // combien, et que coûterait de s'en passer ». La règle de conception qui commande tout : NE PAS
+  // créer un quatorzième registre. Sur les treize existants, quatre divergeaient déjà en silence.
+  assert.equal(crh2.ficheDeLOutil('').mesurable, false, 'a fiche with no subject is refused rather than returned empty: an empty fiche reads as a poor tool, which is the opposite of what it means');
+  const fiche = crh2.ficheDeLOutil('un-outil', { rang: 'Gardien sacré du code', famille: 'Équipe noyau', classes: ['a', 'b'], poids: '900 lignes' });
+  assert.ok(fiche.mesurable && fiche.renseignes === 4 && !fiche.complete, 'it aggregates only what the existing axes handed it, and says how many of its fields were filled — never a silent hole');
+  const trou = fiche.lignes.find((l) => l.cle === 'portee');
+  assert.ok(!trou.renseigne && /TOOL_PORTEE/.test(trou.pourquoi), 'and an unfilled field NAMES the axis that did not answer rather than showing a blank cell — a fiche with silent holes reads exactly like a complete fiche about a poor tool');
+  assert.ok(fiche.lignes.every((l) => l.source), 'every field carries the function that produced it, which is what makes this NOT a fourteenth registry: it reads, it never recomputes, so there is nothing in it that could ever disagree with its source');
+  assert.ok(/N'EST PAS un quatorzième registre/.test(fiche.horsPortee) && /jamais s'il est BON/.test(fiche.horsPortee), 'and it says out loud both what it refuses to be and what it refuses to judge');
+  assert.deepEqual(crh2.ficheDeLOutil('x', {}).lignes.filter((l) => l.renseigne).length, 0, 'with no axis answering at all, nothing is invented — and the reason distinguishes "this script does not exist" from "it is classified nowhere", two different situations this fiche cannot tell apart on its own');
+  // LE TROU QUE LA FICHE A TROUVÉ À SON PREMIER PASSAGE, gardé comme contre-test (#807).
+  const sp = crh2.findOutilsSansPortee([{ type: 'outil', chemin: 'scripts/a.mjs' }, { type: 'outil', chemin: 'scripts/b.mjs' }, { type: 'bibliotheque-partagee', chemin: 'scripts/c.mjs' }], { a: 'agence' });
+  assert.deepEqual([sp.outils, sp.declares, sp.sans], [2, 1, ['b']], 'the portée registry is confronted with the REAL census rather than trusted: a hand-kept list with no guard is exactly the Article 24 pattern, and here it was 13 entries for 50 real tools — 44 tools with no declared portée, which nothing reported because nobody had ever asked the registry about a tool that was not in it');
+  assert.equal(crh2.findOutilsSansPortee([], {}).mesurable, false, 'and an empty census reports NOT MEASURED rather than a full registry: zero missing out of zero tools would read as a clean bill of health');
+
   // L'ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? (2026-09-25, tâche #735).
   // poidsDeLaTache() disait si UNE tâche est trop grosse ; rien ne disait l'inverse. Les deux
   // défauts sont opposés et se paient différemment : une tâche trop grosse se traîne, cinquante

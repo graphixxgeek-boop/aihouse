@@ -61,6 +61,7 @@ RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, c
 #730 L'Agence entière a une version rétroactive : v69.446, ni somme ni moyenne des 50 — et les 2 angles morts du majeur mis en échec EXPRÈS [FAIT]
 #729 Deux notes globales enfin : le jeu 38/100 (une seule composante, et elle le dit), l'Agence 81/100 partielle — jamais une moyenne des deux [FAIT]
 #735 Émiettement de la file mesuré : 87,1 % de légères sur 116 ouvertes, 49 thèmes, le rythme ralentit — aucun seuil absolu proposé [FAIT]
+#757 Fiche agrégée d'un outil : 13 champs, ZÉRO nouveau registre — et elle a trouvé 44 outils sans portée déclarée à son premier passage [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
