@@ -2734,6 +2734,31 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(checkLinks(linkMismatch,readFile)[0].confidence,'confirmé','a documented number that genuinely differs from the real code constant must be a confirmed friction, the whole point of this drift detector');
   assert.equal(checkLinks(linkMissing,readFile)[0].confidence,'probable','a document that never states the expected claim at all is a weaker signal than a genuine numeric mismatch — probable, not confirmed, since the claim may simply live elsewhere');
   assert.equal(checkLinks(linkNoCode,readFile)[0].confidence,'confirmé','a code pattern that cannot even be found in its own source file must always be reported, never silently skipped');
+  // LE SYSTÈME KPI PASSÉ AU PEIGNE FIN (2026-09-25, tâche #827 — constat DEEP-READER 4, TaskList
+  // #230). Sa demande du 2026-09-21 (#262) : « tout le systeme de kpi est bien interconnecté. On
+  // passera ce systeme au peigne fin avec Harmonia pour voir si on en a oublié des connexions. »
+  // La condition qu'elle posait (attendre CASSANDRA-RH) était remplie depuis quatre jours, et sa
+  // seule trace vivante vivait dans un document que le suivi déclarait archivé.
+  const { auditDuSystemeKpi, formatAuditKpiLines } = await import('../scripts/check-harmonia.mjs');
+  const csvFixture = 'run,a_local,b_vivant\nr1,1,1\nr2,,\nr3,,\n';
+  const naturesFixture = { run: 'locale', a_local: 'locale', b_vivant: 'vivante' };
+  const auditKpi = auditDuSystemeKpi({ csv: csvFixture, colonnes: ['run', 'a_local', 'b_vivant'], natures: naturesFixture, fenetre: 2 });
+  assert.deepEqual(auditKpi.perdus.map((p) => p.colonne), ['a_local'], 'a LOCAL column (it reads repo files, no server needed) that stays empty over the recent window is a genuinely lost connection — nothing explains that emptiness');
+  assert.deepEqual(auditKpi.enAttente.map((e) => e.colonne), ['b_vivant'], 'a LIVE column empty over the same window is NOT a lost link: its source needs a running dev server, so its silence means "not measured" — calling it lost would put a false red on half the dashboard, and the two look identical in a CSV');
+  assert.deepEqual(auditKpi.alimentees, ['run'], 'a column still fed inside the window is simply fine, and must be counted so the finding carries its denominator');
+  assert.equal(auditDuSystemeKpi({ csv: '', colonnes: ['x'], natures: { x: 'locale' } }).mesurable, false, 'an empty history must read PAS MESURÉ, never "no lost connection" — a green returned on zero runs read is the defect this whole landscape exists against');
+  const sansNature = auditDuSystemeKpi({ csv: csvFixture, colonnes: ['run', 'inconnue'], natures: naturesFixture });
+  assert.ok(!sansNature.mesurable && /nature déclarée/.test(sansNature.pourquoi), 'a column with no declared nature makes the audit REFUSE rather than skip it: an audit silent about one column reads exactly like an audit that found it healthy (Article 24)');
+  assert.ok(formatAuditKpiLines(auditKpi).join('\n').includes('HORS PORTÉE'), 'the report must state its own limit — it sees that a column stopped filling, never WHY, and a broken computation reads exactly like a deliberate stop');
+  // Et contre le VRAI système KPI, jamais seulement une fixture (Article 25).
+  {
+    const kpi = await import('../scripts/kpi-report.mjs');
+    assert.deepEqual(kpi.findColonnesSansNature(), [], 'every column of the real KPI history must declare whether its source is live or local, otherwise the comb-through goes quietly blind on it');
+    const vrai = auditDuSystemeKpi({ csv: fs.readFileSync('docs/referentiel/kpi-historique.csv', 'utf8'), colonnes: kpi.KPI_HISTORY_COLUMNS, natures: kpi.NATURE_DES_COLONNES_KPI });
+    assert.ok(vrai.mesurable && vrai.runsLus > 10, 'the comb-through must actually read the real KPI history, never conclude on an empty sweep');
+    assert.deepEqual(vrai.perdus, [], `no local KPI column may have stopped filling: the three columns dry on the recent window (smart_breaker_performance, qualite, coherence) all have a LIVE source and are awaiting a simulation — found lost: ${vrai.perdus.map((p) => p.colonne).join(', ')}`);
+  }
+
   console.log('Passed: HARMONIA\'s mechanical layer correctly reconfirms a documented numeric claim against its real code constant — consistent numbers pass silently, a genuine mismatch is a confirmed friction, and a missing documentation claim or an unfindable code constant are both reported rather than silently ignored.');
 }
 

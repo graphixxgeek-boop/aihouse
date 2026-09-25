@@ -83,6 +83,13 @@ DEEP-READER 2 (#229) : je la croyais faite, elle ne l'etait pas — le champ « 
   (#825) et jamais par le format, trois etats a la lecture. Trois lignes mal formees depuis
   l'origine (#625, #683, #751) trouvees par ce lecteur neuf et reparees [FAIT]
 
+DEEP-READER 4 (#230) : le systeme KPI passe au peigne fin par HARMONIA — demande du 2026-09-21,
+  condition remplie depuis quatre jours, seule trace vivante dans un document declare archive.
+  23 colonnes, 24 runs, AUCUNE connexion perdue ; les 3 muettes ont une source VIVANTE et
+  attendent une simulation. Sans la distinction de nature, l'audit rendait un rouge sur trois
+  colonnes saines. Un test a refuse la premiere version : elle faisait de kpi-report.mjs de la
+  tuyauterie par ricochet [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------

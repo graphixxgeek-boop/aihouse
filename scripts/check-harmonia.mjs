@@ -11,6 +11,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
+
 const ROOT = new URL("..", import.meta.url).pathname;
 
 // Chaque entrée : une constante réelle extraite du code source (regex + groupe numérique), et une
@@ -173,7 +174,7 @@ export function checkLinks(links, readFile = (f) => readFileSync(f, "utf8")) {
   return results;
 }
 
-function main() {
+async function main() {
   recordCliUsage("harmonia");
   const results = checkLinks(LINKS);
   printReportHeader({ tool: "harmonia", title: "HARMONIA — partie mécanique (cohérence chiffrée doc/code, zéro coût API)", scriptPath: "scripts/check-harmonia.mjs" });
@@ -216,9 +217,110 @@ function main() {
   console.log("");
   console.log(formatCartographie(cartographieCriteresTransverses()));
 
+  // LE SYSTÈME KPI, passé au peigne fin comme il l'avait demandé le 2026-09-21 (#262).
+  //
+  // IMPORT DYNAMIQUE, ET C'EST UN TEST QUI L'A IMPOSÉ. La première version importait kpi-report.mjs
+  // en tête de fichier ; le filet a immédiatement refusé, parce que le crochet post-commit importe
+  // check-harmonia.mjs — kpi-report devenait donc de la TUYAUTERIE par ricochet, et la moindre
+  // erreur de syntaxe dedans aurait cassé le crochet de tout le monde. Le vocabulaire se LIT
+  // toujours depuis son propre fichier (Article 24, jamais une copie), mais seulement au moment où
+  // ce rapport tourne pour de vrai, jamais à chaque import du module.
+  console.log("");
+  let KPI_HISTORY_COLUMNS = []; let NATURE_DES_COLONNES_KPI = {};
+  try { ({ KPI_HISTORY_COLUMNS, NATURE_DES_COLONNES_KPI } = await import("./kpi-report.mjs")); }
+  catch { /* absent : l'audit dira PAS MESURÉ plutôt que d'inventer un vert */ }
+  const auditKpi = auditDuSystemeKpi({
+    csv: (() => { try { return readFileSync(join(ROOT, "docs/referentiel/kpi-historique.csv"), "utf8"); } catch { return ""; } })(),
+    colonnes: KPI_HISTORY_COLUMNS, natures: NATURE_DES_COLONNES_KPI,
+  });
+  for (const l of formatAuditKpiLines(auditKpi)) console.log(l);
+  for (const p of auditKpi.perdus ?? []) {
+    constats.push({ constat: `KPI — la colonne ${p.colonne} ne se remplit plus`, etat: "a-trancher",
+      pourquoi: "une colonne locale muette peut venir d'un calcul cassé comme d'un choix assumé de ne plus la produire — les deux se lisent pareil dans un CSV" });
+  }
+
   const plan = buildPlanDaction(constats, { toolSlug: "harmonia" });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
   for (const l of plan.lignes) console.log(l);
+}
+
+
+// ————————————————————————————————————————————————————————————————————————
+// LE PASSAGE AU PEIGNE FIN DU SYSTÈME KPI (2026-09-25, tâche #827)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, DU 2026-09-21, tracée en #262 et restée sans suite : « tout le systeme de kpi est
+// bien interconnecté. **On passera ce systeme au peigne fin avec Harmonia pour voir si on en a
+// oublié des connexions.** » La condition qu'elle posait — attendre que CASSANDRA-RH existe —
+// était remplie depuis quatre jours, et sa seule trace vivante se trouvait dans un document que le
+// suivi lui-même déclarait archivé (constat DEEP-READER 4).
+//
+// POURQUOI CHEZ HARMONIA, et pas dans un outil de plus : la question posée est exactement la
+// sienne. ARGUS cherche le trou jamais envisagé ; HARMONIA vérifie la cohérence des liens DÉJÀ
+// EXISTANTS. « Une connexion oubliée » est un lien déclaré qui ne transporte plus rien — le même
+// regard que `checkLinks()` porte sur code↔référentiel, appliqué à colonne↔source.
+//
+// CE QU'IL MESURE : pour chaque colonne de l'historique KPI, depuis combien de runs elle n'est
+// plus alimentée — puis il croise avec la NATURE de sa source, déclarée dans kpi-report.mjs.
+// TROIS ÉTATS, jamais deux :
+//   - LIEN PERDU : colonne LOCALE (elle lit des fichiers du dépôt) et pourtant vide sur toute la
+//     fenêtre récente. Rien n'explique ce vide : c'est une connexion qui ne transporte plus.
+//   - EN ATTENTE D'UNE MESURE VIVANTE : colonne VIVANTE (serveur de dev, simulation). Son vide est
+//     honnête et attendu, et l'appeler « lien perdu » serait un faux rouge sur la moitié du
+//     tableau de bord.
+//   - ALIMENTÉE : rien à dire.
+//
+// SA LIMITE, DÉCLARÉE : il voit qu'une colonne ne se remplit plus, jamais POURQUOI. Une colonne
+// locale vide peut venir d'un calcul cassé comme d'un choix assumé de ne plus la produire — les
+// deux se lisent pareil dans un CSV, et seul un œil humain les sépare.
+export const FENETRE_RUNS_KPI = 6;
+
+export function auditDuSystemeKpi({ csv = "", colonnes = [], natures = {}, fenetre = FENETRE_RUNS_KPI } = {}) {
+  const lignes = String(csv).trim().split("\n").filter((l) => l.trim());
+  if (lignes.length < 2) {
+    return { mesurable: false, pourquoi: "historique KPI illisible ou vide — répondre « aucune connexion perdue » sur zéro run lu serait un vert rendu sur rien" };
+  }
+  const sansNature = colonnes.filter((c) => !natures[c]);
+  if (sansNature.length) {
+    return { mesurable: false, pourquoi: `${sansNature.length} colonne(s) sans nature déclarée (${sansNature.join(", ")}) : sans elle, une colonne vivante et une colonne locale se ressemblent exactement, et l'audit accuserait les deux pareil` };
+  }
+  const enTete = lignes[0].split(",").map((c) => c.trim());
+  const runs = lignes.slice(1).map((l) => l.split(","));
+  const recents = runs.slice(-fenetre);
+  const perdus = []; const enAttente = []; const alimentees = [];
+  for (const col of colonnes) {
+    const i = enTete.indexOf(col);
+    if (i === -1) { perdus.push({ colonne: col, pourquoi: "déclarée dans KPI_HISTORY_COLUMNS et ABSENTE de l'en-tête réel du CSV — le lien est rompu dès l'écriture" }); continue; }
+    const remplie = (r) => String(r[i] ?? "").trim() !== "";
+    const nbRecents = recents.filter(remplie).length;
+    const nbTotal = runs.filter(remplie).length;
+    if (nbRecents > 0) { alimentees.push(col); continue; }
+    const entree = { colonne: col, alimenteeAutrefois: nbTotal, runsLus: runs.length };
+    if (natures[col] === "vivante") enAttente.push(entree);
+    else perdus.push({ ...entree, pourquoi: `colonne LOCALE (elle lit des fichiers du dépôt, aucun serveur requis) et pourtant vide sur les ${fenetre} derniers runs — rien n'explique ce vide` });
+  }
+  return {
+    mesurable: true, perdus, enAttente, alimentees,
+    fenetre, runsLus: runs.length, colonnesExaminees: colonnes.length,
+    horsPortee: "Il voit qu'une colonne ne se remplit plus, jamais POURQUOI : un calcul cassé et un choix assumé de ne plus la produire se lisent pareil dans un CSV.",
+  };
+}
+
+export function formatAuditKpiLines(a) {
+  if (!a?.mesurable) return [`SYSTÈME KPI : PAS MESURÉ — ${a?.pourquoi ?? "aucune donnée"}`];
+  const L = [`=== HARMONIA — le système KPI passé au peigne fin (${a.colonnesExaminees} colonnes, ${a.runsLus} runs, fenêtre ${a.fenetre}) ===`];
+  if (!a.perdus.length) L.push(`Aucune connexion perdue : toute colonne muette sur la fenêtre récente a une source VIVANTE qui explique son silence.`);
+  else {
+    L.push(`🔴 ${a.perdus.length} connexion(s) perdue(s) — colonne locale, donc sans excuse :`);
+    for (const p of a.perdus) L.push(`   · ${p.colonne} — ${p.pourquoi}${p.alimenteeAutrefois ? ` (alimentée ${p.alimenteeAutrefois} fois par le passé)` : ""}`);
+  }
+  if (a.enAttente.length) {
+    L.push(`⏳ ${a.enAttente.length} colonne(s) en attente d'une mesure VIVANTE (serveur de dev ou simulation) : ${a.enAttente.map((e) => e.colonne).join(", ")}.`);
+    L.push(`   Leur vide n'est pas une rupture : c'est « pas mesuré », et les compter comme perdues rendrait un faux rouge sur la moitié du tableau de bord.`);
+  }
+  L.push(`✅ ${a.alimentees.length} colonne(s) alimentée(s) sur la fenêtre récente.`);
+  L.push(`   HORS PORTÉE : ${a.horsPortee}`);
+  return L;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

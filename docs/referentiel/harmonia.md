@@ -89,3 +89,47 @@ au script. Détail : `docs/harmonia/index.md`.
 
 Pas encore raccordé au tableau de bord général, même raisonnement qu'ARGUS : prématuré sur une
 seule exécution.
+
+## Le système KPI passé au peigne fin (2026-09-25, tâche #827)
+
+*(Demande de l'utilisateur du 2026-09-21, tracée en #262 : « tout le systeme de kpi est bien
+interconnecté. **On passera ce systeme au peigne fin avec Harmonia pour voir si on en a oublié des
+connexions.** » La condition qu'elle posait — attendre que CASSANDRA-RH existe — était remplie
+depuis quatre jours, et la seule trace vivante de cette action à faire se trouvait dans
+`docs/cassandra-rh-conception.md`, un document que le suivi lui-même déclare archivé. Constat
+DEEP-READER 4.)*
+
+**Pourquoi chez HARMONIA plutôt que dans un outil de plus** : la question posée est exactement la
+sienne. ARGUS cherche le trou jamais envisagé ; HARMONIA vérifie la cohérence des liens DÉJÀ
+existants. « Une connexion oubliée » est un lien déclaré qui ne transporte plus rien — le même
+regard que `checkLinks()` porte sur code↔référentiel, appliqué à colonne↔source.
+
+**Ce qu'il mesure** : pour chaque colonne de `kpi-historique.csv`, depuis combien de runs elle
+n'est plus alimentée, croisé avec la NATURE de sa source (`NATURE_DES_COLONNES_KPI`,
+`scripts/kpi-report.mjs`). **Trois états, jamais deux** :
+
+- **LIEN PERDU** — colonne LOCALE (elle lit des fichiers du dépôt, aucun serveur requis) et pourtant
+  vide sur toute la fenêtre récente. Rien n'explique ce vide.
+- **EN ATTENTE D'UNE MESURE VIVANTE** — colonne dont la source exige un serveur de dev ou une
+  simulation. Son vide est honnête : il dit « pas mesuré », jamais « lien cassé ».
+- **ALIMENTÉE** — rien à dire, et elle est comptée pour que le constat porte son dénominateur.
+
+**Pourquoi la nature est DÉCLARÉE et non déduite** : la déduire du code (« cette colonne
+passe-t-elle par `fetchLiveMetrics()` ? ») marcherait aujourd'hui et se romprait au premier
+renommage, en silence. `findColonnesSansNature()` vérifie en retour qu'aucune colonne n'y échappe,
+et l'audit REFUSE de conclure si une seule manque — un audit muet sur une colonne se lit exactement
+comme un audit qui l'a trouvée saine (Article 24).
+
+**Premier passage réel, le jour même** : 23 colonnes, 24 runs, fenêtre de 6. **Aucune connexion
+perdue.** Trois colonnes muettes (`smart_breaker_performance_pct`, `qualite_pct`, `coherence_pct`)
+ont toutes une source vivante : elles attendent une simulation, pas une réparation. Sans la
+distinction de nature, l'audit aurait rendu un rouge sur trois colonnes saines.
+
+**Un test l'a corrigé avant même sa première livraison** : la version initiale importait
+`kpi-report.mjs` en tête de fichier. Le filet a refusé, parce que le crochet post-commit importe
+`check-harmonia.mjs` — kpi-report devenait de la **tuyauterie par ricochet**, et une erreur de
+syntaxe dedans aurait cassé le crochet de tout le monde. L'import est devenu dynamique, à l'endroit
+où le rapport tourne.
+
+**Sa limite, déclarée** : il voit qu'une colonne ne se remplit plus, jamais POURQUOI. Un calcul
+cassé et un choix assumé de ne plus la produire se lisent pareil dans un CSV.

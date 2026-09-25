@@ -191,6 +191,42 @@ export const KPI_HISTORY_COLUMNS = [
     'anti_echo_interventions', 'truncation_lia', 'truncation_noe', 'bonus_distincts', 'bonus_total',
     'smart_conso_pct',
 ];
+// LA NATURE DE CHAQUE COLONNE (2026-09-25, tâche #827 — constat DEEP-READER 4, TaskList #230).
+// Sa demande du 2026-09-21, tracée en #262 : « tout le systeme de kpi est bien interconnecté. On
+// passera ce systeme au peigne fin avec Harmonia pour voir si on en a oublié des connexions. »
+//
+// POURQUOI CETTE DÉCLARATION EXISTE, et c'est le cœur de l'audit. Une colonne vide sur les derniers
+// runs a DEUX causes qui se ressemblent trait pour trait dans le CSV :
+//   - sa source est VIVANTE : elle exige un serveur de dev en marche ou une simulation en cours.
+//     Le vide est alors honnête et attendu — il dit « pas mesuré », jamais « lien cassé ».
+//   - sa source est LOCALE : elle lit des fichiers du dépôt et devrait donc se remplir à chaque
+//     passage. Une colonne locale restée vide est une VRAIE connexion perdue.
+// Sans cette nature écrite, un audit qui compte les cellules vides accuse les deux pareil — et
+// rend un faux rouge sur la moitié du tableau de bord.
+//
+// Elle est DÉCLARÉE plutôt que devinée parce que la déduire du code (« cette colonne passe-t-elle
+// par fetchLiveMetrics() ? ») marcherait aujourd'hui et se romprait au premier renommage, en
+// silence. Un garde-fou vérifie en retour qu'aucune colonne n'échappe à la déclaration (Article 24).
+export const NATURE_DES_COLONNES_KPI = {
+    run: "locale", horodatage: "locale",
+    smart_breaker_performance_pct: "vivante", smart_breaker_amelioration_pct: "locale",
+    robustesse_code_pct: "locale", qualite_pct: "vivante", coherence_pct: "vivante",
+    rejouabilite_pct: "vivante", couverture_tdb_pct: "locale",
+    tsc_erreurs: "locale", points_fragiles: "locale",
+    sb_tours: "vivante", sb_tentatives: "vivante", sb_succes: "vivante",
+    sb_429: "vivante", sb_503: "vivante", sb_401_403: "vivante",
+    anti_echo_interventions: "vivante", truncation_lia: "vivante", truncation_noe: "vivante",
+    bonus_distincts: "vivante", bonus_total: "vivante",
+    smart_conso_pct: "locale",
+};
+
+// Le garde-fou de l'Article 24 : une colonne ajoutée demain sans nature déclarée rendrait l'audit
+// muet SUR ELLE, et un audit muet sur une colonne se lit exactement comme un audit qui l'a trouvée
+// saine. Il refuse donc de conclure plutôt que de la sauter.
+export function findColonnesSansNature(colonnes = KPI_HISTORY_COLUMNS, natures = NATURE_DES_COLONNES_KPI) {
+    return colonnes.filter((c) => !natures[c]);
+}
+
 // csvRowFor : fonction pure (testée) qui construit une ligne à partir des données du rapport —
 // une valeur absente (famille non mesurée cette fois) reste une cellule VIDE, jamais "undefined"
 // ou "NaN" écrit tel quel dans le fichier (même principe de fiabilité que le reste du rapport).
