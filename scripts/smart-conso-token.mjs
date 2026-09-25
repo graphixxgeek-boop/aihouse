@@ -472,6 +472,94 @@ export function formatCoutDuCrochetLines(c) {
   return L;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE COÛT DU FILET DE SÉCURITÉ, PAR GROUPE DE TEST (2026-09-25, constat DEEP-READER 7)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE JUMEAU EXACT DE `coutDuCrochet()` juste au-dessus, et c'est pourquoi il vit ici plutôt que
+// dans un outil de plus (Article 31 : on étend avant de construire). L'autre mesure ce que le
+// crochet POST-commit coûte en tokens à l'agent ; celui-ci mesure ce que le filet PRE-commit coûte
+// en SECONDES, à chaque commit, bloquant. Même question — « que me coûte la machinerie ? » — sur
+// les deux bouts du même geste.
+//
+// POURQUOI UNE MESURE PAR GROUPE, ET PAS UN TOTAL : un total de 52 secondes ne dit pas quoi faire.
+// La répartition, elle, dit tout — au premier passage réel, DIX groupes sur 244 pesaient 75 % du
+// temps, et un seul en pesait 27 %. Optimiser au jugé aurait touché les 234 autres pour rien.
+//
+// CE QU'IL NE FAIT PAS, ET C'EST UNE LIMITE, PAS UNE OMISSION : il ne modifie rien. `check-house`
+// est classé TUYAUTERIE par tool-brain (lancé par le crochet pre-commit BLOQUANT — sa panne
+// empêche tout commit), donc seules des modifications à risque FAIBLE s'y appliquent directement ;
+// une restructuration se PROPOSE. Cet outil produit le chiffre qui rend la proposition
+// discutable, et il se relance après coup pour prouver le gain — ou l'absence de gain.
+//
+// IL COÛTE CE QU'IL MESURE : lancer cette mesure lance le filet en entier. À la demande, jamais
+// dans un crochet — sans quoi il doublerait le coût qu'il sert à réduire.
+
+export const TOP_GROUPES_PAR_DEFAUT = 10;
+
+export function repartitionDuFilet(mesures = [], { top = TOP_GROUPES_PAR_DEFAUT } = {}) {
+  const valides = mesures.filter((m) => Number.isFinite(m?.ms) && m.ms >= 0);
+  if (!valides.length) {
+    return { mesurable: false, pourquoi: "aucun groupe chronométré : le filet n'a rien affiché de reconnaissable, ce qui n'est pas la même chose qu'un filet rapide — un zéro ici voudrait dire que la mesure a échoué, jamais que le filet est gratuit" };
+  }
+  const total = valides.reduce((a, m) => a + m.ms, 0);
+  const tries = [...valides].sort((a, b) => b.ms - a.ms);
+  const lesPlusLents = tries.slice(0, top);
+  const poidsTop = lesPlusLents.reduce((a, m) => a + m.ms, 0);
+  return {
+    mesurable: true, groupes: valides.length, totalMs: total,
+    lesPlusLents,
+    partDuTopPct: total > 0 ? (poidsTop / total) * 100 : 0,
+    partDuPremierPct: total > 0 ? (tries[0].ms / total) * 100 : 0,
+    horsPortee:
+      "Cette répartition dit OÙ le temps part, jamais si ce temps est MÉRITÉ : un groupe lent qui " +
+      "lance un vrai balayage du dépôt fait peut-être exactement ce qu'il faut. Le chiffre ouvre la " +
+      "question, il ne la tranche pas — et check-house étant de la tuyauterie bloquante, une " +
+      "restructuration se propose, elle ne s'applique pas.",
+  };
+}
+
+export function formatRepartitionFiletLines(r) {
+  if (!r?.mesurable) return [`PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  const s = (ms) => `${(ms / 1000).toFixed(1)} s`;
+  const L = [
+    `Le filet de sécurité : ${s(r.totalMs)} répartis sur ${r.groupes} groupe(s) de test.`,
+    `Les ${r.lesPlusLents.length} plus lents pèsent ${r.partDuTopPct.toFixed(1)} % du total — et le premier à lui seul ${r.partDuPremierPct.toFixed(1)} %.`,
+    "",
+  ];
+  for (const m of r.lesPlusLents) L.push(`   ${s(m.ms).padStart(7)}  ${String(m.titre ?? "(sans titre)").slice(0, 78)}`);
+  L.push("", `HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
+// La collecte elle-même : on chronomètre entre deux lignes « Passed: », qui sont la seule frontière
+// de groupe que check-house expose déjà. Aucune modification de check-house n'est nécessaire, et
+// c'est délibéré — mesurer un fichier de tuyauterie en le modifiant serait commencer par le risque
+// qu'on cherche justement à éviter.
+export async function mesurerLeFilet({ spawnImpl, commande = "node", args = ["scripts/check-house.mjs"] } = {}) {
+  if (typeof spawnImpl !== "function") {
+    return { mesurable: false, pourquoi: "aucun lanceur fourni — cette mesure LANCE le filet en entier, elle ne se simule pas" };
+  }
+  return new Promise((resolve) => {
+    const debut = Date.now();
+    let dernier = debut; let reste = ""; const mesures = [];
+    const p = spawnImpl(commande, args);
+    p.stdout.on("data", (d) => {
+      reste += d.toString();
+      let i;
+      while ((i = reste.indexOf("\n")) !== -1) {
+        const ligne = reste.slice(0, i); reste = reste.slice(i + 1);
+        if (!ligne.startsWith("Passed:")) continue;
+        const maintenant = Date.now();
+        mesures.push({ ms: maintenant - dernier, titre: ligne.slice(8).trim() });
+        dernier = maintenant;
+      }
+    });
+    p.on("close", () => resolve(repartitionDuFilet(mesures)));
+    p.on("error", () => resolve({ mesurable: false, pourquoi: "le filet n'a pas pu être lancé — pas de mesure, jamais un zéro" }));
+  });
+}
+
 export function computeAdoptionKpi(history) {
   const applied = (history?.actions ?? []).filter((a) => a.type === "proposition_appliquee" && typeof a.reductionPct === "number");
   if (!applied.length) return { propositionsAppliquees: 0, reductionMoyennePct: undefined };
@@ -1157,7 +1245,15 @@ export function parseOutcomeArgs(argv) {
   return { type, atArg, outcome };
 }
 
-function main() {
+async function main() {
+  // `filet` (2026-09-25, constat DEEP-READER 7) : où part le temps du crochet pre-commit. À la
+  // demande UNIQUEMENT — il lance le filet en entier, donc il coûte exactement ce qu'il mesure.
+  if (process.argv[2] === "filet") {
+    const { spawn } = await import("node:child_process");
+    console.log("\nMesure en cours — le filet tourne en entier, comptez une bonne minute.\n");
+    for (const l of formatRepartitionFiletLines(await mesurerLeFilet({ spawnImpl: spawn }))) console.log(l);
+    return;
+  }
   // UN RYTHME DE CONSOMMATION NE SE JUGE QUE DANS LA DURÉE (2026-09-25, tâche #445). Cet outil
   // rendait un état ponctuel : combien de schémas coûteux connus, combien de propositions
   // appliquées. Or c'est la PENTE qui dit si l'agent apprend à consommer moins — un chiffre seul

@@ -89,3 +89,15 @@ DEEP-READER 8 confirmé en direct.
 Trois d'entre elles (#747, #760, #767) attendaient depuis plusieurs jours **sans être visibles nulle
 part** : elles étaient dans le suivi, marquées correctement, et le seul outil chargé de les
 rassembler ne pouvait pas les voir.
+
+### Ajoutée le jour même, et par le garde-fou lui-même
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #819 | Filet de sécurité — ne rien faire, regarder les 3 plus lents, ou un mode rapide | à trancher |
+
+**Comment elle est arrivée ici** : le test écrit une heure plus tôt pour ce registre a **bloqué le
+commit** qui créait #819, parce que la ligne portait `A-TRANCHER` sans être inscrite ici. Le
+mécanisme a donc attrapé son propre auteur, sur sa première occasion réelle — ce qui est la seule
+preuve qui vaille qu'il n'était pas une intention (leçon L2).
+

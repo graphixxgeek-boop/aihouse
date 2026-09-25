@@ -70,6 +70,7 @@ RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, c
 #445 Les 4 derniers outils branchés sur les tendances (zéro privé désormais) — et un câblage contre un nom inventé attrapé à temps [FAIT]
 DEEP-READER 8 : sept décisions attendaient en pleine vue, dont trois depuis des jours — le registre et DEUX tests certifiaient qu'il n'y en avait aucune [FAIT]
 #206 #207 : déjà clos depuis le 2026-09-20, vérifié avant de refaire — la dérive était dans le plan, pas dans le code [VÉRIFIÉ]
+DEEP-READER 7 : le filet coûte 43,7 s à chaque commit, 10 groupes sur 244 en pèsent 76 % — mesuré, trois options proposées, rien appliqué (tuyauterie) [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

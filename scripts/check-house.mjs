@@ -11993,6 +11993,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // OÙ PART LE TEMPS DU FILET DE SÉCURITÉ (2026-09-25, constat DEEP-READER 7 → tâche #818).
+  const sct2 = await import('../scripts/smart-conso-token.mjs');
+  assert.equal(sct2.repartitionDuFilet([]).mesurable, false, 'no timed group yields NOT MEASURED — a zero here would mean the measurement failed, never that the safety net is free');
+  const rf = sct2.repartitionDuFilet([{ ms: 5000, titre: 'gros' }, { ms: 1000, titre: 'petit' }, { ms: 0, titre: 'instantané' }], { top: 1 });
+  assert.deepEqual([rf.groupes, rf.totalMs, Math.round(rf.partDuPremierPct)], [3, 6000, 83], 'a zero-millisecond group still COUNTS as a measured group: dropping it would inflate every share, and a group that is genuinely instant is information');
+  assert.equal(rf.lesPlusLents.length, 1, 'and the top list honours its limit, because the point is not the total — a total of 44 seconds says nothing about what to do, the distribution says everything');
+  assert.ok(/jamais si ce temps est MÉRITÉ/.test(rf.horsPortee), 'the measure says WHERE the time goes and refuses to say whether it is deserved: a slow group that genuinely sweeps the repository may be doing exactly the right thing');
+  assert.equal((await sct2.mesurerLeFilet({})).mesurable, false, 'and with no launcher it refuses rather than pretending: this measurement RUNS the whole net, it cannot be simulated');
+
   // BRANCHER LES QUATRE OUTILS RESTANTS SUR LES TENDANCES (2026-09-25, tâche #445 → #815).
   const st2 = await import('../scripts/serie-temporelle.mjs');
   assert.equal(st2.suivreLaTendance('').mesurable, false, 'a series with no owner is refused: it would never be read back');
