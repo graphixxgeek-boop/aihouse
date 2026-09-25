@@ -399,3 +399,34 @@ gravité et entre **en tête du plan d'action**.
 process réserve explicitement à l'humain (la conclusion de période, et l'utilisateur qui dit si une
 entrée a été APPLIQUÉE) restent hors de toute mécanique — ce mécanisme-ci ne fait que **refuser
 qu'on les oublie en silence**.
+
+## 2026-09-25 — Treize leçons du mauvais côté du trait, et le garde-fou qui l'empêche de revenir (tâche #889)
+
+**Le geste qui l'a trouvé est celui que ce projet répète depuis le matin** : ouvrir le fichier
+avant d'y écrire. En allant porter au registre la leçon de #888 (mesurer la couverture n'est pas
+vérifier la justesse), la lecture du document a montré autre chose — **L12 à L24, treize leçons
+payées par une erreur réelle, se trouvaient physiquement APRÈS le titre `# Bonnes pratiques`**.
+
+**Pourquoi c'est un vrai défaut et pas une coquette de mise en page.** Le registre s'ouvre sur
+« DEUX SECTIONS, JAMAIS UNE SEULE LISTE », et la raison y est écrite : une leçon a été payée par une
+casse, une bonne pratique non, et c'est la seule chose qui les distingue. Une leçon rangée parmi les
+pratiques se lit comme un conseil — elle perd exactement ce qui la rend crédible.
+
+**Pourquoi aucun outil ne pouvait le voir, et c'est le point le plus instructif.** `natureDe()` lit
+le PRÉFIXE de l'identifiant (`L…` ou `BP…`), jamais la section où l'entrée se trouve. Tous les
+comptes du process — 24 leçons, 4 bonnes pratiques, les citations, les remontées — étaient donc
+parfaitement justes. **Seul le lecteur humain était trompé, et les deux sections n'existent que
+pour lui.** Un défaut qu'aucune mesure existante ne peut atteindre est précisément celui qui dure :
+celui-ci datait du 2026-09-23, jour où le trait a été tracé.
+
+**La cause, et elle est banale** : chaque nouvelle leçon était ajoutée à la fin du fichier. C'était
+le bon geste tant que la fin du fichier était encore la fin des leçons. Le jour où une section a été
+ouverte en dessous, le même geste est devenu faux sans que rien ne change d'apparence.
+
+**Ce qui le porte désormais** : `entreesMalRangees()` (`scripts/tool-learning.mjs`) compare la
+POSITION de chaque titre d'entrée à celle du trait, et rien d'autre. Il est versé au plan d'action
+d'`auditLecons()`, il est **muet quand tout est rangé** (une ligne « 0 écart » à chaque passage
+serait l'alarme permanente de L6), il rend **« hors de portée »** plutôt qu'un vert quand le
+document ne porte pas deux sections, et il est éprouvé **dans les deux sens** — une leçon sous les
+pratiques, une pratique au-dessus du trait (BP4 : un détecteur vu mordre dans un seul sens ne prouve
+rien). Sans lui, la leçon L25 écrite le même jour serait tombée du mauvais côté au prochain ajout.
