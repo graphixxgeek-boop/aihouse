@@ -222,3 +222,23 @@ elle n'est pas en retard — seulement en attente de ton feu vert.
 
 **Pourquoi je ne tranche pas** : écarter une tâche est une décision, et la leçon L22 dit de ne
 jamais rouvrir ni fermer ce que tu as sciemment mis de côté.
+
+### Ajoutée le 2026-09-25 — le process qui manque pour toucher un document de référence
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #846 | Modifier un document de référence : le nom du process, et le sort de son étape 9 | à trancher |
+
+**Document** : `docs/plans/process-documents-de-reference-proposition.md`.
+
+**La surprise de l'instruction** : **huit étapes sur dix sont déjà écrites ET déjà portées par un
+mécanisme**. Ce qui manque n'est pas le contenu, c'est qu'elles ne soient nulle part rassemblées.
+
+**Deux questions pour toi** :
+
+1. **Le nom.** Trois pistes — `documents-de-reference`, `livraison-charte` (celui que l'outil emploie
+   déjà en interne), `la-regle-qui-change` — ou le tien.
+2. **L'étape 9**, la seule sans porteur : quand `CLAUDE.md` change, faut-il un contrôle qui DEMANDE
+   si `principes.md`, `parametres.md` et `lib/reference.ts` devaient bouger aussi ? Il ne pourra
+   jamais savoir s'ils le devaient — seulement poser la question, comme les six règles qu'angel
+   demande au lieu de deviner.

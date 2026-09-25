@@ -187,6 +187,12 @@ LE SEUL BIAIS QUI SE CONFIRME (#841) : 30 commits sans Ronde, signale par le rap
   n'existait pas. Garde-fou ajoute : les deux facons de dire « fini » doivent s'accorder.
   Les 5 vraies plus anciennes presentees pour arbitrage [FAIT / A TRANCHER PAR LUI]
 
+#223 (process documents de reference) : HUIT etapes sur DIX etaient deja ecrites ET deja portees
+  par un mecanisme — ce qui manque n'est pas le contenu, c'est qu'elles ne soient nulle part
+  rassemblees. Deux vrais trous : « repercuter dans les autres documents » n'a aucun porteur, et
+  la suite n'existe pas comme suite. Proposition ecrite, NOM ET ETAPE 9 laisses a son arbitrage
+  (un process porte un nom, et les noms se choisissent par lui) [FAIT / A TRANCHER PAR LUI]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------
