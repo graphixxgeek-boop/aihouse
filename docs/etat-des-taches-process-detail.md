@@ -269,3 +269,86 @@ pas pendant que le vrai attend.
 
 **Ce que ça ne change pas** : aucune tâche n'a été close par cette correction, aucune ligne de suivi
 n'a été réécrite. Seule la LECTURE a changé — ce qui est la bonne moitié à corriger (Article 3).
+
+## 2026-09-25 (soir) — Le rapport répond enfin à « où on en est », et deux détecteurs disent que la file est plus courte
+
+**CE QUI A DÉCLENCHÉ TOUT CE BLOC, et c'est sa question, pas une idée d'outil** : « hier soir tu
+m'annonçais 117 taches, aujourd'hui tu me dis 117 taches ouvertes, comme si rien n'a été fait alors
+que tu bosses depuis des heures et je le vois. On retrouve le meme chiffre parce que c'est une
+rotation ? » — plus, dans le même message, « UTILISE L'OUTIL et fais moi un rapport FORMATE en
+fichier txt ».
+
+### La sous-commande `bilan` — le livrable est le FICHIER
+
+`node scripts/check-tasks-details.mjs bilan` écrit un `.txt` daté dans `docs/check-tasks-details/`.
+Article 31 : ce que l'agent écrit à côté commente ce fichier, il ne le remplace jamais. Cinq
+sections, et chacune répond à une question qu'il a posée dans la même journée :
+
+| Section | La question à laquelle elle répond |
+|---|---|
+| 1. Confrontation départ ↔ aujourd'hui | d'où on part, et combien a été fait depuis |
+| 1bis. La rotation | pourquoi le compteur ne baisse pas alors que le travail avance |
+| 1ter. La file est-elle plus courte qu'elle n'en a l'air ? | combien de lignes ouvertes le sont réellement |
+| 2. Les blocs | ce qui se traite ensemble, et dans quel panier |
+| 3. Le format + 3bis. Le rituel | les tâches sont-elles écrites comme il l'a demandé |
+
+### Ce que la confrontation a révélé sur le chiffre de départ lui-même
+
+**« Les 117 de départ » n'ont jamais été 117 tâches.** `#117` est le NUMÉRO de la première tâche
+tracée — le suivi a démarré en cours de projet. Et **trois chiffres 117 sans rapport se
+télescopaient** : ce numéro, le plan de départ de la nuit (qui listait 117 lignes), et les tâches
+ouvertes du jour. Le rapport nomme ce piège plutôt que de le laisser opérer.
+
+**La rotation, mesurée contre le plan de départ figé de la nuit** : 90 encore ouvertes · 27 CLOSES ·
+27 NÉES · 0 disparue. Solde exactement nul, d'où le chiffre identique. **Un total inchangé n'est pas
+un travail immobile**, et aucun compteur ne savait le dire.
+
+### Les trois familles de tâches closes en silence, et seules DEUX sont mécanisables
+
+Trois tâches ont été trouvées déjà faites dans la journée sans être cherchées (#801, #445, #179).
+En mesurant, il y en avait **huit** sur 117 — la file réelle était **109**.
+
+1. **`findTachesClosesAilleurs()`** — une tâche ouverte qu'une tâche ULTÉRIEURE déclare close
+   (« CLÔTURE DE #NNN »). Deux faux verts triviaux sont fermés explicitement : une tâche ne se clôt
+   jamais elle-même, et une tâche antérieure ne peut pas annoncer la fin d'un travail qui n'avait
+   pas commencé.
+2. **`findCapacitesPeutEtreDejaLa()`** — une tâche qui NOMME une commande existante dont le script
+   reconnaît vraiment la sous-commande. Son signal « fonction » a été **retiré avant livraison** :
+   il rendait 21 candidats dont 17 reposaient sur la présence d'une fonction que la tâche venait
+   elle-même de créer, donc il accusait les tâches les mieux documentées (L4).
+3. **La troisième famille n'a AUCUN mécanisme possible** : une tâche faite sans clôture écrite et
+   sans nommer de commande échappe aux deux. #179 était dans ce cas. La seule protection est le
+   RÉFLEXE de vérifier qu'une tâche n'est pas déjà faite avant de la traiter — trois fois payant le
+   2026-09-25 — et **le déclarer EST la protection** quand rien ne peut la porter (Article 27).
+
+### Les blocs de travail — THÈME, POIDS, et un troisième panier trouvé en lançant
+
+Demande : « l'outil est capable de les regrouper sous un meme theme [...] constitue aussi des blocs
+de petites taches à traiter en rafale [...] à toi de trouver une organisation intelligente pour
+determiner si une tache doit rejoindre un bloc par THEME ou par POIDS ».
+
+**La règle d'arbitrage, et elle n'est pas arbitraire** : le THÈME passe avant le POIDS, parce
+qu'une tâche lourde ne PEUT pas rejoindre une rafale (elle la ferait exploser) tandis qu'une tâche
+légère vit très bien dans un bloc thématique. Le thème est le critère contraignant, le poids le
+critère de repli.
+
+**Le troisième panier** est né du premier vrai passage : une rafale contenait deux tâches
+À TRANCHER et une qui coûte du quota API. Or **une rafale ne vaut que si elle se traite d'un coup
+sans s'arrêter**, et une tâche qui attend une décision l'arrête par construction, quel que soit son
+poids. Deux signaux lus sur la ligne, jamais devinés : la criticité `A-TRANCHER`, et le champ
+« pour qui » valant `DETTE-ENVERS-L-UTILISATEUR`.
+
+Seuils, validés par lui : un thème fait bloc à partir de **3** tâches · une rafale à partir de
+**4**, plafonnée à **10**. Mesuré : 10 blocs, 5 rafales, 16 en attente de lui, 0 isolée, 100 % de
+couverture.
+
+### Le rituel d'ouverture et de clôture — sa décision « deux cases à cocher »
+
+Le format de tâche passe à **11 colonnes** avec `ouverture` et `cloture`, chacune portant son seuil
+d'arrivée (`depuis: 872`) pour ne pas accuser les 804 lignes antérieures — même dispositif que
+`pourQui`, et la fourchette de colonnes acceptable s'est élargie **toute seule** de 8–9 à 8–11
+parce qu'elle est dérivée du nombre de champs à seuil (Article 24, vérifié en direct).
+
+À l'ouverture : « respecter les process, utiliser les outils ». À la clôture, les trois questions
+tranchées le 2026-09-24 (#703) : **FIABILISER** (est-ce que ça marche) · **OPTIMISER** (peut-on
+faire mieux) · **HARMONISER** (est-ce raccordé au reste, au bon format).

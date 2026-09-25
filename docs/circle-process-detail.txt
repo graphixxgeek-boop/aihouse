@@ -1551,3 +1551,32 @@ et doit être lue comme tel.
       manquent est signalé GRAVE et IRRÉVERSIBLE — une Ronde enregistrée comme close ne se rouvre
       pas. C'est exactement l'erreur du 2026-09-23.
     · Chaque étape manquante est NOMMÉE avec ce à quoi elle servait, jamais un simple compte.
+
+================================================================================
+2026-09-25 — « 12 écarts » n'en étaient que DEUX : le contrôleur confondait un écart
+constaté avec un fait de conversation jamais déclaré
+================================================================================
+
+CE QUI A ÉTÉ TROUVÉ EN LANÇANT LE CONTRÔLEUR À VIDE, jamais en le relisant : il annonçait
+« 12 écart(s) trouvé(s) ». Dix d'entre eux n'étaient pas des écarts constatés mais des
+faits de conversation JAMAIS DÉCLARÉS — la question AUTO/PRIME/GOAT, les items cochés, les
+rapports livrés, les séries de questions posées. DEUX seulement se lisaient vraiment sur le
+disque : le compteur record-run et la barrière d'ouverture.
+
+POURQUOI LA DISTINCTION COMPTE, et ce n'est pas un détail de vocabulaire : un écart
+CONSTATÉ se répare en corrigeant le process, un fait NON DÉCLARÉ se répare en déclarant.
+Deux gestes différents que le total unique confondait. Un fait non déclaré reste un
+manquement — « un ordre non déclaré n'est pas un ordre respecté » ne change pas — mais il
+n'appelle pas le même travail.
+
+LE CHAMP `nonDeclare` EST POSÉ AU POINT DE VÉRITÉ, dans l'appel add() qui pousse le constat,
+et conditionné à `=== undefined` : seul l'endroit qui pousse sait s'il s'agit d'une donnée
+manquante ou d'un fait mesuré. Jamais une liste d'identifiants tenue à côté, qui se serait
+périmée au premier contrôle ajouté (Article 24).
+
+LE COMPTE SE DÉCOMPOSE DÉSORMAIS dans la sortie : « N signalement(s) — dont X écart(s)
+CONSTATÉ(S) et Y fait(s) JAMAIS DÉCLARÉ(S) ». Le total reste, sa composition l'accompagne.
+
+ET LE CONTRÔLEUR CONCLUT : un plan d'action en trois familles au plus (écarts constatés,
+faits non déclarés, maintenance des tables associées), un constat par famille et jamais un
+par écart, chaque compte accompagné de son dénominateur.

@@ -310,3 +310,57 @@ désormais « zéro mesuré » de « pas pu lire ».
 **Constat secondaire, ouvert en tâche** : l'évaluation du 2026-09-23 a bien eu lieu — le fichier
 existe — et ne s'est jamais inscrite dans `historique-evaluations.json`. L'artefact existe, la
 mémoire ne l'a pas. Un historique qui ne se remplit pas transforme une série en photographie.
+
+## 2026-09-25 — Les 28 entrées sont citées, et la plus invoquée est celle que la journée a payée sept fois
+
+**SA QUESTION (#842), tranchée en fenêtre dédiée** : « compter combien de fois chacune est CITÉE
+dans le dépôt ». Le registre portait 24 leçons et 4 bonnes pratiques, et rien ne disait lesquelles
+avaient servi — un registre dont on ignore ce qui sert grossit jusqu'à ce que plus personne ne le
+relise, ce qui est L6 commise par le registre qui la contient.
+
+**LE RÉSULTAT CONTREDIT L'INQUIÉTUDE QUI A CRÉÉ LA TÂCHE** : les **28 entrées sont citées au moins
+3 fois** hors du registre. Aucune n'est décorative.
+
+| Citations | Entrée |
+|---|---|
+| **125** | L4 — Un garde-fou qui accuse à tort cesse d'être lu |
+| 89 | L2 — Un mécanisme qui ne sort pas du script est une intention |
+| 76 | L5 — Distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder » |
+| 61 | L1 — Une règle écrite que rien ne fait respecter |
+| 44 | L7 — Une intention écrite n'a jamais empêché quoi que ce soit |
+
+Les plus basses, vivantes malgré tout : L17 (3), L15 (6), L19/L18/L10 (7).
+
+**CE QUE LE CLASSEMENT DIT DE PLUS QUE LE COMPTE** : L4 est la plus invoquée du projet, et c'est
+exactement la leçon que le 2026-09-25 a payée **sept fois** en une journée. Ce n'est pas une
+coïncidence — c'est le défaut central de ce type d'outillage, et sa fréquence de citation le
+mesurait déjà avant qu'on s'en aperçoive.
+
+**DEUX PRÉCAUTIONS SANS LESQUELLES LE COMPTE SERAIT FAUX**, chacune testée :
+- **le registre lui-même est exclu** — chaque leçon y figure dans son propre titre, l'inclure aurait
+  rendu « toutes citées au moins une fois », c'est-à-dire un vert obtenu sur rien ;
+- **frontière de mot obligatoire** — sans `\b`, « L1 » attrape L10 à L19 et la plus ancienne paraît
+  dix fois plus citée qu'elle ne l'est.
+
+**LIMITE DÉCLARÉE** : « citée » n'est pas « appliquée ». On peut citer sans suivre, et suivre sans
+citer. C'est un signal à relire, jamais un verdict — et la charte réserve déjà ce jugement-là à
+l'utilisateur, à la Ronde.
+
+**PORTÉ PAR** : `compterCitationsDesLecons()` / `formatCitationsDesLecons()` (`scripts/tool-learning.mjs`),
+câblé dans son `main()` — un détecteur sans appelant aurait été le défaut que ce paysage traque,
+commis dans l'outil même qui mesure l'apprentissage.
+
+### L4 enrichie le même jour — la forme du faux positif qui S'AGGRAVE quand le projet s'améliore
+
+Enrichie plutôt que dédoublée (une L25 pour une variante de la même loi aurait éparpillé ce qui se
+lit mieux ensemble). Ce que la variante ajoute : il ne s'agit plus d'accuser à tort, mais de
+**punir exactement la conduite que le garde-fou existe pour obtenir** — un outil qui avoue une
+absence de mesure, un outil qui prend sa formulation au mécanisme partagé au lieu de la recopier,
+un rapport dense plutôt que verbeux, une ligne de suivi au format le plus récent.
+
+**Pourquoi cette forme est pire** : le bruit ordinaire DIMINUE quand le dépôt s'assainit ;
+celui-ci AUGMENTE. Plus le projet applique ses propres règles, plus le garde-fou crie. Un
+dispositif qui hurle précisément quand on lui obéit finit par enseigner qu'il vaut mieux désobéir.
+
+**Le réflexe qui a attrapé les sept, écrit noir sur blanc dans la leçon** : ouvrir le fichier
+accusé AVANT de le corriger.
