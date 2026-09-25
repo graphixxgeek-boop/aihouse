@@ -89,3 +89,30 @@ différé à un passage ultérieur.
 Agent à part entière (blueprint + instanciation + registre), mécanique, zéro appel Gemini. Menu
 PRESTATIONS : "Pack Régence" (consultation ponctuelle). Registre : `docs/the-king/` (dossier + index),
 vide à la création — se remplira au premier vrai constat d'évolution ou de tension.
+
+## « Détecte-t-il réellement quelque chose ? » — la réponse, mesurée (2026-09-25, tâche #836)
+
+*(Instruction de la tâche #207. Question légitime : le registre de THE-KING ne porte qu'une entrée,
+« zéro tension possible détectée », et cinq passages plus tard le chiffre n'a pas bougé. Un zéro
+constant est exactement ce que rend une sonde aveugle.)*
+
+**La réponse est bonne, pour une fois, et elle est prouvée plutôt que supposée.** Lancé sur une
+paire fabriquée exprès — même vocabulaire, polarités opposées (« doit toujours » / « ne doit
+jamais ») — le détecteur la trouve à **0,889**. Il n'est pas aveugle. Son zéro sur le vrai document
+est donc un zéro **mérité**.
+
+**Ce qui manquait quand même** : ce zéro était rendu **sans son dénominateur**. « Aucune détectée »
+ne disait ni combien de paires avaient été comparées, ni à quelle distance se trouvait la plus
+proche. Un lecteur ne pouvait pas distinguer « 171 paires examinées, la plus proche à 0,189 » de
+« rien n'a pu être comparé » — la même phrase pour deux situations opposées.
+
+**Ce qu'il imprime désormais** : *« aucune, sur 171 paire(s) réellement comparée(s) entre 19
+principes (seuil 0,22). La paire la plus proche reste 1.7 ↔ 2.4 à 0,189 — le zéro est donc mérité,
+pas un silence. »*
+
+**Le contre-test qui le protège** : la paire fabriquée est devenue une assertion permanente. Le jour
+où une refonte casserait la détection, le filet le dira — au lieu que le zéro continue à rassurer.
+
+**Sa limite, inchangée et redite à chaque passage** : le vocabulaire partagé est un SIGNAL, jamais
+une contradiction prouvée. Deux principes peuvent se contredire avec des mots entièrement
+différents, et cette mesure ne les verra jamais.

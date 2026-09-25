@@ -151,6 +151,57 @@ export function findPossibleTensions(principles, { threshold = SEUIL_JACCARD_STR
   return tensions.sort((x, y) => y.jaccard - x.jaccard);
 }
 
+// LE DÉNOMINATEUR DU ZÉRO (2026-09-25, tâche #836 — instruction de la tâche #207 : « THE-KING :
+// vérifier qu'il détecte réellement quelque chose »).
+//
+// LA QUESTION POSÉE ÉTAIT LA BONNE, et la réponse est rassurante pour une fois : lancé sur une
+// paire fabriquée exprès (même vocabulaire, polarités opposées), le détecteur la trouve à 0,889.
+// **Il n'est pas aveugle.** Sur le vrai document, zéro tension au seuil strict est donc un zéro
+// MÉRITÉ, pas un silence — et l'avoir prouvé plutôt que supposé est tout l'objet de cette tâche.
+//
+// CE QUI MANQUAIT QUAND MÊME : ce zéro était rendu SANS SON DÉNOMINATEUR. « Aucune détectée » ne
+// disait ni combien de paires avaient été comparées, ni à quelle distance se trouvait la plus
+// proche. Un lecteur ne pouvait pas distinguer « 171 paires examinées, la plus proche à 0,12 du
+// seuil » de « rien n'a pu être comparé » — la même phrase pour deux situations opposées, encore.
+//
+// SA LIMITE, INCHANGÉE ET REDITE : le vocabulaire partagé est un SIGNAL, jamais une contradiction
+// prouvée. Deux principes peuvent se contredire avec des mots entièrement différents, et cette
+// mesure-là ne les verra jamais.
+export function mesureDesTensions(principles, { threshold = SEUIL_JACCARD_STRICT } = {}) {
+  if (!Array.isArray(principles) || principles.length < 2) {
+    return { mesurable: false, pourquoi: "moins de deux principes extraits : aucune paire à comparer, ce qui n'est pas la même chose que « aucune tension »" };
+  }
+  const wordSets = principles.map((p) => new Set(significantWords(p.texte).filter((w) => w.length > 4)));
+  const pairesPossibles = (principles.length * (principles.length - 1)) / 2;
+  // La paire la plus proche, MÊME sous le seuil : c'est elle qui rend le zéro lisible.
+  let plusProche = null;
+  for (const { i, j, jaccard } of pairesParJaccard(wordSets, { seuil: 0 })) {
+    if (!plusProche || jaccard > plusProche.jaccard) {
+      plusProche = { a: `${principles[i].partie}.${principles[i].numero}`, b: `${principles[j].partie}.${principles[j].numero}`, jaccard: Math.round(jaccard * 1000) / 1000 };
+    }
+  }
+  return {
+    mesurable: true,
+    tensions: findPossibleTensions(principles, { threshold }),
+    principes: principles.length, pairesPossibles, seuil: threshold, plusProche,
+    horsPortee: "Le vocabulaire partagé est un SIGNAL, jamais une contradiction prouvée : deux principes peuvent se contredire avec des mots entièrement différents, et cette mesure ne les verra jamais.",
+  };
+}
+
+export function formatMesureTensionsLines(m) {
+  if (!m?.mesurable) return [`⚖️  Tensions : PAS MESURÉ — ${m?.pourquoi ?? "aucune donnée"}`];
+  const L = [];
+  if (m.tensions.length) {
+    L.push(`⚖️  Tensions POSSIBLES : ${m.tensions.length} à relire humainement, sur ${m.pairesPossibles} paire(s) comparée(s) (seuil ${m.seuil}).`);
+    for (const t of m.tensions) L.push(`   ${t.a} ↔ ${t.b} (vocabulaire partagé ${t.jaccard}) — un SIGNAL, jamais une contradiction prouvée.`);
+  } else {
+    L.push(`⚖️  Tensions POSSIBLES : aucune, sur ${m.pairesPossibles} paire(s) réellement comparée(s) entre ${m.principes} principes (seuil ${m.seuil}).`);
+    if (m.plusProche) L.push(`   La paire la plus proche reste ${m.plusProche.a} ↔ ${m.plusProche.b} à ${m.plusProche.jaccard} — le zéro est donc mérité, pas un silence.`);
+  }
+  L.push(`   HORS PORTÉE : ${m.horsPortee}`);
+  return L;
+}
+
 // Fraîcheur : jamais un auto-edit ni une proposition de texte (calibrage explicite), seulement le
 // nombre de jours depuis la dernière modification réelle — réutilise lastTouchDays() de
 // CLEAN-DIRTY-OLD, jamais un second calcul divergent. `undefined` honnête si le fichier n'a jamais
@@ -187,9 +238,10 @@ function main() {
     console.log(`   ⚠️  ${principles.length - digest.length} principe(s) non daté(s) — ni date déclarée, ni trace dans l'historique git de ce fichier.`);
   }
 
-  const tensions = findPossibleTensions(principles);
-  console.log(`\n⚖️  Tensions POSSIBLES entre principes : ${tensions.length === 0 ? "aucune détectée" : `${tensions.length} à relire humainement`}`);
-  for (const t of tensions) console.log(`   ${t.a} ↔ ${t.b} (vocabulaire partagé ${t.jaccard}) — un SIGNAL, jamais une contradiction prouvée.`);
+  const mesure = mesureDesTensions(principles);
+  const tensions = mesure.mesurable ? mesure.tensions : [];
+  console.log("");
+  for (const l of formatMesureTensionsLines(mesure)) console.log(l);
 
   // LE PLAN D'ACTION (2026-09-23, tâche #211). THE-KING est un VEILLEUR de document, et ses deux
   // constats sont de nature opposée — les fondre serait mentir sur ce qu'il sait.

@@ -8955,6 +8955,24 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(tensions.map((t) => `${t.a}-${t.b}`), ['2.1-2.2'], 'a real "always" vs "never" divergence over genuinely shared vocabulary must be flagged as a possible tension — but 1.1 vs 1.2 (no shared vocabulary, no polarity clash) must never be flagged, proving this is not a bare keyword scan');
   assert.deepEqual(findPossibleTensions([fakePrinciples[0], fakePrinciples[1]]), [], 'two principles sharing no real vocabulary overlap must never be flagged, however their polarity markers read — the Jaccard threshold is the real gate, never the polarity check alone');
 
+  // LE ZÉRO DE THE-KING, ET SON DÉNOMINATEUR (2026-09-25, tâche #836 — instruction de #207,
+  // « vérifier qu'il détecte réellement quelque chose »). La réponse est bonne pour une fois : sur
+  // une paire fabriquée exprès, le détecteur trouve la tension à 0,889 — il n'est PAS aveugle, et
+  // son zéro sur le vrai document est donc mérité. Ce qui manquait, c'est que ce zéro était rendu
+  // sans dire combien de paires avaient été comparées ni à quelle distance était la plus proche :
+  // « aucune détectée » se lisait pareil qu'« rien n'a pu être comparé ».
+  const { mesureDesTensions, formatMesureTensionsLines } = await import('../scripts/the-king.mjs');
+  const paireEvidente = [
+    { partie: 1, numero: 1, texte: 'La documentation technique du projet doit toujours accompagner chaque changement de comportement documenté.' },
+    { partie: 1, numero: 2, texte: 'La documentation technique du projet ne doit jamais accompagner chaque changement de comportement documenté.' },
+  ];
+  assert.equal(mesureDesTensions(paireEvidente).tensions.length, 1, 'THE PROBE MUST BE ABLE TO MATCH: run on a pair built to be a tension — same vocabulary, opposite polarity — the detector must find it. Without this counter-test, its permanent zero on the real document would be indistinguishable from blindness, which is exactly what task #207 asked to settle');
+  assert.equal(mesureDesTensions([{ partie: 1, numero: 1, texte: 'seul' }]).mesurable, false, 'fewer than two principles means no pair to compare at all — PAS MESURÉ, never "no tension"');
+  const mesureReelle = mesureDesTensions(realPrinciples);
+  assert.ok(mesureReelle.pairesPossibles > 100 && mesureReelle.principes === realPrinciples.length, 'the real measurement must carry its denominator: how many pairs were actually compared, between how many principles — a zero without it says nothing');
+  assert.ok(mesureReelle.plusProche && mesureReelle.plusProche.jaccard > 0, 'and the CLOSEST pair, even below threshold, must be reported: it is what makes a zero readable as earned rather than as silence');
+  assert.ok(formatMesureTensionsLines(mesureReelle).join('\n').includes('HORS PORTÉE'), 'the limit stays stated: shared vocabulary is a signal, never a proven contradiction, and two principles contradicting each other in entirely different words will never be seen here');
+
   assert.ok(typeof philosophyFreshnessDays() === 'number', 'philosophyFreshnessDays() must report a real number of days for the actual committed docs/philosophie-et-politique.md file — reusing lastTouchDays() from CLEAN-DIRTY-OLD rather than a second divergent calculation');
   console.log('Passed: THE-KING (tasks #167, #196) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone. Its dated-history retrofit (#196) derives a real birth date from git for every principle that carries none, always taking the FIRST commit that introduced the title rather than the last, always saying whether a date is declared or derived, never inventing one when neither source knows — and, checked live against the real document, now dates 19/19 principles where the declared layer alone reached 2.');
 }

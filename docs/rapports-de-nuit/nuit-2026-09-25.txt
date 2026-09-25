@@ -136,6 +136,11 @@ LES HUIT CONSTATS DEEP-READER SONT CLOS (1 a 8).
   desormais, severite conservee jusqu'au libelle, et contre-test garde : la correction ne troque pas
   un faux vert contre un faux rouge. Le gros chantier des 7 Gardiens reste A TRANCHER par lui [FAIT]
 
+#207 (THE-KING) : il DETECTE bel et bien — prouve sur une paire fabriquee expres (0,889), donc son
+  zero sur le vrai document est merite et non un silence. Mais il sortait sans denominateur :
+  desormais « aucune, sur 171 paires comparees entre 19 principes, la plus proche a 0,189 ».
+  La paire fabriquee est devenue un contre-test permanent [FAIT]
+
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)
 ----------------------------------------------------------------------
