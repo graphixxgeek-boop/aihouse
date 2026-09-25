@@ -2464,6 +2464,70 @@ function valeurLisible(v) {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// UN OUTIL « À LANCER À LA MAIN » DOIT DIRE QUOI TAPER (2026-09-25, tâche #655)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CAS QUI L'A MOTIVÉ, et c'est le plus embarrassant du recensement parce qu'il touche
+// l'Article 0 : la charte décrivait `check-spirit.mjs` comme l'outil de référence pour vérifier
+// l'esprit des personnages, précisait qu'il est « à lancer à la main, pas en continu »... et
+// n'écrivait NULLE PART la commande. La seule commande écrite à côté était celle de Smart Conso
+// API, qu'il faut lancer AVANT lui. Même cas pour `check-profile.mjs`.
+//
+// C'EST LA FORME LA PLUS DISCRÈTE D'UNE RÈGLE INAPPLICABLE : elle a l'air complète, elle est même
+// insistante sur le QUAND, et il manque le seul élément sans lequel personne ne peut l'appliquer.
+// Une IA qui reprend ce projet (Article 27) ne peut pas deviner un nom de fichier.
+//
+// LE GARDE-FOU NE LIT PAS UNE LISTE, IL DÉRIVE (Article 24) : il prend les lignes de la table
+// maîtresse dont le déclenchement dit « à la main » ou « à la demande », en extrait les scripts
+// nommés, et vérifie que la commande de chacun est écrite quelque part dans les documents
+// normatifs. Un outil ajouté demain avec le même déclenchement est couvert sans qu'on y pense.
+
+export const MOTIF_LANCEMENT_MANUEL = /à la main|à la demande|sur demande/i;
+
+export function findOutilsAMainSansCommande(lignesTable = [], { offert = "" } = {}) {
+  if (!lignesTable.length) {
+    return { mesurable: false, pourquoi: "table maîtresse vide ou illisible : aucun outil à confronter, ce qui n'est pas la même chose qu'aucun manque" };
+  }
+  const texte = String(offert);
+  if (!texte.trim()) {
+    return { mesurable: false, pourquoi: "aucun document normatif fourni : sans corpus où chercher, TOUTE commande paraîtrait manquante — l'accusation en masse la plus facile et la plus fausse" };
+  }
+  const manques = [];
+  const couverts = [];
+  for (const l of lignesTable) {
+    if (!MOTIF_LANCEMENT_MANUEL.test(String(l.declenchement ?? ""))) continue;
+    // Le nom de l'outil peut en citer plusieurs (« check-spirit.mjs / check-profile.mjs ») : on
+    // les prend tous, parce qu'une ligne couverte à moitié laisserait un outil sans commande.
+    for (const m of String(l.tool ?? "").matchAll(/([a-z0-9][\w.-]*\.mjs)/gi)) {
+      const fichier = m[1];
+      const echappe = fichier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const cmd = new RegExp(`node\\s+scripts/${echappe}`, "i");
+      // DEUXIÈME FORME ACCEPTÉE, et elle est nécessaire : certains outils NE SE LANCENT PAS
+      // directement par décision de la charte — find-booster et route-booster passent
+      // obligatoirement par tool-brain (Article 31), gemini-key-health et api-providers sont des
+      // pièces de Smart Breaker qu'on atteint par check-gemini-quota. Exiger leur commande directe
+      // reviendrait à réclamer l'écriture d'un geste que la charte interdit. Ce qui manque alors
+      // n'est pas une commande, c'est la PHRASE qui dit par où passer — et cette phrase-là se
+      // cherche mécaniquement, elle ne s'exempte pas à la main (Article 24).
+      // PROXIMITÉ PAR FENÊTRE, jamais par une expression « tout sauf un point » : les noms de
+      // fichier CONTIENNENT un point, donc une telle expression ne peut structurellement pas les
+      // traverser. Elle rendait zéro sur un texte qui disait exactement la bonne chose — la même
+      // sonde-qui-ne-peut-pas-matcher que le reste de cette matinée, en version discrète.
+      const detour = /ne se lance(?:nt)? pas directement|passer par|passe par/i;
+      let parDetour = false;
+      for (const occ of texte.matchAll(new RegExp(echappe, "gi"))) {
+        const fenetre = texte.slice(Math.max(0, occ.index - 250), occ.index + 250);
+        if (detour.test(fenetre)) { parDetour = true; break; }
+      }
+      (cmd.test(texte) || parDetour ? couverts : manques).push({ outil: l.tool, fichier,
+        pourquoi: `la table dit « ${String(l.declenchement).slice(0, 40)}… » et aucun document normatif n'écrit « node scripts/${fichier} » — la main ne sait pas quoi taper` });
+    }
+  }
+  return { mesurable: true, manques, couverts: couverts.length, examines: manques.length + couverts.length,
+    horsPortee: "Ce contrôle voit si la commande est ÉCRITE, jamais si elle est JUSTE : une commande périmée reste une commande écrite." };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // « JE N'AI PAS PU REGARDER » : TROIS FAÇONS, PAS UNE (2026-09-25, tâche #654)
 // ————————————————————————————————————————————————————————————————————————
 //

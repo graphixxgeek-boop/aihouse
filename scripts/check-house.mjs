@@ -11972,6 +11972,23 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // UN OUTIL « À LANCER À LA MAIN » DOIT DIRE QUOI TAPER (2026-09-25, tâche #655 → #811).
+  assert.equal(crh2.findOutilsAMainSansCommande([]).mesurable, false, 'an empty master table yields NOT MEASURED: no tool to confront is not the same thing as no gap');
+  assert.equal(crh2.findOutilsAMainSansCommande([{ tool: 'x.mjs', declenchement: 'à la main' }]).mesurable, false, 'and with no normative corpus to search, EVERY command would look missing — the easiest and most wrong mass accusation there is');
+  const cmd = crh2.findOutilsAMainSansCommande(
+    [{ tool: 'a.mjs / b.mjs', declenchement: 'à la main' }, { tool: 'c.mjs', declenchement: 'à chaque commit' }],
+    { offert: 'lancer node scripts/a.mjs quand il faut' });
+  assert.deepEqual([cmd.manques.map((x) => x.fichier), cmd.couverts], [['b.mjs'], 1], 'a row naming SEVERAL tools is checked tool by tool — half a covered row would leave one without a command — and a tool the table does not call manual is never in scope');
+  const detour = crh2.findOutilsAMainSansCommande([{ tool: 'find-booster.mjs', declenchement: 'à la demande' }],
+    { offert: '`find-booster.mjs` : ne se lancent pas directement, il faut passer par tool-brain.' });
+  assert.equal(detour.manques.length, 0, 'the SECOND accepted form matters: some tools must not be launched directly (find-booster goes through tool-brain, Article 31), so what is missing there is not a command but the sentence saying which way round — and that sentence is searched mechanically rather than exempted by hand');
+  assert.equal(crh2.findOutilsAMainSansCommande([{ tool: 'find-booster.mjs', declenchement: 'à la demande' }], { offert: 'find-booster est un outil formidable.' }).manques.length, 1, 'while merely NAMING the tool is not a route: a mention is not an instruction');
+  assert.ok(/jamais si elle est JUSTE/.test(cmd.horsPortee), 'and the check says what it cannot see: a stale command is still a written command');
+  const reel = crh2.findOutilsAMainSansCommande(
+    (await import('../scripts/le-coordinateur.mjs')).parseToolsTable(fs.readFileSync('docs/regles-de-travail.md', 'utf8')),
+    { offert: fs.readFileSync('docs/regles-de-travail.md', 'utf8') + fs.readFileSync('CLAUDE.md', 'utf8') });
+  assert.deepEqual(reel.manques, [], 'checked live against the real master table and the real normative documents: no tool the table calls manual is left without a way to run it — the guarantee that breaks the day one is added without one. The case that started this: the charter called check-spirit.mjs the reference tool for Article 0, insisted it be run BY HAND, and wrote the command nowhere');
+
   // « JE N'AI PAS PU REGARDER » : TROIS FAÇONS, PAS UNE (2026-09-25, tâche #654 → #809).
   // Le constat disait « 12 outils sans cette capacité ». Fidèle à la leçon de #653, la sonde a été
   // vérifiée AVANT d'être crue — et elle ne voyait ni un throw, ni un état nommé dans le résultat.

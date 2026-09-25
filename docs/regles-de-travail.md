@@ -971,7 +971,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | Outil | Statut | 🎖️ Badge | Ce qu'il détecte/régule | Coût | Déclenchement |
 |---|---|---|---|---|---|
 | `check-house.mjs` | Infrastructure | — | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
-| `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | — | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent |
+| `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | — | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent — **`node scripts/check-spirit.mjs`** et **`node scripts/check-profile.mjs`**, précédés de `node scripts/smart-conso-api.mjs check-spirit --confirm` (Article 22) |
 | ARGUS | Agent | 🎖️ | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
 | HARMONIA | Agent | 🎖️ | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
 | Smart Conso API | Agent | 🎖️ | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |
@@ -3091,3 +3091,30 @@ la règle : **« des fois il ne faut pas chercher midi à 14 h »**.
 
 **Pourquoi « master » a été écarté pour l'export** : en informatique, *master process* désigne déjà
 un programme parent qui en lance d'autres. Un développeur qui reprend l'Agence lirait autre chose.
+
+### Les commandes de lancement qui manquaient (2026-09-25, tâche #655)
+
+Le recensement a trouvé des outils que la table maîtresse déclare « à lancer à la main » **sans que
+la commande soit écrite nulle part**. C'est la forme la plus discrète d'une règle inapplicable :
+elle a l'air complète, elle est même insistante sur le QUAND, et il manque le seul élément sans
+lequel personne ne peut l'appliquer. Une IA qui reprend ce projet ne devine pas un nom de fichier
+(Article 27).
+
+**Les commandes, écrites ici une fois pour toutes :**
+
+- `node scripts/doc-report.mjs` — l'état des rapports et des registres.
+- `node scripts/process-simulation-guardian.mjs` — le contrôle préalable avant une simulation.
+
+**Et les quatre qui NE SE LANCENT PAS directement, par décision de la charte** — ce qui leur
+manquait n'était pas une commande mais la phrase qui dit par où passer :
+
+- `find-booster.mjs` et `route-booster.mjs` : **ne se lancent pas directement**. Il faut passer par
+  `node scripts/tool-brain.mjs "<tâche>" --file <fichier>` (Article 31 : tool-brain est le seul
+  point d'entrée, et `adviseToolBrain()` appelle déjà `recommendFindBrain()` en interne).
+- `gemini-key-health.mjs` et `api-providers.mjs` : **ne se lancent pas directement**. Ce sont des
+  pièces de Smart Breaker ; on passe par `node scripts/check-gemini-quota.mjs`, qui alimente déjà
+  leur historique partagé.
+
+`findOutilsAMainSansCommande()` (CASSANDRA-RH) vérifie mécaniquement les deux formes — la commande
+écrite, ou la phrase de détour — pour tout outil que la table déclare manuel. Un outil ajouté demain
+avec le même déclenchement est couvert sans qu'on y pense.

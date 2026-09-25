@@ -64,6 +64,7 @@ RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, c
 #757 Fiche agrégée d'un outil : 13 champs, ZÉRO nouveau registre — et elle a trouvé 44 outils sans portée déclarée à son premier passage [FAIT]
 #653 Marge d'erreur : le constat était faux (4 erreurs de sonde), le vrai trou était 17 outils hors registre — 50/50 désormais couverts [FAIT]
 #654 Le faux vert le plus dangereux du dépôt : check-spirit disait « rien à signaler » sur ZÉRO donnée, sur l'Article 0 lui-même — corrigé [FAIT]
+#655 La charte ordonnait de lancer check-spirit à la main sans écrire la commande — 17/17 outils manuels ont désormais leur commande ou leur détour [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

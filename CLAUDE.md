@@ -285,9 +285,16 @@ lecture humaine — coûte de vrais appels API (Article 8), donc à lancer à la
 en priorité quand `lib/lia.ts` ou les personnalités changent. **Avant de le lancer, toujours
 consulter Smart Conso API** (`node scripts/smart-conso-api.mjs check-spirit --confirm`, cf.
 Article 22) — même règle que pour une simulation, jamais une exception parce que c'est "juste" un
-diagnostic. Ses heuristiques ne détectent que les dérives les plus grossières (vocabulaire de
+diagnostic. **Les deux commandes, écrites ici parce qu'elles ne l'étaient nulle part** (2026-09-25,
+tâche #655) : `node scripts/check-spirit.mjs` pour le ton face à une provocation, et
+`node scripts/check-profile.mjs` pour le profil psychologique — la charte ordonnait de les lancer à
+la main sans jamais dire quoi taper, ce qui est la forme la plus discrète d'une règle inapplicable.
+Ses heuristiques ne détectent que les dérives les plus grossières (vocabulaire de
 service client) ; elles ne dispensent jamais de lire les réponses. C'est l'outil de référence pour
-vérifier l'Article 0 avant et après tout ajustement de personnalité.
+vérifier l'Article 0 avant et après tout ajustement de personnalité. **Depuis le 2026-09-25 il sait
+aussi refuser de conclure** : si toutes les provocations sont bloquées par le moteur, il affiche
+`🚨 PAS MESURÉ` au lieu de « Aucun marqueur grossier détecté », qui était un satisfecit rendu sur
+zéro donnée — sur la loi suprême du projet.
 
 **Article 14 — Vigilance permanente, à chaque tour et à chaque décision.** La conformité à la
 charte, et en premier lieu à l'Article 0, ne se vérifie pas seulement lors d'un bilan ponctuel :
