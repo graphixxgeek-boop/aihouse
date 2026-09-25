@@ -10,6 +10,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/profil-utilisateur/index.md");
@@ -41,14 +42,40 @@ function main() {
   // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
   printReliabilityNotice("check-profil-utilisateur");
   console.log("=== Garde-fou système de profil utilisateur (docs/profil-utilisateur/) ===\n");
-  if (!existsSync(INDEX_PATH)) {
-    console.log("Aucun index trouvé — le système n'a peut-être jamais été utilisé cette session-ci.");
-    return;
-  }
-  const indexText = readFileSync(INDEX_PATH, "utf8");
+  // LE DÉNOMINATEUR AVANT LE VERDICT (2026-09-25, tâche #865 — suite mesurée de #206, signalée
+  // par le critère 5 de pure-gold-unity). Ce garde-fou pouvait écrire « OK — 0 fiche(s) sur
+  // disque, aucun lien mort » : un vert parfait rendu sur ZÉRO donnée. Et ce n'est pas une
+  // hypothèse de forme — le cas arrive vraiment, le dossier d'observations pouvant être vide
+  // le temps d'une session neuve.
+  //
+  // Il passe par `mesurerCorpus()` plutôt que par une formulation de plus qui lui serait propre
+  // (Article 24 : le mécanisme est écrit une fois, un outil de plus l'obtient en déclarant son
+  // corpus). Les deux causes d'un zéro sont nommées séparément, jamais confondues :
+  //   · pas d'index du tout → rien à confronter, et c'est peut-être parfaitement normal ;
+  //   · un index mais zéro fiche → il y a un index qui ne pointe sur rien, ce qui n'est pas pareil.
+  const indexPresent = existsSync(INDEX_PATH);
   const observationFiles = existsSync(OBSERVATIONS_DIR)
     ? readdirSync(OBSERVATIONS_DIR).filter((f) => f.endsWith(".md"))
     : [];
+  const mesure = mesurerCorpus(indexPresent ? observationFiles : [], {
+    quoi: "les fiches d'observation du profil utilisateur",
+    unite: "fiche",
+    pourquoiVide: indexPresent
+      ? "un index existe mais aucune fiche n'est présente sur le disque : il n'y a rien à confronter à l'index, ce qui n'est pas la même chose qu'un index propre"
+      : "aucun index trouvé — le système n'a peut-être jamais été utilisé cette session-ci, et l'absence d'un système n'est jamais la preuve qu'il est en bon état",
+  });
+  console.log(ligneCorpus(mesure, { nomDuGardien: "profil utilisateur" }));
+  if (!mesure.mesurable) {
+    // Le plan d'action s'imprime QUAND MÊME, et sa seule ligne est l'absence de mesure : sortir
+    // ici en silence rendrait ce passage indiscernable d'un passage réussi.
+    console.log(`\n${PLAN_ACTION_TITRE}`);
+    console.log(planDactionDepuisEcarts([{ pourquoi: `corpus non mesurable — ${mesure.pourquoi}` }], {
+      toolSlug: "check-profil-utilisateur",
+      tache: "vérifier que le système de profil utilisateur existe et porte des fiches avant de lire ce verdict comme un feu vert",
+    }).lignes.join("\n"));
+    return;
+  }
+  const indexText = readFileSync(INDEX_PATH, "utf8");
   const { missingFromIndex, missingFromDisk } = findOrphanedObservations(indexText, observationFiles);
   for (const f of missingFromIndex) console.log(`⚠️ Fiche présente mais jamais indexée : observations/${f}`);
   for (const f of missingFromDisk) console.log(`⚠️ Lien mort dans l'index, fichier introuvable : observations/${f}`);

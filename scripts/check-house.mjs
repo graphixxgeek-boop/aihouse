@@ -3240,6 +3240,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(pgu.peutDireVertSansRienMesurer('function main(){ if(!n) return console.log("pas mesuré"); console.log("✅ aucun écart"); }'), false, 'one that keeps an explicit absence branch is left alone, whichever wording of the project idiom it uses');
   assert.equal(pgu.peutDireVertSansRienMesurer('function main(){ console.log("3 écarts"); }'), false, 'a tool that never claims success has nothing to claim falsely');
   assert.equal(pgu.peutDireVertSansRienMesurer(''), false, 'and an empty file is never an accusation — the guard itself must not invent a finding out of nothing, which is the very defect it hunts');
+  // #865 — the guard was punishing the conduct it exists to reward, for the third time in one day
+  // after PORTES_PLAN_DACTION and MOTIF_EMET_DES_CONSTATS. Since #858 the right way to say "I could
+  // not measure" is no longer to write it in your own words: it is to call the shared mechanism,
+  // which carries the wording once for everyone (Article 24). The sentence then lives in
+  // corpus-mesure.mjs, not in the tool's own file, so a textual scan of that file finds nothing and
+  // accuses it. A tool became suspect by ceasing to copy.
+  assert.equal(pgu.peutDireVertSansRienMesurer('import { mesurerCorpus } from "./corpus-mesure.mjs";\nfunction main(){ const m = mesurerCorpus(f); console.log("✅ aucun écart"); }'), false, 'calling the shared measurement mechanism counts as a declared way of saying "not measured", exactly as the words do — otherwise the guard would reward hand-copied wording over the shared one, which is the opposite of Article 24');
+  assert.equal(pgu.peutDireVertSansRienMesurer('function main(){ console.log("absence de donnée, jamais un faux 0%"); console.log("✅ aucun écart"); }'), false, 'and "absence de donnée" — the wording hyper-scan-checkpoint had used since its construction — was simply missing from the vocabulary: the tool was correct and the detector was blind, which is a false red and not a finding');
+  // MEASURED RATHER THAN CLAIMED: on the real repository today, the shared-mechanism clause changes
+  // ZERO verdicts on its own — both tools it was written for are also cleared by words. It is kept
+  // as the correct semantics for the day a tool uses the mechanism and none of the wording, and
+  // saying it changed nothing is worth more than implying it fixed something.
   // LE SIGNAL MORD POUR DE VRAI, et sur le cas le plus coûteux du paysage (BP4) : la discipline de
   // tâches de tout le projet repose sur ce rapport, et il rendait le même verdict sur un registre
   // PARFAIT et sur un registre INTROUVABLE. Le dénominateur est désormais compté et affiché.

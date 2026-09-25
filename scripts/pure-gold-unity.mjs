@@ -172,11 +172,24 @@ export const CRITERES_RAPPORT = [
 // la sienne échappe à la mesure — limite déclarée, et c'est pour ça que ce critère rend un SIGNAL
 // à relire, jamais un verdict.
 export const MARQUEURS_VERT = /✅|aucun[e]? (?:écart|constat|manquement|détecteur|anomalie)|0 écart|tout va bien|rien trouvé/i;
-export const MARQUEURS_ABSENCE = /pas mesuré|pas mesurable|non mesurable|mesurable:\s*false|aucune donnée|jamais mesuré|faute de données|rien à mesurer|sans données|non conclua|rien n'a été mesuré|n'a été mesuré|porte(?:nt)? sur z[ée]ro/i;
+export const MARQUEURS_ABSENCE = /pas mesuré|pas mesurable|non mesurable|mesurable:\s*false|aucune donnée|absence de donnée|jamais mesuré|faute de données|rien à mesurer|sans données|non conclua|rien n'a été mesuré|n'a été mesuré|porte(?:nt)? sur z[ée]ro/i;
+
+// LE MÉCANISME PARTAGÉ COMPTE AUTANT QUE LES MOTS (2026-09-25, tâche #865) — et sans ceci, ce
+// critère punissait la conduite qu'il est censé récompenser, pour la troisième fois de la journée
+// après PORTES_PLAN_DACTION et MOTIF_EMET_DES_CONSTATS.
+//
+// Depuis #858, la bonne façon de dire « je n'ai rien pu mesurer » n'est PLUS de l'écrire à la main
+// dans son propre vocabulaire : c'est d'appeler `mesurerCorpus()` / `ligneCorpus()`, qui portent la
+// formulation une fois pour tous (Article 24). Or la phrase « 🚨 PAS MESURÉ » vit alors dans
+// corpus-mesure.mjs, pas dans le fichier de l'outil — donc un scan textuel du fichier de l'outil ne
+// la voit nulle part et l'accuse. **Un outil devenait suspect en cessant de recopier.**
+//
+// Appeler le mécanisme partagé vaut donc déclaration, au même titre que les mots.
+export const PORTEURS_ABSENCE = /mesurerCorpus\s*\(|ligneCorpus\s*\(|corpus-mesure\.mjs/;
 
 export function peutDireVertSansRienMesurer(source = "") {
   const texte = String(source);
-  return MARQUEURS_VERT.test(texte) && !MARQUEURS_ABSENCE.test(texte);
+  return MARQUEURS_VERT.test(texte) && !MARQUEURS_ABSENCE.test(texte) && !PORTEURS_ABSENCE.test(texte);
 }
 
 // Le paysage se PARCOURT (Article 24) : un outil neuf entre dans la mesure le jour où il est
