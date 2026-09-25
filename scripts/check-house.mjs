@@ -11972,6 +11972,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // BRANCHER LES QUATRE OUTILS RESTANTS SUR LES TENDANCES (2026-09-25, tâche #445 → #815).
+  const st2 = await import('../scripts/serie-temporelle.mjs');
+  assert.equal(st2.suivreLaTendance('').mesurable, false, 'a series with no owner is refused: it would never be read back');
+  assert.ok(!st2.suivreLaTendance('x', {}).mesurable && /a l'air d'un historique/.test(st2.suivreLaTendance('x', {}).pourquoi), 'and an empty point is refused too — a series of empty points looks exactly like a history');
+  assert.ok(st2.formatTendanceLines({ mesurable: true, outil: 'x', points: 2, tendances: [{ cle: 'a', tendance: 'pas assez de points' }] }).some((l) => /NORMAL pour un outil fraîchement branché/.test(l)), 'under four passes the rendering says so IN WORDS rather than omitting the line: "not enough yet" and "nothing to report" are different sentences, and a freshly wired tool must not read as a silent one');
+  const da2 = await import('../scripts/data-archangel.mjs');
+  assert.deepEqual(da2.findOutilsPrivesDeTendance(), [], 'checked live: none of the tools that SHOULD exploit a trend ignores the mechanism any more — objectifs-vs-resultats (an objective missed three times running is not the same problem as once), kpi-report (a figure without its slope is half the information), clean-dirty-old (stagnation IS a trend), smart-conso-token (a consumption rhythm is only judged over time)');
+  const scts = fs.readFileSync('scripts/smart-conso-token.mjs', 'utf8');
+  assert.ok(/Object\.keys\(KNOWN_COSTLY_PATTERNS\)/.test(scts), 'smart-conso-token now counts the REAL registry');
+  assert.ok(scts.split('\n').filter((l) => l.includes('KNOWN_EXPENSIVE_PATTERNS')).every((l) => l.trim().startsWith('//')), 'and the invented name it was first written against survives ONLY inside a comment, as the record of the mistake: a wiring built on a constant that does not exist would never have fired once — leçon L2 in its purest form, caught by checking the name against the file rather than trusting memory');
+  assert.ok(/TENDANCE : PAS MESURÉE — \$\{e\?\.message/.test(scts), 'and its failure path SAYS it failed rather than swallowing the error: a trend that silently never appears is the exact defect this whole morning is about');
+
   // LIRE VRAIMENT LES REGISTRES, PAS SEULEMENT LEUR CHEMIN (2026-09-25, tâche #490 → #813).
   // data-archangel trouvait dix registres FRAIS « atteints par table » : sept à dix outils citent
   // leur chemin, aucun n'ouvre le fichier. Passer par le chemin n'est pas exploiter le contenu.

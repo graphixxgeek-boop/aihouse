@@ -170,3 +170,43 @@ export function detectTendance(serie, cle, { minPoints = POINTS_MINIMUM_POUR_UNE
 export function findOutilsSansSerie(outils = [], { root = ROOT, exists = existsSync } = {}) {
   return outils.filter((o) => !exists(join(root, seriePath(o))));
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LE GESTE COMPLET, EN UN APPEL (2026-09-25, tâche #445)
+// ————————————————————————————————————————————————————————————————————————
+//
+// POURQUOI UN RACCOURCI PLUTÔT QUE QUATRE COPIES : brancher les quatre outils restants
+// (objectifs-vs-resultats, kpi-report, clean-dirty-old, smart-conso-token) demandait à chacun le
+// même triptyque — construire un point, l'enregistrer, relire sa propre série. Écrit quatre fois,
+// c'est quatre endroits où la même logique peut diverger, et CLONE-HUNTER aurait eu raison de le
+// dire. Écrit ici une fois, un cinquième outil se branche en trois lignes (Article 24).
+//
+// CE QU'IL NE FAIT PAS, ET C'EST DÉLIBÉRÉ : il ne choisit pas les mesures ni leur SENS. Savoir si
+// « plus » vaut mieux que « moins » est propre à chaque outil et ne se devine pas — un raccourci
+// qui trancherait à leur place produirait des progressions et des régressions inversées, c'est-à-
+// dire pire que pas de tendance du tout.
+export function suivreLaTendance(outil, mesures = {}, options = {}) {
+  const cles = Object.keys(mesures);
+  if (!outil) return { mesurable: false, pourquoi: "aucun outil nommé : une série sans propriétaire ne se relit jamais" };
+  if (!cles.length) return { mesurable: false, pourquoi: `aucune mesure fournie pour ${outil} — enregistrer un point vide ferait grossir la série sans rien y mettre, et une série de points vides a l'air d'un historique` };
+  const point = buildPoint({ mesures, ...options });
+  recordPoint(outil, point, options);
+  const serie = loadSerie(outil, options);
+  return { mesurable: true, outil, point, tendances: cles.map((c) => detectTendance(serie, c, options)), points: serie.length };
+}
+
+// Le rendu partagé, pour que les quatre outils disent la même chose de la même façon — et surtout
+// pour que « pas assez de points » reste une PHRASE, jamais une ligne absente. Un outil branché
+// depuis trois passages n'a rien à dire, et le dire est la seule façon de distinguer « rien à
+// signaler » de « pas encore de quoi conclure ».
+export function formatTendanceLines(r) {
+  if (!r?.mesurable) return [`TENDANCE : PAS MESURÉE — ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [`TENDANCES de ${r.outil} (${r.points} point(s) dans la série) :`];
+  for (const t of r.tendances) {
+    L.push(`   ${t.cle.padEnd(28)} ${t.tendance}${t.detail ? ` — ${t.detail}` : ""}${t.rompueA ? ` (série rompue au ${t.rompueA} : changement de méthode)` : ""}`);
+  }
+  if (r.points < POINTS_MINIMUM_POUR_UNE_TENDANCE) {
+    L.push(`   ⚠️ Moins de ${POINTS_MINIMUM_POUR_UNE_TENDANCE} passages : c'est NORMAL pour un outil fraîchement branché, jamais un défaut de câblage.`);
+  }
+  return L;
+}

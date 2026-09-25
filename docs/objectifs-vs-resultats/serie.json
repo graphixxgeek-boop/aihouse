@@ -1,0 +1,20 @@
+[
+ {
+  "date": "2026-09-25",
+  "methode": "v1",
+  "mesures": {
+   "objectifs-atteints": {
+    "valeur": 1,
+    "sens": "plus haut = mieux"
+   },
+   "objectifs-en-dessous": {
+    "valeur": 4,
+    "sens": "plus bas = mieux"
+   },
+   "objectifs-sans-donnees": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   }
+  }
+ }
+]

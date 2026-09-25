@@ -35,6 +35,7 @@ import { parseKpiHistoryCsv, KPI_HISTORY_PATH } from "./kpi-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
 
 const REGISTRY_PATH = new URL("../docs/objectifs-vs-resultats/registre.md", import.meta.url);
 
@@ -207,6 +208,19 @@ function main() {
   const history = loadToolUsageHistory();
   const kpiRows = loadKpiHistoryRows();
   const rows = buildObjectifsReport(markdown, history, { kpiRows });
+
+  // UN OBJECTIF RATÉ TROIS FOIS DE SUITE N'EST PAS LE MÊME PROBLÈME QU'UN OBJECTIF RATÉ UNE FOIS
+  // (2026-09-25, tâche #445). C'est la raison d'être de cet outil, et elle lui manquait : il
+  // confrontait objectif et résultat à l'instant T, sans jamais voir si l'écart se creuse ou se
+  // referme. Les trois statuts sont suivis séparément — « pas de données » est un signal en soi,
+  // et le voir grandir dit qu'on mesure de moins en moins, pas qu'on réussit moins.
+  const parStatut = (st) => (rows ?? []).filter((r) => r.statut === st).length;
+  for (const l of formatTendanceLines(suivreLaTendance("objectifs-vs-resultats", {
+    "objectifs-atteints": { valeur: parStatut("atteint"), sens: SENS.HAUT_MIEUX },
+    "objectifs-en-dessous": { valeur: parStatut("en dessous"), sens: SENS.BAS_MIEUX },
+    "objectifs-sans-donnees": { valeur: parStatut("pas de données"), sens: SENS.BAS_MIEUX },
+  }))) console.log(l);
+  console.log("");
 
   // LE PLAN D'ACTION (2026-09-23, tâche #211). Cet outil confronte un objectif chiffré à un
   // résultat mesuré ailleurs — il ne mesure jamais lui-même. Son plan hérite de cette prudence et

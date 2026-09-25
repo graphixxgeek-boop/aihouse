@@ -26,6 +26,7 @@ import { printReliabilityNotice, qualifierIndicateur, decouperEnUnites, pairesPa
 import { printReportHeader } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
 
 const HISTORY_PATH = fileURLToPath(new URL("../.smart-conso-token-history.json", import.meta.url));
 
@@ -1157,6 +1158,25 @@ export function parseOutcomeArgs(argv) {
 }
 
 function main() {
+  // UN RYTHME DE CONSOMMATION NE SE JUGE QUE DANS LA DURÉE (2026-09-25, tâche #445). Cet outil
+  // rendait un état ponctuel : combien de schémas coûteux connus, combien de propositions
+  // appliquées. Or c'est la PENTE qui dit si l'agent apprend à consommer moins — un chiffre seul
+  // ne distingue pas une bonne journée d'une amélioration réelle.
+  // PREMIÈRE VERSION ÉCRITE CONTRE UN NOM INVENTÉ (`KNOWN_EXPENSIVE_PATTERNS`), donc un mécanisme
+  // qui ne se serait JAMAIS déclenché — la leçon L2 exactement, attrapée en vérifiant le nom sur le
+  // fichier plutôt qu'en faisant confiance à ma mémoire. Le vrai registre s'appelle
+  // KNOWN_COSTLY_PATTERNS, et l'adoption se lit dans computeAdoptionKpi().
+  try {
+    const adoption = computeAdoptionKpi(loadJson(HISTORY_PATH, { actions: [] }));
+    const mesures = { "schemas-couteux-connus": { valeur: Object.keys(KNOWN_COSTLY_PATTERNS).length, sens: SENS.HAUT_MIEUX } };
+    if (Number.isFinite(adoption?.reductionMoyennePct)) mesures["reduction-moyenne-pct"] = { valeur: adoption.reductionMoyennePct, sens: SENS.HAUT_MIEUX };
+    for (const l of formatTendanceLines(suivreLaTendance("smart-conso-token", mesures))) console.log(l);
+    console.log("");
+  } catch (e) {
+    // La tendance est un bonus : elle ne doit jamais empêcher le rapport de sortir. Mais un échec
+    // SILENCIEUX ferait exactement ce que cette matinée combat — le dire coûte une ligne.
+    console.log(`TENDANCE : PAS MESURÉE — ${e?.message ?? "échec de lecture de la série"}`);
+  }
   // CHARTER-SPY vit dans ce même fichier (extension de SMART-CONSO-TOKEN) mais reste un outil
   // distinct au registre : sa propre phrase, jamais celle de son hôte (tâche #198).
   printReliabilityNotice("charter-spy");

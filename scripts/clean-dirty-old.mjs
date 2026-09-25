@@ -25,6 +25,7 @@ import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/clean-dirty-old/index.md");
@@ -130,6 +131,15 @@ function main() {
       ratioToMedian: staleness[f].ratioToMedian !== undefined ? Math.round(staleness[f].ratioToMedian * 10) / 10 : undefined,
       coverageScore: robustnessScore(perFileCoverage[f]),
     }));
+
+  // LA STAGNATION EST UNE TENDANCE, et cet outil la déduisait de dates de fichiers sans jamais la
+  // suivre dans le temps (2026-09-25, tâche #445). Trois zones anciennes ce mois-ci et douze le
+  // mois prochain ne racontent pas la même histoire, et un chiffre seul ne le dit pas.
+  for (const l of formatTendanceLines(suivreLaTendance("clean-dirty-old", {
+    "zones-anciennes": { valeur: staleEntries.length, sens: SENS.BAS_MIEUX },
+    "fichiers-suivis": { valeur: files.length, sens: SENS.NEUTRE },
+  }))) console.log(l);
+  console.log("");
 
   if (!staleEntries.length) {
     console.log("Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.");

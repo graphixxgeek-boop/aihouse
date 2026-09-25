@@ -41,6 +41,7 @@ import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as
 import {recordCliUsage} from './tool-usage.mjs';
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { suivreLaTendance, formatTendanceLines, SENS } from './serie-temporelle.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -833,7 +834,19 @@ async function main() {
     // complète, et une note complète vaut mieux qu'une note partielle affichée plus tôt.
     const santeDuCode = codeHealthScore(tscErrors, tests?.passed, tests?.expected)?.overall;
     console.log('');
-    for (const l of formatNotesLines(await collecterLesNotes({ codeHealth: santeDuCode }))) console.log(l);
+    const notes = await collecterLesNotes({ codeHealth: santeDuCode });
+    for (const l of formatNotesLines(notes)) console.log(l);
+
+    // MONTRER UN CHIFFRE SANS SA PENTE, C'EST MONTRER LA MOITIÉ DE L'INFORMATION (2026-09-25,
+    // tâche #445). C'est le reproche exact que le constat faisait à ce tableau de bord, et il est
+    // juste : une note de 81 ne dit pas si elle vaut 74 il y a un mois ou 90. Les DEUX notes sont
+    // suivies séparément, pour la même raison qu'elles ne se moyennent pas.
+    const mesuresKpi = { 'points-fragiles': { valeur: fragilePoints, sens: SENS.BAS_MIEUX } };
+    if (Number.isFinite(santeDuCode)) mesuresKpi['sante-du-code'] = { valeur: santeDuCode, sens: SENS.HAUT_MIEUX };
+    if (notes?.jeu?.mesurable) mesuresKpi['note-du-jeu'] = { valeur: notes.jeu.note, sens: SENS.HAUT_MIEUX };
+    if (notes?.agence?.mesurable) mesuresKpi['note-de-l-agence'] = { valeur: notes.agence.note, sens: SENS.HAUT_MIEUX };
+    console.log('');
+    for (const l of formatTendanceLines(suivreLaTendance('kpi-report', mesuresKpi))) console.log(l);
 
     // LE PLAN D'ACTION (2026-09-23, tâche #211). Le tableau de bord RELAIE des mesures produites
     // ailleurs — il n'en invente aucune. Son plan ne relaie donc que ce qui est FACTUELLEMENT
