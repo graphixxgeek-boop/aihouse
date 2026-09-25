@@ -17,7 +17,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "no
 import { join } from "node:path";
 import { parseToolsTable, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -113,7 +113,14 @@ export function teamRoster(toolsTableMarkdown) {
     .map((row) => {
       const primaryName = row.tool.split(/[/(]/)[0].trim();
       const slug = slugifyAgentName(primaryName);
-      return { tool: row.tool, primaryName, slug, classique: row.statut === CLASSIQUE_STATUT, category: AGENT_CATEGORIES[slug] };
+      // `category` reste le RANG et rien d'autre (2026-09-25, #754) : c'est le sens qu'il a
+      // toujours eu ici — le regroupement du roster compte des Gardiens et des Membres, pas des
+      // familles. La famille est un SECOND axe, posé à côté plutôt que fondu dans le premier ;
+      // les fondre aurait fabriqué autant de « catégories » que de familles sans que personne
+      // ne l'ait demandé.
+      return { tool: row.tool, primaryName, slug, classique: row.statut === CLASSIQUE_STATUT,
+        category: rangDeLaCategorie(AGENT_CATEGORIES[slug]) ?? undefined,
+        famille: familleDeLaCategorie(AGENT_CATEGORIES[slug]) ?? undefined };
     });
 }
 
@@ -1772,12 +1779,24 @@ export function classerIceberg(fichiers = [], { lire, offert = "", machine = new
     const commande = MOTIF_COMMANDE(slug).test(offert);
     const pointDentree = (src.includes("import.meta.url") && src.includes("process.argv")) || src.startsWith("#!");
     const convocable = commande || pointDentree;
-    const presente = commande || new RegExp(`\\b${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(offert);
+    // UNE MENTION DU NOM NE VAUT PLUS PRÉSENTATION QUAND LE FICHIER SE DÉCLARE PLOMBERIE
+    // (2026-09-24, décision de l'utilisateur sur pnpm-install). Le piège était le même que la
+    // leçon L24 prise à l'envers : en écrivant le paragraphe qui EXPLIQUE qu'un script n'est pas
+    // un outil, on le faisait basculer en « membre » — la sonde compte un mot, elle ne lit pas ce
+    // que la phrase affirme. Une déclaration explicite en tête de fichier tranche donc le cas.
+    const seDeclarePlomberie = mentionIceberg(src) === "plomberie";
+    const presente = commande || (!seDeclarePlomberie && new RegExp(`\\b${slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(offert));
     const parLaMachine = machine.has(slug) || machine.has(f.replace(/\.mjs$/, ""));
 
+    // UNE DÉCLARATION « PLOMBERIE » L'EMPORTE SUR LE POINT D'ENTRÉE, et uniquement dans ce sens.
+    // Décision de l'utilisateur du 2026-09-24 sur pnpm-install : il A un point d'entrée, mais ses
+    // seuls arguments sont des drapeaux internes qu'aucun humain ne tape. La mesure ne peut pas
+    // lire ça — elle voit une porte, pas qui a le droit de la pousser. Le fichier, lui, le sait.
+    // L'inverse resterait un désaccord rapporté : un fichier qui se déclarerait MEMBRE sans être
+    // présenté nulle part mentirait sur un fait vérifiable, et la mesure aurait raison contre lui.
     const derive = presente ? "membre"
       : parLaMachine ? "infrastructure"
-      : convocable ? "oublie"
+      : (convocable && !seDeclarePlomberie) ? "oublie"
       : "plomberie";
     const declare = mentionIceberg(src);
     lignes.push({ slug, groupe: derive, declare, mesurable: true,
@@ -1806,11 +1825,26 @@ export function classerIceberg(fichiers = [], { lire, offert = "", machine = new
 //
 // POURQUOI C'EST LE PREMIER GESTE DU CHANTIER : tant que deux rangements coexistent, tout axe
 // ajouté par-dessus hérite de l'ambiguïté — on empilerait sur un sol qui bouge.
+// Lecture de la FAMILLE portée par une catégorie, jamais du mot « Suite ».
+// Corrigé le 2026-09-25 (#754) sur le fil rouge du projet, rencontré ici pour la énième fois : la
+// première version cherchait /(?:Suite|La Cour)/ dans le libellé. Le jour où les six Suites ont
+// été remplacées par les neuf familles des registres — donc le jour où le désaccord a été CORRIGÉ —
+// la sonde a cessé de matcher et a rendu « ✅ les deux rangements se recouvrent » sur UN seul nom
+// commun. Un contrôle empêché de regarder rend exactement ce que rend un contrôle qui n'a rien
+// trouvé, et ce vert-là est plus dangereux qu'aucun contrôle parce qu'il occupe la place.
+// La forme d'une catégorie est « Rang — Famille » : la famille se lit APRÈS le tiret cadratin, et
+// une catégorie sans tiret n'a pas de famille du tout — ce qui se DIT (sansFamille), jamais se tait.
+// Le découpage vit dans lib-shell, à côté du tableau qu'il lit : deux découpages du même libellé
+// auraient fini par diverger. Re-exporté ici parce que c'est cet outil qui s'en sert pour comparer.
+export { SEPARATEUR_RANG_FAMILLE, familleDeLaCategorie } from "./lib-shell.mjs";
+
 export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
   const suites = new Map();
+  const sansFamille = [];
   for (const [slug, cat] of Object.entries(categories)) {
-    const m = String(cat).match(/(?:Suite|La Cour)\s?.*/);
-    if (m) (suites.get(m[0].trim()) ?? suites.set(m[0].trim(), []).get(m[0].trim())).push(slug);
+    const f = familleDeLaCategorie(cat);
+    if (!f) { sansFamille.push(slug); continue; }
+    (suites.get(f) ?? suites.set(f, []).get(f)).push(slug);
   }
   const familles = new Map();
   for (const r of registres) {
@@ -1818,7 +1852,13 @@ export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
     (familles.get(r.family) ?? familles.set(r.family, []).get(r.family)).push(r.slug);
   }
   if (!suites.size || !familles.size) {
-    return { mesurable: false, pourquoi: "l'un des deux registres est vide ou illisible — une comparaison rendue sur un seul côté ressemblerait à un accord parfait, ce qui est le contraire de la vérité" };
+    // La raison est PRÉCISÉE plutôt que générique : « aucun outil ne porte de famille » et
+    // « le registre est illisible » appellent deux gestes opposés, et les confondre sous un seul
+    // message renverrait l'enquête au mauvais endroit.
+    const pourquoi = !suites.size && sansFamille.length
+      ? `aucun des ${sansFamille.length} outils rangés ne porte de famille (forme attendue « Rang — Famille ») — il n'y a donc rien à comparer, ce qui n'est pas la même chose qu'un accord`
+      : "l'un des deux registres est vide ou illisible — une comparaison rendue sur un seul côté ressemblerait à un accord parfait, ce qui est le contraire de la vérité";
+    return { mesurable: false, pourquoi, sansFamille: sansFamille.sort() };
   }
   const nomsSuites = [...suites.keys()];
   const nomsFamilles = [...familles.keys()];
@@ -1828,20 +1868,58 @@ export function comparerLesFamilles({ categories = {}, registres = [] } = {}) {
   return {
     mesurable: true,
     suites: nomsSuites, familles: nomsFamilles, communs,
+    sansFamille: sansFamille.sort(),
+    seulementCategories: nomsSuites.filter((n) => !nomsFamilles.includes(n)).sort(),
+    seulementRegistres: nomsFamilles.filter((n) => !nomsSuites.includes(n)).sort(),
     sansRegistre: [...avecCategorie].filter((s) => !avecRegistre.has(s)).sort(),
     sansCategorie: [...avecRegistre].filter((s) => !avecCategorie.has(s)).sort(),
-    divergent: communs.length < Math.min(nomsSuites.length, nomsFamilles.length),
+    divergent: communs.length < Math.min(nomsSuites.length, nomsFamilles.length) || sansFamille.length > 0,
   };
+}
+
+// #755 (2026-09-25) — le garde-fou que l'Article 24 exige derrière comparerLesFamilles().
+// POURQUOI il ne suffisait pas de comparer les deux LISTES de noms : le 2026-09-25, les neuf noms
+// se recouvraient parfaitement des deux côtés pendant qu'un outil pouvait très bien être rangé
+// « Coordination » dans l'organigramme et « Gouvernance interne » dans son registre. Un accord de
+// VOCABULAIRE ressemble trait pour trait à un accord de RANGEMENT, et seul le second est la
+// question posée. La comparaison se fait donc outil par outil, jamais nom par nom.
+// Ce qui rend ce garde-fou évolutif (Article 24) : il ne connaît AUCUNE famille par cœur — il lit
+// les deux côtés à l'exécution, donc une dixième famille créée demain est comparée sans qu'on
+// touche à cette fonction.
+export function findFamillesDivergentesParOutil({ categories = {}, registres = [] } = {}) {
+  const parRegistre = new Map();
+  for (const r of registres) if (r?.slug && r?.family) parRegistre.set(r.slug, r.family);
+  if (!parRegistre.size || !Object.keys(categories).length) {
+    return { mesurable: false, pourquoi: "l'un des deux côtés est vide — rendre « aucune divergence » sur un dénominateur vide dirait exactement ce que dit un accord parfait, et c'est le contraire de la vérité" };
+  }
+  const divergences = [];
+  for (const [slug, cat] of Object.entries(categories)) {
+    const famille = familleDeLaCategorie(cat);
+    const registre = parRegistre.get(slug);
+    if (!registre || !famille) continue; // absence traitée par comparerLesFamilles(), jamais deux fois
+    if (famille !== registre) divergences.push({ slug, organigramme: famille, registre });
+  }
+  return { mesurable: true, compares: [...parRegistre.keys()].filter((s) => familleDeLaCategorie(categories[s])).length, divergences };
+}
+
+export function formatDivergencesFamilleLines(d) {
+  if (!d?.mesurable) return [`⚠️ NON MESURÉ — ${d?.pourquoi ?? "raison inconnue"}`];
+  if (!d.divergences.length) return [`✅ Rangement identique des deux côtés pour les ${d.compares} outils comparables.`];
+  const L = [`🔴 ${d.divergences.length} outil(s) rangé(s) dans DEUX familles différentes selon qu'on lit l'organigramme ou son registre :`];
+  for (const x of d.divergences) L.push(`   ${x.slug} — organigramme : « ${x.organigramme} » · registre : « ${x.registre} »`);
+  L.push("   Lequel a raison est un NOMMAGE, donc une décision de l'utilisateur : cet outil le signale, il ne tranche pas.");
+  return L;
 }
 
 export function formatFamillesLines(c) {
   if (!c?.mesurable) return [`⚠️ NON MESURABLE — ${c?.pourquoi ?? "raison inconnue"}`];
   const L = [];
-  L.push(`Suites (organigramme)      : ${c.suites.length}`);
+  L.push(`Familles (organigramme)    : ${c.suites.length}`);
   L.push(`Familles (registres)       : ${c.familles.length}`);
   L.push(`Noms communs aux deux      : ${c.communs.length}${c.communs.length ? ` — ${c.communs.join(" · ")}` : ""}`);
   L.push(`Outils catégorisés sans registre : ${c.sansRegistre.length}`);
   L.push(`Outils avec registre sans catégorie : ${c.sansCategorie.length}`);
+  if (c.sansFamille?.length) L.push(`Outils rangés sans aucune famille : ${c.sansFamille.length} — ${c.sansFamille.join(" · ")}`);
   if (c.divergent) {
     L.push("");
     L.push("🔴 DEUX RANGEMENTS DU MÊME PAYSAGE qui ne se recouvrent pas. Ce n'est pas un détail de nommage :");
@@ -1849,6 +1927,8 @@ export function formatFamillesLines(c) {
     L.push("   Lequel survit est un NOMMAGE, donc une décision de l'utilisateur — cet outil le signale, il ne tranche pas.");
     L.push(`   Côté organigramme : ${c.suites.join(" · ")}`);
     L.push(`   Côté registres    : ${c.familles.join(" · ")}`);
+    if (c.seulementCategories?.length) L.push(`   Famille connue de l'organigramme SEUL : ${c.seulementCategories.join(" · ")}`);
+    if (c.seulementRegistres?.length) L.push(`   Famille connue des registres SEULS    : ${c.seulementRegistres.join(" · ")}`);
   } else L.push("\n✅ Les deux rangements se recouvrent.");
   return L;
 }
@@ -2297,6 +2377,10 @@ function main() {
     console.log("");
     console.log("--- LES DEUX SYSTÈMES DE FAMILLES (tâche #754) ---");
     for (const l of formatFamillesLines(comparerLesFamilles({ categories: AGENT_CATEGORIES, registres: DOC_REPORT_REGISTRIES }))) console.log(l);
+    // Le garde-fou par OUTIL sort dans la même commande que la comparaison par NOM : les deux
+    // répondent à « les deux rangements disent-ils la même chose ? », et n'en imprimer qu'un
+    // laisserait croire qu'un accord de vocabulaire vaut accord de rangement (#755).
+    for (const l of formatDivergencesFamilleLines(findFamillesDivergentesParOutil({ categories: AGENT_CATEGORIES, registres: DOC_REPORT_REGISTRIES }))) console.log(l);
     console.log(`\nHORS PORTÉE : ce classement dit où RANGER un script, QUAND il intervient et SUR QUOI il regarde — jamais s'il est BON, ni s'il regarde BIEN. C'est le travail des Gardiens, et les deux ne se remplacent pas.`);
     return;
   }
@@ -2578,10 +2662,17 @@ export function buildOrganigramme({
   for (const m of certifies) {
     const cat = categories[m.slug];
     if (!cat) { sansCategorie.push(m.nom); continue; }
+    // Le RANG se lit à part de la FAMILLE (2026-09-25, #754). Avant, le libellé entier servait aux
+    // deux : « Agent Cadre » testé en égalité stricte, et le même libellé utilisé comme clé de
+    // suite. Le jour où chaque catégorie a porté « Rang — Famille », LE-COORDINATEUR a cessé d'être
+    // reconnu comme Agent Cadre et s'est retrouvé rangé en Membre — silencieusement, parce qu'un
+    // rang manquant ne laisse aucun trou visible : il remplit juste le rang d'à côté.
+    const rang = rangDeLaCategorie(cat);
+    const famille = familleDeLaCategorie(cat);
     if (gardienSlugs.has(m.slug)) { parRang.gardien.push(m); continue; }
-    if (cat === "Agent Cadre") { parRang.cadre.push(m); continue; }
+    if (rang === "Agent Cadre") { parRang.cadre.push(m); continue; }
     parRang.membre.push(m);
-    (suites[cat] ??= []).push(m);
+    (suites[famille ?? cat] ??= []).push(m);
   }
 
   // Les émetteurs de rapport hors certification : ceux de la table maîtresse qui n'y sont pas

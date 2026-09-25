@@ -104,45 +104,62 @@ export function outilsHorsPortee(slugsLances = [], contexte = "agence", { regist
     .map(({ slug, portee }) => `${slug} : portée « ${portee} », lancé dans un contexte « ${contexte} » — ${PORTEES[portee]}`);
 }
 
+// La forme d'une catégorie est « Rang — Famille » (#754, 2026-09-25) : le RANG dit l'autorité
+// (Article 20bis : Gardien sacré du code, Membre, Agent Cadre, Agent Spécial), la FAMILLE dit le
+// voisinage de travail, et c'est elle qui doit coïncider avec `doc-report.REGISTRIES[].family`.
+// Les deux se LISENT ici plutôt que d'être redécoupées chez chaque lecteur : deux découpages du
+// même libellé auraient fini par diverger, ce qui est exactement le défaut que #754 vient de fermer.
+export const SEPARATEUR_RANG_FAMILLE = " — ";
+export function rangDeLaCategorie(categorie) {
+  const t = String(categorie ?? "");
+  const i = t.indexOf(SEPARATEUR_RANG_FAMILLE);
+  return (i === -1 ? t : t.slice(0, i)).trim() || null;
+}
+export function familleDeLaCategorie(categorie) {
+  const t = String(categorie ?? "");
+  const i = t.indexOf(SEPARATEUR_RANG_FAMILLE);
+  return i === -1 ? null : t.slice(i + SEPARATEUR_RANG_FAMILLE.length).trim() || null;
+}
+
 export const AGENT_CATEGORIES = {
   // Membre, jamais Gardien sacré : il scanne un DOCUMENT, pas la qualité du code — le premier
   // volet du critère double n'est donc pas rempli, même si le second (gratuit à chaque commit) l'est.
   // Membre, jamais Gardien sacré : il analyse un DOCUMENT, pas la qualité du code.
-  "abraham-les-references": "Membre",
-  "moise-tables-de-loi": "Membre",
+  "abraham-les-references": "Membre — Suite Dette & Structure du code",
+  "moise-tables-de-loi": "Membre — Suite Dette & Structure du code",
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
-  "cassandra-rh": "Agent Cadre",
-  "le-coordinateur": "Agent Cadre",
+  "cassandra-rh": "Agent Cadre — Gouvernance interne",
+  "le-coordinateur": "Agent Cadre — Coordination",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
-  argus: "Gardien sacré du code",
-  "safe-export": "Gardien sacré du code",
-  harmonia: "Gardien sacré du code",
-  "axa-check": "Gardien sacré du code",
-  "clean-dirty-old": "Gardien sacré du code",
-  "clone-hunter": "Gardien sacré du code",
+  argus: "Gardien sacré du code — Équipe noyau (Article 20)",
+  "safe-export": "Gardien sacré du code — Équipe noyau (Article 20)",
+  harmonia: "Gardien sacré du code — Équipe noyau (Article 20)",
+  "axa-check": "Gardien sacré du code — Équipe noyau (Article 20)",
+  "clean-dirty-old": "Gardien sacré du code — Équipe noyau (Article 20)",
+  "clone-hunter": "Gardien sacré du code — Équipe noyau (Article 20)",
   // ALWAYS-NEW-CODE (2026-09-21) : sixième Gardien, couche LÉGÈRE seulement (recommendZone() +
   // addendaSignal()/churnSignal(), zéro raisonnement) — le vrai zoom profond, qui exige un
   // raisonnement payant, reste explicitement exclu du statut de Gardien (cf.
   // docs/referentiel/organisation-agence.md §3, critère double : c'est le LIVRABLE qui exige un
   // raisonnement payant qui ne peut jamais devenir un Gardien, jamais le nom de l'outil dans son
   // ensemble — sa couche légère satisfait le critère double exactement comme les 5 autres).
-  "always-new-code": "Gardien sacré du code",
+  "always-new-code": "Gardien sacré du code — Exceptionnel (page blanche / audit lourd)",
   // Suite Suivi-Conso
-  "smart-conso-api": "Membre — Suite Suivi-Conso",
-  "smart-conso-token": "Membre — Suite Suivi-Conso",
-  "objectifs-vs-resultats": "Membre — Suite Suivi-Conso",
-  "ecotoken": "Membre — Suite Suivi-Conso",
+  "smart-conso-api": "Membre — Gouvernance interne",
+  "smart-conso-token": "Membre — Gouvernance interne",
+  "objectifs-vs-resultats": "Membre — Gouvernance interne",
+  "ecotoken": "Membre — Gouvernance interne",
   // Suite Audit Simulation
-  "el-professor": "Membre — Suite Audit Simulation",
-  "the-screener": "Membre — Suite Audit Simulation",
-  "memory-audit": "Membre — Suite Audit Simulation",
+  "el-professor": "Membre — Simulation & qualité narrative",
+  "the-screener": "Membre — Simulation & qualité narrative",
+  "memory-audit": "Membre — Simulation & qualité narrative",
   // Suite Audit lourd
-  "the-final-judge": "Membre — Suite Audit lourd",
-  "the-deep-reader": "Membre — Suite Audit lourd",
-  "hyper-scan-checkpoint": "Membre — Suite Audit lourd",
+  "the-final-judge": "Membre — Audit indépendant",
+  "the-deep-reader": "Membre — Audit indépendant",
+  "hyper-scan-checkpoint": "Membre — Exceptionnel (page blanche / audit lourd)",
   // Suite Dette & Structure du code (ALWAYS-NEW-CODE en est retiré le 2026-09-21 — promu Gardien
   // sacré du code ci-dessus, jamais listé deux fois)
-  "find-booster": "Membre — Suite Dette & Structure du code",
+  "find-booster": "Membre — Outillage de navigation",
   // tool-learning (2026-09-22) : rangé dans la Suite Dette & Structure du code parce que c'est de
   // la dette qu'il parle — la dette d'un outil qui n'apprend pas. Volontairement PAS un Gardien :
   // il juge une TRAJECTOIRE, et une trajectoire ne se mesure pas à chaque commit (trois passages
@@ -154,32 +171,36 @@ export const AGENT_CATEGORIES = {
   "the-equalizer": "Membre — Suite Dette & Structure du code",
   // Membre, jamais Gardien sacré : il ne scanne aucune qualité de code — il rend l'heure et
   // garde la mémoire des estimations. Le premier volet du critère double n'est pas rempli.
-  "agent-du-temps": "Membre",
-  "agent-des-noms": "Membre",   // Membre et jamais Gardien sacré : son scan ne tourne pas à CHAQUE commit — il répond à un ÉVÉNEMENT, un renommage envisagé
+  "agent-du-temps": "Membre — Suite Pilotage & Consommation",
+  "agent-des-noms": "Membre — Suite Dette & Structure du code",   // Membre et jamais Gardien sacré : son scan ne tourne pas à CHAQUE commit — il répond à un ÉVÉNEMENT, un renommage envisagé
   // integration-outil (2026-09-22) : Membre, jamais Gardien. Il ne scanne pas la qualité du code et
   // ne tourne pas à chaque commit — les deux volets du critère d'appartenance, dont aucun n'est
   // facultatif (Article 20). Il répond à la demande, avant de faire entrer un outil.
   "integration-outil": "Membre — Suite Dette & Structure du code",
   // La Cour du Roi
-  "ines-official": "Membre — La Cour du Roi",
-  "the-king": "Membre — La Cour du Roi",
-  "check-tasks-details": "Membre — La Cour du Roi",
+  "ines-official": "Membre — Exceptionnel (page blanche / audit lourd)",
+  "the-king": "Membre — Gouvernance interne",
+  "check-tasks-details": "Membre — Coordination",
   // Suite Orientation (2026-09-22, calibrage explicite de l'utilisateur). Trois membres certifiés
   // n'appartenaient à AUCUNE suite depuis leur certification — un vrai trou trouvé en construisant
   // l'organigramme de CASSANDRA, jamais une décision : ils ressortaient en « catégorie non
   // répertoriée ». Ils forment bien une famille cohérente, distincte de celles qui produisent un
   // constat : ceux qui disent QUOI faire ensuite et AVEC QUOI, jamais ce qu'il faut en penser.
-  "circle-tasks": "Membre — Suite Orientation",
-  "process-simulation-guardian": "Membre — Suite Audit Simulation",
-  "angel-of-ia-process": "Membre — Suite Orientation",
-  "data-archangel": "Membre — Suite Orientation",
-  "pure-gold-unity": "Membre — Suite Orientation",
-  "god-of-all-process": "Membre — Suite Orientation",
-  "tool-brain": "Membre — Suite Orientation",
-  "find-deep-booster": "Membre — Suite Orientation",
+  "circle-tasks": "Membre — Coordination",
+  "process-simulation-guardian": "Membre — Simulation & qualité narrative",
+  "angel-of-ia-process": "Membre — Coordination",
+  "data-archangel": "Membre — Coordination",
+  "pure-gold-unity": "Membre — Coordination",
+  "god-of-all-process": "Membre — Coordination",
+  "tool-brain": "Membre — Coordination",
+  "find-deep-booster": "Membre — Outillage de navigation",
   // Les Agents Spéciaux
-  "check-level-target": "Agent Spécial",
-  "smart-breaker": "Agent Spécial",
+  "check-level-target": "Agent Spécial — Gouvernance interne",
+  // SEULE famille de ce tableau qui ne soit PAS dérivée d'un registre doc-report : Smart Breaker
+  // n'en possède aucun (son domaine est la PRODUCTION, pas un rapport de travail). Rangé ici avec
+  // AGENT-DU-TEMPS parce que les deux pilotent une ressource qui s'épuise — proposé par l'agent le
+  // 2026-09-25, reste à confirmer par l'utilisateur, à qui revient tout nommage (#754).
+  "smart-breaker": "Agent Spécial — Suite Pilotage & Consommation",
 };
 
 // sansAccents() (2026-09-23) — une SEULE normalisation, partagée, jamais deux qui divergeraient.

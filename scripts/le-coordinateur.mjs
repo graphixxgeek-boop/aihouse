@@ -43,7 +43,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
@@ -828,7 +828,12 @@ export function checkAgentOnboarding(agentName, {
   // `undefined` pour un Agent absent de cette table (oubli de mise à jour, ou script pas encore un
   // Agent statutaire) — affiché tel quel comme un signal d'écart, jamais masqué par une valeur par
   // défaut inventée.
-  const category = AGENT_CATEGORIES[slug];
+  // Le badge affiche le RANG seul, jamais le libellé brut (2026-09-25, #754) : depuis que chaque
+  // catégorie porte « Rang — Famille », l'afficher tel quel aurait allongé un badge que
+  // l'utilisateur a validé dans sa forme courte, sans qu'il l'ait demandé. Sa demande d'origine
+  // portait sur LA CATÉGORIE, c'est-à-dire le rang ; la famille est un second axe, qui a sa propre
+  // sortie chez CASSANDRA-RH et n'a rien à faire sur un badge.
+  const category = rangDeLaCategorie(AGENT_CATEGORIES[slug]);
   const categoryLabel = category ? ` (${category})` : " (catégorie non répertoriée — à ajouter dans AGENT_CATEGORIES)";
   // « (classique) » (2026-09-21, reclarification explicite ci-dessus) : même icône 🎖️ pour tous les
   // membres certifiés — seule la mention textuelle distingue un Membre certifié (classique, sans

@@ -40,6 +40,10 @@ LES TÂCHES, UNE PAR LIGNE
 #772 Plan de départ ↔ rapport de nuit : mécanisme construit, testé, 235 groupes au vert [FAIT]
 #765 Article 31 câblé chez angel (règle `outil-obligatoire`) — 235 groupes au vert [FAIT]
 #766 Article 32 câblé chez angel (règle `temps-reel-lu`) — 235 groupes au vert [FAIT]
+#774 Nuit du 25 perdue : cause réelle trouvée (réveil jamais armé), règle `reveil-arme` chez angel [FAIT]
+#739 pnpm-install rangé en plomberie (sa décision) — 70 membres · 0 oublié · 1 infra · 7 plomberie · 0 désaccord [FAIT]
+#754 Bascule 6 Suites → 9 familles : 9 familles des deux côtés, les 9 mêmes noms, 0 divergence [FAIT]
+#755 Garde-fou par OUTIL (findFamillesDivergentesParOutil) : 0 divergence sur 31 comparables [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

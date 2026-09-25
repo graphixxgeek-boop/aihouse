@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -240,7 +240,10 @@ export function findOrphanReportFiles(registries = REGISTRIES.filter((r) => REPO
 // une liste recopiée à la main, donc jamais périmé par un futur 7e Gardien non plus.
 export function findGardiensMissingFromSource(sourceText, { categories = AGENT_CATEGORIES, registries = REGISTRIES } = {}) {
   const gardienSlugs = Object.entries(categories)
-    .filter(([, cat]) => cat === "Gardien sacré du code")
+    // Le RANG, jamais le libellé brut (2026-09-25, #754) : depuis que chaque catégorie porte
+    // « Rang — Famille », une égalité stricte sur le libellé ne matchait plus AUCUN Gardien — et
+    // une liste de Gardiens devenue vide rend exactement ce que rend « aucun Gardien ne manque ».
+    .filter(([, cat]) => rangDeLaCategorie(cat) === "Gardien sacré du code")
     .map(([slug]) => slug);
   return gardienSlugs.filter((slug) => {
     const scriptPath = registries.find((r) => r.slug === slug)?.scriptPath;
@@ -287,7 +290,10 @@ export const APPELS_NON_GARDIENS_HYPER_SCAN = [
 export function findAppelsNonDeclaresDansHyperScan(sourceText, { categories = AGENT_CATEGORIES, registries = REGISTRIES, declares = APPELS_NON_GARDIENS_HYPER_SCAN } = {}) {
   const appeles = [...String(sourceText ?? "").matchAll(/sh\(\s*"node (scripts\/[a-z0-9-]+\.mjs)/g)].map((m) => m[1]);
   const gardienPaths = Object.entries(categories)
-    .filter(([, cat]) => cat === "Gardien sacré du code")
+    // Le RANG, jamais le libellé brut (2026-09-25, #754) : depuis que chaque catégorie porte
+    // « Rang — Famille », une égalité stricte sur le libellé ne matchait plus AUCUN Gardien — et
+    // une liste de Gardiens devenue vide rend exactement ce que rend « aucun Gardien ne manque ».
+    .filter(([, cat]) => rangDeLaCategorie(cat) === "Gardien sacré du code")
     .map(([slug]) => registries.find((r) => r.slug === slug)?.scriptPath)
     .filter(Boolean);
   const declaresPaths = declares.map((d) => d.scriptPath);

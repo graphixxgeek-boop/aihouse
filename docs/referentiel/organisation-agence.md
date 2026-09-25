@@ -176,68 +176,97 @@ Détail complet de chacun : `docs/referentiel/argus.md`, `harmonia.md`, `axa-che
 `clean-dirty-old.md`, `clone-hunter.md`, `always-new-code.md` (inchangés par ce document, sauf
 `clone-hunter.md`/`always-new-code.md` eux-mêmes mis à jour pour refléter leur nouveau statut).
 
-## 4. Membre de l'équipe — 6 suites de travail
+## 4. Membre de l'équipe — 9 familles de travail
 
-**Décision actée le 2026-09-22** : le gabarit STANDARD (blueprint + instanciation + registre, déjà
-en vigueur) suffit pour ces 6 suites — jamais un gabarit sur mesure par groupe, qui ajouterait de la
-complexité sans bénéfice réel (le contenu libre du blueprint/instanciation couvre déjà leurs
-différences). Seuls les Gardiens sacrés (§3) ont un gabarit enrichi, pour la raison qui leur est
-propre (câblage post-commit partagé).
+**Bascule actée le 2026-09-25 par l'utilisateur** (tâche #754), en réponse à une question posée en
+fenêtre dédiée : « **on garde les 9 familles** ». Ce document décrivait 6 *Suites* pendant que
+`doc-report.REGISTRIES[].family` rangeait les mêmes outils en 9 *familles* — deux rangements du même
+paysage, avec **un seul nom commun aux deux**. Ce n'était pas un détail de vocabulaire : tant que les
+deux coexistaient, tout axe de classification ajouté par-dessus héritait de l'ambiguïté, et personne
+ne pouvait dire lequel faisait foi.
+
+**Ce qui a changé concrètement** : `AGENT_CATEGORIES` (`scripts/lib-shell.mjs`) porte désormais, pour
+chaque outil, un libellé de la forme **« Rang — Famille »**. Le *rang* dit l'autorité (Article 20bis :
+Gardien sacré du code, Agent Cadre, Membre, Agent Spécial) ; la *famille* dit le voisinage de
+travail, et c'est elle qui doit coïncider avec le registre. Chaque famille attribuée a été **DÉRIVÉE
+du registre qui la portait déjà**, jamais choisie par analogie — à une seule exception, déclarée
+ci-dessous.
+
+**Les noms que l'utilisateur avait choisis ne sont pas effacés** : la correspondance ci-dessous les
+garde atteignables, parce qu'ils sont cités dans le suivi et dans des commentaires de code, et qu'un
+nom propre sans définition atteignable est une dette de reprise (Article 27).
+
+| Nom que l'utilisateur avait donné (6 Suites) | Famille qui survit (registres) |
+|---|---|
+| Suite Suivi-Conso | éclatée : **Gouvernance interne** (Smart Conso API, SMART-CONSO-TOKEN, objectifs-vs-resultats, ecotoken) et **Suite Pilotage & Consommation** (AGENT-DU-TEMPS, Smart Breaker) |
+| Suite Audit Simulation *(anciennement « Suite Simulation & Qualité narrative »)* | **Simulation & qualité narrative** — le nom d'origine, revenu de lui-même par le registre |
+| Suite Audit lourd | scindée : **Audit indépendant** (THE-FINAL-JUDGE, THE-DEEP-READER) et **Exceptionnel (page blanche / audit lourd)** (HYPER-SCAN-CHECKPOINT, INES-official) |
+| Suite Dette & Structure du code | **Suite Dette & Structure du code** *(le seul nom qui était déjà commun aux deux rangements)* et **Outillage de navigation** (find-booster, find-deep-booster) |
+| La Cour du Roi | répartie : THE-KING en **Gouvernance interne**, INES-official en **Exceptionnel**, check-tasks-details et Doc-Report en **Coordination** |
+| Les Agents Spéciaux | ce n'était pas une famille mais un RANG (`Agent Spécial`), et il est conservé comme tel : CHECK-LEVEL-TARGET en **Gouvernance interne**, Smart Breaker en **Suite Pilotage & Consommation** |
+
+**La neuvième famille, « Équipe noyau (Article 20) »**, n'apparaissait pas dans les 6 Suites : ce sont
+les Gardiens sacrés du code (§3), qui avaient un rang mais aucune famille. Ils en ont une désormais,
+ce qui ne change rien à leur rang ni au critère double qui le gouverne.
+
+**La seule attribution NON dérivée d'un registre, et elle attend sa confirmation** : Smart Breaker ne
+possède aucun registre `doc-report` — son domaine est la PRODUCTION, pas un rapport de travail. Il a
+été rangé en **Suite Pilotage & Consommation** aux côtés d'AGENT-DU-TEMPS parce que les deux pilotent
+une ressource qui s'épuise. C'est une proposition de l'agent, pas une décision : **nommer reste la
+prérogative de l'utilisateur**, et cette ligne est là pour qu'il puisse la corriger d'un mot.
+
+### Ce qui garde les deux rangements alignés, désormais mécaniquement
+
+Deux garde-fous distincts, et le second existe parce que le premier ne suffisait pas :
+
+1. `comparerLesFamilles()` (`scripts/cassandra-rh.mjs`) confronte les deux **listes de noms**, et
+   refuse de répondre quand un seul côté est lisible — une comparaison rendue sur un seul côté
+   ressemble trait pour trait à un accord parfait.
+2. `findFamillesDivergentesParOutil()` (#755) compare **outil par outil**. Un accord sur les neuf
+   noms ne dit rien du rangement : un outil pouvait très bien être « Coordination » ici et
+   « Gouvernance interne » dans son registre, et le premier garde-fou n'y aurait rien vu.
+
+**La leçon payée le jour même de la bascule, et elle est gardée par un contre-test** : la sonde
+d'origine cherchait le mot « Suite » dans le libellé d'une catégorie. Le jour où les Suites ont
+disparu — c'est-à-dire le jour où le désaccord a été CORRIGÉ — elle a cessé de pouvoir matcher et a
+affiché « ✅ les deux rangements se recouvrent » sur **un seul** nom commun. C'est le fil rouge de ce
+projet, rencontré une fois de plus : *un contrôle empêché de regarder rend exactement ce que rend un
+contrôle qui n'a rien trouvé, et ce vert-là est plus dangereux qu'aucun contrôle, parce qu'il occupe
+la place.* La famille se **lit** maintenant après le tiret cadratin (`familleDeLaCategorie()`), elle
+ne se devine plus.
+
+### Le détail par famille n'est plus recopié ici
+
+**Décision du 2026-09-25 (Article 24 : un registre se LIT, il ne se recopie pas)** : la liste des
+membres de chaque famille était tenue à la main dans ce document, et c'est exactement ce qui l'avait
+laissée dériver de six noms contre neuf sans que personne ne le voie. Elle se lit désormais à
+l'exécution :
+
+```
+node scripts/cassandra-rh.mjs organigramme
+```
+
+Cette commande reconstruit l'organigramme complet depuis les données réelles — socle, Agents Cadre,
+Gardiens sacrés, membres par famille, émetteurs non certifiés — et signale tout membre certifié
+laissé sans famille. Un outil qui rejoint l'équipe demain y apparaît sans qu'une ligne soit à
+recopier ici.
+
+**Décision conservée du 2026-09-22** : le gabarit STANDARD (blueprint + instanciation + registre)
+suffit pour toutes ces familles — jamais un gabarit sur mesure par groupe, qui ajouterait de la
+complexité sans bénéfice réel. Seuls les Gardiens sacrés (§3) ont un gabarit enrichi, pour la raison
+qui leur est propre (câblage post-commit partagé).
 
 Le détail complet de chaque outil (coût, déclenchement, ce qu'il détecte) reste dans la table
-maîtresse `docs/regles-de-travail.md` §7ter — ce tableau-ci n'est qu'un regroupement fonctionnel.
+maîtresse `docs/regles-de-travail.md` §7ter — ce document-ci n'est qu'un regroupement fonctionnel.
 
-### Suite Suivi-Conso
-Régule et observe la consommation (API et tokens) et l'usage réel des outils.
-- Smart Conso API — rythme de consommation API de l'agent (Article 22)
-- SMART-CONSO-TOKEN — rythme de consommation de tokens de l'agent (obligation écrite)
-- Compteur d'utilisation des outils (`tool-usage.mjs`) — journal des sollicitations réelles
+### Le rang « Agent Spécial » survit à la bascule
 
-### Suite Audit Simulation
-*(Anciennement « Suite Simulation & Qualité narrative », renommée par l'utilisateur.)* Juge une
-partie réellement jouée (dialogue, visuel, mémoire persistée) — jamais le code du moteur lui-même.
-- EL-PROFESSOR — fidélité à la charte (esprit, naturel, voix, enquête, clarté)
-- THE-SCREENER — qualité visuelle indicative (2 captures d'écran max)
-- memory-audit — cohérence mécanique de la mémoire persistée de Lia/Noé (seul Membre dont le SUJET
-  est un Personnage, sans que cela fasse rejoindre l'équipe aux Personnages eux-mêmes, cf. §5)
-
-### Suite Audit lourd
-*(Nom déjà utilisé dans CIRCLE-TASKS, conservé tel quel.)* Les seuls outils à agent séparé/coût réel
-significatif, jamais automatiques, jamais cochés par défaut dans une Ronde.
-- THE-FINAL-JUDGE — audit indépendant du code et du produit
-- THE-DEEP-READER — cousin de THE-FINAL-JUDGE, relecture lourde du suivi
-- HYPER-SCAN-CHECKPOINT — orchestrateur exceptionnel (Article 21), version complète coûteuse
-
-### Suite Dette & Structure du code
-Dette technique et navigation dans du code volumineux.
-*(CLONE-HUNTER a quitté cette suite le 2026-09-22, puis ALWAYS-NEW-CODE le 2026-09-21, pour
-rejoindre les Gardiens sacrés du code, §3 — deux promotions actées après vérification qu'ils
-remplissent le critère double scan-de-qualité + tourne à chaque commit ; le vrai zoom profond
-d'ALWAYS-NEW-CODE, lui, n'a pas de suite fonctionnelle propre — c'est un raisonnement à la demande,
-jamais un Membre au sens de ce document.)*
-- find-booster — index par concept dans un gros fichier déjà structuré
-- find-deep-booster (`scripts/route-booster.mjs`, renommé depuis « route-booster ») — points de
-  coupe candidats pour découper une fonction géante (Membre certifié classique depuis le
-  2026-09-21, pas Agent — reste dans ce groupe fonctionnel malgré son statut de documentation
-  différent)
-
-### La Cour du Roi
-*(Anciennement « Suite Référentiel & Vue d'ensemble », renommée par l'utilisateur — un nom qui
-trouve sa logique dans le fait que THE-KING lui-même y siège.)* Donne une vue consolidée — du code,
-de la philosophie, des rapports, des tâches.
-- INES-official — édition consolidée et annotée du dépôt
-- THE-KING — veille de `docs/philosophie-et-politique.md`
-- Doc-Report — index global des registres et journaux locaux du réseau d'outils
-- check-tasks-details — état des lieux des tâches à la demande
-
-### Les Agents Spéciaux
-*(Anciennement « À part », renommée par l'utilisateur — n'appartiennent à aucune des 5 suites
-ci-dessus, chacun pour sa propre raison structurelle.)*
-- **Smart Breaker** (`check-gemini-quota.mjs` + `gemini-key-health.mjs` + `api-providers.mjs` +
-  `lib/gemini-keys.ts`) — structure hors norme déjà notée (pas de dossier `docs/` dédié, registre =
-  fichier local jamais committé), portée PRODUCTION plutôt qu'outillage de développement.
-- **CHECK-LEVEL-TARGET** — outil d'aiguillage interne (quel niveau de vérification une demande
-  appelle), jamais une routine qu'on coche soi-même.
+Il ne désignait pas un voisinage de travail mais une **situation structurelle** : CHECK-LEVEL-TARGET
+est un outil d'aiguillage interne (quel niveau de vérification une demande appelle), jamais une
+routine qu'on coche soi-même ; Smart Breaker a une structure hors norme (pas de dossier `docs/`
+dédié, registre = fichier local jamais committé) et une portée PRODUCTION plutôt qu'outillage de
+développement. Les deux gardent ce rang, et ont reçu une famille en plus — les deux axes ne se
+remplacent pas.
 
 ## 5. Jamais un employé de l'Agence — 3 catégories d'exclusion définitive
 

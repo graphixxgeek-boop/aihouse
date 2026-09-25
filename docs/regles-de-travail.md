@@ -3031,13 +3031,11 @@ commande-en-masse au gabarit unifié : chaque point de la saisine repris un par 
 REFUSE un point retenu sans tâche associée, parce que c'est exactement le défaut que l'utilisateur
 a relevé sur la première version écrite à la main.
 
-**Un quatrième cas est laissé en DÉSACCORD ASSUMÉ, et c'est le dispositif qui fonctionne comme
-prévu** : `scripts/pnpm-install.mjs`. Il a un point d'entrée, donc la mesure le dit convocable ;
-mais ses arguments sont des drapeaux internes (`--hold-install-locks`, `--report-store`) que
-personne ne tape à la main. Le fichier se déclare donc `plomberie` en tête, la mesure continue de le
-voir autrement, et l'iceberg **rapporte le désaccord au lieu de le trancher** — exactement le
-comportement pour lequel les deux sources existent. Ce cas appelle un arbitrage de l'utilisateur, pas
-une décision d'agent ; il reste donc visible tant qu'il n'est pas tranché.
+**Un quatrième cas est TRANCHÉ par l'utilisateur le 2026-09-24 : `pnpm-install` est de la
+PLOMBERIE.** Il a un point d'entrée, ce qui faisait dire à la mesure qu'il était convocable ; mais
+ses seuls arguments sont des drapeaux internes (`--hold-install-locks`, `--report-store`) que
+personne ne tape à la main. Sa décision clôt le désaccord : le fichier le déclare en tête, et la
+mesure a été corrigée pour ne plus compter une simple mention comme une présentation.
 
 *(Une leçon en est sortie le soir même, et c'est la L24 prise dans l'autre sens. En écrivant ce
 paragraphe pour EXPLIQUER que pnpm-install n'est pas un outil, je l'ai fait basculer en « membre » :
