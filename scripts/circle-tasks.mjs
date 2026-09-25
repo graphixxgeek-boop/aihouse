@@ -29,7 +29,8 @@ import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers } from "./smart-conso-token.mjs";
 // extractRuleUnits/findRedundantRulePairs ont migré vers moise-tables-de-loi le 2026-09-23 (tâche
 // #613) — elles ne servent qu'à CLAUDE.md, donc elles appartiennent à l'agent de ce périmètre.
-import { extractRuleUnits, findRedundantRulePairs } from "./moise-tables-de-loi.mjs";
+import { extractRuleUnits, findRedundantRulePairs, diagnosticCharte } from "./moise-tables-de-loi.mjs";
+import { analyserDocument, classerDocument, compterObligations, fichiersDuDepot } from "./abraham-les-references.mjs";
 import { AGENT_CATEGORIES, walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
@@ -207,7 +208,7 @@ export const CIRCLE_ITEMS = [
     label: "Vérifier le poids en tokens de CLAUDE.md (allègement périodique)",
     cout: "gratuit — relit CLAUDE.md et applique les fonctions déjà exportées par SMART-CONSO-TOKEN, aucun appel API",
     tokensEstimes: "faible — un seul fichier local relu par le script, pas par l'agent",
-    execute: "Lancer `node scripts/ecotoken.mjs` (ecotoken) — il relit lui-même scanDocumentWeight()/listDatedNarrativeMarkers() de SMART-CONSO-TOKEN, jamais un second calcul, et ajoute ce que ce signal ne savait pas faire : le rendement par article (citations réelles ÷ lignes), le plan de réduction chiffré avec son texte de remplacement prêt à relire, le budget anti-regrossissement, et ce que l'outil a retenu des passages précédents. Écrire son rapport via recordCircleItemReport('ecotoken-scan', ...), puis recordSnapshotIfChanged('ecotoken-scan', contenu actuel de CLAUDE.md, ...) — copie texte datée, une nouvelle snapshot seulement sur un vrai changement. Remplir ENSUITE à la main la colonne « Décision » de docs/ecotoken/index.md : c'est la seule chose que l'outil ne peut pas deviner, et c'est ce qui l'empêche de reproposer indéfiniment une piste déjà refusée. HARMONISATION (2026-09-22) : un seul item de Ronde sur CLAUDE.md, jamais deux — ecotoken a absorbé ce signal plutôt que de s'ajouter à côté.",
+    execute: "Lancer `node scripts/ecotoken.mjs` (ecotoken) — il relit lui-même scanDocumentWeight()/listDatedNarrativeMarkers() de SMART-CONSO-TOKEN, jamais un second calcul, et ajoute ce que ce signal ne savait pas faire : le rendement par article (citations réelles ÷ lignes), le plan de réduction chiffré avec son texte de remplacement prêt à relire, le budget anti-regrossissement, et ce que l'outil a retenu des passages précédents. Écrire son rapport via recordCircleItemReport('ecotoken-scan', ...), puis recordSnapshotIfChanged('ecotoken-scan', contenu actuel de CLAUDE.md, ...) — copie texte datée, une nouvelle snapshot seulement sur un vrai changement. Remplir ENSUITE à la main la colonne « Décision » de docs/ecotoken/index.md : c'est la seule chose que l'outil ne peut pas deviner, et c'est ce qui l'empêche de reproposer indéfiniment une piste déjà refusée. HARMONISATION (2026-09-22) : un seul item de Ronde sur CLAUDE.md, jamais deux — ecotoken a absorbé ce signal plutôt que de s'ajouter à côté. DIAGNOSTIC DE RÉVISION (2026-09-25, #690) : le signal de fraîcheur de cet item porte désormais, à côté du poids, le verdict de `diagnosticCharte()` (MOÏSE) — sept signaux, verdict au PLUS HAUT niveau atteint et jamais une moyenne. Le lire AVANT de décider d'un allègement : le poids dit ce que la charte COÛTE, le verdict dit si elle appelle une révision, et ce sont deux questions différentes. Pour le détail signal par signal : `node scripts/moise-tables-de-loi.mjs`.",
     producesReport: true,
   },
   {
@@ -869,7 +870,7 @@ export function oldestOpenTaskDate(categorized) {
 // ALWAYS-NEW-CODE la plus négligée) — jamais pour "relecture référentiel" ou "correctifs", qui
 // n'ont aucune date de référence mécanique fiable (Article 13 elle-même n'impose aucune cadence
 // fixe, cf. CLAUDE.md — un signal inventé ici serait moins honnête que son absence).
-export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText } = {}, now = Date.now()) {
+export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText, charteContexteImpl } = {}, now = Date.now()) {
   const profilLast = mostRecentDate(profilIndexText);
   const kpiLast = mostRecentDate(kpiIndexText);
   const smartConsoApiLast = mostRecentDate(smartConsoApiIndexText);
@@ -914,7 +915,40 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApi
       // findRedundantRulePairs() de smart-conso-token.mjs (§7ter, anti-duplication).
       const redundant = findRedundantRulePairs(extractRuleUnits(claudeMdText));
       const redundancyNote = redundant.length ? ` — candidat de redondance : ${redundant[0].a} / ${redundant[0].b} (indice ${redundant[0].jaccard.toFixed(2)})` : "";
-      return { ...item, staleness: `${weight.tokens} tokens estimés, niveau "${weight.niveau}"${markers.length ? ` — ${markers.length} aside(s) narrative(s) datée(s) encore réductible(s)` : ""}${redundancyNote}` };
+      // LE DIAGNOSTIC DE RÉVISION (2026-09-25, reste-à-faire de la tâche #690). Sa demande tenait en
+      // une phrase : « le poids était le seul contrôle appelé par la Ronde, et c'est le moins
+      // informatif des signaux ». diagnosticCharte() existait depuis le 2026-09-24, testé onze fois
+      // et appelé NULLE PART en production — le mécanisme qui ne sort pas du script (leçon L2).
+      //
+      // POURQUOI IL EST INJECTÉ ET NON CALCULÉ ICI : la classification lit tout le dépôt pour savoir
+      // quel fichier porte quel Article. Cette fonction est pure et ne touche jamais le disque — même
+      // patron que `htmlWiringReadFileImpl` juste au-dessus. Sans contexte fourni, le signal dit
+      // qu'il n'a PAS REGARDÉ, jamais qu'il n'a rien trouvé : la distinction que ce diagnostic a
+      // lui-même coûté à écrire.
+      //
+      // UN SEUL APPEL À L'INJECTABLE, volontairement : il balaie l'arborescence, et l'appeler deux
+      // fois doublerait le coût du signal le plus cher de la Ronde pour exactement le même résultat.
+      let revisionNote = " — révision : NON MESURÉ (contexte de classification non fourni)";
+      if (charteContexteImpl) {
+        try {
+          const { fichiers, lire } = charteContexteImpl();
+          const unites = analyserDocument({ texte: claudeMdText, chemin: "CLAUDE.md", fichiers }).unites;
+          const d = diagnosticCharte({
+            classement: classerDocument(unites, fichiers, { lire }),
+            obligations: compterObligations(claudeMdText),
+            recouvrements: redundant,
+            tokens: weight.tokens,
+          });
+          revisionNote = d.mesurable
+            ? ` — ${d.verdict.icone} révision ${d.verdict.niveau} (${d.faits.length}/7 signal(aux)${d.faits.length ? ` : ${d.faits.map((f) => f.cle).join(", ")}` : ""})`
+            : ` — révision : NON MESURÉ (${d.pourquoi})`;
+        } catch (e) {
+          // Un diagnostic qui plante ne doit jamais faire tomber toute la Ronde, ni se taire :
+          // l'échec se DIT, parce qu'un signal disparu se lit comme un signal au vert.
+          revisionNote = ` — révision : NON MESURÉ (le diagnostic a échoué — ${e.message})`;
+        }
+      }
+      return { ...item, staleness: `${weight.tokens} tokens estimés, niveau "${weight.niveau}"${markers.length ? ` — ${markers.length} aside(s) narrative(s) datée(s) encore réductible(s)` : ""}${redundancyNote}${revisionNote}` };
     }
     if (item.id === "the-king-signal") {
       if (!philosophyText) return { ...item, staleness: "pas de signal disponible (philosophie-et-politique.md non fourni)" };
@@ -1555,7 +1589,10 @@ function main() {
   const philosophyFreshnessDaysValue = philosophyFreshnessDays();
   const inesOfficialIndexText = read("docs/ines-official/index.md");
   const ideesATrancherText = read(IDEES_REGISTRY_PATH);
-  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText });
+  // Le contexte de classification de la charte (2026-09-25, #690) : fourni SEULEMENT ici, au point
+  // d'entrée, pour que buildCircleReport reste pure comme tout le reste de ce fichier.
+  const charteContexteImpl = () => ({ fichiers: fichiersDuDepot({ racine: ROOT }), lire: (f) => readFileSync(f, "utf8") });
+  const report = buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApiIndexText, smartConsoTokenIndexText, cleanDirtyOldIndexText, htmlWiringReadFileImpl, suiviCategorized, claudeMdText, philosophyText, philosophyFreshnessDaysValue, inesOfficialIndexText, ideesATrancherText, charteContexteImpl });
   console.log("=== CIRCLE-TASKS — Ronde périodique ===\n");
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher (protocole AUTO/PRIME/GOAT, docs/regles-de-travail.md) pour choisir précisément quoi lancer.");
