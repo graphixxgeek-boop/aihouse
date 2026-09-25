@@ -2463,6 +2463,119 @@ function valeurLisible(v) {
   return String(v);
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'AVERTISSEMENT DE MARGE : DÉCLARÉ, ET RÉELLEMENT DIT ? (2026-09-25, tâche #653)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CONSTAT D'ORIGINE disait « 21 outils n'appellent jamais printReliabilityNotice() ». En
+// cherchant à le corriger, la mesure s'est trompée DEUX FOIS de suite, et les deux erreurs sont
+// gardées ici parce qu'elles sont la même : **une sonde qui ne PEUT PAS matcher rend exactement ce
+// que rend une sonde qui n'a rien trouvé.**
+//   1re erreur : chercher `printReliabilityNotice(` seul. Mais `report-template.mjs` relaie déjà
+//      l'avertissement pour tout outil qui passe par `renderTextReport()`.
+//   2e erreur : ajouter `renderTextReport` à la liste. Il manquait encore `printReportHeader()`,
+//      par lequel ecotoken imprime le sien — vérifié en LANÇANT ecotoken, pas en lisant son code.
+// Une troisième liste écrite à la main se serait périmée au prochain relais ajouté. D'où la forme
+// retenue, qui est la seule défendable (Article 24) : **les relais se DÉRIVENT** de la source du
+// gabarit, transitivement, au lieu d'être énumérés.
+//
+// TROIS ÉTATS, JAMAIS DEUX, parce que les deux trous réels ne se corrigent pas pareil :
+//   · IMPRIME — l'outil est déclaré heuristique et son avertissement sort vraiment ;
+//   · DÉCLARÉ MAIS JAMAIS DIT — la nature est écrite dans le registre et personne ne la prononce.
+//     C'est le fil rouge de ce projet : une protection écrite qui ne sort jamais ;
+//   · ABSENT DU REGISTRE — l'outil n'y figure pas, donc `reliabilityNotice()` rend `null` en
+//     silence. Ce n'est pas la même faute et ça ne se répare pas au même endroit.
+
+export function relaisDAvertissement(sourceGabarit = "") {
+  const src = String(sourceGabarit);
+  if (!src.trim()) {
+    return { mesurable: false, relais: [], pourquoi: "le gabarit de rapport n'a pas pu être lu : sans lui, impossible de savoir par quelles fonctions l'avertissement transite — et une liste vide se lirait comme « aucun relais », ce qui accuserait à tort tous les outils qui passent par lui" };
+  }
+  // LES COMMENTAIRES SONT RETIRÉS AVANT TOUTE RECHERCHE, et ce n'est pas un détail : sans ça,
+  // `gravityLine` et `identityLines` étaient classées relais parce qu'un commentaire situé juste
+  // avant la fonction SUIVANTE citait le nom. Un relais inventé est pire qu'un relais manqué — il
+  // fait passer pour bavard un outil réellement muet, exactement le faux vert que tout ce projet
+  // combat. Trouvé en relisant la liste dérivée, jamais en la faisant tourner.
+  const sansCommentaires = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const blocs = new Map();
+  for (const part of sansCommentaires.split(/\nexport function /).slice(1)) {
+    const nom = part.slice(0, part.indexOf("(")).trim();
+    if (nom) blocs.set(nom, part);
+  }
+  const relais = new Set(["reliabilityNotice", "printReliabilityNotice"]);
+  // Transitif : un relais qui en appelle un autre relaie aussi. On itère jusqu'à stabilité plutôt
+  // que sur une profondeur choisie au hasard — une profondeur fixe se périme au premier étage ajouté.
+  for (let tour = 0; tour < blocs.size + 1; tour += 1) {
+    let ajoute = false;
+    for (const [nom, corps] of blocs) {
+      if (relais.has(nom)) continue;
+      if ([...relais].some((r) => new RegExp(`\\b${r}\\s*\\(`).test(corps))) { relais.add(nom); ajoute = true; }
+    }
+    if (!ajoute) break;
+  }
+  return { mesurable: true, relais: [...relais], pourquoi: null };
+}
+
+// LA RÉSOLUTION SCRIPT → SLUG, ET C'EST LA CORRECTION LA PLUS IMPORTANTE DE CE CHANTIER : le
+// registre de fiabilité est indexé par SLUG D'OUTIL, pas par nom de fichier. ARGUS s'y appelle
+// `argus` et vit dans `check-argus.mjs`. Partir du nom de fichier revenait à inventer une SECONDE
+// règle de nommage — et la première correction l'a fait, créant cinq doublons (`check-argus` à côté
+// d'`argus`) avant qu'un test ne les attrape. Deux entrées pour un outil, c'est la divergence
+// silencieuse que l'Article 24 interdit. On part donc de la table de correspondance, inversée, et
+// on ne retombe sur le nom du fichier que lorsqu'elle ne dit rien.
+export function slugDuScript(chemin, correspondance = {}) {
+  const fichier = String(chemin).startsWith("scripts/") ? String(chemin) : `scripts/${chemin}`;
+  for (const [slug, f] of Object.entries(correspondance)) if (f === fichier) return slug;
+  return fichier.replace(/^scripts\//, "").replace(/\.mjs$/, "");
+}
+
+export function findAvertissementsNonDits(scripts = [], { lire, registre = {}, relais = [], correspondance = {} } = {}) {
+  if (typeof lire !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur de source fourni — juger qu'un outil ne dit pas son avertissement sans lire son code reviendrait à le deviner, et c'est exactement l'erreur que cette fonction existe pour empêcher" };
+  }
+  if (!relais.length) {
+    return { mesurable: false, pourquoi: "aucun relais connu : sans savoir par quelles fonctions l'avertissement transite, tout outil paraîtrait muet" };
+  }
+  const motif = new RegExp(`\\b(${relais.map((r) => r.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})\\s*\\(`);
+  const lignes = [];
+  for (const chemin of scripts) {
+    const slug = slugDuScript(chemin, correspondance);
+    const src = lire(chemin);
+    if (src === null || src === undefined) { lignes.push({ chemin, slug, etat: "source illisible" }); continue; }
+    const entree = registre[slug];
+    if (!entree) { lignes.push({ chemin, slug, etat: "absent du registre", pourquoi: "reliabilityNotice() rend null en silence pour lui : ni avertissement, ni signal qu'il en manque un" }); continue; }
+    if (entree.nature !== "heuristique") { lignes.push({ chemin, slug, etat: "mécanique", pourquoi: entree.pourquoi ?? "déclaré mécanique : aucun avertissement à dire" }); continue; }
+    lignes.push(motif.test(String(src))
+      ? { chemin, slug, etat: "imprime" }
+      : { chemin, slug, etat: "déclaré mais jamais dit", pourquoi: "sa nature heuristique est écrite dans le registre et aucun chemin de son code ne la prononce" });
+  }
+  const par = (e) => lignes.filter((l) => l.etat === e);
+  return {
+    mesurable: true, lignes, total: lignes.length,
+    imprime: par("imprime").length,
+    jamaisDits: par("déclaré mais jamais dit").map((l) => l.slug),
+    absents: par("absent du registre").map((l) => l.slug),
+    mecaniques: par("mécanique").length,
+    horsPortee: "Cet outil voit si l'avertissement SORT, jamais s'il est JUSTE : qu'un outil déclaré mécanique le soit vraiment se lit, ça ne se mesure pas.",
+  };
+}
+export function formatAvertissementsLines(a) {
+  if (!a?.mesurable) return [`PAS MESURÉ — ${a.pourquoi}`];
+  const L = [
+    `${a.total} outil(s) examiné(s) : ${a.imprime} disent leur marge · ${a.mecaniques} sont déclarés mécaniques (rien à dire) · ${a.jamaisDits.length} la déclarent SANS JAMAIS la dire · ${a.absents.length} ne sont pas au registre.`,
+  ];
+  if (a.jamaisDits.length) {
+    L.push("", "DÉCLARÉ MAIS JAMAIS DIT — une protection écrite qui ne sort jamais, le fil rouge de ce projet :");
+    L.push(`   ${a.jamaisDits.join(", ")}`);
+  }
+  if (a.absents.length) {
+    L.push("", "ABSENT DU REGISTRE — reliabilityNotice() rend null en silence : ni avertissement, ni signal qu'il en manque un :");
+    L.push(`   ${a.absents.join(", ")}`);
+  }
+  L.push("", `HORS PORTÉE : ${a.horsPortee}`);
+  return L;
+}
+
 export function ficheDeLOutil(slug, axes = {}, { champs = CHAMPS_DE_LA_FICHE } = {}) {
   if (!slug) return { mesurable: false, pourquoi: "aucun outil nommé — une fiche sans sujet n'est pas une fiche vide, c'est une question mal posée" };
   const lignes = champs.map((c) => {

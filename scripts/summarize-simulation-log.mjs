@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 // Extrait un résumé compact des actions d'un journal complet de simulation (messages.json) —
 // tirages de bonus, changements de pièce, révélation, jardin ouvert, progression de l'enquête.
@@ -234,6 +235,10 @@ export function formatSummary(events, { lastRound, dossierFound, shape, phase2, 
 }
 
 function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("summarize-simulation-log");
   const path = process.argv[2];
   if (!path) {
     console.log("Usage: node scripts/summarize-simulation-log.mjs <chemin vers messages.json>");

@@ -8861,7 +8861,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(documentConstruit, [], 'a tool whose report is a built document (THE-FINAL-JUDGE, THE-DEEP-READER) satisfies the rule by putting the notice INTO that document rather than on the console — both wirings are honest, only a silent tool is not');
 
   assert.ok(Object.values(TOOL_RELIABILITY).every((e) => e.pourquoi && e.pourquoi.length > 20), 'every classification must carry a real, specific reason — a registry of bare labels would tell a reader nothing about WHY a number is approximate');
-  assert.ok(Object.keys(RELIABILITY_SCRIPT_FILES).length >= Object.values(TOOL_RELIABILITY).filter((e) => e.nature === 'heuristique').length, 'every heuristic tool must have a known script, otherwise guard 2 could never check it');
+  // REMPLACE UN COMPTE PAR LA VRAIE QUESTION (2026-09-25, tâche #653 → #808). L'assertion d'avant
+  // comparait deux TAILLES de registre, ce qui n'était qu'un proxy : elle devenait fausse dès que
+  // la table de correspondance cessa d'énumérer les non-exceptions, alors même que la garantie
+  // qu'elle visait était mieux tenue qu'avant. On vérifie donc l'intention directement — chaque
+  // outil heuristique mène à un script RÉEL — au lieu d'un nombre qui y ressemblait.
+  for (const [slug, e] of Object.entries(TOOL_RELIABILITY)) {
+    if (e.nature !== 'heuristique') continue;
+    const chemin = RELIABILITY_SCRIPT_FILES[slug] ?? `scripts/${slug}.mjs`;
+    assert.ok(fs.existsSync(chemin), `every heuristic tool must lead to a REAL script, by the correspondence table or by its own name — otherwise guard 2 cannot check it and its silence would read as compliance (${slug} → ${chemin})`);
+  }
   console.log('Passed: TOOL_RELIABILITY (task #198) gives every tool in the real master table an explicit honest/approximate classification, renders one shared warning sentence carrying each tool\'s own real reason, stays completely silent for a genuinely mechanical tool and for an unclassified one (never a default caveat that would hide a missing entry), and is held in place by two mechanical guards checked live against this project: no tool of the real master table can be missing a classification, and no tool classified heuristic can fail to actually emit its OWN warning — verified per slug, so two tools sharing one file can never cover for each other, and accepting both a console print and a notice built into a delivered document.');
 }
 
@@ -11963,6 +11972,28 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(riche.manquants.every((m) => m.quoi), 'and every missing point says what it would have meant, so the list is actionable rather than a grade');
   assert.ok(/jamais ce qu'il VAUT/.test(crh2.richesse({}).horsPortee), 'with no threshold anywhere, deliberately: a poor tool is not a bad tool — find-booster does one thing and does it well, and comes out poor with nothing to fix');
 
+  // L'AVERTISSEMENT DE MARGE : DÉCLARÉ, ET RÉELLEMENT DIT ? (2026-09-25, tâche #653 → #808).
+  // Le constat d'origine annonçait « 21 outils n'appellent jamais printReliabilityNotice() ».
+  // C'était un artefact de sonde, et la mesure s'est trompée QUATRE fois de suite avant d'être
+  // juste. Les quatre erreurs sont la même : une sonde qui ne PEUT PAS matcher rend exactement ce
+  // que rend une sonde qui n'a rien trouvé.
+  const relaisVides = crh2.relaisDAvertissement('');
+  assert.ok(!relaisVides.mesurable && /se lirait comme « aucun relais »/.test(relaisVides.pourquoi), 'an unreadable template yields NOT MEASURED rather than an empty relay list, which would wrongly accuse every tool that warns THROUGH it');
+  const relaisDerives = crh2.relaisDAvertissement('\nexport function a() { reliabilityNotice(x); }\nexport function b() { a(); }\nexport function c() { rien(); }\n');
+  assert.ok(relaisDerives.relais.includes('a') && relaisDerives.relais.includes('b') && !relaisDerives.relais.includes('c'), 'relays are DERIVED from the template source, transitively — a hand-written list went stale twice on this very chantier, once missing renderTextReport() and once missing printReportHeader()');
+  const avecCommentaire = crh2.relaisDAvertissement('\nexport function z() { rien(); }\n// ce commentaire cite reliabilityNotice() avant la fonction suivante\nexport function y() { rien(); }\n');
+  assert.ok(!avecCommentaire.relais.includes('z') && !avecCommentaire.relais.includes('y'), 'comments are stripped before matching: an INVENTED relay is worse than a missed one — it makes a genuinely silent tool look talkative, the exact false green this whole project fights');
+  assert.equal(crh2.slugDuScript('scripts/check-argus.mjs', { argus: 'scripts/check-argus.mjs' }), 'argus', 'a script resolves to its tool SLUG through the correspondence table, never through a second naming rule derived from the filename — that second rule created five duplicate registry entries before a test caught them, and two entries for one tool is the silent divergence Article 24 forbids');
+  assert.equal(crh2.slugDuScript('scripts/inconnu.mjs', {}), 'inconnu', 'and it falls back to the filename only when the table says nothing, which is the case for the large majority of tools here');
+  assert.equal(crh2.findAvertissementsNonDits(['x'], { registre: {}, relais: ['a'] }).mesurable, false, 'with no source reader it refuses to conclude rather than declaring every tool mute');
+  assert.equal(crh2.findAvertissementsNonDits(['x'], { lire: () => 'x', registre: {} }).mesurable, false, 'and with no known relay it refuses too: without knowing which functions carry the warning, every tool would look silent');
+  const av = crh2.findAvertissementsNonDits(['scripts/a.mjs', 'scripts/b.mjs', 'scripts/c.mjs'], {
+    lire: (c) => (c.endsWith('a.mjs') ? 'renderTextReport(f)' : 'rien'),
+    registre: { a: { nature: 'heuristique', pourquoi: 'x' }, b: { nature: 'heuristique', pourquoi: 'y' } },
+    relais: ['renderTextReport'],
+  });
+  assert.deepEqual([av.imprime, av.jamaisDits, av.absents], [1, ['b'], ['c']], 'THREE states, never two: printing · declared-but-never-said (a written protection that never comes out, this project\'s red thread) · absent from the registry (reliabilityNotice returns null in silence). The two gaps do not get fixed in the same place, so merging them would hide one behind the other');
+
   // LA FICHE AGRÉGÉE D'UN OUTIL (2026-09-25, tâche #757) — « c'est quoi, ça sert à qui, ça pèse
   // combien, et que coûterait de s'en passer ». La règle de conception qui commande tout : NE PAS
   // créer un quatorzième registre. Sur les treize existants, quatre divergeaient déjà en silence.
@@ -11974,6 +12005,9 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(fiche.lignes.every((l) => l.source), 'every field carries the function that produced it, which is what makes this NOT a fourteenth registry: it reads, it never recomputes, so there is nothing in it that could ever disagree with its source');
   assert.ok(/N'EST PAS un quatorzième registre/.test(fiche.horsPortee) && /jamais s'il est BON/.test(fiche.horsPortee), 'and it says out loud both what it refuses to be and what it refuses to judge');
   assert.deepEqual(crh2.ficheDeLOutil('x', {}).lignes.filter((l) => l.renseigne).length, 0, 'with no axis answering at all, nothing is invented — and the reason distinguishes "this script does not exist" from "it is classified nowhere", two different situations this fiche cannot tell apart on its own');
+  const fLignes = crh2.formatFicheLines(fiche);
+  assert.ok(fLignes.some((l) => /fiche INCOMPLÈTE/.test(l)) && fLignes.some((l) => /non renseigné/.test(l)), 'the rendering says INCOMPLETE out loud and shows each hole with its cause, rather than printing twelve tidy lines that would read as a full portrait');
+  assert.ok(crh2.formatFicheLines({ mesurable: false, pourquoi: 'rien' })[0].startsWith('PAS DE FICHE'), 'and an impossible fiche renders as PAS DE FICHE rather than as an empty frame — the renderer was the one new function AXA-CHECK found untested here, so it got its test rather than a promise');
   // LE TROU QUE LA FICHE A TROUVÉ À SON PREMIER PASSAGE, gardé comme contre-test (#807).
   const sp = crh2.findOutilsSansPortee([{ type: 'outil', chemin: 'scripts/a.mjs' }, { type: 'outil', chemin: 'scripts/b.mjs' }, { type: 'bibliotheque-partagee', chemin: 'scripts/c.mjs' }], { a: 'agence' });
   assert.deepEqual([sp.outils, sp.declares, sp.sans], [2, 1, ['b']], 'the portée registry is confronted with the REAL census rather than trusted: a hand-kept list with no guard is exactly the Article 24 pattern, and here it was 13 entries for 50 real tools — 44 tools with no declared portée, which nothing reported because nobody had ever asked the registry about a tool that was not in it');

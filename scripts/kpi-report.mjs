@@ -40,6 +40,7 @@ import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.m
 import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
 import {recordCliUsage} from './tool-usage.mjs';
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const root = new URL('..', import.meta.url).pathname;
 const path = (...parts) => join(root, ...parts);
@@ -800,6 +801,10 @@ export async function collecterLesNotes({ codeHealth, lire = (p) => readFileSync
 }
 
 async function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("kpi-report");
     recordCliUsage('kpi');
     // LES DEUX NOTES SEULES (2026-09-25, tâche #729) : un mode léger, sans tsc ni suite de tests,
     // pour répondre à « où en est-on ? » sans payer un passage KPI complet. La santé du code y est

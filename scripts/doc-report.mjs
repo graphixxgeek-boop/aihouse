@@ -653,7 +653,14 @@ export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { s
   const manques = [];
   for (const [slug, entry] of Object.entries(registry)) {
     if (entry.nature !== "heuristique") continue;
-    const file = scriptFor[slug];
+    // REPLI DÉRIVÉ PLUTÔT QU'UNE 18e LIGNE À RECOPIER (2026-09-25, tâche #653 → #808) : quand un
+    // slug ne figure pas dans la table de correspondance, on essaie `scripts/<slug>.mjs` avant de
+    // conclure. Dans ce dépôt, la grande majorité des outils porte exactement ce nom-là ; la table
+    // n'existe que pour les EXCEPTIONS (ARGUS → check-argus.mjs, Smart Breaker →
+    // check-gemini-quota.mjs). Énumérer aussi les non-exceptions faisait de ce registre le septième
+    // à tenir à la main, et c'est précisément ce que l'Article 24 refuse. On ne renonce à conclure
+    // que si NI la table NI le nom dérivé ne désignent un fichier réel.
+    const file = scriptFor[slug] ?? (existsImpl(`scripts/${slug}.mjs`) ? `scripts/${slug}.mjs` : null);
     if (!file) { manques.push({ slug, raison: "aucun script connu pour cet outil heuristique — impossible de vérifier qu'il avertit" }); continue; }
     const full = join(ROOT, file);
     if (!existsImpl(full)) { manques.push({ slug, file, raison: "script introuvable sur le disque" }); continue; }
@@ -673,8 +680,20 @@ export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { s
     // Les quatre portes d'entrée du gabarit comptent : l'en-tête imprimé pour un outil qui écrit en
     // console, et les trois constructeurs pour un outil dont le rapport est un document rendu
     // (memory-audit est dans ce cas — une bibliothèque sans console.log, dont l'appelant imprime).
-    const attendu = new RegExp(`(print)?[rR]eliabilityNotice\\(\\s*["'\`]${slug}["'\`]|(printReportHeader|renderTextReport|renderHtmlReport|buildReportFrame)\\(\\s*\\{[^}]*tool:\\s*["'\`]${slug}["'\`]`);
-    if (!attendu.test(source)) manques.push({ slug, file, raison: "classé heuristique mais n'affiche jamais son propre avertissement (aucun appel nommant ce slug)" });
+    // CINQUIÈME FORME, ET ELLE A ÉTÉ TROUVÉE PAR L'ÉCHEC (2026-09-25, tâche #653 → #808) : le slug
+    // peut être passé par une CONSTANTE plutôt qu'en toutes lettres — `tool: OUTIL`, avec
+    // `const OUTIL = "rapport-gros-prompt"` dix lignes plus haut. Le lecteur voit exactement le même
+    // avertissement ; le garde-fou, lui, ne voyait rien et accusait un outil parfaitement conforme.
+    // C'est la quatrième fois sur ce seul chantier qu'une sonde incapable de matcher rend ce que
+    // rend une sonde qui n'a rien trouvé. On résout donc les liaisons littérales du fichier avant de
+    // chercher, plutôt que d'exiger de chaque outil qu'il écrive son nom deux fois.
+    const alias = [slug];
+    for (const m of source.matchAll(/(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*["'`]([^"'`]+)["'`]\s*;/g)) {
+      if (m[2] === slug) alias.push(m[1]);
+    }
+    const ou = alias.map((a) => (a === slug ? `["'\`]${a}["'\`]` : a)).join("|");
+    const attendu = new RegExp(`(print)?[rR]eliabilityNotice\\(\\s*(${ou})|(printReportHeader|renderTextReport|renderHtmlReport|buildReportFrame)\\(\\s*\\{[^}]*tool:\\s*(${ou})`);
+    if (!attendu.test(source)) manques.push({ slug, file, raison: "classé heuristique mais n'affiche jamais son propre avertissement (aucun appel nommant ce slug, ni en toutes lettres ni par une constante du fichier)" });
   }
   return manques;
 }

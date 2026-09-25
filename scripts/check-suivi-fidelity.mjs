@@ -15,7 +15,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { motCleValide, findMotsClesEnCollision } from "./criticite.mjs";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const SESSIONS_DIR = join(ROOT, "docs/suivi/sessions");
@@ -526,6 +526,10 @@ export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = read
 }
 
 function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("check-suivi-fidelity");
   console.log("=== État des tâches, en temps réel (docs/suivi/) ===\n");
   const all = categorizeAllSessions();
   console.log(`✅ Terminées : ${all.terminee.length}`);

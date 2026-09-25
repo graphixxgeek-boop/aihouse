@@ -443,7 +443,72 @@ export const TOOL_RELIABILITY = {
   "tool-learning": { nature: "heuristique", pourquoi: "il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse" },
   "cassandra-rh": { nature: "heuristique", pourquoi: "relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations" },
   ecotoken: { nature: "heuristique", pourquoi: "le poids en tokens est estimé et le rangement d'un bloc se devine — un bloc qui cite un fichier n'y appartient pas forcément" },
+
+  // ————————————————————————————————————————————————————————————————————————
+  // LES 22 ABSENTS, INSCRITS LE 2026-09-25 (tâche #653 → #808)
+  // ————————————————————————————————————————————————————————————————————————
+  //
+  // CE QUE LA MESURE A RÉELLEMENT DIT, et ce n'était pas ce que le constat d'origine annonçait :
+  // ZÉRO outil déclaré heuristique ne restait muet — les 24 disaient bien leur marge. Le constat
+  // « 21 outils n'appellent jamais printReliabilityNotice() » était un artefact de sonde : il
+  // ignorait que `report-template.mjs` relaie l'avertissement pour qui passe par lui.
+  //
+  // LE VRAI TROU ÉTAIT AILLEURS ET PLUS SILENCIEUX : 17 SCRIPTS D'OUTIL n'étaient rattachés à
+  // AUCUNE entrée de ce registre. Pour eux `reliabilityNotice()` rendait `null` — ni avertissement,
+  // ni signal qu'il en manquait un.
+  //
+  // TROISIÈME ERREUR, LA PLUS INSTRUCTIVE, ET ELLE EST GARDÉE ICI PARCE QU'ELLE A FAILLI PASSER :
+  // la première correction a inscrit 22 entrées en dérivant la clé du NOM DE FICHIER. Or ce
+  // registre est indexé par SLUG D'OUTIL, et `RELIABILITY_SCRIPT_FILES` fait le pont slug→script.
+  // Cinq des 22 étaient donc des DOUBLONS d'outils déjà inscrits sous leur vrai nom — `check-argus`
+  // pour ARGUS, `check-harmonia` pour HARMONIA, `route-booster` pour find-deep-booster,
+  // `the-screener-capture` pour THE-SCREENER, `check-gemini-quota` pour Smart Breaker. Deux
+  // entrées pour un seul outil, c'est exactement la divergence silencieuse que l'Article 24
+  // interdit : elles auraient fini par ne plus dire la même chose. Les cinq ont été retirées, et
+  // le détecteur part désormais du SCRIPT en résolvant par la table de correspondance — jamais
+  // d'une seconde règle de nommage.
+  //
+  // LA RÈGLE D'ARBITRAGE, ÉCRITE PARCE QU'ELLE A ÉTÉ APPLIQUÉE 22 FOIS : en cas de doute,
+  // HEURISTIQUE. Un avertissement de trop se lit et s'ignore ; un avertissement manquant transforme
+  // une estimation en certitude. « Mécanique » est réservé à un outil qui rapporte un FAIT qu'il a
+  // lu, sans aucune inférence entre la lecture et la phrase rendue.
+  "check-profil-utilisateur": { nature: "heuristique", pourquoi: "il déduit une habitude de travail d'un comptage de traces — une habitude réelle qui ne laisse pas de trace lui échappe entièrement" },
+  "check-suivi-fidelity": { nature: "heuristique", pourquoi: "il confronte le texte d'une clôture à ce que le dépôt montre : une correspondance de mots, jamais une preuve que la tâche a vraiment été faite" },
+  "circle-process-guardian": { nature: "heuristique", pourquoi: "il ne voit d'une étape que la trace qu'elle laisse sur le disque, et une sonde cassée rend exactement ce que rend une étape non faite — c'est l'erreur qu'il a lui-même commise sur trois de ses propres sondes" },
+  "kpi-report": { nature: "heuristique", pourquoi: "ses scores sont des moyennes de composantes elles-mêmes estimées, et une famille non mesurée sort du calcul plutôt que d'y peser — le chiffre est une tendance, jamais une note" },
+  "le-regisseur": { nature: "heuristique", pourquoi: "il orchestre des étapes et relaie ce que chacune rend : il hérite de l'approximation de tout ce qu'il appelle, sans jamais pouvoir la corriger" },
+  "ou-on-en-est": { nature: "heuristique", pourquoi: "il résume un chemin parcouru à partir de lignes de suivi écrites à la main — ce que le suivi dit du projet, jamais ce qui a réellement été fait" },
+  "rapport-gros-prompt": { nature: "heuristique", pourquoi: "il découpe une demande longue en points par des marqueurs de texte : une demande formulée sans marqueur ressort en un seul bloc" },
+  "summarize-simulation-log": { nature: "heuristique", pourquoi: "il reconstitue des événements depuis un journal brut dont il connaît deux formes : d'une troisième forme il ne tirerait rien, et un zéro d'événements se lirait comme une simulation calme" },
+  "the-ghost": { nature: "heuristique", pourquoi: "il cherche ce qui manque, et une absence se déduit toujours de ce qu'on a pensé à chercher" },
+  // Les huit suivants rapportent un FAIT qu'ils ont lu, sans inférence entre la lecture et la
+  // phrase rendue. Un avertissement chez eux serait creux, et un avertissement creux use l'alerte
+  // partout ailleurs — c'est la raison même pour laquelle `reliabilityNotice()` rend `null` sur un
+  // outil mécanique plutôt qu'une phrase polie.
+  criticite: { nature: "mécanique", pourquoi: "une échelle de paliers fixe : il range, il n'estime rien" },
+  "messages-courts": { nature: "mécanique", pourquoi: "il rend un texte déjà écrit, sans jugement" },
+  "modes-de-travail": { nature: "mécanique", pourquoi: "il rapporte le mode déclaré, tel qu'il est stocké" },
+  "sites-env": { nature: "mécanique", pourquoi: "il liste la configuration réellement présente, sans l'interpréter" },
+  "tool-usage": { nature: "mécanique", pourquoi: "un compteur d'événements enregistrés : il compte ce qui a été écrit, ni plus ni moins" },
+  "run-framework": { nature: "mécanique", pourquoi: "il lance le serveur et rapporte ce que le processus a dit" },
+  "run-simulation": { nature: "mécanique", pourquoi: "il exécute une simulation et rapporte ce qui s'est passé — le JUGEMENT sur la simulation appartient à EL-PROFESSOR, qui porte son propre avertissement" },
+  "sauvegarde-projet": { nature: "mécanique", pourquoi: "il archive des fichiers réels et dit lesquels — une opération, pas une mesure" },
 };
+
+// LE VOCABULAIRE DE `nature` EST FERMÉ, ET CE GARDE-FOU EXISTE POUR UNE RAISON PRÉCISE : la seule
+// valeur qui DÉCLENCHE un avertissement est exactement « heuristique ». Toute faute de frappe
+// (« heuristque », « heuristic ») ferait donc silencieusement passer un outil estimatif pour un
+// outil mécanique — un faux vert invisible, du type le plus dangereux de ce paysage. Le registre
+// porte d'ailleurs déjà les deux orthographes de l'autre valeur (« mecanique » et « mécanique »),
+// tolérées ici parce qu'aucune des deux ne déclenche quoi que ce soit ; l'une d'elles mal tapée ne
+// change rien, alors qu'une « heuristique » mal tapée change tout.
+export const NATURES_DE_FIABILITE = ["heuristique", "mecanique", "mécanique"];
+export function findNaturesInvalides(registre = TOOL_RELIABILITY, natures = NATURES_DE_FIABILITE) {
+  return Object.entries(registre)
+    .filter(([, e]) => !natures.includes(String(e?.nature ?? "")))
+    .map(([slug, e]) => ({ slug, nature: e?.nature ?? null,
+      pourquoi: `« ${e?.nature} » n'est pas une nature connue : seul « heuristique » déclenche un avertissement, donc toute autre valeur rend cet outil silencieux sans que rien ne le signale` }));
+}
 
 // La phrase unique, en tête de rapport. `null` pour un outil mécanique : pas d'avertissement creux
 // qui perdrait sa valeur d'alerte à force d'apparaître partout. `null` aussi pour un slug inconnu —

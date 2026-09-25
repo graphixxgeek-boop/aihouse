@@ -23,6 +23,7 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const SESSIONS_DIR = "docs/suivi/sessions";
@@ -217,6 +218,10 @@ export function buildOuOnEnEstHtml(b, { dateLabel = new Date().toISOString().sli
 }
 
 function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("ou-on-en-est");
   const { taches, fichiers, dossierAbsent } = chargerTaches();
   const b = bilan(taches, { joursVoulus: Number(process.argv[3]) || 2 });
   const sortie = process.argv[2] || join(ROOT, "docs/ou-on-en-est/ou-on-en-est.html");

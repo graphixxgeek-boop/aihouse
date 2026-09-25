@@ -41,7 +41,7 @@ import {
   findEtapesDeQuestionsManquantes, findEtapesDivergentesDuDocument,
 } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES, findEcrivainsDeRegistreSansContribution } from "./doc-report.mjs";
-import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS, pairesParJaccard } from "./lib-shell.mjs";
+import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS, pairesParJaccard, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -1095,6 +1095,10 @@ export function formatPlanRaccordementRonde(plan) {
 }
 
 function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("circle-process-guardian");
   recordCliUsage("circle-process-guardian");
   console.log("=== circle-process-guardian — vérification mécanique du processus de Ronde ===\n");
   console.log("Ce script ne peut vérifier seul que les faits observables depuis le disque (Parties 4/7/8 de");

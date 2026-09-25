@@ -245,3 +245,58 @@ tenue à la main sans garde-fou.
 `findOutilsSansPortee()` le mesure désormais à chaque `cadrage`. Il **compte et nomme**, il ne casse
 rien : 44 échecs bloqueraient le dépôt, et le chiffre descendra à mesure que le registre se
 remplira. Tâche **#807**.
+
+## L'avertissement de marge : déclaré, et réellement dit ? (2026-09-25, tâche #653 → clôturée par #808)
+
+Le constat d'origine annonçait : *« 21 outils n'appellent jamais `printReliabilityNotice()` »*.
+**C'était faux, et l'histoire de cette correction vaut d'être gardée** — la mesure s'est trompée
+**quatre fois de suite**, toujours de la même façon : *une sonde qui ne PEUT PAS matcher rend
+exactement ce que rend une sonde qui n'a rien trouvé.*
+
+1. Chercher `printReliabilityNotice(` seul — en ignorant que `report-template.mjs` relaie déjà
+   l'avertissement pour qui passe par lui.
+2. Ajouter `renderTextReport` à la liste — en oubliant `printReportHeader()`, par lequel ecotoken
+   imprime le sien. Trouvé **en lançant ecotoken**, pas en lisant son code (Article 25).
+3. Dériver les relais depuis la source du gabarit — mais sans retirer les commentaires, ce qui
+   classait `gravityLine` et `identityLines` comme relais parce qu'un commentaire citait le nom.
+   **Un relais inventé est pire qu'un relais manqué** : il fait passer pour bavard un outil
+   réellement muet.
+4. Dériver la clé de registre depuis le NOM DE FICHIER — alors que le registre est indexé par SLUG
+   d'outil. Cinq **doublons** ont été créés (`check-argus` à côté d'`argus`, `check-harmonia` à côté
+   d'`harmonia`, `route-booster` à côté de `find-deep-booster`, `the-screener-capture` à côté de
+   `the-screener`, `check-gemini-quota` à côté de `smart-breaker`) avant qu'un test ne les attrape.
+   Deux entrées pour un outil, c'est la divergence silencieuse que l'Article 24 interdit.
+
+### Ce que la mesure juste a dit
+
+**ZÉRO outil déclaré heuristique ne restait muet** — les 24 disaient bien leur marge. Le vrai trou
+était ailleurs et plus silencieux : **17 scripts d'outil n'étaient rattachés à aucune entrée du
+registre**. Pour eux, `reliabilityNotice()` rendait `null` : ni avertissement, ni signal qu'il en
+manquait un.
+
+Les 17 sont inscrits, avec une **règle d'arbitrage écrite parce qu'elle a été appliquée 17 fois : en
+cas de doute, HEURISTIQUE.** Un avertissement de trop se lit et s'ignore ; un avertissement manquant
+transforme une estimation en certitude. « Mécanique » est réservé à un outil qui rapporte un FAIT
+qu'il a lu, sans aucune inférence entre la lecture et la phrase rendue.
+
+**Sept outils déclarés heuristiques ne disaient toujours rien** une fois inscrits — ils le disent
+désormais : `check-profil-utilisateur`, `check-suivi-fidelity`, `circle-process-guardian`,
+`kpi-report`, `le-regisseur`, `ou-on-en-est`, `summarize-simulation-log`.
+
+**État final mesuré : 50 outils — 38 disent leur marge · 12 déclarés mécaniques · 0 muet · 0 absent.**
+
+### Trois mécaniques neuves, toutes dérivées plutôt qu'énumérées (Article 24)
+
+- `relaisDAvertissement()` — dérive **transitivement**, depuis la source du gabarit et commentaires
+  retirés, les fonctions par lesquelles l'avertissement transite. Refuse de conclure sur un gabarit
+  illisible.
+- `slugDuScript()` — résout un script vers son slug d'outil **par la table de correspondance**,
+  jamais par une seconde règle de nommage.
+- `findNaturesInvalides()` (dans `lib-shell.mjs`) — le vocabulaire de `nature` est fermé, et pour une
+  raison précise : **seule la valeur exacte « heuristique » déclenche un avertissement**. Une faute
+  de frappe ferait silencieusement passer un outil estimatif pour un outil mécanique.
+
+Deux garde-fous existants ont aussi été corrigés : `findHeuristicToolsWithoutNotice()` retombe
+désormais sur `scripts/<slug>.mjs` quand la table ne dit rien (la table ne sert qu'aux exceptions),
+et accepte un slug passé par une **constante** (`tool: OUTIL`) — il accusait `rapport-gros-prompt`,
+parfaitement conforme.

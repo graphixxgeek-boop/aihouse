@@ -18,7 +18,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { sh } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 
@@ -216,6 +216,10 @@ export function postSimulationChecklist() {
 }
 
 function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("le-regisseur");
   recordCliUsage("simulations");
   const cmd = process.argv[2];
   if (cmd === "checklist") {

@@ -62,6 +62,7 @@ RONDE CIRCLE-TASKS lancée en mode autonome : 76 commits de retard rattrapés, c
 #729 Deux notes globales enfin : le jeu 38/100 (une seule composante, et elle le dit), l'Agence 81/100 partielle — jamais une moyenne des deux [FAIT]
 #735 Émiettement de la file mesuré : 87,1 % de légères sur 116 ouvertes, 49 thèmes, le rythme ralentit — aucun seuil absolu proposé [FAIT]
 #757 Fiche agrégée d'un outil : 13 champs, ZÉRO nouveau registre — et elle a trouvé 44 outils sans portée déclarée à son premier passage [FAIT]
+#653 Marge d'erreur : le constat était faux (4 erreurs de sonde), le vrai trou était 17 outils hors registre — 50/50 désormais couverts [FAIT]
 
 ----------------------------------------------------------------------
 LES INTERDITS RESPECTÉS (vérifiés à la clôture)

@@ -8,6 +8,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { printReliabilityNotice } from "./lib-shell.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/profil-utilisateur/index.md");
@@ -34,6 +35,10 @@ export function findOrphanedObservations(indexText, observationFiles) {
 }
 
 function main() {
+  // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
+  // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
+  // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.
+  printReliabilityNotice("check-profil-utilisateur");
   console.log("=== Garde-fou système de profil utilisateur (docs/profil-utilisateur/) ===\n");
   if (!existsSync(INDEX_PATH)) {
     console.log("Aucun index trouvé — le système n'a peut-être jamais été utilisé cette session-ci.");
