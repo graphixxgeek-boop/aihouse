@@ -208,19 +208,78 @@ export function packsRealises(history, prestations = PRESTATIONS, { fenetreMinut
   }).sort((a, b) => a.realisations - b.realisations);
 }
 
-export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "" } = {}) {
+// QUATRE ÉTATS DEPUIS LE 2026-09-25 (tâche #763, « tu retrouves la vérité »), et le quatrième est
+// né d'une mesure qui a donné exactement le contraire de ce qu'elle affichait.
+//
+// CE QUI S'EST PASSÉ, et c'est le fil rouge du projet appliqué au compteur lui-même. Le rapport
+// annonçait 5 outils « jamais sollicités ». Ces 5 sont, trait pour trait, les 5 seuls du catalogue
+// qui n'appellent pas `recordCliUsage` — 44 autres l'appellent. Leur zéro ne mesurait pas leur
+// inactivité, il mesurait LEUR SILENCE. Deux preuves, l'une vivante et l'autre d'archive :
+// l'AGENT DES NOMS a été lancé trois fois dans l'heure qui a précédé cette correction et le
+// compteur affichait toujours 0 ; THE-FINAL-JUDGE a rendu 20 constats le 2026-09-23, archivés dans
+// `docs/the-final-judge/`, et le compteur affichait toujours 0.
+//
+// LE COÛT ÉTAIT SUR LE POINT D'ÊTRE PAYÉ : la conclusion naturelle d'un zéro est « relançons-le ».
+// Relancer THE-FINAL-JUDGE — le plus cher du paysage, un agent séparé — pour refaire ce qui avait
+// été fait deux jours plus tôt, c'est exactement le gaspillage que tout ce paysage existe pour
+// éviter. D'où l'ordre imposé par l'utilisateur : retrouver la vérité D'ABORD, relancer ensuite,
+// et seulement ce qui ressort vraiment à zéro.
+//
+// LE QUATRIÈME ÉTAT : un outil SANS ligne de commande du tout. THE-FINAL-JUDGE et THE-DEEP-READER
+// sont des bibliothèques qui mettent en forme le rapport d'un AGENT SÉPARÉ ; aucun `node
+// scripts/x.mjs` ne les lance, donc aucun compteur d'appels CLI ne pourra jamais les voir. Leur
+// zéro n'est pas un fait sur leur usage, c'est une absence de mesure — et les deux ne se rendent
+// jamais pareil. Ce que dit leur activité réelle, c'est leur REGISTRE, pas ce compteur.
+// « Peut-on le lancer ? » se lit sur DEUX sources, jamais une seule — et la seconde a été ajoutée
+// après un vrai faux verdict. La première version ne cherchait qu'un garde d'entrée dans le code
+// (`import.meta.url ===`, `process.argv`), et rangeait `check-spirit` parmi les outils qu'aucun
+// compteur ne peut voir. C'est faux : son corps s'exécute directement au chargement, et la charte
+// écrit sa commande noir sur blanc. Même leçon que l'iceberg de CASSANDRA (L24) : **une COMMANDE
+// ÉCRITE dans un document est une preuve, là où l'absence d'un motif dans le code n'est qu'un
+// silence.** Les deux ensemble se trompent beaucoup moins que l'une des deux.
+export function aUneLigneDeCommande(source = "", { offert = "", slug = "" } = {}) {
+  if (/import\.meta\.url\s*===|process\.argv\.slice\(2\)|process\.argv\[2\]/.test(String(source))) return true;
+  const nu = String(slug).replace(/-mjs$/, "");
+  return nu ? new RegExp(`node\\s+scripts/(?:check-)?${nu.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\.mjs`).test(String(offert)) : false;
+}
+
+export function classerLesSilencieux(slugs = [], { lireSource, offert = "" } = {}) {
+  if (typeof lireSource !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur de source fourni — classer un silence sans lire le script revient à deviner pourquoi il se tait, et c'est précisément l'erreur que cette fonction existe pour empêcher" };
+  }
+  const sansCli = [], muets = [], inconnus = [];
+  for (const slug of slugs) {
+    const src = lireSource(slug);
+    if (typeof src !== "string") { inconnus.push(slug); continue; }
+    if (!aUneLigneDeCommande(src, { offert, slug })) sansCli.push(slug);
+    else if (!/recordCliUsage/.test(src)) muets.push(slug);
+  }
+  return { mesurable: true, sansCli, muets, inconnus };
+}
+
+export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "" } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
     .map((slug) => ({ slug, ...toolUsageStats(history, slug) }))
     .sort((a, b) => a.total - b.total);
   const bruts = toolsNeverUsed(history, slugs);
-  // Trois états, jamais deux : réellement jamais sollicité · couvert par le crochet (donc sollicité
-  // à chaque commit sans passer par le compteur) · sollicité.
+  // QUATRE états, jamais deux : réellement jamais sollicité · couvert par le crochet (donc sollicité
+  // à chaque commit sans passer par le compteur) · MUET (il a un CLI mais n'enregistre pas son
+  // passage — un défaut à corriger, jamais un constat d'inactivité) · SANS CLI (le compteur ne peut
+  // structurellement pas le voir) · sollicité.
   const couverts = new Set(outilsCouvertsParLeCrochet(sourceCrochet, bruts));
+  const restants = bruts.filter((s) => !couverts.has(s));
+  const silences = classerLesSilencieux(restants, { lireSource, offert });
+  const sansCli = new Set(silences.mesurable ? silences.sansCli : []);
+  const muets = new Set(silences.mesurable ? silences.muets : []);
   return {
     perTool,
-    neverUsed: bruts.filter((s) => !couverts.has(s)),
+    neverUsed: restants.filter((s) => !sansCli.has(s) && !muets.has(s)),
     couvertsParLeCrochet: [...couverts],
+    sansLigneDeCommande: [...sansCli],
+    muetsAuCompteur: [...muets],
+    silenceMesurable: silences.mesurable,
+    pourquoiSilenceNonMesure: silences.pourquoi,
   };
 }
 
@@ -250,11 +309,12 @@ export function diagnoseToolBrainSelf(history, { checkLastCommitSource } = {}) {
 // ronde [...] te faire des recommandations [...] eventuellement diagnostiquer des ameliorations à
 // apporter sur le systeme global "tool-brain" »). Disponible aux deux déclenchements demandés : à
 // chaque Ronde (cf. circle-tasks.mjs, item "tool-brain-report") ET à la demande (CLI ci-dessous).
-export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, now = Date.now() } = {}) {
+export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, lireSource, offert = "", now = Date.now() } = {}) {
   // `checkLastCommitSource` sert deux fois : à l'auto-diagnostic (est-ce que tool-brain est câblé ?)
   // et désormais à distinguer « jamais sollicité » de « couvert par le crochet ». Un seul fichier
   // lu, deux questions répondues — jamais une seconde lecture pour la même source.
-  const { perTool, neverUsed, couvertsParLeCrochet } = buildToolBrainUsageReport(history, prestations, { sourceCrochet: checkLastCommitSource ?? "" });
+  const { perTool, neverUsed, couvertsParLeCrochet, sansLigneDeCommande, muetsAuCompteur, silenceMesurable, pourquoiSilenceNonMesure } =
+    buildToolBrainUsageReport(history, prestations, { sourceCrochet: checkLastCommitSource ?? "", lireSource, offert });
   const self = diagnoseToolBrainSelf(history, { checkLastCommitSource });
   const lines = [
     "=== tool-brain — rapport de Ronde ===",
@@ -262,6 +322,9 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     "",
     neverUsed.length ? `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}.` : "Tous les outils connus du catalogue ont déjà été sollicités au moins une fois.",
     couvertsParLeCrochet.length ? `${couvertsParLeCrochet.length} outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : ${couvertsParLeCrochet.join(", ")} — leur silence n'est pas une inaction.` : "",
+    !silenceMesurable ? `⚠️ SILENCE NON CLASSÉ — ${pourquoiSilenceNonMesure}` : "",
+    muetsAuCompteur?.length ? `🔴 ${muetsAuCompteur.length} outil(s) ONT une ligne de commande et n'enregistrent PAS leur passage : ${muetsAuCompteur.join(", ")}. Leur zéro ne mesure pas leur inactivité, il mesure leur silence — c'est un défaut du compteur, à corriger, jamais un constat sur eux.` : "",
+    sansLigneDeCommande?.length ? `📗 ${sansLigneDeCommande.length} outil(s) qu'AUCUN compteur d'appels ne peut voir : ${sansLigneDeCommande.join(", ")}. Deux causes possibles, et elles appellent deux gestes différents : soit le travail passe par un agent séparé et le script ne fait que mettre en forme son rapport (rien à corriger — ce qui dit s'il a tourné est son registre \`docs/<outil>/\`), soit sa commande n'est écrite NULLE PART dans les documents, et c'est un vrai manque (constat déjà remonté séparément par l'iceberg de CASSANDRA). Dans les deux cas ce n'est pas zéro, c'est PAS MESURABLE.` : "",
     "",
     "COMBINAISONS du catalogue — réalisées en FAIT, jamais déclarées :",
     ...packsRealises(history, prestations).map((p) => (p.estUneCombinaison
@@ -288,7 +351,22 @@ function main() {
     try {
       checkLastCommitSource = readFileSync(new URL("./hooks/check-last-commit.mjs", import.meta.url), "utf8");
     } catch { /* best-effort, jamais bloquant */ }
-    console.log(formatToolBrainReport({ history, checkLastCommitSource }));
+    // Le lecteur de source est passé ICI plutôt que codé dans la fonction, pour la même raison que
+    // partout ailleurs dans ce paysage : sans lui, le rapport DÉCLARE qu'il n'a pas pu classer les
+    // silences au lieu de les compter comme des zéros (#763).
+    const lireSource = (slug) => {
+      for (const nom of [slug, `check-${slug}`, slug.replace(/-mjs$/, "")]) {
+        try { return readFileSync(new URL(`./${nom}.mjs`, import.meta.url), "utf8"); } catch { /* suivant */ }
+      }
+      return undefined;
+    };
+    // L'OFFRE DÉCLARÉE en seconde source (leçon L24) : ce qui dit qu'un outil se lance, c'est une
+    // commande écrite dans un document, jamais l'absence d'un motif dans son code.
+    let offert = "";
+    for (const doc of ["../CLAUDE.md", "../docs/regles-de-travail.md"]) {
+      try { offert += readFileSync(new URL(doc, import.meta.url), "utf8"); } catch { /* best-effort */ }
+    }
+    console.log(formatToolBrainReport({ history, checkLastCommitSource, lireSource, offert }));
     return;
   }
 

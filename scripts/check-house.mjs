@@ -4626,6 +4626,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   ] };
   const usageReport = buildToolBrainUsageReport(fakeHistory, [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }]);
   assert.deepEqual(usageReport.neverUsed, ['find-brain'], 'a tool with zero real events must show up as never-used, exactly what toolsNeverUsed() already computes — never recalculated a second way here');
+
+  // LE QUATRIÈME ÉTAT DU SILENCE (2026-09-25, tâche #763 — « tu retrouves la vérité »).
+  // CE QUI A ÉTÉ MESURÉ, et c'est le fil rouge du projet appliqué au compteur lui-même : les
+  // 5 outils annoncés « jamais sollicités » étaient, trait pour trait, les 5 seuls du catalogue qui
+  // n'appelaient pas recordCliUsage, quand 44 autres l'appelaient. Leur zéro ne mesurait pas leur
+  // inactivité, il mesurait LEUR SILENCE. Deux preuves : l'AGENT DES NOMS lancé trois fois dans
+  // l'heure précédente affichait toujours 0, et THE-FINAL-JUDGE avait rendu 20 constats archivés le
+  // 2026-09-23 en affichant toujours 0. Le coût était sur le point d'être payé, parce que la
+  // conclusion naturelle d'un zéro est « relançons-le » : relancer THE-FINAL-JUDGE, le plus cher du
+  // paysage, pour refaire ce qui avait été fait deux jours plus tôt.
+  const { classerLesSilencieux, aUneLigneDeCommande } = tb;
+  assert.equal(aUneLigneDeCommande('if (import.meta.url === `file://${process.argv[1]}`) main();'), true, 'a CLI guard proves the tool can be launched');
+  assert.equal(aUneLigneDeCommande('export function f() {}'), false, 'a pure library has no way of being launched, so no counter of CLI calls will ever see it');
+  assert.equal(aUneLigneDeCommande('export function f() {}', { offert: 'lancer node scripts/check-spirit.mjs à la main', slug: 'check-spirit-mjs' }), true, 'SECOND SOURCE, added after a real wrong verdict: a WRITTEN COMMAND in a document is proof, where the absence of a pattern in the code is only silence — the same lesson L24 the iceberg already paid for');
+  const sil = classerLesSilencieux(['muet', 'sanscli'], { lireSource: (s2) => (s2 === 'muet' ? 'process.argv[2]; console.log(1);' : 'export const x = 1;') });
+  assert.deepEqual(sil.muets, ['muet'], 'a tool that CAN be launched and does not record its run is a DEFECT OF THE COUNTER to fix, never a finding about the tool');
+  assert.deepEqual(sil.sansCli, ['sanscli'], 'a tool with no command line at all is NOT MEASURABLE, never zero — and the two must never render alike');
+  assert.equal(classerLesSilencieux(['x'], {}).mesurable, false, 'and with no source reader it refuses to classify rather than guessing why a tool is silent, which is the exact mistake this function exists to prevent');
+  const rapportSilence = formatToolBrainReport({ history: fakeHistory, prestations: [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }], lireSource: () => 'export const x = 1;' });
+  assert.ok(/PAS MESURABLE/.test(rapportSilence), 'the printed report says PAS MESURABLE out loud rather than printing a zero that reads like a verdict on the tool');
+  assert.ok(/SILENCE NON CLASS/.test(formatToolBrainReport({ history: fakeHistory, prestations: [{ outils: ['find-brain'] }] })), 'and with no source reader at all it declares that it could not classify, rather than falling back to counting every silence as a zero');
+  console.log('Passed: the usage counter gained a fourth state, and it was the counter that was wrong (2026-09-25, task #763). The user refused to let me relaunch the big tools on a zero he suspected: "tu retrouves la verité". He was right. The five tools reported as never solicited were, trait for trait, the only five of the catalogue that did not call recordCliUsage while forty-four did — their zero measured their SILENCE, not their inactivity. Two proofs, one live and one from the archive: the naming agent had been run three times in the hour and still read 0; THE-FINAL-JUDGE had delivered 20 findings archived on 2026-09-23 and still read 0. The cost was about to be paid, because the natural conclusion of a zero is "run it again" — and running THE-FINAL-JUDGE, the most expensive thing in this landscape, to redo what was done two days earlier is exactly the waste the whole landscape exists to prevent. Four states now, never two: really never solicited, covered by the commit hook, MUTE (it has a command line and does not record — a defect of the counter, fixed for both), and NO COMMAND LINE AT ALL (a separate agent does the work, so no call counter can ever see it — not zero, NOT MEASURABLE, and what says whether it ran is its registry). Launchability is read from two sources rather than one, after a real wrong verdict filed check-spirit as unlaunchable: a written command in a document is proof where a missing pattern in the code is only silence.');
   assert.equal(usageReport.perTool.find((t) => t.slug === 'argus').total, 2, 'a tool with real events must report its real cumulative total via toolUsageStats(), unmodified');
 
   // diagnoseToolBrainSelf() — borné au SEUL périmètre de tool-brain (jamais un audit du paysage entier).

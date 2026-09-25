@@ -25,6 +25,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { buildReportFrame, renderTextReport, buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
 import * as ctd from "./check-tasks-details.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 export const OUTIL = "rapport-gros-prompt";
 export const SCRIPT_PATH = "scripts/rapport-gros-prompt.mjs";
@@ -162,6 +163,10 @@ export function construireRapport(saisine) {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
+  // #763 : sans cette ligne, le compteur affichait 0 alors que trois rapports existent sur disque —
+  // un compteur empêché de compter rend exactement ce que rend un compteur qui n'a rien à compter,
+  // et la conclusion naturelle d'un zéro est « relançons-le », donc du travail refait pour rien.
+  recordCliUsage("rapport-gros-prompt", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const [, , entree, sortie] = process.argv;
   if (!entree) { console.error("usage : node scripts/rapport-gros-prompt.mjs <saisine.json> [sortie.txt]"); process.exit(2); }
   const texte = renderTextReport(construireRapport(JSON.parse(readFileSync(entree, "utf8"))));
