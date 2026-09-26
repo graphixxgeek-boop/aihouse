@@ -1338,7 +1338,26 @@ export function nomDOutilDuRapport(chemin) {
 // On compare donc par les RACINES DES MOTS (memeChose, lib-shell) : deux noms partageant deux mots
 // significatifs désignent le même outil. `check-house` et `check-spirit` n'en partagent qu'un, et
 // restent distincts.
-export function natureDuJumelage(chemins = [], { dossiersDArchive = ["docs/simulations"] } = {}) {
+// LA SIGNATURE D'UN PASSAGE SE LIT DANS LE RAPPORT, JAMAIS AU DOSSIER QUI LE PORTE (2026-09-26,
+// tâche #976, corrigé le soir même de sa naissance). La première version concluait « le même
+// passage deux fois » du seul fait que les deux fichiers étaient dans le même dossier
+// `ronde-<date>` — et elle a accusé à tort les deux seuls cas qu'elle a trouvés. Vérification faite
+// avant de rien supprimer : `clean-dirty-old.txt` est daté 19:07 sur le commit 79b7dd7,
+// `gardien-clean-dirty-old.txt` 20:13 sur 52be7c7, et pour safe-export l'un est marqué
+// « automatique_post_commit » quand l'autre est une « demande directe ». Ce sont DEUX vrais
+// contrôles, une heure d'écart, dont un lancé à la main : les effacer aurait détruit la preuve que
+// le contrôle avait bien tourné deux fois. Une journée de Ronde peut parfaitement contenir deux
+// passages du même outil, et le dossier ne dit rien de plus que le jour.
+export const MOTIF_SIGNATURE_DE_PASSAGE = /^\s*(?:Produit le|État du code|Contexte de production)\s*:\s*(.+)$/gm;
+
+export function signatureDuPassage(texte = "") {
+  const m = [...String(texte).matchAll(MOTIF_SIGNATURE_DE_PASSAGE)].map((x) => x[1].trim());
+  // Pas d'en-tête daté = pas de signature. On rend null plutôt qu'une chaîne vide, qui se
+  // confondrait avec celle d'un autre rapport sans en-tête et les déclarerait « même passage ».
+  return m.length ? m.join(" | ") : null;
+}
+
+export function natureDuJumelage(chemins = [], { dossiersDArchive = ["docs/simulations"], signatures = [] } = {}) {
   const dossiers = [...new Set(chemins.map((c) => String(c).split("/").slice(0, 2).join("/")))];
   const noms = chemins.map(nomDOutilDuRapport);
   const memeOutil = noms.every((n) => memeChose(n, noms[0]));
@@ -1348,7 +1367,14 @@ export function natureDuJumelage(chemins = [], { dossiersDArchive = ["docs/simul
   // fait croire à un second. Le ranger en « constat répété » l'aurait absous — la répétition n'est
   // légitime qu'entre DEUX passages, jamais à l'intérieur d'un seul.
   const passages = [...new Set(chemins.map((c) => String(c).split("/").filter((d) => /^ronde-/.test(d))[0] ?? null))];
-  if (memeOutil && passages.length === 1 && passages[0]) return { cle: "double-depot", pourquoi: NATURES_DE_JUMELAGE["double-depot"] };
+  // Le dossier commun ne suffit plus : il faut que les rapports portent la MÊME signature de
+  // passage (même heure, même commit, même contexte de production). Sans signature lisible, on ne
+  // conclut pas — une absence de preuve n'est pas une preuve d'absence (leçons L5/L11).
+  const sigs = [...new Set(signatures)];
+  const memeSignature = sigs.length === 1 && sigs[0] != null;
+  if (memeOutil && passages.length === 1 && passages[0] && memeSignature) {
+    return { cle: "double-depot", pourquoi: NATURES_DE_JUMELAGE["double-depot"] };
+  }
   if (dossiers.length === 1 && dossiersDArchive.includes(dossiers[0])) {
     // Dans un dossier d'archives, deux fichiers identiques sont soit le même document déposé deux
     // fois, soit deux exécutions qui ont échoué pareil. Le second cas se reconnaît à ce que le
@@ -1385,10 +1411,11 @@ export function trouverRapportsJumeaux(rapports = [], { seuil = SEUIL_PASSE_PART
     // produirait un groupe géant et faux. Ils sortent du calcul, et on dit combien.
     if (sub.split("\n").filter(Boolean).length < minSubstance) continue;
     if (!parSubstance.has(sub)) parSubstance.set(sub, []);
-    parSubstance.get(sub).push(r.chemin);
+    parSubstance.get(sub).push({ chemin: r.chemin, signature: signatureDuPassage(r.texte) });
   }
-  const groupes = [...parSubstance.entries()].filter(([, c]) => c.length > 1).map(([sub, chemins]) => {
-    const nature = natureDuJumelage(chemins);
+  const groupes = [...parSubstance.entries()].filter(([, c]) => c.length > 1).map(([sub, entrees]) => {
+    const chemins = entrees.map((e) => e.chemin);
+    const nature = natureDuJumelage(chemins, { signatures: entrees.map((e) => e.signature) });
     const cle = nature.cle === "a-lire" && estUnConstatDEchec(sub) ? "meme-echec" : nature.cle === "a-lire" ? "doublon-archive" : nature.cle;
     return { chemins, combien: chemins.length, nature: cle, pourquoi: NATURES_DE_JUMELAGE[cle], extrait: sub.split("\n")[0]?.slice(0, 90) ?? "" };
   });

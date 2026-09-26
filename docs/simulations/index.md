@@ -20,7 +20,7 @@ consultable "en cas de doute" seulement.)*
 
 | Simulation | Round final | Dossier atteint | Événements extraits | Notes |
 |---|---|---|---|---|
-| full_sim (sim1) | 44 | oui | 41 | Le plus ancien journal conservé ; round absent de `story`, reconstruit depuis le label de requête (`phase1-roundN-actorX`). |
+| full_sim (sim1) | 44 | oui | 41 | Le plus ancien journal conservé ; round absent de `story`, reconstruit depuis le label de requête (`phase1-roundN-actorX`). **⚠️ SON TRANSCRIPT EST PERDU, et il ne faut pas le chercher : seul `full_sim_actions.txt` (extrait du vrai journal JSON) subsiste.** Le fichier archivé le 2026-09-19 sous le nom `full_sim_transcript.txt` (commit 79d9b61) ne contenait PAS cette simulation : il portait, octet pour octet, le texte de full_sim15 — un collage personnel horodaté 13:42→13:52, alors que sim1 est une extraction de journal numérotée par rounds. Découvert le 2026-09-26 (tâche #976) par le détecteur de rapports jumeaux, et le fichier au nom trompeur a été supprimé : son contenu survit sous le bon nom, `full_sim15_transcript.txt`. Ce qui est vraiment perdu l'était déjà avant cette suppression. |
 | full_sim2 | 56 | oui | 43 | Idem, round reconstruit depuis le label. |
 | full_sim3 | 52 | oui | 43 | Idem, round reconstruit depuis le label. |
 | full_sim4 | 136 | oui | 75 | Anciennement dupliqué dans `docs/contexte-projet/simulations/` — consolidé ici, ancien emplacement retiré. |

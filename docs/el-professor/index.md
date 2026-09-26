@@ -18,7 +18,7 @@ chacun sans mémoire des autres. Le thème le plus faible du lot, systématiquem
 
 | Simulation | Note globale /100 | Esprit /20 | Naturel /20 | Voix /20 | Enquête /20 | Clarté /20 | Lecture | Rapport |
 |---|---|---|---|---|---|---|---|---|
-| full_sim | 66 | 16 | 13 | 7 | 16 | 14 | partielle (thème 4 : pas de dossier archivé séparément) | [full_sim.md](full_sim.md) |
+| ~~full_sim~~ | ~~66~~ | — | — | — | — | — | **INVALIDÉE le 2026-09-26 (tâche #976) : notée sur le transcript de full_sim15, archivé par erreur sous le nom de sim1. sim1 n'a jamais été notée et ne pourra pas l'être, son transcript étant perdu.** | [full_sim.md](full_sim.md) |
 | full_sim2 | 65 | 16 | 13 | 7 | 17 | 12 | partielle (thème 1 : paliers rares jamais sollicités) | [full_sim2.md](full_sim2.md) |
 | full_sim3 | 65 | 16 | 12 | 7 | 15 | 15 | confiante (réserve : paliers rares jamais testés) | [full_sim3.md](full_sim3.md) |
 | full_sim4 | 59 | 14 | 12 | 7 | 11 | 15 | partielle (décalage dossier/transcript, paliers rares) | [full_sim4.md](full_sim4.md) |

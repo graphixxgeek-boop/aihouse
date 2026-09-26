@@ -7917,7 +7917,20 @@ async function testRapportsJumeaux() {
 
   // LES QUATRE NATURES, et chacune a été imposée par un vrai cas du premier passage.
   assert.equal(natureDuJumelage(['docs/simulations/full_sim15_transcript.txt', 'docs/simulations/full_sim_transcript.txt']).cle, 'a-lire', 'two identical files in the archive folder go to the reading stage rather than being judged on their filename');
-  assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/clean-dirty-old.txt', 'docs/circle-tasks/ronde-2026-09-22/gardien-clean-dirty-old.txt']).cle, 'double-depot', 'MUST CATCH: the SAME passage depositing its report twice under two names is never a legitimate repetition — one control happened, and the second file makes it look like two. Filing it under "repeated finding" would have absolved it');
+
+  // LA SIGNATURE DU PASSAGE DÉCIDE, PAS LE DOSSIER (2026-09-26, corrigé le soir de sa naissance).
+  // La première règle concluait « même passage » du seul fait du dossier ronde-<date> commun, et
+  // elle a accusé à tort les deux SEULS cas qu'elle ait trouvés : une heure d'écart, deux commits
+  // différents, l'un automatique et l'autre lancé à la main. Les supprimer aurait détruit la preuve
+  // que le contrôle avait bien tourné deux fois.
+  const memeSig = 'Produit le : 2026-09-22 à 19:07 UTC | État du code : 79b7dd7';
+  const autreSig = 'Produit le : 2026-09-22 à 20:13 UTC | État du code : 52be7c7';
+  const paireRonde = ['docs/circle-tasks/ronde-2026-09-22/clean-dirty-old.txt', 'docs/circle-tasks/ronde-2026-09-22/gardien-clean-dirty-old.txt'];
+  assert.equal(natureDuJumelage(paireRonde, { signatures: [memeSig, memeSig] }).cle, 'double-depot', 'MUST CATCH: the same passage — same hour, same commit — deposited twice under two names is never a legitimate repetition; the second file makes it look like a second control that never happened');
+  assert.equal(natureDuJumelage(paireRonde, { signatures: [memeSig, autreSig] }).cle, 'constat-repete', 'MUST LET PASS: two genuine passages an hour apart in the same Ronde day, finding the same thing because nothing changed between them — this is the real case in the repository, and calling it a duplicate would have had me delete a real control');
+  assert.equal(natureDuJumelage(paireRonde, { signatures: [null, null] }).cle, 'constat-repete', 'no readable header means no signature, so no conclusion — an absence of proof is never a proof of absence');
+  assert.equal(dr.signatureDuPassage('Produit le : 2026-09-22 à 19:07 UTC\nÉtat du code : 79b7dd7 sur x'), '2026-09-22 à 19:07 UTC | 79b7dd7 sur x', 'the signature is READ from the report rather than guessed from its path');
+  assert.equal(dr.signatureDuPassage('un rapport sans en-tête'), null, 'and a report with no header yields null, never an empty string that would match another headerless report');
   assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/x.txt', 'docs/circle-tasks/ronde-2026-09-23/x.txt']).cle, 'constat-repete', 'MUST LET PASS: the same tool across TWO passages is legitimate — a clean repository twice running must produce the same report twice, and "nothing found" is a full entry');
   assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/argus.txt', 'docs/circle-tasks/ronde-2026-09-23/harmonia.txt']).cle, 'entre-outils', 'and two genuinely different tools saying the same thing is the only case that raises the overlap question');
 
@@ -7963,7 +7976,16 @@ async function testRapportsJumeaux() {
   assert.equal(reel.mesurable, true, 'the twin-report detector must actually run against the real docs/ tree');
   assert.ok(reel.examines > 500, `and read the whole corpus (currently ${reel.examines} reports)`);
   assert.ok(reel.passePartout > 10, `with a real boilerplate set derived from it (currently ${reel.passePartout} lines) — without it the unified template would make every report a twin of every other`);
-  assert.ok(reel.fautifs.length >= 1 && reel.fautifs.length <= 6, `and find the real defects without drowning them: ${reel.fautifs.length} genuinely faulty groups out of ${reel.groupes.length}. A detector that flagged all of them would be as useless as one that flagged none`);
+  // LE DÉPÔT EST PROPRE DEPUIS LE 2026-09-26, et c'est ce qu'on affirme — jamais « il doit rester
+  // des défauts », qui serait un test punissant le succès et qui tomberait le jour du ménage.
+  assert.equal(reel.fautifs.length, 0, `the repository currently holds no faulty twin group (${reel.groupes.length} legitimate ones remain). The single real archive duplicate was deleted, and the two "double deposits" turned out to be two genuine passages an hour apart`);
+  assert.ok(reel.groupes.length > 0, 'and the legitimate groups are still reported: silence about them would hide the RHYTHM question, which is the only thing they raise');
+  // Le pouvoir de mordre se garde sur une fixture, jamais sur l'état du dépôt du jour.
+  const fixtureFautive = trouverRapportsJumeaux([
+    { chemin: 'docs/simulations/a_transcript.txt', texte: 'constat unique numero un\nconstat unique numero deux\nconstat unique numero trois' },
+    { chemin: 'docs/simulations/b_transcript.txt', texte: 'constat unique numero un\nconstat unique numero deux\nconstat unique numero trois' },
+  ]);
+  assert.equal(fixtureFautive.fautifs.length, 1, 'MUST CATCH on a fixture: two identical archive files are still a defect, so the zero above measures a clean repository rather than a blind detector');
 
   console.log("Passed: deux rapports qui disent la même chose (2026-09-26, le premier des trois trous qu'il a demandé de traiter). PERSONNE NE POUVAIT RÉPONDRE À SA QUESTION : CLONE-HUNTER ne regarde que le CODE, pure-gold-unity regarde la FORME des rapports et jamais leur contenu, et ce dépôt porte 727 documents produits par l'outillage. LE PIÈGE À CONTOURNER AVANT D'ÉCRIRE UNE LIGNE : depuis le gabarit unifié, tous les rapports partagent leur en-tête — comparer les textes bruts aurait dit que tout se ressemble. Le passe-partout se DÉRIVE du corpus (une ligne présente dans trois dossiers différents), jamais d'une liste qui se périmerait au premier ajout au gabarit. QUATRE NATURES, JAMAIS UNE, et chacune imposée par un vrai cas : « identique » ne veut pas dire « fautif », et les confondre aurait produit neuf accusations pour trois vrais défauts. Le passage réel a d'ailleurs corrigé le détecteur deux fois : (1) quatre groupes classés « deux outils différents » étaient quatre fois le MÊME outil sous un nom renommé — un item de Ronde rebaptisé produit deux noms pour une chose, et « entre-outils » est justement le seul palier qui appelle une action ; (2) le marqueur d'échec appliqué au texte entier absolvait le SEUL vrai défaut du lot, un transcript de deux cents lignes contenant forcément « rien » quelque part. Résultat final : 3 vrais défauts (un doublon d'archive, deux dépôts doubles d'un même passage de Ronde) et 6 répétitions légitimes, dont le même échec de dossier archivé deux fois — informatif, jamais fautif.");
 }

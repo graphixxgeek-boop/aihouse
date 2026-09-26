@@ -1,5 +1,16 @@
 # EL-PROFESSOR — full_sim (sim1)
 
+> **⚠️ NOTE INVALIDÉE LE 2026-09-26 (tâche #976) — À NE PLUS UTILISER COMME MESURE DE sim1.**
+> Cette note a été rendue en lisant `docs/simulations/full_sim_transcript.txt`, « transcript lu
+> intégralement, 1245 lignes ». Ce fichier ne contenait pas sim1 : il portait, octet pour octet, le
+> texte de **full_sim15**. Les 66/100 ci-dessous notent donc le même texte que les 62/100 de
+> `full_sim15.md` — deux notes différentes sur une seule et même conversation, et l'écart de 4 points
+> entre elles mesure la variabilité du notateur, jamais une différence entre deux simulations.
+> **sim1 n'a jamais été notée** : son transcript est perdu (seul `full_sim_actions.txt` subsiste),
+> et elle ne pourra pas l'être. Le texte ci-dessous est conservé tel quel plutôt que supprimé : il
+> reste une lecture valable de full_sim15, et l'effacer effacerait aussi la trace de l'erreur.
+
+
 Note globale : 66/100 (non plafonnée — le thème Esprit dépasse largement le seuil de 10/20, aucun
 signe de dérive consensuelle confirmée)
 
