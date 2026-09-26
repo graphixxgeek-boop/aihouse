@@ -8384,7 +8384,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // (docs/suivi #230), jamais celui qui la prend. Testé avec un readFileImpl injecté et un
   // sous-ensemble isolé de registres — jamais dépendant du contenu réel des scripts du dépôt, qui
   // peut changer indépendamment de ce test.
-  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, findAppelsNonDeclaresDansHyperScan, findDeclarationsSansAppel, findDeclarationsSansRaison, flagFindBoosterCandidates, checkHtmlReportTheme, findOrphanReportFiles, REPORT_PER_RUN_REGISTRIES } = await import('../scripts/doc-report.mjs');
+  const { REGISTRIES, checkHtmlWiring, auditHtmlDecisions, findRegistriesMissingDecision, buildDocReportIndex, LOCAL_JOURNALS, auditLocalJournals, findJournalsMissingFromGitignore, findUndeclaredLocalJournals, findEngineCodeInRegistries, findGardiensMissingFromSource, findAppelsNonDeclaresDansHyperScan, findDeclarationsSansAppel, findDeclarationsSansRaison, flagFindBoosterCandidates, checkHtmlReportTheme, findOrphanReportFiles, REPORT_PER_RUN_REGISTRIES, derivedDecisionForSlug, deriverLesDecisionsManquantes, scriptsQuiNommentLeDossier, formatDecisionsDeriveesLines } = await import('../scripts/doc-report.mjs');
   assert.ok(REGISTRIES.length >= 15, 'the registry table must cover every real tool registry of the network, never a partial or forgotten subset');
   assert.ok(REGISTRIES.every((r) => r.slug && r.label && r.family && r.path && r.decision), 'every registry entry must be fully specified — a half-filled row would silently break the family grouping or the decision audit');
 
@@ -9744,6 +9744,60 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(audited.filter((r) => r.mismatch).map((r) => r.slug), ['unwired-html-tool'], 'only a "delivery_html" registry whose script genuinely never imports html-report.mjs may be flagged as a mismatch — never a "texte" or "archived_html" registry, which are never expected to import it at all');
 
   assert.deepEqual(findRegistriesMissingDecision(['docs/texte-tool', 'docs/some-brand-new-tool', 'docs/referentiel', 'docs/suivi'], testRegistries), ['docs/some-brand-new-tool'], 'a real docs/ folder with no registered decision is the real gap this function exists to catch, but the general reference/suivi folders (never a per-tool report registry) must never be false-flagged');
+
+  // LA DÉCISION SE DÉRIVE, ELLE NE SE RECOPIE PAS (2026-09-26, tâche #926). Le plan de doc-report
+  // proposait « trancher la décision de docs/X » 24 fois — c'est-à-dire recopier 24 lignes à la main
+  // dans REGISTRIES, la liste tenue à la main que l'Article 24 interdit. Le garde-fou censé attraper
+  // la dette en produisait une.
+  const fauxDR = {
+    'scripts/avec-html.mjs': 'import { renderHtmlReport } from "./html-report.mjs";\nexport function x(){}',
+    'scripts/sans-html.mjs': 'export function y(){ console.log("texte"); }',
+    'scripts/un-autre.mjs': 'const dossier = "docs/sans-script-propre";',
+  };
+  const existsDR = (p) => Object.keys(fauxDR).some((k) => p.endsWith(k));
+  const lireDR = (p) => { const k = Object.keys(fauxDR).find((k) => p.endsWith(k)); if (!k) throw new Error('absent'); return fauxDR[k]; };
+  const listerDR = () => ['avec-html.mjs', 'sans-html.mjs', 'un-autre.mjs'];
+
+  assert.equal(derivedDecisionForSlug('avec-html', { existsImpl: existsDR, readFileImpl: lireDR, listDirImpl: listerDR }).decision, 'delivery_html', 'a producing script that imports html-report.mjs settles its own decision — read from the CODE, never guessed from the name');
+  assert.equal(derivedDecisionForSlug('sans-html', { existsImpl: existsDR, readFileImpl: lireDR, listDirImpl: listerDR }).decision, 'texte', 'and one that does not import it settles the opposite, just as mechanically');
+
+  // LE TROISIÈME ÉTAT, ET C'EST LUI QUI REND L'OUTIL HONNÊTE : un dossier sans script du même nom
+  // peut être un dossier de documents OU le registre d'un outil au nom différent (docs/smart-breaker
+  // ← check-gemini-quota.mjs est un cas RÉEL de ce dépôt). L'outil refuse de trancher (leçon L5).
+  const indecidableDR = derivedDecisionForSlug('sans-script-propre', { existsImpl: existsDR, readFileImpl: lireDR, listDirImpl: listerDR });
+  assert.equal(indecidableDR.derivable, false, 'with no same-named script the tool must ABSTAIN — inventing "document folder" would be wrong for docs/smart-breaker and docs/tableau-de-bord, two real registries whose script carries another name');
+  assert.equal(indecidableDR.decision, null, 'and an abstention carries no decision at all, never a default that would read exactly like a measured one');
+
+  // CHAQUE ABSTENTION PORTE SON PROPRE INDICE — sans quoi les dix cas recevaient la même phrase
+  // recopiée dix fois, le travers que le motif de CLONE-HUNTER a déjà corrigé (tâche #217).
+  assert.deepEqual(indecidableDR.nommePar, ['scripts/un-autre.mjs'], 'the clue that separates one abstention from the next is WHO names the folder, derived per case');
+  assert.ok(/un-autre\.mjs/.test(indecidableDR.pourquoi), 'and that clue must reach the printed reason, not stay in the data');
+  const orphelinDR = derivedDecisionForSlug('personne-ne-me-nomme', { existsImpl: existsDR, readFileImpl: lireDR, listDirImpl: listerDR });
+  assert.ok(/AUCUN script ne le nomme/.test(orphelinDR.pourquoi), 'a folder no script names gets the OPPOSITE clue — a document folder with no format decision to take — never the same sentence as the one above');
+
+  // SANS LE DOSSIER scripts/, ON LE DIT (leçon L5) : « pas pu regarder » ne doit jamais s'imprimer
+  // comme « personne ne le nomme », qui est une conclusion.
+  const aveugleDR = derivedDecisionForSlug('peu-importe', { existsImpl: () => false, readFileImpl: lireDR, listDirImpl: () => { throw new Error('illisible'); } });
+  assert.equal(aveugleDR.nommePar, null, 'an unreadable scripts/ directory yields null, never an empty list that would read as a measured absence');
+  assert.ok(/PAS PU être mesuré/.test(aveugleDR.pourquoi), 'and the report says so in words');
+
+  // LA SUITE DE TESTS ET doc-report LUI-MÊME SONT HORS INDICE : la première nomme tout le dépôt, le
+  // second se citerait dans sa propre mesure — le bug auto-référentiel déjà payé cinq fois ici.
+  const avecBruitDR = scriptsQuiNommentLeDossier('cible', {
+    listDirImpl: () => ['check-house.mjs', 'doc-report.mjs', 'vrai-lecteur.mjs'],
+    readFileImpl: () => 'docs/cible',
+  });
+  assert.deepEqual(avecBruitDR, ['scripts/vrai-lecteur.mjs'], 'the test suite and doc-report itself must never count as clues — one names the whole repository, the other would find itself in what it measures');
+
+  // VÉRIFIÉ LIVE : sur CE dépôt, la dérivation tranche réellement une majorité, et la sortie le dit.
+  const { readdirSync: lireDossierDR } = await import('node:fs');
+  const vraisDossiersDR = lireDossierDR(new URL('../docs', import.meta.url), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => `docs/${e.name}`);
+  const vraiesDR = deriverLesDecisionsManquantes(vraisDossiersDR);
+  assert.ok(vraiesDR.derivees.length >= 10, `against this actual repository the derivation must genuinely settle most of the gap, otherwise it replaced 24 hand-copied lines with nothing — settled: ${vraiesDR.derivees.length}`);
+  assert.equal(vraiesDR.derivees.length + vraiesDR.aDeclarer.length, vraiesDR.total, 'nothing may be lost between the two halves: every gap is either derived or named as undecidable');
+  assert.ok(vraiesDR.derivees.some((d) => d.decision === 'delivery_html') && vraiesDR.derivees.some((d) => d.decision === 'texte'), 'and it must produce BOTH verdicts on the real repository — a derivation that only ever answers one way is a constant, not a measurement');
+  const renduDR = formatDecisionsDeriveesLines(vraiesDR).join('\n');
+  assert.ok(renduDR.includes(String(vraiesDR.derivees.length)) && renduDR.includes(String(vraiesDR.aDeclarer.length)), 'the printed output must carry BOTH counts — showing only the derived half would let the remaining decisions pass for done');
 
   const usageHistory = { events: [{ toolSlug: 'texte-tool', origin: 'demande', at: 1 }] };
   const { rows, byFamily, mismatches } = buildDocReportIndex({ registries: testRegistries, usageHistory, readFileImpl: fakeReadFile });

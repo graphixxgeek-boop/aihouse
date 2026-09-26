@@ -385,6 +385,127 @@ export function findRegistriesMissingDecision(realDocsDirs, registries = REGISTR
   return [...realDocsDirs].filter((d) => !known.has(d) && !NON_REGISTRY_DOCS_DIRS.has(d));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA DÉCISION SE DÉRIVE, ELLE NE SE RECOPIE PAS (2026-09-26, tâche #926)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CONSTAT QUI L'A MOTIVÉE : findRegistriesMissingDecision() comptait 24 dossiers sans décision
+// HTML/texte enregistrée, et son plan proposait 24 fois « trancher la décision de docs/X et
+// l'inscrire au registre ». Vingt-quatre lignes à recopier à la main dans REGISTRIES — c'est-à-dire
+// très exactement la liste tenue à la main que l'Article 24 interdit, et qui se périmerait au
+// prochain dossier créé. Le garde-fou censé attraper la dette en produisait une.
+//
+// CE QUI EST RÉELLEMENT DÉRIVABLE, et c'est la majorité : un dossier `docs/<slug>/` dont le script
+// `scripts/<slug>.mjs` existe répond tout seul à la question — si ce script importe html-report.mjs
+// il livre en HTML (`delivery_html`), sinon il livre en texte (`texte`). Ce n'est pas une
+// supposition sur le nom : c'est le CODE du producteur, lu.
+//
+// CE QUI N'EST PAS DÉRIVABLE, ET QUI SE DÉCLARE PLUTÔT QUE SE DEVINER (leçon L5) : un dossier sans
+// script du même nom peut être deux choses opposées, et aucune mécanique ne les sépare —
+//   · un dossier de DOCUMENTS (docs/plans, docs/reponses, docs/gabarits, docs/rapports-de-nuit),
+//     qui n'a aucune décision de format à prendre parce qu'aucun outil ne le remplit ;
+//   · le registre d'un outil dont le SCRIPT PORTE UN AUTRE NOM — et ce n'est pas théorique :
+//     `docs/smart-breaker/` est produit par `check-gemini-quota.mjs`, `docs/tableau-de-bord/` par
+//     `kpi-report.mjs`. Un outil qui trancherait « pas un registre » sur ces deux-là se tromperait.
+// L'outil rend donc un TROISIÈME état, « à déclarer », avec la raison — jamais un verdict inventé
+// sur la moitié qu'il ne peut pas voir.
+export const DECISION_DERIVEE = "dérivée du code du script producteur";
+export const DECISION_A_DECLARER = "aucun script du même nom : indécidable mécaniquement";
+
+// QUI NOMME CE DOSSIER ? — l'indice qui rend chaque cas indécidable DIFFÉRENT des autres.
+//
+// Sans lui, les dix dossiers non dérivables recevaient la MÊME phrase, recopiée dix fois. C'est le
+// travers que ce projet refuse partout ailleurs (cf. le motif de CLONE-HUNTER, tâche #217) : une
+// raison unique répétée renvoie au lecteur la décision qu'on avait de quoi éclairer.
+//
+// SA LIMITE EST IMPRIMÉE AVEC LUI, jamais tue : « nommer » n'est pas « écrire dedans ». Un script
+// qui cite le chemin PEUT s'en servir comme il peut seulement le mentionner — c'est une borne
+// HAUTE, exactement la même nuance que data-archangel imprime déjà sur sa propre mesure. La preuve
+// d'écriture demanderait d'instrumenter l'exécution, pour un gain nul ici : ce qu'on cherche n'est
+// pas un verdict, c'est de quoi trancher à la main en connaissance de cause.
+//
+// DEUX EXCLUSIONS, et elles ont chacune leur raison : la suite de tests (check-house.mjs) nomme à
+// peu près tout le dépôt, donc la compter ferait dire « nommé » de n'importe quoi ; et doc-report
+// lui-même se citerait dans sa propre mesure — le bug auto-référentiel que ce dépôt a déjà payé
+// cinq fois.
+export const SCRIPTS_HORS_INDICE = new Set(["scripts/check-house.mjs", "scripts/doc-report.mjs"]);
+
+export function scriptsQuiNommentLeDossier(slug, { listDirImpl = readdirSync, readFileImpl = readFileSync, root = ROOT, horsIndice = SCRIPTS_HORS_INDICE } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return null; }
+  const trouves = [];
+  for (const f of fichiers) {
+    const chemin = `scripts/${f}`;
+    if (horsIndice.has(chemin)) continue;
+    let src = "";
+    try { src = readFileImpl(join(root, chemin), "utf8"); } catch { continue; }
+    if (src.includes(`docs/${slug}`)) trouves.push(chemin);
+  }
+  return trouves;
+}
+
+export function derivedDecisionForSlug(slug, { existsImpl = existsSync, readFileImpl = readFileSync, listDirImpl = readdirSync, root = ROOT } = {}) {
+  const scriptPath = `scripts/${slug}.mjs`;
+  const abs = join(root, scriptPath);
+  if (!existsImpl(abs)) {
+    const nomme = scriptsQuiNommentLeDossier(slug, { listDirImpl, readFileImpl, root });
+    // `null` ⇒ le dossier scripts/ n'a pas pu être lu : on le DIT, jamais un « personne ne le nomme »
+    // qui serait la même sortie qu'une vraie absence (leçon L5).
+    const indice = nomme === null
+      ? "et l'indice « qui le nomme ? » n'a PAS PU être mesuré (dossier scripts/ illisible) — ce n'est pas « personne »"
+      : nomme.length
+        ? `mais ${nomme.length} script(s) le nomment : ${nomme.join(", ")} — piste sérieuse d'un registre d'outil au nom différent (borne HAUTE : nommer n'est pas écrire dedans)`
+        : "et AUCUN script ne le nomme — piste sérieuse d'un dossier de DOCUMENTS, qui n'a aucune décision de format à prendre";
+    return {
+      slug, scriptPath: null, decision: null, derivable: false, nommePar: nomme,
+      pourquoi: `${DECISION_A_DECLARER}, ${indice}`,
+    };
+  }
+  let source = "";
+  try { source = readFileImpl(abs, "utf8"); } catch { /* illisible : traité comme indécidable, jamais comme "texte" par défaut */ }
+  if (!source) {
+    return { slug, scriptPath, decision: null, derivable: false, pourquoi: `${scriptPath} existe mais n'a pas pu être lu — un fichier illisible n'est jamais un fichier sans HTML` };
+  }
+  const html = /html-report\.mjs/.test(source);
+  return {
+    slug, scriptPath, derivable: true,
+    decision: html ? "delivery_html" : "texte",
+    pourquoi: html
+      ? `${DECISION_DERIVEE} : ${scriptPath} importe html-report.mjs`
+      : `${DECISION_DERIVEE} : ${scriptPath} n'importe pas html-report.mjs`,
+  };
+}
+
+// Le remplaçant du « trancher 24 fois » : pour chaque dossier sans décision enregistrée, on DÉRIVE
+// quand c'est possible et on NOMME ce qui reste. Le compte des deux moitiés est imprimé, parce
+// qu'un outil qui ne dirait que la moitié dérivée laisserait croire le travail fini.
+export function deriverLesDecisionsManquantes(realDocsDirs, { registries = REGISTRIES, existsImpl = existsSync, readFileImpl = readFileSync, listDirImpl = readdirSync, root = ROOT } = {}) {
+  const manquants = findRegistriesMissingDecision(realDocsDirs, registries);
+  const derivees = [], aDeclarer = [];
+  for (const dir of manquants) {
+    const slug = dir.replace(/^docs\//, "").replace(/\/$/, "");
+    const d = derivedDecisionForSlug(slug, { existsImpl, readFileImpl, listDirImpl, root });
+    (d.derivable ? derivees : aDeclarer).push({ ...d, path: `${dir}/` });
+  }
+  return { total: manquants.length, derivees, aDeclarer };
+}
+
+export function formatDecisionsDeriveesLines(r) {
+  const L = [];
+  L.push(`${r.total} dossier(s) sans décision HTML/texte enregistrée — ${r.derivees.length} DÉRIVÉE(S) du code réel, ${r.aDeclarer.length} à déclarer à la main.`);
+  if (r.derivees.length) {
+    L.push("");
+    L.push("  DÉRIVÉES (aucune main nécessaire — la décision se relit à chaque passage, elle ne se périme pas) :");
+    for (const d of r.derivees) L.push(`    · ${d.path} → ${d.decision} (${d.pourquoi})`);
+  }
+  if (r.aDeclarer.length) {
+    L.push("");
+    L.push("  À DÉCLARER (l'outil REFUSE de trancher, et dit pourquoi — jamais un verdict inventé) :");
+    for (const d of r.aDeclarer) L.push(`    · ${d.path} — ${d.pourquoi}`);
+  }
+  return L;
+}
+
 // checkHtmlReportTheme() — garde-fou mécanique pour deux règles permanentes actées le 2026-09-22,
 // demande explicite de l'utilisateur : « tous les rapports html doivent être aux couleurs de la
 // charte (règle) même si celle-ci évolue [...] et tous les rapports html doivent s'ouvrir avec zoom
@@ -495,9 +616,14 @@ function main() {
   const realDocsDirs = readdirSync(join(ROOT, "docs"), { withFileTypes: true })
     .filter((e) => e.isDirectory())
     .map((e) => `docs/${e.name}`);
-  const missing = findRegistriesMissingDecision(realDocsDirs);
-  if (missing.length) {
-    console.log(`\n⚠️  Dossier(s) sous docs/ sans décision HTML/texte enregistrée : ${missing.join(", ")}`);
+  // LA DÉRIVATION REMPLACE LA LISTE DE NOMS (2026-09-26, tâche #926). L'ancienne sortie énumérait
+  // les dossiers et laissait 24 décisions à recopier à la main dans REGISTRIES ; celle-ci en
+  // TRANCHE la majorité en relisant le code du script producteur, et NOMME le reste avec la raison
+  // pour laquelle aucune mécanique ne peut le trancher.
+  const decisions = deriverLesDecisionsManquantes(realDocsDirs);
+  if (decisions.total) {
+    console.log("");
+    for (const ligne of formatDecisionsDeriveesLines(decisions)) console.log(ligne);
   }
   if (mismatches.length) {
     console.log(`\n⚠️  ${mismatches.length} écart(s) décision/code réel : ${mismatches.map((m) => m.label).join(", ")}`);
