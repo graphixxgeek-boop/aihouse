@@ -8040,6 +8040,54 @@ async function testDocumentsJumeaux() {
 
 await testDocumentsJumeaux();
 
+async function testOffresConcurrentes() {
+  const lc = await import('../scripts/le-coordinateur.mjs');
+  const { findOffresConcurrentes, PRESTATIONS, suggestPrestationsForTask } = lc;
+
+  // LE SIGNAL EST CELUI DU MATCHEUR LUI-MÊME. Deux outils ne se chevauchent pas dans l'absolu : ils
+  // se chevauchent quand ils répondent à LA MÊME DEMANDE, puisque c'est là que l'agent doit choisir
+  // — ce que tool-brain existe précisément pour lui épargner.
+  const fixture = [
+    { nom: 'Offre A', demande: "Dette technique et code qui s'empile plutôt que d'être pensé", outils: ['alpha'] },
+    { nom: 'Offre B', demande: "Dette technique et code qui s'empile plutôt que d'être pensé, trouver un bloc recopié", outils: ['beta'] },
+    { nom: 'Offre C', demande: "Vérifier l'heure et la date au référentiel France", outils: ['gamma'] },
+  ];
+  const r = findOffresConcurrentes(fixture);
+  assert.equal(r.paires.length, 1, 'MUST CATCH: one offer whose trigger phrase SWALLOWS another\'s returns both on every request of that vocabulary, and the entry point can never discriminate');
+  assert.equal(r.paires[0].a, 'Offre A', 'and it names both sides rather than picking a culprit — the fix is to make each demande discriminant, never to remove an offer');
+  assert.ok(!r.paires.some((p) => p.a === 'Offre C' || p.b === 'Offre C'), 'MUST LET PASS: an offer on a different subject shares nothing and is never paired');
+
+  // DEUX OFFRES DU MÊME OUTIL NE SE CONCURRENCENT PAS.
+  const memeOutil = findOffresConcurrentes([
+    { nom: 'X sous un angle', demande: "Dette technique et code qui s'empile plutôt que d'être pensé", outils: ['alpha'] },
+    { nom: 'X sous un autre', demande: "Dette technique et code qui s'empile plutôt que d'être pensé, autrement", outils: ['alpha'] },
+  ]);
+  assert.equal(memeOutil.paires.length, 0, 'MUST LET PASS: one tool has every right to be offered under two angles — accusing that would accuse the catalogue of doing its job');
+
+  // UN CATALOGUE VIDE N'EST JAMAIS « AUCUN CHEVAUCHEMENT ».
+  assert.equal(findOffresConcurrentes([]).mesurable, false, 'nothing to compare is not a clean bill');
+
+  // EN DIRECT SUR LES 58 PRESTATIONS RÉELLES (Article 25).
+  const reel = findOffresConcurrentes();
+  assert.equal(reel.mesurable, true, 'the overlap guard must actually run against the real catalogue');
+  assert.equal(reel.examinees, PRESTATIONS.length, 'on every offer, never a subset');
+  assert.equal(reel.paires.length, 0, `and the single real overlap was fixed at the cause the same evening (currently ${reel.paires.map((p) => `${p.a} ↔ ${p.b}`).join(' · ')})`);
+  // LE SEUIL EST POSÉ DANS UN TROU DE LA DISTRIBUTION, et ce test protège le trou plutôt que le
+  // chiffre : si des paires apparaissent à 4 ou 5 mots, le seuil est à remesurer, pas à défendre.
+  assert.equal(Object.keys(reel.distribution).filter((n) => Number(n) >= reel.seuil).length, 0, `the gap the threshold sits in must still exist (distribution: ${JSON.stringify(reel.distribution)})`);
+
+  // LA CORRECTION N'A CASSÉ NI L'UN NI L'AUTRE DES DEUX APPARIEMENTS — contre-test dans les deux sens.
+  const surClones = suggestPrestationsForTask("trouver un bloc de logique recopié au lieu d'être factorisé");
+  assert.equal(surClones[0]?.nom, 'Pack Chasse aux clones', 'a clone question still reaches CLONE-HUNTER first');
+  const surDette = suggestPrestationsForTask("dette technique, du code qui s'empile plutôt que d'être pensé");
+  assert.equal(surDette[0]?.nom, 'Pack Rénovation', 'and a debt question now reaches ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD first, which it could not before: the clone offer repeated the debt phrase VERBATIM and therefore always scored at least as high');
+
+  console.log("Passed: deux OUTILS qui se chevauchent (2026-09-26, troisième et dernier des trois trous qu'il a demandé de traiter). CE QUE LA REPRISE DES NOTES A CORRIGÉ DANS MON IDÉE DE DÉPART (Article 30) : je croyais le sujet vierge, il ne l'était pas. Le dépôt porte un PRINCIPE anti-duplication écrit (docs/regles-de-travail.md §7ter) et a déjà corrigé deux chevauchements réels — un checkHtmlWiring() dupliqué, un troisième script d'orchestration refusé avant d'exister. Les deux fois, c'est un humain qui a remarqué. Ce qui manquait n'était donc pas la règle mais le MÉCANISME : la forme exacte que l'Article 24 interdit, une promesse sans garde-fou. LE SIGNAL EST CELUI DU MATCHEUR LUI-MÊME (significantWords + racineDuMot), jamais une seconde implémentation qui finirait par diverger de celle qui décide vraiment (leçon L29). LE SEUIL NE SE CHOISIT PAS, IL SE LIT : sur 58 prestations, 1 318 paires ne partagent aucun mot, 271 en partagent un, 60 deux, 4 trois — et UNE SEULE en partageait sept. Le trou entre 3 et 7 est franc, le seuil se pose dedans, et la distribution est imprimée avec le résultat pour qu'on puisse vérifier que le trou tient encore. LE SEUL CHEVAUCHEMENT RÉEL ÉTAIT INSTRUCTIF : la demande de « Pack Chasse aux clones » contenait MOT POUR MOT celle de « Pack Rénovation » avant d'ajouter sa spécificité, si bien que toute question sur la dette technique rendait les deux et que le point d'entrée unique ne pouvait jamais trancher. Corrigé à la cause en rendant la demande discriminante, jamais en retirant une offre — et vérifié dans les deux sens : la question clone atteint toujours CLONE-HUNTER, la question dette atteint désormais ALWAYS-NEW-CODE en premier, ce qu'elle ne faisait pas.");
+}
+
+await testOffresConcurrentes();
+
+
 
 await testEtatDesClassifications();
 

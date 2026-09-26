@@ -340,7 +340,7 @@ export const PRESTATIONS = [
   { nom: "Pack Circulation des données", description: "Inventorie tout ce que l'équipe a accumulé (journaux, registres, séries chiffrées), dit qui relit quoi, et repère la donnée qu'on paie à produire sans que rien ne l'exploite. Sert aussi l'agent directement : « briefing <sujet> » liste tout ce que l'équipe sait déjà sur un sujet, avant de repartir de zéro.", demande: "Savoir ce que l'équipe sait déjà sur un sujet, ou repérer une donnée produite que rien n'exploite", outils: ["data-archangel"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Discipline de simulation", description: "Référent du protocole de simulation, consulté AVANT le lancement plutôt qu'après : récite les cinq leçons déjà payées par une simulation entière, vérifie que le scénario couvre les neuf moments exigés et que Smart Conso API a été consultée, bloque un lancement défaillant (passage en force possible avec raison écrite archivée), puis contrôle le journal réel et les cinq étapes d'archivage.", demande: "Lancer une simulation sans refaire une erreur qui a déjà coûté une heure de quota, et vérifier ensuite que rien n'a été sauté", outils: ["process.simulation.guardian"], cout: "0 appel API pour le contrôle lui-même — la simulation qui suit, elle, en fera beaucoup", tokensEstimes: "faible" },
   { nom: "Pack Cerveau central", description: "Généralise find-brain à tout le catalogue PRESTATIONS : à partir d'une description de tâche et/ou d'un fichier ciblé, indique quelle(s) prestation(s) et quel(s) outil(s) de recherche utiliser, sans rien recalculer soi-même. Délivre aussi le rapport de Ronde (outils jamais sollicités, auto-diagnostic borné à son propre périmètre).", demande: "Savoir quel outil ou quelle combinaison d'outils déjà existante utiliser pour une tâche donnée, sans avoir à y réfléchir soi-même", outils: ["tool-brain"], cout: "0 appel API", tokensEstimes: "faible" },
-  { nom: "Pack Chasse aux clones", description: "Scanne lib/scripts/app/components (hors components/ui, vendored) à la recherche de blocs dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — regroupés par cluster et triés par impact réel.", demande: "Dette technique / code qui s'empile plutôt que d'être pensé — trouver un bloc de logique recopié plutôt que factorisé, même renommé", outils: ["clone-hunter"], cout: "0 appel API — heuristique texte, zéro parseur AST", tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés" },
+  { nom: "Pack Chasse aux clones", description: "Scanne lib/scripts/app/components (hors components/ui, vendored) à la recherche de blocs dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — regroupés par cluster et triés par impact réel.", demande: "Trouver un bloc de logique recopié au lieu d'être factorisé, même renommé — duplication réelle dans le code", outils: ["clone-hunter"], cout: "0 appel API — heuristique texte, zéro parseur AST", tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés" },
   { nom: "Pack Objectifs", description: "Confronte chaque objectif chiffré du registre (par entité/période) au résultat réel déjà mesuré par tool-usage.mjs, avec un statut atteint/en dessous/dépassé/pas de données. Surnom : R/O-Guardian (2026-09-21).", demande: "Vérifier si un objectif fixé sur un outil ou une entité a été atteint sur sa période", outils: ["objectifs-vs-resultats"], cout: "0 appel API — relit un historique déjà écrit, jamais un second calcul", tokensEstimes: "faible — sortie compacte, une ligne par objectif" },
   { nom: "Pack Diète", description: "Mesure la pertinence réelle de chaque passage de CLAUDE.md (citations effectives ÷ lignes occupées), classe en règle/narration/inventaire, et rédige le texte de remplacement chiffré — jamais une coupe automatique. Repère aussi les consignes qu'un crochet applique déjà tout seul.", demande: "Mesurer et réduire le poids et le coût en tokens de la charte CLAUDE.md, le seul document rechargé à chaque message", outils: ["ecotoken"], cout: "0 appel API — relit la charte et le dépôt local", tokensEstimes: "faible — sortie compacte ; le plan détaillé ne se lit qu'à la demande" },
   // Trou trouvé en UTILISANT tool-brain plutôt qu'en l'auditant (2026-09-25) : il a répondu
@@ -821,6 +821,73 @@ export function formatFonctionExistanteLines(r, intention = "") {
   for (const c of r.candidates) L.push(`  · ${c.nom}() — ${c.fichier}${c.parNom.length ? ` · par son nom : ${c.parNom.join(", ")}` : ""}${c.parEntete.length ? ` · par son en-tête : ${c.parEntete.join(", ")}` : ""}`);
   L.push("  Ce sont des CANDIDATES, jamais un verdict « c'est déjà fait » : aucune mécanique ne peut juger qu'une fonction trouvée fait vraiment ce que tu veux.");
   return L;
+}
+
+// DEUX OUTILS QUI RÉPONDENT À LA MÊME DEMANDE (2026-09-26, tâche #979, troisième des trois trous
+// qu'il a demandé de traiter : « il y a des outils qui se chevauchent ? »).
+//
+// CE QUE LA REPRISE DES NOTES A CHANGÉ À MON IDÉE DE DÉPART (Article 30). Je croyais le sujet
+// vierge : il ne l'est pas. Le dépôt porte un PRINCIPE anti-duplication écrit noir sur blanc
+// (`docs/regles-de-travail.md` §7ter), et il a déjà corrigé deux chevauchements réels — un
+// `checkHtmlWiring()` dupliqué entre circle-tasks et doc-report, et un troisième script
+// d'orchestration refusé avant d'exister. Les deux fois, c'est un humain qui a remarqué. Ce qui
+// manquait n'était donc pas la règle mais le MÉCANISME, c'est-à-dire exactement la forme que
+// l'Article 24 interdit : une promesse sans garde-fou.
+//
+// LE SIGNAL CHOISI, ET POURQUOI C'EST LE BON. Deux outils ne « se chevauchent » pas dans l'absolu :
+// ils se chevauchent quand ils répondent à LA MÊME DEMANDE, puisque c'est là que l'agent doit
+// choisir — et tool-brain existe précisément pour lui épargner ce choix. On mesure donc le
+// recouvrement des champs `demande` du catalogue, AVEC LA MÉCANIQUE DU MATCHEUR LUI-MÊME
+// (significantWords + racineDuMot) : une seconde implémentation finirait par diverger de celle qui
+// décide vraiment (leçon L29), et le détecteur mesurerait alors autre chose que ce qui se passe.
+//
+// LE SEUIL NE SE CHOISIT PAS, IL SE LIT DANS LA DISTRIBUTION. Sur les 58 prestations réelles,
+// 1 321 paires ne partagent AUCUN mot, 268 en partagent un, 59 deux, 4 trois — et une seule en
+// partage SEPT. Le trou entre 3 et 7 est franc, donc le seuil se pose dedans, et la distribution
+// est imprimée avec le résultat pour qu'un lecteur puisse vérifier que le trou existe encore.
+export const SEUIL_OFFRES_CONCURRENTES = 4;
+
+export function findOffresConcurrentes(prestations = PRESTATIONS, { seuil = SEUIL_OFFRES_CONCURRENTES, lireSource = null } = {}) {
+  if (!Array.isArray(prestations) || prestations.length < 2) {
+    return { mesurable: false, pourquoi: "moins de deux prestations : il n'y a rien à comparer, et rendre « aucun chevauchement » sur rien serait un satisfecit sur du vide" };
+  }
+  const racines = (t) => new Set(significantWords(t ?? "").map(racineDuMot));
+  const prepare = prestations.map((p) => ({ nom: p.nom, outils: p.outils ?? [], racines: racines(p.demande) }));
+  const distribution = {};
+  const paires = [];
+  for (let i = 0; i < prepare.length; i++) {
+    for (let j = i + 1; j < prepare.length; j++) {
+      const partages = [...prepare[i].racines].filter((w) => prepare[j].racines.has(w));
+      distribution[partages.length] = (distribution[partages.length] ?? 0) + 1;
+      if (partages.length < seuil) continue;
+      // DEUX OFFRES DU MÊME OUTIL NE SE CONCURRENCENT PAS : un outil a le droit d'être proposé sous
+      // deux angles, et le lui reprocher serait reprocher au catalogue de faire son travail.
+      if (prepare[i].outils.some((o) => prepare[j].outils.includes(o))) continue;
+      paires.push({ a: prepare[i].nom, b: prepare[j].nom, outilsA: prepare[i].outils, outilsB: prepare[j].outils, partages });
+    }
+  }
+  return {
+    mesurable: true, seuil, examinees: prepare.length, distribution,
+    paires: paires.sort((x, y) => y.partages.length - x.partages.length),
+    horsPortee: "elle compare les DEMANDES déclarées au catalogue, jamais ce que les outils font vraiment. Deux outils qui font la même chose sous deux libellés sans mot commun lui échappent — c'est CLONE-HUNTER qui répond à cette question-là, sur le code.",
+  };
+}
+
+export function formatOffresConcurrentesLines(r) {
+  if (!r?.mesurable) return [`=== OUTILS QUI SE CHEVAUCHENT : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « aucun chevauchement »."];
+  const l = [`=== OUTILS QUI RÉPONDENT À LA MÊME DEMANDE — ${r.paires.length} sur ${r.examinees} prestations ===`, ""];
+  l.push(`  Distribution des mots partagés entre paires d'offres : ${Object.entries(r.distribution).sort((a, b) => Number(a[0]) - Number(b[0])).map(([n, c]) => `${n} mot(s) × ${c}`).join(" · ")}`);
+  l.push(`  Seuil : ${r.seuil} mots. Il est POSÉ DANS LE TROU de cette distribution, jamais choisi — si le trou se referme, le seuil est à remesurer plutôt qu'à défendre.`);
+  l.push("");
+  if (!r.paires.length) l.push("  Aucune paire d'offres concurrentes : chaque demande du catalogue mène à un outil, et tool-brain peut trancher seul.");
+  for (const p of r.paires) {
+    l.push(`  🟠 ${p.partages.length} mots communs — « ${p.a} » (${p.outilsA.join(", ")}) et « ${p.b} » (${p.outilsB.join(", ")})`);
+    l.push(`      mots : ${p.partages.join(", ")}`);
+    l.push(`      → tool-brain rendra TOUJOURS les deux sur ces mots-là, et l'agent devra choisir : c'est exactement ce que le point d'entrée unique existe pour éviter. Le geste est de rendre chaque demande DISCRIMINANTE, jamais de retirer une offre.`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
 }
 
 export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, onboardingContext = null) {
@@ -1876,6 +1943,13 @@ function main() {
   console.log("\n=== Menu des prestations disponibles via le réseau d'outils ===\n");
   console.log(formatMenu());
   console.log("\nRappel ouvert à chaque passage automatique (demande explicite de l'utilisateur) : ce menu n'exécute rien tout seul — il rappelle ce qui PEUT être commandé, à l'agent comme à l'utilisateur à travers lui.");
+  // LE CHEVAUCHEMENT SE DIT ICI, dans le rapport du catalogue, plutôt que dans un quarante-et-unième
+  // item de Ronde : c'est une question SUR le catalogue, et la poser ailleurs que là où le catalogue
+  // se rend obligerait à tenir un rendez-vous de plus pour une ligne (Article 31 — étendre plutôt
+  // qu'ajouter). Muet quand tout va bien, sauf la distribution, qui est la preuve que le seuil
+  // tient encore.
+  console.log("");
+  for (const ligne of formatOffresConcurrentesLines(findOffresConcurrentes())) console.log(ligne);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
