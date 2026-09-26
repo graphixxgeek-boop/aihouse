@@ -853,6 +853,12 @@ export function verifyHyperScanProcess({
 // apparaisse sans jamais avoir été consigné.
 export const CIRCLE_ITEMS_CHANGELOG = [
   {
+    date: "2026-09-26",
+    itemId: "safe-export-kits",
+    changement: "ajout",
+    pourquoi: "Né d'une QUESTION de l'utilisateur, exactement comme pure-gold-unity-scan et integration-audit avant lui — et c'est la troisième fois que sa seule question révèle un trou que douze garde-fous ne voyaient pas : « est-ce que l'agence en elle meme est couverte par ce principe de kit d'export ? question : qui scanne les outils et l'agence pour verifier ? quel outil ? je veux que ce scan soit fait par un outil à chaque ronde circle avec rapport et alerte ». La réponse mesurée était PERSONNE. SAFE-EXPORT tournait bien à chaque commit comme septième Gardien sacré, mais sa couche légère ne regarde que les raisons perdues et les fuites de spécificité — jamais si chaque fichier possède ses cinq pièces de kit, jamais si l'Agence elle-même possède les siennes. Pire : son registre était EXPLICITEMENT EXCLU de la Ronde (« jamais un item de Ronde — même régime que les six autres Gardiens »), une exclusion vraie d'UNE couche et qui le dispensait en pratique de TOUTES. C'est la leçon que cet ajout laisse derrière lui. Ce que l'item apporte et que rien d'autre ne porte : l'ALERTE. Les deux mesures rendent des chiffres qu'il faut savoir lire ; alerteExport() rend un verdict à quatre paliers (🔴 BLOQUÉ / 🟠 DÉGRADÉ / 🟡 POSSIBLE / ✅ PRÊT) qui répond en un mot à « pourrait-on emporter cette Agence ailleurs aujourd'hui ? » — la question de fond du second des deux projets menés en parallèle, qui méritait un rendez-vous fixe et pas un souvenir. Au jour de sa création : kit de l'Agence 100 % après écriture de ses deux pièces manquantes, et 🟠 DÉGRADÉ sur les fichiers (4 kits incomplets sur des VITAUX/ESSENTIELS, 27 ailleurs).",
+  },
+  {
     date: "2026-09-24",
     itemId: "agent-des-noms",
     changement: "ajout",

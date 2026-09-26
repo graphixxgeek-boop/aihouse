@@ -139,6 +139,36 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer node scripts/kpi-report.mjs et lire au moins la famille Robustesse du code (100% mécanique) — les autres familles restent honnêtement N/A si aucun serveur de dev avec du vrai trafic n'est joignable.",
     producesReport: true,
   },
+  // safe-export-kits (2026-09-26, demande explicite de l'utilisateur : « est-ce que l'agence en elle
+  // meme est couverte par ce principe de kit d'export ? question : qui scanne les outils et l'agence
+  // pour verifier ? quel outil ? je veux que ce scan soit fait par un outil à chaque ronde circle avec
+  // rapport et alerte »).
+  //
+  // LA RÉPONSE HONNÊTE À SA QUESTION ÉTAIT « PERSONNE », et c'est pour ça que cet item existe.
+  // SAFE-EXPORT tournait bien à chaque commit (septième Gardien sacré, Article 20), mais sa couche
+  // légère ne regarde que les RAISONS PERDUES et les fuites de spécificité — jamais si chaque fichier
+  // de l'outillage possède ses cinq pièces de kit, et jamais si l'Agence elle-même possède les
+  // siennes. Trois questions différentes ; une seule était surveillée.
+  //
+  // Ce que cet item apporte et qu'aucun autre ne porte : l'ALERTE. mesurerLesKits() et
+  // mesurerLeKitDeLAgence() rendent des chiffres, qu'il faut savoir lire ; alerteExport() rend un
+  // verdict à quatre paliers (🔴 BLOQUÉ / 🟠 DÉGRADÉ / 🟡 POSSIBLE / ✅ PRÊT) qui répond en un mot à
+  // « pourrait-on emporter cette Agence ailleurs aujourd'hui ? ». C'est la question de fond du second
+  // projet (cf. CLAUDE.md, « Les deux projets ») : elle méritait un rendez-vous fixe, jamais un
+  // souvenir.
+  //
+  // Son dossier de dépôt est docs/safe-export/ronde/ et non docs/safe-export/ — même précédent que
+  // `ecotoken-scan` : les artefacts de Ronde ne se mélangent pas aux fichiers datés que l'outil écrit
+  // lui-même, sinon l'index du registre ne distingue plus un passage demandé d'un passage périodique.
+  {
+    id: "safe-export-kits",
+    theme: "KPI & scans",
+    label: "Scanner les kits d'export — de chaque fichier ET de l'Agence elle-même",
+    cout: "gratuit — relit l'inventaire des sources et l'arborescence docs/, aucun appel API",
+    tokensEstimes: "faible — seules la ligne d'alerte et les premiers manquants sont à lire, le détail complet part dans le fichier daté",
+    execute: "Lancer `node scripts/safe-export.mjs kits` (SAFE-EXPORT). Il mesure DEUX populations, jamais une : le kit de l'Agence comme un tout (mesurerLeKitDeLAgence(), 6 pièces — plan, installation, carte, organisation, standards, leçons) et le kit de chaque fichier de l'outillage (mesurerLesKits(), 5 pièces, exemptions écrites comprises), puis rend le verdict d'alerteExport() à quatre paliers. LIRE D'ABORD LA LIGNE D'ALERTE, jamais les tableaux : elle dit en un mot si l'Agence est emportable aujourd'hui, et c'est la seule chose que les chiffres seuls ne disent pas. Un palier 🔴 ou 🟠 ouvre une vraie tâche dans docs/suivi/ (Article 28), jamais une note dans un compte rendu. Écrire le signal via recordCircleItemReport('safe-export-kits', ...) — le fichier daté complet, lui, est déjà écrit par l'outil dans docs/safe-export/.",
+    producesReport: true,
+  },
   // always-new-code-signal RETIRÉ le 2026-09-21 : ALWAYS-NEW-CODE promu sixième Gardien sacré (couche
   // légère seulement — recommendZone()/addendaSignal()/churnSignal(), zéro raisonnement) — tourne
   // désormais déjà automatiquement à chaque commit (scripts/hooks/check-last-commit.mjs), exactement
@@ -801,9 +831,15 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // frères. Son registre a d'ailleurs fait échouer le crochet pre-commit le jour de sa création,
   // avant même que cette ligne n'existe — findRegistriesMissingFromCircle() a fait exactement son
   // travail, et c'est cette exclusion-ci qui est la vraie réponse, jamais un item de plus.
-  // safe-export (2026-09-22) : septième Gardien sacré par sa COUCHE LÉGÈRE, donc câblé dans le
-  // crochet post-commit et jamais dans la Ronde — même règle que les six autres Gardiens. Son
-  // registre n'archive que les passages PROFONDS, qui eux restent exceptionnels (Article 23).
+  // safe-export : SON EXCLUSION A ÉTÉ RETIRÉE LE 2026-09-26, et le retrait est la vraie correction.
+  // Elle disait « jamais un item de Ronde — même règle que les six autres Gardiens », ce qui était
+  // exact pour sa COUCHE LÉGÈRE (raisons perdues, fuites de spécificité) et faux pour tout le reste :
+  // la mesure des KITS D'EXPORT ne tourne à aucun commit, et personne ne la réclamait jamais. La
+  // question de l'utilisateur (« qui scanne les outils et l'agence pour verifier ? ») n'avait donc
+  // pas de réponse. Le registre docs/safe-export/ est désormais couvert pour de vrai par l'item
+  // `safe-export-kits` ci-dessus — une exclusion écrite valait mieux que rien, une couverture réelle
+  // vaut mieux qu'une exclusion. Leçon transverse : une exclusion juste sur UNE couche d'un outil
+  // finit par le dispenser de TOUTES.
   // tool-learning (2026-09-22) : lui a bien un item de Ronde (« intégré à circle pour un suivi au
   // top, comme le reste » — sa demande), donc pas d'exclusion. Cette ligne existe uniquement pour
   // que la prochaine relecture ne se demande pas s'il a été oublié : il est DANS la Ronde.
@@ -825,7 +861,6 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // pas le deviner. Exclusion écrite plutôt que renommage : renommer l'un des deux casserait des
   // renvois existants pour un gain nul.
   "tableau-de-bord": "Couvert par l'item CIRCLE_ITEMS `kpi`, qui dépose ses artefacts dans ce dossier — seuls les NOMS diffèrent, jamais la couverture",
-  "safe-export": "Gardien sacré du code (couche légère) : tourne automatiquement à CHAQUE commit via le crochet post-commit, jamais un item de Ronde — même régime que les six autres Gardiens. Son scan profond, lui, est exceptionnel et se déclenche sur proposition, jamais sur calendrier",
   "tasks-process-guardian": "gardien de process SECONDAIRE, même règle que process-simulation-guardian et angel-of-ia-process : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22 — une seule voix à la Ronde, jamais une par gardien). Son déclencheur est l'état du suivi, pas le calendrier",
   "process-simulation-guardian": "gardien de process SECONDAIRE, même règle qu'angel-of-ia-process ci-dessus : god-of-all-process centralise et relaie son verdict (décision de l'utilisateur, 2026-09-22). Son vrai déclencheur est de toute façon une simulation, jamais le calendrier",
   "find-deep-booster": "outil de découpage à la demande sur UN fichier précis, jamais un balayage périodique de tout le dépôt — exactement la même raison que find-booster ci-dessus",
@@ -1373,6 +1408,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   // deux produisent un artefact qui n'est pas un rapport texte.
   profil: "docs/profil-utilisateur/",
   kpi: "docs/tableau-de-bord/",
+  "safe-export-kits": "docs/safe-export/ronde/",
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",
   "the-equalizer": "docs/the-equalizer/",

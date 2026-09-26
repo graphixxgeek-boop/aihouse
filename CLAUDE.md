@@ -1128,12 +1128,22 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | THE-KING | l'Agent qui veille au respect de… | `docs/the-king-blueprint.md` | `docs/referentiel/the-king.md` | `scripts/the-king.mjs` |
 | THE-SCREENER | pendant graphique d'EL-PROFESSOR | `docs/the-screener-blueprint.md` | `docs/referentiel/the-screener.md` | `scripts/the-screener-capture.mjs` |
 
-**Six outils n'ont volontairement NI blueprint NI instanciation séparés** — ils n'ont aucune
-connaissance propre au projet à documenter à part, leur valeur étant d'appeler et d'agréger ce que
-les autres disent déjà : **LE-COORDINATEUR**, **CIRCLE-TASKS**, **doc-HTML**, **le compteur
-d'usage**, **Doc-Report** et **find-deep-booster**. Ce que chacun fait exactement, et pourquoi
-chacun est resté sans fiche, vit dans `docs/regles-de-travail.md` §7ter — la table maîtresse
-détaillée outil par outil.
+**RÈGLE ABROGÉE LE 2026-09-26 — plus aucun outil n'est dispensé de blueprint.** Six l'étaient
+(**LE-COORDINATEUR**, **CIRCLE-TASKS**, **doc-HTML**, **le compteur d'usage**, **Doc-Report**,
+**find-deep-booster**), au motif qu'ils n'ont aucune connaissance propre à documenter à part, leur
+valeur étant d'appeler et d'agréger ce que les autres disent déjà. **L'utilisateur a supprimé ce
+motif le 2026-09-26, et sa raison est décisive** : « les optionnels de l'agence ne pourront pas être
+réinstallés correctement si on les a intégrés à l'agence. Ça n'est pas logique. » Le blueprint ne
+récompense pas l'originalité d'un outil — il répond à « peut-on le remonter ailleurs ? », et cette
+question a la même réponse pour tout le monde, puisque le fichier partira de toute façon avec
+l'Agence. Les six ont reçu leurs pièces le jour même.
+
+**Ce qui dispense encore, et c'est tout** : (1) une **pièce** peut être SANS OBJET — le registre
+n'est dû qu'à un fichier qui écrit quelque chose ; (2) un **fichier** peut être dispensé avec sa
+raison ÉCRITE (`EXEMPTES_DU_KIT`, `scripts/safe-export.mjs`), pour les trois cas qui ne partiront
+pas : les crochets git, le script d'installation de l'environnement, et ce qui sert le produit
+plutôt que l'outillage. Le détail du kit complet vit dans `docs/referentiel/safe-export.md`, mesuré
+à chaque Ronde. Ce que chaque outil fait exactement reste dans `docs/regles-de-travail.md` §7ter.
 
 **Un seul point d'entrée obligatoire pour choisir un outil : tool-brain, jamais un choix fait
 soi-même entre les couches.** *(Re-précisé le 2026-09-21 à la demande explicite de l'utilisateur :

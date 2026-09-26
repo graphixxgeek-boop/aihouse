@@ -222,3 +222,84 @@ demandait rien. **C'est exactement l'angle mort qu'il a vu.**
 
 **Coût pour tout combler** : 105 documents à écrire (44 blueprints, 43 fiches, 18 index de
 registre). Chiffre mesuré, jamais estimé.
+
+## Le kit de l'AGENCE elle-même *(2026-09-26)*
+
+**Sa question, et elle a trouvé trois choses d'un coup** : « est-ce que l'agence en elle meme est
+couverte par ce principe de kit d'export ? question : qui scanne les outils et l'agence pour
+verifier ? quel outil ? je veux que ce scan soit fait par un outil à chaque ronde circle avec
+rapport et alerte ».
+
+**Quatre-vingts kits d'outils complets ne font pas une Agence exportable.** Le destinataire
+recevrait quatre-vingts plans de pièces détachées et aucun plan de la machine : il saurait ce que
+fait chaque outil, et rien de la façon dont ils s'appellent, ni par où commencer, ni ce qu'il faut
+installer pour que le premier démarre.
+
+### Les six pièces, et la question à laquelle chacune répond
+
+| Pièce | Fichier | La question du destinataire |
+|---|---|---|
+| le plan | `docs/agence-blueprint.md` | comment les outils s'articulent-ils, et par où commence-t-on ? |
+| l'installation | `docs/agence-installation.md` | que dois-je faire, dans l'ordre, pour qu'elle tourne chez moi ? |
+| la carte | `docs/referentiel/classification-agence.md` | qui compose l'équipe, et que vaut chacun ? |
+| l'organisation | `docs/referentiel/organisation-agence.md` | quels rangs, quelles familles, quels axes ? |
+| les standards | `docs/referentiel/standards.md` | à quoi reconnaît-on qu'un outil est à niveau ? |
+| les leçons | `docs/referentiel/lecons.md` | quelles erreurs n'ai-je pas besoin de refaire ? |
+
+Les deux premières n'existaient pas avant sa question. Elles ont été écrites le jour même :
+**67 % → 100 %**.
+
+### LE FAUX VERT, et pourquoi la correction change la NATURE du contrôle
+
+`mesurerLExportabilite()` vérifiait l'existence de `docs/agence-exportable-conception.md` et
+concluait « le blueprint de l'Agence EXISTE ». Or ce fichier dit LUI-MÊME, dans ses dix premières
+lignes, qu'il n'est pas ça : c'est le carnet d'idées du projet **suivant**. Le contrôle lisait la
+présence d'un fichier et en déduisait la présence d'un contenu — le faux vert le plus classique, et
+il portait sur la pièce la plus importante de tout l'export.
+
+La correction n'est donc pas un chemin de plus. Pour cette pièce seule, on exige qu'elle **se
+DÉCLARE** (`MARQUEUR_PLAN_AGENCE`) : une ligne qui dit ce qu'elle est. C'est peu, et c'est déjà
+beaucoup plus qu'un test d'existence. Les cinq autres restent vérifiées sur leur seule existence, et
+`horsPortee` le dit noir sur blanc plutôt que de le laisser deviner.
+
+**Trois états, jamais deux** : une pièce absente, une pièce présente hors sujet et une pièce
+illisible produisent trois messages différents — et l'illisible ne compte ni comme tenue ni comme
+manquante (elle sort en `nonVerifiees`).
+
+## L'ALERTE d'exportabilité, et sa place à la Ronde
+
+**Le rapport existait ; l'alerte manquait, et la différence est tout** : un rapport de quatre-vingts
+lignes se survole, une alerte de trois lignes se lit.
+
+`alerteExport()` rend un verdict unique, **du plus grave au moins grave**, parce qu'un export bloqué
+par l'absence du plan de la machine ne se rattrape pas en complétant des kits d'outils :
+
+| Verdict | Quand |
+|---|---|
+| 🔴 EXPORT BLOQUÉ | une pièce du kit de l'Agence manque — **passe avant tout le reste** |
+| 🟠 EXPORT DÉGRADÉ | des kits incomplets sur des fichiers VITAUX ou ESSENTIELS |
+| 🟡 EXPORT POSSIBLE | il ne reste que des trous sur des fichiers utiles ou optionnels |
+| ✅ EXPORT PRÊT | tous les kits dus sont tenus, et l'Agence porte le sien |
+
+Elle **se tait quand tout est complet** (leçon L6 : une alerte qui parle toujours cesse d'être une
+alerte) — mais la ligne de verdict reste imprimée dans tous les cas, et « PAS MESURÉE » ne
+ressemble jamais à « aucune alerte ».
+
+### Qui la lance, et à quel rythme
+
+**Item de Ronde `safe-export-kits`**, thème « KPI & scans », gratuit, dépôt dans
+`docs/safe-export/ronde/`. Commande : `node scripts/safe-export.mjs kits`.
+
+**Pourquoi il a fallu l'ajouter alors que SAFE-EXPORT tourne déjà à chaque commit** — et c'est la
+leçon que cet ajout laisse derrière lui. Son registre était **explicitement exclu** de la Ronde
+(`CIRCLE_AUTO_COVERED_REGISTRIES`), au motif exact : « Gardien sacré du code (couche légère) :
+tourne automatiquement à CHAQUE commit […] jamais un item de Ronde ». C'était vrai de **sa couche
+légère** (raisons perdues, fuites de spécificité) et faux de tout le reste : la mesure des kits ne
+tournait à aucun commit, et personne ne la réclamait jamais. **Une exclusion juste sur UNE couche
+d'un outil finit par le dispenser de TOUTES.** L'exclusion a été retirée ; le registre est
+désormais couvert pour de vrai.
+
+### Mesure réelle au jour de sa création
+
+Kit de l'Agence **100 %** (après écriture des deux pièces manquantes). Fichiers :
+**🟠 EXPORT DÉGRADÉ** — 4 kits incomplets sur des VITAUX/ESSENTIELS, 27 ailleurs.

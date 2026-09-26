@@ -639,10 +639,18 @@ export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = e
   // LE BLUEPRINT DE L'AGENCE ELLE-MÊME — sa question, et elle est plus profonde qu'elle n'en a
   // l'air : quatre-vingt-huit blueprints d'outils n'expliquent pas comment les outils s'articulent.
   // Un acheteur qui reçoit 41 plans de pièces détachées n'a pas reçu le plan de la machine.
-  const cheminAgence = join(root, BLUEPRINT_DE_L_AGENCE);
-  const agence = exists(cheminAgence)
-    ? { existe: true, chemin: BLUEPRINT_DE_L_AGENCE, octets: (() => { try { return readFileImpl(cheminAgence, "utf8").length; } catch { return null; } })() }
-    : { existe: false, chemin: BLUEPRINT_DE_L_AGENCE, pourquoi: "aucun document ne décrit l'Agence COMME UN TOUT : on exporterait des pièces sans le plan de la machine" };
+  // CORRIGÉ LE 2026-09-26, ET C'ÉTAIT UN FAUX VERT SUR LA PIÈCE LA PLUS IMPORTANTE. Cette mesure
+  // vérifiait l'existence de `docs/agence-exportable-conception.md` et concluait « le blueprint de
+  // l'Agence EXISTE ». Or ce fichier déclare lui-même, dans ses dix premières lignes, qu'il n'est
+  // pas ça : c'est le carnet d'idées du projet SUIVANT. Le contrôle lisait la présence d'un fichier
+  // et en déduisait la présence d'un contenu. Il délègue désormais à `mesurerLeKitDeLAgence()`,
+  // qui exige que le plan se DÉCLARE comme tel — un fichier présent n'est pas un fichier qui parle
+  // du bon sujet.
+  const kitAgence = mesurerLeKitDeLAgence({ root, exists, readFileImpl });
+  const planAgence = kitAgence.detail.find((d) => d.cle === "plan");
+  const agence = planAgence?.present
+    ? { existe: true, chemin: planAgence.chemin, kit: kitAgence, octets: (() => { try { return readFileImpl(join(root, planAgence.chemin), "utf8").length; } catch { return null; } })() }
+    : { existe: false, chemin: planAgence?.chemin ?? "docs/agence-blueprint.md", kit: kitAgence, pourquoi: planAgence?.pourquoi ?? "aucun document ne décrit l'Agence COMME UN TOUT : on exporterait des pièces sans le plan de la machine" };
   return {
     mesurable: true, niveaux, agence,
     // LA PRIORITÉ SE DÉRIVE DU CROISEMENT, elle ne s'écrit pas : les vitaux et les essentiels sans
@@ -976,10 +984,12 @@ function main() {
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
     return import("./le-classificateur.mjs").then((lc) => {
       const k = mesurerLesKits({ vitalite: lc.vitaliteDuParc() });
-      for (const l of formatKitsLines(k, { combien: 40 })) console.log(l);
+      const a = mesurerLeKitDeLAgence();
+      const sortie = [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 999 }), "", ...alerteExportLines(k, a)];
+      for (const l of [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 40 }), "", ...alerteExportLines(k, a)]) console.log(l);
       try { mkdirSync(join(ROOT, "docs/safe-export"), { recursive: true }); } catch { /* déjà là */ }
       const cible = join(ROOT, "docs/safe-export", `kits-${new Date().toISOString().slice(0, 10)}.txt`);
-      writeFileSync(cible, formatKitsLines(k, { combien: 999 }).join("\n") + "\n", "utf8");
+      writeFileSync(cible, sortie.join("\n") + "\n", "utf8");
       console.log(`\nÉcrit : ${cible}`);
     });
   }
@@ -1529,6 +1539,137 @@ export function formatKitsLines(k, { niveaux = NIVEAUX_DE_KIT, combien = 8, exem
   }
   l.push("");
   l.push(`  HORS PORTÉE : ${k.horsPortee}`);
+  return l;
+}
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// LE KIT DE L'AGENCE ELLE-MÊME (2026-09-26) — sa question, et elle manquait
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION : « est-ce que l'agence en elle-même est couverte par ce principe de kit d'export ? »
+// La réponse mesurée est NON, et c'est pire qu'un simple manque.
+//
+// CE QUE LE PREMIER CONTRÔLE AFFIRMAIT, ET POURQUOI C'ÉTAIT FAUX. `mesurerLExportabilite()`
+// vérifiait l'existence de `docs/agence-exportable-conception.md` et concluait « le blueprint de
+// l'Agence EXISTE ». Or ce fichier dit LUI-MÊME, dans ses dix premières lignes, qu'il n'est pas ça :
+// « Il n'est pas un document de travail sur Maison IA vivante. Rien ici ne gouverne le code
+// actuel. » C'est le carnet d'idées du projet SUIVANT. Le contrôle lisait la présence d'un fichier
+// et en déduisait la présence d'un contenu — le faux vert le plus classique, et il portait sur la
+// pièce la plus importante de tout l'export.
+//
+// POURQUOI LA QUESTION COMPTE AUTANT QU'ELLE EN A L'AIR : quatre-vingts kits d'outils complets ne
+// font pas une Agence exportable. Le destinataire recevrait quatre-vingts plans de pièces détachées
+// et aucun plan de la machine — il saurait ce que fait chaque outil et rien de la façon dont ils
+// s'appellent, ni par où commencer, ni ce qu'il faut installer pour que le premier démarre.
+export const PIECES_DU_KIT_AGENCE = [
+  { cle: "plan", quoi: "le plan de l'Agence comme un TOUT", chemin: "docs/agence-blueprint.md",
+    question: "comment les outils s'articulent-ils, et par où commence-t-on ?" },
+  { cle: "installation", quoi: "la procédure de remise en route ailleurs", chemin: "docs/agence-installation.md",
+    question: "que dois-je faire, dans l'ordre, pour qu'elle tourne chez moi ?" },
+  { cle: "carte", quoi: "la carte des outils, générée", chemin: "docs/referentiel/classification-agence.md",
+    question: "qui compose l'équipe, et que vaut chacun ?" },
+  { cle: "organisation", quoi: "le référentiel d'organisation", chemin: "docs/referentiel/organisation-agence.md",
+    question: "quels rangs, quelles familles, quels axes ?" },
+  { cle: "standards", quoi: "les exigences que l'Agence s'impose", chemin: "docs/referentiel/standards.md",
+    question: "à quoi reconnaît-on qu'un outil est à niveau ?" },
+  { cle: "lecons", quoi: "ce que le projet a appris en se trompant", chemin: "docs/referentiel/lecons.md",
+    question: "quelles erreurs n'ai-je pas besoin de refaire ?" },
+];
+
+// LA PIÈCE LA PLUS FACILE À FALSIFIER, et donc celle qu'on vérifie autrement : un fichier PRÉSENT
+// n'est pas un fichier qui PARLE DU BON SUJET. Le plan de l'Agence a été « présent » pendant des
+// jours sous la forme d'un carnet d'idées sur un autre projet. On exige donc, pour cette pièce
+// seule, qu'elle se DÉCLARE : une ligne qui dit ce qu'elle est. C'est peu, et c'est déjà beaucoup
+// plus qu'un test d'existence.
+export const MARQUEUR_PLAN_AGENCE = /plan de l'Agence|blueprint de l'Agence|l'Agence comme un tout/i;
+
+export function mesurerLeKitDeLAgence({ root = ROOT, exists = existsSync, readFileImpl = readFileSync, pieces = PIECES_DU_KIT_AGENCE } = {}) {
+  const detail = pieces.map((p) => {
+    const present = exists(join(root, p.chemin));
+    if (!present) return { ...p, present: false, pourquoi: "le fichier n'existe pas" };
+    if (p.cle !== "plan") return { ...p, present: true };
+    let texte = "";
+    try { texte = readFileImpl(join(root, p.chemin), "utf8"); } catch { return { ...p, present: null, pourquoi: "le fichier existe mais n'a pas pu être lu : sa nature n'a PAS été vérifiée, ce qui n'est jamais « il convient »" }; }
+    const parle = MARQUEUR_PLAN_AGENCE.test(texte);
+    return { ...p, present: parle, pourquoi: parle ? null : "le fichier existe mais ne se déclare nulle part comme le plan de l'Agence — un fichier présent n'est pas un fichier qui parle du bon sujet" };
+  });
+  const dues = detail.filter((d) => d.present !== null);
+  const tenues = dues.filter((d) => d.present);
+  return {
+    mesurable: true, detail,
+    manquantes: dues.filter((d) => !d.present),
+    nonVerifiees: detail.filter((d) => d.present === null),
+    complet: tenues.length === dues.length,
+    taux: dues.length ? Math.round((tenues.length / dues.length) * 100) : null,
+    horsPortee: "cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.",
+  };
+}
+
+export function formatKitAgenceLines(a) {
+  if (!a?.mesurable) return [`KIT DE L'AGENCE : PAS MESURÉ — ${a?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== LE KIT DE L'AGENCE ELLE-MÊME — ${a.taux} % (${a.detail.length - a.manquantes.length - a.nonVerifiees.length}/${a.detail.length - a.nonVerifiees.length}) ===`, ""];
+  l.push("  Quatre-vingts kits d'outils complets ne font pas une Agence exportable : le destinataire");
+  l.push("  recevrait autant de plans de pièces détachées, et aucun plan de la machine.");
+  l.push("");
+  for (const d of a.detail) {
+    const etat = d.present === null ? "❓ NON VÉRIFIÉ" : d.present ? "✔️  présente   " : "🔴 MANQUANTE  ";
+    l.push(`  ${etat} ${d.quoi}`);
+    l.push(`      ${d.chemin} — ${d.question}`);
+    if (d.pourquoi) l.push(`      ⚠️  ${d.pourquoi}`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${a.horsPortee}`);
+  return l;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// L'ALERTE D'EXPORTABILITÉ (2026-09-26) — ce que la Ronde doit VOIR, pas lire
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE : « je veux que ce scan soit fait par un outil à chaque ronde circle avec rapport et
+// alerte ». Le rapport existait ; l'ALERTE manquait, et la différence est tout : un rapport de
+// quatre-vingts lignes se survole, une alerte de trois lignes se lit.
+//
+// CE QU'ELLE DIT, ET DANS QUEL ORDRE — du plus grave au moins grave, parce qu'un export bloqué par
+// l'absence du plan de la machine ne se rattrape pas en complétant des kits d'outils :
+//   1. le KIT DE L'AGENCE incomplet — on exporterait des pièces sans le plan ;
+//   2. les kits d'outils VITAUX incomplets — ce sans quoi l'Agence ne tourne pas, irrécupérable ;
+//   3. le reste, chiffré, sans le détailler.
+//
+// ELLE SE TAIT QUAND TOUT EST COMPLET. Une alerte qui parle toujours cesse d'être une alerte
+// (leçon L6) — et ce silence-là est mérité, contrairement au silence d'un contrôle qui n'a rien
+// regardé : la ligne de verdict reste imprimée dans tous les cas.
+export function alerteExport(kits, agence) {
+  if (!kits?.mesurable) return { mesurable: false, pourquoi: `les kits n'ont pas été mesurés — ${kits?.pourquoi ?? "raison non fournie"}` };
+  const vitaux = (kits.bloquants ?? []).filter((b) => b.vitalite === "vital" || b.vitalite === "essentiel");
+  const reste = (kits.bloquants ?? []).length - vitaux.length;
+  const agenceIncomplete = agence?.mesurable ? (agence.manquantes ?? []) : null;
+  return {
+    mesurable: true,
+    agenceIncomplete, vitaux, reste,
+    alerte: Boolean((agenceIncomplete && agenceIncomplete.length) || vitaux.length),
+    // LE VERDICT EN UNE LIGNE, toujours imprimé : c'est lui qui distingue « rien à signaler » de
+    // « ce contrôle n'a pas tourné », et les deux se ressemblent trait pour trait dans un silence.
+    verdict: (agenceIncomplete && agenceIncomplete.length)
+      ? "🔴 EXPORT BLOQUÉ — le plan de la machine manque"
+      : vitaux.length ? "🟠 EXPORT DÉGRADÉ — des pièces vitales manquent"
+      : reste ? "🟡 EXPORT POSSIBLE, avec des trous sur des fichiers non vitaux"
+      : "✅ EXPORT PRÊT — tous les kits dus sont tenus",
+  };
+}
+
+export function alerteExportLines(kits, agence) {
+  const a = alerteExport(kits, agence);
+  if (!a.mesurable) return [`⚠️  ALERTE D'EXPORTABILITÉ : PAS MESURÉE — ${a.pourquoi}. Ce n'est PAS « aucune alerte ».`];
+  const l = [`=== ALERTE D'EXPORTABILITÉ — ${a.verdict} ===`];
+  if (a.agenceIncomplete?.length) {
+    l.push(`  🔴 Le KIT DE L'AGENCE est incomplet : ${a.agenceIncomplete.map((m) => m.chemin).join(", ")}`);
+    l.push("     Quatre-vingts kits d'outils complets ne font pas une Agence exportable.");
+  }
+  if (a.vitaux.length) l.push(`  🟠 ${a.vitaux.length} kit(s) incomplet(s) sur des fichiers VITAUX ou ESSENTIELS — à réparer en premier.`);
+  if (a.reste) l.push(`  🟡 ${a.reste} autre(s) kit(s) incomplet(s), sur des fichiers utiles ou optionnels.`);
+  if (!a.alerte && !a.reste) l.push("  Rien à signaler : chaque fichier dû porte son kit complet, et l'Agence porte le sien.");
   return l;
 }
 

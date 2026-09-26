@@ -1,3 +1,23 @@
+=== LE KIT DE L'AGENCE ELLE-MÊME — 100 % (6/6) ===
+
+  Quatre-vingts kits d'outils complets ne font pas une Agence exportable : le destinataire
+  recevrait autant de plans de pièces détachées, et aucun plan de la machine.
+
+  ✔️  présente    le plan de l'Agence comme un TOUT
+      docs/agence-blueprint.md — comment les outils s'articulent-ils, et par où commence-t-on ?
+  ✔️  présente    la procédure de remise en route ailleurs
+      docs/agence-installation.md — que dois-je faire, dans l'ordre, pour qu'elle tourne chez moi ?
+  ✔️  présente    la carte des outils, générée
+      docs/referentiel/classification-agence.md — qui compose l'équipe, et que vaut chacun ?
+  ✔️  présente    le référentiel d'organisation
+      docs/referentiel/organisation-agence.md — quels rangs, quelles familles, quels axes ?
+  ✔️  présente    les exigences que l'Agence s'impose
+      docs/referentiel/standards.md — à quoi reconnaît-on qu'un outil est à niveau ?
+  ✔️  présente    ce que le projet a appris en se trompant
+      docs/referentiel/lecons.md — quelles erreurs n'ai-je pas besoin de refaire ?
+
+  HORS PORTÉE : cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.
+
 === LES KITS D'EXPORT — 51/82 kit(s) complet(s), 7 dispensé(s) avec raison ===
 
   LA RÈGLE, depuis sa correction du 2026-09-26 : le KIT COMPLET est dû à TOUT fichier de l'Agence.
@@ -60,3 +80,7 @@
      [optionnel] scripts/pnpm-install.mjs (40 %) — manque : docs/pnpm-install-blueprint.md, docs/referentiel/pnpm-install.md, docs/pnpm-install/index.md
 
   HORS PORTÉE : un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.
+
+=== ALERTE D'EXPORTABILITÉ — 🟠 EXPORT DÉGRADÉ — des pièces vitales manquent ===
+  🟠 4 kit(s) incomplet(s) sur des fichiers VITAUX ou ESSENTIELS — à réparer en premier.
+  🟡 27 autre(s) kit(s) incomplet(s), sur des fichiers utiles ou optionnels.
