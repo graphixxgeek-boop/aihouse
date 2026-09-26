@@ -8709,6 +8709,23 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const croiseReel = CASSANDRA.croiserTypeEtRang({ recensement: CASSANDRA.recenserLesScripts() });
     assert.equal(croiseReel.couverture, 100, `checked live: every one of the ${croiseReel.total} real files carries both a type and a rank — the "un type + un rang pour chaque fichier" the user asked for, measured rather than claimed`);
     assert.ok(croiseReel.lignes.every((l) => CASSANDRA.decoderIndice(l.indice, { familles: croiseReel.familles }).lisible), 'and every real index can be read back — an index nobody can decode is a decoration');
+
+    // LE POSTE QUI SE DÉRIVE (2026-09-26, sa décision : « pas un rang : dériver les obligations »).
+    // Le rang donne la base, ce que l'outil FAIT ajoute le reste — et « ce qu'il fait » se mesure
+    // par les sondes, jamais ne se déclare. La preuve tient en deux outils DE MÊME RANG : celui qui
+    // garde une mémoire et rend une page doit plus que celui qui ne fait qu'appeler les autres.
+    const postes = CASSANDRA.postesDeTousLesOutils();
+    assert.equal(postes.mesurable, true, 'checked live: the derived postes compute against the real repository');
+    const gros = postes.lignes.find((l) => l.chemin.includes('kpi-report'));
+    const petit = postes.lignes.find((l) => l.chemin.includes('messages-courts'));
+    assert.equal(gros.rang, petit.rang, 'both carry the SAME rank — which is the whole point of the demonstration');
+    assert.ok(gros.ajouts.length > petit.ajouts.length, `same rank, different equipment: the one that keeps a memory and renders a page owes more (${gros.ajouts.length}) than the one that only calls others (${petit.ajouts.length}) — nobody promoted it, the measurement noticed`);
+    assert.ok(gros.ajouts.every((a) => a.pourquoi && a.ou), 'every derived obligation says WHERE it lives and WHY it is owed — an obligation without a reason gets deleted by the next agent (Article 27)');
+    // Le rang, lui, ne se dérive JAMAIS : un outil qui se promouvrait lui-même se décernerait un titre.
+    assert.ok(!Object.keys(CASSANDRA.OBLIGATIONS_DERIVEES[0]).includes('rang'), 'the derived mechanism grants EQUIPMENT, never a RANK — a rank is merited and decided, and that distinction is deliberate');
+    // HORS AGENCE : une exclusion déclarée prime sur toute déduction de type.
+    assert.equal(CASSANDRA.rangDuFichier({ chemin: 'scripts/run-simulation.mjs', type: 'commande-documentee' }, { categories: {} }).rang, 'Hors Agence', 'a declared exclusion wins over every type deduction: looking for a rank for something that never applied is what kept these five in a queue');
+    assert.ok(Object.values(CASSANDRA.HORS_AGENCE).every((r) => r && r.length > 10), 'and each exclusion carries its written reason — a hand-kept list is only legitimate when its manual nature AND its motive are written beside it (Article 24)');
     // Le slug se lit dans l'inventaire de la charte, jamais deviné sur le nom du fichier (L24).
     const slugs = CASSANDRA.slugsParScript(null, { inventaire: [{ script: 'scripts/check-argus.mjs', instanciation: 'docs/referentiel/argus.md' }] });
     assert.equal(slugs['scripts/check-argus.mjs'], 'argus', 'the slug comes from the fiche the charter declares, not from the file name — guessing it missed two of the seven Gardiens sacrés in silence');
@@ -9645,7 +9662,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // justement le travail demandé. Un test doit garder la RÈGLE (chaque rang dit son nom, son sens
   // et où se lisent ses titulaires), jamais le décompte du jour où il a été écrit.
   assert.ok(Object.values(ORG_RANKS).every((r) => r.label && r.sens), 'every rank must carry both a name and what it MEANS — a bare label would leave a reader guessing why a tool sits there');
-  assert.ok(Object.values(ORG_RANKS).every((r) => r.singulier && ['equipe', 'type', 'registre', 'equipe-absent'].includes(r.population)), 'and every rank must say, in the dictionary itself, the form a tool actually carries AND where its holders are read — without that, the check looks for all of them in the team roster and reports the three filled elsewhere as empty');
+  assert.ok(Object.values(ORG_RANKS).every((r) => r.singulier && ['equipe', 'type', 'registre', 'equipe-absent', 'declaration'].includes(r.population)), 'and every rank must say, in the dictionary itself, the form a tool actually carries AND where its holders are read — without that, the check looks for all of them in the team roster and reports the three filled elsewhere as empty');
   console.log('Passed: CASSANDRA rebuilds the Agence Codex org chart from real data on every run (tasks #171/#172/#179) — ranks derived from the real master table and AGENT_CATEGORIES, the six Gardiens from GARDIEN_DOMAINS rather than a second hand-kept list, report emitters from the real file-writer classification — so it can never go stale the way the hand-maintained document did; checked live, every certified member lands in exactly one rank with the totals adding up and none left without a suite (the real three-member gap this closed), no tool can appear at two ranks at once (the duplicate found on the very first render, fixed by a dedicated identity slug that is deliberately NOT the documentation-path slug), it renders through the shared report gabarit with its inherited reliability warning, it says so explicitly when nothing is wrong, and every rank label lives in exactly one place so the calibrated renaming stays a single edit.');
 }
 

@@ -1,6 +1,6 @@
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 2026-09-25 23:23 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 2026-09-26 00:51 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -16,7 +16,7 @@ GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 20
 |---|---|---|---|
 | **TYPE** | ce que le fichier EST | se CONSTATE en lisant le fichier | tous (87) |
 | **RANG** | ce que le fichier VAUT | se MÉRITE, ou se DÉDUIT du type | 100 % des fichiers |
-| **FAMILLE** | ce sur quoi il travaille | se décide, une par membre de l'équipe | les 40 de l'équipe |
+| **FAMILLE** | ce sur quoi il travaille | se décide, une par membre de l'équipe | les 57 de l'équipe |
 | **CLASSES TRANSVERSES** | ce qu'il sait FAIRE | sonde sur le code, plusieurs par fichier | tous |
 | *iceberg* | à quel groupe il appartient (membre, oublié, infrastructure, plomberie) | porté par `classerIceberg()` | — |
 | *moment* | QUAND il intervient | porté par `momentsDeLOutil()` | — |
@@ -45,7 +45,7 @@ GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 20
 | `execution-directe-non-documentee` | **Sans porte** |
 | `commande-documentee` | aucun — le rang se lit dans le registre de l'équipe, et à défaut c'est un état de passage |
 
-## 3. L'échelle des rangs (8) — et comment on monte
+## 3. L'échelle des rangs (10) — et comment on monte
 
 Un rang n'est pas une étiquette figée : c'est une position sur une échelle, avec une marche suivante et ce qu'il faut pour la franchir. Les trois états de passage (Sans porte, Sans fiche, Postulant) ne sont pas des rangs où l'on reste — ce sont des files d'attente avec un geste précis au bout.
 
@@ -54,6 +54,8 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | 🧱 **Socle** | le type du fichier | n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche | — | AUCUNE promotion, et ce n'est pas un plafond : il n'a jamais candidaté. Le promouvoir serait lui inventer une ambition qu'il n'a pas. |
 | 🎖️ **Agents Cadre** | le registre de l'équipe | dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus | — | *(non arrêté)* |
 | 🛡️ **Gardiens sacrés du code** | le registre de l'équipe | délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit | — | *(non arrêté)* |
+| 🎖️ **Membres certifiés classiques** | le registre de l'équipe | un vrai membre badgé, dont la valeur est d'APPELER et d'AGRÉGER ce que les autres disent déjà — deux obligations seulement, parce qu'il n'a rien de propre à documenter à part | Membre | acquérir une connaissance propre au projet — et ça ne se décrète pas : ça se constate le jour où l'outil se met à savoir quelque chose que lui seul sait. |
+| 🚧 **Hors de l'Agence** | ? | lance, sauvegarde ou archive le produit — testé comme n'importe quel code, mais jamais un travailleur de l'Agence (§5 du référentiel, 4e catégorie) | — | AUCUNE, et c'est le sens même du rang : ces scripts servent le PRODUIT, pas l'outillage qui le vérifie. Les équiper d'une fiche et d'un blueprint reviendrait à recruter le camion de livraison. |
 | 🎖️ **Membres certifiés** | le registre de l'équipe | câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint | Gardien sacré du code | remplir le critère DOUBLE de l'Article 20 : un vrai scan de qualité du CODE, ET gratuit à chaque commit. Vers Agent Cadre, ce n'est pas une promotion mécanique mais une décision d'organisation, donc celle de l'utilisateur. |
 | 🚪 **Postulants** *(nom provisoire)* | le type, en l'absence d'inscription | documenté ET lançable, mais absent du registre de l'équipe : le plus proche de l'adhésion, à une décision près | Membre | l'inscrire au registre de l'équipe, et lui donner le poste de travail d'un Membre |
 | 📄 **Sans fiche** *(nom provisoire)* | le type du fichier | lançable, mais nommé par aucun document du dépôt : soit une commande qu'on a oublié de documenter, soit un script jetable qui a survécu | Postulant | lui écrire une fiche — un document, n'importe lequel, qui le nomme |
@@ -65,10 +67,12 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | Socle | AUCUN poste, et ce n'est pas un manque : une bibliothèque, un crochet ou le filet de sécurité servent tout le monde sans avoir jamais candidaté. Leur exigence est ailleurs — être importés proprement et testés. |
 | Agent Cadre | tout ce qu'a un Membre, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. Deux outils seulement. |
 | Gardien sacré du code | fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + câblage au crochet post-commit. JAMAIS d'item de Ronde : il tourne à chaque commit, un item ferait doublon. |
+| Membre classique | DEUX obligations seulement : la ligne à la table maîtresse et l'entrée au menu des prestations. Ni fiche, ni blueprint, ni registre imposés d'office — il n'a rien de propre au projet à documenter à part. Tout le reste de son poste se DÉRIVE de ce qu'il fait réellement (cf. OBLIGATIONS_DERIVEES). |
+| Hors Agence | AUCUN poste d'Agence, par nature : il sert le produit, pas l'outillage. Il reste tenu par le filet de sécurité et le typage, comme n'importe quel code du dépôt. |
 | Membre | fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + entrée au menu des prestations. Le poste complet, sans le crochet. |
 | Postulant | poste NON ARRÊTÉ, et c'est justement ce que le rang signale : lançable, mais nommé par aucun document. La question n'est pas « quel poste lui donner » mais « le documente-t-on, ou le supprime-t-on ». |
-| Sans fiche | *(non arrêté)* |
-| Sans porte | *(non arrêté)* |
+| Sans fiche | poste NON ARRÊTÉ — et c'est le signal : la question n'est pas quel poste lui donner, mais lui écrire une fiche ou le supprimer. |
+| Sans porte | poste NON ARRÊTÉ — la question est encore en amont : lui donner une commande de lancement, ou le supprimer. |
 | Émetteur de rapport | *(non arrêté)* |
 
 **Les pièces d'un poste complet**, pour lire la colonne de droite :
@@ -93,48 +97,54 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | Facette | Position | Valeurs possibles, dans l'ordre |
 |---|---|---|
 | type | 1 | 0=crochet · 1=filet-de-securite · 2=commande-documentee · 3=commande-sans-fiche · 4=bibliotheque-partagee · 5=bibliotheque-solitaire · 6=infrastructure-shell · 7=execution-directe-non-documentee |
-| rang | 2 | 0=Socle · 1=Agent Cadre · 2=Gardien sacré du code · 3=Membre · 4=Postulant · 5=Sans fiche · 6=Sans porte · 7=Émetteur de rapport |
+| rang | 2 | 0=Socle · 1=Agent Cadre · 2=Gardien sacré du code · 3=Membre classique · 4=Hors Agence · 5=Membre · 6=Postulant · 7=Sans fiche · 8=Sans porte · 9=Émetteur de rapport |
 | famille | 3 | 0=Audit indépendant · 1=Coordination · 2=Exceptionnel (page blanche / audit lourd) · 3=Gardiens sacrés du code · 4=Gouvernance interne · 5=Outillage de navigation · 6=Simulation & qualité narrative · 7=Suite Dette & Structure du code |
 | classes | 4 | bit 0=scanne-le-depot · bit 1=rend-du-html · bit 2=tient-un-registre · bit 3=coute-des-appels-api · bit 4=porte-un-garde-fou-devolutivite · bit 5=declare-sa-fiabilite · bit 6=conclut-en-plan-daction · bit 7=compte-son-usage · bit 8=refuse-de-mesurer |
 
 ## 5. Chaque fichier : rang, famille, indice (87, exhaustif)
 
-### 🎖️ Membre — 30
+### 🎖️ Membre — 36
 
 | Fichier | Famille | Indice |
 |---|---|---|
-| `abraham-les-references.mjs` | Suite Dette & Structure du code | `2.3.7.dz` |
-| `agent-des-noms.mjs` | Suite Dette & Structure du code | `2.3.7.dh` |
-| `agent-du-temps.mjs` | Gouvernance interne | `2.3.4.dg` |
-| `angel-of-ia-process.mjs` | Coordination | `2.3.1.cl` |
-| `check-gemini-quota.mjs` | Gouvernance interne | `2.3.4.4g` |
-| `check-level-target.mjs` | Gouvernance interne | `2.3.4.6o` |
-| `check-tasks-details.mjs` | Coordination | `2.3.1.dz` |
-| `circle-tasks.mjs` | Coordination | `2.3.1.c7` |
-| `data-archangel.mjs` | Coordination | `2.3.1.cl` |
-| `ecotoken.mjs` | Gouvernance interne | `2.3.4.dh` |
-| `el-professor.mjs` | Simulation & qualité narrative | `2.3.6.dz` |
-| `find-booster.mjs` | Outillage de navigation | `2.3.5.4g` |
-| `god-of-all-process.mjs` | Coordination | `2.3.1.c7` |
-| `hyper-scan-checkpoint.mjs` | Exceptionnel (page blanche / audit lourd) | `2.3.2.6d` |
-| `ines-official.mjs` | Exceptionnel (page blanche / audit lourd) | `2.3.2.3p` |
-| `integration-outil.mjs` | Suite Dette & Structure du code | `4.3.7.bl` |
-| `memento.mjs` | Simulation & qualité narrative | `4.3.6.ck` |
-| `moise-tables-de-loi.mjs` | Suite Dette & Structure du code | `2.3.7.dx` |
-| `objectifs-vs-resultats.mjs` | Gouvernance interne | `2.3.4.cg` |
-| `process-simulation-guardian.mjs` | Simulation & qualité narrative | `2.3.6.dt` |
-| `pure-gold-unity.mjs` | Coordination | `4.3.1.br` |
-| `smart-conso-api.mjs` | Gouvernance interne | `2.3.4.6c` |
-| `smart-conso-token.mjs` | Gouvernance interne | `2.3.4.dg` |
-| `the-deep-reader.mjs` | Audit indépendant | `5.3.0.2` |
-| `the-equalizer.mjs` | Suite Dette & Structure du code | `2.3.7.dd` |
-| `the-final-judge.mjs` | Audit indépendant | `5.3.0.2` |
-| `the-king.mjs` | Gouvernance interne | `2.3.4.dc` |
-| `the-screener-capture.mjs` | Simulation & qualité narrative | `2.3.6.4m` |
-| `tool-brain.mjs` | Coordination | `2.3.1.dd` |
-| `tool-learning.mjs` | Suite Dette & Structure du code | `2.3.7.dh` |
+| `abraham-les-references.mjs` | Suite Dette & Structure du code | `2.5.7.dz` |
+| `agent-des-noms.mjs` | Suite Dette & Structure du code | `2.5.7.dh` |
+| `agent-du-temps.mjs` | Gouvernance interne | `2.5.4.dg` |
+| `angel-of-ia-process.mjs` | Coordination | `2.5.1.cl` |
+| `check-gemini-quota.mjs` | Gouvernance interne | `2.5.4.4g` |
+| `check-level-target.mjs` | Gouvernance interne | `2.5.4.6o` |
+| `check-profil-utilisateur.mjs` | Coordination | `2.5.1.2p` |
+| `check-profile.mjs` | Simulation & qualité narrative | `2.5.6.8` |
+| `check-spirit.mjs` | Simulation & qualité narrative | `2.5.6.9x` |
+| `check-suivi-fidelity.mjs` | Coordination | `2.5.1.35` |
+| `check-tasks-details.mjs` | Coordination | `2.5.1.dz` |
+| `circle-process-guardian.mjs` | Coordination | `2.5.1.dt` |
+| `circle-tasks.mjs` | Coordination | `2.5.1.c7` |
+| `data-archangel.mjs` | Coordination | `2.5.1.cl` |
+| `ecotoken.mjs` | Gouvernance interne | `2.5.4.dh` |
+| `el-professor.mjs` | Simulation & qualité narrative | `2.5.6.dz` |
+| `find-booster.mjs` | Outillage de navigation | `2.5.5.4g` |
+| `god-of-all-process.mjs` | Coordination | `2.5.1.c7` |
+| `hyper-scan-checkpoint.mjs` | Exceptionnel (page blanche / audit lourd) | `2.5.2.6d` |
+| `ines-official.mjs` | Exceptionnel (page blanche / audit lourd) | `2.5.2.3p` |
+| `integration-outil.mjs` | Suite Dette & Structure du code | `4.5.7.bl` |
+| `memento.mjs` | Simulation & qualité narrative | `4.5.6.ck` |
+| `moise-tables-de-loi.mjs` | Suite Dette & Structure du code | `2.5.7.dx` |
+| `objectifs-vs-resultats.mjs` | Gouvernance interne | `2.5.4.cg` |
+| `process-simulation-guardian.mjs` | Simulation & qualité narrative | `2.5.6.dt` |
+| `pure-gold-unity.mjs` | Coordination | `4.5.1.br` |
+| `smart-conso-api.mjs` | Gouvernance interne | `2.5.4.6c` |
+| `smart-conso-token.mjs` | Gouvernance interne | `2.5.4.dg` |
+| `the-deep-reader.mjs` | Audit indépendant | `5.5.0.2` |
+| `the-equalizer.mjs` | Suite Dette & Structure du code | `2.5.7.dd` |
+| `the-final-judge.mjs` | Audit indépendant | `5.5.0.2` |
+| `the-ghost.mjs` | Gouvernance interne | `2.5.4.4` |
+| `the-king.mjs` | Gouvernance interne | `2.5.4.dc` |
+| `the-screener-capture.mjs` | Simulation & qualité narrative | `2.5.6.4m` |
+| `tool-brain.mjs` | Coordination | `2.5.1.dd` |
+| `tool-learning.mjs` | Suite Dette & Structure du code | `2.5.7.dh` |
 
-### 🧱 Socle — 24
+### 🧱 Socle — 23
 
 | Fichier | Famille | Indice |
 |---|---|---|
@@ -160,35 +170,23 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `report-template.mjs` | — | `4.0.-.9y` |
 | `serie-temporelle.mjs` | — | `4.0.-.78` |
 | `simulation-visiteur.mjs` | — | `5.0.-.0` |
-| `sites-env.sh` | — | `6.0.-.0` |
 | `tasks-process-guardian.mjs` | — | `5.0.-.4g` |
 
-### 🚪 Postulant — 22
+### 🎖️ Membre classique — 11
 
 | Fichier | Famille | Indice |
 |---|---|---|
-| `check-profil-utilisateur.mjs` | — | `2.4.-.2p` |
-| `check-profile.mjs` | — | `2.4.-.8` |
-| `check-spirit.mjs` | — | `2.4.-.9x` |
-| `check-suivi-fidelity.mjs` | — | `2.4.-.35` |
-| `circle-process-guardian.mjs` | — | `2.4.-.dt` |
-| `criticite.mjs` | — | `2.4.-.7k` |
-| `doc-report.mjs` | — | `2.4.-.6v` |
-| `find-brain.mjs` | — | `2.4.-.4g` |
-| `kpi-report.mjs` | — | `2.4.-.dj` |
-| `le-regisseur.mjs` | — | `2.4.-.dj` |
-| `messages-courts.mjs` | — | `2.4.-.74` |
-| `modes-de-travail.mjs` | — | `2.4.-.4` |
-| `ou-on-en-est.mjs` | — | `2.4.-.87` |
-| `rapport-gros-prompt.mjs` | — | `2.4.-.5g` |
-| `route-booster.mjs` | — | `2.4.-.4g` |
-| `run-framework.mjs` | — | `2.4.-.0` |
-| `run-simulation.mjs` | — | `2.4.-.4` |
-| `sauvegarde-projet.mjs` | — | `2.4.-.5` |
-| `sites-env.mjs` | — | `2.4.-.0` |
-| `summarize-simulation-log.mjs` | — | `2.4.-.w` |
-| `the-ghost.mjs` | — | `2.4.-.4` |
-| `tool-usage.mjs` | — | `2.4.-.as` |
+| `criticite.mjs` | Coordination | `2.3.1.7k` |
+| `doc-report.mjs` | Coordination | `2.3.1.6v` |
+| `find-brain.mjs` | Outillage de navigation | `2.3.5.4g` |
+| `kpi-report.mjs` | Gouvernance interne | `2.3.4.dj` |
+| `le-regisseur.mjs` | Simulation & qualité narrative | `2.3.6.dj` |
+| `messages-courts.mjs` | Coordination | `2.3.1.74` |
+| `modes-de-travail.mjs` | Coordination | `2.3.1.4` |
+| `ou-on-en-est.mjs` | Coordination | `2.3.1.87` |
+| `rapport-gros-prompt.mjs` | Coordination | `2.3.1.5g` |
+| `route-booster.mjs` | Outillage de navigation | `2.3.5.4g` |
+| `tool-usage.mjs` | Gouvernance interne | `2.3.4.as` |
 
 ### 🛡️ Gardien sacré du code — 7
 
@@ -202,6 +200,17 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `clone-hunter.mjs` | Gardiens sacrés du code | `4.2.3.69` |
 | `safe-export.mjs` | Gardiens sacrés du code | `4.2.3.dd` |
 
+### 🚧 Hors Agence — 6
+
+| Fichier | Famille | Indice |
+|---|---|---|
+| `run-framework.mjs` | — | `2.4.-.0` |
+| `run-simulation.mjs` | — | `2.4.-.4` |
+| `sauvegarde-projet.mjs` | — | `2.4.-.5` |
+| `sites-env.mjs` | — | `2.4.-.0` |
+| `sites-env.sh` | — | `6.4.-.0` |
+| `summarize-simulation-log.mjs` | — | `2.4.-.w` |
+
 ### 🎖️ Agent Cadre — 2
 
 | Fichier | Famille | Indice |
@@ -213,8 +222,8 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 
 | Fichier | Famille | Indice |
 |---|---|---|
-| `install-ci.mjs` | — | `7.6.-.0` |
-| `pnpm-install.mjs` | — | `7.6.-.4` |
+| `install-ci.mjs` | — | `7.8.-.0` |
+| `pnpm-install.mjs` | — | `7.8.-.4` |
 
 ## 6. Les types de fichier (7, exhaustif)
 
@@ -264,21 +273,21 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 
 Une famille dit **ce sur quoi on travaille**, jamais ce qu'on vaut. Les Gardiens sacrés ont désormais la leur, sur décision de l'utilisateur : le nom répète leur rang, et c'est assumé — une famille explicitement redondante se lit mieux qu'un troisième nom pour la même chose, et c'est l'endroit où on les cherche quand on ouvre l'organigramme.
 
-**Gouvernance interne** — 9 : `agent-du-temps` · `cassandra-rh` · `check-level-target` · `ecotoken` · `objectifs-vs-resultats` · `smart-breaker` · `smart-conso-api` · `smart-conso-token` · `the-king`
+**Coordination** — 17 : `angel-of-ia-process` · `check-profil-utilisateur` · `check-suivi-fidelity` · `check-tasks-details` · `circle-process-guardian` · `circle-tasks` · `criticite` · `data-archangel` · `doc-report` · `god-of-all-process` · `le-coordinateur` · `messages-courts` · `modes-de-travail` · `ou-on-en-est` · `pure-gold-unity` · `rapport-gros-prompt` · `tool-brain`
 
-**Coordination** — 8 : `angel-of-ia-process` · `check-tasks-details` · `circle-tasks` · `data-archangel` · `god-of-all-process` · `le-coordinateur` · `pure-gold-unity` · `tool-brain`
+**Gouvernance interne** — 12 : `agent-du-temps` · `cassandra-rh` · `check-level-target` · `ecotoken` · `kpi-report` · `objectifs-vs-resultats` · `smart-breaker` · `smart-conso-api` · `smart-conso-token` · `the-ghost` · `the-king` · `tool-usage`
 
 **Gardiens sacrés du code** — 7 : `always-new-code` · `argus` · `axa-check` · `clean-dirty-old` · `clone-hunter` · `harmonia` · `safe-export`
 
+**Simulation & qualité narrative** — 7 : `check-profile` · `check-spirit` · `el-professor` · `le-regisseur` · `memory-audit` · `process-simulation-guardian` · `the-screener`
+
 **Suite Dette & Structure du code** — 6 : `abraham-les-references` · `agent-des-noms` · `integration-outil` · `moise-tables-de-loi` · `the-equalizer` · `tool-learning`
 
-**Simulation & qualité narrative** — 4 : `el-professor` · `memory-audit` · `process-simulation-guardian` · `the-screener`
+**Outillage de navigation** — 4 : `find-booster` · `find-brain` · `find-deep-booster` · `route-booster`
 
 **Audit indépendant** — 2 : `the-deep-reader` · `the-final-judge`
 
 **Exceptionnel (page blanche / audit lourd)** — 2 : `hyper-scan-checkpoint` · `ines-official`
-
-**Outillage de navigation** — 2 : `find-booster` · `find-deep-booster`
 
 ## 8. Les classes transverses (9, exhaustif)
 
@@ -339,8 +348,6 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 `abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `corpus-mesure.mjs` · `criticite.mjs` · `data-archangel.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `messages-courts.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `priorites.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `safe-export.mjs` · `serie-temporelle.mjs` · `smart-conso-token.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs`
 
 ## 9. Ce qui reste ouvert
-
-**22 fichiers sont Postulants** : documentés, lançables, et absents du registre de l'équipe. Ce n'est plus une case vide — c'est une file d'attente avec un geste connu au bout (les inscrire, ou déclarer qu'ils n'ont pas vocation à entrer).
 
 > ⚠️ Le référentiel et le code ne déclarent pas le même nombre d'axes — le référentiel déclare 2 axe(s), le code en publie 8 (iceberg, type, moment, domaine, destinataire, cherche, rang, famille) — la prose se rédige à la main, mais elle ne peut plus s'écarter en silence.
 

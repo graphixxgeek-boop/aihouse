@@ -707,6 +707,30 @@ export function mostRecentDate(text) {
 // (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
 // de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
+  // LES 17 QUI ONT REJOINT L'ÉQUIPE LE 2026-09-26, et pourquoi la Ronde ne leur doit pas un item
+  // chacun. Le garde-fou a mordu à la seconde où ils sont entrés au registre, et il avait raison de
+  // poser la question : rejoindre l'équipe, c'est être regardé périodiquement. La réponse suit le
+  // précédent déjà écrit juste en dessous pour abraham-les-references — COUVERT PAR ÉVÉNEMENT — et
+  // elle est donnée un par un plutôt qu'en bloc, parce qu'une exclusion sans raison n'est pas une
+  // décision (Article 28). Dix-sept items de plus auraient noyé la Ronde : la tâche #612 cherche
+  // justement à RÉDUIRE le nombre de rapports produits sans lecteur.
+  "doc-report": "couvert PAR ÉVÉNEMENT : il inventorie les registres quand on touche à un registre, et son propre garde-fou tourne déjà au commit",
+  "kpi-report": "couvert PAR ÉVÉNEMENT : le tableau de bord se produit à la fin d'une simulation ou d'une Ronde, jamais sur son propre rythme",
+  "tool-usage": "couvert EN CONTINU : il enregistre à chaque appel d'outil ; un item périodique regarderait un compteur qui se remplit tout seul",
+  "find-brain": "couvert PAR ÉVÉNEMENT : appelé par tool-brain avant chaque recherche dans un fichier, donc exercé plusieurs fois par jour",
+  "le-regisseur": "couvert PAR ÉVÉNEMENT : il orchestre l'archivage d'une simulation, et il n'y a rien à archiver entre deux simulations",
+  "route-booster": "couvert PAR ÉVÉNEMENT : appelé quand on découpe un gros fichier, un chantier qui se décide, jamais qui se planifie",
+  criticite: "couvert PAR ÉVÉNEMENT : la criticité se calcule au moment où une tâche est écrite, pas par calendrier",
+  "messages-courts": "couvert PAR ÉVÉNEMENT : il met en forme un message quand il y en a un à mettre en forme",
+  "modes-de-travail": "couvert PAR ÉVÉNEMENT : consulté au début d'une session pour savoir dans quel mode on est",
+  "ou-on-en-est": "couvert PAR ÉVÉNEMENT : on le lance quand on veut savoir où on en est, ce qui est par définition une demande",
+  "rapport-gros-prompt": "couvert PAR ÉVÉNEMENT : il sert quand une saisine contient plusieurs demandes, jamais entre deux",
+  "check-spirit": "couvert PAR ÉVÉNEMENT, et c'est écrit dans la charte : à lancer quand lib/lia.ts ou les personnalités changent. Un passage périodique coûterait de vrais appels API sans qu'aucun changement ne le justifie (Article 8)",
+  "check-profile": "couvert PAR ÉVÉNEMENT, même raison et même coût réel que check-spirit",
+  "check-profil-utilisateur": "couvert PAR ÉVÉNEMENT : il relit le profil de collaboration quand une observation nouvelle est écrite",
+  "check-suivi-fidelity": "couvert EN CONTINU : il tourne déjà au crochet de commit, ce qui est plus fréquent qu'un item de Ronde",
+  "circle-process-guardian": "couvert PAR LA RONDE ELLE-MÊME : il est consulté au lancement de chaque Ronde — lui donner un item de Ronde le ferait se vérifier lui-même",
+  "the-ghost": "couvert PAR ÉVÉNEMENT : convoqué quand on cherche une trace disparue, jamais sur un rythme",
   // abraham-les-references (2026-09-23) : couvert PAR ÉVÉNEMENT — on l'appelle quand on analyse
   // un document précis, jamais sur un rythme. Un passage périodique analyserait des documents que
   // personne n'a demandé à regarder, et la tâche #612 cherche justement à REDUIRE les rapports.

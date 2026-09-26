@@ -205,6 +205,28 @@ export const AGENT_CATEGORIES = {
   // AGENT-DU-TEMPS parce que les deux pilotent une ressource qui s'épuise — proposé par l'agent le
   // 2026-09-25, reste à confirmer par l'utilisateur, à qui revient tout nommage (#754).
   "smart-breaker": "Membre — Gouvernance interne",
+  // LES 17 QUI REJOIGNENT L'ÉQUIPE (2026-09-26, ses trois décisions sur les 22 Postulants). Ils
+  // étaient documentés et lançables depuis des semaines, et absents du seul registre qui dit qui
+  // fait partie de l'équipe — une file d'attente que personne ne regardait. Deux rangs, parce que
+  // deux situations : ceux dont la valeur est d'APPELER ce que les autres savent (Membre classique,
+  // deux obligations), et ceux qui portent un JUGEMENT propre au projet (Membre, poste complet).
+  "doc-report": "Membre classique — Coordination",
+  "kpi-report": "Membre classique — Gouvernance interne",
+  "tool-usage": "Membre classique — Gouvernance interne",
+  "find-brain": "Membre classique — Outillage de navigation",
+  "le-regisseur": "Membre classique — Simulation & qualité narrative",
+  "route-booster": "Membre classique — Outillage de navigation",
+  criticite: "Membre classique — Coordination",
+  "messages-courts": "Membre classique — Coordination",
+  "modes-de-travail": "Membre classique — Coordination",
+  "ou-on-en-est": "Membre classique — Coordination",
+  "rapport-gros-prompt": "Membre classique — Coordination",
+  "check-spirit": "Membre — Simulation & qualité narrative",
+  "check-profile": "Membre — Simulation & qualité narrative",
+  "check-profil-utilisateur": "Membre — Coordination",
+  "check-suivi-fidelity": "Membre — Coordination",
+  "circle-process-guardian": "Membre — Coordination",
+  "the-ghost": "Membre — Gouvernance interne",
 };
 
 // sansAccents() (2026-09-23) — une SEULE normalisation, partagée, jamais deux qui divergeraient.

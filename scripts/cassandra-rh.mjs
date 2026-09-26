@@ -2422,6 +2422,10 @@ export const POSTE_PAR_RANG = {
   "Agent Cadre": "tout ce qu'a un Membre, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. Deux outils seulement.",
   "Membre": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + entrée au menu des prestations. Le poste complet, sans le crochet.",
   Socle: "AUCUN poste, et ce n'est pas un manque : une bibliothèque, un crochet ou le filet de sécurité servent tout le monde sans avoir jamais candidaté. Leur exigence est ailleurs — être importés proprement et testés.",
+  "Membre classique": "DEUX obligations seulement : la ligne à la table maîtresse et l'entrée au menu des prestations. Ni fiche, ni blueprint, ni registre imposés d'office — il n'a rien de propre au projet à documenter à part. Tout le reste de son poste se DÉRIVE de ce qu'il fait réellement (cf. OBLIGATIONS_DERIVEES).",
+  "Hors Agence": "AUCUN poste d'Agence, par nature : il sert le produit, pas l'outillage. Il reste tenu par le filet de sécurité et le typage, comme n'importe quel code du dépôt.",
+  "Sans fiche": "poste NON ARRÊTÉ — et c'est le signal : la question n'est pas quel poste lui donner, mais lui écrire une fiche ou le supprimer.",
+  "Sans porte": "poste NON ARRÊTÉ — la question est encore en amont : lui donner une commande de lancement, ou le supprimer.",
   Postulant: "poste NON ARRÊTÉ, et c'est justement ce que le rang signale : lançable, mais nommé par aucun document. La question n'est pas « quel poste lui donner » mais « le documente-t-on, ou le supprime-t-on ».",
 };
 
@@ -2478,6 +2482,66 @@ export function blocsVersMarkdown(blocs = []) {
     }
   }
   return L.join("\n") + "\n";
+}
+
+// LE POSTE DE TRAVAIL SE DÉRIVE, IL NE SE RECOPIE PAS (2026-09-26, sa décision : « pas un rang :
+// dériver les obligations »).
+//
+// CE QUI CLOCHAIT AVANT, ET C'EST EXACTEMENT LE DÉFAUT QUE L'ARTICLE 24 NOMME : le poste était une
+// liste fixe par rang. Un outil qui grossissait — qui se mettait à garder une mémoire, à produire
+// une page, à appeler une API — gardait le poste de son rang d'origine jusqu'à ce que quelqu'un
+// pense à le promouvoir. Personne n'y pensait jamais, parce que rien ne le signalait.
+//
+// LE PRINCIPE : le RANG donne la BASE, ce que l'outil FAIT ajoute le reste. Et « ce qu'il fait » ne
+// se déclare pas — ça se MESURE, par les classes transverses, qui sont des sondes sur son code.
+// Conséquence directe, et c'est tout l'intérêt : le jour où un outil écrit sa première ligne de
+// registre, l'obligation d'avoir un dossier d'historisation apparaît toute seule au commit suivant.
+//
+// CE QUE CE MÉCANISME NE FAIT JAMAIS, ET LA DISTINCTION EST DÉLIBÉRÉE : il ne promeut pas le RANG.
+// Un rang se mérite et se décide ; un outil qui se promouvrait lui-même se décernerait un titre. Ce
+// qui suit une machine, c'est l'ÉQUIPEMENT — ce qu'on doit à un outil devenu plus gros. Le titre
+// reste une décision humaine, l'équipement suit le fait.
+export const OBLIGATIONS_DERIVEES = [
+  { classe: "tient-un-registre", doit: "un dossier d'historisation", ou: "docs/<nom>/ avec son index.md",
+    pourquoi: "il écrit une mémoire durable : sans dossier déclaré, cette mémoire n'est protégée par rien et personne ne sait qu'elle existe" },
+  { classe: "rend-du-html", doit: "une décision de remise HTML déclarée", ou: "le registre de Doc-Report",
+    pourquoi: "il produit une page que quelqu'un LIT vraiment — donc quelqu'un doit avoir décidé comment elle est remise" },
+  { classe: "coute-des-appels-api", doit: "une entrée au menu PRESTATIONS et une consultation Smart Conso API",
+    ou: "scripts/le-coordinateur.mjs, puis l'Article 22", pourquoi: "il coûte de l'argent réel : on ne le lance jamais sans avoir regardé le quota" },
+  { classe: "porte-un-garde-fou-devolutivite", doit: "un test dans les DEUX sens", ou: "scripts/check-house.mjs",
+    pourquoi: "un détecteur qu'on n'a jamais vu mordre ne prouve rien, et un détecteur qui accuse à tort cesse d'être lu (BP4, L4)" },
+  { classe: "declare-sa-fiabilite", doit: "sa marge d'erreur écrite dans son propre rapport", ou: "printReliabilityNotice()",
+    pourquoi: "un chiffre heuristique rendu sans réserve se lit comme un fait mesuré" },
+  { classe: "conclut-en-plan-daction", doit: "des tâches réelles dans le suivi", ou: "docs/suivi/",
+    pourquoi: "l'Article 28 : un rapport n'est pas fini quand il est écrit, mais quand ses constats sont devenus des tâches" },
+];
+
+export function posteDeTravail(ligne, rang, { posteDuRang = POSTE_PAR_RANG, derivees = OBLIGATIONS_DERIVEES, base = POSTE_DE_TRAVAIL, rangs = ORG_RANKS } = {}) {
+  const cleRang = Object.keys(rangs).find((k) => rangs[k].singulier === rang) ?? null;
+  const socle = posteDuRang[rang] ?? null;
+  const acquises = (ligne?.classes ?? []);
+  const ajouts = derivees.filter((o) => acquises.includes(o.classe));
+  // LES TROIS ÉTATS, encore une fois : un rang sans poste ARRÊTÉ n'est pas un rang sans poste.
+  return {
+    rang, cleRang,
+    base: socle ?? null,
+    baseMesuree: socle != null,
+    pourquoiPasDeBase: socle == null ? `le poste de base du rang « ${rang} » n'a jamais été arrêté — ce n'est pas la même chose qu'un rang sans obligations` : null,
+    ajouts,
+    total: (socle ? 1 : 0) + ajouts.length,
+    piecesPossibles: base.length,
+  };
+}
+
+// CE QUE CHAQUE OUTIL DOIT AUJOURD'HUI, ET CE QU'IL DEVRA S'IL GROSSIT — la vue qui rend le
+// mécanisme lisible plutôt que théorique.
+export function postesDeTousLesOutils({ croise = null, derivees = OBLIGATIONS_DERIVEES } = {}) {
+  croise ??= croiserTypeEtRang({ recensement: recenserLesScripts() });
+  if (!croise?.mesurable) return { mesurable: false, pourquoi: croise?.pourquoi ?? "aucun croisement disponible" };
+  const lignes = croise.lignes.map((l) => ({ chemin: l.chemin, rang: l.rang, ...posteDeTravail(l, l.rang, { derivees }) }));
+  const parObligation = {};
+  for (const o of derivees) parObligation[o.classe] = lignes.filter((l) => l.ajouts.some((a) => a.classe === o.classe)).length;
+  return { mesurable: true, lignes, parObligation, total: lignes.length };
 }
 
 export function blocsDeClassification({
@@ -4472,6 +4536,23 @@ export const ORG_RANKS = {
     sens: "dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus" },
   gardien: { label: "Gardiens sacrés du code", singulier: "Gardien sacré du code", emoji: "🛡️", population: "equipe",
     sens: "délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit" },
+  // MEMBRE CERTIFIÉ CLASSIQUE (2026-09-26, décision de l'utilisateur sur le bloc B des 22). Ce rang
+  // EXISTAIT déjà comme statut dans la table maîtresse depuis le 2026-09-21 — il n'avait simplement
+  // jamais rejoint le dictionnaire des rangs, ce qui le rendait invisible à tout ce qui compte les
+  // rangs. Il porte un vrai badge, et sa dispense est précise : aucune connaissance propre au projet
+  // à documenter à part, donc ni fiche, ni blueprint, ni registre imposés d'office.
+  membreClassique: { label: "Membres certifiés classiques", singulier: "Membre classique", emoji: "🎖️", population: "equipe",
+    promotionVers: "membre", condition: "acquérir une connaissance propre au projet — et ça ne se décrète pas : ça se constate le jour où l'outil se met à savoir quelque chose que lui seul sait.",
+    sens: "un vrai membre badgé, dont la valeur est d'APPELER et d'AGRÉGER ce que les autres disent déjà — deux obligations seulement, parce qu'il n'a rien de propre à documenter à part" },
+  // HORS AGENCE (2026-09-26, décision de l'utilisateur sur le bloc A). Le §5 du référentiel
+  // déclarait DÉJÀ trois catégories d'exclusion définitive (les Personnages, le Moteur du jeu, le
+  // code tiers) — il en manquait une quatrième, et c'est elle qui retenait cinq scripts dans une
+  // file d'attente où ils n'avaient rien à faire : ceux qui LANCENT le produit au lieu de
+  // l'analyser. Liste volontairement tenue à la main, ce que l'Article 24 autorise explicitement
+  // quand la nature manuelle est écrite à côté : « lance le produit » ne se lit dans aucune sonde.
+  horsAgence: { label: "Hors de l'Agence", singulier: "Hors Agence", emoji: "🚧", population: "declaration",
+    promotionVers: null, condition: "AUCUNE, et c'est le sens même du rang : ces scripts servent le PRODUIT, pas l'outillage qui le vérifie. Les équiper d'une fiche et d'un blueprint reviendrait à recruter le camion de livraison.",
+    sens: "lance, sauvegarde ou archive le produit — testé comme n'importe quel code, mais jamais un travailleur de l'Agence (§5 du référentiel, 4e catégorie)" },
   membre: { label: "Membres certifiés", singulier: "Membre", emoji: "🎖️", population: "equipe",
     promotionVers: "gardien", condition: "remplir le critère DOUBLE de l'Article 20 : un vrai scan de qualité du CODE, ET gratuit à chaque commit. Vers Agent Cadre, ce n'est pas une promotion mécanique mais une décision d'organisation, donc celle de l'utilisateur.",
     sens: "câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint" },
@@ -4502,6 +4583,14 @@ export const ORG_RANKS = {
 //   · les types LANÇABLES MAIS NON DOCUMENTÉS reçoivent le rang provisoire ci-dessus ;
 //   · le type « outil » est le seul dont le rang ne se déduit PAS : il se lit dans le registre de
 //     l'équipe, parce qu'il dépend de ce que l'outil a prouvé, jamais de ce qu'il est.
+export const HORS_AGENCE = {
+  "run-framework": "lance le serveur de développement du jeu",
+  "run-simulation": "lance une simulation du jeu de bout en bout",
+  "sauvegarde-projet": "sauvegarde le dépôt, une opération d'exploitation",
+  "sites-env": "décrit les environnements de déploiement du site",
+  "summarize-simulation-log": "résume le journal brut d'une simulation avant archivage",
+};
+
 export const RANG_PAR_TYPE = {
   crochet: "socle",
   "filet-de-securite": "socle",
@@ -4535,8 +4624,13 @@ export function slugsParScript(texteCharte, { inventaire = null } = {}) {
 // post-commit), étaient donc typés « bibliothèque partagée » et rétrogradés en Socle — un rang
 // mérité effacé par un rang automatique. Le registre de l'équipe passe donc EN PREMIER ; le type
 // ne fait que remplir les cases que personne n'a remplies.
-export function rangDuFichier(ligne, { categories = AGENT_CATEGORIES, rangs = ORG_RANKS, rangDe = rangDeLaCategorie, slugs = {} } = {}) {
+export function rangDuFichier(ligne, { categories = AGENT_CATEGORIES, rangs = ORG_RANKS, rangDe = rangDeLaCategorie, slugs = {}, horsAgence = HORS_AGENCE } = {}) {
   const chemin = String(ligne?.chemin ?? "");
+  // UNE EXCLUSION DÉCLARÉE PRIME SUR TOUT (2026-09-26) : inutile de chercher un rang à quelqu'un
+  // qui n'a jamais postulé, et le chercher quand même est précisément ce qui gardait ces cinq-là
+  // dans une file d'attente.
+  const nom = chemin.replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
+  if (horsAgence[nom]) return { rang: rangs.horsAgence?.singulier ?? "Hors Agence", source: "declaration", cle: "horsAgence", pourquoi: horsAgence[nom] };
   const declare = slugs[chemin];
   const devine = chemin.replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
   const cat = categories[declare] ?? categories[devine];
