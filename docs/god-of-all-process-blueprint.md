@@ -127,3 +127,35 @@ ressemblent ici.
 
 **Commande** : `node scripts/god-of-all-process.mjs plans` — sous-commande dédiée, jamais imposée au
 rappel de chaque commit, parce qu'elle lit deux arborescences entières.
+
+## Deux natures dans la dette documentaire : la dette et le soupçon (2026-09-26, tâche #943)
+
+**Le défaut constaté** : un commit qui touchait le **contrôleur** d'un process pour une raison sans
+rapport avec lui annonçait quand même une dette sur le document de ce process — alors que la
+documentation réellement due, la fiche de l'outil, avait été écrite **dans le même commit**.
+
+**Le coût s'est mesuré le jour même** : un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+À force d'ignorer cette ligne, **trois dettes réelles de la même journée se sont cachées derrière
+le faux positif**.
+
+**La première règle essayée était mauvaise, et le filet l'a dit.** Séparer « le fichier est la
+PREUVE d'une étape » de « le fichier n'est que le CONTRÔLEUR » affaiblissait précisément le lien qui
+avait laissé passer les neuf dettes de 2026-09-25 ; un test existant a refusé la modification sans
+qu'il ait fallu y penser. C'est exactement ce que l'Article 19 protège : comprendre pourquoi un
+mécanisme a été câblé ainsi avant d'y toucher.
+
+**La règle retenue ne fait taire personne, elle DÉGRADE** :
+
+| Ce que le commit a documenté | Verdict | Sortie |
+|---|---|---|
+| rien | **dette** | ⚠️ pleine et entière, amend recommandé |
+| la fiche ou le blueprint du fichier touché | **soupçon** | ℹ️ à confirmer, en nommant où c'est documenté |
+| le document du process lui-même | rien | silence — la règle a été tenue |
+
+**Les autres documents sont DÉRIVÉS du nom du fichier** (`docs/referentiel/<outil>.md`,
+`docs/<outil>-blueprint.md`), jamais énumérés : un outil ajouté demain est couvert sans qu'on y
+pense (Article 24). La fiche d'un AUTRE outil ne compte pas — sinon un commit touchant deux outils
+absoudrait les deux.
+
+**Le soupçon reste affiché.** L'étouffer rouvrirait le trou que ce détecteur bouche ; le mélanger à
+la dette est ce qui a appris à ne plus lire la ligne.

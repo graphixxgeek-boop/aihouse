@@ -430,3 +430,25 @@ serait l'alarme permanente de L6), il rend **« hors de portée »** plutôt qu'
 document ne porte pas deux sections, et il est éprouvé **dans les deux sens** — une leçon sous les
 pratiques, une pratique au-dessus du trait (BP4 : un détecteur vu mordre dans un seul sens ne prouve
 rien). Sans lui, la leçon L25 écrite le même jour serait tombée du mauvais côté au prochain ajout.
+
+## Le diagnostic des leçons muettes (2026-09-26, tâche #928)
+
+**Le maillon qu'il consolide** : « ressortir avant la tâche ». Une leçon qui ne ressort JAMAIS ne
+sert à rien — mais le chiffre seul pousse au mauvais geste, retirer l'entrée, et retirer une entrée
+est irréversible en pratique : personne ne se souviendra de la remettre.
+
+`diagnostiquerLeconsMuettes()` sépare les deux causes MÉCANIQUES contre le vocabulaire réel des
+tâches du projet : **vocabulaire-absent** (le terrain est écrit dans des mots que ce projet n'emploie
+pas — c'est l'ADRESSE qui est injoignable, jamais la leçon qui est morte) et **adresse-atteignable**
+(ses mots ressortent, la cause du silence est ailleurs). **Aucun verdict ne dit « à retirer »** :
+juger qu'une leçon a cessé de servir demande de la relire, et c'est un jugement humain.
+
+**Premier passage réel : zéro des onze leçons muettes était du poids mort.** Trois avaient un
+terrain injoignable, corrigé le jour même.
+
+**Le garde-fou du terrain coupé** (`findTerrainsCoupes()`) est né du même passage : un champ
+`**Terrain**` écrit sur deux lignes n'est lu qu'à moitié, et l'ancien contrôle n'attrapait ce cas que
+lorsque la première ligne ne rendait AUCUN mot. Sept entrées étaient coupées, six y perdaient
+entièrement leur terrain par FICHIER — la moitié du sélecteur ne fonctionnait pas pour elles. Une
+absence déclarée (`· aucun fichier : <raison>`) reste valable : c'est une décision écrite, pas un
+oubli.

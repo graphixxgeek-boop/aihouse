@@ -448,3 +448,21 @@ appelle un correctif. Ce sont des lectures de SENS.
 « jamais / ni / aucun / sans », et y ajouter « pas » retournerait des cas justes (« il ne faut pas
 oublier de vérifier » veut bien dire vérifier). Importer une règle qui ne corrige rien ici aurait
 créé une dépendance entre deux outils pour un gain nul, en laissant croire à un correctif.
+
+## La quatrième population de la confrontation (2026-09-26, tâche #930)
+
+**Ce que l'état des tâches ne voyait pas** : les trois populations de la confrontation avant/après —
+encore ouvertes / closes depuis / nées depuis — se lisent toutes sur l'**état final**. Une tâche née
+à 06h et fermée à 07h n'apparaît donc nulle part : ni dans « closes » (elle n'était pas dans la
+référence figée), ni dans « nées » (elle n'est plus ouverte).
+
+**Mesuré** : une nuit de 20 ouvertures et 13 fermetures s'affichait « 0 close · 7 nées ». Contre le
+dépôt au moment de la correction : **73 tâches nées ET fermées**, comptées pour rien.
+
+**La frontière de période se lit sur les NUMÉROS, jamais sur une date** : ils sont uniques et
+strictement croissants, propriété que `findTaskNumberIssues()` fait respecter à chaque passage. Une
+ligne dont le numéro dépasse le plus grand de la référence est née après qu'elle a été figée. Aucune
+horloge n'intervient, donc rien ne peut dériver (Article 32).
+
+**Elle n'en remplace aucune, et elle parle même quand elle n'a rien à dire** — une ligne absente se
+lit comme une ligne cassée.

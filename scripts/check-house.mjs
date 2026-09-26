@@ -14107,3 +14107,45 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: sept détecteurs qui ne parlaient nulle part (2026-09-26, tâche #919) — ils existaient, ils étaient testés, et aucun code hors de la suite de tests ne les appelait. La distinction qui décide de leur place vient de la tâche elle-même : un garde-fou qui protège un invariant du CODE appartient aux tests et nulle part ailleurs ; un garde-fou qui dit quelque chose sur LE PROJET doit parler dans le rapport que lit un humain. Ces sept-là parlent du projet — un outil qu'on ordonne de lancer à la main sans jamais écrire sa commande, un outil déclaré heuristique qui ne prononce jamais son avertissement, une section devenue introuvable faute de sommaire, un membre hors de tout organigramme, une activité à enjeu que rien ne gouverne. Ce qui est vérifié ici n'est pas qu'ils fonctionnent, c'est qu'ils sont APPELÉS : un test qui vérifie une fonction sans vérifier qu'on l'appelle est précisément ce qui les a laissés muets. Et le câblage a fait tomber autre chose : doc-report mourait sur un ReferenceError avant son plan d'action depuis le matin même, si bien que sa conclusion n'avait jamais été imprimée une seule fois. Trouvé en lançant l'outil pour de vrai, jamais en relisant le diff.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LA DETTE ET LE SOUPÇON (2026-09-26, tâche #943)
+// ————————————————————————————————————————————————————————————————————————
+// Le détecteur de dettes accusait à tort : un commit qui touchait le CONTRÔLEUR d'un process pour
+// une raison sans rapport annonçait une dette, alors que la documentation réellement due avait été
+// écrite dans le même commit. Le coût s'est mesuré le jour même — à force d'ignorer cette ligne,
+// TROIS dettes réelles de la même journée se sont cachées derrière (leçon L4, prise sur le fait).
+//
+// LA PREMIÈRE RÈGLE ESSAYÉE ÉTAIT MAUVAISE ET LE FILET L'A DIT : séparer « preuve d'une étape » de
+// « simple contrôleur » affaiblissait exactement le lien qui avait laissé passer les neuf dettes de
+// 2026-09-25. Le test existant a refusé, et il avait raison. La règle retenue ne fait donc taire
+// personne : elle DÉGRADE en soupçon quand le commit a documenté le fichier ailleurs.
+{
+  const god943 = await import('../scripts/god-of-all-process.mjs');
+
+  // LA DÉRIVATION DES AUTRES DOCUMENTS — jamais une liste (Article 24).
+  assert.deepEqual(god943.docsAilleurs('scripts/mon-outil.mjs', ['scripts/mon-outil.mjs', 'docs/referentiel/mon-outil.md']), ['docs/referentiel/mon-outil.md'], "a tool's fiche is derived from its filename, so a tool added tomorrow is covered without anyone thinking about it");
+  assert.deepEqual(god943.docsAilleurs('scripts/mon-outil.mjs', ['docs/mon-outil-blueprint.md']), ['docs/mon-outil-blueprint.md'], 'its blueprint counts too');
+  assert.deepEqual(god943.docsAilleurs('scripts/mon-outil.mjs', ['docs/referentiel/un-autre.md']), [], "another tool's fiche is NOT documentation of this one — otherwise any commit touching two tools would absolve both");
+
+  const procFaux943 = [{ slug: 'faux', nom: 'Faux', doc: 'docs/faux-process.md', gardien: 'scripts/faux-gardien.mjs', etapes: [] }];
+
+  // RIEN DE DOCUMENTÉ → DETTE PLEINE ET ENTIÈRE. C'est le cas fondateur, et il ne bouge pas.
+  const nu943 = god943.detteDuDernierCommit({ processes: procFaux943, shImpl: () => 'aaaa111\tsujet\nscripts/faux-gardien.mjs' });
+  assert.equal(nu943.length, 1, 'process code changed and NOTHING documented stays a full debt — this is the founding case and weakening it would reopen the hole that let nine real debts through');
+  assert.equal(nu943[0].lien, 'direct', 'and it is marked as such');
+  assert.ok(god943.detteDuDernierCommitLines(nu943)[0].includes('NÉE(S) dans ce commit'), 'the debt line comes first and says the debt was born HERE');
+
+  // DOCUMENTÉ AILLEURS → SOUPÇON, JAMAIS SILENCE. La nuance est tout le correctif.
+  const soupcon943 = god943.detteDuDernierCommit({ processes: procFaux943, shImpl: () => 'bbbb222\tsujet\nscripts/faux-gardien.mjs\ndocs/referentiel/faux-gardien.md' });
+  assert.equal(soupcon943.length, 1, 'the écart is STILL reported — downgrading is not silencing, and silencing it would reopen exactly the hole this detector plugs');
+  assert.equal(soupcon943[0].lien, 'a-confirmer', 'but it is a suspicion, not a debt: this commit did document the file it changed');
+  const l943 = god943.detteDuDernierCommitLines(soupcon943);
+  assert.ok(l943.some((l) => l.includes('À CONFIRMER')) && !l943.some((l) => l.includes('dette(s) documentaire(s) NÉE(S)')), 'and the two natures never mix in the output: counting them together is what trained me to stop reading the line');
+  assert.ok(l943.some((l) => l.includes('docs/referentiel/faux-gardien.md')), 'the suspicion names WHERE the change was documented, so the reader can judge in one glance rather than reopening the commit');
+
+  // LE CAS PROPRE RESTE PROPRE, et le silence reste la moitié du mécanisme.
+  assert.deepEqual(god943.detteDuDernierCommit({ processes: procFaux943, shImpl: () => 'cccc333\tsujet\nscripts/faux-gardien.mjs\ndocs/faux-process.md' }), [], 'code and document in the same commit is never a finding');
+
+  console.log("Passed: la dette et le soupçon (2026-09-26, tâche #943) — le détecteur de dettes documentaires accusait à tort, et le coût s'est mesuré le jour même : un commit qui touchait le contrôleur d'un process pour une raison sans rapport annonçait une dette alors que la documentation réellement due était dans le même commit, j'ai appris à ne plus lire la ligne, et trois dettes réelles de la même journée se sont cachées derrière. La première règle que j'ai essayée était mauvaise et le filet l'a dit : séparer « preuve d'une étape » de « simple contrôleur » affaiblissait exactement le lien qui avait laissé passer les neuf dettes de 2026-09-25, et un test existant a refusé la modification sans que j'aie eu à y penser. La règle retenue ne fait taire personne — elle DÉGRADE. Si le commit a documenté le fichier touché ailleurs, sa fiche ou son blueprint dérivés de son nom plutôt qu'énumérés, l'écart devient un soupçon à confirmer et il reste affiché, en nommant où la documentation a été écrite. Un commit qui ne documente rien reste une dette pleine et entière, et c'est l'assertion que ces tests protègent en premier.");
+}

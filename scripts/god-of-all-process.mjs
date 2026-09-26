@@ -1038,6 +1038,16 @@ export function etatDuSchema({ processes = PROCESSES, schema = SCHEMA_DE_REFEREN
 // SA LIMITE, déclarée : il juge sur les fichiers d'un commit, donc un commit qui groupe plusieurs
 // sujets élargit la fenêtre et peut laisser passer un cas. Il attrape le cas net — du code de
 // process modifié seul — jamais tous les cas.
+// LES AUTRES DOCUMENTS D'UN FICHIER (2026-09-26, tâche #943) — la fiche et le blueprint d'un outil,
+// DÉRIVÉS de son nom plutôt qu'énumérés (Article 24) : un outil ajouté demain est couvert sans qu'on
+// y pense. Le slug est le nom du fichier sans son extension, la convention sans exception du dépôt.
+export function docsAilleurs(fichier, fichiersDuCommit = []) {
+  const slug = String(fichier).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+  if (!slug) return [];
+  const attendus = new Set([`docs/referentiel/${slug}.md`, `docs/${slug}-blueprint.md`]);
+  return fichiersDuCommit.filter((f) => attendus.has(f));
+}
+
 export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, shImpl = sh, root = ROOT, nbCommits = 15 } = {}) {
   let brut;
   try {
@@ -1071,11 +1081,30 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
       const codeDuProcess = new Set();
       if (p.gardien) codeDuProcess.add(p.gardien);
       for (const e of p.etapes ?? []) if (e.preuve?.fichier?.endsWith(".mjs")) codeDuProcess.add(e.preuve.fichier);
+      // LA DETTE ET LE SOUPÇON (2026-09-26, tâche #943) — et la distinction porte sur ce que le
+      // commit a DOCUMENTÉ, jamais sur la force du lien.
+      //
+      // LE DÉFAUT CONSTATÉ, SUR MOI : un commit qui ajoutait à `angel-of-ia-process.mjs` une règle
+      // de conduite sans aucun rapport avec le process xp-ia annonçait quand même une dette sur
+      // `docs/xp-ia-process-detail.md` — alors que la documentation réellement due, la fiche de
+      // l'outil, avait été écrite DANS LE MÊME COMMIT. **Un garde-fou qui accuse à tort cesse
+      // d'être lu** (L4), et le coût s'est mesuré le jour même : à force d'ignorer cette ligne,
+      // TROIS dettes réelles de la même journée se sont cachées derrière.
+      //
+      // LA PREMIÈRE RÈGLE ESSAYÉE ÉTAIT MAUVAISE, et le filet l'a dit : je séparais « le fichier
+      // est la PREUVE d'une étape » de « le fichier n'est que le CONTRÔLEUR ». Un test existant a
+      // refusé — et il avait raison, parce que le lien au contrôleur est exactement celui qui avait
+      // laissé passer les neuf dettes de 2026-09-25. Affaiblir ce lien rouvrait le trou.
+      //
+      // LA RÈGLE RETENUE NE FAIT DONC TAIRE PERSONNE, elle DÉGRADE : si le commit a documenté le
+      // fichier touché AILLEURS — sa fiche `docs/referentiel/<outil>.md` ou son blueprint — alors
+      // le changement n'est pas non documenté, et l'écart devient un SOUPÇON à confirmer plutôt
+      // qu'une dette. Un commit qui ne documente RIEN reste une dette pleine et entière.
       const touche = c.fichiers.filter((f) => codeDuProcess.has(f) && !PARTAGES.has(f));
       if (!touche.length || c.fichiers.includes(p.doc)) continue;
       for (const fichier of touche) {
         const cle = `${c.hash}|${fichier}`;
-        if (!parCle.has(cle)) parCle.set(cle, { commit: c.hash, sujet: c.sujet, fichier, processes: [], docs: [] });
+        if (!parCle.has(cle)) parCle.set(cle, { commit: c.hash, sujet: c.sujet, fichier, processes: [], docs: [], lien: docsAilleurs(fichier, c.fichiers).length ? "a-confirmer" : "direct", documenteAilleurs: docsAilleurs(fichier, c.fichiers) });
         parCle.get(cle).processes.push(p.slug ?? p.nom);
         parCle.get(cle).docs.push(p.doc);
       }
@@ -1111,8 +1140,9 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
     // Rattrapé seulement si TOUS les documents concernés l'ont été : en rattraper un sur deux laisse
     // l'autre faux, et un demi-rattrapage affiché comme un rattrapage est pire qu'aucun.
     const rattrape = rattrapeurs.length === e.docs.length ? rattrapeurs[0] : null;
+    const indirect = e.lien === "a-confirmer";
     return { ...e, rattrape,
-      pourquoi: `${e.fichier} a changé sans que ${e.docs.join(" ni ")} ne soit mis à jour dans le même commit${rattrape ? ` — RATTRAPÉ depuis, par ${rattrape} : la règle n'a pas été tenue, la dette documentaire l'est` : " — le document décrit désormais un process qui n'existe plus tel quel"} (process concerné${e.processes.length > 1 ? "s" : ""} : ${e.processes.join(", ")})` };
+      pourquoi: `${e.fichier} a changé sans que ${e.docs.join(" ni ")} ne soit mis à jour dans le même commit${rattrape ? ` — RATTRAPÉ depuis, par ${rattrape} : la règle n'a pas été tenue, la dette documentaire l'est` : indirect ? ` — À CONFIRMER, jamais une dette : ce commit a bien documenté ${e.fichier} ailleurs (${(e.documenteAilleurs ?? []).join(", ")}). Reste à vérifier si le process, lui, a changé` : " — le document décrit désormais un process qui n'existe plus tel quel"} (process concerné${e.processes.length > 1 ? "s" : ""} : ${e.processes.join(", ")})` };
   });
 }
 
@@ -1149,10 +1179,25 @@ export function detteDuDernierCommit(options = {}) {
 // les neuf dettes ont pu passer. Il ne rend donc des lignes que lorsqu'il a trouvé.
 export function detteDuDernierCommitLines(ecarts = []) {
   if (!ecarts.length) return [];
-  const L = [`⚠️  ${ecarts.length} dette(s) documentaire(s) NÉE(S) dans ce commit — god-of-all-process, Article 13 :`];
-  for (const e of ecarts) L.push(`  · ${e.pourquoi}`);
-  L.push("  → Corriger maintenant coûte un `git commit --amend` ; découvert à la Ronde, ça coûte de retrouver ce qui a changé.");
-  L.push("  (fenêtre : le dernier commit seul — le bilan complet est dans `node scripts/god-of-all-process.mjs`)");
+  // LES DEUX NATURES NE SE MÉLANGENT PLUS (2026-09-26, tâche #943). Un lien INDIRECT — le fichier
+  // n'est que le contrôleur du process — est un soupçon, jamais une dette. Les compter ensemble a
+  // eu un coût mesuré : le soupçon revenait à chaque commit, j'ai appris à ne plus lire la ligne,
+  // et TROIS dettes réelles du même jour se sont cachées derrière (leçon L4, prise sur le fait).
+  const dettes = ecarts.filter((e) => e.lien !== "a-confirmer");
+  const soupcons = ecarts.filter((e) => e.lien === "a-confirmer");
+  const L = [];
+  if (dettes.length) {
+    L.push(`⚠️  ${dettes.length} dette(s) documentaire(s) NÉE(S) dans ce commit — god-of-all-process, Article 13 :`);
+    for (const e of dettes) L.push(`  · ${e.pourquoi}`);
+    L.push("  → Corriger maintenant coûte un `git commit --amend` ; découvert à la Ronde, ça coûte de retrouver ce qui a changé.");
+  }
+  // LE SOUPÇON RESTE AFFICHÉ, jamais étouffé : l'écarter complètement rouvrirait le trou que ce
+  // détecteur bouche. Il est seulement dit pour ce qu'il est, et il ne compte pas comme une dette.
+  if (soupcons.length) {
+    L.push(`ℹ️  ${soupcons.length} écart(s) À CONFIRMER — pas une dette : ce commit a documenté le fichier touché ailleurs.`);
+    for (const e of soupcons) L.push(`  · ${e.fichier} → ${e.docs.join(", ")} — documenté dans ${(e.documenteAilleurs ?? []).join(", ")}. Si le process lui-même n'a pas changé, il n'y a rien à faire.`);
+  }
+  if (L.length) L.push("  (fenêtre : le dernier commit seul — le bilan complet est dans `node scripts/god-of-all-process.mjs`)");
   return L;
 }
 
