@@ -320,3 +320,67 @@ trop : elle peut avoir été bien cadrée. Le chiffre ouvre une question, il ne 
 
 Une tendance calculée sur moins de deux fenêtres complètes est **refusée** plutôt que produite :
 une tendance inventée se lit exactement comme une vraie.
+
+---
+
+## La STRATÉGIE DE CHANTIER, et sa FICHE LÉGÈRE *(2026-09-26)*
+
+L'outil des tâches porte aussi, depuis le 2026-09-26, le mécanisme du process PRÉ-CHANTIER
+(`docs/pre-chantier-process-detail.md`). **Pourquoi ici et pas dans un 89e script** : une stratégie
+est LIÉE À UNE TÂCHE — c'est l'étape B3 du process — et l'outil qui tient les tâches est le seul
+qui puisse rendre ce lien mécanique au lieu de le laisser à la main.
+
+### Les quatre commandes
+
+| Commande | Ce qu'elle fait |
+|---|---|
+| `strategie creer <n°\|-> "<nom>"` | le squelette 7 sections, lié à la tâche — une stratégie sans tâche le crie |
+| `strategie creer --legere <n°> "<nom>"` | la **fiche légère** : 2 sections seulement (`pourquoi`, `idees`) |
+| `strategie ajouter <nom> <section> <idée>` | verse une idée **intégralement**, entre guillemets, avec sa source |
+| `strategie promouvoir <nom>` | transforme une fiche légère en stratégie complète, **sans toucher un mot** |
+| `strategie livrer <nom>` | le document, pour l'étape D |
+
+### La fiche légère — pourquoi 2 sections, et pourquoi elles gardent leurs numéros
+
+*(Sa décision en fenêtre : « choisissons ensemble au cas par cas : quels chantiers importants
+méritent d'être convertis ? avec une solution légère pour les autres ».)*
+
+**Le problème qu'elle règle est le revers exact de la stratégie complète** : sept sections devant un
+sujet qui n'a que deux idées, c'est cinq sections vides qui disent « ce chantier n'a rien » alors
+qu'il n'a simplement pas encore démarré. Un document à 70 % vide se lit comme un abandon, et
+personne ne verse une idée de plus dans un document qui a l'air mort.
+
+**Les deux sections ne sont pas des sections nouvelles, ce sont les MÊMES** — clés identiques,
+titres identiques, numéros identiques (`SECTIONS_LEGERES` est un filtre sur `SECTIONS_STRATEGIE`,
+jamais un second catalogue : Article 24). Conséquence voulue : `verserDansStrategie()` et le
+garde-fou anti-résumé fonctionnent dessus sans une ligne de code de plus.
+
+**La numérotation garde ses trous** — « 1. » puis « 3. », jamais renumérotés en 1 et 2. C'est la
+règle que la charte s'applique à elle-même en tête de `CLAUDE.md`, et pour la même raison : un
+numéro qui désigne deux choses selon le document où on le lit est une dette de reprise
+(Article 27). Le trou dit aussi quelque chose d'utile — il montre ce qui manque encore.
+
+**La promotion est ce qui rend le format léger acceptable.** Sans elle, choisir « léger » serait
+choisir un cul-de-sac, et la vraie question deviendrait « ce chantier est-il assez important ? » —
+exactement celle qu'il a refusé de trancher à l'avance. `promouvoirStrategie()` rétablit l'ordre
+canonique des sept sections, conserve mot pour mot ce qui était écrit, et **conserve ET signale**
+une section hors catalogue plutôt que de la supprimer : un convertisseur qui jette ce qu'il ne
+reconnaît pas rend un document propre dont il manque une partie, et rien ne dit laquelle.
+
+**Le format se LIT sur le document** (`formatDeStrategie()`), il ne se déclare pas en tête : une
+mention « fiche légère » écrite à la création cesserait d'être vraie à la première promotion, et
+rien ne le verrait.
+
+### Premier usage réel (2026-09-26, tâche #904)
+
+Cinq fiches légères créées pour les cinq familles de la file qui n'ont pas de stratégie complète —
+**cinq, et non quatre comme le plan de nuit l'annonçait** : le plan comptait « 8 familles moins
+4 stratégies », mais l'une des quatre stratégies (EXPORT & COMMERCIALISATION) n'est pas une famille
+de la file, elle les traverse. L'écart est dit plutôt que corrigé en silence.
+
+63 idées versées intégralement, chacune sourcée sur sa ligne de suivi : Process & Ronde (23),
+Outillage & garde-fous (17), Charte & référentiel (13), Données & mesure (8), Le jeu et le site (2).
+**Ce que la section POURQUOI de chacune dit honnêtement** : l'intention n'a jamais été énoncée par
+l'utilisateur pour ces familles — elle est DÉRIVÉE de la file. Tant qu'elle ne porte pas ses mots,
+la fiche dit ce que la file contient, jamais ce qu'il veut en faire. C'est la différence entre un
+inventaire et une stratégie, et c'est le premier trou à combler.

@@ -8759,6 +8759,54 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // LA FICHE LÉGÈRE ET SA PROMOTION (2026-09-26, sa décision : « avec une solution legere pour
+    // les autres »). Ce qui est vérifié ici n'est pas qu'elle existe — c'est qu'elle ne soit pas un
+    // cul-de-sac : si « léger » voulait dire « à refaire plus tard », choisir le format léger
+    // reviendrait à trancher d'avance l'importance du chantier, exactement ce qu'il a refusé.
+    const leg = CT.sectionsLegeres();
+    assert.equal(leg.length, 2, 'the light fiche carries two sections, not seven');
+    assert.deepEqual(leg.map((x) => x.cle), ['pourquoi', 'idees'], 'and they are the two a chantier that has not started can honestly carry: why it would exist, and what has already been said about it');
+    // LES MÊMES CLÉS, LES MÊMES TITRES, LES MÊMES NUMÉROS — pas un second catalogue (Article 24).
+    for (const sec of leg) assert.ok(CT.SECTIONS_STRATEGIE.includes(sec), 'a light section is the SAME object as its full counterpart, never a copy that would drift');
+    const sqL = CT.squeletteDeStrategie({ chantier: 'ESSAI LÉGER', tache: 7, horodatage: 'x', sections: leg });
+    assert.ok(sqL.includes('## 1. POURQUOI CE CHANTIER') && sqL.includes('## 3. LES IDÉES RETENUES'), 'the numbering keeps its holes — 1 then 3, never renumbered to 1 and 2: the charter applies that rule to itself for the same reason, a number meaning two things depending on the document is a handover debt (Article 27)');
+    assert.ok(!sqL.includes('2. CE QUI EXISTE'), 'and the five others are genuinely absent, not present-and-empty: five empty sections read as an abandoned chantier, which is what stops anyone pouring one more idea into it');
+
+    // LE VERSEMENT MARCHE SUR UNE FICHE LÉGÈRE SANS UNE LIGNE DE CODE DE PLUS — la conséquence
+    // voulue de « les mêmes sections », et ce qui rend le format léger utilisable dès le premier jour.
+    const ideeL = 'une idée versée dans une fiche légère, assez longue pour être comptée par le garde-fou';
+    const vL = CT.verserDansStrategie(sqL, { section: 'idees', idee: ideeL, source: 's', sections: leg });
+    assert.equal(vL.ok, true, 'pouring into a light fiche needs no special case');
+    assert.equal(CT.strategieARésumé({ strategie: vL.texte, sources: [ideeL] }).aResume, false, 'and the anti-summary guard applies to it identically — a light format that escaped the guard would be the easy way to summarise');
+    assert.equal(CT.verserDansStrategie(sqL, { section: 'decisions', idee: 'x', sections: leg }).ok, false, 'a section the light fiche does not carry is refused rather than silently created at the end, where it would sit outside the numbering');
+
+    // LE FORMAT SE LIT SUR LE DOCUMENT, il ne se déclare pas en tête : une mention écrite à la
+    // création cesserait d'être vraie à la première promotion, et rien ne le verrait.
+    assert.equal(CT.formatDeStrategie(vL.texte).legere, true, 'the format is read from the sections actually present');
+    assert.equal(CT.formatDeStrategie(sq).complete, true, 'and a full strategy reads as full');
+    assert.deepEqual(CT.formatDeStrategie(vL.texte).manquantes, ['existant', 'recherches', 'decisions', 'a-trancher', 'plan'], 'it names which five are missing rather than only counting them');
+
+    // LA PROMOTION NE PERD JAMAIS UN MOT — c'est la seule chose qui rend le format léger acceptable.
+    const prom = CT.promouvoirStrategie(vL.texte);
+    assert.equal(prom.ok, true, 'a light fiche can be promoted to a full strategy');
+    assert.ok(prom.texte.includes(ideeL), 'and the idea already poured survives the promotion untouched');
+    assert.deepEqual(prom.ajoutees, ['existant', 'recherches', 'decisions', 'a-trancher', 'plan'], 'the five missing sections are added empty');
+    assert.equal(CT.formatDeStrategie(prom.texte).complete, true, 'the result is a genuine full strategy, not a light one with extra text');
+    // L'ORDRE CANONIQUE EST RÉTABLI, jamais « les nouvelles à la fin » : une section 2 qui suit la 7
+    // ferait un document que personne ne relit dans l'ordre où il a été pensé.
+    assert.ok(prom.texte.indexOf('## 2. CE QUI EXISTE') < prom.texte.indexOf('## 3. LES IDÉES'), 'and the sections come back in their canonical order rather than appended at the end');
+    assert.equal(CT.promouvoirStrategie(prom.texte).deja, true, 'promoting an already-complete strategy says so instead of duplicating its sections');
+    assert.equal(CT.promouvoirStrategie('pas de section ici').ok, false, 'a document carrying no section at all is refused: the promotion would not know what to preserve');
+
+    // LE CONTRE-TEST QUI COMPTE LE PLUS : une section écrite à la main, hors catalogue, est
+    // CONSERVÉE et SIGNALÉE — jamais supprimée au motif qu'elle n'est pas reconnue. Un convertisseur
+    // qui jette ce qu'il ne connaît pas rend un document propre dont il manque une partie, et rien
+    // ne dit laquelle : c'est la pire espèce d'outil, parce que son résultat a l'air juste.
+    const bricolee = vL.texte + '\n## 8. UNE SECTION ÉCRITE À LA MAIN\n\nun contenu que personne ne doit perdre\n';
+    const prom2 = CT.promouvoirStrategie(bricolee);
+    assert.ok(prom2.texte.includes('un contenu que personne ne doit perdre'), 'an unknown section survives the promotion word for word');
+    assert.deepEqual(prom2.inconnues, ['8. UNE SECTION ÉCRITE À LA MAIN'], 'and it is NAMED in the result, so its owner learns it sits outside the catalogue instead of discovering it gone');
+
     // LA FILE PAR THÈME ET PAR FAMILLE (2026-09-26, son état des lieux : « une vue par THÈME des 98
     // ouvertes », puis « regrouper en ~8 grandes familles »).
     const CTD = await import('../scripts/check-tasks-details.mjs');

@@ -50,7 +50,9 @@ le format ne l'était pas. Il n'y avait donc rien à inventer : il y avait à un
 | **B1** | Créer la TÂCHE « nouveau chantier » dans `docs/suivi/` | le système de suivi |
 | **B2** | Créer le RAPPORT « STRATÉGIE DE CHANTIER » tout de suite, à partir des éléments existants à date | `check-tasks-details strategie creer` |
 | **B3** | **LIER les deux** — la stratégie porte le numéro de tâche, et le dit en tête | mécanique : le squelette l'inscrit, et crie s'il manque |
+| **B2bis** | Si le chantier n'est pas encore ouvert : la **FICHE LÉGÈRE**, 2 sections au lieu de 7 | `check-tasks-details strategie creer --legere` |
 | **C** | **Alimenter au fur et à mesure** — chaque idée nouvelle trouve sa place dans la stratégie | `check-tasks-details strategie ajouter` |
+| **C bis** | Quand la fiche légère devient un vrai chantier : la **promouvoir**, sans rien réécrire | `check-tasks-details strategie promouvoir` |
 | **D** | Juste avant l'exécution : **lui livrer le rapport dans la conversation** | `check-tasks-details strategie livrer` |
 | **E** | **Analyser le document** : faire le point, refaire des calibrages si besoin | l'agent, puis une fenêtre de questions |
 | **F** | **S'assurer que l'OUTIL correspondant est à jour** selon la stratégie | vérification manuelle, chantier par chantier |

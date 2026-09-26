@@ -2141,6 +2141,96 @@ export function verserDansStrategie(texteStrategie, { section, idee, source, sec
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// LA FICHE LÉGÈRE — 2 sections (2026-09-26, sa décision en fenêtre : « choisissons ensemble au cas
+// par cas : quels chantiers importants méritent d'être convertis ? avec une solution légère pour
+// les autres »).
+//
+// LE PROBLÈME QU'ELLE RÈGLE, et c'est le revers exact de la stratégie complète : sept sections
+// devant un sujet qui n'a que deux idées, c'est cinq sections vides qui disent « ce chantier n'a
+// rien » alors qu'il n'a simplement pas encore démarré. Un document à 70 % vide se lit comme un
+// abandon, et personne ne verse une idée de plus dans un document qui a l'air mort. La fiche
+// légère porte exactement ce qu'un chantier non ouvert peut honnêtement porter : POURQUOI il
+// existerait, et les IDÉES déjà dites dessus.
+//
+// LES DEUX SECTIONS NE SONT PAS DES SECTIONS NOUVELLES, CE SONT LES MÊMES — clés identiques,
+// titres identiques, numéros identiques. Conséquence voulue : `verserDansStrategie()` fonctionne
+// sur une fiche légère sans une ligne de code de plus, et une promotion n'a rien à réécrire
+// (Article 24 : le registre se LIT, il ne se recopie pas).
+//
+// ET LA NUMÉROTATION GARDE SES TROUS — « 1. » puis « 3. », jamais renumérotés en 1 et 2. C'est la
+// règle que la charte s'applique à elle-même en tête de CLAUDE.md, et pour la même raison : un
+// numéro qui désigne deux choses selon le document où on le lit est une dette de reprise
+// (Article 27). Le trou dit aussi quelque chose d'utile — il montre ce qui manque encore.
+export const CLES_LEGERES = ["pourquoi", "idees"];
+
+export function sectionsLegeres(sections = SECTIONS_STRATEGIE, cles = CLES_LEGERES) {
+  return sections.filter((s) => cles.includes(s.cle));
+}
+
+// Le format se LIT sur le document, il ne se déclare pas en tête : une mention « (fiche légère) »
+// écrite à la création cesserait d'être vraie à la première promotion, et rien ne le verrait.
+export function formatDeStrategie(texte = "", sections = SECTIONS_STRATEGIE) {
+  const presentes = sections.filter((s) => String(texte).includes(`## ${s.titre}`));
+  return {
+    presentes: presentes.map((s) => s.cle),
+    manquantes: sections.filter((s) => !presentes.includes(s)).map((s) => s.cle),
+    legere: presentes.length > 0 && presentes.length < sections.length,
+    complete: presentes.length === sections.length,
+  };
+}
+
+// LA PROMOTION — une fiche légère devient une stratégie complète sans qu'un mot soit retouché.
+// C'est la seule chose qui rend le format léger acceptable : sans elle, choisir « léger » serait
+// choisir un cul-de-sac, et la vraie question deviendrait « est-ce que ce chantier est assez
+// important ? » — exactement la question que l'utilisateur a refusé de trancher à l'avance.
+//
+// CE QU'ELLE NE FAIT JAMAIS : perdre du texte. Une section inconnue (écrite à la main, venue d'un
+// autre format) est CONSERVÉE et SIGNALÉE, jamais supprimée au motif qu'elle n'est pas au
+// catalogue. Un outil de conversion qui jette ce qu'il ne reconnaît pas est la pire espèce
+// d'outil : il rend un document propre dont il manque une partie, et rien ne dit laquelle.
+export function promouvoirStrategie(texte = "", { sections = SECTIONS_STRATEGIE } = {}) {
+  const lignes = String(texte).split("\n");
+  const debut = lignes.findIndex((l) => l.startsWith("## "));
+  if (debut === -1) return { ok: false, pourquoi: "ce document ne porte aucune section « ## » — il n'a pas été créé par squeletteDeStrategie(), la promotion ne saurait pas quoi préserver" };
+
+  const tete = lignes.slice(0, debut);
+  const blocs = new Map();
+  const inconnues = [];
+  let courante = null;
+  for (const l of lignes.slice(debut)) {
+    if (l.startsWith("## ")) {
+      const titre = l.slice(3).trim();
+      const s = sections.find((x) => x.titre === titre);
+      courante = { titre, cle: s?.cle ?? null, corps: [] };
+      if (s) blocs.set(s.cle, courante); else inconnues.push(courante);
+      continue;
+    }
+    if (courante) courante.corps.push(l);
+  }
+  if (blocs.size === sections.length && !inconnues.length) {
+    return { ok: false, deja: true, pourquoi: "cette stratégie porte déjà les sept sections — il n'y a rien à promouvoir" };
+  }
+
+  const out = [...tete];
+  const ajoutees = [];
+  for (const s of sections) {
+    out.push(`## ${s.titre}`);
+    const b = blocs.get(s.cle);
+    if (b) { out.push(...b.corps); continue; }
+    ajoutees.push(s.cle);
+    out.push("", `*${s.quoi}*`, "", "*(vide — rien n'a encore été versé ici)*", "");
+  }
+  for (const b of inconnues) { out.push(`## ${b.titre}`, ...b.corps); }
+  return {
+    ok: true,
+    texte: out.join("\n"),
+    ajoutees,
+    conservees: [...blocs.keys()],
+    inconnues: inconnues.map((b) => b.titre),
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 // LA VUE PAR THÈME (2026-09-26, sa demande pendant un état des lieux : « une vue par THÈME des 98
 // ouvertes »). Elle manquait, et son absence a un coût précis : une liste à plat de 98 lignes ne
 // dit pas OÙ la file s'accumule, donc ne permet pas de décider quoi dégager en premier.
@@ -2271,16 +2361,35 @@ function strategieCli(argv) {
   if (!existsSync(STRATEGIES_DIR)) mkdirSync(STRATEGIES_DIR, { recursive: true });
 
   if (sousCommande === "creer") {
-    const tache = reste[0];
-    const chantier = reste.slice(1).join(" ");
-    if (!chantier) { console.error('usage : strategie creer <n° de tâche|-> "<nom du chantier>"'); process.exit(2); }
+    const legere = reste.includes("--legere");
+    const args = reste.filter((x) => x !== "--legere");
+    const tache = args[0];
+    const chantier = args.slice(1).join(" ");
+    if (!chantier) { console.error('usage : strategie creer [--legere] <n° de tâche|-> "<nom du chantier>"'); process.exit(2); }
     const chemin = cheminDeStrategie(chantier);
     if (existsSync(chemin)) { console.log(`Elle existe déjà : ${chemin}\nUne stratégie ne s'écrase jamais — elle s'alimente (« strategie ajouter »).`); return chemin; }
+    const sections = legere ? sectionsLegeres() : SECTIONS_STRATEGIE;
     const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ") + "Z";
-    writeFileSync(chemin, squeletteDeStrategie({ chantier, tache: tache === "-" ? null : tache, horodatage }), "utf8");
+    writeFileSync(chemin, squeletteDeStrategie({ chantier, tache: tache === "-" ? null : tache, horodatage, sections }), "utf8");
     console.log(`Créée : ${chemin}`);
-    console.log(`${SECTIONS_STRATEGIE.length} sections, toutes vides — le squelette existe dès la création, c'est ce qui empêche les notes en vrac.`);
+    console.log(legere
+      ? `FICHE LÉGÈRE — ${sections.length} sections sur ${SECTIONS_STRATEGIE.length} (${sections.map((x) => x.cle).join(" · ")}). Les numéros gardent leurs trous exprès : « strategie promouvoir » ajoutera les 5 autres sans toucher un mot de ce qui est déjà écrit.`
+      : `${sections.length} sections, toutes vides — le squelette existe dès la création, c'est ce qui empêche les notes en vrac.`);
     if (tache === "-") console.log("⚠️  AUCUNE TÂCHE LIÉE : l'étape B3 du pré-chantier n'est pas remplie. Une stratégie sans tâche ne sera jamais reprise.");
+    recordCliUsage("check-tasks-details", { origine: "demande" });
+    return chemin;
+  }
+
+  if (sousCommande === "promouvoir") {
+    const chemin = cheminDeStrategie(reste.join(" "));
+    if (!existsSync(chemin)) { console.error(`Aucune stratégie pour « ${reste.join(" ")} ».`); process.exit(2); }
+    const avant = readFileSync(chemin, "utf8");
+    const r = promouvoirStrategie(avant);
+    if (!r.ok) { console.log(r.pourquoi); return chemin; }
+    writeFileSync(chemin, r.texte, "utf8");
+    console.log(`Promue en stratégie complète : ${chemin}`);
+    console.log(`  ${r.conservees.length} section(s) conservée(s) mot pour mot · ${r.ajoutees.length} ajoutée(s) vide(s) : ${r.ajoutees.join(", ")}`);
+    if (r.inconnues.length) console.log(`  ⚠️  ${r.inconnues.length} section(s) hors catalogue CONSERVÉE(S) en fin de document, jamais supprimée(s) : ${r.inconnues.join(" · ")}`);
     recordCliUsage("check-tasks-details", { origine: "demande" });
     return chemin;
   }
@@ -2320,10 +2429,12 @@ function strategieCli(argv) {
       return i !== -1 && /\*\(vide —/.test(t.slice(i, i + 400));
     }).length;
     const tache = (t.match(/tâche \*\*#(\d+)\*\*/) ?? [])[1];
-    console.log(`  ${f.replace("-strategie.md", "").padEnd(34)} ${SECTIONS_STRATEGIE.length - vides}/${SECTIONS_STRATEGIE.length} sections remplies${tache ? `  · tâche #${tache}` : "  · ⚠️ AUCUNE TÂCHE LIÉE"}`);
+    const fmt = formatDeStrategie(t);
+    const total = fmt.presentes.length;
+    console.log(`  ${f.replace("-strategie.md", "").padEnd(34)} ${total - vides}/${total} sections remplies${fmt.legere ? ` (fiche légère — ${fmt.manquantes.length} section(s) à ajouter par « promouvoir »)` : ""}${tache ? `  · tâche #${tache}` : "  · ⚠️ AUCUNE TÂCHE LIÉE"}`);
   }
   if (!fichiers.length) console.log("  (aucune — `strategie creer <n° tâche> \"<nom>\"` pour la première)");
-  console.log(`\nusage : strategie [creer <n°|-> "<nom>" | ajouter <nom> <section> <idée> | livrer <nom>]`);
+  console.log(`\nusage : strategie [creer [--legere] <n°|-> "<nom>" | ajouter <nom> <section> <idée> | promouvoir <nom> | livrer <nom>]`);
   console.log(`sections : ${SECTIONS_STRATEGIE.map((x) => x.cle).join(" · ")}`);
   recordCliUsage("check-tasks-details", { origine: "demande" });
   return null;
