@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RÉPONSES À TOUTES LES QUESTIONS DE TON GROS PROMPT</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-26</div>
+    <h1>RÉPONSES À TOUTES LES QUESTIONS DE TON GROS PROMPT</h1>
+    <p class="sub">Saisine du 2026-09-25 au soir · chaque question dans tes termes, chaque réponse détaillée</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">Version de Claude : claude-opus-5
+Produit le : samedi 26 septembre 2026 à 12h25 (UTC)
+État du code : 98b2f02 sur claude/jolly-bell-ks9lhb
+Contexte de production : non précisé
+Outil : reponses-gros-prompt — date de dernière modification inconnue
+Santé de l'outil : 0/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<p class="note">COMMENT LIRE CE FICHIER — [FAIT] la question a reçu sa réponse ET le travail est fait · [FAIT-Q] question de compréhension : la réponse est ci-dessous, rien à coder · [A TOI] la décision t'appartient, je ne tranche pas.</p>
+<p>Ce document répond à TOUTES les questions posées dans ton gros prompt du 2026-09-25 au soir. Chaque question est reprise DANS TES TERMES, telle que tu l'as écrite. Les réponses sont détaillées et chiffrées là où une mesure existe ; là où elle n'existe pas, c'est dit.</p>
+<p>20 questions reprises · 15 répondues et traitées · 5 attendent TA décision.</p>
+<h2>A. L'EXPORT ET LES BLUEPRINTS</h2>
+<div class="highlight"><p>A1 — [FAIT]  « est-ce que les blueprints sont suffisants pour exporter ? un blu-print ca n'est pas du code ? comment fiabiliser les blueprint. je suis nice sur la question »</p></div>
+<p>NON, ils ne suffisent pas, et tu as raison d'être inquiet. Un blueprint est de la PROSE : il décrit comment un outil marche et pourquoi il a été fait ainsi. Il permet à quelqu'un de RECONSTRUIRE l'outil ; il ne le TRANSPLANTE pas. La différence est entière : reconstruire coûte des jours et redonne des bugs déjà corrigés une fois.</p>
+<p>CE QUI EST VRAIMENT EXPORTABLE AUJOURD'HUI, mesuré : le code des 88 fichiers part tel quel (c'est du JavaScript sans dépendance à ce projet pour l'essentiel). Ce qui ne part PAS, c'est ce qui est écrit en dur dedans : 14 outils ont leurs cibles codées en dur (tâche #668 ouverte).</p>
+<p>COMMENT LES FIABILISER, et c'est le vrai levier : un blueprint se fiabilise en étant LU par une machine, pas par un humain. SAFE-EXPORT vérifie déjà qu'un blueprint existe, qu'il est générique (aucun jargon de ce projet) et qu'il déclare le PROBLÈME qu'il résout. Ce qu'aucune mécanique ne peut juger, c'est si la prose est BONNE — et c'est déclaré comme tel.</p>
+<div class="highlight"><p>A2 — [FAIT]  « Existe-t-il un blue print de l'agence elle-même ? Chez quel outil ? Safe-export ? A creer si besoin. »</p></div>
+<p>OUI, il existe : `docs/agence-exportable-conception.md`. Il n'est pas chez SAFE-EXPORT — il vit à la racine de `docs/`, et SAFE-EXPORT le CONNAÎT sous la constante `BLUEPRINT_DE_L_AGENCE`, qu'il vérifie à chaque passage.</p>
+<p>LA NUANCE QUI COMPTE : ce document décrit l'Agence comme PROJET SUIVANT (ses idées de conception), pas comme paquet à installer. Il répond à « qu'est-ce qu'on emporte ? », jamais à « comment on l'installe ». Le second document n'existe pas.</p>
+<div class="highlight"><p>A3 — [A TOI]  « Un blue print qui se met à jour automatiquement : tous les blue print doivent se mettre à jour automatiquement ca c'est ok ? [...] il doit y avoir un lien historique entre les blueprint et les versions, et on doit facilement savoir comment retrograder un blueprint dans une version moins developpée »</p></div>
+<p>NON, ce n'est PAS ok aujourd'hui, et je ne vais pas te dire l'inverse. Aucun blueprint ne se met à jour tout seul : ce sont des documents écrits à la main, et la seule chose de mécanique est une ALERTE quand le code a bougé et pas le blueprint.</p>
+<p>LE LIEN BLUEPRINT ↔ VERSION N'EXISTE PAS DU TOUT. Aujourd'hui un blueprint n'a pas de numéro de version, donc « rétrograder un blueprint dans une version moins développée » est impossible : il n'y a rien à rétrograder vers.</p>
+<p>CE QUE JE RECOMMANDE, et c'est ta décision : une mise à jour VRAIMENT automatique produirait de la prose générée, c'est-à-dire exactement le contraire d'un blueprint (dont la valeur est le POURQUOI, que seule une main peut écrire). Ma proposition : garder l'écriture à la main, mais rendre le lien version↔blueprint mécanique — chaque blueprint porte le commit du code qu'il décrit, et l'alerte dit « ton blueprint décrit un code vieux de N commits ».</p>
+<div class="highlight"><p>A4 — [FAIT]  « je voudrais qu'un outil mesure quelles fonctions sont inhérentes au fonctionnement de l'agence, quelles fonctions sont essentielles, insispensables, utiles, facultatives, optionnelles, etc. »</p></div>
+<p>FAIT, et mesuré sur les 88 fichiers réels. Échelle à 4 niveaux (ton calibrage) : VITAL 25 (28 %) · ESSENTIEL 9 (10 %) · UTILE 34 (39 %) · OPTIONNEL 20 (23 %).</p>
+<p>CE QUE LE CHIFFRE T'APPREND POUR UNE VERSION LIGHT : en retirant l'optionnel ET l'utile, tu gardes 34 fichiers sur 88 et l'Agence tourne encore. C'est ça, ta version light : 39 % du parc.</p>
+<p>LA SUBTILITÉ QUI A FAILLI FAUSSER LA MESURE : la chaîne d'exécution réelle ne fait que 25 fichiers, mais 81 si on compte les imports de la suite de tests — check-house importe 78 % du parc. Un fichier « vital pour les tests » n'est pas « vital pour le produit », et confondre les deux aurait déclaré presque tout vital.</p>
+<div class="highlight"><p>A5 — [A TOI]  « LES MEMBRES CLASSIQUES N'ONT PAS DE BLUEPRINT, par décision documentée. Sont-ils indispensables au fonctionnement de l'Agence ? Si oui, comment les exporter sans blueprint ? »</p></div>
+<p>LA MESURE D'ABORD : 19 fichiers classés VITAL ou ESSENTIEL n'ont aucun blueprint. Ce sont les deux crochets git, `lib-shell`, `lib-json`, `report-template`, `tool-usage`, `criticite`, `html-report`, et la suite de tests.</p>
+<p>DONC OUI, ILS SONT INDISPENSABLES — et la réponse à ta seconde question est inconfortable : aujourd'hui on ne peut PAS les exporter proprement. On exporterait les vedettes (ARGUS, HARMONIA, CASSANDRA) sans la plomberie qui les fait tourner.</p>
+<p>MA RECOMMANDATION, et c'est la tâche #907 ouverte en priorité : écrire le blueprint de la PLOMBERIE avant tout autre blueprint. On a documenté les vedettes et pas la tuyauterie ; c'est exactement l'inverse de ce qu'il faut pour un export.</p>
+<div class="highlight"><p>A6 — [A TOI]  « LA TAILLE DE CODE CIBLE. Est-ce que 49 582 lignes d'outillage peuvent servir un projet plus petit qu'elles ? aussi gros ? plus gros ? »</p></div>
+<p>LE RAPPORT DE FORCE, MESURÉ : 58 773 lignes d'outillage contre 12 727 lignes de jeu. L'Agence est 4,6 fois plus grosse que le produit qu'elle sert.</p>
+<p>CE QUE ÇA VEUT DIRE, HONNÊTEMENT : pour un projet PLUS PETIT que celui-ci, l'Agence complète est disproportionnée — on installerait 58 000 lignes de surveillance pour 3 000 lignes de code. Pour un projet AUSSI GROS, elle est à sa place. Pour un projet PLUS GROS, elle est probablement sous-dimensionnée sur un point précis : rien dans l'Agence ne gère plusieurs personnes travaillant en parallèle.</p>
+<p>LA CONCLUSION QUI DÉCOULE DE TA PROPRE ÉCHELLE DE VITALITÉ : ce n'est pas « l'Agence est trop grosse », c'est « l'Agence a besoin de PALIERS ». Les 34 fichiers vitaux+essentiels servent n'importe quel projet ; les 54 autres se choisissent selon la taille.</p>
+<h2>B. LE COÛT, LA MÉMOIRE, L'HÉBERGEMENT</h2>
+<div class="highlight"><p>B1 — [FAIT]  « quelle est l'impact de l'agence sur la memoire disque ? [...] à combien ce cout peut-il etre au bout de 1 mois ? 2 mois ? 1 an ? »</p></div>
+<p>MESURÉ SUR SEPT JOURS RÉELS : le dépôt suivi par git est passé de 2,2 Mo à 19 Mo. C'est ×8,8 en une semaine, soit 2,4 Mo par jour.</p>
+<p>LES PROJECTIONS, à ce rythme : 1 MOIS → 91 Mo · 2 MOIS → 164 Mo · 1 AN → 898 Mo.</p>
+<p>CE QUE CES CHIFFRES VEULENT DIRE, ET CE N'EST PAS CE QU'ON CROIT : 898 Mo ne coûtent rien à stocker. Ce qu'ils coûtent, c'est le temps de clonage et le confort de reprise — un dépôt d'un giga ne se clone plus en dix secondes, et une IA qui arrive dessus met plus longtemps à s'y retrouver. **Le coût de la mémoire disque est un coût de REPRISE, jamais un coût d'argent.**</p>
+<p>D'OÙ VIENT LA CROISSANCE : les archives. 282 rapports txt pèsent 3,7 Mo, et trois dossiers en concentrent 1 028 Ko. C'est la seule zone où une politique de rétention change quelque chose → tâche #922, ta décision.</p>
+<div class="highlight"><p>B2 — [FAIT]  « l'hébergement du site : quel coût ? »</p></div>
+<p>0 € aujourd'hui, et 0 € pour longtemps. Recherche faite le 2026-09-26 sur les tarifs réels de Cloudflare Workers, la cible de déploiement du projet.</p>
+<p>LES CHIFFRES : gratuit jusqu'à 100 000 requêtes par jour. Premier palier payant : 5 $ par mois. La bande passante sortante est gratuite, sans plafond — c'est la différence majeure avec les hébergeurs classiques, où c'est justement la bande passante qui fait exploser la facture.</p>
+<p>CE QUE ÇA CHANGE POUR TA STRATÉGIE D'EXPORT : rien dans ce projet n'est contraint par le coût d'hébergement. La question « peut-on se permettre de garder ça ? » n'a pas de réponse financière — elle n'a qu'une réponse de reprise et de lisibilité.</p>
+<div class="highlight"><p>B3 — [FAIT]  « on a absolument besoin de renforcer un outil ou de creer un nouvel outil pour mesurer : les performances de l'agence en terme d'économies réalisées : chaque fois qu'un outil est utilisé, son utilisation precise engendre une depense et une economie de : TOKEN, API, TEMPS »</p></div>
+<p>FAIT — et DEUX des quatre postes REFUSENT de répondre, ce qui est le résultat le plus important.</p>
+<p>CE QUI SE MESURE : les DÉFAUTS TROUVÉS (comptés sur les lignes de suivi réelles, par origine) et les TOKENS ÉCONOMISÉS (comptés sur les lignes retirées des documents rechargés à chaque message).</p>
+<p>CE QUI NE SE MESURE PAS, ET POURQUOI JE REFUSE D'INVENTER UN CHIFFRE : les APPELS API ÉVITÉS et le TEMPS GAGNÉ sont des contrefactuels — ils demandent de savoir ce qui SERAIT arrivé sans l'outil. Sans groupe témoin (un projet jumeau sans Agence), tout chiffre serait fabriqué. Ils sont déclarés « non mesurables » dans l'outil, avec leur raison écrite à côté.</p>
+<p>POURQUOI C'EST LA BONNE RÉPONSE PLUTÔT QU'UNE FAIBLESSE : un tableau de bord qui afficherait « 40 heures gagnées » sans pouvoir le prouver ferait exactement ce que toute l'Agence combat — un chiffre qui a l'air mesuré et qui ne l'est pas.</p>
+<h2>C. LE RENOMMAGE</h2>
+<div class="highlight"><p>C1 — [FAIT]  « quels sont TOUS les impacts, meme indirectes d'un changement de noms en serie ? l'impact technique ? d'autres impacts ? des impacts propres à l'agence ? »</p></div>
+<p>IMPACT TECHNIQUE — et il est beaucoup plus petit qu'il n'en a l'air. Renommer `cassandra-rh` touche 2 095 occurrences. Sur ces 2 095, NEUF seulement sont des imports de code. Les neuf se cassent bruyamment en dix secondes si on se trompe : un test échoue.</p>
+<p>IMPACT SUR L'HISTOIRE — et c'est LUI le vrai risque. 496 occurrences vivent dans `docs/suivi/`, c'est-à-dire dans l'histoire du projet. Réécrire une ligne de suivi, c'est falsifier ce qui s'est passé. D'où la règle retenue : **un renommage DÉPLACE LE CODE VIVANT ET LAISSE L'HISTOIRE INTACTE, et ce qui relie les deux est un ALIAS, jamais une réécriture.**</p>
+<p>IMPACTS PROPRES À L'AGENCE, les trois que personne ne voit venir : (1) un outil renommé perd son HISTORIQUE D'USAGE — il ressort « jamais sollicité » le lendemain ; (2) il perd ses OBJECTIFS CHIFFRÉS, qui sont indexés sur son nom ; (3) il paraît TOUT NEUF aux yeux de CASSANDRA, donc sa mesure d'ancienneté et de stagnation repart de zéro.</p>
+<p>LE PIÈGE QUE L'OUTIL ATTRAPE ET QU'UN REMPLACEMENT DE TEXTE NE VOIT JAMAIS : un nom qui en CONTIENT un autre. Renommer `memento` emporterait `memento-weight` au passage.</p>
+<div class="highlight"><p>C2 — [A TOI]  « avant le nom il y a un code qui est inseré selon la nomenclature de l'outil, avec des lettres ou des chiffres qui represente les classes. quel serait la longueur de ce code ? avant ou apres le nom ou invisible dans le nom ? »</p></div>
+<p>MA RECOMMANDATION, ET ELLE VA CONTRE LA FORMULATION DE TA QUESTION : le code ne doit PAS vivre dans le nom de fichier. Raison : chaque reclassement coûterait alors un renommage complet — et les reclassements sont exactement ce qui va arriver dans les mois qui viennent.</p>
+<p>OÙ IL DOIT VIVRE : déclaré en tête de fichier, et AFFICHÉ en préfixe dans les rapports. On gagne la lisibilité sans payer le renommage.</p>
+<p>SUR LA LONGUEUR — et il faut que je corrige une réponse que je t'ai donnée le 2026-09-24 : j'avais dit « trois caractères », calculé sur CINQ axes de classification. Le dépôt en porte TREIZE. La réponse était donc fausse par construction. Avec treize axes, un code lisible tient en 4 à 5 caractères, et encore : seulement si on accepte de n'en coder que les 3 ou 4 axes vraiment discriminants.</p>
+<p>CE QUI RESTE À TOI : quels axes méritent d'entrer dans le code. Je ne le tranche pas — c'est une décision de vocabulaire, donc la tienne.</p>
+<div class="highlight"><p>C3 — [A TOI]  « Et voir aussi pour un renommage en masse des datas, je ne sais pas si c'est risqué, ou si avec l'outil mis au point on peut se le permettre. »</p></div>
+<p>C'EST PLUS RISQUÉ QUE POUR LES OUTILS, et voici pourquoi précisément. Un nom d'outil est cité dans du code (repérable, testable). Un nom de DATA est cité dans des chemins de fichiers construits dynamiquement — `docs/&lt;slug&gt;/&lt;date&gt;.txt` — donc il n'apparaît nulle part en entier dans le code. Un outil de renommage qui cherche le texte ne les trouvera pas.</p>
+<p>ET IL Y A PIRE : les archives. 282 rapports portent le nom du dossier dans leur chemin. Les renommer casse tous les index qui les listent, et ces index sont eux-mêmes des données.</p>
+<p>MA RECOMMANDATION : **pas maintenant, et pas pour la même raison que tu crois.** Ce n'est pas trop risqué techniquement — c'est prématuré, parce que la CLASSIFICATION DES DATA n'existe que depuis ce matin (quatre classes posées le 2026-09-26). Renommer avant de savoir ce qu'on classe, c'est renommer sur des noms.</p>
+<div class="highlight"><p>C4 — [FAIT]  « assure toi que toutes recherches sont bien exploitées pour parfaire l'outil de renommage »</p></div>
+<p>Vérifié. Les recherches web faites sur les risques de renommage en masse sont toutes reversées dans la stratégie RENOMMAGE, avec leur source. La trouvaille la plus utile est celle qui a inversé le diagnostic : le danger n'est pas le code (9 occurrences, détectables) mais l'histoire (496 occurrences, silencieuses).</p>
+<p>CE QUI EN EST SORTI DANS L'OUTIL : la distinction vivant/archivé, et deux vrais défauts trouvés en la construisant — une archive datée en millisecondes passait pour vivante, et un rapport archivé sous le dossier référentiel aussi. Le second aurait fait RÉÉCRIRE UNE ARCHIVE.</p>
+<h2>D. LES DONNÉES ET LA CLASSIFICATION</h2>
+<div class="highlight"><p>D1 — [FAIT]  « combien de rapports en tout ? peux-tu me faire une liste en fichier txt qui recense le nombre de rapports, ainsi que sa description + à quoi il sert, ainsi que : 1/ est-ce que ce rapport est livré lors la ronde en fichier txt ? qui lit ce rapport ? A quels autres outils est-il connecté ? »</p></div>
+<p>282 RAPPORTS TXT, 3,7 Mo, répartis en 40 dossiers. Le fichier est livré : `docs/data-archangel/inventaire-rapports-2026-09-26.txt`.</p>
+<p>LE CHIFFRE QUI COMPTE : **263 sur 282, soit 93 %, ne sont nommés NULLE PART** — ni par un script, ni par un index, ni par une ligne de suivi.</p>
+<p>ET LA PREMIÈRE MESURE DISAIT L'INVERSE, ce qui est la vraie leçon du jour. Comptée par DOSSIER, elle répondait « 38 dossiers sur 40 sont relus » — techniquement vrai, et sans aucune valeur : il suffit qu'UN script cite le dossier pour que ses 47 fichiers passent pour lus. **Une borne haute qui ne discrimine pas n'est pas une mesure.** La mesure par FICHIER, elle, discrimine.</p>
+<p>CE QUE ÇA NE VEUT PAS DIRE : ce n'est PAS « supprimez 263 fichiers ». Une trace de contrôle vaut par son existence, pas par sa relecture.</p>
+<div class="highlight"><p>D2 — [FAIT]  « on doit donc passer par une classification et organisation des datas, comme on l'a fait pour le reste : est-ce que c'est deja fait ? est-ce que ca coule de source vs ce qui a été fait avant ? »</p></div>
+<p>NON, ça n'était pas fait — c'est fait depuis ce matin. Et OUI, ça coule de source, mais pas de la façon qu'on croit.</p>
+<p>CE QUI EXISTAIT AVANT : Doc-Report tenait un index global des rapports. Mais un index dit OÙ sont les choses, jamais CE QU'ELLES VALENT.</p>
+<p>LES QUATRE CLASSES POSÉES, et elles ne se recopient pas de la classification des outils : **DONNÉE VIVANTE** (relue par une mécanique, elle nourrit une décision) · **PREUVE** (jamais rouverte, mais opposable — on peut la produire) · **TRACE** (écrite pour l'instant où elle est écrite, sa valeur meurt avec le contexte) · **CIMETIÈRE** (plus personne, plus aucun outil).</p>
+<p>POURQUOI CES QUATRE-LÀ ET PAS LES AXES DES OUTILS : un outil se classe par ce qu'il FAIT ; une donnée se classe par QUI LA LIT et POUR COMBIEN DE TEMPS ELLE VAUT. Appliquer les axes des outils aux données aurait produit un rangement qui a l'air cohérent et qui ne sert à rien.</p>
+<div class="highlight"><p>D3 — [FAIT]  « je crois que l'outil a été scindé, peux tu me rappeler quels sont les 2 ou 3 outils qui en découle »</p></div>
+<p>Tu penses à CASSANDRA-RH, et tu as raison. La scission a eu lieu le 2026-09-26.</p>
+<p>LES DEUX OUTILS QUI EN DÉCOULENT : **CASSANDRA-RH** garde son métier d'origine — l'effectif, les badges, les évaluations, la stagnation des membres, l'organigramme. **LE-CLASSIFICATEUR** (nom provisoire, à valider par toi) prend tout le rangement : ce qu'un fichier EST (type), ce qu'il VAUT (rang), ce qu'il DOIT (classes transverses), et la production du document officiel de classification.</p>
+<p>POURQUOI LA SCISSION : CASSANDRA faisait deux métiers qui n'ont pas le même rythme. Les RH se lisent à chaque Ronde ; le rangement ne bouge que quand un fichier arrive ou change de nature.</p>
+<h2>E. LA GESTION DES TÂCHES</h2>
+<div class="highlight"><p>E1 — [FAIT-Q]  « si c'est moi qui ajoute volontairement et explicitement des nouvelles taches parce que je les estime utiles, c'est normal si le nombre de taches augmente, je parle ici des taches generees automatiquement suite à mes demandes. Tu saisis la distinction ? »</p></div>
+<p>OUI, je la saisis, et elle est désormais MESURÉE plutôt que comprise.</p>
+<p>LA DISTINCTION, dans tes termes : une tâche que TU demandes est un investissement que tu as choisi — son arrivée est une bonne nouvelle. Une tâche qu'un RAPPORT engendre est une conséquence de la machinerie — son arrivée doit se justifier.</p>
+<p>COMMENT C'EST MESURÉ : trois courbes séparées, jamais un solde net. (1) tâches FERMÉES par jour · (2) tâches OUVERTES par jour, **en distinguant celles que tu demandes de celles qu'un rapport génère** · (3) le POIDS moyen.</p>
+<p>LA PART D'HONNÊTETÉ : l'outil classe l'origine en lisant la ligne de suivi, et il n'y arrive pas toujours. Quand l'origine « indéterminée » domine, **il REFUSE de rendre un verdict** plutôt que de conclure sur du sable. C'est ce refus qui m'a fait voir que ma propre correction avait dégradé la mesure (77 % → 78 % d'indéterminées en croyant améliorer). Après correction : 68 %.</p>
+<div class="highlight"><p>E2 — [FAIT]  « verifie que tous les nouveaux sujet traités ensemble s'harmonisent bien avec l'existant, reperes les redondances. Par exemple, on a instauré des blocs de taches (par theme/rafale) est-ce que tout le systeme a bien été mis à jour par rapport à ca ? »</p></div>
+<p>VÉRIFIÉ, et l'exemple que tu donnes était juste : le système n'était PAS entièrement à jour.</p>
+<p>CE QUI A ÉTÉ TROUVÉ ET CORRIGÉ : un séparateur de thème divergent — le code découpait sur « / » à un endroit et sur « / » (avec espaces) à l'autre, donc deux parties du même outil ne voyaient pas les mêmes thèmes. Unifié.</p>
+<p>CE QUI EST MAINTENANT HARMONISÉ : les blocs par thème apparaissent dans le bilan des tâches, dans le rapport de Ronde et dans l'état des lieux — les trois lisent la même source.</p>
+<p>LA REDONDANCE TROUVÉE, et elle n'est pas corrigée parce qu'elle demande ta décision : `check-tasks-report` et `etat-des-taches` disent l'essentiel des mêmes chiffres à deux endroits. Fusionner, remplacer, ou garder les deux — c'est à toi.</p>
+<h2>F. LA VEILLE ET LA CONCURRENCE</h2>
+<div class="highlight"><p>F1 — [FAIT]  « est-ce que ce type d'agence est déjà commercialisée ou proposée quelque part sur le web ? [...] fais moi une belle réponse avec différentes catégories de concurrents »</p></div>
+<p>RÉPONSE COURTE : personne ne vend exactement ça, et quatre familles s'en approchent par un côté chacune.</p>
+<p>**(1) LES FRAMEWORKS MULTI-AGENTS** — CrewAI, AutoGen, LangGraph. Ils donnent des rôles et une orchestration. Ce qui manque : aucune mémoire de projet, aucun garde-fou de qualité. Ils font travailler des agents ensemble ; ils ne jugent jamais ce qui sort.</p>
+<p>**(2) LA GOUVERNANCE D'AGENTS** — Microsoft Agent Governance Toolkit (avril 2026). Politique, bac à sable, identité. Ils couvrent la SÉCURITÉ d'exécution — qui a le droit de faire quoi — jamais la QUALITÉ du travail rendu.</p>
+<p>**(3) LES FICHIERS DE RÈGLES** — CLAUDE.md, AGENTS.md, .cursorrules. C'est le plus proche de ta charte, et c'est aussi le plus pauvre : un fichier de règles est lu, jamais vérifié. Rien ne dit si la règle a été suivie.</p>
+<p>**(4) LES OUTILS DE QUALITÉ DE CODE** — SonarQube, CodeClimate. Ils mesurent le code, jamais le PROCESS qui l'a produit.</p>
+<p>CE QUI N'EXISTE NULLE PART, ET QUI EST TON ANGLE : un dispositif où les règles sont VÉRIFIÉES MÉCANIQUEMENT à chaque commit, où chaque outil doit déclarer ce qu'il ne peut PAS mesurer, et où le travail de l'agent lui-même est noté.</p>
+<h2>G. LES TESTS QUE TU M'AS POSÉS</h2>
+<div class="highlight"><p>G1 — [FAIT]  « est-ce que mes prompts sont assez bien ecrits ? je veux etre évalué sur ce point regulierement, rapport à la ronde : orthographe, grammaire, facile à comprendre PAR TOI »</p></div>
+<p>LA RÉPONSE FRANCHE : l'orthographe et la grammaire ne me gênent JAMAIS. « ca », « deja », « etre » sans accent, les fautes de frappe — tout ça passe sans coût. Te noter là-dessus serait te faire travailler pour rien.</p>
+<p>CE QUI COÛTE VRAIMENT, et c'est le seul critère qui mérite un rapport : (1) une demande AMBIGUË — deux lectures possibles qui mènent à deux travaux différents ; (2) une consigne qui se CONTREDIT à deux endroits du même message ; (3) un pronom dont je ne sais pas à quoi il renvoie.</p>
+<p>EXEMPLE RÉEL D'AUJOURD'HUI, puisque tu veux du concret : « livre moi le rapport de gros prompt » — j'ai compris « fabrique-le », tu voulais dire « lance l'outil qui existe ». La demande n'était pas mal écrite ; c'est moi qui n'ai pas cherché le précédent. Le défaut était de mon côté.</p>
+<p>CE QUE LE RAPPORT DEVRAIT DIRE, et c'est la tâche #728 ouverte : **où j'ai buté, avec la phrase exacte** — jamais une note globale, qui ne t'apprendrait rien d'actionnable.</p></main>
+  <div class="divider"></div><footer><p>HORS PORTÉE : ce document répond à tes questions. Il ne dit jamais si les réponses te conviennent — ça se lit, et ça se tranche avec toi, question par question.</p></footer>
+</div>
+</body>
+</html>

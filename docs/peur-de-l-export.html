@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA PEUR DE L'EXPORT — ce que l'Agence perdrait le jour où elle partirait</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-26</div>
+    <h1>LA PEUR DE L'EXPORT — ce que l'Agence perdrait le jour où elle partirait</h1>
+    <p class="sub">Brutal, chiffré, sans ménagement — comme demandé</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : claude-opus-5
+Produit le : samedi 26 septembre 2026 à 12h26 (UTC)
+État du code : 98b2f02 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : safe-export — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<h2>LA PEUR DE L'EXPORT</h2>
+<p>*(2026-09-26, tâche #906. Sa demande, et elle était explicite : un fichier **brutal, chiffré, sans ménagement**. Ce document ne cherche pas à rassurer. Chaque chiffre vient d'un outil qui a tourné contre le dépôt réel — le rapport brut est `docs/safe-export/exportabilite-2026-09-26.txt`, produit par `node scripts/safe-export.mjs export`. Aucun chiffre ici n'a été écrit de mémoire.)*</p>
+<p>---</p>
+<h2>Ce qu'on croit, et ce que la mesure dit</h2>
+<p>**Ce qu'on croit** : l'Agence est prête à partir. Quarante et un blueprints génériques, un septième Gardien sacré dédié à l'exportabilité, la règle des deux documents par outil appliquée depuis des semaines, et l'Article 27 qui impose la reprenabilité par une autre IA.</p>
+<p>**Ce que la mesure dit** : **36 fichiers sur 88 ont un blueprint. 52 n'en ont pas.** Et parmi ceux qui n'en ont pas, **19 sont vitaux ou essentiels** — c'est-à-dire que sans eux l'Agence ne tourne pas, ou perd une garantie.</p>
+<p>---</p>
+<h2>LES CINQ CHIFFRES QUI FONT MAL</h2>
+<h2>1. Ce qui fait tourner l'Agence est précisément ce qui n'a pas de plan</h2>
+<p>Les 19 bloquants — vitaux ou essentiels, sans blueprint :</p>
+<p>`check-house.mjs` · `criticite.mjs` · `execution-profile.mjs` · `hooks/check-last-commit.mjs` · `hooks/install.mjs` · `hooks/post-commit` · `hooks/pre-commit` · `html-report.mjs` · `install-pnpm.sh` · `lib-json.mjs` · `lib-shell.mjs` · `priorites.mjs` · `report-template.mjs` · `run-framework.mjs` · `sites-env.mjs` · `tool-usage.mjs` · `circle-tasks.mjs` · `doc-report.mjs` · `le-coordinateur.mjs`</p>
+<p>Lis cette liste : ce sont **les crochets git, les bibliothèques partagées, le gabarit des rapports, le compteur d'usage et la suite de tests**. Autrement dit, tout ce qui fait qu'un outil de cette Agence RESSEMBLE à un outil de cette Agence.</p>
+<p>**La conséquence brutale** : on a documenté les VEDETTES et pas la PLOMBERIE. Un acheteur qui reçoit 41 blueprints reçoit 41 descriptions d'outils qui, une fois transplantés, ne s'accrochent à rien. Le format commun des rapports, la façon dont un outil déclare sa fiabilité, le crochet qui les lance : rien de tout ça n'a de plan. **C'est exactement l'inverse de ce qu'il faudrait.**</p>
+<h2>2. Couverture par niveau de vitalité — la pire est en haut</h2>
+<table><thead><tr><th>Niveau</th><th>Fichiers</th><th>Avec blueprint</th><th>Couverture</th></tr></thead><tbody><tr><td>🔴 **vital**</td><td>25</td><td>9</td><td>**36 %**</td></tr><tr><td>🟠 **essentiel**</td><td>9</td><td>6</td><td>67 %</td></tr><tr><td>🟡 utile</td><td>34</td><td>15</td><td>44 %</td></tr><tr><td>⚪ optionnel</td><td>20</td><td>6</td><td>30 %</td></tr></tbody></table>
+<p>**Le niveau le plus critique est le deuxième moins bien couvert.** Ce n'est pas un hasard : on documente ce qu'on est fier d'avoir construit, pas ce qu'on a écrit pour que le reste marche.</p>
+<h2>3. Le dépôt a été multiplié par 8,8 en sept jours</h2>
+<table><thead><tr><th>Quand</th><th>Taille suivie par git</th></tr></thead><tbody><tr><td>2026-09-19</td><td>2,2 Mo</td></tr><tr><td>2026-09-26</td><td>**19 Mo**</td></tr></tbody></table>
+<p>Soit **2,4 Mo par jour**. Projeté en ligne droite (une tendance, jamais une loi — un chantier qui s'arrête la dément) :</p>
+<ul><li>dans 1 mois : **91 Mo**</li></ul>
+<ul><li>dans 2 mois : **164 Mo**</li></ul>
+<ul><li>dans 1 an : **898 Mo**</li></ul>
+<p>**Ce que ça veut dire pour l'export** : à ce rythme, dans un an, « exporter l'Agence » veut dire déplacer près d'un gigaoctet de texte. Pas de code — de TEXTE : des rapports archivés, des transcriptions, des registres. Le code de l'outillage, lui, pèse 58 773 lignes.</p>
+<h2>4. L'outillage pèse 4,6 fois le jeu</h2>
+<ul><li>**Outillage** : 58 773 lignes (88 fichiers)</li></ul>
+<ul><li>**Le jeu lui-même** (`lib/`, `app/`, `components/`) : 12 727 lignes</li></ul>
+<p>La charte demandait de surveiller ce ratio. Le voici, mesuré : **l'Agence est le gros du projet, et le site est devenu la petite moitié.** Ce n'est pas un reproche — les deux projets sont assumés depuis le 2026-09-22 — mais c'est un fait dont il faut tirer les conséquences : **l'export n'est pas un chantier annexe, c'est le chantier du plus gros actif du dépôt.**</p>
+<h2>5. Deux packs d'outils n'ont JAMAIS été réalisés</h2>
+<p>Le Pack Sentinelle (3 outils) et le Pack Panorama (8 outils) — la vue transverse censée précéder une décision de priorisation — n'ont jamais eu lieu une seule fois. **Un outillage qu'on exporte sans l'avoir utilisé en entier exporte aussi ses angles morts.**</p>
+<p>---</p>
+<h2>LES TROIS PEURS, NOMMÉES</h2>
+<h2>Peur n°1 — « On exporte des pièces, pas une machine »</h2>
+<p>`docs/agence-exportable-conception.md` existe (9 400 caractères). C'est le seul document qui parle de l'Agence COMME UN TOUT, et il fait la taille de trois pages. En face : 41 blueprints de pièces détachées.</p>
+<p>**Ce qui manque n'est pas un 42e blueprint.** C'est le document qui dit : voici l'ordre d'installation, voici ce qui dépend de quoi, voici les 25 fichiers de la chaîne quotidienne sans lesquels rien ne démarre, voici les 4 points d'entrée réels.</p>
+<h2>Peur n°2 — « La chaîne est plus petite qu'on ne croit, et ça se voit mal »</h2>
+<p>Mesure : **25 fichiers** forment la chaîne d'exécution quotidienne. Mais si on compte les imports de la suite de tests, on en trouve **81**. L'écart vient d'un seul fichier : `check-house.mjs` importe 78 % du parc — pour le tester.</p>
+<p>**Pourquoi c'est une peur et pas une bonne nouvelle** : ça veut dire qu'on peut croire, en regardant les dépendances, que tout est indispensable. Un export « minimal » fait naïvement emporterait 81 fichiers. Un export réfléchi en emporte 25 et laisse le reste derrière. **Personne ne savait ce chiffre avant ce soir.**</p>
+<h2>Peur n°3 — « Le plus dur n'est pas le code, c'est ce qui n'est écrit nulle part »</h2>
+<p>L'Agence repose sur des règles qui vivent dans CLAUDE.md, `docs/regles-de-travail.md`, et dans la conduite d'un agent. Les Articles 29, 30, 31 et 32 le déclarent noir sur blanc : **aucun mécanisme ne peut vérifier qu'un compte rendu a rappelé son contexte, qu'un chantier a repris les notes, ou qu'un outil a été consulté avant d'agir.** Ces règles se déclarent, elles ne se portent pas.</p>
+<p>Un export livre les outils. Il ne livre pas la discipline qui les fait tourner.</p>
+<p>---</p>
+<h2>LES BÉNÉFICES, ET LES DEUX QU'ON NE PEUT PAS CHIFFRER</h2>
+<p>*(Ajouté le 2026-09-26, tâche #909. Produit par `node scripts/kpi-report.mjs benefices`.)*</p>
+<p>Un tableau de bénéfices qui chiffre TOUT est un argumentaire, pas une mesure — et un chiffre inventé se recopie ensuite dans tous les documents qui citent celui-ci. Quatre postes, dont **deux qui refusent de répondre**.</p>
+<table><thead><tr><th>Poste</th><th>Résultat</th></tr></thead><tbody><tr><td>✅ **Défauts trouvés par un outil**</td><td>**52 tâches** sur 272 d'origine déclarée, soit **19 %**. Comptés sur le SUIVI, pas sur les registres des outils : un signalement que personne n'a repris n'est pas un bénéfice. 569 lignes sur 841 ne déclarent pas leur origine — la part est calculée sur les 272 qui la déclarent.</td></tr><tr><td>✅ **Allègement de la charte**</td><td>**187 lignes** retirées, sur la seule opération chiffrée des 14 enregistrées. Compté en LIGNES, jamais en tokens : la conversion serait une estimation posée sur une estimation.</td></tr><tr><td>🚫 **Appels API évités**</td><td>**NON MESURABLE.** Il faudrait savoir combien d'appels auraient eu lieu SANS l'outillage. Le journal ne garde que les appels FAITS, et compter les refus « seuil dur » donnerait le nombre de fois où l'outil a dit non — jamais le nombre d'appels que ce non a évités. Un refus suivi d'un abandon et un refus suivi d'un contournement s'écrivent pareil.</td></tr><tr><td>🚫 **Temps gagné**</td><td>**NON MESURABLE**, et c'est sa consigne explicite. Sans groupe témoin — le même projet mené sans l'Agence — c'est un contrefactuel, c'est-à-dire une opinion chiffrée.</td></tr></tbody></table>
+<h2>LE RELAI VERS UNE AUTRE IA — ce qui passe, et ce qui accroche</h2>
+<p>*(Sa demande : que SAFE-EXPORT couvre le relai — mémoire, ligne de conduite, process — **sans me servir de moi-même comme étalon**. Produit par `node scripts/safe-export.mjs export`.)*</p>
+<p>**Le piège évident que sa consigne interdit** : vérifier « est-ce qu'une autre IA comprendrait ? » en me demandant si JE comprends. Je comprends toujours — j'ai la conversation, le contexte, les habitudes. Ma compréhension prouve que j'étais là, pas qu'un modèle arrivant à froid s'en sortira. Le seul étalon utilisable est mécanique.</p>
+<table><thead><tr><th>Dimension</th><th>État</th><th>Ce qui accroche</th></tr></thead><tbody><tr><td>**Mémoire** (ce qu'on a appris en se trompant)</td><td>✅ 2/2 documents</td><td>**2 dépendances à un outillage particulier**</td></tr><tr><td>**Conduite** (comment on travaille)</td><td>✅ 3/3 documents</td><td>**2 dépendances à un outillage particulier**</td></tr><tr><td>**Process** (les suites d'étapes qui engagent)</td><td>✅ 3/3 documents</td><td>—</td></tr></tbody></table>
+<p>**Les quatre dépendances sont le vrai défaut de relai**, et il est invisible à l'œil : un document parfaitement écrit qui dit « crée une tâche avec tel outil » est inapplicable pour une IA qui n'a pas cet outil.</p>
+<p>**La sonde elle-même a produit un faux vert à son premier passage**, et c'est gardé comme contre-test : `findDependancesOutillage()` ne scannait que les documents SE DÉCLARANT génériques, donc sautait CLAUDE.md et les règles de travail — exactement ceux à examiner. Le résultat était « aucune dépendance » sur trois documents jamais ouverts.</p>
+<h2>CE QUE LE MONDE EXTÉRIEUR DIT — quatre recherches ciblées</h2>
+<p>*(2026-09-26, tâche #911. Les huit trouvailles intégrales vivent dans `docs/strategies/export-et-commercialisation-strategie.md`, section 4. Ici : ce qu'elles changent.)*</p>
+<p>**1. La double licence évite de fabriquer une « agence light » artificielle.** Le patron éprouvé (Qt, MySQL) est une édition communautaire sous copyleft plus une licence commerciale pour qui ne peut pas l'accepter. **On vend le droit, pas une version amputée** — et ça retire du chemin critique tout le travail de découpage qu'une version allégée aurait exigé.</p>
+<p>**2. Le piège documenté de l'open core vise exactement ce que produit l'Agence.** L'acheteur approuve l'outil sur ce que fait le cœur, puis découvre que la surveillance, la rétention et les contrôles sont derrière le mur payant. Transposé ici : si les Gardiens sont gratuits mais que le suivi, les registres et les rapports sont payants, **l'outil gratuit signale sans jamais rien garder** — l'inverse exact de ce que ce projet a appris (Article 28).</p>
+<p>**3. L'architecture de l'Agence est un patron reconnu, pas une bizarrerie locale.** L'état de l'art sur les agents de code recommande, mot pour mot : *« offload critical tasks to deterministic middleware, bind them to specific agent lifecycle events, so the system — not the LLM — guarantees execution »*. **C'est la définition du crochet post-commit et de ses sept Gardiens.** C'est un argument de vente autant qu'une validation.</p>
+<p>**4. L'hébergement n'est PAS le sujet, et la mesure le retire de la liste des inquiétudes.** Le palier gratuit Cloudflare couvre 100 000 requêtes/jour et 5 Go de D1 ; le premier palier payant est à **5 $/mois**, et la bande passante sortante n'est facturée nulle part. Le coût réel de ce projet est ailleurs : dans les appels au modèle (Article 8, deux cerveaux par tour) et dans un dépôt qui grossit de 2,4 Mo/jour.</p>
+<p>**Et l'anti-patron qui décrit notre vraie difficulté** : *« every invocation starts from zero context »*, cité comme LE facteur qui limite la réutilisabilité entre projets. C'est exactement ce que l'Article 27 et le process XP-IA adressent — **et c'est la partie de l'Agence qui n'est pas du code, donc la plus dure à exporter.** Les trois peurs ci-dessus se résument à celle-là.</p>
+<h2>PLAN D'ACTION</h2>
+<p>*(Article 28 : un rapport n'est pas fini quand il est écrit, il l'est quand ses constats sont devenus des tâches. Trois états seulement — RETENU, ÉCARTÉ avec sa raison, À TRANCHER.)*</p>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce que ça devient</th></tr></thead><tbody><tr><td>**RETENU**</td><td>19 fichiers vitaux/essentiels sans blueprint, dont les crochets et les bibliothèques partagées</td><td>tâche #907 — écrire en priorité le blueprint de la PLOMBERIE (gabarit de rapport, crochets, bibliothèques partagées), avant tout nouveau blueprint d'outil vedette</td></tr><tr><td>**RETENU**</td><td>Aucun document ne décrit l'ordre d'installation ni la chaîne des 25</td><td>tâche #908 — un « plan de la machine » dérivé mécaniquement de la chaîne quotidienne, jamais écrit à la main (il se périmerait)</td></tr><tr><td>**À TRANCHER**</td><td>898 Mo projetés à un an, essentiellement des archives de rapports</td><td>politique d'archivage : purger, compacter, ou externaliser hors du dépôt ? C'est sa décision, pas celle de l'agent — elle touche à ce qu'on garde comme preuve</td></tr><tr><td>**À TRANCHER**</td><td>Pack Sentinelle et Pack Panorama jamais réalisés</td><td>les lancer une fois pour de vrai, ou les retirer du catalogue ? Un pack qui n'a jamais tourné n'est pas un pack, c'est une intention</td></tr><tr><td>**RETENU**</td><td>4 dépendances à un outillage particulier dans les documents de relai (mémoire et conduite)</td><td>tâche #910 — les reformuler pour qu'une IA sans cet outillage puisse les appliquer, ou déclarer explicitement la substitution à côté</td></tr><tr><td>**À TRANCHER**</td><td>Le modèle de licence : double licence (copyleft + commerciale) plutôt qu'open core</td><td>c'est sa décision, pas celle de l'agent. La recherche dit que la double licence évite de découper le produit, et que l'open core mettrait les registres derrière le mur payant — mais choisir de vendre, et comment, ne se dérive d'aucune mesure</td></tr><tr><td>**ÉCARTÉ**</td><td>L'hébergement du site comme source d'inquiétude</td><td>mesuré : 0 € sous 100 000 requêtes/jour, 5 $/mois au premier palier payant, bande passante sortante gratuite. La question était légitime, la réponse la retire de la liste — le coût réel est dans les appels au modèle</td></tr><tr><td>**ÉCARTÉ**</td><td>Le ratio outillage/jeu (4,6×)</td><td>ce n'est pas un défaut à corriger : les deux projets sont assumés depuis le 2026-09-22, et la charte demande de SURVEILLER ce chiffre, jamais de le faire baisser. Il est surveillé, il est écrit, il ne devient pas une tâche</td></tr></tbody></table>
+<p>---</p>
+<p>**CE QUE CE DOCUMENT NE DIT PAS** : il ne dit pas que l'export est impossible, ni qu'il est en retard. Il dit ce qui manquerait si on l'ouvrait demain matin. Chaque chiffre est reproductible : `node scripts/safe-export.mjs export`.</p></main>
+  <div class="divider"></div><footer><p>HORS PORTÉE : ce document mesure ce qui manque pour exporter. Il ne dit jamais s'il FAUT exporter, ni quand — ça se tranche avec toi.</p></footer>
+</div>
+</body>
+</html>
