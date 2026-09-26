@@ -1299,8 +1299,17 @@ export function analyseDesCouches(recensement, { crochets = "", filetDeSecurite 
   // 2. LA COUCHE LOURDE EST-ELLE UTILISÉE : la question qu'il pose, et la réponse honnête est
   //    souvent non. Un outil dont la couche payante n'a jamais tourné a payé sa construction pour
   //    rien — mais l'usage se LIT dans le compteur, jamais dans une impression.
+  //
+  //    UN COMPTEUR VIDE N'EST PAS UN COMPTEUR À ZÉRO (2026-09-26, tâche #916). Défaut réel, trouvé
+  //    en lançant cette fonction pour de bon : un appelant qui passe `usage` mal formé — ou pas du
+  //    tout — obtenait « les 4 couches lourdes n'ont JAMAIS été lancées », alors que deux d'entre
+  //    elles avaient tourné dans l'heure. C'est la leçon L11 dans une fonction écrite pour détecter
+  //    ce genre de chose : le zéro d'une sonde cassée s'écrit comme le zéro d'une vraie mesure. La
+  //    liste n'est donc rendue QUE si le compteur porte au moins une entrée ; sinon elle est nulle,
+  //    et `usageMesure` dit pourquoi.
   const warriors = lignes.filter((l) => l.couches.includes("warrior"));
-  const warriorsJamaisLances = warriors.filter((l) => {
+  const usageMesure = Object.keys(usage ?? {}).length > 0;
+  const warriorsJamaisLances = !usageMesure ? null : warriors.filter((l) => {
     const slug = l.chemin.replace(/^scripts\//, "").replace(/\.mjs$/, "");
     return !usage[slug];
   });
@@ -1312,7 +1321,9 @@ export function analyseDesCouches(recensement, { crochets = "", filetDeSecurite 
     mesurable: true, lignes,
     meriteUneCouche: meriteUneCouche.map((l) => l.chemin),
     warriors: warriors.map((l) => l.chemin),
-    warriorsJamaisLances: warriorsJamaisLances.map((l) => l.chemin),
+    usageMesure,
+    warriorsJamaisLances: warriorsJamaisLances ? warriorsJamaisLances.map((l) => l.chemin) : null,
+    pourquoiPasDUsage: usageMesure ? null : "aucune entrée dans le compteur d'usage fourni : « jamais lancée » n'a PAS été mesuré. Un compteur vide et un outil jamais lancé rendent le même zéro, et l'un accuse à tort (leçon L11)",
     candidatsEnchainement: candidatsEnchainement.map((l) => l.chemin),
     horsPortee: "l'enchaînement automatique est PROPOSÉ, jamais câblé : déclencher seul une couche payante parce qu'une couche gratuite a signalé quelque chose est exactement la dépense sans consultation que l'Article 22 interdit. La liste dit qui POURRAIT, la décision reste humaine.",
   };

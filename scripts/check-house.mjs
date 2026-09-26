@@ -8759,6 +8759,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // LES COUCHES DES GARDIENS SACRÉS (2026-09-26, tâche #916 — point 23 de son gros prompt).
+    // Le défaut trouvé en LANÇANT la fonction pour de bon, jamais en la relisant : un compteur
+    // d'usage vide faisait accuser les quatre couches lourdes d'avoir « JAMAIS été lancées », alors
+    // que deux avaient tourné dans l'heure. C'est la leçon L11 dans une fonction écrite pour
+    // détecter précisément ce genre de chose.
+    const CRH = await import('../scripts/cassandra-rh.mjs');
+    const recF = { mesurable: true, lignes: [{ chemin: 'scripts/a.mjs', type: 'commande-documentee' }] };
+    const sansCompteur = CRH.analyseDesCouches(recF, { couteux: new Set(['a']) });
+    assert.equal(sansCompteur.warriorsJamaisLances, null, 'with an empty usage counter the "never launched" list is NOT produced — a zero from a broken probe writes exactly like a measured zero');
+    assert.ok(sansCompteur.pourquoiPasDUsage.includes('L11'), 'and the refusal names the lesson it applies, rather than staying silent');
+    assert.equal(sansCompteur.usageMesure, false, 'the caller can tell measured from unmeasured without reading prose');
+    const avecCompteur = CRH.analyseDesCouches(recF, { couteux: new Set(['a']), usage: { b: 3 } });
+    assert.deepEqual(avecCompteur.warriorsJamaisLances, ['scripts/a.mjs'], 'and once the counter carries at least one entry the accusation is made again — the guard must still bite');
+
     // L'ANGLE MORT DE L'AUDIT D'INTÉGRATION (2026-09-26, tâche #915 — point 22 de son gros prompt).
     // Les onze registres vérifient le BRANCHEMENT ; un outil peut être branché 11/11 et décrire
     // quelque chose qui n'existe plus. Ce n'est pas une crainte : check-profile a vécu neuf jours

@@ -343,3 +343,34 @@ Tant que le motif ne bouge pas, on ne republie pas. À implémenter.
 L'idée est désormais inscrite dans le document de son chantier, marquée NON TRANCHÉE, sans une
 ligne de développement. Sa question se termine par « qu'en penses-tu ? » — elle attend un échange,
 jamais une exécution.
+
+### Ajoutée le 2026-09-26 par la mesure des couches des Gardiens sacrés (#916)
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #917 | Charte — la couche lourde promise à ARGUS et HARMONIA, que le catalogue PRESTATIONS ne porte pas | à trancher |
+
+## #917 — la charte promet une couche lourde à ARGUS et HARMONIA que le registre ne porte pas
+
+*(Ajoutée le 2026-09-26, tâche #916 : la mesure des couches des Gardiens sacrés a trouvé l'écart.)*
+
+**L'écart, en une phrase** : l'Article 20 affirme mot pour mot que « ARGUS et HARMONIA ajoutent en
+plus, sur demande, une seconde partie à vrai raisonnement (coût réel, Article 8) », et **aucun des
+deux n'est déclaré coûtant dans le catalogue PRESTATIONS** — le registre que la mesure lit, et celui
+que tool-brain affiche à chaque commit.
+
+**Trois lectures, et elles appellent des gestes opposés** :
+
+1. **la couche lourde existe et le catalogue est en dette** → il faut l'y inscrire, et tool-brain la
+   proposera désormais quand elle est pertinente ;
+2. **elle n'existe pas** → la charte promet quelque chose qui n'a jamais été construit, et il faut
+   soit la construire soit retirer la promesse ;
+3. **c'est un geste de l'AGENT** (relancer ARGUS en réfléchissant vraiment) et non une commande →
+   alors elle n'est portée par aucun mécanisme, et l'Article 27 demande de le déclarer noir sur
+   blanc plutôt que de le laisser deviner. *(C'est déjà le cas d'ALWAYS-NEW-CODE, dont le vrai zoom
+   « page blanche » se déclenche par CHECK-LEVEL-TARGET et reste invisible à cette même sonde.)*
+
+**Pourquoi l'agent ne tranche pas** : les trois ont un coût différent, et deux d'entre elles
+touchent la charte — intouchable sans son accord.
+
+**Rapport complet** : `docs/cassandra-rh/couches-des-gardiens-2026-09-26.md`.
