@@ -50,6 +50,7 @@ export const LOCAL_JOURNALS = [
   { path: ".circle-tasks-last-run.json", owner: "CIRCLE-TASKS", purpose: "anti-doublon de la dernière Ronde" },
   { path: ".kpi-report-latest.html", owner: "kpi-report.mjs", purpose: "copie de remise HTML du dernier rapport KPI" },
   { path: ".el-professor-coverage-latest.html", owner: "el-professor.mjs", purpose: "copie de remise HTML de la couverture EL-PROFESSOR" },
+  { path: ".banniere-post-commit.txt", owner: "scripts/hooks/banniere.mjs (tâche #798)", purpose: "la bannière COMPLÈTE du dernier commit — le crochet n'affiche que ce qui exige une action (365 lignes ramenées à 9), tout le contexte atterrit ici et se relit à la demande. Écrasé à chaque commit : c'est un journal du DERNIER passage, jamais une archive qui grossirait" },
   { path: ".circle-tasks-run-summary-latest.txt", owner: "CIRCLE-TASKS", purpose: "récap texte de la dernière Ronde exécutée" },
   { path: ".ines-official-latest-code.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code)" },
   { path: ".ines-official-latest-code_et_docs.txt", owner: "INES-official", purpose: "corps de la dernière édition (périmètre code + documentation)" },

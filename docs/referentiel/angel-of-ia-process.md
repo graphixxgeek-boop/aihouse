@@ -219,3 +219,57 @@ que personne ne le sache (leçon L1).
 **Ce que ça implique pour une autre IA qui reprend le projet** : cette règle ne survivra que parce
 qu'elle est écrite à deux endroits et qu'on vous la redemandera. Il n'y a pas de test à faire
 passer, et il n'y en aura jamais.
+
+## OÙ J'AI BUTÉ SUR UNE SAISINE — la qualité de ses demandes, mesurée sur des cas réels (2026-09-26, tâche #728)
+
+**Sa question, dans ses mots** : « est-ce que mes prompts sont assez bien ecrits ? je veux etre
+évalué sur ce point regulierement, rapport à la ronde : orthographe, grammaire, facile à comprendre
+PAR TOI ».
+
+**Le seul critère qui compte est le troisième, et le lui dire franchement vaut mieux que de le
+noter.** L'orthographe et la grammaire ne gênent jamais la compréhension ici : les accents manquants
+et les fautes de frappe passent sans le moindre coût. Le noter là-dessus le ferait travailler pour
+rien. Ce qui coûte réellement, c'est une demande **ambiguë**, une consigne qui **se contredit** à
+deux endroits, ou un **pronom** dont la cible n'est pas retrouvable.
+
+**Le piège est nommé dans la tâche elle-même** : un agent qui note l'écriture de celui qui le dirige
+a toutes les raisons d'être complaisant. Le biais inverse existe aussi, et il est tout aussi faux :
+s'accuser systématiquement pour ne jamais le mettre en cause produit un rapport flatteur d'un autre
+genre, et le prive d'une information qui lui servirait.
+
+**Ce qui désamorce les deux : on ne rend jamais une note, on enregistre des CAS.** Chacun porte la
+phrase exacte, ce que j'ai compris, ce qu'il voulait dire, et une **cause nommée** rangée dans
+l'une de deux familles étanches :
+
+| Côté saisine | Côté agent |
+|---|---|
+| `ambigu` — deux lectures possibles menaient à deux travaux différents | `precedent-non-cherche` — un document ou un outil existait déjà et je ne l'ai pas cherché |
+| `contradiction` — deux endroits de la même saisine se contredisaient | `process-non-lu` — un process écrit disait comment faire et je ne l'ai pas relu |
+| `pronom` — un « ça », un « le », un « ce truc » dont la cible n'était pas retrouvable | `lecture-trop-rapide` — la saisine le disait, je l'ai lu de travers |
+
+**Le côté est DÉRIVÉ de la cause, jamais déclaré à la main** (Article 24) : un côté écrit à part
+pourrait contredire sa propre cause, et personne ne le verrait.
+
+**Les trois refus, et chacun ferme une façon de rendre le chiffre faux** :
+
+- **un cas sans sa phrase exacte est refusé** — ce ne serait plus une observation, ce serait une
+  impression, et une impression est précisément ce que cette tâche interdit ;
+- **une cause hors des deux familles est refusée** — un cas rangé nulle part ne compte dans aucun
+  total et fait silencieusement baisser celui qu'il aurait dû faire monter ;
+- **un registre vide rend « PAS MESURÉ », jamais un satisfecit** (leçons L5/L11) — « personne n'a
+  rien noté » ressemble trait pour trait à « tout était clair », et les deux ne veulent pas dire la
+  même chose. C'est le défaut que ce projet a payé le plus souvent.
+
+**Registre** : `docs/profil-utilisateur/incomprehensions.json`. **Sortie** : section
+« OÙ J'AI BUTÉ SUR UNE SAISINE » du rapport d'angel, donc relayée à la Ronde par god-of-all-process
+(Article 26) — jamais un rapport de plus à aller chercher.
+
+**Premier résultat réel, et il n'est pas flatteur pour l'agent** : sur 3 incompréhensions
+enregistrées le 2026-09-26, **0 venaient de sa saisine et 3 de moi**. La réponse honnête à sa
+question est donc oui, ses prompts sont assez bien écrits. **Les trois miennes sont imprimées en
+clair avec ses phrases** : les taire aurait rendu le premier chiffre flatteur pour lui et faux.
+
+**Ce que ce mécanisme ne fera jamais** : détecter tout seul qu'une saisine était ambiguë. Personne
+ne peut lire ça dans un fichier. C'est l'agent qui enregistre le cas au moment où il bute, et
+déclarer cette limite EST la protection (Article 27) — comme pour `resume-contextualise` ci-dessus,
+il n'y a pas de test à faire passer et il n'y en aura jamais.

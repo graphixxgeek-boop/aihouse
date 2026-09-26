@@ -1,0 +1,26 @@
+[
+ {
+  "date": "2026-09-26",
+  "phrase": "livre moi le rapport de gros prompt par rapport au gros prompt d hier soir stp",
+  "compris": "fabrique un rapport qui rende compte de la nuit",
+  "voulu": "lance rapport-gros-prompt.mjs, l outil qui existe depuis le 2026-09-24",
+  "cause": "precedent-non-cherche",
+  "cote": "agent"
+ },
+ {
+  "date": "2026-09-26",
+  "phrase": "le rapport de gros prompt est document deja prevu, pas un document que tu dois inventer toi",
+  "compris": "la premiere fois : que je devais rediger la saisine moi-meme",
+  "voulu": "que je lise le process et les references AVANT de construire quoi que ce soit",
+  "cause": "process-non-lu",
+  "cote": "agent"
+ },
+ {
+  "date": "2026-09-26",
+  "phrase": "je veux un fichier HTML de reponses a TOUTES les questions du gros prompt",
+  "compris": "une variante du meme rapport de nuit",
+  "voulu": "un SECOND document, distinct : ses QUESTIONS avec une reponse chacune, au format deja formalise dans docs/reponses/",
+  "cause": "precedent-non-cherche",
+  "cote": "agent"
+ }
+]

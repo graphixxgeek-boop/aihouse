@@ -830,6 +830,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // artefacts produits par une mécanique). Aucun outil ne le remplit périodiquement, donc aucun item
   // de Ronde ne pourrait le vérifier sans inventer un rythme qui n'existe pas.
   reponses: "ce n'est pas le registre d'un outil mais le dossier des réponses écrites pour l'utilisateur : rien ne le remplit sur un rythme, donc un item de Ronde y regarderait un dossier que personne n'a alimenté",
+  // veille (2026-09-26, tâche #771) : même famille que `reponses` ci-dessus — un dossier de
+  // DOCUMENTS, jamais le registre d'un outil. Et son exclusion porte une raison de plus, propre à
+  // son sujet : une veille par CALENDRIER rendrait invariablement « rien de neuf », c'est-à-dire du
+  // bruit qui apprend à ne plus lire la Ronde (leçon L6). Une veille se déclenche sur une QUESTION,
+  // jamais sur une date — et c'est écrit dans son index pour qu'on ne le redécouvre pas.
+  veille: "dossier de DOCUMENTS, jamais le registre d'un outil : aucun script ne le remplit. Et un passage périodique rendrait « rien de neuf » à chaque fois — une veille répond à une question, jamais à un calendrier",
   "objectifs-vs-resultats": "registre hand-maintained consulté quand un objectif précis intéresse quelqu'un, pas une routine mécanique qui aurait toujours quelque chose de neuf à dire à chaque Ronde (contrairement à tool-brain-report, pensé pour construire une habitude) — même logique que check-tasks-details ci-dessus",
 };
 // findReportingToolsMissingFromCircle() (2026-09-22) — LE TROU DANS LE GARDE-FOU LUI-MÊME, trouvé

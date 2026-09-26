@@ -8,13 +8,19 @@
 # correspond exactement à ce choix.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
-node scripts/hooks/check-last-commit.mjs || true
+# LA BANNIÈRE EST HIÉRARCHISÉE DEPUIS LE 2026-09-26 (tâche #798). Chaque outil passe par un
+# enrobage qui n'affiche que ce qui EXIGE UNE ACTION et range le reste dans un journal local relu
+# à la demande. Mesuré : 365 lignes à chaque commit, ignorées sept fois de suite, ramenées à 9.
+# RIEN N'EST SUPPRIMÉ — chaque bloc avait été ajouté parce qu'un défaut réel était passé inaperçu.
+# BANNIERE_PREMIER=1 sur le premier appel seulement : il ÉCRASE le journal, les suivants le
+# complètent, si bien qu'on lit toujours la bannière du DERNIER commit et jamais l'accumulation.
+BANNIERE_PREMIER=1 node scripts/hooks/banniere.mjs node scripts/hooks/check-last-commit.mjs || true
 # ecotoken (2026-09-22) — alerte NON BLOQUANTE sur le poids de CLAUDE.md, le seul
 # document rechargé à chaque message. Choix explicite de l'utilisateur : une alerte, jamais un
 # blocage — ajouter une vraie règle importante en pleine session doit rester possible, on veut
 # seulement que ça ne se fasse plus sans le savoir. La charte a déjà maigri deux fois et regrossi
 # les deux fois : sans ce rappel au moment du commit, on ne s'en aperçoit qu'à la Ronde suivante.
-node scripts/ecotoken.mjs budget || true
+node scripts/hooks/banniere.mjs node scripts/ecotoken.mjs budget || true
 # MOÏSE-TABLES-DE-LOI (2026-09-23, tâche #613) — alerte NON BLOQUANTE de FRAÎCHEUR des instruments
 # de la charte, calibrage explicite de l'utilisateur : « une alerte gratuite à chaque commit, le
 # reste sur demande ». Distincte de la ligne ecotoken ci-dessus, qui surveille le POIDS : celle-ci
@@ -22,12 +28,12 @@ node scripts/ecotoken.mjs budget || true
 # constaté, pas craint : la table de classification servant à décider quoi alléger a tourné trois
 # jours en ignorant six Articles, et un instrument périmé ne rend pas une erreur — il rend des
 # chiffres qui ont l'air justes.
-node scripts/moise-tables-de-loi.mjs || true
+node scripts/hooks/banniere.mjs node scripts/moise-tables-de-loi.mjs || true
 
 # LA CHARTE SE PROTÈGE ELLE-MÊME (2026-09-23, tâche #631) — uniquement quand elle a bougé, pour
 # qu'un commit qui ne la touche pas reste silencieux : un contrôle qui parle pour rien cesse d'être lu.
 if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qx "CLAUDE.md"; then
-  node scripts/moise-tables-de-loi.mjs protection || true
+  node scripts/hooks/banniere.mjs node scripts/moise-tables-de-loi.mjs protection || true
 fi
 
 # LA DETTE DOCUMENTAIRE, SIGNALÉE À SA NAISSANCE (2026-09-25, tâche #436 partie 2) — alerte NON
@@ -44,5 +50,5 @@ fi
 # process change de contrôleur (Article 24) ; la précision vit dans l'outil, qui est muet quand il
 # n'a rien trouvé.
 if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^scripts/.*\.mjs$'; then
-  node scripts/god-of-all-process.mjs dette || true
+  node scripts/hooks/banniere.mjs node scripts/god-of-all-process.mjs dette || true
 fi

@@ -76,3 +76,4 @@ docs/ecotoken/.dernier-fichier-maitre.local.txt
 .conso-tours.json
 docs/sauvegardes/*.zip
 docs/sauvegardes/notice-*.txt
+.banniere-post-commit.txt

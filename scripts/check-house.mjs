@@ -12604,6 +12604,56 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 {
+  // LA BANNIÈRE POST-COMMIT, HIÉRARCHISÉE (2026-09-26, tâche #798) — 362 lignes que personne ne lit.
+  //
+  // Le problème est double et les deux moitiés se renforcent : la bannière coûte ~11 600 tokens à
+  // CHAQUE commit ET elle est trop longue pour être lue, donc elle est payée sans servir. Ignorée
+  // sept fois de suite. Ce n'est pas « je dois mieux lire » : 362 lignes ne se lisent pas à chaque
+  // commit, personne ne le ferait. C'est un problème de PRÉSENTATION (Article 15, appliqué à un
+  // lecteur qui se trouve être l'agent).
+  const ban = await import('../scripts/hooks/banniere.mjs');
+
+  const sortieType = [
+    '⚠️  Attention, mes résultats peuvent être inexacts : blabla habituel.',
+    'État du code : abc123 sur une branche',
+    '=== UN TITRE DE SECTION ===',
+    '  ✅ tout va bien de ce côté',
+    '  🚨 trois écarts réels trouvés',
+    '=== UN AUTRE TITRE ===',
+    '  ⚪ du contexte, beaucoup de contexte',
+    '  ⚠️ Art.13 : 11 → 12 obligation(s) — GROSSI',
+  ].join('\n');
+  const h = ban.hierarchiser(sortieType);
+  assert.deepEqual(h.retenues, [
+    '=== UN TITRE DE SECTION ===', '  🚨 trois écarts réels trouvés',
+    '=== UN AUTRE TITRE ===', '  ⚠️ Art.13 : 11 → 12 obligation(s) — GROSSI',
+  ], 'only what DEMANDS AN ACTION survives, each under the section title that says who is speaking');
+
+  // ⚠️ EST UN MARQUEUR D'ACTION, ET C'EST CE CONTRE-TEST QUI L'A IMPOSÉ. La première version ne
+  // gardait que 🚨 et 🔴 ; lancée pour de vrai sur les cinq outils du crochet, elle rendait ZÉRO
+  // ligne pour MOÏSE — qui portait pourtant « ⚠️ Art.13 : 11 → 12 obligation(s) — GROSSI ».
+  // Un filtre qui cache une vraie alerte est PIRE que le bruit qu'il supprime : son erreur ne
+  // s'affiche nulle part (leçon L4, prise à l'envers).
+  assert.ok(h.retenues.some((l) => /Art\.13/.test(l)), 'a real ⚠️ finding must survive the filter — the first version swallowed exactly this one');
+
+  // MAIS LES DEUX LIGNES DE FORMULAIRE, QUE CHAQUE OUTIL IMPRIME, SONT ÉCARTÉES PAR LEUR TEXTE —
+  // jamais par une heuristique de forme, qui se tromperait un jour sur une vraie alerte.
+  assert.ok(!h.retenues.some((l) => /peuvent être inexacts|État du code/.test(l)), 'the two boilerplate lines carrying ⚠️ are excluded by their known text, otherwise every tool would cost two noise lines');
+
+  // UN TITRE NE SORT QUE S'IL PRÉCÈDE UNE VRAIE ALERTE, et une seule fois : les sortir tous
+  // reconstituerait la table des matières qu'on cherche précisément à retirer.
+  const sansAlerte = ban.hierarchiser(['=== TITRE SEUL ===', '  ✅ rien à signaler'].join('\n'));
+  assert.deepEqual(sansAlerte.retenues, [], 'a section with nothing to act on prints NOTHING — not even its title');
+  assert.deepEqual(ban.formatBanniereLines(sansAlerte), [], 'and a banner with nothing to say says nothing at all: one that speaks for nothing stops being read');
+
+  // RIEN N'EST PERDU, ET LA DERNIÈRE LIGNE LE DIT : chaque bloc du crochet avait été ajouté parce
+  // qu'un défaut réel était passé inaperçu. Le filtre déplace, il ne supprime jamais.
+  const rendu = ban.formatBanniereLines(h);
+  assert.ok(/ligne\(s\) au total/.test(rendu.at(-1)) && new RegExp(ban.JOURNAL.replace('.', '\\.')).test(rendu.at(-1)), 'the last line must always say how much was set aside AND where to read it — a filter that hides silently is a filter nobody can contest');
+  assert.equal(h.total, 8, 'and the total counts the real lines of the source, never only the kept ones');
+}
+
+{
   // LE QUATRIÈME CRITÈRE : LE RAPPORT SORT-IL TOUT CE QUE L'OUTIL SAIT ? (2026-09-23, tâche #211)
   //
   // Né d'une question qu'on ne pouvait pas éviter : impossible d'écrire un plan d'action honnête
@@ -13796,4 +13846,62 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(vrais.some((p) => p.estUneCombinaison && p.realisations === 0), 'and the real answer must be allowed to be uncomfortable: at least one genuine combination of this catalogue has never once happened, which is precisely what the user was asking about and what nothing could tell him before');
 
   console.log('Passed: tool combinations are measured at last (2026-09-23), answering a question nobody could answer — the counter recorded one toolSlug at a time, and across 1 184 events not one mentioned a pack while five packs name a real combination. The design choice is the whole point: a "pack" field filled in by the agent would have measured a declaration, "I thought of the pack", rather than a fact, and this project has paid for that confusion more than once in a single day. What is measured instead is whether the combination HAPPENED — all of a pack\'s tools used inside one window — which is both more honest and more interesting, since it separates "the pack exists and nobody does it" from "the pack happens by itself and naming it would add nothing", two opposite diagnoses a declarative field would have merged. A pack whose second entry is a document is reported as not being a combination at all, rather than as one realised a hundred and fifty-seven times. Run against the real catalogue, the answer is uncomfortable and useful: two of the four genuine combinations have never once occurred, including the eight-tool one meant to give a cross-cutting view before a prioritisation decision.');
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// OÙ J'AI BUTÉ SUR UNE SAISINE (2026-09-26, tâche #728)
+// ————————————————————————————————————————————————————————————————————————
+// Sa demande : « est-ce que mes prompts sont assez bien ecrits ? je veux etre évalué sur ce point
+// regulierement ». Le piège est nommé dans la tâche elle-même : un agent qui note l'écriture de
+// celui qui le dirige a toutes les raisons d'être complaisant — et le biais inverse (s'accuser
+// pour ne jamais le mettre en cause) produit un rapport tout aussi faux. Ce qui désamorce les
+// deux, et c'est la seule chose que ces tests protègent : un cas ne compte que COMPLET, sa cause
+// est nommée d'un côté OU de l'autre, et un registre vide ne rend jamais un verdict.
+{
+  const angComp = await import('../scripts/angel-of-ia-process.mjs');
+
+  // LES DEUX FAMILLES DE CAUSES SONT ÉTANCHES — c'est ce qui permet de dire « ce blocage vient de
+  // moi » sans que le chiffre global devienne une flatterie.
+  assert.equal(angComp.causeConnue('ambigu'), 'saisine', 'an ambiguity in the saisine is attributed to the saisine side');
+  assert.equal(angComp.causeConnue('precedent-non-cherche'), 'agent', 'not having looked for an existing precedent is MINE, and the register must say so — a tool that only ever blames the person directing it is worthless to him');
+  assert.equal(angComp.causeConnue('faute-d-orthographe'), null, 'a cause outside the two named families is rejected rather than silently filed: spelling and grammar never once cost comprehension here, and grading him on them would make him work for nothing');
+
+  // UN CAS INCOMPLET EST REFUSÉ — sans la phrase exacte, ce n'est plus une observation, c'est une
+  // impression, et une impression est précisément ce que cette tâche interdit.
+  const refuse = angComp.enregistrerIncomprehension({ compris: 'x', voulu: 'y', cause: 'ambigu' });
+  assert.equal(refuse.ok, false, 'a case with no verbatim phrase must be REFUSED, never stored — a register of impressions would be worse than no register');
+  assert.ok(refuse.fautes.some((f) => /phrase exacte/.test(f)), 'and the refusal must name what is missing, otherwise it cannot be fixed');
+  assert.equal(angComp.enregistrerIncomprehension({ phrase: 'p', compris: 'c', voulu: 'v', cause: 'inventée' }).ok, false, 'an unknown cause is refused too: a case filed on neither side counts in no total and quietly shrinks whichever number it should have raised');
+
+  // L'AUTRE SENS (BP4) : un cas complet doit bien PASSER, sinon le garde-fou refuserait tout et le
+  // registre resterait vide pour une raison qui n'a rien à voir avec la qualité des saisines.
+  const ok728 = angComp.enregistrerIncomprehension({ phrase: 'p', compris: 'c', voulu: 'v', cause: 'pronom' }, { existants: [{ cause: 'ambigu', cote: 'saisine' }] });
+  assert.equal(ok728.ok, true, 'a complete case must be accepted');
+  assert.equal(ok728.cas.cote, 'saisine', 'and the side is DERIVED from the cause rather than declared by hand — a hand-written side could contradict its own cause (Article 24)');
+  assert.equal(ok728.tous.length, 2, 'the register grows, it is never rewritten');
+
+  // UN REGISTRE VIDE NE S'INTERPRÈTE JAMAIS COMME UN VERDICT (leçon L5/L11) — c'est le défaut que
+  // ce projet a payé le plus souvent : « rien trouvé » et « rien n'a pu être regardé » se ressemblent
+  // trait pour trait, et ici le second se lirait comme « tes saisines sont parfaites ».
+  const vide = angComp.rapportDeComprehension([]);
+  assert.equal(vide.mesurable, false, 'an empty register renders PAS MESURÉ, never a clean bill of health');
+  assert.match(angComp.formatComprehensionLines(vide)[0], /PAS MESURÉ/, 'and the printed line says so in the report, not only in the object nobody reads');
+
+  const mixte = angComp.rapportDeComprehension([
+    { cote: 'saisine', cause: 'ambigu', phrase: 'p1', compris: 'c1', voulu: 'v1' },
+    { cote: 'agent', cause: 'process-non-lu', phrase: 'p2', compris: 'c2', voulu: 'v2' },
+    { cote: 'agent', cause: 'lecture-trop-rapide', phrase: 'p3', compris: 'c3', voulu: 'v3' },
+  ]);
+  assert.equal(mixte.partSaisine, 33, 'the share attributable to the saisine is computed, never estimated');
+  const lignes728 = angComp.formatComprehensionLines(mixte);
+  assert.ok(lignes728.some((l) => /p2/.test(l)) && lignes728.some((l) => /p3/.test(l)), 'my own two cases must be PRINTED, not merely counted: hiding them would make the share above flattering to him and false');
+
+  // BRANCHÉ SUR LE VRAI REGISTRE (Article 25) — un outil qui n'a jamais tourné contre le vrai dépôt
+  // est une intention, pas un outil.
+  const { readFileSync: lireRegistre728 } = await import('node:fs');
+  const reel728 = JSON.parse(lireRegistre728(angComp.INCOMPREHENSIONS_FILE, 'utf8'));
+  assert.ok(Array.isArray(reel728) && reel728.length >= 1, 'the real register on disk must hold at least one real case — a mechanism demonstrated only on fixtures has never met the thing it measures');
+  assert.ok(reel728.every((c) => angComp.causeConnue(c.cause)), 'and every case actually stored must carry a cause from the two named families, otherwise the totals silently lose it');
+
+  console.log("Passed: où j'ai buté sur une saisine (2026-09-26) — sa question était « est-ce que mes prompts sont assez bien écrits ? », et la réponse honnête ne pouvait pas venir d'une note que j'aurais donnée moi-même : un agent qui note l'écriture de celui qui le dirige est complaisant, et celui qui s'accuse systématiquement pour ne pas le mettre en cause ment tout autant. Ce qui est mesuré à la place est un FAIT : chaque fois que j'ai buté, la phrase exacte est enregistrée avec une cause nommée, rangée d'un côté ou de l'autre. Un cas sans sa phrase est refusé (ce serait une impression), une cause inconnue est refusée (elle disparaîtrait des deux totaux), et un registre vide rend PAS MESURÉ plutôt qu'un satisfecit — parce que « personne n'a rien noté » ressemble trait pour trait à « tout était clair ». Sur les trois cas réels de la journée, zéro venaient de son écriture et trois de moi, et les trois sont imprimés en clair : les taire aurait rendu le premier chiffre flatteur pour lui et faux.");
 }

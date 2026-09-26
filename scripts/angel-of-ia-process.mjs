@@ -436,6 +436,90 @@ export const JURY = [
 // Le garde-fou du registre (Article 24) : un juge dont le script n'existe plus produirait une
 // section vide que personne ne remarquerait — le rapport paraîtrait complet en ayant perdu un
 // témoin. Même patron que les garde-fous déjà en place ailleurs dans ce paysage.
+// ————————————————————————————————————————————————————————————————————————
+// OÙ J'AI BUTÉ — l'évaluation de ses saisines, sur des cas RÉELS (2026-09-26, tâche #728)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE : « est-ce que mes prompts sont assez bien ecrits ? je veux etre évalué sur ce point
+// regulierement, rapport à la ronde : orthographe, grammaire, facile à comprendre PAR TOI ».
+//
+// LE SEUL CRITÈRE QUI COMPTE EST LE TROISIÈME, et le dire franchement vaut mieux que de le noter :
+// l'orthographe et la grammaire ne gênent JAMAIS la compréhension ici. « ca », « deja », « etre »
+// sans accent, les fautes de frappe — tout passe sans coût. Le noter là-dessus le ferait travailler
+// pour rien. Ce qui coûte, c'est une demande AMBIGUË, une consigne qui se CONTREDIT à deux
+// endroits, ou un PRONOM dont on ne sait pas à quoi il renvoie.
+//
+// LE PIÈGE, ET IL EST NOMMÉ DANS LA TÂCHE : un agent qui note l'écriture de celui qui le dirige a
+// toutes les raisons d'être complaisant. **Mais le biais inverse existe aussi** — s'accuser
+// systématiquement pour éviter de le mettre en cause produit un rapport tout aussi faux, et prive
+// d'une information qui lui servirait.
+//
+// CE QUI DÉSAMORCE LES DEUX : chaque incompréhension porte une CAUSE, et les causes sont
+// séparées en deux familles nommées. Une saisine parfaitement claire que je n'ai pas su traiter
+// est de MA faute, et le registre le dit. Le rapport ne rend donc jamais une note : il rend des
+// CAS, avec la phrase exacte, et une répartition des causes qui se lit d'un coup d'œil.
+export const CAUSES_COTE_SAISINE = [
+  { cle: "ambigu", quoi: "deux lectures possibles menaient à deux travaux différents" },
+  { cle: "contradiction", quoi: "deux endroits de la même saisine se contredisaient" },
+  { cle: "pronom", quoi: "un « ça », un « le », un « ce truc » dont la cible n'était pas retrouvable" },
+];
+export const CAUSES_COTE_AGENT = [
+  { cle: "precedent-non-cherche", quoi: "un document ou un outil existait déjà et je ne l'ai pas cherché" },
+  { cle: "process-non-lu", quoi: "un process écrit disait comment faire et je ne l'ai pas relu" },
+  { cle: "lecture-trop-rapide", quoi: "la saisine le disait, je l'ai lu de travers" },
+];
+export const INCOMPREHENSIONS_FILE = "docs/profil-utilisateur/incomprehensions.json";
+
+export function causeConnue(cle, { saisine = CAUSES_COTE_SAISINE, agent = CAUSES_COTE_AGENT } = {}) {
+  if (saisine.some((c) => c.cle === cle)) return "saisine";
+  if (agent.some((c) => c.cle === cle)) return "agent";
+  return null;
+}
+
+// Un cas ne s'enregistre QUE complet : sans la phrase exacte, il devient une impression — et une
+// impression est précisément ce que cette tâche interdit. Sans cause connue, il devient un reproche
+// sans objet. On REFUSE plutôt que d'enregistrer un cas inexploitable.
+export function enregistrerIncomprehension(cas, { existants = [] } = {}) {
+  const fautes = [];
+  if (!String(cas?.phrase ?? "").trim()) fautes.push("la phrase exacte manque — sans elle, le cas est une impression, jamais une observation");
+  if (!String(cas?.compris ?? "").trim()) fautes.push("ce que j'ai compris manque — sans les deux lectures côte à côte, on ne peut pas juger laquelle était plausible");
+  if (!String(cas?.voulu ?? "").trim()) fautes.push("ce qu'il voulait dire manque");
+  const cote = causeConnue(cas?.cause);
+  if (!cote) fautes.push(`cause « ${cas?.cause ?? "absente"} » inconnue — attendu : ${[...CAUSES_COTE_SAISINE, ...CAUSES_COTE_AGENT].map((c) => c.cle).join(", ")}`);
+  if (fautes.length) return { ok: false, fautes };
+  return { ok: true, cas: { ...cas, cote }, tous: [...existants, { ...cas, cote }] };
+}
+
+export function rapportDeComprehension(cas = []) {
+  if (!cas.length) {
+    return { mesurable: false, pourquoi: "aucun cas enregistré — et ça ne veut PAS dire que tout est clair : ça veut dire que personne n'a encore noté un cas. Un registre vide ne s'interprète jamais comme un verdict" };
+  }
+  const cotSaisine = cas.filter((c) => c.cote === "saisine");
+  const cotAgent = cas.filter((c) => c.cote === "agent");
+  return {
+    mesurable: true, total: cas.length,
+    cotSaisine, cotAgent,
+    // LE CHIFFRE QUI COMPTE, et ce n'est PAS une note sur ses prompts : c'est la part des blocages
+    // qui viendraient d'une saisine plutôt que de moi. S'il est bas, la réponse honnête à sa
+    // question est « tes prompts ne sont pas le problème ».
+    partSaisine: Math.round((cotSaisine.length / cas.length) * 100),
+  };
+}
+
+export function formatComprehensionLines(r) {
+  if (!r.mesurable) return [`⚠️ Qualité des saisines : PAS MESURÉ — ${r.pourquoi}`];
+  const L = [`Sur ${r.total} incompréhension(s) réellement enregistrée(s) : ${r.cotSaisine.length} venaient de la saisine, ${r.cotAgent.length} de moi (${r.partSaisine} % côté saisine).`];
+  if (!r.cotSaisine.length) {
+    L.push("→ La réponse honnête à ta question « est-ce que mes prompts sont assez bien écrits ? » est OUI : aucun blocage mesuré ne vient de ton écriture.");
+  }
+  for (const c of r.cotSaisine) L.push(`  · [${c.cause}] « ${c.phrase} » — j'ai compris : ${c.compris} · tu voulais : ${c.voulu}`);
+  if (r.cotAgent.length) {
+    L.push(`  Et les ${r.cotAgent.length} de mon côté, nommées plutôt que tues — les taire rendrait le chiffre ci-dessus flatteur pour toi et faux :`);
+    for (const c of r.cotAgent) L.push(`  · [${c.cause}] « ${c.phrase} » — ${c.voulu}`);
+  }
+  return L;
+}
+
 export function findJugesSansOutil({ jury = JURY, root = ROOT, exists = existsSync } = {}) {
   return jury.filter((j) => !exists(join(root, j.script))).map((j) => ({ id: j.id, script: j.script }));
 }
@@ -1043,6 +1127,23 @@ function main() {
     console.log(`Deux origines sont écartées du verdict : « verification » (relancer un outil pour voir s'il marche encore n'est pas le consulter) et « ${ORIGINE_NON_CONCLUANTE} » (le compteur sait qu'un outil a été lancé, jamais pourquoi — insuffisant pour nommer un manquement).`);
   } else {
     console.log(`\nCroisement des horodatages impossible : ${o.raison}`);
+  }
+
+  // OÙ J'AI BUTÉ (2026-09-26, tâche #728) — le registre est LU sur disque, jamais reconstitué de
+  // mémoire : c'est toute la différence entre un cas observé et une impression. Un fichier absent
+  // ou illisible ne se lit PAS comme « tout va bien » — rapportDeComprehension() rend alors
+  // « PAS MESURÉ », et le dire vaut mieux qu'un vert offert sur zéro donnée (leçon L5/L11).
+  console.log("\n=== OÙ J'AI BUTÉ SUR UNE SAISINE ===");
+  let casIncomprehension = [];
+  let registreLisible = true;
+  try {
+    casIncomprehension = JSON.parse(readFileSync(join(ROOT, INCOMPREHENSIONS_FILE), "utf8"));
+    if (!Array.isArray(casIncomprehension)) throw new Error("le registre n'est pas une liste de cas");
+  } catch { registreLisible = false; casIncomprehension = []; }
+  if (!registreLisible) {
+    console.log(`⚠️ Qualité des saisines : PAS MESURÉ — ${INCOMPREHENSIONS_FILE} illisible ou absent. Ce n'est pas « aucune incompréhension » : c'est « rien n'a pu être lu ».`);
+  } else {
+    console.log(formatComprehensionLines(rapportDeComprehension(casIncomprehension)).join("\n"));
   }
 
   const plan = planDactionConduite({ audit, nonEvalue });
