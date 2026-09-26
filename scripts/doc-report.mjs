@@ -188,6 +188,12 @@ export const REGISTRIES = [
   { slug: "angel-of-ia-process", label: "angel-of-ia-process", family: "(f) 👼 Les Anges de la coordination", path: "docs/angel-of-ia-process/", decision: "texte", scriptPath: "scripts/angel-of-ia-process.mjs" },
   { slug: "le-coordinateur", label: "LE-COORDINATEUR", family: "(f) 👼 Les Anges de la coordination", path: "docs/le-coordinateur/", decision: "texte", scriptPath: "scripts/le-coordinateur.mjs" },
   { slug: "doc-report", label: "Doc-Report", family: "(f) 👼 Les Anges de la coordination", path: "docs/doc-report/", decision: "texte", scriptPath: "scripts/doc-report.mjs" },
+  // x-port-blindtest (2026-09-26) : sa famille est celle de l'organigramme, jamais celle que son
+  // sujet suggère — la leçon coûtée par pure-gold-unity quelques jours plus tôt, où j'avais déduit
+  // la famille du thème et où le garde-fou a refusé le commit. Décision « texte » : son rapport est
+  // lu au moment d'une Ronde, par quelqu'un qui décide s'il faut réécrire un kit, jamais archivé
+  // pour être relu en HTML plus tard.
+  { slug: "x-port-blindtest", label: "X-Port BLINDTEST", family: "(f) 👼 Les Anges de la coordination", path: "docs/x-port-blindtest/", decision: "texte", scriptPath: "scripts/x-port-blindtest.mjs" },
   { slug: "reponses", label: "Réponses aux gros prompts", family: "(f) 👼 Les Anges de la coordination", path: "docs/reponses/", decision: "delivery_html", scriptPath: "scripts/rapport-gros-prompt.mjs" },
   // Sa famille est celle de l'organigramme (AGENT_CATEGORIES), jamais celle que son sujet
   // suggère : j'avais écrit « Les Prophètes » parce qu'il traque une dette de forme, et

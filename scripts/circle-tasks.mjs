@@ -241,6 +241,30 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer `node scripts/ecotoken.mjs` (ecotoken) — il relit lui-même scanDocumentWeight()/listDatedNarrativeMarkers() de SMART-CONSO-TOKEN, jamais un second calcul, et ajoute ce que ce signal ne savait pas faire : le rendement par article (citations réelles ÷ lignes), le plan de réduction chiffré avec son texte de remplacement prêt à relire, le budget anti-regrossissement, et ce que l'outil a retenu des passages précédents. Écrire son rapport via recordCircleItemReport('ecotoken-scan', ...), puis recordSnapshotIfChanged('ecotoken-scan', contenu actuel de CLAUDE.md, ...) — copie texte datée, une nouvelle snapshot seulement sur un vrai changement. Remplir ENSUITE à la main la colonne « Décision » de docs/ecotoken/index.md : c'est la seule chose que l'outil ne peut pas deviner, et c'est ce qui l'empêche de reproposer indéfiniment une piste déjà refusée. HARMONISATION (2026-09-22) : un seul item de Ronde sur CLAUDE.md, jamais deux — ecotoken a absorbé ce signal plutôt que de s'ajouter à côté. DIAGNOSTIC DE RÉVISION (2026-09-25, #690) : le signal de fraîcheur de cet item porte désormais, à côté du poids, le verdict de `diagnosticCharte()` (MOÏSE) — sept signaux, verdict au PLUS HAUT niveau atteint et jamais une moyenne. Le lire AVANT de décider d'un allègement : le poids dit ce que la charte COÛTE, le verdict dit si elle appelle une révision, et ce sont deux questions différentes. Pour le détail signal par signal : `node scripts/moise-tables-de-loi.mjs`.",
     producesReport: true,
   },
+  // x-port-blindtest (2026-09-26, demande explicite de l'utilisateur, qui l'a nommé lui-même) :
+  // « un script qui a pour fonction de choisir un membre de l'agence (choix mi-ciblé mi-aléatoire)
+  // et de vérifier la qualité de son kit d'export […] on compare avec le vrai code pour voir si le
+  // kit est valable ». Et son ajout en cours de construction : « l'idée est de mettre l'outil à jour
+  // à la suite du diagnostic de l'aveugle, et de mettre à jour TOUS les kits si besoin, si faille
+  // critique découverte ».
+  //
+  // TROISIÈME ITEM COÛTEUX de la Ronde, aux côtés de THE-FINAL-JUDGE et THE-DEEP-READER, et le seul
+  // des trois dont la mesure est MÉCANIQUE : l'agent séparé ne rend qu'un pronostic, le script
+  // compare. Un verdict qu'on ne pourrait pas rejouer ne vaudrait rien sur ce sujet-là.
+  //
+  // CE QU'IL EST LE SEUL À POUVOIR DIRE : SAFE-EXPORT compte des pièces présentes et déclare
+  // lui-même ne jamais lire leur contenu. Depuis le 2026-09-26 le parc est à 82/82 kits complets —
+  // et rien ne pouvait dire si UN SEUL de ces 82 kits décrit fidèlement le code qu'il accompagne.
+  {
+    id: "x-port-blindtest",
+    theme: "Audit lourd",
+    label: "Tester à l'aveugle la QUALITÉ d'un kit d'export (1 membre par passage)",
+    cout: "COÛTEUX — un agent séparé, ~37 000 jetons par lancement (Article 22/SMART-CONSO-TOKEN à consulter AVANT)",
+    tokensEstimes: "élevé — l'agent lit trois documents entiers et rend un pronostic ; la comparaison, elle, est gratuite",
+    costly: true,
+    execute: "EN TROIS TEMPS, et l'ordre ne se réarrange pas. (1) `node scripts/x-port-blindtest.mjs sujet` — GRATUIT : il tire le membre (jamais testé d'abord, pondéré par la vitalité ; puis le plus ancien) et écrit la consigne aveugle dans docs/x-port-blindtest/. (2) COÛTEUX : un agent séparé lit CETTE CONSIGNE SEULE, sans jamais ouvrir le fichier de code, et dépose son pronostic JSON. L'isolement est tout le dispositif : un agent qui a vu le code ne teste plus rien. (3) `node scripts/x-port-blindtest.mjs juger <pronostic.json> <sujet>` — GRATUIT : il compare au vrai code et rend DEUX chiffres jamais additionnés — le RAPPEL (ce que la doc ne dit pas) et le BRUIT (ce qu'elle laisse croire à tort) — puis classe chaque manque en LOCAL ou SYSTÉMIQUE. Lire la ligne PORTÉE en priorité : un manque systémique veut dire que le GABARIT ne demande la rubrique à personne, donc que les 82 kits ont le même trou, et qu'il faut corriger le gabarit AVANT de toucher ce kit-ci. Son verdict ne touche JAMAIS le badge d'export (décision du 2026-09-26) : le badge dit que les pièces sont là, ce test dit ce qu'elles valent. Écrire le signal via recordCircleItemReport('x-port-blindtest', ...).",
+    producesReport: true,
+  },
   {
     id: "correctifs",
     theme: "Suivi & référentiels",
@@ -1437,6 +1461,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   profil: "docs/profil-utilisateur/",
   kpi: "docs/tableau-de-bord/",
   "safe-export-kits": "docs/safe-export/ronde/",
+  "x-port-blindtest": "docs/x-port-blindtest/ronde/",
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",
   "the-equalizer": "docs/the-equalizer/",

@@ -1689,22 +1689,82 @@ export function formatKitAgenceLines(a) {
 // ELLE SE TAIT QUAND TOUT EST COMPLET. Une alerte qui parle toujours cesse d'être une alerte
 // (leçon L6) — et ce silence-là est mérité, contrairement au silence d'un contrôle qui n'a rien
 // regardé : la ligne de verdict reste imprimée dans tous les cas.
+// LES QUATRE PALIERS, DÉCLARÉS UNE FOIS. Ils vivaient en clair dans une chaîne de ternaires, donc
+// nulle part : impossible de les lire sans lire le code, impossible de les citer dans un document
+// sans les recopier. Un registre se LIT (Article 24).
+export const NIVEAUX_DE_BADGE = [
+  { cle: "bloque", icone: "🔴", rang: 1, libelle: "EXPORT BLOQUÉ",
+    quand: "il manque une pièce au kit de l'Agence elle-même — on exporterait des pièces détachées sans le plan de la machine" },
+  { cle: "degrade", icone: "🟠", rang: 2, libelle: "EXPORT DÉGRADÉ",
+    quand: "au moins un fichier VITAL ou ESSENTIEL porte un kit incomplet" },
+  { cle: "possible", icone: "🟡", rang: 3, libelle: "EXPORT POSSIBLE",
+    quand: "il ne reste que des fichiers utiles ou optionnels incomplets — mais il en reste" },
+  { cle: "pret", icone: "✅", rang: 4, libelle: "EXPORT PRÊT",
+    quand: "tout ce qui est dû est tenu, et l'Agence porte son propre kit" },
+];
+
+// ══════════════════════════════════════════════════════════════════════════
+// LE BADGE DE L'AGENCE — « le pire des deux » (2026-09-26, sa décision)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, dans ses mots : « dès qu'un élément de l'Agence, quel que soit son niveau de vitalité,
+// n'a pas son badge ✅ PRÊT, je voudrais que l'Agence perde tout de suite son badge ✅ PRÊT aussi en
+// conséquence ». Calibrage tranché en fenêtre dédiée le même jour : **le pire des deux**, jamais un
+// 🟡 uniforme — un vital cassé et un optionnel cassé n'appellent pas la même urgence, et les
+// confondre ferait perdre au badge ce qu'il apporte.
+//
+// LE TROU RÉEL QU'IL FERME, et ce n'était pas celui qu'on croyait. L'alerte globale appliquait DÉJÀ
+// sa règle : un seul kit incomplet, même optionnel, empêchait le ✅. Mais le bloc « KIT DE L'AGENCE
+// — 100 % » s'imprimait TOUT SEUL, et pouvait dire 100 % pendant que trente membres étaient cassés.
+// Lu isolément — et un bloc titré se lit isolément — c'était une fausse bonne nouvelle sur la
+// question la plus importante du dispositif.
+//
+// LA RÉSERVE, ÉCRITE PLUTÔT QUE TUE : un badge qui tombe au moindre trou sur 82 fichiers sera orange
+// presque tout le temps, et un voyant toujours orange cesse d'être lu (leçon L6). Ce qui rend la
+// règle jouable est une circonstance, pas un principe : au jour de son adoption le parc est à 82/82.
+// On installe un indicateur strict pendant qu'il est vert, donc toute régression saute aux yeux. À
+// 60/82 la même règle aurait produit du bruit permanent, et il faudrait la recalibrer.
+export function badgeDeLAgence(kits, agence, { niveaux = NIVEAUX_DE_BADGE } = {}) {
+  const palier = (cle) => niveaux.find((n) => n.cle === cle);
+  if (!kits?.mesurable) {
+    return { mesurable: false, pourquoi: `les kits des membres n'ont pas été mesurés — ${kits?.pourquoi ?? "raison non fournie"}. Ce n'est PAS « aucun problème » : c'est un badge qu'on ne peut pas décerner.` };
+  }
+  const bloquants = kits.bloquants ?? [];
+  const vitaux = bloquants.filter((b) => b.vitalite === "vital" || b.vitalite === "essentiel");
+  const reste = bloquants.length - vitaux.length;
+  // L'AGENCE NON MESURÉE NE VAUT PAS UNE AGENCE COMPLÈTE : sans sa mesure on ignore si le plan de la
+  // machine est là, et l'ignorer ne peut jamais valoir un ✅ (leçons L5/L11).
+  const agenceMesuree = Boolean(agence?.mesurable);
+  const agenceManquantes = agenceMesuree ? (agence.manquantes ?? []) : null;
+  const candidats = [];
+  if (!agenceMesuree || agenceManquantes.length) candidats.push(palier("bloque"));
+  if (vitaux.length) candidats.push(palier("degrade"));
+  if (reste) candidats.push(palier("possible"));
+  // LE PIRE DES DEUX, littéralement : le rang le plus BAS gagne. Un tri plutôt qu'une cascade de
+  // `if`, pour qu'un cinquième palier n'oblige jamais à relire l'ordre des conditions.
+  const pire = candidats.sort((a, b) => a.rang - b.rang)[0] ?? palier("pret");
+  return {
+    mesurable: true, niveau: pire.cle, icone: pire.icone, rang: pire.rang,
+    verdict: `${pire.icone} ${pire.libelle}`,
+    pourquoi: pire.cle === "pret" ? pire.quand : pire.quand,
+    agenceManquantes, vitaux, reste,
+    // CE QUE LE BADGE NE DIT PAS, imprimé avec lui : il compte des pièces présentes. Leur QUALITÉ
+    // est le domaine de X-Port BLINDTEST, et son verdict à lui ne touche jamais ce badge-ci.
+    horsPortee: "ce badge dit que les pièces sont là, jamais ce qu'elles valent — la fidélité d'un kit à son code se mesure séparément (X-Port BLINDTEST) et n'entre jamais dans ce calcul.",
+  };
+}
+
 export function alerteExport(kits, agence) {
-  if (!kits?.mesurable) return { mesurable: false, pourquoi: `les kits n'ont pas été mesurés — ${kits?.pourquoi ?? "raison non fournie"}` };
-  const vitaux = (kits.bloquants ?? []).filter((b) => b.vitalite === "vital" || b.vitalite === "essentiel");
-  const reste = (kits.bloquants ?? []).length - vitaux.length;
-  const agenceIncomplete = agence?.mesurable ? (agence.manquantes ?? []) : null;
+  const badge = badgeDeLAgence(kits, agence);
+  if (!badge.mesurable) return { mesurable: false, pourquoi: badge.pourquoi };
   return {
     mesurable: true,
-    agenceIncomplete, vitaux, reste,
-    alerte: Boolean((agenceIncomplete && agenceIncomplete.length) || vitaux.length),
-    // LE VERDICT EN UNE LIGNE, toujours imprimé : c'est lui qui distingue « rien à signaler » de
-    // « ce contrôle n'a pas tourné », et les deux se ressemblent trait pour trait dans un silence.
-    verdict: (agenceIncomplete && agenceIncomplete.length)
-      ? "🔴 EXPORT BLOQUÉ — le plan de la machine manque"
-      : vitaux.length ? "🟠 EXPORT DÉGRADÉ — des pièces vitales manquent"
-      : reste ? "🟡 EXPORT POSSIBLE, avec des trous sur des fichiers non vitaux"
-      : "✅ EXPORT PRÊT — tous les kits dus sont tenus",
+    agenceIncomplete: badge.agenceManquantes, vitaux: badge.vitaux, reste: badge.reste,
+    niveau: badge.niveau, icone: badge.icone,
+    alerte: badge.rang <= 2,
+    // UN SEUL CALCUL DU PALIER, jamais deux : le verdict vient de badgeDeLAgence() et de nulle part
+    // ailleurs (Article 3 — deux mesures de la même chose divergent, leçon L29).
+    verdict: `${badge.verdict} — ${badge.pourquoi}`,
   };
 }
 
