@@ -634,6 +634,101 @@ export function findMotsClesManquants(sessionsDir = SESSIONS_DIR, readDir = read
   return hits;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA LIGNE FANTÔME — une tâche FAITE dont la ligne dit encore « Ouverte » (2026-09-26, tâche #944)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA RÈGLE EXISTAIT DÉJÀ, ÉCRITE NOIR SUR BLANC, et personne ne la portait :
+// `docs/systeme-de-suivi.md` §2 — « À la clôture d'une tâche, sa ligne est mise à jour (statut,
+// pas une nouvelle ligne) ». Aucun mécanisme ne la vérifiait. Elle a donc cessé d'être vraie sans
+// que rien ne le dise, ce qui est exactement ce que l'Article 27 annonce d'une obligation confiée
+// à la seule mémoire d'un agent.
+//
+// CE QUE ÇA CASSE, ET CE N'EST PAS DU RANGEMENT : la file ment sur sa propre taille. Une tâche
+// faite hier compte encore comme ouverte, donc « épuiser la file » n'a plus de fin mesurable, les
+// « plus anciennes tâches encore ouvertes » remontent des travaux terminés, et tout taux
+// d'avancement calculé là-dessus est faux. Une ligne fantôme est pire qu'une ligne manquante :
+// elle a l'air d'un travail qui reste.
+//
+// LE SIGNAL, ET POURQUOI IL EST ÉTROIT PAR CHOIX : on ne retient un fantôme que si une AUTRE ligne,
+// elle-même CLÔTURÉE, dit explicitement « tâche #N ». Un simple « #N » en prose ne suffit pas — une
+// ligne cite couramment une voisine sans prétendre l'avoir faite, et accuser sur cette base
+// produirait exactement le garde-fou qu'on apprend à ignorer (leçon L4). Le prix de ce choix est
+// assumé et déclaré : un fantôme dont la ligne de clôture n'emploie pas le mot « tâche » passe
+// inaperçu. Manquer un vrai cas coûte moins cher qu'en inventer un — c'est la leçon L30.
+export const CITE_UNE_TACHE = /t[âa]ches?\s*#\s*(\d{1,5})/gi;
+
+export function tachesCitees(texte = "") {
+  const out = new Set();
+  for (const m of String(texte).matchAll(CITE_UNE_TACHE)) out.add(Number(m[1]));
+  return out;
+}
+
+export function estCloturee(statut = "") {
+  return /^termin/.test(normaliserStatut(statut));
+}
+
+// Rend TOUJOURS `mesurable` : un suivi illisible ou vide ne peut pas rendre « aucun fantôme », qui
+// se lirait comme un satisfecit sur zéro donnée (leçons L5/L11).
+export function findLignesFantomes(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return { mesurable: false, pourquoi: `${sessionsDir} est introuvable — rien n'a pu être lu, ce qui ne veut pas dire qu'il n'y a rien à trouver`, fantomes: [] };
+  const lignes = [];
+  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
+    for (const l of readFile(join(sessionsDir, file)).split("\n")) {
+      if (!estUneLigneDeTache(l)) continue;
+      const cells = splitTableRow(l);
+      const n = Number((cells[0] ?? "").trim());
+      if (!Number.isFinite(n)) continue;
+      lignes.push({ n, file, statut: cells[cells.length - 1] ?? "", sousSujet: cells[4] ?? "", sujet: (cells[3] ?? "").trim().slice(0, 90) });
+    }
+  }
+  if (!lignes.length) return { mesurable: false, pourquoi: "aucune ligne de tâche lue dans le suivi — un zéro sur zéro donnée n'est pas un zéro", fantomes: [] };
+
+  const closes = lignes.filter((r) => estCloturee(r.statut));
+  const ouvertes = lignes.filter((r) => !estCloturee(r.statut));
+  // TROIS CONDITIONS, ET CHACUNE A ÉTÉ AJOUTÉE PARCE QUE LA VERSION D'AVANT ACCUSAIT À TORT.
+  // La première mesure en rendait 16 ; quatre étaient fausses, et les lire une par une valait
+  // mieux que de croire le chiffre (leçon L28 : un nombre qui BOUGE n'est pas un nombre qui
+  // s'AMÉLIORE).
+  //
+  // 1. La ligne qui cite doit être CLÔTURÉE. Deux lignes ouvertes qui se renvoient l'une à
+  //    l'autre ne prouvent aucun travail fait.
+  // 2. Son numéro doit être PLUS GRAND. Une ligne ne peut pas avoir fait une tâche née après
+  //    elle — c'est l'inverse : elle l'OUVRE en suite de son propre travail. Quatre des seize
+  //    premières alertes étaient exactement ça (n°909 « closant » n°910, n°916/917, n°918/919,
+  //    n°779/787), et chacune décrivait une suite, jamais une clôture.
+  // 3. La citation doit être dans la cellule SOUS-SUJET, jamais dans le Détail. C'est la
+  //    convention réelle du suivi, vérifiée sur les 825 lignes existantes : une ligne qui clôt
+  //    une tâche l'annonce dans son sous-sujet (« Tâche #137 close après vérification »,
+  //    « MEMENTO construit (tâche #169) »). Le Détail, lui, cite couramment une voisine sans
+  //    prétendre l'avoir faite — c'est ce qui faisait dire que n°613 avait clos n°612, alors
+  //    qu'il expliquait au contraire pourquoi il ne la touchait PAS.
+  const parCitee = new Map();
+  for (const c of closes) {
+    for (const cite of tachesCitees(c.sousSujet)) {
+      if (cite >= c.n) continue;
+      if (!parCitee.has(cite)) parCitee.set(cite, []);
+      parCitee.get(cite).push(c.n);
+    }
+  }
+  const fantomes = [];
+  for (const o of ouvertes) {
+    const par = parCitee.get(o.n);
+    if (par?.length) fantomes.push({ n: o.n, file: o.file, sujet: o.sujet, closePar: [...new Set(par)].sort((a, b) => a - b) });
+  }
+  return { mesurable: true, lues: lignes.length, ouvertes: ouvertes.length, fantomes };
+}
+
+export function formatLignesFantomesLines(r) {
+  if (!r.mesurable) return [`❓ Lignes fantômes : PAS MESURÉ — ${r.pourquoi}`];
+  if (!r.fantomes.length) return [`✅ Aucune ligne fantôme sur ${r.ouvertes} ligne(s) ouverte(s) : aucune tâche déclarée ouverte n'est citée comme faite par une ligne close.`];
+  const L = [`🔴 ${r.fantomes.length} ligne(s) FANTÔME(S) sur ${r.ouvertes} ouverte(s) — la file annonce ${r.ouvertes} tâches restantes, il y en a ${r.ouvertes - r.fantomes.length}.`];
+  L.push("   La règle qu'elles enfreignent est écrite depuis le 2026-09-19 dans docs/systeme-de-suivi.md §2 :");
+  L.push("   « À la clôture d'une tâche, sa ligne est mise à jour (statut, pas une nouvelle ligne). »");
+  for (const f of r.fantomes) L.push(`   · n°${f.n} dit « ouverte » mais la tâche est faite et close par n°${f.closePar.join(", n°")} — ${f.sujet}`);
+  return L;
+}
+
 function main() {
   // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
   // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
@@ -741,6 +836,11 @@ function main() {
   } else {
     for (const i of numberIssues) console.log(`   - [${i.type}] n°${i.number} dans ${i.file}`);
   }
+
+  // LA LIGNE FANTÔME (2026-09-26, tâche #944) — placée AVANT les horodatages parce qu'elle change
+  // la taille annoncée de la file, donc le sens de tout ce qui suit.
+  console.log("\n=== Garde-fou lignes fantômes (une tâche FAITE dont la ligne dit encore « ouverte ») ===\n");
+  console.log(formatLignesFantomesLines(findLignesFantomes()).join("\n"));
 
   console.log("\n=== Garde-fou horodatages dans le futur (docs/suivi/) ===\n");
   const futurs = findHorodatagesFuturs();

@@ -948,6 +948,39 @@ bruit, alerte, écarter, filtrer, tolérer · fichiers : scripts/*.mjs
 **aucun mécanisme** pour la règle générale — rien ne peut constater qu'on s'est posé la question.
 Déclaré plutôt que tu (Article 27).
 
+## L31 — Une règle écrite AILLEURS que dans la charte n'a pas de porteur par défaut, et personne ne s'en aperçoit
+
+*(2026-09-26, tâche #944, en cherchant pourquoi la file de tâches ne diminuait jamais.)*
+
+**Ce qui s'est passé** : `docs/systeme-de-suivi.md` §2 dit depuis le 2026-09-19 — « à la clôture
+d'une tâche, sa ligne est mise à jour (statut, pas une nouvelle ligne) ». **Rien ne le vérifiait.**
+Huit tâches ont donc été closes en ouvrant une NOUVELLE ligne, laissant l'ancienne dire « ouverte »
+pour toujours. Quatre de ces huit ont été faites dans la même matinée, par un agent qui venait de
+lire la charte en entier.
+
+**Pourquoi ça passe inaperçu alors que le projet est outillé pour ça** : quand une règle vit dans
+un ARTICLE de la charte, on se demande qui la porte — MOÏSE compte les Articles sans porteur, la
+cartographie les affiche, c'est devenu un réflexe. Une règle qui vit dans un document de PROCESS
+n'est comptée par personne. **Il n'y a pas de cartographie des obligations hors charte**, donc pas
+de liste où une obligation orpheline puisse se voir.
+
+**Ce que ça coûte, et ce n'est pas du rangement** : la file annonçait 129 tâches restantes pour 121
+réelles. « Épuiser la file » n'avait plus de fin mesurable, et la liste des plus anciennes tâches
+encore ouvertes — celle qui sert à décider quoi faire ensuite — remontait du travail déjà rendu.
+Une ligne fantôme est pire qu'une ligne manquante : **elle a l'air d'un travail qui reste.**
+
+**Le geste** : quand on écrit une obligation dans un document de process, se poser la même question
+que pour un Article — *qui la vérifie ?* Si la réponse est « personne », soit on lui donne un
+garde-fou tout de suite, soit on écrit noir sur blanc qu'elle n'en a pas (Article 27). Ce qui ne
+marche jamais, c'est de l'écrire et de passer à la suite.
+
+**Terrain** : quand j'écris une obligation dans un document de process ou de référence · mots : obligation, règle, process, convention, porteur, garde-fou · fichiers : docs/*.md, docs/referentiel/*.md
+
+**Porté par** : `findLignesFantomes()` dans `check-suivi-fidelity.mjs` pour le cas précis qui l'a
+révélée ; **aucun mécanisme** pour la règle générale — rien ne peut lire un document de process et
+décider si telle phrase est une obligation qui mériterait un garde-fou. Déclaré plutôt que tu
+(Article 27), et c'est exactement le manque que la leçon décrit.
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

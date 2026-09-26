@@ -68,3 +68,4 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-09-26T04:40:03.790Z | en_cours | liste | 98 | 830 | 0 | 98 | /home/user/aihouse/docs/check-tasks-details/1790397603787-en_cours-liste.html |
 | 2026-09-26T04:41:55.090Z | en_cours | liste | 98 | 830 | 0 | 98 | /home/user/aihouse/docs/check-tasks-details/1790397715088-en_cours-liste.html |
 | 2026-09-26T04:46:07.008Z | projet_entier | arborescence | 830 | 830 | 0 | 98 | /home/user/aihouse/docs/check-tasks-details/1790397967006-projet_entier-arborescence.html |
+| 2026-09-26T13:20:56.922Z | en_cours | liste | 112 | 876 | 0 | 97 | /home/user/aihouse/docs/check-tasks-details/1790428856915-en_cours-liste.html |

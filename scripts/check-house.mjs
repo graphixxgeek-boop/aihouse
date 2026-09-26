@@ -13905,3 +13905,47 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: où j'ai buté sur une saisine (2026-09-26) — sa question était « est-ce que mes prompts sont assez bien écrits ? », et la réponse honnête ne pouvait pas venir d'une note que j'aurais donnée moi-même : un agent qui note l'écriture de celui qui le dirige est complaisant, et celui qui s'accuse systématiquement pour ne pas le mettre en cause ment tout autant. Ce qui est mesuré à la place est un FAIT : chaque fois que j'ai buté, la phrase exacte est enregistrée avec une cause nommée, rangée d'un côté ou de l'autre. Un cas sans sa phrase est refusé (ce serait une impression), une cause inconnue est refusée (elle disparaîtrait des deux totaux), et un registre vide rend PAS MESURÉ plutôt qu'un satisfecit — parce que « personne n'a rien noté » ressemble trait pour trait à « tout était clair ». Sur les trois cas réels de la journée, zéro venaient de son écriture et trois de moi, et les trois sont imprimés en clair : les taire aurait rendu le premier chiffre flatteur pour lui et faux.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LA LIGNE FANTÔME — une tâche FAITE dont la ligne dit encore « ouverte » (2026-09-26, tâche #944)
+// ————————————————————————————————————————————————————————————————————————
+// La règle existait, écrite depuis le 2026-09-19 dans docs/systeme-de-suivi.md §2, et RIEN ne la
+// portait. Elle a donc cessé d'être vraie en silence (Article 27). Le coût n'est pas cosmétique :
+// une ligne fantôme fait mentir la file sur sa propre taille, donc « épuiser la file » n'a plus de
+// fin mesurable et les « plus anciennes tâches encore ouvertes » remontent du travail déjà fait.
+{
+  const sf944 = await import('../scripts/check-suivi-fidelity.mjs');
+  const EN_TETE_944 = '| N° | Horodatage | Mot-clé | Sujet | Sous-sujet | Criticité | Détail | Statut |';
+  const ligne944 = (n, sousSujet, statut) => `| ${n} | 2026-09-26T00:00Z | mot | Sujet / x | ${sousSujet} | RECOMMANDE | détail | ${statut} |`;
+  const suivi944 = (lignes) => ({
+    exists: () => true, readDir: () => ['s.md'],
+    readFile: () => [EN_TETE_944, ...lignes].join('\n'),
+  });
+  const lancer944 = (lignes) => { const f = suivi944(lignes); return sf944.findLignesFantomes('d', f.readDir, f.readFile, f.exists); };
+
+  // IL DOIT MORDRE — le cas exact, et c'est celui que j'ai produit huit fois moi-même.
+  const mord944 = lancer944([ligne944(10, 'sujet', 'Ouverte'), ligne944(20, 'Tâche #10 close après vérification', 'Terminé — fidèle')]);
+  assert.equal(mord944.fantomes.length, 1, 'a row still "Ouverte" whose work a later CLOSED row declares done must be caught — this is the whole point, and it happened eight times in this repository before anything looked');
+  assert.deepEqual(mord944.fantomes[0].closePar, [20], 'and the report must name WHICH row did the work, otherwise the fix is a hunt');
+
+  // LES TROIS AUTRES SENS (BP4) — chacun correspond à une fausse alerte réelle de la première
+  // mesure, qui en rendait 16 dont 4 fausses. Les lire une par une valait mieux que de croire 16.
+  assert.equal(lancer944([ligne944(10, 'sujet', 'Ouverte'), ligne944(20, 'Tâche #10 à reprendre', 'Ouverte')]).fantomes.length, 0, 'a citation by a row that is ITSELF open proves no work done — two open rows referencing each other is ordinary cross-reference');
+  assert.equal(lancer944([ligne944(20, 'sujet', 'Ouverte'), ligne944(10, 'Tâche #20 ouverte en suite de celle-ci', 'Terminé — fidèle')]).fantomes.length, 0, 'a LOWER-numbered closed row cannot have done a task born after it — it OPENS it as a follow-up; four of the first sixteen alerts were exactly this');
+  assert.equal(sf944.findLignesFantomes('d', () => ['s.md'], () => [EN_TETE_944, ligne944(10, 'sujet', 'Ouverte'), `| 20 | 2026-09-26T00:00Z | mot | Sujet / x | sous-sujet neutre | RECOMMANDE | ceci explique pourquoi la tâche #10 n'est PAS touchée ici | Terminé — fidèle |`].join('\n'), () => true).fantomes.length, 0, 'a citation buried in the DÉTAIL cell is not a closure claim: the real row n°613 cited n°612 there precisely to say it was leaving it alone, and reading that as a closure is how a guard starts accusing wrongly (leçon L4)');
+
+  // UN REGISTRE VIDE OU ILLISIBLE NE REND JAMAIS « AUCUN FANTÔME » (leçons L5/L11).
+  assert.equal(sf944.findLignesFantomes('d', () => [], () => '', () => true).mesurable, false, 'no rows read means PAS MESURÉ, never a clean bill of health — a zero computed on zero data is the defect this project has paid for most often');
+  assert.equal(sf944.findLignesFantomes('d', () => [], () => '', () => false).mesurable, false, 'and an unreadable directory says so too, rather than silently returning an empty list');
+  assert.match(sf944.formatLignesFantomesLines(sf944.findLignesFantomes('d', () => [], () => '', () => true))[0], /PAS MESURÉ/, 'and the printed line carries it, not only the object');
+
+  // BRANCHÉ SUR LE VRAI SUIVI (Article 25) — un outil qui n'a jamais tourné contre le vrai dépôt
+  // est une intention, pas un outil. Les huit fantômes réels ont été clôturés le jour même ; ce
+  // qui est vérifié ici, c'est que la mesure TOURNE et qu'elle compte de vraies lignes.
+  const reel944 = sf944.findLignesFantomes();
+  assert.equal(reel944.mesurable, true, 'the real suivi must actually be measurable');
+  assert.ok(reel944.ouvertes > 50, 'and it must really be reading the repository rather than an empty stub');
+  assert.deepEqual(reel944.fantomes, [], 'the eight real phantoms found the day this guard was written were closed the same day — if this ever fails again, a task was closed under a new number instead of updating its own row, which docs/systeme-de-suivi.md §2 forbids');
+
+  console.log("Passed: la ligne fantôme (2026-09-26, tâche #944) — une tâche faite dont la ligne dit encore « ouverte ». La règle était écrite depuis le 2026-09-19 (« à la clôture d'une tâche, sa ligne est mise à jour, statut, pas une nouvelle ligne ») et absolument rien ne la portait, donc elle a cessé d'être vraie sans que quiconque le sache — huit fois, dont quatre de la même matinée. Le coût n'est pas du rangement : la file mentait sur sa propre taille, 129 tâches restantes annoncées pour 121 réelles, si bien que « épuiser la file » n'avait plus de fin mesurable et que les plus anciennes tâches encore ouvertes remontaient du travail déjà rendu. Le détecteur est étroit par choix et le prix est déclaré : il n'accuse que si une ligne CLÔTURÉE, de numéro PLUS GRAND, nomme la tâche dans sa cellule sous-sujet — la convention réelle du suivi, vérifiée sur 825 lignes. La première version, plus large, en rendait seize dont quatre fausses : trois lignes qui OUVRAIENT une suite plutôt que de clore, et une qui citait sa voisine dans son détail pour expliquer qu'elle n'y touchait pas. Un vrai cas manqué coûte moins cher qu'un faux accusé (leçon L30), et un fantôme dont la ligne de clôture n'emploie pas le mot « tâche » passe donc inaperçu — c'est dit plutôt que tu.");
+}
