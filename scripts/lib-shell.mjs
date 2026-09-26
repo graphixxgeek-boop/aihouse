@@ -727,3 +727,32 @@ export function pairesParJaccard(ensembles = [], { seuil = 0.22 } = {}) {
   }
   return paires;
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// DEUX NOMS DÉSIGNENT-ILS LA MÊME CHOSE ? (2026-09-26)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Partagé dès sa DEUXIÈME utilisation plutôt qu'à la troisième, parce que c'est très exactement la
+// forme de dette que CLONE-HUNTER signale à chaque passage : « le même bloc dans 2 outils
+// différents — c'est la forme de dette qui se recopie une fois de plus à chaque outil qui rejoint
+// l'équipe ». Premier usage : X-Port BLINDTEST, pour apparier un nom annoncé par une documentation
+// et un nom réellement exporté. Second : doc-report, pour savoir si deux rapports viennent du même
+// outil sous deux noms — un item de Ronde renommé (`check-profil-utilisateur` devenu
+// `profil-utilisateur-guard`) produisait sinon deux « outils différents » là où il n'y en a qu'un.
+//
+// Le seuil de DEUX racines partagées n'est pas un réglage libre : à une seule, « check-house » et
+// « check-spirit » seraient le même outil ; à trois, un nom de deux mots ne pourrait jamais
+// s'apparier à rien.
+export function motsDuNom(n) {
+  return String(n).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").toLowerCase()
+    .split(/\s+/).filter((m) => m.length > 3);
+}
+
+export function normaliserNom(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g, ""); }
+
+export function memeChose(a, b) {
+  if (normaliserNom(a) === normaliserNom(b)) return true;
+  const ma = new Set(motsDuNom(a));
+  const communs = motsDuNom(b).filter((m) => ma.has(m));
+  return communs.length >= 2;
+}

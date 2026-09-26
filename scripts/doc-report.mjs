@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -1244,4 +1244,200 @@ export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirIm
   return ecarts;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// ══════════════════════════════════════════════════════════════════════════
+// DEUX RAPPORTS QUI DISENT LA MÊME CHOSE (2026-09-26, sa question)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, telle quelle : « il y a des rapports qui disent exactement la même chose ? »
+//
+// PERSONNE NE POUVAIT RÉPONDRE. CLONE-HUNTER ne regarde que le CODE. pure-gold-unity regarde la
+// FORME des rapports — le gabarit partagé — jamais leur contenu. Ce dépôt porte 727 documents
+// produits par l'outillage, et rien ne vérifiait qu'aucun ne répète un autre.
+//
+// LE PIÈGE QUI REND LA MESURE NAÏVE INUTILISABLE, et il fallait le contourner avant d'écrire une
+// ligne : depuis le gabarit unifié, TOUS les rapports partagent un en-tête identique — avertissement
+// de fiabilité, version du modèle, état du code, santé de l'outil. Comparer les textes bruts
+// dirait que tout se ressemble. On retire donc le passe-partout AVANT de comparer — et on le
+// DÉRIVE du corpus plutôt que de le lister (Article 24) : une ligne présente dans les rapports de
+// trois dossiers différents ou plus est du passe-partout, par construction. Une ligne ajoutée
+// demain au gabarit est reconnue sans que ce fichier bouge.
+//
+// TROIS NATURES, JAMAIS UNE — et ce sont les trois vrais cas trouvés au premier passage qui les
+// ont imposées. « Identique » ne veut pas dire « fautif », et les confondre aurait produit un
+// détecteur qui accuse trois fois pour un seul vrai défaut :
+//   · DOUBLON D'ARCHIVE — le même contenu sous deux noms, dans le même dossier d'archives. Vrai
+//     défaut : l'un des deux est de trop, ou son nom ment. (full_sim15_transcript.txt et
+//     full_sim_transcript.txt, le second sans numéro.)
+//   · CONSTAT RÉPÉTÉ — le MÊME outil, deux passages, le même résultat. Parfaitement légitime : un
+//     dépôt propre deux fois de suite doit produire deux fois le même rapport, et « rien trouvé »
+//     est une entrée pleine. Ça ne devient une question que par le NOMBRE — un contrôle qui rend
+//     dix fois le même verdict interroge son rythme, pas sa justesse.
+//   · MÊME ÉCHEC ARCHIVÉ DEUX FOIS — deux exécutions différentes butent sur le même mur et
+//     archivent le même constat d'échec. Informatif, jamais fautif. (Les dossiers de full_sim18 et
+//     full_sim19 : « aucun dossier retourné », 44 octets, le même défaut trois fois de suite.)
+export const SEUIL_PASSE_PARTOUT = 3;
+export const MOTIF_LIGNE_VOLATILE = /^\s*(?:Produit le|État du code|Version de Claude|Écrit\s*:|Contexte de production|Outil\s*:|Santé de l'outil|Gravité de ce rapport|⚠️)/;
+
+export function lignesPassePartout(rapports = [], seuil = SEUIL_PASSE_PARTOUT) {
+  const parLigne = new Map();
+  for (const r of rapports) {
+    const dossier = String(r.chemin).split("/").slice(0, 2).join("/");
+    for (const l of new Set(String(r.texte).split("\n").map((x) => x.trim()).filter((x) => x.length > 15))) {
+      if (!parLigne.has(l)) parLigne.set(l, new Set());
+      parLigne.get(l).add(dossier);
+    }
+  }
+  return new Set([...parLigne].filter(([, d]) => d.size >= seuil).map(([l]) => l));
+}
+
+export function substanceDuRapport(texte = "", passePartout = new Set()) {
+  return String(texte).split("\n").map((l) => l.trim())
+    .filter((l) => l.length > 0 && !MOTIF_LIGNE_VOLATILE.test(l) && !passePartout.has(l))
+    // Les dates et les nombres changent à chaque passage sans rien changer au CONSTAT : deux
+    // rapports qui disent la même chose à deux jours d'écart doivent se reconnaître.
+    .map((l) => l.replace(/\d{4}-\d{2}-\d{2}/g, "<date>").replace(/\b\d+\b/g, "<n>"))
+    .join("\n");
+}
+
+export const NATURES_DE_JUMELAGE = {
+  "doublon-archive": "le même contenu sous deux noms dans le même dossier d'archives — l'un des deux est de trop, ou son nom ment",
+  "constat-repete": "le même outil a rendu deux fois le même constat — légitime en soi (un dépôt propre deux fois de suite le doit), mais le NOMBRE de répétitions interroge le rythme du contrôle",
+  "meme-echec": "deux exécutions différentes ont buté sur le même mur et archivé le même échec — informatif, jamais fautif",
+  "entre-outils": "deux OUTILS DIFFÉRENTS rendent le même constat — c'est le seul cas qui pose la question du chevauchement",
+  "double-depot": "LE MÊME PASSAGE a déposé son rapport DEUX FOIS, sous deux noms — jamais une répétition légitime : un seul passage a eu lieu, et le second fichier fait croire à un second contrôle",
+};
+
+// QUAND LE NOM DE FICHIER NE DIT RIEN, C'EST LE DOSSIER QUI LE DIT. Un rapport déposé dans le
+// registre d'un outil s'appelle souvent `circle-signal-<date>.txt` ou `snapshot-<date>.txt` : une
+// fois la date et le préfixe générique retirés, il ne reste rien du tout. Comparer ce « rien » au
+// nom d'un autre rapport concluait à deux outils différents — et « entre-outils » est justement le
+// seul palier qui appelle une action. Le dossier porteur est l'information que le nom a perdue.
+export const PREFIXES_GENERIQUES = /^(?:circle-signal|snapshot|rapport|scan|signal)[-_]?/;
+
+export function nomDOutilDuRapport(chemin) {
+  const parts = String(chemin).split("/");
+  const brut = parts.pop()
+    .replace(/[-_]?\d{4}-\d{2}-\d{2}[^.]*/g, "")
+    .replace(/\.(txt|md)$/, "")
+    .replace(PREFIXES_GENERIQUES, "")
+    .replace(/[-_]+$/, "");
+  // Le dossier immédiat, sauf quand c'est un sous-dossier de dépôt (`rapports`, `ronde-<date>`) :
+  // celui-là ne nomme pas un outil, il nomme un passage.
+  const dossiers = parts.filter((d) => d !== "docs" && !/^ronde-|^rapports$/.test(d));
+  return brut.length > 2 ? brut : (dossiers.pop() ?? brut);
+}
+
+// LE PREMIER PASSAGE RÉEL A CLASSÉ QUATRE GROUPES EN « DEUX OUTILS DIFFÉRENTS », ET LES QUATRE
+// ÉTAIENT LE MÊME OUTIL. La comparaison se faisait sur le nom de fichier brut, or un item de Ronde
+// RENOMMÉ produit deux noms pour une seule chose : `check-profil-utilisateur` devenu
+// `profil-utilisateur-guard`, `ines-official` devenu `ines-official-signal`, `clean-dirty-old`
+// devenu `gardien-clean-dirty-old`. Accuser un chevauchement d'outils là où il n'y a qu'un
+// renommage, c'est envoyer chercher un problème qui n'existe pas — et « entre-outils » est
+// précisément le seul palier qui appelle une action.
+//
+// On compare donc par les RACINES DES MOTS (memeChose, lib-shell) : deux noms partageant deux mots
+// significatifs désignent le même outil. `check-house` et `check-spirit` n'en partagent qu'un, et
+// restent distincts.
+export function natureDuJumelage(chemins = [], { dossiersDArchive = ["docs/simulations"] } = {}) {
+  const dossiers = [...new Set(chemins.map((c) => String(c).split("/").slice(0, 2).join("/")))];
+  const noms = chemins.map(nomDOutilDuRapport);
+  const memeOutil = noms.every((n) => memeChose(n, noms[0]));
+  // LE MÊME PASSAGE, DEUX FICHIERS — trouvé au premier vrai passage, deux fois : la Ronde du
+  // 2026-09-22 a déposé `clean-dirty-old.txt` ET `gardien-clean-dirty-old.txt`, puis
+  // `safe-export.txt` ET `gardien-safe-export.txt`. Un seul contrôle a eu lieu ; le second fichier
+  // fait croire à un second. Le ranger en « constat répété » l'aurait absous — la répétition n'est
+  // légitime qu'entre DEUX passages, jamais à l'intérieur d'un seul.
+  const passages = [...new Set(chemins.map((c) => String(c).split("/").filter((d) => /^ronde-/.test(d))[0] ?? null))];
+  if (memeOutil && passages.length === 1 && passages[0]) return { cle: "double-depot", pourquoi: NATURES_DE_JUMELAGE["double-depot"] };
+  if (dossiers.length === 1 && dossiersDArchive.includes(dossiers[0])) {
+    // Dans un dossier d'archives, deux fichiers identiques sont soit le même document déposé deux
+    // fois, soit deux exécutions qui ont échoué pareil. Le second cas se reconnaît à ce que le
+    // contenu DIT être un échec — on ne le devine pas au nom du fichier.
+    return { cle: "a-lire", pourquoi: NATURES_DE_JUMELAGE["doublon-archive"] };
+  }
+  if (!memeOutil) return { cle: "entre-outils", pourquoi: NATURES_DE_JUMELAGE["entre-outils"] };
+  return { cle: "constat-repete", pourquoi: NATURES_DE_JUMELAGE["constat-repete"] };
+}
+
+// UN MARQUEUR D'ÉCHEC NE VAUT QUE SUR UNE SUBSTANCE COURTE, et le premier passage l'a prouvé : un
+// transcript de deux cents lignes contient forcément « rien » ou « aucun » quelque part, et le test
+// appliqué au texte entier a classé un VRAI doublon d'archive (le même transcript sous deux noms,
+// dont un sans numéro) en « même échec archivé deux fois » — c'est-à-dire en cas légitime. Le seul
+// vrai défaut du lot se faisait ainsi absoudre par une coïncidence de vocabulaire.
+// Un vrai constat d'échec tient en quelques lignes : « (aucun dossier retourné dans cette
+// session) » fait 44 octets.
+export const MOTIF_CONSTAT_D_ECHEC = /aucun\b|rien\b|échec|impossible|non produit|pas pu/i;
+export const LIGNES_MAX_CONSTAT_D_ECHEC = 3;
+
+export function estUnConstatDEchec(substance = "", maxLignes = LIGNES_MAX_CONSTAT_D_ECHEC) {
+  const lignes = String(substance).split("\n").filter(Boolean);
+  return lignes.length <= maxLignes && MOTIF_CONSTAT_D_ECHEC.test(substance);
+}
+
+export function trouverRapportsJumeaux(rapports = [], { seuil = SEUIL_PASSE_PARTOUT, minSubstance = 1 } = {}) {
+  if (!rapports.length) return { mesurable: false, pourquoi: "aucun rapport fourni : il n'y a rien à comparer, et rendre « zéro doublon » sur zéro rapport serait un satisfecit sur rien" };
+  const passePartout = lignesPassePartout(rapports, seuil);
+  const parSubstance = new Map();
+  for (const r of rapports) {
+    const sub = substanceDuRapport(r.texte, passePartout);
+    // UN RAPPORT VIDÉ DE SA SUBSTANCE N'EST PAS LE JUMEAU D'UN AUTRE RAPPORT VIDE : deux rapports
+    // qui ne contiennent QUE du passe-partout se ressembleraient forcément, et les apparier
+    // produirait un groupe géant et faux. Ils sortent du calcul, et on dit combien.
+    if (sub.split("\n").filter(Boolean).length < minSubstance) continue;
+    if (!parSubstance.has(sub)) parSubstance.set(sub, []);
+    parSubstance.get(sub).push(r.chemin);
+  }
+  const groupes = [...parSubstance.entries()].filter(([, c]) => c.length > 1).map(([sub, chemins]) => {
+    const nature = natureDuJumelage(chemins);
+    const cle = nature.cle === "a-lire" && estUnConstatDEchec(sub) ? "meme-echec" : nature.cle === "a-lire" ? "doublon-archive" : nature.cle;
+    return { chemins, combien: chemins.length, nature: cle, pourquoi: NATURES_DE_JUMELAGE[cle], extrait: sub.split("\n")[0]?.slice(0, 90) ?? "" };
+  });
+  return {
+    mesurable: true, groupes,
+    examines: rapports.length,
+    sansSubstance: rapports.length - [...parSubstance.values()].reduce((a, c) => a + c.length, 0),
+    passePartout: passePartout.size,
+    fautifs: groupes.filter((g) => ["doublon-archive", "entre-outils", "double-depot"].includes(g.nature)),
+    horsPortee: "elle apparie des rapports dont la SUBSTANCE est identique une fois le passe-partout retiré, les dates et les nombres neutralisés. Deux rapports qui disent la même chose avec des mots différents lui échappent — ça, c'est une lecture.",
+  };
+}
+
+export function formatJumeauxLines(j) {
+  if (!j?.mesurable) return [`=== RAPPORTS JUMEAUX : PAS MESURÉ — ${j?.pourquoi} ===`, "", "Ce n'est PAS « aucun doublon »."];
+  const l = [`=== RAPPORTS QUI DISENT LA MÊME CHOSE — ${j.groupes.length} groupe(s) sur ${j.examines} rapports ===`, ""];
+  l.push(`  ${j.passePartout} ligne(s) de passe-partout retirées avant comparaison — sans ça, le gabarit unifié ferait passer tous les rapports pour des jumeaux.`);
+  if (j.sansSubstance) l.push(`  ${j.sansSubstance} rapport(s) écartés : une fois le passe-partout retiré il ne restait rien à comparer.`);
+  l.push("");
+  if (!j.groupes.length) l.push("  ✅ Aucun rapport n'en répète un autre.");
+  for (const g of j.groupes) {
+    const icone = ["doublon-archive", "double-depot"].includes(g.nature) ? "🔴" : g.nature === "entre-outils" ? "🟠" : "🟡";
+    l.push(`  ${icone} ${g.nature} — ${g.pourquoi}`);
+    for (const c of g.chemins) l.push(`      · ${c}`);
+    if (g.extrait) l.push(`      « ${g.extrait} »`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${j.horsPortee}`);
+  return l;
+}
+
+export function chargerLesRapports({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, racine = "docs" } = {}) {
+  const rapports = [];
+  const pile = [racine];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (!/\.(txt|md)$/.test(e.name) || e.name === "index.md") continue;
+      try { rapports.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme conforme */ }
+    }
+  }
+  return rapports;
+}
+
+if (process.argv[2] === "jumeaux") {
+  const j = trouverRapportsJumeaux(chargerLesRapports());
+  for (const l of formatJumeauxLines(j)) console.log(l);
+} else if (import.meta.url === `file://${process.argv[1]}`) main();

@@ -48,7 +48,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, motsDuNom, normaliserNom, memeChose } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { dependancesInternes, aliasDocumentaires, tientUneMemoire, exemptionDuKit } from "./safe-export.mjs";
 import { buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
@@ -165,23 +165,11 @@ export function structureReelle(source = "", { chemin = "" } = {}) {
 // Les deux sont de vrais défauts et ils se réparent à l'opposé : l'un en complétant, l'autre en
 // corrigeant une affirmation fausse. Les fondre en une note perdrait exactement ce qui décide de
 // l'action — et une note unique est toujours ce qu'on demande en premier.
-export function normaliserNom(n) { return String(n).toLowerCase().replace(/[^a-z0-9]/g, ""); }
-
-// Deux noms se correspondent aussi par leurs MOTS quand l'orthographe diffère : une documentation
-// honnête peut dire « la fonction qui charge les passages » là où le code écrit `chargerPassages`.
-// Punir cet écart reprocherait à la doc d'être écrite en français.
-export function motsDuNom(n) {
-  return String(n).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").toLowerCase()
-    .split(/\s+/).filter((m) => m.length > 3);
-}
-
-export function memeChose(a, b) {
-  if (normaliserNom(a) === normaliserNom(b)) return true;
-  const ma = new Set(motsDuNom(a));
-  const mb = motsDuNom(b);
-  const communs = mb.filter((m) => ma.has(m));
-  return communs.length >= 2;
-}
+// normaliserNom / motsDuNom / memeChose vivent dans lib-shell.mjs depuis le 2026-09-26 : doc-report
+// en avait besoin pour la même question (deux noms désignent-ils la même chose ?), et une seconde
+// copie aurait été la dette que CLONE-HUNTER signale à chaque passage. Réexportés pour que les
+// appelants de ce fichier n'aient pas à savoir d'où ils viennent.
+export { motsDuNom, normaliserNom, memeChose };
 
 export function comparerStructures(pronostic = {}, reelle = {}) {
   const attendus = Array.isArray(pronostic.exports) ? pronostic.exports : null;

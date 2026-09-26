@@ -7894,6 +7894,58 @@ function formatInventaireLinesHasEveryone(se, inv) {
 
 await testConformiteEtInventaire();
 
+// ————————————————————————————————————————————————————————————————————————
+// DEUX RAPPORTS QUI DISENT LA MÊME CHOSE (2026-09-26, premier des trois trous)
+// ————————————————————————————————————————————————————————————————————————
+async function testRapportsJumeaux() {
+  const dr = await import('../scripts/doc-report.mjs');
+  const { lignesPassePartout, substanceDuRapport, natureDuJumelage, nomDOutilDuRapport, estUnConstatDEchec, trouverRapportsJumeaux } = dr;
+
+  // LE PASSE-PARTOUT SE DÉRIVE DU CORPUS, jamais d'une liste (Article 24) : depuis le gabarit
+  // unifié, tous les rapports partagent leur en-tête, et comparer les textes bruts dirait que tout
+  // se ressemble.
+  const corpus = [
+    { chemin: 'docs/a/r1.txt', texte: 'Ligne partagee par tout le monde ici\nconstat propre a A' },
+    { chemin: 'docs/b/r1.txt', texte: 'Ligne partagee par tout le monde ici\nconstat propre a B' },
+    { chemin: 'docs/c/r1.txt', texte: 'Ligne partagee par tout le monde ici\nconstat propre a C' },
+  ];
+  const pp = lignesPassePartout(corpus);
+  assert.ok(pp.has('Ligne partagee par tout le monde ici'), 'MUST CATCH: a line present in reports from three different folders is boilerplate, derived from the corpus rather than listed — a line added to the template tomorrow is recognised without touching this code');
+  assert.ok(!pp.has('constat propre a A'), 'MUST LET PASS: a line that appears in only one folder is substance, never boilerplate — stripping it would erase exactly what we compare');
+  assert.equal(substanceDuRapport(corpus[0].texte, pp), 'constat propre a A', 'and the substance is what remains once the boilerplate is gone');
+  assert.equal(substanceDuRapport('trouve 12 ecarts le 2026-09-22', new Set()), 'trouve <n> ecarts le <date>', 'dates and counts are neutralised: two reports saying the same thing two days apart must recognise each other');
+
+  // LES QUATRE NATURES, et chacune a été imposée par un vrai cas du premier passage.
+  assert.equal(natureDuJumelage(['docs/simulations/full_sim15_transcript.txt', 'docs/simulations/full_sim_transcript.txt']).cle, 'a-lire', 'two identical files in the archive folder go to the reading stage rather than being judged on their filename');
+  assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/clean-dirty-old.txt', 'docs/circle-tasks/ronde-2026-09-22/gardien-clean-dirty-old.txt']).cle, 'double-depot', 'MUST CATCH: the SAME passage depositing its report twice under two names is never a legitimate repetition — one control happened, and the second file makes it look like two. Filing it under "repeated finding" would have absolved it');
+  assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/x.txt', 'docs/circle-tasks/ronde-2026-09-23/x.txt']).cle, 'constat-repete', 'MUST LET PASS: the same tool across TWO passages is legitimate — a clean repository twice running must produce the same report twice, and "nothing found" is a full entry');
+  assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/argus.txt', 'docs/circle-tasks/ronde-2026-09-23/harmonia.txt']).cle, 'entre-outils', 'and two genuinely different tools saying the same thing is the only case that raises the overlap question');
+
+  // LE RENOMMAGE D'UN ITEM N'EST PAS UN CHEVAUCHEMENT D'OUTILS — quatre groupes mal classés au
+  // premier passage, quatre fois le même outil sous deux noms.
+  assert.equal(natureDuJumelage(['docs/circle-tasks/ronde-2026-09-22/check-profil-utilisateur.txt', 'docs/circle-tasks/ronde-2026-09-23/rapports/profil-utilisateur-guard.txt']).cle, 'constat-repete', 'a RENAMED Ronde item produces two filenames for one tool: calling that an overlap sends the reader hunting for a problem that does not exist, and "entre-outils" is precisely the tier that calls for action');
+  assert.equal(nomDOutilDuRapport('docs/profil-utilisateur/circle-signal-2026-09-21T22-44-59-084Z.txt'), 'profil-utilisateur', 'when the filename says nothing once the date and the generic prefix are gone, the CARRYING FOLDER says it — that is the information the filename lost');
+  assert.equal(nomDOutilDuRapport('docs/ecotoken/scan-2026-09-22T04-13-44.txt'), 'ecotoken', 'same for a scan file named after its timestamp alone');
+
+  // LE MARQUEUR D'ÉCHEC NE VAUT QUE SUR UNE SUBSTANCE COURTE — sinon il absout le seul vrai défaut.
+  assert.equal(estUnConstatDEchec('(aucun dossier retourné dans cette session)'), true, 'a genuine failure record is a couple of lines: 44 bytes here');
+  assert.equal(estUnConstatDEchec(Array.from({ length: 50 }, (_, i) => (i === 20 ? 'il ne reste rien à dire' : `ligne ${i}`)).join('\n')), false, 'MUST LET PASS nothing: a two-hundred-line transcript inevitably contains "rien" or "aucun" somewhere, and applying the marker to the whole text classified the ONE real archive duplicate of the repository as a legitimate case — the only true defect of the batch was absolved by a coincidence of vocabulary');
+
+  // UN CORPUS VIDE N'EST JAMAIS « AUCUN DOUBLON ».
+  assert.equal(trouverRapportsJumeaux([]).mesurable, false, 'no reports means nothing to compare — returning "zero duplicates" on zero reports would be a clean bill issued on nothing');
+
+  // EN DIRECT SUR LES 727 RAPPORTS RÉELS (Article 25).
+  const reel = trouverRapportsJumeaux(dr.chargerLesRapports());
+  assert.equal(reel.mesurable, true, 'the twin-report detector must actually run against the real docs/ tree');
+  assert.ok(reel.examines > 500, `and read the whole corpus (currently ${reel.examines} reports)`);
+  assert.ok(reel.passePartout > 10, `with a real boilerplate set derived from it (currently ${reel.passePartout} lines) — without it the unified template would make every report a twin of every other`);
+  assert.ok(reel.fautifs.length >= 1 && reel.fautifs.length <= 6, `and find the real defects without drowning them: ${reel.fautifs.length} genuinely faulty groups out of ${reel.groupes.length}. A detector that flagged all of them would be as useless as one that flagged none`);
+
+  console.log("Passed: deux rapports qui disent la même chose (2026-09-26, le premier des trois trous qu'il a demandé de traiter). PERSONNE NE POUVAIT RÉPONDRE À SA QUESTION : CLONE-HUNTER ne regarde que le CODE, pure-gold-unity regarde la FORME des rapports et jamais leur contenu, et ce dépôt porte 727 documents produits par l'outillage. LE PIÈGE À CONTOURNER AVANT D'ÉCRIRE UNE LIGNE : depuis le gabarit unifié, tous les rapports partagent leur en-tête — comparer les textes bruts aurait dit que tout se ressemble. Le passe-partout se DÉRIVE du corpus (une ligne présente dans trois dossiers différents), jamais d'une liste qui se périmerait au premier ajout au gabarit. QUATRE NATURES, JAMAIS UNE, et chacune imposée par un vrai cas : « identique » ne veut pas dire « fautif », et les confondre aurait produit neuf accusations pour trois vrais défauts. Le passage réel a d'ailleurs corrigé le détecteur deux fois : (1) quatre groupes classés « deux outils différents » étaient quatre fois le MÊME outil sous un nom renommé — un item de Ronde rebaptisé produit deux noms pour une chose, et « entre-outils » est justement le seul palier qui appelle une action ; (2) le marqueur d'échec appliqué au texte entier absolvait le SEUL vrai défaut du lot, un transcript de deux cents lignes contenant forcément « rien » quelque part. Résultat final : 3 vrais défauts (un doublon d'archive, deux dépôts doubles d'un même passage de Ronde) et 6 répétitions légitimes, dont le même échec de dossier archivé deux fois — informatif, jamais fautif.");
+}
+
+await testRapportsJumeaux();
+
 await testEtatDesClassifications();
 
 await testClassificationRapports();
