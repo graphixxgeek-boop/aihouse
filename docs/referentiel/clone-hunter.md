@@ -161,3 +161,48 @@ quoi éclairer. Trois portées, jamais confondues :
   « jamais une 4e copie » n'a jamais suffi à arrêter ;
 - **traverse le moteur du jeu** — une correction de comportement appliquée à une copie sur N
   produirait deux règles différentes dans la même partie.
+
+## Le pont de réexport n'est pas un clone (2026-09-26, tâche #931)
+
+**Trouvé à la vérification finale d'une nuit autonome**, en relançant les sept Gardiens sacrés
+contre le vrai dépôt plutôt qu'en se relisant de mémoire (Article 25).
+
+**LE FAUX POSITIF, ET C'ÉTAIT LA PLUS GROSSE ALERTE DU PASSAGE** : « 32 lignes dupliquées × 2 » dans
+`scripts/cassandra-rh.mjs`, lignes 958 et 1004. Les deux blocs sont l'`import { … }` venu de
+`le-classificateur.mjs` et l'`export { … }` qui réexporte exactement les mêmes noms, pour que les
+appelants d'avant la scission continuent de fonctionner. **Les deux listes SONT identiques, et elles
+doivent l'être** : c'est ce que « réexporter » veut dire. La tâche proposée — « fondre les 2 blocs »
+— était littéralement inexécutable.
+
+**POURQUOI ÇA COMPTE PLUS QUE LE BRUIT AJOUTÉ** : un Gardien sacré tourne à CHAQUE commit. Une
+alerte qu'on ne peut pas traiter et qui revient à chaque fois apprend à survoler tout le rapport, y
+compris les quatre vraies duplications qui l'accompagnaient ce matin-là (leçon L4 : un garde-fou qui
+accuse à tort cesse d'être lu).
+
+**LA RÈGLE, ET ELLE NE PEUT PAS MASQUER UN VRAI CLONE** : `estUnPontDeReexport()` écarte un cluster
+dont **TOUTES** les occurrences tiennent **entièrement** dans une liste de spécificateurs
+(`import {` … `}` ou `export {` … `}`). Un tel bloc ne contient aucune logique — que des noms
+séparés par des virgules, que rien ne permet de factoriser. Deux blocs de vrai code ne peuvent pas
+satisfaire ce test, puisqu'il exige que **chaque** ligne de la région soit dans une liste.
+
+**TROIS BORNES POSÉES AVANT DE CROIRE LE FILTRE**, chacune avec son contre-test dans
+`check-house.mjs` :
+
+1. **Un vrai clone n'est jamais filtré** — de la logique dupliquée échoue le test par construction.
+2. **Moitié liste, moitié code ⇒ gardé** — le filtre est strict sur « toutes les occurrences »,
+   jamais « la plupart », parce qu'un cluster mixte pourrait cacher autre chose.
+3. **Une accolade jamais refermée n'ouvre rien** — et cette borne vient d'un VRAI échec de test le
+   jour même : la première version marquait les lignes au fil de l'eau, si bien qu'un fichier
+   tronqué ou un `import` en cours d'édition avalait tout ce qui suivait et faisait disparaître du
+   plan des duplications réelles. Une liste n'est confirmée qu'une fois **refermée** (Article 5).
+
+**RIEN NE DISPARAÎT, ET LE NOMBRE EST IMPRIMÉ.** Les ponts écartés restent affichés dans les deux
+listes brutes ; seul le PLAN D'ACTION les laisse de côté, et le rapport annonce désormais **trois**
+nombres au lieu de deux — alertes brutes, problèmes distincts, et ce qui reste au plan. Un filtre
+silencieux serait un filtre que personne ne peut contester, et un Gardien sacré qui ferait
+disparaître une trouvaille serait pire que celui qui en compte une de trop.
+
+**Contre-test live, jamais une promesse en commentaire** : la suite de tests vérifie que le filtre
+mord réellement sur CE dépôt (au moins un pont écarté — sinon c'est une intention, leçon L2), que le
+corpus lu n'est pas vide (sinon l'abstention ressemblerait trait pour trait à un verdict propre,
+leçon L11), et que rien n'est perdu entre les gardés et les écartés.

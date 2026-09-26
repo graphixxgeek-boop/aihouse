@@ -12470,6 +12470,50 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(reels.length < v1.length + v2.length, 'and against this actual repository it must genuinely reduce the count, which is the whole point');
   for (const c of reels) assert.ok(ch.motifDuCluster(c).tache.length > 20, 'every real problem must come out with a task of its own, derived from its own facts');
 
+  // LE PONT DE RÉEXPORT N'EST PAS UN CLONE (2026-09-26, tâche #931). Trouvé à la vérification
+  // finale de la nuit, en relançant les sept Gardiens contre le vrai dépôt plutôt qu'en se relisant
+  // (Article 25) : la plus GROSSE alerte du passage — 32 lignes × 2 dans cassandra-rh.mjs — était
+  // l'`import { … }` venu de le-classificateur et l'`export { … }` qui réexporte les mêmes noms.
+  // Les deux listes doivent être identiques : c'est ce que réexporter veut dire, et la tâche
+  // proposée (« fondre les 2 blocs ») était littéralement inexécutable. Sur un Gardien qui tourne à
+  // CHAQUE commit, une alerte intraitable qui revient toujours apprend à survoler tout le rapport,
+  // y compris les quatre vraies duplications qui l'accompagnaient (leçon L4).
+  assert.deepEqual([...ch.lignesDeListeDeSymboles(['import {', '  a,', '  b,', '} from "./x.mjs";', 'const z = 1;'])], [0, 1, 2, 3], 'the specifier-list scan must cover the opening line, the names and the closing brace — and stop there');
+  assert.deepEqual([...ch.lignesDeListeDeSymboles(['import { a } from "./x.mjs";', 'const z = 1;', 'const y = 2;'])], [], 'a one-line import closes on itself and must never open a region that would swallow the code below it');
+
+  // UNE ACCOLADE JAMAIS REFERMÉE N'OUVRE RIEN (contre-test né d'un vrai échec de ce test-ci, le
+  // 2026-09-26) : la première version marquait les lignes au fil de l'eau, si bien qu'un fichier
+  // tronqué ou une liste en cours d'édition avalait tout ce qui suivait — et faisait disparaître du
+  // plan des duplications réelles, en silence.
+  assert.deepEqual([...ch.lignesDeListeDeSymboles(['import {', '  a,', 'const jamaisFerme = 1;', 'return jamaisFerme;'])], [], 'an unclosed specifier list must confirm nothing at all rather than swallow the rest of the file');
+
+  const pont = { lines: 3, occurrences: [{ file: 'scripts/p.mjs', start: 0 }, { file: 'scripts/p.mjs', start: 6 }] };
+  const sourcePont = new Map([['scripts/p.mjs', ['import {', '  A,', '  B,', '} from "./q.mjs";', 'const x = 1;', '', 'export {', '  A,', '  B,', '};']]]);
+  assert.equal(ch.estUnPontDeReexport(pont, sourcePont), true, 'an import list and the export list that re-exports the same names are one re-export bridge, never a duplication to merge');
+
+  // LA BORNE, POSÉE AVANT DE CROIRE LE FILTRE : un vrai clone ne doit jamais passer par ce trou.
+  const vraiClone = { lines: 3, occurrences: [{ file: 'scripts/r.mjs', start: 0 }, { file: 'scripts/r.mjs', start: 4 }] };
+  const sourceClone = new Map([['scripts/r.mjs', ['const total = items.reduce((a, b) => a + b, 0);', 'if (!total) return null;', 'return total / items.length;', '', 'const total = items.reduce((a, b) => a + b, 0);', 'if (!total) return null;', 'return total / items.length;']]]);
+  assert.equal(ch.estUnPontDeReexport(vraiClone, sourceClone), false, 'real duplicated logic is never filtered: the test demands that EVERY line of the region sit inside a specifier list, which no block of actual code can satisfy');
+
+  // MOITIÉ LISTE, MOITIÉ CODE : gardé, parce qu'il pourrait cacher autre chose.
+  const mixte = { lines: 3, occurrences: [{ file: 'scripts/s.mjs', start: 0 }, { file: 'scripts/s.mjs', start: 4 }] };
+  const sourceMixte = new Map([['scripts/s.mjs', ['import {', '  A,', '} from "./t.mjs";', '', 'const A = compute();', 'const B = compute();', 'return A + B;']]]);
+  assert.equal(ch.estUnPontDeReexport(mixte, sourceMixte), false, 'a cluster half inside a list and half in code stays reported — the filter is deliberately strict on "all occurrences", never "most"');
+
+  // SANS LE TEXTE DES FICHIERS, ON NE FILTRE RIEN — et c'est la leçon L5 appliquée : « rien trouvé »
+  // n'est jamais « pas pu regarder ». Écarter à l'aveugle ferait exactement ce que ce filtre existe
+  // pour empêcher.
+  assert.equal(ch.estUnPontDeReexport(pont, null), false, 'with no file text supplied the filter must abstain rather than guess — an unverifiable exclusion is worse than the false positive it removes');
+
+  // VÉRIFIÉ LIVE : sur ce dépôt-ci, le filtre écarte réellement quelque chose ET garde les vrais.
+  const texteReel = ch.collectFileLines(ch.DEFAULT_ROOTS);
+  assert.ok(texteReel.size > 50, 'the live counter-test must read the real repository — a filter checked against an empty corpus abstains, and an abstention reads exactly like a clean result (leçon L11)');
+  const { gardes, ecartes } = ch.ecarterLesPontsDeReexport(reels, texteReel);
+  assert.equal(gardes.length + ecartes.length, reels.length, 'the split must lose nothing: everything is either kept or named as excluded, never dropped in silence');
+  assert.ok(ecartes.length >= 1, 'and against THIS repository it must genuinely exclude the cassandra-rh re-export bridge — a filter that never fires on the case that motivated it is an intention, not a mechanism (leçon L2)');
+  assert.ok(gardes.length >= 15, 'while leaving the real duplications untouched: the filter removes a non-problem, it never shrinks the report');
+
   console.log('Passed: CLONE-HUNTER reports one alert per PROBLEM and gives each its own reason (2026-09-23, task #217) — it grouped by anchor, so the same duplication found from two shifted starts produced two alerts, which is how one pair of twin functions became three. Merging on overlapping REGIONS also makes v2\'s standing promise exact at last: "never already counted by v1" was true of its anchor and false of its region, since its block began one line earlier and enclosed v1\'s. The real risk here was over-merging, and it is bounded first: two genuinely different duplications between the same file pair stay two problems, clusters touching different file sets never merge, the merged problem keeps the largest span and remembers both detectors, and the raw alert count behind it stays visible so the regrouping can be audited instead of trusted. The single phrase repeated 29 times is replaced by a reason derived from what the tool already knew — same file versus spread across tools, and block size — because a debt that recopies itself into every new tool is not the same problem as two twins in one file, and one sentence for both erased exactly that difference.');
 }
 

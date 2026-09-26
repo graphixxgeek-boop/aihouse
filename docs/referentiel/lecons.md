@@ -915,6 +915,39 @@ moteur JavaScript ne l'a refusée que parce que les deux déclarations partageai
 qui manque est un réflexe AVANT, que seule la conduite porte — et le déclarer ici EST la
 protection (Article 27).
 
+## L30 — Le faux positif le plus dangereux est celui qu'on ne PEUT PAS corriger
+
+*(2026-09-26, tâche #931, à la vérification finale d'une nuit autonome.)*
+
+**Ce qui s'est passé** : en relançant les sept Gardiens sacrés contre le vrai dépôt, la plus grosse
+alerte de CLONE-HUNTER annonçait « 32 lignes dupliquées × 2 » et proposait « fondre les 2 blocs ».
+Les deux blocs étaient l'`import { … }` d'un module et l'`export { … }` qui réexporte les mêmes
+noms. **Les fondre est impossible : c'est ce que réexporter veut dire.**
+
+**Pourquoi c'est pire qu'un faux positif ordinaire.** Un faux positif normal se traite : on regarde,
+on conclut « non », on passe. **Celui-ci ne se traite pas** — il n'y a aucun geste qui le fasse
+disparaître, donc il revient à chaque commit, pour toujours. Un Gardien sacré tourne à CHAQUE
+commit : une alerte éternelle et intraitable, placée en tête du rapport, apprend à survoler tout ce
+qui suit. Ce matin-là, elle précédait quatre duplications parfaitement réelles.
+
+**La règle** : quand on trie les faux positifs d'un garde-fou, **la question n'est pas seulement
+« a-t-il tort ? », c'est « existe-t-il un geste qui le ferait taire ? »**. Si la réponse est non, ce
+n'est plus un bruit à tolérer, c'est un défaut à corriger dans l'outil, et il passe devant les faux
+positifs qu'on peut au moins clore un par un.
+
+**Le corollaire, appris en corrigeant** : le filtre écrit pour taire l'alerte a d'abord été faux
+lui-même — une accolade jamais refermée avalait tout le reste du fichier, donc il aurait supprimé de
+vraies duplications en silence. **Un filtre qui se trompe est pire que l'alerte qu'il supprime**,
+parce que son erreur ne s'affiche nulle part. C'est le contre-test qui l'a trouvée, jamais la
+relecture.
+
+**Terrain** : quand je juge qu'une alerte d'un garde-fou est un faux positif · mots : faux positif,
+bruit, alerte, écarter, filtrer, tolérer · fichiers : scripts/*.mjs
+
+**Porté par** : les contre-tests de `estUnPontDeReexport()` dans `check-house.mjs` pour ce cas-ci ;
+**aucun mécanisme** pour la règle générale — rien ne peut constater qu'on s'est posé la question.
+Déclaré plutôt que tu (Article 27).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

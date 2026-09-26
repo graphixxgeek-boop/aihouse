@@ -86,5 +86,27 @@
     "sens": "neutre — la lecture humaine tranche"
    }
   }
+ },
+ {
+  "date": "2026-09-26",
+  "methode": "v1",
+  "mesures": {
+   "fuites": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   },
+   "blueprints-mal-construits": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   },
+   "dependances-outillage": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   },
+   "blueprints-total": {
+    "valeur": 41,
+    "sens": "neutre — la lecture humaine tranche"
+   }
+  }
  }
 ]

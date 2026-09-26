@@ -342,7 +342,11 @@ export function findNearDuplicateBlocks(fileLines, { minLines = 5, minRealTokens
 
 // collectFileLines() : lecture disque partagée par v1 et v2 (jamais deux copies du même parcours de
 // fichiers — un comble pour un détecteur de duplication).
-function collectFileLines(roots) {
+// Exportée le 2026-09-26 (tâche #931) : le contre-test live du filtre de ponts de réexport a
+// besoin du VRAI texte des fichiers. Sans elle, le test serait tombé sur un repli `null`, et un
+// filtre qui s'abstient rend exactement ce que rend un filtre qui n'a rien trouvé — la confusion
+// que ce dépôt a déjà payée cinq fois (leçon L11).
+export function collectFileLines(roots) {
   const fileLines = new Map();
   for (const root of roots) {
     const dir = join(ROOT, root);
@@ -405,6 +409,79 @@ export function clustersSeRecouvrent(a, b) {
     if (debutA >= finB || debutB >= finA) return false;
   }
   return true;
+}
+
+// LA LISTE DE SYMBOLES N'EST PAS DU CODE DUPLIQUÉ — ELLE EST LA SYNTAXE (2026-09-26, tâche #931,
+// trouvée à la vérification finale de la nuit en relançant les sept Gardiens contre le vrai dépôt).
+//
+// LE FAUX POSITIF, MESURÉ : la plus grosse alerte du passage était « 32 lignes dupliquées × 2 » dans
+// scripts/cassandra-rh.mjs, lignes 958 et 1004. Les deux blocs sont un `import { … }` venu de
+// le-classificateur.mjs et l'`export { … }` qui réexporte exactement les mêmes noms, pour que les
+// appelants d'avant la scission continuent de fonctionner. Les deux listes SONT identiques, et
+// elles doivent l'être : c'est ce que « réexporter » veut dire. La tâche proposée — « fondre les 2
+// blocs » — est littéralement impossible à exécuter.
+//
+// POURQUOI ÇA COMPTE PLUS QUE LE BRUIT QU'IL AJOUTE (leçon L4) : un Gardien sacré tourne à CHAQUE
+// commit. Une alerte qu'on ne peut pas traiter et qui revient à chaque fois apprend à survoler tout
+// le rapport, y compris les quatre vraies duplications qui l'accompagnaient ce matin-là.
+//
+// LA RÈGLE, ET ELLE NE PEUT PAS MASQUER UN VRAI CLONE : on écarte un cluster dont TOUTES les
+// occurrences tiennent entièrement dans une liste de spécificateurs (`import {` … `}` ou
+// `export {` … `}`). Un tel bloc ne contient aucune logique — que des noms séparés par des virgules,
+// que rien ne permet de factoriser. Deux blocs de VRAI code ne peuvent pas satisfaire ce test,
+// puisqu'il exige que chaque ligne de la région soit à l'intérieur d'une accolade de liste.
+// Volontairement STRICT sur « toutes » : un cluster à moitié dans une liste et à moitié dans du code
+// reste signalé, parce qu'il pourrait cacher autre chose.
+export const OUVRE_UNE_LISTE = /^\s*(?:import|export)\s*\{/;
+export const FERME_UNE_LISTE = /^\s*\}/;
+
+// Rend l'ensemble des index de lignes (0-based) qui vivent DANS une liste de spécificateurs — les
+// lignes `import {` / `export {` / `}` elles-mêmes comprises, puisque le bloc dupliqué les inclut.
+export function lignesDeListeDeSymboles(lignes = []) {
+  const dedans = new Set();
+  let enCours = null;   // les lignes candidates, retenues tant que la liste n'est pas REFERMÉE
+  lignes.forEach((ligne, i) => {
+    if (enCours === null) {
+      if (!OUVRE_UNE_LISTE.test(ligne)) return;
+      // Une liste refermée sur la même ligne (`import { a } from "x"`) n'ouvre rien : un bloc d'au
+      // moins cinq lignes ne peut pas tenir dedans, et la traiter comme ouverte avalerait la suite.
+      if (!/\}/.test(ligne)) enCours = [i];
+      return;
+    }
+    enCours.push(i);
+    if (FERME_UNE_LISTE.test(ligne)) {
+      // UNE LISTE NE COMPTE QU'UNE FOIS REFERMÉE, et ce n'est pas un détail de forme (Article 5).
+      // Marquer les lignes au fil de l'eau faisait qu'une accolade jamais refermée — fichier
+      // tronqué, syntaxe cassée, `import` en cours d'édition — avalait tout le reste du fichier et
+      // faisait disparaître du plan des duplications parfaitement réelles. Le contre-test qui l'a
+      // trouvé est resté dans la suite : un filtre qui se trompe en SILENCE est pire que l'alerte
+      // qu'il supprime.
+      for (const n of enCours) dedans.add(n);
+      enCours = null;
+    }
+  });
+  return dedans;   // une liste restée ouverte à la fin du fichier n'a jamais été confirmée : rien n'en sort
+}
+
+// `fileLines` absent ⇒ on ne filtre RIEN et on le dit par le comportement : sans le texte des
+// fichiers, impossible de savoir ce qu'une occurrence recouvre, et écarter à l'aveugle ferait
+// exactement ce que ce filtre existe pour empêcher (leçon L5 : « rien trouvé » n'est jamais
+// « pas pu regarder »).
+export function estUnPontDeReexport(cluster, fileLines) {
+  if (!fileLines) return false;
+  return cluster.occurrences.every((o) => {
+    const lignes = fileLines.get ? fileLines.get(o.file) : fileLines[o.file];
+    if (!lignes) return false;
+    const dedans = lignesDeListeDeSymboles(lignes);
+    for (let i = o.start; i < o.start + cluster.lines; i++) if (!dedans.has(i)) return false;
+    return true;
+  });
+}
+
+export function ecarterLesPontsDeReexport(clusters = [], fileLines = null) {
+  const gardes = [], ecartes = [];
+  for (const c of clusters) (estUnPontDeReexport(c, fileLines) ? ecartes : gardes).push(c);
+  return { gardes, ecartes };
 }
 
 export function fusionnerClusters(clusters = []) {
@@ -498,12 +575,26 @@ function main() {
   // quelles — elles portent une vraie information, littéral n'est pas renommage — mais le PLAN
   // D'ACTION, lui, travaille sur les problèmes et non sur les ancres. C'est la partie qu'on lit
   // pour agir : y répéter trois fois la même duplication la rend trois fois moins crédible.
-  const problemes = fusionnerClusters([
+  const problemesBruts = fusionnerClusters([
     ...clusters.map((c) => ({ ...c, detecteur: "identique" })),
     ...nearClusters.map((c) => ({ ...c, detecteur: "renommage" })),
   ]);
+  // LES PONTS DE RÉEXPORT SORTENT DU PLAN, ET ON DIT COMBIEN (2026-09-26, tâche #931). Écartés
+  // seulement du PLAN D'ACTION : ils restent dans les deux listes ci-dessus, parce qu'un Gardien
+  // sacré qui ferait disparaître une trouvaille serait pire que celui qui en compte une de trop.
+  // Le nombre est imprimé plutôt que tu : un filtre silencieux est un filtre que personne ne peut
+  // contester.
+  const { gardes: problemes, ecartes: ponts } = ecarterLesPontsDeReexport(problemesBruts, collectFileLines(DEFAULT_ROOTS));
+  if (ponts.length) {
+    console.log(`\n${ponts.length} problème(s) ÉCARTÉ(S) du plan : liste de symboles (import/export) — pas du code dupliqué, la syntaxe elle-même. Fondre une liste de réexport avec la liste importée est impossible par construction :`);
+    for (const c of ponts) console.log(`  · ${formatClusterSummary(c)}`);
+  }
   const brutes = clusters.length + nearClusters.length;
-  console.log(`\n→ ${brutes} alerte(s) brute(s) = ${problemes.length} problème(s) distinct(s). L'écart n'est pas du bruit : la même duplication trouvée depuis deux ancres différentes (ou par les deux détecteurs) produisait deux alertes pour un seul problème.`);
+  // Les TROIS nombres, jamais deux : les alertes brutes, les problèmes distincts après
+  // regroupement, et ce qui reste au plan une fois les ponts de réexport écartés. Les confondre
+  // ferait dire au filtre du 2026-09-26 qu'il a « trouvé moins de problèmes », alors qu'il en a
+  // écarté un qui n'en était pas un.
+  console.log(`\n→ ${brutes} alerte(s) brute(s) = ${problemesBruts.length} problème(s) distinct(s)${ponts.length ? `, dont ${ponts.length} écarté(s) ci-dessus ⇒ ${problemes.length} au plan d'action` : ""}. L'écart n'est pas du bruit : la même duplication trouvée depuis deux ancres différentes (ou par les deux détecteurs) produisait deux alertes pour un seul problème.`);
 
   // CONSTAT >> TÂCHES (2026-09-23). Ni `toucheLeJeu` ni `fausseUneMesure` : une duplication ne rend
   // aucun chiffre faux et ne touche pas le produit — elle coûte en maintenance. Donc RECOMMANDÉE,
