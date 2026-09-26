@@ -123,3 +123,71 @@ réellement. Confondre les deux donnerait un chiffre cent fois trop gros et une 
 `projeterLaCroissance()` **refuse** un rythme calculé sur moins de deux jours : une droite tirée
 d'un seul point ressemble trait pour trait à une tendance. Et la limite voyage DANS le résultat
 (`horsPortee`), jamais seulement dans un commentaire.
+
+## Les kits d'export (depuis le 2026-09-26)
+
+`node scripts/safe-export.mjs kits` — ou la section « LES KITS D'EXPORT » de `safe-export export`.
+
+**SA DEMANDE** : « je veux ajouter à chaque outil/élément vital ou important à l'agence un kit
+complet. Et un kit d'export moins conséquent (parce que moins pertinent) pour les autres, de façon
+proportionnelle. [...] Je veux un système cohérent. »
+
+**CE QUI EXISTAIT, ET CE QUI MANQUAIT.** Le croisement vitalité × blueprint existait déjà, mais il
+est **binaire** : blueprint, ou pas. Or un blueprint seul ne s'exporte pas — il décrit une mécanique
+que le destinataire devra réécrire. Ce qui part vraiment, c'est un ENSEMBLE.
+
+### Les cinq pièces, et la question de destinataire à laquelle chacune répond
+
+| Pièce | La question qu'elle ferme |
+|---|---|
+| le **blueprint** générique | comment ça marche, indépendamment de ce projet-ci ? |
+| le **code** lui-même | qu'est-ce que je copie ? |
+| la **fiche** d'instanciation | qu'est-ce qui est propre à CE projet, donc à adapter chez moi ? |
+| le **registre** avec son index | où l'outil écrit-il, et sous quelle forme ? |
+| les **dépendances** | que dois-je emporter d'autre pour qu'il démarre ? |
+
+La cinquième est **DÉRIVÉE des imports réels**, jamais écrite : une liste de dépendances tenue à la
+main se périme au premier import ajouté, et un kit qui en oublie une livre un outil qui ne démarre
+pas — le plus décourageant des échecs, puisqu'il arrive avant que le destinataire ait pu juger quoi
+que ce soit.
+
+### Les quatre niveaux, proportionnels par construction
+
+| Vitalité | Kit | Pièces dues |
+|---|---|---|
+| 🔴 vital | **complet** | blueprint + code + fiche + registre + dépendances |
+| 🟠 essentiel | **complet** | idem — il porte une garantie |
+| 🟡 utile | **allégé** | blueprint + code + dépendances |
+| ⚪ optionnel | **minimal** | code + dépendances |
+
+**Le niveau de kit se DÉRIVE du niveau de vitalité, il ne se déclare pas.** Un outil qui devient
+vital hérite du kit complet sans que personne n'y pense — c'est l'Article 24 appliqué à l'export.
+
+### LA DISTINCTION QU'IL A CORRIGÉE LUI-MÊME, et elle n'est pas verbale
+
+Les quatre niveaux qualifient l'importance d'un fichier **POUR LE FONCTIONNEMENT DE L'AGENCE**,
+jamais son exportabilité. Un fichier peut être vital au fonctionnement et trivial à emporter (une
+bibliothèque de dix lignes), ou secondaire au fonctionnement et lourd à transmettre. Le kit est la
+**conséquence** du niveau : une seule échelle, lue deux fois, plutôt que deux échelles qui
+finiraient par dire deux choses du même fichier.
+
+L'axe lui-même vit chez LE-CLASSIFICATEUR (`vitaliteDuParc()`, axe C du référentiel
+d'organisation) ; SAFE-EXPORT en déduit le kit. Frontière nette, jamais deux mesures de vitalité.
+
+### Ce qu'il ne dit pas
+
+**Un kit complet n'est pas un kit suffisant** : la mesure compte des pièces présentes, elle ne lit
+jamais leur contenu et ne garantit pas que le portage réussira. Elle dit ce qui est **prêt** à
+partir.
+
+### Les gabarits
+
+`docs/templates/` porte le gabarit de chaque pièce rédigée (blueprint, fiche, index de registre).
+La commande dit OÙ créer la pièce manquante ; le gabarit dit QUOI y mettre — et une pièce dont on
+ne sait pas quoi écrire ne s'écrit jamais.
+
+### Première mesure réelle (2026-09-26)
+
+89 fichiers, **48 kits complets**. Vitaux : 17/44 (39 %). Essentiels : 3/3. Utiles : 11/25.
+Optionnels : 17/17 par construction. **27 kits dus et non tenus sur des fichiers dont l'Agence
+dépend** — c'est ce qui bloque un export aujourd'hui.

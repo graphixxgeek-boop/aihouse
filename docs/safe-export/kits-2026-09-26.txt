@@ -1,0 +1,44 @@
+=== LES KITS D'EXPORT — 48/89 kit(s) complet(s) ===
+
+  niveau       kit        pièces dues                                   complets   taux moyen
+  -----------  ---------  --------------------------------------------  ---------  ----------
+  🔴 vital      complet    blueprint+source+fiche+registre+dependances    17/44      39 %      67 %
+  🟠 essentiel  complet    blueprint+source+fiche+registre+dependances     3/3      100 %     100 %
+  🟡 utile      allege     blueprint+source+dependances                   11/25      44 %      82 %
+  ⚪ optionnel  minimal    source+dependances                             17/17     100 %     100 %
+
+  🔴 vital → kit complet : sans lui l'Agence ne tourne pas : il doit pouvoir être repris intégralement, sans rien deviner
+  🟠 essentiel → kit complet : il porte une garantie : l'exporter sans son plan reviendrait à exporter la promesse sans le mécanisme
+  🟡 utile → kit allege : il fait gagner du temps : le plan et le code suffisent, la fiche et le registre se refont sur place si on le garde
+  ⚪ optionnel → kit minimal : personne ne le lance ici : il part comme une pièce à réévaluer, pas comme un outil à installer — lui exiger un blueprint coûterait plus que ce qu'il rapporte
+
+  ⛔ 27 KIT(S) DÛ(S) ET NON TENU(S) sur des fichiers dont l'Agence dépend — c'est ce qui bloque un export :
+     scripts/check-house.mjs (40 %) — manque : docs/check-house-blueprint.md, docs/referentiel/check-house.md, docs/check-house/index.md
+     scripts/circle-tasks.mjs (40 %) — manque : docs/circle-tasks-blueprint.md, docs/referentiel/circle-tasks.md, docs/circle-tasks/index.md
+     scripts/corpus-mesure.mjs (40 %) — manque : docs/corpus-mesure-blueprint.md, docs/referentiel/corpus-mesure.md, docs/corpus-mesure/index.md
+     scripts/criticite.mjs (40 %) — manque : docs/criticite-blueprint.md, docs/referentiel/criticite.md, docs/criticite/index.md
+     scripts/doc-report.mjs (80 %) — manque : docs/doc-report-blueprint.md
+     scripts/execution-profile.mjs (40 %) — manque : docs/execution-profile-blueprint.md, docs/referentiel/execution-profile.md, docs/execution-profile/index.md
+     scripts/find-brain.mjs (40 %) — manque : docs/find-brain-blueprint.md, docs/referentiel/find-brain.md, docs/find-brain/index.md
+     scripts/god-of-all-process.mjs (80 %) — manque : docs/referentiel/god-of-all-process.md
+     scripts/hooks/banniere.mjs (40 %) — manque : docs/banniere-blueprint.md, docs/referentiel/banniere.md, docs/banniere/index.md
+     scripts/hooks/check-last-commit.mjs (40 %) — manque : docs/check-last-commit-blueprint.md, docs/referentiel/check-last-commit.md, docs/check-last-commit/index.md
+     scripts/hooks/install.mjs (40 %) — manque : docs/install-blueprint.md, docs/referentiel/install.md, docs/install/index.md
+     scripts/hooks/post-commit (40 %) — manque : docs/post-commit-blueprint.md, docs/referentiel/post-commit.md, docs/post-commit/index.md
+     scripts/hooks/pre-commit (40 %) — manque : docs/pre-commit-blueprint.md, docs/referentiel/pre-commit.md, docs/pre-commit/index.md
+     scripts/html-report.mjs (40 %) — manque : docs/html-report-blueprint.md, docs/referentiel/html-report.md, docs/html-report/index.md
+     scripts/install-pnpm.sh (40 %) — manque : docs/install-pnpm-blueprint.md, docs/referentiel/install-pnpm.md, docs/install-pnpm/index.md
+     scripts/le-coordinateur.mjs (60 %) — manque : docs/le-coordinateur-blueprint.md, docs/referentiel/le-coordinateur.md
+     scripts/lib-json.mjs (40 %) — manque : docs/lib-json-blueprint.md, docs/referentiel/lib-json.md, docs/lib-json/index.md
+     scripts/lib-markdown-table.mjs (40 %) — manque : docs/lib-markdown-table-blueprint.md, docs/referentiel/lib-markdown-table.md, docs/lib-markdown-table/index.md
+     scripts/lib-shell.mjs (40 %) — manque : docs/lib-shell-blueprint.md, docs/referentiel/lib-shell.md, docs/lib-shell/index.md
+     scripts/priorites.mjs (40 %) — manque : docs/priorites-blueprint.md, docs/referentiel/priorites.md, docs/priorites/index.md
+     scripts/report-template.mjs (40 %) — manque : docs/report-template-blueprint.md, docs/referentiel/report-template.md, docs/report-template/index.md
+     scripts/route-booster.mjs (40 %) — manque : docs/route-booster-blueprint.md, docs/referentiel/route-booster.md, docs/route-booster/index.md
+     scripts/run-framework.mjs (40 %) — manque : docs/run-framework-blueprint.md, docs/referentiel/run-framework.md, docs/run-framework/index.md
+     scripts/serie-temporelle.mjs (60 %) — manque : docs/referentiel/serie-temporelle.md, docs/serie-temporelle/index.md
+     scripts/sites-env.mjs (40 %) — manque : docs/sites-env-blueprint.md, docs/referentiel/sites-env.md, docs/sites-env/index.md
+     scripts/tool-brain.mjs (80 %) — manque : docs/tool-brain-blueprint.md
+     scripts/tool-usage.mjs (40 %) — manque : docs/tool-usage-blueprint.md, docs/referentiel/tool-usage.md, docs/tool-usage/index.md
+
+  HORS PORTÉE : un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.

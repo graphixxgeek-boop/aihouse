@@ -7547,6 +7547,76 @@ async function testEtatDesClassifications() {
   console.log("Passed: l'état des classifications (2026-09-26) répond enfin à sa question « est-ce que c'est terminé ? », qui ne l'était pas : chaque classification du dépôt était documentée chez elle, et rien ne comptait les POPULATIONS — or une liste de ce qui est fait ne dit jamais ce qui manque. Six populations recensées (fichiers d'outillage, rapports, datas hors rapports, tâches, règles, code du jeu), chacune avec une sonde qui LIT le dépôt plutôt qu'un chiffre recopié, et quatre états strictement distincts : CLASSÉE · PARTIELLE · AUCUN PORTEUR · PAS MESURÉ. Les deux derniers sont séparés exprès — un trou et une sonde cassée appellent des décisions opposées, et se ressemblent trait pour trait dans une sortie. Une population sans porteur doit écrire POURQUOI. Et le rapport déclare en toutes lettres qu'il ne dira jamais si une classification manquante est utile à faire : c'est un arbitrage, donc sa décision à lui.");
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES KITS D'EXPORT (2026-09-26) — le blueprint ne part jamais seul
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE : « ajouter à chaque outil vital ou important un kit complet, et un kit moins
+// conséquent pour les autres, de façon proportionnelle. Définir des niveaux d'exportabilité, faire
+// correspondre des niveaux de kits et des niveaux de criticité. Je veux un système cohérent. »
+//
+// ET SA CORRECTION, EN COURS DE CHANTIER, qui change le sens de l'axe : les quatre niveaux
+// qualifient l'importance d'un fichier POUR LE FONCTIONNEMENT DE L'AGENCE, jamais son
+// exportabilité. Le kit est la CONSÉQUENCE du niveau. La distinction n'est pas verbale : un
+// fichier peut être vital au fonctionnement et trivial à emporter.
+async function testKitsDExport() {
+  const se = await import('../scripts/safe-export.mjs');
+  const { NIVEAUX_DE_KIT, PIECES_DU_KIT, kitAttendu, basesDuChemin, dependancesInternes, etatDuKit, mesurerLesKits, formatKitsLines } = se;
+
+  // LA PROPORTIONNALITÉ EST LA DEMANDE, donc c'est elle qu'on verrouille : un niveau par niveau de
+  // vitalité, et des kits strictement décroissants. Si un jour « utile » exigeait plus que
+  // « vital », le système cesserait d'être cohérent sans que rien ne le dise.
+  const { VITALITE } = await import('../scripts/le-classificateur.mjs');
+  assert.deepEqual(NIVEAUX_DE_KIT.map((n) => n.vitalite), VITALITE.map((v) => v.cle), 'every vitality level must have exactly one kit level, in the same order — a level with no kit would be invisible to the export with nobody noticing');
+  for (let i = 1; i < NIVEAUX_DE_KIT.length; i += 1) {
+    assert.ok(NIVEAUX_DE_KIT[i].pieces.length <= NIVEAUX_DE_KIT[i - 1].pieces.length, `kit ${NIVEAUX_DE_KIT[i].vitalite} must not demand MORE pieces than the level above it — proportionality is the request itself, and an inversion would break it silently`);
+    assert.ok(NIVEAUX_DE_KIT[i].pieces.every((p) => PIECES_DU_KIT.some((x) => x.cle === p)), 'and every piece a kit demands must be a declared piece, never a name nobody defines');
+  }
+  assert.equal(kitAttendu('vital').pieces.length, 5, 'the vital kit carries all five pieces: what the Agency cannot lose must be reproducible without guesswork');
+  assert.equal(kitAttendu('optionnel').pieces.length, 2, 'the optional kit carries the code and what it needs to start — demanding a blueprint there would cost more than it returns');
+  assert.equal(kitAttendu('inexistant'), null, 'and an unknown level returns null rather than a default kit that would silently under-demand');
+
+  // LES DEUX ORTHOGRAPHES — le faux positif que le premier vrai passage a produit.
+  assert.deepEqual(basesDuChemin('scripts/check-argus.mjs'), ['check-argus', 'argus'], 'a check- prefixed script is looked up BOTH ways: docs/argus-blueprint.md and docs/check-argus-blueprint.md both exist in this repository, under different tools');
+  assert.deepEqual(basesDuChemin('scripts/tool-brain.mjs'), ['tool-brain'], 'and a plain name is looked up once — never a second spelling invented for symmetry');
+
+  // LES DÉPENDANCES SE LISENT, elles ne se déclarent pas.
+  assert.deepEqual(dependancesInternes('import { a } from "./lib-shell.mjs";\nimport b from "./x/y.mjs";'), ['scripts/lib-shell.mjs', 'scripts/x/y.mjs'], 'what must travel WITH the file is read from its real imports — a hand-kept list expires at the first import added');
+  assert.deepEqual(dependancesInternes('import fs from "node:fs";\nimport z from "some-package";'), [], 'and external packages are not "what to take along": they install, they do not travel');
+
+  // UN KIT MESURÉ SUR DES FIXTURES, dans les deux sens.
+  const exists = (c) => /blueprint/.test(String(c));
+  const complet = etatDuKit({ chemin: 'scripts/x.mjs' }, 'optionnel', { exists: () => true, readFileImpl: () => 'import a from "./lib-shell.mjs";' });
+  assert.equal(complet.complet, true, 'an optional file whose code is present has a complete kit — the bar is genuinely lower, as he asked');
+  assert.deepEqual(complet.detail.find((d) => d.cle === 'dependances').liste, ['scripts/lib-shell.mjs'], 'and its kit names what must go with it');
+  const troue = etatDuKit({ chemin: 'scripts/x.mjs' }, 'vital', { exists, readFileImpl: () => '' });
+  assert.equal(troue.complet, false, 'a vital file missing its fiche and registre has an incomplete kit');
+  assert.deepEqual(troue.manquantes.map((m) => m.cle), ['source', 'fiche', 'registre'], 'and the MISSING pieces are named with their path, never counted — a count says how far, a list says what to create');
+  assert.equal(troue.taux, 40, 'with an honest completion rate (2 of the 5 pieces: the blueprint and the dependency list, which a readable file always produces even when empty): twenty kits at 80 % and twenty at 0 % do not get repaired the same way, and "0 complete" confuses them');
+
+  // UN FICHIER ILLISIBLE NE REND JAMAIS « ZÉRO DÉPENDANCE » (leçons L5/L11) — ce serait le pire
+  // résultat possible ici : on emporterait l'outil sans ce qui le fait démarrer.
+  const aveugle = etatDuKit({ chemin: 'scripts/x.mjs' }, 'vital', { exists: () => true, readFileImpl: () => { throw new Error('illisible'); } });
+  assert.equal(aveugle.detail.find((d) => d.cle === 'dependances').present, null, 'an unreadable file reports its dependencies as NOT MEASURED');
+  assert.match(aveugle.detail.find((d) => d.cle === 'dependances').pourquoi, /jamais « aucune dépendance »/, 'and says so in words, because "nothing to take along" would send the tool out without what makes it start');
+  assert.equal(aveugle.complet, true, 'while the pieces it COULD check still count — an unmeasurable piece must not be scored as a failure either (that would be the symmetric lie)');
+
+  // NON MESURABLE au niveau du parc.
+  assert.match(formatKitsLines(mesurerLesKits({ vitalite: null }))[0], /PAS MESURÉ/, 'without the vitality of the fleet, the kits cannot be measured at all — and it says so rather than printing an empty table that reads as "no kit due"');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25).
+  const { vitaliteDuParc } = await import('../scripts/le-classificateur.mjs');
+  const reel = mesurerLesKits({ vitalite: vitaliteDuParc() });
+  assert.equal(reel.mesurable, true, 'against the real repository the kits must actually be measurable');
+  assert.equal(reel.total, 89, 'and cover the whole fleet — the transverse category he asked for covers ALL files, not the documented ones');
+  assert.ok(reel.parNiveau.optionnel.couverture === 100, 'the optional level is at 100 % by construction (code + dependencies), which is the proof that the bar really is proportional and not a uniform demand in disguise');
+  assert.ok(reel.bloquants.length > 0, 'and today there ARE unmet kits on files the Agency depends on: this test would be worthless if it only ever ran on a clean state — the day it drops to zero, that is the real news');
+
+  console.log("Passed: les kits d'export (2026-09-26) répondent à sa demande d'un système PROPORTIONNEL : quatre niveaux de kit alignés un pour un sur les quatre niveaux de vitalité, et strictement décroissants — complet (plan + code + fiche + registre + dépendances) pour les vitaux et les essentiels, allégé pour les utiles, minimal pour les optionnels. Sa correction en cours de chantier est appliquée partout : les quatre niveaux qualifient l'importance POUR LE FONCTIONNEMENT DE L'AGENCE, jamais l'exportabilité — le kit est la conséquence du niveau, une seule échelle lue deux fois plutôt que deux échelles qui divergeraient. Les dépendances se LISENT dans les imports réels (une liste tenue à la main expire au premier import ajouté), les deux orthographes de blueprint du dépôt sont acceptées (le premier passage réclamait docs/house-blueprint.md pour un plan qui existe sous un autre nom), un fichier illisible rend « dépendances PAS MESURÉES » et jamais « aucune dépendance », et les pièces manquantes sont NOMMÉES avec leur chemin. Mesuré en direct : 89 fichiers, 48 kits complets, 27 kits dus et non tenus sur des fichiers dont l'Agence dépend.");
+}
+
+await testKitsDExport();
+
 await testEtatDesClassifications();
 
 await testClassificationRapports();
@@ -9609,10 +9679,13 @@ await testVerrousDOuverture();
       // Le 6e axe (« cherche », 2026-09-26) est arrivé dans le registre, et ce test l'a vu tout seul :
       // « plein » a cessé d'être complet sans qu'aucun chiffre soit édité ici. C'est exactement ce
       // que l'Article 24 demande d'une dérivation — le fixture s'aligne, jamais l'assertion.
-      ? { iceberg: 'membre', type: 'commande-documentee', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'], cherche: ['duplication'] }
-      : { iceberg: 'membre', type: 'commande-documentee', moment: [], domaine: [], destinataire: [], cherche: [] }) });
+      // Le 7e (« vitalite », 2026-09-26, sa demande : ce que l'Agence PERD sans le fichier) est
+      // arrivé de la même façon, et a été vu de la même façon : deuxième preuve le même jour que la
+      // dérivation tient, puisque ajouter un axe au registre a suffi à faire bouger ce test.
+      ? { iceberg: 'membre', type: 'commande-documentee', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'], cherche: ['duplication'], vitalite: 'vital' }
+      : { iceberg: 'membre', type: 'commande-documentee', moment: [], domaine: [], destinataire: [], cherche: [], vitalite: null }) });
   assert.equal(cadr.complets, 2, 'a script carrying ALL the axes counts as complete — the count is derived from AXES_DE_CLASSIFICATION, so the fifth axis added on 2026-09-25 (#741) joined it without a number being edited anywhere (Article 24)');
-  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire', 'cherche'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
+  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire', 'cherche', 'vitalite'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
   assert.equal(cadr.desaccords, 1, 'an unarbitrated disagreement is counted separately from an absence: one is a gap, the other is two sources contradicting each other');
   assert.equal(cadr.signalDeFin.atteint, false, 'and the end signal stays unreached while a single disagreement stands, even if every script were complete');
   assert.ok(formatCadrageLines(cadr).some((l) => /ne manquera jamais/i.test(l)), 'THE NUANCE THAT CHANGES THE TARGET: a script reading no path has no domain to carry — that is a legitimate absence, not a gap. Aiming at 100 % on that denominator would be aiming at the impossible, and an unreachable goal gets abandoned.');

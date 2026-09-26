@@ -14,7 +14,7 @@
 // IL AVERTIT, IL PROPOSE, IL NE BLOQUE JAMAIS (calibrage explicite). Un gardien qui bloque sur un
 // sujet sans rapport avec le travail en cours pousse à désactiver le crochet — et on perd tout.
 
-import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, porteeDe, sh } from "./lib-shell.mjs";
@@ -960,9 +960,27 @@ function main() {
         console.log(`  HORS PORTÉE : ${e.horsPortee}`);
       }
       console.log("");
+      // LES KITS rejoignent `export` plutôt qu'une commande à part : c'est la même question posée
+      // plus finement (« que doit-il partir avec lui ? » au lieu de « a-t-il un plan ? »), et deux
+      // commandes sur le même sujet finiraient par se contredire.
+      for (const l of formatKitsLines(mesurerLesKits({ vitalite: v }))) console.log(l);
+      console.log("");
       for (const l of formatEmpreinteLines(empreinteDisque())) console.log(l);
       console.log("");
       for (const l of formatRelaisLines(relaisDeModele())) console.log(l);
+    });
+  }
+  // `kits` — le même tableau, seul, pour quand c'est LA question du moment.
+  if (process.argv[2] === "kits") {
+    printReliabilityNotice("safe-export");
+    recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return import("./le-classificateur.mjs").then((lc) => {
+      const k = mesurerLesKits({ vitalite: lc.vitaliteDuParc() });
+      for (const l of formatKitsLines(k, { combien: 40 })) console.log(l);
+      try { mkdirSync(join(ROOT, "docs/safe-export"), { recursive: true }); } catch { /* déjà là */ }
+      const cible = join(ROOT, "docs/safe-export", `kits-${new Date().toISOString().slice(0, 10)}.txt`);
+      writeFileSync(cible, formatKitsLines(k, { combien: 999 }).join("\n") + "\n", "utf8");
+      console.log(`\nÉcrit : ${cible}`);
     });
   }
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) — même correction que ses deux voisins du
@@ -1243,4 +1261,197 @@ export function findGuardiansHorsProcess({ root = ROOT, listDirImpl = readdirSyn
 // dessous n'existent (zone morte temporelle). scanVocabulaire() a planté au premier vrai
 // lancement — l'outil aurait paru fini et n'aurait jamais tourné. Toute section ajoutée plus bas
 // hérite désormais de la garantie : au moment où main() part, tout le module est initialisé.
+
+// ══════════════════════════════════════════════════════════════════════════
+// LES KITS D'EXPORT (2026-09-26) — LE BLUEPRINT NE PART JAMAIS SEUL
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, mot pour mot : « tu m'avais dit qu'il était possible, en plus du blueprint, de
+// transmettre le fichier .mjs. Je veux consolider l'export, je veux ajouter à chaque outil/élément
+// vital ou important à l'agence un kit complet. Et un kit d'export moins conséquent (parce que
+// moins pertinent) pour les autres, de façon proportionnelle. [...] définir des niveaux
+// d'exportabilité, faire correspondre des niveaux de kits et des niveaux de criticité sur le
+// sujet. Je veux un système cohérent. »
+//
+// CE QUI EXISTAIT, ET CE QUI MANQUAIT. La VITALITÉ existait déjà (quatre niveaux dérivés, chez
+// LE-CLASSIFICATEUR) et `mesurerLExportabilite()` la croisait déjà avec le blueprint. Mais ce
+// croisement est BINAIRE : blueprint, ou pas de blueprint. Or un blueprint tout seul ne s'exporte
+// pas — il décrit une mécanique que le destinataire devra réécrire. Ce qui part vraiment, c'est un
+// ENSEMBLE : le plan, le code, ce qu'il faut adapter, ce qui le vérifie, et ce sans quoi il ne
+// démarre pas. Le kit nomme cet ensemble, et le fait varier avec ce que l'outil vaut.
+//
+// LE PRINCIPE DE PROPORTIONNALITÉ, qui est sa demande exacte : le niveau de kit se DÉRIVE du niveau
+// de vitalité, il ne se déclare pas. Un outil qui devient vital hérite automatiquement du kit
+// complet sans que personne n'y pense — c'est l'Article 24 appliqué à l'export, et c'est ce qui
+// empêche le système de se périmer au prochain outil.
+//
+// CE QUE LE KIT N'EST PAS : une promesse que l'outil marchera ailleurs. Il dit ce qui est PRÊT à
+// partir, jamais que le portage réussira. Cette limite est imprimée dans le rapport plutôt que tue.
+//
+// DEUX NOTIONS DISTINCTES, ET IL A CORRIGÉ CE POINT EXPRESSÉMENT (2026-09-26, « CORRECTION
+// URGENTE ») : les quatre niveaux VITAL / ESSENTIEL / UTILE / OPTIONNEL qualifient l'importance
+// d'un fichier **pour LE FONCTIONNEMENT DE L'AGENCE**, jamais son exportabilité. La confusion
+// serait grave et pas seulement verbale : un fichier peut être vital au fonctionnement et trivial
+// à exporter (une bibliothèque de dix lignes), ou secondaire au fonctionnement et lourd à
+// transmettre (un outil rare mais subtil). Le KIT est la CONSÉQUENCE du niveau, jamais le niveau
+// lui-même : on mesure ce que le fichier vaut pour l'Agence, puis on en déduit ce qui doit partir
+// avec lui. Un seul axe, lu deux fois — c'est le système cohérent qu'il demande, et c'est ce qui
+// empêche qu'un jour deux échelles disent deux choses du même fichier (leçon L29).
+
+// LES CINQ PIÈCES, et chacune répond à une question qu'un destinataire se pose vraiment.
+export const PIECES_DU_KIT = [
+  { cle: "blueprint", quoi: "le blueprint générique", question: "comment ça marche, indépendamment de ce projet-ci ?",
+    chemin: (base) => `docs/${base}-blueprint.md` },
+  { cle: "source", quoi: "le fichier de code lui-même", question: "qu'est-ce que je copie ?",
+    chemin: (base, ligne) => ligne?.chemin ?? `scripts/${base}.mjs` },
+  { cle: "fiche", quoi: "la fiche d'instanciation", question: "qu'est-ce qui est propre à CE projet, donc à adapter chez moi ?",
+    chemin: (base) => `docs/referentiel/${base}.md` },
+  { cle: "registre", quoi: "le dossier d'historisation avec son index", question: "où l'outil écrit-il, et sous quelle forme ?",
+    chemin: (base) => `docs/${base}/index.md` },
+  { cle: "dependances", quoi: "la liste de ce qui doit partir AVEC lui", question: "que dois-je emporter d'autre pour qu'il démarre ?",
+    // Pas un fichier : une liste DÉRIVÉE des imports réels du code. Un kit qui oublie une
+    // dépendance livre un outil qui ne démarre pas, et c'est le plus décourageant des échecs —
+    // il se produit à la première seconde, avant que le destinataire ait rien pu juger.
+    derivee: true },
+];
+
+// LES QUATRE NIVEAUX DE KIT, alignés un pour un sur les quatre niveaux de vitalité. L'alignement
+// n'est pas une coïncidence de conception : c'est le système cohérent qu'il demande — une seule
+// échelle, lue deux fois, plutôt que deux échelles qui finiraient par diverger (leçon L29).
+export const NIVEAUX_DE_KIT = [
+  { vitalite: "vital", cle: "complet", icone: "🔴", pieces: ["blueprint", "source", "fiche", "registre", "dependances"],
+    pourquoi: "sans lui l'Agence ne tourne pas : il doit pouvoir être repris intégralement, sans rien deviner" },
+  { vitalite: "essentiel", cle: "complet", icone: "🟠", pieces: ["blueprint", "source", "fiche", "registre", "dependances"],
+    pourquoi: "il porte une garantie : l'exporter sans son plan reviendrait à exporter la promesse sans le mécanisme" },
+  { vitalite: "utile", cle: "allege", icone: "🟡", pieces: ["blueprint", "source", "dependances"],
+    pourquoi: "il fait gagner du temps : le plan et le code suffisent, la fiche et le registre se refont sur place si on le garde" },
+  { vitalite: "optionnel", cle: "minimal", icone: "⚪", pieces: ["source", "dependances"],
+    pourquoi: "personne ne le lance ici : il part comme une pièce à réévaluer, pas comme un outil à installer — lui exiger un blueprint coûterait plus que ce qu'il rapporte" },
+];
+
+export function kitAttendu(niveauVitalite, { niveaux = NIVEAUX_DE_KIT } = {}) {
+  return niveaux.find((n) => n.vitalite === niveauVitalite) ?? null;
+}
+
+// basesDuChemin() — LES DEUX ORTHOGRAPHES, et il en faut deux parce que le dépôt en emploie deux.
+//
+// MESURÉ AVANT D'ÊTRE ÉCRIT : `scripts/check-argus.mjs` a son plan sous `docs/argus-blueprint.md`
+// (sans le préfixe), tandis que `scripts/check-suivi-fidelity.mjs` a le sien sous
+// `docs/check-suivi-fidelity-blueprint.md` (avec). Les deux conventions cohabitent depuis toujours,
+// et aucune n'est fautive — ce sont des noms, donc des décisions humaines.
+//
+// POURQUOI CE DÉTAIL COMPTE AUTANT : un lecteur qui n'essaie qu'une seule orthographe déclare
+// absent un document qui existe, et rend une liste de « pièces manquantes » qu'on irait créer en
+// double. C'est le motif L11 pour la troisième fois ce jour-là, et mon premier jet le portait —
+// il réclamait `docs/house-blueprint.md` pour `check-house.mjs` et `docs/suivi-fidelity-…` pour un
+// blueprint qui existe. On essaie donc les deux, et la pièce compte dès que l'une des deux existe.
+export function basesDuChemin(chemin) {
+  const nu = String(chemin).replace(/^scripts\//, "").replace(/^hooks\//, "").replace(/\.(mjs|sh)$/, "");
+  return nu.startsWith("check-") ? [nu, nu.slice("check-".length)] : [nu];
+}
+export function baseDuChemin(chemin) { return basesDuChemin(chemin)[0]; }
+
+// dependancesInternes() — ce qui doit partir AVEC le fichier, LU dans ses imports plutôt que
+// déclaré à la main. Un seul niveau : les imports directs. Aller plus loin donnerait la moitié du
+// dépôt pour les outils centraux, ce qui n'est plus une liste d'emport mais un inventaire.
+export const MOTIF_IMPORT_LOCAL = /from\s+["']\.\/([a-z0-9._/-]+)["']/gi;
+export function dependancesInternes(source = "") {
+  return [...new Set([...String(source).matchAll(MOTIF_IMPORT_LOCAL)].map((m) => `scripts/${m[1]}`))].sort();
+}
+
+export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT } = {}) {
+  const kit = kitAttendu(niveauVitalite, { niveaux });
+  if (!kit) return { mesurable: false, pourquoi: `aucun niveau de kit ne correspond à la vitalité « ${niveauVitalite} » — un niveau de vitalité sans kit rendrait l'outil invisible à l'export sans que personne ne le voie` };
+  const bases = basesDuChemin(ligne.chemin);
+  let source = null;
+  try { source = readFileImpl(join(root, ligne.chemin), "utf8"); } catch { /* voir ci-dessous */ }
+  const detail = [];
+  for (const cle of kit.pieces) {
+    const p = pieces.find((x) => x.cle === cle);
+    if (!p) continue;
+    if (p.cle === "dependances") {
+      // LA DÉPENDANCE NON MESURABLE N'EST JAMAIS UNE ABSENCE DE DÉPENDANCE (leçons L5/L11) : un
+      // fichier illisible rendrait « zéro à emporter », qui est le pire résultat possible ici.
+      if (source === null) { detail.push({ cle, quoi: p.quoi, present: null, pourquoi: "le fichier n'a pas pu être lu : ses dépendances n'ont PAS été mesurées, ce qui n'est jamais « aucune dépendance »" }); continue; }
+      const deps = dependancesInternes(source);
+      detail.push({ cle, quoi: p.quoi, present: true, liste: deps, combien: deps.length });
+      continue;
+    }
+    // La pièce compte dès qu'UNE des orthographes existe ; le chemin rapporté est celui qui a
+    // répondu, ou le premier essayé quand aucune n'existe — pour que « à créer » nomme une cible.
+    const essais = bases.map((b) => p.chemin(b, ligne));
+    const trouve = essais.find((c) => exists(join(root, c)));
+    detail.push({ cle, quoi: p.quoi, chemin: trouve ?? essais[0], essais, present: Boolean(trouve) });
+  }
+  const exigees = detail.filter((d) => d.present !== null);
+  const presentes = exigees.filter((d) => d.present);
+  return {
+    mesurable: true, niveau: kit.cle, icone: kit.icone, vitalite: niveauVitalite, pourquoi: kit.pourquoi,
+    detail, manquantes: exigees.filter((d) => !d.present).map((d) => ({ cle: d.cle, chemin: d.chemin, quoi: d.quoi })),
+    complet: presentes.length === exigees.length,
+    taux: exigees.length ? Math.round((presentes.length / exigees.length) * 100) : null,
+  };
+}
+
+export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT } = {}) {
+  if (!vitalite?.mesurable) {
+    return { mesurable: false, pourquoi: "la vitalité du parc n'a pas été fournie ou n'est pas mesurable : sans elle on ne peut pas savoir QUEL kit chaque fichier doit porter, et compter des pièces sans savoir lesquelles sont dues ne mesure rien" };
+  }
+  const parNiveau = {};
+  const incomplets = [];
+  for (const n of niveaux) {
+    const fichiers = vitalite.parNiveau[n.vitalite] ?? [];
+    const etats = fichiers.map((f) => ({ chemin: f.chemin, ...etatDuKit(f, n.vitalite, { root, exists, readFileImpl, niveaux }) }));
+    const complets = etats.filter((e) => e.complet);
+    parNiveau[n.vitalite] = {
+      kit: n.cle, icone: n.icone, pieces: n.pieces, pourquoi: n.pourquoi,
+      total: fichiers.length, complets: complets.length,
+      couverture: fichiers.length ? Math.round((complets.length / fichiers.length) * 100) : null,
+      // Le taux MOYEN de complétude dit autre chose que le nombre de kits complets : vingt kits à
+      // 80 % et vingt kits à 0 % ne se réparent pas de la même façon, et « 0 complet » les confond.
+      tauxMoyen: fichiers.length ? Math.round(etats.reduce((a, e) => a + (e.taux ?? 0), 0) / fichiers.length) : null,
+      etats,
+    };
+    for (const e of etats) if (!e.complet) incomplets.push({ ...e, vitalite: n.vitalite });
+  }
+  // CE QUI BLOQUE UN EXPORT, dérivé et jamais écrit : un kit complet dû et non tenu, sur un fichier
+  // dont l'Agence dépend. Les utiles et les optionnels manquants sont une dette, pas un blocage.
+  const bloquants = incomplets.filter((e) => e.vitalite === "vital" || e.vitalite === "essentiel");
+  return {
+    mesurable: true, parNiveau, incomplets, bloquants,
+    total: Object.values(parNiveau).reduce((a, x) => a + x.total, 0),
+    complets: Object.values(parNiveau).reduce((a, x) => a + x.complets, 0),
+    horsPortee: "un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.",
+  };
+}
+
+export function formatKitsLines(k, { niveaux = NIVEAUX_DE_KIT, combien = 8 } = {}) {
+  if (!k?.mesurable) return [`KITS D'EXPORT : PAS MESURÉ — ${k?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== LES KITS D'EXPORT — ${k.complets}/${k.total} kit(s) complet(s) ===`, ""];
+  l.push("  niveau       kit        pièces dues                                   complets   taux moyen");
+  l.push("  -----------  ---------  --------------------------------------------  ---------  ----------");
+  for (const n of niveaux) {
+    const x = k.parNiveau[n.vitalite];
+    if (!x) continue;
+    l.push(`  ${n.icone} ${n.vitalite.padEnd(10)} ${x.kit.padEnd(9)}  ${x.pieces.join("+").padEnd(44)}  ${String(x.complets).padStart(3)}/${String(x.total).padEnd(3)}   ${String(x.couverture ?? "—").padStart(4)} %     ${String(x.tauxMoyen ?? "—").padStart(3)} %`);
+  }
+  l.push("");
+  for (const n of niveaux) l.push(`  ${n.icone} ${n.vitalite} → kit ${k.parNiveau[n.vitalite]?.kit} : ${n.pourquoi}`);
+  if (k.bloquants.length) {
+    l.push("");
+    l.push(`  ⛔ ${k.bloquants.length} KIT(S) DÛ(S) ET NON TENU(S) sur des fichiers dont l'Agence dépend — c'est ce qui bloque un export :`);
+    for (const b of k.bloquants.slice(0, combien)) {
+      l.push(`     ${b.chemin} (${b.taux} %) — manque : ${b.manquantes.map((m) => m.chemin ?? m.cle).join(", ")}`);
+    }
+    if (k.bloquants.length > combien) l.push(`     … et ${k.bloquants.length - combien} autre(s)`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${k.horsPortee}`);
+  return l;
+}
+
+// LE LANCEUR EN TOUT DERNIER (déplacé le 2026-09-26) : les constantes du kit d'export ont
+// rejoint la fin du fichier, et main() serait parti avant elles — leur zone morte temporelle,
+// que findLanceursPrematures() refuse. Quatrième outil du dépôt à le payer : le défaut se
+// déclenche à la seconde où un `const` passe sous la ligne du lanceur, jamais avant.
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) main();

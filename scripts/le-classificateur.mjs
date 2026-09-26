@@ -1004,6 +1004,21 @@ export const AXES_DE_CLASSIFICATION = [
   { cle: "domaine", quoi: "SUR QUOI il regarde", porteur: "domainesDeLOutil()" },
   { cle: "destinataire", quoi: "À QUI le résultat sert", porteur: "destinatairesDeLOutil()" },
   { cle: "cherche", quoi: "QUELLE QUESTION il pose au dépôt (déclaré-mais-absent, deux-sources-divergent, duplication…)", porteur: "cartographieCriteresTransverses() — HARMONIA" },
+  // LA VITALITÉ REJOINT LES AXES DÉCLARÉS (2026-09-26, sa demande : « la notion outil
+  // VITAL/ESSENTIEL/UTILE/OPTIONNEL pour LE FONCTIONNEMENT DE L'AGENCE crée une catégorie
+  // transverse qui couvre tous les fichiers. Il faut ajouter ça à la classification, c'est très
+  // important »).
+  //
+  // ELLE ÉTAIT MESURÉE SANS ÊTRE DÉCLARÉE, et c'est exactement le genre d'écart que ce projet
+  // traque ailleurs : `vitaliteDuParc()` existait, tournait, rendait quatre niveaux sur les 89
+  // fichiers — et la liste des AXES ne la nommait pas. Un axe qu'aucune liste ne déclare n'est
+  // dans aucun inventaire, donc il n'entre dans aucune décision : il mesure pour lui-même.
+  //
+  // CE QU'ELLE QUALIFIE EXACTEMENT, et il a corrigé ce point en cours de route : l'importance d'un
+  // fichier **pour LE FONCTIONNEMENT DE L'AGENCE**, jamais son exportabilité. Le KIT D'EXPORT est
+  // la CONSÉQUENCE de ce niveau (chez SAFE-EXPORT), jamais le niveau lui-même — un fichier peut
+  // être vital au fonctionnement et trivial à emporter, ou secondaire et lourd à transmettre.
+  { cle: "vitalite", quoi: "CE QUE L'AGENCE PERD SANS LUI — vital / essentiel / utile / optionnel, pour son FONCTIONNEMENT (jamais pour son exportabilité)", porteur: "vitaliteDuParc() — ici ; le kit d'export qui en découle est chez SAFE-EXPORT" },
 ];
 
 // L'INDICE DE CLASSIFICATION À FACETTES (2026-09-26). Sa demande : « on pourrait remplacer ces
@@ -1130,6 +1145,14 @@ export const POSTE_DE_TRAVAIL = [
   { quoi: "une ligne à la table maîtresse", ou: "docs/regles-de-travail.md §7ter", pourQui: "tous, sans exception" },
   { quoi: "une entrée au menu PRESTATIONS", ou: "scripts/le-coordinateur.mjs", pourQui: "ceux qu'on lance à la demande ou qui coûtent de l'API" },
   { quoi: "un item de Ronde", ou: "scripts/circle-tasks.mjs", pourQui: "les périodiques — jamais les Gardiens sacrés, qui tournent à chaque commit" },
+  // LE KIT D'EXPORT REJOINT LE POSTE DE TRAVAIL (2026-09-26, sa demande : « la détention d'un kit
+  // complet d'export ou d'un kit partiel fait partie du sujet postes de travail »).
+  //
+  // POURQUOI IL SE DÉRIVE DE LA VITALITÉ ET NON DU RANG, et c'est le point qui rend le système
+  // cohérent : le rang dit ce que le fichier VAUT dans l'équipe, la vitalité dit ce que l'Agence
+  // PERD sans lui. Un crochet git n'a aucun rang — il n'a jamais candidaté — et il est pourtant
+  // vital : le lier au rang laisserait sans kit précisément les fichiers qu'on ne peut pas perdre.
+  { quoi: "un kit d'export", ou: "mesuré par SAFE-EXPORT (`node scripts/safe-export.mjs kits`)", pourQui: "TOUS les fichiers, à un niveau proportionnel à leur vitalité — complet pour les vitaux et les essentiels, allégé pour les utiles, minimal pour les optionnels" },
 ];
 
 // LE POSTE DE TRAVAIL PAR RANG (2026-09-25, sa demande : « un tableau mis à jour avec les rangs et

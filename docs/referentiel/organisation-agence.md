@@ -74,6 +74,40 @@ documenter à part :
 - **VIP**
 - **Hors de l'agence, définitivement** (§5)
 
+
+### Axe C — Vitalité pour le FONCTIONNEMENT de l'Agence (« que perd-on sans lui ? »)
+
+*(Ajouté le 2026-09-26, à sa demande : « la notion outil VITAL / ESSENTIEL / UTILE / OPTIONNEL pour
+LE FONCTIONNEMENT DE L'AGENCE qu'on a définie crée une catégorie transverse qui couvre tous les
+fichiers. Il faut ajouter ça à la classification, c'est très important. »)*
+
+**Cet axe était MESURÉ depuis plusieurs jours sans être DÉCLARÉ**, et c'est précisément l'écart que
+son ajout ferme : `vitaliteDuParc()` tournait, rendait ses quatre niveaux sur les 89 fichiers, et
+la liste des axes ne le nommait pas. Un axe qu'aucune liste ne déclare n'entre dans aucun
+inventaire, donc dans aucune décision — il mesure pour lui-même.
+
+| Niveau | Ce que l'Agence perd sans lui | Comment il se détecte |
+|---|---|---|
+| 🔴 **vital** | elle ne tourne plus | il est dans la boucle quotidienne : un crochet git, ou lancé par un crochet / `package.json`, ou importé par l'un d'eux |
+| 🟠 **essentiel** | elle tourne, mais perd une garantie | il porte un garde-fou d'évolutivité : une promesse cesse d'être vérifiée |
+| 🟡 **utile** | rien ne casse, on perd du temps | une commande de lancement est écrite quelque part |
+| ⚪ **optionnel** | rien | personne ne le lance, rien n'est écrit pour lui, il ne garantit rien |
+
+**Il est DÉRIVÉ, jamais déclaré en tête de fichier** : la vitalité se lit dans ce que le dépôt FAIT
+du fichier. Un outil excellent que personne n'a encore branché sort « optionnel », et c'est exact —
+il n'est pas encore vital, il est prêt à l'être.
+
+**Un fichier illisible n'est pas un fichier optionnel.** Il n'y a donc pas cinq niveaux : il y a
+quatre niveaux et un aveu (`mesurable: false`), parce que « rien ne dépend de lui » et « je n'ai
+pas pu l'ouvrir » se ressemblent trait pour trait dans un tableau et appellent l'inverse l'un de
+l'autre.
+
+**CE QUE CET AXE N'EST PAS : une mesure d'exportabilité.** Il dit ce que l'Agence perd sans le
+fichier, pas ce qu'il coûte de l'emporter — un fichier peut être vital au fonctionnement et trivial
+à exporter, ou secondaire et lourd à transmettre. Le **kit d'export** est la CONSÉQUENCE de ce
+niveau, porté par SAFE-EXPORT (`docs/referentiel/safe-export.md`) : une seule échelle, lue deux
+fois, plutôt que deux échelles qui finiraient par diverger.
+
 ## 2. Les Agents Cadre (Direction)
 
 **CASSANDRA-RH + LE-COORDINATEUR** — aucun des deux ne vérifie le code lui-même : l'un route le
