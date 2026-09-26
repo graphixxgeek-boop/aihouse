@@ -293,6 +293,27 @@ export function muetsAuCompteurLines(rapport) {
   ];
 }
 
+// rapportDesMuets() — LE CÂBLAGE RÉEL, sorti du main() le 2026-09-26 (tâche #778, décision de
+// l'utilisateur « bloquer la Ronde, pas le commit »). Il vivait à l'intérieur de la sous-commande
+// `muets` ; le verrou d'ouverture de Ronde (circle-tasks.mjs) en avait besoin à son tour, et le
+// recopier aurait fabriqué exactement le doublon que CLONE-HUNTER traque. Un seul câblage, deux
+// appelants : la sous-commande qui SIGNALE au commit, et le verrou qui BLOQUE l'ouverture.
+export function rapportDesMuets({ readFileImpl = readFileSync, history = null } = {}) {
+  let sourceCrochet = "";
+  try { sourceCrochet = readFileImpl(new URL("./hooks/post-commit", import.meta.url), "utf8"); } catch { /* le classement reste juste, en moins large */ }
+  let offert = "";
+  for (const d of ["../docs/regles-de-travail.md", "../CLAUDE.md"]) {
+    try { offert += readFileImpl(new URL(d, import.meta.url), "utf8"); } catch { /* idem */ }
+  }
+  const lireSource = (slug) => {
+    for (const c of [`./${slug}.mjs`, `./check-${slug}.mjs`]) {
+      try { return readFileImpl(new URL(c, import.meta.url), "utf8"); } catch { /* essai suivant */ }
+    }
+    return null;
+  };
+  return buildToolBrainUsageReport(history ?? loadToolUsageHistory(), PRESTATIONS, { sourceCrochet, lireSource, offert });
+}
+
 export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "" } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
@@ -467,19 +488,7 @@ async function main() {
 
   // LA SOUS-COMMANDE DU CROCHET (2026-09-26, tâche #778) — muette quand il n'y a rien à dire.
   if (rest[0] === "muets") {
-    let sourceCrochet = "";
-    try { sourceCrochet = readFileSync(new URL("./hooks/post-commit", import.meta.url), "utf8"); } catch { /* le classement reste juste, en moins large */ }
-    let offert = "";
-    for (const d of ["../docs/regles-de-travail.md", "../CLAUDE.md"]) {
-      try { offert += readFileSync(new URL(d, import.meta.url), "utf8"); } catch { /* idem */ }
-    }
-    const lireSource = (slug) => {
-      for (const c of [`./${slug}.mjs`, `./check-${slug}.mjs`]) {
-        try { return readFileSync(new URL(c, import.meta.url), "utf8"); } catch { /* essai suivant */ }
-      }
-      return null;
-    };
-    for (const l of muetsAuCompteurLines(buildToolBrainUsageReport(loadToolUsageHistory(), PRESTATIONS, { sourceCrochet, lireSource, offert }))) console.log(l);
+    for (const l of muetsAuCompteurLines(rapportDesMuets())) console.log(l);
     return;
   }
 

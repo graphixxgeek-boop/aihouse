@@ -25,7 +25,7 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
+import { categorizeAllSessions, findTaskNumberIssues } from "./check-suivi-fidelity.mjs";
 import { scanDocumentWeight, listDatedNarrativeMarkers } from "./smart-conso-token.mjs";
 // extractRuleUnits/findRedundantRulePairs ont migré vers moise-tables-de-loi le 2026-09-23 (tâche
 // #613) — elles ne servent qu'à CLAUDE.md, donc elles appartiennent à l'agent de ce périmètre.
@@ -2030,9 +2030,117 @@ export function ouvertureEstFraiche(ouverture, maintenant = Date.now(), heures =
   return age >= 0 && age <= heures * 3600 * 1000;
 }
 
-export function ouvrirRonde(faits, { root = ROOT, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, now = Date.now() } = {}) {
+// ————————————————————————————————————————————————————————————————————————
+// LES VERROUS D'OUVERTURE (2026-09-26, tâches #778, #787 et #954)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DÉCISION, EN QUATRE MOTS : « Bloquer la Ronde, pas le commit ». Trois garde-fous posaient la
+// même question ouverte — signaler, ou bloquer ? — et il a tranché les trois d'un coup. Le commit
+// passe TOUJOURS ; c'est l'OUVERTURE d'une Ronde qui refuse de démarrer tant qu'un de ces trois
+// défauts de structure traîne.
+//
+// POURQUOI CE POINT-LÀ ET PAS UN AUTRE, et c'est tout l'intérêt de son arbitrage. Bloquer le commit
+// punit un travail qui n'a souvent rien à voir avec le défaut — et un garde-fou qu'on subit sur un
+// sujet étranger, on apprend à le contourner (c'est le raisonnement de l'Article 28 pour
+// god-of-all-process). Bloquer l'OUVERTURE tombe au moment exact où le défaut compte : une Ronde
+// est précisément la revue qui devrait voir ces trois choses. Une Ronde lancée avec un registre
+// hors carte, un compteur d'usage faux ou un suivi mal numéroté ne travaille pas sur le vrai
+// dépôt : elle travaille sur une image fausse de lui, et rend des verdicts en conséquence.
+//
+// LE MODE AUTONOME N'EST PAS CONCERNÉ, et sans qu'aucune exemption n'ait à être écrite : la nuit,
+// personne ne passe par `ouvrir` (la Ronde autonome va directement à `record-run --autonome`, cf.
+// autoriseCloture()). Sa borne — « aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour
+// le mode autonome » — tient donc par construction, jamais par une dispense qu'on pourrait oublier
+// de maintenir.
+//
+// UN VERROU QUI NE PEUT PAS MESURER NE BLOQUE JAMAIS (leçons L5/L11/L30). Une sonde qui échoue rend
+// « PAS MESURÉ » et laisse passer : refuser une Ronde sur un défaut qu'on ne sait pas nommer serait
+// le pire des faux positifs — celui que personne ne peut corriger. Le non-mesuré est dit fort, il
+// n'est jamais confondu avec un vert.
+//
+// ÉVOLUTIF PAR CONSTRUCTION (Article 24) : un quatrième garde-fou rejoint le verrou en ajoutant une
+// entrée à cette liste, et rien d'autre ne change — ni ouvrirRonde(), ni le CLI, ni les messages.
+export const VERROUS_D_OUVERTURE = [
+  {
+    cle: "numerotation-du-suivi",
+    libelle: "numéros de tâche en double ou non croissants dans docs/suivi/",
+    quoiFaire: "renuméroter la ou les lignes fautives — `node scripts/check-suivi-fidelity.mjs` donne le prochain numéro correct à utiliser",
+    // Tâche #787 : j'ai cassé la règle du numéro unique sept fois en une matinée sans m'en
+    // apercevoir, parce qu'elle était seulement signalée. Un registre mal numéroté empoisonne
+    // toutes les lectures qui s'appuient dessus — et une Ronde est justement une grosse lecture.
+    async sonde({ findTaskNumberIssuesImpl = findTaskNumberIssues } = {}) {
+      const issues = findTaskNumberIssuesImpl();
+      return { mesurable: true, defauts: issues.map((i) => (i.type === "duplicate"
+        ? `n°${i.number} en double (${i.file}, déjà vu dans ${i.firstSeenIn})`
+        : `n°${i.number} non croissant (${i.file}, précédent ${i.previous})`)) };
+    },
+  },
+  {
+    cle: "outil-muet-au-compteur",
+    libelle: "outils qui ont une ligne de commande et n'enregistrent jamais leur passage",
+    quoiFaire: "ajouter l'appel `recordCliUsage` à l'outil, ou déclarer pourquoi il n'est pas comptable",
+    // Tâche #778 : leur zéro d'usage ne mesure pas leur inactivité, il mesure le silence du
+    // compteur — et la Ronde lit ce compteur pour juger quels outils ne servent à rien.
+    async sonde({ rapportDesMuetsImpl = null } = {}) {
+      const impl = rapportDesMuetsImpl ?? (await import("./tool-brain.mjs")).rapportDesMuets;
+      const r = impl();
+      if (!r?.silenceMesurable) return { mesurable: false, pourquoi: r?.pourquoiSilenceNonMesure ?? "le classement des silences n'a pas pu être fait" };
+      return { mesurable: true, defauts: (r.muetsAuCompteur ?? []).slice() };
+    },
+  },
+  {
+    cle: "registre-hors-ronde",
+    libelle: "registres réels sans item de Ronde ni couverture automatique documentée",
+    quoiFaire: "ajouter le registre à CIRCLE_ITEMS, ou à CIRCLE_AUTO_COVERED_REGISTRIES avec la raison écrite de sa couverture",
+    // Tâche #954 : c'est le trou qu'il avait nommé lui-même — « si un rapport est créé, que je
+    // demande qu'il soit dans circle, mais que ce n'est pas écrit dans les process, la règle va se
+    // perdre ». Une Ronde qui démarre sur une carte incomplète ne peut pas le rattraper.
+    async sonde({ existingPathsImpl = null, declaresImpl = undefined } = {}) {
+      let declares = declaresImpl;
+      if (declares === undefined) {
+        try { ({ REGISTRIES: declares } = await import("./doc-report.mjs")); }
+        catch { return { mesurable: false, pourquoi: "les registres déclarés par doc-report sont illisibles — la confrontation ne porterait que sur les dossiers du disque, ce qui n'est PAS « aucun registre oublié »" }; }
+      }
+      const rootNoSlash = ROOT.replace(/\/$/, "");
+      const chemins = existingPathsImpl ?? walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash);
+      return { mesurable: true, defauts: findRegistriesMissingFromCircle(chemins, undefined, { declares }) };
+    },
+  },
+];
+
+// findVerrousActifs() — rend TROIS informations, jamais un booléen : ce qui bloque, ce qui n'a pas
+// pu être mesuré, et (implicitement) le reste qui est propre. « false » n'en dirait aucune.
+export async function findVerrousActifs(verrous = VERROUS_D_OUVERTURE, options = {}) {
+  const actifs = [], nonMesures = [];
+  for (const v of verrous) {
+    let r;
+    try { r = await v.sonde(options[v.cle] ?? {}); }
+    catch (e) { nonMesures.push({ cle: v.cle, libelle: v.libelle, pourquoi: `la sonde a échoué : ${e?.message ?? e}` }); continue; }
+    if (!r || r.mesurable === false) { nonMesures.push({ cle: v.cle, libelle: v.libelle, pourquoi: r?.pourquoi ?? "raison non fournie par la sonde" }); continue; }
+    if (r.defauts?.length) actifs.push({ cle: v.cle, libelle: v.libelle, quoiFaire: v.quoiFaire, defauts: r.defauts });
+  }
+  return { actifs, nonMesures };
+}
+
+// formatVerrousLines() — muet quand tout est propre ET mesuré (leçon L6 : une ligne « 0 défaut »
+// répétée à chaque ouverture est exactement le bruit qui rend un contrôle invisible).
+export function formatVerrousLines({ actifs = [], nonMesures = [] } = {}) {
+  const lignes = [];
+  for (const nm of nonMesures) lignes.push(`❓ Verrou « ${nm.cle} » : PAS MESURÉ — ${nm.pourquoi}. Il ne bloque donc pas, et ce n'est PAS la preuve qu'il n'y a rien.`);
+  for (const a of actifs) {
+    lignes.push(`🔴 ${a.defauts.length} ${a.libelle} : ${a.defauts.join(" · ")}`);
+    lignes.push(`   → ${a.quoiFaire}`);
+  }
+  return lignes;
+}
+
+export function ouvrirRonde(faits, { root = ROOT, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync, now = Date.now(), verrousActifs = [] } = {}) {
   const manquants = findFaitsManquants(faits);
   if (manquants.length) return { ok: false, manquants };
+  // LE VERROU, appliqué ICI et nulle part ailleurs (2026-09-26, sa décision « bloquer la Ronde,
+  // pas le commit »). Les verrous sont CALCULÉS par l'appelant et PASSÉS : cette fonction reste
+  // pure comme tout le reste de ce fichier, et un test peut poser le cas des deux côtés.
+  if (verrousActifs.length) return { ok: false, manquants: [], verrousActifs };
   const dossier = join(root, "docs/circle-tasks");
   mkdirImpl(dossier, { recursive: true });
   const enregistrement = { ...faits, at: new Date(now).toISOString() };
@@ -2091,7 +2199,7 @@ function recordRunCli() {
   console.log(`✅ Ronde CIRCLE-TASKS enregistrée comme faite au commit #${state.lastRunCommitCount} — le rappel post-commit repart de zéro à partir de maintenant.`);
 }
 
-function ouvrirCli() {
+async function ouvrirCli() {
   const arg = (nom) => (process.argv.find((a) => a.startsWith(`--${nom}=`)) ?? "").split("=")[1];
   const q1 = arg("q1");
   const faits = {
@@ -2101,7 +2209,20 @@ function ouvrirCli() {
     mode: (arg("mode") ?? "").toUpperCase(),
     modeReponduPar: arg("repondu-par"),
   };
-  const res = ouvrirRonde(faits);
+  // Les verrous sont sondés AVANT l'écriture : une ouverture refusée ne doit rien laisser derrière
+  // elle, sinon la Ronde suivante hériterait d'un laissez-passer qu'on n'a jamais accordé.
+  const verrous = await findVerrousActifs();
+  for (const l of formatVerrousLines(verrous)) console.error(l);
+  const res = ouvrirRonde(faits, { verrousActifs: verrous.actifs });
+  if (!res.ok && res.verrousActifs?.length) {
+    console.error("");
+    console.error(`❌ Ouverture de Ronde REFUSÉE — ${res.verrousActifs.length} verrou(x) de structure actif(s), listé(s) ci-dessus.`);
+    console.error("");
+    console.error("Le commit, lui, n'est JAMAIS bloqué par ces défauts : c'est la Ronde qui refuse de démarrer,");
+    console.error("parce qu'une Ronde lancée sur une carte fausse rend des verdicts faux. Corrige, puis relance `ouvrir`.");
+    process.exitCode = 1;
+    return;
+  }
   if (!res.ok) {
     console.error(`❌ Ouverture refusée — il manque : ${res.manquants.join(", ")}.`);
     console.error("Usage : node scripts/circle-tasks.mjs ouvrir --q1=oui|non [--retour=avant|après] --mode=AUTO|PRIME|GOAT --repondu-par=utilisateur");
@@ -2117,4 +2238,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (process.argv[2] === "record-run") recordRunCli();
   else if (process.argv[2] === "ouvrir") ouvrirCli();
   else main();
+  // `ouvrirCli` est asynchrone depuis le 2026-09-26 (les verrous sondent tool-brain et doc-report
+  // par import dynamique) ; rien n'attend son retour ici, comme pour `main()` — le process se
+  // termine naturellement quand la promesse est résolue, et son code de sortie est posé par
+  // `process.exitCode`, jamais par un `await` qu'il faudrait penser à ajouter.
 }

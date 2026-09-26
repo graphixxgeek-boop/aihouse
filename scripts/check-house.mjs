@@ -7293,6 +7293,84 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LES VERROUS D'OUVERTURE DE RONDE (2026-09-26, tâches #778, #787, #954)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DÉCISION : « Bloquer la Ronde, pas le commit ». Trois garde-fous laissaient la même question
+// ouverte depuis des jours ; il l'a tranchée pour les trois d'un coup. Ces tests vérifient les DEUX
+// sens (bonne pratique BP4) : un verrou doit mordre sur le défaut qu'il vise, et laisser passer le
+// cas propre — et, troisième sens propre à ce mécanisme, un verrou qui NE PEUT PAS mesurer ne doit
+// jamais bloquer, parce qu'un refus qu'on ne sait pas expliquer est un faux positif incorrigible
+// (leçon L30).
+async function testVerrousDOuverture() {
+  const { VERROUS_D_OUVERTURE, findVerrousActifs, formatVerrousLines, ouvrirRonde } = await import('../scripts/circle-tasks.mjs');
+
+  assert.equal(VERROUS_D_OUVERTURE.length, 3, 'exactly the three garde-fous his answer covered — a fourth joins by adding an entry here and nothing else changes (Article 24), so this count moving without a suivi row is the drift worth catching');
+  for (const v of VERROUS_D_OUVERTURE) {
+    assert.ok(v.cle && v.libelle && v.quoiFaire && typeof v.sonde === 'function', `verrou ${v.cle}: every lock must name itself, say what it saw AND say what to do about it — a refusal that does not tell you how to lift it is exactly the guard people learn to route around`);
+  }
+
+  // SENS 1 — chaque verrou MORD sur son défaut, et nomme le coupable plutôt qu'un simple compte.
+  const mord = await findVerrousActifs(VERROUS_D_OUVERTURE, {
+    'numerotation-du-suivi': { findTaskNumberIssuesImpl: () => [{ type: 'duplicate', number: 940, file: 'a.md', firstSeenIn: 'b.md' }] },
+    'outil-muet-au-compteur': { rapportDesMuetsImpl: () => ({ silenceMesurable: true, muetsAuCompteur: ['un-outil'] }) },
+    'registre-hors-ronde': { existingPathsImpl: ['docs/tout-neuf/index.md'], declaresImpl: [] },
+  });
+  assert.equal(mord.actifs.length, 3, 'all three locks must bite when their own defect is present — a lock that has never bitten proves nothing (BP4)');
+  const texteMord = formatVerrousLines(mord).join('\n');
+  assert.match(texteMord, /n°940 en double/, 'the duplicate task number is named, never just counted: "1 défaut" cannot be acted on, "n°940 en double" can');
+  assert.match(texteMord, /un-outil/, 'the mute tool is named too');
+  assert.match(texteMord, /tout-neuf/, 'and so is the registry nobody attached to the Ronde — the exact hole he described: a report created, asked for at the Ronde, never written into the process');
+
+  // SENS 2 — rien ne mord quand tout est propre, ET la sortie est VIDE (leçon L6 : une ligne
+  // « 0 défaut » répétée à chaque ouverture est le bruit qui rend un contrôle invisible).
+  const propre = await findVerrousActifs(VERROUS_D_OUVERTURE, {
+    'numerotation-du-suivi': { findTaskNumberIssuesImpl: () => [] },
+    'outil-muet-au-compteur': { rapportDesMuetsImpl: () => ({ silenceMesurable: true, muetsAuCompteur: [] }) },
+    'registre-hors-ronde': { existingPathsImpl: ['docs/argus/index.md'], declaresImpl: [] },
+  });
+  assert.deepEqual(propre.actifs, [], 'a clean repository must open its Ronde without argument — a guard that fires on a correct state teaches people to ignore it (leçon L4)');
+  assert.deepEqual(formatVerrousLines(propre), [], 'and it must print absolutely nothing, not a reassuring green line');
+
+  // SENS 3 — NON MESURÉ n'est jamais un vert, et ne bloque jamais non plus.
+  const aveugle = await findVerrousActifs(VERROUS_D_OUVERTURE, {
+    'numerotation-du-suivi': { findTaskNumberIssuesImpl: () => [] },
+    'outil-muet-au-compteur': { rapportDesMuetsImpl: () => ({ silenceMesurable: false, pourquoiSilenceNonMesure: 'aucun lecteur de source' }) },
+    'registre-hors-ronde': { existingPathsImpl: [], declaresImpl: [] },
+  });
+  assert.equal(aveugle.actifs.length, 0, 'an unmeasurable lock must NOT block: refusing a Ronde over a defect nobody can name is the one false positive that cannot be corrected (leçon L30)');
+  assert.equal(aveugle.nonMesures.length, 1, 'but it must be counted as unmeasured, never folded into the clean ones');
+  assert.match(formatVerrousLines(aveugle)[0], /PAS MESURÉ/, 'and said out loud — "nothing found" and "could not look" must never read the same (leçons L5/L11)');
+  assert.match(formatVerrousLines(aveugle)[0], /aucun lecteur de source/, 'with the real reason carried through, not a generic shrug');
+  // Une sonde qui EXPLOSE doit se comporter comme une sonde aveugle, jamais faire tomber l'ouverture.
+  const casse = await findVerrousActifs([{ cle: 'x', libelle: 'x', quoiFaire: 'x', sonde: () => { throw new Error('disque illisible'); } }]);
+  assert.equal(casse.actifs.length, 0, 'a probe that throws must not block the Ronde either');
+  assert.match(casse.nonMesures[0].pourquoi, /disque illisible/, 'and the crash reason is reported rather than swallowed — a silent catch would turn a broken probe into a green one');
+
+  // LE REFUS LUI-MÊME — et surtout : une ouverture refusée n'écrit RIEN.
+  const faits = { changementModelePosee: true, changementModeleReponse: 'non', mode: 'AUTO', modeReponduPar: 'utilisateur' };
+  let aEcrit = false;
+  const refus = ouvrirRonde(faits, { writeFileImpl: () => { aEcrit = true; }, mkdirImpl: () => {}, verrousActifs: mord.actifs });
+  assert.equal(refus.ok, false, 'a Ronde whose structural locks are active must not open');
+  assert.equal(aEcrit, false, 'and nothing may be written on the way out: a half-written opening would become a laissez-passer nobody ever granted');
+  assert.equal(refus.verrousActifs.length, 3, 'the refusal carries the locks back so the CLI can print what to fix, never a bare "refused"');
+  const passe = ouvrirRonde(faits, { writeFileImpl: () => { aEcrit = true; }, mkdirImpl: () => {}, verrousActifs: [] });
+  assert.equal(passe.ok, true, 'and with no active lock the opening proceeds exactly as before — the mechanism adds a condition, it never changes the normal path');
+  assert.equal(aEcrit, true, 'which means it really does write the opening record');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25 : un outil qui n'a jamais tourné pour de vrai est
+  // une intention). Aujourd'hui les trois verrous sont propres ; le jour où l'un mord, c'est ce
+  // test qui le dira avant qu'une Ronde ne parte sur une carte fausse.
+  const reel = await findVerrousActifs();
+  assert.deepEqual(reel.nonMesures, [], 'against the real repository the three probes must all be able to MEASURE — an unmeasurable probe here means the wiring broke, and it would pass silently');
+  assert.deepEqual(reel.actifs.map((a) => a.cle), [], 'and all three must be clean right now: a real active lock is a real refusal to open the next Ronde, so it belongs in the suivi, never only in a test run');
+
+  console.log('Passed: les 3 verrous d\'ouverture de Ronde (numérotation du suivi #787, outil muet au compteur #778, registre hors Ronde #954) appliquent sa décision « bloquer la Ronde, pas le commit » — chacun mord sur son propre défaut en NOMMANT le coupable, se tait complètement quand le dépôt est propre, refuse de bloquer (tout en le disant fort) quand il ne peut pas mesurer ou que sa sonde explose, et une ouverture refusée n\'écrit rien du tout. Vérifié aussi en direct contre le vrai dépôt : trois sondes mesurables, zéro verrou actif.');
+}
+
+await testVerrousDOuverture();
+
+// ————————————————————————————————————————————————————————————————————————
 // THE-EQUALIZER (2026-09-23) — le rassembleur « tout est-il à niveau ? »
 // ————————————————————————————————————————————————————————————————————————
 //

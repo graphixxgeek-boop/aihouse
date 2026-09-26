@@ -163,6 +163,7 @@ export function verifyRondeProcess({
   hasFreshReportFileImpl = hasFreshReportFile,
   findOrphanReportFilesImpl = findOrphanReportFiles,
   findRegistriesMissingFromCircleImpl = findRegistriesMissingFromCircle,
+  registresDeclares = REGISTRIES,
   existingPaths,
   shImpl = sh,
   loadLastRunImpl = loadLastRun,
@@ -408,8 +409,14 @@ export function verifyRondeProcess({
   if (orphans.length) add("orphan-reports", `${orphans.length} registre(s) avec des rapports jamais indexés : ${orphans.map((o) => o.slug).join(", ")}.`);
 
   // 8. findRegistriesMissingFromCircle() — aucun registre orphelin.
+  // LES REGISTRES DÉCLARÉS SONT PASSÉS (2026-09-26) : sans `declares`, ce contrôle ne confrontait
+  // à la Ronde que les dossiers trouvés SUR LE DISQUE — trois registres déclarés par doc-report
+  // vivent à un chemin que ce balayage ne peut pas reconnaître, et leur vert ne disait pas
+  // « couverts » mais « pas regardés ». Même angle mort que celui corrigé côté circle-tasks.mjs
+  // le même jour (tâche #954) : il tenait ici aussi, et le corriger d'un seul côté l'aurait laissé
+  // vivant dans le contrôleur, c'est-à-dire chez celui qui est censé le voir.
   const realExistingPaths = existingPaths ?? walkDocsPaths("docs", "");
-  const missingFromCircle = findRegistriesMissingFromCircleImpl(realExistingPaths);
+  const missingFromCircle = findRegistriesMissingFromCircleImpl(realExistingPaths, undefined, { declares: registresDeclares });
   if (missingFromCircle.length) add("registries-missing-from-circle", `${missingFromCircle.length} registre(s) réel(s) sans entrée CIRCLE_ITEMS ni exclusion documentée : ${missingFromCircle.join(", ")}.`);
 
   // 8bis. LES 7 GARDIENS SACRÉS — relayés, jamais relancés (cf. bloc dédié plus bas).

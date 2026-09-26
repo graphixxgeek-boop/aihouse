@@ -489,7 +489,7 @@ l'outil existe et fonctionne mais n'est encore appelé par aucun script automati
 l'agent qui pilote qui doit l'invoquer lui-même, à la fin de chaque Ronde, en lui passant les
 faits réels de la Ronde qu'il vient de mener).
 
-=====================================================================
+
 PARTIE 9 — MISE À JOUR DU 2026-09-22 (SUITE) : deux ajouts supplémentaires le même soir
 =====================================================================
 1. **`verifyHyperScanProcess({...})`** — étend la même discipline honnête à HYPER-SCAN-CHECKPOINT
@@ -719,6 +719,92 @@ première application de la règle d'écriture posée en tête de cette Partie 8
                                               régénéré à chaque Ronde, jamais committé — le registre
                                               durable, lui, vit dans les artefacts datés de chaque
                                               item (recordCircleItemReport → docs/<outil>/).
+
+=====================================================================
+PARTIE 8bis — MISE À JOUR DU 2026-09-26 : LES TROIS VERROUS DE STRUCTURE
+=====================================================================
+
+SA DÉCISION, EN QUATRE MOTS : « Bloquer la Ronde, pas le commit ».
+
+Trois garde-fous du paysage posaient depuis des jours exactement la même question ouverte —
+faut-il SIGNALER ou faut-il BLOQUER ? — et chacun attendait sa réponse dans son coin. Il les a
+tranchés tous les trois d'un coup, et la réponse n'était ni l'une ni l'autre des deux options
+telles qu'elles étaient posées : ce n'est pas le commit qu'on bloque, c'est la Ronde.
+
+CE QUE SON ARBITRAGE RÈGLE, et c'est plus fin que les deux options d'origine. Bloquer le COMMIT
+punit un travail qui n'a le plus souvent aucun rapport avec le défaut — et un garde-fou qu'on subit
+sur un sujet étranger, on apprend à le contourner (c'est le raisonnement même de l'Article 28 pour
+god-of-all-process). Se contenter de SIGNALER ne suffisait pas non plus : la preuve tient dans les
+faits, la numérotation du suivi a été cassée sept fois en une matinée alors qu'elle était signalée
+à chaque commit. Bloquer l'OUVERTURE d'une Ronde tombe au moment exact où le défaut compte : une
+Ronde est précisément la revue qui devrait voir ces trois choses-là.
+
+POURQUOI CE MOMENT-LÀ EST LE BON, en une phrase : une Ronde lancée avec un registre hors carte, un
+compteur d'usage faux ou un suivi mal numéroté ne travaille pas sur le vrai dépôt — elle travaille
+sur une image fausse de lui, et rend des verdicts en conséquence. Ce sont trois défauts de la CARTE,
+jamais du terrain, et c'est ce qui les distingue de tout ce qu'une Ronde peut légitimement trouver
+en chemin.
+
+---------------------------------------------------------------------
+LES TROIS VERROUS
+---------------------------------------------------------------------
+
+  1. numerotation-du-suivi      — un numéro de tâche en double ou non croissant dans docs/suivi/
+                                  (tâche #787). Un registre mal numéroté empoisonne toutes les
+                                  lectures qui s'appuient dessus, et une Ronde est une grosse
+                                  lecture.
+  2. outil-muet-au-compteur     — un outil qui a une ligne de commande et n'enregistre jamais son
+                                  passage (tâche #778). Son zéro d'usage ne mesure pas son
+                                  inactivité, il mesure le silence du compteur — et la Ronde lit ce
+                                  compteur pour juger quels outils ne servent à rien.
+  3. registre-hors-ronde        — un registre réel sans item de Ronde ni couverture automatique
+                                  documentée (tâche #954). C'est le trou qu'il avait nommé lui-même :
+                                  « si un rapport est créé, que je demande qu'il soit dans circle,
+                                  mais que ce n'est pas écrit dans les process, la règle va se
+                                  perdre ».
+
+---------------------------------------------------------------------
+CE QUI SE PASSE CONCRÈTEMENT
+---------------------------------------------------------------------
+
+`node scripts/circle-tasks.mjs ouvrir ...` sonde les trois verrous AVANT d'écrire quoi que ce soit.
+Si l'un mord, l'ouverture est REFUSÉE, rien n'est écrit (une ouverture à moitié écrite deviendrait
+un laissez-passer que personne n'a accordé), et chaque verrou actif imprime deux lignes : ce qu'il a
+vu, en NOMMANT le coupable, puis ce qu'il faut faire pour le lever. Un refus qui ne dit pas comment
+le lever est exactement le garde-fou qu'on apprend à contourner.
+
+LE COMMIT N'EST JAMAIS BLOQUÉ par ces trois défauts. Le rappel post-commit continue de les signaler
+comme avant — signaler et bloquer ne s'excluent pas, ils tombent à deux moments différents.
+
+LE MODE AUTONOME N'EST PAS CONCERNÉ, et sans qu'aucune exemption n'ait eu à être écrite : la nuit,
+personne ne passe par `ouvrir` (la Ronde autonome va directement à `record-run --autonome`, cf.
+Partie 8). Sa borne — « aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode
+autonome » — tient donc par construction, jamais par une dispense qu'on pourrait oublier de
+maintenir en la déplaçant un jour.
+
+UN VERROU QUI NE PEUT PAS MESURER NE BLOQUE JAMAIS. Une sonde qui échoue, ou qui rend « pas
+mesurable », affiche « PAS MESURÉ » avec sa raison et laisse passer : refuser une Ronde sur un
+défaut qu'on ne sait pas nommer serait le pire des faux positifs, celui que personne ne peut
+corriger (leçon L30). Et un non-mesuré n'est jamais confondu avec un vert (leçons L5/L11).
+
+QUAND TOUT EST PROPRE, RIEN NE S'AFFICHE. Pas de ligne « 0 défaut » : c'est ce bruit-là qui rend un
+contrôle invisible à force d'être répété (leçon L6).
+
+---------------------------------------------------------------------
+AJOUTER UN QUATRIÈME VERROU
+---------------------------------------------------------------------
+
+Une entrée de plus dans `VERROUS_D_OUVERTURE` (scripts/circle-tasks.mjs), et rien d'autre ne change
+— ni `ouvrirRonde()`, ni le CLI, ni les messages (Article 24 : un nouveau venu hérite de tout ce que
+l'équipe sait déjà faire). Chaque entrée doit porter QUATRE choses : sa clé, ce qu'elle surveille,
+QUOI FAIRE pour la lever, et une sonde qui rend soit `{ mesurable: true, defauts: [...] }`, soit
+`{ mesurable: false, pourquoi: "..." }`. La sonde reçoit ses dépendances en paramètre, pour que le
+test puisse poser le cas dans les deux sens (bonne pratique BP4).
+
+CORRECTION DU MÊME JOUR, côté contrôleur : `verifyRondeProcess()` (circle-process-guardian.mjs)
+appelait `findRegistriesMissingFromCircle()` SANS lui passer les registres déclarés — il portait
+donc le même angle mort que celui corrigé côté circle-tasks.mjs la veille (tâche #954), et le
+corriger d'un seul côté l'aurait laissé vivant chez celui qui est précisément censé le voir.
 
 =====================================================================
 PARTIE 9 — MISE À JOUR DU 2026-09-23 : L'ORDRE DE FIN DE RONDE, REFONDU
