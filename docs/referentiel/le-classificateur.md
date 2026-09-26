@@ -140,3 +140,42 @@ liste de douze.
 `gemini-key-health`, `memento-weight` et `serie-temporelle`, qui s'en servent pour calculer un
 CHEMIN. Un garde qui accuse à tort cesse d'être lu (leçon L4) — et celui-ci aurait répondu faux à
 la question même qui l'a fait naître.
+
+## Les trois arbitrages du 2026-09-26, tranchés en fenêtre dédiée
+
+**1. LE-COORDINATEUR n'est plus Agent Cadre.** Sa question : *« est-ce que le coordinateur a
+vraiment sa place dans cette catégorie ? est-ce qu'il peut convoquer ? »*. La mesure a répondu
+avant l'opinion : `convoquer()` et `cloreConvocation()` n'existent QUE dans `cassandra-rh.mjs`, et
+LE-COORDINATEUR n'a rien d'équivalent. Or le poste d'Agent Cadre promet littéralement « le droit de
+convoquer les autres et de rendre un verdict sur eux ». Un rang porté sans son pouvoir est un titre
+décerné d'office, ce que ce projet refuse pour tous les autres rangs. **Il reste un Agent Cadre,
+CASSANDRA-RH.**
+
+**Et l'agent s'est trompé une seconde fois dans le même geste, corrigé avant livraison** : ayant
+fait descendre LE-COORDINATEUR, il l'a d'abord placé en Membre premium. La table maîtresse écrivait
+« Membre certifié (classique) » depuis le 2026-09-21, et il n'a ni fiche ni blueprint par décision
+explicite de la charte — la définition exacte du rang classique. Le registre disait la vérité ;
+c'est la mémoire de l'agent qui inventait (leçon L24).
+
+**2. La famille « Exceptionnel » est dissoute.** Ses trois soupçons étaient fondés, chacun
+vérifiable :
+- **HYPER-SCAN-CHECKPOINT ne peut pas être Gardien sacré** — le critère de l'Article 20 est DOUBLE
+  (vrai scan de qualité **et** gratuit à chaque commit), et l'Article 21 dit qu'il « ne se déclenche
+  jamais automatiquement, jamais en continu ». Il échoue la seconde moitié par conception, comme
+  THE-FINAL-JUDGE, et l'Article 20 déclare déjà cette exclusion structurelle. Il rejoint **La
+  Gouvernance Royale** : il orchestre les autres, il ne scanne pas lui-même.
+- **INES-official n'est pas exceptionnelle** — son propre en-tête dit « déclenchement PÉRIODIQUE via
+  la Ronde CIRCLE-TASKS, jamais seulement sur demande », et précise que c'est l'utilisateur qui
+  avait corrigé l'agent sur ce point. Une famille nommée « Exceptionnel » contredisait son
+  calibrage. Elle rejoint **Les Anges de la coordination**.
+- **ALWAYS-NEW-CODE est bien l'épreuve de la page blanche par essence** — l'Article 23 le dit mot
+  pour mot. La famille s'appelait « page blanche » et ne le contenait pas.
+
+À deux membres, elle était par ailleurs sous la taille minimale que l'outillage utilise déjà
+(`TAILLE_MIN_FAMILLE = 3`).
+
+**3. La Suite Tarantino fait bien partie de l'Agence, et son principe s'exporte.** « Hors Agence »
+ne désigne QUE ce qui LANCE le produit (`run-framework`, `sauvegarde-projet`…), jamais ce qui le
+JUGE. EL-PROFESSOR note la fidélité à la charte : c'est un jugement de qualité. Et l'export suit la
+règle déjà en place des deux documents par outil — **le blueprint générique part, l'instanciation
+(Lia, Noé, les jauges) reste**.

@@ -340,3 +340,19 @@ l'équipe, supervise le badge, ne réécrit jamais ce document) — la mise à j
 à la charge de l'agent qui pilote, au même titre que la table maîtresse de
 `docs/regles-de-travail.md` §7ter (Article 13 — un nouvel outil qui rejoint l'agence sans mise à
 jour de ce document est une dette documentaire, pas un détail reportable).
+
+## Décisions du 2026-09-26 (soir) — rangs, familles et un rang rendu
+
+*(Tranchées par l'utilisateur en fenêtre dédiée, après mesure. Détail complet et preuves :
+`docs/referentiel/le-classificateur.md`.)*
+
+1. **Un seul Agent Cadre : CASSANDRA-RH.** LE-COORDINATEUR redescend à Membre classique — ce que la
+   table maîtresse écrivait déjà. Raison mesurée : `convoquer()` n'existe que chez CASSANDRA, et le
+   poste de Cadre est défini par ce pouvoir.
+2. **La famille « Exceptionnel » est dissoute** : HYPER-SCAN-CHECKPOINT → La Gouvernance Royale,
+   INES-official → Les Anges de la coordination. Son nom promettait « page blanche » alors que le
+   porteur de la page blanche (ALWAYS-NEW-CODE, Article 23) vit ailleurs.
+3. **Le rang « Membre » devient « Membre premium » 🥇**, et une famille « Hors Agence » 🚧 rejoint la
+   liste, tout en bas de l'échelle des rangs, sans évolution possible et sans entrée possible.
+4. **La Suite Tarantino reste dans l'Agence** et son principe reste exportable : « hors Agence »
+   qualifie ce qui lance le produit, jamais ce qui le juge.

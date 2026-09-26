@@ -9652,7 +9652,13 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(org.sansCategorie, [], 'checked live against the real master table: no certified member may be left without a suite — an org chart that silently loses people is worth nothing, and this is the exact real gap (CIRCLE-TASKS, tool-brain, find-deep-booster) found the night this was built');
   assert.equal(org.effectifs.certifiesTotal, org.effectifs.cadres + org.effectifs.gardiens + org.effectifs.membres, 'every certified member must be placed in exactly one rank — the totals must add up, never a member counted twice nor dropped between two ranks');
   assert.equal(org.effectifs.gardiens, 7, 'the SEVEN Gardiens sacrés must be derived from GARDIEN_DOMAINS, their real mechanical source of truth, never from a second hand-kept list (Article 24) — SAFE-EXPORT joined on 2026-09-22 and this count moved on its own, which is exactly what deriving rather than listing buys');
-  assert.ok(org.cadres.includes('CASSANDRA-RH') && org.cadres.includes('LE-COORDINATEUR'), 'both real Agents Cadre must appear as such — the user placed LE-COORDINATEUR there alongside CASSANDRA, and the code already carried it');
+  // LE-COORDINATEUR A QUITTÉ LE RANG DE CADRE le 2026-09-26, sur sa décision, et l'assertion garde
+  // la RAISON plutôt que le fait : le poste d'Agent Cadre promet « le droit de convoquer les autres
+  // et de rendre un verdict sur eux », et la mesure a montré que convoquer()/cloreConvocation()
+  // n'existent que dans cassandra-rh.mjs. LE-COORDINATEUR propose des packs ; il ne convoque
+  // personne. Le rang se MÉRITE, et un rang porté sans son pouvoir est un titre décerné d'office.
+  assert.ok(org.cadres.includes('CASSANDRA-RH'), 'CASSANDRA-RH is the Agent Cadre, and the rank is earned rather than granted: she is the only tool in the repository that can convoquer() and cloreConvocation()');
+  assert.ok(!org.cadres.includes('LE-COORDINATEUR'), 'LE-COORDINATEUR stepped down on 2026-09-26 after the measurement: it proposes packs, it convokes nobody, and a rank whose defining power a tool does not hold is a title awarded by default — exactly what this project refuses for every other rank');
   assert.ok(org.socle.some((n) => n.startsWith('check-house')), 'check-house must appear at the socle, visible at the top rather than silently absent from every rank — the user\'s explicit choice, so a reader never mistakes "outside the ranks" for "counts less"');
 
   // Le défaut réel trouvé à la toute première lecture du rendu : un même outil placé deux fois.
@@ -10428,7 +10434,13 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   const teamSize = teamSizeSnapshot(roster);
   assert.equal(teamSize.total, 4, 'the headcount must be a plain honest count, never a judged "too many/too few" verdict');
-  assert.deepEqual(teamSize.byCategory, { 'Gardien sacré du code': 2, '(catégorie non répertoriée)': 1, 'Agent Cadre': 1 }, 'members must be grouped by their real AGENT_CATEGORIES label, with an honest fallback bucket for a genuine gap in that table — never silently dropped');
+  // « Membre classique » depuis le 2026-09-26, et ce n'est PAS le rang que l'agent avait choisi en
+  // premier : ayant fait descendre LE-COORDINATEUR du rang de Cadre, il l'avait mis en Membre
+  // premium, soit une seconde sur-promotion du même geste. La table maîtresse écrivait déjà
+  // « Membre certifié (classique) » depuis le 2026-09-21, et il n'a ni fiche ni blueprint par
+  // décision explicite de la charte — la définition exacte du rang classique. Le registre disait
+  // la vérité ; c'est la mémoire de l'agent qui inventait (leçon L24 : ouvrir avant d'affirmer).
+  assert.deepEqual(teamSize.byCategory, { 'Gardien sacré du code': 2, '(catégorie non répertoriée)': 1, 'Membre classique': 1 }, 'members must be grouped by their real AGENT_CATEGORIES label, with an honest fallback bucket for a genuine gap in that table — never silently dropped');
 
   // toolsToReconsider() — combine deux signaux déjà calculés ailleurs, jamais un troisième calcul
   // RH inventé.

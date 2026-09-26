@@ -1,6 +1,6 @@
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 02:59 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 03:18 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -98,7 +98,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 |---|---|---|---|
 | type | 1 | 0=crochet · 1=filet-de-securite · 2=commande-documentee · 3=commande-sans-fiche · 4=bibliotheque-partagee · 5=bibliotheque-solitaire · 6=infrastructure-shell · 7=execution-directe-non-documentee | 🪝 crochet · 🕸️ filet-de-securite · ⌨️ commande-documentee · ⌨️❓ commande-sans-fiche · 📚 bibliotheque-partagee · 📕 bibliotheque-solitaire · 🐚 infrastructure-shell · 🚧 execution-directe-non-documentee |
 | rang | 2 | 0=Socle · 1=Agent Cadre · 2=Gardien sacré du code · 3=Membre classique · 4=Membre premium · 5=Postulant · 6=Sans fiche · 7=Sans porte · 8=Émetteur de rapport · 9=Hors Agence | 🧱 Socle · 🎖️ Agent Cadre · 🛡️ Gardien sacré du code · 🎖️ Membre classique · 🥇 Membre premium · 🚪 Postulant · 📄 Sans fiche · 🧱 Sans porte · 📝 Émetteur de rapport · 🚧 Hors Agence |
-| famille | 3 | 0=(f) ✨ Exceptionnel (page blanche / audit lourd) · 1=(f) 🎬 La Suite Tarantino - Simulation & qualité narrative · 2=(f) 👑 La Gouvernance Royale · 3=(f) 👼 Les Anges de la coordination · 4=(f) 📜 Les Prophètes - Dette & Structure du code · 5=(f) 🕵️ Les Agents Externes - Audit indépendant · 6=(f) 🚀 Les Boosters de Navigation · 7=(f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage · 8=(f) 🛡️ Les Gardiens Sacrés du Code | ✨ · 🎬 · 👑 · 👼 · 📜 · 🕵️ · 🚀 · 🚧 · 🛡️ |
+| famille | 3 | 0=(f) 🎬 La Suite Tarantino - Simulation & qualité narrative · 1=(f) 👑 La Gouvernance Royale · 2=(f) 👼 Les Anges de la coordination · 3=(f) 📜 Les Prophètes - Dette & Structure du code · 4=(f) 🕵️ Les Agents Externes - Audit indépendant · 5=(f) 🚀 Les Boosters de Navigation · 6=(f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage · 7=(f) 🛡️ Les Gardiens Sacrés du Code | 🎬 · 👑 · 👼 · 📜 · 🕵️ · 🚀 · 🚧 · 🛡️ |
 | classes | 4 | bit 0=scanne-le-depot · bit 1=rend-du-html · bit 2=tient-un-registre · bit 3=coute-des-appels-api · bit 4=porte-un-garde-fou-devolutivite · bit 5=declare-sa-fiabilite · bit 6=conclut-en-plan-daction · bit 7=compte-son-usage · bit 8=refuse-de-mesurer | 🔎 scanne-le-depot · 📄 rend-du-html · 🗃️ tient-un-registre · 💳 coute-des-appels-api · 🌱 porte-un-garde-fou-devolutivite · ⚠️ declare-sa-fiabilite · 🎯 conclut-en-plan-daction · 🪞 compte-son-usage · 🧭 refuse-de-mesurer |
 
 > **La colonne de droite est la traduction demandée le 2026-09-26.** Elle n'est recopiée nulle part : l'icône d'une famille et celle d'une classe se LISENT dans le nom que l'utilisateur leur a donné le même jour, et seuls les types ont reçu la leur ici — parce qu'un type est un constat de forme, jamais un nom choisi. Une série d'icônes se reconnaît sans décoder ; un indice se trie, se cherche et se compare. Les deux disent la même chose et voyagent ensemble.
@@ -109,40 +109,40 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 
 | Fichier | Famille | Indice | En icônes |
 |---|---|---|---|
-| `abraham-les-references.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.4.dz` | ⌨️ 🥇 📜 🔎📄🗃️🌱⚠️🎯🪞🧭 |
-| `agent-des-noms.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.4.dh` | ⌨️ 🥇 📜 🔎🗃️⚠️🎯🪞🧭 |
-| `agent-du-temps.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.dg` | ⌨️ 🥇 👑 🗃️⚠️🎯🪞🧭 |
-| `angel-of-ia-process.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.cl` | ⌨️ 🥇 👼 🔎🗃️🎯🪞🧭 |
-| `check-gemini-quota.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.4g` | ⌨️ 🥇 👑 ⚠️🪞 |
-| `check-level-target.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.6o` | ⌨️ 🥇 👑 🌱⚠️🎯🪞 |
-| `check-spirit.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.1.9x` | ⌨️ 🥇 🎬 🔎🗃️⚠️🎯🧭 |
-| `check-suivi-fidelity.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.35` | ⌨️ 🥇 👼 🔎🌱⚠️🎯 |
-| `check-tasks-details.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.dz` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🎯🪞🧭 |
-| `circle-process-guardian.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.dt` | ⌨️ 🥇 👼 🔎🌱⚠️🎯🪞🧭 |
-| `circle-tasks.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.c7` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🪞🧭 |
-| `data-archangel.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.cl` | ⌨️ 🥇 👼 🔎🗃️🎯🪞🧭 |
-| `ecotoken.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.dh` | ⌨️ 🥇 👑 🔎🗃️⚠️🎯🪞🧭 |
-| `el-professor.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.1.dz` | ⌨️ 🥇 🎬 🔎📄🗃️🌱⚠️🎯🪞🧭 |
-| `find-booster.mjs` | (f) 🚀 Les Boosters de Navigation | `2.4.6.4g` | ⌨️ 🥇 🚀 ⚠️🪞 |
-| `god-of-all-process.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.c7` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🪞🧭 |
-| `hyper-scan-checkpoint.mjs` | (f) ✨ Exceptionnel (page blanche / audit lourd) | `2.4.0.6d` | ⌨️ 🥇 ✨ 🔎🗃️⚠️🎯🪞 |
-| `ines-official.mjs` | (f) ✨ Exceptionnel (page blanche / audit lourd) | `2.4.0.3p` | ⌨️ 🥇 ✨ 🔎🗃️🪞 |
-| `integration-outil.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `4.4.4.bl` | 📚 🥇 📜 🔎⚠️🪞🧭 |
-| `le-classificateur.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.dr` | ⌨️ 🥇 👑 🔎📄🗃️💳⚠️🎯🪞🧭 |
-| `memento.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `4.4.1.ck` | 📚 🥇 🎬 🗃️🎯🪞🧭 |
-| `moise-tables-de-loi.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.4.dx` | ⌨️ 🥇 📜 🔎🗃️🌱⚠️🎯🪞🧭 |
-| `objectifs-vs-resultats.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.cg` | ⌨️ 🥇 👑 🎯🪞🧭 |
-| `process-simulation-guardian.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.1.dt` | ⌨️ 🥇 🎬 🔎🌱⚠️🎯🪞🧭 |
-| `pure-gold-unity.mjs` | (f) 👼 Les Anges de la coordination | `4.4.3.br` | 📚 🥇 👼 🔎📄🗃️⚠️🪞🧭 |
-| `smart-conso-api.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.6c` | ⌨️ 🥇 👑 🗃️⚠️🎯🪞 |
-| `smart-conso-token.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.dg` | ⌨️ 🥇 👑 🗃️⚠️🎯🪞🧭 |
-| `the-deep-reader.mjs` | (f) 🕵️ Les Agents Externes - Audit indépendant | `5.4.5.2` | 📕 🥇 🕵️ 📄 |
-| `the-equalizer.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.4.dd` | ⌨️ 🥇 📜 🔎⚠️🎯🪞🧭 |
-| `the-final-judge.mjs` | (f) 🕵️ Les Agents Externes - Audit indépendant | `5.4.5.2` | 📕 🥇 🕵️ 📄 |
-| `the-king.mjs` | (f) 👑 La Gouvernance Royale | `2.4.2.dc` | ⌨️ 🥇 👑 ⚠️🎯🪞🧭 |
-| `the-screener-capture.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.1.4m` | ⌨️ 🥇 🎬 📄🗃️⚠️🪞 |
-| `tool-brain.mjs` | (f) 👼 Les Anges de la coordination | `2.4.3.dd` | ⌨️ 🥇 👼 🔎⚠️🎯🪞🧭 |
-| `tool-learning.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.4.dh` | ⌨️ 🥇 📜 🔎🗃️⚠️🎯🪞🧭 |
+| `abraham-les-references.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dz` | ⌨️ 🥇 📜 🔎📄🗃️🌱⚠️🎯🪞🧭 |
+| `agent-des-noms.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dh` | ⌨️ 🥇 📜 🔎🗃️⚠️🎯🪞🧭 |
+| `agent-du-temps.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dg` | ⌨️ 🥇 👑 🗃️⚠️🎯🪞🧭 |
+| `angel-of-ia-process.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.cl` | ⌨️ 🥇 👼 🔎🗃️🎯🪞🧭 |
+| `check-gemini-quota.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.4g` | ⌨️ 🥇 👑 ⚠️🪞 |
+| `check-level-target.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.6o` | ⌨️ 🥇 👑 🌱⚠️🎯🪞 |
+| `check-spirit.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.9x` | ⌨️ 🥇 🎬 🔎🗃️⚠️🎯🧭 |
+| `check-suivi-fidelity.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.35` | ⌨️ 🥇 👼 🔎🌱⚠️🎯 |
+| `check-tasks-details.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dz` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🎯🪞🧭 |
+| `circle-process-guardian.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dt` | ⌨️ 🥇 👼 🔎🌱⚠️🎯🪞🧭 |
+| `circle-tasks.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.c7` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🪞🧭 |
+| `data-archangel.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.cl` | ⌨️ 🥇 👼 🔎🗃️🎯🪞🧭 |
+| `ecotoken.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dh` | ⌨️ 🥇 👑 🔎🗃️⚠️🎯🪞🧭 |
+| `el-professor.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.dz` | ⌨️ 🥇 🎬 🔎📄🗃️🌱⚠️🎯🪞🧭 |
+| `find-booster.mjs` | (f) 🚀 Les Boosters de Navigation | `2.4.5.4g` | ⌨️ 🥇 🚀 ⚠️🪞 |
+| `god-of-all-process.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.c7` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🪞🧭 |
+| `hyper-scan-checkpoint.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.6d` | ⌨️ 🥇 👑 🔎🗃️⚠️🎯🪞 |
+| `ines-official.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.3p` | ⌨️ 🥇 👼 🔎🗃️🪞 |
+| `integration-outil.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `4.4.3.bl` | 📚 🥇 📜 🔎⚠️🪞🧭 |
+| `le-classificateur.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dr` | ⌨️ 🥇 👑 🔎📄🗃️💳⚠️🎯🪞🧭 |
+| `memento.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `4.4.0.ck` | 📚 🥇 🎬 🗃️🎯🪞🧭 |
+| `moise-tables-de-loi.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dx` | ⌨️ 🥇 📜 🔎🗃️🌱⚠️🎯🪞🧭 |
+| `objectifs-vs-resultats.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.cg` | ⌨️ 🥇 👑 🎯🪞🧭 |
+| `process-simulation-guardian.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.dt` | ⌨️ 🥇 🎬 🔎🌱⚠️🎯🪞🧭 |
+| `pure-gold-unity.mjs` | (f) 👼 Les Anges de la coordination | `4.4.2.br` | 📚 🥇 👼 🔎📄🗃️⚠️🪞🧭 |
+| `smart-conso-api.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.6c` | ⌨️ 🥇 👑 🗃️⚠️🎯🪞 |
+| `smart-conso-token.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dg` | ⌨️ 🥇 👑 🗃️⚠️🎯🪞🧭 |
+| `the-deep-reader.mjs` | (f) 🕵️ Les Agents Externes - Audit indépendant | `5.4.4.2` | 📕 🥇 🕵️ 📄 |
+| `the-equalizer.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dd` | ⌨️ 🥇 📜 🔎⚠️🎯🪞🧭 |
+| `the-final-judge.mjs` | (f) 🕵️ Les Agents Externes - Audit indépendant | `5.4.4.2` | 📕 🥇 🕵️ 📄 |
+| `the-king.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dc` | ⌨️ 🥇 👑 ⚠️🎯🪞🧭 |
+| `the-screener-capture.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.4m` | ⌨️ 🥇 🎬 📄🗃️⚠️🪞 |
+| `tool-brain.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dd` | ⌨️ 🥇 👼 🔎⚠️🎯🪞🧭 |
+| `tool-learning.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dh` | ⌨️ 🥇 📜 🔎🗃️⚠️🎯🪞🧭 |
 
 ### 🧱 Socle — 23
 
@@ -172,53 +172,47 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `simulation-visiteur.mjs` | — | `5.0.-.0` | 📕 🧱 · — |
 | `tasks-process-guardian.mjs` | — | `5.0.-.4g` | 📕 🧱 · ⚠️🪞 |
 
-### 🎖️ Membre classique — 13
+### 🎖️ Membre classique — 14
 
 | Fichier | Famille | Indice | En icônes |
 |---|---|---|---|
-| `check-profil-utilisateur.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.2p` | ⌨️ 🎖️ 👼 🔎⚠️🎯 |
-| `criticite.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.7k` | ⌨️ 🎖️ 👼 🌱🧭 |
-| `doc-report.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.6v` | ⌨️ 🎖️ 👼 🔎📄🗃️🌱⚠️🎯🪞 |
-| `find-brain.mjs` | (f) 🚀 Les Boosters de Navigation | `2.3.6.4g` | ⌨️ 🎖️ 🚀 ⚠️🪞 |
-| `kpi-report.mjs` | (f) 👑 La Gouvernance Royale | `2.3.2.dj` | ⌨️ 🎖️ 👑 🔎📄🗃️⚠️🎯🪞🧭 |
-| `le-regisseur.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.3.1.dj` | ⌨️ 🎖️ 🎬 🔎📄🗃️⚠️🎯🪞🧭 |
-| `messages-courts.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.74` | ⌨️ 🎖️ 👼 🧭 |
-| `modes-de-travail.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.4` | ⌨️ 🎖️ 👼 🗃️ |
-| `ou-on-en-est.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.87` | ⌨️ 🎖️ 👼 🔎📄🗃️⚠️🧭 |
-| `rapport-gros-prompt.mjs` | (f) 👼 Les Anges de la coordination | `2.3.3.5g` | ⌨️ 🎖️ 👼 🗃️🎯🪞 |
-| `route-booster.mjs` | (f) 🚀 Les Boosters de Navigation | `2.3.6.4g` | ⌨️ 🎖️ 🚀 ⚠️🪞 |
-| `the-ghost.mjs` | (f) 👑 La Gouvernance Royale | `2.3.2.4` | ⌨️ 🎖️ 👑 🗃️ |
-| `tool-usage.mjs` | (f) 👑 La Gouvernance Royale | `2.3.2.as` | ⌨️ 🎖️ 👑 🗃️🪞🧭 |
+| `check-profil-utilisateur.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.2p` | ⌨️ 🎖️ 👼 🔎⚠️🎯 |
+| `criticite.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.7k` | ⌨️ 🎖️ 👼 🌱🧭 |
+| `doc-report.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.6v` | ⌨️ 🎖️ 👼 🔎📄🗃️🌱⚠️🎯🪞 |
+| `find-brain.mjs` | (f) 🚀 Les Boosters de Navigation | `2.3.5.4g` | ⌨️ 🎖️ 🚀 ⚠️🪞 |
+| `kpi-report.mjs` | (f) 👑 La Gouvernance Royale | `2.3.1.dj` | ⌨️ 🎖️ 👑 🔎📄🗃️⚠️🎯🪞🧭 |
+| `le-coordinateur.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.bb` | ⌨️ 🎖️ 👼 🔎📄🗃️🌱🪞🧭 |
+| `le-regisseur.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.3.0.dj` | ⌨️ 🎖️ 🎬 🔎📄🗃️⚠️🎯🪞🧭 |
+| `messages-courts.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.74` | ⌨️ 🎖️ 👼 🧭 |
+| `modes-de-travail.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.4` | ⌨️ 🎖️ 👼 🗃️ |
+| `ou-on-en-est.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.87` | ⌨️ 🎖️ 👼 🔎📄🗃️⚠️🧭 |
+| `rapport-gros-prompt.mjs` | (f) 👼 Les Anges de la coordination | `2.3.2.5g` | ⌨️ 🎖️ 👼 🗃️🎯🪞 |
+| `route-booster.mjs` | (f) 🚀 Les Boosters de Navigation | `2.3.5.4g` | ⌨️ 🎖️ 🚀 ⚠️🪞 |
+| `the-ghost.mjs` | (f) 👑 La Gouvernance Royale | `2.3.1.4` | ⌨️ 🎖️ 👑 🗃️ |
+| `tool-usage.mjs` | (f) 👑 La Gouvernance Royale | `2.3.1.as` | ⌨️ 🎖️ 👑 🗃️🪞🧭 |
 
 ### 🛡️ Gardien sacré du code — 7
 
 | Fichier | Famille | Indice | En icônes |
 |---|---|---|---|
-| `always-new-code.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.8.ds` | ⌨️ 🛡️ 🛡️ 🌱⚠️🎯🪞🧭 |
-| `axa-check.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.8.dh` | ⌨️ 🛡️ 🛡️ 🔎🗃️⚠️🎯🪞🧭 |
-| `check-argus.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.8.dh` | ⌨️ 🛡️ 🛡️ 🔎🗃️⚠️🎯🪞🧭 |
-| `check-harmonia.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.8.dd` | ⌨️ 🛡️ 🛡️ 🔎⚠️🎯🪞🧭 |
-| `clean-dirty-old.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.8.68` | ⌨️ 🛡️ 🛡️ ⚠️🎯🪞 |
-| `clone-hunter.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `4.2.8.69` | 📚 🛡️ 🛡️ 🔎⚠️🎯🪞 |
-| `safe-export.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `4.2.8.dd` | 📚 🛡️ 🛡️ 🔎⚠️🎯🪞🧭 |
+| `always-new-code.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.ds` | ⌨️ 🛡️ 🛡️ 🌱⚠️🎯🪞🧭 |
+| `axa-check.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.dh` | ⌨️ 🛡️ 🛡️ 🔎🗃️⚠️🎯🪞🧭 |
+| `check-argus.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.dh` | ⌨️ 🛡️ 🛡️ 🔎🗃️⚠️🎯🪞🧭 |
+| `check-harmonia.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.dd` | ⌨️ 🛡️ 🛡️ 🔎⚠️🎯🪞🧭 |
+| `clean-dirty-old.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.68` | ⌨️ 🛡️ 🛡️ ⚠️🎯🪞 |
+| `clone-hunter.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `4.2.7.69` | 📚 🛡️ 🛡️ 🔎⚠️🎯🪞 |
+| `safe-export.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `4.2.7.dd` | 📚 🛡️ 🛡️ 🔎⚠️🎯🪞🧭 |
 
 ### 🚧 Hors Agence — 6
 
 | Fichier | Famille | Indice | En icônes |
 |---|---|---|---|
-| `run-framework.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.7.0` | ⌨️ 🚧 🚧 — |
-| `run-simulation.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.7.4` | ⌨️ 🚧 🚧 🗃️ |
-| `sauvegarde-projet.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.7.5` | ⌨️ 🚧 🚧 🔎🗃️ |
-| `sites-env.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.7.0` | ⌨️ 🚧 🚧 — |
-| `sites-env.sh` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `6.9.7.0` | 🐚 🚧 🚧 — |
-| `summarize-simulation-log.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.7.w` | ⌨️ 🚧 🚧 ⚠️ |
-
-### 🎖️ Agent Cadre — 2
-
-| Fichier | Famille | Indice | En icônes |
-|---|---|---|---|
-| `cassandra-rh.mjs` | (f) 👑 La Gouvernance Royale | `2.1.2.dz` | ⌨️ 🎖️ 👑 🔎📄🗃️🌱⚠️🎯🪞🧭 |
-| `le-coordinateur.mjs` | (f) 👼 Les Anges de la coordination | `2.1.3.bb` | ⌨️ 🎖️ 👼 🔎📄🗃️🌱🪞🧭 |
+| `run-framework.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.0` | ⌨️ 🚧 🚧 — |
+| `run-simulation.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.4` | ⌨️ 🚧 🚧 🗃️ |
+| `sauvegarde-projet.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.5` | ⌨️ 🚧 🚧 🔎🗃️ |
+| `sites-env.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.0` | ⌨️ 🚧 🚧 — |
+| `sites-env.sh` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `6.9.6.0` | 🐚 🚧 🚧 — |
+| `summarize-simulation-log.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.w` | ⌨️ 🚧 🚧 ⚠️ |
 
 ### 🧱 Sans porte — 2
 
@@ -226,6 +220,12 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 |---|---|---|---|
 | `install-ci.mjs` | — | `7.7.-.0` | 🚧 🧱 · — |
 | `pnpm-install.mjs` | — | `7.7.-.4` | 🚧 🧱 · 🗃️ |
+
+### 🎖️ Agent Cadre — 1
+
+| Fichier | Famille | Indice | En icônes |
+|---|---|---|---|
+| `cassandra-rh.mjs` | (f) 👑 La Gouvernance Royale | `2.1.1.dz` | ⌨️ 🎖️ 👑 🔎📄🗃️🌱⚠️🎯🪞🧭 |
 
 ### 🚪 Postulant — 1
 
@@ -310,13 +310,13 @@ Mais le constat cache une vraie question : **un fichier peut porter une porte da
 
 > La sonde a été resserrée avant sa première livraison : sa première version cherchait `import.meta.url` tout court et accusait à tort cinq fichiers qui s'en servent pour calculer un CHEMIN. Un garde qui accuse à tort cesse d'être lu (leçon L4) — et celui-ci aurait répondu faux à la question même qui l'a fait naître.
 
-## 7. Les familles (9, exhaustif)
+## 7. Les familles (8, exhaustif)
 
 Une famille dit **ce sur quoi on travaille**, jamais ce qu'on vaut. Les Gardiens sacrés ont désormais la leur, sur décision de l'utilisateur : le nom répète leur rang, et c'est assumé — une famille explicitement redondante se lit mieux qu'un troisième nom pour la même chose, et c'est l'endroit où on les cherche quand on ouvre l'organigramme. **Les Hors Agence ont reçu la leur le 2026-09-26, sur le même principe et pour une raison mesurée** : la famille était le seul axe qui ne couvrait pas tout le dépôt, et six fichiers sortaient avec une case vide — or une case vide ne dit jamais si personne n'a rempli ou si rien n'était à remplir. Deux interdits vont avec ce rang, et ils ne sont pas symétriques d'un manque de mérite : ces fichiers **ne peuvent pas évoluer**, et **aucun outil de l'Agence ne peut les rejoindre** — on n'est pas hors Agence parce qu'on a démérité, mais parce qu'on sert le produit.
 
-**(f) 👼 Les Anges de la coordination** — 17 : `angel-of-ia-process` · `check-profil-utilisateur` · `check-suivi-fidelity` · `check-tasks-details` · `circle-process-guardian` · `circle-tasks` · `criticite` · `data-archangel` · `doc-report` · `god-of-all-process` · `le-coordinateur` · `messages-courts` · `modes-de-travail` · `ou-on-en-est` · `pure-gold-unity` · `rapport-gros-prompt` · `tool-brain`
+**(f) 👼 Les Anges de la coordination** — 18 : `angel-of-ia-process` · `check-profil-utilisateur` · `check-suivi-fidelity` · `check-tasks-details` · `circle-process-guardian` · `circle-tasks` · `criticite` · `data-archangel` · `doc-report` · `god-of-all-process` · `ines-official` · `le-coordinateur` · `messages-courts` · `modes-de-travail` · `ou-on-en-est` · `pure-gold-unity` · `rapport-gros-prompt` · `tool-brain`
 
-**(f) 👑 La Gouvernance Royale** — 13 : `agent-du-temps` · `cassandra-rh` · `check-level-target` · `ecotoken` · `kpi-report` · `le-classificateur` · `objectifs-vs-resultats` · `smart-breaker` · `smart-conso-api` · `smart-conso-token` · `the-ghost` · `the-king` · `tool-usage`
+**(f) 👑 La Gouvernance Royale** — 14 : `agent-du-temps` · `cassandra-rh` · `check-level-target` · `ecotoken` · `hyper-scan-checkpoint` · `kpi-report` · `le-classificateur` · `objectifs-vs-resultats` · `smart-breaker` · `smart-conso-api` · `smart-conso-token` · `the-ghost` · `the-king` · `tool-usage`
 
 **(f) 🛡️ Les Gardiens Sacrés du Code** — 7 : `always-new-code` · `argus` · `axa-check` · `clean-dirty-old` · `clone-hunter` · `harmonia` · `safe-export`
 
@@ -329,8 +329,6 @@ Une famille dit **ce sur quoi on travaille**, jamais ce qu'on vaut. Les Gardiens
 **(f) 🚀 Les Boosters de Navigation** — 4 : `find-booster` · `find-brain` · `find-deep-booster` · `route-booster`
 
 **(f) 🕵️ Les Agents Externes - Audit indépendant** — 2 : `the-deep-reader` · `the-final-judge`
-
-**(f) ✨ Exceptionnel (page blanche / audit lourd)** — 2 : `hyper-scan-checkpoint` · `ines-official`
 
 ## 8. Les classes transverses (9, exhaustif)
 

@@ -135,7 +135,7 @@ export const AGENT_CATEGORIES = {
   "cassandra-rh": "Agent Cadre — (f) 👑 La Gouvernance Royale",
   // Né le 2026-09-26 de la scission de CASSANDRA : elle juge les gens, lui range les choses.
   "le-classificateur": "Membre premium — (f) 👑 La Gouvernance Royale",
-  "le-coordinateur": "Agent Cadre — (f) 👼 Les Anges de la coordination",
+  "le-coordinateur": "Membre classique — (f) 👼 Les Anges de la coordination",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
   argus: "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
   "safe-export": "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
@@ -162,7 +162,7 @@ export const AGENT_CATEGORIES = {
   // Suite Audit lourd
   "the-final-judge": "Membre premium — (f) 🕵️ Les Agents Externes - Audit indépendant",
   "the-deep-reader": "Membre premium — (f) 🕵️ Les Agents Externes - Audit indépendant",
-  "hyper-scan-checkpoint": "Membre premium — (f) ✨ Exceptionnel (page blanche / audit lourd)",
+  "hyper-scan-checkpoint": "Membre premium — (f) 👑 La Gouvernance Royale",
   // Suite Dette & Structure du code (ALWAYS-NEW-CODE en est retiré le 2026-09-21 — promu Gardien
   // sacré du code ci-dessus, jamais listé deux fois)
   "find-booster": "Membre premium — (f) 🚀 Les Boosters de Navigation",
@@ -184,7 +184,7 @@ export const AGENT_CATEGORIES = {
   // facultatif (Article 20). Il répond à la demande, avant de faire entrer un outil.
   "integration-outil": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // La Cour du Roi
-  "ines-official": "Membre premium — (f) ✨ Exceptionnel (page blanche / audit lourd)",
+  "ines-official": "Membre premium — (f) 👼 Les Anges de la coordination",
   "the-king": "Membre premium — (f) 👑 La Gouvernance Royale",
   "check-tasks-details": "Membre premium — (f) 👼 Les Anges de la coordination",
   // Suite Orientation (2026-09-22, calibrage explicite de l'utilisateur). Trois membres certifiés
