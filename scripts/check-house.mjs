@@ -14029,3 +14029,46 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: un terrain coupé en deux qui passait quand même (2026-09-26, tâche #928) — le garde-fou existait et n'attrapait que le cas total. Il exigeait qu'une ligne Terrain tronquée ne rende AUCUN mot ; une ligne qui en rendait ne serait-ce qu'un seul passait pour saine, et tout ce qui suivait le retour à la ligne était perdu sans bruit. Sept entrées réelles étaient dans ce cas, et six y perdaient entièrement leur terrain par FICHIER — la moitié du sélecteur, celle qui fait remonter une leçon parce qu'on touche le fichier qu'elle concerne, ne fonctionnait tout simplement pas pour elles. Le signal retenu ne devine rien : le champ Terrain se termine par son segment « · fichiers : », donc une ligne sans ce segment est tronquée, point. Une absence DÉCLARÉE (« · aucun fichier : <raison> ») passe, parce qu'elle est une décision écrite et non un oubli — et la raison a été déplacée DANS la ligne, là où le garde-fou la lit, plutôt que dans une note à côté qu'aucun mécanisme ne reliait à la règle.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LA QUATRIÈME POPULATION — nées ET fermées dans la période (2026-09-26, tâche #930)
+// ————————————————————————————————————————————————————————————————————————
+// Les trois populations de la confrontation se lisent toutes sur l'ÉTAT FINAL. Une tâche née à 06h
+// et fermée à 07h n'apparaît donc nulle part : ni dans « closes » (elle n'était pas dans la
+// référence), ni dans « nées » (elle n'est plus ouverte). Mesuré sur une vraie nuit : 20 ouvertes,
+// 13 fermées, et le rapport affichait « 0 close · 7 nées » — trait pour trait ce qu'afficherait
+// une nuit qui aurait ouvert sept tâches et n'aurait rien fait.
+{
+  const ctd930 = await import('../scripts/check-tasks-details.mjs');
+  const r930 = (numero, statusKey) => ({ numero, statusKey });
+
+  // LE CAS ÉPHÉMÈRE DOIT ÊTRE VU — et il ne l'était par aucune des trois autres lignes.
+  const ephemere930 = ctd930.mesurerRotation(
+    [r930(10, 'ouverte'), r930(11, 'terminee'), r930(12, 'terminee')],
+    [10, 11],
+  );
+  assert.equal(ephemere930.neesEtFermees, 1, 'a task born after the reference was frozen AND already closed must be counted: it is real work that leaves no trace in a difference of states');
+  assert.deepEqual(ephemere930.neesEtFermeesNumeros, [12], 'and it is named, so the figure can be checked rather than believed');
+  assert.equal(ephemere930.closesDepuis, 1, 'the three existing populations keep their exact meaning — the fourth ADDS, it never reinterprets');
+  assert.equal(ephemere930.neesDepuis, 0, 'and an ephemeral task is still not a "born" one: it is no longer open');
+
+  // L'AUTRE SENS (BP4) — sans lui, une fonction qui compterait tout en éphémère passerait le test
+  // ci-dessus et rendrait un chiffre flatteur sur n'importe quel dépôt.
+  assert.equal(ctd930.mesurerRotation([r930(10, 'ouverte'), r930(11, 'terminee')], [10, 11]).neesEtFermees, 0, 'a closed task that WAS in the reference is an ordinary closure, never an ephemeral one — counting it twice would inflate the period');
+  assert.equal(ctd930.mesurerRotation([r930(5, 'terminee'), r930(10, 'ouverte')], [10, 11]).neesEtFermees, 0, 'and a task numbered BELOW the reference was closed before the period: numbers are unique and strictly increasing, a property findTaskNumberIssues() enforces, so the boundary needs no clock and cannot drift (Article 32)');
+  assert.match(ctd930.mesurerRotation([r930(10, 'ouverte')], [10]).verdictEphemeres, /Aucune tâche née ET fermée/, 'a period with no ephemeral work says so explicitly rather than printing nothing, which would read as "the line is broken"');
+
+  // PAS DE RÉFÉRENCE = PAS DE MESURE (leçon L5) — inchangé, et vérifié ici parce que la quatrième
+  // population divise implicitement par le max de la référence.
+  assert.equal(ctd930.mesurerRotation([r930(10, 'ouverte')], []).mesurable, false, 'no reference means no measurement, never a zero');
+
+  // BRANCHÉ SUR LE VRAI DÉPÔT (Article 25).
+  const plan930 = ctd930.dernierPlanDeDepart();
+  const nums930 = plan930 ? ctd930.lireNumerosDuPlan(plan930) : { mesurable: false };
+  if (nums930.mesurable) {
+    const reel930 = ctd930.mesurerRotation(ctd930.loadAllTaskRows(), nums930.numeros);
+    assert.ok(reel930.neesEtFermees > 0, 'against the real repository the figure must be non-zero: the period this measure was written in closed dozens of tasks that the three old lines showed as nothing at all');
+  }
+
+  console.log("Passed: la quatrième population, nées ET fermées dans la période (2026-09-26, tâche #930) — les trois lignes de la confrontation se lisent toutes sur l'état final, si bien qu'une tâche née à six heures et fermée à sept n'apparaissait nulle part : ni dans « closes », puisqu'elle n'était pas dans la référence, ni dans « nées », puisqu'elle n'est plus ouverte. Une vraie nuit de vingt ouvertures et treize fermetures s'affichait « 0 close · 7 nées », trait pour trait ce qu'afficherait une nuit qui aurait ouvert sept tâches et n'aurait rien fait — un chiffre juste qui désigne la mauvaise réalité, le motif exact que ce projet traque partout. La frontière de période se lit sur les NUMÉROS et pas sur une date : ils sont uniques et strictement croissants, propriété qu'un autre garde-fou fait respecter à chaque passage, donc aucune horloge n'intervient et rien ne peut dériver. La quatrième ligne n'en remplace aucune : elle rend visible le travail qui ne laisse aucune trace dans un différentiel d'états. Contre le vrai dépôt, elle en compte soixante-treize.");
+}

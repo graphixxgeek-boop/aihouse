@@ -457,3 +457,31 @@ systeme a bien été mis à jour par rapport à ca ? » — **la réponse mesur�
    (« / » entouré d'espaces). Zéro ligne d'écart sur le registre du jour, mesuré avant de toucher —
    mais « Suivi/file » aurait été rangé sous deux têtes différentes selon la vue. Unifié sur
    `splitSujet()`.
+
+## La quatrième population : nées **ET** fermées dans la période (2026-09-26, tâche #930)
+
+**Le défaut est exactement du type que ce projet chasse : un chiffre juste qui désigne la mauvaise
+réalité.** Les trois populations de la confrontation — encore ouvertes / closes depuis / nées
+depuis — se lisent toutes sur l'**état final**. Une tâche née à 06h et fermée à 07h n'apparaît donc
+**nulle part** : ni dans « closes » (elle n'était pas dans la référence figée), ni dans « nées »
+(elle n'est plus ouverte).
+
+**Mesuré sur une vraie nuit** : 20 tâches ouvertes, 13 fermées, et le rapport affichait
+« 0 close · 7 nées » — trait pour trait ce qu'afficherait une nuit qui aurait ouvert sept tâches et
+n'aurait rien fait. Contre le dépôt au moment où la mesure a été écrite : **73 tâches nées et
+fermées**, invisibles aux trois anciennes lignes.
+
+**Pourquoi ça comptait pour l'utilisateur précisément** : c'est la distinction qu'il avait posée
+lui-même — « si c'est moi qui ajoute volontairement des nouvelles tâches, c'est normal si le nombre
+augmente ; je parle des tâches générées automatiquement », et « 117 tâches ne veut rien dire en
+soi ». Le rapport ne pouvait pas répondre à cette question-là.
+
+**Comment la frontière de période est tracée, sans horloge** : par le **numéro**. Les numéros de
+tâche sont uniques et strictement croissants — ce n'est pas une supposition, c'est une propriété
+que `findTaskNumberIssues()` (check-suivi-fidelity) fait respecter à chaque passage. Une ligne dont
+le numéro dépasse le plus grand de la référence est née après qu'elle a été figée. Aucune date à
+lire, donc **aucune dérive d'horloge possible** (Article 32).
+
+**Elle ne remplace aucune des trois autres** : elle rend visible le travail qui ne laisse aucune
+trace dans un différentiel d'états. Quand il n'y en a aucune, elle le dit explicitement plutôt que
+de n'afficher rien — une ligne absente se lit comme une ligne cassée.

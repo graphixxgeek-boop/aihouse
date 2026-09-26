@@ -1256,6 +1256,28 @@ export function mesurerRotation(rows = [], numerosDeReference = []) {
   // disparue, et les confondre transformerait une perte de suivi en réussite.
   const introuvables = reference.filter((n) => !parNum.has(n));
   const neesDepuis = [...ouvertes].filter((n) => !reference.includes(n));
+  // LA QUATRIÈME POPULATION — NÉES **ET** FERMÉES DANS LA PÉRIODE (2026-09-26, tâche #930).
+  //
+  // LE DÉFAUT QU'ELLE FERME EST EXACTEMENT DU TYPE QUE CE PROJET CHASSE : un chiffre juste qui
+  // désigne la mauvaise réalité. Les trois populations ci-dessus se lisent toutes sur l'ÉTAT FINAL,
+  // si bien qu'une tâche née à 06h et fermée à 07h n'apparaît NULLE PART — ni dans « closes »
+  // (elle n'était pas dans la référence), ni dans « nées » (elle n'est plus ouverte).
+  //
+  // MESURÉ SUR UNE VRAIE NUIT : 20 tâches ouvertes, 13 fermées, et le rapport affichait
+  // « 0 close · 7 nées » — trait pour trait ce qu'afficherait une nuit qui aurait ouvert sept
+  // tâches et n'aurait rien fait. C'est très précisément la distinction que l'utilisateur avait
+  // posée lui-même : « 117 tâches ne veut rien dire en soi ».
+  //
+  // COMMENT ON SAIT QU'UNE LIGNE EST NÉE APRÈS LA RÉFÉRENCE, SANS HORLOGE : par son NUMÉRO. Les
+  // numéros de tâche sont uniques et strictement croissants — ce n'est pas une supposition, c'est
+  // une propriété que `findTaskNumberIssues()` (check-suivi-fidelity) fait respecter à chaque
+  // passage. Une ligne dont le numéro dépasse le plus grand de la référence est donc née après
+  // qu'elle a été figée. Aucune date à lire, donc aucune dérive d'horloge possible (Article 32).
+  const dernierDeLaReference = Math.max(...reference);
+  const neesEtFermees = rows
+    .filter((r) => Number.isFinite(r.numero) && r.numero > dernierDeLaReference && !ouvertes.has(r.numero))
+    .map((r) => r.numero)
+    .sort((a, b) => a - b);
   return {
     mesurable: true,
     reference: reference.length,
@@ -1263,6 +1285,11 @@ export function mesurerRotation(rows = [], numerosDeReference = []) {
     closesDepuis: closesDepuis.length,
     introuvables,
     neesDepuis: neesDepuis.length,
+    // Elle ne REMPLACE aucune des trois autres : elle rend visible le travail qui ne laisse
+    // aucune trace dans un différentiel d'états.
+    neesEtFermees: neesEtFermees.length,
+    neesEtFermeesNumeros: neesEtFermees,
+    dernierDeLaReference,
     ouvertesAujourdhui: ouvertes.size,
     // Le taux porte son dénominateur, comme partout ici.
     renouvellement: ouvertes.size ? Math.round((neesDepuis.length / ouvertes.size) * 100) : 0,
@@ -1270,6 +1297,12 @@ export function mesurerRotation(rows = [], numerosDeReference = []) {
     verdict: reference.length === ouvertes.size
       ? `ROTATION À L'UNITÉ PRÈS : ${reference.length} au départ, ${ouvertes.size} aujourd'hui — le même chiffre, mais ${closesDepuis.length} ont été closes et ${neesDepuis.length} sont nées. Un total inchangé n'est PAS un travail immobile.`
       : `${closesDepuis.length} close(s) sur ${reference.length} de référence · ${neesDepuis.length} née(s) depuis · la file passe de ${reference.length} à ${ouvertes.size}.`,
+    // Le travail INVISIBLE au différentiel d'états, dit en toutes lettres plutôt que laissé à
+    // déduire d'un chiffre manquant.
+    verdictEphemeres: neesEtFermees.length
+      // On plafonne la liste : 73 numéros sur une ligne noieraient le chiffre, qui est le message.
+      ? `ET ${neesEtFermees.length} tâche(s) NÉE(S) ET FERMÉE(S) dans la période (n°${neesEtFermees.slice(0, 8).join(", n°")}${neesEtFermees.length > 8 ? `, … +${neesEtFermees.length - 8}` : ""}) — ce travail n'apparaît dans AUCUNE des trois populations ci-dessus, parce qu'elles se lisent toutes sur l'état final. Sans cette ligne, une période productive se lit comme une période vide.`
+      : `Aucune tâche née ET fermée dans la période : tout le travail de la période est visible dans les trois populations ci-dessus.`,
   };
 }
 
@@ -2809,11 +2842,13 @@ function bilanCli() {
     L.push(`      Encore ouvertes aujourd'hui ................ ${rot.encoreOuvertes}`);
     L.push(`      CLOSES depuis .............................. ${rot.closesDepuis}`);
     L.push(`      NÉES depuis ................................ ${rot.neesDepuis}`);
+    L.push(`      NÉES **ET** FERMÉES dans la période ........ ${rot.neesEtFermees}   ← invisible aux trois lignes ci-dessus`);
     L.push(`      Ouvertes aujourd'hui ....................... ${rot.ouvertesAujourdhui}`);
     L.push(`      Renouvellement de la file .................. ${rot.renouvellement} %`);
     if (rot.introuvables.length) L.push(`      ⚠️ ${rot.introuvables.length} numéro(s) de la référence ONT DISPARU du suivi : ${rot.introuvables.map((n) => "#" + n).join(" ")} — une ligne perdue n'est pas une clôture`);
     L.push("");
     L.push(`  ${rot.verdict}`);
+    L.push(`  ${rot.verdictEphemeres}`);
   }
   L.push("");
 
