@@ -1997,6 +1997,150 @@ function rondeCli() {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// LA STRATÉGIE DE CHANTIER (2026-09-26, son gros prompt du soir)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SON INTENTION, DANS SES MOTS : « à la base, on crée PAS un repertoire d'idees et notes en vrac
+// au sujet d'un chantier, A LA PLACE : on crée tout de suite une STRATEGIE de chantier et on
+// integre chaque nouvelle idée/note à la stratégie existante, à sa place. »
+//
+// CE QUI EXISTAIT DÉJÀ, MESURÉ AVANT DE CONSTRUIRE (sa consigne : « beaucoup de choses existent
+// deja [...] on réaménage simplement l'existant, pas de depense ou creation inutile ») : le système
+// existe, mais ÉCLATÉ EN TROIS CONVENTIONS QUI S'IGNORENT —
+//   · 8 fichiers `docs/*-conception.md` (les notes d'un chantier, format libre) ;
+//   · 25 fichiers `docs/plans/` (plans, enquêtes, propositions, cadrages — même rôle, autre dossier) ;
+//   · `docs/idees-a-trancher.md` (le registre des idées sans décision).
+// Et l'un d'eux s'appelle déjà `docs/plans/classification-notes-et-strategie.md` : le mot était
+// là, le format ne l'était pas. Il n'y a donc RIEN à inventer, il y a à UNIFIER.
+//
+// POURQUOI CHEZ CHECK-TASKS-DETAILS ET PAS DANS UN 89e OUTIL (sa décision, en fenêtre dédiée) :
+// une stratégie est LIÉE À UNE TÂCHE — c'est son étape B3. L'outil qui tient les tâches est le
+// seul qui puisse rendre ce lien mécanique au lieu de le laisser à la main. Et 98 % de la file
+// ouverte est déjà de l'outillage : un outil de plus était le mauvais geste.
+export const STRATEGIES_DIR = join(ROOT, "docs/strategies");
+
+// LE SQUELETTE — 7 sections, sa décision. Les six premières s'alimentent au fil de l'eau ; la
+// septième ne se remplit qu'à la fin, juste avant l'exécution. L'ordre n'est pas décoratif : on
+// ne peut pas écrire un plan avant d'avoir posé ce qui existe, et on ne peut pas trancher avant
+// d'avoir rassemblé les idées.
+export const SECTIONS_STRATEGIE = [
+  { cle: "pourquoi", titre: "1. POURQUOI CE CHANTIER", quoi: "l'intention d'origine, dans SES mots — jamais reformulée en vocabulaire d'agent" },
+  { cle: "existant", titre: "2. CE QUI EXISTE DÉJÀ", quoi: "mesuré sur le dépôt, jamais supposé — c'est ce qui évite de reconstruire ce qui est là" },
+  { cle: "idees", titre: "3. LES IDÉES RETENUES", quoi: "intégrales, citées, jamais résumées — chacune avec sa source" },
+  { cle: "recherches", titre: "4. LES RECHERCHES ET TROUVAILLES", quoi: "ce qu'on est allé chercher dehors, et ce qu'on en a tiré" },
+  { cle: "decisions", titre: "5. LES DÉCISIONS DÉJÀ PRISES", quoi: "ce qui ne se rediscute plus, avec la date et qui a tranché" },
+  { cle: "a-trancher", titre: "6. CE QUI RESTE À TRANCHER", quoi: "les arbitrages qui lui reviennent — jamais tranchés par l'agent" },
+  { cle: "plan", titre: "7. LE PLAN D'EXÉCUTION", quoi: "ne se remplit qu'À LA FIN, juste avant la construction effective" },
+];
+
+export function slugDeChantier(nom = "") {
+  return String(nom).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+}
+
+export function cheminDeStrategie(nomDuChantier, { dossier = STRATEGIES_DIR } = {}) {
+  return join(dossier, `${slugDeChantier(nomDuChantier)}-strategie.md`);
+}
+
+// LA CRÉATION — un squelette, jamais un document vide. Sa formulation : « Le document STRATEGIE DE
+// CHANTIER A UNE STRUCTURE DEJA ETABLIE A SA CREATION ». Une section vide porte son INTENTION
+// écrite, pour que celui qui la remplit sache ce qu'on attend d'elle : un titre seul invite à
+// écrire n'importe quoi dessous.
+export function squeletteDeStrategie({ chantier, tache = null, horodatage = null, sections = SECTIONS_STRATEGIE } = {}) {
+  if (!chantier) return null;
+  const L = [];
+  L.push(`# STRATÉGIE DE CHANTIER — ${chantier}`);
+  L.push("");
+  L.push(`*(Créée le ${horodatage ?? "(horodatage non fourni)"}${tache ? `, liée à la tâche **#${tache}**` : ", AUCUNE TÂCHE LIÉE — ce qui est un manque, pas un choix"}.)*`);
+  L.push("");
+  L.push("> **CE DOCUMENT NE RÉSUME JAMAIS.** Il AGRÈGE et il ORDONNE. Chaque idée y entre");
+  L.push("> intégralement, entre guillemets, avec sa source. Trouver sa place dans la stratégie est");
+  L.push("> le travail ; la raccourcir serait la perdre. En cas de conflit majeur entre une idée");
+  L.push("> nouvelle et la stratégie en place, on ne tranche pas : on pose une question de calibrage.");
+  L.push("");
+  for (const s of sections) {
+    L.push(`## ${s.titre}`);
+    L.push("");
+    L.push(`*${s.quoi}*`);
+    L.push("");
+    L.push("*(vide — rien n'a encore été versé ici)*");
+    L.push("");
+  }
+  return L.join("\n");
+}
+
+// LE GARDE-FOU ANTI-RÉSUMÉ (sa décision : « citation intégrale + source, et un garde-fou qui
+// compte »). Il compare la longueur des CITATIONS présentes dans la stratégie à la longueur des
+// SOURCES d'où elles viennent. Si la stratégie porte moins de texte cité que ses sources n'en
+// contiennent, elle a résumé — et elle le dit.
+//
+// CE QU'IL NE PEUT PAS VOIR, et le dire vaut mieux que de prétendre le contraire : il compte des
+// CARACTÈRES, pas du SENS. Une citation intégrale mais mal placée passe pour bonne ; une
+// reformulation plus longue que l'original passe aussi. Il attrape la perte grossière — celle qui
+// arrive vraiment, quand on « synthétise pour que ça tienne » — jamais la trahison subtile.
+// LE MOTIF S'ANCRE SUR LA LIGNE DE SOURCE, JAMAIS SUR LES GUILLEMETS — et c'est une correction
+// trouvée au premier remplissage réel (23 idées versées dans la stratégie RENOMMAGE) : le garde-fou
+// a crié « PERTE, 92 % » sur un document parfaitement intact. La cause : plusieurs idées de
+// l'utilisateur CONTIENNENT elles-mêmes des guillemets français (« je veux rendre des hommages »),
+// et un motif qui s'arrête au premier « » » tronquait la citation au milieu.
+//
+// Un garde qui accuse à tort cesse d'être lu (leçon L4), et celui-ci aurait accusé à tort à CHAQUE
+// passage, puisque citer l'utilisateur en le citant est exactement ce qu'on lui demande de faire.
+// Il lit donc désormais le bloc entier entre l'ouverture « « » et la ligne « — source : » que
+// `verserDansStrategie()` écrit toujours derrière : une borne que l'outil pose lui-même, jamais
+// un caractère qui peut apparaître dans le texte cité.
+export const MOTIF_CITATION = /«\s([\s\S]{20,}?)\s»\n\n— source :/g;
+
+// LE COMPTAGE COMMENCE APRÈS LA PREMIÈRE SECTION, et ce n'est pas un détail : la bannière
+// « CE DOCUMENT NE RÉSUME JAMAIS » est elle-même une citation en bloc. Le premier passage réel
+// comptait donc 408 caractères « cités » pour 66 de source — le garde-fou se nourrissait de son
+// propre en-tête et aurait déclaré « aucune perte » sur un document entièrement résumé.
+// C'est le bug auto-référentiel, rencontré pour la troisième fois cette semaine (find-booster
+// #182, la sonde API ce matin, celui-ci). Il a une forme constante : un outil qui se trouve
+// lui-même dans ce qu'il mesure.
+export function corpsDeStrategie(texte = "") {
+  const i = String(texte).indexOf("\n## ");
+  return i === -1 ? "" : String(texte).slice(i);
+}
+
+export function citationsDe(texte = "") {
+  const out = [];
+  for (const m of corpsDeStrategie(texte).matchAll(MOTIF_CITATION)) out.push(String(m[1] ?? "").trim());
+  return out;
+}
+
+export function strategieARésumé({ strategie = "", sources = [] } = {}) {
+  if (!strategie) return { mesurable: false, pourquoi: "aucune stratégie fournie — sans le document, une perte de texte n'est pas observable" };
+  if (!sources.length) return { mesurable: false, pourquoi: "aucune source fournie — comparer une stratégie à rien rendrait toujours « aucune perte », le pire des faux verts (leçon L5)" };
+  const citees = citationsDe(strategie).join(" ").length;
+  const source = sources.map((s) => String(s ?? "")).join(" ").length;
+  const ratio = source ? citees / source : 0;
+  return {
+    mesurable: true, citees, source, ratio: Math.round(ratio * 100),
+    aResume: citees < source,
+    manque: Math.max(0, source - citees),
+    horsPortee: "compte des CARACTÈRES, jamais du SENS : une citation intégrale mal placée passe pour bonne, et une reformulation plus longue que l'original passe aussi. Il attrape la perte grossière, jamais la trahison subtile.",
+  };
+}
+
+// L'AJOUT D'UNE IDÉE — elle se VERSE dans une section, elle ne s'écrase jamais sur ce qui est là.
+export function verserDansStrategie(texteStrategie, { section, idee, source, sections = SECTIONS_STRATEGIE } = {}) {
+  const s = sections.find((x) => x.cle === section);
+  if (!s) return { ok: false, pourquoi: `section « ${section} » inconnue — les sections sont ${sections.map((x) => x.cle).join(", ")}` };
+  if (!String(idee ?? "").trim()) return { ok: false, pourquoi: "aucune idée fournie : verser du vide dans une stratégie la fait grossir sans rien lui apprendre" };
+  const lignes = String(texteStrategie).split("\n");
+  const i = lignes.findIndex((l) => l.trim() === `## ${s.titre}`);
+  if (i === -1) return { ok: false, pourquoi: `la section « ${s.titre} » est absente du document — il n'a pas été créé par squeletteDeStrategie()` };
+  let j = i + 1;
+  while (j < lignes.length && !lignes[j].startsWith("## ")) j += 1;
+  // Le marqueur « vide » disparaît dès qu'un premier contenu arrive : le laisser sous une section
+  // pleine ferait mentir le document sur lui-même.
+  const corps = lignes.slice(i + 1, j).filter((l) => !/^\*\(vide —/.test(l.trim()));
+  const entree = ["", `« ${String(idee).trim()} »`, "", `— source : ${source ?? "NON SOURCÉE, ce qui est un manque"}`, ""];
+  return { ok: true, texte: [...lignes.slice(0, i + 1), ...corps, ...entree, ...lignes.slice(j)].join("\n") };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
 // LA VUE PAR THÈME (2026-09-26, sa demande pendant un état des lieux : « une vue par THÈME des 98
 // ouvertes »). Elle manquait, et son absence a un coût précis : une liste à plat de 98 lignes ne
 // dit pas OÙ la file s'accumule, donc ne permet pas de décider quoi dégager en premier.
@@ -2120,6 +2264,69 @@ export function blocsDesThemes(vue) {
   }
   B.push({ type: "note", text: vue.horsPortee });
   return B;
+}
+
+function strategieCli(argv) {
+  const [, , , sousCommande, ...reste] = argv;
+  if (!existsSync(STRATEGIES_DIR)) mkdirSync(STRATEGIES_DIR, { recursive: true });
+
+  if (sousCommande === "creer") {
+    const tache = reste[0];
+    const chantier = reste.slice(1).join(" ");
+    if (!chantier) { console.error('usage : strategie creer <n° de tâche|-> "<nom du chantier>"'); process.exit(2); }
+    const chemin = cheminDeStrategie(chantier);
+    if (existsSync(chemin)) { console.log(`Elle existe déjà : ${chemin}\nUne stratégie ne s'écrase jamais — elle s'alimente (« strategie ajouter »).`); return chemin; }
+    const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ") + "Z";
+    writeFileSync(chemin, squeletteDeStrategie({ chantier, tache: tache === "-" ? null : tache, horodatage }), "utf8");
+    console.log(`Créée : ${chemin}`);
+    console.log(`${SECTIONS_STRATEGIE.length} sections, toutes vides — le squelette existe dès la création, c'est ce qui empêche les notes en vrac.`);
+    if (tache === "-") console.log("⚠️  AUCUNE TÂCHE LIÉE : l'étape B3 du pré-chantier n'est pas remplie. Une stratégie sans tâche ne sera jamais reprise.");
+    recordCliUsage("check-tasks-details", { origine: "demande" });
+    return chemin;
+  }
+
+  if (sousCommande === "ajouter") {
+    const [chantier, section, ...mots] = reste;
+    const idee = mots.join(" ");
+    const chemin = cheminDeStrategie(chantier ?? "");
+    if (!existsSync(chemin)) { console.error(`Aucune stratégie pour « ${chantier} » — la créer d'abord.`); process.exit(2); }
+    const avant = readFileSync(chemin, "utf8");
+    const r = verserDansStrategie(avant, { section, idee, source: process.env.SOURCE ?? null });
+    if (!r.ok) { console.error(r.pourquoi); process.exit(2); }
+    writeFileSync(chemin, r.texte, "utf8");
+    const verdict = strategieARésumé({ strategie: r.texte, sources: [idee] });
+    console.log(`Versé dans « ${section} » : ${chemin}`);
+    if (verdict.mesurable && verdict.aResume) console.log(`⚠️  PERTE DÉTECTÉE : ${verdict.citees} caractères cités pour ${verdict.source} de source (${verdict.ratio} %). Une stratégie AGRÈGE, elle ne résume jamais.`);
+    recordCliUsage("check-tasks-details", { origine: "demande" });
+    return chemin;
+  }
+
+  if (sousCommande === "livrer" || sousCommande === "lire") {
+    const chemin = cheminDeStrategie(reste.join(" "));
+    if (!existsSync(chemin)) { console.error(`Aucune stratégie pour « ${reste.join(" ")} ».`); process.exit(2); }
+    console.log(readFileSync(chemin, "utf8"));
+    recordCliUsage("check-tasks-details", { origine: "demande" });
+    return chemin;
+  }
+
+  // Sans sous-commande : l'inventaire de ce qui existe, jamais une erreur sèche.
+  let fichiers = [];
+  try { fichiers = readdirSync(STRATEGIES_DIR).filter((f) => f.endsWith("-strategie.md")); } catch { /* dossier neuf */ }
+  console.log(`=== STRATÉGIES DE CHANTIER — ${fichiers.length} ===\n`);
+  for (const f of fichiers.sort()) {
+    const t = readFileSync(join(STRATEGIES_DIR, f), "utf8");
+    const vides = SECTIONS_STRATEGIE.filter((sec) => {
+      const i = t.indexOf(`## ${sec.titre}`);
+      return i !== -1 && /\*\(vide —/.test(t.slice(i, i + 400));
+    }).length;
+    const tache = (t.match(/tâche \*\*#(\d+)\*\*/) ?? [])[1];
+    console.log(`  ${f.replace("-strategie.md", "").padEnd(34)} ${SECTIONS_STRATEGIE.length - vides}/${SECTIONS_STRATEGIE.length} sections remplies${tache ? `  · tâche #${tache}` : "  · ⚠️ AUCUNE TÂCHE LIÉE"}`);
+  }
+  if (!fichiers.length) console.log("  (aucune — `strategie creer <n° tâche> \"<nom>\"` pour la première)");
+  console.log(`\nusage : strategie [creer <n°|-> "<nom>" | ajouter <nom> <section> <idée> | livrer <nom>]`);
+  console.log(`sections : ${SECTIONS_STRATEGIE.map((x) => x.cle).join(" · ")}`);
+  recordCliUsage("check-tasks-details", { origine: "demande" });
+  return null;
 }
 
 function themesCli() {
@@ -2330,6 +2537,7 @@ function main() {
   // s'organise. Le livrable est le FICHIER (Article 31) ; ce qui s'imprime ici n'en est que l'écho.
   if (process.argv[2] === "bilan") return bilanCli();
   if (process.argv[2] === "themes") return themesCli();
+  if (process.argv[2] === "strategie") return strategieCli(process.argv);
   if (process.argv[2] === "emiettement") {
     const rows = loadAllTaskRows();
     console.log(`\n=== ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? ===\n`);

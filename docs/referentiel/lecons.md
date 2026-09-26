@@ -818,6 +818,39 @@ format, deux versions · fichiers : scripts/le-classificateur.mjs, scripts/html-
 vérifie qu'un bloc `highlight` atteint bien le Markdown. La règle générale — vérifier les rendus l'un
 contre l'autre — n'a pas de porteur mécanique et se déclare ici (Article 27).
 
+## L27 — Une heure LUE devient fausse en vieillissant : ce n'est pas la lecture qui dérive, c'est sa RÉUTILISATION
+
+*(2026-09-26, quatrième horodatage refusé de la semaine par `findHorodatagesFuturs()`, et le premier
+dont la cause a été cherchée au lieu d'être corrigée à la main.)*
+
+L'Article 32 dit : « jamais une date ou une heure tapée de mémoire, on la LIT ». Cette règle est
+respectée — l'heure EST lue, à chaque fois, via AGENT-DU-TEMPS. Et pourtant le garde-fou refuse un
+commit sur quatre. **Le geste interdit n'est donc pas celui qu'on croyait.**
+
+**Ce qui se passe réellement** : on lit l'heure correctement à 05h18. On travaille vingt minutes. On
+écrit la ligne de suivi en réutilisant la valeur lue au début — ou pire, en l'ajustant « à peu près »
+pour tenir compte du temps passé. La lecture était juste ; **c'est sa péremption qui ne l'est pas**.
+
+**Le cas le plus vicieux, et c'est celui qui a produit cette leçon** : l'heure écrite venait d'un
+`fire_at` — l'horodatage FUTUR d'un réveil programmé, lu dans la sortie d'un outil quelques minutes
+plus tôt. Un chiffre juste, dans un champ voisin, pris pour l'heure courante. Aucune invention, aucun
+calcul de tête : juste le mauvais champ d'une vraie mesure.
+
+**La forme générale, et elle dépasse largement l'heure** : une mesure lue est vraie AU MOMENT où on
+la lit. La réutiliser plus tard sans la relire, c'est exactement ce que l'Article 24 interdit pour
+les listes — sauf qu'ici la copie ne se périme pas en semaines, elle se périme en minutes.
+
+**Le geste qui ferme le trou** : relire l'heure **au moment d'écrire la ligne**, jamais au début du
+travail qu'elle datera. Une lecture coûte une seconde ; un commit refusé en coûte cinq minutes.
+
+**Terrain** : quand on écrit un horodatage dans le suivi, un rapport, un plan · mots : horodatage,
+heure, date, suivi, ligne, refusé, futur · fichiers : docs/suivi/, scripts/agent-du-temps.mjs
+
+**Porté par** : `findHorodatagesFuturs()` (check-suivi-fidelity) refuse mécaniquement une ligne datée
+dans le futur — c'est lui qui a attrapé les quatre. Ce qu'aucun mécanisme ne peut voir, c'est une
+heure PASSÉE réutilisée (une ligne datée de vingt minutes trop tôt passe sans bruit), et le déclarer
+ici EST la protection (Article 27).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

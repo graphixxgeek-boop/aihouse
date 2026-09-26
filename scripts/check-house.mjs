@@ -8721,6 +8721,44 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(gros.rang, petit.rang, 'both carry the SAME rank — which is the whole point of the demonstration');
     assert.ok(gros.ajouts.length > petit.ajouts.length, `same rank, different equipment: the one that keeps a memory and renders a page owes more (${gros.ajouts.length}) than the one that only calls others (${petit.ajouts.length}) — nobody promoted it, the measurement noticed`);
     assert.ok(gros.ajouts.every((a) => a.pourquoi && a.ou), 'every derived obligation says WHERE it lives and WHY it is owed — an obligation without a reason gets deleted by the next agent (Article 27)');
+    // LA STRATÉGIE DE CHANTIER (2026-09-26, son gros prompt). Son intention : « on crée PAS un
+    // repertoire d'idees et notes en vrac au sujet d'un chantier, A LA PLACE : on crée tout de
+    // suite une STRATEGIE de chantier et on integre chaque nouvelle idée/note à la stratégie
+    // existante, à sa place ». Elle vit chez check-tasks-details, sa décision : zéro outil de plus.
+    const CT = await import('../scripts/check-tasks-details.mjs');
+    const sq = CT.squeletteDeStrategie({ chantier: 'ESSAI', tache: 42, horodatage: '2026-09-26T05:45Z' });
+    assert.ok(sq, 'a strategy is born as a SKELETON, never as an empty file: seven sections exist from creation, which is what stops notes piling up loose');
+    for (const sec of CT.SECTIONS_STRATEGIE) assert.ok(sq.includes(sec.titre), `section "${sec.titre}" must exist from birth`);
+    assert.ok(sq.includes('vide —'), 'and an empty section SAYS it is empty, rather than looking like a section nobody had anything to put in');
+    assert.equal(CT.squeletteDeStrategie({}), null, 'a strategy with no chantier name is refused rather than created nameless');
+    assert.ok(CT.squeletteDeStrategie({ chantier: 'x' }).includes('AUCUNE TÂCHE LIÉE'), 'a strategy with no linked task says so loudly — step B3 of his pre-chantier is precisely that link, and a strategy nobody can reach from a task is never picked up again');
+
+    // LE VERSEMENT AJOUTE, IL N'ÉCRASE JAMAIS — c'est le cœur de sa consigne ferme.
+    const v1 = CT.verserDansStrategie(sq, { section: 'idees', idee: 'première idée assez longue pour compter', source: 's1' });
+    const v2 = CT.verserDansStrategie(v1.texte, { section: 'idees', idee: 'seconde idée tout aussi longue à garder', source: 's2' });
+    assert.ok(v2.texte.includes('première idée') && v2.texte.includes('seconde idée'), 'a second idea poured into the same section never overwrites the first: the strategy AGGREGATES');
+    assert.ok(!v2.texte.split('## 3.')[1].split('## 4.')[0].includes('vide —'), 'and the "empty" marker disappears once something is in — leaving it would make the document lie about itself');
+    assert.equal(CT.verserDansStrategie(sq, { section: 'inexistante', idee: 'x' }).ok, false, 'an unknown section is refused rather than silently creating one');
+    assert.equal(CT.verserDansStrategie(sq, { section: 'idees', idee: '  ' }).ok, false, 'and pouring emptiness is refused: it would grow the document without teaching it anything');
+
+    // LE GARDE-FOU ANTI-RÉSUMÉ — vérifié DANS LES DEUX SENS, parce qu'un garde qui ne mord jamais
+    // ne prouve rien (BP4). Sa consigne, littérale : « UN RAPPORT DE STRATGIE ET INSPIRATION NE
+    // RESUME JAMAIS LES IDEES, il les ORDONNE ».
+    const idee = 'une idée entière qu il faut garder mot pour mot sans la raccourcir du tout';
+    const intacte = CT.verserDansStrategie(sq, { section: 'idees', idee, source: 's' }).texte;
+    assert.equal(CT.strategieARésumé({ strategie: intacte, sources: [idee] }).aResume, false, 'an idea quoted in full reports no loss');
+    const coupee = CT.verserDansStrategie(sq, { section: 'idees', idee: 'une idée entière quon a raccourcie', source: 's' }).texte;
+    assert.equal(CT.strategieARésumé({ strategie: coupee, sources: [idee] }).aResume, true, 'and a shortened one IS caught — the guard really bites, which is the only thing that makes the promise worth anything');
+    assert.equal(CT.strategieARésumé({ strategie: intacte, sources: [] }).mesurable, false, 'with no sources it REFUSES to answer rather than reporting "no loss" against an empty denominator — the worst false green (leçon L5)');
+
+    // DEUX BUGS AUTO-RÉFÉRENTIELS, TROUVÉS AUX DEUX PREMIERS PASSAGES RÉELS, gardés comme
+    // contre-tests parce que c'est la TROISIÈME fois cette semaine que ce motif revient
+    // (find-booster #182, la sonde API du matin, ceux-ci) : un outil qui se trouve lui-même.
+    assert.ok(!CT.corpsDeStrategie(sq).includes('NE RÉSUME JAMAIS'), 'the banner is excluded from counting: it is itself a block quote, and counting it made the guard report 408 cited characters for 66 of source — it fed on its own header');
+    const avecGuillemets = 'une idée qui cite « ses propres mots » en plein milieu, comme il le fait tout le temps';
+    const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
+    assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
+
     // LA FILE PAR THÈME ET PAR FAMILLE (2026-09-26, son état des lieux : « une vue par THÈME des 98
     // ouvertes », puis « regrouper en ~8 grandes familles »).
     const CTD = await import('../scripts/check-tasks-details.mjs');
