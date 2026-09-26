@@ -213,6 +213,45 @@ rejoint `tasks-process-guardian` une fois les archives écartées) ; et le §9 p
 
 ---
 
+## LES DIX AXES PUBLIÉS PAR LE CODE *(2026-09-26, tâche #981)*
+
+Le garde-fou de divergence a refusé de se taire : la prose de cette fiche en déclarait **trois**
+quand le code en publiait **dix**. Elle se rédige à la main — mais elle ne peut plus s'écarter en
+silence, et un lecteur qui n'aurait lu que cette page aurait cru le rangement trois fois plus
+pauvre qu'il n'est.
+
+`iceberg` (à quel groupe il appartient) · `type` (ce qu'il EST) · `moment` (QUAND il intervient) ·
+`domaine` (SUR QUOI il regarde) · `destinataire` (À QUI le résultat sert) · `cherche` (quelle
+QUESTION il pose au dépôt) · `vitalite` (ce que l'Agence perd sans lui) · **`exportabilite`
+(PEUT-IL PARTIR)** · `rang` (ce qu'il VAUT) · `famille` (avec qui il travaille).
+
+**Le dixième est né de sa question du 2026-09-26** : « est-ce que tous les sujets liés à l'export
+sont bien pris en compte dans la classification, dont l'exportabilité des fichiers ET la vitalité
+des fichiers vs le fonctionnement de l'agence ? ». La réponse était **à moitié**, et l'écart se
+lisait dans la ligne juste au-dessus de celle qui manquait : la vitalité était un axe déclaré,
+l'exportabilité était seulement RENVOYÉE ailleurs (« le kit d'export est chez SAFE-EXPORT »). **Un
+renvoi n'est pas une classification** : on ne pouvait pas croiser « ce fichier est vital » avec
+« son kit est complet » sans ouvrir deux documents, alors que c'est exactement le croisement qui
+décide si l'Agence peut partir aujourd'hui.
+
+**Il est LU, jamais recalculé.** `etatDuKit()` reste chez SAFE-EXPORT, qui en est le Gardien sacré du code : deux
+mesures de la même chose finissent toujours par diverger, et le projet l'a déjà payé (leçon L29).
+Cet axe ne fait que RAPPORTER ce que l'autre dit, dans le document où l'on vient demander « c'est
+quoi, ce fichier ? ».
+
+## Une SECONDE POPULATION : les documents *(2026-09-26, tâche #980)*
+
+Cet outil classait 90 fichiers **exécutables** et ne lisait les documents que comme des sources.
+Le dépôt en porte **437**, et six seulement étaient nommés au titre de l'export. Ils forment
+désormais une population à part entière, avec un seul axe — **l'exportabilité** — à trois états
+tranchés par l'utilisateur : **PART** (générique, réutilisable ailleurs) · **RESTE** (propre au jeu)
+· **MÉMOIRE** (archive de ce projet, ne part jamais et ne se supprime pas).
+
+Tout est **déduit** de registres déjà existants, jamais recopié ; les exceptions sont déclarées
+avec leur raison (`EXCEPTIONS_D_EXPORT`). Couverture au premier passage complet : **98 %**. Les neuf
+documents de stratégie restent délibérément « à instruire » — aucun signal mécanique ne les sépare,
+et c'est un arbitrage humain (Article 28).
+
 ## L'échelle de VITALITÉ — le cinquième axe *(2026-09-26, tâche #906)*
 
 Ses quatre niveaux, dans ses mots : **vital** (sans lui l'Agence ne tourne pas) · **essentiel**

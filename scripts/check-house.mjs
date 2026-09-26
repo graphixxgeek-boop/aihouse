@@ -10116,9 +10116,9 @@ await testVerrousDOuverture();
   // LE GARDE-FOU DU §1 (2026-09-25, sa décision : « un garde-fou qui ALERTE dès que les deux ne
   // disent plus la même chose »). Il ne réécrit jamais la prose : il compte, et il le dit.
   {
-    const deux = CASSANDRA.axesDivergentDuReferentiel({ texte: '### Axe A — un\n### Axe B — deux\n', axes: [{ cle: 'x' }], rangs: false, familles: false });
+    const deux = CASSANDRA.axesDivergentDuReferentiel({ texte: '### Axe A — un\n### Axe B — deux\n', axes: [{ cle: 'x' }], rangs: false, familles: false, exportabilite: false });
     assert.equal(deux.divergent, true, 'bites: two axes declared in prose against one published by the code is a divergence');
-    const pareil = CASSANDRA.axesDivergentDuReferentiel({ texte: '### Axe A — un\n### Axe B — deux\n', axes: [{ cle: 'x' }, { cle: 'y' }], rangs: false, familles: false });
+    const pareil = CASSANDRA.axesDivergentDuReferentiel({ texte: '### Axe A — un\n### Axe B — deux\n', axes: [{ cle: 'x' }, { cle: 'y' }], rangs: false, familles: false, exportabilite: false });
     assert.equal(pareil.divergent, false, 'and stays silent when both sides count the same — a guard that accuses when all is well stops being read (L4)');
     assert.equal(CASSANDRA.axesDivergentDuReferentiel({ texte: 'aucun titre ici' }).mesure, 'pas mesuré', 'a document that changed shape reports "pas mesuré" rather than counting zero declared axes, which would be a measurement fabricated by the reader');
     assert.equal(CASSANDRA.axesDivergentDuReferentiel({ lire: () => { throw new Error('nope'); } }).mesure, 'pas mesuré', 'and an unreadable document never yields a green');

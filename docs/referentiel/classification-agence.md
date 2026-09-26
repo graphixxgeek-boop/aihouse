@@ -1,6 +1,8 @@
+> **Frontière avec `docs/referentiel/organisation-agence.md`** : celui-là DÉFINIT les axes, un par un, avec la raison qui a fait naître chacun. Celui-ci les APPLIQUE aux 90 fichiers et aux 437 documents, et il est GÉNÉRÉ — jamais écrit à la main.
+
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 22:48 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 23:02 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -413,7 +415,6 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 | **2 portes orphelines** — `integration-outil.mjs` · `tasks-process-guardian.mjs` | le fichier est lançable et rien de vivant dans le dépôt ne le lance | lui écrire sa commande dans la table maîtresse, ou le supprimer |
 | **1 membre du registre n'a pas de fichier à lui** — `find-deep-booster` | il porte un rang et une famille, mais son code vit à l'intérieur d'un autre fichier | rien d'urgent : le noter ici suffit, tant que l'addition du §1 le dit au lieu de le masquer |
 | **4 rangs portent un nom provisoire** — 🚪 Postulant · 🏷️ Sans fiche · 🕳️ Sans porte · 📝 Émetteur de rapport | l'agent les a nommés faute de mieux, et c'est l'utilisateur qui nomme | les trancher dans la fournée de nommage (tâche #200) |
-| **Le référentiel et le code ne déclarent pas le même nombre d'axes** | le référentiel déclare 3 axe(s), le code en publie 9 (iceberg, type, moment, domaine, destinataire, cherche, vitalite, rang, famille) — la prose se rédige à la main, mais elle ne peut plus s'écarter en silence | réécrire à la main le §1 de `docs/referentiel/organisation-agence.md` — la prose est humaine, seul l'écart est mécanique |
 
 > Chaque ligne porte son geste, jamais seulement son constat (Article 28) : un rapport qui s'arrête au constat ressemble à un problème traité, et c'est exactement ce qui rend l'oubli invisible.
 

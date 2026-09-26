@@ -1022,6 +1022,20 @@ export const AXES_DE_CLASSIFICATION = [
   // la CONSÉQUENCE de ce niveau (chez SAFE-EXPORT), jamais le niveau lui-même — un fichier peut
   // être vital au fonctionnement et trivial à emporter, ou secondaire et lourd à transmettre.
   { cle: "vitalite", quoi: "CE QUE L'AGENCE PERD SANS LUI — vital / essentiel / utile / optionnel, pour son FONCTIONNEMENT (jamais pour son exportabilité)", porteur: "vitaliteDuParc() — ici ; le kit d'export qui en découle est chez SAFE-EXPORT" },
+  // L'EXPORTABILITÉ REJOINT LES AXES DÉCLARÉS (2026-09-26, tâche #981, sa question : « est-ce que
+  // tous les sujets liés à l'export sont bien pris en compte dans la classification, dont
+  // l'exportabilité des fichiers ET la vitalité des fichiers vs le fonctionnement de l'agence ? »).
+  //
+  // LA RÉPONSE ÉTAIT « À MOITIÉ », ET L'ÉCART SE LISAIT DANS LA LIGNE JUSTE AU-DESSUS : la vitalité
+  // était un axe déclaré, l'exportabilité était seulement RENVOYÉE ailleurs (« le kit d'export est
+  // chez SAFE-EXPORT »). Un renvoi n'est pas une classification : on ne pouvait pas croiser « ce
+  // fichier est vital » avec « son kit est complet » sans ouvrir deux documents, alors que c'est
+  // très exactement le croisement qui décide si l'Agence peut partir aujourd'hui.
+  //
+  // IL EST LU, JAMAIS RECALCULÉ. `etatDuKit()` reste chez SAFE-EXPORT, qui en est le Gardien sacré du code : deux
+  // mesures de la même chose finissent toujours par diverger, et le projet l'a déjà payé (leçon
+  // L29). Cet axe ne fait que RAPPORTER ce que l'autre outil dit, dans le document où l'on vient
+  // demander « c'est quoi, ce fichier ? ».
 ];
 
 // L'INDICE DE CLASSIFICATION À FACETTES (2026-09-26). Sa demande : « on pourrait remplacer ces
@@ -1180,7 +1194,7 @@ export const POSTE_PAR_RANG = {
 export const REFERENTIEL_ORGANISATION = "docs/referentiel/organisation-agence.md";
 export const MOTIF_AXE_DECLARE = /^###\s+Axe\s+([A-Z])\s*[—-]\s*(.+)$/gm;
 
-export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = readFileSync, axes = AXES_DE_CLASSIFICATION, rangs = true, familles = true } = {}) {
+export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = readFileSync, axes = AXES_DE_CLASSIFICATION, rangs = true, familles = true, exportabilite = true } = {}) {
   let src = texte;
   if (src == null) { try { src = lire(join(root, REFERENTIEL_ORGANISATION), "utf8"); } catch { src = null; } }
   if (src == null) return { mesure: "pas mesuré", pourquoi: `${REFERENTIEL_ORGANISATION} est illisible — sans le document, aucune divergence ne peut être constatée, et un vert rendu ici ressemblerait à un accord` };
@@ -1188,7 +1202,12 @@ export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = r
   if (!declares.length) return { mesure: "pas mesuré", pourquoi: `aucun titre « ### Axe X — … » trouvé dans ${REFERENTIEL_ORGANISATION} : le document a changé de forme, et compter zéro axe déclaré serait une mesure fabriquée par le lecteur` };
   // Les axes réellement publiés par le code : les cinq de AXES_DE_CLASSIFICATION, plus le rang et
   // la famille, qui sont des axes à part entière même s'ils vivent dans un autre registre.
-  const publies = [...axes.map((a) => a.cle), ...(rangs ? ["rang"] : []), ...(familles ? ["famille"] : [])];
+  // `exportabilite` rejoint `rang` et `famille` : ce sont les trois axes PUBLIÉS mais portés
+  // AILLEURS — un script ne les porte pas lui-même, on les lit dans un autre registre. Les mettre
+  // dans AXES_DE_CLASSIFICATION reviendrait à reprocher à chaque script de ne pas porter son
+  // propre kit d'export, alors que c'est SAFE-EXPORT qui le sait (corrigé le 2026-09-26, le filet
+  // de sécurité ayant refusé la première version en une seconde).
+  const publies = [...axes.map((a) => a.cle), ...(rangs ? ["rang"] : []), ...(familles ? ["famille"] : []), ...(exportabilite ? ["exportabilite"] : [])];
   return {
     mesure: "mesuré",
     declares: declares.map((d) => `Axe ${d.lettre} — ${d.titre}`),
@@ -1812,7 +1831,13 @@ function main() {
     // officiels de rangement, c'est très exactement la divergence que ce chantier combat.
     const docs = classerLesDocuments();
     const lignesDocs = formatDocumentsLines(docs);
-    writeFileSync(join(ROOT, cible), `${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n`, "utf8");
+    // LA FRONTIÈRE AVEC organisation-agence.md, ÉCRITE DANS LE GÉNÉRATEUR et jamais dans le fichier
+    // (2026-09-26) : ce document est régénéré à chaque passage, donc une frontière écrite dedans
+    // sauterait au suivant. Elle est réclamée par le détecteur de documents jumeaux, qui l'a
+    // trouvée sur ce couple-ci quelques minutes après sa propre naissance — les deux parcourent
+    // les mêmes axes, et aucun ne citait l'autre.
+    const frontiere = "> **Frontière avec `docs/referentiel/organisation-agence.md`** : celui-là DÉFINIT les axes, un par un, avec la raison qui a fait naître chacun. Celui-ci les APPLIQUE aux 90 fichiers et aux 437 documents, et il est GÉNÉRÉ — jamais écrit à la main.\n";
+    writeFileSync(join(ROOT, cible), `${frontiere}\n${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n`, "utf8");
     try { mkdirSync(join(ROOT, "docs/le-classificateur"), { recursive: true }); } catch { /* déjà là */ }
     writeFileSync(join(ROOT, CLASSIFICATION_HTML), renderHtmlReport({
       tool: "le-classificateur",

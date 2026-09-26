@@ -93,6 +93,61 @@ inventaire, donc dans aucune décision — il mesure pour lui-même.
 | 🟡 **utile** | rien ne casse, on perd du temps | une commande de lancement est écrite quelque part |
 | ⚪ **optionnel** | rien | personne ne le lance, rien n'est écrit pour lui, il ne garantit rien |
 
+**FRONTIÈRE AVEC `docs/referentiel/classification-agence.md`** *(2026-09-26, écrite le soir même où
+le détecteur de documents jumeaux l'a réclamée — sur ce texte-ci, quelques minutes après sa propre
+naissance)* : ce document-ci **DÉFINIT** les axes, un par un, avec la raison qui a fait naître
+chacun. Le voisin **APPLIQUE** ces axes aux 90 fichiers et aux 437 documents, et il est GÉNÉRÉ à
+chaque passage — on ne l'écrit jamais à la main. On vient ici pour comprendre un axe, on va là-bas
+pour savoir où tombe un fichier.
+
+### Axe D — Exportabilité (« ce fichier PEUT-IL partir ? »)
+
+*(Ajouté le 2026-09-26, tâche #981, sur sa question : « est-ce que tous les sujets liés à l'export
+sont bien pris en compte dans la classification, dont l'exportabilité des fichiers ET la vitalité
+des fichiers vs le fonctionnement de l'agence ? »)*
+
+**La réponse était À MOITIÉ, et l'écart se lisait juste au-dessus** : la vitalité était un axe
+déclaré (axe C), l'exportabilité était seulement RENVOYÉE ailleurs — « le kit d'export est chez
+SAFE-EXPORT ». Un renvoi n'est pas une classification : on ne pouvait pas croiser « ce fichier est
+vital » avec « son kit est complet » sans ouvrir deux documents, alors que c'est exactement le
+croisement qui décide si l'Agence peut partir aujourd'hui.
+
+**Il est LU, jamais recalculé** : `etatDuKit()` reste chez SAFE-EXPORT, qui en est le Gardien sacré du code. Deux
+mesures de la même chose finissent toujours par diverger (leçon L29) ; cet axe ne fait que
+RAPPORTER ce que l'autre dit, dans le document où l'on vient demander « c'est quoi, ce fichier ? ».
+Trois états : **kit complet** · **kit incomplet** (les pièces manquantes sont nommées) · **dispensé
+avec sa raison écrite** — un fichier qui ne partira jamais (crochet git, installateur) n'est pas un
+fichier en retard.
+
+### Axe E — Type (« ce que le fichier EST »)
+
+Constaté en LISANT le fichier, jamais deviné à son nom : porté par `typeDuScript()`.
+
+### Axe F — Moment (« QUAND il intervient »)
+
+À chaque commit, à la Ronde, sur demande, avant un chantier : porté par `momentsDeLOutil()`.
+
+### Axe G — Domaine (« SUR QUOI il regarde »)
+
+Le jeu, l'Agence, ou les deux : porté par `domainesDeLOutil()`. Vingt-deux fichiers n'en ont
+légitimement aucun — une bibliothèque ne regarde rien — et cette absence est déclarée plutôt que
+comptée comme un trou.
+
+### Axe H — Destinataire (« À QUI le résultat sert »)
+
+L'agent, l'utilisateur, ou un autre outil : porté par `destinatairesDeLOutil()`.
+
+### Axe I — Question posée au dépôt (« ce qu'il CHERCHE »)
+
+Déclaré-mais-absent, deux-sources-divergent, duplication… : porté par HARMONIA
+(`cartographieCriteresTransverses()`), et c'est le seul axe dont le porteur vit dans un autre outil.
+
+### Axe J — Groupe iceberg (« à quel étage il vit »)
+
+Membre, oublié, infrastructure, plomberie : porté par `classerIceberg()`. C'est l'axe qui répond à
+sa demande d'origine — séparer ce qui a un nom de ce qui est de la tuyauterie.
+
+
 **Il est DÉRIVÉ, jamais déclaré en tête de fichier** : la vitalité se lit dans ce que le dépôt FAIT
 du fichier. Un outil excellent que personne n'a encore branché sort « optionnel », et c'est exact —
 il n'est pas encore vital, il est prêt à l'être.
