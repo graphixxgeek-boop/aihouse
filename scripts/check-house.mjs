@@ -8759,6 +8759,20 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // LE TEMPS DE L'UTILISATEUR (2026-09-26, tâche #913 — point 26 de son gros prompt). La QUATRIÈME
+    // obligation de l'Article 32 n'avait aucun mécanisme : l'agent la « savait », ce que l'Article 27
+    // interdit précisément de considérer comme une protection.
+    const ADT = await import('../scripts/agent-du-temps.mjs');
+    const tSansRien = ADT.tempsDeLUtilisateur({});
+    assert.equal(tSansRien.mode.indisponible, true, 'with no working mode it says so: one does not guess whether a blocking question would cost ten seconds or a whole night');
+    assert.equal(tSansRien.depuisSaDerniereTrace.mesurable, false, 'and "how long since he last spoke" REFUSES rather than guessing');
+    assert.ok(tSansRien.depuisSaDerniereTrace.pourquoi.includes('0,1 h'), 'the refusal carries the two real failed attempts that produced it — both returned "0.1 h" in the middle of an autonomous night while he was asleep, because every suivi row is written BY THE AGENT, including the ones born of his own request');
+    const tMode = ADT.tempsDeLUtilisateur({ mode: { slug: 'autonome', utilisateurPresent: false, fenetrePeutBloquer: false } });
+    assert.ok(tMode.mode.nature.includes('DÉCLARÉ'), 'the working mode is reported as a DECLARATION, never an observation: a mode nobody changed describes yesterday\'s intention');
+    const tLong = ADT.tempsDeLUtilisateur({ derniereLigne: '2026-09-26T00:00Z', maintenant: new Date('2026-09-26T09:00Z') });
+    assert.equal(tLong.depuisSaDerniereTrace.longueAbsence, true, 'when a caller DOES supply a real timestamp, a long silence is flagged — a report written for someone who just spoke does not suit someone returning nine hours later (Article 29)');
+    assert.ok(tLong.depuisSaDerniereTrace.horsPortee.includes('silence'), 'and even then it measures a WRITTEN silence, never an absence: he can read without writing');
+
     // LES BÉNÉFICES NETS (2026-09-26, tâche #909) — et sa consigne qui compte le plus est celle qui
     // INTERDIT : « déclarer que le contrefactuel "temps gagné" n'est pas mesurable sans groupe
     // témoin ». Un tableau de bénéfices qui chiffre tout est un argumentaire, pas une mesure.

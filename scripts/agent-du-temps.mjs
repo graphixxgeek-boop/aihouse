@@ -111,6 +111,63 @@ export async function maintenant({ fetchImpl = globalThis.fetch, horlogeSysteme 
 // mécaniques, jamais mon jugement »). Une estimation est « juste » à ±30 % : en deçà elle sous-estime,
 // au-delà elle sur-estime. Le chiffre vient de la première mesure réelle (38 min estimées contre 27
 // réelles, soit 41 % d'écart, ressenti comme « nettement trop »), pas d'une convention.
+// ══════════════════════════════════════════════════════════════════════════
+// LE TEMPS DE L'UTILISATEUR (2026-09-26, tâche #913 — point 26 de son gros prompt : « la notion du
+// temps — renforcer AGENT-DU-TEMPS »).
+//
+// LA QUATRIÈME OBLIGATION DE L'ARTICLE 32 N'AVAIT AUCUN MÉCANISME, et c'est le trou que ceci
+// comble. L'Article dit : « le temps de L'UTILISATEUR compte autant que celui de la machine.
+// Est-il présent ou endormi ? Combien de temps lui reste-t-il ? Une question bloquante posée à
+// trois heures du matin ne bloque pas dix secondes, elle bloque la nuit entière. » Les trois
+// premières obligations (lire l'heure, nommer la source, calculer la fraîcheur) sont portées par
+// cet outil depuis le 2026-09-24. La quatrième ne l'était par rien — l'agent la « savait », ce que
+// l'Article 27 interdit précisément de considérer comme une protection.
+//
+// CE QU'IL MESURE : le mode de travail déclaré dit si l'utilisateur est présent et si une fenêtre
+// peut bloquer. C'est une DÉCLARATION, pas une observation, et c'est écrit comme tel — un mode qu'on
+// a oublié de changer décrit l'intention d'hier.
+//
+// CE QU'IL DÉCLARE IMPOSSIBLE, et c'est le résultat le plus utile de ce travail (Article 27 : quand
+// un mécanisme est impossible, l'écrire noir sur blanc EST la protection). **« Depuis combien de
+// temps n'a-t-il pas parlé ? » ne se lit PAS dans ce dépôt.** Deux tentatives ont été faites et
+// toutes deux rendaient « 0,1 h » en pleine nuit autonome, alors qu'il dormait depuis des heures :
+//   1. la dernière ligne du suivi → c'est la dernière ligne écrite par l'AGENT ;
+//   2. la dernière ligne d'origine « utilisateur » → une ligne née de SA demande est quand même
+//      ÉCRITE par l'agent, souvent des heures plus tard. L'origine dit d'où vient la tâche, jamais
+//      quand il a parlé.
+// Le seul porteur possible est l'horodatage du dernier message reçu, qui vit dans la conversation
+// et pas sur le disque. Un appelant qui l'a peut le passer en `derniereLigne` ; sans lui, la
+// fonction REFUSE plutôt que de rendre un chiffre qui dirait toujours « il vient de parler ».
+export const SEUIL_LONGUE_ABSENCE_H = 4;
+
+export function tempsDeLUtilisateur({ mode = null, derniereLigne = null, maintenant = new Date() } = {}) {
+  const ecoule = derniereLigne ? (maintenant.getTime() - new Date(derniereLigne).getTime()) / 3600000 : null;
+  return {
+    // LE MODE EST UNE DÉCLARATION, jamais une observation — et le dire change ce qu'on en fait.
+    mode: mode ? { slug: mode.slug ?? null, utilisateurPresent: mode.utilisateurPresent ?? null, fenetrePeutBloquer: mode.fenetrePeutBloquer ?? null,
+                   nature: "DÉCLARÉ par le mode de travail en cours, jamais observé : si le mode n'a pas été changé, il décrit l'intention d'hier" }
+        : { indisponible: true, pourquoi: "aucun mode de travail lisible — on ne sait donc pas si une question bloquante coûterait dix secondes ou une nuit, et c'est exactement ce qu'il ne faut pas supposer" },
+    depuisSaDerniereTrace: ecoule === null
+      ? { mesurable: false, pourquoi: "NON LISIBLE DEPUIS LE DÉPÔT, et c'est une impossibilité DÉCLARÉE plutôt qu'un oubli : les lignes du suivi sont écrites par l'AGENT, y compris celles nées d'une demande de l'utilisateur. Deux tentatives ont rendu « 0,1 h » en pleine nuit autonome, alors qu'il dormait depuis des heures. Le seul porteur possible est l'horodatage du dernier message reçu, qui vit dans la conversation et pas sur le disque — un appelant qui l'a le passe en `derniereLigne`" }
+      : { mesurable: true, heures: Math.round(ecoule * 10) / 10,
+          longueAbsence: ecoule >= SEUIL_LONGUE_ABSENCE_H,
+          // CE QUE CETTE MESURE NE PROUVE PAS, et il faut le dire : elle mesure un SILENCE ÉCRIT,
+          // pas une absence. Il peut lire sans écrire, et il le fait souvent.
+          horsPortee: "mesure un silence ÉCRIT, jamais une absence : il peut lire sans écrire une ligne. Un long silence dit qu'un compte rendu doit se réexpliquer (Article 29), jamais qu'il dort." },
+  };
+}
+
+export function formatTempsUtilisateurLines(t) {
+  const l = ["--- LE TEMPS DE L'UTILISATEUR (Article 32, quatrième obligation) ---"];
+  l.push(t.mode.indisponible
+    ? `  ❓ MODE DE TRAVAIL : ${t.mode.pourquoi}`
+    : `  MODE « ${t.mode.slug} » — présent : ${t.mode.utilisateurPresent} · une fenêtre peut bloquer : ${t.mode.fenetrePeutBloquer}\n     ${t.mode.nature}`);
+  l.push(t.depuisSaDerniereTrace.mesurable
+    ? `  DEPUIS SA DERNIÈRE TRACE ÉCRITE : ${t.depuisSaDerniereTrace.heures} h${t.depuisSaDerniereTrace.longueAbsence ? ` — au-delà de ${SEUIL_LONGUE_ABSENCE_H} h : un compte rendu doit se réexpliquer, pas reprendre au milieu de sa phrase (Article 29)` : ""}\n     ${t.depuisSaDerniereTrace.horsPortee}`
+    : `  ❓ DEPUIS SA DERNIÈRE TRACE : ${t.depuisSaDerniereTrace.pourquoi}`);
+  return l;
+}
+
 export const TOLERANCE_ESTIMATION = 0.3;
 
 export function comparerAuReel(estime, reel, { tolerance = TOLERANCE_ESTIMATION } = {}) {
@@ -201,6 +258,14 @@ async function main() {
     const aj = ajusterDepuisHistorique(h.mesures);
     console.log(`\n  AJUSTEMENT : ${aj.mesurable ? `facteur ${aj.facteur} — ${aj.pourquoi}` : `pas encore — ${aj.pourquoi}`}`);
   }
+  // LE TEMPS DE L'UTILISATEUR (2026-09-26, #913) — les sources sont chargées ICI plutôt qu'importées
+  // en tête : un dépôt sans mode de travail ni suivi doit obtenir un « pas mesuré » avec sa raison,
+  // jamais un plantage, et cet outil est le dernier qui devrait tomber (Article 32).
+  let modeCourantLu = null;
+  try { modeCourantLu = (await import("./modes-de-travail.mjs")).modeCourant(); } catch { /* déclaré par la fonction */ }
+  console.log("");
+  for (const l of formatTempsUtilisateurLines(tempsDeLUtilisateur({ mode: modeCourantLu }))) console.log(l);
+
   const ecarts = [];
   if (m.mesurable && m.source === "système") ecarts.push({ pourquoi: "l'heure vient de l'horloge locale : les API de temps sont refusées par la politique réseau de l'environnement, à autoriser si une heure indépendante de la machine est voulue" });
   if (!h.mesurable) ecarts.push({ pourquoi: "aucune mesure historisée : la première estimation comparée au réel n'a encore rien à ajuster" });

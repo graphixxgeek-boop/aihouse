@@ -61,3 +61,41 @@ l'horloge locale en silence.
 d'autre. Ce qui est GÉNÉRIQUE — comparer, historiser, ajuster — vit ici et sert aussi bien la Ronde
 que la simulation (Article 18). Les recopier aurait donné deux historiques qui divergent, ce que
 l'Article 24 interdit.
+
+---
+
+## La QUATRIÈME obligation de l'Article 32, enfin portée *(2026-09-26, tâche #913)*
+
+L'Article 32 dit : « **le temps de L'UTILISATEUR compte autant que celui de la machine.** Est-il
+présent ou endormi ? Combien de temps lui reste-t-il ? Une question bloquante posée à trois heures
+du matin ne bloque pas dix secondes, elle bloque la nuit entière. »
+
+Les trois premières obligations (lire l'heure, nommer la source, calculer la fraîcheur sur une heure
+lue) étaient portées par cet outil depuis le 2026-09-24. **La quatrième ne l'était par rien** —
+l'agent la « savait », ce que l'Article 27 interdit précisément de considérer comme une protection.
+
+### Ce qui est mesuré
+
+**Le mode de travail en cours** (`modes-de-travail.mjs`) : l'utilisateur est-il déclaré présent, une
+fenêtre peut-elle bloquer. C'est rapporté comme une **DÉCLARATION, jamais une observation** — un
+mode qu'on a oublié de changer décrit l'intention d'hier.
+
+### Ce qui est déclaré IMPOSSIBLE, et c'est le résultat le plus utile
+
+**« Depuis combien de temps n'a-t-il pas parlé ? » ne se lit pas dans ce dépôt.** Deux tentatives
+ont été faites, et **les deux rendaient « 0,1 h » en pleine nuit autonome, alors qu'il dormait
+depuis des heures** :
+
+1. **la dernière ligne du suivi** → c'est la dernière ligne écrite par l'AGENT ;
+2. **la dernière ligne d'origine « utilisateur »** → une ligne née de SA demande est quand même
+   ÉCRITE par l'agent, souvent des heures plus tard. L'origine dit d'où vient la tâche, **jamais
+   quand il a parlé**.
+
+Le seul porteur possible est l'horodatage du dernier message reçu, **qui vit dans la conversation et
+pas sur le disque**. Un appelant qui l'a le passe en `derniereLigne` ; sans lui, la fonction REFUSE
+plutôt que de rendre un chiffre qui dirait toujours « il vient de parler ».
+
+Quand le chiffre EST fourni, un silence de plus de 4 heures est signalé : un compte rendu écrit pour
+quelqu'un qui vient de parler ne convient pas à quelqu'un qui revient neuf heures plus tard
+(Article 29, pris par l'autre bout). Et même là, la mesure porte sa limite : **un silence ÉCRIT
+n'est pas une absence** — il peut lire sans écrire une ligne.

@@ -313,6 +313,17 @@ export const PROCESSES = [
       // confronter un plan figé à l'état du jour — mais RIEN N'OBLIGEAIT à figer le plan, donc la
       // confrontation du matin se faisait contre le plan d'une nuit antérieure, ou contre rien.
       // Un avant/après sans « avant » n'est pas une mesure, c'est une impression.
+      // LE RÉVEIL A UNE CEINTURE **ET** DES BRETELLES (2026-09-26, tâche #913 — sa demande la plus
+      // ferme de la nuit : « assure toi de ne plus jamais t'arreter en mode auto quand je te
+      // lance »). La relance normale est une chaîne de réveils courts que l'agent RÉARME à chaque
+      // tour ; son défaut est structurel et non théorique — **un seul tour qui se termine sans
+      // réarmer et la nuit est finie**, sans que rien ne le signale. Un filet RÉCURRENT, qui ne
+      // dépend d'aucun réarmement, tire la chaîne même quand elle a cassé.
+      //
+      // POURQUOI LES DEUX, ET PAS SEULEMENT LE RÉCURRENT : le récurrent est au mieux horaire, donc
+      // une casse coûte jusqu'à une heure de nuit perdue. La chaîne courte donne le rythme, le
+      // récurrent garantit qu'elle reprend. Aucun des deux ne remplace l'autre.
+      { cle: "reveil-a-deux-etages", libelle: "armer les DEUX réveils avant de commencer : la chaîne courte réarmée à chaque tour (le rythme) ET un filet récurrent qui ne dépend d'aucun réarmement (la garantie) — un seul tour qui se termine sans réarmer suffit à tuer une nuit entière", preuve: null },
       { cle: "plan-depart-fige", libelle: "figer la liste des tâches ouvertes AVANT de commencer, dans docs/rapports-de-nuit/plan-depart-AAAA-MM-JJ.txt — sans ce point de départ, aucune confrontation du matin n'est possible", preuve: { dossier: "docs/rapports-de-nuit/", motif: /^plan-depart-.*\.txt$/ } },
       // AJOUTÉE (2026-09-22) : avant de reprendre le plan, savoir où on en est. Sans ça, une nuit
       // passe à côté d'une tâche en attente parfaitement traitable pendant que personne ne dort
