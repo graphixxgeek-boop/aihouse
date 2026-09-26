@@ -7467,6 +7467,40 @@ async function testClassificationRapports() {
   assert.ok(indetermines < reel.rapports.lignes.length / 3, `at most a third of folders may stay unsorted (currently ${indetermines} of ${reel.rapports.lignes.length}) — above that the axis is not classifying, it is failing to match, and the first real run proved the two look identical`);
   assert.equal(findSujetsSansTerrain((await import('../scripts/le-coordinateur.mjs')).PRESTATIONS.map((p) => `${p.demande ?? ''} ${p.description ?? ''}`)).sansTerrain.length, 0, 'and against the REAL catalogue every declared subject must still have words to search on — a subject that can no longer match returns zero, which reads exactly like a clean theme');
 
+  // LES TREIZE TROUS COMBLÉS (sa décision « les combler maintenant »), et la distinction qui évite
+  // d'en fabriquer quatre faux. Neuf dossiers étaient de vrais registres non déclarés ; quatre
+  // n'en sont pas, et les déclarer de force aurait fait réclamer un item de Ronde à des archives
+  // que personne ne produit périodiquement — un mensonge propre plutôt qu'un trou visible.
+  const dr2 = await import('../scripts/doc-report.mjs');
+  assert.ok(dr2.DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES.every((e) => e.path && e.pourquoi), 'each non-registry carries a WRITTEN reason — an exclusion without one is not a decision, it is a silent abandonment (Article 28)');
+  assert.deepEqual(dr2.findDossiersNiRegistreNiDeclares(['docs/argus/', 'docs/plans/']), [], 'a declared registry and a declared non-registry both count as accounted for');
+  assert.deepEqual(dr2.findDossiersNiRegistreNiDeclares(['docs/tout-neuf/']), ['docs/tout-neuf'], 'and a folder that is neither is named — the exact blind spot the classification revealed, now unable to reform at the next tool');
+  const avecExclus = classerLesRapports({
+    registres: [], prestations: [], nonRegistres: [{ path: 'docs/beta/', pourquoi: 'ce ne sont pas des rapports d\'outil' }],
+    inventaire: { mesurable: true, lignes: [{ dossier: 'docs/beta', combien: 1, octets: 1, lecteurs: [], aUnIndex: false, jamaisCites: 1 }] },
+  });
+  assert.deepEqual(avecExclus.sansEquipe, [], 'a folder declared as NOT a registry is never reported as a missing team — reproaching a decision already taken and written is the false positive that makes a guard stop being read (leçon L4)');
+  assert.equal(avecExclus.horsRegistreAssume[0].pourquoi, 'ce ne sont pas des rapports d\'outil', 'it is reported as assumed instead, carrying its reason — three states, never two');
+  const reelApres = await classificationComplete();
+  assert.deepEqual(reelApres.rapports.sansEquipe, [], 'against the real repository every report folder now has either a declared team or a written reason for having none — the thirteen holes his answer asked me to fill');
+
+  // LA VÉRIFICATION DE LA RONDE (#612) — en LECTURE SEULE, sur sa consigne « on ne touche rien ».
+  const { verifierLesRapportsDeRonde, formatVerificationRondeLines } = da;
+  const vRonde = verifierLesRapportsDeRonde({
+    classification: { rapports: { mesurable: true, lignes: [
+      { dossier: 'docs/a', combien: 2, sujet: 'travail', fonction: 'matiere' },
+      { dossier: 'docs/b', combien: 3, sujet: 'travail', fonction: 'matiere' },
+      { dossier: 'docs/c', combien: 1, sujet: 'jeu', fonction: 'livre' },
+    ] } },
+    dossiersDeRonde: ['docs/a/', 'docs/b/', 'docs/c/', 'docs/jamais-rien/'],
+  });
+  assert.equal(vRonde.groupes.length, 2, 'folders are grouped by the classification cell they share, never by how alike their names look — point 2 of the task, in code');
+  assert.equal(vRonde.candidats, 2, 'only the two sharing a cell count as merge candidates; the lone one does not');
+  assert.deepEqual(vRonde.absents, ['docs/jamais-rien'], 'a declared drop folder that never received a file is named rather than silently missing from the count');
+  assert.equal(vRonde.livres, 1, 'and the report separates what is genuinely DELIVERED to him from what is only material for another tool — the distinction his ceiling of ten actually needs');
+  assert.ok(formatVerificationRondeLines(vRonde).some((l) => /RIEN N'A ÉTÉ TOUCHÉ/.test(l)), 'the output states in words that it measured and proposed nothing: he asked for a verification, not a merge plan');
+  assert.match(formatVerificationRondeLines({ mesurable: false, pourquoi: 'rien lu' })[0], /PAS MESURÉ/, 'and an unmeasurable verification says so rather than printing an empty, reassuring grouping');
+
   console.log('Passed: la classification des rapports et des datas (2026-09-26, ses trois commandes liées #955/#956/#957) range 290 rapports réels sur trois axes — le SUJET (dérivé du catalogue PRESTATIONS), l\'ÉQUIPE propriétaire (LUE dans les registres déclarés, jamais recopiée) et la FONCTION (ses trois questions — besoin d\'être lu ? par qui ? qu\'alimente-t-il ? — répondues par la décision déclarée, les lecteurs réels et l\'index, jamais attribuées) — croise les deux premiers comme il l\'a demandé, et intègre les datas qui NE SONT PAS des rapports (journaux locaux, séries chiffrées), ce que personne ne comptait avec eux. Ce que ces tests protègent avant le rangement, c\'est le REFUS de ranger : « sujet non déterminé » reste une sortie, un axe dont les mots ont disparu du corpus se dénonce au lieu de rendre des zéros, et une classification non mesurable le dit au lieu de ressembler à un dépôt propre. Le premier vrai passage a rendu 18 dossiers sur 40 sans sujet — un chiffre qui ne disait rien du dépôt, seulement que PRESTATIONS écrit « ARGUS » là où REGISTRIES écrit « scripts/check-argus.mjs » ; après normalisation, 7. Les deux formes qu\'il a choisies (document généré + HTML de lecture) sortent d\'UN SEUL calcul.');
 }
 
@@ -10007,7 +10041,17 @@ await testVerrousDOuverture();
   const { readdirSync: lireDossierDR } = await import('node:fs');
   const vraisDossiersDR = lireDossierDR(new URL('../docs', import.meta.url), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => `docs/${e.name}`);
   const vraiesDR = deriverLesDecisionsManquantes(vraisDossiersDR);
-  assert.ok(vraiesDR.derivees.length >= 10, `against this actual repository the derivation must genuinely settle most of the gap, otherwise it replaced 24 hand-copied lines with nothing — settled: ${vraiesDR.derivees.length}`);
+  // LE SEUIL EST DEVENU UNE PROPORTION, le 2026-09-26, et le remplacement est motivé plutôt que
+  // commode. Il valait `>= 10` en absolu, calibré le jour où VINGT-QUATRE dossiers n'étaient pas
+  // déclarés : il mesurait « la dérivation tranche-t-elle une majorité de l'écart ? » à travers un
+  // nombre qui ne valait que pour cet écart-là. Déclarer neuf de ces dossiers (sa décision du jour,
+  // « les combler maintenant ») a fait tomber la pioche à 7 sur 15 — donc le test refusait
+  // exactement le progrès qu'il existe pour encourager. La PROPORTION dit ce que l'absolu voulait
+  // dire et ne se périme pas quand l'écart rétrécit. Ce n'est pas un affaiblissement : le jour où la
+  // dérivation cesse de trancher la majorité, ce test échoue toujours, et il échouera même sur un
+  // écart de trois dossiers, là où `>= 10` serait devenu inatteignable donc désactivé de fait.
+  assert.ok(vraiesDR.derivees.length * 2 >= vraiesDR.derivees.length + vraiesDR.aDeclarer.length, `against this actual repository the derivation must genuinely settle MOST of the gap (a proportion, never an absolute that expires as the gap shrinks) — settled ${vraiesDR.derivees.length} of ${vraiesDR.derivees.length + vraiesDR.aDeclarer.length}`);
+  assert.ok(vraiesDR.derivees.length >= 3, 'and it must still settle something at all: a derivation that decides nothing replaced hand-copied lines with nothing, which is the original point of this check');
   assert.equal(vraiesDR.derivees.length + vraiesDR.aDeclarer.length, vraiesDR.total, 'nothing may be lost between the two halves: every gap is either derived or named as undecidable');
   assert.ok(vraiesDR.derivees.some((d) => d.decision === 'delivery_html') && vraiesDR.derivees.some((d) => d.decision === 'texte'), 'and it must produce BOTH verdicts on the real repository — a derivation that only ever answers one way is a constant, not a measurement');
   const renduDR = formatDecisionsDeriveesLines(vraiesDR).join('\n');

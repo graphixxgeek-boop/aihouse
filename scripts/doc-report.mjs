@@ -40,6 +40,36 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // committés (état/cache local, gitignored, perdu à chaque nouveau conteneur d'exécution) — jamais
 // suivis par git, donc jamais par lastTouchDays()/git log ; leur fraîcheur se lit via l'horodatage
 // du système de fichiers lui-même (mtime).
+// LES QUATRE DOSSIERS QUI NE SONT PAS DES REGISTRES (2026-09-26, tâches #955/#961)
+//
+// POURQUOI CETTE LISTE EXISTE PLUTÔT QUE QUATRE ENTRÉES DE PLUS CI-DESSUS. Sa consigne était de
+// combler les trous ; la combler en déclarant ces quatre-là comme des registres d'outil aurait
+// fabriqué un mensonge propre — aucun n'a d'outil producteur, aucun n'a d'index de passages, et le
+// verrou « registre hors Ronde » se serait mis à réclamer un item de Ronde pour des archives que
+// personne ne produit périodiquement.
+//
+// UN TROU COMBLÉ PAR UNE RAISON ÉCRITE RESTE UN TROU COMBLÉ : le jour où quelqu'un redemandera
+// « pourquoi docs/plans n'a pas d'équipe ? », la réponse est ici, et elle ne dépend de la mémoire
+// de personne (Article 27).
+export const DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES = [
+  { path: "docs/plans/", pourquoi: "les plans de chantier — écrits à la main pour un chantier donné, jamais produits passage après passage par un outil. Un plan n'a pas de producteur périodique, donc pas d'équipe propriétaire." },
+  { path: "docs/rapports-de-nuit/", pourquoi: "les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas." },
+  { path: "docs/rapports-gros-prompt/", pourquoi: "les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs." },
+  { path: "docs/contexte-projet/", pourquoi: "les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties." },
+];
+
+// findDossiersNiRegistreNiDeclares() — LE GARDE-FOU DE CETTE DÉCLARATION (Article 24). Un dossier
+// de docs/ qui porte des rapports sans être NI un registre déclaré NI un non-registre déclaré est
+// exactement l'angle mort que la classification vient de révéler, et rien ne l'empêchait de se
+// reformer au prochain outil.
+export function findDossiersNiRegistreNiDeclares(dossiers = [], registres = REGISTRIES, exclus = DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES) {
+  const connus = new Set([
+    ...registres.map((r) => String(r.path ?? "").replace(/\/+$/, "")),
+    ...exclus.map((e) => String(e.path ?? "").replace(/\/+$/, "")),
+  ]);
+  return dossiers.map((d) => String(d).replace(/\/+$/, "")).filter((d) => !connus.has(d));
+}
+
 export const LOCAL_JOURNALS = [
   { path: ".gemini-key-health.json", owner: "Smart Breaker", purpose: "historique de santé des clés/modèles Gemini" },
   { path: ".smart-conso-session.json", owner: "Smart Conso API", purpose: "état de session en cours (consultations récentes)" },
@@ -140,6 +170,33 @@ export const REGISTRIES = [
   // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
   { slug: "safe-export", label: "SAFE-EXPORT", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
   { slug: "tool-learning", label: "TOOL-LEARNING", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
+  // LES NEUF REGISTRES QUI EXISTAIENT SUR LE DISQUE SANS ÊTRE DÉCLARÉS (2026-09-26, tâches
+  // #955/#961, sur sa décision « les combler maintenant »).
+  //
+  // COMMENT ILS ONT ÉTÉ TROUVÉS, et c'est le premier service rendu par la classification : elle
+  // range les rapports par ÉQUIPE PROPRIÉTAIRE en LISANT cette liste — et treize dossiers réels
+  // sont sortis « équipe non déclarée ». Ils n'étaient pas cachés : ils étaient simplement
+  // invisibles à toute question posée à partir d'ici, ce qui n'est pas la même chose et se
+  // ressemble beaucoup. Neuf d'entre eux sont de VRAIS registres d'outil (un index.md, des
+  // rapports de passage) ; les quatre autres ne le sont pas, et sont déclarés comme tels dans
+  // DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES plus bas plutôt qu'ajoutés de force ici.
+  //
+  // L'EFFET DE BORD, VOULU : le verrou « registre hors Ronde » (circle-tasks.mjs) lit cette liste.
+  // Les déclarer, c'est les faire entrer dans le champ de vision de la Ronde.
+  { slug: "data-archangel", label: "data-archangel", family: "(f) 👼 Les Anges de la coordination", path: "docs/data-archangel/", decision: "texte", scriptPath: "scripts/data-archangel.mjs" },
+  { slug: "god-of-all-process", label: "god-of-all-process", family: "(f) 👼 Les Anges de la coordination", path: "docs/god-of-all-process/", decision: "texte", scriptPath: "scripts/god-of-all-process.mjs" },
+  { slug: "angel-of-ia-process", label: "angel-of-ia-process", family: "(f) 👼 Les Anges de la coordination", path: "docs/angel-of-ia-process/", decision: "texte", scriptPath: "scripts/angel-of-ia-process.mjs" },
+  { slug: "le-coordinateur", label: "LE-COORDINATEUR", family: "(f) 👼 Les Anges de la coordination", path: "docs/le-coordinateur/", decision: "texte", scriptPath: "scripts/le-coordinateur.mjs" },
+  { slug: "doc-report", label: "Doc-Report", family: "(f) 👼 Les Anges de la coordination", path: "docs/doc-report/", decision: "texte", scriptPath: "scripts/doc-report.mjs" },
+  { slug: "reponses", label: "Réponses aux gros prompts", family: "(f) 👼 Les Anges de la coordination", path: "docs/reponses/", decision: "delivery_html", scriptPath: "scripts/rapport-gros-prompt.mjs" },
+  // Sa famille est celle de l'organigramme (AGENT_CATEGORIES), jamais celle que son sujet
+  // suggère : j'avais écrit « Les Prophètes » parce qu'il traque une dette de forme, et
+  // findFamillesDivergentesParOutil() a refusé le commit — l'organigramme le range chez les
+  // Anges. C'est exactement le service que ce garde-fou rend : une famille se LIT chez celui
+  // qui la déclare, elle ne se déduit pas de ce que fait l'outil (Article 24).
+  { slug: "pure-gold-unity", label: "pure-gold-unity", family: "(f) 👼 Les Anges de la coordination", path: "docs/pure-gold-unity/", decision: "texte", scriptPath: "scripts/pure-gold-unity.mjs" },
+  { slug: "tableau-de-bord", label: "Tableau de bord interne (KPI)", family: "(f) 👑 La Gouvernance Royale", path: "docs/tableau-de-bord/", decision: "texte", scriptPath: "scripts/kpi-report.mjs" },
+  { slug: "sauvegardes", label: "Sauvegardes du projet", family: "(f) 👑 La Gouvernance Royale", path: "docs/sauvegardes/", decision: "texte", scriptPath: "scripts/sauvegarde-projet.mjs" },
   // THE-EQUALIZER : texte, comme ses voisins de suite. Son verdict est relu par des outils (god,
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus
   // joli et moins lisible par les autres.
@@ -480,8 +537,15 @@ export function derivedDecisionForSlug(slug, { existsImpl = existsSync, readFile
 // Le remplaçant du « trancher 24 fois » : pour chaque dossier sans décision enregistrée, on DÉRIVE
 // quand c'est possible et on NOMME ce qui reste. Le compte des deux moitiés est imprimé, parce
 // qu'un outil qui ne dirait que la moitié dérivée laisserait croire le travail fini.
-export function deriverLesDecisionsManquantes(realDocsDirs, { registries = REGISTRIES, existsImpl = existsSync, readFileImpl = readFileSync, listDirImpl = readdirSync, root = ROOT } = {}) {
-  const manquants = findRegistriesMissingDecision(realDocsDirs, registries);
+export function deriverLesDecisionsManquantes(realDocsDirs, { registries = REGISTRIES, nonRegistres = DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES, existsImpl = existsSync, readFileImpl = readFileSync, listDirImpl = readdirSync, root = ROOT } = {}) {
+  // LES NON-REGISTRES SORTENT DE L'ÉCART, et c'est une correction de cause plutôt qu'un
+  // ajustement de seuil (2026-09-26). Une décision HTML/texte est une décision de FORMAT DE
+  // RAPPORT : un dossier de plans écrits à la main, ou les archives d'entrée transmises par
+  // l'utilisateur, n'en ont aucune à prendre. Les compter dans « reste à déclarer » gonflait
+  // l'écart d'items qu'on ne pourra jamais déclarer, ce qui fait baisser le taux de dérivation
+  // sans qu'aucun progrès n'y change rien — un dénominateur qu'on ne peut pas faire descendre.
+  const horsChamp = new Set((nonRegistres ?? []).map((e) => String(e.path ?? "").replace(/\/+$/, "")));
+  const manquants = findRegistriesMissingDecision(realDocsDirs, registries).filter((d) => !horsChamp.has(String(d).replace(/\/+$/, "")));
   const derivees = [], aDeclarer = [];
   for (const dir of manquants) {
     const slug = dir.replace(/^docs\//, "").replace(/\/$/, "");

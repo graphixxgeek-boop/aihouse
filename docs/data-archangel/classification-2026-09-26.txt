@@ -2,7 +2,7 @@
 
   CE QUI EST RANGÉ, PAR NATURE — et « rapport » n'est qu'une des quatre :
     RAPPORTS              291  — les fichiers produits passage après passage par un outil, archivés dans son registre
-    REGISTRES              45  — l'index d'un outil — la mémoire de ce qu'il a déjà vu, relue au passage suivant
+    REGISTRES              54  — l'index d'un outil — la mémoire de ce qu'il a déjà vu, relue au passage suivant
     JOURNAUX locaux        20  — un journal tenu par un outil pour lui-même, jamais un rapport livré
     SÉRIES CHIFFRÉES        1  — les indicateurs suivis dans le temps — la seule donnée dont la valeur est de se comparer à elle-même
 
@@ -10,43 +10,46 @@
 
   AXE 1 — LE SUJET TRAITÉ
     documents                4 dossier(s) ·   92 fichier(s)
-    travail                 12 dossier(s) ·   63 fichier(s)
+    travail                 13 dossier(s) ·   64 fichier(s)
     code                     4 dossier(s) ·   58 fichier(s)
-    (non déterminé)          7 dossier(s) ·   30 fichier(s)
+    (non déterminé)          6 dossier(s) ·   29 fichier(s)
     outillage                6 dossier(s) ·   21 fichier(s)
     donnees                  4 dossier(s) ·   17 fichier(s)
     consommation             3 dossier(s) ·   10 fichier(s)
 
   AXE 2 — L'ÉQUIPE PROPRIÉTAIRE (lue dans les registres déclarés, jamais recopiée)
-    (f) 👼 Les Anges de la coordination                   12 dossier(s) ·   71 fichier(s)
-    (f) 👑 La Gouvernance Royale                           7 dossier(s) ·   67 fichier(s)
-    (non déterminé)                                       13 dossier(s) ·   48 fichier(s)
+    (f) 👼 Les Anges de la coordination                   18 dossier(s) ·   93 fichier(s)
+    (f) 👑 La Gouvernance Royale                           9 dossier(s) ·   75 fichier(s)
     (f) 🛡️ Les Gardiens Sacrés du Code                    3 dossier(s) ·   47 fichier(s)
     (f) 🎬 La Suite Tarantino - Simulation & qualité narrative   1 dossier(s) ·   44 fichier(s)
-    (f) 📜 Les Prophètes - Dette & Structure du code       4 dossier(s) ·   14 fichier(s)
+    (f) 📜 Les Prophètes - Dette & Structure du code       5 dossier(s) ·   18 fichier(s)
+    (non déterminé)                                        4 dossier(s) ·   14 fichier(s)
 
   AXE 3 — LA FONCTION (a-t-il besoin d'être lu ? par qui ? qu'alimente-t-il ?)
-    livré à l'utilisateur          5 dossier(s) ·   79 fichier(s)  — écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit
-    matière d'un autre outil      33 dossier(s) ·  210 fichier(s)  — au moins un script le relit : il alimente une analyse en aval
-    trace consultable              2 dossier(s) ·    2 fichier(s)  — un index.md le liste — retrouvable à la main, jamais relu automatiquement
+    livré à l'utilisateur          6 dossier(s) ·   80 fichier(s)  — écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit
+    matière d'un autre outil      34 dossier(s) ·  211 fichier(s)  — au moins un script le relit : il alimente une analyse en aval
+    trace consultable              0 dossier(s) ·    0 fichier(s)  — un index.md le liste — retrouvable à la main, jamais relu automatiquement
     écrit et jamais rouvert        0 dossier(s) ·    0 fichier(s)  — ni livraison, ni lecteur, ni index : produit pour personne
 
   LES DEUX AXES CROISÉS (sujet × équipe) — les 12 premières cases
-    travail × (f) 👼 Les Anges de la coordination                    56 fichier(s)
+    travail × (f) 👼 Les Anges de la coordination                    62 fichier(s)
     code × (f) 🛡️ Les Gardiens Sacrés du Code                       46 fichier(s)
     documents × (f) 🎬 La Suite Tarantino - Simulation & qualité narrative   44 fichier(s)
     documents × (f) 👑 La Gouvernance Royale                         44 fichier(s)
-    (sujet non déterminé) × (équipe non déclarée)                    20 fichier(s)
-    donnees × (équipe non déclarée)                                  17 fichier(s)
+    (sujet non déterminé) × (f) 👼 Les Anges de la coordination      14 fichier(s)
     outillage × (f) 📜 Les Prophètes - Dette & Structure du code     14 fichier(s)
-    (sujet non déterminé) × (f) 👼 Les Anges de la coordination      10 fichier(s)
     consommation × (f) 👑 La Gouvernance Royale                      10 fichier(s)
+    donnees × (équipe non déclarée)                                   9 fichier(s)
+    donnees × (f) 👼 Les Anges de la coordination                     8 fichier(s)
+    (sujet non déterminé) × (f) 👑 La Gouvernance Royale              8 fichier(s)
     code × (f) 👑 La Gouvernance Royale                               7 fichier(s)
-    travail × (équipe non déclarée)                                   7 fichier(s)
     outillage × (f) 👑 La Gouvernance Royale                          6 fichier(s)
 
-  ❓ 7 dossier(s) SANS SUJET DÉTERMINÉ : docs/profil-utilisateur · docs/le-coordinateur · docs/pure-gold-unity · docs/sauvegardes · docs/tableau-de-bord · docs/contexte-projet · docs/reponses — rangés nulle part plutôt que rangés au hasard.
-  ❓ 13 dossier(s) SANS ÉQUIPE DÉCLARÉE : docs/data-archangel · docs/god-of-all-process · docs/rapports-gros-prompt · docs/angel-of-ia-process · docs/le-coordinateur · docs/pure-gold-unity · docs/rapports-de-nuit · docs/sauvegardes · docs/tableau-de-bord · docs/contexte-projet · docs/plans · docs/doc-report · docs/reponses — ils existent sur le disque sans entrée dans les registres.
+  ❓ 6 dossier(s) SANS SUJET DÉTERMINÉ : docs/profil-utilisateur · docs/le-coordinateur · docs/pure-gold-unity · docs/sauvegardes · docs/tableau-de-bord · docs/contexte-projet — rangés nulle part plutôt que rangés au hasard.
+  ✔️  docs/rapports-gros-prompt n'a pas d'équipe, et c'est ASSUMÉ : les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs.
+  ✔️  docs/rapports-de-nuit n'a pas d'équipe, et c'est ASSUMÉ : les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas.
+  ✔️  docs/contexte-projet n'a pas d'équipe, et c'est ASSUMÉ : les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties.
+  ✔️  docs/plans n'a pas d'équipe, et c'est ASSUMÉ : les plans de chantier — écrits à la main pour un chantier donné, jamais produits passage après passage par un outil. Un plan n'a pas de producteur périodique, donc pas d'équipe propriétaire.
 
   HORS PÉRIMÈTRE, déclaré plutôt que tu : les données du JEU (base D1, état d'une partie) ne sont
   pas rangées ici. Le périmètre est l'Agence — ce que l'outillage produit et relit.

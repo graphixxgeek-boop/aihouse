@@ -30,7 +30,7 @@ import { join } from "node:path";
 import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { LOCAL_JOURNALS, REGISTRIES } from "./doc-report.mjs";
+import { LOCAL_JOURNALS, REGISTRIES, DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES } from "./doc-report.mjs";
 import { KPI_HISTORY_PATH } from "./kpi-report.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -1245,7 +1245,7 @@ export function slugDOutil(nom) {
 // objets et que trois passages séparés divergeraient. Rien n'est recalculé : la famille vient de
 // `REGISTRIES` (déclarée), les lecteurs et l'état viennent de `inventaireDesRapports()` (mesurés),
 // le sujet se dérive du catalogue PRESTATIONS (déclaré). Cette fonction assemble et croise.
-export function classerLesRapports({ registres = [], prestations = [], inventaire = null } = {}) {
+export function classerLesRapports({ registres = [], prestations = [], inventaire = null, nonRegistres = [] } = {}) {
   if (!inventaire?.mesurable) {
     return { mesurable: false, pourquoi: `l'inventaire des rapports n'est pas disponible (${inventaire?.pourquoi ?? "raison non fournie"}) — sans lui, la classification porterait sur les registres déclarés seuls, et dirait « tout est classé » d'un dépôt qu'elle n'a pas regardé` };
   }
@@ -1261,6 +1261,7 @@ export function classerLesRapports({ registres = [], prestations = [], inventair
     }
   }
   const parChemin = new Map(registres.map((r) => [String(r.path ?? "").replace(/\/+$/, ""), r]));
+  const horsRegistre = new Map((nonRegistres ?? []).map((e) => [String(e.path ?? "").replace(/\/+$/, ""), e.pourquoi]));
   const lignes = [];
   for (const l of inventaire.lignes) {
     const reg = parChemin.get(l.dossier);
@@ -1298,7 +1299,12 @@ export function classerLesRapports({ registres = [], prestations = [], inventair
     parSujet: compter("sujet"), parEquipe: compter("equipe"), parFonction: compter("fonction"),
     croise: [...croise.entries()].map(([cle, v]) => ({ cle, ...v })).sort((a, b) => b.fichiers - a.fichiers),
     sansSujet: lignes.filter((l) => !l.sujet).map((l) => l.dossier),
-    sansEquipe: lignes.filter((l) => !l.equipe).map((l) => l.dossier),
+    // TROIS ÉTATS, JAMAIS DEUX : déclaré · déclaré comme N'ÉTANT PAS un registre (avec sa raison) ·
+    // ni l'un ni l'autre. Confondre les deux derniers ferait reprocher à quatre dossiers une
+    // décision déjà prise et écrite, et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+    sansEquipe: lignes.filter((l) => !l.equipe && !horsRegistre.has(l.dossier)).map((l) => l.dossier),
+    horsRegistreAssume: lignes.filter((l) => !l.equipe && horsRegistre.has(l.dossier))
+      .map((l) => ({ dossier: l.dossier, pourquoi: horsRegistre.get(l.dossier) })),
   };
 }
 
@@ -1318,6 +1324,7 @@ export function formatClassificationLines(c) {
   for (const x of c.croise.slice(0, 12)) l.push(`    ${x.cle.padEnd(62)} ${String(x.fichiers).padStart(4)} fichier(s)`);
   if (c.sansSujet.length) l.push("", `  ❓ ${c.sansSujet.length} dossier(s) SANS SUJET DÉTERMINÉ : ${c.sansSujet.join(" · ")} — rangés nulle part plutôt que rangés au hasard.`);
   if (c.sansEquipe.length) l.push(`  ❓ ${c.sansEquipe.length} dossier(s) SANS ÉQUIPE DÉCLARÉE : ${c.sansEquipe.join(" · ")} — ils existent sur le disque sans entrée dans les registres.`);
+  for (const h of c.horsRegistreAssume ?? []) l.push(`  ✔️  ${h.dossier} n'a pas d'équipe, et c'est ASSUMÉ : ${h.pourquoi}`);
   return l;
 }
 
@@ -1361,7 +1368,7 @@ export async function classificationComplete({
     catch (e) { presta = []; sansCatalogue = `le catalogue PRESTATIONS est illisible (${e?.message ?? e}) — l'axe du SUJET ne peut rien attraper, et ses zéros ne disent PAS qu'aucun rapport n'a de sujet`; }
   }
   const inv = inventaire ?? inventaireDesRapports();
-  const rapports = classerLesRapports({ registres: registres ?? REGISTRIES, prestations: presta, inventaire: inv });
+  const rapports = classerLesRapports({ registres: registres ?? REGISTRIES, prestations: presta, inventaire: inv, nonRegistres: DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES });
   if (sansCatalogue && rapports.mesurable) rapports.sujetNonMesure = sansCatalogue;
   const src = sources ?? listDataSources();
   const parNature = NATURES_DE_DATA.map((n) => ({
@@ -1417,6 +1424,7 @@ export function blocsClassificationHtml(c) {
   );
   if (r.sansSujet.length) blocks.push({ type: "note", text: `${r.sansSujet.length} dossier(s) sans sujet déterminé : ${r.sansSujet.join(" · ")}. Rangés nulle part plutôt que rangés au hasard — un rapport mis de force dans une case ment, un rapport non rangé se voit.` });
   if (r.sansEquipe.length) blocks.push({ type: "note", text: `${r.sansEquipe.length} dossier(s) sans équipe déclarée : ${r.sansEquipe.join(" · ")}. Ils existent sur le disque sans entrée dans les registres.` });
+  if (r.horsRegistreAssume?.length) blocks.push({ type: "table", headers: ["Dossier sans équipe, et c'est assumé", "Pourquoi"], rows: r.horsRegistreAssume.map((h) => [h.dossier, h.pourquoi]) });
   blocks.push({ type: "note", text: "Hors périmètre, déclaré plutôt que tu : les données du JEU (base D1, état d'une partie) ne sont pas rangées ici. Le périmètre est l'Agence — ce que l'outillage produit et relit." });
   return { tool: "data-archangel", title: "Classification des rapports et des datas", subtitle: "Ce que l'Agence produit, rangé par sujet, par équipe et par fonction.", blocks };
 }
@@ -1426,6 +1434,21 @@ export function blocsClassificationHtml(c) {
 // finiraient par ne plus dire la même chose, et c'est le lecteur qui paierait la différence.
 async function classificationCli() {
   const c = await classificationComplete();
+  // `classification ronde` — la vérification de la tâche #612, en lecture seule.
+  if (process.argv[3] === "ronde") {
+    let dossiers = [];
+    try { const { CIRCLE_REPORT_FOLDERS } = await import("./circle-tasks.mjs"); dossiers = Object.values(CIRCLE_REPORT_FOLDERS); }
+    catch (e) { console.log(`VÉRIFICATION DE LA RONDE : PAS MESURÉ — les dossiers de dépôt sont illisibles (${e?.message ?? e})`); process.exitCode = 1; return; }
+    const v = verifierLesRapportsDeRonde({ classification: c, dossiersDeRonde: dossiers });
+    const sortie = formatVerificationRondeLines(v);
+    for (const x of sortie) console.log(x);
+    if (!v.mesurable) { process.exitCode = 1; return; }
+    try { mkdirSync(join(ROOT, "docs/data-archangel"), { recursive: true }); } catch { /* déjà là */ }
+    const f = join(ROOT, "docs/data-archangel", `verification-ronde-${new Date().toISOString().slice(0, 10)}.txt`);
+    writeFileSync(f, sortie.join("\n") + "\n", "utf8");
+    console.log(`\nÉcrit : ${f}`);
+    return;
+  }
   const lignes = formatClassificationCompleteLines(c);
   for (const l of lignes) console.log(l);
   if (!c.rapports?.mesurable) { process.exitCode = 1; return; }
@@ -1443,3 +1466,56 @@ async function classificationCli() {
 // `const` écrits en dessous, qui seraient alors dans leur zone morte temporelle. Deux outils
 // de ce dépôt l'ont payé le 2026-09-23, et findLanceursPrematures() le refuse depuis.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();
+
+// ══════════════════════════════════════════════════════════════════════════
+// LA VÉRIFICATION DE LA RONDE (2026-09-26, tâche #612 — « on ne touche rien »)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA CONSIGNE, mot pour mot : « ok on fait juste une vérification, on ne touche rien pour
+// l'instant, on regarde ensemble au cas par cas ». Cette fonction MESURE et ne propose aucune
+// fusion : elle range les dossiers de dépôt de la Ronde dans les cases de la classification, et
+// rend les groupes tels quels. Décider ce qui fusionne est son travail à lui, pas celui d'un
+// programme — et c'est exactement la raison pour laquelle #612 attendait cette classification.
+//
+// CE QU'ELLE PERMET DE VOIR, et que la liste brute des 30 dossiers ne montrait pas : deux rapports
+// qui partagent la même case (même SUJET, même FONCTION) sont les seuls candidats sérieux à une
+// fusion. Deux rapports de cases différentes ne fusionnent pas, même s'ils se ressemblent de titre.
+// C'est précisément le point 2 de la tâche : « ne jamais supposer un doublon sur la seule proximité
+// de titre ».
+export function verifierLesRapportsDeRonde({ classification, dossiersDeRonde = [] } = {}) {
+  const r = classification?.rapports;
+  if (!r?.mesurable) return { mesurable: false, pourquoi: r?.pourquoi ?? "la classification n'est pas disponible" };
+  const cibles = new Set(dossiersDeRonde.map((d) => String(d).replace(/\/+$/, "")));
+  const lignes = r.lignes.filter((l) => cibles.has(l.dossier));
+  const absents = [...cibles].filter((c) => !r.lignes.some((l) => l.dossier === c));
+  const cases = new Map();
+  for (const l of lignes) {
+    const k = `${l.sujet ?? "(sujet non déterminé)"} × ${l.fonction}`;
+    (cases.get(k) ?? cases.set(k, []).get(k)).push(l);
+  }
+  const groupes = [...cases.entries()].map(([cle, membres]) => ({ cle, membres })).sort((a, b) => b.membres.length - a.membres.length);
+  return {
+    mesurable: true, groupes, absents,
+    dossiers: lignes.length, attendus: cibles.size,
+    livres: lignes.filter((l) => l.fonction === "livre").length,
+    candidats: groupes.filter((g) => g.membres.length > 1).reduce((a, g) => a + g.membres.length, 0),
+  };
+}
+
+export function formatVerificationRondeLines(v, { plafond = 10 } = {}) {
+  if (!v?.mesurable) return [`VÉRIFICATION DE LA RONDE : PAS MESURÉ — ${v.pourquoi}`];
+  const l = [`=== VÉRIFICATION — LES RAPPORTS DE LA RONDE, RANGÉS DANS LES CASES DE LA CLASSIFICATION ===`, ""];
+  l.push(`  ${v.dossiers} dossier(s) de dépôt sur ${v.attendus} déclarés · ${v.groupes.length} case(s) distincte(s) · plafond souhaité : ${plafond} fichiers`);
+  l.push(`  Dont ${v.livres} réellement LIVRÉ(S) à l'utilisateur ; les ${v.dossiers - v.livres} autres sont de la MATIÈRE relue par un outil.`);
+  l.push(`  ${v.candidats} dossier(s) partagent une case avec au moins un autre : ce sont les SEULS candidats sérieux à une fusion.`);
+  if (v.absents.length) l.push(`  ❓ ${v.absents.length} dossier(s) de dépôt déclarés mais introuvables dans l'inventaire : ${v.absents.join(" · ")} — ils n'ont peut-être jamais rien déposé.`);
+  l.push("");
+  for (const g of v.groupes) {
+    l.push(`  ${g.cle}${g.membres.length > 1 ? "" : "   (seul dans sa case — jamais un candidat à la fusion)"}`);
+    for (const m of g.membres) l.push(`      ${m.dossier.padEnd(38)} ${String(m.combien).padStart(3)} fichier(s)`);
+    l.push("");
+  }
+  l.push("  RIEN N'A ÉTÉ TOUCHÉ — c'est une mesure, jamais une proposition de fusion. Deux rapports d'une");
+  l.push("  même case sont des candidats ; ce qui fusionne réellement se décide au cas par cas, avec lui.");
+  return l;
+}

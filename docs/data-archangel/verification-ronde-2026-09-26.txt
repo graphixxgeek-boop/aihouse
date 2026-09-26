@@ -1,0 +1,59 @@
+=== VÉRIFICATION — LES RAPPORTS DE LA RONDE, RANGÉS DANS LES CASES DE LA CLASSIFICATION ===
+
+  30 dossier(s) de dépôt sur 32 déclarés · 10 case(s) distincte(s) · plafond souhaité : 10 fichiers
+  Dont 4 réellement LIVRÉ(S) à l'utilisateur ; les 26 autres sont de la MATIÈRE relue par un outil.
+  27 dossier(s) partagent une case avec au moins un autre : ce sont les SEULS candidats sérieux à une fusion.
+  ❓ 2 dossier(s) de dépôt déclarés mais introuvables dans l'inventaire : docs/cassandra-rh/organigramme · docs/ecotoken/ronde — ils n'ont peut-être jamais rien déposé.
+
+  travail × matiere
+      docs/tool-brain                          6 fichier(s)
+      docs/chantier-preliminaire               5 fichier(s)
+      docs/god-of-all-process                  5 fichier(s)
+      docs/html-wiring-check                   5 fichier(s)
+      docs/idee-a-trancher                     5 fichier(s)
+      docs/network-check                       5 fichier(s)
+      docs/relecture-correctifs                5 fichier(s)
+      docs/suivi-open-tasks                    5 fichier(s)
+      docs/relecture-referentiel               1 fichier(s)
+
+  outillage × matiere
+      docs/integration-outil                   5 fichier(s)
+      docs/tool-learning                       5 fichier(s)
+      docs/the-equalizer                       3 fichier(s)
+      docs/agent-des-noms                      1 fichier(s)
+
+  (sujet non déterminé) × matiere
+      docs/le-coordinateur                     4 fichier(s)
+      docs/pure-gold-unity                     4 fichier(s)
+      docs/sauvegardes                         4 fichier(s)
+      docs/tableau-de-bord                     4 fichier(s)
+
+  code × matiere
+      docs/hyper-scan-checkpoint               7 fichier(s)
+      docs/clean-dirty-old                     5 fichier(s)
+      docs/ines-official                       5 fichier(s)
+
+  consommation × matiere
+      docs/smart-conso-api                     5 fichier(s)
+      docs/smart-conso-token                   4 fichier(s)
+      docs/agent-du-temps                      1 fichier(s)
+
+  travail × livre
+      docs/check-tasks-details                17 fichier(s)
+      docs/ou-on-en-est                        2 fichier(s)
+
+  documents × matiere
+      docs/the-king                            6 fichier(s)
+      docs/angel-of-ia-process                 4 fichier(s)
+
+  (sujet non déterminé) × livre   (seul dans sa case — jamais un candidat à la fusion)
+      docs/profil-utilisateur                 10 fichier(s)
+
+  donnees × matiere   (seul dans sa case — jamais un candidat à la fusion)
+      docs/data-archangel                      7 fichier(s)
+
+  outillage × livre   (seul dans sa case — jamais un candidat à la fusion)
+      docs/cassandra-rh                        6 fichier(s)
+
+  RIEN N'A ÉTÉ TOUCHÉ — c'est une mesure, jamais une proposition de fusion. Deux rapports d'une
+  même case sont des candidats ; ce qui fusionne réellement se décide au cas par cas, avec lui.
