@@ -162,6 +162,39 @@ contre-test : `findDependancesOutillage()` ne scannait que les documents SE DÉC
 donc sautait CLAUDE.md et les règles de travail — exactement ceux à examiner. Le résultat était
 « aucune dépendance » sur trois documents jamais ouverts.
 
+## CE QUE LE MONDE EXTÉRIEUR DIT — quatre recherches ciblées
+
+*(2026-09-26, tâche #911. Les huit trouvailles intégrales vivent dans
+`docs/strategies/export-et-commercialisation-strategie.md`, section 4. Ici : ce qu'elles changent.)*
+
+**1. La double licence évite de fabriquer une « agence light » artificielle.** Le patron éprouvé
+(Qt, MySQL) est une édition communautaire sous copyleft plus une licence commerciale pour qui ne
+peut pas l'accepter. **On vend le droit, pas une version amputée** — et ça retire du chemin critique
+tout le travail de découpage qu'une version allégée aurait exigé.
+
+**2. Le piège documenté de l'open core vise exactement ce que produit l'Agence.** L'acheteur
+approuve l'outil sur ce que fait le cœur, puis découvre que la surveillance, la rétention et les
+contrôles sont derrière le mur payant. Transposé ici : si les Gardiens sont gratuits mais que le
+suivi, les registres et les rapports sont payants, **l'outil gratuit signale sans jamais rien
+garder** — l'inverse exact de ce que ce projet a appris (Article 28).
+
+**3. L'architecture de l'Agence est un patron reconnu, pas une bizarrerie locale.** L'état de l'art
+sur les agents de code recommande, mot pour mot : *« offload critical tasks to deterministic
+middleware, bind them to specific agent lifecycle events, so the system — not the LLM — guarantees
+execution »*. **C'est la définition du crochet post-commit et de ses sept Gardiens.** C'est un
+argument de vente autant qu'une validation.
+
+**4. L'hébergement n'est PAS le sujet, et la mesure le retire de la liste des inquiétudes.** Le
+palier gratuit Cloudflare couvre 100 000 requêtes/jour et 5 Go de D1 ; le premier palier payant est
+à **5 $/mois**, et la bande passante sortante n'est facturée nulle part. Le coût réel de ce projet
+est ailleurs : dans les appels au modèle (Article 8, deux cerveaux par tour) et dans un dépôt qui
+grossit de 2,4 Mo/jour.
+
+**Et l'anti-patron qui décrit notre vraie difficulté** : *« every invocation starts from zero
+context »*, cité comme LE facteur qui limite la réutilisabilité entre projets. C'est exactement ce
+que l'Article 27 et le process XP-IA adressent — **et c'est la partie de l'Agence qui n'est pas du
+code, donc la plus dure à exporter.** Les trois peurs ci-dessus se résument à celle-là.
+
 ## PLAN D'ACTION
 
 *(Article 28 : un rapport n'est pas fini quand il est écrit, il l'est quand ses constats sont
@@ -174,6 +207,8 @@ devenus des tâches. Trois états seulement — RETENU, ÉCARTÉ avec sa raison,
 | **À TRANCHER** | 898 Mo projetés à un an, essentiellement des archives de rapports | politique d'archivage : purger, compacter, ou externaliser hors du dépôt ? C'est sa décision, pas celle de l'agent — elle touche à ce qu'on garde comme preuve |
 | **À TRANCHER** | Pack Sentinelle et Pack Panorama jamais réalisés | les lancer une fois pour de vrai, ou les retirer du catalogue ? Un pack qui n'a jamais tourné n'est pas un pack, c'est une intention |
 | **RETENU** | 4 dépendances à un outillage particulier dans les documents de relai (mémoire et conduite) | tâche #910 — les reformuler pour qu'une IA sans cet outillage puisse les appliquer, ou déclarer explicitement la substitution à côté |
+| **À TRANCHER** | Le modèle de licence : double licence (copyleft + commerciale) plutôt qu'open core | c'est sa décision, pas celle de l'agent. La recherche dit que la double licence évite de découper le produit, et que l'open core mettrait les registres derrière le mur payant — mais choisir de vendre, et comment, ne se dérive d'aucune mesure |
+| **ÉCARTÉ** | L'hébergement du site comme source d'inquiétude | mesuré : 0 € sous 100 000 requêtes/jour, 5 $/mois au premier palier payant, bande passante sortante gratuite. La question était légitime, la réponse la retire de la liste — le coût réel est dans les appels au modèle |
 | **ÉCARTÉ** | Le ratio outillage/jeu (4,6×) | ce n'est pas un défaut à corriger : les deux projets sont assumés depuis le 2026-09-22, et la charte demande de SURVEILLER ce chiffre, jamais de le faire baisser. Il est surveillé, il est écrit, il ne devient pas une tâche |
 
 ---

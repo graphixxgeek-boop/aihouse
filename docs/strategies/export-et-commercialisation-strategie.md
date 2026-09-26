@@ -96,7 +96,46 @@
 
 *ce qu'on est allé chercher dehors, et ce qu'on en a tiré*
 
-*(vide — rien n'a encore été versé ici)*
+
+
+« Le modèle « open core » (un cœur ouvert + une couche payante) ne tient QUE si on possède chaque ligne du code : c'est la condition posée en tête de toutes les sources. Ici elle est remplie — le dépôt n'a qu'un auteur et un agent — mais elle cesse de l'être au premier contributeur extérieur, et un accord de cession doit exister AVANT, jamais après. »
+
+— source : recherche web du 2026-09-26 — mecanik.dev « Software Licensing Models: An Enterprise Guide 2026 » et nhimg.org « What Is Open Core Licensing? »
+
+
+« Le piège documenté de l'open core, et il vise exactement ce que produit l'Agence : l'acheteur approuve l'outil sur ce que fait le cœur, puis découvre que la surveillance, la restriction d'accès et la rétention sont derrière le mur payant. Transposé ici : si les Gardiens sacrés sont dans le cœur mais que le suivi, les registres et les rapports sont payants, l'outil gratuit signale sans jamais rien garder — et c'est exactement l'inverse de ce que ce projet a appris (un rapport qui ne devient pas une tâche ne sert à rien, Article 28). »
+
+— source : recherche web du 2026-09-26 — nhimg.org, glossaire « open core licensing »
+
+
+« Le patron éprouvé cité par les sources est la double licence à la Qt / MySQL : une édition communautaire sous copyleft, et une licence commerciale pour qui ne peut pas accepter le copyleft. L'intérêt pour ce projet-ci est qu'il ne demande AUCUN découpage du produit — on vend le droit, pas une version amputée. C'est la seule forme qui n'oblige pas à fabriquer une « agence light » artificielle. »
+
+— source : recherche web du 2026-09-26 — mecanik.dev, « Software Licensing Models »
+
+
+« Ce qui rend un cadre d'agent IA réellement portable, d'après l'état de l'art : être agnostique au fournisseur de modèle et au langage, découper en compétences modulaires versionnées avec le code, séparer les préoccupations (planification, exécution, observation, correction) plutôt qu'un monolithe, et surtout DÉCHARGER LE CRITIQUE SUR DU DÉTERMINISTE branché aux événements du cycle de vie — de sorte que le système, et non le modèle, garantisse l'exécution. »
+
+— source : recherche web du 2026-09-26 — epsilla.com « 12 Reusable Agentic Harness Design Patterns from Claude Code », spring.io « Agent Skills », devblogs.microsoft.com « AGENTS.md and Skills »
+
+
+« LE POINT QUI VALIDE L'ARCHITECTURE DE L'AGENCE, et il mérite d'être noté tel quel : « offload critical tasks to deterministic middleware, bind them to specific agent lifecycle events, so the system — not the LLM — guarantees execution ». C'est mot pour mot ce que fait le crochet post-commit avec les sept Gardiens sacrés. Ce n'est donc pas une particularité de ce projet : c'est un patron reconnu, et l'Agence en est une instance complète plutôt qu'une bizarrerie locale. »
+
+— source : recherche web du 2026-09-26 — thesystemguide.com « Common Security Anti-Patterns in AI Agent Deployments » et epsilla.com
+
+
+« L'anti-patron nommé qui décrit un vrai risque ici : « every invocation starts from zero context », le manque de partage de contexte, cité comme LE facteur qui limite la réutilisabilité entre projets. C'est exactement ce que l'Article 27 et le process XP-IA adressent — et c'est la partie de l'Agence qui n'est PAS du code, donc la plus difficile à exporter. »
+
+— source : recherche web du 2026-09-26 — dev.to « I Built 100+ Gen AI Agents » et epsilla.com
+
+
+« COÛT D'HÉBERGEMENT DU SITE, chiffres 2026 : le palier gratuit de Cloudflare Workers couvre 100 000 requêtes/jour, 10 ms de CPU par invocation, 128 Mo de mémoire ; D1 y ajoute 5 Go de stockage, 5 millions de lignes lues et 100 000 écrites par jour. Le palier payant démarre à 5 $/mois minimum par compte, puis 0,30 $ par million de requêtes au-delà de 10 millions inclus. La bande passante sortante n'est facturée ni sur Workers, ni sur D1, ni sur R2. »
+
+— source : recherche web du 2026-09-26 — developers.cloudflare.com/workers/platform/pricing et developers.cloudflare.com/d1/platform/pricing
+
+
+« CE QUE CES CHIFFRES CHANGENT POUR LA DÉCISION, et c'est net : l'hébergement n'est PAS le sujet. Tant que le site reste sous 100 000 requêtes/jour, il coûte 0 €, et le premier palier payant est à 5 $/mois. Le coût réel de ce projet est ailleurs — dans les appels au modèle (Article 8, deux cerveaux par tour) et dans les 19 Mo de dépôt qui croissent de 2,4 Mo/jour. Projeter l'hébergement à un an était une inquiétude légitime, et la mesure la retire de la liste. »
+
+— source : dérivé des chiffres Cloudflare ci-dessus croisés avec l'empreinte disque mesurée le 2026-09-26
 
 ## 5. LES DÉCISIONS DÉJÀ PRISES
 
