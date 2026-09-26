@@ -14213,3 +14213,74 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: deux libellés réels qui ne rendaient aucun outil (2026-09-26, tâche #777) — le coût de ce défaut est celui que le projet redoute le plus : on consulte le point d'entrée obligatoire, on n'obtient rien, et on refait à la main ce qu'un outil savait faire, parce que « aucune correspondance » et « aucun outil ne sait faire ça » sont indiscernables. La tâche écrivait deux pistes et exigeait de MESURER avant de trancher. La seconde — plus de poids à un mot rare dans le catalogue — a été prototypée et mesurée : sur trois nouvelles correspondances, DEUX étaient fausses, déclenchées par « deux » et « file », rares dans un catalogue de cinquante offres et parfaitement vides de sens. Un mot rare dans un petit catalogue n'est pas un mot informatif, et elle est écartée avec cette raison plutôt qu'abandonnée en silence. La première — écrire dans l'offre le vocabulaire qu'on emploie vraiment — referme les deux trous sans en ouvrir un seul : les noms des personnages n'apparaissaient dans aucune offre, le mot « constante » non plus. L'assertion qui compte autant que les deux premières est celle de la NON-inflation : un libellé que rien ne sert doit continuer à ne rien rendre, sans quoi le point d'entrée devient une machine à sous et ses réponses ne valent plus rien.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// « EST-CE QUE ÇA EXISTE DÉJÀ ? » (2026-09-26, tâche #746)
+// ————————————————————————————————————————————————————————————————————————
+// Sa demande : « l'idee que le coordinateur puisse dire au codeur (moi) si une fonction existe deja
+// dans le code ». Le besoin a déjà été payé : ABRAHAM-LES-REFERENCES est né de trente fonctions
+// génériques enfermées dans l'agent d'un seul document, faute d'avoir cherché si elles existaient
+// ailleurs. Ce qui manquait n'était pas un outil de plus, c'était le MOMENT : suggestPrestations
+// répond « quel outil utiliser », CLONE-HUNTER trouve les doublons APRÈS qu'ils sont écrits.
+{
+  const lc746 = await import('../scripts/le-coordinateur.mjs');
+
+  // LE NOM D'UNE FONCTION PORTE PLUSIEURS MOTS, et les séparer est la seule façon de le rapprocher
+  // d'une intention écrite en français.
+  assert.equal(lc746.motsDuNomDeFonction('findLignesFantomes'), 'find Lignes Fantomes', 'a camelCase name carries several words: without splitting it, "lignes fantômes" could never find findLignesFantomes');
+
+  const invFaux746 = { mesurable: true, fonctions: [
+    { fichier: 'scripts/a.mjs', nom: 'compterLesDoublons', entete: 'compte les blocs identiques' },
+    { fichier: 'scripts/b.mjs', nom: 'lireLHeure', entete: "rend l heure avec sa source" },
+    { fichier: 'scripts/c.mjs', nom: 'autreChose', entete: 'sans rapport' },
+  ] };
+
+  // IL DOIT TROUVER, et rendre la bonne EN TÊTE.
+  const t746 = lc746.chercherUneFonctionExistante('compter les doublons de blocs', invFaux746);
+  assert.equal(t746.candidates[0].nom, 'compterLesDoublons', 'the function that already does it must come first');
+  assert.ok(t746.candidates[0].parNom.length >= 2, 'and the report shows WHICH words matched, so the reader judges rather than believes');
+
+  // LE SEUIL DE DEUX MOTS TIENT — c'est la mesure de #777 qui l'impose : un seul mot commun
+  // rapproche n'importe quoi de n'importe quoi, et un point d'entrée qui rend du bruit cesse d'être
+  // consulté (leçon L4).
+  assert.deepEqual(lc746.chercherUneFonctionExistante('compter les moutons', invFaux746).candidates, [], 'a single shared word is never enough, whatever its rarity: that was measured on task #777 and it produced two false hits out of three');
+
+  // LE POIDS EST DÉRIVÉ DU CORPUS, jamais une liste de mots vides à tenir à jour (Article 24).
+  // Vérifié sur le VRAI corpus et non sur la fixture : à trois fonctions, tous les mots ont le même
+  // poids et la démonstration ne voudrait rien dire — c'est d'ailleurs exactement la raison pour
+  // laquelle la porte du mot unique ne s'ouvre jamais sur un petit corpus.
+  const poidsReel746 = lc746.poidsDesMots(lc746.inventaireDesFonctions().fonctions);
+  assert.ok(poidsReel746('fantome') > poidsReel746('verifier'), 'a rare word must weigh more than a generic verb: "vérifier" and "détecter" are in hundreds of functions here, "fantôme" in three, and without this the first answer to any question is whichever function shares its verb');
+  assert.ok(poidsReel746.median > 0, 'and the corpus median must be a real number, since it is what lets the threshold be expressed in information rather than in word count');
+
+  // RIEN TROUVÉ NE SE DIT JAMAIS COMME RIEN N'EXISTE (même honnêteté que la reprise des notes de
+  // l'Article 30, et pour la même raison).
+  const rien746 = lc746.formatFonctionExistanteLines(lc746.chercherUneFonctionExistante('zorglub flibustier', invFaux746), 'zorglub flibustier');
+  assert.ok(rien746.some((l) => /PAS la preuve qu'il n'y a rien/.test(l)), 'an empty result says explicitly that it proves nothing about the repository, only about those words — otherwise it reads as permission to write the function again');
+
+  // UN INVENTAIRE ILLISIBLE OU VIDE REND PAS MESURÉ (leçons L5/L11).
+  assert.equal(lc746.chercherUneFonctionExistante('x y', { mesurable: false, pourquoi: 'illisible' }).mesurable, false, 'an unreadable inventory renders PAS MESURÉ, never an empty candidate list');
+  assert.equal(lc746.chercherUneFonctionExistante('', invFaux746).mesurable, false, 'and an empty intention too, rather than pretending the repository was searched');
+  assert.match(lc746.formatFonctionExistanteLines({ mesurable: false, pourquoi: 'r' })[0], /PAS MESURÉ/, 'and the printed line carries it');
+
+  // BRANCHÉ SUR LE VRAI DÉPÔT (Article 25) — un outil qui n'a jamais tourné contre le vrai code
+  // n'est pas un outil, c'est une intention.
+  const invReel746 = lc746.inventaireDesFonctions();
+  assert.equal(invReel746.mesurable, true, 'the real scripts/ must actually be inventoried');
+  assert.ok(invReel746.fonctions.length > 500, 'and it must really hold the repository\'s exported functions rather than a stub');
+  const reel746 = lc746.chercherUneFonctionExistante('archiver un rapport de simulation', invReel746);
+  assert.equal(reel746.candidates[0].fichier, 'scripts/le-regisseur.mjs', 'run against the real repository it must point at the tool that genuinely archives simulations — the answer nobody could get before without knowing it already');
+  // LE COÛT DE L'ÉTROITESSE, GARDÉ COMME CONTRE-TEST plutôt que tu : une fonction dont la seule
+  // idée partagée est très précise peut être manquée. « détecter un doublon de code » ne remonte
+  // pas planDoublons(), qui ne partage que la racine « doublon », pendant que deux mots plus
+  // génériques suffisent ailleurs. Le message de réponse vide dit d'essayer un autre vocabulaire,
+  // et c'est vérifié ici plutôt que promis.
+  assert.equal(lc746.chercherUneFonctionExistante('plan de doublons a fusionner', invReel746).candidates[0].nom, 'planDoublons', 'and retrying with the subject\'s own vocabulary finds what a generic phrasing missed — which is why the empty answer says so instead of reading as an absence');
+
+  // LE MODE EST CÂBLÉ DANS TOOL-BRAIN, jamais un 79e script : la tâche le demandait explicitement,
+  // et un mécanisme qui ne sort pas du script est une intention (leçon L2).
+  const { readFileSync: lireTb746 } = await import('node:fs');
+  assert.ok(/rest\[0\] === "existe"/.test(lireTb746('scripts/tool-brain.mjs', 'utf8')), 'it must be reachable as a mode of the single entry point, which is what the task asked for by name');
+
+  console.log("Passed: « est-ce que ça existe déjà ? » (2026-09-26, tâche #746) — sa demande était qu'avant d'écrire une fonction, quelque chose vérifie qu'elle n'existe pas ailleurs. Le besoin avait déjà été payé : ABRAHAM-LES-REFERENCES est né de trente fonctions génériques enfermées dans l'agent d'un seul document. Ce qui manquait n'était pas un outil de plus mais le MOMENT — suggestPrestations répond « quel outil utiliser », CLONE-HUNTER trouve les doublons après qu'ils sont écrits, personne ne regardait avant. C'est donc un MODE de tool-brain, comme la tâche l'exigeait, sur les 1 172 fonctions exportées du dépôt réel, nom découpé en mots et en-tête de commentaire compris, parce que dans ce dépôt le pourquoi vit à côté du quoi et dit souvent mieux que le nom ce qu'une fonction fait. Le premier classement était inutilisable : trente-quatre candidates pour une question, en tête celles qui partageaient le seul verbe « lire ». Le poids log(N/df) le corrige sans aucune liste de mots vides à tenir à jour, et il se recalcule sur le corpus réel à chaque passage. Le seuil de deux mots partagés ne bouge pas, parce que la mesure de #777 a montré qu'un mot rare sur un petit corpus est souvent un mot vide. Et il ne rend jamais un verdict « c'est déjà fait » : des candidates à lire, puisque aucune mécanique ne peut juger qu'une fonction trouvée fait vraiment ce qu'on veut.");
+}

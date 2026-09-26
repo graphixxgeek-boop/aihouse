@@ -23,7 +23,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName } from "./le-coordinateur.mjs";
+import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName, inventaireDesFonctions, chercherUneFonctionExistante, formatFonctionExistanteLines } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -451,6 +451,19 @@ async function main() {
   printReliabilityNotice("tool-brain");
   recordCliUsage("tool-brain");
   const [, , ...rest] = process.argv;
+
+  // « EST-CE QUE ÇA EXISTE DÉJÀ ? » (2026-09-26, tâche #746) — un MODE de tool-brain, jamais un
+  // 79e script, comme la tâche le demandait explicitement. Le point d'entrée reste unique.
+  //
+  // LE TROU QU'IL FERME EST UNE QUESTION DE MOMENT : `suggestPrestationsForTask` répond « quel
+  // OUTIL utiliser », CLONE-HUNTER trouve les doublons APRÈS qu'ils sont écrits. Personne ne
+  // regardait AVANT — et le projet a déjà payé ça, ABRAHAM-LES-REFERENCES étant né de trente
+  // fonctions génériques enfermées dans l'agent d'un seul document faute d'avoir cherché.
+  if (rest[0] === "existe") {
+    const intention = rest.slice(1).join(" ");
+    for (const l of formatFonctionExistanteLines(chercherUneFonctionExistante(intention, inventaireDesFonctions()), intention)) console.log(l);
+    return;
+  }
 
   // LA SOUS-COMMANDE DU CROCHET (2026-09-26, tâche #778) — muette quand il n'y a rien à dire.
   if (rest[0] === "muets") {

@@ -662,6 +662,153 @@ function badgeWarningsForOutils(outils, onboardingContext) {
   return warnings;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// « EST-CE QUE ÇA EXISTE DÉJÀ ? » (2026-09-26, tâche #746)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, DANS SES MOTS : « l'idee que le coordinateur puisse dire au codeur (moi) si une
+// fonction existe deja dans le code. du genre le codeur veut creer un outil, mais le coordinateur
+// verifie si la fonction n'existe pas deja ».
+//
+// LE BESOIN EST RÉEL ET DÉJÀ PAYÉ PLUSIEURS FOIS : ABRAHAM-LES-REFERENCES est né exactement de ça —
+// trente fonctions génériques enfermées dans l'agent d'un seul document, faute d'avoir cherché si
+// elles existaient ailleurs.
+//
+// CE QUI EXISTAIT ET NE SUFFISAIT PAS, et c'est une question de MOMENT :
+//   · `suggestPrestationsForTask()` répond « quel OUTIL utiliser », jamais « est-ce que cette
+//     FONCTION existe déjà » ;
+//   · CLONE-HUNTER trouve les doublons APRÈS qu'ils sont écrits.
+// Personne ne regardait AVANT. C'est le trou, et c'est le seul.
+//
+// CE QU'IL NE FAIT PAS, et le dire est la moitié de l'outil : il ne juge PAS qu'une fonction
+// trouvée fait vraiment ce qu'on veut. Il rend des CANDIDATES à lire, jamais un verdict « c'est
+// déjà fait ». Un outil qui trancherait à ma place ferait réutiliser du code au petit bonheur, ce
+// qui coûte plus cher que de le réécrire.
+export const MOTIF_FONCTION_EXPORTEE = /^export function ([A-Za-z0-9_$]+)\s*\(/;
+
+// Le nom d'une fonction est écrit en camelCase : `findLignesFantomes` porte trois mots, et les
+// séparer est la seule façon de rapprocher « lignes fantômes » de son nom. Fait ici plutôt que par
+// le lecteur, sinon chaque appelant réinventerait la règle (Article 24).
+export function motsDuNomDeFonction(nom = "") {
+  return String(nom).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_$]/g, " ");
+}
+
+export function inventaireDesFonctions({ root = ROOT, lireDossier = readdirSync, lireFichier = readFileSync } = {}) {
+  let fichiers = [];
+  try { fichiers = lireDossier(join(root, "scripts")).filter((f) => String(f).endsWith(".mjs")); }
+  catch { return { mesurable: false, pourquoi: "scripts/ illisible — rien n'a pu être inventorié, ce qui n'est jamais la même chose qu'aucune fonction", fonctions: [] }; }
+  const fonctions = [];
+  for (const f of fichiers) {
+    let texte = "";
+    try { texte = lireFichier(join(root, "scripts", f), "utf8"); } catch { continue; }
+    const lignes = texte.split("\n");
+    for (let i = 0; i < lignes.length; i += 1) {
+      const m = lignes[i].match(MOTIF_FONCTION_EXPORTEE);
+      if (!m) continue;
+      // L'EN-TÊTE EST LA MOITIÉ DU SIGNAL, et c'est propre à ce dépôt : ici le POURQUOI vit à côté
+      // du QUOI (Article 27), donc le commentaire au-dessus d'une fonction dit souvent mieux que
+      // son nom ce qu'elle fait. On remonte le bloc contigu de `//`, et rien d'autre.
+      const entete = [];
+      for (let j = i - 1; j >= 0 && /^\s*\/\//.test(lignes[j]) && entete.length < 12; j -= 1) entete.unshift(lignes[j].replace(/^\s*\/\/\s?/, ""));
+      fonctions.push({ fichier: `scripts/${f}`, nom: m[1], entete: entete.join(" ").slice(0, 400) });
+    }
+  }
+  if (!fonctions.length) return { mesurable: false, pourquoi: "aucune fonction exportée trouvée dans scripts/ — un inventaire vide ne se lit jamais comme « rien n'existe »", fonctions: [] };
+  return { mesurable: true, fonctions };
+}
+
+// Le SEUIL EST LE MÊME QUE CELUI DU CATALOGUE — deux mots partagés — et pour la même raison : un
+// seul mot commun rapproche n'importe quoi de n'importe quoi, et un point d'entrée qui rend du
+// bruit cesse d'être consulté (leçon L4). Un mot du NOM pèse double : un nom de fonction est choisi,
+// là où un en-tête raconte.
+export const SEUIL_CANDIDATE = 2;
+
+// LE POIDS D'UN MOT SE DÉRIVE DU CORPUS, il ne se décrète pas (2026-09-26, tâche #746, et la mesure
+// est la raison d'être de cette fonction). Le premier classement mettait en tête, pour « lire
+// l'heure », trois fonctions qui partagent seulement le verbe « lire » — et il en rendait 34 pour
+// « compter les lignes du suivi ». **Un verbe générique ne dit rien** : « lire », « vérifier »,
+// « détecter » sont dans des centaines de fonctions ici, « fantôme » ou « doublon » dans trois.
+// Le poids classique log(N/df) le dit tout seul, sans aucune liste de mots vides à tenir à jour
+// (Article 24) — et il se recalcule sur le corpus réel à chaque passage, donc il suit le dépôt.
+//
+// CE QU'IL NE CHANGE PAS : le seuil de DEUX mots partagés. C'est la mesure de la tâche #777 qui le
+// dit — sur un petit corpus, un mot rare est souvent un mot vide qui se trouve rare. Ici le corpus
+// fait plus de mille fonctions, donc la rareté veut dire quelque chose, mais elle sert à CLASSER,
+// jamais à faire entrer une candidate que le seuil refuse.
+export function poidsDesMots(fonctions = []) {
+  const df = new Map();
+  for (const f of fonctions) {
+    const vus = new Set([...significantWords(motsDuNomDeFonction(f.nom)), ...significantWords(f.entete)].map(racineDuMot));
+    for (const r of vus) df.set(r, (df.get(r) ?? 0) + 1);
+  }
+  const n = Math.max(1, fonctions.length);
+  const poids = (mot) => Math.log(n / ((df.get(racineDuMot(mot)) ?? 0) + 1));
+  // LE POIDS MÉDIAN DU CORPUS — dérivé, jamais choisi. Il sert de « valeur d'un mot ordinaire »,
+  // et c'est lui qui rend le seuil exprimable autrement qu'en comptant des mots (voir plus bas).
+  const tous = [...df.keys()].map(poids).sort((a, b) => a - b);
+  poids.median = tous.length ? tous[Math.floor(tous.length / 2)] : 0;
+  return poids;
+}
+
+export function chercherUneFonctionExistante(intention, inventaire, { max = 6, seuil = SEUIL_CANDIDATE } = {}) {
+  if (!inventaire?.mesurable) return { mesurable: false, pourquoi: inventaire?.pourquoi ?? "aucun inventaire fourni", candidates: [] };
+  const mots = new Set(significantWords(intention));
+  if (!mots.size) return { mesurable: false, pourquoi: "intention vide : sans mots à rapprocher il n'y a rien à chercher, et rendre « aucune candidate » laisserait croire que le dépôt a été fouillé", candidates: [] };
+  const racines = new Set([...mots].map(racineDuMot));
+  const correspond = (texte) => [...new Set(significantWords(texte).filter((w) => mots.has(w) || racines.has(racineDuMot(w))))];
+  const poids = poidsDesMots(inventaire.fonctions);
+  const notees = inventaire.fonctions.map((f) => {
+    const parNom = correspond(motsDuNomDeFonction(f.nom));
+    const parEntete = correspond(f.entete).filter((w) => !parNom.includes(w));
+    // Le SEUIL compte des mots ; le SCORE les pèse. Les confondre ferait entrer une candidate sur
+    // un seul mot rare, ce que la mesure de #777 a montré dangereux.
+    //
+    // ET IL COMPTE DES RACINES DISTINCTES, jamais des mots (corrigé par un contre-test, 2026-09-26) :
+    // un en-tête reprend presque toujours le mot du nom — « compterLesDoublons » commenté « compte
+    // les blocs » — donc compter les deux faisait franchir le seuil de deux à une candidate qui ne
+    // partageait en réalité qu'UNE seule idée. Le seuil devenait un seuil à un mot sans que rien ne
+    // le dise, ce qui est exactement la dérive que la mesure de #777 interdisait.
+    const partages = new Set([...parNom, ...parEntete].map(racineDuMot)).size;
+    const score = parNom.reduce((a, w) => a + 2 * poids(w), 0) + parEntete.reduce((a, w) => a + poids(w), 0);
+    // Le mot le plus informatif qu'elle partage, NON pondéré par sa position : c'est lui qui décide
+    // si une seule racine peut suffire. Comparé au médian du corpus, il se normalise tout seul —
+    // sur un petit corpus aucun mot ne se détache, donc aucune candidate ne passe par cette porte,
+    // et c'est exactement ce que la mesure de #777 exigeait sur un catalogue de cinquante offres.
+    const motLePlusFort = Math.max(0, ...[...parNom, ...parEntete].map((w) => poids(w)));
+    return { ...f, parNom, parEntete, partages, motLePlusFort, score };
+    // LE SEUIL, EXPRIMÉ EN INFORMATION PLUTÔT QU'EN NOMBRE DE MOTS (2026-09-26, et les deux
+    // versions précédentes sont gardées écrites parce que chacune ratait un cas réel).
+    //
+    //   · compter les MOTS : « compterLesDoublons » commenté « compte les blocs » franchissait le
+    //     seuil sur une seule idée répétée — un seuil à un mot qui ne se disait pas.
+    //   · compter les RACINES distinctes : corrige ça, et fait tomber la MEILLEURE réponse à
+    //     « détecter un doublon de code », `planDoublons()`, qui ne partage qu'une racine — pendant
+    //     qu'une fonction sans rapport passait avec le verbe « detect » plus le mot « code ».
+    //     **Deux mots génériques valaient mieux qu'un mot précis**, soit l'inverse de ce qu'on veut.
+    //
+    // La règle retenue demande qu'une candidate apporte AU MOINS AUTANT D'INFORMATION QUE DEUX MOTS
+    // ORDINAIRES — le poids médian du corpus, dérivé de lui à chaque passage (Article 24). Un mot
+    // très spécifique suffit donc, deux mots creux ne suffisent pas. Ce n'est pas un assouplissement
+    // du seuil de #777 : c'est la même exigence, mesurée en information plutôt qu'en occurrences,
+    // et sur un corpus de plus de mille fonctions où la rareté veut vraiment dire quelque chose.
+  }).filter((f) => f.partages >= seuil || f.motLePlusFort >= seuil * poids.median).sort((a, b) => b.score - a.score || a.nom.localeCompare(b.nom));
+  return { mesurable: true, examinees: inventaire.fonctions.length, candidates: notees.slice(0, max), total: notees.length };
+}
+
+export function formatFonctionExistanteLines(r, intention = "") {
+  if (!r.mesurable) return [`❓ « ça existe déjà ? » : PAS MESURÉ — ${r.pourquoi}`];
+  if (!r.candidates.length) {
+    return [
+      `Aucune fonction existante ne ressemble à « ${intention} » (${r.examinees} fonctions exportées examinées).`,
+      "  Ce n'est PAS la preuve qu'il n'y a rien : c'est la preuve que CES MOTS-LÀ ne ressortent pas. Réessayer avec le vocabulaire du sujet avant de conclure qu'on part de zéro.",
+    ];
+  }
+  const L = [`${r.total} fonction(s) existante(s) ressemblent à « ${intention} » (${r.examinees} examinées) — À LIRE avant d'en écrire une de plus :`];
+  for (const c of r.candidates) L.push(`  · ${c.nom}() — ${c.fichier}${c.parNom.length ? ` · par son nom : ${c.parNom.join(", ")}` : ""}${c.parEntete.length ? ` · par son en-tête : ${c.parEntete.join(", ")}` : ""}`);
+  L.push("  Ce sont des CANDIDATES, jamais un verdict « c'est déjà fait » : aucune mécanique ne peut juger qu'une fonction trouvée fait vraiment ce que tu veux.");
+  return L;
+}
+
 export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, onboardingContext = null) {
   const taskWords = new Set(significantWords(taskLabel));
   if (!taskWords.size) return [];
