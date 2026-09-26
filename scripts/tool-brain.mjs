@@ -260,6 +260,39 @@ export function classerLesSilencieux(slugs = [], { lireSource, offert = "" } = {
   return { mesurable: true, sansCli, muets, inconnus };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE GARDE-FOU QUI EMPÊCHERA LE PROCHAIN OUTIL MUET (2026-09-26, tâche #778)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE TROU QU'IL FERME : `classerLesSilencieux()` sait déjà reconnaître un outil MUET — il a une
+// ligne de commande et n'enregistre jamais son passage — mais ce classement n'apparaissait que
+// dans le rapport de Ronde, lancé à la main. **Un outil créé demain sans `recordCliUsage` rejoint
+// donc la zone muette en silence, et son zéro se lit ensuite comme un verdict sur lui**, alors
+// qu'il dit seulement que personne ne compte. Un compteur faux empoisonne toutes les décisions
+// d'usage qui s'appuient dessus.
+//
+// CE QU'IL FAIT ET CE QU'IL NE FAIT PAS : il SIGNALE au commit, il ne bloque pas. Le choix entre
+// signaler et bloquer revient à l'utilisateur et lui est posé (tâche #778, à trancher) ; en
+// attendant, le comportement retenu est le moins brutal des deux, et c'est celui qu'on peut
+// revenir en arrière sans rien perdre.
+//
+// MUET QUAND TOUT VA BIEN, jamais une ligne « 0 muet » à chaque commit : c'est ce bruit-là qui
+// rend un contrôle invisible (leçon L6). Et un silence NON MESURABLE se dit, il ne se tait pas
+// (leçons L5/L11) — sans lecteur de source, « aucun muet » et « rien n'a pu être lu » se
+// ressembleraient trait pour trait.
+export function muetsAuCompteurLines(rapport) {
+  if (!rapport?.silenceMesurable) {
+    return [`❓ Outils muets au compteur : PAS MESURÉ — ${rapport?.pourquoiSilenceNonMesure ?? "raison non fournie"}`];
+  }
+  const muets = rapport.muetsAuCompteur ?? [];
+  if (!muets.length) return [];
+  return [
+    `⚠️  ${muets.length} outil(s) MUET(S) au compteur d'usage : ${muets.join(", ")}`,
+    "   Ils ont une ligne de commande et n'appellent jamais `recordCliUsage` — leur zéro d'usage ne veut donc RIEN dire,",
+    "   et il se lira pourtant comme un verdict sur eux. Ajouter l'appel, ou déclarer pourquoi cet outil n'est pas comptable.",
+  ];
+}
+
 export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "" } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
@@ -418,6 +451,24 @@ async function main() {
   printReliabilityNotice("tool-brain");
   recordCliUsage("tool-brain");
   const [, , ...rest] = process.argv;
+
+  // LA SOUS-COMMANDE DU CROCHET (2026-09-26, tâche #778) — muette quand il n'y a rien à dire.
+  if (rest[0] === "muets") {
+    let sourceCrochet = "";
+    try { sourceCrochet = readFileSync(new URL("./hooks/post-commit", import.meta.url), "utf8"); } catch { /* le classement reste juste, en moins large */ }
+    let offert = "";
+    for (const d of ["../docs/regles-de-travail.md", "../CLAUDE.md"]) {
+      try { offert += readFileSync(new URL(d, import.meta.url), "utf8"); } catch { /* idem */ }
+    }
+    const lireSource = (slug) => {
+      for (const c of [`./${slug}.mjs`, `./check-${slug}.mjs`]) {
+        try { return readFileSync(new URL(c, import.meta.url), "utf8"); } catch { /* essai suivant */ }
+      }
+      return null;
+    };
+    for (const l of muetsAuCompteurLines(buildToolBrainUsageReport(loadToolUsageHistory(), PRESTATIONS, { sourceCrochet, lireSource, offert }))) console.log(l);
+    return;
+  }
 
   if (rest[0] === "rapport") {
     const history = loadToolUsageHistory();

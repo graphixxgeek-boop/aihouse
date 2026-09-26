@@ -51,4 +51,13 @@ fi
 # n'a rien trouvé.
 if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^scripts/.*\.mjs$'; then
   node scripts/hooks/banniere.mjs node scripts/god-of-all-process.mjs dette || true
+  # L'OUTIL MUET, SIGNALÉ À SA NAISSANCE (2026-09-26, tâche #778) — alerte NON BLOQUANTE, même
+  # calibrage que les lignes ci-dessus, et le choix signaler/bloquer reste à trancher par
+  # l'utilisateur. Le défaut qu'elle ferme : un outil créé avec une ligne de commande et sans
+  # `recordCliUsage` rejoint la zone muette en silence, et son zéro d'usage se lit ensuite comme
+  # un verdict sur lui alors qu'il dit seulement que personne ne compte. Le classement existait
+  # depuis #763 et n'apparaissait QUE dans le rapport de Ronde, lancé à la main (leçon L2).
+  # Même filtre superset que la ligne ci-dessus, et pour la même raison : la précision vit dans
+  # l'outil, qui est muet quand il n'a rien trouvé.
+  node scripts/hooks/banniere.mjs node scripts/tool-brain.mjs muets || true
 fi

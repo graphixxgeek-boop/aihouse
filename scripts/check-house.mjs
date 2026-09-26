@@ -14149,3 +14149,37 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: la dette et le soupçon (2026-09-26, tâche #943) — le détecteur de dettes documentaires accusait à tort, et le coût s'est mesuré le jour même : un commit qui touchait le contrôleur d'un process pour une raison sans rapport annonçait une dette alors que la documentation réellement due était dans le même commit, j'ai appris à ne plus lire la ligne, et trois dettes réelles de la même journée se sont cachées derrière. La première règle que j'ai essayée était mauvaise et le filet l'a dit : séparer « preuve d'une étape » de « simple contrôleur » affaiblissait exactement le lien qui avait laissé passer les neuf dettes de 2026-09-25, et un test existant a refusé la modification sans que j'aie eu à y penser. La règle retenue ne fait taire personne — elle DÉGRADE. Si le commit a documenté le fichier touché ailleurs, sa fiche ou son blueprint dérivés de son nom plutôt qu'énumérés, l'écart devient un soupçon à confirmer et il reste affiché, en nommant où la documentation a été écrite. Un commit qui ne documente rien reste une dette pleine et entière, et c'est l'assertion que ces tests protègent en premier.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LE GARDE-FOU QUI EMPÊCHERA LE PROCHAIN OUTIL MUET (2026-09-26, tâche #778)
+// ————————————————————————————————————————————————————————————————————————
+// Le classement existait depuis #763 et n'apparaissait QUE dans le rapport de Ronde, lancé à la
+// main — leçon L2. Un outil créé demain sans `recordCliUsage` rejoignait donc la zone muette en
+// silence, et son zéro d'usage se serait lu comme un verdict sur lui alors qu'il dit seulement que
+// personne ne compte. Un compteur faux empoisonne toutes les décisions d'usage qui suivent.
+{
+  const tb778 = await import('../scripts/tool-brain.mjs');
+
+  // MUET QUAND TOUT VA BIEN — c'est la moitié du mécanisme, jamais un détail : une ligne « 0 muet »
+  // à chaque commit est exactement le bruit qui rend un contrôle invisible (leçon L6).
+  assert.deepEqual(tb778.muetsAuCompteurLines({ silenceMesurable: true, muetsAuCompteur: [] }), [], 'nothing at all is printed when no tool is mute');
+
+  // IL DOIT MORDRE, et nommer.
+  const mord778 = tb778.muetsAuCompteurLines({ silenceMesurable: true, muetsAuCompteur: ['un-outil'] });
+  assert.ok(mord778.length >= 2 && mord778[0].includes('un-outil'), 'a mute tool is named, so the fix is one line away rather than a hunt');
+  assert.ok(mord778.some((l) => /ne veut donc RIEN dire/.test(l)), "and the line says WHY it matters: the tool's zero usage is not a verdict on the tool, it means nobody is counting");
+
+  // PAS MESURÉ NE SE DIT JAMAIS COMME « AUCUN MUET » (leçons L5/L11).
+  assert.match(tb778.muetsAuCompteurLines({ silenceMesurable: false, pourquoiSilenceNonMesure: 'pas de lecteur' })[0], /PAS MESURÉ/, 'an unmeasurable silence says so rather than rendering an empty list, which would read exactly like a clean result');
+  assert.match(tb778.muetsAuCompteurLines(null)[0], /PAS MESURÉ/, 'and a missing report too, rather than crashing or printing nothing');
+
+  // CÂBLÉ POUR DE VRAI DANS LE CROCHET (leçon L2 : un mécanisme qui ne sort pas du script est une
+  // intention). C'est l'assertion qui compte le plus ici, puisque le défaut corrigé EST l'absence
+  // de câblage — la fonction, elle, existait déjà.
+  const { readFileSync: lireHook778 } = await import('node:fs');
+  const hook778 = lireHook778('scripts/hooks/post-commit', 'utf8');
+  assert.ok(/tool-brain\.mjs muets/.test(hook778), 'the post-commit hook must actually call it: the defect being fixed IS the missing wiring, and a test on the function alone would pass while the guard stays as mute as the tools it hunts');
+  assert.ok(/banniere\.mjs node scripts\/tool-brain\.mjs muets/.test(hook778), 'and it goes through the banner like every other hook call, so it obeys the same hierarchy rather than reintroducing the 365 lines that made the banner unreadable');
+
+  console.log("Passed: le garde-fou qui empêchera le prochain outil muet (2026-09-26, tâche #778) — le classement des outils muets existait depuis #763 et n'apparaissait que dans le rapport de Ronde, lancé à la main, donc un outil créé demain avec une ligne de commande et sans recordCliUsage rejoignait la zone muette sans que rien ne le dise. Son zéro d'usage se serait ensuite lu comme un verdict sur lui, alors qu'il ne dit qu'une chose : personne ne compte. Et un compteur faux empoisonne toutes les décisions d'usage qui s'appuient dessus. Il SIGNALE au commit, il ne bloque pas — le choix entre signaler et bloquer revient à l'utilisateur et lui est posé ; en attendant, c'est le moins brutal des deux, et le seul sur lequel on peut revenir sans rien perdre. Il est muet quand tout va bien, parce qu'une ligne « 0 muet » à chaque commit est très exactement le bruit qui rend un contrôle invisible, et un silence non mesurable se dit plutôt que de ressembler à un résultat propre. L'assertion qui compte le plus est la dernière : le crochet l'appelle vraiment, puisque le défaut corrigé EST l'absence de câblage — un test sur la seule fonction aurait été vert pendant que le garde-fou restait aussi muet que les outils qu'il traque.");
+}
