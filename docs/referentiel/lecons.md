@@ -851,6 +851,70 @@ dans le futur — c'est lui qui a attrapé les quatre. Ce qu'aucun mécanisme ne
 heure PASSÉE réutilisée (une ligne datée de vingt minutes trop tôt passe sans bruit), et le déclarer
 ici EST la protection (Article 27).
 
+## L28 — Un chiffre qui BOUGE n'est pas un chiffre qui s'AMÉLIORE
+
+*(2026-09-26, tâche #905, en élargissant le motif qui reconnaît l'origine d'une tâche de suivi.)*
+
+**Ce qui s'est passé, et ça a pris deux minutes à commettre et vingt à voir.** Les trois courbes de
+rotation rendaient « 77 % d'origine indéterminée » — un chiffre visiblement trop haut, causé par un
+motif qui ne connaissait pas les formes réellement écrites dans le registre (« Sa demande du … »,
+« Son gros prompt du … »). J'ai élargi le motif, relancé, et lu **78 %**. Puis, sans y penser, j'ai
+regardé le détail plutôt que le total : la part « demandée » avait BAISSÉ.
+
+**La cause** : en réécrivant le motif j'avais laissé tomber son drapeau `/i`. Les formes existantes
+écrites avec une majuscule — « Demande explicite de l'utilisateur », la plus fréquente de toutes —
+avaient cessé de correspondre. **L'élargissement avait rétréci la mesure.** Drapeau remis : 68 %.
+
+**Pourquoi c'est une leçon et pas une étourderie** : un chiffre qui change APRÈS une modification
+ressemble trait pour trait à un chiffre qui répond à la modification. C'est le même piège que le
+zéro d'une sonde cassée (L11) pris un cran plus loin : là, un résultat ABSENT ressemblait à un
+résultat NUL ; ici, un résultat DÉGRADÉ ressemble à un résultat AMÉLIORÉ. Et la lecture naturelle
+— « j'ai élargi, donc ça s'est élargi » — confirme l'erreur au lieu de la révéler.
+
+**Le geste qui ferme le trou** : mesurer AVANT, mesurer APRÈS, et vérifier que la variation va dans
+le sens attendu **sur la composante qu'on a touchée**, jamais sur le total. Un total agrège, donc
+un total masque : ici, +6 indéterminées et −3 demandées se lisaient « à peu près pareil ».
+
+**Terrain** : toute modification d'un motif, d'un seuil, d'un filtre · mots : motif, regex, seuil,
+élargir, mesure, avant/après · fichiers : scripts/*.mjs
+
+**Porté par** : `origineDeLaTache()` est verrouillée par un contre-test de casse dans check-house.mjs
+— la forme MAJUSCULE la plus fréquente du registre doit rester reconnue, sans quoi la suite échoue.
+Ce qu'aucun mécanisme ne peut voir, c'est une variation non vérifiée sur une mesure qui n'a pas
+encore de test, et le déclarer ici EST la protection (Article 27).
+
+## L29 — Le doublon qui a été attrapé par le compilateur aurait survécu dans un autre fichier
+
+*(2026-09-26, tâche #905, en construisant les trois courbes de rotation.)*
+
+**Ce qui s'est passé** : il fallait distinguer les tâches que l'utilisateur demande de celles que la
+machinerie engendre. J'ai écrit un classificateur d'origine complet — ses motifs, ses trois états,
+ses commentaires. Au premier chargement du module, Node a refusé :
+`SyntaxError: Identifier 'origineDeLaTache' has already been declared`. **La fonction existait
+depuis deux jours, à quelques centaines de lignes au-dessus, dans le même fichier.**
+
+**Ce qui aurait été perdu si le doublon avait vécu** : pas du temps — deux classificateurs auraient
+rendu deux réponses différentes sur la même ligne de suivi, et la courbe aurait été plus fausse
+qu'absente. Une mesure fausse se défend ; une mesure absente se voit.
+
+**Le point qui fait la leçon, et il est inconfortable** : ce n'est ni la reprise des notes
+(Article 30) ni tool-brain (Article 31) qui ont mordu. C'est le moteur JavaScript, par accident,
+parce que les deux déclarations partageaient un fichier. **Le même doublon écrit dans deux fichiers
+différents n'aurait rien déclenché du tout** — et ce dépôt compte quatre-vingt-huit fichiers.
+
+**Le geste qui ferme le trou** : avant d'écrire une fonction qui CLASSE, qui MESURE ou qui NOMME,
+chercher le verbe dans le dépôt, pas seulement le nom qu'on s'apprête à donner. « Origine »,
+« classer », « répartition » auraient tous rendu la fonction existante.
+
+**Terrain** : avant d'écrire une fonction d'analyse ou de classement · mots : doublon, classificateur,
+origine, mesure, déjà existant · fichiers : scripts/*.mjs
+
+**Porté par** : **aucun mécanisme** ne peut intercepter l'écriture d'une fonction avant qu'elle
+existe. CLONE-HUNTER l'aurait vue APRÈS coup, au commit suivant, une fois le travail fait ; le
+moteur JavaScript ne l'a refusée que parce que les deux déclarations partageaient un fichier. Ce
+qui manque est un réflexe AVANT, que seule la conduite porte — et le déclarer ici EST la
+protection (Article 27).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

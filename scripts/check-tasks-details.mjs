@@ -238,7 +238,40 @@ export function splitSujet(sujet) {
   return { theme: theme.trim() || "?", sousTheme: rest.join(" / ").trim() || "Général" };
 }
 
-const OPEN_KEYS = new Set(["ouverte", "enCours", "autre"]);
+// EXPORTÉ DEPUIS LE 2026-09-26 (tâche #905), et pour une raison qu'il a lui-même demandé de
+// chercher : « verifie que tous les nouveaux sujet traités ensemble s'harmonisent bien avec
+// l'existant, reperes les redondances ». La vue par thème, écrite quelques heures plus tôt,
+// portait sa PROPRE copie de cette liste — `["ouverte", "enCours", "autre"]` recopiée à la main.
+// Les deux disaient la même chose ce jour-là ; le jour où un statut rejoindrait OPEN_KEYS, la vue
+// par thème aurait cessé de le voir SANS RIEN DIRE, et une famille se serait vidée toute seule.
+// C'est le cas d'école de l'Article 24 : un registre se LIT, il ne se recopie pas.
+export const OPEN_KEYS = new Set(["ouverte", "enCours", "autre"]);
+
+// LE GARDE-FOU QUE L'ARTICLE 24 EXIGE DERRIÈRE CETTE LISTE (2026-09-26, tâche #905). Exporter
+// OPEN_KEYS ne suffit pas : rien n'empêche la prochaine fonction d'en recopier une de plus, et
+// c'est exactement ce qui vient de se passer. Celui-ci relit LE CODE et refuse une seconde copie.
+//
+// IL EST ÉCRIT POUR NE PAS SE TROUVER LUI-MÊME — quatrième fois cette semaine que ce motif se
+// présente (find-booster #182, la sonde API, le garde-fou anti-résumé deux fois). Trois exclusions,
+// chacune nécessaire : la LIGNE DE DÉCLARATION, qui porte forcément la liste ; les COMMENTAIRES,
+// où cette même liste est citée pour expliquer pourquoi il ne faut pas la recopier ; et le MOTIF
+// lui-même, qui contient les trois mots qu'il cherche.
+export const MOTIF_LISTE_OUVERTURE = /\[\s*"ouverte"\s*,\s*"enCours"/;
+
+export function findListesDOuvertureEnDur({ source = null, lire = readFileSync, chemin = new URL(import.meta.url).pathname } = {}) {
+  let texte = source;
+  if (texte === null) { try { texte = lire(chemin, "utf8"); } catch { return { mesurable: false, pourquoi: `le fichier source (${chemin}) n'a pas pu être lu : aucune copie n'a été cherchée, ce qui n'est jamais la même chose qu'aucune copie trouvée` }; } }
+  const copies = [];
+  String(texte).split("\n").forEach((ligne, i) => {
+    const nu = ligne.trim();
+    if (nu.startsWith("//") || nu.startsWith("*")) return;          // un commentaire cite, il ne code pas
+    if (nu.includes("export const OPEN_KEYS")) return;               // la déclaration elle-même
+    if (nu.includes("MOTIF_LISTE_OUVERTURE")) return;                // le motif contient ce qu'il cherche
+    if (MOTIF_LISTE_OUVERTURE.test(ligne)) copies.push({ ligne: i + 1, extrait: nu.slice(0, 100) });
+  });
+  return { mesurable: true, copies,
+    horsPortee: "ne lit que CE fichier : une copie faite dans un autre script passerait à travers. Le motif est littéral, donc une copie écrite dans un autre ordre (« enCours » avant « ouverte ») lui échapperait aussi — il attrape la recopie paresseuse, celle qui arrive vraiment." };
+}
 
 export function filterByZoom(rows, zoom, { latestTaskNumber } = {}) {
   if (!ZOOM_LEVELS.includes(zoom)) throw new Error(`zoom inconnu : ${zoom}`);
@@ -1262,6 +1295,241 @@ export function dernierPlanDeDepart({ dossier = join(ROOT, "docs/rapports-de-nui
   return fichiers.length ? join(dossier, fichiers[fichiers.length - 1]) : null;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LES TROIS COURBES (2026-09-26, tâche #905 — sa décision en fenêtre, et c'est LUI qui a imposé
+// qu'elles soient trois plutôt qu'un chiffre).
+//
+// SA PEUR, DANS SES MOTS : « il faut gérer ca, on peut pas laisser le travail en mode tapis roulant
+// ou enfoncement (plus de taches qui se génèrent que de taches accomplies) ». Et sa nuance, qui est
+// tout l'intérêt de la mesure : « ca ne me dérange pas si dans la rotation, la proportion de
+// grosses taches diminue au profit de petites taches rapides : 117 taches ne veut rien dire en soi,
+// s'il y a 90% de taches rapides ou lourdes, ca change tout. »
+//
+// POURQUOI JAMAIS UN SOLDE NET, et c'est la décision qu'il a prise explicitement : « ouvertes moins
+// fermées » vaut zéro aussi bien quand rien ne se passe que quand trente tâches lourdes sont closes
+// et trente légères naissent. Le chiffre unique est exactement le témoin que ce projet traque
+// partout — deux réalités opposées qui s'affichent pareil. Trois courbes séparées, jamais leur
+// différence.
+//
+// LA DISTINCTION QU'IL A NOMMÉE LUI-MÊME, et sans elle la courbe 2 ne veut rien dire : « si c'est
+// moi qui ajoute volontairement et explicitement des nouvelles taches parce que je les estime
+// utiles, c'est normal si le nombre de taches augmente, je parle ici des taches generees
+// automatiquement suite à mes demandes. Tu saisis la distinction ? » Une tâche qu'il demande est un
+// choix ; une tâche que la machinerie fait naître derrière est le tapis roulant.
+
+// L'ORIGINE NE SE REMESURE PAS ICI : ELLE EXISTE DÉJÀ, et c'est une trouvaille de ce chantier —
+// à signaler plutôt qu'à taire (Article 30). En écrivant ces courbes j'ai commencé par construire
+// un SECOND classificateur d'origine, avec ses propres motifs, avant que le chargement du module
+// ne refuse le doublon : `origineDeLaTache()` existe depuis le 2026-09-24, à quelques centaines de
+// lignes d'ici, dans le même fichier. Deux classificateurs auraient donné deux réponses
+// différentes sur la même ligne de suivi, et la courbe aurait été plus fausse qu'absente.
+//
+// CE QUI M'A MANQUÉ EST EXACTEMENT CE QUE LA CHARTE PRESCRIT : la reprise des notes avant
+// d'ouvrir le chantier (Article 30) et le passage par tool-brain avant d'agir (Article 31). Le
+// garde-fou qui a mordu ici n'est ni l'un ni l'autre : c'est le moteur JavaScript refusant une
+// déclaration en double. Un doublon dans DEUX fichiers différents n'aurait rien refusé du tout.
+//
+// LA CORRESPONDANCE AVEC SA DISTINCTION À LUI, et elle est écrite comme une table plutôt que comme
+// une suite de `if` — un cinquième état demain se range à un seul endroit (Article 24) :
+export const ORIGINE_VERS_COURBE = {
+  // Ce qu'il DEMANDE : jamais un reproche, il l'a écrit noir sur blanc.
+  utilisateur: "demandee",
+  // LA MACHINERIE, et les deux y vont ensemble à dessein : une tâche née d'une trouvaille d'outil
+  // et une tâche que l'agent s'est donnée sont le même phénomène de son point de vue — du travail
+  // que personne n'a commandé. C'est LE tapis roulant dont il parle.
+  outil: "auto-generee",
+  agent: "auto-generee",
+  // Le silence reste le silence : le ranger d'office ferait taire le signal qu'il veut voir.
+  "indéterminée": "indeterminee",
+};
+
+export function courbeDeLOrigine(row = {}, { table = ORIGINE_VERS_COURBE, origineImpl = origineDeLaTache } = {}) {
+  return table[origineImpl(row).origine] ?? "indeterminee";
+}
+
+const JOUR = (h) => String(h ?? "").slice(0, 10);
+
+// LES TROIS COURBES. Chacune rend SA série par jour, et aucune n'est combinée avec une autre.
+export function troisCourbes(rows = [], { jours = 14, poidsImpl = poidsDeLaTache, origineImpl = courbeDeLOrigine } = {}) {
+  const datees = rows.filter((r) => /^\d{4}-\d{2}-\d{2}/.test(String(r.horodatage ?? "")));
+  if (!datees.length) {
+    return { mesurable: false, pourquoi: "aucune ligne ne porte un horodatage lisible : sans date il n'y a pas de courbe, et une courbe plate se lirait comme une activité nulle (leçon L5)" };
+  }
+  const parJour = new Map();
+  const veiller = (j) => {
+    if (!parJour.has(j)) parJour.set(j, { jour: j, fermees: 0, ouvertes: { demandee: 0, "auto-generee": 0, indeterminee: 0 }, poids: [], paliers: { lourde: 0, moyenne: 0, legere: 0 } });
+    return parJour.get(j);
+  };
+  for (const r of datees) {
+    const j = JOUR(r.horodatage);
+    const d = veiller(j);
+    // COURBE 1 — FERMÉES PAR JOUR. Sa limite, déclarée plutôt que tue : ce registre écrit le plus
+    // souvent la tâche ET sa clôture dans la même ligne, le même jour. « Fermée le jour J » veut
+    // donc dire « travaillée et close le jour J », ce qui est précisément ce qu'il veut voir ; une
+    // tâche ouverte un jour et close trois jours plus tard compte au jour de son ÉCRITURE.
+    if (r.statusKey === "terminee") d.fermees += 1;
+    // COURBE 2 — OUVERTES PAR JOUR, séparées par origine. Chaque ligne écrite ce jour-là est une
+    // tâche née ce jour-là, close ou non : une tâche née et close dans la journée a bel et bien
+    // été engendrée, et l'effacer de la courbe 2 masquerait la moitié du tapis roulant.
+    d.ouvertes[origineImpl(r)] += 1;
+    // COURBE 3 — LE POIDS. Sa nuance : une file qui s'allonge en légères n'est pas un enfoncement.
+    const p = poidsImpl(r);
+    if (p.mesurable) { d.poids.push(p.points); d.paliers[p.palier] += 1; }
+  }
+  const serie = [...parJour.values()].sort((a, b) => a.jour.localeCompare(b.jour)).slice(-jours).map((d) => ({
+    ...d,
+    neesEnTout: d.ouvertes.demandee + d.ouvertes["auto-generee"] + d.ouvertes.indeterminee,
+    poidsMoyen: d.poids.length ? Number((d.poids.reduce((a, b) => a + b, 0) / d.poids.length).toFixed(2)) : null,
+  }));
+  return {
+    mesurable: true,
+    jours: serie.length,
+    serie,
+    horsPortee: "la courbe des FERMÉES se lit sur l'horodatage d'écriture de la ligne, pas sur une date de clôture séparée : ce registre écrit le plus souvent la tâche et sa clôture ensemble. Et l'origine est relayée d'origineDeLaTache() — une HEURISTIQUE sur le texte de la ligne, jamais une déclaration — et ses quatre états sont ramenés à trois par une table lisible, « indéterminée » compris, jamais rangé d'office.",
+  };
+}
+
+export function formatTroisCourbesLines(c) {
+  if (!c?.mesurable) return [`TROIS COURBES : PAS MESURÉES — ${c?.pourquoi ?? "raison non fournie"}`];
+  const l = [];
+  l.push(`=== LES TROIS COURBES — ${c.jours} dernier(s) jour(s) écrit(s) dans le suivi ===`);
+  l.push(`JAMAIS UN SOLDE NET : « ouvertes moins fermées » vaut zéro quand rien ne bouge ET quand trente lourdes sont closes pendant que trente légères naissent.`);
+  l.push("");
+  l.push(`  jour         fermées   nées (lui / auto / ?)      poids moyen   ⬛ / ◧ / ▫`);
+  l.push(`  -----------  -------   ------------------------   -----------   ----------`);
+  for (const d of c.serie) {
+    l.push(`  ${d.jour}   ${String(d.fermees).padStart(5)}   ${String(d.neesEnTout).padStart(4)} (${d.ouvertes.demandee} / ${d.ouvertes["auto-generee"]} / ${d.ouvertes.indeterminee})`.padEnd(64)
+      + `${d.poidsMoyen === null ? "  pas mesuré" : String(d.poidsMoyen).padStart(11)}   ${d.paliers.lourde} / ${d.paliers.moyenne} / ${d.paliers.legere}`);
+  }
+  const tot = c.serie.reduce((a, d) => ({
+    fermees: a.fermees + d.fermees,
+    lui: a.lui + d.ouvertes.demandee,
+    auto: a.auto + d.ouvertes["auto-generee"],
+    indet: a.indet + d.ouvertes.indeterminee,
+  }), { fermees: 0, lui: 0, auto: 0, indet: 0 });
+  l.push("");
+  l.push(`  TOTAL sur la fenêtre : ${tot.fermees} fermée(s) · ${tot.lui} née(s) de SA demande · ${tot.auto} née(s) de la machinerie · ${tot.indet} d'origine indéterminée.`);
+  // LE VERDICT REFUSE DE CONCLURE QUAND LA PART INDÉTERMINÉE DOMINE — et ce n'est pas une prudence
+  // décorative : au premier passage réel, 648 lignes sur 836 (77 %) n'ont pas d'origine lisible, et
+  // la phrase « pas de tapis roulant » se serait appuyée sur 62 tâches connues contre 648 inconnues.
+  // C'est exactement le faux vert que ce projet traque partout : un verdict rassurant rendu sur des
+  // données absentes. Tant que la majorité des lignes ne dit pas d'où elle vient, la bonne réponse
+  // est « pas concluant », pas « tout va bien ».
+  const declarees = tot.lui + tot.auto;
+  const partIndet = tot.indet + declarees ? Math.round((tot.indet / (tot.indet + declarees)) * 100) : 0;
+  if (tot.indet > declarees) {
+    l.push(`  🚨 VERDICT NON RENDU : ${partIndet} % des lignes de la fenêtre (${tot.indet} sur ${tot.indet + declarees}) ne disent pas d'où elles viennent. Un « pas de tapis roulant » appuyé sur ${declarees} lignes connues contre ${tot.indet} inconnues serait un satisfecit rendu sur des données absentes.`);
+    l.push(`  → CE QUI LE RENDRAIT CONCLUANT : que la cellule d'origine de chaque nouvelle ligne cite sa source — « sa demande du … », « constat de … ». Le passé ne se réécrit pas ; les lignes à venir, si.`);
+  } else {
+    // LA LECTURE QU'IL A DEMANDÉE, et elle ne porte QUE sur la part auto-générée : les tâches qu'il
+    // demande lui-même ne sont jamais un reproche, il l'a écrit noir sur blanc.
+    l.push(tot.auto > tot.fermees
+      ? `  ⚠️ TAPIS ROULANT sur cette fenêtre : la machinerie a engendré ${tot.auto} tâche(s) pour ${tot.fermees} fermée(s). Ce qu'il demande lui-même n'entre pas dans ce verdict.`
+      : `  Pas de tapis roulant sur cette fenêtre : ${tot.auto} née(s) de la machinerie pour ${tot.fermees} fermée(s) — mesuré sur ${declarees} ligne(s) dont l'origine est lisible.`);
+  }
+  l.push(`  HORS PORTÉE : ${c.horsPortee}`);
+  return l;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LE FILTRE AVANT CRÉATION (2026-09-26, tâche #905 — sa demande, mot pour mot : « je veux ajouter
+// une toute premiere action au debut : verifier que cette tache n'existe pas deja, et si elle peut
+// etoffer une tache existante plutot que creer une nouvelle tache : c'est le FILTRE, avant la
+// creation de chaque tache »).
+//
+// POURQUOI IL EST LE PREMIER MAILLON DE SA CHAÎNE, et pas un confort : c'est la seule action qui
+// peut faire que la tâche N'EXISTE PAS. Tout le reste du rituel (le process, l'outil, puis
+// harmoniser/optimiser/fiabiliser) s'applique à une tâche déjà née. Une file de 98 lignes dont 13
+// thèmes ne portent qu'une seule tâche n'est pas une file surchargée, c'est une file ÉMIETTÉE — et
+// l'émiettement se fabrique exactement là, au moment où on crée au lieu d'étoffer.
+//
+// IL NE TRANCHE JAMAIS, IL PROPOSE — trois issues, jamais une décision automatique. Créer une tâche
+// est un geste que l'agent fait ; fusionner deux tâches en est un autre, et il change ce que le
+// registre raconte. Un filtre qui fusionnerait tout seul déciderait à la place du seul qui puisse
+// juger que deux formulations désignent le même travail.
+export const MOTS_VIDES = new Set(["le","la","les","un","une","des","du","de","au","aux","et","ou","en","dans","sur","pour","par","que","qui","quoi","dont","avec","sans","est","sont","ete","etre","a","à","ce","cette","ces","son","sa","ses","leur","leurs","plus","moins","pas","ne","il","elle","on","nous","vous","ils","elles","se","y","d","l","n","s","c","jamais","toujours","tout","tous","toute","toutes"]);
+
+export function motsSignificatifs(texte = "", vides = MOTS_VIDES) {
+  return new Set(String(texte).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, " ").split(" ")
+    .filter((m) => m.length >= 4 && !vides.has(m)));
+}
+
+// La ressemblance de Jaccard, et rien de plus savant : ce qu'on cherche n'est pas une similarité
+// sémantique, c'est « ces deux lignes parlent-elles des mêmes choses ? ». Un chiffre qu'on peut
+// recalculer à la main est un chiffre qu'on peut contester.
+export function ressemblance(a, b) {
+  const A = a instanceof Set ? a : motsSignificatifs(a);
+  const B = b instanceof Set ? b : motsSignificatifs(b);
+  if (!A.size || !B.size) return 0;
+  let communs = 0;
+  for (const m of A) if (B.has(m)) communs += 1;
+  return communs / (A.size + B.size - communs);
+}
+
+// LES DEUX SEUILS, ET POURQUOI ILS SONT DEUX. Un seuil unique force un choix binaire — doublon ou
+// rien — alors que sa demande en porte trois : ne pas créer, étoffer une existante, ou créer.
+export const SEUIL_DOUBLON = 0.45;
+export const SEUIL_ETOFFER = 0.22;
+
+export function filtreAvantCreation({ sujet = "", sousSujet = "", motCle = "", rows = [], seuilDoublon = SEUIL_DOUBLON, seuilEtoffer = SEUIL_ETOFFER } = {}) {
+  const texte = `${sujet} ${sousSujet}`.trim();
+  if (!texte) {
+    return { mesurable: false, pourquoi: "aucun libellé fourni pour la tâche envisagée : sans texte il n'y a rien à comparer, et un « aucun doublon » rendu sur du vide vaudrait feu vert (leçon L5)" };
+  }
+  // SEULES LES TÂCHES OUVERTES COMPTENT : une tâche close ne peut pas être étoffée, et la signaler
+  // comme doublon ferait renoncer à un travail qu'il faut refaire. Deux gestes opposés.
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+  const mots = motsSignificatifs(texte);
+  const candidats = ouvertes.map((r) => ({
+    numero: r.numero,
+    sujet: r.sujet,
+    sousSujet: r.sousSujet,
+    motCle: r.motCle,
+    score: ressemblance(mots, `${r.sujet ?? ""} ${r.sousSujet ?? ""}`),
+    // LE MOT-CLÉ IDENTIQUE EST UN SIGNAL À PART, jamais fondu dans le score : le registre impose
+    // déjà qu'un mot-clé soit unique parmi les tâches ouvertes. Une collision n'est donc pas un
+    // indice de ressemblance, c'est une violation de règle — et elle se dit comme telle.
+    memeMotCle: Boolean(motCle) && String(r.motCle ?? "").toLowerCase() === String(motCle).toLowerCase(),
+    memeTheme: splitSujet(r.sujet).theme.toLowerCase() === splitSujet(sujet).theme.toLowerCase(),
+  })).filter((c) => c.score >= seuilEtoffer || c.memeMotCle)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  const doublons = candidats.filter((c) => c.score >= seuilDoublon);
+  const aEtoffer = candidats.filter((c) => c.score < seuilDoublon && c.score >= seuilEtoffer);
+  const collisions = candidats.filter((c) => c.memeMotCle);
+  const issue = doublons.length ? "ne-pas-creer" : aEtoffer.length ? "etoffer" : "creer";
+  return {
+    mesurable: true, issue, candidats, doublons, aEtoffer, collisions,
+    comparees: ouvertes.length,
+    horsPortee: "compare des MOTS, jamais du sens : deux tâches écrites avec un vocabulaire différent sur le même sujet passeront à travers, et deux tâches qui partagent un vocabulaire technique sans parler de la même chose remonteront à tort. Il PROPOSE, il ne fusionne jamais — décider que deux formulations désignent le même travail n'est pas un geste de programme.",
+  };
+}
+
+export function formatFiltreLines(f, libelle = "") {
+  if (!f?.mesurable) return [`FILTRE AVANT CRÉATION : PAS MESURÉ — ${f?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== FILTRE AVANT CRÉATION — « ${libelle} » ===`];
+  l.push(`Comparée aux ${f.comparees} tâche(s) OUVERTES (une tâche close ne peut pas être étoffée, et la signaler ferait renoncer à un travail à refaire).`);
+  l.push("");
+  if (f.collisions.length) {
+    l.push(`🚨 MOT-CLÉ DÉJÀ PRIS par ${f.collisions.map((c) => `#${c.numero}`).join(", ")} — le registre impose un mot-clé unique parmi les ouvertes : ce n'est pas un indice, c'est une règle enfreinte.`);
+  }
+  if (f.issue === "ne-pas-creer") {
+    l.push(`⛔ NE PAS CRÉER — ${f.doublons.length} tâche(s) ouverte(s) disent déjà à peu près ça :`);
+  } else if (f.issue === "etoffer") {
+    l.push(`✍️  ÉTOFFER PLUTÔT QUE CRÉER — ${f.aEtoffer.length} tâche(s) ouverte(s) sont proches :`);
+  } else {
+    l.push(`✅ CRÉER — aucune tâche ouverte ne s'en approche assez pour l'accueillir.`);
+  }
+  for (const c of f.candidats) {
+    l.push(`   #${c.numero}  ${Math.round(c.score * 100)}%${c.memeTheme ? " · même thème" : ""}${c.memeMotCle ? " · MÊME MOT-CLÉ" : ""}  ${String(c.sousSujet ?? "").slice(0, 80)}`);
+  }
+  l.push("");
+  l.push(`  IL PROPOSE, IL NE TRANCHE PAS : ${f.horsPortee}`);
+  return l;
+}
+
 // LES TÂCHES CLOSES AILLEURS (2026-09-25, tâche #876) — LA FILE EST PLUS COURTE QU'ELLE N'EN A L'AIR.
 //
 // D'OÙ ÇA VIENT, et c'est arrivé DEUX fois dans la même journée sans être cherché : #801 et #445
@@ -2242,7 +2510,9 @@ export function promouvoirStrategie(texte = "", { sections = SECTIONS_STRATEGIE 
 // LES LIGNES SANS SÉPARATEUR SONT COMPTÉES À PART, jamais fondues dans un thème inventé : un sujet
 // écrit d'un bloc n'a pas de thème, il a une convention non respectée. Les deux appellent des
 // gestes opposés — l'un se range, l'autre se réécrit — et les confondre masquerait le second.
-export const SEPARATEUR_THEME = "/";
+// LE SÉPARATEUR EST CELUI DE splitSujet() — « / » entouré d'espaces, la convention écrite dans
+// tout docs/suivi/ — et non plus un « / » nu qui en faisait une seconde convention concurrente.
+export const SEPARATEUR_THEME = " / ";
 
 // LES HUIT FAMILLES (2026-09-26, sa décision : « Regrouper en ~8 grandes familles »). Une file à
 // 31 entrées ne se lit pas d'un coup d'œil ; une file à 8 oui. Le THÈME reste la granularité fine
@@ -2306,14 +2576,18 @@ export function themesDesTachesOuvertes(rows = [], { separateur = SEPARATEUR_THE
   if (!Array.isArray(rows) || !rows.length) {
     return { mesurable: false, pourquoi: "aucune ligne de suivi lue — sans elles, un zéro thème se lirait comme une file vide au lieu d'une lecture ratée (leçon L5)" };
   }
-  const ouvertes = rows.filter((r) => ["ouverte", "enCours", "autre"].includes(r.statusKey));
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
   const parTheme = new Map();
   const sansTheme = [];
   for (const r of ouvertes) {
     const sujet = String(r.sujet ?? "").trim();
-    const i = sujet.indexOf(separateur);
-    if (i === -1) { sansTheme.push(r); continue; }
-    const theme = sujet.slice(0, i).trim() || "(vide)";
+    // LE DÉCOUPAGE EST CELUI DE splitSujet(), PARTAGÉ AVEC LES BLOCS — pas un second découpage.
+    // L'ancien lisait un « / » nu, splitSujet() lit « / » entouré d'espaces : sur le registre du
+    // 2026-09-26 les deux rendaient exactement la même chose (zéro ligne d'écart, mesuré avant de
+    // toucher), mais un sujet écrit « Suivi/file » serait rangé sous « Suivi » par l'un et sous
+    // « Suivi/file » par l'autre. Deux vues du même registre qui ne se recoupent plus.
+    if (!sujet.includes(separateur)) { sansTheme.push(r); continue; }
+    const theme = splitSujet(sujet).theme || "(vide)";
     (parTheme.get(theme) ?? parTheme.set(theme, []).get(theme)).push(r);
   }
   const themes = [...parTheme.entries()]
@@ -2649,6 +2923,25 @@ function main() {
   if (process.argv[2] === "bilan") return bilanCli();
   if (process.argv[2] === "themes") return themesCli();
   if (process.argv[2] === "strategie") return strategieCli(process.argv);
+  // LES TROIS COURBES, joignables en une commande — un mécanisme que personne ne peut lancer
+  // n'existe pas (Article 31). Le nombre de jours se passe en argument plutôt que d'être figé :
+  // il répond à deux questions différentes selon qu'on regarde une nuit ou une semaine.
+  // LE FILTRE, joignable avant d'écrire la ligne — c'est tout son intérêt : lancé après, il ne
+  // filtre plus rien, il constate.
+  if (process.argv[2] === "filtre") {
+    const libelle = process.argv.slice(3).join(" ");
+    if (!libelle) { console.error('usage : check-tasks-details filtre "<le sujet de la tâche envisagée>"  [MOTCLE=xxx]'); process.exit(2); }
+    const f = filtreAvantCreation({ sujet: libelle, sousSujet: libelle, motCle: process.env.MOTCLE ?? "", rows: loadAllTaskRows() });
+    for (const l of formatFiltreLines(f, libelle)) console.log(l);
+    recordCliUsage("check-tasks-details", { origine: "demande" });
+    return;
+  }
+  if (process.argv[2] === "courbes") {
+    const jours = Number(process.argv[3]) || 14;
+    for (const l of formatTroisCourbesLines(troisCourbes(loadAllTaskRows(), { jours }))) console.log(l);
+    recordCliUsage("check-tasks-details", { origine: "demande" });
+    return;
+  }
   if (process.argv[2] === "emiettement") {
     const rows = loadAllTaskRows();
     console.log(`\n=== ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? ===\n`);
@@ -3066,7 +3359,17 @@ export function origineDeLaTache(row = {}) {
   // L'APOSTROPHE COMPTE DOUBLE, littéralement : le registre écrit « l'utilisateur » avec
   // l'apostroppe droite, la prose de l'agent avec la courbe (’). Un motif qui n'en accepte qu'une
   // manque la moitié des lignes sans jamais le dire — attrapé par un test au premier passage.
-  if (/demande (?:explicite )?(?:de l['’]utilisateur|du user)|l['’]utilisateur (?:demande|a demandé|insiste)|à sa demande|prompt de l['’]utilisateur/i.test(t)) {
+  // LE MOTIF A ÉTÉ ÉLARGI LE 2026-09-26 (tâche #905), ET LA MESURE L'A EXIGÉ : en branchant les
+  // trois courbes de rotation, 77 % des lignes du registre rendaient « indéterminée ». Ce n'était
+  // pas un registre muet — c'était le motif qui ne connaissait pas la façon dont ce projet écrit.
+  // La cellule d'origine dit presque toujours « Sa demande du … », « Son gros prompt du … »,
+  // « Sa question : … » : aucune de ces formes n'était reconnue, alors que « à sa demande » l'était.
+  // 35 lignes rattrapées d'un coup, et une courbe qui cesse de refuser de conclure pour rien.
+  //
+  // POURQUOI « SA/SON » SUFFIT ICI, et c'est déclaré plutôt que supposé : dans la cellule d'origine
+  // d'une ligne de ce suivi, le possessif de la troisième personne ne désigne jamais qu'une seule
+  // personne — l'utilisateur. Un outil est toujours nommé (« constat de ARGUS »), jamais « il ».
+  if (/demande (?:explicite )?(?:de l['’]utilisateur|du user)|l['’]utilisateur (?:demande|a demandé|insiste)|à sa demande|prompt de l['’]utilisateur|\b[Ss]a (?:demande|décision|consigne|question|formulation|réponse en fenêtre)\b|\b[Ss]on gros prompt\b|\b[Ss]es mots\b|\ben fenêtre de calibrage\b/i.test(t)) {
     return { origine: "utilisateur", declaree: true, pourquoi: "la ligne cite une demande de l'utilisateur" };
   }
   if (/trouvé par|remonté par|signalé par|constat de|écart trouvé/i.test(t)) {

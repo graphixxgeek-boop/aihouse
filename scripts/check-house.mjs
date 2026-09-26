@@ -8759,6 +8759,95 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // LES TROIS COURBES (2026-09-26, tâche #905 — sa décision : « la rotation se mesure en TROIS
+    // COURBES SÉPARÉES [...] Jamais un solde net, qui confondrait tout »).
+    const CT2 = await import('../scripts/check-tasks-details.mjs');
+    // LA TABLE DE CORRESPONDANCE, ET LE DOUBLON ÉVITÉ DE JUSTESSE : un second classificateur
+    // d'origine avait commencé à s'écrire ici avant que le module ne refuse la déclaration en
+    // double. Ce test verrouille la délégation, pour que le doublon ne revienne pas par la fenêtre.
+    assert.equal(CT2.courbeDeLOrigine({ sousSujet: 'demande explicite de l\'utilisateur' }), 'demandee', "a task he asked for is his, never the treadmill");
+    assert.equal(CT2.courbeDeLOrigine({ sousSujet: 'constat de ARGUS, trouvé par le rapport' }), 'auto-generee', 'a task born of a tool finding is the machinery');
+    assert.equal(CT2.courbeDeLOrigine({ sousSujet: 'AUTO-ATTRIBUÉE' }), 'auto-generee', 'and a task the agent gave itself counts as machinery too: from his side both are work nobody ordered');
+    assert.equal(CT2.courbeDeLOrigine({ sousSujet: 'rien de reconnaissable ici' }), 'indeterminee', 'silence stays silence — filing it either way would mute the very signal he wants to see');
+    assert.deepEqual(Object.keys(CT2.ORIGINE_VERS_COURBE).sort(), ['agent', 'indéterminée', 'outil', 'utilisateur'], 'the mapping covers every state origineDeLaTache() can return — a fifth one tomorrow lands in one place (Article 24)');
+
+    const fauxRows = [
+      { numero: 1, horodatage: '2026-09-01T10:00Z', statusKey: 'terminee', sousSujet: 'sa demande du jour', sujet: 'x', detail: 'court' },
+      { numero: 2, horodatage: '2026-09-01T11:00Z', statusKey: 'ouverte', sousSujet: 'constat de CLONE-HUNTER', sujet: 'x', detail: 'court' },
+      { numero: 3, horodatage: '2026-09-02T09:00Z', statusKey: 'ouverte', sousSujet: 'constat de ARGUS', sujet: 'x', detail: 'court' },
+    ];
+    const c3 = CT2.troisCourbes(fauxRows);
+    assert.equal(c3.serie.length, 2, 'one point per day actually written, never a padded calendar');
+    assert.equal(c3.serie[0].fermees, 1, 'the closed curve counts closures');
+    assert.deepEqual(c3.serie[0].ouvertes, { demandee: 1, 'auto-generee': 1, indeterminee: 0 }, 'and the born curve is SPLIT by origin, which is the whole point of his distinction');
+    assert.ok(!('solde' in c3.serie[0]), 'no net balance is ever computed: "born minus closed" reads zero both when nothing happens and when thirty heavy ones close while thirty light ones appear');
+    assert.equal(CT2.troisCourbes([]).mesurable, false, 'with no dated row it REFUSES rather than drawing a flat curve, which would read as no activity (leçon L5)');
+
+    // LE VERDICT REFUSE DE CONCLURE QUAND LA PART INDÉTERMINÉE DOMINE, et ce n'est pas théorique :
+    // au premier passage réel sur le vrai suivi, 77 % des lignes n'ont pas d'origine lisible.
+    const opaques = Array.from({ length: 10 }, (_, i) => ({ numero: 10 + i, horodatage: '2026-09-03T10:00Z', statusKey: 'terminee', sousSujet: 'rien de reconnaissable', sujet: 'x', detail: 'court' }));
+    const txtOpaque = CT2.formatTroisCourbesLines(CT2.troisCourbes(opaques)).join('\n');
+    assert.ok(txtOpaque.includes('VERDICT NON RENDU'), 'a reassuring "no treadmill" rendered over mostly unknown origins is refused — it would be a satisfecit on absent data');
+    const clairs = [
+      { numero: 20, horodatage: '2026-09-04T10:00Z', statusKey: 'terminee', sousSujet: 'sa demande', sujet: 'x', detail: 'court' },
+      { numero: 21, horodatage: '2026-09-04T11:00Z', statusKey: 'terminee', sousSujet: 'sa demande', sujet: 'x', detail: 'court' },
+      { numero: 22, horodatage: '2026-09-04T12:00Z', statusKey: 'ouverte', sousSujet: 'constat de ARGUS', sujet: 'x', detail: 'court' },
+    ];
+    assert.ok(!CT2.formatTroisCourbesLines(CT2.troisCourbes(clairs)).join('\n').includes('VERDICT NON RENDU'), 'and when origins ARE readable the verdict is rendered — a guard that never concludes is as useless as one that always reassures');
+
+    // LE MOTIF D'ORIGINE ÉLARGI, ET SON CONTRE-TEST DE CASSE — payé le soir même : en élargissant
+    // le motif j'ai laissé tomber le drapeau `i`, et la mesure a EMPIRÉ (77 % d'indéterminées → 78 %)
+    // tout en ayant l'air d'une amélioration, parce que « Demande explicite de l'utilisateur » avec
+    // sa majuscule cessait de correspondre. Un chiffre qui bouge n'est pas un chiffre qui s'améliore.
+    assert.equal(CT2.origineDeLaTache({ sousSujet: 'Sa demande du 2026-09-26' }).origine, 'utilisateur', 'the capitalised form this repo actually writes is recognised');
+    assert.equal(CT2.origineDeLaTache({ sousSujet: 'Demande explicite de l\'utilisateur' }).origine, 'utilisateur', 'and the pre-existing capitalised form still is — the counter-test for the dropped /i flag');
+    assert.equal(CT2.origineDeLaTache({ sousSujet: 'Son gros prompt du 2026-09-26' }).origine, 'utilisateur', 'as is the phrasing his own big prompts are filed under');
+
+    // L'HARMONISATION QU'IL A DEMANDÉ DE VÉRIFIER (2026-09-26 : « verifie que tous les nouveaux
+    // sujet traités ensemble s'harmonisent bien avec l'existant, reperes les redondances. Par
+    // exemple, on a instauré des blocs de taches (par theme/rafale) est-ce que tout le systeme a
+    // bien été mis à jour par rapport à ca ? »). La réponse mesurée était NON, deux fois.
+    assert.ok(CT2.OPEN_KEYS instanceof Set, 'the open-status set is exported so nobody has to recopy it');
+    assert.equal(CT2.findListesDOuvertureEnDur().copies.length, 0, 'and no second hand-written copy of it survives in this file: the theme view carried one, and the day a status joined OPEN_KEYS that view would have stopped seeing it WITHOUT SAYING SO');
+    assert.equal(CT2.findListesDOuvertureEnDur({ source: 'const x = ["ouverte", "enCours", "autre"];' }).copies.length, 1, 'the guard really bites on a copy — a guard that never finds anything proves nothing');
+    // ET IL NE SE TROUVE PAS LUI-MÊME : quatrième fois cette semaine que ce motif se présente.
+    assert.equal(CT2.findListesDOuvertureEnDur({ source: '// un commentaire qui cite ["ouverte", "enCours", "autre"] pour expliquer la règle' }).copies.length, 0, 'a comment CITING the list is not a copy of it — otherwise the very explanation of the rule would break the rule');
+    assert.equal(CT2.findListesDOuvertureEnDur({ source: 'export const OPEN_KEYS = new Set(["ouverte", "enCours", "autre"]);' }).copies.length, 0, 'and the declaration itself is never its own violation');
+    // LES DEUX VUES DÉCOUPENT LE THÈME DE LA MÊME FAÇON — mesuré avant de toucher : zéro ligne
+    // d'écart aujourd'hui, mais « Suivi/file » aurait été rangé sous deux têtes différentes.
+    assert.equal(CT2.SEPARATEUR_THEME, ' / ', 'the theme separator is the one splitSujet() and the task blocks already use, never a second convention beside it');
+
+    // LE FILTRE AVANT CRÉATION (2026-09-26, sa demande : « verifier que cette tache n'existe pas
+    // deja, et si elle peut etoffer une tache existante plutot que creer une nouvelle tache »).
+    const filRows = [
+      { numero: 50, statusKey: 'ouverte', motCle: 'rotation', sujet: 'Suivi / rotation', sousSujet: 'mesurer la rotation de la file par jour avec trois courbes separees' },
+      { numero: 51, statusKey: 'ouverte', motCle: 'export', sujet: 'Agence / export', sousSujet: 'mesurer exportabilite des outils blueprint version' },
+      { numero: 52, statusKey: 'terminee', motCle: 'clone', sujet: 'Suivi / rotation', sousSujet: 'mesurer la rotation de la file par jour avec trois courbes separees' },
+    ];
+    const fDoublon = CT2.filtreAvantCreation({ sujet: 'Suivi / rotation', sousSujet: 'mesurer la rotation de la file par jour avec trois courbes separees', rows: filRows });
+    assert.equal(fDoublon.issue, 'ne-pas-creer', 'a task that already exists open is caught before it is written — the only action that can make a task NOT exist');
+    assert.deepEqual(fDoublon.doublons.map((c) => c.numero), [50], 'and the CLOSED twin is never offered: a closed task cannot be étoffée, and flagging it would drop work that has to be redone');
+    const fNeuve = CT2.filtreAvantCreation({ sujet: 'Jeu / graphismes', sousSujet: 'donner un vrai trottoir tridimensionnel praticable aux personnages', rows: filRows });
+    assert.equal(fNeuve.issue, 'creer', 'and a genuinely new subject is cleared — a filter that never clears anything stops being run');
+    const fMotCle = CT2.filtreAvantCreation({ sujet: 'Autre / sujet', sousSujet: 'quelque chose de completement different ailleurs', motCle: 'rotation', rows: filRows });
+    assert.equal(fMotCle.collisions.length, 1, 'a keyword already taken by an open task is reported SEPARATELY from the similarity score: the registry requires it unique, so it is a rule broken, not a hint');
+    assert.equal(CT2.filtreAvantCreation({ rows: filRows }).mesurable, false, 'with no wording it REFUSES rather than clearing: a "no duplicate" rendered over emptiness reads as a green light (leçon L5)');
+    // IL PROPOSE, IL NE TRANCHE PAS — vérifié sur la sortie, pas seulement promis en commentaire.
+    assert.ok(CT2.formatFiltreLines(fDoublon, 'x').join('\n').includes('IL PROPOSE, IL NE TRANCHE PAS'), 'the limit travels with the finding rather than living only in a comment nobody reads');
+
+    // LE REFUS DE CLÔTURE SANS LA CASE APRÈS (2026-09-26, sa décision : « la case à cocher devient
+    // une condition, pas une intention »). Ce qui manquait n'était pas la mesure — findRituelManquant()
+    // comptait déjà très bien — c'était le REFUS : un taux de 60 % s'affiche et ne bloque rien.
+    const CSF = await import('../scripts/check-suivi-fidelity.mjs');
+    const ligne = (n, cloture, statut) => `| ${n} | 2026-09-26T01:00Z | mc | Sujet / titre | origine | RECOMMANDE | PROJET | OUI | ${cloture} | détail | ${statut} |`;
+    assert.equal(CSF.findCloturesSansRituel(ligne(900, 'OUI', 'Terminé')).length, 0, 'a closure carrying its AFTER box passes');
+    assert.equal(CSF.findCloturesSansRituel(ligne(900, '', 'Terminé')).length, 1, 'a closure with an EMPTY after box is refused');
+    assert.equal(CSF.findCloturesSansRituel(ligne(900, 'NON', 'Terminé')).length, 1, 'and an explicit NON is refused too: closing while declaring the ritual undone is exactly the intention he wanted turned into a condition');
+    assert.equal(CSF.findCloturesSansRituel(ligne(900, '', 'Ouverte')).length, 0, 'an OPEN task is never concerned — one cannot refuse the closing of something not yet closed');
+    assert.equal(CSF.findCloturesSansRituel(ligne(500, '', 'Terminé')).length, 0, 'and a line written BEFORE the threshold is not at fault: the column did not exist then, and accusing 870 lines at once is leçon L4, already paid twice in this very file');
+    // Le premier passage réel a mordu une fois, sur une ligne close cette nuit même (#898, case NON).
+    assert.ok(Array.isArray(CSF.auditCloturesSansRituel()), 'the audit runs against the real suivi, never a fixture');
+
     // LA FICHE LÉGÈRE ET SA PROMOTION (2026-09-26, sa décision : « avec une solution legere pour
     // les autres »). Ce qui est vérifié ici n'est pas qu'elle existe — c'est qu'elle ne soit pas un
     // cul-de-sac : si « léger » voulait dire « à refaire plus tard », choisir le format léger

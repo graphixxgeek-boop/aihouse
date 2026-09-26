@@ -14,7 +14,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE } from "./criticite.mjs";
+import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE, CASE_COCHEE, PREMIERE_TACHE_AVEC_RITUEL, QUESTIONS_DE_CLOTURE } from "./criticite.mjs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -55,6 +55,58 @@ export function findUnverifiedClosures(sessionText) {
     }
   }
   return hits;
+}
+
+// findCloturesSansRituel() (2026-09-26, tâche #905 — SA DÉCISION, prise en fenêtre dédiée : « le
+// garde-fou refuse une clôture dont la colonne APRÈS est vide — exactement comme il refuse déjà une
+// clôture sans déclaration de fidélité. La case à cocher devient une condition, pas une intention. »)
+//
+// CE QUI EXISTAIT DÉJÀ, ET CE QUI MANQUAIT — la distinction est tout le sujet. Les deux colonnes du
+// rituel existent depuis le 2026-09-25 (#872) et `findRituelManquant()` les MESURE très bien : il
+// dit quel pourcentage des lignes porte ses deux cases. Mais mesurer n'est pas refuser. Un taux de
+// 60 % s'affiche, se lit, et ne bloque rien ; la case restait donc une intention, exactement le mot
+// qu'il a employé. Ce qui manquait n'était pas la mesure, c'était la CONDITION.
+//
+// POURQUOI SEULEMENT LA COLONNE APRÈS, et c'est sa décision, pas une facilité : la colonne AVANT se
+// remplit quand on OUVRE la tâche, et on ne peut pas refuser l'ouverture de quelque chose qui n'est
+// pas encore là. La colonne APRÈS se remplit quand on CLÔT — et là, il y a un geste à refuser.
+// `findRituelManquant()` continue de mesurer les deux ; celui-ci n'en refuse qu'une.
+//
+// LA POSITION DE LA COLONNE EST DÉRIVÉE, JAMAIS ÉCRITE EN DUR (Article 24) : FORMAT_TACHE déclare
+// l'ordre, et les fichiers réels placent `detail` juste avant `statut` plutôt qu'à sa place
+// déclarée — divergence déjà documentée et déjà traitée comme une dette ailleurs. On lit donc la
+// colonne depuis la FIN, où l'ordre réel est stable : ... | ouverture | clôture | détail | statut |.
+export const RANG_CLOTURE_DEPUIS_LA_FIN = 3;
+
+export function findCloturesSansRituel(sessionText, { depuis = PREMIERE_TACHE_AVEC_RITUEL } = {}) {
+  const hits = [];
+  for (const row of String(sessionText).split("\n").filter(estUneLigneDeTache)) {
+    const cells = splitTableRow(row);
+    const numero = Number(cells[0]);
+    // UNE LIGNE D'AVANT LE SEUIL N'EST PAS FAUTIVE : la colonne n'existait pas quand elle a été
+    // écrite. Accuser 870 lignes d'un coup est la leçon L4, payée deux fois dans ce fichier.
+    if (!Number.isFinite(numero) || numero < depuis) continue;
+    const statut = cells[cells.length - 1] ?? "";
+    if (!/^termin[ée]/i.test(statut)) continue;
+    // Une ligne portant des « | » en trop n'est pas une case vide : c'est une ligne mal formée, et
+    // le geste qui la répare n'est pas le même. On ne la compte pas ici — un autre garde-fou la voit.
+    if (cells.length > FORMAT_TACHE.length) continue;
+    const cloture = cells[cells.length - RANG_CLOTURE_DEPUIS_LA_FIN] ?? "";
+    if (String(cloture).trim().toUpperCase() !== CASE_COCHEE) {
+      hits.push({ numero, cloture: String(cloture).trim(), row: row.trim() });
+    }
+  }
+  return hits;
+}
+
+export function auditCloturesSansRituel(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return [];
+  const out = [];
+  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
+    const hits = findCloturesSansRituel(readFile(join(sessionsDir, file), "utf8"));
+    if (hits.length) out.push({ file, hits });
+  }
+  return out;
 }
 
 // findClaimedFilesMissing() (2026-09-19, demande explicite de l'utilisateur : « fiabiliser [...] la
@@ -621,6 +673,18 @@ function main() {
     for (const { file, hits } of results) {
       console.log(`${file} : ${hits.length} clôture(s) sans vérification de fidélité`);
       for (const h of hits) console.log(`   - ${h.row}`);
+    }
+  }
+
+  console.log(`\n=== Garde-fou rituel de clôture (la colonne APRÈS, depuis #${PREMIERE_TACHE_AVEC_RITUEL}) ===\n`);
+  const sansRituel = auditCloturesSansRituel();
+  if (!sansRituel.length) {
+    console.log(`Aucune clôture sans sa case APRÈS — chaque tâche close depuis le seuil déclare ${QUESTIONS_DE_CLOTURE.map((q) => q.mot).join(" / ")}.`);
+  } else {
+    console.log("Sa décision du 2026-09-26 : « la case à cocher devient une condition, pas une intention ». Une tâche close sans sa case APRÈS n'est pas close.");
+    for (const { file, hits } of sansRituel) {
+      console.log(`${file} : ${hits.length} clôture(s) sans la case APRÈS`);
+      for (const h of hits) console.log(`   - #${h.numero} — case lue : « ${h.cloture || "(vide)"} »`);
     }
   }
 

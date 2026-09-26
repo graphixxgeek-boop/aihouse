@@ -384,3 +384,76 @@ Outillage & garde-fous (17), Charte & référentiel (13), Données & mesure (8),
 l'utilisateur pour ces familles — elle est DÉRIVÉE de la file. Tant qu'elle ne porte pas ses mots,
 la fiche dit ce que la file contient, jamais ce qu'il veut en faire. C'est la différence entre un
 inventaire et une stratégie, et c'est le premier trou à combler.
+
+---
+
+## La GESTION DES TÂCHES — les trois courbes, le filtre, le refus de clôture *(2026-09-26, #905)*
+
+Sa peur, dans ses mots : « il faut gérer ca, on peut pas laisser le travail en mode tapis roulant ou
+enfoncement (plus de taches qui se génèrent que de taches accomplies) ».
+
+### 1. Les trois courbes — `check-tasks-details courbes [jours]`
+
+**Jamais un solde net**, et c'est sa décision explicite : « ouvertes moins fermées » vaut zéro aussi
+bien quand rien ne se passe que quand trente tâches lourdes sont closes pendant que trente légères
+naissent. Trois séries par jour, séparées :
+
+1. **Fermées** par jour.
+2. **Nées** par jour, séparées en *ce qu'il demande* / *ce que la machinerie engendre* / *indéterminé*.
+3. **Poids moyen** et répartition ⬛ / ◧ / ▫ — sa nuance : « ca ne me dérange pas si dans la rotation,
+   la proportion de grosses taches diminue au profit de petites taches rapides ».
+
+**L'origine n'est pas remesurée ici** : `courbeDeLOrigine()` relaie `origineDeLaTache()`, qui existe
+depuis le 2026-09-24, via la table `ORIGINE_VERS_COURBE`. Un second classificateur avait commencé à
+s'écrire avant que le module ne refuse le doublon — leçon **L29**. La table range `outil` et `agent`
+du même côté : du point de vue de l'utilisateur, une tâche née d'une trouvaille d'outil et une tâche
+que l'agent s'est donnée sont le même phénomène — du travail que personne n'a commandé.
+
+**LE VERDICT REFUSE DE CONCLURE quand la part indéterminée domine.** Au premier passage réel, 77 %
+des lignes n'avaient pas d'origine lisible : un « pas de tapis roulant » appuyé là-dessus aurait été
+un satisfecit rendu sur des données absentes. Le motif d'origine a été élargi aux formes réellement
+écrites ici (« Sa demande du … », « Son gros prompt du … ») : 77 % → 68 %. L'épisode a coûté la
+leçon **L28** — le drapeau `/i` perdu en chemin avait fait EMPIRER la mesure tout en ayant l'air
+d'une amélioration.
+
+### 2. Le filtre avant création — `check-tasks-details filtre "<le sujet envisagé>"`
+
+Sa demande : « je veux ajouter une toute premiere action au debut : verifier que cette tache n'existe
+pas deja, et si elle peut etoffer une tache existante plutot que creer une nouvelle tache ».
+
+C'est **la seule action qui peut faire que la tâche n'existe pas** — tout le reste du rituel
+s'applique à une tâche déjà née. Trois issues, jamais une décision automatique : `ne-pas-creer` ·
+`etoffer` · `creer`. La ressemblance est un Jaccard sur les mots significatifs (un chiffre qu'on
+peut recalculer à la main est un chiffre qu'on peut contester), deux seuils parce que sa demande
+porte trois issues, et **seules les tâches OUVERTES sont comparées** : une tâche close ne peut pas
+être étoffée, et la signaler ferait renoncer à un travail qu'il faut refaire. Un mot-clé déjà pris
+est reporté **à part** du score : le registre l'impose unique, donc c'est une règle enfreinte, pas
+un indice.
+
+### 3. Le refus de clôture sans la case APRÈS
+
+Sa décision : « la case à cocher devient une condition, pas une intention ». Les deux colonnes
+existaient depuis #872 et `findRituelManquant()` les MESURAIT très bien — mais un taux de 60 %
+s'affiche et ne bloque rien. `findCloturesSansRituel()` (`check-suivi-fidelity.mjs`) refuse
+désormais une ligne close dont la case APRÈS est vide ou à NON, à partir du seuil #872 seulement
+(accuser 870 lignes écrites avant que la colonne existe est la leçon L4). **Seule la colonne APRÈS**
+est concernée : on ne peut pas refuser l'ouverture de quelque chose qui n'existe pas encore.
+
+**Il a mordu à son premier passage**, sur une ligne close la nuit même — #898, case APRÈS à NON. La
+ligne n'a pas été retouchée : une ligne CLOSE du suivi historique ne se réécrit pas sans lui.
+
+### 4. L'harmonisation qu'il a demandé de vérifier, et les deux écarts trouvés
+
+« verifie que tous les nouveaux sujet traités ensemble s'harmonisent bien avec l'existant, reperes
+les redondances. [...] on a instauré des blocs de taches (par theme/rafale) est-ce que tout le
+systeme a bien été mis à jour par rapport à ca ? » — **la réponse mesurée était NON, deux fois.**
+
+1. **La vue par thème portait sa propre copie de `OPEN_KEYS`**, recopiée à la main. Les deux disaient
+   la même chose ce jour-là ; le jour où un statut aurait rejoint `OPEN_KEYS`, la vue par thème
+   aurait cessé de le voir **sans rien dire**, et une famille se serait vidée toute seule. `OPEN_KEYS`
+   est désormais exporté, et `findListesDOuvertureEnDur()` relit le code pour refuser une seconde
+   copie — le garde-fou que l'Article 24 exige derrière toute liste.
+2. **Deux découpages de thème concurrents** : la vue lisait un « / » nu, les blocs lisent `splitSujet()`
+   (« / » entouré d'espaces). Zéro ligne d'écart sur le registre du jour, mesuré avant de toucher —
+   mais « Suivi/file » aurait été rangé sous deux têtes différentes selon la vue. Unifié sur
+   `splitSujet()`.
