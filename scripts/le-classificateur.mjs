@@ -348,7 +348,7 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
   const parClasse = {};
   for (const cl of classes) parClasse[cl.cle] = lignes.filter((l) => l.classes.includes(cl.cle)).map((l) => l.chemin);
 
-  return { mesurable: true, lignes, parType, parClasse, total: lignes.length,
+  return { mesurable: true, lignes, importeDe: Object.fromEntries(Object.entries(importeDe).map(([k, v]) => [k, [...v]])), parType, parClasse, total: lignes.length,
     illisibles: lignes.filter((l) => l.illisible).map((l) => l.chemin),
     horsPortee: "le TYPE se dérive de la forme du fichier et les CLASSES de sondes sur son texte : un outil qui scanne le dépôt sans jamais appeler readdirSync échappe à sa classe, et aucune sonde ne sait ce qu'un script fait VRAIMENT. Ce recensement dit ce qui se voit, jamais ce qui se comprend." };
 }
@@ -520,6 +520,163 @@ export function bibliothequesLancables({ recensement = null, root = ROOT, lire =
 //   · aucun outil de l'Agence ne peut les REJOINDRE — c'est `entreeInterdite`, et c'est le sens
 //     même du rang : on n'est pas hors Agence parce qu'on a démérité, mais parce qu'on sert le
 //     produit. Aucun mérite ni démérite n'y mène.
+// ══════════════════════════════════════════════════════════════════════════
+// L'ÉCHELLE DE VITALITÉ (2026-09-26, tâche #906 — sa décision en fenêtre, et ses quatre niveaux
+// écrits dans ses mots : « vital (sans lui l'Agence ne tourne pas), essentiel (sans lui elle tourne
+// mais perd une garantie), utile (il fait gagner du temps), optionnel (confort ou cas particulier) »).
+//
+// À QUOI ELLE SERT, ET CE N'EST PAS UN CLASSEMENT DE PLUS : elle répond à la question de l'export.
+// Quatre-vingt-huit fichiers ne partent pas en même temps ; il faut savoir lesquels d'abord. Un
+// « vital » oublié dans un export rend le paquet inutilisable au premier commit ; un « optionnel »
+// emporté par habitude alourdit le paquet sans rien garantir.
+//
+// ELLE SE DÉRIVE, ELLE NE SE DÉCLARE PAS (Article 24). Aucun fichier ne porte son niveau écrit en
+// tête : le niveau se lit sur ce que le dépôt FAIT du fichier — qui le lance, qui l'importe, ce
+// qu'il garantit. Une liste écrite à la main aurait été fausse au premier script ajouté, et le
+// dépôt en a gagné plusieurs cette semaine.
+//
+// POURQUOI L'ORDRE DES NIVEAUX EST UN ORDRE, et pas un ensemble d'étiquettes : le premier qui
+// reconnaît le fichier gagne. Un garde-fou lancé par le crochet est VITAL, pas essentiel — il
+// s'exécute à chaque commit, donc l'Agence s'arrête sans lui. Prendre le niveau le plus fort
+// d'abord évite qu'un fichier soit rangé sous sa qualité la plus faible.
+// LES QUATRE NIVEAUX SE LISENT SUR DES QUESTIONS DIFFÉRENTES, jamais sur une même échelle de
+// dépendance — et c'est une correction faite après avoir MESURÉ la première version, qui rangeait
+// 88 % du parc en « vital ou essentiel » et ne discriminait donc rien. La cause : « quelqu'un
+// l'importe » est vrai de 71 fichiers sur 88 dans ce dépôt. Une échelle où presque tout est en
+// haut ne dit pas que tout est vital, elle dit que le critère est mauvais.
+//
+// LE CRITÈRE QUI DISCRIMINE VRAIMENT : est-ce que ce fichier tourne DANS LA BOUCLE QUOTIDIENNE ?
+// Un crochet git s'exécute à chaque commit, `package.json` à chaque build — et tout ce que ces
+// points d'entrée importent, transitivement, part avec eux. C'est la chaîne sans laquelle l'Agence
+// s'arrête, au sens littéral de sa définition : « sans lui l'Agence ne tourne pas ».
+export const POINTS_D_ENTREE_QUOTIDIENS = ["crochet git", "package.json"];
+
+// LE CROCHET LUI-MÊME EST UN POINT D'ENTRÉE, et l'oublier était le premier faux verdict de cette
+// échelle : `hooks/pre-commit` et `hooks/post-commit` sortaient « optionnel », c'est-à-dire
+// « confort ou cas particulier », alors qu'ils SONT la boucle quotidienne. La sonde cherchait qui
+// est LANCÉ PAR un crochet, et un crochet n'est lancé par aucun crochet — il est lancé par git.
+export const MOTIF_FICHIER_CROCHET = /^scripts\/hooks\//;
+
+// LA SUITE DE TESTS FAUSSE LA CHAÎNE, ET IL A FALLU LA MESURER POUR LE VOIR. Première version de
+// la fermeture transitive : 77 fichiers sur 88 « vitaux », 0 « essentiel ». Le coupable n'est pas
+// le critère mais UN fichier : `check-house.mjs` est lancé par le crochet et importe presque tout
+// le dépôt — pour le TESTER. Un import de test n'est pas une dépendance d'exécution : retirer un
+// outil de l'export ne casse pas la boucle, ça retire un test de la suite.
+//
+// LA FRONTIÈRE EST DÉRIVÉE, PAS LISTÉE (Article 24) : est une suite de tests tout fichier qui
+// importe au moins la moitié du parc. Écrire « check-house.mjs » en dur ici aurait été faux le
+// jour où la suite se scinde en deux, et ce dépôt a déjà scindé plusieurs outils.
+export const PART_MINIMUM_SUITE_DE_TEST = 0.5;
+
+export function findSuitesDeTest({ importeDe = {}, total = 0, part = PART_MINIMUM_SUITE_DE_TEST } = {}) {
+  if (!total) return [];
+  return Object.entries(importeDe)
+    .filter(([, cibles]) => (cibles?.length ?? 0) >= total * part)
+    .map(([chemin, cibles]) => ({ chemin, importe: cibles.length, part: Math.round((cibles.length / total) * 100) }));
+}
+
+// La fermeture transitive du graphe d'imports, depuis les points d'entrée. On la calcule ici plutôt
+// que de réutiliser `propagerParDelegation()` : celle-ci propage une classe des IMPORTÉS vers les
+// IMPORTEURS (« j'appelle quelqu'un qui coûte des appels API, donc j'en coûte »), et la vitalité va
+// dans l'autre sens (« je suis appelé par la boucle, donc j'en fais partie »). Deux propagations
+// opposées : les confondre aurait rendu vital tout ce qui importe un fichier vital, c'est-à-dire
+// presque tout le dépôt.
+export function chaineQuotidienne({ lignes = [], importeDe = {}, entrees = POINTS_D_ENTREE_QUOTIDIENS, motifCrochet = MOTIF_FICHIER_CROCHET, ignorerLesSuitesDeTest = true } = {}) {
+  // LA SUITE DE TESTS RESTE DANS LA CHAÎNE (elle tourne bien à chaque commit) mais ses imports NE
+  // PROPAGENT PAS : elle est un point d'arrivée, jamais un relais. Sans ça, elle rend vital tout ce
+  // qu'elle teste, c'est-à-dire tout.
+  const graphe = { ...importeDe };
+  if (ignorerLesSuitesDeTest) {
+    for (const s of findSuitesDeTest({ importeDe, total: lignes.length })) delete graphe[s.chemin];
+  }
+  importeDe = graphe;
+  const dans = new Set(lignes
+    .filter((l) => motifCrochet.test(l.chemin) || (l.portes ?? []).some((p) => entrees.includes(p)))
+    .map((l) => l.chemin));
+  let bouge = true;
+  let tours = 0;
+  while (bouge && tours++ < 50) {
+    bouge = false;
+    for (const chemin of [...dans]) {
+      for (const cible of importeDe[chemin] ?? []) {
+        if (!dans.has(cible)) { dans.add(cible); bouge = true; }
+      }
+    }
+  }
+  return dans;
+}
+
+export const VITALITE = [
+  { cle: "vital", icone: "🔴", quoi: "sans lui l'Agence ne tourne pas",
+    pourquoi: "il est dans la boucle quotidienne : c'est un crochet git, ou il est lancé par un crochet ou par package.json, ou l'un d'eux l'importe même indirectement",
+    detecte: (l, ctx) => ctx?.chaine?.has(l.chemin) ?? false },
+  { cle: "essentiel", icone: "🟠", quoi: "sans lui elle tourne, mais perd une garantie",
+    pourquoi: "il porte un garde-fou d'évolutivité : l'Agence continue sans lui, mais une promesse cesse d'être vérifiée",
+    detecte: (l) => (l.classes ?? []).some((c) => /garde-fou/.test(c)) },
+  { cle: "utile", icone: "🟡", quoi: "il fait gagner du temps, à la demande",
+    pourquoi: "une commande de lancement est écrite quelque part : quelqu'un peut s'en servir, mais rien ne casse s'il disparaît",
+    detecte: (l) => (l.portes ?? []).some((p) => /commande de lancement est écrite|ligne de commande/.test(p)) },
+  { cle: "optionnel", icone: "⚪", quoi: "confort ou cas particulier",
+    pourquoi: "personne ne le lance, aucune commande n'est écrite pour lui, et il ne garantit rien",
+    detecte: () => true },
+];
+
+// UN FICHIER ILLISIBLE N'EST PAS UN FICHIER OPTIONNEL — et c'est la distinction qui empêche le pire
+// verdict possible ici : « rien ne dépend de lui » rendu sur un fichier qu'on n'a pas pu ouvrir.
+// Les deux se ressemblent trait pour trait dans un tableau, et l'un dit de le laisser, l'autre de
+// regarder (leçon L5). Il n'y a donc pas cinq niveaux — il y a quatre niveaux et un aveu.
+export function vitaliteDuFichier(ligne = {}, { echelle = VITALITE, chaine = new Set() } = {}) {
+  if (ligne.illisible) {
+    return { mesurable: false, niveau: null,
+      pourquoi: "le fichier n'a pas pu être lu : sa vitalité n'a pas été mesurée, ce qui n'est jamais la même chose que « rien ne dépend de lui »" };
+  }
+  const n = echelle.find((x) => { try { return x.detecte(ligne, { chaine }); } catch { return false; } }) ?? echelle[echelle.length - 1];
+  return { mesurable: true, niveau: n.cle, icone: n.icone, quoi: n.quoi, pourquoi: n.pourquoi };
+}
+
+export function vitaliteDuParc({ recensement = null, echelle = VITALITE, recenser = recenserLesScripts } = {}) {
+  const rec = recensement ?? recenser();
+  if (!rec?.mesurable) return { mesurable: false, pourquoi: rec?.pourquoi ?? "recensement indisponible" };
+  const chaine = chaineQuotidienne({ lignes: rec.lignes, importeDe: rec.importeDe ?? {} });
+  const parNiveau = Object.fromEntries(echelle.map((n) => [n.cle, []]));
+  const nonMesures = [];
+  for (const l of rec.lignes) {
+    const v = vitaliteDuFichier(l, { echelle, chaine });
+    if (!v.mesurable) { nonMesures.push({ chemin: l.chemin, pourquoi: v.pourquoi }); continue; }
+    parNiveau[v.niveau].push({ chemin: l.chemin, importeurs: l.importeurs ?? 0, lignes: l.lignes ?? 0 });
+  }
+  const mesures = Object.values(parNiveau).reduce((a, v) => a + v.length, 0);
+  return {
+    mesurable: true, total: rec.lignes.length, mesures, parNiveau, nonMesures, chaine: chaine.size,
+    suitesDeTest: findSuitesDeTest({ importeDe: rec.importeDe ?? {}, total: rec.lignes.length }),
+    chaineAvecLesTests: chaineQuotidienne({ lignes: rec.lignes, importeDe: rec.importeDe ?? {}, ignorerLesSuitesDeTest: false }).size,
+    // LE POIDS EN LIGNES PAR NIVEAU, parce que la question de l'export est « combien de code doit
+    // partir en premier ? », et que compter des fichiers répond mal : un vital de 12 000 lignes et
+    // un vital de 40 lignes ne coûtent pas la même chose à emporter.
+    lignesParNiveau: Object.fromEntries(echelle.map((n) => [n.cle, parNiveau[n.cle].reduce((a, f) => a + (f.lignes ?? 0), 0)])),
+    horsPortee: "la vitalité est DÉRIVÉE de ce que le dépôt fait du fichier (qui le lance, ce qu'il garantit) — jamais déclarée en tête de fichier. Un outil excellent que personne n'a encore branché sort « optionnel », et c'est exact : il n'est pas encore vital, il est prêt à l'être.",
+  };
+}
+
+export function formatVitaliteLines(v, { echelle = VITALITE } = {}) {
+  if (!v?.mesurable) return [`VITALITÉ DU PARC : PAS MESURÉE — ${v?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== VITALITÉ DU PARC — ${v.mesures} fichier(s) mesuré(s) sur ${v.total} ===`];
+  for (const n of echelle) {
+    const g = v.parNiveau[n.cle] ?? [];
+    const part = v.mesures ? Math.round((g.length / v.mesures) * 100) : 0;
+    l.push(`  ${n.icone} ${n.cle.toUpperCase().padEnd(10)} ${String(g.length).padStart(3)} fichier(s) · ${String(part).padStart(3)} % · ${String(v.lignesParNiveau[n.cle]).padStart(6)} lignes — ${n.quoi}`);
+    l.push(`     ${n.pourquoi}`);
+  }
+  // LES DEUX LECTURES, CÔTE À CÔTE — parce que l'écart entre elles EST le résultat le plus parlant.
+  if (v.suitesDeTest?.length) {
+    l.push(`  ↳ Chaîne d'EXÉCUTION : ${v.chaine} fichier(s). Chaîne avec les imports de test : ${v.chaineAvecLesTests}.`);
+    l.push(`     L'écart vient de ${v.suitesDeTest.map((s) => `${s.chemin} (importe ${s.part} % du parc)`).join(" · ")} — un import de TEST n'est pas une dépendance d'exécution.`);
+  }
+  if (v.nonMesures.length) l.push(`  ❓ NON MESURÉS : ${v.nonMesures.length} — ${v.nonMesures.map((x) => x.chemin).join(", ")} (illisibles, jamais rangés d'office en « optionnel »)`);
+  l.push(`  HORS PORTÉE : ${v.horsPortee}`);
+  return l;
+}
+
 export const FAMILLE_HORS_AGENCE = "(f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage";
 
 export const ORG_RANKS = {
@@ -1384,7 +1541,13 @@ function main() {
     recordRegistryWrite?.("le-classificateur", cible);
     return;
   }
-  console.log("\nUsage : node scripts/le-classificateur.mjs [classification] [chemin]");
+  // LA VITALITÉ, joignable en une commande : un mécanisme que personne ne peut lancer n'existe pas
+  // (Article 31). Elle sert à l'export — savoir ce qui doit partir en premier.
+  if (sub === "vitalite") {
+    for (const l of formatVitaliteLines(vitaliteDuParc())) console.log(l);
+    return;
+  }
+  console.log("\nUsage : node scripts/le-classificateur.mjs [classification [chemin] | vitalite]");
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

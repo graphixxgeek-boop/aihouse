@@ -210,3 +210,44 @@ auto-référentiel, déjà payé sur find-booster (tâche #182), refait à l'ide
 2 justes sur 4 à **4 sur 4** ; les portes orphelines passent de 1 à **2** (`integration-outil`
 rejoint `tasks-process-guardian` une fois les archives écartées) ; et le §9 passe de 1 constat à
 **5, chacun avec son geste**.
+
+---
+
+## L'échelle de VITALITÉ — le cinquième axe *(2026-09-26, tâche #906)*
+
+Ses quatre niveaux, dans ses mots : **vital** (sans lui l'Agence ne tourne pas) · **essentiel**
+(sans lui elle tourne mais perd une garantie) · **utile** (il fait gagner du temps) · **optionnel**
+(confort ou cas particulier).
+
+**À quoi elle sert** : répondre à la question de l'export. Quatre-vingt-huit fichiers ne partent pas
+en même temps. Un « vital » oublié rend le paquet inutilisable au premier commit ; un « optionnel »
+emporté par habitude alourdit le paquet sans rien garantir.
+
+**Elle se dérive, elle ne se déclare pas** : aucun fichier ne porte son niveau écrit en tête. Le
+niveau se lit sur ce que le dépôt FAIT du fichier — qui le lance, ce qu'il garantit.
+
+### Les trois faux verdicts qui ont façonné le critère, gardés comme contre-tests
+
+1. **« quelqu'un l'importe » → 88 % du parc en vital ou essentiel.** 71 fichiers sur 88 sont importés
+   par au moins un autre. Une échelle où presque tout est en haut ne dit pas que tout est vital,
+   elle dit que le critère est mauvais.
+2. **La chaîne quotidienne transitive → 77 vitaux, ZÉRO essentiel.** Le coupable était UN fichier :
+   `check-house.mjs` est lancé par le crochet et importe 78 % du parc **pour le tester**. Un import
+   de test n'est pas une dépendance d'exécution. La suite reste dans la chaîne (elle tourne bien à
+   chaque commit) mais ses imports ne propagent plus — et la frontière est DÉRIVÉE
+   (`findSuitesDeTest()` : est une suite de tests tout fichier qui importe la moitié du parc),
+   jamais écrite en dur, parce que la suite peut se scinder demain.
+3. **Les crochets eux-mêmes sortaient « optionnel »**, c'est-à-dire « confort », alors qu'ils SONT
+   la boucle quotidienne. La sonde cherchait qui est LANCÉ PAR un crochet ; un crochet n'est lancé
+   par aucun crochet, il est lancé par git.
+
+**Résultat exploitable** : 25 vitaux (28 %) · 9 essentiels (10 %) · 34 utiles (39 %) · 20 optionnels
+(23 %). Et l'écart entre la chaîne d'exécution (25) et la chaîne avec les imports de test (81) est
+imprimé à côté — c'est lui qui dit qu'un export « minimal » fait naïvement emporterait 81 fichiers
+là où 25 suffisent.
+
+**Un fichier illisible n'est jamais rangé en « optionnel »** : les deux se ressemblent trait pour
+trait dans un tableau, et l'un dit de le laisser, l'autre de regarder (leçon L5). Il n'y a donc pas
+cinq niveaux — il y a quatre niveaux et un aveu.
+
+Commande : `node scripts/le-classificateur.mjs vitalite`.

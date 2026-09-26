@@ -1,0 +1,50 @@
+⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
+=== VITALITÉ DU PARC — 88 fichier(s) mesuré(s) sur 88 ===
+  🔴 VITAL       25 fichier(s) ·  28 % ·  27047 lignes — sans lui l'Agence ne tourne pas
+     il est dans la boucle quotidienne : c'est un crochet git, ou il est lancé par un crochet ou par package.json, ou l'un d'eux l'importe même indirectement
+  🟠 ESSENTIEL    9 fichier(s) ·  10 % ·  14663 lignes — sans lui elle tourne, mais perd une garantie
+     il porte un garde-fou d'évolutivité : l'Agence continue sans lui, mais une promesse cesse d'être vérifiée
+  🟡 UTILE       34 fichier(s) ·  39 % ·  12589 lignes — il fait gagner du temps, à la demande
+     une commande de lancement est écrite quelque part : quelqu'un peut s'en servir, mais rien ne casse s'il disparaît
+  ⚪ OPTIONNEL   20 fichier(s) ·  23 % ·   4474 lignes — confort ou cas particulier
+     personne ne le lance, aucune commande n'est écrite pour lui, et il ne garantit rien
+  ↳ Chaîne d'EXÉCUTION : 25 fichier(s). Chaîne avec les imports de test : 81.
+     L'écart vient de scripts/check-house.mjs (importe 78 % du parc) — un import de TEST n'est pas une dépendance d'exécution.
+  HORS PORTÉE : la vitalité est DÉRIVÉE de ce que le dépôt fait du fichier (qui le lance, ce qu'il garantit) — jamais déclarée en tête de fichier. Un outil excellent que personne n'a encore branché sort « optionnel », et c'est exact : il n'est pas encore vital, il est prêt à l'être.
+
+=== EXPORTABILITÉ — croisement vitalité × blueprint ===
+  vital        9/25  ont un blueprint · 36 %
+  essentiel    6/9   ont un blueprint · 67 %
+  utile       15/34  ont un blueprint · 44 %
+  optionnel    6/20  ont un blueprint · 30 %
+  ⛔ BLOQUANTS (vitaux ou essentiels SANS blueprint) : 19
+     · scripts/check-house.mjs
+     · scripts/criticite.mjs
+     · scripts/execution-profile.mjs
+     · scripts/hooks/check-last-commit.mjs
+     · scripts/hooks/install.mjs
+     · scripts/hooks/post-commit
+     · scripts/hooks/pre-commit
+     · scripts/html-report.mjs
+     · scripts/install-pnpm.sh
+     · scripts/lib-json.mjs
+     · scripts/lib-shell.mjs
+     · scripts/priorites.mjs
+     · scripts/report-template.mjs
+     · scripts/run-framework.mjs
+     · scripts/sites-env.mjs
+     · scripts/tool-usage.mjs
+     · scripts/circle-tasks.mjs
+     · scripts/doc-report.mjs
+     · scripts/le-coordinateur.mjs
+  Blueprint de l'Agence elle-même : docs/agence-exportable-conception.md (9400 caractères) — il EXISTE, ce qui ne dit pas qu'il suffit.
+  HORS PORTÉE : un blueprint PRÉSENT n'est pas un blueprint SUFFISANT : cette mesure compte des fichiers, elle ne lit pas leur contenu. findBlueprintsMalConstruits() fait l'autre moitié du travail, et les deux ensemble ne remplacent toujours pas une relecture.
+
+=== EMPREINTE DISQUE — ce qui partirait vraiment dans un export ===
+  Aujourd'hui (2026-09-26) : 19 Mo suivis par git.
+  Il y a 7 jours (2026-09-19) : 2.2 Mo — soit ×8.8 en 7 jours, 2.4 Mo/jour.
+  Dans 1 mois  :    91.3 Mo
+  Dans 2 mois  :   163.5 Mo
+  Dans 1 an    :   898.1 Mo
+  HORS PORTÉE : projection LINÉAIRE d'un rythme observé sur quelques jours : elle donne un ordre de grandeur, jamais une prévision. Un chantier qui s'arrête ou une archive purgée la démentent immédiatement.
+  Ce chiffre exclut .git (l'historique) et tout ce qui n'est pas suivi : c'est le poids de ce qui PART, pas celui du conteneur.

@@ -86,3 +86,40 @@ dix-sept garde-fous étaient couverts par le commentaire d'un autre.
 **La limite, déclarée plutôt que tue.** Ce chiffre dit une absence d'EXPLICATION, jamais une absence
 de RAISON. Juger si un commentaire explique vraiment ou paraphrase le code reste hors de portée
 d'une mécanique : c'est un signal pour une relecture humaine, jamais un verdict.
+
+---
+
+## Mesurer l'export, pas seulement le surveiller *(2026-09-26, tâche #906)*
+
+Deux commandes nouvelles, toutes deux sous `node scripts/safe-export.mjs export`.
+
+### Le croisement vitalité × blueprint — `mesurerLExportabilite()`
+
+**Ce qui manquait n'était pas la liste des outils sans blueprint** : `findOutilsSansBlueprint()`
+la produisait déjà. Ce qui manquait était de savoir **lesquels comptent**. Une liste plate de vingt
+outils ne se hiérarchise pas ; trois outils VITAUX sans blueprint se traitent le soir même.
+
+La vitalité est **relayée de LE-CLASSIFICATEUR** (`vitaliteDuParc()`), jamais recalculée ici — deux
+mesures de vitalité qui divergeraient seraient pires qu'une seule (leçon L29).
+
+**Premier passage réel (2026-09-26)** : 36 blueprints pour 88 fichiers · **19 bloquants** (vitaux ou
+essentiels sans blueprint), dont les deux crochets git, `lib-shell`, `lib-json`, `report-template`,
+`tool-usage`, `criticite` et la suite de tests. Couverture par niveau : vital 36 %, essentiel 67 %,
+utile 44 %, optionnel 30 %.
+
+**Ce qu'il ne dit pas** : un blueprint PRÉSENT n'est pas un blueprint SUFFISANT. Cette mesure compte
+des fichiers, elle ne lit pas leur contenu — `findBlueprintsMalConstruits()` fait l'autre moitié, et
+les deux ensemble ne remplacent pas une relecture.
+
+### L'empreinte disque et sa projection — `empreinteDisque()`
+
+**La taille se lit sur git, jamais sur `du`** : `du` mesure le conteneur (node_modules, caches,
+navigateurs préinstallés — 2,9 Go dont presque rien n'appartient au projet), git mesure ce qui PART
+réellement. Confondre les deux donnerait un chiffre cent fois trop gros et une panique sans objet.
+
+**Premier passage réel** : 2,2 Mo au 2026-09-19 → 19 Mo au 2026-09-26, soit **×8,8 en sept jours**,
+2,4 Mo/jour. Projections linéaires : 91 Mo à un mois, 164 Mo à deux, 898 Mo à un an.
+
+`projeterLaCroissance()` **refuse** un rythme calculé sur moins de deux jours : une droite tirée
+d'un seul point ressemble trait pour trait à une tendance. Et la limite voyage DANS le résultat
+(`horsPortee`), jamais seulement dans un commentaire.

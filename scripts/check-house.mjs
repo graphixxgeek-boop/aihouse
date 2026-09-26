@@ -8759,6 +8759,57 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // L'ÉCHELLE DE VITALITÉ ET L'EXPORTABILITÉ (2026-09-26, tâche #906 — ses quatre niveaux dictés
+    // en fenêtre, et sa question « quels outils vitaux n'ont pas de blueprint ? »).
+    const LCV = await import('../scripts/le-classificateur.mjs');
+    const SEX = await import('../scripts/safe-export.mjs');
+    assert.deepEqual(LCV.VITALITE.map((n) => n.cle), ['vital', 'essentiel', 'utile', 'optionnel'], 'four levels, in his words and in his order');
+    // LA CHAÎNE QUOTIDIENNE EST TRANSITIVE — un fichier importé par un fichier lancé au commit
+    // tourne au commit, même si personne ne le lance directement.
+    const lignesF = [
+      { chemin: 'scripts/hooks/pre-commit', portes: [], classes: [] },
+      { chemin: 'scripts/a.mjs', portes: ['crochet git'], classes: [] },
+      { chemin: 'scripts/b.mjs', portes: [], classes: [] },
+      { chemin: 'scripts/c.mjs', portes: [], classes: ['porte-un-garde-fou-devolutivite'] },
+      { chemin: 'scripts/d.mjs', portes: ['une commande de lancement est écrite'], classes: [] },
+      { chemin: 'scripts/e.mjs', portes: [], classes: [] },
+    ];
+    const chaineF = LCV.chaineQuotidienne({ lignes: lignesF, importeDe: { 'scripts/a.mjs': ['scripts/b.mjs'] } });
+    assert.ok(chaineF.has('scripts/b.mjs'), 'a file imported by a hook-launched one is in the daily loop too');
+    // LE CROCHET LUI-MÊME EST UN POINT D'ENTRÉE — premier faux verdict de cette échelle : pre-commit
+    // et post-commit sortaient « optionnel », c'est-à-dire « confort », alors qu'ils SONT la boucle.
+    assert.ok(chaineF.has('scripts/hooks/pre-commit'), 'a hook file is an entry point: it is launched by git, never by another hook');
+    assert.equal(LCV.vitaliteDuFichier(lignesF[3], { chaine: chaineF }).niveau, 'essentiel', 'a garde-fou outside the loop is essentiel: the Agency runs without it but stops verifying a promise');
+    assert.equal(LCV.vitaliteDuFichier(lignesF[4], { chaine: chaineF }).niveau, 'utile', 'a documented command with nothing depending on it is utile');
+    assert.equal(LCV.vitaliteDuFichier(lignesF[5], { chaine: chaineF }).niveau, 'optionnel', 'and a file nobody launches, nobody imports and nothing guarantees is optionnel');
+    assert.equal(LCV.vitaliteDuFichier({ illisible: true }).mesurable, false, 'an UNREADABLE file is never filed as optionnel: "nothing depends on it" and "I could not open it" look identical in a table and call for opposite gestures (leçon L5)');
+
+    // LA SUITE DE TESTS EST UN POINT D'ARRIVÉE, JAMAIS UN RELAIS — et c'est une correction faite
+    // après avoir MESURÉ : la première version rendait 77 vitaux sur 88 et 0 essentiel, parce que
+    // check-house.mjs est lancé par le crochet et importe 78 % du parc pour le TESTER.
+    const grosGraphe = { 'scripts/suite.mjs': lignesF.map((l) => l.chemin) };
+    const avecSuite = [...lignesF, { chemin: 'scripts/suite.mjs', portes: ['crochet git'], classes: [] }];
+    assert.deepEqual(LCV.findSuitesDeTest({ importeDe: grosGraphe, total: avecSuite.length }).map((x) => x.chemin), ['scripts/suite.mjs'], 'a file importing at least half the parc is DERIVED as a test suite, never written down by name');
+    const sansPropagation = LCV.chaineQuotidienne({ lignes: avecSuite, importeDe: grosGraphe });
+    assert.ok(!sansPropagation.has('scripts/e.mjs'), 'its imports do NOT propagate: a TEST import is not a runtime dependency, and treating it as one made everything vital');
+    assert.ok(sansPropagation.has('scripts/suite.mjs'), 'but the suite itself stays in the loop — it does run at every commit');
+    assert.ok(LCV.chaineQuotidienne({ lignes: avecSuite, importeDe: grosGraphe, ignorerLesSuitesDeTest: false }).has('scripts/e.mjs'), 'and the counter-test confirms the exclusion is what changes the answer, not a coincidence');
+
+    // LE CROISEMENT VITALITÉ × BLUEPRINT — ce qui manquait n'était pas la liste des outils sans
+    // blueprint, c'était de savoir LESQUELS COMPTENT.
+    const vFaux = { mesurable: true, parNiveau: { vital: [{ chemin: 'scripts/vital-sans.mjs' }], essentiel: [{ chemin: 'scripts/ess-avec.mjs' }], utile: [], optionnel: [] } };
+    const exp = SEX.mesurerLExportabilite({ vitalite: vFaux, exists: (c) => String(c).includes('ess-avec-blueprint.md') });
+    assert.deepEqual(exp.bloquants, ['scripts/vital-sans.mjs'], 'only the vital/essential ones WITHOUT a blueprint are blocking — a flat list of twenty cannot be prioritised, three vital ones get done tonight');
+    assert.equal(exp.niveaux.essentiel.couverture, 100, 'and coverage carries its denominator, per level');
+    assert.equal(SEX.mesurerLExportabilite({ vitalite: null }).mesurable, false, 'without the vitality axis it REFUSES: counting missing blueprints without knowing which matter is an inventory, not a priority');
+
+    // LA PROJECTION DE CROISSANCE REFUSE UN RYTHME TIRÉ D'UN SEUL JOUR — une droite tracée sur un
+    // point ressemble trait pour trait à une tendance.
+    assert.equal(SEX.projeterLaCroissance({ octetsAujourdhui: 100, octetsParJour: 10, joursObserves: 1 }).mesurable, false, 'one observed day is not a rhythm');
+    const proj = SEX.projeterLaCroissance({ octetsAujourdhui: 1000, octetsParJour: 100, joursObserves: 7 });
+    assert.equal(proj.projections.find((p) => p.cle === '1 mois').octets, 4000, 'and the projection is plainly linear, recomputable by hand');
+    assert.ok(proj.horsPortee.includes('LINÉAIRE'), 'with its limit travelling inside the result rather than living in a comment');
+
     // LES TROIS COURBES (2026-09-26, tâche #905 — sa décision : « la rotation se mesure en TROIS
     // COURBES SÉPARÉES [...] Jamais un solde net, qui confondrait tout »).
     const CT2 = await import('../scripts/check-tasks-details.mjs');

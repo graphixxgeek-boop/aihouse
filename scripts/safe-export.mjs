@@ -17,7 +17,7 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
-import { printReliabilityNotice, porteeDe } from "./lib-shell.mjs";
+import { printReliabilityNotice, porteeDe, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -595,6 +595,134 @@ export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = exi
 // les indices se CONCENTRENT. Trois écarts éparpillés dans trois fichiers sont du bruit ordinaire ;
 // trois écarts dans le même fichier disent qu'il s'y passe quelque chose. Proposer un scan payant à
 // chaque avertissement reviendrait à le proposer toujours, donc à n'être jamais écouté.
+// ══════════════════════════════════════════════════════════════════════════
+// MESURER L'EXPORTABILITÉ (2026-09-26, tâche #906 — ses questions du gros prompt : « quels outils
+// vitaux n'ont pas de blueprint ? y a-t-il un blueprint de l'Agence elle-même ? »).
+//
+// CE QUI MANQUAIT, ET C'EST LE CŒUR DE SA QUESTION : SAFE-EXPORT savait déjà dire QUELS outils
+// n'ont pas de blueprint. Il ne savait pas dire lesquels COMPTENT. Une liste de vingt outils sans
+// blueprint ne se hiérarchise pas ; une liste de trois outils VITAUX sans blueprint se traite le
+// soir même. Le croisement vitalité × blueprint est toute la différence entre un inventaire et une
+// priorité.
+//
+// LA VITALITÉ EST RELAYÉE DE LE-CLASSIFICATEUR, jamais recalculée ici : c'est son axe, et deux
+// mesures de vitalité qui divergeraient seraient pires qu'une seule (leçon L29, payée le jour même
+// sur un classificateur d'origine écrit en double).
+export const BLUEPRINT_DE_L_AGENCE = "docs/agence-exportable-conception.md";
+
+export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = existsSync, readFileImpl = readFileSync } = {}) {
+  if (!vitalite?.mesurable) {
+    return { mesurable: false, pourquoi: "la vitalité du parc n'a pas été fournie ou n'est pas mesurable : sans elle on ne peut que compter des blueprints manquants, jamais dire lesquels comptent" };
+  }
+  const aUnBlueprint = (chemin) => {
+    const base = String(chemin).replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
+    return exists(join(root, `docs/${base}-blueprint.md`));
+  };
+  const niveaux = {};
+  for (const [niveau, fichiers] of Object.entries(vitalite.parNiveau)) {
+    const avec = fichiers.filter((f) => aUnBlueprint(f.chemin));
+    niveaux[niveau] = {
+      total: fichiers.length,
+      avecBlueprint: avec.length,
+      sansBlueprint: fichiers.filter((f) => !aUnBlueprint(f.chemin)).map((f) => f.chemin),
+      couverture: fichiers.length ? Math.round((avec.length / fichiers.length) * 100) : null,
+    };
+  }
+  // LE BLUEPRINT DE L'AGENCE ELLE-MÊME — sa question, et elle est plus profonde qu'elle n'en a
+  // l'air : quatre-vingt-huit blueprints d'outils n'expliquent pas comment les outils s'articulent.
+  // Un acheteur qui reçoit 41 plans de pièces détachées n'a pas reçu le plan de la machine.
+  const cheminAgence = join(root, BLUEPRINT_DE_L_AGENCE);
+  const agence = exists(cheminAgence)
+    ? { existe: true, chemin: BLUEPRINT_DE_L_AGENCE, octets: (() => { try { return readFileImpl(cheminAgence, "utf8").length; } catch { return null; } })() }
+    : { existe: false, chemin: BLUEPRINT_DE_L_AGENCE, pourquoi: "aucun document ne décrit l'Agence COMME UN TOUT : on exporterait des pièces sans le plan de la machine" };
+  return {
+    mesurable: true, niveaux, agence,
+    // LA PRIORITÉ SE DÉRIVE DU CROISEMENT, elle ne s'écrit pas : les vitaux et les essentiels sans
+    // blueprint sont ce qui bloque un export, dans cet ordre.
+    bloquants: [...(niveaux.vital?.sansBlueprint ?? []), ...(niveaux.essentiel?.sansBlueprint ?? [])],
+    horsPortee: "un blueprint PRÉSENT n'est pas un blueprint SUFFISANT : cette mesure compte des fichiers, elle ne lit pas leur contenu. findBlueprintsMalConstruits() fait l'autre moitié du travail, et les deux ensemble ne remplacent toujours pas une relecture.",
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// L'EMPREINTE DISQUE ET SA PROJECTION (2026-09-26, tâche #906 — sa question : « mémoire disque :
+// coût réel aujourd'hui, projeté à 1 mois, 2 mois, 1 an »).
+//
+// LA PROJECTION EST UNE TENDANCE, JAMAIS UNE LOI, et c'est écrit dans le résultat plutôt que promis
+// en commentaire : elle prolonge en ligne droite un rythme observé sur quelques jours. Un chantier
+// qui s'arrête, une archive qu'on purge, une simulation de plus — chacun la dément. Elle sert à
+// savoir si l'ordre de grandeur est « quelques dizaines de Mo » ou « plusieurs Go », jamais à
+// prévoir une facture.
+export const HORIZONS_DE_PROJECTION = [
+  { cle: "1 mois", jours: 30 },
+  { cle: "2 mois", jours: 60 },
+  { cle: "1 an", jours: 365 },
+];
+
+export function projeterLaCroissance({ octetsAujourdhui = 0, octetsParJour = 0, joursObserves = 0, horizons = HORIZONS_DE_PROJECTION } = {}) {
+  // MOINS DE DEUX JOURS OBSERVÉS NE FAIT PAS UN RYTHME — un rythme calculé sur une seule journée
+  // est le chiffre de cette journée-là, présenté comme une tendance (même défaut que L5, pris par
+  // l'autre bout : ici ce n'est pas l'absence de mesure qui trompe, c'est sa maigreur).
+  if (joursObserves < 2) {
+    return { mesurable: false, pourquoi: `seulement ${joursObserves} jour(s) observé(s) : un rythme a besoin d'au moins deux points, et une droite tirée d'un seul jour ressemble trait pour trait à une tendance` };
+  }
+  return {
+    mesurable: true, octetsAujourdhui, octetsParJour, joursObserves,
+    projections: horizons.map((h) => ({ ...h, octets: Math.round(octetsAujourdhui + octetsParJour * h.jours) })),
+    horsPortee: "projection LINÉAIRE d'un rythme observé sur quelques jours : elle donne un ordre de grandeur, jamais une prévision. Un chantier qui s'arrête ou une archive purgée la démentent immédiatement.",
+  };
+}
+
+export function enMo(octets) { return Math.round((Number(octets) || 0) / 1024 / 1024 * 10) / 10; }
+
+// LA TAILLE SE LIT SUR GIT, jamais sur `du` : `du` mesure le conteneur (node_modules, caches,
+// navigateurs préinstallés — 2,9 Go dont presque rien n'appartient au projet), git mesure ce qui
+// PART réellement lors d'un export. Confondre les deux donnerait un chiffre cent fois trop gros et
+// une panique sans objet.
+export function tailleSuivieParGit({ shImpl = sh, jours = 0 } = {}) {
+  const ref = jours
+    ? (shImpl(`git rev-list -1 --before="${jours} days ago" HEAD`) ?? "").trim()
+    : "HEAD";
+  if (!ref) return { mesurable: false, pourquoi: `aucun commit trouvé avant ${jours} jour(s) : l'historique ne remonte pas si loin, ce qui n'est jamais la même chose qu'un dépôt vide` };
+  const sortie = shImpl(`git ls-tree -r -l ${ref} | awk '{s+=$4} END{print s}'`);
+  const octets = Number(String(sortie ?? "").trim());
+  if (!Number.isFinite(octets) || !octets) return { mesurable: false, pourquoi: `la taille n'a pas pu être lue pour ${ref} — rien n'a été mesuré` };
+  const quand = (shImpl(`git show -s --format=%ad --date=short ${ref}`) ?? "").trim();
+  return { mesurable: true, ref, quand, octets };
+}
+
+export const FENETRE_DE_CROISSANCE_JOURS = 7;
+
+export function empreinteDisque({ shImpl = sh, fenetre = FENETRE_DE_CROISSANCE_JOURS, horizons = HORIZONS_DE_PROJECTION } = {}) {
+  const aujourdhui = tailleSuivieParGit({ shImpl });
+  const avant = tailleSuivieParGit({ shImpl, jours: fenetre });
+  if (!aujourdhui.mesurable) return { mesurable: false, pourquoi: aujourdhui.pourquoi };
+  if (!avant.mesurable) {
+    return { mesurable: false, aujourdhui, pourquoi: `taille actuelle lue (${enMo(aujourdhui.octets)} Mo) mais pas de point de comparaison à ${fenetre} jours : ${avant.pourquoi}. Une taille sans rythme ne se projette pas.` };
+  }
+  const parJour = (aujourdhui.octets - avant.octets) / fenetre;
+  return {
+    mesurable: true, aujourdhui, avant, fenetre, parJour,
+    facteur: avant.octets ? Math.round((aujourdhui.octets / avant.octets) * 10) / 10 : null,
+    projection: projeterLaCroissance({ octetsAujourdhui: aujourdhui.octets, octetsParJour: parJour, joursObserves: fenetre, horizons }),
+  };
+}
+
+export function formatEmpreinteLines(e) {
+  if (!e?.mesurable) return [`EMPREINTE DISQUE : PAS MESURÉE — ${e?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== EMPREINTE DISQUE — ce qui partirait vraiment dans un export ===`];
+  l.push(`  Aujourd'hui (${e.aujourdhui.quand}) : ${enMo(e.aujourdhui.octets)} Mo suivis par git.`);
+  l.push(`  Il y a ${e.fenetre} jours (${e.avant.quand}) : ${enMo(e.avant.octets)} Mo — soit ×${e.facteur} en ${e.fenetre} jours, ${enMo(e.parJour)} Mo/jour.`);
+  if (e.projection.mesurable) {
+    for (const p of e.projection.projections) l.push(`  Dans ${p.cle.padEnd(7)} : ${String(enMo(p.octets)).padStart(7)} Mo`);
+    l.push(`  HORS PORTÉE : ${e.projection.horsPortee}`);
+  } else {
+    l.push(`  PROJECTION : PAS MESURÉE — ${e.projection.pourquoi}`);
+  }
+  l.push(`  Ce chiffre exclut .git (l'historique) et tout ce qui n'est pas suivi : c'est le poids de ce qui PART, pas celui du conteneur.`);
+  return l;
+}
+
 export const CONCENTRATION_MINIMUM = 3;
 export function proposerSondePoussee(ecarts = [], { seuil = CONCENTRATION_MINIMUM } = {}) {
   const parFichier = new Map();
@@ -741,6 +869,34 @@ export function tendancesExport(options = {}) {
 }
 
 function main() {
+  // LA COMMANDE « export » (2026-09-26, tâche #906) : le croisement vitalité × blueprint et
+  // l'empreinte disque, joignables sans lancer le balayage complet — ce sont les deux chiffres
+  // qu'il a demandés pour décider, pas pour surveiller.
+  if (process.argv[2] === "export") {
+    printReliabilityNotice("safe-export");
+    recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return import("./le-classificateur.mjs").then((lc) => {
+      const v = lc.vitaliteDuParc();
+      for (const l of lc.formatVitaliteLines(v)) console.log(l);
+      console.log("");
+      const e = mesurerLExportabilite({ vitalite: v });
+      if (!e.mesurable) { console.log(`EXPORTABILITÉ : PAS MESURÉE — ${e.pourquoi}`); }
+      else {
+        console.log("=== EXPORTABILITÉ — croisement vitalité × blueprint ===");
+        for (const [niveau, d] of Object.entries(e.niveaux)) {
+          console.log(`  ${niveau.padEnd(10)} ${String(d.avecBlueprint).padStart(3)}/${String(d.total).padEnd(3)} ont un blueprint · ${d.couverture === null ? "pas mesurable" : d.couverture + " %"}`);
+        }
+        console.log(`  ⛔ BLOQUANTS (vitaux ou essentiels SANS blueprint) : ${e.bloquants.length}`);
+        for (const c of e.bloquants) console.log(`     · ${c}`);
+        console.log(e.agence.existe
+          ? `  Blueprint de l'Agence elle-même : ${e.agence.chemin} (${e.agence.octets} caractères) — il EXISTE, ce qui ne dit pas qu'il suffit.`
+          : `  ⛔ AUCUN blueprint de l'Agence elle-même : ${e.agence.pourquoi}`);
+        console.log(`  HORS PORTÉE : ${e.horsPortee}`);
+      }
+      console.log("");
+      for (const l of formatEmpreinteLines(empreinteDisque())) console.log(l);
+    });
+  }
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) — même correction que ses deux voisins du
   // même soir : l'en-tête n'est plus écrit à la main ici.
   printReportHeader({ tool: "safe-export", title: "SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet", scriptPath: "scripts/safe-export.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
