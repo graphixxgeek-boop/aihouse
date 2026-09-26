@@ -254,6 +254,9 @@ export const PRESTATIONS = [
   // sept garde-fous d'intégration ne couvrait PRESTATIONS : ils vérifient chacun leur registre, et
   // celui-ci n'avait personne. Trouvé au premier vrai passage d'integration-outil.mjs, qui existe
   // précisément pour rendre la liste des registres DEMANDABLE avant de commencer.
+  // LE-CLASSIFICATEUR (2026-09-26) — la prestation que son rang lui impose dès sa naissance, et
+  // c'est le garde-fou d'intégration qui l'a réclamée à la seconde, par son nom.
+  { nom: "Pack Rangement", description: "Dit ce qu'un fichier de l'outillage EST (son type), ce qu'il VAUT (son rang), ce sur quoi il travaille (sa famille) et ce qu'il DOIT (son poste) — et régénère le document officiel de classification, en texte et en HTML.", demande: "Savoir ce qu'est un fichier de l'outillage, quel rang il porte et ce qu'il doit — ou régénérer le document officiel de classification", outils: ["le-classificateur"], cout: "0 appel API — lit le dépôt réel", tokensEstimes: "nul : tout est mécanique, aucun raisonnement" },
   { nom: "Pack Départ", description: "Vérifie si l'outillage et le code sont exportables : jargon propre au projet resté dans un blueprint, terme employé sans fiche qui le définisse, mécanisme sans sa raison écrite.", demande: "Exportabilité de l'Agence, reprise par une autre IA (Article 27)", outils: ["SAFE-EXPORT"], cout: "0 appel API — couche légère mécanique", tokensEstimes: "nul en couche légère ; la sonde profonde, elle, se propose et se valide avant" },
   // THE-EQUALIZER (2026-09-23) — la prestation que personne ne rendait : un verdict d'ENSEMBLE. Chaque
   // pack ci-dessous répond de sa part ; celui-ci répond de la question que l'utilisateur a posée

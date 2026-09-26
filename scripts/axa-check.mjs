@@ -332,6 +332,9 @@ export const AGENT_SCRIPT_FILES = {
   // c'est la SIXIÈME inscription manuelle que l'utilisateur pointe comme le vrai défaut
   // d'évolutivité restant (Article 24, précision du 2026-09-22) : le garde-fou DÉTECTE l'oubli au
   // lieu de l'ÉVITER. Constat gardé ici, à côté du symptôme.
+  // 2026-09-26 : né de la scission de CASSANDRA, et le garde-fou l'a réclamé nommément au premier
+  // commit — septième inscription manuelle que l'Article 24 vise, symptôme gardé à côté du constat.
+  "le-classificateur": "scripts/le-classificateur.mjs",
   "safe-export": "scripts/safe-export.mjs",
   "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",

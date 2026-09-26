@@ -154,6 +154,12 @@ export const REGISTRIES = [
   { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "Suite Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
   { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
   { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
+  // LE-CLASSIFICATEUR (2026-09-26, né de la scission de CASSANDRA). "archived_html" plutôt que
+  // "delivery_html" : il ne produit pas un rapport de passage qu'on remettrait ensuite en HTML — il
+  // produit une RÉFÉRENCE, dont la version HTML EST la version de remise, committée telle quelle.
+  // C'est la demande explicite de l'utilisateur du 2026-09-26 : « ce doc doit m'être livré en HTML,
+  // mais il peut être enregistré en txt dans les dossiers ».
+  { slug: "le-classificateur", label: "LE-CLASSIFICATEUR", family: "Gouvernance interne", path: "docs/le-classificateur/", decision: "archived_html", scriptPath: "scripts/le-classificateur.mjs" },
   { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
   { slug: "ecotoken", label: "ecotoken", family: "Gouvernance interne", path: "docs/ecotoken/", decision: "texte", scriptPath: "scripts/ecotoken.mjs" },
   // 9 nouveaux registres ajoutés le 2026-09-21 (règle générale : « tous les outils qui interviennent

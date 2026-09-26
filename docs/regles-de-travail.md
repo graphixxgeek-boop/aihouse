@@ -972,6 +972,7 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 |---|---|---|---|---|---|
 | `check-house.mjs` | Infrastructure | — | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
 | `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | — | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent — **`node scripts/check-spirit.mjs`** et **`node scripts/check-profile.mjs`**, précédés de `node scripts/smart-conso-api.mjs check-spirit --confirm` (Article 22) |
+| LE-CLASSIFICATEUR | Agent | 🎖️ | le rangement de l'outillage : type, rang, famille, classes, indice — et le document officiel de classification | gratuit | à la demande, quand le rangement change — **`node scripts/le-classificateur.mjs classification`** |
 | ARGUS | Agent | 🎖️ | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
 | HARMONIA | Agent | 🎖️ | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
 | Smart Conso API | Agent | 🎖️ | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |

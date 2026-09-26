@@ -1100,6 +1100,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | CASSANDRA-RH | l'Agent Cadre RH de l'outillage de travail | `docs/cassandra-rh-blueprint.md` | `docs/referentiel/cassandra-rh.md` | `scripts/cassandra-rh.mjs` |
 | CHECK-LEVEL-TARGET | l'outil qui calcule, avant toute vérification, le niveau attendu et la combinaison… | `docs/check-level-target-blueprint.md` | `docs/referentiel/check-level-target.md` | `scripts/check-level-target.mjs` |
 | CHECK-TASKS-DETAILS | l'outil d'état des lieux des tâches à la demande | `docs/check-tasks-details-blueprint.md` | `docs/referentiel/check-tasks-details.md` | `scripts/check-tasks-details.mjs` |
+| LE-CLASSIFICATEUR | le rangement de l'outillage : ce qu'un fichier EST, ce qu'il VAUT, ce qu'il DOIT — et le document officiel de classification *(nom provisoire)* | `docs/le-classificateur-blueprint.md` | `docs/referentiel/le-classificateur.md` | `scripts/le-classificateur.mjs` |
 | CLEAN-DIRTY-OLD | détecteur de stagnation | `docs/clean-dirty-old-blueprint.md` | `docs/referentiel/clean-dirty-old.md` | `scripts/clean-dirty-old.mjs` |
 | CLONE-HUNTER | détecteur de blocs de code dupliqués | `docs/clone-hunter-blueprint.md` | `docs/referentiel/clone-hunter.md` | `scripts/clone-hunter.mjs` |
 | ecotoken | réduit le coût permanent en tokens des documents que l’agent recharge | `docs/ecotoken-blueprint.md` | `docs/referentiel/ecotoken.md` | `scripts/ecotoken.mjs` |
@@ -1171,6 +1172,7 @@ de toucher.)*
 | `docs/referentiel/regles-de-la-memoire.md` | avant de toucher à `lib/life.ts` ou à une mémoire de personnage | traversée par l'axe de la mémoire |
 | `docs/referentiel/organisation-agence.md` | avant tout changement d'organigramme de l'outillage — c'est le domaine de CASSANDRA-RH, et sa tenue à jour reste manuelle | référentiel CANONIQUE de l'Agence Codex |
 | `docs/referentiel/standards.md` | quand on se demande si quelque chose est « à niveau » — les 29 exigences, chacune nommant son vérificateur ou déclarant que personne ne la vérifie | source de vérité de THE-EQUALIZER |
+| `docs/referentiel/le-classificateur.md` | avant de toucher au rangement de l'outillage (types, rangs, familles, classes, indice) — et pour comprendre pourquoi le poste de travail se dérive au lieu de se recopier | né de la scission de CASSANDRA-RH |
 | `docs/referentiel/lecons.md` | quand une erreur vient d'être payée, et à chaque Ronde | ce que le projet a appris en se trompant |
 | `docs/referentiel/points-fragiles.md` | avant de toucher une zone réputée fragile, ou en attente d'une décision de conception | registre vivant, compté par le KPI |
 | `docs/referentiel/memento-weight.md` | quand le poids du contexte envoyé à Gemini par tour est en cause | instanciation du voisin de memory-audit |

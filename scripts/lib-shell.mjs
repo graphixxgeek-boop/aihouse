@@ -133,6 +133,8 @@ export const AGENT_CATEGORIES = {
   "moise-tables-de-loi": "Membre — Suite Dette & Structure du code",
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
   "cassandra-rh": "Agent Cadre — Gouvernance interne",
+  // Né le 2026-09-26 de la scission de CASSANDRA : elle juge les gens, lui range les choses.
+  "le-classificateur": "Membre — Gouvernance interne",
   "le-coordinateur": "Agent Cadre — Coordination",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
   argus: "Gardien sacré du code — Gardiens sacrés du code",
@@ -397,6 +399,7 @@ export function lastCommitFiles(shImpl = sh, cwd = undefined) {
 export const TOOL_RELIABILITY = {
   // --- Mécaniques : ce qu'ils affichent est un fait exact, aucun avertissement à donner.
   "check-house-mjs": { nature: "mecanique", pourquoi: "un test passe ou échoue, il n'y a rien à interpréter" },
+  "le-classificateur": { nature: "mecanique", pourquoi: "un type se constate sur le fichier, un rang se lit dans un registre — aucune interprétation, sauf la liste « Hors Agence » qui est tenue à la main et le dit" },
   "le-coordinateur": { nature: "mecanique", pourquoi: "chaque point de câblage vérifié est une présence ou une absence sur le disque" },
   "doc-html": { nature: "mecanique", pourquoi: "ne produit aucun constat — il met en page un rapport déjà écrit par un autre" },
   "compteur-d-utilisation-des-outils": { nature: "mecanique", pourquoi: "compte exactement les sollicitations réellement enregistrées, jamais une estimation" },

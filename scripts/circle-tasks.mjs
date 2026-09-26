@@ -734,6 +734,7 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // abraham-les-references (2026-09-23) : couvert PAR ÉVÉNEMENT — on l'appelle quand on analyse
   // un document précis, jamais sur un rythme. Un passage périodique analyserait des documents que
   // personne n'a demandé à regarder, et la tâche #612 cherche justement à REDUIRE les rapports.
+  "le-classificateur": "couvert PAR ÉVÉNEMENT : le document de classification se regénère quand le rangement change — un passage périodique réécrirait un fichier identique",
   "abraham-les-references": "couvert PAR ÉVÉNEMENT : on l'appelle sur un document précis quand on décide de l'analyser, jamais par calendrier — et un item de plus contredirait la tâche #612",
   // moise-tables-de-loi (2026-09-23) : EXCLUSION MOTIVÉE, et elle applique deux décisions de
   // l'utilisateur prises le même jour. (1) Ses deux garde-fous de fraîcheur sont déjà gratuits à
