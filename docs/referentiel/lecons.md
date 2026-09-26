@@ -251,8 +251,7 @@ dit qu'il vient de coûter des heures.
 Le test qui tranche : *est-ce que quelqu'un peut répondre à ce que je m'apprête à écrire ?* Si non,
 ça ne se dit pas, ça **s'écrit dans le suivi** et le travail continue.
 
-**Terrain** : quand je m'apprête à rendre compte sans qu'on me l'ait demandé · mots : point d'étape,
-rendre compte, résumé, bilan, autonome, nuit · fichiers : docs/mode-auto-process-guardian.md
+**Terrain** : quand je m'apprête à rendre compte sans qu'on me l'ait demandé · mots : point d'étape, rendre compte, résumé, bilan, autonome, nuit, compte rendu · fichiers : docs/mode-auto-process-guardian.md, docs/rapports-de-nuit/*.md
 
 **Porté par** : `findArretPremature()` (`scripts/god-of-all-process.mjs`) — il compare les chantiers
 du plan aux chantiers réellement clos et nomme l'arrêt prématuré, avec son responsable.
@@ -494,7 +493,7 @@ ailleurs : l'assertion « un tour ordinaire coûte exactement deux appels » (`c
 mordra à nouveau si quelqu'un rend les deux répliques du stub identiques. La leçon, elle, ne vaut
 que lue au bon moment — d'où le terrain ci-dessous.
 
-**Terrain** : quand un nouveau garde-fou fait rougir un test qui n'était pas son sujet, ou quand j'ajuste une assertion pour faire passer la suite · mots : stub, fixture, faux modèle, jeu de test, assertion qui casse, ajuster le test · fichiers : scripts/check-house.mjs
+**Terrain** : quand un nouveau garde-fou fait rougir un test qui n'était pas son sujet, ou quand j'ajuste une assertion pour faire passer la suite · mots : stub, fixture, faux modèle, jeu de test, assertion qui casse, ajuster le test, contre-test, check-house, assertion, couverture · fichiers : scripts/check-house.mjs
 
 ## L18 — Un guide qui dicte une forme précise et fausse coûte plus cher que pas de guide du tout
 
@@ -579,7 +578,7 @@ mordant sur son propre auteur.*
 post-commit. Il compare le texte supprimé à l'état actuel du dépôt : une raison déplacée ne
 déclenche rien, une raison introuvable est nommée avec son fichier.
 
-**Terrain** : quand je déplace, extrais ou renomme du code d'un fichier vers un autre, et quand je réécris un en-tête de fichier · mots : migrer, déplacer, extraire, factoriser, déménager, renommer un module · fichiers : scripts/safe-export.mjs, scripts/hooks/check-last-commit.mjs
+**Terrain** : quand je déplace, extrais ou renomme du code d'un fichier vers un autre, et quand je réécris un en-tête de fichier · mots : migrer, déplacer, extraire, factoriser, déménager, renommer un module, renommage, scission, migration, factorisation, extraction, en-tête · fichiers : scripts/safe-export.mjs, scripts/hooks/check-last-commit.mjs
 
 ## L21 — Satisfaire un garde-fou avec une chaîne qu'un autre lit autrement déplace le défaut au lieu de le corriger
 
@@ -811,8 +810,7 @@ grandit tout seul : chaque type ajouté d'un côté creuse l'écart.
 2. **Un test compare les deux rendus sur le même bloc**, pas chacun de son côté. Un test par rendu
    aurait laissé passer ce défaut indéfiniment : les deux auraient été verts.
 
-**Terrain** : quand un contenu est rendu en plusieurs formats · mots : rendu, markdown, html, export,
-format, deux versions · fichiers : scripts/le-classificateur.mjs, scripts/html-report.mjs
+**Terrain** : quand un contenu est rendu en plusieurs formats · mots : rendu, markdown, html, export, format, deux versions · fichiers : scripts/le-classificateur.mjs, scripts/html-report.mjs
 
 **Porté par** : `blocsVersMarkdown()` signale un type inconnu dans sa sortie, et `check-house.mjs`
 vérifie qu'un bloc `highlight` atteint bien le Markdown. La règle générale — vérifier les rendus l'un
@@ -843,8 +841,7 @@ les listes — sauf qu'ici la copie ne se périme pas en semaines, elle se péri
 **Le geste qui ferme le trou** : relire l'heure **au moment d'écrire la ligne**, jamais au début du
 travail qu'elle datera. Une lecture coûte une seconde ; un commit refusé en coûte cinq minutes.
 
-**Terrain** : quand on écrit un horodatage dans le suivi, un rapport, un plan · mots : horodatage,
-heure, date, suivi, ligne, refusé, futur · fichiers : docs/suivi/, scripts/agent-du-temps.mjs
+**Terrain** : quand on écrit un horodatage dans le suivi, un rapport, un plan · mots : horodatage, heure, date, suivi, ligne, refusé, futur · fichiers : docs/suivi/, scripts/agent-du-temps.mjs
 
 **Porté par** : `findHorodatagesFuturs()` (check-suivi-fidelity) refuse mécaniquement une ligne datée
 dans le futur — c'est lui qui a attrapé les quatre. Ce qu'aucun mécanisme ne peut voir, c'est une
@@ -875,8 +872,7 @@ résultat NUL ; ici, un résultat DÉGRADÉ ressemble à un résultat AMÉLIORÉ
 le sens attendu **sur la composante qu'on a touchée**, jamais sur le total. Un total agrège, donc
 un total masque : ici, +6 indéterminées et −3 demandées se lisaient « à peu près pareil ».
 
-**Terrain** : toute modification d'un motif, d'un seuil, d'un filtre · mots : motif, regex, seuil,
-élargir, mesure, avant/après · fichiers : scripts/*.mjs
+**Terrain** : toute modification d'un motif, d'un seuil, d'un filtre · mots : motif, regex, seuil, élargir, mesure, avant/après · fichiers : scripts/*.mjs
 
 **Porté par** : `origineDeLaTache()` est verrouillée par un contre-test de casse dans check-house.mjs
 — la forme MAJUSCULE la plus fréquente du registre doit rester reconnue, sans quoi la suite échoue.
@@ -906,8 +902,7 @@ différents n'aurait rien déclenché du tout** — et ce dépôt compte quatre-
 chercher le verbe dans le dépôt, pas seulement le nom qu'on s'apprête à donner. « Origine »,
 « classer », « répartition » auraient tous rendu la fonction existante.
 
-**Terrain** : avant d'écrire une fonction d'analyse ou de classement · mots : doublon, classificateur,
-origine, mesure, déjà existant · fichiers : scripts/*.mjs
+**Terrain** : avant d'écrire une fonction d'analyse ou de classement · mots : doublon, classificateur, origine, mesure, déjà existant · fichiers : scripts/*.mjs
 
 **Porté par** : **aucun mécanisme** ne peut intercepter l'écriture d'une fonction avant qu'elle
 existe. CLONE-HUNTER l'aurait vue APRÈS coup, au commit suivant, une fois le travail fait ; le
@@ -941,8 +936,7 @@ vraies duplications en silence. **Un filtre qui se trompe est pire que l'alerte 
 parce que son erreur ne s'affiche nulle part. C'est le contre-test qui l'a trouvée, jamais la
 relecture.
 
-**Terrain** : quand je juge qu'une alerte d'un garde-fou est un faux positif · mots : faux positif,
-bruit, alerte, écarter, filtrer, tolérer · fichiers : scripts/*.mjs
+**Terrain** : quand je juge qu'une alerte d'un garde-fou est un faux positif · mots : faux positif, bruit, alerte, écarter, filtrer, tolérer · fichiers : scripts/*.mjs
 
 **Porté par** : les contre-tests de `estUnPontDeReexport()` dans `check-house.mjs` pour ce cas-ci ;
 **aucun mécanisme** pour la règle générale — rien ne peut constater qu'on s'est posé la question.
@@ -993,11 +987,7 @@ Devant vingt endroits à corriger, le réflexe est de corriger les vingt. Le bon
 l'endroit unique dont les vingt dépendent, et de ne toucher que celui-là. Les vingt suivants, ceux
 qui n'existent pas encore, en hériteront sans qu'on y pense.
 
-**Terrain** : quand la même correction doit s'appliquer à plusieurs endroits · mots : partout, tous
-les outils, chaque rapport, harmoniser, généraliser
-*(Aucun terrain par FICHIER déclaré, volontairement : « la même correction à plusieurs endroits » ne se
-lit dans aucun chemin en particulier, et un motif large l'attacherait à tout — donc à rien.)*
-
+**Terrain** : quand la même correction doit s'appliquer à plusieurs endroits · mots : partout, tous les outils, chaque rapport, harmoniser, généraliser · aucun fichier : « la même correction à plusieurs endroits » ne se lit dans aucun chemin en particulier, et un motif large l'attacherait à tout — donc à rien
 **Porté par** : l'Article 24 de la charte, et `findScriptsMissingFromAgentFiles()`
 (`scripts/axa-check.mjs`) pour le cas où une liste serait quand même recopiée.
 
@@ -1046,8 +1036,7 @@ l'outil mordre.** Il faut donc toujours deux épreuves, jamais une :
 2. un cas proche mais légitime qu'il doit LAISSER PASSER — sinon on livre du bruit, et un garde-fou
    qui accuse à tort cesse d'être lu (L4).
 
-**Terrain** : quand je construis ou je livre un détecteur · mots : détecteur, garde-fou, vérifier,
-faux positif, zéro, aucun écart · fichiers : scripts/*.mjs
+**Terrain** : quand je construis ou je livre un détecteur · mots : détecteur, garde-fou, vérifier, faux positif, zéro, aucun écart · fichiers : scripts/*.mjs
 
 **Porté par** : **aucun mécanisme** — rien ne peut constater qu'un détecteur a été éprouvé dans les
 deux sens, seule la discipline le porte. Déclaré plutôt que tu.

@@ -13949,3 +13949,83 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: la ligne fantôme (2026-09-26, tâche #944) — une tâche faite dont la ligne dit encore « ouverte ». La règle était écrite depuis le 2026-09-19 (« à la clôture d'une tâche, sa ligne est mise à jour, statut, pas une nouvelle ligne ») et absolument rien ne la portait, donc elle a cessé d'être vraie sans que quiconque le sache — huit fois, dont quatre de la même matinée. Le coût n'est pas du rangement : la file mentait sur sa propre taille, 129 tâches restantes annoncées pour 121 réelles, si bien que « épuiser la file » n'avait plus de fin mesurable et que les plus anciennes tâches encore ouvertes remontaient du travail déjà rendu. Le détecteur est étroit par choix et le prix est déclaré : il n'accuse que si une ligne CLÔTURÉE, de numéro PLUS GRAND, nomme la tâche dans sa cellule sous-sujet — la convention réelle du suivi, vérifiée sur 825 lignes. La première version, plus large, en rendait seize dont quatre fausses : trois lignes qui OUVRAIENT une suite plutôt que de clore, et une qui citait sa voisine dans son détail pour expliquer qu'elle n'y touchait pas. Un vrai cas manqué coûte moins cher qu'un faux accusé (leçon L30), et un fantôme dont la ligne de clôture n'emploie pas le mot « tâche » passe donc inaperçu — c'est dit plutôt que tu.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// POIDS MORT, OU ADRESSE INJOIGNABLE ? (2026-09-26, tâche #928)
+// ————————————————————————————————————————————————————————————————————————
+// La tâche posait deux lectures d'un même chiffre — des leçons jamais remontées en ~300 occasions —
+// et refusait de trancher sans mesure, pour une raison juste : retirer une entrée du registre est
+// irréversible en pratique, personne ne se souviendra de la remettre. Ce qui est testé ici, c'est
+// que la mesure sépare bien les deux causes MÉCANIQUES, et qu'elle ne conclue jamais « à retirer ».
+{
+  const tl928 = await import('../scripts/tool-learning.mjs');
+  const lecon928 = (id, mots) => ({ id, titre: id, mots, fichiers: [] });
+
+  // LE MOT DE SON TERRAIN N'EXISTE NULLE PART DANS LE VOCABULAIRE RÉEL → c'est l'ADRESSE qui est
+  // injoignable, jamais la preuve que la leçon est morte. Le geste qui suit est opposé.
+  const absent928 = tl928.diagnostiquerLeconsMuettes([lecon928('L99', ['zorglub'])], { corpus: ['corriger le suivi', 'écrire un blueprint'], jamaisRemontees: ['L99'] });
+  assert.equal(absent928.cas[0].verdict, 'vocabulaire-absent', 'a lesson whose terrain words never occur in the real vocabulary is diagnosed as unreachable, not as dead weight');
+  assert.match(absent928.cas[0].geste, /jamais retirer la leçon/, 'and the prescribed gesture must say explicitly not to remove it — the whole danger of this measure is that it invites the opposite');
+
+  // SES MOTS SORTENT → son terrain est joignable, la cause est ailleurs. On s'arrête là, et c'est
+  // délibéré : dire « elle a concouru et perdu » serait une déduction que la mesure ne porte pas.
+  const joignable928 = tl928.diagnostiquerLeconsMuettes([lecon928('L98', ['suivi'])], { corpus: ['corriger le suivi', 'le suivi des tâches'], jamaisRemontees: ['L98'] });
+  assert.equal(joignable928.cas[0].verdict, 'adresse-atteignable', 'a lesson whose words DO occur is diagnosed as reachable: the fault is not its terrain');
+  assert.equal(joignable928.cas[0].occurrences, 2, 'and the number of real occurrences is counted, never estimated');
+
+  // AUCUN VERDICT NE DIT « À RETIRER » — l'invariant central de cette tâche.
+  const tousLesVerdicts928 = [...absent928.cas, ...joignable928.cas].map((c) => c.verdict);
+  assert.ok(tousLesVerdicts928.every((v) => v !== 'a-retirer' && v !== 'poids-mort'), 'no verdict may ever read "remove it": this function rules out the two MECHANICAL causes so that a good lesson is never removed because of a bad address. Judging a lesson still useful requires rereading it, and that is a human call');
+
+  // UN CORPUS ABSENT NE REND JAMAIS UN VERDICT (leçons L5/L11) — sans lui, « vocabulaire absent »
+  // et « corpus absent » se ressemblent trait pour trait, et une seule des deux est une trouvaille.
+  assert.equal(tl928.diagnostiquerLeconsMuettes([lecon928('L97', ['x'])], { corpus: null, jamaisRemontees: ['L97'] }).mesurable, false, 'no corpus means PAS MESURÉ, never a verdict');
+  assert.equal(tl928.diagnostiquerLeconsMuettes([lecon928('L97', ['x'])], { corpus: [], jamaisRemontees: ['L97'] }).mesurable, false, 'an empty corpus likewise');
+  assert.match(tl928.formatLeconsMuettesLines(tl928.diagnostiquerLeconsMuettes([], { corpus: null })) [0], /PAS MESURÉ/, 'and the printed line says so');
+
+  // AUCUNE MUETTE = RIEN À DIAGNOSTIQUER, et c'est un état distinct de « pas mesuré ».
+  const rien928 = tl928.diagnostiquerLeconsMuettes([lecon928('L96', ['x'])], { corpus: ['y'], jamaisRemontees: [] });
+  assert.equal(rien928.mesurable, true, 'having nothing to diagnose is a MEASURED result, not an absence of measurement');
+  assert.deepEqual(rien928.cas, [], 'and it lists nothing rather than inventing a case');
+
+  // UNE MUETTE CITÉE QUI N'EXISTE PAS DANS LE REGISTRE EST SIGNALÉE, jamais avalée en silence :
+  // deux sources qui se contredisent est en soi la trouvaille.
+  assert.equal(tl928.diagnostiquerLeconsMuettes([], { corpus: ['y'], jamaisRemontees: ['L95'] }).cas[0].verdict, 'introuvable', 'a lesson named as mute but absent from the register is reported, because one of the two sources is wrong and silence would hide which');
+
+  // BRANCHÉ SUR LE VRAI DÉPÔT (Article 25).
+  const corpusReel928 = tl928.corpusDesTaches();
+  assert.ok(Array.isArray(corpusReel928) && corpusReel928.length > 100, 'the real task vocabulary must actually be read from docs/suivi/sessions — a measure demonstrated only on fixtures has never met the thing it measures');
+
+  console.log("Passed: poids mort, ou adresse injoignable ? (2026-09-26, tâche #928) — onze leçons du registre n'étaient jamais remontées, et le chiffre seul poussait au mauvais geste : les retirer. La mesure sépare les deux causes mécaniques contre le vocabulaire réel de 885 tâches du projet, et la réponse est nette : ZÉRO sur onze est du poids mort. Trois (L9, L17, L20) écrivent leur terrain dans un vocabulaire que ce projet n'emploie jamais pour nommer son travail — « stub », « fixture », « migrer », « factoriser » ne sortent pas une seule fois d'un intitulé de tâche, alors que ces leçons sont bonnes : c'est leur ADRESSE qui est injoignable. Les huit autres ont un terrain parfaitement joignable, et leur silence vient d'ailleurs. Aucun verdict ne dit « à retirer », et c'est l'invariant que ces tests protègent : retirer une entrée est irréversible en pratique, personne ne se souvient de la remettre, et juger qu'une leçon a cessé de servir demande de la relire — un jugement humain, pas une mesure. La limite est déclarée dans le code plutôt que tue : le corpus est le vocabulaire des INTITULÉS, un proxy plus étroit que la phrase réellement soumise au sélecteur, donc « vocabulaire absent » veut dire « injoignable par ce vocabulaire-là », jamais « injoignable tout court ».");
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// UN TERRAIN COUPÉ EN DEUX QUI PASSAIT QUAND MÊME (2026-09-26, tâche #928)
+// ————————————————————————————————————————————————————————————————————————
+// Le garde-fou existait (`terrainCoupe`) et avait un trou : il exigeait que la première ligne ne
+// rende AUCUN mot. Une ligne coupée qui en rend un seul n'était donc ni « sans terrain » ni
+// « terrain coupé » — et ses autres mots, plus tout son champ `fichiers`, disparaissaient en
+// silence. Sept entrées réelles du registre étaient dans ce cas, dont six perdaient entièrement
+// leur terrain par FICHIER : la moitié du sélecteur ne fonctionnait pas pour elles.
+{
+  const tlT = await import('../scripts/tool-learning.mjs');
+
+  // IL DOIT MORDRE sur une ligne tronquée, même quand elle rend déjà un mot — c'est très
+  // exactement le cas que l'ancien garde-fou laissait passer.
+  const coupeT = tlT.findTerrainsCoupes('## L99 — titre\n**Terrain** : quand x · mots : un\ndeux, trois · fichiers : scripts/*.mjs\n');
+  assert.equal(coupeT.length, 1, 'a Terrain line lacking its "· fichiers :" segment is truncated, whatever the first line already yields');
+  assert.equal(coupeT[0].id, 'L99', 'and the entry is named, otherwise the fix is a hunt through a thousand-line register');
+  assert.match(coupeT[0].perdu, /deux, trois/, 'the report must say WHAT is lost, not merely that something is');
+
+  // LES DEUX AUTRES SENS (BP4). Une ligne complète passe ; une absence DÉCLARÉE passe aussi, parce
+  // qu'elle est une décision écrite et non un oubli — c'est le cas réel de BP1.
+  assert.deepEqual(tlT.findTerrainsCoupes('## L98 — t\n**Terrain** : quand x · mots : a, b · fichiers : scripts/*.mjs\n'), [], 'a complete line is never flagged');
+  assert.deepEqual(tlT.findTerrainsCoupes('## L97 — t\n**Terrain** : quand x · mots : a · aucun fichier : aucun chemin ne porte ce cas\n'), [], 'a DECLARED absence of file terrain is a complete declaration, not a truncation — the reason lives inside the line, where the guard reads it, never in a note beside it that no mechanism links to the rule (Article 24)');
+  assert.equal(tlT.findTerrainsCoupes('## L96 — t\n**Terrain** : quand x · mots : a\n\n**Porté par** : `f()`\n')[0].perdu.includes('jamais été écrit'), true, 'a line truncated with nothing after it says so explicitly rather than reporting an empty loss');
+
+  // BRANCHÉ SUR LE VRAI REGISTRE (Article 25) — les sept cas réels ont été recollés le jour même.
+  const { readFileSync: lireLeconsT } = await import('node:fs');
+  assert.deepEqual(tlT.findTerrainsCoupes(lireLeconsT('docs/referentiel/lecons.md', 'utf8')), [], 'the real register must carry no cut Terrain any more: seven were found and rejoined the day this guard was written, and six of them had silently lost their entire FILE terrain');
+
+  console.log("Passed: un terrain coupé en deux qui passait quand même (2026-09-26, tâche #928) — le garde-fou existait et n'attrapait que le cas total. Il exigeait qu'une ligne Terrain tronquée ne rende AUCUN mot ; une ligne qui en rendait ne serait-ce qu'un seul passait pour saine, et tout ce qui suivait le retour à la ligne était perdu sans bruit. Sept entrées réelles étaient dans ce cas, et six y perdaient entièrement leur terrain par FICHIER — la moitié du sélecteur, celle qui fait remonter une leçon parce qu'on touche le fichier qu'elle concerne, ne fonctionnait tout simplement pas pour elles. Le signal retenu ne devine rien : le champ Terrain se termine par son segment « · fichiers : », donc une ligne sans ce segment est tronquée, point. Une absence DÉCLARÉE (« · aucun fichier : <raison> ») passe, parce qu'elle est une décision écrite et non un oubli — et la raison a été déplacée DANS la ligne, là où le garde-fou la lit, plutôt que dans une note à côté qu'aucun mécanisme ne reliait à la règle.");
+}

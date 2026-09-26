@@ -923,6 +923,147 @@ function poidsDe(id, poids) {
   return poids.pesees.find((x) => x.id === id)?.remontees ?? 0;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// POIDS MORT, OU ADRESSE INJOIGNABLE ? (2026-09-26, tâche #928)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CHIFFRE QUI A OUVERT LA TÂCHE : L7, L9, L17 et L18 n'ont JAMAIS été remontées, respectivement
+// en 352, 342, 294 et 275 occasions. Deux lectures possibles, et elles appellent des gestes
+// OPPOSÉS — retirer la leçon, ou corriger la façon dont on la retrouve.
+//
+// CE QUI LES SÉPARE, ET C'EST MESURABLE PLUTÔT QU'OPINABLE : est-ce que les MOTS de son terrain
+// apparaissent, ne serait-ce qu'une fois, dans le vocabulaire réel des tâches de ce projet ?
+//
+//   · vocabulaire-absent  → aucun mot de son terrain ne ressort JAMAIS dans une vraie tâche. Ce
+//                           n'est pas la leçon qui est morte, c'est son ADRESSE qui est injoignable.
+//                           Le geste est de corriger le terrain, JAMAIS de retirer la leçon.
+//   · adresse-atteignable → ses mots ressortent bien dans le vocabulaire réel. Son terrain n'est
+//                           donc PAS le problème, et la cause est ailleurs : le plafond du
+//                           sélecteur, ou une formulation différente au point de remontée réel.
+//                           Le geste est au sélecteur, jamais à la leçon.
+//   · servie              → elle est bien remontée au moins une fois : rien à instruire.
+//
+// LA LIMITE DE LA MESURE, DÉCLARÉE PLUTÔT QUE TUE : le corpus est le vocabulaire des INTITULÉS de
+// tâches du suivi (sujet + sous-sujet), pas la phrase exacte que reçoit `leconsPourTache()` au
+// moment réel où elle choisit — celle-là vit dans la conversation et nulle part sur disque. C'est
+// donc un PROXY, et il est plus étroit que la réalité : « factoriser » sort zéro fois des intitulés
+// alors qu'une vraie tâche de refonte s'appelle bien comme ça ailleurs. Conséquence directe :
+// « vocabulaire-absent » veut dire « injoignable par ce vocabulaire-LÀ », jamais « injoignable tout
+// court ». Un verdict qui prétendrait plus serait faux, et un faux verdict sur un registre de
+// leçons est exactement le genre d'erreur que ce registre existe pour éviter.
+//
+// POURQUOI AUCUN DES TROIS NE DIT « À RETIRER » : cette fonction ne sait pas juger si une leçon est
+// encore utile — ça demande de la relire, et c'est un jugement humain. Elle écarte seulement les
+// deux causes MÉCANIQUES, pour qu'on ne retire jamais une bonne leçon à cause d'une mauvaise
+// adresse. Retirer une entrée est irréversible en pratique : personne ne se souviendra de la
+// remettre, et c'est la raison exacte pour laquelle la tâche refusait de trancher sans mesure.
+// UN TERRAIN COUPÉ EN DEUX QUI PASSE QUAND MÊME (2026-09-26, tâche #928, trouvé en corrigeant L9)
+//
+// LE GARDE-FOU EXISTAIT ET AVAIT UN TROU. `terrainCoupe` signale une entrée dont le champ Terrain
+// s'étale sur deux lignes — seule la première est lue — MAIS il exige que cette première ligne ne
+// rende AUCUN mot. L9 en rendait un (« point d'étape ») : elle n'était donc ni « sans terrain » ni
+// « terrain coupé », et ses cinq autres mots plus son champ `fichiers` étaient perdus en silence
+// depuis qu'elle a été écrite. Un garde-fou qui n'attrape que le cas total laisse passer le cas
+// partiel, qui est le plus courant et le plus discret.
+//
+// LE SIGNAL, SANS AMBIGUÏTÉ POSSIBLE : le champ Terrain se termine par son segment « · fichiers : ».
+// Une ligne Terrain sans ce segment est une ligne tronquée, point. On ne devine rien sur la suite.
+// UNE ABSENCE DÉCLARÉE N'EST PAS UNE LIGNE TRONQUÉE (même patron que les exclusions motivées
+// ailleurs dans ce paysage) : « · aucun fichier : <raison> » est une déclaration complète, et BP1
+// est le cas réel — « la même correction à plusieurs endroits » ne se lit dans aucun chemin en
+// particulier. La raison vit DANS la ligne, là où le garde-fou la lit, jamais dans une note à côté
+// qu'aucun mécanisme ne relie à la règle (Article 24).
+export const TERRAIN_COMPLET = /·\s*(?:fichiers|aucun fichier)\s*:/;
+
+export function findTerrainsCoupes(texte = "") {
+  const lignes = String(texte).split("\n");
+  const coupes = [];
+  let idCourant = null;
+  for (let i = 0; i < lignes.length; i += 1) {
+    const m = lignes[i].match(/^##\s+(L\d+|BP\d+)\s/);
+    if (m) { idCourant = m[1]; continue; }
+    if (!lignes[i].startsWith("**Terrain**")) continue;
+    if (TERRAIN_COMPLET.test(lignes[i])) continue;
+    const suite = (lignes[i + 1] ?? "").trim();
+    coupes.push({
+      id: idCourant,
+      ligne: i + 1,
+      // On dit CE QUI EST PERDU, pas seulement qu'il manque quelque chose : sans ça, le lecteur
+      // doit rouvrir le fichier pour comprendre de quoi on parle.
+      perdu: suite && !suite.startsWith("**") ? suite : "(rien sur la ligne suivante — le champ « · fichiers : » n'a jamais été écrit)",
+    });
+  }
+  return coupes;
+}
+
+export function formatTerrainsCoupesLines(coupes = []) {
+  if (!coupes.length) return ["✅ Aucun terrain coupé : chaque champ Terrain tient sur une ligne et déclare ses fichiers."];
+  const L = [`🔴 ${coupes.length} champ(s) Terrain COUPÉ(S) — seule la première ligne est lue, le reste est perdu en silence :`];
+  for (const c of coupes) L.push(`   · ${c.id ?? "?"} (ligne ${c.ligne}) — perdu : ${c.perdu.slice(0, 110)}`);
+  L.push("   Le champ Terrain doit tenir sur UNE ligne et finir par « · fichiers : … ».");
+  return L;
+}
+
+export const SUIVI_SESSIONS = "docs/suivi/sessions";
+
+// Le corpus est le vocabulaire RÉEL des tâches du projet, lu sur disque — jamais une liste de mots
+// supposés représentatifs, qui mesurerait ce que j'imagine du projet plutôt que le projet.
+export function corpusDesTaches({ root = ROOT, lireDossier = readdirSync, readFileImpl = readFileSync } = {}) {
+  const dir = join(root, SUIVI_SESSIONS);
+  let fichiers = [];
+  try { fichiers = lireDossier(dir).filter((f) => String(f).endsWith(".md")); } catch { return null; }
+  if (!fichiers.length) return null;
+  const phrases = [];
+  for (const f of fichiers) {
+    let texte = "";
+    try { texte = readFileImpl(join(dir, f), "utf8"); } catch { continue; }
+    for (const l of texte.split("\n")) {
+      if (!l.startsWith("|")) continue;
+      const cells = l.split("|").slice(1, -1);
+      if (cells.length < 6) continue;
+      // Sujet + sous-sujet : ce qu'une tâche DIT d'elle-même, qui est exactement ce que
+      // leconsPourTache() reçoit au moment où il choisit. Le détail entier noierait le signal.
+      const phrase = `${cells[3] ?? ""} ${cells[4] ?? ""}`.toLowerCase().trim();
+      if (phrase) phrases.push(phrase);
+    }
+  }
+  return phrases.length ? phrases : null;
+}
+
+export function diagnostiquerLeconsMuettes(lecons = [], { corpus = null, jamaisRemontees = [], max = 3 } = {}) {
+  if (!corpus?.length) return { mesurable: false, pourquoi: "aucun vocabulaire de tâches lisible — sans corpus réel, « vocabulaire absent » et « corpus absent » se ressemblent trait pour trait, et une seule des deux est une trouvaille (leçon L5)", cas: [] };
+  if (!jamaisRemontees.length) return { mesurable: true, cas: [], pourquoi: "aucune leçon n'est restée muette : rien à diagnostiquer" };
+  const cas = [];
+  for (const id of jamaisRemontees) {
+    const l = lecons.find((x) => x.id === id);
+    if (!l) { cas.push({ id, verdict: "introuvable", pourquoi: `${id} est citée comme muette et n'existe pas dans le registre — une des deux sources se trompe` }); continue; }
+    if (!l.mots?.length) { cas.push({ id, verdict: "sans-terrain", pourquoi: "aucun mot de terrain déclaré : elle ne peut remonter d'aucune façon, et un autre garde-fou le dit déjà" }); continue; }
+    const vus = l.mots.filter((m) => corpus.some((p) => p.includes(m)));
+    if (!vus.length) {
+      cas.push({ id, verdict: "vocabulaire-absent", mots: l.mots, geste: "corriger le TERRAIN dans le vocabulaire où les tâches sont réellement nommées, jamais retirer la leçon", pourquoi: `aucun de ses ${l.mots.length} mot(s) de terrain n'apparaît une seule fois dans les intitulés des ${corpus.length} tâches réelles — son adresse est écrite dans un vocabulaire que ce projet n'emploie pas pour nommer son travail, ce qui ne dit rien de sa valeur` });
+      continue;
+    }
+    // Ses mots sortent : son terrain n'est PAS le problème. On s'arrête là — dire « elle a donc
+    // concouru et perdu » serait une déduction de plus que la mesure ne porte, puisque le corpus
+    // est un proxy des phrases réellement soumises au sélecteur.
+    const occurrences = corpus.filter((p) => l.mots.some((m) => p.includes(m))).length;
+    cas.push({ id, verdict: "adresse-atteignable", motsVus: vus, occurrences, geste: `chercher ailleurs que dans le terrain : le plafond du sélecteur (max=${max}), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel`, pourquoi: `ses mots ressortent dans ${occurrences} intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs` });
+  }
+  return { mesurable: true, cas, corpus: corpus.length };
+}
+
+export function formatLeconsMuettesLines(r) {
+  if (!r.mesurable) return [`❓ Leçons jamais remontées : PAS MESURÉ — ${r.pourquoi}`];
+  if (!r.cas.length) return [`✅ ${r.pourquoi}`];
+  const L = [`${r.cas.length} leçon(s) jamais remontée(s), diagnostiquée(s) contre le vocabulaire réel de ${r.corpus} tâche(s) :`];
+  for (const c of r.cas) {
+    L.push(`  · ${c.id} — ${c.verdict} : ${c.pourquoi}`);
+    if (c.geste) L.push(`    → ${c.geste}`);
+  }
+  L.push("  AUCUN de ces verdicts ne dit « à retirer » : écarter les deux causes mécaniques sert justement à ne jamais retirer une bonne leçon à cause d'une mauvaise adresse.");
+  return L;
+}
+
 export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsImpl = existsSync, sourcesImpl } = {}) {
   const chemin = join(root, LECONS_PATH);
   // L5 appliquée à cet audit lui-même : un registre absent n'est pas un registre conforme.
@@ -1430,6 +1571,22 @@ function main() {
   const groupes = auditL.mesure === "mesuré" ? groupesEquivalents(auditL.lecons) : [];
   console.log("");
   for (const l of formatRemontees(remontees, groupes)) console.log(l);
+
+  // UN TERRAIN COUPÉ EN DEUX (2026-09-26, tâche #928) — avant le diagnostic, parce qu'un terrain
+  // tronqué fausse justement ce diagnostic : il ferait passer pour injoignable une adresse qui est
+  // seulement à moitié lue.
+  console.log("");
+  for (const l of formatTerrainsCoupesLines(findTerrainsCoupes(
+    auditL.mesure === "mesuré" ? readFileSync(join(ROOT, LECONS_PATH), "utf8") : "",
+  ))) console.log(l);
+
+  // POIDS MORT, OU ADRESSE INJOIGNABLE ? (2026-09-26, tâche #928) — placé juste après la liste des
+  // muettes, parce que « jamais servie » sans sa cause pousse au mauvais geste : retirer l'entrée.
+  console.log("");
+  for (const l of formatLeconsMuettesLines(diagnostiquerLeconsMuettes(
+    auditL.mesure === "mesuré" ? auditL.lecons : [],
+    { corpus: corpusDesTaches(), jamaisRemontees: remontees.aRetirer },
+  ))) console.log(l);
 
   // LA REMISE À NIVEAU DU CODE (2026-09-23, chantier 7) — « est-ce que tout le code bénéficie de la
   // leçon que tu as apprise ? ». Couche MÉCANIQUE et continue : elle pose la question sur les

@@ -255,3 +255,54 @@ ne pouvait pas changer le comportement par défaut, et un test le vérifie.
 « aucun corpus fourni » et « un corpus vide fourni » s'écrivaient pareil, et le second retombait
 silencieusement sur la lecture du dépôt — deux intentions opposées confondues par une valeur par
 défaut. Trouvé par un test, pas par une relecture.)*
+
+## Poids mort, ou adresse injoignable ? (2026-09-26, tâche #928)
+
+**La question qui a ouvert la tâche** : onze leçons du registre n'avaient JAMAIS été remontées,
+certaines en plus de 300 occasions. Deux lectures possibles, **et elles appellent des gestes
+opposés** — retirer la leçon, ou corriger la façon dont on la retrouve.
+
+**Ce qui les sépare, et c'est mesurable plutôt qu'opinable** : est-ce que les MOTS de son terrain
+apparaissent, ne serait-ce qu'une fois, dans le vocabulaire réel des tâches du projet ?
+
+| Verdict | Ce que ça veut dire | Le geste |
+|---|---|---|
+| `vocabulaire-absent` | aucun mot de son terrain ne ressort d'un intitulé de tâche réel | corriger le TERRAIN — **jamais** retirer la leçon |
+| `adresse-atteignable` | ses mots ressortent : son terrain est joignable, la cause est ailleurs | regarder le plafond du sélecteur, le poids des entrées qui passent devant |
+| `introuvable` | citée comme muette et absente du registre | une des deux sources se trompe, et le silence cacherait laquelle |
+
+**Aucun verdict ne dit « à retirer », et c'est l'invariant central.** Retirer une entrée est
+irréversible en pratique : personne ne se souviendra de la remettre. Juger qu'une leçon a cessé de
+servir demande de la relire — un jugement humain, pas une mesure. Cette fonction écarte seulement
+les deux causes MÉCANIQUES, pour qu'on ne retire jamais une bonne leçon à cause d'une mauvaise
+adresse.
+
+**Le résultat réel du premier passage : ZÉRO sur onze est du poids mort.** Trois (L9, L17, L20)
+écrivaient leur terrain dans un vocabulaire que ce projet n'emploie jamais pour nommer son
+travail — « stub », « fixture », « migrer », « factoriser » ne sortent pas une seule fois d'un
+intitulé de tâche. Leurs terrains ont été corrigés le jour même ; les trois sont redevenues
+joignables.
+
+**La limite est déclarée, jamais tue** : le corpus est le vocabulaire des INTITULÉS de tâches
+(sujet + sous-sujet du suivi), pas la phrase exacte que reçoit `leconsPourTache()` au moment réel
+où elle choisit — celle-là vit dans la conversation et nulle part sur disque. C'est donc un PROXY,
+plus étroit que la réalité. « Vocabulaire absent » veut dire « injoignable par ce vocabulaire-là »,
+jamais « injoignable tout court ».
+
+## Le terrain coupé en deux, et le garde-fou qui ne l'attrapait qu'à moitié
+
+**Trouvé en corrigeant L9**, donc en faisant tout autre chose. `terrainCoupe` signalait déjà une
+entrée dont le champ Terrain s'étale sur deux lignes — seule la première est lue — **mais il
+exigeait que cette première ligne ne rende AUCUN mot**. Une ligne coupée qui en rendait ne
+serait-ce qu'un seul n'était ni « sans terrain » ni « terrain coupé ».
+
+**Sept entrées réelles étaient dans ce cas** (L9, L26, L27, L28, L29, L30, BP1), et **six y
+perdaient entièrement leur terrain par FICHIER** : la moitié du sélecteur — celle qui fait remonter
+une leçon parce qu'on touche le fichier qu'elle concerne — ne fonctionnait tout simplement pas pour
+elles.
+
+**Le signal ne devine rien** : le champ Terrain se termine par son segment `· fichiers :`. Une
+ligne sans ce segment est tronquée, point. Une **absence déclarée** (`· aucun fichier : <raison>`)
+passe, parce qu'elle est une décision écrite et non un oubli — c'est le cas de BP1, dont la raison
+a été déplacée DANS la ligne, là où le garde-fou la lit, plutôt que dans une note à côté qu'aucun
+mécanisme ne reliait à la règle (Article 24).
