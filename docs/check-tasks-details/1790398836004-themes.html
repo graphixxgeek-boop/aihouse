@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>État des tâches — la file par THÈME</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-26T05:00:36.003Z</div>
+    <h1>État des tâches — la file par THÈME</h1>
+    <p class="sub">Où la file s'accumule vraiment · lecture seule de docs/suivi/</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p>97 tâches ouvertes, 31 thèmes, 8 familles. **La famille se lit d'un coup d'œil, le thème dit où c'est.**</p></div>
+<table><thead><tr><th>Famille</th><th>Ouvertes</th><th>Critiques</th><th>Les thèmes qu'elle couvre</th></tr></thead><tbody><tr><td>**Process &amp; Ronde**</td><td>23</td><td>3</td><td>Process (12) · Ronde (10) · Conduite (1)</td></tr><tr><td>**Organisation de l'Agence**</td><td>19</td><td>—</td><td>Organisation (8) · Agence (5) · Badge (2) · CASSANDRA-RH (2) · Classification (1) · Exportabilité (1)</td></tr><tr><td>**Outillage &amp; garde-fous**</td><td>17</td><td>1</td><td>Outillage (8) · Coordination (3) · Compteur d'usage (2) · Crochet post-commit (1) · Filet (1) · tool-brain (1) · Veille (1)</td></tr><tr><td>**Charte &amp; référentiel**</td><td>13</td><td>2</td><td>Charte (7) · Documentation (4) · Idées (1) · Standards (1)</td></tr><tr><td>**Suivi &amp; file**</td><td>9</td><td>—</td><td>Suivi (4) · XP (3) · File (2)</td></tr><tr><td>**Données &amp; mesure**</td><td>8</td><td>1</td><td>Données (3) · Profil utilisateur (2) · Sauvegarde (2) · Conso (1)</td></tr><tr><td>**Nommage &amp; vocabulaire**</td><td>6</td><td>1</td><td>Nommage (5) · TOOL_PORTEE (1)</td></tr><tr><td>**Le jeu et le site**</td><td>2</td><td>—</td><td>check-spirit (1) · Refonte graphique (1)</td></tr></tbody></table>
+<h2>Le détail, thème par thème</h2>
+<div class="highlight"><p>97 tâches ouvertes réparties sur 31 thèmes. Les 30 des trois premiers thèmes pèsent 31 % de la file à elles seules.</p></div>
+<table><thead><tr><th>Thème</th><th>Ouvertes</th><th>Dont critiques/urgentes</th><th>La plus ancienne</th><th>Numéros</th></tr></thead><tbody><tr><td>**Process**</td><td>12</td><td>1</td><td>2026-09-22</td><td>#436 · #567 · #603 · #701 · #706 · #723 · #724 · #732 · #769 · #770 · #773 · #846</td></tr><tr><td>**Ronde**</td><td>10</td><td>1</td><td>2026-09-22</td><td>#490 · #491 · #492 · #493 · #566 · #574 · #721 · #726 · #841 · #842</td></tr><tr><td>**Organisation**</td><td>8</td><td>—</td><td>2026-09-23</td><td>#439 · #636 · #656 · #657 · #696 · #707 · #710 · #737</td></tr><tr><td>**Outillage**</td><td>8</td><td>—</td><td>2026-09-22</td><td>#390 · #571 · #575 · #580 · #612 · #695 · #705 · #746</td></tr><tr><td>**Charte**</td><td>7</td><td>2</td><td>2026-09-23</td><td>#624 · #659 · #760 · #765 · #766 · #767 · #790</td></tr><tr><td>**Agence**</td><td>5</td><td>—</td><td>2026-09-24</td><td>#745 · #748 · #793 · #800 · #803</td></tr><tr><td>**Nommage**</td><td>5</td><td>1</td><td>2026-09-24</td><td>#733 · #740 · #747 · #768 · #775</td></tr><tr><td>**Documentation**</td><td>4</td><td>—</td><td>2026-09-23</td><td>#604 · #623 · #629 · #711</td></tr><tr><td>**Suivi**</td><td>4</td><td>—</td><td>2026-09-24</td><td>#687 · #699 · #708 · #787</td></tr><tr><td>**Coordination**</td><td>3</td><td>—</td><td>2026-09-24</td><td>#677 · #714 · #715</td></tr><tr><td>**Données**</td><td>3</td><td>—</td><td>2026-09-25</td><td>#795 · #813 · #814</td></tr><tr><td>**XP**</td><td>3</td><td>—</td><td>2026-09-24</td><td>#679 · #681 · #749</td></tr><tr><td>**Badge**</td><td>2</td><td>—</td><td>2026-09-25</td><td>#801 · #853</td></tr><tr><td>**CASSANDRA-RH**</td><td>2</td><td>—</td><td>2026-09-24</td><td>#709 · #713</td></tr><tr><td>**Compteur d'usage**</td><td>2</td><td>—</td><td>2026-09-25</td><td>#778 · #823</td></tr><tr><td>**File**</td><td>2</td><td>—</td><td>2026-09-25</td><td>#805 · #845</td></tr><tr><td>**Profil utilisateur**</td><td>2</td><td>—</td><td>2026-09-24</td><td>#717 · #728</td></tr><tr><td>**Sauvegarde**</td><td>2</td><td>1</td><td>2026-09-24</td><td>#700 · #725</td></tr><tr><td>**check-spirit**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#810</td></tr><tr><td>**Classification**</td><td>1</td><td>—</td><td>2026-09-24</td><td>#750</td></tr><tr><td>**Conduite**</td><td>1</td><td>1</td><td>2026-09-24</td><td>#703</td></tr><tr><td>**Conso**</td><td>1</td><td>—</td><td>2026-09-24</td><td>#704</td></tr><tr><td>**Crochet post-commit**</td><td>1</td><td>1</td><td>2026-09-25</td><td>#798</td></tr><tr><td>**Exportabilité**</td><td>1</td><td>—</td><td>2026-09-24</td><td>#668</td></tr><tr><td>**Filet**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#819</td></tr><tr><td>**Idées**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#830</td></tr><tr><td>**Refonte graphique**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#861</td></tr><tr><td>**Standards**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#796</td></tr><tr><td>**TOOL_PORTEE**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#807</td></tr><tr><td>**tool-brain**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#777</td></tr><tr><td>**Veille**</td><td>1</td><td>—</td><td>2026-09-25</td><td>#771</td></tr></tbody></table>
+<p class="note">le thème se lit sur la TÊTE du sujet, jamais sur le contenu de la tâche : deux tâches du même sujet rangées sous deux têtes différentes resteront séparées ici, et c'est une question d'écriture, pas de mesure.</p></main>
+  <div class="divider"></div><footer><p>check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.</p></footer>
+</div>
+</body>
+</html>

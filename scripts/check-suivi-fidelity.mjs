@@ -155,12 +155,24 @@ export function categorizeTasks(sessionText) {
     else if (/^en cours/.test(s)) buckets.enCours.push(entry);
     // « en attente de décision » est une tâche OUVERTE qui attend l'utilisateur, jamais une
     // décision déjà prise : la ranger ailleurs la ferait disparaître de ce qu'il reste à trancher.
-    else if (/^ouverte/.test(s) || /^a faire/.test(s) || /^a traiter/.test(s) || /^en attente/.test(s)) buckets.ouverte.push(entry);
+    // TROIS FORMES DE PLUS, TROUVÉES LE 2026-09-26 en faisant le ménage de la file à sa demande.
+    // Elles tombaient dans « autre », c'est-à-dire nulle part : quatre tâches réelles comptées
+    // ouvertes faute de mieux, sans que personne sache ce qu'elles attendaient vraiment.
+    //   · « A-TRANCHER » (#853, #861) — elle attend SA décision : c'est la définition même d'une
+    //     tâche ouverte, et c'est déjà ce que « en attente de décision » veut dire juste au-dessus ;
+    //   · « Ouverte → Avancée » (#813) — le normaliseur lit la DROITE d'une flèche, qui est le
+    //     dernier état atteint, et rendait donc « avancee » : un mot qu'aucun seau ne connaissait.
+    //     Avancée n'est pas close. Une tâche qui progresse reste une tâche à finir, et la ranger
+    //     ailleurs la ferait disparaître du reste à faire au moment précis où elle avance.
+    else if (/^ouverte/.test(s) || /^a faire/.test(s) || /^a traiter/.test(s) || /^en attente/.test(s) || /^a.?trancher/.test(s) || /^avanc/.test(s)) buckets.ouverte.push(entry);
     // ÉCARTÉE/REPORTÉE EST UNE DÉCISION DE L'UTILISATEUR, jamais un reste à faire : la ranger
     // avec les tâches ouvertes la lui re-proposerait à chaque passage, exactement ce qu'il a
     // demandé qu'on ne fasse jamais (« ne jamais écarter une zone sciemment laissée de côté par
     // moi » — pris par l'autre bout : ne jamais rouvrir ce qu'il a fermé, cf. leçon L22).
-    else if (/^ecart/.test(s) || /^report/.test(s) || /^abandon/.test(s)) buckets.ecartee.push(entry);
+    //   · « Sortie de la file » (#734) — c'est SA décision explicite du 2026-09-26 (« je sors #734
+    //     SQUID GAME de la file, refonte graphique »). La compter ouverte la lui reproposerait à
+    //     chaque passage, exactement ce que la leçon L22 interdit.
+    else if (/^ecart/.test(s) || /^report/.test(s) || /^abandon/.test(s) || /^sortie de la file/.test(s)) buckets.ecartee.push(entry);
     else buckets.autre.push(entry);
   }
   return buckets;

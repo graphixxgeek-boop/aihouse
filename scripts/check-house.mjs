@@ -8721,6 +8721,27 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(gros.rang, petit.rang, 'both carry the SAME rank — which is the whole point of the demonstration');
     assert.ok(gros.ajouts.length > petit.ajouts.length, `same rank, different equipment: the one that keeps a memory and renders a page owes more (${gros.ajouts.length}) than the one that only calls others (${petit.ajouts.length}) — nobody promoted it, the measurement noticed`);
     assert.ok(gros.ajouts.every((a) => a.pourquoi && a.ou), 'every derived obligation says WHERE it lives and WHY it is owed — an obligation without a reason gets deleted by the next agent (Article 27)');
+    // LA FILE PAR THÈME ET PAR FAMILLE (2026-09-26, son état des lieux : « une vue par THÈME des 98
+    // ouvertes », puis « regrouper en ~8 grandes familles »).
+    const CTD = await import('../scripts/check-tasks-details.mjs');
+    const vueReelle = CTD.themesDesTachesOuvertes(CTD.loadAllTaskRows());
+    assert.equal(vueReelle.mesurable, true, 'checked live against the real suivi, never a fixture');
+    assert.equal(CTD.themesDesTachesOuvertes([]).mesurable, false, 'and with no rows it REFUSES to answer rather than returning zero themes — a zero would read as an empty queue instead of a failed read (leçon L5)');
+    // LE THÈME SE LIT, IL NE SE DÉCLARE PAS : aucune liste de thèmes n'existe, donc aucune à périmer.
+    assert.ok(vueReelle.themes.length > 5, `the themes are derived from the head of each subject line, so a new one appears the day a task writes it — ${vueReelle.themes.length} today`);
+    // LES SANS-THÈME SONT COMPTÉS À PART, jamais rangés sous un thème inventé : un sujet écrit d'un
+    // bloc n'a pas de thème, il a une convention non respectée — et les deux gestes sont opposés.
+    assert.ok(Array.isArray(vueReelle.sansTheme), 'subjects written without the separator are counted apart rather than filed under an invented theme');
+    // LA TABLE DES FAMILLES EST LA SEULE LISTE MANUELLE DE CET OUTIL, donc la seule qui exige un
+    // garde-fou (Article 24) — et il se vérifie DANS LES DEUX SENS.
+    const famReelle = CTD.vueParFamille(vueReelle);
+    assert.equal(famReelle.mesurable, true, 'the family view computes against the real queue');
+    assert.deepEqual(famReelle.garde.orphelins.map((t) => t.theme), [], 'no real theme may fall outside every family: a theme with no family disappears from the family view, and an empty cell reads as "nothing to do here"');
+    const vueFactice = { mesurable: true, ouvertes: 1, themes: [{ theme: 'ThèmeQuiNExistePas', combien: 1, critiques: 0, numeros: [1] }], sansTheme: [] };
+    assert.equal(CTD.themesSansFamille(vueFactice).orphelins.length, 1, 'and the guard really bites: a theme absent from the table is reported, which is what keeps the only hand-kept list in this tool from going stale in silence');
+    assert.ok(CTD.familleDuTheme('Process'), 'a known theme resolves to its family');
+    assert.equal(CTD.familleDuTheme('n-importe-quoi'), null, 'and an unknown one returns null rather than a guessed family');
+
     // LES FAUSSES BIBLIOTHÈQUES (2026-09-26, né de sa question sur le document HTML : « c'est normal
     // ou on a loupé quelque chose dans leur conception ? »). La réponse ne pouvait pas être un avis :
     // le type « bibliothèque » se CONSTATE, il ne juge rien — mais un fichier peut porter une porte

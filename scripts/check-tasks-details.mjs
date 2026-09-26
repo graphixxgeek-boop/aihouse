@@ -2010,6 +2010,64 @@ function rondeCli() {
 // gestes opposés — l'un se range, l'autre se réécrit — et les confondre masquerait le second.
 export const SEPARATEUR_THEME = "/";
 
+// LES HUIT FAMILLES (2026-09-26, sa décision : « Regrouper en ~8 grandes familles »). Une file à
+// 31 entrées ne se lit pas d'un coup d'œil ; une file à 8 oui. Le THÈME reste la granularité fine
+// du suivi — il porte de l'information qu'on ne veut pas perdre — et la famille est une VUE par
+// dessus, jamais un remplacement.
+//
+// C'EST LA SEULE LISTE TENUE À LA MAIN DE CET OUTIL, ET ELLE NE PEUT PAS L'ÊTRE AUTREMENT :
+// rattacher « Filet » à l'outillage plutôt qu'aux garde-fous est un jugement, pas une mesure. Elle
+// est donc accompagnée du garde-fou que l'Article 24 exige dans ce cas précis :
+// `themesSansFamille()` crie dès qu'un thème nouveau n'entre nulle part — ce qui arrivera, parce
+// qu'un thème naît le jour où une tâche l'écrit. Sans lui, un thème neuf disparaîtrait en silence
+// de la vue par famille, et une case vide se lirait comme « rien à faire là ».
+export const FAMILLES_DE_THEMES = {
+  "Process & Ronde": ["Process", "Ronde", "Conduite"],
+  "Charte & référentiel": ["Charte", "Documentation", "Standards", "Idées"],
+  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Badge"],
+  "Suivi & file": ["Suivi", "File", "XP"],
+  "Nommage & vocabulaire": ["Nommage", "TOOL_PORTEE"],
+  "Outillage & garde-fous": ["Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille"],
+  "Données & mesure": ["Données", "Conso", "Sauvegarde", "Profil utilisateur"],
+  "Le jeu et le site": ["Refonte graphique", "check-spirit"],
+};
+
+export function familleDuTheme(theme, familles = FAMILLES_DE_THEMES) {
+  for (const [famille, themes] of Object.entries(familles)) if (themes.includes(theme)) return famille;
+  return null;
+}
+
+// LE GARDE-FOU DE LA SEULE LISTE MANUELLE : quels thèmes RÉELS n'entrent dans aucune famille ?
+export function themesSansFamille(vue, familles = FAMILLES_DE_THEMES) {
+  if (!vue?.mesurable) return { mesurable: false, pourquoi: vue?.pourquoi ?? "aucune vue par thème fournie" };
+  const orphelins = vue.themes.filter((t) => !familleDuTheme(t.theme, familles));
+  // L'autre sens compte autant : une famille qui cite un thème que plus aucune tâche ne porte est
+  // une ligne morte. Elle ne casse rien, mais elle fait croire que la famille couvre plus qu'elle.
+  const cites = new Set(Object.values(familles).flat());
+  const reels = new Set(vue.themes.map((t) => t.theme));
+  const citesSansTache = [...cites].filter((t) => !reels.has(t));
+  return { mesurable: true, orphelins, citesSansTache };
+}
+
+export function vueParFamille(vue, familles = FAMILLES_DE_THEMES) {
+  if (!vue?.mesurable) return { mesurable: false, pourquoi: vue.pourquoi };
+  const par = new Map(Object.keys(familles).map((f) => [f, []]));
+  for (const t of vue.themes) {
+    const f = familleDuTheme(t.theme, familles);
+    if (f) par.get(f).push(t);
+  }
+  const lignes = [...par.entries()]
+    .map(([famille, themes]) => ({
+      famille,
+      combien: themes.reduce((n, t) => n + t.combien, 0),
+      critiques: themes.reduce((n, t) => n + t.critiques, 0),
+      themes: themes.sort((a, b) => b.combien - a.combien),
+    }))
+    .filter((l) => l.combien)
+    .sort((a, b) => b.combien - a.combien);
+  return { mesurable: true, lignes, garde: themesSansFamille(vue, familles) };
+}
+
 export function themesDesTachesOuvertes(rows = [], { separateur = SEPARATEUR_THEME } = {}) {
   if (!Array.isArray(rows) || !rows.length) {
     return { mesurable: false, pourquoi: "aucune ligne de suivi lue — sans elles, un zéro thème se lirait comme une file vide au lieu d'une lecture ratée (leçon L5)" };
@@ -2040,6 +2098,17 @@ export function themesDesTachesOuvertes(rows = [], { separateur = SEPARATEUR_THE
 export function blocsDesThemes(vue) {
   if (!vue?.mesurable) return [{ type: "note", text: `🚨 PAS MESURÉ — ${vue?.pourquoi ?? "raison non fournie"}` }];
   const B = [];
+  const fam = vueParFamille(vue);
+  if (fam.mesurable) {
+    B.push({ type: "highlight", text: `${vue.ouvertes} tâches ouvertes, ${vue.themes.length} thèmes, ${fam.lignes.length} familles. **La famille se lit d'un coup d'œil, le thème dit où c'est.**` });
+    B.push({ type: "table", headers: ["Famille", "Ouvertes", "Critiques", "Les thèmes qu'elle couvre"], rows: fam.lignes.map((l) => [
+      `**${l.famille}**`, String(l.combien), l.critiques ? String(l.critiques) : "—",
+      l.themes.map((t) => `${t.theme} (${t.combien})`).join(" · "),
+    ]) });
+    if (fam.garde.orphelins.length) B.push({ type: "note", text: `⚠️ **${fam.garde.orphelins.length} thème(s) n'entrent dans aucune famille** : ${fam.garde.orphelins.map((t) => `${t.theme} (${t.combien})`).join(" · ")}. La table des familles est la SEULE liste tenue à la main de cet outil — la rattacher est un jugement, pas une mesure. Ce signal existe pour qu'elle ne se périme jamais en silence (Article 24).` });
+    if (fam.garde.citesSansTache.length) B.push({ type: "note", text: `ℹ️ ${fam.garde.citesSansTache.length} thème(s) cité(s) par une famille ne portent plus aucune tâche ouverte : ${fam.garde.citesSansTache.join(" · ")}. Rien de cassé — mais la famille couvre moins qu'elle n'annonce.` });
+  }
+  B.push({ type: "heading", level: 2, text: "Le détail, thème par thème" });
   B.push({ type: "highlight", text: `${vue.ouvertes} tâches ouvertes réparties sur ${vue.themes.length} thèmes. Les ${vue.themes.slice(0, 3).reduce((n, t) => n + t.combien, 0)} des trois premiers thèmes pèsent ${Math.round((vue.themes.slice(0, 3).reduce((n, t) => n + t.combien, 0) / vue.ouvertes) * 100)} % de la file à elles seules.` });
   B.push({ type: "table", headers: ["Thème", "Ouvertes", "Dont critiques/urgentes", "La plus ancienne", "Numéros"], rows: vue.themes.map((t) => [
     `**${t.theme}**`, String(t.combien), t.critiques ? String(t.critiques) : "—",
