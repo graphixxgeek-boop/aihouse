@@ -1996,6 +1996,84 @@ function rondeCli() {
   console.log(`Rapport HTML : ${htmlFile}`);
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LA VUE PAR THÈME (2026-09-26, sa demande pendant un état des lieux : « une vue par THÈME des 98
+// ouvertes »). Elle manquait, et son absence a un coût précis : une liste à plat de 98 lignes ne
+// dit pas OÙ la file s'accumule, donc ne permet pas de décider quoi dégager en premier.
+//
+// LE THÈME NE SE DÉCLARE PAS, IL SE LIT — le suivi écrit déjà chaque sujet sous la forme
+// « Thème / le détail », et la tête de cette ligne EST le thème. Aucune liste de thèmes n'est donc
+// tenue à la main : un thème nouveau apparaît le jour où une tâche l'écrit (Article 24).
+//
+// LES LIGNES SANS SÉPARATEUR SONT COMPTÉES À PART, jamais fondues dans un thème inventé : un sujet
+// écrit d'un bloc n'a pas de thème, il a une convention non respectée. Les deux appellent des
+// gestes opposés — l'un se range, l'autre se réécrit — et les confondre masquerait le second.
+export const SEPARATEUR_THEME = "/";
+
+export function themesDesTachesOuvertes(rows = [], { separateur = SEPARATEUR_THEME } = {}) {
+  if (!Array.isArray(rows) || !rows.length) {
+    return { mesurable: false, pourquoi: "aucune ligne de suivi lue — sans elles, un zéro thème se lirait comme une file vide au lieu d'une lecture ratée (leçon L5)" };
+  }
+  const ouvertes = rows.filter((r) => ["ouverte", "enCours", "autre"].includes(r.statusKey));
+  const parTheme = new Map();
+  const sansTheme = [];
+  for (const r of ouvertes) {
+    const sujet = String(r.sujet ?? "").trim();
+    const i = sujet.indexOf(separateur);
+    if (i === -1) { sansTheme.push(r); continue; }
+    const theme = sujet.slice(0, i).trim() || "(vide)";
+    (parTheme.get(theme) ?? parTheme.set(theme, []).get(theme)).push(r);
+  }
+  const themes = [...parTheme.entries()]
+    .map(([theme, taches]) => ({
+      theme,
+      combien: taches.length,
+      numeros: taches.map((t) => t.numero).filter((n) => Number.isFinite(n)).sort((a, b) => a - b),
+      critiques: taches.filter((t) => /CRITIQUE|URGENT/i.test(String(t.criticite ?? ""))).length,
+      plusAncienne: taches.map((t) => t.horodatage).filter(Boolean).sort()[0] ?? null,
+    }))
+    .sort((a, b) => b.combien - a.combien || a.theme.localeCompare(b.theme));
+  return { mesurable: true, ouvertes: ouvertes.length, themes, sansTheme,
+    horsPortee: "le thème se lit sur la TÊTE du sujet, jamais sur le contenu de la tâche : deux tâches du même sujet rangées sous deux têtes différentes resteront séparées ici, et c'est une question d'écriture, pas de mesure." };
+}
+
+export function blocsDesThemes(vue) {
+  if (!vue?.mesurable) return [{ type: "note", text: `🚨 PAS MESURÉ — ${vue?.pourquoi ?? "raison non fournie"}` }];
+  const B = [];
+  B.push({ type: "highlight", text: `${vue.ouvertes} tâches ouvertes réparties sur ${vue.themes.length} thèmes. Les ${vue.themes.slice(0, 3).reduce((n, t) => n + t.combien, 0)} des trois premiers thèmes pèsent ${Math.round((vue.themes.slice(0, 3).reduce((n, t) => n + t.combien, 0) / vue.ouvertes) * 100)} % de la file à elles seules.` });
+  B.push({ type: "table", headers: ["Thème", "Ouvertes", "Dont critiques/urgentes", "La plus ancienne", "Numéros"], rows: vue.themes.map((t) => [
+    `**${t.theme}**`, String(t.combien), t.critiques ? String(t.critiques) : "—",
+    t.plusAncienne ? String(t.plusAncienne).slice(0, 10) : "—",
+    t.numeros.map((n) => `#${n}`).join(" · ") || "—",
+  ]) });
+  if (vue.sansTheme.length) {
+    B.push({ type: "note", text: `⚠️ **${vue.sansTheme.length} tâche(s) ouverte(s) n'ont pas de thème** : leur sujet est écrit d'un bloc, sans le séparateur « ${SEPARATEUR_THEME} » que la convention du suivi attend. Ce n'est pas un défaut de rangement, c'est une convention non respectée — et elles sont donc invisibles à toute lecture par thème : ${vue.sansTheme.map((r) => `#${r.numero}`).join(" · ")}` });
+  }
+  B.push({ type: "note", text: vue.horsPortee });
+  return B;
+}
+
+function themesCli() {
+  const rows = loadAllTaskRows();
+  const vue = themesDesTachesOuvertes(rows);
+  const blocks = blocsDesThemes(vue);
+  const html = renderHtmlReport({
+    title: "État des tâches — la file par THÈME",
+    subtitle: "Où la file s'accumule vraiment · lecture seule de docs/suivi/",
+    dateLabel: new Date().toISOString(),
+    blocks,
+    footer: "check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.",
+  });
+  if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
+  const outFile = join(OUT_DIR, `${Date.now()}-themes.html`);
+  writeFileSync(outFile, html, "utf8");
+  console.log(renderTextReport({ tool: "check-tasks-details", title: "État des tâches — la file par THÈME", blocks }));
+  console.log(`
+Même rapport en HTML : ${outFile}`);
+  recordCliUsage("check-tasks-details", { origine: "demande" });
+  return outFile;
+}
+
 function bilanCli() {
   const rows = loadAllTaskRows();
   const figures = suiviFigures(rows);
@@ -2182,6 +2260,7 @@ function main() {
   // sous-commande existante ne réunissait : d'où on part, où on en est, et comment le reste
   // s'organise. Le livrable est le FICHIER (Article 31) ; ce qui s'imprime ici n'en est que l'écho.
   if (process.argv[2] === "bilan") return bilanCli();
+  if (process.argv[2] === "themes") return themesCli();
   if (process.argv[2] === "emiettement") {
     const rows = loadAllTaskRows();
     console.log(`\n=== ÉMIETTEMENT DE LA FILE — a-t-on coupé trop fin ? ===\n`);
