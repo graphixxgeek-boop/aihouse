@@ -64,5 +64,27 @@
     "sens": "plus bas = mieux"
    }
   }
+ },
+ {
+  "date": "2026-09-26",
+  "methode": "v1",
+  "mesures": {
+   "membres-certifies": {
+    "valeur": 54,
+    "sens": "plus haut = mieux"
+   },
+   "effectif": {
+    "valeur": 54,
+    "sens": "neutre — la lecture humaine tranche"
+   },
+   "outils-a-reconsiderer": {
+    "valeur": 15,
+    "sens": "plus bas = mieux"
+   },
+   "trous-de-couverture": {
+    "valeur": 52,
+    "sens": "plus bas = mieux"
+   }
+  }
  }
 ]

@@ -66,6 +66,7 @@ const FORMES_REDIRECTION = [
 // sur mon intuition) ; ce module possède la RÈGLE (que faire d'un message court). On DÉRIVE donc la
 // mesure de chez lui plutôt que d'en garder une copie qui divergerait au premier réglage.
 import { SEUILS_RAFALE, loadTours, detecterRafale } from "./smart-conso-token.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 export const SEUIL_MESSAGE_COURT = SEUILS_RAFALE.court;
 
@@ -200,4 +201,10 @@ export function formatRegleMessagesCourts() {
   ].join("\n");
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) console.log(formatRegleMessagesCourts());
+// Le compteur d'usage, câblé le 2026-09-26 (Ronde, plan d'action de tool-brain) : ce script a une
+// ligne de commande et n'enregistrait pas son passage — son zéro mesurait son SILENCE, jamais son
+// inactivité (leçon L11). Ici l'appel vit dans le point d'entrée lui-même, faute de main().
+if (import.meta.url === `file://${process.argv[1]}`) {
+  recordCliUsage("messages-courts");
+  console.log(formatRegleMessagesCourts());
+}

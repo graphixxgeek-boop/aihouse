@@ -9,6 +9,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
@@ -37,6 +38,10 @@ export function findOrphanedObservations(indexText, observationFiles) {
 }
 
 function main() {
+  // Le compteur d'usage, câblé le 2026-09-26 (Ronde, plan d'action de tool-brain) : ce script a
+  // une ligne de commande et n'enregistrait pas son passage — son zéro mesurait son SILENCE, jamais
+  // son inactivité, ce qui rendait faux tout verdict d'usage le concernant (leçon L11).
+  recordCliUsage("check-profil-utilisateur");
   // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
   // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
   // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.

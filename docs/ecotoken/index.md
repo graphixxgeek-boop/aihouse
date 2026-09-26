@@ -41,3 +41,4 @@ reproposer en tête ce qui a déjà été refusé.)*
 | 2026-09-23 21:15 | 21593 | 2053 | à trancher | 15 aparté(s) narratif(s) daté(s) |
 | 2026-09-25 10:23 | 24614 | 2252 | à trancher | 18 aparté(s) narratif(s) daté(s) |
 | 2026-09-25 14:05 | 24774 | 2252 | à trancher | 18 aparté(s) narratif(s) daté(s) |
+| 2026-09-26 08:04 | 25570 | 2645 | à trancher | 18 aparté(s) narratif(s) daté(s) |

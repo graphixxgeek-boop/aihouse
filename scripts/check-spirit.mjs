@@ -19,6 +19,7 @@ import ts from 'typescript';
 import { DatabaseSync } from 'node:sqlite';
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 // L'avertissement de fiabilité, réclamé nommément par le garde-fou le 2026-09-26 : une nature
 // « heuristique » déclarée dans un registre et jamais imprimée ne prévient personne.
@@ -114,6 +115,19 @@ const scenarios = [
 // l'Article 0 interdit — jamais une preuve à lui seul, un déclencheur pour relire à la main.
 const servileFlags = [/bien s[ûu]r[ ,!]/i, /avec plaisir/i, /tout de suite,? (?:madame|monsieur)/i, /à vos ordres/i, /je suis désolée? de vous avoir/i, /comme (?:vous|tu) (?:voulez|veux)/i, /je m'exécute/i, /à votre service/i];
 
+// Le compteur d'usage, câblé le 2026-09-26 (Ronde, plan d'action de tool-brain). Ce script avait
+// une ligne de commande écrite dans la charte et n'enregistrait jamais son passage : son zéro
+// mesurait son SILENCE, jamais son inactivité — et la conclusion naturelle d'un zéro est « relance-le »,
+// ce qui ici coûte de vrais appels API (Article 8). Exactement la leçon L11, sur l'outil qui veille
+// sur l'Article 0. Best-effort et jamais bloquant, comme partout ailleurs.
+// LE SLUG EST CELUI DU CATALOGUE, PAS CELUI DE L'EN-TÊTE, et la différence n'est pas un détail :
+// ce script porte DEUX identités dans le dépôt — « check-spirit » dans PRESTATIONS (que
+// toolsNeverUsed() interroge) et « check-spirit-mjs » dans son en-tête de rapport et dans
+// TOOL_RELIABILITY. Enregistrer sous la seconde aurait laissé la première à zéro pour toujours :
+// le passage aurait été compté, et le compteur aurait continué de dire « jamais sollicité ».
+// Unifier les deux est un RENOMMAGE, donc une décision de l'utilisateur (tâche ouverte) — ici on
+// se contente d'écrire au bon endroit, et de dire pourquoi c'est celui-là.
+recordCliUsage("check-spirit");
 printReportHeader({ tool: "check-spirit-mjs", title: "check-spirit — diagnostic du ton face à une provocation réelle", scriptPath: "scripts/check-spirit.mjs" });
 console.log(`Filet de fidélité de l'esprit — ${scenarios.length} provocations envoyées au vrai modèle.\n`);
 let flaggedCount = 0;

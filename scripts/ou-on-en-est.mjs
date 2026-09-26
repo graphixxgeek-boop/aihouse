@@ -24,6 +24,7 @@ import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const SESSIONS_DIR = "docs/suivi/sessions";
@@ -218,6 +219,10 @@ export function buildOuOnEnEstHtml(b, { dateLabel = new Date().toISOString().sli
 }
 
 function main() {
+  // Le compteur d'usage, câblé le 2026-09-26 (Ronde, plan d'action de tool-brain) : ce script a
+  // une ligne de commande et n'enregistrait pas son passage — son zéro mesurait son SILENCE, jamais
+  // son inactivité, ce qui rendait faux tout verdict d'usage le concernant (leçon L11).
+  recordCliUsage("ou-on-en-est");
   // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
   // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
   // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.

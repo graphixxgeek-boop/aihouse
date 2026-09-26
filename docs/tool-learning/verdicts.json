@@ -1,1 +1,32 @@
-[]
+[
+ {
+  "outil": "ARGUS",
+  "verdict": "apprend",
+  "autonomes": 2,
+  "enseigne": true,
+  "detail": "2 preuve(s) autonome(s) : relit-sa-memoire, faux-positifs-en-baisse",
+  "pourquoi": "PREUVE CITABLE, jamais une impression : la suite de tests affirme « ARGUS finally remembers its own verdicts (2026-09-23, tâche #214) — it had been re-reporting six candidates investigated and CLOSED on 2026-09-19, the conclusions sitting in its own registry which it never read ». Il relit donc désormais sa mémoire, et le flux de faux positifs (la bannière permanente ⚠️6, trois jours durant) a cessé — deux preuves autonomes.",
+  "source": "Ronde du 2026-09-26 — étape manuelle enfin faite après 5 passages sautés",
+  "date": "2026-09-26"
+ },
+ {
+  "outil": "SAFE-EXPORT",
+  "verdict": "apprend",
+  "autonomes": 2,
+  "enseigne": true,
+  "detail": "2 preuve(s) autonome(s) : relit-sa-memoire, faux-positifs-en-baisse",
+  "pourquoi": "PREUVE CITABLE : c'est de SAFE-EXPORT qu'ARGUS relaie son mécanisme de mémoire (« relayé depuis SAFE-EXPORT plutôt que copié »), donc il la relit. Et la baisse de faux positifs est mesurée : « five of the eleven were the guard's fault, not the documents' » — un détecteur resserré deux fois, chaque resserrement borné par son contre-test.",
+  "source": "Ronde du 2026-09-26 — étape manuelle enfin faite après 5 passages sautés",
+  "date": "2026-09-26"
+ },
+ {
+  "outil": "CLONE-HUNTER",
+  "verdict": "immobile",
+  "autonomes": 1,
+  "enseigne": true,
+  "detail": "il n'a progressé que par mes corrections, jamais de lui-même — enseigné, pas apprenant",
+  "pourquoi": "UNE SEULE preuve autonome, et c'est le verdict honnête : la baisse de faux positifs est mesurée (« il groupait par ancre, si bien que la même duplication trouvée depuis deux départs décalés produisait deux alertes — c'est ainsi qu'une paire de jumelles en est devenue trois », tâche #217). Mais il n'a pas de mémoire propre qu'il relirait : il recalcule tout à chaque passage. Immobile ne veut pas dire mauvais — ça veut dire qu'il ne progresse pas TOUT SEUL.",
+  "source": "Ronde du 2026-09-26 — étape manuelle enfin faite après 5 passages sautés",
+  "date": "2026-09-26"
+ }
+]
