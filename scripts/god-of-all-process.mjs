@@ -42,7 +42,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 // silencieusement amputé de sa moitié conduite.
 import { auditWorkingRules, angelSectionLines } from "./angel-of-ia-process.mjs";
 import { recordFunctionUsage } from "./tool-usage.mjs";
-import { readAgentSession, SESSION_FILE } from "./report-template.mjs";
+import { readAgentSession, SESSION_FILE, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -2213,6 +2213,25 @@ function main() {
     for (const a of sansProcess) console.log(`   · ${a.chemin}\n     pourquoi ça compte : ${a.indices.join(" · ")}`);
     console.log("   Écrire un process pour chacune, ou déclarer noir sur blanc pourquoi elle n'en a pas besoin.\n");
   }
+
+  // LE PLAN D'ACTION DE GOD LUI-MÊME (2026-09-26, tâche #803) — et l'ironie était complète : le
+  // contrôleur qui CONSTATE qu'un rapport sans plan d'action n'est pas fini (Article 28) était le
+  // seul outil du dépôt à scanner, à émettre des constats, et à s'arrêter sans conclure.
+  // L'instruction demandée par la tâche a été faite par `findOutilsDevantConclure()`, qui existait
+  // déjà : sur 32 scanners, 26 concluent, 5 sont dispensés parce qu'ils rendent un ÉTAT et non des
+  // constats, et il en restait UN qui devait conclure. Celui-ci.
+  const ecartsGod = [
+    ...detteDuDernierCommit().filter((e) => e.lien !== "a-confirmer").map((e) => ({
+      fichier: e.fichier, defaut: `dette documentaire née au commit ${e.commit} : ${e.docs.join(", ")} pas mis à jour`,
+      tache: `mettre à jour ${e.docs.join(" et ")}, ou déclarer pourquoi ce changement ne les concerne pas`, fausseUneMesure: true })),
+    ...sansProcess.map((a) => ({
+      fichier: a.chemin, defaut: "activité à enjeu sans process écrit",
+      tache: `écrire le process de « ${a.chemin} », ou déclarer noir sur blanc pourquoi elle n'en a pas besoin`, fausseUneMesure: false })),
+  ];
+  const planGod = planDactionDepuisEcarts(ecartsGod, { toolSlug: "god-of-all-process",
+    libelle: (e) => `${e.fichier} — ${e.defaut}`, tache: (e) => e.tache });
+  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
+  for (const l of planGod.lignes) console.log(l);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

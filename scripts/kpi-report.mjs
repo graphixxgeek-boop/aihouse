@@ -854,9 +854,8 @@ export async function collecterLesNotes({ codeHealth, lire = (p) => readFileSync
 
     // — AGENCE · conclusion : la part d'outils qui terminent par un plan d'action (Article 28).
     try {
-        const { recenserLesScripts } = await import('./cassandra-rh.mjs');
+        const { recenserLesScripts, findOutilsDevantConclure } = await import('./cassandra-rh.mjs');
         const rec = recenserLesScripts();
-        const outils = (rec.lignes ?? []).filter((x) => x.type === 'outil');
         // LE DÉNOMINATEUR DE L'EXIGENCE, jamais la population entière (2026-09-25, tâche #833).
         // CASSANDRA raisonne déjà ainsi dans `nivellementParClasse()` — « dire 12 sur 82 pour une
         // exigence qui ne concerne que les 32 qui scannent serait un taux juste sur le papier et
@@ -868,10 +867,33 @@ export async function collecterLesNotes({ codeHealth, lire = (p) => readFileSync
         // entre les outils qui ÉMETTENT DES CONSTATS et ceux qui rendent un ÉTAT
         // (`findOutilsDevantConclure()`). Appliquer la même correction par analogie sans mesurer
         // aurait été une seconde erreur déguisée en leçon apprise.
-        const scanners = outils.filter((x) => x.classes?.includes('scanne-le-depot'));
-        if (scanners.length) {
-            const concluent = scanners.filter((x) => x.classes?.includes('conclut-en-plan-daction')).length;
-            agence.conclusion = { valeur: (concluent / scanners.length) * 100, detail: `${concluent}/${scanners.length} outils qui scannent le dépôt concluent (les autres n'ont rien à conclure)` };
+        // LE DÉNOMINATEUR SE LIT CHEZ CELUI QUI L'A INSTRUIT, il ne se recalcule pas ici
+        // (2026-09-26, tâche #803 — Article 24, et la mesure qui l'impose est chiffrée).
+        //
+        // CE QUE FAISAIT LA VERSION D'AVANT : elle prenait TOUT ce qui scanne le dépôt, y compris
+        // les bibliothèques (`lib-shell.mjs` scanne et n'a aucun rapport à conclure) et les
+        // crochets. Résultat : **44 %**, la composante la plus basse de la note de l'Agence, et de
+        // loin. La tâche #803 est née de ce chiffre en annonçant « 28 outils sur 50 ».
+        //
+        // CE QUE LA VRAIE INSTRUCTION DIT : `findOutilsDevantConclure()` existait déjà chez
+        // CASSANDRA et tranche la question que #803 demandait d'instruire — il écarte ce qui n'est
+        // pas une commande documentée, puis LIT le code pour séparer « émet des constats » de
+        // « rend un état ». Sur 32 scanners : 26 concluent, 5 sont dispensés avec leur raison, et
+        // **UN SEUL** devait conclure sans le faire.
+        //
+        // 44 % contre 96 % — et le premier était juste sur le papier, faux sur le fond. Deux
+        // mesures de la même exigence, deux dénominateurs : exactement la divergence silencieuse
+        // que l'Article 24 interdit, et c'est la plus basse des deux qui pilotait la note.
+        // On lui passe le recensement ENTIER : c'est LUI qui sait quel type d'entrée est concerné,
+        // et refiltrer ici recréerait la seconde règle de portée qu'on vient justement de retirer.
+        const devant = findOutilsDevantConclure(rec.lignes ?? [], {
+            lire: (ch) => { try { return readFileSync(ch, 'utf8'); } catch { return null; } },
+        });
+        if (devant.mesurable) {
+            const concernes = devant.concluent.length + devant.doivent.length;
+            agence.conclusion = concernes
+                ? { valeur: (devant.concluent.length / concernes) * 100, detail: `${devant.concluent.length}/${concernes} outils qui émettent des constats concluent par un plan d'action (${devant.dispenses.length} dispensé(s) : ils rendent un ÉTAT, pas des constats)` }
+                : { valeur: null, detail: 'aucun outil concerné par cette exigence — pas de taux à rendre' };
         }
     } catch { /* recensement impossible */ }
 

@@ -14284,3 +14284,38 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: « est-ce que ça existe déjà ? » (2026-09-26, tâche #746) — sa demande était qu'avant d'écrire une fonction, quelque chose vérifie qu'elle n'existe pas ailleurs. Le besoin avait déjà été payé : ABRAHAM-LES-REFERENCES est né de trente fonctions génériques enfermées dans l'agent d'un seul document. Ce qui manquait n'était pas un outil de plus mais le MOMENT — suggestPrestations répond « quel outil utiliser », CLONE-HUNTER trouve les doublons après qu'ils sont écrits, personne ne regardait avant. C'est donc un MODE de tool-brain, comme la tâche l'exigeait, sur les 1 172 fonctions exportées du dépôt réel, nom découpé en mots et en-tête de commentaire compris, parce que dans ce dépôt le pourquoi vit à côté du quoi et dit souvent mieux que le nom ce qu'une fonction fait. Le premier classement était inutilisable : trente-quatre candidates pour une question, en tête celles qui partageaient le seul verbe « lire ». Le poids log(N/df) le corrige sans aucune liste de mots vides à tenir à jour, et il se recalcule sur le corpus réel à chaque passage. Le seuil de deux mots partagés ne bouge pas, parce que la mesure de #777 a montré qu'un mot rare sur un petit corpus est souvent un mot vide. Et il ne rend jamais un verdict « c'est déjà fait » : des candidates à lire, puisque aucune mécanique ne peut juger qu'une fonction trouvée fait vraiment ce qu'on veut.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// « 28 OUTILS SUR 50 NE CONCLUENT PAS » — le chiffre était faux (2026-09-26, tâche #803)
+// ————————————————————————————————————————————————————————————————————————
+// La tâche demandait d'INSTRUIRE : lesquels des 28 doivent vraiment conclure par un plan d'action,
+// et lesquels n'ont rien à conclure ? L'instruction existait déjà — `findOutilsDevantConclure()`
+// écarte ce qui n'est pas une commande documentée, puis LIT le code pour séparer « émet des
+// constats » de « rend un état ». Elle n'était simplement pas lue par le KPI, qui recalculait sa
+// propre portée sur tout ce qui scanne, bibliothèques et crochets compris.
+{
+  const crh803 = await import('../scripts/cassandra-rh.mjs');
+  const { readFileSync: lire803 } = await import('node:fs');
+  const lecteur803 = (c) => { try { return lire803(c, 'utf8'); } catch { return null; } };
+
+  // L'INSTRUCTION, SUR LE VRAI DÉPÔT (Article 25) — c'est elle la réponse à la tâche.
+  const rec803 = crh803.recenserLesScripts();
+  const devant803 = crh803.findOutilsDevantConclure(rec803.lignes ?? [], { lire: lecteur803 });
+  assert.equal(devant803.mesurable, true, 'the instruction must actually run against the real repository');
+  assert.deepEqual(devant803.doivent, [], 'and after this task no tool that EMITS FINDINGS may end without a plan d\'action: god-of-all-process was the last one, and the irony was complete — the controller that reports "a finding without a task is not finished" (Article 28) was itself stopping short of concluding');
+  assert.ok(devant803.dispenses.length >= 1, 'tools that render an ÉTAT rather than findings stay exempt, and they are listed rather than counted against the rate — a backup or a catalogue has nothing to conclude');
+
+  // SANS LECTEUR DE SOURCE, ELLE REFUSE DE CONCLURE (leçon L5) : « émet des constats » et « rend un
+  // état » se ressemblent exactement de l'extérieur.
+  assert.equal(crh803.findOutilsDevantConclure(rec803.lignes ?? [], {}).mesurable, false, 'without a source reader it refuses rather than guessing which tools owe a conclusion');
+  assert.equal(crh803.findOutilsDevantConclure([], { lire: lecteur803 }).mesurable, false, 'and an empty census says PAS MESURÉ, never "they all conclude"');
+
+  // LE KPI LIT DÉSORMAIS CETTE INSTRUCTION AU LIEU DE RECALCULER SA PROPRE PORTÉE (Article 24) —
+  // c'est la cause racine, et elle vaut plus que le chiffre : deux mesures de la même exigence
+  // donnaient deux dénominateurs, et c'est la plus basse qui pilotait la note de l'Agence.
+  const srcKpi803 = lire803('scripts/kpi-report.mjs', 'utf8');
+  assert.ok(/findOutilsDevantConclure\(/.test(srcKpi803), 'the KPI must READ the instruction that exists rather than recompute its own scope');
+  assert.ok(!/scanners\.filter\(\(x\) => x\.classes\?\.includes\('conclut-en-plan-daction'\)\)/.test(srcKpi803), 'and the old recomputation must be gone, not merely shadowed: leaving both would be exactly the silent divergence Article 24 forbids');
+
+  console.log("Passed: « 28 outils sur 50 ne concluent pas » — le chiffre était faux (2026-09-26, tâche #803). La tâche demandait d'instruire lesquels des 28 devaient vraiment conclure, et l'instruction existait déjà : findOutilsDevantConclure() écarte ce qui n'est pas une commande documentée, puis LIT le code pour séparer « émet des constats » de « rend un état ». Elle n'était simplement lue par personne. Le KPI, lui, recalculait sa propre portée sur tout ce qui scanne le dépôt — bibliothèques et crochets compris, alors que lib-shell.mjs scanne et n'a aucun rapport à conclure — et rendait 44 %, la composante la plus basse de la note de l'Agence et de loin. La vraie mesure : 32 scanners, 26 qui concluent, 5 dispensés avec leur raison, et UN SEUL qui devait conclure sans le faire. C'était god-of-all-process, et l'ironie était complète : le contrôleur qui constate qu'un rapport sans plan d'action n'est pas fini s'arrêtait lui-même sans conclure. Il conclut désormais, sur ses propres dettes documentaires et ses activités à enjeu sans process. 44 % contre 100 % — le premier était juste sur le papier et faux sur le fond, et c'est la cause racine qui compte ici, pas le chiffre : deux mesures de la même exigence, deux dénominateurs, et c'est la plus basse qui pilotait la note.");
+}
