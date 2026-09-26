@@ -764,6 +764,25 @@ export function formatReprisesLines(r, { parLieu = 6 } = {}) {
   return L;
 }
 
+// « PERSONNE NE LIT » VOULAIT DIRE « PERSONNE D'AUTRE QUE SON PRODUCTEUR » (2026-09-26, tâche #927).
+//
+// CE QUE LA PHRASE A COÛTÉ, et c'est mesuré plutôt que craint : la veille, tool-learning avait jugé
+// SAFE-EXPORT « apprend » sur la preuve `relit-sa-memoire`. Le lendemain, ce rapport annonçait
+// `docs/safe-export/` parmi les données fraîches que « PERSONNE ne lit ». J'ai cru à une
+// contradiction entre deux de mes propres mesures, et j'ai passé une demi-heure à construire un
+// détecteur pour la résoudre. **Il n'y avait aucune contradiction** : tool-learning demande « l'outil
+// relit-il SA PROPRE mémoire ? » (oui, `loadMemoire()`), ce compteur demande « quelqu'un d'AUTRE que
+// le producteur la lit-il ? » (non). Deux questions différentes, deux réponses justes, et un seul
+// mot — « personne » — qui laissait croire le contraire.
+//
+// LE DÉTECTEUR A ÉTÉ RETIRÉ, et son retrait vaut la leçon : lancé contre le vrai dépôt, il créditait
+// 14 sources et ne changeait AUCUN chiffre (orphelines 26 → 26, branchées 39 → 39), parce que
+// chacune de ses trouvailles était un producteur lisant son propre fichier — ce que toutes les
+// mesures excluent déjà par construction. Du code qui ne déplace aucune mesure est une décoration
+// (leçon L2), et il faisait même bouger un compteur dans le MAUVAIS sens sur un faux positif (une
+// PHRASE citant un chemin prise pour une constante de chemin, leçon L28).
+//
+// CE QUI RESTE EST GRATUIT ET SUFFIT : dire ce que la mesure mesure vraiment.
 export function criticalIgnoredData(briefing, { seuilFraicheurJours = 2 } = {}) {
   return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0 && !(l.lueParTableDeclaree ?? []).length);
 }
@@ -901,7 +920,7 @@ export function formatDataArchangelReport(r) {
   const l = [];
   l.push(`Sources de données inventoriées : ${r.total} — ${r.branchees} réellement relues par un autre outil (${r.pourcentage} %).`);
   if (r.critiques.length) {
-    l.push("", `🚨 ${r.critiques.length} donnée(s) FRAÎCHE(S) que personne ne lit — écrite il y a peu, donc elle a quelque chose à dire, et aucun outil ne l'écoute :`);
+    l.push("", `🚨 ${r.critiques.length} donnée(s) FRAÎCHE(S) qu'AUCUN OUTIL AUTRE QUE SON PRODUCTEUR ne lit — écrite il y a peu, donc elle a quelque chose à dire, et personne d'autre ne l'écoute :`);
     for (const c of r.critiques) {
       // L'annotation dit à quoi ressemble la décision à prendre : un outil qui frôle déjà la donnée
       // est un candidat évident pour la lire vraiment ; personne à proximité oriente plutôt vers
@@ -979,7 +998,7 @@ export function planDactionCirculation(r, { toolSlug = "data-archangel" } = {}) 
   if (r.critiques.length) {
     constats.push({
       etat: "retenu",
-      constat: `${r.critiques.length} donnée(s) FRAÎCHE(S) sur ${total} inventoriées que personne ne relit — ex. ${ex(r.critiques)}`,
+      constat: `${r.critiques.length} donnée(s) FRAÎCHE(S) sur ${total} inventoriées qu'aucun outil AUTRE QUE LEUR PRODUCTEUR ne relit — ex. ${ex(r.critiques)}`,
       // Au-delà d'une poignée, la tâche honnête n'est plus « brancher chacune » mais « décider
       // comment traiter la population » : proposer trente branchements est un plan qu'on ne suit pas.
       tache: r.critiques.length > 20
