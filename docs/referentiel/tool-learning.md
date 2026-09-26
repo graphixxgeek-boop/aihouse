@@ -202,3 +202,56 @@ demandent un jugement par outil qu'aucune mécanique ne sait produire ici ; les 
 remplirait le registre de chiffres inventés — une mesure **fausse** au lieu d'une mesure absente.
 Rendre l'absence visible et nommée est la seule chose honnête qu'un mécanisme puisse faire quand le
 geste manquant est humain (Article 27).
+
+---
+
+## Le POIDS d'une leçon — pondérer par le nombre de remontées *(2026-09-26, tâche #914)*
+
+Sa demande : « leçons et bonnes pratiques : **pondérer par le nombre de remontées**, ranger les
+trouvailles ».
+
+**Le problème est réel** : le registre traitait ses 33 entrées comme égales. Elles ne le sont pas.
+Une leçon qui est REVENUE cinq fois décrit un piège permanent de ce projet ; une entrée jamais citée
+est soit toute neuve, soit dormante. Sans pondération, `leconsPourTache()` départageait les ex æquo
+**par identifiant, c'est-à-dire par ancienneté** — sur trois entrées à un mot commun, on servait les
+trois plus vieilles. **L'ordre du fichier n'est pas un ordre d'importance.**
+
+### Ce qu'on compte
+
+Les citations de l'identifiant (« L5 », « leçon L5 ») partout **ailleurs que dans sa propre
+entrée** : dans les commentaires des scripts et dans les lignes de suivi. Une leçon citée là a été
+**RAPPELÉE au moment d'agir** — c'est exactement ce qu'on attend d'elle. On ne compte pas les
+intentions, on compte les rappels.
+
+### Premier passage réel — les cinq pièges permanents de ce projet
+
+| Rappels | Leçon |
+|---|---|
+| **113** | L4 — un garde-fou qui accuse à tort cesse d'être lu |
+| **87** | L5 — distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder » |
+| **75** | L2 — un mécanisme qui ne sort pas du script est une intention |
+| **41** | L1 — une règle que rien ne fait respecter |
+| **29** | L7 — une intention écrite n'a jamais empêché quoi que ce soit |
+
+602 rappels sur 83 fichiers, médiane à 9. Deux entrées jamais rappelées (L26, L27) — **écrites le
+jour même**, ce que le compteur ne peut pas distinguer d'une entrée dormante, et il le dit.
+
+### Le poids DÉPARTAGE, il ne classe jamais
+
+La pertinence reste première, et c'est délibéré : l'inverse ferait remonter L4 (113 rappels) sur
+toute tâche qui la frôle, et le rappel deviendrait permanent, **donc invisible** — exactement la
+leçon L6. À score de pertinence ÉGAL seulement, la plus souvent rappelée passe devant.
+
+**Un poids absent vaut 0 pour tout le monde**, donc ne départage personne : brancher la pondération
+ne pouvait pas changer le comportement par défaut, et un test le vérifie.
+
+### Deux limites, écrites dans le résultat plutôt que dans un commentaire
+
+1. On compte des **RAPPELS**, jamais des applications : une leçon citée dix fois a été rappelée dix
+   fois, ce qui ne prouve pas qu'elle a été suivie.
+2. **Un zéro ne condamne rien** — une entrée écrite il y a une heure ne peut pas encore être citée.
+
+*(Détail de conception : le paramètre `corpus` vaut `null` par défaut, jamais `[]`. Avec `[]`,
+« aucun corpus fourni » et « un corpus vide fourni » s'écrivaient pareil, et le second retombait
+silencieusement sur la lecture du dépôt — deux intentions opposées confondues par une valeur par
+défaut. Trouvé par un test, pas par une relecture.)*

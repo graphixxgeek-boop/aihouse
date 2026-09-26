@@ -885,7 +885,16 @@ export function propositionDeFusion(groupe, lecons = []) {
 // une correspondance nulle rend une liste VIDE — jamais un repêchage « au cas où ». Un rappel qui
 // sort à chaque fois est un meuble, et le projet a déjà payé ce prix une fois (un rappel de Ronde
 // ignoré plus de deux cents fois, mot pour mot le même).
-export function leconsPourTache(tache, { lecons = [], max = 3, fichiers = [] } = {}) {
+// `poids` (2026-09-26, tâche #914) — SA DEMANDE : « pondérer par le nombre de remontées ». Le tri
+// départageait jusqu'ici les ex æquo par identifiant, c'est-à-dire par ANCIENNETÉ : sur trois
+// entrées à un mot commun, on servait les trois plus vieilles. L'ordre du fichier n'est pas un ordre
+// d'importance. À score de pertinence ÉGAL, la plus souvent rappelée passe devant — c'est le piège
+// que ce projet a payé le plus de fois.
+//
+// LA PERTINENCE RESTE PREMIÈRE, ET C'EST DÉLIBÉRÉ : le poids DÉPARTAGE, il ne classe jamais.
+// L'inverse ferait remonter L4 (113 rappels) sur toute tâche qui la mentionne de loin, et le rappel
+// deviendrait permanent, donc invisible — exactement la leçon L6.
+export function leconsPourTache(tache, { lecons = [], max = 3, fichiers = [], poids = null } = {}) {
   const texte = String(tache ?? "").toLowerCase();
   const chemins = (Array.isArray(fichiers) ? fichiers : [fichiers]).filter(Boolean);
   // Ni phrase ni fichier : on ne sert RIEN. Un repêchage « au cas où » rendrait le rappel permanent,
@@ -901,8 +910,17 @@ export function leconsPourTache(tache, { lecons = [], max = 3, fichiers = [] } =
       return { l, score: parMots + parFichiers, parMots, parFichiers };
     })
     .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score || String(a.l.id).localeCompare(String(b.l.id)));
-  return notees.slice(0, max).map((x) => ({ ...x.l, correspondances: x.score, parMots: x.parMots, parFichiers: x.parFichiers }));
+    .sort((a, b) => b.score - a.score
+      || (poidsDe(b.l.id, poids) - poidsDe(a.l.id, poids))
+      || String(a.l.id).localeCompare(String(b.l.id)));
+  return notees.slice(0, max).map((x) => ({ ...x.l, correspondances: x.score, parMots: x.parMots, parFichiers: x.parFichiers, remontees: poidsDe(x.l.id, poids) }));
+}
+
+// Un poids absent vaut 0 pour TOUT LE MONDE, donc ne départage personne et laisse l'ordre
+// d'avant intact : brancher la pondération ne pouvait pas changer le comportement par défaut.
+function poidsDe(id, poids) {
+  if (!poids?.mesurable) return 0;
+  return poids.pesees.find((x) => x.id === id)?.remontees ?? 0;
 }
 
 export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsImpl = existsSync, sourcesImpl } = {}) {
@@ -952,6 +970,80 @@ export function auditLecons({ root = ROOT, readFileImpl = readFileSync, existsIm
     sansTerrain, terrainCoupe,
     applicables: juges.length - sansTerrain.length,
   };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LE POIDS D'UNE LEÇON (2026-09-26, tâche #914 — point 25 de son gros prompt : « leçons et bonnes
+// pratiques : pondérer par le nombre de remontées, ranger les trouvailles »).
+//
+// LE PROBLÈME QU'IL A VU, ET IL EST RÉEL : le registre traite ses 33 entrées comme égales. Elles ne
+// le sont pas. Une leçon qui est REVENUE cinq fois décrit un piège permanent de ce projet ; une
+// entrée jamais citée depuis son écriture est soit toute neuve, soit morte — et les deux appellent
+// des gestes opposés. Sans pondération, `leconsPourTache()` sert les trois premières qui matchent,
+// dans l'ordre du fichier, c'est-à-dire par ancienneté. L'ordre du fichier n'est pas un ordre
+// d'importance.
+//
+// CE QU'ON COMPTE, ET POURQUOI C'EST LA BONNE MESURE : les citations de l'identifiant (« L5 »,
+// « leçon L5 ») partout AILLEURS que dans sa propre entrée. Une leçon citée dans le commentaire
+// d'un garde-fou, dans une ligne de suivi ou dans un message de commit a été RAPPELÉE au moment
+// d'agir — c'est exactement ce qu'on attend d'elle. On ne compte pas les intentions, on compte les
+// rappels.
+//
+// CE QU'UN ZÉRO NE PROUVE PAS, et il faut le dire avant de l'utiliser : une entrée à zéro citation
+// n'est pas une entrée inutile. Elle peut avoir été écrite il y a une heure. Le poids classe, il ne
+// condamne jamais — et le tri sépare explicitement les neuves des dormantes.
+export const MOTIF_CITATION_LECON = (id) => new RegExp(`(?:^|[^A-Za-z0-9])${id}(?![0-9A-Za-z])`, "g");
+
+// `corpus = null` PLUTÔT QUE `[]`, et la nuance a été trouvée par un test : avec `[]` par défaut,
+// « aucun corpus fourni » et « un corpus vide fourni » s'écrivaient pareil, donc le second retombait
+// silencieusement sur la lecture du dépôt. Deux intentions opposées confondues par une valeur par
+// défaut — `null` veut dire « lis le dépôt », `[]` veut dire « voici un corpus, et il est vide ».
+export function poidsDesLecons({ lecons = [], corpus = null, root = ROOT, readFileImpl = readFileSync } = {}) {
+  if (!lecons.length) return { mesurable: false, pourquoi: "aucune leçon fournie : un registre vide ne se pondère pas, et un classement sur zéro entrée ressemble à un classement (leçon L5)" };
+  // LE CORPUS EXCLUT LE REGISTRE LUI-MÊME — sinon chaque entrée se compterait au moins une fois,
+  // et le bug auto-référentiel reviendrait pour la cinquième fois cette semaine.
+  const textes = corpus ?? scriptSources(root, readFileImpl).concat(suiviSources(root, readFileImpl));
+  if (!textes.length) return { mesurable: false, pourquoi: "aucun texte à parcourir : le nombre de remontées n'a pas été mesuré, ce qui n'est jamais la même chose que zéro remontée" };
+  const pesees = lecons.map((l) => {
+    let n = 0;
+    for (const t of textes) n += (String(t).match(MOTIF_CITATION_LECON(l.id)) ?? []).length;
+    return { id: l.id, titre: l.titre, nature: l.nature, remontees: n };
+  }).sort((a, b) => b.remontees - a.remontees || a.id.localeCompare(b.id));
+  const total = pesees.reduce((a, x) => a + x.remontees, 0);
+  const jamais = pesees.filter((x) => !x.remontees);
+  return {
+    mesurable: true, pesees, total, textes: textes.length,
+    // TROIS RANGS, ET LE TROISIÈME EST UN AVEU : la médiane sépare ce qui revient souvent de ce qui
+    // revient peu, et zéro citation est mis à part plutôt que rangé tout en bas — « jamais rappelée »
+    // et « rappelée une fois » ne disent pas la même chose.
+    mediane: pesees.length ? pesees[Math.floor(pesees.length / 2)].remontees : 0,
+    jamaisRappelees: jamais.map((x) => x.id),
+    horsPortee: "compte des RAPPELS de l'identifiant, jamais des applications : une leçon citée dix fois dans des commentaires a été rappelée dix fois, ce qui ne prouve pas qu'elle a été suivie. Et un zéro ne condamne rien — une entrée écrite il y a une heure ne peut pas encore avoir été citée. Le poids CLASSE, il ne juge pas.",
+  };
+}
+
+// Le suivi compte autant que le code : une leçon rappelée dans une ligne de tâche a servi au moment
+// où elle devait servir. Il est lu à part pour que l'absence de l'un se voie plutôt que de se fondre.
+function suiviSources(root, readFileImpl) {
+  const dir = join(root, "docs/suivi/sessions");
+  const out = [];
+  let noms = [];
+  try { noms = readdirSync(dir).filter((f) => f.endsWith(".md")); } catch { return out; }
+  for (const n of noms) { try { out.push(readFileImpl(join(dir, n), "utf8")); } catch { /* illisible */ } }
+  return out;
+}
+
+export function formatPoidsLeconsLines(p, { combien = 8 } = {}) {
+  if (!p?.mesurable) return [`POIDS DES LEÇONS : PAS MESURÉ — ${p?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== LE POIDS DES LEÇONS — ${p.total} rappel(s) comptés dans ${p.textes} fichier(s) ===`];
+  l.push(`  Les ${combien} les plus rappelées — ce sont les pièges PERMANENTS de ce projet :`);
+  for (const x of p.pesees.slice(0, combien)) l.push(`    ${String(x.remontees).padStart(4)} × ${x.id.padEnd(5)} ${String(x.titre ?? "").slice(0, 78)}`);
+  l.push(`  Médiane : ${p.mediane} rappel(s).`);
+  l.push(p.jamaisRappelees.length
+    ? `  ❓ JAMAIS RAPPELÉES (${p.jamaisRappelees.length}) : ${p.jamaisRappelees.join(", ")} — toute neuve, ou dormante. Les deux appellent des gestes opposés, et ce compteur ne les distingue pas.`
+    : `  Aucune entrée sans rappel.`);
+  l.push(`  HORS PORTÉE : ${p.horsPortee}`);
+  return l;
 }
 
 function scriptSources(root, readFileImpl) {
@@ -1405,6 +1497,13 @@ function main() {
     for (const t of tendancesApprentissage()) console.log(`  ${t.cle} : ${t.tendance ?? t.etat ?? "pas encore de tendance"}`);
   } else {
     console.log("\n· Aucune série enregistrée : le registre de verdicts est vide, et un point à zéro sur un registre vide serait une fausse courbe plate, jamais une mesure.");
+  }
+  // LE POIDS DES LEÇONS (2026-09-26, #914) — imprimé ici parce que c'est le rapport qui parle du
+  // registre, et qu'un mécanisme qui ne sort jamais du script est une intention (L2).
+  const auditPourPoids = auditLecons();
+  if (auditPourPoids.mesure === "mesuré") {
+    console.log("");
+    for (const l of formatPoidsLeconsLines(poidsDesLecons({ lecons: auditPourPoids.lecons }))) console.log(l);
   }
   recordCliUsage("tool-learning", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
 }

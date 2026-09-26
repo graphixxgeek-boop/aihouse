@@ -8759,6 +8759,24 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // LE POIDS DES LEÇONS (2026-09-26, tâche #914 — « pondérer par le nombre de remontées »).
+    const TL = await import('../scripts/tool-learning.mjs');
+    const leconsF = [{ id: 'L1', titre: 'a', nature: 'leçon', mots: ['seuil'], fichiers: [] },
+                     { id: 'L2', titre: 'b', nature: 'leçon', mots: ['seuil'], fichiers: [] }];
+    const pF = TL.poidsDesLecons({ lecons: leconsF, corpus: ['on applique L2 ici', 'et encore L2 là', 'rien'] });
+    assert.deepEqual(pF.pesees.map((x) => x.id), ['L2', 'L1'], 'the most-recalled entry comes first — the file order is an order of AGE, never of importance');
+    assert.deepEqual(pF.jamaisRappelees, ['L1'], 'and never-recalled entries are named apart rather than filed at the bottom: "never recalled" and "recalled once" do not say the same thing');
+    assert.equal(TL.poidsDesLecons({ lecons: [] }).mesurable, false, 'an empty register refuses rather than ranking nothing (leçon L5)');
+    assert.equal(TL.poidsDesLecons({ lecons: leconsF, corpus: [] }).mesurable, false, 'and with no corpus it refuses too: zero recalls measured is not the same as zero recalls');
+    // LE POIDS DÉPARTAGE, IL NE CLASSE JAMAIS — l'inverse ferait remonter la leçon la plus citée
+    // sur toute tâche qui la frôle, et le rappel deviendrait permanent, donc invisible (L6).
+    const pertinent = [{ id: 'LA', titre: 'a', nature: 'leçon', mots: ['seuil', 'garde'], fichiers: [] },
+                       { id: 'LB', titre: 'b', nature: 'leçon', mots: ['seuil'], fichiers: [] }];
+    const pdsB = TL.poidsDesLecons({ lecons: pertinent, corpus: ['LB LB LB LB'] });
+    assert.equal(TL.leconsPourTache('un garde et un seuil', { lecons: pertinent, poids: pdsB, max: 1 })[0].id, 'LA', 'relevance stays first: two matched words beat four recalls');
+    assert.equal(TL.leconsPourTache('un seuil', { lecons: pertinent, poids: pdsB, max: 1 })[0].id, 'LB', 'and the weight only breaks a TIE — at equal relevance, the trap this project paid for most often goes first');
+    assert.equal(TL.leconsPourTache('un seuil', { lecons: pertinent, max: 1 })[0].id, 'LA', 'with no weight supplied the previous behaviour is untouched: wiring the weighting could not change the default');
+
     // LE TEMPS DE L'UTILISATEUR (2026-09-26, tâche #913 — point 26 de son gros prompt). La QUATRIÈME
     // obligation de l'Article 32 n'avait aucun mécanisme : l'agent la « savait », ce que l'Article 27
     // interdit précisément de considérer comme une protection.
