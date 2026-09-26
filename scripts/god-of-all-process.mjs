@@ -252,6 +252,38 @@ export const PROCESSES = [
     ],
   },
   {
+    // LE PRÉ-CHANTIER (2026-09-26, son gros prompt) — huitième process déclaré. Il naît d'un constat
+    // qu'il a posé lui-même : une idée notée en vrac n'est pas perdue, elle est PIRE que perdue —
+    // retrouvable mais inexploitable. Le coût n'est pas payé quand on note, il est payé six semaines
+    // plus tard, quand il faut agir et qu'il faut relire trente notes éparses pour deviner
+    // lesquelles se contredisent.
+    slug: "pre-chantier",
+    maillonsSansObjet: {
+      scan: "le pré-chantier ORDONNE de la matière existante, il ne scanne rien : sa mesure est celle de la stratégie qu'il produit",
+    },
+    nom: "PRÉ-CHANTIER — de l'idée validée à la construction effective",
+    quand: "une idée de chantier vient d'être VALIDÉE et va devenir un chantier réel",
+    motsCles: ["chantier", "strategie", "nouvelle idee", "pre-chantier", "notes"],
+    doc: "docs/pre-chantier-process-detail.md",
+    gardien: "scripts/check-tasks-details.mjs",
+    etapes: [
+      { cle: "validation", libelle: "A — lui demander si on crée VRAIMENT ce chantier : la suite ne vaut que si la réponse est OUI", preuve: null },
+      { cle: "tache", libelle: "B1 — créer la tâche dans docs/suivi/", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
+      { cle: "strategie", libelle: "B2 — créer le rapport STRATÉGIE DE CHANTIER tout de suite, à partir des éléments existants à date", preuve: { dossier: "docs/strategies/", motif: /-strategie\.md$/ } },
+      { cle: "lien", libelle: "B3 — LIER les deux : la stratégie porte le numéro de tâche et le dit en tête", preuve: { dossier: "docs/strategies/", motif: /-strategie\.md$/ } },
+      { cle: "alimenter", libelle: "C — alimenter au fur et à mesure, en CITANT intégralement : la stratégie agrège, elle ne résume JAMAIS", preuve: null },
+      { cle: "livrer", libelle: "D — juste avant l'exécution : lui livrer le rapport dans la conversation", preuve: null },
+      { cle: "analyser", libelle: "E — analyser le document, faire le point, refaire des calibrages si besoin", preuve: null },
+      { cle: "outil-a-jour", libelle: "F — s'assurer que l'OUTIL correspondant au chantier est bien à jour selon la stratégie", preuve: null },
+      // LE PLAN D'ACTION DU PRÉ-CHANTIER N'EST PAS AILLEURS : c'est la SECTION 7 de la stratégie,
+      // « LE PLAN D'EXÉCUTION », qui ne se remplit qu'à la fin, juste avant la construction. Et la
+      // section 6, « CE QUI RESTE À TRANCHER », porte exactement le troisième état de l'Article 28.
+      // Un plan qui voyage avec le document qui l'a motivé ne peut pas se perdre.
+      { cle: "plan-action", libelle: "PLAN D'ACTION : la section 7 de la stratégie (le plan d'exécution) et sa section 6 (ce qui reste à trancher) — les trois états de l'Article 28 vivent DANS la stratégie, jamais dans un document séparé", preuve: { dossier: "docs/strategies/", motif: /-strategie\.md$/ } },
+      { cle: "executer", libelle: "G/H — lancer la construction effective : son début SIGNALE la fin de ce process", preuve: null },
+    ],
+  },
+  {
     slug: "nuit",
     maillonsSansObjet: {
       scan: "la nuit ORCHESTRE d'autres process (Ronde, simulation) qui scannent eux-mêmes — elle n'a pas de mesure propre",
@@ -1612,6 +1644,11 @@ export const MOTIF_TACHE_ANNONCEE = /(?:tâche|tache)\s*\*{0,2}#(\d+)/gi;
 // main reste légitime tant que sa nature manuelle est écrite noir sur blanc). Et un garde-fou qui
 // refuse le silence : un process NOUVEAU doit soit porter l'étape, soit figurer ici avec sa raison.
 export const PROCESS_SANS_ESTIMATION_ASSUMEE = {
+  // LE PRÉ-CHANTIER N'ESTIME RIEN, ET C'EST STRUCTUREL, pas un oubli (2026-09-26) : il ORDONNE de
+  // la matière déjà là — il range des idées dans une stratégie, il ne construit rien. L'estimation
+  // de durée, de tokens et d'API appartient au CHANTIER qu'il précède, jamais à lui : estimer le
+  // coût du rangement des notes reviendrait à chiffrer la lecture d'un plan avant de bâtir.
+  "pre-chantier": "ce process ORDONNE de la matière existante, il ne construit rien : l'estimation de durée, de tokens et d'API appartient au chantier qu'il précède, et la dupliquer ici donnerait deux chiffres pour un seul travail",
   "analyse-charte": "lecture et rédaction, sans appel API ni durée imprévisible — l'estimation coûterait plus que ce qu'elle informe",
   "semi-autonome": "ce n'est pas une activité mais un MODE de travail : il n'a ni début ni fin à estimer",
   "nuit": "le plan de nuit EST l'estimation — il liste les chantiers avant de commencer, et une seconde estimation par-dessus ferait doublon",

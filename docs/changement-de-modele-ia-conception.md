@@ -157,3 +157,61 @@ assertions couvrent les cinq régimes réels, dont les deux qui doivent rester s
 réexaminé avant d'être recopié. Ici, l'impossibilité portait sur la PREUVE ; le mécanisme possible
 portait sur la DÉCLARATION. Confondre les deux avait laissé une obligation reposer sur la seule
 mémoire de l'agent — ce que l'Article 27 interdit — et elle est tombée au premier essai réel.
+
+---
+
+## Sa demande du 2026-09-26 — anticiper le changement de modèle, et NE PAS se servir de soi-même comme étalon
+
+*(Reprise intégrale de son gros prompt du soir. Elle entre ici plutôt qu'au seul suivi : c'est
+exactement le trou que la STRATÉGIE DE CHANTIER existe pour fermer — une idée notée dans la file et
+jamais recopiée dans le document du chantier qu'elle concerne. Le garde-fou de fraîcheur des
+fichiers préliminaires l'a attrapée le soir même.)*
+
+> « safe export : l'outil vérifie les exports, et aussi à la marge : qu'un changement de modèle
+> CLAUDE (opus, fable…) en cours de route est fluidifié grâce à l'outil, le relai se fait de manière
+> propre et complète (mémoire, ligne de conduite, process, etc) et exportable - obligé - je ferais
+> des test à un moment donné, de repasser à une version inferieure pour voir si l'agence tient dans
+> ces conditions, et aussi un test en passant par un modèle plus puissant (FABLE), je ferai des
+> tests : anticipe sur ca stp. L'agence devrait tourner sur un modèle moins puissant que toi, tu ne
+> dois pas te servir de toi même pour calibrer ca (sujet export, donc). »
+
+**OBJECTIF qu'il formule** : « CONSTRUIRE LE CODE DE MANIERE A ANTICIPER SUR UN CHANGEMENT
+D'ENVIRONNEMENT GENERAL (CHANGEMENT IA) OU LOCAL (MODELE DIFFERENT AU SEIN D'UNE MEME IA) ».
+**ATTENDU** : mise à jour de l'outil.
+
+### Ce que cette consigne interdit, et c'est la partie la plus dure
+
+« **tu ne dois pas te servir de toi même pour calibrer ca** » est une contrainte méthodologique
+sévère, et elle est juste. Un agent qui juge « est-ce que l'Agence est compréhensible ? » en se
+lisant lui-même répond toujours oui : il a écrit les documents, il en connaît les raisons non
+écrites, et il comble les trous sans s'en apercevoir. **Le seul calibrage honnête passe par des
+critères MÉCANIQUES qui ne dépendent pas de qui lit** — un chemin cité existe-t-il, une règle
+a-t-elle un porteur nommé, un nom propre a-t-il une définition atteignable — jamais par une
+impression de clarté.
+
+C'est déjà ce que fait SAFE-EXPORT avec `findRaisonsPerdues()` et `findGardienAmbigu()`. Ce qui
+manque, c'est le reste du relai : mémoire, ligne de conduite, process.
+
+### Ce qui existe déjà, et qui sert au relai sans avoir été conçu pour ça
+
+- **`.agent-session.json`** — l'identité du modèle en cours, déposée à chaque session autonome.
+  C'est le seul endroit du dépôt qui sait QUEL modèle a produit quoi.
+- **L'Article 27** (« le projet doit rester reprenable par une AUTRE IA, à tout moment ») est déjà
+  la règle de fond. Il vise une autre IA ; un autre modèle de la même IA en est un cas particulier
+  plus facile, jamais un cas différent.
+- **Les blueprints génériques** portent le POURQUOI, qui survit au changement de modèle comme au
+  changement de langage.
+- **Le registre des leçons** (`docs/referentiel/lecons.md`) porte ce que le projet a appris en se
+  trompant — c'est la mémoire qu'un modèle entrant n'a pas.
+
+### Ce qui manque, et qui reste à construire
+
+1. **Rien ne mesure ce qu'un modèle MOINS PUISSANT perdrait.** Le test qu'il annonce (repasser à une
+   version inférieure) n'a aucun instrument pour être lu : il faudrait savoir à l'avance quelles
+   obligations de la charte dépendent d'une capacité de raisonnement, et lesquelles sont purement
+   mécaniques. Les secondes tiennent sur n'importe quel modèle ; les premières non.
+2. **Aucun document ne dit ce qui se passe AU MOMENT du basculement.** Le relai — ce que le modèle
+   sortant doit laisser, ce que le modèle entrant doit lire en premier — n'est écrit nulle part.
+3. **Le lien entre la version de l'Agence et le modèle qui l'a produite n'existe pas.** On sait
+   quelle version d'un outil tourne ; on ne sait pas sous quel modèle elle a été écrite, donc on ne
+   peut pas savoir ce qui se dégraderait en descendant.

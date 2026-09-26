@@ -57,6 +57,14 @@ le format ne l'était pas. Il n'y avait donc rien à inventer : il y avait à un
 | **G** | Lancer l'exécution, **en parfaite harmonie avec la stratégie** | — |
 | **H** | **La fin du process est signalée par le début de la construction effective** | — |
 
+**Les trois commandes de la colonne de droite vivent toutes dans UN SEUL fichier :
+`scripts/check-tasks-details.mjs`** — l'outil des tâches, étendu le 2026-09-26 plutôt que doublé par
+un script de plus (Article 24 : un nouveau venu hérite de ce que l'équipe sait déjà faire). C'est
+lui le gardien mécanique de ce process : il porte le squelette des sept sections, le versement
+d'une idée à sa place, le garde-fou anti-résumé et la livraison. Écrire ici le nom du fichier n'est
+pas une redondance de la colonne : une commande peut être renommée, le porteur reste, et une IA qui
+reprend le projet doit pouvoir aller le lire sans le deviner (Article 27).
+
 ---
 
 ## Partie 4 — La consigne ferme de l'étape C : la stratégie NE RÉSUME JAMAIS
