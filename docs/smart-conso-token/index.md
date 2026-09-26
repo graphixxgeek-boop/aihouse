@@ -15,3 +15,23 @@ vivent dans `.smart-conso-token-history.json`, local et non versionné.)*
 | 2026-09-20 | Auto-diagnostic sécurisé ajouté : `recordAction()` conserve destinataire + verdict, `recordOutcome()` attache un résultat réellement observé (jamais deviné), `diagnoseAdviceAccuracy()` repère un seuil dur probablement non respecté et tout résultat qui contredit/confirme un verdict passé — jamais un ajustement automatique | Tension réelle signalée avant d'implémenter (Article 14) : la demande littérale de l'utilisateur (« il se corrige de façon autonome ») romprait la règle déjà établie plusieurs fois. Calibrée en version sécurisée après 3 questions explicites : jamais d'auto-ajustement, portée agent+outils seulement (jamais l'utilisateur, aucune trace mécanique fiable de ses décisions), affiché aux moments déjà existants (crochet post-commit). 116/116 tests, tsc propre. |
 | 2026-09-21 | Scan Global relancé (item `smart-conso-token-scan` de CIRCLE-TASKS, Ronde AUTO) : 130 documents (71 le 2026-09-20), ~464 861 tokens au total — rapport archivé dans `docs/smart-conso-token/scans/scan-2026-09-21-circle.md` | Toujours 1 seul document en ACTION REQUISE : `CLAUDE.md`, 29 606 tokens (+814 depuis le 2026-09-20, ~+2,8 %, cohérent avec les 3 versions ajoutées ce soir). 9 documents INFORMATIF, dont `docs/regles-de-travail.md` désormais à 52 228 tokens — à garder à l'œil lors d'une future passe d'allègement, aucune urgence constatée ce soir. |
 | 2026-09-22 | Scan Global relancé (item `smart-conso-token-scan` de CIRCLE-TASKS, Ronde AUTO exécutée par Opus 5) : **197 documents** (130 le 2026-09-21, +52 %), **~712 107 tokens** au total (+53 % en un jour) — rapport archivé dans `docs/smart-conso-token/scans/scan-2026-09-22-circle-auto.md` | Toujours 1 seul document en ACTION REQUISE : `CLAUDE.md`, ~29 606 tokens, **strictement inchangé depuis le 2026-09-21** (les ajouts documentaires du jour sont tous allés dans `docs/`, jamais dans la charte — exactement le comportement voulu). Trouvaille réelle de ce passage : `docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo.md` pèse ~109 295 tokens pour 469 lignes et est devenu le document le plus lourd du dépôt, près du double de `regles-de-travail.md` — le système de suivi n'a aucun plafond ni rotation par session (signal, jamais une décision prise seule). Friction de méthode relevée : aucune sous-commande CLI n'existe pour lancer un scan de portée, l'`execute` de l'item suppose pourtant qu'on « relance » un scan. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**11 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-22T17-20-06-065Z.txt](circle-signal-2026-09-22T17-20-06-065Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-846Z.txt](circle-signal-2026-09-23T21-49-13-846Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-542Z.txt](circle-signal-2026-09-25T14-14-12-542Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [claude-md-narrative-candidates.md](scans/claude-md-narrative-candidates.md) | scans |
+| [scan-2026-09-20-02-08.md](scans/scan-2026-09-20-02-08.md) | scans |
+| [scan-2026-09-20-02-19-v2.md](scans/scan-2026-09-20-02-19-v2.md) | scans |
+| [scan-2026-09-21-circle.md](scans/scan-2026-09-21-circle.md) | scans |
+| [scan-2026-09-22-circle-auto.md](scans/scan-2026-09-22-circle-auto.md) | scans |
+| [serie.json](serie.json) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

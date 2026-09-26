@@ -169,6 +169,21 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer `node scripts/safe-export.mjs kits` (SAFE-EXPORT). Il mesure DEUX populations, jamais une : le kit de l'Agence comme un tout (mesurerLeKitDeLAgence(), 6 pièces — plan, installation, carte, organisation, standards, leçons) et le kit de chaque fichier de l'outillage (mesurerLesKits(), 5 pièces, exemptions écrites comprises), puis rend le verdict d'alerteExport() à quatre paliers. LIRE D'ABORD LA LIGNE D'ALERTE, jamais les tableaux : elle dit en un mot si l'Agence est emportable aujourd'hui, et c'est la seule chose que les chiffres seuls ne disent pas. Un palier 🔴 ou 🟠 ouvre une vraie tâche dans docs/suivi/ (Article 28), jamais une note dans un compte rendu. Écrire le signal via recordCircleItemReport('safe-export-kits', ...) — le fichier daté complet, lui, est déjà écrit par l'outil dans docs/safe-export/.",
     producesReport: true,
   },
+  // systeme-des-index (2026-09-26, tâche #982, sa demande : « vérifier l'indexation générale […]
+  // est-ce que tous les fichiers sont bien équipés comme il se doit ? »). Gratuit, et surtout :
+  // c'est une mesure qui ne peut que se DÉGRADER entre deux passages, puisque chaque outil dépose
+  // des fichiers en tournant et que rien ne met à jour l'index à sa place. Un rendez-vous fixe est
+  // donc la seule forme qui tienne — un scan à la demande ne serait lancé qu'après avoir déjà
+  // perdu un fichier.
+  {
+    id: "systeme-des-index",
+    theme: "KPI & scans",
+    label: "Le système des index — tous les fichiers sont-ils annoncés quelque part ?",
+    cout: "gratuit — relit l'arborescence docs/ et les index, aucun appel API",
+    tokensEstimes: "faible — seuls les dossiers À TRAITER sont à lire, les autres tiennent en une ligne de compte",
+    execute: "Lancer `node scripts/data-archangel.mjs index`. LIRE LES TROIS CONTRATS AVANT LES CHIFFRES : un index est un CATALOGUE (il nomme les fichiers), un JOURNAL (une ligne par passage, il n'a pas à les nommer) ou de la PROSE (il ne promet rien). Le même chiffre veut dire l'inverse selon le contrat, et appliquer un seuil unique aux trois produirait une accusation en masse au lieu d'une mesure. Ce qui compte : un catalogue INCOMPLET et un journal EN RETARD sont de vrais trous ; un index SANS CONTRAT n'est pas en retard, il est inutilisable pour retrouver un fichier, et le geste est de lui choisir une nature. `--generer` écrit les index MANQUANTS et EUX SEULS — il refuse d'écraser un index existant, la prose qui explique un dossier valant mieux qu'une liste. Écrire le signal via recordCircleItemReport('systeme-des-index', ...) ; le fichier daté est déjà déposé par l'outil dans docs/data-archangel/.",
+    producesReport: true,
+  },
   // documents-jumeaux (2026-09-26, tâche #978, son point 4 : « il y a des doublons dans les
   // documents ? »). Personne ne répondait : CLONE-HUNTER traque le CODE dupliqué, pure-gold-unity
   // la FORME des rapports, et le détecteur de rapports jumeaux compare une substance EXACTE — il
@@ -784,6 +799,20 @@ export function mostRecentDate(text) {
 // (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
 // de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
+  // LES HUIT QUE LA GÉNÉRATION D'INDEX A RÉVÉLÉS (2026-09-26, tâche #983). Ils n'ont pas changé de
+  // nature en recevant une table des matières : ce garde-fou reconnaît un registre à la présence
+  // d'un `index.md`, et il a donc raison de DEMANDER — la réponse s'écrit ici plutôt que le signal
+  // s'étouffe. Un dossier de documents avec un sommaire reste un dossier de documents ; il ne
+  // devient pas le registre d'un outil, et lui donner un item de Ronde serait inventer un passage
+  // périodique là où personne ne dépose rien.
+  "referentiel": "LE référentiel du projet — 112 documents écrits à la main, aucun producteur périodique. Son index est une table des matières, générée pour que la charte puisse enfin la citer : elle ordonne de vérifier « contre la table des matières réelle de ce dossier », et cette table n'existait pas",
+  "plans": "les plans de chantier — écrits pour un chantier donné, jamais produits passage après passage",
+  "strategies": "les raisonnements stratégiques sur ce projet — rédigés, jamais produits mécaniquement",
+  "rapports-de-nuit": "un rapport par nuit travaillée, rédigé par l'agent et non par un outil",
+  "rapports-gros-prompt": "un rapport par saisine, rédigé — le dossier docs/reponses/, lui, EST un registre",
+  "contexte-projet": "les archives historiques transmises par l'utilisateur : des pièces d'ENTRÉE, jamais des sorties de l'Agence",
+  "templates": "les gabarits dont sortent les pièces de kit — un moule ne s'accumule pas, il sert",
+  "gabarits": "même nature que templates/ — deux dossiers pour une même chose, voisinage à instruire séparément, mais ni l'un ni l'autre n'est un registre",
   // LES DEUX REGISTRES NÉS LE 2026-09-26 en comblant les kits d'export, et le garde-fou a mordu à
   // la seconde où leur index.md est apparu — exactement son travail. Ni l'un ni l'autre n'est un
   // outil périodique : ce sont des MÉCANISMES appelés par les autres, dont le registre ne porte que
@@ -1478,6 +1507,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   kpi: "docs/tableau-de-bord/",
   "safe-export-kits": "docs/safe-export/ronde/",
   "documents-jumeaux": "docs/abraham-les-references/ronde/",
+  "systeme-des-index": "docs/data-archangel/ronde/",
   "x-port-blindtest": "docs/x-port-blindtest/ronde/",
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",

@@ -82,3 +82,36 @@ observations qui n'ont pas été enregistrées avec cette rigueur à l'époque (
 | 2026-09-22T01:15:00Z | Segment couvrant la finalisation de l'idée-à-trancher (3 bugs trouvés en direct), la promotion d'ALWAYS-NEW-CODE en 6e Gardien sacré, un message à 5 points (Niveau 1/2/3 de l'agence, discipline d'écriture des idées, audit d'harmonisation, CIRCLE-TASKS AUTO/PRIME/GOAT + périodicité), et l'exécution réelle de la première Ronde AUTO | 5 (fait confiance au test en conditions réelles plutôt qu'à la relecture seule pour valider un mécanisme neuf ; refuse qu'une réponse forcée dans les options proposées remplace une vraie question ouverte ; distingue explicitement une nouvelle règle générale d'une exception déjà actée, sans laisser l'une contaminer l'autre ; corrige ma proposition par défaut quand elle est trop prudente, en assumant le coût réel ; revient corriger un détail de comportement juste avant le lancement final, une fois qu'il visualise concrètement l'usage réel) | 2 (répond systématiquement « recommandé » une fois les enjeux bien expliqués ; distingue nettement valider une conception et autoriser sa construction) | [2026-09-22-0115.md](observations/2026-09-22-0115.md) |
 | 2026-09-22T02:45:00Z | Segment couvrant la finalisation de circle-process-guardian, le protocole de changement de modèle IA, un message à 8 points, la correction d'une erreur de compréhension sur le point 3, la modernisation d'HYPER-SCAN-CHECKPOINT et son intégration dans CIRCLE-TASKS, le rôle à 2 niveaux de circle-process-guardian, et l'exécution de la Ronde AUTO sous Opus 5 | 4 (récupère la valeur d'une erreur de communication plutôt que de la faire annuler, en trois messages successifs ; conçoit un rôle d'outil en deux niveaux distincts plutôt qu'un seul ; remet en cause l'utilité d'une pratique installée sans la supposer acquise ni la condamner d'avance ; corrige une erreur de lecture en réaffirmant la règle générale plutôt que le seul cas précis) | 2 (redirige par impératifs brefs et répétés quand plusieurs fils avancent en parallèle, quatre fois dans ce seul segment ; répond systématiquement « recommandé » une fois les enjeux bien expliqués) | [2026-09-22-0245.md](observations/2026-09-22-0245.md) |
 | 2026-09-25T14:14:00Z | Segment couvrant la nuit autonome du 2026-09-24/25 (clôture des huit constats THE-DEEP-READER, tâches #822 à #846) et la Ronde en paramètres recommandés qu'il a placée lui-même dans le déroulé du travail | 4 (place un rituel DANS le flux plutôt qu'à côté ; valide explicitement le RYTHME et non le résultat, ce qu'il ne fait presque jamais ; demande la VÉRIFICATION de la consigne de non-arrêt plutôt que la consigne elle-même ; ses messages raccourcissent quand le travail lui convient — l'inverse d'un désengagement) | 2 (ses décisions en attente ne bougent pas en son absence, nuancé : le coût n'est pas la question mais la période entière ; redirige par impératifs brefs plutôt que par explication) | [2026-09-25-1414.md](observations/2026-09-25-1414.md) |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**24 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-21T22-44-59-084Z.txt](circle-signal-2026-09-21T22-44-59-084Z.txt) | — |
+| [circle-signal-2026-09-22T17-19-15-256Z.txt](circle-signal-2026-09-22T17-19-15-256Z.txt) | — |
+| [circle-signal-2026-09-22T17-20-06-063Z.txt](circle-signal-2026-09-22T17-20-06-063Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-132Z.txt](circle-signal-2026-09-22T17-42-10-132Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-136Z.txt](circle-signal-2026-09-22T17-42-10-136Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-850Z.txt](circle-signal-2026-09-23T21-49-13-850Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-918Z.txt](circle-signal-2026-09-23T21-49-13-918Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-568Z.txt](circle-signal-2026-09-25T14-14-12-568Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-690Z.txt](circle-signal-2026-09-25T14-14-12-690Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [incomprehensions.json](incomprehensions.json) | — |
+| [2026-09-19-2019.md](observations/2026-09-19-2019.md) | observations |
+| [2026-09-19-2137.md](observations/2026-09-19-2137.md) | observations |
+| [2026-09-20-0321.md](observations/2026-09-20-0321.md) | observations |
+| [2026-09-20-1420.md](observations/2026-09-20-1420.md) | observations |
+| [2026-09-20-1930.md](observations/2026-09-20-1930.md) | observations |
+| [2026-09-20-2350.md](observations/2026-09-20-2350.md) | observations |
+| [2026-09-21-0150.md](observations/2026-09-21-0150.md) | observations |
+| [2026-09-21-1410.md](observations/2026-09-21-1410.md) | observations |
+| [2026-09-22-0005.md](observations/2026-09-22-0005.md) | observations |
+| [2026-09-22-0115.md](observations/2026-09-22-0115.md) | observations |
+| [2026-09-22-0245.md](observations/2026-09-22-0245.md) | observations |
+| [2026-09-25-1414.md](observations/2026-09-25-1414.md) | observations |
+| [profil-actuel.txt](profil-actuel.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

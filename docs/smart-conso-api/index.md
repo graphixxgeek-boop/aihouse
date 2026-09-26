@@ -7,3 +7,18 @@ local, non versionné), ce qui a changé et pourquoi.)*
 | Date | Décision | Notes |
 |---|---|---|
 | 2026-09-19 | Création de l'outil + premier seuil dur proposé (`simulation` : 2 lancements confirmés / 6h) | Créé le jour même d'un épuisement total réel du quota Gemini pendant cette session. Seuil choisi directement à partir de cet épisode, **encore en attente de validation explicite de l'utilisateur** avant d'être considéré vraiment "dur" (cf. blueprint). |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**6 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-21T22-44-59-084Z.txt](circle-signal-2026-09-21T22-44-59-084Z.txt) | — |
+| [circle-signal-2026-09-22T17-19-15-255Z.txt](circle-signal-2026-09-22T17-19-15-255Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-842Z.txt](circle-signal-2026-09-23T21-49-13-842Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-533Z.txt](circle-signal-2026-09-25T14-14-12-533Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

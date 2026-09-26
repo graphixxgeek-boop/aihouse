@@ -18,3 +18,15 @@ laisser croire que le vert mécanique couvre tout.
 | Date | Passage | Chemins vérifiés | Morts | Absences déclarées | Corrigé |
 |---|---|---|---|---|---|
 | 2026-09-23 | [Premier passage](2026-09-23-premier-passage.md) | 1136 | 3 → 0 | 2 | 3 documents, dont la charte (+ 1 ligne retirée sur décision de l'utilisateur) |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**3 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [2026-09-23-premier-passage.md](2026-09-23-premier-passage.md) | — |
+| [circle-signal-2026-09-23T21-49-13-877Z.txt](circle-signal-2026-09-23T21-49-13-877Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

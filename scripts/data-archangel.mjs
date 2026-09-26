@@ -27,7 +27,7 @@ import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSy
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { LOCAL_JOURNALS, REGISTRIES, DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES } from "./doc-report.mjs";
@@ -1053,6 +1053,323 @@ export function formatAgentBriefing(r, { filtre } = {}) {
   return l.join("\n");
 }
 
+// --- LE SYSTÈME DES INDEX — EXTENSION (2026-09-26, tâches #982/#983) --------------------------
+//
+// SA DEMANDE, EN DEUX TEMPS ET LA SECONDE CORRIGE LA PREMIÈRE : « crée un petit outil pour les
+// index et fais lui tout de suite profiter de ton expérience », puis, quelques minutes plus tard,
+// « ajoute le comme une EXTENSION d'archangel plutôt si tu peux ». Le fichier séparé a donc existé
+// une demi-heure avant d'être replié ici — et son choix est le bon : data-archangel veille sur la
+// CIRCULATION des données, or un fichier qu'aucun index n'annonce est exactement un fichier qui ne
+// circule pas. Un outil de plus aurait ajouté un membre à nourrir (kit, registre, place à la Ronde,
+// onze registres d'intégration) pour une question qui appartenait déjà à quelqu'un.
+//
+// CE QUE CETTE EXTENSION A REÇU DÈS SA NAISSANCE, et c'est le sens exact de « fais lui profiter de
+// ton expérience » : ce qui suit n'est pas de la précaution ajoutée après coup, c'est ce que la
+// soirée du 2026-09-26 a coûté ailleurs, dans le dépôt, en vrai.
+//   · ELLE REFUSE DE CONCLURE SUR RIEN (leçon L13) — une racine illisible rend « pas mesuré »,
+//     jamais « tout est indexé ». Un satisfecit sur zéro dossier ressemble trait pour trait à un
+//     vrai vert, et c'est la forme d'erreur la plus chère de ce projet.
+//   · ELLE N'A PAS UN SEUIL MAIS TROIS CONTRATS (leçon L4, payée QUATRE fois ce jour-là) —
+//     appliquer la même règle à un catalogue, à un journal et à de la prose déclarerait 77 % du
+//     dépôt cassé là où la moitié fonctionne comme prévu.
+//   · ELLE N'ÉCRASE JAMAIS CE QU'ELLE N'A PAS ÉCRIT — la génération ne touche QUE les dossiers
+//     sans index.
+//   · ELLE NE SE LIT PAS ELLE-MÊME — son dépôt est exclu du balayage : le piège auto-référentiel
+//     que find-booster (#182) puis le détecteur de rapports jumeaux (#976) ont déjà payé.
+//   · ELLE DÉPOSE UN FICHIER ET CONCLUT PAR UN PLAN D'ACTION (Articles 31 et 28).
+//
+//
+// SA DEMANDE : « vérifier l'indexation générale […] est-ce que tous les fichiers sont bien équipés
+// comme il se doit ? ». Le chiffre brut, mesuré avant toute interprétation : **755 fichiers
+// déposés dans docs/ (index exclus), 177 nommés dans leur index — 23 %.**
+//
+// MAIS 23 % N'EST PAS « 77 % DE CASSÉ », et le dire serait la faute que ce dépôt combat le plus
+// souvent (leçon L4). Un index de ce projet n'a pas UN contrat, il en a TROIS, et le même chiffre
+// veut dire des choses opposées selon lequel :
+//   · CATALOGUE — il NOMME les fichiers. Un fichier absent de la liste est un vrai trou.
+//   · JOURNAL — une LIGNE par passage, datée. Il ne nomme aucun fichier et n'a pas à le faire ;
+//     ce qui se mesure est le nombre de lignes contre le nombre de passages déposés. ecotoken en
+//     est l'exemple type : 36 lignes pour 45 fichiers, donc neuf passages sans trace.
+//   · PROSE — ni l'un ni l'autre. Il explique le dossier sans rien dire de son contenu. **C'est
+//     la découverte du passage** : trente-deux index sont dans ce cas, dont un sur un dossier de
+//     vingt-cinq fichiers. Un index qui ne promet rien ne peut pas être en retard — il ne peut
+//     pas non plus servir, et c'est très exactement la leçon L13 (« une preuve satisfaite par le
+//     registre vide qu'elle doit remplir ne prouve rien »).
+//
+// LA NATURE SE LIT, ELLE NE SE DÉCLARE PAS (Article 24) : on regarde ce que l'index FAIT, jamais
+// ce qu'il dit être. Un index créé demain est classé sans qu'on touche à ce fichier.
+export const NATURES_D_INDEX = [
+  { cle: "catalogue", icone: "📇", contrat: "il NOMME les fichiers de son dossier — un fichier absent de la liste est un vrai trou" },
+  { cle: "journal", icone: "📔", contrat: "une LIGNE par passage, datée — il ne nomme pas les fichiers et n'a pas à le faire ; ce qui se mesure est le nombre de lignes contre le nombre de dépôts" },
+  { cle: "prose", icone: "📄", contrat: "AUCUN — il explique le dossier sans rien dire de son contenu, donc il ne peut ni être à jour ni être en retard" },
+  { cle: "absent", icone: "🚫", contrat: "aucun index du tout : les fichiers du dossier ne sont annoncés nulle part" },
+];
+
+export const PART_MINIMALE_DE_CATALOGUE = 0.5;
+export const LIGNES_MINIMALES_DE_JOURNAL = 2;
+
+export function lignesDeTableau(texte = "") {
+  // Les lignes de séparation (`|---|---|`) et la ligne d'en-tête ne sont pas des passages : les
+  // compter gonflerait le journal d'exactement deux lignes, et un journal de deux lignes passerait
+  // pour tenu à jour alors qu'il est vide.
+  const lignes = String(texte).split("\n").map((l) => l.trim()).filter((l) => l.startsWith("|") && !/^\|[\s:-]+\|/.test(l));
+  return Math.max(0, lignes.length - (lignes.length ? 1 : 0));
+}
+
+export function natureDeLIndex(texte, fichiers = [], { partCatalogue = PART_MINIMALE_DE_CATALOGUE, minJournal = LIGNES_MINIMALES_DE_JOURNAL } = {}) {
+  if (texte == null) return { cle: "absent", cites: 0, lignes: 0 };
+  const cites = fichiers.filter((f) => String(texte).includes(String(f).split("/").pop())).length;
+  const lignes = lignesDeTableau(texte);
+  if (fichiers.length && cites >= fichiers.length * partCatalogue) return { cle: "catalogue", cites, lignes };
+  if (lignes >= minJournal) return { cle: "journal", cites, lignes };
+  return { cle: "prose", cites, lignes };
+}
+
+// LE VERDICT DÉPEND DU CONTRAT, jamais d'un seuil unique appliqué à tout le monde — c'est ce qui
+// sépare une mesure d'une accusation en masse.
+export function verdictDeLIndex(nature, fichiers) {
+  if (nature.cle === "absent") return fichiers ? { etat: "sans index", manque: fichiers, pourquoi: `${fichiers} fichier(s) déposés et aucun index : rien ne dit qu'ils existent` } : { etat: "sans objet", manque: 0, pourquoi: "dossier vide : il n'y a rien à annoncer" };
+  if (!fichiers) return { etat: "sans objet", manque: 0, pourquoi: "l'index existe et le dossier est vide — rien à lister, et ce n'est pas un défaut" };
+  if (nature.cle === "catalogue") {
+    const manque = fichiers - nature.cites;
+    return manque > 0
+      ? { etat: "incomplet", manque, pourquoi: `catalogue : ${nature.cites}/${fichiers} fichiers nommés, ${manque} absent(s) de la liste qu'il promet de tenir` }
+      : { etat: "à jour", manque: 0, pourquoi: `catalogue complet : les ${fichiers} fichiers sont nommés` };
+  }
+  if (nature.cle === "journal") {
+    // COMPTER LES LIGNES CONTRE LES FICHIERS ACCUSE À TORT, et le vrai dépôt l'a montré : une SEULE
+    // ligne de journal peut couvrir PLUSIEURS fichiers d'un même passage — un scan et le dossier
+    // qu'il dépose à côté. ecotoken tenait 39 lignes pour 45 fichiers et les couvrait TOUS par leur
+    // date : « en retard » y était faux (leçon L4, la cinquième fois de la journée). Ce qui compte
+    // n'est pas le nombre de lignes, c'est qu'AUCUN dépôt ne soit sans trace.
+    const manque = nature.sansTrace ?? Math.max(0, fichiers - nature.lignes);
+    return manque > 0
+      ? { etat: "en retard", manque, pourquoi: `journal : ${manque} dépôt(s) n'apparaissent ni par leur nom ni par leur date dans les ${nature.lignes} ligne(s) du journal` }
+      : { etat: "à jour", manque: 0, pourquoi: `journal tenu : ${nature.lignes} ligne(s), et les ${fichiers} dépôt(s) y sont tous traçables` };
+  }
+  return { etat: "sans contrat", manque: fichiers, pourquoi: `prose : l'index explique le dossier sans rien dire de ses ${fichiers} fichiers — il ne peut ni être à jour ni être en retard, donc il ne peut pas servir à les retrouver` };
+}
+
+// La date lue dans le NOM du fichier : le seul lien fiable entre un dépôt et sa ligne de journal.
+export const MOTIF_DATE_DE_FICHIER = /(\d{4}-\d{2}-\d{2})/;
+
+export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  let dossiers = [];
+  try { dossiers = listDirImpl(join(root, racine), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => `${racine}/${e.name}`); } catch { /* racine illisible */ }
+  if (!dossiers.length) {
+    return { mesurable: false, pourquoi: `aucun dossier lu sous ${racine} : rendre « tout est indexé » sur zéro dossier serait un satisfecit sur du vide (leçon L13)` };
+  }
+  const lignes = [];
+  for (const dir of dossiers) {
+    const fichiers = [];
+    const pile = [dir];
+    while (pile.length) {
+      const d = pile.pop();
+      let entrees = [];
+      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+      for (const f of entrees) {
+        if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
+        if (f.name === "index.md") continue;
+        fichiers.push(`${d}/${f.name}`);
+      }
+    }
+    let texte = null;
+    try { texte = readFileImpl(join(root, dir, "index.md"), "utf8"); } catch { /* pas d'index : c'est un état, pas une erreur */ }
+    const nature = natureDeLIndex(texte, fichiers);
+    // Le nombre de dépôts SANS TRACE se calcule ici, où le texte et les fichiers sont tous deux
+    // sous la main, et il est passé au verdict plutôt que redevine par lui (leçon L29).
+    if (nature.cle === "journal") nature.sansTrace = depotsSansTrace(texte, fichiers).length;
+    lignes.push({ dossier: dir, fichiers: fichiers.length, nature: nature.cle, cites: nature.cites, lignesIndex: nature.lignes, ...verdictDeLIndex(nature, fichiers.length) });
+  }
+  const total = lignes.reduce((a, l) => a + l.fichiers, 0);
+  const parEtat = {};
+  for (const l of lignes) (parEtat[l.etat] ??= []).push(l);
+  return {
+    mesurable: true, lignes, examines: lignes.length, fichiers: total,
+    parEtat,
+    aTraiter: lignes.filter((l) => ["incomplet", "en retard", "sans contrat", "sans index"].includes(l.etat)).sort((a, b) => b.manque - a.manque),
+    horsPortee: "elle mesure si un fichier est ANNONCÉ par son index, jamais si ce que l'index en dit est juste. Un index qui nomme tous ses fichiers en les décrivant de travers sort « à jour » — ça, c'est une lecture.",
+  };
+}
+
+// GÉNÉRER L'INDEX QUI MANQUE — et SEULEMENT celui qui manque (2026-09-26, tâche #982).
+//
+// LA LIMITE EST LA RÈGLE, pas une prudence : cette fonction REFUSE d'écrire là où un index existe
+// déjà. Les 43 index en retard ou sans contrat ont été écrits à la main, souvent avec une prose
+// qui explique le dossier mieux qu'aucune génération ne saura le faire ; les écraser ferait
+// disparaître ce travail pour le remplacer par une liste. Ce qui manque, en revanche, ne peut être
+// détruit par ce qui l'occupe : les huit dossiers sans index du tout sont le seul terrain où
+// écrire ne coûte rien et rapporte tout.
+//
+// CE QU'UN INDEX GÉNÉRÉ DIT DE LUI-MÊME : qu'il est généré. Un catalogue produit par une machine
+// et présenté comme tenu à la main appellerait des ajouts manuels qui sauteraient au passage
+// suivant — le dire évite à quelqu'un d'y écrire quelque chose qu'il perdrait.
+export function contenuDIndexGenere(dossier, fichiers = [], { horodatage = "" } = {}) {
+  const nom = String(dossier).split("/").pop();
+  const l = [
+    `# ${nom} — table des matières`,
+    "",
+    `*(Catalogue GÉNÉRÉ par \`node scripts/data-archangel.mjs index --generer\`${horodatage ? `, le ${horodatage}` : ""}. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*`,
+    "",
+    `**${fichiers.length} fichier(s).**`,
+    "",
+    "| Fichier | |",
+    "|---|---|",
+  ];
+  for (const f of [...fichiers].sort()) {
+    const base = String(f).split("/").pop();
+    const sousDossier = String(f).slice(String(dossier).length + 1, -base.length - 1);
+    l.push(`| [${base}](${String(f).slice(String(dossier).length + 1)}) | ${sousDossier || "—"} |`);
+  }
+  return l.join("\n") + "\n";
+}
+
+export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = readdirSync, writeImpl = writeFileSync, horodatage = "" } = {}) {
+  if (!mesure?.mesurable) return { mesurable: false, pourquoi: mesure?.pourquoi ?? "aucune mesure fournie" };
+  const ecrits = [];
+  for (const ligne of mesure.lignes) {
+    // « sans index » et RIEN D'AUTRE : ni « en retard », ni « sans contrat », ni « incomplet ».
+    if (ligne.etat !== "sans index") continue;
+    const fichiers = [];
+    const pile = [ligne.dossier];
+    while (pile.length) {
+      const d = pile.pop();
+      let entrees = [];
+      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+      for (const f of entrees) {
+        if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
+        if (f.name === "index.md") continue;
+        fichiers.push(`${d}/${f.name}`);
+      }
+    }
+    const chemin = `${ligne.dossier}/index.md`;
+    writeImpl(join(root, chemin), contenuDIndexGenere(ligne.dossier, fichiers, { horodatage }), "utf8");
+    ecrits.push({ chemin, fichiers: fichiers.length });
+  }
+  return { mesurable: true, ecrits, horsPortee: "elle n'écrit QUE là où aucun index n'existe. Un index déjà écrit à la main n'est jamais remplacé par une liste — la prose qui explique un dossier vaut mieux qu'un catalogue, et l'écraser la ferait disparaître." };
+}
+
+export function formatIndexLines(r) {
+  if (!r?.mesurable) return [`=== SYSTÈME DES INDEX : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « tout est indexé »."];
+  const l = [`=== LE SYSTÈME DES INDEX — ${r.examines} dossiers, ${r.fichiers} fichiers déposés ===`, ""];
+  l.push("  TROIS CONTRATS, JAMAIS UN SEUL SEUIL POUR TOUT LE MONDE — le même chiffre veut dire l'inverse selon la nature de l'index :");
+  for (const n of NATURES_D_INDEX) l.push(`    ${n.icone} ${n.cle} — ${n.contrat}`);
+  l.push("");
+  for (const [etat, lot] of Object.entries(r.parEtat).sort((a, b) => b[1].length - a[1].length)) {
+    l.push(`  ${etat} : ${lot.length} dossier(s)`);
+  }
+  if (r.aTraiter.length) {
+    l.push("");
+    l.push(`  LES ${r.aTraiter.length} À TRAITER, du plus gros écart au plus petit :`);
+    for (const x of r.aTraiter) l.push(`      · ${x.dossier} — ${x.pourquoi}`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
+
+// --- ANGEL-OF-INDEX : LES DEUX RÉPARATIONS (2026-09-26, nom donné par l'utilisateur) -----------
+//
+// UN SEUL MÉCANISME POUR LES DEUX, et c'est ce qui les rend sûres : tout ce qui est écrit par la
+// machine vit entre DEUX MARQUEURS. Ce qu'un humain a écrit autour n'est jamais touché, et une
+// seconde exécution remplace le bloc au lieu de l'empiler. Sans ces bornes, « compléter » voudrait
+// dire réécrire le fichier, c'est-à-dire la chose que la génération refuse depuis sa naissance.
+export const DEBUT_BLOC_GENERE = "<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->";
+export const FIN_BLOC_GENERE = "<!-- FIN DU SOMMAIRE GÉNÉRÉ -->";
+
+export function poserLeBlocGenere(texte = "", contenu = "") {
+  const t = String(texte);
+  const i = t.indexOf(DEBUT_BLOC_GENERE);
+  const j = t.indexOf(FIN_BLOC_GENERE);
+  const bloc = `${DEBUT_BLOC_GENERE}\n${contenu}\n${FIN_BLOC_GENERE}`;
+  // Idempotent : un bloc déjà posé est REMPLACÉ, jamais doublé. Une réparation qui s'empile à
+  // chaque passage transformerait l'index en journal de ses propres réparations.
+  if (i !== -1 && j > i) return t.slice(0, i) + bloc + t.slice(j + FIN_BLOC_GENERE.length);
+  return `${t.trimEnd()}\n\n${bloc}\n`;
+}
+
+// SON CHOIX DU 2026-09-26 : « ajouter la liste SOUS la prose existante ». La prose qui explique un
+// dossier est souvent ce qu'il a de plus utile — on ne la remplace pas, on lui ajoute ce qui lui
+// manquait pour servir à retrouver un fichier.
+export function sommaireDesFichiers(dossier, fichiers = []) {
+  const l = ["## Fichiers", "", `**${fichiers.length} fichier(s)** dans ce dossier.`, "", "| Fichier | Sous-dossier |", "|---|---|"];
+  for (const f of [...fichiers].sort()) {
+    const rel = String(f).slice(String(dossier).length + 1);
+    const base = rel.split("/").pop();
+    l.push(`| [${base}](${rel}) | ${rel.includes("/") ? rel.slice(0, -base.length - 1) : "—"} |`);
+  }
+  return l.join("\n");
+}
+
+// SON SECOND CHOIX : rattraper les journaux depuis les fichiers. AVEC UNE LIMITE QUE JE M'IMPOSE
+// ET QUI COMPTE : je ne FORGE PAS de lignes dans le tableau existant. Chaque journal a ses propres
+// colonnes — un poids, un gain, une décision, un verdict — et je ne sais pas ce que l'outil a
+// mesuré ce jour-là ; remplir ces cases reviendrait à inventer la donnée même que le journal
+// existe pour conserver. Ce que je sais, et c'est tout ce que j'écris : un fichier a été déposé,
+// tel jour. Les dépôts sans trace sont donc listés à part, marqués RECONSTITUÉ, jamais mêlés aux
+// lignes écrites sur le moment.
+export function depotsSansTrace(texte = "", fichiers = []) {
+  return fichiers.filter((f) => {
+    const base = String(f).split("/").pop();
+    if (String(texte).includes(base)) return false;
+    const d = base.match(MOTIF_DATE_DE_FICHIER);
+    // Sans date lisible, on ne peut pas dire si le journal en parle : on le compte comme sans
+    // trace plutôt que de le supposer couvert — l'inverse gonflerait le journal en silence.
+    return !d || !String(texte).includes(d[1]);
+  });
+}
+
+export function sommaireDesDepotsSansTrace(dossier, sansTrace = []) {
+  const l = [
+    "## Dépôts sans ligne de journal *(reconstitué)*",
+    "",
+    "*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*",
+    "",
+    `**${sansTrace.length} dépôt(s)** sans trace.`,
+    "",
+    "| Fichier | Date lue dans le nom |",
+    "|---|---|",
+  ];
+  for (const f of [...sansTrace].sort()) {
+    const rel = String(f).slice(String(dossier).length + 1);
+    const base = rel.split("/").pop();
+    l.push(`| [${base}](${rel}) | ${(base.match(MOTIF_DATE_DE_FICHIER) ?? [])[1] ?? "—"} |`);
+  }
+  return l.join("\n");
+}
+
+export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, writeImpl = writeFileSync, etats = ["sans contrat", "en retard"] } = {}) {
+  if (!mesure?.mesurable) return { mesurable: false, pourquoi: mesure?.pourquoi ?? "aucune mesure fournie" };
+  const repares = [];
+  for (const ligne of mesure.lignes) {
+    if (!etats.includes(ligne.etat)) continue;
+    const fichiers = [];
+    const pile = [ligne.dossier];
+    while (pile.length) {
+      const d = pile.pop();
+      let entrees = [];
+      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+      for (const f of entrees) {
+        if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
+        if (f.name === "index.md") continue;
+        fichiers.push(`${d}/${f.name}`);
+      }
+    }
+    if (!fichiers.length) continue;
+    const chemin = `${ligne.dossier}/index.md`;
+    let texte = "";
+    try { texte = readFileImpl(join(root, chemin), "utf8"); } catch { continue; }
+    const contenu = ligne.etat === "en retard"
+      ? sommaireDesDepotsSansTrace(ligne.dossier, depotsSansTrace(texte, fichiers))
+      : sommaireDesFichiers(ligne.dossier, fichiers);
+    if (ligne.etat === "en retard" && !depotsSansTrace(texte, fichiers).length) continue;
+    writeImpl(join(root, chemin), poserLeBlocGenere(texte, contenu), "utf8");
+    repares.push({ chemin, etat: ligne.etat, fichiers: fichiers.length });
+  }
+  return { mesurable: true, repares, horsPortee: "elle n'écrit QU'ENTRE SES DEUX MARQUEURS : la prose écrite à la main autour n'est jamais touchée, et un second passage remplace le bloc au lieu de l'empiler." };
+}
+
 function main() {
   const sub = process.argv[2];
   printReportHeader({
@@ -1066,6 +1383,57 @@ function main() {
   // consulte au moment d'ouvrir un chantier, où la circulation des données n'intéresse personne.
   // Lui faire payer le scan complet aurait fait de la règle « on reprend d'abord les notes » une
   // commande qu'on saute parce qu'elle est lente.
+  // `index` (2026-09-26, tâche #982) — l'état du système d'index, à sa demande. Chez data-archangel
+  // parce que c'est lui qui veille sur la CIRCULATION des données : un fichier qu'aucun index
+  // n'annonce est un fichier qui ne circule pas, quelle que soit sa qualité.
+  // « angel-of-index » — nom donné par l'utilisateur le 2026-09-26. « index » reste accepté et
+  // c'est délibéré : le mot est celui qu'on tape spontanément, et refuser le mot naturel pour
+  // imposer le nom propre ferait rater la commande à qui ne l'a pas mémorisée.
+  if (sub === "angel-of-index" || sub === "index") {
+    const r = mesurerLesIndex();
+    if (process.argv[3] === "--completer" || process.argv[3] === "--rattraper") {
+      // « --completer » couvre les DEUX formes d'index qui promettent une liste sans la tenir :
+      // celui qui n'en a jamais eu (« sans contrat ») et celui qui en a une incomplète. Le geste
+      // est le même — un bloc généré SOUS ce qui existe — et les séparer aurait obligé à lancer
+      // deux commandes pour un seul défaut.
+      const etats = process.argv[3] === "--completer" ? ["sans contrat", "incomplet"] : ["en retard"];
+      const rep = reparerLesIndex(r, { etats });
+      if (!rep.mesurable) { console.log(`\nPAS MESURÉ — ${rep.pourquoi}`); return; }
+      console.log(`\n=== ${rep.repares.length} index RÉPARÉ(S) — ${process.argv[3] === "--completer" ? "sommaire ajouté SOUS la prose existante" : "dépôts sans trace listés, marqués reconstitués"} ===\n`);
+      for (const x of rep.repares) console.log(`  ✅ ${x.chemin} — ${x.fichiers} fichier(s)`);
+      console.log(`\n  ${rep.horsPortee}`);
+      return;
+    }
+    if (process.argv[3] === "--generer") {
+      const g = genererLesIndexManquants(r, { horodatage: new Date().toISOString().slice(0, 10) });
+      if (!g.mesurable) { console.log(`\nPAS MESURÉ — ${g.pourquoi}`); return; }
+      console.log(`\n=== ${g.ecrits.length} index GÉNÉRÉ(S) — uniquement là où il n'en existait aucun ===\n`);
+      for (const e of g.ecrits) console.log(`  ✅ ${e.chemin} — ${e.fichiers} fichier(s) listés`);
+      console.log(`\n  ${g.horsPortee}`);
+      return;
+    }
+    const lignes = formatIndexLines(r);
+    for (const ligne of lignes) console.log(ligne);
+    try { mkdirSync(join(ROOT, "docs/data-archangel"), { recursive: true }); } catch { /* déjà là */ }
+    // LE PLAN D'ACTION (Article 28) : les trois écarts sont SÉPARÉS parce qu'ils appellent trois
+    // gestes différents — compléter une liste, rattraper un journal, ou CHOISIR une nature pour un
+    // index qui n'en a aucune. Les fondre en un seul chiffre ferait perdre le geste.
+    const ecarts = [];
+    if (r.mesurable) {
+      const par = (etat) => (r.parEtat[etat] ?? []).length;
+      if (par("incomplet")) ecarts.push({ pourquoi: `${par("incomplet")} catalogue(s) ne nomment pas tous leurs fichiers` });
+      if (par("en retard")) ecarts.push({ pourquoi: `${par("en retard")} journal(aux) comptent moins de lignes que de dépôts` });
+      if (par("sans contrat")) ecarts.push({ pourquoi: `${par("sans contrat")} index n'annoncent rien de leur dossier — ni catalogue ni journal` });
+      if (par("sans index")) ecarts.push({ pourquoi: `${par("sans index")} dossier(s) sans aucun index : \`index --generer\` les écrit sans rien écraser` });
+    }
+    const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "data-archangel", tache: "traiter dossier par dossier — compléter un catalogue, rattraper un journal, ou CHOISIR une nature pour un index qui n'en a pas ; jamais un remplacement en masse, la prose qui explique un dossier valant mieux qu'une liste" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const ligne of plan.lignes) console.log(ligne);
+    const chemin = `docs/data-archangel/systeme-des-index-${new Date().toISOString().slice(0, 10)}.txt`;
+    writeFileSync(join(ROOT, chemin), [...lignes, "", PLAN_ACTION_TITRE, ...plan.lignes].join("\n") + "\n", "utf8");
+    console.log(`\nRapport déposé : ${chemin}`);
+    return;
+  }
   if (sub === "notes") {
     for (const l of formatReprisesLines(reprendreLesNotes(process.argv[3]))) console.log(l);
     return;

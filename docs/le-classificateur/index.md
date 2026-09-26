@@ -11,3 +11,15 @@ la tâche #612 cherche à réduire le nombre de fichiers produits sans lecteur.
 | Date | Fichiers classés | Couverture du rang | Remarque |
 |---|---|---|---|
 | 2026-09-26 | 88 | 100 % | Première génération après la scission de CASSANDRA-RH. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**3 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [classification-agence.html](classification-agence.html) | — |
+| [etat-des-classifications-2026-09-26.html](etat-des-classifications-2026-09-26.html) | — |
+| [etat-des-classifications-2026-09-26.txt](etat-des-classifications-2026-09-26.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

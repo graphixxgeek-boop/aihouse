@@ -18,3 +18,18 @@ découverte un test après l'autre.
 Il ne peut pas non plus s'obliger à être consulté. Cette limite est déclarée plutôt que tue (même
 honnêteté que tool-brain et SMART-CONSO-TOKEN) : l'obligation vit dans l'entrée « Intégration d'un
 nouvel outil » de `PROCESSES` (`scripts/god-of-all-process.mjs`), surveillée par god-of-all-process.
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**6 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-22T17-20-06-065Z.txt](circle-signal-2026-09-22T17-20-06-065Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-136Z.txt](circle-signal-2026-09-22T17-42-10-136Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-914Z.txt](circle-signal-2026-09-23T21-49-13-914Z.txt) | — |
+| [circle-signal-2026-09-24T21-48-39-584Z.txt](circle-signal-2026-09-24T21-48-39-584Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-632Z.txt](circle-signal-2026-09-25T14-14-12-632Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

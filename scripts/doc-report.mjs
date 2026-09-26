@@ -56,6 +56,15 @@ export const DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES = [
   { path: "docs/rapports-de-nuit/", pourquoi: "les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas." },
   { path: "docs/rapports-gros-prompt/", pourquoi: "les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs." },
   { path: "docs/contexte-projet/", pourquoi: "les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties." },
+  // LES QUATRE QUE LA GÉNÉRATION D'INDEX A RÉVÉLÉS (2026-09-26, tâche #982). Ils n'ont pas changé
+  // de nature : ils ont reçu une TABLE DES MATIÈRES, et le garde-fou reconnaît un registre à la
+  // présence d'un `index.md`. C'est lui qui a raison de demander, et la réponse est écrite ici
+  // plutôt que le signal étouffé — un dossier de documents avec un sommaire reste un dossier de
+  // documents, il ne devient pas le registre d'un outil.
+  { path: "docs/referentiel/", pourquoi: "LE référentiel du projet — 112 documents écrits à la main, jamais produits passage après passage. Son index est une table des matières, générée pour que la charte puisse enfin la citer : elle ordonne de vérifier « contre la table des matières réelle de ce dossier », et cette table n'existait pas." },
+  { path: "docs/strategies/", pourquoi: "les raisonnements stratégiques sur ce projet, rédigés, jamais produits mécaniquement. Leur sommaire ne leur donne pas de producteur périodique." },
+  { path: "docs/templates/", pourquoi: "les gabarits dont sortent les pièces de kit. Un moule n'est pas un registre : il ne s'accumule pas, il sert." },
+  { path: "docs/gabarits/", pourquoi: "même nature que docs/templates/ — deux dossiers pour une même chose, voisinage à instruire séparément, mais ni l'un ni l'autre n'est un registre." },
 ];
 
 // findDossiersNiRegistreNiDeclares() — LE GARDE-FOU DE CETTE DÉCLARATION (Article 24). Un dossier

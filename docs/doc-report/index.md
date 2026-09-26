@@ -11,3 +11,14 @@ décision HTML/texte et de l'index global des rapports — plus, depuis le 2026-
 | Rapport | Quand | Ce qu'il dit |
 |---|---|---|
 | `coherence-outil-rapport-2026-09-26.txt` | 2026-09-26 | les cinq critères d'un rapport complet, tous au vert ; 19 détecteurs portés par la seule suite de tests, triés en 7 à câbler / 12 à laisser (tâche #919) |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**2 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [coherence-outil-rapport-2026-09-26.txt](coherence-outil-rapport-2026-09-26.txt) | — |
+| [rapports-jumeaux-2026-09-26.txt](rapports-jumeaux-2026-09-26.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

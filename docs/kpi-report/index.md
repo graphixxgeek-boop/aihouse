@@ -17,3 +17,15 @@ se lit.
 | 2026-09-22 | Les familles dépendant d'un serveur de développement avec du vrai trafic rendaient des chiffres là où il n'y avait aucune donnée. | Elles rendent honnêtement **N/A** quand aucun serveur n'est joignable. La seule famille 100 % mécanique (Robustesse du code) est celle qu'on lit en Ronde. |
 | 2026-09-26 | **« 28 outils sur 50 ne concluent pas » — le chiffre était faux**, et c'était la composante la plus basse de la note de l'Agence. Le KPI recalculait sa propre portée sur tout ce qui scanne le dépôt, bibliothèques et crochets compris, alors que la vraie mesure existait déjà : 32 scanners, 26 qui concluent, 5 dispensés avec raison, **UN SEUL** en faute. **44 % contre 100 %** — deux mesures de la même exigence, deux dénominateurs, et c'est la plus basse qui pilotait la note. | Le KPI lit désormais `findOutilsDevantConclure()` au lieu de recalculer. Et l'unique fautif était god-of-all-process : le contrôleur qui constate qu'un rapport sans plan d'action n'est pas fini s'arrêtait lui-même sans conclure. |
 | 2026-09-26 | Kit d'export : son registre manquait. | Ce fichier. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Dépôts sans ligne de journal *(reconstitué)*
+
+*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
+
+**1 dépôt(s)** sans trace.
+
+| Fichier | Date lue dans le nom |
+|---|---|
+| [serie.json](serie.json) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

@@ -24,3 +24,16 @@ l'autre, jamais des rapports à lire.
 |---|---|---|
 | 2026-09-26 | **Kits d'export, premier passage sous la règle universelle** : 89 fichiers, 82 kits dus, 7 dispensés avec raison, **33 complets, 49 incomplets**. Les optionnels sont passés de 100 % (ancienne règle proportionnelle) à **18 %** — le premier chiffre mesurait une exigence si basse qu'elle ne demandait rien. Coût mesuré pour tout combler : **105 documents** (44 blueprints, 43 fiches, 18 index). | Règle corrigée sur sa décision (ligne de suivi n°969) ; comblement lancé par ordre de réparation, les vitaux d'abord. |
 | 2026-09-26 | **Ce dossier n'avait pas d'index** — SAFE-EXPORT mesurait la complétude des kits de tout le monde et son propre registre n'existait pas. | Cet index, créé le jour même. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**4 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [exportabilite-2026-09-26.txt](exportabilite-2026-09-26.txt) | — |
+| [kits-2026-09-26.txt](kits-2026-09-26.txt) | — |
+| [memoire.json](memoire.json) | — |
+| [serie.json](serie.json) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

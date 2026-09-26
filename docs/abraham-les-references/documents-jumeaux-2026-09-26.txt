@@ -1,7 +1,7 @@
-=== DOCUMENTS QUI DISENT LA MÊME CHOSE — 0 paire(s) à instruire sur 382 documents ===
+=== DOCUMENTS QUI DISENT LA MÊME CHOSE — 0 paire(s) à instruire sur 387 documents ===
 
-  Recouvrement de vocabulaire mesuré au-dessus de 0.25 · 282 paire(s) écartées comme légitimes PAR CONSTRUCTION :
-    · index-replique × 177 — le même nom de fichier dans deux dossiers différents — un index généré chez chaque outil, jamais deux documents concurrents
+  Recouvrement de vocabulaire mesuré au-dessus de 0.25 · 288 paire(s) écartées comme légitimes PAR CONSTRUCTION :
+    · index-replique × 183 — le même nom de fichier dans deux dossiers différents — un index généré chez chaque outil, jamais deux documents concurrents
     · serie-datee × 39 — deux instantanés datés du même dossier — c'est une histoire, pas une redondance
     · kit-du-meme-outil × 35 — le blueprint, la fiche et le registre d'un même outil — ils couvrent le même sujet PAR DESIGN, sous trois angles
     · ensemble-declare × 30 — deux documents d'un ensemble que son NOMMAGE déclare (au moins trois fichiers du dossier partagent leur préfixe ou leur suffixe)
@@ -10,12 +10,12 @@
   🟢 43 % de vocabulaire commun (121 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/charte-cartographie.md
       · docs/referentiel/claude-md-regles.md
-  🟢 35 % de vocabulaire commun (388 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
-      · docs/referentiel/classification-agence.md
-      · docs/referentiel/le-classificateur.md
   🟢 35 % de vocabulaire commun (1588 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/regles-de-travail.md
       · CLAUDE.md
+  🟢 35 % de vocabulaire commun (386 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/classification-agence.md
+      · docs/referentiel/le-classificateur.md
   🟢 34 % de vocabulaire commun (1099 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/parametres.md
       · docs/referentiel/principes.md
@@ -31,12 +31,12 @@
   🟢 28 % de vocabulaire commun (371 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/le-classificateur.md
       · docs/referentiel/organisation-agence.md
-  🟢 28 % de vocabulaire commun (358 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
-      · docs/referentiel/classification-agence.md
-      · docs/referentiel/organisation-agence.md
   🟢 28 % de vocabulaire commun (216 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/peur-de-l-export.md
       · docs/strategies/export-et-commercialisation-strategie.md
+  🟢 28 % de vocabulaire commun (354 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/classification-agence.md
+      · docs/referentiel/organisation-agence.md
   🟢 28 % de vocabulaire commun (861 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/lecons.md
       · CLAUDE.md

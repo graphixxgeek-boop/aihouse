@@ -54,3 +54,14 @@ justement factorisé leur logique commune. Ce n'est pas une régression : la par
 dans `judge-persona-shared.mjs`, et chacune des deux fonctions ne garde plus que le signal propre à
 SON personnage. Le classement en convention est donc exact, et l'outil n'a pas sur-accusé — ce qui
 est la seule chose qui rende un détecteur croyable sur la durée.
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**2 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-25T14-14-12-517Z.txt](circle-signal-2026-09-25T14-14-12-517Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

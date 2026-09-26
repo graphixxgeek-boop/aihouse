@@ -42,3 +42,16 @@ reproposer en tête ce qui a déjà été refusé.)*
 | 2026-09-25 10:23 | 24614 | 2252 | à trancher | 18 aparté(s) narratif(s) daté(s) |
 | 2026-09-25 14:05 | 24774 | 2252 | à trancher | 18 aparté(s) narratif(s) daté(s) |
 | 2026-09-26 08:04 | 25570 | 2645 | à trancher | 18 aparté(s) narratif(s) daté(s) |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Dépôts sans ligne de journal *(reconstitué)*
+
+*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
+
+**2 dépôt(s)** sans trace.
+
+| Fichier | Date lue dans le nom |
+|---|---|
+| [.dernier-fichier-maitre.local.txt](.dernier-fichier-maitre.local.txt) | — |
+| [circle-signals-index.md](ronde/circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

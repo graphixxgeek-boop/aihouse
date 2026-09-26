@@ -7,3 +7,17 @@ ce qui en a été fait. Un passage sans suite se voit ici, jamais dans la sortie
 |---|---|---|
 | 2026-09-24 | **Premier passage, le jour de sa construction.** Source de l'heure : **système**, jamais réseau — les deux API de temps essayées (`worldtimeapi.org`, `timeapi.io`) rendent **HTTP 403**, refusées par la politique réseau de l'environnement d'exécution (`connect_rejected`). L'heure locale est juste (vérifiée contre l'horodatage git du commit en cours), mais elle est invérifiable depuis le conteneur. | **Écart RETENU et déclaré dans le rapport lui-même**, jamais masqué : l'outil affiche « SOURCE : système » et liste les essais échoués avec leur motif. La décision d'autoriser un domaine de temps appartient à l'utilisateur (paramètre d'environnement), jamais à l'agent — elle est portée au rapport de nuit. **Le repli n'est pas un échec de conception : c'est le comportement calibré** (« essaie l'API, et si ça échoue prends l'horloge système »). Ce qui aurait été un échec, c'est de rendre l'heure locale sans dire qu'elle l'est. |
 | 2026-09-24 | Première mesure historisée, reprise de la Ronde GOAT MAX de la veille : **38 minutes estimées contre 27 réelles, soit +41 % — SUR-ESTIMÉE**. | Conservée telle quelle. **Aucun ajustement appliqué** : il en faut trois, et un facteur calculé sur un point ressemble pourtant à une statistique. C'est aussi ce point qui a donné le seuil de tolérance de ±30 % — dérivé d'une mesure réelle ressentie comme « nettement trop », jamais d'une convention. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Dépôts sans ligne de journal *(reconstitué)*
+
+*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
+
+**3 dépôt(s)** sans trace.
+
+| Fichier | Date lue dans le nom |
+|---|---|
+| [circle-signal-2026-09-25T14-14-12-524Z.txt](circle-signal-2026-09-25T14-14-12-524Z.txt) | 2026-09-25 |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [estimations.md](estimations.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

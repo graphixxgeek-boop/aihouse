@@ -7,3 +7,15 @@
 | 2026-09-24 21:09 | 7901d7a | 881 fichiers, 6.1 Mo | 48 fichiers, 1.0 Mo |
 | 2026-09-24 21:10 | 7901d7a | 881 fichiers, 6.1 Mo | 41 fichiers, 1.0 Mo |
 | 2026-09-25 14:11 | 7b1799c | 929 fichiers, 6.5 Mo | 47 fichiers, 1.0 Mo |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Dépôts sans ligne de journal *(reconstitué)*
+
+*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
+
+**1 dépôt(s)** sans trace.
+
+| Fichier | Date lue dans le nom |
+|---|---|
+| [circle-signals-index.md](circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

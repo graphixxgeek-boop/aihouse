@@ -48,3 +48,55 @@ avoir à tous les rouvrir. Une entrée se met à jour dès qu'un trou trouvé ic
 | 2026-09-19 | [scan-2026-09-19-21-39.txt](scan-2026-09-19-21-39.txt) | Aucune nouvelle | Sous-produit d'un commit ordinaire (crochet post-commit) — reconfirme les 6 candidats "probable" déjà connus (`lastCause` inclus, pas encore supprimé du code à ce moment de la soirée), rien de neuf par rapport au balayage du même jour ci-dessous. Indexé rétroactivement (tâche #340). |
 | 2026-09-19 | [scan-2026-09-19-21-09.txt](scan-2026-09-19-21-09.txt) | Aucune nouvelle | Sous-produit d'un commit ordinaire (crochet post-commit) — reconfirme les 6 candidats "probable" déjà connus (`lastCause` inclus), rien de neuf par rapport au balayage du même jour ci-dessous. Indexé rétroactivement (tâche #340). |
 | 2026-09-19 | [scan-2026-09-19-17-05.txt](scan-2026-09-19-17-05.txt) | `trottoirGranted` (lib/life.ts) jamais lu nulle part après avoir été positionné à `true` — le bonus "trottoir" enregistre un accès narré qui n'est ensuite jamais consulté pour changer quoi que ce soit (même famille de bug que le bouton jour/nuit manuel, corrigé plus tôt le même jour) | Premier balayage réel d'ARGUS, lancé le jour de sa création (demande explicite de l'utilisateur). 6 autres champs signalés en confiance "probable" (`ambientSeen`, `observerNamed`, `lastCause`, `exitSearched`, `proposalHistoryChecked`, `personalBoosted`) — `exitSearched` vérifié manuellement et écarté (faux positif, réellement lu dans `lib/turn.ts`) ; les 5 autres restent à vérifier avant d'agir. **`trottoirGranted` vérifié et écarté à son tour (2026-09-19, second faux positif) :** ce n'est pas un trou — `docs/referentiel/parametres.md` documentait déjà, avant même ce scan, un choix explicite de l'utilisateur (« on verra après ») de garder `trottoir` comme un instant entièrement résolu au moment du tirage (les répliques de réaction sont déjà générées à cet instant, cf. `app/api/lia/route.ts`), jamais une zone 3D à consulter plus tard comme le jardin — le flag n'a donc structurellement rien à relire après coup. Reclassé le même jour en tâche de la future refonte graphique plutôt que fermé silencieusement (cf. Plan d'origine, CLAUDE.md). Leçon methodologique : consulter `docs/referentiel/parametres.md` AVANT de qualifier une trouvaille ARGUS de bug, pas après avoir déjà fait choisir une correction à l'utilisateur (Article 19). **Les 4 derniers candidats vérifiés et clos (2026-09-19, audit ligne-par-ligne exhaustif) :** `ambientSeen`, `observerNamed`, `proposalHistoryChecked` et `personalBoosted` sont tous de FAUX POSITIFS — réellement lus comme condition à l'endroit même où ils sont écrits (`app/api/lia/route.ts`), l'heuristique d'ARGUS les avait signalés uniquement à cause d'un nombre brut d'occurrences trop faible pour déclencher sa confiance "confirmé", jamais parce qu'ils étaient réellement morts. **`lastCause` en revanche était un vrai champ mort confirmé** : écrit à chaque pensée causale mais jamais lu nulle part, entièrement remplacé en pratique par `causeByActor` (la version par personnage, introduite au même moment mais jamais retiré son doublon global) — supprimé du code le jour même (Article 3). Ce lot clôt enfin les 7 candidats de ce tout premier balayage, restés 3 jours en attente de vérification manuelle. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**43 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [memoire.json](memoire.json) | — |
+| [scan-2026-09-19-17-05.txt](scan-2026-09-19-17-05.txt) | — |
+| [scan-2026-09-19-21-09.txt](scan-2026-09-19-21-09.txt) | — |
+| [scan-2026-09-19-21-39.txt](scan-2026-09-19-21-39.txt) | — |
+| [scan-2026-09-20-11-42.txt](scan-2026-09-20-11-42.txt) | — |
+| [scan-2026-09-20-11-43.txt](scan-2026-09-20-11-43.txt) | — |
+| [scan-2026-09-20-20-52.txt](scan-2026-09-20-20-52.txt) | — |
+| [scan-2026-09-21-00-02.txt](scan-2026-09-21-00-02.txt) | — |
+| [scan-2026-09-21-01-06.txt](scan-2026-09-21-01-06.txt) | — |
+| [scan-2026-09-21-17-04.txt](scan-2026-09-21-17-04.txt) | — |
+| [scan-2026-09-21-18-54.txt](scan-2026-09-21-18-54.txt) | — |
+| [scan-2026-09-21-22-13.txt](scan-2026-09-21-22-13.txt) | — |
+| [scan-2026-09-21-22-41.txt](scan-2026-09-21-22-41.txt) | — |
+| [scan-2026-09-22-00-49.txt](scan-2026-09-22-00-49.txt) | — |
+| [scan-2026-09-22-00-58.txt](scan-2026-09-22-00-58.txt) | — |
+| [scan-2026-09-22-04-15.txt](scan-2026-09-22-04-15.txt) | — |
+| [scan-2026-09-22-04-29.txt](scan-2026-09-22-04-29.txt) | — |
+| [scan-2026-09-22-11-35.txt](scan-2026-09-22-11-35.txt) | — |
+| [scan-2026-09-22-11-36.txt](scan-2026-09-22-11-36.txt) | — |
+| [scan-2026-09-22-17-13.txt](scan-2026-09-22-17-13.txt) | — |
+| [scan-2026-09-22-17-39.txt](scan-2026-09-22-17-39.txt) | — |
+| [scan-2026-09-22-17-55.txt](scan-2026-09-22-17-55.txt) | — |
+| [scan-2026-09-22-19-08.txt](scan-2026-09-22-19-08.txt) | — |
+| [scan-2026-09-22-20-13.txt](scan-2026-09-22-20-13.txt) | — |
+| [scan-2026-09-22-20-20.txt](scan-2026-09-22-20-20.txt) | — |
+| [scan-2026-09-22-20-27.txt](scan-2026-09-22-20-27.txt) | — |
+| [scan-2026-09-22-21-00.txt](scan-2026-09-22-21-00.txt) | — |
+| [scan-2026-09-22-21-01.txt](scan-2026-09-22-21-01.txt) | — |
+| [scan-2026-09-23-18-56.txt](scan-2026-09-23-18-56.txt) | — |
+| [scan-2026-09-23-18-57.txt](scan-2026-09-23-18-57.txt) | — |
+| [scan-2026-09-23-18-58.txt](scan-2026-09-23-18-58.txt) | — |
+| [scan-2026-09-23-20-32.txt](scan-2026-09-23-20-32.txt) | — |
+| [scan-2026-09-23-21-19.txt](scan-2026-09-23-21-19.txt) | — |
+| [scan-2026-09-23-21-26.txt](scan-2026-09-23-21-26.txt) | — |
+| [scan-2026-09-25-10-53.txt](scan-2026-09-25-10-53.txt) | — |
+| [scan-2026-09-25-14-08.txt](scan-2026-09-25-14-08.txt) | — |
+| [scan-2026-09-25-14-09.txt](scan-2026-09-25-14-09.txt) | — |
+| [scan-2026-09-25-14-18.txt](scan-2026-09-25-14-18.txt) | — |
+| [scan-2026-09-25-15-19.txt](scan-2026-09-25-15-19.txt) | — |
+| [scan-2026-09-25-15-21.txt](scan-2026-09-25-15-21.txt) | — |
+| [scan-2026-09-26-08-08.txt](scan-2026-09-26-08-08.txt) | — |
+| [scan-2026-09-26-08-18.txt](scan-2026-09-26-08-18.txt) | — |
+| [scan-2026-09-26-22-31.txt](scan-2026-09-26-22-31.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

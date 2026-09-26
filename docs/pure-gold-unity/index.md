@@ -8,3 +8,17 @@ arrivés sans le respecter.
 |---|---|---|---|---|
 | 2026-09-22 (1er passage) | 29 | 11 | 18 | Première mesure réelle. L'obligation existait depuis le matin même et n'avait rien changé : « devoir » et « faire » ne sont pas la même chose. |
 | 2026-09-22 (après migration) | 29 | 29 | 0 | Chantier clos. À partir d'ici, l'outil ne sert plus à rattraper un retard mais à détecter une RÉGRESSION : un nouvel outil qui écrirait son rapport à la main. |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**5 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-22T17-20-06-064Z.txt](circle-signal-2026-09-22T17-20-06-064Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-133Z.txt](circle-signal-2026-09-22T17-42-10-133Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-799Z.txt](circle-signal-2026-09-23T21-49-13-799Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-484Z.txt](circle-signal-2026-09-25T14-14-12-484Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

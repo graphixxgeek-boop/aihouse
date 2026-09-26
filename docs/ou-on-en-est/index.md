@@ -43,3 +43,16 @@ travail lui-même.
 | Date | Période couverte | Tâches terminées | Rapport |
 |---|---|---|---|
 | 2026-09-23 | 2026-09-22 → 2026-09-23 | 249 sur 485 tracées | `ou-on-en-est.html` |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**4 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-23T21-49-13-904Z.txt](circle-signal-2026-09-23T21-49-13-904Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-678Z.txt](circle-signal-2026-09-25T14-14-12-678Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [ou-on-en-est.html](ou-on-en-est.html) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

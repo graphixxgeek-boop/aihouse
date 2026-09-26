@@ -1055,6 +1055,18 @@ export function trouverDocumentsJumeaux(documents = [], { seuil = SEUIL_DOCUMENT
   };
 }
 
+// UN BLOC ÉCRIT PAR UNE MACHINE EST DU DÉCOR, jamais de la substance (2026-09-26, tâche #983).
+// Le soir même où ce détecteur est né, l'extension angel-of-index a posé un sommaire généré dans
+// une cinquantaine d'index — des blocs quasi identiques d'un dossier à l'autre, par construction.
+// Sept paires se sont mises à « dire la même chose », et c'était vrai : elles partageaient le même
+// décor. Le retirer avant de comparer est la même règle que le passe-partout des rapports, et la
+// borne existe déjà — les deux marqueurs que la génération pose elle-même.
+export const MOTIF_BLOC_GENERE = /<!-- SOMMAIRE GÉNÉRÉ[\s\S]*?<!-- FIN DU SOMMAIRE GÉNÉRÉ -->/g;
+
+export function sansLeBlocGenere(texte = "") {
+  return String(texte).replace(MOTIF_BLOC_GENERE, "");
+}
+
 export function chargerLesDocuments({ racine = "docs", fichiersEnPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = readFileSync, horsPortee = HORS_PORTEE_DOCUMENTS, tailleMin = TAILLE_MINIMALE_DOCUMENT } = {}) {
   const documents = [];
   const pile = [racine];
@@ -1067,7 +1079,7 @@ export function chargerLesDocuments({ racine = "docs", fichiersEnPlus = ["CLAUDE
       if (e.isDirectory()) { pile.push(chemin); continue; }
       if (!e.name.endsWith(".md") || horsPortee.some((h) => h.motif.test(chemin))) continue;
       try {
-        const texte = readFileImpl(chemin, "utf8");
+        const texte = sansLeBlocGenere(readFileImpl(chemin, "utf8"));
         // Un document trop court n'a pas assez de vocabulaire pour qu'un recouvrement veuille dire
         // quoi que ce soit : l'inclure produirait des paires au hasard.
         if (texte.length >= tailleMin) documents.push({ chemin, texte });
@@ -1075,7 +1087,7 @@ export function chargerLesDocuments({ racine = "docs", fichiersEnPlus = ["CLAUDE
     }
   }
   for (const f of fichiersEnPlus) {
-    try { documents.push({ chemin: f, texte: readFileImpl(f, "utf8") }); } catch { /* absent : on ne l'invente pas */ }
+    try { documents.push({ chemin: f, texte: sansLeBlocGenere(readFileImpl(f, "utf8")) }); } catch { /* absent : on ne l'invente pas */ }
   }
   return documents;
 }

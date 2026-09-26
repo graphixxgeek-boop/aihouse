@@ -64,3 +64,31 @@ chaque ligne précise sur combien de points sur combien de thèmes elle porte.)*
 - **Rapport** = lien vers le fichier détaillé de cette simulation (`docs/el-professor/<sim>.md`).
 - Un plafond a été appliqué à la note globale (thème Esprit < 10/20) : signalé explicitement dans le
   rapport détaillé, jamais silencieux dans cette table.
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**19 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [full_sim.md](full_sim.md) | — |
+| [full_sim10.md](full_sim10.md) | — |
+| [full_sim11.md](full_sim11.md) | — |
+| [full_sim14.md](full_sim14.md) | — |
+| [full_sim15.md](full_sim15.md) | — |
+| [full_sim16.md](full_sim16.md) | — |
+| [full_sim17.html](full_sim17.html) | — |
+| [full_sim17.md](full_sim17.md) | — |
+| [full_sim18.md](full_sim18.md) | — |
+| [full_sim19.md](full_sim19.md) | — |
+| [full_sim2.md](full_sim2.md) | — |
+| [full_sim3.md](full_sim3.md) | — |
+| [full_sim4.md](full_sim4.md) | — |
+| [full_sim5.md](full_sim5.md) | — |
+| [full_sim6.md](full_sim6.md) | — |
+| [full_sim7.md](full_sim7.md) | — |
+| [full_sim8.md](full_sim8.md) | — |
+| [full_sim9.md](full_sim9.md) | — |
+| [synthese-2026-09-19.md](synthese-2026-09-19.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

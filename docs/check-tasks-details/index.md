@@ -69,3 +69,100 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-09-26T04:41:55.090Z | en_cours | liste | 98 | 830 | 0 | 98 | /home/user/aihouse/docs/check-tasks-details/1790397715088-en_cours-liste.html |
 | 2026-09-26T04:46:07.008Z | projet_entier | arborescence | 830 | 830 | 0 | 98 | /home/user/aihouse/docs/check-tasks-details/1790397967006-projet_entier-arborescence.html |
 | 2026-09-26T13:20:56.922Z | en_cours | liste | 112 | 876 | 0 | 97 | /home/user/aihouse/docs/check-tasks-details/1790428856915-en_cours-liste.html |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**88 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [1789907983522-en_cours-liste.html](1789907983522-en_cours-liste.html) | — |
+| [1789908217479-elargi-arborescence.html](1789908217479-elargi-arborescence.html) | — |
+| [1789908269163-en_cours-liste.html](1789908269163-en_cours-liste.html) | — |
+| [1789911200155-en_cours-liste.html](1789911200155-en_cours-liste.html) | — |
+| [1789913230863-en_cours-liste.html](1789913230863-en_cours-liste.html) | — |
+| [1789913320510-en_cours-arborescence.html](1789913320510-en_cours-arborescence.html) | — |
+| [1789913976744-en_cours-arborescence.html](1789913976744-en_cours-arborescence.html) | — |
+| [1789916616621-projet_entier-arborescence.html](1789916616621-projet_entier-arborescence.html) | — |
+| [1789930809643-projet_entier-arborescence.html](1789930809643-projet_entier-arborescence.html) | — |
+| [1789932728875-en_cours-liste.html](1789932728875-en_cours-liste.html) | — |
+| [1789942688476-en_cours-liste.html](1789942688476-en_cours-liste.html) | — |
+| [1789942702956-projet_entier-arborescence.html](1789942702956-projet_entier-arborescence.html) | — |
+| [1789949457364-en_cours-liste.html](1789949457364-en_cours-liste.html) | — |
+| [1789950258880-en_cours-liste.html](1789950258880-en_cours-liste.html) | — |
+| [1789960034272-projet_entier-arborescence.html](1789960034272-projet_entier-arborescence.html) | — |
+| [1789960034691-en_cours-liste.html](1789960034691-en_cours-liste.html) | — |
+| [1789964544644-projet_entier-liste.html](1789964544644-projet_entier-liste.html) | — |
+| [1789964550420-en_cours-liste.html](1789964550420-en_cours-liste.html) | — |
+| [1789964550873-elargi-liste.html](1789964550873-elargi-liste.html) | — |
+| [1789965399724-en_cours-liste.html](1789965399724-en_cours-liste.html) | — |
+| [1789993954850-en_cours-liste.html](1789993954850-en_cours-liste.html) | — |
+| [1789993993698-projet_entier-arborescence.html](1789993993698-projet_entier-arborescence.html) | — |
+| [1789995060773-en_cours-liste.html](1789995060773-en_cours-liste.html) | — |
+| [1789995061211-elargi-liste.html](1789995061211-elargi-liste.html) | — |
+| [1789995061664-projet_entier-liste.html](1789995061664-projet_entier-liste.html) | — |
+| [1789995070773-projet_entier-arborescence.html](1789995070773-projet_entier-arborescence.html) | — |
+| [1790046924909-en_cours-liste.html](1790046924909-en_cours-liste.html) | — |
+| [1790050614065-en_cours-liste.html](1790050614065-en_cours-liste.html) | — |
+| [1790051362293-en_cours-liste.html](1790051362293-en_cours-liste.html) | — |
+| [1790052928767-en_cours-liste.html](1790052928767-en_cours-liste.html) | — |
+| [1790056370772-en_cours-liste.html](1790056370772-en_cours-liste.html) | — |
+| [1790073589861-en_cours-liste.html](1790073589861-en_cours-liste.html) | — |
+| [1790083320772-en_cours-liste.html](1790083320772-en_cours-liste.html) | — |
+| [1790097286696-en_cours-liste.html](1790097286696-en_cours-liste.html) | — |
+| [1790098903082-en_cours-liste.html](1790098903082-en_cours-liste.html) | — |
+| [1790099830963-en_cours-liste.html](1790099830963-en_cours-liste.html) | — |
+| [1790104086246-en_cours-liste.html](1790104086246-en_cours-liste.html) | — |
+| [1790105113063-en_cours-liste.html](1790105113063-en_cours-liste.html) | — |
+| [1790105121558-en_cours-liste.html](1790105121558-en_cours-liste.html) | — |
+| [1790105128349-en_cours-liste.html](1790105128349-en_cours-liste.html) | — |
+| [1790107260251-en_cours-liste.html](1790107260251-en_cours-liste.html) | — |
+| [1790107899267-en_cours-liste.html](1790107899267-en_cours-liste.html) | — |
+| [1790107900901-en_cours-liste.html](1790107900901-en_cours-liste.html) | — |
+| [1790113355715-en_cours-liste.html](1790113355715-en_cours-liste.html) | — |
+| [1790159659403-en_cours-liste.html](1790159659403-en_cours-liste.html) | — |
+| [1790164717021-en_cours-liste.html](1790164717021-en_cours-liste.html) | — |
+| [1790166265958-en_cours-liste.html](1790166265958-en_cours-liste.html) | — |
+| [1790166413036-en_cours-liste.html](1790166413036-en_cours-liste.html) | — |
+| [1790167292790-en_cours-liste.html](1790167292790-en_cours-liste.html) | — |
+| [1790198176712-en_cours-liste.html](1790198176712-en_cours-liste.html) | — |
+| [1790200706899-en_cours-liste.html](1790200706899-en_cours-liste.html) | — |
+| [1790278654664-en_cours-liste.html](1790278654664-en_cours-liste.html) | — |
+| [1790291146995-en_cours-liste.html](1790291146995-en_cours-liste.html) | — |
+| [1790295482467-en_cours-liste.html](1790295482467-en_cours-liste.html) | — |
+| [1790295572383-en_cours-liste.html](1790295572383-en_cours-liste.html) | — |
+| [1790353945912-en_cours-liste.html](1790353945912-en_cours-liste.html) | — |
+| [1790397492496-en_cours-liste.html](1790397492496-en_cours-liste.html) | — |
+| [1790397603787-en_cours-liste.html](1790397603787-en_cours-liste.html) | — |
+| [1790397715088-en_cours-liste.html](1790397715088-en_cours-liste.html) | — |
+| [1790397967006-projet_entier-arborescence.html](1790397967006-projet_entier-arborescence.html) | — |
+| [1790398055919-themes.html](1790398055919-themes.html) | — |
+| [1790398717675-themes.html](1790398717675-themes.html) | — |
+| [1790398753711-themes.html](1790398753711-themes.html) | — |
+| [1790398836004-themes.html](1790398836004-themes.html) | — |
+| [1790403295500-themes.html](1790403295500-themes.html) | — |
+| [1790404353552-themes.html](1790404353552-themes.html) | — |
+| [1790428856915-en_cours-liste.html](1790428856915-en_cours-liste.html) | — |
+| [bilan-taches-2026-09-25T16-42Z.txt](bilan-taches-2026-09-25T16-42Z.txt) | — |
+| [bilan-taches-2026-09-25T16-59Z.txt](bilan-taches-2026-09-25T16-59Z.txt) | — |
+| [bilan-taches-2026-09-25T17-09Z.txt](bilan-taches-2026-09-25T17-09Z.txt) | — |
+| [bilan-taches-2026-09-25T18-42Z.txt](bilan-taches-2026-09-25T18-42Z.txt) | — |
+| [bilan-taches-2026-09-25T19-02Z.txt](bilan-taches-2026-09-25T19-02Z.txt) | — |
+| [bilan-taches-2026-09-26T04-47Z.txt](bilan-taches-2026-09-26T04-47Z.txt) | — |
+| [bilan-taches-2026-09-26T05-17Z.txt](bilan-taches-2026-09-26T05-17Z.txt) | — |
+| [bilan-taches-2026-09-26T08-07Z.txt](bilan-taches-2026-09-26T08-07Z.txt) | — |
+| [bilan-taches-2026-09-26T11-39Z.txt](bilan-taches-2026-09-26T11-39Z.txt) | — |
+| [bilan-taches-2026-09-26T12-12Z.txt](bilan-taches-2026-09-26T12-12Z.txt) | — |
+| [circle-signal-2026-09-22T17-19-15-255Z.txt](circle-signal-2026-09-22T17-19-15-255Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-836Z.txt](circle-signal-2026-09-23T21-49-13-836Z.txt) | — |
+| [circle-signal-2026-09-24T21-48-39-572Z.txt](circle-signal-2026-09-24T21-48-39-572Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-671Z.txt](circle-signal-2026-09-25T14-14-12-671Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [historique.jsonl](historique.jsonl) | — |
+| [ronde-2026-09-21T23-26-29.html](ronde-2026-09-21T23-26-29.html) | — |
+| [ronde-2026-09-21T23-26-29.txt](ronde-2026-09-21T23-26-29.txt) | — |
+| [ronde-2026-09-25T14-08-43.html](ronde-2026-09-25T14-08-43.html) | — |
+| [ronde-2026-09-25T14-08-43.txt](ronde-2026-09-25T14-08-43.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

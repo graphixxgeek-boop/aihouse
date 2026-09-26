@@ -53,3 +53,26 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 | Date | Rapports classés | Sans sujet | Sans équipe | Fichiers |
 |---|---|---|---|---|
 | 2026-09-26 | 290 en 40 dossiers | 6 | 0 (4 déclarés hors registre, avec raison) | `classification-2026-09-26.txt` · `.html` · `verification-ronde-2026-09-26.txt` |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**14 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [circle-signal-2026-09-22T17-20-06-065Z.txt](circle-signal-2026-09-22T17-20-06-065Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-136Z.txt](circle-signal-2026-09-22T17-42-10-136Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-824Z.txt](circle-signal-2026-09-23T21-49-13-824Z.txt) | — |
+| [circle-signal-2026-09-24T21-48-39-553Z.txt](circle-signal-2026-09-24T21-48-39-553Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-559Z.txt](circle-signal-2026-09-25T14-14-12-559Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [classification-2026-09-26.html](classification-2026-09-26.html) | — |
+| [classification-2026-09-26.txt](classification-2026-09-26.txt) | — |
+| [classification-des-data-2026-09-26.md](classification-des-data-2026-09-26.md) | — |
+| [dossier-cible-2026-09-25.md](dossier-cible-2026-09-25.md) | — |
+| [dossier-classification-2026-09-25.md](dossier-classification-2026-09-25.md) | — |
+| [inventaire-rapports-2026-09-26.txt](inventaire-rapports-2026-09-26.txt) | — |
+| [systeme-des-index-2026-09-26.txt](systeme-des-index-2026-09-26.txt) | — |
+| [verification-ronde-2026-09-26.txt](verification-ronde-2026-09-26.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

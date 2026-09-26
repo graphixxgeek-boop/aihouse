@@ -9,3 +9,14 @@ uniquement dans la conversation.
 
 *(La liste se lit sur le contenu du dossier ; elle n'est pas recopiée ici, pour ne pas créer une
 deuxième vérité qui se périmerait — Article 24.)*
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**2 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [reponses-gros-prompt-2026-09-23.txt](reponses-gros-prompt-2026-09-23.txt) | — |
+| [reponses-gros-prompt-2026-09-26.html](reponses-gros-prompt-2026-09-26.html) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

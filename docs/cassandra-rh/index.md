@@ -37,3 +37,37 @@ construction, ce qui est en soi le vrai signal.
 **Trous de couverture de test** (AXA-CHECK, jamais recalculé) : HARMONIA **25 %** (le plus bas de
 l'équipe, et c'est un Gardien sacré), ARGUS 60 %, HYPER-SCAN-CHECKPOINT 63 %, AXA-CHECK lui-même
 63 %, Smart Conso API 64 %, THE-DEEP-READER 67 %. **THE-SCREENER : jamais scanné.**
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**25 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [carte-des-axes-2026-09-25-19-45.html](carte-des-axes-2026-09-25-19-45.html) | — |
+| [carte-des-axes-2026-09-25-21-04.html](carte-des-axes-2026-09-25-21-04.html) | — |
+| [circle-signal-2026-09-22T17-20-06-065Z.txt](circle-signal-2026-09-22T17-20-06-065Z.txt) | — |
+| [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
+| [circle-signal-2026-09-23T21-49-13-828Z.txt](circle-signal-2026-09-23T21-49-13-828Z.txt) | — |
+| [circle-signal-2026-09-24T21-48-39-565Z.txt](circle-signal-2026-09-24T21-48-39-565Z.txt) | — |
+| [circle-signal-2026-09-25T14-14-12-659Z.txt](circle-signal-2026-09-25T14-14-12-659Z.txt) | — |
+| [circle-signals-index.md](circle-signals-index.md) | — |
+| [convocations.md](convocations.md) | — |
+| [couches-des-gardiens-2026-09-26.md](couches-des-gardiens-2026-09-26.md) | — |
+| [2026-09-23-EVAL-DEV.html](evaluations/2026-09-23-EVAL-DEV.html) | evaluations |
+| [2026-09-23-EVAL-IA.html](evaluations/2026-09-23-EVAL-IA.html) | evaluations |
+| [EVAL-DEV-2026-09-22.md](evaluations/EVAL-DEV-2026-09-22.md) | evaluations |
+| [eval-dev-2026-09-23.html](evaluations/eval-dev-2026-09-23.html) | evaluations |
+| [eval-ia-2026-09-23.html](evaluations/eval-ia-2026-09-23.html) | evaluations |
+| [eval-ia.md](evaluations/eval-ia.md) | evaluations |
+| [dossier-conception-exploitation-2026-09.txt](gouvernance/dossier-conception-exploitation-2026-09.txt) | gouvernance |
+| [circle-signal-2026-09-22T05-01-47-467Z.txt](organigramme/circle-signal-2026-09-22T05-01-47-467Z.txt) | organigramme |
+| [circle-signal-2026-09-22T17-19-15-256Z.txt](organigramme/circle-signal-2026-09-22T17-19-15-256Z.txt) | organigramme |
+| [circle-signal-2026-09-22T17-42-10-136Z.txt](organigramme/circle-signal-2026-09-22T17-42-10-136Z.txt) | organigramme |
+| [circle-signal-2026-09-23T21-49-13-832Z.txt](organigramme/circle-signal-2026-09-23T21-49-13-832Z.txt) | organigramme |
+| [circle-signal-2026-09-25T14-14-12-639Z.txt](organigramme/circle-signal-2026-09-25T14-14-12-639Z.txt) | organigramme |
+| [circle-signals-index.md](organigramme/circle-signals-index.md) | organigramme |
+| [serie.json](serie.json) | — |
+| [versions-outils-2026-09-24.txt](versions-outils-2026-09-24.txt) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->
