@@ -89,6 +89,12 @@ export const TOOL_PORTEE = {
   "smart-conso-token": "les-deux",             // pèse les documents de travail ET le coût d'une analyse de simulation
   "hyper-scan-checkpoint": "les-deux",         // sa version complète inclut une mini-simulation réelle
   "the-final-judge": "les-deux",               // audite le code ET le produit
+  // Ajouté le 2026-09-26 (tâche #807), en instruisant les suspicions UNE PAR UNE comme la tâche
+  // l'exigeait : `loadArchivedSimulationActions()` OUVRE réellement `docs/simulations/` et lit les
+  // fichiers `_actions.txt`. Ce n'est pas une mention en passant — c'est la seule des sept
+  // suspicions qui décrivait un vrai usage, et elle serait restée invisible dans un lot traité en
+  // masse, ce qui est exactement la raison pour laquelle la tâche interdisait de le faire.
+  "axa-check": "les-deux",                     // mesure la couverture du code ET relit les actions archivées d'une simulation
   // Tout le reste est de portée « agence » — déclaré par défaut plus bas plutôt qu'énuméré ici,
   // pour qu'un nouvel outil hérite du cas majoritaire sans inscription manuelle (Article 24).
 };

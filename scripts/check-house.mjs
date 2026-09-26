@@ -14319,3 +14319,47 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: « 28 outils sur 50 ne concluent pas » — le chiffre était faux (2026-09-26, tâche #803). La tâche demandait d'instruire lesquels des 28 devaient vraiment conclure, et l'instruction existait déjà : findOutilsDevantConclure() écarte ce qui n'est pas une commande documentée, puis LIT le code pour séparer « émet des constats » de « rend un état ». Elle n'était simplement lue par personne. Le KPI, lui, recalculait sa propre portée sur tout ce qui scanne le dépôt — bibliothèques et crochets compris, alors que lib-shell.mjs scanne et n'a aucun rapport à conclure — et rendait 44 %, la composante la plus basse de la note de l'Agence et de loin. La vraie mesure : 32 scanners, 26 qui concluent, 5 dispensés avec leur raison, et UN SEUL qui devait conclure sans le faire. C'était god-of-all-process, et l'ironie était complète : le contrôleur qui constate qu'un rapport sans plan d'action n'est pas fini s'arrêtait lui-même sans conclure. Il conclut désormais, sur ses propres dettes documentaires et ses activités à enjeu sans process. 44 % contre 100 % — le premier était juste sur le papier et faux sur le fond, et c'est la cause racine qui compte ici, pas le chiffre : deux mesures de la même exigence, deux dénominateurs, et c'est la plus basse qui pilotait la note.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// « 44 OUTILS SANS PORTÉE DÉCLARÉE » — il y en avait UNE (2026-09-26, tâche #807)
+// ————————————————————————————————————————————————————————————————————————
+// Le registre TOOL_PORTEE déclare en toutes lettres que tout ce qu'il ne nomme pas est de portée
+// « agence », pour qu'un nouvel outil hérite du cas majoritaire sans inscription manuelle
+// (Article 24). Les 44 « sans portée » héritaient donc légitimement — le chiffre comptait le
+// fonctionnement normal comme un manque. Le vrai travail tenait dans les SEPT suspicions : des
+// outils qui héritent du défaut alors que leur code touche une simulation.
+{
+  const crh807 = await import('../scripts/cassandra-rh.mjs');
+  const { TOOL_PORTEE: TP807, porteeDe: portee807 } = await import('../scripts/lib-shell.mjs');
+  const { readFileSync: lire807 } = await import('node:fs');
+  const lecteur807 = (c) => { try { return lire807(c, 'utf8'); } catch { return null; } };
+
+  // LA SEULE VRAIE PORTÉE MANQUANTE DU LOT — et elle serait passée inaperçue dans un traitement en
+  // masse, ce qui est exactement pourquoi la tâche interdisait d'en faire un.
+  assert.equal(portee807('axa-check'), 'les-deux', 'axa-check genuinely OPENS docs/simulations and reads the archived _actions.txt files: one of the seven suspicions described a real use, and treating the batch as noise would have buried it');
+
+  // LE BUG AUTO-RÉFÉRENTIEL, CORRIGÉ À LA SOURCE et non par une exemption : le fichier qui DÉFINIT
+  // le motif contient forcément ce motif. Une exemption aurait masqué un défaut au lieu de le
+  // réparer (Article 3).
+  const reel807 = crh807.findOutilsSansPortee(crh807.recenserLesScripts().lignes, TP807, { lire: lecteur807 });
+  assert.deepEqual(reel807.suspectes, [], 'no suspicion may remain on the real repository: seven that nothing can extinguish become scenery in two readings (leçon L6), and the eighth — the one that would matter — would pass with them');
+  assert.ok(reel807.heritees.length > 30, 'and the tools that legitimately inherit the default are COUNTED as inheriting, never as a gap: that distinction is the whole correction');
+
+  // CHAQUE EXEMPTION PORTE SA RAISON — c'est la condition que l'Article 24 pose à une liste tenue
+  // à la main, et elle est vérifiée plutôt que promise.
+  assert.deepEqual(crh807.findExemptionsSansRaison(), [], 'every hand-written exemption must carry its written reason: without it the list becomes a way to silence the guard rather than a decision');
+  assert.ok(Object.keys(crh807.MENTIONS_SANS_USAGE).length >= 5, 'and the five roster mentions are declared individually, one reason each — "naming a tool is not doing its work" is a lesson this repository has already paid for three times');
+
+  // LE DÉTECTEUR DOIT ENCORE MORDRE — sans ça, l'exemption aurait simplement éteint la lumière.
+  const faux807 = [{ chemin: 'scripts/faux.mjs', type: 'commande-documentee', classes: [] }];
+  const mord807 = crh807.findOutilsSansPortee(faux807, {}, { lire: () => 'const d = join(ROOT, "docs/simulations");', exemptions: {} });
+  assert.deepEqual(mord807.suspectes, ['faux'], 'a tool that really reaches into docs/simulations without a declared portée must still be caught — the exemptions narrow the guard, they never switch it off');
+  const calme807 = crh807.findOutilsSansPortee(faux807, {}, { lire: () => 'const x = 1;', exemptions: {} });
+  assert.deepEqual([calme807.suspectes, calme807.heritees], [[], ['faux']], 'and a tool with no simulation signal inherits quietly, which is the majority case the registry was designed for');
+
+  // SANS LECTEUR DE SOURCE, ON N'INVENTE PAS DE SUSPICION (leçon L5).
+  assert.deepEqual(crh807.findOutilsSansPortee(faux807, {}, {}).suspectes, [], 'with no source reader no suspicion is invented: it cannot be distinguished from a tool that was never read');
+  assert.equal(crh807.findOutilsSansPortee([], {}, { lire: lecteur807 }).mesurable, false, 'and an empty census says PAS MESURÉ rather than "the registry is complete"');
+
+  console.log("Passed: « 44 outils sans portée déclarée » — il y en avait UNE (2026-09-26, tâche #807). Le registre déclare en toutes lettres que tout ce qu'il ne nomme pas est de portée « agence », pour qu'un nouvel outil hérite du cas majoritaire sans inscription manuelle : les 44 héritaient donc légitimement, et le chiffre comptait le fonctionnement normal comme un manque. Le vrai travail tenait dans les sept suspicions, et la tâche exigeait de les instruire une par une plutôt qu'en masse — exigence qui a payé, puisque la seule vraie portée manquante du lot serait passée inaperçue dans un traitement groupé. axa-check OUVRE réellement docs/simulations et lit les fichiers d'actions archivés : sa portée est « les deux », et c'est un sur sept. cassandra-rh se détectait elle-même, le fichier qui définit le motif le contenant forcément — corrigé à la source plutôt qu'inscrit en exemption, parce que ce n'est pas une décision mais un défaut. Les cinq dernières sont des mentions dans un inventaire : décrire un outil n'est pas faire son travail, et « nommer n'est pas utiliser » est une leçon que ce dépôt a déjà payée trois fois. Chacune est déclarée avec sa raison écrite, vérifiée mécaniquement, et le détecteur mord toujours sur un vrai cas — les exemptions le rétrécissent, elles ne l'éteignent pas.");
+}

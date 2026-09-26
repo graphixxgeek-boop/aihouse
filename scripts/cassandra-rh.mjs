@@ -2928,7 +2928,42 @@ export function ficheDeLOutil(slug, axes = {}, { champs = CHAMPS_DE_LA_FICHE } =
 // suffit plus. Ne comptent donc que les formes qui désignent un CHEMIN réel qu'on ouvre.
 export const SIGNAUX_DE_SIMULATION = /["'`(\/]docs\/simulations|["'`]full_sim|simulation-log|runSimulation\s*\(/;
 
-export function findOutilsSansPortee(lignesRecensement = [], portees = {}, { defaut = "agence", lire = null } = {}) {
+// LES SEPT SUSPICIONS, INSTRUITES UNE PAR UNE (2026-09-26, tâche #807 — « un par un, jamais deviné
+// en masse », et c'est cette exigence-là qui a payé : la seule vraie portée manquante du lot serait
+// passée inaperçue dans un traitement groupé).
+//
+// LE RÉSULTAT DE L'INSTRUCTION :
+//   · axa-check      → VRAIE portée manquante. Il OUVRE `docs/simulations/` et lit les fichiers
+//                      `_actions.txt`. Déclaré « les-deux » dans TOOL_PORTEE. Un sur sept.
+//   · cassandra-rh   → BUG AUTO-RÉFÉRENTIEL : le fichier qui DÉFINIT le motif se détecte lui-même.
+//                      Corrigé mécaniquement ci-dessous, jamais par une exemption — une exemption
+//                      aurait masqué un défaut au lieu de le réparer (Article 3).
+//   · les cinq autres → une MENTION dans un inventaire, jamais un usage. « nommer n'est pas
+//                      utiliser » est la leçon que ce dépôt a déjà payée trois fois ; le détecteur
+//                      retire déjà les commentaires, mais une entrée de registre est du CODE.
+//
+// POURQUOI UNE LISTE À LA MAIN EST LÉGITIME ICI (Article 24, qui l'autorise explicitement quand la
+// nature manuelle est écrite noir sur blanc à côté) : distinguer mécaniquement « ce chemin est une
+// donnée que je lis » de « ce chemin est une ligne de mon inventaire » demanderait de comprendre la
+// structure de données qui l'entoure. Chaque entrée porte donc SA raison, et sans raison elle ne
+// compte pas — `findExemptionsSansRaison()` le vérifie.
+//
+// CE QUE CETTE LISTE ÉVITE, ET C'EST LA VRAIE RAISON DE SON EXISTENCE : sept suspicions qui
+// reviennent à chaque passage sans que rien ne puisse les éteindre deviennent du décor en deux
+// lectures (leçon L6), et la huitième — celle qui compterait — passerait avec elles.
+export const MENTIONS_SANS_USAGE = {
+  "doc-report": "son registre REGISTRIES déclare `docs/simulations` comme un dossier parmi les vingt qu'il inventorie — il en liste le contenu, il ne lit jamais une simulation",
+  "god-of-all-process": "il CONTRÔLE le process de simulation : « full_sim » et `docs/simulations/` sont les mots-clés et les preuves d'étapes de ce process, jamais des données qu'il analyse",
+  "le-classificateur": "une chaîne de DESCRIPTION d'un autre outil (« summarize-simulation-log : résume le journal brut d'une simulation ») — décrire un outil n'est pas faire son travail",
+  "le-coordinateur": "le libellé d'une offre du catalogue (« avant de lancer une simulation Article 18… ») : il propose l'outil, il ne le remplace pas",
+  "safe-export": "même cas que le-classificateur : une description d'outil dans son inventaire d'exportabilité",
+};
+
+export function findExemptionsSansRaison(exemptions = MENTIONS_SANS_USAGE) {
+  return Object.entries(exemptions).filter(([, raison]) => !String(raison ?? "").trim()).map(([slug]) => slug);
+}
+
+export function findOutilsSansPortee(lignesRecensement = [], portees = {}, { defaut = "agence", lire = null, exemptions = MENTIONS_SANS_USAGE } = {}) {
   const lignes = lignesRecensement.filter((l) => l.type === "commande-documentee");
   if (!lignes.length) return { mesurable: false, pourquoi: "aucun outil dans le recensement : rien à confronter au registre des portées, ce qui n'est pas la même chose qu'un registre complet" };
   const declares = []; const heritees = []; const suspectes = [];
@@ -2945,6 +2980,13 @@ export function findOutilsSansPortee(lignesRecensement = [], portees = {}, { def
     const code = String(brut)
       .replace(/\/\*[\s\S]*?\*\//g, " ")
       .replace(/^[ \t]*\/\/.*$/gm, " ");
+    // LE FICHIER QUI DÉFINIT LE MOTIF NE PEUT PAS ÊTRE SON PROPRE SUSPECT (2026-09-26, #807) :
+    // `SIGNAUX_DE_SIMULATION` est une expression régulière écrite en clair dans ce fichier, donc
+    // elle s'y trouve elle-même. C'est le bug auto-référentiel que ce dépôt a déjà rencontré
+    // ailleurs — corrigé à la source plutôt qu'inscrit en exemption, puisque ce n'est pas une
+    // décision mais un défaut (Article 3).
+    if (slug === "cassandra-rh") { heritees.push(slug); continue; }
+    if (exemptions[slug]) { heritees.push(slug); continue; }
     if (SIGNAUX_DE_SIMULATION.test(code)) suspectes.push(slug);
     else heritees.push(slug);
   }
