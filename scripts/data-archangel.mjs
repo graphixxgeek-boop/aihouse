@@ -397,6 +397,121 @@ export function agentDataBriefing(carte, { root = ROOT, now = Date.now(), lecteu
 // CE QU'IL RAPPORTE, ET CE QU'IL NE PEUT PAS. Il trouve où le sujet a déjà été traité ; il ne lit
 // pas à ma place. Un chantier ouvert sans passer par là part avec les seules notes que l'agent a
 // en mémoire — c'est-à-dire, à la session suivante, aucune (Article 27).
+// ══════════════════════════════════════════════════════════════════════════
+// L'INVENTAIRE DES RAPPORTS EN TXT (2026-09-26, tâche #921 — point 28 de son gros prompt :
+// « l'inventaire des rapports en txt : combien, description, à quoi il sert, livré à la Ronde ?,
+// qui le lit, connecté à quoi », suivi de son arbitrage « tu analyses le document txt produit, puis
+// tu enchaînes sur la classification des DATA »).
+//
+// POURQUOI ICI ET PAS DANS UN OUTIL DE PLUS : data-archangel veille déjà sur la CIRCULATION des
+// données — qui produit, qui lit, qui n'est lu par personne. Un rapport archivé est une donnée
+// produite ; la question « qui le lit ? » est exactement la sienne. Le construire à côté aurait
+// donné deux cartes de la même circulation, et deux cartes divergent (Article 3, anti-doublon).
+//
+// CE QUI REND CET INVENTAIRE UTILE PLUTÔT QUE DÉCORATIF : il ne compte pas des fichiers, il répond
+// à la question du gaspillage. Un dossier qui accumule trois cents rapports que personne ne rouvre
+// n'est pas une archive, c'est un cimetière — et il grossit à chaque commit. La distinction se
+// mesure : un dossier est-il RELU (quelqu'un y lit un fichier) ou seulement ÉCRIT ?
+export const MOTIF_PRODUCTEUR = /docs\/([a-z0-9-]+)\//;
+
+// TROIS ÉTATS DE LECTURE, JAMAIS DEUX — et le troisième est celui qui coûte cher :
+//   · relu par un outil        — un script ouvre les fichiers de ce dossier ;
+//   · relu par un index        — un index.md les liste, donc un humain peut les retrouver ;
+//   · écrit et jamais rouvert  — produit, archivé, et hors de portée de tout le monde.
+export const ETATS_D_ARCHIVE = ["relu par un outil", "listé par un index", "écrit et jamais rouvert"];
+
+export function inventaireDesRapports({ root = ROOT, racine = "docs", lireDossier = readdirSync, lire = readFileSync, exists = existsSync, scripts = null } = {}) {
+  let dossiers = [];
+  try {
+    dossiers = lireDossier(join(root, racine), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
+  } catch {
+    return { mesurable: false, pourquoi: `le dossier ${racine}/ n'a pas pu être lu : aucun rapport n'a été inventorié, ce qui n'est jamais la même chose qu'aucun rapport` };
+  }
+  // Les sources des scripts, lues UNE fois : la question « qui lit ce dossier ? » se pose 40 fois,
+  // et relire 80 fichiers à chaque fois ferait de cet inventaire un outil qu'on n'ose plus lancer.
+  let sources = scripts;
+  if (!sources) {
+    sources = {};
+    try { for (const f of lireDossier(join(root, "scripts")).filter((x) => x.endsWith(".mjs"))) { try { sources[f] = lire(join(root, "scripts", f), "utf8"); } catch { /* illisible */ } } } catch { /* pas de scripts */ }
+  }
+  // LE CORPUS OÙ L'ON CHERCHE LES CITATIONS, construit UNE fois : les sources des scripts plus tous
+  // les .md du dépôt. Chercher 282 noms de fichiers dans 400 documents relus à chaque fois ferait
+  // de cet inventaire un outil qu'on n'ose plus lancer (L2, pris par l'autre bout : un outil trop
+  // lent finit par ne plus sortir du tout).
+  const corpus = Object.values(sources);
+  const empiler = (dossier) => {
+    let noms = [];
+    try { noms = lireDossier(join(root, dossier)); } catch { return; }
+    for (const n of noms) {
+      if (n.endsWith(".md")) { try { corpus.push(lire(join(root, dossier, n), "utf8")); } catch { /* illisible */ } }
+    }
+  };
+  empiler("docs");
+  empiler("docs/referentiel");
+  empiler("docs/suivi/sessions");
+  const lignes = [];
+  for (const d of dossiers) {
+    let fichiers = [];
+    try { fichiers = lireDossier(join(root, racine, d)); } catch { continue; }
+    const txt = fichiers.filter((f) => f.endsWith(".txt"));
+    if (!txt.length) continue;
+    const chemin = `${racine}/${d}`;
+    // QUI LE LIT : un script qui NOMME ce dossier dans son code peut l'ouvrir. C'est une borne
+    // haute, jamais une preuve de lecture — et c'est dit, plutôt que présenté comme un fait.
+    const lecteurs = Object.entries(sources)
+      .filter(([nom, src]) => nom !== "data-archangel.mjs" && new RegExp(`["'\`][^"'\`]*${d}/`).test(String(src)))
+      .map(([nom]) => `scripts/${nom}`);
+    const aUnIndex = exists(join(root, racine, d, "index.md"));
+    const etat = lecteurs.length ? ETATS_D_ARCHIVE[0] : aUnIndex ? ETATS_D_ARCHIVE[1] : ETATS_D_ARCHIVE[2];
+    let octets = 0;
+    for (const f of txt) { try { octets += lire(join(root, racine, d, f), "utf8").length; } catch { /* illisible */ } }
+    // LE FICHIER, PAS SEULEMENT LE DOSSIER — et c'est la mesure qui discrimine vraiment. « Un script
+    // nomme ce dossier » est vrai de 38 dossiers sur 40 : ça ne sépare rien. La vraie question est
+    // par FICHIER : ce rapport-ci est-il nommé quelque part ailleurs que dans son propre dossier ?
+    // Un rapport que personne ne cite n'est jamais rouvert individuellement — il n'est consultable
+    // qu'en ouvrant le dossier au hasard, ce que personne ne fait.
+    const cites = txt.filter((f) => corpus.some((t) => t.includes(f)));
+    lignes.push({ dossier: chemin, combien: txt.length, octets, lecteurs, aUnIndex, etat,
+      cites: cites.length, jamaisCites: txt.length - cites.length });
+  }
+  lignes.sort((a, b) => b.combien - a.combien);
+  const parEtat = Object.fromEntries(ETATS_D_ARCHIVE.map((e) => [e, lignes.filter((l) => l.etat === e)]));
+  return {
+    mesurable: true, lignes,
+    total: lignes.reduce((a, l) => a + l.combien, 0),
+    octets: lignes.reduce((a, l) => a + l.octets, 0),
+    parEtat,
+    horsPortee: "« qui le lit » est une BORNE HAUTE : un script qui nomme le dossier dans son code PEUT l'ouvrir, ce qui ne prouve pas qu'il le fait, ni qu'il lit autre chose que le dernier fichier. Un dossier sans lecteur et sans index, en revanche, est bien hors de portée de tout le monde — c'est le seul verdict ferme de cet inventaire.",
+  };
+}
+
+export function formatInventaireRapportsLines(inv, { combien = 12 } = {}) {
+  if (!inv?.mesurable) return [`INVENTAIRE DES RAPPORTS : PAS MESURÉ — ${inv?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== INVENTAIRE DES RAPPORTS EN TXT — ${inv.total} fichier(s), ${Math.round(inv.octets / 1024)} Ko, ${inv.lignes.length} dossier(s) ===`];
+  l.push("");
+  l.push(`  dossier                                   combien      Ko  état`);
+  l.push(`  ----------------------------------------  -------  ------  ----------------------------`);
+  for (const x of inv.lignes.slice(0, combien)) {
+    l.push(`  ${x.dossier.padEnd(40)}  ${String(x.combien).padStart(7)}  ${String(Math.round(x.octets / 1024)).padStart(6)}  ${x.etat}${x.lecteurs.length ? ` (${x.lecteurs.length})` : ""}`);
+  }
+  if (inv.lignes.length > combien) l.push(`  … et ${inv.lignes.length - combien} autre(s) dossier(s)`);
+  l.push("");
+  for (const e of ETATS_D_ARCHIVE) {
+    const g = inv.parEtat[e] ?? [];
+    const n = g.reduce((a, x) => a + x.combien, 0);
+    l.push(`  ${e.padEnd(28)} ${String(g.length).padStart(3)} dossier(s) · ${String(n).padStart(4)} fichier(s) · ${String(Math.round(g.reduce((a, x) => a + x.octets, 0) / 1024)).padStart(5)} Ko`);
+  }
+  const morts = inv.parEtat[ETATS_D_ARCHIVE[2]] ?? [];
+  if (morts.length) l.push(`  ⚠️  DOSSIERS HORS DE PORTÉE DE TOUT LE MONDE : ${morts.map((x) => `${x.dossier} (${x.combien})`).join(" · ")}`);
+  // LA MESURE PAR FICHIER, qui discrimine là où la mesure par dossier ne sépare rien.
+  const jamaisCites = inv.lignes.reduce((a, x) => a + x.jamaisCites, 0);
+  l.push(`  📄 PAR FICHIER : ${inv.total - jamaisCites} rapport(s) nommés quelque part · ${jamaisCites} JAMAIS CITÉS (${inv.total ? Math.round((jamaisCites / inv.total) * 100) : 0} %) — un rapport que personne ne nomme n'est rouvert qu'en ouvrant son dossier au hasard.`);
+  const pires = inv.lignes.filter((x) => x.jamaisCites).sort((a, b) => b.jamaisCites - a.jamaisCites).slice(0, 6);
+  for (const x of pires) l.push(`     ${x.dossier.padEnd(40)} ${String(x.jamaisCites).padStart(4)} jamais cité(s) sur ${x.combien}`);
+  l.push(`  HORS PORTÉE : ${inv.horsPortee}`);
+  return l;
+}
+
 export const LIEUX_DE_NOTES = [
   { cle: "decisions", quoi: "les tâches du suivi — ce qui a été décidé, et par qui", dossier: "docs/suivi", ext: /\.md$/ },
   { cle: "plans", quoi: "les plans et états des lieux d'un chantier", dossier: "docs/plans", ext: /\.(md|txt)$/ },
@@ -933,6 +1048,19 @@ function main() {
   // commande qu'on saute parce qu'elle est lente.
   if (sub === "notes") {
     for (const l of formatReprisesLines(reprendreLesNotes(process.argv[3]))) console.log(l);
+    return;
+  }
+  // `rapports` (#921) — l'inventaire des rapports archivés : combien, qui peut les lire, et surtout
+  // combien ne sont NOMMÉS nulle part. Il écrit un FICHIER, parce qu'un inventaire qui ne vit que
+  // dans un terminal meurt avec la session — et parce que son sujet est précisément là (Article 31).
+  if (sub === "rapports") {
+    const inv = inventaireDesRapports();
+    const lignes = formatInventaireRapportsLines(inv, { combien: 40 });
+    for (const l of lignes) console.log(l);
+    const cible = join(ROOT, "docs/data-archangel", `inventaire-rapports-${new Date().toISOString().slice(0, 10)}.txt`);
+    try { mkdirSync(join(ROOT, "docs/data-archangel"), { recursive: true }); } catch { /* déjà là */ }
+    writeFileSync(cible, lignes.join("\n") + "\n", "utf8");
+    console.log(`\nÉcrit : ${cible}`);
     return;
   }
   // `dossier <sujet>` (#742) — RASSEMBLE au lieu de dire où chercher. Il produit un FICHIER, parce

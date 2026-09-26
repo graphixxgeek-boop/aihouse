@@ -821,6 +821,15 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   "find-booster": "outil de navigation à la demande sur un fichier précis, jamais un scan périodique de tout le dépôt",
   "el-professor": "déjà obligatoire à chaque simulation (Article 18, étape 4bis), une seconde routine ferait doublon",
   simulations: "l'archive elle-même, pas un outil à relancer périodiquement",
+  // reponses (2026-09-26, tâche #921) : ce dossier a reçu un index.md le soir où l'inventaire des
+  // rapports a montré que deux dossiers de docs/ n'étaient atteignables par personne — ni relus par
+  // un outil, ni listés par un index. Lui donner un index l'a rendu visible ; ça en a aussi fait un
+  // « registre » au sens mécanique de cette fonction, et le garde-fou a mordu aussitôt. Il avait
+  // raison de poser la question, et la réponse est NON : ce n'est pas le registre d'un outil, c'est
+  // le dossier où vivent les RÉPONSES écrites pour l'utilisateur (des livrables de lecture, pas des
+  // artefacts produits par une mécanique). Aucun outil ne le remplit périodiquement, donc aucun item
+  // de Ronde ne pourrait le vérifier sans inventer un rythme qui n'existe pas.
+  reponses: "ce n'est pas le registre d'un outil mais le dossier des réponses écrites pour l'utilisateur : rien ne le remplit sur un rythme, donc un item de Ronde y regarderait un dossier que personne n'a alimenté",
   "objectifs-vs-resultats": "registre hand-maintained consulté quand un objectif précis intéresse quelqu'un, pas une routine mécanique qui aurait toujours quelque chose de neuf à dire à chaque Ronde (contrairement à tool-brain-report, pensé pour construire une habitude) — même logique que check-tasks-details ci-dessus",
 };
 // findReportingToolsMissingFromCircle() (2026-09-22) — LE TROU DANS LE GARDE-FOU LUI-MÊME, trouvé

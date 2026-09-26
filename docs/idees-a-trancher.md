@@ -374,3 +374,39 @@ que tool-brain affiche à chaque commit.
 touchent la charte — intouchable sans son accord.
 
 **Rapport complet** : `docs/cassandra-rh/couches-des-gardiens-2026-09-26.md`.
+
+### Ajoutée le 2026-09-26 par l'inventaire des rapports txt (#921)
+
+| Tâche | Sujet | Décision |
+|---|---|---|
+| #922 | Données — la politique de rétention des trois plus gros dossiers d'archives | à trancher |
+
+## #922 — garder N derniers, compacter, ou externaliser les archives ?
+
+*(Ajoutée le 2026-09-26, tâche #921 : l'inventaire des rapports txt a mesuré où pèse vraiment le
+poids.)*
+
+**Le chiffre, et il resserre la question au lieu de l'élargir** : sur 3 738 Ko d'archives dans
+`docs/`, **trois dossiers en pèsent 1 028 à eux seuls** — `docs/simulations`, `docs/ecotoken`,
+`docs/check-tasks-details`. Les 37 autres pèsent 2,7 Mo et ne coûtent rien à garder. **Une politique
+de rétention ne se discute donc que sur ces trois-là**, jamais sur les 282 fichiers en bloc.
+
+**Les trois options, et elles n'ont pas le même coût** :
+
+1. **garder les N derniers** de chaque dossier et effacer au-delà → le plus simple, mais on perd la
+   capacité de comparer à loin, qui est justement ce que ces archives servent ;
+2. **compacter les anciens en un résumé** → le geste existe déjà pour les simulations
+   (`scripts/summarize-simulation-log.mjs`, écrit exactement pour ça) : on garde le fait, on perd le
+   détail ;
+3. **externaliser hors du dépôt git** → on garde tout et le dépôt arrête de grossir, mais la preuve
+   n'est plus opposable depuis le dépôt seul, ce qui contredit l'Article 27 (une autre IA n'a que le
+   dépôt).
+
+**Pourquoi l'agent ne tranche pas** : ça touche à ce qu'on garde comme **preuve**, et décider seul
+de ce qui s'efface n'est pas une décision d'agent.
+
+**Ce qui rend la décision utile sans la rendre urgente** : le dépôt suivi par git est passé de 2,2 à
+19 Mo en sept jours (#906) et ces archives en sont une part directe — mais l'hébergement reste à 0 €
+(mesuré en #906), donc rien ne brûle.
+
+**Rapport complet** : `docs/data-archangel/classification-des-data-2026-09-26.md`.

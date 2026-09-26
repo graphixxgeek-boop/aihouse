@@ -8771,6 +8771,37 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // L'INVENTAIRE DES RAPPORTS EN TXT (2026-09-26, tâche #921 — point 28 de son gros prompt).
+    // LA LEÇON DE MÉTHODE, et elle vaut au-delà de cet outil : la mesure par DOSSIER rendait
+    // 38 dossiers « relus » sur 40, un verdict rassurant et parfaitement inutile. Une mesure dont
+    // presque tout le monde sort au vert ne dit pas que tout va bien, elle dit que la granularité
+    // est trop grosse. La mesure par FICHIER sépare : 19 cités, 263 jamais nommés.
+    const DA = await import('../scripts/data-archangel.mjs');
+    const invF = DA.inventaireDesRapports({
+      lireDossier: (chemin, opts) => {
+        if (opts?.withFileTypes) return [{ name: 'a', isDirectory: () => true }, { name: 'b', isDirectory: () => true }];
+        if (String(chemin).endsWith('/a')) return ['cite.txt', 'orphelin.txt'];
+        if (String(chemin).endsWith('/b')) return ['seul.txt'];
+        return [];
+      },
+      lire: (chemin) => (String(chemin).includes('scripts/') ? 'du code qui nomme "a/" et cite cite.txt' : 'xxxx'),
+      exists: () => false,
+      scripts: { 'faux.mjs': 'const p = "docs/a/quelque-chose"; // et cite.txt' },
+    });
+    assert.equal(invF.total, 3, 'every .txt of every folder is counted');
+    const dossierA = invF.lignes.find((l) => l.dossier.endsWith('/a'));
+    assert.equal(dossierA.etat, 'relu par un outil', 'a folder named in a script source counts as reachable — a HIGH BOUND, never a proof of reading');
+    assert.equal(dossierA.cites, 1, 'and the per-FILE measure separates: one of its two reports is named somewhere, the other is not');
+    assert.equal(dossierA.jamaisCites, 1, 'a report nobody names is only reachable by opening its folder at random, which nobody does');
+    const dossierB = invF.lignes.find((l) => l.dossier.endsWith('/b'));
+    assert.equal(dossierB.etat, 'écrit et jamais rouvert', 'a folder no script names and no index lists is out of everyone\'s reach — the only firm verdict of this inventory');
+    assert.ok(invF.horsPortee.includes('BORNE HAUTE'), 'and the limit travels inside the result, never only in a comment');
+    assert.equal(DA.inventaireDesRapports({ lireDossier: () => { throw new Error('nope'); } }).mesurable, false, 'an unreadable docs/ refuses rather than reporting zero reports (leçon L5)');
+    // LES DEUX ORPHELINS RÉELS ONT ÉTÉ RÉPARÉS LE SOIR MÊME, et le test le vérifie sur le vrai dépôt.
+    const invReel = DA.inventaireDesRapports();
+    assert.equal(invReel.mesurable, true, 'checked live against the real repository, never only a fixture');
+    assert.deepEqual(invReel.parEtat['écrit et jamais rouvert'], [], 'zero folder left out of reach — docs/doc-report and docs/reponses each got an index the night they were found');
+
     // LES COUCHES DES GARDIENS SACRÉS (2026-09-26, tâche #916 — point 23 de son gros prompt).
     // Le défaut trouvé en LANÇANT la fonction pour de bon, jamais en la relisant : un compteur
     // d'usage vide faisait accuser les quatre couches lourdes d'avoir « JAMAIS été lancées », alors

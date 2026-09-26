@@ -1,0 +1,57 @@
+=== INVENTAIRE DES RAPPORTS EN TXT — 282 fichier(s), 3734 Ko, 40 dossier(s) ===
+
+  dossier                                   combien      Ko  état
+  ----------------------------------------  -------  ------  ----------------------------
+  docs/simulations                               44     698  relu par un outil (16)
+  docs/argus                                     39      16  relu par un outil (9)
+  docs/ecotoken                                  37     314  relu par un outil (5)
+  docs/check-tasks-details                       14     281  relu par un outil (6)
+  docs/profil-utilisateur                        10       5  relu par un outil (4)
+  docs/hyper-scan-checkpoint                      7     136  relu par un outil (6)
+  docs/cassandra-rh                               6       8  relu par un outil (5)
+  docs/the-king                                   6       1  relu par un outil (4)
+  docs/tool-brain                                 6       2  relu par un outil (3)
+  docs/chantier-preliminaire                      5       1  relu par un outil (2)
+  docs/clean-dirty-old                            5       1  relu par un outil (6)
+  docs/data-archangel                             5       2  relu par un outil (2)
+  docs/god-of-all-process                         5       2  relu par un outil (1)
+  docs/html-wiring-check                          5       1  relu par un outil (2)
+  docs/idee-a-trancher                            5       1  relu par un outil (2)
+  docs/ines-official                              5       1  relu par un outil (4)
+  docs/integration-outil                          5       1  relu par un outil (2)
+  docs/network-check                              5       3  relu par un outil (2)
+  docs/relecture-correctifs                       5       2  relu par un outil (2)
+  docs/smart-conso-api                            5       1  relu par un outil (4)
+  docs/suivi-open-tasks                           5       3  relu par un outil (2)
+  docs/tool-learning                              5       2  relu par un outil (4)
+  docs/angel-of-ia-process                        4       1  relu par un outil (4)
+  docs/le-coordinateur                            4       1  relu par un outil (1)
+  docs/pure-gold-unity                            4       2  relu par un outil (1)
+  docs/rapports-de-nuit                           4      73  relu par un outil (2)
+  docs/rapports-gros-prompt                       4      33  relu par un outil (1)
+  docs/sauvegardes                                4    1942  relu par un outil (1)
+  docs/smart-conso-token                          4       1  relu par un outil (4)
+  docs/tableau-de-bord                            4       1  relu par un outil (1)
+  docs/contexte-projet                            3     129  relu par un outil (1)
+  docs/the-equalizer                              3       1  relu par un outil (2)
+  docs/ou-on-en-est                               2       1  relu par un outil (3)
+  docs/plans                                      2      33  relu par un outil (5)
+  docs/agent-des-noms                             1       1  relu par un outil (3)
+  docs/agent-du-temps                             1       1  relu par un outil (3)
+  docs/doc-report                                 1       3  écrit et jamais rouvert
+  docs/relecture-referentiel                      1       0  relu par un outil (4)
+  docs/reponses                                   1      21  écrit et jamais rouvert
+  docs/safe-export                                1       6  relu par un outil (3)
+
+  relu par un outil             38 dossier(s) ·  280 fichier(s) ·  3710 Ko
+  listé par un index             0 dossier(s) ·    0 fichier(s) ·     0 Ko
+  écrit et jamais rouvert        2 dossier(s) ·    2 fichier(s) ·    24 Ko
+  ⚠️  DOSSIERS HORS DE PORTÉE DE TOUT LE MONDE : docs/doc-report (1) · docs/reponses (1)
+  📄 PAR FICHIER : 19 rapport(s) nommés quelque part · 263 JAMAIS CITÉS (93 %) — un rapport que personne ne nomme n'est rouvert qu'en ouvrant son dossier au hasard.
+     docs/simulations                           42 jamais cité(s) sur 44
+     docs/argus                                 37 jamais cité(s) sur 39
+     docs/ecotoken                              36 jamais cité(s) sur 37
+     docs/check-tasks-details                   12 jamais cité(s) sur 14
+     docs/profil-utilisateur                     9 jamais cité(s) sur 10
+     docs/hyper-scan-checkpoint                  6 jamais cité(s) sur 7
+  HORS PORTÉE : « qui le lit » est une BORNE HAUTE : un script qui nomme le dossier dans son code PEUT l'ouvrir, ce qui ne prouve pas qu'il le fait, ni qu'il lit autre chose que le dernier fichier. Un dossier sans lecteur et sans index, en revanche, est bien hors de portée de tout le monde — c'est le seul verdict ferme de cet inventaire.
