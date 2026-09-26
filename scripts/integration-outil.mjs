@@ -27,7 +27,7 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { PROCESSES } from "./god-of-all-process.mjs";
 import { join } from "node:path";
-import { printReliabilityNotice, sansAccents } from "./lib-shell.mjs";
+import { printReliabilityNotice, sansAccents, AGENT_CATEGORIES } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 import { EXIGENCES_PAR_CLASSE, classesDuScript, typeDeScript } from "./cassandra-rh.mjs";
@@ -136,10 +136,27 @@ export const REGISTRES_D_INTEGRATION = [
 // Ancré sur la DÉCLARATION (`export const X = `), jamais sur la première occurrence du mot : celle-ci
 // tombait dans un commentaire 80 lignes plus haut, et la fenêtre de lecture ratait la moitié du
 // registre. Trouvé au premier vrai passage de cet outil sur le vrai dépôt (Article 25).
+// blocApres() — LA FENÊTRE FIXE DE 40 000 CARACTÈRES ÉTAIT UN PLAFOND INVISIBLE (corrigé le
+// 2026-09-26). Elle coupait `CIRCLE_ITEMS` au milieu : sur les 37 items réels, **22 seulement**
+// étaient lus, et les quinze derniers passaient pour inexistants. Un outil inscrit dans l'un
+// d'eux s'entendait donc répondre « inscription manquante », avec la ligne à coller — un conseil
+// faux mais net, qui aurait créé un doublon d'item si je l'avais suivi.
+//
+// POURQUOI LA FENÊTRE A TENU SI LONGTEMPS SANS SE VOIR : elle était juste au début, quand la
+// constante tenait dedans. Un plafond en dur ne se périme pas d'un coup, il se périme quand le
+// contenu grandit — et personne ne relit un nombre magique le jour où il devient trop petit.
+// C'est le motif de l'Article 24 dans sa version la plus discrète.
+//
+// LA FIN RÉELLE DU BLOC, plutôt qu'une longueur devinée : le `];` ou `};` en colonne 0, la forme
+// qu'ont toutes les grandes déclarations de ce dépôt (même repère que
+// `stripExportedConstantBodies()` chez data-archangel). Si ce repère est introuvable, on retombe
+// sur la fin du fichier — jamais sur une fenêtre arbitraire qui recréerait le défaut en silence.
 function blocApres(texte, nom) {
   const i = texte.indexOf(`export const ${nom}`);
   const j = i < 0 ? texte.indexOf(nom) : i;
-  return j < 0 ? "" : texte.slice(j, j + 40000);
+  if (j < 0) return "";
+  const fin = texte.slice(j).search(/^[\]}];?$/m);
+  return fin < 0 ? texte.slice(j) : texte.slice(j, j + fin + 2);
 }
 function slugsDansBloc(texte, nom) {
   return new Set([...blocApres(texte, nom).matchAll(/["'{\s]slug:\s*["']([a-z0-9-]+)["']|^\s*["']([a-z0-9-]+)["']\s*:/gm)].map((m) => m[1] ?? m[2]).filter(Boolean));
@@ -227,7 +244,36 @@ export function findModulesDeReglesOrphelins({ root = ROOT, readFileImpl = readF
   return orphelins;
 }
 
-export function etatIntegration(slug, { root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION } = {}) {
+// estDeclare() — LE RÔLE SUFFIXÉ COMPTE (2026-09-26, onze faux positifs mesurés).
+//
+// CE QUI A ÉTÉ TROUVÉ EN LANÇANT L'OUTIL POUR DE VRAI, et c'est la troisième fois que le même motif
+// mord ici : ce fichier porte déjà deux corrections écrites plus haut, chacune sur « un lecteur muet
+// déclare tout le monde absent ». En voici la troisième forme. Les registres n'écrivent pas tous le
+// même identifiant : CIRCLE_ITEMS range data-archangel sous `data-archangel-SCAN`, the-king sous
+// `the-king-SIGNAL`, ecotoken sous `ecotoken-SCAN`. Une comparaison à l'identique déclarait donc ces
+// outils NON INSCRITS et réclamait un item de Ronde qui existe déjà.
+//
+// COMBIEN, EXACTEMENT : 11 outils sur 58. Un outil sur cinq recevait un conseil faux mais net —
+// « ajoute ceci » — et l'appliquer aurait créé un doublon d'item de Ronde. C'est le pire cas pour un
+// outil censé aider, et la leçon L4 en personne : un garde-fou qui accuse à tort cesse d'être lu.
+//
+// LA CLAUSE QUI ÉVITE DE SUR-CORRIGER, dérivée plutôt qu'écrite à la main : un identifiant ne couvre
+// un outil que si le reste, après le tiret, n'est pas LUI-MÊME le nom d'un autre outil. Sans elle, un
+// outil nommé « tool » se croirait couvert par l'entrée de « tool-brain » — un faux négatif, donc le
+// plus dangereux des deux, puisqu'il ne se voit jamais.
+export function estDeclare(slug, declares, autresOutils = []) {
+  if (declares.has(slug)) return true;
+  const connus = new Set(autresOutils.filter((o) => o !== slug));
+  for (const d of declares) {
+    if (!String(d).startsWith(`${slug}-`)) continue;
+    const reste = String(d).slice(slug.length + 1);
+    if (connus.has(reste) || connus.has(String(d))) continue;
+    return true;
+  }
+  return false;
+}
+
+export function etatIntegration(slug, { root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION, autresOutils = Object.keys(AGENT_CATEGORIES) } = {}) {
   return registres.map((r) => {
     let texte;
     try {
@@ -236,7 +282,7 @@ export function etatIntegration(slug, { root = ROOT, readFileImpl = readFileSync
       return { ...r, mesurable: false, pourquoi: `${r.fichier} illisible — aucune conclusion tirée` };
     }
     const declares = r.extrait(texte);
-    return { cle: r.cle, fichier: r.fichier, quoi: r.quoi, facultatif: !!r.facultatif, mesurable: true, present: declares.has(slug), forme: r.forme(slug) };
+    return { cle: r.cle, fichier: r.fichier, quoi: r.quoi, facultatif: !!r.facultatif, mesurable: true, present: estDeclare(slug, declares, autresOutils), forme: r.forme(slug) };
   });
 }
 

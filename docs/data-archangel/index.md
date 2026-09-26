@@ -31,3 +31,25 @@ sonde qui ne peut pas voir rend exactement ce que rend une sonde qui n'a rien tr
 « Terminée », entre autres). Ce n'est pas illégitime dans un journal où l'on ajoute sans réécrire,
 mais un lecteur qui cherche L'ÉTAT d'une tâche en trouve deux et rien ne lui dit lequel fait foi.
 **Signalé, jamais arbitré** — c'est une règle de tenue du suivi, donc une décision de l'utilisateur.
+
+## La classification des rapports et des datas (depuis le 2026-09-26)
+
+`node scripts/data-archangel.mjs classification` range les rapports réels sur trois axes — le SUJET
+traité, l'ÉQUIPE propriétaire (lue dans les registres déclarés), la FONCTION — croise les deux
+premiers, et intègre les datas qui ne sont pas des rapports (journaux locaux, séries chiffrées).
+Elle écrit **deux** fichiers par passage : `classification-<date>.txt` et `.html`.
+
+`node scripts/data-archangel.mjs classification ronde` ajoute la vérification en lecture seule des
+rapports de Ronde (tâche #612) : `verification-ronde-<date>.txt`.
+
+**Mise à jour en continu, et ce que ça veut dire exactement** : le rapport ne contient aucun chiffre
+figé — il relit le dépôt réel à chaque passage, donc il ne peut pas se périmer. Et ce passage est
+déclenché par l'item de Ronde `data-archangel-scan`, jamais par la mémoire de l'agent. Les deux
+ensemble font la continuité ; l'un sans l'autre ne la ferait pas.
+
+Le document qui la PRÉSENTE (à quoi servent les axes, ce qu'elle refuse de ranger, ce qui est hors
+périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
+
+| Date | Rapports classés | Sans sujet | Sans équipe | Fichiers |
+|---|---|---|---|---|
+| 2026-09-26 | 290 en 40 dossiers | 6 | 0 (4 déclarés hors registre, avec raison) | `classification-2026-09-26.txt` · `.html` · `verification-ronde-2026-09-26.txt` |

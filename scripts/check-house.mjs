@@ -7504,6 +7504,51 @@ async function testClassificationRapports() {
   console.log('Passed: la classification des rapports et des datas (2026-09-26, ses trois commandes liées #955/#956/#957) range 290 rapports réels sur trois axes — le SUJET (dérivé du catalogue PRESTATIONS), l\'ÉQUIPE propriétaire (LUE dans les registres déclarés, jamais recopiée) et la FONCTION (ses trois questions — besoin d\'être lu ? par qui ? qu\'alimente-t-il ? — répondues par la décision déclarée, les lecteurs réels et l\'index, jamais attribuées) — croise les deux premiers comme il l\'a demandé, et intègre les datas qui NE SONT PAS des rapports (journaux locaux, séries chiffrées), ce que personne ne comptait avec eux. Ce que ces tests protègent avant le rangement, c\'est le REFUS de ranger : « sujet non déterminé » reste une sortie, un axe dont les mots ont disparu du corpus se dénonce au lieu de rendre des zéros, et une classification non mesurable le dit au lieu de ressembler à un dépôt propre. Le premier vrai passage a rendu 18 dossiers sur 40 sans sujet — un chiffre qui ne disait rien du dépôt, seulement que PRESTATIONS écrit « ARGUS » là où REGISTRIES écrit « scripts/check-argus.mjs » ; après normalisation, 7. Les deux formes qu\'il a choisies (document généré + HTML de lecture) sortent d\'UN SEUL calcul.');
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ÉTAT DES CLASSIFICATIONS (2026-09-26) — « est-ce que c'est terminé ? »
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION : « on peut dire que la classification générale c'est terminé — tout élément de
+// l'agence a connu une classification renseignée dans nos outils ? » Elle n'était pas répondable :
+// chaque classification était documentée CHEZ ELLE, et rien ne comptait les POPULATIONS. Une liste
+// de ce qui est fait ne dit jamais ce qui manque.
+async function testEtatDesClassifications() {
+  const lc = await import('../scripts/le-classificateur.mjs');
+  const { POPULATIONS_A_CLASSER, etatDesClassifications, formatEtatClassificationsLines } = lc;
+
+  for (const p of POPULATIONS_A_CLASSER) {
+    assert.ok(p.cle && p.quoi && typeof p.sonde === 'function', `population ${p.cle}: each one must name itself and carry a probe that READS the repository — a population declared with a hand-written count would expire at the next tool while still reading as a measurement (Article 24)`);
+    assert.ok(p.porteur || p.pourquoiPasDePorteur, `population ${p.cle}: a population with no porteur must say WHY in writing — an unexplained gap is not a decision, it is a silent abandonment (Article 28)`);
+  }
+
+  // LES QUATRE ÉTATS, chacun sur sa propre fixture — un état qu'aucun test ne produit est un état
+  // dont on ne sait pas s'il sort jamais.
+  const faux = [
+    { cle: 'pleine', quoi: 'tout rangé', porteur: 'X', sonde: async () => ({ mesurable: true, total: 10, classes: 10 }) },
+    { cle: 'partielle', quoi: 'à moitié rangé', porteur: 'X', sonde: async () => ({ mesurable: true, total: 10, classes: 4 }) },
+    { cle: 'orpheline', quoi: 'personne ne la range', porteur: null, pourquoiPasDePorteur: 'et voici pourquoi', sonde: async () => ({ mesurable: true, total: 10, classes: 0 }) },
+    { cle: 'aveugle', quoi: 'illisible', porteur: 'X', sonde: async () => { throw new Error('disque illisible'); } },
+  ];
+  const e = await etatDesClassifications(faux);
+  assert.equal(e.classees, 1, 'a fully classified population is counted as such');
+  assert.equal(e.partielles[0].taux, 40, 'a partial one carries its real rate, never a bare "incomplet" that cannot be acted on');
+  assert.equal(e.sansPorteur[0].cle, 'orpheline', 'a population nobody classifies is its OWN state, never folded into "partial": one is work in progress, the other is a hole, and they call for opposite decisions');
+  assert.equal(e.nonMesurees[0].cle, 'aveugle', 'and a probe that throws lands in PAS MESURÉ rather than being counted as zero, which would read as a hole that does not exist (leçons L5/L11)');
+  assert.match(formatEtatClassificationsLines(e).join(' '), /disque illisible/, 'carrying the real failure reason through');
+  assert.match(formatEtatClassificationsLines(e).join(' '), /ne dira jamais : si une classification manquante est UTILE à faire/, 'and the report states in words that it never decides usefulness: that is an arbitrage, so his decision (Article 16) — a program that decided it would manufacture work instead of shedding light on it');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25). Les chiffres bougeront ; ce qui est verrouillé ici,
+  // c'est que CHAQUE sonde sait mesurer. Une sonde cassée est le seul résultat qui rend cet état
+  // inutile, et elle est silencieuse par nature — c'est arrivé au premier passage, sur les règles.
+  const reel = await etatDesClassifications();
+  assert.deepEqual(reel.nonMesurees.map((x) => x.cle), [], `every population probe must actually measure against the real repository — one that cannot is not a finding about the project, it is a broken probe, and the two look identical in the output`);
+  assert.ok(reel.lignes.length >= 5, 'and the inventory must cover the real populations, not a token two');
+
+  console.log("Passed: l'état des classifications (2026-09-26) répond enfin à sa question « est-ce que c'est terminé ? », qui ne l'était pas : chaque classification du dépôt était documentée chez elle, et rien ne comptait les POPULATIONS — or une liste de ce qui est fait ne dit jamais ce qui manque. Six populations recensées (fichiers d'outillage, rapports, datas hors rapports, tâches, règles, code du jeu), chacune avec une sonde qui LIT le dépôt plutôt qu'un chiffre recopié, et quatre états strictement distincts : CLASSÉE · PARTIELLE · AUCUN PORTEUR · PAS MESURÉ. Les deux derniers sont séparés exprès — un trou et une sonde cassée appellent des décisions opposées, et se ressemblent trait pour trait dans une sortie. Une population sans porteur doit écrire POURQUOI. Et le rapport déclare en toutes lettres qu'il ne dira jamais si une classification manquante est utile à faire : c'est un arbitrage, donc sa décision à lui.");
+}
+
+await testEtatDesClassifications();
+
 await testClassificationRapports();
 
 await testVerrousDOuverture();
@@ -8654,6 +8699,30 @@ await testVerrousDOuverture();
   // dire absent pour un fichier illisible, ou se taire parce que son lecteur ne reconnaît plus la
   // forme de son registre (le cas le plus grave : un rapport spectaculaire et entièrement faux).
   const { REGISTRES_D_INTEGRATION, etatIntegration, planDIntegration, findLecteursCasses } = await import('../scripts/integration-outil.mjs');
+  // DEUX FAUX POSITIFS MESURÉS ET CORRIGÉS LE 2026-09-26, tous deux trouvés en lançant l'outil pour
+  // de vrai sur un outil que je savais inscrit (Article 25). Ils se combinaient : l'un tronquait la
+  // liste des items, l'autre refusait les identifiants suffixés — et l'outil réclamait donc des
+  // inscriptions déjà faites, avec la ligne à coller. Suivre ce conseil aurait créé des doublons.
+  const { estDeclare } = await import('../scripts/integration-outil.mjs');
+  // (1) LE RÔLE SUFFIXÉ. CIRCLE_ITEMS range data-archangel sous `data-archangel-scan`.
+  assert.equal(estDeclare('data-archangel', new Set(['data-archangel-scan']), ['tool-brain']), true, 'an id that is the slug plus a role suffix counts as declared — otherwise the tool demands a Ronde item that already exists, and following that advice creates a duplicate');
+  assert.equal(estDeclare('argus', new Set(['argus'])), true, 'an exact id still counts, obviously');
+  assert.equal(estDeclare('the-king', new Set(['ecotoken-scan', 'kpi'])), false, 'and an unrelated set still reports absence: widening the match must not make the check unable to say no');
+  // LA CLAUSE ANTI-SUR-CORRECTION : le reste après le tiret ne doit pas être un AUTRE outil, sinon
+  // on remplace un faux positif par un faux négatif — invisible, donc pire.
+  assert.equal(estDeclare('tool', new Set(['tool-brain']), ['tool', 'brain']), false, 'a tool named "tool" must NOT consider itself covered by the entry of "brain": the remainder after the hyphen is another tool\'s own name');
+  assert.equal(estDeclare('tool', new Set(['tool-report']), ['tool', 'brain']), true, 'while a genuine role suffix, naming no other tool, still counts');
+  // (2) LA FENÊTRE FIXE. Le lecteur coupait CIRCLE_ITEMS à 40 000 caractères : 22 des 37 items réels
+  // étaient lus. Vérifié contre le VRAI fichier, jamais contre une fixture — une fixture courte
+  // n'aurait jamais pu montrer un plafond qui ne se déclenche qu'au-delà d'une certaine taille.
+  const { readFileSync: lireCI } = await import('node:fs');
+  const texteCircle = lireCI(new URL('../scripts/circle-tasks.mjs', import.meta.url), 'utf8');
+  const idsLus = REGISTRES_D_INTEGRATION.find((r) => r.cle === 'ronde').extrait(texteCircle);
+  const { CIRCLE_ITEMS: itemsReels } = await import('../scripts/circle-tasks.mjs');
+  for (const it of itemsReels) {
+    assert.ok(idsLus.has(it.id), `the reader must see EVERY real Ronde item, and it did not see "${it.id}" — a fixed-size window is a ceiling that expires silently as the constant grows (Article 24), and the ids past it read exactly like ids that were never written`);
+  }
+
   const fauxFichiers = { 'scripts/faux.mjs': 'export const REG = [ { slug: "un" }, { slug: "deux" } ];' };
   const lireFaux = (chemin) => {
     const cle = Object.keys(fauxFichiers).find((k) => String(chemin).endsWith(k));

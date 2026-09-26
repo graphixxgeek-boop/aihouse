@@ -251,3 +251,42 @@ trait dans un tableau, et l'un dit de le laisser, l'autre de regarder (leçon L5
 cinq niveaux — il y a quatre niveaux et un aveu.
 
 Commande : `node scripts/le-classificateur.mjs vitalite`.
+
+## L'état des classifications (depuis le 2026-09-26)
+
+`node scripts/le-classificateur.mjs etat` — la vue d'ensemble que personne ne portait.
+
+**LA QUESTION QU'IL RÉPOND, et pourquoi elle n'était pas répondable avant.** Sa question :
+« est-ce qu'on peut dire que la classification générale c'est terminé — tout élément de l'agence a
+connu une classification renseignée dans nos outils ? » Le dépôt portait des classifications
+réelles — les fichiers d'outillage ici, les rapports chez data-archangel, les règles chez Abraham —
+chacune parfaitement documentée **chez elle**, et aucune vue d'ensemble. Or **une liste de ce qui
+est fait ne dit jamais ce qui manque** : répondre « est-ce terminé ? » exige de savoir combien de
+POPULATIONS existent, pas seulement que celles qu'on a rangées sont bien rangées.
+
+**Les six populations recensées** : les fichiers de l'outillage · les rapports archivés · les datas
+qui ne sont pas des rapports · les tâches du suivi · les règles de la charte · le code du jeu.
+Chacune porte une **sonde qui lit le dépôt réel** — jamais un chiffre recopié, qui se périmerait au
+prochain outil tout en se lisant comme une mesure (Article 24).
+
+**Quatre états, strictement distincts** :
+
+| État | Ce que ça veut dire |
+|---|---|
+| **CLASSÉE** | tous les éléments de la population portent leur classification |
+| **PARTIELLE** | un porteur existe, tout n'est pas rangé — du travail en cours |
+| **AUCUN PORTEUR** | personne ne classe cette population, et la raison est écrite |
+| **PAS MESURÉ** | la sonde n'a pas pu mesurer — ce n'est **jamais** un zéro |
+
+Les deux derniers sont séparés exprès : un trou et une sonde cassée appellent des décisions
+opposées, et se ressemblent trait pour trait dans une sortie. Le premier vrai passage l'a démontré —
+la sonde des règles était cassée (elle recevait un texte là où la fonction attend des unités déjà
+découpées) et l'état a affiché « PAS MESURÉ » au lieu de compter zéro règle classée.
+
+**CE QU'IL NE FERA JAMAIS, et c'est une ligne rouge** : dire si une classification manquante est
+**utile** à faire. Il dit ce qui est rangé et ce qui ne l'est pas. L'utilité est un arbitrage, donc
+la décision de l'utilisateur (Article 16) — un programme qui trancherait ça fabriquerait du travail
+au lieu d'en éclairer.
+
+**Une population de plus** rejoint la liste par une entrée dans `POPULATIONS_A_CLASSER`, et rien
+d'autre ne change.

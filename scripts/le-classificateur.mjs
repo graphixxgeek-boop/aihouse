@@ -1541,6 +1541,12 @@ function main() {
     recordRegistryWrite?.("le-classificateur", cible);
     return;
   }
+  // `etat` (2026-09-26) — la vue d'ensemble : quelles POPULATIONS du projet sont rangées, et
+  // lesquelles ne le sont pas. Livré en HTML en plus du texte : le document officiel de
+  // classification se remet toujours en HTML (sa règle permanente).
+  if (sub === "etat") {
+    return etatCli();
+  }
   // LA VITALITÉ, joignable en une commande : un mécanisme que personne ne peut lancer n'existe pas
   // (Article 31). Elle sert à l'export — savoir ce qui doit partir en premier.
   if (sub === "vitalite") {
@@ -1550,4 +1556,175 @@ function main() {
   console.log("\nUsage : node scripts/le-classificateur.mjs [classification [chemin] | vitalite]");
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════
+// L'ÉTAT DES CLASSIFICATIONS (2026-09-26) — QU'EST-CE QUI EST RANGÉ, ET QUOI NE L'EST PAS ?
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, mot pour mot : « on a les documents de classification — tâches, datas, fichiers,
+// quoi d'autre ? — et d'organisation à jour dans nos datas ? on peut dire que la classification
+// générale c'est terminé (tout élément de l'agence a connu une classification renseignée dans nos
+// outils) ? » Et son objectif : « faire le point sur les étapes de classification — peut-être que
+// certaines classifications sont utiles à faire car non existantes, tandis que d'autres ne sont
+// pas utiles à faire ».
+//
+// POURQUOI CE N'ÉTAIT PAS RÉPONDABLE AVANT, et c'est le trou que cette fonction ferme : le dépôt
+// portait des classifications réelles — les fichiers d'outillage ici, les rapports chez
+// data-archangel, les règles chez Abraham — chacune parfaitement documentée CHEZ ELLE, et
+// **aucune vue d'ensemble**. « Est-ce terminé ? » exige de savoir COMBIEN DE POPULATIONS existent,
+// pas seulement que celles qu'on a rangées sont bien rangées. Une liste de ce qui est fait ne dit
+// jamais ce qui manque.
+//
+// CE QUE CETTE FONCTION NE FAIT JAMAIS, et c'est une ligne rouge : elle ne décide pas si une
+// classification est UTILE. Elle dit ce qui est rangé, par qui, et ce qui ne l'est pas. L'utilité
+// est un arbitrage, donc sa décision à lui (Article 16) — un programme qui trancherait ça
+// fabriquerait du travail au lieu d'en éclairer.
+//
+// ÉVOLUTIF PAR CONSTRUCTION (Article 24) : une population de plus rejoint la liste par une entrée,
+// et sa sonde LIT le dépôt réel plutôt que d'annoncer un chiffre écrit à la main — un chiffre
+// recopié ici se périmerait au prochain outil, et se lirait pourtant comme une mesure.
+export const POPULATIONS_A_CLASSER = [
+  {
+    cle: "fichiers-outillage", quoi: "les fichiers de l'outillage (scripts de l'Agence)",
+    porteur: "LE-CLASSIFICATEUR — 4 axes dans l'indice (type, rang, famille, classes), 5 autres portés ailleurs",
+    document: "docs/referentiel/classification-agence.md",
+    async sonde() {
+      const doc = documentDeClassification({ horodatage: "(sonde)" });
+      if (!doc?.mesurable) return { mesurable: false, pourquoi: doc?.pourquoi ?? "le document de classification n'a pas pu être produit" };
+      return { mesurable: true, total: doc.croise.total, classes: doc.croise.total - doc.croise.sansRang.length };
+    },
+  },
+  {
+    cle: "rapports", quoi: "les rapports archivés que l'outillage produit",
+    porteur: "data-archangel — 3 axes (sujet, équipe propriétaire, fonction), les deux premiers croisés",
+    document: "docs/referentiel/classification-des-rapports-et-datas.md",
+    async sonde() {
+      const { classificationComplete } = await import("./data-archangel.mjs");
+      const c = await classificationComplete();
+      if (!c?.rapports?.mesurable) return { mesurable: false, pourquoi: c?.rapports?.pourquoi ?? "la classification des rapports n'a pas pu être faite" };
+      const r = c.rapports;
+      const classes = r.lignes.filter((l) => l.sujet && (l.equipe || (r.horsRegistreAssume ?? []).some((h) => h.dossier === l.dossier)));
+      return { mesurable: true, total: r.lignes.length, classes: classes.length, unite: "dossiers" };
+    },
+  },
+  {
+    cle: "datas-hors-rapports", quoi: "les données qui ne sont PAS des rapports (registres, journaux locaux, séries chiffrées)",
+    porteur: "data-archangel — 4 natures déclarées",
+    document: "docs/referentiel/classification-des-rapports-et-datas.md",
+    async sonde() {
+      const { listDataSources } = await import("./data-archangel.mjs");
+      const src = listDataSources();
+      return { mesurable: true, total: src.length, classes: src.filter((s) => s.nature).length, unite: "sources" };
+    },
+  },
+  {
+    cle: "taches", quoi: "les tâches du suivi",
+    porteur: "le suivi lui-même — 4 attributs par ligne (sujet, sous-sujet, criticité, pour qui), vérifiés par check-suivi-fidelity",
+    document: "docs/systeme-de-suivi.md",
+    async sonde() {
+      const { loadAllTaskRows } = await import("./check-tasks-details.mjs");
+      const rows = loadAllTaskRows();
+      if (!rows?.length) return { mesurable: false, pourquoi: "aucune ligne de suivi lue — ce n'est pas « aucune tâche »" };
+      return { mesurable: true, total: rows.length, classes: rows.filter((r) => r.criticite && r.sujet).length, unite: "tâches" };
+    },
+  },
+  {
+    cle: "regles", quoi: "les règles de la charte et des règles de travail",
+    porteur: "Abraham-les-references — 2 axes croisés (force de garantie × gravité)",
+    document: "docs/referentiel/abraham-les-references.md",
+    // LA SONDE PREND LES UNITÉS, PAS LE TEXTE — corrigé au premier vrai passage : je lui passais
+    // le contenu de CLAUDE.md, et `unites.map is not a function` a fait sortir « PAS MESURÉ ».
+    // C'est le bon comportement de l'état (une sonde cassée ne se tait pas), et c'était bien une
+    // sonde cassée : `classerDocument()` classe des unités DÉJÀ découpées par `extractRuleUnits()`.
+    async sonde() {
+      const { classerDocument, analyserDocument: analyser } = await import("./abraham-les-references.mjs");
+      const { readFileSync: lire } = await import("node:fs");
+      const a = analyser({ texte: lire(join(ROOT, "CLAUDE.md"), "utf8"), chemin: "CLAUDE.md" });
+      const unites = a?.unites ?? [];
+      if (!a?.mesurable || !unites.length) return { mesurable: false, pourquoi: "aucune règle découpée dans CLAUDE.md — la forme de numérotation n'a pas été reconnue, ce qui n'est jamais « aucune règle »" };
+      const c = classerDocument(unites, {}, { lire: () => "" });
+      const lignes = c?.lignes ?? [];
+      return { mesurable: true, total: unites.length, classes: lignes.filter((x) => x.garantie && x.gravite).length, unite: "règles" };
+    },
+  },
+  {
+    cle: "jeu", quoi: "le CODE DU JEU lui-même (lib/, app/, components/)",
+    porteur: null,
+    document: null,
+    pourquoiPasDePorteur: "aucune classification n'existe, et rien ne dit qu'il en faille une : le jeu se juge sur ce qu'il RACONTE (Articles 0 à 17), pas sur un rangement de ses fichiers. C'est un constat, jamais une recommandation — l'utilité est sa décision.",
+    async sonde() {
+      const { readdirSync: lireD } = await import("node:fs");
+      let total = 0;
+      for (const d of ["lib", "app", "components"]) {
+        try { total += lireD(join(ROOT, d), { recursive: true }).filter((f) => /\.(ts|tsx)$/.test(String(f))).length; } catch { /* dossier absent */ }
+      }
+      return { mesurable: true, total, classes: 0, unite: "fichiers" };
+    },
+  },
+];
+
+export async function etatDesClassifications(populations = POPULATIONS_A_CLASSER) {
+  const lignes = [];
+  for (const p of populations) {
+    let s;
+    try { s = await p.sonde(); }
+    catch (e) { s = { mesurable: false, pourquoi: `la sonde a échoué : ${e?.message ?? e}` }; }
+    const etat = !s?.mesurable ? "PAS MESURÉ"
+      : !p.porteur ? "AUCUN PORTEUR"
+      : s.classes >= s.total ? "CLASSÉE"
+      : "PARTIELLE";
+    lignes.push({ ...p, ...s, etat, taux: s?.mesurable && s.total ? Math.round((s.classes / s.total) * 100) : null });
+  }
+  return {
+    lignes,
+    classees: lignes.filter((l) => l.etat === "CLASSÉE").length,
+    partielles: lignes.filter((l) => l.etat === "PARTIELLE"),
+    sansPorteur: lignes.filter((l) => l.etat === "AUCUN PORTEUR"),
+    nonMesurees: lignes.filter((l) => l.etat === "PAS MESURÉ"),
+  };
+}
+
+export function formatEtatClassificationsLines(e) {
+  const l = [`=== L'ÉTAT DES CLASSIFICATIONS — ${e.lignes.length} population(s) recensée(s) ===`, ""];
+  l.push(`  ${e.classees} CLASSÉE(S) · ${e.partielles.length} PARTIELLE(S) · ${e.sansPorteur.length} SANS PORTEUR · ${e.nonMesurees.length} NON MESURÉE(S)`);
+  l.push("");
+  for (const x of e.lignes) {
+    l.push(`  ${x.etat.padEnd(14)} ${x.quoi}`);
+    l.push(`      ${x.mesurable ? `${x.classes}/${x.total} ${x.unite ?? "éléments"} rangés${x.taux !== null ? ` (${x.taux} %)` : ""}` : `PAS MESURÉ — ${x.pourquoi}`}`);
+    l.push(`      porteur : ${x.porteur ?? "AUCUN"}${x.document ? ` · document : ${x.document}` : ""}`);
+    if (x.pourquoiPasDePorteur) l.push(`      ${x.pourquoiPasDePorteur}`);
+    l.push("");
+  }
+  l.push("  CE QUE CE RAPPORT NE DIT PAS, et ne dira jamais : si une classification manquante est UTILE à faire.");
+  l.push("  Il dit ce qui est rangé et ce qui ne l'est pas. L'utilité est un arbitrage, donc une décision de");
+  l.push("  l'utilisateur — un programme qui trancherait ça fabriquerait du travail au lieu d'en éclairer.");
+  return l;
+}
+
+async function etatCli() {
+  const e = await etatDesClassifications();
+  const lignes = formatEtatClassificationsLines(e);
+  for (const x of lignes) console.log(x);
+  try { mkdirSync(join(ROOT, "docs/le-classificateur"), { recursive: true }); } catch { /* déjà là */ }
+  const jour = new Date().toISOString().slice(0, 10);
+  writeFileSync(join(ROOT, "docs/le-classificateur", `etat-des-classifications-${jour}.txt`), lignes.join("\n") + "\n", "utf8");
+  writeFileSync(join(ROOT, "docs/le-classificateur", `etat-des-classifications-${jour}.html`), renderHtmlReport({
+    tool: "le-classificateur",
+    title: "L'état des classifications",
+    subtitle: "Quelles populations du projet sont rangées, par qui, et lesquelles ne le sont pas.",
+    blocks: [
+      { type: "paragraph", text: `${e.classees} population(s) entièrement classée(s), ${e.partielles.length} partielle(s), ${e.sansPorteur.length} sans porteur, ${e.nonMesurees.length} non mesurée(s).` },
+      { type: "table", headers: ["État", "Population", "Rangés", "Porteur", "Document"], rows: e.lignes.map((x) => [x.etat, x.quoi, x.mesurable ? `${x.classes}/${x.total}${x.taux !== null ? ` (${x.taux} %)` : ""}` : "PAS MESURÉ", x.porteur ?? "AUCUN", x.document ?? "—"]) },
+      ...e.lignes.filter((x) => x.pourquoiPasDePorteur).map((x) => ({ type: "note", text: `${x.quoi} — ${x.pourquoiPasDePorteur}` })),
+      { type: "note", text: "Ce rapport ne dit jamais si une classification manquante est UTILE à faire. Il dit ce qui est rangé et ce qui ne l'est pas ; l'utilité est un arbitrage, donc une décision de l'utilisateur." },
+    ],
+  }), "utf8");
+  console.log(`\nÉcrit : docs/le-classificateur/etat-des-classifications-${jour}.txt`);
+  console.log(`Écrit : docs/le-classificateur/etat-des-classifications-${jour}.html`);
+}
+
+// LE LANCEUR EN TOUT DERNIER (déplacé le 2026-09-26) : il vivait au milieu du fichier, donc
+// main() partait avant les `const` écrits en dessous — leur zone morte temporelle. C'est le
+// défaut exact que findLanceursPrematures() refuse, et il s'est produit ici à la seconde où une
+// constante a rejoint la fin du fichier. Troisième outil du dépôt à le payer.
 if (import.meta.url === `file://${process.argv[1]}`) main();

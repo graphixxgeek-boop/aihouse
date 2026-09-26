@@ -1,0 +1,32 @@
+=== L'ÉTAT DES CLASSIFICATIONS — 6 population(s) recensée(s) ===
+
+  4 CLASSÉE(S) · 1 PARTIELLE(S) · 1 SANS PORTEUR · 0 NON MESURÉE(S)
+
+  CLASSÉE        les fichiers de l'outillage (scripts de l'Agence)
+      89/89 éléments rangés (100 %)
+      porteur : LE-CLASSIFICATEUR — 4 axes dans l'indice (type, rang, famille, classes), 5 autres portés ailleurs · document : docs/referentiel/classification-agence.md
+
+  PARTIELLE      les rapports archivés que l'outillage produit
+      35/41 dossiers rangés (85 %)
+      porteur : data-archangel — 3 axes (sujet, équipe propriétaire, fonction), les deux premiers croisés · document : docs/referentiel/classification-des-rapports-et-datas.md
+
+  CLASSÉE        les données qui ne sont PAS des rapports (registres, journaux locaux, séries chiffrées)
+      75/75 sources rangés (100 %)
+      porteur : data-archangel — 4 natures déclarées · document : docs/referentiel/classification-des-rapports-et-datas.md
+
+  CLASSÉE        les tâches du suivi
+      896/896 tâches rangés (100 %)
+      porteur : le suivi lui-même — 4 attributs par ligne (sujet, sous-sujet, criticité, pour qui), vérifiés par check-suivi-fidelity · document : docs/systeme-de-suivi.md
+
+  CLASSÉE        les règles de la charte et des règles de travail
+      33/33 règles rangés (100 %)
+      porteur : Abraham-les-references — 2 axes croisés (force de garantie × gravité) · document : docs/referentiel/abraham-les-references.md
+
+  AUCUN PORTEUR  le CODE DU JEU lui-même (lib/, app/, components/)
+      0/96 fichiers rangés (0 %)
+      porteur : AUCUN
+      aucune classification n'existe, et rien ne dit qu'il en faille une : le jeu se juge sur ce qu'il RACONTE (Articles 0 à 17), pas sur un rangement de ses fichiers. C'est un constat, jamais une recommandation — l'utilité est sa décision.
+
+  CE QUE CE RAPPORT NE DIT PAS, et ne dira jamais : si une classification manquante est UTILE à faire.
+  Il dit ce qui est rangé et ce qui ne l'est pas. L'utilité est un arbitrage, donc une décision de
+  l'utilisateur — un programme qui trancherait ça fabriquerait du travail au lieu d'en éclairer.

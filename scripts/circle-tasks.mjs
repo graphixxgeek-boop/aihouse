@@ -531,7 +531,14 @@ export const CIRCLE_ITEMS = [
     label: "La donnée produite par l'équipe est-elle exploitée, ou écrite pour rien ?",
     cout: "gratuit — relit le code des scripts et la date des fichiers déjà sur le disque, zéro appel API",
     tokensEstimes: "faible — un ratio, la liste des orphelines, quelques branchements suggérés",
-    execute: "Lancer node scripts/data-archangel.mjs et lire le ratio de sources réellement relues. LIRE la nuance imprimée en bas du rapport avant de conclure : un registre destiné à l'œil humain n'a pas besoin d'un lecteur-outil, la question posée est « personne n'exploite la SÉRIE ? ». Les branchements suggérés sont des suggestions, jamais des manquements — en retenir un est une décision, jamais une évidence. Écrire le signal via recordCircleItemReport('data-archangel-scan', ...).",
+    // LA CLASSIFICATION REJOINT CET ITEM, elle n'en crée pas un second (2026-09-26, sa demande :
+    // « assure-toi que cette classification des datas est bien enregistrée chez l'outil concerné,
+    // avec une mise à jour en continu »). Même tête, même sujet, même famille : deux items auraient
+    // fait deux rapports sur la même circulation de données, et c'est exactement ce que #612 cherche
+    // à réduire. La mise à jour en continu tient à deux choses réunies : le rapport ne contient
+    // AUCUN chiffre figé — il relit le dépôt réel à chaque passage — et ce passage est désormais
+    // déclenché par la Ronde plutôt que par ma mémoire.
+    execute: "Lancer node scripts/data-archangel.mjs et lire le ratio de sources réellement relues. LIRE la nuance imprimée en bas du rapport avant de conclure : un registre destiné à l'œil humain n'a pas besoin d'un lecteur-outil, la question posée est « personne n'exploite la SÉRIE ? ». Les branchements suggérés sont des suggestions, jamais des manquements — en retenir un est une décision, jamais une évidence. PUIS lancer node scripts/data-archangel.mjs classification, qui régénère la classification des rapports et des datas (document + page HTML) contre l'état réel du dépôt : lire les dossiers SANS SUJET et SANS ÉQUIPE, qui sont les seuls verdicts durs de ce rapport. Écrire le signal via recordCircleItemReport('data-archangel-scan', ...).",
     producesReport: true,
   },
   {
