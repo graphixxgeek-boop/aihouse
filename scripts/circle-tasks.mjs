@@ -714,6 +714,13 @@ export function mostRecentDate(text) {
 // (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
 // de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
+  // LES DEUX REGISTRES NÉS LE 2026-09-26 en comblant les kits d'export, et le garde-fou a mordu à
+  // la seconde où leur index.md est apparu — exactement son travail. Ni l'un ni l'autre n'est un
+  // outil périodique : ce sont des MÉCANISMES appelés par les autres, dont le registre ne porte que
+  // leurs propres constats de construction. Leur donner un item de Ronde reviendrait à convoquer
+  // une bibliothèque pour qu'elle raconte sa semaine.
+  "serie-temporelle": "Mécanisme PARTAGÉ d'historisation, appelé par les outils qui déposent une série — il n'a aucun passage à lui. Ce que la Ronde doit lire, ce sont les TENDANCES dans les rapports de chaque outil, jamais le mécanisme qui les calcule.",
+  "tool-usage": "Le compteur tourne à CHAQUE commande d'outil, donc bien plus souvent qu'une Ronde. Son état est déjà rapporté périodiquement par l'item `tool-brain-report`, qui lit ce compteur — un second item ferait deux verdicts sur la même donnée.",
   // LES 17 QUI ONT REJOINT L'ÉQUIPE LE 2026-09-26, et pourquoi la Ronde ne leur doit pas un item
   // chacun. Le garde-fou a mordu à la seconde où ils sont entrés au registre, et il avait raison de
   // poser la question : rejoindre l'équipe, c'est être regardé périodiquement. La réponse suit le

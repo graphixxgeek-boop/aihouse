@@ -1,4 +1,4 @@
-=== LES KITS D'EXPORT — 45/82 kit(s) complet(s), 7 dispensé(s) avec raison ===
+=== LES KITS D'EXPORT — 51/82 kit(s) complet(s), 7 dispensé(s) avec raison ===
 
   LA RÈGLE, depuis sa correction du 2026-09-26 : le KIT COMPLET est dû à TOUT fichier de l'Agence.
   Un optionnel exporté sans son plan est un optionnel irrécupérable — et il partira quand même,
@@ -7,7 +7,7 @@
 
   ordre de réparation   à jour     dispensés   taux moyen
   --------------------  ---------  ----------  ----------
-  🔴 1. vital             27/37    73 %        7       89 %
+  🔴 1. vital             33/37    89 %        7       95 %
   🟠 2. essentiel          3/3    100 %        0      100 %
   🟡 3. utile             11/25    44 %        0       70 %
   ⚪ 4. optionnel          4/17    24 %        0       65 %
@@ -26,17 +26,11 @@
      /^scripts\/hooks\// — les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit
      /^scripts\/run-framework/ — il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison
 
-  ⛔ 37 KIT(S) INCOMPLET(S), dans l'ordre de réparation — chacun bloque la réinstallation de SON fichier :
-     [vital] scripts/doc-report.mjs (80 %) — manque : docs/doc-report-blueprint.md
-     [vital] scripts/god-of-all-process.mjs (80 %) — manque : docs/referentiel/god-of-all-process.md
+  ⛔ 31 KIT(S) INCOMPLET(S), dans l'ordre de réparation — chacun bloque la réinstallation de SON fichier :
      [vital] scripts/report-template.mjs (80 %) — manque : docs/report-template/index.md
-     [vital] scripts/tool-brain.mjs (80 %) — manque : docs/tool-brain-blueprint.md
-     [vital] scripts/le-coordinateur.mjs (60 %) — manque : docs/le-coordinateur-blueprint.md, docs/referentiel/le-coordinateur.md
-     [vital] scripts/serie-temporelle.mjs (60 %) — manque : docs/referentiel/serie-temporelle.md, docs/serie-temporelle/index.md
      [vital] scripts/find-brain.mjs (50 %) — manque : docs/find-brain-blueprint.md, docs/referentiel/find-brain.md
      [vital] scripts/check-house.mjs (40 %) — manque : docs/check-house-blueprint.md, docs/referentiel/check-house.md, docs/check-house/index.md
      [vital] scripts/circle-tasks.mjs (40 %) — manque : docs/circle-tasks-blueprint.md, docs/referentiel/circle-tasks.md, docs/circle-tasks/index.md
-     [vital] scripts/tool-usage.mjs (40 %) — manque : docs/tool-usage-blueprint.md, docs/referentiel/tool-usage.md, docs/tool-usage/index.md
      [utile] scripts/check-profile.mjs (75 %) — manque : docs/check-profile-blueprint.md
      [utile] scripts/ou-on-en-est.mjs (60 %) — manque : docs/ou-on-en-est-blueprint.md, docs/referentiel/ou-on-en-est.md
      [utile] scripts/check-gemini-quota.mjs (50 %) — manque : docs/check-gemini-quota-blueprint.md, docs/referentiel/check-gemini-quota.md
