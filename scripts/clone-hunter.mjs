@@ -31,6 +31,9 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+// La mémoire vient de SAFE-EXPORT, comme celle d'ARGUS (tâche #214) : une seule discipline
+// d'écartement pour tous les Gardiens, jamais une par outil.
+import { loadMemoire, filtrerDejaTranches } from "./safe-export.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -538,6 +541,58 @@ export function motifDuCluster(cluster) {
   };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA MÉMOIRE — CLONE-HUNTER CESSE DE REPOSER LES MÊMES QUESTIONS (2026-09-26, tâche #925)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE VERDICT QUI L'A DÉCLENCHÉE : tool-learning l'a jugé « immobile » le 2026-09-26 — une seule
+// preuve autonome sur trois. Sa baisse de faux positifs est réelle et mesurée (tâche #217), mais il
+// n'avait AUCUNE mémoire : il recalculait tout à chaque passage, donc chacun de ses progrès avait
+// coûté une correction de ma part. « Immobile » ne veut pas dire mauvais — ça veut dire qu'il ne
+// progresse pas tout seul.
+//
+// LE MÉCANISME EST RELAYÉ, JAMAIS RECOPIÉ : `loadMemoire()` et `filtrerDejaTranches()` viennent de
+// SAFE-EXPORT, exactement comme ARGUS les a reçus le 2026-09-23. Deux mémoires séparées auraient
+// vite donné deux disciplines différentes sur la même question — et c'est le doublon que cet
+// outil-ci traque pour vivre.
+//
+// CE QUI EST HÉRITÉ SANS UNE LIGNE DE PLUS, et c'est tout l'intérêt du relais : un cluster n'est
+// filtré QUE s'il porte un accord explicite daté de l'utilisateur ET une raison écrite ; un
+// « écarté sciemment » sans accord revient, et son rappel GROSSIT à chaque passage jusqu'à la
+// question obligatoire. L'agent ne peut pas se faire taire tout seul.
+//
+// LE PIÈGE QUI DÉCIDE DE TOUT : L'IDENTITÉ NE CONTIENT PAS LES NUMÉROS DE LIGNE.
+// Un cluster est repéré par `fichier:ligne`, et cette ligne BOUGE dès qu'on édite le fichier au
+// dessus — ce qui arrive à chaque commit. Une mémoire indexée sur la ligne oublierait donc tout au
+// premier changement, tout en ayant l'air de fonctionner : le pire état possible, puisqu'un registre
+// vide se lit comme « rien n'a jamais été écarté ». L'identité retenue est donc la LISTE DES
+// FICHIERS (triée) plus l'APERÇU du bloc — deux choses qui survivent à un décalage de lignes et qui
+// changent, à raison, dès que la duplication elle-même change.
+export function identiteDuCluster(cluster) {
+  const fichiers = [...new Set(cluster.occurrences.map((o) => o.file))].sort().join(" + ");
+  const apercu = String(cluster.preview?.[0] ?? "").trim().slice(0, 80);
+  return { fichier: fichiers, defaut: apercu };
+}
+
+// Traduit les clusters dans la forme qu'attend `filtrerDejaTranches()` (fichier/defaut), applique le
+// filtre partagé, puis rend les clusters d'origine enrichis de leur compteur de passages et de leur
+// palier de relance. On ne rend JAMAIS la forme traduite : le reste du rapport travaille sur des
+// clusters, et lui en rendre une autre serait la dette que ce fichier traque.
+export function clustersNonTranches(clusters = [], memoire = [], filtrer) {
+  const traduits = clusters.map((c) => ({ ...identiteDuCluster(c), cluster: c }));
+  // `filtrerDejaTranches()` rend un OBJET (gardes, ecartesSansAccord, regressions…), jamais un
+  // tableau — relayer un mécanisme partagé veut dire en respecter la forme, pas la deviner.
+  const verdict = filtrer(traduits, memoire);
+  return {
+    gardes: verdict.gardes.map((g) => ({ ...g.cluster, passages: g.passages, relance: g.relance, ton: g.ton })),
+    ecartes: clusters.length - verdict.gardes.length,
+    // Les deux signaux que la mémoire partagée porte et qu'il serait grave de perdre en route : une
+    // tentative d'écarter sans accord, et un problème corrigé qui REVIENT.
+    ecartesSansAccord: verdict.ecartesSansAccord ?? [],
+    regressions: verdict.regressions ?? [],
+  };
+}
+
 export function formatClusterSummary(cluster) {
   const where = cluster.occurrences.map((o) => `${o.file}:${o.start + 1}`).join(", ");
   return `${cluster.lines} ligne(s) dupliquée(s) × ${cluster.occurrences.length} endroit(s) — ${where} — aperçu: "${cluster.preview[0] ?? ""}"`;
@@ -584,7 +639,15 @@ function main() {
   // sacré qui ferait disparaître une trouvaille serait pire que celui qui en compte une de trop.
   // Le nombre est imprimé plutôt que tu : un filtre silencieux est un filtre que personne ne peut
   // contester.
-  const { gardes: problemes, ecartes: ponts } = ecarterLesPontsDeReexport(problemesBruts, collectFileLines(DEFAULT_ROOTS));
+  const { gardes: apresPonts, ecartes: ponts } = ecarterLesPontsDeReexport(problemesBruts, collectFileLines(DEFAULT_ROOTS));
+  // LA MÉMOIRE S'APPLIQUE APRÈS LE FILTRE DES PONTS, et l'ordre compte : un pont de réexport n'est
+  // pas un problème écarté par décision, c'est un non-problème. Les mélanger ferait apparaître dans
+  // la mémoire des écartements que personne n'a décidés.
+  const memoireClone = loadMemoire({ fichier: "docs/clone-hunter/memoire.json" });
+  const { gardes: problemes, ecartes: dejaTranches } = clustersNonTranches(apresPonts, memoireClone, filtrerDejaTranches);
+  if (dejaTranches) {
+    console.log(`\n${dejaTranches} problème(s) déjà TRANCHÉ(S) avec ton accord explicite, écartés de ce plan (docs/clone-hunter/memoire.json) — un écartement sans accord, lui, revient toujours et son rappel grossit.`);
+  }
   if (ponts.length) {
     console.log(`\n${ponts.length} problème(s) ÉCARTÉ(S) du plan : liste de symboles (import/export) — pas du code dupliqué, la syntaxe elle-même. Fondre une liste de réexport avec la liste importée est impossible par construction :`);
     for (const c of ponts) console.log(`  · ${formatClusterSummary(c)}`);

@@ -1,0 +1,248 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il découpe une demande longue en points par des marqueurs de texte : une demande formulée sans marqueur ressort en un seul bloc. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : samedi 26 septembre 2026 à 12h05 (UTC)
+État du code : 74adf17 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : demande directe
+Outil : rapport-gros-prompt — inchangé depuis le vendredi 25 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== RAPPORT DE GROS PROMPT — la saisine du 2026-09-26 (31 points, 6 chantiers) ===
+Saisine du 2026-09-25, dans la soirée · 31 point(s) · 26 tâche(s) associée(s)
+Date : 2026-09-26
+
+Ton prompt du 2026-09-25, dans la soirée contient 31 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
+🟢 31 retenu(s) · ⚪ 0 écarté(s) · 🟠 0 à trancher par toi.
+
+Mesurer l'existant avant de construire
+
+🟢 [1] RETENU — #901
+   TA DEMANDE : « beaucoup de choses existent déjà, on réaménage simplement l'existant »
+   OÙ ÇA EN EST : FAIT. Mesuré avant d'écrire une ligne : les notes de chantier vivaient déjà dans 5 endroits (docs/plans, docs/suivi, le référentiel, la conception, les commentaires de tête). La STRATÉGIE DE CHANTIER les AGRÈGE et les ORDONNE — elle n'invente aucun format neuf, et elle ne résume jamais.
+
+Écrire le process PRÉ-CHANTIER et le câbler
+
+🟢 [2] RETENU — #903
+   TA DEMANDE : « (point 2 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. Le 8e process DÉCLARÉ : écrit sur disque (A→H, huit étapes) ET câblé chez god-of-all-process. Sans le câblage il n'aurait pas existé demain — c'est la leçon L2 appliquée d'avance.
+
+Étendre check-tasks-details : créer / ajouter / livrer
+
+🟢 [3] RETENU — #901, #905
+   TA DEMANDE : « (point 3 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. Trois sous-commandes réelles, plus une quatrième que tu n'avais pas demandée : `strategie promouvoir`, qui fait passer une fiche légère en fiche complète SANS PERDRE UN MOT — remet l'ordre canonique, garde le contenu mot pour mot, et NOMME les sections inconnues au lieu de les jeter.
+
+Le garde-fou anti-résumé
+
+🟢 [4] RETENU — #901
+   TA DEMANDE : « (point 4 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. Il compare les caractères cités à la somme des sources : si la stratégie est plus courte que ce qu'elle cite, elle a résumé, et elle le DIT. Le document porte aussi l'interdiction en tête, en toutes lettres.
+
+RENOMMAGE — la stratégie la plus riche
+
+🟢 [5] RETENU — #901
+   TA DEMANDE : « une période de cohabitation des deux noms »
+   OÙ ÇA EN EST : CONVERTIE. Tes deux ajouts du soir (table de conversion ancien→nouveau, période de cohabitation) y sont intégralement cités. Les 2 095 occurrences y sont, dont seulement NEUF sont des imports de code — le risque n'est pas où on le cherche.
+
+EXPORT & COMMERCIALISATION
+
+🟢 [6] RETENU — #902
+   TA DEMANDE : « (point 6 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : CONVERTIE. Huit de tes points y tombent. Le chantier existait sans titre : il avait des idées partout et aucun endroit.
+
+CLASSIFICATION & NIVELLEMENT
+
+🟢 [7] RETENU — #901
+   TA DEMANDE : « (point 7 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : CONVERTIE. C'est elle qui commande l'ordre du reste — et c'est écrit dans la stratégie, pas seulement su.
+
+GESTION DES TÂCHES
+
+🟢 [8] RETENU — #905
+   TA DEMANDE : « il faut gérer ca, on peut pas laisser le travail en mode tapis roulant ou enfoncement »
+   OÙ ÇA EN EST : CONVERTIE, et c'est celle qui a produit le plus de code réel : trois courbes, un filtre, une clôture refusable.
+
+Fiche légère pour les 4 autres familles
+
+🟢 [9] RETENU — #904
+   TA DEMANDE : « (point 9 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. 2 sections au lieu de 7. Et la promotion vers la fiche complète ne perd jamais un mot — vérifié par contre-test, pas promis en commentaire.
+
+Les trois courbes de rotation
+
+🟢 [10] RETENU — #905
+   TA DEMANDE : « ca ne me dérange pas si dans la rotation, la proportion de grosses taches diminue au profit de petites taches rapides : 117 taches ne veut rien dire en soi »
+   OÙ ÇA EN EST : FAIT, et l'outil REFUSE de conclure quand il ne sait pas : si l'origine « indéterminée » domine, il ne rend pas de verdict. C'est ce refus qui m'a fait trouver une régression sur ma propre mesure (77 % → 78 % en croyant améliorer : un drapeau /i perdu). Corrigé : 77 % → 68 %.
+
+Les deux colonnes début/fin, clôture refusable
+
+🟢 [11] RETENU — #905
+   TA DEMANDE : « 3 actions AVANT (1:filtre 2:comment (process) 3:comment(outil)) + 3 actions APRES (1: bien intégré, au bon format 2: complet 3:100% fonctionnel) »
+   OÙ ÇA EN EST : FAIT. Le garde-fou refuse une clôture dont la colonne APRÈS est vide, exactement comme il refuse déjà une clôture sans déclaration de fidélité. La case à cocher est devenue une condition.
+
+Le filtre anti-doublon AVANT création
+
+🟢 [12] RETENU — #905
+   TA DEMANDE : « je veux ajouter une toute premiere action au debut : verifier que cette tache n'existe pas deja, et si elle peut etoffer une tache existante plutot que creer une nouvelle tache : c'est le FILTRE, avant la creation de chaque tache »
+   OÙ ÇA EN EST : FAIT. Trois issues, jamais deux : ne-pas-créer / étoffer une tâche existante / créer. Les seuils (0,45 et 0,22) sont dérivés d'une mesure sur le vrai registre, pas choisis ronds.
+
+Harmonisation des blocs de tâches par thème
+
+🟢 [13] RETENU — #905
+   TA DEMANDE : « verifie que tous les nouveaux sujet traités ensemble s'harmonisent bien avec l'existant, reperes les redondances »
+   OÙ ÇA EN EST : FAIT. Les blocs par thème sont répercutés dans le bilan, la Ronde et le rapport de tâches. Un séparateur de thème divergent (" / " contre "/") a été unifié au passage.
+
+Le fichier PEUR DE L'EXPORT — brutal, chiffré
+
+🟢 [14] RETENU — #906
+   TA DEMANDE : « (point 14 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : LIVRÉ : `docs/peur-de-l-export.md`. Sans ménagement, comme demandé. Le chiffre qui fait mal : 19 fichiers VITAUX n'ont aucun blueprint — les deux crochets git, lib-shell, lib-json, la suite de tests. On a documenté les vedettes et pas la plomberie.
+
+L'échelle de vitalité à 4 niveaux sur les 88 fichiers
+
+🟢 [15] RETENU — #906
+   TA DEMANDE : « (point 15 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. 25 vital (28 %) / 9 essentiel (10 %) / 34 utile (39 %) / 20 optionnel (23 %). La chaîne d'exécution réelle fait 25 fichiers ; avec les imports de test elle en fait 81.
+
+Mesurer l'exportabilité, blueprints manquants
+
+🟢 [16] RETENU — #906, #907
+   TA DEMANDE : « (point 16 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT — et le résultat a ouvert une tâche prioritaire (#907) : écrire le blueprint de la PLOMBERIE avant tout le reste. Un blueprint de l'Agence elle-même existe (`docs/agence-exportable-conception.md`).
+
+Mémoire disque : coût réel, projeté 1 mois / 2 mois / 1 an
+
+🟢 [17] RETENU — #906
+   TA DEMANDE : « (point 17 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : MESURÉ : dépôt ×8,8 en sept jours (2,2 → 19 Mo), 2,4 Mo/jour, projection 91 / 164 / 898 Mo. **L'hébergement n'est PAS le sujet** : 0 € sous 100 000 requêtes/jour, 5 $/mois au premier palier payant, bande passante sortante gratuite. Ce qui coûte, c'est la reprise.
+
+Le relai de modèle, sans me servir de moi-même comme étalon
+
+🟢 [18] RETENU — #909, #910
+   TA DEMANDE : « (point 18 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT, et ta consigne est respectée à la lettre : la mesure porte sur ce que le DÉPÔT fournit à une IA qui arrive (mémoire, conduite, process), jamais sur ce que je saurais faire. 4 dépendances à un outillage particulier trouvées dans les documents normatifs.
+
+Les bénéfices nets, et ce qui n'est pas mesurable
+
+🟢 [19] RETENU — #909
+   TA DEMANDE : « (point 19 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT — et DEUX des quatre postes REFUSENT de répondre : « appels API évités » et « temps gagné » n'ont pas de groupe témoin, donc aucun chiffre honnête. Ils sont déclarés non mesurables plutôt que remplis au jugé.
+
+Recherches web ciblées + exportabilité vs commercialisation
+
+🟢 [20] RETENU — #911
+   TA DEMANDE : « (point 20 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT : quatre questions, huit trouvailles. Dont celle qui change le cadrage : l'hébergement est gratuit à cette échelle, donc « exporter » est un problème de REPRISE, jamais de coût.
+
+check-profile — dégeler, corriger l'en-tête, sans le lancer
+
+🟢 [21] RETENU — #912
+   TA DEMANDE : « (point 21 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT, sans un seul appel API. Son en-tête MENTAIT depuis neuf jours : il annonçait un mécanisme « pas encore construit » alors que `route.ts:31-32` prouve que le prompt de production a été « validé sur douze profils dans scripts/check-profile.mjs ».
+
+Fermer l'angle mort de l'audit d'intégration
+
+🟢 [22] RETENU — #915
+   TA DEMANDE : « (point 22 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. Les 11 registres vérifiaient les fils et pas le tissu : l'audit regardait si chaque membre était déclaré, jamais si les déclarations se recoupaient.
+
+Les Gardiens sacrés en Ronde — mesurer les couches
+
+🟢 [23] RETENU — #916, #917
+   TA DEMANDE : « (point 23 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT. Un seul vrai candidat à une couche lourde. Et une PROMESSE NON PORTÉE trouvée au passage : l'Article 20 dit qu'ARGUS et HARMONIA ont une couche lourde sur demande, le catalogue ne la déclare pas → #917, à trancher.
+
+Cohérence outil ↔ rapport
+
+🟢 [24] RETENU — #918, #919
+   TA DEMANDE : « cohérence outil ↔ rapport : chaque fonctionnalité intéressante alimente-t-elle le rapport ? »
+   OÙ ÇA EN EST : FAIT — et l'outil existait déjà : `pure-gold-unity` porte exactement ce critère depuis le 2026-09-23. Ton point n'appelait pas une construction, il appelait un PASSAGE. Cinq critères au vert. Reste 19 détecteurs portés par la seule suite de tests, dont 7 devraient parler → #919.
+
+Pondérer les leçons par le nombre de remontées
+
+🟢 [25] RETENU — #914, #928
+   TA DEMANDE : « (point 25 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT : 602 rappels comptés. Les cinq pièges permanents sont L4 (113), L5 (87), L2 (75). Et 4 leçons n'ont JAMAIS été remontées en ~300 occasions chacune → #928, à trancher : poids mort, ou angle mort du sélecteur ?
+
+Renforcer AGENT-DU-TEMPS
+
+🟢 [26] RETENU — #913
+   TA DEMANDE : « ajoute aussi ta prise en compte du temps réel, au même niveau »
+   OÙ ÇA EN EST : FAIT : l'Article 32 a enfin son quatrième porteur. Le temps de L'UTILISATEUR (présent ou endormi) compte désormais autant que celui de la machine — avec une impossibilité DÉCLARÉE plutôt que tue : je ne peux pas mesurer ta dernière trace depuis ce conteneur.
+
+Le mode auto ne s'arrête jamais
+
+🟢 [27] RETENU — #913
+   TA DEMANDE : « assure toi de ne plus jamais t'arreter en mode auto quand je te lance »
+   OÙ ÇA EN EST : FAIT : réveil à DEUX étages — une chaîne courte réarmée à chaque tour (le rythme) ET un filet récurrent qui ne dépend d'aucun réarmement (la garantie). Un seul tour qui se termine sans réarmer suffisait à tuer une nuit entière.
+
+L'inventaire des rapports txt, puis la classification des DATA
+
+🟢 [28] RETENU — #921, #922
+   TA DEMANDE : « l'inventaire des rapports en txt (combien, description, à quoi il sert, livré à la Ronde ?, qui le lit, connecté à quoi) »
+   OÙ ÇA EN EST : FAIT. 282 rapports, 3,7 Mo, **263 (93 %) nommés nulle part**. Et la première mesure disait l'INVERSE (« 38 dossiers sur 40 sont relus ») parce qu'elle comptait par DOSSIER : un seul script citant le dossier faisait passer ses 47 fichiers pour lus. Quatre classes de DATA posées. #922 ouverte à trancher : la rétention.
+
+La Ronde en paramètres recommandés + son plan d'action
+
+🟢 [29] RETENU — #923
+   TA DEMANDE : « (point 29 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT : 31 items, mode autonome, clôture enregistrée. Deux gestes manuels faits sur place plutôt que renvoyés à une tâche : les 4 outils muets au compteur d'usage, et l'étape de tool-learning sautée 5 fois de suite (3 verdicts écrits sur preuve citable).
+
+La confrontation avant/après contre les 97 tâches figées
+
+🟢 [30] RETENU — #924, #930
+   TA DEMANDE : « (point 30 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT, et le chiffre se dit sans le contourner : **ZÉRO des 97 tâches de départ fermée**. La nuit a fait tes 31 points, pas la file. Et la mesure a un ANGLE MORT trouvé en la lisant : les 13 tâches nées ET fermées la même nuit sont invisibles aux deux colonnes → #930.
+
+Vérification finale — dernière Ronde + relecture
+
+🟢 [31] RETENU — #931, #932
+   TA DEMANDE : « (point 31 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md) »
+   OÙ ÇA EN EST : FAIT : les sept Gardiens relancés contre le vrai dépôt (Article 25), pas une relecture de mémoire. Ça a trouvé la plus grosse alerte de CLONE-HUNTER, intraitable par construction (un import et son réexport ne se fondent pas) → corrigée, leçon L30.
+
+Plan d'action
+
+  → RETENU · [1] ✅ ⚪ Son gros prompt du 2026-09-26 : « à la base, on crée PAS un repertoire d'… — tâche [RECOMMANDEE] : 901
+  → RETENU · [2] ✅ 🔴 Son gros prompt du 2026-09-26, la structure A→H qu'il a dictée lui-même :… — tâche [RECOMMANDEE] : 903
+  → RETENU · [3] ✅ ⚪ Son gros prompt du 2026-09-26 : « à la base, on crée PAS un repertoire d'…
+       + ✅ 🔴 Son gros prompt du 2026-09-26 (« on peut pas laisser le travail en mode t… — tâche [RECOMMANDEE] : 901
+  → RETENU · [4] ✅ ⚪ Son gros prompt du 2026-09-26 : « à la base, on crée PAS un repertoire d'… — tâche [RECOMMANDEE] : 901
+  → RETENU · [5] ✅ ⚪ Son gros prompt du 2026-09-26 : « à la base, on crée PAS un repertoire d'… — tâche [RECOMMANDEE] : 901
+  → RETENU · [6] ⬜ 🔴 Son gros prompt du 2026-09-26 : huit points distincts sur l'export (bluep… — tâche [RECOMMANDEE] : 902
+  → RETENU · [7] ✅ ⚪ Son gros prompt du 2026-09-26 : « à la base, on crée PAS un repertoire d'… — tâche [RECOMMANDEE] : 901
+  → RETENU · [8] ✅ 🔴 Son gros prompt du 2026-09-26 (« on peut pas laisser le travail en mode t… — tâche [RECOMMANDEE] : 905
+  → RETENU · [9] ✅ ⚪ Sa décision en fenêtre le 2026-09-26 : « choisissons ensmbel au ca par ca… — tâche [RECOMMANDEE] : 904
+  → RETENU · [10] ✅ 🔴 Son gros prompt du 2026-09-26 (« on peut pas laisser le travail en mode t… — tâche [RECOMMANDEE] : 905
+  → RETENU · [11] ✅ 🔴 Son gros prompt du 2026-09-26 (« on peut pas laisser le travail en mode t… — tâche [RECOMMANDEE] : 905
+  → RETENU · [12] ✅ 🔴 Son gros prompt du 2026-09-26 (« on peut pas laisser le travail en mode t… — tâche [RECOMMANDEE] : 905
+  → RETENU · [13] ✅ 🔴 Son gros prompt du 2026-09-26 (« on peut pas laisser le travail en mode t… — tâche [RECOMMANDEE] : 905
+  → RETENU · [14] ✅ 🔴 Son gros prompt du 2026-09-26, points 14 à 17 : le fichier « PEUR DE L'EX… — tâche [RECOMMANDEE] : 906
+  → RETENU · [15] ✅ 🔴 Son gros prompt du 2026-09-26, points 14 à 17 : le fichier « PEUR DE L'EX… — tâche [RECOMMANDEE] : 906
+  → RETENU · [16] ✅ 🔴 Son gros prompt du 2026-09-26, points 14 à 17 : le fichier « PEUR DE L'EX…
+       + ⬜ 🔴 Constat #1 du plan d'action de `docs/peur-de-l-export.md` (2026-09-26) : … — tâche [RECOMMANDEE] : 906
+  → RETENU · [17] ✅ 🔴 Son gros prompt du 2026-09-26, points 14 à 17 : le fichier « PEUR DE L'EX… — tâche [RECOMMANDEE] : 906
+  → RETENU · [18] ✅ 🔴 Son gros prompt du 2026-09-26, points 18 et 19 : « les bénéfices nets : m…
+       + ⬜ ⚪ Constat du relai de modèle (`node scripts/safe-export.mjs export`, 2026-0… — tâche [RECOMMANDEE] : 909
+  → RETENU · [19] ✅ 🔴 Son gros prompt du 2026-09-26, points 18 et 19 : « les bénéfices nets : m… — tâche [RECOMMANDEE] : 909
+  → RETENU · [20] ✅ ⚪ Son gros prompt du 2026-09-26, point 20 : « recherches web ciblées (3 à 4… — tâche [RECOMMANDEE] : 911
+  → RETENU · [21] ✅ ⚪ Son gros prompt du 2026-09-26, point 21 : « check-profile — dégeler, corr… — tâche [RECOMMANDEE] : 912
+  → RETENU · [22] ✅ ⚪ Son gros prompt du 2026-09-26, point 22 : « l'angle mort de l'audit d'int… — tâche [RECOMMANDEE] : 915
+  → RETENU · [23] ✅ ⚪ Son gros prompt du 2026-09-26, point 23 : « les Gardiens sacrés en Ronde …
+       + ⬜ ⚪ Constat du rapport `docs/cassandra-rh/couches-des-gardiens-2026-09-26.md`… — tâche [RECOMMANDEE] : 916
+  → RETENU · [24] ✅ ⚪ Son gros prompt du 2026-09-26, point 24 : « cohérence outil ↔ rapport : c…
+       + ⬜ ⚪ Constat de `pure-gold-unity` archivé dans `docs/doc-report/coherence-outi… — tâche [RECOMMANDEE] : 918
+  → RETENU · [25] ✅ ⚪ Son gros prompt du 2026-09-26, point 25 : « leçons et bonnes pratiques : …
+       + ⬜ ⚪ Plan d'action de tool-learning, Ronde du 2026-09-26 (tâche #923). — tâche [RECOMMANDEE] : 914
+  → RETENU · [26] ✅ ⚪ Son gros prompt du 2026-09-26, points 26 et 27 : « la notion du temps — r… — tâche [RECOMMANDEE] : 913
+  → RETENU · [27] ✅ ⚪ Son gros prompt du 2026-09-26, points 26 et 27 : « la notion du temps — r… — tâche [RECOMMANDEE] : 913
+  → RETENU · [28] ✅ ⚪ Son gros prompt du 2026-09-26, point 28 : « l'inventaire des rapports en …
+       + ⬜ ⚪ Plan d'action de `docs/data-archangel/classification-des-data-2026-09-26.… — tâche [RECOMMANDEE] : 921
+  → RETENU · [29] ✅ ⚪ Point 29 du plan de nuit `docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.m… — tâche [RECOMMANDEE] : 923
+  → RETENU · [30] ✅ ⚪ Point 30 du plan de nuit : la confrontation avant/après contre `docs/rapp…
+       + ⬜ ⚪ Trouvé en lisant `docs/check-tasks-details/bilan-taches-2026-09-26T08-07Z… — tâche [RECOMMANDEE] : 924
+  → RETENU · [31] ✅ ⚪ Point 31 du plan de nuit : vérification finale, les sept Gardiens relancé…
+       + ✅ ⚪ Sa consigne : « mets toi en mode ne plus t'arrêter, enchaîne sans t'arrêt… — tâche [RECOMMANDEE] : 931
+
+---
+HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.

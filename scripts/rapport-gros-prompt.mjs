@@ -24,6 +24,7 @@
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { buildReportFrame, renderTextReport, buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 import * as ctd from "./check-tasks-details.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
@@ -169,6 +170,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   recordCliUsage("rapport-gros-prompt", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const [, , entree, sortie] = process.argv;
   if (!entree) { console.error("usage : node scripts/rapport-gros-prompt.mjs <saisine.json> [sortie.txt]"); process.exit(2); }
-  const texte = renderTextReport(construireRapport(JSON.parse(readFileSync(entree, "utf8"))));
-  if (sortie) { writeFileSync(sortie, texte); console.log(`Rapport écrit : ${sortie}`); } else console.log(texte);
+  // DEUX SORTIES POUR UNE SEULE DESCRIPTION (2026-09-26, sa demande : « livre le rapport de gros
+  // prompt [...] en format HTML (la sauvegarde reste txt) »). C'est exactement la décision
+  // `delivery_html` déjà en vigueur ailleurs : le TXT est l'archive committée, le HTML est la copie
+  // de remise. Les deux rendus consomment la MÊME description (`construireRapport`), donc aucun des
+  // deux ne peut dire ce que l'autre ignore — c'est toute la raison d'être du gabarit partagé.
+  const description = construireRapport(JSON.parse(readFileSync(entree, "utf8")));
+  const texte = renderTextReport(description);
+  if (sortie) {
+    writeFileSync(sortie, texte);
+    console.log(`Archive TXT écrite : ${sortie}`);
+    const html = sortie.replace(/\.txt$/, "") + ".html";
+    writeFileSync(html, renderHtmlReport(description));
+    console.log(`Copie de remise HTML : ${html}`);
+  } else console.log(texte);
 }

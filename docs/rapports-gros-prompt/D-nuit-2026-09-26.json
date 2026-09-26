@@ -1,0 +1,327 @@
+{
+ "titre": "RAPPORT DE GROS PROMPT — la saisine du 2026-09-26 (31 points, 6 chantiers)",
+ "dateDuPrompt": "2026-09-25, dans la soirée",
+ "dateDuRapport": "2026-09-26",
+ "origine": "demande",
+ "points": [
+  {
+   "id": "1",
+   "sort": "retenu",
+   "taches": [
+    901
+   ],
+   "sujet": "Mesurer l'existant avant de construire",
+   "citation": "beaucoup de choses existent déjà, on réaménage simplement l'existant",
+   "reponse": "FAIT. Mesuré avant d'écrire une ligne : les notes de chantier vivaient déjà dans 5 endroits (docs/plans, docs/suivi, le référentiel, la conception, les commentaires de tête). La STRATÉGIE DE CHANTIER les AGRÈGE et les ORDONNE — elle n'invente aucun format neuf, et elle ne résume jamais."
+  },
+  {
+   "id": "2",
+   "sort": "retenu",
+   "taches": [
+    903
+   ],
+   "sujet": "Écrire le process PRÉ-CHANTIER et le câbler",
+   "citation": "(point 2 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. Le 8e process DÉCLARÉ : écrit sur disque (A→H, huit étapes) ET câblé chez god-of-all-process. Sans le câblage il n'aurait pas existé demain — c'est la leçon L2 appliquée d'avance."
+  },
+  {
+   "id": "3",
+   "sort": "retenu",
+   "taches": [
+    901,
+    905
+   ],
+   "sujet": "Étendre check-tasks-details : créer / ajouter / livrer",
+   "citation": "(point 3 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. Trois sous-commandes réelles, plus une quatrième que tu n'avais pas demandée : `strategie promouvoir`, qui fait passer une fiche légère en fiche complète SANS PERDRE UN MOT — remet l'ordre canonique, garde le contenu mot pour mot, et NOMME les sections inconnues au lieu de les jeter."
+  },
+  {
+   "id": "4",
+   "sort": "retenu",
+   "taches": [
+    901
+   ],
+   "sujet": "Le garde-fou anti-résumé",
+   "citation": "(point 4 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. Il compare les caractères cités à la somme des sources : si la stratégie est plus courte que ce qu'elle cite, elle a résumé, et elle le DIT. Le document porte aussi l'interdiction en tête, en toutes lettres."
+  },
+  {
+   "id": "5",
+   "sort": "retenu",
+   "taches": [
+    901
+   ],
+   "sujet": "RENOMMAGE — la stratégie la plus riche",
+   "citation": "une période de cohabitation des deux noms",
+   "reponse": "CONVERTIE. Tes deux ajouts du soir (table de conversion ancien→nouveau, période de cohabitation) y sont intégralement cités. Les 2 095 occurrences y sont, dont seulement NEUF sont des imports de code — le risque n'est pas où on le cherche."
+  },
+  {
+   "id": "6",
+   "sort": "retenu",
+   "taches": [
+    902
+   ],
+   "sujet": "EXPORT & COMMERCIALISATION",
+   "citation": "(point 6 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "CONVERTIE. Huit de tes points y tombent. Le chantier existait sans titre : il avait des idées partout et aucun endroit."
+  },
+  {
+   "id": "7",
+   "sort": "retenu",
+   "taches": [
+    901
+   ],
+   "sujet": "CLASSIFICATION & NIVELLEMENT",
+   "citation": "(point 7 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "CONVERTIE. C'est elle qui commande l'ordre du reste — et c'est écrit dans la stratégie, pas seulement su."
+  },
+  {
+   "id": "8",
+   "sort": "retenu",
+   "taches": [
+    905
+   ],
+   "sujet": "GESTION DES TÂCHES",
+   "citation": "il faut gérer ca, on peut pas laisser le travail en mode tapis roulant ou enfoncement",
+   "reponse": "CONVERTIE, et c'est celle qui a produit le plus de code réel : trois courbes, un filtre, une clôture refusable."
+  },
+  {
+   "id": "9",
+   "sort": "retenu",
+   "taches": [
+    904
+   ],
+   "sujet": "Fiche légère pour les 4 autres familles",
+   "citation": "(point 9 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. 2 sections au lieu de 7. Et la promotion vers la fiche complète ne perd jamais un mot — vérifié par contre-test, pas promis en commentaire."
+  },
+  {
+   "id": "10",
+   "sort": "retenu",
+   "taches": [
+    905
+   ],
+   "sujet": "Les trois courbes de rotation",
+   "citation": "ca ne me dérange pas si dans la rotation, la proportion de grosses taches diminue au profit de petites taches rapides : 117 taches ne veut rien dire en soi",
+   "reponse": "FAIT, et l'outil REFUSE de conclure quand il ne sait pas : si l'origine « indéterminée » domine, il ne rend pas de verdict. C'est ce refus qui m'a fait trouver une régression sur ma propre mesure (77 % → 78 % en croyant améliorer : un drapeau /i perdu). Corrigé : 77 % → 68 %."
+  },
+  {
+   "id": "11",
+   "sort": "retenu",
+   "taches": [
+    905
+   ],
+   "sujet": "Les deux colonnes début/fin, clôture refusable",
+   "citation": "3 actions AVANT (1:filtre 2:comment (process) 3:comment(outil)) + 3 actions APRES (1: bien intégré, au bon format 2: complet 3:100% fonctionnel)",
+   "reponse": "FAIT. Le garde-fou refuse une clôture dont la colonne APRÈS est vide, exactement comme il refuse déjà une clôture sans déclaration de fidélité. La case à cocher est devenue une condition."
+  },
+  {
+   "id": "12",
+   "sort": "retenu",
+   "taches": [
+    905
+   ],
+   "sujet": "Le filtre anti-doublon AVANT création",
+   "citation": "je veux ajouter une toute premiere action au debut : verifier que cette tache n'existe pas deja, et si elle peut etoffer une tache existante plutot que creer une nouvelle tache : c'est le FILTRE, avant la creation de chaque tache",
+   "reponse": "FAIT. Trois issues, jamais deux : ne-pas-créer / étoffer une tâche existante / créer. Les seuils (0,45 et 0,22) sont dérivés d'une mesure sur le vrai registre, pas choisis ronds."
+  },
+  {
+   "id": "13",
+   "sort": "retenu",
+   "taches": [
+    905
+   ],
+   "sujet": "Harmonisation des blocs de tâches par thème",
+   "citation": "verifie que tous les nouveaux sujet traités ensemble s'harmonisent bien avec l'existant, reperes les redondances",
+   "reponse": "FAIT. Les blocs par thème sont répercutés dans le bilan, la Ronde et le rapport de tâches. Un séparateur de thème divergent (\" / \" contre \"/\") a été unifié au passage."
+  },
+  {
+   "id": "14",
+   "sort": "retenu",
+   "taches": [
+    906
+   ],
+   "sujet": "Le fichier PEUR DE L'EXPORT — brutal, chiffré",
+   "citation": "(point 14 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "LIVRÉ : `docs/peur-de-l-export.md`. Sans ménagement, comme demandé. Le chiffre qui fait mal : 19 fichiers VITAUX n'ont aucun blueprint — les deux crochets git, lib-shell, lib-json, la suite de tests. On a documenté les vedettes et pas la plomberie."
+  },
+  {
+   "id": "15",
+   "sort": "retenu",
+   "taches": [
+    906
+   ],
+   "sujet": "L'échelle de vitalité à 4 niveaux sur les 88 fichiers",
+   "citation": "(point 15 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. 25 vital (28 %) / 9 essentiel (10 %) / 34 utile (39 %) / 20 optionnel (23 %). La chaîne d'exécution réelle fait 25 fichiers ; avec les imports de test elle en fait 81."
+  },
+  {
+   "id": "16",
+   "sort": "retenu",
+   "taches": [
+    906,
+    907
+   ],
+   "sujet": "Mesurer l'exportabilité, blueprints manquants",
+   "citation": "(point 16 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT — et le résultat a ouvert une tâche prioritaire (#907) : écrire le blueprint de la PLOMBERIE avant tout le reste. Un blueprint de l'Agence elle-même existe (`docs/agence-exportable-conception.md`)."
+  },
+  {
+   "id": "17",
+   "sort": "retenu",
+   "taches": [
+    906
+   ],
+   "sujet": "Mémoire disque : coût réel, projeté 1 mois / 2 mois / 1 an",
+   "citation": "(point 17 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "MESURÉ : dépôt ×8,8 en sept jours (2,2 → 19 Mo), 2,4 Mo/jour, projection 91 / 164 / 898 Mo. **L'hébergement n'est PAS le sujet** : 0 € sous 100 000 requêtes/jour, 5 $/mois au premier palier payant, bande passante sortante gratuite. Ce qui coûte, c'est la reprise."
+  },
+  {
+   "id": "18",
+   "sort": "retenu",
+   "taches": [
+    909,
+    910
+   ],
+   "sujet": "Le relai de modèle, sans me servir de moi-même comme étalon",
+   "citation": "(point 18 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT, et ta consigne est respectée à la lettre : la mesure porte sur ce que le DÉPÔT fournit à une IA qui arrive (mémoire, conduite, process), jamais sur ce que je saurais faire. 4 dépendances à un outillage particulier trouvées dans les documents normatifs."
+  },
+  {
+   "id": "19",
+   "sort": "retenu",
+   "taches": [
+    909
+   ],
+   "sujet": "Les bénéfices nets, et ce qui n'est pas mesurable",
+   "citation": "(point 19 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT — et DEUX des quatre postes REFUSENT de répondre : « appels API évités » et « temps gagné » n'ont pas de groupe témoin, donc aucun chiffre honnête. Ils sont déclarés non mesurables plutôt que remplis au jugé."
+  },
+  {
+   "id": "20",
+   "sort": "retenu",
+   "taches": [
+    911
+   ],
+   "sujet": "Recherches web ciblées + exportabilité vs commercialisation",
+   "citation": "(point 20 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT : quatre questions, huit trouvailles. Dont celle qui change le cadrage : l'hébergement est gratuit à cette échelle, donc « exporter » est un problème de REPRISE, jamais de coût."
+  },
+  {
+   "id": "21",
+   "sort": "retenu",
+   "taches": [
+    912
+   ],
+   "sujet": "check-profile — dégeler, corriger l'en-tête, sans le lancer",
+   "citation": "(point 21 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT, sans un seul appel API. Son en-tête MENTAIT depuis neuf jours : il annonçait un mécanisme « pas encore construit » alors que `route.ts:31-32` prouve que le prompt de production a été « validé sur douze profils dans scripts/check-profile.mjs »."
+  },
+  {
+   "id": "22",
+   "sort": "retenu",
+   "taches": [
+    915
+   ],
+   "sujet": "Fermer l'angle mort de l'audit d'intégration",
+   "citation": "(point 22 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. Les 11 registres vérifiaient les fils et pas le tissu : l'audit regardait si chaque membre était déclaré, jamais si les déclarations se recoupaient."
+  },
+  {
+   "id": "23",
+   "sort": "retenu",
+   "taches": [
+    916,
+    917
+   ],
+   "sujet": "Les Gardiens sacrés en Ronde — mesurer les couches",
+   "citation": "(point 23 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT. Un seul vrai candidat à une couche lourde. Et une PROMESSE NON PORTÉE trouvée au passage : l'Article 20 dit qu'ARGUS et HARMONIA ont une couche lourde sur demande, le catalogue ne la déclare pas → #917, à trancher."
+  },
+  {
+   "id": "24",
+   "sort": "retenu",
+   "taches": [
+    918,
+    919
+   ],
+   "sujet": "Cohérence outil ↔ rapport",
+   "citation": "cohérence outil ↔ rapport : chaque fonctionnalité intéressante alimente-t-elle le rapport ?",
+   "reponse": "FAIT — et l'outil existait déjà : `pure-gold-unity` porte exactement ce critère depuis le 2026-09-23. Ton point n'appelait pas une construction, il appelait un PASSAGE. Cinq critères au vert. Reste 19 détecteurs portés par la seule suite de tests, dont 7 devraient parler → #919."
+  },
+  {
+   "id": "25",
+   "sort": "retenu",
+   "taches": [
+    914,
+    928
+   ],
+   "sujet": "Pondérer les leçons par le nombre de remontées",
+   "citation": "(point 25 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT : 602 rappels comptés. Les cinq pièges permanents sont L4 (113), L5 (87), L2 (75). Et 4 leçons n'ont JAMAIS été remontées en ~300 occasions chacune → #928, à trancher : poids mort, ou angle mort du sélecteur ?"
+  },
+  {
+   "id": "26",
+   "sort": "retenu",
+   "taches": [
+    913
+   ],
+   "sujet": "Renforcer AGENT-DU-TEMPS",
+   "citation": "ajoute aussi ta prise en compte du temps réel, au même niveau",
+   "reponse": "FAIT : l'Article 32 a enfin son quatrième porteur. Le temps de L'UTILISATEUR (présent ou endormi) compte désormais autant que celui de la machine — avec une impossibilité DÉCLARÉE plutôt que tue : je ne peux pas mesurer ta dernière trace depuis ce conteneur."
+  },
+  {
+   "id": "27",
+   "sort": "retenu",
+   "taches": [
+    913
+   ],
+   "sujet": "Le mode auto ne s'arrête jamais",
+   "citation": "assure toi de ne plus jamais t'arreter en mode auto quand je te lance",
+   "reponse": "FAIT : réveil à DEUX étages — une chaîne courte réarmée à chaque tour (le rythme) ET un filet récurrent qui ne dépend d'aucun réarmement (la garantie). Un seul tour qui se termine sans réarmer suffisait à tuer une nuit entière."
+  },
+  {
+   "id": "28",
+   "sort": "retenu",
+   "taches": [
+    921,
+    922
+   ],
+   "sujet": "L'inventaire des rapports txt, puis la classification des DATA",
+   "citation": "l'inventaire des rapports en txt (combien, description, à quoi il sert, livré à la Ronde ?, qui le lit, connecté à quoi)",
+   "reponse": "FAIT. 282 rapports, 3,7 Mo, **263 (93 %) nommés nulle part**. Et la première mesure disait l'INVERSE (« 38 dossiers sur 40 sont relus ») parce qu'elle comptait par DOSSIER : un seul script citant le dossier faisait passer ses 47 fichiers pour lus. Quatre classes de DATA posées. #922 ouverte à trancher : la rétention."
+  },
+  {
+   "id": "29",
+   "sort": "retenu",
+   "taches": [
+    923
+   ],
+   "sujet": "La Ronde en paramètres recommandés + son plan d'action",
+   "citation": "(point 29 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT : 31 items, mode autonome, clôture enregistrée. Deux gestes manuels faits sur place plutôt que renvoyés à une tâche : les 4 outils muets au compteur d'usage, et l'étape de tool-learning sautée 5 fois de suite (3 verdicts écrits sur preuve citable)."
+  },
+  {
+   "id": "30",
+   "sort": "retenu",
+   "taches": [
+    924,
+    930
+   ],
+   "sujet": "La confrontation avant/après contre les 97 tâches figées",
+   "citation": "(point 30 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT, et le chiffre se dit sans le contourner : **ZÉRO des 97 tâches de départ fermée**. La nuit a fait tes 31 points, pas la file. Et la mesure a un ANGLE MORT trouvé en la lisant : les 13 tâches nées ET fermées la même nuit sont invisibles aux deux colonnes → #930."
+  },
+  {
+   "id": "31",
+   "sort": "retenu",
+   "taches": [
+    931,
+    932
+   ],
+   "sujet": "Vérification finale — dernière Ronde + relecture",
+   "citation": "(point 31 du gros prompt du 2026-09-26, repris dans docs/rapports-de-nuit/plan-nuit-2026-09-26-v2.md)",
+   "reponse": "FAIT : les sept Gardiens relancés contre le vrai dépôt (Article 25), pas une relecture de mémoire. Ça a trouvé la plus grosse alerte de CLONE-HUNTER, intraitable par construction (un import et son réexport ne se fondent pas) → corrigée, leçon L30."
+  }
+ ]
+}
