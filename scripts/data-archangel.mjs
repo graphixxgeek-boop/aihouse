@@ -1171,6 +1171,12 @@ export const SUJETS_DE_RAPPORT = [
   { cle: "jeu", libelle: "le JEU — Lia, Noé, la maison", mots: ["personnage", "dialogue", "replique", "ton", "simulation", "narrat", "jeu", "graphique", "ecran"] },
   { cle: "consommation", libelle: "la CONSOMMATION — API, tokens, temps", mots: ["quota", "api", "token", "cout", "conso", "temps", "heure", "estimation"] },
   { cle: "donnees", libelle: "les DONNÉES et leur circulation", mots: ["donnee", "data", "rapport", "registre", "journal", "index", "archive", "memoire"] },
+  // LE 8e SUJET (2026-09-26) — trouvé en traitant les six dossiers « sujet non déterminé ». Quatre
+  // venaient d'outils absents du catalogue ; les deux derniers, non : leur prestation existait et
+  // ne portait simplement AUCUN mot de sujet, parce qu'il manquait le thème le plus fréquent du
+  // corpus. « vérifier » revient 7 fois dans les `demande`, « contrôle » 3 — c'était le trou, pas
+  // l'outil. Ajouté après avoir vérifié qu'il ne vide aucun autre sujet : ce n'est pas un fourre-tout.
+  { cle: "verifications", libelle: "les VÉRIFICATIONS et les contrôles", mots: ["verifier", "verification", "controle", "scan", "garde-fou", "conformite", "fiabilite", "coherence"] },
 ];
 
 // normaliserPourSujet() — sans accents et en minuscules, parce que « référentiel » et
@@ -1298,7 +1304,10 @@ export function classerLesRapports({ registres = [], prestations = [], inventair
     total: lignes.reduce((a, l) => a + l.combien, 0),
     parSujet: compter("sujet"), parEquipe: compter("equipe"), parFonction: compter("fonction"),
     croise: [...croise.entries()].map(([cle, v]) => ({ cle, ...v })).sort((a, b) => b.fichiers - a.fichiers),
-    sansSujet: lignes.filter((l) => !l.sujet).map((l) => l.dossier),
+    // UN DOSSIER QUI N'EST PAS LE REGISTRE D'UN OUTIL N'A PAS DE SUJET À DÉRIVER, et le lui
+    // reprocher serait le même faux positif que pour l'équipe (corrigé le même jour, leçon L4) :
+    // le sujet se lit dans la prestation de l'outil producteur, et ces dossiers n'en ont pas.
+    sansSujet: lignes.filter((l) => !l.sujet && !horsRegistre.has(l.dossier)).map((l) => l.dossier),
     // TROIS ÉTATS, JAMAIS DEUX : déclaré · déclaré comme N'ÉTANT PAS un registre (avec sa raison) ·
     // ni l'un ni l'autre. Confondre les deux derniers ferait reprocher à quatre dossiers une
     // décision déjà prise et écrite, et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).

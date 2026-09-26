@@ -7563,18 +7563,36 @@ async function testKitsDExport() {
   const se = await import('../scripts/safe-export.mjs');
   const { NIVEAUX_DE_KIT, PIECES_DU_KIT, kitAttendu, basesDuChemin, dependancesInternes, etatDuKit, mesurerLesKits, formatKitsLines } = se;
 
-  // LA PROPORTIONNALITÉ EST LA DEMANDE, donc c'est elle qu'on verrouille : un niveau par niveau de
-  // vitalité, et des kits strictement décroissants. Si un jour « utile » exigeait plus que
-  // « vital », le système cesserait d'être cohérent sans que rien ne le dise.
+  // LA RÈGLE, APRÈS SA CORRECTION DU 2026-09-26 : le kit COMPLET est dû à TOUT fichier. Sa raison,
+  // et elle est imparable : « les optionnels de l'agence ne pourront pas être réinstallés
+  // correctement si on les a intégrés à l'agence ». Faire varier la RÉINSTALLABILITÉ avec
+  // l'IMPORTANCE produisait l'absurdité qu'il nomme — on emporte le fichier et on ne sait plus le
+  // remonter. C'est donc l'UNIFORMITÉ qui se verrouille ici, là où la version d'avant verrouillait
+  // la décroissance : le test dit le contraire de ce qu'il disait ce matin, et c'est voulu.
   const { VITALITE } = await import('../scripts/le-classificateur.mjs');
-  assert.deepEqual(NIVEAUX_DE_KIT.map((n) => n.vitalite), VITALITE.map((v) => v.cle), 'every vitality level must have exactly one kit level, in the same order — a level with no kit would be invisible to the export with nobody noticing');
-  for (let i = 1; i < NIVEAUX_DE_KIT.length; i += 1) {
-    assert.ok(NIVEAUX_DE_KIT[i].pieces.length <= NIVEAUX_DE_KIT[i - 1].pieces.length, `kit ${NIVEAUX_DE_KIT[i].vitalite} must not demand MORE pieces than the level above it — proportionality is the request itself, and an inversion would break it silently`);
-    assert.ok(NIVEAUX_DE_KIT[i].pieces.every((p) => PIECES_DU_KIT.some((x) => x.cle === p)), 'and every piece a kit demands must be a declared piece, never a name nobody defines');
+  assert.deepEqual(NIVEAUX_DE_KIT.map((n) => n.vitalite), VITALITE.map((v) => v.cle), 'every vitality level must appear, in the same order — a level absent here would be a level nobody measures');
+  for (const n of NIVEAUX_DE_KIT) {
+    assert.deepEqual(n.pieces, se.KIT_COMPLET, `kit ${n.vitalite} must demand the FULL kit: a lighter kit for a less important file is exactly the reasoning he corrected — the file still leaves with the Agency, and without its plan it cannot be put back`);
+    assert.ok(Number.isFinite(n.rang), 'and each level carries a repair RANK instead: vitality no longer decides what is due, it decides what gets fixed first');
   }
-  assert.equal(kitAttendu('vital').pieces.length, 5, 'the vital kit carries all five pieces: what the Agency cannot lose must be reproducible without guesswork');
-  assert.equal(kitAttendu('optionnel').pieces.length, 2, 'the optional kit carries the code and what it needs to start — demanding a blueprint there would cost more than it returns');
+  assert.ok(se.KIT_COMPLET.every((p) => PIECES_DU_KIT.some((x) => x.cle === p)), 'every piece the kit demands must be a declared piece, never a name nobody defines');
   assert.equal(kitAttendu('inexistant'), null, 'and an unknown level returns null rather than a default kit that would silently under-demand');
+
+  // LES DISPENSES — rares, écrites, et hors du dénominateur.
+  assert.ok(se.EXEMPTES_DU_KIT.every((e) => e.motif instanceof RegExp && e.pourquoi), 'each exemption carries a WRITTEN reason: an exemption without one is not a decision, it is a silent abandonment (Article 28)');
+  assert.ok(se.exemptionDuKit('scripts/hooks/post-commit'), 'a git hook is exempt: it is the Agency WIRED to this repository, not a tool to reinstall elsewhere');
+  assert.equal(se.exemptionDuKit('scripts/argus.mjs'), null, 'while an ordinary tool is never exempt — the exemption list must stay a short list of real cases, not a back door');
+  const dispense = etatDuKit({ chemin: 'scripts/hooks/post-commit' }, 'vital', { exists: () => false, readFileImpl: () => '' });
+  assert.equal(dispense.exempte, true, 'an exempt file is its OWN state');
+  assert.equal(dispense.taux, null, 'with no rate at all, so it cannot inflate the coverage figure — a dispensation counted as a success would make the number flattering instead of exact');
+
+  // LE REGISTRE EST SANS OBJET POUR UN FICHIER QUI N'ÉCRIT RIEN — jamais « manquant ».
+  assert.equal(se.tientUneMemoire('writeFileSync(x)'), true, 'a file that writes keeps a memory');
+  assert.equal(se.tientUneMemoire('export const X = 1;'), false, 'a library writes nothing');
+  const biblio = etatDuKit({ chemin: 'scripts/lib-x.mjs' }, 'vital', { exists: () => true, readFileImpl: () => 'export const X = 1;' });
+  const ligneRegistre = biblio.detail.find((d) => d.cle === 'registre');
+  assert.equal(ligneRegistre.sansObjet, true, 'so its registre is SANS OBJET, never missing: demanding an index from a file with nothing to historise would be demanding an empty document');
+  assert.equal(biblio.complet, true, 'and a piece without object must not count against it — otherwise every library would be permanently incomplete, and the figure would stop meaning anything');
 
   // LES DEUX ORTHOGRAPHES — le faux positif que le premier vrai passage a produit.
   assert.deepEqual(basesDuChemin('scripts/check-argus.mjs'), ['check-argus', 'argus'], 'a check- prefixed script is looked up BOTH ways: docs/argus-blueprint.md and docs/check-argus-blueprint.md both exist in this repository, under different tools');
@@ -7591,8 +7609,8 @@ async function testKitsDExport() {
   assert.deepEqual(complet.detail.find((d) => d.cle === 'dependances').liste, ['scripts/lib-shell.mjs'], 'and its kit names what must go with it');
   const troue = etatDuKit({ chemin: 'scripts/x.mjs' }, 'vital', { exists, readFileImpl: () => '' });
   assert.equal(troue.complet, false, 'a vital file missing its fiche and registre has an incomplete kit');
-  assert.deepEqual(troue.manquantes.map((m) => m.cle), ['source', 'fiche', 'registre'], 'and the MISSING pieces are named with their path, never counted — a count says how far, a list says what to create');
-  assert.equal(troue.taux, 40, 'with an honest completion rate (2 of the 5 pieces: the blueprint and the dependency list, which a readable file always produces even when empty): twenty kits at 80 % and twenty at 0 % do not get repaired the same way, and "0 complete" confuses them');
+  assert.deepEqual(troue.manquantes.map((m) => m.cle), ['source', 'fiche'], 'and the MISSING pieces are named with their path, never counted — a count says how far, a list says what to create. The registre is absent from this list because an empty file writes nothing: it is SANS OBJET, and lumping it in with the real gaps would send someone off to create a document with nothing to put in it');
+  assert.equal(troue.taux, 50, 'with an honest completion rate computed on the pieces genuinely DUE (2 of 4 here — the sans-objet registre leaves the denominator too, otherwise every library would be permanently below par): twenty kits at 80 % and twenty at 0 % do not get repaired the same way, and "0 complete" confuses them');
 
   // UN FICHIER ILLISIBLE NE REND JAMAIS « ZÉRO DÉPENDANCE » (leçons L5/L11) — ce serait le pire
   // résultat possible ici : on emporterait l'outil sans ce qui le fait démarrer.
@@ -7608,11 +7626,12 @@ async function testKitsDExport() {
   const { vitaliteDuParc } = await import('../scripts/le-classificateur.mjs');
   const reel = mesurerLesKits({ vitalite: vitaliteDuParc() });
   assert.equal(reel.mesurable, true, 'against the real repository the kits must actually be measurable');
-  assert.equal(reel.total, 89, 'and cover the whole fleet — the transverse category he asked for covers ALL files, not the documented ones');
-  assert.ok(reel.parNiveau.optionnel.couverture === 100, 'the optional level is at 100 % by construction (code + dependencies), which is the proof that the bar really is proportional and not a uniform demand in disguise');
-  assert.ok(reel.bloquants.length > 0, 'and today there ARE unmet kits on files the Agency depends on: this test would be worthless if it only ever ran on a clean state — the day it drops to zero, that is the real news');
+  assert.equal(reel.total + reel.exemptes, 89, 'and account for the whole fleet — every file is either owed a kit or dispensed with a written reason, never simply absent from the count');
+  assert.ok(reel.exemptes > 0 && reel.exemptes < 15, `the exemptions must stay a short list of real cases (currently ${reel.exemptes} of 89): a long one would mean the rule has become optional`);
+  assert.ok(reel.bloquants.some((b) => b.vitalite === 'optionnel'), 'and an OPTIONAL file with an incomplete kit must now appear in the list — it was filtered out before his correction, which is exactly the blind spot he pointed at: it leaves with the Agency and cannot be put back');
+  assert.ok(reel.bloquants.length > 0, 'today there ARE unmet kits: this test would be worthless if it only ever ran on a clean state — the day it drops to zero, that is the real news');
 
-  console.log("Passed: les kits d'export (2026-09-26) répondent à sa demande d'un système PROPORTIONNEL : quatre niveaux de kit alignés un pour un sur les quatre niveaux de vitalité, et strictement décroissants — complet (plan + code + fiche + registre + dépendances) pour les vitaux et les essentiels, allégé pour les utiles, minimal pour les optionnels. Sa correction en cours de chantier est appliquée partout : les quatre niveaux qualifient l'importance POUR LE FONCTIONNEMENT DE L'AGENCE, jamais l'exportabilité — le kit est la conséquence du niveau, une seule échelle lue deux fois plutôt que deux échelles qui divergeraient. Les dépendances se LISENT dans les imports réels (une liste tenue à la main expire au premier import ajouté), les deux orthographes de blueprint du dépôt sont acceptées (le premier passage réclamait docs/house-blueprint.md pour un plan qui existe sous un autre nom), un fichier illisible rend « dépendances PAS MESURÉES » et jamais « aucune dépendance », et les pièces manquantes sont NOMMÉES avec leur chemin. Mesuré en direct : 89 fichiers, 48 kits complets, 27 kits dus et non tenus sur des fichiers dont l'Agence dépend.");
+  console.log("Passed: les kits d'export, RÈGLE CORRIGÉE le 2026-09-26 par lui, et sa raison est imparable : « les optionnels de l'agence ne pourront pas être réinstallés correctement si on les a intégrés à l'agence ». Mon premier système faisait varier le kit avec la VITALITÉ, c'est-à-dire avec ce que l'Agence perd sans le fichier — mais le kit répond à une autre question : peut-on le REMONTER ailleurs ? Et elle a la même réponse pour tout le monde, puisque le fichier partira de toute façon. Le kit complet (blueprint + code + fiche + registre + dépendances) est donc dû à TOUS, ce que ce test verrouille désormais à la place de la décroissance qu'il verrouillait le matin même. Deux soupapes, jamais une dispense implicite : une PIÈCE peut être SANS OBJET (un fichier qui n'écrit rien n'a pas de registre à emporter — réclamer un index vide fabriquerait du travail qui n'apprend rien), et un FICHIER peut être dispensé avec sa raison écrite (les crochets git câblent l'Agence à CE dépôt, install-pnpm décrit CETTE machine, run-framework sert le produit). Un dispensé n'a pas de taux du tout, donc il ne peut pas rendre la couverture flatteuse. La vitalité ne dispense plus personne : elle donne l'ORDRE de réparation. Mesuré en direct : 82 kits dus, 7 dispensés, 33 complets, 49 incomplets — dont des OPTIONNELS, qui étaient filtrés hors de la liste avant sa correction et qui sont précisément l'angle mort qu'il a vu.");
 }
 
 await testKitsDExport();

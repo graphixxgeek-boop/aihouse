@@ -1,33 +1,34 @@
 === LA CLASSIFICATION COMPLÈTE — RAPPORTS ET DATAS ===
 
   CE QUI EST RANGÉ, PAR NATURE — et « rapport » n'est qu'une des quatre :
-    RAPPORTS              291  — les fichiers produits passage après passage par un outil, archivés dans son registre
+    RAPPORTS              294  — les fichiers produits passage après passage par un outil, archivés dans son registre
     REGISTRES              54  — l'index d'un outil — la mémoire de ce qu'il a déjà vu, relue au passage suivant
     JOURNAUX locaux        20  — un journal tenu par un outil pour lui-même, jamais un rapport livré
     SÉRIES CHIFFRÉES        1  — les indicateurs suivis dans le temps — la seule donnée dont la valeur est de se comparer à elle-même
 
-=== CLASSIFICATION DES RAPPORTS — 40 dossier(s), 291 fichier(s) ===
+=== CLASSIFICATION DES RAPPORTS — 41 dossier(s), 294 fichier(s) ===
 
   AXE 1 — LE SUJET TRAITÉ
     documents                4 dossier(s) ·   92 fichier(s)
     travail                 13 dossier(s) ·   64 fichier(s)
     code                     4 dossier(s) ·   58 fichier(s)
-    (non déterminé)          6 dossier(s) ·   29 fichier(s)
-    outillage                6 dossier(s) ·   21 fichier(s)
-    donnees                  4 dossier(s) ·   17 fichier(s)
-    consommation             3 dossier(s) ·   10 fichier(s)
+    outillage                8 dossier(s) ·   27 fichier(s)
+    donnees                  5 dossier(s) ·   22 fichier(s)
+    verifications            2 dossier(s) ·   14 fichier(s)
+    consommation             4 dossier(s) ·   14 fichier(s)
+    (non déterminé)          1 dossier(s) ·    3 fichier(s)
 
   AXE 2 — L'ÉQUIPE PROPRIÉTAIRE (lue dans les registres déclarés, jamais recopiée)
-    (f) 👼 Les Anges de la coordination                   18 dossier(s) ·   93 fichier(s)
-    (f) 👑 La Gouvernance Royale                           9 dossier(s) ·   75 fichier(s)
-    (f) 🛡️ Les Gardiens Sacrés du Code                    3 dossier(s) ·   47 fichier(s)
+    (f) 👼 Les Anges de la coordination                   19 dossier(s) ·   98 fichier(s)
+    (f) 👑 La Gouvernance Royale                          10 dossier(s) ·   76 fichier(s)
+    (f) 🛡️ Les Gardiens Sacrés du Code                    3 dossier(s) ·   48 fichier(s)
     (f) 🎬 La Suite Tarantino - Simulation & qualité narrative   1 dossier(s) ·   44 fichier(s)
-    (f) 📜 Les Prophètes - Dette & Structure du code       5 dossier(s) ·   18 fichier(s)
+    (f) 📜 Les Prophètes - Dette & Structure du code       4 dossier(s) ·   14 fichier(s)
     (non déterminé)                                        4 dossier(s) ·   14 fichier(s)
 
   AXE 3 — LA FONCTION (a-t-il besoin d'être lu ? par qui ? qu'alimente-t-il ?)
-    livré à l'utilisateur          6 dossier(s) ·   80 fichier(s)  — écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit
-    matière d'un autre outil      34 dossier(s) ·  211 fichier(s)  — au moins un script le relit : il alimente une analyse en aval
+    livré à l'utilisateur          7 dossier(s) ·   81 fichier(s)  — écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit
+    matière d'un autre outil      34 dossier(s) ·  213 fichier(s)  — au moins un script le relit : il alimente une analyse en aval
     trace consultable              0 dossier(s) ·    0 fichier(s)  — un index.md le liste — retrouvable à la main, jamais relu automatiquement
     écrit et jamais rouvert        0 dossier(s) ·    0 fichier(s)  — ni livraison, ni lecteur, ni index : produit pour personne
 
@@ -36,16 +37,14 @@
     code × (f) 🛡️ Les Gardiens Sacrés du Code                       46 fichier(s)
     documents × (f) 🎬 La Suite Tarantino - Simulation & qualité narrative   44 fichier(s)
     documents × (f) 👑 La Gouvernance Royale                         44 fichier(s)
-    (sujet non déterminé) × (f) 👼 Les Anges de la coordination      14 fichier(s)
+    verifications × (f) 👼 Les Anges de la coordination              14 fichier(s)
     outillage × (f) 📜 Les Prophètes - Dette & Structure du code     14 fichier(s)
-    consommation × (f) 👑 La Gouvernance Royale                      10 fichier(s)
+    consommation × (f) 👑 La Gouvernance Royale                      14 fichier(s)
+    donnees × (f) 👼 Les Anges de la coordination                     9 fichier(s)
     donnees × (équipe non déclarée)                                   9 fichier(s)
-    donnees × (f) 👼 Les Anges de la coordination                     8 fichier(s)
-    (sujet non déterminé) × (f) 👑 La Gouvernance Royale              8 fichier(s)
     code × (f) 👑 La Gouvernance Royale                               7 fichier(s)
-    outillage × (f) 👑 La Gouvernance Royale                          6 fichier(s)
-
-  ❓ 6 dossier(s) SANS SUJET DÉTERMINÉ : docs/profil-utilisateur · docs/le-coordinateur · docs/pure-gold-unity · docs/sauvegardes · docs/tableau-de-bord · docs/contexte-projet — rangés nulle part plutôt que rangés au hasard.
+    outillage × (f) 👑 La Gouvernance Royale                          7 fichier(s)
+    code × (f) 👼 Les Anges de la coordination                        5 fichier(s)
   ✔️  docs/rapports-gros-prompt n'a pas d'équipe, et c'est ASSUMÉ : les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs.
   ✔️  docs/rapports-de-nuit n'a pas d'équipe, et c'est ASSUMÉ : les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas.
   ✔️  docs/contexte-projet n'a pas d'équipe, et c'est ASSUMÉ : les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties.

@@ -151,17 +151,36 @@ main se périme au premier import ajouté, et un kit qui en oublie une livre un 
 pas — le plus décourageant des échecs, puisqu'il arrive avant que le destinataire ait pu juger quoi
 que ce soit.
 
-### Les quatre niveaux, proportionnels par construction
+### LE KIT COMPLET EST DÛ À TOUS — sa correction du 2026-09-26
 
-| Vitalité | Kit | Pièces dues |
-|---|---|---|
-| 🔴 vital | **complet** | blueprint + code + fiche + registre + dépendances |
-| 🟠 essentiel | **complet** | idem — il porte une garantie |
-| 🟡 utile | **allégé** | blueprint + code + dépendances |
-| ⚪ optionnel | **minimal** | code + dépendances |
+**Le premier système faisait varier le kit avec la vitalité. C'était faux, et il l'a vu :**
 
-**Le niveau de kit se DÉRIVE du niveau de vitalité, il ne se déclare pas.** Un outil qui devient
-vital hérite du kit complet sans que personne n'y pense — c'est l'Article 24 appliqué à l'export.
+> « Je comprends ma logique de départ, mais elle est mauvaise : le résultat, c'est que les
+> optionnels de l'agence ne pourront pas être réinstallés correctement si on les a intégrés à
+> l'agence. Ça n'est pas logique. »
+
+**Pourquoi c'est imparable** : le kit ne répond pas à « que perd l'Agence sans ce fichier ? » mais à
+**« peut-on le remonter ailleurs ? »** — et cette question a la même réponse pour tout le monde. Un
+optionnel exporté sans son plan est un optionnel irrécupérable, et il partira quand même puisqu'il
+fait partie de l'Agence. Faire dépendre la réinstallabilité de l'importance produisait exactement
+cette absurdité : on emporte le fichier, et on ne sait plus le remonter.
+
+**Pièces dues, les mêmes pour tous** : blueprint + code + fiche + registre + dépendances.
+
+**Deux soupapes, jamais une dispense implicite :**
+
+1. **Une PIÈCE peut être SANS OBJET.** Le registre n'est dû qu'à un fichier qui ÉCRIT quelque
+   chose : une bibliothèque n'a rien à historiser, et lui réclamer un index reviendrait à réclamer
+   un document vide. « Sans objet » et « manquant » se ressemblent dans un compte et appellent
+   l'inverse l'un de l'autre — ils sont séparés, avec la raison.
+2. **Un FICHIER peut être dispensé, avec sa raison ÉCRITE.** Trois cas aujourd'hui : les crochets
+   git (le CÂBLAGE de l'Agence à ce dépôt-ci, réinstallés par `hooks/install.mjs`),
+   `install-pnpm.sh` (il décrit CETTE machine) et `run-framework` (il sert le produit, rang Hors
+   Agence). **Un dispensé n'a aucun taux** : le compter comme une réussite rendrait la couverture
+   flatteuse au lieu d'exacte.
+
+**Et la vitalité, alors ?** Elle reste l'axe qui dit ce que l'Agence perd sans le fichier — donc
+elle donne l'**ORDRE de réparation** des kits manquants. Une priorité, jamais une dispense.
 
 ### LA DISTINCTION QU'IL A CORRIGÉE LUI-MÊME, et elle n'est pas verbale
 
@@ -186,8 +205,20 @@ partir.
 La commande dit OÙ créer la pièce manquante ; le gabarit dit QUOI y mettre — et une pièce dont on
 ne sait pas quoi écrire ne s'écrit jamais.
 
-### Première mesure réelle (2026-09-26)
+### Mesure réelle après la correction (2026-09-26)
 
-89 fichiers, **48 kits complets**. Vitaux : 17/44 (39 %). Essentiels : 3/3. Utiles : 11/25.
-Optionnels : 17/17 par construction. **27 kits dus et non tenus sur des fichiers dont l'Agence
-dépend** — c'est ce qui bloque un export aujourd'hui.
+89 fichiers : **82 kits dus, 7 dispensés** avec raison. **33 complets, 49 incomplets.**
+
+| Ordre de réparation | À jour | Taux moyen |
+|---|---|---|
+| 🔴 1. vital | 17/37 (46 %) | 75 % |
+| 🟠 2. essentiel | 3/3 (100 %) | 100 % |
+| 🟡 3. utile | 10/25 (40 %) | 69 % |
+| ⚪ 4. optionnel | 3/17 (18 %) | 62 % |
+
+**Ce que la correction a rendu visible** : les optionnels étaient à 100 % sous l'ancienne règle, et
+ils sont à 18 %. Le premier chiffre n'était pas faux — il mesurait une exigence si basse qu'elle ne
+demandait rien. **C'est exactement l'angle mort qu'il a vu.**
+
+**Coût pour tout combler** : 105 documents à écrire (44 blueprints, 43 fiches, 18 index de
+registre). Chiffre mesuré, jamais estimé.

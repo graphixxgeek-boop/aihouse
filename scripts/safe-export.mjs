@@ -1315,18 +1315,67 @@ export const PIECES_DU_KIT = [
     derivee: true },
 ];
 
-// LES QUATRE NIVEAUX DE KIT, alignés un pour un sur les quatre niveaux de vitalité. L'alignement
-// n'est pas une coïncidence de conception : c'est le système cohérent qu'il demande — une seule
-// échelle, lue deux fois, plutôt que deux échelles qui finiraient par diverger (leçon L29).
+// ══════════════════════════════════════════════════════════════════════════
+// LE KIT EST COMPLET POUR TOUS — SA CORRECTION DU 2026-09-26, ET ELLE EST JUSTE
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SES MOTS : « je comprends ma logique de départ, mais elle est mauvaise : le résultat, c'est que
+// les optionnels de l'agence ne pourront pas être réinstallés correctement si on les a intégrés à
+// l'agence. Ça n'est pas logique. »
+//
+// POURQUOI IL A RAISON, ET POURQUOI MON PREMIER SYSTÈME ÉTAIT FAUX. J'avais fait varier le kit
+// avec la VITALITÉ, c'est-à-dire avec ce que l'Agence perd sans le fichier. Mais le kit ne répond
+// pas à cette question-là. Il répond à : **peut-on le réinstaller ailleurs ?** Et cette question a
+// la même réponse pour tout le monde — un optionnel exporté sans son plan est un optionnel
+// irrécupérable, et il partira quand même, puisqu'il fait partie de l'Agence. Faire dépendre la
+// réinstallabilité de l'importance produisait très exactement l'absurdité qu'il nomme : on
+// emporte le fichier, et on ne sait plus le remonter.
+//
+// CE QUI REMPLACE LA PROPORTIONNALITÉ, et ce n'est pas « tout le monde doit tout » : deux
+// mécanismes, qui ne se confondent jamais.
+//   1. UNE PIÈCE PEUT ÊTRE SANS OBJET. Un registre n'est dû qu'à un fichier qui ÉCRIT quelque
+//      chose : une bibliothèque n'a rien à historiser, et lui réclamer un index serait réclamer un
+//      document vide. La pièce est alors « sans objet », jamais « manquante » — les deux se
+//      ressemblent dans un compte et appellent l'inverse l'une de l'autre.
+//   2. UN FICHIER PEUT ÊTRE EXEMPTÉ, avec sa raison ÉCRITE. Ce sont les fichiers qui ne partiront
+//      pas : ceux qui servent le PRODUIT et non l'outillage, et ceux qui décrivent la machine
+//      d'ici. Une exemption sans raison n'est pas une décision, c'est un abandon déguisé
+//      (Article 28).
+//
+// LA VITALITÉ NE DISPARAÎT PAS POUR AUTANT : elle reste l'axe qui dit ce que l'Agence perd sans le
+// fichier, donc l'ORDRE dans lequel on répare les kits manquants. Elle ne décide plus de ce qui
+// est dû — elle décide de ce qu'on fait en premier. C'est une PRIORITÉ, jamais une dispense.
+export const KIT_COMPLET = ["blueprint", "source", "fiche", "registre", "dependances"];
+
+// LES EXEMPTIONS, chacune avec sa raison, et elles sont rares par construction.
+export const EXEMPTES_DU_KIT = [
+  { motif: /^scripts\/install-pnpm\.sh$/, pourquoi: "il installe l'environnement de CE conteneur : il décrit la machine d'ici, jamais un outil à remonter ailleurs" },
+  { motif: /^scripts\/hooks\//, pourquoi: "les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit" },
+  { motif: /^scripts\/run-framework/, pourquoi: "il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison" },
+];
+
+export function exemptionDuKit(chemin, { exemptes = EXEMPTES_DU_KIT } = {}) {
+  return exemptes.find((e) => e.motif.test(String(chemin))) ?? null;
+}
+
+// ÉCRIT-IL QUELQUE CHOSE ? La question qui rend le registre DÛ ou SANS OBJET. Lue dans le code
+// plutôt que déclarée : un fichier qui appelle une écriture ou enregistre un rapport tient une
+// mémoire, les autres non — et une liste tenue à la main se périmerait au premier outil qui se met
+// à écrire.
+export const MOTIF_ECRIT = /writeFileSync|appendFileSync|recordCircleItemReport|recordRegistryWrite|enregistrer[A-Z]/;
+export function tientUneMemoire(source = "") { return MOTIF_ECRIT.test(String(source)); }
+
+// LES NIVEAUX DE VITALITÉ NE CHANGENT PLUS LE KIT : ils donnent l'ORDRE DE RÉPARATION. Gardé sous
+// le même nom pour que rien d'autre ne bouge, mais chaque entrée porte désormais le kit COMPLET.
 export const NIVEAUX_DE_KIT = [
-  { vitalite: "vital", cle: "complet", icone: "🔴", pieces: ["blueprint", "source", "fiche", "registre", "dependances"],
-    pourquoi: "sans lui l'Agence ne tourne pas : il doit pouvoir être repris intégralement, sans rien deviner" },
-  { vitalite: "essentiel", cle: "complet", icone: "🟠", pieces: ["blueprint", "source", "fiche", "registre", "dependances"],
-    pourquoi: "il porte une garantie : l'exporter sans son plan reviendrait à exporter la promesse sans le mécanisme" },
-  { vitalite: "utile", cle: "allege", icone: "🟡", pieces: ["blueprint", "source", "dependances"],
-    pourquoi: "il fait gagner du temps : le plan et le code suffisent, la fiche et le registre se refont sur place si on le garde" },
-  { vitalite: "optionnel", cle: "minimal", icone: "⚪", pieces: ["source", "dependances"],
-    pourquoi: "personne ne le lance ici : il part comme une pièce à réévaluer, pas comme un outil à installer — lui exiger un blueprint coûterait plus que ce qu'il rapporte" },
+  { vitalite: "vital", cle: "complet", icone: "🔴", pieces: KIT_COMPLET, rang: 1,
+    pourquoi: "sans lui l'Agence ne tourne pas : son kit se répare EN PREMIER — la priorité, jamais une exigence plus haute" },
+  { vitalite: "essentiel", cle: "complet", icone: "🟠", pieces: KIT_COMPLET, rang: 2,
+    pourquoi: "il porte une garantie : deuxième dans l'ordre de réparation, même kit dû" },
+  { vitalite: "utile", cle: "complet", icone: "🟡", pieces: KIT_COMPLET, rang: 3,
+    pourquoi: "il fait gagner du temps ici, et il devra pouvoir le faire ailleurs : même kit dû, réparé après les deux premiers" },
+  { vitalite: "optionnel", cle: "complet", icone: "⚪", pieces: KIT_COMPLET, rang: 4,
+    pourquoi: "personne ne le lance ici, mais il partira quand même avec l'Agence — et un optionnel exporté sans son plan est un optionnel irrécupérable" },
 ];
 
 export function kitAttendu(niveauVitalite, { niveaux = NIVEAUX_DE_KIT } = {}) {
@@ -1359,9 +1408,14 @@ export function dependancesInternes(source = "") {
   return [...new Set([...String(source).matchAll(MOTIF_IMPORT_LOCAL)].map((m) => `scripts/${m[1]}`))].sort();
 }
 
-export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT } = {}) {
+export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT, exemptes = EXEMPTES_DU_KIT } = {}) {
   const kit = kitAttendu(niveauVitalite, { niveaux });
   if (!kit) return { mesurable: false, pourquoi: `aucun niveau de kit ne correspond à la vitalité « ${niveauVitalite} » — un niveau de vitalité sans kit rendrait l'outil invisible à l'export sans que personne ne le voie` };
+  // L'EXEMPTION EST UN ÉTAT À PART, jamais un kit complet par défaut : un fichier dispensé et un
+  // fichier en règle ne se comptent pas ensemble, sinon la dispense gonflerait le taux de
+  // couverture et le rendrait flatteur au lieu d'être exact.
+  const dispense = exemptionDuKit(ligne.chemin, { exemptes });
+  if (dispense) return { mesurable: true, exempte: true, pourquoi: dispense.pourquoi, niveau: kit.cle, icone: kit.icone, vitalite: niveauVitalite, detail: [], manquantes: [], complet: true, taux: null };
   const bases = basesDuChemin(ligne.chemin);
   let source = null;
   try { source = readFileImpl(join(root, ligne.chemin), "utf8"); } catch { /* voir ci-dessous */ }
@@ -1375,6 +1429,14 @@ export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = ex
       if (source === null) { detail.push({ cle, quoi: p.quoi, present: null, pourquoi: "le fichier n'a pas pu être lu : ses dépendances n'ont PAS été mesurées, ce qui n'est jamais « aucune dépendance »" }); continue; }
       const deps = dependancesInternes(source);
       detail.push({ cle, quoi: p.quoi, present: true, liste: deps, combien: deps.length });
+      continue;
+    }
+    // LE REGISTRE N'EST DÛ QU'À UN FICHIER QUI ÉCRIT. Une bibliothèque n'a rien à historiser, et
+    // lui réclamer un index reviendrait à réclamer un document vide — donc à fabriquer du travail
+    // qui n'apprend rien. « Sans objet » et « manquant » se ressemblent dans un compte et appellent
+    // l'inverse l'un de l'autre : ils sont séparés ici, avec la raison.
+    if (p.cle === "registre" && source !== null && !tientUneMemoire(source)) {
+      detail.push({ cle, quoi: p.quoi, present: null, sansObjet: true, pourquoi: "ce fichier n'écrit rien : il n'a aucune mémoire à historiser, donc aucun registre à emporter" });
       continue;
     }
     // La pièce compte dès qu'UNE des orthographes existe ; le chemin rapporté est celui qui a
@@ -1402,46 +1464,66 @@ export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSy
   for (const n of niveaux) {
     const fichiers = vitalite.parNiveau[n.vitalite] ?? [];
     const etats = fichiers.map((f) => ({ chemin: f.chemin, ...etatDuKit(f, n.vitalite, { root, exists, readFileImpl, niveaux }) }));
-    const complets = etats.filter((e) => e.complet);
+    const exemptes = etats.filter((e) => e.exempte);
+    const dus = etats.filter((e) => !e.exempte);
+    const complets = dus.filter((e) => e.complet);
     parNiveau[n.vitalite] = {
-      kit: n.cle, icone: n.icone, pieces: n.pieces, pourquoi: n.pourquoi,
-      total: fichiers.length, complets: complets.length,
-      couverture: fichiers.length ? Math.round((complets.length / fichiers.length) * 100) : null,
+      kit: n.cle, icone: n.icone, pieces: n.pieces, pourquoi: n.pourquoi, rang: n.rang,
+      // LE DÉNOMINATEUR EXCLUT LES DISPENSÉS : un taux calculé sur eux serait flatteur et faux.
+      total: dus.length, exemptes: exemptes.length, complets: complets.length,
+      couverture: dus.length ? Math.round((complets.length / dus.length) * 100) : null,
       // Le taux MOYEN de complétude dit autre chose que le nombre de kits complets : vingt kits à
       // 80 % et vingt kits à 0 % ne se réparent pas de la même façon, et « 0 complet » les confond.
-      tauxMoyen: fichiers.length ? Math.round(etats.reduce((a, e) => a + (e.taux ?? 0), 0) / fichiers.length) : null,
+      tauxMoyen: dus.length ? Math.round(dus.reduce((a, e) => a + (e.taux ?? 0), 0) / dus.length) : null,
       etats,
     };
-    for (const e of etats) if (!e.complet) incomplets.push({ ...e, vitalite: n.vitalite });
+    for (const e of dus) if (!e.complet) incomplets.push({ ...e, vitalite: n.vitalite, rang: n.rang });
   }
-  // CE QUI BLOQUE UN EXPORT, dérivé et jamais écrit : un kit complet dû et non tenu, sur un fichier
-  // dont l'Agence dépend. Les utiles et les optionnels manquants sont une dette, pas un blocage.
-  const bloquants = incomplets.filter((e) => e.vitalite === "vital" || e.vitalite === "essentiel");
+  // CE QUI BLOQUE UN EXPORT, revu le 2026-09-26 sur sa correction : TOUT kit incomplet bloque la
+  // réinstallation de SON fichier, quel que soit son niveau. La vitalité ne dit plus qui est
+  // dispensé — elle donne l'ORDRE dans lequel on répare. D'où un tri, et jamais un filtre : filtrer
+  // ferait disparaître de la liste précisément les optionnels qu'il vient de nous faire remarquer.
+  const bloquants = [...incomplets].sort((a, b) => (a.rang ?? 9) - (b.rang ?? 9) || (b.taux ?? 0) - (a.taux ?? 0));
   return {
     mesurable: true, parNiveau, incomplets, bloquants,
     total: Object.values(parNiveau).reduce((a, x) => a + x.total, 0),
     complets: Object.values(parNiveau).reduce((a, x) => a + x.complets, 0),
+    exemptes: Object.values(parNiveau).reduce((a, x) => a + x.exemptes, 0),
     horsPortee: "un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.",
   };
 }
 
-export function formatKitsLines(k, { niveaux = NIVEAUX_DE_KIT, combien = 8 } = {}) {
+export function formatKitsLines(k, { niveaux = NIVEAUX_DE_KIT, combien = 8, exemptes = EXEMPTES_DU_KIT } = {}) {
   if (!k?.mesurable) return [`KITS D'EXPORT : PAS MESURÉ — ${k?.pourquoi ?? "raison non fournie"}`];
-  const l = [`=== LES KITS D'EXPORT — ${k.complets}/${k.total} kit(s) complet(s) ===`, ""];
-  l.push("  niveau       kit        pièces dues                                   complets   taux moyen");
-  l.push("  -----------  ---------  --------------------------------------------  ---------  ----------");
+  const l = [`=== LES KITS D'EXPORT — ${k.complets}/${k.total} kit(s) complet(s), ${k.exemptes} dispensé(s) avec raison ===`, ""];
+  l.push("  LA RÈGLE, depuis sa correction du 2026-09-26 : le KIT COMPLET est dû à TOUT fichier de l'Agence.");
+  l.push("  Un optionnel exporté sans son plan est un optionnel irrécupérable — et il partira quand même,");
+  l.push("  puisqu'il fait partie de l'Agence. La vitalité ne dispense plus personne : elle donne l'ORDRE");
+  l.push("  dans lequel on répare.");
+  l.push("");
+  l.push("  ordre de réparation   à jour     dispensés   taux moyen");
+  l.push("  --------------------  ---------  ----------  ----------");
   for (const n of niveaux) {
     const x = k.parNiveau[n.vitalite];
     if (!x) continue;
-    l.push(`  ${n.icone} ${n.vitalite.padEnd(10)} ${x.kit.padEnd(9)}  ${x.pieces.join("+").padEnd(44)}  ${String(x.complets).padStart(3)}/${String(x.total).padEnd(3)}   ${String(x.couverture ?? "—").padStart(4)} %     ${String(x.tauxMoyen ?? "—").padStart(3)} %`);
+    l.push(`  ${n.icone} ${String(n.rang)}. ${n.vitalite.padEnd(16)} ${String(x.complets).padStart(3)}/${String(x.total).padEnd(3)} ${String(x.couverture ?? "—").padStart(4)} %   ${String(x.exemptes).padStart(6)}      ${String(x.tauxMoyen ?? "—").padStart(3)} %`);
   }
   l.push("");
-  for (const n of niveaux) l.push(`  ${n.icone} ${n.vitalite} → kit ${k.parNiveau[n.vitalite]?.kit} : ${n.pourquoi}`);
+  l.push(`  PIÈCES DUES, les mêmes pour tous : ${KIT_COMPLET.join(" + ")}`);
+  l.push("  · le registre est SANS OBJET pour un fichier qui n'écrit rien — jamais « manquant » : lui");
+  l.push("    réclamer un index reviendrait à réclamer un document vide.");
+  l.push("");
+  for (const n of niveaux) l.push(`  ${n.icone} ${n.vitalite} : ${n.pourquoi}`);
+  if (exemptes.length) {
+    l.push("");
+    l.push(`  ⚪ ${exemptes.length} DISPENSE(S) ÉCRITE(S) — un fichier dispensé n'entre pas dans le taux, sinon la dispense le rendrait flatteur :`);
+    for (const e of exemptes) l.push(`     ${String(e.motif)} — ${e.pourquoi}`);
+  }
   if (k.bloquants.length) {
     l.push("");
-    l.push(`  ⛔ ${k.bloquants.length} KIT(S) DÛ(S) ET NON TENU(S) sur des fichiers dont l'Agence dépend — c'est ce qui bloque un export :`);
+    l.push(`  ⛔ ${k.bloquants.length} KIT(S) INCOMPLET(S), dans l'ordre de réparation — chacun bloque la réinstallation de SON fichier :`);
     for (const b of k.bloquants.slice(0, combien)) {
-      l.push(`     ${b.chemin} (${b.taux} %) — manque : ${b.manquantes.map((m) => m.chemin ?? m.cle).join(", ")}`);
+      l.push(`     [${b.vitalite}] ${b.chemin} (${b.taux} %) — manque : ${b.manquantes.map((m) => m.chemin ?? m.cle).join(", ")}`);
     }
     if (k.bloquants.length > combien) l.push(`     … et ${k.bloquants.length - combien} autre(s)`);
   }

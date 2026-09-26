@@ -28,6 +28,7 @@
 import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 export const OUTIL = "sauvegarde-projet";
 export const SCRIPT_PATH = "scripts/sauvegarde-projet.mjs";
@@ -158,6 +159,12 @@ export function ligneDeRegistre({ date, commit, nbCoffre, tailleCoffre, nbNotice
 }
 
 function main() {
+  // LE PASSAGE S'ENREGISTRE (2026-09-26). Trouvé par un chemin détourné et c'est ce qui le rend
+  // intéressant : cet outil venait de rejoindre le catalogue des prestations, donc le compteur
+  // d'usage s'est mis à le regarder — et le verrou d'ouverture de Ronde a immédiatement refusé,
+  // parce qu'il a une ligne de commande et n'enregistrait rien. Son zéro d'usage ne disait pas
+  // « personne ne sauvegarde », il disait « personne ne compte », et les deux se ressemblent.
+  recordCliUsage("sauvegarde-projet", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const sh = (c) => execSync(c, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   mkdirSync(DOSSIER, { recursive: true });
   const commit = sh("git rev-parse --short HEAD").trim();
