@@ -726,7 +726,6 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   "ou-on-en-est": "couvert PAR ÉVÉNEMENT : on le lance quand on veut savoir où on en est, ce qui est par définition une demande",
   "rapport-gros-prompt": "couvert PAR ÉVÉNEMENT : il sert quand une saisine contient plusieurs demandes, jamais entre deux",
   "check-spirit": "couvert PAR ÉVÉNEMENT, et c'est écrit dans la charte : à lancer quand lib/lia.ts ou les personnalités changent. Un passage périodique coûterait de vrais appels API sans qu'aucun changement ne le justifie (Article 8)",
-  "check-profile": "couvert PAR ÉVÉNEMENT, même raison et même coût réel que check-spirit",
   "check-profil-utilisateur": "couvert PAR ÉVÉNEMENT : il relit le profil de collaboration quand une observation nouvelle est écrite",
   "check-suivi-fidelity": "couvert EN CONTINU : il tourne déjà au crochet de commit, ce qui est plus fréquent qu'un item de Ronde",
   "circle-process-guardian": "couvert PAR LA RONDE ELLE-MÊME : il est consulté au lancement de chaque Ronde — lui donner un item de Ronde le ferait se vérifier lui-même",

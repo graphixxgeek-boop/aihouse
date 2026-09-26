@@ -335,6 +335,10 @@ export const AGENT_SCRIPT_FILES = {
   // 2026-09-26 : né de la scission de CASSANDRA, et le garde-fou l'a réclamé nommément au premier
   // commit — septième inscription manuelle que l'Article 24 vise, symptôme gardé à côté du constat.
   "le-classificateur": "scripts/le-classificateur.mjs",
+  // 2026-09-26, bloc C des 22 : réclamés nommément par findScriptsMissingFromAgentFiles().
+  "check-spirit": "scripts/check-spirit.mjs",
+  "check-suivi-fidelity": "scripts/check-suivi-fidelity.mjs",
+  "circle-process-guardian": "scripts/circle-process-guardian.mjs",
   "safe-export": "scripts/safe-export.mjs",
   "tool-learning": "scripts/tool-learning.mjs",
   "the-equalizer": "scripts/the-equalizer.mjs",

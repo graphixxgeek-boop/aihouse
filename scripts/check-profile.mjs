@@ -16,6 +16,11 @@
 // répondu ; `expectVerdictLeaning` sert juste à la lecture humaine du résumé, pas à un calcul.
 
 import fs from 'node:fs';
+import { printReliabilityNotice } from "./lib-shell.mjs";
+
+// Réclamé nommément par le garde-fou le 2026-09-26, et doublement justifié ici : cet outil est GELÉ
+// depuis le même jour, son en-tête dit qu'il teste un mécanisme qui existe désormais.
+printReliabilityNotice("check-profile");
 
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
 const apiKey = (devVars.match(/^GEMINI_API_KEY=(.*)$/m) ?? [])[1]?.trim() || process.env.GEMINI_API_KEY;

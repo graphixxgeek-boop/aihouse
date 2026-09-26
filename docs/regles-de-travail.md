@@ -971,8 +971,23 @@ bloqué par un statut, seulement par l'existence réelle d'une fonction ou d'un 
 | Outil | Statut | 🎖️ Badge | Ce qu'il détecte/régule | Coût | Déclenchement |
 |---|---|---|---|---|---|
 | `check-house.mjs` | Infrastructure | — | régressions de comportement (filet de sécurité) | gratuit | à chaque changement de code |
-| `check-spirit.mjs` / `check-profile.mjs` | Infrastructure | — | fidélité de l'esprit des personnages (Article 0) | réel (API) | à la main, si `lib/lia.ts`/personnalités changent — **`node scripts/check-spirit.mjs`** et **`node scripts/check-profile.mjs`**, précédés de `node scripts/smart-conso-api.mjs check-spirit --confirm` (Article 22) |
-| LE-CLASSIFICATEUR | Agent | 🎖️ | le rangement de l'outillage : type, rang, famille, classes, indice — et le document officiel de classification | gratuit | à la demande, quand le rangement change — **`node scripts/le-classificateur.mjs classification`** |
+| check-spirit | Agent | 🎖️ | fidélité de l'esprit des personnages (Article 0) face à de vraies provocations | réel (API) | à la main quand `lib/lia.ts` ou les personnalités changent — **`node scripts/check-spirit.mjs`**, précédé de `node scripts/smart-conso-api.mjs check-spirit --confirm` (Article 22) |
+| check-profile | Infrastructure | — | prototype du « dossier retourné » — **GELÉ le 2026-09-26** : son en-tête dit que le mécanisme n'existe pas encore dans le code, or il existe désormais (62 mentions dans `route.ts`). Soit l'outil a suivi et son en-tête ment, soit il teste quelque chose qui a changé sous lui | **à ne pas lancer tant que le doute tient** — il coûterait de vrais appels pour mesurer on ne sait quoi | rien, jusqu'à ce que le doute soit tranché ; puis `node scripts/check-profile.mjs` précédé de Smart Conso API || LE-CLASSIFICATEUR | Agent | 🎖️ | le rangement de l'outillage : type, rang, famille, classes, indice — et le document officiel de classification | gratuit | à la demande, quand le rangement change — **`node scripts/le-classificateur.mjs classification`** |
+| check-suivi-fidelity | Agent | 🎖️ | clôtures de suivi sans déclaration de fidélité, fichiers annoncés et absents, commits sans ligne, horodatages datés dans le futur | gratuit | à chaque commit (crochet) — **`node scripts/check-suivi-fidelity.mjs`** |
+| circle-process-guardian | Agent | 🎖️ | le DÉROULÉ de la Ronde : double communication, fraîcheur des rapports, étapes de clôture, signaux qui se répètent — **contrôleur de process**, jamais un Gardien sacré (Article 20bis) | gratuit | au lancement de chaque Ronde, et peut la bloquer — **`node scripts/circle-process-guardian.mjs`** |
+| doc-report | Membre certifié (classique) | 🎖️ | inventaire des registres et de leur décision HTML/texte | gratuit | à la demande et au commit |
+| kpi-report | Membre certifié (classique) | 🎖️ | le tableau de bord chiffré | gratuit | fin de simulation ou de Ronde |
+| tool-usage | Membre certifié (classique) | 🎖️ | le compteur d'usage réel des outils | gratuit | en continu, à chaque appel d'outil |
+| find-brain | Membre certifié (classique) | 🎖️ | quel outil de recherche employer sur un fichier donné | gratuit | appelé par tool-brain avant chaque recherche |
+| le-regisseur | Membre certifié (classique) | 🎖️ | l'archivage mécanique d'une simulation (Article 18) | gratuit | après chaque simulation |
+| route-booster | Membre certifié (classique) | 🎖️ | le découpage d'un gros fichier fourre-tout | gratuit | quand un découpage est décidé |
+| criticite | Membre certifié (classique) | 🎖️ | le calcul de criticité d'une tâche | gratuit | à l'écriture d'une tâche |
+| messages-courts | Membre certifié (classique) | 🎖️ | la mise en forme d'un message court | gratuit | à la demande |
+| modes-de-travail | Membre certifié (classique) | 🎖️ | le mode de travail en cours (présent, nuit, autonome) | gratuit | début de session, et Article 32 |
+| ou-on-en-est | Membre certifié (classique) | 🎖️ | l'état d'avancement, à la demande | gratuit | à la demande |
+| rapport-gros-prompt | Membre certifié (classique) | 🎖️ | le rapport d'une saisine à demandes multiples | gratuit | quand une saisine en contient plusieurs |
+| check-profil-utilisateur | Membre certifié (classique) | 🎖️ | fiche d'observation sans ligne d'index, et l'inverse — **garde-fou mécanique** | gratuit | à la demande |
+| the-ghost | Membre certifié (classique) | 🎖️ | l'orchestration du mode nuit autonome | gratuit | quand l'utilisateur laisse travailler seul |
 | ARGUS | Agent | 🎖️ | absences — ce qui devrait exister et n'existe pas (Article 20) | gratuit (partie mécanique) | toujours déployé — logique testée à chaque commit (`check-house.mjs`, pre-commit) ET balayage réel du code courant à chaque commit (`scripts/hooks/check-last-commit.mjs`, post-commit, warn-only, 2026-09-20) |
 | HARMONIA | Agent | 🎖️ | frictions — deux choses qui existent et se contredisent (Article 20) | gratuit (partie mécanique) | idem ARGUS ci-dessus |
 | Smart Conso API | Agent | 🎖️ | rythme de consommation API de l'AGENT pendant le travail (Article 22) ; peut aussi scanner l'historique réel pour repérer des schémas coûteux | gratuit à consulter | avant toute action coûteuse de l'agent |

@@ -1101,6 +1101,9 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | CHECK-LEVEL-TARGET | l'outil qui calcule, avant toute vérification, le niveau attendu et la combinaison… | `docs/check-level-target-blueprint.md` | `docs/referentiel/check-level-target.md` | `scripts/check-level-target.mjs` |
 | CHECK-TASKS-DETAILS | l'outil d'état des lieux des tâches à la demande | `docs/check-tasks-details-blueprint.md` | `docs/referentiel/check-tasks-details.md` | `scripts/check-tasks-details.mjs` |
 | LE-CLASSIFICATEUR | le rangement de l'outillage : ce qu'un fichier EST, ce qu'il VAUT, ce qu'il DOIT — et le document officiel de classification *(nom provisoire)* | `docs/le-classificateur-blueprint.md` | `docs/referentiel/le-classificateur.md` | `scripts/le-classificateur.mjs` |
+| check-spirit | le filet de fidélité du TON : de vraies provocations au vrai modèle, lues par un humain (Article 0) | `docs/check-spirit-blueprint.md` | `docs/referentiel/check-spirit.md` | `scripts/check-spirit.mjs` |
+| check-suivi-fidelity | le garde-fou du suivi : clôtures sans déclaration de fidélité, fichiers annoncés absents, horodatages dans le futur | `docs/check-suivi-fidelity-blueprint.md` | `docs/referentiel/check-suivi-fidelity.md` | `scripts/check-suivi-fidelity.mjs` |
+| circle-process-guardian | contrôleur du DÉROULÉ de la Ronde, et il peut la bloquer *(contrôleur de process, jamais un Gardien sacré)* | `docs/circle-process-guardian-blueprint.md` | `docs/referentiel/circle-process-guardian.md` | `scripts/circle-process-guardian.mjs` |
 | CLEAN-DIRTY-OLD | détecteur de stagnation | `docs/clean-dirty-old-blueprint.md` | `docs/referentiel/clean-dirty-old.md` | `scripts/clean-dirty-old.mjs` |
 | CLONE-HUNTER | détecteur de blocs de code dupliqués | `docs/clone-hunter-blueprint.md` | `docs/referentiel/clone-hunter.md` | `scripts/clone-hunter.mjs` |
 | ecotoken | réduit le coût permanent en tokens des documents que l’agent recharge | `docs/ecotoken-blueprint.md` | `docs/referentiel/ecotoken.md` | `scripts/ecotoken.mjs` |
@@ -1173,6 +1176,9 @@ de toucher.)*
 | `docs/referentiel/organisation-agence.md` | avant tout changement d'organigramme de l'outillage — c'est le domaine de CASSANDRA-RH, et sa tenue à jour reste manuelle | référentiel CANONIQUE de l'Agence Codex |
 | `docs/referentiel/standards.md` | quand on se demande si quelque chose est « à niveau » — les 29 exigences, chacune nommant son vérificateur ou déclarant que personne ne la vérifie | source de vérité de THE-EQUALIZER |
 | `docs/referentiel/le-classificateur.md` | avant de toucher au rangement de l'outillage (types, rangs, familles, classes, indice) — et pour comprendre pourquoi le poste de travail se dérive au lieu de se recopier | né de la scission de CASSANDRA-RH |
+| `docs/referentiel/check-spirit.md` | avant et après tout ajustement de personnalité — c'est le seul outil qui touche la sortie RÉELLE | porteur de l'Article 0 |
+| `docs/referentiel/check-suivi-fidelity.md` | quand une clôture de suivi est refusée, ou un horodatage rejeté | porteur mécanique de l'Article 32 |
+| `docs/referentiel/circle-process-guardian.md` | avant de lancer une Ronde, ou quand il en bloque une | contrôleur de process, jamais Gardien sacré |
 | `docs/referentiel/lecons.md` | quand une erreur vient d'être payée, et à chaque Ronde | ce que le projet a appris en se trompant |
 | `docs/referentiel/points-fragiles.md` | avant de toucher une zone réputée fragile, ou en attente d'une décision de conception | registre vivant, compté par le KPI |
 | `docs/referentiel/memento-weight.md` | quand le poids du contexte envoyé à Gemini par tour est en cause | instanciation du voisin de memory-audit |

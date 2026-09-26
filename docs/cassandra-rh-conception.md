@@ -454,3 +454,34 @@ en UN endroit s'applique le jour même à TOUS les outils, y compris ceux écrit
 prochaine intégration sans que ce fichier bouge.
 
 **Aucun seuil sur la richesse, délibérément** : un outil pauvre n'est pas un mauvais outil.
+
+## 2026-09-26 — La scission : le rangement part, l'effectif reste
+
+**Décision de l'utilisateur**, après avoir pesé la création de LE-GRAND-ARCHITECTE (qui n'existait
+que sur le papier) : « on part sur le fait de scinder cassandra […] sortir le rangement seul », puis
+« ok pour LE-CLASSIFICATEUR, continue la scission ».
+
+**Ce qui motive la coupure, et ce n'est pas la taille.** CASSANDRA portait deux métiers qui ne
+posent pas la même question : *« qui va bien dans l'équipe ? »* (effectif, badges, stagnation, KPI,
+convocations) et *« qu'est-ce que c'est ? »* (types, rangs, familles, classes, indice). Le premier
+juge des gens, le second range des choses. Ces deux questions n'ont ni le même rythme, ni le même
+public, ni la même autorité. Le fichier faisait 4 326 lignes, le plus gros du dépôt — c'est ce qui
+a rendu la coupure urgente, jamais ce qui l'a justifiée.
+
+**Ce qui part** : l'axe TYPE et le recensement, l'axe RANG et l'échelle de promotion, le croisement
+des deux, l'indice à facettes, le poste de travail dérivé, le document officiel de classification.
+34 noms, tous RÉEXPORTÉS depuis `cassandra-rh.mjs` pour qu'aucun appelant n'ait à changer une ligne.
+
+**Ce qui reste chez elle, et pourquoi** : l'organigramme (`buildOrganigramme`) met en scène des
+PERSONNES à des postes — c'est de l'organisation, pas du rangement. La carte des axes en page HTML
+est un rapport de CASSANDRA, qui consomme le classement sans en faire partie. La comparaison des
+familles avec doc-report vérifie la cohérence de deux REGISTRES : un contrôle de tenue.
+
+**La règle de dépendance, non négociable** : `le-classificateur.mjs` n'importe JAMAIS
+`cassandra-rh.mjs`. Sens unique. Sans elle, les deux se rappelleraient l'un l'autre et la scission
+n'aurait rien séparé — elle aurait réparti le même bloc sur deux fichiers.
+
+**Ce que LE-GRAND-ARCHITECTE devient** : son dossier de conception reste ouvert pour les deux rôles
+que la scission ne couvre pas — juger si la structure DOCUMENTAIRE du projet entier reste saine, et
+si un pôle mérite son propre document. Le construire aujourd'hui pour un rôle qu'un autre outil
+vient de prendre serait un doublon.

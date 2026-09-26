@@ -1,6 +1,6 @@
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 2026-09-26 01:08 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 2026-09-26 02:28 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -16,7 +16,7 @@ GÉNÉRÉ par `node scripts/cassandra-rh.mjs classification`, dernier passage 20
 |---|---|---|---|
 | **TYPE** | ce que le fichier EST | se CONSTATE en lisant le fichier | tous (88) |
 | **RANG** | ce que le fichier VAUT | se MÉRITE, ou se DÉDUIT du type | 100 % des fichiers |
-| **FAMILLE** | ce sur quoi il travaille | se décide, une par membre de l'équipe | les 58 de l'équipe |
+| **FAMILLE** | ce sur quoi il travaille | se décide, une par membre de l'équipe | les 57 de l'équipe |
 | **CLASSES TRANSVERSES** | ce qu'il sait FAIRE | sonde sur le code, plusieurs par fichier | tous |
 | *iceberg* | à quel groupe il appartient (membre, oublié, infrastructure, plomberie) | porté par `classerIceberg()` | — |
 | *moment* | QUAND il intervient | porté par `momentsDeLOutil()` | — |
@@ -103,7 +103,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 
 ## 5. Chaque fichier : rang, famille, indice (88, exhaustif)
 
-### 🎖️ Membre — 37
+### 🎖️ Membre — 34
 
 | Fichier | Famille | Indice |
 |---|---|---|
@@ -113,8 +113,6 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `angel-of-ia-process.mjs` | Coordination | `2.5.1.cl` |
 | `check-gemini-quota.mjs` | Gouvernance interne | `2.5.4.4g` |
 | `check-level-target.mjs` | Gouvernance interne | `2.5.4.6o` |
-| `check-profil-utilisateur.mjs` | Coordination | `2.5.1.2p` |
-| `check-profile.mjs` | Simulation & qualité narrative | `2.5.6.8` |
 | `check-spirit.mjs` | Simulation & qualité narrative | `2.5.6.9x` |
 | `check-suivi-fidelity.mjs` | Coordination | `2.5.1.35` |
 | `check-tasks-details.mjs` | Coordination | `2.5.1.dz` |
@@ -139,7 +137,6 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `the-deep-reader.mjs` | Audit indépendant | `5.5.0.2` |
 | `the-equalizer.mjs` | Suite Dette & Structure du code | `2.5.7.dd` |
 | `the-final-judge.mjs` | Audit indépendant | `5.5.0.2` |
-| `the-ghost.mjs` | Gouvernance interne | `2.5.4.4` |
 | `the-king.mjs` | Gouvernance interne | `2.5.4.dc` |
 | `the-screener-capture.mjs` | Simulation & qualité narrative | `2.5.6.4m` |
 | `tool-brain.mjs` | Coordination | `2.5.1.dd` |
@@ -173,10 +170,11 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `simulation-visiteur.mjs` | — | `5.0.-.0` |
 | `tasks-process-guardian.mjs` | — | `5.0.-.4g` |
 
-### 🎖️ Membre classique — 11
+### 🎖️ Membre classique — 13
 
 | Fichier | Famille | Indice |
 |---|---|---|
+| `check-profil-utilisateur.mjs` | Coordination | `2.3.1.2p` |
 | `criticite.mjs` | Coordination | `2.3.1.7k` |
 | `doc-report.mjs` | Coordination | `2.3.1.6v` |
 | `find-brain.mjs` | Outillage de navigation | `2.3.5.4g` |
@@ -187,6 +185,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `ou-on-en-est.mjs` | Coordination | `2.3.1.87` |
 | `rapport-gros-prompt.mjs` | Coordination | `2.3.1.5g` |
 | `route-booster.mjs` | Outillage de navigation | `2.3.5.4g` |
+| `the-ghost.mjs` | Gouvernance interne | `2.3.4.4` |
 | `tool-usage.mjs` | Gouvernance interne | `2.3.4.as` |
 
 ### 🛡️ Gardien sacré du code — 7
@@ -225,6 +224,12 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 |---|---|---|
 | `install-ci.mjs` | — | `7.8.-.0` |
 | `pnpm-install.mjs` | — | `7.8.-.4` |
+
+### 🚪 Postulant — 1
+
+| Fichier | Famille | Indice |
+|---|---|---|
+| `check-profile.mjs` | — | `2.6.-.14` |
 
 ## 6. Les types de fichier (7, exhaustif)
 
@@ -280,9 +285,9 @@ Une famille dit **ce sur quoi on travaille**, jamais ce qu'on vaut. Les Gardiens
 
 **Gardiens sacrés du code** — 7 : `always-new-code` · `argus` · `axa-check` · `clean-dirty-old` · `clone-hunter` · `harmonia` · `safe-export`
 
-**Simulation & qualité narrative** — 7 : `check-profile` · `check-spirit` · `el-professor` · `le-regisseur` · `memory-audit` · `process-simulation-guardian` · `the-screener`
-
 **Suite Dette & Structure du code** — 6 : `abraham-les-references` · `agent-des-noms` · `integration-outil` · `moise-tables-de-loi` · `the-equalizer` · `tool-learning`
+
+**Simulation & qualité narrative** — 6 : `check-spirit` · `el-professor` · `le-regisseur` · `memory-audit` · `process-simulation-guardian` · `the-screener`
 
 **Outillage de navigation** — 4 : `find-booster` · `find-brain` · `find-deep-booster` · `route-booster`
 
@@ -324,11 +329,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `abraham-les-references.mjs` · `always-new-code.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `criticite.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `le-coordinateur.mjs` · `moise-tables-de-loi.mjs` · `process-simulation-guardian.mjs`
 
-### déclare sa marge d'erreur — 47
+### déclare sa marge d'erreur — 48
 
 > avertit qu'il peut se tromper avant de rendre un chiffre — l'exigence transverse de tous les outils heuristiques
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `route-booster.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `summarize-simulation-log.mjs` · `tasks-process-guardian.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-profile.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `route-booster.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `summarize-simulation-log.mjs` · `tasks-process-guardian.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs`
 
 ### conclut par un plan d'action — 39
 
@@ -349,6 +354,8 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 `abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `corpus-mesure.mjs` · `criticite.mjs` · `data-archangel.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `messages-courts.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `priorites.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `safe-export.mjs` · `serie-temporelle.mjs` · `smart-conso-token.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs`
 
 ## 9. Ce qui reste ouvert
+
+**1 fichiers sont Postulants** : documentés, lançables, et absents du registre de l'équipe. Ce n'est plus une case vide — c'est une file d'attente avec un geste connu au bout (les inscrire, ou déclarer qu'ils n'ont pas vocation à entrer).
 
 > ⚠️ Le référentiel et le code ne déclarent pas le même nombre d'axes — le référentiel déclare 2 axe(s), le code en publie 8 (iceberg, type, moment, domaine, destinataire, cherche, rang, famille) — la prose se rédige à la main, mais elle ne peut plus s'écarter en silence.
 

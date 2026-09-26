@@ -224,11 +224,22 @@ export const AGENT_CATEGORIES = {
   "ou-on-en-est": "Membre classique — Coordination",
   "rapport-gros-prompt": "Membre classique — Coordination",
   "check-spirit": "Membre — Simulation & qualité narrative",
-  "check-profile": "Membre — Simulation & qualité narrative",
-  "check-profil-utilisateur": "Membre — Coordination",
+  // check-profile GELÉ hors de l'équipe le 2026-09-26, et c'est un doute réel, pas une prudence :
+  // son propre en-tête, daté du 2026-09-17, dit que « le mécanisme réel n'existe pas encore dans le
+  // code ». Or ce mécanisme existe désormais (62 mentions du dossier dans route.ts). Soit l'outil a
+  // suivi et son en-tête est périmé, soit il teste quelque chose qui a changé sous lui. Le promouvoir
+  // sans avoir tranché reviendrait à certifier un outil dont on ignore s'il mesure encore. Il reste
+  // Postulant — un état de passage avec une marche connue.
+
+  // Redescendu de « Membre » à « Membre classique » le 2026-09-26, sur sa relecture : 110 lignes
+  // qui vérifient qu'une fiche a bien sa ligne d'index. C'est un GARDE-FOU MÉCANIQUE, pas un
+  // jugement (Article 20bis) — je l'avais promu en bloc avec cinq autres sans les relire un par un.
+  "check-profil-utilisateur": "Membre classique — Coordination",
   "check-suivi-fidelity": "Membre — Coordination",
   "circle-process-guardian": "Membre — Coordination",
-  "the-ghost": "Membre — Gouvernance interne",
+  // Même correction, même raison : 137 lignes qui ORCHESTRENT le mode nuit — sa valeur est
+  // d'appeler les autres, ce qui est la définition exacte du rang classique.
+  "the-ghost": "Membre classique — Gouvernance interne",
 };
 
 // sansAccents() (2026-09-23) — une SEULE normalisation, partagée, jamais deux qui divergeraient.
@@ -399,6 +410,10 @@ export function lastCommitFiles(shImpl = sh, cwd = undefined) {
 export const TOOL_RELIABILITY = {
   // --- Mécaniques : ce qu'ils affichent est un fait exact, aucun avertissement à donner.
   "check-house-mjs": { nature: "mecanique", pourquoi: "un test passe ou échoue, il n'y a rien à interpréter" },
+  // 2026-09-26 : les trois que le garde-fou a réclamés en même temps que leur ligne de table.
+  "check-spirit": { nature: "heuristique", pourquoi: "il détecte le vocabulaire de service client, pas la fadeur — un ton plat sans un seul mot interdit passerait au vert, et la lecture humaine reste obligatoire" },
+  "check-profile": { nature: "heuristique", pourquoi: "même famille que check-spirit, et gelé depuis le 2026-09-26 : son en-tête dit qu'il teste un mécanisme absent, or il existe" },
+  "route-booster": { nature: "heuristique", pourquoi: "il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste" },
   "le-classificateur": { nature: "mecanique", pourquoi: "un type se constate sur le fichier, un rang se lit dans un registre — aucune interprétation, sauf la liste « Hors Agence » qui est tenue à la main et le dit" },
   "le-coordinateur": { nature: "mecanique", pourquoi: "chaque point de câblage vérifié est une présence ou une absence sur le disque" },
   "doc-html": { nature: "mecanique", pourquoi: "ne produit aucun constat — il met en page un rapport déjà écrit par un autre" },

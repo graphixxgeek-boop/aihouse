@@ -17,6 +17,10 @@ import { readFileSync } from "node:fs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 
+// L'avertissement de fiabilité, réclamé nommément par le garde-fou le 2026-09-26 : une nature
+// « heuristique » déclarée dans un registre et jamais imprimée ne prévient personne.
+printReliabilityNotice("route-booster");
+
 const BANNER_RE = /^\s*\/\/\s*-{3,}/;
 // Testé contre le vrai route.ts (2026-09-21) : la fonction POST est indentée par un bloc `try`
 // englobant, donc toute contrainte stricte sur la profondeur d'indentation ratait chaque branche

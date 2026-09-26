@@ -20,6 +20,10 @@ import { DatabaseSync } from 'node:sqlite';
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
+// L'avertissement de fiabilité, réclamé nommément par le garde-fou le 2026-09-26 : une nature
+// « heuristique » déclarée dans un registre et jamais imprimée ne prévient personne.
+printReliabilityNotice("check-spirit");
+
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
 const apiKey = (devVars.match(/^GEMINI_API_KEY=(.*)$/m) ?? [])[1]?.trim() || process.env.GEMINI_API_KEY;
 if (!apiKey) { console.error('Pas de GEMINI_API_KEY trouvée (.dev.vars ou variable d\'environnement). Abandon.'); process.exit(1); }
