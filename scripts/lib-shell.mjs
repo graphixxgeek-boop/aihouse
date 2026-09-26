@@ -224,12 +224,19 @@ export const AGENT_CATEGORIES = {
   "ou-on-en-est": "Membre classique — (f) 👼 Les Anges de la coordination",
   "rapport-gros-prompt": "Membre classique — (f) 👼 Les Anges de la coordination",
   "check-spirit": "Membre premium — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
-  // check-profile GELÉ hors de l'équipe le 2026-09-26, et c'est un doute réel, pas une prudence :
-  // son propre en-tête, daté du 2026-09-17, dit que « le mécanisme réel n'existe pas encore dans le
-  // code ». Or ce mécanisme existe désormais (62 mentions du dossier dans route.ts). Soit l'outil a
-  // suivi et son en-tête est périmé, soit il teste quelque chose qui a changé sous lui. Le promouvoir
-  // sans avoir tranché reviendrait à certifier un outil dont on ignore s'il mesure encore. Il reste
-  // Postulant — un état de passage avec une marche connue.
+  // check-profile DÉGELÉ le 2026-09-26 (tâche #912), et le doute a été tranché en regardant plutôt
+  // qu'en supposant. Il était Postulant depuis le matin même parce que son en-tête, daté du
+  // 2026-09-17, disait « le mécanisme réel n'existe pas encore dans le code » alors que ce mécanisme
+  // existe. Deux hypothèses étaient ouvertes : l'en-tête est périmé, ou l'outil teste quelque chose
+  // qui a changé sous lui. **C'est la première, et route.ts le dit lui-même** : « version longue du
+  // prompt validé sur douze profils dans scripts/check-profile.mjs ». Le mécanisme de production n'a
+  // pas seulement été construit depuis — il a été construit À PARTIR de ce banc d'essai. L'en-tête a
+  // été réécrit, la fiche existe (docs/referentiel/check-profile.md), il rejoint l'équipe.
+  //
+  // MEMBRE CLASSIQUE, pas premium, et c'est cohérent avec la relecture du même jour : il n'a ni
+  // assertion ni verdict calculé — il envoie de vrais appels et affiche les réponses pour une
+  // lecture humaine. Sa valeur est réelle et son rang le dit honnêtement.
+  "check-profile": "Membre classique — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
 
   // Redescendu de « Membre » à « Membre classique » le 2026-09-26, sur sa relecture : 110 lignes
   // qui vérifient qu'une fiche a bien sa ligne d'index. C'est un GARDE-FOU MÉCANIQUE, pas un
@@ -412,7 +419,7 @@ export const TOOL_RELIABILITY = {
   "check-house-mjs": { nature: "mecanique", pourquoi: "un test passe ou échoue, il n'y a rien à interpréter" },
   // 2026-09-26 : les trois que le garde-fou a réclamés en même temps que leur ligne de table.
   "check-spirit": { nature: "heuristique", pourquoi: "il détecte le vocabulaire de service client, pas la fadeur — un ton plat sans un seul mot interdit passerait au vert, et la lecture humaine reste obligatoire" },
-  "check-profile": { nature: "heuristique", pourquoi: "même famille que check-spirit, et gelé depuis le 2026-09-26 : son en-tête dit qu'il teste un mécanisme absent, or il existe" },
+  "check-profile": { nature: "heuristique", pourquoi: "même famille que check-spirit : aucune assertion, aucun verdict calculé — il envoie de vrais appels et rend des réponses de modèle à LIRE. Dégelé le 2026-09-26, ce qui ne change rien à sa nature" },
   "route-booster": { nature: "heuristique", pourquoi: "il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste" },
   "le-classificateur": { nature: "mecanique", pourquoi: "un type se constate sur le fichier, un rang se lit dans un registre — aucune interprétation, sauf la liste « Hors Agence » qui est tenue à la main et le dit" },
   "le-coordinateur": { nature: "mecanique", pourquoi: "chaque point de câblage vérifié est une présence ou une absence sur le disque" },

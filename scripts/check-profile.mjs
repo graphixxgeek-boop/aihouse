@@ -1,25 +1,45 @@
-// Prototype de fiabilité pour le "dossier retourné" (énigme post-révélation, en cours de
-// conception le 2026-09-17) — PAS un test automatique classique, sur le modèle de
-// check-spirit.mjs : le mécanisme réel (pièges dans app/api/lia/route.ts, dossier persisté,
-// jauge d'appréciation exposée) n'existe pas encore dans le code, cette conception n'étant pas
-// encore validée. Ce script teste isolément la partie la plus risquée AVANT de l'intégrer :
-// un diagnostic psychologique généré librement par Gemini, à partir d'un dossier de preuves
-// comportementales, tient-il debout ? Reste-t-il dans le ton rugueux des personnages (Article 0)
-// au lieu de glisser vers un registre thérapeutique — le risque n°1 identifié pour cette
-// fonctionnalité, puisque "diagnostic psychologique" est justement le genre de sujet qui pousse
-// un modèle vers "il semble que vous ayez du mal à...". Coûte de vrais appels API (Article 8) :
-// à lancer à la main, jamais en continu. `node scripts/check-profile.mjs`.
+// CHECK-PROFILE — le banc d'essai isolé du DIAGNOSTIC PSYCHOLOGIQUE du dossier retourné.
+// =====================================================================================
+// EN-TÊTE RÉÉCRIT LE 2026-09-26 (tâche #912) : celui d'avant datait du 2026-09-17 et disait « le
+// mécanisme réel n'existe pas encore dans le code, cette conception n'étant pas encore validée ».
+// C'était vrai ce jour-là. Ce ne l'est plus, et l'écart avait un coût réel : l'outil a été GELÉ hors
+// de l'équipe le 2026-09-26 précisément parce qu'on ne pouvait plus savoir s'il mesurait encore
+// quelque chose. **Un outil dont l'en-tête ment sur son objet ne peut plus être ni promu ni lancé
+// en confiance** — c'est la dette documentaire que l'Article 13 interdit, appliquée à un fichier de
+// code plutôt qu'à un document.
+//
+// CE QUI A ÉTÉ VÉRIFIÉ AVANT DE RÉÉCRIRE, plutôt que supposé (Article 19) : `app/api/lia/route.ts`
+// porte 61 mentions du dossier, `generateDossierFragment()` tourne pour Lia et pour Noé, et
+// `lib/life.ts` porte la jauge d'appréciation par personnage. **Mieux : route.ts NOMME ce fichier**
+// — « version longue du prompt validé sur douze profils dans scripts/check-profile.mjs ». Le
+// mécanisme n'a pas seulement été construit : il a été construit À PARTIR de ce banc d'essai.
+//
+// CE QU'IL EST DONC AUJOURD'HUI : le banc où l'on éprouve, isolément et à froid, la partie la plus
+// risquée du dossier retourné — un diagnostic psychologique généré librement par le modèle à partir
+// de preuves comportementales. Le risque n°1 n'a pas changé d'un mot : « diagnostic psychologique »
+// est exactement le genre de sujet qui pousse un modèle vers « il semble que vous ayez du mal
+// à... », c'est-à-dire vers le registre thérapeutique que l'Article 0 rejette. Ce banc sert à voir
+// cette dérive AVANT qu'elle n'atteigne le jeu.
+//
+// CE QU'IL N'EST PAS : un test automatique. Il n'a ni assertion ni verdict calculé — il envoie de
+// vrais appels et affiche les réponses pour une LECTURE HUMAINE, comme check-spirit. Son
+// `expectVerdictLeaning` aide cette lecture, il n'entre dans aucun calcul.
+//
+// COÛT ET PRÉCAUTION (Article 8 et Article 22) : 2×N vrais appels d'un coup (N profils × Lia et
+// Noé). **Toujours consulter Smart Conso API avant de le lancer** :
+// `node scripts/smart-conso-api.mjs check-profile --confirm`, puis `node scripts/check-profile.mjs`.
+// Jamais en continu, jamais dans un crochet.
 //
 // Pour ajouter un profil : ajoute une entrée à `profiles` ci-dessous. `traps` reproduit les 4-5
-// pièges canoniques envisagés pour le dossier retourné (miroir retourné, dilemme moral,
-// contradiction relevée, test de pouvoir, excuse après coup) avec ce que CET observateur y aurait
-// répondu ; `expectVerdictLeaning` sert juste à la lecture humaine du résumé, pas à un calcul.
+// pièges canoniques du dossier retourné (miroir retourné, dilemme moral, contradiction relevée,
+// test de pouvoir, excuse après coup) avec ce que CET observateur y aurait répondu.
 
 import fs from 'node:fs';
 import { printReliabilityNotice } from "./lib-shell.mjs";
 
-// Réclamé nommément par le garde-fou le 2026-09-26, et doublement justifié ici : cet outil est GELÉ
-// depuis le même jour, son en-tête dit qu'il teste un mécanisme qui existe désormais.
+// Réclamé nommément par le garde-fou le 2026-09-26 : cet outil est HEURISTIQUE au sens strict —
+// il n'a aucune assertion, il rend des réponses de modèle à lire. Le dégel du 2026-09-26 (#912) n'y
+// change rien : ce n'est pas parce que son en-tête est redevenu exact que sa sortie devient un verdict.
 printReliabilityNotice("check-profile");
 
 const devVars = fs.existsSync('.dev.vars') ? fs.readFileSync('.dev.vars', 'utf8') : '';
