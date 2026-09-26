@@ -912,6 +912,17 @@ async function main() {
         for (const l of formatNotesLines(await collecterLesNotes())) console.log(l);
         return;
     }
+    // LES BÉNÉFICES NETS (2026-09-26, tâche #909) — un mode léger lui aussi : il ne lit que le
+    // suivi et la mémoire de la charte, jamais tsc ni la suite de tests. Les sources sont injectées
+    // ici plutôt qu'importées en tête, pour qu'un dépôt qui n'aurait ni suivi ni charte obtienne un
+    // « pas mesuré » avec sa raison, jamais un plantage.
+    if (process.argv[2] === 'benefices') {
+        const ctd = await import('./check-tasks-details.mjs');
+        const moise = await import('./moise-tables-de-loi.mjs');
+        const b = beneficesNets({ rows: ctd.loadAllTaskRows(), origineImpl: ctd.origineDeLaTache, operations: moise.lireOperations({}) });
+        for (const l of formatBeneficesLines(b)) console.log(l);
+        return;
+    }
     console.log('Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).');
 
     const live = await fetchLiveMetrics();
@@ -1069,6 +1080,89 @@ async function main() {
         smartConsoDetail: smartConsoMetrics,
     });
     console.log(`Copie de présentation HTML régénérée : ${KPI_HTML_PATH} (jamais committée — cf. .gitignore).`);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LES BÉNÉFICES NETS (2026-09-26, tâche #909 — sa demande du gros prompt : « les bénéfices nets :
+// mesurer les appels API évités, les tokens économisés, les défauts trouvés »).
+//
+// SA CONSIGNE LA PLUS IMPORTANTE EST CELLE QUI INTERDIT, et elle est venue de lui : « déclarer que
+// le contrefactuel "temps gagné" n'est pas mesurable sans groupe témoin ». C'est le cœur de cette
+// fonction. Un tableau de bénéfices qui chiffre tout, y compris ce qui n'est pas mesurable, est un
+// argumentaire, pas une mesure — et il finit par être cru.
+//
+// QUATRE POSTES, DONT DEUX QUI REFUSENT DE RÉPONDRE. Ce n'est pas un aveu de faiblesse : un poste
+// qui dit « pas mesurable, et voici pourquoi » vaut plus qu'un poste qui rend un chiffre inventé,
+// parce qu'un chiffre inventé se recopie ensuite dans tous les documents qui citent celui-ci.
+
+export const POSTES_DE_BENEFICE = ["defauts-trouves", "tokens-economises", "appels-api-evites", "temps-gagne"];
+
+// POSTE 1 — LES DÉFAUTS TROUVÉS. Ils se comptent sur le SUIVI, pas sur les registres des outils, et
+// c'est un choix : un registre d'outil compte ce que l'outil a SIGNALÉ, le suivi compte ce qui a
+// donné lieu à un vrai travail. Un signalement que personne n'a repris n'est pas un bénéfice.
+export function defautsTrouves({ rows = [], origineImpl = null } = {}) {
+  if (!rows.length) return { mesurable: false, pourquoi: "aucune ligne de suivi lue : un zéro défaut se lirait comme un outillage inutile au lieu d'une lecture ratée (leçon L5)" };
+  if (!origineImpl) return { mesurable: false, pourquoi: "le classificateur d'origine n'a pas été fourni — et il ne se réécrit pas ici : origineDeLaTache() existe déjà, deux mesures d'origine qui divergeraient seraient pires qu'une seule (leçon L29)" };
+  const parOrigine = { outil: 0, utilisateur: 0, agent: 0, "indéterminée": 0 };
+  for (const r of rows) parOrigine[origineImpl(r).origine] = (parOrigine[origineImpl(r).origine] ?? 0) + 1;
+  const declarees = parOrigine.outil + parOrigine.utilisateur + parOrigine.agent;
+  return {
+    mesurable: true, parOrigine, declarees, total: rows.length,
+    defauts: parOrigine.outil,
+    // LE DÉNOMINATEUR VOYAGE AVEC LE CHIFFRE, toujours : « 62 défauts trouvés » ne veut rien dire
+    // sans savoir sur combien de lignes, ni combien d'entre elles ne disent pas d'où elles viennent.
+    part: declarees ? Math.round((parOrigine.outil / declarees) * 100) : null,
+    horsPortee: `${parOrigine["indéterminée"]} ligne(s) sur ${rows.length} ne déclarent pas leur origine : la part est calculée sur les ${declarees} qui la déclarent, jamais sur le total, ce qui ferait passer les silences pour des tâches non trouvées par un outil.`,
+  };
+}
+
+// POSTE 2 — LES TOKENS ÉCONOMISÉS. Seule la charte porte une mémoire AVANT/APRÈS exploitable
+// (`docs/referentiel/charte-operations.md`), et elle la porte en LIGNES, pas en tokens : la
+// conversion serait une estimation de plus posée sur une estimation.
+export const MOTIF_LIGNES = /~?(\d+)\s*l\./;
+
+export function tokensEconomises({ operations = null } = {}) {
+  if (!operations?.mesurable) return { mesurable: false, pourquoi: "la mémoire des opérations de la charte n'a pas pu être lue : rien n'a été mesuré, ce qui n'est jamais la même chose qu'aucune économie" };
+  const chiffrees = operations.operations.filter((o) => MOTIF_LIGNES.test(String(o.avant ?? "")) && MOTIF_LIGNES.test(String(o.apres ?? "")));
+  if (!chiffrees.length) return { mesurable: false, operations: operations.operations.length, pourquoi: `${operations.operations.length} opération(s) enregistrée(s), aucune ne porte un avant/après chiffré : on sait que des allègements ont eu lieu, jamais de combien` };
+  let gagnees = 0;
+  for (const o of chiffrees) {
+    gagnees += Number(MOTIF_LIGNES.exec(String(o.avant))[1]) - Number(MOTIF_LIGNES.exec(String(o.apres))[1]);
+  }
+  return {
+    mesurable: true, operations: operations.operations.length, chiffrees: chiffrees.length, lignesGagnees: gagnees,
+    horsPortee: "compté en LIGNES de la charte, jamais en tokens : la conversion lignes→tokens serait une estimation posée sur une estimation. Et ce chiffre ne couvre QUE la charte — les autres documents rechargés n'ont pas de mémoire avant/après.",
+  };
+}
+
+// POSTES 3 ET 4 — CEUX QUI REFUSENT, et le refus est le résultat.
+export const BENEFICES_NON_MESURABLES = [
+  { cle: "appels-api-evites", pourquoi: "il faudrait savoir combien d'appels auraient eu lieu SANS l'outillage. Personne n'a fait tourner ce projet sans Smart Conso API pour comparer, et le journal ne garde que les appels FAITS. Compter les refus « seuil dur » donnerait le nombre de fois où l'outil a dit non, jamais le nombre d'appels que ce non a évités : un refus suivi d'un abandon et un refus suivi d'un contournement s'écrivent pareil." },
+  { cle: "temps-gagne", pourquoi: "SA CONSIGNE EXPLICITE du 2026-09-26, et elle est juste : sans groupe témoin — le même projet mené sans l'Agence — « temps gagné » est un contrefactuel, c'est-à-dire une opinion chiffrée. Le seul honnête serait de mesurer une tâche faite deux fois, avec et sans, ce que personne ne fera." },
+];
+
+export function beneficesNets({ rows = [], origineImpl = null, operations = null } = {}) {
+  return {
+    mesurable: true,
+    defauts: defautsTrouves({ rows, origineImpl }),
+    tokens: tokensEconomises({ operations }),
+    nonMesurables: BENEFICES_NON_MESURABLES,
+  };
+}
+
+export function formatBeneficesLines(b) {
+  const l = ["=== BÉNÉFICES NETS DE L'OUTILLAGE ==="];
+  l.push("Quatre postes, dont DEUX qui refusent de répondre — un poste qui dit « pas mesurable, et voici pourquoi »");
+  l.push("vaut plus qu'un chiffre inventé, parce qu'un chiffre inventé se recopie ensuite partout.");
+  l.push("");
+  l.push(b.defauts.mesurable
+    ? `  ✅ DÉFAUTS TROUVÉS PAR UN OUTIL : ${b.defauts.defauts} tâche(s) sur ${b.defauts.declarees} d'origine déclarée (${b.defauts.part} %).\n     ${b.defauts.horsPortee}`
+    : `  ❓ DÉFAUTS TROUVÉS : PAS MESURÉ — ${b.defauts.pourquoi}`);
+  l.push(b.tokens.mesurable
+    ? `  ✅ ALLÈGEMENT DE LA CHARTE : ${b.tokens.lignesGagnees} ligne(s) retirées sur ${b.tokens.chiffrees} opération(s) chiffrée(s) (${b.tokens.operations} enregistrées).\n     ${b.tokens.horsPortee}`
+    : `  ❓ TOKENS ÉCONOMISÉS : PAS MESURÉ — ${b.tokens.pourquoi}`);
+  for (const n of b.nonMesurables) l.push(`  🚫 ${n.cle.toUpperCase()} : NON MESURABLE — ${n.pourquoi}`);
+  return l;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

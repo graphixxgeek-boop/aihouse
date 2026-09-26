@@ -342,12 +342,20 @@ export function fichiersSourcesDuProjet({ root = ROOT, listDirImpl = readdirSync
 // loi : « une IA qui arrive sans le gestionnaire de tâches de Claude Code, sans ses crochets git ou
 // sans ses fenêtres de questions doit pouvoir travailler avec les documents seuls ».
 export const DEPENDANCES_OUTILLAGE = /TaskCreate|TaskUpdate|AskUserQuestion|SendUserFile|crochet post-commit|crochet pre-commit|Claude Code/;
-export function findDependancesOutillage(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {
+// `quelleQueSoitLaDeclaration` (2026-09-26, tâche #909) — AJOUTÉ PARCE QUE SON ABSENCE PRODUISAIT
+// UN FAUX VERT, attrapé au premier passage du relai de modèle. Le filtre « ne scanner que les
+// documents qui SE DÉCLARENT génériques » est juste pour la portabilité d'un blueprint : un
+// document spécifique au projet a le droit de nommer l'outillage du projet. Mais le relai de modèle
+// pose une AUTRE question — « une IA sans cet outillage peut-elle s'en servir ? » — et là le filtre
+// faisait sauter CLAUDE.md et les règles de travail, c'est-à-dire exactement les documents à
+// examiner. Le résultat était « aucune dépendance » sur trois documents jamais ouverts : la forme
+// la plus dangereuse du zéro (leçon L11). Le comportement par défaut ne change pas d'un iota.
+export function findDependancesOutillage(fichiers = [], { readFileImpl = readFileSync, root = ROOT, quelleQueSoitLaDeclaration = false } = {}) {
   const trouvees = [];
   for (const f of fichiers) {
     let texte;
     try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
-    if (declarationDuFichier(texte) !== "générique") continue;
+    if (!quelleQueSoitLaDeclaration && declarationDuFichier(texte) !== "générique") continue;
     const lignes = texte.split("\n").filter((l) => DEPENDANCES_OUTILLAGE.test(l));
     // Une dépendance CITÉE POUR ÊTRE ÉCARTÉE n'en est pas une — le texte qui dit « une IA sans
     // crochet git doit pouvoir travailler » nomme forcément le crochet git. Sans cette distinction,
@@ -723,6 +731,64 @@ export function formatEmpreinteLines(e) {
   return l;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LE RELAI DE MODÈLE (2026-09-26, tâche #909 — sa demande : « le changement de modèle en cours de
+// route : que SAFE-EXPORT couvre le relai (mémoire, ligne de conduite, process) », avec une
+// consigne qui compte autant que la demande : **sans me servir de moi-même comme étalon**).
+//
+// CE QUE SA CONSIGNE INTERDIT, ET C'EST LE PIÈGE ÉVIDENT : vérifier « est-ce qu'une autre IA
+// comprendrait ? » en me demandant si JE comprends. Je comprends toujours — j'ai la conversation,
+// le contexte, les habitudes. Ma compréhension ne prouve rien sur celle d'un modèle qui arrive à
+// froid ; elle prouve seulement que j'étais là. Le seul étalon utilisable est donc MÉCANIQUE : le
+// document existe-t-il, est-il atteignable, et ne dépend-il pas d'un outillage particulier ?
+//
+// LES TROIS DIMENSIONS DU RELAI sont les siennes, pas une invention : ce qu'on a APPRIS (la
+// mémoire), comment on TRAVAILLE (la ligne de conduite), et ce qu'on SUIT (les process). Un relai
+// qui n'en porte que deux laisse le successeur refaire une erreur déjà payée, travailler autrement,
+// ou sauter une étape — trois échecs différents.
+export const DIMENSIONS_DU_RELAI = [
+  { cle: "memoire", quoi: "ce que le projet a APPRIS en se trompant", documents: ["docs/referentiel/lecons.md", "docs/referentiel/points-fragiles.md"],
+    sansQuoi: "le successeur repaiera une erreur déjà payée, et personne ne saura qu'elle l'avait déjà été" },
+  { cle: "conduite", quoi: "comment on TRAVAILLE ensemble", documents: ["CLAUDE.md", "docs/regles-de-travail.md", "docs/philosophie-et-politique.md"],
+    sansQuoi: "le successeur travaillera autrement, et la différence se lira dans le produit avant de se lire dans le code" },
+  { cle: "process", quoi: "les suites d'étapes qui engagent", documents: ["docs/god-of-all-process-blueprint.md", "docs/pre-chantier-process-detail.md", "docs/xp-ia-process-detail.md"],
+    sansQuoi: "le successeur sautera des étapes sans savoir qu'elles existaient" },
+];
+
+export function relaisDeModele({ root = ROOT, dimensions = DIMENSIONS_DU_RELAI, exists = existsSync, readFileImpl = readFileSync } = {}) {
+  const resultats = dimensions.map((d) => {
+    const presents = d.documents.filter((c) => exists(join(root, c)));
+    const absents = d.documents.filter((c) => !exists(join(root, c)));
+    // LA DÉPENDANCE À UN OUTILLAGE PARTICULIER EST LE VRAI DÉFAUT DE RELAI, et il est invisible à
+    // l'œil : un document parfaitement écrit qui dit « crée une tâche avec TaskCreate » est
+    // inapplicable pour une IA qui n'a pas cet outil. findDependancesOutillage() le voit déjà —
+    // on le RELAIE plutôt que d'écrire une seconde sonde (leçon L29).
+    const dependances = findDependancesOutillage(presents, { readFileImpl, root, quelleQueSoitLaDeclaration: true });
+    return { ...d, presents, absents, dependances, complet: !absents.length };
+  });
+  const incompletes = resultats.filter((r) => !r.complet);
+  return {
+    mesurable: true, dimensions: resultats, incompletes: incompletes.map((r) => r.cle),
+    // CE QU'AUCUNE MÉCANIQUE NE PEUT VÉRIFIER, déclaré plutôt que tu (Article 27) : qu'un document
+    // présent soit SUFFISANT. On vérifie qu'il existe et qu'il ne s'appuie pas sur un outillage
+    // particulier ; on ne vérifie pas qu'un modèle inconnu, demain, en tirera ce qu'il faut.
+    horsPortee: "vérifie l'EXISTENCE et l'INDÉPENDANCE À L'OUTILLAGE, jamais la suffisance. Et surtout jamais « est-ce que je comprends ? » : ma compréhension prouve que j'étais là, pas qu'un modèle arrivant à froid s'en sortira. C'est sa consigne explicite du 2026-09-26 — ne pas me servir de moi-même comme étalon.",
+  };
+}
+
+export function formatRelaisLines(r) {
+  if (!r?.mesurable) return [`RELAI DE MODÈLE : PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`];
+  const l = ["=== RELAI DE MODÈLE — ce qui passe à l'IA suivante ==="];
+  for (const d of r.dimensions) {
+    l.push(`  ${d.complet ? "✅" : "⛔"} ${d.cle.toUpperCase().padEnd(9)} ${d.quoi}`);
+    l.push(`     ${d.presents.length}/${d.documents.length} document(s) présent(s)${d.absents.length ? ` — MANQUE : ${d.absents.join(", ")}` : ""}`);
+    if (!d.complet) l.push(`     SANS ÇA : ${d.sansQuoi}`);
+    if (d.dependances.length) l.push(`     ⚠️  ${d.dependances.length} dépendance(s) à un outillage particulier : un document qui dit « crée une tâche avec tel outil » est inapplicable pour une IA qui ne l'a pas.`);
+  }
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
 export const CONCENTRATION_MINIMUM = 3;
 export function proposerSondePoussee(ecarts = [], { seuil = CONCENTRATION_MINIMUM } = {}) {
   const parFichier = new Map();
@@ -895,6 +961,8 @@ function main() {
       }
       console.log("");
       for (const l of formatEmpreinteLines(empreinteDisque())) console.log(l);
+      console.log("");
+      for (const l of formatRelaisLines(relaisDeModele())) console.log(l);
     });
   }
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) — même correction que ses deux voisins du

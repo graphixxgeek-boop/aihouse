@@ -1,12 +1,12 @@
 ⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
 === VITALITÉ DU PARC — 88 fichier(s) mesuré(s) sur 88 ===
-  🔴 VITAL       25 fichier(s) ·  28 % ·  27047 lignes — sans lui l'Agence ne tourne pas
+  🔴 VITAL       25 fichier(s) ·  28 % ·  27136 lignes — sans lui l'Agence ne tourne pas
      il est dans la boucle quotidienne : c'est un crochet git, ou il est lancé par un crochet ou par package.json, ou l'un d'eux l'importe même indirectement
   🟠 ESSENTIEL    9 fichier(s) ·  10 % ·  14663 lignes — sans lui elle tourne, mais perd une garantie
      il porte un garde-fou d'évolutivité : l'Agence continue sans lui, mais une promesse cesse d'être vérifiée
-  🟡 UTILE       34 fichier(s) ·  39 % ·  12589 lignes — il fait gagner du temps, à la demande
+  🟡 UTILE       35 fichier(s) ·  40 % ·  13930 lignes — il fait gagner du temps, à la demande
      une commande de lancement est écrite quelque part : quelqu'un peut s'en servir, mais rien ne casse s'il disparaît
-  ⚪ OPTIONNEL   20 fichier(s) ·  23 % ·   4474 lignes — confort ou cas particulier
+  ⚪ OPTIONNEL   19 fichier(s) ·  22 % ·   3295 lignes — confort ou cas particulier
      personne ne le lance, aucune commande n'est écrite pour lui, et il ne garantit rien
   ↳ Chaîne d'EXÉCUTION : 25 fichier(s). Chaîne avec les imports de test : 81.
      L'écart vient de scripts/check-house.mjs (importe 78 % du parc) — un import de TEST n'est pas une dépendance d'exécution.
@@ -15,8 +15,8 @@
 === EXPORTABILITÉ — croisement vitalité × blueprint ===
   vital        9/25  ont un blueprint · 36 %
   essentiel    6/9   ont un blueprint · 67 %
-  utile       15/34  ont un blueprint · 44 %
-  optionnel    6/20  ont un blueprint · 30 %
+  utile       16/35  ont un blueprint · 46 %
+  optionnel    5/19  ont un blueprint · 26 %
   ⛔ BLOQUANTS (vitaux ou essentiels SANS blueprint) : 19
      · scripts/check-house.mjs
      · scripts/criticite.mjs
@@ -41,10 +41,32 @@
   HORS PORTÉE : un blueprint PRÉSENT n'est pas un blueprint SUFFISANT : cette mesure compte des fichiers, elle ne lit pas leur contenu. findBlueprintsMalConstruits() fait l'autre moitié du travail, et les deux ensemble ne remplacent toujours pas une relecture.
 
 === EMPREINTE DISQUE — ce qui partirait vraiment dans un export ===
-  Aujourd'hui (2026-09-26) : 19 Mo suivis par git.
+  Aujourd'hui (2026-09-26) : 19.1 Mo suivis par git.
   Il y a 7 jours (2026-09-19) : 2.2 Mo — soit ×8.8 en 7 jours, 2.4 Mo/jour.
-  Dans 1 mois  :    91.3 Mo
-  Dans 2 mois  :   163.5 Mo
-  Dans 1 an    :   898.1 Mo
+  Dans 1 mois  :    91.5 Mo
+  Dans 2 mois  :     164 Mo
+  Dans 1 an    :   900.6 Mo
   HORS PORTÉE : projection LINÉAIRE d'un rythme observé sur quelques jours : elle donne un ordre de grandeur, jamais une prévision. Un chantier qui s'arrête ou une archive purgée la démentent immédiatement.
   Ce chiffre exclut .git (l'historique) et tout ce qui n'est pas suivi : c'est le poids de ce qui PART, pas celui du conteneur.
+
+=== RELAI DE MODÈLE — ce qui passe à l'IA suivante ===
+  ✅ MEMOIRE   ce que le projet a APPRIS en se trompant
+     2/2 document(s) présent(s)
+     ⚠️  2 dépendance(s) à un outillage particulier : un document qui dit « crée une tâche avec tel outil » est inapplicable pour une IA qui ne l'a pas.
+  ✅ CONDUITE  comment on TRAVAILLE ensemble
+     3/3 document(s) présent(s)
+     ⚠️  2 dépendance(s) à un outillage particulier : un document qui dit « crée une tâche avec tel outil » est inapplicable pour une IA qui ne l'a pas.
+  ✅ PROCESS   les suites d'étapes qui engagent
+     3/3 document(s) présent(s)
+  HORS PORTÉE : vérifie l'EXISTENCE et l'INDÉPENDANCE À L'OUTILLAGE, jamais la suffisance. Et surtout jamais « est-ce que je comprends ? » : ma compréhension prouve que j'étais là, pas qu'un modèle arrivant à froid s'en sortira. C'est sa consigne explicite du 2026-09-26 — ne pas me servir de moi-même comme étalon.
+⚠️  Attention, mes résultats peuvent être inexacts : ses scores sont des moyennes de composantes elles-mêmes estimées, et une famille non mesurée sort du calcul plutôt que d'y peser — le chiffre est une tendance, jamais une note. À vérifier avant d'agir, jamais un verdict acquis.
+=== BÉNÉFICES NETS DE L'OUTILLAGE ===
+Quatre postes, dont DEUX qui refusent de répondre — un poste qui dit « pas mesurable, et voici pourquoi »
+vaut plus qu'un chiffre inventé, parce qu'un chiffre inventé se recopie ensuite partout.
+
+  ✅ DÉFAUTS TROUVÉS PAR UN OUTIL : 52 tâche(s) sur 272 d'origine déclarée (19 %).
+     569 ligne(s) sur 841 ne déclarent pas leur origine : la part est calculée sur les 272 qui la déclarent, jamais sur le total, ce qui ferait passer les silences pour des tâches non trouvées par un outil.
+  ✅ ALLÈGEMENT DE LA CHARTE : 187 ligne(s) retirées sur 1 opération(s) chiffrée(s) (14 enregistrées).
+     compté en LIGNES de la charte, jamais en tokens : la conversion lignes→tokens serait une estimation posée sur une estimation. Et ce chiffre ne couvre QUE la charte — les autres documents rechargés n'ont pas de mémoire avant/après.
+  🚫 APPELS-API-EVITES : NON MESURABLE — il faudrait savoir combien d'appels auraient eu lieu SANS l'outillage. Personne n'a fait tourner ce projet sans Smart Conso API pour comparer, et le journal ne garde que les appels FAITS. Compter les refus « seuil dur » donnerait le nombre de fois où l'outil a dit non, jamais le nombre d'appels que ce non a évités : un refus suivi d'un abandon et un refus suivi d'un contournement s'écrivent pareil.
+  🚫 TEMPS-GAGNE : NON MESURABLE — SA CONSIGNE EXPLICITE du 2026-09-26, et elle est juste : sans groupe témoin — le même projet mené sans l'Agence — « temps gagné » est un contrefactuel, c'est-à-dire une opinion chiffrée. Le seul honnête serait de mesurer une tâche faite deux fois, avec et sans, ce que personne ne fera.

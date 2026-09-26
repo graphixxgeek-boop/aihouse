@@ -122,6 +122,46 @@ Un export livre les outils. Il ne livre pas la discipline qui les fait tourner.
 
 ---
 
+## LES BÉNÉFICES, ET LES DEUX QU'ON NE PEUT PAS CHIFFRER
+
+*(Ajouté le 2026-09-26, tâche #909. Produit par `node scripts/kpi-report.mjs benefices`.)*
+
+Un tableau de bénéfices qui chiffre TOUT est un argumentaire, pas une mesure — et un chiffre inventé
+se recopie ensuite dans tous les documents qui citent celui-ci. Quatre postes, dont **deux qui
+refusent de répondre**.
+
+| Poste | Résultat |
+|---|---|
+| ✅ **Défauts trouvés par un outil** | **52 tâches** sur 272 d'origine déclarée, soit **19 %**. Comptés sur le SUIVI, pas sur les registres des outils : un signalement que personne n'a repris n'est pas un bénéfice. 569 lignes sur 841 ne déclarent pas leur origine — la part est calculée sur les 272 qui la déclarent. |
+| ✅ **Allègement de la charte** | **187 lignes** retirées, sur la seule opération chiffrée des 14 enregistrées. Compté en LIGNES, jamais en tokens : la conversion serait une estimation posée sur une estimation. |
+| 🚫 **Appels API évités** | **NON MESURABLE.** Il faudrait savoir combien d'appels auraient eu lieu SANS l'outillage. Le journal ne garde que les appels FAITS, et compter les refus « seuil dur » donnerait le nombre de fois où l'outil a dit non — jamais le nombre d'appels que ce non a évités. Un refus suivi d'un abandon et un refus suivi d'un contournement s'écrivent pareil. |
+| 🚫 **Temps gagné** | **NON MESURABLE**, et c'est sa consigne explicite. Sans groupe témoin — le même projet mené sans l'Agence — c'est un contrefactuel, c'est-à-dire une opinion chiffrée. |
+
+## LE RELAI VERS UNE AUTRE IA — ce qui passe, et ce qui accroche
+
+*(Sa demande : que SAFE-EXPORT couvre le relai — mémoire, ligne de conduite, process — **sans me
+servir de moi-même comme étalon**. Produit par `node scripts/safe-export.mjs export`.)*
+
+**Le piège évident que sa consigne interdit** : vérifier « est-ce qu'une autre IA comprendrait ? »
+en me demandant si JE comprends. Je comprends toujours — j'ai la conversation, le contexte, les
+habitudes. Ma compréhension prouve que j'étais là, pas qu'un modèle arrivant à froid s'en sortira.
+Le seul étalon utilisable est mécanique.
+
+| Dimension | État | Ce qui accroche |
+|---|---|---|
+| **Mémoire** (ce qu'on a appris en se trompant) | ✅ 2/2 documents | **2 dépendances à un outillage particulier** |
+| **Conduite** (comment on travaille) | ✅ 3/3 documents | **2 dépendances à un outillage particulier** |
+| **Process** (les suites d'étapes qui engagent) | ✅ 3/3 documents | — |
+
+**Les quatre dépendances sont le vrai défaut de relai**, et il est invisible à l'œil : un document
+parfaitement écrit qui dit « crée une tâche avec tel outil » est inapplicable pour une IA qui n'a pas
+cet outil.
+
+**La sonde elle-même a produit un faux vert à son premier passage**, et c'est gardé comme
+contre-test : `findDependancesOutillage()` ne scannait que les documents SE DÉCLARANT génériques,
+donc sautait CLAUDE.md et les règles de travail — exactement ceux à examiner. Le résultat était
+« aucune dépendance » sur trois documents jamais ouverts.
+
 ## PLAN D'ACTION
 
 *(Article 28 : un rapport n'est pas fini quand il est écrit, il l'est quand ses constats sont
@@ -133,6 +173,7 @@ devenus des tâches. Trois états seulement — RETENU, ÉCARTÉ avec sa raison,
 | **RETENU** | Aucun document ne décrit l'ordre d'installation ni la chaîne des 25 | tâche #908 — un « plan de la machine » dérivé mécaniquement de la chaîne quotidienne, jamais écrit à la main (il se périmerait) |
 | **À TRANCHER** | 898 Mo projetés à un an, essentiellement des archives de rapports | politique d'archivage : purger, compacter, ou externaliser hors du dépôt ? C'est sa décision, pas celle de l'agent — elle touche à ce qu'on garde comme preuve |
 | **À TRANCHER** | Pack Sentinelle et Pack Panorama jamais réalisés | les lancer une fois pour de vrai, ou les retirer du catalogue ? Un pack qui n'a jamais tourné n'est pas un pack, c'est une intention |
+| **RETENU** | 4 dépendances à un outillage particulier dans les documents de relai (mémoire et conduite) | tâche #910 — les reformuler pour qu'une IA sans cet outillage puisse les appliquer, ou déclarer explicitement la substitution à côté |
 | **ÉCARTÉ** | Le ratio outillage/jeu (4,6×) | ce n'est pas un défaut à corriger : les deux projets sont assumés depuis le 2026-09-22, et la charte demande de SURVEILLER ce chiffre, jamais de le faire baisser. Il est surveillé, il est écrit, il ne devient pas une tâche |
 
 ---

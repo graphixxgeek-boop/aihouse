@@ -8759,6 +8759,44 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // LES BÉNÉFICES NETS (2026-09-26, tâche #909) — et sa consigne qui compte le plus est celle qui
+    // INTERDIT : « déclarer que le contrefactuel "temps gagné" n'est pas mesurable sans groupe
+    // témoin ». Un tableau de bénéfices qui chiffre tout est un argumentaire, pas une mesure.
+    const KPI = await import('../scripts/kpi-report.mjs');
+    const SEX2 = await import('../scripts/safe-export.mjs');
+    const CTB = await import('../scripts/check-tasks-details.mjs');
+    assert.deepEqual(KPI.BENEFICES_NON_MESURABLES.map((n) => n.cle), ['appels-api-evites', 'temps-gagne'], 'two of the four posts refuse to answer, and the refusal IS the result');
+    for (const n of KPI.BENEFICES_NON_MESURABLES) assert.ok(n.pourquoi.length > 80, 'each refusal carries its reason at length: "not measurable" without a why is an evasion, not a measure');
+    const rowsB = [
+      { sousSujet: 'constat de ARGUS', sujet: 'x', detail: '' },
+      { sousSujet: 'trouvé par CLONE-HUNTER', sujet: 'x', detail: '' },
+      { sousSujet: 'sa demande du jour', sujet: 'x', detail: '' },
+      { sousSujet: 'rien de reconnaissable', sujet: 'x', detail: '' },
+    ];
+    const dfts = KPI.defautsTrouves({ rows: rowsB, origineImpl: CTB.origineDeLaTache });
+    assert.equal(dfts.defauts, 2, 'defects found are counted on the TRACKER, not on the tools\' own registries: a finding nobody picked up is not a benefit');
+    assert.equal(dfts.part, 67, 'and the share is computed on the rows that DECLARE an origin — counting silences as "not found by a tool" would flatter the number');
+    assert.equal(KPI.defautsTrouves({ rows: rowsB }).mesurable, false, 'without the origin classifier it REFUSES rather than writing a second one (leçon L29)');
+    assert.equal(KPI.defautsTrouves({ rows: [] , origineImpl: CTB.origineDeLaTache }).mesurable, false, 'and with no rows it refuses too: zero defects would read as useless tooling instead of a failed read');
+    const tk = KPI.tokensEconomises({ operations: { mesurable: true, operations: [{ avant: '~1451 l.', apres: '~1264 l.' }, { avant: 'bloc', apres: 'déplacé' }] } });
+    assert.equal(tk.lignesGagnees, 187, 'the charter saving is read from its own before/after memory');
+    assert.equal(tk.chiffrees, 1, 'and an operation with no figures is counted apart rather than guessed at');
+    assert.equal(KPI.tokensEconomises({ operations: { mesurable: true, operations: [{ avant: 'bloc', apres: 'déplacé' }] } }).mesurable, false, 'a memory with no quantified operation reports "we know lightenings happened, never by how much"');
+
+    // LE RELAI DE MODÈLE (2026-09-26, tâche #909) — et sa consigne explicite : « sans me servir de
+    // moi-même comme étalon ». Le seul étalon utilisable est mécanique.
+    const rel = SEX2.relaisDeModele();
+    assert.deepEqual(rel.dimensions.map((d) => d.cle), ['memoire', 'conduite', 'process'], 'the three relay dimensions are his, not an invention: what we LEARNED, how we WORK, what we FOLLOW');
+    assert.ok(rel.horsPortee.includes('étalon'), 'and the result carries the rule that forbids using my own understanding as the yardstick');
+    const relManquant = SEX2.relaisDeModele({ exists: (c) => !String(c).includes('lecons.md') });
+    assert.ok(relManquant.incompletes.includes('memoire'), 'a missing memory document is named, with what is lost without it');
+    // LE FAUX VERT ATTRAPÉ AU PREMIER PASSAGE : findDependancesOutillage ne scannait que les
+    // documents SE DÉCLARANT génériques, donc sautait CLAUDE.md et les règles de travail — c'est-à-dire
+    // exactement ceux à examiner. « Aucune dépendance » sur trois documents jamais ouverts.
+    const texteSpecifique = 'Instanciation propre à ce projet.\nCrée une tâche avec TaskCreate.';
+    assert.equal(SEX2.findDependancesOutillage(['x.md'], { readFileImpl: () => texteSpecifique }).length, 0, 'the default behaviour is untouched: a project-specific document may name the project tooling');
+    assert.equal(SEX2.findDependancesOutillage(['x.md'], { readFileImpl: () => texteSpecifique, quelleQueSoitLaDeclaration: true }).length, 1, 'but the relay check looks anyway — a document saying "create a task with TaskCreate" is unusable for an AI that does not have it, whatever the document declares about itself');
+
     // L'ÉCHELLE DE VITALITÉ ET L'EXPORTABILITÉ (2026-09-26, tâche #906 — ses quatre niveaux dictés
     // en fenêtre, et sa question « quels outils vitaux n'ont pas de blueprint ? »).
     const LCV = await import('../scripts/le-classificateur.mjs');
