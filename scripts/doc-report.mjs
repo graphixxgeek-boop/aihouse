@@ -22,7 +22,7 @@
 // AGENT_SCRIPT_FILES d'axa-check.mjs — un registre non listé ici est lui-même un gap réel (cf.
 // findRegistriesMissingDecision()), jamais une raison de deviner sa famille.
 
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
@@ -1420,6 +1420,15 @@ export function formatJumeauxLines(j) {
   return l;
 }
 
+// SES PROPRES RAPPORTS NE SONT PAS DU CORPUS (2026-09-26, tâche #976). Le détecteur dépose sa
+// sortie dans docs/doc-report/, que ce même balayage relit — deux passages qui trouvent la même
+// chose auraient donc produit deux fichiers identiques, que le passage suivant aurait appariés
+// comme un « constat répété » portant sur lui-même. Ce dépôt n'est pas un rapport d'outil au sens
+// où les autres le sont : c'est le RÉSULTAT de la comparaison, jamais une de ses entrées. Le
+// projet a déjà payé cette famille d'erreur une fois (find-booster, tâche #182, bug
+// auto-référentiel), et c'est pourquoi elle est fermée ici avant d'avoir coûté quoi que ce soit.
+export const MOTIF_RAPPORT_JUMEAUX = /^rapports-jumeaux-/;
+
 export function chargerLesRapports({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, racine = "docs" } = {}) {
   const rapports = [];
   const pile = [racine];
@@ -1431,13 +1440,32 @@ export function chargerLesRapports({ root = ROOT, listDirImpl = readdirSync, rea
       const chemin = `${d}/${e.name}`;
       if (e.isDirectory()) { pile.push(chemin); continue; }
       if (!/\.(txt|md)$/.test(e.name) || e.name === "index.md") continue;
+      if (MOTIF_RAPPORT_JUMEAUX.test(e.name)) continue;
       try { rapports.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme conforme */ }
     }
   }
   return rapports;
 }
 
+// LE DÉPÔT DU RAPPORT, ET POURQUOI IL NE POUVAIT PAS ÊTRE FACULTATIF (2026-09-26, tâche #976).
+// Cette sous-commande n'imprimait qu'à l'écran. L'Article 31 (faille 3) dit que le livrable est le
+// FICHIER : une sortie qui ne vit que dans un terminal ne peut être ni relue, ni comparée au
+// passage précédent, ni citée par quiconque — ce qui est exactement le reproche que cet outil-ci
+// adresse aux autres. Elle n'appelait pas non plus recordCliUsage() : le garde-fou des outils muets
+// lit la PRÉSENCE de cet appel dans le script, or main() l'appelle plus haut, si bien que le script
+// passait pour instrumenté pendant que cette branche-là ne comptait rien.
+export function deposerRapportJumeaux(lignes, { root = ROOT, now = new Date(), writeImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  const dossier = join(root, "docs/doc-report");
+  mkdirImpl(dossier, { recursive: true });
+  const chemin = join(dossier, `rapports-jumeaux-${now.toISOString().slice(0, 10)}.txt`);
+  writeImpl(chemin, lignes.join("\n") + "\n", "utf8");
+  return chemin;
+}
+
 if (process.argv[2] === "jumeaux") {
+  recordCliUsage("doc-report");
   const j = trouverRapportsJumeaux(chargerLesRapports());
-  for (const l of formatJumeauxLines(j)) console.log(l);
+  const lignes = formatJumeauxLines(j);
+  for (const l of lignes) console.log(l);
+  console.log(`\nRapport déposé : ${deposerRapportJumeaux(lignes).replace(ROOT, "")}`);
 } else if (import.meta.url === `file://${process.argv[1]}`) main();

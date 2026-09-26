@@ -1,0 +1,45 @@
+=== RAPPORTS QUI DISENT LA MÊME CHOSE — 9 groupe(s) sur 727 rapports ===
+
+  47 ligne(s) de passe-partout retirées avant comparaison — sans ça, le gabarit unifié ferait passer tous les rapports pour des jumeaux.
+
+  🔴 doublon-archive — le même contenu sous deux noms dans le même dossier d'archives — l'un des deux est de trop, ou son nom ment
+      · docs/simulations/full_sim15_transcript.txt
+      · docs/simulations/full_sim_transcript.txt
+      « Noé · déplacement »
+  🟡 meme-echec — deux exécutions différentes ont buté sur le même mur et archivé le même échec — informatif, jamais fautif
+      · docs/simulations/full_sim18_dossier.txt
+      · docs/simulations/full_sim19_dossier.txt
+      « (aucun dossier retourné dans cette session) »
+  🟡 constat-repete — le même outil a rendu deux fois le même constat — légitime en soi (un dépôt propre deux fois de suite le doit), mais le NOMBRE de répétitions interroge le rythme du contrôle
+      · docs/profil-utilisateur/circle-signal-2026-09-21T22-44-59-084Z.txt
+      · docs/circle-tasks/ronde-2026-09-23/rapports/profil-utilisateur-guard.txt
+      · docs/circle-tasks/ronde-2026-09-22/check-profil-utilisateur.txt
+      « === Garde-fou système de profil utilisateur (docs/profil-utilisateur/) === »
+  🟡 constat-repete — le même outil a rendu deux fois le même constat — légitime en soi (un dépôt propre deux fois de suite le doit), mais le NOMBRE de répétitions interroge le rythme du contrôle
+      · docs/ecotoken/scan-2026-09-22T04-13-44.txt
+      · docs/ecotoken/scan-2026-09-22T04-16-57.txt
+      · docs/ecotoken/scan-2026-09-22T05-04-21.txt
+      « === ecotoken — réduire le coût permanent de la charte === »
+  🟡 constat-repete — le même outil a rendu deux fois le même constat — légitime en soi (un dépôt propre deux fois de suite le doit), mais le NOMBRE de répétitions interroge le rythme du contrôle
+      · docs/ecotoken/scan-2026-09-22T11-37-11.txt
+      · docs/ecotoken/scan-2026-09-22T11-37-49.txt
+      « === ecotoken — réduire le coût permanent de la charte === »
+  🟡 constat-repete — le même outil a rendu deux fois le même constat — légitime en soi (un dépôt propre deux fois de suite le doit), mais le NOMBRE de répétitions interroge le rythme du contrôle
+      · docs/ecotoken/scan-2026-09-23T16-03-50.txt
+      · docs/ecotoken/scan-2026-09-23T16-03-55.txt
+      · docs/ecotoken/scan-2026-09-23T16-12-38.txt
+      « === ecotoken — réduire le coût permanent de la charte === »
+  🟡 constat-repete — le même outil a rendu deux fois le même constat — légitime en soi (un dépôt propre deux fois de suite le doit), mais le NOMBRE de répétitions interroge le rythme du contrôle
+      · docs/circle-tasks/ronde-2026-09-23/rapports/ines-official-signal.txt
+      · docs/circle-tasks/ronde-2026-09-22/ines-official.txt
+      « === INES-official — édition consolidée du dépôt === »
+  🔴 double-depot — LE MÊME PASSAGE a déposé son rapport DEUX FOIS, sous deux noms — jamais une répétition légitime : un seul passage a eu lieu, et le second fichier fait croire à un second contrôle
+      · docs/circle-tasks/ronde-2026-09-22/clean-dirty-old.txt
+      · docs/circle-tasks/ronde-2026-09-22/gardien-clean-dirty-old.txt
+      « === CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) === »
+  🔴 double-depot — LE MÊME PASSAGE a déposé son rapport DEUX FOIS, sous deux noms — jamais une répétition légitime : un seul passage a eu lieu, et le second fichier fait croire à un second contrôle
+      · docs/circle-tasks/ronde-2026-09-22/gardien-safe-export.txt
+      · docs/circle-tasks/ronde-2026-09-22/safe-export.txt
+      « === SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet === »
+
+  HORS PORTÉE : elle apparie des rapports dont la SUBSTANCE est identique une fois le passe-partout retiré, les dates et les nombres neutralisés. Deux rapports qui disent la même chose avec des mots différents lui échappent — ça, c'est une lecture.

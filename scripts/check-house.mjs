@@ -7934,6 +7934,30 @@ async function testRapportsJumeaux() {
   // UN CORPUS VIDE N'EST JAMAIS « AUCUN DOUBLON ».
   assert.equal(trouverRapportsJumeaux([]).mesurable, false, 'no reports means nothing to compare — returning "zero duplicates" on zero reports would be a clean bill issued on nothing');
 
+  // LE DÉTECTEUR NE SE LIT PAS LUI-MÊME. Il dépose sa sortie dans docs/doc-report/, que son propre
+  // balayage relit : deux passages qui trouvent la même chose auraient déposé deux fichiers
+  // identiques, appariés au passage suivant comme un « constat répété » portant sur lui-même. Le
+  // dépôt est le RÉSULTAT de la comparaison, jamais une de ses entrées.
+  const avecSonPropreDepot = dr.chargerLesRapports({
+    listDirImpl: (d) => (String(d).endsWith('docs')
+      ? [{ name: 'doc-report', isDirectory: () => true }]
+      : [{ name: 'rapports-jumeaux-2026-09-26.txt', isDirectory: () => false }, { name: 'coherence.txt', isDirectory: () => false }]),
+    readFileImpl: () => 'peu importe',
+  });
+  assert.deepEqual(avecSonPropreDepot.map((r) => r.chemin), ['docs/doc-report/coherence.txt'], 'MUST LET PASS the neighbouring report and MUST EXCLUDE its own deposit: the repository has already paid this auto-referential family once (find-booster, task #182), and here it is closed before costing anything');
+  assert.equal(dr.MOTIF_RAPPORT_JUMEAUX.test('rapports-jumeaux-2026-09-26.txt'), true, 'the exclusion is a declared pattern rather than a name buried in the loop');
+  assert.equal(dr.MOTIF_RAPPORT_JUMEAUX.test('rapports-jumeaux-index.md'), true, 'and it holds whatever suffix a future deposit takes');
+  assert.equal(dr.MOTIF_RAPPORT_JUMEAUX.test('rapport-jumeaux-2026-09-26.txt'), false, 'MUST LET PASS: a near name that is not this tool\'s deposit stays in the corpus — an exclusion too wide would silently shrink what gets compared');
+
+  // LE DÉPÔT LUI-MÊME (Article 31, faille 3 : le livrable est le FICHIER).
+  let ecrit = null;
+  const chemin = dr.deposerRapportJumeaux(['une ligne', 'une autre'], {
+    root: '/tmp/x', now: new Date('2026-09-26T21:50:00Z'),
+    writeImpl: (c, t) => { ecrit = { c, t }; }, mkdirImpl: () => {},
+  });
+  assert.ok(chemin.endsWith('docs/doc-report/rapports-jumeaux-2026-09-26.txt'), 'the deposit lands in the tool\'s own registry, named by the day it was produced');
+  assert.equal(ecrit.t, 'une ligne\nune autre\n', 'and it holds exactly what was printed — a report that only exists in a terminal can be neither re-read nor compared to the previous passage');
+
   // EN DIRECT SUR LES 727 RAPPORTS RÉELS (Article 25).
   const reel = trouverRapportsJumeaux(dr.chargerLesRapports());
   assert.equal(reel.mesurable, true, 'the twin-report detector must actually run against the real docs/ tree');
