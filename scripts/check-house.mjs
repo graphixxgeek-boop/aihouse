@@ -8721,6 +8721,29 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.equal(gros.rang, petit.rang, 'both carry the SAME rank — which is the whole point of the demonstration');
     assert.ok(gros.ajouts.length > petit.ajouts.length, `same rank, different equipment: the one that keeps a memory and renders a page owes more (${gros.ajouts.length}) than the one that only calls others (${petit.ajouts.length}) — nobody promoted it, the measurement noticed`);
     assert.ok(gros.ajouts.every((a) => a.pourquoi && a.ou), 'every derived obligation says WHERE it lives and WHY it is owed — an obligation without a reason gets deleted by the next agent (Article 27)');
+    // LES FAUSSES BIBLIOTHÈQUES (2026-09-26, né de sa question sur le document HTML : « c'est normal
+    // ou on a loupé quelque chose dans leur conception ? »). La réponse ne pouvait pas être un avis :
+    // le type « bibliothèque » se CONSTATE, il ne juge rien — mais un fichier peut porter une porte
+    // dans son code sans qu'aucun document ne l'écrive, et celui-là n'est pas une bibliothèque.
+    const fausses = CASSANDRA.bibliothequesLancables({ recensement: CASSANDRA.recenserLesScripts() });
+    assert.equal(fausses.mesurable, true, 'checked live against the real repository, never on a fixture: the question was asked about twelve real files');
+    assert.ok(fausses.examines >= 20, `every file typed as a library is examined, ${fausses.examines} of them today`);
+    // LA SONDE RESSERRÉE — le contre-test de l'erreur commise en la construisant. Sa première
+    // version cherchait `import.meta.url` tout court et accusait cinq fichiers qui l'emploient pour
+    // calculer un CHEMIN. Un garde qui accuse à tort cesse d'être lu (leçon L4).
+    assert.equal(CASSANDRA.porteDansLeCode('const ROOT = new URL("..", import.meta.url).pathname;').lancable, false,
+      'a library computing a PATH from import.meta.url is not launchable — the naive probe accused five real files of the repository, and would have answered wrong to the very question that created it');
+    assert.equal(CASSANDRA.porteDansLeCode('if (process.argv[1] === fileURLToPath(import.meta.url)) main();').lancable, true,
+      'the launch guard is the COMPARISON against argv, never the presence of the word');
+    assert.equal(CASSANDRA.porteDansLeCode('async function main() {}').aMain, true, 'a defined main() is a door in its own right');
+    // TROIS VERDICTS, JAMAIS DEUX : une porte atteinte par le crochet ou par un autre outil est un
+    // choix de conception ; une porte que rien n'atteint est un trou. Les confondre accuserait une
+    // conception saine, ce que la question demandait précisément d'éviter.
+    assert.ok(fausses.vraies.every((x) => x.verdict === 'vraie bibliothèque'), 'a file with no door at all is confirmed as a genuine library rather than left ambiguous');
+    assert.ok(fausses.suspects.every((x) => Array.isArray(x.appelants)), 'every suspect says WHO actually launches it — the difference between a design choice and a hole');
+    assert.ok(fausses.orphelines.every((x) => !x.appelants.length), 'an orphan door is one that NOTHING in the repository launches, which is a measured fact rather than a suspicion');
+    assert.ok(fausses.suspects.length < fausses.examines, 'and the guard never accuses the whole population: it separates, it does not condemn');
+
     // Le rang, lui, ne se dérive JAMAIS : un outil qui se promouvrait lui-même se décernerait un titre.
     assert.ok(!Object.keys(CASSANDRA.OBLIGATIONS_DERIVEES[0]).includes('rang'), 'the derived mechanism grants EQUIPMENT, never a RANK — a rank is merited and decided, and that distinction is deliberate');
     // HORS AGENCE : une exclusion déclarée prime sur toute déduction de type.

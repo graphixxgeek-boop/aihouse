@@ -61,3 +61,82 @@ Il range ce qu'il peut MESURER. Un fichier dont la finalité n'est écrite nulle
 état de passage, et c'est voulu : la leçon L24 dit que la finalité ne se déduit jamais du code. Le
 rang « Hors Agence » est, pour la même raison, une liste tenue à la main avec sa raison écrite —
 « lance le produit » ne se lit dans aucune sonde.
+
+## Les renommages du 2026-09-26 — et ce qu'ils ont rendu possible
+
+*(Décidés par l'utilisateur en relisant le document HTML. Il nomme, jamais l'agent — règle du
+2026-09-24 portée par AGENT DES NOMS. Les emojis, eux, ont été choisis par l'agent à sa demande
+explicite.)*
+
+**Les 8 familles portent un préfixe `(f)` et une icône.** Coordination → *Les Anges de la
+coordination* 👼 · Gouvernance interne → *La Gouvernance Royale* 👑 · Gardiens sacrés du code →
+*Les Gardiens Sacrés du Code* 🛡️ · Simulation & qualité narrative → *La Suite Tarantino* 🎬 ·
+Suite Dette & Structure du code → *Les Prophètes* 📜 · Outillage de navigation → *Les Boosters de
+Navigation* 🚀 · Audit indépendant → *Les Agents Externes* 🕵️ · Exceptionnel ✨.
+
+**Les 9 classes transverses portent un préfixe `(ct)`, une icône et un nom collectif** — en gardant
+délibérément leur définition pure en seconde moitié, à sa demande : *Les scanners* 🔎 · *Les
+rapporteurs HTML* 📄 · *Les enregistreurs* 🗃️ · *Les consommateurs d'API* 💳 · *Les évolutifs* 🌱 ·
+*Les heuristiques* ⚠️ · *Les pro-actifs* 🎯 · *Les auto-conscients* 🪞 · *Les véridiques* 🧭.
+
+**Le rang « Membre » devient « Membre premium » 🥇** — le mot figurait déjà dans sa propre note de
+nommage ouverte depuis le 2026-09-21 (tâche #200, « Premium 🥇 »), ce qui n'a été découvert
+qu'après coup.
+
+**Une famille « Hors Agence » 🚧 rejoint la liste, et le rang descend tout en bas de l'échelle.**
+Elle redit le rang, comme celle des Gardiens sacrés et pour la même raison assumée. Ce qu'elle
+ferme est mesuré : la famille était **le seul axe qui ne couvrait pas tout le dépôt**, et six
+fichiers sortaient avec une case vide — or une case vide ne dit jamais si personne n'a rempli ou
+si rien n'était à remplir. Deux interdits l'accompagnent, et aucun n'est un jugement de valeur :
+ces fichiers ne peuvent pas évoluer, et **aucun outil de l'Agence ne peut les rejoindre** — on
+n'est pas hors Agence parce qu'on a démérité, mais parce qu'on sert le produit.
+
+**Ce que le renommage a fait remonter, et que personne ne cherchait.** Renommer les familles dans
+le registre d'équipe seul a déclenché le garde-fou des deux systèmes de familles : **33 outils se
+sont retrouvés rangés dans deux familles différentes**, parce que `doc-report.mjs` tient sa propre
+liste de 45 familles. Les deux restent volontairement indépendantes — les faire dériver l'une de
+l'autre rendrait le garde-fou tautologique, donc incapable de rien trouver — et la divergence a
+été corrigée dans le même commit.
+
+## La 4e colonne d'icônes — et pourquoi elle ne se recopie pas
+
+Sa question : *« tu n'as pas trouvé de solution pour ajouter une 4e colonne dans le tableau
+"indice" avec une traduction de l'indice en série d'icônes ? »*
+
+La solution est venue de **sa propre décision du même message** : en donnant un emoji à chaque
+famille et à chaque classe, il a mis l'icône DANS le nom. `emojiDuLibelle()` la LIT donc au lieu
+qu'une seconde table la recopie — ce qui aurait divergé au premier renommage (Article 24). Seuls
+les 8 **types** ont reçu leur icône dans le code (`ICONE_PAR_TYPE`), parce qu'un type est un
+constat de forme et non un nom choisi par quelqu'un.
+
+`indiceEnIcones()` rend une série du genre `⌨️ 🛡️ 🛡️ 🔎🗃️⚠️🎯🪞🧭`. Elle ne remplace jamais
+l'indice, elle le double : **une série d'icônes se reconnaît sans décoder ; un indice se trie, se
+cherche et se compare.** Un libellé sans emoji rend une chaîne vide, jamais une icône inventée.
+
+## `bibliothequesLancables()` — la question qui a créé un garde-fou
+
+Sa question, sur douze fichiers rangés en bibliothèque : *« c'est normal ou on a loupé quelque
+chose dans leur conception ? »*
+
+Y répondre en prose aurait produit un avis que personne ne peut rejouer. Le garde-fou répond à la
+place, et se reposera la question tout seul sur le prochain fichier (Article 31).
+
+**Ce qu'il mesure** : un fichier typé bibliothèque porte-t-il malgré tout une **porte** dans son
+code (un `main()` défini, ou un garde de lancement comparant `import.meta.url` à `process.argv`) ?
+Si oui, `quiLappelle()` cherche ensuite qui écrit réellement `node scripts/<lui>` dans le dépôt.
+
+**Trois verdicts, jamais deux** — et c'est ce qui empêche d'accuser une conception saine :
+- **vraie bibliothèque** — aucune porte, le type est juste, il n'y a rien à corriger ;
+- **porte réelle atteinte autrement** — le crochet post-commit ou un autre outil la lance : c'est
+  un choix de conception, pas un oubli ;
+- **PORTE ORPHELINE** — le fichier est lançable et **rien au monde ne le lance**.
+
+**Résultat réel au 2026-09-26** : 22 fichiers examinés, 16 vraies bibliothèques, 6 portes non
+écrites, et **une seule orpheline — `tasks-process-guardian.mjs`**, qui ne figurait pas dans sa
+liste de douze.
+
+**LA SONDE A ÉCHOUÉ À SON PREMIER PASSAGE, ET C'EST GARDÉ.** Sa première version cherchait
+`import.meta.url` tout court : elle accusait `report-template`, `execution-profile`,
+`gemini-key-health`, `memento-weight` et `serie-temporelle`, qui s'en servent pour calculer un
+CHEMIN. Un garde qui accuse à tort cesse d'être lu (leçon L4) — et celui-ci aurait répondu faux à
+la question même qui l'a fait naître.

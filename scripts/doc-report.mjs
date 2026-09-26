@@ -103,79 +103,79 @@ export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOUR
 // remise HTML actée). scriptPath : le script producteur, pour vérifier la décision "delivery_html"
 // (null quand aucun script unique ne produit ce registre, ex. les archives manuelles de simulation).
 export const REGISTRIES = [
-  { slug: "argus", label: "ARGUS", family: "Gardiens sacrés du code", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
-  { slug: "harmonia", label: "HARMONIA", family: "Gardiens sacrés du code", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
-  { slug: "axa-check", label: "AXA-CHECK", family: "Gardiens sacrés du code", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
-  { slug: "clean-dirty-old", label: "CLEAN-DIRTY-OLD", family: "Gardiens sacrés du code", path: "docs/clean-dirty-old/", decision: "texte", scriptPath: "scripts/clean-dirty-old.mjs" },
-  { slug: "always-new-code", label: "ALWAYS-NEW-CODE", family: "Gardiens sacrés du code", path: "docs/always-new-code/", decision: "texte", scriptPath: "scripts/always-new-code.mjs" },
-  { slug: "hyper-scan-checkpoint", label: "HYPER-SCAN-CHECKPOINT", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/hyper-scan-checkpoint/", decision: "texte", scriptPath: "scripts/hyper-scan-checkpoint.mjs" },
-  { slug: "check-level-target", label: "CHECK-LEVEL-TARGET", family: "Gouvernance interne", path: "docs/check-level-target/", decision: "texte", scriptPath: "scripts/check-level-target.mjs" },
-  { slug: "the-king", label: "THE-KING", family: "Gouvernance interne", path: "docs/the-king/", decision: "texte", scriptPath: "scripts/the-king.mjs" },
-  { slug: "ines-official", label: "INES-official", family: "Exceptionnel (page blanche / audit lourd)", path: "docs/ines-official/", decision: "texte", scriptPath: "scripts/ines-official.mjs" },
-  { slug: "smart-conso-api", label: "Smart Conso API", family: "Gouvernance interne", path: "docs/smart-conso-api/", decision: "texte", scriptPath: "scripts/smart-conso-api.mjs" },
-  { slug: "smart-conso-token", label: "SMART-CONSO-TOKEN", family: "Gouvernance interne", path: "docs/smart-conso-token/", decision: "texte", scriptPath: "scripts/smart-conso-token.mjs" },
-  { slug: "kpi", label: "Tableau de bord / KPI", family: "Simulation & qualité narrative", path: "docs/referentiel/kpi-rapports/", decision: "delivery_html", scriptPath: "scripts/kpi-report.mjs" },
-  { slug: "el-professor", label: "EL-PROFESSOR", family: "Simulation & qualité narrative", path: "docs/el-professor/", decision: "delivery_html", scriptPath: "scripts/el-professor.mjs" },
-  { slug: "memory-audit", label: "memory-audit", family: "Simulation & qualité narrative", path: "docs/memory-audit/", decision: "texte", scriptPath: "scripts/memento.mjs" },
-  { slug: "the-screener", label: "THE-SCREENER", family: "Simulation & qualité narrative", path: "docs/the-screener/", decision: "delivery_html", scriptPath: "scripts/the-screener-capture.mjs" },
-  { slug: "simulations", label: "Simulations (Article 18)", family: "Simulation & qualité narrative", path: "docs/simulations/", decision: "delivery_html", scriptPath: "scripts/le-regisseur.mjs" },
-  { slug: "the-final-judge", label: "THE-FINAL-JUDGE", family: "Audit indépendant", path: "docs/the-final-judge/", decision: "delivery_html", scriptPath: "scripts/the-final-judge.mjs" },
-  { slug: "the-deep-reader", label: "THE-DEEP-READER", family: "Audit indépendant", path: "docs/suivi/relectures-lourdes/", decision: "delivery_html", scriptPath: "scripts/the-deep-reader.mjs" },
-  { slug: "check-tasks-details", label: "check-tasks-details", family: "Coordination", path: "docs/check-tasks-details/", decision: "archived_html", scriptPath: "scripts/check-tasks-details.mjs" },
+  { slug: "argus", label: "ARGUS", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
+  { slug: "harmonia", label: "HARMONIA", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
+  { slug: "axa-check", label: "AXA-CHECK", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
+  { slug: "clean-dirty-old", label: "CLEAN-DIRTY-OLD", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/clean-dirty-old/", decision: "texte", scriptPath: "scripts/clean-dirty-old.mjs" },
+  { slug: "always-new-code", label: "ALWAYS-NEW-CODE", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/always-new-code/", decision: "texte", scriptPath: "scripts/always-new-code.mjs" },
+  { slug: "hyper-scan-checkpoint", label: "HYPER-SCAN-CHECKPOINT", family: "(f) ✨ Exceptionnel (page blanche / audit lourd)", path: "docs/hyper-scan-checkpoint/", decision: "texte", scriptPath: "scripts/hyper-scan-checkpoint.mjs" },
+  { slug: "check-level-target", label: "CHECK-LEVEL-TARGET", family: "(f) 👑 La Gouvernance Royale", path: "docs/check-level-target/", decision: "texte", scriptPath: "scripts/check-level-target.mjs" },
+  { slug: "the-king", label: "THE-KING", family: "(f) 👑 La Gouvernance Royale", path: "docs/the-king/", decision: "texte", scriptPath: "scripts/the-king.mjs" },
+  { slug: "ines-official", label: "INES-official", family: "(f) ✨ Exceptionnel (page blanche / audit lourd)", path: "docs/ines-official/", decision: "texte", scriptPath: "scripts/ines-official.mjs" },
+  { slug: "smart-conso-api", label: "Smart Conso API", family: "(f) 👑 La Gouvernance Royale", path: "docs/smart-conso-api/", decision: "texte", scriptPath: "scripts/smart-conso-api.mjs" },
+  { slug: "smart-conso-token", label: "SMART-CONSO-TOKEN", family: "(f) 👑 La Gouvernance Royale", path: "docs/smart-conso-token/", decision: "texte", scriptPath: "scripts/smart-conso-token.mjs" },
+  { slug: "kpi", label: "Tableau de bord / KPI", family: "(f) 🎬 La Suite Tarantino - Simulation & qualité narrative", path: "docs/referentiel/kpi-rapports/", decision: "delivery_html", scriptPath: "scripts/kpi-report.mjs" },
+  { slug: "el-professor", label: "EL-PROFESSOR", family: "(f) 🎬 La Suite Tarantino - Simulation & qualité narrative", path: "docs/el-professor/", decision: "delivery_html", scriptPath: "scripts/el-professor.mjs" },
+  { slug: "memory-audit", label: "memory-audit", family: "(f) 🎬 La Suite Tarantino - Simulation & qualité narrative", path: "docs/memory-audit/", decision: "texte", scriptPath: "scripts/memento.mjs" },
+  { slug: "the-screener", label: "THE-SCREENER", family: "(f) 🎬 La Suite Tarantino - Simulation & qualité narrative", path: "docs/the-screener/", decision: "delivery_html", scriptPath: "scripts/the-screener-capture.mjs" },
+  { slug: "simulations", label: "Simulations (Article 18)", family: "(f) 🎬 La Suite Tarantino - Simulation & qualité narrative", path: "docs/simulations/", decision: "delivery_html", scriptPath: "scripts/le-regisseur.mjs" },
+  { slug: "the-final-judge", label: "THE-FINAL-JUDGE", family: "(f) 🕵️ Les Agents Externes - Audit indépendant", path: "docs/the-final-judge/", decision: "delivery_html", scriptPath: "scripts/the-final-judge.mjs" },
+  { slug: "the-deep-reader", label: "THE-DEEP-READER", family: "(f) 🕵️ Les Agents Externes - Audit indépendant", path: "docs/suivi/relectures-lourdes/", decision: "delivery_html", scriptPath: "scripts/the-deep-reader.mjs" },
+  { slug: "check-tasks-details", label: "check-tasks-details", family: "(f) 👼 Les Anges de la coordination", path: "docs/check-tasks-details/", decision: "archived_html", scriptPath: "scripts/check-tasks-details.mjs" },
   // OÙ ON EN EST (2026-09-23) — troisième angle sur les mêmes tâches, à côté de la Ronde (rien
   // n'a-t-il dérivé ?) et de l'état des tâches (qu'est-ce qu'on fait maintenant ?) : celui-ci dit
   // ce qui a été FAIT et ce que le projet y a gagné. HTML archivé, comme ses deux voisins.
-  { slug: "ou-on-en-est", label: "Où on en est", family: "Coordination", path: "docs/ou-on-en-est/", decision: "archived_html", scriptPath: "scripts/ou-on-en-est.mjs" },
-  { slug: "le-coordinateur-catalogue", label: "Catalogue LE-COORDINATEUR", family: "Coordination", path: "docs/le-coordinateur-catalogue/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
-  { slug: "dream-team-photo", label: "Photo de la dream team", family: "Coordination", path: "docs/profil-utilisateur/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
-  { slug: "find-booster", label: "find-booster", family: "Outillage de navigation", path: "docs/find-booster/", decision: "texte", scriptPath: "scripts/find-booster.mjs" },
+  { slug: "ou-on-en-est", label: "Où on en est", family: "(f) 👼 Les Anges de la coordination", path: "docs/ou-on-en-est/", decision: "archived_html", scriptPath: "scripts/ou-on-en-est.mjs" },
+  { slug: "le-coordinateur-catalogue", label: "Catalogue LE-COORDINATEUR", family: "(f) 👼 Les Anges de la coordination", path: "docs/le-coordinateur-catalogue/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
+  { slug: "dream-team-photo", label: "Photo de la dream team", family: "(f) 👼 Les Anges de la coordination", path: "docs/profil-utilisateur/", decision: "delivery_html", scriptPath: "scripts/le-coordinateur.mjs" },
+  { slug: "find-booster", label: "find-booster", family: "(f) 🚀 Les Boosters de Navigation", path: "docs/find-booster/", decision: "texte", scriptPath: "scripts/find-booster.mjs" },
   // family corrigée le 2026-09-21 (tâche #290, écart réel trouvé en construisant
   // findGardiensMissingFromSource() ci-dessous) : "Qualité du code" datait d'avant la promotion de
   // CLONE-HUNTER en 5e Gardien sacré du code (AGENT_CATEGORIES, lib-shell.mjs) — jamais mise à jour
   // ici au moment de cette promotion, exactement le genre d'écart entre deux registres que
   // l'Article 2/13 interdit de laisser traîner une fois trouvé.
-  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "Gardiens sacrés du code", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
+  { slug: "clone-hunter", label: "CLONE-HUNTER", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/clone-hunter/", decision: "texte", scriptPath: "scripts/clone-hunter.mjs" },
   // 2026-09-22 : septième Gardien. Son registre n'archive que les passages PROFONDS (exceptionnels,
   // Article 23) — la couche légère, elle, ne produit qu'un avertissement post-commit sans fichier.
-  { slug: "safe-export", label: "SAFE-EXPORT", family: "Gardiens sacrés du code", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
-  { slug: "tool-learning", label: "TOOL-LEARNING", family: "Suite Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
+  { slug: "safe-export", label: "SAFE-EXPORT", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/safe-export/", decision: "texte", scriptPath: "scripts/safe-export.mjs" },
+  { slug: "tool-learning", label: "TOOL-LEARNING", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/tool-learning/", decision: "texte", scriptPath: "scripts/tool-learning.mjs" },
   // THE-EQUALIZER : texte, comme ses voisins de suite. Son verdict est relu par des outils (god,
   // la Ronde), jamais seulement par un humain devant un navigateur — un HTML le rendrait plus
   // joli et moins lisible par les autres.
-  { slug: "the-equalizer", label: "THE-EQUALIZER", family: "Suite Dette & Structure du code", path: "docs/the-equalizer/", decision: "texte", scriptPath: "scripts/the-equalizer.mjs" },
+  { slug: "the-equalizer", label: "THE-EQUALIZER", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/the-equalizer/", decision: "texte", scriptPath: "scripts/the-equalizer.mjs" },
   // Décision « texte » assumée : son rapport se lit en trois lignes dans le terminal au moment où
   // on a besoin de l'heure. Une page HTML pour dire l'heure serait une page qu'on n'ouvre jamais.
   // Décision « texte » assumée : un plan de renommage se lit ligne à ligne dans le terminal, juste
   // avant de toucher au dépôt, et se vérifie avec la commande jumelle juste après. Une page HTML
   // s'ouvrirait après coup, c'est-à-dire trop tard pour le geste qu'elle est censée encadrer.
-  { slug: "agent-des-noms", label: "AGENT DES NOMS", family: "Suite Dette & Structure du code", path: "docs/agent-des-noms/", decision: "texte", scriptPath: "scripts/agent-des-noms.mjs" },
-  { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "Gouvernance interne", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
-  { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "Suite Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
-  { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "Suite Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
-  { slug: "integration-outil", label: "integration-outil", family: "Suite Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
-  { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "Gouvernance interne", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
+  { slug: "agent-des-noms", label: "AGENT DES NOMS", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/agent-des-noms/", decision: "texte", scriptPath: "scripts/agent-des-noms.mjs" },
+  { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "(f) 👑 La Gouvernance Royale", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
+  { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
+  { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
+  { slug: "integration-outil", label: "integration-outil", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },
+  { slug: "objectifs-vs-resultats", label: "objectifs-vs-resultats", family: "(f) 👑 La Gouvernance Royale", path: "docs/objectifs-vs-resultats/", decision: "texte", scriptPath: "scripts/objectifs-vs-resultats.mjs" },
   // LE-CLASSIFICATEUR (2026-09-26, né de la scission de CASSANDRA). "archived_html" plutôt que
   // "delivery_html" : il ne produit pas un rapport de passage qu'on remettrait ensuite en HTML — il
   // produit une RÉFÉRENCE, dont la version HTML EST la version de remise, committée telle quelle.
   // C'est la demande explicite de l'utilisateur du 2026-09-26 : « ce doc doit m'être livré en HTML,
   // mais il peut être enregistré en txt dans les dossiers ».
-  { slug: "le-classificateur", label: "LE-CLASSIFICATEUR", family: "Gouvernance interne", path: "docs/le-classificateur/", decision: "archived_html", scriptPath: "scripts/le-classificateur.mjs" },
-  { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "Gouvernance interne", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
-  { slug: "ecotoken", label: "ecotoken", family: "Gouvernance interne", path: "docs/ecotoken/", decision: "texte", scriptPath: "scripts/ecotoken.mjs" },
+  { slug: "le-classificateur", label: "LE-CLASSIFICATEUR", family: "(f) 👑 La Gouvernance Royale", path: "docs/le-classificateur/", decision: "archived_html", scriptPath: "scripts/le-classificateur.mjs" },
+  { slug: "cassandra-rh", label: "CASSANDRA-RH", family: "(f) 👑 La Gouvernance Royale", path: "docs/cassandra-rh/", decision: "delivery_html", scriptPath: "scripts/cassandra-rh.mjs" },
+  { slug: "ecotoken", label: "ecotoken", family: "(f) 👑 La Gouvernance Royale", path: "docs/ecotoken/", decision: "texte", scriptPath: "scripts/ecotoken.mjs" },
   // 9 nouveaux registres ajoutés le 2026-09-21 (règle générale : « tous les outils qui interviennent
   // lors de la Ronde DOIVENT produire un rapport txt au minimum ») — les items de CIRCLE_ITEMS sans
   // outil déjà enregistré ci-dessus reçoivent chacun leur propre dossier (cf.
   // circle-tasks.mjs::CIRCLE_REPORT_FOLDERS, recordCircleItemReport()). Tous "texte" : de simples
   // signaux, jamais une remise HTML.
-  { slug: "html-wiring-check", label: "html-wiring-check (Ronde)", family: "Coordination", path: "docs/html-wiring-check/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "ecotoken-ronde", label: "Scan ecotoken produit pendant une Ronde (item ecotoken-scan)", family: "Coordination", path: "docs/ecotoken/ronde/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "suivi-open-tasks", label: "Tâche ouverte la plus ancienne (Ronde)", family: "Coordination", path: "docs/suivi-open-tasks/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "chantier-preliminaire", label: "Fraîcheur fichiers préliminaires (Ronde)", family: "Coordination", path: "docs/chantier-preliminaire/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "idee-a-trancher", label: "Idées en attente de décision (Ronde)", family: "Coordination", path: "docs/idee-a-trancher/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "tool-brain", label: "tool-brain (Ronde)", family: "Coordination", path: "docs/tool-brain/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "network-check", label: "network-check-run (Ronde)", family: "Coordination", path: "docs/network-check/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "relecture-referentiel", label: "Relecture référentiel (Ronde)", family: "Coordination", path: "docs/relecture-referentiel/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
-  { slug: "relecture-correctifs", label: "Relecture correctifs (Ronde)", family: "Coordination", path: "docs/relecture-correctifs/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "html-wiring-check", label: "html-wiring-check (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/html-wiring-check/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "ecotoken-ronde", label: "Scan ecotoken produit pendant une Ronde (item ecotoken-scan)", family: "(f) 👼 Les Anges de la coordination", path: "docs/ecotoken/ronde/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "suivi-open-tasks", label: "Tâche ouverte la plus ancienne (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/suivi-open-tasks/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "chantier-preliminaire", label: "Fraîcheur fichiers préliminaires (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/chantier-preliminaire/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "idee-a-trancher", label: "Idées en attente de décision (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/idee-a-trancher/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "tool-brain", label: "tool-brain (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/tool-brain/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "network-check", label: "network-check-run (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/network-check/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "relecture-referentiel", label: "Relecture référentiel (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/relecture-referentiel/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
+  { slug: "relecture-correctifs", label: "Relecture correctifs (Ronde)", family: "(f) 👼 Les Anges de la coordination", path: "docs/relecture-correctifs/", decision: "texte", scriptPath: "scripts/circle-tasks.mjs" },
 ];
 
 // findEngineCodeInRegistries() (2026-09-21, demande explicite de l'utilisateur après avoir repéré

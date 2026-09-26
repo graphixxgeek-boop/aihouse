@@ -987,6 +987,16 @@ export {
   slugsParScript,
   rangDuFichier,
   croiserTypeEtRang,
+  // Nés le 2026-09-26 de sa question sur le document HTML, relayés ici comme tous les noms de la
+  // scission : un appelant écrit avant elle ne doit jamais avoir à savoir que le rangement a
+  // déménagé (c'est le contrat de la scission, pas une commodité).
+  bibliothequesLancables,
+  porteDansLeCode,
+  quiLappelle,
+  indiceEnIcones,
+  emojiDuLibelle,
+  ICONE_PAR_TYPE,
+  FAMILLE_HORS_AGENCE,
 } from "./le-classificateur.mjs";
 import {
   MOTIF_PORTE_CLI,

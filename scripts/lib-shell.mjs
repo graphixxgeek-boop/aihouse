@@ -129,101 +129,101 @@ export const AGENT_CATEGORIES = {
   // Membre, jamais Gardien sacré : il scanne un DOCUMENT, pas la qualité du code — le premier
   // volet du critère double n'est donc pas rempli, même si le second (gratuit à chaque commit) l'est.
   // Membre, jamais Gardien sacré : il analyse un DOCUMENT, pas la qualité du code.
-  "abraham-les-references": "Membre — Suite Dette & Structure du code",
-  "moise-tables-de-loi": "Membre — Suite Dette & Structure du code",
+  "abraham-les-references": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
+  "moise-tables-de-loi": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
-  "cassandra-rh": "Agent Cadre — Gouvernance interne",
+  "cassandra-rh": "Agent Cadre — (f) 👑 La Gouvernance Royale",
   // Né le 2026-09-26 de la scission de CASSANDRA : elle juge les gens, lui range les choses.
-  "le-classificateur": "Membre — Gouvernance interne",
-  "le-coordinateur": "Agent Cadre — Coordination",
+  "le-classificateur": "Membre premium — (f) 👑 La Gouvernance Royale",
+  "le-coordinateur": "Agent Cadre — (f) 👼 Les Anges de la coordination",
   // Les Gardiens sacrés du code (Article 20 — tourne automatiquement à chaque commit)
-  argus: "Gardien sacré du code — Gardiens sacrés du code",
-  "safe-export": "Gardien sacré du code — Gardiens sacrés du code",
-  harmonia: "Gardien sacré du code — Gardiens sacrés du code",
-  "axa-check": "Gardien sacré du code — Gardiens sacrés du code",
-  "clean-dirty-old": "Gardien sacré du code — Gardiens sacrés du code",
-  "clone-hunter": "Gardien sacré du code — Gardiens sacrés du code",
+  argus: "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
+  "safe-export": "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
+  harmonia: "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
+  "axa-check": "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
+  "clean-dirty-old": "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
+  "clone-hunter": "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
   // ALWAYS-NEW-CODE (2026-09-21) : sixième Gardien, couche LÉGÈRE seulement (recommendZone() +
   // addendaSignal()/churnSignal(), zéro raisonnement) — le vrai zoom profond, qui exige un
   // raisonnement payant, reste explicitement exclu du statut de Gardien (cf.
   // docs/referentiel/organisation-agence.md §3, critère double : c'est le LIVRABLE qui exige un
   // raisonnement payant qui ne peut jamais devenir un Gardien, jamais le nom de l'outil dans son
   // ensemble — sa couche légère satisfait le critère double exactement comme les 5 autres).
-  "always-new-code": "Gardien sacré du code — Gardiens sacrés du code",
+  "always-new-code": "Gardien sacré du code — (f) 🛡️ Les Gardiens Sacrés du Code",
   // Suite Suivi-Conso
-  "smart-conso-api": "Membre — Gouvernance interne",
-  "smart-conso-token": "Membre — Gouvernance interne",
-  "objectifs-vs-resultats": "Membre — Gouvernance interne",
-  "ecotoken": "Membre — Gouvernance interne",
+  "smart-conso-api": "Membre premium — (f) 👑 La Gouvernance Royale",
+  "smart-conso-token": "Membre premium — (f) 👑 La Gouvernance Royale",
+  "objectifs-vs-resultats": "Membre premium — (f) 👑 La Gouvernance Royale",
+  "ecotoken": "Membre premium — (f) 👑 La Gouvernance Royale",
   // Suite Audit Simulation
-  "el-professor": "Membre — Simulation & qualité narrative",
-  "the-screener": "Membre — Simulation & qualité narrative",
-  "memory-audit": "Membre — Simulation & qualité narrative",
+  "el-professor": "Membre premium — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
+  "the-screener": "Membre premium — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
+  "memory-audit": "Membre premium — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
   // Suite Audit lourd
-  "the-final-judge": "Membre — Audit indépendant",
-  "the-deep-reader": "Membre — Audit indépendant",
-  "hyper-scan-checkpoint": "Membre — Exceptionnel (page blanche / audit lourd)",
+  "the-final-judge": "Membre premium — (f) 🕵️ Les Agents Externes - Audit indépendant",
+  "the-deep-reader": "Membre premium — (f) 🕵️ Les Agents Externes - Audit indépendant",
+  "hyper-scan-checkpoint": "Membre premium — (f) ✨ Exceptionnel (page blanche / audit lourd)",
   // Suite Dette & Structure du code (ALWAYS-NEW-CODE en est retiré le 2026-09-21 — promu Gardien
   // sacré du code ci-dessus, jamais listé deux fois)
-  "find-booster": "Membre — Outillage de navigation",
+  "find-booster": "Membre premium — (f) 🚀 Les Boosters de Navigation",
   // tool-learning (2026-09-22) : rangé dans la Suite Dette & Structure du code parce que c'est de
   // la dette qu'il parle — la dette d'un outil qui n'apprend pas. Volontairement PAS un Gardien :
   // il juge une TRAJECTOIRE, et une trajectoire ne se mesure pas à chaque commit (trois passages
   // minimum avant de conclure), donc il a sa place dans un rythme périodique.
-  "tool-learning": "Membre — Suite Dette & Structure du code",
+  "tool-learning": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // THE-EQUALIZER (2026-09-23) : Membre, jamais Gardien sacré. Il ne remplit AUCUN des deux volets du
   // critère — il ne scanne rien par lui-même (il rassemble ce que les contrôleurs ont déjà dit) et
   // il ne tourne pas à chaque commit (un verdict d'ensemble à chaque commit serait du bruit).
-  "the-equalizer": "Membre — Suite Dette & Structure du code",
+  "the-equalizer": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // Membre, jamais Gardien sacré : il ne scanne aucune qualité de code — il rend l'heure et
   // garde la mémoire des estimations. Le premier volet du critère double n'est pas rempli.
-  "agent-du-temps": "Membre — Gouvernance interne",
-  "agent-des-noms": "Membre — Suite Dette & Structure du code",   // Membre et jamais Gardien sacré : son scan ne tourne pas à CHAQUE commit — il répond à un ÉVÉNEMENT, un renommage envisagé
+  "agent-du-temps": "Membre premium — (f) 👑 La Gouvernance Royale",
+  "agent-des-noms": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",   // Membre et jamais Gardien sacré : son scan ne tourne pas à CHAQUE commit — il répond à un ÉVÉNEMENT, un renommage envisagé
   // integration-outil (2026-09-22) : Membre, jamais Gardien. Il ne scanne pas la qualité du code et
   // ne tourne pas à chaque commit — les deux volets du critère d'appartenance, dont aucun n'est
   // facultatif (Article 20). Il répond à la demande, avant de faire entrer un outil.
-  "integration-outil": "Membre — Suite Dette & Structure du code",
+  "integration-outil": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // La Cour du Roi
-  "ines-official": "Membre — Exceptionnel (page blanche / audit lourd)",
-  "the-king": "Membre — Gouvernance interne",
-  "check-tasks-details": "Membre — Coordination",
+  "ines-official": "Membre premium — (f) ✨ Exceptionnel (page blanche / audit lourd)",
+  "the-king": "Membre premium — (f) 👑 La Gouvernance Royale",
+  "check-tasks-details": "Membre premium — (f) 👼 Les Anges de la coordination",
   // Suite Orientation (2026-09-22, calibrage explicite de l'utilisateur). Trois membres certifiés
   // n'appartenaient à AUCUNE suite depuis leur certification — un vrai trou trouvé en construisant
   // l'organigramme de CASSANDRA, jamais une décision : ils ressortaient en « catégorie non
   // répertoriée ». Ils forment bien une famille cohérente, distincte de celles qui produisent un
   // constat : ceux qui disent QUOI faire ensuite et AVEC QUOI, jamais ce qu'il faut en penser.
-  "circle-tasks": "Membre — Coordination",
-  "process-simulation-guardian": "Membre — Simulation & qualité narrative",
-  "angel-of-ia-process": "Membre — Coordination",
-  "data-archangel": "Membre — Coordination",
-  "pure-gold-unity": "Membre — Coordination",
-  "god-of-all-process": "Membre — Coordination",
-  "tool-brain": "Membre — Coordination",
-  "find-deep-booster": "Membre — Outillage de navigation",
+  "circle-tasks": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "process-simulation-guardian": "Membre premium — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
+  "angel-of-ia-process": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "data-archangel": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "pure-gold-unity": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "god-of-all-process": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "tool-brain": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "find-deep-booster": "Membre premium — (f) 🚀 Les Boosters de Navigation",
   // Les Agents Spéciaux
-  "check-level-target": "Membre — Gouvernance interne",
+  "check-level-target": "Membre premium — (f) 👑 La Gouvernance Royale",
   // SEULE famille de ce tableau qui ne soit PAS dérivée d'un registre doc-report : Smart Breaker
   // n'en possède aucun (son domaine est la PRODUCTION, pas un rapport de travail). Rangé ici avec
   // AGENT-DU-TEMPS parce que les deux pilotent une ressource qui s'épuise — proposé par l'agent le
   // 2026-09-25, reste à confirmer par l'utilisateur, à qui revient tout nommage (#754).
-  "smart-breaker": "Membre — Gouvernance interne",
+  "smart-breaker": "Membre premium — (f) 👑 La Gouvernance Royale",
   // LES 17 QUI REJOIGNENT L'ÉQUIPE (2026-09-26, ses trois décisions sur les 22 Postulants). Ils
   // étaient documentés et lançables depuis des semaines, et absents du seul registre qui dit qui
   // fait partie de l'équipe — une file d'attente que personne ne regardait. Deux rangs, parce que
   // deux situations : ceux dont la valeur est d'APPELER ce que les autres savent (Membre classique,
   // deux obligations), et ceux qui portent un JUGEMENT propre au projet (Membre, poste complet).
-  "doc-report": "Membre classique — Coordination",
-  "kpi-report": "Membre classique — Gouvernance interne",
-  "tool-usage": "Membre classique — Gouvernance interne",
-  "find-brain": "Membre classique — Outillage de navigation",
-  "le-regisseur": "Membre classique — Simulation & qualité narrative",
-  "route-booster": "Membre classique — Outillage de navigation",
-  criticite: "Membre classique — Coordination",
-  "messages-courts": "Membre classique — Coordination",
-  "modes-de-travail": "Membre classique — Coordination",
-  "ou-on-en-est": "Membre classique — Coordination",
-  "rapport-gros-prompt": "Membre classique — Coordination",
-  "check-spirit": "Membre — Simulation & qualité narrative",
+  "doc-report": "Membre classique — (f) 👼 Les Anges de la coordination",
+  "kpi-report": "Membre classique — (f) 👑 La Gouvernance Royale",
+  "tool-usage": "Membre classique — (f) 👑 La Gouvernance Royale",
+  "find-brain": "Membre classique — (f) 🚀 Les Boosters de Navigation",
+  "le-regisseur": "Membre classique — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
+  "route-booster": "Membre classique — (f) 🚀 Les Boosters de Navigation",
+  criticite: "Membre classique — (f) 👼 Les Anges de la coordination",
+  "messages-courts": "Membre classique — (f) 👼 Les Anges de la coordination",
+  "modes-de-travail": "Membre classique — (f) 👼 Les Anges de la coordination",
+  "ou-on-en-est": "Membre classique — (f) 👼 Les Anges de la coordination",
+  "rapport-gros-prompt": "Membre classique — (f) 👼 Les Anges de la coordination",
+  "check-spirit": "Membre premium — (f) 🎬 La Suite Tarantino - Simulation & qualité narrative",
   // check-profile GELÉ hors de l'équipe le 2026-09-26, et c'est un doute réel, pas une prudence :
   // son propre en-tête, daté du 2026-09-17, dit que « le mécanisme réel n'existe pas encore dans le
   // code ». Or ce mécanisme existe désormais (62 mentions du dossier dans route.ts). Soit l'outil a
@@ -234,12 +234,12 @@ export const AGENT_CATEGORIES = {
   // Redescendu de « Membre » à « Membre classique » le 2026-09-26, sur sa relecture : 110 lignes
   // qui vérifient qu'une fiche a bien sa ligne d'index. C'est un GARDE-FOU MÉCANIQUE, pas un
   // jugement (Article 20bis) — je l'avais promu en bloc avec cinq autres sans les relire un par un.
-  "check-profil-utilisateur": "Membre classique — Coordination",
-  "check-suivi-fidelity": "Membre — Coordination",
-  "circle-process-guardian": "Membre — Coordination",
+  "check-profil-utilisateur": "Membre classique — (f) 👼 Les Anges de la coordination",
+  "check-suivi-fidelity": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "circle-process-guardian": "Membre premium — (f) 👼 Les Anges de la coordination",
   // Même correction, même raison : 137 lignes qui ORCHESTRENT le mode nuit — sa valeur est
   // d'appeler les autres, ce qui est la définition exacte du rang classique.
-  "the-ghost": "Membre classique — Gouvernance interne",
+  "the-ghost": "Membre classique — (f) 👑 La Gouvernance Royale",
 };
 
 // sansAccents() (2026-09-23) — une SEULE normalisation, partagée, jamais deux qui divergeraient.
