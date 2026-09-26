@@ -90,6 +90,16 @@ dans `scripts/check-house.mjs`. Le contrôleur, lui, ne définit rien — il com
 
 4. **Le changelog** — une entrée dans `CIRCLE_ITEMS_CHANGELOG` disant POURQUOI cet item existe. Le
    pourquoi n'est déductible d'aucun diff : sans cette ligne, il est perdu le jour même.
+   **Et il faut aussi vérifier que l'outil n'est pas DÉJÀ EXCLU de la Ronde** (ajouté le 2026-09-26,
+   en ajoutant l'item `safe-export-kits`). `CIRCLE_AUTO_COVERED_REGISTRIES` peut déjà porter une
+   ligne d'exclusion pour cet outil : si on ajoute l'item sans la retirer, deux tables se
+   contredisent en silence, et c'est l'exclusion qui gagne à la lecture humaine. **Le cas réel, et
+   c'est la leçon à emporter** : SAFE-EXPORT était exclu au motif « Gardien sacré (couche légère) :
+   tourne à CHAQUE commit, jamais un item de Ronde ». Exact pour sa couche légère — raisons perdues,
+   fuites de spécificité — et faux de tout le reste : la mesure des kits d'export ne tournait à aucun
+   commit, et personne ne la réclamait jamais. **Une exclusion juste sur UNE couche d'un outil finit
+   par le dispenser de TOUTES.** Avant d'écrire l'item, lire l'exclusion s'il y en a une, et la
+   retirer ou la réécrire — jamais la laisser dire le contraire de ce qu'on vient de câbler.
 5. **Les comptes figés** — deux assertions de `check-house.mjs` citent le nombre d'items. Elles
    refusent le commit, donc elles sont déjà protégées ; ce raccordement existe pour que le plan le
    DISE avant la première exécution rouge, plutôt qu'après.

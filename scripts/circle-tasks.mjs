@@ -751,6 +751,15 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // une bibliothèque pour qu'elle raconte sa semaine.
   "serie-temporelle": "Mécanisme PARTAGÉ d'historisation, appelé par les outils qui déposent une série — il n'a aucun passage à lui. Ce que la Ronde doit lire, ce sont les TENDANCES dans les rapports de chaque outil, jamais le mécanisme qui les calcule.",
   "tool-usage": "Le compteur tourne à CHAQUE commande d'outil, donc bien plus souvent qu'une Ronde. Son état est déjà rapporté périodiquement par l'item `tool-brain-report`, qui lit ce compteur — un second item ferait deux verdicts sur la même donnée.",
+  // LES TROIS REGISTRES NÉS DU COMBLEMENT DES KITS D'EXPORT (2026-09-26). Chacun est apparu parce
+  // que la pièce « registre » du kit lui manquait, et le garde-fou a mordu à la seconde où le
+  // fichier est arrivé sur le disque — exactement son travail. Aucun des trois n'appelle un item de
+  // Ronde, et la raison est la même pour les trois sous des formes différentes : ils ne connaissent
+  // pas de RYTHME PÉRIODIQUE. Un item qui les convoquerait tous les quinze jours rendrait
+  // invariablement « rien de neuf », c'est-à-dire du bruit qui apprend à sauter la Ronde.
+  "report-template": "Bibliothèque de gabarit APPELÉE par les autres outils, sans ligne de commande : personne ne la « lance », donc elle n'a aucun passage à rapporter. Ce qu'elle dépose (l'identité de l'agent, relue par tous les rapports) est vérifié à CHAQUE rapport produit, bien plus souvent qu'une Ronde — et god-of-all-process signale déjà une identité manquante.",
+  "check-house": "LE FILET DE SÉCURITÉ LUI-MÊME : il tourne à chaque commit via le crochet pre-commit et REFUSE le commit s'il échoue. Un item de Ronde qui demanderait « et si on lançait les tests ? » arriverait toujours après des dizaines de passages déjà faits — le contraire exact d'un signal utile.",
+  "circle-tasks": "IL EST LA RONDE : c'est lui qui définit CIRCLE_ITEMS. Un item lui demandant de se vérifier serait circulaire, et ce n'est pas un jeu de mots — c'est circle-process-guardian, un contrôleur de process extérieur, qui juge son déroulé, précisément parce qu'un juge et son sujet ne peuvent pas être le même fichier.",
   // LES 17 QUI ONT REJOINT L'ÉQUIPE LE 2026-09-26, et pourquoi la Ronde ne leur doit pas un item
   // chacun. Le garde-fou a mordu à la seconde où ils sont entrés au registre, et il avait raison de
   // poser la question : rejoindre l'équipe, c'est être regardé périodiquement. La réponse suit le

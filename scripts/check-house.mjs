@@ -7619,6 +7619,30 @@ async function testKitsDExport() {
   assert.match(aveugle.detail.find((d) => d.cle === 'dependances').pourquoi, /jamais « aucune dépendance »/, 'and says so in words, because "nothing to take along" would send the tool out without what makes it start');
   assert.equal(aveugle.complet, true, 'while the pieces it COULD check still count — an unmeasurable piece must not be scored as a failure either (that would be the symmetric lie)');
 
+  // LES DOCUMENTS QUI NE PORTENT PAS LE NOM DE LEUR SCRIPT (2026-09-26). Le pire genre de faux
+  // positif : il ne fait pas perdre une information, il fait PRODUIRE UN DOUBLON — et un doublon de
+  // document divergera du premier au premier changement. Trois cas réels, tous anciens et tous
+  // légitimes : kpi-report s'appelle « Tableau de bord », check-gemini-quota s'appelle « Smart
+  // Breaker », the-screener-capture est le mécanisme de capture de THE-SCREENER.
+  const { aliasDocumentaires } = se;
+  const tableFaite = [
+    '| Nom | Ce que c\'est | Architecture | Instanciation | Script |',
+    '|---|---|---|---|---|',
+    '| Tableau de bord | le KPI | `docs/tableau-de-bord-blueprint.md` | `docs/referentiel/tableau-de-bord.md` | `scripts/kpi-report.mjs` |',
+  ].join('\n');
+  const carte = aliasDocumentaires({ readFileImpl: () => tableFaite });
+  assert.equal(carte.get('scripts/kpi-report.mjs').blueprint, 'docs/tableau-de-bord-blueprint.md', 'MUST CATCH: the declared document path is read from the inventory table, never derived from the script filename');
+  assert.equal(carte.get('scripts/kpi-report.mjs').fiche, 'docs/referentiel/tableau-de-bord.md', 'both columns are read, not only the first — a tool whose fiche alone is renamed would otherwise still be asked for a duplicate');
+  assert.equal(aliasDocumentaires({ readFileImpl: () => 'un document sans la moindre table' }), null, 'MUST LET PASS: no table at all yields null, so the caller falls back to deriving from the filename — never an empty map that would read as "no alias exists"');
+  assert.equal(aliasDocumentaires({ readFileImpl: () => { throw new Error('illisible'); } }), null, 'and an unreadable inventory does the same rather than crashing the whole measurement');
+  assert.equal(aliasDocumentaires({ readFileImpl: () => '| Nom | Quoi | rien | rien | rien |' }), null, 'a row with no backticked script path is not an alias — it must never be half-read into a broken entry, and a table that yields nothing usable reads as "unparsed", never as "no alias exists"');
+
+  // EN DIRECT CONTRE LE VRAI INVENTAIRE (Article 25) : c'est lui qui a produit les trois faux
+  // positifs, et c'est lui seul qui peut dire qu'ils sont refermés.
+  const carteReelle = aliasDocumentaires();
+  assert.ok(carteReelle && carteReelle.size > 30, `the real CLAUDE.md inventory must actually parse (currently ${carteReelle?.size ?? 0} rows) — a table that stops parsing would silently re-open the three false positives`);
+  assert.equal(carteReelle.get('scripts/check-gemini-quota.mjs').fiche, 'docs/referentiel/smart-breaker.md', 'Smart Breaker keeps its nickname in the documents and its technical name on disk — the measurement must follow the declaration, never the filename');
+
   // NON MESURABLE au niveau du parc.
   assert.match(formatKitsLines(mesurerLesKits({ vitalite: null }))[0], /PAS MESURÉ/, 'without the vitality of the fleet, the kits cannot be measured at all — and it says so rather than printing an empty table that reads as "no kit due"');
 

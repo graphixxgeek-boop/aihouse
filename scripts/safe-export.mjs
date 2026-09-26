@@ -1418,7 +1418,51 @@ export function dependancesInternes(source = "") {
   return [...new Set([...String(source).matchAll(MOTIF_IMPORT_LOCAL)].map((m) => `scripts/${m[1]}`))].sort();
 }
 
-export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT, exemptes = EXEMPTES_DU_KIT } = {}) {
+// ══════════════════════════════════════════════════════════════════════════
+// LES DOCUMENTS QUI NE PORTENT PAS LE NOM DE LEUR SCRIPT (2026-09-26)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LE DÉFAUT QUE CETTE FONCTION CORRIGE, ET IL RÉCLAMAIT DU TRAVAIL DÉJÀ FAIT. La mesure dérivait
+// le chemin des documents du NOM DU FICHIER (`scripts/x.mjs` → `docs/x-blueprint.md`). Or plusieurs
+// outils de ce dépôt portent un nom d'usage différent de leur nom de fichier, pour des raisons
+// toutes légitimes et toutes anciennes : `kpi-report.mjs` s'appelle « Tableau de bord »,
+// `check-gemini-quota.mjs` s'appelle « Smart Breaker », `the-screener-capture.mjs` est le mécanisme
+// de capture de THE-SCREENER. Leurs documents existent, complets, depuis des semaines.
+//
+// La mesure réclamait donc la création de trois blueprints et trois fiches qui EXISTENT DÉJÀ. C'est
+// le pire genre de faux positif : il ne fait pas perdre une information, il fait produire un
+// doublon — et un doublon de document divergera du premier au premier changement.
+//
+// POURQUOI ON LIT LA TABLE PLUTÔT QUE D'ÉCRIRE UNE LISTE D'ALIAS (Article 24). L'inventaire
+// documentaire de CLAUDE.md porte déjà, colonne par colonne, le script et ses deux documents. Une
+// liste d'alias recopiée ici dirait la même chose une seconde fois et se périmerait au premier
+// renommage — exactement la dette que l'Article 24 interdit. On LIT la table ; elle est la
+// déclaration, ce fichier n'en est que le lecteur.
+//
+// CE QU'ELLE NE FAIT PAS : elle n'invente aucun chemin. Un script absent de la table garde la
+// dérivation par son nom, qui est le cas majoritaire et reste le comportement par défaut.
+export const MOTIF_LIGNE_INVENTAIRE = /^\|(.+)\|\s*$/;
+export function aliasDocumentaires({ root = ROOT, readFileImpl = readFileSync, fichier = "CLAUDE.md" } = {}) {
+  let texte = "";
+  try { texte = readFileImpl(join(root, fichier), "utf8"); } catch { return null; }
+  const carte = new Map();
+  for (const ligne of String(texte).split("\n")) {
+    if (!ligne.startsWith("| ") || !ligne.includes("`scripts/")) continue;
+    const cellules = ligne.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+    if (cellules.length < 5) continue;
+    const script = /`([^`]+)`/.exec(cellules[4]);
+    if (!script) continue;
+    const blueprint = /`([^`]+)`/.exec(cellules[2]);
+    const fiche = /`([^`]+)`/.exec(cellules[3]);
+    carte.set(script[1], { blueprint: blueprint?.[1] ?? null, fiche: fiche?.[1] ?? null });
+  }
+  // UNE TABLE VIDE N'EST JAMAIS UNE TABLE SANS ALIAS (leçons L5/L11) : si le parseur ne trouve plus
+  // une seule ligne, c'est le format de la table qui a changé, pas les alias qui ont disparu. On
+  // rend null, et l'appelant retombe sur la dérivation par le nom plutôt que sur un silence.
+  return carte.size ? carte : null;
+}
+
+export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT, exemptes = EXEMPTES_DU_KIT, aliasImpl = undefined } = {}) {
   const kit = kitAttendu(niveauVitalite, { niveaux });
   if (!kit) return { mesurable: false, pourquoi: `aucun niveau de kit ne correspond à la vitalité « ${niveauVitalite} » — un niveau de vitalité sans kit rendrait l'outil invisible à l'export sans que personne ne le voie` };
   // L'EXEMPTION EST UN ÉTAT À PART, jamais un kit complet par défaut : un fichier dispensé et un
@@ -1427,6 +1471,7 @@ export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = ex
   const dispense = exemptionDuKit(ligne.chemin, { exemptes });
   if (dispense) return { mesurable: true, exempte: true, pourquoi: dispense.pourquoi, niveau: kit.cle, icone: kit.icone, vitalite: niveauVitalite, detail: [], manquantes: [], complet: true, taux: null };
   const bases = basesDuChemin(ligne.chemin);
+  const alias = aliasImpl === undefined ? aliasDocumentaires({ root, readFileImpl }) : aliasImpl;
   let source = null;
   try { source = readFileImpl(join(root, ligne.chemin), "utf8"); } catch { /* voir ci-dessous */ }
   const detail = [];
@@ -1451,7 +1496,11 @@ export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = ex
     }
     // La pièce compte dès qu'UNE des orthographes existe ; le chemin rapporté est celui qui a
     // répondu, ou le premier essayé quand aucune n'existe — pour que « à créer » nomme une cible.
-    const essais = bases.map((b) => p.chemin(b, ligne));
+    // LE CHEMIN DÉCLARÉ PASSE EN PREMIER : un outil dont le document porte un autre nom que son
+    // fichier (Tableau de bord, Smart Breaker, THE-SCREENER) se verrait sinon réclamer un doublon
+    // de ce qu'il possède déjà. Il s'ajoute aux orthographes dérivées, il ne les remplace pas.
+    const declare = alias?.get(ligne.chemin)?.[p.cle] ?? null;
+    const essais = [...(declare ? [declare] : []), ...bases.map((b) => p.chemin(b, ligne))];
     const trouve = essais.find((c) => exists(join(root, c)));
     detail.push({ cle, quoi: p.quoi, chemin: trouve ?? essais[0], essais, present: Boolean(trouve) });
   }
