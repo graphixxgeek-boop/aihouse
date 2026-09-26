@@ -859,13 +859,42 @@ export function findReportingToolsMissingFromCircle(categories = AGENT_CATEGORIE
   });
 }
 
-export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_ITEMS) {
-  const registrySlugs = [...new Set(
-    [...(existingPaths || [])]
+// LE GARDE-FOU LISAIT UNE CONVENTION DE CHEMIN, PAS LE REGISTRE (corrigé le 2026-09-26, tâche #954,
+// sur sa demande : « si un rapport est créé, que je demande qu'il soit dans circle, mais que ce
+// n'est pas écrit dans les process : la règle va se perdre et le rapport ne sortira pas à circle »).
+//
+// CE QU'IL FAISAIT : il balayait le disque et ne retenait que les chemins de la forme
+// `docs/<slug>/index.md`. **Trois registres déclarés par doc-report ne peuvent structurellement pas
+// prendre cette forme** — `docs/referentiel/kpi-rapports/`, `docs/suivi/relectures-lourdes/`,
+// `docs/ecotoken/ronde/` — donc le garde-fou ne les a JAMAIS confrontés à la Ronde. Son vert les
+// concernant ne voulait rien dire : il ne disait pas « ils sont couverts », il disait « je ne les
+// ai pas regardés », et les deux se ressemblent trait pour trait (leçon L5).
+//
+// AUCUN RAPPORT N'ÉTAIT PERDU LE JOUR DE LA CORRECTION, vérifié un par un : les trois sont bien
+// couverts par un item. **C'est une chance, pas une garantie** — c'est très exactement la situation
+// qu'il décrit, un rapport qui pourrait ne jamais sortir à la Ronde sans que rien ne le dise.
+//
+// CE QU'IL FAIT MAINTENANT : il confronte AUSSI la liste DÉCLARÉE des registres (doc-report), quel
+// que soit leur chemin. On lit le registre au lieu de deviner sa forme (Article 24). Le balayage du
+// disque reste, parce qu'un dossier créé sans être déclaré doit continuer d'être vu : les deux
+// sources se complètent, aucune ne remplace l'autre.
+export function findRegistriesMissingFromCircle(existingPaths, items = CIRCLE_ITEMS, { declares = null, dossiers = CIRCLE_REPORT_FOLDERS } = {}) {
+  // UN REGISTRE QUI EST LE DOSSIER DE DÉPÔT D'UN ITEM EST COUVERT PAR CET ITEM, quel que soit son
+  // nom. Premier vrai cas, trouvé par l'élargissement lui-même : `ecotoken-ronde`
+  // (`docs/ecotoken/ronde/`) est l'endroit où l'item `ecotoken-scan` dépose ses rapports — les deux
+  // slugs ne se contiennent pas, et le rapprochement par le nom concluait donc à un trou.
+  // On rapproche par le CHEMIN, qui est le lien réel, plutôt que par une ressemblance de libellé.
+  const cheminsDesItems = new Set(Object.values(dossiers ?? {}).map((d) => String(d).replace(/\/+$/, "")));
+  const registrySlugs = [...new Set([
+    ...[...(existingPaths || [])]
       .map((p) => p.match(/^docs\/([a-z0-9-]+)\/index\.md$/))
       .filter(Boolean)
       .map((m) => m[1]),
-  )];
+    // Les registres DÉCLARÉS, par leur slug, quel que soit l'endroit où ils vivent.
+    ...(declares ?? [])
+      .filter((r) => !cheminsDesItems.has(String(r?.path ?? "").replace(/\/+$/, "")))
+      .map((r) => String(r?.slug ?? "")).filter(Boolean),
+  ])];
   // Comparaison bidirectionnelle par id (jamais un texte joint) : un registre plus court que son
   // item ("profil" ⊂ "profil-utilisateur") ou plus long ("always-new-code" ⊂
   // "always-new-code-signal") doit matcher dans les deux sens, jamais un seul.
@@ -1614,7 +1643,7 @@ export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_I
   return renderHtmlReport({ title: "CIRCLE-TASKS — récapitulatif de la Ronde", dateLabel: dateLabel ?? new Date().toISOString(), blocks });
 }
 
-function main() {
+async function main() {
   printReliabilityNotice("circle-tasks");
   recordCliUsage("circle-tasks");
   const read = (p) => (existsSync(`${ROOT}${p}`) ? readFileSync(`${ROOT}${p}`, "utf8") : "");
@@ -1656,7 +1685,16 @@ function main() {
     }
   }
   const rootNoSlash = ROOT.replace(/\/$/, "");
-  const missingRegistries = findRegistriesMissingFromCircle(walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash));
+  // LES REGISTRES DÉCLARÉS SONT LUS CHEZ CELUI QUI LES DÉCLARE (2026-09-26, tâche #954) : sans ça,
+  // trois d'entre eux vivaient à un chemin que le balayage du disque ne pouvait pas reconnaître, et
+  // leur vert ne disait pas « couverts » mais « pas regardés ». Import dynamique, même raison
+  // qu'ailleurs dans ce paysage : un import de tête ferait entrer doc-report dans la chaîne du
+  // crochet.
+  let registresDeclares = null;
+  try { ({ REGISTRIES: registresDeclares } = await import("./doc-report.mjs")); }
+  catch { /* le balayage du disque reste, en moins large — et c'est dit juste en dessous */ }
+  if (!registresDeclares) console.log(red(`${ALERT_ICON} Registres déclarés illisibles : la confrontation à la Ronde n'a porté que sur les dossiers du disque. Ce n'est PAS « aucun registre oublié ».`));
+  const missingRegistries = findRegistriesMissingFromCircle(walkDocsPaths(`${rootNoSlash}/docs`, rootNoSlash), undefined, { declares: registresDeclares });
   if (missingRegistries.length) console.log(red(`${ALERT_ICON} Registre(s) sans item de Ronde ni couverture automatique documentée : ${missingRegistries.join(", ")} — à ajouter à CIRCLE_ITEMS ou à CIRCLE_AUTO_COVERED_REGISTRIES avec la raison de sa couverture.`));
   for (const missing of findPromisedFilesMissing()) {
     console.log(red(`${ALERT_ICON} Fichier promis par la documentation mais ABSENT du disque : ${missing.path} — ${missing.promesse}.`));

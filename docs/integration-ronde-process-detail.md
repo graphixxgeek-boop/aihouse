@@ -70,6 +70,24 @@ dans `scripts/check-house.mjs`. Le contrôleur, lui, ne définit rien — il com
    dérivé d'une table ne se voit pas de l'extérieur et faisait compter ces dossiers comme écrits
    pour personne ; et la déclaration n'est jamais crue sur parole — data-archangel ne la crédite
    qu'après avoir vérifié que le fichier lit réellement le disque.
+3bis. **Le registre confronté, quel que soit son CHEMIN** (ajouté le 2026-09-26, tâche #954, sur sa
+   demande : « si un rapport est créé, que je demande qu'il soit dans circle, mais que ce n'est pas
+   écrit dans les process : la règle va se perdre et le rapport ne sortira pas à circle »).
+   `findRegistriesMissingFromCircle()` ne balayait que le disque, en ne retenant que les chemins de
+   la forme `docs/<slug>/index.md`. **Trois registres déclarés par doc-report ne peuvent
+   structurellement pas prendre cette forme** — `docs/referentiel/kpi-rapports/`,
+   `docs/suivi/relectures-lourdes/`, `docs/ecotoken/ronde/` — et n'avaient donc JAMAIS été
+   confrontés à la Ronde. Leur vert ne disait pas « couverts », il disait « pas regardés ».
+   Il lit désormais AUSSI la liste **déclarée** des registres, quel que soit leur chemin, et
+   rapproche par le **chemin** plutôt que par une ressemblance de nom : un registre qui EST le
+   dossier de dépôt d'un item est couvert par cet item même si les deux slugs ne se ressemblent pas
+   (cas réel : `ecotoken-ronde` ↔ item `ecotoken-scan`). Le balayage du disque reste, parce qu'un
+   dossier créé sans être déclaré doit rester visible — **les deux sources se complètent, aucune ne
+   remplace l'autre.**
+   **Conséquence pour qui ajoute un rapport** : il n'y a plus de chemin « exotique » qui échappe au
+   contrôle. Un rapport nouveau est soit porté par un item, soit déposé dans le dossier d'un item,
+   soit exclu par écrit — et il n'existe plus de quatrième possibilité silencieuse.
+
 4. **Le changelog** — une entrée dans `CIRCLE_ITEMS_CHANGELOG` disant POURQUOI cet item existe. Le
    pourquoi n'est déductible d'aucun diff : sans cette ligne, il est perdu le jour même.
 5. **Les comptes figés** — deux assertions de `check-house.mjs` citent le nombre d'items. Elles

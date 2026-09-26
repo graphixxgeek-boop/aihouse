@@ -14363,3 +14363,52 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: « 44 outils sans portée déclarée » — il y en avait UNE (2026-09-26, tâche #807). Le registre déclare en toutes lettres que tout ce qu'il ne nomme pas est de portée « agence », pour qu'un nouvel outil hérite du cas majoritaire sans inscription manuelle : les 44 héritaient donc légitimement, et le chiffre comptait le fonctionnement normal comme un manque. Le vrai travail tenait dans les sept suspicions, et la tâche exigeait de les instruire une par une plutôt qu'en masse — exigence qui a payé, puisque la seule vraie portée manquante du lot serait passée inaperçue dans un traitement groupé. axa-check OUVRE réellement docs/simulations et lit les fichiers d'actions archivés : sa portée est « les deux », et c'est un sur sept. cassandra-rh se détectait elle-même, le fichier qui définit le motif le contenant forcément — corrigé à la source plutôt qu'inscrit en exemption, parce que ce n'est pas une décision mais un défaut. Les cinq dernières sont des mentions dans un inventaire : décrire un outil n'est pas faire son travail, et « nommer n'est pas utiliser » est une leçon que ce dépôt a déjà payée trois fois. Chacune est déclarée avec sa raison écrite, vérifiée mécaniquement, et le détecteur mord toujours sur un vrai cas — les exemptions le rétrécissent, elles ne l'éteignent pas.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// LE GARDE-FOU DE LA RONDE LISAIT UNE CONVENTION DE CHEMIN (2026-09-26, tâche #954)
+// ————————————————————————————————————————————————————————————————————————
+// Sa demande, mot pour mot : « si un rapport est créé, que je demande qu'il soit dans circle, mais
+// que ce n'est pas écrit dans les process : la règle va se perdre et le rapport ne sortira pas à
+// circle ». Le garde-fou censé empêcher ça balayait le disque et ne retenait que les chemins de la
+// forme `docs/<slug>/index.md` — TROIS registres déclarés ne peuvent structurellement pas prendre
+// cette forme, donc il ne les a jamais confrontés à la Ronde. Son vert ne disait pas « couverts »,
+// il disait « pas regardés », et les deux se ressemblent trait pour trait (leçon L5).
+{
+  const ct954 = await import('../scripts/circle-tasks.mjs');
+  const dr954 = await import('../scripts/doc-report.mjs');
+
+  // IL DOIT VOIR UN REGISTRE DÉCLARÉ HORS CONVENTION — c'est très exactement l'angle mort corrigé.
+  const horsConvention = [{ slug: 'un-registre-ailleurs', path: 'docs/referentiel/un-coin-perdu/' }];
+  assert.deepEqual(
+    ct954.findRegistriesMissingFromCircle([], [{ id: 'autre-chose' }], { declares: horsConvention, dossiers: {} }),
+    ['un-registre-ailleurs'],
+    'a DECLARED registry living outside docs/<slug>/index.md must now be confronted with the Ronde: before this, the scan simply could not see it, and three real registries were in that position',
+  );
+
+  // LE RAPPROCHEMENT SE FAIT PAR LE CHEMIN, jamais par une ressemblance de nom — premier vrai cas
+  // trouvé par l'élargissement lui-même : `ecotoken-ronde` est le dossier de dépôt de l'item
+  // `ecotoken-scan`, et les deux slugs ne se contiennent pas.
+  assert.deepEqual(
+    ct954.findRegistriesMissingFromCircle([], [{ id: 'ecotoken-scan' }], { declares: [{ slug: 'ecotoken-ronde', path: 'docs/ecotoken/ronde/' }], dossiers: { 'ecotoken-scan': 'docs/ecotoken/ronde/' } }),
+    [],
+    'a registry that IS an item\'s declared drop folder is covered by that item whatever its name — matching on the path is the real link, matching on the label would have invented a gap',
+  );
+
+  // L'ANCIEN CHEMIN CONTINUE DE MARCHER : le balayage du disque n'est pas remplacé, il est complété.
+  // Un dossier créé sans jamais être déclaré doit rester visible.
+  assert.deepEqual(
+    ct954.findRegistriesMissingFromCircle(['docs/un-outil-neuf/index.md'], [{ id: 'autre' }], { declares: [], dossiers: {} }),
+    ['un-outil-neuf'],
+    'the disk scan must survive: a folder created without ever being declared is exactly the case it was written for, and replacing one source by the other would trade one blind spot for another',
+  );
+
+  // ET IL RESTE SILENCIEUX QUAND TOUT EST COUVERT, par l'un ou l'autre chemin.
+  assert.deepEqual(ct954.findRegistriesMissingFromCircle(['docs/mon-item/index.md'], [{ id: 'mon-item' }], { declares: [{ slug: 'mon-item', path: 'docs/mon-item/' }], dossiers: {} }), [], 'nothing is reported when the item exists — the guard must stay quiet to stay readable');
+
+  // BRANCHÉ SUR LE VRAI DÉPÔT (Article 25) : les 45 registres déclarés sont désormais confrontés.
+  const { readdirSync: lireDossier954, existsSync: existe954 } = await import('node:fs');
+  const chemins954 = lireDossier954('docs', { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => `docs/${e.name}/index.md`).filter(existe954);
+  assert.deepEqual(ct954.findRegistriesMissingFromCircle(chemins954, undefined, { declares: dr954.REGISTRIES }), [], 'against the real repository, every declared registry must be covered by a Ronde item, by a declared drop folder, or by a written exclusion. Verified one by one the day this was widened: no report was actually being lost — but that was luck, not a guarantee, and luck is exactly what the user asked to stop relying on');
+
+  console.log("Passed: le garde-fou de la Ronde lisait une convention de chemin, pas le registre (2026-09-26, tâche #954). Sa demande était précise : si un rapport est créé et qu'il doit passer à la Ronde sans que ce soit écrit dans les process, la règle se perd et le rapport ne sort jamais. Le garde-fou censé empêcher ça ne retenait que les chemins de la forme docs/<slug>/index.md, et trois registres déclarés — le KPI, les relectures lourdes, le scan ecotoken de Ronde — ne peuvent structurellement pas prendre cette forme. Il ne les avait donc JAMAIS confrontés à la Ronde : son vert ne disait pas « ils sont couverts », il disait « je ne les ai pas regardés », et les deux se ressemblent trait pour trait. Aucun rapport n'était perdu le jour de la correction, vérifié un par un — c'était une chance, pas une garantie. Il lit désormais AUSSI la liste déclarée des registres, quel que soit leur chemin, et rapproche par le CHEMIN plutôt que par une ressemblance de nom : l'élargissement a lui-même produit un faux positif sur ecotoken-ronde, dossier de dépôt de l'item ecotoken-scan dont les deux slugs ne se contiennent pas. Le balayage du disque reste, parce qu'un dossier créé sans être déclaré doit rester visible : les deux sources se complètent, aucune ne remplace l'autre.");
+}
