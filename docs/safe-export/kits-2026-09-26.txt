@@ -48,5 +48,103 @@
 
   HORS PORTÉE : un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.
 
+=== L'INVENTAIRE NOMINATIF — 90 fichier(s), un seul niveau de kit ===
+
+  NIVEAU DE KIT : « complet » — et il n'y en a qu'un. Les mêmes 5 pièces sont dues à tous :
+  blueprint · source · fiche · registre · dependances. La vitalité donne l'ORDRE de réparation, jamais une exigence différente.
+
+  fichier                                             vitalité     kit    pièces tenues
+  --------------------------------------------------  -----------  -----  -------------
+  scripts/abraham-les-references.mjs                  🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/always-new-code.mjs                         🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/angel-of-ia-process.mjs                     🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/axa-check.mjs                               🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/check-house.mjs                             🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/check-level-target.mjs                      🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/check-suivi-fidelity.mjs                    🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/check-tasks-details.mjs                     🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/circle-process-guardian.mjs                 🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/circle-tasks.mjs                            🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/clean-dirty-old.mjs                         🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/corpus-mesure.mjs                           🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/criticite.mjs                               🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/doc-report.mjs                              🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/ecotoken.mjs                                🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/execution-profile.mjs                       🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/find-booster.mjs                            🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/find-brain.mjs                              🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/god-of-all-process.mjs                      🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/hooks/banniere.mjs                          🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/hooks/check-last-commit.mjs                 🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/hooks/install.mjs                           🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/hooks/post-commit                           🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/hooks/pre-commit                            🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/html-report.mjs                             🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/hyper-scan-checkpoint.mjs                   🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/install-pnpm.sh                             🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/le-coordinateur.mjs                         🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/lib-json.mjs                                🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/lib-markdown-table.mjs                      🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/lib-shell.mjs                               🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/moise-tables-de-loi.mjs                     🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/priorites.mjs                               🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/report-template.mjs                         🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/route-booster.mjs                           🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/run-framework.mjs                           🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/serie-temporelle.mjs                        🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/sites-env.mjs                               🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/smart-conso-api.mjs                         🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/smart-conso-token.mjs                       🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/the-king.mjs                                🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/tool-brain.mjs                              🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/tool-learning.mjs                           🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/tool-usage.mjs                              🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/cassandra-rh.mjs                            🟠 essentiel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/el-professor.mjs                            🟠 essentiel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/process-simulation-guardian.mjs             🟠 essentiel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/agent-des-noms.mjs                          🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/agent-du-temps.mjs                          🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/check-argus.mjs                             🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/check-gemini-quota.mjs                      🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/check-harmonia.mjs                          🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/check-profil-utilisateur.mjs                🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/check-profile.mjs                           🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/check-spirit.mjs                            🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/data-archangel.mjs                          🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/ines-official.mjs                           🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/kpi-report.mjs                              🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/le-classificateur.mjs                       🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/le-regisseur.mjs                            🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/messages-courts.mjs                         🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/modes-de-travail.mjs                        🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/objectifs-vs-resultats.mjs                  🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/ou-on-en-est.mjs                            🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/rapport-gros-prompt.mjs                     🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/run-simulation.mjs                          🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/safe-export.mjs                             🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/sauvegarde-projet.mjs                       🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/summarize-simulation-log.mjs                🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/the-equalizer.mjs                           🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/the-ghost.mjs                               🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/the-screener-capture.mjs                    🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/x-port-blindtest.mjs                        🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/api-providers.mjs                           ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/build-verified.sh                           ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/clone-hunter.mjs                            ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/gemini-key-health.mjs                       ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/install-ci.mjs                              ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/install-ci.sh                               ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/integration-outil.mjs                       ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/judge-persona-shared.mjs                    ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/memento-weight.mjs                          ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/memento.mjs                                 ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/pnpm-install.mjs                            ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/pure-gold-unity.mjs                         ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/simulation-visiteur.mjs                     ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/sites-env.sh                                ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/tasks-process-guardian.mjs                  ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/the-deep-reader.mjs                         ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/the-final-judge.mjs                         ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+
 === ALERTE D'EXPORTABILITÉ — ✅ EXPORT PRÊT — tout ce qui est dû est tenu, et l'Agence porte son propre kit ===
   Rien à signaler : chaque fichier dû porte son kit complet, et l'Agence porte le sien.

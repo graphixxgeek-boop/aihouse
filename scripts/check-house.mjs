@@ -7832,6 +7832,68 @@ async function testBadgeEtBlindtest() {
 
 await testBadgeEtBlindtest();
 
+// ————————————————————————————————————————————————————————————————————————
+// CONFORMITÉ MÉCANIQUE, INVENTAIRE NOMINATIF, KIT DANS L'INTÉGRATION (2026-09-26)
+// ————————————————————————————————————————————————————————————————————————
+async function testConformiteEtInventaire() {
+  const xp = await import('../scripts/x-port-blindtest.mjs');
+  const se = await import('../scripts/safe-export.mjs');
+
+  // LE DÉCOUPAGE DE PHRASE — un point suivi d'une lettre n'est pas une fin de phrase, et l'ignorer
+  // a produit le deuxième faux positif de la journée sur ce détecteur.
+  const avecExtension = "Il reconnaît un porteur nommé `maFonction()` ou `scripts/x.mjs` : ce sont des exemples de FORME.";
+  assert.match(xp.phraseAutourDu(avecExtension, 'maFonction'), /exemples de FORME/, 'MUST CATCH: the sentence must survive a file extension in the middle of it — cutting at the dot of ".mjs" stopped just before the words that explained why the name has no reason to exist');
+  assert.match(xp.phraseAutourDu("Première phrase. `chargerTout()` existe vraiment. Troisième.", 'chargerTout'), /existe vraiment/, 'MUST LET PASS: a genuine sentence boundary must still cut — otherwise the window would swallow neighbouring sentences and their words');
+
+  // LES TROIS ÉTATS D'UN NOM ABSENT, imposés par les deux premiers vrais résultats.
+  assert.equal(xp.natureDeLAbsence("pas de prédicat `isDawn()` malgré le patron établi").etat, 'a-instruire', 'MUST CATCH the first real false positive: a document recording the ABSENCE of a function tells the truth, and counting it as a lie would have made the detector wrong 2 times out of 2 on its very first run');
+  assert.equal(xp.natureDeLAbsence("un porteur nommé `maFonction()` : ce sont des exemples de FORME, pas des chemins réels").pourquoi.includes('EXEMPLE'), true, 'and the second one is reported with the RIGHT reason: that sentence carries BOTH markers, so the example test must come first — a right verdict with a wrong explanation sends the next reader looking in the wrong place');
+  assert.equal(xp.natureDeLAbsence("`genererRapportMagique()` produit le rapport chaque matin").etat, 'faux', 'MUST LET PASS nothing: a plain claim with no negation and no example marker really is a false statement, or the whole check would excuse everything');
+
+  // L'INDEX VIDE N'EST JAMAIS « TOUT EST FAUX ».
+  assert.equal(xp.indexDuDepot({ listDirImpl: () => [] }).mesurable, false, 'an empty repository index yields UNMEASURABLE — comparing against it would turn every single cited name into a lie, the most spectacular false positive available (leçon L4)');
+
+  // UN DISPENSÉ N'EST PAS UN NON-MESURABLE.
+  const idxFaux = { mesurable: true, noms: new Set(['a']) };
+  const dispense = xp.verifierUnKit('scripts/hooks/post-commit', { index: idxFaux });
+  assert.ok(dispense.mesurable && dispense.dispense && dispense.conforme, 'a file dispensed from the kit by a written decision has no documents ON PURPOSE: counting it as unmeasurable made the report look as if it had seven holes when it has seven decisions');
+
+  // EN DIRECT SUR LES 83 KITS RÉELS (Article 25) — c'est ce passage qui a trouvé les deux cas.
+  const { vitaliteDuParc } = await import('../scripts/le-classificateur.mjs');
+  const parc = vitaliteDuParc();
+  const lignesReelles = [];
+  for (const [vitalite, fichiers] of Object.entries(parc.parNiveau ?? {})) for (const f of fichiers) lignesReelles.push({ chemin: f.chemin, vitalite });
+  const conf = xp.verifierTousLesKits({ lignes: lignesReelles, index: xp.indexDuDepot() });
+  assert.equal(conf.mesurable, true, 'the mechanical conformity check must actually run against the real fleet');
+  assert.ok(conf.citesEnTout > 300, `and actually read something (currently ${conf.citesEnTout} names cited across the real documents) — a check that found nothing to compare would pass for clean`);
+  assert.equal(conf.fautifs.length, 0, `today NO document claims a function that exists nowhere (currently ${conf.fautifs.length}) — the day this breaks, a kit has started lying, which is worse than a kit being empty`);
+
+  // L'INVENTAIRE NOMINATIF — le livre ne nommait plus personne une fois tout réparé.
+  const inv = se.inventaireDesKits(se.mesurerLesKits({ vitalite: parc }));
+  assert.ok(inv.combien > 80, `MUST CATCH the defect that repaired itself into invisibility: the kits report named ONLY the incomplete ones, so at 83/83 it named nobody. The inventory must list every file (currently ${inv.combien})`);
+  assert.equal(inv.niveauDeKit, 'complet', 'and state that there is exactly ONE kit level, which is his question: the same five pieces are owed to everyone, the vitality only orders the repairs');
+  assert.ok(inv.lignes.every((x) => x.vitalite && Array.isArray(x.pieces)), 'every line must carry who it is, what its vitality is and which pieces it actually holds — "who is equipped how" is not answerable from a percentage');
+  assert.ok(formatInventaireLinesHasEveryone(se, inv), 'and the rendered book must print them all, not a truncated top-N');
+
+  // LE KIT DANS LE PARCOURS D'INTÉGRATION — il n'y figurait pas du tout.
+  const io = await import('../scripts/integration-outil.mjs');
+  const kitInteg = await io.kitDIntegration('safe-export');
+  assert.equal(kitInteg.mesurable, true, 'the integration path must now be able to measure a tool\'s export kit');
+  assert.equal(kitInteg.complet, true, 'and SAFE-EXPORT, which measures everyone else\'s kit, must hold its own');
+  const kitInconnu = await io.kitDIntegration('outil-qui-nexiste-pas');
+  assert.equal(kitInconnu.mesurable, false, 'MUST LET PASS: a file too new to appear in the fleet is NOT a file without a kit — reproaching its kit before it has been classified would be a reproach addressed at the wrong moment');
+  const plan = await io.planDIntegration('safe-export');
+  assert.ok(plan.kit && plan.kit.mesurable, 'and the kit must travel with the integration plan itself, not only be available on the side — eleven registries were checked before this and not one asked a new tool for its blueprint, so a tool could be declared perfectly integrated and remain untransportable');
+
+  console.log("Passed: la conformité mécanique des kits, l'inventaire nominatif et le kit dans le parcours d'intégration (2026-09-26, ses points 1 à 3). SON POINT 1 ÉTAIT EXACT ET LE TROU ÉTAIT TOTAL : integration-outil.mjs ne contenait pas UNE SEULE FOIS le mot « kit ». Onze registres vérifiés — fiabilité, catégorie, couverture de test, catalogue, Ronde, table maîtresse, inventaire de la charte — et aucun ne demandait à un outil neuf d'arriver avec son blueprint, sa fiche et son registre. Un outil pouvait donc être déclaré parfaitement intégré et rester intransportable. Sa formulation était juste, et c'est elle qui décide de l'endroit : le parcours d'intégration est le seul moment où l'on réclame à un outil TOUTES ses obligations d'un coup, donc c'est bien lui le représentant de la classification — une obligation que le parcours ne réclame pas n'est réclamée par personne au moment où elle coûterait le moins cher à tenir. SON POINT 2 est devenu GRATUIT et EXHAUSTIF sur une moitié : le BRUIT (ce que la doc affirme à tort) se vérifie mécaniquement, là où le RAPPEL (ce qu'elle tait) exige une lecture. 417 noms cités dans les 83 kits, et la première version en accusait 2 — dont ZÉRO étaient des mensonges : un registre notant l'ABSENCE d'une fonction, et une fiche donnant un EXEMPLE DE FORME en le disant deux lignes plus bas. Un détecteur juste à 0 sur 2 à son premier passage est un détecteur qu'on cesse de lire, d'où les trois états. SON POINT 3 a trouvé un défaut qui s'aggravait en se réparant : le livre des kits ne nommait QUE les incomplets, donc à 83/83 il ne nommait PLUS PERSONNE — le succès l'avait vidé. Un rapport d'anomalies et un inventaire ne sont pas le même document, même sortis du même calcul.");
+}
+function formatInventaireLinesHasEveryone(se, inv) {
+  const lignes = se.formatInventaireLines(inv);
+  return inv.lignes.every((x) => lignes.some((l) => l.includes(x.chemin)));
+}
+
+await testConformiteEtInventaire();
+
 await testEtatDesClassifications();
 
 await testClassificationRapports();
@@ -9019,12 +9081,12 @@ await testVerrousDOuverture();
   assert.deepEqual(etatIntegration('trois', { readFileImpl: lireFaux, registres: regFaux }).map((e) => e.present), [false], 'a tool absent from the registry is the gap this tool exists to name before the commit, not after the red test');
   const regCasse = [{ cle: 'absent', fichier: 'scripts/nexistepas.mjs', quoi: 'x', extrait: () => new Set(), forme: () => '' }];
   assert.equal(etatIntegration('un', { readFileImpl: lireFaux, registres: regCasse })[0].mesurable, false, 'an unreadable file reports "not measurable", never "absent": an absence of measurement is not an absence of registration, and confusing the two sends me to duplicate an existing line');
-  assert.equal(planDIntegration('trois', { readFileImpl: lireFaux, registres: regFaux }).complet, false, 'planDIntegration is only complet when every mandatory registry is filled');
-  assert.equal(planDIntegration('un', { readFileImpl: lireFaux, registres: regFaux }).complet, true, 'and it says so plainly once they are');
+  assert.equal((await planDIntegration('trois', { readFileImpl: lireFaux, registres: regFaux })).complet, false, 'planDIntegration is only complet when every mandatory registry is filled');
+  assert.equal((await planDIntegration('un', { readFileImpl: lireFaux, registres: regFaux })).complet, true, 'and it says so plainly once they are');
   assert.equal(findLecteursCasses({ readFileImpl: lireFaux, registres: regFaux, minimum: 2 }).length, 0, 'a reader that extracts two tools from a two-tool registry is working');
   assert.equal(findLecteursCasses({ readFileImpl: lireFaux, registres: regFaux, minimum: 5 }).length, 1, 'a reader extracting fewer tools than a real registry can hold is the reader breaking, never the registry emptying — the exact class of failure SAFE-EXPORT produced on 2026-09-22 when its marker sought the wrong word and declared 25 blueprints faulty');
   assert.deepEqual(findLecteursCasses(), [], 'checked live against the real repository: every one of the ten integration registries is still readable in its current shape — this assertion caught three broken readers on the very first real run (an anchor landing in a comment, "id:" taken for "slug:", and a registry naming its tools in plain words), before any of them had produced a single wrong figure');
-  assert.deepEqual(planDIntegration('integration-outil').restant.map((e) => e.cle), [], 'checked live: the tool built to make integration complete is itself completely integrated — the one case where failing would have been its own refutation');
+  assert.deepEqual((await planDIntegration('integration-outil')).restant.map((e) => e.cle), [], 'checked live: the tool built to make integration complete is itself completely integrated — the one case where failing would have been its own refutation');
 
   // qualifierIndicateur (2026-09-22) — « un vert non représentatif est une alerte », tranché par
   // l'utilisateur à la clôture de la Ronde, sur trois chiffres verts de cette Ronde même.
@@ -14364,7 +14426,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const obl = io2.obligationsDeClasse('the-king');
   assert.ok(obl.mesurable && Array.isArray(obl.tenues) && Array.isArray(obl.manquantes), 'the integration plan now knows what a tool OWES its class, not only which registries name it — until tonight a tool could be perfectly "integrated" while declaring no margin of error, unable to answer "not measured" and concluding with no plan of action');
   assert.equal(io2.obligationsDeClasse('ce-script-n-existe-pas').mesurable, false, 'an unreadable script yields no obligations rather than an empty list that would read as a clean slate');
-  const planKing = io2.planDIntegration('the-king');
+  const planKing = await io2.planDIntegration('the-king');
   assert.ok('obligations' in planKing, 'and the plan carries them, since a requirement nobody is shown at integration time is a requirement discovered one test at a time afterwards');
 
   console.log('Passed: the Agence\'s own scripts are classified by TYPE and by TRANSVERSE CLASS (2026-09-24, chantiers 1.3 and 1.4 of the night plan) — two axes neither of the existing registries carried, since AGENT_CATEGORIES gives a RANK a library cannot have and TOOL_PORTEE gives what a tool ANALYSES, neither saying what a file IS nor what it KNOWS HOW TO DO. It lives with CASSANDRA rather than in a twenty-sixth script, because she already holds the roster and the same prompt asked to reduce the tool count. Everything is derived and nothing enumerated: the type is read from the file itself, each class is a probe on its source, so a script added tomorrow gets both without anyone thinking about it. Its first four real runs produced four false verdicts and each one is kept as a counter-test, because all four came from the same laziness — measuring what was easy rather than what the question asked. It looked for a fiche named after the FILE while a fiche is named after the TOOL, accusing 22 at once; it counted one way of reaching a script when this repository has five, declaring the charter\'s own Article 0 diagnostic dead; then, over-correcting, it took a mere documentary mention for an entry point and promoted a library imported eighteen times to a tool; and it accepted a launch command found in a SUIVI row, that is the story of a past run, which erased the one genuinely useful finding — that the charter orders check-spirit.mjs to be run by hand and nowhere writes the command.');

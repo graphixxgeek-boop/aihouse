@@ -985,7 +985,8 @@ function main() {
     return import("./le-classificateur.mjs").then((lc) => {
       const k = mesurerLesKits({ vitalite: lc.vitaliteDuParc() });
       const a = mesurerLeKitDeLAgence();
-      const sortie = [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 999 }), "", ...alerteExportLines(k, a)];
+      const inv = inventaireDesKits(k);
+      const sortie = [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 999 }), "", ...formatInventaireLines(inv), "", ...alerteExportLines(k, a)];
       for (const l of [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 40 }), "", ...alerteExportLines(k, a)]) console.log(l);
       try { mkdirSync(join(ROOT, "docs/safe-export"), { recursive: true }); } catch { /* déjà là */ }
       const cible = join(ROOT, "docs/safe-export", `kits-${new Date().toISOString().slice(0, 10)}.txt`);
@@ -1550,6 +1551,60 @@ export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSy
     exemptes: Object.values(parNiveau).reduce((a, x) => a + x.exemptes, 0),
     horsPortee: "un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.",
   };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// L'INVENTAIRE NOMINATIF — « le livre des kits » (2026-09-26, sa question)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION : « VÉRIFIER AUSSI QUE "LE LIVRE DES KITS D'EXPORT" RÉPERTORIE BIEN TOUS LES KITS, LE
+// NIVEAU DE KIT (normalement un seul), QUI EST ÉQUIPÉ COMMENT ? »
+//
+// LA RÉPONSE MESURÉE ÉTAIT NON, et le défaut est de ceux qui s'aggravent en se réparant : le
+// rapport ne nommait QUE les kits incomplets. Le matin, avec 49 trous, il ressemblait à un
+// inventaire. Le soir, à 83/83, **un `grep` des chemins de fichiers dans le rapport rendait ZÉRO**
+// — le livre censé dire qui est équipé comment ne nommait plus personne. Le succès l'avait vidé.
+//
+// C'est pour ça qu'un rapport d'ANOMALIES et un INVENTAIRE ne sont pas le même document, même
+// quand ils sortent du même calcul : le premier est utile tant qu'il reste des anomalies, le second
+// l'est surtout quand il n'y en a plus. Ils cohabitent ici, dans cet ordre — les trous d'abord,
+// parce qu'on les répare ; l'inventaire ensuite, parce qu'on l'emporte.
+export function inventaireDesKits(k, { niveaux = NIVEAUX_DE_KIT } = {}) {
+  if (!k?.mesurable) return { mesurable: false, pourquoi: k?.pourquoi ?? "les kits n'ont pas été mesurés" };
+  const lignes = [];
+  for (const n of niveaux) {
+    const bloc = k.parNiveau?.[n.vitalite];
+    for (const e of bloc?.etats ?? []) {
+      lignes.push({
+        chemin: e.chemin, vitalite: n.vitalite, icone: n.icone,
+        dispense: Boolean(e.exempte), complet: Boolean(e.complet), taux: e.taux,
+        // CE QU'IL PORTE, pièce par pièce — c'est la réponse à « qui est équipé comment », et elle
+        // n'existait nulle part : le taux seul ne dit pas LAQUELLE des cinq pièces manque.
+        pieces: (e.detail ?? []).map((d) => ({ cle: d.cle, etat: d.sansObjet ? "sans-objet" : d.present === null ? "non-verifie" : d.present ? "tenue" : "manquante" })),
+      });
+    }
+  }
+  return { mesurable: true, lignes, combien: lignes.length, niveauDeKit: "complet", pieces: KIT_COMPLET };
+}
+
+export function formatInventaireLines(inv) {
+  if (!inv?.mesurable) return [`=== INVENTAIRE DES KITS : PAS MESURÉ — ${inv.pourquoi} ===`];
+  const l = [`=== L'INVENTAIRE NOMINATIF — ${inv.combien} fichier(s), un seul niveau de kit ===`, ""];
+  l.push(`  NIVEAU DE KIT : « ${inv.niveauDeKit} » — et il n'y en a qu'un. Les mêmes ${inv.pieces.length} pièces sont dues à tous :`);
+  l.push(`  ${inv.pieces.join(" · ")}. La vitalité donne l'ORDRE de réparation, jamais une exigence différente.`);
+  l.push("");
+  l.push("  fichier                                             vitalité     kit    pièces tenues");
+  l.push("  --------------------------------------------------  -----------  -----  -------------");
+  for (const x of inv.lignes) {
+    const tenues = x.pieces.filter((p) => p.etat === "tenue").map((p) => p.cle);
+    const manquantes = x.pieces.filter((p) => p.etat === "manquante").map((p) => p.cle);
+    const sansObjet = x.pieces.filter((p) => p.etat === "sans-objet").map((p) => p.cle);
+    const etat = x.dispense ? "dispensé" : x.complet ? "✔️ " : "🔴";
+    const detail = x.dispense ? "aucune pièce due, par décision écrite"
+      : [tenues.join("+"), manquantes.length ? `MANQUE ${manquantes.join("+")}` : "", sansObjet.length ? `(${sansObjet.join("+")} sans objet)` : ""].filter(Boolean).join("  ");
+    l.push(`  ${x.chemin.padEnd(50).slice(0, 50)}  ${`${x.icone} ${x.vitalite}`.padEnd(11)}  ${etat.padEnd(5)}  ${detail}`);
+  }
+  return l;
 }
 
 export function formatKitsLines(k, { niveaux = NIVEAUX_DE_KIT, combien = 8, exemptes = EXEMPTES_DU_KIT } = {}) {

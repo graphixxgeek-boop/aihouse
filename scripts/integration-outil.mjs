@@ -323,10 +323,69 @@ export function obligationsDeClasse(slug, { root = ROOT, readFileImpl = readFile
   };
 }
 
-export function planDIntegration(slug, options = {}) {
+// ══════════════════════════════════════════════════════════════════════════
+// LE KIT D'EXPORT DANS LE PARCOURS D'INTÉGRATION (2026-09-26, sa demande)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SES MOTS : « LE KIT D'EXPORT DOIT FAIRE PARTIE DU PROCESS D'INTÉGRATION […] le parcours
+// d'intégration est à mes yeux, d'une certaine manière, le protecteur de la classification ou son
+// représentant ».
+//
+// IL AVAIT RAISON, ET LE TROU ÉTAIT TOTAL : ce fichier ne contenait pas UNE SEULE FOIS le mot
+// « kit ». Onze registres d'intégration vérifiés, et pas un ne demandait à un outil neuf d'arriver
+// avec son blueprint, sa fiche et son registre. Un outil pouvait donc être déclaré parfaitement
+// intégré — fiabilité, catégorie, couverture de test, catalogue, Ronde, table maîtresse, inventaire
+// de la charte — et rester intransportable.
+//
+// POURQUOI SA FORMULATION EST JUSTE, et c'est ce qui décide de l'endroit où la vérification vit :
+// le parcours d'intégration est le seul moment où l'on demande à un outil de prouver qu'il tient
+// TOUTES ses obligations à la fois. C'est donc bien lui le représentant de la classification — la
+// classification dit ce qu'un fichier EST et ce qu'il DOIT, le parcours est ce qui le lui réclame.
+// Une obligation que le parcours ne réclame pas n'est réclamée par personne au moment où elle
+// coûterait le moins cher à tenir.
+//
+// IL NE RECALCULE RIEN : il appelle `etatDuKit()` de SAFE-EXPORT, avec la vitalité réelle du parc.
+// Deux mesures du même kit divergeraient au premier changement de règle (leçon L29), et la règle a
+// déjà changé une fois ce jour-là.
+export async function kitDIntegration(slug, { chemin = `scripts/${slug}.mjs` } = {}) {
+  let se, lc;
+  try { se = await import("./safe-export.mjs"); lc = await import("./le-classificateur.mjs"); }
+  catch (e) { return { mesurable: false, pourquoi: `la mesure des kits n'a pas pu être chargée (${e.message}) — ce n'est PAS « kit complet »` }; }
+  const parc = lc.vitaliteDuParc();
+  if (!parc?.mesurable) return { mesurable: false, pourquoi: "la vitalité du parc est indisponible : on ne peut pas savoir quel kit est dû, et compter des pièces sans savoir lesquelles sont dues ne mesure rien" };
+  let vitalite = null;
+  for (const [niveau, fichiers] of Object.entries(parc.parNiveau ?? {})) if (fichiers.some((f) => f.chemin === chemin)) vitalite = niveau;
+  // UN FICHIER QUE LE PARC NE CONNAÎT PAS ENCORE N'EST PAS UN FICHIER SANS KIT : il est trop neuf
+  // pour avoir été classé, et lui reprocher son kit avant de l'avoir classé serait un reproche
+  // adressé au mauvais moment. On le dit, on ne le note pas.
+  if (!vitalite) return { mesurable: false, pourquoi: `${chemin} n'apparaît pas encore dans la vitalité du parc — trop neuf pour être classé, donc trop neuf pour qu'on lui reproche son kit. À reprendre au prochain passage.` };
+  const etat = se.etatDuKit({ chemin }, vitalite);
+  if (!etat?.mesurable) return { mesurable: false, pourquoi: etat?.pourquoi ?? "état du kit non mesurable" };
+  return {
+    mesurable: true, vitalite, exempte: Boolean(etat.exempte), complet: etat.complet, taux: etat.taux,
+    manquantes: (etat.detail ?? []).filter((d) => d.present === false).map((d) => ({ cle: d.cle, quoi: d.quoi, chemin: d.chemin })),
+    pourquoi: etat.exempte ? etat.pourquoi : null,
+  };
+}
+
+export function formatKitDIntegrationLines(k, slug) {
+  if (!k?.mesurable) return [`  ❓ KIT D'EXPORT : PAS MESURÉ — ${k?.pourquoi}`];
+  if (k.exempte) return [`  ⚪ KIT D'EXPORT : dispensé — ${k.pourquoi}`];
+  if (k.complet) return [`  ✔️  KIT D'EXPORT complet (${k.taux} %, vitalité ${k.vitalite}) — ${slug} est transportable`];
+  return [
+    `  🔴 KIT D'EXPORT INCOMPLET (${k.taux} %, vitalité ${k.vitalite}) — ${slug} serait intégré ici et INTRANSPORTABLE ailleurs :`,
+    ...k.manquantes.map((m) => `      · ${m.quoi} → à créer : ${m.chemin}`),
+  ];
+}
+
+export async function planDIntegration(slug, options = {}) {
   const etat = etatIntegration(slug, options);
   const obligations = obligationsDeClasse(slug, options);
+  // LE KIT REJOINT LE PLAN le 2026-09-26 : il manquait aux onze registres, et son absence rendait
+  // possible un outil « parfaitement intégré » et pourtant intransportable.
+  const kit = await kitDIntegration(slug, { chemin: `scripts/${slug}.mjs` });
   return {
+    kit,
     slug,
     fait: etat.filter((e) => e.mesurable && e.present).map((e) => e.cle),
     restant: etat.filter((e) => e.mesurable && !e.present && !e.facultatif),
@@ -485,7 +544,7 @@ export function findModulesNonCitesParLeurProcess({ root = ROOT, readFileImpl = 
   return hits;
 }
 
-function main() {
+async function main() {
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) : l'avertissement de fiabilité, le titre et
   // l'horodatage passent par printReportHeader() plutôt que d'être réécrits ici. Un rapport qui
   // fabrique son propre en-tête finit par diverger de tous les autres sans que personne ne le
@@ -547,7 +606,9 @@ function main() {
     console.log("Deux issues, jamais un silence : en faire un MEMBRE (le plan ci-dessous s'applique), ou déclarer son process hôte dans le fichier lui-même.");
     console.log("Le plan est donné quand même, mais il ne vaut que si la première issue est la bonne :\n");
   }
-  const plan = planDIntegration(slug);
+  const plan = await planDIntegration(slug);
+  for (const l of formatKitDIntegrationLines(plan.kit, slug)) console.log(l);
+  console.log("");
   console.log(`Outil : ${slug}\n${plan.fait.length}/${REGISTRES_D_INTEGRATION.length} registre(s) déjà renseigné(s) : ${plan.fait.join(", ") || "aucun"}\n`);
   if (plan.restant.length) {
     console.log(`${plan.restant.length} inscription(s) manquante(s) — à faire AVANT le commit, pas après l'échec du test :`);

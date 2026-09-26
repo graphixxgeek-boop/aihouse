@@ -1,0 +1,12 @@
+=== CONFORMITÉ MÉCANIQUE DES KITS — 83/83 sans aucune affirmation fausse ===
+
+  417 nom(s) de fonction cité(s) dans les documents, 0 affirmé(s) à tort.
+  ⚪ 7 fichier(s) dispensés de kit par décision écrite — ils n'ont aucun document, et c'est voulu.
+
+  ✅ Aucun document n'affirme l'existence d'une fonction qui n'existe pas.
+
+  🟡 2 nom(s) absent(s) mais PAS un mensonge — descendus d'un cran plutôt que cachés :
+      · `isDawn()` dans docs/always-new-code/index.md — la phrase qui porte ce nom décrit son ABSENCE — le document dit donc la vérité, pas un mensonge
+      · `maFonction()` dans docs/referentiel/moise-tables-de-loi.md — la phrase donne ce nom comme un EXEMPLE DE FORME, jamais comme une fonction réelle
+
+  HORS PORTÉE : elle vérifie qu'un nom CITÉ entre accents graves avec des parenthèses existe quelque part dans le dépôt. Elle ne dit rien de ce que la documentation OUBLIE — cette moitié-là demande une lecture, donc l'agent aveugle. Et une doc qui décrirait tout en prose, sans jamais citer un nom, passerait ici sans être vérifiée du tout.

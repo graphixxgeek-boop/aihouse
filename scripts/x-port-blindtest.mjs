@@ -46,11 +46,11 @@
 // coûte une correction, le second en coûte quatre-vingt-deux, et les traiter pareil garantit de
 // refaire le même diagnostic quatre-vingt-une fois de plus.
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { dependancesInternes, aliasDocumentaires, tientUneMemoire } from "./safe-export.mjs";
+import { dependancesInternes, aliasDocumentaires, tientUneMemoire, exemptionDuKit } from "./safe-export.mjs";
 import { buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -355,6 +355,168 @@ export function promptAveugle(dossier) {
   ].join("\n");
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LA VÉRIFICATION MÉCANIQUE DE CONFORMITÉ — gratuite, sur TOUS les kits
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE : « CHECKER QUE TOUS LES KITS D'EXPORT ET LEUR CONTENU SONT BIEN EN CONFORMITÉ PARFAITE
+// AVEC LE CODE, QUE TOUT EST EXACT, VÉRIFICATION AU CAS PAR CAS, SANS FAUTE, AIDE-TOI DE L'OUTIL OU
+// ÉQUIPE L'OUTIL POUR QU'IL T'AIDE. »
+//
+// POURQUOI CETTE MOITIÉ-LÀ PEUT SE FAIRE SANS AGENT, ET SUR LES 83 D'UN COUP. Le test à l'aveugle
+// mesure deux choses, et une seule exige un raisonnement :
+//   · le RAPPEL — ce que le code fait et que la doc tait. Il faut quelqu'un qui LISE la doc et en
+//     déduise ce qui manque : c'est un jugement, donc un agent, donc un échantillon.
+//   · le BRUIT — ce que la doc AFFIRME et que le code ne fait pas. Celui-là est vérifiable
+//     mécaniquement : un nom cité entre accents graves existe, ou n'existe pas.
+//
+// C'est donc la moitié « la doc ment-elle ? » qui devient gratuite et exhaustive — et c'est la plus
+// grave des deux : une doc incomplète fait ouvrir le code, une doc fausse ne le fait pas ouvrir.
+//
+// LE FAUX POSITIF QU'IL FAUT ÉVITER, et il aurait été massif : une fiche cite légitimement des
+// fonctions d'AUTRES outils (la fiche de SAFE-EXPORT cite `findRegistriesMissingFromCircle()`, qui
+// vit dans circle-tasks). « Cité mais absent de CE fichier » aurait donc accusé chaque renvoi
+// croisé — c'est-à-dire la bonne pratique du dépôt. On compare à l'index de TOUT le dépôt : un nom
+// qui n'existe NULLE PART est un vrai mensonge ; un nom qui vit ailleurs est un renvoi.
+export const MOTIF_NOM_CITE = /`([a-zA-Z_$][\w$]*)\(\)`/g;
+
+export function nomsCites(texte = "") {
+  return [...new Set([...String(texte).matchAll(MOTIF_NOM_CITE)].map((m) => m[1]))];
+}
+
+// indexDuDepot() — tous les symboles exportés du dépôt, lus une fois. Un index construit par fichier
+// coûterait 83 relectures de tout scripts/ ; ici c'est une passe.
+export function indexDuDepot({ root = ROOT, listDirImpl = null, readFileImpl = readFileSync, dossiers = ["scripts", "lib"] } = {}) {
+  const readdir = listDirImpl ?? readdirSync;
+  const noms = new Set();
+  let fichiers = 0;
+  for (const d of dossiers) {
+    let liste = [];
+    try { liste = readdir(join(root, d)); } catch { continue; }
+    for (const f of liste) {
+      if (!/\.(mjs|ts|js)$/.test(f)) continue;
+      let texte = "";
+      try { texte = readFileImpl(join(root, d, f), "utf8"); fichiers += 1; } catch { continue; }
+      for (const m of texte.matchAll(/(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g)) noms.add(m[1]);
+      for (const m of texte.matchAll(/(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=/g)) noms.add(m[1]);
+    }
+  }
+  // AUCUN FICHIER LU N'EST JAMAIS « AUCUN SYMBOLE » : un index vide ferait passer CHAQUE nom cité
+  // pour un mensonge, soit le faux positif le plus spectaculaire possible (leçon L4).
+  return fichiers ? { mesurable: true, noms, fichiers } : { mesurable: false, pourquoi: "aucun fichier de code n'a pu être lu : l'index est vide, et comparer à un index vide ferait passer chaque nom cité pour une invention" };
+}
+
+
+// TROIS ÉTATS POUR UN NOM ABSENT, JAMAIS DEUX — et les deux premiers vrais résultats de cette
+// vérification sont ce qui a imposé le troisième. Sur 417 noms cités dans les 83 kits, elle en a
+// trouvé 2 introuvables, et AUCUN des deux n'était un mensonge :
+//   · `isDawn()` — le registre d'ALWAYS-NEW-CODE note que l'outil a trouvé son ABSENCE, par
+//     contraste avec `isNight()` qui existe. Le document dit donc exactement la vérité.
+//   · `maFonction()` — la fiche de MOÏSE écrit deux lignes plus bas que c'est un exemple de FORME,
+//     et note qu'un AUTRE garde-fou s'était déjà fait avoir par ce même passage.
+// Les compter comme des mensonges aurait donné un détecteur juste à 0 sur 2 dès son premier
+// passage, c'est-à-dire un détecteur qu'on cesse de lire (leçon L4, la troisième fois ce jour-là).
+//
+// Ce qu'ils partagent : **la phrase qui porte le nom ne dit pas « ça existe »**. Elle dit son
+// absence, ou elle le donne en exemple. On ne les cache pas pour autant — les cacher serait l'autre
+// faute — ils descendent d'un cran, en « à instruire », et restent visibles.
+export const MOTS_DE_NEGATION = ["pas de", "aucun", "aucune", "absence", "n'existe pas", "nexiste pas", "manque", "manquant", "jamais", "sans"];
+export const MOTS_D_EXEMPLE = ["exemple", "exemples", "forme", "gabarit", "par exemple", "fictif", "fictive"];
+
+// UN POINT SUIVI D'UNE LETTRE N'EST PAS UNE FIN DE PHRASE, et l'ignorer a produit le deuxième faux
+// positif de la journée sur ce même détecteur : le découpage naïf coupait sur le point de
+// « scripts/<nom>.mjs » et s'arrêtait AVANT les mots « ce sont des exemples de FORME » qui, deux
+// mots plus loin, disaient exactement pourquoi ce nom n'a pas à exister. Une fin de phrase est un
+// point suivi d'un blanc ou de la fin du texte — jamais un point d'extension de fichier.
+export const MOTIF_FIN_DE_PHRASE = /\.(?=\s|$)/g;
+
+export function phraseAutourDu(texte, nom) {
+  const t = String(texte);
+  const i = t.indexOf(`\`${nom}()\``);
+  if (i < 0) return "";
+  const bornes = [...t.matchAll(MOTIF_FIN_DE_PHRASE)].map((m) => m.index);
+  const debut = bornes.filter((b) => b < i).pop();
+  const fin = bornes.find((b) => b > i);
+  return t.slice(debut === undefined ? 0 : debut + 1, fin === undefined ? Math.min(t.length, i + 400) : fin + 1);
+}
+
+export function natureDeLAbsence(phrase, { negations = MOTS_DE_NEGATION, exemples = MOTS_D_EXEMPLE } = {}) {
+  const p = sansAccentsSimple(String(phrase).toLowerCase());
+  // L'EXEMPLE SE TESTE AVANT LA NÉGATION, et l'ordre n'est pas arbitraire : une phrase qui déclare
+  // « ce sont des exemples de forme, pas des chemins réels » contient les DEUX marqueurs. Tester la
+  // négation d'abord rendait le bon verdict avec la MAUVAISE raison — un rapport juste sur le fond
+  // et faux dans son explication, qui enverrait le prochain lecteur chercher au mauvais endroit.
+  // « Ceci est un exemple » est une déclaration ; un « pas » qui traîne dans la phrase n'en est pas
+  // une.
+  if (exemples.some((m) => p.includes(m))) return { etat: "a-instruire", pourquoi: "la phrase donne ce nom comme un EXEMPLE DE FORME, jamais comme une fonction réelle" };
+  if (negations.some((m) => p.includes(sansAccentsSimple(m)))) return { etat: "a-instruire", pourquoi: "la phrase qui porte ce nom décrit son ABSENCE — le document dit donc la vérité, pas un mensonge" };
+  return { etat: "faux", pourquoi: "le document affirme l'existence de cette fonction, et elle n'existe nulle part dans le dépôt" };
+}
+
+function sansAccentsSimple(t) { return String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+
+export function verifierUnKit(chemin, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, alias = undefined, index = null, exemptes = undefined } = {}) {
+  if (!index?.mesurable) return { mesurable: false, chemin, pourquoi: index?.pourquoi ?? "index du dépôt non fourni" };
+  // UN FICHIER DISPENSÉ DE KIT N'EST PAS UN FICHIER NON MESURABLE : les sept dispensés (crochets
+  // git, installateur de l'environnement, lanceur du produit) n'ont AUCUN document par décision
+  // écrite. Les compter comme « non mesurables » faisait lire le rapport comme s'il avait sept
+  // trous, alors qu'il a sept décisions.
+  const dispense = exemptionDuKit(chemin, exemptes === undefined ? {} : { exemptes });
+  if (dispense) return { mesurable: true, chemin, dispense: true, conforme: true, combienCites: 0, fantomes: [], pourquoi: dispense.pourquoi, documents: [] };
+  const dossier = dossierAveugle(chemin, { root, exists, readFileImpl, alias });
+  if (!dossier.vues.length) return { mesurable: false, chemin, pourquoi: "aucun document lisible : rien à confronter au code, ce qui n'est jamais « conforme »" };
+  const cites = [];
+  for (const v of dossier.vues) for (const n of nomsCites(v.texte)) cites.push({ nom: n, ou: v.chemin, texte: v.texte });
+  const absents = cites.filter((c) => !index.noms.has(c.nom));
+  const juges = absents.map((c) => ({ nom: c.nom, ou: c.ou, ...natureDeLAbsence(phraseAutourDu(c.texte, c.nom)) }));
+  const fantomes = juges.filter((j) => j.etat === "faux");
+  return {
+    mesurable: true, chemin, combienCites: cites.length, fantomes,
+    aInstruire: juges.filter((j) => j.etat === "a-instruire"),
+    conforme: fantomes.length === 0,
+    documents: dossier.vues.map((v) => v.chemin),
+  };
+}
+
+export function verifierTousLesKits({ lignes = [], root = ROOT, exists = existsSync, readFileImpl = readFileSync, alias = undefined, index = null } = {}) {
+  if (!index?.mesurable) return { mesurable: false, pourquoi: index?.pourquoi ?? "index du dépôt non fourni" };
+  const resultats = lignes.map((l) => verifierUnKit(l.chemin, { root, exists, readFileImpl, alias, index }));
+  const mesures = resultats.filter((r) => r.mesurable);
+  const dispenses = mesures.filter((r) => r.dispense);
+  const examines = mesures.filter((r) => !r.dispense);
+  const fautifs = examines.filter((r) => !r.conforme);
+  return {
+    mesurable: true, resultats,
+    examines: examines.length, dispenses: dispenses.length, nonMesurables: resultats.length - mesures.length,
+    fautifs, citesEnTout: examines.reduce((a, r) => a + r.combienCites, 0),
+    fantomesEnTout: fautifs.reduce((a, r) => a + r.fantomes.length, 0),
+    aInstruire: examines.flatMap((r) => (r.aInstruire ?? []).map((j) => ({ ...j, chemin: r.chemin }))),
+    horsPortee: "elle vérifie qu'un nom CITÉ entre accents graves avec des parenthèses existe quelque part dans le dépôt. Elle ne dit rien de ce que la documentation OUBLIE — cette moitié-là demande une lecture, donc l'agent aveugle. Et une doc qui décrirait tout en prose, sans jamais citer un nom, passerait ici sans être vérifiée du tout.",
+  };
+}
+
+export function formatConformiteLines(v) {
+  if (!v?.mesurable) return [`=== CONFORMITÉ DES KITS : PAS MESURÉE — ${v?.pourquoi} ===`, "", "Ce n'est PAS « tout est conforme »."];
+  const l = [`=== CONFORMITÉ MÉCANIQUE DES KITS — ${v.examines - v.fautifs.length}/${v.examines} sans aucune affirmation fausse ===`, ""];
+  l.push(`  ${v.citesEnTout} nom(s) de fonction cité(s) dans les documents, ${v.fantomesEnTout} affirmé(s) à tort.`);
+  if (v.dispenses) l.push(`  ⚪ ${v.dispenses} fichier(s) dispensés de kit par décision écrite — ils n'ont aucun document, et c'est voulu.`);
+  if (v.nonMesurables) l.push(`  ❓ ${v.nonMesurables} fichier(s) non mesurables (aucun document lisible, sans dispense) — ce n'est jamais « conforme ».`);
+  l.push("");
+  if (!v.fautifs.length) l.push("  ✅ Aucun document n'affirme l'existence d'une fonction qui n'existe pas.");
+  for (const f of v.fautifs) {
+    l.push(`  🔴 ${f.chemin}`);
+    for (const g of f.fantomes) l.push(`      · \`${g.nom}()\` cité dans ${g.ou} — ${g.pourquoi}`);
+  }
+  if (v.aInstruire?.length) {
+    l.push("");
+    l.push(`  🟡 ${v.aInstruire.length} nom(s) absent(s) mais PAS un mensonge — descendus d'un cran plutôt que cachés :`);
+    for (const j of v.aInstruire) l.push(`      · \`${j.nom}()\` dans ${j.ou} — ${j.pourquoi}`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${v.horsPortee}`);
+  return l;
+}
+
 export function enregistrerPassage(entree, { root = ROOT, readFileImpl = readFileSync, writeImpl = writeFileSync, fichier = FICHIER_PASSAGES } = {}) {
   const passages = chargerPassages({ root, readFileImpl, fichier });
   passages.push(entree);
@@ -428,12 +590,30 @@ async function commandeJuger(fichierPronostic, cheminSujet) {
   console.log(`\nÉcrit : ${cible}`);
 }
 
+async function commandeConformite() {
+  const { vitaliteDuParc } = await import("./le-classificateur.mjs");
+  const parc = vitaliteDuParc();
+  if (!parc?.mesurable) { console.log("🚨 PAS MESURÉ — la vitalité du parc est indisponible, donc la population des kits est inconnue."); return; }
+  const lignes = [];
+  for (const [vitalite, fichiers] of Object.entries(parc.parNiveau ?? {})) for (const f of fichiers) lignes.push({ chemin: f.chemin, vitalite });
+  const index = indexDuDepot();
+  const v = verifierTousLesKits({ lignes, index });
+  const lgs = formatConformiteLines(v);
+  for (const l of lgs) console.log(l);
+  const jour = new Date().toISOString().slice(0, 10);
+  mkdirSync(join(ROOT, DOSSIER), { recursive: true });
+  const cible = join(ROOT, DOSSIER, `conformite-${jour}.txt`);
+  writeFileSync(cible, lgs.join("\n"));
+  console.log(`\nÉcrit : ${cible}`);
+}
+
 async function main() {
   printReliabilityNotice("il compare des NOMS de fonctions entre une documentation et un code — une documentation excellente qui ne nomme rien sera comptée comme incomplète, et un pronostic reste un jugement, jamais une mesure exacte.");
   recordCliUsage(OUTIL, { commande: process.argv[2] ?? "aide" });
   const cmd = process.argv[2];
   if (cmd === "sujet") return commandeSujet();
   if (cmd === "juger") return commandeJuger(process.argv[3], process.argv[4]);
+  if (cmd === "conformite") return commandeConformite();
   console.log("X-Port BLINDTEST — le test à l'aveugle de la qualité d'un kit d'export.");
   console.log("");
   console.log("  node scripts/x-port-blindtest.mjs sujet            → tire un membre, écrit la consigne aveugle");

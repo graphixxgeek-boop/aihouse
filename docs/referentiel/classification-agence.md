@@ -1,6 +1,6 @@
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 17:23 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 21:16 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -10,19 +10,20 @@ GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passa
 
 **Est-ce que l'organisation décide de la classification ?** Sur un point précis, oui — et c'est le seul. L'organisation décide des CRITÈRES (ce qu'il faut pour être Gardien sacré) ; la classification applique ces critères aux fichiers réels et dit qui les remplit. Elle ne choisit jamais qui entre dans quelle case : elle mesure. C'est pour ça que les deux documents existent, et que ni l'un ni l'autre n'absorbe son voisin — l'un pose la règle, l'autre compte.
 
-## 1. Les 8 axes, et la question à laquelle chacun répond
+## 1. Les 9 axes, et la question à laquelle chacun répond
 
 | Axe | La question | Comment il se remplit | Combien de fichiers il couvre, ici |
 |---|---|---|---|
-| **TYPE** | ce que le fichier EST | se CONSTATE en lisant le fichier | **89 / 89** — aucun fichier sans type |
-| **RANG** | ce que le fichier VAUT | se MÉRITE d'abord ; ne se DÉDUIT du type qu'à défaut | **89 / 89** (100 %) |
-| **FAMILLE** | ce sur quoi il travaille | se décide — une par membre de l'équipe, plus celle que porte le rang Hors Agence | **63 / 89** : 57 fichiers de l'équipe + 6 Hors Agence. Les 26 restants sont le Socle et les états de passage, qui n'ont pas de famille et n'en manquent pas. |
-| **CLASSES TRANSVERSES** | ce qu'il sait FAIRE | une sonde par classe sur le code ; zéro, une ou plusieurs par fichier | **75 / 89** en portent au moins une — les autres n'en portent aucune, et c'est un constat, pas un trou |
+| **TYPE** | ce que le fichier EST | se CONSTATE en lisant le fichier | **90 / 90** — aucun fichier sans type |
+| **RANG** | ce que le fichier VAUT | se MÉRITE d'abord ; ne se DÉDUIT du type qu'à défaut | **90 / 90** (100 %) |
+| **FAMILLE** | ce sur quoi il travaille | se décide — une par membre de l'équipe, plus celle que porte le rang Hors Agence | **63 / 90** : 57 fichiers de l'équipe + 6 Hors Agence. Les 27 restants sont le Socle et les états de passage, qui n'ont pas de famille et n'en manquent pas. |
+| **CLASSES TRANSVERSES** | ce qu'il sait FAIRE | une sonde par classe sur le code ; zéro, une ou plusieurs par fichier | **76 / 90** en portent au moins une — les autres n'en portent aucune, et c'est un constat, pas un trou |
 | *iceberg* | à quel groupe il appartient (membre, oublié, infrastructure, plomberie) | porté par `classerIceberg()` | *mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger |
 | *moment* | QUAND il intervient | porté par `momentsDeLOutil()` | *mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger |
 | *domaine* | SUR QUOI il regarde | porté par `domainesDeLOutil()` | *mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger |
 | *destinataire* | À QUI le résultat sert | porté par `destinatairesDeLOutil()` | *mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger |
 | *cherche* | QUELLE QUESTION il pose au dépôt (déclaré-mais-absent, deux-sources-divergent, duplication…) | porté par `cartographieCriteresTransverses() — HARMONIA` | *mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger |
+| *vitalite* | CE QUE L'AGENCE PERD SANS LUI — vital / essentiel / utile / optionnel, pour son FONCTIONNEMENT (jamais pour son exportabilité) | porté par `vitaliteDuParc() — ici ; le kit d'export qui en découle est chez SAFE-EXPORT` | *mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger |
 
 > ⚠️ **Le registre de l'équipe compte 58 inscrits, mais seulement 57 ont un fichier à eux.** Le ou les manquants : `find-deep-booster` — un vrai membre, avec son rang et sa famille, dont le code vit à l'intérieur d'un autre fichier. Ce n'est pas un bug, c'est un fait : il est dit ici plutôt que noyé dans une addition qui ne tomberait pas juste.
 
@@ -91,6 +92,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 - **une ligne à la table maîtresse** (`docs/regles-de-travail.md §7ter`) — pour : tous, sans exception
 - **une entrée au menu PRESTATIONS** (`scripts/le-coordinateur.mjs`) — pour : ceux qu'on lance à la demande ou qui coûtent de l'API
 - **un item de Ronde** (`scripts/circle-tasks.mjs`) — pour : les périodiques — jamais les Gardiens sacrés, qui tournent à chaque commit
+- **un kit d'export** (`mesuré par SAFE-EXPORT (`node scripts/safe-export.mjs kits`)`) — pour : TOUS les fichiers, à un niveau proportionnel à leur vitalité — complet pour les vitaux et les essentiels, allégé pour les utiles, minimal pour les optionnels
 
 ## 4. L'indice de classification à facettes
 
@@ -113,7 +115,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 
 > **La colonne de droite est la traduction demandée le 2026-09-26.** Elle n'est recopiée nulle part : l'icône d'une famille et celle d'une classe se LISENT dans le nom que l'utilisateur leur a donné le même jour, et seuls les types ont reçu la leur ici — parce qu'un type est un constat de forme, jamais un nom choisi. Une série d'icônes se reconnaît sans décoder ; un indice se trie, se cherche et se compare. Les deux disent la même chose et voyagent ensemble.
 
-## 5. Chaque fichier : rang, famille, indice (89, exhaustif)
+## 5. Chaque fichier : rang, famille, indice (90, exhaustif)
 
 ### 👔 Agent Cadre — 1
 
@@ -131,7 +133,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `check-harmonia.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.dd` | ⌨️ 🛡️ 🛡️ 🔎⚠️🎯🪞🧭 |
 | `clean-dirty-old.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.68` | ⌨️ 🛡️ 🛡️ ⚠️🎯🪞 |
 | `clone-hunter.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `4.2.7.69` | 📚 🛡️ 🛡️ 🔎⚠️🎯🪞 |
-| `safe-export.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.dd` | ⌨️ 🛡️ 🛡️ 🔎⚠️🎯🪞🧭 |
+| `safe-export.mjs` | (f) 🛡️ Les Gardiens Sacrés du Code | `2.2.7.dh` | ⌨️ 🛡️ 🛡️ 🔎🗃️⚠️🎯🪞🧭 |
 
 ### 🥇 Membre premium — 34
 
@@ -192,6 +194,12 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `the-ghost.mjs` | (f) 👑 La Gouvernance Royale | `2.3.1.4` | ⌨️ 🥈 👑 🗃️ |
 | `tool-usage.mjs` | (f) 👑 La Gouvernance Royale | `2.3.1.as` | ⌨️ 🥈 👑 🗃️🪞🧭 |
 
+### 🚪 Postulant — 1
+
+| Fichier | Famille | Indice | En icônes |
+|---|---|---|---|
+| `x-port-blindtest.mjs` | — | `2.5.-.dh` | ⌨️ 🚪 · 🔎🗃️⚠️🎯🪞🧭 |
+
 ### 🕳️ Sans porte — 2
 
 | Fichier | Famille | Indice | En icônes |
@@ -234,7 +242,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 |---|---|---|---|
 | `run-framework.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.0` | ⌨️ 🚧 🚧 — |
 | `run-simulation.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.4` | ⌨️ 🚧 🚧 🗃️ |
-| `sauvegarde-projet.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.5` | ⌨️ 🚧 🚧 🔎🗃️ |
+| `sauvegarde-projet.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.3p` | ⌨️ 🚧 🚧 🔎🗃️🪞 |
 | `sites-env.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.0` | ⌨️ 🚧 🚧 — |
 | `sites-env.sh` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `6.9.6.0` | 🐚 🚧 🚧 — |
 | `summarize-simulation-log.mjs` | (f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage | `2.9.6.w` | ⌨️ 🚧 🚧 ⚠️ |
@@ -255,11 +263,11 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 
 `check-house.mjs`
 
-### commande-documentee — 56
+### commande-documentee — 57
 
 > une porte d'entrée réelle (ligne de commande, package.json, crochet ou commande écrite) ET au moins un document qui la nomme
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-profile.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `criticite.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `messages-courts.mjs` · `modes-de-travail.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `rapport-gros-prompt.mjs` · `route-booster.mjs` · `run-framework.mjs` · `run-simulation.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `sites-env.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `summarize-simulation-log.mjs` · `the-equalizer.mjs` · `the-ghost.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-profile.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `criticite.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `messages-courts.mjs` · `modes-de-travail.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `rapport-gros-prompt.mjs` · `route-booster.mjs` · `run-framework.mjs` · `run-simulation.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `sites-env.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `summarize-simulation-log.mjs` · `the-equalizer.mjs` · `the-ghost.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs` · `x-port-blindtest.mjs`
 
 ### bibliotheque-partagee — 16
 
@@ -343,11 +351,11 @@ Une famille dit **ce sur quoi on travaille**, jamais ce qu'on vaut. Les Gardiens
 
 Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et traverse les rangs : un Gardien sacré et une bibliothèque peuvent porter la même.
 
-### (ct) 🔎 Les scanners - scanne le dépôt — 38
+### (ct) 🔎 Les scanners - scanne le dépôt — 39
 
 > parcourt des fichiers pour y chercher quelque chose — la classe que l'utilisateur a nommée lui-même
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `hooks/check-last-commit.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `the-equalizer.mjs` · `tool-brain.mjs` · `tool-learning.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `hooks/check-last-commit.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `the-equalizer.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `x-port-blindtest.mjs`
 
 ### (ct) 📄 Les rapporteurs HTML - rend un rapport HTML — 21
 
@@ -355,11 +363,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `abraham-les-references.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-tasks-details.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `html-report.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `ou-on-en-est.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `the-deep-reader.mjs` · `the-final-judge.mjs` · `the-screener-capture.mjs`
 
-### (ct) 🗃️ Les enregistreurs - tient un registre — 42
+### (ct) 🗃️ Les enregistreurs - tient un registre — 44
 
 > écrit une mémoire durable sur le disque — ce qui lui permet de se souvenir d'un passage à l'autre
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `gemini-key-health.mjs` · `god-of-all-process.mjs` · `hooks/banniere.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento-weight.mjs` · `memento.mjs` · `modes-de-travail.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `pnpm-install.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `run-simulation.mjs` · `sauvegarde-projet.mjs` · `serie-temporelle.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `the-ghost.mjs` · `the-screener-capture.mjs` · `tool-learning.mjs` · `tool-usage.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `gemini-key-health.mjs` · `god-of-all-process.mjs` · `hooks/banniere.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento-weight.mjs` · `memento.mjs` · `modes-de-travail.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `pnpm-install.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `run-simulation.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `serie-temporelle.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `the-ghost.mjs` · `the-screener-capture.mjs` · `tool-learning.mjs` · `tool-usage.mjs` · `x-port-blindtest.mjs`
 
 ### (ct) 💳 Les consommateurs d'API - coûte de vrais appels API — 4
 
@@ -373,38 +381,39 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `abraham-les-references.mjs` · `always-new-code.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `criticite.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `le-coordinateur.mjs` · `moise-tables-de-loi.mjs` · `process-simulation-guardian.mjs`
 
-### (ct) ⚠️ Les heuristiques - déclare sa marge d'erreur — 48
+### (ct) ⚠️ Les heuristiques - déclare sa marge d'erreur — 49
 
 > avertit qu'il peut se tromper avant de rendre un chiffre — l'exigence transverse de tous les outils heuristiques
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-profile.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `route-booster.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `summarize-simulation-log.mjs` · `tasks-process-guardian.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-profile.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `route-booster.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `summarize-simulation-log.mjs` · `tasks-process-guardian.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `x-port-blindtest.mjs`
 
-### (ct) 🎯 Les pro-actifs - conclut par un plan d'action — 40
+### (ct) 🎯 Les pro-actifs - conclut par un plan d'action — 41
 
 > transforme ses constats en gestes (Article 28) au lieu de s'arrêter au rapport
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `process-simulation-guardian.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `tool-brain.mjs` · `tool-learning.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `hyper-scan-checkpoint.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `process-simulation-guardian.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `x-port-blindtest.mjs`
 
-### (ct) 🪞 Les auto-conscients - enregistre son propre usage — 53
+### (ct) 🪞 Les auto-conscients - enregistre son propre usage — 55
 
 > sait dire s'il a servi — sans quoi personne ne peut constater qu'un outil n'est jamais sollicité
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hooks/post-commit` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `messages-courts.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `route-booster.mjs` · `safe-export.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `tasks-process-guardian.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-gemini-quota.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clean-dirty-old.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `find-booster.mjs` · `find-brain.mjs` · `god-of-all-process.mjs` · `hooks/post-commit` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `messages-courts.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `route-booster.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `tasks-process-guardian.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs` · `x-port-blindtest.mjs`
 
-### (ct) 🧭 Les véridiques - sait répondre « pas mesuré » — 44
+### (ct) 🧭 Les véridiques - sait répondre « pas mesuré » — 45
 
 > distingue « je n'ai rien trouvé » de « je n'ai pas pu regarder » (leçon L5) — la classe la plus discrète et la plus importante
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `corpus-mesure.mjs` · `criticite.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `messages-courts.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `priorites.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `safe-export.mjs` · `serie-temporelle.mjs` · `smart-conso-token.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `always-new-code.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `corpus-mesure.mjs` · `criticite.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento.mjs` · `messages-courts.mjs` · `moise-tables-de-loi.mjs` · `objectifs-vs-resultats.mjs` · `ou-on-en-est.mjs` · `priorites.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `report-template.mjs` · `safe-export.mjs` · `serie-temporelle.mjs` · `smart-conso-token.mjs` · `the-equalizer.mjs` · `the-king.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `tool-usage.mjs` · `x-port-blindtest.mjs`
 
 ## 9. Ce qui reste ouvert — et le geste que chaque point appelle
 
 | Ce qui reste ouvert | Pourquoi c'en est un | Le geste |
 |---|---|---|
+| **1 fichier est Postulant** — `x-port-blindtest.mjs` | documenté et lançable, mais absent du registre de l'équipe | l'inscrire au registre, ou déclarer par écrit qu'il n'a pas vocation à entrer |
 | **2 portes orphelines** — `integration-outil.mjs` · `tasks-process-guardian.mjs` | le fichier est lançable et rien de vivant dans le dépôt ne le lance | lui écrire sa commande dans la table maîtresse, ou le supprimer |
 | **1 membre du registre n'a pas de fichier à lui** — `find-deep-booster` | il porte un rang et une famille, mais son code vit à l'intérieur d'un autre fichier | rien d'urgent : le noter ici suffit, tant que l'addition du §1 le dit au lieu de le masquer |
 | **4 rangs portent un nom provisoire** — 🚪 Postulant · 🏷️ Sans fiche · 🕳️ Sans porte · 📝 Émetteur de rapport | l'agent les a nommés faute de mieux, et c'est l'utilisateur qui nomme | les trancher dans la fournée de nommage (tâche #200) |
-| **Le référentiel et le code ne déclarent pas le même nombre d'axes** | le référentiel déclare 2 axe(s), le code en publie 8 (iceberg, type, moment, domaine, destinataire, cherche, rang, famille) — la prose se rédige à la main, mais elle ne peut plus s'écarter en silence | réécrire à la main le §1 de `docs/referentiel/organisation-agence.md` — la prose est humaine, seul l'écart est mécanique |
+| **Le référentiel et le code ne déclarent pas le même nombre d'axes** | le référentiel déclare 3 axe(s), le code en publie 9 (iceberg, type, moment, domaine, destinataire, cherche, vitalite, rang, famille) — la prose se rédige à la main, mais elle ne peut plus s'écarter en silence | réécrire à la main le §1 de `docs/referentiel/organisation-agence.md` — la prose est humaine, seul l'écart est mécanique |
 
 > Chaque ligne porte son geste, jamais seulement son constat (Article 28) : un rapport qui s'arrête au constat ressemble à un problème traité, et c'est exactement ce qui rend l'oubli invisible.
 
