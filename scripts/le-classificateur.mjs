@@ -1631,7 +1631,7 @@ export const MOTIFS_PART = [
   // LES GABARITS SONT LA PIÈCE LA PLUS EXPORTABLE DE TOUTES, et le premier passage les a pourtant
   // laissés en « à instruire ». Ce sont les moules dont sortent le blueprint, la fiche et le
   // registre de chaque outil : une Agence remontée ailleurs sans eux ne sait plus fabriquer un kit.
-  { motif: /^docs\/templates\//, pourquoi: "le moule dont sort chaque pièce de kit — sans lui, l'Agence remontée ailleurs ne sait plus en fabriquer" },
+  { motif: /^docs\/templates\//, pourquoi: "le moule dont sort chaque pièce de kit — sans lui, l'Agence remontée ailleurs ne sait plus en fabriquer. docs/gabarits/ y a été fusionné le 2026-09-26" },
   // La documentation d'un PROCESS décrit une façon de travailler, jamais le jeu. Même nature que
   // les règles de travail, et elle voyage pour la même raison.
   { motif: /^docs\/[a-z0-9-]+-process-detail\.md$/, pourquoi: "le détail d'un process de travail : il vaut pour n'importe quel projet piloté par IA" },
@@ -1696,9 +1696,26 @@ export const EXCEPTIONS_D_EXPORT = [
   { chemin: "docs/referentiel/claude-md-asides-historique.md", etat: "MEMOIRE", pourquoi: "l'historique des apartés retirés de la charte : la trace d'un travail fait, jamais une règle" },
   { chemin: "docs/referentiel/charte-cartographie.md", etat: "RESTE", pourquoi: "cartographie de CETTE charte-ci, régénérée à la demande — l'OUTIL qui la produit part, sa sortie sur ce projet reste" },
   { chemin: "docs/referentiel/claude-md-regles.md", etat: "RESTE", pourquoi: "la table des règles de CETTE charte-ci — même raison que sa voisine, dont elle déclare désormais la frontière" },
+  // LES NEUF STRATÉGIES, TRIÉES UNE PAR UNE le 2026-09-26 sur sa validation (« les trier un par un,
+  // je te propose le tri »). LE CRITÈRE, ET IL SE TIENT EN UNE QUESTION : un autre projet piloté
+  // par IA referait-il ce raisonnement ? S'il le referait, l'emporter lui épargne des semaines ;
+  // s'il n'en a que faire, l'emporter lui impose du bruit sur un jeu qui n'est pas le sien.
+  { chemin: "docs/strategies/renommage-en-masse-strategie.md", etat: "PART", pourquoi: "renommer à grande échelle sans casser l'histoire est un problème que TOUT outillage rencontre — le raisonnement ne doit surtout pas être refait de zéro" },
+  { chemin: "docs/strategies/classification-et-nivellement-strategie.md", etat: "PART", pourquoi: "comment ranger un outillage et le mettre à niveau : la question se repose à l'identique ailleurs, et elle a coûté des semaines ici" },
+  { chemin: "docs/strategies/process-et-ronde-strategie.md", etat: "PART", pourquoi: "la vérification périodique — un projet piloté par IA en a besoin quel que soit son sujet" },
+  { chemin: "docs/strategies/outillage-et-garde-fous-strategie.md", etat: "PART", pourquoi: "comment construire un garde-fou qui tienne : c'est le cœur transportable de l'Agence" },
+  { chemin: "docs/strategies/donnees-et-mesure-strategie.md", etat: "PART", pourquoi: "mesurer plutôt que supposer : le réflexe le plus cher à acquérir, et celui qui sert partout" },
+  { chemin: "docs/strategies/gestion-des-taches-strategie.md", etat: "PART", pourquoi: "le suivi durable des tâches ne dépend d'aucun domaine — un projet suivant aura le même besoin dès son premier jour" },
+  { chemin: "docs/strategies/export-et-commercialisation-strategie.md", etat: "PART", pourquoi: "c'est la stratégie du SECOND PROJET lui-même : si un document doit arriver le premier dans le carton, c'est celui-là" },
+  { chemin: "docs/strategies/le-jeu-et-le-site-strategie.md", etat: "RESTE", pourquoi: "le jeu et le site : rien de ce raisonnement ne s'applique à autre chose que ce produit-ci" },
+  { chemin: "docs/strategies/charte-et-referentiel-strategie.md", etat: "RESTE", pourquoi: "une stratégie SUR CETTE CHARTE-CI, dont les 32 Articles parlent de Lia et Noé — la méthode voyage déjà dans les autres stratégies, ce document-ci raisonne sur un texte qui reste" },
 ];
 
-// LES NEUF STRATÉGIES RESTENT « À INSTRUIRE », ET C'EST UNE DÉCISION PLUTÔT QU'UN OUBLI
+// LES NEUF STRATÉGIES ONT ÉTÉ TRIÉES LE 2026-09-26 (ci-dessus). Ce commentaire garde la trace de
+// POURQUOI elles ont d'abord été laissées « à instruire » : aucun signal mécanique ne les sépare —
+// certaines ne concernent que le jeu, d'autres serviraient ailleurs, et le dossier ne le dit pas.
+// L'arbitrage était donc humain, comme l'Article 28 le prévoit pour son troisième état, et il a été
+// rendu. La constante ci-dessous reste : elle documente ce que le détecteur NE sait pas trancher.
 // (2026-09-26). `docs/strategies/*-strategie.md` sont des raisonnements STRATÉGIQUES sur ce
 // projet : certains ne concernent que le jeu (« le-jeu-et-le-site »), d'autres seraient
 // parfaitement utiles ailleurs (« renommage-en-masse », « classification-et-nivellement »), et

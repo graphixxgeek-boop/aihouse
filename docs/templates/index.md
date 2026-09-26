@@ -10,3 +10,17 @@
 | [blueprint.md](blueprint.md) | — |
 | [fiche-instanciation.md](fiche-instanciation.md) | — |
 | [registre-index.md](registre-index.md) | — |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+## Fichiers
+
+**5 fichier(s)** dans ce dossier.
+
+| Fichier | Sous-dossier |
+|---|---|
+| [README.md](README.md) | — |
+| [blueprint.md](blueprint.md) | — |
+| [fiche-instanciation.md](fiche-instanciation.md) | — |
+| [process.md](process.md) | — |
+| [registre-index.md](registre-index.md) | — |
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

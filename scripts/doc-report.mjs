@@ -64,7 +64,6 @@ export const DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES = [
   { path: "docs/referentiel/", pourquoi: "LE référentiel du projet — 112 documents écrits à la main, jamais produits passage après passage. Son index est une table des matières, générée pour que la charte puisse enfin la citer : elle ordonne de vérifier « contre la table des matières réelle de ce dossier », et cette table n'existait pas." },
   { path: "docs/strategies/", pourquoi: "les raisonnements stratégiques sur ce projet, rédigés, jamais produits mécaniquement. Leur sommaire ne leur donne pas de producteur périodique." },
   { path: "docs/templates/", pourquoi: "les gabarits dont sortent les pièces de kit. Un moule n'est pas un registre : il ne s'accumule pas, il sert." },
-  { path: "docs/gabarits/", pourquoi: "même nature que docs/templates/ — deux dossiers pour une même chose, voisinage à instruire séparément, mais ni l'un ni l'autre n'est un registre." },
 ];
 
 // findDossiersNiRegistreNiDeclares() — LE GARDE-FOU DE CETTE DÉCLARATION (Article 24). Un dossier
@@ -475,7 +474,7 @@ export function findRegistriesMissingDecision(realDocsDirs, registries = REGISTR
 //
 // CE QUI N'EST PAS DÉRIVABLE, ET QUI SE DÉCLARE PLUTÔT QUE SE DEVINER (leçon L5) : un dossier sans
 // script du même nom peut être deux choses opposées, et aucune mécanique ne les sépare —
-//   · un dossier de DOCUMENTS (docs/plans, docs/reponses, docs/gabarits, docs/rapports-de-nuit),
+//   · un dossier de DOCUMENTS (docs/plans, docs/reponses, docs/templates, docs/rapports-de-nuit),
 //     qui n'a aucune décision de format à prendre parce qu'aucun outil ne le remplit ;
 //   · le registre d'un outil dont le SCRIPT PORTE UN AUTRE NOM — et ce n'est pas théorique :
 //     `docs/smart-breaker/` est produit par `check-gemini-quota.mjs`, `docs/tableau-de-bord/` par

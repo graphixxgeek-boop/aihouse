@@ -887,7 +887,7 @@ export function schemaUnifie(schema = SCHEMA_DE_REFERENCE) {
 // ————————————————————————————————————————————————————————————————————————
 //
 // Demande de l'utilisateur : « le modèle de process et son contrôle + les gabarits ». Le modèle vit
-// dans docs/gabarits/process.md ; ceci en est le contrôle.
+// dans docs/templates/process.md ; ceci en est le contrôle.
 //
 // CE QU'IL VÉRIFIE EST UNE RÉPONSE, JAMAIS UN TITRE, et ce choix décide de tout le reste. Les huit
 // process déclarés ont des structures franchement différentes — « Partie 1…6 » chez l'un, des
@@ -1919,7 +1919,7 @@ export function buildGodReportBlocks({ processes = PROCESSES, root = ROOT, sessi
   // document de process écrit vingt minutes plus tôt.
   const horsGabarit = findProcessHorsGabarit({ processes, root });
   blocks.push({ type: "note", text: horsGabarit.length
-    ? `⚠️ ${horsGabarit.length} réponse(s) manquante(s) au gabarit de process (docs/gabarits/process.md) :\n  ${horsGabarit.map((e) => `${e.process} (${e.doc}) — ${e.quoi}`).join("\n  ")}`
+    ? `⚠️ ${horsGabarit.length} réponse(s) manquante(s) au gabarit de process (docs/templates/process.md) :\n  ${horsGabarit.map((e) => `${e.process} (${e.doc}) — ${e.quoi}`).join("\n  ")}`
     : "✅ Gabarit de process : chaque document déclaré répond aux cinq questions du modèle (ce qu'il empêche, son déclencheur, ses étapes et leurs preuves, son contrôleur nommé, ses limites). Présence vérifiée, jamais la qualité de la réponse." });
 
   const sansGardien = findProcessesWithoutGuardian({ processes, root });

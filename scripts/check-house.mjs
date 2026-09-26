@@ -13242,8 +13242,8 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const illisible = god.findProcessHorsGabarit({ processes: [gabaritOk], readFileImpl: () => { throw new Error('nope'); } });
   assert.deepEqual(illisible.map((e) => e.cle), ['document'], 'an unreadable document must report exactly that, never be counted as five separate template violations — an absence of measurement is not a measurement');
   // Et en direct contre les vrais documents de process.
-  assert.deepEqual(god.findProcessHorsGabarit(), [], "checked live against every real process document: each must answer the five questions of docs/gabarits/process.md — this assertion found 8 missing answers across 5 documents on its first run, three of them in a process document written twenty minutes earlier");
-  assert.ok(fs.existsSync('docs/gabarits/process.md'), 'the template itself must exist on disk: a control that checks against a model nobody can read is a control nobody can satisfy');
+  assert.deepEqual(god.findProcessHorsGabarit(), [], "checked live against every real process document: each must answer the five questions of docs/templates/process.md — this assertion found 8 missing answers across 5 documents on its first run, three of them in a process document written twenty minutes earlier");
+  assert.ok(fs.existsSync('docs/templates/process.md'), 'the template itself must exist on disk: a control that checks against a model nobody can read is a control nobody can satisfy');
 
   // 5. LES QUATRE GARDIENS SACRÉS CÂBLÉS CE JOUR-LÀ produisent bien une section de plan.
   const sourcesGardiens = Object.fromEntries(['check-argus', 'check-harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter', 'always-new-code', 'safe-export']

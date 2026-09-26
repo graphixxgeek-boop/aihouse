@@ -1,5 +1,29 @@
 # DATA-ARCHANGEL — instanciation
 
+## Deux mots, deux choses : « index » et « angel-of-index » *(2026-09-26, tranché par l'utilisateur)*
+
+**Le mot « index » désignait DEUX choses**, et je m'en suis servi dans les deux sens dans la même
+phrase le soir où l'extension est née : le FICHIER `index.md` posé dans un dossier, et le SYSTÈME
+qui surveille ces fichiers. C'est la forme la plus discrète de la dette de reprise que l'Article 27
+nomme — une IA qui lit « vérifier l'index » ne peut pas savoir s'il faut ouvrir un fichier ou
+lancer un scan, et rien ne l'avertit de son hésitation.
+
+**La règle, et elle ne coûte aucun renommage :**
+
+- **« index »**, seul, désigne TOUJOURS le fichier : `docs/<dossier>/index.md`. C'est le mot qu'on
+  tape spontanément, et le lui retirer aurait obligé à renommer 58 fichiers plus tous les chemins
+  qui les citent — exactement le chantier de renommage en masse qui n'est pas encore ouvert.
+- **« angel-of-index »** désigne TOUJOURS le système qui les mesure et les répare :
+  `node scripts/data-archangel.mjs angel-of-index`. Nom donné par l'utilisateur le 2026-09-26.
+- La commande accepte aussi `index` tout court, **et c'est délibéré** : refuser le mot naturel pour
+  imposer le nom propre ferait rater la commande à qui ne l'a pas mémorisée. L'alias sert la main,
+  le nom propre sert la phrase.
+
+**Ce que la règle interdit** : écrire « l'index » en parlant du système. Un document qui le fait
+rend la phrase ambiguë pour tout lecteur qui n'a pas le contexte en tête — c'est-à-dire pour tout
+lecteur de demain.
+
+
 *Blueprint : `docs/data-archangel-blueprint.md`. Registre : `docs/data-archangel/`.
 Script : `scripts/data-archangel.mjs`.*
 
