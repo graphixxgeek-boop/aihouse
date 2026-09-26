@@ -1,6 +1,6 @@
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 21:16 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 22:48 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -417,3 +417,28 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 > Chaque ligne porte son geste, jamais seulement son constat (Article 28) : un rapport qui s'arrête au constat ressemble à un problème traité, et c'est exactement ce qui rend l'oubli invisible.
 
+
+
+## Les documents — ce qui part avec l'Agence
+
+```
+=== CE QUI PART AVEC L'AGENCE — 437 documents, couverture 98 % ===
+
+  📦 PART — 195 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
+  🏠 RESTE — 12 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
+  🗄️ MEMOIRE — 221 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
+  ❓ A-INSTRUIRE — 9 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
+
+  LES 9 À INSTRUIRE, un par un — aucun n'est rangé par défaut :
+      ❓ docs/strategies/charte-et-referentiel-strategie.md
+      ❓ docs/strategies/classification-et-nivellement-strategie.md
+      ❓ docs/strategies/donnees-et-mesure-strategie.md
+      ❓ docs/strategies/export-et-commercialisation-strategie.md
+      ❓ docs/strategies/gestion-des-taches-strategie.md
+      ❓ docs/strategies/le-jeu-et-le-site-strategie.md
+      ❓ docs/strategies/outillage-et-garde-fous-strategie.md
+      ❓ docs/strategies/process-et-ronde-strategie.md
+      ❓ docs/strategies/renommage-en-masse-strategie.md
+
+  HORS PORTÉE : elle dit si un document PEUT partir, jamais s'il est à jour ni s'il est bon. Un document générique et périmé sort « PART » — c'est THE-EQUALIZER et la relecture périodique qui répondent à l'autre question.
+```

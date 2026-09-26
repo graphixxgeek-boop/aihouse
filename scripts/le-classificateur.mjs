@@ -23,6 +23,9 @@ import { join } from "node:path";
 import { AGENT_CATEGORIES, rangDeLaCategorie, familleDeLaCategorie, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
+// L'inventaire documentaire de la charte est déjà parsé par SAFE-EXPORT : on le LIT chez lui
+// plutôt que d'en tenir une seconde copie, qui finirait par diverger (leçon L29).
+import { aliasDocumentaires } from "./safe-export.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -1541,6 +1544,260 @@ function lireLHeure() {
   try { return new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return null; }
 }
 
+// ============================================================================================
+// DEUXIÈME POPULATION : LES DOCUMENTS (2026-09-26, tâche #980)
+// ============================================================================================
+//
+// SA QUESTION, ET LE CHIFFRE QUI Y RÉPOND : « dans les documents de référence, lesquels doivent
+// être exportés ? est-ce que la séparation existe aujourd'hui ? » — NON, elle n'existait pas.
+// Ce fichier classait 90 fichiers EXÉCUTABLES sur neuf axes ; il ne lisait les documents que comme
+// des SOURCES (qui lance quoi, quel outil possède quelle fiche). Le dépôt porte 438 documents, et
+// SIX seulement étaient nommés quelque part au titre de l'export : les six pièces du kit de
+// l'Agence. Les 432 autres n'étaient classés par personne — ni comme partant, ni comme restant.
+//
+// CE QUE ÇA COÛTAIT, CONCRÈTEMENT : le jour où l'on emporte l'Agence, personne ne sait quoi
+// mettre dans le carton. On emporterait soit tout (et le prochain projet hérite des transcripts de
+// Lia et Noé, de neuf mois de suivi et de deux cents rapports datés), soit les scripts seuls (et
+// l'Agence arrive sans une ligne de ce qui explique pourquoi elle est faite comme ça, ce que
+// l'Article 27 interdit).
+//
+// LES TROIS ÉTATS, TRANCHÉS PAR L'UTILISATEUR EN FENÊTRE DÉDIÉE le 2026-09-26. Deux ne suffisaient
+// pas, et sa raison est la bonne : sans le troisième, les ~200 archives datées tomberaient dans
+// « ne part pas » à côté des documents du jeu, et on ne saurait plus distinguer « propre au jeu »
+// de « mémoire du passé » — deux choses qui appellent des gestes opposés le jour du déménagement.
+export const ETATS_D_EXPORT = [
+  { cle: "PART", icone: "📦", quoi: "générique, réutilisable tel quel sur un autre projet — entre dans le carton" },
+  { cle: "RESTE", icone: "🏠", quoi: "propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant" },
+  { cle: "MEMOIRE", icone: "🗄️", quoi: "archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus" },
+  { cle: "A-INSTRUIRE", icone: "❓", quoi: "aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux" },
+];
+
+// LES SIGNAUX SE LISENT, ILS NE SE RECOPIENT PAS (Article 24). Aucune liste de 438 chemins ici :
+// chaque état se DÉDUIT de deux registres qui existaient déjà et que d'autres outils tiennent
+// pour eux-mêmes — l'inventaire documentaire de la charte (qui dit quel document est le blueprint
+// ou la fiche d'un outil) et la convention de dépôt des archives. Un document créé demain est
+// classé sans qu'on touche à ce fichier.
+//
+// L'ORDRE DES TROIS TESTS EST LA RÈGLE, pas un détail : MÉMOIRE se teste EN PREMIER. Un rapport
+// archivé dans le dossier d'un outil parle forcément de cet outil, donc il ressemblerait à une
+// pièce de kit ; et une archive du jeu nomme forcément Lia et Noé, donc elle ressemblerait à un
+// document du jeu. Tester la mémoire d'abord, c'est écarter ce qui est un RÉCIT DE PASSAGE avant
+// de se demander de quoi il parle — exactement la distinction que ce fichier a déjà payée une fois
+// en acceptant une commande de lancement trouvée dans un suivi.
+export const MOTIFS_MEMOIRE = [
+  { motif: /^docs\/suivi\//, pourquoi: "le journal des tâches : l'histoire de ce projet-ci, jamais une règle" },
+  { motif: /^docs\/simulations\//, pourquoi: "les conversations archivées de Lia et Noé" },
+  { motif: /^docs\/plans\//, pourquoi: "un plan de chantier est la photographie d'un moment" },
+  { motif: /^docs\/rapports-de-nuit\//, pourquoi: "le compte rendu d'une nuit précise" },
+  { motif: /^docs\/[a-z0-9-]+\/.*\d{4}-\d{2}-\d{2}/, pourquoi: "un passage daté déposé dans le registre d'un outil" },
+  { motif: /^docs\/[a-z0-9-]+\/ronde-/, pourquoi: "le dépôt d'une Ronde" },
+  // L'INDEX D'UN REGISTRE, SOUS SES DEUX NOMS RÉELS. Le premier passage n'attrapait que
+  // `index.md` et laissait 23 `circle-signals-index.md` en « à instruire » — même nature, autre
+  // nom, et la différence ne tient qu'à une convention de dépôt de la Ronde.
+  { motif: /^docs\/[a-z0-9-]+\/[a-z-]*index\.md$/, pourquoi: "l'index d'un registre : il liste des passages passés, il ne dit aucune règle" },
+  { motif: /^docs\/[a-z0-9-]+\/[a-z-]+\/[a-z-]*index\.md$/, pourquoi: "l'index d'un sous-registre" },
+  { motif: /^docs\/contexte-projet\//, pourquoi: "les archives historiques transmises par l'utilisateur" },
+];
+
+// Ce qui part, et la raison tient en une phrase : ce sont les documents que le projet a ÉCRITS POUR
+// PARTIR. Le blueprint le dit de lui-même (« réutilisable tel quel »), le kit de l'Agence a été
+// construit pour être remonté ailleurs, et les documents de méthode ne parlent jamais du jeu.
+export const MOTIFS_PART = [
+  { motif: /^docs\/[a-z0-9-]+-blueprint\.md$/, pourquoi: "un blueprint se déclare générique — c'est sa définition" },
+  { motif: /^docs\/agence-(blueprint|installation)\.md$/, pourquoi: "les deux pièces qui expliquent comment remonter l'Agence ailleurs" },
+  { motif: /^docs\/philosophie-et-politique\.md$/, pourquoi: "déclaré formulé pour rester utilisable sur un futur projet" },
+  { motif: /^docs\/referentiel\/(standards|lecons|organisation-agence|classification-agence|le-classificateur)\.md$/, pourquoi: "pièce du kit de l'Agence" },
+  { motif: /^docs\/(regles-de-travail|systeme-de-suivi|xp-ia-process-detail)\.md$/, pourquoi: "méthode de travail : elle vaut pour n'importe quel projet piloté par IA" },
+  { motif: /^docs\/[a-z0-9-]+-conception\.md$/, pourquoi: "document de conception d'un outil, jamais du jeu" },
+  // LES GABARITS SONT LA PIÈCE LA PLUS EXPORTABLE DE TOUTES, et le premier passage les a pourtant
+  // laissés en « à instruire ». Ce sont les moules dont sortent le blueprint, la fiche et le
+  // registre de chaque outil : une Agence remontée ailleurs sans eux ne sait plus fabriquer un kit.
+  { motif: /^docs\/templates\//, pourquoi: "le moule dont sort chaque pièce de kit — sans lui, l'Agence remontée ailleurs ne sait plus en fabriquer" },
+  // La documentation d'un PROCESS décrit une façon de travailler, jamais le jeu. Même nature que
+  // les règles de travail, et elle voyage pour la même raison.
+  { motif: /^docs\/[a-z0-9-]+-process-detail\.md$/, pourquoi: "le détail d'un process de travail : il vaut pour n'importe quel projet piloté par IA" },
+  { motif: /^docs\/mode-[a-z0-9-]+\.md$/, pourquoi: "un mode de travail de l'agent, jamais une règle du jeu" },
+];
+
+// Ce qui reste : les documents qui gouvernent le JEU. Le signal n'est pas le dossier — les fiches
+// du jeu et les fiches d'outils cohabitent dans docs/referentiel/ — mais le SUJET, lu dans le
+// texte : un document qui nomme Lia et Noé plusieurs fois parle du produit, pas de l'outillage.
+export const SEUIL_MENTIONS_DU_JEU = 3;
+// LA FRONTIÈRE DE MOT NE MARCHE PAS SUR UN NOM ACCENTUÉ, et le contre-test l'a prouvé avant que
+// ça ne coûte quoi que ce soit (2026-09-26). `\bNoé\b` ne correspond JAMAIS : « é » n'est pas un
+// caractère de mot au sens de `\b`, donc la frontière attendue après lui n'existe pas. Le
+// détecteur ne comptait donc que « Lia », et un document qui parle surtout de Noé — il y en a —
+// serait passé sous le seuil et sorti « à instruire » au lieu de « reste ». On encadre par des
+// lookarounds Unicode, seule forme qui tienne sur un nom accentué.
+export const MOTIF_PERSONNAGES = /(?<![\p{L}])(Lia|No[ée])(?![\p{L}])/gu;
+
+export function compterMentionsDuJeu(texte = "") {
+  return (String(texte).match(MOTIF_PERSONNAGES) ?? []).length;
+}
+
+// Les noms de base de tout ce qui est exécutable dans le dépôt, LUS sur le disque. On retire les
+// préfixes conventionnels (`check-argus.mjs` est documenté dans `argus.md`) parce que le dépôt
+// nomme ainsi depuis toujours et que la fiche porte le nom de L'OUTIL, jamais celui du script.
+export const PREFIXES_DE_SCRIPT = /^(check|run)-/;
+
+export function nomsDesExecutables({ root = ROOT, listDirImpl = readdirSync, dossiers = ["scripts", "lib"] } = {}) {
+  const noms = new Set();
+  for (const d of dossiers) {
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, d)); } catch { continue; }
+    for (const e of entrees) {
+      const base = String(e).replace(/\.(mjs|ts|tsx)$/, "");
+      if (base === String(e)) continue;
+      noms.add(base);
+      noms.add(base.replace(PREFIXES_DE_SCRIPT, ""));
+    }
+  }
+  return noms;
+}
+
+// LES EXCEPTIONS, ET IL EN FAUT — l'utilisateur a tranché « déduit par l'outil, exceptions écrites »
+// le 2026-09-26. Une exception sans raison n'est pas une décision, c'est un rangement arbitraire
+// (Article 28) : chacune porte donc la sienne, et elles sont peu nombreuses par construction —
+// tout ce qui pouvait se dériver l'a été avant d'arriver ici.
+export const EXCEPTIONS_D_EXPORT = [
+  { chemin: "docs/carnet-de-bord.md", etat: "MEMOIRE", pourquoi: "l'état vivant du travail EN COURS sur ce projet-ci : il n'a aucun sens ailleurs, et ce n'est pas une règle" },
+  { chemin: "docs/idees-a-trancher.md", etat: "MEMOIRE", pourquoi: "registre des idées de CE projet en attente d'arbitrage" },
+  { chemin: "docs/peur-de-l-export.md", etat: "PART", pourquoi: "il raisonne sur ce qui empêche une Agence de partir — c'est le sujet même du second projet, et il vaut pour n'importe quel outillage" },
+  { chemin: "docs/referentiel/organisation-globale-projet.md", etat: "RESTE", pourquoi: "le document mère de CE projet : il décrit comment le jeu et l'Agence s'articulent ICI" },
+  { chemin: "docs/referentiel/process-calibres.md", etat: "PART", pourquoi: "les process tels qu'un humain les a calibrés : la forme est réutilisable, et c'est la partie la plus chère à retrouver" },
+  { chemin: "docs/referentiel/classification-des-rapports-et-datas.md", etat: "PART", pourquoi: "la règle de rangement des rapports et des données — le cœur même de ce qui doit voyager" },
+  { chemin: "docs/referentiel/concordance-evolutivite-conception.md", etat: "PART", pourquoi: "document de conception sur l'évolutivité, sans une ligne sur le jeu" },
+  { chemin: "docs/referentiel/feuille-de-route.md", etat: "RESTE", pourquoi: "la feuille de route du JEU — les sept chantiers d'origine et leur avancement" },
+  { chemin: "docs/referentiel/regles-de-l-espace.md", etat: "RESTE", pourquoi: "les déplacements de Lia et Noé dans la maison" },
+  { chemin: "docs/referentiel/regles-de-la-memoire.md", etat: "RESTE", pourquoi: "la mémoire des personnages" },
+  { chemin: "docs/referentiel/regles-des-graphismes.md", etat: "RESTE", pourquoi: "le rendu 3D de la maison et des personnages — propre à ce produit-ci" },
+  { chemin: "docs/referentiel/smart-breaker-historique.md", etat: "PART", pourquoi: "les règles opérationnelles de la résilience API : elles valent pour tout projet qui appelle un modèle sous quota" },
+  { chemin: "docs/referentiel/build-verified.md", etat: "PART", pourquoi: "fiche d'instanciation d'un outil, son propre titre le dit" },
+  { chemin: "docs/referentiel/charte-operations.md", etat: "MEMOIRE", pourquoi: "« Mémoire des opérations sur la charte » — son titre dit qu'il enregistre des passages passés" },
+  { chemin: "docs/referentiel/claude-md-asides-historique.md", etat: "MEMOIRE", pourquoi: "l'historique des apartés retirés de la charte : la trace d'un travail fait, jamais une règle" },
+  { chemin: "docs/referentiel/charte-cartographie.md", etat: "RESTE", pourquoi: "cartographie de CETTE charte-ci, régénérée à la demande — l'OUTIL qui la produit part, sa sortie sur ce projet reste" },
+  { chemin: "docs/referentiel/claude-md-regles.md", etat: "RESTE", pourquoi: "la table des règles de CETTE charte-ci — même raison que sa voisine, dont elle déclare désormais la frontière" },
+];
+
+// LES NEUF STRATÉGIES RESTENT « À INSTRUIRE », ET C'EST UNE DÉCISION PLUTÔT QU'UN OUBLI
+// (2026-09-26). `docs/strategies/*-strategie.md` sont des raisonnements STRATÉGIQUES sur ce
+// projet : certains ne concernent que le jeu (« le-jeu-et-le-site »), d'autres seraient
+// parfaitement utiles ailleurs (« renommage-en-masse », « classification-et-nivellement »), et
+// deux parlent de l'avenir de l'Agence elle-même. Aucun signal mécanique ne les sépare, et les
+// ranger tous du même côté ferait perdre les uns ou polluerait avec les autres. C'est un
+// arbitrage humain : il est PORTÉ À L'UTILISATEUR (Article 28, état « À TRANCHER ») plutôt que
+// tranché ici, et il reste visible dans le rapport tant qu'il ne l'est pas.
+export const A_TRANCHER_PAR_L_UTILISATEUR = /^docs\/strategies\//;
+
+// UN DOCUMENT DANS LE DOSSIER D'UN OUTIL EST SON REGISTRE, quel que soit son nom. Le premier
+// passage n'attrapait que les fichiers nommés `index` ; `registre.md`, `estimations.md`,
+// `convocations.md`, `eval-ia.md` sont exactement la même chose sous un autre nom. Le signal n'est
+// pas le nom du fichier mais le DOSSIER : s'il porte le nom d'un exécutable du parc, tout ce qui
+// s'y trouve est ce que cet outil a écrit en tournant — un récit de passages, jamais une règle.
+export const MOTIF_DOSSIER_D_OUTIL = /^docs\/([a-z0-9-]+)\//;
+
+export function classerUnDocument(chemin, texte = "", { alias = null, executables = null, seuilJeu = SEUIL_MENTIONS_DU_JEU, exceptions = EXCEPTIONS_D_EXPORT } = {}) {
+  const declaree = exceptions.find((e) => e.chemin === String(chemin));
+  if (declaree) return { chemin: String(chemin), etat: declaree.etat, pourquoi: declaree.pourquoi, source: "exception déclarée à la main" };
+  const c = String(chemin);
+  const memoire = MOTIFS_MEMOIRE.find((m) => m.motif.test(c));
+  if (memoire) return { chemin: c, etat: "MEMOIRE", pourquoi: memoire.pourquoi, source: "convention de dépôt" };
+  const part = MOTIFS_PART.find((m) => m.motif.test(c));
+  if (part) return { chemin: c, etat: "PART", pourquoi: part.pourquoi, source: "convention de nommage" };
+  // L'INVENTAIRE DE LA CHARTE TRANCHE CE QUE LE CHEMIN NE DIT PAS. Une fiche d'outil et une fiche
+  // du jeu vivent toutes deux dans docs/referentiel/ et se ressemblent trait pour trait ; seul
+  // l'inventaire sait laquelle documente un outil. On LIT ce registre plutôt que d'énumérer les
+  // fiches (Article 24) : un outil intégré demain apporte sa ligne, et sa fiche est classée seule.
+  if (alias && [...alias.values()].some((a) => a?.fiche === c || a?.blueprint === c)) {
+    return { chemin: c, etat: "PART", pourquoi: "fiche ou blueprint déclaré dans l'inventaire de la charte — pièce du kit d'un outil qui part", source: "inventaire de la charte" };
+  }
+  // LA FICHE D'UN OUTIL SE RECONNAÎT À L'EXISTENCE DE SON OUTIL, pas à sa présence dans un
+  // inventaire. L'inventaire de la charte nomme 38 outils ; le parc en compte 90 — s'y fier seul
+  // laissait une cinquantaine de fiches parfaitement légitimes en « à instruire », c'est-à-dire
+  // accusait le référentiel d'un trou qui était dans l'inventaire. On confronte donc le nom de la
+  // fiche au contenu RÉEL de scripts/ et lib/ : dérivé, jamais recopié, et un outil né demain
+  // apporte sa fiche sans qu'on touche à ce fichier (Article 24).
+  const fiche = c.match(/^docs\/referentiel\/([a-z0-9-]+)\.md$/);
+  if (fiche && executables && executables.has(fiche[1])) {
+    return { chemin: c, etat: "PART", pourquoi: `fiche de l'outil « ${fiche[1]} », dont le fichier existe vraiment dans le parc — elle part avec lui`, source: "parc réel" };
+  }
+  // Un document qui se déclare lui-même « fiche d'instanciation » ou « blueprint » dans son titre
+  // dit ce qu'il est mieux qu'aucune convention de chemin.
+  if (/^#\s.*\b(fiche d'instanciation|blueprint)\b/im.test(texte)) {
+    return { chemin: c, etat: "PART", pourquoi: "le document se déclare pièce de kit dans son propre titre", source: "auto-déclaration" };
+  }
+  if (/^#\s*Gabarit\b/im.test(texte)) {
+    return { chemin: c, etat: "PART", pourquoi: "un gabarit est le moule dont sortent les documents — il part avec l'Agence, sinon elle ne sait plus en fabriquer", source: "auto-déclaration" };
+  }
+  const dossier = c.match(MOTIF_DOSSIER_D_OUTIL);
+  if (dossier && executables && executables.has(dossier[1])) {
+    return { chemin: c, etat: "MEMOIRE", pourquoi: `déposé dans le registre de « ${dossier[1]} » : c'est ce que cet outil a écrit en tournant, jamais une règle`, source: "dossier d'outil" };
+  }
+  const mentions = compterMentionsDuJeu(texte);
+  if (mentions >= seuilJeu) {
+    return { chemin: c, etat: "RESTE", pourquoi: `nomme les personnages ${mentions} fois : ce document gouverne le jeu, pas l'outillage`, source: "sujet du texte" };
+  }
+  return { chemin: c, etat: "A-INSTRUIRE", pourquoi: "aucun signal ne tranche — ni archive, ni pièce de kit, ni document du jeu", source: "aucune" };
+}
+
+export function chargerLesDocuments({ root = ROOT, racines = ["docs"], enPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  const docs = [];
+  const pile = [...racines];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (!e.name.endsWith(".md")) continue;
+      try { docs.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme classé */ }
+    }
+  }
+  for (const f of enPlus) {
+    try { docs.push({ chemin: f, texte: readFileImpl(join(root, f), "utf8") }); } catch { /* absent : on ne l'invente pas */ }
+  }
+  return docs;
+}
+
+export function classerLesDocuments(documents = null, { root = ROOT, aliasImpl = null } = {}) {
+  const docs = documents ?? chargerLesDocuments({ root });
+  if (!docs.length) {
+    return { mesurable: false, pourquoi: "aucun document lu : rendre un classement sur zéro document serait un satisfecit sur du vide" };
+  }
+  let alias = null;
+  try { alias = (aliasImpl ?? aliasDocumentaires)({ root }); } catch { /* sans inventaire, les fiches tombent en « à instruire », et le rapport le dit */ }
+  const executables = nomsDesExecutables({ root });
+  const classes = docs.map((d) => classerUnDocument(d.chemin, d.texte, { alias, executables }));
+  const parEtat = {};
+  for (const c of classes) (parEtat[c.etat] ??= []).push(c);
+  return {
+    mesurable: true, examines: docs.length, classes, parEtat,
+    inventaireLu: alias != null,
+    couverture: Math.round(((docs.length - (parEtat["A-INSTRUIRE"]?.length ?? 0)) / docs.length) * 100),
+    horsPortee: "elle dit si un document PEUT partir, jamais s'il est à jour ni s'il est bon. Un document générique et périmé sort « PART » — c'est THE-EQUALIZER et la relecture périodique qui répondent à l'autre question.",
+  };
+}
+
+export function formatDocumentsLines(r) {
+  if (!r?.mesurable) return [`=== CLASSIFICATION DES DOCUMENTS : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « tout est classé »."];
+  const l = [`=== CE QUI PART AVEC L'AGENCE — ${r.examines} documents, couverture ${r.couverture} % ===`, ""];
+  if (!r.inventaireLu) l.push("  ⚠️  L'inventaire documentaire de la charte n'a pas pu être lu : les fiches d'outils tombent en « à instruire » faute de registre, ce n'est PAS un défaut de ces fiches.");
+  for (const e of ETATS_D_EXPORT) {
+    const lot = r.parEtat[e.cle] ?? [];
+    l.push(`  ${e.icone} ${e.cle} — ${lot.length} document(s) : ${e.quoi}`);
+  }
+  const aInstruire = r.parEtat["A-INSTRUIRE"] ?? [];
+  if (aInstruire.length) {
+    l.push("");
+    l.push(`  LES ${aInstruire.length} À INSTRUIRE, un par un — aucun n'est rangé par défaut :`);
+    for (const c of aInstruire) l.push(`      ❓ ${c.chemin}`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
 function main() {
   printReliabilityNotice("le-classificateur");
   recordCliUsage("le-classificateur");
@@ -1549,13 +1806,19 @@ function main() {
     const doc = documentDeClassification({ horodatage: lireLHeure() });
     if (!doc.mesurable) { console.log(`\n🚨 PAS MESURÉ — ${doc.pourquoi}`); return; }
     const cible = process.argv[3] ?? CLASSIFICATION_PATH;
-    writeFileSync(join(ROOT, cible), doc.markdown, "utf8");
+    // LA SECONDE POPULATION REJOINT LE DOCUMENT OFFICIEL (2026-09-26, tâche #980). Sa règle est
+    // sans exception : le document de classification se remet en HTML. Le classement des documents
+    // y entre donc par les deux sorties à la fois, jamais dans un fichier à part — deux documents
+    // officiels de rangement, c'est très exactement la divergence que ce chantier combat.
+    const docs = classerLesDocuments();
+    const lignesDocs = formatDocumentsLines(docs);
+    writeFileSync(join(ROOT, cible), `${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n`, "utf8");
     try { mkdirSync(join(ROOT, "docs/le-classificateur"), { recursive: true }); } catch { /* déjà là */ }
     writeFileSync(join(ROOT, CLASSIFICATION_HTML), renderHtmlReport({
       tool: "le-classificateur",
       title: "Classification générale de l'Agence Codex",
       subtitle: "Le document officiel du rangement — types, rangs, familles, classes et indice à facettes, listes exhaustives",
-      blocks: doc.blocs,
+      blocks: [...doc.blocs, { type: "heading", text: "Les documents — ce qui part avec l'Agence" }, { type: "pre", text: lignesDocs.join("\n") }],
     }), "utf8");
     console.log(`\nÉcrit : ${cible}`);
     console.log(`Écrit : ${CLASSIFICATION_HTML}  ← la version de remise`);
@@ -1649,6 +1912,21 @@ export const POPULATIONS_A_CLASSER = [
       const rows = loadAllTaskRows();
       if (!rows?.length) return { mesurable: false, pourquoi: "aucune ligne de suivi lue — ce n'est pas « aucune tâche »" };
       return { mesurable: true, total: rows.length, classes: rows.filter((r) => r.criticite && r.sujet).length, unite: "tâches" };
+    },
+  },
+  {
+    // LES DOCUMENTS — sixième population, inscrite le 2026-09-26 (tâche #980) sur sa question :
+    // « est-ce que tous les éléments importants de l'Agence sont couverts par une classification ? ».
+    // La réponse était NON, et le trou se voyait ici même : ce registre en déclarait cinq, et les
+    // 437 documents du dépôt — dont la charte, tout le référentiel et tous les blueprints —
+    // n'étaient dans aucune. Le registre posait la bonne question et ne la posait pas sur lui-même.
+    cle: "documents", quoi: "les documents du dépôt (charte, référentiel, blueprints, plans, archives)",
+    porteur: "LE-CLASSIFICATEUR — axe d'exportabilité (PART / RESTE / MÉMOIRE), déduit, exceptions écrites",
+    document: "docs/referentiel/classification-agence.md",
+    async sonde() {
+      const r = classerLesDocuments();
+      if (!r?.mesurable) return { mesurable: false, pourquoi: r?.pourquoi ?? "aucun document lu" };
+      return { mesurable: true, total: r.examines, classes: r.examines - (r.parEtat["A-INSTRUIRE"]?.length ?? 0) };
     },
   },
   {

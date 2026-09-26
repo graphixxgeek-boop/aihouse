@@ -8087,6 +8087,57 @@ async function testOffresConcurrentes() {
 
 await testOffresConcurrentes();
 
+async function testClassificationDesDocuments() {
+  const lc = await import('../scripts/le-classificateur.mjs');
+  const { classerUnDocument, classerLesDocuments, nomsDesExecutables, ETATS_D_EXPORT, EXCEPTIONS_D_EXPORT, POPULATIONS_A_CLASSER, compterMentionsDuJeu } = lc;
+
+  // L'ORDRE DES TESTS EST LA RÈGLE, pas un détail d'implémentation : MÉMOIRE se teste EN PREMIER.
+  // Un rapport archivé dans le dossier d'un outil parle forcément de cet outil, donc il
+  // ressemblerait à une pièce de kit ; une archive du jeu nomme forcément Lia et Noé, donc elle
+  // ressemblerait à un document du jeu. Écarter d'abord ce qui est un RÉCIT DE PASSAGE.
+  const exe = new Set(['argus', 'check-argus', 'ecotoken']);
+  assert.equal(classerUnDocument('docs/suivi/sessions/s.md', 'Lia et Noé et Lia').etat, 'MEMOIRE', 'MUST CATCH: the task journal is a record, never a rule — and it names the characters constantly, so testing the game first would have filed it as a game document');
+  assert.equal(classerUnDocument('docs/ecotoken/scan-2026-09-22.txt.md', 'peu importe', { executables: exe }).etat, 'MEMOIRE', 'a dated deposit inside a tool folder is what that tool wrote while running');
+  assert.equal(classerUnDocument('docs/argus-blueprint.md', 'x').etat, 'PART', 'a blueprint declares itself generic — that is its definition');
+  assert.equal(classerUnDocument('docs/templates/blueprint.md', 'x').etat, 'PART', 'MUST CATCH: the moulds are the MOST exportable thing of all, and the first pass left them unclassified — an Agency rebuilt elsewhere without them can no longer make a kit');
+  assert.equal(classerUnDocument('docs/referentiel/argus.md', 'x', { executables: exe }).etat, 'PART', 'MUST CATCH: a tool fiche is recognised by ITS TOOL EXISTING, never by an inventory. The charter names 38 tools for a fleet of 90, and trusting it alone left some fifty legitimate fiches unclassified — accusing the référentiel of a hole that was in the inventory');
+  assert.equal(classerUnDocument('docs/referentiel/inconnu-total.md', 'un texte neutre', { executables: exe }).etat, 'A-INSTRUIRE', 'MUST LET PASS nothing: with no signal it says so rather than filing by default — a silent default is how a classification becomes false');
+  assert.equal(classerUnDocument('docs/referentiel/quelque-chose.md', 'Lia parle. Noé répond. Lia insiste.', { executables: exe }).etat, 'RESTE', 'a document naming the characters governs the game, not the tooling');
+  assert.equal(compterMentionsDuJeu('Lia, Noé, Noe'), 3, 'and the count reads both spellings of the second name');
+
+  // LES EXCEPTIONS PORTENT TOUTES LEUR RAISON — une exception sans raison n'est pas une décision.
+  assert.ok(EXCEPTIONS_D_EXPORT.length > 0, 'the user chose "derived, with written exceptions", so exceptions must exist');
+  assert.ok(EXCEPTIONS_D_EXPORT.every((e) => e.pourquoi && e.pourquoi.length > 20), 'every one carries a real reason, never a bare verdict (Article 28)');
+  assert.ok(EXCEPTIONS_D_EXPORT.every((e) => ETATS_D_EXPORT.some((s) => s.cle === e.etat)), 'and every one lands on a declared state rather than inventing a fourth');
+  assert.equal(classerUnDocument('docs/peur-de-l-export.md', '').source, 'exception déclarée à la main', 'a declared exception wins over every derivation, and says so');
+
+  // LE PARC SE LIT SUR LE DISQUE, jamais dans une liste (Article 24).
+  const noms = nomsDesExecutables();
+  assert.ok(noms.has('safe-export') && noms.has('argus'), `the fleet is read from scripts/ and lib/, prefixes stripped (check-argus.mjs is documented in argus.md) — currently ${noms.size} names`);
+
+  // UN CORPUS VIDE N'EST JAMAIS « TOUT EST CLASSÉ ».
+  assert.equal(classerLesDocuments([]).mesurable, false, 'no document read is not a clean bill');
+
+  // EN DIRECT SUR LES 437 DOCUMENTS RÉELS (Article 25).
+  const reel = classerLesDocuments();
+  assert.equal(reel.mesurable, true, 'the document classification must actually run against the real repository');
+  assert.ok(reel.examines > 400, `on the whole corpus (currently ${reel.examines})`);
+  assert.ok(reel.couverture >= 95, `with a coverage that makes it usable (currently ${reel.couverture} %)`);
+  // Le reste n'est pas un oubli : ce sont les neuf stratégies, portées à l'utilisateur parce
+  // qu'aucun signal mécanique ne les sépare (Article 28, état « à trancher »).
+  assert.ok((reel.parEtat['A-INSTRUIRE'] ?? []).every((c) => lc.A_TRANCHER_PAR_L_UTILISATEUR.test(c.chemin)), `everything still unclassified is the arbitration deliberately left to the user, never a forgotten file: ${(reel.parEtat['A-INSTRUIRE'] ?? []).map((c) => c.chemin).join(', ')}`);
+  assert.ok((reel.parEtat['PART'] ?? []).length > 100 && (reel.parEtat['MEMOIRE'] ?? []).length > 100, 'and the three states are all genuinely populated — a classification that put everything in one box would measure nothing');
+
+  // LA SIXIÈME POPULATION EST INSCRITE AU REGISTRE, et c'est le point de sa question : ce registre
+  // demandait « tout est-il rangé ? » sans se le demander sur les 437 documents du dépôt.
+  assert.ok(POPULATIONS_A_CLASSER.some((p) => p.cle === 'documents'), 'the documents are now a declared population, so their coverage is measured at every passage rather than remembered');
+
+  console.log("Passed: ce qui part avec l'Agence, document par document (2026-09-26, sa demande « EN FINIR AVEC LA CLASSIFICATION »). SA QUESTION ÉTAIT « est-ce que la séparation existe aujourd'hui ? » ET LA RÉPONSE ÉTAIT NON : ce fichier classait 90 fichiers EXÉCUTABLES sur neuf axes et ne lisait les documents que comme des sources. Sur 437 documents, SIX étaient nommés quelque part au titre de l'export — les six pièces du kit de l'Agence. Le jour du déménagement, personne ne savait quoi mettre dans le carton : soit tout, et le projet suivant hérite des transcripts de Lia et Noé et de neuf mois de suivi ; soit les scripts seuls, et l'Agence arrive sans une ligne de ce qui explique pourquoi elle est faite ainsi, ce que l'Article 27 interdit. TROIS ÉTATS, TRANCHÉS PAR LUI EN FENÊTRE DÉDIÉE : deux ne suffisaient pas, parce que les archives datées tomberaient alors dans « ne part pas » à côté des documents du jeu, et que « propre au jeu » et « mémoire du passé » appellent des gestes opposés. TOUT EST DÉRIVÉ, RIEN N'EST RECOPIÉ : les états se déduisent de deux registres qui existaient déjà — l'inventaire documentaire de la charte et le contenu réel de scripts/ — et un document créé demain est classé sans qu'on touche à ce fichier. La couverture est montée par paliers en corrigeant à chaque fois une famille entière plutôt qu'un fichier : 73 % au premier passage, 83 % une fois les index de Ronde et les gabarits reconnus, 92 % une fois les fiches confrontées au PARC RÉEL plutôt qu'à l'inventaire de la charte (qui nomme 38 outils pour 90 fichiers), 98 % avec treize exceptions portant chacune sa raison. LE RESTE EST UNE DÉCISION, PAS UN OUBLI : les neuf documents de stratégie ne se séparent par aucun signal mécanique — certains ne concernent que le jeu, d'autres serviraient ailleurs — et ils sont portés à l'utilisateur plutôt que rangés à sa place. ET LE REGISTRE DES POPULATIONS POSAIT LA BONNE QUESTION SANS SE LA POSER À LUI-MÊME : il en déclarait cinq, et les 437 documents du dépôt — la charte, tout le référentiel, tous les blueprints — n'étaient dans aucune.");
+}
+
+await testClassificationDesDocuments();
+
+
 
 
 await testEtatDesClassifications();
