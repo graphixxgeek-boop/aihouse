@@ -179,3 +179,34 @@ ne désigne QUE ce qui LANCE le produit (`run-framework`, `sauvegarde-projet`…
 JUGE. EL-PROFESSOR note la fidélité à la charte : c'est un jugement de qualité. Et l'export suit la
 règle déjà en place des deux documents par outil — **le blueprint générique part, l'instanciation
 (Lia, Noé, les jauges) reste**.
+
+## La relecture ligne à ligne du 2026-09-26 — dix défauts, et le pire était invisible
+
+*(Sa demande : « vérifie le doc que tu m'as envoyé, il y a beaucoup d'erreurs [...] c'est la
+classification que nous allons graver dans le marbre donc pas d'imprécisions ». Il avait raison.)*
+
+| # | Le défaut | Ce qu'il produisait | Ce qui le ferme |
+|---|---|---|---|
+| 1 | `blocsVersMarkdown()` ignorait le type `highlight` | les DEUX versions du même document ne disaient pas la même chose, et la version texte perdait la phrase centrale | le bloc est rendu, et un type inconnu écrit « BLOC NON RENDU » au lieu de disparaître (leçon **L26**) |
+| 2 | deux rangs partageaient une icône (🎖️, 🧱) | la traduction de l'indice en icônes n'était plus réversible — dans le document dont c'est la fonction | `iconesEnCollision()`, vérifié sur les quatre facettes |
+| 3 | « Qui le remplit : **?** » imprimé pour Hors Agence | un trou de table de correspondance se lisait comme un trou de connaissance | `QUI_REMPLIT` nommé, et un cas non traduit le DIT |
+| 4 | le tableau des rangs sortait dans l'ordre du code | le Socle en tête d'une échelle qu'il ne monte pas ; Membre classique avant Membre premium | champ `echelon` + `rangsOrdonnes()` ; §5/§6/§7 suivent l'ordre des facettes |
+| 5 | trois sommets affichaient « *(non arrêté)* » | un sommet ressemblait à un oubli | Agent Cadre, Gardien sacré et Émetteur déclarent pourquoi rien ne suit |
+| 6 | l'exemple d'indice `2.2.3.dh` était **fabriqué** | il décrivait un Gardien sacré chez Les Prophètes, que porte aucun fichier | l'exemple est tiré du dépôt et décodé sous les yeux du lecteur |
+| 7 | la classe « coûte de vrais appels API » était fausse à moitié | `check-house` y figurait parce qu'il MOQUE l'appel ; `le-classificateur` parce que **sa propre sonde se trouvait elle-même** | sonde sur `await fetch(` distant + propagation le long du graphe d'import + déclaration écrite pour l'invisible |
+| 8 | « qui le lance vraiment » citait des **archives** | une ligne de `docs/suivi/` présentée comme une commande — la confusion que ce dépôt avait déjà payée une fois | `estLanceurVivant()` : code exécuté ou document normatif, jamais une mémoire |
+| 9 | une addition qui ne tombait pas juste | « 57 + 6 » annoncé pour un total de 62 | `membresSansFichier()` nomme le manquant (`find-deep-booster`) au lieu de le masquer |
+| 10 | le §9 s'arrêtait au constat | les portes orphelines mouraient dans leur propre page (Article 28) | un vrai plan d'action, un geste par ligne |
+
+**Le plus grave est le n°1, et il mérite d'être compris plutôt que noté.** Les deux fichiers étaient
+corrects : le HTML complet, le Markdown bien formé. Ce qui manquait n'existait que dans la
+COMPARAISON — et personne ne compare deux fichiers censés venir de la même source, précisément parce
+qu'ils viennent de la même source. C'est la leçon L26.
+
+**Le n°7 est le plus humiliant** : la sonde cherchait un motif que son propre code contenait. Le bug
+auto-référentiel, déjà payé sur find-booster (tâche #182), refait à l'identique deux jours plus tard.
+
+**Ce que la correction a changé, en chiffres** : la classe « coûte de vrais appels API » passe de
+2 justes sur 4 à **4 sur 4** ; les portes orphelines passent de 1 à **2** (`integration-outil`
+rejoint `tasks-process-guardian` une fois les archives écartées) ; et le §9 passe de 1 constat à
+**5, chacun avec son geste**.

@@ -8744,6 +8744,59 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     assert.ok(fausses.orphelines.every((x) => !x.appelants.length), 'an orphan door is one that NOTHING in the repository launches, which is a measured fact rather than a suspicion');
     assert.ok(fausses.suspects.length < fausses.examines, 'and the guard never accuses the whole population: it separates, it does not condemn');
 
+    // LA RELECTURE LIGNE À LIGNE DU DOCUMENT (2026-09-26, sa demande : « c'est la classification que
+    // nous allons graver dans le marbre, donc pas d'imprécisions »). Cinq défauts réels trouvés en
+    // le lisant contre le code, chacun tenu ici pour qu'il ne revienne pas.
+    const LC = await import('../scripts/le-classificateur.mjs');
+    const recLC = LC.recenserLesScripts();
+    const croiseLC = LC.croiserTypeEtRang({ recensement: recLC });
+
+    // (1) LE RENDU MARKDOWN AVALAIT LES BLOCS « highlight » — donc les deux versions du MÊME
+    // document ne disaient pas la même chose, et la version texte perdait la phrase centrale de
+    // tout le document (« le rang mérité l'emporte toujours »).
+    const mdEssai = LC.blocsVersMarkdown([{ type: 'highlight', text: 'la phrase centrale' }]);
+    assert.ok(mdEssai.includes('la phrase centrale'), 'a highlight block must reach the Markdown output: the HTML renderer shows it, so dropping it silently made the two versions of one document disagree');
+    const mdInconnu = LC.blocsVersMarkdown([{ type: 'type-qui-nexiste-pas', text: 'x' }]);
+    assert.ok(/BLOC NON RENDU/.test(mdInconnu), 'and an unknown block type is SIGNALLED in the document rather than swallowed — a renderer that ignores what it does not know renders exactly like one that had nothing to say');
+
+    // (2) DEUX RANGS PARTAGEAIENT UNE ICÔNE (🎖️ pour Agent Cadre et Membre classique, 🧱 pour Socle
+    // et Sans porte), ce qui rend la traduction de l'indice en icônes non réversible — dans le
+    // document dont c'est précisément la fonction.
+    const collisions = LC.iconesEnCollision({ familles: croiseLC.familles });
+    for (const facette of ['type', 'rang', 'famille', 'classes']) {
+      assert.deepEqual(collisions[facette], [], `checked live: no two values of the "${facette}" facet may share an icon, or the icon translation stops being reversible`);
+    }
+
+    // (3) LE TABLEAU DES RANGS SORTAIT DANS L'ORDRE DU CODE — Socle en tête d'une échelle qu'il ne
+    // monte pas, et Membre classique avant Membre premium sans dire lequel est au-dessus.
+    const echelle = LC.rangsOrdonnes();
+    const surEchelle = echelle.filter((r) => Number.isInteger(r.echelon));
+    assert.deepEqual(surEchelle.map((r) => r.echelon), [...surEchelle.map((r) => r.echelon)].sort((a, b) => a - b), 'the ladder comes out in ascending order, from the most fragile state to the highest rank');
+    assert.equal(echelle.at(-1).singulier, 'Hors Agence', 'and Hors Agence closes the table, which is the user\'s explicit instruction — it is not a rung, it is the end of the list');
+    assert.ok(echelle.every((r) => r.promotionVers || r.condition), 'every rank says either where it leads or why it leads nowhere: "(non arrêté)" printed on a summit reads as an oversight rather than as the top of the scale');
+
+    // (4) « QUI LE REMPLIT : ? » SORTAIT DANS LE DOCUMENT pour le rang Hors Agence, parce que sa
+    // population n'était pas dans la table de traduction. Un « ? » imprimé se lit comme un trou de
+    // connaissance alors que c'est un trou de correspondance.
+    for (const r of echelle) {
+      assert.ok(!/non traduite/.test(LC.quiRemplit(r.population)), `every rank's population must be translated: "${r.singulier}" printed a bare "?" in the reference document before this`);
+    }
+
+    // (5) LA CLASSE « COÛTE DE VRAIS APPELS API » ÉTAIT FAUSSE À MOITIÉ — check-house y figurait
+    // parce qu'il MOQUE l'appel, et le classificateur parce que sa propre sonde se trouvait
+    // elle-même. Elle commande l'Article 22 : une moitié de faux y est cher payée.
+    const apis = (recLC.parClasse['coute-des-appels-api'] ?? []).map((c) => c.replace('scripts/', ''));
+    assert.ok(!apis.includes('check-house.mjs'), 'the safety net MOCKS the API call in its fixtures — a URL quoted in an assertion is the exact opposite of a real call');
+    assert.ok(!apis.includes('le-classificateur.mjs'), 'and the probe must not match ITSELF: its own pattern contained the word it was looking for (the self-referential bug already paid for once on find-booster, task #182)');
+    assert.ok(apis.includes('check-gemini-quota.mjs'), 'while a tool that reaches the network THROUGH another (check-gemini-quota imports api-providers) does cost API calls, and the charter says so — delegation propagates along the import graph');
+    assert.ok(apis.includes('check-spirit.mjs'), 'and what no probe on scripts/ can ever see (check-spirit compiles lib/lia.ts and runs it) is DECLARED with its reason rather than left silent');
+
+    // (6) « QUI LE LANCE VRAIMENT » CITAIT DES ARCHIVES — une ligne de docs/suivi/ est le récit d'un
+    // passage passé, pas une commande. Le dépôt avait déjà payé cette confusion une fois.
+    assert.equal(LC.estLanceurVivant('docs/suivi/sessions/une-session.md'), null, 'a suivi row is the story of a past run, never a launch command — printing it as a launcher was this repository\'s known mistake, made twice');
+    assert.ok(LC.estLanceurVivant('scripts/circle-tasks.mjs'), 'executed code is a living launcher');
+    assert.ok(LC.estLanceurVivant('docs/regles-de-travail.md'), 'and so is a normative document, which says what must be done in the present tense');
+
     // Le rang, lui, ne se dérive JAMAIS : un outil qui se promouvrait lui-même se décernerait un titre.
     assert.ok(!Object.keys(CASSANDRA.OBLIGATIONS_DERIVEES[0]).includes('rang'), 'the derived mechanism grants EQUIPMENT, never a RANK — a rank is merited and decided, and that distinction is deliberate');
     // HORS AGENCE : une exclusion déclarée prime sur toute déduction de type.

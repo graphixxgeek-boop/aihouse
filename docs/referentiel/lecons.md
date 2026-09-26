@@ -782,6 +782,42 @@ moment où je classe.
 
 ---
 
+## L26 — Deux rendus du même contenu doivent être vérifiés l'UN CONTRE L'AUTRE, jamais chacun seul
+
+*(2026-09-26, trouvé en relisant le document de classification ligne à ligne à la demande de
+l'utilisateur.)*
+
+Un même générateur produisait deux versions d'un document : une en HTML, une en texte. Le rendu HTML
+connaissait six types de blocs, le rendu Markdown seulement cinq — et le sixième, `highlight`,
+tombait dans un `else` absent. **Résultat : la version texte perdait silencieusement la phrase
+centrale du document** (« le rang MÉRITÉ l'emporte toujours »), et personne ne pouvait le voir, parce
+que chaque version, lue seule, était parfaitement cohérente.
+
+**Pourquoi ce défaut est invisible par construction** : les deux fichiers sont corrects. Le HTML est
+complet, le Markdown est bien formé. Ce qui manque n'existe que dans la COMPARAISON, et personne ne
+compare deux fichiers censés venir de la même source — c'est précisément parce qu'ils viennent de la
+même source qu'on les croit identiques.
+
+**La forme générale, au-delà des documents** : chaque fois qu'une donnée est rendue par deux chemins
+(deux formats, deux écrans, une API et son affichage, un rapport et son résumé), le point faible
+n'est ni l'un ni l'autre chemin — c'est le type de contenu que l'un connaît et l'autre pas. Et il
+grandit tout seul : chaque type ajouté d'un côté creuse l'écart.
+
+**Les deux gestes, et le second est le seul qui tienne dans le temps** :
+
+1. **Un rendu ne doit JAMAIS ignorer en silence ce qu'il ne connaît pas.** Un `else` muet rend
+   exactement comme un contenu vide. Ici, l'inconnu écrit désormais « BLOC NON RENDU » dans le
+   document lui-même : impossible à rater, impossible à confondre avec un trou de contenu.
+2. **Un test compare les deux rendus sur le même bloc**, pas chacun de son côté. Un test par rendu
+   aurait laissé passer ce défaut indéfiniment : les deux auraient été verts.
+
+**Terrain** : quand un contenu est rendu en plusieurs formats · mots : rendu, markdown, html, export,
+format, deux versions · fichiers : scripts/le-classificateur.mjs, scripts/html-report.mjs
+
+**Porté par** : `blocsVersMarkdown()` signale un type inconnu dans sa sortie, et `check-house.mjs`
+vérifie qu'un bloc `highlight` atteint bien le Markdown. La règle générale — vérifier les rendus l'un
+contre l'autre — n'a pas de porteur mécanique et se déclare ici (Article 27).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

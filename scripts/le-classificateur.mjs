@@ -63,8 +63,18 @@ export const CLASSES_TRANSVERSES = [
     quoi: "écrit une mémoire durable sur le disque — ce qui lui permet de se souvenir d'un passage à l'autre",
     sonde: (src) => /writeFileSync|appendFileSync/.test(src) },
   { cle: "coute-des-appels-api", libelle: "(ct) 💳 Les consommateurs d'API - coûte de vrais appels API",
-    quoi: "consulte un modèle ou un service distant : jamais lancé sans passer par Smart Conso API (Article 22)",
-    sonde: (src) => /generativelanguage|fetch\s*\(\s*[`'"]https/.test(src) },
+    quoi: "consulte un modèle ou un service distant PAYANT : jamais lancé sans passer par Smart Conso API (Article 22)",
+    // LA SONDE A ÉTÉ REFAITE LE 2026-09-26, sur 2 faux verdicts SUR 4 — la moitié d'une classe qui
+    // commande l'Article 22. L'ancienne cherchait le mot « generativelanguage » n'importe où :
+    //   · `check-house.mjs` sortait consommateur d'API parce qu'il MOQUE l'appel dans ses tests —
+    //     une URL citée dans une assertion est exactement le contraire d'un appel réel ;
+    //   · `le-classificateur.mjs` sortait consommateur d'API parce que la sonde SE TROUVAIT
+    //     ELLE-MÊME : son propre motif contient le mot qu'elle cherche. Le bug auto-référentiel
+    //     déjà payé une fois sur find-booster (tâche #182), refait à l'identique.
+    // Le vrai signal est un appel AWAITÉ vers un hôte DISTANT : `await fetch(` suivi d'une URL
+    // https qui ne soit pas localhost. `kpi-report` et `run-simulation` awaitent bien un fetch,
+    // mais vers le serveur de dev local — ça ne coûte pas un centime d'API.
+    sonde: (src) => MOTIF_APPEL_DISTANT.test(String(src)) },
   { cle: "porte-un-garde-fou-devolutivite", libelle: "(ct) 🌱 Les évolutifs - porte un garde-fou d'évolutivité",
     quoi: "contient une fonction qui refuse une liste recopiée à la main : elle compare une copie à sa source et crie quand les deux divergent (Article 24). C'est ce qui permet à un registre de grossir sans qu'une copie oubliée se périme en silence.",
     sonde: (src) => /function\s+find\w*(Diverg|Missing|Manquant|NonDeclar|Undeclared)\w*\s*\(/.test(src) },
@@ -81,6 +91,22 @@ export const CLASSES_TRANSVERSES = [
     quoi: "distingue « je n'ai rien trouvé » de « je n'ai pas pu regarder » (leçon L5) — la classe la plus discrète et la plus importante",
     sonde: (src) => /PAS MESURÉ|pas mesuré|mesurable\s*:\s*false/.test(src) },
 ];
+
+// Un appel réseau RÉEL et DISTANT : `await fetch(` puis, dans la même expression, une URL https
+// qui n'est pas localhost. Le `await` écarte les motifs cités dans un commentaire ou dans une
+// expression régulière ; le `https` non-local écarte le serveur de développement.
+export const MOTIF_APPEL_DISTANT = /await\s+fetch\s*\(\s*[`'"][^`'"\n]*https:\/\/(?!localhost|127\.0\.0\.1)/;
+
+// CE QU'AUCUNE SONDE SUR `scripts/` NE PEUT VOIR, ET QUI SE DÉCLARE PLUTÔT QUE DE SE TAIRE.
+// `check-spirit.mjs` coûte de vrais appels Gemini — la charte le dit noir sur blanc — mais il ne
+// contient pas une ligne de réseau : il COMPILE `lib/lia.ts` et l'exécute, et l'appel vit là.
+// Aucune lecture de `scripts/*.mjs` ne peut l'apercevoir. L'Article 24 autorise explicitement une
+// liste tenue à la main quand sa nature manuelle est écrite à côté : la voici, avec la raison de
+// chaque entrée. Une entrée sans raison serait un aveu déguisé, jamais une déclaration.
+export const APPEL_API_DECLARE = {
+  "scripts/check-spirit.mjs": "compile lib/lia.ts avec typescript puis l'exécute : l'appel Gemini vit dans lib/, hors de portée d'une sonde qui lit scripts/",
+  "scripts/check-profile.mjs": "même mécanique que check-spirit, et son propre appel direct est en plus visible dans le fichier",
+};
 
 // DEUX FAUX VERDICTS, TROUVÉS AU PREMIER PASSAGE RÉEL — et les garder écrits vaut mieux que de
 // les refaire, parce que les deux venaient de la même paresse : mesurer ce qui était facile à
@@ -180,8 +206,31 @@ export function typeDeScript(chemin, source = "", { fiches = new Set(), importeu
   return importeurs >= 2 ? "bibliotheque-partagee" : "bibliotheque-solitaire";
 }
 
-export function classesDuScript(source = "", classes = CLASSES_TRANSVERSES) {
-  return classes.filter((c) => c.sonde(String(source))).map((c) => c.cle);
+export function classesDuScript(source = "", classes = CLASSES_TRANSVERSES, chemin = null, declarees = APPEL_API_DECLARE) {
+  const cles = classes.filter((c) => c.sonde(String(source))).map((c) => c.cle);
+  // La déclaration manuelle S'AJOUTE à la sonde, elle ne la remplace jamais : sans quoi une
+  // déclaration oubliée effacerait un constat mesuré, ce qui est le pire des deux mondes.
+  if (chemin && declarees?.[chemin] && !cles.includes("coute-des-appels-api")) cles.push("coute-des-appels-api");
+  return cles;
+}
+
+// Propage UNE classe le long du graphe d'import, jusqu'au point fixe : si A importe B et que B
+// porte la classe, A la porte aussi. Le point fixe est nécessaire et pas décoratif — une chaîne
+// de trois fichiers existe déjà dans ce dépôt, et s'arrêter au premier niveau raterait le bout.
+export function propagerParDelegation(lignes, importeDe, cle) {
+  const parChemin = new Map(lignes.map((l) => [l.chemin, l]));
+  let bouge = true;
+  let tours = 0;
+  while (bouge && tours++ < 20) {
+    bouge = false;
+    for (const l of lignes) {
+      if (l.classes.includes(cle)) continue;
+      for (const cible of importeDe?.[l.chemin] ?? []) {
+        if (parChemin.get(cible)?.classes?.includes(cle)) { l.classes.push(cle); bouge = true; break; }
+      }
+    }
+  }
+  return lignes;
 }
 
 // LE RECENSEMENT COMPLET. Il refuse de répondre plutôt que de rendre un tableau vide quand il n'a
@@ -251,13 +300,17 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
   };
   lireInstructions("docs");
 
-  // Qui importe qui — dérivé des imports réels, jamais d'une carte tenue à la main.
+  // Qui importe qui — dérivé des imports réels, jamais d'une carte tenue à la main. Le SENS de
+  // l'arête est gardé en plus du simple compteur, parce qu'une classe peut se propager le long
+  // du graphe : qui importe un consommateur d'API en consomme aussi (cf. `propagerParDelegation`).
   const importeurs = {};
-  for (const [, src] of Object.entries(sources)) {
+  const importeDe = {};
+  for (const [source, src] of Object.entries(sources)) {
     if (!src) continue;
     for (const m of String(src).matchAll(/from\s+["']\.\/([a-z0-9-]+\.mjs)["']|import\(["']\.\.\/scripts\/([a-z0-9-]+\.mjs)["']/g)) {
       const cible = `scripts/${m[1] ?? m[2]}`;
       importeurs[cible] = (importeurs[cible] ?? 0) + 1;
+      (importeDe[source] ??= new Set()).add(cible);
     }
   }
 
@@ -270,7 +323,7 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
       illisible: src === null,
       type: src === null ? "illisible" : typeDeScript(c, src, { fiches, importeurs: nb, portes, scriptsDeLInventaire, documente: new RegExp(`scripts/${c.replace(/^scripts\//, "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(documentation) }),
       fiche: fiches.has(c) ? "fiche dédiée" : (scriptsDeLInventaire.has(c) ? "à l'inventaire de la charte" : null),
-      classes: src === null ? [] : classesDuScript(src, classes),
+      classes: src === null ? [] : classesDuScript(src, classes, c),
       importeurs: nb,
       portes,
       // LE POIDS, demandé explicitement (#744, « indiquer le nombre de lignes de code, le poids
@@ -284,6 +337,14 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
 
   const parType = {};
   for (const l of lignes) (parType[l.type] ??= []).push(l.chemin);
+  // LA DÉLÉGATION SE PROPAGE, pour cette classe-là seulement (2026-09-26). `check-gemini-quota`
+  // ne contient pas une ligne de réseau : il importe `api-providers`, qui appelle. La charte le
+  // range pourtant explicitement parmi les actions coûteuses soumises à l'Article 22. Une sonde
+  // qui ne regarde que le texte d'un fichier ne pouvait pas le voir — le graphe d'import, si.
+  // Seule cette classe se propage : « scanne le dépôt » ou « rend un rapport HTML » restent des
+  // faits locaux, et les propager rendrait la moitié du dépôt rapporteur HTML par contagion.
+  propagerParDelegation(lignes, importeDe, "coute-des-appels-api");
+
   const parClasse = {};
   for (const cl of classes) parClasse[cl.cle] = lignes.filter((l) => l.classes.includes(cl.cle)).map((l) => l.chemin);
 
@@ -353,32 +414,64 @@ export function porteDansLeCode(source = "") {
   return { aMain, aGardeDeLancement, lancable: aMain || aGardeDeLancement };
 }
 
-// Qui, dans le dépôt, écrit « node scripts/<ce fichier> » ? On LIT les endroits où une commande
-// peut vivre (la doc, le crochet post-commit, package.json, les items de Ronde) — jamais une
-// liste recopiée à la main, qui se périmerait au premier outil ajouté (Article 24).
-export const LIEUX_DE_COMMANDE = ["docs", "scripts", "package.json", ".githooks"];
+// Qui, dans le dépôt, LANCE VRAIMENT ce fichier ? On LIT les endroits où une commande peut vivre —
+// jamais une liste recopiée à la main, qui se périmerait au premier outil ajouté (Article 24).
+//
+// LA DISTINCTION QUI FAIT TOUT, ET LE DÉPÔT L'AVAIT DÉJÀ PAYÉE UNE FOIS : une ligne de
+// `docs/suivi/`, un rapport archivé, l'index d'un registre — ce sont des RÉCITS DE PASSAGES
+// PASSÉS, pas des commandes. Le commentaire de tête de ce fichier raconte déjà l'erreur commise
+// en construisant le typage : « il a accepté une commande de lancement trouvée dans un SUIVI,
+// c'est-à-dire l'histoire d'un passage passé ». La première version de `quiLappelle()` l'a refaite
+// à l'identique et l'a IMPRIMÉE dans le document : `integration-outil` y était « lancé par » une
+// ligne de suivi, et `safe-export` par un dossier d'analyse daté. Deux fausses portes, dans le
+// document même destiné à être gravé dans le marbre.
+//
+// Un LANCEUR VIVANT est donc l'un des deux, et rien d'autre :
+//   · du CODE EXÉCUTÉ (`scripts/`, les crochets git, `package.json`) — il lancera encore demain ;
+//   · un DOCUMENT NORMATIF (la charte, les règles de travail, le référentiel, un blueprint) — il
+//     dit ce qu'il FAUT faire, au présent.
+// Tout le reste de `docs/` est une mémoire : vraie, utile, et muette sur ce qui se lance encore.
+export const LANCEURS_VIVANTS = [
+  { prefixe: "scripts/", quoi: "code exécuté" },
+  { prefixe: ".githooks/", quoi: "crochet git" },
+  { prefixe: "package.json", quoi: "manifeste du projet" },
+  { prefixe: "CLAUDE.md", quoi: "la charte" },
+  { prefixe: "docs/regles-de-travail.md", quoi: "les règles de travail" },
+  { prefixe: "docs/referentiel/", quoi: "le référentiel" },
+];
+export const MOTIF_BLUEPRINT = /^docs\/[a-z0-9-]+-blueprint\.md$/;
 
-export function quiLappelle(chemin, { root = ROOT, lire = readFileSync, lieux = LIEUX_DE_COMMANDE, lireDossier = readdirSync } = {}) {
+export function estLanceurVivant(chemin, lanceurs = LANCEURS_VIVANTS) {
+  const c = String(chemin);
+  if (MOTIF_BLUEPRINT.test(c)) return "blueprint générique";
+  return lanceurs.find((l) => c === l.prefixe || c.startsWith(l.prefixe))?.quoi ?? null;
+}
+
+export function quiLappelle(chemin, { root = ROOT, lire = readFileSync, lireDossier = readdirSync, lanceurs = LANCEURS_VIVANTS } = {}) {
   const cible = `node ${String(chemin)}`;
-  const trouves = [];
+  const vivants = [];
+  const archives = [];
   const parcourir = (rel, profondeur = 0) => {
-    if (profondeur > 3 || trouves.length >= 5) return;
+    if (profondeur > 3) return;
     let entrees = [];
     try { entrees = lireDossier(join(root, rel), { withFileTypes: true }); } catch { return; }
     for (const e of entrees) {
       const sous = rel ? `${rel}/${e.name}` : e.name;
       if (e.isDirectory()) { parcourir(sous, profondeur + 1); continue; }
-      if (!/\.(md|mjs|json|sh)$/.test(e.name)) continue;
-      if (sous === chemin) continue;
-      try { if (lire(join(root, sous), "utf8").includes(cible)) trouves.push(sous); } catch { /* illisible : on ne conclut pas */ }
-      if (trouves.length >= 5) return;
+      if (!/\.(md|mjs|json|sh)$/.test(e.name) || sous === chemin) continue;
+      let contient = false;
+      try { contient = lire(join(root, sous), "utf8").includes(cible); } catch { continue; }
+      if (!contient) continue;
+      (estLanceurVivant(sous, lanceurs) ? vivants : archives).push(sous);
     }
   };
-  for (const l of lieux) {
-    if (l.includes(".")) { try { if (lire(join(root, l), "utf8").includes(cible)) trouves.push(l); } catch { /* absent */ } }
+  for (const l of [...new Set([...lanceurs.map((x) => x.prefixe.replace(/\/$/, "")), "docs"])]) {
+    if (l.includes(".") && !l.includes("/")) { try { if (lire(join(root, l), "utf8").includes(cible)) vivants.push(l); } catch { /* absent */ } }
     else parcourir(l);
   }
-  return [...new Set(trouves)];
+  // Les deux listes sortent ENSEMBLE : une archive n'est pas une porte, mais l'effacer ferait
+  // croire que rien n'a jamais lancé ce fichier, ce qui est une autre erreur (leçon L5).
+  return { vivants: [...new Set(vivants)].sort(), archives: [...new Set(archives)].sort() };
 }
 
 export function bibliothequesLancables({ recensement = null, root = ROOT, lire = readFileSync, types = TYPES_BIBLIOTHEQUE } = {}) {
@@ -396,10 +489,11 @@ export function bibliothequesLancables({ recensement = null, root = ROOT, lire =
     // commande écrite nulle part est un trou ; la même porte appelée par le crochet post-commit
     // ou par un autre outil est un choix de conception, pas un oubli. Confondre les deux ferait
     // exactement ce que la question demandait d'éviter : accuser une conception saine.
-    const appelants = porte.lancable ? quiLappelle(l.chemin, { root, lire }) : [];
-    const ligne = { chemin: l.chemin, type: l.type, ...porte, appelants,
+    const appels = porte.lancable ? quiLappelle(l.chemin, { root, lire }) : { vivants: [], archives: [] };
+    const ligne = { chemin: l.chemin, type: l.type, ...porte, appelants: appels.vivants, archives: appels.archives,
       verdict: !porte.lancable ? "vraie bibliothèque"
-        : appelants.length ? "porte réelle, atteinte autrement (crochet ou autre outil) — jamais une commande écrite"
+        : appels.vivants.length ? "porte réelle, atteinte par du code ou un document normatif — simplement jamais écrite comme commande"
+        : appels.archives.length ? "PORTE ORPHELINE : rien de vivant ne le lance — seules des archives gardent la trace d'un passage passé"
         : "PORTE ORPHELINE : le fichier est lançable et rien au monde ne le lance" };
     (porte.lancable ? suspects : vraies).push(ligne);
   }
@@ -429,22 +523,24 @@ export function bibliothequesLancables({ recensement = null, root = ROOT, lire =
 export const FAMILLE_HORS_AGENCE = "(f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage";
 
 export const ORG_RANKS = {
-  socle: { label: "Socle", singulier: "Socle", emoji: "🧱", population: "type",
+  socle: { label: "Socle", singulier: "Socle", emoji: "🧱", population: "type", echelon: null,
     promotionVers: null, condition: "AUCUNE promotion, et ce n'est pas un plafond : il n'a jamais candidaté. Le promouvoir serait lui inventer une ambition qu'il n'a pas.",
     sens: "n'est pas membre de l'équipe : c'est le sol sur lequel tout le monde marche" },
-  cadre: { label: "Agents Cadre", singulier: "Agent Cadre", emoji: "🎖️", population: "equipe",
+  cadre: { label: "Agents Cadre", singulier: "Agent Cadre", emoji: "👔", population: "equipe", echelon: 6,
+    promotionVers: null, condition: "SOMMET de l'échelle : il n'y a rien au-dessus. Et on n'y monte pas par mérite mesuré — c'est une décision d'organisation, donc celle de l'utilisateur. Le rang se définit par un pouvoir précis : convoquer les autres et rendre un verdict sur eux.",
     sens: "dirigent — une fonction dans l'organigramme, jamais un badge de qualité en plus" },
-  gardien: { label: "Gardiens sacrés du code", singulier: "Gardien sacré du code", emoji: "🛡️", population: "equipe",
+  gardien: { label: "Gardiens sacrés du code", singulier: "Gardien sacré du code", emoji: "🛡️", population: "equipe", echelon: 5,
+    promotionVers: null, condition: "SOMMET de la qualité : aucun rang de mérite au-dessus. Le seul mouvement restant est vers Agent Cadre, qui n'est pas une promotion mais une décision d'organisation.",
     sens: "délivrent un vrai scan de qualité ET tournent automatiquement à CHAQUE commit" },
   // MEMBRE CERTIFIÉ CLASSIQUE (2026-09-26, décision de l'utilisateur sur le bloc B des 22). Ce rang
   // EXISTAIT déjà comme statut dans la table maîtresse depuis le 2026-09-21 — il n'avait simplement
   // jamais rejoint le dictionnaire des rangs, ce qui le rendait invisible à tout ce qui compte les
   // rangs. Il porte un vrai badge, et sa dispense est précise : aucune connaissance propre au projet
   // à documenter à part, donc ni fiche, ni blueprint, ni registre imposés d'office.
-  membreClassique: { label: "Membres certifiés classiques", singulier: "Membre classique", emoji: "🎖️", population: "equipe",
+  membreClassique: { label: "Membres classiques", singulier: "Membre classique", emoji: "🥈", population: "equipe", echelon: 3,
     promotionVers: "membre", condition: "acquérir une connaissance propre au projet — et ça ne se décrète pas : ça se constate le jour où l'outil se met à savoir quelque chose que lui seul sait.",
     sens: "un vrai membre badgé, dont la valeur est d'APPELER et d'AGRÉGER ce que les autres disent déjà — deux obligations seulement, parce qu'il n'a rien de propre à documenter à part" },
-  membre: { label: "Membres premium", singulier: "Membre premium", emoji: "🥇", population: "equipe",
+  membre: { label: "Membres premium", singulier: "Membre premium", emoji: "🥇", population: "equipe", echelon: 4,
     promotionVers: "gardien", condition: "remplir le critère DOUBLE de l'Article 20 : un vrai scan de qualité du CODE, ET gratuit à chaque commit. Vers Agent Cadre, ce n'est pas une promotion mécanique mais une décision d'organisation, donc celle de l'utilisateur.",
     sens: "câblage complet vérifié : table maîtresse, menu, instanciation, registre, blueprint" },
   // TROIS RANGS HORS ÉQUIPE PLUTÔT QU'UN SEUL (2026-09-26, sa demande : « pourquoi pas 2 ou 3 rangs
@@ -453,16 +549,17 @@ export const ORG_RANKS = {
   // distinctes se cachaient sous une seule étiquette, et elles n'appellent pas du tout le même
   // geste. Les trois sont des ÉTATS DE PASSAGE, jamais des rangs où l'on reste — c'est ce que dit
   // leur `promotionVers`. NOMS PROVISOIRES, déclarés comme tels : il nomme, jamais moi (#200).
-  postulant: { label: "Postulants", singulier: "Postulant", emoji: "🚪", population: "equipe-absent", nomProvisoire: true,
+  postulant: { label: "Postulants", singulier: "Postulant", emoji: "🚪", population: "equipe-absent", nomProvisoire: true, echelon: 2,
     promotionVers: "membre", condition: "l'inscrire au registre de l'équipe, et lui donner le poste de travail d'un Membre",
     sens: "documenté ET lançable, mais absent du registre de l'équipe : le plus proche de l'adhésion, à une décision près" },
-  sansFiche: { label: "Sans fiche", singulier: "Sans fiche", emoji: "📄", population: "type", nomProvisoire: true,
+  sansFiche: { label: "Sans fiche", singulier: "Sans fiche", emoji: "🏷️", population: "type", nomProvisoire: true, echelon: 1,
     promotionVers: "postulant", condition: "lui écrire une fiche — un document, n'importe lequel, qui le nomme",
     sens: "lançable, mais nommé par aucun document du dépôt : soit une commande qu'on a oublié de documenter, soit un script jetable qui a survécu" },
-  sansPorte: { label: "Sans porte", singulier: "Sans porte", emoji: "🧱", population: "type", nomProvisoire: true,
+  sansPorte: { label: "Sans porte", singulier: "Sans porte", emoji: "🕳️", population: "type", nomProvisoire: true, echelon: 0,
     promotionVers: "sansFiche", condition: "lui écrire une commande de lancement quelque part, ou le supprimer",
     sens: "personne ne l'importe et aucune commande de lancement n'est écrite nulle part : il ne peut être lancé que par quelqu'un qui sait déjà — l'état le plus fragile du dépôt" },
-  emetteur: { label: "Émetteurs de rapport non certifiés", singulier: "Émetteur de rapport", emoji: "📝", population: "registre", nomProvisoire: true,
+  emetteur: { label: "Émetteurs de rapport non certifiés", singulier: "Émetteur de rapport", emoji: "📝", population: "registre", nomProvisoire: true, echelon: null,
+    promotionVers: null, condition: "EN ATTENTE DE NOM (fournée #200) : sa marche suivante se décidera avec son nom, et pas avant — décider d'une promotion pour un rang qu'on ne sait pas encore nommer serait décider dans le vide.",
     sens: "produisent un vrai rapport lu par un humain sans être membres — rang en attente de nommage" },
 
   // HORS AGENCE (2026-09-26, décision de l'utilisateur sur le bloc A). Le §5 du référentiel
@@ -471,10 +568,65 @@ export const ORG_RANKS = {
   // file d'attente où ils n'avaient rien à faire : ceux qui LANCENT le produit au lieu de
   // l'analyser. Liste volontairement tenue à la main, ce que l'Article 24 autorise explicitement
   // quand la nature manuelle est écrite à côté : « lance le produit » ne se lit dans aucune sonde.
-  horsAgence: { label: "Hors de l'Agence", singulier: "Hors Agence", emoji: "🚧", population: "declaration",
+  horsAgence: { label: "Hors de l'Agence", singulier: "Hors Agence", emoji: "🚧", population: "declaration", echelon: null,
     famille: FAMILLE_HORS_AGENCE, entreeInterdite: true, promotionVers: null, condition: "AUCUNE, et c'est le sens même du rang : ces scripts servent le PRODUIT, pas l'outillage qui le vérifie. Les équiper d'une fiche et d'un blueprint reviendrait à recruter le camion de livraison.",
     sens: "lance, sauvegarde ou archive le produit — testé comme n'importe quel code, mais jamais un travailleur de l'Agence (§5 du référentiel, 4e catégorie)" },
 };
+
+// L'ÉCHELLE SE LIT DANS L'ORDRE OÙ ON LA MONTE (2026-09-26, sa relecture : « assure-toi que tout
+// est rangé dans l'ordre, à sa place »). Le tableau des rangs sortait dans l'ordre de déclaration
+// du code, ce qui mettait le Socle en tête d'une ÉCHELLE qu'il ne monte pas et plaçait le Membre
+// classique avant le Membre premium sans dire lequel est au-dessus. L'ordre se DÉRIVE désormais du
+// champ `echelon` : un rang qui n'est pas sur l'échelle (`echelon: null`) sort après, groupé, parce
+// que le Socle, l'Émetteur et les Hors Agence ne sont pas des marches — ce sont des situations.
+export function rangsOrdonnes(rangs = ORG_RANKS) {
+  const entrees = Object.entries(rangs).map(([cle, r]) => ({ cle, ...r }));
+  const surLEchelle = entrees.filter((r) => Number.isInteger(r.echelon)).sort((a, b) => a.echelon - b.echelon);
+  // Hors échelle, l'ordre suit celui du code — mais les Hors Agence ferment la marche, sur sa
+  // décision explicite : « Les hors agence sont tout en bas de tableau des rangs ».
+  const horsEchelle = entrees.filter((r) => !Number.isInteger(r.echelon));
+  const dernier = horsEchelle.filter((r) => r.cle === "horsAgence");
+  return [...surLEchelle, ...horsEchelle.filter((r) => r.cle !== "horsAgence"), ...dernier];
+}
+
+// QUI REMPLIT UN RANG — la traduction d'une `population` en français. Elle vivait en ligne dans le
+// générateur avec un `?? "?"` au bout, et ce point d'interrogation est SORTI DANS LE DOCUMENT :
+// « Hors de l'Agence | Qui le remplit : ? », parce que la population « declaration » n'y figurait
+// pas. Un « ? » imprimé dans un document de référence se lit comme un trou de connaissance alors
+// que c'est un trou de table de correspondance. Elle est nommée ici, et un cas non traduit le DIT.
+export const QUI_REMPLIT = {
+  equipe: "le registre de l'équipe",
+  type: "le type du fichier",
+  registre: "un registre tiers",
+  "equipe-absent": "le type, en l'absence d'inscription",
+  declaration: "une déclaration écrite à la main, avec sa raison",
+};
+export function quiRemplit(population, table = QUI_REMPLIT) {
+  return table[population] ?? `population « ${population} » non traduite — à ajouter à QUI_REMPLIT`;
+}
+
+// LES ICÔNES DOIVENT ÊTRE UNIQUES DANS UNE MÊME FACETTE, sans quoi la traduction de l'indice en
+// série d'icônes n'est plus réversible : deux rangs portant 🎖️ rendaient le même symbole pour
+// « Agent Cadre » et « Membre classique », et deux types 🧱 pour « Socle » et « Sans porte ».
+// Entre facettes, en revanche, une icône partagée est légitime — la POSITION désambiguïse, et la
+// famille des Gardiens sacrés redit volontairement l'icône de leur rang (décision de l'utilisateur).
+export function iconesEnCollision({ types = ICONE_PAR_TYPE, rangs = ORG_RANKS, familles = [], classes = CLASSES_TRANSVERSES } = {}) {
+  const collisionsDe = (paires) => {
+    const vus = new Map();
+    for (const [nom, icone] of paires) {
+      if (!icone) continue;
+      (vus.get(icone) ?? vus.set(icone, []).get(icone)).push(nom);
+    }
+    return [...vus.entries()].filter(([, noms]) => noms.length > 1).map(([icone, noms]) => ({ icone, noms }));
+  };
+  return {
+    mesurable: true,
+    type: collisionsDe(Object.entries(types)),
+    rang: collisionsDe(Object.values(rangs).map((r) => [r.singulier, r.emoji])),
+    famille: collisionsDe(familles.map((f) => [f, emojiDuLibelle(f)])),
+    classes: collisionsDe(classes.map((c) => [c.cle, emojiDuLibelle(c.libelle)])),
+  };
+}
 
 // LE CROISEMENT TYPE × RANG, la question qu'il a posée mot pour mot : « comment se croisent les
 // deux données ? ». La réponse tient en une phrase : **le TYPE décide si un RANG est possible, et
@@ -545,6 +697,26 @@ export function rangDuFichier(ligne, { categories = AGENT_CATEGORIES, rangs = OR
 }
 
 // CHAQUE FICHIER, SON TYPE ET SON RANG — la vue exhaustive qu'il a demandée, jamais deux exemples.
+// UN MEMBRE DU REGISTRE PEUT N'AVOIR AUCUN FICHIER À LUI, et ça s'est vu en vérifiant une addition
+// qui ne tombait pas juste (2026-09-26) : le document annonçait « les 57 de l'équipe + les 6 Hors
+// Agence » pour un total mesuré de 62, et 57 + 6 = 63. Un chiffre présenté comme une somme doit
+// s'additionner, sinon c'est le lecteur qui découvre l'erreur — et il l'a découverte.
+// Le manquant est `find-deep-booster` : un vrai membre, avec un rang et une famille, dont le code
+// vit à l'intérieur de `find-booster.mjs`. Ce n'est pas un bug, c'est un fait à dire.
+export function membresSansFichier({ categories = AGENT_CATEGORIES, croise = null, slugs = null } = {}) {
+  if (!croise?.mesurable) return { mesurable: false, pourquoi: "aucun croisement fourni — sans les fichiers réels, l'absence d'un fichier n'est pas observable" };
+  slugs ??= (() => { try { return slugsParScript(readFileSync(join(ROOT, "CLAUDE.md"), "utf8")); } catch { return {}; } })();
+  const couverts = new Set();
+  for (const l of croise.lignes) {
+    const declare = slugs[l.chemin];
+    const devine = String(l.chemin).replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
+    if (categories[declare]) couverts.add(declare);
+    else if (categories[devine]) couverts.add(devine);
+  }
+  const sansFichier = Object.keys(categories).filter((slug) => !couverts.has(slug));
+  return { mesurable: true, inscrits: Object.keys(categories).length, avecFichier: couverts.size, sansFichier };
+}
+
 export function croiserTypeEtRang({ recensement = null, categories = AGENT_CATEGORIES, rangs = ORG_RANKS, slugs = null } = {}) {
   slugs ??= (() => { try { return slugsParScript(readFileSync(join(ROOT, "CLAUDE.md"), "utf8")); } catch { return {}; } })();
   if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement fourni — sans lire les fichiers, aucun croisement n'est mesurable" };
@@ -704,11 +876,11 @@ export const ICONE_PAR_TYPE = {
   crochet: "🪝",
   "filet-de-securite": "🕸️",
   "commande-documentee": "⌨️",
-  "commande-sans-fiche": "⌨️❓",
+  "commande-sans-fiche": "❓",
   "bibliotheque-partagee": "📚",
   "bibliotheque-solitaire": "📕",
   "infrastructure-shell": "🐚",
-  "execution-directe-non-documentee": "🚧",
+  "execution-directe-non-documentee": "🔒",
 };
 
 // L'emoji d'un libellé est celui qu'il PORTE — premier caractère non alphabétique après le
@@ -718,6 +890,20 @@ export function emojiDuLibelle(libelle = "") {
   const m = String(libelle).match(/^\s*(?:\((?:f|ct)\)\s*)?(\p{Extended_Pictographic}\uFE0F?)/u);
   return m ? m[1] : "";
 }
+
+// LE NOM COURT D'UNE FAMILLE OU D'UNE CLASSE, pour les tableaux où le libellé entier ne tient pas.
+// Il se DÉRIVE du libellé (on retire le préfixe « (f) » ou « (ct) », l'emoji, et la définition pure
+// qui suit le tiret) — jamais une seconde liste de noms courts, qui divergerait au premier
+// renommage. Le libellé complet reste la seule source ; ceci n'en est qu'une vue.
+export function nomCourtDeLibelle(libelle = "") {
+  return String(libelle)
+    .replace(/^\s*\((?:f|ct)\)\s*/, "")
+    .replace(/^\s*\p{Extended_Pictographic}\uFE0F?\s*/u, "")
+    .split(" - ")[0]
+    .trim();
+}
+export const nomCourtDeFamille = nomCourtDeLibelle;
+export const nomCourtDeClasse = nomCourtDeLibelle;
 
 export function indiceEnIcones(ligne, { types = ICONE_PAR_TYPE, rangs = ORG_RANKS, classes = CLASSES_TRANSVERSES, rang = null } = {}) {
   const iType = types[ligne?.type] ?? "·";
@@ -794,7 +980,7 @@ export const POSTE_DE_TRAVAIL = [
 // on connaît le rang, on en DÉDUIT le poste — c'est sa formule mot pour mot.
 export const POSTE_PAR_RANG = {
   "Gardien sacré du code": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + câblage au crochet post-commit. JAMAIS d'item de Ronde : il tourne à chaque commit, un item ferait doublon.",
-  "Agent Cadre": "tout ce qu'a un Membre, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. Deux outils seulement.",
+  "Agent Cadre": "tout ce qu'a un Membre premium, PLUS le droit de convoquer les autres et de rendre un verdict sur eux. UN SEUL outil aujourd'hui, CASSANDRA-RH, depuis que LE-COORDINATEUR a rendu le rang le 2026-09-26 faute de pouvoir convoquer.",
   "Membre premium": "fiche + blueprint + dossier d'historisation + ligne à la table maîtresse + entrée au menu des prestations. Le poste complet, sans le crochet.",
   Socle: "AUCUN poste, et ce n'est pas un manque : une bibliothèque, un crochet ou le filet de sécurité servent tout le monde sans avoir jamais candidaté. Leur exigence est ailleurs — être importés proprement et testés.",
   "Membre classique": "DEUX obligations seulement : la ligne à la table maîtresse et l'entrée au menu des prestations. Ni fiche, ni blueprint, ni registre imposés d'office — il n'a rien de propre au projet à documenter à part. Tout le reste de son poste se DÉRIVE de ce qu'il fait réellement (cf. OBLIGATIONS_DERIVEES).",
@@ -843,18 +1029,36 @@ export const CLASSIFICATION_HTML = "docs/le-classificateur/classification-agence
 // il produit des BLOCS, que le gabarit partagé rend en HTML et qu'une petite fonction rend en
 // Markdown. Écrire les deux à la main aurait garanti qu'ils divergent — c'est exactement le défaut
 // que ce document décrit par ailleurs.
+// LE RENDU MARKDOWN AVALAIT SILENCIEUSEMENT LES BLOCS « highlight » (trouvé le 2026-09-26 en
+// relisant le document ligne à ligne, sur sa demande). Le rendu HTML, lui, les affiche — si bien
+// que les DEUX VERSIONS DU MÊME DOCUMENT ne disaient pas la même chose, et que la version texte
+// perdait au passage la phrase la plus importante de tout le document : « Le rang MÉRITÉ l'emporte
+// toujours ; le type ne remplit que les cases que personne n'a remplies. »
+//
+// Un rendu qui ignore un type qu'il ne connaît pas est exactement le défaut que ce projet combat
+// partout ailleurs : il rend la même chose qu'un rendu qui n'avait rien à dire. Il SIGNALE
+// désormais, dans le document lui-même — impossible à rater, et impossible à confondre avec un
+// trou de contenu.
+export const TYPES_DE_BLOC = ["heading", "paragraph", "note", "highlight", "list", "table"];
+
 export function blocsVersMarkdown(blocs = []) {
   const L = [];
   for (const b of blocs) {
     if (b.type === "heading") L.push(`${"#".repeat(b.level ?? 2)} ${b.text}`, "");
     else if (b.type === "paragraph") L.push(b.text, "");
     else if (b.type === "note") L.push(`> ${b.text}`, "");
+    // Le « highlight » est un bloc PROÉMINENT côté HTML (bordure pleine, fond marqué). En texte,
+    // l'équivalent le plus proche est une citation en gras : visible sans être criarde.
+    // Pas de gras ajouté autour : le texte porte déjà le sien, et deux gras imbriqués rendent
+    // « ****mot** » — du balisage cassé là où on voulait de l'emphase.
+    else if (b.type === "highlight") L.push(`> **À RETENIR** — ${[b.heading, ...(b.paragraphs ?? [b.text])].filter(Boolean).join(" — ")}`, "");
     else if (b.type === "list") L.push(...(b.items ?? []).map((i) => `- ${i}`), "");
     else if (b.type === "table") {
       L.push(`| ${b.headers.join(" | ")} |`, `|${b.headers.map(() => "---").join("|")}|`);
       for (const r of b.rows) L.push(`| ${r.join(" | ")} |`);
       L.push("");
     }
+    else L.push(`> ⚠️ **BLOC NON RENDU** — type « ${b.type} » inconnu de \`blocsVersMarkdown()\`. Son contenu existe dans la version HTML et manque ici : à corriger dans le générateur, jamais à la main.`, "");
   }
   return L.join("\n") + "\n";
 }
@@ -944,14 +1148,26 @@ export function blocsDeClassification({
   B.push({ type: "paragraph", text: "**L'ORGANISATION décide ce qui DOIT ÊTRE.** Qui dirige, quel poste exige quels documents, quel process encadre quoi. Elle se TRANCHE." });
   B.push({ type: "paragraph", text: "**Est-ce que l'organisation décide de la classification ?** Sur un point précis, oui — et c'est le seul. L'organisation décide des CRITÈRES (ce qu'il faut pour être Gardien sacré) ; la classification applique ces critères aux fichiers réels et dit qui les remplit. Elle ne choisit jamais qui entre dans quelle case : elle mesure. C'est pour ça que les deux documents existent, et que ni l'un ni l'autre n'absorbe son voisin — l'un pose la règle, l'autre compte." });
 
+  // LES QUATRE AXES PRINCIPAUX ET LES CINQ SECONDAIRES, chacun avec sa COUVERTURE RÉELLE comptée
+  // ici (2026-09-26). Les cinq secondaires affichaient « — » dans cette colonne, ce qui se lit
+  // comme « personne ne sait » alors que la vérité est simplement qu'ils vivent dans un autre
+  // outil : ils sont DÉCLARÉS ici et MESURÉS là-bas, et le dire vaut mieux qu'un tiret.
+  const avecFamille = croise.lignes.filter((l) => l.famille).length;
+  const avecClasse = recensement.lignes.filter((l) => (l.classes ?? []).length).length;
+  const horsAgenceAvecFamille = croise.lignes.filter((l) => l.famille && l.rang === rangs.horsAgence?.singulier).length;
+  const sansFichier = membresSansFichier({ categories, croise });
   B.push({ type: "heading", level: 2, text: `1. Les ${axes.length + 2} axes, et la question à laquelle chacun répond` });
-  B.push({ type: "table", headers: ["Axe", "La question", "Comment il se remplit", "Couvre"], rows: [
-    ["**TYPE**", "ce que le fichier EST", "se CONSTATE en lisant le fichier", `tous (${croise.total})`],
-    ["**RANG**", "ce que le fichier VAUT", "se MÉRITE, ou se DÉDUIT du type", `${croise.couverture} % des fichiers`],
-    ["**FAMILLE**", "ce sur quoi il travaille", "se décide, une par membre de l'équipe", `les ${Object.keys(categories).length} de l'équipe`],
-    ["**CLASSES TRANSVERSES**", "ce qu'il sait FAIRE", "sonde sur le code, plusieurs par fichier", "tous"],
-    ...axes.filter((a) => !["type"].includes(a.cle)).map((a) => [`*${a.cle}*`, a.quoi, `porté par \`${a.porteur}\``, "—"]),
+  B.push({ type: "table", headers: ["Axe", "La question", "Comment il se remplit", "Combien de fichiers il couvre, ici"], rows: [
+    ["**TYPE**", "ce que le fichier EST", "se CONSTATE en lisant le fichier", `**${recensement.total} / ${recensement.total}** — aucun fichier sans type`],
+    ["**RANG**", "ce que le fichier VAUT", "se MÉRITE d'abord ; ne se DÉDUIT du type qu'à défaut", `**${croise.total - croise.sansRang.length} / ${croise.total}** (${croise.couverture} %)`],
+    ["**FAMILLE**", "ce sur quoi il travaille", "se décide — une par membre de l'équipe, plus celle que porte le rang Hors Agence", `**${avecFamille} / ${croise.total}** : ${avecFamille - horsAgenceAvecFamille} fichiers de l'équipe + ${horsAgenceAvecFamille} Hors Agence. Les ${croise.total - avecFamille} restants sont le Socle et les états de passage, qui n'ont pas de famille et n'en manquent pas.`],
+    ["**CLASSES TRANSVERSES**", "ce qu'il sait FAIRE", "une sonde par classe sur le code ; zéro, une ou plusieurs par fichier", `**${avecClasse} / ${recensement.total}** en portent au moins une — les autres n'en portent aucune, et c'est un constat, pas un trou`],
+    ...axes.filter((a) => !["type"].includes(a.cle)).map((a) => [`*${a.cle}*`, a.quoi, `porté par \`${a.porteur}\``, "*mesuré dans l'outil qui le porte, jamais recompté ici* — deux comptages du même axe finiraient par diverger"]),
   ] });
+  if (sansFichier.mesurable && sansFichier.sansFichier.length) {
+    B.push({ type: "note", text: `⚠️ **Le registre de l'équipe compte ${sansFichier.inscrits} inscrits, mais seulement ${sansFichier.avecFichier} ont un fichier à eux.** Le ou les manquants : ${sansFichier.sansFichier.map(code).join(" · ")} — un vrai membre, avec son rang et sa famille, dont le code vit à l'intérieur d'un autre fichier. Ce n'est pas un bug, c'est un fait : il est dit ici plutôt que noyé dans une addition qui ne tomberait pas juste.` });
+  }
+  B.push({ type: "note", text: "**Les quatre premiers axes sont en gras parce qu'ils composent l'indice** (§4) ; les cinq autres existent et sont mesurés, mais par d'autres outils, et n'entrent pas dans le code. C'est une décision, pas un oubli : un indice à neuf facettes ne se lirait plus." });
   B.push({ type: "paragraph", text: "**Pourquoi type et rang ne font pas doublon** : un type se constate, un rang se mérite. Une bibliothèque partagée n'a pas de rang d'équipe et n'en manque pas — elle n'a jamais candidaté." });
 
   B.push({ type: "heading", level: 2, text: "2. Comment type et rang se croisent — la règle, en une phrase" });
@@ -962,42 +1178,74 @@ export function blocsDeClassification({
     "Un rang par défaut, jamais : il ressemblerait trait pour trait à un rang gagné.",
   ] });
   B.push({ type: "note", text: "Cet ordre a été trouvé en faisant TOURNER la règle, pas en la relisant : le premier jet lisait le type d'abord et rétrogradait deux Gardiens sacrés en Socle parce qu'ils n'ont pas de commande à eux." });
-  B.push({ type: "table", headers: ["Type de fichier", "Rang qu'il donne automatiquement"], rows: Object.entries(RANG_PAR_TYPE).map(([ty, cle]) => [code(ty), cle ? `**${rangs[cle]?.singulier ?? cle}**` : "aucun — le rang se lit dans le registre de l'équipe, et à défaut c'est un état de passage"]) });
+  B.push({ type: "table", headers: ["Type de fichier", "Rang qu'il donne automatiquement"], rows: Object.keys(types).map((ty) => { const cle = RANG_PAR_TYPE[ty]; return [`${ICONE_PAR_TYPE[ty] ?? ""} ${code(ty)}`.trim(), cle ? `${rangs[cle]?.emoji ?? ""} **${rangs[cle]?.singulier ?? cle}**`.trim() : "aucun — le rang se lit dans le registre de l'équipe, et à défaut c'est un état de passage"]; }) });
 
   B.push({ type: "heading", level: 2, text: `3. L'échelle des rangs (${Object.keys(rangs).length}) — et comment on monte` });
   B.push({ type: "paragraph", text: "Un rang n'est pas une étiquette figée : c'est une position sur une échelle, avec une marche suivante et ce qu'il faut pour la franchir. Les trois états de passage (Sans porte, Sans fiche, Postulant) ne sont pas des rangs où l'on reste — ce sont des files d'attente avec un geste précis au bout." });
-  B.push({ type: "table", headers: ["Rang", "Qui le remplit", "Ce que ça veut dire", "Marche suivante", "Ce qu'il faut pour la franchir"], rows: Object.values(rangs).map((r) => [
-    `${r.emoji} **${r.label}**${r.nomProvisoire ? " *(nom provisoire)*" : ""}`,
-    ({ equipe: "le registre de l'équipe", type: "le type du fichier", registre: "un registre tiers", "equipe-absent": "le type, en l'absence d'inscription" })[r.population] ?? "?",
+  const echelle = rangsOrdonnes(rangs);
+  B.push({ type: "table", headers: ["#", "Rang", "Qui le remplit", "Ce que ça veut dire", "Marche suivante", "Ce qu'il faut pour la franchir"], rows: echelle.map((r) => [
+    Number.isInteger(r.echelon) ? String(r.echelon) : "hors échelle",
+    `${r.emoji} **${r.singulier}**${r.nomProvisoire ? " *(nom provisoire)*" : ""}`,
+    quiRemplit(r.population),
     r.sens,
-    r.promotionVers ? (rangs[r.promotionVers]?.singulier ?? r.promotionVers) : "—",
+    r.promotionVers ? `${rangs[r.promotionVers]?.emoji ?? ""} ${rangs[r.promotionVers]?.singulier ?? r.promotionVers}`.trim() : "— *(sommet ou hors échelle)*",
     r.condition ?? "*(non arrêté)*",
   ]) });
-  B.push({ type: "table", headers: ["Rang", "Le poste de travail qui en découle"], rows: Object.values(rangs).map((r) => [r.singulier, posteDuRang[r.singulier] ?? "*(non arrêté)*"]) });
+  B.push({ type: "note", text: "La colonne **#** est la position sur l'échelle, de la plus fragile (0) à la plus haute (6). Les quatre derniers rangs n'ont pas de numéro : le Socle, l'Émetteur de rapport et les Hors Agence ne sont pas des marches qu'on monte, ce sont des SITUATIONS — et le dire vaut mieux que de les ranger dans une échelle où ils n'iraient nulle part." });
+  B.push({ type: "table", headers: ["Rang", "Le poste de travail qui en découle"], rows: echelle.map((r) => [`${r.emoji} ${r.singulier}`, posteDuRang[r.singulier] ?? "*(non arrêté)*"]) });
   B.push({ type: "paragraph", text: "**Les pièces d'un poste complet**, pour lire la colonne de droite :" });
   B.push({ type: "list", items: poste.map((p) => `**${p.quoi}** (\`${p.ou}\`) — pour : ${p.pourQui}`) });
 
   B.push({ type: "heading", level: 2, text: "4. L'indice de classification à facettes" });
   B.push({ type: "paragraph", text: "**Le nom n'est pas inventé** : ranger un objet sur plusieurs axes indépendants au lieu d'un seul arbre s'appelle une *classification à facettes*, et le code composite qui en résulte est une *notation* — en français de bibliothèque, un **indice**. Chaque position est une facette, chacune indépendante des autres, et l'indice entier se lit comme une adresse." });
-  B.push({ type: "paragraph", text: `**Format : \`${FACETTES.join(" . ")}\`** — par exemple \`2.2.3.dh\`. Les trois premières facettes sont un rang dans une liste ; la quatrième est un nombre en base 36 dont chaque bit allumé est une classe (une seule facette répond « lesquelles ? » plutôt que « laquelle ? »).` });
+  // L'EXEMPLE EST TIRÉ DU DÉPÔT, jamais inventé (2026-09-26). L'ancien, `2.2.3.dh`, décrivait un
+  // Gardien sacré rangé chez Les Prophètes : aucun fichier réel ne porte cet indice, et un exemple
+  // qui contredit la table qu'il illustre apprend à se méfier des deux.
+  const exemple = croise.lignes.find((l) => l.rang === rangs.gardien?.singulier && l.indice) ?? croise.lignes.find((l) => l.indice);
+  B.push({ type: "paragraph", text: `**Format : \`${FACETTES.join(" . ")}\`** — les trois premières facettes sont un rang dans une liste ; la quatrième est un nombre en base 36 dont chaque bit allumé est une classe (une seule facette répond « lesquelles ? » plutôt que « laquelle ? »).` });
+  if (exemple) {
+    const d = decoderIndice(exemple.indice, { types, rangs, familles: croise.familles, classes });
+    B.push({ type: "highlight", text: `**Exemple réel, pris dans le tableau du §5** : \`${court(exemple.chemin)}\` porte l'indice **\`${exemple.indice}\`**, soit ${exemple.icones}. Décodé : type *${d.type ?? "—"}* · rang *${d.rang ?? "—"}* · famille *${d.famille ? nomCourtDeFamille(d.famille) : "—"}* · ${(d.classes ?? []).length} classe(s).` });
+  }
   B.push({ type: "note", text: "Trois états dans une facette, jamais deux : un chiffre (la valeur), « - » (la facette ne s'applique pas — un fichier du Socle n'a pas de famille et n'en manque pas), « ? » (la valeur existe mais n'a pas été reconnue). Confondre les deux derniers ferait lire une absence légitime comme un trou." });
   B.push({ type: "paragraph", text: "**Pourquoi un indice plutôt que des icônes** : une icône se reconnaît, elle ne se trie pas, ne se cherche pas et ne se compare pas. Un indice fait les trois. Les deux cohabitent — l'icône pour l'œil, l'indice pour la machine et le tri." });
   B.push({ type: "table", headers: ["Facette", "Position", "Valeurs possibles, dans l'ordre", "L'icône de chacune"], rows: [
-    ["type", "1", Object.keys(types).map((t, i) => `${i}=${t}`).join(" · "), Object.keys(types).map((t) => `${ICONE_PAR_TYPE[t] ?? "·"} ${t}`).join(" · ")],
-    ["rang", "2", Object.values(rangs).map((r, i) => `${i}=${r.singulier}`).join(" · "), Object.values(rangs).map((r) => `${r.emoji} ${r.singulier}`).join(" · ")],
-    ["famille", "3", croise.familles.map((f, i) => `${i}=${f}`).join(" · "), croise.familles.map((f) => emojiDuLibelle(f) || "·").join(" · ")],
-    ["classes", "4", classes.map((c, i) => `bit ${i}=${c.cle}`).join(" · "), classes.map((c) => `${emojiDuLibelle(c.libelle) || "·"} ${c.cle}`).join(" · ")],
+    ["type", "1", Object.keys(types).map((t, i) => `${i} = ${t}`).join(" · "), Object.keys(types).map((t) => `${ICONE_PAR_TYPE[t] ?? "·"} ${t}`).join(" · ")],
+    ["rang", "2", Object.values(rangs).map((r, i) => `${i} = ${r.singulier}`).join(" · "), Object.values(rangs).map((r) => `${r.emoji} ${r.singulier}`).join(" · ")],
+    ["famille", "3", croise.familles.map((f, i) => `${i} = ${nomCourtDeFamille(f)}`).join(" · "), croise.familles.map((f) => `${emojiDuLibelle(f) || "·"} ${nomCourtDeFamille(f)}`).join(" · ")],
+    ["classes", "4", classes.map((c, i) => `bit ${i} = ${nomCourtDeClasse(c.libelle)}`).join(" · "), classes.map((c) => `${emojiDuLibelle(c.libelle) || "·"} ${nomCourtDeClasse(c.libelle)}`).join(" · ")],
   ] });
   B.push({ type: "note", text: "**La colonne de droite est la traduction demandée le 2026-09-26.** Elle n'est recopiée nulle part : l'icône d'une famille et celle d'une classe se LISENT dans le nom que l'utilisateur leur a donné le même jour, et seuls les types ont reçu la leur ici — parce qu'un type est un constat de forme, jamais un nom choisi. Une série d'icônes se reconnaît sans décoder ; un indice se trie, se cherche et se compare. Les deux disent la même chose et voyagent ensemble." });
 
   B.push({ type: "heading", level: 2, text: `5. Chaque fichier : rang, famille, indice (${croise.total}, exhaustif)` });
-  for (const [rang, liste] of grouper(croise.lignes, (l) => l.rang ?? "(aucun)")) {
+  // L'ordre des groupes suit l'ÉCHELLE (§3), jamais la taille des populations : un lecteur qui
+  // descend la liste doit retrouver la hiérarchie qu'il vient de lire, pas un classement par effectif.
+  // Du plus haut mérite au plus fragile, PUIS les situations hors échelle (Socle, Émetteur, Hors
+  // Agence). Un simple `.reverse()` de l'échelle montante mettait les Hors Agence en tête du
+  // document, ce qui est l'inverse exact de ce que la §3 venait d'établir.
+  const echelonne = rangsOrdonnes(rangs);
+  const ordreDesRangs = [
+    ...echelonne.filter((r) => Number.isInteger(r.echelon)).reverse(),
+    ...echelonne.filter((r) => !Number.isInteger(r.echelon)),
+  ].map((r) => r.singulier);
+  const groupesRang = grouper(croise.lignes, (l) => l.rang ?? "(aucun)")
+    .sort((a, b) => (ordreDesRangs.indexOf(a[0]) + 1 || 99) - (ordreDesRangs.indexOf(b[0]) + 1 || 99));
+  for (const [rang, liste] of groupesRang) {
     B.push({ type: "heading", level: 3, text: `${rangs[Object.keys(rangs).find((k) => rangs[k].singulier === rang)]?.emoji ?? "•"} ${rang} — ${liste.length}` });
     B.push({ type: "table", headers: ["Fichier", "Famille", "Indice", "En icônes"], rows: liste.sort((a, b) => a.chemin.localeCompare(b.chemin)).map((l) => [code(court(l.chemin)), l.famille ?? "—", code(l.indice), l.icones ?? "—"]) });
   }
 
-  B.push({ type: "heading", level: 2, text: `6. Les types de fichier (${new Set(recensement.lignes.map((l) => l.type)).size}, exhaustif)` });
-  for (const [ty, liste] of grouper(recensement.lignes, (l) => l.type)) {
+  const typesPresents = new Set(recensement.lignes.map((l) => l.type));
+  const typesAbsents = Object.keys(types).filter((t) => !typesPresents.has(t));
+  B.push({ type: "heading", level: 2, text: `6. Les types de fichier (${typesPresents.size} présents sur les ${Object.keys(types).length} du registre, exhaustif)` });
+  if (typesAbsents.length) B.push({ type: "note", text: `${typesAbsents.map(code).join(" · ")} n'${typesAbsents.length > 1 ? "ont" : "a"} aucun fichier aujourd'hui, et c'est une bonne nouvelle : ${typesAbsents.map((t) => types[t]).join(" ; ")}. Le type reste déclaré — le retirer ferait disparaître le jour où un fichier y retombe.` });
+  // Dans l'ordre de la FACETTE (§4), pour qu'un lecteur qui vient de lire « 0 = crochet, 1 =
+  // filet-de-securite… » retrouve exactement la même suite ici. Trier par population donnerait
+  // deux ordres différents pour la même liste dans le même document.
+  const ordreDesTypes = Object.keys(types);
+  const groupesType = grouper(recensement.lignes, (l) => l.type)
+    .sort((a, b) => (ordreDesTypes.indexOf(a[0]) + 1 || 99) - (ordreDesTypes.indexOf(b[0]) + 1 || 99));
+  for (const [ty, liste] of groupesType) {
     B.push({ type: "heading", level: 3, text: `${ty} — ${liste.length}` });
     B.push({ type: "note", text: types[ty] ?? "*(type non décrit dans le registre)*" });
     B.push({ type: "paragraph", text: liste.map((l) => code(court(l.chemin))).sort().join(" · ") });
@@ -1027,9 +1275,11 @@ export function blocsDeClassification({
   const membresParFamille = Object.entries(categories).map(([slug, cat]) => ({ slug, f: familleDeLaCategorie(cat) ?? "(sans famille)" }));
   for (const l of croise.lignes) {
     const fr = Object.values(rangs).find((r) => r.singulier === l.rang)?.famille;
-    if (fr) membresParFamille.push({ slug: court(l.chemin), f: fr });
+    if (fr) membresParFamille.push({ slug: court(l.chemin).replace(/\.(mjs|sh)$/, ""), f: fr });
   }
-  for (const [f, liste] of grouper(membresParFamille, (x) => x.f)) {
+  const groupesFamille = grouper(membresParFamille, (x) => x.f)
+    .sort((a, b) => (croise.familles.indexOf(a[0]) + 1 || 99) - (croise.familles.indexOf(b[0]) + 1 || 99));
+  for (const [f, liste] of groupesFamille) {
     B.push({ type: "paragraph", text: `**${f}** — ${liste.length} : ${liste.map((x) => code(x.slug)).sort().join(" · ")}` });
   }
 
@@ -1042,14 +1292,61 @@ export function blocsDeClassification({
     B.push({ type: "paragraph", text: liste.length ? liste.map(code).join(" · ") : "*(aucun fichier ne porte cette classe aujourd'hui)*" });
   }
 
-  B.push({ type: "heading", level: 2, text: "9. Ce qui reste ouvert" });
-  const postulants = croise.lignes.filter((l) => l.rang === rangs.postulant?.singulier);
-  if (postulants.length) B.push({ type: "paragraph", text: `**${postulants.length} fichiers sont Postulants** : documentés, lançables, et absents du registre de l'équipe. Ce n'est plus une case vide — c'est une file d'attente avec un geste connu au bout (les inscrire, ou déclarer qu'ils n'ont pas vocation à entrer).` });
-  if (divergenceAxes.mesure !== "mesuré") B.push({ type: "note", text: `Axes du référentiel : 🚨 PAS MESURÉ — ${divergenceAxes.pourquoi}` });
-  else if (divergenceAxes.divergent) B.push({ type: "note", text: `⚠️ Le référentiel et le code ne déclarent pas le même nombre d'axes — ${divergenceAxes.pourquoi}.` });
-  else B.push({ type: "note", text: "Le référentiel et le code déclarent le même nombre d'axes." });
+  // § 9 — LE PLAN D'ACTION, pas seulement la liste des trous (Article 28 : un rapport n'est pas fini
+  // quand il est écrit, il l'est quand ses constats sont devenus des tâches). Cette section
+  // n'énumérait que les Postulants et fermait sur un avertissement ; tout le reste de ce que le
+  // document venait de mesurer — les portes orphelines, le membre sans fichier — mourait dans sa
+  // propre page. Chaque ligne porte donc désormais son GESTE, et le geste est précis.
+  B.push({ type: "heading", level: 2, text: "9. Ce qui reste ouvert — et le geste que chaque point appelle" });
+  const pluriel = (n, singulier, plur) => `${n} ${n > 1 ? plur : singulier}`;
+  const constats = [];
 
-  return { mesurable: true, blocs: B, croise, divergenceAxes };
+  const postulants = croise.lignes.filter((l) => l.rang === rangs.postulant?.singulier);
+  if (postulants.length) constats.push([
+    `**${pluriel(postulants.length, "fichier est Postulant", "fichiers sont Postulants")}** — ${postulants.map((l) => code(court(l.chemin))).join(" · ")}`,
+    "documenté et lançable, mais absent du registre de l'équipe",
+    "l'inscrire au registre, ou déclarer par écrit qu'il n'a pas vocation à entrer",
+  ]);
+
+  const orphelines = (bibliothequesLancables({ recensement })?.orphelines) ?? [];
+  if (orphelines.length) constats.push([
+    `**${pluriel(orphelines.length, "porte orpheline", "portes orphelines")}** — ${orphelines.map((x) => code(court(x.chemin))).join(" · ")}`,
+    "le fichier est lançable et rien de vivant dans le dépôt ne le lance",
+    "lui écrire sa commande dans la table maîtresse, ou le supprimer",
+  ]);
+
+  if (sansFichier.mesurable && sansFichier.sansFichier.length) constats.push([
+    `**${pluriel(sansFichier.sansFichier.length, "membre du registre n'a", "membres du registre n'ont")} pas de fichier à lui** — ${sansFichier.sansFichier.map(code).join(" · ")}`,
+    "il porte un rang et une famille, mais son code vit à l'intérieur d'un autre fichier",
+    "rien d'urgent : le noter ici suffit, tant que l'addition du §1 le dit au lieu de le masquer",
+  ]);
+
+  const provisoires = Object.values(rangs).filter((r) => r.nomProvisoire);
+  if (provisoires.length) constats.push([
+    `**${pluriel(provisoires.length, "rang porte un nom provisoire", "rangs portent un nom provisoire")}** — ${provisoires.map((r) => `${r.emoji} ${r.singulier}`).join(" · ")}`,
+    "l'agent les a nommés faute de mieux, et c'est l'utilisateur qui nomme",
+    "les trancher dans la fournée de nommage (tâche #200)",
+  ]);
+
+  if (divergenceAxes.mesure !== "mesuré") constats.push([
+    "**Les axes du référentiel : 🚨 PAS MESURÉ**",
+    divergenceAxes.pourquoi,
+    "rendre le référentiel lisible par le garde-fou avant de conclure quoi que ce soit sur les axes",
+  ]);
+  else if (divergenceAxes.divergent) constats.push([
+    "**Le référentiel et le code ne déclarent pas le même nombre d'axes**",
+    divergenceAxes.pourquoi,
+    "réécrire à la main le §1 de `docs/referentiel/organisation-agence.md` — la prose est humaine, seul l'écart est mécanique",
+  ]);
+
+  if (constats.length) {
+    B.push({ type: "table", headers: ["Ce qui reste ouvert", "Pourquoi c'en est un", "Le geste"], rows: constats });
+    B.push({ type: "note", text: "Chaque ligne porte son geste, jamais seulement son constat (Article 28) : un rapport qui s'arrête au constat ressemble à un problème traité, et c'est exactement ce qui rend l'oubli invisible." });
+  } else {
+    B.push({ type: "highlight", text: "Rien d'ouvert à cette génération : tous les fichiers portent un type et un rang, aucune porte n'est orpheline, aucun nom n'est provisoire, et le référentiel s'accorde avec le code." });
+  }
+
+  return { mesurable: true, blocs: B, croise, divergenceAxes, constatsOuverts: constats.length };
 }
 
 export function documentDeClassification(options = {}) {
