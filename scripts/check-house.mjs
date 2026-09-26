@@ -14183,3 +14183,33 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: le garde-fou qui empêchera le prochain outil muet (2026-09-26, tâche #778) — le classement des outils muets existait depuis #763 et n'apparaissait que dans le rapport de Ronde, lancé à la main, donc un outil créé demain avec une ligne de commande et sans recordCliUsage rejoignait la zone muette sans que rien ne le dise. Son zéro d'usage se serait ensuite lu comme un verdict sur lui, alors qu'il ne dit qu'une chose : personne ne compte. Et un compteur faux empoisonne toutes les décisions d'usage qui s'appuient dessus. Il SIGNALE au commit, il ne bloque pas — le choix entre signaler et bloquer revient à l'utilisateur et lui est posé ; en attendant, c'est le moins brutal des deux, et le seul sur lequel on peut revenir sans rien perdre. Il est muet quand tout va bien, parce qu'une ligne « 0 muet » à chaque commit est très exactement le bruit qui rend un contrôle invisible, et un silence non mesurable se dit plutôt que de ressembler à un résultat propre. L'assertion qui compte le plus est la dernière : le crochet l'appelle vraiment, puisque le défaut corrigé EST l'absence de câblage — un test sur la seule fonction aurait été vert pendant que le garde-fou restait aussi muet que les outils qu'il traque.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// DEUX LIBELLÉS RÉELS QUI NE RENDAIENT AUCUN OUTIL (2026-09-26, tâche #777)
+// ————————————————————————————————————————————————————————————————————————
+// Le coût de ce défaut est celui que le projet redoute le plus : l'agent consulte le point d'entrée
+// obligatoire, n'obtient rien, et refait à la main un travail qu'un outil savait faire. « Aucune
+// correspondance » et « aucun outil ne sait faire ça » sont indiscernables.
+//
+// DEUX PISTES ÉTAIENT ÉCRITES DANS LA TÂCHE, à MESURER avant de trancher. La deuxième — donner plus
+// de poids à un mot RARE dans le catalogue — a été prototypée et MESURÉE : sur les trois nouvelles
+// correspondances qu'elle produisait, DEUX étaient fausses (« deux » et « file », rares dans un
+// catalogue de cinquante offres et vides de sens). Un mot rare dans un petit catalogue n'est pas un
+// mot informatif. Elle est donc ÉCARTÉE avec sa raison, jamais silencieusement abandonnée.
+{
+  const lc777 = await import('../scripts/le-coordinateur.mjs');
+  const nom = (l) => (lc777.suggestPrestationsForTask(l)[0] ?? {}).nom ?? null;
+
+  // LES DEUX TROUS NOMMÉS PAR LA TÂCHE, refermés — et vérifiés sur le VRAI catalogue (Article 25).
+  assert.equal(nom('analyser la qualite des dialogues de Lia et Noe'), 'Pack Fidélité du ton', "the label the task measured at zero must now reach the tool that exists exactly for it — the characters' names appeared in no offer at all");
+  assert.equal(nom('deux constantes homonymes, preparer un renommage'), 'Pack Baptême', 'and the second hole too: a name collision is precisely what the naming agent handles, and the word "constante" was in no offer');
+
+  // AUCUNE INFLATION — l'autre moitié de la mesure, et la seule qui protège le point d'entrée. Un
+  // libellé qui ne correspond à rien doit CONTINUER à ne rien rendre : c'est ce qui donne du poids
+  // aux réponses quand il y en a une (Article 24, un rapport qu'on cesse de lire ne protège plus).
+  assert.deepEqual(lc777.suggestPrestationsForTask('enchainer sur le bloc suivant de taches ouvertes'), [], 'a meta-request that no tool serves must still return nothing — enriching three offers must not turn the entry point into a slot machine');
+  assert.equal(lc777.suggestPrestationsForTask('verifier la couverture de test d un script').length, 1, 'and the labels that already worked must return exactly what they returned before, no more');
+  assert.equal(lc777.suggestPrestationsForTask('trouver les blocs de code dupliques').length, 1, 'same here — the fix is three offers made more precise, never a loosened threshold');
+
+  console.log("Passed: deux libellés réels qui ne rendaient aucun outil (2026-09-26, tâche #777) — le coût de ce défaut est celui que le projet redoute le plus : on consulte le point d'entrée obligatoire, on n'obtient rien, et on refait à la main ce qu'un outil savait faire, parce que « aucune correspondance » et « aucun outil ne sait faire ça » sont indiscernables. La tâche écrivait deux pistes et exigeait de MESURER avant de trancher. La seconde — plus de poids à un mot rare dans le catalogue — a été prototypée et mesurée : sur trois nouvelles correspondances, DEUX étaient fausses, déclenchées par « deux » et « file », rares dans un catalogue de cinquante offres et parfaitement vides de sens. Un mot rare dans un petit catalogue n'est pas un mot informatif, et elle est écartée avec cette raison plutôt qu'abandonnée en silence. La première — écrire dans l'offre le vocabulaire qu'on emploie vraiment — referme les deux trous sans en ouvrir un seul : les noms des personnages n'apparaissaient dans aucune offre, le mot « constante » non plus. L'assertion qui compte autant que les deux premières est celle de la NON-inflation : un libellé que rien ne sert doit continuer à ne rien rendre, sans quoi le point d'entrée devient une machine à sous et ses réponses ne valent plus rien.");
+}
