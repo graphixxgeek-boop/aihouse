@@ -2153,6 +2153,21 @@ function main() {
   }
   console.log("=== god-of-all-process — état du dispositif ===\n");
   for (const b of buildGodReportBlocks()) console.log(b.text, "\n");
+
+  // UNE VÉRIFICATION QUI NE SORTAIT JAMAIS D'ICI (2026-09-26, tâche #919) —
+  // `findScriptsDeservingProcess()` existait, était testée, et AUCUN CODE HORS DE LA SUITE DE TESTS
+  // NE L'APPELAIT (leçon L2 : un mécanisme qui ne sort pas du script est une intention). Elle parle
+  // du PROJET, pas d'un invariant de code : elle nomme les activités à enjeu que rien ne gouverne.
+  // C'est très exactement le métier de god, et son rapport n'en disait pas un mot.
+  const sansProcess = findScriptsDeservingProcess();
+  console.log("=== ACTIVITÉS À ENJEU SANS PROCESS ÉCRIT (tâche #919) ===\n");
+  if (!sansProcess.length) {
+    console.log("✅ Chaque activité à enjeu déclarée a son process écrit.\n");
+  } else {
+    console.log(`⚠️  ${sansProcess.length} activité(s) à enjeu sans process écrit — je SIGNALE, je ne corrige jamais (Article 26) :`);
+    for (const a of sansProcess) console.log(`   · ${a.chemin}\n     pourquoi ça compte : ${a.indices.join(" · ")}`);
+    console.log("   Écrire un process pour chacune, ou déclarer noir sur blanc pourquoi elle n'en a pas besoin.\n");
+  }
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

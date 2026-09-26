@@ -14072,3 +14072,38 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: la quatrième population, nées ET fermées dans la période (2026-09-26, tâche #930) — les trois lignes de la confrontation se lisent toutes sur l'état final, si bien qu'une tâche née à six heures et fermée à sept n'apparaissait nulle part : ni dans « closes », puisqu'elle n'était pas dans la référence, ni dans « nées », puisqu'elle n'est plus ouverte. Une vraie nuit de vingt ouvertures et treize fermetures s'affichait « 0 close · 7 nées », trait pour trait ce qu'afficherait une nuit qui aurait ouvert sept tâches et n'aurait rien fait — un chiffre juste qui désigne la mauvaise réalité, le motif exact que ce projet traque partout. La frontière de période se lit sur les NUMÉROS et pas sur une date : ils sont uniques et strictement croissants, propriété qu'un autre garde-fou fait respecter à chaque passage, donc aucune horloge n'intervient et rien ne peut dériver. La quatrième ligne n'en remplace aucune : elle rend visible le travail qui ne laisse aucune trace dans un différentiel d'états. Contre le vrai dépôt, elle en compte soixante-treize.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// SEPT DÉTECTEURS QUI NE PARLAIENT NULLE PART (2026-09-26, tâche #919)
+// ————————————————————————————————————————————————————————————————————————
+// Ils existaient, ils étaient testés, et AUCUN CODE HORS DE LA SUITE DE TESTS NE LES APPELAIT —
+// leçon L2. Ce qui est vérifié ici n'est PAS qu'ils fonctionnent (leurs propres tests le font
+// ailleurs) : c'est qu'ils sont désormais APPELÉS depuis le rapport de leur outil. Un test qui
+// vérifie une fonction sans vérifier qu'on l'appelle est exactement ce qui a laissé sept
+// mécanismes muets pendant des semaines.
+{
+  const { readFileSync: lireSrc919 } = await import('node:fs');
+  const APPELS_ATTENDUS_919 = [
+    ['scripts/doc-report.mjs', ['findToolsMissingReliability(', 'findUnnavigableSections(', 'findHeuristicToolsWithoutNotice(']],
+    ['scripts/cassandra-rh.mjs', ['findOutilsAMainSansCommande(', 'findMembersWithoutCategory(', 'findAvertissementsNonDits(']],
+    ['scripts/god-of-all-process.mjs', ['findScriptsDeservingProcess(']],
+  ];
+  for (const [fichier, appels] of APPELS_ATTENDUS_919) {
+    const src = lireSrc919(fichier, 'utf8');
+    for (const appel of appels) {
+      // On compte les occurrences HORS de la déclaration : `export function f(` ne prouve rien.
+      const occurrences = src.split(appel).length - 1;
+      const declarations = src.split(`export function ${appel}`).length - 1;
+      assert.ok(occurrences - declarations >= 1, `${fichier} must actually CALL ${appel} outside its own declaration — a detector nobody calls is an intention, not a mechanism (leçon L2), and these seven sat tested-but-mute while their tools' reports said nothing at all about the dimensions they measure`);
+    }
+  }
+
+  // LE PLAN D'ACTION DE DOC-REPORT NE PLANTAIT PLUS — il référençait une variable `missing`
+  // supprimée le matin même en tâche #926, donc main() mourait sur un ReferenceError et le plan
+  // d'action n'a JAMAIS été imprimé une seule fois. Trouvé en lançant l'outil pour de vrai
+  // (Article 25), jamais en relisant le diff.
+  const srcDoc919 = lireSrc919('scripts/doc-report.mjs', 'utf8');
+  assert.ok(!/\.\.\.missing\.map\(/.test(srcDoc919), 'doc-report main() must not reference the removed `missing` variable: it crashed the whole report before its plan d\'action, and a tool that dies before its conclusion is a tool whose conclusion nobody has ever read');
+
+  console.log("Passed: sept détecteurs qui ne parlaient nulle part (2026-09-26, tâche #919) — ils existaient, ils étaient testés, et aucun code hors de la suite de tests ne les appelait. La distinction qui décide de leur place vient de la tâche elle-même : un garde-fou qui protège un invariant du CODE appartient aux tests et nulle part ailleurs ; un garde-fou qui dit quelque chose sur LE PROJET doit parler dans le rapport que lit un humain. Ces sept-là parlent du projet — un outil qu'on ordonne de lancer à la main sans jamais écrire sa commande, un outil déclaré heuristique qui ne prononce jamais son avertissement, une section devenue introuvable faute de sommaire, un membre hors de tout organigramme, une activité à enjeu que rien ne gouverne. Ce qui est vérifié ici n'est pas qu'ils fonctionnent, c'est qu'ils sont APPELÉS : un test qui vérifie une fonction sans vérifier qu'on l'appelle est précisément ce qui les a laissés muets. Et le câblage a fait tomber autre chose : doc-report mourait sur un ReferenceError avant son plan d'action depuis le matin même, si bien que sa conclusion n'avait jamais été imprimée une seule fois. Trouvé en lançant l'outil pour de vrai, jamais en relisant le diff.");
+}

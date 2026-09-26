@@ -673,8 +673,15 @@ function main() {
   // `fausseUneMesure` seulement pour les écarts décision/code : quand le registre dit une chose et
   // le code une autre, tout ce qui lit ce registre travaille sur du faux.
   const ecartsDocReport = [
-    ...missing.map((d) => ({ fichier: d, defaut: "dossier sous docs/ sans décision HTML/texte enregistrée",
-      tache: `trancher la décision HTML/texte de ${d} et l'inscrire au registre`, fausseUneMesure: false })),
+    // LA VARIABLE `missing` N'EXISTAIT PLUS (corrigé le 2026-09-26, tâche #919). Elle a été
+    // remplacée par `decisions` en tâche #926 et cette ligne, restée derrière, faisait planter
+    // main() sur un ReferenceError — donc **le plan d'action de doc-report n'a jamais été
+    // imprimé une seule fois** depuis ce changement, le jour même. Trouvé en lançant l'outil pour
+    // de vrai, jamais en relisant le diff : c'est exactement ce que l'Article 25 demande, et
+    // exactement ce que je n'avais pas fait. Seules les décisions qu'AUCUNE mécanique ne peut
+    // trancher deviennent une tâche — les 13 dérivées n'en demandent aucune.
+    ...decisions.aDeclarer.map((d) => ({ fichier: d.path ?? d.slug, defaut: `décision HTML/texte indécidable mécaniquement — ${d.pourquoi}`,
+      tache: `trancher la décision HTML/texte de ${d.path ?? d.slug} et l'inscrire au registre`, fausseUneMesure: false })),
     ...mismatches.map((m2) => ({ fichier: m2.label, defaut: "la décision enregistrée ne correspond pas au code réel",
       tache: `réaligner ${m2.label} : corriger le registre ou le code, selon lequel des deux a raison`, fausseUneMesure: true })),
     ...missingFromGitignore.map((j) => ({ fichier: j, defaut: "journal local absent de .gitignore — risque de fuite au prochain commit",
@@ -682,7 +689,49 @@ function main() {
     ...undeclared.map((j) => ({ fichier: j, defaut: "entrée de .gitignore ressemblant à un journal local, jamais déclarée dans LOCAL_JOURNALS",
       tache: `déclarer ${j} dans LOCAL_JOURNALS, ou écrire pourquoi il n'en est pas un`, fausseUneMesure: false })),
   ];
-  const planDoc = planDactionDepuisEcarts(ecartsDocReport, { toolSlug: "doc-report",
+  // ————————————————————————————————————————————————————————————————————
+  // TROIS DÉTECTEURS QUI NE PARLAIENT NULLE PART (2026-09-26, tâche #919)
+  // ————————————————————————————————————————————————————————————————————
+  // Ils existaient, ils étaient testés, et AUCUN CODE HORS DE LA SUITE DE TESTS NE LES APPELAIT —
+  // leçon L2 : un mécanisme qui ne sort pas du script est une intention. La distinction qui décide
+  // de leur place est celle de la tâche : un garde-fou qui protège un invariant du CODE appartient
+  // aux tests et nulle part ailleurs ; un garde-fou qui dit quelque chose sur LE PROJET doit parler
+  // dans le rapport que lit un humain. Ces trois-là parlent du projet.
+  //
+  // CE QUE LE CÂBLAGE AJOUTE, ALORS QUE LE TEST EXISTE DÉJÀ : le test casse un commit le jour où
+  // l'écart apparaît, mais le rapport, lui, ne disait RIEN de ces trois dimensions — ni écart, ni
+  // vérification. Une dimension absente du rapport se lit comme une dimension qui n'existe pas, et
+  // ce projet tient qu'une absence de mesure n'est jamais une mesure rassurante.
+  //
+  // UNE LIGNE CHACUN QUAND TOUT VA BIEN, jamais trois sections : sept sections bruyantes d'un coup
+  // seraient une régression (leçon L6, une alarme permanente fait dépendre d'elle).
+  let tableMaitresse = "";
+  try { tableMaitresse = readFileSync(join(ROOT, "docs/regles-de-travail.md"), "utf8"); } catch { /* déclaré ci-dessous */ }
+  console.log("\n=== TROIS VÉRIFICATIONS QUI NE SORTAIENT JAMAIS D'ICI (tâche #919) ===");
+  const ecartsMuets = [];
+  if (!tableMaitresse) {
+    // L5/L11 : « pas lu » ne se dit jamais comme « rien trouvé ».
+    console.log("❓ PAS MESURÉ — docs/regles-de-travail.md illisible : les deux vérifications qui en dépendent n'ont pas tourné, ce qui n'est pas la même chose qu'un résultat propre.");
+  } else {
+    const sansFiabilite = findToolsMissingReliability(tableMaitresse);
+    console.log(sansFiabilite.length
+      ? `🔴 ${sansFiabilite.length} outil(s) de la table maîtresse sans classification de fiabilité : ${sansFiabilite.join(", ")}`
+      : "✅ Chaque outil de la table maîtresse porte une classification de fiabilité.");
+    for (const o of sansFiabilite) ecartsMuets.push({ fichier: o, defaut: "outil de la table maîtresse sans classification de fiabilité", tache: `classer ${o} dans TOOL_RELIABILITY, ou écrire pourquoi il n'en a pas besoin`, fausseUneMesure: true });
+
+    const introuvables = findUnnavigableSections(tableMaitresse);
+    console.log(introuvables.length
+      ? `🔴 ${introuvables.length} section(s) devenue(s) introuvable(s) faute de sommaire : ${introuvables.map((x) => x.titre ?? x).join(" · ")}`
+      : "✅ Aucune section du document de travail n'est devenue introuvable faute de sommaire.");
+    for (const x of introuvables) ecartsMuets.push({ fichier: String(x.titre ?? x), defaut: "section longue sans sommaire — on ne peut y trouver quoi que ce soit sans tout lire", tache: `ajouter un sommaire à la section « ${x.titre ?? x} »`, fausseUneMesure: false });
+  }
+  const sansAvertissement = findHeuristicToolsWithoutNotice();
+  console.log(sansAvertissement.length
+    ? `🔴 ${sansAvertissement.length} outil(s) déclaré(s) heuristique(s) dont le code ne prononce jamais son avertissement : ${sansAvertissement.map((x) => x.slug ?? x).join(", ")}`
+    : "✅ Chaque outil déclaré heuristique prononce réellement son avertissement de marge.");
+  for (const x of sansAvertissement) ecartsMuets.push({ fichier: String(x.slug ?? x), defaut: "déclaré heuristique et son code ne dit jamais son avertissement — une protection écrite qui ne sort jamais", tache: `faire prononcer son avertissement à ${x.slug ?? x}, ou corriger sa classification`, fausseUneMesure: true });
+
+  const planDoc = planDactionDepuisEcarts([...ecartsDocReport, ...ecartsMuets], { toolSlug: "doc-report",
     libelle: (e) => `${e.fichier} — ${e.defaut}`,
     tache: (e) => e.tache });
   console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);

@@ -17,7 +17,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "no
 import { join } from "node:path";
 import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
 import { renderTextReport } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -3968,6 +3968,57 @@ async function main() {
   console.log(CASSANDRA_PERSONA);
   console.log("");
   console.log(buildCassandraLightSignal(data));
+
+  // ————————————————————————————————————————————————————————————————————
+  // TROIS VÉRIFICATIONS QUI NE SORTAIENT JAMAIS D'ICI (2026-09-26, tâche #919)
+  // ————————————————————————————————————————————————————————————————————
+  // Elles existaient, elles étaient testées, et AUCUN CODE HORS DE LA SUITE DE TESTS NE LES
+  // APPELAIT — leçon L2. La distinction qui décide de leur place vient de la tâche : un garde-fou
+  // qui protège un invariant du CODE reste aux tests ; un garde-fou qui dit quelque chose sur LE
+  // PROJET doit parler dans le rapport que lit un humain. Ces trois-là parlent du projet : un outil
+  // qu'on ordonne de lancer à la main sans jamais écrire la commande, un outil déclaré heuristique
+  // qui ne prononce jamais son avertissement, un membre hors de tout organigramme.
+  //
+  // UNE LIGNE CHACUNE QUAND TOUT VA BIEN, jamais trois sections : trois blocs bruyants d'un coup
+  // seraient une régression (leçon L6, une alarme permanente fait dépendre d'elle).
+  console.log("\n=== TROIS VÉRIFICATIONS QUI NE SORTAIENT JAMAIS D'ICI (tâche #919) ===");
+  let tableRH = "";
+  try { tableRH = readFileSync(join(ROOT, "docs/regles-de-travail.md"), "utf8"); } catch { /* dit ci-dessous */ }
+  if (!tableRH) {
+    console.log("❓ PAS MESURÉ — docs/regles-de-travail.md illisible : rien n'a été confronté, ce qui n'est pas la même chose qu'aucun manque.");
+  } else {
+    let offert = tableRH;
+    try { offert += readFileSync(join(ROOT, "CLAUDE.md"), "utf8"); } catch { /* la table seule suffit, en moins large */ }
+    const { parseToolsTable: lireTableRH } = await import("./le-coordinateur.mjs");
+    const cmd = findOutilsAMainSansCommande(lireTableRH(tableRH), { offert });
+    console.log(!cmd.mesurable
+      ? `❓ PAS MESURÉ — ${cmd.pourquoi}`
+      : cmd.manques.length
+        ? `🔴 ${cmd.manques.length} outil(s) que la table dit MANUELS et dont la commande n'est écrite nulle part : ${cmd.manques.map((x) => x.fichier).join(", ")}`
+        : `✅ Chacun des ${cmd.couverts} outil(s) déclaré(s) manuel(s) a sa commande écrite quelque part.`);
+
+    const sansCategorie = findMembersWithoutCategory(tableRH);
+    console.log(sansCategorie.length
+      ? `🔴 ${sansCategorie.length} membre(s) de la table maîtresse hors de tout rang de l'organigramme : ${sansCategorie.map((x) => x.nom ?? x).join(", ")}`
+      : "✅ Chaque membre de la table maîtresse a sa place dans l'organigramme.");
+  }
+  // L'AVERTISSEMENT NON DIT — les relais sont DÉRIVÉS du gabarit partagé, jamais énumérés
+  // (Article 24) : un nouvel étage de relais écrit demain est pris en compte sans qu'on y pense.
+  let srcGabarit = "";
+  try { srcGabarit = readFileSync(join(ROOT, "scripts/report-template.mjs"), "utf8"); } catch { /* dit ci-dessous */ }
+  const relaisConnus = relaisDAvertissement(srcGabarit);
+  const av = findAvertissementsNonDits(Object.values(AGENT_SCRIPT_FILES), {
+    lire: (c) => { try { return readFileSync(join(ROOT, c), "utf8"); } catch { return null; } },
+    registre: TOOL_RELIABILITY,
+    relais: relaisConnus.mesurable ? relaisConnus.relais : [],
+    correspondance: AGENT_SCRIPT_FILES,
+  });
+  console.log(!av.mesurable
+    ? `❓ PAS MESURÉ — ${av.pourquoi}`
+    : av.jamaisDits.length
+      ? `🔴 ${av.jamaisDits.length} outil(s) déclaré(s) heuristique(s) dont le code ne prononce JAMAIS l'avertissement : ${av.jamaisDits.join(", ")} (${av.imprime} l'impriment, ${av.absents.length} sont hors du registre)`
+      : `✅ Les ${av.imprime} outil(s) déclaré(s) heuristique(s) prononcent tous leur avertissement (${av.absents.length} script(s) hors registre, ce qui est un autre sujet).`);
+
   console.log("\nSous-commandes : `rapport` (bilan RH complet), `organigramme` (l'Agence reconstruite depuis les données réelles).");
 }
 
