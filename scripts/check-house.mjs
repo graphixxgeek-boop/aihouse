@@ -8809,6 +8809,38 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     // détecter précisément ce genre de chose.
     const CRH = await import('../scripts/cassandra-rh.mjs');
     const recF = { mesurable: true, lignes: [{ chemin: 'scripts/a.mjs', type: 'commande-documentee' }] };
+    // STAGNER N'EST PAS UN DÉFAUT — STAGNER EN ÉTANT TRÈS SOLLICITÉ EN EST UN (2026-09-26, #713).
+    // Sa question : « QUi surveille qu'un outil evolue constamment, ne reste pas à l'etat 1 toute sa
+    // vie ? ». CASSANDRA savait déjà dire « pas bougé depuis 12 jours », et cette phrase seule ne
+    // vaut rien : un outil qui fait une chose et la fait bien n'a aucune raison de bouger. La
+    // signaler produirait une alarme permanente sur des outils sains (leçon L6).
+    const ageFaux = (slug) => ({ vieuxEtUtilise: 40, vieuxEtOublie: 40, fraisChaud: 1, sansDate: null })[slug];
+    const stag = CRH.stagnationMalgreUsage(['vieuxEtUtilise', 'vieuxEtOublie', 'fraisChaud', 'sansDate'], {
+      usage: { vieuxEtUtilise: 30, vieuxEtOublie: 1, fraisChaud: 50, sansDate: 9 }, ageJours: ageFaux,
+    });
+    assert.deepEqual(stag.alertes.map((a) => a.slug), ['vieuxEtUtilise'], 'only the crossing raises the alert: old AND heavily used. Age alone must never be a finding');
+    assert.deepEqual(stag.sains.map((a) => a.slug), ['vieuxEtOublie'], 'old and rarely used is a NON-problem, named as such rather than left to be re-examined at every pass');
+    assert.deepEqual(stag.recents.map((a) => a.slug), ['fraisChaud'], 'a tool touched yesterday says nothing, however used it is');
+    assert.deepEqual(stag.sansAge.map((a) => a.slug), ['sansDate'], 'a tool whose age cannot be read is set apart, never counted as fresh — an unreadable date is not a recent date');
+    assert.ok(/30 fois/.test(stag.alertes[0].pourquoi) && /40 jours/.test(stag.alertes[0].pourquoi), 'and the reason carries BOTH numbers, since it is their crossing that makes the finding');
+
+    // LE ZÉRO N'EST UNE BONNE NOUVELLE QU'APRÈS AVOIR VU L'OUTIL MORDRE (BP4) : sur CE dépôt le
+    // détecteur rend zéro alerte, ce qui est plausible — tout a été touché cette semaine. Le test
+    // ci-dessus est donc la preuve qu'il MORD ; celui-ci la preuve qu'il n'invente rien.
+    const rienDuTout = CRH.stagnationMalgreUsage(['a', 'b'], { usage: { a: 99, b: 99 }, ageJours: () => 0 });
+    assert.equal(rienDuTout.alertes.length, 0, 'everything freshly touched must raise nothing, whatever the usage');
+
+    // USAGE NON MESURÉ ⇒ ON NE CONCLUT PAS (leçon L11) : un zéro de compteur ne se distingue pas
+    // d'un outil inactif, et le premier vrai passage de cette mesure est justement tombé dessus.
+    const aveugleStag = CRH.stagnationMalgreUsage(['a'], { usage: {}, ageJours: () => 99 });
+    assert.equal(aveugleStag.mesurable, false, 'with no usage measured at all the tool must refuse to conclude rather than accuse every old file');
+    assert.equal(aveugleStag.alertes.length, 0, 'and it must accuse nobody while refusing');
+    assert.ok(/PAS MESURÉ/.test(CRH.formatStagnationLines(aveugleStag).join(' ')), 'the printed line must say PAS MESURÉ, never "rien à signaler" — the two read identically and mean the opposite');
+
+    // LES NON-PROBLÈMES SONT COMPTÉS, PAS LISTÉS : les afficher un par un noierait le seul signal.
+    const rendu = CRH.formatStagnationLines(stag).join('\n');
+    assert.ok(/vieuxEtUtilise/.test(rendu) && !/vieuxEtOublie/.test(rendu), 'the report names the real finding and only COUNTS the non-problems — a report that lists everything is a report nobody finishes');
+
     const sansCompteur = CRH.analyseDesCouches(recF, { couteux: new Set(['a']) });
     assert.equal(sansCompteur.warriorsJamaisLances, null, 'with an empty usage counter the "never launched" list is NOT produced — a zero from a broken probe writes exactly like a measured zero');
     assert.ok(sansCompteur.pourquoiPasDUsage.includes('L11'), 'and the refusal names the lesson it applies, rather than staying silent');

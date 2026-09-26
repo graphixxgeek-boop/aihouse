@@ -1283,6 +1283,72 @@ export function couchesDuScript(chemin, source = "", { crochets = "", filetDeSec
 }
 
 // L'ANALYSE QU'IL DEMANDE, ET ELLE TIENT EN TROIS QUESTIONS — jamais un tableau de plus.
+// ————————————————————————————————————————————————————————————————————————
+// STAGNER N'EST PAS UN DÉFAUT — STAGNER EN ÉTANT TRÈS SOLLICITÉ EN EST UN (2026-09-26, tâche #713)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION : « QUi surveille qu'un outil evolue constamment, ne reste pas à l'etat 1 toute sa
+// vie ? » — et sa propre réponse : « CASSANDRA, c'est déjà son métier ».
+//
+// CE QUI EXISTAIT DÉJÀ ET NE SUFFISAIT PAS : elle tient le tableau des versions et de la richesse.
+// Elle sait donc dire « cet outil n'a pas bougé depuis 12 jours ». **Et cette phrase, seule, ne vaut
+// rien** : un outil qui fait une chose et la fait bien n'a aucune raison de bouger. La signaler
+// produirait une alarme permanente sur des outils parfaitement sains — leçon L6, et le plus sûr
+// moyen de faire cesser la lecture du tableau.
+//
+// LE CROISEMENT EST LE SIGNAL, JAMAIS L'ANCIENNETÉ SEULE, et c'est lui qui rend la mesure utile :
+// un outil IMMOBILE mais TRÈS SOLLICITÉ est un outil qu'on utilise beaucoup et qu'on n'améliore
+// jamais. C'est là que la dette s'accumule sans se voir, parce que tout marche.
+//
+// LES QUATRE ÉTATS, et trois d'entre eux sont des NON-PROBLÈMES qu'il faut nommer pour qu'on cesse
+// de les regarder :
+//   · IMMOBILE ET TRÈS SOLLICITÉ → le seul vrai signal ;
+//   · immobile et peu sollicité  → il fait son travail, on le laisse (le cas le plus fréquent) ;
+//   · récent                     → il vient de bouger, rien à dire ;
+//   · usage NON MESURÉ           → on ne conclut pas (leçon L11 : un zéro d'usage peut être le
+//                                  silence du compteur, pas l'inactivité de l'outil).
+export const JOURS_IMMOBILE = 10;
+export const SOLLICITATIONS_ELEVEES = 5;
+
+export function stagnationMalgreUsage(outils = [], { usage = {}, ageJours = () => null, joursImmobile = JOURS_IMMOBILE, seuilUsage = SOLLICITATIONS_ELEVEES } = {}) {
+  const usageMesure = Object.keys(usage).length > 0;
+  if (!usageMesure) {
+    return {
+      mesurable: false,
+      pourquoi: "aucun usage mesuré — un zéro de compteur ne se distingue pas d'un outil inactif, et croiser sur du vide produirait un verdict sur rien (leçon L11)",
+      alertes: [], sains: [], recents: [],
+    };
+  }
+  const alertes = [], sains = [], recents = [], sansAge = [];
+  for (const o of outils) {
+    const slug = typeof o === "string" ? o : o.slug;
+    if (!slug) continue;
+    const jours = ageJours(slug);
+    const fois = usage[slug] ?? 0;
+    if (jours === null || jours === undefined) { sansAge.push({ slug, fois }); continue; }
+    if (jours < joursImmobile) { recents.push({ slug, jours, fois }); continue; }
+    if (fois >= seuilUsage) alertes.push({ slug, jours, fois,
+      pourquoi: `sollicité ${fois} fois et pas retouché depuis ${jours} jours — on s'en sert beaucoup et on ne l'améliore jamais` });
+    else sains.push({ slug, jours, fois,
+      pourquoi: `immobile depuis ${jours} jours mais sollicité ${fois} fois : il fait une chose et la fait bien, rien à signaler` });
+  }
+  return { mesurable: true, alertes, sains, recents, sansAge };
+}
+
+export function formatStagnationLines(r) {
+  if (!r.mesurable) return [`⚠️ Stagnation vs usage : PAS MESURÉ — ${r.pourquoi}`];
+  const L = [];
+  if (!r.alertes.length) {
+    L.push(`✅ Aucun outil immobile ET très sollicité (seuils : ${JOURS_IMMOBILE} j sans retouche, ${SOLLICITATIONS_ELEVEES} sollicitations).`);
+  } else {
+    L.push(`🚨 ${r.alertes.length} outil(s) IMMOBILE(S) ET TRÈS SOLLICITÉ(S) — c'est là que la dette s'accumule sans se voir, parce que tout marche :`);
+    for (const a of r.alertes.sort((x, y) => y.fois - x.fois)) L.push(`   · ${a.slug} — ${a.pourquoi}`);
+  }
+  // Les non-problèmes sont COMPTÉS et pas listés : les afficher un par un noierait le seul signal.
+  L.push(`   (${r.sains.length} immobile(s) mais peu sollicité(s) — non-problème · ${r.recents.length} récent(s) · ${r.sansAge?.length ?? 0} sans âge lisible)`);
+  return L;
+}
+
 export function analyseDesCouches(recensement, { crochets = "", filetDeSecurite = "", sources = {}, usage = {}, couteux = new Set() } = {}) {
   if (!recensement?.mesurable) return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement à analyser" };
   // Les scripts à exécution directe comptent AUSSI : `check-spirit.mjs` est le plus coûteux du
@@ -3816,6 +3882,29 @@ async function main() {
     console.log("\n  Ni la somme ni la moyenne des versions ci-dessous : la somme monterait à chaque faute de frappe corrigée,");
     console.log("  et la moyenne BAISSERAIT le jour où un outil neuf rejoint l'équipe — un nouveau membre ferait reculer");
     console.log("  la version de l'équipe. La composition de l'équipe est à l'Agence ce que la surface exportée est à un outil.");
+    // STAGNER EN ÉTANT TRÈS SOLLICITÉ (2026-09-26, tâche #713) — câblé ICI, juste avant le tableau
+    // des versions, parce que c'est lui qui donne son SENS au tableau : la colonne « pas bougé
+    // depuis N jours » ne dit rien toute seule, et cette section dit lesquelles de ces lignes
+    // méritent qu'on s'y arrête.
+    console.log("\n=== STAGNATION vs SOLLICITATION (tâche #713) ===\n");
+    try {
+      const { readFileSync: lireJson } = await import("node:fs");
+      const { lastTouchDays } = await import("./clean-dirty-old.mjs");
+      let evenements = [];
+      try { evenements = JSON.parse(lireJson(join(ROOT, ".tool-usage-history.json"), "utf8")).events ?? []; } catch { /* compteur absent : la mesure le DIRA */ }
+      const compte = {};
+      for (const e of evenements) if (e.toolSlug) compte[e.toolSlug] = (compte[e.toolSlug] ?? 0) + 1;
+      const ageDe = (slug) => {
+        for (const chemin of [`scripts/${slug}.mjs`, `scripts/check-${slug}.mjs`]) {
+          const d = lastTouchDays(chemin);
+          if (Number.isFinite(d)) return d;
+        }
+        return null;   // âge illisible : mis à part, jamais compté comme récent
+      };
+      for (const l of formatStagnationLines(stagnationMalgreUsage(Object.keys(compte), { usage: compte, ageJours: ageDe }))) console.log(l);
+    } catch (e) {
+      console.log(`⚠️ Stagnation vs sollicitation : PAS MESURÉ — ${e.message}. Une erreur de lecture n'est jamais « rien à signaler ».`);
+    }
     console.log("\n=== VERSION ET RICHESSE, OUTIL PAR OUTIL ===\n");
     console.log("Deux échelles SÉPARÉES, à la demande de l'utilisateur, et la raison est bonne : la VERSION dit ce qui");
     console.log("s'est passé (combien de fois l'outil a changé de capacités), la RICHESSE dit ce qu'il EST aujourd'hui.");
