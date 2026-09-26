@@ -3,6 +3,8 @@
 *(Blueprint générique réutilisable tel quel : il ne connaît rien du domaine, seulement des outils qui
 gardent ou non une mémoire, et un agent qui les corrige ou non.)*
 
+**FRONTIÈRE AVEC `docs/xp-ia-process-detail.md`, ÉCRITE ICI PARCE QU'ELLE MANQUAIT** *(2026-09-26, tâche #978)* : les deux documents parlent d'apprentissage et partageaient 27 % de leur vocabulaire sans que ni l'un ni l'autre ne cite le chemin de son voisin. La frontière est nette une fois dite : **celui-ci porte l'apprentissage des OUTILS** — un outil garde-t-il une mémoire de ses passages, et l'agent l'aide-t-il vraiment à progresser. **L'autre porte l'apprentissage de L'AGENT** — la chaîne découvrir → enregistrer → analyser → ressortir, et le registre des leçons. Le premier est un outil mesurable, le second est un process de conduite. Ils se croisent sur un seul point, et il est assumé : une leçon apprise par l'agent peut se traduire par une mémoire ajoutée à un outil.
+
 ## Le problème qu'il résout
 
 Un paysage d'outils peut être parfaitement équipé et parfaitement immobile. Chaque outil a sa

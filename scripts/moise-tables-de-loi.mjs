@@ -381,6 +381,8 @@ export function renderCartographie(carto, { date = new Date().toISOString().slic
     "",
     `*(Généré le ${date} par \`node scripts/moise-tables-de-loi.mjs cartographie\`. Document de TRAVAIL de l'agent, jamais destiné à l'utilisateur — sa vision à lui est la synthèse stratégique, \`node scripts/moise-tables-de-loi.mjs synthese\`. Régénérable à volonté : les natures marquées « décidé » sont relues et reprises telles quelles, jamais écrasées.)*`,
     "",
+    "**FRONTIÈRE AVEC `docs/referentiel/claude-md-regles.md`, ÉCRITE ICI PLUTÔT QUE SUPPOSÉE** *(2026-09-26, tâche #978)* : les deux documents parcourent CLAUDE.md Article par Article, et aucun des deux ne citait l'autre — deux inventaires du même document qui divergent en silence sont le risque que l'Article 24 nomme. **Celui-ci dit ce qu'il FAUT FAIRE de chaque Article** (sa nature, et le geste qu'elle commande : intouchable, réductible, remplaçable). **L'autre dit ce que chaque Article EST** (sensibilité, importance, nombre de références croisées, nombre de lignes). On lit celui-ci avant de décider d'un allègement, l'autre pour savoir à quoi on touche. Les deux sont générés par le même outil et se régénèrent ensemble.",
+    "",
     `**État mesuré** : ${carto.lignesCharte} lignes · ~${carto.tokens} tokens estimés · ${carto.obligations.instructions} obligations pour ${carto.obligations.disponible} réellement suivables (${carto.obligations.verdict}).`,
     "",
     "## Les quatre natures, et le geste que chacune commande",
@@ -1048,6 +1050,8 @@ async function main() {
     const table = buildClaudeMdRuleTable(charte, fichiersDuDepot());
     const entete = [
       "# Référentiel des règles de la charte (CHARTER-SPY, porté par MOÏSE-TABLES-DE-LOI)",
+      "",
+      "**FRONTIÈRE AVEC `docs/referentiel/charte-cartographie.md`** *(2026-09-26, tâche #978)* : cette table dit ce que chaque Article EST (sensibilité, importance, références croisées, lignes) ; la cartographie dit ce qu'il FAUT EN FAIRE (sa nature, et le geste qu'elle commande). Aucun des deux ne citait l'autre, et deux inventaires du même document qui divergent en silence sont exactement le risque de l'Article 24.",
       "",
       `*(Régénéré le ${new Date().toISOString().slice(0, 10)} par \`node scripts/moise-tables-de-loi.mjs table\`. Fichier de référence UNIQUE tenu à jour — jamais un dossier+index séparé (calibrage explicite du 2026-09-20). À régénérer AVANT toute décision d'allègement : la version précédente datait du 2026-09-20 et s'arrêtait à l'Article 23, six Articles derrière la réalité, et un instrument périmé ne rend pas une erreur — il rend des chiffres qui ont l'air justes.)*`,
       "",

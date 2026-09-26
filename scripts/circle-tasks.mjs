@@ -169,6 +169,22 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer `node scripts/safe-export.mjs kits` (SAFE-EXPORT). Il mesure DEUX populations, jamais une : le kit de l'Agence comme un tout (mesurerLeKitDeLAgence(), 6 pièces — plan, installation, carte, organisation, standards, leçons) et le kit de chaque fichier de l'outillage (mesurerLesKits(), 5 pièces, exemptions écrites comprises), puis rend le verdict d'alerteExport() à quatre paliers. LIRE D'ABORD LA LIGNE D'ALERTE, jamais les tableaux : elle dit en un mot si l'Agence est emportable aujourd'hui, et c'est la seule chose que les chiffres seuls ne disent pas. Un palier 🔴 ou 🟠 ouvre une vraie tâche dans docs/suivi/ (Article 28), jamais une note dans un compte rendu. Écrire le signal via recordCircleItemReport('safe-export-kits', ...) — le fichier daté complet, lui, est déjà écrit par l'outil dans docs/safe-export/.",
     producesReport: true,
   },
+  // documents-jumeaux (2026-09-26, tâche #978, son point 4 : « il y a des doublons dans les
+  // documents ? »). Personne ne répondait : CLONE-HUNTER traque le CODE dupliqué, pure-gold-unity
+  // la FORME des rapports, et le détecteur de rapports jumeaux compare une substance EXACTE — il
+  // déclare lui-même hors portée « deux documents qui disent la même chose avec des mots
+  // différents ». C'est gratuit et mécanique, donc ça a sa place ici plutôt que sur demande : une
+  // redondance entre documents naît le jour où on écrit le second, et se voit d'autant plus mal
+  // qu'aucun des deux n'a l'air fautif.
+  {
+    id: "documents-jumeaux",
+    theme: "KPI & scans",
+    label: "Deux documents qui disent la même chose",
+    cout: "gratuit — relit l'arborescence docs/ et compare les vocabulaires, aucun appel API",
+    tokensEstimes: "faible — seules les paires À INSTRUIRE sont à lire ; les familles légitimes se résument en une ligne chacune",
+    execute: "Lancer `node scripts/abraham-les-references.mjs documents-jumeaux`. NE LIRE QUE LA PREMIÈRE LIGNE ET LES PAIRES 🟠 : les 🟢 citent déjà le chemin l'une de l'autre, donc leur recouvrement est assumé, et les familles écartées (index répliqués, séries datées, kit d'un même outil, ensemble déclaré, instantané daté) sont légitimes PAR CONSTRUCTION. Une paire 🟠 n'est jamais un verdict, toujours une question : les deux documents couvrent le même terrain et aucun ne dit lequel prime. Trois issues, jamais deux — fusionner, DÉCLARER LA FRONTIÈRE dans l'un des deux (le geste le moins cher et le plus souvent le bon), ou écarter avec la raison écrite. Si l'un des deux est GÉNÉRÉ, la frontière s'écrit dans le générateur, jamais dans le fichier : écrite dans le fichier, elle saute à la régénération suivante. Écrire le signal via recordCircleItemReport('documents-jumeaux', ...) — le fichier daté complet est déjà déposé par l'outil dans docs/abraham-les-references/.",
+    producesReport: true,
+  },
   // always-new-code-signal RETIRÉ le 2026-09-21 : ALWAYS-NEW-CODE promu sixième Gardien sacré (couche
   // légère seulement — recommendZone()/addendaSignal()/churnSignal(), zéro raisonnement) — tourne
   // désormais déjà automatiquement à chaque commit (scripts/hooks/check-last-commit.mjs), exactement
@@ -1461,6 +1477,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   profil: "docs/profil-utilisateur/",
   kpi: "docs/tableau-de-bord/",
   "safe-export-kits": "docs/safe-export/ronde/",
+  "documents-jumeaux": "docs/abraham-les-references/ronde/",
   "x-port-blindtest": "docs/x-port-blindtest/ronde/",
   "pure-gold-unity-scan": "docs/pure-gold-unity/",
   "tool-learning": "docs/tool-learning/",

@@ -906,8 +906,230 @@ export function classerEtEcrire(chemin, { prefixe = "Article", sortie = null, ec
   return { mesurable: true, classement, cible, forme: r.forme, couverture: r.couverture?.part };
 }
 
+// --- 9. DEUX DOCUMENTS QUI DISENT LA MÊME CHOSE ------------------------------------------------
+// (2026-09-26, tâche #978, deuxième des trois trous qu'il a demandé de traiter : « il y a des
+// doublons dans les documents ? ».)
+//
+// POURQUOI ICI ET PAS AILLEURS. Personne ne répondait : CLONE-HUNTER traque le CODE dupliqué,
+// pure-gold-unity vérifie la FORME des rapports, et le détecteur de rapports jumeaux
+// (doc-report) compare une substance EXACTE — il déclare lui-même hors portée « deux rapports qui
+// disent la même chose avec des mots différents ». Or c'est exactement ce qu'est une redondance
+// entre documents : le même terrain couvert deux fois, jamais les mêmes phrases. Abraham porte
+// déjà la mécanique qu'il faut — motsSignificatifs(), pairesParJaccard(), et surtout la notion de
+// FRONTIÈRE DÉCLARÉE : deux règles peuvent légitimement parler du même sujet si l'une dit où
+// s'arrête l'autre. On l'étend des règles d'un document aux documents du dépôt (Article 31 :
+// étendre plutôt que construire à côté).
+//
+// LE BRUIT STRUCTUREL EST ÉCRASANT, ET IL A FALLU LE MESURER AVANT DE FIXER QUOI QUE CE SOIT. Sur
+// 382 documents, la mesure brute rend 2 886 paires — parce que ce dépôt produit des SÉRIES (un
+// catalogue horodaté déposé à chaque passage) et des INDEX RÉPLIQUÉS (le même `index.md` généré
+// dans le dossier de chaque outil). Ces familles sont légitimes PAR CONSTRUCTION, et elles se
+// DÉRIVENT du nommage plutôt que de se lister (Article 24) : un outil créé demain hérite du
+// classement sans qu'on touche à ce fichier. Une fois les quatre familles écartées, il reste une
+// trentaine de paires à instruire — un nombre qu'un humain peut lire.
+export const HORS_PORTEE_DOCUMENTS = [
+  // Le suivi est un JOURNAL de tâches, pas un document qui affirme quelque chose : il cite par
+  // construction le vocabulaire de tout le projet, donc il ressemble à tout. L'y inclure noyait la
+  // mesure sous des paires qui ne mènent nulle part.
+  { motif: /^docs\/suivi\//, pourquoi: "journal de tâches : il cite tout le projet par construction, donc il ressemble à tout" },
+  // Les simulations sont des ARCHIVES de conversations. Deux transcripts se ressemblent parce que
+  // c'est le même jeu, et c'est doc-report qui les compare, sur leur substance exacte.
+  { motif: /^docs\/simulations\//, pourquoi: "archives de conversations : leur ressemblance est normale, et doc-report les compare déjà" },
+];
+
+export const TAILLE_MINIMALE_DOCUMENT = 800;
+// Seuil MESURÉ, jamais choisi : à 0,25 la mesure rend une trentaine de paires sur 382 documents,
+// c'est-à-dire une liste lisible. Plus bas, elle noie ; plus haut, elle ne rend que les séries
+// déjà écartées comme légitimes.
+export const SEUIL_DOCUMENTS_JUMEAUX = 0.25;
+
+export const FAMILLES_LEGITIMES = {
+  "index-replique": "le même nom de fichier dans deux dossiers différents — un index généré chez chaque outil, jamais deux documents concurrents",
+  "serie-datee": "deux instantanés datés du même dossier — c'est une histoire, pas une redondance",
+  "kit-du-meme-outil": "le blueprint, la fiche et le registre d'un même outil — ils couvrent le même sujet PAR DESIGN, sous trois angles",
+  "ensemble-declare": "deux documents d'un ensemble que son NOMMAGE déclare (au moins trois fichiers du dossier partagent leur préfixe ou leur suffixe)",
+  "instantane-date": "un état des lieux DATÉ face au document vivant qu'il photographie — un instantané dit forcément ce que disait sa cible ce jour-là, et le lui reprocher reviendrait à reprocher à une photo de ressembler à son sujet",
+};
+
+// UN ÉTAT DES LIEUX DATÉ EST UNE PHOTOGRAPHIE, jamais un document concurrent (2026-09-26,
+// tâche #978, troisième des trois paires instruites au premier passage). `docs/plans/
+// etat-des-lieux-classification-2026-09-24.md` recouvrait le registre vivant d'Abraham à 25 % —
+// évidemment, puisqu'il le photographie. Même logique que `serie-datee`, appliquée à un instantané
+// SEUL plutôt qu'à une série : on ne compare pas une photo à son sujet.
+export const MOTIF_INSTANTANE_DATE = /^docs\/plans\/.*\d{4}-\d{2}-\d{2}/;
+
+export function slugDuDocument(chemin) {
+  const parts = String(chemin).split("/");
+  const base = parts.pop().replace(/\.md$/, "");
+  return (base === "index" ? (parts.pop() ?? base) : base).replace(/-blueprint$/, "").replace(/-conception$/, "");
+}
+
+// UN ENSEMBLE SE JUGE SUR LA PAIRE, PAS SUR LA PURETÉ DU DOSSIER — et c'est une correction faite
+// au premier vrai passage, quelques minutes après avoir écrit la première version. Celle-ci
+// exigeait que TOUS les documents du dossier partagent le même préfixe ou le même suffixe. Un
+// seul intrus suffisait à la faire échouer : `docs/el-professor/` contient quatorze fiches
+// `full_simN.md` et UN `synthese-2026-09-19.md`, et cet unique fichier faisait retomber les
+// quatorze autres dans les accusations — HUIT paires accusées à tort, sur des notes qui se
+// ressemblent parce qu'elles appliquent la même grille à des simulations différentes. Un
+// garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+//
+// LA RÈGLE RETENUE : deux documents appartiennent au même ensemble si leurs noms partagent un
+// préfixe (ou un suffixe) d'au moins quatre caractères QUE PARTAGENT AU MOINS TROIS fichiers du
+// dossier. Trois, parce que deux fichiers qui se ressemblent sont justement ce qu'on cherche —
+// c'est à partir du troisième qu'on tient une collection. Rien n'est listé : le nommage déclare
+// l'ensemble, et un dossier créé demain est classé sans qu'on touche à ce fichier (Article 24).
+export const LONGUEUR_MINIMALE_D_AFFIXE = 4;
+export const MEMBRES_MINIMUM_D_UN_ENSEMBLE = 3;
+
+export function affixesCommuns(nomA, nomB, mini = LONGUEUR_MINIMALE_D_AFFIXE) {
+  const a = String(nomA).replace(/\.md$/, ""), b = String(nomB).replace(/\.md$/, "");
+  let p = 0;
+  while (p < a.length && p < b.length && a[p] === b[p]) p++;
+  let sfx = 0;
+  while (sfx < a.length - p && sfx < b.length - p && a[a.length - 1 - sfx] === b[b.length - 1 - sfx]) sfx++;
+  return {
+    prefixe: p >= mini ? a.slice(0, p) : null,
+    suffixe: sfx >= mini ? a.slice(a.length - sfx) : null,
+  };
+}
+
+export function membresDuMemeEnsemble(cheminA, cheminB, { listDirImpl = readdirSync, cache = new Map(), minMembres = MEMBRES_MINIMUM_D_UN_ENSEMBLE } = {}) {
+  const dossier = String(cheminA).split("/").slice(0, -1).join("/");
+  const { prefixe, suffixe } = affixesCommuns(String(cheminA).split("/").pop(), String(cheminB).split("/").pop());
+  if (!prefixe && !suffixe) return false;
+  if (!cache.has(dossier)) {
+    let noms = [];
+    try { noms = listDirImpl(dossier).filter((n) => String(n).endsWith(".md")); } catch { /* illisible : pas d'ensemble, et on ne le devine pas */ }
+    cache.set(dossier, noms);
+  }
+  const noms = cache.get(dossier);
+  const partagent = (test) => noms.filter(test).length >= minMembres;
+  if (prefixe && partagent((n) => String(n).startsWith(prefixe))) return true;
+  if (suffixe && partagent((n) => String(n).replace(/\.md$/, "").endsWith(suffixe))) return true;
+  return false;
+}
+
+export function familleDeLaPaire(a, b, options = {}) {
+  const dossier = (c) => String(c).split("/").slice(0, -1).join("/");
+  const nom = (c) => String(c).split("/").pop();
+  const DATE = /\d{4}-\d{2}-\d{2}/;
+  if (nom(a) === nom(b) && dossier(a) !== dossier(b)) return "index-replique";
+  if (dossier(a) === dossier(b) && DATE.test(nom(a)) && DATE.test(nom(b))) return "serie-datee";
+  if (slugDuDocument(a) === slugDuDocument(b)) return "kit-du-meme-outil";
+  if (dossier(a) === dossier(b) && membresDuMemeEnsemble(a, b, options)) return "ensemble-declare";
+  if (MOTIF_INSTANTANE_DATE.test(a) !== MOTIF_INSTANTANE_DATE.test(b)) return "instantane-date";
+  return null;
+}
+
+// LA FRONTIÈRE DÉCLARÉE, REPRISE DE findRecouvrementsNonDeclares() ET APPLIQUÉE AUX DOCUMENTS.
+// Deux documents peuvent parfaitement couvrir le même terrain si l'un dit où s'arrête l'autre :
+// c'est même la bonne pratique de ce dépôt. Un document qui cite le CHEMIN de l'autre sait qu'il
+// existe — le recouvrement est alors assumé, jamais un doublon ignoré.
+export function citeLAutre(texteA, cheminB) {
+  return String(texteA).includes(String(cheminB));
+}
+
+export function trouverDocumentsJumeaux(documents = [], { seuil = SEUIL_DOCUMENTS_JUMEAUX, listDirImpl = readdirSync } = {}) {
+  if (documents.length < 2) {
+    return { mesurable: false, pourquoi: "moins de deux documents fournis : il n'y a rien à comparer, et rendre « aucun doublon » sur rien serait un satisfecit sur du vide" };
+  }
+  const cache = new Map();
+  const ensembles = documents.map((d) => motsSignificatifs(d.texte));
+  const familles = {};
+  const paires = [];
+  for (const { i, j, jaccard, motsPartages } of pairesParJaccard(ensembles, { seuil })) {
+    const a = documents[i], b = documents[j];
+    const f = familleDeLaPaire(a.chemin, b.chemin, { listDirImpl, cache });
+    if (f) { familles[f] = (familles[f] ?? 0) + 1; continue; }
+    const declaree = citeLAutre(a.texte, b.chemin) || citeLAutre(b.texte, a.chemin);
+    paires.push({
+      a: a.chemin, b: b.chemin, jaccard: +jaccard.toFixed(3), motsPartages,
+      nature: declaree ? "voisinage-declare" : "meme-terrain-non-declare",
+    });
+  }
+  paires.sort((x, y) => y.jaccard - x.jaccard);
+  return {
+    mesurable: true, examines: documents.length, seuil, familles, paires,
+    aInstruire: paires.filter((p) => p.nature === "meme-terrain-non-declare"),
+    horsPortee: "elle mesure un RECOUVREMENT DE VOCABULAIRE, jamais un sens. Deux documents qui disent la même chose sans partager leurs mots lui échappent, et deux documents du même domaine partagent du vocabulaire sans rien se répéter — d'où des QUESTIONS et jamais un verdict.",
+  };
+}
+
+export function chargerLesDocuments({ racine = "docs", fichiersEnPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = readFileSync, horsPortee = HORS_PORTEE_DOCUMENTS, tailleMin = TAILLE_MINIMALE_DOCUMENT } = {}) {
+  const documents = [];
+  const pile = [racine];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = listDirImpl(d, { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (!e.name.endsWith(".md") || horsPortee.some((h) => h.motif.test(chemin))) continue;
+      try {
+        const texte = readFileImpl(chemin, "utf8");
+        // Un document trop court n'a pas assez de vocabulaire pour qu'un recouvrement veuille dire
+        // quoi que ce soit : l'inclure produirait des paires au hasard.
+        if (texte.length >= tailleMin) documents.push({ chemin, texte });
+      } catch { /* illisible : il ne compte pas comme conforme */ }
+    }
+  }
+  for (const f of fichiersEnPlus) {
+    try { documents.push({ chemin: f, texte: readFileImpl(f, "utf8") }); } catch { /* absent : on ne l'invente pas */ }
+  }
+  return documents;
+}
+
+export function formatDocumentsJumeauxLines(r) {
+  if (!r?.mesurable) return [`=== DOCUMENTS QUI DISENT LA MÊME CHOSE : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « aucun doublon »."];
+  const l = [`=== DOCUMENTS QUI DISENT LA MÊME CHOSE — ${r.aInstruire.length} paire(s) à instruire sur ${r.examines} documents ===`, ""];
+  const total = Object.values(r.familles).reduce((a, n) => a + n, 0);
+  l.push(`  Recouvrement de vocabulaire mesuré au-dessus de ${r.seuil} · ${total} paire(s) écartées comme légitimes PAR CONSTRUCTION :`);
+  for (const [f, n] of Object.entries(r.familles).sort((a, b) => b[1] - a[1])) l.push(`    · ${f} × ${n} — ${FAMILLES_LEGITIMES[f]}`);
+  l.push("");
+  if (!r.paires.length) l.push("  Aucune paire au-dessus du seuil une fois les familles légitimes écartées.");
+  for (const p of r.paires) {
+    const icone = p.nature === "meme-terrain-non-declare" ? "🟠" : "🟢";
+    const dire = p.nature === "meme-terrain-non-declare"
+      ? "aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime"
+      : "l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré";
+    l.push(`  ${icone} ${(p.jaccard * 100).toFixed(0)} % de vocabulaire commun (${p.motsPartages} mots) — ${dire}`);
+    l.push(`      · ${p.a}`);
+    l.push(`      · ${p.b}`);
+  }
+  l.push("");
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
+
+export function deposerRapportDocumentsJumeaux(lignes, { now = new Date(), writeImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  mkdirImpl("docs/abraham-les-references", { recursive: true });
+  const chemin = `docs/abraham-les-references/documents-jumeaux-${now.toISOString().slice(0, 10)}.txt`;
+  writeImpl(chemin, lignes.join("\n") + "\n", "utf8");
+  return chemin;
+}
+
 function main() {
   const [, , arg1, arg2] = process.argv;
+  // « documents-jumeaux » : le pendant, à l'échelle du DÉPÔT, de findPairesRedondantes() qui ne
+  // regardait que l'intérieur d'un document. Commande à part pour la même raison que « classer » :
+  // elle ÉCRIT un fichier.
+  if (arg1 === "documents-jumeaux") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM-LES-REFERENCES — deux documents qui disent la même chose", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const r = trouverDocumentsJumeaux(chargerLesDocuments());
+    const lignes = formatDocumentsJumeauxLines(r);
+    for (const ligne of lignes) console.log(ligne);
+    const ecarts = r.mesurable && r.aInstruire.length
+      ? [{ pourquoi: `${r.aInstruire.length} paire(s) de documents couvrent le même terrain sans qu'aucun ne cite l'autre` }]
+      : [];
+    const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "instruire chaque paire une par une — fusionner, déclarer la frontière dans l'un des deux, ou écarter avec la raison écrite ; jamais un retrait en masse" });
+    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
+    for (const ligne of plan.lignes) console.log(ligne);
+    console.log(`\nRapport déposé : ${deposerRapportDocumentsJumeaux(lignes)}`);
+    return;
+  }
   // « classer » est une COMMANDE séparée et non un ajout au rapport par défaut : elle ÉCRIT un
   // fichier, et un outil de lecture qui se met soudain à écrire est exactement le genre d'effet de
   // bord qu'on ne remarque qu'une fois le dépôt sali.

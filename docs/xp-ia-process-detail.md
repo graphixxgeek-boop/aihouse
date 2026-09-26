@@ -3,6 +3,8 @@
 *(Nom donné par l'utilisateur le 2026-09-23. Sixième process déclaré du projet, aux côtés de la
 Ronde, de la simulation, de la nuit autonome, du méta-process et de l'intégration d'un outil.)*
 
+**FRONTIÈRE AVEC `docs/tool-learning-blueprint.md`** *(2026-09-26, tâche #978)* : ce document porte l'apprentissage de L'AGENT (la chaîne découvrir → enregistrer → analyser → ressortir, et le registre des leçons) ; l'autre porte l'apprentissage des OUTILS (un outil garde-t-il une mémoire de ses passages, l'agent l'aide-t-il à progresser). Un process de conduite d'un côté, un outil mesurable de l'autre. Ils ne se croisent que sur un point, assumé : une leçon apprise par l'agent peut se traduire par une mémoire ajoutée à un outil.
+
 **RÈGLE D'ÉCRITURE DE CE DOCUMENT, en tête parce qu'elle a déjà été oubliée ailleurs** : tout
 mécanisme construit en lien avec ce process s'inscrit ICI, pas seulement dans `docs/suivi/`. Le
 SUIVI date ce qui a été FAIT ; le PROCESS dit ce qui EST. Un mécanisme consigné seulement dans le
