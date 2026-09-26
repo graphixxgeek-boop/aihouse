@@ -8759,6 +8759,28 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     const t3 = CT.verserDansStrategie(sq, { section: 'idees', idee: avecGuillemets, source: 's' }).texte;
     assert.equal(CT.strategieARésumé({ strategie: t3, sources: [avecGuillemets] }).aResume, false, 'an idea CONTAINING French quotes is not truncated by the counter: quoting him while quoting him is exactly what the rule asks for, and the first pattern cried "92 % PERTE" on an intact document');
 
+    // L'ANGLE MORT DE L'AUDIT D'INTÉGRATION (2026-09-26, tâche #915 — point 22 de son gros prompt).
+    // Les onze registres vérifient le BRANCHEMENT ; un outil peut être branché 11/11 et décrire
+    // quelque chose qui n'existe plus. Ce n'est pas une crainte : check-profile a vécu neuf jours
+    // avec un en-tête faux, aucun registre en défaut, aucune alerte.
+    const IO = await import('../scripts/integration-outil.mjs');
+    const nue = IO.findPromessesPerimees({ listeScripts: ['f.mjs'], readFileImpl: () => "// le mécanisme n'existe pas encore dans le code (2026-09-01)\n", ageDepuis: '2026-09-26' });
+    assert.equal(nue.trouvees.length, 1, 'a bare promise in a tool header is questioned — the future tense is the phrasing that goes stale in silence, because it is SUCCESS that makes it false');
+    assert.equal(nue.trouvees[0].jours, 25, 'and its age is computed from the date written beside it: "this pas-encore is 25 days old" gets handled, "maybe old" gets postponed');
+    // UNE PROMESSE CITÉE N'EN EST PAS UNE — même patron que findDependancesOutillage, et le premier
+    // passage réel a accusé la seule ligne qui CITE l'ancien en-tête pour dire en quoi il était faux.
+    const citee = IO.findPromessesPerimees({ listeScripts: ['f.mjs'], readFileImpl: () => "// il disait « le mécanisme n'existe pas encore » et c'était faux\n" });
+    assert.equal(citee.trouvees.length, 0, 'accusing the very text that repairs the defect is the surest way to stop being read (leçon L4)');
+    // LA CITATION SUR DEUX LIGNES — sans le suivi d'état, un balayage ligne par ligne voit une fin
+    // de citation sans son début, donc une promesse nue là où il y a du discours rapporté.
+    const surDeuxLignes = "// il disait « le mécanisme\n// n'existe pas encore dans le code » et c'était faux\n// mais ceci n'existe pas encore vraiment\n";
+    const multi = IO.findPromessesPerimees({ listeScripts: ['f.mjs'], readFileImpl: () => surDeuxLignes });
+    assert.equal(multi.trouvees.length, 1, 'a quote spanning two lines is still a quote — and the bare promise on the third line is still caught');
+    assert.equal(multi.trouvees[0].ligne, 3, 'the one flagged is the bare one, never the quoted one');
+    assert.equal(IO.findPromessesPerimees({ listeScripts: [], readFileImpl: () => '' }).trouvees.length, 0, 'an empty script list finds nothing without crashing');
+    // ET IL EST PROPRE SUR LE VRAI DÉPÔT, ce qui est le point : le seul outil concerné a été réparé.
+    assert.equal(IO.findPromessesPerimees({ ageDepuis: '2026-09-26' }).trouvees.length, 0, 'checked live against the real repository — zero stale promise left, check-profile having been rewritten the same night');
+
     // LE POIDS DES LEÇONS (2026-09-26, tâche #914 — « pondérer par le nombre de remontées »).
     const TL = await import('../scripts/tool-learning.mjs');
     const leconsF = [{ id: 'L1', titre: 'a', nature: 'leçon', mots: ['seuil'], fichiers: [] },

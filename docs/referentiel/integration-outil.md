@@ -140,3 +140,55 @@ d'être documenté : le mesurer autrement l'exempterait de tout au moment préci
 **Première intégration passée sous ce régime** : AGENT-DU-TEMPS, le 2026-09-24 — onze registres sur
 onze du premier coup, plus son blueprint et sa fiche. La première fois qu'un outil de ce projet
 entre sans découvrir ses oublis un test après l'autre.
+
+---
+
+## L'ANGLE MORT de l'audit, et sa fermeture *(2026-09-26, tâche #915)*
+
+Sa demande : « l'angle mort de l'audit d'intégration — **fermer le trou côté outil** ».
+
+### Ce que l'audit voit, et ce qu'il ne voyait pas
+
+Les onze registres vérifient le **BRANCHEMENT** : l'outil est-il connu de la couverture de test, du
+catalogue, de la Ronde, de la charte. C'est nécessaire, et **ce n'est pas suffisant** — un outil
+peut être branché 11/11 et **décrire quelque chose qui n'existe plus**. L'audit regarde les fils,
+jamais ce qui passe dedans.
+
+### Ce n'est pas une crainte : c'est arrivé cette nuit
+
+`check-profile.mjs` a été gelé hors de l'équipe le 2026-09-26 parce que son en-tête, écrit le
+2026-09-17, affirmait « le mécanisme réel n'existe pas encore dans le code ». Le mécanisme existait
+depuis des jours — **et il avait été construit À PARTIR de cet outil**. Neuf jours de fausseté,
+aucun registre en défaut, aucune alerte.
+
+### La forme constante d'une phrase qui se périme en silence : le FUTUR
+
+« pas encore », « à venir », « en cours de conception », « sera », « prochainement ». Une
+description au présent vieillit mal mais reste discutable ; **une promesse devient fausse le jour
+où elle est tenue — et c'est le SUCCÈS qui la rend fausse**, ce qui explique que personne ne
+revienne la corriger.
+
+`findPromessesPerimees()` lit les 40 premières lignes de chaque script et rend une **question** avec
+l'âge de la phrase quand une date est écrite à côté. Il **ne conclut jamais** : un « pas encore »
+parfaitement légitime existe, et un garde-fou qui accuse à tort cesse d'être lu (L4). Il tourne à
+chaque passage de l'outil — un détecteur qu'il faut penser à lancer n'est lu par personne (L2).
+
+### Deux exclusions, chacune née d'un faux positif réel
+
+1. **Une promesse CITÉE n'en est pas une.** Premier passage : la seule trouvaille du dépôt était la
+   ligne de `check-profile.mjs` qui cite son ancien en-tête pour expliquer en quoi il était faux.
+   Accuser le texte qui répare le défaut est le plus sûr moyen de ne plus être lu. *(Même patron que
+   `findDependancesOutillage()`, qui exclut déjà la dépendance « citée pour être écartée ».)*
+2. **L'état de citation se suit d'une ligne à l'autre.** La citation en question ouvrait ligne 3 et
+   fermait ligne 4 : un balayage ligne par ligne voyait une fin de citation sans son début, donc une
+   promesse nue là où il y avait du discours rapporté. **Une exclusion qui ne tient pas sur deux
+   lignes ne tient pas du tout** — ce dépôt écrit ses citations sur plusieurs lignes partout.
+
+**État du dépôt après réparation : zéro promesse périmée sur 80 scripts**, vérifié en direct par un
+test qui casserait le jour où une nouvelle apparaît.
+
+### Ce qui reste hors de portée, et qui est déclaré
+
+Il cherche des promesses **au futur**, jamais la vérité d'une description **au présent**. Un outil
+qui décrit faussement quelque chose au présent lui échappe entièrement. Ce trou-là n'a pas de
+mécanisme possible — le déclarer EST la protection (Article 27).

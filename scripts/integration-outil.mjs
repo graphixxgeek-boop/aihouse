@@ -302,6 +302,98 @@ export function planDIntegration(slug, options = {}) {
 // entièrement faux. SAFE-EXPORT a vécu exactement ça le 2026-09-22 (25 blueprints « fautifs » parce
 // que son marqueur cherchait le mauvais mot) ; le chiffre lui-même était l'alarme. Un registre réel
 // contient forcément plusieurs outils : zéro ou un, c'est le lecteur qui est cassé, pas le dépôt.
+// ══════════════════════════════════════════════════════════════════════════
+// L'ANGLE MORT DE L'AUDIT D'INTÉGRATION (2026-09-26, tâche #915 — point 22 de son gros prompt :
+// « l'angle mort de l'audit d'intégration — fermer le trou côté outil »).
+//
+// CE QUE L'AUDIT VÉRIFIE, ET CE QU'IL NE VOIT PAS. Les onze registres ci-dessus vérifient le
+// BRANCHEMENT : l'outil est-il connu de la couverture de test, du catalogue, de la Ronde, de la
+// charte. C'est nécessaire, et ce n'est pas suffisant — **un outil peut être branché 11/11 et
+// décrire quelque chose qui n'existe plus.** L'audit regarde les fils, jamais ce qui passe dedans.
+//
+// CE N'EST PAS UNE CRAINTE, C'EST ARRIVÉ CETTE NUIT. `check-profile.mjs` a été gelé hors de
+// l'équipe le 2026-09-26 parce que son en-tête, écrit le 2026-09-17, affirmait « le mécanisme réel
+// n'existe pas encore dans le code, cette conception n'étant pas encore validée ». Le mécanisme
+// existait depuis des jours — et pire, il avait été construit À PARTIR de cet outil. Neuf jours de
+// fausseté, aucun registre en défaut, aucune alerte.
+//
+// LA PHRASE QUI SE PÉRIME EN SILENCE A UNE FORME CONSTANTE : c'est le FUTUR. « pas encore »,
+// « à venir », « en cours de conception », « sera », « prochainement ». Une description au présent
+// vieillit mal mais reste discutable ; une promesse, elle, devient fausse le jour où elle est tenue
+// — **et c'est le succès qui la rend fausse, ce qui explique que personne ne revienne la corriger.**
+//
+// IL QUESTIONNE, IL NE CONCLUT JAMAIS. Un « pas encore » parfaitement légitime existe (un outil
+// écrit hier, une limite réelle et toujours vraie). Ce détecteur rend une QUESTION avec l'âge de la
+// phrase ; c'est la lecture qui tranche. Un garde-fou qui accuserait à tort cesserait d'être lu (L4).
+export const MOTIF_PROMESSE = /\b(?:n'existe pas encore|pas encore (?:validé|construit|câblé|branché|écrit|intégré|implémenté)|à venir|en cours de conception|sera (?:construit|câblé|ajouté|écrit)|prochainement|reste à (?:construire|câbler|écrire))\b/i;
+
+// L'EN-TÊTE SEULEMENT, jamais tout le fichier : une promesse dans un commentaire local décrit un
+// bout de code précis et se corrige avec lui. Une promesse EN TÊTE décrit l'outil entier, c'est
+// elle qu'on lit pour savoir à quoi il sert, et c'est elle qui trompe quand elle se périme.
+export const LIGNES_D_ENTETE = 40;
+
+export function findPromessesPerimees({ root = ROOT, readFileImpl = readFileSync, listeScripts = null, lignesEntete = LIGNES_D_ENTETE, ageDepuis = null } = {}) {
+  let noms = listeScripts;
+  if (!noms) {
+    try { noms = readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); }
+    catch { return { mesurable: false, pourquoi: "le dossier scripts/ n'a pas pu être lu : aucune promesse n'a été cherchée, ce qui n'est jamais la même chose qu'aucune promesse trouvée" }; }
+  }
+  const trouvees = [];
+  for (const n of noms) {
+    let texte;
+    try { texte = readFileImpl(join(root, "scripts", n), "utf8"); } catch { continue; }
+    const lignes = texte.split("\n").slice(0, lignesEntete);
+    // L'ÉTAT DE CITATION SE SUIT D'UNE LIGNE À L'AUTRE, et il l'a fallu : au premier passage réel,
+    // la seule trouvaille du dépôt était une citation dont le « ouvrait ligne 3 et le » fermait
+    // ligne 4. Un balayage ligne par ligne voyait la fin d'une citation sans son début, donc une
+    // promesse nue là où il y avait du discours rapporté. Une exclusion qui ne tient pas sur deux
+    // lignes ne tient pas du tout — ce dépôt écrit ses citations sur plusieurs lignes partout.
+    let dansCitation = false;
+    lignes.forEach((l, i) => {
+      const nu = l.trim();
+      const ouvre = (nu.match(/«/g) ?? []).length;
+      const ferme = (nu.match(/»/g) ?? []).length;
+      const etaitDansCitation = dansCitation;
+      dansCitation = dansCitation ? !(ferme > ouvre) : ouvre > ferme;
+      if (!nu.startsWith("//")) return;
+      if (etaitDansCitation) return;
+      // LE DÉTECTEUR NE SE TROUVE PAS LUI-MÊME — cinquième fois cette semaine que ce motif revient.
+      if (nu.includes("MOTIF_PROMESSE") || nu.includes("findPromessesPerimees")) return;
+      if (!MOTIF_PROMESSE.test(nu)) return;
+      // UNE PROMESSE CITÉE N'EN EST PAS UNE — même patron déjà prouvé ailleurs dans ce dépôt
+      // (findDependancesOutillage exclut la dépendance « citée pour être écartée »). Le premier
+      // passage réel a signalé l'unique ligne de `check-profile.mjs` qui CITE son ancien en-tête
+      // pour expliquer en quoi il était faux : accuser le texte qui répare le défaut est le plus
+      // sûr moyen de ne plus être lu (L4). Une vraie promesse s'écrit en clair, pas entre guillemets.
+      if (/«[^»]*»/.test(nu) && MOTIF_PROMESSE.test((nu.match(/«([^»]*)»/) ?? ["", ""])[1])) return;
+      // LA DATE ÉCRITE À CÔTÉ, quand il y en a une, est ce qui rend la question CHIFFRÉE plutôt que
+      // vague : « ce "pas encore" a neuf jours » se traite, « ce "pas encore" est peut-être vieux »
+      // se repousse. Sans date, la question reste posée, mais sans âge — et c'est dit.
+      const date = (nu.match(/\b(20\d{2}-\d{2}-\d{2})\b/) ?? [])[1] ?? null;
+      const jours = date && ageDepuis ? Math.round((new Date(ageDepuis) - new Date(date)) / 86400000) : null;
+      trouvees.push({ fichier: `scripts/${n}`, ligne: i + 1, date, jours, extrait: nu.slice(0, 130) });
+    });
+  }
+  return {
+    mesurable: true, scripts: noms.length, trouvees,
+    horsPortee: "cherche des PROMESSES au futur dans l'en-tête, jamais la vérité d'une description au présent — un outil qui décrit faussement quelque chose au présent lui échappe entièrement. Et un « pas encore » peut être parfaitement exact : il QUESTIONNE avec l'âge de la phrase, il ne conclut jamais (leçon L4).",
+  };
+}
+
+export function formatPromessesLines(p) {
+  if (!p?.mesurable) return [`PROMESSES D'EN-TÊTE : PAS MESURÉ — ${p?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== L'ANGLE MORT DE L'AUDIT : les promesses d'en-tête (${p.scripts} script(s) lus) ===`];
+  l.push(`  Les 11 registres vérifient le BRANCHEMENT. Un outil peut être branché 11/11 et décrire quelque chose`);
+  l.push(`  qui n'existe plus — c'est arrivé cette nuit, neuf jours durant, sans qu'aucun registre soit en défaut.`);
+  if (!p.trouvees.length) { l.push(`  Aucune promesse au futur dans les en-têtes lus.`); return l; }
+  for (const t of p.trouvees) {
+    l.push(`  ❓ ${t.fichier}:${t.ligne}${t.jours !== null ? ` — la phrase porte la date ${t.date}, soit ${t.jours} jour(s)` : t.date ? ` — datée ${t.date}` : " — aucune date écrite, donc aucun âge"}`);
+    l.push(`     ${t.extrait}`);
+  }
+  l.push(`  HORS PORTÉE : ${p.horsPortee}`);
+  return l;
+}
+
 export function findLecteursCasses({ root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION, minimum = 2 } = {}) {
   const casses = [];
   for (const r of registres) {
@@ -354,6 +446,14 @@ function main() {
   // décide — trouvé sur ce fichier le soir même de sa construction, par la Ronde.
   printReportHeader({ tool: "integration-outil", title: "INTEGRATION-OUTIL — faire entrer un outil dans l'Agence Codex", scriptPath: "scripts/integration-outil.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const slug = process.argv[2];
+  // L'ANGLE MORT, IMPRIMÉ À CHAQUE PASSAGE (2026-09-26, #915) : il ne coûte rien, il lit 80 fichiers
+  // en quelques millisecondes, et un détecteur qu'il faut penser à lancer n'est lu par personne (L2).
+  const promesses = findPromessesPerimees({ ageDepuis: new Date().toISOString().slice(0, 10) });
+  if (promesses.mesurable && promesses.trouvees.length) {
+    console.log("");
+    for (const l of formatPromessesLines(promesses)) console.log(l);
+    console.log("");
+  }
   const casses = findLecteursCasses();
   if (casses.length) {
     console.log("⚠️  Lecteurs cassés — le rapport ci-dessous serait faux, à corriger AVANT de s'y fier :");
