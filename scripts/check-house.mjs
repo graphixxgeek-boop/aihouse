@@ -5277,6 +5277,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.ok(cost.lignes.length >= 2 && cost.total > 0);
   assert.equal(cost.lignes[0].chemin, 'CLAUDE.md', 'the always-reloaded charter must dominate the real cost ranking — that is what justifies attacking it first');
   assert.ok(cost.lignes[0].partPct >= 50, 'CLAUDE.md must account for the majority of a session, otherwise the whole premise of this tool is wrong');
+  // UN DOSSIER RELU N'EST PAS UN DOSSIER LU EN ENTIER (2026-09-26, tâche #920). Cette assertion-ci
+  // a CASSÉ pour de vrai la nuit où le suivi a atteint 43 % du coût de session — non parce que le
+  // suivi coûtait cher, mais parce que le calcul additionnait TOUS les fichiers de session jamais
+  // écrits alors qu'on ne rouvre que celui de la session en cours. Le piège est qu'un tel dossier
+  // grossit tout seul : il finit mécaniquement par dominer le classement, qui se met alors à
+  // désigner la mauvaise cible. Un chiffre qui augmente sans que rien n'empire déplace l'effort.
+  const profilSuivi = eco.DOCUMENT_PROFILES.find((p) => p.chemin === 'docs/suivi/sessions');
+  assert.equal(profilSuivi.fichierCourantSeulement, true, 'the tracking folder is weighed on its CURRENT session file only — nobody ever reopens twelve past sessions at once');
+  const profilTemoin = [{ chemin: 'docs/suivi/sessions', chargement: 'a_la_demande', lectures: 1, dossier: true, fichierCourantSeulement: true }];
+  const unSeul = eco.realSessionCost(profilTemoin, { messagesParSession: 10 });
+  const tousLesFichiers = eco.realSessionCost([{ ...profilTemoin[0], fichierCourantSeulement: false }], { messagesParSession: 10 });
+  assert.ok(unSeul.lignes[0].poids < tousLesFichiers.lignes[0].poids, 'and the flag really changes the measure — a counter-test, never a promise in a comment');
   assert.equal(eco.CHARGEMENT.archive(99999, 50), 0, 'an archive nobody reopens costs nothing — its size is NOT a problem, contrary to what a raw weight ranking suggests');
   assert.equal(eco.CHARGEMENT.toujours(100, 7), 700, 'an always-loaded document is paid once per message');
   assert.equal(eco.CHARGEMENT.a_la_demande(100, 50, 3), 300, 'an on-demand document is paid per real read, never per message');

@@ -1,0 +1,44 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il reconnaît une conversion au gabarit à la présence d'un appel dans le code, jamais en lisant le rapport produit — un outil qui appellerait le cadre sans s'en servir passerait pour conforme. À vérifier avant d'agir, jamais un verdict acquis.
+=== pure-gold-unity — unification réelle des rapports ===
+
+Outils tenus par le gabarit : 42
+Conformes : 40/42 (95 %)
+
+À migrer (2), des plus simples aux plus lourdes :
+  [moyenne] scripts/sauvegarde-projet.mjs — date sa sortie lui-même, écrit un fichier de rapport directement
+  [lourde] scripts/agent-des-noms.mjs — écrit son propre titre en dur, date sa sortie lui-même, imprime l'avertissement à part, hors du cadre
+
+La conversion reste un geste manuel : convertir un rapport, c'est réécrire du texte que quelqu'un lit.
+
+--- Les trois critères d'un rapport complet (contenu / date / plan d'action) ---
+Critère 2 (date en toutes lettres) : porté par le gabarit partagé, mesuré juste au-dessus.
+
+Critère 1 — du contenu, jamais un simple renvoi : ✅ aucun rapport archivé ne se contente de pointer ailleurs.
+   ✅ 1 rapport(s) COURTS MAIS DENSES — ils portent leur donnée, le fichier qu'ils mentionnent est un complément et non un substitut. Jamais un écart :
+      · check-tasks-details — circle-signal-2026-09-25T14-14-12-671Z.txt (11 lignes, 42 chiffres à lui)
+
+Critère 3 — un plan d'action le cas échéant : ✅ tous les outils à constats concluent.
+
+Critère 4 — le rapport sort-il TOUT ce que l'outil sait détecter : ✅ aucun détecteur sans effet.
+Critère 5 — le rapport peut-il dire « tout va bien » sans rien avoir mesuré : ✅ chaque outil à verdict porte au moins une façon déclarée de dire qu'il n'a pas pu mesurer.
+
+   (19 autre(s) détecteur(s) sont portés par la SEULE suite de tests : ils protègent pour de vrai — le crochet pre-commit la lance à chaque commit — mais ne disent jamais rien dans le rapport de leur outil. Signalés, jamais comptés en faute.)
+   · angel-of-ia-process :: findConstatsSansChiffre()
+   · axa-check :: findTestsAffaiblisAvecLeCode()
+   · cassandra-rh :: findOutilsAMainSansCommande()
+   · cassandra-rh :: findAvertissementsNonDits()
+   · cassandra-rh :: findMembersWithoutCategory()
+   · check-tasks-details :: findListesDOuvertureEnDur()
+   · check-tasks-details :: findStatutsContredits()
+   · criticite :: findPaliersSansFamille()
+   · criticite :: findPourQuiInvalide()
+   · doc-report :: findUnnavigableSections()
+   · doc-report :: findToolsMissingReliability()
+   · doc-report :: findHeuristicToolsWithoutNotice()
+   · ecotoken :: findTriggersNotWired()
+   · god-of-all-process :: findMecanismesAbsentsDuGardien()
+   · god-of-all-process :: findMecanismesAbsentsDuDocument()
+   · god-of-all-process :: findScriptsDeservingProcess()
+   · kpi-report :: findColonnesSansNature()
+   · modes-de-travail :: findModesInconnusCites()
+   · safe-export :: findTermesNonDefinis()

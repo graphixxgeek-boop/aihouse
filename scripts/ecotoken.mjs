@@ -1389,7 +1389,7 @@ export const DOCUMENT_PROFILES = [
   { chemin: "docs/regles-de-travail.md", chargement: "a_la_demande", lectures: 2, note: "relu dès qu'un protocole de travail est en jeu (simulation, Ronde, livrable)" },
   { chemin: "docs/referentiel/principes.md", chargement: "a_la_demande", lectures: 1, note: "relu avant toute intervention sur le moteur du jeu" },
   { chemin: "docs/referentiel/parametres.md", chargement: "a_la_demande", lectures: 1, note: "relu lors d'un rééquilibrage" },
-  { chemin: "docs/suivi/sessions", chargement: "a_la_demande", lectures: 3, note: "le suivi de la session en cours, relu à chaque mise à jour de tâche", dossier: true },
+  { chemin: "docs/suivi/sessions", chargement: "a_la_demande", lectures: 3, note: "le suivi de la session EN COURS, relu à chaque mise à jour de tâche — jamais les sessions passées, d'où fichierCourantSeulement", dossier: true, fichierCourantSeulement: true },
   // Ajouté le 2026-09-22 après mesure : 83 000 tokens, le plus gros artefact du dépôt, dont 92 % de
   // versions anciennes jamais relues. Il n'était dans AUCUN profil, donc totalement invisible aux
   // mesures de coût — un angle mort de 4× CLAUDE.md. Déclaré ici pour qu'il cesse de l'être, PAS
@@ -1406,7 +1406,26 @@ export function realSessionCost(profiles = DOCUMENT_PROFILES, { messagesParSessi
     if (!existsSync(full)) continue;
     let poids = 0;
     if (prof.dossier) {
-      for (const f of readdirSync(full)) if (/\.md$/.test(f)) poids += estimateTokens(readFileSync(join(full, f), "utf8"));
+      const fichiers = readdirSync(full).filter((f) => /\.md$/.test(f));
+      // UN DOSSIER RELU N'EST PAS UN DOSSIER LU EN ENTIER (2026-09-26, tâche #920). Défaut trouvé
+      // en direct, par l'assertion qui exige que CLAUDE.md domine le classement : elle a cassé la
+      // nuit où le suivi a pris 43 % du coût de session. La cause n'était pas que le suivi coûte
+      // cher — c'est que ce calcul additionnait TOUS les fichiers de session jamais écrits, alors
+      // que « relu à chaque mise à jour de tâche » veut dire : le fichier de la session EN COURS.
+      // Personne n'a jamais rouvert les douze sessions précédentes d'un coup.
+      //
+      // LE PIÈGE EST QU'IL GROSSIT TOUT SEUL : un dossier qui s'allonge à chaque session finit
+      // mécaniquement par dominer un classement de coût, et le classement se met alors à désigner
+      // la mauvaise cible. Un chiffre qui augmente sans que rien n'empire est pire qu'un chiffre
+      // absent : il déplace l'effort.
+      if (prof.fichierCourantSeulement && fichiers.length) {
+        const plusRecent = fichiers
+          .map((f) => ({ f, t: (() => { try { return statSync(join(full, f)).mtimeMs; } catch { return 0; } })() }))
+          .sort((a, b) => b.t - a.t)[0].f;
+        poids = estimateTokens(readFileSync(join(full, plusRecent), "utf8"));
+      } else {
+        for (const f of fichiers) poids += estimateTokens(readFileSync(join(full, f), "utf8"));
+      }
     } else poids = estimateTokens(readFileSync(full, "utf8"));
     const calc = CHARGEMENT[prof.chargement] ?? CHARGEMENT.a_la_demande;
     lignes.push({ ...prof, poids, coutSession: Math.round(calc(poids, messagesParSession, prof.lectures ?? 1)) });
