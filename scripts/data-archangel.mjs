@@ -28,6 +28,7 @@ import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { LOCAL_JOURNALS, REGISTRIES } from "./doc-report.mjs";
 import { KPI_HISTORY_PATH } from "./kpi-report.mjs";
@@ -1082,6 +1083,14 @@ function main() {
     console.log(`\nÉcrit : ${cible}`);
     return;
   }
+  // `classification` (#955/#956/#957) — LES TROIS AXES, ET LES DEUX FORMES QU'IL A CHOISIES :
+  // « document généré + HTML de lecture ». Les deux, jamais l'un à la place de l'autre — le
+  // document se relit dans un terminal et se compare d'une version à l'autre, la page se lit.
+  // Les deux sortent du MÊME calcul : deux rendus d'un seul passage, jamais deux passages qui
+  // divergeraient.
+  if (sub === "classification") {
+    return classificationCli();
+  }
   // `dossier <sujet>` (#742) — RASSEMBLE au lieu de dire où chercher. Il produit un FICHIER, parce
   // qu'un rapport qui ne vit que dans la sortie d'un terminal meurt avec la session (Article 31 :
   // le livrable est le fichier, mon texte le commente et ne le remplace jamais).
@@ -1118,4 +1127,319 @@ function main() {
   console.log(plan.lignes.join("\n"));
 }
 
+
+// ══════════════════════════════════════════════════════════════════════════
+// LA CLASSIFICATION DES RAPPORTS ET DES DATAS (2026-09-26, tâches #955/#956/#957)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SON IDÉE, EN TROIS COMMANDES LIÉES — et il a lui-même écrit le lien entre elles :
+//   1. classer les rapports PAR THÈME  — « éclaircir la masse de rapports, comprendre les familles,
+//      les types, créer des groupes par thème » ;
+//   2. classer les rapports PAR FONCTION — « un rapport a-t-il besoin d'être lu ? par qui ?
+//      qu'est-ce que ce rapport alimente comme analyse ? » ;
+//   3. LA CLASSIFICATION COMPLÈTE rapports ET datas — « chez qui est-elle hébergée ? y a-t-il des
+//      datas AUTRES que les rapports ? est-ce qu'un document qui la PRÉSENTE existe ? »
+//
+// SA RÉPONSE À MES DEUX QUESTIONS DE CALIBRAGE : l'axe thème est « les deux axes, croisés » (le
+// SUJET traité × l'ÉQUIPE propriétaire), et la livraison est « document généré + HTML de lecture ».
+//
+// « EST-CE QUE ÇA EXISTE DÉJÀ ? » — il l'a demandé pour chacune des trois, et la réponse mesurée
+// est NON pour les trois, mais pas de la même façon :
+//   · les OUTILS sont classés (docs/referentiel/classification-agence.md, généré, 8 axes) — mais
+//     il classe des outils, jamais leurs rapports ni les données ;
+//   · les REGISTRES sont à moitié classés : les 45 entrées de `REGISTRIES` portent une FAMILLE,
+//     donc l'axe « équipe propriétaire » existe déjà — c'est pour ça qu'il est LU ici, jamais
+//     recopié (Article 24) — mais aucun axe de SUJET, et aucune FONCTION ;
+//   · les rapports sur le disque et les sources de données ne sont classés NULLE PART ;
+//   · et le document qui PRÉSENTE tout ça n'existait pas. C'est ce que cette classification produit.
+//
+// POURQUOI ICI PLUTÔT QUE DANS UN 80e SCRIPT : data-archangel veille déjà sur la CIRCULATION des
+// données — qui produit, qui lit, qui n'est lu par personne. Il porte déjà `listDataSources()` (les
+// datas déclarées) ET `inventaireDesRapports()` (les rapports réels sur le disque) : les deux
+// moitiés exactes de la question 3. Le construire à côté aurait donné deux cartes de la même
+// circulation, et deux cartes divergent (Article 3, anti-doublon).
+
+// L'AXE 1 — LE SUJET TRAITÉ. Son vocabulaire est DÉRIVÉ du corpus réel des `demande` du catalogue
+// PRESTATIONS (les mots qui y reviennent au moins trois fois), jamais inventé de tête — et
+// `findSujetsSansTerrain()` plus bas refuse qu'un sujet survive à la disparition de ses mots du
+// corpus, sans quoi un sujet qui ne peut plus rien attraper passerait pour un sujet vide (L11).
+export const SUJETS_DE_RAPPORT = [
+  { cle: "code", libelle: "le CODE lui-même", mots: ["code", "fonction", "doublon", "test", "couverture", "refonte", "bug", "fragil", "dette"] },
+  { cle: "documents", libelle: "les DOCUMENTS et les règles", mots: ["document", "charte", "article", "regle", "reference", "referentiel", "blueprint", "philosophie"] },
+  { cle: "outillage", libelle: "l'OUTILLAGE et l'équipe", mots: ["outil", "outillage", "agence", "equipe", "badge", "integration", "classification", "nom"] },
+  { cle: "travail", libelle: "le TRAVAIL et les décisions", mots: ["tache", "travail", "decision", "suivi", "process", "ronde", "plan", "avancement", "objectif"] },
+  { cle: "jeu", libelle: "le JEU — Lia, Noé, la maison", mots: ["personnage", "dialogue", "replique", "ton", "simulation", "narrat", "jeu", "graphique", "ecran"] },
+  { cle: "consommation", libelle: "la CONSOMMATION — API, tokens, temps", mots: ["quota", "api", "token", "cout", "conso", "temps", "heure", "estimation"] },
+  { cle: "donnees", libelle: "les DONNÉES et leur circulation", mots: ["donnee", "data", "rapport", "registre", "journal", "index", "archive", "memoire"] },
+];
+
+// normaliserPourSujet() — sans accents et en minuscules, parce que « référentiel » et
+// « referentiel » sont le même mot et qu'un axe qui rate l'un des deux ne mesure rien.
+export function normaliserPourSujet(texte) {
+  return String(texte ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+// sujetDuRapport() — rend le sujet le mieux attesté, ET rend `null` plutôt qu'un sujet par défaut
+// quand rien ne ressort. Un rapport rangé de force dans une case au hasard est pire qu'un rapport
+// non rangé : le premier ment, le second se voit.
+export function sujetDuRapport(texte, sujets = SUJETS_DE_RAPPORT) {
+  const t = normaliserPourSujet(texte);
+  if (!t.trim()) return null;
+  let meilleur = null;
+  for (const s of sujets) {
+    const score = s.mots.filter((m) => t.includes(m)).length;
+    if (score > 0 && (!meilleur || score > meilleur.score)) meilleur = { cle: s.cle, libelle: s.libelle, score };
+  }
+  return meilleur;
+}
+
+// findSujetsSansTerrain() — LE GARDE-FOU DE L'AXE (Article 24). Un sujet dont plus aucun mot
+// n'apparaît dans le corpus réel ne peut plus rien attraper : son zéro se lirait comme « aucun
+// rapport sur ce thème » alors qu'il dit « ce thème ne sait plus chercher ». Les deux se
+// ressemblent trait pour trait, et c'est exactement la leçon L11.
+export function findSujetsSansTerrain(corpus = [], sujets = SUJETS_DE_RAPPORT) {
+  const t = corpus.map(normaliserPourSujet).join(" ");
+  if (!t.trim()) return { mesurable: false, pourquoi: "corpus vide — aucun sujet n'a pu être confronté au terrain, ce qui n'est jamais la même chose que « tous les sujets sont bons »" };
+  return { mesurable: true, sansTerrain: sujets.filter((s) => !s.mots.some((m) => t.includes(m))).map((s) => s.cle) };
+}
+
+// L'AXE 3 — LA FONCTION (tâche #956). Ses trois questions — « a-t-il besoin d'être lu ? par qui ?
+// qu'alimente-t-il ? » — trouvent chacune une réponse MESURÉE plutôt qu'attribuée :
+//   · « besoin d'être lu » se lit dans la DÉCISION déjà déclarée du registre (un rapport livré en
+//     HTML est écrit pour ses yeux à lui ; un rapport texte est une trace) ;
+//   · « par qui » se lit dans les lecteurs réels de l'inventaire (un script qui nomme le dossier) ;
+//   · « qu'alimente-t-il » se lit dans ces mêmes lecteurs : ce sont les analyses qu'il nourrit.
+// QUATRE FONCTIONS, et la quatrième est celle qui coûte cher — un rapport que ni outil, ni index,
+// ni livraison n'atteint est produit à chaque passage pour personne.
+export const FONCTIONS_DE_RAPPORT = [
+  { cle: "livre", libelle: "livré à l'utilisateur", quoi: "écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit" },
+  { cle: "matiere", libelle: "matière d'un autre outil", quoi: "au moins un script le relit : il alimente une analyse en aval" },
+  { cle: "trace", libelle: "trace consultable", quoi: "un index.md le liste — retrouvable à la main, jamais relu automatiquement" },
+  { cle: "orphelin", libelle: "écrit et jamais rouvert", quoi: "ni livraison, ni lecteur, ni index : produit pour personne" },
+];
+
+export function fonctionDuRapport({ decision, lecteurs = [], aUnIndex = false } = {}) {
+  if (/html/.test(String(decision ?? ""))) return FONCTIONS_DE_RAPPORT[0];
+  if (lecteurs.length) return FONCTIONS_DE_RAPPORT[1];
+  if (aUnIndex) return FONCTIONS_DE_RAPPORT[2];
+  return FONCTIONS_DE_RAPPORT[3];
+}
+
+// slugDOutil() — LE RAPPROCHEMENT ENTRE DEUX REGISTRES QUI N'ÉCRIVENT PAS LES NOMS PAREIL, et
+// c'est le premier vrai passage qui l'a montré : PRESTATIONS écrit « ARGUS », « MOÏSE-TABLES-DE-LOI »,
+// « Smart Breaker (check-gemini-quota.mjs) », là où REGISTRIES écrit « scripts/check-argus.mjs ».
+// Sans cette normalisation, DIX-HUIT dossiers sur quarante sortaient « sujet non déterminé » — un
+// chiffre qui aurait parfaitement pu passer pour un constat sur le dépôt, alors qu'il ne disait que
+// l'orthographe de deux registres (leçon L11, encore).
+export function slugDOutil(nom) {
+  return normaliserPourSujet(nom)
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\.mjs\b/g, " ")
+    .replace(/^scripts\//, "")
+    .replace(/^check-/, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// classerLesRapports() — LES TROIS AXES EN UN SEUL PASSAGE, parce qu'ils décrivent les mêmes
+// objets et que trois passages séparés divergeraient. Rien n'est recalculé : la famille vient de
+// `REGISTRIES` (déclarée), les lecteurs et l'état viennent de `inventaireDesRapports()` (mesurés),
+// le sujet se dérive du catalogue PRESTATIONS (déclaré). Cette fonction assemble et croise.
+export function classerLesRapports({ registres = [], prestations = [], inventaire = null } = {}) {
+  if (!inventaire?.mesurable) {
+    return { mesurable: false, pourquoi: `l'inventaire des rapports n'est pas disponible (${inventaire?.pourquoi ?? "raison non fournie"}) — sans lui, la classification porterait sur les registres déclarés seuls, et dirait « tout est classé » d'un dépôt qu'elle n'a pas regardé` };
+  }
+  // Le texte qui sert à deviner le sujet d'un outil : sa prestation, si elle existe. On l'indexe
+  // par slug d'outil, une fois — chercher 53 prestations pour 45 registres à chaque ligne ferait
+  // de cette classification un outil qu'on n'ose plus lancer.
+  const texteParOutil = new Map();
+  for (const p of prestations) {
+    for (const o of p.outils ?? []) {
+      const k = slugDOutil(o);
+      if (!k) continue;
+      texteParOutil.set(k, `${texteParOutil.get(k) ?? ""} ${p.demande ?? ""} ${p.description ?? ""} ${p.nom ?? ""}`);
+    }
+  }
+  const parChemin = new Map(registres.map((r) => [String(r.path ?? "").replace(/\/+$/, ""), r]));
+  const lignes = [];
+  for (const l of inventaire.lignes) {
+    const reg = parChemin.get(l.dossier);
+    const slug = slugDOutil(reg?.scriptPath ? String(reg.scriptPath).replace(/^scripts\//, "") : l.dossier.replace(/^docs\//, ""));
+    // Le sujet se cherche d'abord dans la prestation de l'outil (déclarée, écrite pour être lue),
+    // puis, à défaut, dans le NOM du dossier — une borne basse honnête, jamais un sujet inventé.
+    const sujet = sujetDuRapport(texteParOutil.get(slug) ?? "") ?? sujetDuRapport(`${slug} ${reg?.label ?? ""}`);
+    lignes.push({
+      dossier: l.dossier, combien: l.combien, octets: l.octets, jamaisCites: l.jamaisCites,
+      declare: Boolean(reg),
+      equipe: reg?.family ?? null,
+      sujet: sujet?.cle ?? null, sujetLibelle: sujet?.libelle ?? null,
+      fonction: fonctionDuRapport({ decision: reg?.decision, lecteurs: l.lecteurs, aUnIndex: l.aUnIndex }).cle,
+    });
+  }
+  const compter = (champ) => {
+    const m = new Map();
+    for (const l of lignes) {
+      const c = l[champ] ?? "(non déterminé)";
+      const e = m.get(c) ?? { dossiers: 0, fichiers: 0 };
+      e.dossiers += 1; e.fichiers += l.combien; m.set(c, e);
+    }
+    return [...m.entries()].map(([cle, v]) => ({ cle, ...v })).sort((a, b) => b.fichiers - a.fichiers);
+  };
+  // LE CROISEMENT QU'IL A DEMANDÉ — « les deux axes, croisés », jamais deux listes côte à côte.
+  const croise = new Map();
+  for (const l of lignes) {
+    const k = `${l.sujet ?? "(sujet non déterminé)"} × ${l.equipe ?? "(équipe non déclarée)"}`;
+    const e = croise.get(k) ?? { dossiers: 0, fichiers: 0 };
+    e.dossiers += 1; e.fichiers += l.combien; croise.set(k, e);
+  }
+  return {
+    mesurable: true, lignes,
+    total: lignes.reduce((a, l) => a + l.combien, 0),
+    parSujet: compter("sujet"), parEquipe: compter("equipe"), parFonction: compter("fonction"),
+    croise: [...croise.entries()].map(([cle, v]) => ({ cle, ...v })).sort((a, b) => b.fichiers - a.fichiers),
+    sansSujet: lignes.filter((l) => !l.sujet).map((l) => l.dossier),
+    sansEquipe: lignes.filter((l) => !l.equipe).map((l) => l.dossier),
+  };
+}
+
+export function formatClassificationLines(c) {
+  if (!c?.mesurable) return [`CLASSIFICATION DES RAPPORTS : PAS MESURÉ — ${c?.pourquoi ?? "raison non fournie"}`];
+  const l = [`=== CLASSIFICATION DES RAPPORTS — ${c.lignes.length} dossier(s), ${c.total} fichier(s) ===`, ""];
+  l.push("  AXE 1 — LE SUJET TRAITÉ");
+  for (const s of c.parSujet) l.push(`    ${String(s.cle).padEnd(22)} ${String(s.dossiers).padStart(3)} dossier(s) · ${String(s.fichiers).padStart(4)} fichier(s)`);
+  l.push("", "  AXE 2 — L'ÉQUIPE PROPRIÉTAIRE (lue dans les registres déclarés, jamais recopiée)");
+  for (const e of c.parEquipe) l.push(`    ${String(e.cle).padEnd(52)} ${String(e.dossiers).padStart(3)} dossier(s) · ${String(e.fichiers).padStart(4)} fichier(s)`);
+  l.push("", "  AXE 3 — LA FONCTION (a-t-il besoin d'être lu ? par qui ? qu'alimente-t-il ?)");
+  for (const f of FONCTIONS_DE_RAPPORT) {
+    const x = c.parFonction.find((y) => y.cle === f.cle);
+    l.push(`    ${f.libelle.padEnd(28)} ${String(x?.dossiers ?? 0).padStart(3)} dossier(s) · ${String(x?.fichiers ?? 0).padStart(4)} fichier(s)  — ${f.quoi}`);
+  }
+  l.push("", "  LES DEUX AXES CROISÉS (sujet × équipe) — les 12 premières cases");
+  for (const x of c.croise.slice(0, 12)) l.push(`    ${x.cle.padEnd(62)} ${String(x.fichiers).padStart(4)} fichier(s)`);
+  if (c.sansSujet.length) l.push("", `  ❓ ${c.sansSujet.length} dossier(s) SANS SUJET DÉTERMINÉ : ${c.sansSujet.join(" · ")} — rangés nulle part plutôt que rangés au hasard.`);
+  if (c.sansEquipe.length) l.push(`  ❓ ${c.sansEquipe.length} dossier(s) SANS ÉQUIPE DÉCLARÉE : ${c.sansEquipe.join(" · ")} — ils existent sur le disque sans entrée dans les registres.`);
+  return l;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LA CLASSIFICATION COMPLÈTE — RAPPORTS **ET** DATAS (2026-09-26, tâche #957)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SES QUATRE QUESTIONS, et chacune reçoit ici une réponse mesurée plutôt qu'affirmée :
+//   · « chez qui cette classification est-elle hébergée ? » → ici, chez data-archangel, parce qu'il
+//     portait déjà les deux inventaires qu'elle croise ;
+//   · « y a-t-il des datas AUTRES que les rapports ? » → OUI, et c'est mesuré : les JOURNAUX locaux
+//     et les SÉRIES CHIFFRÉES ne sont pas des rapports, et personne ne les comptait avec eux ;
+//   · « est-ce que cette classification les INTÈGRE ? » → elle doit, sinon elle ne serait que la
+//     classification des rapports sous un autre nom ;
+//   · « un document qui la PRÉSENTE existe-t-il ? » → il n'existait pas. C'est ce que cette
+//     commande produit, dans les deux formes qu'il a choisies.
+//
+// CE QU'ELLE NE FAIT PAS, déclaré plutôt que tu : elle ne range pas les données du JEU (la base D1,
+// l'état d'une partie). Son périmètre est l'Agence — ce que l'outillage produit et relit. Un jour où
+// les données du jeu devront être rangées, ce sera un autre axe, jamais une extension silencieuse
+// de celui-ci.
+export const NATURES_DE_DATA = [
+  { cle: "rapport", libelle: "RAPPORTS", quoi: "les fichiers produits passage après passage par un outil, archivés dans son registre" },
+  { cle: "registre", libelle: "REGISTRES", quoi: "l'index d'un outil — la mémoire de ce qu'il a déjà vu, relue au passage suivant" },
+  { cle: "journal", libelle: "JOURNAUX locaux", quoi: "un journal tenu par un outil pour lui-même, jamais un rapport livré" },
+  { cle: "mesure", libelle: "SÉRIES CHIFFRÉES", quoi: "les indicateurs suivis dans le temps — la seule donnée dont la valeur est de se comparer à elle-même" },
+];
+
+export async function classificationComplete({
+  registres = null, prestations = null, inventaire = null, sources = null,
+} = {}) {
+  // Les registres sont LUS chez ceux qui les déclarent (Article 24), jamais recopiés ici. Le
+  // catalogue PRESTATIONS arrive par import DYNAMIQUE, même raison qu'ailleurs dans ce paysage :
+  // un import de tête ferait entrer LE-COORDINATEUR dans la chaîne du crochet post-commit. Et s'il
+  // échoue, on le DIT — sans lui, l'axe du sujet ne saurait plus rien attraper, et son silence se
+  // lirait comme « aucun rapport n'a de sujet » (leçon L11).
+  let presta = prestations;
+  let sansCatalogue = null;
+  if (!presta) {
+    try { ({ PRESTATIONS: presta } = await import("./le-coordinateur.mjs")); }
+    catch (e) { presta = []; sansCatalogue = `le catalogue PRESTATIONS est illisible (${e?.message ?? e}) — l'axe du SUJET ne peut rien attraper, et ses zéros ne disent PAS qu'aucun rapport n'a de sujet`; }
+  }
+  const inv = inventaire ?? inventaireDesRapports();
+  const rapports = classerLesRapports({ registres: registres ?? REGISTRIES, prestations: presta, inventaire: inv });
+  if (sansCatalogue && rapports.mesurable) rapports.sujetNonMesure = sansCatalogue;
+  const src = sources ?? listDataSources();
+  const parNature = NATURES_DE_DATA.map((n) => ({
+    ...n,
+    combien: n.cle === "rapport" ? (rapports.mesurable ? rapports.total : null) : src.filter((s) => s.nature === n.cle).length,
+  }));
+  return { rapports, sources: src, parNature, sujets: SUJETS_DE_RAPPORT, fonctions: FONCTIONS_DE_RAPPORT, sujetNonMesure: sansCatalogue };
+}
+
+export function formatClassificationCompleteLines(c) {
+  const l = ["=== LA CLASSIFICATION COMPLÈTE — RAPPORTS ET DATAS ===", ""];
+  l.push("  CE QUI EST RANGÉ, PAR NATURE — et « rapport » n'est qu'une des quatre :");
+  for (const n of c.parNature) {
+    l.push(`    ${n.libelle.padEnd(20)} ${n.combien === null ? "PAS MESURÉ" : String(n.combien).padStart(4)}  — ${n.quoi}`);
+  }
+  l.push("");
+  if (c.sujetNonMesure) l.push(`  ❓ AXE DU SUJET : PAS MESURÉ — ${c.sujetNonMesure}`, "");
+  l.push(...formatClassificationLines(c.rapports));
+  l.push("");
+  l.push("  HORS PÉRIMÈTRE, déclaré plutôt que tu : les données du JEU (base D1, état d'une partie) ne sont");
+  l.push("  pas rangées ici. Le périmètre est l'Agence — ce que l'outillage produit et relit.");
+  return l;
+}
+
+// blocsClassificationHtml() — la page de LECTURE. Même calcul que le document texte, jamais un
+// second : deux rendus qui recalculeraient chacun de leur côté finiraient par ne plus dire la même
+// chose, et c'est le lecteur qui paierait la différence.
+export function blocsClassificationHtml(c) {
+  const r = c.rapports;
+  const blocks = [
+    { type: "paragraph", text: "Trois axes pour ranger ce que l'Agence produit : le SUJET traité, l'ÉQUIPE propriétaire, et la FONCTION du rapport. Les deux premiers sont croisés plus bas, comme demandé." },
+    { type: "heading", text: "Ce qui est rangé, par nature" },
+    { type: "table", headers: ["Nature", "Combien", "Ce que c'est"], rows: c.parNature.map((n) => [n.libelle, n.combien === null ? "PAS MESURÉ" : String(n.combien), n.quoi]) },
+  ];
+  if (!r?.mesurable) {
+    blocks.push({ type: "note", text: `Classification des rapports : PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}. Ce n'est pas « rien à ranger ».` });
+    return { tool: "data-archangel", title: "Classification des rapports et des datas", subtitle: "Ce que l'Agence produit, rangé par sujet, par équipe et par fonction.", blocks };
+  }
+  blocks.push(
+    ...(c.sujetNonMesure ? [{ type: "note", text: `Axe du sujet : PAS MESURÉ — ${c.sujetNonMesure}.` }] : []),
+    { type: "heading", text: "Axe 1 — le sujet traité" },
+    { type: "table", headers: ["Sujet", "Dossiers", "Fichiers"], rows: r.parSujet.map((x) => [String(x.cle), String(x.dossiers), String(x.fichiers)]) },
+    { type: "heading", text: "Axe 2 — l'équipe propriétaire" },
+    { type: "note", text: "Lue dans les registres déclarés, jamais recopiée ici : le jour où une équipe change de nom, cette page change avec elle." },
+    { type: "table", headers: ["Équipe", "Dossiers", "Fichiers"], rows: r.parEquipe.map((x) => [String(x.cle), String(x.dossiers), String(x.fichiers)]) },
+    { type: "heading", text: "Axe 3 — la fonction" },
+    { type: "paragraph", text: "A-t-il besoin d'être lu ? Par qui ? Qu'alimente-t-il ? Les trois réponses sont mesurées : la livraison est déclarée par le registre, les lecteurs sont les scripts qui nomment le dossier, et ce qu'il alimente, ce sont ces mêmes lecteurs." },
+    { type: "table", headers: ["Fonction", "Dossiers", "Fichiers", "Ce que ça veut dire"], rows: c.fonctions.map((f) => { const x = r.parFonction.find((y) => y.cle === f.cle); return [f.libelle, String(x?.dossiers ?? 0), String(x?.fichiers ?? 0), f.quoi]; }) },
+    { type: "heading", text: "Les deux axes croisés" },
+    { type: "table", headers: ["Sujet × équipe", "Dossiers", "Fichiers"], rows: r.croise.map((x) => [x.cle, String(x.dossiers), String(x.fichiers)]) },
+    { type: "heading", text: "Le détail, dossier par dossier" },
+    { type: "table", headers: ["Dossier", "Fichiers", "Sujet", "Équipe", "Fonction"], rows: r.lignes.map((x) => [x.dossier, String(x.combien), x.sujet ?? "—", x.equipe ?? "—", x.fonction]) },
+  );
+  if (r.sansSujet.length) blocks.push({ type: "note", text: `${r.sansSujet.length} dossier(s) sans sujet déterminé : ${r.sansSujet.join(" · ")}. Rangés nulle part plutôt que rangés au hasard — un rapport mis de force dans une case ment, un rapport non rangé se voit.` });
+  if (r.sansEquipe.length) blocks.push({ type: "note", text: `${r.sansEquipe.length} dossier(s) sans équipe déclarée : ${r.sansEquipe.join(" · ")}. Ils existent sur le disque sans entrée dans les registres.` });
+  blocks.push({ type: "note", text: "Hors périmètre, déclaré plutôt que tu : les données du JEU (base D1, état d'une partie) ne sont pas rangées ici. Le périmètre est l'Agence — ce que l'outillage produit et relit." });
+  return { tool: "data-archangel", title: "Classification des rapports et des datas", subtitle: "Ce que l'Agence produit, rangé par sujet, par équipe et par fonction.", blocks };
+}
+
+// classificationCli() — LES DEUX FORMES QU'IL A CHOISIES, « document généré + HTML de lecture »,
+// produites par un SEUL calcul. Deux rendus d'un même passage, jamais deux passages : deux calculs
+// finiraient par ne plus dire la même chose, et c'est le lecteur qui paierait la différence.
+async function classificationCli() {
+  const c = await classificationComplete();
+  const lignes = formatClassificationCompleteLines(c);
+  for (const l of lignes) console.log(l);
+  if (!c.rapports?.mesurable) { process.exitCode = 1; return; }
+  try { mkdirSync(join(ROOT, "docs/data-archangel"), { recursive: true }); } catch { /* déjà là */ }
+  const jour = new Date().toISOString().slice(0, 10);
+  const txt = join(ROOT, "docs/data-archangel", `classification-${jour}.txt`);
+  writeFileSync(txt, lignes.join("\n") + "\n", "utf8");
+  const html = join(ROOT, "docs/data-archangel", `classification-${jour}.html`);
+  writeFileSync(html, renderHtmlReport(blocsClassificationHtml(c)), "utf8");
+  console.log(`\nÉcrit : ${txt}`);
+  console.log(`Écrit : ${html}`);
+}
+
+// LE LANCEUR EN TOUT DERNIER, jamais au milieu du fichier : main() partirait avant les
+// `const` écrits en dessous, qui seraient alors dans leur zone morte temporelle. Deux outils
+// de ce dépôt l'ont payé le 2026-09-23, et findLanceursPrematures() le refuse depuis.
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classification des rapports et des datas</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-26T16:46:54.263Z</div>
+    <h1>Classification des rapports et des datas</h1>
+    <p class="sub">Ce que l'Agence produit, rangé par sujet, par équipe et par fonction.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : claude-opus-5
+Produit le : samedi 26 septembre 2026 à 16h46 (UTC)
+État du code : ba43a2a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<p>Trois axes pour ranger ce que l'Agence produit : le SUJET traité, l'ÉQUIPE propriétaire, et la FONCTION du rapport. Les deux premiers sont croisés plus bas, comme demandé.</p>
+<h2>Ce qui est rangé, par nature</h2>
+<table><thead><tr><th>Nature</th><th>Combien</th><th>Ce que c'est</th></tr></thead><tbody><tr><td>RAPPORTS</td><td>291</td><td>les fichiers produits passage après passage par un outil, archivés dans son registre</td></tr><tr><td>REGISTRES</td><td>45</td><td>l'index d'un outil — la mémoire de ce qu'il a déjà vu, relue au passage suivant</td></tr><tr><td>JOURNAUX locaux</td><td>20</td><td>un journal tenu par un outil pour lui-même, jamais un rapport livré</td></tr><tr><td>SÉRIES CHIFFRÉES</td><td>1</td><td>les indicateurs suivis dans le temps — la seule donnée dont la valeur est de se comparer à elle-même</td></tr></tbody></table>
+<h2>Axe 1 — le sujet traité</h2>
+<table><thead><tr><th>Sujet</th><th>Dossiers</th><th>Fichiers</th></tr></thead><tbody><tr><td>documents</td><td>4</td><td>92</td></tr><tr><td>travail</td><td>12</td><td>63</td></tr><tr><td>code</td><td>4</td><td>58</td></tr><tr><td>(non déterminé)</td><td>7</td><td>30</td></tr><tr><td>outillage</td><td>6</td><td>21</td></tr><tr><td>donnees</td><td>4</td><td>17</td></tr><tr><td>consommation</td><td>3</td><td>10</td></tr></tbody></table>
+<h2>Axe 2 — l'équipe propriétaire</h2>
+<p class="note">Lue dans les registres déclarés, jamais recopiée ici : le jour où une équipe change de nom, cette page change avec elle.</p>
+<table><thead><tr><th>Équipe</th><th>Dossiers</th><th>Fichiers</th></tr></thead><tbody><tr><td>(f) 👼 Les Anges de la coordination</td><td>12</td><td>71</td></tr><tr><td>(f) 👑 La Gouvernance Royale</td><td>7</td><td>67</td></tr><tr><td>(non déterminé)</td><td>13</td><td>48</td></tr><tr><td>(f) 🛡️ Les Gardiens Sacrés du Code</td><td>3</td><td>47</td></tr><tr><td>(f) 🎬 La Suite Tarantino - Simulation &amp; qualité narrative</td><td>1</td><td>44</td></tr><tr><td>(f) 📜 Les Prophètes - Dette &amp; Structure du code</td><td>4</td><td>14</td></tr></tbody></table>
+<h2>Axe 3 — la fonction</h2>
+<p>A-t-il besoin d'être lu ? Par qui ? Qu'alimente-t-il ? Les trois réponses sont mesurées : la livraison est déclarée par le registre, les lecteurs sont les scripts qui nomment le dossier, et ce qu'il alimente, ce sont ces mêmes lecteurs.</p>
+<table><thead><tr><th>Fonction</th><th>Dossiers</th><th>Fichiers</th><th>Ce que ça veut dire</th></tr></thead><tbody><tr><td>livré à l'utilisateur</td><td>5</td><td>79</td><td>écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit</td></tr><tr><td>matière d'un autre outil</td><td>33</td><td>210</td><td>au moins un script le relit : il alimente une analyse en aval</td></tr><tr><td>trace consultable</td><td>2</td><td>2</td><td>un index.md le liste — retrouvable à la main, jamais relu automatiquement</td></tr><tr><td>écrit et jamais rouvert</td><td>0</td><td>0</td><td>ni livraison, ni lecteur, ni index : produit pour personne</td></tr></tbody></table>
+<h2>Les deux axes croisés</h2>
+<table><thead><tr><th>Sujet × équipe</th><th>Dossiers</th><th>Fichiers</th></tr></thead><tbody><tr><td>travail × (f) 👼 Les Anges de la coordination</td><td>10</td><td>56</td></tr><tr><td>code × (f) 🛡️ Les Gardiens Sacrés du Code</td><td>2</td><td>46</td></tr><tr><td>documents × (f) 🎬 La Suite Tarantino - Simulation &amp; qualité narrative</td><td>1</td><td>44</td></tr><tr><td>documents × (f) 👑 La Gouvernance Royale</td><td>2</td><td>44</td></tr><tr><td>(sujet non déterminé) × (équipe non déclarée)</td><td>6</td><td>20</td></tr><tr><td>donnees × (équipe non déclarée)</td><td>4</td><td>17</td></tr><tr><td>outillage × (f) 📜 Les Prophètes - Dette &amp; Structure du code</td><td>4</td><td>14</td></tr><tr><td>(sujet non déterminé) × (f) 👼 Les Anges de la coordination</td><td>1</td><td>10</td></tr><tr><td>consommation × (f) 👑 La Gouvernance Royale</td><td>3</td><td>10</td></tr><tr><td>code × (f) 👑 La Gouvernance Royale</td><td>1</td><td>7</td></tr><tr><td>travail × (équipe non déclarée)</td><td>2</td><td>7</td></tr><tr><td>outillage × (f) 👑 La Gouvernance Royale</td><td>1</td><td>6</td></tr><tr><td>code × (f) 👼 Les Anges de la coordination</td><td>1</td><td>5</td></tr><tr><td>documents × (équipe non déclarée)</td><td>1</td><td>4</td></tr><tr><td>outillage × (f) 🛡️ Les Gardiens Sacrés du Code</td><td>1</td><td>1</td></tr></tbody></table>
+<h2>Le détail, dossier par dossier</h2>
+<table><thead><tr><th>Dossier</th><th>Fichiers</th><th>Sujet</th><th>Équipe</th><th>Fonction</th></tr></thead><tbody><tr><td>docs/simulations</td><td>44</td><td>documents</td><td>(f) 🎬 La Suite Tarantino - Simulation &amp; qualité narrative</td><td>livre</td></tr><tr><td>docs/argus</td><td>41</td><td>code</td><td>(f) 🛡️ Les Gardiens Sacrés du Code</td><td>matiere</td></tr><tr><td>docs/ecotoken</td><td>38</td><td>documents</td><td>(f) 👑 La Gouvernance Royale</td><td>matiere</td></tr><tr><td>docs/check-tasks-details</td><td>17</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>livre</td></tr><tr><td>docs/profil-utilisateur</td><td>10</td><td>—</td><td>(f) 👼 Les Anges de la coordination</td><td>livre</td></tr><tr><td>docs/data-archangel</td><td>7</td><td>donnees</td><td>—</td><td>matiere</td></tr><tr><td>docs/hyper-scan-checkpoint</td><td>7</td><td>code</td><td>(f) 👑 La Gouvernance Royale</td><td>matiere</td></tr><tr><td>docs/cassandra-rh</td><td>6</td><td>outillage</td><td>(f) 👑 La Gouvernance Royale</td><td>livre</td></tr><tr><td>docs/the-king</td><td>6</td><td>documents</td><td>(f) 👑 La Gouvernance Royale</td><td>matiere</td></tr><tr><td>docs/tool-brain</td><td>6</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/chantier-preliminaire</td><td>5</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/clean-dirty-old</td><td>5</td><td>code</td><td>(f) 🛡️ Les Gardiens Sacrés du Code</td><td>matiere</td></tr><tr><td>docs/god-of-all-process</td><td>5</td><td>travail</td><td>—</td><td>matiere</td></tr><tr><td>docs/html-wiring-check</td><td>5</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/idee-a-trancher</td><td>5</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/ines-official</td><td>5</td><td>code</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/integration-outil</td><td>5</td><td>outillage</td><td>(f) 📜 Les Prophètes - Dette &amp; Structure du code</td><td>matiere</td></tr><tr><td>docs/network-check</td><td>5</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/rapports-gros-prompt</td><td>5</td><td>donnees</td><td>—</td><td>matiere</td></tr><tr><td>docs/relecture-correctifs</td><td>5</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/smart-conso-api</td><td>5</td><td>consommation</td><td>(f) 👑 La Gouvernance Royale</td><td>matiere</td></tr><tr><td>docs/suivi-open-tasks</td><td>5</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/tool-learning</td><td>5</td><td>outillage</td><td>(f) 📜 Les Prophètes - Dette &amp; Structure du code</td><td>matiere</td></tr><tr><td>docs/angel-of-ia-process</td><td>4</td><td>documents</td><td>—</td><td>matiere</td></tr><tr><td>docs/le-coordinateur</td><td>4</td><td>—</td><td>—</td><td>matiere</td></tr><tr><td>docs/pure-gold-unity</td><td>4</td><td>—</td><td>—</td><td>matiere</td></tr><tr><td>docs/rapports-de-nuit</td><td>4</td><td>donnees</td><td>—</td><td>matiere</td></tr><tr><td>docs/sauvegardes</td><td>4</td><td>—</td><td>—</td><td>matiere</td></tr><tr><td>docs/smart-conso-token</td><td>4</td><td>consommation</td><td>(f) 👑 La Gouvernance Royale</td><td>matiere</td></tr><tr><td>docs/tableau-de-bord</td><td>4</td><td>—</td><td>—</td><td>matiere</td></tr><tr><td>docs/contexte-projet</td><td>3</td><td>—</td><td>—</td><td>matiere</td></tr><tr><td>docs/the-equalizer</td><td>3</td><td>outillage</td><td>(f) 📜 Les Prophètes - Dette &amp; Structure du code</td><td>matiere</td></tr><tr><td>docs/ou-on-en-est</td><td>2</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>livre</td></tr><tr><td>docs/plans</td><td>2</td><td>travail</td><td>—</td><td>matiere</td></tr><tr><td>docs/agent-des-noms</td><td>1</td><td>outillage</td><td>(f) 📜 Les Prophètes - Dette &amp; Structure du code</td><td>matiere</td></tr><tr><td>docs/agent-du-temps</td><td>1</td><td>consommation</td><td>(f) 👑 La Gouvernance Royale</td><td>matiere</td></tr><tr><td>docs/doc-report</td><td>1</td><td>donnees</td><td>—</td><td>trace</td></tr><tr><td>docs/relecture-referentiel</td><td>1</td><td>travail</td><td>(f) 👼 Les Anges de la coordination</td><td>matiere</td></tr><tr><td>docs/reponses</td><td>1</td><td>—</td><td>—</td><td>trace</td></tr><tr><td>docs/safe-export</td><td>1</td><td>outillage</td><td>(f) 🛡️ Les Gardiens Sacrés du Code</td><td>matiere</td></tr></tbody></table>
+<p class="note">7 dossier(s) sans sujet déterminé : docs/profil-utilisateur · docs/le-coordinateur · docs/pure-gold-unity · docs/sauvegardes · docs/tableau-de-bord · docs/contexte-projet · docs/reponses. Rangés nulle part plutôt que rangés au hasard — un rapport mis de force dans une case ment, un rapport non rangé se voit.</p>
+<p class="note">13 dossier(s) sans équipe déclarée : docs/data-archangel · docs/god-of-all-process · docs/rapports-gros-prompt · docs/angel-of-ia-process · docs/le-coordinateur · docs/pure-gold-unity · docs/rapports-de-nuit · docs/sauvegardes · docs/tableau-de-bord · docs/contexte-projet · docs/plans · docs/doc-report · docs/reponses. Ils existent sur le disque sans entrée dans les registres.</p>
+<p class="note">Hors périmètre, déclaré plutôt que tu : les données du JEU (base D1, état d'une partie) ne sont pas rangées ici. Le périmètre est l'Agence — ce que l'outillage produit et relit.</p></main>
+  
+</div>
+</body>
+</html>

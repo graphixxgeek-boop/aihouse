@@ -7368,6 +7368,110 @@ async function testVerrousDOuverture() {
   console.log('Passed: les 3 verrous d\'ouverture de Ronde (numérotation du suivi #787, outil muet au compteur #778, registre hors Ronde #954) appliquent sa décision « bloquer la Ronde, pas le commit » — chacun mord sur son propre défaut en NOMMANT le coupable, se tait complètement quand le dépôt est propre, refuse de bloquer (tout en le disant fort) quand il ne peut pas mesurer ou que sa sonde explose, et une ouverture refusée n\'écrit rien du tout. Vérifié aussi en direct contre le vrai dépôt : trois sondes mesurables, zéro verrou actif.');
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA CLASSIFICATION DES RAPPORTS ET DES DATAS (2026-09-26, tâches #955/#956/#957)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SON IDÉE, EN TROIS COMMANDES LIÉES : classer les rapports par THÈME, par FONCTION, et produire
+// LA classification complète rapports + datas avec le document qui la présente. Ses deux calibrages :
+// « les deux axes, croisés » (sujet × équipe) et « document généré + HTML de lecture ».
+//
+// CE QUE CES TESTS PROTÈGENT EN PRIORITÉ, et ce n'est pas le rangement : c'est le refus de ranger.
+// Un rapport mis de force dans une case ment, un rapport non rangé se voit — donc « sujet non
+// déterminé » doit rester une sortie possible, et un axe qui ne peut plus rien attraper doit se
+// dénoncer lui-même plutôt que rendre des zéros (leçon L11, payée ici pour de vrai : la première
+// mesure rendait 18 dossiers sans sujet sur 40, et ce chiffre ne disait rien du dépôt — seulement
+// que PRESTATIONS écrit « ARGUS » là où REGISTRIES écrit « scripts/check-argus.mjs »).
+async function testClassificationRapports() {
+  const da = await import('../scripts/data-archangel.mjs');
+  const { SUJETS_DE_RAPPORT, FONCTIONS_DE_RAPPORT, sujetDuRapport, findSujetsSansTerrain, slugDOutil, fonctionDuRapport, classerLesRapports, classificationComplete, formatClassificationLines, blocsClassificationHtml } = da;
+
+  // L'AXE DU SUJET — il attrape, et surtout il REFUSE d'attraper.
+  assert.equal(sujetDuRapport('vérifier la qualité du ton et des répliques des personnages')?.cle, 'jeu', 'a report about the characters lands under the game, not under a generic bucket');
+  assert.equal(sujetDuRapport('surveiller le quota API et le coût en tokens')?.cle, 'consommation', 'and one about spend lands under consumption');
+  assert.equal(sujetDuRapport('zzzz qqqq'), null, 'text matching no subject returns null, never a default subject: a report forced into a random box lies, a report left unsorted is visible');
+  assert.equal(sujetDuRapport(''), null, 'and empty text too, rather than picking the first subject in the list');
+  assert.equal(sujetDuRapport('personnages et dialogues et répliques, mais aussi un peu de token')?.cle, 'jeu', 'when two subjects match, the better-attested one wins — never the first declared, which would make the order of the list a hidden ranking');
+
+  // LE GARDE-FOU DE L'AXE (Article 24) — un sujet dont les mots ont disparu du corpus.
+  const sansTerrain = findSujetsSansTerrain(['un corpus qui ne parle que de personnages et de dialogues']);
+  assert.equal(sansTerrain.mesurable, true, 'a non-empty corpus is measurable');
+  assert.ok(sansTerrain.sansTerrain.includes('consommation'), 'a subject whose every word is absent from the real corpus is flagged: its zero would read as "no report on this theme" when it actually means "this theme can no longer search" (leçon L11)');
+  assert.ok(!sansTerrain.sansTerrain.includes('jeu'), 'and a subject that CAN still match is never flagged — a guard that accuses wrongly stops being read (leçon L4)');
+  assert.equal(findSujetsSansTerrain([]).mesurable, false, 'an empty corpus says it could not measure rather than declaring every subject dead');
+
+  // LE RAPPROCHEMENT DE DEUX ORTHOGRAPHES — la correction que le premier vrai passage a imposée.
+  assert.equal(slugDOutil('ARGUS'), 'argus', 'PRESTATIONS writes tools in capitals');
+  assert.equal(slugDOutil('scripts/check-argus.mjs'), 'argus', 'REGISTRIES writes them as a script path with a check- prefix — both must reduce to the same key, or the whole subject axis measures nothing but spelling');
+  assert.equal(slugDOutil('MOÏSE-TABLES-DE-LOI'), 'moise-tables-de-loi', 'accents are folded too');
+  assert.equal(slugDOutil('Smart Breaker (check-gemini-quota.mjs)'), 'smart-breaker', 'and a parenthetical aside is dropped rather than glued into the key');
+
+  // L'AXE DE LA FONCTION — ses trois questions, quatre réponses, dans le bon ordre de priorité.
+  assert.equal(fonctionDuRapport({ decision: 'delivery_html' }).cle, 'livre', 'a report declared as an HTML delivery is written for him to read');
+  assert.equal(fonctionDuRapport({ decision: 'texte', lecteurs: ['scripts/x.mjs'] }).cle, 'matiere', 'one that a script reopens feeds an analysis downstream');
+  assert.equal(fonctionDuRapport({ decision: 'texte', aUnIndex: true }).cle, 'trace', 'one that only an index lists is findable by hand');
+  assert.equal(fonctionDuRapport({ decision: 'texte' }).cle, 'orphelin', 'and one with no delivery, no reader and no index is produced for nobody — the state that costs, and the reason this axis exists');
+  assert.equal(fonctionDuRapport({ decision: 'archived_html', lecteurs: [], aUnIndex: false }).cle, 'livre', 'delivery wins over everything: a report written to be delivered is not an orphan just because no script reopens it');
+  assert.equal(FONCTIONS_DE_RAPPORT.length, 4, 'four functions, and the fourth is the expensive one — losing it would make "produced for nobody" indistinguishable from "archived"');
+
+  // LE CROISEMENT QU'IL A DEMANDÉ, sur une fixture où les deux axes sont volontairement décorrélés.
+  const inv = { mesurable: true, lignes: [
+    { dossier: 'docs/alpha', combien: 3, octets: 10, lecteurs: ['scripts/y.mjs'], aUnIndex: true, jamaisCites: 0 },
+    { dossier: 'docs/beta', combien: 5, octets: 20, lecteurs: [], aUnIndex: false, jamaisCites: 5 },
+  ] };
+  const c = classerLesRapports({
+    registres: [{ path: 'docs/alpha/', family: 'Équipe A', decision: 'texte', scriptPath: 'scripts/alpha.mjs' }],
+    prestations: [{ outils: ['ALPHA'], demande: 'analyser les personnages et leurs dialogues' }],
+    inventaire: inv,
+  });
+  assert.equal(c.mesurable, true, 'a measurable inventory yields a measurable classification');
+  assert.equal(c.lignes.find((l) => l.dossier === 'docs/alpha').equipe, 'Équipe A', 'the owning team is READ from the declared registry, never re-derived (Article 24)');
+  assert.equal(c.lignes.find((l) => l.dossier === 'docs/alpha').sujet, 'jeu', 'and the subject comes from the tool\'s own catalogue entry, matched across the two spellings');
+  assert.equal(c.lignes.find((l) => l.dossier === 'docs/beta').equipe, null, 'a folder present on disk but absent from the registries has NO team rather than a made-up one');
+  assert.equal(c.lignes.find((l) => l.dossier === 'docs/beta').fonction, 'orphelin', 'and with no delivery, reader or index it is an orphan — the finding, not a gap in the tool');
+  assert.deepEqual(c.sansEquipe, ['docs/beta'], 'undeclared folders are named one by one, never counted');
+  assert.ok(c.croise.some((x) => x.cle.includes('jeu') && x.cle.includes('Équipe A')), 'the two axes are genuinely CROSSED — a single cell carries both, which is what he asked for rather than two lists side by side');
+  assert.equal(c.total, 8, 'and the file count is the real sum, not the folder count');
+
+  // NON MESURABLE — jamais confondu avec « rien à ranger ».
+  const ko = classerLesRapports({ inventaire: { mesurable: false, pourquoi: 'docs/ illisible' } });
+  assert.equal(ko.mesurable, false, 'an unreadable inventory yields an unmeasurable classification, never an empty one');
+  assert.match(formatClassificationLines(ko)[0], /PAS MESURÉ/, 'and it says so out loud rather than printing zeroes that read like a clean result (leçons L5/L11)');
+  assert.match(formatClassificationLines(ko)[0], /docs\/ illisible/, 'carrying the real reason through');
+
+  // LA CLASSIFICATION COMPLÈTE — ses quatre questions, dont « y a-t-il des datas AUTRES ? ».
+  const complete = await classificationComplete({ registres: [], prestations: [], inventaire: inv, sources: [
+    { id: 'docs/x/index.md', nature: 'registre' }, { id: 'docs/j.json', nature: 'journal' }, { id: 'kpi.json', nature: 'mesure' },
+  ] });
+  assert.equal(complete.parNature.length, 4, 'four natures: reports are only ONE of them, which is the whole point of his third question');
+  assert.equal(complete.parNature.find((n) => n.cle === 'journal').combien, 1, 'local journals are counted as data in their own right — nobody was counting them with the reports');
+  assert.equal(complete.parNature.find((n) => n.cle === 'mesure').combien, 1, 'and so are the numeric series');
+  assert.equal(complete.parNature.find((n) => n.cle === 'rapport').combien, 8, 'while the report count comes from the real inventory');
+
+  // LES DEUX FORMES QU'IL A CHOISIES, produites par UN SEUL calcul.
+  const page = blocsClassificationHtml(complete);
+  assert.ok(page.title && page.blocks.length, 'the HTML page is built from the same result object as the text document, never from a second pass that could drift');
+  assert.ok(page.blocks.some((b) => b.type === 'table' && b.headers?.some((h) => /sujet × équipe/i.test(h))), 'the reading page carries the crossed table he asked for');
+  assert.ok(page.blocks.some((b) => b.type === 'table' && b.headers?.includes('Dossier')), 'and the folder-by-folder detail, so the page answers "which one?" and not only "how many?"');
+  const pageKo = blocsClassificationHtml({ rapports: { mesurable: false, pourquoi: 'rien lu' }, parNature: [], fonctions: FONCTIONS_DE_RAPPORT });
+  assert.ok(pageKo.blocks.some((b) => b.type === 'note' && /PAS MESURÉ/.test(b.text)), 'an unmeasurable classification still renders a page — one that says it measured nothing, rather than an empty page that looks like a clean repository');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25) : un outil qui n'a jamais tourné pour de vrai est
+  // une intention. Les chiffres bougeront ; ce qui est verrouillé ici, c'est que la mesure MARCHE.
+  const reel = await classificationComplete();
+  assert.equal(reel.rapports.mesurable, true, 'against the real repository the classification must actually run');
+  assert.equal(reel.sujetNonMesure, null, 'and the PRESTATIONS catalogue must really load — if it ever stops, the subject axis silently stops catching anything');
+  assert.ok(reel.rapports.total > 200, 'the real repository carries well over two hundred archived reports — the mass he asked to make sense of');
+  assert.ok(reel.rapports.parSujet.filter((x) => x.cle !== '(non déterminé)').length >= 5, 'and at least five subjects must genuinely be in use: an axis where everything lands in one box would sort nothing');
+  const indetermines = reel.rapports.sansSujet.length;
+  assert.ok(indetermines < reel.rapports.lignes.length / 3, `at most a third of folders may stay unsorted (currently ${indetermines} of ${reel.rapports.lignes.length}) — above that the axis is not classifying, it is failing to match, and the first real run proved the two look identical`);
+  assert.equal(findSujetsSansTerrain((await import('../scripts/le-coordinateur.mjs')).PRESTATIONS.map((p) => `${p.demande ?? ''} ${p.description ?? ''}`)).sansTerrain.length, 0, 'and against the REAL catalogue every declared subject must still have words to search on — a subject that can no longer match returns zero, which reads exactly like a clean theme');
+
+  console.log('Passed: la classification des rapports et des datas (2026-09-26, ses trois commandes liées #955/#956/#957) range 290 rapports réels sur trois axes — le SUJET (dérivé du catalogue PRESTATIONS), l\'ÉQUIPE propriétaire (LUE dans les registres déclarés, jamais recopiée) et la FONCTION (ses trois questions — besoin d\'être lu ? par qui ? qu\'alimente-t-il ? — répondues par la décision déclarée, les lecteurs réels et l\'index, jamais attribuées) — croise les deux premiers comme il l\'a demandé, et intègre les datas qui NE SONT PAS des rapports (journaux locaux, séries chiffrées), ce que personne ne comptait avec eux. Ce que ces tests protègent avant le rangement, c\'est le REFUS de ranger : « sujet non déterminé » reste une sortie, un axe dont les mots ont disparu du corpus se dénonce au lieu de rendre des zéros, et une classification non mesurable le dit au lieu de ressembler à un dépôt propre. Le premier vrai passage a rendu 18 dossiers sur 40 sans sujet — un chiffre qui ne disait rien du dépôt, seulement que PRESTATIONS écrit « ARGUS » là où REGISTRIES écrit « scripts/check-argus.mjs » ; après normalisation, 7. Les deux formes qu\'il a choisies (document généré + HTML de lecture) sortent d\'UN SEUL calcul.');
+}
+
+await testClassificationRapports();
+
 await testVerrousDOuverture();
 
 // ————————————————————————————————————————————————————————————————————————
