@@ -1,0 +1,129 @@
+PLAN DE DÉPART — mode auto du 2026-09-26
+======================================================================
+
+FIGÉ AVANT DE COMMENCER, à 05h10 UTC — heure LUE via AGENT-DU-TEMPS, source système.
+C'est le « avant » de la confrontation du matin. Sans lui, `check-tasks-details bilan`
+compare l'état du jour au plan d'une nuit antérieure, ou à rien — et un avant/après sans
+« avant » n'est pas une mesure, c'est une impression.
+
+À CHAQUE TÂCHE, SANS EXCEPTION : respecter le process, utiliser les outils.
+Sa consigne permanente — Articles 26 et 31.
+
+ORDRE FIXÉ PAR LUI : 1. Process & Ronde → 2. Outillage & garde-fous → 3. Charte.
+SIMULATION : écartée par lui ce soir.
+BORNES : les 5 interdits habituels + CLAUDE.md intouchable + suivi historique intouchable.
+
+----------------------------------------------------------------------
+ÉTAT AU DÉPART : 97 tâche(s) ouverte(s) sur 832 lignes de suivi
+----------------------------------------------------------------------
+   23  Process & Ronde
+   19  Organisation de l'Agence
+   17  Outillage & garde-fous
+   13  Charte & référentiel
+    9  Suivi & file
+    8  Données & mesure
+    6  Nommage & vocabulaire
+    2  Le jeu et le site
+
+----------------------------------------------------------------------
+LA LISTE FIGÉE — une ligne par tâche ouverte
+----------------------------------------------------------------------
+#390 | RECOMMANDE-NECESSAIRE    | Outillage / badge
+#436 | PRIORITAIRE-OBLIGATOIRE  | Process / vérification à froid
+#439 | RECOMMANDE-NECESSAIRE    | Organisation / catégories transverses
+#490 | PRIORITAIRE-OBLIGATOIRE  | Ronde / plan d'action R1
+#491 | PRIORITAIRE-OBLIGATOIRE  | Ronde / plan d'action R2
+#492 | NORMAL-UTILE             | Ronde / plan d'action R3
+#493 | NORMAL-UTILE             | Ronde / plan d'action R4
+#566 | PRIORITAIRE-OBLIGATOIRE  | Ronde / lecteur générique
+#567 | PRIORITAIRE-OBLIGATOIRE  | Process / mode de travail
+#571 | PRIORITAIRE-OBLIGATOIRE  | Outillage / renommage + revue
+#574 | NORMAL-UTILE             | Ronde / paramètre de lancement
+#575 | RECOMMANDE-NECESSAIRE    | Outillage / audit d'usage
+#580 | RECOMMANDE-NECESSAIRE    | Outillage / renommage
+#603 | PRIORITAIRE-OBLIGATOIRE  | Process / conduite
+#604 | RECOMMANDE-NECESSAIRE    | Documentation / Article 18
+#612 | RECOMMANDE-NECESSAIRE    | Outillage / CIRCLE-TASKS
+#623 | RECOMMANDE-NECESSAIRE    | Documentation / docs/regles-de-travail.md (chantier #208)
+#624 | PRIORITAIRE-OBLIGATOIRE  | Charte / CLAUDE.md (chantier #208)
+#629 | RECOMMANDE-NECESSAIRE    | Documentation / docs/referentiel (chantier #208)
+#636 | RECOMMANDE-NECESSAIRE    | Organisation / vocabulaire (chantier #208)
+#656 | NORMAL-UTILE             | Organisation / bibliothèques à un seul client
+#657 | NORMAL-UTILE             | Organisation / code mort possible
+#659 | PRIORITAIRE-OBLIGATOIRE  | Charte / généraliser le mécanisme DEMANDÉE
+#668 | PRIORITAIRE-OBLIGATOIRE  | Exportabilité / les 14 candidats non portables
+#677 | RECOMMANDE-NECESSAIRE    | Coordination / Deux packs du catalogue formulés en mêmes mots — tool-brain remonte les deux pour une seule question
+#679 | PRIORITAIRE-OBLIGATOIRE  | XP / Leçon L23 sans porteur — forcer la lecture du DOCUMENT de process avant d'agir, jamais sa déclaration dans le code
+#681 | NORMAL-UTILE             | XP / Une erreur répétée la même nuit, et ce qu'elle dit d'une décision déjà prise
+#687 | NORMAL-UTILE             | Suivi / Faut-il scinder l'outil de suivi des tâches en deux ou trois agents ?
+#695 | RECOMMANDE-NECESSAIRE    | Outillage / Tâches C à F des failles IA — les quatre restantes, pour cette nuit
+#696 | RECOMMANDE-NECESSAIRE    | Organisation / Harmoniser le modèle de gouvernance de l'utilisateur avec l'existant — 20 questions avant toute construct
+#699 | RECOMMANDE-NECESSAIRE    | Suivi / chaîne mesure → suite
+#700 | RECOMMANDE-CRITIQUE      | Sauvegarde / coffre et notice
+#701 | RECOMMANDE-NECESSAIRE    | Process / commande-en-masse
+#703 | RECOMMANDE-CRITIQUE      | Conduite / mots d'ordre permanents
+#704 | RECOMMANDE-NECESSAIRE    | Conso / tokens
+#705 | RECOMMANDE-NECESSAIRE    | Outillage / découpe
+#706 | RECOMMANDE-NECESSAIRE    | Process / nommage
+#707 | RECOMMANDE-NECESSAIRE    | Organisation / iceberg
+#708 | RECOMMANDE-NECESSAIRE    | Suivi / fiche de tâche
+#709 | RECOMMANDE-NECESSAIRE    | CASSANDRA-RH / convocation
+#710 | RECOMMANDE-NECESSAIRE    | Organisation / document total
+#711 | RECOMMANDE-NECESSAIRE    | Documentation / nature AUTO ou FIGÉ
+#713 | RECOMMANDE-NECESSAIRE    | CASSANDRA-RH / versions
+#714 | RECOMMANDE-NECESSAIRE    | Coordination / catalogue
+#715 | RECOMMANDE-NECESSAIRE    | Coordination / combinaisons d'outils
+#717 | RECOMMANDE-NECESSAIRE    | Profil utilisateur / les deux sens
+#721 | RECOMMANDE-NECESSAIRE    | Ronde / suites
+#723 | RECOMMANDE-CRITIQUE      | Process / la saisine elle-même n'est jamais archivée
+#724 | RECOMMANDE-NECESSAIRE    | Process / déclenchement automatique du process
+#725 | RECOMMANDE-NECESSAIRE    | Sauvegarde / l'agencement de la mémoire du projet
+#726 | RECOMMANDE-CRITIQUE      | Ronde / le process n'a pas été suivi
+#728 | RECOMMANDE-NECESSAIRE    | Profil utilisateur / qualité de ses prompts
+#732 | RECOMMANDE-NECESSAIRE    | Process / fréquence des auto-rappels en mode autonome
+#733 | RECOMMANDE-UTILE         | Nommage / les séries d'hommages
+#737 | RECOMMANDE-NECESSAIRE    | Organisation / vider le groupe OUBLIÉ et poser les 77 mentions
+#740 | RECOMMANDE-NECESSAIRE    | Nommage / booster l'agent des noms : TOUS les impacts d'un renommage en série
+#745 | RECOMMANDE-NECESSAIRE    | Agence / fusionner des agents pour réduire l'effectif — retrouver le sujet mis de côté
+#746 | RECOMMANDE-NECESSAIRE    | Outillage / LE-COORDINATEUR dit si une fonction existe DÉJÀ avant d'en créer une
+#747 | A-TRANCHER               | Nommage / la nomenclature : un code de classe dans le nom
+#748 | RECOMMANDE-NECESSAIRE    | Agence / qui garde et surveille l'HISTOIRE de l'Agence ?
+#749 | RECOMMANDE-NECESSAIRE    | XP / le moment manquant : une leçon découverte en UTILISANT un outil
+#750 | RECOMMANDE-NECESSAIRE    | Classification / 3e et 4e distinctions : le MOMENT et la NATURE
+#760 | A-TRANCHER               | Charte / proposer un NOUVEL article (le trentième) pour la reprise des notes
+#765 | CRITIQUE-STRUCTURANT     | Charte / Article 31 — tout passe par un OUTIL, et un rapport est TOUJOURS le rapport d'un outil
+#766 | CRITIQUE-STRUCTURANT     | Charte / Article 32 — le temps réel se LIT, jamais ne se déduit
+#767 | A-TRANCHER               | Charte / quelles autres règles à fort levier manquent ?
+#768 | CRITIQUE-STRUCTURANT     | Nommage / l'outil de renommage PUISSANT, avec recherches web
+#769 | RECOMMANDE-NECESSAIRE    | Process / 10 questions d'alignement à la fin de chaque Ronde
+#770 | RECOMMANDE-NECESSAIRE    | Process / la préparation avant le passage en mode auto
+#771 | RECOMMANDE-UTILE         | Veille / l'Agence a-t-elle des équivalents commercialisés ?
+#773 | RECOMMANDE-NECESSAIRE    | Process / vérifier que TOUS les process ont été respectés sur les dernières demandes
+#775 | RECOMMANDE-NECESSAIRE    | Nommage / les deux collisions réelles à trancher avec lui (`PALIERS`, `recordOutcome`)
+#777 | RECOMMANDE-UTILE         | tool-brain / deux libellés de tâche réels ne rendent toujours AUCUN outil
+#778 | RECOMMANDE-NECESSAIRE    | Compteur d'usage / le garde-fou qui empêchera le prochain outil muet
+#787 | RECOMMANDE-NECESSAIRE    | Suivi / le garde-fou de numérotation doit-il BLOQUER, comme celui des horodatages ?
+#790 | RECOMMANDE-NECESSAIRE    | Charte / les treize Articles muets : déclarer l'impossibilité, ou nommer le porteur qui existe déjà
+#793 | RECOMMANDE-NECESSAIRE    | Agence / check-house pèse un quart de tout l'outillage — 12 052 lignes
+#795 | RECOMMANDE-NECESSAIRE    | Données / un quart des sources de l'Agence écrit pour personne
+#796 | RECOMMANDE-NECESSAIRE    | Standards / les deux seules exigences non tenues parlent toutes deux de MÉMOIRE
+#798 | RECOMMANDE-CRITIQUE      | Crochet post-commit / 362 lignes que personne ne lit : raccourcir, ou hiérarchiser ?
+#800 | A-TRANCHER               | Agence / lequel des trois axes fait monter le majeur ?
+#801 | A-TRANCHER               | Badge / la FAMILLE a disparu de la cérémonie, et chaque outil certifié émet une fausse « mise à jour »
+#803 | RECOMMANDE-NECESSAIRE    | Agence / 28 outils sur 50 ne terminent toujours pas par un plan d'action
+#805 | A-TRANCHER               | File / 87 % de tâches légères et 49 thèmes pour 116 ouvertes : est-ce un émiettement ou un rythme sain ?
+#807 | RECOMMANDE-NECESSAIRE    | TOOL_PORTEE / **44 outils sur 50 n'ont aucune portée déclarée**, et rien ne le signalait
+#810 | RECOMMANDE-NECESSAIRE    | check-spirit / relancer POUR DE VRAI une fois le correctif validé
+#813 | PRIORITAIRE-OBLIGATOIRE  | Données / dix registres FRAIS que sept à dix outils citaient sans jamais les OUVRIR
+#814 | A-TRANCHER               | Données / les registres restants : brancher un lecteur, ou déclarer l'absence assumée ?
+#819 | A-TRANCHER               | Filet / trois options chiffrées : ne rien faire, regarder les 3 plus lents, ou un mode rapide
+#823 | A-TRANCHER               | Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et le garde-fou est tombé deux fois dans ce qu'il tra
+#830 | A-TRANCHER               | Idées / **« un outil qui vérifie la logique et les trous PARTOUT » — la question posée il y a quatre jours, restée sans 
+#841 | A-TRANCHER               | Ronde / **30 commits sans Ronde — et c'est le seul endroit où le soupçon de #205 se vérifie vraiment**
+#842 | A-TRANCHER               | Ronde / **« rentabiliser les trouvailles » : l'outil qui mesure ça existe, et son verdict est net — le registre grossit 
+#845 | A-TRANCHER               | File / les 5 plus anciennes tâches encore ouvertes, présentées pour arbitrage
+#846 | A-TRANCHER               | Process / **modifier un document de référence : huit étapes sur dix étaient déjà là, jamais rassemblées**
+#853 | MOYENNE                  | Badge / #801 remesuré : **20 cérémonies en attente, toutes sur le MÊME motif — une information répétée vingt fois, pas v
+#861 | MOYENNE                  | Refonte graphique / son idée SQUID GAME vivait au suivi et nulle part dans le document de son chantier
+
+Total figé : 97 tâches ouvertes.

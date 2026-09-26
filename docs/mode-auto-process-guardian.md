@@ -32,6 +32,58 @@ les trois se sont réellement produits :
 Ce document ferme les trois : le cadre est écrit avant la nuit, le seuil d'arrêt est unique et
 explicite, et le périmètre sensible est nommé.
 
+## LA PREMIÈRE QUESTION, AVANT TOUT LE RESTE : « avez-vous un gros prompt ? »
+
+*(2026-09-26, sa demande le soir même : « inscris dans le process auto de nuit que la premiere
+question doit etre : avez-vous un gros prompt ? [...] cette consigne doit etre ecrite dans les
+process pour la prochaine fois ».)*
+
+**Elle est née d'un cas réel, arrivé le jour où elle a été écrite.** Le plan de nuit venait d'être
+arrêté, écrit, testé et poussé quand il a annoncé : « j'ai un gros prompt, j'aurais du te le donner
+avant pour que tu t'organises, mais c'est pas grave : tu vas t'adapter ». Le plan était déjà figé
+sur les mauvaises hypothèses.
+
+**Pourquoi cette question passe avant l'identité de session, avant l'état des tâches, avant tout :
+un gros prompt ne s'AJOUTE pas à un plan de nuit, il le RÉÉCRIT.** Le découvrir après coup coûte
+l'organisation entière. Et ce n'est pas un oubli de sa part — c'est une question que l'agent
+n'avait jamais posée.
+
+**Ce qu'on fait de la réponse** :
+- **Oui** → le **process GROS PROMPT** tourne D'ABORD (`scripts/rapport-gros-prompt.mjs`,
+  registre `docs/rapports-gros-prompt/`), et le plan de nuit se construit AUTOUR de lui, jamais à
+  côté. Les deux process ne se concurrencent pas : le gros prompt donne la matière, le process
+  autonome donne les bornes et le seuil d'arrêt.
+- **Non** → on enchaîne normalement sur l'identité de session.
+
+Portée par `god-of-all-process.mjs`, étape `gros-prompt-dabord`, qui la place en tête de liste.
+
+## LA CONFRONTATION AVANT / APRÈS — et le « avant » doit être FIGÉ
+
+*(2026-09-26, sa demande du même soir : « verifie aussi que tu vas utiliser la confrontation des
+listes des taches avant/apres comme prevu par les process. on en a deja parlé, ajoute ca aussi. »)*
+
+**Le mécanisme existait déjà et n'était obligatoire nulle part.** `check-tasks-details bilan` sait
+confronter une liste figée à l'état du jour ; mais rien n'imposait de FIGER la liste au départ, de
+sorte que la confrontation du matin se faisait contre le plan d'une nuit antérieure — ou contre
+rien. **Un avant/après sans « avant » n'est pas une mesure, c'est une impression**, et une
+impression dira toujours que la nuit a été bonne.
+
+Deux étapes, aux deux bouts de la nuit, et aucune ne se saute :
+
+1. **Au départ** — figer la liste des tâches ouvertes dans
+   `docs/rapports-de-nuit/plan-depart-AAAA-MM-JJ.txt`, une ligne par tâche au format `#NNN | …`.
+   C'est ce fichier que l'outil ira chercher (le plus récent, trouvé plutôt que nommé en dur).
+2. **Au matin, avant le seuil d'arrêt** — `node scripts/check-tasks-details.mjs bilan`, qui rend la
+   soustraction : ce qui a été fermé, ce qui s'est ouvert, ce qui n'a pas bougé.
+
+Portées par `god-of-all-process.mjs`, étapes `plan-depart-fige` et `confrontation`.
+
+**Ce que la confrontation ne dit pas, et il faut le savoir en la lisant** : le compteur peut ne pas
+baisser alors que le travail avance, parce qu'un chantier GÉNÈRE des tâches — une trouvaille non
+suivie d'une tâche serait perdue (Article 28). Le nombre qui monte n'est donc pas un retard ; c'est
+la chaîne qui tient. La confrontation sépare ces deux mouvements au lieu de les confondre dans un
+solde net.
+
 ## Ce que l'utilisateur donne au départ
 
 Un plan numéroté, dans son ordre à lui. Le plan **se suit dans cet ordre**, sans en sauter une

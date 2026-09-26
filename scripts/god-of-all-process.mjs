@@ -263,7 +263,25 @@ export const PROCESSES = [
     doc: "docs/mode-auto-process-guardian.md",
     gardien: "scripts/god-of-all-process.mjs",
     etapes: [
+      // LA TOUTE PREMIÈRE ÉTAPE, AVANT MÊME L'IDENTITÉ (2026-09-26, sa demande le soir même :
+      // « inscris dans le process auto de nuit que la premiere question doit etre : avez-vous un
+      // gros prompt ? [...] cette consigne doit etre ecrite dans les process pour la prochaine
+      // fois »). Elle est née d'un cas réel arrivé ce soir-là : le plan de nuit venait d'être
+      // arrêté et poussé quand il a annoncé « j'ai un gros prompt, j'aurais du te le donner
+      // avant pour que tu t'organises ». Le plan était déjà figé sur les mauvaises hypothèses.
+      //
+      // POURQUOI ELLE PASSE AVANT TOUT LE RESTE : un gros prompt ne s'ajoute pas à un plan de
+      // nuit, il le RÉÉCRIT. Le découvrir après coup coûte le travail d'organisation entier, et
+      // ce n'est pas un oubli de l'utilisateur — c'est une question que l'agent n'a jamais posée.
+      { cle: "gros-prompt-dabord", libelle: "PREMIÈRE question posée à l'utilisateur, avant toute organisation : « avez-vous un gros prompt ? » — si oui, le process GROS PROMPT tourne D'ABORD et le plan de nuit se construit autour de lui", preuve: { dossier: "docs/rapports-gros-prompt/", motif: /\.(txt|md|html)$/ } },
       { cle: "identite", libelle: "déposer l'identité de session (version de Claude)", preuve: { fichier: SESSION_FILE } },
+      // LE PLAN DE DÉPART SE FIGE AVANT DE COMMENCER (2026-09-26, sa demande du même soir :
+      // « verifie aussi que tu vas utiliser la confrontation des listes des taches avant/apres
+      // comme prevu par les process »). Le mécanisme existait — `check-tasks-details bilan` sait
+      // confronter un plan figé à l'état du jour — mais RIEN N'OBLIGEAIT à figer le plan, donc la
+      // confrontation du matin se faisait contre le plan d'une nuit antérieure, ou contre rien.
+      // Un avant/après sans « avant » n'est pas une mesure, c'est une impression.
+      { cle: "plan-depart-fige", libelle: "figer la liste des tâches ouvertes AVANT de commencer, dans docs/rapports-de-nuit/plan-depart-AAAA-MM-JJ.txt — sans ce point de départ, aucune confrontation du matin n'est possible", preuve: { dossier: "docs/rapports-de-nuit/", motif: /^plan-depart-.*\.txt$/ } },
       // AJOUTÉE (2026-09-22) : avant de reprendre le plan, savoir où on en est. Sans ça, une nuit
       // passe à côté d'une tâche en attente parfaitement traitable pendant que personne ne dort
       // dessus — et l'audit du jour a justement trouvé quatre tâches faites mais jamais closes.
@@ -287,6 +305,10 @@ export const PROCESSES = [
       // limite d'elle-même (on ne la franchit qu'une fois le reste épuisé), et elle place la
       // dernière action de la nuit sur une VÉRIFICATION plutôt que sur une production — donc sur le
       // seul geste qui ne peut pas créer une nouvelle erreur à corriger.
+      // LA CONFRONTATION AVANT/APRÈS (2026-09-26, sa demande). Elle répond à la seule question qui
+      // compte au réveil — « qu'est-ce qui a vraiment bougé cette nuit ? » — et elle y répond par
+      // une soustraction, jamais par un récit. Le récit dira toujours que la nuit a été bonne.
+      { cle: "confrontation", libelle: "confronter la liste figée au départ à l'état réel du matin (`node scripts/check-tasks-details.mjs bilan`) — ce qui a été fermé, ce qui s'est ouvert, ce qui n'a pas bougé", preuve: { dossier: "docs/check-tasks-details/", motif: /^bilan-taches-.*\.txt$/ } },
       { cle: "verification-finale", libelle: "dernière Ronde + relecture de son propre travail de la nuit — AUCUNE action au-delà de ce seuil", preuve: { fichier: ".circle-tasks-run-summary-latest.txt" } },
       { cle: "rapport", libelle: "livrer le rapport de nuit en fichier texte, normé et archivé", preuve: { dossier: "docs/rapports-de-nuit/", motif: /\.txt$/ } },
     ],
