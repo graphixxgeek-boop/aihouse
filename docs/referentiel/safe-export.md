@@ -205,23 +205,53 @@ partir.
 La commande dit OÙ créer la pièce manquante ; le gabarit dit QUOI y mettre — et une pièce dont on
 ne sait pas quoi écrire ne s'écrit jamais.
 
-### Mesure réelle après la correction (2026-09-26)
+### Mesure réelle : de la correction au 100 %, le même jour
 
-89 fichiers : **82 kits dus, 7 dispensés** avec raison. **33 complets, 49 incomplets.**
+89 fichiers : **82 kits dus, 7 dispensés** avec raison.
+
+| Moment du 2026-09-26 | Kits complets | Alerte |
+|---|---|---|
+| juste après la correction de la règle | 33 / 82 | 🟠 EXPORT DÉGRADÉ |
+| après les vitaux et essentiels | 55 / 82 | 🟡 EXPORT POSSIBLE |
+| après les utiles | 69 / 82 | 🟡 EXPORT POSSIBLE |
+| **à 20h18** | **82 / 82** | **✅ EXPORT PRÊT** |
 
 | Ordre de réparation | À jour | Taux moyen |
 |---|---|---|
-| 🔴 1. vital | 17/37 (46 %) | 75 % |
+| 🔴 1. vital | 37/37 (100 %) | 100 % |
 | 🟠 2. essentiel | 3/3 (100 %) | 100 % |
-| 🟡 3. utile | 10/25 (40 %) | 69 % |
-| ⚪ 4. optionnel | 3/17 (18 %) | 62 % |
+| 🟡 3. utile | 25/25 (100 %) | 100 % |
+| ⚪ 4. optionnel | 17/17 (100 %) | 100 % |
 
-**Ce que la correction a rendu visible** : les optionnels étaient à 100 % sous l'ancienne règle, et
-ils sont à 18 %. Le premier chiffre n'était pas faux — il mesurait une exigence si basse qu'elle ne
-demandait rien. **C'est exactement l'angle mort qu'il a vu.**
+**Ce que la correction avait rendu visible** : les optionnels étaient à 100 % sous l'ancienne règle,
+et ils sont retombés à 18 % quand le kit complet leur a été dû. Le premier chiffre n'était pas
+faux — il mesurait une exigence si basse qu'elle ne demandait rien. **C'est exactement l'angle mort
+qu'il a vu**, et c'est ce qui rend le 100 % d'aujourd'hui différent de celui du matin.
 
-**Coût pour tout combler** : 105 documents à écrire (44 blueprints, 43 fiches, 18 index de
-registre). Chiffre mesuré, jamais estimé.
+**Coût réel du comblement** : 105 documents annoncés, écrits dans la journée — 44 blueprints,
+43 fiches, 18 index de registre. Chiffre mesuré avant, vérifié après.
+
+**Le test a remplacé son propre contraire.** Il exigeait le matin qu'il RESTE des kits non tenus
+(« un test qui ne tourne que sur un état propre ne prouve rien »). L'état propre est arrivé : ce qui
+vaut désormais d'être verrouillé, c'est lui. L'invariant « un optionnel incomplet n'est jamais
+filtré » a migré sur une fixture — laissé sur le réel, il aurait puni le succès.
+
+### Le faux positif qui faisait écrire des doublons *(2026-09-26)*
+
+La mesure dérivait le chemin des documents du NOM DU FICHIER. Trois outils portent un nom d'usage
+différent de leur nom de fichier — `kpi-report.mjs` s'appelle « Tableau de bord »,
+`check-gemini-quota.mjs` « Smart Breaker », `the-screener-capture.mjs` est le mécanisme de capture
+de THE-SCREENER — et leurs documents existaient depuis des semaines.
+
+**Ce faux positif ne fait pas perdre une information : il fait PRODUIRE UN DOUBLON**, et un doublon
+de document diverge du premier au premier changement.
+
+Corrigé par `aliasDocumentaires()`, qui **LIT** l'inventaire documentaire de CLAUDE.md — colonne
+script, colonne blueprint, colonne fiche. Une liste d'alias recopiée ici aurait dit la même chose
+une seconde fois et se serait périmée au premier renommage (Article 24). Un script absent de la
+table garde la dérivation par son nom, qui reste le cas majoritaire. **Une table qui ne parse plus
+rend `null`, jamais une carte vide** : « je n'ai pas su lire » et « il n'y a pas d'alias » appellent
+l'inverse l'un de l'autre.
 
 ## Le kit de l'AGENCE elle-même *(2026-09-26)*
 

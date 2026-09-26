@@ -18,7 +18,7 @@
 
   HORS PORTÉE : cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.
 
-=== LES KITS D'EXPORT — 64/82 kit(s) complet(s), 7 dispensé(s) avec raison ===
+=== LES KITS D'EXPORT — 82/82 kit(s) complet(s), 7 dispensé(s) avec raison ===
 
   LA RÈGLE, depuis sa correction du 2026-09-26 : le KIT COMPLET est dû à TOUT fichier de l'Agence.
   Un optionnel exporté sans son plan est un optionnel irrécupérable — et il partira quand même,
@@ -29,8 +29,8 @@
   --------------------  ---------  ----------  ----------
   🔴 1. vital             37/37   100 %        7      100 %
   🟠 2. essentiel          3/3    100 %        0      100 %
-  🟡 3. utile             20/25    80 %        0       88 %
-  ⚪ 4. optionnel          4/17    24 %        0       68 %
+  🟡 3. utile             25/25   100 %        0      100 %
+  ⚪ 4. optionnel         17/17   100 %        0      100 %
 
   PIÈCES DUES, les mêmes pour tous : blueprint + source + fiche + registre + dependances
   · le registre est SANS OBJET pour un fichier qui n'écrit rien — jamais « manquant » : lui
@@ -46,27 +46,7 @@
      /^scripts\/hooks\// — les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit
      /^scripts\/run-framework/ — il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison
 
-  ⛔ 18 KIT(S) INCOMPLET(S), dans l'ordre de réparation — chacun bloque la réinstallation de SON fichier :
-     [utile] scripts/le-regisseur.mjs (40 %) — manque : docs/le-regisseur-blueprint.md, docs/referentiel/le-regisseur.md, docs/le-regisseur/index.md
-     [utile] scripts/modes-de-travail.mjs (40 %) — manque : docs/modes-de-travail-blueprint.md, docs/referentiel/modes-de-travail.md, docs/modes-de-travail/index.md
-     [utile] scripts/rapport-gros-prompt.mjs (40 %) — manque : docs/rapport-gros-prompt-blueprint.md, docs/referentiel/rapport-gros-prompt.md, docs/rapport-gros-prompt/index.md
-     [utile] scripts/run-simulation.mjs (40 %) — manque : docs/run-simulation-blueprint.md, docs/referentiel/run-simulation.md, docs/run-simulation/index.md
-     [utile] scripts/sauvegarde-projet.mjs (40 %) — manque : docs/sauvegarde-projet-blueprint.md, docs/referentiel/sauvegarde-projet.md, docs/sauvegarde-projet/index.md
-     [optionnel] scripts/memento.mjs (80 %) — manque : docs/memento/index.md
-     [optionnel] scripts/pure-gold-unity.mjs (80 %) — manque : docs/referentiel/pure-gold-unity.md
-     [optionnel] scripts/tasks-process-guardian.mjs (75 %) — manque : docs/referentiel/tasks-process-guardian.md
-     [optionnel] scripts/the-deep-reader.mjs (75 %) — manque : docs/the-deep-reader-blueprint.md
-     [optionnel] scripts/memento-weight.mjs (60 %) — manque : docs/memento-weight-blueprint.md, docs/memento-weight/index.md
-     [optionnel] scripts/api-providers.mjs (50 %) — manque : docs/api-providers-blueprint.md, docs/referentiel/api-providers.md
-     [optionnel] scripts/build-verified.sh (50 %) — manque : docs/build-verified-blueprint.md, docs/referentiel/build-verified.md
-     [optionnel] scripts/install-ci.mjs (50 %) — manque : docs/install-ci-blueprint.md, docs/referentiel/install-ci.md
-     [optionnel] scripts/install-ci.sh (50 %) — manque : docs/install-ci-blueprint.md, docs/referentiel/install-ci.md
-     [optionnel] scripts/judge-persona-shared.mjs (50 %) — manque : docs/judge-persona-shared-blueprint.md, docs/referentiel/judge-persona-shared.md
-     [optionnel] scripts/simulation-visiteur.mjs (50 %) — manque : docs/simulation-visiteur-blueprint.md, docs/referentiel/simulation-visiteur.md
-     [optionnel] scripts/gemini-key-health.mjs (40 %) — manque : docs/gemini-key-health-blueprint.md, docs/referentiel/gemini-key-health.md, docs/gemini-key-health/index.md
-     [optionnel] scripts/pnpm-install.mjs (40 %) — manque : docs/pnpm-install-blueprint.md, docs/referentiel/pnpm-install.md, docs/pnpm-install/index.md
-
   HORS PORTÉE : un kit COMPLET n'est pas un kit SUFFISANT : cette mesure compte des pièces présentes, elle ne lit jamais leur contenu ni ne garantit que le portage réussira. Elle dit ce qui est PRÊT à partir, jamais que ça marchera ailleurs.
 
-=== ALERTE D'EXPORTABILITÉ — 🟡 EXPORT POSSIBLE, avec des trous sur des fichiers non vitaux ===
-  🟡 18 autre(s) kit(s) incomplet(s), sur des fichiers utiles ou optionnels.
+=== ALERTE D'EXPORTABILITÉ — ✅ EXPORT PRÊT — tous les kits dus sont tenus ===
+  Rien à signaler : chaque fichier dû porte son kit complet, et l'Agence porte le sien.

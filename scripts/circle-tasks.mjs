@@ -760,6 +760,25 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   "report-template": "Bibliothèque de gabarit APPELÉE par les autres outils, sans ligne de commande : personne ne la « lance », donc elle n'a aucun passage à rapporter. Ce qu'elle dépose (l'identité de l'agent, relue par tous les rapports) est vérifié à CHAQUE rapport produit, bien plus souvent qu'une Ronde — et god-of-all-process signale déjà une identité manquante.",
   "check-house": "LE FILET DE SÉCURITÉ LUI-MÊME : il tourne à chaque commit via le crochet pre-commit et REFUSE le commit s'il échoue. Un item de Ronde qui demanderait « et si on lançait les tests ? » arriverait toujours après des dizaines de passages déjà faits — le contraire exact d'un signal utile.",
   "circle-tasks": "IL EST LA RONDE : c'est lui qui définit CIRCLE_ITEMS. Un item lui demandant de se vérifier serait circulaire, et ce n'est pas un jeu de mots — c'est circle-process-guardian, un contrôleur de process extérieur, qui juge son déroulé, précisément parce qu'un juge et son sujet ne peuvent pas être le même fichier.",
+  // run-simulation (2026-09-26, même origine : son registre est né du comblement des kits). Il
+  // répond à un ÉVÉNEMENT — une simulation qu'on lance — jamais à un calendrier, et il coûte de
+  // vrais appels API (Article 8). Un item de Ronde qui le convoquerait tous les quinze jours
+  // proposerait de lancer une simulation à chaque passage : exactement la dépense que le protocole
+  // de l'Article 18 encadre, et exactement le bruit qui apprend à sauter la Ronde.
+  "run-simulation": "Répond à un ÉVÉNEMENT (une simulation lancée), jamais à un calendrier, et il coûte de vrais appels API. Son moment est celui du protocole de l'Article 18, porté par process-simulation-guardian ; un item périodique proposerait de dépenser du quota à chaque passage",
+  // gemini-key-health (2026-09-26, registre né du comblement des kits) : membre du groupe Smart
+  // Breaker, dont le déclencheur est un BLOCAGE de quota, jamais un calendrier. Sa mémoire s'enrichit
+  // à chaque sondage réel ; un item de Ronde n'aurait rien à lui faire faire, sinon sonder l'API pour
+  // le plaisir de sonder — c'est-à-dire dépenser du quota pour produire une ligne de plus.
+  "gemini-key-health": "Groupe Smart Breaker : son déclencheur est un BLOCAGE de quota (procédure de l'Article 22), jamais un calendrier. Sa mémoire s'enrichit des sondages réels ; un item périodique dépenserait du quota uniquement pour produire une ligne de registre",
+  // memento / memento-weight / pnpm-install (2026-09-26, registres nés du comblement des kits).
+  // Les deux premiers sont l'ancien nom de fichier et le voisin de memory-audit, déjà exclu plus
+  // haut pour la même raison — leur objet n'est pas le dépôt mais une PARTIE en cours, et un item de
+  // Ronde n'aurait aucune donnée à regarder. Le troisième est de la plomberie appelée par
+  // l'outillage d'installation, jamais convoquée.
+  "memento": "Nom de FICHIER de memory-audit (surnom conservé, tâche #172) : même exclusion que lui — il cible la mémoire narrative de Lia/Noé EN JEU, vérifiable seulement sur des instantanés réels de partie, jamais par un balayage périodique du dépôt",
+  "memento-weight": "Son verdict est déjà relayé par le rapport KPI (reportMementoWeight), lu à chaque Ronde via l'item `kpi` — un item séparé ferait deux verdicts sur la même donnée. Et comme memory-audit, il mesure une PARTIE en cours, pas le dépôt",
+  "pnpm-install": "Plomberie appelée par l'outillage d'installation, jamais convoquée par un humain (cf. sa fiche et le désaccord de classement qu'elle porte). Elle n'a aucun passage périodique à rapporter",
   // LES 17 QUI ONT REJOINT L'ÉQUIPE LE 2026-09-26, et pourquoi la Ronde ne leur doit pas un item
   // chacun. Le garde-fou a mordu à la seconde où ils sont entrés au registre, et il avait raison de
   // poser la question : rejoindre l'équipe, c'est être regardé périodiquement. La réponse suit le
