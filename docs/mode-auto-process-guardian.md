@@ -272,6 +272,19 @@ les commits récents et nomme ceux qui touchent le code d'un process sans touche
 le MÊME commit. Le même commit, et pas « dans la journée », pour la raison que le suivi applique
 déjà : « je le ferai après » est la forme que prend l'oubli.
 
+**UN COMMENTAIRE AJOUTÉ N'EST PLUS UN CHANGEMENT DE PROCESS** *(2026-09-27, tâche #1014)*. Il
+jugeait sur le FICHIER TOUCHÉ, jamais sur ce qui avait changé dedans. Le jour où la pose des
+mentions `// ICEBERG:` a ajouté **une ligne de commentaire en tête de 79 fichiers**, il a annoncé
+**huit dettes de process, les huit fausses** — aucun process n'avait bougé. Un garde-fou qui accuse
+à tort cesse d'être lu (leçon L4), et huit fausses en un seul commit sont la dose qui fait cesser.
+Il lit désormais le DIFF : un changement dont toutes les lignes ajoutées et retirées sont des
+commentaires ou du vide n'a pas pu déplacer une règle. La règle est générale plutôt que taillée sur
+le cas du jour (Article 24) — écrire « ignore la ligne ICEBERG » aurait laissé passer le prochain
+cas sous une autre forme. **Risque résiduel assumé** : ici le POURQUOI vit à côté du QUOI, donc un
+commentaire peut porter une règle ; un commit qui ne ferait que la réécrire cesserait d'être
+signalé. Échange accepté — ce cas-là documente, il ne change pas le process. **Mesure : 20 écarts
+→ 12**, les huit fausses disparaissent, les vraies dettes des commits précédents restent.
+
 **Ses deux limites, déclarées plutôt que masquées :**
 - il juge sur les fichiers d'un commit, donc un commit qui groupe plusieurs sujets élargit la
   fenêtre et peut laisser passer un cas ;

@@ -1049,6 +1049,45 @@ export function docsAilleurs(fichier, fichiersDuCommit = []) {
   return fichiersDuCommit.filter((f) => attendus.has(f));
 }
 
+// UN COMMENTAIRE AJOUTÉ N'EST PAS UN CHANGEMENT DE PROCESS (2026-09-27, tâche #1014). Le
+// détecteur ci-dessous juge sur le FICHIER TOUCHÉ, jamais sur ce qui a changé dedans — et le
+// 2026-09-27 il a rendu HUIT dettes documentaires d'un coup, les huit fausses : le seul changement
+// de ces fichiers était une ligne `// ICEBERG: membre` posée en tête par une commande de rangement.
+// Aucun process n'avait bougé. **Un garde-fou qui accuse à tort cesse d'être lu** (leçon L4), et
+// huit fausses accusations dans un seul commit sont exactement la dose qui fait cesser de lire —
+// avec, derrière, les vraies dettes qui se cachent (le même coût s'est déjà mesuré ici le
+// 2026-09-26, tâche #943).
+//
+// LA RÈGLE EST GÉNÉRALE PLUTÔT QUE TAILLÉE SUR LE CAS DU JOUR (Article 24) : un diff dont TOUTES
+// les lignes ajoutées et retirées sont des commentaires ou du vide n'a pas modifié le comportement
+// du fichier, donc n'a pas pu déplacer une règle de process. Écrire « ignore la ligne ICEBERG »
+// aurait laissé passer le prochain cas sous une autre forme.
+//
+// LE RISQUE RÉSIDUEL, ASSUMÉ ET ÉCRIT : dans ce dépôt, le POURQUOI vit à côté du QUOI, donc un
+// commentaire PEUT porter une règle (Article 27). Un commit qui ne ferait que réécrire un tel
+// commentaire cesserait d'être signalé. C'est un échange accepté : ce cas-là documente, il ne
+// change pas le process — alors que le cas inverse, huit accusations fausses, éteint le contrôle
+// entier. Une mesure impossible (diff illisible) ne fait taire personne : on rend `false`, donc le
+// fichier reste compté comme un vrai changement.
+export function diffSeulementDesCommentaires(hash, fichier, { shImpl = sh, root = ROOT } = {}) {
+  let diff;
+  try {
+    // L'ORDRE DES ARGUMENTS N'EST PAS DÉCORATIF, et il a mordu tout de suite : écrit
+    // `-- <fichier> <hash>`, git prend le HASH POUR UN CHEMIN et rend le diff de HEAD au lieu de
+    // celui du commit demandé. Le filtre passait alors de 20 écarts à 0 — il aurait fait taire le
+    // contrôle entier, y compris sur de vraies dettes. Trouvé par la MESURE avant/après, jamais en
+    // relisant la ligne : elle a l'air juste.
+    diff = shImpl(`git show --format= --unified=0 ${hash} -- ${JSON.stringify(fichier)}`, { cwd: String(root).replace(/\/$/, "") });
+  } catch {
+    return false; // diff illisible : on ne fait taire personne sur une absence de mesure
+  }
+  const lignes = String(diff).split("\n")
+    .filter((l) => /^[+-]/.test(l) && !/^(\+\+\+|---)/.test(l))
+    .map((l) => l.slice(1).trim());
+  if (!lignes.length) return false; // rien de lisible : même prudence
+  return lignes.every((l) => l === "" || l.startsWith("//") || l.startsWith("*") || l.startsWith("/*") || l.startsWith("*/") || l.startsWith("#"));
+}
+
 export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, shImpl = sh, root = ROOT, nbCommits = 15 } = {}) {
   let brut;
   try {
@@ -1101,7 +1140,12 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
       // fichier touché AILLEURS — sa fiche `docs/referentiel/<outil>.md` ou son blueprint — alors
       // le changement n'est pas non documenté, et l'écart devient un SOUPÇON à confirmer plutôt
       // qu'une dette. Un commit qui ne documente RIEN reste une dette pleine et entière.
-      const touche = c.fichiers.filter((f) => codeDuProcess.has(f) && !PARTAGES.has(f));
+      const touche = c.fichiers
+        .filter((f) => codeDuProcess.has(f) && !PARTAGES.has(f))
+        // Un fichier dont le diff ne contient que des commentaires n'a pas déplacé de règle : voir
+        // le commentaire de `diffSeulementDesCommentaires()` juste au-dessus, et les huit fausses
+        // dettes du 2026-09-27 qui l'ont rendu nécessaire.
+        .filter((f) => !diffSeulementDesCommentaires(c.hash, f, { shImpl, root }));
       if (!touche.length || c.fichiers.includes(p.doc)) continue;
       for (const fichier of touche) {
         const cle = `${c.hash}|${fichier}`;

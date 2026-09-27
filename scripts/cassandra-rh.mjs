@@ -1536,6 +1536,88 @@ export const REGISTRE_CONVOCATIONS = "docs/cassandra-rh/convocations.md";
 
 // LA CONVOCATION SE DÉRIVE DES SIGNAUX EXISTANTS, jamais d'un jugement neuf. Chaque règle dit
 // QUI est convoqué et POURQUOI — et le « qui » n'est pas toujours l'outil, c'est tout l'intérêt.
+// LA CONVOCATION DOIT PRODUIRE UNE DÉCISION, ET SE RECONVOQUER SI RIEN N'A BOUGÉ (2026-09-27,
+// tâche #709). Sa demande, littérale : « CONVOCATION chez Cassandra : tout fonctionne bien ?
+// detaille le fonctionnement stp » → puis sa correction, qui est la vraie commande : « production
+// d'une decision + tache si besoin ».
+//
+// LE DÉFAUT QU'IL A VU : la convocation fonctionnait, mais elle produisait un COMPTE RENDU et
+// s'arrêtait là. C'est exactement le défaut des 35 constats sans suite (#699) et le trou que
+// l'Article 28 nomme — un rapport n'est pas fini quand il est écrit, il l'est quand ses constats
+// sont devenus des tâches. Une convocation qui pose une question et ne réclame jamais de réponse
+// est une convocation qu'on peut ignorer indéfiniment sans que rien ne le signale.
+//
+// TROIS DÉCISIONS, JAMAIS DEUX, ET JAMAIS QUATRE. Deux (garder/retirer) forcerait la main sur un
+// outil qu'on n'a pas encore eu le temps de juger, donc produirait des « garder » par défaut qui ne
+// décident rien. Le SURSIS est la troisième, et c'est elle qui fait tenir le dispositif : elle
+// autorise à ne pas trancher tout de suite, **à condition de dire quand**. Une quatrième («
+// à voir ») rouvrirait la porte que le sursis vient de fermer.
+//
+// ET ACCEPTER QU'UN OUTIL FINISSE PAR ÊTRE RETIRÉ FAIT PARTIE DU MARCHÉ — c'est sa formulation. Un
+// dispositif où aucune issue ne mène au retrait n'est pas une évaluation, c'est une cérémonie.
+export const DECISIONS_DE_CONVOCATION = {
+  corrige: { quoi: "l'outil a été corrigé — la convocation est éteinte par un changement réel, vérifiable dans le dépôt", echeance: false },
+  sursis: { quoi: "on ne tranche pas aujourd'hui, mais on dit QUAND — sans échéance, un sursis est un abandon qui se donne l'air d'une décision", echeance: true },
+  retire: { quoi: "l'outil part. Accepter qu'un outil finisse par être retiré fait partie du marché, sans quoi ce dispositif n'est qu'une cérémonie", echeance: false },
+};
+
+// Le sursis s'écrit dans la case de clôture du registre sous une forme que la machine sait relire.
+// Une échéance notée en prose libre est une échéance que personne ne vérifiera jamais (Article 24).
+export const MOTIF_SURSIS = /SURSIS\s+jusqu'au\s+(\d{4}-\d{2}-\d{2})/i;
+
+// LES CRANS, et il y en a trois parce qu'un compteur sans plafond ne dit plus rien au bout d'un
+// moment. Le dernier n'est pas « on retire » — la décision reste humaine — c'est « on ne peut plus
+// faire semblant de ne pas avoir vu ».
+export const CRANS_DE_RECONVOCATION = [
+  { cran: 1, quoi: "reconvoqué une première fois : l'échéance du sursis est passée sans que rien ne bouge" },
+  { cran: 2, quoi: "reconvoqué une deuxième fois : deux sursis consécutifs non tenus, la question n'est plus l'outil mais la décision qu'on ne prend pas" },
+  { cran: 3, quoi: "dernier cran : le sursis ne peut plus être reconduit sans une raison écrite qui dise pourquoi celui-ci tiendrait mieux que les deux précédents" },
+];
+
+// Relit le registre et rend les sursis dont l'échéance est passée. Il ne clôt rien et ne retire
+// rien : il RECONVOQUE, d'un cran plus haut, en nommant les échéances déjà manquées.
+//
+// LA DATE DU JOUR SE PASSE EN PARAMÈTRE, jamais `new Date()` pris à l'intérieur : une fraîcheur
+// calculée sur une heure devinée est fausse sans qu'on puisse le voir (Article 32), et un test qui
+// ne peut pas fixer le jour ne teste rien de reproductible.
+export function reconvocationsDues(texteRegistre = "", { aujourdhui = null } = {}) {
+  if (!aujourdhui) {
+    return { mesurable: false, dues: [], pourquoi: "aucune date du jour fournie — une échéance se compare à une date LUE, jamais à une date devinée (Article 32), et un âge faux se lit comme « tout va bien »" };
+  }
+  const dues = [];
+  for (const ligne of String(texteRegistre).split("\n")) {
+    if (!ligne.trim().startsWith("|")) continue;
+    const cellules = ligne.split("|").map((c) => c.trim());
+    const cloture = cellules[cellules.length - 2] ?? "";
+    // LA DERNIÈRE ÉCHÉANCE, jamais la première : une ligne reconduite deux fois porte deux dates,
+    // et nommer la plus ancienne annoncerait un retard faux — plus grave qu'il n'est, donc discuté
+    // au lieu d'être traité. Trouvé en lisant la sortie du premier contre-test, pas en relisant le
+    // code : `match()` rend la PREMIÈRE occurrence, ce qui a l'air juste tant qu'il n'y en a qu'une.
+    const toutes = [...cloture.matchAll(new RegExp(MOTIF_SURSIS.source, "gi"))];
+    if (!toutes.length) continue;
+    const m = toutes[toutes.length - 1];
+    if (m[1] >= aujourdhui) continue; // échéance à venir : un sursis en cours n'est pas un sursis manqué
+    // Le cran se LIT sur la ligne (combien de fois « SURSIS » y figure), il ne se tient pas dans
+    // une variable ailleurs : le registre est la seule mémoire du dispositif.
+    const combien = (cloture.match(/SURSIS/gi) ?? []).length;
+    const cran = CRANS_DE_RECONVOCATION[Math.min(combien, CRANS_DE_RECONVOCATION.length) - 1] ?? CRANS_DE_RECONVOCATION[0];
+    dues.push({ sujet: cellules[3] ?? "(sujet illisible)", qui: cellules[2] ?? "?", echeance: m[1], cran: cran.cran, pourquoiCran: cran.quoi });
+  }
+  return { mesurable: true, dues, pourquoi: dues.length ? `${dues.length} sursis dont l'échéance est passée` : "aucun sursis échu — soit il n'y en a pas, soit ils courent encore" };
+}
+
+export function formatReconvocationsLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi ?? "raison inconnue"}`];
+  if (!r.dues.length) return ["✅ Aucun sursis échu : aucune décision reportée n'a dépassé la date qu'elle s'était donnée."];
+  const out = [`⚠️ ${r.dues.length} RECONVOCATION(S) — un sursis dont l'échéance passe sans rien produire est un abandon, pas une décision :`];
+  for (const d of r.dues) {
+    out.push(`   · ${d.sujet} (${d.qui}) — échéance ${d.echeance} dépassée · CRAN ${d.cran}`);
+    out.push(`       ${d.pourquoiCran}`);
+  }
+  out.push("   La décision reste humaine à chaque cran : ce mécanisme ne retire jamais un outil tout seul.");
+  return out;
+}
+
 export function convoquer({ reconsider = [], nivellement = null, objectifsRows = [], neverUsed = [] } = {}) {
   const convocations = [];
   for (const f of reconsider) {
@@ -3966,6 +4048,19 @@ async function main() {
     console.log("RÈGLE DE CLÔTURE, non négociable : une convocation ne se clôt QUE avec un accord daté de l'utilisateur ET une raison écrite.");
     console.log("Toute autre tentative est relayée nommément comme une tentative de faire taire l'alerte — un agent qui écrit lui-même « traité » la fait disparaître sans que personne d'autre l'ait vue.");
     console.log(`Registre : ${REGISTRE_CONVOCATIONS}`);
+    // LES TROIS DÉCISIONS ET LES RECONVOCATIONS (2026-09-27, tâche #709) — sans elles, la
+    // convocation posait une question que rien n'obligeait jamais à refermer.
+    console.log("\nLES TROIS DÉCISIONS POSSIBLES, jamais deux, jamais quatre :");
+    for (const [cle, d] of Object.entries(DECISIONS_DE_CONVOCATION)) {
+      console.log(`  · ${cle.toUpperCase().padEnd(8)} ${d.quoi}`);
+    }
+    console.log(`  Le sursis s'écrit dans la case de clôture sous la forme « SURSIS jusqu'au AAAA-MM-JJ — <raison> » :`);
+    console.log("  une échéance notée en prose libre est une échéance que personne ne vérifiera jamais.");
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    let texteReg = "";
+    try { texteReg = readFileSync(join(ROOT, REGISTRE_CONVOCATIONS), "utf8"); } catch { texteReg = ""; }
+    console.log("");
+    for (const l of formatReconvocationsLines(reconvocationsDues(texteReg, { aujourdhui }))) console.log(l);
     const plan = buildPlanDaction(
       // « à trancher » par nature, jamais « retenu » : une convocation POSE une question dont la
       // réponse n'appartient pas à l'agent. La marquer retenue reviendrait à la traiter seul, ce

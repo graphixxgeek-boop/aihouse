@@ -13389,6 +13389,12 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // impayés (leçon L6). Cas réel du soir : quatre écarts légitimes trouvés, les quatre documents mis
   // à jour dans l'heure, et le détecteur affichait toujours les mêmes sept lignes.
   const gitFaux = (cmd) => {
+    // Deux commandes passent désormais par ce stub (2026-09-27, tâche #1014) : l'historique, et le
+    // DIFF de chaque fichier touché, lu pour écarter les changements qui ne sont que du commentaire.
+    // Seul l'historique est vérifié ici — c'est lui que cette assertion existe pour garder. Le diff
+    // rend une chaîne vide, ce qui vaut « pas seulement du commentaire » : la fixture continue donc
+    // de mesurer exactement ce qu'elle mesurait avant le filtre.
+    if (!/^git log\b/.test(cmd)) return '';
     assert.match(cmd, /git log/, 'the detector must read real git history, never guess');
     // Du plus récent au plus ancien, comme git log : cccc222 (le rattrapage) vient donc APRÈS
     // cccc333 (le fautif) dans le temps, même s'il apparaît avant dans la sortie.
@@ -13419,7 +13425,13 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   {
     const fautif = 'dddd111\tfautif\nscripts/faux-gardien.mjs\nscripts/autre.mjs';
     let commandeVue = null;
-    const espion = (cmd) => { commandeVue = cmd; return fautif; };
+    // L'ESPION NE RETIENT QUE LA COMMANDE D'HISTORIQUE (2026-09-27, tâche #1014) : depuis que le
+    // détecteur lit aussi le DIFF de chaque fichier touché pour écarter les changements qui ne sont
+    // que du commentaire, deux commandes distinctes passent par ce même stub. Retenir la dernière
+    // faisait échouer l'assertion sur une commande qui n'est pas celle qu'elle vérifie — la fenêtre
+    // à un commit. Le `git show` rend une chaîne vide, ce qui vaut « pas seulement du commentaire »
+    // et laisse donc la dette visible : la fixture continue de mesurer ce qu'elle mesurait.
+    const espion = (cmd) => { if (/^git log\b/.test(cmd)) { commandeVue = cmd; return fautif; } return ''; };
     const nes = god.detteDuDernierCommit({ processes: procFaux, shImpl: espion });
     assert.equal(nes.length, 1, 'process code changed without its document must be caught in the very commit that creates the debt, not a week later at the Ronde');
     assert.match(commandeVue, /git log -n 1\b/, 'the hook window is ONE commit: a debt born ten commits ago is no longer information at commit eleven, it is a list nobody can extinguish');
@@ -15958,3 +15970,162 @@ async function testMentionsIcebergPosees() {
   console.log("Passed: la seconde source de l'iceberg n'existait pas (2026-09-27, tâche #737, second volet). Le garde-fou de désaccord compare ce qu'un fichier DÉCLARE en tête à ce que la mesure DÉRIVE de son point d'entrée et de sa présentation — il était construit et testé, mais 79 fichiers sur 81 ne déclaraient rien, donc il comparait à du vide. Un garde-fou qui compare une valeur à rien ne mord jamais, et son silence se lit comme un accord. poserMentionIceberg() pose la ligne, sous --poser seulement (une commande lue à chaque Ronde qui écrirait dans 79 fichiers au passage serait une surprise, pas un service) ; elle passe le shebang plutôt que de le casser ; elle ne réécrit JAMAIS une déclaration existante, parce qu'une déclaration qui contredit la mesure est précisément ce qu'on veut lire — pnpm-install se déclare plomberie contre sa propre porte d'entrée, arbitrage rendu par l'utilisateur. Résultat mesuré : 2/81 → 81/81, zéro désaccord le jour de la pose, ce qui est attendu : la mention est un point de repère daté, et c'est à partir de demain qu'un fichier qui gagne une porte ou perd sa présentation deviendra visible.");
 }
 await testMentionsIcebergPosees();
+
+// HUIT FAUSSES DETTES DOCUMENTAIRES EN UN SEUL COMMIT (2026-09-27, tâche #1014). Le détecteur de
+// changement indirect jugeait sur le FICHIER TOUCHÉ, jamais sur ce qui avait changé dedans. Le
+// 2026-09-27, la pose des mentions `// ICEBERG:` a ajouté UNE LIGNE DE COMMENTAIRE en tête de 79
+// fichiers — et il a annoncé huit dettes de process, les huit fausses. Un garde-fou qui accuse à
+// tort cesse d'être lu (leçon L4), et huit fausses en un commit sont la dose qui fait cesser.
+async function testDetteIndirecteIgnoreLesCommentaires() {
+  const god1014 = await import('../scripts/god-of-all-process.mjs');
+
+  // CE QU'IL DOIT LAISSER PASSER : un diff qui n'ajoute que du commentaire. Le comportement du
+  // fichier n'a pas bougé, donc aucune règle de process n'a pu se déplacer.
+  const shCommentaire = () => 'diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -0,0 +1 @@\n+// ICEBERG: membre\n';
+  assert.equal(god1014.diffSeulementDesCommentaires('abc1234', 'scripts/x.mjs', { shImpl: shCommentaire }), true,
+    'a diff made only of comment lines must be recognised as such: it is the exact shape of the 79 ICEBERG annotations that produced eight false debts');
+
+  // CE QU'IL DOIT ATTRAPER : le cas PROCHE, et c'est lui qui compte. Un diff qui ajoute du
+  // commentaire ET une ligne de code reste un vrai changement — sinon il suffirait de commenter
+  // abondamment son correctif pour échapper au contrôle.
+  const shMixte = () => 'diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -0,0 +2 @@\n+// une explication\n+export const SEUIL = 3;\n';
+  assert.equal(god1014.diffSeulementDesCommentaires('abc1234', 'scripts/x.mjs', { shImpl: shMixte }), false,
+    'MUST CATCH: one real code line among the comments is still a real change — otherwise commenting generously would be enough to escape the control');
+
+  // LES LIGNES RETIRÉES COMPTENT AUTANT QUE LES AJOUTÉES : supprimer une constante en gardant son
+  // commentaire est un changement de comportement, pas une réécriture de prose.
+  const shSuppression = () => 'diff --git a/x b/x\n--- a/x\n+++ b/x\n@@ -1 +0,0 @@\n-export const SEUIL = 3;\n';
+  assert.equal(god1014.diffSeulementDesCommentaires('abc1234', 'scripts/x.mjs', { shImpl: shSuppression }), false,
+    'removed lines count as much as added ones: deleting a constant while keeping its comment changes behaviour');
+
+  // UNE MESURE IMPOSSIBLE NE FAIT TAIRE PERSONNE. Un diff illisible ou vide rend `false`, donc le
+  // fichier reste compté comme un vrai changement — l'inverse transformerait chaque échec de
+  // lecture en absolution silencieuse, exactement le faux vert que ce dépôt traque partout.
+  assert.equal(god1014.diffSeulementDesCommentaires('abc1234', 'scripts/x.mjs', { shImpl: () => { throw new Error('git absent'); } }), false,
+    'an unreadable diff must NOT silence the finding: turning every read failure into an absolution is the false green this repo hunts everywhere');
+  assert.equal(god1014.diffSeulementDesCommentaires('abc1234', 'scripts/x.mjs', { shImpl: () => '' }), false,
+    'and an empty diff is a non-measure, not a comment-only change');
+
+  // LES EN-TÊTES DU DIFF NE SONT PAS DU CONTENU : `---` et `+++` commencent par + ou -, et les
+  // compter comme des lignes de code rendrait TOUT diff « non commentaire », donc le filtre inerte.
+  assert.equal(god1014.diffSeulementDesCommentaires('abc1234', 'scripts/x.mjs', { shImpl: shCommentaire }), true,
+    'the --- and +++ headers start with + and - but are not content: counting them would make every diff look like code and leave the filter inert');
+
+  // SUR LE VRAI DÉPÔT (Article 25), dans les DEUX sens — c'est ce qui sépare un filtre qui marche
+  // d'un filtre qui se contente de tout taire, et le premier jet faisait exactement ça.
+  const { execSync: exec1014 } = await import('node:child_process');
+  const vraiSh1014 = (c, o) => exec1014(c, { ...o, encoding: 'utf8' });
+  const shSansDiff1014 = (c, o) => (c.startsWith('git show') ? '' : vraiSh1014(c, o));
+  const avant1014 = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 15, shImpl: shSansDiff1014 }).length;
+  const apres1014 = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 15 }).length;
+  assert.ok(apres1014 < avant1014, `the filter must actually remove something against the real repository (${avant1014} → ${apres1014})`);
+  assert.ok(apres1014 > 0, `and it must NOT remove everything: a filter that silences the whole control is worse than the noise it replaces. The first attempt did exactly that — 20 → 0 — because the git arguments were in the wrong order and git read the commit hash as a pathspec, returning HEAD's diff for every commit (got ${apres1014})`);
+
+  console.log("Passed: huit fausses dettes documentaires en un seul commit (2026-09-27, tâche #1014). Le détecteur de changement indirect jugeait sur le FICHIER TOUCHÉ, jamais sur ce qui avait changé dedans : la pose des mentions // ICEBERG a ajouté une ligne de COMMENTAIRE en tête de 79 fichiers, et il a annoncé huit dettes de process, les huit fausses — aucun process n'avait bougé. Un garde-fou qui accuse à tort cesse d'être lu (L4), et le coût s'était déjà mesuré ici le 2026-09-26 : à force d'ignorer cette ligne, trois dettes réelles s'étaient cachées derrière. La règle retenue est GÉNÉRALE plutôt que taillée sur le cas du jour (Article 24) : un diff dont toutes les lignes ajoutées et retirées sont des commentaires ou du vide n'a pas modifié le comportement, donc n'a pas pu déplacer une règle. Risque résiduel assumé et écrit : dans ce dépôt le POURQUOI vit à côté du QUOI, donc un commentaire peut porter une règle — mais ce cas-là DOCUMENTE, il ne change pas le process, alors que huit accusations fausses éteignent le contrôle entier. Le premier jet était pire que le défaut : écrit `-- <fichier> <hash>`, git prenait le hash pour un chemin et rendait le diff de HEAD, faisant tomber le détecteur de 20 écarts à ZÉRO. Trouvé par la mesure avant/après, jamais en relisant la ligne — elle a l'air juste. Mesure finale sur le vrai dépôt : 20 → 12, les huit fausses du dernier commit disparaissent, les vraies dettes des commits précédents restent.");
+}
+await testDetteIndirecteIgnoreLesCommentaires();
+
+// LE « PROCESS PRIMITIF » ÉTAIT NOMMÉ PARTOUT ET N'EXISTAIT NULLE PART (2026-09-27, tâche #707).
+// Le mot vivait dans le code de classerIceberg() et dans le message que l'outil imprime quand le
+// groupe OUBLIÉ n'est pas vide — « chacun passe par le process primitif, un par un ». Il n'était
+// écrit dans aucun document et aucune commande ne le portait. Un process nommé dans une consigne
+// mais introuvable est pire qu'un process absent : le lecteur croit qu'il suffit de le suivre
+// (leçon L1 — une règle écrite que rien ne fait respecter).
+async function testProcessPrimitif() {
+  const io707 = await import('../scripts/integration-outil.mjs');
+
+  // LE CAS QUI APPELLE UNE DÉCISION, et c'est le seul : un script convocable que rien ne présente.
+  const oublie = io707.dossierDuPortier('nouveau', { lignesIceberg: [{ slug: 'nouveau', groupe: 'oublie', declare: null, desaccord: false, pourquoi: 'convocable, mais RIEN ne le présente' }] });
+  assert.equal(oublie.decisionDue, true, 'a callable script nobody presents is exactly what the gatekeeper exists for — this is the one case that owes a decision');
+  assert.match(oublie.suite.suite, /DEUX issues/, 'and it must name BOTH exits: promote it, or declare it plumbing. Offering only one would make the gatekeeper a funnel');
+
+  // LE CAS PROCHE QUI NE DOIT RIEN RÉCLAMER : un membre est à sa place. Un portier qui déroule un
+  // dossier pour tout le monde fabrique du travail et cesse d'être lu.
+  const membre = io707.dossierDuPortier('outil', { lignesIceberg: [{ slug: 'outil', groupe: 'membre', declare: 'membre', desaccord: false, pourquoi: 'présenté quelque part' }] });
+  assert.equal(membre.decisionDue, false, 'MUST LET PASS: a member is in its place. A gatekeeper that opens a file for everyone manufactures work and stops being read');
+
+  // LE DÉSACCORD RÉCLAME UNE DÉCISION MÊME HORS DU GROUPE OUBLIÉ : c'est le signal que la seconde
+  // source de l'iceberg existe pour produire (#737), et le taire ici le rendrait invisible pile là
+  // où quelqu'un le cherche.
+  const contradit = io707.dossierDuPortier('bizarre', { lignesIceberg: [{ slug: 'bizarre', groupe: 'infrastructure', declare: 'membre', desaccord: true, pourquoi: 'lancé par la machine' }] });
+  assert.equal(contradit.decisionDue, true, 'a file whose declaration contradicts the measure owes a decision too, whatever its group — that disagreement is the whole point of the second source');
+  assert.ok(io707.formatPortierLines(contradit).some((l) => /DÉSACCORD/.test(l)), 'and the disagreement must be SAID, not merely counted');
+
+  // LES DEUX SOURCES SONT RENDUES SÉPARÉMENT, jamais fondues en un seul verdict : leur écart est
+  // l'information la plus utile que ce portier puisse produire.
+  const lignes = io707.formatPortierLines(membre);
+  assert.ok(lignes.some((l) => /MESURE dérive/.test(l)) && lignes.some((l) => /FICHIER déclare/.test(l)),
+    'the derived group and the declared one are printed side by side: merging them into one verdict would hide the only thing worth reading');
+
+  // UN SLUG INCONNU N'EST JAMAIS UN VERDICT : « absent du classement » et « rien à signaler » se
+  // ressemblent trait pour trait et appellent l'inverse l'un de l'autre (leçon L11).
+  const inconnu = io707.dossierDuPortier('nexistepas', { lignesIceberg: [] });
+  assert.equal(inconnu.mesurable, false, 'an unknown slug is a NON-MEASURE, never a clean bill: "absent from the classification" and "nothing to report" look identical and mean the opposite');
+  assert.ok(io707.formatPortierLines(inconnu)[0].includes('PAS MESURÉ'), 'and it says so in the first line, where a reader in a hurry will see it');
+
+  // LES QUATRE GROUPES ONT TOUS UNE SUITE : un groupe sans suite serait une impasse, et la
+  // plomberie en particulier a droit à une organisation A MINIMA — jamais une zone de non-droit.
+  const { GROUPES_ICEBERG: groupes707 } = await import('../scripts/cassandra-rh.mjs');
+  for (const g of Object.keys(groupes707)) {
+    assert.ok(io707.SUITES_DU_PORTIER[g], `every iceberg group must have a documented follow-up, including ${g} — a group with no exit is a dead end, and plumbing especially is organised a minima rather than left as a lawless zone`);
+  }
+
+  console.log("Passed: le « process primitif » était nommé partout et n'existait nulle part (2026-09-27, tâche #707). Le mot vivait dans le code de classerIceberg() et dans le message imprimé quand le groupe OUBLIÉ n'est pas vide — « chacun passe par le process primitif, un par un » — sans être écrit dans aucun document ni porté par aucune commande. Un process nommé dans une consigne mais introuvable est pire qu'un process absent : le lecteur croit qu'il suffit de le suivre (L1). Il est désormais une extension d'integration-outil plutôt qu'un script de plus (Article 31), et il passe AVANT elle : il ne pose qu'une question, « ce fichier mérite-t-il d'être visible ? », là où l'intégration répond à « que faut-il écrire pour qu'il entre ? ». Les deux ne font pas doublon — le portier DÉCIDE, l'intégration EXÉCUTE. Et il n'décide pas vraiment : il INSTRUIT, parce que la promotion d'un script en membre appartient à l'utilisateur, un par un, jamais un reclassement en masse (#737). Une décision n'est due que dans deux cas — le groupe OUBLIÉ, et un désaccord entre ce qu'un fichier déclare et ce que la mesure dérive — sans quoi un portier qui ouvre un dossier pour les 81 scripts fabriquerait du travail et cesserait d'être lu. Lancé pour de vrai : 81 scripts, zéro dossier en attente, et ce vert-là est expliqué plutôt que servi tel quel.");
+}
+await testProcessPrimitif();
+
+// LA CONVOCATION POSAIT UNE QUESTION QUE RIEN N'OBLIGEAIT À REFERMER (2026-09-27, tâche #709). Sa
+// correction, littérale : « production d'une decision + tache si besoin ». Elle produisait un
+// compte rendu et s'arrêtait là — le défaut exact des 35 constats sans suite (#699) et le trou que
+// l'Article 28 nomme. Une question qu'on peut ignorer indéfiniment sans que rien ne le signale.
+async function testConvocationProduitUneDecision() {
+  const crh709 = await import('../scripts/cassandra-rh.mjs');
+
+  // TROIS DÉCISIONS, JAMAIS DEUX NI QUATRE. Deux (garder/retirer) forcerait la main sur un outil
+  // qu'on n'a pas eu le temps de juger et produirait des « garder » par défaut qui ne décident
+  // rien ; une quatrième (« à voir ») rouvrirait la porte que le sursis vient de fermer.
+  assert.deepEqual(Object.keys(crh709.DECISIONS_DE_CONVOCATION), ['corrige', 'sursis', 'retire'],
+    'exactly three outcomes: two would manufacture default "keep" decisions, a fourth would reopen the door the reprieve just closed');
+  assert.equal(crh709.DECISIONS_DE_CONVOCATION.sursis.echeance, true,
+    'and only the reprieve carries a deadline — without one, a reprieve is an abandonment wearing the clothes of a decision');
+
+  const reg = [
+    '| Date | Convoqué | Sujet | Motif | Question | Clôture |',
+    "| 2026-09-01 | OUTIL | `echu` | stagne | q | SURSIS jusqu'au 2026-09-10 — on verra |",
+    "| 2026-09-01 | OUTIL | `deux-fois` | stagne | q | SURSIS jusqu'au 2026-09-05 — puis SURSIS jusqu'au 2026-09-12 |",
+    "| 2026-09-01 | OUTIL | `en-cours` | stagne | q | SURSIS jusqu'au 2026-12-31 — il court encore |",
+    '| 2026-09-01 | OUTIL | `clos` | stagne | q | CORRIGÉ le 2026-09-02, accord utilisateur |',
+  ].join('\n');
+  const r = crh709.reconvocationsDues(reg, { aujourdhui: '2026-09-27' });
+
+  // CE QU'IL DOIT ATTRAPER : un sursis dont la date est passée sans que rien ne bouge.
+  assert.equal(r.dues.length, 2, 'an expired reprieve must come back: that is the whole mechanism');
+  assert.ok(r.dues.some((d) => d.sujet.includes('echu') && d.cran === 1), 'a first expired reprieve comes back at level 1');
+
+  // LE CRAN SE LIT SUR LE REGISTRE, jamais tenu dans une variable ailleurs : le registre est la
+  // seule mémoire du dispositif, et un compteur qui vit à côté finit par diverger de lui.
+  const deuxFois = r.dues.find((d) => d.sujet.includes('deux-fois'));
+  assert.equal(deuxFois.cran, 2, 'a line reprieved twice comes back one level higher — the question stops being the tool and becomes the decision nobody takes');
+  assert.equal(deuxFois.echeance, '2026-09-12',
+    'and the deadline named is the LAST one, never the first: naming the older date would announce a longer delay than the real one, which gets argued about instead of treated');
+
+  // LES CAS PROCHES QUI DOIVENT PASSER, et ils comptent autant : un sursis qui COURT ENCORE n'est
+  // pas un sursis manqué, et une ligne close n'a plus rien à dire.
+  assert.ok(!r.dues.some((d) => d.sujet.includes('en-cours')), 'MUST LET PASS a reprieve still running: reporting it would make the alert cry every day and stop being read');
+  assert.ok(!r.dues.some((d) => d.sujet.includes('clos')), 'MUST LET PASS a closed line: it carries no deadline at all');
+
+  // SANS DATE DU JOUR, IL REFUSE DE CONCLURE. Une fraîcheur calculée sur une heure devinée est
+  // fausse sans qu'on puisse le voir, et un âge faux se lit comme « tout va bien » (Article 32).
+  const sansDate = crh709.reconvocationsDues(reg);
+  assert.equal(sansDate.mesurable, false, 'no date means NO VERDICT: a deadline compares to a date that was READ, never to one that was guessed');
+  assert.ok(crh709.formatReconvocationsLines(sansDate)[0].includes('PAS MESURÉ'), 'and it says so rather than printing a reassuring empty list');
+
+  // ET LE VERT EST EXPLIQUÉ, jamais servi nu : « aucun sursis échu » doit dire les DEUX raisons
+  // possibles, sinon il se lit comme « tout est traité » alors qu'il peut vouloir dire « il n'y a
+  // rien à traiter » (leçon L11).
+  const vide = crh709.reconvocationsDues('| Date | Convoqué |', { aujourdhui: '2026-09-27' });
+  assert.match(vide.pourquoi, /soit il n'y en a pas, soit ils courent encore/, 'an empty result must name both readings — "nothing overdue" and "nothing at all" are not the same news');
+
+  console.log("Passed: la convocation posait une question que rien n'obligeait à refermer (2026-09-27, tâche #709). Sa correction était littérale — « production d'une decision + tache si besoin » — et le défaut exact des 35 constats sans suite : un compte rendu qui s'arrête au constat. Trois décisions désormais, jamais deux ni quatre : CORRIGÉ, SURSIS, RETIRÉ. Deux auraient forcé la main sur un outil qu'on n'a pas eu le temps de juger et produit des « garder » par défaut qui ne décident rien ; une quatrième (« à voir ») rouvrirait la porte que le sursis ferme. Le sursis est la clé du dispositif : il autorise à ne pas trancher aujourd'hui À CONDITION de dire quand, et il s'écrit sous une forme que la machine relit — une échéance en prose libre est une échéance que personne ne vérifiera. Passé la date, la ligne revient d'un CRAN plus haut, et le cran se lit sur le registre lui-même plutôt que dans un compteur à côté qui finirait par diverger. Deux précisions payées par la sortie du premier contre-test : l'échéance nommée est la DERNIÈRE et non la première (match() rend la première, ce qui a l'air juste tant qu'il n'y en a qu'une, et annoncerait un retard faux), et un sursis qui court encore n'est jamais un sursis manqué. Sans date du jour, il refuse de conclure (Article 32). La décision reste humaine à chaque cran : ce mécanisme ne retire jamais un outil tout seul — mais accepter qu'un outil finisse par être retiré fait partie du marché, sans quoi ce n'est plus une évaluation, c'est une cérémonie.");
+}
+await testConvocationProduitUneDecision();

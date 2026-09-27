@@ -280,3 +280,60 @@ test qui casserait le jour où une nouvelle apparaît.
 Il cherche des promesses **au futur**, jamais la vérité d'une description **au présent**. Un outil
 qui décrit faussement quelque chose au présent lui échappe entièrement. Ce trou-là n'a pas de
 mécanisme possible — le déclarer EST la protection (Article 27).
+
+## LE PROCESS PRIMITIF — le portier de l'iceberg
+
+*(2026-09-27, tâche #707. Sa demande, dans ses mots : « je veux faire un partage iceberg entre ce
+qui est visible [...] et ce qui est invisible : la tuyauterie, la plomberie [...] un process
+d'integration de la partie visible, process primitif en quelque sorte ».)*
+
+**LE TROU QU'IL FERME, ET IL ÉTAIT DISCRET.** Le mot « process primitif » était écrit dans le code
+de `classerIceberg()` et dans le message que l'outil imprime quand le groupe OUBLIÉ n'est pas vide
+— « chacun passe par le process primitif, un par un ». Il n'existait nulle part : ni document, ni
+commande. **Un process nommé dans une consigne mais introuvable est pire qu'un process absent**,
+parce que le lecteur croit qu'il suffit de le suivre (leçon L1 : une règle écrite que rien ne fait
+respecter).
+
+**POURQUOI « PRIMITIF », et le mot est juste** : il passe AVANT l'intégration et ne pose qu'une
+question — **ce fichier mérite-t-il d'être visible ?** L'intégration, elle, répond à « que faut-il
+écrire pour qu'il entre ? », ce qui n'a de sens qu'une fois la première question tranchée. Les deux
+ne font donc pas doublon : **le portier DÉCIDE, l'intégration EXÉCUTE.** C'est aussi pourquoi il
+vit ici plutôt que dans un script de plus (Article 31 : on étend avant de construire).
+
+**IL N'DÉCIDE PAS VRAIMENT : IL INSTRUIT.** La promotion d'un script en MEMBRE appartient à
+l'utilisateur, explicitement (#737 : « chacun passe par le process primitif, un par un — décision de
+l'utilisateur, jamais un reclassement en masse »). Le portier rassemble les pièces du dossier et dit
+ce qui suivra selon la réponse ; il ne répond pas à sa place. Un portier qui ouvrirait tout seul ne
+serait plus un portier.
+
+```
+node scripts/integration-outil.mjs primitif          # les dossiers qui attendent une décision
+node scripts/integration-outil.mjs primitif <slug>   # le dossier d'un script en particulier
+```
+
+**LES DEUX SOURCES SONT RENDUES SÉPARÉMENT, jamais fondues en un verdict unique** : ce que la mesure
+DÉRIVE du dépôt, et ce que le fichier DÉCLARE en tête. Leur écart est l'information la plus utile
+que ce portier puisse produire — les fondre cacherait la seule chose qui vaille d'être lue.
+
+**UNE DÉCISION N'EST DUE QUE DANS DEUX CAS**, et c'est ce qui l'empêche de devenir une formalité
+qu'on traverse pour tout le monde : le groupe **OUBLIÉ** (convocable, mais rien ne le présente), et
+un **DÉSACCORD** entre la déclaration et la mesure. Partout ailleurs il dit « ce fichier est à sa
+place » et se tait. Un portier qui ouvre un dossier pour les 81 scripts fabrique du travail et cesse
+d'être lu.
+
+**LES QUATRE SUITES, une par groupe, parce qu'un groupe sans suite est une impasse :**
+
+| Groupe | Ce qui suit |
+|---|---|
+| **membre** | rien à décider — vérifier que son kit d'intégration est complet |
+| **oublie** | DEUX issues, jamais une troisième : le PRÉSENTER (il devient membre, l'intégration s'applique) ou le DÉCLARER plomberie en tête de fichier (il cesse d'être un oubli, il devient un choix) |
+| **plomberie** | organisation A MINIMA, jamais rien : une ligne qui dit ce qu'il fait et qui l'utilise. Pas de zone de non-droit |
+| **infrastructure** | même exigence minimale, plus la mention de QUI le lance — un fichier que seule la machine appelle disparaît des radars humains |
+
+**UN SLUG INCONNU N'EST JAMAIS UN VERDICT** : il rend `PAS MESURÉ`, parce que « absent du
+classement » et « rien à signaler » se ressemblent trait pour trait et appellent l'inverse l'un de
+l'autre (leçon L11).
+
+**Premier passage réel, le jour même** : 81 scripts, **zéro dossier en attente** — le groupe OUBLIÉ
+est vide et aucune déclaration ne contredit la mesure. Ce vert est expliqué plutôt que servi tel
+quel : ce n'est pas « rien à faire », c'est « rien qui appelle une décision ».

@@ -30,8 +30,8 @@ import { PROCESSES } from "./god-of-all-process.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, sansAccents, AGENT_CATEGORIES } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
-import { EXIGENCES_PAR_CLASSE, classesDuScript, typeDeScript } from "./cassandra-rh.mjs";
+import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction } from "./report-template.mjs";
+import { EXIGENCES_PAR_CLASSE, classesDuScript, typeDeScript, classerIceberg, lanceParLaMachine } from "./cassandra-rh.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -715,6 +715,100 @@ export function findModulesNonCitesParLeurProcess({ root = ROOT, readFileImpl = 
   return hits;
 }
 
+// ============================================================================================
+// LE PROCESS PRIMITIF — le portier de l'iceberg (2026-09-27, tâche #707)
+// ============================================================================================
+//
+// SA DEMANDE, DANS SES MOTS : « je veux faire un partage iceberg entre ce qui est visible [...] et
+// ce qui est invisible : la tuyauterie, la plomberie [...] un process d'integration de la partie
+// visible, process primitif en quelque sorte ».
+//
+// POURQUOI IL EST « PRIMITIF », ET LE MOT EST JUSTE : il passe AVANT le process d'intégration, et
+// il ne pose qu'une question — **ce fichier mérite-t-il d'être visible ?** L'intégration, elle,
+// répond à « que faut-il écrire pour qu'il entre ? », ce qui n'a de sens qu'une fois la première
+// question tranchée. Les deux ne font donc pas doublon : le portier DÉCIDE, l'intégration EXÉCUTE.
+//
+// LE TROU QU'IL FERME, ET IL ÉTAIT DISCRET : le mot « process primitif » était écrit dans le code
+// de `classerIceberg()` et dans le message que l'outil imprime quand le groupe OUBLIÉ n'est pas
+// vide — « chacun passe par le process primitif, un par un ». Sauf qu'il n'existait nulle part.
+// Un process nommé dans une consigne mais introuvable est pire qu'un process absent : le lecteur
+// croit qu'il suffit de le suivre (leçon L1 — une règle écrite que rien ne fait respecter).
+//
+// IL DÉCIDE ? NON : IL INSTRUIT, ET C'EST DÉLIBÉRÉ. La décision de promouvoir un script en MEMBRE
+// appartient à l'utilisateur, explicitement (#737 : « chacun passe par le process primitif, un par
+// un — décision de l'utilisateur, jamais un reclassement en masse »). Ce portier rassemble donc les
+// pièces du dossier et dit ce qui suivra selon la réponse ; il ne répond pas à sa place. Un portier
+// qui ouvrirait tout seul ne serait plus un portier.
+export const SUITES_DU_PORTIER = {
+  membre: {
+    quoi: "il est déjà visible : convocable, et quelque chose le présente",
+    suite: "rien à décider — vérifier plutôt que son kit d'intégration est complet",
+    commande: (slug) => `node scripts/integration-outil.mjs ${slug}`,
+  },
+  oublie: {
+    quoi: "convocable, mais RIEN ne le présente — c'est le seul groupe qui appelle une décision",
+    suite: "DEUX issues, jamais une troisième : le PRÉSENTER (il devient membre, et le process d'intégration s'applique) ou le DÉCLARER plomberie en tête de fichier (il cesse d'être un oubli, il devient un choix)",
+    commande: (slug) => `node scripts/integration-outil.mjs ${slug}   # s'il est promu
+         // ICEBERG: plomberie  en tête de scripts/${slug}.mjs   # s'il ne l'est pas`,
+  },
+  plomberie: {
+    quoi: "appelé par d'autres outils, jamais convoqué — il n'a pas à être présenté",
+    suite: "organisation A MINIMA, jamais rien : une ligne qui dit ce qu'il fait et qui l'utilise. Pas de zone de non-droit",
+    commande: (slug) => `garder son commentaire de tête à jour dans scripts/${slug}.mjs`,
+  },
+  infrastructure: {
+    quoi: "lancé par la machine (package.json, crochet git), jamais par l'utilisateur",
+    suite: "même exigence minimale que la plomberie, plus la mention de QUI le lance — un fichier que seule la machine appelle disparaît des radars humains",
+    commande: (slug) => `garder son commentaire de tête à jour dans scripts/${slug}.mjs`,
+  },
+};
+
+// Rassemble le dossier d'un arrivant : son groupe dérivé, ce qu'il déclare, et ce qui suit.
+// Les deux sources sont rendues SÉPARÉMENT et jamais fondues : leur désaccord est l'information la
+// plus utile que ce portier puisse produire (cf. l'axe J de docs/referentiel/organisation-agence.md).
+export function dossierDuPortier(slug, { lignesIceberg = [], suites = SUITES_DU_PORTIER } = {}) {
+  const ligne = lignesIceberg.find((l) => l.slug === slug);
+  if (!ligne) {
+    return { mesurable: false, slug, pourquoi: `« ${slug} » n'apparaît pas dans le classement iceberg — soit le fichier n'existe pas, soit le classement n'a pas pu être produit, et les deux appellent l'inverse l'un de l'autre` };
+  }
+  const suite = suites[ligne.groupe] ?? null;
+  return {
+    mesurable: true, slug,
+    derive: ligne.groupe,
+    declare: ligne.declare ?? null,
+    desaccord: Boolean(ligne.desaccord),
+    pourquoiDerive: ligne.pourquoi,
+    suite,
+    // UNE DÉCISION N'EST DUE QUE DANS UN CAS, et le dire évite de transformer ce portier en
+    // formalité qu'on traverse pour tout le monde (ce qui le ferait cesser d'être lu).
+    decisionDue: ligne.groupe === "oublie" || Boolean(ligne.desaccord),
+  };
+}
+
+export function formatPortierLines(d) {
+  if (!d?.mesurable) return [`❓ PAS MESURÉ — ${d?.pourquoi ?? "raison inconnue"}`];
+  const out = [`PROCESS PRIMITIF — ${d.slug}`, ""];
+  out.push(`  Ce que la MESURE dérive : ${d.derive.toUpperCase()} — ${d.pourquoiDerive}`);
+  out.push(`  Ce que le FICHIER déclare : ${d.declare ? d.declare.toUpperCase() : "rien (aucune mention // ICEBERG: en tête)"}`);
+  if (d.desaccord) {
+    out.push("");
+    out.push("  ⚠️ DÉSACCORD — les deux sources ne disent pas la même chose, et c'est exactement ce que");
+    out.push("     ce dispositif existe pour montrer. Quelque chose a bougé sans que la déclaration suive,");
+    out.push("     ou la déclaration affirme un fait que la mesure contredit. À instruire avant tout le reste.");
+  }
+  out.push("");
+  if (d.suite) {
+    out.push(`  Situation : ${d.suite.quoi}`);
+    out.push(`  Ce qui suit : ${d.suite.suite}`);
+    out.push(`     ${d.suite.commande(d.slug)}`);
+  }
+  out.push("");
+  out.push(d.decisionDue
+    ? "  ⇒ UNE DÉCISION EST DUE, et elle appartient à l'utilisateur, jamais à l'agent (#737)."
+    : "  ⇒ Aucune décision due : ce fichier est à sa place. Le portier ne fabrique pas de travail.");
+  return out;
+}
+
 async function main() {
   // Cadre commun (pure-gold-unity, Ronde du 2026-09-22) : l'avertissement de fiabilité, le titre et
   // l'horodatage passent par printReportHeader() plutôt que d'être réécrits ici. Un rapport qui
@@ -722,6 +816,62 @@ async function main() {
   // décide — trouvé sur ce fichier le soir même de sa construction, par la Ronde.
   printReportHeader({ tool: "integration-outil", title: "INTEGRATION-OUTIL — faire entrer un outil dans l'Agence Codex", scriptPath: "scripts/integration-outil.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const slug = process.argv[2];
+
+  // LE PORTIER, EN PREMIER (2026-09-27, tâche #707) — parce qu'il passe AVANT l'intégration, et
+  // qu'une branche placée après aurait suggéré l'inverse. Le classement se LIT chez son porteur
+  // (`classerIceberg()`), jamais recalculé ici : deux comptages du même axe finissent par diverger.
+  if (slug === "primitif") {
+    const cible = process.argv[3];
+    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
+    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
+    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
+      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
+    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+    const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    if (!cible) {
+      // SANS CIBLE, IL REND CE QUI ATTEND VRAIMENT UNE DÉCISION — jamais les 81 lignes du parc :
+      // un portier qui déroule tout le monde à chaque passage cesse d'être lu, et le groupe qu'il
+      // garde est justement celui qui doit rester court.
+      const aTrancher = lignes.filter((l) => l.groupe === "oublie" || l.desaccord);
+      console.log("PROCESS PRIMITIF — le portier de l'iceberg\n");
+      console.log("Il ne pose qu'une question : ce fichier mérite-t-il d'être VISIBLE ? L'intégration vient après,");
+      console.log("et seulement si la réponse est oui. Le portier instruit, il ne décide pas : la promotion d'un");
+      console.log("script en membre appartient à l'utilisateur, un par un, jamais un reclassement en masse.\n");
+      if (!aTrancher.length) {
+        console.log(`✅ Aucun dossier en attente sur ${lignes.length} script(s) : le groupe OUBLIÉ est vide et aucune déclaration ne contredit la mesure.`);
+        console.log("   Ce n'est pas « rien à faire », c'est « rien qui appelle une décision » — et le groupe OUBLIÉ");
+        console.log("   est temporaire par construction : un groupe qui ne se vide jamais est un aveu, pas une catégorie.");
+      } else {
+        console.log(`${aTrancher.length} dossier(s) en attente de décision :\n`);
+        for (const l of aTrancher) for (const x of formatPortierLines(dossierDuPortier(l.slug, { lignesIceberg: lignes }))) console.log(`  ${x}`);
+      }
+      console.log("\nUsage : node scripts/integration-outil.mjs primitif <slug>   (le dossier d'UN script en particulier)");
+      // LE PLAN D'ACTION, MÊME VIDE (Article 28, et le filet l'a exigé dès le premier commit) : un
+      // portier qui émet des dossiers sans dire ce qu'ils deviennent s'arrête au constat, ce que
+      // cette Agence refuse partout ailleurs. La section s'imprime même sans constat, parce que
+      // « rien à traiter » et « le plan n'a pas été produit » se confondraient sinon.
+      imprimerPlanDaction(planDactionDepuisEcarts(
+        aTrancher.map((l) => ({ quoi: `« ${l.slug} » attend une décision (${l.desaccord ? "désaccord entre sa déclaration et la mesure" : "groupe OUBLIÉ"})`,
+          quoiFaire: l.desaccord
+            ? `instruire le désaccord : la mesure dit « ${l.groupe} », le fichier déclare « ${l.declare} ». L'un des deux a cessé d'être vrai, et c'est ce que la seconde source existe pour montrer`
+            : `porter la question à l'utilisateur, un par un (#737) : le PRÉSENTER pour qu'il devienne membre, ou le DÉCLARER plomberie en tête de fichier` })),
+        { toolSlug: "integration-outil", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire },
+      ));
+      recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+      return;
+    }
+    const dossier = dossierDuPortier(cible, { lignesIceberg: lignes });
+    for (const x of formatPortierLines(dossier)) console.log(x);
+    imprimerPlanDaction(planDactionDepuisEcarts(
+      dossier.mesurable && dossier.decisionDue
+        ? [{ quoi: `« ${cible} » attend une décision (${dossier.desaccord ? "désaccord déclaration/mesure" : "groupe OUBLIÉ"})`, quoiFaire: dossier.suite?.suite ?? "porter la question à l'utilisateur" }]
+        : !dossier.mesurable ? [{ quoi: `« ${cible} » est absent du classement`, quoiFaire: dossier.pourquoi }] : [],
+      { toolSlug: "integration-outil", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire },
+    ));
+    recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return;
+  }
   // L'ANGLE MORT, IMPRIMÉ À CHAQUE PASSAGE (2026-09-26, #915) : il ne coûte rien, il lit 80 fichiers
   // en quelques millisecondes, et un détecteur qu'il faut penser à lancer n'est lu par personne (L2).
   const promesses = findPromessesPerimees({ ageDepuis: new Date().toISOString().slice(0, 10) });
