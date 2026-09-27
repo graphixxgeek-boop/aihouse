@@ -30,7 +30,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, dateEnToutesLettres } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction, PLAN_ACTION_TITRE, dateEnToutesLettres } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -121,6 +121,80 @@ export function parseStandards(markdown = "") {
     });
   });
   return exigences;
+}
+
+// LA CONFRONTATION AVEC UN CADRE EXTÉRIEUR (2026-09-27, tâche #1003). Sa question du 2026-09-27 :
+// « quel outil pourrait accompagner le passage des 15 tests, comment on peut organiser tout ça
+// efficacement ». Les quinze en question sont les règles de gouvernance G1-G15 de son dossier de
+// conception, enregistré dans `docs/gouvernance-agence-virtuelle-cadre-cible.md`.
+//
+// POURQUOI UN OUTIL PLUTÔT QU'UNE LECTURE. Confronter quinze règles à vingt-neuf exigences à l'œil
+// donne un avis ; le refaire dans un mois donne un autre avis, et rien ne dit lequel a changé — la
+// liste ou le jugement. Le rapprochement se MESURE donc, et la mesure se rejoue.
+//
+// CE QU'IL SAIT ET CE QU'IL NE SAIT PAS, dit avant les chiffres : il rapproche par VOCABULAIRE
+// PARTAGÉ, jamais par compréhension. Il rend donc un CANDIDAT de correspondance, à confirmer par un
+// humain — deux règles peuvent parler des mêmes mots sans dire la même chose, et l'inverse aussi.
+// C'est un point de départ pour la lecture, jamais un verdict de couverture.
+export const MOTIF_REGLE_EXTERNE = /^\|\s*(G\d{1,2})\s*[—-]\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|/gm;
+export const MOTS_VIDES_CONFRONTATION = new Set(["chaque", "toute", "tout", "aucun", "aucune", "dans", "avec", "pour", "leur", "leurs", "sont", "est", "une", "des", "les", "que", "qui", "par", "sur", "son", "sa", "ses", "aux", "aupres", "plus", "sans", "elle", "cette", "avant", "apres", "doit", "peut", "fait", "pas"]);
+
+function motsUtiles(texte = "") {
+  return new Set(String(texte).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .split(/[^a-z0-9]+/).filter((m) => m.length >= 4 && !MOTS_VIDES_CONFRONTATION.has(m)));
+}
+
+export function confronterCadreExterne(texteCadre = "", exigences = [], { seuil = 2 } = {}) {
+  const regles = [...String(texteCadre).matchAll(MOTIF_REGLE_EXTERNE)]
+    .map((m) => ({ id: m[1], titre: m[2].trim(), enonce: m[3].trim() }));
+  if (!regles.length) {
+    return { mesurable: false, pourquoi: "aucune règle Gn trouvée dans le cadre fourni — soit le document a changé de forme, soit il n'a pas été lu, et les deux appellent l'inverse d'un feu vert (leçon L11)" };
+  }
+  if (!exigences.length) {
+    return { mesurable: false, pourquoi: "aucune exigence déclarée à confronter — un rapprochement contre une liste vide rendrait « rien n'est couvert », ce qui n'est pas une mesure mais une absence de mesure" };
+  }
+  const lignes = regles.map((r) => {
+    const motsRegle = motsUtiles(`${r.titre} ${r.enonce}`);
+    const candidats = exigences.map((e) => {
+      const partages = [...motsUtiles(`${e.exigence} ${e.verificateur}`)].filter((m) => motsRegle.has(m));
+      return { id: e.id, exigence: e.exigence, etat: e.etat, partages };
+    }).filter((c) => c.partages.length >= seuil)
+      .sort((a, b) => b.partages.length - a.partages.length)
+      .slice(0, 3);
+    return { ...r, candidats, couvertureCandidate: candidats.length > 0 };
+  });
+  return {
+    mesurable: true,
+    regles: regles.length,
+    exigences: exigences.length,
+    lignes,
+    sansCandidat: lignes.filter((l) => !l.couvertureCandidate).map((l) => l.id),
+  };
+}
+
+export function formatConfrontationLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi ?? "raison inconnue"}`];
+  const out = [
+    `CONFRONTATION — ${r.regles} règle(s) du cadre extérieur contre ${r.exigences} exigence(s) déclarées.`,
+    "",
+    "⚠️  Le rapprochement se fait par VOCABULAIRE PARTAGÉ, jamais par compréhension : chaque ligne",
+    "    ci-dessous est un CANDIDAT à confirmer, jamais une couverture prouvée. Deux règles peuvent",
+    "    partager des mots sans dire la même chose — et dire la même chose sans partager un mot.",
+    "",
+  ];
+  for (const l of r.lignes) {
+    out.push(`${l.id} — ${l.titre}`);
+    if (!l.candidats.length) {
+      out.push("   ⚠️ AUCUNE exigence déclarée ne lui ressemble : soit la règle n'est pas pratiquée ici, soit elle l'est sans être déclarée. Les deux appellent une décision, jamais la même.");
+    } else {
+      for (const c of l.candidats) out.push(`   · candidat ${c.id} [${c.etat}] — ${c.exigence.slice(0, 90)}${c.exigence.length > 90 ? "…" : ""}`);
+    }
+  }
+  out.push("");
+  out.push(r.sansCandidat.length
+    ? `${r.sansCandidat.length} règle(s) sans aucun candidat : ${r.sansCandidat.join(", ")}.`
+    : "Chaque règle du cadre a au moins un candidat — ce qui ne dit PAS qu'elle est couverte, seulement qu'il y a quelque chose à lire.");
+  return out;
 }
 
 export function loadStandards({ root = ROOT, readFileImpl = readFileSync } = {}) {
@@ -300,6 +374,27 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   recordCliUsage("the-equalizer");
   printReportHeader({ tool: "THE-EQUALIZER", title: "Tout est-il à niveau ?", subtitle: "un verdict par domaine, et ce que personne ne vérifie", scriptPath: "scripts/the-equalizer.mjs" });
   printReliabilityNotice("the-equalizer");
+
+  // LA CONFRONTATION AVEC UN CADRE EXTÉRIEUR, sur demande (2026-09-27, tâche #1003). Sous-commande
+  // à part et jamais dans le passage ordinaire : elle répond à une question ponctuelle (« nos
+  // exigences couvrent-elles ce cadre-là ? »), et l'imprimer à chaque Ronde noierait le verdict
+  // quotidien sous quinze lignes qui ne bougent qu'au rythme d'un document extérieur.
+  if (process.argv[2] === "confronter") {
+    const cadre = process.argv[3] ?? "docs/gouvernance-agence-virtuelle-cadre-cible.md";
+    let texte = "";
+    try { texte = readFileSync(join(ROOT, cadre), "utf8"); }
+    catch { console.log(`❓ PAS MESURÉ — « ${cadre} » est illisible : on ne confronte rien à un document qu'on n'a pas pu ouvrir, et rendre « aucun écart » sur zéro lecture serait le pire des verts.`); process.exit(0); }
+    const conf = confronterCadreExterne(texte, loadStandards());
+    for (const l of formatConfrontationLines(conf)) console.log(l);
+    imprimerPlanDaction(planDactionDepuisEcarts(
+      (conf.sansCandidat ?? []).map((id) => ({
+        quoi: `${id} — règle du cadre extérieur sans aucune exigence déclarée qui lui ressemble`,
+        quoiFaire: "lire la règle et trancher : soit elle est déjà PRATIQUÉE ici sans être déclarée (et il faut l'inscrire dans docs/referentiel/standards.md avec son vérificateur), soit elle ne l'est pas (et c'est une décision, jamais un oubli à combler en silence)",
+      })),
+      { toolSlug: "the-equalizer", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire },
+    ));
+    process.exit(0);
+  }
 
   const exigences = loadStandards();
   const fantomes = findVerificateursFantomes(exigences, exportsDuDepot());

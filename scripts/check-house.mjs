@@ -16309,3 +16309,54 @@ async function testCheminRetireDeclare() {
   console.log("Passed: un fichier retiré laissait vingt-et-un renvois qui ressemblaient à des liens morts (2026-09-27, tâche #1000). lib/reference.ts, le référentiel affiché en jeu, a quitté le produit sur décision de l'utilisateur, son texte archivé verbatim — et les documents qui le citent ne se valaient pas. Deux vrais liens morts corrigés : une ÉTAPE DE PROCESS qui ordonnait d'y écrire une nouvelle entrée (le pire des cas — elle n'informe pas du passé, elle commande une action impossible) et une liste de couches à mettre à jour qui le comptait encore. Les renvois NARRATIFS restent tels quels : effacer le pourquoi d'un correctif parce que le fichier a bougé est exactement ce que les Articles 19 et 27 interdisent. En chemin, une leçon payée comptant : déclarer l'absence DANS LES MOTS DE LA CHARTE a fait MONTER le compte de 14 à 19, parce que le garde-fou proposait « corriger le renvoi ou déclarer l'absence » sans reconnaître le vocabulaire du retrait — une issue qu'un outil propose et n'accepte pas est pire que pas d'issue. Le vocabulaire est élargi, et surtout le fait est déclaré UNE FOIS pour tout le dépôt plutôt que treize fois ligne à ligne : treize répétitions du même fait sont la liste recopiée à la main que l'Article 24 interdit. La déclaration reste vérifiable, jamais une dispense — si l'archive disparaît à son tour, les treize renvois redeviennent morts, et ce contre-test le prouve. Mesure : 19 → 0, avec 21 absences déclarées.");
 }
 await testCheminRetireDeclare();
+
+// L'OUTIL QUI ACCOMPAGNE SES QUINZE TESTS (2026-09-27, tâche #1003). Sa question du jour : « quel
+// outil pourrait accompagner le passage des 15 tests, comment on peut organiser tout ça
+// efficacement ». Les quinze sont les règles de gouvernance G1-G15 de son dossier de conception.
+// Confronter quinze règles à vingt-neuf exigences à l'œil donne un AVIS ; le refaire dans un mois
+// donne un autre avis, et rien ne dit lequel a changé — la liste ou le jugement.
+async function testConfrontationCadreExterne() {
+  const eq1003 = await import('../scripts/the-equalizer.mjs');
+
+  const cadre = [
+    '| G1 — Identité unique | Chaque agent possède un identifiant et une version. |',
+    '| G13 — Non-régression | Les tests de référence sont exécutés avant promotion. |',
+  ].join('\n');
+
+  // CE QU'IL DOIT RAPPROCHER : une exigence qui partage assez de vocabulaire pour valoir la lecture.
+  const avecCandidat = eq1003.confronterCadreExterne(cadre, [
+    { id: 'T1', exigence: 'Les tests de référence sont exécutés avant toute promotion', verificateur: 'check-house', etat: 'mecanique' },
+  ]);
+  assert.equal(avecCandidat.mesurable, true, 'a readable frame and a non-empty standards list must yield a measurable confrontation');
+  const g13 = avecCandidat.lignes.find((l) => l.id === 'G13');
+  assert.ok(g13.candidats.length >= 1, 'a requirement sharing real vocabulary with the rule must come up as a candidate to read');
+
+  // ET CE QU'IL DOIT LAISSER SANS CANDIDAT plutôt que de rapprocher au jugé : une règle dont aucune
+  // exigence ne partage le vocabulaire. « Aucun candidat » est une information, pas un échec.
+  assert.ok(avecCandidat.sansCandidat.includes('G1'), 'a rule nothing resembles must be reported as such: inventing a match would be worse than admitting none');
+
+  // LA LIMITE EST DITE DANS LA SORTIE, jamais seulement dans un commentaire : le rapprochement se
+  // fait par MOTS PARTAGÉS, jamais par compréhension. Deux règles peuvent partager des mots sans
+  // dire la même chose, et dire la même chose sans partager un mot.
+  assert.ok(eq1003.formatConfrontationLines(avecCandidat).some((l) => /VOCABULAIRE PARTAGÉ/.test(l)),
+    'the weakness of the matcher must be printed with the result: a candidate presented as a verdict would be read as coverage');
+  assert.ok(eq1003.formatConfrontationLines(avecCandidat).some((l) => /CANDIDAT/.test(l)),
+    'and the word CANDIDAT must appear, because that is exactly what these lines are');
+
+  // DEUX REFUS, chacun contre un faux vert (leçon L11) : un cadre illisible et une liste
+  // d'exigences vide rendent tous deux « aucun écart » si on ne les sépare pas de la mesure.
+  assert.equal(eq1003.confronterCadreExterne('du texte sans aucune règle Gn', [{ id: 'T1' }]).mesurable, false,
+    'a frame with no Gn rule is a NON-MEASURE: "nothing to confront" and "nothing diverges" render identically otherwise');
+  assert.equal(eq1003.confronterCadreExterne(cadre, []).mesurable, false,
+    'and confronting against an empty standards list would report "nothing is covered", which is an absence of measure rather than a measure');
+
+  // SUR LE VRAI DÉPÔT (Article 25) : c'est la réponse à la tâche, et elle est inconfortable.
+  const { readFileSync: lire1003 } = await import('node:fs');
+  const reel = eq1003.confronterCadreExterne(lire1003('docs/gouvernance-agence-virtuelle-cadre-cible.md', 'utf8'), eq1003.loadStandards());
+  assert.equal(reel.mesurable, true, 'the confrontation must actually run against his registered framework and the real standards');
+  assert.equal(reel.regles, 15, 'his framework carries exactly fifteen governance rules, G1 to G15');
+  assert.ok(reel.sansCandidat.length >= 10, `and most of them have no lexical counterpart among the declared requirements (got ${reel.sansCandidat.length}) — which is the finding, not a failure of the tool`);
+
+  console.log("Passed: l'outil qui accompagne ses quinze tests (2026-09-27, tâche #1003). Sa question était « quel outil pourrait accompagner le passage des 15 tests » — les règles de gouvernance G1-G15 de son dossier de conception. Confronter quinze règles à vingt-neuf exigences à l'œil donne un avis ; le refaire dans un mois donne un autre avis, et rien ne dit lequel a changé, la liste ou le jugement. THE-EQUALIZER le mesure donc, et la mesure se rejoue. RÉSULTAT RÉEL, et il est inconfortable : 14 des 15 règles n'ont AUCUNE exigence déclarée qui leur ressemble. CE QUE CE CHIFFRE NE DIT PAS, et l'outil le dit lui-même en tête de sa sortie : « aucun candidat » ne veut pas dire « pas pratiqué ». Plusieurs de ces règles SONT pratiquées ici sans être déclarées — la non-régression est le filet lancé avant chaque commit, l'humain dans la boucle est le périmètre sensible tout entier, les sorties prouvables sont l'horodatage et la version que chaque rapport porte déjà. Elles sont tenues et invisibles à l'inventaire, ce qui est exactement le défaut que ce projet traque ailleurs sous le nom d'axe non déclaré. Le rapprochement se fait par VOCABULAIRE PARTAGÉ, jamais par compréhension, et la sortie l'imprime avec le résultat plutôt que dans un commentaire : deux règles peuvent partager des mots sans dire la même chose, et dire la même chose sans partager un mot. Chaque ligne est donc un CANDIDAT à lire, jamais une couverture prouvée. Deux refus de conclure, chacun contre un faux vert : un cadre illisible et une liste d'exigences vide rendraient tous deux « aucun écart ».");
+}
+await testConfrontationCadreExterne();

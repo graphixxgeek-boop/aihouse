@@ -112,3 +112,38 @@ binaire l'effaçait entièrement.
 
 Même discipline que partout ailleurs dans ce projet : mesuré / pas mesuré / pas mesurable ne se
 confondent jamais.
+
+## LA CONFRONTATION AVEC UN CADRE EXTÉRIEUR
+
+*(2026-09-27, tâche #1003. Sa question : « quel outil pourrait accompagner le passage des 15 tests,
+comment on peut organiser tout ça efficacement » — les quinze règles de gouvernance G1-G15 de son
+dossier de conception, enregistré dans `docs/gouvernance-agence-virtuelle-cadre-cible.md`.)*
+
+```
+node scripts/the-equalizer.mjs confronter [chemin-du-cadre]
+```
+
+**POURQUOI UN OUTIL PLUTÔT QU'UNE LECTURE.** Confronter quinze règles à vingt-neuf exigences à l'œil
+donne un avis ; le refaire dans un mois donne un autre avis, et rien ne dit lequel a changé — la
+liste ou le jugement. Le rapprochement se mesure donc, et la mesure se rejoue.
+
+**CE QU'IL SAIT ET CE QU'IL NE SAIT PAS, et c'est imprimé EN TÊTE de la sortie plutôt que caché dans
+un commentaire** : il rapproche par **vocabulaire partagé**, jamais par compréhension. Deux règles
+peuvent partager des mots sans dire la même chose, et dire la même chose sans partager un mot.
+Chaque ligne est un **CANDIDAT à lire**, jamais une couverture prouvée — un outil qui présenterait
+ça comme un verdict ferait pire que rien.
+
+**« AUCUN CANDIDAT » NE VEUT PAS DIRE « PAS PRATIQUÉ », et c'est la lecture la plus importante.**
+Premier passage réel : **14 des 15 règles n'ont aucune exigence déclarée qui leur ressemble**. Or
+plusieurs sont tenues ici tous les jours — la non-régression EST le filet lancé avant chaque commit,
+l'humain dans la boucle EST le périmètre sensible, les sorties prouvables SONT l'horodatage et la
+version que chaque rapport porte, la revue périodique EST la Ronde. Elles sont **tenues et
+invisibles à l'inventaire**, ce qui est exactement le défaut que ce projet traque ailleurs sous le
+nom d'axe mesuré mais non déclaré.
+
+**CE QUE LE PLAN D'ACTION DEMANDE, règle par règle** : trancher entre « déjà pratiquée, à INSCRIRE
+dans `standards.md` avec son vérificateur » et « pas pratiquée ici, et c'est une décision ». Jamais
+un oubli à combler en silence — déclarer une exigence engage l'Agence à la vérifier.
+
+**Deux refus de conclure**, chacun contre un faux vert : un cadre illisible et une liste d'exigences
+vide rendraient tous deux « aucun écart ».
