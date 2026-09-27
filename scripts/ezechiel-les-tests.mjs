@@ -1272,8 +1272,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // passage, jamais du code — il ne peut donc pas être cassé par une mutation, et l'ignorer ici
     // ne relâche rien de la protection réelle.
     const TOLERES = ["docs/abraham-les-references/alertes.json", "docs/ezechiel-les-tests/mesures.json", "docs/ezechiel-les-tests/historique.json", "docs/ezechiel-les-tests/robustesse.json"];
-    const sale = execSync("git status --porcelain", { cwd: ROOT }).toString().trim()
-      .split("\n").filter((l) => l.trim() && !TOLERES.includes(l.slice(3).trim())).join("\n");
+    // LE CHEMIN SE LIT APRÈS LE CODE D'ÉTAT, jamais à une position fixe : `.trim()` sur la sortie
+    // entière mange l'espace de tête de la PREMIÈRE ligne, si bien que `slice(3)` y rendait
+    // « cs/abraham-… ». La tolérance ne s'appliquait donc qu'à partir de la deuxième ligne — un
+    // décalage d'un caractère, et la passe refusait de partir.
+    const cheminDeLaLigne = (l) => String(l).trim().replace(/^\S+\s+/, "").trim();
+    const sale = execSync("git status --porcelain", { cwd: ROOT }).toString()
+      .split("\n").filter((l) => l.trim() && !TOLERES.includes(cheminDeLaLigne(l))).join("\n");
     if (sale) {
       console.log("🚨 REFUS — le dépôt porte des modifications non commitées :");
       console.log(sale.split("\n").slice(0, 10).map((l) => `   ${l}`).join("\n"));
