@@ -1124,6 +1124,47 @@ tool-usage pour casser un cycle d'import. Deux déménagements, la même ligne c
 panne. C'est ce qui justifie une entrée : une erreur qui se répète le jour même n'est pas une
 étourderie, c'est un réflexe manquant.*
 
+## L37 — Corriger une occurrence ne corrige pas la CLASSE : la même faute revient ailleurs, et le troisième endroit est le pire
+
+Un défaut trouvé et corrigé se referme dans la tête ; il reste ouvert partout où le même
+raisonnement a été écrit. Et l'endroit qui survit le plus longtemps est le plus haut placé — celui
+qui produit le CHIFFRE affiché en tête de rapport, parce que personne ne remonte de la conclusion
+vers son calcul.
+
+**La forme exacte du défaut, ici** : un plan porte le nom de l'OUTIL, jamais celui de son fichier.
+`scripts/check-argus.mjs` a pour plan `docs/argus-blueprint.md`, et Smart Breaker garde même
+`docs/outil-resilience-api.md`, son nom d'avant le surnom. Toute fonction qui DÉRIVE le nom du plan
+du nom du script accuse donc des outils parfaitement documentés.
+
+**TROIS FOIS DANS LE MÊME DÉPÔT**, et l'écart entre les deux dernières se compte en heures :
+
+| | Où | Ce que ça coûtait |
+|---|---|---|
+| 1 | LE-CLASSIFICATEUR | « SANS FICHE » sur 22 outils d'un coup, tous à tort |
+| 2 | `findOutilsSansBlueprint()` (SAFE-EXPORT) | les mêmes accusés, le matin du 2026-09-27 |
+| 3 | `mesurerLExportabilite()` (SAFE-EXPORT) | 6 outils « sans plan » — **et le taux d'exportabilité affiché en tête de rapport était faux d'autant** |
+
+Le deuxième et le troisième vivent dans **le même fichier, à cinquante lignes d'écart**. Corriger le
+deuxième n'a pas fait regarder le troisième, parce qu'une fois la correction écrite on passe à la
+suite : la faute est réparée *là où on l'a vue*.
+
+**Le geste** : quand un défaut est corrigé, ne pas demander « où l'ai-je vu ? » mais **« quel
+RAISONNEMENT était faux ? »**, puis chercher ce raisonnement partout, y compris dans le fichier
+qu'on vient de refermer. Ici la question était « qu'est-ce qui, dans ce dépôt, devine un chemin au
+lieu de le lire ? » — et elle a une réponse mécanique (Article 24).
+
+**Terrain** : quand je viens de corriger un défaut et que je m'apprête à passer à la suite · mots : corriger, même défaut, ailleurs, dérive, devine, déduit du nom · fichiers : scripts/*.mjs
+
+**Porté par** : **aucun mécanisme** — rien ne sait reconnaître « le même raisonnement » sous deux
+écritures différentes, et cette impossibilité est déclarée ici plutôt que tue (Article 27). Ce qui
+existe est EN AMONT, et couvre la cause plutôt que la récidive : l'Article 24 interdit de dériver là
+où une source se lit, et `aliasDocumentaires()` est désormais le seul lecteur du lien script → plan
+(L29 : deux lecteurs finiraient par diverger).
+
+*Trouvée le 2026-09-27 sur la tâche #902, en vérifiant une question de l'utilisateur plutôt qu'en
+relisant du code : la couverture blueprint annonçait 77 plans sur 83 dus, et les 6 manquants
+existaient tous. Après correction : 83 sur 83, 100 % aux quatre niveaux de vitalité.*
+
 
 # Bonnes pratiques
 
@@ -1195,3 +1236,62 @@ deux sens, seule la discipline le porte. Déclaré plutôt que tu.
 registre. C'était juste — vérifié ensuite sur des doublons fabriqués, qu'il a bien attrapés, et sur
 deux entrées de même terrain mais de sujets différents, qu'il a bien laissées tranquilles. Sans ces
 deux épreuves, le zéro n'aurait rien valu.*
+
+## BP5 — Un seuil se DÉRIVE du corpus réel ; s'il ne peut pas l'être, il se DÉCLARE provisoire
+
+Un seuil choisi au jugé a l'air d'un seuil mesuré : les deux s'écrivent avec un chiffre. La
+différence ne se voit jamais dans le code, seulement dans ce qu'on écrit à côté.
+
+**Le geste, en deux temps.** D'abord chercher le corpus qui répond : ici, « à partir de combien de
+demandes un message mérite-t-il le process ? » se lit sur les quatre saisines réellement archivées
+— 8, 4, 11 et 31 points, donc la plus petite qui ait mérité le process en portait quatre, donc le
+seuil est quatre. Ensuite, quand le corpus n'existe pas, **le dire dans la sortie de l'outil** au
+lieu de poser un chiffre qui aura l'air aussi solide que l'autre.
+
+**Le cas qui rend la règle utile est le second**, et il s'est présenté dans la même fonction : le
+seuil en CARACTÈRES ne pouvait pas être dérivé, précisément parce qu'aucune saisine n'avait jamais
+été archivée dans son texte d'origine. Il est donc posé à 1 500 **avec sa nature écrite** — « jamais
+mesurée, à recalibrer sur les trois premières saisines archivées » — et le verdict de l'outil porte
+cette mention à chaque fois qu'il s'appuie dessus.
+
+**Ce que ça évite** : une estimation qui se fait passer pour une mesure est pire que les deux. On ne
+la rediscute jamais, parce qu'elle a l'air d'avoir déjà été tranchée.
+
+**Terrain** : quand j'écris un seuil, une constante de déclenchement, un plancher · mots : seuil, à partir de, minimum, déclenche, palier, constante · fichiers : scripts/*.mjs
+
+**Porté par** : **aucun mécanisme** pour la moitié qui compte — rien ne distingue un chiffre mesuré
+d'un chiffre inventé, et l'écrire ici EST la protection (Article 27). La moitié dérivable, elle, est
+couverte en amont par l'Article 24 (un registre se LIT, il ne se recopie pas).
+
+*Observée le 2026-09-27 sur les tâches #723/#724 : les deux seuils du même déclencheur, l'un dérivé
+et l'autre pas, dans la même fonction et à trois lignes d'écart.*
+
+## BP6 — Avant de remplir un registre à la main, chercher si la preuve est DÉJÀ écrite dans le dépôt
+
+Devant un registre vide et quatre-vingts lignes à y mettre, le réflexe est de les taper. Dans un
+dépôt qui écrit le POURQUOI à côté du QUOI (Article 27), une partie de ces lignes existe déjà —
+sous une autre forme, à un autre endroit, et sans lecteur.
+
+**Le geste** : chercher la FORMULE que le dépôt emploie pour dire la chose, avant d'écrire la
+première ligne. Ici, « (2026-09-22, nom donné par l'utilisateur) » vivait dans le commentaire de
+tête de six outils, depuis des jours, au-dessus du code que ce nom désigne.
+
+**Ce que ça change, et ce n'est pas seulement du temps gagné.** Un registre semé depuis le dépôt
+CITE sa preuve ligne par ligne — le fichier et le numéro de ligne — donc il se vérifie. Un registre
+tapé de mémoire affirme. Sur un registre dont le rôle est précisément de prouver qui a décidé quoi,
+la différence est toute la valeur du document.
+
+**Le corollaire, à ne jamais lâcher** : on ne sème QUE ce qui porte une trace écrite. Les entrées
+sans trace restent dans la dette, où elles doivent être — un registre complété au jugé ne prouve
+plus rien (L13).
+
+**Terrain** : quand un registre est vide et que je m'apprête à le remplir · mots : registre, inventaire, à remplir, historiser, tracer, qui a décidé · fichiers : scripts/*.mjs
+
+**Porté par** : `findBaptemesDocumentes()` (`scripts/agent-des-noms.mjs`) pour ce cas-là. Le geste
+général — chercher la trace avant de taper — n'a pas de porteur possible et se déclare ici.
+
+*Observée le 2026-09-27 sur la tâche #706. Le registre des baptêmes n'existait pas, l'outil annonçait
+« 81 noms sur 81 jamais validés », et six de ces baptêmes étaient documentés noir sur blanc. Un faux
+positif rencontré en mesurant a dicté la précision du motif : « SON mot » attrapait « SON motif de
+titre ». Ici un faux positif n'aurait pas fait du bruit — il aurait inscrit au registre un nom que
+l'utilisateur n'a jamais choisi, dans le document qui existe pour prouver le contraire.*

@@ -16229,13 +16229,38 @@ async function testDetteIndirecteIgnoreLesCommentaires() {
 
   // SUR LE VRAI DÉPÔT (Article 25), dans les DEUX sens — c'est ce qui sépare un filtre qui marche
   // d'un filtre qui se contente de tout taire, et le premier jet faisait exactement ça.
+  //
+  // ANCRÉ SUR UN COMMIT FIXE, ET PLUS SUR UNE FENÊTRE GLISSANTE (corrigé le 2026-09-27). La version
+  // d'origine comparait les 15 derniers commits avec et sans le filtre, et exigeait une réduction.
+  // Elle est passée pendant deux jours, puis a échoué — sans qu'une ligne de code ait bougé : cinq
+  // commits de la journée avaient simplement poussé la pose des mentions // ICEBERG hors de la
+  // fenêtre, et il ne restait plus un seul diff de commentaires à filtrer. Mesuré le jour même :
+  // sur 15 commits 4 → 4, sur 20 commits 13 → 5. Le filtre marchait parfaitement ; c'est le test
+  // qui mesurait la date plutôt que le code.
+  //
+  // UN TEST DONT LE VERDICT DÉPEND DU JOUR OÙ ON LE LANCE est pire qu'un test absent : il finit par
+  // être relancé « pour voir », puis contourné. L'ancrage est donc un commit RÉEL et IMMUABLE de
+  // l'historique — la pose des mentions en tête de 79 fichiers — et les deux sens s'y lisent d'un
+  // coup : le même commit porte des fichiers modifiés en commentaire seul ET un fichier de vrai
+  // code, ce qui est exactement la paire dont un contre-test a besoin.
+  const COMMIT_POSE_ICEBERG = '1963fb3';
   const { execSync: exec1014 } = await import('node:child_process');
   const vraiSh1014 = (c, o) => exec1014(c, { ...o, encoding: 'utf8' });
-  const shSansDiff1014 = (c, o) => (c.startsWith('git show') ? '' : vraiSh1014(c, o));
-  const avant1014 = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 15, shImpl: shSansDiff1014 }).length;
-  const apres1014 = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 15 }).length;
-  assert.ok(apres1014 < avant1014, `the filter must actually remove something against the real repository (${avant1014} → ${apres1014})`);
-  assert.ok(apres1014 > 0, `and it must NOT remove everything: a filter that silences the whole control is worse than the noise it replaces. The first attempt did exactly that — 20 → 0 — because the git arguments were in the wrong order and git read the commit hash as a pathspec, returning HEAD's diff for every commit (got ${apres1014})`);
+  const ancrePresente = (() => { try { vraiSh1014(`git cat-file -e ${COMMIT_POSE_ICEBERG}^{commit}`); return true; } catch { return false; } })();
+  // Si l'ancre disparaît (branche neuve, historique réécrit), on le DIT au lieu de sauter en
+  // silence : un test qui s'absout tout seul est le faux vert que ce dépôt traque partout (L5).
+  assert.ok(ancrePresente, `the anchor commit ${COMMIT_POSE_ICEBERG} is missing from history — the real-repository check cannot run, and saying so beats skipping silently (L5)`);
+  assert.equal(god1014.diffSeulementDesCommentaires(COMMIT_POSE_ICEBERG, 'scripts/axa-check.mjs'), true,
+    'MUST CATCH on the real repository: that commit only added a // ICEBERG header line to this file, so its diff is comment-only and carries no rule change');
+  assert.equal(god1014.diffSeulementDesCommentaires(COMMIT_POSE_ICEBERG, 'scripts/cassandra-rh.mjs'), false,
+    'MUST LET PASS on the real repository: the SAME commit changed real code in this file, so the filter must not absolve it — one commit, both answers, which is what makes this pair a counter-test rather than a demonstration');
+
+  // LA FENÊTRE GLISSANTE GARDE UNE SEULE ASSERTION, celle qui reste vraie quel que soit le jour :
+  // le filtre ne doit JAMAIS tout faire taire. Le premier jet faisait exactement ça — 20 écarts
+  // ramenés à ZÉRO, parce que les arguments git étaient dans le mauvais ordre et que git lisait le
+  // hash comme un chemin, rendant le diff de HEAD pour chaque commit.
+  const apres1014 = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 30 }).length;
+  assert.ok(apres1014 > 0, `the filter must NOT silence the whole control: a control that never speaks is worse than the noise it replaces (got ${apres1014})`);
 
   console.log("Passed: huit fausses dettes documentaires en un seul commit (2026-09-27, tâche #1014). Le détecteur de changement indirect jugeait sur le FICHIER TOUCHÉ, jamais sur ce qui avait changé dedans : la pose des mentions // ICEBERG a ajouté une ligne de COMMENTAIRE en tête de 79 fichiers, et il a annoncé huit dettes de process, les huit fausses — aucun process n'avait bougé. Un garde-fou qui accuse à tort cesse d'être lu (L4), et le coût s'était déjà mesuré ici le 2026-09-26 : à force d'ignorer cette ligne, trois dettes réelles s'étaient cachées derrière. La règle retenue est GÉNÉRALE plutôt que taillée sur le cas du jour (Article 24) : un diff dont toutes les lignes ajoutées et retirées sont des commentaires ou du vide n'a pas modifié le comportement, donc n'a pas pu déplacer une règle. Risque résiduel assumé et écrit : dans ce dépôt le POURQUOI vit à côté du QUOI, donc un commentaire peut porter une règle — mais ce cas-là DOCUMENTE, il ne change pas le process, alors que huit accusations fausses éteignent le contrôle entier. Le premier jet était pire que le défaut : écrit `-- <fichier> <hash>`, git prenait le hash pour un chemin et rendait le diff de HEAD, faisant tomber le détecteur de 20 écarts à ZÉRO. Trouvé par la mesure avant/après, jamais en relisant la ligne — elle a l'air juste. Mesure finale sur le vrai dépôt : 20 → 12, les huit fausses du dernier commit disparaissent, les vraies dettes des commits précédents restent.");
 }
