@@ -61,3 +61,26 @@ if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^scripts/.*\.mjs$'; 
   # l'outil, qui est muet quand il n'a rien trouvé.
   node scripts/hooks/banniere.mjs node scripts/tool-brain.mjs muets || true
 fi
+
+# EZECHIEL-LES-TESTS, INSTALLÉ (2026-09-27, tâche #1027) — alerte NON BLOQUANTE, même calibrage
+# que toutes les lignes ci-dessus.
+#
+# LE DÉFAUT QU'IL FERME EST MESURÉ SUR LUI-MÊME, et c'est l'ironie qui a déclenché cette ligne :
+# construit et vérifié dans la journée, Ezechiel comptait 22 passages, TOUS en lancement manuel.
+# Rien ne le déclenchait. C'est exactement la leçon L2 — un mécanisme qui ne sort pas du script
+# est une intention — appliquée à l'outil qui existe justement pour dire quand un garde-fou ne
+# garde plus rien.
+#
+# CE QUI TOURNE ICI EST LA PARTIE GRATUITE, et seulement elle : l'enquête lit du TEXTE et rend en
+# quelques dizaines de millisecondes. Le chronométrage (`sante`) et la passe de robustesse
+# (`robustesse`) relancent le filet pour de vrai — l'un coûte une exécution complète, l'autre
+# une par cassure — et n'ont donc rien à faire dans un crochet. Les mélanger transformerait un
+# commit de deux minutes en commit de deux heures.
+#
+# LE FILTRE VISE LE FILET ET SA MACHINERIE : un commit qui ne touche ni les tests ni un script de
+# l'Agence n'a rien changé à ce qu'Ezechiel mesure, et un contrôle qui parle pour rien cesse
+# d'être lu (leçon L6). Le filtre est un superset volontaire, comme les lignes ci-dessus : la
+# précision vit dans l'outil, qui est muet quand il n'a rien trouvé.
+if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE '^scripts/.*\.(mjs|ts)$'; then
+  node scripts/hooks/banniere.mjs node scripts/ezechiel-les-tests.mjs || true
+fi
