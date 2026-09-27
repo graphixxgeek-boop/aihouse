@@ -16360,3 +16360,51 @@ async function testConfrontationCadreExterne() {
   console.log("Passed: l'outil qui accompagne ses quinze tests (2026-09-27, tâche #1003). Sa question était « quel outil pourrait accompagner le passage des 15 tests » — les règles de gouvernance G1-G15 de son dossier de conception. Confronter quinze règles à vingt-neuf exigences à l'œil donne un avis ; le refaire dans un mois donne un autre avis, et rien ne dit lequel a changé, la liste ou le jugement. THE-EQUALIZER le mesure donc, et la mesure se rejoue. RÉSULTAT RÉEL, et il est inconfortable : 14 des 15 règles n'ont AUCUNE exigence déclarée qui leur ressemble. CE QUE CE CHIFFRE NE DIT PAS, et l'outil le dit lui-même en tête de sa sortie : « aucun candidat » ne veut pas dire « pas pratiqué ». Plusieurs de ces règles SONT pratiquées ici sans être déclarées — la non-régression est le filet lancé avant chaque commit, l'humain dans la boucle est le périmètre sensible tout entier, les sorties prouvables sont l'horodatage et la version que chaque rapport porte déjà. Elles sont tenues et invisibles à l'inventaire, ce qui est exactement le défaut que ce projet traque ailleurs sous le nom d'axe non déclaré. Le rapprochement se fait par VOCABULAIRE PARTAGÉ, jamais par compréhension, et la sortie l'imprime avec le résultat plutôt que dans un commentaire : deux règles peuvent partager des mots sans dire la même chose, et dire la même chose sans partager un mot. Chaque ligne est donc un CANDIDAT à lire, jamais une couverture prouvée. Deux refus de conclure, chacun contre un faux vert : un cadre illisible et une liste d'exigences vide rendraient tous deux « aucun écart ».");
 }
 await testConfrontationCadreExterne();
+
+// PERSONNE NE GARDAIT L'HISTOIRE DE L'AGENCE (2026-09-27, tâche #748). Sa question : « Oui veillons
+// à l'histoire que l'agence raconte c'est très important. QUI garde et surveille l'histoire de
+// l'agence ? » La réponse honnête était PERSONNE. L'histoire existe — le suivi, les simulations
+// archivées, les registres — mais aucun outil ne veillait sur elle EN TANT QUE TELLE.
+async function testVeilleSurLHistoire() {
+  const da748 = await import('../scripts/data-archangel.mjs');
+
+  // CE QUI EST DE L'HISTOIRE se DÉRIVE du chemin, jamais d'une liste recopiée qui se périmerait au
+  // premier dossier créé (Article 24).
+  assert.equal(da748.estDeLHistoire('docs/simulations/full_sim20.txt'), true, 'an archived simulation is history');
+  assert.equal(da748.estDeLHistoire('docs/suivi/sessions/x.md'), true, 'the task log is history');
+  assert.equal(da748.estDeLHistoire('docs/argus/index.md'), true, 'a registry index is history: it only ever grows');
+  assert.equal(da748.estDeLHistoire('scripts/argus.mjs'), false, 'MUST LET PASS ordinary code: a script shrinks every time it is simplified, and calling that a loss of history would make the watcher cry at every refactor');
+
+  // UN REGISTRE QUI PERD DES LIGNES : le signal est brut, et c'est sa force — on compte, on ne juge
+  // pas le contenu. Seul le SOLDE négatif compte : un remplacement ligne pour ligne n'est pas une
+  // perte, et crier dessus rendrait le veilleur illisible.
+  const perte = da748.findHistoireRaccourcie({ shImpl: () => 'aaaa111\tun commit\n2\t40\tdocs/simulations/vieux.txt\n' });
+  assert.equal(perte.pertes.length, 1, 'MUST CATCH a history file that lost 38 net lines');
+  assert.equal(perte.pertes[0].perdu, 38, 'and the NET loss is what is reported, never the raw count of removed lines');
+  const remplacement = da748.findHistoireRaccourcie({ shImpl: () => 'aaaa111\tun commit\n40\t40\tdocs/simulations/vieux.txt\n' });
+  assert.deepEqual(remplacement.pertes, [], 'MUST LET PASS a line-for-line rewrite: nothing was lost, and reporting it would drown the real losses');
+  const code = da748.findHistoireRaccourcie({ shImpl: () => 'aaaa111\tun commit\n2\t400\tscripts/un-outil.mjs\n' });
+  assert.deepEqual(code.pertes, [], 'MUST LET PASS a shrinking SCRIPT: simplifying code is the goal, not an attack on history');
+
+  // UN GIT ILLISIBLE N'EST JAMAIS « RIEN À SIGNALER » (leçon L11) : les deux se rendent identiques
+  // si on ne les sépare pas, et l'un dit le contraire de l'autre.
+  const casse = da748.findHistoireRaccourcie({ shImpl: () => { throw new Error('pas de git'); } });
+  assert.equal(casse.mesurable, false, 'an unreadable history is a NON-MEASURE: saying "nothing to report" would assert the opposite of what is known');
+
+  // ET IL DIT CE QU'IL NE COUVRE PAS. Sur les quatre atteintes que la tâche nomme, deux se lisent
+  // dans git sans jugement et deux demandent de comparer le SENS de deux versions. Un veilleur qui
+  // laisse croire qu'il couvre quatre atteintes quand il en voit deux est pire qu'un veilleur
+  // absent — c'est la seule façon dont un trou peut devenir invisible.
+  const lignes = da748.formatHistoireLines(da748.veillerSurLHistoire({ shImpl: () => '' }));
+  assert.ok(lignes.some((l) => /ne sont PAS couvertes|NE SONT PAS couvertes|PAS couvertes/i.test(l)),
+    'the watcher must print what it does NOT cover, in its own output rather than in a comment nobody opens');
+
+  // SUR LE VRAI DÉPÔT (Article 25) : il doit tourner, et il doit trouver quelque chose ou dire
+  // pourquoi il ne trouve rien.
+  const reel = da748.veillerSurLHistoire();
+  assert.equal(reel.raccourcies.mesurable, true, 'the watcher must actually run against the real git history');
+  assert.equal(reel.archives.mesurable, true, 'and against the real archives');
+
+  console.log("Passed: personne ne gardait l'histoire de l'Agence (2026-09-27, tâche #748). Sa question — « QUI garde et surveille l'histoire de l'agence ? » — avait pour réponse honnête PERSONNE : l'histoire existe (le suivi, les simulations archivées, les registres de chaque outil) et aucun outil ne veillait sur elle en tant que telle. Les plus proches n'en couvraient qu'un bout : data-archangel surveillait la CIRCULATION des données, l'AGENT DES NOMS empêchait qu'un renommage la falsifie. Le rôle échoit à data-archangel plutôt qu'à un 82e script (Article 31 : on étend avant de construire) parce que les fichiers dont il suit la circulation sont exactement ceux dont l'histoire est en jeu — et il porte un nom, ce que sa question demandait. DEUX ATTEINTES SUR QUATRE sont couvertes : un registre qui perd des lignes, une archive retouchée après sa création. Les deux autres — une mesure passée corrigée après coup, une date qui recule — demandent de comparer le SENS de deux versions et ne le sont pas, ce que la sortie IMPRIME : un veilleur qui laisse croire qu'il couvre quatre atteintes quand il en voit deux est pire qu'un veilleur absent. Deux faux signaux corrigés au premier passage : `--follow` faisait remonter à l'archive les 221 modifications de son fichier SOURCE (juste au sens de git, faux au sens de la question), et les `index.md` étaient comptés comme des archives alors qu'un catalogue DOIT changer à chaque archivage — l'accuser ferait crier le veilleur pile quand il a raison de se taire. Premier passage réel : un transcript de simulation a perdu 1 245 lignes nettes, ce que personne n'aurait vu.");
+}
+await testVeilleSurLHistoire();

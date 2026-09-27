@@ -1410,6 +1410,123 @@ export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync
   return { mesurable: true, repares, horsPortee: "elle n'écrit QU'ENTRE SES DEUX MARQUEURS : la prose écrite à la main autour n'est jamais touchée, et un second passage remplace le bloc au lieu de l'empiler." };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA VEILLE SUR L'HISTOIRE — deux atteintes mécaniquement détectables, deux déclarées hors portée
+// ————————————————————————————————————————————————————————————————————————
+//
+// CE QU'UN GARDIEN DE L'HISTOIRE DEVRAIT VOIR, tel que la tâche #748 le formule : une archive
+// réécrite · une mesure passée corrigée après coup · un registre qui perd des lignes · une date qui
+// recule. Deux de ces quatre se lisent dans l'historique git sans jugement. Les deux autres non, et
+// c'est DIT plutôt que sous-entendu : un veilleur qui laisse croire qu'il couvre quatre atteintes
+// quand il en voit deux est pire qu'un veilleur absent (leçon L11).
+
+// Ce qui est de l'HISTOIRE, par nature : une archive ne se corrige pas, elle s'ajoute. Un registre
+// ne se raccourcit pas, il s'allonge. Les dossiers se LISENT sur le disque, jamais une liste de
+// chemins recopiée qui se périmerait au premier dossier créé (Article 24).
+export const MOTIF_DOSSIER_D_HISTOIRE = /^docs\/(contexte-projet|simulations|suivi)\//;
+export const MOTIF_FICHIER_D_HISTOIRE = /(archive|historique|index)\.(md|csv|jsonl)$/i;
+
+export function estDeLHistoire(chemin = "") {
+  return MOTIF_DOSSIER_D_HISTOIRE.test(chemin) || MOTIF_FICHIER_D_HISTOIRE.test(chemin);
+}
+
+// UN REGISTRE QUI PERD DES LIGNES. Le signal est brut et c'est sa force : on ne juge pas le
+// contenu, on compte. Un fichier d'histoire qui rétrécit a perdu quelque chose que quelqu'un avait
+// écrit — légitimement parfois (une compaction déclarée), mais jamais sans qu'on le sache.
+export function findHistoireRaccourcie({ shImpl = execSync, root = ROOT, nbCommits = 30 } = {}) {
+  let brut;
+  try {
+    brut = shImpl(`git log -n ${nbCommits} --numstat --pretty=format:%H%x09%s`, { cwd: String(root).replace(/\/$/, ""), encoding: "utf8" });
+  } catch (e) {
+    return { mesurable: false, pertes: [], pourquoi: `l'historique git est illisible (${e?.message ?? e}) — on ne peut PAS dire si l'histoire a été raccourcie, et rendre « rien à signaler » serait affirmer le contraire de ce qu'on sait` };
+  }
+  const pertes = [];
+  let commit = null;
+  for (const ligne of String(brut).split("\n")) {
+    if (/^[0-9a-f]{7,40}\t/.test(ligne)) { const [h, ...s] = ligne.split("\t"); commit = { hash: h.slice(0, 8), sujet: s.join(" ") }; continue; }
+    const m = ligne.match(/^(\d+)\t(\d+)\t(.+)$/);
+    if (!m || !commit) continue;
+    const [, ajoutees, retirees, chemin] = m;
+    if (!estDeLHistoire(chemin)) continue;
+    const perdu = Number(retirees) - Number(ajoutees);
+    // Un remplacement ligne pour ligne n'est pas une perte : on ne retient que le SOLDE négatif,
+    // et seulement au-delà d'une ligne, pour ne pas crier sur une coquille corrigée.
+    if (perdu > 1) pertes.push({ commit: commit.hash, sujet: commit.sujet, chemin, perdu, retirees: Number(retirees), ajoutees: Number(ajoutees) });
+  }
+  return { mesurable: true, pertes, fenetre: nbCommits,
+    pourquoi: pertes.length ? `${pertes.length} fichier(s) d'histoire ont NET perdu des lignes sur les ${nbCommits} derniers commits` : `aucun fichier d'histoire n'a perdu de ligne sur les ${nbCommits} derniers commits` };
+}
+
+// UNE ARCHIVE RÉÉCRITE. Une archive est, par définition, un texte qu'on n'édite plus : on l'ajoute
+// une fois et on le cite. Chaque modification ULTÉRIEURE à sa création est donc un fait à connaître
+// — pas forcément une faute (une note d'archivage ajoutée en est une légitime, et ce matin même
+// j'en ai posé six), mais jamais quelque chose qui doit passer inaperçu.
+export function findArchivesReecrites({ shImpl = execSync, root = ROOT } = {}) {
+  const cwd = String(root).replace(/\/$/, "");
+  let fichiers;
+  try {
+    fichiers = shImpl("git ls-files docs/contexte-projet docs/simulations", { cwd, encoding: "utf8" })
+      // UN CATALOGUE N'EST PAS UNE ARCHIVE, et l'exclure est une correction de justesse, pas une
+      // dispense : `index.md` est la table des matières du dossier, elle DOIT changer chaque fois
+      // qu'un fichier arrive. L'accuser d'être « réécrite » ferait crier ce veilleur à chaque
+      // archivage — donc à chaque fois qu'il a raison de se taire (leçon L4).
+      .split("\n").filter((f) => f.trim() && f.endsWith(".md") && !/\/index\.md$/.test(f));
+  } catch (e) {
+    return { mesurable: false, reecrites: [], pourquoi: `impossible de lister les archives (${e?.message ?? e}) — une absence de mesure, jamais un feu vert` };
+  }
+  if (!fichiers.length) {
+    return { mesurable: false, reecrites: [], pourquoi: "aucune archive trouvée : il n'y a rien à surveiller, ce qui n'est pas la même chose que « rien n'a bougé »" };
+  }
+  const reecrites = [];
+  for (const f of fichiers) {
+    let commits;
+    // SANS `--follow`, ET C'EST UN CHOIX PAYÉ AU PREMIER PASSAGE : avec lui, git remonte l'histoire
+    // du fichier SOURCE quand l'archive en est issue, et `referentiel-affiche-en-jeu-archive.md`
+    // ressortait avec 221 modifications — celles de `lib/reference.ts` dont il a été extrait. Un
+    // chiffre juste au sens de git, et faux au sens de la question posée : « cette ARCHIVE a-t-elle
+    // été retouchée depuis qu'elle est une archive ? »
+    try { commits = shImpl(`git log --format=%h -- ${JSON.stringify(f)}`, { cwd, encoding: "utf8" }).split("\n").filter(Boolean); }
+    catch { continue; }
+    if (commits.length > 1) reecrites.push({ chemin: f, modifications: commits.length - 1, dernier: commits[0] });
+  }
+  return { mesurable: true, reecrites, total: fichiers.length,
+    pourquoi: reecrites.length ? `${reecrites.length} archive(s) sur ${fichiers.length} ont été modifiées après leur création` : `aucune des ${fichiers.length} archives n'a été retouchée depuis sa création` };
+}
+
+export function veillerSurLHistoire(opts = {}) {
+  return { raccourcies: findHistoireRaccourcie(opts), archives: findArchivesReecrites(opts) };
+}
+
+export function formatHistoireLines(v) {
+  const L = ["=== LA VEILLE SUR L'HISTOIRE — qui garde ce que l'Agence raconte d'elle-même ===", ""];
+  L.push("Deux atteintes sur quatre sont mécaniquement détectables ici. Les deux autres — une mesure");
+  L.push("passée corrigée après coup, une date qui recule dans un registre — demandent de comparer le");
+  L.push("SENS de deux versions, pas leur forme. Elles ne sont PAS couvertes, et le dire vaut mieux que");
+  L.push("de laisser croire à une couverture complète : un veilleur qui en couvre deux en laissant");
+  L.push("croire qu'il en couvre quatre est pire qu'un veilleur absent.");
+  L.push("");
+  const r = v?.raccourcies ?? {};
+  L.push("--- UN REGISTRE QUI PERD DES LIGNES ---");
+  if (!r.mesurable) L.push(`❓ PAS MESURÉ — ${r.pourquoi}`);
+  else if (!r.pertes.length) L.push(`✅ ${r.pourquoi}.`);
+  else {
+    L.push(`⚠️ ${r.pourquoi} :`);
+    for (const p of r.pertes.slice(0, 12)) L.push(`   · ${p.chemin} — ${p.perdu} ligne(s) nettes perdues au commit ${p.commit} (« ${String(p.sujet).slice(0, 60)} »)`);
+    L.push("   Une perte peut être légitime — une compaction déclarée, un doublon retiré. Elle ne doit juste jamais passer inaperçue.");
+  }
+  L.push("");
+  const a = v?.archives ?? {};
+  L.push("--- UNE ARCHIVE RÉÉCRITE ---");
+  if (!a.mesurable) L.push(`❓ PAS MESURÉ — ${a.pourquoi}`);
+  else if (!a.reecrites.length) L.push(`✅ ${a.pourquoi}.`);
+  else {
+    L.push(`⚠️ ${a.pourquoi} — une archive est par définition un texte qu'on n'édite plus :`);
+    for (const x of a.reecrites.slice(0, 12)) L.push(`   · ${x.chemin} — ${x.modifications} modification(s) après création (dernière : ${x.dernier})`);
+    L.push("   Ajouter une note d'archivage est légitime ; réécrire le texte archivé ne l'est jamais. La distinction se lit, elle ne se mesure pas.");
+  }
+  return L;
+}
+
 function main() {
   const sub = process.argv[2];
   printReportHeader({
@@ -1471,6 +1588,23 @@ function main() {
     const chemin = `docs/data-archangel/systeme-des-index-${new Date().toISOString().slice(0, 10)}.txt`;
     writeFileSync(join(ROOT, chemin), [...lignes, "", PLAN_ACTION_TITRE, ...plan.lignes].join("\n") + "\n", "utf8");
     console.log(`\nRapport déposé : ${chemin}`);
+    return;
+  }
+  // LA VEILLE SUR L'HISTOIRE (2026-09-27, tâche #748). Sa question : « Oui veillons à l'histoire que
+  // l'agence raconte c'est très important. QUI garde et surveille l'histoire de l'agence ? »
+  //
+  // LA RÉPONSE HONNÊTE ÉTAIT « PERSONNE », et c'était un trou. L'histoire EXISTE — le suivi, les
+  // simulations archivées, les registres de chaque outil — mais aucun outil ne veillait sur elle EN
+  // TANT QUE TELLE. Les plus proches ne couvraient qu'un bout : data-archangel surveille la
+  // CIRCULATION des données, l'AGENT DES NOMS empêche qu'un renommage la falsifie.
+  //
+  // POURQUOI CE RÔLE ÉCHOIT À data-archangel PLUTÔT QU'À UN 82e SCRIPT (Article 31 : on étend avant
+  // de construire) : les fichiers dont il suit la circulation sont EXACTEMENT ceux dont l'histoire
+  // est en jeu. Un script à part relirait le même arbre pour une question voisine. Le mandat
+  // s'élargit, le veilleur reste le même, et il porte un nom — ce que sa question demandait.
+  if (sub === "histoire") {
+    for (const l of formatHistoireLines(veillerSurLHistoire())) console.log(l);
+    recordCliUsage("data-archangel", { origine: "demande" });
     return;
   }
   if (sub === "notes") {

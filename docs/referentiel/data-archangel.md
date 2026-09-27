@@ -158,3 +158,48 @@ la règle `estUnDepot()` posée la veille — un fichier dont le nom finit par `
 jamais un dépôt. `docs/referentiel/kpi-index.md` et `docs/templates/registre-index.md` ont donc
 quitté leur catalogue de dossier. Les deux restent atteignables par les documents qui les citent
 (la charte pour le premier) ; ce qui a disparu est leur ligne dans une liste, pas leur adresse.
+
+## LA VEILLE SUR L'HISTOIRE — qui garde ce que l'Agence raconte d'elle-même
+
+*(2026-09-27, tâche #748. Sa question : « Oui veillons à l'histoire que l'agence raconte c'est très
+important. QUI garde et surveille l'histoire de l'agence ? »)*
+
+**LA RÉPONSE HONNÊTE ÉTAIT « PERSONNE », et c'était un trou.** L'histoire EXISTE — le suivi, les
+simulations archivées, les registres de chaque outil — mais aucun outil ne veillait sur elle EN TANT
+QUE TELLE. Les plus proches n'en couvraient qu'un bout : data-archangel surveillait la CIRCULATION
+des données, l'AGENT DES NOMS empêchait qu'un renommage la falsifie.
+
+**POURQUOI CE RÔLE ÉCHOIT ICI plutôt qu'à un 82e script** *(Article 31 : on étend avant de
+construire)* : les fichiers dont data-archangel suit la circulation sont exactement ceux dont
+l'histoire est en jeu. Un script à part relirait le même arbre pour une question voisine. Le mandat
+s'élargit, le veilleur reste le même — et il porte un nom, ce que sa question demandait. **C'est un
+veilleur au sens de l'Article 20bis, jamais un Gardien sacré** : il surveille un patrimoine, il ne
+scanne pas la qualité du code.
+
+```
+node scripts/data-archangel.mjs histoire
+```
+
+**DEUX ATTEINTES SUR QUATRE, et les deux autres sont DITES plutôt que sous-entendues.** La tâche en
+nommait quatre : une archive réécrite · une mesure passée corrigée après coup · un registre qui perd
+des lignes · une date qui recule. Deux se lisent dans git sans jugement. **Les deux autres demandent
+de comparer le SENS de deux versions, pas leur forme, et ne sont pas couvertes** — la sortie
+l'imprime à chaque passage. Un veilleur qui laisse croire qu'il couvre quatre atteintes quand il en
+voit deux est pire qu'un veilleur absent : c'est la seule façon dont un trou devient invisible.
+
+| Atteinte | Couverte ? | Comment |
+|---|---|---|
+| Un registre qui perd des lignes | ✅ | solde NET négatif sur un fichier d'histoire, lu dans `git log --numstat` |
+| Une archive réécrite | ✅ | plus d'un commit sur un fichier d'archive, qui par définition ne s'édite plus |
+| Une mesure passée corrigée après coup | ❌ | demande de comparer le SENS de deux versions |
+| Une date qui recule | ❌ | idem — `findHorodatagesFuturs()` couvre l'autre sens seulement |
+
+**DEUX FAUX SIGNAUX CORRIGÉS AU PREMIER PASSAGE**, et chacun apprend quelque chose : `--follow`
+faisait remonter à l'archive les **221 modifications de son fichier SOURCE** (un chiffre juste au
+sens de git, faux au sens de la question posée) ; et les `index.md` étaient comptés comme des
+archives, alors qu'un catalogue DOIT changer à chaque archivage — l'accuser ferait crier le veilleur
+pile au moment où il a raison de se taire (leçon L4).
+
+**Ce qu'il a trouvé à son premier vrai passage** : un transcript de simulation avait perdu
+**1 245 lignes nettes**, et personne ne l'aurait vu. Un outil qui trouve quelque chose dès son
+premier passage n'est pas une intention (leçon L2).
