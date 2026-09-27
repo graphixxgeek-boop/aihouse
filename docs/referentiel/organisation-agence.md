@@ -503,3 +503,57 @@ jour de ce document est une dette documentaire, pas un détail reportable).
    liste, tout en bas de l'échelle des rangs, sans évolution possible et sans entrée possible.
 4. **La Suite Tarantino reste dans l'Agence** et son principe reste exportable : « hors Agence »
    qualifie ce qui lance le produit, jamais ce qui le juge.
+
+---
+
+# Gardien sacré du code, contrôleur de process, veilleur, garde-fou mécanique
+
+*(Les quatre mots distincts de l'Article 20bis, déménagés de CLAUDE.md le 2026-09-27, chantier #208.
+Leur domicile naturel est ici : ce sont des mots d'ORGANIGRAMME, et ce document est le référentiel
+canonique de l'Agence. La charte garde l'obligation — le mot ne s'emploie jamais seul comme titre —
+et les quatre noms ; le détail de ce que chacun recouvre est ici, lu au moment où l'on nomme
+quelque chose. Aucun mot n'a changé au passage.)*
+
+## Le texte d'origine, intégral
+*(2026-09-23, demande explicite de l'utilisateur : « autre dette de vocabulaire : l'appellation
+"gardien" pour des agents différents : corrige ça : les différents gardiens doivent être distingués,
+garde l'expression "gardien sacré" ».)* Le même mot désignait quatre rôles qui n'ont ni le même
+objet, ni la même autorité, ni le même rythme — exactement la dette de reprise que l'Article 27
+nomme : un nom propre sans définition atteignable. Une IA lisant « le gardien a validé » ne pouvait
+pas savoir lequel avait validé quoi.
+
+- **Gardien sacré du code** — les sept de l'Article 20, et eux seuls. Critère double et
+  non négociable : délivre un vrai scan de QUALITÉ DU CODE **et** tourne gratuitement,
+  mécaniquement, à CHAQUE commit. L'expression reste réservée à ce rang.
+- **Contrôleur de process** — surveille le DÉROULÉ d'une activité à étapes, jamais la qualité du
+  code : god-of-all-process (le contrôleur maître, qui relaie la voix des autres),
+  circle-process-guardian, process-simulation-guardian, angel-of-ia-process (côté conduite),
+  tasks-process-guardian. Il signale, il ne corrige jamais.
+- **Veilleur** — surveille UN document ou UNE décision déjà actée, sans scanner le code et sans
+  gouverner d'étapes : THE-KING (la philosophie), Doc-Report (la décision HTML/texte),
+  data-archangel (la circulation des données).
+- **Garde-fou mécanique** — jamais un outil, toujours une FONCTION à l'intérieur d'un outil
+  (`findToolsMissingFromMenu()`, `findFaitsManquants()`...). C'est le grain que l'Article 24 exige
+  derrière toute liste : le mot désigne le mécanisme, jamais celui qui le porte.
+
+**« guardian » compte pareil** *(précision de l'utilisateur dans le même échange : « "gardien" ou
+"guardian" en anglais, c'est pareil »)*. Les trois scripts qui portent ce mot anglais —
+`circle-process-guardian.mjs`, `process-simulation-guardian.mjs`, `tasks-process-guardian.mjs` —
+sont des **contrôleurs de process**, sans exception : chacun porte déjà `process` dans son nom, de
+sorte qu'aucun Gardien sacré ne s'est jamais appelé ainsi. Ces noms de fichiers sont l'orthographe
+historique du rang, jamais un cinquième terme. Deux conséquences mécaniques, vérifiées et non
+laissées à la mémoire : un futur script nommé `*-guardian` **sans** `process` dans son nom est un
+écart, et aucun Gardien sacré ne peut prendre cette orthographe.
+
+**Une seule exception déclarée, parce qu'elle vient de l'utilisateur lui-même** : le surnom
+**R/O-Guardian** (objectifs-vs-resultats, 2026-09-21) — un veilleur, jamais un contrôleur de
+process. Un surnom donné par l'utilisateur ne se corrige pas dans son dos ; il se déclare, comme
+tout contenu volontairement curaté à la main (Article 24).
+
+Le mot « gardien » employé seul, comme titre, n'a plus de sens dans ce projet : il se qualifie
+toujours. `findGardienAmbigu()` (`scripts/safe-export.mjs`) le vérifie mécaniquement sur les
+documents normatifs — cette charte et `docs/referentiel/` — plutôt que de compter sur la mémoire
+d'un agent (Article 27).
+
+
+

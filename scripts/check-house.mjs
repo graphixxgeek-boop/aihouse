@@ -5537,8 +5537,29 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // eux, là où le poids seul ne compare que des tailles.
   const cost = eco.realSessionCost(undefined, { messagesParSession: 50 });
   assert.ok(cost.lignes.length >= 2 && cost.total > 0);
-  assert.equal(cost.lignes[0].chemin, 'CLAUDE.md', 'the always-reloaded charter must dominate the real cost ranking — that is what justifies attacking it first');
-  assert.ok(cost.lignes[0].partPct >= 50, 'CLAUDE.md must account for the majority of a session, otherwise the whole premise of this tool is wrong');
+  // LE TEST PUNISSAIT LE SUCCÈS (2026-09-27, chantier #208). Il exigeait que CLAUDE.md soit PREMIER
+  // du classement de coût réel — vrai le jour où il a été écrit, faux le jour où la charte a
+  // suffisamment maigri pour se faire dépasser. Un test qui tombe précisément quand le travail a
+  // réussi est de la même famille que le garde-fou du format qui accusait les sept lignes les plus
+  // à jour (#870) : il encode un FAIT là où il devrait vérifier un PRINCIPE.
+  //
+  // CE QUI EST VRAIMENT EXIGÉ, et qui reste vrai quelle que soit la taille des fichiers : la charte
+  // est le poids le plus lourd de ceux qui sont RECHARGÉS À CHAQUE MESSAGE. C'est ça qui justifie
+  // de l'attaquer en premier — jamais sa place absolue, qu'un document lu trois fois par session
+  // peut légitimement lui prendre. Et le classement doit rester réellement dérivé, jamais figé.
+  const toujours = cost.lignes.filter((l) => l.chargement === 'toujours');
+  assert.ok(toujours.length > 0, 'the ranking must actually carry the always-reloaded category — an empty one would make the next assertion pass on nothing (leçon L5)');
+  assert.equal(toujours[0].chemin, 'CLAUDE.md', 'among the documents reloaded at EVERY message, the charter must be the heaviest — that is what justifies attacking it first, and it stays true however much the on-demand documents grow');
+  assert.ok(cost.lignes.every((l) => l.chemin && l.chargement), 'and every line must name its file and its loading mode: a ranking whose rows lack either is not a derived measurement');
+  // MÊME DÉFAUT, DEUXIÈME OCCURRENCE — et c'est une CLASSE, pas un accident (leçon L37). Celle-ci
+  // lisait `lignes[0]` en croyant lire la charte, et exigeait d'elle la MAJORITÉ d'une session.
+  // Mesuré le 2026-09-27, une fois la charte allégée de 17,5 % : docs/suivi/sessions 47 %, la
+  // charte 45 %. La prémisse « la charte domine une session » a donc cessé d'être vraie — non
+  // parce que l'outil se trompe, mais parce que le travail a réussi et que le suivi a grossi.
+  // C'est une TROUVAILLE, pas une régression : elle devient la tâche #1024.
+  const ligneCharte = cost.lignes.find((l) => l.chemin === 'CLAUDE.md');
+  assert.ok(ligneCharte, 'the charter must appear in the ranking at all — its absence would be a broken measurement, never a light charter');
+  assert.ok(ligneCharte.partPct >= 25, `the charter must remain a MAJOR share of a session (currently ${ligneCharte.partPct} %) — below a quarter, this tool would be pointed at the wrong document. What it must NOT assert is that it is the majority: that was true when this line was written and stopped being true the day the charter got light enough to be overtaken`);
   // UN DOSSIER RELU N'EST PAS UN DOSSIER LU EN ENTIER (2026-09-26, tâche #920). Cette assertion-ci
   // a CASSÉ pour de vrai la nuit où le suivi a atteint 43 % du coût de session — non parce que le
   // suivi coûtait cher, mais parce que le calcul additionnait TOUS les fichiers de session jamais

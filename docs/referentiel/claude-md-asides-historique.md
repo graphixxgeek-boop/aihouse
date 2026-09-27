@@ -285,3 +285,124 @@ plutôt que d'ajouter le fichier : ce que ce document aurait apporté — pourqu
 conception a été prise — est désormais porté par `docs/referentiel/` et par `docs/suivi/`, qui
 eux sont tenus à jour. La trace de ce retrait vit ici plutôt que nulle part, pour qu'une IA qui
 reprend le projet ne reparte pas chercher ce fichier au prochain audit.)*
+
+---
+
+# Fournée du 2026-09-27 — chantier #208, passe d'allègement demandée par l'utilisateur
+
+**POURQUOI CES ONZE-LÀ SONT ICI, et la raison est la règle elle-même** : l'Article 13 déclare que
+la justification narrative de QUAND et POURQUOI une règle est née (sa date, la citation de la
+demande) vit dans ce fichier plutôt que mêlée à la règle. Ce sont des apartés que l'outil ecotoken
+a identifiés mécaniquement dans CLAUDE.md, pas un tri à l'œil. **Rien n'est résumé : chacun est
+repris mot pour mot, avec l'Article auquel il appartenait** — sans quoi on saurait ce qui a été dit
+sans savoir de quoi ça parlait, ce qui est pire qu'une suppression franche.
+
+Ils pesaient environ 590 tokens rechargés à CHAQUE message, pour un récit qui ne se lit qu'une fois.
+
+
+## Les deux projets, et pourquoi ils n'en font qu'un
+
+*(Posé explicitement par l'utilisateur le 2026-09-22, et noté ici plutôt qu'ailleurs parce que
+c'est le cadre qui rend intelligible tout le reste du fichier.)*
+
+## Article 18
+
+*(Les trois blocs ci-dessus ont été déplacés ici le 2026-09-22 : ils vivaient sous l'Article 16
+(format des questions) alors qu'ils décrivent tous les trois ce qui se passe APRÈS la livraison
+d'une simulation — le sujet de l'Article 18, qu'ils citent d'ailleurs nommément. Aucun mot changé,
+seulement rangés sous l'Article dont ils parlent.)*
+
+## Article 25
+
+*(2026-09-22, demande explicite de l'utilisateur : « verifie régulièrement ton travail : à inscrire
+dans la charte : tu dois verifier regulierement ton travail, en utilisant si besoin les outils ».)*
+
+## Article 28
+
+*(2026-09-22, principe fondamental posé par l'utilisateur et qualifié par lui de TRÈS IMPORTANT :
+« un rapport produit des infos qui sont traitées lors d'une analyse : de cette analyse ressort un
+plan d'action correctif ou des ajustements/optimisation. De ce plan d'action ressort des taches à
+inscrire dans check-list ».)*
+
+## Article 29
+
+*(2026-09-23, demande explicite de l'utilisateur, qualifiée par lui d'URGENTE : « quand tu me fais
+ton résumé final à chaque réponse [...] tu dois absolument me rappeler en intro : 1/ le contexte
+2/ à quelle demande (résumé) de ma part ça correspond 3/ l'étiquette de la tâche 4/ te souvenir que
+je ne suis pas codeur ».)*
+
+## Article 30
+
+*(2026-09-24, règle posée par l'utilisateur et qualifiée par lui d'IMPORTANTE : « avant de débuter
+n'importe quel autre chantier : on reprend d'abord les notes. règle importante [...] c'est donc un
+process à établir fermement ».)*
+
+## Article 31
+
+*(2026-09-25, demande explicite de l'utilisateur, qualifiée par lui de TRÈS IMPORTANTE : « pour
+chaque demande, tu dois utiliser un outil et non faire les choses à la main. Et si je te demande un
+rapport, ou que j'ai besoin d'un rapport, c'est TOUJOURS le rapport d'un outil, TOUJOURS, TOUJOURS.
+suivi de ton analyse + plan d'action selon le process. Mets cette règle dans le marbre de
+l'agence. » Il a demandé qu'elle soit ultra-optimisée et ultra-fiabilisée, parce que « de cette
+règle dépend une grande partie du fonctionnement actif de l'agence ».)*
+
+## Article 32
+
+*(2026-09-25, demande explicite de l'utilisateur, posée au même niveau que l'Article 31 : « ajoute
+aussi ta prise en compte du temps réel, au même niveau. C'est pareil, ça va conditionner tellement
+de choses derrière. »)*
+
+## Le process XP-IA-bonnes-pratiques-et-lecons — l'expérience de l'agent
+
+*(2026-09-23, nom donné par l'utilisateur. Un des process déclarés — leur liste se lit dans
+`PROCESSES` (`scripts/god-of-all-process.mjs`), jamais recopiée ici : elle en comptait six ce
+jour-là, elle en compte douze aujourd'hui. Document complet :
+`docs/xp-ia-process-detail.md` — jamais résumé ici.)*
+
+## Inventaire documentaire des outils
+
+*(Renommé le 2026-09-22, à la demande explicite de l'utilisateur : « je veux réserver tant que
+possible le nom catalogue pour le catalogue du coordinateur ». Ce tableau ne catalogue pas des
+offres de service, il inventorie les DOCUMENTS que chaque outil possède — deux choses différentes
+qui portaient le même nom, au point qu'une IA lisant « consulter le catalogue » ne pouvait pas
+savoir laquelle. Dette de reprise au sens exact de l'Article 27, corrigée plutôt que notée.)*
+
+## Référentiel technique — la référence à jour
+
+*(Condensé le 2026-09-23, tâche #628, même geste que l'Article 19 et sur la même preuve : la
+littérature publique appelle ça « progressive disclosure » — le document principal garde le
+DÉCLENCHEUR, le contenu vit dans le document lui-même, lu au moment où il sert. Ces 15 entrées
+pesaient 135 lignes et 14 obligations pour redire en prose ce que chaque fiche dit déjà mieux.
+**Aucun chemin n'a été retiré** : six d'entre eux ne sont atteignables que d'ici, vérifié avant
+de toucher.)*
+
+## Article 24 — les deux blocs réécrits le 2026-09-27 (chantier #208)
+
+**POURQUOI ILS ONT CHANGÉ DE FORME, et l'utilisateur l'a dit lui-même** : sur le second, sa
+relecture portait la mention « PAS COMPRIS ». Un bloc de charte qu'on ne comprend pas à la lecture
+ne protège rien en pratique — il occupe la place d'une règle sans en faire le travail. Le fond est
+strictement conservé (les deux exceptions sont les mêmes, et la condition « écrit noir sur blanc à
+côté » reste intacte) ; seule la formulation devient lisible. Le premier bloc, lui, est fondu dans
+la règle qu'il ne faisait que prolonger. **Voici les deux textes d'origine, mot pour mot.**
+
+**Précision du 2026-09-22, à la demande explicite de l'utilisateur** (« si un nouveau script arrive,
+toutes les fonctionnalités et parametres/certifications sont appliquées au nouvel outil qui rejoint
+l'équipe. Tous les outils et scripts sont bien calibrés pour accueillir des evolutions, jamais de
+listes ou fonctionnalités figées ») : l'évolutivité ne s'arrête pas à « aucune liste recopiée sans
+garde-fou ». Elle exige qu'un outil qui REJOINT l'équipe hérite de tout ce que l'équipe sait déjà
+faire, sans qu'on ait à y penser un registre après l'autre.
+
+**Ce que la règle impose en attendant** : toute nouvelle construction se conçoit pour accueillir un
+membre de plus sans modification de sa propre logique — un registre se LIT, il ne s'énumère pas ; un
+seuil se DÉRIVE, il ne se recopie pas ; une fonctionnalité nouvelle s'applique à TOUS les outils
+existants le jour où elle est écrite, jamais seulement à ceux auxquels on a pensé sur le moment.
+
+**Ce que cet Article n'exige PAS** : un vocabulaire fermé et stable par
+nature (les états d'une machine à états, une énumération de paliers) n'a rien à synchroniser et
+n'est jamais concerné ; un contenu explicitement curaté à la main par décision humaine documentée
+(ex. `KNOWN_LESSONS` du Smart Breaker, `SMART_BREAKER_CAPABILITIES`) reste légitime tel quel, tant
+que cette nature volontairement manuelle est écrite noir sur blanc à côté. Un audit exhaustif de
+tout le reste du paysage (au-delà des 12 outils déjà couverts par un garde-fou après cet audit) n'a
+pas été fait ce soir-là au-delà de ce qui précède — un futur passage complémentaire reste ouvert.
+
+

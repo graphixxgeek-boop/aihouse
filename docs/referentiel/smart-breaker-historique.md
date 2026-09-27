@@ -412,3 +412,41 @@ terrain — elle n'a pas été levée, et elle s'appliquera telle quelle à la p
 
 
 *(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*
+
+---
+
+## Le texte complet de la section « Smart Breaker », déménagé ici le 2026-09-27 (chantier #208)
+
+**POURQUOI** : ecotoken l'a signalée comme un MANUEL LOGÉ dans une section de règles — 538 tokens
+d'exploitation d'outil rechargés à chaque message, dans un fichier qui est censé porter des règles.
+La charte garde la **procédure d'urgence** (l'utilisateur ne veut pas ouvrir trois fichiers le jour
+d'une panne), **réduite aux gestes qu'aucun code ne fait à sa place** : les étapes déjà automatisées
+y sont désormais nommées comme telles au lieu d'être listées comme des consignes. Le texte intégral,
+lui, est ici.
+
+**Blocage de quota Gemini — outil surnommé « Smart Breaker ».** Regroupe
+`scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` + `scripts/api-providers.mjs` +
+`lib/gemini-keys.ts`. **Toutes ses règles opérationnelles** (fait établi sur le quota journalier par
+modèle et par projet, repli de modèle et de clé, rotation et recul exponentiel, portée production,
+condition stricte avant toute activation d un modèle de repli, discrétion) vivent dans
+`docs/referentiel/smart-breaker-historique.md` — **à lire avant toute intervention sur ce sujet**.
+Blueprint générique réutilisable : `docs/outil-resilience-api.md`. Ce qui reste ci-dessous est la
+seule chose qui doit rester sous les yeux en permanence : la procédure à suivre le jour où ça bloque.
+
+**Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
+429/503 répété :** (0) consulter Smart Conso API (`node scripts/smart-conso-api.mjs diagnostic
+--confirm`, cf. Article 22) — `check-gemini-quota.mjs` sonde plusieurs modèles × plusieurs clés en
+quelques secondes, c'est bien une action coûteuse au sens de cet Article, jamais une exception parce
+que c'est un diagnostic plutôt qu'une simulation ; (1) `node scripts/check-gemini-quota.mjs` pour
+identifier les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
+`.dev.vars` (`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) si un second projet Google est
+disponible, ajouter sa clé à `GEMINI_API_KEY_FALLBACKS` — vérifier D'ABORD qu'il s'agit bien d'un
+projet distinct, pas une seconde clé du même projet (sonder avec `check-gemini-quota.mjs` en forçant
+`GEMINI_API_KEY` sur cette nouvelle clé) ; (4) redémarrer le serveur de développement pour que
+`.dev.vars` soit effectivement chargé (confirmé empiriquement : une variable d'environnement shell
+seule n'est PAS prise en compte par le runtime Cloudflare Workers en mode dev) — en vérifiant
+qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent (nom de processus différent
+de `vinext dev`/`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser
+reprendre la simulation.
+
+

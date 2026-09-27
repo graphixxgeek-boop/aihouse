@@ -144,3 +144,51 @@ RYTHME des actions de l'agent pendant le développement. Il ne touche jamais à 
 en production, et son expérience INFORME l'Article 8 sans jamais le trancher. Un verdict de Smart
 Conso API ne peut donc pas servir d'argument pour fusionner les deux cerveaux, baisser la qualité
 d'un appel, ou modifier quoi que ce soit que l'Article 0 protège.
+
+---
+
+## La frontière avec l'Article 8, déménagée ici le 2026-09-27 (chantier #208)
+
+**POURQUOI ELLE A QUITTÉ LA CHARTE, et la raison compte autant que le texte** (Article 27) : ces
+deux paragraphes ne créent aucune obligation nouvelle — ils expliquent pourquoi deux règles
+voisines ne se mélangent jamais. Une explication se lit au moment où le doute survient ; la garder
+sous les yeux à chaque message coûtait ~350 tokens pour une question qu'on ne se pose presque
+jamais. **Rien n'est perdu : le texte est repris mot pour mot.** L'obligation, elle, reste dans la
+charte, à l'Article 8 (que l'utilisateur a explicitement décidé de conserver après avoir vu
+qu'aucun outil ne le porte) et à l'Article 22.
+
+**Frontière avec Smart Conso API** — liés en esprit
+(les deux visent à ne pas gaspiller les appels API), mais à deux niveaux différents, jamais
+fusionnés en un seul mécanisme : cet Article 8 gouverne l'ARCHITECTURE du jeu en production (ce que
+le code fait pour un vrai visiteur), tranché une fois pour toutes et protégé par l'Article 0, qui
+prime toujours. Smart Conso API (cf. section dédiée plus bas) régule un terrain différent : le
+rythme des actions de l'agent PENDANT le travail de développement (simulations lancées,
+diagnostics) — jamais l'architecture de production elle-même. Smart Conso API ne peut donc jamais
+suggérer de modifier un choix déjà tranché par cet article (comme la séparation des deux cerveaux)
+au nom de l'économie : ce serait exactement la dérive que l'Article 0 interdit.
+
+**Dans l'autre sens, en revanche, un bénéfice réel et légitime existe** : l'expérience accumulée par Smart
+Conso API (combien coûte réellement une simulation, un diagnostic, à quel rythme le quota se tend)
+peut ÉCLAIRER une décision future sous cet article — par exemple juger si une nouvelle
+fonctionnalité doit appeler l'API en direct ou générer une réplique localement (Article 10), en
+connaissance de cause plutôt qu'à l'aveugle. Sens unique, strictement : Smart Conso API informe,
+elle ne tranche jamais — la décision reste toujours gouvernée par l'Article 0, quoi que ses données
+suggèrent.
+
+---
+
+## Le texte complet de l'Article 22, déménagé ici le 2026-09-27 (chantier #208)
+
+**Abraham classait cet Article « MODE D'EMPLOI D'OUTIL », c'est-à-dire réductible à un déclencheur et un renvoi vérifié — et l'utilisateur l'avait pressenti** (« A SUPPRIMER : les outils assurent »). La suppression TOTALE, elle, aurait fait disparaître l'obligation de consulter, que rien d'autre ne porte : la charte garde donc le déclencheur et les deux verdicts, cette fiche garde le reste. Une règle de conduite surveillée (`conso-api-consultee`, `angel-of-ia-process`) remplace ce que la prose faisait toute seule.
+
+**Article 22 — Smart Conso API : consultation systématique avant toute action coûteuse.** Avant tout
+appel réel à l'API Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le
+jeu réel, sous la seule autorité de l'Article 8 — l'agent consulte Smart Conso API
+(`scripts/smart-conso-api.mjs::assess()`), jamais après coup. Un verdict "seuil souple" reste
+négociable ; un verdict "seuil dur" est non négociable et exige une validation humaine explicite.
+Frontière stricte avec l'Article 8 : Smart Conso API ne modifie jamais l'architecture de production
+ni ne bascule un modèle/une clé de son propre chef — son expérience INFORME l'Article 8, jamais ne
+le court-circuite. Détail complet : `docs/smart-conso-api-blueprint.md` et
+`docs/referentiel/smart-conso-api.md`.
+
+

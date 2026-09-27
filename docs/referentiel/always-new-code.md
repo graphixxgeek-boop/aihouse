@@ -140,3 +140,25 @@ qu'ils sont trop ou trop peu sensibles.
 en silence. `extractHarmoniaThemes()`/`findThemesDivergingFromHarmonia()` relisent le texte réel de
 harmonia.md et rapportent tout écart dans les deux sens (un thème d'HARMONIA absent d'ici, ou
 l'inverse), câblé dans `main()`.
+
+---
+
+## Le texte complet de l'Article 23, fondu dans l'Article 7 le 2026-09-27 (chantier #208)
+
+**Le numéro 23 reste occupé dans la charte** — il est cité tel quel dans le code et la documentation, et le renuméroter casserait ces renvois (règle d'ouverture de CLAUDE.md). Ce qui a changé : l'Article 7 porte désormais lui-même les obligations qui comptent (jamais automatique, jamais un résultat exact, jamais appliqué sans interroger l'utilisateur, et le garde-fou de l'Article 19 avant de qualifier quoi que ce soit d'empilé), au lieu qu'un Article entier serve à dire « l'Article 7 a un outil ». Abraham n'avait trouvé AUCUN recouvrement non déclaré entre les deux : ce n'était donc pas une redondance, seulement un chaînon qui coûtait plus qu'il ne portait.
+
+**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7
+demandait déjà, périodiquement, de se poser la question de la page blanche — cet Article lui donne
+un vrai outil. Sur UNE zone à la fois, ALWAYS-NEW-CODE imagine comment cette zone serait construite
+aujourd'hui avec toute la connaissance actuelle du projet, puis compare à la structure réelle pour
+repérer la dette d'organisation — ce vrai zoom profond reste jamais automatique (déclenché via
+CHECK-LEVEL-TARGET niveau "Exceptionnel"), jamais un résultat "exact à 100 %" (toujours un palier de
+confiance), jamais une application automatique (l'agent interroge toujours l'utilisateur avant tout
+changement réel). Distinct de sa couche légère (rotation + indices mécaniques d'empilement, zéro
+raisonnement), qui elle tourne bien automatiquement à chaque commit en tant que sixième Gardien
+sacré du code (Article 20) — les deux ne sont jamais confondues.
+**Garde-fou non négociable** : avant de qualifier quoi que ce soit d'"empilé, à corriger", toujours
+vérifier d'abord que ce n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
+Détail complet : `docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
+
+

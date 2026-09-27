@@ -147,3 +147,20 @@ changements — proposition qui attend toujours une confirmation, jamais un lanc
 
 **La conséquence pour qui reprend ce projet** : si vous hésitez à le lancer, ne le lancez pas. Son
 utilité vient de sa rareté ; banalisé, il devient un coût fixe déguisé en vigilance.
+
+---
+
+## Le texte complet de l'Article 21, déménagé ici le 2026-09-27 (chantier #208)
+
+**La charte garde le VERROU** — jamais automatique, jamais sans confirmation explicite de l'utilisateur — et son critère de succès. Elle a laissé partir le mode d'emploi. L'utilisateur avait d'abord tranché pour la suppression totale ; la seconde confirmation que l'Article 14 impose a montré que ça retirait le verrou lui-même, sur un outil qui coûte de vrais appels payants, et il a choisi de le garder. C'est exactement ce que la double confirmation protège.
+
+**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement
+à ARGUS et HARMONIA (Article 20, toujours déployés), HYPER-SCAN-CHECKPOINT ne se déclenche jamais
+automatiquement, jamais en continu — seulement sur demande explicite de l'utilisateur, ou proposé
+par l'agent après une grosse vague de changements (jamais lancé sans confirmation). Son seul vrai
+critère de succès n'est jamais "a-t-il tourné sans erreur" mais combien de bugs ou d'oublis
+réellement inconnus il a fait remonter. Détail complet (ce qu'il orchestre, la double perspective en
+version complète, la preuve vivante de sa vocation) : `docs/hyper-scan-checkpoint-blueprint.md` et
+`docs/referentiel/hyper-scan-checkpoint.md`.
+
+

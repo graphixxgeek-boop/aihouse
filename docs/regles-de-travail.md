@@ -3168,3 +3168,83 @@ manquait n'était pas une commande mais la phrase qui dit par où passer :
 `findOutilsAMainSansCommande()` (CASSANDRA-RH) vérifie mécaniquement les deux formes — la commande
 écrite, ou la phrase de détour — pour tout outil que la table déclare manuel. Un outil ajouté demain
 avec le même déclenchement est couvert sans qu'on y pense.
+
+---
+
+# §2ter — Ce qui vient de CLAUDE.md le 2026-09-27 (chantier #208)
+
+**POURQUOI CES QUATRE BLOCS SONT ICI PLUTÔT QUE DANS LA CHARTE**, et la raison tient en une phrase :
+ce sont des règles de MÉTHODE, pas des règles sur le contenu du jeu — exactement la frontière que ce
+document-ci déclare tenir depuis sa création. Ils décrivent comment une livraison se déroule entre
+l'utilisateur et l'agent, et ils se lisent au moment où on livre, jamais à chaque message.
+**Aucun mot n'est changé, aucune obligation n'est retirée** : la charte garde l'obligation de suivre
+ces étapes sans en sauter une (Article 18), ce document dit lesquelles.
+
+## La livraison des transcriptions complètes
+
+**Préférence de livraison des transcriptions complètes.** Depuis le 2026-09-18, l'utilisateur a
+explicitement demandé la livraison des transcriptions intégrales de simulation **en fichier joint
+uniquement**, jamais collées en clair dans la réponse — ceci remplace l'instruction initiale du
+2026-09-16 qui demandait un copier-coller sans résumé directement dans la conversation. Toute
+future simulation de bout en bout doit donc être livrée via `SendUserFile`, pas inline.
+
+
+## Ce qui se passe après la livraison d'une simulation
+
+**Double lecture en parallèle.** Dès que le transcript est
+livré (étape 3), l'utilisateur le lit et rédige ses propres commentaires de son côté, en parallèle
+du travail de l'agent (étapes 4 à 7) — les deux lectures avancent en même temps, chacune de son
+côté, pas l'une après l'autre. Une fois son propre travail de mise à jour terminé (étape 7 close),
+l'agent le signale clairement, et le prochain message de l'utilisateur sera typiquement
+« voici mes commentaires » : l'agent doit s'y attendre et reconnaître ce signal comme l'ouverture
+d'un second passage de retours sur le MÊME transcript (déjà lu et déjà en partie corrigé), à traiter
+point par point comme tout retour annoté (cf. Article 16, complément du 2026-09-17). Pour rester
+synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livraison → double lecture en
+parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
+moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
+
+**Questions de calibrage après « voici mes commentaires ».** L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
+s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
+second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
+plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
+(corrigeables directement, cf. Article 3) et lesquels impliquent un choix de conception réel
+(portée d'un nouveau mécanisme, calibrage d'un seuil, arbitrage entre deux comportements plausibles)
+— et pose ses questions de calibrage sur ces derniers avant d'implémenter quoi que ce soit dessus,
+exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correction directe après
+investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
+traités point par point (Article 16, complément du 2026-09-17).
+
+**Sondage rapide juste après la livraison des documents d'une simulation.** Dès que le
+transcript, le dossier et le rapport KPI d'une nouvelle simulation sont livrés (étapes 3 et 4 de
+l'Article 18), avant de se lancer dans l'analyse détaillée (étape 5), l'agent pose un petit
+questionnaire de calibrage en trois questions, via l'outil de questions dédié (format ci-dessus) :
+1. Est-ce que l'utilisateur va lire la conversation livrée entièrement, en diagonale, ou pas du
+   tout — pour savoir si l'analyse peut supposer une lecture déjà faite ou doit tout réexpliquer.
+2. Est-ce que l'utilisateur a besoin que l'agent cite des extraits précis de la conversation pour
+   illustrer chaque point remonté dans l'analyse, plutôt qu'une description sans citation.
+3. Une troisième question, construite par l'agent selon le contexte du moment (chantiers en cours,
+   urgence, autres demandes en attente), portant sur la façon d'enchaîner les tâches qui suivent.
+Les réponses obtenues doivent concrètement changer la façon dont l'agent répond ensuite (niveau de
+détail, présence ou non de citations, ordre des tâches) — jamais notées puis ignorées. Cette
+exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
+rétroactivement à une livraison déjà faite avant qu'elle n'existe.
+
+---
+
+## Le texte complet de l'ancien Article 18 (protocole de simulation), remplacé le 2026-09-27
+
+**L'Article 18 ne visait que la simulation**, si bien que chaque nouveau process devait redemander la même discipline à son compte — ils sont douze aujourd'hui. Sur décision de l'utilisateur (question 11 sur 30), il est devenu le CADRE de tous les gros process, en gardant son numéro pour ne casser aucun renvoi. Le protocole de simulation lui-même n'a rien perdu : il vit dans son document de process, et god-of-all-process le nomme quand on le lui demande. Voici le texte d'origine, mot pour mot.
+
+**Article 18 — Protocole de simulation complète.** Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
+simulation complète, intégrale, de bout en bout), l'agent suit systématiquement, sans en sauter une
+étape et sans avoir besoin qu'on le lui redemande à chaque fois, le protocole complet et détaillé
+(consultation Smart Conso API, lancement contre un serveur à jour, avancement donné en direct,
+livraison du transcript/dossier en fichier joint, archivage durable, rapport KPI, lecture
+EL-PROFESSOR/THE-SCREENER avant analyse, comparaison avec l'historique, au moins une dizaine de
+questions de calibrage avant toute correction) documenté dans `docs/regles-de-travail.md` — jamais
+improvisé, jamais raccourci de sa propre initiative. **LE-RÉGISSEUR** (`scripts/le-regisseur.mjs`,
+2026-09-21) orchestre mécaniquement les étapes qui ne demandent aucun jugement (archivage des
+fichiers, extraction du résumé compact, rapport KPI) — jamais les deux index de jugement
+(`docs/simulations/index.md`, `docs/referentiel/kpi-index.md`), qui restent la plume de l'agent.
+
+

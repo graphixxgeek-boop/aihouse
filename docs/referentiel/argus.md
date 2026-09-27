@@ -121,3 +121,35 @@ se corrige, le second se DÉCIDE — et c'est pourquoi ARGUS signale plutôt qu'
 **Ce qui le distingue d'une incohérence HARMONIA** : HARMONIA compare deux choses qui existent
 toutes les deux et devraient s'accorder (un chiffre dans un document, le même chiffre dans le code).
 ARGUS cherche ce qui n'existe NULLE PART. L'un vérifie un lien, l'autre son absence.
+
+---
+
+## L'énumération des Gardiens sacrés, retirée de la charte le 2026-09-27 (chantier #208)
+
+**Pourquoi elle est partie** : la charte listait les membres à la main, ce que l'Article 24 interdit — un registre se LIT. La preuve du coût est dans le texte lui-même : il disait « les six tournent automatiquement » quarante lignes après avoir nommé le septième. La charte garde désormais le CRITÈRE d'appartenance, qui est la vraie règle ; les membres se lisent dans `docs/referentiel/classification-agence.md`, généré.
+
+**Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous logiques.**
+ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre
+explicitement (combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence
+logique manquée, lien discret non vu) — sur une idée neuve comme sur le code déjà écrit. **HARMONIA**
+(cousin d'ARGUS, cohérence des liens déjà existants), **AXA-CHECK** (troisième membre, robustesse/
+fragilité RÉELLES par couverture de test), **CLEAN-DIRTY-OLD** (quatrième membre, stagnation
+relative — délègue toujours son jugement aux trois autres, jamais une réponse fabriquée) et
+**CLONE-HUNTER** (cinquième membre depuis le 2026-09-22, blocs de code dupliqués — littéral et par
+renommage bijectif cohérent) et **ALWAYS-NEW-CODE** (sixième membre depuis le 2026-09-21, mais
+seulement sa COUCHE LÉGÈRE — `recommendZone()`/`addendaSignal()`/`churnSignal()`, zéro raisonnement)
+rejoignent la même règle — le critère d'appartenance : délivre un vrai scan de qualité du code ET
+peut tourner gratuitement, mécaniquement, à chaque commit. Ce critère exclut structurellement le
+LIVRABLE qui exige un vrai raisonnement payant (le vrai zoom profond « page blanche » d'ALWAYS-NEW-
+CODE lui-même, ou THE-FINAL-JUDGE dans son ensemble — celui-ci sans aucune couche gratuite),
+jamais l'outil entier par contrecoup quand une couche légère existe séparément. Les six tournent
+automatiquement, comme `check-house.mjs`, à chaque commit (partie mécanique gratuite, câblée dans le
+crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en plus, sur demande, une seconde partie à vrai
+raisonnement (coût réel, Article 8), en particulier avant toute idée nouvelle. Détail complet de
+chaque outil (mécanique exacte, carte de dépendances, registres) : `docs/regles-de-travail.md` §7ter
+(tableau des outils), `docs/referentiel/organisation-agence.md` (l'organigramme complet — ces six y
+sont « les Gardiens sacrés du code ») et la fiche dédiée de chacun (`docs/referentiel/argus.md`,
+`harmonia.md`, `axa-check.md`, `clean-dirty-old.md`, `clone-hunter.md`, `always-new-code.md`,
+chacune avec son propre blueprint générique) — jamais répété ici.
+
+

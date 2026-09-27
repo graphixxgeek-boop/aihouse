@@ -22,9 +22,6 @@ C'est l'exact opposé de l'agent conversationnel consensuel habituel.
 
 ## Les deux projets, et pourquoi ils n'en font qu'un
 
-*(Posé explicitement par l'utilisateur le 2026-09-22, et noté ici plutôt qu'ailleurs parce que
-c'est le cadre qui rend intelligible tout le reste du fichier.)*
-
 **Il y a deux projets menés en parallèle : le site et l'Agence.** Sa formulation exacte :
 « L'agence est un prétexte pour construire le site, le site est un prétexte pour construire
 l'agence. Quand le site sera fini, l'agence sera aussi potentiellement finie : il suffira de
@@ -132,12 +129,6 @@ menaces) :**
   condition stricte que le ton reste clairement sarcastique/hypothétique — jamais une vraie menace
   posée comme un fait sur le point de se réaliser.
 
-**Préférence de livraison des transcriptions complètes.** Depuis le 2026-09-18, l'utilisateur a
-explicitement demandé la livraison des transcriptions intégrales de simulation **en fichier joint
-uniquement**, jamais collées en clair dans la réponse — ceci remplace l'instruction initiale du
-2026-09-16 qui demandait un copier-coller sans résumé directement dans la conversation. Toute
-future simulation de bout en bout doit donc être livrée via `SendUserFile`, pas inline.
-
 L'ambiance est dystopique, façon série futuriste où l'insolite s'installe progressivement. Les
 deux agents ne se connaissent pas au départ ; une relation évolutive et réaliste se construit
 entre eux (complicité, intimité, désaccords, disputes), avec une texture humaine — jamais réduite
@@ -188,28 +179,25 @@ que du document de référence, comment reconstruirais-je ce système aujourd'hu
 sert à repérer les lourdeurs accumulées par construction progressive et à les éliminer, sans
 jamais perdre de comportement observable.
 
+**L'outil qui la rend concrète, ALWAYS-NEW-CODE** (Article 23, fondu ici le 2026-09-27) : sur UNE
+zone à la fois, il imagine comment elle serait construite aujourd'hui avec toute la connaissance du
+projet, puis compare à la structure réelle. Ce zoom profond n'est **jamais automatique**, ne rend
+**jamais un résultat exact à 100 %** (toujours un palier de confiance), et **ne s'applique jamais
+tout seul** — l'agent interroge toujours l'utilisateur avant le moindre changement réel. Sa couche
+légère, elle, tourne bien à chaque commit ; les deux ne se confondent jamais. **Garde-fou non
+négociable** : avant de qualifier quoi que ce soit d'« empilé, à corriger », vérifier d'abord que ce
+n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
+
 **Article 8 — Sobriété des appels API, sans compromis sur l'expérience.** Limiter les appels au
 strict nécessaire, jamais au prix du naturel. La séparation "un cerveau par personnage" (deux
 appels Gemini distincts, chacun ne voyant que sa propre perception) est maintenue malgré son
 coût : elle sert directement la qualité de l'esprit des personnages.
 
-**Frontière avec Smart Conso API** — liés en esprit
-(les deux visent à ne pas gaspiller les appels API), mais à deux niveaux différents, jamais
-fusionnés en un seul mécanisme : cet Article 8 gouverne l'ARCHITECTURE du jeu en production (ce que
-le code fait pour un vrai visiteur), tranché une fois pour toutes et protégé par l'Article 0, qui
-prime toujours. Smart Conso API (cf. section dédiée plus bas) régule un terrain différent : le
-rythme des actions de l'agent PENDANT le travail de développement (simulations lancées,
-diagnostics) — jamais l'architecture de production elle-même. Smart Conso API ne peut donc jamais
-suggérer de modifier un choix déjà tranché par cet article (comme la séparation des deux cerveaux)
-au nom de l'économie : ce serait exactement la dérive que l'Article 0 interdit.
-
-**Dans l'autre sens, en revanche, un bénéfice réel et légitime existe** : l'expérience accumulée par Smart
-Conso API (combien coûte réellement une simulation, un diagnostic, à quel rythme le quota se tend)
-peut ÉCLAIRER une décision future sous cet article — par exemple juger si une nouvelle
-fonctionnalité doit appeler l'API en direct ou générer une réplique localement (Article 10), en
-connaissance de cause plutôt qu'à l'aveugle. Sens unique, strictement : Smart Conso API informe,
-elle ne tranche jamais — la décision reste toujours gouvernée par l'Article 0, quoi que ses données
-suggèrent.
+**Sens unique avec Smart Conso API, et il ne se négocie pas** : son expérience du coût réel INFORME
+une décision prise sous cet Article, elle ne la tranche jamais. Elle ne peut donc jamais suggérer de
+revenir sur un choix déjà arbitré ici — la séparation des deux cerveaux en premier — au nom de
+l'économie : ce serait exactement la dérive que l'Article 0 interdit. Pourquoi les deux règles ne se
+mélangent pas, en détail : `docs/referentiel/smart-conso-api.md`.
 
 **Article 9 — Rejouabilité et surprise.** Chaque session doit pouvoir raconter une histoire
 différente. Même schéma d'enquête, jamais le même déroulé mot pour mot.
@@ -274,7 +262,8 @@ d'origine affirmait que le visage restait un emoji, onze versions après son rem
 n'était revenu sur cette phrase). **La liste des documents à relire ne s'écrit pas ici** : elle se
 lit sur la table des matières réelle de `docs/referentiel/` et la racine de `docs/`, jamais recopiée
 de mémoire — une liste figée se périme au premier outil créé, et celle qui vivait ici en citait neuf
-quand le dossier en comptait cinquante-trois. Cette relecture se fait à l'occasion de toute revue de
+quand le dossier en comptait déjà cinquante-trois — il en porte le double aujourd'hui, ce qui
+montre à quelle vitesse une telle liste ment. Cette relecture se fait à l'occasion de toute revue de
 fond demandée par l'utilisateur (bilan, audit, planification), jamais renvoyée à plus tard faute
 d'occasion dédiée. Un écart trouvé se corrige immédiatement (Article 3), jamais seulement signalé.
 
@@ -382,60 +371,30 @@ PRINCIPE que le modèle peut s'appliquer à lui-même à n'importe quelle répli
 registre, une règle de non-répétition portant sur le fond et sur toute la session, jamais seulement
 sur les deux derniers tours) — jamais un exemple de plus dans une énumération.
 
-**Article 18 — Protocole de simulation complète.** Quand l'utilisateur demande de « lancer une simulation » (ou toute formulation équivalente —
-simulation complète, intégrale, de bout en bout), l'agent suit systématiquement, sans en sauter une
-étape et sans avoir besoin qu'on le lui redemande à chaque fois, le protocole complet et détaillé
-(consultation Smart Conso API, lancement contre un serveur à jour, avancement donné en direct,
-livraison du transcript/dossier en fichier joint, archivage durable, rapport KPI, lecture
-EL-PROFESSOR/THE-SCREENER avant analyse, comparaison avec l'historique, au moins une dizaine de
-questions de calibrage avant toute correction) documenté dans `docs/regles-de-travail.md` — jamais
-improvisé, jamais raccourci de sa propre initiative. **LE-RÉGISSEUR** (`scripts/le-regisseur.mjs`,
-2026-09-21) orchestre mécaniquement les étapes qui ne demandent aucun jugement (archivage des
-fichiers, extraction du résumé compact, rapport KPI) — jamais les deux index de jugement
+**Article 18 — Un gros process se suit en entier, jamais raccourci de sa propre initiative.**
+Quand l'utilisateur déclenche une activité qui a son process écrit — lancer une simulation, une
+Ronde, une nuit autonome, l'intégration d'un outil, une modification de document de référence, ou
+n'importe laquelle des autres — l'agent en suit **toutes les étapes, dans leur ordre, sans en
+sauter une et sans avoir besoin qu'on le lui redemande**. Il ne les réordonne pas de lui-même, et
+il ne saute une étape que pour une raison qu'il ÉCRIT (Article 26).
+
+**LA RÈGLE EST LA MÊME POUR TOUS, ET C'EST TOUT L'INTÉRÊT** *(2026-09-27 : elle ne visait que la
+simulation, si bien que chaque nouveau process devait redemander la même discipline à son compte)*.
+**Quel process s'applique, et quelles sont ses étapes, ne se devine jamais** : ça se demande à
+`node scripts/god-of-all-process.mjs which "<la tâche>"`, qui lit la liste réelle des process
+déclarés — jamais une liste recopiée ici, qui se périmerait au douzième (Article 24). Le détail de
+chacun vit dans son propre document, nommé par cette réponse.
+
+**Ce que ça n'autorise pas** : réduire un process à ses étapes mécaniques. **LE-RÉGISSEUR**
+(`scripts/le-regisseur.mjs`) orchestre celles qui ne demandent aucun jugement — archivage,
+extraction du résumé compact, rapport KPI — **jamais les index de jugement**
 (`docs/simulations/index.md`, `docs/referentiel/kpi-index.md`), qui restent la plume de l'agent.
 
-**Double lecture en parallèle.** Dès que le transcript est
-livré (étape 3), l'utilisateur le lit et rédige ses propres commentaires de son côté, en parallèle
-du travail de l'agent (étapes 4 à 7) — les deux lectures avancent en même temps, chacune de son
-côté, pas l'une après l'autre. Une fois son propre travail de mise à jour terminé (étape 7 close),
-l'agent le signale clairement, et le prochain message de l'utilisateur sera typiquement
-« voici mes commentaires » : l'agent doit s'y attendre et reconnaître ce signal comme l'ouverture
-d'un second passage de retours sur le MÊME transcript (déjà lu et déjà en partie corrigé), à traiter
-point par point comme tout retour annoté (cf. Article 16, complément du 2026-09-17). Pour rester
-synchronisé à chaque fois, l'agent rappelle explicitement ce déroulé (livraison → double lecture en
-parallèle → signal de fin de son côté → « voici mes commentaires » attendu de l'utilisateur) au
-moment où il livre le transcript d'une nouvelle simulation, pas seulement la première fois.
-
-**Questions de calibrage après « voici mes commentaires ».** L'exigence de l'étape 7 de l'Article 18 (au moins une dizaine de questions avant correction) ne
-s'applique pas seulement à l'analyse initiale de l'agent : elle s'applique de la même façon à ce
-second passage de retours annotés par l'utilisateur. Dès que « voici mes commentaires » arrive avec
-plusieurs points distincts, l'agent identifie lesquels sont des bugs à cause racine évidente
-(corrigeables directement, cf. Article 3) et lesquels impliquent un choix de conception réel
-(portée d'un nouveau mécanisme, calibrage d'un seuil, arbitrage entre deux comportements plausibles)
-— et pose ses questions de calibrage sur ces derniers avant d'implémenter quoi que ce soit dessus,
-exactement comme pour l'analyse initiale. Les deux temps (bugs clairs → correction directe après
-investigation ; conception ouverte → questions d'abord) peuvent cohabiter dans la même réponse,
-traités point par point (Article 16, complément du 2026-09-17).
-
-**Sondage rapide juste après la livraison des documents d'une simulation.** Dès que le
-transcript, le dossier et le rapport KPI d'une nouvelle simulation sont livrés (étapes 3 et 4 de
-l'Article 18), avant de se lancer dans l'analyse détaillée (étape 5), l'agent pose un petit
-questionnaire de calibrage en trois questions, via l'outil de questions dédié (format ci-dessus) :
-1. Est-ce que l'utilisateur va lire la conversation livrée entièrement, en diagonale, ou pas du
-   tout — pour savoir si l'analyse peut supposer une lecture déjà faite ou doit tout réexpliquer.
-2. Est-ce que l'utilisateur a besoin que l'agent cite des extraits précis de la conversation pour
-   illustrer chaque point remonté dans l'analyse, plutôt qu'une description sans citation.
-3. Une troisième question, construite par l'agent selon le contexte du moment (chantiers en cours,
-   urgence, autres demandes en attente), portant sur la façon d'enchaîner les tâches qui suivent.
-Les réponses obtenues doivent concrètement changer la façon dont l'agent répond ensuite (niveau de
-détail, présence ou non de citations, ordre des tâches) — jamais notées puis ignorées. Cette
-exigence est nouvelle : elle s'applique à partir de la simulation suivant son adoption, pas
-rétroactivement à une livraison déjà faite avant qu'elle n'existe.
-
-*(Les trois blocs ci-dessus ont été déplacés ici le 2026-09-22 : ils vivaient sous l'Article 16
-(format des questions) alors qu'ils décrivent tous les trois ce qui se passe APRÈS la livraison
-d'une simulation — le sujet de l'Article 18, qu'ils citent d'ailleurs nommément. Aucun mot changé,
-seulement rangés sous l'Article dont ils parlent.)*
+**Ce qui se passe APRÈS la livraison d'une simulation** — la double lecture en parallèle, les
+questions de calibrage sur « voici mes commentaires », et le sondage en trois questions posé juste
+après la livraison — vit dans `docs/regles-de-travail.md`, lu au moment où on livre. Les trois sont
+des ÉTAPES, pas des règles de contenu ; l'obligation qui reste ici est de les suivre sans en sauter
+une.
 
 **Article 19 — Comprendre avant de toucher.** Avant de modifier une ligne de code existante, comprendre la logique en place et
 la raison pour laquelle elle a été écrite ainsi — jamais un changement à l'aveugle sur la seule foi
@@ -467,42 +426,30 @@ compris avant d'agir — n'a pas de porteur possible, et le déclarer ici EST la
 (Article 27).
 
 **Article 20 — ARGUS : aucun travail ne se termine sans passer par le détecteur de trous logiques.**
-ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre
-explicitement (combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence
-logique manquée, lien discret non vu) — sur une idée neuve comme sur le code déjà écrit. **HARMONIA**
-(cousin d'ARGUS, cohérence des liens déjà existants), **AXA-CHECK** (troisième membre, robustesse/
-fragilité RÉELLES par couverture de test), **CLEAN-DIRTY-OLD** (quatrième membre, stagnation
-relative — délègue toujours son jugement aux trois autres, jamais une réponse fabriquée) et
-**CLONE-HUNTER** (cinquième membre depuis le 2026-09-22, blocs de code dupliqués — littéral et par
-renommage bijectif cohérent) et **ALWAYS-NEW-CODE** (sixième membre depuis le 2026-09-21, mais
-seulement sa COUCHE LÉGÈRE — `recommendZone()`/`addendaSignal()`/`churnSignal()`, zéro raisonnement)
-rejoignent la même règle — le critère d'appartenance : délivre un vrai scan de qualité du code ET
-peut tourner gratuitement, mécaniquement, à chaque commit. Ce critère exclut structurellement le
-LIVRABLE qui exige un vrai raisonnement payant (le vrai zoom profond « page blanche » d'ALWAYS-NEW-
-CODE lui-même, ou THE-FINAL-JUDGE dans son ensemble — celui-ci sans aucune couche gratuite),
-jamais l'outil entier par contrecoup quand une couche légère existe séparément. Les six tournent
-automatiquement, comme `check-house.mjs`, à chaque commit (partie mécanique gratuite, câblée dans le
-crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en plus, sur demande, une seconde partie à vrai
-raisonnement (coût réel, Article 8), en particulier avant toute idée nouvelle. Détail complet de
-chaque outil (mécanique exacte, carte de dépendances, registres) : `docs/regles-de-travail.md` §7ter
-(tableau des outils), `docs/referentiel/organisation-agence.md` (l'organigramme complet — ces six y
-sont « les Gardiens sacrés du code ») et la fiche dédiée de chacun (`docs/referentiel/argus.md`,
-`harmonia.md`, `axa-check.md`, `clean-dirty-old.md`, `clone-hunter.md`, `always-new-code.md`,
-chacune avec son propre blueprint générique) — jamais répété ici.
+ARGUS repère les trous logiques qu'aucun autre garde-fou de cette charte ne couvre explicitement
+(combinaison de mécanismes jamais envisagée, cas limite oublié, conséquence logique manquée, lien
+discret non vu) — sur une idée neuve comme sur le code déjà écrit. Il n'est pas seul : il appartient
+au rang des **Gardiens sacrés du code**, qui est aussi leur famille.
 
-**Mise à jour du 2026-09-26, sur ses décisions du jour — trois précisions, aucune obligation retirée.**
-(1) **Ils sont SEPT**, pas six : SAFE-EXPORT a rejoint le rang le 2026-09-23 et le texte ci-dessus le
-dit déjà ; ce rappel existe parce que le chiffre « six » traîne encore dans plusieurs documents.
-(2) **Ils ont désormais leur propre FAMILLE**, « Gardiens sacrés du code », sur décision explicite de
-l'utilisateur. Le nom répète le rang, et c'est assumé : une famille explicitement redondante se lit
-mieux qu'un troisième nom pour la même chose (l'ancienne s'appelait « Équipe noyau (Article 20) », un
-nom que plus personne ne rattachait). **Le rang et la famille restent deux axes indépendants** — la
-preuve tient dans le dépôt : un Gardien sacré peut parfaitement vivre ailleurs, et le critère
-d'appartenance au RANG reste le critère double énoncé plus haut, jamais l'appartenance à la famille.
-(3) **Le mot « outil » ne désigne plus un type de fichier** : il désigne désormais n'importe quel
-fichier de l'outillage, au sens large. Le type qui s'appelait ainsi s'appelle « commande documentée »
-(nom provisoire, à trancher avec la fournée de renommage). Aucune règle de cet Article ne change :
-seul le vocabulaire cesse de dire deux choses à la fois (Article 20bis).
+**LE RANG SE DÉFINIT PAR SON CRITÈRE, JAMAIS PAR LA LISTE DE SES MEMBRES** *(Article 24 : un
+registre se LIT, il ne se recopie pas — et c'est cette énumération qui laissait traîner le chiffre
+« six » alors qu'ils sont sept)*. **Le critère est double et non négociable** : délivrer un vrai
+scan de QUALITÉ DU CODE **et** pouvoir tourner gratuitement, mécaniquement, à CHAQUE commit. Il
+exclut structurellement ce qui exige un raisonnement payant — le zoom profond « page blanche »
+d'ALWAYS-NEW-CODE, THE-FINAL-JUDGE en entier — sans exclure l'outil par contrecoup quand une couche
+légère existe séparément. **Qui sont les membres aujourd'hui se lit** dans
+`docs/referentiel/classification-agence.md`, qui est généré et donc jamais périmé, et dans
+`docs/referentiel/organisation-agence.md` pour l'organigramme.
+
+Tous tournent automatiquement, comme `check-house.mjs`, à chaque commit (partie mécanique gratuite,
+câblée dans le crochet `post-commit`) ; ARGUS et HARMONIA ajoutent en plus, sur demande, une seconde
+partie à vrai raisonnement (coût réel, Article 8), en particulier avant toute idée nouvelle. La
+mécanique exacte de chacun vit dans sa fiche `docs/referentiel/<outil>.md`, jamais répétée ici.
+
+**Le mot « outil » ne désigne plus un type de fichier** *(2026-09-26)* : il désigne n'importe quel
+fichier de l'outillage, au sens large. Le type qui s'appelait ainsi s'appelle « commande
+documentée » (nom provisoire, à trancher avec la fournée de renommage). Aucune règle de cet Article
+ne change : seul le vocabulaire cesse de dire deux choses à la fois (Article 20bis).
 Le rangement complet — types, rangs, familles, classes, indice — vit dans
 `docs/referentiel/classification-agence.md`, généré et donc jamais périmé.
 
@@ -524,65 +471,30 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
-**Article 20bis — Quatre mots distincts, jamais « gardien » tout court.**
-*(2026-09-23, demande explicite de l'utilisateur : « autre dette de vocabulaire : l'appellation
-"gardien" pour des agents différents : corrige ça : les différents gardiens doivent être distingués,
-garde l'expression "gardien sacré" ».)* Le même mot désignait quatre rôles qui n'ont ni le même
-objet, ni la même autorité, ni le même rythme — exactement la dette de reprise que l'Article 27
-nomme : un nom propre sans définition atteignable. Une IA lisant « le gardien a validé » ne pouvait
-pas savoir lequel avait validé quoi.
+**Article 20bis — Quatre mots distincts, jamais « gardien » tout court.** Le même mot désignait
+quatre rôles qui n'ont ni le même objet, ni la même autorité, ni le même rythme : **Gardien sacré du
+code**, **Contrôleur de process**, **Veilleur**, **Garde-fou mécanique**. Une IA lisant « le gardien
+a validé » ne pouvait pas savoir lequel avait validé quoi — une dette de reprise au sens exact de
+l'Article 27. **Le mot employé seul, comme titre, n'a plus de sens ici : il se qualifie toujours.**
+Ce que chacun des quatre recouvre, l'équivalence de l'orthographe anglaise « guardian », et
+l'exception déclarée du surnom R/O-Guardian : `docs/referentiel/organisation-agence.md`.
+`findGardienAmbigu()` (`scripts/safe-export.mjs`) le vérifie mécaniquement sur les documents
+normatifs, plutôt que de compter sur la mémoire d'un agent.
 
-- **Gardien sacré du code** — les sept de l'Article 20, et eux seuls. Critère double et
-  non négociable : délivre un vrai scan de QUALITÉ DU CODE **et** tourne gratuitement,
-  mécaniquement, à CHAQUE commit. L'expression reste réservée à ce rang.
-- **Contrôleur de process** — surveille le DÉROULÉ d'une activité à étapes, jamais la qualité du
-  code : god-of-all-process (le contrôleur maître, qui relaie la voix des autres),
-  circle-process-guardian, process-simulation-guardian, angel-of-ia-process (côté conduite),
-  tasks-process-guardian. Il signale, il ne corrige jamais.
-- **Veilleur** — surveille UN document ou UNE décision déjà actée, sans scanner le code et sans
-  gouverner d'étapes : THE-KING (la philosophie), Doc-Report (la décision HTML/texte),
-  data-archangel (la circulation des données).
-- **Garde-fou mécanique** — jamais un outil, toujours une FONCTION à l'intérieur d'un outil
-  (`findToolsMissingFromMenu()`, `findFaitsManquants()`...). C'est le grain que l'Article 24 exige
-  derrière toute liste : le mot désigne le mécanisme, jamais celui qui le porte.
-
-**« guardian » compte pareil** *(précision de l'utilisateur dans le même échange : « "gardien" ou
-"guardian" en anglais, c'est pareil »)*. Les trois scripts qui portent ce mot anglais —
-`circle-process-guardian.mjs`, `process-simulation-guardian.mjs`, `tasks-process-guardian.mjs` —
-sont des **contrôleurs de process**, sans exception : chacun porte déjà `process` dans son nom, de
-sorte qu'aucun Gardien sacré ne s'est jamais appelé ainsi. Ces noms de fichiers sont l'orthographe
-historique du rang, jamais un cinquième terme. Deux conséquences mécaniques, vérifiées et non
-laissées à la mémoire : un futur script nommé `*-guardian` **sans** `process` dans son nom est un
-écart, et aucun Gardien sacré ne peut prendre cette orthographe.
-
-**Une seule exception déclarée, parce qu'elle vient de l'utilisateur lui-même** : le surnom
-**R/O-Guardian** (objectifs-vs-resultats, 2026-09-21) — un veilleur, jamais un contrôleur de
-process. Un surnom donné par l'utilisateur ne se corrige pas dans son dos ; il se déclare, comme
-tout contenu volontairement curaté à la main (Article 24).
-
-Le mot « gardien » employé seul, comme titre, n'a plus de sens dans ce projet : il se qualifie
-toujours. `findGardienAmbigu()` (`scripts/safe-export.mjs`) le vérifie mécaniquement sur les
-documents normatifs — cette charte et `docs/referentiel/` — plutôt que de compter sur la mémoire
-d'un agent (Article 27).
-
-**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Contrairement
-à ARGUS et HARMONIA (Article 20, toujours déployés), HYPER-SCAN-CHECKPOINT ne se déclenche jamais
-automatiquement, jamais en continu — seulement sur demande explicite de l'utilisateur, ou proposé
-par l'agent après une grosse vague de changements (jamais lancé sans confirmation). Son seul vrai
-critère de succès n'est jamais "a-t-il tourné sans erreur" mais combien de bugs ou d'oublis
-réellement inconnus il a fait remonter. Détail complet (ce qu'il orchestre, la double perspective en
-version complète, la preuve vivante de sa vocation) : `docs/hyper-scan-checkpoint-blueprint.md` et
-`docs/referentiel/hyper-scan-checkpoint.md`.
+**Article 21 — HYPER-SCAN-CHECKPOINT : la vérification approfondie exceptionnelle.** Il ne se
+déclenche **jamais automatiquement, jamais en continu, et jamais sans la confirmation explicite de
+l'utilisateur** — l'agent peut le proposer après une grosse vague de changements, jamais le lancer
+de son propre chef. Son seul vrai critère de succès n'est jamais « a-t-il tourné sans erreur » mais
+combien de bugs ou d'oublis réellement inconnus il a fait remonter. Détail :
+`docs/hyper-scan-checkpoint-blueprint.md` et `docs/referentiel/hyper-scan-checkpoint.md`.
 
 **Article 22 — Smart Conso API : consultation systématique avant toute action coûteuse.** Avant tout
 appel réel à l'API Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le
 jeu réel, sous la seule autorité de l'Article 8 — l'agent consulte Smart Conso API
-(`scripts/smart-conso-api.mjs::assess()`), jamais après coup. Un verdict "seuil souple" reste
-négociable ; un verdict "seuil dur" est non négociable et exige une validation humaine explicite.
-Frontière stricte avec l'Article 8 : Smart Conso API ne modifie jamais l'architecture de production
-ni ne bascule un modèle/une clé de son propre chef — son expérience INFORME l'Article 8, jamais ne
-le court-circuite. Détail complet : `docs/smart-conso-api-blueprint.md` et
-`docs/referentiel/smart-conso-api.md`.
+(`node scripts/smart-conso-api.mjs <action> --confirm`), **jamais après coup**. Un verdict « seuil
+souple » reste négociable ; un verdict « seuil dur » est non négociable et exige une validation
+humaine explicite. Détail : `docs/smart-conso-api-blueprint.md` et
+`docs/referentiel/smart-conso-api.md`, qui porte aussi la frontière avec l'Article 8.
 
 **SMART-CONSO-TOKEN — le pendant de Smart Conso API pour les TOKENS de l'agent lui-même.** Aucun
 compteur externe des tokens de l'agent n'existe (contrairement au quota Gemini, sondable en
@@ -594,48 +506,31 @@ déléguée), toute lecture exhaustive du dépôt, et tout passage de raisonneme
 coûteux, capacité de scan Global/Partiel/Zoomé/Focus, KPI) : `docs/smart-conso-token-blueprint.md`
 et `docs/referentiel/smart-conso-token.md`.
 
-**Blocage de quota Gemini — outil surnommé « Smart Breaker ».** Regroupe
-`scripts/check-gemini-quota.mjs` + `scripts/gemini-key-health.mjs` + `scripts/api-providers.mjs` +
-`lib/gemini-keys.ts`. **Toutes ses règles opérationnelles** (fait établi sur le quota journalier par
-modèle et par projet, repli de modèle et de clé, rotation et recul exponentiel, portée production,
-condition stricte avant toute activation d un modèle de repli, discrétion) vivent dans
-`docs/referentiel/smart-breaker-historique.md` — **à lire avant toute intervention sur ce sujet**.
-Blueprint générique réutilisable : `docs/outil-resilience-api.md`. Ce qui reste ci-dessous est la
-seule chose qui doit rester sous les yeux en permanence : la procédure à suivre le jour où ça bloque.
+**Blocage de quota Gemini — « Smart Breaker ».** Ce que l'outil regroupe, ses règles
+opérationnelles et son blueprint vivent dans `docs/referentiel/smart-breaker-historique.md` et
+`docs/outil-resilience-api.md`, **à lire avant toute intervention sur ce sujet**. Ce qui reste ici
+est la seule chose qui doit être sous les yeux le jour de la panne : les gestes qu'AUCUN code ne
+fait à ma place.
 
-**Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
-429/503 répété :** (0) consulter Smart Conso API (`node scripts/smart-conso-api.mjs diagnostic
---confirm`, cf. Article 22) — `check-gemini-quota.mjs` sonde plusieurs modèles × plusieurs clés en
-quelques secondes, c'est bien une action coûteuse au sens de cet Article, jamais une exception parce
-que c'est un diagnostic plutôt qu'une simulation ; (1) `node scripts/check-gemini-quota.mjs` pour
-identifier les modèles réellement disponibles à cet instant ; (2) reporter la ligne suggérée dans
-`.dev.vars` (`GEMINI_FALLBACK_MODELS=modèle1,modèle2`) ; (3) si un second projet Google est
-disponible, ajouter sa clé à `GEMINI_API_KEY_FALLBACKS` — vérifier D'ABORD qu'il s'agit bien d'un
-projet distinct, pas une seconde clé du même projet (sonder avec `check-gemini-quota.mjs` en forçant
-`GEMINI_API_KEY` sur cette nouvelle clé) ; (4) redémarrer le serveur de développement pour que
-`.dev.vars` soit effectivement chargé (confirmé empiriquement : une variable d'environnement shell
-seule n'est PAS prise en compte par le runtime Cloudflare Workers en mode dev) — en vérifiant
-qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent (nom de processus différent
-de `vinext dev`/`node scripts/run-framework`, peut garder le port occupé) ; (5) relancer ou laisser
-reprendre la simulation.
+**Dès qu'une simulation reste bloquée en HTTP 429/503 répété** — les étapes automatiques (sondage,
+repli de modèle, rotation de clé, recul exponentiel) se déclenchent seules : (0) consulter Smart
+Conso API (`node scripts/smart-conso-api.mjs diagnostic --confirm`), car sonder plusieurs modèles ×
+plusieurs clés est bien une action coûteuse au sens de l'Article 22, jamais une exception parce que
+c'est un diagnostic ; (1) `node scripts/check-gemini-quota.mjs`, puis **reporter à la main** la
+ligne suggérée dans `.dev.vars` ; (2) si un second projet Google existe, **vérifier D'ABORD qu'il
+est bien distinct** — pas une seconde clé du même projet — avant d'ajouter sa clé à
+`GEMINI_API_KEY_FALLBACKS` ; (3) **redémarrer le serveur de développement**, sans quoi `.dev.vars`
+n'est pas chargé (une variable d'environnement shell seule ne suffit PAS au runtime Cloudflare
+Workers), en vérifiant qu'aucun processus `workerd` orphelin ne survit à un `pkill` précédent.
 
-**Article 23 — ALWAYS-NEW-CODE : l'épreuve de la page blanche, rendue concrète.** L'Article 7
-demandait déjà, périodiquement, de se poser la question de la page blanche — cet Article lui donne
-un vrai outil. Sur UNE zone à la fois, ALWAYS-NEW-CODE imagine comment cette zone serait construite
-aujourd'hui avec toute la connaissance actuelle du projet, puis compare à la structure réelle pour
-repérer la dette d'organisation — ce vrai zoom profond reste jamais automatique (déclenché via
-CHECK-LEVEL-TARGET niveau "Exceptionnel"), jamais un résultat "exact à 100 %" (toujours un palier de
-confiance), jamais une application automatique (l'agent interroge toujours l'utilisateur avant tout
-changement réel). Distinct de sa couche légère (rotation + indices mécaniques d'empilement, zéro
-raisonnement), qui elle tourne bien automatiquement à chaque commit en tant que sixième Gardien
-sacré du code (Article 20) — les deux ne sont jamais confondues.
-**Garde-fou non négociable** : avant de qualifier quoi que ce soit d'"empilé, à corriger", toujours
-vérifier d'abord que ce n'est pas déjà une décision assumée et documentée ailleurs (Article 19).
-Détail complet : `docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
+**Article 23 — FONDU DANS L'ARTICLE 7 le 2026-09-27.** Le numéro reste occupé : il est cité tel
+quel dans le code et la documentation, et le renuméroter casserait ces renvois. Son contenu vit
+désormais dans l'Article 7, qu'il ne faisait que prolonger ; son détail est dans
+`docs/always-new-code-blueprint.md` et `docs/referentiel/always-new-code.md`.
 
 **Article 24 — Toute construction doit être évolutive, jamais figée sur une liste copiée à la main.**
 *(2026-09-21, audit d'évolutivité demandé explicitement par l'utilisateur.)* Portée
-strictement le CODE et l'OUTILLAGE de travail (les ~25 scripts de l'Agence Codex et leur
+strictement le CODE et l'OUTILLAGE de travail (les scripts de l'Agence Codex et leur
 documentation technique) — jamais le contenu narratif du jeu, déjà couvert séparément par le
 corollaire de l'Article 10 (variété de fond des répliques de secours) et celui de l'Article 17
 (jamais de liste de mots figée pour le registre). **Règle** : toute construction qui reflète l'état
@@ -656,25 +551,18 @@ prouvé ailleurs dans le projet (`findToolsMissingFromMenu()`, `findRegistriesMi
 `findRegistriesMissingDecision()`, `findGardiensMissingFromSource()` — 8 outils protégés de cette
 façon avant même cet audit).
 
-**Précision du 2026-09-22, à la demande explicite de l'utilisateur** (« si un nouveau script arrive,
-toutes les fonctionnalités et parametres/certifications sont appliquées au nouvel outil qui rejoint
-l'équipe. Tous les outils et scripts sont bien calibrés pour accueillir des evolutions, jamais de
-listes ou fonctionnalités figées ») : l'évolutivité ne s'arrête pas à « aucune liste recopiée sans
-garde-fou ». Elle exige qu'un outil qui REJOINT l'équipe hérite de tout ce que l'équipe sait déjà
-faire, sans qu'on ait à y penser un registre après l'autre.
+**UN NOUVEAU VENU HÉRITE DE TOUT CE QUE L'ÉQUIPE SAIT DÉJÀ FAIRE.** Toute construction se conçoit
+pour accueillir un membre de plus sans modification de sa propre logique : **un registre se LIT, il
+ne s'énumère pas ; un seuil se DÉRIVE, il ne se recopie pas ; une fonctionnalité nouvelle s'applique
+à TOUS les outils existants le jour où elle est écrite**, jamais seulement à ceux auxquels on a
+pensé sur le moment.
 
-**Ce que la règle impose en attendant** : toute nouvelle construction se conçoit pour accueillir un
-membre de plus sans modification de sa propre logique — un registre se LIT, il ne s'énumère pas ; un
-seuil se DÉRIVE, il ne se recopie pas ; une fonctionnalité nouvelle s'applique à TOUS les outils
-existants le jour où elle est écrite, jamais seulement à ceux auxquels on a pensé sur le moment.
-
-**Ce que cet Article n'exige PAS** : un vocabulaire fermé et stable par
-nature (les états d'une machine à états, une énumération de paliers) n'a rien à synchroniser et
-n'est jamais concerné ; un contenu explicitement curaté à la main par décision humaine documentée
-(ex. `KNOWN_LESSONS` du Smart Breaker, `SMART_BREAKER_CAPABILITIES`) reste légitime tel quel, tant
-que cette nature volontairement manuelle est écrite noir sur blanc à côté. Un audit exhaustif de
-tout le reste du paysage (au-delà des 12 outils déjà couverts par un garde-fou après cet audit) n'a
-pas été fait ce soir-là au-delà de ce qui précède — un futur passage complémentaire reste ouvert.
+**Deux choses échappent à cet Article, et il faut les reconnaître pour ne pas perdre son temps.**
+D'abord **une liste qui ne peut pas changer** : les états d'une machine, une échelle de niveaux —
+elle n'a rien à synchroniser avec quoi que ce soit, donc rien ne peut diverger. Ensuite **une liste
+choisie à la main exprès**, par une décision humaine — à la seule condition que cette nature
+volontairement manuelle soit **écrite noir sur blanc juste à côté** ; sans cette phrase, elle
+redevient une copie qui se périmera en silence.
 
 **Article 26 — Les process se respectent, et god-of-all-process en est le référent.**
 *(2026-09-22, demande explicite de l'utilisateur : « une regle qui t'oblige à respecter les process,
@@ -699,8 +587,6 @@ que le couple god/angel a relevé — et traiter un manquement nommé comme un b
 comme une remarque.
 
 **Article 25 — Vérifier régulièrement son propre travail, pas seulement le produire.**
-*(2026-09-22, demande explicite de l'utilisateur : « verifie régulièrement ton travail : à inscrire
-dans la charte : tu dois verifier regulierement ton travail, en utilisant si besoin les outils ».)*
 Produire un changement et le tester une fois ne suffit pas : l'agent revient périodiquement sur son
 propre travail déjà livré pour y chercher ses erreurs, **en sollicitant réellement les outils du
 paysage plutôt qu'en se relisant de mémoire**. Cet Article se distingue nettement de ses voisins :
@@ -756,10 +642,6 @@ défaire ce qui a été gagné ?* Un « non » quelque part est un écart à com
 (Article 3/13), jamais une note pour plus tard.
 
 **Article 28 — Un rapport n'est pas fini quand il est écrit : il l'est quand ses constats sont devenus des tâches.**
-*(2026-09-22, principe fondamental posé par l'utilisateur et qualifié par lui de TRÈS IMPORTANT :
-« un rapport produit des infos qui sont traitées lors d'une analyse : de cette analyse ressort un
-plan d'action correctif ou des ajustements/optimisation. De ce plan d'action ressort des taches à
-inscrire dans check-list ».)*
 
 **Le trou que cet Article ferme est le plus gros du projet, et le plus discret** : tout ce paysage
 d'outils existe pour produire des trouvailles, et rien ne vérifiait qu'une seule d'entre elles soit
@@ -803,10 +685,6 @@ vérifie donc que la tâche annoncée existe réellement dans le suivi, jamais s
 citée.
 
 **Article 29 — Tout compte rendu s'ouvre en rappelant à qui il s'adresse.**
-*(2026-09-23, demande explicite de l'utilisateur, qualifiée par lui d'URGENTE : « quand tu me fais
-ton résumé final à chaque réponse [...] tu dois absolument me rappeler en intro : 1/ le contexte
-2/ à quelle demande (résumé) de ma part ça correspond 3/ l'étiquette de la tâche 4/ te souvenir que
-je ne suis pas codeur ».)*
 
 **LE PROBLÈME QU'IL RÈGLE, et il est structurel, jamais un défaut d'attention.** L'agent termine
 une réponse avec en tête tout ce qu'il vient de faire ; l'utilisateur la reçoit après avoir fait
@@ -852,9 +730,6 @@ réponse. C'est la seule protection possible pour une règle qui ne se joue que 
 et la déclarer ainsi vaut mieux que de la confier à la mémoire d'un agent (Article 27).
 
 **Article 30 — Aucun chantier ne s'ouvre avant d'avoir repris les notes.**
-*(2026-09-24, règle posée par l'utilisateur et qualifiée par lui d'IMPORTANTE : « avant de débuter
-n'importe quel autre chantier : on reprend d'abord les notes. règle importante [...] c'est donc un
-process à établir fermement ».)*
 
 **IL L'A DÉMONTRÉE PLUTÔT QUE SUPPOSÉE, et c'est ce qui la rend incontestable.** Il avait demandé
 quelle longueur donner au code de nomenclature d'un outil ; la réponse a été « trois caractères »,
@@ -896,14 +771,8 @@ document trois jours plus tôt, signalée alors par THE-DEEP-READER et restée o
 outil qui trouve quelque chose à son premier passage n'est pas une intention (leçon L2).
 
 **Article 31 — Tout passe par un OUTIL, et un rapport est TOUJOURS le rapport d'un outil.**
-*(2026-09-25, demande explicite de l'utilisateur, qualifiée par lui de TRÈS IMPORTANTE : « pour
-chaque demande, tu dois utiliser un outil et non faire les choses à la main. Et si je te demande un
-rapport, ou que j'ai besoin d'un rapport, c'est TOUJOURS le rapport d'un outil, TOUJOURS, TOUJOURS.
-suivi de ton analyse + plan d'action selon le process. Mets cette règle dans le marbre de
-l'agence. » Il a demandé qu'elle soit ultra-optimisée et ultra-fiabilisée, parce que « de cette
-règle dépend une grande partie du fonctionnement actif de l'agence ».)*
 
-**POURQUOI ELLE EST LA PLUS STRUCTURANTE DE TOUTES.** Ce dépôt porte près de quatre-vingts outils
+**POURQUOI ELLE EST LA PLUS STRUCTURANTE DE TOUTES.** Ce dépôt porte tout un paysage d'outils
 construits pour ne pas refaire à la main ce qu'une mécanique sait faire mieux. Un agent qui répond
 de tête à côté d'eux ne perd pas seulement du temps : il rend un résultat que **rien ne peut
 vérifier, que personne ne peut rejouer, et qui ne laisse aucune trace**. Et ça s'est produit le soir
@@ -960,9 +829,6 @@ quotidien. Ce qu'aucune mécanique ne peut intercepter — un `Read` ou un raiso
 avant qu'un outil ait été consulté — est déclaré ici, et le déclarer EST la protection (Article 27).
 
 **Article 32 — Le temps réel se LIT, jamais ne se déduit.**
-*(2026-09-25, demande explicite de l'utilisateur, posée au même niveau que l'Article 31 : « ajoute
-aussi ta prise en compte du temps réel, au même niveau. C'est pareil, ça va conditionner tellement
-de choses derrière. »)*
 
 **LE DÉFAUT EST STRUCTUREL, JAMAIS UN MANQUE D'ATTENTION — et il est mesuré.** Une IA n'a pas
 d'horloge : elle déduit l'heure du dernier horodatage vu passer dans son contexte, et cette
@@ -1036,9 +902,7 @@ vit dans `docs/systeme-de-suivi.md`.
 
 ## Le process XP-IA-bonnes-pratiques-et-lecons — l'expérience de l'agent
 
-*(2026-09-23, nom donné par l'utilisateur. Sixième process déclaré, aux côtés de la Ronde, de la
-simulation, de la nuit autonome, du méta-process et de l'intégration d'un outil. Document complet :
-`docs/xp-ia-process-detail.md` — jamais résumé ici.)*
+*(Document complet : `docs/xp-ia-process-detail.md` — jamais résumé ici.)*
 
 **Le problème qu'il ferme** : un outil garde son registre d'une session à l'autre, **un agent ne
 garde rien**. Ce qui n'est pas écrit ET rendu atteignable au bon moment n'existera plus demain. Les
@@ -1075,12 +939,6 @@ générique réutilisable sur un autre projet, une instanciation propre à ce pr
 `docs/referentiel/`, un registre dans un dossier dédié avec index.)*
 
 ## Inventaire documentaire des outils
-
-*(Renommé le 2026-09-22, à la demande explicite de l'utilisateur : « je veux réserver tant que
-possible le nom catalogue pour le catalogue du coordinateur ». Ce tableau ne catalogue pas des
-offres de service, il inventorie les DOCUMENTS que chaque outil possède — deux choses différentes
-qui portaient le même nom, au point qu'une IA lisant « consulter le catalogue » ne pouvait pas
-savoir laquelle. Dette de reprise au sens exact de l'Article 27, corrigée plutôt que notée.)*
 
 *(Condensé par ecotoken : ces 23 entrées avaient chacune leur propre section
 narrative, soit 377 lignes rechargées à CHAQUE message. Leur récit — genèse, arbitrages,
@@ -1124,6 +982,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | Smart Conso API | la petite sœur de Smart Breaker, dédiée à réguler le rythme de consommation d'une API… | `docs/smart-conso-api-blueprint.md` | `docs/referentiel/smart-conso-api.md` | `scripts/smart-conso-api.mjs` |
 | SMART-CONSO-TOKEN | pendant de Smart Conso API pour les TOKENS de l'agent lui-même | `docs/smart-conso-token-blueprint.md` | `docs/referentiel/smart-conso-token.md` | `scripts/smart-conso-token.mjs` |
 | Tableau de bord interne (KPI) | *(à écrire à la main — non extractible mécaniquement)* | `docs/tableau-de-bord-blueprint.md` | `docs/referentiel/tableau-de-bord.md` | `scripts/kpi-report.mjs` |
+| THE-DEEP-READER | le cousin de THE-FINAL-JUDGE : relecture lourde du suivi confrontée à l'historique de conversation (coût variable, deux conseillers obligatoires avant de le lancer) | `docs/the-deep-reader-blueprint.md` | `docs/referentiel/the-deep-reader.md` | `scripts/the-deep-reader.mjs` |
 | THE-FINAL-JUDGE | un audit indépendant de code et de produit | `docs/the-final-judge-blueprint.md` | `docs/referentiel/the-final-judge.md` | `scripts/the-final-judge.mjs` |
 | THE-KING | l'Agent qui veille au respect de… | `docs/the-king-blueprint.md` | `docs/referentiel/the-king.md` | `scripts/the-king.mjs` |
 | THE-SCREENER | pendant graphique d'EL-PROFESSOR | `docs/the-screener-blueprint.md` | `docs/referentiel/the-screener.md` | `scripts/the-screener-capture.mjs` |
@@ -1168,13 +1027,6 @@ demander si un outil déjà existant répondrait plus vite ou plus complètement
 
 ## Référentiel technique — la référence à jour
 
-*(Condensé le 2026-09-23, tâche #628, même geste que l'Article 19 et sur la même preuve : la
-littérature publique appelle ça « progressive disclosure » — le document principal garde le
-DÉCLENCHEUR, le contenu vit dans le document lui-même, lu au moment où il sert. Ces 15 entrées
-pesaient 135 lignes et 14 obligations pour redire en prose ce que chaque fiche dit déjà mieux.
-**Aucun chemin n'a été retiré** : six d'entre eux ne sont atteignables que d'ici, vérifié avant
-de toucher.)*
-
 | Document | À lire quand | Rang |
 |---|---|---|
 | `docs/referentiel/principes.md` | avant toute intervention sur le moteur du jeu | source de vérité du comportement |
@@ -1184,11 +1036,12 @@ de toucher.)*
 | `docs/referentiel/regles-des-graphismes.md` | avant la refonte graphique, et comme base de jugement de THE-SCREENER | traversée par l'axe du graphisme |
 | `docs/referentiel/regles-de-la-memoire.md` | avant de toucher à `lib/life.ts` ou à une mémoire de personnage | traversée par l'axe de la mémoire |
 | `docs/referentiel/organisation-agence.md` | avant tout changement d'organigramme de l'outillage — c'est le domaine de CASSANDRA-RH, et sa tenue à jour reste manuelle | référentiel CANONIQUE de l'Agence Codex |
-| `docs/referentiel/standards.md` | quand on se demande si quelque chose est « à niveau » — les 29 exigences, chacune nommant son vérificateur ou déclarant que personne ne la vérifie | source de vérité de THE-EQUALIZER |
+| `docs/referentiel/standards.md` | quand on se demande si quelque chose est « à niveau » — chaque exigence nommant son vérificateur, ou déclarant que personne ne la vérifie | source de vérité de THE-EQUALIZER |
 | `docs/referentiel/le-classificateur.md` | avant de toucher au rangement de l'outillage (types, rangs, familles, classes, indice) — et pour comprendre pourquoi le poste de travail se dérive au lieu de se recopier | né de la scission de CASSANDRA-RH |
 | `docs/referentiel/check-spirit.md` | avant et après tout ajustement de personnalité — c'est le seul outil qui touche la sortie RÉELLE | porteur de l'Article 0 |
 | `docs/referentiel/check-suivi-fidelity.md` | quand une clôture de suivi est refusée, ou un horodatage rejeté | porteur mécanique de l'Article 32 |
 | `docs/referentiel/circle-process-guardian.md` | avant de lancer une Ronde, ou quand il en bloque une | contrôleur de process, jamais Gardien sacré |
+| `docs/referentiel/feuille-de-route.md` | avant toute planification de chantier — le plan en 7 chantiers d'Opus, leur état vérifié dans le code, et l'ordre acté avec l'utilisateur | le plan d'origine, texte intégral |
 | `docs/referentiel/lecons.md` | quand une erreur vient d'être payée, et à chaque Ronde | ce que le projet a appris en se trompant |
 | `docs/referentiel/points-fragiles.md` | avant de toucher une zone réputée fragile, ou en attente d'une décision de conception | registre vivant, compté par le KPI |
 | `docs/referentiel/memento-weight.md` | quand le poids du contexte envoyé à Gemini par tour est en cause | instanciation du voisin de memory-audit |
@@ -1199,7 +1052,7 @@ de toucher.)*
 tout document de référence de ce projet vit dans `docs/referentiel/`, et la liste ci-dessus se
 vérifie contre la table des matières réelle de ce dossier — jamais recopiée de mémoire.
 
-**Les fiches des 22 outils de l'Agence Codex ne sont plus répétées ici** *(2026-09-22)* :
+**Les fiches des outils de l'Agence Codex ne sont plus répétées ici** *(2026-09-22)* :
 leur chemin `docs/referentiel/<outil>.md` figure déjà, ligne par ligne, dans la colonne
 « Instanciation » du tableau « Inventaire documentaire des outils » ci-dessus, et ce que chacune
 contient est décrit dans la fiche elle-même. Les garder en double coûtait ~2 500 tokens à CHAQUE
@@ -1211,7 +1064,7 @@ Les trois clauses normatives qui n'existaient qu'ici ont été rapatriées dans
 Les deux chemins que les puces étaient seules à citer restent donc atteignables sans elles : le
 SCRIPT de chaque outil a rejoint le tableau (colonne « Script ») et son REGISTRE suit une règle sans
 exception, `docs/<nom-de-l-outil-en-minuscules>/` avec son `index.md` — une règle énoncée une fois
-vaut mieux que vingt-deux chemins recopiés. (`lib/life.ts`, que seule la puce memory-audit citait,
+vaut mieux qu'autant de chemins recopiés. (`lib/life.ts`, que seule la puce memory-audit citait,
 est le sujet même de `docs/referentiel/regles-de-la-memoire.md`, listé juste au-dessus.)
 
 
@@ -1259,12 +1112,3 @@ incohérences connues que la restructuration a corrigées), un extrait réel de 
 référence de ton déjà atteinte (Article 0 et Article 1), et le diagnostic initial de Claude Opus qui
 a servi de base au plan de travail. Le détail de chacun, et la trace du fichier retiré de cette
 liste le 2026-09-23, vivent dans `docs/referentiel/claude-md-asides-historique.md`.
-
-## Plan d’origine (analyse Opus) — état d’avancement
-
-Le plan en 7 chantiers d’Opus, leur état vérifié dans le code, et la feuille de route actée
-avec l’utilisateur (ordre des chantiers, refonte graphique, exigences ajoutées en cours de route)
-vivent désormais dans **`docs/referentiel/feuille-de-route.md`** — texte intégral, rien de résumé.
-À relire avant toute planification de chantier, et à mettre à jour au même titre que le reste du
-référentiel (Article 13). Retiré d’ici par ecotoken : ce contenu se consulte au moment de
-planifier, il n’a pas à être rechargé à chaque message.
