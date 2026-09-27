@@ -15887,6 +15887,24 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const faux = { a: { quoi: 'la charte', fraicheur: 'x' }, b: { quoi: 'LA CHARTE', fraicheur: 'y' } };
   assert.equal(ezl.chevauchementsDePerimetre(faux).collisions.length, 1, 'MUST CATCH: a fourth tool entering a perimeter already held is refused instead of silently doubling someone');
 
+  // ---- LA CHAÎNE RÉELLE N'ÉTAIT EXERCÉE PAR AUCUN TEST (trouvé le 2026-09-27 par la passe de
+  // robustesse, en creux). Casser volontairement la ligne qui associe une commande du crochet à
+  // son enveloppe ne faisait PAS rougir le filet — parce qu'aucune assertion n'exécutait jamais
+  // `chaineDuFilet()` sur de vraies données. C'est exactement le genre de zone que la passe de
+  // robustesse existe pour révéler, et la voici couverte.
+  const crochetFictif = { "h/pre-commit": 'NODE_V8_COVERAGE=x node scripts/check-house.mjs\nnpx tsc --noEmit' };
+  const ch = ezl.chaineDuFilet({ lire: (f) => crochetFictif[f] ?? null, crochets: ["h/pre-commit"] });
+  assert.equal(ch.mesurable, true, 'the real chain must be readable from the hooks');
+  assert.ok(ch.etapes.length >= 2, 'both commands of the hook are seen');
+  // LA PREMIÈRE VERSION DE CETTE ASSERTION ÉTAIT AVEUGLE, et la passe de robustesse l'a prouvé :
+  // elle comparait l'ENSEMBLE trié des clés, or inverser l'appariement échange simplement les deux
+  // enveloppes et l'ensemble reste identique. Un test qui ne peut pas rougir n'est pas un test —
+  // c'est l'ORDRE d'apparition qu'il faut vérifier, parce que c'est lui que l'appariement décide.
+  assert.equal(ch.enveloppes[0]?.cle, 'couverture', "MUST MATCH THE RIGHT ENVELOPE: the first command carries the COVERAGE envelope, not another one. Inverting the pairing on purpose did not turn the net red — no test ever ran chaineDuFilet() on real data, and the first version of this very assertion was blind to the swap because a sorted SET survives an exchange");
+  assert.equal(ch.enveloppes[1]?.cle, 'typage', 'and the second carries the typing one — the pairing, not the inventory');
+  assert.ok(ch.enveloppes.every((e) => e.quoi && e.pourquoi), 'and every envelope carries what it is AND why it costs — a name alone teaches nothing to whoever reads the report');
+  assert.equal(ezl.chaineDuFilet({ lire: () => null, crochets: ["absent"] }).mesurable, false, 'MUST REFUSE: unreadable hooks mean the chain is unknown, never « the chain is empty » (leçons L5/L11)');
+
   // ---- LA FRAÎCHEUR DU FILET — un test qui appelle une fonction disparue ne protège plus rien.
   const fauxFilet = ["const m = await import('../scripts/faux-module.mjs');", "assert.ok(m.fonctionDisparue());"].join("\n");
   const lireFaux = (f) => (f === 'scripts/faux-module.mjs' ? 'export function fonctionVivante() {}' : null);

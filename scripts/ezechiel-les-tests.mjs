@@ -1306,7 +1306,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       }
       const pas = Math.max(1, Math.floor(candidates.length / combien));
       const choisies = candidates.filter((_, i) => i % pas === 0).slice(0, combien);
+      // LE DÉPÔT EST REVÉRIFIÉ AVANT CHAQUE CASSURE, et ce n'est pas une précaution de confort :
+      // sans elle, la passe ne sait pas distinguer « le filet a attrapé MA cassure » de « le filet
+      // a échoué pour une autre raison ». Le défaut s'est produit pour de vrai le 2026-09-27 — un
+      // fichier édité pendant les deux heures de la passe a fait échouer un lancement, la cassure
+      // du moment a été comptée « attrapée », et la comparaison avant/après a ensuite annoncé une
+      // PROTECTION PERDUE qui n'existait pas. Une alarme de veto qui crie à tort est pire
+      // qu'absente : on apprend à l'ignorer (leçon L4), et c'est le verdict qui autorise ou
+      // interdit d'alléger le filet.
       for (const mut of choisies) {
+        const saleMaintenant = execSync("git status --porcelain", { cwd: ROOT }).toString()
+          .split("\n").filter((l) => l.trim() && !TOLERES.includes(cheminDeLaLigne(l))).join("\n");
+        if (saleMaintenant) {
+          console.log(`\n🚨 PASSE INTERROMPUE — le dépôt a changé pendant l'exécution :\n${saleMaintenant.split("\n").slice(0, 5).map((l) => `   ${l}`).join("\n")}`);
+          console.log("Les résultats déjà obtenus ne sont PAS enregistrés : une cassure comptée « attrapée » alors que le filet échouait pour une autre raison fausse le verdict de protection, et ce verdict est celui qui autorise ou interdit d'alléger le filet.");
+          resultats.length = 0;
+          break;
+        }
         const chemin = join(ROOT, mut.chemin);
         const original = readFileSync(chemin, "utf8");
         const lignes = original.split("\n");
