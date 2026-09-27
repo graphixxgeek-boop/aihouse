@@ -16892,3 +16892,67 @@ async function testPreparationDeNuit() {
   console.log("Passed: la préparation avant la nuit (2026-09-27, tâche #770). Sa raison est explicite et elle est juste — « je ne vais pas intervenir pour perturber ta mémoire pendant plusieurs heures, alors tu peux organiser ton périmètre interne en fonction ». Ce n'est pas une métaphore : ce qui n'est pas rassemblé avant le départ ne le sera plus. Les trois gestes sont les siens et chacun est MESURÉ plutôt que coché — les process concernés se DÉRIVENT des mots du plan contre les process déclarés (Article 24), les outils viennent de tool-brain et sont réellement chargés pour vérifier qu'ils tournent. LE FAUX POSITIF DU PREMIER PASSAGE EST LA LEÇON L37 EN DIRECT : le catalogue rend des NOMS D'AFFICHAGE, jamais des noms de fichier, et dériver scripts/<nom>.mjs accusait VINGT outils d'être introuvables, les vingt à tort. Le résolveur existait déjà — normaliserNomDOutil(), né en 2026-09-25 du même problème mot pour mot — et il a été réutilisé plutôt que réécrit (L29, BP6). Un nom qu'on ne résout pas est désormais rendu « non résolu », jamais « cassé » : les confondre est exactement ce faux positif. LE TROISIÈME GESTE EST LE PLUS IMPORTANT ET LE MOINS ÉVIDENT : déclarer ce qu'on met de côté paraît secondaire à côté de rassembler ce dont on a besoin, c'est l'inverse — ce qui n'est pas nommé comme écarté ressemble au matin à un oubli, et l'agent de la nuit hésite dessus à trois heures parce que rien ne dit que c'était un choix. Il ne se mesure pas, donc l'outil REFUSE de le considérer rempli. Et il ne bloque jamais le départ : un contrôle de préparation qui refuserait la nuit ferait perdre la nuit.");
 }
 await testPreparationDeNuit();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LES DIX QUESTIONS D'ALIGNEMENT EN FIN DE RONDE (2026-09-27, tâche #769)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testAlignementDeRonde() {
+  const C = await import('../scripts/circle-tasks.mjs');
+  const G = await import('../scripts/god-of-all-process.mjs');
+  const dix = (over = {}) => [
+    ...Array.from({ length: 5 }, (_, i) => ({ id: `F${i + 1}`, nature: 'fond', question: `fond ${i + 1} ?`, reponsePrevue: `je prévois ${i + 1}` })),
+    ...Array.from({ length: 5 }, (_, i) => ({ id: `D${i + 1}`, nature: 'detail', question: `détail ${i + 1} ?` })),
+  ].map((q) => ({ ...q, ...(over[q.id] ?? {}) }));
+
+  assert.equal(C.validerAlignement(dix()).valide, true, 'MUST LET PASS: five fond questions each carrying a written prediction, five détail questions carrying none');
+
+  // LE MÉCANISME CENTRAL, et sans lui tout le dispositif est décoratif : une question de fond sans
+  // PRÉDICTION ÉCRITE ne produit aucun écart lisible — on relit sa réponse en se disant « c'est
+  // bien ce que je pensais », ce que cette tâche existe précisément pour empêcher.
+  const sansPrediction = C.validerAlignement(dix({ F3: { reponsePrevue: '' } }));
+  assert.equal(sansPrediction.valide, false, 'MUST CATCH: a fond question with no written prediction makes any gap unreadable — the whole device rests on committing to an answer BEFORE hearing his');
+  assert.ok(sansPrediction.fautes.join(' ').includes('AVANT'), 'and the refusal says why, rather than just refusing');
+
+  // L'ASYMÉTRIE EST UN REFUS, PAS UNE TOLÉRANCE. Une question de détail qu'on sait prédire est une
+  // question de fond mal étiquetée — et la ranger du mauvais côté ferait disparaître un écart GRAVE
+  // dans la moitié où apprendre est normal. C'est le faux négatif le plus coûteux du dispositif.
+  assert.equal(C.validerAlignement(dix({ D2: { reponsePrevue: 'je sais déjà' } })).valide, false, 'MUST CATCH: a détail question carrying a prediction is a mislabelled fond question — filed there, a GRAVE gap would vanish into the half where learning is normal');
+
+  // LES DEUX MOITIÉS NE SE COMPENSENT PAS : elles mesurent des choses différentes, donc sacrifier
+  // l'une revient à ne plus mesurer que l'autre, pas à mesurer dix questions.
+  assert.equal(C.validerAlignement(dix().slice(0, 9)).valide, false, 'MUST CATCH: nine questions — the two halves measure different things, so dropping one is not "almost ten"');
+  assert.equal(C.validerAlignement([...dix().filter((q) => q.nature === 'fond'), ...dix().filter((q) => q.nature === 'fond').map((q) => ({ ...q, id: q.id + 'b' }))]).valide, false, 'and ten questions all on the same side is not ten questions either');
+
+  // L'ÉCART NE SE MESURE PAS SUR DU VIDE : sans les réponses de l'utilisateur, « zéro écart »
+  // ressemble trait pour trait à un alignement parfait (L11).
+  assert.equal(C.mesurerEcartsDAlignement(dix()).mesurable, false, 'MUST REFUSE: with none of his answers recorded, "zero gaps" looks exactly like a perfect alignment');
+  const repondu = dix().map((q) => ({ ...q, reponseReelle: 'sa réponse' }));
+  repondu[1].ecart = true;
+  const m = C.mesurerEcartsDAlignement(repondu);
+  assert.equal(m.fond.graves, 1, 'a declared gap on a fond question is counted');
+  assert.ok(C.formatAlignementLines(m).join('\n').includes('PROBLÈME GRAVE'), 'and it is reported as GRAVE — not a correction to note, a chantier to open');
+  assert.ok(m.horsPortee.includes('DÉCLARÉ par l\'utilisateur'), 'the gap is declared by him, never deduced by comparing text: two sentences can say the same thing without sharing a word, and on the gravest half a mechanical verdict would be the least reliable one');
+
+  // LA PRÉDICTION NE SE RÉÉCRIT JAMAIS — le piège que le registre en deux temps existe pour fermer.
+  // Si le second passage pouvait retoucher la prédiction, il n'y aurait plus d'écart possible :
+  // seulement une prédiction rendue juste après coup, la forme la plus discrète d'un faux vert.
+  let ecrit = '[]';
+  const io = { root: '.', readFileImpl: () => ecrit, writeFileImpl: (_, c) => { ecrit = c; } };
+  C.enregistrerAlignement({ ronde: 'test-769', questions: dix() }, io);
+  assert.throws(() => C.enregistrerAlignement({ ronde: 'test-769', questions: dix({ F1: { reponsePrevue: 'en fait je prévoyais autre chose' } }) }, io),
+    /n'est plus une prédiction/, 'MUST CATCH: rewriting a prediction on the second pass is refused — a prediction retouched afterwards is a verdict made right, which is the quietest false green there is');
+  // MAIS LE SECOND PASSAGE DOIT MARCHER : c'est là qu'on écrit SES réponses. Un registre qui
+  // refuserait aussi ça ne serait jamais rempli qu'à moitié.
+  assert.doesNotThrow(() => C.enregistrerAlignement({ ronde: 'test-769', questions: dix().map((q) => ({ ...q, reponseReelle: 'sa réponse' })) }, io),
+    'MUST LET PASS: the second pass adds HIS answers without touching the predictions — that is the whole point of a two-pass register');
+
+  // ET L'ÉTAPE EXISTE DANS LE PROCESS, avant l'enregistrement : une Ronde inscrite comme faite sans
+  // les dix questions les reporterait à la suivante, où elles seraient reportées encore.
+  const ronde = G.PROCESSES.find((p) => p.slug === 'ronde');
+  const cles = ronde.etapes.map((e) => e.cle);
+  assert.ok(cles.includes('alignement'), 'the alignment step is declared in the Ronde process, not only built in code (L1)');
+  assert.ok(cles.indexOf('alignement') < cles.indexOf('enregistrement'), 'and it comes BEFORE recording the Ronde as done: his words are "à la fin", not "après"');
+
+  console.log("Passed: les dix questions d'alignement en fin de Ronde (2026-09-27, tâche #769). Le dispositif est fin, et sa finesse est dans l'ASYMÉTRIE VOULUE : les 5 questions DE FOND ne servent pas à apprendre — je dois connaître sa réponse à l'avance, et un écart y est un PROBLÈME GRAVE, le signal que nos deux modèles du projet ont divergé sans que personne le voie ; les 5 questions DE DÉTAIL servent l'inverse, elles portent sur ce qui n'a jamais été tranché, et y apprendre quelque chose est normal. LE MÉCANISME QUI REND L'ÉCART MESURABLE, et sans lui tout le reste est décoratif : LA PRÉDICTION S'ÉCRIT AVANT LA RÉPONSE. Une question de fond posée sans prédiction engagée par écrit ne produit aucun écart lisible — on relit sa réponse en se disant « c'est bien ce que je pensais ». Le registre se remplit donc en deux temps, et le second REFUSE de toucher au premier : une prédiction retouchée après coup n'est plus une prédiction, c'est un verdict rendu juste, la forme la plus discrète d'un faux vert. L'asymétrie est elle aussi un refus : une question de détail qu'on sait prédire est une question de fond mal étiquetée, et la ranger du mauvais côté ferait disparaître un écart grave dans la moitié où l'on apprend. L'écart lui-même est DÉCLARÉ par l'utilisateur et jamais déduit d'une comparaison de texte — deux phrases peuvent dire la même chose sans partager un mot, et sur la moitié la plus grave du dispositif une mécanique qui trancherait rendrait le verdict le moins fiable. L'étape est déclarée dans le process, AVANT l'enregistrement de la Ronde : inscrite comme faite sans ses dix questions, une Ronde les reporterait à la suivante, où elles seraient reportées encore.");
+}
+await testAlignementDeRonde();

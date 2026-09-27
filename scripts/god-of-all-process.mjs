@@ -89,6 +89,11 @@ export const PROCESSES = [
       { cle: "plan-action", libelle: "donner à chaque constat son état : retenu / écarté avec sa raison / à trancher (le plan vit DANS l'analyse, jamais ailleurs)", preuve: { dossier: "docs/circle-tasks/", motif: /ANALYSE\.md$/, recursif: true } },
       { cle: "taches", libelle: "inscrire dans docs/suivi/ les tâches issues des constats retenus", preuve: { dossier: "docs/suivi/sessions/", motif: /\.md$/ } },
       { cle: "contributions", libelle: "chaque signal écrit dans le registre d'un outil enregistre la contribution (recordCircleItemReport → recordToolContribution)", preuve: { fichier: ".tool-usage-history.json" } },
+      // AJOUTÉE le 2026-09-27 (tâche #769). Elle vient AVANT l'enregistrement, et l'ordre n'est pas
+      // décoratif : une Ronde inscrite comme faite sans que les dix questions aient été posées les
+      // reporterait à la suivante, où elles seraient reportées encore. Sa demande dit « à la fin »,
+      // pas « après ».
+      { cle: "alignement", libelle: "poser les 10 questions d'alignement — 5 de fond avec ma réponse PRÉVUE écrite avant la sienne, 5 de détail sur les frontières obscures ; un écart sur le fond est un problème GRAVE, jamais une correction à noter", preuve: { fichier: "docs/circle-tasks/alignement.json" } },
       { cle: "enregistrement", libelle: "enregistrer la Ronde comme faite", preuve: { fichier: ".circle-tasks-last-run.json" } },
     ],
   },

@@ -2134,6 +2134,120 @@ export function prochaineAction({ registre = [], serie = null } = {}) {
 // c'est qu'un tel passage ne peut plus se CONCLURE, donc ne peut plus passer pour une Ronde faite.
 // L'échec devient bruyant au lieu d'être invisible. C'est la même honnêteté que tool-brain et
 // SMART-CONSO-TOKEN : on ne prétend pas intercepter la conversation, on rend l'omission coûteuse.
+// ══════════════════════════════════════════════════════════════════════════
+// LES DIX QUESTIONS D'ALIGNEMENT EN FIN DE RONDE (2026-09-27, tâche #769)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, mot pour mot : « je veux qu'à chaque ronde, à la fin, il y ait un moment où tu me
+// poses 10 questions d'alignement de la compréhension aux 2 extrémités : 5 sur le fond, pour être
+// sûr de ma réponse à l'avance (en cas d'écart : problème grave) 5 sur des points de détail, des
+// frontières obscures ».
+//
+// LE DISPOSITIF EST FIN, ET SA FINESSE EST DANS L'ASYMÉTRIE VOULUE. Les deux moitiés ne mesurent
+// pas la même chose et ne se lisent pas de la même façon :
+//
+//   · les 5 questions DE FOND ne servent PAS à apprendre. Je dois connaître sa réponse à l'avance,
+//     et un écart y est un PROBLÈME GRAVE : le signal que nos deux modèles du projet ont divergé
+//     sans que personne le voie ;
+//   · les 5 questions DE DÉTAIL servent l'inverse : elles portent sur les frontières floues, ce qui
+//     n'a jamais été tranché, ce dont je ne suis pas sûr. Y apprendre quelque chose est normal.
+//
+// LE MÉCANISME QUI REND L'ÉCART MESURABLE, et sans lui tout le dispositif est décoratif : LA
+// PRÉDICTION S'ÉCRIT AVANT LA RÉPONSE. Une question de fond posée sans que j'aie engagé ma réponse
+// par écrit ne produit aucun écart lisible — je relirai la sienne en me disant « c'est bien ce que
+// je pensais », et c'est exactement ce que cette tâche existe pour empêcher. Le registre se remplit
+// donc EN DEUX TEMPS, et le second refuse de toucher au premier.
+//
+// UNE QUESTION DE DÉTAIL NE PORTE PAS DE PRÉDICTION, et c'est un refus et non un oubli : si je peux
+// prédire la réponse, ce n'est pas une frontière obscure — c'est une question de fond mal étiquetée,
+// et la ranger du mauvais côté ferait disparaître un écart grave dans la moitié où l'on apprend.
+export const ALIGNEMENT_PATH = "docs/circle-tasks/alignement.json";
+export const NATURES_ALIGNEMENT = ["fond", "detail"];
+export const QUESTIONS_PAR_NATURE = 5;
+
+export function validerAlignement(questions = []) {
+  const fautes = [];
+  const parNature = Object.fromEntries(NATURES_ALIGNEMENT.map((n) => [n, 0]));
+  questions.forEach((q, i) => {
+    const ou = `question ${q?.id ?? `n°${i + 1}`}`;
+    if (!NATURES_ALIGNEMENT.includes(q?.nature)) { fautes.push(`${ou} : nature « ${q?.nature ?? "absente"} » inconnue — attendu ${NATURES_ALIGNEMENT.join(" ou ")}`); return; }
+    parNature[q.nature] += 1;
+    if (!String(q?.question ?? "").trim()) fautes.push(`${ou} : pas de question écrite`);
+    if (q.nature === "fond" && !String(q?.reponsePrevue ?? "").trim()) {
+      fautes.push(`${ou} : question DE FOND sans réponse prévue — sans prédiction écrite AVANT, aucun écart n'est lisible : je relirai sa réponse en me disant « c'est bien ce que je pensais », et c'est exactement ce que cette tâche existe pour empêcher`);
+    }
+    if (q.nature === "detail" && String(q?.reponsePrevue ?? "").trim()) {
+      fautes.push(`${ou} : question DE DÉTAIL avec une réponse prévue — si je peux la prédire, ce n'est pas une frontière obscure mais une question de fond mal étiquetée, et la ranger ici ferait disparaître un écart grave dans la moitié où l'on apprend`);
+    }
+  });
+  for (const n of NATURES_ALIGNEMENT) {
+    if (parNature[n] !== QUESTIONS_PAR_NATURE) fautes.push(`${parNature[n]} question(s) « ${n} » au lieu de ${QUESTIONS_PAR_NATURE} — les deux moitiés mesurent des choses différentes, en sacrifier une revient à ne plus mesurer que l'autre`);
+  }
+  return { valide: fautes.length === 0, fautes };
+}
+
+export function mesurerEcartsDAlignement(questions = []) {
+  const repondues = questions.filter((q) => String(q?.reponseReelle ?? "").trim());
+  if (!repondues.length) {
+    return { mesurable: false, pourquoi: "aucune réponse de l'utilisateur enregistrée — un alignement sans ses réponses ne mesure rien, et « zéro écart » y ressemblerait trait pour trait à un alignement parfait (leçon L11)" };
+  }
+  const fond = repondues.filter((q) => q.nature === "fond");
+  // L'ÉCART EST DÉCLARÉ PAR L'UTILISATEUR, jamais deviné par comparaison de texte : deux phrases
+  // peuvent dire la même chose sans partager un mot, et l'inverse. Une mécanique qui trancherait
+  // ici rendrait le verdict le moins fiable du dispositif sur la moitié la plus grave.
+  const graves = fond.filter((q) => q.ecart === true);
+  return {
+    mesurable: true,
+    fond: { posees: fond.length, graves: graves.length, detail: graves.map((q) => ({ id: q.id, question: q.question, prevue: q.reponsePrevue, reelle: q.reponseReelle })) },
+    detail: { posees: repondues.length - fond.length, appris: repondues.filter((q) => q.nature === "detail" && String(q.reponseReelle).trim()).length },
+    horsPortee: "l'écart sur une question de fond est DÉCLARÉ par l'utilisateur, jamais déduit d'une comparaison de texte : deux phrases peuvent dire la même chose sans partager un mot. Sur la moitié la plus grave du dispositif, une mécanique qui trancherait rendrait le verdict le moins fiable.",
+  };
+}
+
+export function enregistrerAlignement(entree, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, date = new Date().toISOString() } = {}) {
+  const v = validerAlignement(entree?.questions);
+  if (!v.valide) throw new Error(`alignement de Ronde REFUSÉ, rien n'est enregistré.\n  - ${v.fautes.join("\n  - ")}`);
+  const journal = loadJsonArray(ALIGNEMENT_PATH, { root, readFileImpl });
+  // UNE PRÉDICTION NE SE RÉÉCRIT JAMAIS. C'est tout le mécanisme : si le second passage pouvait
+  // retoucher `reponsePrevue`, il n'y aurait plus d'écart possible — seulement une prédiction
+  // rendue juste après coup, ce qui est la forme la plus discrète d'un faux vert.
+  const deja = journal.find((e) => e.ronde === entree.ronde);
+  if (deja) {
+    for (const q of entree.questions) {
+      const ancienne = deja.questions.find((x) => x.id === q.id);
+      if (ancienne && String(ancienne.reponsePrevue ?? "") !== String(q.reponsePrevue ?? "")) {
+        throw new Error(`la réponse prévue de la question ${q.id} a changé entre les deux passages — une prédiction retouchée après coup n'est plus une prédiction, c'est un verdict rendu juste. Le registre refuse.`);
+      }
+    }
+    Object.assign(deja, { ...entree, date, premierPassage: deja.premierPassage ?? deja.date });
+  } else journal.push({ ...entree, date });
+  try { mkdirSync(join(root, "docs/circle-tasks"), { recursive: true }); } catch { /* déjà là */ }
+  writeFileImpl(join(root, ALIGNEMENT_PATH), JSON.stringify(journal, null, 2) + "\n", "utf8");
+  return journal.length;
+}
+
+export function formatAlignementLines(m) {
+  if (!m?.mesurable) return ["", "🚨 ALIGNEMENT — PAS MESURÉ", `   ${m?.pourquoi ?? "raison non fournie"}`];
+  const L = ["", "🎯 ALIGNEMENT DE FIN DE RONDE — les dix questions de la tâche #769", ""];
+  L.push(`   FOND : ${m.fond.posees} posée(s), ${m.fond.graves} écart(s).`);
+  if (m.fond.graves) {
+    L.push("   🚨 UN ÉCART SUR UNE QUESTION DE FOND EST UN PROBLÈME GRAVE : nos deux modèles du projet");
+    L.push("      ont divergé sans que personne le voie. Ce n'est pas une correction à noter, c'est un");
+    L.push("      chantier à ouvrir.");
+    for (const q of m.fond.detail) {
+      L.push(`      · [${q.id}] ${q.question}`);
+      L.push(`         je prévoyais : ${q.prevue}`);
+      L.push(`         il a répondu : ${q.reelle}`);
+    }
+  } else L.push("   ✅ aucun écart sur le fond — nos deux modèles du projet se tiennent.");
+  L.push("");
+  L.push(`   DÉTAIL : ${m.detail.posees} posée(s), ${m.detail.appris} réponse(s) obtenue(s). Y apprendre quelque chose est NORMAL :`);
+  L.push("      ces questions portent sur ce qui n'a jamais été tranché, pas sur ce que je devrais savoir.");
+  L.push("");
+  L.push(`   HORS PORTÉE : ${m.horsPortee}`);
+  return L;
+}
+
 export const OUVERTURE_PATH = "docs/circle-tasks/ouverture.json";
 
 // Les faits d'ouverture obligatoires, dans l'ordre réel du process (Q1 AVANT AUTO/PRIME/GOAT).
