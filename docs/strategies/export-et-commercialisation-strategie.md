@@ -164,6 +164,82 @@ filet qui existe déjà, et le chemin de ce filet est **écrit en dur** dans son
 (`FILET = "scripts/check-house.mjs"`). Sur un autre projet il ne saurait ni trouver le filet, ni en
 proposer un s'il n'y en a pas. Trois manques identifiés, trois tâches ouvertes.
 
+## 4ter. LES DOCUMENTS DE RÉFÉRENCE ET LA CHARTE — mesuré le 2026-09-27
+
+**Ses questions, dans ses mots** : « les fichiers de références sont-ils exportables ? avec
+abraham ? les fichiers de references sont ils bien construits en architecture (pour un futur
+projet) ? comment bien exporter toute cette partie ? y compris dans le contenu : certaines regles
+concernent le fonctionnement de l'agence et pas du jeu, il faut que ces regles soient inscrites
+dans un autre projet, au meme endroit, je pense ? »
+
+### Ce que la mesure dit, contre le dépôt réel (459 documents classés, 100 % de couverture)
+
+| Ensemble | PART (s'exporte) | RESTE (propre au jeu) | MÉMOIRE (archive) |
+|---|---|---|---|
+| `docs/referentiel/` (105 fiches) | **90** | 11 | 4 |
+| Tout le dépôt (459 documents) | 208 | 14 | 237 |
+
+**Les 11 fiches qui restent sont exactement les bonnes** : `principes`, `parametres`,
+`regles-du-temps`, `regles-de-l-espace`, `regles-des-graphismes`, `regles-de-la-memoire`,
+`points-fragiles`, `feuille-de-route`, `charte-cartographie`, `claude-md-regles`,
+`organisation-globale-projet`. Ce sont les règles du JEU. Le classement n'a pas de trou de ce
+côté-là — l'architecture des fiches tient.
+
+### LE TROU EST AILLEURS, ET IL EST EXACTEMENT CELUI QU'IL PRESSENTAIT
+
+**`CLAUDE.md` est classé RESTE en entier** — « propre au jeu Lia/Noé, ne sert à rien ailleurs ».
+Or sur ses 33 Articles, une petite dizaine seulement parlent du jeu :
+
+| Parlent du JEU (restent) | Parlent de l'AGENCE (devraient partir) |
+|---|---|
+| 0 (l'esprit des personnages), 1 (la conversation prime), 4 (l'enquête tient debout), 9 (rejouabilité), 10 (répliques locales), 11 (zéro répétition), 12 (le sens avant la forme), 17 (se mettre à la place des personnages) | 3, 5, 6, 7, 13, 14, 15, 16, 18, 19, 20, 20bis, 21, 24, 25, 26, 27, 28, 29, 30, 31, 32 — comprendre avant de toucher, corriger la cause, un rapport devient des tâches, le temps se lit, tout passe par un outil, reprenable par une autre IA… |
+| Mixtes : 2 (cohérence, cite les jauges), 8 (sobriété API, cite Gemini), 22 (Smart Conso API) | |
+
+**Deux Articles sur trois sont génériques, et aujourd'hui aucun ne part.** Un projet suivant
+repartirait sans « comprendre avant de toucher », sans « un rapport n'est pas fini tant qu'il n'est
+pas devenu des tâches », sans « le temps se lit, jamais ne se déduit » — c'est-à-dire sans ce qui a
+coûté le plus cher à apprendre ici.
+
+### LA CAUSE, ET ELLE EST STRUCTURELLE
+
+**Chaque outil a deux documents : un blueprint générique et une instanciation propre au projet.**
+82 blueprints existent. **La charte, elle, n'a pas de blueprint.** Elle mélange dans un seul fichier
+ce qui est vrai pour Lia et Noé et ce qui serait vrai pour n'importe quel projet piloté par IA — et
+comme elle est un seul fichier, le classement ne peut que la ranger d'un côté ou de l'autre. Il l'a
+rangée du mauvais.
+
+Le même raisonnement vaut pour `docs/regles-de-travail.md` (la méthode de collaboration : presque
+entièrement générique) et pour `docs/philosophie-et-politique.md`, qui est **déjà écrit** pour être
+réutilisable ailleurs — la preuve que la séparation est possible et qu'elle a déjà été faite une fois.
+
+### CE QUI EST PROPOSÉ, ET QUI RESTE À TRANCHER
+
+1. **Donner un blueprint à la charte** : `docs/charte-blueprint.md`, la version générique des ~22
+   Articles d'Agence, sans une ligne sur Lia ni Noé. `CLAUDE.md` en devient l'instanciation : il
+   garde les Articles de jeu et cite le blueprint pour le reste. Même patron que les 82 autres —
+   **rien de nouveau à inventer, seulement à appliquer**.
+2. **Le vérificateur naturel est Abraham**, pas MOÏSE. MOÏSE ne connaît qu'un document, la charte ;
+   Abraham traite n'importe quel document à règles numérotées, donc il peut comparer le blueprint
+   et l'instanciation et dire lesquelles des règles sont tombées en route.
+3. **À trancher** : découper la charte est une opération sur la pièce maîtresse du projet. Elle
+   demande la double confirmation de l'Article 14, et elle n'est pas engagée.
+
+### LES OUTILS : lesquels partent ?
+
+Mesuré contre `EXEMPTES_DU_KIT` (`scripts/safe-export.mjs`), la seule liste qui fasse foi :
+**tous les outils de l'Agence partent**, y compris MOÏSE, Abraham et Ezechiel. Trois catégories
+seulement sont dispensées, chacune avec sa raison écrite : les crochets git, le script
+d'installation de l'environnement, et ce qui sert le PRODUIT plutôt que l'outillage.
+
+**Le seul cas particulier est `check-house.mjs`** : « la suite de tests DE ce projet : elle teste le
+jeu, donc elle le nomme. Elle ne s'exporte pas, elle se réécrit. » Juste pour son CONTENU — mais la
+décision laisse partir son ARCHITECTURE avec, alors que c'est elle qui vaut (cf. tâche #1028).
+
+**Et un avertissement mesuré le même jour** : « l'outil part » ne veut pas dire « l'outil marche
+ailleurs ». Ezechiel est dans le kit d'export et pourtant le chemin du filet est écrit en dur dans
+son code. **Être exportable et être portable sont deux choses différentes**, et seule la première
+est aujourd'hui vérifiée.
+
 ## 5. LES DÉCISIONS DÉJÀ PRISES
 
 *ce qui ne se rediscute plus, avec la date et qui a tranché*
