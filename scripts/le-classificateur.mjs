@@ -1758,7 +1758,15 @@ export const MOTIFS_MEMOIRE = [
 // construit pour être remonté ailleurs, et les documents de méthode ne parlent jamais du jeu.
 export const MOTIFS_PART = [
   { motif: /^docs\/[a-z0-9-]+-blueprint\.md$/, pourquoi: "un blueprint se déclare générique — c'est sa définition" },
-  { motif: /^docs\/agence-(blueprint|installation)\.md$/, pourquoi: "les deux pièces qui expliquent comment remonter l'Agence ailleurs" },
+  // TROIS PIÈCES, plus deux depuis le 2026-09-27 (tâche #908) : le plan de la machine généré rejoint
+  // le blueprint et la procédure — même réponse en trois moitiés, ce que l'Agence EST, dans quel
+  // ORDRE la poser, et avec QUELS fichiers ici.
+  // POURQUOI PAS UN `agence-*` GÉNÉRAL, qui serait pourtant plus évolutif : `agence-exportable-
+  // conception.md` porte le même préfixe et n'est PAS ça — c'est le carnet d'idées du projet
+  // SUIVANT, il le déclare lui-même dans ses dix premières lignes, et ce dépôt a déjà payé une fois
+  // de l'avoir pris pour le plan de l'Agence. Le préfixe ne dit donc pas le sujet. Liste tenue à la
+  // main, et sa nature manuelle est écrite ici comme l'Article 24 l'exige.
+  { motif: /^docs\/agence-(blueprint|installation|plan-de-la-machine)\.md$/, pourquoi: "les trois pièces qui expliquent comment remonter l'Agence ailleurs" },
   { motif: /^docs\/philosophie-et-politique\.md$/, pourquoi: "déclaré formulé pour rester utilisable sur un futur projet" },
   { motif: /^docs\/referentiel\/(standards|lecons|organisation-agence|classification-agence|le-classificateur)\.md$/, pourquoi: "pièce du kit de l'Agence" },
   { motif: /^docs\/(regles-de-travail|systeme-de-suivi|xp-ia-process-detail)\.md$/, pourquoi: "méthode de travail : elle vaut pour n'importe quel projet piloté par IA" },
@@ -2005,6 +2013,9 @@ export const EXCEPTIONS_DE_NATURE = [
   { chemin: "docs/agence-installation.md", cle: "export", icone: "📦",
     quoi: "il sert le DÉPART de l'Agence — comment la remonter ailleurs, et ce qui l'en empêche",
     pourquoi: "son arbitrage du 2026-09-27 : une nature neuve EXPORT. C'est le mode d'emploi du déménagement" },
+  { chemin: "docs/agence-plan-de-la-machine.md", cle: "export", icone: "📦",
+    quoi: "il sert le DÉPART de l'Agence — comment la remonter ailleurs, et ce qui l'en empêche",
+    pourquoi: "tâche #908 : le pendant INSTANCIÉ de la procédure d'installation. Elle dit l'ordre en prose et sans nommer un fichier, pour pouvoir voyager ; celui-ci donne les vrais noms de CE dépôt, calculés sur son graphe d'imports. Même nature EXPORT, deux moitiés du même mode d'emploi — et il est GÉNÉRÉ, donc il ne se périme pas" },
   { chemin: "docs/peur-de-l-export.md", cle: "export", icone: "📦",
     quoi: "il sert le DÉPART de l'Agence — comment la remonter ailleurs, et ce qui l'en empêche",
     pourquoi: "même arbitrage : c'est le raisonnement sur ce qui empêche une Agence de partir, l'autre moitié du même sujet" },

@@ -4609,6 +4609,56 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.match(formatReexportsLines(reel)[0],/aucun nom réexporté/,'the clean case says what was checked and on how many files, never a bare green');
   }
 
+  // LE PLAN DE LA MACHINE (2026-09-27, tâche #908). SAFE-EXPORT le disait déjà sans savoir le
+  // combler : « un acheteur qui reçoit quatre-vingts plans de pièces détachées n'a pas reçu le plan
+  // de la machine. » Les deux documents génériques existants n'y répondent pas — ils sont écrits
+  // sans nommer un seul fichier, pour pouvoir voyager. Il manquait leur pendant instancié, et la
+  // tâche en fixait la contrainte : GÉNÉRÉ depuis la chaîne réelle, jamais rédigé, sinon il se
+  // périme au premier fichier ajouté (Article 24).
+  {
+    const {paliersDInstallation,renderPlanDeLaMachine}=await import('../scripts/safe-export.mjs');
+    // L'ORDRE SE CALCULE : le palier d'un fichier est la plus longue chaîne de dépendances qui mène
+    // à lui, donc poser les paliers dans l'ordre garantit qu'aucun fichier n'arrive orphelin.
+    const p=paliersDInstallation({lignes:[{chemin:'a'},{chemin:'b'},{chemin:'c'}],importeDe:{b:['a'],c:['b']}});
+    assert.deepEqual(p.paliers.map((x)=>[x.niveau,x.fichiers]),[[0,['a']],[1,['b']],[2,['c']]],'the installation order is CALCULATED from the dependency graph — it is the only definition of an order that is not an opinion');
+    assert.deepEqual(p.cycles,[],'and a clean graph reports no cycle');
+    // UN CYCLE EST NOMMÉ, JAMAIS MASQUÉ : il rend l'ordre arbitraire entre les fichiers concernés,
+    // et un plan qui le cacherait donnerait un ordre impossible à suivre sans qu'on comprenne pourquoi.
+    const q=paliersDInstallation({lignes:[{chemin:'x'},{chemin:'y'}],importeDe:{x:['y'],y:['x']}});
+    assert.ok(q.cycles.length>=1,'a cycle must be NAMED rather than silently broken: the recursion is cut so nothing loops, but the reader is told');
+    assert.match(renderPlanDeLaMachine(q,{}),/cycle d'imports/,'and the generated document carries that warning, never only the console');
+    // UNE DÉPENDANCE HORS CHAÎNE NE COMPTE PAS — sinon le plan classerait un fichier d'après des
+    // voisins que l'installation ne pose jamais.
+    assert.deepEqual(paliersDInstallation({lignes:[{chemin:'a'}],importeDe:{a:['dehors']}}).paliers.map((x)=>x.niveau),[0],'a dependency outside the daily chain does not create a tier: the plan only orders what is actually installed');
+    // ET IL REFUSE DE CONCLURE SANS CHAÎNE (leçon L11).
+    assert.equal(paliersDInstallation({}).mesurable,false,'with no chain it refuses to conclude rather than printing an empty plan that reads as a tiny, tidy Agency');
+    assert.match(renderPlanDeLaMachine(paliersDInstallation({}),{}),/PAS MESURÉ/,'and the document says so in its own body, where the reader is');
+    // LE DOCUMENT SE DÉCLARE GÉNÉRÉ, parce que la seule façon de le périmer serait de l'éditer.
+    assert.match(renderPlanDeLaMachine(p,{entrees:['scripts/hooks/pre-commit']}),/Ce document est GÉNÉRÉ/,'the generated document says it is generated and must not be hand-edited — the one way it could go stale');
+  }
+
+  // DEUX MESURES DU MÊME OUTIL DISAIENT LE CONTRAIRE (2026-09-27, tâche #907). Le compte des kits
+  // honore EXEMPTES_DU_KIT — crochets git, installeur d'environnement, lanceur du produit, chacun
+  // avec sa raison écrite — et affichait « 7 dispensés ». Le croisement vitalité × blueprint, lui,
+  // ne lisait pas cette déclaration et sortait EXACTEMENT LES MÊMES SEPT en « ⛔ BLOQUANTS ». Le
+  // même rapport affirmait donc, à trois lignes d'écart, qu'ils étaient dispensés et qu'ils
+  // bloquaient. C'est la leçon L29 : deux calculs sur la même question finissent par diverger.
+  {
+    const {mesurerLExportabilite,exemptionDuKit}=await import('../scripts/safe-export.mjs');
+    const vit={mesurable:true,parNiveau:{
+      vital:[{chemin:'scripts/hooks/pre-commit'},{chemin:'scripts/outil-sans-plan.mjs'},{chemin:'scripts/safe-export.mjs'}],
+      essentiel:[],utile:[],optionnel:[],
+    }};
+    const e=mesurerLExportabilite({vitalite:vit,exists:(p)=>String(p).endsWith('safe-export-blueprint.md')});
+    assert.deepEqual(e.bloquants,['scripts/outil-sans-plan.mjs'],'only the file that genuinely owes a blueprint blocks: a git hook declared as not travelling is not a gap, and the SAME rule must decide here and in the kit count — there is one rule, written once, and it is READ');
+    assert.equal(e.niveaux.vital.dus,2,'the denominator is the number of files that OWE a blueprint, never the raw population — otherwise the line reads "39/46 · 100 %" and contradicts itself in three characters');
+    assert.equal(e.niveaux.vital.couverture,50,'and the percentage is computed on that same denominator');
+    assert.equal(e.niveaux.vital.exemptes.length,1,'the exempt file is counted apart and KEPT: a silent dispensation inflates the rate and looks like earned coverage');
+    assert.ok(e.niveaux.vital.exemptes[0].pourquoi,'and it carries its written reason — an exemption without a reason is not a decision, it is an abandonment in disguise (Article 28)');
+    assert.ok(exemptionDuKit('scripts/hooks/post-commit'),'the one rule recognises a hook');
+    assert.equal(exemptionDuKit('scripts/argus.mjs'),null,'and leaves an ordinary tool alone — without this the exemption would excuse everything');
+  }
+
   // LE MENU S'OUVRE AUX PÉRIODIQUES (2026-09-25, décision de l'utilisateur) — et deux pièges se
   // referment en même temps, chacun mesuré sur la vraie table plutôt que craint.
   {

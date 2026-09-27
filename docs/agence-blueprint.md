@@ -140,6 +140,13 @@ qui exigent un raisonnement. **La séparation gratuit/payant est structurante** 
 
 → `docs/agence-installation.md`, la procédure dans l'ordre.
 
+**Et son pendant instancié, GÉNÉRÉ depuis le dépôt d'origine** : `docs/agence-plan-de-la-machine.md`
+(`node scripts/safe-export.mjs plan-machine`). Les deux documents ci-dessus sont volontairement
+écrits sans nommer un seul fichier, pour pouvoir voyager ; celui-là donne les vrais noms, l'ordre
+d'installation calculé sur le graphe d'imports réel, et les cycles éventuels. Il se régénère, donc
+il ne se périme pas — à lire en regard de la procédure quand on veut savoir *quoi* poser à chaque
+étape, jamais à la place d'elle.
+
 ## 9. Sa limite honnête
 
 **Tout ce qui ne se joue que dans la conversation échappe à toute mécanique.** Qu'un agent ait

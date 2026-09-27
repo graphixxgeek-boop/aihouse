@@ -666,14 +666,31 @@ export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = e
     const base = String(chemin).replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
     return exists(join(root, `docs/${base}-blueprint.md`));
   };
+  // DEUX MESURES DU MÊME OUTIL DISAIENT LE CONTRAIRE L'UNE DE L'AUTRE (2026-09-27, tâche #907).
+  // Le compte des kits honore `EXEMPTES_DU_KIT` — les crochets git, le script d'installation de
+  // l'environnement et le lanceur du PRODUIT ne partent pas avec l'Agence, chacun avec sa raison
+  // écrite — et affichait « 7 dispensés ». Ce croisement-ci, lui, ne lisait pas cette déclaration :
+  // il sortait EXACTEMENT LES MÊMES SEPT FICHIERS en « ⛔ BLOQUANTS ». Le même outil, dans le même
+  // rapport, affirmait donc à trois lignes d'écart qu'ils étaient dispensés et qu'ils bloquaient.
+  //
+  // C'est la leçon L29 dans sa forme la plus pure : deux calculs sur la même question finissent
+  // toujours par diverger. Il n'y a pas deux règles, il y en a une — et elle est déjà écrite, avec
+  // ses raisons, à un seul endroit. On la LIT (Article 24), on ne la recopie pas.
+  //
+  // LES EXEMPTÉS NE DISPARAISSENT PAS DE LA MESURE : ils sont comptés à part et nommés, parce
+  // qu'une dispense silencieuse gonflerait le taux et ressemblerait à une couverture méritée.
   const niveaux = {};
   for (const [niveau, fichiers] of Object.entries(vitalite.parNiveau)) {
-    const avec = fichiers.filter((f) => aUnBlueprint(f.chemin));
+    const exemptes = fichiers.filter((f) => exemptionDuKit(f.chemin));
+    const dus = fichiers.filter((f) => !exemptionDuKit(f.chemin));
+    const avec = dus.filter((f) => aUnBlueprint(f.chemin));
     niveaux[niveau] = {
       total: fichiers.length,
+      dus: dus.length,
+      exemptes: exemptes.map((f) => ({ chemin: f.chemin, pourquoi: exemptionDuKit(f.chemin)?.pourquoi ?? "" })),
       avecBlueprint: avec.length,
-      sansBlueprint: fichiers.filter((f) => !aUnBlueprint(f.chemin)).map((f) => f.chemin),
-      couverture: fichiers.length ? Math.round((avec.length / fichiers.length) * 100) : null,
+      sansBlueprint: dus.filter((f) => !aUnBlueprint(f.chemin)).map((f) => f.chemin),
+      couverture: dus.length ? Math.round((avec.length / dus.length) * 100) : null,
     };
   }
   // LE BLUEPRINT DE L'AGENCE ELLE-MÊME — sa question, et elle est plus profonde qu'elle n'en a
@@ -998,7 +1015,12 @@ function main() {
       else {
         console.log("=== EXPORTABILITÉ — croisement vitalité × blueprint ===");
         for (const [niveau, d] of Object.entries(e.niveaux)) {
-          console.log(`  ${niveau.padEnd(10)} ${String(d.avecBlueprint).padStart(3)}/${String(d.total).padEnd(3)} ont un blueprint · ${d.couverture === null ? "pas mesurable" : d.couverture + " %"}`);
+          // LE DÉNOMINATEUR EST CELUI DU POURCENTAGE, jamais un autre : afficher « 39/46 · 100 % »
+          // est un chiffre qui se contredit lui-même en trois caractères. Les dispensés sont
+          // comptés à part et NOMMÉS — une dispense tue ressemble à une couverture méritée.
+          const dispense = d.exemptes?.length ? ` (+${d.exemptes.length} dispensé${d.exemptes.length > 1 ? "s" : ""} avec raison écrite)` : "";
+          console.log(`  ${niveau.padEnd(10)} ${String(d.avecBlueprint).padStart(3)}/${String(d.dus ?? d.total).padEnd(3)} dus ont un blueprint · ${d.couverture === null ? "pas mesurable" : d.couverture + " %"}${dispense}`);
+          for (const ex of d.exemptes ?? []) console.log(`               · dispensé : ${ex.chemin} — ${ex.pourquoi}`);
         }
         console.log(`  ⛔ BLOQUANTS (vitaux ou essentiels SANS blueprint) : ${e.bloquants.length}`);
         for (const c of e.bloquants) console.log(`     · ${c}`);
@@ -1019,6 +1041,50 @@ function main() {
     });
   }
   // `kits` — le même tableau, seul, pour quand c'est LA question du moment.
+  // LA COMMANDE « plan-machine » (2026-09-27, tâche #908) : le plan de la machine, généré depuis la
+  // chaîne quotidienne réelle. Il ne se lance pas à chaque commit — c'est un document qu'on
+  // régénère quand la chaîne a bougé, pas un contrôle qui doit mordre tous les jours.
+  if (process.argv[2] === "plan-machine") {
+    printReliabilityNotice("safe-export");
+    recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return import("./le-classificateur.mjs").then(async (lc) => {
+      const rec = lc.recenserLesScripts();
+      const chaine = lc.chaineQuotidienne({ lignes: rec.lignes, importeDe: rec.importeDe });
+      const plan = paliersDInstallation({ lignes: rec.lignes, importeDe: rec.importeDe, chaine });
+      // LES POINTS D'ENTRÉE SE DÉRIVENT EUX AUSSI : ceux que le classificateur reconnaît comme
+      // lancés par git ou par package.json, jamais une liste écrite ici qui se périmerait au
+      // premier crochet ajouté.
+      const entrees = rec.lignes
+        .filter((l) => (l.portes ?? []).some((porte) => lc.POINTS_D_ENTREE_QUOTIDIENS.some((e) => String(porte).includes(e))))
+        .map((l) => l.chemin).sort();
+      // L'HEURE SE LIT, JAMAIS NE SE DÉDUIT (Article 32) — et si elle est illisible, le document
+      // le dit plutôt que de porter une date inventée.
+      let horodatage = "";
+      try {
+        const t = await import("./agent-du-temps.mjs");
+        const m = await t.maintenant();
+        // LA SOURCE VOYAGE AVEC L'HEURE, TOUJOURS (Article 32) : une heure de repli présentée comme
+        // une heure réseau est le pire type d'erreur, parce qu'une heure fausse ressemble trait pour
+        // trait à une heure juste. Dans ce conteneur les deux API de temps rendent HTTP 403, donc la
+        // source est « système » — et le document le dit à chaque régénération plutôt que de le taire.
+        horodatage = m?.mesurable ? `${m.humain} (source : ${m.source})` : "";
+      } catch { horodatage = ""; }
+      let commit = "";
+      try { commit = sh("git rev-parse --short HEAD", { cwd: ROOT }).trim(); } catch { commit = ""; }
+      const md = renderPlanDeLaMachine(plan, { entrees, horodatage, commit });
+      const chemin = join(ROOT, "docs/agence-plan-de-la-machine.md");
+      writeFileSync(chemin, md);
+      console.log("=== SAFE-EXPORT — plan de la machine ===\n");
+      if (!plan.mesurable) { console.log(`🚨 PAS MESURÉ — ${plan.pourquoi}`); return; }
+      console.log(`✅ docs/agence-plan-de-la-machine.md régénéré : ${plan.paliers.length} paliers, ${plan.total} fichiers, ${entrees.length} point(s) d'entrée.`);
+      if (plan.cycles.length) console.log(`⚠️  ${plan.cycles.length} fichier(s) dans un cycle d'imports, nommés dans le document : ${plan.cycles.join(", ")}`);
+      else console.log("   Aucun cycle d'imports : l'ordre est suivable de bout en bout.");
+      console.log("\n   Ce document est le pendant INSTANCIÉ de docs/agence-blueprint.md (ce que l'Agence est) et");
+      console.log("   docs/agence-installation.md (dans quel ordre la poser), qui restent volontairement sans un");
+      console.log("   seul nom de fichier pour pouvoir voyager. Celui-ci donne les vrais noms, et il se RÉGÉNÈRE.");
+    });
+  }
+
   if (process.argv[2] === "kits") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
@@ -1370,6 +1436,130 @@ export function formatReexportsLines(r) {
   if (!r.ecarts.length) return [`   ✅ réexports : aucun nom réexporté sans liaison locale sur ${r.fichiers} fichiers (leçon L36).`];
   return ["   ⚠️  RÉEXPORT SANS LIAISON LOCALE — l'appel plantera à l'exécution, jamais à la lecture (leçon L36) :",
     ...r.ecarts.map((e) => `      · ${e.chemin} — ${e.pourquoi}`)];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE PLAN DE LA MACHINE (2026-09-27, tâche #908) — GÉNÉRÉ, JAMAIS RÉDIGÉ.
+//
+// CE QUI MANQUAIT, ET SAFE-EXPORT LE DISAIT DÉJÀ SANS SAVOIR LE COMBLER : « un acheteur qui reçoit
+// quatre-vingts plans de pièces détachées n'a pas reçu le plan de la machine. » Deux documents
+// génériques existent — `docs/agence-blueprint.md` (ce que l'Agence EST) et
+// `docs/agence-installation.md` (dans quel ORDRE la poser) — et tous deux sont écrits en prose
+// volontairement sans nommer un seul fichier de ce dépôt, ce qui est juste pour un blueprint
+// destiné à voyager. Il manquait leur pendant INSTANCIÉ : pour CE dépôt-ci, quels fichiers forment
+// la chaîne, qui dépend de qui, et par où commencer.
+//
+// LA CONTRAINTE EST LE CŒUR DE LA TÂCHE, et elle vient d'elle : ce document doit être DÉRIVÉ de la
+// chaîne quotidienne et du graphe d'imports, jamais rédigé. Écrit à la main il se périmerait au
+// premier fichier ajouté — exactement comme les quatre listes que l'audit d'évolutivité du
+// 2026-09-21 avait trouvées déjà fausses (Article 24).
+//
+// L'ORDRE D'INSTALLATION SE CALCULE, IL NE SE DÉCIDE PAS. Le palier d'un fichier est la longueur
+// de la plus longue chaîne de dépendances qui mène à lui : un fichier qui n'importe personne est au
+// palier 0 et se pose en premier, un fichier qui importe un fichier de palier 3 est au moins au
+// palier 4. Poser les paliers dans l'ordre garantit qu'aucun fichier n'arrive avant ce dont il a
+// besoin — c'est la seule définition d'un « ordre d'installation » qui ne soit pas une opinion.
+//
+// LES CYCLES SONT DÉCLARÉS, JAMAIS CONTOURNÉS EN SILENCE. Un cycle d'import rend la notion de
+// palier indéfinie pour les fichiers qui en font partie. On coupe la récursion pour ne pas boucler,
+// et on NOMME les fichiers concernés : un plan d'installation qui masquerait un cycle donnerait un
+// ordre impossible à suivre, et celui qui le suit ne comprendrait pas pourquoi.
+export function paliersDInstallation({ lignes = [], importeDe = {}, chaine = null } = {}) {
+  const dans = chaine ?? new Set(lignes.map((l) => l.chemin));
+  if (!dans.size) return { mesurable: false, pourquoi: "aucune chaîne quotidienne fournie — « rien à installer » et « je n'ai rien lu » s'écrivent pareil", paliers: [], cycles: [] };
+  const dep = {};
+  for (const [src, cibles] of Object.entries(importeDe)) {
+    if (!dans.has(src)) continue;
+    dep[src] = [...(cibles ?? [])].filter((c) => dans.has(c));
+  }
+  const memo = {}; const enCours = new Set(); const cycles = new Set();
+  const palier = (c) => {
+    if (memo[c] !== undefined) return memo[c];
+    if (enCours.has(c)) { cycles.add(c); return 0; }
+    enCours.add(c);
+    const d = dep[c] ?? [];
+    const v = d.length ? 1 + Math.max(...d.map(palier)) : 0;
+    enCours.delete(c); memo[c] = v; return v;
+  };
+  const parPalier = new Map();
+  for (const c of dans) {
+    const p = palier(c);
+    if (!parPalier.has(p)) parPalier.set(p, []);
+    parPalier.get(p).push(c);
+  }
+  const paliers = [...parPalier.entries()].sort((a, b) => a[0] - b[0])
+    .map(([niveau, fichiers]) => ({ niveau, fichiers: fichiers.sort(), depend: fichiers.sort().map((f) => ({ fichier: f, sur: (dep[f] ?? []).sort() })) }));
+  return { mesurable: true, paliers, cycles: [...cycles].sort(), total: dans.size };
+}
+
+export function renderPlanDeLaMachine(plan, { entrees = [], horodatage = "", commit = "" } = {}) {
+  const l = [];
+  l.push("# Le plan de la machine — l'Agence Codex telle qu'elle est câblée ici");
+  l.push("");
+  l.push("> **Ce document est GÉNÉRÉ** par `node scripts/safe-export.mjs plan-machine`, depuis la chaîne");
+  l.push("> quotidienne réelle et le graphe d'imports. **Ne pas l'éditer à la main** : la prochaine");
+  l.push("> génération écrase tout. Écrit à la main, il se périmerait au premier fichier ajouté — c'est");
+  l.push("> exactement ce que la tâche #908 demandait d'éviter (Article 24).");
+  l.push("");
+  if (horodatage) l.push(`*Produit le ${horodatage}${commit ? ` · état du code : ${commit}` : ""}.*`);
+  l.push("");
+  l.push("**Son complément générique, à lire d'abord** : `docs/agence-blueprint.md` dit ce que l'Agence EST,");
+  l.push("`docs/agence-installation.md` dans quel ORDRE la poser — tous deux sans nommer un fichier, pour");
+  l.push("pouvoir voyager. Ce document-ci est leur pendant instancié : les mêmes étapes, avec les vrais noms.");
+  l.push("");
+  if (!plan?.mesurable) {
+    l.push(`## 🚨 PAS MESURÉ`);
+    l.push("");
+    l.push(plan?.pourquoi ?? "raison non fournie");
+    return l.join("\n") + "\n";
+  }
+  l.push("## Par où ça démarre");
+  l.push("");
+  l.push("Ce que l'Agence lance elle-même, sans que personne le demande — tout le reste n'est atteint");
+  l.push("que par eux :");
+  l.push("");
+  for (const e of entrees) l.push(`- \`${e}\``);
+  if (!entrees.length) l.push("- *(aucun point d'entrée dérivé — la sonde n'a rien trouvé, ce qui est un défaut de câblage, pas un dépôt vide)*");
+  l.push("");
+  l.push(`## L'ordre d'installation — ${plan.paliers.length} paliers, ${plan.total} fichiers`);
+  l.push("");
+  l.push("Le palier d'un fichier est la longueur de la plus longue chaîne de dépendances qui mène à lui.");
+  l.push("**Poser les paliers dans l'ordre garantit qu'aucun fichier n'arrive avant ce dont il a besoin.**");
+  l.push("C'est la seule définition d'un ordre d'installation qui ne soit pas une opinion.");
+  l.push("");
+  for (const p of plan.paliers) {
+    l.push(`### Palier ${p.niveau} — ${p.fichiers.length} fichier(s)`);
+    l.push("");
+    if (p.niveau === 0) l.push("*Ils n'importent rien de la chaîne : ils se posent en premier, dans n'importe quel ordre entre eux.*");
+    l.push("");
+    for (const d of p.depend) {
+      l.push(d.sur.length
+        ? `- \`${d.fichier}\` — après ${d.sur.map((x) => `\`${x}\``).join(", ")}`
+        : `- \`${d.fichier}\``);
+    }
+    l.push("");
+  }
+  l.push("## Ce que ce plan ne dit pas");
+  l.push("");
+  l.push("**Il ne dit pas ce que chaque fichier FAIT** : ça, c'est son blueprint et sa fiche. Il dit dans");
+  l.push("quel ordre les poser pour qu'aucun n'arrive orphelin.");
+  l.push("");
+  l.push("**Il ne couvre que la chaîne QUOTIDIENNE** — ce que les points d'entrée atteignent réellement.");
+  l.push("Un outil lancé seulement à la main n'y figure pas, et son absence n'est pas un verdict sur lui.");
+  l.push("");
+  if (plan.cycles.length) {
+    l.push(`**Il y a ${plan.cycles.length} fichier(s) dans un cycle d'imports**, et leur palier est donc indéfini :`);
+    l.push("");
+    for (const c of plan.cycles) l.push(`- \`${c}\``);
+    l.push("");
+    l.push("Un cycle ne casse pas l'installation (les modules se résolvent), mais il rend l'ordre arbitraire");
+    l.push("entre eux. **Il est nommé plutôt que masqué** : un plan qui cacherait un cycle donnerait un ordre");
+    l.push("impossible à suivre sans qu'on comprenne pourquoi.");
+  } else {
+    l.push("**Aucun cycle d'imports dans la chaîne** : l'ordre ci-dessus est suivable de bout en bout.");
+  }
+  l.push("");
+  return l.join("\n") + "\n";
 }
 
 export function findGardienAmbigu(texte, options = {}) {
