@@ -98,6 +98,54 @@ export const PROCESSES = [
     ],
   },
   {
+    // LE ONZIÈME PROCESS (2026-09-27, tâche #846). NOM CHOISI PAR L'UTILISATEUR ce jour-là, entre
+    // trois pistes qui lui ont été présentées — les noms se choisissent ici par lui, et un process
+    // acté sans lui serait un process que personne n'a voulu.
+    //
+    // LA SURPRISE DE L'INSTRUCTION EST QUE HUIT ÉTAPES SUR DIX EXISTAIENT DÉJÀ, chacune exigée par
+    // la charte ET portée par un mécanisme réel. Ce qui manquait n'était pas le contenu : c'est
+    // qu'elles ne soient NULLE PART rassemblées en une suite dont on puisse voir les trous. Un
+    // agent devait les retrouver de mémoire — précisément ce que l'Article 30 interdit.
+    slug: "documents-de-reference",
+    nom: "Modifier CLAUDE.md ou un document de référence",
+    quand: "avant de toucher une règle de la charte ou d'un document du référentiel",
+    motsCles: ["charte", "claude.md", "référentiel", "referentiel", "article", "obligation", "principes.md", "parametres.md", "règle", "regle"],
+    doc: "docs/plans/process-documents-de-reference-proposition.md",
+    gardien: "scripts/moise-tables-de-loi.mjs",
+    // LES QUATRE MAILLONS SANS OBJET, et leur raison est UNE SEULE : ce process APPLIQUE une
+    // décision, il n'en produit pas. Les constats qui motivent un changement de règle viennent
+    // d'ailleurs — d'une Ronde, d'un rapport d'outil, d'une demande de l'utilisateur — et c'est là
+    // qu'ils sont triés, retenus ou écartés. Ce process-ci commence APRÈS, quand il est déjà acquis
+    // qu'une règle doit bouger, et sa seule mission est que ça se fasse sans rien casser ni rien
+    // perdre. Lui réclamer un rapport reviendrait à demander un rapport sur l'exécution d'une
+    // décision déjà rapportée ailleurs — le doublon exact que le schéma unifié cherche à éviter.
+    // Déclaré ici plutôt que laissé vide en espérant que ça passe.
+    maillonsSansObjet: {
+      rapports: "il n'y a rien à rapporter : le constat qui a motivé le changement de règle a déjà été rapporté par le process ou l'outil qui l'a trouvé, et le changement lui-même laisse sa trace dans le registre des opérations et la ligne de suivi",
+      analyse: "rien à trier — quand ce process démarre, l'analyse est faite et la décision est prise ; trier ici serait rejuger une décision au moment de l'appliquer, ce qui est le meilleur moyen de l'appliquer à moitié",
+      "plan-action": "il n'y a aucun constat à retenir ou à écarter : ce process EST déjà l'action d'un plan, jamais la source d'un nouveau (Article 28, pris par le bon bout)",
+      questions: "les arbitrages ont eu lieu avant — au moment de décider que la règle devait bouger. Poser une question ici reviendrait à rouvrir la décision pendant qu'on l'écrit, et une règle à moitié écrite est pire que l'ancienne",
+    },
+    etapes: [
+      { cle: "reprise-des-notes", libelle: "chercher ce que le dépôt sait déjà sur la règle qu'on s'apprête à toucher (Article 30)", preuve: null },
+      { cle: "comprendre-la-raison", libelle: "lire la raison d'être de la règle avant d'y toucher — un mécanisme qui semble trop prudent en a presque toujours une (Article 19)", preuve: null },
+      { cle: "heure-lue", libelle: "lire l'heure plutôt que la taper : toute date écrite dans un document de référence se LIT (Article 32)", preuve: null },
+      { cle: "article-preserve", libelle: "vérifier qu'aucun Article n'a disparu, glissé, ni été vidé de ses obligations (protegerLaCharte)", preuve: { fichier: "CLAUDE.md" } },
+      { cle: "chemins-atteignables", libelle: "vérifier qu'aucun chemin cité n'est devenu inatteignable (cheminsPerdus)", preuve: null },
+      { cle: "sobriete", libelle: "un Article neuf se pèse : le nombre d'obligations est ce qui sature, jamais le nombre de lignes", preuve: null },
+      { cle: "memoire-des-operations", libelle: "inscrire l'opération au registre de la charte, Article par Article", preuve: { fichier: "docs/referentiel/charte-operations.md" } },
+      { cle: "ligne-de-suivi", libelle: "inscrire la tâche dans docs/suivi/ DANS LE MÊME commit", preuve: { dossier: "docs/suivi/sessions" } },
+      // L'ÉTAPE 9 — LE SEUL TROU SANS PORTEUR, et il est comblé le 2026-09-27 sur sa décision
+      // (« la construire — elle demande »). Le mécanisme ne saura JAMAIS si les autres documents
+      // devaient bouger ; il sait dire qu'une obligation a changé d'un côté seulement, et poser la
+      // question. C'est le même compromis que les six règles qu'angel-of-ia-process DEMANDE au lieu
+      // de deviner — et c'est très exactement ce que la charte exige « le jour même » (Article 13)
+      // sans que rien ne l'ait jamais vérifié (leçon L1, sur la règle qui gouverne la charte).
+      { cle: "repercussion", libelle: "répercuter dans les autres documents le jour même — detteDeRepercussion() signale une obligation qui a bougé dans la charte sans qu'un seul document du référentiel ne soit touché, et DEMANDE si c'était voulu", preuve: { fichier: "docs/referentiel/principes.md" } },
+      { cle: "filet", libelle: "lancer le filet de sécurité avant de considérer le changement terminé (Article 13)", preuve: null },
+    ],
+  },
+  {
     // AJOUTÉ le 2026-09-23 (tâche #613). Ce process est l'un des rares à porter les six maillons du
     // schéma unifié sans qu'aucun soit sans objet — c'est normal : une analyse de la charte EST une
     // enquête, là où une intégration d'outil est une liste de cases à cocher.
@@ -1485,6 +1533,21 @@ export function formatPointDeControleLines(p) {
 //
 // IL NE BLOQUE PAS LE DÉPART. Un contrôle de préparation qui refuserait la nuit ferait perdre la
 // nuit — exactement ce qu'il existe pour protéger.
+// UN PROCESS DÉCLARÉ À MOITIÉ EST PIRE QU'UN PROCESS ABSENT (2026-09-27, trouvé en déclarant le
+// onzième) : il apparaît dans les listes, il compte dans les totaux, et il fait planter le premier
+// mécanisme qui le lit sur un TypeError qui ne nomme pas le coupable. Ce qui manquait n'était pas
+// l'attention — c'est qu'aucun champ n'était EXIGÉ nulle part, donc le douzième aurait fait pareil.
+export const CHAMPS_PROCESS_REQUIS = ["slug", "nom", "motsCles", "gardien", "etapes"];
+
+export function findProcessMalDeclares(processes = PROCESSES, { requis = CHAMPS_PROCESS_REQUIS } = {}) {
+  const manques = [];
+  for (const p of processes) {
+    const absents = requis.filter((c) => p?.[c] === undefined || (Array.isArray(p[c]) && !p[c].length));
+    if (absents.length) manques.push({ slug: p?.slug ?? "(sans slug)", absents });
+  }
+  return manques;
+}
+
 export function preparationDeNuit({ planTexte = null, taches = [], processes = PROCESSES, outilsPour = null, verifier = null } = {}) {
   if (planTexte == null && !taches.length) {
     return { mesurable: false, pourquoi: "aucun PLAN DE DÉPART et aucune liste de tâches — il n'y a rien à préparer, et rendre « prêt » sur zéro donnée serait le pire des verts la veille d'une nuit entière" };
@@ -1573,7 +1636,11 @@ export function whichProcess(tache, { processes = PROCESSES } = {}) {
   const t = String(tache ?? "").toLowerCase();
   if (!t.trim()) return [];
   return processes
-    .map((p) => ({ process: p, score: p.motsCles.filter((m) => t.includes(m)).length }))
+    // UN PROCESS SANS `motsCles` FAISAIT PLANTER ICI sur un TypeError illisible (2026-09-27, trouvé
+    // en déclarant le onzième). Le défaut n'était pas l'oubli — c'est qu'un champ obligatoire
+    // n'était exigé nulle part : le douzième l'aurait rencontré aussi. On rend le process
+    // INTROUVABLE plutôt que fatal, et `findProcessMalDeclares()` le nomme pour de bon.
+    .map((p) => ({ process: p, score: (p.motsCles ?? []).filter((m) => t.includes(m)).length }))
     .filter((r) => r.score > 0)
     .sort((a, b) => b.score - a.score)
     .map((r) => r.process);
@@ -1926,6 +1993,12 @@ export const MOTIF_TACHE_ANNONCEE = /(?:tâche|tache)\s*\*{0,2}#(\d+)/gi;
 // main reste légitime tant que sa nature manuelle est écrite noir sur blanc). Et un garde-fou qui
 // refuse le silence : un process NOUVEAU doit soit porter l'étape, soit figurer ici avec sa raison.
 export const PROCESS_SANS_ESTIMATION_ASSUMEE = {
+  // #846 — modifier un document de référence. Une estimation n'a pas d'objet ici, et pour une
+  // raison de FOND plutôt que de commodité : la durée ne dépend pas du process, elle dépend de la
+  // règle qu'on touche. Corriger un chemin prend une minute, réécrire un Article en prend une
+  // heure, et le process est le même. Annoncer une durée reviendrait à annoncer un chiffre qui ne
+  // mesure rien — et un chiffre qui ne mesure rien finit par servir de référence.
+  "documents-de-reference": "la durée ne dépend pas du process mais de la règle touchée : corriger un chemin prend une minute, réécrire un Article une heure, et les deux suivent les mêmes dix étapes. Annoncer une durée ici serait annoncer un chiffre qui ne mesure rien — et un chiffre qui ne mesure rien finit par servir de référence.",
   // LE PRÉ-CHANTIER N'ESTIME RIEN, ET C'EST STRUCTUREL, pas un oubli (2026-09-26) : il ORDONNE de
   // la matière déjà là — il range des idées dans une stratégie, il ne construit rien. L'estimation
   // de durée, de tokens et d'API appartient au CHANTIER qu'il précède, jamais à lui : estimer le

@@ -67,6 +67,71 @@ import { estimateTokens } from "./smart-conso-token.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
+// ══════════════════════════════════════════════════════════════════════════
+// LA RÉPERCUSSION : LE SEUL TROU DU PROCESS « MODIFIER UN DOCUMENT DE RÉFÉRENCE » (#846)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LA SURPRISE DE L'INSTRUCTION EST QUE PRESQUE TOUT EXISTAIT DÉJÀ : huit étapes sur dix sont
+// exigées par la charte ET portées par un mécanisme réel — reprise des notes (Art. 30), raison
+// d'être (`findRaisonsPerdues()`), heure lue (Art. 32), Article disparu ou glissé
+// (`protegerLaCharte()`), chemin devenu inatteignable (`cheminsPerdus()`), sobriété d'un Article
+// neuf, mémoire des opérations, ligne de suivi.
+//
+// LE SEUL TROU SANS AUCUN PORTEUR ÉTAIT CELUI-CI : « répercuter dans les autres documents ». La
+// charte l'exige « le jour même » (Article 13) et RIEN ne vérifiait que ça avait été fait — ce qui
+// est exactement la leçon L1, sur la règle qui gouverne la charte elle-même.
+//
+// CE QUI SE MESURE, ET LE PREMIER ESSAI ÉTAIT FAUX. J'ai d'abord compté les UNITÉS DE RÈGLE de la
+// charte : elles valent 33 et n'ont pas bougé d'un iota sur 80 commits, y compris pendant les
+// passes d'allègement qui ont réécrit des Articles entiers. Normal — elles comptent les ARTICLES,
+// pas les obligations. Un détecteur bâti dessus n'aurait mordu qu'à la création ou à la suppression
+// d'un Article, c'est-à-dire presque jamais : un motif qui ne PEUT pas matcher ressemble trait pour
+// trait à un motif qui ne matche pas (leçon L11). Trouvé en mesurant, jamais en relisant.
+//
+// LA BONNE MESURE EST LE NOMBRE D'OBLIGATIONS (`compterObligations`, ABRAHAM) : il bouge dès qu'une
+// phrase impérative est ajoutée, retirée ou reformulée. Un commit qui le fait bouger SANS toucher un
+// seul document du référentiel est une dette de répercussion.
+//
+// POURQUOI LE COMPTE ET PAS LE TEXTE : comparer les textes dirait qu'une virgule a changé. Ce qui
+// doit se répercuter n'est pas une retouche, c'est une OBLIGATION qui apparaît ou disparaît — et
+// c'est précisément ce que ce compte suit.
+export const DOSSIER_REFERENTIEL = "docs/referentiel/";
+
+export function detteDeRepercussion(commit, { shImpl = sh, root = ROOT, compter = A.compterObligations, charte = "CLAUDE.md" } = {}) {
+  const lire = (rev) => { try { return shImpl(`git show ${rev}:${charte}`, { cwd: root, maxBuffer: 5e7 }); } catch { return null; } };
+  let fichiers;
+  try { fichiers = shImpl(`git diff-tree --no-commit-id --name-only -r ${commit}`, { cwd: root }).trim().split("\n").filter(Boolean); }
+  catch { return { mesurable: false, pourquoi: `le commit ${commit} est illisible — « aucune dette » et « je n'ai pas pu regarder » s'écrivent tous les deux zéro (L5)` }; }
+  if (!fichiers.includes(charte)) return { mesurable: true, concerne: false, pourquoi: `ce commit ne touche pas ${charte} : il n'y a rien à répercuter` };
+  const avant = lire(`${commit}~1`), apres = lire(commit);
+  if (avant === null || apres === null) return { mesurable: false, pourquoi: `impossible de lire ${charte} avant et après ${commit} — sans les deux états, aucune variation n'est calculable` };
+  const n = compter(apres), p = compter(avant);
+  const touche = fichiers.filter((f) => f.startsWith(DOSSIER_REFERENTIEL));
+  return {
+    mesurable: true, concerne: true,
+    obligationsAvant: p, obligationsApres: n, variation: n - p,
+    referentielTouche: touche,
+    // UNE CHARTE RETOUCHÉE SANS QU'UNE OBLIGATION BOUGE N'A RIEN À RÉPERCUTER : reformuler une
+    // phrase, corriger une faute, déplacer un paragraphe ne change aucune règle. Accuser là ferait
+    // crier le contrôle sur le travail d'entretien, donc le ferait taire pour de bon (L4).
+    dette: n !== p && touche.length === 0,
+    pourquoi: n === p
+      ? "le nombre d'obligations n'a pas bougé : la charte a été retouchée sans qu'aucune règle apparaisse ou disparaisse, il n'y a rien à répercuter"
+      : touche.length
+        ? `${Math.abs(n - p)} obligation(s) ${n > p ? "ajoutée(s)" : "retirée(s)"}, et ${touche.length} document(s) du référentiel ont bougé dans le même commit — répercussion faite`
+        : `${Math.abs(n - p)} obligation(s) ${n > p ? "ajoutée(s)" : "retirée(s)"} dans la charte, et AUCUN document du référentiel touché. L'Article 13 exige la répercussion « le jour même » : une règle changée d'un côté seulement s'applique en silence pendant des semaines.`,
+  };
+}
+
+export function formatRepercussionLines(r) {
+  if (!r?.mesurable) return ["", `🚨 RÉPERCUSSION — PAS MESURÉE : ${r?.pourquoi ?? "raison non fournie"}`];
+  if (!r.concerne) return [];
+  if (!r.dette) return ["", `📘 RÉPERCUSSION — ✅ ${r.pourquoi}`];
+  return ["", "📘 RÉPERCUSSION — 🟠 DETTE", `   ${r.pourquoi}`,
+    "   Ce trou était le SEUL du process « modifier un document de référence » à n'avoir aucun porteur :",
+    "   la charte l'exigeait, et rien ne vérifiait qu'on l'avait fait (leçon L1, sur la règle qui gouverne la charte)."];
+}
+
 export const CHARTE = "CLAUDE.md";
 // NOMS DE DOCUMENTS VOLONTAIREMENT GÉNÉRIQUES (« charte- », jamais « claude-md- »). La première
 // version de cet outil s'appelait d'après un modèle d'IA précis ; l'utilisateur l'a refusée en deux

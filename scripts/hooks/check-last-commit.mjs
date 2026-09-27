@@ -452,6 +452,23 @@ try {
   if (msg) console.log(`${msg}\n`);
 } catch { /* best-effort, jamais bloquant */ }
 
+// L'ÉTAPE 9 DU PROCESS « documents-de-reference » — ELLE DEMANDE (2026-09-27, tâche #846, sur sa
+// décision du jour : « la construire — elle demande »). Un mécanisme ne saura JAMAIS si les autres
+// documents devaient bouger ; il sait dire qu'une obligation a changé d'un côté seulement, et poser
+// la question. Même compromis que les six règles qu'angel-of-ia-process demande au lieu de deviner.
+//
+// ELLE EST MUETTE QUAND IL N'Y A RIEN À DIRE, et c'est ce qui la rend lisible : une charte
+// retouchée sans qu'aucune obligation bouge n'a rien à répercuter, et crier là ferait taire le
+// contrôle pour de bon (L4).
+try {
+  const { detteDeRepercussion, formatRepercussionLines } = await import("../moise-tables-de-loi.mjs");
+  const r = detteDeRepercussion("HEAD");
+  if (r.mesurable && r.concerne && r.dette) {
+    for (const l of formatRepercussionLines(r)) console.log(l);
+    console.log("   → Est-ce voulu ? Si oui, l'écrire ; sinon, répercuter maintenant (Article 13).\n");
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
 // LE PROCESS GROS PROMPT DORT-IL ? (2026-09-27, tâche #701, volet 3.) Sa question était
 // « comment on pourrait faire pour que ce process ne reste pas à dormir » — et la réponse est
 // exactement ici, au même endroit que la relance de Ronde : un compteur qu'il faut penser à

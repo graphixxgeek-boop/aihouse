@@ -17018,3 +17018,68 @@ async function testGrosPromptNeDortPas() {
   console.log(`Passed: le process gros prompt ne doit pas dormir (2026-09-27, tâche #701). Sa question ÉTAIT la tâche — « comment on pourrait faire pour que ce process ne reste pas à dormir » — et la trouvaille décidait si un compteur était seulement possible : un process qui sert PAR ÉVÉNEMENT ne se mesure pas au temps écoulé. « 39 commits sans Ronde » a un sens parce que la Ronde a un rythme ; un long silence du gros prompt peut simplement vouloir dire qu'aucune grosse saisine n'est arrivée, et le dépôt le disait noir sur blanc depuis des jours — ce constat, pris tel quel, condamnait le compteur. CE QUI SE MESURE EST DONC L'OCCASION, et sa propre règle en déclare une : il envoie sa saisine AVANT une période autonome. Une nuit qui démarre sans saisine archivée est un manque réel, datable, lisible sur le disque. La fenêtre d'un jour n'est pas un confort — il l'envoie souvent la veille au soir, et exiger la même date ferait crier le compteur sur les nuits les mieux préparées ; elle ne s'étend pas en arrière non plus, sinon le rattrapage du lendemain effacerait le manque. LA DERNIÈRE NUIT COMPTE PLUS QUE LE TAUX : un historique à 50 % dont la dernière nuit est couverte décrit un process qui a pris, l'inverse un process qui s'éteint — et c'est la seule chose que le rappel de commit dit, parce qu'un taux affiché en permanence est le bruit qui rend un contrôle invisible (L6). MESURE RÉELLE SUR LE DÉPÔT : ${R.nuitsSansSaisine({ nuits: R.datesDesNuits(), saisines: R.datesDesSaisines() }).couvertes}/${R.datesDesNuits().length} périodes autonomes couvertes, et la plus récente ne l'est PAS — le process dort pour de vrai, ce qui est exactement ce que la tâche demandait de rendre visible. La notice d'accueil est régénérée depuis les process réels (recopiée, elle mentirait au premier process ajouté, et une notice qui ment sur les règles est pire qu'une absence de notice puisqu'on la suit) et elle LISTE sans jamais résumer. L'invitation ne tombe qu'aux deux moments qu'il a nommés, et reste une proposition.`);
 }
 await testGrosPromptNeDortPas();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LE PROCESS « documents-de-reference » ET SON ÉTAPE 9 (2026-09-27, tâche #846)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testProcessDocumentsDeReference() {
+  const M = await import('../scripts/moise-tables-de-loi.mjs');
+  const G = await import('../scripts/god-of-all-process.mjs');
+
+  // LE PREMIER ESSAI ÉTAIT FAUX, ET C'EST LA LEÇON L11 : j'ai d'abord compté les UNITÉS DE RÈGLE de
+  // la charte. Elles valent 33 et n'ont pas bougé d'un iota sur 80 commits, y compris pendant les
+  // passes d'allègement qui ont réécrit des Articles entiers — normal, elles comptent les ARTICLES.
+  // Un détecteur bâti dessus n'aurait mordu qu'à la création ou la suppression d'un Article, donc
+  // presque jamais : un motif qui ne PEUT pas matcher ressemble à un motif qui ne matche pas.
+  // Trouvé en MESURANT, jamais en relisant. La bonne mesure est le nombre d'OBLIGATIONS.
+  const shFaux = (etat) => (cmd) => {
+    if (cmd.includes('diff-tree')) return etat.fichiers.join('\n');
+    if (cmd.includes('~1:CLAUDE.md')) return etat.avant;
+    if (cmd.includes(':CLAUDE.md')) return etat.apres;
+    throw new Error('commande inattendue');
+  };
+  const compter = (t) => String(t).length; // témoin : un compte simple et prévisible
+
+  // MUST CATCH — une obligation bouge, aucun document du référentiel touché.
+  const dette = M.detteDeRepercussion('abc', { shImpl: shFaux({ fichiers: ['CLAUDE.md', 'scripts/x.mjs'], avant: 'aa', apres: 'aaa' }), compter });
+  assert.equal(dette.dette, true, 'MUST CATCH: an obligation changed in the charter and not one référentiel document moved — the charter demands the repercussion "le jour même" and nothing ever checked it (L1, on the rule that governs the charter itself)');
+  assert.ok(dette.pourquoi.includes('Article 13'), 'and the finding names the rule it protects rather than just accusing');
+
+  // MUST LET PASS — deux cas différents, et les confondre éteindrait le contrôle.
+  const faite = M.detteDeRepercussion('abc', { shImpl: shFaux({ fichiers: ['CLAUDE.md', 'docs/referentiel/principes.md'], avant: 'aa', apres: 'aaa' }), compter });
+  assert.equal(faite.dette, false, 'MUST LET PASS: the same change WITH a référentiel document in the same commit is a repercussion done');
+  // LE CAS LE PLUS IMPORTANT DES DEUX : une charte retouchée sans qu'aucune obligation bouge n'a
+  // RIEN à répercuter — reformuler, corriger une faute, déplacer un paragraphe ne change aucune
+  // règle. Accuser là ferait crier le contrôle sur le travail d'entretien, donc le ferait taire (L4).
+  const entretien = M.detteDeRepercussion('abc', { shImpl: shFaux({ fichiers: ['CLAUDE.md'], avant: 'aaa', apres: 'aaa' }), compter });
+  assert.equal(entretien.dette, false, 'MUST LET PASS: a charter retouched without any obligation moving has nothing to repercuss — crying there would fire on maintenance work and silence the control for good (L4)');
+  assert.ok(entretien.pourquoi.includes("n'a pas bougé"), 'and it says why it stays silent, rather than staying silent');
+
+  // UN COMMIT QUI NE TOUCHE PAS LA CHARTE n'est pas « sans dette » : il est HORS SUJET, et les
+  // distinguer évite de compter des commits ordinaires comme des succès de répercussion.
+  const horsSujet = M.detteDeRepercussion('abc', { shImpl: shFaux({ fichiers: ['scripts/x.mjs'], avant: 'a', apres: 'a' }), compter });
+  assert.equal(horsSujet.concerne, false, 'a commit that does not touch the charter is OUT OF SCOPE, never "no debt" — counting ordinary commits as repercussion successes would inflate the measure');
+
+  // ET IL REFUSE DE CONCLURE plutôt que d'absoudre : un commit illisible n'est pas un commit propre.
+  assert.equal(M.detteDeRepercussion('abc', { shImpl: () => { throw new Error('git absent'); } }).mesurable, false, 'an unreadable commit reports PAS MESURÉ: "no debt" and "I could not look" both write zero (L5)');
+
+  // LE PROCESS EXISTE COMME SUITE, et c'était le second trou : chacune des dix étapes vivait dans
+  // son coin, donc un agent devait les retrouver de mémoire — ce que l'Article 30 interdit.
+  const proc = G.PROCESSES.find((p) => p.slug === 'documents-de-reference');
+  assert.ok(proc, 'the process is declared, under the name the user chose in a dedicated window on 2026-09-27');
+  assert.equal(proc.etapes.length, 10, 'and it carries its ten steps as a SEQUENCE — the gap was never the content, it was that nothing gathered them where the holes could be seen');
+  assert.ok(proc.etapes.some((e) => e.cle === 'repercussion'), 'including step 9, the only one that had no carrier at all');
+  assert.equal(proc.gardien, 'scripts/moise-tables-de-loi.mjs', 'and its guardian is the charter\'s own agent, never a twelfth script');
+
+  // ET UN PROCESS DÉCLARÉ À MOITIÉ EST PIRE QU'UN PROCESS ABSENT — trouvé en déclarant celui-ci :
+  // il apparaît dans les listes, il compte dans les totaux, et il faisait planter le premier
+  // mécanisme qui le lisait sur un TypeError qui ne nommait pas le coupable. Ce qui manquait
+  // n'était pas l'attention : aucun champ n'était EXIGÉ nulle part, donc le douzième aurait fait
+  // pareil. La correction rend le process introuvable plutôt que fatal, et le NOMME.
+  assert.deepEqual(G.findProcessMalDeclares(), [], 'every declared process carries its required fields — a half-declared one shows up in the lists, counts in the totals, and crashed the first mechanism that read it');
+  assert.deepEqual(G.findProcessMalDeclares([{ slug: 'creux', nom: 'x', gardien: 'y', etapes: [1] }]).map((m) => m.absents), [['motsCles']], 'MUST CATCH a process missing a required field, and NAME the field — the TypeError it replaces named nothing');
+  assert.ok(G.whichProcess('charte'), 'MUST NOT CRASH: a process with no motsCles is now unfindable rather than fatal');
+
+  console.log("Passed: le process « documents-de-reference » et son étape 9 (2026-09-27, tâche #846). La surprise de l'instruction était que HUIT ÉTAPES SUR DIX existaient déjà, chacune exigée par la charte ET portée par un mécanisme réel : ce qui manquait n'était pas le contenu, c'était qu'elles ne soient nulle part rassemblées en une suite dont on puisse voir les trous — un agent devait les retrouver de mémoire, précisément ce que l'Article 30 interdit. LE SEUL TROU SANS AUCUN PORTEUR était « répercuter dans les autres documents » : la charte l'exige le jour même (Article 13) et rien ne vérifiait que ça avait été fait, ce qui est la leçon L1 sur la règle qui gouverne la charte elle-même. MON PREMIER ESSAI DE MESURE ÉTAIT FAUX ET C'EST LA LEÇON L11 : j'ai compté les unités de règle, qui valent 33 et n'ont pas bougé d'un iota sur 80 commits, y compris pendant les passes d'allègement qui ont réécrit des Articles entiers — elles comptent les ARTICLES, pas les obligations, donc un détecteur bâti dessus n'aurait mordu qu'à la création ou la suppression d'un Article. Trouvé en MESURANT, jamais en relisant. La bonne mesure est le nombre d'OBLIGATIONS, et elle distingue trois cas sur le vrai dépôt : une charte retouchée sans qu'aucune règle bouge (rien à répercuter, et crier là ferait taire le contrôle sur du travail d'entretien), un changement correctement répercuté, et une dette. Sur 80 commits réels : 1 changement d'obligation, correctement répercuté, zéro dette. LE NOM ET LE SORT DE L'ÉTAPE 9 ONT ÉTÉ TRANCHÉS PAR L'UTILISATEUR en fenêtre dédiée — les noms se choisissent ici par lui, et un process acté sans lui serait un process que personne n'a voulu. Son choix « la construire, elle demande » est le même compromis que les six règles qu'angel-of-ia-process demande au lieu de deviner : le mécanisme ne saura jamais si les autres documents DEVAIENT bouger, il sait dire qu'une obligation a changé d'un seul côté et poser la question.");
+}
+await testProcessDocumentsDeReference();

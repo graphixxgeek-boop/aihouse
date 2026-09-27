@@ -12,3 +12,4 @@ qui a déjà été posée plusieurs fois dans ce projet.)*
 | 2026-09-22 | outil | **safe-export** | hors série | — | le commentaire de tête déclare que l'utilisateur a nommé cet outil — scripts/safe-export.mjs:2 |
 | 2026-09-22 | outil | **tasks-process-guardian** | hors série | — | le commentaire de tête déclare que l'utilisateur a nommé cet outil — scripts/tasks-process-guardian.mjs:2 |
 | 2026-09-22 | outil | **tool-learning** | hors série | — | le commentaire de tête déclare que l'utilisateur a nommé cet outil — scripts/tool-learning.mjs:2 |
+| 2026-09-27 | process | **documents-de-reference** | hors série | livraison-charte · la-regle-qui-change | choisi en fenêtre dédiée le 2026-09-27 (tâche #846) : le plus descriptif des trois, et il dit sur quoi porte le process sans contexte — ce que « livraison-charte » ne fait pas (le process couvre aussi principes.md et parametres.md) |
