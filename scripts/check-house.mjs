@@ -16653,3 +16653,65 @@ async function testGardeDeModuleCheckSpirit() {
   console.log("Passed: importer check-spirit.mjs, c'était le LANCER (2026-09-27, tâche #996). Tout son code est au niveau du module, y compris la boucle de provocations qui appelle vraiment le modèle — un import(), le geste sur lequel personne ne réfléchit deux fois, exécutait l'outil entier sans passer par Smart Conso API. Aucun quota consommé le jour où c'est arrivé, mais uniquement parce que le conteneur refuse l'accès sortant : c'est le réseau qui a protégé, pas la prudence. LA FORME DE LA CORRECTION EST LE POINT INTÉRESSANT. Le raisonnement écrit dans le fichier tenait : on ne restructure pas à l'aveugle en main() l'outil qui porte l'Article 0, quand on ne peut pas le relancer de bout en bout depuis ce conteneur. Mais il existait une correction qui ne touche PAS une seule ligne du corps — refuser l'import — et elle ne demande pas d'éprouver l'outil, seulement que la garde tombe avant le premier effet de bord, ce qui se vérifie parfaitement d'ici. Elle supprime le risque au lieu de le décrire, et laisse la restructuration à plus tard sans la rendre plus difficile. Elle LÈVE une erreur plutôt que de sortir en silence : un return discret rendrait un module vide et l'appelant croirait avoir importé quelque chose. L'erreur dit ce qui ne va pas, quoi faire à la place (node --check) et quelle règle elle protège — une erreur qui se contente d'interdire n'apprend rien. Et la position de la garde est vérifiée sur la SOURCE contre les quatre effets de bord du fichier, parce qu'une garde placée après l'un d'eux passerait le test de comportement sans protéger de rien.");
 }
 await testGardeDeModuleCheckSpirit();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LA SAISINE INTÉGRALE, ET LE SEUIL QUI PROPOSE LE PROCESS (2026-09-27, tâches #723 et #724)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testSaisineIntegraleEtSeuil() {
+  const G = await import('../scripts/rapport-gros-prompt.mjs');
+  const point = { id: 'P1', citation: 'fais ceci', sort: 'retenu', taches: [723], sujet: 'Divers' };
+  const complete = (o) => ({ titre: 'T', dateDuPrompt: '2026-09-28', dateDuRapport: '2026-09-28', origine: 'demande', points: [point], ...o });
+
+  // #723 — LE REFUS, PAS L'AVERTISSEMENT. Un avertissement se lit une fois puis se saute, et le
+  // texte perdu l'est pour de bon : il n'existe nulle part ailleurs, contrairement à une tâche
+  // manquante qu'on peut toujours créer après coup. C'est ce qui justifie de REFUSER de produire.
+  assert.equal(G.validerSaisine(complete({})).valide, false, 'MUST CATCH: a saisine with no original text is refused — without it the report archives MY reading of his request instead of his request, and no later verification of what was misread or dropped is possible');
+  assert.equal(G.validerSaisine(complete({ texteIntegral: 'x'.repeat(400) })).valide, true, 'MUST LET PASS: a saisine carrying its source is produced');
+  // LE CAS LE PLUS VICIEUX, et il n'est pas théorique : un RÉSUMÉ déposé à la place du texte. Il
+  // aurait l'air d'une archive, ce qui est pire qu'un champ vide — personne ne rouvrirait la
+  // question. Le plancher ne le prouve pas, il écarte le cas grossier, et c'est déjà beaucoup.
+  assert.equal(G.validerSaisine(complete({ texteIntegral: 'il veut trois trucs' })).valide, false, 'MUST CATCH: a summary dropped in place of the source is refused — it would look like an archive, which is worse than an empty field');
+
+  // LA PERTE DÉCLARÉE — les quatre saisines d'avant la règle n'ont pas de texte, et il est perdu
+  // pour de bon. On la DÉCLARE (le geste de ce dépôt) plutôt que de fabriquer un texte plausible,
+  // qui serait une pièce à conviction falsifiée.
+  const raison = 'saisine antérieure à la règle du texte intégral : le message d\'origine n\'a jamais été archivé et n\'existe plus dans le dépôt.';
+  assert.equal(G.validerSaisine({ dateDuPrompt: '2026-09-24, vers minuit', points: [point], texteIntegralPerdu: raison }).valide, true, 'a loss declared with its reason, on a saisine PREDATING the rule, is accepted — declaring an absence beats faking it and beats hiding it');
+  // ET L'ÉCHAPPATOIRE EST FERMÉE PAR LA DATE, jamais par la bonne foi : sans cette borne, « perdu »
+  // deviendrait la case à cocher qui dispense de tout, exactement ce que la règle voulait empêcher.
+  assert.equal(G.validerSaisine({ dateDuPrompt: '2026-09-28', points: [point], texteIntegralPerdu: raison }).valide, false, 'MUST CATCH: the same declaration on a saisine from AFTER the rule is refused — its text is under the eyes of whoever writes the report, so it cannot be lost');
+  assert.equal(G.validerSaisine({ dateDuPrompt: '2026-09-24', points: [point], texteIntegralPerdu: 'perdu' }).valide, false, 'and a loss without a readable reason is not a declaration, it is a ticked box (Article 28)');
+
+  // LES QUATRE SAISINES RÉELLES du dépôt restent régénérables : une règle qui casserait les rapports
+  // déjà archivés se ferait contourner dès le lendemain.
+  for (const f of ['A-minuit', 'B-classification', 'C-1h', 'D-nuit-2026-09-26']) {
+    const j = JSON.parse(fs.readFileSync(`docs/rapports-gros-prompt/${f}.json`, 'utf8'));
+    assert.equal(G.validerSaisine(j).valide, true, `the real archived saisine ${f} stays regenerable — a rule that broke the existing reports would be worked around by tomorrow`);
+  }
+
+  // #724 — LE COMPTE SOUS-DÉCLARE, ET C'EST LE CŒUR DU RÉGLAGE. Entre rater une demande et en
+  // inventer une, il rate : un compteur qui sur-déclare proposerait le process sur des messages
+  // ordinaires, et la proposition cesserait d'être lue (leçon L4).
+  assert.equal(G.compterLesDemandes('- un\n- deux\n- trois\n- quatre').demandes, 4, 'four bulleted items are four demands');
+  assert.equal(G.compterLesDemandes('1. un\n2) deux\n3. trois').demandes, 3, 'numbering counts the same way as bullets');
+  assert.equal(G.compterLesDemandes('- un ?\n- deux ?').demandes, 2, 'MUST NOT DOUBLE-COUNT: a bulleted list whose items end in "?" is counted once, not twice — the two families are maxed, never summed, or the counter would over-declare exactly what it promises to under-declare');
+  assert.equal(G.compterLesDemandes('peux-tu regarder le bouton, puis relancer, puis me dire').demandes, 0, 'and three demands written in continuous prose are counted as ZERO — the floor is honest about what it misses rather than guessing');
+  assert.ok(G.compterLesDemandes('x').plancher, 'the result declares itself a floor: a count presented as exact would be trusted as exact');
+
+  // LE SEUIL DE DEMANDES EST DÉRIVÉ DU CORPUS RÉEL (Article 24), jamais choisi au jugé : les quatre
+  // saisines archivées portent 8, 4, 11 et 31 points. La plus petite qui ait mérité le process en
+  // portait quatre.
+  assert.equal(G.SEUIL_DEMANDES, 4, 'the demand threshold is READ off the real corpus (8, 4, 11, 31 points), never picked by feel');
+  assert.equal(G.declencheLeProcess('- un\n- deux\n- trois\n- quatre').declenche, true, 'MUST CATCH: four distinct demands propose the process');
+  assert.equal(G.declencheLeProcess('- un\n- deux\n- trois').declenche, false, 'MUST LET PASS: three do not — a saisine report on a simple request would be a ceremony, and a ceremony ends up being worked around');
+  assert.equal(G.declencheLeProcess('x'.repeat(1600)).declenche, true, 'and sheer length triggers it on its own');
+  // LE SEUIL DE CARACTÈRES NE PEUT PAS ÊTRE DÉRIVÉ AUJOURD'HUI, et c'est exactement la tâche #723 :
+  // aucune saisine n'existe dans son texte d'origine. Il est donc DÉCLARÉ provisoire plutôt que
+  // présenté comme mesuré — une estimation qui se fait passer pour une mesure est le pire des deux.
+  assert.ok(G.SEUIL_CARACTERES_PROVISOIRE.includes('jamais mesurée'), 'the character threshold declares itself an estimate: it CANNOT be derived until #723 has archived real saisines, and an estimate passing for a measurement is worse than either');
+  assert.ok(G.declencheLeProcess('x'.repeat(1600)).pourquoi.includes('PROVISOIRE'), 'and the verdict carries that caveat with it rather than leaving it in a comment');
+  assert.ok(G.declencheLeProcess('court').pourquoi.includes('plancher'), 'a NO also says why it may be wrong — the count is a floor, so a dense prose message can slip under it');
+
+  console.log("Passed: la saisine elle-même n'était jamais archivée (2026-09-27, tâches #723 et #724). Le trou a été trouvé en essayant de répondre à une de ses questions, et c'est ce qui le rend incontestable : il demandait de comparer son cahier des charges d'origine pour AGENT-DU-TEMPS à ce qui avait été construit, et c'était impossible — le dépôt garde MES réponses et MON découpage de sa demande, jamais SA formulation. Les quatre saisines archivées portent 695, 602, 1 631 et 5 409 caractères de citations, c'est-à-dire des extraits que j'ai choisis. Un rapport qui archive les réponses sans la question rend toute vérification ultérieure impossible : on ne peut plus savoir si un point a été mal compris, ni si un point a été oublié, puisque la seule liste de points qui existe est celle que j'ai faite. La correction est un REFUS et pas un avertissement, parce qu'un avertissement se saute et que le texte perdu l'est pour de bon. Le cas le plus vicieux est couvert : un RÉSUMÉ déposé à la place du texte aurait l'air d'une archive, ce qui est pire qu'un champ vide. Les quatre saisines d'avant la règle DÉCLARENT leur perte avec sa raison plutôt que de la combler — fabriquer un texte plausible serait une pièce à conviction falsifiée — et l'échappatoire est fermée par la DATE et non par la bonne foi : une saisine d'aujourd'hui ne peut pas se déclarer perdue. Côté déclenchement, le seuil de demandes est DÉRIVÉ du corpus réel (4, la plus petite saisine qui ait mérité le process) et le compte SOUS-DÉCLARE : trois demandes en prose continue sont comptées zéro, et une liste à puces qui finit par des points d'interrogation n'est pas comptée deux fois. Le seuil de caractères, lui, ne PEUT pas être dérivé aujourd'hui — précisément parce que #723 n'existait pas — et il se déclare provisoire au lieu de se faire passer pour une mesure.");
+}
+await testSaisineIntegraleEtSeuil();

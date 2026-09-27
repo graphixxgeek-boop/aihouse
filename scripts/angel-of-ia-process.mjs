@@ -84,6 +84,11 @@ export const REGLES_SURVEILLEES = [
   // commits à 01h, 02h, 03h et 05h les nuits précédentes, et n'a rien produit celle du 25 —
   // parce que le réveil n'avait pas été armé avant la fin du tour. Le mécanisme existait et
   // fonctionnait ; c'est le geste de l'armer qui a manqué, et rien ne le rappelait.
+  // #724 — LA PART QU'AUCUNE MÉCANIQUE NE PEUT PRENDRE, et la déclarer EST la protection
+  // (Article 27). `rapport-gros-prompt.mjs seuil <message.txt>` compte les demandes et la longueur,
+  // mais rien ne peut intercepter un message à son arrivée dans une conversation : c'est donc à
+  // l'agent de passer la saisine au compteur, et à angel de demander s'il l'a fait.
+  { id: "seuil-gros-prompt", cote: "agent", observable: false, regle: "Dès qu'une saisine porte plusieurs demandes distinctes, la passer au compteur (`node scripts/rapport-gros-prompt.mjs seuil <message.txt>`) et PROPOSER le process gros prompt quand il se déclenche — jamais l'imposer, jamais le sauter parce que le message avait l'air simple. Et le rapport produit archive la SAISINE INTÉGRALE, sans quoi il n'archive que mon découpage de sa demande (tâche #723).", source: "CLAUDE.md Articles 27 et 31 · tâches #723 et #724" },
   { id: "reveil-arme", cote: "agent", observable: false, regle: "En mode autonome, ARMER le réveil (send_later, 15 min) AVANT de terminer le tour, systématiquement. Un tour qui se termine sans réveil armé arrête la nuit, quoi qu'annonce le compte rendu.", source: "nuit perdue du 2026-09-25, constatée par la comparaison plan de départ ↔ rapport de nuit" },
   { id: "reprise-des-notes", cote: "agent", observable: false, regle: "Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent.", source: "docs/regles-de-travail.md §0bis" },
   { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },

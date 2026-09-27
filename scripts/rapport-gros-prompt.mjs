@@ -64,6 +64,134 @@ export function validerPoints(points = []) {
   return { valide: fautes.length === 0, fautes };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LA SAISINE INTÉGRALE (2026-09-24, tâche #723 — RECOMMANDE-CRITIQUE)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LE TROU A ÉTÉ TROUVÉ EN ESSAYANT DE RÉPONDRE À UNE DE SES QUESTIONS, et c'est ce qui le rend
+// incontestable. Il demandait de comparer son cahier des charges d'origine pour AGENT-DU-TEMPS à
+// ce qui avait été construit. Impossible : le dépôt garde MES réponses (`docs/reponses/`) et MON
+// découpage de sa demande en points, jamais SA formulation. Les quatre saisines archivées à ce
+// jour portent 695, 602, 1 631 et 5 409 caractères de CITATIONS — des extraits que j'ai choisis,
+// jamais son texte.
+//
+// POURQUOI C'EST GRAVE ET PAS SEULEMENT DOMMAGE. Un rapport qui archive les réponses sans la
+// question rend toute vérification ultérieure impossible : on ne peut plus savoir si un point a
+// été mal compris, ni si un point a été oublié, puisque la seule liste de points qui existe est
+// celle que j'ai faite. C'est exactement le reproche qu'il formule — « j'espère que tu n'as pas
+// perdu la valeur ». Le découpage est une INTERPRÉTATION ; l'archiver sans sa source, c'est
+// archiver ma lecture à la place de sa demande.
+//
+// LA CORRECTION EST UN REFUS, jamais un avertissement : sans `texteIntegral`, le rapport n'est pas
+// produit. Un avertissement se lit une fois puis se saute, et le texte perdu l'est pour de bon —
+// il n'existe nulle part ailleurs, contrairement à une tâche manquante qu'on peut toujours créer
+// après coup.
+//
+// ET IL EST RECOPIÉ VERBATIM, jamais reformaté : ni recoupé, ni ré-indenté, ni tronqué. Un texte
+// « nettoyé » n'est plus une pièce à conviction. La seule chose qu'on en dit est sa longueur, pour
+// qu'une troncature accidentelle se voie.
+export const SAISINE_MIN_CARACTERES = 120;
+
+// LES QUATRE SAISINES D'AVANT LA RÈGLE, et pourquoi elles ne sont pas fabriquées. Les quatre
+// rapports déjà archivés (`docs/rapports-gros-prompt/`) n'ont pas de texte d'origine : il est perdu
+// pour de bon, et inventer un texte plausible serait infiniment pire qu'un champ vide — ce serait
+// une pièce à conviction falsifiée. Elles déclarent donc la PERTE, avec sa raison, plutôt que de
+// la combler : c'est le geste que ce dépôt applique déjà partout (« déclarer l'absence » vaut mieux
+// que la taire, et mieux que la remplir).
+//
+// L'ÉCHAPPATOIRE EST FERMÉE PAR LA DATE, jamais par la bonne foi : la déclaration n'est acceptée
+// que pour une saisine ANTÉRIEURE au jour où la règle est née. Une saisine d'aujourd'hui ne peut
+// pas se déclarer perdue — son texte est sous les yeux de celui qui rédige le rapport.
+export const DATE_REGLE_SAISINE = "2026-09-27";
+
+export function validerSaisine(saisine = {}) {
+  const fautes = [];
+  const texte = String(saisine.texteIntegral ?? "");
+  const perdu = String(saisine.texteIntegralPerdu ?? "").trim();
+  if (perdu) {
+    const avant = String(saisine.dateDuPrompt ?? "") < DATE_REGLE_SAISINE;
+    if (!avant) {
+      fautes.push(`PERTE DÉCLARÉE SUR UNE SAISINE DU ${saisine.dateDuPrompt ?? "?"} — refusée. La règle du texte intégral existe depuis le ${DATE_REGLE_SAISINE} : une saisine de ce jour ou d'après ne peut pas avoir perdu son texte, il est sous les yeux de celui qui rédige le rapport.`);
+    } else if (perdu.length < LONGUEUR_MIN_RAISON) {
+      fautes.push("PERTE DÉCLARÉE SANS RAISON LISIBLE — une perte sans raison écrite n'est pas une déclaration, c'est une case cochée (Article 28).");
+    }
+    return { valide: fautes.length === 0, fautes, perteDeclaree: fautes.length === 0 };
+  }
+  if (!texte.trim()) {
+    fautes.push("SAISINE INTÉGRALE ABSENTE — le rapport n'est PAS produit (tâche #723). Sans le texte d'origine, ce rapport n'archive que MON découpage de sa demande, jamais sa demande : aucune vérification ultérieure n'est plus possible, et son texte n'existe nulle part ailleurs.");
+  } else if (texte.trim().length < SAISINE_MIN_CARACTERES) {
+    // UN RÉSUMÉ GLISSÉ À LA PLACE DU TEXTE serait pire qu'une absence : il aurait l'air d'une
+    // archive. Le plancher ne prouve rien à lui seul, il écarte seulement le cas grossier.
+    fautes.push(`SAISINE INTÉGRALE SUSPECTE — ${texte.trim().length} caractères pour ${(saisine.points ?? []).length} point(s) distinct(s). C'est trop court pour être le texte d'origine : un résumé déposé à la place ressemblerait à une archive, ce qui est pire qu'un champ vide.`);
+  }
+  return { valide: fautes.length === 0, fautes };
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// LE DÉCLENCHEMENT AUTOMATIQUE (2026-09-24, tâche #724)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE : « je voudrais generaliser l'utilisation du process gros prompt : quand un prompt
+// comporte X taches à faire ou X caracteres, il y a automatiquement la proposition ». Deux seuils,
+// et ce qui se déclenche est une PROPOSITION — jamais un rapport imposé, parce qu'un rapport de
+// saisine sur une demande simple serait une cérémonie, et une cérémonie finit par se contourner.
+//
+// LE COMPTE SOUS-DÉCLARE, ET C'EST UN CHOIX. Repérer « une demande » dans du texte libre français
+// n'a pas de solution exacte. Entre rater une demande et en inventer une, ce compteur rate : il ne
+// retient que des marqueurs STRUCTURELS non ambigus (une puce, une numérotation, un point
+// d'interrogation en fin de paragraphe). Un compteur qui sur-déclare proposerait le process sur
+// des messages ordinaires, et la proposition cesserait d'être lue (leçon L4). Le résultat est donc
+// un PLANCHER, et il le dit.
+export const MOTIF_PUCE = /^\s*(?:[-*•–—]\s+|\(?\d{1,2}[.)]\s+|[a-zA-Z][.)]\s+)/;
+
+// LE SEUIL DE DEMANDES EST DÉRIVÉ DU CORPUS RÉEL, jamais choisi au jugé (Article 24) : les quatre
+// saisines archivées à ce jour portent 8, 4, 11 et 31 points distincts. La plus petite qui ait
+// réellement mérité le process en portait QUATRE.
+export const SEUIL_DEMANDES = 4;
+
+// LE SEUIL DE CARACTÈRES EST PROVISOIRE, ET LA RAISON EST EXACTEMENT LA TÂCHE #723 : il ne PEUT
+// PAS être dérivé aujourd'hui, puisque aucune saisine n'a jamais été archivée dans son texte
+// d'origine. Ce qu'on a — 695 à 5 409 caractères de citations — est un plancher de mes extraits,
+// pas la longueur de ses messages. Le chiffre ci-dessous est donc une estimation DÉCLARÉE comme
+// telle, à recalibrer sur les trois premières vraies saisines que #723 fera archiver. L'écrire
+// plutôt que de le taire est la seule protection possible (Article 27).
+export const SEUIL_CARACTERES = 1500;
+export const SEUIL_CARACTERES_PROVISOIRE = "estimation, jamais mesurée : aucune saisine n'existe dans son texte d'origine avant la tâche #723. À recalibrer sur les trois premières archivées.";
+
+export function compterLesDemandes(texte = "") {
+  const lignes = String(texte).split("\n");
+  const puces = lignes.filter((l) => MOTIF_PUCE.test(l)).length;
+  // Un paragraphe qui se termine par un point d'interrogation est une demande, sans ambiguïté.
+  // On ne compte QUE ceux-là : un verbe à l'impératif se confond avec un présent, et ce compteur
+  // préfère rater plutôt qu'inventer.
+  const questions = String(texte).split(/\n\s*\n/).filter((b) => /\?\s*$/.test(b.trim())).length;
+  // Les deux familles ne s'additionnent PAS : une liste à puces dont un item finit par « ? » serait
+  // comptée deux fois, et le compteur sur-déclarerait précisément ce qu'il promet de sous-déclarer.
+  const demandes = Math.max(puces, questions);
+  return {
+    demandes, puces, questions,
+    caracteres: String(texte).length,
+    plancher: true,
+    horsPortee: "PLANCHER, jamais un compte exact : seuls les marqueurs structurels non ambigus sont retenus (puce, numérotation, paragraphe interrogatif). Une demande formulée en prose continue n'est pas comptée — ce compteur rate plutôt que d'inventer.",
+  };
+}
+
+export function declencheLeProcess(texte = "", { seuilDemandes = SEUIL_DEMANDES, seuilCaracteres = SEUIL_CARACTERES } = {}) {
+  const c = compterLesDemandes(texte);
+  const parDemandes = c.demandes >= seuilDemandes;
+  const parLongueur = c.caracteres >= seuilCaracteres;
+  return {
+    ...c,
+    declenche: parDemandes || parLongueur,
+    // LA RAISON VOYAGE AVEC LE VERDICT : « le process est proposé » sans dire pourquoi se lit comme
+    // une règle arbitraire, et une règle arbitraire se contourne.
+    pourquoi: parDemandes && parLongueur ? `${c.demandes} demandes repérées (seuil ${seuilDemandes}) ET ${c.caracteres} caractères (seuil ${seuilCaracteres})`
+      : parDemandes ? `${c.demandes} demandes repérées, seuil ${seuilDemandes}`
+      : parLongueur ? `${c.caracteres} caractères, seuil ${seuilCaracteres} (seuil PROVISOIRE — ${SEUIL_CARACTERES_PROVISOIRE})`
+      : `${c.demandes} demande(s) et ${c.caracteres} caractères : sous les deux seuils. Et comme le compte est un plancher, un message dense en prose continue peut passer dessous — la proposition reste possible à la main.`,
+  };
+}
+
 // Le nombre de points ne se déclare pas, il se compte : une saisine qui annoncerait « 12 points »
 // et en porterait 11 produirait un rapport qui ment sur sa propre exhaustivité.
 export function compterParSort(points = []) {
@@ -97,6 +225,16 @@ export function blocsDuRapport(saisine) {
     if (!parSujet.has(s)) parSujet.set(s, []);
     parSujet.get(s).push(p);
   }
+  // LA SAISINE TELLE QU'ELLE EST ARRIVÉE, avant tout découpage (tâche #723). Elle vient EN TÊTE et
+  // pas en annexe : le découpage qui suit est une interprétation, et on lit une interprétation en
+  // ayant sa source sous les yeux, jamais après l'avoir déjà admise.
+  const brut = String(saisine.texteIntegral ?? "");
+  const perdu = String(saisine.texteIntegralPerdu ?? "").trim();
+  blocs.push({ type: "heading", text: "LA SAISINE, TELLE QU'ELLE EST ARRIVÉE" });
+  blocs.push({ type: "note", text: perdu
+    ? `⛔ TEXTE D'ORIGINE PERDU — ${perdu}\n\nCe rapport n'archive donc que MON découpage de sa demande, jamais sa demande. Aucune vérification ultérieure n'est possible sur ce qui aurait pu être mal compris ou oublié. C'est précisément le trou que la tâche #723 a refermé pour les saisines suivantes.`
+    : `${brut.length} caractères, recopiés VERBATIM — ni recoupés, ni ré-indentés, ni tronqués. Le découpage en ${points.length} point(s) ci-dessous est MON interprétation ; ceci est la source.\n\n` + brut });
+
   for (const [sujet, liste] of parSujet) {
     blocs.push({ type: "heading", text: sujet });
     for (const p of liste) {
@@ -127,8 +265,13 @@ let vignetteDe = () => null;
 
 export function construireRapport(saisine) {
   vignetteDe = chargerVignettes();
+  // LES DEUX REFUS SONT LEVÉS ENSEMBLE, jamais l'un puis l'autre : un rapport recommencé trois fois
+  // parce qu'on ne lui dit qu'une faute à la fois finit par être produit à la main pour aller plus
+  // vite, et le garde-fou aura servi à le contourner.
+  const vs = validerSaisine(saisine);
   const v = validerPoints(saisine.points);
-  if (!v.valide) throw new Error(`rapport-gros-prompt : saisine incomplète, rapport NON produit.\n  - ${v.fautes.join("\n  - ")}`);
+  const fautes = [...vs.fautes, ...v.fautes];
+  if (fautes.length) throw new Error(`rapport-gros-prompt : saisine incomplète, rapport NON produit.\n  - ${fautes.join("\n  - ")}`);
   const points = saisine.points ?? [];
   // LE CHAMP S'APPELLE `constat`, PAS `libelle` — défaut réel du premier rapport produit, trouvé
   // par l'utilisateur en le lisant : « pourquoi dans la fin de rapport [...] toutes les taches sont
@@ -170,7 +313,26 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // et la conclusion naturelle d'un zéro est « relançons-le », donc du travail refait pour rien.
   recordCliUsage("rapport-gros-prompt", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const [, , entree, sortie] = process.argv;
-  if (!entree) { console.error("usage : node scripts/rapport-gros-prompt.mjs <saisine.json> [sortie.txt]"); process.exit(2); }
+  // LA COMMANDE « seuil » (2026-09-24, tâche #724) : elle répond à « ce message mérite-t-il le
+  // process ? » sans rien produire. Elle existe séparément du rapport parce que la réponse est
+  // utile AVANT de décider d'en faire un — et parce qu'un compteur qu'on ne peut pas interroger
+  // seul ne sera jamais consulté (leçon L2 : un mécanisme qui ne sort jamais du script est une
+  // intention).
+  if (entree === "seuil") {
+    const fichier = process.argv[3];
+    if (!fichier) { console.error("usage : node scripts/rapport-gros-prompt.mjs seuil <message.txt>"); process.exit(2); }
+    const d = declencheLeProcess(readFileSync(fichier, "utf8"));
+    console.log("");
+    console.log("=== LE PROCESS GROS PROMPT EST-IL PROPOSÉ ? (tâche #724) ===");
+    console.log(`  ${d.declenche ? "🟠 OUI — proposition à poser" : "⚪ NON"} : ${d.pourquoi}`);
+    console.log(`  Compté : ${d.demandes} demande(s) — ${d.puces} par puce ou numérotation, ${d.questions} paragraphe(s) interrogatif(s) · ${d.caracteres} caractères.`);
+    console.log(`  Seuils : ${SEUIL_DEMANDES} demandes (DÉRIVÉ du corpus réel : 8, 4, 11 et 31 points sur les quatre saisines archivées) · ${SEUIL_CARACTERES} caractères (PROVISOIRE).`);
+    console.log(`  HORS PORTÉE : ${d.horsPortee}`);
+    console.log("  CE QUI SE DÉCLENCHE est une PROPOSITION, jamais un rapport imposé : un rapport de saisine sur une demande simple serait une cérémonie, et une cérémonie finit par se contourner.");
+    console.log("");
+    process.exit(0);
+  }
+  if (!entree) { console.error("usage : node scripts/rapport-gros-prompt.mjs <saisine.json> [sortie.txt]\n        node scripts/rapport-gros-prompt.mjs seuil <message.txt>"); process.exit(2); }
   // DEUX SORTIES POUR UNE SEULE DESCRIPTION (2026-09-26, sa demande : « livre le rapport de gros
   // prompt [...] en format HTML (la sauvegarde reste txt) »). C'est exactement la décision
   // `delivery_html` déjà en vigueur ailleurs : le TXT est l'archive committée, le HTML est la copie
