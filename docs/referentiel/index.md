@@ -1,8 +1,8 @@
 # referentiel — table des matières
 
-*(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-26. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
+*(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-27. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**112 fichier(s).**
+**111 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -55,7 +55,6 @@
 | [integration-outil.md](integration-outil.md) | — |
 | [judge-persona-shared.md](judge-persona-shared.md) | — |
 | [kpi-historique.csv](kpi-historique.csv) | — |
-| [kpi-index.md](kpi-index.md) | — |
 | [chantier2-2026-09-19.txt](kpi-rapports/chantier2-2026-09-19.txt) | kpi-rapports |
 | [full_sim16.txt](kpi-rapports/full_sim16.txt) | kpi-rapports |
 | [manuel-2026-09-20T03-33.txt](kpi-rapports/manuel-2026-09-20T03-33.txt) | kpi-rapports |

@@ -336,14 +336,24 @@ export function shouldSnapshotText(lastSnapshotText, currentText) {
 //     Eux seuls sont soumis au réveil conditionnel ci-dessous.
 // Confondre les deux étages serait le vrai danger : conditionner les tests créerait un trou de
 // surveillance, conditionner les Gardiens ne fait qu'éteindre du bruit.
-export const NOT_REALLY_CODE = [
-  // `lib/reference.ts` vit dans un dossier de code mais n'en est pas : c'est le référentiel
-  // AFFICHÉ en jeu (panneau Admin), de la donnée narrative versionnée section par section. Il est
-  // incrémenté à presque chaque commit, ce qui faisait passer tout commit pour un changement de
-  // moteur — la cause racine du gaspillage mesuré. Aucun champ de life.ts ne peut mourir, aucun
-  // bloc ne peut se dupliquer, aucune couverture de test ne peut bouger parce qu'il a changé.
-  /^lib\/reference\.ts$/,
-];
+// LA LISTE EST VIDE DEPUIS LE 2026-09-27, ET C'EST UNE MESURE, JAMAIS UN OUBLI. Elle n'a jamais
+// contenu qu'une entrée : `lib/reference.ts`, le référentiel AFFICHÉ en jeu dans le panneau Admin —
+// de la donnée narrative qui vivait dans un dossier de code, incrémentée à presque chaque commit, ce
+// qui faisait passer tout commit pour un changement de moteur. C'était la cause racine du
+// gaspillage mesuré ce jour-là : vingt rescans d'affilée des mêmes champs sur un fichier qui
+// n'avait pas bougé.
+//
+// LE PANNEAU ADMIN ET SES DEUX FICHIERS DE DONNÉES ONT ÉTÉ RETIRÉS DU PRODUIT le 2026-09-27 (sa
+// décision : cette fonction — permettre à une IA de reprendre le projet à sa genèse — est
+// aujourd'hui remplie, et mieux, par CLAUDE.md et docs/referentiel/). La cause disparaît donc avec
+// le fichier, et l'exclusion avec elle : la garder serait un motif qui ne peut plus jamais
+// correspondre, c'est-à-dire un zéro qui se lit comme une protection alors qu'il ne protège rien.
+//
+// LE COMMENTAIRE RESTE, LUI, et c'est délibéré : une liste vide sans son histoire se lit comme une
+// liste qu'on a oublié de remplir. Le prochain fichier de données logé dans un dossier de code se
+// reconnaîtra ici, avec la raison déjà écrite (Article 27). Archive du contenu retiré :
+// docs/contexte-projet/referentiel-affiche-en-jeu-archive.md.
+export const NOT_REALLY_CODE = [];
 
 // Ce que chaque Gardien surveille RÉELLEMENT — lu dans leur code, jamais supposé (Article 19).
 // ARGUS et CLONE-HUNTER balaient large (marqueurs TODO partout, duplication dans quatre racines) ;

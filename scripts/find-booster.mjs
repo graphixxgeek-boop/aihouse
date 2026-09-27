@@ -154,6 +154,14 @@ const DESCRIPTION_PREVIEW_LENGTH = 200;
 // ligne). La description est tronquée à `DESCRIPTION_PREVIEW_LENGTH` caractères (avec "…") — jamais
 // le texte complet, qui rendrait chaque résultat de recherche imbuvable pour une simple navigation.
 //
+// 2026-09-27 : CE MOTIF N'A PLUS DE TERRAIN VIVANT DANS CE DÉPÔT, et l'écrire vaut mieux que de le
+// laisser croire. `lib/reference.ts` a quitté le produit ce jour-là (décision explicite de
+// l'utilisateur : le panneau Admin servait à ce qu'une IA reprenne le projet à sa genèse, rôle
+// aujourd'hui rempli par CLAUDE.md et docs/referentiel/). Le motif RESTE, parce qu'il est correct et
+// qu'un tel fichier peut réapparaître ; il est prouvé par fixture dans check-house.mjs, avec un
+// garde-fou vivant qui échouera en nommant le fichier le jour où un tableau titré revient. Texte
+// archivé : docs/contexte-projet/referentiel-affiche-en-jeu-archive.md.
+//
 // Bug auto-référentiel trouvé et corrigé le 2026-09-21 (demande explicite d'optimisation, find-booster
 // lancé sur son propre fichier source) : contrairement à FUNCTION_RE/BLOCK_START_RE (ancrées en début
 // de ligne, donc jamais déclenchées par une ligne de commentaire qui commence toujours par `//`),
@@ -223,7 +231,8 @@ export function searchByConcepts(index, keywords) {
 // (choisi par extension, jamais mélangé : un .md n'a pas de fonctions/blocs/tableaux JS, un
 // .mjs/.ts n'a pas de titres) — jamais un motif au détriment d'un autre, pour servir route.ts
 // (fonctions ET, depuis la tâche #180, son cœur dense de commentaires non accolade-préfixés),
-// check-house.mjs (blocs), lib/reference.ts (tableau titré) et docs/regles-de-travail.md (titres)
+// check-house.mjs (blocs), lib/reference.ts (tableau titré — parti du dépôt le 2026-09-27, cf.
+// ci-dessus, motif conservé) et docs/regles-de-travail.md (titres)
 // avec la même qualité de résultat.
 //
 // Cœur séparé de la lecture disque (2026-09-21, demande explicite d'optimisation : « optimiser ce
@@ -256,8 +265,10 @@ export function buildIndex(filePath) {
 
 // recommendFindBooster() (2026-09-21, question directe de l'utilisateur : « est-ce que find-booster
 // pourrait détecter quand un fichier est trop lourd [...] ou c'est toi qui fait cette analyse
-// systématiquement ? ») — jamais le nombre de lignes seul : lib/reference.ts vient de prouver qu'un
-// fichier peut être dense (poids réel élevé) sur très peu de lignes. Réutilise directement
+// systématiquement ? ») — jamais le nombre de lignes seul : lib/reference.ts l'avait prouvé en 2026
+// (132 lignes, poids réel énorme) et, depuis son retrait le 2026-09-27, c'est `lib/lia.ts` qui tient
+// ce rôle de témoin vivant : 191 lignes pour ~19 000 tokens. Un fichier peut être dense sans être
+// long. Réutilise directement
 // `estimateTokens()` de smart-conso-token.mjs (les deux vivent dans scripts/, aucune frontière
 // lib/scripts à respecter ici, contrairement à memento weight) — jamais une seconde formule
 // divergente. `tokenThreshold` par défaut réutilise le palier "élevé" déjà calibré par

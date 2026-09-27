@@ -87,12 +87,20 @@ vide.
 | | Ce qui tourne | Effet | Conditionné ? |
 |---|---|---|---|
 | **GARANTIT** | `check-house.mjs` + `tsc` (pre-commit) | **Bloque** le commit | **Jamais** — conditionner créerait un trou |
-| **RENFORCE** | Les 6 Gardiens sacrés (post-commit) | Signale, n'a jamais rien bloqué | Oui |
+| **RENFORCE** | Les 7 Gardiens sacrés (post-commit) | Signale, n'a jamais rien bloqué | Oui |
 
 **La cause racine, mesurée :** sur 20 commits, 18 ne touchaient `lib/` que par `lib/reference.ts` —
 le référentiel AFFICHÉ en jeu, de la donnée narrative incrémentée à chaque commit. Il faisait passer
-tout commit pour un changement de moteur. `NOT_REALLY_CODE` l'exclut, et c'est ce seul exclusion qui
-débloque tout le reste.
+tout commit pour un changement de moteur. `NOT_REALLY_CODE` l'excluait, et c'est cette seule
+exclusion qui débloquait tout le reste.
+
+**Depuis le 2026-09-27, la liste est VIDE — et c'est une mesure, jamais un oubli.** La cause a
+disparu avec le fichier : le référentiel affiché en jeu a été retiré du produit sur décision
+explicite de l'utilisateur. Garder l'exclusion serait garder un motif qui ne peut plus jamais
+correspondre, c'est-à-dire un zéro qui se lit comme une protection alors qu'il ne protège rien.
+Le MÉCANISME reste entièrement câblé et testé dans les deux sens ; le commentaire de tête de
+`NOT_REALLY_CODE` garde toute l'histoire, pour que le prochain fichier de données logé dans un
+dossier de code se reconnaisse avec la raison déjà écrite (Article 27).
 
 **Deux chemins de prudence, non négociables :** un Gardien sacré absent de la table tourne toujours, et si
 git ne dit pas ce qui a changé, tout tourne. Ne pas savoir n'autorise jamais à se taire.
@@ -345,3 +353,29 @@ normatives retirées retrouvées mot pour mot** dans le document d'accueil.
 existent réellement (les 3 autres sont des motifs génériques `lib/*.ts`, pas des renvois). Aucune
 règle morte, aucun renvoi cassé — le problème de la charte était un **rangement**, jamais une
 péremption.
+
+## Une archive n'est jamais un domicile (2026-09-27)
+
+**Trouvé en créant l'archive, pas en cherchant un bug.** Le jour où
+`docs/contexte-projet/referentiel-affiche-en-jeu-archive.md` est né — le texte du référentiel
+affiché en jeu, retiré du produit —, l'outil a immédiatement proposé d'y déménager la section
+« Référentiel technique — la référence à jour » de la charte : la table qui dit QUEL document lire
+QUAND. Le score d'affinité ne voyait qu'une chose, le mot « referentiel » dans les deux noms.
+
+**Pourquoi c'était grave, et pas seulement inexact.** C'est la fausse adresse que `affiniteChemin()`
+avait justement été écrite pour empêcher (« un renvoi faux est pire que pas de renvoi »), mais en
+pire : la charte déclare noir sur blanc que `docs/contexte-projet/` est une archive historique,
+**« jamais comme source de vérité sur le comportement actuel »**. Y envoyer du contenu vivant ne le
+range pas — ça le périme. Et le signal changeait de nature au passage : une QUESTION honnêtement
+posée (« corps étranger ou sujet même ? ») devenait un déménagement chiffré vers le mauvais endroit.
+
+**La correction** : `DOSSIERS_JAMAIS_DESTINATION` retire ces dossiers des candidats avant tout
+calcul d'affinité. La liste est tenue à la main et sa nature manuelle est écrite à côté (Article 24 :
+aucune mécanique ne peut deviner qu'un dossier est une archive) — ce qui la protège de la dérive,
+c'est `archivesNonDeclarees()` : si la charte cesse de déclarer un de ces dossiers comme archive,
+le garde-fou nomme l'exclusion devenue orpheline au lieu de la laisser vivre sans cause. C'est
+exactement le défaut corrigé le même jour sur `NOT_REALLY_CODE`, vu par l'autre bout.
+
+**Vérifié dans les deux sens** (BP4) : le vrai chemin d'archive est refusé, un document de
+référence ordinaire reste une destination parfaitement légitime, la charte réelle ne laisse aucune
+exclusion orpheline, et retirer la déclaration de la charte fait bien parler le garde-fou.

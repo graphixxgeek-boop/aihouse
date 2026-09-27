@@ -241,9 +241,9 @@ personnage au moment où il parle.
 
 **Article 13 — Les outils de travail vivent avec le code.** Le filet de sécurité
 (`scripts/check-house.mjs`), le filet de fidélité de l'esprit (`scripts/check-spirit.mjs` — voir
-plus bas), le référentiel de travail (`docs/referentiel/principes.md` et `parametres.md`) et le
-référentiel affiché en jeu (`lib/reference.ts`, panneau Admin) ne sont pas des documents figés
-produits une fois : ils décrivent un code qui continue de changer. Tout changement de comportement
+plus bas) et le référentiel de travail (`docs/referentiel/principes.md` et `parametres.md`) ne sont
+pas des documents figés produits une fois : ils décrivent un code qui continue de changer. Tout
+changement de comportement
 (règle, paramètre, architecture, geste, décor) doit se refléter le jour même dans le ou les
 documents concernés, et le filet de sécurité doit être exécuté avant de considérer un changement
 terminé — jamais après coup, jamais différé à une session ultérieure. Un écart constaté entre deux
@@ -1223,14 +1223,18 @@ empêcher). Ils doivent être mis à jour à chaque changement de règle ou de p
 ou un chiffre qui change dans le code et pas ici est une dette à combler tout de suite, pas plus
 tard (Article 6/7/13).
 
-Un troisième document existe et a un rôle différent : `lib/reference.ts` est le référentiel
-**affiché en jeu** (panneau Admin, protégé par mot de passe), écrit en prose narrative et
-versionné section par section (« Version 36 », etc.) — c'est le journal de bord technique que
-Codex tenait à jour au fil des demandes, lisible par l'utilisateur lui-même. Il ne remplace pas
-`docs/referentiel/` (qui reste la référence de travail pour tout agent codant) mais doit rester
-factuellement exact : toute affirmation qui y décrit un comportement doit correspondre au code
-réel, au même titre que `docs/referentiel/` (Article 6/13). Un changement d'architecture ou de
-règle significatif se répercute donc potentiellement dans les trois documents, pas un seul.
+**Un troisième document a existé, et il a été retiré le 2026-09-27 — la raison reste écrite ici
+plutôt que perdue (Article 27).** `lib/reference.ts` était le référentiel **affiché en jeu**
+(panneau Admin, protégé par mot de passe), écrit en prose narrative et versionné section par section
+(« Version 36 », etc.) : le journal de bord technique que Codex tenait à jour au fil des demandes.
+Sa raison d'être — permettre à une IA de reprendre le projet à sa genèse — est aujourd'hui remplie,
+et mieux, par ce fichier-ci et par `docs/referentiel/` ; le garder revenait à tenir un troisième
+document à jour pour un rôle que plus personne ne lui demandait, exactement la dette que
+l'Article 13 interdit. Décision explicite de l'utilisateur, prise ce jour-là. Son texte intégral
+(50 sections + 151 versions) est archivé **verbatim** dans
+`docs/contexte-projet/referentiel-affiche-en-jeu-archive.md` — jamais résumé, jamais perdu, et
+soumis au même statut que le reste de ce dossier : une archive de contexte, **jamais une source de
+vérité sur le comportement actuel**. Il n'y a donc plus que DEUX documents à répercuter, pas trois.
 
 ## Simulations archivées — une source de vérification, pas un historique
 

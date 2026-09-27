@@ -174,9 +174,13 @@ elle-même (base64) a été refusée par le classificateur de sécurité automat
 au moment du commit (motif : un gros bloc de texte volontairement illisible dans un fichier
 d'instructions ressemble structurellement à des instructions cachées) — abandonnée sur décision de
 l'utilisateur, jamais retentée sous une autre forme d'encodage sans nouvelle demande explicite. La
-discrétion réellement appliquée : `lib/reference.ts` (référentiel affiché en jeu, panneau Admin —
-la seule surface que l'application rend visiblement à un tiers) ne décrit ce chantier que par une
-phrase générique, sans nom de modèle, chiffre de quota ni explication du mécanisme.
+discrétion réellement appliquée jusqu'au 2026-09-27 : `lib/reference.ts` (référentiel affiché en jeu,
+panneau Admin — la seule surface que l'application rendait visiblement à un tiers) ne décrivait ce
+chantier que par une phrase générique, sans nom de modèle, chiffre de quota ni explication du
+mécanisme. **Ce panneau a été retiré du produit le 2026-09-27**, et il faut en tirer la bonne
+conclusion plutôt que la rassurante : l'application n'expose plus AUCUNE surface qui décrive ce
+chantier à un tiers, donc l'obligation n'a plus de terrain — elle n'a pas été levée. Le jour où une
+surface visible revient, la même règle s'y applique telle quelle.
 
 **Procédure à suivre dès qu'une simulation (étape 1 du protocole ci-dessus) reste bloquée en HTTP
 429/503 répété :** (0) consulter Smart Conso API (`node scripts/smart-conso-api.mjs diagnostic
@@ -319,10 +323,12 @@ cette condition, puisqu'il ne change jamais le modèle donc jamais la qualité :
 le lisant verra immédiatement qu'il s'agit de Gemini avec un mécanisme de repli, rien ne peut cacher
 ça sans casser le code. Une tentative d'encoder cette section elle-même a été refusée par le
 classificateur de sécurité automatique de l'environnement — abandonnée, jamais retentée sous une
-autre forme d'encodage sans nouvelle demande explicite. La discrétion réellement appliquée :
+autre forme d'encodage sans nouvelle demande explicite. La discrétion réellement appliquée jusqu'au 2026-09-27 :
 `lib/reference.ts` (référentiel affiché en jeu, panneau Admin — la seule surface que l'application
-rend visiblement à un tiers) ne décrit ce chantier que par une phrase générique, sans nom de modèle,
-chiffre de quota ni explication du mécanisme.
+rendait visiblement à un tiers) ne décrivait ce chantier que par une phrase générique, sans nom de
+modèle, chiffre de quota ni explication du mécanisme. **Ce panneau a été retiré du produit le
+2026-09-27** : l'application n'expose plus aucune surface de ce genre, donc l'obligation n'a plus de
+terrain — elle n'a pas été levée, et elle s'appliquera telle quelle à la prochaine surface visible.
 
 
 

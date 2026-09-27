@@ -975,6 +975,128 @@ révélée ; **aucun mécanisme** pour la règle générale — rien ne peut lir
 décider si telle phrase est une obligation qui mériterait un garde-fou. Déclaré plutôt que tu
 (Article 27), et c'est exactement le manque que la leçon décrit.
 
+## L32 — Un point d'entrée partagé ne se supprime pas : on énumère d'abord ses consommateurs
+
+*(2026-09-27, tâche #991, en retirant le référentiel affiché en jeu du produit.)*
+
+**Ce qui s'est passé** : la demande était claire et limitée — retirer le panneau Admin, son bouton,
+son document. `app/api/admin/route.ts` ne servait que ce panneau, en apparence. Elle servait en
+réalité DEUX choses sans rapport l'une avec l'autre : le document affiché d'un côté, et de l'autre
+le canal de mesure que `kpi-report.mjs` interroge pour le rapport de l'étape 4 de l'Article 18
+(Smart Breaker, poids de contexte, rejouabilité). **La supprimer entière aurait tué le second sans
+qu'aucun test ne le dise.**
+
+**Pourquoi la panne aurait été invisible** : `fetchLiveMetrics()` traite un échec comme un serveur
+éteint et imprime « serveur non joignable — normal si aucune simulation n'est en cours ». Une panne
+permanente aurait donc pris exactement la forme du cas normal. Le rapport aurait continué à sortir,
+sans ses mesures, et personne n'aurait su distinguer les deux.
+
+**La règle** : avant de supprimer un point d'entrée partagé — une route, un export, un fichier de
+données, une commande —, **chercher qui l'appelle, et le faire par un grep du dépôt entier, jamais
+de mémoire**. Un point d'entrée n'a pas de signature qui dise combien de rôles il porte : c'est le
+nom du fichier qui ment le plus souvent, et ici il disait « admin » pour deux métiers différents.
+La suppression se réduit alors au rôle vraiment visé.
+
+**Le corollaire, appris dans la même heure** : un consommateur qui traite l'absence comme un état
+normal ne protège de rien — il transforme la panne en silence. Quand une suppression touche un
+producteur, il faut regarder ce que ses lecteurs font d'un zéro (L5, prise par l'autre bout).
+
+**Terrain** : quand je supprime une route, un export, un fichier de données ou une commande · mots : supprimer, retirer, suppression, nettoyer, démanteler, route, endpoint · fichiers : app/**, lib/*.ts, scripts/*.mjs
+
+**Porté par** : **aucun mécanisme** — rien ne peut constater qu'on a cherché les consommateurs avant
+de supprimer. Ce qui existe, et qui l'a rattrapé ici, c'est la relecture du fichier AVANT de le
+retirer (Article 19). Déclaré plutôt que tu (Article 27).
+
+## L33 — Créer un fichier change le terrain que les outils lisent : ce n'est jamais un simple ajout
+
+*(2026-09-27, tâche #991, en archivant le référentiel retiré.)*
+
+**Ce qui s'est passé** : l'archive
+`docs/contexte-projet/referentiel-affiche-en-jeu-archive.md` a été créée pour ne rien perdre. Elle
+a immédiatement cassé DEUX choses, sans qu'une seule ligne de code ait changé :
+
+1. **ecotoken s'est mis à proposer une fausse adresse.** Le score d'affinité a vu le mot
+   « referentiel » dans le nom de l'archive et dans le titre de la section « Référentiel technique »
+   de la charte, et a proposé d'y déménager la table qui dit quel document lire quand — vers un
+   dossier que la charte déclare « jamais une source de vérité ». Le signal a changé de nature au
+   passage : une QUESTION honnête est devenue un déménagement chiffré vers le mauvais endroit.
+2. **Le catalogue de son dossier a cessé d'être vrai**, et rien ne pouvait le remettre à jour
+   (voir L34).
+
+**Pourquoi c'est contre-intuitif** : on relit les guides après avoir modifié du CODE. Un fichier
+ajouté ressemble à une addition inoffensive — or les outils de ce dépôt lisent le dépôt, donc un
+fichier de plus est un changement d'ENTRÉE pour tout ce qui le balaie. Un nom bien choisi pour un
+humain peut être un nom trompeur pour un score de ressemblance.
+
+**La règle** : après avoir créé un fichier dans `docs/` ou dans `scripts/`, relancer les garde-fous
+plutôt que de supposer qu'un ajout ne casse rien. Et se demander une fois : **à quoi ce nom
+ressemble-t-il, pour une machine qui compare des mots ?**
+
+**Terrain** : quand je crée un fichier dans docs/ ou scripts/, en particulier une archive ou un document au nom proche d'un existant · mots : créer, archiver, nouveau fichier, déposer, nommer · fichiers : docs/**, scripts/*.mjs
+
+**Porté par** : `DOSSIERS_JAMAIS_DESTINATION` + `archivesNonDeclarees()` (`scripts/ecotoken.mjs`)
+pour le cas des archives ; la régénération des catalogues (`scripts/data-archangel.mjs`) pour
+l'autre. **Aucun mécanisme** pour la règle générale — rien ne peut constater qu'on a relancé les
+garde-fous après un ajout. Déclaré plutôt que tu.
+
+## L34 — Un contenu qu'un outil GÉNÈRE doit pouvoir être RÉGÉNÉRÉ, sinon il ment à date fixe
+
+*(2026-09-27, tâche #991, en déposant un fichier dans un dossier catalogué.)*
+
+**Ce qui s'est passé** : `data-archangel` sait générer le catalogue d'un dossier, et il écrit en tête
+de chaque catalogue « n'y écrivez rien à la main, **une régénération l'effacerait** ». Cette
+régénération n'existait pas. `--generer` refuse — à raison — d'écraser un index existant, parce
+qu'une prose écrite à la main vaut mieux qu'une liste ; `--completer` ne traite que les index sans
+contrat. **Un catalogue généré tombait donc en retard pour toujours**, en affichant une consigne qui
+désignait une commande inexistante. Sept catalogues réels étaient dans ce cas.
+
+**Pourquoi c'est pire qu'un document simplement périmé** : un catalogue PROMET la liste complète de
+son dossier. En retard, il ne se tait pas — il affirme quelque chose de faux, et son lecteur conclut
+que le fichier manquant n'existe pas.
+
+**La règle** : quand un outil écrit un contenu qui reflète un état (une liste, une table, un
+sommaire), la question à se poser le jour où on l'écrit n'est pas « sait-il le produire ? » mais
+**« sait-il le REproduire quand l'état aura bougé, sans écraser ce qu'il n'a pas écrit ? »**. La
+réponse passe par une SIGNATURE : l'outil réécrit ce qu'il reconnaît comme sien, et ne touche à rien
+d'autre.
+
+**Terrain** : quand je construis un outil qui écrit un document dérivé d'un état · mots : générer, catalogue, index, sommaire, table, régénérer, écraser · fichiers : scripts/*.mjs
+
+**Porté par** : `estUnCatalogueGenere()` / `SIGNATURE_CATALOGUE_GENERE`
+(`scripts/data-archangel.mjs`), avec ses contre-tests dans `check-house.mjs` — dont celui qui vérifie
+qu'une prose écrite à la main n'est JAMAIS reconnue comme régénérable.
+
+## L35 — Un moniteur qui ne surveille qu'une étape lit l'intervalle entre deux étapes comme un échec
+
+*(2026-09-27, décidé par l'utilisateur — « c'est une leçon à inscrire au registre » — après une
+annonce fausse de ma part le même jour.)*
+
+**Ce qui s'est passé** : j'ai annoncé à l'utilisateur qu'un commit avait échoué une seconde fois.
+**Il n'avait pas échoué** : il était passé, et le commit `fc20268` était déjà dans le dépôt pendant
+que je le disais perdu. Mon moniteur ne surveillait qu'un seul signal, la sortie de `check-house`,
+alors que le crochet pre-commit enchaîne plusieurs étapes. Il s'est déclenché dans l'intervalle
+pendant lequel `tsc` tournait — un silence que j'ai lu comme une interruption.
+
+**Pourquoi c'est une leçon et pas une inattention** : un processus à plusieurs étapes est SILENCIEUX
+entre deux étapes, par construction. Un moniteur branché sur une seule d'entre elles ne peut pas
+distinguer « c'est fini » de « c'est passé à la suite ». Les deux se présentent exactement de la
+même façon : plus rien n'arrive.
+
+**Le coût réel** : j'ai fait perdre du temps sur une panne inexistante, et — plus grave — j'ai
+rapporté à l'utilisateur un état du dépôt que je n'avais pas vérifié. Un compte rendu faux sur un
+fait vérifiable en une commande coûte plus cher que le retard qu'il prétendait signaler.
+
+**La règle** : un moniteur surveille l'ÉTAT FINAL, jamais une étape intermédiaire — le code de
+sortie du processus entier, ou le fait réel qu'on attend (« le commit existe-t-il ? »). Et avant
+d'annoncer un échec, **le vérifier sur la source de vérité** (`git log`), jamais sur l'absence d'un
+signal.
+
+**Terrain** : quand je surveille un processus long ou que je m'apprête à annoncer qu'il a échoué · mots : moniteur, surveiller, attendre, commit, échec, échoué, bloqué, timeout · aucun fichier : elle porte sur ma conduite pendant une attente et sur aucun fichier du dépôt — un moniteur se lance depuis n'importe où
+
+**Porté par** : **aucun mécanisme** — rien ne peut lire ce que j'annonce dans la conversation.
+C'est la même limite honnête que les Articles 29 et 30 : la déclarer EST la protection
+(Article 27).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

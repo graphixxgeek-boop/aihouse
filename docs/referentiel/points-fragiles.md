@@ -45,10 +45,15 @@ fichier dès qu'elle est résolue ou tranchée — jamais laissée ici "au cas o
     est prévue via Cloudflare dans un environnement de TEST, pas une ouverture au grand public — le
     risque réel avant la vraie mise en production reste donc faible, à réévaluer explicitement au
     moment de basculer en production réelle.
-  - Le code d'accès du panneau admin (`'1980'`, sans limite de tentatives, `app/api/admin/route.ts`)
+  - Le code d'accès de la route admin (`'1980'`, sans limite de tentatives, `app/api/admin/route.ts`)
     — déjà repéré indépendamment plus tôt dans cette session, reconfirmé par THE-FINAL-JUDGE.
     Décision explicite de l'utilisateur : laissé tel quel pour l'instant (enjeu jugé faible, panneau
-    de documentation seulement, jamais un accès qui modifie l'état du jeu).
+    de documentation seulement, jamais un accès qui modifie l'état du jeu). **Mise à jour du
+    2026-09-27, et elle réduit encore l'enjeu sans le supprimer** : le panneau de documentation a été
+    retiré du produit, la route ne sert plus que des COMPTEURS de mesure (Smart Breaker, poids de
+    contexte, rejouabilité) lus par `kpi-report.mjs`. Ce qui fuirait derrière ce code n'est donc plus
+    de la documentation mais des chiffres de fonctionnement — toujours aucun accès qui modifie l'état
+    du jeu.
   - Architecture mono-instance/mono-partie (une seule maison partagée par tous les visiteurs) —
     déjà un chantier connu et volontairement déprioritisé (Plan d'origine, point 7, "mécaniques de
     diffusion"). THE-FINAL-JUDGE conteste cette priorisation et la juge bloquante avant toute mise

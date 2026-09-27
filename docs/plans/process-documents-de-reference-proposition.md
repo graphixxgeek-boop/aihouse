@@ -35,7 +35,10 @@ rassemblées en une suite qu'on puisse suivre et dont on puisse voir les trous.
 
 **A. L'étape 9 n'a aucun porteur.** La charte exige qu'un changement de comportement se répercute
 « le jour même » dans les documents concernés — `CLAUDE.md`, `docs/referentiel/principes.md`,
-`parametres.md`, `lib/reference.ts`. Rien ne vérifie que ça a été fait. C'est précisément le genre
+`parametres.md`, `lib/reference.ts`. Rien ne vérifie que ça a été fait. *(Note du 2026-09-27 :
+`lib/reference.ts` a quitté le dépôt ce jour-là — le référentiel affiché en jeu a été retiré du
+produit. Ce document garde la formulation d'origine parce qu'il date une proposition ; la liste
+réelle à répercuter ne compte plus que trois documents.)* C'est précisément le genre
 d'obligation qui n'existe plus à la session suivante (Article 27).
 
 **B. La suite n'existe nulle part comme suite.** Chacune des dix étapes vit dans son coin. Un agent

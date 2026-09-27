@@ -57,7 +57,9 @@ export function drawFace(ctx: CanvasRenderingContext2D, size: number, isLia: boo
   // malgré un premier correctif d'opacité — le problème n'était pas la transparence mais tout le
   // schéma de valeurs. Un jeton clair avec des traits sombres, façon icône plate, se détache de
   // n'importe quel sol sans dépendre d'un fond neutre, et se rapproche du reste du décor (formes
-  // simples, couleurs franches, aucun post-traitement — cf. Article 12 de reference.ts). Les
+  // simples, couleurs franches, aucun post-traitement — cf. Article 12 du référentiel affiché en
+  // jeu, retiré du produit le 2026-09-27 et archivé dans
+  // docs/contexte-projet/referentiel-affiche-en-jeu-archive.md). Les
   // paramètres d'émotion (faceExpression) restent intégralement conservés : seul le rendu change.
   const glow = .18 + e.comfort / 100 * .22 + e.attraction / 100 * .16;
   const plate = ctx.createRadialGradient(0, -R * .2, R * .1, 0, 0, R);

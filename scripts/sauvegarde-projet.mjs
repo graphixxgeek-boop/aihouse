@@ -46,7 +46,14 @@ export const ORDRE_DE_LECTURE = [
   { motif: /^CLAUDE\.md$/, pourquoi: "LA CHARTE — la loi du projet. Elle prime sur tout le reste, y compris sur ce que le code fait." },
   { motif: /^docs\/carnet-de-bord\.md$/, pourquoi: "où en était le travail à l'instant de la sauvegarde" },
   { motif: /^docs\/referentiel\/(principes|parametres)\.md$/, pourquoi: "les deux sources de vérité : ce que le moteur FAIT, et avec quels chiffres" },
-  { motif: /^lib\/(?!reference-history)/, pourquoi: "le moteur du jeu — perception, dialogue, drame, jauges, mémoire, histoire" },
+  // L'exception `(?!reference-history)` a été retirée le 2026-09-27 avec le fichier qu'elle
+  // écartait : `lib/reference-history.ts`, le journal de bord ancien du panneau Admin (151
+  // versions), écarté de la sauvegarde parce qu'il pesait très lourd pour de l'historique que
+  // personne ne relisait. Le panneau a quitté le produit ce jour-là sur décision de
+  // l'utilisateur ; une exception qui ne peut plus jamais correspondre n'écarte plus rien et se
+  // lirait comme une protection active. Texte archivé :
+  // docs/contexte-projet/referentiel-affiche-en-jeu-archive.md.
+  { motif: /^lib\//, pourquoi: "le moteur du jeu — perception, dialogue, drame, jauges, mémoire, histoire" },
   { motif: /^app\//, pourquoi: "les pages et l'orchestration des appels au modèle" },
   { motif: /^components\//, pourquoi: "le rendu 3D et l'interface" },
   { motif: /^docs\/regles-de-travail\.md$/, pourquoi: "la méthode de collaboration, distincte du contenu du jeu" },

@@ -1204,6 +1204,22 @@ export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = re
 // CE QU'UN INDEX GÉNÉRÉ DIT DE LUI-MÊME : qu'il est généré. Un catalogue produit par une machine
 // et présenté comme tenu à la main appellerait des ajouts manuels qui sauteraient au passage
 // suivant — le dire évite à quelqu'un d'y écrire quelque chose qu'il perdrait.
+// LA SIGNATURE D'UN CATALOGUE ÉCRIT PAR CET OUTIL, et c'est ce qui autorise à le RÉÉCRIRE
+// (2026-09-27). Un index généré promet la liste complète du dossier ; quand un fichier arrive, il
+// cesse de tenir cette promesse — et jusqu'ici RIEN ne pouvait le remettre à jour : `--generer`
+// refuse d'écraser un index existant (à raison : une prose écrite à la main vaut mieux qu'une
+// liste) et `--completer` ne traite que les index sans contrat ou incomplets sous une prose. Un
+// catalogue généré tombait donc en retard pour toujours, tout en affichant en tête « n'y écrivez
+// rien à la main, une régénération l'effacerait » — une consigne qui désignait une régénération
+// qui n'existait pas. Trouvé en déposant une archive dans docs/contexte-projet/.
+// La reconnaissance se fait sur le texte que l'outil écrit LUI-MÊME juste en dessous, jamais sur
+// une liste de dossiers tenue à la main : ce qu'il n'a pas signé, il n'y touche pas.
+export const SIGNATURE_CATALOGUE_GENERE = /Catalogue GÉNÉRÉ par `node scripts\/data-archangel\.mjs index --generer`/;
+
+export function estUnCatalogueGenere(texte = "") {
+  return SIGNATURE_CATALOGUE_GENERE.test(String(texte));
+}
+
 export function contenuDIndexGenere(dossier, fichiers = [], { horodatage = "" } = {}) {
   const nom = String(dossier).split("/").pop();
   const l = [
@@ -1224,12 +1240,19 @@ export function contenuDIndexGenere(dossier, fichiers = [], { horodatage = "" } 
   return l.join("\n") + "\n";
 }
 
-export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = readdirSync, writeImpl = writeFileSync, horodatage = "" } = {}) {
+export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = readdirSync, writeImpl = writeFileSync, readFileImpl = readFileSync, horodatage = "" } = {}) {
   if (!mesure?.mesurable) return { mesurable: false, pourquoi: mesure?.pourquoi ?? "aucune mesure fournie" };
   const ecrits = [];
   for (const ligne of mesure.lignes) {
-    // « sans index » et RIEN D'AUTRE : ni « en retard », ni « sans contrat », ni « incomplet ».
-    if (ligne.etat !== "sans index") continue;
+    // « sans index », ET un catalogue que cet outil a lui-même signé et qui a pris du retard.
+    // Rien d'autre : jamais une prose, jamais un journal, jamais un index écrit à la main.
+    let regeneration = false;
+    if (ligne.etat !== "sans index") {
+      let texte = "";
+      try { texte = readFileImpl(join(root, `${ligne.dossier}/index.md`), "utf8"); } catch { continue; }
+      if (!estUnCatalogueGenere(texte)) continue;
+      regeneration = true;
+    }
     const fichiers = [];
     const pile = [ligne.dossier];
     while (pile.length) {
@@ -1244,9 +1267,9 @@ export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = re
     }
     const chemin = `${ligne.dossier}/index.md`;
     writeImpl(join(root, chemin), contenuDIndexGenere(ligne.dossier, fichiers, { horodatage }), "utf8");
-    ecrits.push({ chemin, fichiers: fichiers.length });
+    ecrits.push({ chemin, fichiers: fichiers.length, regeneration });
   }
-  return { mesurable: true, ecrits, horsPortee: "elle n'écrit QUE là où aucun index n'existe. Un index déjà écrit à la main n'est jamais remplacé par une liste — la prose qui explique un dossier vaut mieux qu'un catalogue, et l'écraser la ferait disparaître." };
+  return { mesurable: true, ecrits, horsPortee: "elle écrit là où aucun index n'existe, et RÉÉCRIT un catalogue qu'elle a elle-même signé et qui a pris du retard (sa promesse est la liste complète : en retard, il ment). Un index écrit à la main n'est jamais remplacé par une liste — la prose qui explique un dossier vaut mieux qu'un catalogue, et l'écraser la ferait disparaître." };
 }
 
 export function formatIndexLines(r) {
@@ -1458,7 +1481,7 @@ function main() {
       const g = genererLesIndexManquants(r, { horodatage: new Date().toISOString().slice(0, 10) });
       if (!g.mesurable) { console.log(`\nPAS MESURÉ — ${g.pourquoi}`); return; }
       console.log(`\n=== ${g.ecrits.length} index GÉNÉRÉ(S) — uniquement là où il n'en existait aucun ===\n`);
-      for (const e of g.ecrits) console.log(`  ✅ ${e.chemin} — ${e.fichiers} fichier(s) listés`);
+      for (const e of g.ecrits) console.log(`  ✅ ${e.chemin} — ${e.fichiers} fichier(s) listés${e.regeneration ? " (catalogue généré remis à jour)" : ""}`);
       console.log(`\n  ${g.horsPortee}`);
       return;
     }

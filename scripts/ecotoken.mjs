@@ -411,6 +411,36 @@ export function findMisfiledBlocks(texte) {
 // CLAUDE.md, la seule vraie extraction restante, n'en cite aucun et reste donc posée.
 const TITRE_NOMME_UN_FICHIER_SOURCE = /`[^`]*\.(ts|tsx|mjs|js)`/;
 
+// UNE ARCHIVE N'EST JAMAIS UN DOMICILE (2026-09-27, trouvé en la créant). Le jour où
+// `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md` est né, l'outil a aussitôt proposé
+// d'y déménager la section « Référentiel technique » de la charte — la table qui dit quel document
+// lire quand. Le score d'affinité ne voyait qu'une chose : le mot « referentiel » dans les deux
+// noms. C'est exactement la fausse adresse que `affiniteChemin` avait été écrite pour empêcher, et
+// elle est ici pire qu'ailleurs : la charte déclare noir sur blanc que `docs/contexte-projet/` est
+// une archive historique, « JAMAIS une source de vérité sur le comportement actuel ». Y envoyer du
+// contenu vivant ne le range pas, ça le périme.
+//
+// La liste est tenue à la main, et sa nature manuelle est écrite ici même (Article 24) — aucune
+// mécanique ne peut deviner qu'un dossier est une archive. Ce qui la protège de la dérive
+// silencieuse, c'est `archivesNonDeclarees()` juste dessous : si la charte cesse de déclarer un de
+// ces dossiers comme archive, le garde-fou le dit au lieu de laisser l'exclusion vivre sans cause.
+export const DOSSIERS_JAMAIS_DESTINATION = [
+  { prefixe: "docs/contexte-projet/", motifCharte: /docs\/contexte-projet\/[\s\S]{0,900}?jamais\s+(comme\s+)?(une\s+)?source de vérité/i, pourquoi: "archives historiques, déclarées par CLAUDE.md « jamais comme source de vérité sur le comportement actuel » — y déplacer du contenu vivant le périme au lieu de le ranger" },
+];
+
+export function estUneDestinationInterdite(chemin, dossiers = DOSSIERS_JAMAIS_DESTINATION) {
+  return dossiers.find((d) => String(chemin).startsWith(d.prefixe)) ?? null;
+}
+
+// Le garde-fou de la liste ci-dessus : chaque dossier exclu doit TOUJOURS être déclaré archive par
+// la charte. Une exclusion dont la cause a disparu est une exclusion qui ne protège plus rien —
+// la même erreur que `NOT_REALLY_CODE` gardant un motif pour un fichier parti (lib-shell.mjs).
+export function archivesNonDeclarees(charterText, dossiers = DOSSIERS_JAMAIS_DESTINATION) {
+  return dossiers
+    .filter((d) => !d.motifCharte.test(String(charterText ?? "")))
+    .map((d) => ({ prefixe: d.prefixe, ecart: "exclu comme archive, mais la charte ne le déclare plus comme telle — l'exclusion a perdu sa cause" }));
+}
+
 export function planExtractions(sections, totalTokens, { seuilPct = 3, seuilTokens = 400 } = {}) {
   return sections
     .filter((s) => classifySectionNature(s) !== "regle" && s.tokens / totalTokens * 100 >= seuilPct && s.tokens >= seuilTokens && !/^\(préambule\)$/.test(s.titre) && !TITRE_NOMME_UN_FICHIER_SOURCE.test(s.titre))
@@ -422,7 +452,7 @@ export function planExtractions(sections, totalTokens, { seuilPct = 3, seuilToke
       // que pas de renvoi : il envoie lire le mauvais document en croyant avoir la bonne adresse.
       // On exige donc une vraie affinité entre le titre de la section et le nom du fichier ; sinon
       // on dit franchement qu'il reste à créer.
-      const candidats = [...s.texte.matchAll(/`(docs\/[^`]+?\.md)`/g)].map((m) => m[1]);
+      const candidats = [...s.texte.matchAll(/`(docs\/[^`]+?\.md)`/g)].map((m) => m[1]).filter((c) => !estUneDestinationInterdite(c));
       const cible = candidats.map((c) => ({ c, score: affiniteChemin(c, s.titre) })).filter((x) => x.score > 0).sort((a, b) => b.score - a.score)[0]?.c ?? null;
       const stub = `## ${s.titre}\n\n${cible ? `Voir \`${cible}\`.` : "*(document d'accueil à CRÉER — aucun des documents cités dans la section ne traite réellement de son sujet ; renvoyer vers l'un d'eux serait une fausse adresse.)*"} Retiré de la charte par ecotoken : lu à la demande, jamais rechargé à chaque message.`;
       // QUATRIÈME APPRENTISSAGE (2026-09-22, en passant aux fichiers suivants) : sans destination
@@ -672,15 +702,17 @@ export const BUDGETS = {
   "CLAUDE.md": 30_000,
   "docs/regles-de-travail.md": 60_000,
   "docs/referentiel/principes.md": 28_000,
-  // lib/reference.ts (2026-09-22, décision explicite de l'utilisateur : « un budget surveillé,
-  // comme pour la charte »). L'outil signalait depuis ce matin que ce fichier était profilé mais
-  // SANS plafond — donc libre de grossir sans qu'aucun avertissement ne se déclenche. Il avait
-  // atteint 83 000 tokens sans que personne ne s'en aperçoive, dont 89 % d'historique de versions,
-  // et il part entier dans le paquet déployé. Après séparation du journal de bord ancien
-  // (lib/reference-history.ts, chargé seulement à la demande) il retombe à ~15 000 : le plafond est
-  // posé à 25 000, une vraie marge pour les vingt versions glissantes sans laisser revenir la
-  // dérive. Ce qui dépasse se déplace vers le journal, jamais ne se résume ni ne se supprime.
-  "lib/reference.ts": 25_000,
+  // RETIRÉ LE 2026-09-27, ET LA RAISON RESTE ÉCRITE (Article 27). L'entrée était
+  // "lib/reference.ts": 25_000, posée le 2026-09-22 sur décision explicite de l'utilisateur (« un
+  // budget surveillé, comme pour la charte ») : ce fichier — le référentiel AFFICHÉ en jeu dans le
+  // panneau Admin — avait atteint 83 000 tokens sans que personne ne s'en aperçoive, dont 89 %
+  // d'historique de versions, et partait entier dans le paquet déployé. Après séparation du journal
+  // ancien il retombait à ~15 000, d'où un plafond à 25 000.
+  // Le panneau Admin et ses deux fichiers de données ont quitté le produit le 2026-09-27 (sa
+  // décision : cette fonction est aujourd'hui remplie, et mieux, par CLAUDE.md et
+  // docs/referentiel/). Un budget sur un fichier absent ne surveille plus rien : il se lit comme
+  // une ligne verte alors qu'il ne mesure rien du tout. Texte archivé :
+  // docs/contexte-projet/referentiel-affiche-en-jeu-archive.md.
 };
 
 export function checkWeightBudget(charterText, budget = DEFAULT_BUDGET_TOKENS) {
@@ -1417,13 +1449,13 @@ export const DOCUMENT_PROFILES = [
   { chemin: "docs/referentiel/principes.md", chargement: "a_la_demande", lectures: 1, note: "relu avant toute intervention sur le moteur du jeu" },
   { chemin: "docs/referentiel/parametres.md", chargement: "a_la_demande", lectures: 1, note: "relu lors d'un rééquilibrage" },
   { chemin: "docs/suivi/sessions", chargement: "a_la_demande", lectures: 3, note: "le suivi de la session EN COURS, relu à chaque mise à jour de tâche — jamais les sessions passées, d'où fichierCourantSeulement", dossier: true, fichierCourantSeulement: true },
-  // Ajouté le 2026-09-22 après mesure : 83 000 tokens, le plus gros artefact du dépôt, dont 92 % de
-  // versions anciennes jamais relues. Il n'était dans AUCUN profil, donc totalement invisible aux
-  // mesures de coût — un angle mort de 4× CLAUDE.md. Déclaré ici pour qu'il cesse de l'être, PAS
-  // pour être découpé : c'est le référentiel affiché en jeu (panneau Admin) et un fichier du
-  // MOTEUR, pas de la documentation. Le restructurer changerait ce qu'un utilisateur voit — une
-  // décision qui appartient à l'utilisateur, jamais à l'outil ni à moi (garde-fou de la charte).
-  { chemin: "lib/reference.ts", chargement: "a_la_demande", lectures: 1, note: "référentiel affiché en jeu ; 171 versions, 92 % d'historique jamais relu — coûteux à ouvrir, rarement ouvert" },
+  // RETIRÉ LE 2026-09-27, MÊME RAISON QUE SON BUDGET (voir BUDGETS ci-dessus). L'entrée était
+  // { chemin: "lib/reference.ts", chargement: "a_la_demande", lectures: 1 } — le plus gros artefact
+  // du dépôt (83 000 tokens, 92 % d'historique jamais relu), déclaré ici le 2026-09-22 pour qu'il
+  // cesse d'être un angle mort de 4× CLAUDE.md. L'utilisateur a décidé le 2026-09-27 de retirer le
+  // panneau Admin qu'il servait ; le fichier a quitté le dépôt, le profil part avec lui. Un profil
+  // sur un fichier absent est sauté en silence par realSessionCost() (existsSync) : le garder
+  // donnerait une table qui prétend surveiller un document qui n'existe plus.
 ];
 
 export function realSessionCost(profiles = DOCUMENT_PROFILES, { messagesParSession = 50, root = ROOT } = {}) {

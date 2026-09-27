@@ -126,3 +126,35 @@ atteinte.
 part plutôt que rendus invisibles — savoir QUI les lit vaut mieux que ne plus les voir. Les 8 qui
 restent sont de vrais trous : des registres écrits par leur outil et jamais comparés d'un passage à
 l'autre.
+
+## Un catalogue généré peut être REMIS À JOUR (2026-09-27)
+
+**Le défaut, trouvé en déposant un fichier, jamais en cherchant un bug.** L'outil écrit en tête de
+chaque catalogue qu'il génère : « n'y écrivez rien à la main, **une régénération l'effacerait** ».
+Cette régénération n'existait pas. `--generer` refuse — à raison — d'écraser un index existant,
+parce qu'une prose écrite à la main vaut mieux qu'une liste ; `--completer` ne traite que les index
+sans contrat ou incomplets sous une prose. **Un catalogue généré tombait donc en retard pour
+toujours**, en affichant une consigne qui désignait une commande inexistante. Sept catalogues réels
+étaient dans ce cas le jour de la correction.
+
+**Pourquoi c'est pire qu'un document simplement périmé** : un catalogue PROMET la liste complète de
+son dossier. En retard, il ne se tait pas — il affirme quelque chose de faux, et son lecteur conclut
+que le fichier manquant n'existe pas. C'est exactement ce que veille cet outil : « un fichier
+qu'aucun index n'annonce est un fichier qui ne circule pas ».
+
+**La correction, et sa sûreté.** `--generer` réécrit désormais AUSSI un catalogue **que l'outil a
+lui-même signé** et qui a pris du retard. La reconnaissance se fait sur `SIGNATURE_CATALOGUE_GENERE`
+— le texte que l'outil écrit lui-même dans l'en-tête — et jamais sur une liste de dossiers tenue à
+la main (Article 24) : ce qu'il n'a pas signé, il n'y touche pas. Une prose écrite à la main reste
+donc intouchable, ce qui est toute la sûreté de la fonctionnalité.
+
+**Vérifié dans les deux sens** (BP4), et le second compte plus que le premier : l'outil reconnaît sa
+propre signature dans ce qu'il écrit, et une prose écrite à la main n'est **jamais** reconnue comme
+régénérable. Un test sur deux catalogues en retard, l'un signé et l'autre écrit à la main, vérifie
+qu'un seul des deux est réécrit.
+
+**Effet de bord assumé au premier vrai passage** : la régénération a propagé aux anciens catalogues
+la règle `estUnDepot()` posée la veille — un fichier dont le nom finit par `index.md` est un index,
+jamais un dépôt. `docs/referentiel/kpi-index.md` et `docs/templates/registre-index.md` ont donc
+quitté leur catalogue de dossier. Les deux restent atteignables par les documents qui les citent
+(la charte pour le premier) ; ce qui a disparu est leur ligne dans une liste, pas leur adresse.

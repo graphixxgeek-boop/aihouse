@@ -129,7 +129,13 @@ successives à la demande explicite de l'utilisateur. Reprises ici depuis `docs/
    Observation (cf. décision 6 ci-dessus sur les jauges).
 7. **Jardin/roulette/verdict/enquête regroupés dans un seul tiroir d'actions** — un point d'accès
    unique pour les mécaniques secondaires, plutôt que des boutons épars.
-8. **Le panneau Admin rejoint un menu réglages** — jamais un bouton dédié visible en permanence.
+8. ~~**Le panneau Admin rejoint un menu réglages** — jamais un bouton dédié visible en
+   permanence.~~ **SANS OBJET DEPUIS LE 2026-09-27** : le panneau Admin (le référentiel affiché en
+   jeu, `lib/reference.ts`) a été retiré du produit sur décision explicite de l'utilisateur — sa
+   raison d'être, permettre à une IA de reprendre le projet à sa genèse, est aujourd'hui remplie par
+   `CLAUDE.md` et `docs/referentiel/`. La décision reste écrite plutôt que effacée : elle dit
+   comment trancher le jour où un panneau technique revient à l'écran. Texte archivé :
+   `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`.
 9. **L'indicateur jour/nuit reste visible en permanence à l'écran**, jamais relégué dans un menu.
 10. **« Nouvelle arrivée » et « passer à la révélation » restent des boutons visibles directement à
     l'écran**, jamais enfouis dans un menu — ce sont des actions rares mais importantes, qui

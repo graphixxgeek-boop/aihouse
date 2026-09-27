@@ -22,8 +22,12 @@ mener [...] je veux un tableau de bord avec des données SMART »). Un élément
    `successes / attempts × 100` — la proportion de tentatives Gemini qui ont abouti sans buter sur
    un blocage. `lib/gemini-keys.ts` tient des compteurs bruts en mémoire process (tours,
    disponibilité de la clé principale au départ d'un tour, tentatives par issue —
-   succès/429/503/401-403), exposés par le panneau Admin (`app/api/admin/route.ts`, champ
-   `geminiKeyMetrics`) et lus par `scripts/kpi-report.mjs`. Jamais en base de données : une mémoire
+   succès/429/503/401-403), exposés par la route `app/api/admin/route.ts` (champ
+   `geminiKeyMetrics`) et lus par `scripts/kpi-report.mjs`. *(2026-09-27 : cette route s'appelait
+   « le panneau Admin » parce qu'elle servait AUSSI le référentiel affiché en jeu. Ce panneau a été
+   retiré du produit ce jour-là ; la route reste, réduite à ce seul canal de MESURE — sans elle le
+   rapport KPI perdrait toutes ses mesures live et dirait « serveur non joignable », une panne qui
+   ressemblerait trait pour trait à un serveur éteint.)* Jamais en base de données : une mémoire
    process, remise à zéro à chaque redémarrage du serveur, qui correspond exactement à "un rapport
    par simulation" (Article 18). **Deux KPI supplémentaires, spécifiques au Smart Breaker,
    affichés en tête de chaque rapport, en gras** : la performance globale ci-dessus (répétée en
@@ -179,7 +183,7 @@ traité comme le bug documentaire qu'il est, pas laissé pour plus tard.)*
 - **Chantier 1 (2026-09-19) — fait** : famille "Robustesse du code", registre des points fragiles,
   script `kpi-report.mjs`, et le présent découpage architecture/instanciation.
 - **Chantier 1bis (2026-09-19) — fait** : efficacité du Smart Breaker, en mémoire process (pas de
-  base de données), exposée par le panneau Admin et lue par `kpi-report.mjs` — cf. famille
+  base de données), exposée par `app/api/admin/route.ts` et lue par `kpi-report.mjs` — cf. famille
   "Performance runtime" ci-dessus pour le détail complet.
 - **Chantier 2 (2026-09-19) — fait** : KPI global en % pour les 4 familles restantes (Qualité,
   Cohérence logique, Rejouabilité/rythme, Robustesse déjà faite au chantier 1), KPI de couverture

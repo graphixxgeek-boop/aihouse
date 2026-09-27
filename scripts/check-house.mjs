@@ -14,7 +14,7 @@ import {DatabaseSync} from 'node:sqlite';
 Object.defineProperty(globalThis.crypto,'randomUUID',{value:()=>{let candidate;do{candidate='00000000-0000-4000-8000-'+(++seedCounter).toString(16).padStart(12,'0');}while(insoliteHash(candidate)>=6);return candidate;},configurable:true});}
 fs.mkdirSync('.sites-runtime',{recursive:true});
 const transpile=s=>ts.transpileModule(s,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','reference','update-audit','gemini-keys','daynight','quality-metrics','memento-weight'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./memento-weight"','"./test-memento-weight.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
+for(const name of ['house','simulation','relationship','dialogue','story','lia','world','turn','life','drama','perception','visual-events','stock','presentation','playback','evidence','update-audit','gemini-keys','daynight','quality-metrics','memento-weight'])fs.writeFileSync(`.sites-runtime/test-${name}.mjs`,transpile(fs.readFileSync(`lib/${name}.ts`,'utf8').replace('"./update-audit"','"./test-update-audit.mjs"').replace('"./visual-events"','"./test-visual-events.mjs"').replace('"./drama"','"./test-drama.mjs"').replace('"./perception"','"./test-perception.mjs"').replace('"./life"','"./test-life.mjs"').replace('"./house"','"./test-house.mjs"').replace('"./lia"','"./test-lia.mjs"').replace('"./gemini-keys"','"./test-gemini-keys.mjs"').replace('"./memento-weight"','"./test-memento-weight.mjs"').replace('"./simulation"','"./test-simulation.mjs"').replace('"./relationship"','"./test-relationship.mjs"').replace('"./story"','"./test-story.mjs"').replace('"./daynight"','"./test-daynight.mjs"')));
 const raw=fs.readFileSync('app/api/lia/route.ts','utf8').replace('import { env } from "cloudflare:workers";','const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"','"./test-stock.mjs"').replaceAll('"@/lib/visual-events"','"./test-visual-events.mjs"').replaceAll('"@/lib/perception"','"./test-perception.mjs"').replaceAll('"@/lib/lia"','"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"','"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"','"./test-world.mjs"').replaceAll('"@/lib/house"','"./test-house.mjs"').replaceAll('"@/lib/simulation"','"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"','"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"','"./test-relationship.mjs"').replaceAll('"@/lib/story"','"./test-story.mjs"').replaceAll('"@/lib/life"','"./test-life.mjs"').replaceAll('"@/lib/drama"','"./test-drama.mjs"').replaceAll('"@/lib/turn"','"./test-turn.mjs"').replaceAll('"@/lib/daynight"','"./test-daynight.mjs"').replaceAll('"@/lib/quality-metrics"','"./test-quality-metrics.mjs"');
 fs.writeFileSync('.sites-runtime/test-route.mjs',transpile(raw));
 const sqlite=new DatabaseSync(':memory:');sqlite.exec(fs.readFileSync('drizzle/0000_jazzy_cobalt_man.sql','utf8'));
@@ -1046,7 +1046,21 @@ assert.ok(looksLikeEcho('Commander un sentiment depuis cet écran, ça ne marche
   console.log('Passed: waitForPlayback\'s DEFAULT wait — the real setTimeout wrapper, and the only path production ever takes — is finally executed by the suite (2026-09-23, task #213, the last uncovered function in the repository). AXA-CHECK named it "wait()", which took a read to understand: it is not a named function but the default value of the `wait` parameter, and both pre-existing tests rightly inject their own, which is exactly what left the real timer never running once. The test measures a genuine suspension rather than assuming it (a wait returning immediately would otherwise pass and prove nothing), bounds itself so a regression fails instead of hanging, and covers the dead-playback exit where alive() must win over the clock.');
 }
 
-const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.ok(referenceSections[0].title.includes('Version 270'));assert.ok(referenceSections.some(s=>s.title.startsWith('26')&&s.text.includes('18a')&&s.text.includes('20b')));assert.ok(referenceSections.some(s=>s.text.includes('food=3800 ms')));assert.ok(!referenceSections.some(s=>s.text.includes('2 400 ms')));assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, current Admin revision and durations, verified legend/count concordance and first food witness validation.');
+// 2026-09-27 : quatre assertions de ce bloc lisaient `referenceSections` (lib/reference.ts, le
+// référentiel AFFICHÉ en jeu) pour vérifier que le document montré à l'utilisateur restait
+// factuellement exact — la version courante affichée en tête, la concordance légende/comptage, et
+// la durée de repas réellement en vigueur (food=3800 ms, jamais l'ancienne valeur 2 400 ms).
+// Le panneau Admin et son document ont été retirés du produit ce jour-là sur décision explicite de
+// l'utilisateur. Le SUJET de ces quatre assertions n'existe plus : elles ne sont pas désactivées,
+// elles sont sans objet.
+// CE QUI RESTE VÉRIFIÉ ICI, et c'est l'essentiel : les 25 demandes de `updateAudit`, le comptage
+// d'observations et le témoin de repas — aucun de ces trois ne passait par le document affiché.
+// CE QUI N'EST PLUS VÉRIFIÉ NULLE PART, et il vaut mieux l'écrire que de le laisser croire : rien
+// ne relit plus une durée de jeu dans un document destiné à l'utilisateur, parce qu'il n'y a plus
+// de tel document. La règle qui l'exigeait (Article 6/13) porte désormais sur docs/referentiel/
+// seul, où `findFaitsManquants()` la tient. Texte archivé :
+// docs/contexte-projet/referentiel-affiche-en-jeu-archive.md.
+const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');assert.equal(updateAudit.length,25);assert.equal(new Set(updateAudit.map(a=>a.point)).size,25);assert.equal(investigationCounts([],[],true,[],{mirrorVerified:true,ambientVerified:true}).observations,3);assert.ok(stockResult.story.life.foodVerified);console.log('Passed: all 25 requested changes listed, verified legend/count concordance and first food witness validation (the in-game reference document those assertions also read left the product on 2026-09-27 — see the note above for what is no longer covered).');
 
 {
   // Insolite openings (Article 9) : une minorité de sessions démarre autrement — Lia se sent mal,
@@ -5318,7 +5332,16 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // commit sans condition et n'est PAS concerné ici ; seuls les six Gardiens (post-commit, qui
   // n'ont jamais rien bloqué) se réveillent selon ce qui a réellement changé.
   const { gardienShouldRun, realCodeFilesChanged, GARDIEN_DOMAINS, NOT_REALLY_CODE, lastCommitFiles } = await import('../scripts/lib-shell.mjs');
-  assert.deepEqual(realCodeFilesChanged(['lib/reference.ts', 'lib/life.ts', 'docs/x.md']), ['lib/life.ts', 'docs/x.md'], 'lib/reference.ts lives in a code folder but is displayed narrative DATA — excluding it is the whole point, since it is bumped on nearly every commit and made every commit look like an engine change');
+  // 2026-09-27 : NOT_REALLY_CODE ne contenait qu'une entrée, `lib/reference.ts`, et ce fichier a
+  // été retiré du produit ce jour-là (décision explicite de l'utilisateur). La liste est donc vide,
+  // et ce test suit le contenu réel plutôt que de figer un motif qui ne peut plus correspondre.
+  // Les deux directions sont vérifiées, jamais une seule : (1) la liste vide est une MESURE, pas un
+  // oubli — le mécanisme d'exclusion reste câblé et reprendra du service au prochain fichier de
+  // données logé dans un dossier de code ; (2) il discrimine toujours pour de vrai, un fichier hors
+  // dossier de code restant exclu par son emplacement.
+  assert.deepEqual(NOT_REALLY_CODE, [], 'the exclusion list must genuinely be empty now that its single real entry (lib/reference.ts) has left the repo — an exclusion motif that can never match again is a zero that reads like a protection while protecting nothing');
+  assert.deepEqual(realCodeFilesChanged(['lib/reference.ts', 'lib/life.ts', 'docs/x.md']), ['lib/reference.ts', 'lib/life.ts', 'docs/x.md'], 'counter-test of the retirement, run against the REAL list: with nothing left to exclude the function passes every path through, the very path it used to drop included — if this ever drops one again, a hand-kept motif has crept back in. (Location is not this function\'s job: sorting docs/ from code is GARDIEN_DOMAINS\' work, one layer down.)');
+  assert.deepEqual(realCodeFilesChanged(['lib/reference.ts', 'lib/life.ts'], [/^lib\/reference\.ts$/]), ['lib/life.ts'], 'and the counter-test in the other direction, on an injected list: the filtering MACHINERY must still work exactly as before — the emptiness retired one dead motif, it did not silently disable the mechanism, which is what would make the next data file lodged in a code folder impossible to exclude');
   assert.equal(gardienShouldRun('argus', ['docs/suivi/x.md']), false, 'a documentation-only commit must let ARGUS sleep — it can neither kill a life.ts field nor add a TODO marker');
   assert.equal(gardienShouldRun('harmonia', ['docs/suivi/x.md']), true, 'HARMONIA watches doc↔code links, so a documentation change IS its domain — it must stay awake where ARGUS sleeps');
   // Étendu le 2026-09-22 (demande explicite de l'utilisateur : « always new code doit agir sur tout
@@ -5333,7 +5356,14 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // Les deux chemins de prudence : ne jamais se taire par ignorance.
   assert.equal(gardienShouldRun('argus', undefined), true, 'when git does not say what changed, every guardian runs — not knowing never authorises silence');
   assert.equal(gardienShouldRun('un-gardien-inconnu', ['docs/x.md']), true, 'an unlisted guardian always runs — forgetting an entry must never create a silent blind spot');
-  assert.ok(Object.keys(GARDIEN_DOMAINS).length === 7 && NOT_REALLY_CODE.length >= 1, 'all SEVEN Gardiens must declare a domain (SAFE-EXPORT joined 2026-09-22, and its domain is docs/ + scripts/ rather than the game engine: its question is the Agency\'s exportability, and lib/ will never leave with the Agency), and the not-really-code list must not be empty');
+  // 2026-09-27 : cette assertion exigeait AUSSI `NOT_REALLY_CODE.length >= 1`, ce qui était juste
+  // tant que la liste avait un contenu réel à protéger. Elle n'en avait qu'un, `lib/reference.ts`,
+  // parti du dépôt ce jour-là. Exiger une liste non vide obligerait désormais à y remettre un motif
+  // pour faire taire un test — c'est-à-dire à réinventer une exclusion sans cause, exactement le
+  // contraire de ce que cette liste garantit. La liste vide est vérifiée pour ce qu'elle est, une
+  // MESURE, dans le bloc dédié plus haut ; ici on ne garde que ce qui reste vrai : les sept Gardiens
+  // déclarent chacun un domaine.
+  assert.equal(Object.keys(GARDIEN_DOMAINS).length, 7, 'all SEVEN Gardiens must declare a domain (SAFE-EXPORT joined 2026-09-22, and its domain is docs/ + scripts/ rather than the game engine: its question is the Agency\'s exportability, and lib/ will never leave with the Agency)');
   assert.equal(typeof lastCommitFiles, 'function');
   // Vérifié en direct contre le vrai dépôt : la liste du dernier commit est lisible, et elle
   // contient bien des fichiers.
@@ -5577,6 +5607,18 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.deepEqual(charte.extractionsAExaminer, [], 'the charter must no longer ask anything: its one remaining candidate was answered, and a question whose answer is known in advance is not honesty, it is noise billed to the reader\'s attention');
   const charteSansDecision = eco.analyzeDocument('CLAUDE.md', { tranchees: {} });
   assert.ok(charteSansDecision.extractionsAExaminer.some((e) => /Référentiel technique/.test(e.section)), 'MUST STILL BITE: remove the written decision and the question comes straight back — which proves the two mechanical filters never silenced it, and that only the explicit human answer did');
+
+  // UNE ARCHIVE N'EST JAMAIS UN DOMICILE (2026-09-27). Trouvé en créant pour de vrai
+  // docs/contexte-projet/referentiel-affiche-en-jeu-archive.md : l'outil a aussitôt proposé d'y
+  // déménager la section « Référentiel technique » de la charte, sur la seule ressemblance du mot
+  // « referentiel » dans les deux noms. La charte déclare pourtant ce dossier archive historique,
+  // « jamais une source de vérité » : y envoyer du contenu vivant le périme au lieu de le ranger.
+  // La preuve que ça mordait vraiment est juste au-dessus — sans le filtre, cette section cessait
+  // d'être une QUESTION posée et devenait un déménagement chiffré vers la mauvaise adresse.
+  assert.ok(eco.estUneDestinationInterdite('docs/contexte-projet/referentiel-affiche-en-jeu-archive.md'), 'the real archive path that caused this must be refused as a destination');
+  assert.equal(eco.estUneDestinationInterdite('docs/referentiel/principes.md'), null, 'counter-test: an ordinary reference document must stay a perfectly legitimate destination — the filter has to discriminate, not refuse everything');
+  assert.deepEqual(eco.archivesNonDeclarees(fs.readFileSync('CLAUDE.md', 'utf8')), [], 'checked live against the real charter: every folder excluded as an archive must still be DECLARED an archive there — the guard against a hand-kept exclusion outliving its cause, the exact defect NOT_REALLY_CODE had the same day');
+  assert.equal(eco.archivesNonDeclarees('une charte qui ne déclare plus rien').length, 1, 'MUST STILL BITE: strip the declaration from the charter and the guard names the orphaned exclusion rather than staying green on a cause that has gone');
 
   // --- Sections devenues INTROUVABLES (Doc-Report, pas ecotoken : réduire un document et le rendre
   // utilisable sont deux métiers). §7ter pesait 64 % de son document, 1 527 lignes, 48 blocs sous
@@ -8261,6 +8303,28 @@ async function testSystemeDesIndex() {
   assert.ok(ecritsJournal[0].includes('r-2026-09-01.txt') && ecritsJournal[0].includes('r-2026-09-02.txt'), 'the rebuilt block must KEEP what it had already reconstituted and ADD the new deposit — rebuilt against the full text it would keep only the newcomer, and the two passes would contradict each other forever');
   const strippe = da.sansLeBlocGenere(`avant\n${da.DEBUT_BLOC_GENERE}\ndedans\n${da.FIN_BLOC_GENERE}\naprès`);
   assert.ok(strippe.includes('avant') && strippe.includes('après') && !strippe.includes('dedans'), 'stripping the generated block must leave the hand-written text on both sides intact and nothing of the machine-written middle');
+  // UN CATALOGUE GÉNÉRÉ PEUT ÊTRE REMIS À JOUR, ET RIEN D'AUTRE (2026-09-27). Trouvé en déposant
+  // une archive dans docs/contexte-projet/ : le catalogue de ce dossier promettait la liste
+  // complète, le nouveau fichier n'y était pas, et AUCUNE commande ne pouvait le rafraîchir —
+  // `--generer` refuse d'écraser un index existant, `--completer` ne traite que les index sans
+  // contrat ou incomplets. Un catalogue généré tombait donc en retard pour toujours, tout en
+  // affichant en tête « une régénération l'effacerait » : une consigne qui désignait une
+  // régénération inexistante. L'outil réécrit maintenant ce qu'il a lui-même SIGNÉ, reconnu par le
+  // texte qu'il écrit lui-même — jamais par une liste de dossiers tenue à la main (Article 24).
+  assert.ok(da.estUnCatalogueGenere(da.contenuDIndexGenere('docs/x', ['docs/x/a.md'])), 'the tool must recognise its OWN signature in what it writes — the only thing that authorises a rewrite');
+  assert.equal(da.estUnCatalogueGenere('# mon dossier\n\nUne prose écrite à la main qui explique le dossier.'), false, 'counter-test, and it is the whole safety of this feature: a hand-written index must NEVER be recognised as regenerable — overwriting prose with a list would destroy the very thing worth keeping');
+  const ecritsRegen = [];
+  const regen = da.genererLesIndexManquants(
+    { mesurable: true, lignes: [{ dossier: 'docs/genere', etat: 'catalogue' }, { dossier: 'docs/prose', etat: 'catalogue' }] },
+    {
+      root: '/tmp/inexistant-regen',
+      listDirImpl: () => [{ name: 'depot.md', isDirectory: () => false }],
+      readFileImpl: (chemin) => String(chemin).includes('docs/genere') ? da.contenuDIndexGenere('docs/genere', []) : '# prose\n\nÉcrit à la main.',
+      writeImpl: (chemin, contenu) => ecritsRegen.push({ chemin: String(chemin), contenu }),
+    });
+  assert.equal(regen.ecrits.length, 1, 'of two stale catalogues only the one the tool signed may be rewritten — the hand-written one is left exactly as it is');
+  assert.ok(regen.ecrits[0].chemin.includes('docs/genere') && regen.ecrits[0].regeneration === true, 'the rewritten one must be the generated catalogue, and must say it is a regeneration rather than pass for a first write');
+
   // estUnDepot() — ce qui n'est PAS un dépôt, dérivé plutôt qu'énuméré (Article 24).
   assert.deepEqual(
     ['rapport-2026-09-27.txt', '.dernier-fichier-maitre.local.txt', 'ronde/circle-signals-index.md', 'index.md'].map(da.estUnDepot),
@@ -11603,8 +11667,10 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   // extractTitledArrayIndex() — un 4e motif réel (2026-09-21, question directe de l'utilisateur :
   // « ainsi que pour le fichier references.ts »), qui a aussi révélé un vrai principe : un fichier
-  // peut être dense (poids réel élevé) sur très peu de lignes — lib/reference.ts ne fait que 132
-  // lignes mais chaque entrée est un pavé de texte sur une seule ligne.
+  // peut être dense (poids réel élevé) sur très peu de lignes — lib/reference.ts ne faisait que 132
+  // lignes mais chaque entrée était un pavé de texte sur une seule ligne. (Ce fichier a quitté le
+  // dépôt le 2026-09-27 ; son texte est archivé dans
+  // docs/contexte-projet/referentiel-affiche-en-jeu-archive.md.)
   const titledFixture = [
     "export const referenceSections=[",
     " {title:'00 · Version 1 — test',text:'Un texte court pour ce test.'},",
@@ -11617,32 +11683,48 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(titledIndex[1].description.length, 201, 'a text field genuinely longer than the preview length (200 chars) must be truncated to exactly that length plus one real ellipsis character — never the full text, which would make a search result unreadable, and never silently truncated without the "…" marker');
   assert.ok(titledIndex[1].description.endsWith('…'), 'a truncated description must end with a real ellipsis marker so the truncation itself is never mistaken for the genuine end of the text');
 
-  // 2026-09-22 : cette assertion comptait 117 entrées versionnées dans lib/reference.ts. Le journal
-  // de bord ancien a été déplacé dans lib/reference-history.ts (décision explicite : le panneau
-  // Admin garde les vingt versions récentes et va chercher les 151 antérieures à la demande), donc
-  // la masse n'est plus là — elle est ailleurs, intacte. Le test suit le contenu réel plutôt que de
-  // figer un emplacement : les deux fichiers sont vérifiés, et leur SOMME doit rester au-dessus du
-  // seuil, ce qui casserait aussitôt si un déplacement perdait des entrées en route.
-  const liveTitledIndex = buildIndex('lib/reference.ts');
-  const liveHistoryIndex = buildIndex('lib/reference-history.ts');
-  assert.ok(liveTitledIndex.length + liveHistoryIndex.length >= 190, 'checked live against the two real files: buildIndex() must still find the full bulk of the titled entries through its titled-array-extraction third code path — the split moved them, it never removed any, and this sum is what proves it');
-  assert.ok(liveTitledIndex.length >= 20, 'the file still displayed immediately by the Admin panel must keep its own real entries (27 reference sections + the 20 most recent versions), never become a hollow shell pointing elsewhere');
-  assert.ok(liveHistoryIndex.some((e) => e.name.includes('Version 1')), 'the real, already-existing "Version 1" entry (the earliest one still recorded) must still be found by its real title text — in the history file, where it now lives');
+  // 2026-09-27 : ces trois assertions tournaient EN DIRECT contre lib/reference.ts et
+  // lib/reference-history.ts, les deux fichiers de données du panneau Admin. Le panneau a été retiré
+  // du produit ce jour-là (décision explicite de l'utilisateur : « on a remplacé tout ça
+  // aujourd'hui »), et plus AUCUN fichier vivant du dépôt n'écrit un tableau titré `{title, text}`
+  // — mesuré, jamais supposé. Le motif reste donc couvert par la seule preuve encore honnête : la
+  // fixture ci-dessus, qui teste la même mécanique sur un contenu contrôlé.
+  //
+  // CE QU'ON PERD, ET ON L'ÉCRIT PLUTÔT QUE DE FAIRE COMME SI : le motif n'a plus de terrain réel.
+  // Une fixture prouve que l'extraction marche sur ce qu'on lui donne ; elle ne prouvera plus jamais
+  // qu'elle marche sur du vrai code de ce dépôt-ci, parce qu'il n'y en a plus. Le garde-fou
+  // ci-dessous mesure exactement ça et parlera tout seul le jour où un tel fichier réapparaît —
+  // pas un rappel confié à la mémoire d'un agent (Article 27).
+  // Le garde-fou interroge le VRAI extracteur, jamais une seconde regex écrite à côté : deux
+  // mécanismes pour la même question divergent toujours (leçon L29), et c'est précisément
+  // l'extracteur qu'on veut savoir sans terrain.
+  const fichiersATableauTitre = ['lib', 'app', 'components'].flatMap((dir) => {
+    const abs = new URL('../' + dir + '/', import.meta.url);
+    let noms = [];
+    try { noms = fs.readdirSync(abs); } catch { return []; }
+    return noms.filter((n) => n.endsWith('.ts') || n.endsWith('.tsx'))
+      .filter((n) => extractTitledArrayIndex(fs.readFileSync(new URL(n, abs), 'utf8')).length > 0)
+      .map((n) => dir + '/' + n);
+  });
+  assert.deepEqual(fichiersATableauTitre, [], 'no live file writes a titled {title, text} array any more (lib/reference.ts and lib/reference-history.ts left the repo on 2026-09-27) — this assertion is the honest tripwire for that fact: the day one reappears it fails HERE, naming the file, so the live proof above can be restored instead of quietly staying fixture-only for ever');
 
   // recommendFindBooster() — répond à la vraie question de l'utilisateur (« est-ce que find-booster
   // pourrait détecter quand un fichier est trop lourd [...] ou c'est toi qui fait cette analyse
-  // systématiquement ? ») : jamais le nombre de lignes seul (lib/reference.ts, 132 lignes, l'a prouvé
-  // faux), le vrai poids en tokens (réutilise estimateTokens() de smart-conso-token.mjs verbatim,
-  // jamais une seconde formule).
-  const heavyLive = recommendFindBooster('lib/reference.ts');
-  assert.ok(heavyLive.worthwhile === true && heavyLive.tokens > 8000, 'checked live: lib/reference.ts must be recommended as worthwhile by its real high token weight, despite its genuinely low line count — the exact real case that disproves a line-count-only heuristic');
+  // systématiquement ? ») : jamais le nombre de lignes seul, le vrai poids en tokens (réutilise
+  // estimateTokens() de smart-conso-token.mjs verbatim, jamais une seconde formule).
+  // 2026-09-27 : le témoin vivant de ce principe était lib/reference.ts (132 lignes, poids réel
+  // énorme), retiré du produit ce jour-là. Il est remplacé par lib/lia.ts, mesuré le même jour —
+  // 191 lignes pour ~19 000 tokens — qui fait exactement la même démonstration sur un fichier bien
+  // vivant, celui-là. Remplacé plutôt que supprimé : c'est LA preuve que le nombre de lignes ment.
+  const heavyLive = recommendFindBooster('lib/lia.ts');
+  assert.ok(heavyLive.worthwhile === true && heavyLive.tokens > 8000, 'checked live: lib/lia.ts must be recommended as worthwhile by its real high token weight (~19 000 tokens) despite its genuinely modest line count (191) — the exact real case that disproves a line-count-only heuristic');
   const lightLive = recommendFindBooster('lib/house.ts');
   assert.equal(lightLive.worthwhile, false, 'checked live: a genuinely small, low-weight real file (lib/house.ts) must never be recommended — the guard against recommending find-booster on every file indiscriminately');
   // notFound (2026-09-21, real bug found running tool-brain against a file not yet created) : a
   // missing path must never crash, only report an honest absence.
   const missingLive = recommendFindBooster('scripts/does-not-exist-yet.mjs');
   assert.deepEqual(missingLive, { tokens: 0, entryCount: 0, worthwhile: false, notFound: true }, 'a nonexistent file path must return an honest notFound verdict rather than throwing an uncaught ENOENT — the exact crash found live while consulting tool-brain before creating a new script');
-  console.log('Passed: find-booster (2026-09-21, promoted the same night to a full Membre de l\'équipe after proving itself on 4 real different files) indexes all four real structural patterns this codebase actually uses — named functions, anonymous top-level test blocks, titled array entries (lib/reference.ts\'s real style, with an honest length-capped preview rather than a full-text dump), and Markdown headings (gated to .md files only) — tags each against the real HARMONIA themes by honest keyword match, answers a concept search against name+description, now recommends itself via recommendFindBooster(), which reuses SMART-CONSO-TOKEN\'s own real token-weight formula rather than line count — verified live to correctly flag lib/reference.ts as worthwhile (high real weight, low line count) and lib/house.ts as not (genuinely small) — and, since the same evening, reports an honest notFound rather than crashing on a file that does not exist yet.');
+  console.log('Passed: find-booster (2026-09-21, promoted the same night to a full Membre de l\'équipe after proving itself on 4 real different files) indexes all four real structural patterns this codebase actually uses — named functions, anonymous top-level test blocks, titled array entries (the real style of the now-retired lib/reference.ts, kept fixture-proven with an honest length-capped preview rather than a full-text dump, plus a live tripwire for the day such a file reappears), and Markdown headings (gated to .md files only) — tags each against the real HARMONIA themes by honest keyword match, answers a concept search against name+description, now recommends itself via recommendFindBooster(), which reuses SMART-CONSO-TOKEN\'s own real token-weight formula rather than line count — verified live to correctly flag lib/lia.ts as worthwhile (high real weight, modest line count) and lib/house.ts as not (genuinely small) — and, since the same evening, reports an honest notFound rather than crashing on a file that does not exist yet.');
 }
 
 {
