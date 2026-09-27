@@ -172,6 +172,26 @@
 
 — source : son gros prompt du 2026-09-26
 
+**MESURÉ LE 2026-09-27 (tâche #902) — `node scripts/safe-export.mjs export`, section « CONSTRUIRE OU
+FAIRE TOURNER ».** La question chiffrée est répondue, l'arbitrage reste le sien.
+
+- **70 551 lignes sur 70 793 servent à CONSTRUIRE — 99,7 %.**
+- **242 lignes seulement servent encore le produit une fois installé** : `scripts/install-pnpm.sh`
+  (217 lignes, il décrit la machine d'ici) et `scripts/run-framework.mjs` (25 lignes, il lance le jeu).
+
+**CE QUE LE CHIFFRE CONFIRME** : son intuition était juste, et plus fortement qu'annoncé. L'Agence
+n'est pas « en partie » inutile après installation — elle l'est presque entièrement, par
+construction. C'est la définition même d'un outillage : il sert à fabriquer, pas à tourner.
+
+**CE QUE LE CHIFFRE NE DIT PAS, et la mesure l'imprime elle-même** : il compte `scripts/`
+seulement, donc l'outillage ; le produit (`lib/`, `app/`, `components/`) n'est pas au dénominateur.
+Et une ligne n'est pas un coût — 70 000 lignes que personne ne lance ne pèsent rien à l'exécution.
+Ce chiffre éclaire un arbitrage, il ne rend aucun verdict.
+
+**CE QUI RESTE À TRANCHER, et c'est lui qui le tranche** : faut-il livrer une version commercialisée
+SANS l'outillage (un produit net, mais l'acheteur ne peut plus le faire évoluer avec l'Agence), AVEC
+(il hérite de la machine à construire, et de sa maintenance), ou les deux en deux offres ?
+
 
 « LA TAILLE DE CODE CIBLE. Est-ce que 49 582 lignes d'outillage peuvent servir un projet plus petit qu'elles ? aussi gros ? plus gros ? Question ouverte, recherches web demandées. »
 
@@ -181,6 +201,28 @@
 « LES MEMBRES CLASSIQUES N'ONT PAS DE BLUEPRINT, par décision documentée. Sont-ils indispensables au fonctionnement de l'Agence ? Si oui, comment les exporter sans blueprint ? Question qu'il pose et qui n'est pas tranchée. »
 
 — source : son gros prompt du 2026-09-26
+
+**LA QUESTION S'EST REFERMÉE TOUTE SEULE, ET AVANT QU'ON LA TRAITE (constaté le 2026-09-27, tâche
+#902).** Il avait déjà répondu lui-même le 2026-09-26, dans un autre échange, et sa raison est
+décisive : « les optionnels de l'agence ne pourront pas être réinstallés correctement si on les a
+intégrés à l'agence. Ça n'est pas logique. » La dispense de blueprint a été **abrogée** ce jour-là,
+et les six outils concernés ont reçu leurs pièces le jour même. Il n'y a donc plus de membre sans
+blueprint à exporter.
+
+**ET LE CHIFFRE LE CONFIRME MÉCANIQUEMENT** : la couverture blueprint est de **100 % aux quatre
+niveaux de vitalité** (39/39 vitaux, 3/3 essentiels, 25/25 utiles, 16/16 optionnels), zéro bloquant.
+
+**MAIS CE 100 % ÉTAIT FAUX JUSQU'À CE MATIN, et c'est la trouvaille du jour.** La mesure annonçait
+six outils « sans blueprint » — `check-argus`, `check-gemini-quota`, `check-harmonia`, `kpi-report`,
+`the-screener-capture`, `memento` — **les six à tort**. Elle cherchait un plan nommé d'après le
+SCRIPT quand un plan est nommé d'après l'OUTIL : ARGUS s'appelle `check-argus.mjs` et son plan
+`argus-blueprint.md`. Le lien exact est écrit dans la colonne « Architecture » de l'inventaire de
+CLAUDE.md ; la mesure le LIT désormais au lieu de le deviner (Article 24).
+
+**LA VRAIE LEÇON N'EST PAS LE CHIFFRE, C'EST LA RÉCIDIVE** : c'est la **troisième** fois que ce dépôt
+paie exactement ce défaut — LE-CLASSIFICATEUR accusait 22 outils d'être « SANS FICHE », puis
+`findOutilsSansBlueprint()` a accusé les mêmes le matin même, dans le même fichier, cinquante lignes
+plus haut. Corriger une occurrence ne corrige pas la classe.
 
 ## 7. LE PLAN D'EXÉCUTION
 

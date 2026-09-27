@@ -10503,6 +10503,24 @@ await testVerrousDOuverture();
     assert.equal(exp.niveaux.essentiel.couverture, 100, 'and coverage carries its denominator, per level');
     assert.equal(SEX.mesurerLExportabilite({ vitalite: null }).mesurable, false, 'without the vitality axis it REFUSES: counting missing blueprints without knowing which matter is an inventory, not a priority');
 
+    // LE BLUEPRINT SE LIT DANS LA CHARTE, IL NE SE DEVINE PAS (2026-09-27, tâche #902). Le même
+    // défaut pour la troisième fois : un plan porte le nom de l'OUTIL, pas celui de son SCRIPT.
+    // `check-argus.mjs` → `argus-blueprint.md`. Six outils parfaitement documentés étaient déclarés
+    // « sans blueprint », et le chiffre d'exportabilité en tête de rapport était faux d'autant.
+    const vAlias = { mesurable: true, parNiveau: { vital: [{ chemin: 'scripts/check-argus.mjs' }], essentiel: [], utile: [], optionnel: [] } };
+    const carteAlias = new Map([['scripts/check-argus.mjs', { blueprint: 'docs/argus-blueprint.md', fiche: null }]]);
+    const expAlias = SEX.mesurerLExportabilite({ vitalite: vAlias, aliasImpl: carteAlias, exists: (c) => String(c).endsWith('docs/argus-blueprint.md') });
+    assert.deepEqual(expAlias.bloquants, [], 'MUST LET PASS: a tool whose blueprint is named after the TOOL is found through the charter inventory, never accused because the filename differs');
+    // LE CONTRE-TEST — la lecture de la charte ne doit pas devenir un blanc-seing : un outil DÉCLARÉ
+    // avec un blueprint qui n'existe pas sur le disque reste bloquant. Une ligne de tableau n'est pas
+    // un fichier.
+    const expMenteur = SEX.mesurerLExportabilite({ vitalite: vAlias, aliasImpl: carteAlias, exists: () => false });
+    assert.deepEqual(expMenteur.bloquants, ['scripts/check-argus.mjs'], 'MUST CATCH: a blueprint declared in the charter but absent from disk is still a blocker — reading the inventory replaces the guess, it never replaces the file check');
+    // ET SANS INVENTAIRE LISIBLE, la dérivation par le nom reprend la main plutôt que de tout laisser
+    // passer : un parseur cassé ne doit jamais se lire comme « aucun outil n'a de blueprint manquant ».
+    const expSansCarte = SEX.mesurerLExportabilite({ vitalite: vAlias, aliasImpl: null, exists: (c) => String(c).endsWith('docs/argus-blueprint.md') });
+    assert.deepEqual(expSansCarte.bloquants, ['scripts/check-argus.mjs'], 'and with no readable inventory the filename derivation takes over — a broken parser must never read as a clean bill of health (lesson L11)');
+
     // LA PROJECTION DE CROISSANCE REFUSE UN RYTHME TIRÉ D'UN SEUL JOUR — une droite tracée sur un
     // point ressemble trait pour trait à une tendance.
     assert.equal(SEX.projeterLaCroissance({ octetsAujourdhui: 100, octetsParJour: 10, joursObserves: 1 }).mesurable, false, 'one observed day is not a rhythm');

@@ -708,11 +708,31 @@ export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = exi
 // sur un classificateur d'origine écrit en double).
 export const BLUEPRINT_DE_L_AGENCE = "docs/agence-exportable-conception.md";
 
-export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = existsSync, readFileImpl = readFileSync } = {}) {
+export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = existsSync, readFileImpl = readFileSync, aliasImpl = undefined } = {}) {
   if (!vitalite?.mesurable) {
     return { mesurable: false, pourquoi: "la vitalité du parc n'a pas été fournie ou n'est pas mesurable : sans elle on ne peut que compter des blueprints manquants, jamais dire lesquels comptent" };
   }
+  // LE MÊME DÉFAUT, UNE TROISIÈME FOIS, ET C'EST CE QUI LE REND INTÉRESSANT (2026-09-27, tâche #902).
+  // LE-CLASSIFICATEUR l'avait payé — « il cherchait une fiche nommée d'après le FICHIER alors
+  // qu'une fiche est nommée d'après l'OUTIL, accusant 22 d'un coup » ; `findOutilsSansBlueprint()`
+  // l'a payé ce matin même, dans CE fichier, à cinquante lignes d'ici. Et la mesure qui produit le
+  // CHIFFRE D'EXPORTABILITÉ AFFICHÉ EN TÊTE DE RAPPORT continuait, elle, de dériver le nom du
+  // blueprint du nom du script : `check-argus.mjs` cherchait `docs/check-argus-blueprint.md` quand
+  // son plan s'appelle `docs/argus-blueprint.md`. Six outils étaient déclarés « sans blueprint »,
+  // les six à tort, et la couverture annoncée en était fausse d'autant.
+  //
+  // CORRIGER UNE OCCURRENCE NE CORRIGE PAS LA CLASSE : c'est la vraie leçon de ce troisième cas.
+  // Le lien script → blueprint est ÉCRIT dans la colonne « Architecture » de l'inventaire de
+  // CLAUDE.md. Il se LIT (Article 24), par la seule fonction qui sait le lire — jamais un second
+  // lecteur du même tableau, qui finirait par en diverger (leçon L29).
+  //
+  // LA DÉRIVATION RESTE EN DERNIER RECOURS, et elle n'est pas un vestige : un script qui n'a
+  // AUCUNE ligne dans l'inventaire (un outil neuf, pas encore inscrit) doit rester mesurable.
+  // L'ordre compte : la source lue l'emporte toujours sur la devinette.
+  const alias = aliasImpl === undefined ? aliasDocumentaires({ root, readFileImpl }) : aliasImpl;
   const aUnBlueprint = (chemin) => {
+    const declare = alias?.get(String(chemin))?.blueprint;
+    if (declare) return exists(join(root, declare));
     const base = String(chemin).replace(/^scripts\//, "").replace(/\.(mjs|sh)$/, "");
     return exists(join(root, `docs/${base}-blueprint.md`));
   };
@@ -1084,6 +1104,12 @@ function main() {
       // plus finement (« que doit-il partir avec lui ? » au lieu de « a-t-il un plan ? »), et deux
       // commandes sur le même sujet finiraient par se contredire.
       for (const l of formatKitsLines(mesurerLesKits({ vitalite: v }))) console.log(l);
+      console.log("");
+      // CONSTRUIRE OU FAIRE TOURNER (2026-09-27, tâche #902) : sa première question du dossier de
+      // stratégie — « quelle part de l'Agence devient inutile une fois le site vendu ? ». Elle vit
+      // dans la commande `export` parce que c'est exactement la même question posée à l'envers :
+      // ce qui doit pouvoir PARTIR, et ce qui n'a aucune raison de RESTER.
+      for (const l of formatPartDeConstructionLines(partDeConstruction({ recenser: lc.recenserLesScripts }))) console.log(l);
       console.log("");
       for (const l of formatEmpreinteLines(empreinteDisque())) console.log(l);
       console.log("");
@@ -1745,6 +1771,63 @@ export const EXEMPTES_DU_KIT = [
   { motif: /^scripts\/hooks\//, pourquoi: "les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit" },
   { motif: /^scripts\/run-framework/, pourquoi: "il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison" },
 ];
+
+// CONSTRUIRE OU FAIRE TOURNER : LA PART DE L'AGENCE QUI NE SERT PLUS APRÈS L'INSTALLATION
+// (2026-09-27, tâche #902 — sa question, posée dans son gros prompt du 2026-09-26 : « la part de
+// l'Agence inutile en version commercialisée, estimée en lignes de code ».)
+//
+// LA LOGIQUE QU'IL AVAIT DÉJÀ POSÉE, et cette mesure ne fait que la chiffrer : **l'exportabilité
+// est un besoin DU CRÉATEUR pendant la construction, jamais de l'acheteur après installation.**
+// Un acheteur qui installe le produit n'a besoin d'aucun garde-fou, d'aucun registre, d'aucune
+// Ronde — tout ça a servi à FABRIQUER ce qu'il reçoit.
+//
+// LA FRONTIÈRE SE LIT, ELLE NE SE DEVINE PAS : c'est exactement celle que `EXEMPTES_DU_KIT`
+// déclare déjà, avec ses raisons écrites — le lanceur du produit et l'installeur de
+// l'environnement d'un côté, tout le reste de l'autre. Aucune seconde liste (Article 24, L29).
+//
+// CE QUE LA MESURE NE VOIT PAS, et le dire fait partie du résultat : elle compte `scripts/`, donc
+// l'OUTILLAGE. Le produit lui-même (`lib/`, `app/`, `components/`) n'est pas dans le dénominateur
+// — la question porte sur ce que l'Agence emporterait pour rien, pas sur la taille du jeu. Et une
+// ligne n'est pas un coût : 70 000 lignes d'outillage ne pèsent rien à l'exécution d'un produit
+// qui ne les lance jamais. Ce chiffre éclaire un ARBITRAGE, il ne rend aucun verdict.
+export function partDeConstruction({ recensement = null, exemptes = EXEMPTES_DU_KIT, recenser = null } = {}) {
+  const rec = recensement ?? (recenser ? recenser() : null);
+  if (!rec?.lignes?.length) {
+    return { mesurable: false, pourquoi: "aucun recensement de scripts fourni — « rien d'inutile » et « je n'ai rien compté » s'écrivent tous les deux zéro (leçon L11)" };
+  }
+  let total = 0, produit = 0;
+  const sertLeProduit = [];
+  for (const l of rec.lignes) {
+    const n = l.lignes ?? 0;
+    total += n;
+    const ex = exemptionDuKit(l.chemin, { exemptes });
+    // Parmi les exemptés, seuls comptent ici ceux dont la raison écrite dit qu'ils servent le
+    // PRODUIT ou la MACHINE — un crochet git est exempté d'export mais reste de la construction.
+    if (ex && /PRODUIT|environnement de CE conteneur/.test(ex.pourquoi)) {
+      produit += n;
+      sertLeProduit.push({ chemin: l.chemin, lignes: n, pourquoi: ex.pourquoi });
+    }
+  }
+  const construction = total - produit;
+  return {
+    mesurable: true, total, produit, construction,
+    partConstruction: total ? Math.round((construction / total) * 1000) / 10 : null,
+    sertLeProduit,
+    horsPortee: "compte scripts/ seulement — le produit lui-même n'est pas au dénominateur, et une ligne qui ne s'exécute jamais ne coûte rien à l'installation. Ce chiffre éclaire un arbitrage, il ne rend aucun verdict.",
+  };
+}
+
+export function formatPartDeConstructionLines(r) {
+  if (!r?.mesurable) return [`   🚨 PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`];
+  const l = ["", "🏗️  CONSTRUIRE OU FAIRE TOURNER — ce que l'Agence emporterait pour rien (tâche #902)"];
+  l.push(`   ${r.construction} lignes sur ${r.total} servent à CONSTRUIRE — ${r.partConstruction} %.`);
+  l.push(`   ${r.produit} lignes seulement servent encore une fois le produit installé :`);
+  for (const x of r.sertLeProduit) l.push(`      · ${x.chemin} (${x.lignes} lignes) — ${x.pourquoi}`);
+  l.push("   CE QUE ÇA CONFIRME, et c'est son propre cadrage : l'exportabilité est un besoin du CRÉATEUR");
+  l.push("   pendant la construction, jamais de l'acheteur après installation.");
+  l.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
 
 export function exemptionDuKit(chemin, { exemptes = EXEMPTES_DU_KIT } = {}) {
   return exemptes.find((e) => e.motif.test(String(chemin))) ?? null;
