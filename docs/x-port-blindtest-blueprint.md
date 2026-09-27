@@ -1,4 +1,4 @@
-# X-Port BLINDTEST — blueprint : éprouver à l'aveugle la QUALITÉ d'un kit d'export
+# X-Port BLINDTEST — blueprint générique : éprouver à l'aveugle la QUALITÉ d'un kit d'export
 
 *(Blueprint réutilisable sur un autre projet. Instanciation : `docs/referentiel/x-port-blindtest.md`.)*
 

@@ -316,6 +316,18 @@ export function findLodgedManuals(texte, { root = ROOT, seuilTokens = 400 } = {}
 // Article voit une masse aberrante (ici un Article 19 huit fois trop gros) qu'il attribue à la
 // mauvaise règle. Le signal est mécanique : le bloc cite un AUTRE Article plus souvent que celui
 // sous lequel il est rangé.
+// Les formes par lesquelles un texte DÉCLARE qu'il cite plutôt qu'il n'appartient. « → Article N »
+// et « (cf. Article N) » désignent une référence ; « pris ici par l'autre bout », « renvoie à » et
+// « cité ici comme » le disent en toutes lettres.
+// L'ESPACE EST SOUPLE, et ce n'est pas un détail : la charte est enveloppée à 100 colonnes, donc
+// une formule de renvoi se retrouve coupée par un retour à la ligne au milieu. Un motif qui exige
+// des espaces simples rate le seul cas réel qu'il devait reconnaître — vérifié sur pièce.
+export const MOTIF_RENVOI_DECLARE = /→\s*Article\s+\d+|cf\.\s*Article\s+\d+|pris\s+ici\s+par\s+l['’]autre\s+bout|renvoie\s+à\s+l['’]Article|cité\s+ici\s+comme|par\s+renvoi/i;
+
+export const EXTRACTIONS_TRANCHEES = {
+  "Référentiel technique — la référence à jour": "TRANCHÉ le 2026-09-27 par l'utilisateur : elle RESTE. C'est la table qui dit QUEL document lire QUAND ; la déménager obligerait à ouvrir un fichier de plus pour savoir quel fichier ouvrir — on paierait l'indirection deux fois pour économiser une seule lecture.",
+};
+
 export function findMisfiledBlocks(texte) {
   const trouvailles = [];
   for (const section of splitSections(texte)) {
@@ -350,6 +362,21 @@ export function findMisfiledBlocks(texte) {
       const [meilleur, n] = meilleurEntree;
       const chezLui = comptes[articleCourant] ?? 0;
       if (Number(meilleur) === articleCourant || n < 2 || n <= chezLui) continue;
+      // UN RENVOI QUI SE DÉCLARE N'EST PLUS UNE QUESTION (2026-09-27, tranché par l'utilisateur en
+      // fenêtre dédiée : « ce sont des renvois — ils restent »). Le commentaire ci-dessus a raison
+      // sur le fond — aucun COMPTAGE ne sépare « ce bloc appartient à l'Article X » de « ce bloc
+      // renvoie à l'Article X » — mais il en tirait la mauvaise conséquence : poser indéfiniment
+      // une question à laquelle le texte répond déjà. Les deux blocs réellement remontés la
+      // portaient noir sur blanc, l'un par « Article 19, pris ici par l'autre bout », l'autre par
+      // la flèche « → Article 28 » qui désigne l'Article comme le REMÈDE d'une faille, jamais
+      // comme le domicile du bloc.
+      //
+      // C'EST UN PRINCIPE, JAMAIS UNE LISTE DE BLOCS GRACIÉS (Article 24) : ce qui éteint la
+      // question est la forme que l'auteur emploie pour dire « je cite, je n'appartiens pas ».
+      // Elle s'applique d'elle-même à un bloc écrit demain. Et elle laisse intacte la question
+      // quand le texte ne déclare rien — c'est-à-dire exactement le cas que ce détecteur existe
+      // pour trouver.
+      if (MOTIF_RENVOI_DECLARE.test(bloc.texte)) continue;
       trouvailles.push({
         bloc: bloc.titre, tokens: bloc.tokens, rangeSous: articleCourant, appartientA: Number(meilleur),
         pourquoi: `rangé sous l'Article ${articleCourant}, mais il cite ${n} fois l'Article ${meilleur} et ${chezLui} fois son hôte — est-ce son SUJET (alors il est mal rangé) ou un simple RENVOI (alors il reste) ? L'outil ne peut pas trancher : les deux cas ont la même signature.`,
@@ -1448,7 +1475,11 @@ export function realSessionCost(profiles = DOCUMENT_PROFILES, { messagesParSessi
 // Les appliquer à un document qui n'a ni l'un ni l'autre produirait du bruit, pas des trouvailles.
 // `analyzeDocument()` les active donc seulement quand le document s'y prête réellement, détecté sur
 // son contenu — jamais sur son nom de fichier, qui ne prouve rien.
-export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
+// `tranchees` est INJECTABLE pour que le filet de sécurité puisse prouver les deux sens : que la
+// question se tait quand la décision est écrite, ET qu'elle revient dès qu'on la retire. Sans ça,
+// un filtre qui aurait silencieusement tout éteint serait indiscernable d'un filtre qui fait
+// exactement ce qu'on lui demande (leçon L13).
+export function analyzeDocument(path, { repoFiles = null, root = ROOT, tranchees = EXTRACTIONS_TRANCHEES } = {}) {
   const full = join(root, path);
   if (!existsSync(full)) return { chemin: path, absent: true };
   const texte = readFileSync(full, "utf8");
@@ -1465,10 +1496,17 @@ export function analyzeDocument(path, { repoFiles = null, root = ROOT } = {}) {
   const total = sections.reduce((a, b) => a + b.tokens, 0);
   const dejaVues = new Set(propositions.flatMap((p) => p.deplacements.map((d) => d.nom)));
   const extractionsAExaminer = [];
+  // LES QUESTIONS DÉJÀ TRANCHÉES NE SE REPOSENT PAS (2026-09-27). Une question d'extraction est
+  // légitime tant que personne n'y a répondu ; reposée à chaque passage APRÈS une réponse, elle
+  // devient le bruit qui fait cesser de lire le rapport (leçon L6) — et pire, elle laisse croire
+  // que la décision est encore ouverte. Chaque entrée porte donc la réponse ET sa raison, en
+  // toutes lettres : une section graciée sans raison écrite serait un abandon déguisé (Article 28).
+  // La table est tenue à la main, et c'est assumé — aucune mécanique ne peut deviner qu'un humain
+  // a tranché, exactement comme pour `enregistrerBapteme()` (Article 24, cas du contenu curaté).
   for (const e of planExtractions(sections, total)) {
     if (dejaVues.has(e.section)) continue;
     // Sans destination existante : une question posée, jamais un gain annoncé.
-    if (e.aExaminer) { extractionsAExaminer.push({ section: e.section, tokens: e.tokensAvant, question: `« ${e.section} » pèse ${e.tokensAvant} tk. Est-ce un corps étranger dans ce document (alors il faut lui créer un domicile) ou son sujet même (alors il reste) ? Aucun document existant ne traite déjà ce sujet — l'outil ne peut pas trancher.` }); continue; }
+    if (e.aExaminer && !(e.section in tranchees)) { extractionsAExaminer.push({ section: e.section, tokens: e.tokensAvant, question: `« ${e.section} » pèse ${e.tokensAvant} tk. Est-ce un corps étranger dans ce document (alors il faut lui créer un domicile) ou son sujet même (alors il reste) ? Aucun document existant ne traite déjà ce sujet — l'outil ne peut pas trancher.` }); continue; }
     propositions.push({ strategie: "extraction", cible: e.section, tokensAvant: e.tokensAvant, tokensApres: e.tokensApres, gain: e.gain, risque: e.nature === "narration" ? "faible" : "moyen", remplacement: e.stub, deplacements: [{ nom: e.section, vers: e.cible, cibleManquante: e.cibleManquante, texte: e.texte }] });
   }
   const manuelRef = estLeManuelDesProcedures(path, repoFiles ?? loadRepoFiles(root));
@@ -1792,7 +1830,10 @@ function main() {
     for (const d of analyses) {
       const signaux = [];
       for (const m of d.manuelsLoges ?? []) signaux.push(`📦 manuel logé · « ${m.section} » (${m.tokens} tk) — ${m.pourquoi ?? "un mode d'emploi d'outil dans un document de règles"}`);
-      for (const b of d.malRanges ?? []) signaux.push(`🗂️  rangement à trancher · « ${b.section} » — ${b.pourquoi ?? "cite un autre Article que celui sous lequel il vit"} (aucun token en jeu, c'est la structure)`);
+      // `b.bloc`, jamais `b.section` : le champ n'a jamais existé sous ce nom, si bien que le signal
+      // demandait de trancher « undefined » — une question qui ne dit pas sur QUOI elle porte ne peut
+      // pas recevoir de réponse (corrigé le 2026-09-27, trouvé en lisant le rapport d'une vraie Ronde).
+      for (const b of d.malRanges ?? []) signaux.push(`🗂️  rangement à trancher · « ${b.bloc ?? b.section ?? "(bloc non nommé)"} » — ${b.pourquoi ?? "cite un autre Article que celui sous lequel il vit"} (aucun token en jeu, c'est la structure)`);
       for (const e of d.extractionsAExaminer ?? []) signaux.push(`❓ à trancher · ${e.question}`);
       if (!signaux.length) continue;
       console.log(`\n  ── ${d.chemin} · criticité du fichier : ${d.criticite?.niveau?.toUpperCase() ?? "inconnue"} — seules les actions à risque « ${d.criticite?.risqueMaxAutorise ?? "?"} » y sont applicables directement`);

@@ -6,7 +6,9 @@
 
 Ce n'est **pas** une suite de tests unitaires au sens habituel : c'est **un seul fichier exécutable**
 qui rejoue, contre le dépôt RÉEL, tout ce que le projet a compris en se trompant. Il est branché au
-crochet pre-commit et **refuse le commit** quand il échoue.
+point de contrôle qui précède l'intégration (un crochet pre-commit git dans ce projet-ci, jamais une exigence du patron) et il **refuse l'intégration** quand il échoue.
+Le mécanisme est le refus ; l'outil qui le porte n'en fait pas partie, sans quoi ce patron cesserait
+d'être générique.
 
 La différence n'est pas cosmétique. Une suite de tests classique protège des fonctions ; celui-ci
 protège des **décisions** — et une décision oubliée ne casse rien, elle se contente de disparaître.

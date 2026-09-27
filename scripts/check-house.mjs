@@ -5566,8 +5566,17 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   // peut rapporter) et un titre qui nomme le fichier de code qu'il documente (entrée par module
   // dans un document de référence, jamais un corps étranger).
   assert.equal(paramsDoc.extractionsAExaminer.length, 0, 'the parameters reference must no longer ask anything at all: every one of its heavy sections is titled after the source file it documents, which is the mechanical proof that it is this document\'s own subject rather than a foreign body');
+  // 2026-09-27 : L'UTILISATEUR A RÉPONDU À CETTE QUESTION, donc elle cesse d'être posée — exactement
+  // le raisonnement tenu ci-dessus pour parametres.md, appliqué au dernier candidat qui restait.
+  // Sa réponse en fenêtre dédiée : « elle reste — c'est le sujet même de la charte », parce que
+  // déménager la table qui dit QUEL document lire QUAND obligerait à ouvrir un fichier de plus pour
+  // savoir quel fichier ouvrir. L'assertion ne disparaît pas : elle change de sens et se vérifie
+  // MAINTENANT DANS LES DEUX SENS, sans quoi un filtre qui aurait tout éteint en silence serait
+  // indiscernable d'un filtre qui fait son travail (leçon L13).
   const charte = eco.analyzeDocument('CLAUDE.md');
-  assert.ok(charte.extractionsAExaminer.some((e) => /Référentiel technique/.test(e.section)), 'the one genuine remaining candidate must survive both new filters — heavy enough (4 400+ tk) and titled after no source file — otherwise the filters would have silenced the real question along with the noise');
+  assert.deepEqual(charte.extractionsAExaminer, [], 'the charter must no longer ask anything: its one remaining candidate was answered, and a question whose answer is known in advance is not honesty, it is noise billed to the reader\'s attention');
+  const charteSansDecision = eco.analyzeDocument('CLAUDE.md', { tranchees: {} });
+  assert.ok(charteSansDecision.extractionsAExaminer.some((e) => /Référentiel technique/.test(e.section)), 'MUST STILL BITE: remove the written decision and the question comes straight back — which proves the two mechanical filters never silenced it, and that only the explicit human answer did');
 
   // --- Sections devenues INTROUVABLES (Doc-Report, pas ecotoken : réduire un document et le rendre
   // utilisable sont deux métiers). §7ter pesait 64 % de son document, 1 527 lignes, 48 blocs sous
@@ -12620,6 +12629,33 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const muet = frhr({ recensement: [{ chemin: 'scripts/muet.mjs', type: 'commande-documentee', classes: [], source: 'console.log(1)' }] });
   assert.deepEqual(muet.orphelins, [], 'the near case must pass: a command that produces no report at all owes the Ronde nothing, and accusing it would be the false red that makes a guard stop being read');
   assert.equal(frhr({ recensement: [] }).mesurable, false, 'an unreadable census must return "not measured" with its reason, never a clean-looking zero');
+
+  // LES TROIS FAUX ROUGES DE L'EXPORTABILITÉ (2026-09-27) — tous de la même famille : un détecteur
+  // qui note la FORME plutôt que la présence du contenu, et qui accuse donc en masse. Vingt-deux
+  // écarts annoncés, seize faux.
+  const se = await import('../scripts/safe-export.mjs');
+  const eco = await import('../scripts/ecotoken.mjs');
+  const { readFileSync: lireFichier, readdirSync: lireDossier } = await import('node:fs');
+
+  // 1. La section « problème » : treize blueprints la portaient sous un titre que le motif ignorait
+  // (« Le défaut qu'il ferme », « Le trou qu'il comble », « Les trois mensonges d'une compilation
+  // nue »…). Écrire dix-sept sections aurait dupliqué du contenu déjà là (Article 13).
+  const motifProbleme = se.SECTIONS_ATTENDUES.find((x) => x.cle === 'probleme').motif;
+  const tousBlueprints = lireDossier('docs').filter((f) => /-blueprint\.md$/.test(f));
+  assert.deepEqual(tousBlueprints.filter((f) => !motifProbleme.test(lireFichier(`docs/${f}`, 'utf8'))), [], 'measured live: every blueprint in the repository must state the problem it solves, under whichever of the headings this repository actually uses');
+  assert.ok(tousBlueprints.length > 50, `the zero above must be measured on a real population, not an empty one (currently ${tousBlueprints.length})`);
+  assert.ok(!motifProbleme.test('# x\n\n## Ce qu\'il est\n\nUn script qui lit des fichiers.'), 'MUST STILL BITE: a blueprint that only describes its ROLE states no problem — accepting it would empty the requirement of its meaning, which is the distinction the 2026-09-23 widening already drew');
+
+  // 2. Le blueprint nommé d'après l'OUTIL et non d'après son script : trois outils accusés de n'en
+  // avoir aucun alors que le leur existait et était déclaré dans l'inventaire de CLAUDE.md.
+  assert.deepEqual(se.findOutilsSansBlueprint(['kpi-report', 'memento', 'the-screener-capture']).map((x) => x.outil), [], 'a tool whose blueprint is named after the TOOL rather than after its script file must be recognised — the mapping is declared in the inventory and is read, never recopied (Article 24)');
+  assert.deepEqual(se.findOutilsSansBlueprint(['fantome'], { exists: (c) => String(c).endsWith('scripts/fantome.mjs'), aliasImpl: null }).map((x) => x.outil), ['fantome'], 'MUST STILL BITE: a tool with a script and no blueprint anywhere is a real gap');
+
+  // 3. Le renvoi déclaré : ecotoken reposait indéfiniment une question à laquelle le texte répond.
+  assert.deepEqual(eco.findMisfiledBlocks(lireFichier('CLAUDE.md', 'utf8')), [], 'measured live on the real charter: a block that DECLARES it is citing rather than belonging must no longer be asked about — the two real cases said so in as many words, one by "pris ici par l\'autre bout", the other by the arrow that points to the Article as a remedy');
+  assert.ok(!eco.MOTIF_RENVOI_DECLARE.test('Ce bloc parle deux fois de la même règle sans rien déclarer.'), 'MUST STILL ASK: a block that declares nothing keeps its question — that is precisely the case this detector exists to find');
+  assert.ok(eco.MOTIF_RENVOI_DECLARE.test('pris\n  ici par l\'autre bout'), 'the pattern must tolerate the line break: the charter wraps at 100 columns, so a real declaration is split in two — a pattern requiring single spaces would miss the only case it had to catch');
+  assert.ok(Object.values(eco.EXTRACTIONS_TRANCHEES).every((r) => typeof r === 'string' && r.length > 40), 'a settled extraction question must carry the decision AND its reason: a section spared without a written reason is an abandonment in disguise (Article 28)');
 
   // Les cinq raccordements mordent chacun pour de vrai (BP4), sur des fixtures qui reproduisent
   // exactement les manques rencontrés en intégrant THE-EQUALIZER.

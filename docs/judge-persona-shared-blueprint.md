@@ -2,6 +2,20 @@
 
 *(Blueprint réutilisable. Instanciation : `docs/referentiel/judge-persona-shared.md`.)*
 
+## Le problème qu'il résout, et il ne se voit qu'au deuxième outil
+
+Le premier outil d'audit qui convoque un agent séparé écrit ses deux fonctions de service sans que
+personne n'y trouve à redire : extraire le personnage depuis son document de référence, et repérer
+un rapport générique. Le second outil les réécrit — non par négligence, mais parce qu'il est écrit
+séparément et que la duplication ne devient visible qu'une fois les deux en place.
+
+Le coût n'est pas la ligne de code en double. Il est que **les deux copies divergent**, et que la
+divergence porte précisément sur ce qui fait la valeur d'un audit. Un personnage extrait d'une façon
+ici et d'une autre là, ce sont deux juges qui ne jugent plus selon les mêmes critères tout en
+rendant des verdicts présentés comme comparables. Un détecteur de rapport générique durci d'un côté
+et pas de l'autre, c'est un outil qui laisse passer ce que son jumeau refuse. Dans les deux cas
+l'écart est invisible : chaque outil, lu seul, paraît correct.
+
 ## Ce qu'il est
 
 Dès qu'un projet a **deux** outils d'audit qui font appel à un agent séparé jouant un personnage

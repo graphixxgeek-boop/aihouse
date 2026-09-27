@@ -118,11 +118,11 @@
     "sens": "plus bas = mieux"
    },
    "blueprints-mal-construits": {
-    "valeur": 19,
+    "valeur": 0,
     "sens": "plus bas = mieux"
    },
    "dependances-outillage": {
-    "valeur": 1,
+    "valeur": 0,
     "sens": "plus bas = mieux"
    },
    "blueprints-total": {

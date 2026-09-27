@@ -526,7 +526,21 @@ export const SECTIONS_ATTENDUES = [
   // noter la forme du titre plutôt que la présence du contenu. Deux VRAIS manques subsistaient
   // derrière ces deux faux positifs, et ils ont été écrits à la main : un blueprint qui décrit son
   // RÔLE ne dit pas pour autant quel problème l'a fait naître.
-  { cle: "probleme", motif: /problème qu'il résout|le problème|pourquoi il existe|vocation|ce que ce patron résout|se justifie/i, pourquoi: "sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris" },
+  // ÉLARGI UNE SECONDE FOIS le 2026-09-27, et la leçon est la même qu'au 2026-09-23 : le motif
+  // notait la FORME DU TITRE plutôt que la présence du contenu. Mesuré sur les 17 blueprints
+  // qu'il accusait ce jour-là, TREIZE portaient bel et bien leur énoncé de problème, sous les
+  // titres que ce dépôt emploie réellement — « Le défaut fondateur », « Le défaut qu'il ferme »,
+  // « Le trou qu'il comble », « Le trou qu'il ferme », « Le besoin », « Le motif général »,
+  // « Les trois mensonges d'une compilation nue », « Le piège structurel », « L'asymétrie réelle
+  // qui le motive », « Le principe fondateur ». Écrire dix-sept sections aurait dupliqué du
+  // contenu déjà là, ce que l'Article 13 interdit — et treize faux rouges auraient fini par faire
+  // cesser de lire ce détecteur (leçon L4). QUATRE vrais manques subsistaient derrière, et ils ont
+  // été écrits à la main le jour même : le faux positif cache le vrai défaut, jamais l'inverse.
+  //
+  // CE QUI RESTE VOLONTAIREMENT HORS DU MOTIF : « ce qu'il est ». Un blueprint qui décrit son RÔLE
+  // ne dit pas quel problème l'a fait naître, et l'accepter viderait l'exigence de son sens — c'est
+  // la distinction qu'énonçait déjà l'élargissement de 2026-09-23, et elle tient toujours.
+  { cle: "probleme", motif: /problème qu'il résout|le problème|pourquoi il existe|vocation|ce que ce patron résout|se justifie|défaut fondateur|défaut qu'il ferme|trou qu'il (comble|ferme)|le besoin|motif général|qui le motive|mensonges d'une|piège structurel|principe fondateur|vrai sujet de ce document/i, pourquoi: "sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris" },
   { cle: "garde-fous", motif: /garde-fou|limite honnête|ce qu'il ne|jamais/i, pourquoi: "sans ses limites, l'outil sera cru au-delà de ce qu'il sait faire" },
 ];
 
@@ -587,11 +601,36 @@ export const BLUEPRINT_SOUS_UN_AUTRE_NOM = {
 // sont des registres de CONTENU — profil-utilisateur, suivi-open-tasks, relecture-correctifs… —
 // une liste qui se serait périmée au premier dossier créé. Un registre de contenu n'a jamais eu
 // vocation à partir avec l'Agence : lui réclamer un blueprint serait un contresens.
-export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = existsSync, exemptes = SANS_BLUEPRINT_ASSUME, alias = BLUEPRINT_SOUS_UN_AUTRE_NOM } = {}) {
+// LES ALIAS SE LISENT DANS CLAUDE.md, ILS NE SE RECOPIENT PAS (2026-09-27, Article 24 — et le défaut
+// a été payé le jour même). Cette fonction dérivait le nom du blueprint du nom du FICHIER
+// (`docs/<script>-blueprint.md`) et complétait par une table écrite à la main d'UNE seule entrée.
+// Or plusieurs outils de ce dépôt portent un blueprint nommé d'après l'OUTIL et non d'après son
+// script : `scripts/kpi-report.mjs` → `docs/tableau-de-bord-blueprint.md`, `scripts/memento.mjs` →
+// `docs/memory-audit-blueprint.md`, `scripts/the-screener-capture.mjs` →
+// `docs/the-screener-blueprint.md`. Les trois étaient accusés de n'avoir AUCUN blueprint alors que
+// le leur existait, était complet, et était déclaré noir sur blanc dans l'inventaire de CLAUDE.md.
+// C'est exactement la classe de défaut que LE-CLASSIFICATEUR avait déjà payée — « il cherchait une
+// fiche nommée d'après le FICHIER alors qu'une fiche est nommée d'après l'OUTIL, accusant 22 d'un
+// coup » — et `aliasDocumentaires()`, qui lit cette correspondance dans la table réelle, vivait
+// déjà dans ce fichier sans que cette fonction l'appelle.
+//
+// LA TABLE À LA MAIN RESTE, et elle n'est pas redondante : elle couvre le cas où un outil n'a
+// AUCUNE ligne dans l'inventaire (Smart Breaker y figure sous son surnom). Les deux sources se
+// complètent, la lue l'emportant sur la recopiée quand les deux parlent — jamais l'inverse, sans
+// quoi une entrée oubliée à la main continuerait de masquer la vérité du dépôt.
+export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = existsSync, readFileImpl = readFileSync, exemptes = SANS_BLUEPRINT_ASSUME, alias = BLUEPRINT_SOUS_UN_AUTRE_NOM, aliasImpl = undefined } = {}) {
+  const lus = aliasImpl === undefined ? aliasDocumentaires({ root, readFileImpl }) : aliasImpl;
+  // La carte lue est indexée par CHEMIN de script (`scripts/x.mjs`) ; on la ramène au slug.
+  const parSlug = new Map();
+  if (lus) for (const [chemin, v] of lus) {
+    const slug = String(chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    if (v?.blueprint) parSlug.set(slug, v.blueprint);
+  }
+  const blueprintDe = (o) => parSlug.get(o) ?? alias[o] ?? `docs/${o}-blueprint.md`;
   return outils
     .filter((o) => !(o in exemptes))
-    .filter((o) => exists(join(root, `scripts/${o}.mjs`)) || o in alias)
-    .filter((o) => !exists(join(root, alias[o] ?? `docs/${o}-blueprint.md`)))
+    .filter((o) => exists(join(root, `scripts/${o}.mjs`)) || o in alias || parSlug.has(o))
+    .filter((o) => !exists(join(root, blueprintDe(o))))
     .map((o) => ({ outil: o, pourquoi: "aucun blueprint : cet outil ne partira pas avec l'Agence le jour de l'export" }));
 }
 
@@ -1092,6 +1131,15 @@ function main() {
     libelle: (e) => {
       const ou = e.fichier ?? e.outil ?? "(source inconnue)";
       if (e.defaut) return `${ou} — ${e.defaut}${e.consequence ? ` (${e.consequence})` : ""}`;
+      // L'ÉTIQUETTE DIT LAQUELLE DES DEUX FUITES C'EST (corrigé le 2026-09-27). Les deux détecteurs
+      // qui rendent un `exemple` ne disent PAS la même chose : findFuitesDeSpecificite() trouve du
+      // vocabulaire propre au projet (un nom de personnage, le nom du produit), findDependancesOutillage()
+      // trouve une dépendance à un outillage particulier (un crochet git, un gestionnaire de paquets).
+      // Les afficher tous deux comme « jargon propre au projet » envoyait chercher un nom de
+      // personnage dans un fichier qui n'en contient aucun — le lecteur perd son temps, puis cesse
+      // de lire. Le premier porte une LIGNE, le second n'en porte pas : c'est ce qui les distingue
+      // mécaniquement, et le « :undefined » affiché jusqu'ici était le symptôme visible du mélange.
+      if (e.exemple && e.ligne == null) return `${ou} — dépend d'un outillage particulier : « ${String(e.exemple).trim().slice(0, 90)} »${e.occurrences > 1 ? ` (+${e.occurrences - 1} autre(s) dans ce fichier — corriger celle-ci ne suffira pas)` : ""}. Un blueprint générique décrit le MÉCANISME, jamais l'outil qui le porte ici : citer le crochet comme EXEMPLE suffit à lever l'écart.`;
       if (e.exemple) return `${ou}:${e.ligne} — jargon propre au projet : « ${String(e.exemple).trim().slice(0, 90)} »${e.occurrences > 1 ? ` (+${e.occurrences - 1} autre(s) dans ce fichier — corriger celle-ci ne suffira pas)` : ""}`;
       return `${ou} — ${e.pourquoi ?? "écart sans description : à regarder dans le corps du rapport"}`;
     },

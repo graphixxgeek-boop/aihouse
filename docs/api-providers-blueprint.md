@@ -2,6 +2,20 @@
 
 *(Blueprint réutilisable. Instanciation : `docs/referentiel/api-providers.md`.)*
 
+## Le problème qu'il résout
+
+Un projet qui dépend d'une API finit toujours par en dépendre de plusieurs : une seconde clé, un
+second projet chez le même fournisseur, puis un fournisseur concurrent. Sans registre, chacun de ces
+ajouts se paie en code éparpillé — une adresse ici, un format de réponse là, un cas particulier dans
+la fonction qui sonde — et le troisième ajout coûte plus cher que les deux premiers réunis.
+
+Mais le vrai problème n'est pas l'éparpillement : c'est que **savoir SONDER un fournisseur et savoir
+S'EN SERVIR sont deux capacités différentes**, et que rien, dans un code sans registre, ne marque la
+frontière entre les deux. Le registre contient des noms de fournisseurs, le produit appelle un
+fournisseur, l'inférence se fait toute seule — et un jour quelqu'un bascule la production sur un
+fournisseur que personne n'a jamais validé. Ce document existe pour écrire cette frontière noir sur
+blanc, parce qu'elle ne se déduit d'aucune ligne de code.
+
 ## Ce qu'il est : un registre de DIAGNOSTIC, jamais un commutateur de production
 
 Un outil qui sonde la santé d'une clé d'API finit toujours par recevoir la demande « fais en sorte

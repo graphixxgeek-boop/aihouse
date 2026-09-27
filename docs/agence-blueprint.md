@@ -1,4 +1,4 @@
-# L'Agence Codex — le plan de l'Agence comme un tout
+# L'Agence Codex — blueprint générique : le plan de l'Agence comme un tout
 
 *(Créé le 2026-09-26, sur sa question : « est-ce que l'agence en elle-même est couverte par ce
 principe de kit d'export ? ». La réponse mesurée était **non**, et pire : un contrôle affirmait le
@@ -11,6 +11,30 @@ détachées : quatre-vingts d'entre eux n'apprennent pas comment la machine tour
 commence, ni ce qui appelle quoi.
 
 ---
+
+## Le problème que cette Agence résout
+
+Un projet piloté par une IA produit du travail plus vite qu'un humain ne peut le relire. Ce n'est
+pas la vitesse qui pose problème — c'est ce qu'elle rend invisible. Trois choses se dégradent en
+silence, et aucune ne déclenche d'erreur :
+
+**Une décision perd sa raison.** Un mécanisme écrit un mardi pour couvrir un cas limite réel paraît
+redondant le jeudi suivant, à un agent qui n'a pas la mémoire du mardi. Il le supprime de bonne foi,
+et le bug déjà corrigé revient.
+
+**Une règle cesse d'être vraie sans que personne ne le sache.** Une liste recopiée à la main diverge
+de ce qu'elle reflète dès le premier ajout ; un document affirme un comportement que le code ne
+tient plus ; une obligation écrite n'a aucun porteur et n'existe donc plus à la session suivante.
+Rien ne casse, tout paraît en ordre, et l'écart grandit.
+
+**Un contrôle rend un verdict sur rien.** Un outil qui n'a pas pu lire ses données rend un résultat
+qui ressemble trait pour trait à un résultat mérité. C'est le défaut le plus coûteux du lot, parce
+qu'il transforme l'absence de vérification en preuve de bonne santé.
+
+Aucun de ces trois-là ne se rattrape par la relecture : on ne relit pas ce qui manque, et on ne
+remarque pas un vert qui n'a rien mesuré. Il faut des mécanismes qui posent la question à la place
+de celui qui n'y pensera pas — à chaque commit, gratuitement, sans dépendre de la mémoire ni de la
+discipline de qui que ce soit. **C'est ce que cette Agence est, et rien d'autre.**
 
 ## 1. Ce que l'Agence est, en une phrase
 
@@ -47,7 +71,8 @@ résultat qu'on ne peut pas rejouer n'est pas une mesure.
 ## 3. Les quatre couches, et comment elles s'appellent
 
 ```
-  ① À CHAQUE COMMIT (gratuit, automatique — crochet post-commit)
+  ① À CHAQUE INTÉGRATION (gratuit, automatique — déclenché par le gestionnaire de versions, ici
+     un crochet git, mais n'importe quel déclencheur d'après-intégration fait l'affaire)
      les Gardiens sacrés du code : scan de qualité, zéro coût, aucune décision
              │
              ▼

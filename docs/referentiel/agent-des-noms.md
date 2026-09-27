@@ -72,6 +72,40 @@ Cette dette se purge **APRÈS la classification de l'iceberg** (tâche #737), ja
 posée par l'utilisateur, et sa raison tient debout seule : renommer un outil dont on ignore encore
 le groupe produit un nom qui ne voudra plus rien dire ensuite.
 
+## Les trois décisions du 2026-09-27, prises en fenêtre dédiée — À APPLIQUER LE MOMENT VENU
+
+*(Tranchées par l'utilisateur, mais volontairement PAS ENCORE appliquées : ses mots, « pour les noms
+et le renommage on attend d'avoir fini sur la classification et les sujets adjacents, mais pense à me
+le reproposer à ce moment-là […] prends juste des notes enregistrées pour l'instant ». Elles vivent
+donc ici plutôt que dans le code, et c'est exactement ce que l'Article 27 demande : une décision qui
+n'existe que dans la tête de l'agent n'existera plus à la session suivante.)*
+
+**1. LE PÉRIMÈTRE : les ~50 outils réellement NOMMÉS, jamais les 81 fichiers.** Le compteur actuel
+prend tous les `scripts/*.mjs`, ce qui mélange trois populations qui n'ont rien à voir : les outils
+qu'on a baptisés (ABRAHAM, CASSANDRA-RH, THE-KING, ecotoken…), **14 noms mécaniques** (`check-house`,
+`run-simulation`, `install-ci`… — un préfixe, pas un baptême) et une douzaine de **bibliothèques**
+(`lib-shell`, `lib-json`, `report-template`…). Or `OBJETS_A_NOMMER` dit depuis le 2026-09-24 que
+seuls **outil, process et rapport** se nomment. Les deux mesures se contredisent, et c'est la leçon
+L29 dans sa forme exacte : deux mesures de la même chose qui divergent. **Le « 81 sur 81 » affiché à
+chaque Ronde est donc faux par excès** — à corriger quand le chantier s'ouvrira, jamais avant, mais
+à ne pas oublier : un chiffre faux empoisonne toutes les décisions qui s'appuient dessus.
+
+**2. UN TROISIÈME ÉTAT : « hérité, jamais choisi ».** Un nom en service que l'utilisateur n'a jamais
+choisi n'est ni validé ni fautif. Le valider rétroactivement ferait perdre au registre sa seule
+raison d'être — git sait déjà QUE ça s'appelle comme ça, jamais QUI l'a voulu. Le registre doit donc
+distinguer ce qui a été VOULU de ce qui s'est installé tout seul.
+
+**3. LE RENOMMAGE NE SE FAIT PAS NOM PAR NOM.** Précision de l'utilisateur, et elle invalide la
+méthode que l'outil propose aujourd'hui : « je ne fais pas des noms au cas par cas, je crée des
+séries de noms à l'intérieur d'une même famille ou autre, donc pour renommer il faudra une autre
+méthode ». La commande `renommage <ancien> <nouveau>` reste juste pour le GESTE technique ; ce qui
+manque est l'étage au-dessus — présenter une FAMILLE entière et lui proposer une série cohérente,
+jamais une liste de noms isolés à trancher un par un. À concevoir avec lui le moment venu.
+
+**QUAND LE REPROPOSER, et c'est une obligation, pas une intention** : quand la classification et ses
+sujets adjacents seront clos, et au plus tard à l'ouverture de la fournée de renommage (#200/#745).
+Il a annoncé « 2 ou 3 prompts environ à te donner avant l'étape renommage ».
+
 ## Comment on s'en sert
 
 ```
