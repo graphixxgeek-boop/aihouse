@@ -1042,3 +1042,41 @@ export function statistiquesDesTouchesPartagees() {
   const { demandes, passages, evitees } = COMPTEUR_TOUCHES;
   return { demandes, passages, evitees, tauxPct: demandes ? (evitees / demandes) * 100 : 0 };
 }
+
+
+// =============================================================================================
+// LE DOCUMENT QUI FAIT LOI, QUAND IL N'EST PAS LÀ
+// =============================================================================================
+// TROUVÉ EN LANÇANT L'AGENCE SUR UN DÉPÔT ÉTRANGER (2026-09-27, tâche #1034, projet témoin
+// `sindresorhus/slugify` figé sur `3b17b2e`). Huit outils lancés, cinq tournent, et **trois
+// s'arrêtent net sur la même chose** : ils lisent le document qui fait loi — la charte — et
+// meurent d'un `ENOENT` quand il n'existe pas. C'est le cas le plus fréquent de non-portabilité
+// trouvé par l'essai, et aussi le plus facile à corriger : il ne demande pas de repenser l'outil,
+// seulement d'arrêter de supposer.
+//
+// LA DIFFÉRENCE ENTRE LES CINQ QUI TOURNENT ET LES TROIS QUI MEURENT tient en une phrase : les
+// premiers DÉCLARENT ce qu'ils ne peuvent pas mesurer, les seconds supposent que ce qu'ils
+// cherchent existe. « Pas de charte ici » est un résultat parfaitement valable — c'est même le
+// résultat attendu au moment « AVANT », quand l'Agence arrive sur un projet qui n'a encore rien.
+// Un `ENOENT` en pleine figure, lui, n'apprend rien à personne.
+//
+// CORRIGÉ POUR LA CLASSE, JAMAIS POUR L'OCCURRENCE (leçon L37) : une seule fonction, utilisée par
+// les trois, et par tous ceux qui liront un document de loi demain.
+export function lireLeDocumentGouvernant(chemin, { root = ".", lireImpl = readFileSync } = {}) {
+  try {
+    return { trouve: true, chemin, texte: lireImpl(chemin.startsWith("/") ? chemin : `${root}/${chemin}`.replace(/\/+/g, "/"), "utf8") };
+  } catch {
+    return { trouve: false, chemin, texte: null,
+      pourquoi: `${chemin} est introuvable ici — ce n'est pas une erreur, c'est un dépôt qui n'a pas (encore) ce document` };
+  }
+}
+
+// LA PHRASE QU'ON IMPRIME À LA PLACE, et elle dit trois choses parce que les trois manquent quand
+// un outil meurt : ce qu'il cherchait, pourquoi ce n'est pas une panne, et ce qu'il aurait fait.
+export function ligneDocumentAbsent(doc = {}, { outil = "cet outil", aQuoiCaSert = "" } = {}) {
+  return [
+    `⚪ PAS MESURÉ — ${doc.pourquoi ?? `${doc.chemin} est introuvable`}`,
+    `   ${outil} a besoin de ce document pour travailler${aQuoiCaSert ? ` : ${aQuoiCaSert}` : ""}.`,
+    "   Il rend donc la main proprement plutôt que de s'arrêter sur une erreur : une absence déclarée est un résultat, un plantage n'apprend rien.",
+  ];
+}

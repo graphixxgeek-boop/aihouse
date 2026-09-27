@@ -24,7 +24,7 @@
 // paramètres restent injectables : un test qui passe son propre `lire` n'est pas touché.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { lireFichierPartage } from "./lib-shell.mjs";
-import { join } from "node:path";
+import { join, dirname } from "node:path";
 import { AGENT_CATEGORIES, rangDeLaCategorie, familleDeLaCategorie, printReliabilityNotice, listerLesFichiers } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
@@ -2253,6 +2253,13 @@ function main() {
       "> **Frontière avec `docs/organisation-agence-conception.md`** : celui-là recueille les ÉVOLUTIONS d'organigramme proposées et PAS ENCORE ACTÉES — un carnet d'idées, écrit à la main, où rien n'est vrai du dépôt d'aujourd'hui. Celui-ci ne montre que l'ÉTAT MESURÉ à l'instant de sa génération. Une idée passe de l'un à l'autre en étant mise en œuvre, jamais en étant recopiée.",
       "",
     ].join("\n");
+    // LE DOSSIER DE SORTIE SE CRÉE, IL NE SE SUPPOSE PAS (2026-09-27, tâche #1034). Sur le dépôt
+    // témoin étranger, le classificateur mourait ici d'un ENOENT : il écrivait dans
+    // `docs/referentiel/` sans vérifier que ce dossier existe. Sur CE dépôt il existe depuis
+    // toujours, donc le défaut était invisible — c'est exactement ce que le projet témoin est là
+    // pour trouver. Un outil qui produit un document crée le dossier qui l'accueille.
+    mkdirSync(dirname(join(ROOT, cible)), { recursive: true });
+    mkdirSync(dirname(join(ROOT, CLASSIFICATION_HTML)), { recursive: true });
     writeFileSync(join(ROOT, cible), `${frontiere}\n${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n\n## Les documents — ce que chacun porte\n\n\`\`\`\n${lignesNature.join("\n")}\n\`\`\`\n`, "utf8");
     try { mkdirSync(join(ROOT, "docs/le-classificateur"), { recursive: true }); } catch { /* déjà là */ }
     writeFileSync(join(ROOT, CLASSIFICATION_HTML), renderHtmlReport({

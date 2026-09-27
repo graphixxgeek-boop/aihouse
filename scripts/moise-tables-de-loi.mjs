@@ -52,7 +52,7 @@
 
 import { readFileSync, existsSync, writeFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import { printReliabilityNotice, decouperEnUnites, sh } from "./lib-shell.mjs";
+import { printReliabilityNotice, decouperEnUnites, sh, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import * as A from "./abraham-les-references.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
@@ -1181,7 +1181,14 @@ async function main() {
   {
     const { readdirSync } = await import("node:fs");
     const lister = (d) => { try { return readdirSync(join(ROOT, d)); } catch { return []; } };
-    const fraicheur = findFaitsPerimes(readFileSync(join(ROOT, "CLAUDE.md"), "utf8"), { lister });
+    // MÊME CORRECTION QUE SES DEUX VOISINS (2026-09-27, tâche #1034) : MOÏSE est l'agent de la
+    // charte, donc sans charte il n'a rien à dire — mais « rien à dire » se dit, il ne se plante pas.
+    const docLoi = lireLeDocumentGouvernant("CLAUDE.md", { root: ROOT });
+    if (!docLoi.trouve) {
+      for (const l of ligneDocumentAbsent(docLoi, { outil: "MOÏSE-TABLES-DE-LOI", aQuoiCaSert: "tout son périmètre est la charte : sans elle il n'a littéralement rien à inspecter" })) console.log(l);
+      return;
+    }
+    const fraicheur = findFaitsPerimes(docLoi.texte, { lister });
     for (const l of formatFraicheurLines(fraicheur)) console.log(l);
     console.log("");
     // LE DÉPÔT AU REGISTRE PARTAGÉ (2026-09-27, organisation tranchée par l'utilisateur) : Abraham

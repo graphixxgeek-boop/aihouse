@@ -105,16 +105,22 @@ export function filetLePlusGros(fichiers = {}) {
 // TROIS ÉTATS, JAMAIS DEUX : trouvé (avec PAR QUELLE piste, donc avec sa force), pas trouvé (avec
 // TOUT ce qui a été essayé, parce qu'un « non » sans essais ne s'instruit pas), et jamais un chemin
 // rendu au hasard qui ferait enquêter sur le mauvais fichier.
-export function detecterLeFilet({ option = null, sourceCrochet = null, paquet = null, fichiers = null } = {}) {
+// UN CANDIDAT QUI N'EXISTE PAS N'EST PAS UN CANDIDAT (garde-fou ajouté le 2026-09-27 après le
+// second passage du projet témoin). Le crochet NOMME un fichier ; rien ne garantit que ce fichier
+// soit là — un crochet recopié depuis un autre projet, un chemin renommé, une arborescence
+// différente. Rendre un chemin mort ferait dire à l'enquête « filet illisible » au lieu de
+// « filet introuvable », et ces deux phrases n'envoient pas au même endroit.
+export function detecterLeFilet({ option = null, sourceCrochet = null, paquet = null, fichiers = null, existe = null } = {}) {
   const essais = [];
+  const vraimentLa = (c) => (existe ? existe(c) : true);
   if (option) return { trouve: true, chemin: option, piste: "option", force: "certaine", essais };
   essais.push({ cle: "option", resultat: "aucun chemin donné à la main" });
 
-  const parCrochet = sourceCrochet ? filetDuCrochet(sourceCrochet) : [];
+  const parCrochet = (sourceCrochet ? filetDuCrochet(sourceCrochet) : []).filter(vraimentLa);
   if (parCrochet.length === 1) return { trouve: true, chemin: parCrochet[0], piste: "crochet", force: "forte", essais };
   essais.push({ cle: "crochet", resultat: !sourceCrochet ? "aucun crochet de pré-commit lisible" : parCrochet.length ? `${parCrochet.length} lancements candidats, impossible de trancher : ${parCrochet.join(", ")}` : "le crochet ne lance aucun fichier reconnaissable" });
 
-  const parPaquet = paquet ? filetDuPaquet(paquet) : [];
+  const parPaquet = (paquet ? filetDuPaquet(paquet) : []).filter(vraimentLa);
   if (parPaquet.length === 1) return { trouve: true, chemin: parPaquet[0], piste: "paquet", force: "moyenne", essais };
   essais.push({ cle: "paquet", resultat: !paquet ? "aucun fichier de paquet lisible" : parPaquet.length ? `${parPaquet.length} candidats dans la commande de test : ${parPaquet.join(", ")}` : "aucune commande de test déclarée" });
 
@@ -136,7 +142,7 @@ export function filetResolu({ root = ROOT, argv = process.argv, force = false } 
   const lu = (f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } };
   let paquet = null;
   try { paquet = JSON.parse(lu("package.json") ?? "{}"); } catch { paquet = null; }
-  const d = detecterLeFilet({ option, sourceCrochet: lu(CROCHETS[0]), paquet });
+  const d = detecterLeFilet({ option, sourceCrochet: lu(CROCHETS[0]), paquet, existe: (c) => lu(c) !== null });
   _filetResolu = d.trouve ? d.chemin : FILET;
   _filetResolu_detection = d;
   return _filetResolu;

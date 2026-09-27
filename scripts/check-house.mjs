@@ -16275,6 +16275,40 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// CE QUE LE PROJET TÉMOIN A TROUVÉ, ET QUI N'AURAIT JAMAIS ÉTÉ TROUVÉ ICI (2026-09-27, #1034)
+// ————————————————————————————————————————————————————————————————————————
+// Huit outils lancés sur un dépôt ÉTRANGER (sindresorhus/slugify, commit 3b17b2e, 13 fichiers).
+// Cinq tournaient, TROIS mouraient — tous les trois sur la même chose : ils lisent le document qui
+// fait loi et meurent d'un ENOENT quand il n'existe pas. Sur CE dépôt-ci le fichier est là depuis
+// toujours, donc le défaut était structurellement invisible. C'est exactement ce à quoi sert un
+// témoin étranger.
+{
+  const sh = await import('../scripts/lib-shell.mjs');
+  const e = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // UNE ABSENCE EST UN RÉSULTAT, JAMAIS UNE PANNE. La différence entre les cinq qui tournaient et
+  // les trois qui mouraient tient en une phrase : les premiers DÉCLARENT ce qu'ils ne peuvent pas
+  // mesurer, les seconds supposent que ce qu'ils cherchent existe.
+  const absent = sh.lireLeDocumentGouvernant('CLAUDE.md', { lireImpl: () => { throw new Error('ENOENT'); } });
+  assert.equal(absent.trouve, false, 'un document de loi introuvable rend une absence DÉCLARÉE, jamais une exception qui tue l\'outil');
+  assert.equal(absent.texte, null, 'et son texte est null, jamais une chaîne vide qui se lirait comme un document vide — les deux n\'ont pas le même sens');
+  const dit = sh.ligneDocumentAbsent(absent, { outil: 'un-outil', aQuoiCaSert: 'sa raison' }).join(' ');
+  assert.ok(/PAS MESURÉ/.test(dit) && /un-outil/.test(dit) && /sa raison/.test(dit), 'la phrase rendue dit les trois choses qui manquent quand un outil meurt : ce qu\'il cherchait, à quoi ça lui sert, et qu\'il rend la main proprement');
+  const present = sh.lireLeDocumentGouvernant('CLAUDE.md', { lireImpl: () => '# une charte' });
+  assert.equal(present.texte, '# une charte', 'et quand le document est là, rien ne change : le contrat du cas normal est intact');
+
+  // LE SECOND PASSAGE DU TÉMOIN A TROUVÉ UN DÉFAUT DANS LE TRAVAIL DE LA MÊME JOURNÉE, et c'est la
+  // meilleure preuve de son utilité : l'Agence emporte SES crochets avec elle, donc la détection du
+  // filet pointait vers le nôtre au lieu de celui du projet d'accueil. Un crochet NOMME un fichier ;
+  // rien ne garantit qu'il soit là.
+  const mort = e.detecterLeFilet({ sourceCrochet: 'node scripts/nexiste-pas.mjs', existe: () => false });
+  assert.equal(mort.trouve, false, 'MUST NOT RETURN A DEAD PATH: un candidat nommé par le crochet mais absent du disque n\'est pas un candidat — le rendre ferait dire « filet illisible » au lieu de « filet introuvable », et ces deux phrases n\'envoient pas au même endroit');
+  assert.equal(e.detecterLeFilet({ sourceCrochet: 'node scripts/bien-la.mjs', existe: () => true }).chemin, 'scripts/bien-la.mjs', 'et un candidat qui existe vraiment passe, comme avant : le garde-fou filtre, il ne bloque pas');
+
+  console.log("Passed: ce que le projet témoin a trouvé, et qui n'aurait JAMAIS été trouvé ici (2026-09-27, tâche #1034). Huit outils de l'Agence lancés sur un dépôt ÉTRANGER — sindresorhus/slugify, commit 3b17b2e, treize fichiers, aucun outillage : cinq tournaient, TROIS mouraient, et les trois sur exactement la même chose — ils lisent le document qui fait loi et meurent d'un ENOENT quand il n'existe pas. SUR CE DÉPÔT-CI LE FICHIER EST LÀ DEPUIS TOUJOURS, donc le défaut était structurellement invisible : aucune relecture, aucun garde-fou local n'aurait pu le voir, il fallait sortir. LA DIFFÉRENCE ENTRE LES CINQ ET LES TROIS TIENT EN UNE PHRASE : les premiers DÉCLARENT ce qu'ils ne peuvent pas mesurer, les seconds supposent que ce qu'ils cherchent existe. « Pas de charte ici » est un résultat parfaitement valable — c'est même le résultat ATTENDU au moment « AVANT », quand l'Agence arrive sur un projet qui n'a encore rien ; un ENOENT en pleine figure, lui, n'apprend rien à personne. Corrigé pour la CLASSE et jamais pour l'occurrence : une seule fonction partagée, utilisée par les trois et par tous ceux qui liront un document de loi demain. Le texte rendu est `null` et jamais une chaîne vide, parce qu'« introuvable » et « vide » n'ont pas le même sens. ET LE SECOND PASSAGE DU TÉMOIN A TROUVÉ UN DÉFAUT DANS LE TRAVAIL DE LA MÊME JOURNÉE, ce qui est la meilleure preuve de son utilité : l'Agence emporte SES PROPRES CROCHETS avec elle, si bien que la détection du filet pointait vers le nôtre au lieu de celui du projet d'accueil. Un crochet NOMME un fichier, rien ne garantit qu'il soit là — un candidat absent du disque n'est donc plus un candidat, sinon l'enquête dirait « filet illisible » là où il fallait dire « filet introuvable », et ces deux phrases n'envoient pas au même endroit. Résultat mesuré en rejouant le témoin : 5/8 outils au départ, 8/8 après, et les trois réparés rendent une absence déclarée plutôt qu'une réponse fabriquée.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
 // LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et

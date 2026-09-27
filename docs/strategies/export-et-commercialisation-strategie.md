@@ -370,6 +370,39 @@ Chacune est une conséquence directe de ce qui s'est passé, jamais une précaut
    jour ; lancé à chaque Ronde, il mesure une TRAJECTOIRE — et c'est la trajectoire qui dit si
    l'Agence devient réellement portable ou si elle en parle seulement.
 
+### Le SECOND passage du témoin (2026-09-27, le soir même) : 5/8 → 8/8
+
+La première correction de portabilité identifiée par l'essai a été faite dans la foulée, puis le
+témoin **rejoué** — parce qu'une correction non rejouée est une intention.
+
+| | Avant | Après |
+|---|---|---|
+| Outils qui tournent sur le dépôt étranger | **5/8** | **8/8** |
+| Outils qui meurent sur l'absence de charte | 3 | 0 |
+
+**Les trois réparés ne rendent pas une réponse fabriquée** — c'est le point qui compte. Ils rendent
+une absence DÉCLARÉE : « pas de charte ici, voici à quoi elle me sert, je rends la main proprement ».
+Une seule fonction partagée pour les trois, jamais trois correctifs locaux.
+
+**ET LE SECOND PASSAGE A TROUVÉ UN DÉFAUT DANS LE TRAVAIL DE LA MÊME JOURNÉE** — c'est la meilleure
+preuve de l'utilité du témoin : la détection automatique du filet, écrite quelques heures plus tôt,
+pointait vers NOTRE filet à l'intérieur du dépôt étranger. Parce que **l'Agence emporte ses propres
+crochets avec elle**, et que le crochet nomme notre fichier.
+
+### La cinquième contrainte d'export, née de là
+
+**CE QUI NE DOIT PAS VOYAGER est aussi important que ce qui voyage.** Le kit d'export doit lister
+explicitement les fichiers qui restent :
+
+| Ne part pas | Pourquoi |
+|---|---|
+| `scripts/hooks/` | les crochets de CE dépôt ; emportés, ils font croire à l'Agence qu'elle est chez elle et faussent toute détection |
+| le fichier de tests du produit | SAFE-EXPORT le tranche déjà : il se réécrit, seule son ARCHITECTURE part (`docs/architecture-du-filet.md`) |
+| le script d'installation de l'environnement | propre à la machine d'origine |
+
+Sans cette liste, une installation naïve (« je copie `scripts/` ») emporte tout, et les outils
+détectent l'ancien projet au lieu du nouveau — **une panne silencieuse, jamais une erreur**.
+
 ### Ce qui reste à trancher
 
 L'ordre entre l'étape 2 et l'étape 3 est discutable : construire le projet témoin d'abord donnerait

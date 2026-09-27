@@ -34,7 +34,7 @@ import { buildClaudeMdRuleTable } from "./moise-tables-de-loi.mjs";
 // check-level-target n'importe pas ecotoken.
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -1785,7 +1785,15 @@ function main() {
   // éternellement « jamais sollicité » quel que soit le nombre de fois où il tourne vraiment.
   recordCliUsage("ecotoken");
   const sub = process.argv[2];
-  const texte = readFileSync(CHARTER, "utf8");
+  // PLUS DE SUPPOSITION SUR LA PRÉSENCE DE LA CHARTE (2026-09-27, tâche #1034) : l'essai sur un
+  // dépôt étranger a montré qu'ecotoken mourait ici d'un ENOENT. « Pas de charte ici » est un
+  // résultat valable, et c'est même le résultat ATTENDU au moment « AVANT » de l'arrivée.
+  const docLoi = lireLeDocumentGouvernant(CHARTER);
+  if (!docLoi.trouve) {
+    for (const l of ligneDocumentAbsent(docLoi, { outil: "ecotoken", aQuoiCaSert: "il mesure le poids en tokens des documents rechargés à chaque message, et la charte est le premier d'entre eux" })) console.log(l);
+    return;
+  }
+  const texte = docLoi.texte;
   if (sub === "budget") {
     // Réveil conditionnel : ecotoken s'applique sa propre médecine. Vérifier le poids de la charte
     // après un commit qui n'a touché que du code serait exactement le coup d'épée dans l'eau qu'il
