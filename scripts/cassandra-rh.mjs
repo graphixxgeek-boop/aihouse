@@ -2426,19 +2426,25 @@ export function cadrageDeLaClassification(lignesIceberg = [], { axesParScript } 
   if (!lignesIceberg.length) {
     return { mesurable: false, pourquoi: "aucun script à mesurer — un dénominateur vide rend 100 % d'avancement, ce qui est le contraire de la vérité" };
   }
+  // LES AXES QUI PORTENT SUR LES DOCUMENTS SONT ÉCARTÉS ICI (2026-09-27, tâche #439) : ce cadrage
+  // mesure l'avancement sur les SCRIPTS. Compter la nature d'un document parmi ce qu'un script doit
+  // porter rendrait chaque script éternellement incomplet, et un objectif inatteignable se fait
+  // abandonner — c'est exactement ce que ce même cadrage dit déjà du domaine d'une bibliothèque.
+  // Le filtre se DÉRIVE du drapeau porté par l'axe, jamais d'une liste de clés recopiée ici.
+  const axesDesScripts = AXES_DE_CLASSIFICATION.filter((a) => !a.surLesDocuments);
   const parScript = [];
-  const manquantsParAxe = Object.fromEntries(AXES_DE_CLASSIFICATION.map((a) => [a.cle, 0]));
+  const manquantsParAxe = Object.fromEntries(axesDesScripts.map((a) => [a.cle, 0]));
   let complets = 0, desaccords = 0;
   for (const l of lignesIceberg) {
     const axes = axesParScript(l) ?? {};
-    const portes = AXES_DE_CLASSIFICATION.filter((a) => {
+    const portes = axesDesScripts.filter((a) => {
       const v = axes[a.cle];
       return Array.isArray(v) ? v.length > 0 : v != null && v !== "";
     }).map((a) => a.cle);
-    for (const a of AXES_DE_CLASSIFICATION) if (!portes.includes(a.cle)) manquantsParAxe[a.cle] += 1;
-    if (portes.length === AXES_DE_CLASSIFICATION.length) complets += 1;
+    for (const a of axesDesScripts) if (!portes.includes(a.cle)) manquantsParAxe[a.cle] += 1;
+    if (portes.length === axesDesScripts.length) complets += 1;
     if (l?.desaccord) desaccords += 1;
-    parScript.push({ script: l?.slug ?? l?.fichier ?? "?", portes, manque: AXES_DE_CLASSIFICATION.map((a) => a.cle).filter((c) => !portes.includes(c)) });
+    parScript.push({ script: l?.slug ?? l?.fichier ?? "?", portes, manque: axesDesScripts.map((a) => a.cle).filter((c) => !portes.includes(c)) });
   }
   const total = lignesIceberg.length;
   return { mesurable: true, total, complets, desaccords, manquantsParAxe, parScript,

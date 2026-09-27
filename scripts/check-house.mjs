@@ -10658,10 +10658,20 @@ await testVerrousDOuverture();
       // Le 7e (« vitalite », 2026-09-26, sa demande : ce que l'Agence PERD sans le fichier) est
       // arrivé de la même façon, et a été vu de la même façon : deuxième preuve le même jour que la
       // dérivation tient, puisque ajouter un axe au registre a suffi à faire bouger ce test.
-      ? { iceberg: 'membre', type: 'commande-documentee', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'], cherche: ['duplication'], vitalite: 'vital' }
-      : { iceberg: 'membre', type: 'commande-documentee', moment: [], domaine: [], destinataire: [], cherche: [], vitalite: null }) });
+      // Le 8e (« exportabilite », 2026-09-27, tâche #439) est arrivé de la même façon, et pour une
+      // raison qui vaut d'être écrite : son entrée n'avait JAMAIS été ajoutée au registre malgré
+      // quarante lignes de commentaire l'annonçant depuis la veille (leçon L1). Ce fixture l'a vu
+      // dès qu'elle a existé — troisième preuve que la dérivation tient.
+      //
+      // Le 9e (« nature ») N'Y EST PAS, et c'est délibéré : il porte sur les DOCUMENTS. Le compter
+      // parmi ce qu'un script doit porter rendrait chaque script éternellement incomplet, et un
+      // objectif inatteignable se fait abandonner — exactement la nuance que ce test défend déjà
+      // plus bas pour le domaine d'une bibliothèque. Le cadrage l'écarte en lisant son drapeau
+      // `surLesDocuments`, jamais une liste de clés recopiée.
+      ? { iceberg: 'membre', type: 'commande-documentee', moment: ['a-la-demande'], domaine: ['code'], destinataire: ['agent'], cherche: ['duplication'], vitalite: 'vital', exportabilite: 'part' }
+      : { iceberg: 'membre', type: 'commande-documentee', moment: [], domaine: [], destinataire: [], cherche: [], vitalite: null, exportabilite: null }) });
   assert.equal(cadr.complets, 2, 'a script carrying ALL the axes counts as complete — the count is derived from AXES_DE_CLASSIFICATION, so the fifth axis added on 2026-09-25 (#741) joined it without a number being edited anywhere (Article 24)');
-  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire', 'cherche', 'vitalite'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
+  assert.deepEqual(cadr.parScript.find((x) => x.script === 'partiel').manque, ['moment', 'domaine', 'destinataire', 'cherche', 'vitalite', 'exportabilite'], 'and what is MISSING is named per script, never just counted — a percentage says how far, a list says what to do');
   assert.equal(cadr.desaccords, 1, 'an unarbitrated disagreement is counted separately from an absence: one is a gap, the other is two sources contradicting each other');
   assert.equal(cadr.signalDeFin.atteint, false, 'and the end signal stays unreached while a single disagreement stands, even if every script were complete');
   assert.ok(formatCadrageLines(cadr).some((l) => /ne manquera jamais/i.test(l)), 'THE NUANCE THAT CHANGES THE TARGET: a script reading no path has no domain to carry — that is a legitimate absence, not a gap. Aiming at 100 % on that denominator would be aiming at the impossible, and an unreachable goal gets abandoned.');
@@ -16186,3 +16196,116 @@ async function testCiblesParametrables() {
   console.log("Passed: quatre outils de l'Agence ne pouvaient pas partir (2026-09-27, tâche #668). SAFE-EXPORT les signalait depuis le chantier 3.5 : leurs cibles étaient écrites en dur, sans aucune option pour les changer. Le cas le plus net est THE-KING, dont la vocation GÉNÉRIQUE est de veiller sur un texte fondateur et qui codait en dur celui de ce projet-ci — il ne pouvait donc veiller sur aucun autre, ce qui est rater la moitié de sa mission au sens exact de la charte (« chaque outil construit ici doit pouvoir partir »). Le remède n'est jamais de retirer la lecture : c'est de la rendre paramétrable avec une valeur par défaut. Et le paramètre PARLE LA LANGUE DU PAYSAGE (`{ chemin = … }`, `{ dossier = … }`) plutôt qu'un nom à moi : élargir la sonde pour qu'elle accepte n'importe quel nom l'aurait affaiblie, alors qu'adopter la convention harmonise. Vérifié dans les deux sens sur une fixture — un chemin en dur est attrapé, le MÊME chemin reçu en option passe — puis sur le vrai dépôt : 12 candidats → 8, et les huit restants sont d'une autre nature (ils nomment un artefact du JEU, ce que SAFE-EXPORT présente lui-même comme une question et non un verdict). Les quatre outils rendent exactement la même sortie qu'avant, lancés pour de vrai.");
 }
 await testCiblesParametrables();
+
+// LES DEUX LISTES D'AXES NE SE PARLAIENT PAS (2026-09-27, tâche #439). Le document canonique
+// DÉFINIT les axes de classification, AXES_DE_CLASSIFICATION les PORTE, et rien ne vérifiait
+// qu'elles disent la même chose. Elles avaient divergé dans les DEUX sens.
+async function testAxesDivergents() {
+  const lc439 = await import('../scripts/le-classificateur.mjs');
+
+  // CE QU'IL DOIT ATTRAPER, PREMIER SENS : un axe porté par le code que le document ne définit pas.
+  // Il mesure sans que personne sache ce qu'il mesure.
+  const orphelinCode = lc439.axesDivergents('### Axe A — Machin — `machin`\n', {
+    axesDuCode: [{ cle: 'machin' }, { cle: 'jamais-defini' }], portesAilleurs: {},
+  });
+  assert.deepEqual(orphelinCode.codeSansDocument, ['jamais-defini'], 'MUST CATCH an axis carried by code and defined nowhere');
+
+  // SECOND SENS, ET C'EST CELUI QUI A MORDU POUR DE VRAI : un axe défini dans le document et porté
+  // par rien. L'exportabilité a été exactement ça pendant un jour entier — quarante lignes de
+  // commentaire annonçant qu'elle rejoignait la liste, au-dessus d'une liste qui ne la contenait
+  // pas. Un commentaire aussi détaillé a l'air d'être la preuve de ce qu'il décrit (leçon L1).
+  const orphelinDoc = lc439.axesDivergents('### Axe A — Machin — `machin`\n### Axe B — Truc — `truc`\n', {
+    axesDuCode: [{ cle: 'machin' }], portesAilleurs: {},
+  });
+  assert.deepEqual(orphelinDoc.documentSansCode, ['truc'], 'MUST CATCH a definition with no carrier — that is exactly what exportability was for a whole day');
+
+  // UN AXE SANS CLÉ EST SIGNALÉ, jamais rapproché au jugé : le document nomme ses axes en français
+  // avec majuscules et parenthèses, et deux formulations du même axe ne se ressemblent pas assez
+  // pour qu'une comparaison de texte tienne.
+  const sansCle = lc439.axesDivergents('### Axe A — Un titre sans clé\n', { axesDuCode: [], portesAilleurs: {} });
+  assert.equal(sansCle.sansCle.length, 1, 'an axis with no key is reported: it cannot be matched to any carrier, so it escapes the very check meant to cover it');
+
+  // LES EXCEPTIONS SONT DÉCLARÉES ET LISTÉES, jamais tues : sans elles le garde-fou crierait à
+  // chaque passage sur deux axes qui portent légitimement sur les POSTES et non sur les fichiers,
+  // et un contrôle qui crie toujours n'est plus lu (L4). Mais une exception qu'on ne voit plus
+  // finit par couvrir autre chose qu'elle, donc elle reste imprimée.
+  const avecException = lc439.axesDivergents('### Axe A — Rôle — `role-dans-l-organigramme`\n', { axesDuCode: [] });
+  assert.deepEqual(avecException.documentSansCode, [], 'a declared exception must not be reported as a gap');
+  assert.equal(avecException.portesAilleurs.length, 1, 'but it stays LISTED: an exception nobody sees any more ends up covering something else');
+  assert.ok(avecException.portesAilleurs[0].pourquoi.includes('POSTE'), 'and it carries its reason, so the next reader can judge whether it still holds');
+
+  // UN DOCUMENT ILLISIBLE N'EST JAMAIS UN ACCORD (leçon L11) : « aucun écart » et « je n'ai rien lu »
+  // se rendent identiques si on ne les sépare pas.
+  const vide = lc439.axesDivergents('du texte sans aucun titre d\'axe');
+  assert.equal(vide.mesurable, false, 'a document with no axis heading is a NON-MEASURE: "no divergence" and "I read nothing" render identically otherwise');
+
+  // SUR LE VRAI DÉPÔT (Article 25) : les deux listes doivent concorder, dans les deux sens.
+  const { readFileSync: lire439 } = await import('node:fs');
+  const reel439 = lc439.axesDivergents(lire439('docs/referentiel/organisation-agence.md', 'utf8'));
+  assert.equal(reel439.mesurable, true, 'the confrontation must actually run against the real reference document');
+  assert.deepEqual(reel439.codeSansDocument, [], 'no axis may be carried by the code without being defined in the reference document');
+  assert.deepEqual(reel439.documentSansCode, [], 'and none may be defined without a carrier — exportability and document nature were both in that state before this task');
+  assert.deepEqual(reel439.sansCle, [], 'every axis in the document carries its key, so every one of them is actually checked');
+
+  console.log("Passed: les deux listes d'axes ne se parlaient pas (2026-09-27, tâche #439). docs/referentiel/organisation-agence.md DÉFINIT les axes de classification, AXES_DE_CLASSIFICATION les PORTE, et rien ne vérifiait qu'elles disent la même chose — elles avaient divergé dans les DEUX sens. L'exportabilité était définie dans le document et absente du code : son entrée n'avait JAMAIS été écrite, sous quarante lignes de commentaire annonçant qu'elle rejoignait la liste. C'est la leçon L1 dans sa forme la plus pure, et la dernière chose qu'on relit, parce qu'un commentaire aussi détaillé a l'air d'être la preuve de ce qu'il décrit — trouvée en COMPTANT les axes (7 au lieu de 8), jamais en lisant le texte. Dans l'autre sens, la nature des documents était portée par le code et mesurée à 100 % sur 450 documents depuis le matin même, sans figurer dans aucune liste d'axes : elle mesurait pour elle-même. Les deux sont déclarées, et le rapprochement se fait par une CLÉ portée par chaque titre plutôt que par une ressemblance de nom — deux formulations du même axe ne se ressemblent pas assez pour qu'une comparaison de texte tienne, et un axe sans clé est lui-même signalé. Deux exceptions restent, écrites et listées : les axes « statut de documentation » et « rôle dans l'organigramme » portent sur les POSTES et se lisent sur l'organigramme, jamais sur un fichier. Les taire ferait crier le contrôle à chaque passage (L4) ; ne pas les lister laisserait l'exception couvrir autre chose qu'elle.");
+}
+await testAxesDivergents();
+
+// UN FICHIER RETIRÉ LAISSAIT VINGT-ET-UN RENVOIS QUI RESSEMBLAIENT À DES LIENS MORTS (2026-09-27,
+// tâche #1000). lib/reference.ts — le référentiel affiché en jeu — a quitté le produit sur décision
+// de l'utilisateur, son texte archivé verbatim. Restaient les documents qui le citent, et ils ne se
+// valaient pas : certains RACONTENT le passé (l'Article 19 interdit d'effacer le pourquoi d'un
+// correctif parce que le fichier a bougé), d'autres ENVOYAIENT LIRE le fichier ou ORDONNAIENT d'y
+// écrire — et ceux-là enverront la prochaine IA dans le vide.
+async function testCheminRetireDeclare() {
+  const csf1000 = await import('../scripts/check-suivi-fidelity.mjs');
+
+  // LA DÉCLARATION EST UN FAIT VÉRIFIABLE, JAMAIS UNE DISPENSE : un chemin retiré n'est pardonné
+  // que si son successeur existe pour de vrai. Sans cette condition, la table serait le moyen le
+  // plus simple de faire taire n'importe quel lien mort — exactement ce qu'elle ne doit pas être.
+  const avecArchive = csf1000.findCheminsMortsDansReferentiel();
+  assert.deepEqual(avecArchive.morts, [], 'with the archive in place, a retired path is a declared absence and not a dead link — that is the second issue the guard itself offers (Article 27)');
+  assert.ok(avecArchive.declarees.length >= 13, `and every citation of it is counted as declared rather than silently dropped (got ${avecArchive.declarees.length})`);
+
+  // LE CONTRE-TEST QUI COMPTE LE PLUS : si l'archive disparaît à son tour, les renvois redeviennent
+  // morts, et bruyamment. Une table de dispenses qui ne peut plus mordre ne protège plus rien.
+  const sansArchive = csf1000.findCheminsMortsDansReferentiel({
+    retires: { 'lib/reference.ts': { retireLe: '2026-09-27', successeur: 'docs/archive-qui-n-existe-pas.md', pourquoi: 'fixture' } },
+  });
+  assert.ok(sansArchive.morts.length >= 10, `MUST CATCH AGAIN when the successor itself vanishes: a declaration whose archive is gone is a dead link wearing a permission slip (got ${sansArchive.morts.length})`);
+
+  // UN CHEMIN QUI N'A JAMAIS ÉTÉ DÉCLARÉ RESTE MORT : la table couvre un fait précis, jamais une
+  // famille de chemins.
+  const inconnu = csf1000.findCheminsMortsDansReferentiel({
+    fichiers: ['docs/referentiel/fixture.md'],
+    readFile: () => 'Voir `lib/un-fichier-qui-n-a-jamais-existe.ts` pour le détail.',
+    exists: (p) => !String(p).includes('un-fichier-qui-n-a-jamais-existe'),
+    retires: {},
+  });
+  assert.equal(inconnu.morts.length, 1, 'MUST CATCH an undeclared missing path: the table covers one precise fact, never a family of paths');
+
+  // LA DÉCLARATION PAR LIGNE CONTINUE DE MARCHER, et sa contrainte reste forte : la tournure doit
+  // être SUR la ligne citante. Élargir son vocabulaire au RETRAIT était nécessaire — le garde-fou
+  // proposait « déclarer l'absence » sans reconnaître les mots du retrait, si bien que déclarer
+  // l'absence dans les mots de la charte FAISAIT MONTER le compte de 14 à 19.
+  const surLaLigne = csf1000.findCheminsMortsDansReferentiel({
+    fichiers: ['docs/referentiel/fixture.md'],
+    readFile: () => '`lib/parti.ts` a été retiré du produit le 2026-09-27.',
+    exists: (p) => !String(p).includes('parti.ts'),
+    retires: {},
+  });
+  assert.deepEqual(surLaLigne.morts, [], 'the removal vocabulary must be recognised: an issue the tool proposes and does not accept is worse than no issue at all');
+
+  // ET LA CONTRAINTE DE PROXIMITÉ TIENT TOUJOURS : une mention de retrait DIX LIGNES PLUS HAUT ne
+  // doit faire taire aucun autre lien mort du même document.
+  const troisLignesPlusLoin = csf1000.findCheminsMortsDansReferentiel({
+    fichiers: ['docs/referentiel/fixture.md'],
+    readFile: () => '`lib/parti.ts` a été retiré du produit.\n\nVoir aussi `lib/autre-chose.ts`.',
+    exists: (p) => !(String(p).includes('parti.ts') || String(p).includes('autre-chose.ts')),
+    retires: {},
+  });
+  assert.equal(troisLignesPlusLoin.morts.length, 1, 'MUST STILL CATCH: a removal declared on one line does not cover a different dead path further down — that per-line constraint is what keeps the mechanism honest');
+
+  console.log("Passed: un fichier retiré laissait vingt-et-un renvois qui ressemblaient à des liens morts (2026-09-27, tâche #1000). lib/reference.ts, le référentiel affiché en jeu, a quitté le produit sur décision de l'utilisateur, son texte archivé verbatim — et les documents qui le citent ne se valaient pas. Deux vrais liens morts corrigés : une ÉTAPE DE PROCESS qui ordonnait d'y écrire une nouvelle entrée (le pire des cas — elle n'informe pas du passé, elle commande une action impossible) et une liste de couches à mettre à jour qui le comptait encore. Les renvois NARRATIFS restent tels quels : effacer le pourquoi d'un correctif parce que le fichier a bougé est exactement ce que les Articles 19 et 27 interdisent. En chemin, une leçon payée comptant : déclarer l'absence DANS LES MOTS DE LA CHARTE a fait MONTER le compte de 14 à 19, parce que le garde-fou proposait « corriger le renvoi ou déclarer l'absence » sans reconnaître le vocabulaire du retrait — une issue qu'un outil propose et n'accepte pas est pire que pas d'issue. Le vocabulaire est élargi, et surtout le fait est déclaré UNE FOIS pour tout le dépôt plutôt que treize fois ligne à ligne : treize répétitions du même fait sont la liste recopiée à la main que l'Article 24 interdit. La déclaration reste vérifiable, jamais une dispense — si l'archive disparaît à son tour, les treize renvois redeviennent morts, et ce contre-test le prouve. Mesure : 19 → 0, avec 21 absences déclarées.");
+}
+await testCheminRetireDeclare();

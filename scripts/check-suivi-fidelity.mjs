@@ -648,9 +648,43 @@ const TOURNURE_DE_PROPOSITION = /(all[ée]gerait|pourrait|serait|à cr[ée]er|en
 // le chemin existe · il est absent et personne ne le dit · il est absent ET le document le déclare.
 // Le dernier n'est pas un défaut, c'est précisément ce que l'Article 27 demande de faire.
 // La déclaration est LUE dans la phrase, jamais supposée d'après le ton.
-const ABSENCE_DECLAREE = /(n'existe pas|n'a jamais existé|jamais committé|absent du dépôt|introuvable|disparue? avec)/i;
+// LE VOCABULAIRE DE L'ABSENCE DÉCLARÉE. Le message de ce garde-fou propose deux issues — « corriger
+// le renvoi OU déclarer l'absence (Article 27) » — et seule la première marchait vraiment : les
+// tournures du RETRAIT n'y figuraient pas.
+//
+// ÉLARGI LE 2026-09-27 (tâche #1000), et le cas l'a imposé le jour même : `lib/reference.ts` a été
+// retiré du produit et archivé verbatim. Les six documents qui le citaient ont reçu une note disant
+// exactement ça — « a été RETIRÉ du produit [...] archivé dans <chemin> » — et le compte de chemins
+// morts est MONTÉ de 14 à 19. Déclarer l'absence dans les mots de la charte aggravait le signal :
+// une issue proposée par l'outil que l'outil lui-même ne reconnaissait pas.
+//
+// L'ÉLARGISSEMENT RESTE ÉTROIT, et la contrainte forte est ailleurs : la tournure doit figurer SUR
+// LA MÊME LIGNE que la citation. Un document qui parle d'un retrait dix lignes plus haut ne fait
+// donc taire aucun vrai lien mort — c'est ce qui sépare cet élargissement d'un affaiblissement.
+const ABSENCE_DECLAREE = /(n'existe pas|n'a jamais existé|jamais committé|absent du dépôt|introuvable|disparue? avec|retiré (?:du|de) (?:produit|dépôt|jeu)|a quitté le dépôt|archivé (?:verbatim )?dans)/i;
 
-export function findCheminsMortsDansReferentiel({ root = ROOT, fichiers, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync } = {}) {
+// LES CHEMINS RETIRÉS, DÉCLARÉS UNE FOIS POUR TOUT LE DÉPÔT (2026-09-27, tâche #1000).
+//
+// LE PROBLÈME QUE LA DÉCLARATION PAR LIGNE NE RÈGLE PAS. `ABSENCE_DECLAREE` exige que la tournure
+// figure SUR LA MÊME LIGNE que la citation, et cette contrainte est bonne : un document qui parle
+// d'un retrait dix lignes plus haut ne doit pas faire taire un vrai lien mort ailleurs. Mais quand
+// un fichier RÉEL quitte le dépôt, ce n'est pas treize faits différents à déclarer treize fois :
+// c'est UN fait, et le répéter à chaque ligne citante est exactement la liste recopiée à la main
+// que l'Article 24 interdit — elle se périmerait au premier document qui le cite à son tour.
+//
+// CE QUI EST DÉCLARÉ ICI EST UN FAIT VÉRIFIABLE, jamais une dispense : le fichier a été retiré à
+// une date, et son contenu vit à un endroit qui, lui, DOIT exister. Un successeur introuvable
+// rouvre le signal — sans quoi cette table deviendrait le moyen le plus simple de faire taire
+// n'importe quel lien mort, ce qui est précisément ce qu'elle ne doit pas être.
+export const CHEMINS_RETIRES = {
+  "lib/reference.ts": {
+    retireLe: "2026-09-27",
+    successeur: "docs/contexte-projet/referentiel-affiche-en-jeu-archive.md",
+    pourquoi: "le référentiel AFFICHÉ EN JEU (panneau Admin), retiré du produit sur décision explicite de l'utilisateur — son rôle est aujourd'hui rempli par CLAUDE.md et docs/referentiel/. Texte intégral archivé verbatim, jamais résumé",
+  },
+};
+
+export function findCheminsMortsDansReferentiel({ root = ROOT, fichiers, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync, retires = CHEMINS_RETIRES } = {}) {
   const cibles = fichiers ?? [
     ...readdirSync(join(root, "docs/referentiel")).filter((f) => f.endsWith(".md")).map((f) => `docs/referentiel/${f}`),
     "CLAUDE.md", "docs/regles-de-travail.md", "docs/systeme-de-suivi.md", "docs/philosophie-et-politique.md",
@@ -669,6 +703,12 @@ export function findCheminsMortsDansReferentiel({ root = ROOT, fichiers, readFil
         if (exists(join(root, chemin))) continue;
         if (TOURNURE_DE_PROPOSITION.test(ligne)) continue;
         if (ABSENCE_DECLAREE.test(ligne)) { declarees.push({ document: rel, chemin }); continue; }
+        // Un chemin RETIRÉ et déclaré comme tel n'est pas un lien mort — à la condition stricte que
+        // son successeur existe vraiment. Si l'archive a disparu à son tour, le renvoi redevient
+        // mort, et il le redevient bruyamment : c'est ce qui empêche cette table d'être une porte
+        // de sortie pour n'importe quel chemin cassé.
+        const retire = retires?.[chemin];
+        if (retire && exists(join(root, retire.successeur))) { declarees.push({ document: rel, chemin, retireLe: retire.retireLe, successeur: retire.successeur }); continue; }
         morts.push({ document: rel, chemin, pourquoi: `« ${rel} » cite ${chemin}, qui n'existe pas sur le disque` });
       }
     }

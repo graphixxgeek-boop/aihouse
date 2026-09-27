@@ -39,7 +39,23 @@ Toute confusion entre ces deux axes est une erreur de lecture de l'organigramme 
 des questions différentes et se combinent librement (ex. LE-COORDINATEUR est « Membre certifié
 (classique) » sur l'axe A et « Agent Cadre » (Direction) sur l'axe B en même temps).
 
-### Axe A — Statut de documentation (« quel dossier ce poste a-t-il ? »)
+**DEUX LISTES, ET UN GARDE-FOU QUI LES CONFRONTE** *(2026-09-27, tâche #439)*. Ce document
+**DÉFINIT** les axes ; `AXES_DE_CLASSIFICATION` (`scripts/le-classificateur.mjs`) les **PORTE**.
+Rien ne vérifiait que les deux disent la même chose, et elles avaient divergé dans les DEUX sens :
+l'exportabilité était définie ici et absente du code — son entrée n'avait jamais été écrite malgré
+quarante lignes de commentaire l'annonçant (leçon L1) — pendant que la nature des documents était
+portée par le code et absente d'ici. `axesDivergents()` les confronte désormais à chaque passage.
+
+**LE RAPPROCHEMENT SE FAIT PAR UNE CLÉ**, jamais par une ressemblance de titre : chaque titre
+ci-dessous porte la sienne entre accents graves, et **un axe défini sans clé est lui-même signalé**
+— un axe qu'on ne peut pas adresser mécaniquement n'entre dans aucune vérification (Article 24).
+
+**LES DEUX PREMIERS AXES PORTENT SUR LES POSTES, jamais sur les fichiers**, et c'est pour ça
+qu'aucun porteur du code ne leur correspond : « quel dossier ce poste a-t-il ? » et « à quel niveau
+travaille-t-il ? » se lisent sur l'organigramme, pas sur un fichier. Ce n'est donc pas un écart —
+mais le dire ici évite qu'un futur lecteur le prenne pour un trou à combler.
+
+### Axe A — Statut de documentation (« quel dossier ce poste a-t-il ? ») — `statut-de-documentation`
 
 **Reclarifié le 2026-09-21** (correction explicite de l'utilisateur : « les agents que tu cites
 [LE-COORDINATEUR, CIRCLE-TASKS, route-booster] [...] ce sont bien des membres certifiés avec badge
@@ -65,7 +81,7 @@ documenter à part :
 - **Infrastructure** : pas de nom propre, la plomberie qui fait tourner les Agents et les Membres
   certifiés classiques.
 
-### Axe B — Rôle dans l'organigramme (« à quel niveau ce poste travaille-t-il ? »)
+### Axe B — Rôle dans l'organigramme (« à quel niveau ce poste travaille-t-il ? ») — `role-dans-l-organigramme`
 
 - **Direction** — rebaptisée ici **« Les Agents Cadre »** (nom choisi par l'utilisateur, 2026-09-22)
 - **Équipe noyau** — rebaptisée ici **« les Gardiens sacrés du code »** (nom choisi par
@@ -75,7 +91,7 @@ documenter à part :
 - **Hors de l'agence, définitivement** (§5)
 
 
-### Axe C — Vitalité pour le FONCTIONNEMENT de l'Agence (« que perd-on sans lui ? »)
+### Axe C — Vitalité pour le FONCTIONNEMENT de l'Agence (« que perd-on sans lui ? ») — `vitalite`
 
 *(Ajouté le 2026-09-26, à sa demande : « la notion outil VITAL / ESSENTIEL / UTILE / OPTIONNEL pour
 LE FONCTIONNEMENT DE L'AGENCE qu'on a définie crée une catégorie transverse qui couvre tous les
@@ -115,7 +131,7 @@ chacun. Le voisin **APPLIQUE** ces axes aux 90 fichiers et aux 437 documents, et
 chaque passage — on ne l'écrit jamais à la main. On vient ici pour comprendre un axe, on va là-bas
 pour savoir où tombe un fichier.
 
-### Axe D — Exportabilité (« ce fichier PEUT-IL partir ? »)
+### Axe D — Exportabilité (« ce fichier PEUT-IL partir ? ») — `exportabilite`
 
 *(Ajouté le 2026-09-26, tâche #981, sur sa question : « est-ce que tous les sujets liés à l'export
 sont bien pris en compte dans la classification, dont l'exportabilité des fichiers ET la vitalité
@@ -134,30 +150,47 @@ Trois états : **kit complet** · **kit incomplet** (les pièces manquantes sont
 avec sa raison écrite** — un fichier qui ne partira jamais (crochet git, installateur) n'est pas un
 fichier en retard.
 
-### Axe E — Type (« ce que le fichier EST »)
+### Axe E — Type (« ce que le fichier EST ») — `type`
 
 Constaté en LISANT le fichier, jamais deviné à son nom : porté par `typeDuScript()`.
 
-### Axe F — Moment (« QUAND il intervient »)
+### Axe F — Moment (« QUAND il intervient ») — `moment`
 
 À chaque commit, à la Ronde, sur demande, avant un chantier : porté par `momentsDeLOutil()`.
 
-### Axe G — Domaine (« SUR QUOI il regarde »)
+### Axe G — Domaine (« SUR QUOI il regarde ») — `domaine`
 
 Le jeu, l'Agence, ou les deux : porté par `domainesDeLOutil()`. Vingt-deux fichiers n'en ont
 légitimement aucun — une bibliothèque ne regarde rien — et cette absence est déclarée plutôt que
 comptée comme un trou.
 
-### Axe H — Destinataire (« À QUI le résultat sert »)
+### Axe H — Destinataire (« À QUI le résultat sert ») — `destinataire`
 
 L'agent, l'utilisateur, ou un autre outil : porté par `destinatairesDeLOutil()`.
 
-### Axe I — Question posée au dépôt (« ce qu'il CHERCHE »)
+### Axe I — Question posée au dépôt (« ce qu'il CHERCHE ») — `cherche`
 
 Déclaré-mais-absent, deux-sources-divergent, duplication… : porté par HARMONIA
 (`cartographieCriteresTransverses()`), et c'est le seul axe dont le porteur vit dans un autre outil.
 
-### Axe J — Groupe iceberg (« à quel étage il vit »)
+### Axe K — Nature d'un document (« ce qu'un DOCUMENT est ») — `nature`
+
+*(2026-09-27, tâches #1002/#1008 pour sa construction, #439 pour sa DÉCLARATION — et les deux dates
+disent le défaut : il était mesuré à 100 % sur 450 documents depuis le matin, et absent de cette
+liste. Même histoire que la vitalité avant le 2026-09-26 : un axe qu'aucune liste ne déclare n'entre
+dans aucun inventaire, donc dans aucune décision. Il mesure pour lui-même.)*
+
+Index, gabarit, blueprint, conception, cadre-cible, process, stratégie, suivi, archive, plan,
+référence, mode, registre, rapport, export : porté par `natureDuDocument()`.
+
+**IL PORTE SUR LES DOCUMENTS, JAMAIS SUR LES SCRIPTS**, et c'est dit plutôt que laissé deviner :
+le confondre avec l'axe E (le TYPE d'un fichier de code) ferait chercher une nature à un script et
+un type à un blueprint, deux questions qui n'ont pas de réponse.
+
+**Mesure au jour de sa déclaration : 450 documents, ZÉRO indéterminé** — dont cinq arbitrages rendus
+par l'utilisateur lui-même, figés par un test pour qu'une décision rendue ne puisse pas se reperdre.
+
+### Axe J — Groupe iceberg (« à quel étage il vit ») — `iceberg`
 
 Membre, oublié, infrastructure, plomberie : porté par `classerIceberg()`. C'est l'axe qui répond à
 sa demande d'origine — séparer ce qui a un nom de ce qui est de la tuyauterie.

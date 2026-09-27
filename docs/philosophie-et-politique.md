@@ -359,3 +359,6 @@ règle reste en l'état ; le gain de légèreté ne justifie jamais de trancher 
   risquer une divergence.
 - **Ne jamais résoudre une ambiguïté réelle par une supposition silencieuse** — au minimum, signaler
   le doute ; au mieux, le lever par une question avant d'agir.
+
+
+*(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*

@@ -275,8 +275,10 @@ La rigueur de vérification (tests, documentation, relecture) se resserre sur le
 l'utilisateur identifie comme centraux — jamais un même niveau partout par défaut. Concrètement :
 compilation propre (`tsc --noEmit`), suite `scripts/check-house.mjs` intégralement verte, un
 nouveau test dédié pour toute mécanique nouvelle, documentation mise à jour le jour même dans les
-couches concernées (`docs/referentiel/`, `lib/reference.ts`, ce document si la règle de travail
-elle-même change) et une revue du diff avant commit restent la pratique par défaut de l'agent —
+couches concernées (`docs/referentiel/`, ce document si la règle de travail
+elle-même change — `lib/reference.ts` en faisait partie jusqu'au 2026-09-27, date de son retrait du
+produit ; son texte est archivé dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, et il n'y a donc plus que DEUX couches à répercuter, pas
+trois) et une revue du diff avant commit restent la pratique par défaut de l'agent —
 mais quand l'importance d'un sujet n'est pas évidente, l'agent DEMANDE (cf. section 2) plutôt que
 de fixer lui-même le curseur.
 

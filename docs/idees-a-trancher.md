@@ -410,3 +410,6 @@ de ce qui s'efface n'est pas une décision d'agent.
 (mesuré en #906), donc rien ne brûle.
 
 **Rapport complet** : `docs/data-archangel/classification-des-data-2026-09-26.md`.
+
+
+*(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*

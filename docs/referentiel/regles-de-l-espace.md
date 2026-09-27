@@ -190,3 +190,6 @@ position (x, z) exacte, le chemin BFS réellement emprunté, la vitesse de march
 collision visuelle ou un chevauchement de personnages — ces points demandent soit une relecture
 du code (`lib/house.ts`, `components/house-view.tsx`), soit une observation directe de la scène
 3D par l'utilisateur, jamais une déduction depuis le seul flux de messages.
+
+
+*(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*

@@ -1049,7 +1049,100 @@ export const AXES_DE_CLASSIFICATION = [
   // mesures de la même chose finissent toujours par diverger, et le projet l'a déjà payé (leçon
   // L29). Cet axe ne fait que RAPPORTER ce que l'autre outil dit, dans le document où l'on vient
   // demander « c'est quoi, ce fichier ? ».
+  //
+  // ⚠️ LA LIGNE MANQUAIT (trouvé le 2026-09-27, tâche #439). Le commentaire ci-dessus annonçait
+  // « L'EXPORTABILITÉ REJOINT LES AXES DÉCLARÉS » depuis le 2026-09-26 — et l'entrée n'avait
+  // jamais été écrite. Quarante lignes expliquant pourquoi un axe rejoint la liste, juste au-dessus
+  // d'une liste qui ne le contient pas : c'est la leçon L1 dans sa forme la plus pure, et la
+  // dernière chose qu'on relit, parce qu'un commentaire aussi détaillé a l'air d'être la preuve de
+  // ce qu'il décrit. Trouvée en COMPTANT les axes (7, pas 8), jamais en relisant le texte.
+  { cle: "exportabilite", quoi: "CE FICHIER PEUT-IL PARTIR — part / reste / mémoire, et l'état de son kit", porteur: "etatDuKit() — SAFE-EXPORT ; lu ici, jamais recalculé (leçon L29)" },
+  // LA NATURE DES DOCUMENTS (2026-09-27, tâches #1002/#1008) — elle était construite, mesurée à
+  // 100 % sur 450 documents, et absente des deux listes d'axes. Même défaut que la vitalité avant
+  // le 2026-09-26 : un axe qu'aucune liste ne déclare n'entre dans aucun inventaire, donc dans
+  // aucune décision. Elle est déclarée le jour même où le défaut a été vu, plutôt que notée.
+  //
+  // ELLE PORTE SUR LES DOCUMENTS, pas sur les scripts, et c'est dit plutôt que laissé deviner : la
+  // confondre avec le `type` d'un fichier de code ferait chercher une nature à un script et un type
+  // à un blueprint, deux questions qui n'ont pas de réponse.
+  // `surLesDocuments: true` n'est pas décoratif : `cadrageDeLaClassification()` mesure l'avancement
+  // sur les SCRIPTS, et compter la nature parmi les axes qu'un script doit porter rendrait chaque
+  // script éternellement incomplet. Viser 100 % sur un dénominateur impossible fait abandonner
+  // l'objectif — le test de cadrage le dit déjà d'un autre axe, et la règle vaut ici aussi.
+  { cle: "nature", quoi: "CE QU'UN DOCUMENT EST — index, gabarit, blueprint, conception, cadre-cible, process, stratégie, suivi, archive, plan, référence, mode, registre, rapport, export", porteur: "natureDuDocument() — ici ; porte sur les DOCUMENTS, jamais sur les scripts", surLesDocuments: true },
 ];
+
+// LES DEUX LISTES D'AXES NE SE PARLAIENT PAS (2026-09-27, tâche #439). Sa demande d'origine : « il
+// faudra vraiment qu'on clarifie l'organisation [...] je compte sur toi pour m'aider à s'y
+// retrouver et proposer un schéma d'agence propre et intelligent ».
+//
+// LE DÉFAUT MESURÉ, ET IL VA DANS LES DEUX SENS : `docs/referentiel/organisation-agence.md`
+// DÉFINIT les axes un par un, `AXES_DE_CLASSIFICATION` les PORTE — et rien ne vérifiait que les
+// deux disent la même chose. Au moment de la mesure : l'exportabilité était définie dans le
+// document et absente du code (son entrée n'avait jamais été écrite, malgré quarante lignes de
+// commentaire l'annonçant), la nature des documents était portée par le code et absente du
+// document, et deux axes du document (statut de documentation, rôle dans l'organigramme) portent
+// sur les POSTES plutôt que sur les fichiers.
+//
+// LE RAPPROCHEMENT SE FAIT PAR UNE CLÉ, jamais par une ressemblance de titre : le document nomme
+// chaque axe en français, avec majuscules et parenthèses, et deux formulations du même axe ne se
+// ressemblent pas assez pour qu'une comparaison de texte tienne. Chaque titre du document porte
+// donc sa clé entre accents graves, et **un axe défini sans clé est lui-même un écart** — un axe
+// qu'on ne peut pas adresser mécaniquement n'entre dans aucune vérification (Article 24).
+export const MOTIF_AXE_DOCUMENTE = /^###\s+Axe\s+[A-Z]\s+—\s+(.+?)\s*$/gm;
+export const MOTIF_CLE_D_AXE = /`([a-z-]+)`/;
+
+// DEUX AXES PORTÉS AILLEURS QUE PAR UN FICHIER, et leur exception est ÉCRITE plutôt que subie
+// (Article 24 : un contenu volontairement curaté reste légitime tant que sa nature manuelle est
+// écrite noir sur blanc à côté). Ils portent sur les POSTES : « quel dossier ce poste a-t-il ? » et
+// « à quel niveau travaille-t-il ? » se lisent sur l'organigramme, jamais sur un fichier. Sans cette
+// déclaration, le garde-fou les signalerait à chaque passage — et un contrôle qui crie toujours
+// n'est plus lu (leçon L4), ce qui cacherait les vrais écarts derrière deux faux permanents.
+export const AXES_PORTES_AILLEURS = {
+  "statut-de-documentation": "porte sur un POSTE (quel dossier il a), jamais sur un fichier — il se lit sur l'organigramme",
+  "role-dans-l-organigramme": "porte sur un POSTE (à quel niveau il travaille), jamais sur un fichier — il se lit sur l'organigramme",
+};
+
+export function axesDivergents(texteDocument = "", { axesDuCode = AXES_DE_CLASSIFICATION, portesAilleurs = AXES_PORTES_AILLEURS } = {}) {
+  const titres = [...String(texteDocument).matchAll(MOTIF_AXE_DOCUMENTE)].map((m) => m[1]);
+  if (!titres.length) {
+    return { mesurable: false, pourquoi: "aucun titre d'axe trouvé dans le document — soit il a changé de forme, soit il n'a pas été lu, et les deux appellent l'inverse d'un feu vert (leçon L11)" };
+  }
+  const documentes = new Map();
+  const sansCle = [];
+  for (const t of titres) {
+    const k = t.match(MOTIF_CLE_D_AXE)?.[1];
+    if (!k) { sansCle.push(t); continue; }
+    documentes.set(k, t);
+  }
+  const duCode = new Set(axesDuCode.map((a) => a.cle));
+  return {
+    mesurable: true,
+    titres: titres.length,
+    sansCle,
+    // Porté par le code, jamais défini dans le document : il mesure sans que personne sache ce
+    // qu'il mesure.
+    codeSansDocument: [...duCode].filter((k) => !documentes.has(k)),
+    // Défini dans le document, porté par rien : une définition sans porteur est une intention (L1),
+    // et c'est exactement ce que l'exportabilité a été pendant un jour entier.
+    documentSansCode: [...documentes.keys()].filter((k) => !duCode.has(k) && !Object.hasOwn(portesAilleurs, k)),
+    // Listés, jamais tus : une exception qu'on ne voit plus finit par couvrir autre chose qu'elle.
+    portesAilleurs: [...documentes.keys()].filter((k) => Object.hasOwn(portesAilleurs, k)).map((k) => ({ cle: k, pourquoi: portesAilleurs[k] })),
+  };
+}
+
+export function formatAxesDivergentsLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r.pourquoi}`];
+  const out = [`AXES — ${r.titres} défini(s) dans le document, ${AXES_DE_CLASSIFICATION.length} porté(s) par le code.`];
+  for (const k of r.codeSansDocument) out.push(`   ⚠️ « ${k} » est PORTÉ par le code et n'est DÉFINI nulle part : il mesure sans que personne sache ce qu'il mesure.`);
+  for (const k of r.documentSansCode) out.push(`   ⚠️ « ${k} » est DÉFINI dans le document et porté par RIEN : une définition sans porteur est une intention (leçon L1).`);
+  for (const t of r.sansCle) out.push(`   · « ${t} » n'affiche aucune clé entre accents graves : il ne peut être rapproché d'aucun porteur, donc il échappe à cette vérification.`);
+  for (const a of r.portesAilleurs ?? []) out.push(`   · « ${a.cle} » — exception déclarée : ${a.pourquoi}`);
+  if (!r.codeSansDocument.length && !r.documentSansCode.length && !r.sansCle.length) {
+    out.push("   ✅ Les deux listes disent la même chose, dans les deux sens.");
+  }
+  return out;
+}
 
 // L'INDICE DE CLASSIFICATION À FACETTES (2026-09-26). Sa demande : « on pourrait remplacer ces
 // icônes par un code axe1=un chiffre, axe2=un chiffre… ce qui donnerait pour chaque outil : rang,

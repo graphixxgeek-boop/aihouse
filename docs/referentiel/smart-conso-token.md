@@ -377,9 +377,13 @@ jamais considéré terminé, quel que soit le nombre de tokens économisés.
    `npx tsc --noEmit` (propre, hors l'erreur préexistante connue de `vite.config.ts`) après CHAQUE
    lot de retraits, jamais seulement à la fin. Re-scanner avec `scanScope`/`estimateTokens` pour
    mesurer le gain RÉEL, jamais une estimation a priori.
-6. **Documenter et livrer** : nouvelle entrée `lib/reference.ts` (Version N), ligne `docs/suivi/`
-   avec les chiffres avant/après honnêtes, mise à jour de l'assertion `Version N` dans
-   `check-house.mjs`, commit + push. Rapporter à l'utilisateur le vrai delta mesuré (tokens estimés
+6. **Documenter et livrer** : ligne `docs/suivi/`
+   avec les chiffres avant/après honnêtes, commit + push.
+   *(Corrigé le 2026-09-27, tâche #1000 : cette étape demandait d'écrire « une nouvelle entrée
+   `lib/reference.ts` (Version N) » et de mettre à jour l'assertion `Version N` dans
+   `check-house.mjs`. Le fichier a été RETIRÉ du produit le 2026-09-27 — son texte intégral est
+   archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`. Un lien mort dans une ÉTAPE DE PROCESS est le pire des cas : il
+   n'informe pas du passé, il ordonne une action impossible, et la prochaine IA la cherchera.)* Rapporter à l'utilisateur le vrai delta mesuré (tokens estimés
    et lignes), jamais un chiffre annoncé avant d'avoir mesuré.
 
 **Limite honnête sur la mesure elle-même** (trouvée en pratique le 2026-09-20) : l'estimation
