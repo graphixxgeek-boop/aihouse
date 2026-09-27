@@ -7,6 +7,8 @@ registre tout seul — et le déclarer vaut mieux que de laisser croire le contr
 
 | Fichier | Ce que c'est | Qui l'écrit |
 |---|---|---|
+| `historique.json` | les vingt derniers relevés chronométrés (date, durée totale, code de sortie, nombre d'anomalies). C'est LUI qui permet de parler de GAIN : un relevé seul décrit un état, c'est la suite qui dit si un changement a servi à quelque chose. | `node scripts/ezechiel-les-tests.mjs sante` |
+| `robustesse.json` | les dix dernières passes de robustesse, chaque cassure volontaire identifiée par fichier + ligne + opérateur et son verdict (attrapée / survivante). C'est LUI qui permet de dire ce qu'un allègement a coûté en protection. | `node scripts/ezechiel-les-tests.mjs robustesse` |
 | `mesures.json` | le chronométrage du filet groupe par groupe ET sa santé de fonctionnement du dernier passage réel. Écrasé à chaque `mesurer` : c'est l'état du DERNIER relevé, jamais une archive qui grossirait. | `node scripts/ezechiel-les-tests.mjs sante` |
 
 ## Les passages

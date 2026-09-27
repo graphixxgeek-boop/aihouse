@@ -15909,6 +15909,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   // ---- LES ASSERTIONS QUI PASSENT QUOI QU'IL ARRIVE — le défaut le plus silencieux d'une suite.
   assert.equal(ezl.assertionsNonAttendues("assert.ok(f().then(x => x));").length, 1, 'MUST CATCH: an assertion on a promise never awaited passes whatever you break — it does not look like a broken test, it looks like a green one (BP2)');
+  assert.equal(ezl.assertionsNonAttendues(`const fixture = "assert.ok(f().then(x => x));";`).length, 0, "MUST NOT ACCUSE ITSELF: the third time this exact class of defect showed up in this tool — a test file QUOTES code, and quoted code is not executed code. The line just above is that very fixture, and Ezechiel was denouncing it (leçon L37: fix the CLASS, never the occurrence)");
   assert.deepEqual(ezl.assertionsNonAttendues("assert.ok(await p.then(x => x));"), [], 'MUST LET PASS: a promise chain that IS awaited is correct code, and the pattern was widened only after its own counter-test caught it demanding a bare name before `.then(` — which missed `f().then(…)`, the form actually written');
   assert.deepEqual(ezl.assertionsNonAttendues("assert.ok(await f());"), [], 'MUST LET PASS: a properly awaited call is exactly what we want to see, and flagging it would train everyone to ignore the signal');
 
@@ -15989,6 +15990,47 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(ezl.planDeLEnquete(enq).some((e) => /chronométrage/.test(e.constat)), 'and with no chronometer recorded the plan must SAY so: without it, « seconds gained at equal protection » cannot be verified, so any trimming would be guessed');
 
   console.log("Passed: EZECHIEL, LA VUE LARGE (2026-09-27, tâche #1026) — la demande complète de l'utilisateur, verrouillée point par point. La frontière à trois entre MOÏSE (la charte), Abraham (tout document à règles numérotées) et Ezechiel (le filet et sa machinerie) est une DONNÉE que ce test relit, pas une promesse en prose : un quatrième outil qui revendiquerait demain un périmètre déjà tenu se ferait refuser. La fraîcheur du filet attrape un test qui appelle une fonction que son module n'exporte plus — et laisse passer une méthode du langage, un export bien vivant, et surtout un alias réutilisé pour deux modules, qui est une non-mesure et jamais une accusation. Un import écrit dans une chaîne est une fixture : Ezechiel accusait son propre contre-test. Une assertion sur une promesse jamais attendue passe quoi qu'on casse, donc elle est dénoncée. Le croisement coût/protection met en tête les groupes qui coûtent du temps sans porter une seule assertion — le seul endroit où des secondes se gagnent sans perdre une once de protection — et répète qu'un groupe LENT n'est pas un groupe à retirer. Le chronomètre se recolle sur les lignes de succès réelles et se déclare incomplet plutôt que de servir un classement faux. La passe de robustesse refuse de conclure si le filet était déjà rouge avant la première cassure. Le voyant de fonctionnement répond à une question que le code de sortie ne pose jamais : une suite peut rendre 0 en ayant SAUTÉ la moitié de ses blocs, en ayant exécuté le même deux fois, ou en crachant des avertissements que plus personne ne lit — les trois sont attrapés, et « vert » n'est jamais confondu avec « rien de bloquant ». Et la dernière assertion vérifie que toutes ces capacités sont BRANCHÉES dans l'enquête : une fonction écrite et jamais appelée est une intention, pas un outil (leçon L2).");
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LE REGISTRE D'ALERTES PARTAGÉ (2026-09-27, tâche #1027) — « Abraham veille », rendu mécanique
+// ————————————————————————————————————————————————————————————————————————
+// L'organisation a été tranchée par l'utilisateur en fenêtre dédiée : Abraham est le POINT
+// D'ENTRÉE de l'assainissement à grande échelle, MOÏSE et Ezechiel restent convocables seuls sur
+// leur périmètre, et « Abraham n'est jamais loin, il veille » passe par un REGISTRE PARTAGÉ plutôt
+// que par une règle écrite. La différence est tout : une règle écrite cesse d'être vraie sans que
+// personne le sache, un fichier où chaque outil dépose son verdict est un fait (Article 27).
+{
+  const abA = await import('../scripts/abraham-les-references.mjs');
+
+  // UN OUTIL NE PEUT JAMAIS EFFACER LES ALERTES D'UN AUTRE — c'est ce qui rend le partage sûr.
+  const base = [{ outil: 'moise-tables-de-loi', cle: 'a', depuis: '2026-09-01T00:00Z', gravite: 'à surveiller', constat: 'x' }];
+  const apres = abA.fusionnerDepot(base, 'ezechiel-les-tests', [{ cle: 'b', constat: 'y' }], { maintenant: '2026-09-27T00:00Z' });
+  assert.equal(apres.filter((a) => a.outil === 'moise-tables-de-loi').length, 1, "a deposit REPLACES its own tool's alerts and never touches another's — otherwise the last tool to run would silently erase everyone else's findings");
+  assert.equal(apres.filter((a) => a.outil === 'ezechiel-les-tests').length, 1, 'and its own are recorded');
+  // LA DATE DE PREMIÈRE APPARITION SE REPREND — sans elle une alerte de trois semaines aurait l'air
+  // neuve chaque jour, et la veille ne verrait jamais rien traîner.
+  const reDepot = abA.fusionnerDepot(apres, 'moise-tables-de-loi', [{ cle: 'a', constat: 'x' }], { maintenant: '2026-09-27T00:00Z' });
+  assert.equal(reDepot.find((a) => a.outil === 'moise-tables-de-loi').depuis, '2026-09-01T00:00Z', 'an alert that comes back keeps its FIRST-SEEN date: without it, an alert dragging on for three weeks would look brand new every single day, and the watch would never see anything drag');
+  // MUST CATCH : un dépôt sans outil est intraçable, donc refusé.
+  assert.throws(() => abA.fusionnerDepot([], '', [{ cle: 'a' }]), /intraçable/, 'a deposit with no depositing tool is refused: nobody could tell whose finding it is, nor when it stopped being true');
+
+  // CE QUI TRAÎNE — la seule chose que ce chapeau apporte et que personne d'autre ne voit.
+  const vieille = [{ outil: 'x', cle: 'v', depuis: '2026-09-01T00:00Z', gravite: 'à surveiller', constat: 'vieille' }];
+  assert.equal(abA.alertesQuiTrainent(vieille, { maintenant: Date.parse('2026-09-27T00:00Z') }).length, 1, 'an alert first seen 26 days ago is dragging, and naming it is the whole point of the watch');
+  assert.equal(abA.alertesQuiTrainent(vieille, { maintenant: Date.parse('2026-09-02T00:00Z') }).length, 0, 'MUST LET PASS: an alert from yesterday is not dragging — flagging it would drown the real ones on day one');
+
+  // UN REGISTRE VIDE N'EST JAMAIS « AUCUNE ALERTE ».
+  assert.equal(abA.synthetiserLesAlertes([]).mesurable, false, 'an empty registry means nobody has deposited yet — « no alert » and « nobody looked » look exactly alike, and they are not the same thing (leçons L5/L11)');
+  // UN OUTIL PASSÉ SANS RIEN TROUVER EXISTE, et c'est la moitié de l'information qu'on oublie.
+  const propre = abA.synthetiserLesAlertes([], { passages: { 'moise-tables-de-loi': { quand: '2026-09-27T00:00Z', combien: 0 } } });
+  assert.equal(propre.mesurable, true, 'a tool that ran and found nothing makes the registry measurable: a clean pass is a result, not an absence');
+  assert.equal(propre.propres.length, 1, 'and it is named as such — otherwise it would vanish exactly like a tool that never ran');
+
+  // LA FRONTIÈRE RESTE TENUE : Abraham RASSEMBLE, il ne réanalyse jamais.
+  assert.ok(abA.synthetiserLesAlertes([{ outil: 'x', cle: 'a', depuis: '2026-09-27T00:00Z', gravite: 'bloquante', constat: 'c' }]).horsPortee.includes("n'analyse jamais à la place"), "the summary must state its own limit: Abraham gathers, he never re-does MOÏSE's or Ezechiel's analysis — doing so would be exactly the overlap the three perimeters forbid");
+
+  console.log("Passed: le registre d'alertes partagé (2026-09-27, tâche #1027) — « Abraham n'est jamais loin, il veille » cesse d'être une intention et devient un fichier. L'organisation vient de l'utilisateur, en fenêtre dédiée : Abraham est le point d'entrée de l'assainissement à grande échelle, MOÏSE et Ezechiel restent convocables seuls sur leur périmètre, et chacun DÉPOSE son verdict au lieu qu'Abraham le relance — le relancer aurait refait leur analyse, donc exactement le chevauchement que la frontière des trois périmètres interdit, et sur le filet ça aurait coûté une exécution complète à chaque consultation. Trois invariants sont verrouillés ici. Un outil remplace SES alertes et ne touche jamais à celles des autres, sans quoi le dernier passé effacerait en silence les trouvailles de tout le monde. Une alerte qui revient garde sa date de PREMIÈRE apparition, sans quoi une alerte qui traîne depuis trois semaines aurait l'air neuve chaque jour et la veille ne verrait jamais rien traîner — c'est la seule chose que ce chapeau apporte et que personne d'autre ne voit. Et un outil passé SANS RIEN TROUVER est enregistré comme tel : un registre vide rend PAS MESURÉ, parce que « aucune alerte » et « personne n'a regardé » se ressemblent trait pour trait.");
 }
 
 // ————————————————————————————————————————————————————————————————————————

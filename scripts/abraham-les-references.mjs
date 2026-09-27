@@ -1175,8 +1175,147 @@ export function deposerRapportDocumentsJumeaux(lignes, { now = new Date(), write
   return chemin;
 }
 
+
+// =============================================================================================
+// LE REGISTRE D'ALERTES PARTAGÉ — ce qui rend concret « Abraham n'est jamais loin, il veille »
+// =============================================================================================
+// TRANCHÉ PAR L'UTILISATEUR EN FENÊTRE DÉDIÉE le 2026-09-27, en deux réponses qui se complètent :
+// Abraham est le POINT D'ENTRÉE de l'assainissement à grande échelle (il convoque MOÏSE et
+// Ezechiel et FUSIONNE leurs alertes, sans jamais refaire leur analyse), et sa veille passe par un
+// REGISTRE PARTAGÉ plutôt que par une règle écrite.
+//
+// POURQUOI UN REGISTRE ET PAS UNE RÈGLE, et c'est l'Article 27 pris au mot : « Abraham veille »
+// écrit dans une fiche est une intention. Un fichier où chaque outil dépose son verdict est un
+// fait — et il survit à un changement d'IA, ce qu'aucune bonne volonté ne fait.
+//
+// LE CHOIX DE CONCEPTION QUI COMPTE : un dépôt REMPLACE les alertes de SON outil et ne touche
+// jamais à celles des autres. Un journal qui empilerait tout finirait par décrire un passé que
+// personne ne relit ; ce qu'on veut savoir est ce qui est vrai MAINTENANT. Mais une alerte qui
+// revient à l'identique garde sa date de PREMIÈRE apparition — sans elle, une alerte qui traîne
+// depuis trois semaines ressemblerait chaque jour à une alerte toute neuve, et c'est exactement ce
+// que la veille doit rendre visible.
+// Abraham travaille depuis la racine du dépôt, comme le reste de ce fichier (`racine = "."`) :
+// il n'a pas de constante ROOT, et lui en inventer une ici la ferait diverger de la sienne.
+const RACINE_ALERTES = ".";
+export const FICHIER_ALERTES = "docs/abraham-les-references/alertes.json";
+export const JOURS_AVANT_DE_TRAINER = 7;
+
+// LE REGISTRE GARDE DEUX CHOSES, ET LA SECONDE EST AUSSI IMPORTANTE QUE LA PREMIÈRE : les alertes,
+// et la trace de QUI EST PASSÉ. Un outil qui a regardé et n'a rien trouvé disparaîtrait sinon
+// exactement comme un outil qui n'a jamais tourné — et ce projet paie cette confusion depuis
+// toujours (leçons L5/L11). Un passage sans alerte est une bonne nouvelle ; une absence de passage
+// est un trou. Les deux doivent se distinguer d'un coup d'œil.
+export function lireRegistre({ root = RACINE_ALERTES, lire = null } = {}) {
+  const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
+  const brut = lireF(FICHIER_ALERTES);
+  if (brut == null) return { passages: {}, alertes: [] };
+  try {
+    const j = JSON.parse(brut);
+    if (Array.isArray(j)) return { passages: {}, alertes: j };
+    return { passages: j.passages ?? {}, alertes: Array.isArray(j.alertes) ? j.alertes : [] };
+  } catch { return { passages: {}, alertes: [] }; }
+}
+
+export function lireAlertes(opts = {}) { return lireRegistre(opts).alertes; }
+
+export function fusionnerDepot(existantes = [], outil, nouvelles = [], { maintenant = new Date().toISOString() } = {}) {
+  if (!outil) throw new Error("une alerte sans outil déposant est intraçable : on ne saurait ni à qui la reprocher, ni quand elle a cessé d'être vraie");
+  const anciennes = new Map(existantes.filter((a) => a.outil === outil).map((a) => [a.cle, a]));
+  const autres = existantes.filter((a) => a.outil !== outil);
+  const miennes = nouvelles.map((a) => ({
+    outil, cle: String(a.cle), objet: a.objet ?? null, gravite: a.gravite ?? "à surveiller", constat: a.constat ?? "",
+    // LA DATE DE PREMIÈRE APPARITION EST CE QUI PERMET DE VOIR UNE ALERTE TRAÎNER. Elle se reprend
+    // à l'identique tant que l'alerte revient ; elle repart à zéro dès qu'elle a disparu une fois.
+    depuis: anciennes.get(String(a.cle))?.depuis ?? maintenant,
+    vueLe: maintenant,
+  }));
+  return [...autres, ...miennes];
+}
+
+// L'ÉCRITURE, volontairement séparée de la fusion : la fusion est pure et donc testable au
+// caractère près, l'écriture est le seul endroit qui touche au disque. Un outil qui dépose ne peut
+// jamais effacer les alertes d'un autre — le paramètre `outil` est obligatoire pour cette raison.
+export function deposerAlertes(outil, alertes = [], { root = RACINE_ALERTES, lire = null, ecrire = null, maintenant = new Date().toISOString() } = {}) {
+  const registre = lireRegistre({ root, lire });
+  const fusionnees = fusionnerDepot(registre.alertes, outil, alertes, { maintenant });
+  const passages = { ...registre.passages, [outil]: { quand: maintenant, combien: alertes.length } };
+  const ecrireF = ecrire ?? ((f, c) => { mkdirSync(join(root, "docs/abraham-les-references"), { recursive: true }); writeFileSync(join(root, f), c); });
+  ecrireF(FICHIER_ALERTES, JSON.stringify({ passages, alertes: fusionnees }, null, 2));
+  return { passages, alertes: fusionnees };
+}
+
+export function alertesQuiTrainent(alertes = [], { maintenant = Date.now(), jours = JOURS_AVANT_DE_TRAINER } = {}) {
+  const seuil = jours * 24 * 3600 * 1000;
+  return alertes
+    .map((a) => ({ ...a, ageJours: (maintenant - Date.parse(a.depuis)) / (24 * 3600 * 1000) }))
+    .filter((a) => Number.isFinite(a.ageJours) && a.ageJours * 24 * 3600 * 1000 >= seuil)
+    .sort((a, b) => b.ageJours - a.ageJours);
+}
+
+// LA FUSION À GRANDE ÉCHELLE : ce qu'Abraham RASSEMBLE et que personne ne voit autrement. Chaque
+// outil connaît son propre périmètre ; aucun ne sait combien d'alertes pèsent sur le dépôt ENTIER,
+// ni laquelle attend depuis le plus longtemps. C'est tout ce que ce chapeau apporte — et il
+// n'apporte rien d'autre, délibérément : refaire l'analyse des deux autres serait exactement le
+// chevauchement que la frontière des trois périmètres interdit.
+export function synthetiserLesAlertes(alertes = [], { maintenant = Date.now(), passages = {} } = {}) {
+  if (!alertes.length && !Object.keys(passages).length) {
+    return { mesurable: false, pourquoi: `le registre partagé (${FICHIER_ALERTES}) est vide : aucun outil n'a encore déposé son verdict. « Aucune alerte » et « personne n'a regardé » se ressemblent trait pour trait, et ce n'est pas la même chose (leçons L5/L11)` };
+  }
+  const parOutil = {}, parGravite = {};
+  for (const a of alertes) {
+    (parOutil[a.outil] ??= []).push(a);
+    (parGravite[a.gravite] ??= []).push(a);
+  }
+  const trainent = alertesQuiTrainent(alertes, { maintenant });
+  // CEUX QUI SONT PASSÉS SANS RIEN TROUVER — la moitié de l'information, et celle qu'on oublie.
+  const propres = Object.entries(passages).filter(([, p]) => !p.combien).map(([o, p]) => ({ outil: o, quand: p.quand }));
+  return {
+    mesurable: true, total: alertes.length, parOutil, parGravite, trainent, passages, propres,
+    bloquantes: alertes.filter((a) => a.gravite === "bloquante"),
+    horsPortee: "Abraham RASSEMBLE, il n'analyse jamais à la place des deux autres : MOÏSE reste seul juge de la charte, Ezechiel seul juge du filet. Ce chapeau apporte la vue d'ensemble et l'âge des alertes, rien de plus — et c'est déjà ce que personne d'autre ne voit.",
+  };
+}
+
+export function formatAlertesLines(s) {
+  if (!s?.mesurable) return [`PAS MESURÉ — ${s?.pourquoi ?? "aucune donnée"}`];
+  const L = [`${s.total} alerte(s) déposée(s) · ${Object.keys(s.passages ?? {}).length} outil(s) passé(s).`];
+  for (const [outil, list] of Object.entries(s.parOutil)) L.push(`  · ${outil} : ${list.length} alerte(s)`);
+  for (const p of s.propres ?? []) L.push(`  ✅ ${p.outil} : passé le ${String(p.quand).slice(0, 16).replace("T", " ")}, RIEN trouvé — ce qui n'est pas la même chose que ne pas être passé`);
+  if (s.bloquantes.length) {
+    L.push("", `🚨 ${s.bloquantes.length} BLOQUANTE(S) :`);
+    for (const a of s.bloquantes) L.push(`   ${a.outil} — ${a.constat}`);
+  }
+  L.push("", s.trainent.length
+    ? `⏳ ${s.trainent.length} alerte(s) traînent depuis plus de ${JOURS_AVANT_DE_TRAINER} jours — c'est la seule chose que la veille apporte et que personne d'autre ne voit :`
+    : `Aucune alerte ne traîne depuis plus de ${JOURS_AVANT_DE_TRAINER} jours.`);
+  for (const a of s.trainent.slice(0, 10)) L.push(`   ${a.ageJours.toFixed(0)} j · ${a.outil} — ${a.constat}`);
+  L.push("", s.horsPortee);
+  return L;
+}
+
 function main() {
   const [, , arg1, arg2] = process.argv;
+  // « assainissement » : le point d'entrée à grande échelle, tranché par l'utilisateur le
+  // 2026-09-27. Il LIT le registre partagé et fusionne ; il ne relance jamais les deux autres, et
+  // ce n'est pas une paresse — refaire leur analyse serait le chevauchement que la frontière des
+  // trois périmètres interdit, et sur le filet ça coûterait une exécution complète à chaque fois.
+  if (arg1 === "assainissement") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — assainissement : toutes les alertes du dépôt, rassemblées", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const reg = lireRegistre();
+    const s = synthetiserLesAlertes(reg.alertes, { passages: reg.passages });
+    for (const l of formatAlertesLines(s)) console.log(l);
+    if (!s.mesurable) {
+      console.log("\nPour alimenter le registre : `node scripts/moise-tables-de-loi.mjs` (la charte) et `node scripts/ezechiel-les-tests.mjs` (le filet) déposent leur verdict à chaque passage.");
+    }
+    const ecarts = [];
+    if (s.mesurable && s.bloquantes.length) ecarts.push({ pourquoi: `${s.bloquantes.length} alerte(s) bloquante(s) déposée(s) par les outils du rang` });
+    if (s.mesurable && s.trainent.length) ecarts.push({ pourquoi: `${s.trainent.length} alerte(s) traînent depuis plus de ${JOURS_AVANT_DE_TRAINER} jours sans être traitées` });
+    if (!s.mesurable) ecarts.push({ pourquoi: "le registre partagé est vide : aucun outil n'a encore déposé, donc la veille ne veille sur rien" });
+    imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "traiter chaque alerte sur le périmètre de l'outil qui l'a levée — Abraham rassemble, il ne corrige jamais à la place de MOÏSE ni d'Ezechiel" }));
+    return;
+  }
   // « documents-jumeaux » : le pendant, à l'échelle du DÉPÔT, de findPairesRedondantes() qui ne
   // regardait que l'intérieur d'un document. Commande à part pour la même raison que « classer » :
   // elle ÉCRIT un fichier.

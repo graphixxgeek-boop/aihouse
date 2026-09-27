@@ -1184,6 +1184,20 @@ async function main() {
     const fraicheur = findFaitsPerimes(readFileSync(join(ROOT, "CLAUDE.md"), "utf8"), { lister });
     for (const l of formatFraicheurLines(fraicheur)) console.log(l);
     console.log("");
+    // LE DÉPÔT AU REGISTRE PARTAGÉ (2026-09-27, organisation tranchée par l'utilisateur) : Abraham
+    // est le point d'entrée de l'assainissement à grande échelle, et c'est par ce registre qu'il
+    // « veille » même quand on ne l'appelle pas. MOÏSE n'y dépose que ce qu'il a mesuré sur SON
+    // périmètre — la charte — et jamais un mot du filet ni d'un autre document.
+    try {
+      const { deposerAlertes } = await import("./abraham-les-references.mjs");
+      const ecarts = (fraicheur?.perimes ?? []).map((f) => ({
+        cle: `fait-perime:${f.cle ?? f.annonce ?? ""}`.slice(0, 80), objet: "CLAUDE.md", gravite: "à surveiller",
+        constat: `la charte annonce « ${f.annonce} » là où le dépôt en compte ${f.reel} — un chiffre recopié re-périra, il se retire plutôt qu'il ne s'ajuste`,
+      }));
+      deposerAlertes("moise-tables-de-loi", ecarts);
+    } catch (err) {
+      console.log(`⚠️  Alertes NON déposées au registre partagé : ${err?.message ?? err}. Abraham ne les verra pas.\n`);
+    }
   }
 
   if (commande === "cartographie") {

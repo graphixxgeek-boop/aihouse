@@ -1,0 +1,68 @@
+{
+  "passages": {
+    "moise-tables-de-loi": {
+      "quand": "2026-09-27T16:31:30.543Z",
+      "combien": 0
+    },
+    "ezechiel-les-tests": {
+      "quand": "2026-09-27T16:31:30.968Z",
+      "combien": 6
+    }
+  },
+  "alertes": [
+    {
+      "outil": "ezechiel-les-tests",
+      "cle": "6 groupe(s) impriment « Passed » sans aucune assertion",
+      "objet": "scripts/check-house.mjs",
+      "gravite": "à surveiller",
+      "constat": "6 groupe(s) impriment « Passed » sans aucune assertion",
+      "depuis": "2026-09-27T16:31:30.968Z",
+      "vueLe": "2026-09-27T16:31:30.968Z"
+    },
+    {
+      "outil": "ezechiel-les-tests",
+      "cle": "3 groupe(s) portent une assertion sur une valeur littérale",
+      "objet": "scripts/check-house.mjs",
+      "gravite": "à surveiller",
+      "constat": "3 groupe(s) portent une assertion sur une valeur littérale",
+      "depuis": "2026-09-27T16:31:30.968Z",
+      "vueLe": "2026-09-27T16:31:30.968Z"
+    },
+    {
+      "outil": "ezechiel-les-tests",
+      "cle": "1 groupe(s) sans raison écrite",
+      "objet": "scripts/check-house.mjs",
+      "gravite": "à surveiller",
+      "constat": "1 groupe(s) sans raison écrite",
+      "depuis": "2026-09-27T16:31:30.968Z",
+      "vueLe": "2026-09-27T16:31:30.968Z"
+    },
+    {
+      "outil": "ezechiel-les-tests",
+      "cle": "d'où vient le temps n'a pas été mesuré",
+      "objet": "scripts/check-house.mjs",
+      "gravite": "bloquante",
+      "constat": "d'où vient le temps n'a pas été mesuré",
+      "depuis": "2026-09-27T16:31:30.968Z",
+      "vueLe": "2026-09-27T16:31:30.968Z"
+    },
+    {
+      "outil": "ezechiel-les-tests",
+      "cle": "la suite elle-même n'est pas au vert : 2 anomalie(s) de fonctionnement",
+      "objet": "scripts/check-house.mjs",
+      "gravite": "à surveiller",
+      "constat": "la suite elle-même n'est pas au vert : 2 anomalie(s) de fonctionnement",
+      "depuis": "2026-09-27T16:31:30.968Z",
+      "vueLe": "2026-09-27T16:31:30.968Z"
+    },
+    {
+      "outil": "ezechiel-les-tests",
+      "cle": "ce qu'un allègement coûterait en protection n'a jamais été mesuré",
+      "objet": "scripts/check-house.mjs",
+      "gravite": "bloquante",
+      "constat": "ce qu'un allègement coûterait en protection n'a jamais été mesuré",
+      "depuis": "2026-09-27T16:31:30.968Z",
+      "vueLe": "2026-09-27T16:31:30.968Z"
+    }
+  ]
+}

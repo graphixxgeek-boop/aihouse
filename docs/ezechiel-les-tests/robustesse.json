@@ -1,0 +1,36 @@
+[
+  {
+    "quand": "2026-09-27T16:21:31.308Z",
+    "tauxPct": 100,
+    "resultats": [
+      {
+        "chemin": "lib/dialogue.ts",
+        "ligne": 25,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/clean-dirty-old.mjs",
+        "ligne": 54,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/kpi-report.mjs",
+        "ligne": 56,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/route-booster.mjs",
+        "ligne": 29,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      }
+    ]
+  }
+]

@@ -557,3 +557,21 @@ d'un agent (Article 27).
 
 
 
+
+
+## Le chapeau de l'assainissement — Abraham, MOÏSE, Ezechiel (2026-09-27, tâche #1027)
+
+**Tranché par l'utilisateur en fenêtre dédiée**, et c'est une relation de CONVOCATION, jamais
+d'autorité : Abraham ne commande rien à personne, il rassemble.
+
+- **Abraham est le point d'entrée** de l'assainissement à grande échelle
+  (`node scripts/abraham-les-references.mjs assainissement`). Il fusionne les alertes de tous, dit
+  lesquelles sont bloquantes et lesquelles **traînent depuis plus de sept jours**.
+- **MOÏSE et Ezechiel restent convocables seuls** pour un contrôle localisé sur leur périmètre.
+- **La veille passe par un registre partagé**, jamais par une règle écrite : chaque outil dépose
+  son verdict — et son passage même quand il n'a rien trouvé — dans
+  `docs/abraham-les-references/alertes.json`. C'est ce qui rend « Abraham n'est jamais loin, il
+  veille » vérifiable plutôt qu'intentionnel (Article 27).
+- **Abraham n'analyse jamais à la place des deux autres.** MOÏSE reste seul juge de la charte,
+  Ezechiel seul juge du filet. Le détail des trois périmètres :
+  `docs/referentiel/abraham-les-references.md`.

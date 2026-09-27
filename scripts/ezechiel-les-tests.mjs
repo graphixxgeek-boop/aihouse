@@ -426,9 +426,14 @@ export function assertionsNonAttendues(src = "") {
     // Une fonction async appelée SANS await à l'intérieur d'une assertion : la promesse est
     // comparée, jamais sa valeur. L'indice mécanique fiable est l'absence de `await` sur une
     // expression qui en appelle une, ou un `.then(` non attendu.
-    if (MOTIF_ASSERTION_NON_ATTENDUE.test(l)) {
-      trouvees.push({ ligne: i + 1, extrait: l.trim().slice(0, 110), pourquoi: "une promesse est comparée au lieu de sa valeur : cette assertion passera quoi qu'on casse dans le code" });
-    }
+    if (!MOTIF_ASSERTION_NON_ATTENDUE.test(l)) continue;
+    // TROISIÈME FOIS QUE LA MÊME CLASSE DE DÉFAUT SE PRÉSENTE DANS CET OUTIL, et c'est la leçon L37
+    // prise sur le fait : un fichier de tests CITE du code, et le code cité n'est pas du code
+    // exécuté. Après les imports et les lignes de succès, ce sont les assertions — celle-ci
+    // s'accusait elle-même, puisque son propre contre-test contient le défaut qu'elle cherche.
+    const dehors = [...l.matchAll(/\.(?:then|catch)\s*\(/g)].some((m) => !dansUneChaine(l, m.index));
+    if (!dehors) continue;
+    trouvees.push({ ligne: i + 1, extrait: l.trim().slice(0, 110), pourquoi: "une promesse est comparée au lieu de sa valeur : cette assertion passera quoi qu'on casse dans le code" });
   }
   return trouvees;
 }
@@ -1101,8 +1106,20 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           writeFileSync(chemin, original);
         }
       }
-      const restant = execSync("git status --porcelain", { cwd: ROOT }).toString().trim();
-      console.log(restant ? `\n🚨 RESTAURATION INCOMPLÈTE — à vérifier à la main :\n${restant}` : "\nRestauration vérifiée : le dépôt est revenu exactement à son état de départ.");
+      // LA VÉRIFICATION DE RESTAURATION NE REGARDE QUE LES FICHIERS QU'ON A MUTÉS, et ce n'est pas
+      // un relâchement : le premier vrai passage a duré neuf minutes, pendant lesquelles un autre
+      // fichier du dépôt a été modifié à côté. La passe a crié « RESTAURATION INCOMPLÈTE » sur un
+      // fichier qu'elle n'avait jamais touché — une alarme qui accuse à tort cesse d'être lue
+      // (leçon L4). Ce qui la regarde est l'état des fichiers de SES cassures ; le reste est du
+      // travail en cours, signalé à part et sans dramatiser.
+      const salesMaintenant = new Set(execSync("git status --porcelain", { cwd: ROOT }).toString().trim().split("\n").filter(Boolean).map((l) => l.slice(3).trim()));
+      const mutes = new Set(choisies.map((m) => m.chemin));
+      const pasRestaures = [...mutes].filter((f) => salesMaintenant.has(f));
+      const autres = [...salesMaintenant].filter((f) => !mutes.has(f));
+      console.log(pasRestaures.length
+        ? `\n🚨 RESTAURATION INCOMPLÈTE — ces fichiers ont été cassés par la passe et ne sont pas revenus à leur état d'origine :\n${pasRestaures.map((f) => `   ${f}`).join("\n")}`
+        : "\nRestauration vérifiée : tous les fichiers cassés par la passe sont revenus exactement à leur état de départ.");
+      if (autres.length) console.log(`   (${autres.length} autre(s) fichier(s) modifié(s) pendant la passe, qu'elle n'a jamais touchés : ${autres.slice(0, 4).join(", ")}${autres.length > 4 ? "…" : ""} — du travail en cours, pas un défaut de restauration)`);
     }
     console.log("");
     const v = verdictDeRobustesse(resultats, { filetVertAvant: vertAvant });
@@ -1138,5 +1155,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   };
   const e = enqueter({ durees });
   for (const l of formatEnqueteLines(e)) console.log(l);
-  imprimerPlanDaction(buildPlanDaction(planDeLEnquete(e), { toolSlug: "ezechiel-les-tests" }));
+  const plan = planDeLEnquete(e);
+  imprimerPlanDaction(buildPlanDaction(plan, { toolSlug: "ezechiel-les-tests" }));
+
+  // LE DÉPÔT AU REGISTRE PARTAGÉ — c'est par lui qu'Abraham « veille » même quand personne ne
+  // l'appelle (organisation tranchée par l'utilisateur le 2026-09-27). Ezechiel ne dépose que ce
+  // qu'il a MESURÉ sur SON périmètre : il ne dit jamais un mot de la charte ni d'un autre document.
+  try {
+    const { deposerAlertes } = await import("./abraham-les-references.mjs");
+    deposerAlertes("ezechiel-les-tests", plan.map((c) => ({
+      cle: String(c.constat).slice(0, 80), objet: FILET,
+      gravite: c.niveau === "obligatoire" ? "bloquante" : "à surveiller",
+      constat: c.constat,
+    })));
+  } catch (err) {
+    // UN DÉPÔT QUI ÉCHOUE NE FAIT PAS TOMBER L'ENQUÊTE, et il ne se tait pas non plus : un registre
+    // silencieusement vide se lirait comme « aucune alerte » (leçons L5/L11).
+    console.log(`\n⚠️  Alertes NON déposées au registre partagé : ${err?.message ?? err}. Abraham ne les verra pas.`);
+  }
 }

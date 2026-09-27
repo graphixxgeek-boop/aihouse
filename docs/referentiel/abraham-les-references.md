@@ -112,3 +112,34 @@ place).
 **Agent** 🎖️, Membre ordinaire — **hors Ronde**, même motif que MOÏSE : ce qu'il sait dire
 gratuitement remonte déjà par l'agent qui l'appelle, et un item de plus contredirait la tâche #612,
 qui cherche justement à réduire le nombre de rapports produits à chaque passage.
+
+## Le chapeau de l'assainissement (2026-09-27, tâche #1027)
+
+**Tranché par l'utilisateur en fenêtre dédiée.** Abraham est le **POINT D'ENTRÉE** de
+l'assainissement à grande échelle : `node scripts/abraham-les-references.mjs assainissement` rend,
+en un seul rapport, toutes les alertes du dépôt, leur gravité, et — surtout — **leur âge**.
+
+**Trois outils, trois périmètres qui ne se chevauchent pas**, et la frontière est une DONNÉE
+(`PERIMETRES` dans `scripts/ezechiel-les-tests.mjs`), relue par un test à chaque passage du filet :
+
+| Outil | Son objet | La fraîcheur qu'il garantit |
+|---|---|---|
+| MOÏSE-TABLES-DE-LOI | la charte, et elle seule | les FAITS qu'elle énonce — un chiffre annoncé correspond-il au dépôt réel ? |
+| Abraham-les-references | n'importe quel document à règles numérotées | les RÈGLES — porteur réel, citations vivantes, redondances |
+| EZECHIEL-LES-TESTS | le filet de sécurité et toute la machinerie qui l'entoure | la CORRESPONDANCE entre ce que les tests appellent et ce que le code offre encore |
+
+**Comment Abraham « veille » sans refaire le travail des autres.** Il ne les relance jamais : il
+LIT le registre partagé `docs/abraham-les-references/alertes.json`, où chacun dépose le verdict de
+son propre périmètre à chaque passage. Les relancer aurait refait leur analyse — donc exactement
+le chevauchement que la frontière interdit — et sur le filet cela coûterait une exécution complète
+à chaque consultation.
+
+**Trois invariants du registre, chacun verrouillé par un contre-test :**
+
+1. **Un outil remplace SES alertes et ne touche jamais à celles des autres.** Sans cette règle, le
+   dernier passé effacerait en silence les trouvailles de tout le monde.
+2. **Une alerte qui revient garde sa date de PREMIÈRE apparition.** Sans elle, une alerte qui traîne
+   depuis trois semaines aurait l'air neuve chaque jour — et c'est justement ce que la veille
+   apporte, que personne d'autre ne voit.
+3. **Un passage SANS alerte est enregistré comme un passage.** Un registre vide rend PAS MESURÉ :
+   « aucune alerte » et « personne n'a regardé » se ressemblent trait pour trait.
