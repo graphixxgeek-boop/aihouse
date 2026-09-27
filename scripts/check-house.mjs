@@ -16348,6 +16348,34 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE COORDINATEUR NE CLASSAIT PAS SES PROPRES DOSSIERS (2026-09-27)
+// ————————————————————————————————————————————————————————————————————————
+// TROUVÉ SUR SA QUESTION : « ou alors tout est centralisé chez Abraham pour la maintenance ? ». En
+// vérifiant qui dépose vraiment dans le registre partagé, la réponse est tombée : MOÏSE et Ezechiel
+// déposaient, ABRAHAM NON — alors que c'est LUI qui porte le code du registre. Le défaut était
+// parfaitement invisible parce que sa synthèse avait l'air complète : elle rassemblait tout, sauf
+// ses propres trouvailles, qui mouraient à l'écran.
+{
+  const ab = await import('../scripts/abraham-les-references.mjs');
+
+  // TROIS ÉTATS DANS LA SYNTHÈSE, et c'est ce qui rend le trou visible : un outil qui n'est JAMAIS
+  // passé et un outil passé qui n'a RIEN trouvé ne disent pas la même chose.
+  const propre = ab.synthetiserLesAlertes([], { passages: { "abraham-les-references": { quand: "2026-09-27", combien: 0 } } });
+  assert.ok((propre.propres ?? []).some((x) => x.outil === 'abraham-les-references'), 'un outil passé sans rien trouver doit apparaître comme PASSÉ ET PROPRE, jamais se confondre avec un outil qui n\'est pas passé du tout (leçon L5/L11)');
+  const jamais = ab.synthetiserLesAlertes([], { passages: {} });
+  assert.ok(!(jamais.propres ?? []).length, 'et sans aucun passage, personne n\'est déclaré propre : le silence n\'est pas un bon résultat');
+
+  // LE DÉPÔT EST IDEMPOTENT ET GARDE L'ANCIENNETÉ : une alerte qui revient au passage suivant n'est
+  // pas une alerte neuve, sinon rien ne « traînerait » jamais et le compteur d'ancienneté serait mort.
+  const hier = [{ outil: 'x', cle: 'k', objet: 'o', gravite: 'bloquante', constat: 'c', depuis: '2026-09-20', vueLe: '2026-09-20' }];
+  const fusion = ab.fusionnerDepot(hier, 'x', [{ cle: 'k', objet: 'o', gravite: 'bloquante', constat: 'c' }], { maintenant: new Date('2026-09-27T10:00:00Z') });
+  assert.equal(fusion[0].depuis, '2026-09-20', 'MUST KEEP ITS AGE: une alerte qui revient garde sa date d\'apparition — la remettre à aujourd\'hui ferait qu\'aucune alerte ne traînerait jamais, et le compteur d\'ancienneté deviendrait décoratif');
+  assert.equal(ab.alertesQuiTrainent(fusion, { maintenant: new Date('2026-09-30T10:00:00Z'), jours: 3 }).length, 1, 'et c\'est cette ancienneté conservée qui fait qu\'une alerte finit par être signalée comme traînante');
+
+  console.log("Passed: le coordinateur ne classait pas ses propres dossiers (2026-09-27). Trouvé sur sa question — « ou alors tout est centralisé chez Abraham pour la maintenance ? » — en vérifiant qui DÉPOSE vraiment dans le registre partagé plutôt qu'en relisant l'organigramme : MOÏSE et Ezechiel déposaient, ABRAHAM NON, alors que c'est lui qui porte le code du registre. LE DÉFAUT ÉTAIT INVISIBLE PARCE QUE SA SYNTHÈSE AVAIT L'AIR COMPLÈTE : elle rassemblait tout sauf ses propres trouvailles, qui mouraient à l'écran sans jamais entrer dans la veille qu'il anime — un rassembleur qui ne se rassemble pas lui-même rend une synthèse incomplète en ayant l'air complète, ce qui est pire qu'une synthèse absente. CE QUE CES ASSERTIONS PROTÈGENT EST LA DISTINCTION QUI REND LE TROU VISIBLE : « jamais passé » et « passé, rien trouvé » ne sont pas la même chose, et les confondre est exactement ce qui a permis à l'absence d'Abraham de passer inaperçue pendant des jours. Elles protègent aussi l'ANCIENNETÉ : une alerte qui revient au passage suivant garde sa date d'apparition, sans quoi rien ne traînerait jamais et le compteur serait décoratif. La répartition reste celle qu'il avait devinée — chacun son périmètre, Abraham au point d'entrée — mais le point d'entrée dépose désormais comme les autres.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
 // LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et

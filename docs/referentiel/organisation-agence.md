@@ -575,3 +575,50 @@ d'autorité : Abraham ne commande rien à personne, il rassemble.
 - **Abraham n'analyse jamais à la place des deux autres.** MOÏSE reste seul juge de la charte,
   Ezechiel seul juge du filet. Le détail des trois périmètres :
   `docs/referentiel/abraham-les-references.md`.
+
+## Qui maintient quoi, et pourquoi ce n'est pas centralisé (2026-09-27)
+
+**Sa question** : « qui surveille la maintenance de l'architecture du fichier test ? C'est bien
+Ezechiel ? Idem pour MOÏSE et CLAUDE.md ? Idem pour Abraham et l'ensemble des docs de référence ?
+Ou alors tout est centralisé chez Abraham ? »
+
+**Ce n'est pas centralisé, et les trois périmètres sont déclarés dans le code** (`PERIMETRES`,
+`scripts/ezechiel-les-tests.mjs`), avec un garde-fou qui vérifie mécaniquement qu'ils ne se
+chevauchent pas — mesuré : zéro collision.
+
+| Agent | Son périmètre | Ce qu'il y surveille |
+|---|---|---|
+| **Ezechiel** | LE FILET, et toute la machinerie autour | la CORRESPONDANCE entre ce que les tests appellent et ce que le code offre encore |
+| **MOÏSE** | LA CHARTE, et elle seule | les FAITS qu'elle énonce — un chiffre annoncé correspond-il au dépôt réel ? — et sa STRUCTURE (aucun Article disparu, renuméroté ou inséré au milieu) |
+| **Abraham** | N'IMPORTE quel document à règles numérotées | les RÈGLES : porteur réel, citations vivantes, redondances |
+
+**Abraham n'est pas le patron des deux autres : il est le POINT D'ENTRÉE et le rassembleur.** On
+peut convoquer MOÏSE ou Ezechiel directement pour un périmètre précis ; Abraham, lui, tient le
+registre d'alertes partagé où chacun dépose, et rend la vue d'ensemble. Il RASSEMBLE, il n'analyse
+jamais à la place des autres — MOÏSE reste seul juge de la charte, Ezechiel seul juge du filet.
+
+### Ce qu'Ezechiel fait sur le filet, et ce n'est pas qu'une chose
+
+Sa question portait sur « la maintenance » au singulier ; elle est en réalité à six faces, et toutes
+sont mécaniques et gratuites sauf mention contraire :
+
+1. **L'enquête** — structure, citations mortes, blocs sans assertion, blocs sans raison écrite.
+2. **Le voyant de santé** — la suite elle-même tourne-t-elle proprement (bruit, avertissements,
+   succès annoncés mais jamais imprimés) ? Une suite peut être verte ET malade.
+3. **Le chronométrage par bloc et son historique** — devient-elle plus lente, et de combien ?
+4. **La passe de robustesse** — mord-elle encore vraiment ? (coût réel : elle relance le filet une
+   fois par cassure)
+5. **Les obstacles au parallèle** — qu'est-ce qui refuse d'être séparé ?
+6. **La détection et la PRESCRIPTION** — quel fichier est le filet, et à quoi devrait ressembler
+   celui d'un projet qui n'en a pas encore (`docs/architecture-du-filet.md`).
+
+**Il n'écrit JAMAIS dans le filet.** Il rend un constat ; la décision reste humaine.
+
+### Le trou trouvé en répondant à cette question
+
+**Abraham tenait le registre d'alertes partagé — c'est lui qui en porte le code — et il n'y déposait
+jamais rien.** Seuls MOÏSE et Ezechiel alimentaient. Le coordinateur de l'assainissement ne classait
+pas ses propres dossiers : ses trouvailles à lui (deux documents qui disent la même chose) mouraient
+à l'écran sans jamais entrer dans la veille qu'il anime. **Un rassembleur qui ne se rassemble pas
+lui-même rend une synthèse incomplète en ayant l'air complète**, ce qui est pire qu'une synthèse
+absente. Corrigé le jour même : il dépose avant de lire.

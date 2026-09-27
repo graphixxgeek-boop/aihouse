@@ -1319,6 +1319,23 @@ function main() {
     printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — assainissement : toutes les alertes du dépôt, rassemblées", scriptPath: "scripts/abraham-les-references.mjs" });
     printReliabilityNotice("abraham-les-references");
     recordCliUsage("abraham-les-references");
+    // ABRAHAM DÉPOSE SES PROPRES ALERTES AVANT DE LIRE CELLES DES AUTRES (2026-09-27, trouvé sur sa
+    // question « ou alors tout est centralisé chez Abraham pour la maintenance ? »). Le défaut était
+    // structurel et parfaitement invisible : Abraham TIENT le registre partagé — c'est lui qui en
+    // porte le code — et il n'y déposait JAMAIS RIEN. Seuls MOÏSE et Ezechiel alimentaient. Le
+    // coordinateur de l'assainissement ne classait pas ses propres dossiers, si bien que ses
+    // trouvailles à lui — deux documents qui disent la même chose — mouraient à l'écran et
+    // n'entraient jamais dans la veille qu'il anime. Un rassembleur qui ne se rassemble pas lui-même
+    // rend une synthèse incomplète en ayant l'air complète, ce qui est pire qu'une synthèse absente.
+    const siennes = [];
+    try {
+      const jumeaux = trouverDocumentsJumeaux(chargerLesDocuments());
+      for (const paire of (jumeaux.aInstruire ?? []).slice(0, 20)) {
+        siennes.push({ cle: `documents jumeaux : ${paire.a} × ${paire.b}`, objet: paire.a, gravite: "a-instruire",
+          constat: `${paire.a} et ${paire.b} partagent ${Math.round((paire.recouvrement ?? 0) * 100)} % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà` });
+      }
+    } catch { /* un scan impossible ne fabrique aucune alerte : mieux vaut ne rien déposer que déposer du vide */ }
+    deposerAlertes("abraham-les-references", siennes);
     const reg = lireRegistre();
     const s = synthetiserLesAlertes(reg.alertes, { passages: reg.passages });
     for (const l of formatAlertesLines(s)) console.log(l);
