@@ -21,7 +21,7 @@ import { existsSync, mkdtempSync, rmSync, readFileSync } from "node:fs";
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice, derniereTouchePartagee } from "./lib-shell.mjs";
 import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
@@ -107,10 +107,16 @@ export function cleanDirtyOldPerformance(indexText) {
 // --- Orchestration réelle ---------------------------------------------------------------------
 
 // Exportée pour que LE-COORDINATEUR puisse calculer le même signal sans reshell check-house.mjs.
-export function lastTouchDays(file) {
-  const out = sh(`git log -1 --format=%ct -- ${file}`, { cwd: ROOT }).trim();
-  if (!out) return undefined;
-  const commitSeconds = Number(out);
+// UN SEUL PASSAGE D'HISTORIQUE POUR TOUT LE MONDE (2026-09-27, chantier du filet, deuxième marche).
+// Cette fonction ouvrait un `git log -1` par fichier : ~9 ms l'unité, invisible seule, 13,3 s pour
+// le seul bloc INES-official du filet, qui la sollicite 356 fois. La date vient désormais de la
+// carte partagée (`dernieresTouchePartagee`, lib-shell), construite en UN passage d'historique.
+// LE CONTRAT NE CHANGE PAS — même nombre de jours, `undefined` pour un fichier que l'historique ne
+// connaît pas — et il a été vérifié fichier par fichier avant d'être branché : 1 260 fichiers
+// suivis, 1 260 dates identiques, zéro écart. Un gain de vitesse qui changerait un seul de ces
+// chiffres serait une régression déguisée, pas une optimisation.
+export function lastTouchDays(file, { shImpl = sh, cwd = ROOT, touches = null } = {}) {
+  const commitSeconds = touches ? touches.get(String(file).replace(/^\.\//, "")) : derniereTouchePartagee(file, { shImpl, cwd });
   if (!Number.isFinite(commitSeconds)) return undefined;
   return (Date.now() / 1000 - commitSeconds) / 86400;
 }

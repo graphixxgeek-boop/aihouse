@@ -967,3 +967,69 @@ export function statistiquesDuDecorPartage() {
   return { demandes, lectures, evitees: demandes - lectures, octetsEvites,
     tauxPct: demandes ? ((demandes - lectures) / demandes) * 100 : 0 };
 }
+
+
+// =============================================================================================
+// LES DATES DE GIT PARTAGÉES — un seul passage d'historique, pour toute l'exécution
+// =============================================================================================
+// MÊME DÉFAUT QUE LE DÉCOR PARTAGÉ, MAIS SUR LES SOUS-PROCESSUS, et il est mesuré (2026-09-27,
+// chantier du filet, deuxième marche). `lastTouchDays()` lance `git log -1 -- <fichier>` pour UN
+// fichier : environ 9 ms le coup, invisible seul. Le bloc INES-official du filet en lance 356 (178
+// fichiers × deux appels, parce que l'annotation et le résumé redemandent chacun la même date) et
+// pèse à lui seul 13,3 s, soit 14,4 % du filet entier. Aucune lecture de fichier n'est en cause
+// ici : c'est le coût d'ouvrir un processus, payé trois cent cinquante-six fois.
+//
+// LA TECHNIQUE EST CELLE DU MÉTIER, pas une invention maison : un seul passage d'historique
+// (`git log --name-only`) rend la date du dernier commit de TOUS les fichiers d'un coup. Mesuré
+// sur ce dépôt (881 commits) : 0,25 s pour l'historique complet, contre 3,3 s pour les 356 appels
+// individuels — et le gain grandit avec le nombre de fichiers, jamais l'inverse.
+//
+// LE MARQUEUR EST UN OCTET NUL, et ce n'est pas de la coquetterie : un horodatage est une suite de
+// chiffres, et rien n'interdit à un fichier de s'appeler « 1790487945 ». Un chemin, lui, ne peut
+// jamais contenir d'octet nul — c'est la seule séparation que le système garantit. `core.quotePath=false`
+// pour la même raison : sans lui, git échappe les accents et les chemins français ne correspondent plus.
+//
+// LA LIMITE EST DÉCLARÉE, jamais tue : la carte est construite UNE fois par exécution et n'est pas
+// réinvalidée. C'est juste tant qu'un outil ne commite pas au milieu de son propre passage, ce
+// qu'aucun outil de ce dépôt ne fait — tous lisent. `viderLesTouchesPartagees()` existe pour le cas
+// contraire, et le déclarer ici vaut mieux que de laisser croire à une invalidation qui n'existe pas.
+const CACHE_TOUCHES = { carte: null };
+const COMPTEUR_TOUCHES = { demandes: 0, passages: 0, evitees: 0 };
+
+export function construireLesTouches(sortie = "") {
+  const carte = new Map();
+  let horodatage = null;
+  for (const ligne of String(sortie).split("\n")) {
+    if (ligne.startsWith("\0")) { const n = Number(ligne.slice(1)); horodatage = Number.isFinite(n) ? n : null; continue; }
+    if (!ligne || horodatage == null) continue;
+    if (!carte.has(ligne)) carte.set(ligne, horodatage);
+  }
+  return carte;
+}
+
+export function dernieresTouchesPartagees({ shImpl = sh, cwd = undefined } = {}) {
+  if (CACHE_TOUCHES.carte) return CACHE_TOUCHES.carte;
+  COMPTEUR_TOUCHES.passages++;
+  let sortie = "";
+  try { sortie = shImpl(`git -c core.quotePath=false log --format=%x00%ct --name-only --no-renames HEAD`, { cwd }); }
+  catch { sortie = ""; }
+  CACHE_TOUCHES.carte = construireLesTouches(sortie);
+  return CACHE_TOUCHES.carte;
+}
+
+// RETOURNE DES SECONDES EPOCH, ou `undefined` pour un fichier que l'historique ne connaît pas —
+// exactement ce que rendait `git log -1 --format=%ct` sur un fichier jamais committé. Le contrat ne
+// change pas ; seul le nombre de processus ouverts change.
+export function derniereTouchePartagee(fichier, opts = {}) {
+  COMPTEUR_TOUCHES.demandes++;
+  const carte = dernieresTouchesPartagees(opts);
+  if (carte.size) COMPTEUR_TOUCHES.evitees++;
+  return carte.get(String(fichier).replace(/^\.\//, ""));
+}
+
+export function viderLesTouchesPartagees() { CACHE_TOUCHES.carte = null; }
+
+export function statistiquesDesTouchesPartagees() {
+  const { demandes, passages, evitees } = COMPTEUR_TOUCHES;
+  return { demandes, passages, evitees, tauxPct: demandes ? (evitees / demandes) * 100 : 0 };
+}

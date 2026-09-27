@@ -432,7 +432,7 @@ export function toolsToReconsider({ usageHistory, knownSlugs, staleness, objecti
 // d'outils, juste appliqué ici à un périmètre différent (les scripts, jamais lib/*.ts).
 export function scriptStaleness(shImpl) {
   const byFile = {};
-  for (const scriptPath of Object.values(AGENT_SCRIPT_FILES)) byFile[scriptPath] = lastTouchDays(scriptPath, shImpl);
+  for (const scriptPath of Object.values(AGENT_SCRIPT_FILES)) byFile[scriptPath] = lastTouchDays(scriptPath, { shImpl });
   return relativeStaleness(byFile);
 }
 

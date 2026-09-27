@@ -16183,6 +16183,48 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
+// ————————————————————————————————————————————————————————————————————————
+// LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et
+// c'est un défaut d'une autre nature : aucun octet n'est lu en trop, c'est le coût d'ouvrir un
+// processus qui est payé 356 fois dans un seul bloc. Le bloc INES-official pesait 13,3 s, soit
+// 14,4 % du filet entier, pour 178 fichiers dont chacun demandait DEUX fois sa date de dernier
+// commit — une fois pour l'annotation, une fois pour le résumé.
+{
+  const sh = await import('../scripts/lib-shell.mjs');
+
+  // LE DÉCOUPAGE EST LE CŒUR : l'octet nul sépare un horodatage d'un chemin, et rien d'autre ne
+  // le peut. Un horodatage est une suite de chiffres, et rien n'interdit à un fichier de s'appeler
+  // « 1790487945 » — sans le marqueur, ce fichier-là deviendrait une date et emporterait avec lui
+  // tous les chemins qui le suivent.
+  const brut = '\u0000200\nscripts/a.mjs\ndocs/b.md\n\n\u0000100\nscripts/a.mjs\n1790487945\n';
+  const carte = sh.construireLesTouches(brut);
+  assert.equal(carte.get('scripts/a.mjs'), 200, 'git rend son historique du plus récent au plus ancien : la PREMIÈRE apparition d\'un fichier est sa date de dernier commit, et une apparition plus ancienne ne doit jamais l\'écraser');
+  assert.equal(carte.get('docs/b.md'), 200, 'tous les fichiers d\'un même commit portent la date de ce commit, jamais seulement le premier de la liste');
+  assert.equal(carte.get('1790487945'), 100, 'MUST NOT CONFUSE: un fichier dont le NOM est une suite de chiffres reste un chemin, parce que seul l\'octet nul marque un horodatage — sans ce marqueur il deviendrait une date et volerait la sienne à tout ce qui le suit');
+  assert.equal(carte.size, 3, 'et rien d\'autre n\'entre dans la carte : ni les lignes vides que git intercale, ni les horodatages eux-mêmes');
+  assert.equal(sh.construireLesTouches('scripts/orphelin.mjs\n').size, 0, 'un chemin rencontré avant le moindre horodatage n\'a pas de date connue : il est ignoré, jamais daté au hasard (leçon L5 — « pas trouvé » n\'est pas « pas pu regarder »)');
+
+  // LE CONTRAT NE CHANGE PAS, et c'est la seule chose qui compte : un fichier que l'historique ne
+  // connaît pas rend `undefined`, exactement comme le `git log -1` d'avant sur un fichier jamais
+  // committé. Une optimisation qui transformerait ça en 0 ferait passer un fichier neuf pour un
+  // fichier daté d'aujourd'hui — l'exact contraire de ce que mesure la stagnation.
+  const cdo = await import('../scripts/clean-dirty-old.mjs');
+  const fausseCarte = new Map([['scripts/connu.mjs', Math.round(Date.now() / 1000) - 86400 * 3]]);
+  assert.equal(Math.round(cdo.lastTouchDays('scripts/connu.mjs', { touches: fausseCarte })), 3, 'la conversion en jours reste celle d\'avant : trois jours de secondes font trois jours');
+  assert.equal(cdo.lastTouchDays('scripts/jamais-committe.mjs', { touches: fausseCarte }), undefined, 'MUST STAY UNDEFINED: un fichier absent de l\'historique n\'a pas d\'âge, il n\'a pas l\'âge zéro — c\'est la distinction que buildEditionSummary() compte séparément sous « jamais committé »');
+
+  // ET LA VRAIE CARTE DU VRAI DÉPÔT, parce qu'un outil qui n'a jamais tourné contre le vrai dépôt
+  // est une intention (Article 25). Vérifiée fichier par fichier avant branchement : 1 260 fichiers
+  // suivis, 1 260 dates identiques à celles du `git log -1` individuel, zéro écart.
+  const reelle = sh.dernieresTouchesPartagees({ cwd: new URL('..', import.meta.url).pathname });
+  assert.ok(reelle.size > 500, `la carte réelle doit porter tout le dépôt, pas un échantillon — ${reelle.size} fichiers trouvés`);
+  assert.ok(typeof cdo.lastTouchDays('scripts/check-house.mjs') === 'number', 'et le filet lui-même, qui est committé, doit avoir un âge réel');
+
+  console.log("Passed: les dates de git partagées (2026-09-27, chantier du filet, deuxième marche). La première marche partageait les LECTURES ; celle-ci partage les SOUS-PROCESSUS, et le défaut n'est pas le même : aucun octet n'était lu en trop, c'est le coût d'ouvrir un processus qui était payé 356 fois dans le seul bloc INES-official — 178 fichiers × deux demandes de date, ~9 ms l'unité, 13,3 s au total, 14,4 % du filet entier. Un seul passage d'historique (`git log --name-only`, 0,25 s sur 881 commits) rend la même chose pour TOUS les fichiers d'un coup, et le bloc tombe à 0,28 s. CE QUE CES ASSERTIONS PROTÈGENT N'EST PAS LE GAIN, C'EST LE CONTRAT : la même date, au même jour près, et surtout le même `undefined` pour un fichier que l'historique ne connaît pas — un fichier jamais committé n'a pas l'âge zéro, il n'a pas d'âge, et c'est précisément ce que le résumé d'édition compte à part. La vérification n'a pas été déclarée mais FAITE, fichier par fichier, avant le branchement : 1 260 fichiers suivis, 1 260 dates identiques au `git log -1` individuel, zéro écart. Le contre-test le plus utile est celui du fichier nommé « 1790487945 » : un horodatage est une suite de chiffres, un chemin peut l'être aussi, et seul l'octet nul — le seul caractère qu'un chemin ne peut jamais contenir — les sépare vraiment.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA DETTE ET LE SOUPÇON (2026-09-26, tâche #943)
 // ————————————————————————————————————————————————————————————————————————
 // Le détecteur de dettes accusait à tort : un commit qui touchait le CONTRÔLEUR d'un process pour
