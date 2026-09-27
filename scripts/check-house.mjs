@@ -14431,7 +14431,11 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const fichiers = { 'scripts/x.mjs': 'export function maGarde() { return 1; }' };
   assert.equal(m.porteursDeclares('Cette règle est tenue par `maGarde()`.', fichiers).etat, 'porté', 'a rule naming a mechanism that genuinely exists in the repository must report "porté"');
   assert.equal(m.porteursDeclares('Cette règle ne nomme aucun mécanisme, elle se contente de prescrire.', fichiers).etat, 'sans porteur', 'a rule naming nothing must report "sans porteur" — its prose IS the mechanism (Article 27), which makes it untouchable in substance rather than well protected');
-  const fantome = m.porteursDeclares('Cette règle est vérifiée par `garantieImaginaire()`.', fichiers);
+  // LE CORPUS SE DÉCLARE COMPLET (2026-09-27, tâche #1023) : sans ça, un mécanisme absent du corpus
+  // FOURNI se lisait comme un mécanisme absent du DÉPÔT — une non-mesure prise pour une preuve, et
+  // c'est ce qui faisait accuser l'Article 13 de la charte à tort. L'intention du test ne change
+  // pas d'un mot : un vrai fantôme reste le pire des états.
+  const fantome = m.porteursDeclares('Cette règle est vérifiée par `garantieImaginaire()`.', fichiers, { corpusComplet: true });
   assert.equal(fantome.etat, 'fantôme', 'a rule naming a mechanism that does NOT exist must report "fantôme" — the worst of the three states, since it reassures wrongly where a declared absence at least keeps vigilance awake');
   assert.deepEqual(fantome.fantomes, ['garantieImaginaire'], 'and it must NAME the missing mechanism, never just count it: an unnamed ghost cannot be chased');
   assert.equal(m.porteursDeclares('Voir `scripts/x.mjs` pour le détail.', fichiers).etat, 'porté', 'a script path is a valid porteur too, verified against the real file list rather than assumed');
@@ -14704,7 +14708,9 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const depot = { 'scripts/existe.mjs': 'export function jeSuisLa() {}' };
   assert.equal(ab.porteursDeclares('rien de nommé ici', depot).etat, 'sans porteur', 'a rule naming no mechanism is "sans porteur", which is legitimate when assumed — its prose IS the mechanism (Article 27)');
   assert.equal(ab.porteursDeclares('vérifié par `jeSuisLa()`', depot).etat, 'porté', 'a rule naming a mechanism that exists is carried');
-  const fantome = ab.porteursDeclares('vérifié par `nExistePasDuTout()`', depot);
+  // Même contrat qu'au-dessus (2026-09-27, #1023) : le corpus se DÉCLARE complet pour qu'un absent
+  // compte comme un fantôme. L'intention est intacte ; seule la preuve est désormais exigée.
+  const fantome = ab.porteursDeclares('vérifié par `nExistePasDuTout()`', depot, { corpusComplet: true });
   assert.equal(fantome.etat, 'fantôme', 'and a rule naming a mechanism that cannot be found must be FANTÔME rather than counted as carried — an announced protection that does not exist is worse than an absence, because it reassures wrongly');
   assert.ok(fantome.fantomes.includes('nExistePasDuTout'), 'naming the missing mechanism, since "something is wrong somewhere" is not a finding anyone can act on');
 
@@ -15785,6 +15791,40 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(!/\.\.\.missing\.map\(/.test(srcDoc919), 'doc-report main() must not reference the removed `missing` variable: it crashed the whole report before its plan d\'action, and a tool that dies before its conclusion is a tool whose conclusion nobody has ever read');
 
   console.log("Passed: sept détecteurs qui ne parlaient nulle part (2026-09-26, tâche #919) — ils existaient, ils étaient testés, et aucun code hors de la suite de tests ne les appelait. La distinction qui décide de leur place vient de la tâche elle-même : un garde-fou qui protège un invariant du CODE appartient aux tests et nulle part ailleurs ; un garde-fou qui dit quelque chose sur LE PROJET doit parler dans le rapport que lit un humain. Ces sept-là parlent du projet — un outil qu'on ordonne de lancer à la main sans jamais écrire sa commande, un outil déclaré heuristique qui ne prononce jamais son avertissement, une section devenue introuvable faute de sommaire, un membre hors de tout organigramme, une activité à enjeu que rien ne gouverne. Ce qui est vérifié ici n'est pas qu'ils fonctionnent, c'est qu'ils sont APPELÉS : un test qui vérifie une fonction sans vérifier qu'on l'appelle est précisément ce qui les a laissés muets. Et le câblage a fait tomber autre chose : doc-report mourait sur un ReferenceError avant son plan d'action depuis le matin même, si bien que sa conclusion n'avait jamais été imprimée une seule fois. Trouvé en lançant l'outil pour de vrai, jamais en relisant le diff.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA FRAÎCHEUR DES FAITS (#1022) ET LE MANUEL QUI N'EST PAS UN FANTÔME (#1023) — 2026-09-27
+// ————————————————————————————————————————————————————————————————————————
+// DEUX DEMANDES DE L'UTILISATEUR LE MÊME JOUR, et les deux naissent du même défaut mesuré : un
+// chiffre recopié se périme en silence, et un garde-fou qui accuse à tort cesse d'être lu.
+{
+  const mtl22 = await import('../scripts/moise-tables-de-loi.mjs');
+  const ab23 = await import('../scripts/abraham-les-references.mjs');
+  const listerFaux = (d) => (d === 'scripts' ? ['a.mjs', 'b.mjs', 'c.mjs'] : []);
+
+  // #1022 — LE CHIFFRE SE COMPARE AU DÉPÔT RÉEL, jamais à un attendu recopié.
+  assert.equal(mtl22.findFaitsPerimes('les ~7 scripts de l\'Agence', { lister: listerFaux }).ecarts.length, 1, 'MUST CATCH: a figure announced by the charter that no longer matches the repository — this is the whole point, and eight of them were false on 2026-09-27, half contradicting each other INSIDE the same file');
+  assert.equal(mtl22.findFaitsPerimes('les 3 scripts de l\'Agence', { lister: listerFaux }).ecarts.length, 0, 'MUST LET PASS: a figure that matches reality says nothing — a guard that also fires on correct numbers would be unreadable within a week');
+  // LA PROSE N'EST PAS UN DÉNOMBREMENT, et le premier passage réel l'a prouvé : « 8 outils protégés
+  // de cette façon » n'a rien à voir avec l'inventaire, et se faisait accuser (leçon L4).
+  assert.equal(mtl22.findFaitsPerimes('8 outils protégés de cette façon avant même cet audit', { lister: listerFaux }).ecarts.length, 0, 'MUST LET PASS: prose that happens to contain a number is not a count of the inventory — the first real run accused exactly this sentence');
+  assert.equal(mtl22.findFaitsPerimes('les fiches des 22 outils', { lister: listerFaux }).ecarts.length > 0, true, 'MUST CATCH: a sentence that genuinely claims to count the inventory');
+  // SANS LECTEUR, IL REFUSE DE CONCLURE (leçons L5/L11) : une liste vide se lirait comme « tout est à jour ».
+  assert.equal(mtl22.findFaitsPerimes('les 25 scripts').mesurable, false, 'with no repository reader it must declare NOT MEASURED, never return an empty list that reads as a fresh charter');
+  // ET IL DIT DE RETIRER LE CHIFFRE, jamais de l'ajuster — sinon la correction se périmera pareil.
+  assert.ok(/RETIRER/.test(mtl22.formatFraicheurLines(mtl22.findFaitsPerimes('les ~7 scripts', { lister: listerFaux })).join(' ')), 'and it must say to REMOVE the figure rather than update it: an updated figure re-expires at the next arrival, which this repository saw punish four guards in a single day');
+
+  // #1023 — UN CORPUS PARTIEL N'EST PAS UNE PREUVE D'ABSENCE. C'était la vraie cause du « porteur
+  // fantôme » de l'Article 13 : le fichier n'était pas dans le corpus fourni, pas absent du dépôt.
+  const corpus = { 'scripts/reel.mjs': 'export function f() {}' };
+  assert.equal(ab23.porteursDeclares('voir `scripts/absent.mjs`', corpus).etat, 'a-confirmer', "MUST NOT ACCUSE: a mechanism missing from the corpus GIVEN to the function was never proven missing from the repository — that is a non-measure, not a phantom (leçons L5/L11)");
+  assert.equal(ab23.porteursDeclares('voir `scripts/absent.mjs`', corpus, { corpusComplet: true }).etat, 'fantôme', 'MUST STILL BITE: once the caller declares the corpus complete, a missing mechanism IS a phantom — and a phantom reassures wrongly, which is worse than an admitted absence');
+  // UN MÉCANISME DÉCLARÉ MANUEL EST UN CHOIX ÉCRIT, jamais un oubli.
+  assert.equal(ab23.mecanismeDeclareManuel('coûte de vrais appels API, donc à lancer à la main, pas en continu'), true, 'MUST RECOGNISE: the charter says of check-profile.mjs that it must be launched BY HAND because it costs real paid calls — Abraham accused the charter of a defect it declares and justifies itself');
+  assert.equal(ab23.mecanismeDeclareManuel('câblé au crochet post-commit, il tourne à chaque commit'), false, 'MUST LET PASS: a mechanism wired to a hook is not manual, and calling it so would excuse a real gap');
+
+  console.log("Passed: la fraîcheur des faits et le manuel qui n'est pas un fantôme (2026-09-27, tâches #1022 et #1023) — deux demandes du même jour, nées du même défaut mesuré. MOÏSE compare désormais chaque chiffre annoncé par la charte au dépôt RÉEL, à chaque passage et sans qu'on ait à le demander, parce qu'une garantie qu'il faut penser à réclamer n'en est pas une ; il dit de RETIRER le chiffre plutôt que de l'ajuster, puisqu'un nombre recopié re-périra exactement comme les quatre qui ont puni une arrivée d'outil dans la seule journée du 2026-09-27. Sa sonde a été resserrée au premier passage réel, où « 8 outils protégés de cette façon » se faisait accuser d'être un mauvais dénombrement de l'inventaire. Et Abraham distingue enfin trois états là où il n'en voyait que deux : un mécanisme introuvable dans le corpus FOURNI n'est pas un fantôme mais un « à confirmer », parce qu'on ne l'a pas cherché partout ; un mécanisme que la règle déclare expressément manuel est un choix écrit et non un oubli, ce qui était toute l'affaire du prétendu fantôme de l'Article 13.");
 }
 
 // ————————————————————————————————————————————————————————————————————————

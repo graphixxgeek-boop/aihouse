@@ -839,6 +839,91 @@ export function verdictDeRevision(signauxTrouves = [], catalogue = SIGNAUX_DE_RE
 // LE DIAGNOSTIC LUI-MÊME. Il prend des MESURES DÉJÀ FAITES plutôt que de les refaire, et il rend
 // `mesurable: false` quand il n'a rien pu lire — la distinction qui a coûté huit corrections dans
 // la nuit du 2026-09-24 : un contrôle qui n'a pas pu regarder ne doit jamais ressembler à un
+// ============================================================================================
+// LA FRAÎCHEUR DES FAITS (2026-09-27, tâche #1022)
+// ============================================================================================
+// DEMANDE EXPLICITE DE L'UTILISATEUR : « moise ou abraham doivent garantir la fraicheur de
+// claude.md ». MOÏSE a été choisi en fenêtre dédiée parce qu'il est déjà l'agent du seul périmètre
+// de la charte, qu'il tourne déjà à chaque commit qui la touche, et qu'il en refuse déjà les
+// déformations de STRUCTURE. Lui ajouter la fraîcheur des FAITS complète un poste existant.
+//
+// LE COÛT MESURÉ, et il est ce qui rend cette fonction nécessaire : le 2026-09-27, HUIT affirmations
+// chiffrées de la charte étaient fausses, et la moitié se contredisaient À L'INTÉRIEUR du même
+// fichier — « les six tournent automatiquement » quarante lignes avant un texte qui dit qu'ils sont
+// sept, « les fiches des 22 outils » juste sous un tableau qui en compte trente-neuf.
+//
+// LE PRINCIPE, ET C'EST LUI QU'IL A RETENU : un nombre énoncé dans la charte se DÉRIVE du dépôt,
+// ou bien un garde-fou refuse l'écart. Corriger les huit chiffres n'aurait rien réglé — ils
+// auraient repéri à la prochaine arrivée d'outil, ce que ce dépôt a vu arriver QUATRE fois dans la
+// seule journée du 2026-09-27 (Article 24, leçon L37).
+//
+// CE QUI EST CURATÉ À LA MAIN ICI, ET POURQUOI C'EST LÉGITIME (Article 24, exception écrite) : la
+// LISTE des sondes. Aucune mécanique ne peut deviner qu'une phrase parle du nombre de scripts. En
+// revanche chaque sonde CALCULE sa vérité depuis le dépôt réel — aucun chiffre attendu n'est
+// recopié, donc aucune sonde ne peut se périmer en silence. Seule son absence est possible, et une
+// sonde manquante ne ment jamais : elle ne dit simplement rien.
+export const SONDES_DE_FRAICHEUR = [
+  {
+    cle: "scripts",
+    quoi: "le nombre de scripts de l'Agence",
+    motif: /(?:~|environ\s+)?(\d+)\s+scripts\b/gi,
+    reel: ({ lister }) => lister("scripts").filter((f) => f.endsWith(".mjs")).length,
+  },
+  {
+    cle: "fiches-referentiel",
+    quoi: "le nombre de fiches du référentiel",
+    motif: /(\d+)\s+(?:fiches?|documents?)\s+(?:de\s+)?référentiel/gi,
+    reel: ({ lister }) => lister("docs/referentiel").filter((f) => f.endsWith(".md")).length,
+  },
+  {
+    cle: "outils-inventaire",
+    quoi: "le nombre d'outils de l'inventaire documentaire",
+    // LE MOTIF EST RESSERRÉ, et il l'a été au premier passage réel : « (\\d+) outils » attrapait
+    // « 8 outils protégés de cette façon », une phrase qui ne parle pas du tout de l'inventaire.
+    // Un garde-fou qui accuse à tort cesse d'être lu (L4). Ne comptent que les formulations qui
+    // prétendent VRAIMENT dénombrer l'inventaire.
+    motif: /(?:fiches? des|inventaire de[s]?|catalogue de[s]?)\s+(\d+)\s+outils\b/gi,
+    reel: ({ charte }) => (String(charte).match(/^\|\s+[A-Za-zÀ-ÿ].*\|\s+`docs\/[^`]+`\s+\|/gm) ?? []).length,
+  },
+];
+
+// UN ÉCART SE MESURE, IL NE SE DEVINE PAS : sans lecteur de dépôt, la fonction rend PAS MESURÉ
+// plutôt qu'une liste vide, qui se lirait comme « tous les chiffres sont justes » (leçons L5/L11).
+export function findFaitsPerimes(charte = "", { lister = null, sondes = SONDES_DE_FRAICHEUR, tolerance = 0 } = {}) {
+  if (typeof lister !== "function") {
+    return { mesurable: false, pourquoi: "aucun lecteur de dépôt fourni — sans lui on ne peut comparer aucun chiffre au réel, ce qui n'est jamais la même chose qu'une charte à jour" };
+  }
+  const ecarts = [];
+  let sondesActives = 0;
+  for (const sonde of sondes) {
+    let reel;
+    try { reel = sonde.reel({ lister, charte }); } catch { continue; }
+    if (!Number.isFinite(reel)) continue;
+    sondesActives++;
+    for (const m of String(charte).matchAll(sonde.motif)) {
+      const annonce = Number(m[1]);
+      if (!Number.isFinite(annonce)) continue;
+      if (Math.abs(annonce - reel) <= tolerance) continue;
+      ecarts.push({
+        cle: sonde.cle, quoi: sonde.quoi, annonce, reel, extrait: m[0],
+        pourquoi: `la charte annonce ${annonce}, le dépôt en porte ${reel} — un chiffre recopié se périme à la prochaine arrivée, c'est pourquoi la bonne correction est de le RETIRER plutôt que de l'ajuster (Article 24)`,
+      });
+    }
+  }
+  return { mesurable: true, sondesActives, ecarts };
+}
+
+export function formatFraicheurLines(r) {
+  if (!r?.mesurable) return [`PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  if (!r.ecarts.length) return [`✅ Fraîcheur des faits : aucun écart sur ${r.sondesActives} sonde(s) — chaque chiffre annoncé correspond au dépôt réel.`];
+  const L = [`⚠️  ${r.ecarts.length} chiffre(s) de la charte ne correspondent plus au dépôt :`];
+  for (const e of r.ecarts) L.push(`   · ${e.quoi} — « ${e.extrait.trim()} » alors que le dépôt en porte ${e.reel}. ${e.pourquoi}`);
+  L.push("", "   La bonne correction est presque toujours de RETIRER le chiffre, jamais de le mettre à jour :",
+    "   un nombre recopié dans un document re-périra, et ce dépôt en a vu quatre punir une arrivée",
+    "   dans la seule journée du 2026-09-27.");
+  return L;
+}
+
 // contrôle qui n'a rien trouvé.
 export function diagnosticCharte({ classement = null, obligations = null, jamaisCites = [],
   recouvrements = [], cheminsMorts = [], cartoPerimee = false, tokens = null,
@@ -1089,6 +1174,17 @@ async function main() {
   printReportHeader({ tool: "moise-tables-de-loi", title: "MOÏSE-TABLES-DE-LOI — le périmètre de la charte, et lui seul", scriptPath: "scripts/moise-tables-de-loi.mjs" });
   printReliabilityNotice("moise-tables-de-loi");
   recordCliUsage("moise-tables-de-loi");
+
+  // LA FRAÎCHEUR DES FAITS (2026-09-27, tâche #1022) tourne à CHAQUE passage, jamais sur une
+  // sous-commande qu'il faudrait penser à taper : une garantie qu'on doit demander n'en est pas
+  // une (Article 27). Elle est gratuite — trois lectures de dossier.
+  {
+    const { readdirSync } = await import("node:fs");
+    const lister = (d) => { try { return readdirSync(join(ROOT, d)); } catch { return []; } };
+    const fraicheur = findFaitsPerimes(readFileSync(join(ROOT, "CLAUDE.md"), "utf8"), { lister });
+    for (const l of formatFraicheurLines(fraicheur)) console.log(l);
+    console.log("");
+  }
 
   if (commande === "cartographie") {
     const carto = buildCartographie({ mesurerObligations: budgetInstructions });

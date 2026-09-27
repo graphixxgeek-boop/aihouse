@@ -74,7 +74,27 @@ export const estDuCode = (chemin) => EXT_CODE.has(chemin.slice(chemin.lastIndexO
 const MOTIF_FONCTION_CITEE = /`([a-zA-Z][a-zA-Z0-9_]{3,})\(\)`/g;
 const MOTIF_SCRIPT_CITE = /`(scripts\/[a-z0-9-]+\.mjs)`/g;
 
-export function porteursDeclares(texteUnite = "", fichiers = {}) {
+// UN MÉCANISME VOLONTAIREMENT MANUEL N'EST PAS UN MÉCANISME MANQUANT (2026-09-27, tâche #1023).
+// Demande explicite de l'utilisateur : « Abraham doit distinguer "aucun mécanisme n'existe" de
+// "le mécanisme est volontairement manuel, et c'est écrit à côté" ».
+//
+// LE CAS QUI L'A PAYÉE, et il est instructif : Abraham dénonçait un porteur fantôme sur l'Article 13
+// de la charte. Vérification faite avant de rien corriger (Article 19) : les neuf chemins et la
+// fonction que cet Article nomme EXISTENT TOUS. Le « fantôme » était `check-profile.mjs`, qu'aucun
+// test ne lance — parce que la charte ORDONNE de le lancer à la main, puisqu'il coûte de vrais
+// appels payants. Abraham accusait donc la charte d'un défaut qu'elle déclare et justifie
+// elle-même, sur l'Article qui gouverne toute la documentation. Patron exact de la leçon L4.
+export const MOTIF_MANUEL_DECLARE = /à lancer à la main|lancer à la main|jamais en continu|jamais dans un crochet|sur demande (?:explicite|uniquement)|à la demande, jamais|jamais automatique/i;
+
+export function mecanismeDeclareManuel(texte = "") {
+  return MOTIF_MANUEL_DECLARE.test(String(texte));
+}
+
+// LE SECOND DÉFAUT, ET C'EST LE VRAI : le fantôme se décidait sur un corpus de fichiers FOURNI PAR
+// L'APPELANT. Un fichier simplement absent de ce corpus se lisait comme un fichier inexistant —
+// une non-mesure prise pour une preuve (leçons L5/L11). Sans déclaration explicite que le corpus
+// est complet, un mécanisme introuvable devient « à confirmer », jamais « fantôme ».
+export function porteursDeclares(texteUnite = "", fichiers = {}, { corpusComplet = false } = {}) {
   const nommes = new Set();
   for (const m of String(texteUnite).matchAll(MOTIF_FONCTION_CITEE)) nommes.add({ type: "fonction", nom: m[1] });
   for (const m of String(texteUnite).matchAll(MOTIF_SCRIPT_CITE)) nommes.add({ type: "script", nom: m[1] });
@@ -86,6 +106,9 @@ export function porteursDeclares(texteUnite = "", fichiers = {}) {
     (existe ? trouves : fantomes).push(n.nom);
   }
   if (!nommes.size) return { etat: "sans porteur", trouves: [], fantomes: [], pourquoi: "ne nomme aucun mécanisme — sa prose est son seul mécanisme (Article 27)" };
+  if (fantomes.length && !corpusComplet) {
+    return { etat: "a-confirmer", trouves, fantomes, pourquoi: `${fantomes.length} mécanisme(s) n'ont pas été trouvés DANS LE CORPUS FOURNI (${fantomes.join(", ")}) — ce qui ne prouve pas qu'ils n'existent pas, seulement qu'on ne les a pas cherchés partout. Relancer avec corpusComplet: true pour trancher` };
+  }
   if (fantomes.length) return { etat: "fantôme", trouves, fantomes, pourquoi: `nomme ${fantomes.length} mécanisme(s) INTROUVABLE(S) : ${fantomes.join(", ")} — pire qu'une absence, puisque ça rassure à tort` };
   return { etat: "porté", trouves, fantomes: [], pourquoi: `nomme ${trouves.length} mécanisme(s) et tous existent : ${trouves.slice(0, 3).join(", ")}${trouves.length > 3 ? "…" : ""}` };
 }
@@ -214,6 +237,14 @@ export function niveauGarantie(porteur = {}, texte = "", { lire = null } = {}) {
   // moitié de la charte : un mécanisme qui EXISTE mais que rien ne lance à chaque commit. C'est la
   // vérité la plus utile de toute cette classification, et c'était exactement celle que la version
   // mention-vaut-mécanisme effaçait.
+  // UN MÉCANISME QUI EXISTE, QUE RIEN NE LANCE, ET DONT LA RÈGLE DIT QU'IL EST MANUEL n'est pas un
+  // mécanisme oublié : c'est une décision assumée, et la reprocher à chaque passage est exactement
+  // ce qui fait cesser de lire un garde-fou (leçon L4, et Article 24 sur le contenu curaté à la
+  // main qui reste légitime tant que sa nature est écrite noir sur blanc à côté).
+  if (porteur.etat === "porté" && mecanismeDeclareManuel(t)) {
+    return { ...NIVEAUX_GARANTIE[4], porteur: nommes, manuelDeclare: true, pourquoi: `nomme ${nommes.length} mécanisme(s) qui existent et que la règle déclare EXPRESSÉMENT manuels (${nommes.slice(0, 2).join(", ")}) — ce n'est pas un oubli, c'est un choix écrit, le plus souvent parce que les lancer en continu coûterait de vrais appels payants` };
+  }
+  if (porteur.etat === "a-confirmer") return { ...NIVEAUX_GARANTIE[4], porteur: nommes, aConfirmer: true, pourquoi: porteur.pourquoi };
   if (porteur.etat === "porté") return { ...NIVEAUX_GARANTIE[4], porteur: nommes, pourquoi: `nomme ${nommes.length} mécanisme(s) qui existe(nt) vraiment, mais qu'aucun test ni crochet n'exécute : ${nommes.slice(0, 2).join(", ")}` };
   if (porteur.etat === "fantôme") return { ...NIVEAUX_GARANTIE[0], porteur: [], pourquoi: `nomme un mécanisme INTROUVABLE (${(porteur.fantomes ?? []).join(", ")}) — pire qu'une absence, ça rassure à tort` };
   if (/\bDEMANDE\b|refuse d'être (au )?vert|angel-of-ia-process/i.test(t)) return { ...NIVEAUX_GARANTIE[3], porteur: [], pourquoi: "sa conformité est DEMANDÉE et le silence compte comme un manquement" };
@@ -251,7 +282,7 @@ export function porteurExterne(numero, prefixe, toutesLesUnites = [], fichiers =
     const phrases = t.split(/\n\s*\n/);
     for (const ph of phrases) {
       if (!new RegExp(`${prefixe}\\s*${moi}\\b`, "i").test(ph)) continue;
-      const p = porteursDeclares(ph, fichiers);
+      const p = porteursDeclares(ph, fichiers, { corpusComplet: true });
       if (p.etat === "porté") return { depuis: u.numero, mecanismes: p.trouves, phrase: ph.slice(0, 120) };
     }
   }
@@ -286,7 +317,7 @@ export function verdictDepuisEcart(ecart) {
 
 export function classerUnite(unite = {}, fichiers = {}, { lire = null, toutesLesUnites = [], prefixe = "Article" } = {}) {
   const texte = unite.texte ?? "";
-  let porteur = porteursDeclares(texte, fichiers);
+  let porteur = porteursDeclares(texte, fichiers, { corpusComplet: true });
   let externe = null;
   if (porteur.etat === "sans porteur") {
     externe = porteurExterne(unite.numero, prefixe, toutesLesUnites, fichiers);
@@ -348,7 +379,7 @@ export function mesurerUnites({ texte, motifUnite, motifBorneSuperieure, champs,
   const unites = decouperEnUnites(texte, motifUnite, { motifBorneSuperieure, champs });
   return unites.map((u) => {
     const cle = u.numero ?? u.article ?? u.n;
-    const porteur = porteursDeclares(u.texte, fichiers);
+    const porteur = porteursDeclares(u.texte, fichiers, { corpusComplet: true });
     return {
       numero: cle,
       titre: u.titre ?? "",
