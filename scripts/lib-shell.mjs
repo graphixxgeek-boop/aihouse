@@ -890,3 +890,33 @@ export function memeChose(a, b) {
   const communs = motsDuNom(b).filter((m) => ma.has(m));
   return communs.length >= 2;
 }
+
+// ============================================================================================
+// LE BLOC GÉNÉRÉ D'UN INDEX — DÉMÉNAGÉ ICI LE 2026-09-27 (tâche #1004)
+// ============================================================================================
+// POURQUOI IL A DÛ BOUGER, et le déclencheur est mesuré : `data-archangel` pose un sommaire
+// généré sous la prose d'un index, entre deux marqueurs. Ce bloc est de la MISE EN PAGE, pas de la
+// substance — mais le détecteur de documents jumeaux, lui, lisait le fichier entier. Après le
+// rattrapage des index de cette nuit, il a rendu **26 paires de documents « qui disent la même
+// chose »** dont AUCUNE ne se ressemblait vraiment : ce qu'elles partageaient était le gabarit du
+// sommaire, pas leur contenu. Un détecteur qui accuse à tort cesse d'être lu (leçon L4).
+//
+// POURQUOI DANS lib-shell ET PAS UN IMPORT CROISÉ : `abraham-les-references` tourne dans la chaîne
+// du crochet post-commit ; lui faire importer `data-archangel` y ferait entrer `doc-report` et
+// `kpi-report` par ricochet, et une erreur dans l'un casserait le crochet de tout le monde. Le
+// dépôt a déjà refusé ce montage une fois, pour cette raison exacte. La maison commune est donc le
+// seul endroit où les deux peuvent le lire sans se dépendre l'un de l'autre (Article 24 : écrit
+// une fois, jamais recopié).
+export const DEBUT_BLOC_GENERE = "<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->";
+export const FIN_BLOC_GENERE = "<!-- FIN DU SOMMAIRE GÉNÉRÉ -->";
+
+// Rend le texte SANS son bloc généré. Un fichier qui n'en porte pas ressort inchangé — c'est la
+// condition pour que n'importe quel lecteur puisse l'appliquer sans se demander d'abord si le
+// document est concerné.
+export function sansLeBlocGenere(texte = "") {
+  const t = String(texte);
+  const i = t.indexOf(DEBUT_BLOC_GENERE);
+  if (i === -1) return t;
+  const j = t.indexOf(FIN_BLOC_GENERE, i);
+  return j === -1 ? t.slice(0, i) : t.slice(0, i) + t.slice(j + FIN_BLOC_GENERE.length);
+}

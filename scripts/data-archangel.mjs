@@ -24,7 +24,7 @@
 // ligne ne bouge ici.
 
 import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from "node:fs";
-import { listerLesFichiers } from "./lib-shell.mjs";
+import { listerLesFichiers, DEBUT_BLOC_GENERE, FIN_BLOC_GENERE, sansLeBlocGenere } from "./lib-shell.mjs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -1277,8 +1277,12 @@ export function formatIndexLines(r) {
 // machine vit entre DEUX MARQUEURS. Ce qu'un humain a écrit autour n'est jamais touché, et une
 // seconde exécution remplace le bloc au lieu de l'empiler. Sans ces bornes, « compléter » voudrait
 // dire réécrire le fichier, c'est-à-dire la chose que la génération refuse depuis sa naissance.
-export const DEBUT_BLOC_GENERE = "<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->";
-export const FIN_BLOC_GENERE = "<!-- FIN DU SOMMAIRE GÉNÉRÉ -->";
+// LES DEUX MARQUEURS ET LE RETRAIT DU BLOC VIVENT DANS lib-shell DEPUIS LE 2026-09-27 (#1004) :
+// le détecteur de documents jumeaux en a besoin aussi, et il ne peut pas importer ce fichier sans
+// faire entrer doc-report et kpi-report dans la chaîne du crochet post-commit. Ils sont RÉEXPORTÉS
+// ici pour que tout ce qui les lisait à cette adresse continue de les trouver — un déménagement ne
+// doit jamais casser un lecteur existant (Article 19).
+export { DEBUT_BLOC_GENERE, FIN_BLOC_GENERE, sansLeBlocGenere };
 
 export function poserLeBlocGenere(texte = "", contenu = "") {
   const t = String(texte);
@@ -1325,13 +1329,7 @@ export function sommaireDesFichiers(dossier, fichiers = []) {
 // c'est une trace honnête, juste moins riche qu'une ligne écrite à la main. Le défaut n'était donc
 // jamais de le compter : c'était de le réécrire à neuf. Il se construit désormais contre le texte
 // SANS lui-même, donc il accumule, et la mesure lit le texte entier, donc il compte.
-export function sansLeBlocGenere(texte = "") {
-  const t = String(texte);
-  const i = t.indexOf(DEBUT_BLOC_GENERE);
-  if (i === -1) return t;
-  const j = t.indexOf(FIN_BLOC_GENERE, i);
-  return j === -1 ? t.slice(0, i) : t.slice(0, i) + t.slice(j + FIN_BLOC_GENERE.length);
-}
+// (`sansLeBlocGenere()` vit désormais dans lib-shell — voir la réexportation plus haut.)
 
 // CE QUI N'EST PAS UN DÉPÔT, et la règle est DÉRIVÉE plutôt qu'énumérée (Article 24) : un fichier
 // caché est un état local de l'outil (`.dernier-fichier-maitre.local.txt`), et un fichier dont le

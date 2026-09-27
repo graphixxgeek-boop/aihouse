@@ -9700,6 +9700,40 @@ await testVerrousDOuverture();
   // chercher l'arrivant, cocher, et donner la ligne à coller. Ce qui reste DIFFÉRENT est la liste.
   // Trois outils séparés auraient recopié trois fois les cinq mêmes gestes, donc divergé au
   // premier changement de l'un d'eux (Article 31 : on étend, on n'agit jamais à côté).
+  // L'AXE « NATURE » DES DOCUMENTS (2026-09-27, tâche #249 — son point 12). Second axe des 448
+  // documents, à côté de l'exportabilité : celui-là dit si un document PART, celui-ci dit ce qu'il
+  // PORTE. Les deux se croisent dans les quatre sens, et c'est pour ça qu'ils restent deux.
+  const { natureDuDocument, natureDesDocuments, loisIntrouvables, NATURES_DE_DOCUMENT, DOCUMENTS_QUI_FONT_LOI, EXCEPTIONS_DE_NATURE } = await import('../scripts/le-classificateur.mjs');
+  // L'ORDRE DES TESTS EST LA RÈGLE : du plus spécifique au plus général. Ces quatre cas le figent,
+  // et chacun serait rangé ailleurs si l'ordre glissait.
+  assert.equal(natureDuDocument('docs/argus/index.md').cle, 'index', 'un index.md déposé dans le dossier d\'un outil est un INDEX avant d\'être un rapport — testé en premier pour ça');
+  assert.equal(natureDuDocument('docs/argus-blueprint.md').cle, 'blueprint', 'un blueprint est reconnu par son suffixe, jamais par son dossier');
+  assert.equal(natureDuDocument('docs/argus/passage-2026-09-27.md').cle, 'rapport', 'un dépôt daté dans le dossier d\'un outil est un rapport');
+  assert.equal(natureDuDocument('docs/el-professor/full_sim16.md').cle, 'rapport', 'ET un dépôt NON daté aussi : dix-huit fiches EL-PROFESSOR portaient le numéro de la simulation et non une date — mon motif d\'origine, qui n\'exigeait qu\'une date, en laissait dix-huit en « indéterminée » pour un signal trop étroit alors que le DOSSIER le disait déjà');
+  assert.equal(natureDuDocument('docs/referentiel/principes.md').cle, 'reference', 'le référentiel est testé AVANT le motif large des dossiers d\'outils, sinon il tomberait en « rapport »');
+  assert.equal(natureDuDocument('docs/suivi/sessions/x.md').cle, 'suivi', 'idem pour le suivi');
+  assert.equal(natureDuDocument('docs/strategies/x-strategie.md').cle, 'strategie', 'idem pour les stratégies');
+  assert.equal(natureDuDocument('CLAUDE.md').cle, 'loi', 'la charte OBLIGE — elle ne décrit pas, et aucun chemin ne peut le dire : c\'est la seule liste écrite à la main de cet axe, déclarée comme telle (Article 24)');
+  assert.equal(natureDuDocument('docs/outil-resilience-api.md').cle, 'blueprint', 'l\'unique exception déclarée : CLAUDE.md dit en toutes lettres que ce fichier est le blueprint de Smart Breaker et « garde son nom d\'avant le surnom » — la raison est historique, aucun suffixe ne peut la trahir');
+  assert.equal(natureDuDocument('docs/un-fichier-que-rien-ne-reconnait.md').cle, 'indeterminee', 'ET IL DOIT SAVOIR DIRE QU\'IL NE SAIT PAS : un axe qui range tout par défaut ne range rien (leçon L11)');
+  // LE GARDE-FOU DERRIÈRE LA SEULE LISTE MANUELLE, comme l'Article 24 l'exige : une loi renommée
+  // sortirait en « indéterminée » en silence, et l'axe perdrait sa catégorie la plus importante.
+  assert.deepEqual(loisIntrouvables(), [], 'les quatre documents déclarés comme faisant loi et l\'exception déclarée doivent tous exister');
+  assert.equal(loisIntrouvables({ loi: [{ chemin: 'docs/disparu.md', pourquoi: 'x' }], exceptions: [] }).length, 1, 'et le garde-fou doit MORDRE sur un chemin déclaré qui n\'existe plus');
+  // CONTRE LE VRAI DÉPÔT (Article 25) : il tourne, il couvre, et il n'invente pas de nature.
+  const nat = natureDesDocuments();
+  assert.ok(nat.mesurable && nat.examines > 400, `l'axe doit tourner sur les 448 documents réels (actuellement ${nat.examines})`);
+  assert.ok(nat.couverture >= 95, `et couvrir au moins 95 % (actuellement ${nat.couverture} %) — le reste est nommé un par un, jamais rangé par défaut`);
+  const clesConnues = new Set(['loi', 'indeterminee', ...NATURES_DE_DOCUMENT.map((n) => n.cle), ...EXCEPTIONS_DE_NATURE.map((e) => e.cle)]);
+  for (const c of nat.classes) assert.ok(clesConnues.has(c.cle), `aucune nature hors du registre déclaré ne doit apparaître (« ${c.cle} » sur ${c.chemin})`);
+  // SES QUATRE ARBITRAGES DU 2026-09-27, figés ici : l'axe ne savait pas ranger ces documents, il
+  // les a tranchés en fenêtre dédiée, et une décision rendue ne doit pas pouvoir se reperdre.
+  for (const [chemin, attendu] of [['docs/carnet-de-bord.md', 'registre'], ['docs/idees-a-trancher.md', 'registre'], ['docs/agence-installation.md', 'export'], ['docs/peur-de-l-export.md', 'export'], ['docs/gouvernance-agence-virtuelle-cadre-cible.md', 'cadre-cible']]) {
+    assert.equal(natureDuDocument(chemin).cle, attendu, `${chemin} a été tranché « ${attendu} » par l'utilisateur le 2026-09-27 — une décision rendue ne se reperd pas`);
+  }
+  assert.equal((nat.parNature.indeterminee ?? []).length, 0, `les quatre indéterminés ont été tranchés : l'axe couvre désormais tout le parc (actuellement ${(nat.parNature.indeterminee ?? []).length} indéterminé(s) — un document neuf d'une nature inconnue en produira un, et c'est alors un motif à ajouter, jamais un défaut du document)`);
+  assert.ok(DOCUMENTS_QUI_FONT_LOI.every((d) => d.pourquoi && d.pourquoi.length > 30), 'chaque entrée de la liste manuelle porte sa raison écrite — une exception sans raison n\'est pas une décision, c\'est un rangement arbitraire (Article 28)');
+
   const { TYPES_D_ARRIVANT } = await import('../scripts/integration-outil.mjs');
   assert.ok(Object.keys(TYPES_D_ARRIVANT).length >= 8 && TYPES_D_ARRIVANT.outil, 'le registre des types porte l\'outil et les sept autres — et il se LIT partout (message d\'usage, dispatch, rapport), donc un neuvième type demain est joignable sans toucher à aucun des trois');
   for (const [t, d] of Object.entries(TYPES_D_ARRIVANT)) {

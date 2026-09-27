@@ -29,7 +29,7 @@
 
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { decouperEnUnites, pairesParJaccard, printReliabilityNotice } from "./lib-shell.mjs";
+import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -1034,7 +1034,20 @@ export function trouverDocumentsJumeaux(documents = [], { seuil = SEUIL_DOCUMENT
     return { mesurable: false, pourquoi: "moins de deux documents fournis : il n'y a rien à comparer, et rendre « aucun doublon » sur rien serait un satisfecit sur du vide" };
   }
   const cache = new Map();
-  const ensembles = documents.map((d) => motsSignificatifs(d.texte));
+  // LE SOMMAIRE GÉNÉRÉ N'EST PAS DE LA SUBSTANCE (2026-09-27, tâche #1004, et c'est le premier
+  // passage après le rattrapage des index qui l'a prouvé). `data-archangel` pose sous la prose de
+  // chaque index un tableau des fichiers du dossier, entre deux marqueurs. Ce bloc partage son
+  // GABARIT — les mêmes en-têtes, la même forme — d'un index à l'autre, si bien que deux index
+  // parfaitement différents finissaient par se ressembler assez pour franchir le seuil.
+  //
+  // MESURÉ : 1 paire à instruire avant le rattrapage, **26 après**, et aucune des vingt-cinq
+  // nouvelles ne disait vraiment la même chose. Un détecteur qui accuse à tort cesse d'être lu
+  // (leçon L4), et celui-ci venait de multiplier ses accusations par vingt-six sans qu'aucun
+  // document n'ait changé de contenu — seule leur mise en page avait bougé.
+  //
+  // LA CORRECTION EST AU BON ENDROIT : on ne relève pas le seuil (ce qui aurait rendu le détecteur
+  // aveugle aux vrais cas), on retire ce qui n'aurait jamais dû être compté.
+  const ensembles = documents.map((d) => motsSignificatifs(sansLeBlocGenere(d.texte)));
   const familles = {};
   const paires = [];
   for (const { i, j, jaccard, motsPartages } of pairesParJaccard(ensembles, { seuil })) {
@@ -1059,13 +1072,22 @@ export function trouverDocumentsJumeaux(documents = [], { seuil = SEUIL_DOCUMENT
 // Le soir même où ce détecteur est né, l'extension angel-of-index a posé un sommaire généré dans
 // une cinquantaine d'index — des blocs quasi identiques d'un dossier à l'autre, par construction.
 // Sept paires se sont mises à « dire la même chose », et c'était vrai : elles partageaient le même
-// décor. Le retirer avant de comparer est la même règle que le passe-partout des rapports, et la
-// borne existe déjà — les deux marqueurs que la génération pose elle-même.
-export const MOTIF_BLOC_GENERE = /<!-- SOMMAIRE GÉNÉRÉ[\s\S]*?<!-- FIN DU SOMMAIRE GÉNÉRÉ -->/g;
-
-export function sansLeBlocGenere(texte = "") {
-  return String(texte).replace(MOTIF_BLOC_GENERE, "");
-}
+// décor. Le retirer avant de comparer est la même règle que le passe-partout des rapports.
+//
+// LA TROISIÈME COPIE, ET CE QU'ELLE A COÛTÉ (2026-09-27, tâche #1004). Ce retrait existait en
+// DEUX exemplaires — ici, et dans `data-archangel` qui pose le bloc. Deux implémentations, une par
+// expression régulière et une par index de chaîne, jamais confrontées. Ce n'est pas la duplication
+// qui a mordu, c'est sa conséquence : le retrait vivait dans le `chargerLesDocuments()` D'ICI,
+// pendant que le filet de sécurité appelait celui de `le-classificateur`, **qui porte le même nom
+// et ne retire rien**. Le détecteur recevait donc du texte non nettoyé sans que rien ne le dise,
+// et il est passé de 1 paire à instruire à 26 le jour du rattrapage des index — vingt-cinq
+// accusations fausses, sur des documents dont pas une ligne de contenu n'avait bougé.
+//
+// DEUX CORRECTIONS, ET LA SECONDE COMPTE PLUS QUE LA PREMIÈRE : la fonction vit désormais dans
+// `lib-shell` (écrite une fois, Article 24), et surtout `trouverDocumentsJumeaux()` l'applique
+// LUI-MÊME plutôt que de faire confiance à son appelant. Un détecteur dont la justesse dépend de
+// qui l'alimente n'est juste que par chance.
+export { sansLeBlocGenere };
 
 export function chargerLesDocuments({ racine = "docs", fichiersEnPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = readFileSync, horsPortee = HORS_PORTEE_DOCUMENTS, tailleMin = TAILLE_MINIMALE_DOCUMENT } = {}) {
   const documents = [];

@@ -18,7 +18,7 @@
 // existant n'a eu à changer une ligne. Ce n'est pas une facilité, c'est ce qui permet de déplacer
 // du code sans mêler un déménagement à une modification — deux changements dans un seul commit
 // sont impossibles à relire quand quelque chose casse.
-import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { AGENT_CATEGORIES, rangDeLaCategorie, familleDeLaCategorie, printReliabilityNotice, listerLesFichiers } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -1708,6 +1708,10 @@ export const EXCEPTIONS_D_EXPORT = [
   { chemin: "docs/strategies/gestion-des-taches-strategie.md", etat: "PART", pourquoi: "le suivi durable des tâches ne dépend d'aucun domaine — un projet suivant aura le même besoin dès son premier jour" },
   { chemin: "docs/strategies/export-et-commercialisation-strategie.md", etat: "PART", pourquoi: "c'est la stratégie du SECOND PROJET lui-même : si un document doit arriver le premier dans le carton, c'est celui-là" },
   { chemin: "docs/strategies/le-jeu-et-le-site-strategie.md", etat: "RESTE", pourquoi: "le jeu et le site : rien de ce raisonnement ne s'applique à autre chose que ce produit-ci" },
+  // LES DEUX ARRIVÉES DU 2026-09-27, triées à la même question que les neuf stratégies ci-dessous :
+  // un autre projet piloté par IA referait-il ce raisonnement ?
+  { chemin: "docs/gouvernance-agence-virtuelle-cadre-cible.md", etat: "PART", pourquoi: "son dossier de gouvernance, écrit hors de ce dépôt : il ne parle QUE d'agences d'agents-outils en général — deux schémas, seize rôles, quinze règles, aucune ligne sur Lia et Noé. C'est la pièce la plus directement réutilisable qu'on ait reçue" },
+  { chemin: "docs/strategies/organisation-de-l-agence-strategie.md", etat: "PART", pourquoi: "comment organiser une agence d'outils : la question se repose à l'identique ailleurs, exactement comme pour classification-et-nivellement et outillage-et-garde-fous, triées PART le 2026-09-26" },
   { chemin: "docs/strategies/charte-et-referentiel-strategie.md", etat: "RESTE", pourquoi: "une stratégie SUR CETTE CHARTE-CI, dont les 32 Articles parlent de Lia et Noé — la méthode voyage déjà dans les autres stratégies, ce document-ci raisonne sur un texte qui reste" },
 ];
 
@@ -1731,6 +1735,224 @@ export const A_TRANCHER_PAR_L_UTILISATEUR = /^docs\/strategies\//;
 // pas le nom du fichier mais le DOSSIER : s'il porte le nom d'un exécutable du parc, tout ce qui
 // s'y trouve est ce que cet outil a écrit en tournant — un récit de passages, jamais une règle.
 export const MOTIF_DOSSIER_D_OUTIL = /^docs\/([a-z0-9-]+)\//;
+
+// ============================================================================================
+// L'AXE « NATURE » DES DOCUMENTS (2026-09-27, tâche #249 — son point 12)
+// ============================================================================================
+//
+// SA DÉCISION, en fenêtre de calibrage : « Un axe « nature » déduit ». Puis, en balayant son
+// point 12 : « les index, les leçons, les process eux-mêmes, les KPI et les registres [...] ok,
+// on y va, et il leur faut une classification aussi ou c'est bon ? » — oui, et c'est le même axe :
+// ces cinq familles ne FONT rien, elles CONTIENNENT quelque chose, exactement comme un document.
+//
+// L'ÉCART ENTRE CE QUE JE CROYAIS ET CE QUE LES NOTES DISENT (Article 30, et il se déclare plutôt
+// que de se corriger en silence). J'ai annoncé à l'utilisateur que les 447 documents n'avaient
+// AUCUN axe. C'est faux : ils en ont UN depuis le 2026-09-26, l'EXPORTABILITÉ (`ETATS_D_EXPORT`,
+// juste au-dessus), dérivé, exhaustif, et déjà dans le document officiel. Ce que j'ai mesuré et
+// mal nommé, c'est qu'ils n'en ont qu'UN SEUL. Celui-ci est le second.
+//
+// POURQUOI DEUX AXES ET PAS UN SEUL ÉLARGI — c'est la question qu'on se pose en arrivant, et la
+// réponse tient à ce que chacun sert : l'exportabilité répond « ce document part-il avec
+// l'Agence ? », la nature répond « qu'est-ce qu'il PORTE ? ». Les deux se croisent dans les quatre
+// sens : une RÈGLE peut partir (la méthode de travail) ou rester (les règles du jeu) ; une ARCHIVE
+// reste toujours mais un GABARIT part toujours. Les fondre perdrait la moitié de l'information.
+//
+// LE DÉCLENCHEUR RÉEL, et il est mesuré : `le-classificateur` classe 90 fichiers d'OUTILLAGE sur
+// neuf axes, parce qu'un script FAIT quelque chose — on peut donc lui demander son type, son rang,
+// sa famille. Un document ne fait rien. Aucun des neuf axes ne peut rien en dire, et c'est pour ça
+// que les 447 n'en avaient qu'un.
+//
+// L'ORDRE DES TESTS EST LA RÈGLE, jamais un détail de mise en œuvre, et il se lit comme ceci : du
+// plus spécifique au plus général. Un `index.md` déposé dans le dossier d'un outil est un INDEX
+// avant d'être un rapport ; un `-blueprint.md` est un BLUEPRINT avant d'être un document de la
+// racine de docs/. Tester dans l'autre sens rangerait tout dans la première catégorie large
+// rencontrée, et l'axe ne dirait plus rien.
+export const NATURES_DE_DOCUMENT = [
+  { cle: "index", icone: "🗂️", quoi: "un catalogue : il dit ce que contient un dossier, il n'affirme rien lui-même",
+    motif: /(^|\/)[a-z-]*index\.md$/ },
+  { cle: "gabarit", icone: "🧩", quoi: "un moule dont sortent d'autres documents — le plus exportable de tous",
+    motif: /^docs\/templates\// },
+  { cle: "blueprint", icone: "📐", quoi: "l'architecture d'un outil, écrite pour être remontée ailleurs",
+    motif: /-blueprint\.md$/ },
+  { cle: "conception", icone: "✏️", quoi: "un raisonnement de conception encore ouvert — des idées, pas une règle",
+    motif: /-conception\.md$/ },
+  // « CADRE CIBLE » EST NÉ D'UN VRAI DOCUMENT, jamais d'une case à remplir d'avance (2026-09-27).
+  // Son dossier de gouvernance, écrit HORS de ce dépôt, n'entrait dans aucune nature : ce n'est
+  // pas notre carnet de conception (qui accumule NOS idées en cours), ce n'est pas une règle (il
+  // n'oblige à rien), et ce n'est pas une archive (il est frais et actionnable). Il le dit
+  // lui-même en note finale : « une proposition de conception, non la description d'un dispositif
+  // déjà en place ». C'est exactement ça, un cadre cible.
+  //
+  // ET LE SUFFIXE COMPTE POUR UNE SECONDE RAISON, mesurée en la payant : nommé `-conception`, le
+  // fichier déclenchait le garde-fou de fraîcheur des chantiers, qui exige que tout
+  // `docs/*-conception.md` soit déclaré comme carnet d'un chantier du dépôt. Il a refusé le
+  // commit. Un suffixe n'est pas décoratif ici : il engage des contrôles.
+  { cle: "cadre-cible", icone: "🎯", quoi: "un cadre proposé, à adapter — jamais la description de ce qui existe",
+    motif: /-cadre-cible\.md$/ },
+  { cle: "process", icone: "🔁", quoi: "le déroulé détaillé d'une activité à étapes",
+    motif: /-process-detail\.(md|txt)$/ },
+  { cle: "strategie", icone: "🧭", quoi: "le raisonnement de fond d'un chantier, agrégé et jamais résumé",
+    motif: /^docs\/strategies\// },
+  { cle: "suivi", icone: "📋", quoi: "le journal des tâches — ce qui a été décidé, quand, et par qui",
+    motif: /^docs\/suivi\// },
+  { cle: "archive", icone: "🗄️", quoi: "une mémoire figée : on la consulte, on ne la met jamais à jour",
+    motif: /^docs\/(contexte-projet|simulations)\// },
+  { cle: "plan", icone: "🗺️", quoi: "la photographie d'un moment : ce qu'on comptait faire ce jour-là",
+    motif: /^docs\/(plans|rapports-de-nuit|rapports-gros-prompt)\// },
+  // LE RAPPORT SE RECONNAÎT À SA DATE, jamais à son dossier : chaque outil dépose dans le sien, et
+  // énumérer les dossiers d'outils serait la liste recopiée que l'Article 24 interdit — il en
+  // naît un à chaque outil construit.
+  { cle: "rapport", icone: "📊", quoi: "le dépôt d'un passage d'outil — un constat à un instant, jamais une règle",
+    motif: /^docs\/[a-z0-9-]+\/.*\d{4}-\d{2}-\d{2}/ },
+  { cle: "reference", icone: "📖", quoi: "la règle telle qu'elle s'applique aujourd'hui — la source de vérité d'un sujet",
+    motif: /^docs\/referentiel\// },
+  { cle: "mode", icone: "🎚️", quoi: "un mode de travail de l'agent : comment il se conduit dans une situation donnée",
+    motif: /^docs\/mode-[a-z0-9-]+\.md$/ },
+  // LES DEUX DERNIERS MOTIFS SONT VOLONTAIREMENT LARGES, ET ILS SONT EN DERNIER POUR ÇA. Tout ce
+  // qui vit dans `docs/<slug>/` appartient au registre d'un outil — et la règle du dépôt est sans
+  // exception (CLAUDE.md : « docs/<nom-de-l-outil-en-minuscules>/ avec son index.md »). Les placer
+  // plus haut aurait avalé le référentiel, le suivi, les plans et les stratégies, qui vivent eux
+  // aussi sous `docs/quelque-chose/` ; les placer ici les laisse ramasser ce que personne d'autre
+  // ne reconnaît, ce qui est exactement leur rôle.
+  { cle: "registre", icone: "🗃️", quoi: "la mémoire d'un outil : ce qu'il a déjà vu, relu à son passage suivant",
+    motif: /^docs\/[a-z0-9-]+\/(.*\/)?registre\.md$/ },
+  // LE PREMIER PASSAGE RÉEL A EXIGÉ CE MOTIF, et il est instructif : ma version d'origine ne
+  // reconnaissait un rapport qu'à sa DATE dans le nom de fichier. Dix-huit fiches EL-PROFESSOR
+  // (`full_sim16.md`…) sont des dépôts de passage sans une date dans leur nom — elles portent le
+  // numéro de la simulation notée. Dix-huit « indéterminés » pour un motif trop étroit, alors que
+  // le signal évident était juste à côté : le DOSSIER. Mesuré, jamais deviné (Article 25).
+  { cle: "rapport", icone: "📊", quoi: "le dépôt d'un passage d'outil — un constat à un instant, jamais une règle",
+    motif: /^docs\/[a-z0-9-]+\// },
+];
+
+// LA LOI NE SE DÉDUIT PAS D'UN CHEMIN, et c'est déclaré plutôt que forcé (Article 24, qui autorise
+// explicitement un contenu curaté à la main « tant que cette nature volontairement manuelle est
+// écrite noir sur blanc à côté »).
+//
+// POURQUOI AUCUNE DÉRIVATION NE MARCHE ICI, essayée avant d'abandonner : ces documents vivent à la
+// racine de `docs/` comme une vingtaine d'autres, ils n'ont aucun suffixe commun, et « cité par
+// CLAUDE.md » attraperait la moitié du dépôt puisque la charte renvoie partout. Ce qui les
+// distingue est ce qu'ils FONT — ils obligent — et ça ne se lit sur aucun chemin.
+//
+// ELLE EST COURTE PAR CONSTRUCTION : quatre documents, et un cinquième serait une décision de
+// l'utilisateur, jamais un ajout de l'agent. Le garde-fou ci-dessous vérifie qu'aucun n'a disparu.
+export const DOCUMENTS_QUI_FONT_LOI = [
+  { chemin: "CLAUDE.md", pourquoi: "la charte : la loi suprême du projet, lue en entier avant toute intervention" },
+  { chemin: "docs/regles-de-travail.md", pourquoi: "la méthode de collaboration — la charte ordonne de la lire EN PLUS d'elle, jamais à sa place" },
+  { chemin: "docs/philosophie-et-politique.md", pourquoi: "les valeurs et la façon de trancher un conflit de valeurs — texte fondateur, révisé exceptionnellement" },
+  { chemin: "docs/systeme-de-suivi.md", pourquoi: "la structure du suivi durable : la charte en fait une obligation, pas une convention" },
+];
+
+export const NATURE_INDETERMINEE = { cle: "indeterminee", icone: "❓", quoi: "aucun signal ne tranche — dit plutôt que rangé par défaut" };
+
+// LES EXCEPTIONS DE NATURE, ET IL EN FAUT EXACTEMENT UNE AUJOURD'HUI. Même règle que pour l'axe
+// d'exportabilité juste au-dessus : tout ce qui pouvait se dériver l'a été avant d'arriver ici, et
+// chacune porte sa raison — une exception sans raison n'est pas une décision, c'est un rangement
+// arbitraire (Article 28).
+export const EXCEPTIONS_DE_NATURE = [
+  // SES DEUX ARBITRAGES DU 2026-09-27, en fenêtre dédiée, sur les quatre documents que l'axe ne
+  // savait pas ranger. L'Article 28 réserve ce troisième état — « à trancher » — à une décision
+  // qui n'est pas celle de l'agent ; elle a été rendue, et elle est écrite ici avec sa raison.
+  { chemin: "docs/carnet-de-bord.md", cle: "registre", icone: "🗃️",
+    quoi: "la mémoire d'un outil : ce qu'il a déjà vu, relue à son passage suivant",
+    pourquoi: "son arbitrage : REGISTRE. Un registre est « une liste à laquelle on ajoute et sur laquelle on revient, où l'on n'écrit jamais une règle » — c'est exactement ce que fait le carnet de bord, et la nature existait déjà" },
+  { chemin: "docs/idees-a-trancher.md", cle: "registre", icone: "🗃️",
+    quoi: "la mémoire d'un outil : ce qu'il a déjà vu, relue à son passage suivant",
+    pourquoi: "même arbitrage, même raison : les idées en attente s'empilent et se relisent, elles n'obligent à rien" },
+  // « EXPORT » EST UNE NATURE NEUVE, et c'est SON choix contre mon conseil — je proposais de les
+  // séparer en process et conception. Sa raison se tient mieux que la mienne : ces deux documents
+  // ne se lisent jamais séparément. Le jour du déménagement, on veut les deux sous la main, et une
+  // nature commune est précisément ce qui les fait ressortir ensemble.
+  //
+  // ELLE NE FAIT PAS DOUBLON AVEC L'AXE D'EXPORTABILITÉ, et la distinction vaut d'être écrite :
+  // cet axe-là dit si un document PART (283 documents partent) ; celle-ci dit qu'un document PARLE
+  // de l'export. Deux questions, et la seconde ne concerne que quelques fichiers.
+  { chemin: "docs/agence-installation.md", cle: "export", icone: "📦",
+    quoi: "il sert le DÉPART de l'Agence — comment la remonter ailleurs, et ce qui l'en empêche",
+    pourquoi: "son arbitrage du 2026-09-27 : une nature neuve EXPORT. C'est le mode d'emploi du déménagement" },
+  { chemin: "docs/peur-de-l-export.md", cle: "export", icone: "📦",
+    quoi: "il sert le DÉPART de l'Agence — comment la remonter ailleurs, et ce qui l'en empêche",
+    pourquoi: "même arbitrage : c'est le raisonnement sur ce qui empêche une Agence de partir, l'autre moitié du même sujet" },
+  { chemin: "docs/outil-resilience-api.md", cle: "blueprint", icone: "📐",
+    quoi: "l'architecture d'un outil, écrite pour être remontée ailleurs",
+    pourquoi: "c'est le blueprint de Smart Breaker, et CLAUDE.md le dit en toutes lettres — « le blueprint garde son nom d'avant le surnom ». Aucun suffixe ne peut le trahir : la raison est historique, pas structurelle" },
+];
+
+export function natureDuDocument(chemin, { natures = NATURES_DE_DOCUMENT, loi = DOCUMENTS_QUI_FONT_LOI, exceptions = EXCEPTIONS_DE_NATURE } = {}) {
+  const p = String(chemin ?? "");
+  const exc = exceptions.find((d) => d.chemin === p);
+  if (exc) return { cle: exc.cle, icone: exc.icone, quoi: exc.quoi, pourquoi: exc.pourquoi };
+  const l = loi.find((d) => d.chemin === p);
+  if (l) return { cle: "loi", icone: "⚖️", quoi: "un texte qui OBLIGE — il ne décrit pas, il impose", pourquoi: l.pourquoi };
+  for (const n of natures) if (n.motif.test(p)) return { ...n, pourquoi: `le chemin correspond à ${n.motif}` };
+  return { ...NATURE_INDETERMINEE, pourquoi: "ni la loi, ni aucun des motifs de nature ne reconnaît ce chemin — c'est un manque du détecteur, jamais un défaut du document" };
+}
+
+// LE GARDE-FOU QUE L'ARTICLE 24 EXIGE DERRIÈRE LA SEULE LISTE ÉCRITE À LA MAIN DE CET AXE : un
+// document de loi renommé ou déplacé sortirait silencieusement en « indéterminée », et l'axe
+// perdrait sa catégorie la plus importante sans que rien ne le dise.
+export function loisIntrouvables({ root = ROOT, loi = DOCUMENTS_QUI_FONT_LOI, exceptions = EXCEPTIONS_DE_NATURE, existsImpl = existsSync } = {}) {
+  const manquants = [];
+  for (const d of loi) {
+    if (existsImpl(join(root, d.chemin))) continue;
+    manquants.push({ ...d, pourquoi: `${d.chemin} est déclaré comme faisant loi et n'existe plus : la nature « loi » a perdu un membre en silence` });
+  }
+  // Les exceptions comptent pareil : un chemin déclaré à la main qui disparaît fait retomber son
+  // document en « indéterminée » sans que rien ne le dise, et c'est exactement le silence que
+  // l'Article 24 exige de rendre bruyant.
+  for (const d of exceptions) {
+    if (existsImpl(join(root, d.chemin))) continue;
+    manquants.push({ ...d, pourquoi: `${d.chemin} porte une exception de nature déclarée à la main et n'existe plus : l'exception ne s'applique à rien` });
+  }
+  return manquants;
+}
+
+export function natureDesDocuments(documents = null, { root = ROOT } = {}) {
+  const docs = documents ?? chargerLesDocuments({ root });
+  if (!docs.length) {
+    return { mesurable: false, pourquoi: "aucun document lu : rendre une répartition sur zéro document serait un satisfecit sur du vide" };
+  }
+  const classes = docs.map((d) => ({ chemin: d.chemin, ...natureDuDocument(d.chemin) }));
+  const parNature = {};
+  for (const c of classes) (parNature[c.cle] ??= []).push(c);
+  const indetermines = parNature.indeterminee ?? [];
+  return {
+    mesurable: true, examines: docs.length, classes, parNature,
+    couverture: Math.round(((docs.length - indetermines.length) / docs.length) * 100),
+    loisPerdues: loisIntrouvables({ root }),
+    horsPortee: "elle dit ce qu'un document PORTE, jamais s'il est à jour, ni s'il est bon, ni s'il part avec l'Agence — cette dernière question est l'autre axe, juste à côté, et les deux se croisent dans les quatre sens.",
+  };
+}
+
+export function formatNatureLines(r) {
+  if (!r?.mesurable) return [`=== NATURE DES DOCUMENTS : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « tout est classé »."];
+  const l = [`=== CE QUE CHAQUE DOCUMENT PORTE — ${r.examines} documents, couverture ${r.couverture} % ===`, ""];
+  l.push("  Second axe des documents, à côté de l'exportabilité : celui-là dit si un document PART,");
+  l.push("  celui-ci dit ce qu'il PORTE. Les deux se croisent — une règle peut partir ou rester, une");
+  l.push("  archive reste toujours, un gabarit part toujours.");
+  l.push("");
+  // DÉDOUBLONNÉ, parce que deux motifs peuvent porter la même nature (un rapport se reconnaît à sa
+  // date OU à son dossier) et que la liste d'affichage les rendrait alors deux fois — trouvé au
+  // premier passage réel, sur une ligne qui s'imprimait en double avec le même compte.
+  const ordre = [...new Set(["loi", ...NATURES_DE_DOCUMENT.map((n) => n.cle), "indeterminee"])];
+  for (const cle of ordre) {
+    const lot = r.parNature[cle] ?? [];
+    if (!lot.length) continue;
+    const { icone, quoi } = lot[0];
+    l.push(`  ${icone} ${cle.toUpperCase()} — ${lot.length} document(s) : ${quoi}`);
+  }
+  const indet = r.parNature.indeterminee ?? [];
+  if (indet.length) {
+    l.push("");
+    l.push(`  LES ${indet.length} INDÉTERMINÉS, nommés un par un — aucun n'est rangé par défaut :`);
+    for (const c of indet.slice(0, 40)) l.push(`      ❓ ${c.chemin}`);
+    if (indet.length > 40) l.push(`      … et ${indet.length - 40} autre(s)`);
+  }
+  for (const perdue of r.loisPerdues) l.push(`  🔴 ${perdue.pourquoi}`);
+  l.push("");
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return l;
+}
 
 export function classerUnDocument(chemin, texte = "", { alias = null, executables = null, seuilJeu = SEUIL_MENTIONS_DU_JEU, exceptions = EXCEPTIONS_D_EXPORT } = {}) {
   const declaree = exceptions.find((e) => e.chemin === String(chemin));
@@ -1841,23 +2063,43 @@ function main() {
     // officiels de rangement, c'est très exactement la divergence que ce chantier combat.
     const docs = classerLesDocuments();
     const lignesDocs = formatDocumentsLines(docs);
+    // LE SECOND AXE DES DOCUMENTS (2026-09-27, tâche #249) entre par les DEUX sorties, comme le
+    // premier : le document officiel de rangement est unique, et un axe qui vivrait dans un
+    // fichier à part serait très exactement la divergence que ce chantier combat.
+    const nature = natureDesDocuments();
+    const lignesNature = formatNatureLines(nature);
     // LA FRONTIÈRE AVEC organisation-agence.md, ÉCRITE DANS LE GÉNÉRATEUR et jamais dans le fichier
     // (2026-09-26) : ce document est régénéré à chaque passage, donc une frontière écrite dedans
     // sauterait au suivant. Elle est réclamée par le détecteur de documents jumeaux, qui l'a
     // trouvée sur ce couple-ci quelques minutes après sa propre naissance — les deux parcourent
     // les mêmes axes, et aucun ne citait l'autre.
-    const frontiere = "> **Frontière avec `docs/referentiel/organisation-agence.md`** : celui-là DÉFINIT les axes, un par un, avec la raison qui a fait naître chacun. Celui-ci les APPLIQUE aux 90 fichiers et aux 437 documents, et il est GÉNÉRÉ — jamais écrit à la main.\n";
-    writeFileSync(join(ROOT, cible), `${frontiere}\n${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n`, "utf8");
+    // LA SECONDE FRONTIÈRE, RÉCLAMÉE PAR LE DÉTECTEUR DE DOCUMENTS JUMEAUX LE 2026-09-27, et il a
+    // eu raison : l'axe « nature » ajouté ce jour-là a fait entrer ici assez de vocabulaire de
+    // classification pour que ce document et le carnet de conception de l'organisation se
+    // ressemblent — sans qu'aucun ne dise où s'arrête l'autre. Elle est écrite DANS LE GÉNÉRATEUR
+    // comme la première, et pour la même raison : ce fichier est réécrit à chaque passage, donc
+    // une frontière posée dedans sauterait au suivant.
+    const frontiere = [
+      "> **Frontière avec `docs/referentiel/organisation-agence.md`** : celui-là DÉFINIT les axes, un par un, avec la raison qui a fait naître chacun. Celui-ci les APPLIQUE aux 90 fichiers et aux 448 documents, et il est GÉNÉRÉ — jamais écrit à la main.",
+      ">",
+      "> **Frontière avec `docs/organisation-agence-conception.md`** : celui-là recueille les ÉVOLUTIONS d'organigramme proposées et PAS ENCORE ACTÉES — un carnet d'idées, écrit à la main, où rien n'est vrai du dépôt d'aujourd'hui. Celui-ci ne montre que l'ÉTAT MESURÉ à l'instant de sa génération. Une idée passe de l'un à l'autre en étant mise en œuvre, jamais en étant recopiée.",
+      "",
+    ].join("\n");
+    writeFileSync(join(ROOT, cible), `${frontiere}\n${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n\n## Les documents — ce que chacun porte\n\n\`\`\`\n${lignesNature.join("\n")}\n\`\`\`\n`, "utf8");
     try { mkdirSync(join(ROOT, "docs/le-classificateur"), { recursive: true }); } catch { /* déjà là */ }
     writeFileSync(join(ROOT, CLASSIFICATION_HTML), renderHtmlReport({
       tool: "le-classificateur",
       title: "Classification générale de l'Agence Codex",
       subtitle: "Le document officiel du rangement — types, rangs, familles, classes et indice à facettes, listes exhaustives",
-      blocks: [...doc.blocs, { type: "heading", text: "Les documents — ce qui part avec l'Agence" }, { type: "pre", text: lignesDocs.join("\n") }],
+      blocks: [...doc.blocs,
+        { type: "heading", text: "Les documents — ce qui part avec l'Agence" }, { type: "pre", text: lignesDocs.join("\n") },
+        { type: "heading", text: "Les documents — ce que chacun porte" }, { type: "pre", text: lignesNature.join("\n") }],
     }), "utf8");
     console.log(`\nÉcrit : ${cible}`);
     console.log(`Écrit : ${CLASSIFICATION_HTML}  ← la version de remise`);
     console.log(`${doc.croise.total} fichier(s) classés — couverture du rang : ${doc.croise.couverture} %, ${doc.croise.sansRang.length} sans rang.`);
+    if (nature.mesurable) console.log(`${nature.examines} document(s) sur DEUX axes — exportabilité ${docs.couverture} %, nature ${nature.couverture} %.`);
+    for (const perdue of nature.loisPerdues ?? []) console.log(`⚠️  ${perdue.pourquoi}`);
     if (doc.divergenceAxes.divergent) console.log(`⚠️  ${doc.divergenceAxes.pourquoi}`);
     recordRegistryWrite?.("le-classificateur", cible);
     return;

@@ -15,3 +15,4 @@
 | [outillage-et-garde-fous-strategie.md](outillage-et-garde-fous-strategie.md) | — |
 | [process-et-ronde-strategie.md](process-et-ronde-strategie.md) | — |
 | [renommage-en-masse-strategie.md](renommage-en-masse-strategie.md) | — |
+| [organisation-de-l-agence-strategie.md](organisation-de-l-agence-strategie.md) | — |
