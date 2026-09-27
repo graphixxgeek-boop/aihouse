@@ -322,6 +322,54 @@ parce qu'il est le seul à casser la bulle. Le programme HTML de l'utilisateur f
 témoin** précieux mais pour une autre question — l'Agence arrivant sur un vrai produit sans aucun
 outillage, écrit par lui, donc utile immédiatement mais porteur de ses habitudes.
 
+### Le déroulé exact du premier essai, et l'identité du témoin (ajouté le 2026-09-27)
+
+**LE TÉMOIN EST NOMMÉ, et il fallait le faire** : le critère « reproductible » exige un dépôt figé
+sur un commit, et le premier compte rendu décrivait « un dépôt public » sans dire lequel — un témoin
+anonyme n'est pas reproductible, c'est une anecdote.
+
+| | |
+|---|---|
+| **Dépôt** | `github.com/sindresorhus/slugify` |
+| **Commit** | `3b17b2e` |
+| **Taille** | 13 fichiers suivis |
+| **Pourquoi lui** | étranger (écrit par quelqu'un d'autre, avec d'autres habitudes), minuscule donc rejouable en secondes, réel (une vraie bibliothèque utilisée par des milliers de projets), et **sans aucun outillage de l'Agence** — ni charte, ni référentiel, ni suivi, ni filet nommé comme le nôtre |
+
+**Le déroulé, dans l'ordre :**
+
+1. **Vérifier que le réseau du conteneur autorise un clone.** Il l'autorise. Point non trivial : sans
+   ça, tout le dispositif du témoin tombait.
+2. **Premier essai avec DIX scripts copiés** — choisis à la main, ceux qu'on croyait autonomes.
+   **Il a planté immédiatement sur des imports manquants.** C'est la trouvaille la plus structurante
+   de l'essai, et elle a été trouvée en trois minutes.
+3. **Deuxième essai avec les 82 scripts.** Là, ça démarre.
+4. **Huit outils lancés** dans le dépôt étranger, et les verdicts du tableau ci-dessus.
+
+**CE QUE L'ESSAI A COÛTÉ : environ trois minutes.** C'est le rapport coût/trouvailles qui justifie
+d'en faire un rituel plutôt qu'une expérience unique.
+
+### Les quatre contraintes d'export que cet essai a écrites
+
+Chacune est une conséquence directe de ce qui s'est passé, jamais une précaution théorique.
+
+1. **L'Agence s'emporte ENTIÈRE, jamais à la carte.** La toile de dépendances entre les 82 scripts
+   est dense : `lib-shell.mjs`, `tool-usage.mjs`, `report-template.mjs` sont importés par presque
+   tout le monde. Ce n'est pas un défaut de conception — c'est ce qui fait qu'un nouvel outil hérite
+   du travail des autres (Article 24) — mais **ça doit être écrit noir sur blanc dans le manuel
+   d'installation** : « copier dix scripts ne marche pas, et l'erreur ne dira pas pourquoi ».
+2. **Un outil qui ne trouve pas la charte doit le DIRE, jamais s'arrêter.** Trois outils sur huit
+   plantent sur exactement ce point. C'est le cas le plus fréquent ET le plus facile à corriger, ce
+   qui en fait la première correction de portabilité à faire.
+3. **« Pas mesuré » est un SUCCÈS d'export, pas un échec.** Ezechiel a rendu sept fois « pas
+   mesuré » et a rendu la main proprement. Un taux de portabilité qui compterait ces sept-là comme
+   des échecs pousserait à fabriquer des réponses là où il n'y a pas de données — l'exact contraire
+   de la discipline anti-faux-vert de ce projet. **D'où les trois verdicts et non deux** : portable,
+   HONNÊTE, non portable.
+4. **Le témoin se rejoue, il ne se visite pas une fois.** Trois minutes pour huit outils : le geste
+   est assez court pour entrer dans la Ronde. Un témoin lancé une seule fois mesure l'état d'un
+   jour ; lancé à chaque Ronde, il mesure une TRAJECTOIRE — et c'est la trajectoire qui dit si
+   l'Agence devient réellement portable ou si elle en parle seulement.
+
 ### Ce qui reste à trancher
 
 L'ordre entre l'étape 2 et l'étape 3 est discutable : construire le projet témoin d'abord donnerait
