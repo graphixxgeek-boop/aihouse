@@ -221,7 +221,22 @@ export function classesDuScript(source = "", classes = CLASSES_TRANSVERSES, chem
 // Propage UNE classe le long du graphe d'import, jusqu'au point fixe : si A importe B et que B
 // porte la classe, A la porte aussi. Le point fixe est nécessaire et pas décoratif — une chaîne
 // de trois fichiers existe déjà dans ce dépôt, et s'arrêter au premier niveau raterait le bout.
-export function propagerParDelegation(lignes, importeDe, cle) {
+// LA SUITE DE TESTS N'HÉRITE JAMAIS PAR DÉLÉGATION (2026-09-27). **Tester un outil n'est pas
+// l'exécuter** — la même distinction que celle payée le matin même sur le compteur d'usage
+// (tâche #1007), et elle mord ici pour une raison presque comique : en ajoutant un contre-test qui
+// IMPORTE `check-spirit.mjs` pour prouver que l'import est refusé, `check-house.mjs` est devenu par
+// délégation un « consommateur d'API » — l'assertion qui refuse exactement ce verdict a sauté.
+//
+// POURQUOI LE REFUS ÉTAIT JUSTE ET LA PROPAGATION FAUSSE : la classe « coûte de vrais appels API »
+// commande l'Article 22, c'est-à-dire une consultation de Smart Conso API avant lancement. Le filet
+// de sécurité tourne à CHAQUE commit et ne consomme rien : l'y soumettre rendrait la règle
+// inapplicable, donc ignorée. Une classe qui range mal le fichier le plus lancé du dépôt ne range
+// plus rien.
+//
+// LE FILTRE SE DÉRIVE, il ne se nomme pas : `findSuitesDeTest()` reconnaît une suite à la PART du
+// parc qu'elle importe, donc un second fichier de tests demain en héritera sans qu'on touche ici.
+export function propagerParDelegation(lignes, importeDe, cle, { suites = null } = {}) {
+  const exclues = suites ?? new Set(findSuitesDeTest({ importeDe, total: lignes.length }).map((x) => x.chemin));
   const parChemin = new Map(lignes.map((l) => [l.chemin, l]));
   let bouge = true;
   let tours = 0;
@@ -229,6 +244,7 @@ export function propagerParDelegation(lignes, importeDe, cle) {
     bouge = false;
     for (const l of lignes) {
       if (l.classes.includes(cle)) continue;
+      if (exclues.has(l.chemin)) continue;
       for (const cible of importeDe?.[l.chemin] ?? []) {
         if (parChemin.get(cible)?.classes?.includes(cle)) { l.classes.push(cle); bouge = true; break; }
       }
@@ -572,11 +588,24 @@ export const MOTIF_FICHIER_CROCHET = /^scripts\/hooks\//;
 // jour où la suite se scinde en deux, et ce dépôt a déjà scindé plusieurs outils.
 export const PART_MINIMUM_SUITE_DE_TEST = 0.5;
 
+// LE GRAPHE ARRIVE SOUS DEUX FORMES, et ne pas le savoir a coûté un faux verdict (2026-09-27) :
+// `recenserLesScripts()` construit `importeDe` avec des **Sets** et ne les convertit en tableaux
+// qu'au moment de RENDRE son résultat. La même fonction est donc appelée deux fois sur deux formes
+// différentes — de l'intérieur sur des Sets, de l'extérieur sur des tableaux. Elle lisait
+// `cibles.length`, indéfini sur un Set : à l'intérieur du recensement elle ne trouvait AUCUNE suite
+// de test, l'exclusion ne s'appliquait pas, et `check-house.mjs` héritait par délégation d'une
+// classe « coûte de vrais appels API » alors qu'il MOQUE l'appel. Compter se dérive de la forme
+// reçue, jamais d'une supposition sur l'appelant.
+export function tailleDuGraphe(cibles) {
+  if (!cibles) return 0;
+  return cibles instanceof Set || cibles instanceof Map ? cibles.size : (cibles.length ?? 0);
+}
+
 export function findSuitesDeTest({ importeDe = {}, total = 0, part = PART_MINIMUM_SUITE_DE_TEST } = {}) {
   if (!total) return [];
   return Object.entries(importeDe)
-    .filter(([, cibles]) => (cibles?.length ?? 0) >= total * part)
-    .map(([chemin, cibles]) => ({ chemin, importe: cibles.length, part: Math.round((cibles.length / total) * 100) }));
+    .filter(([, cibles]) => tailleDuGraphe(cibles) >= total * part)
+    .map(([chemin, cibles]) => ({ chemin, importe: tailleDuGraphe(cibles), part: Math.round((tailleDuGraphe(cibles) / total) * 100) }));
 }
 
 // La fermeture transitive du graphe d'imports, depuis les points d'entrée. On la calcule ici plutôt

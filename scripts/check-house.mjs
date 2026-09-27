@@ -10307,6 +10307,22 @@ await testVerrousDOuverture();
     assert.ok(sansPropagation.has('scripts/suite.mjs'), 'but the suite itself stays in the loop — it does run at every commit');
     assert.ok(LCV.chaineQuotidienne({ lignes: avecSuite, importeDe: grosGraphe, ignorerLesSuitesDeTest: false }).has('scripts/e.mjs'), 'and the counter-test confirms the exclusion is what changes the answer, not a coincidence');
 
+    // LE GRAPHE ARRIVE SOUS DEUX FORMES, et la dérivation doit compter pareil sur les deux. Bug
+    // réel du 2026-09-27 : `recenserLesScripts()` construit ses cibles en **Set** et ne les
+    // convertit en tableaux qu'en rendant son résultat. `cibles.length` valait donc `undefined`
+    // à l'intérieur, zéro suite trouvée, exclusion muette — et check-house.mjs héritait par
+    // délégation de « coûte de vrais appels API » alors qu'il MOQUE l'appel. Une mesure qui
+    // dépend de la forme de son entrée est un faux verdict qui attend son tour.
+    const grapheEnSets = { 'scripts/suite.mjs': new Set(lignesF.map((l) => l.chemin)) };
+    assert.deepEqual(LCV.findSuitesDeTest({ importeDe: grapheEnSets, total: avecSuite.length }).map((x) => x.chemin), ['scripts/suite.mjs'], 'a Set of targets counts exactly like an Array of the same targets: the same graph must not give two answers depending on who hands it over');
+    assert.equal(LCV.tailleDuGraphe(new Set(['a', 'b'])), 2, 'a Set is measured by its size');
+    assert.equal(LCV.tailleDuGraphe(['a', 'b']), 2, 'an Array by its length');
+    assert.equal(LCV.tailleDuGraphe(undefined), 0, 'and an absent graph is zero, never a crash');
+    // LE CONTRE-TEST DANS L'AUTRE SENS — un fichier qui importe JUSTE EN DESSOUS de la moitié du
+    // parc reste un fichier ordinaire : la correction ne doit pas transformer le seuil en passoire.
+    const petitGrapheEnSets = { 'scripts/presque.mjs': new Set(lignesF.slice(0, 1).map((l) => l.chemin)) };
+    assert.deepEqual(LCV.findSuitesDeTest({ importeDe: petitGrapheEnSets, total: avecSuite.length }), [], 'and a file importing below the threshold is NOT a test suite, whichever form its graph arrives in');
+
     // LE CROISEMENT VITALITÉ × BLUEPRINT — ce qui manquait n'était pas la liste des outils sans
     // blueprint, c'était de savoir LESQUELS COMPTENT.
     const vFaux = { mesurable: true, parNiveau: { vital: [{ chemin: 'scripts/vital-sans.mjs' }], essentiel: [{ chemin: 'scripts/ess-avec.mjs' }], utile: [], optionnel: [] } };
@@ -16408,3 +16424,42 @@ async function testVeilleSurLHistoire() {
   console.log("Passed: personne ne gardait l'histoire de l'Agence (2026-09-27, tâche #748). Sa question — « QUI garde et surveille l'histoire de l'agence ? » — avait pour réponse honnête PERSONNE : l'histoire existe (le suivi, les simulations archivées, les registres de chaque outil) et aucun outil ne veillait sur elle en tant que telle. Les plus proches n'en couvraient qu'un bout : data-archangel surveillait la CIRCULATION des données, l'AGENT DES NOMS empêchait qu'un renommage la falsifie. Le rôle échoit à data-archangel plutôt qu'à un 82e script (Article 31 : on étend avant de construire) parce que les fichiers dont il suit la circulation sont exactement ceux dont l'histoire est en jeu — et il porte un nom, ce que sa question demandait. DEUX ATTEINTES SUR QUATRE sont couvertes : un registre qui perd des lignes, une archive retouchée après sa création. Les deux autres — une mesure passée corrigée après coup, une date qui recule — demandent de comparer le SENS de deux versions et ne le sont pas, ce que la sortie IMPRIME : un veilleur qui laisse croire qu'il couvre quatre atteintes quand il en voit deux est pire qu'un veilleur absent. Deux faux signaux corrigés au premier passage : `--follow` faisait remonter à l'archive les 221 modifications de son fichier SOURCE (juste au sens de git, faux au sens de la question), et les `index.md` étaient comptés comme des archives alors qu'un catalogue DOIT changer à chaque archivage — l'accuser ferait crier le veilleur pile quand il a raison de se taire. Premier passage réel : un transcript de simulation a perdu 1 245 lignes nettes, ce que personne n'aurait vu.");
 }
 await testVeilleSurLHistoire();
+
+// IMPORTER check-spirit.mjs, C'ÉTAIT LE LANCER (2026-09-27, tâche #996). Tout son code est au
+// niveau du module, y compris la boucle de provocations qui appelle VRAIMENT le modèle. Un
+// `import()` — geste anodin, fait un jour pour vérifier que le fichier se chargeait encore —
+// exécutait donc l'outil entier sans passer par Smart Conso API (Article 22). Aucun quota consommé
+// ce jour-là, mais UNIQUEMENT parce que le conteneur refuse l'accès sortant : c'est le réseau qui a
+// protégé, pas la prudence.
+async function testGardeDeModuleCheckSpirit() {
+  // LA GARDE SE VÉRIFIE EN ESSAYANT, jamais en relisant : c'est précisément une relecture qui avait
+  // conclu que « tout le code est au niveau du module » sans en tirer la conséquence.
+  let leve = null;
+  try { await import('../scripts/check-spirit.mjs'); }
+  catch (e) { leve = e; }
+  assert.ok(leve, 'importing check-spirit.mjs MUST throw: its module body calls the real model, and an import is the one gesture nobody thinks twice about');
+  assert.match(String(leve.message), /ne s'importe pas/, 'and the error must say what is wrong');
+  assert.match(String(leve.message), /node --check/, 'plus what to do instead to verify it loads — an error that only forbids teaches nothing');
+  assert.match(String(leve.message), /Smart Conso API/, 'and it must name the rule it protects (Article 22), so the reader understands the cost rather than the inconvenience');
+
+  // LA GARDE TOMBE AVANT TOUT EFFET DE BORD, et c'est la seule chose qui compte vraiment : elle
+  // doit précéder la transpilation des modules du jeu, l'écriture dans .sites-runtime, la base en
+  // mémoire, l'import de la route et la boucle d'appels. Vérifié sur la SOURCE, parce qu'une garde
+  // placée après un effet de bord passerait ce test-ci sans protéger de rien.
+  const { readFileSync: lire996 } = await import('node:fs');
+  const src996 = lire996('scripts/check-spirit.mjs', 'utf8').split('\n');
+  const ligneGarde = src996.findIndex((l) => /import\.meta\.url !== `file:\/\/\$\{process\.argv\[1\]\}`/.test(l));
+  assert.ok(ligneGarde > 0, 'the guard must exist in the source, not only in behaviour');
+  for (const [quoi, motif] of [
+    ['la transpilation des modules du jeu', /^for \(const name of \['house'/],
+    ['la base de données en mémoire', /new DatabaseSync/],
+    ["l'import de la route réelle", /await import\('\.\.\/\.sites-runtime\/test-route\.mjs'\)/],
+    ['la boucle de provocations', /^for \(const \{ category, actor, message \} of scenarios\)/],
+  ]) {
+    const ligne = src996.findIndex((l) => motif.test(l));
+    assert.ok(ligne > ligneGarde, `${quoi} must come AFTER the guard (line ${ligne + 1} vs guard at ${ligneGarde + 1}): a guard placed after a side effect passes this test while protecting nothing`);
+  }
+
+  console.log("Passed: importer check-spirit.mjs, c'était le LANCER (2026-09-27, tâche #996). Tout son code est au niveau du module, y compris la boucle de provocations qui appelle vraiment le modèle — un import(), le geste sur lequel personne ne réfléchit deux fois, exécutait l'outil entier sans passer par Smart Conso API. Aucun quota consommé le jour où c'est arrivé, mais uniquement parce que le conteneur refuse l'accès sortant : c'est le réseau qui a protégé, pas la prudence. LA FORME DE LA CORRECTION EST LE POINT INTÉRESSANT. Le raisonnement écrit dans le fichier tenait : on ne restructure pas à l'aveugle en main() l'outil qui porte l'Article 0, quand on ne peut pas le relancer de bout en bout depuis ce conteneur. Mais il existait une correction qui ne touche PAS une seule ligne du corps — refuser l'import — et elle ne demande pas d'éprouver l'outil, seulement que la garde tombe avant le premier effet de bord, ce qui se vérifie parfaitement d'ici. Elle supprime le risque au lieu de le décrire, et laisse la restructuration à plus tard sans la rendre plus difficile. Elle LÈVE une erreur plutôt que de sortir en silence : un return discret rendrait un module vide et l'appelant croirait avoir importé quelque chose. L'erreur dit ce qui ne va pas, quoi faire à la place (node --check) et quelle règle elle protège — une erreur qui se contente d'interdire n'apprend rien. Et la position de la garde est vérifiée sur la SOURCE contre les quatre effets de bord du fichier, parce qu'une garde placée après l'un d'eux passerait le test de comportement sans protéger de rien.");
+}
+await testGardeDeModuleCheckSpirit();

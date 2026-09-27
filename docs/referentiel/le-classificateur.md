@@ -279,6 +279,16 @@ niveau se lit sur ce que le dépôt FAIT du fichier — qui le lance, ce qu'il g
 3. **Les crochets eux-mêmes sortaient « optionnel »**, c'est-à-dire « confort », alors qu'ils SONT
    la boucle quotidienne. La sonde cherchait qui est LANCÉ PAR un crochet ; un crochet n'est lancé
    par aucun crochet, il est lancé par git.
+4. **La même dérivation rendait DEUX réponses selon la forme de son entrée** (2026-09-27, tâche
+   #1015). `recenserLesScripts()` construit son graphe d'imports avec des **Set** et ne les
+   convertit en tableaux qu'en RENDANT son résultat ; `findSuitesDeTest()` lisait `cibles.length`,
+   indéfini sur un Set. Appelée de l'extérieur elle trouvait bien la suite ; appelée de l'intérieur,
+   là où l'exclusion sert, elle n'en trouvait **aucune**. Conséquence visible : `check-house.mjs`
+   héritait par délégation de la classe « coûte de vrais appels API » — alors qu'il MOQUE l'appel —
+   et le filet de sécurité a fini par refuser son propre commit. Le compte se dérive désormais de la
+   forme reçue (`tailleDuGraphe()`), jamais d'une supposition sur l'appelant. **La leçon dépasse ce
+   bug** : une fonction exportée qu'un module s'appelle aussi à lui-même voit deux mondes, et le
+   test qui ne l'exerce que depuis l'extérieur reste vert pendant que l'autre moitié est fausse.
 
 **Résultat exploitable** : 25 vitaux (28 %) · 9 essentiels (10 %) · 34 utiles (39 %) · 20 optionnels
 (23 %). Et l'écart entre la chaîne d'exécution (25) et la chaîne avec les imports de test (81) est

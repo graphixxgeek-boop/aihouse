@@ -1,5 +1,8 @@
 // ICEBERG: membre
-// ⚠️ CE FICHIER N'A PAS DE GARDE DE MODULE PRINCIPAL : L'IMPORTER, C'EST LE LANCER.
+// ⚠️ CE FICHIER NE S'IMPORTE PAS : L'IMPORTER, CE SERAIT LE LANCER — et la garde ci-dessous le REFUSE
+// désormais (2026-09-27, tâche #996), au lieu de se contenter de le déclarer.
+//
+// L'HISTOIRE, GARDÉE PARCE QU'ELLE EXPLIQUE LA FORME DE LA CORRECTION.
 // (Déclaré le 2026-09-27 après m'être fait prendre.) Tout son code est au niveau du module, y
 // compris la boucle de provocations qui appelle VRAIMENT le modèle. Un simple
 // `import('./check-spirit.mjs')` — geste anodin, fait ici pour vérifier que le fichier se chargeait
@@ -9,10 +12,30 @@
 //
 // CE QU'IL FAUT FAIRE EN ATTENDANT LA VRAIE CORRECTION : ne jamais importer ce fichier pour le
 // tester. Pour vérifier qu'il se charge, lire son source ou le passer à `node --check`.
-// LA VRAIE CORRECTION — envelopper le corps dans une garde `import.meta.url === argv[1]` — est une
-// tâche à part, et délibérément PAS faite dans la foulée : ce fichier ne peut pas être éprouvé de
-// bout en bout depuis ce conteneur (pas d'accès à l'API), et restructurer à l'aveugle l'outil qui
-// porte l'Article 0 coûterait plus cher que le risque qu'il fait courir (tâche inscrite au suivi).
+// CE QUI A ÉTÉ FAIT, ET POURQUOI CETTE FORME-LÀ. Le raisonnement ci-dessus tenait et tient
+// toujours : ce fichier ne peut pas être éprouvé de bout en bout depuis ce conteneur (pas d'accès
+// sortant à l'API), et restructurer à l'aveugle l'outil qui porte l'Article 0 coûterait plus cher
+// que le risque qu'il fait courir. Envelopper les 240 lignes dans un `main()` reste donc à faire
+// le jour où on pourra le relancer pour de vrai.
+//
+// MAIS IL EXISTE UNE CORRECTION QUI NE TOUCHE PAS UNE SEULE LIGNE DU CORPS : **refuser l'import**.
+// Elle ne demande pas d'éprouver l'outil, seulement de vérifier que la garde tombe AVANT le premier
+// effet de bord — ce qui, lui, se vérifie parfaitement d'ici. Elle supprime entièrement le risque
+// (un import ne peut plus rien lancer) au lieu de le décrire, et laisse la restructuration à plus
+// tard sans la rendre plus difficile.
+//
+// POURQUOI ELLE LÈVE UNE ERREUR PLUTÔT QUE DE SORTIR EN SILENCE : un `return` discret rendrait un
+// module vide, et l'appelant croirait avoir importé quelque chose. Une erreur nommée dit ce qui ne
+// va pas et quoi faire à la place — c'est la seule forme qui apprenne quelque chose au lecteur.
+if (import.meta.url !== `file://${process.argv[1]}`) {
+  throw new Error(
+    "check-spirit.mjs ne s'importe pas : tout son code est au niveau du module, y compris la boucle "
+    + "de provocations qui appelle VRAIMENT le modèle Gemini. L'importer lancerait l'outil entier "
+    + "sans passer par Smart Conso API (Article 22). Pour vérifier qu'il se charge : `node --check "
+    + "scripts/check-spirit.mjs`. Pour le LANCER, c'est un geste à part, après consultation de "
+    + "Smart Conso API : `node scripts/check-spirit.mjs`.",
+  );
+}
 // Filet de fidélité de l'esprit (Article 0 de CLAUDE.md) — PAS un test automatique classique.
 //
 // check-house.mjs vérifie la mécanique du moteur avec un faux Gemini déterministe ; il ne peut
