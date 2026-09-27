@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // messages-courts.mjs (2026-09-23) — NE JAMAIS S'ARRÊTER SUR UN MESSAGE COURT.
 //
 // LA DEMANDE, en trois morceaux distincts (tâche #572) :

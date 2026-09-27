@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // check-tasks-details.mjs — état des lieux des tâches à la demande, gratuit, mécanique (2026-09-20,
 // demande explicite de l'utilisateur : un gabarit pour ses demandes type « fais-moi l'état des
 // tâches en cours », avec un choix de zoom [en cours actuellement / vue élargie / tout le projet]

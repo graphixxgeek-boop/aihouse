@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // CIRCLE-TASKS — « Ronde périodique » (2026-09-20, nommé par l'utilisateur : « je voudrais creer un
 // mini agent qui appelle l'executoin de ce process : l'agent s'appelle circle-tasks »).
 //

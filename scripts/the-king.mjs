@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // THE-KING (tâche #167, 2026-09-21) — veille au respect de docs/philosophie-et-politique.md dans
 // les décisions à haut niveau. Né d'une demande explicite de l'utilisateur : « cree un agent
 // 'the-king' qui est chargé de verifier que lorsque tu prends une decision à haut niveau [...]

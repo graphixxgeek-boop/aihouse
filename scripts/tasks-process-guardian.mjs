@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // TASKS.PROCESS.GUARDIAN (2026-09-22, nom donné par l'utilisateur). Le gardien du process de suivi
 // des tâches et des idées — troisième gardien de process, aux côtés de circle-process-guardian (la
 // Ronde) et process-simulation-guardian (la simulation).

@@ -1,3 +1,4 @@
+// ICEBERG: plomberie
 // Petit assistant partagé pour lire une table markdown "au format registre" utilisée par plusieurs
 // outils de ce projet (2026-09-19, extrait au moment de construire CLEAN-DIRTY-OLD, en trouvant la
 // même logique de filtrage de lignes sur le point d'être réécrite une troisième fois après

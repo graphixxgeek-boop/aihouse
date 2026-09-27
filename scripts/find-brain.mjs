@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // find-brain — cerveau unifié des deux outils de recherche dans le code (2026-09-21, demande
 // explicite de l'utilisateur : « je veux un cerveau intelligent "find-brain" qui englobe les 2
 // scripts find-booster et find-deep-booster pour plus d'efficacité dans les recherches [...] tu

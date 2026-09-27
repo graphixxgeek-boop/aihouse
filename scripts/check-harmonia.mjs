@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // HARMONIA — partie mécanique et gratuite (2026-09-19, cf. docs/harmonia-blueprint.md et
 // docs/referentiel/harmonia.md). Rôle : reconfirmer qu'une affirmation CHIFFRÉE documentée dans
 // docs/referentiel/ correspond toujours à la constante réelle du code qu'elle décrit — jamais se

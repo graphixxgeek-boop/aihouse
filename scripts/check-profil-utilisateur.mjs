@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Garde-fou du système de profil utilisateur (2026-09-19, cf. docs/profil-utilisateur/index.md et
 // docs/regles-de-travail.md §9 « Historisation du profil »). Une fiche d'observation créée dans
 // docs/profil-utilisateur/observations/ doit toujours avoir une ligne correspondante dans la table

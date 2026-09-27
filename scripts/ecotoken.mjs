@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// ICEBERG: membre
 // ecotoken — réduire le coût PERMANENT de CLAUDE.md (tâche #359, 2026-09-22).
 //
 // POURQUOI CET OUTIL EXISTE. CLAUDE.md est le seul document du dépôt rechargé à CHAQUE message :

@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // GABARIT UNIFIÉ DES RAPPORTS (2026-09-22, tâche #199, demande explicite de l'utilisateur :
 // « doc-report nouvelle fonction : s'assurer que tous les reports ont le meme format, gabarit : ce
 // format est graphique (txt ou html, mise en page, couleurs, etc.) mais aussi au niveau du contenu :

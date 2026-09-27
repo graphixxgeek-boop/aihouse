@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Doc-Report (tâche #165, 2026-09-21) — index global des rapports du réseau d'outils, GARDIEN de
 // la décision HTML/texte déjà actée (docs/suivi #230), jamais celui qui la prend (calibrage
 // explicite : « le gardien de la décision, jamais celui qui décide »).

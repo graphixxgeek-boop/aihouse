@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // SMART-CONSO-TOKEN — pendant de Smart Conso API, mais pour les TOKENS de l'agent lui-même
 // (2026-09-20, cf. docs/smart-conso-token-blueprint.md et docs/referentiel/smart-conso-token.md).
 // Rôle, demandé explicitement par l'utilisateur : « un conseiller en réduction de conso électrique »

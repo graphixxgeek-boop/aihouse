@@ -1,3 +1,4 @@
+// ICEBERG: plomberie
 // CORPUS-MESURÉ — le mécanisme partagé qui empêche un Gardien sacré de dire « tout va bien »
 // sur des données absentes (2026-09-25, tâche #858 — chantier #206, autorisé par l'utilisateur
 // en fenêtre dédiée : « oui, les sept d'un coup »).

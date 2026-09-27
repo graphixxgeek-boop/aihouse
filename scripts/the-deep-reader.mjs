@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Partie mécanique minimale de THE-DEEP-READER (2026-09-20, cf. docs/referentiel/the-deep-reader.md
 // pour les règles complètes). Même statut que scripts/the-final-judge.mjs : THE-DEEP-READER lui-même
 // est un vrai agent séparé (outil Agent), jamais invocable depuis un script headless — ce fichier ne

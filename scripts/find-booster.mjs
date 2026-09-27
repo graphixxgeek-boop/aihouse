@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // find-booster — Membre de l'équipe (2026-09-21, promu le même soir après un premier usage réel
 // concluant sur 4 fichiers différents). Conçu d'abord pour app/api/lia/route.ts sous le nom
 // "route-find-booster", renommé "find-booster" puis promu à un vrai statut d'équipe (badge, fiche

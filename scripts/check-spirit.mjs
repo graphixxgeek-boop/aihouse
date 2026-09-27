@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // ⚠️ CE FICHIER N'A PAS DE GARDE DE MODULE PRINCIPAL : L'IMPORTER, C'EST LE LANCER.
 // (Déclaré le 2026-09-27 après m'être fait prendre.) Tout son code est au niveau du module, y
 // compris la boucle de provocations qui appelle VRAIMENT le modèle. Un simple

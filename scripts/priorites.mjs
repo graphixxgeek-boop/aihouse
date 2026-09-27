@@ -1,3 +1,4 @@
+// ICEBERG: plomberie
 // priorites.mjs — L'ÉCHELLE DE PRIORITÉ DES TÂCHES, et les règles qui la gouvernent.
 //
 // Construit le 2026-09-23 (nuit autonome, chantier 1 du plan), après 32 calibrages avec

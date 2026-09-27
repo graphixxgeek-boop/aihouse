@@ -1,3 +1,4 @@
+// ICEBERG: membre
 import { readFileSync } from "node:fs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 

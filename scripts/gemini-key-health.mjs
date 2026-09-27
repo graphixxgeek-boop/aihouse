@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // PRINCIPE FONDATEUR DE CE MODULE (2026-09-18, formulation explicite de l'utilisateur : « je veux
 // que l'outil ait une connaissance fine de la clef API de façon à pouvoir la dominer : c'est le
 // principe fondateur de l'outil qui lui permet d'atteindre son objectif : contourner les

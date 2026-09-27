@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // THE-GHOST — petit orchestrateur du mode nocturne autonome (2026-09-21, nommé par l'utilisateur :
 // « créé un petit agent script "the-ghost" qui gere le mode autonome [...] quand je vais dormir ou
 // quand je te laisse travailler seul »).

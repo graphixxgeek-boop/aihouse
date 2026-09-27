@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Partie mécanique minimale de THE-FINAL-JUDGE (2026-09-20, cf. docs/referentiel/the-final-judge.md
 // pour les règles complètes). THE-FINAL-JUDGE lui-même est un vrai agent séparé (outil `Agent`),
 // jamais invocable depuis un script headless comme check-spirit.mjs appelle Gemini directement — ce

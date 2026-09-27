@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // criticite.mjs (2026-09-23) — LA CRITICITÉ D'UN CÔTÉ, L'URGENCE DE L'AUTRE.
 //
 // LE DÉFAUT QUE CE FICHIER RÉPARE, nommé par l'utilisateur : « la classification melange le crtiere

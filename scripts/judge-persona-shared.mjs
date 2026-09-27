@@ -1,3 +1,4 @@
+// ICEBERG: plomberie
 // Partagé entre the-final-judge.mjs et the-deep-reader.mjs (2026-09-21, tâche #152 — les deux
 // fichiers avaient chacun leur propre copie de extractPersonaBlock(), strictement identique, et une
 // version de detectGenericReport() qui répétait la même logique de "sections manquantes"/"trop

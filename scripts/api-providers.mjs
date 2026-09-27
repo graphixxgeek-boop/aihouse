@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Registre des fournisseurs d'API sondables par l'outil de diagnostic (2026-09-18, demande
 // explicite de l'utilisateur : « fais en sorte que cet outil puisse s'adapter à une autre clef
 // API, identique ou totalement différente, c'est à dire fournie par un fournisseur différent,

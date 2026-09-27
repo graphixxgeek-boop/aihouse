@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // THE-EQUALIZER (2026-09-23, chantier 5 du plan de nuit) — le vérificateur « tout est-il à niveau ? ».
 //
 // SA VOCATION, dans les mots de l'utilisateur : « qui se charge de vérifier par ailleurs que tout

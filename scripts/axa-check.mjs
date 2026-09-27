@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // AXA-CHECK — robustesse et fragilité par fonction (2026-09-19, cf. docs/axa-check-blueprint.md et
 // docs/referentiel/axa-check.md). Né d'une question directe de l'utilisateur pendant le calibrage
 // de CLEAN-DIRTY-OLD : « comment sait-on si une zone du code est couverte ou pas par un test ? » —

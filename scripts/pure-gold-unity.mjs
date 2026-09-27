@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // PURE-GOLD-UNITY (2026-09-22, demande de l'utilisateur : « je veux un outil qui scan les scripts
 // non unifiés »). Le gabarit unifié des rapports existe depuis le matin même (report-template.mjs :
 // un seul contrat, deux rendus, un emplacement générique d'en-tête) et la liste des outils TENUS de

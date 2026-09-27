@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // LE-CLASSIFICATEUR — le rangement de l'outillage, et lui seul.
 //
 // NOM PROVISOIRE, validé comme tel par l'utilisateur le 2026-09-26 : descriptif, jamais un nom
@@ -966,6 +967,18 @@ export function rangsQuiDivergent({ categories = AGENT_CATEGORIES, rangs = ORG_R
     pourquoi: "chaque rang déclare désormais OÙ se lisent ses titulaires — un rang peuplé par le type du fichier n'a jamais à figurer dans le registre de l'équipe, et l'y chercher fabriquait une dette qui n'existait pas",
   };
 }
+
+// COMBIEN D'EXEMPLES LA CARTE CITE PAR LIGNE. Écrite ICI, et pas ailleurs, pour une raison payée
+// comptant le 2026-09-27 (tâche #1011) : `carteDesAxes()` a déménagé de `cassandra-rh.mjs` vers ce
+// fichier lors de la scission, **et sa constante est restée derrière**. La sous-commande `axes`
+// plantait donc à chaque lancement sur un `ReferenceError` — un outil qui ne démarre pas, pendant
+// que la tâche #750 qu'il sert restait « en cours » faute d'avoir pu le voir tourner.
+//
+// Le sens de dépendance interdit à ce fichier d'importer `cassandra-rh.mjs` (règle en tête de
+// fichier), donc la constante vit ici et `cassandra-rh.mjs` la RÉEXPORTE : son ancienne adresse
+// continue de marcher, et il n'en existe qu'UNE (Article 24 — jamais deux constantes du même nom
+// dans deux fichiers, c'est exactement la dette que la tâche #1005 instruit par ailleurs).
+export const AXES_EXEMPLES_MAX = 2;
 
 export function carteDesAxes({ categories = AGENT_CATEGORIES, rangDe = rangDeLaCategorie, familleDe = familleDeLaCategorie } = {}) {
   const parRang = new Map();

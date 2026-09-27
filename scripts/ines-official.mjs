@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // INES-official (tâche #168, 2026-09-21) — la « secrétaire » qui aplatit le dépôt en un seul
 // fichier consolidé, annoté avec les signaux déjà calculés ailleurs dans le réseau d'outils.
 // MVP calibré explicitement avec l'utilisateur : APLATIR + ANNOTER, jamais une réécriture réelle du

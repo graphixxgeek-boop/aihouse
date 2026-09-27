@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // ANGEL-OF-IA-PROCESS (2026-09-22, nom donné par l'utilisateur). Outil SÉPARÉ de
 // god-of-all-process, et c'est délibéré : god surveille le déroulé d'ACTIVITÉS (une Ronde, une
 // simulation), angel surveille la CONDUITE de ceux qui travaillent — le respect de

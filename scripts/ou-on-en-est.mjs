@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// ICEBERG: membre
 // OÙ ON EN EST — le récapitulatif de ce qui a été FAIT, et de ce que le projet y a gagné.
 //
 // D'OÙ IL VIENT (2026-09-23, demande explicite de l'utilisateur) : « peux-tu me faire un compte

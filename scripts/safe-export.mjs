@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // SAFE-EXPORT (2026-09-22, nom donné par l'utilisateur) — le scan d'exportabilité et de
 // lisibilité-par-une-autre-IA. Septième Gardien sacré du code, par sa COUCHE LÉGÈRE seulement.
 //

@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // HYPER-SCAN-CHECKPOINT — vérification approfondie exceptionnelle (2026-09-19, cf.
 // docs/hyper-scan-checkpoint-blueprint.md et docs/referentiel/hyper-scan-checkpoint.md).
 // Reconstruit à partir de cinq vrais prompts historiques de l'utilisateur (16-19 septembre),

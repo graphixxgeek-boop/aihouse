@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Outil de diagnostic quota Gemini (2026-09-18, créé après un vrai blocage rencontré en simulation
 // intégrale : le quota gratuit journalier de gemini-flash-lite-latest — alias gemini-3.5-flash-lite,
 // 500 requêtes/jour/modèle, GenerateRequestsPerDayPerProjectPerModel-FreeTier — s'est épuisé en

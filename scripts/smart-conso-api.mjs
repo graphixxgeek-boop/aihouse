@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // SMART CONSO API — petite sœur de Smart Breaker (2026-09-19, cf.
 // docs/smart-conso-api-blueprint.md et docs/referentiel/smart-conso-api.md). Rôle : un vrai canal
 // de consultation, sollicité SYSTÉMATIQUEMENT par l'agent avant toute action qui va déclencher de

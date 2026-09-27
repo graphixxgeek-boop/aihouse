@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // LE-RÉGISSEUR — orchestre les parties MÉCANIQUES, sans aucun jugement, du protocole de simulation
 // complète (Article 18 de CLAUDE.md), pour ne plus dépendre de la seule mémoire de l'agent à chaque
 // simulation (2026-09-21, demande explicite de l'utilisateur pendant une passe d'allègement de

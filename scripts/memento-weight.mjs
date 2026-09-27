@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // memento weight (nom conservé tel quel, 2026-09-21 — demande explicite de l'utilisateur : « je
 // n'ai pas tres bien compris le role b [...] on pourrait le laisser en 'memento weight' »). Partie
 // OUTILLAGE de ce rôle : persistance après coup et agrégation des échantillons de poids de contexte

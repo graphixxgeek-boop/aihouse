@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // html-report.mjs — gabarit HTML réutilisable pour la remise de rapports (2026-09-20, demande
 // explicite de l'utilisateur après la « photo de la dream team » : « tu vas transformer tous les
 // rapports en fichiers HTML avec une mise en page améliorée [...] petit bond en avant du projet

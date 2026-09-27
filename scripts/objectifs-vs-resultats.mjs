@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // objectifs-vs-resultats (tâche #287, 2026-09-21, demande explicite de l'utilisateur : « tool brain
 // delivre un rapport txt à chaque ronde [...] est-ce qu'on en fait un membre certifié ? » — role
 // distinct, validé point par point : (1) un petit registre qui fixe un objectif chiffré par entité

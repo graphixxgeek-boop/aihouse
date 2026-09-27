@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // lib-json.mjs — LE chargeur de JSON de l'Agence, et le seul (2026-09-23, tâche #216, accord
 // explicite de l'utilisateur : « Oui, un seul chargeur partagé »).
 //

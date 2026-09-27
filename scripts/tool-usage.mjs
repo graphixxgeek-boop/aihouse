@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // COMPTEUR D'USAGE DES OUTILS (tâche #166, 2026-09-21) — capturé en conception le 2026-09-21T01:45Z
 // (docs/suivi #230), calibré le même soir : cumul PERMANENT depuis le début du projet (jamais remis
 // à zéro par session), nourrit la future CASSANDRA-RH pour juger si un outil a toujours sa place.

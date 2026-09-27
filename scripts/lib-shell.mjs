@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Petit assistant partagé pour lancer une commande shell sans jamais faire planter l'appelant sur
 // un code de sortie non nul (2026-09-19, extrait après avoir trouvé la même fonction réécrite à
 // l'identique dans trois scripts — always-new-code.mjs, check-level-target.mjs,

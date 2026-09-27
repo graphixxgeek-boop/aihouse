@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // CASSANDRA-RH — l'Agent Cadre RH de l'Agence Codex (2026-09-22, round de calibrage en 20
 // questions consigné dans docs/cassandra-rh-conception.md, tâche de suivi #134 close par ce round).
 // Noyau de première version, décidé explicitement avec l'utilisateur : NOTER l'équipe + SUPERVISER
@@ -26,7 +27,7 @@ import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./seri
 // direction permise, et l'import statique ne crée aucun cycle. CASSANDRA n'est pas dans la chaîne
 // du crochet post-commit (c'est une Agent Cadre, sollicitée à la Ronde), donc le coût du
 // recensement ne pèse sur aucun commit.
-import { recenserLesScripts as recenserLesScriptsPourCompteur, findSuitesDeTest as findSuitesDeTestPourCompteur } from "./le-classificateur.mjs";
+import { recenserLesScripts as recenserLesScriptsPourCompteur, findSuitesDeTest as findSuitesDeTestPourCompteur, AXES_EXEMPLES_MAX } from "./le-classificateur.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
@@ -1858,6 +1859,38 @@ export function mentionIceberg(source) {
   return m ? m[1].toLowerCase().replace("oublié", "oublie") : null;
 }
 
+// POSER LA MENTION EN TÊTE DE FICHIER (2026-09-27, tâche #737, second volet). Le premier volet —
+// vider le groupe OUBLIÉ — est clos : la mesure en rend zéro. Restait la seconde source, et sans
+// elle le garde-fou de désaccord ne peut RIEN attraper : il compare une déclaration à une dérivation,
+// et 79 fichiers sur 81 ne déclaraient rien. Comparer à du vide, c'est ne pas comparer.
+//
+// CE QUE CETTE FONCTION N'EST PAS, et c'est l'objection qu'il faut se faire à soi-même avant de
+// l'écrire : poser 79 mentions DEPUIS la mesure ne fabrique pas une seconde source indépendante —
+// au moment du geste, les deux disent forcément la même chose, et un garde-fou qui compare une
+// copie à son original ne mordra jamais. Ce n'est pas le but. Le but est de figer un ÉTAT DÉCLARÉ à
+// une date : à partir de demain, un fichier qui gagne un point d'entrée, perd sa présentation ou
+// change de rôle verra sa dérivation bouger pendant que sa déclaration reste — et c'est exactement
+// ce désaccord-là que l'utilisateur a voulu pouvoir lire, en sachant qu'il coûtait ces annotations.
+// La mention est un point de repère daté, jamais un second avis rendu le même jour.
+//
+// ELLE NE TOUCHE JAMAIS UN FICHIER QUI DÉCLARE DÉJÀ, et surtout pas pour « corriger » un désaccord :
+// un désaccord est précisément ce qu'on veut voir, et l'écraser en silence reviendrait à supprimer
+// la mesure au lieu de la lire (Article 3 — on corrige la cause, jamais le symptôme). Un fichier
+// qui se déclare PLOMBERIE l'emporte d'ailleurs sur sa propre porte d'entrée, décision prise sur
+// `pnpm-install` : réécrire sa mention effacerait cet arbitrage humain.
+//
+// LA LIGNE SE POSE APRÈS LE SHEBANG s'il y en a un — la déplacer casserait l'exécution du fichier.
+export function poserMentionIceberg(source, groupe) {
+  const src = String(source ?? "");
+  if (mentionIceberg(src) !== null) return { source: src, pose: false, pourquoi: "le fichier déclare déjà son groupe — une déclaration existante ne se réécrit jamais, c'est elle qui fait le désaccord" };
+  if (!Object.hasOwn(GROUPES_ICEBERG, String(groupe))) return { source: src, pose: false, pourquoi: `groupe inconnu : « ${groupe} » — on n'écrit pas dans un fichier une valeur qu'aucun lecteur ne saura relire` };
+  const ligne = `// ICEBERG: ${groupe}`;
+  const lignes = src.split("\n");
+  const apresShebang = lignes[0]?.startsWith("#!") ? 1 : 0;
+  lignes.splice(apresShebang, 0, ligne);
+  return { source: lignes.join("\n"), pose: true, pourquoi: `mention « ${groupe} » posée en tête` };
+}
+
 // Ce que la MACHINE lance, lu dans package.json et dans les crochets git — jamais devine.
 export function lanceParLaMachine({ packageJson = "", crochets = [] } = {}) {
   const dedans = [packageJson, ...crochets].join("\n");
@@ -2188,7 +2221,11 @@ export function formatDestinatairesLines(lignes = []) {
 // le code range ce que le FICHIER est (crochet, outil, bibliothèque partagée…), pas le rang. La
 // distinction qu'il cherche existe bel et bien, mais sous le nom `rang`, et son découpage fin sous
 // le nom `famille`. Le dire est le premier service de cette carte.
-export const AXES_EXEMPLES_MAX = 2;
+// LA CONSTANTE VIT DÉSORMAIS CHEZ `le-classificateur.mjs`, avec la fonction qui l'utilise (2026-09-27,
+// tâche #1011). Elle est réexportée ici pour que son ancienne adresse continue de marcher
+// (Article 19 : on ne casse pas un lecteur qu'on n'a pas lu), jamais redéclarée — deux constantes
+// du même nom dans deux fichiers finissent toujours par diverger.
+export { AXES_EXEMPLES_MAX };
 
 // LE VOCABULAIRE, DÉFINI UNE FOIS (2026-09-25) — ses trois questions, dans ses mots : « c'est quoi
 // la classification ? c'est quoi l'organisation ? c'est quoi un outil ? »
@@ -3596,6 +3633,25 @@ async function main() {
     const machine = lanceParLaMachine({ packageJson: lu("package.json"),
       crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
     const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    // POSER LES MENTIONS, SUR DEMANDE EXPLICITE SEULEMENT (2026-09-27, tâche #737, second volet).
+    // Jamais au fil de l'eau : cette commande est lue à chaque Ronde, et une lecture qui ÉCRIT dans
+    // 79 fichiers au passage serait une surprise, pas un service. `--poser` est donc un geste, et le
+    // geste se raconte — chaque fichier touché est nommé, avec sa raison.
+    if (process.argv.includes("--poser")) {
+      let poses = 0; const refuses = [];
+      for (const l of lignes) {
+        const chemin = join(ROOT, "scripts", `${l.slug}.mjs`);
+        const r = poserMentionIceberg(lu(join("scripts", `${l.slug}.mjs`)), l.groupe);
+        if (!r.pose) { refuses.push(`${l.slug} — ${r.pourquoi}`); continue; }
+        writeFileSync(chemin, r.source, "utf8"); poses += 1;
+        console.log(`  ✅ ${l.slug} → ${l.groupe}`);
+      }
+      for (const x of refuses) console.log(`  · non touché : ${x}`);
+      console.log(`\n${poses} mention(s) posée(s), ${refuses.length} fichier(s) laissé(s) tels quels.`);
+      console.log("Relancez sans --poser pour lire le classement : à partir de maintenant, tout écart entre ce qu'un fichier DÉCLARE et ce que la mesure DÉRIVE devient un désaccord visible.");
+      recordCliUsage("cassandra-rh", { origine: "demande" });
+      return;
+    }
     console.log(`\n=== L'ICEBERG — ${fichiers.length} scripts, quatre groupes ===\n`);
     for (const l of formatIcebergLines(lignes)) console.log(l);
     // Les 3e et 4e axes sortent dans la MÊME commande, délibérément : trois sous-commandes qui

@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // PROCESS.SIMULATION.GUARDIAN (2026-09-22, demande explicite de l'utilisateur : « je veux un agent
 // script responsable du process simu (à l'image de process.circle) il s'appelle
 // process.simulation.guardian »). Construit sur le modèle de circle-process-guardian.mjs, avec

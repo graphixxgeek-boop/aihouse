@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // memory-audit (surnom, 2026-09-21 — remplace le nom "MEMENTO", retiré de la documentation à la
 // demande explicite de l'utilisateur une fois son rôle mieux compris : « memento audite la
 // capacité des persos sur la memoire, ce n'est pas un outil de la gestion directe de la memoire

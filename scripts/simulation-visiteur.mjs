@@ -1,3 +1,4 @@
+// ICEBERG: plomberie
 // LE VISITEUR DE SIMULATION (2026-09-22) — conception complète dans
 // docs/simulation-visiteur-conception.md, onze décisions calibrées avec l'utilisateur avant la
 // première ligne de code.

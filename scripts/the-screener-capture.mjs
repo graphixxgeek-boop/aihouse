@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // THE-SCREENER — mécanisme de capture (2026-09-19, cf. docs/the-screener-blueprint.md et
 // docs/referentiel/the-screener.md). Pilote un vrai navigateur (Playwright) pour prendre le
 // nombre minimal de captures décidé avec l'utilisateur (2 par simulation) — la seule façon

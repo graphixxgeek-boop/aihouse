@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // CLEAN-DIRTY-OLD — code ancien et peu retouché, jamais retesté ni relu depuis longtemps
 // (2026-09-19, cf. docs/clean-dirty-old-blueprint.md et docs/referentiel/clean-dirty-old.md). Né
 // pendant le calibrage de cet outil, d'une question directe de l'utilisateur qui a fait naître

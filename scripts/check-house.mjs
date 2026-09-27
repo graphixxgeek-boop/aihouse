@@ -1,3 +1,4 @@
+// ICEBERG: membre
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -15907,3 +15908,53 @@ async function testCompteurAveugleAuxImports() {
   console.log("Passed: le compteur d'usage était aveugle aux appels par import (2026-09-27, tâche #1007). Le rapport de licenciements de CASSANDRA-RH désignait 10 outils comme candidats au retrait « jamais sollicités » — la moitié d'entre eux étaient appelés en permanence, mais par import depuis un autre script ou par un crochet git, ce que recordCliUsage() n'enregistre pas. Leur zéro mesurait le silence du compteur, jamais leur inactivité, et les deux s'écrivent 0 (leçon L11). La correction est DÉRIVÉE et non énumérée : on lit le recensement du classificateur et le dossier des crochets, donc un outil qui deviendra bibliothèque demain sera couvert sans qu'on touche à ce fichier. Deux pièges traversés en chemin : la première version, trop étroite, ratait check-suivi-fidelity (23 importeurs) ; la seconde, trop large, sortait 73 outils sur 90 parce que check-house.mjs importe 81 % du parc — tester un outil n'est pas l'exécuter. La suite de tests se DÉTECTE à la part du parc qu'elle importe, elle ne se nomme pas. Le rapport passe de 10 faux candidats à 5 vrais, et l'invisible reste listé, requalifié : le taire ferait disparaître pour de bon une bibliothèque réellement morte.");
 }
 await testCompteurAveugleAuxImports();
+
+// LA SECONDE SOURCE DE L'ICEBERG N'EXISTAIT PAS (2026-09-27, tâche #737, second volet). Le
+// mécanisme de désaccord — comparer ce qu'un fichier DÉCLARE en tête à ce que la mesure DÉRIVE —
+// était construit, testé, et comparait à du vide : 2 fichiers sur 81 portaient une mention. Un
+// garde-fou qui compare une valeur à rien ne mordra jamais, et son silence se lit comme un accord.
+async function testMentionsIcebergPosees() {
+  const crh737 = await import('../scripts/cassandra-rh.mjs');
+
+  // CE QU'ELLE DOIT FAIRE : poser la ligne en tête d'un fichier qui n'en a pas.
+  const pose = crh737.poserMentionIceberg('export const x = 1;', 'plomberie');
+  assert.equal(pose.pose, true, 'a file with no declaration must receive one — that is the whole point of the second source');
+  assert.equal(pose.source.split('\n')[0], '// ICEBERG: plomberie', 'and the line goes FIRST, where mentionIceberg() reads it');
+
+  // LE SHEBANG PASSE AVANT, et ce n'est pas un détail de forme : une ligne insérée au-dessus de
+  // `#!/usr/bin/env node` casse l'exécution du fichier. Cinq scripts du dépôt en portent un.
+  const avecShebang = crh737.poserMentionIceberg('#!/usr/bin/env node\nexport const x = 1;', 'membre');
+  assert.equal(avecShebang.source.split('\n')[0], '#!/usr/bin/env node', 'MUST NOT break the shebang: inserting above it makes the script unexecutable, and five real scripts carry one');
+  assert.equal(avecShebang.source.split('\n')[1], '// ICEBERG: membre', 'the mention takes the line right after it');
+
+  // CE QU'ELLE NE DOIT JAMAIS FAIRE : réécrire une déclaration existante. Une déclaration qui
+  // contredit la mesure est exactement ce qu'on veut LIRE — l'écraser supprimerait le constat au
+  // lieu de le traiter (Article 3). Le cas est réel : pnpm-install se déclare PLOMBERIE contre sa
+  // propre porte d'entrée, arbitrage rendu par l'utilisateur le 2026-09-24.
+  const dejaDeclare = crh737.poserMentionIceberg('// ICEBERG: plomberie\nexport const x = 1;', 'membre');
+  assert.equal(dejaDeclare.pose, false, 'MUST LET PASS an existing declaration: overwriting it would erase a human arbitration and silence the very disagreement the two-source pattern exists to show');
+  assert.equal(dejaDeclare.source, '// ICEBERG: plomberie\nexport const x = 1;', 'and the file must come back byte for byte unchanged, never "almost" unchanged');
+
+  // ET ELLE REFUSE UNE VALEUR QU'AUCUN LECTEUR NE SAURA RELIRE, plutôt que de l'écrire quand même :
+  // une mention hors vocabulaire serait invisible à mentionIceberg(), donc un fichier annoté qui
+  // compterait comme non annoté — le pire des deux mondes.
+  const inconnu = crh737.poserMentionIceberg('export const x = 1;', 'nimportequoi');
+  assert.equal(inconnu.pose, false, 'an unknown group is refused: written anyway it would be unreadable by mentionIceberg(), producing a file that looks annotated and counts as bare');
+  assert.match(inconnu.pourquoi, /groupe inconnu/, 'and the refusal says why, so the caller can repair rather than guess');
+
+  // LA BOUCLE EST BIEN FERMÉE : ce qu'on pose doit être ce que le lecteur relit.
+  assert.equal(crh737.mentionIceberg(pose.source), 'plomberie', 'what poserMentionIceberg writes, mentionIceberg must read back — otherwise the two halves of the mechanism do not meet');
+  assert.equal(crh737.mentionIceberg(avecShebang.source), 'membre', 'including past a shebang');
+
+  // SUR LE VRAI DÉPÔT (Article 25) : les 81 scripts déclarent désormais leur groupe, et aucun n'est
+  // en désaccord avec la mesure le jour où on les pose — c'est normal et c'est dit, la mention est
+  // un point de repère DATÉ, jamais un second avis rendu le même jour. Ce test garde la couverture,
+  // pas l'absence de désaccord : un désaccord qui apparaîtra demain est exactement le but.
+  const { readdirSync: lire737, readFileSync: lireF737 } = await import('node:fs');
+  const scripts737 = lire737('scripts').filter((f) => f.endsWith('.mjs'));
+  const sansMention = scripts737.filter((f) => crh737.mentionIceberg(lireF737(`scripts/${f}`, 'utf8')) === null);
+  assert.deepEqual(sansMention, [], `every script must declare its iceberg group, or the disagreement guard compares against nothing — ${sansMention.length} still bare`);
+
+  console.log("Passed: la seconde source de l'iceberg n'existait pas (2026-09-27, tâche #737, second volet). Le garde-fou de désaccord compare ce qu'un fichier DÉCLARE en tête à ce que la mesure DÉRIVE de son point d'entrée et de sa présentation — il était construit et testé, mais 79 fichiers sur 81 ne déclaraient rien, donc il comparait à du vide. Un garde-fou qui compare une valeur à rien ne mord jamais, et son silence se lit comme un accord. poserMentionIceberg() pose la ligne, sous --poser seulement (une commande lue à chaque Ronde qui écrirait dans 79 fichiers au passage serait une surprise, pas un service) ; elle passe le shebang plutôt que de le casser ; elle ne réécrit JAMAIS une déclaration existante, parce qu'une déclaration qui contredit la mesure est précisément ce qu'on veut lire — pnpm-install se déclare plomberie contre sa propre porte d'entrée, arbitrage rendu par l'utilisateur. Résultat mesuré : 2/81 → 81/81, zéro désaccord le jour de la pose, ce qui est attendu : la mention est un point de repère daté, et c'est à partir de demain qu'un fichier qui gagne une porte ou perd sa présentation deviendra visible.");
+}
+await testMentionsIcebergPosees();

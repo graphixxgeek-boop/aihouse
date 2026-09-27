@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // CLONE-HUNTER (2026-09-21, tâche #170bis — demande explicite de l'utilisateur : « est-ce qu'on a
 // deja un outil qui traque les redondances, repetition, duplicatas, dans le code ? »). Vérifié
 // avant construction (Article 19) : ARGUS (findDeadLifeFields/findTodoMarkers), HARMONIA

@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // modes-de-travail.mjs (2026-09-23) — LES TROIS MODES DE TRAVAIL, déclarés une fois et lus partout.
 //
 // POURQUOI CE FICHIER EXISTE, ET CE QU'IL CORRIGE. Le projet vivait sur UN booléen,

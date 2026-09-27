@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // X-Port BLINDTEST — le test à l'aveugle de la QUALITÉ d'un kit d'export
 // =======================================================================
 // NOMMÉ PAR L'UTILISATEUR le 2026-09-26, en fenêtre dédiée, parmi quatre propositions.

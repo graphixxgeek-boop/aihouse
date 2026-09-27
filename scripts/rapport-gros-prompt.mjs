@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// ICEBERG: membre
 // RAPPORT DE GROS PROMPT — l'utilitaire qui rend compte d'une saisine, point par point
 // =====================================================================================
 // POURQUOI IL EXISTE (2026-09-24, demande explicite de l'utilisateur). Son process : il accumule

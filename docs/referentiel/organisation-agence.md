@@ -92,6 +92,21 @@ inventaire, donc dans aucune décision — il mesure pour lui-même.
 | 🟠 **essentiel** | elle tourne, mais perd une garantie | il porte un garde-fou d'évolutivité : une promesse cesse d'être vérifiée |
 | 🟡 **utile** | rien ne casse, on perd du temps | une commande de lancement est écrite quelque part |
 | ⚪ **optionnel** | rien | personne ne le lance, rien n'est écrit pour lui, il ne garantit rien |
+**Il est DÉRIVÉ, jamais déclaré en tête de fichier** : la vitalité se lit dans ce que le dépôt FAIT
+du fichier. Un outil excellent que personne n'a encore branché sort « optionnel », et c'est exact —
+il n'est pas encore vital, il est prêt à l'être.
+
+**Un fichier illisible n'est pas un fichier optionnel.** Il n'y a donc pas cinq niveaux : il y a
+quatre niveaux et un aveu (`mesurable: false`), parce que « rien ne dépend de lui » et « je n'ai
+pas pu l'ouvrir » se ressemblent trait pour trait dans un tableau et appellent l'inverse l'un de
+l'autre.
+
+**CE QUE CET AXE N'EST PAS : une mesure d'exportabilité.** Il dit ce que l'Agence perd sans le
+fichier, pas ce qu'il coûte de l'emporter — un fichier peut être vital au fonctionnement et trivial
+à exporter, ou secondaire et lourd à transmettre. Le **kit d'export** est la CONSÉQUENCE de ce
+niveau, porté par SAFE-EXPORT (`docs/referentiel/safe-export.md`) : une seule échelle, lue deux
+fois, plutôt que deux échelles qui finiraient par diverger.
+
 
 **FRONTIÈRE AVEC `docs/referentiel/classification-agence.md`** *(2026-09-26, écrite le soir même où
 le détecteur de documents jumeaux l'a réclamée — sur ce texte-ci, quelques minutes après sa propre
@@ -147,21 +162,31 @@ Déclaré-mais-absent, deux-sources-divergent, duplication… : porté par HARMO
 Membre, oublié, infrastructure, plomberie : porté par `classerIceberg()`. C'est l'axe qui répond à
 sa demande d'origine — séparer ce qui a un nom de ce qui est de la tuyauterie.
 
+**LA FRONTIÈRE EST MÉCANIQUE, et c'est ce qui la rend vérifiable sans jugement** : « est-ce que je
+peux le convoquer ? ». Un script avec un point d'entrée propre et quelque chose qui le présente est
+un MEMBRE ; un script seulement appelé par un autre est de la PLOMBERIE ; un script que la machine
+lance sans que personne le présente est de l'INFRASTRUCTURE. Reste OUBLIÉ — convocable mais présenté
+nulle part — et ce groupe est **temporaire par construction** : un groupe qui ne se vide jamais est
+un aveu, pas une catégorie. Il est à zéro depuis le 2026-09-27.
 
-**Il est DÉRIVÉ, jamais déclaré en tête de fichier** : la vitalité se lit dans ce que le dépôt FAIT
-du fichier. Un outil excellent que personne n'a encore branché sort « optionnel », et c'est exact —
-il n'est pas encore vital, il est prêt à l'être.
+**IL EST LE SEUL AXE À DEUX SOURCES, et c'est un choix payé** *(décision de l'utilisateur, seconde
+source complétée le 2026-09-27, tâche #737)*. La mesure DÉRIVE le groupe du dépôt ; chaque fichier
+le DÉCLARE en tête, par une ligne `// ICEBERG: <groupe>`. Les deux ne servent pas à se confirmer —
+elles servent à **diverger**. Le jour où un fichier gagne un point d'entrée, perd sa présentation ou
+change de rôle, sa dérivation bouge pendant que sa déclaration reste, et ce désaccord se lit. Tant
+que la seconde source manquait, ce garde-fou comparait à du vide : 2 fichiers sur 81 déclaraient
+quelque chose, et son silence se lisait comme un accord. Elles sont à **81/81** depuis le
+2026-09-27, posées par `node scripts/cassandra-rh.mjs iceberg --poser`.
 
-**Un fichier illisible n'est pas un fichier optionnel.** Il n'y a donc pas cinq niveaux : il y a
-quatre niveaux et un aveu (`mesurable: false`), parce que « rien ne dépend de lui » et « je n'ai
-pas pu l'ouvrir » se ressemblent trait pour trait dans un tableau et appellent l'inverse l'un de
-l'autre.
+**LA DÉCLARATION L'EMPORTE DANS UN SEUL SENS : plomberie.** Un fichier qui se déclare plomberie
+gagne contre sa propre porte d'entrée — la mesure voit une porte, elle ne peut pas voir qui a le
+droit de la pousser, et `pnpm-install` n'a que des drapeaux internes qu'aucun humain ne tape
+(arbitrage de l'utilisateur, 2026-09-24). L'inverse reste un désaccord rapporté : un fichier qui se
+déclarerait MEMBRE sans être présenté nulle part mentirait sur un fait vérifiable, et la mesure
+aurait raison contre lui. Pour la même raison, `--poser` **ne réécrit jamais** une déclaration
+existante : écraser un désaccord reviendrait à supprimer le constat au lieu de le traiter
+(Article 3).
 
-**CE QUE CET AXE N'EST PAS : une mesure d'exportabilité.** Il dit ce que l'Agence perd sans le
-fichier, pas ce qu'il coûte de l'emporter — un fichier peut être vital au fonctionnement et trivial
-à exporter, ou secondaire et lourd à transmettre. Le **kit d'export** est la CONSÉQUENCE de ce
-niveau, porté par SAFE-EXPORT (`docs/referentiel/safe-export.md`) : une seule échelle, lue deux
-fois, plutôt que deux échelles qui finiraient par diverger.
 
 ## 2. Les Agents Cadre (Direction)
 

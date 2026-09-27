@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // circle-process-guardian.mjs (2026-09-22) — vérifie mécaniquement que le processus complet de la
 // Ronde CIRCLE-TASKS a bien été suivi, tel que documenté dans docs/circle-process-detail.txt
 // (Parties 5 et 7). JAMAIS un second calcul divergent : réutilise findOrphanReportFiles()/

@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // EL-PROFESSOR — partie mécanique et gratuite (2026-09-19, cf. docs/el-professor-blueprint.md et
 // docs/referentiel/el-professor.md). La notation elle-même (une vraie lecture qualitative contre
 // la charte) ne peut pas être mécanisée — ce script ne fait qu'une chose, zéro appel réseau,

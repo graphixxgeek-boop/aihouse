@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // SÉRIE-TEMPORELLE (2026-09-22) — le mécanisme PARTAGÉ d'historisation et de tendance.
 //
 // Demandé explicitement : « tous les rapports doivent etre historisés et comparés dans une mesure

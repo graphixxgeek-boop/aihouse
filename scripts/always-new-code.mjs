@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // ALWAYS-NEW-CODE — dette d'organisation (2026-09-19, cf. docs/always-new-code-blueprint.md et
 // docs/referentiel/always-new-code.md). Rend concret l'Article 7 ("l'épreuve de la page blanche") :
 // imaginer comment on reconstruirait une zone du projet en repartant de zéro, avec toute la

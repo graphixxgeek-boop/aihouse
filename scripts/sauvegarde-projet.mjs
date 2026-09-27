@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// ICEBERG: membre
 // SAUVEGARDE DU PROJET — le coffre et la notice
 // ==============================================
 // POURQUOI (2026-09-24, demande explicite de l'utilisateur, calibrée en fenêtres). Sa formulation :

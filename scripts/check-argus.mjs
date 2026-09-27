@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // ARGUS — partie mécanique et gratuite (2026-09-19, cf. docs/argus-blueprint.md et
 // docs/referentiel/argus.md). Deux vérifications structurelles, zéro appel réseau, zéro coût :
 // (1) un champ déclaré dans le type Life (lib/life.ts) mais jamais lu ailleurs dans le projet —

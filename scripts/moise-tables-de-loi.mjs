@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // MOÏSE-TABLES-DE-LOI (2026-09-23, tâche #613) — l'agent dédié au SEUL périmètre de la charte.
 //
 // SA VOCATION, dans les mots de l'utilisateur : « je veux que tu crées un outil dédié à Claude :

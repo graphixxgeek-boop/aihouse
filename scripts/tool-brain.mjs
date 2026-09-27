@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // tool-brain — cerveau central des rappels d'outils (2026-09-21, demande explicite de l'utilisateur :
 // « ca ne doit pas seulement pointer vers find brain, mais aussi vers tous les outils et pour ce
 // faire via le catalogue du coordinateur [...] resoud ce point definitivement [...] adapte avec

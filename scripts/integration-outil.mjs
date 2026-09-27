@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // INTEGRATION-OUTIL (2026-09-22) — le process d'intégration d'un nouvel outil dans l'Agence Codex,
 // rendu ACTIF plutôt qu'écrit.
 //

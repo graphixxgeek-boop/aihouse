@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// ICEBERG: membre
 // Pilote de simulation intégrale (Article 18, étape 1 — cf. docs/regles-de-travail.md §6bis).
 //
 // POURQUOI CE FICHIER EXISTE (2026-09-22, tâche #356). L'étape 1 du protocole dit « lancer LE

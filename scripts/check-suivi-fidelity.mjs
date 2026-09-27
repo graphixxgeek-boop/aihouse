@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // Garde-fou du système de suivi (2026-09-19, cf. docs/systeme-de-suivi.md). Une tâche fermée doit
 // toujours préciser "terminée — fidèle" ou "terminée — écart : ..." — jamais un "terminée" nu qui
 // laisserait la question "réalisée exactement selon le prompt ?" sans réponse. Ce script relit

@@ -1,3 +1,4 @@
+// ICEBERG: membre
 // LE-COORDINATEUR — petit orchestrateur des vérifications gratuites déjà existantes (2026-09-19,
 // nommé ainsi par l'utilisateur, calibré via l'Article 16 : « est-ce qu'il est possible de le
 // créer à moindre coût, simplement comme un coordinateur de fonctions existantes ? juste là pour
