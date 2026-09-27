@@ -43,6 +43,147 @@ import { buildPlanDaction, PLAN_ACTION_TITRE, SANS_CONSTAT_PROPRE } from "./repo
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
+// ══════════════════════════════════════════════════════════════════════════
+// LE PROCESS GROS PROMPT NE DOIT PAS DORMIR (2026-09-27, tâche #701)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION EST LA TÂCHE ELLE-MÊME : « comment on pourrait faire pour que ce process ne reste pas
+// à dormir ». Son principe, dans ses mots : il accumule idées, tâches et questions pendant qu'on
+// travaille — « pour ne pas te perturber avec trop de prompts intempestifs : c'était un de mes
+// défauts à corriger » — et les envoie d'un bloc AVANT UNE PÉRIODE AUTONOME.
+//
+// CETTE DERNIÈRE PHRASE EST CE QUI REND LE COMPTEUR POSSIBLE, et c'est la trouvaille de la tâche.
+// Un process qui sert PAR ÉVÉNEMENT ne se mesure pas au temps écoulé : la Ronde a un rythme, donc
+// « 39 commits sans Ronde » veut dire quelque chose ; un long silence du process gros prompt peut
+// simplement vouloir dire qu'aucune grosse saisine n'est arrivée. Le dépôt le dit d'ailleurs
+// noir sur blanc depuis des jours — « couvert PAR ÉVÉNEMENT : il sert quand une saisine contient
+// plusieurs demandes, jamais entre deux » — et ce constat, pris tel quel, condamnait le compteur.
+//
+// L'OCCASION SE MESURE DONC, PLUTÔT QUE LE TEMPS : chaque période autonome est une occasion
+// DÉCLARÉE par sa propre règle. Une nuit qui démarre sans saisine archivée est un manque réel,
+// datable, et lisible sur le disque — jamais une impression.
+//
+// LA FENÊTRE DE DEUX JOURS N'EST PAS UN CONFORT : il envoie sa saisine « avant » la nuit, c'est-à-
+// dire le plus souvent la veille au soir. Exiger la même date ferait crier le compteur sur les
+// nuits les mieux préparées, ce qui est le plus sûr moyen de le faire ignorer (L4).
+export const DOSSIER_NUITS = "docs/rapports-de-nuit";
+export const DOSSIER_SAISINES = "docs/rapports-gros-prompt";
+export const MOTIF_DATE_NUIT = /(20\d\d-\d\d-\d\d)/;
+export const FENETRE_AVANT_NUIT_JOURS = 1;
+
+export function datesDesNuits({ root = ROOT, lireDossier = readdirSync, dossier = DOSSIER_NUITS } = {}) {
+  let fichiers = [];
+  try { fichiers = lireDossier(join(root, dossier)); } catch { return null; }
+  const dates = new Set();
+  for (const f of fichiers) {
+    if (f === "index.md") continue;
+    const m = MOTIF_DATE_NUIT.exec(f);
+    if (m) dates.add(m[1]);
+  }
+  return [...dates].sort();
+}
+
+export function datesDesSaisines({ root = ROOT, lireDossier = readdirSync, lire = readFileSync, dossier = DOSSIER_SAISINES } = {}) {
+  let fichiers = [];
+  try { fichiers = lireDossier(join(root, dossier)); } catch { return null; }
+  const dates = [];
+  for (const f of fichiers.filter((x) => x.endsWith(".json"))) {
+    try {
+      const j = JSON.parse(lire(join(root, dossier, f), "utf8"));
+      // LA DATE SE LIT DANS LA SAISINE, jamais sur le fichier : `A-minuit.json` ne porte aucune
+      // date dans son nom, et l'horodatage du fichier dit quand il a été RECOPIÉ, pas quand la
+      // demande est arrivée. Les deux divergent dès le premier déplacement de fichier.
+      const m = MOTIF_DATE_NUIT.exec(String(j.dateDuPrompt ?? ""));
+      if (m) dates.push({ fichier: f, date: m[1], points: (j.points ?? []).length });
+    } catch { /* un fichier illisible n'est pas une saisine absente : il est ignoré, et le compte le dit */ }
+  }
+  return dates.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export function nuitsSansSaisine({ nuits = null, saisines = null, fenetre = FENETRE_AVANT_NUIT_JOURS } = {}) {
+  // DEUX REFUS, et ils ne disent pas la même chose : sans la liste des nuits il n'y a pas
+  // d'occasion à compter ; sans celle des saisines, « aucune nuit couverte » serait rendu alors
+  // qu'on n'a simplement pas pu regarder (leçon L5).
+  if (!nuits) return { mesurable: false, pourquoi: `le dossier ${DOSSIER_NUITS} est illisible — sans les périodes autonomes, il n'y a aucune OCCASION à confronter, et « le process ne dort pas » serait rendu sur zéro donnée` };
+  if (!saisines) return { mesurable: false, pourquoi: `le dossier ${DOSSIER_SAISINES} est illisible — « aucune nuit couverte » et « je n'ai pas pu regarder » s'écrivent tous les deux zéro (leçon L5)` };
+  const jour = 86400000;
+  const couverte = (n) => saisines.some((s) => {
+    const ecart = (Date.parse(n) - Date.parse(s.date)) / jour;
+    return ecart >= 0 && ecart <= fenetre;
+  });
+  const sans = nuits.filter((n) => !couverte(n));
+  return {
+    mesurable: true,
+    nuits: nuits.length, saisines: saisines.length,
+    couvertes: nuits.length - sans.length, sans,
+    // LA DERNIÈRE NUIT COMPTE PLUS QUE LE TAUX : un historique à 50 % dont la dernière nuit est
+    // couverte décrit un process qui a pris, l'inverse décrit un process en train de s'éteindre.
+    derniereNuit: nuits.at(-1) ?? null,
+    derniereCouverte: nuits.length ? couverte(nuits.at(-1)) : null,
+    horsPortee: `une nuit est « couverte » si une saisine porte sa date ou celle de la veille (${fenetre} jour) : il envoie sa saisine AVANT la nuit, souvent la veille au soir. Exiger la même date ferait crier le compteur sur les nuits les mieux préparées — le plus sûr moyen de le faire ignorer.`,
+  };
+}
+
+// L'INVITATION — les DEUX moments qu'il a nommés, et ils ne se ressemblent pas. Le premier est un
+// événement net (une nuit s'annonce) ; le second est une DÉRIVE (des messages courts s'enchaînent
+// sur des sujets différents), c'est-à-dire précisément la situation que sa propre règle cherche à
+// éviter. Les distinguer compte : le premier s'anticipe, le second se rattrape.
+export const MOMENTS_INVITATION = [
+  { cle: "avant-periode-autonome", quand: "il annonce une nuit, un mode auto ou une absence", quoi: "proposer d'ouvrir une saisine AVANT de partir — c'est le moment que sa propre règle désigne, et le seul où le rapport peut encore servir à cadrer la nuit" },
+  { cle: "rafale-de-messages-courts", quand: "plusieurs messages courts s'enchaînent sur des sujets différents", quoi: "proposer de les rassembler en une saisine — c'est exactement le défaut qu'il dit avoir corrigé chez lui (« trop de prompts intempestifs »), et le voir revenir est le signal que le process n'a pas pris" },
+];
+
+export function inviterLeProcessGrosPrompt({ nuitAnnoncee = false, messagesCourtsConsecutifs = 0, seuilRafale = 2 } = {}) {
+  const moments = [];
+  if (nuitAnnoncee) moments.push(MOMENTS_INVITATION[0]);
+  if (messagesCourtsConsecutifs >= seuilRafale) moments.push({ ...MOMENTS_INVITATION[1], compte: messagesCourtsConsecutifs });
+  return {
+    invite: moments.length > 0, moments,
+    // JAMAIS IMPOSÉ : un rapport de saisine réclamé sur une demande simple est une cérémonie, et
+    // une cérémonie finit par se contourner. Le même arbitrage que le seuil de la tâche #724.
+    forme: "une PROPOSITION, jamais un rapport imposé",
+  };
+}
+
+// LA NOTICE D'ACCUEIL — « l'agence pourrait énoncer ses règles de fonctionnement ». Elle est
+// RÉGÉNÉRÉE depuis les process réels, donc jamais périmée (Article 24) : une notice recopiée à la
+// main mentirait au premier process ajouté, et une notice qui ment sur les règles est pire qu'une
+// absence de notice — on la suit.
+export function noticeDAccueil(processes = [], { max = 12 } = {}) {
+  if (!processes.length) return { mesurable: false, pourquoi: "aucun process déclaré n'a été fourni — une notice d'accueil vide se lirait comme « cette Agence n'a pas de règles »" };
+  return {
+    mesurable: true,
+    lignes: processes.slice(0, max).map((p) => ({ slug: p.slug, etapes: (p.etapes ?? []).length, document: p.document ?? p.doc ?? null })),
+    total: processes.length,
+    horsPortee: "elle liste les process et leur nombre d'étapes ; elle ne les résume JAMAIS. Un résumé de process se périme sans qu'on le voie, et quelqu'un le suivrait à la place du vrai.",
+  };
+}
+
+export function formatGrosPromptLines(dormance, notice, invitation = null) {
+  const L = ["", "📬 LE PROCESS GROS PROMPT DORT-IL ? (tâche #701)"];
+  if (!dormance?.mesurable) L.push(`   🚨 PAS MESURÉ — ${dormance?.pourquoi ?? "raison non fournie"}`);
+  else {
+    L.push(`   ${dormance.couvertes}/${dormance.nuits} période(s) autonome(s) précédée(s) d'une saisine archivée, pour ${dormance.saisines} saisine(s) au total.`);
+    if (dormance.sans.length) L.push(`   Sans saisine : ${dormance.sans.join(" · ")}`);
+    L.push(dormance.derniereCouverte
+      ? `   ✅ la DERNIÈRE nuit (${dormance.derniereNuit}) était couverte — le process a pris.`
+      : `   🟠 la DERNIÈRE nuit (${dormance.derniereNuit}) ne l'était PAS. Le taux global compte moins que celui-ci : un process qui vient de sauter son occasion la plus récente est en train de s'éteindre, quoi que dise l'historique.`);
+    L.push(`   HORS PORTÉE : ${dormance.horsPortee}`);
+  }
+  if (notice?.mesurable) {
+    L.push("");
+    L.push(`   📖 NOTICE D'ACCUEIL — ${notice.total} process déclaré(s), régénérée depuis les process réels :`);
+    for (const l of notice.lignes) L.push(`      · ${l.slug.padEnd(20)} ${String(l.etapes).padStart(2)} étape(s) — ${l.document ?? "document non déclaré"}`);
+    L.push(`      ${notice.horsPortee}`);
+  }
+  if (invitation?.invite) {
+    L.push("");
+    L.push(`   ✋ INVITATION À OUVRIR UNE SAISINE — ${invitation.forme} :`);
+    for (const m of invitation.moments) L.push(`      · ${m.quand} → ${m.quoi}`);
+  }
+  return L;
+}
+
 // Personnage FIXE (2026-09-22, demande explicite : « un ton fixe et reconnaissable [...] comme
 // THE-FINAL-JUDGE »). Reproduit mot pour mot par l'agent qui pilote au moment de narrer un rapport
 // de CASSANDRA — jamais reformulé, même garde-fou que le personnage de THE-FINAL-JUDGE

@@ -452,6 +452,22 @@ try {
   if (msg) console.log(`${msg}\n`);
 } catch { /* best-effort, jamais bloquant */ }
 
+// LE PROCESS GROS PROMPT DORT-IL ? (2026-09-27, tâche #701, volet 3.) Sa question était
+// « comment on pourrait faire pour que ce process ne reste pas à dormir » — et la réponse est
+// exactement ici, au même endroit que la relance de Ronde : un compteur qu'il faut penser à
+// consulter ne réveille personne.
+//
+// IL NE PARLE QUE QUAND LA DERNIÈRE OCCASION A ÉTÉ MANQUÉE, jamais à chaque commit. Un taux
+// historique affiché en permanence est le bruit qui rend un contrôle invisible (L6) ; ce qui
+// mérite une ligne, c'est qu'une nuit vienne de démarrer sans saisine.
+try {
+  const { datesDesNuits, datesDesSaisines, nuitsSansSaisine } = await import("../cassandra-rh.mjs");
+  const d = nuitsSansSaisine({ nuits: datesDesNuits(), saisines: datesDesSaisines() });
+  if (d.mesurable && d.derniereCouverte === false) {
+    console.log(`📬 La dernière période autonome (${d.derniereNuit}) a démarré SANS saisine archivée — ${d.couvertes}/${d.nuits} le sont. Le process gros prompt s'éteint : c'est l'occasion la plus récente qui compte, pas le taux.\n`);
+  }
+} catch { /* best-effort, jamais bloquant */ }
+
 // Badge automatique — déclenchement réel à chaque commit (2026-09-22, demande explicite de
 // l'utilisateur : « tu crées un petit script pour gérer toute cette partie validation/intégration/
 // badge/message [...] avec déclenchement auto quand le script reçoit son badge réellement dans le

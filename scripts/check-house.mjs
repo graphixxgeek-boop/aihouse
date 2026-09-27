@@ -16956,3 +16956,65 @@ async function testAlignementDeRonde() {
   console.log("Passed: les dix questions d'alignement en fin de Ronde (2026-09-27, tâche #769). Le dispositif est fin, et sa finesse est dans l'ASYMÉTRIE VOULUE : les 5 questions DE FOND ne servent pas à apprendre — je dois connaître sa réponse à l'avance, et un écart y est un PROBLÈME GRAVE, le signal que nos deux modèles du projet ont divergé sans que personne le voie ; les 5 questions DE DÉTAIL servent l'inverse, elles portent sur ce qui n'a jamais été tranché, et y apprendre quelque chose est normal. LE MÉCANISME QUI REND L'ÉCART MESURABLE, et sans lui tout le reste est décoratif : LA PRÉDICTION S'ÉCRIT AVANT LA RÉPONSE. Une question de fond posée sans prédiction engagée par écrit ne produit aucun écart lisible — on relit sa réponse en se disant « c'est bien ce que je pensais ». Le registre se remplit donc en deux temps, et le second REFUSE de toucher au premier : une prédiction retouchée après coup n'est plus une prédiction, c'est un verdict rendu juste, la forme la plus discrète d'un faux vert. L'asymétrie est elle aussi un refus : une question de détail qu'on sait prédire est une question de fond mal étiquetée, et la ranger du mauvais côté ferait disparaître un écart grave dans la moitié où l'on apprend. L'écart lui-même est DÉCLARÉ par l'utilisateur et jamais déduit d'une comparaison de texte — deux phrases peuvent dire la même chose sans partager un mot, et sur la moitié la plus grave du dispositif une mécanique qui trancherait rendrait le verdict le moins fiable. L'étape est déclarée dans le process, AVANT l'enregistrement de la Ronde : inscrite comme faite sans ses dix questions, une Ronde les reporterait à la suivante, où elles seraient reportées encore.");
 }
 await testAlignementDeRonde();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LE PROCESS GROS PROMPT NE DOIT PAS DORMIR (2026-09-27, tâche #701)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testGrosPromptNeDortPas() {
+  const R = await import('../scripts/cassandra-rh.mjs');
+  const G = await import('../scripts/god-of-all-process.mjs');
+
+  // LA TROUVAILLE DE LA TÂCHE, et elle décidait si le compteur était seulement possible : un
+  // process qui sert PAR ÉVÉNEMENT ne se mesure pas au temps écoulé. « 39 commits sans Ronde » a
+  // un sens parce que la Ronde a un rythme ; un long silence du gros prompt peut simplement dire
+  // qu'aucune grosse saisine n'est arrivée. Ce qui se mesure est donc l'OCCASION — et sa propre
+  // règle en déclare une : il envoie sa saisine avant une période autonome.
+  const nuits = ['2026-09-22', '2026-09-23', '2026-09-24'];
+  const saisines = [{ fichier: 'x.json', date: '2026-09-23', points: 8 }];
+  const d = R.nuitsSansSaisine({ nuits, saisines });
+  assert.deepEqual(d.sans, ['2026-09-22'], 'MUST CATCH the night with no saisine, and MUST LET PASS the two the single saisine covers');
+  // LA FENÊTRE D'UN JOUR N'EST PAS UN CONFORT : il envoie sa saisine AVANT la nuit, souvent la
+  // veille au soir. Exiger la même date ferait crier le compteur sur les nuits les MIEUX préparées,
+  // ce qui est le plus sûr moyen de le faire ignorer (L4).
+  assert.ok(!d.sans.includes('2026-09-24'), 'a saisine sent the evening BEFORE covers the night: demanding the same date would fire on the best-prepared nights, the surest way to get the counter ignored');
+  // ET ELLE NE S'ÉTEND PAS EN ARRIÈRE : une saisine postérieure à la nuit ne la couvre pas, sinon
+  // le rattrapage du lendemain effacerait le manque au lieu de le montrer.
+  assert.deepEqual(R.nuitsSansSaisine({ nuits: ['2026-09-22'], saisines: [{ date: '2026-09-25' }] }).sans, ['2026-09-22'], 'MUST CATCH: a saisine written AFTER the night does not cover it — catching up the next day must not erase the gap');
+
+  // LA DERNIÈRE NUIT COMPTE PLUS QUE LE TAUX, et c'est ce que le message du commit dit : un
+  // historique à 50 % dont la dernière nuit est couverte décrit un process qui a pris ; l'inverse
+  // décrit un process en train de s'éteindre.
+  assert.equal(d.derniereCouverte, true, 'the most recent night is tracked separately from the rate');
+  assert.equal(R.nuitsSansSaisine({ nuits: ['2026-09-22', '2026-09-30'], saisines: [{ date: '2026-09-22' }] }).derniereCouverte, false, 'and a good historical rate with a missed LAST night reports the miss');
+
+  // DEUX REFUS QUI NE DISENT PAS LA MÊME CHOSE (L5) : sans les nuits il n'y a pas d'occasion à
+  // compter ; sans les saisines, « aucune couverte » serait rendu alors qu'on n'a pas pu regarder.
+  assert.equal(R.nuitsSansSaisine({ nuits: null, saisines: [] }).mesurable, false, 'MUST REFUSE with no list of autonomous periods: there is no OCCASION to count against');
+  assert.equal(R.nuitsSansSaisine({ nuits: [], saisines: null }).mesurable, false, 'MUST REFUSE with no saisine list: "none covered" and "I could not look" both write zero (L5)');
+
+  // LA DATE SE LIT DANS LA SAISINE, jamais sur le fichier : A-minuit.json ne porte aucune date dans
+  // son nom, et l'horodatage du fichier dit quand il a été RECOPIÉ, pas quand la demande est
+  // arrivée. Les deux divergent dès le premier déplacement de fichier.
+  const reelles = R.datesDesSaisines();
+  assert.ok(reelles.length >= 4, 'the real saisines of this repository are read');
+  assert.ok(reelles.every((s) => /^20\d\d-\d\d-\d\d$/.test(s.date)), 'each one carries the date written INSIDE it, never the filesystem timestamp');
+
+  // LA NOTICE EST RÉGÉNÉRÉE depuis les process réels (Article 24) : recopiée à la main, elle
+  // mentirait au premier process ajouté — et une notice qui ment sur les règles est pire qu'une
+  // absence de notice, parce qu'on la suit.
+  const n = R.noticeDAccueil(G.PROCESSES);
+  assert.equal(n.total, G.PROCESSES.length, 'the welcome notice counts the real declared processes, never a hand-copied list');
+  assert.ok(n.lignes.every((l) => l.slug && Number.isFinite(l.etapes)), 'and each line carries its step count, read off the process itself');
+  assert.equal(R.noticeDAccueil([]).mesurable, false, 'with no process declared it refuses: an empty notice would read as "this Agency has no rules"');
+  assert.ok(n.horsPortee.includes('ne les résume JAMAIS'), 'it lists, it never summarises: a summarised process goes stale unseen and someone follows it instead of the real one');
+
+  // L'INVITATION — les DEUX moments qu'il a nommés, et ils ne se ressemblent pas : le premier est
+  // un événement net, le second est une DÉRIVE (le défaut qu'il dit avoir corrigé chez lui).
+  assert.equal(R.inviterLeProcessGrosPrompt({}).invite, false, 'no invitation out of the two moments he named — a proposal made constantly stops being read');
+  assert.deepEqual(R.inviterLeProcessGrosPrompt({ nuitAnnoncee: true }).moments.map((m) => m.cle), ['avant-periode-autonome'], 'an announced night invites the saisine, at the moment his own rule designates');
+  assert.deepEqual(R.inviterLeProcessGrosPrompt({ messagesCourtsConsecutifs: 3 }).moments.map((m) => m.cle), ['rafale-de-messages-courts'], 'and a streak of short messages invites it too: seeing that defect come back is the signal the process has not taken');
+  assert.ok(R.inviterLeProcessGrosPrompt({ nuitAnnoncee: true }).forme.includes('jamais un rapport imposé'), 'what fires is a PROPOSAL: a saisine report demanded on a simple request is a ceremony, and a ceremony ends up being worked around');
+
+  console.log(`Passed: le process gros prompt ne doit pas dormir (2026-09-27, tâche #701). Sa question ÉTAIT la tâche — « comment on pourrait faire pour que ce process ne reste pas à dormir » — et la trouvaille décidait si un compteur était seulement possible : un process qui sert PAR ÉVÉNEMENT ne se mesure pas au temps écoulé. « 39 commits sans Ronde » a un sens parce que la Ronde a un rythme ; un long silence du gros prompt peut simplement vouloir dire qu'aucune grosse saisine n'est arrivée, et le dépôt le disait noir sur blanc depuis des jours — ce constat, pris tel quel, condamnait le compteur. CE QUI SE MESURE EST DONC L'OCCASION, et sa propre règle en déclare une : il envoie sa saisine AVANT une période autonome. Une nuit qui démarre sans saisine archivée est un manque réel, datable, lisible sur le disque. La fenêtre d'un jour n'est pas un confort — il l'envoie souvent la veille au soir, et exiger la même date ferait crier le compteur sur les nuits les mieux préparées ; elle ne s'étend pas en arrière non plus, sinon le rattrapage du lendemain effacerait le manque. LA DERNIÈRE NUIT COMPTE PLUS QUE LE TAUX : un historique à 50 % dont la dernière nuit est couverte décrit un process qui a pris, l'inverse un process qui s'éteint — et c'est la seule chose que le rappel de commit dit, parce qu'un taux affiché en permanence est le bruit qui rend un contrôle invisible (L6). MESURE RÉELLE SUR LE DÉPÔT : ${R.nuitsSansSaisine({ nuits: R.datesDesNuits(), saisines: R.datesDesSaisines() }).couvertes}/${R.datesDesNuits().length} périodes autonomes couvertes, et la plus récente ne l'est PAS — le process dort pour de vrai, ce qui est exactement ce que la tâche demandait de rendre visible. La notice d'accueil est régénérée depuis les process réels (recopiée, elle mentirait au premier process ajouté, et une notice qui ment sur les règles est pire qu'une absence de notice puisqu'on la suit) et elle LISTE sans jamais résumer. L'invitation ne tombe qu'aux deux moments qu'il a nommés, et reste une proposition.`);
+}
+await testGrosPromptNeDortPas();
