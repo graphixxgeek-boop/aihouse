@@ -21,6 +21,12 @@ import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porte
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
+// LE SENS DE LA DÉPENDANCE EST CONTRAINT, et il est déclaré à l'autre bout : `le-classificateur`
+// écrit en tête qu'il n'importe JAMAIS ce fichier-ci. Cassandra → classificateur est donc la seule
+// direction permise, et l'import statique ne crée aucun cycle. CASSANDRA n'est pas dans la chaîne
+// du crochet post-commit (c'est une Agent Cadre, sollicitée à la Ronde), donc le coût du
+// recensement ne pèse sur aucun commit.
+import { recenserLesScripts as recenserLesScriptsPourCompteur, findSuitesDeTest as findSuitesDeTestPourCompteur } from "./le-classificateur.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
 import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
@@ -170,17 +176,104 @@ export function tokenInvestmentVerdict(slug, tokenHistory) {
   return withClassification[withClassification.length - 1].classification;
 }
 
-export function toolsToReconsider({ usageHistory, knownSlugs, staleness, objectifsRows = [], tokenHistory, docReportRows = [] }) {
+// CE QUE LE COMPTEUR NE PEUT PAS VOIR, ET POURQUOI IL FAUT LE DÉCLARER ICI (2026-09-27, tâche
+// #1007, trouvée en instruisant son diagnostic de fusion).
+//
+// LE DÉFAUT, MESURÉ : ce rapport s'appelle le « rapport de licenciements » et sa vocation est de
+// FAIRE DÉCIDER. Le 2026-09-27 il proposait de retirer dix outils sur le signal « jamais
+// sollicité ». Au moins quatre tournent en permanence — `check-suivi-fidelity` à chaque commit,
+// `tool-usage` qui EST le compteur et ne peut structurellement pas se compter, `criticite` et
+// `route-booster` qui sont des bibliothèques appelées par `import`.
+//
+// LA CAUSE : `recordCliUsage()` n'enregistre qu'un lancement EN LIGNE DE COMMANDE. Un outil appelé
+// par import ne laisse aucune trace. Son zéro mesure donc le SILENCE de l'outil, jamais son
+// inactivité — et les deux s'écrivent 0 (leçon L11). Dans un rapport consultatif, un tel signal se
+// corrige à la lecture ; dans un rapport de DÉCISION, il retire des outils vivants.
+//
+// LA CORRECTION EST DÉRIVÉE, JAMAIS ÉNUMÉRÉE (Article 24) : le classificateur sait déjà distinguer
+// une bibliothèque d'une commande documentée, et le dossier des crochets git est lisible sur le
+// disque. On ne recopie donc aucune liste de noms — on lit ce que d'autres savent déjà, et un outil
+// qui deviendra bibliothèque demain sera couvert sans qu'on touche à ce fichier.
+//
+// ET LE SIGNAL N'EST PAS SUPPRIMÉ, IL EST REQUALIFIÉ : un outil invisible au compteur le reste, et
+// le rapport le DIT. Le taire produirait le défaut inverse — une bibliothèque réellement morte
+// n'apparaîtrait plus jamais.
+export function invisiblesAuCompteur({ recensementImpl = null, listDirImpl = readdirSync, root = ROOT } = {}) {
+  const invisibles = new Map();
+  // LES APPELANTS RÉELS, LA SUITE DE TESTS EXCLUE — et cette exclusion n'est pas un détail, c'est
+  // ce qui sépare une mesure d'un compte de bruit. Premier élargissement du 2026-09-27 : j'ai
+  // retenu « au moins un importeur », et 73 outils sur 90 sont ressortis hors de portée du
+  // compteur. Le chiffre disait tout : `check-house.mjs` importe 73 scripts — 81 % du parc — parce
+  // que c'est la SUITE DE TESTS, et tester un outil n'est pas l'exécuter en production. Le rapport
+  // serait alors passé de « tout le monde est à retirer » à « personne ne l'est », deux verdicts
+  // également faux.
+  //
+  // LA SUITE DE TESTS SE DÉTECTE, ELLE NE SE NOMME PAS (Article 24) : `findSuitesDeTest()` la
+  // reconnaît à la PART du parc qu'elle importe, donc un second fichier de tests demain sera exclu
+  // sans qu'on touche à ceci.
+  try {
+    const r = (recensementImpl ?? recenserLesScriptsPourCompteur)();
+    const lignes = r?.lignes ?? r ?? [];
+    const importeDe = r?.importeDe ?? {};
+    const suites = new Set(findSuitesDeTestPourCompteur({ importeDe, total: lignes.length }).map((x) => x.chemin));
+    // On renverse la carte : `importeDe` dit ce qu'un script importe, on veut qui importe un script.
+    const appelants = {};
+    for (const [importeur, importes] of Object.entries(importeDe)) {
+      if (suites.has(importeur)) continue;   // tester n'est pas exécuter
+      for (const cible of importes ?? []) (appelants[cible] ??= new Set()).add(importeur);
+    }
+    for (const l of lignes) {
+      const slug = String(l.chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+      const combien = (appelants[l.chemin] ?? new Set()).size;
+      if (combien > 0) {
+        invisibles.set(slug, `${combien} autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande`);
+      } else if (String(l.type ?? "").startsWith("bibliotheque")) {
+        // Une bibliothèque que plus personne n'importe est un vrai signal, PAS un angle mort :
+        // elle n'est ni lançable ni appelée. On ne la déclare donc pas invisible.
+        continue;
+      }
+    }
+  } catch (e) {
+    return { mesurable: false, invisibles, pourquoi: `le recensement des scripts est illisible (${e?.message ?? e}) — on ne peut PAS dire quels outils sont invisibles au compteur, et les traiter comme visibles accuserait des bibliothèques à tort` };
+  }
+  // Les crochets git : ils lancent des outils sans passer par une ligne de commande de l'agent.
+  let sourceCrochets = "";
+  try {
+    for (const f of listDirImpl(join(root, "scripts/hooks"))) {
+      try { sourceCrochets += readFileSync(join(root, "scripts/hooks", f), "utf8"); } catch { /* un crochet illisible n'invente rien */ }
+    }
+  } catch { /* pas de dossier de crochets : rien à ajouter, et ce n'est pas une erreur */ }
+  for (const m of sourceCrochets.matchAll(/scripts\/([a-z0-9-]+)\.mjs/g)) {
+    if (!invisibles.has(m[1])) invisibles.set(m[1], "il est lancé par un crochet git, donc à chaque commit — le compteur n'enregistre que les lancements de l'agent");
+  }
+  // LE COMPTEUR LUI-MÊME, et c'est le cas le plus évident une fois dit : il ne peut pas enregistrer
+  // son propre passage sans se compter à chaque fois qu'il compte un autre.
+  invisibles.set("tool-usage", "c'est le compteur lui-même : il ne peut structurellement pas se compter");
+  return { mesurable: true, invisibles, pourquoi: `${invisibles.size} outil(s) sont hors de portée du compteur — leur zéro d'usage ne veut rien dire` };
+}
+
+export function toolsToReconsider({ usageHistory, knownSlugs, staleness, objectifsRows = [], tokenHistory, docReportRows = [], horsDePortee = null }) {
   const neverUsed = new Set(toolsNeverUsed(usageHistory, knownSlugs));
+  // Si la mesure des invisibles échoue, on ne suppose PAS qu'ils sont tous visibles : on garde le
+  // signal mais on le marque non fiable, plutôt que de rendre un verdict sur une base inconnue.
+  const hp = horsDePortee ?? invisiblesAuCompteur();
   const findings = [];
   for (const slug of knownSlugs) {
     const reasons = [];
-    if (neverUsed.has(slug)) reasons.push("jamais sollicité (tool-usage.mjs)");
+    const invisible = hp.mesurable ? hp.invisibles.get(slug) : null;
+    if (neverUsed.has(slug) && invisible) {
+      reasons.push(`⚠️ zéro d'usage NON INTERPRÉTABLE — ${invisible}. Ce n'est PAS un motif de retrait`);
+    } else if (neverUsed.has(slug)) {
+      reasons.push(hp.mesurable ? "jamais sollicité (tool-usage.mjs)" : `jamais sollicité (tool-usage.mjs) — ⚠️ à lire avec réserve : ${hp.pourquoi}`);
+    }
     const scriptPath = AGENT_SCRIPT_FILES[slug];
     const staleEntry = scriptPath ? staleness?.[scriptPath] : undefined;
     if (staleEntry?.stale) reasons.push(`stagnant relativement au reste du projet (${staleEntry.days} j)`);
     const belowObjective = objectifsRows.some((r) => r.entite === slug && r.statut === "en dessous");
-    if (belowObjective && neverUsed.has(slug)) reasons.push("objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)");
+    // Le « signal renforcé » combine deux signaux : si l'un des deux est non interprétable, leur
+    // somme l'est aussi. Le laisser passer rendrait par la bande le verdict que la ligne du dessus
+    // vient d'écarter.
+    if (belowObjective && neverUsed.has(slug) && !(hp.mesurable && hp.invisibles.has(slug))) reasons.push("objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)");
     if (tokenHistory) {
       const verdict = tokenInvestmentVerdict(slug, tokenHistory);
       if (verdict === "sans_retour") reasons.push("tokens investis à sa construction classés sans retour (SMART-CONSO-TOKEN)");

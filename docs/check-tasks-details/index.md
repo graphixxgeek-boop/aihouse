@@ -166,3 +166,10 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [ronde-2026-09-25T14-08-43.txt](ronde-2026-09-25T14-08-43.txt) | — |
 | [tri-2026-09-27T03-13Z.txt](tri-2026-09-27T03-13Z.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
+| 2026-09-27T04:07:59.475Z | projet_entier | arborescence | 941 | 941 | 0 | 86 | /home/user/aihouse/docs/check-tasks-details/1790482079470-projet_entier-arborescence.html |
+| 2026-09-27T04:13:17.625Z | en_cours | liste | 104 | 941 | 0 | 94 | /home/user/aihouse/docs/check-tasks-details/1790482397621-en_cours-liste.html |
+| 2026-09-27T04:15:59.037Z | en_cours | arborescence | 104 | 941 | 0 | 94 | /home/user/aihouse/docs/check-tasks-details/1790482559034-en_cours-arborescence.html |
+| 2026-09-27T04:24:25.313Z | projet_entier | arborescence | 941 | 941 | 0 | 94 | /home/user/aihouse/docs/check-tasks-details/1790483065305-projet_entier-arborescence.html |
+| 2026-09-27T04:28:28.436Z | en_cours | arborescence | 103 | 941 | 0 | 103 | /home/user/aihouse/docs/check-tasks-details/1790483308433-en_cours-arborescence.html |
+| 2026-09-27T04:20:00.728Z | themes | familles | 103 | 941 | 0 | 0 | /home/user/aihouse/docs/check-tasks-details/1790482800728-themes.html |
+| 2026-09-27T04:28:28.693Z | themes | familles | 103 | 941 | 0 | 0 | /home/user/aihouse/docs/check-tasks-details/1790483308693-themes.html |

@@ -1,0 +1,119 @@
+# Plan de départ — nuit du 2026-09-27 (liste FIGÉE des tâches ouvertes)
+#
+# Figée à 04:35Z, AVANT toute action. Sans ce point de départ, la confrontation du matin se ferait
+# contre rien — et un avant/après sans « avant » est une impression, jamais une mesure.
+# Confrontation du matin : node scripts/check-tasks-details.mjs bilan
+#
+# La définition d une tâche OUVERTE est celle de l outil lui-même (statusKey ouverte + enCours),
+# jamais un filtre réinventé ici : un premier jet maison en comptait 135 au lieu de 103, et une
+# confrontation entre deux dénominateurs différents ne mesure rien.
+#
+# ORDRE DONNÉ PAR L UTILISATEUR (2026-09-27, avant de dormir) :
+#   1) organisation + classification   2) les 11 tâches process   3) export   4) le reste, à mon organisation
+#   But annoncé : tout finir, la centaine.
+# BORNES : périmètre sensible habituel + PAS de renommage en masse + PAS de CLAUDE.md (ses 3 réponses : 1+2+3)
+
+TOTAL FIGÉ : 103 tâches ouvertes sur 941 lignes de suivi.
+#390 | Outillage / badge
+#436 | Process / vérification à froid
+#439 | Organisation / catégories transverses
+#490 | Ronde / plan d'action R1
+#491 | Ronde / plan d'action R2
+#492 | Ronde / plan d'action R3
+#493 | Ronde / plan d'action R4
+#566 | Ronde / lecteur générique
+#571 | Outillage / renommage + revue
+#574 | Ronde / paramètre de lancement
+#575 | Outillage / audit d'usage
+#580 | Outillage / renommage
+#603 | Process / conduite
+#604 | Documentation / Article 18
+#612 | Outillage / CIRCLE-TASKS
+#623 | Documentation / docs/regles-de-travail.md (chantier #208)
+#624 | Charte / CLAUDE.md (chantier #208)
+#629 | Documentation / docs/referentiel (chantier #208)
+#636 | Organisation / vocabulaire (chantier #208)
+#656 | Organisation / bibliothèques à un seul client
+#657 | Organisation / code mort possible
+#659 | Charte / généraliser le mécanisme DEMANDÉE
+#668 | Exportabilité / les 14 candidats non portables
+#677 | Coordination / Deux packs du catalogue formulés en mêmes mots — tool-brain remonte les deux pour une seule question
+#679 | XP / Leçon L23 sans porteur — forcer la lecture du DOCUMENT de process avant d'agir, jamais sa déclaration dans le code
+#681 | XP / Une erreur répétée la même nuit, et ce qu'elle dit d'une décision déjà prise
+#687 | Suivi / Faut-il scinder l'outil de suivi des tâches en deux ou trois agents ?
+#695 | Outillage / Tâches C à F des failles IA — les quatre restantes, pour cette nuit
+#696 | Organisation / Harmoniser le modèle de gouvernance de l'utilisateur avec l'existant — 20 questions avant toute construction
+#699 | Suivi / chaîne mesure → suite
+#700 | Sauvegarde / coffre et notice
+#701 | Process / commande-en-masse
+#703 | Conduite / mots d'ordre permanents
+#704 | Conso / tokens
+#705 | Outillage / découpe
+#706 | Process / nommage
+#707 | Organisation / iceberg
+#708 | Suivi / fiche de tâche
+#709 | CASSANDRA-RH / convocation
+#710 | Organisation / document total
+#711 | Documentation / nature AUTO ou FIGÉ
+#714 | Coordination / catalogue
+#715 | Coordination / combinaisons d'outils
+#717 | Profil utilisateur / les deux sens
+#721 | Ronde / suites
+#723 | Process / la saisine elle-même n'est jamais archivée
+#724 | Process / déclenchement automatique du process
+#725 | Sauvegarde / l'agencement de la mémoire du projet
+#726 | Ronde / le process n'a pas été suivi
+#732 | Process / fréquence des auto-rappels en mode autonome
+#733 | Nommage / les séries d'hommages
+#737 | Organisation / vider le groupe OUBLIÉ et poser les 77 mentions
+#740 | Nommage / booster l'agent des noms : TOUS les impacts d'un renommage en série
+#745 | Agence / fusionner des agents pour réduire l'effectif — retrouver le sujet mis de côté
+#747 | Nommage / la nomenclature : un code de classe dans le nom
+#748 | Agence / qui garde et surveille l'HISTOIRE de l'Agence ?
+#749 | XP / le moment manquant : une leçon découverte en UTILISANT un outil
+#750 | Classification / 3e et 4e distinctions : le MOMENT et la NATURE
+#760 | Charte / proposer un NOUVEL article (le trentième) pour la reprise des notes
+#765 | Charte / Article 31 — tout passe par un OUTIL, et un rapport est TOUJOURS le rapport d'un outil
+#766 | Charte / Article 32 — le temps réel se LIT, jamais ne se déduit
+#767 | Charte / quelles autres règles à fort levier manquent ?
+#768 | Nommage / l'outil de renommage PUISSANT, avec recherches web
+#769 | Process / 10 questions d'alignement à la fin de chaque Ronde
+#770 | Process / la préparation avant le passage en mode auto
+#773 | Process / vérifier que TOUS les process ont été respectés sur les dernières demandes
+#775 | Nommage / les deux collisions réelles à trancher avec lui (`PALIERS`, `recordOutcome`)
+#790 | Charte / les treize Articles muets : déclarer l'impossibilité, ou nommer le porteur qui existe déjà
+#793 | Agence / check-house pèse un quart de tout l'outillage — 12 052 lignes
+#795 | Données / un quart des sources de l'Agence écrit pour personne
+#796 | Standards / les deux seules exigences non tenues parlent toutes deux de MÉMOIRE
+#800 | Agence / lequel des trois axes fait monter le majeur ?
+#801 | Badge / la FAMILLE a disparu de la cérémonie, et chaque outil certifié émet une fausse « mise à jour »
+#805 | File / 87 % de tâches légères et 49 thèmes pour 116 ouvertes : est-ce un émiettement ou un rythme sain ?
+#810 | check-spirit / relancer POUR DE VRAI une fois le correctif validé
+#813 | Données / dix registres FRAIS que sept à dix outils citaient sans jamais les OUVRIR
+#814 | Données / les registres restants : brancher un lecteur, ou déclarer l'absence assumée ?
+#819 | Filet / trois options chiffrées : ne rien faire, regarder les 3 plus lents, ou un mode rapide
+#823 | Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et le garde-fou est tombé deux fois dans ce qu'il traque
+#830 | Idées / **« un outil qui vérifie la logique et les trous PARTOUT » — la question posée il y a quatre jours, restée sans réponse tracée**
+#841 | Ronde / **30 commits sans Ronde — et c'est le seul endroit où le soupçon de #205 se vérifie vraiment**
+#842 | Ronde / **« rentabiliser les trouvailles » : l'outil qui mesure ça existe, et son verdict est net — le registre grossit sans que personne ne dise s'il sert**
+#845 | File / les 5 plus anciennes tâches encore ouvertes, présentées pour arbitrage
+#846 | Process / **modifier un document de référence : huit étapes sur dix étaient déjà là, jamais rassemblées**
+#853 | Badge / #801 remesuré : **20 cérémonies en attente, toutes sur le MÊME motif — une information répétée vingt fois, pas vingt informations**
+#861 | Refonte graphique / son idée SQUID GAME vivait au suivi et nulle part dans le document de son chantier
+#902 | Agence / **EXPORT ET COMMERCIALISATION — le chantier existait sans tâche, donc sans existence dans la file**
+#907 | Agence / **écrire en priorité le blueprint de la PLOMBERIE, avant tout nouveau blueprint d'outil vedette**
+#908 | Agence / **un « plan de la machine » DÉRIVÉ de la chaîne quotidienne, jamais écrit à la main**
+#910 | Agence / **4 dépendances à un outillage particulier dans les documents de relai — à reformuler ou à déclarer**
+#917 | Charte / **la charte promet une couche lourde à ARGUS et HARMONIA que le registre ne porte pas — trois lectures, et c'est SA décision**
+#922 | Données / **3 dossiers pèsent 1 028 Ko sur 3 738 : garder N derniers, compacter, ou externaliser ? C'est SA décision**
+#929 | Nommage / **un seul script, DEUX identités : `check-spirit` et `check-spirit-mjs` — et c'est un renommage, donc SA décision**
+#936 | Conduite / **CONTROL+ENTRÉE met un prompt en attente, et je ne le lui avais jamais dit — les gestes de son interface ne sont nulle part**
+#988 | Nommage / **le registre des baptêmes : trois décisions prises, application REPORTÉE à sa demande**
+#993 | Agence / **les constats de CLONE-HUNTER : trois factorisations, chacune prouvée équivalente**
+#994 | Agence / **élargir le périmètre d'AXA-CHECK de 38 à 68 scripts, AVEC un troisième état « non exercé »**
+#995 | Agence / **CLONE-HUNTER : réunir les alertes dont le texte d'un bloc est CONTENU dans celui d'un autre**
+#996 | Agence / **`check-spirit.mjs` : l'importer c'est le LANCER — lui donner une garde de module principal**
+#997 | Agence / **les 18 constats CLONE-HUNTER restants, à descendre jusqu'à zéro**
+#1000 | Agence / **11 renvois à `lib/reference.ts` survivent au retrait du fichier — mémoire légitime ou lien mort ?**
+#1003 | Agence / **son dossier de conception externe enregistré intégralement, et la confrontation qu'il demande**
+#1005 | Agence / **deux fonctions `chargerLesDocuments()` dans deux fichiers, qui ne rendent pas la même chose**

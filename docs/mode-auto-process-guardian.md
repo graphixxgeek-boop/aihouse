@@ -194,6 +194,57 @@ sans qu'aucune ligne d'ici ne dise ce qu'ils sont.*
   régénéré à chaque passage. Fichier de travail local, jamais committé ; le registre durable vit
   dans les artefacts datés de chaque item.
 
+## LES RÉGLAGES DE RÉVEIL QUI ONT FAIT LEURS PREUVES — historisés, jamais retrouvés de mémoire
+
+*(2026-09-27, demande explicite de l'utilisateur au moment d'aller dormir : « l'essentiel est de bien
+regler ton reveil à chaque tour comme tu l'as fait la nuit derniere, reprends tes reglages à toi
+comme la nuit derniere pour etre sur de ne pas t'arreter et renseigne ces reglages quelque part pour
+historiser que ca fonctionne comme ca : la nuit derniere tu as reussi à ne pas t'arreter ».)*
+
+**LE PROBLÈME QU'IL POINTE EST EXACTEMENT CELUI DE L'ARTICLE 27, appliqué au réveil.** Une nuit a
+marché ; les réglages qui l'ont fait marcher ne vivaient nulle part. À la nuit suivante, un agent —
+le même ou un autre — les redevine, et un réglage redeviné est un réglage qui peut être manqué. Ce
+qui n'est pas écrit n'existera plus demain, et ça vaut pour un intervalle en minutes comme pour une
+règle de la charte.
+
+**LES DEUX RÉVEILS, ET IL EN FAUT DEUX — c'est le cœur du dispositif :**
+
+| | Le rythme | La garantie |
+|---|---|---|
+| **Quoi** | chaîne courte `send_later` | filet récurrent `create_trigger` (cron) |
+| **Intervalle** | **15 minutes** | **toutes les heures, minute 7** |
+| **Réarmement** | à CHAQUE tour, en PREMIER | aucun — il tombe tout seul |
+| **Ce qu'il protège** | la cadence de travail | la nuit entière |
+
+**Pourquoi deux et pas un seul, et la raison est dissymétrique :** la chaîne courte donne le rythme
+mais elle est fragile — **un seul tour qui se termine sans la réarmer suffit à tuer la nuit**, et
+c'est exactement le genre d'oubli qu'on fait à 3 h du matin au milieu d'un chantier. Le filet
+horaire, lui, ne dépend d'aucun geste : il tombe même si la chaîne est morte. À l'inverse, le filet
+seul laisserait jusqu'à une heure de machine inutilisée à chaque décrochage. Aucun des deux ne
+remplace l'autre.
+
+**LA RÈGLE D'ORDRE, non négociable : on réarme AVANT de travailler, jamais après.** Réarmer en fin
+de tour revient à confier la nuit à la mémoire d'un agent qui vient de passer vingt minutes sur
+autre chose. Les deux prompts de réveil le disent en première ligne, plutôt que de compter dessus.
+
+**POURQUOI 15 MINUTES, et pas 45.** L'utilisateur avait demandé le 2026-09-24 (tâche #732) des
+rappels « plus proches que 45 minutes » en demandant quel était le minimum : le minimum technique
+est d'**une minute** (le planificateur relève toutes les minutes). 15 minutes est le réglage retenu
+— assez court pour qu'un décrochage coûte un quart d'heure et non trois quarts, assez long pour
+qu'un vrai chantier tienne entre deux réveils sans être haché.
+
+**POURQUOI LA MINUTE 7 pour le filet horaire**, et jamais la minute 0 : les tâches planifiées se
+bousculent en haut de l'heure, et un réveil qui arrive en retard parce que tout le monde s'est donné
+rendez-vous à la même minute est un réveil qu'on ne peut pas chronométrer.
+
+**CE QUE LE RÉVEIL NE FAIT PAS, et il faut que ce soit écrit** : il ne rend pas de compte à
+l'utilisateur. Il dort. Un réveil qui produirait un message par tour transformerait la nuit en
+notification continue — le rendu se fait une seule fois, au seuil d'arrêt, en fichier texte.
+
+**Preuve du fonctionnement, nuit du 2026-09-26 au 27** : la nuit précédente s'est déroulée sans
+arrêt avec ce dispositif, et c'est l'utilisateur lui-même qui l'a constaté (« la nuit derniere tu as
+reussi à ne pas t'arreter »). C'est cette réussite-là que cette section met à l'abri.
+
 ## Toute modification INDIRECTE d'un process se solde par une mise à jour DIRECTE de son document
 
 *(2026-09-23, demande explicite de l'utilisateur : « ajoute que le process maître indique que toute

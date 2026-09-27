@@ -42,6 +42,25 @@ propre connaissance propre au projet (statut "Agent" plein, jamais "classique").
   précis ; (3) un registre `doc-report.mjs::buildDocReportIndex()` jamais committé (`ageDays`
   indéfini) signale que personne ne consulte jamais la SORTIE de l'outil, distinct de « l'outil
   lui-même jamais lancé ».
+  **Corrigé le 2026-09-27 (tâche #1007) — le compteur était AVEUGLE aux appels par import.**
+  `recordCliUsage()` n'enregistre qu'un lancement en ligne de commande : un outil appelé par
+  `import` depuis un autre script, ou lancé par un crochet git, ne laisse aucune trace. Son zéro
+  mesurait donc son SILENCE, jamais son inactivité — et les deux s'écrivent 0 (leçon L11). Sur 10
+  outils désignés « à retirer », la moitié travaillaient en permanence. `invisiblesAuCompteur()`
+  rétablit la distinction : il DÉRIVE la liste des outils hors de portée (recensement du
+  classificateur pour les appelants réels, dossier `scripts/hooks/` pour les crochets, le compteur
+  lui-même qui ne peut structurellement pas se compter) plutôt que de recopier des noms
+  (Article 24). Deux pièges traversés : la version trop étroite ratait `check-suivi-fidelity`
+  (23 importeurs) ; la version trop large sortait 73 outils sur 90, parce que `check-house.mjs`
+  importe 81 % du parc — **tester un outil n'est pas l'exécuter**, et la suite de tests se DÉTECTE
+  (`findSuitesDeTest()`, à la part du parc qu'elle importe) plutôt qu'elle ne se nomme. Résultat
+  réel : 10 faux candidats → 5 vrais. Le signal n'est jamais supprimé, il est **requalifié** —
+  l'outil invisible reste listé avec « zéro d'usage NON INTERPRÉTABLE », parce que le taire ferait
+  disparaître pour de bon une bibliothèque réellement morte. Le « signal renforcé » (objectif en
+  dessous + jamais sollicité) est retiré dans ce cas : une somme dont un terme n'est pas
+  interprétable ne l'est pas non plus, et la laisser passer réaffirmerait par la bande le verdict
+  que la ligne précédente vient d'écarter. Si le recensement est illisible, `mesurable: false` — on
+  ne suppose PAS que tout le monde est visible.
 - **Recrutement** — squelette à 3 étapes (`cv_provisoire` → `entretien_preliminaire` →
   `proposition`), chaque avancée exigeant une décision explicite (`avancer`/`rejeter`), un dossier
   clos jamais rouvert silencieusement. Aucune vraie recherche web à ce stade — hors périmètre de

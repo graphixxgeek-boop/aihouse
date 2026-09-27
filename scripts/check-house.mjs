@@ -15825,3 +15825,85 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 
   console.log("Passed: le garde-fou de la Ronde lisait une convention de chemin, pas le registre (2026-09-26, tâche #954). Sa demande était précise : si un rapport est créé et qu'il doit passer à la Ronde sans que ce soit écrit dans les process, la règle se perd et le rapport ne sort jamais. Le garde-fou censé empêcher ça ne retenait que les chemins de la forme docs/<slug>/index.md, et trois registres déclarés — le KPI, les relectures lourdes, le scan ecotoken de Ronde — ne peuvent structurellement pas prendre cette forme. Il ne les avait donc JAMAIS confrontés à la Ronde : son vert ne disait pas « ils sont couverts », il disait « je ne les ai pas regardés », et les deux se ressemblent trait pour trait. Aucun rapport n'était perdu le jour de la correction, vérifié un par un — c'était une chance, pas une garantie. Il lit désormais AUSSI la liste déclarée des registres, quel que soit leur chemin, et rapproche par le CHEMIN plutôt que par une ressemblance de nom : l'élargissement a lui-même produit un faux positif sur ecotoken-ronde, dossier de dépôt de l'item ecotoken-scan dont les deux slugs ne se contiennent pas. Le balayage du disque reste, parce qu'un dossier créé sans être déclaré doit rester visible : les deux sources se complètent, aucune ne remplace l'autre.");
 }
+
+// LE COMPTEUR D'USAGE ÉTAIT AVEUGLE AUX APPELS PAR IMPORT (2026-09-27, tâche #1007). Le « rapport
+// de licenciements » de CASSANDRA-RH désignait 10 outils comme candidats au retrait au motif qu'ils
+// n'avaient JAMAIS été sollicités. Le motif était faux pour la moitié d'entre eux :
+// `recordCliUsage()` n'enregistre qu'un lancement EN LIGNE DE COMMANDE, et un outil appelé par
+// `import` depuis un autre script ne laisse aucune trace. Son zéro mesurait son SILENCE, jamais son
+// inactivité — et les deux s'écrivent 0 (leçon L11). Dans un rapport consultatif on corrige à la
+// lecture ; dans un rapport de DÉCISION, on retire des outils vivants.
+async function testCompteurAveugleAuxImports() {
+  const crh1007 = await import('../scripts/cassandra-rh.mjs');
+
+  // CE QU'IL DOIT ATTRAPER : un outil que personne ne lance mais que deux autres scripts importent.
+  // Son zéro ne veut rien dire, et le rapport doit le DIRE plutôt que de le taire — un signal tu
+  // produirait le défaut inverse (une bibliothèque réellement morte n'apparaîtrait plus jamais).
+  const recensementAvecImports = () => ({
+    lignes: [
+      { chemin: 'scripts/appele-par-import.mjs', type: 'commande-documentee' },
+      { chemin: 'scripts/appelant-un.mjs', type: 'commande-documentee' },
+      { chemin: 'scripts/appelant-deux.mjs', type: 'commande-documentee' },
+    ],
+    importeDe: {
+      'scripts/appelant-un.mjs': ['scripts/appele-par-import.mjs'],
+      'scripts/appelant-deux.mjs': ['scripts/appele-par-import.mjs'],
+    },
+  });
+  const hp1007 = crh1007.invisiblesAuCompteur({ recensementImpl: recensementAvecImports, listDirImpl: () => { throw new Error('pas de crochets dans ce test'); } });
+  assert.equal(hp1007.mesurable, true, 'a readable census must yield a measurable verdict — otherwise the guard cannot say anything at all');
+  assert.ok(hp1007.invisibles.has('appele-par-import'), 'a tool imported by two other scripts is out of the counter\'s reach: its zero measures the counter\'s blindness, never the tool\'s inactivity');
+  assert.match(hp1007.invisibles.get('appele-par-import'), /2 autre\(s\) script\(s\)/, 'the reason must carry the COUNT of real callers, so a human can judge it without re-running anything');
+
+  // LE CAS PROCHE QUI DOIT PASSER : un outil que personne n'importe et que personne ne lance. Là,
+  // le zéro est un vrai signal et doit continuer de sortir. Confondre les deux cas reviendrait à
+  // remplacer un angle mort par un autre.
+  assert.ok(!hp1007.invisibles.has('appelant-un'), 'a tool nobody imports is NOT out of reach: its zero is a genuine signal and must keep coming out, or the fix would trade one blind spot for another');
+
+  // LA SUITE DE TESTS EST EXCLUE, ET C'EST CE QUI SÉPARE UNE MESURE D'UN COMPTE DE BRUIT. Premier
+  // élargissement réel du jour : en retenant « au moins un importeur », 73 outils sur 90 sont
+  // ressortis hors de portée — parce que check-house.mjs importe 81 % du parc. Le rapport serait
+  // passé de « tout le monde est à retirer » à « personne ne l'est », deux verdicts également faux.
+  const recensementAvecSuite = () => {
+    const parc = Array.from({ length: 20 }, (_, i) => `scripts/outil-${i}.mjs`);
+    return {
+      lignes: [...parc, 'scripts/la-suite.mjs'].map((chemin) => ({ chemin, type: 'commande-documentee' })),
+      importeDe: { 'scripts/la-suite.mjs': parc },
+    };
+  };
+  const hpSuite = crh1007.invisiblesAuCompteur({ recensementImpl: recensementAvecSuite, listDirImpl: () => { throw new Error('pas de crochets dans ce test'); } });
+  assert.ok(!hpSuite.invisibles.has('outil-0'), 'being imported by the TEST SUITE is not being executed: testing a tool is not using it, and counting it as reachable would silence the entire park at once');
+
+  // LE COMPTEUR LUI-MÊME : il ne peut structurellement pas se compter sans se compter chaque fois
+  // qu'il compte un autre. C'est le seul nom écrit en dur, et il l'est parce que la raison est
+  // structurelle, jamais une liste à tenir à jour (Article 24).
+  assert.ok(hp1007.invisibles.has('tool-usage'), 'the counter cannot record its own passage — this one is structural, not a list to maintain');
+
+  // QUAND LA MESURE ÉCHOUE, ON NE SUPPOSE PAS QUE TOUT EST VISIBLE. Supposer l'inverse rendrait un
+  // verdict de retrait sur une base inconnue, exactement le faux vert que ce projet traque partout.
+  const hpCasse = crh1007.invisiblesAuCompteur({ recensementImpl: () => { throw new Error('recensement illisible'); } });
+  assert.equal(hpCasse.mesurable, false, 'an unreadable census must say so rather than pretend every tool is visible to the counter');
+  assert.match(hpCasse.pourquoi, /illisible/, 'the reason for the non-measure must name what failed, or the reader cannot repair it');
+
+  // ET LE VERDICT FINAL EST REQUALIFIÉ, PAS SUPPRIMÉ : l'outil invisible reste listé, avec une
+  // raison qui dit noir sur blanc que ce n'est pas un motif de retrait.
+  const findings1007 = crh1007.toolsToReconsider({
+    usageHistory: [], knownSlugs: ['appele-par-import', 'appelant-un'], staleness: {},
+    objectifsRows: [{ entite: 'appele-par-import', statut: 'en dessous' }, { entite: 'appelant-un', statut: 'en dessous' }],
+    tokenHistory: null, docReportRows: [], horsDePortee: hp1007,
+  });
+  const requalifie = findings1007.find((f) => f.slug === 'appele-par-import');
+  assert.ok(requalifie.reasons.some((r) => /NON INTERPRÉTABLE/.test(r)), 'the invisible tool stays in the report, requalified: hiding it would let a genuinely dead library disappear for good');
+  assert.ok(!requalifie.reasons.some((r) => /signal renforcé/.test(r)), 'a reinforced signal built on a non-interpretable one is non-interpretable too — letting it through would re-assert by the back door the verdict the line above just dismissed');
+  const vrai = findings1007.find((f) => f.slug === 'appelant-un');
+  assert.ok(vrai.reasons.some((r) => /signal renforcé/.test(r)), 'the genuine candidate must keep its reinforced signal: the fix removes false accusations, never real ones');
+
+  // BRANCHÉ SUR LE VRAI DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre le vrai dépôt
+  // n'est pas un outil, c'est une intention.
+  const reel1007 = crh1007.invisiblesAuCompteur();
+  assert.equal(reel1007.mesurable, true, 'against the real repository the measure must succeed, otherwise the whole report stays unreadable');
+  assert.ok(reel1007.invisibles.size > 5 && reel1007.invisibles.size < 80, `against the real repository the out-of-reach set must be a real subset of the park, never all of it nor almost none — got ${reel1007.invisibles.size}`);
+
+  console.log("Passed: le compteur d'usage était aveugle aux appels par import (2026-09-27, tâche #1007). Le rapport de licenciements de CASSANDRA-RH désignait 10 outils comme candidats au retrait « jamais sollicités » — la moitié d'entre eux étaient appelés en permanence, mais par import depuis un autre script ou par un crochet git, ce que recordCliUsage() n'enregistre pas. Leur zéro mesurait le silence du compteur, jamais leur inactivité, et les deux s'écrivent 0 (leçon L11). La correction est DÉRIVÉE et non énumérée : on lit le recensement du classificateur et le dossier des crochets, donc un outil qui deviendra bibliothèque demain sera couvert sans qu'on touche à ce fichier. Deux pièges traversés en chemin : la première version, trop étroite, ratait check-suivi-fidelity (23 importeurs) ; la seconde, trop large, sortait 73 outils sur 90 parce que check-house.mjs importe 81 % du parc — tester un outil n'est pas l'exécuter. La suite de tests se DÉTECTE à la part du parc qu'elle importe, elle ne se nomme pas. Le rapport passe de 10 faux candidats à 5 vrais, et l'invisible reste listé, requalifié : le taire ferait disparaître pour de bon une bibliothèque réellement morte.");
+}
+await testCompteurAveugleAuxImports();

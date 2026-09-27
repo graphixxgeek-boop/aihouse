@@ -2761,6 +2761,18 @@ function themesCli() {
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   const outFile = join(OUT_DIR, `${Date.now()}-themes.html`);
   writeFileSync(outFile, html, "utf8");
+  // LE RAPPORT S'INSCRIT AU REGISTRE, comme tous les autres (2026-09-27, tâche #1009). Cette
+  // sous-commande écrivait son HTML sans jamais appeler `appendIndexRow()` : deux rapports produits
+  // le même matin n'étaient cités nulle part, et c'est le filet de sécurité qui l'a trouvé en
+  // REFUSANT le commit — l'index promet la liste complète du dossier, en retard il ment.
+  // Un rapport que le registre ignore est un rapport que personne ne retrouvera (Article 24).
+  // Les colonnes « zoom/forme » du registre sont communes à tous : cette vue n'en a pas au sens
+  // strict, donc elle déclare ce qu'elle EST (`themes` / `familles`) plutôt que de laisser un vide
+  // qui se lirait comme une donnée manquante.
+  appendIndexRow({
+    file: outFile, zoom: "themes", format: "familles",
+    count: vue?.ouvertes ?? 0, total: rows.length, regressions: [], stagnant: [],
+  });
   console.log(renderTextReport({ tool: "check-tasks-details", title: "État des tâches — la file par THÈME", blocks }));
   console.log(`
 Même rapport en HTML : ${outFile}`);
