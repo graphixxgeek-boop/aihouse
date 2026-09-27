@@ -285,6 +285,43 @@ est **invisible** — et c'est le plus probable des trois.
 C'est la technique standard du métier pour tester un outillage : un dépôt de fixture. Elle est
 gratuite, elle tourne en secondes, et elle se rejoue à chaque Ronde.
 
+### Les critères d'un bon projet témoin, et le premier essai RÉEL (2026-09-27)
+
+**Sa question** : « on prend un vrai dépôt extérieur ? pour que ça sorte des redondances
+éventuelles dues à moi, pour que ça sorte de ma bulle ». **L'intuition est juste, et c'est le
+critère le plus important des cinq.**
+
+| Critère | Pourquoi il compte |
+|---|---|
+| **ÉTRANGER** | un témoin qu'on a écrit soi-même porte nos propres habitudes : les outils s'y sentiraient chez eux et on ne verrait rien |
+| **REPRODUCTIBLE** | le même témoin doit rendre le même verdict — un dépôt extérieur se fige sur un commit précis, jamais suivi en continu |
+| **PETIT ET RAPIDE** | il doit se rejouer à chaque Ronde ; un témoin qui prend dix minutes ne sera plus lancé |
+| **RÉALISTE** | un vrai projet avec son vrai désordre, pas une maquette assainie qui ne surprendra personne |
+| **PAUVRE EN OUTILLAGE** | ni charte, ni référentiel, ni filet : c'est le moment « AVANT » de la grille des quatre moments, et le plus révélateur |
+
+**PREMIER ESSAI FAIT LE JOUR MÊME**, sur un vrai dépôt public cloné dans le conteneur (le réseau le
+permet, vérifié). Les 82 scripts copiés dedans, huit outils lancés :
+
+| Verdict | Outils | Ce que ça dit |
+|---|---|---|
+| ✅ **tourne** | Ezechiel (7 × « pas mesuré »), data-archangel, SAFE-EXPORT, Abraham, tool-brain | ils survivent à un dépôt inconnu et DÉCLARENT ce qu'ils ne peuvent pas mesurer — c'est le **bon** résultat, pas un échec |
+| 💥 **plante** | ecotoken, le-classificateur, MOÏSE | ils cherchent un fichier de charte qui n'existe pas et s'arrêtent net |
+
+**Trois enseignements en trois minutes de test :**
+
+1. **La distinction « honnête » / « non portable » n'est pas théorique** : Ezechiel dit sept fois
+   « pas mesuré » et rend la main proprement. C'est exactement le comportement voulu.
+2. **On ne peut pas emporter UN outil, on emporte l'Agence ou rien** : le premier essai avec dix
+   scripts a planté sur des imports manquants. La toile de dépendances est dense — ce n'est pas un
+   défaut, mais c'est une contrainte d'export à écrire.
+3. **Trois outils sur huit plantent sur l'absence de charte.** C'est le cas le plus fréquent et le
+   plus facile à corriger : rendre « pas de charte trouvée » au lieu de s'arrêter.
+
+**Décision proposée** : le témoin principal est un **dépôt public extérieur figé sur un commit**,
+parce qu'il est le seul à casser la bulle. Le programme HTML de l'utilisateur ferait un **second
+témoin** précieux mais pour une autre question — l'Agence arrivant sur un vrai produit sans aucun
+outillage, écrit par lui, donc utile immédiatement mais porteur de ses habitudes.
+
 ### Ce qui reste à trancher
 
 L'ordre entre l'étape 2 et l'étape 3 est discutable : construire le projet témoin d'abord donnerait
