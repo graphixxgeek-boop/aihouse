@@ -28,6 +28,11 @@ export const FLATTEN_SCOPES = ["code", "code_et_docs"];
 
 // Listes blanches explicites (jamais une liste noire, qui grandirait indéfiniment sans jamais
 // couvrir le prochain cas — même principe que le Corollaire de l'Article 17 de CLAUDE.md).
+// SON REGISTRE — paramétrable depuis le 2026-09-27 (tâche #668), même raison que les trois autres :
+// un chemin de CE projet écrit en dur empêche l'outil de partir, et la lecture se rend optionnelle
+// plutôt que retirée.
+export const INDEX_PATH = "docs/ines-official/index.md";
+
 const CODE_EXTENSIONS = new Set([".ts", ".tsx", ".mjs", ".js"]);
 const DOCS_EXTENSIONS = new Set([".md"]);
 const CODE_ROOTS = ["lib", "app", "scripts", "components"];
@@ -185,11 +190,11 @@ export function recordEdition(scope, { indexText, now = new Date(), writeFileImp
   return { version, date, scope, fileCount: files.length, sizeBytes: Buffer.byteLength(body, "utf8"), row, latestPath: LATEST_PATH_BY_SCOPE[scope], summary };
 }
 
-function main() {
+function main({ chemin = INDEX_PATH } = {}) {
   printReportHeader({ tool: "ines-official", title: "INES-official — édition consolidée du dépôt", scriptPath: "scripts/ines-official.mjs" });
   recordCliUsage("ines-official");
   const scope = process.argv[2] === "code_et_docs" ? "code_et_docs" : "code";
-  const indexPath = "docs/ines-official/index.md";
+  const indexPath = chemin;
   const indexText = existsSync(indexPath) ? readFileSync(indexPath, "utf8") : "";
   const result = recordEdition(scope, { indexText });
   console.log(`Édition v${result.version} (${result.date}, ${scope}) : ${result.fileCount} fichier(s), ${result.sizeBytes} octets.`);

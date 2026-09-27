@@ -206,3 +206,21 @@ changé et pourquoi.
 **Ce que ça n'enlève pas** : le bilan complet chez god reste le seul endroit qui voit la fenêtre
 longue et la distinction IMPAYÉ/RATTRAPÉ. Le crochet attrape ce qui naît, il ne remplace pas ce qui
 regarde en arrière.
+
+
+## Le contrôleur est PARTAGÉ, et ce qui change chez lui change ici aussi
+
+*(2026-09-27, inscrit parce que `findChangementsIndirectsSansMiseAJour()` a nommé ce document — et
+il avait raison : `scripts/god-of-all-process.mjs` surveille ce process ET celui de la nuit
+autonome, donc une modification de son code touche les deux, même quand elle a été écrite en
+pensant à un seul.)*
+
+**Ce qui a changé le 2026-09-27** : le détecteur de changement indirect ne juge plus sur le FICHIER
+touché mais sur ce qui a changé dedans — un diff dont toutes les lignes ajoutées et retirées sont
+des commentaires n'est plus compté comme un changement de process. Le détail, la raison et le
+risque résiduel vivent dans `docs/mode-auto-process-guardian.md`, écrits une fois : les recopier ici
+créerait deux textes qui finiraient par diverger, exactement la dette que l'Article 13 interdit.
+
+**La règle générale que ce cas illustre** : quand god-of-all-process change, les deux documents sont
+concernés. Celui qui porte le détail l'écrit ; l'autre renvoie vers lui plutôt que de se taire — un
+silence se lit comme « rien n'a bougé de mon côté », ce qui est faux.

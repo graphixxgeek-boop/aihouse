@@ -15,8 +15,11 @@ import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from 
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const INDEX_PATH = join(ROOT, "docs/profil-utilisateur/index.md");
-const OBSERVATIONS_DIR = join(ROOT, "docs/profil-utilisateur/observations");
+// SES DEUX CIBLES — paramétrables depuis le 2026-09-27 (tâche #668). Le système de profil
+// utilisateur n'a rien de propre à CE projet : tout projet piloté par IA gagne à savoir avec qui il
+// travaille. Coder ses deux chemins en dur empêchait l'outil de partir avec l'Agence.
+export const INDEX_PATH = join(ROOT, "docs/profil-utilisateur/index.md");
+export const OBSERVATIONS_DIR = join(ROOT, "docs/profil-utilisateur/observations");
 
 // Extrait chaque nom de fichier référencé par un lien markdown "(observations/xxx.md)" dans la
 // table de l'index — jamais un motif qui dépendrait de l'ordre exact des colonnes, pour rester
@@ -38,7 +41,7 @@ export function findOrphanedObservations(indexText, observationFiles) {
   };
 }
 
-function main() {
+function main({ chemin = INDEX_PATH, dossier = OBSERVATIONS_DIR } = {}) {
   // Le compteur d'usage, câblé le 2026-09-26 (Ronde, plan d'action de tool-brain) : ce script a
   // une ligne de commande et n'enregistrait pas son passage — son zéro mesurait son SILENCE, jamais
   // son inactivité, ce qui rendait faux tout verdict d'usage le concernant (leçon L11).
@@ -59,9 +62,9 @@ function main() {
   // corpus). Les deux causes d'un zéro sont nommées séparément, jamais confondues :
   //   · pas d'index du tout → rien à confronter, et c'est peut-être parfaitement normal ;
   //   · un index mais zéro fiche → il y a un index qui ne pointe sur rien, ce qui n'est pas pareil.
-  const indexPresent = existsSync(INDEX_PATH);
-  const observationFiles = existsSync(OBSERVATIONS_DIR)
-    ? readdirSync(OBSERVATIONS_DIR).filter((f) => f.endsWith(".md"))
+  const indexPresent = existsSync(chemin);
+  const observationFiles = existsSync(dossier)
+    ? readdirSync(dossier).filter((f) => f.endsWith(".md"))
     : [];
   const mesure = mesurerCorpus(indexPresent ? observationFiles : [], {
     quoi: "les fiches d'observation du profil utilisateur",
@@ -80,7 +83,7 @@ function main() {
     }));
     return;
   }
-  const indexText = readFileSync(INDEX_PATH, "utf8");
+  const indexText = readFileSync(chemin, "utf8");
   const { missingFromIndex, missingFromDisk } = findOrphanedObservations(indexText, observationFiles);
   for (const f of missingFromIndex) console.log(`⚠️ Fiche présente mais jamais indexée : observations/${f}`);
   for (const f of missingFromDisk) console.log(`⚠️ Lien mort dans l'index, fichier introuvable : observations/${f}`);

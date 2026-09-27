@@ -30,7 +30,10 @@ import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDac
 import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const INDEX_PATH = join(ROOT, "docs/clean-dirty-old/index.md");
+// SON REGISTRE — paramétrable depuis le 2026-09-27 (tâche #668) : un chemin de CE projet écrit en
+// dur empêche l'outil de partir ailleurs, et le remède n'est jamais de retirer la lecture mais de
+// la rendre optionnelle avec une valeur par défaut, comme le reste du paysage.
+export const INDEX_PATH = join(ROOT, "docs/clean-dirty-old/index.md");
 
 // --- Stagnation RELATIVE, jamais un seuil de date fixe inventé ------------------------------
 
@@ -112,7 +115,7 @@ export function lastTouchDays(file) {
   return (Date.now() / 1000 - commitSeconds) / 86400;
 }
 
-function main() {
+function main({ chemin = INDEX_PATH } = {}) {
   recordCliUsage("clean-dirty-old");
   printReportHeader({ tool: "clean-dirty-old", title: "CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement)", scriptPath: "scripts/clean-dirty-old.mjs" });
 
@@ -186,8 +189,8 @@ function main() {
   console.log("décision assumée et documentée ailleurs (docs/referentiel/parametres.md, points-fragiles.md) — un code");
   console.log("stagnant n'est pas automatiquement de la dette, la leçon trottoirGranted (docs/argus/index.md) le rappelle.");
 
-  if (existsSync(INDEX_PATH)) {
-    const perf = cleanDirtyOldPerformance(readFileSync(INDEX_PATH, "utf8"));
+  if (existsSync(chemin)) {
+    const perf = cleanDirtyOldPerformance(readFileSync(chemin, "utf8"));
     console.log(perf
       ? `\nPerformance de l'outil (KPI, suivi dès le premier passage) : ${perf.passages} passage(s) consigné(s) · ${perf.totalFindings} trouvaille(s) confirmée(s) · ${perf.findingsPerPassage.toFixed(1)}/passage.`
       : "\nPerformance de l'outil : aucun passage encore consigné dans l'index — ce signal apparaîtra une fois qu'une trouvaille confirmée y sera enregistrée.");

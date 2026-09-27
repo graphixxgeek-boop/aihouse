@@ -16129,3 +16129,60 @@ async function testConvocationProduitUneDecision() {
   console.log("Passed: la convocation posait une question que rien n'obligeait à refermer (2026-09-27, tâche #709). Sa correction était littérale — « production d'une decision + tache si besoin » — et le défaut exact des 35 constats sans suite : un compte rendu qui s'arrête au constat. Trois décisions désormais, jamais deux ni quatre : CORRIGÉ, SURSIS, RETIRÉ. Deux auraient forcé la main sur un outil qu'on n'a pas eu le temps de juger et produit des « garder » par défaut qui ne décident rien ; une quatrième (« à voir ») rouvrirait la porte que le sursis ferme. Le sursis est la clé du dispositif : il autorise à ne pas trancher aujourd'hui À CONDITION de dire quand, et il s'écrit sous une forme que la machine relit — une échéance en prose libre est une échéance que personne ne vérifiera. Passé la date, la ligne revient d'un CRAN plus haut, et le cran se lit sur le registre lui-même plutôt que dans un compteur à côté qui finirait par diverger. Deux précisions payées par la sortie du premier contre-test : l'échéance nommée est la DERNIÈRE et non la première (match() rend la première, ce qui a l'air juste tant qu'il n'y en a qu'une, et annoncerait un retard faux), et un sursis qui court encore n'est jamais un sursis manqué. Sans date du jour, il refuse de conclure (Article 32). La décision reste humaine à chaque cran : ce mécanisme ne retire jamais un outil tout seul — mais accepter qu'un outil finisse par être retiré fait partie du marché, sans quoi ce n'est plus une évaluation, c'est une cérémonie.");
 }
 await testConvocationProduitUneDecision();
+
+// QUATRE OUTILS DE L'AGENCE NE POUVAIENT PAS PARTIR (2026-09-27, tâche #668). SAFE-EXPORT les
+// signalait depuis le chantier 3.5 : leurs cibles étaient écrites en dur, sans aucune option pour
+// les changer. Le cas le plus net est THE-KING, dont la vocation GÉNÉRIQUE est de veiller sur un
+// texte fondateur — et qui codait en dur celui de CE projet-ci, donc ne pouvait veiller sur aucun
+// autre. Le remède n'est jamais de retirer la lecture : c'est de la rendre paramétrable avec une
+// valeur par défaut, exactement comme le reste du paysage le fait déjà.
+async function testCiblesParametrables() {
+  const { findScriptsNonPortables: nonPortables668 } = await import('../scripts/safe-export.mjs');
+
+  // CE QU'IL DOIT ATTRAPER : un script qui nomme un chemin de CE projet sans offrir d'option.
+  const enDur = nonPortables668(['scripts/faux.mjs'], {
+    readFileImpl: () => 'const P = "docs/philosophie-et-politique.md";\nexport function f() { return P; }',
+    portee: () => 'agence',
+  });
+  assert.equal(enDur.length, 1, 'MUST CATCH: a hard-coded project path with no option is exactly what stops a tool from leaving');
+
+  // LE CAS PROCHE QUI DOIT PASSER : le MÊME chemin, mais reçu en option avec une valeur par défaut.
+  // C'est le remède, et confondre les deux rendrait le détecteur inutile après correction.
+  const parametrable = nonPortables668(['scripts/faux.mjs'], {
+    readFileImpl: () => 'const P = "docs/philosophie-et-politique.md";\nexport function f({ chemin = P } = {}) { return chemin; }',
+    portee: () => 'agence',
+  });
+  assert.deepEqual(parametrable, [], 'MUST LET PASS the same path once it arrives as an option with a default — that IS the fix, and a detector that still cries after it has been applied teaches nothing');
+
+  // LES QUATRE OUTILS CORRIGÉS, SUR LE VRAI DÉPÔT (Article 25) : ils doivent RÉELLEMENT accepter
+  // une autre cible, pas seulement avoir l'air de l'accepter. Un paramètre déclaré mais ignoré est
+  // pire qu'un chemin en dur : il promet une portabilité qui n'existe pas.
+  const king668 = await import('../scripts/the-king.mjs');
+  assert.equal(typeof king668.PHILOSOPHY_PATH, 'string', 'the default target must be exported, so a host project can read what it is replacing');
+  let luPar = null;
+  assert.doesNotThrow(() => king668.philosophyFreshnessDays({ chemin: 'docs/un-autre-texte-fondateur.md' }),
+    'THE-KING must accept another founding text: watching over one is its generic vocation, and a tool that can only watch THIS project has missed half its mission');
+  void luPar;
+
+  const profil668 = await import('../scripts/check-profil-utilisateur.mjs');
+  assert.equal(typeof profil668.INDEX_PATH, 'string', 'the user-profile index path is exported rather than buried');
+  assert.equal(typeof profil668.OBSERVATIONS_DIR, 'string', 'and so is its observations folder — a system with two targets needs both parameterisable, or it is only half portable');
+
+  const cdo668 = await import('../scripts/clean-dirty-old.mjs');
+  assert.equal(typeof cdo668.INDEX_PATH, 'string', 'CLEAN-DIRTY-OLD exports its registry path');
+  const ines668 = await import('../scripts/ines-official.mjs');
+  assert.equal(typeof ines668.INDEX_PATH, 'string', 'and so does INES-official');
+
+  // ET LA MESURE GLOBALE A BOUGÉ, sinon rien ne prouve que le travail a servi : un correctif qui
+  // ne fait pas descendre le chiffre qu'il visait est une intention (L2, Article 25).
+  const { readdirSync: lire668 } = await import('node:fs');
+  const tous668 = lire668('scripts').filter((f) => f.endsWith('.mjs')).map((f) => `scripts/${f}`);
+  const restants = nonPortables668(tous668).map((x) => x.fichier ?? x.slug ?? '');
+  for (const corrige of ['the-king', 'clean-dirty-old', 'ines-official', 'check-profil-utilisateur']) {
+    assert.ok(!restants.some((r) => String(r).includes(corrige)),
+      `${corrige} must no longer appear among the non-portable tools — it was fixed, and a detector that keeps naming a fixed tool stops being read (L4)`);
+  }
+
+  console.log("Passed: quatre outils de l'Agence ne pouvaient pas partir (2026-09-27, tâche #668). SAFE-EXPORT les signalait depuis le chantier 3.5 : leurs cibles étaient écrites en dur, sans aucune option pour les changer. Le cas le plus net est THE-KING, dont la vocation GÉNÉRIQUE est de veiller sur un texte fondateur et qui codait en dur celui de ce projet-ci — il ne pouvait donc veiller sur aucun autre, ce qui est rater la moitié de sa mission au sens exact de la charte (« chaque outil construit ici doit pouvoir partir »). Le remède n'est jamais de retirer la lecture : c'est de la rendre paramétrable avec une valeur par défaut. Et le paramètre PARLE LA LANGUE DU PAYSAGE (`{ chemin = … }`, `{ dossier = … }`) plutôt qu'un nom à moi : élargir la sonde pour qu'elle accepte n'importe quel nom l'aurait affaiblie, alors qu'adopter la convention harmonise. Vérifié dans les deux sens sur une fixture — un chemin en dur est attrapé, le MÊME chemin reçu en option passe — puis sur le vrai dépôt : 12 candidats → 8, et les huit restants sont d'une autre nature (ils nomment un artefact du JEU, ce que SAFE-EXPORT présente lui-même comme une question et non un verdict). Les quatre outils rendent exactement la même sortie qu'avant, lancés pour de vrai.");
+}
+await testCiblesParametrables();

@@ -24,7 +24,17 @@ import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = process.cwd();
 
-const PHILOSOPHY_PATH = "docs/philosophie-et-politique.md";
+// LE TEXTE FONDATEUR SUR LEQUEL IL VEILLE — paramétrable depuis le 2026-09-27 (tâche #668).
+//
+// POURQUOI CE CAS EST LE PLUS NET DES QUATORZE : veiller sur un texte fondateur est précisément la
+// VOCATION GÉNÉRIQUE de THE-KING. Un outil dont le métier est « garder la boussole d'un projet » et
+// qui code en dur la boussole de CE projet-ci ne peut pas garder celle du suivant — il a raté la
+// moitié de sa mission (charte, « chaque outil construit ici doit pouvoir partir »).
+//
+// LE REMÈDE N'EST JAMAIS DE RETIRER LA LECTURE, c'est de la rendre paramétrable avec une valeur par
+// défaut, exactement comme le reste du paysage le fait déjà (`{ root = ROOT }`, `{ registres = … }`).
+// Un outil qui reçoit sa cible en option part tel quel : il suffit de lui en donner une autre.
+export const PHILOSOPHY_PATH = "docs/philosophie-et-politique.md";
 
 // 6 catégories de déclenchement confirmées avec l'utilisateur (2026-09-21) : chaque mot-clé est un
 // SIGNAL, jamais une certitude — une décision peut toucher plusieurs catégories à la fois, ou aucune
@@ -207,15 +217,15 @@ export function formatMesureTensionsLines(m) {
 // nombre de jours depuis la dernière modification réelle — réutilise lastTouchDays() de
 // CLEAN-DIRTY-OLD, jamais un second calcul divergent. `undefined` honnête si le fichier n'a jamais
 // été commité (cas théorique, jamais rencontré en pratique sur ce projet).
-export function philosophyFreshnessDays() {
-  return lastTouchDays(PHILOSOPHY_PATH);
+export function philosophyFreshnessDays({ chemin = PHILOSOPHY_PATH } = {}) {
+  return lastTouchDays(chemin);
 }
 
 // shouldSnapshotPhilosophy() DÉPLACÉE dans lib-shell.mjs le 2026-09-22 sous le nom générique
 // shouldSnapshotText() — un second appelant réel est apparu le même soir (la snapshot CLAUDE.md de
 // claude-md-weight-signal, cf. circle-tasks.mjs), jamais un second calcul divergent (Article 3).
 
-function main() {
+function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
@@ -223,14 +233,14 @@ function main() {
     const reminder = reminderFor(requestText);
     console.log(reminder ?? "👑 THE-KING : aucune des 6 catégories de déclenchement détectée dans ce texte — consultation non signalée comme nécessaire (jamais une certitude, le jugement humain/agent reste final).");
   }
-  console.log(`\n📅 Fraîcheur de ${PHILOSOPHY_PATH} : ${(() => { const d = philosophyFreshnessDays(); return d == null ? "jamais committé" : `dernière modification il y a ${Math.round(d)} j`; })()}`);
+  console.log(`\n📅 Fraîcheur de ${chemin} : ${(() => { const d = philosophyFreshnessDays({ chemin }); return d == null ? "jamais committé" : `dernière modification il y a ${Math.round(d)} j`; })()}`);
 
   // HISTORIQUE AFFICHÉ (2026-09-22, tâche #196). Trou réel trouvé en finissant le retrofit daté :
   // main() ne montrait QUE la fraîcheur — le digest et les tensions n'existaient que pour l'appelant
   // CIRCLE-TASKS, jamais pour quelqu'un qui lance l'outil à la main. Un outil dont le cœur du rôle
   // (« conserver un historique de l'évolution du document », demande d'origine) reste invisible
   // depuis sa propre ligne de commande n'est pas un outil terminé.
-  const principles = extractPrincipleUnits(readFileSync(join(ROOT, PHILOSOPHY_PATH), "utf8"));
+  const principles = extractPrincipleUnits(readFileSync(join(ROOT, chemin), "utf8"));
   const digest = buildEvolutionDigest(principles);
   const declarees = principles.filter((p) => extractPrincipleDate(p)).length;
   console.log(`\n📜 Évolution du document — ${digest.length}/${principles.length} principes datés (${declarees} date(s) déclarée(s), ${digest.length - declarees} dérivée(s) de l'historique git) :`);
