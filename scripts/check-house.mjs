@@ -9695,6 +9695,45 @@ await testVerrousDOuverture();
     assert.ok(idsLus.has(it.id), `the reader must see EVERY real Ronde item, and it did not see "${it.id}" — a fixed-size window is a ceiling that expires silently as the constant grows (Article 24), and the ids past it read exactly like ids that were never written`);
   }
 
+  // LES HUIT TYPES D'ARRIVANT (2026-09-27, tâche #998 — ses points 9, 10 et 12). Ce qui est
+  // UNIQUE est la mécanique : lire la liste des registres, ouvrir chaque fichier pour de vrai, y
+  // chercher l'arrivant, cocher, et donner la ligne à coller. Ce qui reste DIFFÉRENT est la liste.
+  // Trois outils séparés auraient recopié trois fois les cinq mêmes gestes, donc divergé au
+  // premier changement de l'un d'eux (Article 31 : on étend, on n'agit jamais à côté).
+  const { TYPES_D_ARRIVANT } = await import('../scripts/integration-outil.mjs');
+  assert.ok(Object.keys(TYPES_D_ARRIVANT).length >= 8 && TYPES_D_ARRIVANT.outil, 'le registre des types porte l\'outil et les sept autres — et il se LIT partout (message d\'usage, dispatch, rapport), donc un neuvième type demain est joignable sans toucher à aucun des trois');
+  for (const [t, d] of Object.entries(TYPES_D_ARRIVANT)) {
+    assert.ok(d.registres.length >= 1 && d.quoi && d.arrivant, `le type « ${t} » doit porter au moins un registre, ce qu'il est, et sous quelle forme l'arrivant se donne — un type sans registre serait un guichet sans fiche`);
+    for (const r of d.registres) assert.ok(r.cle && r.quoi && typeof r.extrait === 'function' && typeof r.forme === 'function', `chaque registre de « ${t} » doit savoir se LIRE et dire la ligne à coller — sans la ligne à coller, le rapport nomme un manque sans donner le geste`);
+  }
+  // CONTRE LE VRAI DÉPÔT (Article 25), dans les DEUX SENS (BP4) : chaque type doit savoir dire OUI
+  // sur une chose réellement déclarée, et NON sur une chose qui n'existe pas. Un détecteur toujours
+  // vert et un détecteur toujours rouge sont aussi inutiles l'un que l'autre.
+  const presents = [['document', 'docs/strategies/renommage-en-masse-strategie.md'], ['lecon', 'L35'], ['process', 'ronde'], ['registre', 'argus'], ['index', 'docs/le-classificateur'], ['kpi', 'smart_breaker_performance_pct'], ['donnee', 'argus']];
+  for (const [t, arrivant] of presents) {
+    const etat = etatIntegration(arrivant, { registres: TYPES_D_ARRIVANT[t].registres });
+    assert.ok(etat.every((e) => e.mesurable && e.present), `« ${arrivant} » est réellement déclaré : le type « ${t} » doit le voir. ${JSON.stringify(etat.map((e) => [e.cle, e.mesurable, e.present]))}`);
+  }
+  const absents = [['document', 'docs/strategies/inexistant-strategie.md'], ['lecon', 'L999'], ['process', 'process-imaginaire'], ['kpi', 'indicateur_imaginaire_pct'], ['donnee', 'source-imaginaire']];
+  for (const [t, arrivant] of absents) {
+    const etat = etatIntegration(arrivant, { registres: TYPES_D_ARRIVANT[t].registres });
+    assert.ok(etat.some((e) => e.mesurable && !e.present), `« ${arrivant} » n'existe nulle part : le type « ${t} » doit savoir le dire, sinon il coche tout le monde`);
+  }
+  // LE CAS QUI A CORRIGÉ MA CONCEPTION AVANT LIVRAISON, gardé ici parce qu'il est instructif : ma
+  // première version du type KPI réclamait une ligne dans `kpi-index.md` et une autre dans le
+  // registre des objectifs. Lancée sur une colonne vivante, elle a rendu deux refus — ces deux
+  // documents indexent des RUNS et des ENTITÉS, jamais des colonnes. Réclamer une inscription dans
+  // un registre qui ne porte pas ce genre d'objet, c'est réclamer l'impossible, et un contrôle
+  // impossible à satisfaire se fait désactiver (leçon L4).
+  assert.deepEqual(TYPES_D_ARRIVANT.kpi.registres.map((r) => r.fichier), ['docs/referentiel/kpi-historique.csv', 'scripts/kpi-report.mjs'], 'les deux vrais domiciles d\'une colonne : l\'en-tête de l\'historique, sans lequel elle n\'est suivie nulle part, et le code qui la REMPLIT — une colonne que personne n\'alimente est un « lien perdu » au sens d\'HARMONIA');
+  // `fichier` PEUT ÊTRE UNE FONCTION : l'index d'un document dépend du dossier où il tombe, ce
+  // qu'un chemin fixe ne dit pas. Et `identifiant` dit sous quelle forme l'arrivant se cherche
+  // DANS CE REGISTRE-LÀ — un document se cite par son nom de fichier, jamais par son chemin
+  // complet, et les confondre rendrait « jamais déclaré » sur un document parfaitement indexé.
+  const regDoc = TYPES_D_ARRIVANT.document.registres[0];
+  assert.equal(regDoc.fichier('docs/strategies/x.md'), 'docs/strategies/index.md', 'le fichier à ouvrir se DÉDUIT de l\'arrivant');
+  assert.equal(regDoc.identifiant('docs/strategies/x.md'), 'x.md', 'et ce qu\'on y cherche est le nom de fichier, jamais le chemin complet');
+
   const fauxFichiers = { 'scripts/faux.mjs': 'export const REG = [ { slug: "un" }, { slug: "deux" } ];' };
   const lireFaux = (chemin) => {
     const cle = Object.keys(fauxFichiers).find((k) => String(chemin).endsWith(k));

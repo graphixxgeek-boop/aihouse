@@ -55,6 +55,44 @@ faux mais net.
 qu'une réponse demandée est exacte et complète. L'obligation de demander vit ailleurs — dans un
 process écrit et surveillé. Le déclarer noir sur blanc vaut mieux que le laisser supposer.
 
+## La généralisation à N types d'arrivant *(2026-09-27)*
+
+**Le piège qu'un autre projet rencontrera exactement pareil** : on construit d'abord le parcours
+d'arrivée de la chose la plus visible (ici, un outil), puis on découvre que dix autres sortes de
+choses entrent sans parcours — des documents, des index, des indicateurs, des règles. La tentation
+est d'écrire un outil par sorte.
+
+**Ce qui rend la généralisation possible sans tout réécrire** : dans un parcours d'arrivée, la
+mécanique et la liste sont deux choses séparées, et on ne s'en rend compte qu'en essayant de la
+dupliquer. La mécanique tient en cinq gestes — lire la liste des endroits où l'arrivant doit être
+déclaré, ouvrir chacun, y chercher l'arrivant, cocher, donner la ligne exacte à coller. Aucun de ces
+cinq gestes ne dépend de ce qui arrive. Seule la liste en dépend.
+
+**La forme à reprendre** : un registre `TYPES_D_ARRIVANT` qui associe chaque type à sa liste de
+registres, et une fonction d'état qui prend la liste en paramètre plutôt que de la connaître. Le
+registre se LIT partout — message d'usage, aiguillage, rapport — de sorte qu'un type de plus ne
+demande de toucher à aucun des trois.
+
+**Deux paramètres qu'on croit inutiles et qui deviennent indispensables au deuxième type** :
+
+- le fichier à ouvrir peut DÉPENDRE de l'arrivant (l'index d'un document dépend de son dossier) ;
+- ce qu'on cherche dans le fichier n'est pas toujours l'arrivant tel quel (un document se cite par
+  son nom de fichier, pas par son chemin complet).
+
+Les deux restent facultatifs, de sorte que les registres du premier type continuent de fonctionner
+sans modification — c'est la condition pour étendre plutôt que réécrire.
+
+**La règle de contenu, et c'est elle qui décide de la valeur du parcours** : n'y mettre QUE ce qui
+se vérifie en lisant un fichier réel. Une obligation qu'on ne sait pas mesurer est une ligne de plus
+dans un rapport, jamais une protection ; et annoncer un registre qui n'existe pas encore crée une
+référence morte, qui rassure alors qu'elle ne mène nulle part.
+
+**Le piège de conception mesuré sur ce projet, et il vaut d'être connu** : deux des registres du
+type « indicateur » ont été écrits en supposant ce que contenaient deux documents. Lancés sur une
+donnée vivante, ils ont rendu deux refus — les deux documents indexaient tout autre chose. Un
+contrôle impossible à satisfaire se fait désactiver. **Ne jamais écrire une liste de registres sans
+la lancer immédiatement sur un cas dont on SAIT qu'il est en règle.**
+
 ## Test de reprise
 
 Une personne ou une IA qui arrive sur le projet, sans historique, peut-elle faire entrer un nouvel

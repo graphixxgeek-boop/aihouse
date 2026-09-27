@@ -227,6 +227,152 @@ const MARQUEUR_PROCESS_HOTE = /^export\s+const\s+PROCESS_HOTE\s*=\s*["'`]([^"'`]
 
 // Lit la nature dans le fichier réel, jamais dans une liste. Un script introuvable rend
 // « pas mesurable » plutôt qu'une nature par défaut : ne pas savoir n'autorise jamais à conclure.
+// ===========================================================================================
+// LES TYPES D'ARRIVANT (2026-09-27, tâche #998 → points 9, 10 et 12 de son grand prompt)
+// ===========================================================================================
+// SA DEMANDE, mot pour mot : « Process d'intégration des données / rapports / documents : on créé
+// une tache ou on le fait maintenant · Process d'intégration des tâches et des règles : idem · En
+// balayant : les index, les leçons, les process eux-mêmes, les KPI et les registres. Aucun n'a de
+// process d'arrivée. : ok, on y va ». Et son arbitrage de la veille, en fenêtre de calibrage :
+// « Un seul parcours pour les trois (Recommandé) ».
+//
+// POURQUOI ICI ET PAS TROIS OUTILS DE PLUS. Ce fichier savait déjà faire entrer UNE chose dans
+// l'Agence : un outil. Le geste est le même pour les autres — « voici les registres à renseigner,
+// voici la ligne à coller, voici ce qui manque encore » — et seule la LISTE change. Trois outils
+// auraient recopié trois fois la même mécanique, donc divergé au premier changement (Article 31 :
+// on étend ce qui couvre à moitié, on n'agit jamais à côté).
+//
+// LE FICHIER GARDE SON NOM, et c'est son choix : « La règle d'abord, le renommage plus tard ».
+// `integration-outil` ne fait plus seulement entrer des outils ; le renommer maintenant ferait
+// deux chantiers au lieu d'un.
+//
+// IL SIGNALE, IL NE BLOQUE JAMAIS — sa décision du 2026-09-27, et elle a une raison qu'il vaut
+// mieux garder écrite : chaque passage d'outil dépose un fichier, donc un contrôle bloquant
+// transformerait chaque rapport produit en commit refusé. C'est la règle qu'il a déjà donnée à
+// god-of-all-process pour les plans d'action, et pour le même motif — un contrôle qui bloque sur
+// un sujet sans rapport avec le travail en cours pousse à le contourner.
+//
+// CE QUE CHAQUE LISTE CONTIENT, ET CE QU'ELLE NE CONTIENT PAS. Uniquement ce qui se VÉRIFIE en
+// lisant un fichier réel. Une obligation qu'on ne saurait pas mesurer serait une ligne de plus
+// dans un rapport, jamais une protection — et annoncer un registre qui n'existe pas encore est
+// exactement la référence morte que l'Article 28 nomme comme le cas le plus vicieux. L'axe
+// « nature » des documents, par exemple, n'entre ici que le jour où il existe (tâche #249).
+
+// `fichier` peut désormais être une FONCTION de l'arrivant : l'index d'un document dépend du
+// dossier où il tombe, ce qu'un chemin fixe ne peut pas exprimer. `identifiant` dit sous quelle
+// forme l'arrivant se cherche dans ce registre-là — un document se cite par son nom de fichier,
+// jamais par son chemin complet, et confondre les deux rendrait « jamais déclaré » sur un document
+// parfaitement indexé.
+const nomDeFichier = (s) => String(s).split("/").pop();
+const dossierDe = (s) => String(s).split("/").slice(0, -1).join("/");
+const lignesCitees = (t, motif) => new Set([...String(t).matchAll(motif)].map((m) => m[1]));
+
+export const REGISTRES_DU_DOCUMENT = [
+  {
+    cle: "index-du-dossier", fichier: (s) => `${dossierDe(s)}/index.md`, identifiant: nomDeFichier,
+    quoi: "l'index du dossier doit le nommer — sans quoi le document est invisible pour qui ne lit que l'index (Article 27)",
+    extrait: (t) => lignesCitees(t, /\(([^)\s|]+\.md)\)/g),
+    forme: (s) => `| [${nomDeFichier(s)}](${nomDeFichier(s)}) | — |   ← une ligne du tableau de ${dossierDe(s)}/index.md, ou \`node scripts/data-archangel.mjs angel-of-index --completer\``,
+  },
+];
+
+export const REGISTRES_DE_L_INDEX = [
+  {
+    cle: "index-existe", fichier: (s) => `${s}/index.md`, identifiant: () => "index",
+    quoi: "le dossier doit PORTER un index — un dossier sans index est un dossier dont le contenu ne circule pas",
+    // Le fichier est lu par `etatIntegration` ; s'il est illisible on rend « pas mesurable », et
+    // s'il est vide on ne déclare rien. Un index vide et un index absent appellent le même geste,
+    // mais pas le même message, et c'est la lecture qui les sépare.
+    extrait: (t) => new Set(String(t).trim() ? ["index"] : []),
+    forme: (s) => `node scripts/data-archangel.mjs angel-of-index --completer   ← écrit un sommaire sous la prose de ${s}/index.md, sans jamais l'écraser`,
+  },
+];
+
+export const REGISTRES_DE_LA_LECON = [
+  {
+    cle: "registre-lecons", fichier: "docs/referentiel/lecons.md", identifiant: (s) => String(s).toUpperCase(),
+    quoi: "le registre des leçons transverses — une leçon qui n'y est pas ne ressortira jamais au bon moment",
+    extrait: (t) => lignesCitees(t, /^##\s+(L\d+|BP\d+)\b/gm),
+    forme: (s) => `## ${String(s).toUpperCase()} — <ce qu'on a appris, en une phrase qui tient seule>\n\n*(date, ce qui l'a coûtée.)*   ← dans docs/referentiel/lecons.md`,
+  },
+];
+
+export const REGISTRES_DU_PROCESS = [
+  {
+    cle: "processus-declare", fichier: "scripts/god-of-all-process.mjs", identifiant: (s) => s,
+    quoi: "la table PROCESSES de god-of-all-process — c'est elle qui vérifie ensuite que le process a bien un document ET un contrôleur",
+    extrait: (t) => lignesCitees(t, /^\s*slug:\s*"([a-z0-9-]+)"/gm),
+    forme: (s) => `  { slug: "${s}", nom: "…", quand: "…", motsCles: […], doc: "docs/${s}-process-detail.md", gardien: "scripts/…", etapes: […] },   ← dans PROCESSES`,
+  },
+];
+
+// LES DEUX REGISTRES DU KPI ONT ÉTÉ CORRIGÉS AVANT LEUR PREMIÈRE LIVRAISON, et c'est le premier
+// passage réel qui l'a exigé (Article 25). Ma première version réclamait une ligne dans
+// `docs/referentiel/kpi-index.md` et une autre dans le registre des objectifs. Lancée sur
+// `couverture_axa_pct`, une colonne parfaitement vivante, elle a rendu DEUX refus.
+//
+// La cause : ces deux documents n'indexent pas ce que je croyais. `kpi-index.md` indexe des RUNS
+// — un rapport archivé par passage, avec le jugement porté ce jour-là. Le registre des objectifs
+// indexe des ENTITÉS (des outils), pas des colonnes. Réclamer une inscription dans un registre qui
+// ne porte pas ce genre d'objet, c'est réclamer l'impossible, et un contrôle impossible à
+// satisfaire se fait désactiver (leçon L4).
+//
+// Les deux VRAIS domiciles d'une colonne : l'en-tête de l'historique CSV, sans lequel elle n'est
+// suivie nulle part, et le code qui la REMPLIT — une colonne présente dans le CSV que personne
+// n'alimente est ce qu'HARMONIA appelle un « lien perdu ».
+export const REGISTRES_DU_KPI = [
+  {
+    cle: "colonne-historique", fichier: "docs/referentiel/kpi-historique.csv", identifiant: (s) => s,
+    quoi: "l'en-tête de l'historique CSV — une colonne qui n'y est pas n'est suivie dans le temps nulle part, et la seule valeur d'un indicateur est de se comparer à lui-même",
+    extrait: (t) => new Set(String(t).split("\n")[0].split(",").map((c) => c.trim())),
+    forme: (s) => `ajouter la colonne \`${s}\` à l'en-tête de docs/referentiel/kpi-historique.csv`,
+  },
+  {
+    cle: "source-qui-remplit", fichier: "scripts/kpi-report.mjs", identifiant: (s) => s,
+    quoi: "le code qui ALIMENTE la colonne — une colonne du CSV que personne ne remplit est ce qu'HARMONIA appelle un « lien perdu »",
+    extrait: (t) => new Set([...String(t).matchAll(/\b([a-z][a-z0-9_]{3,}_pct|[a-z][a-z0-9_]{5,})\b/g)].map((m) => m[1])),
+    forme: (s) => `écrire la valeur de \`${s}\` dans scripts/kpi-report.mjs, à l'endroit où la ligne de run se compose`,
+  },
+];
+
+export const REGISTRES_DU_REGISTRE = [
+  {
+    cle: "registre-rapports", fichier: "scripts/doc-report.mjs", identifiant: (s) => s,
+    quoi: "la table REGISTRIES — elle décide HTML/texte, alimente l'index global et repère les journaux orphelins",
+    extrait: (t) => slugsDansBloc(t, "REGISTRIES"),
+    forme: (s) => `  { slug: "${s}", path: "docs/${s}/index.md", scriptPath: "scripts/${s}.mjs", html: false },   ← dans REGISTRIES`,
+  },
+  {
+    cle: "index-du-registre", fichier: (s) => `docs/${s}/index.md`, identifiant: () => "index",
+    quoi: "le registre doit porter son propre index — la règle du dépôt est sans exception : docs/<nom-en-minuscules>/index.md",
+    extrait: (t) => new Set(String(t).trim() ? ["index"] : []),
+    forme: (s) => `créer docs/${s}/index.md avec une phrase disant ce que ce registre conserve, puis \`node scripts/data-archangel.mjs angel-of-index --completer\``,
+  },
+];
+
+export const REGISTRES_DE_LA_DONNEE = [
+  {
+    cle: "source-declaree", fichier: "scripts/doc-report.mjs", identifiant: (s) => s,
+    quoi: "les trois sources que `listDataSources()` dérive — REGISTRIES, LOCAL_JOURNALS, KPI_HISTORY_PATH. Une donnée hors de ces trois n'existe pour aucun outil",
+    extrait: (t) => new Set([...slugsDansBloc(t, "REGISTRIES"), ...slugsDansBloc(t, "LOCAL_JOURNALS")]),
+    forme: (s) => `déclarer "${s}" dans REGISTRIES (un registre d'outil) ou LOCAL_JOURNALS (un journal tenu pour soi) — les deux vivent dans scripts/doc-report.mjs`,
+  },
+];
+
+// LE REGISTRE DES TYPES. Il se LIT (Article 24) : la sous-commande, le message d'usage et le
+// rapport d'ensemble le parcourent tous les trois, donc un neuvième type demain est joignable sans
+// qu'aucun d'eux ne change.
+export const TYPES_D_ARRIVANT = {
+  outil:    { quoi: "un script qui rejoint l'outillage",                        arrivant: "le slug de l'outil (le nom du script, sans .mjs)", registres: REGISTRES_D_INTEGRATION },
+  document: { quoi: "un document qui rejoint docs/",                            arrivant: "son chemin, ex. docs/strategies/x-strategie.md",   registres: REGISTRES_DU_DOCUMENT },
+  index:    { quoi: "un dossier qui doit porter un index",                      arrivant: "le chemin du dossier, ex. docs/le-classificateur", registres: REGISTRES_DE_L_INDEX },
+  lecon:    { quoi: "une leçon transverse ou une bonne pratique",               arrivant: "son numéro, ex. L36 ou BP5",                       registres: REGISTRES_DE_LA_LECON },
+  process:  { quoi: "un process déclaré, avec ses étapes",                      arrivant: "son slug, ex. pre-chantier",                       registres: REGISTRES_DU_PROCESS },
+  kpi:      { quoi: "un indicateur suivi dans le temps",                        arrivant: "le nom de la colonne, ex. couverture_axa_pct",     registres: REGISTRES_DU_KPI },
+  registre: { quoi: "un dossier où un outil dépose ce qu'il a vu",              arrivant: "le slug de l'outil qui le tient",                  registres: REGISTRES_DU_REGISTRE },
+  donnee:   { quoi: "une source de données que les autres outils pourront lire", arrivant: "son slug ou son chemin",                          registres: REGISTRES_DE_LA_DONNEE },
+};
+
 export function natureDuScript(slug, { root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION } = {}) {
   let source;
   try {
@@ -286,16 +432,27 @@ export function estDeclare(slug, declares, autresOutils = []) {
   return false;
 }
 
+// DEUX GÉNÉRALISATIONS AJOUTÉES LE 2026-09-27 (tâche #998), et chacune répond à un cas réel que
+// la version « outil seulement » ne pouvait pas exprimer :
+//   · `fichier` peut être une FONCTION de l'arrivant — l'index d'un document dépend du dossier où
+//     il tombe, ce qu'un chemin fixe ne dit pas ;
+//   · `identifiant` dit sous quelle forme l'arrivant se cherche DANS CE REGISTRE-LÀ — un document
+//     se cite par son nom de fichier et jamais par son chemin complet, et confondre les deux
+//     rendrait « jamais déclaré » sur un document parfaitement indexé (leçon L4).
+// Les deux sont facultatives : un registre d'outil qui ne les pose pas se comporte exactement
+// comme avant, ce qui était la condition pour étendre sans rien casser.
 export function etatIntegration(slug, { root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_D_INTEGRATION, autresOutils = Object.keys(AGENT_CATEGORIES) } = {}) {
   return registres.map((r) => {
+    const chemin = typeof r.fichier === "function" ? r.fichier(slug) : r.fichier;
+    const cherche = typeof r.identifiant === "function" ? r.identifiant(slug) : slug;
     let texte;
     try {
-      texte = readFileImpl(join(root, r.fichier), "utf8");
+      texte = readFileImpl(join(root, chemin), "utf8");
     } catch {
-      return { ...r, mesurable: false, pourquoi: `${r.fichier} illisible — aucune conclusion tirée` };
+      return { ...r, fichier: chemin, mesurable: false, pourquoi: `${chemin} illisible — aucune conclusion tirée, et surtout aucune supposée` };
     }
     const declares = r.extrait(texte);
-    return { cle: r.cle, fichier: r.fichier, quoi: r.quoi, facultatif: !!r.facultatif, mesurable: true, present: estDeclare(slug, declares, autresOutils), forme: r.forme(slug) };
+    return { cle: r.cle, fichier: chemin, quoi: r.quoi, facultatif: !!r.facultatif, mesurable: true, present: estDeclare(cherche, declares, autresOutils), forme: r.forme(slug) };
   });
 }
 
@@ -579,9 +736,62 @@ async function main() {
     console.log("");
   }
   if (!slug) {
-    console.log(`${REGISTRES_D_INTEGRATION.length} registres à renseigner pour un outil qui arrive :\n`);
-    for (const r of REGISTRES_D_INTEGRATION) console.log(`· ${r.cle}${r.facultatif ? " (selon décision)" : ""} — ${r.quoi}\n    ${r.fichier}`);
+    console.log(`${REGISTRES_D_INTEGRATION.length} registres à renseigner pour un OUTIL qui arrive :\n`);
+    for (const r of REGISTRES_D_INTEGRATION) console.log(`· ${r.cle}${r.facultatif ? " (selon décision)" : ""} — ${r.quoi}\n    ${typeof r.fichier === "function" ? "(dépend de l'arrivant)" : r.fichier}`);
+    // LES AUTRES TYPES D'ARRIVANT, listés EN LISANT le registre (Article 24) : un neuvième type
+    // demain apparaît ici sans qu'on touche à ce message d'usage.
+    console.log(`\nEt ${Object.keys(TYPES_D_ARRIVANT).length - 1} autres choses peuvent arriver dans l'Agence — chacune avec sa propre liste :\n`);
+    for (const [t, d] of Object.entries(TYPES_D_ARRIVANT)) {
+      if (t === "outil") continue;
+      console.log(`· ${t.padEnd(9)} ${d.quoi}`);
+      console.log(`    ${d.registres.length} registre(s) · l'arrivant se donne comme : ${d.arrivant}`);
+    }
     console.log("\nUsage : node scripts/integration-outil.mjs <slug-de-l-outil>");
+    console.log(`        node scripts/integration-outil.mjs <${Object.keys(TYPES_D_ARRIVANT).filter((t) => t !== "outil").join("|")}> <l'arrivant>`);
+    console.log("\nIL SIGNALE, IL NE BLOQUE JAMAIS (sa décision du 2026-09-27) : ce qui manque est nommé et reste visible tant que ce n'est pas traité, mais rien ne s'arrête.");
+    recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return;
+  }
+
+  // LES SEPT AUTRES TYPES D'ARRIVANT (2026-09-27, tâche #998 — ses points 9, 10 et 12).
+  // Le type se lit sur le REGISTRE, jamais sur une liste de `if` : ajouter un type demain ne
+  // demande rien ici (Article 24). Et la branche est placée AVANT tout ce qui suit, parce que tout
+  // ce qui suit — la nature du script, les obligations de classe, les modules de règles — ne
+  // s'applique qu'à un outil : le faire traverser à un document rendrait des reproches absurdes.
+  if (Object.prototype.hasOwnProperty.call(TYPES_D_ARRIVANT, slug) && slug !== "outil") {
+    const type = TYPES_D_ARRIVANT[slug];
+    const arrivant = process.argv[3];
+    if (!arrivant) {
+      console.log(`${slug} — ${type.quoi}\n`);
+      console.log(`L'arrivant se donne comme : ${type.arrivant}\n`);
+      for (const r of type.registres) console.log(`· ${r.cle}${r.facultatif ? " (selon décision)" : ""} — ${r.quoi}`);
+      console.log(`\nUsage : node scripts/integration-outil.mjs ${slug} <${type.arrivant.split(",")[0]}>`);
+      recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+      return;
+    }
+    const etat = etatIntegration(arrivant, { registres: type.registres });
+    console.log(`${slug.toUpperCase()} — ${type.quoi}\nArrivant : ${arrivant}\n`);
+    const manquants = etat.filter((e) => e.mesurable && !e.present && !e.facultatif);
+    const aDecider = etat.filter((e) => e.mesurable && !e.present && e.facultatif);
+    for (const e of etat) {
+      const marque = !e.mesurable ? "❓" : e.present ? "✅" : e.facultatif ? "🔵" : "❌";
+      console.log(`${marque} ${e.cle} — ${e.quoi}`);
+      console.log(`     ${e.fichier}`);
+      if (!e.mesurable) console.log(`     ⚠️ ${e.pourquoi}`);
+      else if (!e.present) console.log(`     À écrire : ${e.forme}`);
+    }
+    console.log("");
+    if (!manquants.length && !aDecider.length) {
+      console.log(`✅ Rien ne manque : ${arrivant} est déclaré partout où son type l'exige.`);
+    } else {
+      console.log(`${manquants.length} registre(s) à renseigner${aDecider.length ? `, plus ${aDecider.length} à décider (jamais une formalité à cocher)` : ""}.`);
+    }
+    // LA LIMITE, DITE PLUTÔT QUE TUE (leçon L11) : cette liste ne couvre que ce qui se VÉRIFIE en
+    // lisant un fichier. Une obligation qu'on ne saurait pas mesurer serait une ligne de plus dans
+    // un rapport, jamais une protection — et annoncer un registre qui n'existe pas encore est la
+    // référence morte que l'Article 28 nomme comme le cas le plus vicieux.
+    console.log(`\nHORS PORTÉE : ce parcours vérifie les déclarations qui se LISENT dans un fichier. Il ne dit jamais si ce qui arrive MÉRITAIT d'arriver — ça se lit, et ça se tranche avec l'utilisateur.`);
+    console.log("Il SIGNALE, il ne bloque jamais.");
     recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
     return;
   }

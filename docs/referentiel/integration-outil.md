@@ -143,6 +143,94 @@ entre sans découvrir ses oublis un test après l'autre.
 
 ---
 
+## HUIT TYPES D'ARRIVANT, UN SEUL PARCOURS *(2026-09-27, tâche #998 — ses points 9, 10 et 12)*
+
+**Sa demande**, mot pour mot : « Process d'intégration des données / rapports / documents : on créé
+une tache ou on le fait maintenant · Process d'intégration des tâches et des règles : idem · En
+balayant : les index, les leçons, les process eux-mêmes, les KPI et les registres. Aucun n'a de
+process d'arrivée. : ok, on y va ». Et son arbitrage de la veille, en fenêtre de calibrage : **« Un
+seul parcours pour les trois »**.
+
+### Ce que « unique » veut dire, parce que c'est contre-intuitif
+
+Il l'a dit lui-même en lisant la première version : « c'est contre intuitif, j'ai du mal à saisir ».
+La réponse tient en une phrase : **ce qui est unique, c'est la MÉCANIQUE ; ce qui reste différent,
+c'est la LISTE.**
+
+L'image qui le rend évident : le guichet d'entrée d'un immeuble. Il y a UN guichet — c'est ce qui
+est unique. Mais l'employé n'a pas la même fiche selon qui se présente : un locataire remplit un
+bail, un livreur signe un bon, un artisan montre son ordre de mission. Le guichet, la file, le
+tampon, la phrase « voilà ce qui vous manque encore » : identiques pour tous. Seule la fiche change.
+
+**Les cinq gestes communs**, rigoureusement les mêmes pour un script ou pour une leçon :
+lire la liste des endroits où l'arrivant doit être déclaré · ouvrir chacun de ces fichiers pour de
+vrai · y chercher l'arrivant · cocher ✅ ou ❌ · pour chaque ❌, **donner la ligne exacte à coller**.
+
+Trois outils séparés auraient recopié ces cinq gestes trois fois — donc divergé au premier
+changement de l'un d'eux. C'est exactement ce que l'Article 31 veut éviter : on étend ce qui couvre
+à moitié, on n'agit jamais à côté.
+
+### Les huit fiches
+
+| Type | Où il va regarder | Ce qu'il y cherche |
+|---|---|---|
+| `outil` | les 10 registres historiques (fiabilité, couverture de test, Ronde, catalogue…) | le slug du script |
+| `document` | l'index de **son** dossier | son nom de fichier |
+| `index` | le dossier doit porter un `index.md` non vide | l'existence de l'index |
+| `lecon` | `docs/referentiel/lecons.md` | `## L36` ou `## BP5` |
+| `process` | la table `PROCESSES` de god-of-all-process | son slug |
+| `kpi` | l'en-tête de `kpi-historique.csv` **et** `scripts/kpi-report.mjs` | le nom de la colonne |
+| `registre` | la table `REGISTRIES` **et** son propre `index.md` | le slug de l'outil qui le tient |
+| `donnee` | `REGISTRIES` ou `LOCAL_JOURNALS`, les deux seules sources que `listDataSources()` dérive | son slug |
+
+Un neuvième type demain est **une fiche de plus, pas un outil de plus** — et le registre des types
+se LIT partout (message d'usage, dispatch, rapport), donc aucun des trois n'a à changer (Article 24).
+
+### Il SIGNALE, il ne bloque JAMAIS
+
+Sa décision du 2026-09-27, en fenêtre de calibrage, et elle a une raison qu'il vaut mieux garder
+écrite : **chaque passage d'outil dépose un fichier**, donc un contrôle bloquant transformerait
+chaque rapport produit en commit refusé. C'est la règle qu'il avait déjà donnée à
+god-of-all-process pour les plans d'action, et pour le même motif — un contrôle qui bloque sur un
+sujet sans rapport avec le travail en cours pousse à le contourner.
+
+### Deux généralisations, chacune imposée par un cas réel
+
+- **`fichier` peut être une FONCTION de l'arrivant.** L'index d'un document dépend du dossier où il
+  tombe, ce qu'un chemin fixe ne peut pas exprimer.
+- **`identifiant` dit sous quelle forme l'arrivant se cherche DANS CE REGISTRE-LÀ.** Un document se
+  cite par son nom de fichier, jamais par son chemin complet ; les confondre rendrait « jamais
+  déclaré » sur un document parfaitement indexé (leçon L4).
+
+Les deux sont facultatives : un registre d'outil qui ne les pose pas se comporte exactement comme
+avant — c'était la condition pour étendre sans rien casser.
+
+### Ce que le premier passage réel a corrigé dans ma conception, avant livraison
+
+**Le type KPI était faux.** Ma première version réclamait une ligne dans `docs/referentiel/kpi-index.md`
+et une autre dans le registre des objectifs. Lancée sur une colonne parfaitement vivante, elle a
+rendu **deux refus**.
+
+La cause : ces deux documents n'indexent pas ce que je croyais. `kpi-index.md` indexe des **RUNS**
+— un rapport archivé par passage. Le registre des objectifs indexe des **ENTITÉS** (des outils), pas
+des colonnes. Réclamer une inscription dans un registre qui ne porte pas ce genre d'objet, c'est
+réclamer l'impossible, et un contrôle impossible à satisfaire se fait désactiver (leçon L4).
+
+Les deux vrais domiciles d'une colonne sont l'en-tête de l'historique CSV — sans lequel elle n'est
+suivie nulle part — et le code qui la **remplit** : une colonne présente dans le CSV que personne
+n'alimente est ce qu'HARMONIA appelle un « lien perdu ».
+
+### Ce que ce parcours ne contient pas, délibérément
+
+**Uniquement ce qui se VÉRIFIE en lisant un fichier réel.** Une obligation qu'on ne saurait pas
+mesurer serait une ligne de plus dans un rapport, jamais une protection. Et annoncer un registre
+qui n'existe pas encore est exactement la référence morte que l'Article 28 nomme comme le cas le
+plus vicieux : l'axe « nature » des documents, par exemple, n'entrera ici que le jour où il existe
+(tâche #249).
+
+**Hors portée, dit à chaque passage** : il vérifie les déclarations ; il ne dit jamais si ce qui
+arrive MÉRITAIT d'arriver — ça se lit, et ça se tranche avec l'utilisateur.
+
 ## L'ANGLE MORT de l'audit, et sa fermeture *(2026-09-26, tâche #915)*
 
 Sa demande : « l'angle mort de l'audit d'intégration — **fermer le trou côté outil** ».
