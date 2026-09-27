@@ -6,7 +6,7 @@
     },
     "ezechiel-les-tests": {
       "quand": "2026-09-27",
-      "combien": 6
+      "combien": 5
     }
   },
   "alertes": [
@@ -53,15 +53,6 @@
       "gravite": "à surveiller",
       "constat": "la suite elle-même n'est pas au vert : 2 anomalie(s) de fonctionnement",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-27"
-    },
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "1 protection(s) perdue(s) depuis la passe de robustesse précédente",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "bloquante",
-      "constat": "1 protection(s) perdue(s) depuis la passe de robustesse précédente",
-      "depuis": "2026-09-27",
       "vueLe": "2026-09-27"
     }
   ]
