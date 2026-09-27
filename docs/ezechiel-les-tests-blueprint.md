@@ -52,3 +52,37 @@ autres protègent.
 Il lit du TEXTE ; il n'exécute pas la suite groupe par groupe. Il peut donc affirmer « ce groupe ne
 contient aucune assertion », jamais « cette assertion ne peut pas échouer » — établir le second
 demande de casser le code exprès et de relancer, ce qui est une passe à part.
+
+## Les quatre axes ajoutés le 2026-09-27, et pourquoi chacun manquait
+
+Les six axes ci-dessus décrivent l'ÉTAT du filet. Ces quatre-là répondent à des questions qu'aucun
+d'eux ne posait, et chacune vient d'une exigence formulée par le commanditaire.
+
+7. **La santé de FONCTIONNEMENT** — « le fonctionnement général de la suite est-il lui-même OK
+   VERT ? ». C'est une question différente de « les tests passent-ils » : une suite peut rendre un
+   code de sortie 0 en ayant SAUTÉ la moitié de ses blocs, en ayant exécuté le même deux fois, ou
+   en crachant des avertissements que plus personne ne lit. Cinq anomalies sont donc surveillées, et
+   « vert » n'est jamais confondu avec « rien de bloquant » : les deux sont rendus séparément.
+8. **La correspondance test ↔ code** — un test qui appelle une fonction que son module n'exporte
+   plus ne protège plus rien, et peut passer sur un `undefined` sans le dire. C'est la part de
+   Fraîcheur qui revient à cet outil dans le contrat à trois (cf. axe 10).
+9. **Le GAIN et son PRIX** — un outil qui mesure l'état ne mesure pas l'effet. Sans comparaison de
+   deux relevés, on saurait que c'est plus rapide, jamais combien ni grâce à quoi. Et sans
+   comparaison de deux passes de robustesse, on ne saurait jamais ce que la rapidité a coûté. La
+   règle est un veto : **un allègement qui fait perdre une protection est refusé, quel que soit le
+   temps qu'il fait gagner.**
+10. **La frontière avec ses deux voisins, écrite en DONNÉE** — trois outils se partagent
+    l'assainissement : l'un tient la charte, l'un tout document à règles numérotées, l'un le filet
+    et sa machinerie. Un commentaire promettant « on ne se chevauche pas » n'aurait jamais rien
+    empêché ; une donnée relue par un test refuse un quatrième outil qui revendiquerait un périmètre
+    déjà tenu.
+
+## La leçon du premier voyant, et elle vaut pour tout outil de contrôle
+
+Le voyant de santé a trouvé un défaut à son tout premier passage réel — et c'était le SIEN. Il
+annonçait « 4 succès attendus jamais imprimés », donc quatre blocs sautés : les quatre étaient des
+fixtures citées dans une chaîne de caractères, à l'intérieur de ses propres contre-tests. **Le
+voyant avait raison de crier sur l'écart ; c'est le dénombrement qui mentait.** Un outil qui compte
+ce qu'un fichier de tests DIT doit toujours distinguer le code exécuté du code cité — et corriger
+cette distinction une fois ne suffit pas : elle se corrige pour la CLASSE entière, jamais pour
+l'occurrence qu'on vient de voir.

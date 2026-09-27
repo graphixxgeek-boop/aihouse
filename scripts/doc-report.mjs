@@ -975,6 +975,10 @@ export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { s
 export const FILE_WRITER_NATURES = {
   "scripts/check-house.mjs": { nature: "infrastructure", pourquoi: "filet de tests : son résultat est un code de sortie et une sortie console, les fichiers qu'il écrit sont des relevés de couverture temporaires" },
   "scripts/check-spirit.mjs": { nature: "rapport", pourquoi: "affiche de vraies réponses du modèle destinées à une lecture humaine — le diagnostic de ton" },
+  // Sa sous-commande `mesurer` écrit le chronométrage du filet groupe par groupe : une donnée
+  // relue par l'enquête, jamais lue telle quelle par un humain. Son RAPPORT, lui, est la sortie
+  // console de l'enquête — c'est bien un journal, pas un second rapport.
+  "scripts/ezechiel-les-tests.mjs": { nature: "journal", pourquoi: "tient docs/ezechiel-les-tests/mesures.json, le chronométrage du filet groupe par groupe, relu par l'enquête pour croiser coût et protection" },
   "scripts/gemini-key-health.mjs": { nature: "journal", pourquoi: "tient .gemini-key-health.json, relu par le code de rotation des clés, jamais par un humain" },
   "scripts/html-report.mjs": { nature: "infrastructure", pourquoi: "c'est le moteur de rendu lui-même (doc-HTML) — il met en page le rapport des autres, il n'en a aucun" },
   "scripts/memento-weight.mjs": { nature: "journal", pourquoi: "tient l'historique du poids de contexte par tour, relu par les outils de suivi conso" },

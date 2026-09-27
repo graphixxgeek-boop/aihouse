@@ -15868,6 +15868,130 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// EZECHIEL, LA VUE LARGE (2026-09-27, tâche #1026) — fraîcheur, frontière, coût, robustesse
+// ————————————————————————————————————————————————————————————————————————
+// Le premier Ezechiel lisait le fichier de tests. Celui-ci répond à la demande complète de
+// l'utilisateur : « je veux que Ezechiel et MOÏSE garantissent la fraîcheur du document qu'ils
+// inspectent… les 3 outils ne se chevauchent pas et se combinent parfaitement : chacun son
+// périmètre », et « on est bien ok que Ezechiel a une vue large sur le problème, pas seulement à
+// l'intérieur du fichier de tests ? ». Chaque assertion ci-dessous verrouille une de ces promesses,
+// dans les DEUX sens : ce qu'elle doit attraper, et le cas voisin qu'elle doit laisser passer.
+{
+  const ezl = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // ---- LA FRONTIÈRE À TROIS — une DONNÉE vérifiable, jamais une promesse en prose (Article 24).
+  const perim = ezl.chevauchementsDePerimetre();
+  assert.deepEqual(perim.collisions, [], 'MOÏSE, Abraham and Ezechiel must never claim the same object: two tools on one object means two possible answers to one question, and nobody knows which to believe when they diverge (leçon L29)');
+  assert.deepEqual(perim.sansFraicheur, [], 'and each of the three must declare WHOSE freshness it guarantees — the user asked for three tools that combine, not three that overlap');
+  // MUST CATCH : si un quatrième outil revendiquait demain un périmètre déjà tenu, la donnée mord.
+  const faux = { a: { quoi: 'la charte', fraicheur: 'x' }, b: { quoi: 'LA CHARTE', fraicheur: 'y' } };
+  assert.equal(ezl.chevauchementsDePerimetre(faux).collisions.length, 1, 'MUST CATCH: a fourth tool entering a perimeter already held is refused instead of silently doubling someone');
+
+  // ---- LA FRAÎCHEUR DU FILET — un test qui appelle une fonction disparue ne protège plus rien.
+  const fauxFilet = ["const m = await import('../scripts/faux-module.mjs');", "assert.ok(m.fonctionDisparue());"].join("\n");
+  const lireFaux = (f) => (f === 'scripts/faux-module.mjs' ? 'export function fonctionVivante() {}' : null);
+  const fr = ezl.fraicheurDuFilet(fauxFilet, { lire: lireFaux });
+  assert.equal(fr.perimes.length, 1, 'MUST CATCH: the net calls a function its module no longer exports — that test protects nothing, and worse, it can pass on `undefined` without saying so');
+  // MUST LET PASS : une méthode du langage n'est pas une fonction du module.
+  const vivant = ["const m = await import('../scripts/faux-module.mjs');", "assert.ok(m.fonctionVivante().map(x => x));"].join("\n");
+  assert.deepEqual(ezl.fraicheurDuFilet(vivant, { lire: lireFaux }).perimes, [], 'MUST LET PASS: a live export, and `.map()` is a language method — denouncing either would make the guard unreadable (leçon L4)');
+  // MUST LET PASS : un alias réutilisé pour DEUX modules n'accuse personne — c'est une non-mesure.
+  const ambigu = ["const clair = await import('../scripts/c.mjs');", "assert.ok(clair.autre());", "const g = await import('../scripts/a.mjs');", "const g = await import('../scripts/b.mjs');", "assert.ok(g.quelqueChose());"].join("\n");
+  const frAmb = ezl.fraicheurDuFilet(ambigu, { lire: () => 'export function autre() {}' });
+  assert.equal(frAmb.perimes.length, 0, 'MUST NOT ACCUSE: one alias reused for two different modules is a non-measure, never an accusation (leçons L5/L11) — this exact case denounced a perfectly live function on the first real pass');
+  assert.ok(frAmb.aliasAmbigus.length >= 1, 'and the ambiguity is DECLARED rather than hidden: silence would look like a clean bill of health');
+  const toutAmbigu = ["const g = await import('../scripts/a.mjs');", "const g = await import('../scripts/b.mjs');", "assert.ok(g.quelqueChose());"].join("\n");
+  assert.equal(ezl.fraicheurDuFilet(toutAmbigu, { lire: () => 'export function autre() {}' }).mesurable, false, 'MUST REFUSE: if NO alias can be resolved there is nothing to compare, and « zéro périmé » would then be a clean bill of health handed out on zero data (leçons L5/L11)');
+
+  // ---- UN IMPORT CITÉ DANS UNE CHAÎNE N'EST PAS UN IMPORT (troisième faux positif, 2026-09-27).
+  assert.equal(ezl.dansUneChaine(`const x = "await import('./a.mjs')";`, 20), true, 'MUST CATCH: an import written inside a string literal is a fixture — Ezechiel was accusing its OWN counter-test of importing a missing file');
+  assert.equal(ezl.dansUneChaine("await import('./a.mjs');", 0), false, 'MUST LET PASS: a real import is not inside a string, and skipping it would blind the check that protects the whole net');
+
+  // ---- LES ASSERTIONS QUI PASSENT QUOI QU'IL ARRIVE — le défaut le plus silencieux d'une suite.
+  assert.equal(ezl.assertionsNonAttendues("assert.ok(f().then(x => x));").length, 1, 'MUST CATCH: an assertion on a promise never awaited passes whatever you break — it does not look like a broken test, it looks like a green one (BP2)');
+  assert.deepEqual(ezl.assertionsNonAttendues("assert.ok(await p.then(x => x));"), [], 'MUST LET PASS: a promise chain that IS awaited is correct code, and the pattern was widened only after its own counter-test caught it demanding a bare name before `.then(` — which missed `f().then(…)`, the form actually written');
+  assert.deepEqual(ezl.assertionsNonAttendues("assert.ok(await f());"), [], 'MUST LET PASS: a properly awaited call is exactly what we want to see, and flagging it would train everyone to ignore the signal');
+
+  // ---- LE CROISEMENT COÛT / PROTECTION — « des secondes gagnées À PROTECTION ÉGALE », ses mots.
+  assert.equal(ezl.croiserCoutEtProtection([], []).mesurable, false, 'MUST REFUSE: without BOTH the split and the chronometer there is nothing to cross, and an empty ranking would read as a net without a problem (leçons L5/L11)');
+  const grp = [{ ligne: 10, titre: 'cher', texte: 'assert.ok(1);' }, { ligne: 20, titre: 'muet', texte: 'const x = 1;' }];
+  const croise = ezl.croiserCoutEtProtection(grp, [{ ms: 9000 }, { ms: 5000 }]);
+  assert.equal(croise.aRegarder[0].ligne, 20, 'the group costing time while carrying NO assertion comes first: it is the only place where seconds are gained without losing an ounce of protection');
+  assert.equal(croise.sansAucuneAssertion.length, 1, 'and it is named separately, because that is the shortlist a human can decide on in ten minutes');
+  assert.ok(croise.horsPortee.includes('pas un groupe à retirer'), 'MUST SAY SO: a SLOW group is not a group to remove — a sweep that reads the whole repository takes time because it is doing its job, and forgetting that would turn this tool into a test-shredder');
+
+  // ---- LE RECOLLAGE DU CHRONO — un groupe qui imprime cinq succès consomme cinq lignes, pas une.
+  const recolle = ezl.recollerLeChrono([{ ligne: 1, titre: 'a', sujets: 2 }, { ligne: 2, titre: 'b', sujets: 1 }],
+    [{ ms: 100, texte: 'Passed: x' }, { ms: 300, texte: 'Passed: y' }, { ms: 900, texte: 'Passed: z' }]);
+  assert.equal(recolle.mesures[0].ms, 300, 'a two-subject group is measured up to its LAST success line — splitting it would hand the second half of its cost to the next group');
+  assert.equal(recolle.mesures[1].ms, 600, 'and the following group only carries what it actually spent');
+  assert.equal(recolle.complet, true, 'with every line accounted for, the measure declares itself complete');
+  // MUST CATCH : un recollage qui ne tombe pas juste se DÉCLARE incomplet plutôt que d'être servi.
+  assert.equal(ezl.recollerLeChrono([{ ligne: 1, sujets: 1 }], [{ ms: 1, texte: 'Passed: a' }, { ms: 2, texte: 'Passed: b' }]).complet, false, 'MUST CATCH: leftover success lines mean the split no longer matches the run — declaring the measure incomplete beats serving a wrong ranking as fact');
+
+  // ---- LA MESURE ABSENTE N'EST PAS UNE MESURE À ZÉRO.
+  assert.equal(ezl.mesuresEnregistrees({ lire: () => null }).presentes, false, 'no recorded measurement must never be served as a measurement of zero (leçons L5/L11)');
+  assert.equal(ezl.mesuresEnregistrees({ lire: () => '{ pas du json' }).presentes, false, 'and a corrupted measurement file would read as an absence of problem — it is refused too');
+
+  // ---- LA PASSE DE ROBUSTESSE — la seule qui puisse répondre « le filet mord-il vraiment ? ».
+  assert.equal(ezl.verdictDeRobustesse([{ attrapee: true }], { filetVertAvant: false }).mesurable, false, "MUST REFUSE: if the net was ALREADY red before the first break, everything counts as « caught » without the net having anything to do with it — the exact shape of « rien trouvé » masquerading as « tout va bien »");
+  assert.equal(ezl.verdictDeRobustesse([]).mesurable, false, 'and a score over zero attempts would read as a perfect net');
+  const vr = ezl.verdictDeRobustesse([{ attrapee: true }, { attrapee: false, chemin: 'a', ligne: 1, operateur: 'x', quoi: 'y' }]);
+  assert.equal(vr.tauxPct, 50, 'the only figure that matters is how many deliberate breaks the net CAUGHT');
+  assert.ok(vr.horsPortee.includes('ne dit pas'), 'and a survivor is never an accusation by itself: it says the net does not watch THAT line, not that a test is missing');
+
+  // ---- LE DÉNOMBREMENT DES GROUPES NE COMPTE PAS LES SUCCÈS CITÉS DANS UNE CHAÎNE. C'est le
+  // voyant de santé lui-même qui a trouvé ce défaut à son premier passage réel : il annonçait
+  // « 4 succès attendus jamais imprimés », donc quatre blocs sautés, alors que les quatre étaient
+  // des fixtures écrites dans les contre-tests ci-dessus. Le voyant avait raison de crier sur
+  // l'écart ; c'est le dénombrement qui mentait. Une fois corrigé : 295 attendus, 295 imprimés.
+  assert.equal(ezl.decouperEnGroupes(`const f = "console.log('Passed: cité');";`).length, 0, "MUST NOT COUNT: a success line quoted inside a string is a fixture, not a block — counting it manufactured four « skipped blocks » out of this very test file, and a blocking alarm that cries wolf stops being read (leçon L4)");
+  assert.equal(ezl.decouperEnGroupes("assert.ok(1);\nconsole.log('Passed: vrai');").length, 1, 'MUST STILL COUNT: a real success line is still a real block — narrowing the rule too far would hide genuinely skipped blocks, which is the defect this light exists to catch');
+
+  // ---- LE VOYANT DE FONCTIONNEMENT (demande du 2026-09-27) : « Ezechiel doit aussi savoir dire si
+  // le fonctionnement général de la suite de test est lui-même OK VERT et ne subit aucune erreur de
+  // fonctionnement, aucune anomalie ». C'est une question DIFFÉRENTE de « les tests passent-ils » :
+  // une suite peut rendre 0 en ayant sauté la moitié de ses blocs.
+  const grpSante = [{ ligne: 1, titre: 'a', sujets: 1 }, { ligne: 2, titre: 'b', sujets: 1 }];
+  const vertParfait = ezl.santeDuFilet({ code: 0, ms: 1000, groupes: grpSante, lignes: [{ texte: 'Passed: a', flux: 'normal' }, { texte: 'Passed: b', flux: 'normal' }] });
+  assert.equal(vertParfait.vert, true, 'MUST LET PASS: a suite that returns 0, prints every expected success, warns about nothing and writes nothing to stderr IS green — a light that never goes green teaches everyone to ignore it');
+  // MUST CATCH — un bloc sauté : code 0, et pourtant la moitié de la suite n'a pas tourné.
+  const saute = ezl.santeDuFilet({ code: 0, ms: 1000, groupes: grpSante, lignes: [{ texte: 'Passed: a', flux: 'normal' }] });
+  assert.equal(saute.vert, false, 'MUST CATCH: a block declared in the file that never printed its success was SKIPPED — and a skipped block looks exactly like a passing one, which is the emptiest green there is');
+  assert.equal(saute.sansBlocage, false, 'and it is blocking: a suite that does not run in full makes every other figure in the report uninterpretable');
+  // MUST CATCH — un même succès imprimé deux fois : le bloc a tourné en double.
+  const double = ezl.santeDuFilet({ code: 0, groupes: [{ ligne: 1, sujets: 2 }], lignes: [{ texte: 'Passed: a', flux: 'normal' }, { texte: 'Passed: a', flux: 'normal' }] });
+  assert.ok(double.anomalies.some((a) => a.cle === 'doublons'), 'MUST CATCH: the same success printed twice means a block ran twice — it pays its cost twice and skews every cost ranking');
+  // MUST CATCH — un avertissement du moteur : rien ne casse aujourd'hui, tout casse à une version près.
+  const warn = ezl.santeDuFilet({ code: 0, groupes: [{ ligne: 1, sujets: 1 }], lignes: [{ texte: 'Passed: a', flux: 'normal' }, { texte: '(node:1) DeprecationWarning: x', flux: 'erreur' }] });
+  assert.ok(warn.anomalies.some((a) => a.cle === 'obsolescence'), 'MUST CATCH: engine warnings accumulate precisely because they break nothing today');
+  assert.equal(warn.sansBlocage, true, 'but they are NOT blocking — confusing « green » with « nothing blocking » would be the hollow green this whole function exists to prevent, so both are reported separately');
+  // MUST CATCH — une suite rouge se dit rouge AVANT tout le reste.
+  assert.equal(ezl.santeDuFilet({ code: 1, groupes: grpSante, lignes: [{ texte: 'Passed: a', flux: 'normal' }] }).anomalies[0].cle, 'rouge', 'a red suite must be named FIRST: while it is red, nothing else on the page can be read');
+  // MUST REFUSE — sans exécution réelle, aucun verdict : la santé ne se lit pas dans le texte.
+  assert.equal(ezl.santeDuFilet({}).mesurable, false, 'MUST REFUSE: health is only readable from a REAL run — inferring it from the file text would be a green handed out on zero data (leçons L5/L11)');
+
+  // ---- LES CIBLES SE LISENT DANS LE FILET, elles ne se recopient pas (Article 24).
+  const cibles = ezl.ciblesDeMutation("const a = await import('../scripts/vrai.mjs');\nconst b = await import('../scripts/fixtures/faux.mjs');", { existe: () => true });
+  assert.deepEqual(cibles, ['scripts/vrai.mjs'], 'targets are READ from what the net actually imports, and a fixture path is not a target — a hand-written list would have aged at the first tool added');
+  // MUST LET PASS : on ne mute jamais un commentaire — une survivante y serait un faux constat.
+  assert.deepEqual(ezl.mutationsPossibles('x.mjs', '// if (a === b) return;'), [], 'MUST NOT MUTATE a comment: it changes nothing, so it would survive every time and manufacture a fake blind spot');
+  const mut = ezl.mutationsPossibles('x.mjs', 'if (a === b) return;');
+  assert.equal(mut.length, 1, 'MUST CATCH: a real comparison is mutable, and that is how we learn whether the net notices');
+  assert.ok(mut[0].apres.includes('!=='), 'and the break is a real inversion of meaning, not a cosmetic edit');
+  assert.ok(mut[0].avant !== mut[0].apres && mut[0].ligne === 1, 'each mutation carries exactly what to write and where, so the restore is unambiguous even if the run dies mid-way');
+
+  // ---- L'ENQUÊTE LES BRANCHE TOUTES : une fonction écrite mais jamais appelée ne protège personne.
+  const enq = ezl.enqueter({ lire: (f) => (f === ezl.FILET ? "assert.ok(1);\nconsole.log('Passed: x');" : null) });
+  for (const cle of ['perimetres', 'fraicheur', 'asyncs', 'chrono', 'cout']) {
+    assert.ok(Object.prototype.hasOwnProperty.call(enq, cle), `MUST BE WIRED: enqueter() must return « ${cle} » — a capability written and never called by the orchestrator is an intention, not a tool (leçon L2)`);
+  }
+  assert.ok(ezl.planDeLEnquete(enq).some((e) => /chronométrage/.test(e.constat)), 'and with no chronometer recorded the plan must SAY so: without it, « seconds gained at equal protection » cannot be verified, so any trimming would be guessed');
+
+  console.log("Passed: EZECHIEL, LA VUE LARGE (2026-09-27, tâche #1026) — la demande complète de l'utilisateur, verrouillée point par point. La frontière à trois entre MOÏSE (la charte), Abraham (tout document à règles numérotées) et Ezechiel (le filet et sa machinerie) est une DONNÉE que ce test relit, pas une promesse en prose : un quatrième outil qui revendiquerait demain un périmètre déjà tenu se ferait refuser. La fraîcheur du filet attrape un test qui appelle une fonction que son module n'exporte plus — et laisse passer une méthode du langage, un export bien vivant, et surtout un alias réutilisé pour deux modules, qui est une non-mesure et jamais une accusation. Un import écrit dans une chaîne est une fixture : Ezechiel accusait son propre contre-test. Une assertion sur une promesse jamais attendue passe quoi qu'on casse, donc elle est dénoncée. Le croisement coût/protection met en tête les groupes qui coûtent du temps sans porter une seule assertion — le seul endroit où des secondes se gagnent sans perdre une once de protection — et répète qu'un groupe LENT n'est pas un groupe à retirer. Le chronomètre se recolle sur les lignes de succès réelles et se déclare incomplet plutôt que de servir un classement faux. La passe de robustesse refuse de conclure si le filet était déjà rouge avant la première cassure. Le voyant de fonctionnement répond à une question que le code de sortie ne pose jamais : une suite peut rendre 0 en ayant SAUTÉ la moitié de ses blocs, en ayant exécuté le même deux fois, ou en crachant des avertissements que plus personne ne lit — les trois sont attrapés, et « vert » n'est jamais confondu avec « rien de bloquant ». Et la dernière assertion vérifie que toutes ces capacités sont BRANCHÉES dans l'enquête : une fonction écrite et jamais appelée est une intention, pas un outil (leçon L2).");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA DETTE ET LE SOUPÇON (2026-09-26, tâche #943)
 // ————————————————————————————————————————————————————————————————————————
 // Le détecteur de dettes accusait à tort : un commit qui touchait le CONTRÔLEUR d'un process pour

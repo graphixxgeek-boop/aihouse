@@ -57,3 +57,36 @@ tort cesse d'être lu (leçon L4).
 
 Il n'écrit jamais dans `scripts/check-house.mjs`. tool-brain le classe TUYAUTERIE score 9, le plus
 haut du dépôt : sa panne empêche tout commit.
+
+## Les commandes (2026-09-27, v2)
+
+| Commande | Ce qu'elle fait | Ce qu'elle coûte |
+|---|---|---|
+| `node scripts/ezechiel-les-tests.mjs` | l'enquête complète, instantanée — elle ne touche à rien et relit les relevés déjà enregistrés | gratuit, quelques dizaines de ms |
+| `node scripts/ezechiel-les-tests.mjs sante` (alias `mesurer`) | lance le filet POUR DE VRAI, horodate ses lignes de succès, en tire le chronométrage groupe par groupe ET le voyant de fonctionnement, puis enregistre les deux | une exécution complète du filet (≈ 107 s au 2026-09-27) |
+| `node scripts/ezechiel-les-tests.mjs robustesse [--combien=N]` | casse le vrai code exprès, relance le filet, regarde s'il mord, restaure, et compare à la passe précédente | (N+1) exécutions du filet — **passe séparée, jamais dans l'enquête** |
+
+## L'état réel au 2026-09-27 (deuxième relevé, le premier chronométré)
+
+- **Filet nu : 107 s.** Pas les 43,7 s mesurées le 2026-09-25 : il a plus que doublé en deux jours.
+- **L'enveloppe ne pèse qu'une douzaine de secondes** (couverture V8 + `tsc`) sur ~113 s bloquantes.
+  **Le temps est dans les tests eux-mêmes** — ce qui invalide l'hypothèse de départ du chantier, et
+  c'est la mesure qui l'a dit, jamais la relecture.
+- **295 succès attendus, 295 imprimés, recollage COMPLET** : aucun bloc sauté, aucun bloc en double.
+- **Deux anomalies non bloquantes** : un avertissement d'API expérimentale, et deux lignes écrites
+  sur la sortie d'erreur alors que la suite est verte.
+- **697 appels du filet vers un module de l'Agence, 0 périmé.**
+- **La passe de robustesse n'a encore jamais tourné** : tant qu'elle n'a pas tourné, « le filet
+  mord » reste une intention (Article 25).
+
+## Sa part du contrat à trois
+
+MOÏSE garantit la fraîcheur des FAITS de la charte. Abraham celle des RÈGLES de n'importe quel
+document numéroté. Ezechiel celle de la CORRESPONDANCE entre ce que les tests appellent et ce que le
+code offre encore. La frontière vit dans `PERIMETRES` (`scripts/ezechiel-les-tests.mjs`), relue par
+un test à chaque passage du filet : elle est vérifiable, pas promise.
+
+**Abraham est le point d'entrée de l'assainissement à grande échelle** : il convoque les deux autres
+et fusionne leurs alertes, sans jamais refaire leur analyse. MOÏSE et Ezechiel restent convocables
+seuls sur leur périmètre, et déposent alors leur verdict dans le registre d'alertes partagé —
+c'est par ce registre qu'Abraham « veille » même quand on ne l'a pas appelé.
