@@ -41,7 +41,7 @@ l'équipe, et c'est un Gardien sacré), ARGUS 60 %, HYPER-SCAN-CHECKPOINT 63 %, 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**25 fichier(s)** dans ce dossier.
+**26 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -67,6 +67,7 @@ l'équipe, et c'est un Gardien sacré), ARGUS 60 %, HYPER-SCAN-CHECKPOINT 63 %, 
 | [circle-signal-2026-09-22T17-42-10-136Z.txt](organigramme/circle-signal-2026-09-22T17-42-10-136Z.txt) | organigramme |
 | [circle-signal-2026-09-23T21-49-13-832Z.txt](organigramme/circle-signal-2026-09-23T21-49-13-832Z.txt) | organigramme |
 | [circle-signal-2026-09-25T14-14-12-639Z.txt](organigramme/circle-signal-2026-09-25T14-14-12-639Z.txt) | organigramme |
+| [circle-signal-2026-09-27T00-12-15-625Z.txt](organigramme/circle-signal-2026-09-27T00-12-15-625Z.txt) | organigramme |
 | [circle-signals-index.md](organigramme/circle-signals-index.md) | organigramme |
 | [serie.json](serie.json) | — |
 | [versions-outils-2026-09-24.txt](versions-outils-2026-09-24.txt) | — |

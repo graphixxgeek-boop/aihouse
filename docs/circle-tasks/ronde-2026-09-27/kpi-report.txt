@@ -1,0 +1,122 @@
+⚠️  Attention, mes résultats peuvent être inexacts : ses scores sont des moyennes de composantes elles-mêmes estimées, et une famille non mesurée sort du calcul plutôt que d'y peser — le chiffre est une tendance, jamais une note. À vérifier avant d'agir, jamais un verdict acquis.
+Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).
+Serveur de dev non joignable sur les ports connus (5173, 3000) — normal si aucune simulation n’est en cours, pas de mesure cette fois.
+
+**🔧 Performance globale du Smart Breaker : N/A (serveur non joignable)**
+**📈 Améliorations réalisées sur l’outil : 88%** (7/8 capacités prévues, implémentées et testées)
+→ Action : Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant activation en production
+
+== Robustesse du code : tsc --noEmit ==
+OK — 0 erreur.
+
+== Robustesse du code : check-house.mjs ==
+⚠️ SUITE ROUGE — 0/266 bloc(s) passés avant l'échec. Sortie :
+file:///home/user/aihouse/scripts/check-house.mjs:8219
+  const ecrits = [];
+        ^
+
+SyntaxError: Identifier 'ecrits' has already been declared
+    at compileSourceTextModule (node:internal/modules/esm/utils:346:16)
+    at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:107:18)
+    at #translate (node:internal/modules/esm/loader:546:20)
+    at afterLoad (node:internal/modules/esm/loader:596:29)
+    at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:601:12)
+    at #createModuleJob (node:internal/modules/esm/loader:624:36)
+    at #getJobFromResolveResult (node:internal/modules/esm/loader:343:34)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:311:41)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:664:25)
+
+Node.js v22.22.2
+
+
+== Robustesse du code : points fragiles ouverts ==
+14 point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.
+
+⚠️  Attention, mes résultats peuvent être inexacts : il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste. À vérifier avant d'agir, jamais un verdict acquis.
+NOTE DU JEU     : 38/100   (moyenne des 1 composante(s) réellement mesurée(s) sur 1 atteignable(s))
+      esprit         38/100               fidélité à la charte de la dernière simulation notée  ← EL-PROFESSOR  — full_sim19 — lecture confiante sur 1/2/3/5 ; partielle sur 4 (second acte structurellement impossible, même cause de script que full_sim18)
+      rendu          hors de portée ici   qualité visuelle de ce que le visiteur voit  ← THE-SCREENER  — THE-SCREENER rend un jugement visuel à LIRE, jamais un chiffre — le forcer en note inventerait une précision qu'il n'a pas
+      naturel        hors de portée ici   part de tours sans intervention anti-écho  ← tableau de bord (qualityScore)  — exige un serveur de jeu qui tourne avec du vrai trafic — mesurable seulement pendant une simulation
+      coherence      hors de portée ici   part de tours sans troncature à rattraper  ← tableau de bord (coherenceScore)  — exige un serveur de jeu qui tourne avec du vrai trafic — mesurable seulement pendant une simulation
+      rejouabilite   hors de portée ici   variété réelle des bonus tirés  ← tableau de bord (replayabilityScore)  — exige un serveur de jeu qui tourne avec du vrai trafic — mesurable seulement pendant une simulation
+      ⚠️ Cette note repose sur UNE SEULE composante : ce n'est pas une synthèse, c'est ce verdict-là recopié, réserves comprises.
+
+NOTE DE L'AGENCE : 85.7/100   (moyenne des 5 composante(s) réellement mesurée(s) sur 5 atteignable(s))
+      exigences      93.1/100             exigences écrites réellement tenues  ← THE-EQUALIZER  — 27/29 tenues mécaniquement
+      robustesse     99/100               couverture de test par fonction  ← AXA-CHECK  — relevé du 2026-09-19
+      conclusion     100/100              outils qui terminent par un plan d'action (Article 28)  ← CASSANDRA-RH (classes)  — 28/28 outils qui émettent des constats concluent par un plan d'action (5 dispensé(s) : ils rendent un ÉTAT, pas des constats)
+      usage          86.5/100             outils réellement sollicités au moins une fois  ← tool-brain  — 45/52 sollicités au moins une fois
+      santeDuCode    50/100               typage propre et suite de tests au vert  ← tableau de bord (codeHealthScore)
+
+LES DEUX NE SE MOYENNENT JAMAIS, et c'est la raison d'être de ces deux notes plutôt qu'une :
+un jeu excellent servi par un outillage faible rendrait exactement le même chiffre qu'un
+outillage impeccable servant un jeu raté. Aucune note unique du projet n'est produite ici.
+Chaque composante LIT le verdict de l'outil qui l'a produite, elle ne le recompte jamais (leçon L22).
+
+TENDANCES de kpi-report (3 point(s) dans la série) :
+   points-fragiles              pas assez de points — 3 point(s) exploitable(s), il en faut 4 — deux points forment un segment, jamais une tendance
+   sante-du-code                pas assez de points — 3 point(s) exploitable(s), il en faut 4 — deux points forment un segment, jamais une tendance
+   note-du-jeu                  pas assez de points — 3 point(s) exploitable(s), il en faut 4 — deux points forment un segment, jamais une tendance
+   note-de-l-agence             pas assez de points — 3 point(s) exploitable(s), il en faut 4 — deux points forment un segment, jamais une tendance
+   ⚠️ Moins de 4 passages : c'est NORMAL pour un outil fraîchement branché, jamais un défaut de câblage.
+
+=== Plan d'action ===
+  ? À TRANCHER · 14 point(s) fragile(s) ouvert(s) dans docs/referentiel/points-fragiles.md — un point fragile est une zone identifiée EN ATTENTE d'une décision de conception, jamais un bug actif — le traiter comme une tâche automatique reviendrait à trancher à la place de l'utilisateur
+
+== Robustesse du code : taille et densité ==
+lib/lia.ts : 191 lignes (prompt géant, à surveiller — pas un défaut en soi).
+lib/dialogue.ts : 470 lignes.
+lib/ : 26 fichiers.
+
+== KPI global — Robustesse du code ==
+50% (moyenne : propreté tsc 100%, suite de tests 0%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+→ Action : la suite est rouge — corriger la cause avant de considérer un changement terminé (Article 3), jamais contourner un test qui gêne.
+
+== KPI — Mémoire des personnages (memento weight) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucun tour joué).
+
+== Qualité de sortie ==
+Aucun tour ÉLIGIBLE au filet anti-écho cette session (un tour ne l’est que s’il porte une offre avec sa réplique) — rien à mesurer, ce qui n’est jamais 100 %.
+
+== Cohérence logique ==
+Pas de tour enregistré cette session — rien à mesurer.
+
+== Rejouabilité (signal partiel — diversité récente des bonus) ==
+Pas de mesure disponible cette fois (serveur non joignable, ou aucune session en cours).
+
+== KPI global — Performance runtime ==
+N/A cette fois.
+
+== Smart Conso — détail (Smart Conso API + SMART-CONSO-TOKEN) ==
+Conformité API (salves confirmées avant d'agir) : 100% (7/7 salve(s))
+Adoption SMART-CONSO-TOKEN : 1 proposition(s) réellement appliquée(s), réduction moyenne mesurée 13%.
+Fraîcheur des schémas connus : Registre validé pour "claude" (recherche du 2026-09-20) — cohérent avec l'identité déclarée "claude-opus-5".
+
+== KPI global — Smart Conso ==
+71% (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).
+
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+100% des familles ATTEIGNABLES dans ce contexte ont produit une vraie mesure (2/2).
+→ Hors de portée ici, jamais un défaut : Smart Breaker — performance, Qualité de sortie, Cohérence logique, Rejouabilité — ces familles ont besoin d'un serveur de jeu avec du vrai trafic, absent de cette exécution (typiquement une Ronde ou un contrôle après commit). Elles se mesurent pendant une simulation.
+→ Lecture : tout ce qui pouvait être mesuré ici l’a été (2/6 familles au total, le reste hors de portée dans ce contexte) — rien n’indique un tableau de bord cassé.
+
+== Synthèse ==
+🚨 ALERTE TABLEAU DE BORD — suite check-house.mjs rouge.
+
+== SYNTHÈSE COMPACTE (à relayer telle quelle dans la conversation) ==
+Run : manuel-2026-09-27T00:10
+| Famille | KPI global |
+|---|---|
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 50% |
+| Qualité de sortie | N/A |
+| Cohérence logique | N/A |
+| Rejouabilité (partiel) | N/A |
+| Smart Conso | 71% |
+| Couverture du tableau de bord | 100% |
+
+🚨 Points d'attention : suite check-house.mjs rouge.
+
+Historique complet (toutes les exécutions, tous les chiffres) : docs/referentiel/kpi-historique.csv — à envoyer en pièce jointe, jamais collé dans la conversation.
+Copie de présentation HTML régénérée : .kpi-report-latest.html (jamais committée — cf. .gitignore).

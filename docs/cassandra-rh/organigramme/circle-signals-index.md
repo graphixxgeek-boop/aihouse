@@ -6,3 +6,4 @@
 | 2026-09-22T17:42:10.136Z | circle-signal-2026-09-22T17-42-10-136Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — 7 Gardiens sacrés, garde-fou des deux moitiés (tous / seulement eux) en place. |
 | 2026-09-23T21:49:13.832Z | circle-signal-2026-09-23T21-49-13-832Z.txt | Ronde GOAT MAX du 2026-09-23 — Organigramme reconstruit depuis les donnees reelles. |
 | 2026-09-25T14:14:12.639Z | circle-signal-2026-09-25T14-14-12-639Z.txt | Organigramme de l'Agence (CASSANDRA-RH) — Ronde du 2026-09-25. |
+| 2026-09-27T00:12:15.625Z | circle-signal-2026-09-27T00-12-15-625Z.txt | Ronde du 2026-09-27. Organigramme reconstruit depuis les données réelles, rapport produit. |

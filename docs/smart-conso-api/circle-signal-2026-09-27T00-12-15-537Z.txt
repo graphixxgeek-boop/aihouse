@@ -1,0 +1,1 @@
+Ronde du 2026-09-27. 1 relancement confirmé dans les 10 minutes suivant un épuisement réel de quota — un quota journalier ne revient pas en quelques minutes, et le retryDelay de Google est trompeur pour ce cas. À l'avenir : attendre une confirmation de check-gemini-quota.mjs, jamais réessayer à l'aveugle.

@@ -1,0 +1,1 @@
+Ronde du 2026-09-27. Heure lue, SOURCE = système (les deux API de temps rendent HTTP 403 dans ce conteneur, c'est un réglage d'environnement, jamais un défaut de l'outil). 2/2 signaux au vert.

@@ -1,0 +1,60 @@
+
+=== L'AGENT DES NOMS — l'utilisateur baptise, le mécanisme se souvient ===
+
+⚠️  Attention, mes résultats peuvent être inexacts : la NATURE d'une occurrence est déduite de son emplacement et de la forme de sa ligne — un motif, jamais un parseur : une prose vivante rangée dans un dossier d'archives sera classée historique, et c'est le sens sûr de l'erreur, celui qui laisse une mention périmée plutôt que de réécrire une archive. À vérifier avant d'agir, jamais un verdict acquis.
+
+Noms provisoires oubliés (plus de 7 jours) : 0
+⚠️ 2 marque(s) sans date lisible — l'ancienneté n'est pas mesurable, donc AUCUNE alerte n'est rendue plutôt qu'une alerte inventée :
+   · scripts/check-house.mjs
+   · docs/regles-de-travail.md
+
+⚠️ Le registre n'existe pas encore : les 81 noms en service comptent TOUS comme non validés, ce qui est le vrai état des choses et non un artefact.
+   · abraham-les-references
+   · agent-des-noms
+   · agent-du-temps
+   · always-new-code
+   · angel-of-ia-process
+   · api-providers
+   · axa-check
+   · cassandra-rh
+   · check-argus
+   · check-gemini-quota
+   · check-harmonia
+   · check-house
+   · check-level-target
+   · check-profil-utilisateur
+   · check-profile
+   · check-spirit
+   · check-suivi-fidelity
+   · check-tasks-details
+   · circle-process-guardian
+   · circle-tasks
+   · clean-dirty-old
+   · clone-hunter
+   · corpus-mesure
+   · criticite
+   · data-archangel
+   · doc-report
+   · ecotoken
+   · el-professor
+   · execution-profile
+   · find-booster
+   · find-brain
+   · gemini-key-health
+   · god-of-all-process
+   · html-report
+   · hyper-scan-checkpoint
+   · ines-official
+   · install-ci
+   · integration-outil
+   · judge-persona-shared
+   · kpi-report
+   · … et 41 autre(s)
+
+HORS PORTÉE : aucun mécanisme ne peut empêcher un nom d'être choisi — il peut seulement rendre impossible de l'OUBLIER. Et la dette ci-dessus se purge APRÈS la classification, jamais avant : renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien dire.
+
+=== Plan d'action ===
+  → RETENU · 81 nom(s) en service sur 81 jamais validés au registre des baptêmes (le registre n'existe pas encore : le total EST le compte) — ex. abraham-les-references, agent-des-noms, agent-du-temps (+78) — tâche [RECOMMANDEE] : créer le registre des baptêmes, ou décider qu'il n'en faut pas : tant qu'il n'existe pas, ce chiffre mesure son absence et non une dette de nommage
+HORS PORTÉE de ce plan : aucune de ces tâches ne propose un NOM. Les noms se choisissent par l'utilisateur — ce plan prépare sa décision, il ne la prend jamais.
+
+AUTRES COMMANDES : renommage <ancien> <nouveau> (le plan, avant) · verifier <ancien> (le reste, après) · homonymes (un nom, deux définitions)

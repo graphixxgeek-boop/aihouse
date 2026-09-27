@@ -9,15 +9,14 @@ ce qui en a été fait. Un passage sans suite se voit ici, jamais dans la sortie
 | 2026-09-24 | Première mesure historisée, reprise de la Ronde GOAT MAX de la veille : **38 minutes estimées contre 27 réelles, soit +41 % — SUR-ESTIMÉE**. | Conservée telle quelle. **Aucun ajustement appliqué** : il en faut trois, et un facteur calculé sur un point ressemble pourtant à une statistique. C'est aussi ce point qui a donné le seuil de tolérance de ±30 % — dérivé d'une mesure réelle ressentie comme « nettement trop », jamais d'une convention. |
 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
-## Dépôts sans ligne de journal *(reconstitué)*
+## Fichiers
 
-*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
+**4 fichier(s)** dans ce dossier.
 
-**3 dépôt(s)** sans trace.
-
-| Fichier | Date lue dans le nom |
+| Fichier | Sous-dossier |
 |---|---|
-| [circle-signal-2026-09-25T14-14-12-524Z.txt](circle-signal-2026-09-25T14-14-12-524Z.txt) | 2026-09-25 |
+| [circle-signal-2026-09-25T14-14-12-524Z.txt](circle-signal-2026-09-25T14-14-12-524Z.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-523Z.txt](circle-signal-2026-09-27T00-12-15-523Z.txt) | — |
 | [circle-signals-index.md](circle-signals-index.md) | — |
 | [estimations.md](estimations.md) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

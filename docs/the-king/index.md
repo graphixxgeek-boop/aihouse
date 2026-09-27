@@ -11,7 +11,7 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**7 fichier(s)** dans ce dossier.
+**8 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -21,5 +21,6 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 | [circle-signal-2026-09-22T19-45-15-297Z.txt](circle-signal-2026-09-22T19-45-15-297Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-786Z.txt](circle-signal-2026-09-23T21-49-13-786Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-466Z.txt](circle-signal-2026-09-25T14-14-12-466Z.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-411Z.txt](circle-signal-2026-09-27T00-12-15-411Z.txt) | — |
 | [circle-signals-index.md](circle-signals-index.md) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

@@ -7,3 +7,4 @@
 | 2026-09-23T21:49:13.914Z | circle-signal-2026-09-23T21-49-13-914Z.txt | Ronde GOAT MAX du 2026-09-23 — Aucun membre incomplet. |
 | 2026-09-24T21:48:39.584Z | circle-signal-2026-09-24T21-48-39-584Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
 | 2026-09-25T14:14:12.632Z | circle-signal-2026-09-25T14-14-12-632Z.txt | Audit d'intégration (integrationAudit, LE-COORDINATEUR) — Ronde du 2026-09-25. |
+| 2026-09-27T00:12:15.683Z | circle-signal-2026-09-27T00-12-15-683Z.txt | Ronde du 2026-09-27. COUVERT PAR THE-EQUALIZER, qui délègue à integrationAudit() et rend 54/54 membres certifiables sans aucun écart. Appelé directement avec un |

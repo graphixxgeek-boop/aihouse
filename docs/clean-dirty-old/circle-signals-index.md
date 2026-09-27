@@ -7,3 +7,4 @@
 | 2026-09-22T17:42:10.133Z | circle-signal-2026-09-22T17-42-10-133Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — Aucune zone signalée. |
 | 2026-09-23T21:49:13.872Z | circle-signal-2026-09-23T21-49-13-872Z.txt | Ronde GOAT MAX du 2026-09-23 — 4 j depuis le dernier passage journalise. |
 | 2026-09-25T14:14:12.611Z | circle-signal-2026-09-25T14-14-12-611Z.txt | CLEAN-DIRTY-OLD — signal de Ronde du 2026-09-25. |
+| 2026-09-27T00:12:15.426Z | circle-signal-2026-09-27T00-12-15-426Z.txt | Ronde du 2026-09-27. 22 fichiers analysés, aucune zone nettement plus ancienne que le reste. Tendances : 3 points seulement, il en faut 4 — normal pour un outil |

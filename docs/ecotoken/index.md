@@ -48,10 +48,9 @@ reproposer en tête ce qui a déjà été refusé.)*
 
 *(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
 
-**2 dépôt(s)** sans trace.
+**1 dépôt(s)** sans trace.
 
 | Fichier | Date lue dans le nom |
 |---|---|
-| [.dernier-fichier-maitre.local.txt](.dernier-fichier-maitre.local.txt) | — |
-| [circle-signals-index.md](ronde/circle-signals-index.md) | — |
+| [circle-signal-2026-09-27T00-12-15-442Z.txt](ronde/circle-signal-2026-09-27T00-12-15-442Z.txt) | 2026-09-27 |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

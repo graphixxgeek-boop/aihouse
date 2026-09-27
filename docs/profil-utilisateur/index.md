@@ -86,7 +86,7 @@ observations qui n'ont pas été enregistrées avec cette rigueur à l'époque (
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**24 fichier(s)** dans ce dossier.
+**25 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -99,6 +99,7 @@ observations qui n'ont pas été enregistrées avec cette rigueur à l'époque (
 | [circle-signal-2026-09-23T21-49-13-918Z.txt](circle-signal-2026-09-23T21-49-13-918Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-568Z.txt](circle-signal-2026-09-25T14-14-12-568Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-690Z.txt](circle-signal-2026-09-25T14-14-12-690Z.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-640Z.txt](circle-signal-2026-09-27T00-12-15-640Z.txt) | — |
 | [circle-signals-index.md](circle-signals-index.md) | — |
 | [incomprehensions.json](incomprehensions.json) | — |
 | [2026-09-19-2019.md](observations/2026-09-19-2019.md) | observations |

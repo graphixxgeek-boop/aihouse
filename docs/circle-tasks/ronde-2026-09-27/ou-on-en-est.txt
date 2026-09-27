@@ -1,0 +1,13 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il résume un chemin parcouru à partir de lignes de suivi écrites à la main — ce que le suivi dit du projet, jamais ce qui a réellement été fait. À vérifier avant d'agir, jamais un verdict acquis.
+=== OÙ ON EN EST — ce qui a été fait, et ce que le projet y a gagné ===
+
+3 fichier(s) de session lu(s), 866 tâche(s) au total — c'est le dénominateur.
+41 terminée(s) sur la période (2026-09-25, 2026-09-26), 258 ouverte(s).
+   · Outillage : 16
+   · Process et méthode : 10
+   · Non classé : 7
+   · Suivi des tâches : 4
+   · Charte et référentiels : 3
+   · Le jeu : 1
+
+Rapport HTML : /home/user/aihouse/docs/ou-on-en-est/ou-on-en-est.html

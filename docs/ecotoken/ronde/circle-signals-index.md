@@ -6,3 +6,4 @@
 | 2026-09-22T17:42:10.134Z | circle-signal-2026-09-22T17-42-10-134Z.txt | RONDE 2 (conforme au process, ouverte dans les règles) — docs/regles-de-travail.md toujours au-dessus de son budget ; filon mécanique épuisé, la suite du tri es |
 | 2026-09-23T21:49:13.804Z | circle-signal-2026-09-23T21-49-13-804Z.txt | Ronde GOAT MAX du 2026-09-23 — CLAUDE.md : 21593 tokens, 1064 lignes, criticite MAITRE. 4/4 declencheurs verifies cables. ALERTE : docs/referentiel/parametres.m |
 | 2026-09-25T14:14:12.491Z | circle-signal-2026-09-25T14-14-12-491Z.txt | ecotoken — Ronde du 2026-09-25 (rapport complet : docs/ecotoken/scan-2026-09-25T14-05-05.txt). |
+| 2026-09-27T00:12:15.442Z | circle-signal-2026-09-27T00-12-15-442Z.txt | Ronde du 2026-09-27. 5 documents rechargés, 152 590 tokens. Gain mécanique détecté : ~14 600 tk, tous sur lib/reference.ts (un passage décrivant une procédure d |

@@ -1,0 +1,18 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : dimanche 27 septembre 2026 à 00h06 (UTC)
+État du code : 44da038 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — inchangé depuis le samedi 26 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== data-archangel — circulation des données dans l'Agence Codex ===
+Ce que l'équipe produit, qui le relit, et ce que l'agent lui-même n'exploite pas encore.
+
+
+=== 0 index GÉNÉRÉ(S) — uniquement là où il n'en existait aucun ===
+
+
+  elle n'écrit QUE là où aucun index n'existe. Un index déjà écrit à la main n'est jamais remplacé par une liste — la prose qui explique un dossier vaut mieux qu'un catalogue, et l'écraser la ferait disparaître.

@@ -1,0 +1,28 @@
+⚠️  Attention, mes résultats peuvent être inexacts : le poids en tokens est estimé et le rangement d'un bloc se devine — un bloc qui cite un fichier n'y appartient pas forcément. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : dimanche 27 septembre 2026 à 00h07 (UTC)
+État du code : 44da038 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : ecotoken — inchangé depuis le samedi 26 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== ecotoken — poids réel des documents rechargés ===
+
+=== ecotoken · portée global ===
+5 document(s) analysé(s), 152 590 tokens au total.
+Gain détecté : ~14 600 tokens.
+
+  ~ 14600 tk · lib/reference.ts (16222 tk, 1 proposition(s))
+             [faible] mecanise — 1 passage(s) décrivant une procédure déjà automatisée (~14600 tk)
+
+  Aucun gain mécanique détecté sur 4 document(s) — un zéro honnête, jamais une ligne de remplissage : CLAUDE.md, docs/referentiel/parametres.md, docs/referentiel/principes.md, docs/regles-de-travail.md
+
+  ── CLAUDE.md · criticité du fichier : MAITRE — seules les actions à risque « faible » y sont applicables directement
+     📦 manuel logé · « Charte de qualité — à appliquer à chaque itération » (538 tk) — 538 tk d'exploitation d'outil (5 commandes citées) logés dans une section de RÈGLES, alors que docs/referentiel/smart-breaker-historique.md et docs/outil-resilience-api.md traite(nt) déjà le sujet
+     🗂️  rangement à trancher · « undefined » — rangé sous l'Article 31, mais il cite 2 fois l'Article 28 et 0 fois son hôte — est-ce son SUJET (alors il est mal rangé) ou un simple RENVOI (alors il reste) ? L'outil ne peut pas trancher : les deux cas ont la même signature. (aucun token en jeu, c'est la structure)
+     🗂️  rangement à trancher · « undefined » — rangé sous l'Article 27, mais il cite 2 fois l'Article 19 et 0 fois son hôte — est-ce son SUJET (alors il est mal rangé) ou un simple RENVOI (alors il reste) ? L'outil ne peut pas trancher : les deux cas ont la même signature. (aucun token en jeu, c'est la structure)
+     ❓ à trancher · « Référentiel technique — la référence à jour » pèse 1638 tk. Est-ce un corps étranger dans ce document (alors il faut lui créer un domicile) ou son sujet même (alors il reste) ? Aucun document existant ne traite déjà ce sujet — l'outil ne peut pas trancher.
+
+  Portées disponibles : global / partiel / zoome / focus (vocabulaire partagé avec THE-FINAL-JUDGE et SMART-CONSO-TOKEN).

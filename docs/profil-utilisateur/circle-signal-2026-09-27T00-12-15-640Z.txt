@@ -1,0 +1,1 @@
+Ronde du 2026-09-27. check-profil-utilisateur : aucun écart (aucune fiche orpheline, aucun lien mort).

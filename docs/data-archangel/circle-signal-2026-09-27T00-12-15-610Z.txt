@@ -1,0 +1,1 @@
+Ronde du 2026-09-27. Rapport produit. Extension angel-of-index lancée trois fois (--generer --completer --rattraper), 0 index à générer, la réparation d'un catalogue incomplet a dû être corrigée dans l'outil lui-même (cf. systeme-des-index).

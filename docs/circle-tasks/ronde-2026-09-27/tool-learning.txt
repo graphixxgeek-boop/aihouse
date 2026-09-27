@@ -1,0 +1,188 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il juge une trajectoire : sous trois passages il refuse de conclure, et une baisse de trouvailles peut venir d'un code qui s'est amélioré plutôt que d'un outil qui régresse. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : dimanche 27 septembre 2026 à 00h08 (UTC)
+État du code : 44da038 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : cli_direct
+Outil : tool-learning — inchangé depuis le samedi 26 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== TOOL-LEARNING — l'apprentissage de l'outillage, et le mien à son égard ===
+
+Évolutivité, moitié 1 (pouvoir partir)   → SAFE-EXPORT
+Évolutivité, moitié 2 (devenir meilleur) → TOOL-LEARNING
+
+Frontière avec CASSANDRA : elle juge l'ÉTAT et les MOYENS, lui la TRAJECTOIRE et l'USAGE.
+Un outil peut avoir une mémoire et ne jamais la relire — équipé pour elle, immobile pour lui.
+
+· relit-sa-memoire (autonome) — son code lit vraiment le registre qu'il écrit
+· taux-de-trouvaille (autonome) — il trouve proportionnellement plus de vrais problèmes qu'avant
+· faux-positifs-en-baisse (autonome) — il se trompe moins au fil du temps
+· enrichi-par-l-agent (enseigné) — une trace montre que l'agent l'a corrigé ou enrichi, avec la raison
+
+· Aucun de mes verdicts passés n'a été réfuté (ou pas encore assez d'historique).
+
+=== CE QU'IL ME REPROCHE, À MOI (3 passage(s) d'historique) ===
+· Étape manuelle : faite — 3 verdict(s) enregistré(s) — la trajectoire peut se juger dès qu'il y en a trois
+Gravité : RIEN À ME REPROCHER — 1 diagnostic(s) posé(s) par cet outil, jamais suivi(s) d'effet — le plus ancien revu 0 fois sans que je touche à rien : CLONE-HUNTER
+   ⚠️  CLONE-HUNTER : jugé « immobile » le 2026-09-26, aucun commit sur son script depuis, revu 0 fois.
+
+=== PROCESS XP-IA-bonnes-pratiques-et-lecons — LE REGISTRE (docs/referentiel/lecons.md) ===
+35 entrée(s) — 31 leçon(s) payée(s) par une erreur, 4 bonne(s) pratique(s).
+Tenue : 24 portée(s) par un mécanisme réel, 11 sans mécanisme possible (déclaré), 0 sans porteur, 0 porteur(s) fantôme(s).
+Mise en pratique : 35/35 peuvent remonter au bon moment.
+  ✅ L1 (portée) — portée par etatConnexionProcessGardien
+  ✅ L2 (portée) — portée par findDetecteursMuets
+  📄 L3 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L4 (portée) — portée par SANS_BLUEPRINT_ASSUME, SANS_CONSTAT_PROPRE, MOTIF_AVEU_DE_NON_MESURE, PORTEURS_ABSENCE, findRapportsCourtsMaisDenses
+  ✅ L5 (portée) — portée par relanceCircleTasks
+  ✅ L6 (portée) — portée par filtrerDejaTranches, loadMemoire
+  ✅ L7 (portée) — portée par findScriptsMissingFromAgentFiles
+  ✅ L8 (portée) — portée par fusionnerClusters, motifDuCluster
+  ✅ L9 (portée) — portée par findArretPremature
+  📄 L10 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  📄 L11 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L12 (portée) — portée par MOTIF_NIVEAU, parseStandards, formatANiveau
+  📄 L13 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L14 (portée) — portée par doitIntercalerUnTourAutonome
+  📄 L15 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L16 (portée) — portée par findTranscriptsSteriles
+  📄 L17 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L18 (portée) — portée par TOOL_RELIABILITY, nature
+  ✅ L19 (portée) — portée par sansAccents
+  ✅ L20 (portée) — portée par findRaisonsPerdues
+  ✅ L21 (portée) — portée par knownToolSlugsFromPrestations
+  ✅ L22 (portée) — portée par summarizeArgusOutput
+  📄 L23 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L24 (portée) — portée par findRegistriesMissingFromCircle
+  ✅ L25 (portée) — portée par PRECISION_NATURE
+  ✅ L26 (portée) — portée par blocsVersMarkdown
+  ✅ L27 (portée) — portée par findHorodatagesFuturs
+  ✅ L28 (portée) — portée par origineDeLaTache
+  📄 L29 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  ✅ L30 (portée) — portée par estUnPontDeReexport
+  ✅ L31 (portée) — portée par findLignesFantomes
+  ✅ BP1 (portée) — portée par findScriptsMissingFromAgentFiles
+  📄 BP2 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  📄 BP3 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+  📄 BP4 (sans mécanisme) — impossibilité déclarée avec sa raison, jamais tue (ce que L7 prescrit)
+
+Citations des leçons : 35/35 mesurée(s) — hors du registre lui-même, qui les contient toutes par construction.
+
+  LES PLUS CITÉES — celles qui ont vraiment changé la façon d'écrire :
+     216 × L4 — Un garde-fou qui accuse à tort cesse d'être lu
+     156 × L5 — Distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder »
+     138 × L2 — Un mécanisme qui ne sort pas du script est une intention
+      78 × L1 — Une règle écrite que rien ne fait respecter, et une règle appliquée que rien n'a écrite
+      73 × L11 — Un motif qui ne peut PAS matcher ressemble à un motif qui ne matche pas
+
+  ✅ Aucune leçon n'est restée sans citation : toutes ont servi au moins une fois ailleurs que dans le registre.
+
+  LES MOINS CITÉES (mais citées) — à surveiller, jamais à retirer sur ce seul chiffre :
+       5 × L31 — Une règle écrite AILLEURS que dans la charte n'a pas de porteur par défaut, et personne ne s'en aperçoit
+       6 × L27 — Une heure LUE devient fausse en vieillissant : ce n'est pas la lecture qui dérive, c'est sa RÉUTILISATION
+       6 × L25 — Compter combien de lignes reçoivent une étiquette ne dit RIEN de la justesse des étiquettes
+       7 × L26 — Deux rendus du même contenu doivent être vérifiés l'UN CONTRE L'AUTRE, jamais chacun seul
+       8 × L28 — Un chiffre qui BOUGE n'est pas un chiffre qui s'AMÉLIORE
+
+  HORS PORTÉE : « Citée » n'est pas « appliquée » : on peut citer sans suivre, et suivre sans citer. Signal à relire, jamais un verdict — et c'est l'utilisateur qui tranche, à la Ronde.
+
+Journal XP : 14 captation(s) dont 0 « rien à retenir », 1 conclusion(s) sur ma façon de travailler, 0 jugement(s) de l'utilisateur.
+Aucun jugement d'application encore rendu : c'est l'utilisateur qui tranche, à la Ronde.
+Dernière conclusion (2026-09-23) : Mon travers dominant sur cette période est identifiable et il est unique : je construis le mécanisme et je m arrête avant de le brancher. Sept occurrences en une journée, dont une qui répondait à une demande explicite faite le matin même. Le défaut n est pas l oubli — c est que le mécanisme construit RESSEMBLE à un problème traité, ce qui éteint la vigilance juste avant la dernière étape. Corollaire mesuré : chaque détecteur neuf a dû être resserré au moins une fois, ce qui veut dire que mon premier jet sur-accuse systématiquement. Conduite à tenir : ne jamais considérer un mécanisme comme fini tant que je n ai pas vu sa sortie de mes propres yeux dans le rapport réel, et faire tourner chaque détecteur neuf sur le vrai dépôt avant de l appeler terminé.
+Moments où la question se pose : garde-fou-bloque · fin-de-compte-rendu · ronde-et-evaluation.
+
+Chaîne XP : 5/5 maillon(s) branché(s) — la chaîne est complète.
+  ✅ 1/ Découvrir — quelque chose me relance aux moments déclencheurs — xp-lecons est bien présent dans scripts/angel-of-ia-process.mjs
+  ✅ 2/ Enregistrer — la trouvaille est écrite où on la retrouvera — enregistrerXp est bien présent dans scripts/tool-learning.mjs
+  ✅ 3/ Analyser à la Ronde — la période est relue et j'en tire une conclusion — tool-learning est bien présent dans scripts/circle-tasks.mjs
+  ✅ 4a/ Ressortir AVANT la tâche — tool-brain sert ce qui s'applique — leconsPourTache est bien présent dans scripts/tool-brain.mjs
+  ✅ 4b/ Ressortir AU COMMIT — ce qui est passé quand même est rattrapé — leconsPourTache est bien présent dans scripts/hooks/check-last-commit.mjs
+
+Remontées : 413 occasion(s) mesurée(s) depuis la mise en place du compteur.
+  · sert sans effet connu : L1, L2, L3, L4, L5, L8, L10, L11, L12, L13, L15, L24, BP2, BP3, BP4
+  · vivante : L6, L14, L16, L19, L21, L22, L23, L26, L27, L28, L29, L30, L31, BP1
+  · jamais servie : L7, L9, L17, L18, L20, L25
+  · aucune entrée équivalente à une autre : le registre ne dit pas deux fois la même chose.
+
+✅ Aucun terrain coupé : chaque champ Terrain tient sur une ligne et déclare ses fichiers.
+
+6 leçon(s) jamais remontée(s), diagnostiquée(s) contre le vocabulaire réel de 924 tâche(s) :
+  · L7 — adresse-atteignable : ses mots ressortent dans 14 intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs
+    → chercher ailleurs que dans le terrain : le plafond du sélecteur (max=3), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel
+  · L9 — adresse-atteignable : ses mots ressortent dans 83 intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs
+    → chercher ailleurs que dans le terrain : le plafond du sélecteur (max=3), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel
+  · L17 — adresse-atteignable : ses mots ressortent dans 10 intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs
+    → chercher ailleurs que dans le terrain : le plafond du sélecteur (max=3), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel
+  · L18 — adresse-atteignable : ses mots ressortent dans 2 intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs
+    → chercher ailleurs que dans le terrain : le plafond du sélecteur (max=3), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel
+  · L20 — adresse-atteignable : ses mots ressortent dans 24 intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs
+    → chercher ailleurs que dans le terrain : le plafond du sélecteur (max=3), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel
+  · L25 — adresse-atteignable : ses mots ressortent dans 29 intitulé(s) de tâche réel(s) : son terrain est donc joignable, et la cause de son silence est ailleurs
+    → chercher ailleurs que dans le terrain : le plafond du sélecteur (max=3), le poids des entrées qui passent devant, ou une formulation différente au point de remontée réel
+  AUCUN de ces verdicts ne dit « à retirer » : écarter les deux causes mécaniques sert justement à ne jamais retirer une bonne leçon à cause d'une mauvaise adresse.
+
+Remise à niveau du code — 32/32 leçon(s) ont des fichiers de leur terrain touchés depuis qu'elles ont été apprises.
+  · L31 — 217 fichier(s) touché(s) depuis le 2026-09-26 : docs/abraham-les-references/index.md, docs/agence-blueprint.md, docs/agence-installation.md, docs/agent-des-noms/index.md…
+  · L12 — 146 fichier(s) touché(s) depuis le 2026-09-23 : docs/referentiel/a-niveau.md, docs/referentiel/abraham-les-references.md, docs/referentiel/agent-des-noms.md, docs/referentiel/agent-du-temps.md…
+  · L5 — 76 fichier(s) touché(s) depuis le 2026-09-22 : scripts/a-niveau.mjs, scripts/abraham-les-references.mjs, scripts/agent-des-noms.mjs, scripts/agent-du-temps.mjs…
+  · L11 — 69 fichier(s) touché(s) depuis le 2026-09-23 : lib/dialogue.ts, lib/lia.ts, lib/life.ts, lib/quality-metrics.ts…
+  · L2 — 64 fichier(s) touché(s) depuis le 2026-09-23 : scripts/a-niveau.mjs, scripts/abraham-les-references.mjs, scripts/agent-des-noms.mjs, scripts/agent-du-temps.mjs…
+  · L4 — 64 fichier(s) touché(s) depuis le 2026-09-23 : scripts/a-niveau.mjs, scripts/abraham-les-references.mjs, scripts/agent-des-noms.mjs, scripts/agent-du-temps.mjs…
+  … et 26 autre(s).
+Ce relevé pose une QUESTION (« ces fichiers ont-ils été relus à la lumière de la leçon ? »), il n'affirme aucun défaut — le juger demande le passage profond, sur demande.
+  3 leçon(s) non mesurable(s) : BP1 (aucun motif de fichier déclaré dans son terrain) ; BP2 (aucune date d'origine lisible dans l'entrée) ; BP3 (aucune date d'origine lisible dans l'entrée)
+
+=== Plan d'action ===
+  → RETENU · verdict ignoré PAR MOI : CLONE-HUNTER, jugé « immobile » le 2026-09-26, revu 0 fois sans un seul commit depuis — tâche [RECOMMANDEE] : traiter ce que CLONE-HUNTER dit depuis le 2026-09-26, ou écarter son verdict explicitement — le revoir sans agir n'est ni l'un ni l'autre
+  ? À TRANCHER · aucune entrée n'a encore été jugée appliquée ou non par l'utilisateur — le registre grossit sans qu'on sache s'il change quoi que ce soit
+  ? À TRANCHER · L7 n'est jamais remontée en 413 occasions — poids mort dans un registre qui ne cesse de grossir
+  ? À TRANCHER · L9 n'est jamais remontée en 403 occasions — poids mort dans un registre qui ne cesse de grossir
+  ? À TRANCHER · L17 n'est jamais remontée en 355 occasions — poids mort dans un registre qui ne cesse de grossir
+  ? À TRANCHER · L18 n'est jamais remontée en 336 occasions — poids mort dans un registre qui ne cesse de grossir
+  ? À TRANCHER · L20 n'est jamais remontée en 330 occasions — poids mort dans un registre qui ne cesse de grossir
+  ? À TRANCHER · L25 n'est jamais remontée en 96 occasions — poids mort dans un registre qui ne cesse de grossir
+  ? À TRANCHER · L1 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L2 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L3 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L4 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L5 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L8 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L10 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L11 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L12 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L13 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L15 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · L24 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · BP2 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · BP3 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+  ? À TRANCHER · BP4 remonte souvent et n'a jamais été jugée appliquée — ressortir ne suffit visiblement pas
+
+→ aucun diagnostic posé n'est resté lettre morte
+
+=== CE QUE ME COÛTE L'AIDE (mesuré le 2026-09-22, jamais estimé) ===
+Aider un outil ≈ le poids de son script : médiane 3300 tokens, soit ~9 % d'un agent séparé.
+Le frein n'est pas là : son TEST (check-house.mjs) pèse 273000 tokens, 44 % de tout scripts/.
+→ Règle : jamais de lecture intégrale de check-house.mjs pour ajouter un test — tool-brain --file d'abord.
+   CLONE-HUNTER : scripts/CLONE-HUNTER.mjs introuvable — aucune estimation servie à la place d'une mesure absente
+
+=== TENDANCES (mécanisme partagé) ===
+  outils-apprenants : pas assez de points
+  archive-seulement : pas assez de points
+  diagnostics-ignores : pas assez de points
+  verdicts-refutes : pas assez de points
+
+=== LE POIDS DES LEÇONS — 895 rappel(s) comptés dans 84 fichier(s) ===
+  Les 8 les plus rappelées — ce sont les pièges PERMANENTS de ce projet :
+     166 × L4    L4 — Un garde-fou qui accuse à tort cesse d'être lu
+     131 × L5    L5 — Distinguer « je n'ai rien trouvé » de « je n'ai pas pu regarder »
+     100 × L2    L2 — Un mécanisme qui ne sort pas du script est une intention
+      66 × L11   L11 — Un motif qui ne peut PAS matcher ressemble à un motif qui ne matche pas
+      55 × L6    L6 — Une alarme permanente ne se contente pas d'être ignorée, elle fait dépens
+      46 × L1    L1 — Une règle écrite que rien ne fait respecter, et une règle appliquée que r
+      32 × BP4   BP4 — Un détecteur qui n'a jamais mordu ne prouve rien : le vérifier dans les 
+      32 × L7    L7 — Une intention écrite n'a jamais empêché quoi que ce soit
+  Médiane : 11 rappel(s).
+  Aucune entrée sans rappel.
+  HORS PORTÉE : compte des RAPPELS de l'identifiant, jamais des applications : une leçon citée dix fois dans des commentaires a été rappelée dix fois, ce qui ne prouve pas qu'elle a été suivie. Et un zéro ne condamne rien — une entrée écrite il y a une heure ne peut pas encore avoir été citée. Le poids CLASSE, il ne juge pas.

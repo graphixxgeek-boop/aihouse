@@ -1,0 +1,1 @@
+Ronde du 2026-09-27. COUVERT PAR THE-EQUALIZER, qui délègue à integrationAudit() et rend 54/54 membres certifiables sans aucun écart. Appelé directement avec un contexte vide, integrationAudit() rend « table maîtresse illisible » — ce n'est PAS un écart d'intégration, c'est un appel mal formé de ma part, et le dire vaut mieux que de le compter comme un manque.

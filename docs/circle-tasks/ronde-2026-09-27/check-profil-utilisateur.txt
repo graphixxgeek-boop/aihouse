@@ -1,0 +1,8 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il déduit une habitude de travail d'un comptage de traces — une habitude réelle qui ne laisse pas de trace lui échappe entièrement. À vérifier avant d'agir, jamais un verdict acquis.
+=== Garde-fou système de profil utilisateur (docs/profil-utilisateur/) ===
+
+profil utilisateur — 12 fiche(s) réellement analysé(s) — c'est le dénominateur de tout ce qui suit.
+OK — 12 fiche(s) sur disque, toutes référencées dans l'index, aucun lien mort.
+
+=== Plan d'action ===
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.

@@ -1321,12 +1321,21 @@ export function comparerEstimationEtReel(estimeeMinutes, reelleMinutes) {
         : "écart dans la marge : l'estimation a tenu" };
 }
 
+// L'EXCLUSION D'UN ITEM COÛTEUX EST DÉRIVÉE, JAMAIS RECOPIÉE (2026-09-26, Article 24 — et le défaut
+// a été payé le jour même, à l'ouverture d'une Ronde AUTO). `x-port-blindtest` est né `costly: true`
+// (~37 000 jetons, un agent séparé) et personne n'a pensé à l'ajouter à NOT_RECOMMENDED_BY_DEFAULT :
+// il est donc entré dans la sélection AUTO par défaut, exactement ce que le process interdit
+// (« les items costly ne sont jamais cochés par défaut »). Une liste tenue à la main ne peut pas
+// accueillir un membre de plus sans qu'on y pense ; le drapeau `costly`, lui, voyage avec l'item.
+// La raison ÉCRITE reste prioritaire quand elle existe : elle est plus précise que la raison dérivée,
+// et la perdre appauvrirait le message rendu à l'utilisateur.
+export const RAISON_COUTEUX_DERIVEE = "coûteux (agent séparé) — jamais coché par défaut. Exclusion DÉRIVÉE de son drapeau `costly`, jamais d'une liste tenue à la main : un item coûteux ajouté demain est exclu sans que personne n'y pense.";
+
 export function recommendCircleSelection(report) {
-  return report.map((r) => ({
-    ...r,
-    recommande: !(r.id in NOT_RECOMMENDED_BY_DEFAULT),
-    raisonExclusion: NOT_RECOMMENDED_BY_DEFAULT[r.id],
-  }));
+  return report.map((r) => {
+    const raison = NOT_RECOMMENDED_BY_DEFAULT[r.id] ?? (r.costly ? RAISON_COUTEUX_DERIVEE : undefined);
+    return { ...r, recommande: !raison, raisonExclusion: raison };
+  });
 }
 
 // primeAddableItems() — tâche du 2026-09-21 (protocole AUTO/PRIME/GOAT, demande explicite de
@@ -1371,6 +1380,13 @@ export const COSTLY_SUBSTITUTES = {
   "the-final-judge": "network-check-run (synthèse gratuite déjà dans cette Ronde, LE-COORDINATEUR) — jamais un remplacement complet, juste la meilleure alternative gratuite disponible",
   "the-deep-reader": "check-tasks-details / docs/systeme-de-suivi.md (version légère déjà documentée dans organisation-agence.md) — jamais un remplacement complet",
   "hyper-scan-checkpoint-light": "aucun substitut nécessaire — cet item EST déjà la version gratuite, rien de moins coûteux à proposer à la place",
+  // x-port-blindtest (ajouté le 2026-09-26 après que circle-process-guardian ait signalé
+  // `missing-substitute` : l'alerte de fraîcheur aurait littéralement affiché "undefined" le jour où
+  // cet item devient dû). Le substitut est honnêtement PARTIEL, et le dire fait partie du substitut :
+  // safe-export-kits compte les pièces présentes et déclare lui-même ne jamais lire leur contenu —
+  // c'est exactement ce que le test à l'aveugle est le seul à savoir faire. Le proposer à la place
+  // répond "les pièces sont là", jamais "elles valent quelque chose".
+  "x-port-blindtest": "safe-export-kits (gratuit, déjà dans cette Ronde — SAFE-EXPORT compte les pièces du kit) — jamais un remplacement : il dit que les pièces sont là, jamais ce qu'elles valent, qui est précisément l'objet du test à l'aveugle",
 };
 
 // recommendCircleSelectionWithPeriodicity() — étend recommendCircleSelection() SANS le modifier

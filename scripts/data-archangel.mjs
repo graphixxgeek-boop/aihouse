@@ -1169,7 +1169,7 @@ export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = re
       try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
       for (const f of entrees) {
         if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
-        if (f.name === "index.md") continue;
+        if (!estUnDepot(f.name)) continue;
         fichiers.push(`${d}/${f.name}`);
       }
     }
@@ -1238,7 +1238,7 @@ export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = re
       try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
       for (const f of entrees) {
         if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
-        if (f.name === "index.md") continue;
+        if (!estUnDepot(f.name)) continue;
         fichiers.push(`${d}/${f.name}`);
       }
     }
@@ -1309,14 +1309,46 @@ export function sommaireDesFichiers(dossier, fichiers = []) {
 // existe pour conserver. Ce que je sais, et c'est tout ce que j'écris : un fichier a été déposé,
 // tel jour. Les dépôts sans trace sont donc listés à part, marqués RECONSTITUÉ, jamais mêlés aux
 // lignes écrites sur le moment.
+// LE BLOC GÉNÉRÉ ACCUMULE, IL NE REMPLACE PAS (2026-09-27, trouvé en lançant l'outil pendant une
+// Ronde et non en relisant le code — Article 25). Le défaut était une boucle sans fin, et il faut
+// voir les deux moitiés pour comprendre pourquoi : le bloc d'un journal liste les dépôts sans
+// trace ; le passage suivant relisait le fichier ENTIER, bloc compris, n'y trouvait plus que la
+// nouveauté du jour, et RÉÉCRIVAIT le bloc avec elle seule — rendant « sans trace » tout ce que le
+// bloc précédent couvrait. Deux passages consécutifs se contredisaient indéfiniment, et le filet de
+// sécurité refusait le commit à chaque Ronde.
+//
+// LA RÉSOLUTION, et ce n'est pas celle qu'on croit d'abord. La tentation était de ne plus compter
+// le bloc comme une trace (leçon L13 : un registre ne se prouve pas avec ce qu'il vient d'écrire).
+// Mais le bloc DIT ce qu'il est — « la liste est RECONSTITUÉE depuis les fichiers eux-mêmes » — et
+// c'est une trace honnête, juste moins riche qu'une ligne écrite à la main. Le défaut n'était donc
+// jamais de le compter : c'était de le réécrire à neuf. Il se construit désormais contre le texte
+// SANS lui-même, donc il accumule, et la mesure lit le texte entier, donc il compte.
+export function sansLeBlocGenere(texte = "") {
+  const t = String(texte);
+  const i = t.indexOf(DEBUT_BLOC_GENERE);
+  if (i === -1) return t;
+  const j = t.indexOf(FIN_BLOC_GENERE, i);
+  return j === -1 ? t.slice(0, i) : t.slice(0, i) + t.slice(j + FIN_BLOC_GENERE.length);
+}
+
+// CE QUI N'EST PAS UN DÉPÔT, et la règle est DÉRIVÉE plutôt qu'énumérée (Article 24) : un fichier
+// caché est un état local de l'outil (`.dernier-fichier-maitre.local.txt`), et un fichier dont le
+// nom finit par `index.md` est un index de sous-dossier — reprocher à un index de ne pas s'indexer
+// lui-même est exactement le faux rouge qui fait cesser de lire un garde-fou (leçon L4).
+export function estUnDepot(chemin = "") {
+  const base = String(chemin).split("/").pop() ?? "";
+  return !base.startsWith(".") && !base.endsWith("index.md");
+}
+
 export function depotsSansTrace(texte = "", fichiers = []) {
-  return fichiers.filter((f) => {
+  const horsBloc = String(texte);
+  return fichiers.filter(estUnDepot).filter((f) => {
     const base = String(f).split("/").pop();
-    if (String(texte).includes(base)) return false;
+    if (horsBloc.includes(base)) return false;
     const d = base.match(MOTIF_DATE_DE_FICHIER);
     // Sans date lisible, on ne peut pas dire si le journal en parle : on le compte comme sans
     // trace plutôt que de le supposer couvert — l'inverse gonflerait le journal en silence.
-    return !d || !String(texte).includes(d[1]);
+    return !d || !horsBloc.includes(d[1]);
   });
 }
 
@@ -1339,7 +1371,19 @@ export function sommaireDesDepotsSansTrace(dossier, sansTrace = []) {
   return l.join("\n");
 }
 
-export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, writeImpl = writeFileSync, etats = ["sans contrat", "en retard"] } = {}) {
+// « incomplet » A REJOINT LES ÉTATS RÉPARABLES LE 2026-09-27, et le défaut a été trouvé en lançant
+// l'outil pour de vrai pendant une Ronde, jamais en relisant le code (Article 25). Un catalogue qui
+// gagne un fichier passe en « incomplet », et AUCUN des deux états d'origine ne le couvrait : le
+// bloc généré restait figé sur la liste de la veille, pour toujours. Concrètement, le filet de
+// sécurité refusait le commit à chaque Ronde, puisque chaque outil qui tourne dépose un fichier de
+// plus — le geste même que la Ronde consiste à faire rendait la Ronde impossible à clore.
+//
+// LA CONDITION QUI PROTÈGE LA PROSE ÉCRITE À LA MAIN : on ne régénère que si l'index porte DÉJÀ le
+// bloc généré. Là où il en porte un, le fichier manquant est forcément dans la partie écrite par la
+// machine, et la réécrire est exactement ce qu'elle promet. Là où il n'y en a pas, le catalogue est
+// tenu à la main : le compléter d'autorité écraserait un choix humain, ce que cet outil refuse
+// depuis le premier jour.
+export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, writeImpl = writeFileSync, etats = ["sans contrat", "en retard", "incomplet"] } = {}) {
   if (!mesure?.mesurable) return { mesurable: false, pourquoi: mesure?.pourquoi ?? "aucune mesure fournie" };
   const repares = [];
   for (const ligne of mesure.lignes) {
@@ -1352,7 +1396,7 @@ export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync
       try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
       for (const f of entrees) {
         if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
-        if (f.name === "index.md") continue;
+        if (!estUnDepot(f.name)) continue;
         fichiers.push(`${d}/${f.name}`);
       }
     }
@@ -1360,10 +1404,16 @@ export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync
     const chemin = `${ligne.dossier}/index.md`;
     let texte = "";
     try { texte = readFileImpl(join(root, chemin), "utf8"); } catch { continue; }
+    // Un catalogue « incomplet » sans bloc généré est tenu à la main : jamais réécrit (cf. ci-dessus).
+    if (ligne.etat === "incomplet" && !texte.includes(DEBUT_BLOC_GENERE)) continue;
+    // CONTRE LE TEXTE SANS SON PROPRE BLOC : c'est ce qui fait qu'il ACCUMULE au lieu de se
+    // remplacer (cf. sansLeBlocGenere ci-dessus). Bâti contre le texte entier, il ne garderait que
+    // la nouveauté du jour et perdrait tout ce qu'il avait déjà reconstitué.
+    const aReconstituer = ligne.etat === "en retard" ? depotsSansTrace(sansLeBlocGenere(texte), fichiers) : [];
     const contenu = ligne.etat === "en retard"
-      ? sommaireDesDepotsSansTrace(ligne.dossier, depotsSansTrace(texte, fichiers))
+      ? sommaireDesDepotsSansTrace(ligne.dossier, aReconstituer)
       : sommaireDesFichiers(ligne.dossier, fichiers);
-    if (ligne.etat === "en retard" && !depotsSansTrace(texte, fichiers).length) continue;
+    if (ligne.etat === "en retard" && !aReconstituer.length) continue;
     writeImpl(join(root, chemin), poserLeBlocGenere(texte, contenu), "utf8");
     repares.push({ chemin, etat: ligne.etat, fichiers: fichiers.length });
   }

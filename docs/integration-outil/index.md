@@ -22,7 +22,7 @@ nouvel outil » de `PROCESSES` (`scripts/god-of-all-process.mjs`), surveillée p
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**6 fichier(s)** dans ce dossier.
+**7 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -31,5 +31,6 @@ nouvel outil » de `PROCESSES` (`scripts/god-of-all-process.mjs`), surveillée p
 | [circle-signal-2026-09-23T21-49-13-914Z.txt](circle-signal-2026-09-23T21-49-13-914Z.txt) | — |
 | [circle-signal-2026-09-24T21-48-39-584Z.txt](circle-signal-2026-09-24T21-48-39-584Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-632Z.txt](circle-signal-2026-09-25T14-14-12-632Z.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-683Z.txt](circle-signal-2026-09-27T00-12-15-683Z.txt) | — |
 | [circle-signals-index.md](circle-signals-index.md) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

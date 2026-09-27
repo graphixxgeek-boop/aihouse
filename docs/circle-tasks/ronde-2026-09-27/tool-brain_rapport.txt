@@ -1,0 +1,46 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : associe une tâche à des outils par mots-clés — il peut passer à côté de l'outil réellement utile. À vérifier avant d'agir, jamais un verdict acquis.
+=== tool-brain — rapport de Ronde ===
+Date : 2026-09-27T00:11:03.754Z
+
+4 outil(s) du catalogue jamais sollicité(s) : check-spirit, kpi-report, sauvegarde-projet, check-spirit-mjs.
+1 outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : check-house-mjs — leur silence n'est pas une inaction.
+
+
+📗 2 outil(s) qu'AUCUN compteur d'appels ne peut voir : the-final-judge, the-deep-reader. Deux causes possibles, et elles appellent deux gestes différents : soit le travail passe par un agent séparé et le script ne fait que mettre en forme son rapport (rien à corriger — ce qui dit s'il a tourné est son registre `docs/<outil>/`), soit sa commande n'est écrite NULLE PART dans les documents, et c'est un vrai manque (constat déjà remonté séparément par l'iceberg de CASSANDRA). Dans les deux cas ce n'est pas zéro, c'est PAS MESURABLE.
+
+✨ SIGNE TRÈS POSITIF — 782 appel(s) de ma propre initiative, sur 33 outil(s) différent(s).
+   (ni item de Ronde, ni lancé par un crochet : 12 outil(s) dictés par un process et 7 automatiques sont retirés du compte)
+   Les plus sollicités : data-archangel (138) · check-tasks-details (96) · safe-export (75) · integration-outil (58) · smart-conso-token (39) · argus (37) · harmonia (36) · le-classificateur (34)
+   HORS PORTÉE : Un appel spontané prouve une INITIATIVE, jamais qu'elle était la bonne : lancer dix fois le mauvais outil compte pareil. Et l'origine « spontane » du vocabulaire reste inutilisée — ce signal est DÉRIVÉ de « cli_direct », il ne la remplace pas.
+
+🔴 1 origine(s) d'usage sur 6 qu'aucun chemin automatique ne produit et que le journal n'a JAMAIS portée : spontane.
+   Une catégorie inécrite se lit « zéro » exactement comme une catégorie réellement inutilisée —
+   et tout outil qui la lit rend un verdict sur du vide. À câbler ou à retirer, jamais à laisser en l'état.
+   HORS PORTÉE : Le journal prouve qu'une origine EST produisible ; son silence ne prouve jamais qu'aucun chemin n'existe — recordToolUsage() est exportée, un appel délibéré peut toujours écrire n'importe laquelle. Ce qui est signalé, c'est une origine qu'aucun chemin AUTOMATIQUE ne produit et que rien n'a jamais écrite : lue par un outil, elle rendra toujours zéro.
+
+COMBINAISONS du catalogue — réalisées en FAIT, jamais déclarées :
+- Pack Sentinelle (3 outils) : JAMAIS réalisé
+- Pack Panorama (8 outils) : JAMAIS réalisé
+- Pack Éclaireur (3 outils) : 36 fois
+- Pack Rénovation (2 outils) : 82 fois
+- Pack Décollage : PAS une combinaison — une de ses entrées est un document, pas un outil
+
+Outils les moins sollicités (total cumulé, jamais remis à zéro) :
+- check-spirit : 0 sollicitation(s)
+- kpi-report : 0 sollicitation(s)
+- sauvegarde-projet : 0 sollicitation(s)
+- check-spirit-mjs : 0 sollicitation(s)
+- the-final-judge : 0 sollicitation(s)
+- the-deep-reader : 0 sollicitation(s)
+- check-house-mjs : 0 sollicitation(s)
+- messages-courts : 1 sollicitation(s)
+- find-deep-booster : 1 sollicitation(s)
+- ou-on-en-est : 2 sollicitation(s)
+
+Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :
+- tool-brain a été sollicité 153 fois, mais jamais de ma propre initiative (toujours un item de Ronde ou un crochet) — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.
+
+=== Plan d'action ===
+  → RETENU · 4 outil(s) du catalogue jamais sollicité(s) : check-spirit, kpi-report, sauvegarde-projet, check-spirit-mjs — tâche [RECOMMANDEE] : les lancer une fois pour de vrai, ou décider de les retirer — un outil construit et jamais appelé n'a jamais protégé personne (leçon L2), et le défaut est du côté de l'agent, jamais de l'outil
+  → RETENU · auto-diagnostic : tool-brain a été sollicité 153 fois, mais jamais de ma propre initiative (toujours un item de Ronde ou un crochet) — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique. — tâche [RECOMMANDEE] : traiter dans le périmètre de tool-brain lui-même, jamais en élargissant le diagnostic au reste du paysage

@@ -1,0 +1,92 @@
+⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : dimanche 27 septembre 2026 à 00h06 (UTC)
+État du code : 44da038 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : cli_direct
+Outil : safe-export — inchangé depuis le samedi 26 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+· cible « agence » : l'outillage de travail est-il exportable vers un autre projet ?
+· cible « projet » : une autre IA reprendrait-elle ce code sans le casser ?
+
+SAFE-EXPORT — 81 blueprint(s) réellement analysé(s) — c'est le dénominateur de tout ce qui suit.
+
+--- LE CODE PARTIRAIT-IL ? 12 candidat(s) ---
+Jusqu'ici SAFE-EXPORT ne vérifiait que des DOCUMENTS : un outil pouvait avoir un blueprint parfait et
+planter à la première seconde dans un dépôt neuf. Ces lignes posent une QUESTION, jamais un verdict —
+savoir si un couplage au jeu est un défaut ou la nature même de l'outil demande de lire ce qu'il fait.
+· scripts/always-new-code.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un module du moteur de jeu, une page ou une route du site, un personnage du jeu, une mécanique narrative) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/check-argus.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un module du moteur de jeu) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/check-gemini-quota.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un module du moteur de jeu) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/check-level-target.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un module du moteur de jeu, une page ou une route du site) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/check-profil-utilisateur.mjs — chemins de CE projet écrits en dur et non paramétrables (docs/profil-utilisateur/index.md) : à passer en option avec une valeur par défaut, comme le reste du paysage
+· scripts/clean-dirty-old.mjs — chemins de CE projet écrits en dur et non paramétrables (docs/clean-dirty-old/index.md) : à passer en option avec une valeur par défaut, comme le reste du paysage
+· scripts/find-booster.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un personnage du jeu, une mécanique narrative) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/hooks/check-last-commit.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un module du moteur de jeu, les archives de simulation) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/ines-official.mjs — chemins de CE projet écrits en dur et non paramétrables (docs/ines-official/index.md) : à passer en option avec une valeur par défaut, comme le reste du paysage
+· scripts/kpi-report.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (un module du moteur de jeu, une page ou une route du site, un personnage du jeu) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/route-booster.mjs — nomme un artefact du JEU en dur et n'offre aucune cible paramétrable (une page ou une route du site) — partirait-il tel quel sur un autre projet, ou faut-il rendre ses cibles paramétrables ?
+· scripts/the-king.mjs — chemins de CE projet écrits en dur et non paramétrables (docs/philosophie-et-politique.md) : à passer en option avec une valeur par défaut, comme le reste du paysage
+  fuites de spécificité : 0 fichier(s)
+  blueprints mal construits : 19
+  dépendances à un outillage particulier : 1
+
+23 écart(s) à regarder (0 écarté(s) avec votre accord explicite, jamais reposé(s)).
+
+📖 VOCABULAIRE — mesuré sur 105 document(s) normatif(s) : 0 emploi(s) ambigu(s).
+
+🧭 X6 — 98 garde-fou(s) exporté(s) sans une ligne d'explication, sur 116 fichier(s) source et 27 garde-fou(s) nommé(s) par un registre réel.
+   Ce que ce chiffre dit, et rien de plus : une absence d'EXPLICATION, jamais une absence de RAISON — juger si un commentaire explique vraiment reste hors de portée d'une mécanique.
+   Pourquoi ce périmètre et pas toutes les fonctions : la version large rend 298 cas, un mur plutôt qu'un signal. L'Article 27 craint précisément le garde-fou, qui ressemble toujours à du zèle tant qu'on ignore le bug qu'il a coûté.
+   • scripts/abraham-les-references.mjs:568 — findPairesRedondantes()
+   • scripts/agent-des-noms.mjs:401 — findHomonymesExportes()
+   • scripts/always-new-code.mjs:67 — findThemesDivergingFromHarmonia()
+   • scripts/angel-of-ia-process.mjs:163 — checkConsultationOrder()
+   • scripts/angel-of-ia-process.mjs:266 — auditWorkingRules()
+   • scripts/angel-of-ia-process.mjs:523 — findJugesSansOutil()
+   • scripts/angel-of-ia-process.mjs:566 — findConstatsSansChiffre()
+   • scripts/cassandra-rh.mjs:2270 — findFamillesDivergentesParOutil()
+   • scripts/cassandra-rh.mjs:2648 — findOutilsAMainSansCommande()
+   • scripts/cassandra-rh.mjs:2735 — auditDuRefus()
+   … +88 autre(s).
+
+--- LES GARDIENS SACRÉS DÉCLARENT-ILS CE QU'ILS ONT REGARDÉ ? ---
+✅ Les 7 Gardien(s) sacré(s) vérifié(s) déclarent tous leur corpus avant de conclure.
+
+=== Plan d'action ===
+⏫ PLAN PRIORITAIRE — Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils.
+  → RETENU · docs/agence-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/agence-blueprint.md réellement exportable
+  → RETENU · docs/agence-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/agence-blueprint.md réellement exportable
+  → RETENU · docs/api-providers-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/api-providers-blueprint.md réellement exportable
+  → RETENU · docs/build-verified-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/build-verified-blueprint.md réellement exportable
+  → RETENU · docs/check-house-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/check-house-blueprint.md réellement exportable
+  → RETENU · docs/check-profil-utilisateur-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/check-profil-utilisateur-blueprint.md réellement exportable
+  → RETENU · docs/gemini-key-health-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/gemini-key-health-blueprint.md réellement exportable
+  → RETENU · docs/judge-persona-shared-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/judge-persona-shared-blueprint.md réellement exportable
+  → RETENU · docs/messages-courts-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/messages-courts-blueprint.md réellement exportable
+  → RETENU · docs/modes-de-travail-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/modes-de-travail-blueprint.md réellement exportable
+  → RETENU · docs/pnpm-install-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/pnpm-install-blueprint.md réellement exportable
+  → RETENU · docs/rapport-gros-prompt-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/rapport-gros-prompt-blueprint.md réellement exportable
+  → RETENU · docs/report-template-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/report-template-blueprint.md réellement exportable
+  → RETENU · docs/run-simulation-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/run-simulation-blueprint.md réellement exportable
+  → RETENU · docs/sauvegarde-projet-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/sauvegarde-projet-blueprint.md réellement exportable
+  → RETENU · docs/the-deep-reader-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/the-deep-reader-blueprint.md réellement exportable
+  → RETENU · docs/the-ghost-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/the-ghost-blueprint.md réellement exportable
+  → RETENU · docs/x-port-blindtest-blueprint.md — ne se déclare pas générique (aucun détecteur de fuite ne le regardera — il pourra contenir n'importe quoi sans que rien ne le dise) — tâche [OBLIGATOIRE] : rendre docs/x-port-blindtest-blueprint.md réellement exportable
+  → RETENU · docs/x-port-blindtest-blueprint.md — section « probleme » absente (sans le problème résolu, personne ne saura si cet outil vaut la peine d'être repris) — tâche [OBLIGATOIRE] : rendre docs/x-port-blindtest-blueprint.md réellement exportable
+  → RETENU · docs/check-house-blueprint.md:undefined — jargon propre au projet : « crochet pre-commit et **refuse le commit** quand il échoue. » — tâche [OBLIGATOIRE] : rendre docs/check-house-blueprint.md réellement exportable
+  → RETENU · kpi-report — aucun blueprint (aucun blueprint : cet outil ne partira pas avec l'Agence le jour de l'export) — tâche [OBLIGATOIRE] : rendre kpi-report réellement exportable
+  → RETENU · memento — aucun blueprint (aucun blueprint : cet outil ne partira pas avec l'Agence le jour de l'export) — tâche [OBLIGATOIRE] : rendre memento réellement exportable
+  → RETENU · the-screener-capture — aucun blueprint (aucun blueprint : cet outil ne partira pas avec l'Agence le jour de l'export) — tâche [OBLIGATOIRE] : rendre the-screener-capture réellement exportable
+
+· Aucune sonde proposée : aucun fichier ne concentre 3 écarts ou plus — des écarts éparpillés sont du bruit ordinaire, jamais un signal
+  fuites : stable
+  blueprints-mal-construits : en dégradation
+  dependances-outillage : en dégradation
+  blueprints-total : en hausse (non jugée)

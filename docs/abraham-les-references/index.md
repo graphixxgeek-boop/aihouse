@@ -14,15 +14,15 @@ ce qui en a été fait. Un passage sans suite se voit ici, jamais dans la sortie
 | 2026-09-24 | `docs/regles-de-travail.md` — classification (le second document, l'utilisateur ayant insisté sur les deux) | 19 règles · 96 % de couverture · **aucune critique** · 3 🟠 · 8 🟡 · 8 🟢 · une seule règle sans le moindre porteur | **Contre-intuitif et utile** : le document « secondaire » est mieux protégé que la charte elle-même. Six de ses règles hautes sont DEMANDÉES par `angel-of-ia-process`, mécanisme que la charte, elle, n'utilise presque pas. La suite est le nivellement (chantier 2), pas une correction d'urgence : à niveler, ce n'est pas un bug. |
 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
-## Dépôts sans ligne de journal *(reconstitué)*
+## Fichiers
 
-*(Ces passages ont laissé un fichier et aucune ligne. La liste est RECONSTITUÉE depuis les fichiers eux-mêmes : elle dit qu'un dépôt a eu lieu, jamais ce que l'outil a mesuré ce jour-là — cette donnée-là est perdue, et l'inventer serait pire que de la déclarer perdue.)*
+**5 fichier(s)** dans ce dossier.
 
-**3 dépôt(s)** sans trace.
-
-| Fichier | Date lue dans le nom |
+| Fichier | Sous-dossier |
 |---|---|
 | [classification-CLAUDE.html](classification-CLAUDE.html) | — |
 | [classification-docs-regles-de-travail.html](classification-docs-regles-de-travail.html) | — |
-| [documents-jumeaux-2026-09-26.txt](documents-jumeaux-2026-09-26.txt) | 2026-09-26 |
+| [documents-jumeaux-2026-09-26.txt](documents-jumeaux-2026-09-26.txt) | — |
+| [documents-jumeaux-2026-09-27.txt](documents-jumeaux-2026-09-27.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-393Z.txt](ronde/circle-signal-2026-09-27T00-12-15-393Z.txt) | ronde |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

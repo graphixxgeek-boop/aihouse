@@ -19,7 +19,7 @@ vivent dans `.smart-conso-token-history.json`, local et non versionné.)*
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**11 fichier(s)** dans ce dossier.
+**12 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -27,6 +27,7 @@ vivent dans `.smart-conso-token-history.json`, local et non versionné.)*
 | [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-846Z.txt](circle-signal-2026-09-23T21-49-13-846Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-542Z.txt](circle-signal-2026-09-25T14-14-12-542Z.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-551Z.txt](circle-signal-2026-09-27T00-12-15-551Z.txt) | — |
 | [circle-signals-index.md](circle-signals-index.md) | — |
 | [claude-md-narrative-candidates.md](scans/claude-md-narrative-candidates.md) | scans |
 | [scan-2026-09-20-02-08.md](scans/scan-2026-09-20-02-08.md) | scans |

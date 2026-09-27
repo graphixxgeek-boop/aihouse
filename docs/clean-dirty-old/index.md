@@ -11,7 +11,7 @@ trois questions déléguées — un passage sans zone signalée ne mérite pas d
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**7 fichier(s)** dans ce dossier.
+**8 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -20,6 +20,7 @@ trois questions déléguées — un passage sans zone signalée ne mérite pas d
 | [circle-signal-2026-09-22T17-42-10-133Z.txt](circle-signal-2026-09-22T17-42-10-133Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-872Z.txt](circle-signal-2026-09-23T21-49-13-872Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-611Z.txt](circle-signal-2026-09-25T14-14-12-611Z.txt) | — |
+| [circle-signal-2026-09-27T00-12-15-426Z.txt](circle-signal-2026-09-27T00-12-15-426Z.txt) | — |
 | [circle-signals-index.md](circle-signals-index.md) | — |
 | [serie.json](serie.json) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

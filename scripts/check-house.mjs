@@ -5878,7 +5878,7 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
     THEME_ORDER, groupCircleReportByTheme, oldestOpenTaskDate,
     buildCircleRunSummaryText, buildCircleRunSummaryHtml, findRegistriesMissingFromCircle, CIRCLE_AUTO_COVERED_REGISTRIES,
     findPromisedFilesMissing, CIRCLE_PROMISED_FILES,
-    recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, primeAddableItems,
+    recommendCircleSelection, NOT_RECOMMENDED_BY_DEFAULT, RAISON_COUTEUX_DERIVEE, primeAddableItems,
     costlyItemDueStatus, COSTLY_DUE_THRESHOLD_DAYS, recommendCircleSelectionWithPeriodicity, COSTLY_SUBSTITUTES,
     recordCircleItemReport, CIRCLE_REPORT_FOLDERS, recordSnapshotIfChanged,
   } = await import('../scripts/circle-tasks.mjs');
@@ -7107,6 +7107,21 @@ const {referenceSections}=await import('../.sites-runtime/test-reference.mjs');c
   assert.equal(recommended.find((r) => r.id === 'referentiel').raisonExclusion, NOT_RECOMMENDED_BY_DEFAULT.referentiel, 'an excluded item must carry its own documented reason verbatim, never a silent exclusion with no explanation');
   assert.equal(recommended.find((r) => r.id === 'profil').raisonExclusion, undefined, 'a recommended item must carry no exclusion reason at all, never a fabricated empty string');
   assert.equal(recommended.length, report.length, 'recommendCircleSelection() must annotate every real item from the report, never drop or add one');
+  // L'EXCLUSION DES ITEMS COÛTEUX EST DÉRIVÉE, JAMAIS RECOPIÉE (2026-09-26, Article 24). Le défaut
+  // réel : `x-port-blindtest` est né `costly: true` le 2026-09-26 et personne ne l'a ajouté à
+  // NOT_RECOMMENDED_BY_DEFAULT — il est donc entré dans la sélection AUTO par défaut, alors que le
+  // process écrit noir sur blanc que les items coûteux n'y entrent jamais. Une liste tenue à la main
+  // ne peut pas accueillir un membre de plus sans qu'on y pense ; le drapeau, lui, voyage avec l'item.
+  assert.equal(recommended.filter((r) => r.costly && r.recommande).length, 0, 'no costly item may ever sit in the default AUTO selection — this is measured on the REAL CIRCLE_ITEMS, so a costly item added tomorrow fails here the day it is added, instead of quietly costing a 37k-token agent spawn in someone\'s AUTO Ronde');
+  assert.ok(!recommended.find((r) => r.id === 'x-port-blindtest').recommande, 'x-port-blindtest specifically — the item that actually slipped through — must be excluded, and by derivation rather than by being appended to the hand-kept list');
+  // Les deux contre-tests (BP4) : un cas qu'il DOIT attraper, et un cas voisin qu'il doit laisser passer.
+  const derive = recommendCircleSelection([{ id: 'inconnu-couteux', costly: true }, { id: 'inconnu-gratuit', costly: false }, { id: 'inconnu-sans-drapeau' }]);
+  assert.equal(derive[0].recommande, false, 'a brand-new costly item absent from NOT_RECOMMENDED_BY_DEFAULT must be excluded on its flag alone — this is the exact case the hand-kept list missed');
+  assert.equal(derive[0].raisonExclusion, RAISON_COUTEUX_DERIVEE, 'the derived exclusion must carry its own written reason, never a silent exclusion the user cannot question');
+  assert.equal(derive[1].recommande, true, 'the near case must pass: an item explicitly flagged costly:false is a perfectly ordinary recommended item, never swept up by the new rule');
+  assert.equal(derive[2].recommande, true, 'the other near case must pass too: an item carrying no costly flag at all is free by default, exactly as before this rule existed');
+  assert.equal(recommendCircleSelection([{ id: 'the-final-judge', costly: true }])[0].raisonExclusion, NOT_RECOMMENDED_BY_DEFAULT['the-final-judge'], 'when a written reason already exists it wins over the derived one — it is more specific, and losing it would make the message rendered to the user poorer');
+
 
   // primeAddableItems()/costlyItemDueStatus()/recommendCircleSelectionWithPeriodicity() (2026-09-21,
   // protocole AUTO/PRIME/GOAT demandé explicitement par l'utilisateur).
@@ -8193,6 +8208,55 @@ async function testSystemeDesIndex() {
   });
   assert.equal(fixtureTrouee.aTraiter.length, 1, 'MUST CATCH on a fixture: an index that says nothing about its two files is still a finding, so the zero above measures a clean repository rather than a blind detector (leçon L13)');
   assert.equal(NATURES_D_INDEX.length, 4, 'and the four states are declared rather than hidden in a condition');
+
+  // reparerLesIndex() ET L'ÉTAT « incomplet » (2026-09-27) — trouvé en lançant l'outil pour de vrai
+  // pendant une Ronde, jamais en relisant le code (Article 25). Chaque outil qui tourne dépose un
+  // fichier, le catalogue de son dossier passe « incomplet », et AUCUN des deux états réparables
+  // d'origine ne le couvrait : le bloc généré restait figé sur la liste de la veille. Le geste même
+  // que la Ronde consiste à faire rendait donc la Ronde impossible à clore, puisque l'assertion
+  // ci-dessus refusait le commit.
+  const { reparerLesIndex: rli } = da;
+  const ecritsIndex = [];
+  const incompletAvecBloc = {
+    mesurable: true,
+    lignes: [{ dossier: 'docs/faux-catalogue', etat: 'incomplet', nature: 'catalogue' }],
+  };
+  const rep = rli(incompletAvecBloc, {
+    listDirImpl: () => [{ name: 'a.txt', isDirectory: () => false }, { name: 'b.txt', isDirectory: () => false }],
+    readFileImpl: () => `Un peu de prose.\n${da.DEBUT_BLOC_GENERE}\n| [a.txt](a.txt) |\n${da.FIN_BLOC_GENERE}`,
+    writeImpl: (chemin, contenu) => ecritsIndex.push({ chemin, contenu }),
+  });
+  assert.deepEqual(rep.repares.map((r) => r.etat), ['incomplet'], 'MUST CATCH: a catalogue that gained a file and already carries the generated block must be refreshed — otherwise its block stays frozen on yesterday\'s list forever');
+  assert.ok(ecritsIndex[0].contenu.includes('b.txt') && ecritsIndex[0].contenu.includes('Un peu de prose.'), 'the refresh must add the missing file AND leave the hand-written prose around the markers untouched');
+  // Le contre-test qui compte le plus : un catalogue tenu ENTIÈREMENT à la main n'est jamais réécrit.
+  const mainLibre = [];
+  const rep2 = rli(incompletAvecBloc, {
+    listDirImpl: () => [{ name: 'a.txt', isDirectory: () => false }, { name: 'b.txt', isDirectory: () => false }],
+    readFileImpl: () => 'Un index écrit à la main, qui cite a.txt et explique pourquoi.',
+    writeImpl: (chemin, contenu) => mainLibre.push({ chemin, contenu }),
+  });
+  assert.deepEqual([rep2.repares, mainLibre], [[], []], 'MUST NOT TOUCH: an incomplete catalogue with no generated block is hand-kept — completing it by force would overwrite a human choice, which this tool has refused since day one');
+
+  // LE BLOC GÉNÉRÉ ACCUMULE (2026-09-27) — la boucle sans fin, trouvée en lançant l'outil pendant une
+  // Ronde. Le bloc d'un journal listait les dépôts sans trace ; le passage suivant relisait le
+  // fichier entier, bloc compris, n'y voyait plus que la nouveauté du jour, et réécrivait le bloc
+  // avec elle seule — rendant « sans trace » tout ce que le bloc précédent couvrait. Deux passages
+  // se contredisaient indéfiniment et le commit était refusé à chaque Ronde.
+  const journalAvecBloc = { mesurable: true, lignes: [{ dossier: 'docs/faux-journal', etat: 'en retard', nature: 'journal' }] };
+  const ecritsJournal = [];
+  da.reparerLesIndex(journalAvecBloc, {
+    listDirImpl: () => [{ name: 'r-2026-09-01.txt', isDirectory: () => false }, { name: 'r-2026-09-02.txt', isDirectory: () => false }],
+    readFileImpl: () => `Journal tenu à la main.\n${da.DEBUT_BLOC_GENERE}\n| [r-2026-09-01.txt](r-2026-09-01.txt) |\n${da.FIN_BLOC_GENERE}`,
+    writeImpl: (chemin, contenu) => ecritsJournal.push(contenu),
+  });
+  assert.ok(ecritsJournal[0].includes('r-2026-09-01.txt') && ecritsJournal[0].includes('r-2026-09-02.txt'), 'the rebuilt block must KEEP what it had already reconstituted and ADD the new deposit — rebuilt against the full text it would keep only the newcomer, and the two passes would contradict each other forever');
+  const strippe = da.sansLeBlocGenere(`avant\n${da.DEBUT_BLOC_GENERE}\ndedans\n${da.FIN_BLOC_GENERE}\naprès`);
+  assert.ok(strippe.includes('avant') && strippe.includes('après') && !strippe.includes('dedans'), 'stripping the generated block must leave the hand-written text on both sides intact and nothing of the machine-written middle');
+  // estUnDepot() — ce qui n'est PAS un dépôt, dérivé plutôt qu'énuméré (Article 24).
+  assert.deepEqual(
+    ['rapport-2026-09-27.txt', '.dernier-fichier-maitre.local.txt', 'ronde/circle-signals-index.md', 'index.md'].map(da.estUnDepot),
+    [true, false, false, false],
+    'a hidden file is local tool state and an "…index.md" is a sub-folder index: reproaching an index for not indexing itself is the false red that makes a guard stop being read (leçon L4)');
 
   console.log("Passed: le système des index (2026-09-26, son point 4 — « vérifier l'indexation générale, est-ce que tous les fichiers sont bien équipés comme il se doit ? »). LE CHIFFRE BRUT ÉTAIT SPECTACULAIRE ET À MOITIÉ FAUX : 755 fichiers déposés dans docs/, 177 nommés dans leur index, soit 23 %. Le lire comme « 77 % de cassé » aurait été la faute que ce dépôt combat le plus souvent, parce qu'un index n'a pas UN contrat mais TROIS. Un CATALOGUE nomme ses fichiers, donc une absence est un trou. Un JOURNAL tient une ligne datée par passage et ne nomme rien, donc ce qui se mesure est le nombre de lignes contre le nombre de dépôts — ecotoken en est l'exemple : 36 lignes pour 45 fichiers, neuf passages sans trace, et pas 45. Une PROSE ne promet rien du tout, donc elle ne peut ni être à jour ni être en retard : vingt-quatre index sont dans ce cas, dont un sur un dossier de vingt-cinq fichiers, et c'est exactement la leçon L13 — une preuve satisfaite par le registre vide qu'elle doit remplir ne prouve rien. LE PIRE CAS TOUCHAIT LA CHARTE : docs/referentiel/ portait 112 fichiers et AUCUN index, alors que CLAUDE.md ordonne de vérifier une liste « contre la table des matières réelle de ce dossier » — une règle qui désignait un document inexistant depuis toujours. Les huit dossiers sans index ont été générés, et la génération REFUSE d'écraser un index existant : les quarante-trois écrits à la main expliquent souvent leur dossier mieux qu'une liste ne le ferait, et les remplacer aurait effacé ce travail. Dossiers à jour : 7 avant, 15 après.");
 }
@@ -12531,6 +12595,31 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // rebrancher dans le main() de son fichier ne suffisait pas : c'est ici, dans la suite exécutée à
   // chaque commit, qu'il devient impossible de l'oublier à nouveau.
   assert.deepEqual(findItemsMissingFromChangelog(), [], 'checked live against the real CIRCLE_ITEMS: every Ronde item must carry its "pourquoi" in CIRCLE_ITEMS_CHANGELOG — this guard existed for a full day with zero callers while eight items joined the Ronde without one');
+
+  // findRapportsHorsRonde() (2026-09-27) — SA DEMANDE à l'ouverture de cette Ronde : « c'est le moment
+  // de voir si toutes nos demandes de rapports à integrer dans la ronde ont bien été prises en
+  // compte ». Aucun des quatre garde-fous existants ne partait de cette population-là : ils partent
+  // des DOSSIERS qui existent, ou des ITEMS qui existent. Celui-ci part des outils qui PRODUISENT un
+  // rapport, donc il voit l'outil qui écrit un vrai rapport que personne ne réclame — et qui ne sera
+  // donc jamais livré.
+  //
+  // CE QUE SA PREMIÈRE VERSION A COÛTÉ, gardé ici comme contre-test vivant : elle lisait la PROSE du
+  // suivi et rendait dix accusations, dont DIX fausses (leçon L4). Sa deuxième tenait sa propre table
+  // de dispenses, et les cinq entrées écrites à la main étaient DÉJÀ dans
+  // CIRCLE_AUTO_COVERED_REGISTRIES, avec une raison meilleure (Article 24/19). Ce qu'il lit
+  // aujourd'hui, ce sont deux registres réels, jamais une troisième copie.
+  const { findRapportsHorsRonde: frhr } = await import('../scripts/circle-process-guardian.mjs');
+  const reelHorsRonde = frhr();
+  assert.equal(reelHorsRonde.mesurable, true, 'measured live against the real repository: the census must be readable, since an unreadable one returns "not measured" and that must never be mistaken for "nothing orphaned"');
+  assert.deepEqual(reelHorsRonde.orphelins, [], 'no tool may write a real report that no Ronde item ever claims — such a report is archived and never delivered, which is exactly what the user asked to rule out');
+  assert.ok(reelHorsRonde.reclames > 0 && reelHorsRonde.dispenses.length > 0, 'the zero above must be a measured zero, not an empty population: real reports must be found on both sides, claimed and exempted (leçon L13 — a proof satisfied by the empty registry it must fill proves nothing)');
+  assert.ok(reelHorsRonde.dispenses.every((d) => typeof d.pourquoi === 'string' && d.pourquoi.length > 20), 'every exemption must carry a written reason of real substance — an exemption without a reason is not a decision, it is an abandonment in disguise (Article 28)');
+  // Les deux contre-tests (BP4) : un cas qu'il DOIT attraper, un voisin qu'il doit laisser passer.
+  const fantome = frhr({ recensement: [{ chemin: 'scripts/rapport-fantome.mjs', type: 'commande-documentee', classes: [], source: 'renderHtmlReport({})' }] });
+  assert.deepEqual(fantome.orphelins.map((o) => o.slug), ['rapport-fantome'], 'a brand-new tool that produces a report and appears in no table at all must be caught — this is the whole point, and a detector that never bites proves nothing');
+  const muet = frhr({ recensement: [{ chemin: 'scripts/muet.mjs', type: 'commande-documentee', classes: [], source: 'console.log(1)' }] });
+  assert.deepEqual(muet.orphelins, [], 'the near case must pass: a command that produces no report at all owes the Ronde nothing, and accusing it would be the false red that makes a guard stop being read');
+  assert.equal(frhr({ recensement: [] }).mesurable, false, 'an unreadable census must return "not measured" with its reason, never a clean-looking zero');
 
   // Les cinq raccordements mordent chacun pour de vrai (BP4), sur des fixtures qui reproduisent
   // exactement les manques rencontrés en intégrant THE-EQUALIZER.

@@ -28,7 +28,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import {
-  CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, ITEMS_SANS_DOSSIER_ASSUME, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, loadLastRun, findRegistriesMissingFromCircle,
+  CIRCLE_ITEMS, CIRCLE_REPORT_FOLDERS, ITEMS_SANS_DOSSIER_ASSUME, NOT_RECOMMENDED_BY_DEFAULT, COSTLY_SUBSTITUTES, CIRCLE_AUTO_COVERED_REGISTRIES, loadLastRun, findRegistriesMissingFromCircle,
   // LA BARRIÈRE D'OUVERTURE ET LE SUIVI DES QUESTIONS (câblés ici le 2026-09-23). Ces mécanismes
   // vivaient dans circle-tasks.mjs et dans docs/circle-process-detail.txt (Parties 8 et 11) — le
   // gardien du process, lui, n'en savait rien : `grep` n'en trouvait pas une seule mention. Un
@@ -42,6 +42,11 @@ import {
 } from "./circle-tasks.mjs";
 import { findOrphanReportFiles, REGISTRIES, findEcrivainsDeRegistreSansContribution } from "./doc-report.mjs";
 import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS, pairesParJaccard, printReliabilityNotice } from "./lib-shell.mjs";
+// LE RECENSEMENT RÉEL DES SCRIPTS, lu plutôt que recopié (Article 24) : c'est LE-CLASSIFICATEUR qui
+// sait ce qu'un fichier EST (commande, bibliothèque, crochet) et ce qu'il SAIT FAIRE, et
+// findRapportsHorsRonde() a besoin des deux pour ne pas réclamer une place de Ronde à une
+// bibliothèque. Aucun cycle : le-classificateur n'importe rien d'ici.
+import { recenserLesScripts } from "./le-classificateur.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -1045,6 +1050,123 @@ export function findStaleItemCountReferences(text, realCount) {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// UN RAPPORT QUI EXISTE, ET QUE LA RONDE NE RÉCLAME À PERSONNE (2026-09-27)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE, à l'ouverture de cette Ronde : « verifie simplement que TOUS les rapports seront bien
+// livrés, il y en a de nombreux. c'est le moment de voir si toutes nos demandes de rapports à
+// integrer dans la ronde ont bien été prises en compte. »
+//
+// CE QUE PERSONNE NE COUVRAIT, et il faut voir le trou précisément pour croire qu'il en reste un
+// après quatre garde-fous. findRegistriesMissingFromCircle() part des DOSSIERS qui existent sur le
+// disque : un outil qui produit un rapport sans avoir de registre lui est invisible.
+// findItemsMissingFromChangelog() et les [item-sans-signal] partent, eux, d'items qui existent
+// DÉJÀ dans la Ronde. Aucun des trois ne part de la population qu'il vient de nommer : les outils
+// qui PRODUISENT un rapport. Un outil peut donc écrire un vrai rapport, utile, complet — et n'être
+// réclamé par aucun item, donc n'être jamais livré, sans qu'une seule ligne ne s'en plaigne.
+//
+// LA PREMIÈRE VERSION LISAIT LA PROSE DU SUIVI, et elle est jetée plutôt que corrigée : elle
+// cherchait les lignes promettant une place dans la Ronde, et sur dix accusations, DIX étaient
+// fausses — elle confondait « cette ligne parle de la Ronde et nomme un script » avec « cette ligne
+// promet une place à ce script ». C'est exactement la leçon L4 : un garde-fou qui accuse à tort
+// cesse d'être lu, et le prix se paie sur les vrais cas qu'il aurait trouvés ensuite. La question
+// se répond dans le CODE, où elle ne se devine pas.
+//
+// DEUX REGISTRES LUS, JAMAIS RECOPIÉS (Article 24) : le recensement réel des scripts
+// (recenserLesScripts(), LE-CLASSIFICATEUR — qui dit lesquels sont des commandes et lesquels sont
+// des bibliothèques) et CIRCLE_ITEMS. Un outil né demain entre dans la population sans que personne
+// n'y pense.
+export const MOTIF_SCRIPT_CITE = /scripts\/([a-z0-9][a-z0-9-]*)\.mjs/gi;
+
+// PRODUIRE UN RAPPORT, ça se lit dans le code : l'outil appelle le gabarit unifié. Jamais une liste
+// de noms — c'est la sonde qui décide, et elle vaut pour un outil écrit demain.
+export const MOTIF_PRODUIT_UN_RAPPORT = /renderHtmlReport\s*\(|deposerRapport|ecrireRapport/;
+
+// LES DISPENSES, chacune avec sa raison ÉCRITE et vérifiable — une dispense sans raison n'est pas
+// une décision, c'est un oubli déguisé (Article 28). Elles ne sont PAS une liste d'outils : chaque
+// entrée est une SONDE sur le recensement réel, donc elle s'applique d'elle-même à un nouveau venu
+// qui tombe dans le même cas.
+export const DISPENSES_DE_RONDE = [
+  { cle: "gardien-sacre", pourquoi: "Gardien sacré du code : il tourne GRATUITEMENT à CHAQUE commit par le crochet post-commit (Article 20) — lui donner en plus un item périodique dirait deux fois la même chose, moins souvent",
+    sonde: ({ slug, gardiens }) => gardiens.has(slug) },
+  { cle: "crochet-ou-filet", pourquoi: "crochet git ou filet de sécurité : il s'exécute déjà à chaque commit, jamais à la main — un item de Ronde ne changerait rien à sa fréquence",
+    sonde: ({ type }) => type === "crochet" || type === "filet-de-securite" },
+  { cle: "bibliotheque", pourquoi: "bibliothèque, pas une commande : elle n'a aucune porte d'entrée, donc rien à lancer dans une Ronde — ce qu'elle produit est produit par celui qui l'appelle",
+    sonde: ({ type }) => String(type ?? "").startsWith("bibliotheque") },
+  { cle: "coute-des-appels-api", pourquoi: "coûte de VRAIS appels à l'API Gemini (Article 8/22) : la charte ordonne de le lancer à la main après consultation de Smart Conso API, jamais en routine — un item recommandé par défaut contredirait cette règle",
+    sonde: ({ classes }) => classes.has("appelle-une-api-payante") || classes.has("appelle-une-api") },
+  // LE REGISTRE RÉEL DES DISPENSES, LU PLUTÔT QUE REDOUBLÉ (Article 24/19). Première version de ce
+  // détecteur : il tenait sa propre table de cinq dispenses « sert un autre process », écrite à la
+  // main. Vérification faite, les CINQ étaient déjà déclarées, avec une raison meilleure que la
+  // mienne, dans CIRCLE_AUTO_COVERED_REGISTRIES — soixante entrées tenues depuis des semaines. Un
+  // second registre pour la même question n'aurait pas protégé la Ronde : il aurait divergé du
+  // premier au premier ajout, et c'est très exactement le défaut que cet Article interdit.
+  { cle: "couverture-declaree", pourquoi: "déjà dispensé d'item de Ronde par une décision ÉCRITE dans CIRCLE_AUTO_COVERED_REGISTRIES — la raison propre à cet outil y est écrite, et c'est elle qui fait foi",
+    sonde: ({ slug, couverts }) => slug in couverts, raisonDe: ({ slug, couverts }) => couverts[slug] },
+];
+
+// scriptsAtteintsParLaRonde() — DÉRIVÉ des items réels, jamais une liste tenue à la main : un item
+// ajouté demain fait entrer son script ici sans que personne n'y pense (Article 24). Trois sources,
+// parce qu'un item nomme son script à trois endroits différents selon son âge : son `execute` (le
+// cas courant), son id (quand l'id EST le nom du script) et son dossier de dépôt.
+export function scriptsAtteintsParLaRonde({ items = CIRCLE_ITEMS, folders = CIRCLE_REPORT_FOLDERS } = {}) {
+  const atteints = new Set();
+  const avaler = (texte) => { for (const m of String(texte ?? "").matchAll(MOTIF_SCRIPT_CITE)) atteints.add(m[1].toLowerCase()); };
+  for (const i of items) {
+    avaler(i.execute); avaler(i.label); avaler(i.cout);
+    if (i.id) atteints.add(String(i.id).toLowerCase());
+  }
+  for (const d of Object.values(folders)) {
+    const slug = String(d).replace(/^docs\//, "").split("/")[0];
+    if (slug) atteints.add(slug.toLowerCase());
+  }
+  return atteints;
+}
+
+// findRapportsHorsRonde() — QUATRE ÉTATS, jamais deux : réclamé par la Ronde · dispensé avec sa
+// raison · ORPHELIN (le seul vrai signalement) · pas mesurable. Le dernier n'est pas du remplissage :
+// sans lui, « 0 orphelin » se lirait comme « tout est couvert » alors qu'il pourrait vouloir dire
+// « je n'ai pas pu lire le recensement » — et les deux se ressemblent trait pour trait.
+export function findRapportsHorsRonde({ recensement = null, items = CIRCLE_ITEMS, folders = CIRCLE_REPORT_FOLDERS, gardiens = null, root = ROOT, lire = readFileSync, dispenses = DISPENSES_DE_RONDE, couverts = CIRCLE_AUTO_COVERED_REGISTRIES } = {}) {
+  let lignes = recensement;
+  if (!lignes) { try { lignes = recenserLesScripts().lignes; } catch { lignes = null; } }
+  if (!Array.isArray(lignes) || !lignes.length) {
+    return { mesurable: false, pourquoi: "recensement des scripts illisible — ce n'est PAS « aucun rapport orphelin », c'est « je n'ai rien pu lire »" };
+  }
+  const setGardiens = gardiens ?? new Set(Object.keys(GARDIEN_DOMAINS));
+  const atteints = scriptsAtteintsParLaRonde({ items, folders });
+  const orphelins = []; const dispenses_ = []; let reclames = 0; let sansRapport = 0;
+  for (const l of lignes) {
+    const chemin = l.chemin ?? l.fichier ?? "";
+    const slug = String(chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "").toLowerCase();
+    if (!slug) continue;
+    let source = l.source;
+    if (source == null) { try { source = lire(join(root, chemin), "utf8"); } catch { source = ""; } }
+    if (!MOTIF_PRODUIT_UN_RAPPORT.test(source)) { sansRapport += 1; continue; }
+    if (atteints.has(slug)) { reclames += 1; continue; }
+    const contexte = { slug, type: l.type, classes: new Set(l.classes ?? []), gardiens: setGardiens, couverts };
+    const d = dispenses.find((x) => { try { return x.sonde(contexte); } catch { return false; } });
+    // `raisonDe` quand la dispense sait rendre LA raison propre à cet outil-là (cas du registre
+    // déclaré) ; la raison générique de la sonde sinon. Jamais une dispense sans raison affichable.
+    if (d) { dispenses_.push({ slug, cle: d.cle, pourquoi: (d.raisonDe ? d.raisonDe(contexte) : null) || d.pourquoi }); continue; }
+    orphelins.push({ slug, type: l.type });
+  }
+  return {
+    mesurable: true, orphelins, dispenses: dispenses_, reclames, sansRapport,
+    horsPortee: "Il dit qu'un rapport n'est réclamé par AUCUN item, jamais qu'il DEVRAIT l'être : ce jugement-là reste humain. Et il ne lit que scripts/ — un rapport produit ailleurs lui échappe.",
+  };
+}
+
+export function formatRapportsHorsRondeLines(r) {
+  if (!r?.mesurable) return [`Rapports hors Ronde : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [];
+  for (const o of r.orphelins) L.push(`- [rapport-hors-ronde] ${o.slug} produit un vrai rapport et AUCUN item de la Ronde ne le réclame — il ne sera donc jamais livré par une Ronde. À raccorder (node scripts/circle-process-guardian.mjs ${o.slug}) ou à dispenser avec sa raison écrite.`);
+  L.push(`${r.orphelins.length ? "" : "✅ "}${r.reclames} rapport(s) réclamé(s) par un item · ${r.dispenses.length} dispensé(s) avec raison écrite · ${r.orphelins.length} orphelin(s) · ${r.sansRapport} script(s) qui ne produisent aucun rapport.`);
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LE PROCESS D'INTÉGRATION À LA RONDE (2026-09-23) — SÉPARÉ de l'intégration à l'Agence
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1222,6 +1344,13 @@ function main() {
   const sansChangelog = findItemsMissingFromChangelog();
   for (const f of sansChangelog) console.log(`- [${f.check}] ${f.message}`);
   if (!mapDrift.length && !countDrift.length && !sansChangelog.length) console.log("Aucun écart de maintenance détecté (tables associées cohérentes, aucun compte figé obsolète, aucun item sans son pourquoi).");
+
+  // CÂBLÉ ICI DÈS SA NAISSANCE (2026-09-27) : un détecteur qui ne sort pas de son script est une
+  // intention, pas un mécanisme (leçon L2) — et ce fichier en a déjà hébergé un qui a veillé dans
+  // le vide pendant une journée entière (findItemsMissingFromChangelog, câblé après coup).
+  console.log("\n=== Tous les rapports de l'Agence sont-ils réclamés par la Ronde ? (2026-09-27) ===");
+  const horsRonde = findRapportsHorsRonde();
+  for (const l of formatRapportsHorsRondeLines(horsRonde)) console.log(l);
 
   console.log("\n=== Raccordement d'un item à la Ronde (process séparé de l'intégration à l'Agence) ===");
   const cible = process.argv[2];
