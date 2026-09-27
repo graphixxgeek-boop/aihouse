@@ -1265,7 +1265,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const combien = Number((process.argv.find((a) => a.startsWith("--combien=")) || "").split("=")[1]) || 4;
     // GARDE-FOU NON NÉGOCIABLE : cette passe écrit dans de vrais fichiers. Si le dépôt porte déjà
     // des modifications, une restauration ratée deviendrait indiscernable du travail en cours.
-    const sale = execSync("git status --porcelain", { cwd: ROOT }).toString().trim();
+    // LE REGISTRE D'ALERTES EST STRUCTURELLEMENT SALE APRÈS CHAQUE COMMIT, et le découvrir a coûté
+    // deux commits pour rien : le crochet post-commit relance l'enquête, l'enquête dépose ses
+    // alertes, donc le fichier est modifié juste après le commit qui vient de l'enregistrer. Exiger
+    // qu'il soit propre rendait la passe de robustesse INLANÇABLE. C'est un journal du dernier
+    // passage, jamais du code — il ne peut donc pas être cassé par une mutation, et l'ignorer ici
+    // ne relâche rien de la protection réelle.
+    const TOLERES = ["docs/abraham-les-references/alertes.json", "docs/ezechiel-les-tests/mesures.json", "docs/ezechiel-les-tests/historique.json", "docs/ezechiel-les-tests/robustesse.json"];
+    const sale = execSync("git status --porcelain", { cwd: ROOT }).toString().trim()
+      .split("\n").filter((l) => l.trim() && !TOLERES.includes(l.slice(3).trim())).join("\n");
     if (sale) {
       console.log("🚨 REFUS — le dépôt porte des modifications non commitées :");
       console.log(sale.split("\n").slice(0, 10).map((l) => `   ${l}`).join("\n"));
