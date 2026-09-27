@@ -1235,13 +1235,26 @@ export function fusionnerDepot(existantes = [], outil, nouvelles = [], { mainten
 // L'ÉCRITURE, volontairement séparée de la fusion : la fusion est pure et donc testable au
 // caractère près, l'écriture est le seul endroit qui touche au disque. Un outil qui dépose ne peut
 // jamais effacer les alertes d'un autre — le paramètre `outil` est obligatoire pour cette raison.
+// L'HORODATAGE EST ARRONDI À LA JOURNÉE, et ce n'est pas une approximation par paresse : le crochet
+// post-commit relance l'enquête, donc le registre était réécrit JUSTE APRÈS le commit qui venait de
+// l'enregistrer, et le dépôt n'était jamais propre. Ça a rendu la passe de robustesse inlançable
+// une fois. La granularité « jour » suffit exactement à la seule mesure qui lit ces dates — « cette
+// alerte traîne depuis plus de sept jours » — et rend deux passages du même jour IDENTIQUES.
+export function jourDe(horodatage) { return String(horodatage).slice(0, 10); }
+
 export function deposerAlertes(outil, alertes = [], { root = RACINE_ALERTES, lire = null, ecrire = null, maintenant = new Date().toISOString() } = {}) {
+  const jour = jourDe(maintenant);
   const registre = lireRegistre({ root, lire });
-  const fusionnees = fusionnerDepot(registre.alertes, outil, alertes, { maintenant });
-  const passages = { ...registre.passages, [outil]: { quand: maintenant, combien: alertes.length } };
+  const fusionnees = fusionnerDepot(registre.alertes, outil, alertes, { maintenant: jour });
+  const passages = { ...registre.passages, [outil]: { quand: jour, combien: alertes.length } };
+  const contenu = JSON.stringify({ passages, alertes: fusionnees }, null, 2);
+  // ON N'ÉCRIT QUE SI LE CONTENU A CHANGÉ. Réécrire à l'identique salit le dépôt sans rien
+  // apprendre à personne, et un dépôt en permanence sale finit par ne plus être regardé.
+  const actuel = (lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } }))(FICHIER_ALERTES);
+  if (actuel === contenu) return { passages, alertes: fusionnees, ecrit: false };
   const ecrireF = ecrire ?? ((f, c) => { mkdirSync(join(root, "docs/abraham-les-references"), { recursive: true }); writeFileSync(join(root, f), c); });
-  ecrireF(FICHIER_ALERTES, JSON.stringify({ passages, alertes: fusionnees }, null, 2));
-  return { passages, alertes: fusionnees };
+  ecrireF(FICHIER_ALERTES, contenu);
+  return { passages, alertes: fusionnees, ecrit: true };
 }
 
 export function alertesQuiTrainent(alertes = [], { maintenant = Date.now(), jours = JOURS_AVANT_DE_TRAINER } = {}) {

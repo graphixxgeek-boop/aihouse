@@ -16056,6 +16056,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // LA FRONTIÈRE RESTE TENUE : Abraham RASSEMBLE, il ne réanalyse jamais.
   assert.ok(abA.synthetiserLesAlertes([{ outil: 'x', cle: 'a', depuis: '2026-09-27T00:00Z', gravite: 'bloquante', constat: 'c' }]).horsPortee.includes("n'analyse jamais à la place"), "the summary must state its own limit: Abraham gathers, he never re-does MOÏSE's or Ezechiel's analysis — doing so would be exactly the overlap the three perimeters forbid");
 
+  // ---- LE REGISTRE NE SE RÉÉCRIT PLUS À L'IDENTIQUE (2026-09-27, tâche #1035). Le crochet
+  // post-commit relance l'enquête, donc le registre était réécrit JUSTE APRÈS le commit qui venait
+  // de l'enregistrer : le dépôt n'était jamais propre, et ça a rendu la passe de robustesse
+  // inlançable une fois. La granularité « jour » suffit à la seule mesure qui lit ces dates.
+  assert.equal(abA.jourDe('2026-09-27T18:45:12.345Z'), '2026-09-27', 'the timestamp is rounded to the DAY: two deposits on the same day must produce an identical file');
+  let ecrits = 0;
+  const faux = { contenu: null };
+  const opts = () => ({ lire: () => faux.contenu, ecrire: (_f, c) => { faux.contenu = c; ecrits++; }, maintenant: '2026-09-27T10:00:00Z' });
+  abA.deposerAlertes('x', [{ cle: 'a', constat: 'c' }], opts());
+  assert.equal(ecrits, 1, 'the first deposit writes');
+  const second = abA.deposerAlertes('x', [{ cle: 'a', constat: 'c' }], { ...opts(), maintenant: '2026-09-27T23:59:00Z' });
+  assert.equal(ecrits, 1, 'MUST NOT REWRITE: the same alerts later the SAME DAY produce an identical file — rewriting it identically dirties the repository without teaching anyone anything, and a permanently dirty repository stops being looked at');
+  assert.equal(second.ecrit, false, 'and the caller is told nothing was written, rather than left to guess');
+  abA.deposerAlertes('x', [{ cle: 'b', constat: 'autre' }], { ...opts(), maintenant: '2026-09-27T23:59:00Z' });
+  assert.equal(ecrits, 2, 'MUST STILL WRITE: a real change in the alerts is written the same day — narrowing the rule to « once a day » would silence a finding that appeared an hour later');
+
   console.log("Passed: le registre d'alertes partagé (2026-09-27, tâche #1027) — « Abraham n'est jamais loin, il veille » cesse d'être une intention et devient un fichier. L'organisation vient de l'utilisateur, en fenêtre dédiée : Abraham est le point d'entrée de l'assainissement à grande échelle, MOÏSE et Ezechiel restent convocables seuls sur leur périmètre, et chacun DÉPOSE son verdict au lieu qu'Abraham le relance — le relancer aurait refait leur analyse, donc exactement le chevauchement que la frontière des trois périmètres interdit, et sur le filet ça aurait coûté une exécution complète à chaque consultation. Trois invariants sont verrouillés ici. Un outil remplace SES alertes et ne touche jamais à celles des autres, sans quoi le dernier passé effacerait en silence les trouvailles de tout le monde. Une alerte qui revient garde sa date de PREMIÈRE apparition, sans quoi une alerte qui traîne depuis trois semaines aurait l'air neuve chaque jour et la veille ne verrait jamais rien traîner — c'est la seule chose que ce chapeau apporte et que personne d'autre ne voit. Et un outil passé SANS RIEN TROUVER est enregistré comme tel : un registre vide rend PAS MESURÉ, parce que « aucune alerte » et « personne n'a regardé » se ressemblent trait pour trait.");
 }
 
