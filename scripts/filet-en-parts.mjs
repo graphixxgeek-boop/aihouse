@@ -36,10 +36,15 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { cpus } from "node:os";
-import { TOUCHES_L_ETAT_COMMUN } from "./ezechiel-les-tests.mjs";
+import { TOUCHES_L_ETAT_COMMUN, filetResolu } from "./ezechiel-les-tests.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
 
+// MÊME DÉFAUT QUE CELUI D'EZECHIEL, CORRIGÉ POUR LA CLASSE ET PAS POUR L'OCCURRENCE (leçon L37) :
+// un chemin de CE dépôt écrit en constante rendrait ce runner inutilisable ailleurs. La détection
+// n'est pas réécrite ici, elle est IMPORTÉE d'Ezechiel (Article 24 : un registre se lit, il ne se
+// recopie pas) — le jour où Ezechiel apprend une piste de plus, ce runner en hérite sans qu'on y
+// touche. Ce qui reste ci-dessous est le dernier recours, jamais la vérité.
 export const FILET = "scripts/check-house.mjs";
 export const MESURES = "docs/ezechiel-les-tests/mesures.json";
 export const PARTS_PAR_DEFAUT = 4;
@@ -203,7 +208,9 @@ async function main() {
   printReportHeader({ tool: "filet-en-parts", title: "FILET-EN-PARTS — le filet lancé en plusieurs parts simultanées", scriptPath: "scripts/filet-en-parts.mjs" });
   recordCliUsage("filet-en-parts");
   const combien = Number((process.argv.find((a) => a.startsWith("--parts=")) ?? "").split("=")[1]) || Math.min(PARTS_PAR_DEFAUT, cpus().length);
-  const src = readFileSync(new URL(`../${FILET}`, import.meta.url), "utf8");
+  const cheminDuFilet = filetResolu();
+  console.log(`\nFilet : ${cheminDuFilet}`);
+  const src = readFileSync(new URL(`../${cheminDuFilet}`, import.meta.url), "utf8");
   const blocs = blocsDeNiveauZero(src);
   const finDuPreambule = blocs[0] ? blocs[0].debut - 1 : 0;
   let mesures = [];

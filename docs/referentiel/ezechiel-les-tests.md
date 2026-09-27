@@ -114,3 +114,30 @@ raison vivent dans le code, et la leçon générale dans `docs/referentiel/lecon
 identifié — mais il change la NATURE du filet, qui ne protégerait plus tout à chaque commit. Cette
 décision appartient à l'utilisateur (Article 16), et elle est posée dans le plan d'action de la
 recherche.
+
+## Le filet ne s'écrit plus en dur, il se trouve (2026-09-27, tâche #1030)
+
+**Sa question ÉTAIT la tâche** : « est-ce que Ezechiel saura sinon quel fichier est le filet de
+sécurité du code, s'il prend les choses en cours ». La réponse était NON : `FILET` était une
+constante, donc sur n'importe quel autre dépôt l'outil cherchait un fichier inexistant.
+
+**Trois pistes, et leur ORDRE est un jugement sur leur fiabilité** :
+
+| Piste | Force | Pourquoi cet ordre |
+|---|---|---|
+| `--filet <chemin>` donné à la main | certaine | c'est une décision humaine, elle prime sur tout |
+| le fichier que le crochet de pré-commit LANCE | forte | c'est la définition même d'un filet : ce qui doit passer avant d'enregistrer |
+| la commande de test DÉCLARÉE par le gestionnaire de paquets | moyenne | une déclaration, pas un fait |
+| le plus gros fichier porteur d'assertions (≥ 20) | faible | une devinette, et elle se présente comme telle dans le rapport |
+
+**Trois états, jamais deux** : trouvé (avec la piste ET sa force, imprimées en tête du rapport),
+pas trouvé (avec **les quatre essais**, parce qu'un « non » sans ses essais ne s'instruit pas), et
+jamais un chemin rendu au hasard — un outil qui devine son fichier d'étude rend un rapport
+entièrement faux sans jamais le signaler.
+
+**Sur ce dépôt, la détection retrouve `scripts/check-house.mjs` PAR LE CROCHET**, jamais par le
+dernier recours — c'est la seule vérification qui prouve quelque chose, sinon la détection
+répéterait simplement la constante.
+
+**filet-en-parts hérite de la même détection par IMPORT, jamais par copie** (Article 24) : le jour
+où une piste de plus est ajoutée ici, l'autre outil en profite sans qu'on y touche.

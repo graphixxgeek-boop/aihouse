@@ -16190,6 +16190,50 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE FILET NE S'ÉCRIT PLUS EN DUR, IL SE TROUVE (2026-09-27, tâche #1030)
+// ————————————————————————————————————————————————————————————————————————
+// SA QUESTION ÉTAIT LA TÂCHE : « est-ce que Ezechiel saura sinon quel fichier est le filet de
+// sécurité du code, s'il prend les choses en cours ». Un chemin de CE dépôt écrit en constante
+// rendait l'outil inutilisable ailleurs — l'Article 24 pris en défaut sur l'outil déclaré fini le
+// jour même. Trois pistes, et leur ORDRE est un jugement sur leur fiabilité, jamais un hasard.
+{
+  const e = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // LA PREUVE LA PLUS FORTE EST CE QUE LE CROCHET LANCE VRAIMENT, parce que c'est la définition même
+  // d'un filet : ce qui doit passer avant d'enregistrer. Encore faut-il ne pas confondre le filet
+  // avec l'outillage que le même crochet lance à côté.
+  assert.deepEqual(e.filetDuCrochet('NODE_V8_COVERAGE=x node scripts/check-house.mjs\nnode scripts/hooks/banniere.mjs\nnpx tsc --noEmit'), ['scripts/check-house.mjs'], 'un crochet lance plusieurs choses : le filet est celui qui ne trahit pas un rôle d\'outillage, et la bannière ou un crochet ne doivent jamais être pris pour lui');
+  assert.deepEqual(e.filetDuPaquet({ scripts: { test: 'node test/suite.mjs', lint: 'eslint .' } }), ['test/suite.mjs'], 'la commande de test déclarée par le gestionnaire de paquets est la deuxième piste — une DÉCLARATION, donc plus faible que ce qui est réellement lancé');
+
+  // LA TROISIÈME PISTE EST UNE DEVINETTE, ET ELLE DOIT LE DIRE. Un fichier qui porte trois
+  // assertions n'est pas un filet de sécurité ; le seuil existe pour que « le plus gros » veuille
+  // dire quelque chose plutôt que « le moins petit de rien du tout ».
+  const gros = 'assert.ok(1);\n'.repeat(50);
+  assert.equal(e.filetLePlusGros({ 'a.js': 'assert(1);', 'b.js': gros })?.chemin, 'b.js', 'à défaut de crochet et de paquet, le plus gros porteur d\'assertions est le meilleur candidat restant');
+  assert.equal(e.filetLePlusGros({ 'a.js': 'assert(1);', 'b.js': 'assert(2);' }), null, 'MUST REFUSE: sous le seuil, aucun fichier n\'est un filet — rendre le moins petit de deux fichiers insignifiants ferait enquêter sur du vide en annonçant une trouvaille');
+
+  // L'ORDRE DES PISTES, VÉRIFIÉ DANS LES DEUX SENS : ce qui est donné à la main gagne toujours,
+  // et une piste forte ne se fait jamais doubler par une plus faible.
+  assert.equal(e.detecterLeFilet({ option: 'a/moi.mjs', sourceCrochet: 'node scripts/autre.mjs' }).piste, 'option', 'le chemin donné à la main gagne sur tout le reste : c\'est la seule source dont la fiabilité soit certaine');
+  assert.equal(e.detecterLeFilet({ sourceCrochet: 'node scripts/du-crochet.mjs', paquet: { scripts: { test: 'node test/du-paquet.mjs' } } }).chemin, 'scripts/du-crochet.mjs', 'MUST NOT BE OVERTAKEN: ce que le crochet lance vraiment prime sur ce que le paquet déclare — l\'inverse ferait préférer une intention à un fait');
+
+  // TROIS ÉTATS, JAMAIS DEUX, et c'est tout l'enjeu : un outil qui devine son fichier d'étude rend
+  // un rapport entièrement faux sans jamais le signaler.
+  const rien = e.detecterLeFilet({});
+  assert.equal(rien.trouve, false, 'sans aucune piste, la détection REFUSE de rendre un chemin');
+  assert.equal(rien.essais.length, 4, 'et elle rend TOUT ce qu\'elle a essayé : un « non » sans ses essais ne s\'instruit pas');
+  assert.ok(e.formatDetectionLines(rien).some((l) => /--filet/.test(l)), 'le message d\'échec porte lui-même la sortie de secours, plutôt que de la laisser à la mémoire de qui le lit');
+
+  // ET SUR LE VRAI DÉPÔT, parce qu'un détecteur qui n'a jamais tourné contre le vrai dépôt est une
+  // intention (Article 25). Il doit retrouver le filet PAR DÉTECTION, jamais par la constante.
+  const reel = e.detecterLeFilet({ sourceCrochet: fs.readFileSync('scripts/hooks/pre-commit', 'utf8'), paquet: JSON.parse(fs.readFileSync('package.json', 'utf8')) });
+  assert.equal(reel.chemin, 'scripts/check-house.mjs', 'sur ce dépôt-ci, la détection doit retrouver le vrai filet');
+  assert.equal(reel.piste, 'crochet', 'et le retrouver par le CROCHET, pas par le dernier recours — sinon la détection ne prouverait rien, elle répéterait la constante');
+
+  console.log("Passed: le filet ne s'écrit plus en dur, il se trouve (2026-09-27, tâche #1030). Sa question ÉTAIT la tâche — « est-ce que Ezechiel saura sinon quel fichier est le filet de sécurité du code, s'il prend les choses en cours » — et la réponse était non : `FILET = \"scripts/check-house.mjs\"` était une constante, donc sur n'importe quel autre dépôt l'outil cherchait un fichier inexistant et ne pouvait rien enquêter. L'Article 24 pris en défaut sur l'outil déclaré fini le jour même. TROIS PISTES, ET LEUR ORDRE EST UN JUGEMENT SUR LEUR FIABILITÉ : ce que le crochet de pré-commit LANCE vraiment est la preuve la plus forte, parce que c'est la définition même d'un filet — ce qui doit passer avant d'enregistrer ; ce que le gestionnaire de paquets DÉCLARE comme commande de test n'est qu'une déclaration ; le plus gros fichier porteur d'assertions est une DEVINETTE, et elle se présente comme telle dans le rapport. CE QUE CES ASSERTIONS PROTÈGENT EST LE REFUS : sans aucune piste, la détection ne rend pas un chemin au hasard — elle rend faux, avec les QUATRE essais qu'elle a faits, parce qu'un « non » sans ses essais ne s'instruit pas, et elle imprime elle-même la sortie de secours (`--filet`) plutôt que de la laisser à la mémoire de qui la lit. Le seuil de vingt assertions joue le même rôle sur la troisième piste : rendre le moins petit de deux fichiers insignifiants ferait enquêter sur du vide en annonçant une trouvaille. Vérifié sur le vrai dépôt, et c'est la seule vérification qui compte ici : la détection retrouve `scripts/check-house.mjs` PAR LE CROCHET, jamais par le dernier recours — sinon elle ne prouverait rien, elle répéterait la constante. filet-en-parts hérite de la même détection par import plutôt que par copie (Article 24), donc une piste de plus profitera aux deux sans qu'on y touche.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
 // LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et

@@ -47,7 +47,110 @@ import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
+// LE FILET NE S'ÉCRIT PLUS EN DUR, IL SE TROUVE (2026-09-27, tâche #1030) — et c'est sa question
+// à lui qui l'a ouverte : « est-ce que Ezechiel saura sinon quel fichier est le filet de sécurité
+// du code, s'il prend les choses en cours ». Un chemin de CE dépôt écrit en constante rendait
+// l'outil inutilisable ailleurs : sur un autre projet il cherchait un fichier inexistant et ne
+// pouvait rien enquêter — l'Article 24 pris en défaut sur l'outil déclaré fini le jour même.
+// CE QUI RESTE ICI EST UN DERNIER RECOURS, jamais la vérité : la valeur par défaut de ce dépôt,
+// utilisée seulement quand aucune des trois détections n'aboutit.
 export const FILET = "scripts/check-house.mjs";
+
+// LES TROIS PISTES, DANS CET ORDRE, et l'ordre est un jugement sur leur fiabilité : ce que le
+// crochet de pré-commit LANCE vraiment est la preuve la plus forte (c'est la définition même d'un
+// filet : ce qui doit passer avant d'enregistrer) ; ce que le gestionnaire de paquets DÉCLARE
+// comme commande de test est une déclaration, donc plus faible ; le plus gros fichier porteur
+// d'assertions est une DEVINETTE, et elle se présente comme telle.
+export const PISTES_DU_FILET = [
+  { cle: "option", quoi: "le chemin donné à la main (--filet)", force: "certaine" },
+  { cle: "crochet", quoi: "le fichier que le crochet de pré-commit lance vraiment", force: "forte" },
+  { cle: "paquet", quoi: "la commande de test déclarée par le gestionnaire de paquets", force: "moyenne" },
+  { cle: "plus-gros", quoi: "le plus gros fichier du dépôt qui porte des assertions", force: "faible — une devinette, à confirmer" },
+];
+
+export const MOTIF_LANCEMENT = /\bnode\s+(?:--[\w=./-]+\s+)*([\w./-]+\.(?:mjs|js|cjs|ts))/g;
+
+// Un crochet lance plusieurs choses (couverture, typage, outils) ; le filet est celui dont le nom
+// ne trahit pas un rôle d'outillage. On rend le PREMIER lancement qui n'est ni un crochet ni un
+// utilitaire connu — et s'il y a un doute, on rend tout ce qu'on a vu plutôt qu'un seul nom.
+export function filetDuCrochet(texte = "") {
+  const vus = [];
+  for (const m of String(texte).matchAll(new RegExp(MOTIF_LANCEMENT.source, "g"))) {
+    const c = m[1];
+    if (/hooks\//.test(c) || /banniere|install|sites-env/.test(c)) continue;
+    if (!vus.includes(c)) vus.push(c);
+  }
+  return vus;
+}
+
+export function filetDuPaquet(json = {}) {
+  const commande = json?.scripts?.test ?? json?.scripts?.["test:unit"] ?? "";
+  return filetDuCrochet(String(commande));
+}
+
+// LA DEVINETTE, ET ELLE S'ANNONCE : le plus gros fichier qui porte vraiment des assertions. On ne
+// compte pas les fichiers qui se contentent d'importer un cadre de test — il faut des appels.
+export const MOTIF_ASSERTION = /\b(?:assert|expect)\s*[.(]/g;
+
+export function filetLePlusGros(fichiers = {}) {
+  let meilleur = null;
+  for (const [chemin, contenu] of Object.entries(fichiers)) {
+    const combien = (String(contenu).match(MOTIF_ASSERTION) ?? []).length;
+    if (combien < 20) continue;
+    if (!meilleur || combien > meilleur.assertions) meilleur = { chemin, assertions: combien };
+  }
+  return meilleur;
+}
+
+// TROIS ÉTATS, JAMAIS DEUX : trouvé (avec PAR QUELLE piste, donc avec sa force), pas trouvé (avec
+// TOUT ce qui a été essayé, parce qu'un « non » sans essais ne s'instruit pas), et jamais un chemin
+// rendu au hasard qui ferait enquêter sur le mauvais fichier.
+export function detecterLeFilet({ option = null, sourceCrochet = null, paquet = null, fichiers = null } = {}) {
+  const essais = [];
+  if (option) return { trouve: true, chemin: option, piste: "option", force: "certaine", essais };
+  essais.push({ cle: "option", resultat: "aucun chemin donné à la main" });
+
+  const parCrochet = sourceCrochet ? filetDuCrochet(sourceCrochet) : [];
+  if (parCrochet.length === 1) return { trouve: true, chemin: parCrochet[0], piste: "crochet", force: "forte", essais };
+  essais.push({ cle: "crochet", resultat: !sourceCrochet ? "aucun crochet de pré-commit lisible" : parCrochet.length ? `${parCrochet.length} lancements candidats, impossible de trancher : ${parCrochet.join(", ")}` : "le crochet ne lance aucun fichier reconnaissable" });
+
+  const parPaquet = paquet ? filetDuPaquet(paquet) : [];
+  if (parPaquet.length === 1) return { trouve: true, chemin: parPaquet[0], piste: "paquet", force: "moyenne", essais };
+  essais.push({ cle: "paquet", resultat: !paquet ? "aucun fichier de paquet lisible" : parPaquet.length ? `${parPaquet.length} candidats dans la commande de test : ${parPaquet.join(", ")}` : "aucune commande de test déclarée" });
+
+  const gros = fichiers ? filetLePlusGros(fichiers) : null;
+  if (gros) return { trouve: true, chemin: gros.chemin, piste: "plus-gros", force: "faible — une devinette, à confirmer", assertions: gros.assertions, essais };
+  essais.push({ cle: "plus-gros", resultat: fichiers ? "aucun fichier ne porte au moins 20 assertions" : "aucun fichier fourni à examiner" });
+
+  return { trouve: false, chemin: null, piste: null, essais,
+    pourquoi: "aucune des trois pistes n'a abouti — et le dire vaut mieux que d'enquêter sur un fichier au hasard, qui rendrait un rapport entièrement faux sans jamais le signaler" };
+}
+
+// LE RÉSOLVEUR DU LANCEMENT — une seule détection par exécution, et son résultat est IMPRIMÉ.
+// Un outil qui choisit silencieusement son fichier d'étude est un outil dont on ne peut pas
+// vérifier le rapport : si la détection se trompe, tout ce qui suit est faux sans le dire.
+let _filetResolu = null;
+export function filetResolu({ root = ROOT, argv = process.argv, force = false } = {}) {
+  if (_filetResolu && !force) return _filetResolu;
+  const option = (argv.find((a) => a.startsWith("--filet=")) ?? "").split("=")[1] || null;
+  const lu = (f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } };
+  let paquet = null;
+  try { paquet = JSON.parse(lu("package.json") ?? "{}"); } catch { paquet = null; }
+  const d = detecterLeFilet({ option, sourceCrochet: lu(CROCHETS[0]), paquet });
+  _filetResolu = d.trouve ? d.chemin : FILET;
+  _filetResolu_detection = d;
+  return _filetResolu;
+}
+let _filetResolu_detection = null;
+export function derniereDetection() { return _filetResolu_detection; }
+
+export function formatDetectionLines(d = {}) {
+  if (d.trouve) return [`Filet détecté : ${d.chemin} (par ${PISTES_DU_FILET.find((p) => p.cle === d.piste)?.quoi ?? d.piste} — fiabilité ${d.force})`];
+  const L = ["🚨 AUCUN FILET TROUVÉ — l'enquête est impossible, et ce n'est pas un résultat vide :", `   ${d.pourquoi}`, "   Ce qui a été essayé :"];
+  for (const e of d.essais ?? []) L.push(`     · ${PISTES_DU_FILET.find((p) => p.cle === e.cle)?.quoi ?? e.cle} → ${e.resultat}`);
+  L.push("   Donner le chemin à la main lève le doute : `node scripts/ezechiel-les-tests.mjs --filet <chemin>`");
+  return L;
+}
 export const CROCHETS = ["scripts/hooks/pre-commit", "scripts/hooks/post-commit"];
 
 // LES ENVELOPPES : ce qui entoure le filet et coûte du temps sans être un test. Chacune porte ce
@@ -1122,11 +1225,11 @@ export function formatGainLines(g, p) {
 // ---------------------------------------------------------------------------------------------
 // L'ENQUÊTE COMPLÈTE
 // ---------------------------------------------------------------------------------------------
-export function enqueter({ root = ROOT, lire = null, existe = null, durees = {} } = {}) {
+export function enqueter({ root = ROOT, lire = null, existe = null, durees = {}, filet = FILET } = {}) {
   const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
-  const src = lireF(FILET);
+  const src = lireF(filet);
   if (src == null) {
-    return { mesurable: false, pourquoi: `${FILET} illisible — aucune enquête possible, et un rapport vide se lirait comme un filet sain` };
+    return { mesurable: false, pourquoi: `${filet} illisible — aucune enquête possible, et un rapport vide se lirait comme un filet sain` };
   }
   const groupes = decouperEnGroupes(src);
   const chrono = mesuresEnregistrees({ root, lire: lireF });
@@ -1352,7 +1455,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     const { dirname } = await import("node:path");
     const depart = Date.now();
     const lignes = [];
-    const enfant = spawn(process.execPath, [join(ROOT, FILET)], { cwd: ROOT });
+    const enfant = spawn(process.execPath, [join(ROOT, filetResolu())], { cwd: ROOT });
     // LES DEUX FLUX SONT DISTINGUÉS, et ce n'est pas un détail de confort : du bruit sur la sortie
     // d'erreur d'une suite VERTE est une anomalie à part entière — c'est ainsi qu'un vrai message
     // finit par passer inaperçu le jour où il arrive.
@@ -1364,7 +1467,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     };
     enfant.stdout.on("data", avaler("normal")); enfant.stderr.on("data", avaler("erreur"));
     const code = await new Promise((r) => enfant.on("close", r));
-    const groupes = decouperEnGroupes(readFileSync(join(ROOT, FILET), "utf8"));
+    const groupes = decouperEnGroupes(readFileSync(join(ROOT, filetResolu()), "utf8"));
     const recolle = recollerLeChrono(groupes, lignes);
     const totalMs = Date.now() - depart;
     console.log(`Filet terminé en ${(totalMs / 1000).toFixed(1)} s (code ${code}).`);
@@ -1432,10 +1535,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       console.log("Sur un dépôt sale, une restauration ratée serait indiscernable du travail en cours.");
       process.exit(1);
     }
-    const srcFilet = readFileSync(join(ROOT, FILET), "utf8");
+    const srcFilet = readFileSync(join(ROOT, filetResolu()), "utf8");
     const cibles = ciblesDeMutation(srcFilet);
     console.log(`${cibles.length} module(s) importé(s) par le filet — les cibles se lisent, elles ne se recopient pas.`);
-    const lancer = () => spawnSync(process.execPath, [join(ROOT, FILET)], { cwd: ROOT, stdio: "ignore", timeout: 600000 }).status === 0;
+    const lancer = () => spawnSync(process.execPath, [join(ROOT, filetResolu())], { cwd: ROOT, stdio: "ignore", timeout: 600000 }).status === 0;
     const t0 = Date.now();
     console.log("Vérification préalable : le filet est-il vert AVANT toute cassure ?");
     const vertAvant = lancer();
@@ -1529,7 +1632,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     couvertureMs: Number(process.env.EZ_COUV_MS) || null,
     typageMs: Number(process.env.EZ_TSC_MS) || null,
   };
-  const e = enqueter({ durees });
+  // LE FILET SE DÉTECTE, ET LA DÉTECTION S'IMPRIME (2026-09-27, tâche #1030) : un outil qui choisit
+  // en silence le fichier qu'il étudie rend un rapport invérifiable — si la détection se trompe,
+  // tout ce qui suit est faux sans jamais le dire.
+  const chemin = filetResolu();
+  for (const l of formatDetectionLines(derniereDetection() ?? { trouve: true, chemin, piste: "option", force: "certaine" })) console.log(l);
+  const e = enqueter({ durees, filet: chemin });
   for (const l of formatEnqueteLines(e)) console.log(l);
   const plan = planDeLEnquete(e);
   imprimerPlanDaction(buildPlanDaction(plan, { toolSlug: "ezechiel-les-tests" }));
@@ -1540,7 +1648,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   try {
     const { deposerAlertes } = await import("./abraham-les-references.mjs");
     deposerAlertes("ezechiel-les-tests", plan.map((c) => ({
-      cle: String(c.constat).slice(0, 80), objet: FILET,
+      cle: String(c.constat).slice(0, 80), objet: filetResolu(),
       gravite: c.niveau === "obligatoire" ? "bloquante" : "à surveiller",
       constat: c.constat,
     })));
