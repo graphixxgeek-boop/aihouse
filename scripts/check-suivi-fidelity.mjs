@@ -38,18 +38,37 @@ export function splitTableRow(row) {
   return cells;
 }
 
+// LES LIGNES DE TÂCHE AVEC LEUR STATUT, LUES UNE SEULE FOIS (2026-09-27, tâche #993, deuxième
+// constat retenu de CLONE-HUNTER). Quatre fonctions de ce fichier répétaient exactement les mêmes
+// cinq lignes : découper le texte, garder les lignes de tâche, découper chaque ligne en cellules,
+// prendre la DERNIÈRE comme statut. CLONE-HUNTER les signalait depuis plusieurs passages.
+//
+// CE QUE LA RÉPÉTITION RISQUAIT, et ce n'est pas seulement de la lourdeur : « le statut est la
+// dernière cellule » est une CONVENTION du format de suivi, pas une évidence. Écrite à quatre
+// endroits, elle devait être corrigée à quatre endroits le jour où une colonne serait ajoutée après
+// Statut — et la copie oubliée aurait lu une cellule voisine en silence, donc conclu « ouverte »
+// sur une tâche close. C'est exactement ce qui vient d'arriver à `estUnDepot()` dans un autre
+// fichier le même jour.
+//
+// `cells` est rendu avec le reste parce que trois des quatre appelants en ont besoin ensuite : le
+// recalculer de leur côté aurait rétabli la moitié du doublon.
+export function lignesDeTacheAvecStatut(sessionText) {
+  return String(sessionText)
+    .split("\n")
+    .filter(estUneLigneDeTache)
+    .map((row) => {
+      const cells = splitTableRow(row);
+      return { row, cells, statut: cells[cells.length - 1] ?? "" };
+    });
+}
+
 // Une ligne du tableau "| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |"
 // est une clôture non vérifiée si son dernier champ (Statut) commence par "terminée" sans jamais
 // contenir "fidèle" ni "écart". Une tâche encore "ouverte"/"en cours" n'est jamais concernée — le
 // garde-fou ne porte que sur ce qui est déclaré fini.
 export function findUnverifiedClosures(sessionText) {
-  const rows = sessionText
-    .split("\n")
-    .filter(estUneLigneDeTache);
   const hits = [];
-  for (const row of rows) {
-    const cells = splitTableRow(row);
-    const statut = cells[cells.length - 1] ?? "";
+  for (const { row, statut } of lignesDeTacheAvecStatut(sessionText)) {
     if (/^termin[ée]e/i.test(statut) && !/fid[èe]le/i.test(statut) && !/[ée]cart/i.test(statut)) {
       hits.push({ row: row.trim(), statut });
     }
@@ -118,13 +137,8 @@ export function auditCloturesSansRituel(sessionsDir = SESSIONS_DIR, readDir = re
 const REPO_PATH_PATTERN = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-/]+\.[A-Za-z0-9]+)`/g;
 
 export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root = ROOT) {
-  const rows = sessionText
-    .split("\n")
-    .filter(estUneLigneDeTache);
   const hits = [];
-  for (const row of rows) {
-    const cells = splitTableRow(row);
-    const statut = cells[cells.length - 1] ?? "";
+  for (const { row, cells, statut } of lignesDeTacheAvecStatut(sessionText)) {
     if (!/^termin[ée]e/i.test(statut)) continue;
     // Description = avant-dernière colonne, jamais un index fixe (2026-09-20, ajout de la colonne
     // N° en première position, cf. extractTaskNumbers ci-dessous) : Description précède toujours
@@ -145,13 +159,8 @@ export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root
 // cours", ou toute autre valeur future) — jamais un motif positif qui devrait deviner tous les
 // libellés possibles d'un statut non fermé.
 export function findOpenTasks(sessionText) {
-  const rows = sessionText
-    .split("\n")
-    .filter(estUneLigneDeTache);
   const hits = [];
-  for (const row of rows) {
-    const cells = splitTableRow(row);
-    const statut = cells[cells.length - 1] ?? "";
+  for (const { row, cells, statut } of lignesDeTacheAvecStatut(sessionText)) {
     // Un statut VIDE est une ligne mal formée (tableau markdown cassé) — un trou à signaler, jamais
     // un silence qui la laisserait invisible au garde-fou (trouvé le 2026-09-19 en relisant le
     // script à la demande explicite de l'utilisateur : « assure-toi encore de la fiabilité »).
@@ -194,13 +203,8 @@ export function estUneLigneDeTache(l) {
 }
 
 export function categorizeTasks(sessionText) {
-  const rows = sessionText
-    .split("\n")
-    .filter(estUneLigneDeTache);
   const buckets = { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
-  for (const row of rows) {
-    const cells = splitTableRow(row);
-    const statut = cells[cells.length - 1] ?? "";
+  for (const { row, cells, statut } of lignesDeTacheAvecStatut(sessionText)) {
     const entry = { row: row.trim(), statut, cells, statutNormalise: normaliserStatut(statut) };
     const s = entry.statutNormalise;
     if (/^termin[ée]/.test(s) || /^fait\b/.test(s)) buckets.terminee.push(entry);

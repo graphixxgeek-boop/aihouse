@@ -20,7 +20,7 @@
 // sont impossibles à relire quand quelque chose casse.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { AGENT_CATEGORIES, rangDeLaCategorie, familleDeLaCategorie, printReliabilityNotice } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, rangDeLaCategorie, familleDeLaCategorie, printReliabilityNotice, listerLesFichiers } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 // L'inventaire documentaire de la charte est déjà parsé par SAFE-EXPORT : on le LIT chez lui
@@ -1777,18 +1777,11 @@ export function classerUnDocument(chemin, texte = "", { alias = null, executable
 }
 
 export function chargerLesDocuments({ root = ROOT, racines = ["docs"], enPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  // Parcours partagé (lib-shell, 2026-09-27, tâche #993) — cf. le commentaire de listerLesFichiers()
+  // pour la raison. Le filtre et la lecture restent ici : ils sont propres à cet outil.
   const docs = [];
-  const pile = [...racines];
-  while (pile.length) {
-    const d = pile.pop();
-    let entrees = [];
-    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
-    for (const e of entrees) {
-      const chemin = `${d}/${e.name}`;
-      if (e.isDirectory()) { pile.push(chemin); continue; }
-      if (!e.name.endsWith(".md")) continue;
-      try { docs.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme classé */ }
-    }
+  for (const chemin of listerLesFichiers(racines, { root, listDirImpl, garder: (nom) => nom.endsWith(".md") })) {
+    try { docs.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme classé */ }
   }
   for (const f of enPlus) {
     try { docs.push({ chemin: f, texte: readFileImpl(join(root, f), "utf8") }); } catch { /* absent : on ne l'invente pas */ }

@@ -8303,6 +8303,57 @@ async function testSystemeDesIndex() {
   assert.ok(ecritsJournal[0].includes('r-2026-09-01.txt') && ecritsJournal[0].includes('r-2026-09-02.txt'), 'the rebuilt block must KEEP what it had already reconstituted and ADD the new deposit — rebuilt against the full text it would keep only the newcomer, and the two passes would contradict each other forever');
   const strippe = da.sansLeBlocGenere(`avant\n${da.DEBUT_BLOC_GENERE}\ndedans\n${da.FIN_BLOC_GENERE}\naprès`);
   assert.ok(strippe.includes('avant') && strippe.includes('après') && !strippe.includes('dedans'), 'stripping the generated block must leave the hand-written text on both sides intact and nothing of the machine-written middle');
+  // DEUX TABLES slug → SCRIPT QUI NE SE PARLAIENT PAS (2026-09-27, tâche #993, troisième constat
+  // retenu de CLONE-HUNTER). axa-check et doc-report tiennent chacune à la main une table associant
+  // un slug d'outil à son fichier ; 32 slugs sont communs, et rien ne vérifiait qu'elles disent la
+  // même chose. Elles la disent aujourd'hui — c'est une chance, pas une garantie, et l'Article 24
+  // demande exactement ça : soit lire dynamiquement, soit un garde-fou qui détecte l'écart.
+  {
+    const ls = await import('../scripts/lib-shell.mjs');
+    const ax = await import('../scripts/axa-check.mjs');
+    const dr2 = await import('../scripts/doc-report.mjs');
+    assert.deepEqual(ls.findTablesScriptsDivergentes(ax.AGENT_SCRIPT_FILES, dr2.RELIABILITY_SCRIPT_FILES, { nomA: 'axa-check', nomB: 'doc-report' }), [], 'checked live against the two real hand-kept tables: a slug present in both must point at the SAME script — the guarantee breaks the day one of them is edited without the other, which is the only way a tool ends up covered under one name and mis-named under the other');
+    const communs = Object.keys(ax.AGENT_SCRIPT_FILES).filter((k) => k in dr2.RELIABILITY_SCRIPT_FILES);
+    assert.ok(communs.length >= 30, `the guard must have a real denominator: it currently compares ${communs.length} shared slugs, and a check that silently drops to zero shared entries would read as green while looking at nothing (leçon L11)`);
+    assert.deepEqual(ls.findTablesScriptsDivergentes({ a: 'x.mjs', b: 'y.mjs' }, { a: 'AUTRE.mjs', c: 'z.mjs' }).map((e) => e.slug), ['a'], 'bites: a shared slug pointing at two different scripts is named');
+    assert.deepEqual(ls.findTablesScriptsDivergentes({ a: 'x.mjs' }, { b: 'y.mjs' }), [], 'and the counter-test that keeps it honest: tables with NO slug in common are not in disagreement — asymmetry is not divergence, and reproaching a difference that may well be deliberate is the false red that stops a guard being read (leçon L4)');
+  }
+
+  // LE PARCOURS RÉCURSIF, ÉCRIT UNE SEULE FOIS (2026-09-27, tâche #993, premier constat retenu de
+  // CLONE-HUNTER). Il existait en CINQ exemplaires : trois ici dans data-archangel.mjs, un dans
+  // doc-report.mjs::chargerLesRapports() et un dans le-classificateur.mjs::chargerLesDocuments().
+  // Le coût avait déjà été payé : la règle estUnDepot() posée la veille n'avait été appliquée
+  // qu'aux copies qu'on avait sous les yeux, et sept catalogues du dépôt ne la respectaient
+  // toujours pas le lendemain. C'est mot pour mot l'avertissement de CLONE-HUNTER — « assez gros
+  // pour qu'une correction appliquée à l'un et pas à l'autre passe inaperçue ».
+  {
+    const ls = await import('../scripts/lib-shell.mjs');
+    const faux = {
+      'docs': [{ name: 'a.md', isDirectory: () => false }, { name: 'sous', isDirectory: () => true }, { name: 'z.txt', isDirectory: () => false }],
+      'docs/sous': [{ name: 'b.md', isDirectory: () => false }],
+    };
+    const lire = (chemin) => { const cle = String(chemin).replace(/\\/g, '/').replace(/^\.\//, ''); if (!(cle in faux)) throw new Error('ENOENT'); return faux[cle]; };
+    assert.deepEqual(ls.listerLesFichiers('docs', { root: '.', listDirImpl: lire, garder: (n) => n.endsWith('.md') }).sort(), ['docs/a.md', 'docs/sous/b.md'], 'it must genuinely descend into sub-folders and apply the filter — a walk that stops at the first level would silently halve every inventory in the Agency');
+    assert.deepEqual(ls.listerLesFichiers('docs', { root: '.', listDirImpl: lire }).sort(), ['docs/a.md', 'docs/sous/b.md', 'docs/z.txt'], 'with no filter it must keep every file, never guess one — the default is the caller\'s business, not the walk\'s');
+    assert.deepEqual(ls.listerLesFichiers('dossier-absent', { root: '.', listDirImpl: lire }), [], 'an unreadable folder must yield nothing rather than throw: every one of the five call sites relied on that, and losing it would crash three tools on a folder that has simply not been created yet');
+    assert.deepEqual(ls.listerLesFichiers(['docs/sous', 'dossier-absent'], { root: '.', listDirImpl: lire }), ['docs/sous/b.md'], 'several roots are walked in one call (le-classificateur passes a list), and one unreadable root among them must never cancel the others');
+    // L'ÉQUIVALENCE AVEC L'ANCIEN CODE, VÉRIFIÉE EN DIRECT CONTRE LE VRAI DÉPÔT — une factorisation
+    // qui change l'ORDRE des résultats casserait silencieusement tout ce qui lit « le premier
+    // trouvé ». L'ancien algorithme est réécrit ici tel qu'il était, jamais importé : le comparer à
+    // lui-même ne prouverait rien.
+    const ancien = (racines, root, garder) => {
+      const out = []; const pile = Array.isArray(racines) ? [...racines] : [racines];
+      while (pile.length) {
+        const d = pile.pop(); let e = [];
+        try { e = fs.readdirSync(path.join(root, d), { withFileTypes: true }); } catch { continue; }
+        for (const f of e) { const c = `${d}/${f.name}`; if (f.isDirectory()) { pile.push(c); continue; } if (!garder(f.name, c)) continue; out.push(c); }
+      }
+      return out;
+    };
+    const garderMd = (n) => n.endsWith('.md');
+    assert.deepEqual(ls.listerLesFichiers('docs', { root: '.', garder: garderMd }), ancien('docs', '.', garderMd), 'checked live against the real docs/ tree (447 files): the shared walk must return the exact same paths IN THE EXACT SAME ORDER as the code it replaces — a factorisation that quietly reorders results is a behaviour change disguised as a cleanup');
+  }
+
   // UN CATALOGUE GÉNÉRÉ PEUT ÊTRE REMIS À JOUR, ET RIEN D'AUTRE (2026-09-27). Trouvé en déposant
   // une archive dans docs/contexte-projet/ : le catalogue de ce dossier promettait la liste
   // complète, le nouveau fichier n'y était pas, et AUCUNE commande ne pouvait le rafraîchir —

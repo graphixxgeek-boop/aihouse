@@ -296,6 +296,75 @@ export function walkDocsPaths(dir, root, out = new Set()) {
   return out;
 }
 
+// LE PARCOURS RÉCURSIF D'UN DOSSIER, ÉCRIT UNE SEULE FOIS (2026-09-27, tâche #993, sur le premier
+// constat retenu de CLONE-HUNTER).
+//
+// LE CONSTAT, ET IL EST MESURÉ : le même parcours en pile — descendre dans les sous-dossiers, garder
+// les fichiers qui passent un filtre — existait en CINQ exemplaires. Trois dans data-archangel.mjs
+// (mesure des index, génération, réparation), octet pour octet identiques ; un dans
+// doc-report.mjs::chargerLesRapports() et un dans le-classificateur.mjs::chargerLesDocuments(), même
+// charpente avec un filtre différent.
+//
+// LE COÛT N'EST PAS THÉORIQUE, IL A DÉJÀ ÉTÉ PAYÉ. La règle `estUnDepot()` — un fichier dont le nom
+// finit par `index.md` est un index, jamais un dépôt — a été posée le 2026-09-26 et appliquée aux
+// copies qu'on avait sous les yeux. Le lendemain, sept catalogues du dépôt ne la respectaient
+// toujours pas. C'est exactement l'avertissement de CLONE-HUNTER, mot pour mot : « assez gros pour
+// qu'une correction appliquée à l'un et pas à l'autre passe inaperçue ».
+//
+// POURQUOI CELUI-CI SE FACTORISE ALORS QU'UN AUTRE A ÉTÉ ÉCARTÉ, et la distinction est écrite pour
+// que personne ne rouvre la mauvaise. L'enquête du 2026-09-22 (docs/plans/enquete-clone-hunter-
+// 2026-09-22.md) a ÉCARTÉ, avec sa raison, le préambule « balayer scripts/*.mjs, sauter l'illisible » :
+// « un helper qui enveloppe un try/catch de 2 lignes coûte souvent plus en indirection qu'il ne
+// rapporte ». Cette raison tient toujours et cet écart n'est PAS rouvert ici. Ce parcours-ci est
+// autre chose : dix à douze lignes portant une vraie logique (une pile, une descente, un filtre),
+// cinq sites, et une règle métier qui a réellement divergé entre les copies. Ce ne sont pas deux
+// jugements contradictoires sur le même cas, ce sont deux cas différents.
+//
+// CE QU'IL NE FAIT PAS : il ne lit aucun fichier. Les appelants qui ont besoin du CONTENU le lisent
+// eux-mêmes, avec leur propre gestion de l'illisible — qui diffère d'un appelant à l'autre (ignorer
+// en silence, compter comme non conforme…) et n'avait aucune raison d'être unifiée de force.
+export function listerLesFichiers(racines, { root = ".", listDirImpl = readdirSync, garder = () => true } = {}) {
+  const trouves = [];
+  const pile = Array.isArray(racines) ? [...racines] : [racines];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (!garder(e.name, chemin)) continue;
+      trouves.push(chemin);
+    }
+  }
+  return trouves;
+}
+
+// DEUX TABLES slug → SCRIPT, TENUES À LA MAIN DANS DEUX OUTILS (2026-09-27, tâche #993, troisième
+// constat retenu de CLONE-HUNTER).
+//
+// LE CONSTAT : `AGENT_SCRIPT_FILES` (axa-check.mjs, portée de la couverture de test) et
+// `RELIABILITY_SCRIPT_FILES` (doc-report.mjs, script à citer dans l'avertissement de fiabilité)
+// associent toutes deux un slug d'outil à son fichier. Elles partagent 32 slugs, mesurés le jour de
+// ce constat, et personne ne vérifiait qu'elles disent la même chose. Elles la disent — 0 divergence
+// ce jour-là — mais c'est une chance, jamais une garantie : le commentaire de tête de la seconde
+// raconte lui-même que sept registres ont dû être remplis un par un pour un seul outil qui arrivait.
+//
+// CE QUE CE GARDE-FOU FAIT, ET CE QU'IL NE FAIT PAS. Il compare les slugs COMMUNS et signale un
+// désaccord sur le chemin — le défaut qui rend un outil couvert ici et mal nommé là. Il ne dit RIEN
+// de l'asymétrie (6 slugs propres à l'une, 10 à l'autre) : les deux tables n'ont pas le même objet,
+// et exiger qu'elles aient les mêmes clés serait accuser à tort une différence peut-être voulue
+// (leçon L4). Cette question-là est une décision humaine, elle reste posée, pas tranchée en douce.
+//
+// Les tables sont INJECTÉES par l'appelant plutôt qu'importées : lib-shell est la base, elle ne
+// remonte jamais vers les outils qui l'importent.
+export function findTablesScriptsDivergentes(tableA, tableB, { nomA = "A", nomB = "B" } = {}) {
+  const a = tableA ?? {}, b = tableB ?? {};
+  return Object.keys(a)
+    .filter((slug) => slug in b && a[slug] !== b[slug])
+    .map((slug) => ({ slug, [nomA]: a[slug], [nomB]: b[slug], ecart: `le même slug désigne deux scripts différents : « ${a[slug]} » dans ${nomA}, « ${b[slug]} » dans ${nomB} — l'un des deux est faux, et rien ne disait lequel` }));
+}
+
 // Extrait le 2026-09-21 de circle-tasks.mjs (audit d'évolutivité — nouveau signal
 // chantier-preliminaire-signal) : circle-tasks.mjs doit désormais importer checkChantierFileFreshness()/
 // loadAllTaskRows() de check-tasks-details.mjs, ce qui aurait créé exactement le même cycle que

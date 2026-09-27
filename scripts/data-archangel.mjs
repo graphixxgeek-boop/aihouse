@@ -24,6 +24,7 @@
 // ligne ne bouge ici.
 
 import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { listerLesFichiers } from "./lib-shell.mjs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -1161,18 +1162,7 @@ export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = re
   }
   const lignes = [];
   for (const dir of dossiers) {
-    const fichiers = [];
-    const pile = [dir];
-    while (pile.length) {
-      const d = pile.pop();
-      let entrees = [];
-      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
-      for (const f of entrees) {
-        if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
-        if (!estUnDepot(f.name)) continue;
-        fichiers.push(`${d}/${f.name}`);
-      }
-    }
+    const fichiers = listerLesFichiers(dir, { root, listDirImpl, garder: estUnDepot });
     let texte = null;
     try { texte = readFileImpl(join(root, dir, "index.md"), "utf8"); } catch { /* pas d'index : c'est un état, pas une erreur */ }
     const nature = natureDeLIndex(texte, fichiers);
@@ -1253,18 +1243,7 @@ export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = re
       if (!estUnCatalogueGenere(texte)) continue;
       regeneration = true;
     }
-    const fichiers = [];
-    const pile = [ligne.dossier];
-    while (pile.length) {
-      const d = pile.pop();
-      let entrees = [];
-      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
-      for (const f of entrees) {
-        if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
-        if (!estUnDepot(f.name)) continue;
-        fichiers.push(`${d}/${f.name}`);
-      }
-    }
+    const fichiers = listerLesFichiers(ligne.dossier, { root, listDirImpl, garder: estUnDepot });
     const chemin = `${ligne.dossier}/index.md`;
     writeImpl(join(root, chemin), contenuDIndexGenere(ligne.dossier, fichiers, { horodatage }), "utf8");
     ecrits.push({ chemin, fichiers: fichiers.length, regeneration });
@@ -1411,18 +1390,7 @@ export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync
   const repares = [];
   for (const ligne of mesure.lignes) {
     if (!etats.includes(ligne.etat)) continue;
-    const fichiers = [];
-    const pile = [ligne.dossier];
-    while (pile.length) {
-      const d = pile.pop();
-      let entrees = [];
-      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
-      for (const f of entrees) {
-        if (f.isDirectory()) { pile.push(`${d}/${f.name}`); continue; }
-        if (!estUnDepot(f.name)) continue;
-        fichiers.push(`${d}/${f.name}`);
-      }
-    }
+    const fichiers = listerLesFichiers(ligne.dossier, { root, listDirImpl, garder: estUnDepot });
     if (!fichiers.length) continue;
     const chemin = `${ligne.dossier}/index.md`;
     let texte = "";

@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -1465,19 +1465,14 @@ export function formatJumeauxLines(j) {
 export const MOTIF_RAPPORT_JUMEAUX = /^rapports-jumeaux-/;
 
 export function chargerLesRapports({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, racine = "docs" } = {}) {
+  // Le parcours vient de lib-shell (2026-09-27, tâche #993) : il était recopié ici, dans
+  // le-classificateur.mjs et trois fois dans data-archangel.mjs. Le FILTRE reste ici, parce qu'il
+  // est propre à cet outil ; la LECTURE aussi, parce que ce qu'on fait d'un fichier illisible
+  // diffère d'un appelant à l'autre — ici il ne compte pas comme conforme, ailleurs il est ignoré.
+  const garder = (nom) => /\.(txt|md)$/.test(nom) && nom !== "index.md" && !MOTIF_RAPPORT_JUMEAUX.test(nom);
   const rapports = [];
-  const pile = [racine];
-  while (pile.length) {
-    const d = pile.pop();
-    let entrees = [];
-    try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
-    for (const e of entrees) {
-      const chemin = `${d}/${e.name}`;
-      if (e.isDirectory()) { pile.push(chemin); continue; }
-      if (!/\.(txt|md)$/.test(e.name) || e.name === "index.md") continue;
-      if (MOTIF_RAPPORT_JUMEAUX.test(e.name)) continue;
-      try { rapports.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme conforme */ }
-    }
+  for (const chemin of listerLesFichiers(racine, { root, listDirImpl, garder })) {
+    try { rapports.push({ chemin, texte: readFileImpl(join(root, chemin), "utf8") }); } catch { /* illisible : il ne compte pas comme conforme */ }
   }
   return rapports;
 }
