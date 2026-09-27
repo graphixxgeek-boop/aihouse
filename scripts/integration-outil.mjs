@@ -60,19 +60,23 @@ export const REGISTRES_D_INTEGRATION = [
   },
   {
     cle: "couverture-axa", fichier: "scripts/axa-check.mjs", quoi: "couverture de test réelle (sans quoi l'outil est invisible à AXA-CHECK et à la stagnation)",
-    extrait: (t) => chemin_scripts(t, "AGENT_SCRIPT_FILES"),
-    forme: (s) => `  "scripts/${s}.mjs",  // dans AGENT_SCRIPT_FILES`,
+    extrait: (t) => chainesDansBloc(t, "SLUGS_COUVERTS_PAR_AXA"),
+    forme: (s) => `  "${s}",  // dans SLUGS_COUVERTS_PAR_AXA (le chemin se DÉRIVE, ne l'écrivez pas)`,
   },
   {
     cle: "registre-rapports", fichier: "scripts/doc-report.mjs", quoi: "registre de rapports (décision HTML/texte, index global, journaux orphelins)",
     extrait: (t) => slugsDansBloc(t, "REGISTRIES"),
     forme: (s) => `  { slug: "${s}", path: "docs/${s}/index.md", scriptPath: "scripts/${s}.mjs", html: false },  // dans REGISTRIES`,
   },
-  {
-    cle: "avertissement", fichier: "scripts/doc-report.mjs", quoi: "fichier porteur de l'avertissement d'inexactitude",
-    extrait: (t) => chemin_scripts(t, "RELIABILITY_SCRIPT_FILES"),
-    forme: (s) => `  "scripts/${s}.mjs",  // dans RELIABILITY_SCRIPT_FILES`,
-  },
+  // REGISTRE RETIRÉ LE 2026-09-27 (tâche #993), ET C'EST UNE OBLIGATION QUI DISPARAÎT POUR DE BON,
+  // jamais un contrôle qu'on abandonne. Il réclamait une ligne dans `RELIABILITY_SCRIPT_FILES`
+  // (doc-report) pour dire quel fichier porte l'avertissement d'inexactitude. Cette table se DÉRIVE
+  // désormais du registre de fiabilité lui-même : déclarer la fiabilité d'un outil — ce que le
+  // registre « fiabilite » ci-dessus réclame déjà — suffit à lui donner son script. Garder les deux
+  // reviendrait à demander deux fois la même chose, et à accuser d'un oubli un outil parfaitement
+  // inscrit. C'est exactement ce que l'Article 24 promet : un arrivant hérite sans qu'on y pense.
+  // Preuve chiffrée : la table tenue à la main en couvrait 42 quand le registre en déclarait 68 —
+  // vingt-six outils échappaient au contrôle, et personne ne pouvait le voir.
   {
     // objectif-chiffre (2026-09-23) — ONZIÈME REGISTRE, ajouté après un écart réel : en intégrant
     // THE-EQUALIZER, cet outil a annoncé « 10/10 registres renseignés » pendant que la suite de tests
@@ -173,6 +177,15 @@ function nomsOuScripts(texte, nom) {
   const parNom = [...sansAccents(bloc).matchAll(/["']([A-Za-z][A-Za-z0-9 -]{2,})["']/g)]
     .map((m) => m[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
   return new Set([...parScript, ...parNom]);
+}
+// Un tableau de CHAÎNES NUES (2026-09-27, tâche #993) : `slugsDansBloc` exige un « : » après le
+// nom et `chemin_scripts` un chemin `scripts/x.mjs` — aucun des deux ne voit `"argus",` tout seul.
+// Depuis que les chemins se dérivent au lieu d'être écrits (cf. scriptPourSlug, lib-shell), le
+// périmètre d'AXA-CHECK s'écrit ainsi, et sans ce lecteur les deux sondes accusaient CHAQUE outil
+// déjà inscrit d'un oubli imaginaire — constaté en direct sur clone-hunter, argus et tool-brain
+// avant le premier commit (leçon L4 : un garde-fou qui accuse à tort cesse d'être lu).
+function chainesDansBloc(texte, nom) {
+  return new Set([...blocApres(texte, nom).matchAll(/^\s*"([a-z0-9][a-z0-9-]*)",\s*$/gm)].map((m) => m[1]));
 }
 function chemin_scripts(texte, nom) {
   return new Set([...blocApres(texte, nom).matchAll(/scripts\/([a-z0-9-]+)\.mjs/g)].map((m) => m[1]));

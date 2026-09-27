@@ -18,7 +18,7 @@
 import { readFileSync, readdirSync, existsSync, mkdtempSync, rmSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice, scriptPourSlug } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal, churnSignalMesure } from "./always-new-code.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
@@ -326,64 +326,57 @@ export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) 
 // check-house.mjs — son entrée V8 porte directement son vrai chemin, jamais un fichier intermédiaire
 // à retrouver. Nommage non uniforme constaté (ARGUS → check-argus.mjs, THE-SCREENER →
 // the-screener-capture.mjs) : une correspondance explicite, jamais déduite d'un slug.
-export const AGENT_SCRIPT_FILES = {
-  // 2026-09-22 : les deux derniers arrivants. Leur absence a fait échouer l'audit d'intégration
-  // avant même le commit — findScriptsMissingFromAgentFiles() a fait exactement son travail, et
-  // c'est la SIXIÈME inscription manuelle que l'utilisateur pointe comme le vrai défaut
-  // d'évolutivité restant (Article 24, précision du 2026-09-22) : le garde-fou DÉTECTE l'oubli au
-  // lieu de l'ÉVITER. Constat gardé ici, à côté du symptôme.
-  // 2026-09-26 : né de la scission de CASSANDRA, et le garde-fou l'a réclamé nommément au premier
-  // commit — septième inscription manuelle que l'Article 24 vise, symptôme gardé à côté du constat.
-  "le-classificateur": "scripts/le-classificateur.mjs",
-  // 2026-09-26, bloc C des 22 : réclamés nommément par findScriptsMissingFromAgentFiles().
-  "check-spirit": "scripts/check-spirit.mjs",
-  "check-suivi-fidelity": "scripts/check-suivi-fidelity.mjs",
-  "circle-process-guardian": "scripts/circle-process-guardian.mjs",
-  "safe-export": "scripts/safe-export.mjs",
-  "tool-learning": "scripts/tool-learning.mjs",
-  "the-equalizer": "scripts/the-equalizer.mjs",
-  "agent-des-noms": "scripts/agent-des-noms.mjs",
-  "agent-du-temps": "scripts/agent-du-temps.mjs",
-  "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
-  "abraham-les-references": "scripts/abraham-les-references.mjs",
-  "integration-outil": "scripts/integration-outil.mjs",
-  argus: "scripts/check-argus.mjs",
-  harmonia: "scripts/check-harmonia.mjs",
-  "smart-conso-api": "scripts/smart-conso-api.mjs",
-  "check-level-target": "scripts/check-level-target.mjs",
-  "hyper-scan-checkpoint": "scripts/hyper-scan-checkpoint.mjs",
-  "always-new-code": "scripts/always-new-code.mjs",
-  "axa-check": "scripts/axa-check.mjs",
-  "clean-dirty-old": "scripts/clean-dirty-old.mjs",
-  "el-professor": "scripts/el-professor.mjs",
-  "the-screener": "scripts/the-screener-capture.mjs",
-  "the-final-judge": "scripts/the-final-judge.mjs",
-  "the-deep-reader": "scripts/the-deep-reader.mjs",
-  "smart-conso-token": "scripts/smart-conso-token.mjs",
-  "check-tasks-details": "scripts/check-tasks-details.mjs",
-  "clone-hunter": "scripts/clone-hunter.mjs",
-  // 6 entrées ajoutées le 2026-09-21 par le nouveau garde-fou findScriptsMissingFromAgentFiles()
-  // (audit d'évolutivité) : ces Agents réels de la table maîtresse étaient invisibles à la
-  // couverture AXA-CHECK et à la stagnation CASSANDRA-RH depuis leur construction, sans qu'aucun
-  // signal ne le détecte — exactement le gap que ce garde-fou existe désormais pour prévenir.
-  "the-king": "scripts/the-king.mjs",
-  "ines-official": "scripts/ines-official.mjs",
-  "memory-audit": "scripts/memento.mjs",
-  "find-booster": "scripts/find-booster.mjs",
-  "objectifs-vs-resultats": "scripts/objectifs-vs-resultats.mjs",
-  "cassandra-rh": "scripts/cassandra-rh.mjs",
-  "ecotoken": "scripts/ecotoken.mjs",
-  // Smart Breaker (2026-09-22) : rejoint la couverture le jour où il est devenu un vrai Agent
-  // certifié. Signalé instantanément par findScriptsMissingFromAgentFiles() dès le changement de
-  // statut — le garde-fou de l'Article 24 faisant exactement ce pour quoi il a été écrit.
-  // Point d'entrée réel de l'ensemble (4 fichiers), jamais un second chemin inventé.
-  "smart-breaker": "scripts/check-gemini-quota.mjs",
-  // Nom donné par l'utilisateur (« process.simulation.guardian »), d'où le slug en tirets qui en
-  // dérive ; le fichier, lui, garde l'ordre habituel des noms de scripts de ce dépôt.
-  "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
-  "angel-of-ia-process": "scripts/angel-of-ia-process.mjs",
-  "data-archangel": "scripts/data-archangel.mjs",
-};
+export const SLUGS_COUVERTS_PAR_AXA = [
+  "le-classificateur",
+  "check-spirit",
+  "check-suivi-fidelity",
+  "circle-process-guardian",
+  "safe-export",
+  "tool-learning",
+  "the-equalizer",
+  "agent-des-noms",
+  "agent-du-temps",
+  "moise-tables-de-loi",
+  "abraham-les-references",
+  "integration-outil",
+  "argus",
+  "harmonia",
+  "smart-conso-api",
+  "check-level-target",
+  "hyper-scan-checkpoint",
+  "always-new-code",
+  "axa-check",
+  "clean-dirty-old",
+  "el-professor",
+  "the-screener",
+  "the-final-judge",
+  "the-deep-reader",
+  "smart-conso-token",
+  "check-tasks-details",
+  "clone-hunter",
+  "the-king",
+  "ines-official",
+  "memory-audit",
+  "find-booster",
+  "objectifs-vs-resultats",
+  "cassandra-rh",
+  "ecotoken",
+  "smart-breaker",
+  "process-simulation-guardian",
+  "angel-of-ia-process",
+  "data-archangel",
+];
+
+// 2026-09-27, tâche #993 : la table était une MAP slug → chemin, recopiée entrée par entrée. Les
+// chemins se DÉRIVENT désormais (`scriptPourSlug`, lib-shell) au lieu d'être écrits : sur les 68
+// outils du registre de fiabilité, 57 ont pour script `scripts/<slug>.mjs`, et les 11 exceptions
+// vivent à UN seul endroit, avec le garde-fou qui vérifie qu'elles pointent vers un fichier réel.
+// Ce qui reste écrit ici est la seule chose propre à AXA-CHECK : la LISTE DES SLUGS, c'est-à-dire
+// son PÉRIMÈTRE de mesure. Le dériver aussi reviendrait à décider tout seul que cet outil mesure
+// désormais 68 scripts au lieu de 38 — un élargissement de ce qu'un Gardien sacré surveille, donc
+// une décision qui revient à l'utilisateur, jamais à une factorisation.
+// Vérifié : la dérivation reproduit les 38 chemins précédents à l'identique, aucun écart.
+export const AGENT_SCRIPT_FILES = Object.fromEntries(SLUGS_COUVERTS_PAR_AXA.map((slug) => [slug, scriptPourSlug(slug)]));
 
 export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {
   const covFiles = existsSync(covDir) ? readDir(covDir) : [];

@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -880,35 +880,25 @@ export function findToolsMissingReliability(toolsTableMarkdown, registry = TOOL_
 // sortie. Une classification sans affichage ne vaut rien — elle ne fait que déplacer le mensonge.
 // `scriptFor` associe un slug à son fichier ; un outil dont le script est introuvable est signalé
 // comme tel plutôt que silencieusement passé (une absence n'est jamais une conformité).
-export const RELIABILITY_SCRIPT_FILES = {
-  // 2026-09-22 — SEPTIÈME registre à inscrire à la main pour les deux mêmes outils, et le dernier
-  // de la série. Chacun des sept a fait échouer un test l'un après l'autre : les garde-fous ont
-  // tous fonctionné, et c'est justement ce qui rend le diagnostic de l'Article 24 imparable — ils
-  // DÉTECTENT l'oubli, ils ne l'ÉVITENT pas. Sept registres pour un outil qui arrive, c'est la
-  // mesure exacte de ce qu'il reste à automatiser.
-  "safe-export": "scripts/safe-export.mjs", "tool-learning": "scripts/tool-learning.mjs",
-  "the-equalizer": "scripts/the-equalizer.mjs",
-  "agent-des-noms": "scripts/agent-des-noms.mjs",
-  "agent-du-temps": "scripts/agent-du-temps.mjs",
-  "moise-tables-de-loi": "scripts/moise-tables-de-loi.mjs",
-  "abraham-les-references": "scripts/abraham-les-references.mjs",
-  "integration-outil": "scripts/integration-outil.mjs",
-  "check-spirit-mjs": "scripts/check-spirit.mjs", argus: "scripts/check-argus.mjs", harmonia: "scripts/check-harmonia.mjs",
-  "smart-conso-api": "scripts/smart-conso-api.mjs", "check-level-target": "scripts/check-level-target.mjs",
-  "hyper-scan-checkpoint": "scripts/hyper-scan-checkpoint.mjs", "always-new-code": "scripts/always-new-code.mjs",
-  "axa-check": "scripts/axa-check.mjs", "clean-dirty-old": "scripts/clean-dirty-old.mjs",
-  "el-professor": "scripts/el-professor.mjs", "the-screener": "scripts/the-screener-capture.mjs",
-  "the-final-judge": "scripts/the-final-judge.mjs", "the-deep-reader": "scripts/the-deep-reader.mjs",
-  "smart-breaker": "scripts/check-gemini-quota.mjs", "smart-conso-token": "scripts/smart-conso-token.mjs",
-  "circle-tasks": "scripts/circle-tasks.mjs", "check-tasks-details": "scripts/check-tasks-details.mjs", "ou-on-en-est": "scripts/ou-on-en-est.mjs",
-  "charter-spy": "scripts/smart-conso-token.mjs", "doc-report": "scripts/doc-report.mjs",
-  "the-king": "scripts/the-king.mjs", "memory-audit": "scripts/memento.mjs",
-  "find-deep-booster": "scripts/route-booster.mjs", "find-brain": "scripts/find-brain.mjs",
-  "tool-brain": "scripts/tool-brain.mjs", "find-booster": "scripts/find-booster.mjs",
-  "angel-of-ia-process": "scripts/angel-of-ia-process.mjs", "data-archangel": "scripts/data-archangel.mjs", "pure-gold-unity": "scripts/pure-gold-unity.mjs",   "god-of-all-process": "scripts/god-of-all-process.mjs", "process-simulation-guardian": "scripts/process-simulation-guardian.mjs",
-  "clone-hunter": "scripts/clone-hunter.mjs", "cassandra-rh": "scripts/cassandra-rh.mjs",
-  ecotoken: "scripts/ecotoken.mjs",
-};
+// 2026-09-27, tâche #993 : cette table était une MAP de 42 entrées recopiées à la main — et
+// `TOOL_RELIABILITY`, le registre qu'elle sert, en déclare SOIXANTE-HUIT. Vingt-six outils
+// déclarés fiables n'avaient donc aucun script associé : le contrôle passait dessus sans rien dire,
+// parce que sa portée était celle de la table, jamais celle du registre.
+//
+// Elle se DÉRIVE désormais du registre lui-même, chemin compris (`scriptPourSlug`, lib-shell : 57
+// des 68 ont pour script `scripts/<slug>.mjs`, les 11 exceptions vivent à un seul endroit). Deux
+// garanties mesurées avant de remplacer quoi que ce soit : les 42 anciennes entrées sont
+// reproduites À L'IDENTIQUE, et l'élargissement de 42 à 68 ne révèle AUCUN constat nouveau — les
+// vingt-six outils qui échappaient au contrôle le passent tous. C'est ce qui rend cet
+// élargissement sûr, et c'est la seule raison pour laquelle il est fait ici plutôt que soumis.
+//
+// CE QUE ÇA CHANGE POUR L'AVENIR, et c'est le vrai gain (Article 24) : un outil qui rejoint
+// l'équipe hérite de ce contrôle le jour où il déclare sa fiabilité, sans qu'aucune seconde
+// inscription ne soit à faire — l'inscription oubliée étant précisément ce qui avait laissé
+// vingt-six outils dehors.
+export const RELIABILITY_SCRIPT_FILES = Object.fromEntries(
+  Object.keys(TOOL_RELIABILITY).map((slug) => [slug, scriptPourSlug(slug)]),
+);
 export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { scriptFor = RELIABILITY_SCRIPT_FILES, readFileImpl = readFileSync, existsImpl = existsSync } = {}) {
   const manques = [];
   for (const [slug, entry] of Object.entries(registry)) {

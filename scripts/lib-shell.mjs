@@ -340,6 +340,61 @@ export function listerLesFichiers(racines, { root = ".", listDirImpl = readdirSy
   return trouves;
 }
 
+// LE SCRIPT D'UN OUTIL SE DÉDUIT DE SON NOM (2026-09-27, tâche #993).
+//
+// LA MESURE QUI A TOUT DÉCIDÉ, et elle a été faite avant d'écrire une ligne : sur les 68 outils
+// déclarés dans TOOL_RELIABILITY, **57 ont pour script `scripts/<slug>.mjs`, exactement**. Onze
+// font exception, et elles sont ci-dessous. Deux tables tenues à la main — `AGENT_SCRIPT_FILES`
+// (axa-check, 38 entrées) et `RELIABILITY_SCRIPT_FILES` (doc-report, 42) — recopiaient cette règle
+// entrée par entrée, soit environ quatre-vingts lignes pour redire ce qu'une phrase suffit à dire.
+//
+// CE QUE ÇA EXPLIQUE, ET C'EST PLUS INTÉRESSANT QUE LA DUPLICATION ELLE-MÊME. Les deux tables sont
+// asymétriques : 6 slugs d'un côté, 10 de l'autre, 26 et 30 absences par rapport au registre. En
+// les instruisant une par une, aucune n'est un choix : AUCUNE entrée d'aucune des deux tables n'est
+// absente du registre de fiabilité (0 intrus des deux côtés), et toutes les absences sont des
+// oublis. Personne n'a été négligent — c'est le PROCÉDÉ qui garantissait l'oubli, et le commentaire
+// de tête de la seconde table le racontait déjà : « sept registres à remplir à la main pour un seul
+// outil qui arrive ». C'est exactement ce que l'Article 24 interdit.
+//
+// LES ONZE EXCEPTIONS SONT CURATÉES À LA MAIN, ET CETTE NATURE MANUELLE EST ÉCRITE ICI MÊME
+// (Article 24) : aucune mécanique ne peut deviner que « argus » s'appelle `check-argus.mjs`. Ce qui
+// les protège de la dérive, c'est `findSlugsSansScript()` juste dessous — une exception qui pointe
+// vers un fichier disparu, ou un slug qui ne se résout plus, est nommé au lieu de passer.
+export const SCRIPTS_HORS_REGLE = {
+  // Le slug porte un suffixe qui distingue l'OUTIL du fichier (deux entrées du registre pour un
+  // même fichier : l'une juge le filet, l'autre le script qui le lance).
+  "check-spirit-mjs": "scripts/check-spirit.mjs",
+  "check-house-mjs": "scripts/check-house.mjs",
+  // Le nom d'usage diffère du nom de fichier, pour des raisons historiques toutes documentées dans
+  // la fiche de l'outil concerné.
+  argus: "scripts/check-argus.mjs",
+  harmonia: "scripts/check-harmonia.mjs",
+  "the-screener": "scripts/the-screener-capture.mjs",
+  "smart-breaker": "scripts/check-gemini-quota.mjs",
+  "memory-audit": "scripts/memento.mjs",
+  "doc-html": "scripts/html-report.mjs",
+  "compteur-d-utilisation-des-outils": "scripts/tool-usage.mjs",
+  // Deux outils qui VIVENT dans le fichier d'un autre : ce ne sont pas des alias, ce sont des
+  // couches distinctes hébergées là, et leur script est donc légitimement celui de leur hôte.
+  "charter-spy": "scripts/smart-conso-token.mjs",
+  "find-deep-booster": "scripts/route-booster.mjs",
+};
+
+export function scriptPourSlug(slug, { exceptions = SCRIPTS_HORS_REGLE } = {}) {
+  return exceptions[slug] ?? `scripts/${slug}.mjs`;
+}
+
+// Le garde-fou de la règle ET de ses exceptions : tout slug déclaré doit se résoudre vers un
+// fichier qui EXISTE. C'est ce qui remplace les quatre-vingts lignes tenues à la main — non pas en
+// supprimant la vérification, mais en la rendant mécanique et exhaustive là où elle était partielle.
+export function findSlugsSansScript(registre = {}, { existsImpl, root = "." } = {}) {
+  const existe = existsImpl ?? ((c) => existsSync(join(root, c)));
+  return Object.keys(registre)
+    .map((slug) => ({ slug, chemin: scriptPourSlug(slug) }))
+    .filter(({ chemin }) => !existe(chemin))
+    .map(({ slug, chemin }) => ({ slug, chemin, ecart: `« ${slug} » est déclaré mais se résout vers « ${chemin} », qui n'existe pas — soit le fichier a été renommé sans que l'exception suive, soit le slug est une exception qui n'a jamais été déclarée` }));
+}
+
 // DEUX TABLES slug → SCRIPT, TENUES À LA MAIN DANS DEUX OUTILS (2026-09-27, tâche #993, troisième
 // constat retenu de CLONE-HUNTER).
 //

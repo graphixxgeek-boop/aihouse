@@ -8303,6 +8303,31 @@ async function testSystemeDesIndex() {
   assert.ok(ecritsJournal[0].includes('r-2026-09-01.txt') && ecritsJournal[0].includes('r-2026-09-02.txt'), 'the rebuilt block must KEEP what it had already reconstituted and ADD the new deposit — rebuilt against the full text it would keep only the newcomer, and the two passes would contradict each other forever');
   const strippe = da.sansLeBlocGenere(`avant\n${da.DEBUT_BLOC_GENERE}\ndedans\n${da.FIN_BLOC_GENERE}\naprès`);
   assert.ok(strippe.includes('avant') && strippe.includes('après') && !strippe.includes('dedans'), 'stripping the generated block must leave the hand-written text on both sides intact and nothing of the machine-written middle');
+  // LE SCRIPT D'UN OUTIL SE DÉDUIT DE SON NOM (2026-09-27, tâche #993, suite du constat ci-dessous).
+  // Le garde-fou de divergence n'était que la moitié du travail : mesure faite, sur les 68 outils du
+  // registre de fiabilité, 57 ont pour script `scripts/<slug>.mjs` et 11 font exception. Les deux
+  // tables tenues à la main (38 et 42 entrées, ~80 lignes) recopiaient cette règle entrée par entrée
+  // — et leur asymétrie n'était choisie par personne : AUCUNE de leurs entrées n'est absente du
+  // registre, toutes les absences sont des oublis. C'est le PROCÉDÉ qui garantissait l'oubli.
+  {
+    const ls2 = await import('../scripts/lib-shell.mjs');
+    const ax2 = await import('../scripts/axa-check.mjs');
+    const dr3 = await import('../scripts/doc-report.mjs');
+    assert.equal(ls2.scriptPourSlug('clone-hunter'), 'scripts/clone-hunter.mjs', 'the rule itself: an ordinary slug derives its script, and that is what removes eighty hand-kept lines');
+    assert.equal(ls2.scriptPourSlug('argus'), 'scripts/check-argus.mjs', 'and the exception wins over the rule — ARGUS really lives in check-argus.mjs, which no derivation could ever guess');
+    assert.deepEqual(ls2.findSlugsSansScript(ls2.TOOL_RELIABILITY), [], 'checked live against the real registry: every one of the declared tools must resolve to a file that EXISTS — this is what replaces the hand-kept tables, by making the check mechanical and exhaustive where it was partial');
+    assert.equal(ls2.findSlugsSansScript({ 'outil-fantome': {} }, { existsImpl: () => false }).length, 1, 'MUST STILL BITE: a slug resolving to nothing is named — otherwise the guard would be a green light over an empty check (leçon L11)');
+    assert.deepEqual(ls2.findSlugsSansScript({ argus: {} }, { existsImpl: (c) => c === 'scripts/check-argus.mjs' }), [], 'counter-test: an exception pointing at a real file passes, so the guard discriminates instead of refusing everything');
+    // Les deux tables dérivées, confrontées à ce qu'elles valaient AVANT (instantané pris avant
+    // toute modification) : une factorisation qui change une seule valeur n'est pas une
+    // factorisation, c'est un changement de comportement déguisé en nettoyage.
+    assert.equal(Object.keys(ax2.AGENT_SCRIPT_FILES).length, ax2.SLUGS_COUVERTS_PAR_AXA.length, 'the derived map must have exactly one entry per declared slug — its PERIMETER stays hand-declared, because widening what a Gardien sacré measures is the user\'s decision, never a side effect of tidying');
+    assert.equal(ax2.AGENT_SCRIPT_FILES['clone-hunter'], 'scripts/clone-hunter.mjs');
+    assert.equal(ax2.AGENT_SCRIPT_FILES['memory-audit'], 'scripts/memento.mjs', 'an exception must survive the derivation — this one is the real case that would silently break coverage measurement for that tool');
+    assert.equal(Object.keys(dr3.RELIABILITY_SCRIPT_FILES).length, Object.keys(ls2.TOOL_RELIABILITY).length, 'the reliability table now covers the WHOLE registry it serves: it held 42 entries for 68 declared tools, so twenty-six escaped the check entirely and nothing could see it');
+    assert.equal(dr3.findHeuristicToolsWithoutNotice().length, 0, 'and the widening is safe, measured rather than assumed: going from 42 to 68 reveals ZERO new finding — the twenty-six tools that escaped the check all pass it');
+  }
+
   // DEUX TABLES slug → SCRIPT QUI NE SE PARLAIENT PAS (2026-09-27, tâche #993, troisième constat
   // retenu de CLONE-HUNTER). axa-check et doc-report tiennent chacune à la main une table associant
   // un slug d'outil à son fichier ; 32 slugs sont communs, et rien ne vérifiait qu'elles disent la
