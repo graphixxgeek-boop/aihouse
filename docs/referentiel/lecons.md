@@ -1248,6 +1248,35 @@ personne n'exécute est pire qu'un test qui échoue** : il rend un vert vide. R�
 dérive une copie d'un fichier pour l'exécuter ailleurs, la redirection porte sur TOUT le fichier,
 jamais sur la partie qu'on a en tête.
 
+**L42 — Un banc d'essai qui n'installe pas ce qu'il mesure mesure ce qui traînait là.**
+*(2026-09-28, tâche #1034 étape 2 — et c'est la leçon L41 qui revient, cette fois dans l'outil chargé
+de la vérifier chez les autres.)* Le banc du témoin lance chaque outil de l'Agence dans un dépôt
+ÉTRANGER et classe ce qui se passe. Il ne copiait rien : il lançait `scripts/<outil>.mjs` en se
+plaçant dans le dépôt d'accueil, en supposant qu'une copie de l'Agence s'y trouvait — elle y était,
+posée à la main vingt minutes plus tôt. Résultat : après avoir réparé sept outils et vérifié chaque
+réparation à la main, le banc a rendu **exactement le même rapport qu'avant**, code 0, quinze
+non-portables, et **il avait l'air juste**. Les sept corrections étaient simplement absentes de la
+copie qu'il exécutait. **Un rapport qui ne bouge pas après une correction n'est pas forcément la
+preuve que la correction ne sert à rien : c'est peut-être la preuve que le banc ne l'a pas vue.**
+La correction est mécanique et non négociable : le banc réinstalle à CHAQUE passage, imprime combien
+de fichiers il a posés et depuis quel commit, et refuse de mesurer si la copie échoue. Le chiffre
+réel, une fois le banc réparé : **79 % → 89 %**, quinze non-portables tombés à huit.
+
+**L43 — Sur un petit corpus, la rareté d'un mot n'est pas un signal : 60 % des mots y sont « rares ».**
+*(2026-09-28, même tâche, idée essayée et écartée le jour même.)* Le point d'entrée obligatoire
+(tool-brain) a répondu « aucune correspondance » à une demande qu'une offre du catalogue servait
+parfaitement — l'offre le disait dans sa DESCRIPTION, et seul son champ `demande` était lu. L'idée
+séduisante : admettre UN seul mot partagé quand ce mot n'est employé que par une offre, au motif
+qu'un mot rare pèse plus que deux mots banals. **La mesure l'a tuée en une commande** : sur les 70
+offres réelles, 851 racines dont **508 (60 %) n'apparaissent que dans une seule offre**. Le
+contre-test d'inflation déjà en place est passé de zéro à trois fausses pistes (« bloc », « enchaîner »,
+« suivent »), trois faux sens pour un vrai. **Ce qui marche sur mille fonctions ne marche pas sur
+soixante-dix offres, et seule la mesure le dit.** Ce qui a réglé le problème n'était pas le matcheur
+mais la DONNÉE : enrichir la demande de l'offre du vocabulaire qu'un lecteur emploie vraiment. Règle
+générale : avant de raffiner un algorithme de rapprochement, regarder si la chaîne qu'on cherche à
+rapprocher est simplement absente du texte qu'on lit.
+
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

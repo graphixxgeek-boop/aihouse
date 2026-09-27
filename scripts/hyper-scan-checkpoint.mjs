@@ -38,7 +38,7 @@
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { sh as shBase, printReliabilityNotice } from "./lib-shell.mjs";
+import { sh as shBase, printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { verifyRondeProcess } from "./circle-process-guardian.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
@@ -278,8 +278,13 @@ function main() {
   }
 
   console.log("\n--- Charte (CLAUDE.md) ---");
-  const charter = readFileSync(join(ROOT, "CLAUDE.md"), "utf8");
-  console.log(`${charter.length} caractères, ${charter.split("\n").length} lignes — relecture COMPLÈTE requise en aval (jamais un résumé de mémoire, décision explicite de l'utilisateur).`);
+  // (2026-09-27, tâche #1034) — même classe que #1043 : la charte se lit, son absence se déclare.
+  const charterDoc = lireLeDocumentGouvernant("CLAUDE.md", { root: ROOT });
+  if (!charterDoc.trouve) {
+    for (const l of ligneDocumentAbsent(charterDoc, { outil: "HYPER-SCAN-CHECKPOINT", aQuoiCaSert: "la relecture complète de la charte est l'étape 1 de sa liste" })) console.log(l);
+  } else {
+    console.log(`${charterDoc.texte.length} caractères, ${charterDoc.texte.split("\n").length} lignes — relecture COMPLÈTE requise en aval (jamais un résumé de mémoire, décision explicite de l'utilisateur).`);
+  }
 
   const checklist = [
     "1. Relire CLAUDE.md EN ENTIER (le fichier vient d'être chargé ci-dessus ; cette étape reste un vrai raisonnement, jamais automatisable) — chaque Article est-il toujours respecté par le code actuel ?",

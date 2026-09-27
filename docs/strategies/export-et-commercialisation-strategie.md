@@ -552,3 +552,50 @@ plus haut. Corriger une occurrence ne corrige pas la classe.
 *ne se remplit qu'À LA FIN, juste avant la construction effective*
 
 *(vide — rien n'a encore été versé ici)*
+
+### Le TROISIÈME passage du témoin (2026-09-28) : 79 % → 89 %, et le banc mentait
+
+**Ce qui a été fait.** Les quinze outils encore non portables ont été instruits un par un en les
+lançant pour de vrai dans le dépôt témoin et en lisant le fichier et la ligne exacts où chacun
+mourait. Trois familles nettes en sont sorties, et elles se soignent différemment :
+
+| Famille | Outils | Le geste |
+|---|---|---|
+| **Il LIT un document de loi** sans vérifier qu'il existe | le-coordinateur, the-king, the-equalizer, hyper-scan-checkpoint, kpi-report, el-professor | `lireLeDocumentGouvernant()` — l'absence se DÉCLARE |
+| **Il LISTE un dossier** supposé présent | check-suivi-fidelity | `listerLeDossierGouvernant()` — même geste, forme dossier |
+| **Il ÉCRIT** dans un dossier jamais créé | ou-on-en-est | `assurerLeDossierDeSortie()` — ici on CRÉE, on ne renonce pas |
+
+**La troisième se traite à l'inverse des deux autres, et c'est la subtilité du jour.** Quand un outil
+LIT, l'absence est un résultat légitime à déclarer. Quand il ÉCRIT, non : le rapport, on sait le
+produire — renoncer serait une panne déguisée en honnêteté.
+
+**LE DÉFAUT ÉTAIT DANS LE BANC, ET IL EST DE LOIN LE PLUS INSTRUCTIF DE LA SÉRIE.** Après ces sept
+réparations, le banc a rendu **exactement le même rapport qu'avant** : code 0, quinze non-portables,
+les mêmes lignes mot pour mot. La cause : **le banc n'installait rien**. Il lançait
+`scripts/<outil>.mjs` en se plaçant dans le dépôt d'accueil, en supposant qu'une copie de l'Agence
+s'y trouvait déjà — elle y était, posée à la main vingt minutes plus tôt, **vieille de quatre
+fichiers**. Il mesurait le passé avec l'aplomb du présent.
+
+**Ce que ça dit pour l'export, et c'est une contrainte de plus** : *un outil qui vérifie une
+installation doit l'INSTALLER lui-même, à chaque passage, et dire ce qu'il a posé.* Un banc qui
+travaille sur ce qu'il trouve sur place ne mesure pas un produit, il mesure un état de disque.
+Le banc réinstalle désormais `scripts/` en entier avant chaque passage, imprime le nombre de fichiers
+et le commit d'origine, et refuse de mesurer si la copie échoue. (Leçon L42.)
+
+**Le chiffre, une fois le banc réparé** : **65/73 outils tiennent debout, 89 %** — contre 79 % au
+passage précédent, non-portables **15 → 8**.
+
+**Les huit qui restent, et ils ne se ressemblent pas** :
+
+- **Légitimement liés, à DÉCLARER plutôt qu'à corriger** : `install-ci`, `pnpm-install` — des
+  installateurs, dont le rôle est précisément de connaître l'environnement d'accueil.
+- **Ils supposent l'arborescence du JEU** (`lib/life.ts`, `lib/lia.ts`, `app/api/lia/route.ts`) :
+  `check-argus`, `kpi-report` (nouvelle couche, la précédente est réparée), `route-booster`. Ceux-là
+  demandent de DÉTECTER le produit hôte au lieu de le supposer — un vrai chantier de conception, pas
+  un correctif.
+- **Liés à notre environnement** : `check-gemini-quota` (`.dev.vars`), `the-screener-capture`
+  (navigateur), `filet-en-parts` (il cherche un filet à découper, et le témoin n'en a pas).
+
+**Le principe qui sort de ce troisième passage** : les corrections faciles sont épuisées. Ce qui
+reste n'est plus de la négligence, c'est de la CONCEPTION — un outil de l'Agence doit pouvoir
+demander à son hôte « où est ton code ? » au lieu de répondre à sa place.

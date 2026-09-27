@@ -52,7 +52,7 @@
     "sens": "plus bas = mieux"
    },
    "sante-du-code": {
-    "valeur": 50,
+    "valeur": 100,
     "sens": "plus haut = mieux"
    },
    "note-du-jeu": {
@@ -60,7 +60,7 @@
     "sens": "plus haut = mieux"
    },
    "note-de-l-agence": {
-    "valeur": 85.7,
+    "valeur": 94,
     "sens": "plus haut = mieux"
    }
   }

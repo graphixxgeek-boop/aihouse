@@ -44,7 +44,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles, REGISTRIES as REGISTRIES_DOC_REPORT } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
@@ -320,7 +320,7 @@ export const PRESTATIONS = [
   { nom: "Pack Chasse", description: "Orchestre ARGUS/HARMONIA/check-house.mjs/le tableau de bord en version légère gratuite ; version complète ajoute une double perspective par agent séparé.", demande: "Chasse aux bugs cachés avant une étape importante", outils: ["HYPER-SCAN-CHECKPOINT"], cout: "version légère : 0 appel API ; version complète : appels Gemini réels — consulter Smart Conso API avant", tokensEstimes: "version légère : faible ; version complète : ~37k tokens fixes (agent séparé) — consulter SMART-CONSO-TOKEN avant" },
   { nom: "Pack Verdict", description: "Un agent séparé, sans mémoire du projet, incarne un professionnel senior et rend un verdict opiniâtre sur le code et le produit.", demande: "Audit global indépendant (code + produit + reprise potentielle)", outils: ["THE-FINAL-JUDGE"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes par appel (quasi le même quel que soit le palier d'intensité) — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
   { nom: "Pack Bouclier", description: "Même agent séparé que Pack Verdict, mandat explicitement étendu aux risques de sécurité/production.", demande: "Sécurité et préparation à la mise en production", outils: ["THE-FINAL-JUDGE (mandat sécurité inclus)"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes — consulter Smart Conso API ET SMART-CONSO-TOKEN avant" },
-  { nom: "Pack Mémoire Longue", description: "Un agent séparé archiviste relit la conversation entière contre docs/suivi/ pour trouver ce qui n'a jamais été tracé.", demande: "Vérifier qu'aucune idée/tâche n'a été oubliée dans le suivi (relecture lourde, agent séparé)", outils: ["THE-DEEP-READER"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes minimum + volume réel de conversation à relire, jamais un chiffre fixe comme Pack Verdict — consulter Smart Conso API ET SMART-CONSO-TOKEN avant, préférer d'abord la version légère gratuite (docs/systeme-de-suivi.md)" },
+  { nom: "Pack Mémoire Longue", description: "Un agent séparé archiviste relit la conversation entière contre docs/suivi/ pour trouver ce qui n'a jamais été tracé.", demande: "Relire l'historique de la conversation pour vérifier qu'aucune idée, leçon ou tâche n'a été oubliée dans le suivi (relecture lourde, agent séparé)", outils: ["THE-DEEP-READER"], cout: "0 appel API — agent séparé, jamais de Gemini", tokensEstimes: "~37k tokens fixes minimum + volume réel de conversation à relire, jamais un chiffre fixe comme Pack Verdict — consulter Smart Conso API ET SMART-CONSO-TOKEN avant, préférer d'abord la version légère gratuite (docs/systeme-de-suivi.md)" },
   { nom: "Pack Dépannage", description: "Sonde plusieurs modèles/clés Gemini avec un appel minimal réel pour identifier ce qui est encore disponible.", demande: "Diagnostiquer un blocage/quota Gemini épuisé (429/503 répétés)", outils: ["Smart Breaker (check-gemini-quota.mjs)"], cout: "réel — quelques appels Gemini minimaux de diagnostic", tokensEstimes: "négligeable" },
   { nom: "Pack Sobriété", description: "Donne un avis fiabilisé avant une action coûteuse en tokens, combinant schémas connus et historique observé.", demande: "Réguler ma propre consommation de tokens avant une action coûteuse", outils: ["SMART-CONSO-TOKEN"], cout: "0 appel API", tokensEstimes: "nul — 0 token, 0 appel API" },
   { nom: "Pack Ronde", description: "Ouvre la fenêtre à cocher de la Ronde périodique (profil, référentiels, KPI, signaux ALWAYS-NEW-CODE/CLEAN-DIRTY-OLD, scans Smart Conso, catalogue, photo de la dream team, THE-SCREENER).", demande: "Lancer la ronde périodique des tâches gratuites mal automatisées", outils: ["CIRCLE-TASKS"], cout: "0 appel API — sauf si THE-FINAL-JUDGE (⚠️🔴) est explicitement coché", tokensEstimes: "faible à modéré selon la sélection — ~37k tokens fixes seulement si THE-FINAL-JUDGE est explicitement coché" },
@@ -618,6 +618,11 @@ const STOPWORDS_FR = new Set([
   "le", "la", "les", "de", "des", "du", "un", "une", "et", "ou", "à", "au", "aux", "pour", "sur",
   "dans", "en", "avec", "sans", "que", "qui", "ne", "pas", "est", "être", "ce", "cette", "son", "sa",
   "ses", "tout", "toute", "tous", "toutes", "plus", "déjà", "jamais", "cet", "cette",
+  // « non » a rejoint la liste le 2026-09-27 (tâche #1034) en MESURANT, pas en supposant : c'est un
+  // mot purement grammatical qui se trouve n'employé que par une seule offre du catalogue, donc le
+  // rapprochement par mot rare ci-dessous le prenait pour un signal fort. Un mot vide qui passe
+  // pour rare est exactement le faux positif qui fait cesser de lire un point d'entrée (leçon L4).
+  "non",
 ]);
 
 // Exportée (2026-09-20) pour que check-tasks-details.mjs réutilise EXACTEMENT le même tokenizer
@@ -914,6 +919,39 @@ export function formatOffresConcurrentesLines(r) {
   l.push(`  HORS PORTÉE : ${r.horsPortee}`);
   return l;
 }
+
+// L'IDÉE DU MOT RARE, ESSAYÉE ET ÉCARTÉE LE MÊME JOUR — avec sa raison, parce qu'un écart sans
+// raison n'est pas une décision (Article 28). Elle est écrite ici plutôt que perdue : le prochain
+// agent aura la même idée, et il doit trouver la mesure qui la referme (Article 27).
+//
+// LE DÉFAUT DE DÉPART ÉTAIT RÉEL, lui, et trouvé en SE SERVANT du point d'entrée. Demande exacte :
+// « relire l'historique de conversation et en extraire les leçons, bonnes pratiques et éléments de
+// stratégie non encore enregistrés ». Réponse : « Aucune correspondance dans le catalogue ». Or le
+// **Pack Mémoire Longue** dit dans sa description « relit la CONVERSATION entière contre
+// docs/suivi/ ». L'offre existait, elle répondait, et l'agent est reparti convaincu que personne ne
+// savait faire — le coût exact que ce fichier redoute depuis la tâche #776.
+//
+// L'IDÉE : admettre UN seul mot partagé quand ce mot n'est employé que par une offre du catalogue
+// (df = 1), au motif qu'un mot rare pèse plus que deux mots banals — la doctrine de `poidsDesMots()`
+// plus bas, jamais appliquée ici.
+//
+// CE QUE LA MESURE A DIT, ET ELLE L'A TUÉE : sur les 70 offres réelles, 851 racines dont **508
+// (60 %) n'apparaissent que dans UNE offre**. « Rare » n'y distingue donc presque rien. Le contre-
+// test d'inflation déjà en place (« enchainer sur le bloc suivant de taches ouvertes », une méta-
+// demande qu'aucun outil ne sert) est passé de 0 à TROIS pistes : « bloc » (sens « bloc de code
+// dupliqué »), « enchaîner » (sens « enchaîner les vérifications »), « suivent ». Trois faux sens
+// pour un vrai. Un point d'entrée obligatoire qui rend du bruit cesse d'être lu (leçon L4), et
+// c'est plus cher que le silence qu'on voulait corriger.
+//
+// ESSAYÉ AUSSI, ET ÉCARTÉ POUR LA MÊME RAISON : compter les mots sur la SURFACE (demande +
+// description) avec le seuil de deux inchangé. Zéro inflation, mais zéro gain — la bonne offre ne
+// partage qu'UN mot avec la demande, quelle que soit la surface lue — et un classement déplacé sur
+// « renommage », où Pack Espion passait devant Pack Baptême. Aucune des deux mécaniques ne gagne.
+//
+// CE QUI A ÉTÉ FAIT À LA PLACE, et c'est le geste que ce fichier prescrit déjà lui-même
+// (`formatOffresConcurrentesLines` : « rendre chaque demande DISCRIMINANTE ») : la DEMANDE de
+// l'offre a été enrichie du vocabulaire qu'un lecteur emploie vraiment. Corriger la donnée, pas le
+// matcheur. Même geste que la tâche #777, qui avait refermé deux trous identiques de cette façon.
 
 export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, onboardingContext = null) {
   const taskWords = new Set(significantWords(taskLabel));
@@ -2160,8 +2198,13 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   // ecotoken (2026-09-22) : le poids de la charte est une donnée de réseau au même titre
   // que la couverture de test — c'est le seul document rechargé à chaque message. Lecture seule du
   // budget, jamais le plan complet (qui demande de lire tout le dépôt, trop cher pour une synthèse).
-  const budgetCharte = checkWeightBudget(readFileSync(join(ROOT, "CLAUDE.md"), "utf8"));
-  rows.push({ name: "ecotoken (poids de la charte)", result: budgetCharte.depasse ? `à regarder (${budgetCharte.tokens} tk, +${budgetCharte.depassement} au-dessus du budget)` : `ok (${budgetCharte.tokens} tk, marge ${budgetCharte.margePct} %)`, when: now });
+  // PAS DE CHARTE ICI EST UN RÉSULTAT, JAMAIS UNE PANNE (2026-09-27, tâche #1034) : sur un dépôt
+  // qui n'a pas encore de CLAUDE.md, cette ligne tuait tout le coordinateur avant la première
+  // sortie. Elle DÉCLARE désormais ce qu'elle n'a pas pu mesurer, comme les cinq outils qui ont
+  // tourné du premier coup sur le dépôt témoin.
+  const charteDoc = lireLeDocumentGouvernant("CLAUDE.md", { root: ROOT });
+  const budgetCharte = charteDoc.trouve ? checkWeightBudget(charteDoc.texte) : null;
+  rows.push({ name: "ecotoken (poids de la charte)", result: !budgetCharte ? "⚪ pas mesuré (CLAUDE.md introuvable ici)" : budgetCharte.depasse ? `à regarder (${budgetCharte.tokens} tk, +${budgetCharte.depassement} au-dessus du budget)` : `ok (${budgetCharte.tokens} tk, marge ${budgetCharte.margePct} %)`, when: now });
 
   // Doc-Report (2026-09-21, tâche #340, trouvaille réelle : 6 fichiers de scan ARGUS restés
   // orphelins avant d'être indexés rétroactivement) — vérifie qu'un registre à "un fichier par

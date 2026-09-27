@@ -15,7 +15,7 @@
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -240,7 +240,14 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // CIRCLE-TASKS, jamais pour quelqu'un qui lance l'outil à la main. Un outil dont le cœur du rôle
   // (« conserver un historique de l'évolution du document », demande d'origine) reste invisible
   // depuis sa propre ligne de commande n'est pas un outil terminé.
-  const principles = extractPrincipleUnits(readFileSync(join(ROOT, chemin), "utf8"));
+  // LE DOCUMENT QUI FAIT LOI PEUT NE PAS ÊTRE LÀ (2026-09-27, tâche #1034) — sur un dépôt sans
+  // philosophie écrite, THE-KING mourait ici. Une absence déclarée vaut mieux qu'un ENOENT.
+  const philoDoc = lireLeDocumentGouvernant(chemin, { root: ROOT });
+  if (!philoDoc.trouve) {
+    for (const l of ligneDocumentAbsent(philoDoc, { outil: "THE-KING", aQuoiCaSert: "il y lit les principes, leurs dates et leurs tensions" })) console.log(l);
+    return;
+  }
+  const principles = extractPrincipleUnits(philoDoc.texte);
   const digest = buildEvolutionDigest(principles);
   const declarees = principles.filter((p) => extractPrincipleDate(p)).length;
   console.log(`\n📜 Évolution du document — ${digest.length}/${principles.length} principes datés (${declarees} date(s) déclarée(s), ${digest.length - declarees} dérivée(s) de l'historique git) :`);

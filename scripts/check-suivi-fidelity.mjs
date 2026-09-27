@@ -16,7 +16,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE, CASE_COCHEE, PREMIERE_TACHE_AVEC_RITUEL, QUESTIONS_DE_CLOTURE } from "./criticite.mjs";
-import { sh, printReliabilityNotice } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent, listerLeDossierGouvernant } from "./lib-shell.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
@@ -946,7 +946,14 @@ function main() {
   }
 
   console.log("\n=== Garde-fou validation des tâches terminées (fichiers cités réellement présents) ===\n");
-  const allSessions = readdirSync(SESSIONS_DIR).filter((f) => f.endsWith(".md"));
+  // (2026-09-27, tâche #1034) — sur un dépôt sans suivi, l'outil mourait ici au lieu de dire
+  // simplement qu'il n'y a rien à vérifier. Même classe que #1043, forme « dossier ».
+  const dossierSessions = listerLeDossierGouvernant(SESSIONS_DIR);
+  if (!dossierSessions.trouve) {
+    for (const l of ligneDocumentAbsent(dossierSessions, { outil: "check-suivi-fidelity", aQuoiCaSert: "il y relit chaque fichier de session du suivi" })) console.log(l);
+    return;
+  }
+  const allSessions = dossierSessions.fichiers.filter((f) => f.endsWith(".md"));
   let anyMissingFile = false;
   for (const file of allSessions) {
     const missingFiles = findClaimedFilesMissing(readFileSync(join(SESSIONS_DIR, file), "utf8"));

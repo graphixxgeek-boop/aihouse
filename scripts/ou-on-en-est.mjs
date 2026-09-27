@@ -24,7 +24,7 @@
 import { readFileSync, readdirSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, assurerLeDossierDeSortie } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -239,6 +239,10 @@ function main() {
     console.log(`${b.faitesPeriode.length} terminée(s) sur la période (${b.periode.jours.join(", ")}), ${b.ouvertesTotal.length} ouverte(s).`);
     for (const [d, l] of b.parDomaine) console.log(`   · ${d} : ${l.length}`);
   }
+  // (2026-09-27, tâche #1034) — troisième forme de la même supposition : le dossier de sortie
+  // n'existe pas sur un dépôt neuf. On le crée, parce qu'ici l'absence n'est pas un résultat à
+  // déclarer : le rapport, lui, on sait le produire.
+  assurerLeDossierDeSortie(sortie);
   writeFileSync(sortie, buildOuOnEnEstHtml(b), "utf8");
   console.log(`\nRapport HTML : ${sortie}`);
 }

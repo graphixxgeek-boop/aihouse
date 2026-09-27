@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -75,8 +75,15 @@ export function buildElProfessorCoverageHtml(missing, orphans) {
 function main() {
   printReliabilityNotice("el-professor");
   recordCliUsage("el-professor");
-  const simIndex = readFileSync(join(ROOT, "docs/simulations/index.md"), "utf8");
-  const elProfessorIndex = readFileSync(join(ROOT, "docs/el-professor/index.md"), "utf8");
+  // (2026-09-27, tâche #1034) — deux registres, deux absences possibles, un seul geste.
+  const docs = [["docs/simulations/index.md", "l'index des simulations archivées"], ["docs/el-professor/index.md", "son propre registre de notes"]]
+    .map(([chemin, role]) => ({ role, ...lireLeDocumentGouvernant(chemin, { root: ROOT }) }));
+  const manquant = docs.find((d) => !d.trouve);
+  if (manquant) {
+    for (const l of ligneDocumentAbsent(manquant, { outil: "EL-PROFESSOR", aQuoiCaSert: `il y lit ${manquant.role}` })) console.log(l);
+    return;
+  }
+  const [simIndex, elProfessorIndex] = docs.map((d) => d.texte);
   const missing = findMissingNotes(simIndex, elProfessorIndex);
   const orphans = findOrphanNotes(simIndex, elProfessorIndex);
 

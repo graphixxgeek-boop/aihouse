@@ -28,7 +28,7 @@
 
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction, PLAN_ACTION_TITRE, dateEnToutesLettres } from "./report-template.mjs";
 
@@ -197,8 +197,19 @@ export function formatConfrontationLines(r) {
   return out;
 }
 
+// ABSENT NE VEUT PAS DIRE CASSÉ (2026-09-27, tâche #1034) : sur un dépôt sans référentiel de
+// standards, THE-EQUALIZER s'arrêtait sur un ENOENT. Il rend maintenant une liste VIDE, et
+// `standardsAbsents()` permet à l'appelant de dire « pas mesuré » au lieu de « zéro exigence » —
+// les deux se ressemblent à l'affichage, et c'est exactement la confusion que la leçon L5 nomme.
 export function loadStandards({ root = ROOT, readFileImpl = readFileSync } = {}) {
-  return parseStandards(readFileImpl(join(root, STANDARDS_PATH), "utf8"));
+  const doc = lireLeDocumentGouvernant(STANDARDS_PATH, { root, lireImpl: readFileImpl });
+  dernierChargement = doc;
+  return doc.trouve ? parseStandards(doc.texte) : [];
+}
+
+let dernierChargement = { trouve: true };
+export function standardsAbsents() {
+  return dernierChargement.trouve ? null : ligneDocumentAbsent(dernierChargement, { outil: "THE-EQUALIZER", aQuoiCaSert: "il y lit les exigences à vérifier et leur vérificateur déclaré" });
 }
 
 // ————————————————————————————————————————————————————————————————————————

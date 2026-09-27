@@ -4793,7 +4793,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // Cause bête et générale : le rapprochement se faisait caractère pour caractère. Et le coût est
   // celui que ce projet redoute le plus — « aucune correspondance » se lit comme « aucun outil ne
   // sait faire ça », les deux sont indiscernables, et l'agent refait à la main ce qu'un outil savait.
-  const { racineDuMot, suggestPrestationsForTask: suggestAvecRacines } = await import('../scripts/le-coordinateur.mjs');
+  const { racineDuMot, suggestPrestationsForTask: suggestAvecRacines, significantWords } = await import('../scripts/le-coordinateur.mjs');
   assert.equal(racineDuMot('renommage'), racineDuMot('renommer'), 'THE EXACT CASE THAT REVEALED IT: a request saying "renommage" must reach an offer saying "renommer"');
   assert.equal(racineDuMot('mesure'), racineDuMot('mesurer'), 'and the suffix "re" was REMOVED after a real trial that gave mesure→mesu while mesurer→mesur: an ending that SEPARATES two forms of the same word does the exact opposite of its job');
   assert.equal(racineDuMot('message'), 'messag', 'each ending carries its own minimum remaining length, because one value for all is wrong in one direction or the other: renommage must give renomm (6 left, cut) while message must not give mess (4 left, no cut)');
@@ -4806,6 +4806,18 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.deepEqual(suggestAvecRacines('la maison', racinesFaux), [], 'the threshold of two shared words is untouched — one word was never enough and still is not');
   const bapteme = suggestAvecRacines('renommer un outil sans casser le code');
   assert.ok(bapteme.some((m) => m.outils.includes('agent-des-noms')), 'checked live against the real PRESTATIONS menu: the naming agent is now reachable from a rename request, which it was not this morning');
+
+  // LE VOCABULAIRE DU LECTEUR (2026-09-27, tâche #1034) — même défaut que la racine ci-dessus, et
+  // trouvé de la même façon : en SE SERVANT du point d'entrée. Demande exacte : « relire
+  // l'historique de conversation et en extraire les leçons ». Réponse : « Aucune correspondance ».
+  // Or le Pack Mémoire Longue relit précisément la conversation — sa DESCRIPTION le dit, sa
+  // DEMANDE ne le disait pas, et seule la demande est lue. Corrigé sur la DONNÉE, jamais sur le
+  // matcheur : deux mécaniques ont été essayées et écartées le même jour (le mot rare, la surface
+  // élargie), et leur mesure est écrite dans le fichier pour que personne ne les rejoue à l'aveugle.
+  const lecteur = suggestAvecRacines("relire l'historique de conversation et en extraire les lecons");
+  assert.ok(lecteur.some((m) => m.outils.includes('THE-DEEP-READER')), 'THE EXACT REQUEST THAT MISSED: the long-memory pack must now be reachable from the words a reader actually uses, not only from the words the offer happened to be written with');
+  assert.ok(suggestAvecRacines("Vérifier qu'aucune tâche du suivi n'a été oubliée").some((m) => m.nom === 'Pack Mémoire Longue'), 'and the label it already answered still reaches it — enriching a demande must never cost an existing match (BP4, both directions)');
+  assert.deepEqual(significantWords('non'), [], '"non" joined the stopwords by MEASURE while testing the abandoned rare-word rule: a purely grammatical word that happens to be used by a single offer was passing for a strong signal');
 
   assert.deepEqual(matches[0].badgeWarnings, [], 'without an onboardingContext argument, badgeWarnings must default to an honest empty array rather than throwing or fabricating a warning — full backward compatibility for every pre-existing caller');
 
@@ -16296,6 +16308,21 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(/PAS MESURÉ/.test(dit) && /un-outil/.test(dit) && /sa raison/.test(dit), 'la phrase rendue dit les trois choses qui manquent quand un outil meurt : ce qu\'il cherchait, à quoi ça lui sert, et qu\'il rend la main proprement');
   const present = sh.lireLeDocumentGouvernant('CLAUDE.md', { lireImpl: () => '# une charte' });
   assert.equal(present.texte, '# une charte', 'et quand le document est là, rien ne change : le contrat du cas normal est intact');
+
+  // LES DEUX AUTRES FORMES DE LA MÊME SUPPOSITION (2026-09-27, tâche #1034, étape 2). En instruisant
+  // les quinze outils encore non portables, la moitié des morts restantes ne venaient PAS d'un
+  // fichier : elles venaient d'un DOSSIER supposé présent (`docs/suivi/sessions`) ou d'un dossier de
+  // SORTIE jamais créé (`docs/ou-on-en-est/`). Corriger la classe et pas l'occurrence (leçon L37)
+  // veut dire couvrir les trois formes, pas la première seulement — sinon la deuxième revient sur
+  // le prochain outil écrit, et le troisième endroit est toujours le pire.
+  const dossierAbsent = sh.listerLeDossierGouvernant('docs/suivi/sessions', { listerImpl: () => { throw new Error('ENOENT'); } });
+  assert.equal(dossierAbsent.trouve, false, 'un dossier de loi introuvable rend lui aussi une absence DÉCLARÉE, jamais une exception');
+  assert.deepEqual(dossierAbsent.fichiers, [], 'et une liste VIDE, pour que l\'appelant puisse itérer sans se protéger — mais il doit lire `trouve` avant de conclure « rien à signaler », qui n\'est pas « pas mesuré » (leçon L5)');
+  assert.deepEqual(sh.listerLeDossierGouvernant('x', { listerImpl: () => ['a.md'] }).fichiers, ['a.md'], 'et quand le dossier est là, rien ne change : le contrat du cas normal est intact');
+  let cree = null;
+  assert.equal(sh.assurerLeDossierDeSortie('docs/ou-on-en-est/rapport.html', { creerImpl: (d) => { cree = d; } }), 'docs/ou-on-en-est', 'TROISIÈME FORME, et elle se traite à l\'INVERSE des deux autres : quand l\'outil ÉCRIT, l\'absence du dossier n\'est pas un résultat à déclarer — le rapport, lui, on sait le produire, donc on crée le chemin plutôt que de renoncer');
+  assert.equal(cree, 'docs/ou-on-en-est', 'et c\'est bien le dossier PARENT qui est créé, jamais le fichier lui-même');
+  assert.equal(sh.assurerLeDossierDeSortie('rapport.html', { creerImpl: () => { throw new Error('ne doit pas être appelé'); } }), null, 'CONTRE-TEST (BP4) : un chemin sans dossier parent ne crée rien du tout — un helper qui appellerait mkdir sur une chaîne vide échouerait là où il n\'y avait rien à faire');
 
   // LE SECOND PASSAGE DU TÉMOIN A TROUVÉ UN DÉFAUT DANS LE TRAVAIL DE LA MÊME JOURNÉE, et c'est la
   // meilleure preuve de son utilité : l'Agence emporte SES crochets avec elle, donc la détection du

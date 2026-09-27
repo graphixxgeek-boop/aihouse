@@ -6,7 +6,7 @@
 // mutualisation de docs/regles-de-travail.md §7ter est censée empêcher désormais).
 
 import { execSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 // PERSONNAGES — HORS DE L'ÉQUIPE, JAMAIS UNE CATÉGORIE DE L'ORGANIGRAMME (2026-09-21, tâche #245,
@@ -1079,4 +1079,29 @@ export function ligneDocumentAbsent(doc = {}, { outil = "cet outil", aQuoiCaSert
     `   ${outil} a besoin de ce document pour travailler${aQuoiCaSert ? ` : ${aQuoiCaSert}` : ""}.`,
     "   Il rend donc la main proprement plutôt que de s'arrêter sur une erreur : une absence déclarée est un résultat, un plantage n'apprend rien.",
   ];
+}
+
+// LA MÊME ABSENCE, MAIS SUR UN DOSSIER (2026-09-27, tâche #1034). `lireLeDocumentGouvernant()`
+// ci-dessus couvrait le fichier ; l'essai sur dépôt étranger a montré que la moitié des morts
+// restantes venaient d'un DOSSIER supposé présent (`docs/suivi/sessions`, `docs/<outil>/`). Corriger
+// pour la CLASSE et pas pour l'occurrence (leçon L37) veut dire couvrir les deux formes, pas la
+// première seulement — sinon la seconde revient sur le prochain outil écrit.
+export function listerLeDossierGouvernant(chemin, { root = ".", listerImpl = readdirSync } = {}) {
+  try {
+    return { trouve: true, chemin, fichiers: listerImpl(chemin.startsWith("/") ? chemin : `${root}/${chemin}`.replace(/\/+/g, "/")) };
+  } catch {
+    return { trouve: false, chemin, fichiers: [],
+      pourquoi: `${chemin} est introuvable ici — ce n'est pas une erreur, c'est un dépôt qui n'a pas (encore) ce dossier` };
+  }
+}
+
+// ÉCRIRE SON RAPPORT QUELQUE PART QUI N'EXISTE PAS ENCORE. Troisième forme de la même supposition :
+// l'outil ne LIT pas, il ÉCRIT, et meurt parce que le dossier de destination n'a jamais été créé
+// (`docs/ou-on-en-est/`). Ici l'absence n'est PAS un résultat à déclarer — un rapport qu'on sait
+// produire doit s'écrire — donc le geste juste est de créer le chemin, jamais de renoncer.
+export function assurerLeDossierDeSortie(fichier, { creerImpl = mkdirSync } = {}) {
+  const dossier = String(fichier).replace(/\/[^/]*$/, "");
+  if (!dossier || dossier === String(fichier)) return null;
+  creerImpl(dossier, { recursive: true });
+  return dossier;
 }

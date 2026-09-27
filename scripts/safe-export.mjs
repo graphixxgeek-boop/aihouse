@@ -18,7 +18,7 @@
 // LE DÉCOR PARTAGÉ (2026-09-27) : les lectures par défaut passent par le cache commun de
 // lib-shell, invalidé par mtime+taille+inode — un fichier modifié est donc bien relu. Les
 // paramètres restent injectables : un test qui passe son propre `lire` n'est pas touché.
-import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync, cpSync } from "node:fs";
 import { lireFichierPartage } from "./lib-shell.mjs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
@@ -1093,6 +1093,16 @@ function main() {
     }
     return import("./le-classificateur.mjs").then(async (lc) => {
       const { spawnSync } = await import("node:child_process");
+      // LE BANC N'INSTALLAIT RIEN, ET C'EST LE PIRE DÉFAUT QU'IL POUVAIT AVOIR (2026-09-27, tâche
+      // #1034 étape 2). Il lançait `scripts/<outil>.mjs` avec `cwd` sur le dépôt témoin, en
+      // supposant qu'une copie de l'Agence s'y trouvait déjà. Elle y était — posée à la main vingt
+      // minutes plus tôt — donc le banc a rendu un rapport parfaitement crédible, code 0, sur une
+      // Agence VIEILLE DE QUATRE FICHIERS. Il mesurait le passé en ayant l'air de mesurer le
+      // présent : exactement la leçon L41, cette fois sur l'outil censé la vérifier chez les autres.
+      // Une copie qu'on ne rafraîchit pas n'est pas une copie, c'est un souvenir.
+      const pose = installerLAgenceChez(ou);
+      if (!pose.mesurable) { console.log(`🚨 PAS MESURÉ — ${pose.pourquoi}`); return; }
+      console.log(`Agence installée dans le témoin : ${pose.fichiers} fichier(s) copiés depuis ${pose.commit} — le banc réinstalle à CHAQUE passage, sans quoi il mesurerait ce qui traînait là.\n`);
       const rec = lc.recenserLesScripts();
       const noms = [...new Set((rec.lignes ?? rec).map((l) => String(l.chemin ?? l.fichier ?? "")).filter((c) => c.endsWith(".mjs")).map((c) => c.replace(/^scripts\//, "").replace(/\.mjs$/, "")))]
         .filter((n) => !n.startsWith("hooks/") && n !== "check-house" && n !== "lib-shell");
@@ -2423,6 +2433,24 @@ export function verdictDuTemoin({ code, sortie = "" } = {}) {
 // lance CE site — ils ne partent pas, et c'est écrit depuis longtemps. LA LISTE NE SE RECOPIE PAS
 // (Article 24) : c'est le registre `NE_PART_PAS_ET_C_EST_NORMAL` du même fichier, celui-là même
 // qui sert déjà à l'exportabilité. Un second registre finirait par diverger du premier.
+// POSER L'AGENCE CHEZ L'HÔTE, à chaque passage, et dire ce qui a été posé. La copie porte TOUT le
+// dossier `scripts/` et rien d'autre : c'est précisément ce que l'Agence prétend pouvoir emporter,
+// donc c'est ce qu'on doit lui donner — ni plus (ce serait tricher), ni moins.
+export function installerLAgenceChez(ou, { root = ROOT, copier = null, lister = null, shImpl = sh } = {}) {
+  if (!ou) return { mesurable: false, pourquoi: "aucun dépôt témoin donné" };
+  try {
+    const copie = copier ?? cpSync;
+    const listeur = lister ?? readdirSync;
+    copie(join(root, "scripts"), join(ou, "scripts"), { recursive: true, force: true });
+    const fichiers = listeur(join(ou, "scripts")).length;
+    let commit = "commit inconnu";
+    try { commit = String(shImpl("git rev-parse --short HEAD")).trim() || commit; } catch { /* un dépôt sans git reste mesurable */ }
+    return { mesurable: true, fichiers, commit };
+  } catch (e) {
+    return { mesurable: false, pourquoi: `la copie de scripts/ vers ${ou} a échoué (${e?.message ?? e}) — et sans copie fraîche, le banc mesurerait ce qui traînait là` };
+  }
+}
+
 export function synthetiserLeTemoin(passages = [], { exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
   if (!passages.length) return { mesurable: false, pourquoi: "aucun outil lancé : un banc d'essai vide rendrait « tout est portable » sur zéro mesure (leçon L5/L11)" };
   const parVerdict = {};

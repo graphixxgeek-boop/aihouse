@@ -41,7 +41,7 @@ import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.m
 import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
 import {recordCliUsage} from './tool-usage.mjs';
 import { buildPlanDaction, PLAN_ACTION_TITRE, readAgentSession, imprimerPlanDaction } from "./report-template.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { suivreLaTendance, formatTendanceLines, SENS } from './serie-temporelle.mjs';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -383,7 +383,7 @@ export function buildKpiFullReportHtml(run, full) {
         ['Erreurs tsc (hors vite.config.ts, préexistante)', String(full.tscErrors)],
         ['Tests check-house.mjs', full.tests ? `${full.tests.passed}/${full.tests.expected} bloc(s)${full.tests.green ? '' : ' — SUITE ROUGE'}` : 'N/A'],
         ['Couverture réelle par fonction (AXA-CHECK)', full.tests?.coverageScore === undefined ? 'N/A' : pct(full.tests.coverageScore)],
-        ['Points fragiles ouverts', String(full.fragilePoints)],
+        ['Points fragiles ouverts', full.fragilePoints == null ? '⚪ pas mesuré' : String(full.fragilePoints)],
         ['lib/lia.ts', `${full.stats?.liaLines ?? 'N/A'} lignes`],
         ['lib/dialogue.ts', `${full.stats?.dialogueLines ?? 'N/A'} lignes`],
         ['Fichiers dans lib/', String(full.stats?.libFileCount ?? 'N/A')],
@@ -505,7 +505,14 @@ function runTestSuite() {
 
 function countFragilePoints() {
     section('Robustesse du code : points fragiles ouverts');
-    const content = readFileSync(path('docs', 'referentiel', 'points-fragiles.md'), 'utf8');
+    // (2026-09-27, tâche #1034) — sans ce registre, 0 point fragile serait un MENSONGE : c'est
+    // « pas mesuré », pas « rien à signaler ». La distinction est celle de la leçon L5.
+    const doc = lireLeDocumentGouvernant('docs/referentiel/points-fragiles.md', { root });
+    if (!doc.trouve) {
+        for (const l of ligneDocumentAbsent(doc, { outil: 'le tableau de bord', aQuoiCaSert: "il y compte les points fragiles restés ouverts" })) console.log(l);
+        return null;
+    }
+    const content = doc.texte;
     const afterHeading = content.split('## Points ouverts')[1] ?? '';
     const count = (afterHeading.match(/^- /gm) ?? []).length;
     console.log(`${count} point(s) fragile(s) ouvert(s) — détail dans docs/referentiel/points-fragiles.md.`);
@@ -1055,7 +1062,7 @@ async function main() {
     if (alerts.length) {
         console.log(`🚨 ALERTE TABLEAU DE BORD — ${alerts.join(', ')}.`);
     } else {
-        console.log(`Tout est vert : ${pct(health.overall)} robustesse du code, ${fragilePoints} point(s) fragile(s) ouvert(s) déjà identifié(s) et suivis.`);
+        console.log(`Tout est vert : ${pct(health.overall)} robustesse du code, ${fragilePoints == null ? '⚪ points fragiles pas mesurés (registre absent)' : `${fragilePoints} point(s) fragile(s) ouvert(s) déjà identifié(s) et suivis`}.`);
     }
 
     // Historique CSV + synthèse compacte (2026-09-19, demande explicite de l'utilisateur : « dans
