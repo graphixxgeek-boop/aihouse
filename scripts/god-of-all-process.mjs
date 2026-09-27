@@ -33,6 +33,8 @@ import { printReliabilityNotice, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { dernierPlanDeDepart } from "./check-tasks-details.mjs";
 import { recentCommits, findCommitsMissingSuiviUpdate } from "./check-suivi-fidelity.mjs";
+import { adviseToolBrain } from "./tool-brain.mjs";
+import { normaliserNomDOutil } from "./le-coordinateur.mjs";
 // LE RELAIS D'ANGEL, RENDU RÉEL (2026-09-23). Il existait depuis le 2026-09-22 comme un PARAMÈTRE
 // (`sectionAngel`) que god attendait qu'on lui tende — et personne ne le lui tendait jamais :
 // `grep sectionAngel` ne trouvait aucun appelant. L'Article 26 promet « une seule voix, jamais une
@@ -1454,6 +1456,87 @@ export function formatPointDeControleLines(p) {
   return L;
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LA PRÉPARATION AVANT LE PASSAGE EN MODE AUTO (2026-09-27, tâche #770)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, mot pour mot : « tu te prépares psychologiquement pour la nuit : tu prends un moment
+// pour relire tous les process qui vont être concernés, tous les outils dont tu vas avoir besoin,
+// tu te prépares pour ne rien oublier, tu organises ta mémoire pour la nuit de façon optimale ».
+//
+// SA RAISON EST EXPLICITE ET ELLE EST JUSTE : « je ne vais pas intervenir pour perturber ta mémoire
+// pendant plusieurs heures, alors tu peux organiser ton périmètre interne en fonction ». Ce n'est
+// pas une métaphore, c'est une contrainte réelle du travail autonome long : **ce qui n'est pas
+// rassemblé avant le départ ne le sera plus**, et une session qui se remplit de recherches
+// dispersées finit par oublier la charte qu'elle est censée servir.
+//
+// LES TROIS GESTES SONT LES SIENS, et chacun est MESURÉ plutôt que coché. Une case « j'ai relu les
+// process » est une déclaration ; ce qui suit est une lecture du plan réel.
+//
+// LE TROISIÈME EST LE PLUS IMPORTANT, ET C'EST LE MOINS ÉVIDENT. « Déclarer ce qu'on met de côté »
+// paraît secondaire à côté de « rassembler ce dont on a besoin » — c'est l'inverse. Ce qui n'est
+// pas nommé comme écarté ressemble, au matin, à quelque chose qu'on a oublié ; et l'agent de la
+// nuit, lui, retombe dessus à trois heures et hésite, parce que rien ne dit que c'était un choix.
+//
+// IL NE BLOQUE PAS LE DÉPART. Un contrôle de préparation qui refuserait la nuit ferait perdre la
+// nuit — exactement ce qu'il existe pour protéger.
+export function preparationDeNuit({ planTexte = null, taches = [], processes = PROCESSES, outilsPour = null, verifier = null } = {}) {
+  if (planTexte == null && !taches.length) {
+    return { mesurable: false, pourquoi: "aucun PLAN DE DÉPART et aucune liste de tâches — il n'y a rien à préparer, et rendre « prêt » sur zéro donnée serait le pire des verts la veille d'une nuit entière" };
+  }
+  const nums = planTexte != null ? numerosDuPlan(planTexte) : taches.map((t) => t.numero).filter(Boolean);
+  if (!nums.length) return { mesurable: false, pourquoi: "le plan ne porte aucun numéro de tâche : une préparation calculée sur zéro tâche se déclarerait complète sans avoir rien lu" };
+
+  // GESTE 1 — LES PROCESS CONCERNÉS. Ils se DÉRIVENT des mots du plan contre les process déclarés
+  // (Article 24), jamais d'une liste écrite à côté qui se périmerait au prochain process créé.
+  const texte = String(planTexte ?? taches.map((t) => `${t.sujet ?? ""} ${t.titre ?? ""}`).join(" ")).toLowerCase();
+  const concernes = processes.filter((pr) => {
+    const mots = [pr.slug, ...(pr.slug ?? "").split("-")].filter((m) => m.length >= 4);
+    return mots.some((m) => texte.includes(m));
+  }).map((pr) => ({ slug: pr.slug, document: pr.document ?? pr.doc ?? null, etapes: (pr.etapes ?? []).length }));
+
+  // GESTE 2 — LES OUTILS, ET SURTOUT : EST-CE QU'ILS TOURNENT ? La tâche dit « vérifier qu'ils
+  // tournent », et c'est la moitié qui compte : un outil qu'on découvre cassé à trois heures du
+  // matin coûte la nuit, alors que le même essai avant le départ coûte deux secondes.
+  const outils = [...new Set((outilsPour ? outilsPour(texte) : []).filter(Boolean))];
+  const etat = verifier ? outils.map((o) => ({ outil: o, ...verifier(o) })) : [];
+  const casses = etat.filter((e) => e.ok === false);
+
+  return {
+    mesurable: true,
+    processus: { concernes, aucun: concernes.length === 0 },
+    outils: { attendus: outils, verifies: etat.length, casses },
+    // GESTE 3 — CE QU'ON MET DE CÔTÉ. La liste ne se devine pas : elle se remplit à la main au
+    // moment du départ, et l'outil REFUSE de la considérer remplie tant qu'elle ne l'est pas.
+    // Une préparation qui se déclarerait complète sans ce geste aurait sauté le seul des trois
+    // qu'aucune mesure ne peut produire à la place de l'agent.
+    ecarte: { declare: false, pourquoi: "à déclarer à la main au départ : ce qui n'est pas nommé comme écarté ressemble, au matin, à un oubli — et l'agent de la nuit hésite dessus à trois heures parce que rien ne dit que c'était un choix" },
+    total: nums.length,
+    horsPortee: "il rapproche les process par les MOTS du plan : un process concerné qu'aucun mot n'appelle lui reste invisible, et c'est un plancher. Il ne bloque JAMAIS le départ — un contrôle de préparation qui refuserait la nuit ferait perdre la nuit.",
+  };
+}
+
+export function formatPreparationLines(p) {
+  if (!p?.mesurable) return ["", "🚨 PRÉPARATION — PAS MESURÉE", `   ${p?.pourquoi ?? "raison non fournie"}`];
+  const L = ["", `🎒 PRÉPARATION AVANT LA NUIT — les trois gestes de la tâche #770, sur ${p.total} tâche(s) au plan`, ""];
+  L.push(`1. LES PROCESS À RELIRE AVANT (pas pendant) — ${p.processus.concernes.length} concerné(s) :`);
+  for (const c of p.processus.concernes) L.push(`      · ${c.slug.padEnd(20)} ${c.etapes} étape(s) — ${c.document ?? "document non déclaré"}`);
+  if (p.processus.aucun) L.push("      ⚠️ aucun process reconnu dans les mots du plan — c'est possible, mais c'est aussi ce que rendrait un rapprochement cassé : à vérifier à l'œil avant de partir.");
+  L.push("");
+  L.push(`2. LES OUTILS DONT J'AURAI BESOIN — ${p.outils.attendus.length} attendu(s), ${p.outils.verifies} vérifié(s) :`);
+  for (const o of p.outils.attendus) L.push(`      · ${o}`);
+  if (p.outils.casses.length) {
+    L.push(`   ⛔ ${p.outils.casses.length} NE TOURNE(NT) PAS — à régler AVANT de partir :`);
+    for (const c of p.outils.casses) L.push(`      · ${c.outil} — ${c.pourquoi ?? "échec non détaillé"}`);
+  } else if (p.outils.verifies) L.push("   ✅ tous répondent. Un outil découvert cassé à trois heures coûte la nuit ; le même essai maintenant coûte deux secondes.");
+  L.push("");
+  L.push(`3. CE QUE JE METS DE CÔTÉ — ${p.ecarte.declare ? "déclaré" : "🟠 PAS ENCORE DÉCLARÉ"}`);
+  L.push(`      ${p.ecarte.pourquoi}`);
+  L.push("");
+  L.push(`   HORS PORTÉE : ${p.horsPortee}`);
+  return L;
+}
+
 export function formatComparaisonLines(c) {
   if (!c?.mesurable) return [`⚠️ NON MESURABLE — ${c?.pourquoi ?? "raison inconnue"}`];
   const L = [`=== PLAN DE DÉPART ↔ RAPPORT DE NUIT — ${c.total} tâche(s) au départ ===`, ""];
@@ -2301,6 +2384,42 @@ function main() {
   // LE POINT DE CONTRÔLE DE NUIT (2026-09-27, tâche #732). Sous-commande plutôt que ligne du rappel
   // post-commit : il n'a de sens qu'EN MODE AUTONOME, et une section de plus à chaque commit de
   // journée serait le bruit qui rend un contrôle invisible (L6).
+  // LA PRÉPARATION (2026-09-27, tâche #770) : étape 0 du mode autonome, lancée AVANT de partir.
+  // Sous-commande comme le checkpoint, et pour la même raison : elle n'a de sens qu'au départ d'une
+  // nuit, jamais à chaque commit de journée.
+  if (tache === "preparer") {
+    const plan = dernierPlanDeDepart();
+    const lire = (f) => { try { return readFileSync(f.startsWith("/") ? f : join(ROOT, f), "utf8"); } catch { return null; } };
+    // LES OUTILS SE DEMANDENT À TOOL-BRAIN, le point d'entrée obligatoire (Article 31) — jamais
+    // une liste écrite ici, qui se périmerait au premier outil créé (Article 24).
+    const outilsPour = (txt) => { try { return (adviseToolBrain({ taskDescription: txt })?.prestations ?? []).flatMap((x) => x.outils ?? []); } catch { return []; } };
+    // « VÉRIFIER QU'ILS TOURNENT » est pris au pied de la lettre : `node --check` sur le fichier.
+    // Un script cassé découvert à trois heures du matin coûte la nuit ; le même essai maintenant
+    // coûte deux secondes.
+    //
+    // LE PIÈGE, RENCONTRÉ AU PREMIER PASSAGE, ET C'EST LA CLASSE DE DÉFAUT DE LA LEÇON L37 : le
+    // catalogue rend des NOMS D'AFFICHAGE (« AGENT-DU-TEMPS », « HARMONIA (nœuds sensibles) »),
+    // jamais des noms de fichier. Dériver `scripts/<nom>.mjs` de là accusait VINGT outils d'être
+    // introuvables, les vingt à tort — un garde-fou qui accuse à tort cesse d'être lu (L4), et la
+    // veille d'une nuit il ferait perdre du temps au pire moment.
+    //
+    // LE RÉSOLVEUR EXISTAIT DÉJÀ : `normaliserNomDOutil()` est né en 2026-09-25 du même problème,
+    // mot pour mot (« la table maîtresse écrit AGENT DES NOMS ; le menu écrit agent-des-noms »).
+    // On le réutilise au lieu d'en écrire un second qui finirait par diverger (L29, BP6).
+    const scripts = new Set(readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, "")));
+    const parNorme = new Map([...scripts].map((f) => [normaliserNomDOutil(f), f]));
+    const verifier = (o) => {
+      const fichier = scripts.has(o) ? o : parNorme.get(normaliserNomDOutil(o));
+      // UN NOM QU'ON N'ARRIVE PAS À RÉSOUDRE N'EST PAS UN OUTIL CASSÉ : c'est une correspondance
+      // manquée, et les confondre est exactement le faux positif ci-dessus. On le DIT, sans
+      // l'accuser.
+      if (!fichier) return { ok: null, pourquoi: `nom non résolu vers un script — ce n'est pas une panne, c'est une correspondance manquée` };
+      try { sh(`node --check ${JSON.stringify(join(ROOT, `scripts/${fichier}.mjs`))}`); return { ok: true }; }
+      catch (e) { return { ok: false, pourquoi: String(e.message).split("\n")[0].slice(0, 120) }; }
+    };
+    for (const l of formatPreparationLines(preparationDeNuit({ planTexte: plan ? lire(plan) : null, outilsPour, verifier }))) console.log(l);
+    return;
+  }
   if (tache === "checkpoint") {
     const plan = dernierPlanDeDepart();
     const lire = (f) => { try { return readFileSync(f.startsWith("/") ? f : join(ROOT, f), "utf8"); } catch { return null; } };

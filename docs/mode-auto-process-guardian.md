@@ -245,6 +245,49 @@ notification continue — le rendu se fait une seule fois, au seuil d'arrêt, en
 arrêt avec ce dispositif, et c'est l'utilisateur lui-même qui l'a constaté (« la nuit derniere tu as
 reussi à ne pas t'arreter »). C'est cette réussite-là que cette section met à l'abri.
 
+## ÉTAPE 0 — LA PRÉPARATION AVANT DE PARTIR (2026-09-27, tâche #770)
+
+*(Sa demande : « tu te prépares psychologiquement pour la nuit : tu prends un moment pour relire
+tous les process qui vont être concernés, tous les outils dont tu vas avoir besoin, tu te prépares
+pour ne rien oublier, tu organises ta mémoire pour la nuit de façon optimale ».)*
+
+**SA RAISON EST EXPLICITE, ET ELLE EST JUSTE** : « je ne vais pas intervenir pour perturber ta
+mémoire pendant plusieurs heures, alors tu peux organiser ton périmètre interne en fonction ». Ce
+n'est pas une métaphore, c'est une contrainte réelle du travail autonome long : **ce qui n'est pas
+rassemblé avant le départ ne le sera plus**, et une session qui se remplit de recherches dispersées
+finit par oublier la charte qu'elle est censée servir.
+
+**LE GESTE, une commande, AVANT tout le reste :**
+`node scripts/god-of-all-process.mjs preparer`
+
+**LES TROIS GESTES SONT LES SIENS, et chacun est MESURÉ plutôt que coché** — une case « j'ai relu
+les process » est une déclaration, pas une lecture.
+
+| | Le geste | Ce qui le mesure |
+|---|---|---|
+| **1** | relire les process concernés **avant**, pas pendant | ils se DÉRIVENT des mots du plan contre les process déclarés (Article 24), et chacun sort avec son document |
+| **2** | rassembler les outils **et vérifier qu'ils tournent** | tool-brain donne la liste, `node --check` la vérifie pour de vrai |
+| **3** | déclarer ce qu'on met **de côté** | ne se mesure pas : se déclare à la main, et l'outil REFUSE de le considérer rempli |
+
+**LE TROISIÈME EST LE PLUS IMPORTANT, ET C'EST LE MOINS ÉVIDENT.** « Déclarer ce qu'on met de
+côté » paraît secondaire à côté de « rassembler ce dont on a besoin » — c'est l'inverse. Ce qui
+n'est pas nommé comme écarté ressemble, au matin, à quelque chose qu'on a oublié ; et l'agent de la
+nuit, lui, retombe dessus à trois heures et hésite, parce que rien ne dit que c'était un choix.
+
+**LE FAUX POSITIF DU PREMIER PASSAGE, écrit ici parce qu'il resservira** : le catalogue rend des
+NOMS D'AFFICHAGE (« HARMONIA (nœuds sensibles) »), jamais des noms de fichier. Dériver
+`scripts/<nom>.mjs` accusait **vingt outils** d'être introuvables, les vingt à tort — la veille
+d'une nuit, un garde-fou qui accuse à tort fait perdre du temps au pire moment (L4). Le résolveur
+existait déjà ailleurs dans le dépôt et a été réutilisé plutôt que réécrit (L29, BP6). Un nom qu'on
+ne résout pas est désormais rendu **« non résolu »**, jamais « cassé ».
+
+**IL NE BLOQUE JAMAIS LE DÉPART.** Un contrôle de préparation qui refuserait la nuit ferait perdre
+la nuit — exactement ce qu'il existe pour protéger. Il REGARDE, comme son voisin d'après.
+
+**DEUX REFUS DE CONCLURE** : sans plan et sans liste de tâches, il n'y a rien à préparer, et rendre
+« prêt » sur zéro donnée la veille d'une nuit entière est le faux vert le plus cher qui soit ; un
+plan sans aucun numéro se déclarerait préparé sans avoir rien lu.
+
 ## LE POINT DE CONTRÔLE — ce que le réveil de 15 minutes est censé servir (2026-09-27, tâche #732)
 
 **LE RÉGLAGE CI-DESSUS N'EST QUE LA MOITIÉ DE LA TÂCHE, et c'est la moitié facile.** Passer de 45 à

@@ -16834,3 +16834,61 @@ async function testPointDeControleDeNuit() {
   console.log("Passed: un réveil n'est pas un contrôle (2026-09-27, tâche #732, seconde moitié). La première moitié était faite — le rappel est passé de 45 à 15 minutes, avec un filet horaire derrière, et les deux réglages sont historisés avec leur raison dans le process. Ce qui manquait est la RAISON D'ÊTRE du réglage, écrite dans la tâche depuis le premier jour : « ce qu'un rappel rapproché apporte vraiment, c'est un POINT DE CONTRÔLE forcé ». Un agent réveillé au milieu d'un chantier reprend ce chantier ; il ne s'arrête pas pour regarder où il en est. Le réveil donnait la cadence sans jamais donner le regard, et la tâche disait ce que ça coûte : « c'est exactement ce qui aurait attrapé le décalage de colonnes de ce soir en dix minutes au lieu de trois heures ». Les trois questions sont celles de la tâche, mot pour mot, et chacune est MESURÉE plutôt que posée — une question posée à un agent qui vient de travailler vingt minutes reçoit la réponse qu'il croit vraie, et c'est précisément la mémoire à laquelle on ne peut pas se fier. Trois refus de conclure, couvrant trois faux verts différents : pas de plan, pas de commits, un plan sans numéro. « Hors plan » n'est jamais traité comme une faute — une nuit trouve des choses, et le lui reprocher pousserait à ne plus rien trouver ; le signal ne tombe que quand le hors-plan DOMINE, et jamais sous trois commits. La fraîcheur du suivi est relayée de check-suivi-fidelity plutôt que recalculée (L29). Lancé pour de vrai sur le dépôt : 22 tâches du plan sur 103 touchées, 42 % du travail hors plan, carnet de bord à jour.");
 }
 await testPointDeControleDeNuit();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LA PRÉPARATION AVANT LE PASSAGE EN MODE AUTO (2026-09-27, tâche #770)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testPreparationDeNuit() {
+  const G = await import('../scripts/god-of-all-process.mjs');
+  const faux = [
+    { slug: 'simulation', document: 'docs/regles-de-travail.md', etapes: [1, 2] },
+    { slug: 'integration-outil', document: 'docs/referentiel/integration-outil.md', etapes: [1] },
+  ];
+  const plan = '#100 | simulation | relancer une simulation\n#200 | divers | autre chose\n';
+
+  // DEUX REFUS DE CONCLURE, la veille d'une nuit entière — c'est le moment où un faux vert coûte
+  // le plus cher : on part rassuré, et ce qui manque ne se découvre plus qu'à trois heures.
+  assert.equal(G.preparationDeNuit({}).mesurable, false, 'MUST REFUSE: with neither plan nor task list there is nothing to prepare, and reporting "ready" on no data the night before is the costliest false green there is');
+  assert.equal(G.preparationDeNuit({ planTexte: 'un plan sans numéro' }).mesurable, false, 'MUST REFUSE: a plan with no task number would declare the preparation complete without having read anything');
+
+  const p = G.preparationDeNuit({ planTexte: plan, processes: faux });
+  // GESTE 1 — les process se DÉRIVENT des mots du plan (Article 24), jamais d'une liste écrite à
+  // côté qui se périmerait au prochain process créé.
+  assert.deepEqual(p.processus.concernes.map((c) => c.slug), ['simulation'], 'MUST CATCH the process the plan actually names, and MUST LET PASS the one it does not: the list is derived from the plan text, never copied beside it');
+  assert.ok(p.processus.concernes[0].document, 'and each one carries its document, since the geste is to RE-READ it before leaving, not to know it exists');
+
+  // GESTE 2 — LE FAUX POSITIF RENCONTRÉ AU PREMIER PASSAGE RÉEL, et c'est la classe de la leçon
+  // L37 : le catalogue rend des NOMS D'AFFICHAGE (« HARMONIA (nœuds sensibles) »), jamais des noms
+  // de fichier. Dériver scripts/<nom>.mjs accusait VINGT outils d'être introuvables, les vingt à
+  // tort — la veille d'une nuit, un garde-fou qui accuse à tort fait perdre du temps au pire
+  // moment (L4). Le résolveur existait déjà ailleurs : on le réutilise (L29, BP6).
+  const avecNoms = G.preparationDeNuit({
+    planTexte: plan, processes: faux,
+    outilsPour: () => ['ARGUS', 'HARMONIA (nœuds sensibles)', 'inexistant-xyz'],
+    verifier: (o) => (o === 'inexistant-xyz' ? { ok: null, pourquoi: 'nom non résolu' } : { ok: true }),
+  });
+  assert.deepEqual(avecNoms.outils.casses, [], 'MUST LET PASS: a display name that resolves to a real script is not a broken tool — and an unresolved name is reported as unresolved (ok: null), never accused of being broken');
+  const avecCasse = G.preparationDeNuit({
+    planTexte: plan, processes: faux,
+    outilsPour: () => ['argus', 'casse'],
+    verifier: (o) => (o === 'casse' ? { ok: false, pourquoi: 'SyntaxError' } : { ok: true }),
+  });
+  assert.deepEqual(avecCasse.outils.casses.map((c) => c.outil), ['casse'], 'MUST CATCH a genuinely broken tool: found now it costs two seconds, found at three in the morning it costs the night');
+  // LE DÉDOUBLONNAGE compte : le catalogue peut proposer le même outil par deux offres, et le voir
+  // deux fois dans la liste de départ ferait douter de la liste entière.
+  assert.equal(G.preparationDeNuit({ planTexte: plan, processes: faux, outilsPour: () => ['argus', 'argus'] }).outils.attendus.length, 1, 'a tool suggested by two offers appears once');
+
+  // GESTE 3 — LE PLUS IMPORTANT, ET LE MOINS ÉVIDENT. Il ne se mesure pas : il se déclare à la
+  // main. L'outil refuse donc de le considérer rempli, plutôt que de laisser une préparation se
+  // dire complète en ayant sauté le seul des trois qu'aucune mesure ne peut produire.
+  assert.equal(p.ecarte.declare, false, 'MUST NOT self-satisfy: what is set aside cannot be measured, so it is reported as NOT declared rather than quietly counted as done');
+  assert.ok(G.formatPreparationLines(p).join('\n').includes('PAS ENCORE DÉCLARÉ'), 'and the output says so plainly, because what is not named as set aside looks like an oversight by morning');
+
+  // IL NE BLOQUE JAMAIS LE DÉPART : un contrôle de préparation qui refuserait la nuit ferait
+  // perdre la nuit — exactement ce qu'il existe pour protéger.
+  assert.ok(p.horsPortee.includes('ne bloque JAMAIS'), 'the tool states that it never blocks: a preparation check that refused the night would lose the very thing it protects');
+  assert.ok(G.formatPreparationLines({ mesurable: false, pourquoi: 'x' })[1].includes('PAS MESURÉE'), 'and an unmeasurable preparation prints PAS MESURÉE, never a clean-looking silence');
+
+  console.log("Passed: la préparation avant la nuit (2026-09-27, tâche #770). Sa raison est explicite et elle est juste — « je ne vais pas intervenir pour perturber ta mémoire pendant plusieurs heures, alors tu peux organiser ton périmètre interne en fonction ». Ce n'est pas une métaphore : ce qui n'est pas rassemblé avant le départ ne le sera plus. Les trois gestes sont les siens et chacun est MESURÉ plutôt que coché — les process concernés se DÉRIVENT des mots du plan contre les process déclarés (Article 24), les outils viennent de tool-brain et sont réellement chargés pour vérifier qu'ils tournent. LE FAUX POSITIF DU PREMIER PASSAGE EST LA LEÇON L37 EN DIRECT : le catalogue rend des NOMS D'AFFICHAGE, jamais des noms de fichier, et dériver scripts/<nom>.mjs accusait VINGT outils d'être introuvables, les vingt à tort. Le résolveur existait déjà — normaliserNomDOutil(), né en 2026-09-25 du même problème mot pour mot — et il a été réutilisé plutôt que réécrit (L29, BP6). Un nom qu'on ne résout pas est désormais rendu « non résolu », jamais « cassé » : les confondre est exactement ce faux positif. LE TROISIÈME GESTE EST LE PLUS IMPORTANT ET LE MOINS ÉVIDENT : déclarer ce qu'on met de côté paraît secondaire à côté de rassembler ce dont on a besoin, c'est l'inverse — ce qui n'est pas nommé comme écarté ressemble au matin à un oubli, et l'agent de la nuit hésite dessus à trois heures parce que rien ne dit que c'était un choix. Il ne se mesure pas, donc l'outil REFUSE de le considérer rempli. Et il ne bloque jamais le départ : un contrôle de préparation qui refuserait la nuit ferait perdre la nuit.");
+}
+await testPreparationDeNuit();
