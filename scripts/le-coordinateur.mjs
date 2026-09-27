@@ -46,7 +46,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
-import { findOrphanReportFiles } from "./doc-report.mjs";
+import { findOrphanReportFiles, REGISTRIES as REGISTRIES_DOC_REPORT } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
@@ -59,7 +59,7 @@ import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation, filterIndexRowsByVersion } from "./smart-conso-token.mjs";
 import { checkWeightBudget } from "./ecotoken.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { loadJson, recordCliUsage } from "./tool-usage.mjs";
+import { loadJson, recordCliUsage, loadToolUsageHistory } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const BADGE_CEREMONY_HISTORY_PATH = join(ROOT, ".badge-ceremony-history.json");
@@ -1006,6 +1006,167 @@ export function findOutilsMuets({ recensement = null, inventaire = null, prestat
     .filter((l) => !nomsCandidatsDUnScript(l.chemin, inv).some((n) => auMenu.has(normaliserNomDOutil(n))))
     .map((l) => ({ chemin: l.chemin, type: l.type ?? "?", candidats: nomsCandidatsDUnScript(l.chemin, inv) }));
   return { mesurable: true, muets, commandables: commandables.length, total: recensement.lignes.length };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES COMBINAISONS D'OUTILS, ENFIN — ET ELLES SE MESURENT, ELLES NE S'IMAGINENT PAS
+// (2026-09-27, tâche #715. Sa demande, et elle durait depuis le début de l'Agence : « je veux un
+// calcul complexe pour imaginer des combinaisons pertinentes [...] c'est une des vocations du
+// catalogue que je n'ai toujours pas réussi à mettre en place correctement depuis le début de
+// l'agence : HELP ! »)
+//
+// POURQUOI ÇA N'AVAIT JAMAIS MARCHÉ, et c'est le vrai apport de cette tâche : les tentatives
+// précédentes partaient des OUTILS. 75 outils font 2 775 paires et 67 525 trios ; un classement sur
+// ce volume aurait l'air intelligent et serait du bruit, sans aucun moyen de faire la différence.
+// Une combinaison utile ne se déduit pas d'un stock disponible — elle se lit dans ce qui se passe
+// déjà, ou dans un besoin auquel personne ne répond.
+//
+// DEUX GÉNÉRATEURS MÉCANIQUES ICI, UN TROISIÈME DÉLÉGUÉ — jamais un calcul sur toutes les paires.
+// (1) CE QUI ARRIVE DÉJÀ TOUT SEUL. Le compteur d'usage horodate chaque lancement : deux outils qui
+//     tombent sans cesse dans la même fenêtre de travail forment une combinaison que l'agent fait
+//     déjà sans lui avoir donné de nom. La nommer, c'est tout ce qu'il reste à faire.
+// (2) CE QUI S'EMBOÎTE. A écrit un registre que B sait lire : la chaîne existe dans le dépôt, il
+//     suffit de la suivre.
+// (3) LES EXIGENCES QUE PERSONNE NE VÉRIFIE → cette question-là est déjà celle de THE-EQUALIZER
+//     (`confronterCadreExterne()`, tâche #1003). La refaire ici serait un second calcul divergent
+//     sur la même donnée (leçon L29) : on renvoie vers lui, on ne le réimplémente pas (Article 31).
+//
+// LE PIÈGE DU GÉNÉRATEUR (1), MESURÉ AVANT D'ÊTRE CRAINT : compté en brut, le palmarès est trusté
+// par `agent-du-temps` — 70 fenêtres avec moïse, 69 avec ecotoken, 38 avec tool-brain. Ce n'est pas
+// une combinaison, c'est un RITUEL : on lit l'heure avant d'écrire, donc il accompagne tout le
+// monde. Le compte brut mesure la fréquence, jamais l'affinité. On lit donc l'ÉCART À L'ATTENDU :
+// combien de fois cette paire tombe ensemble, rapporté à ce que leurs fréquences respectives
+// prédiraient si elles ne s'appelaient jamais l'une l'autre. Un outil omniprésent a un écart de 1
+// avec tout le monde et disparaît de lui-même ; `argus + harmonia` ressort à 20, et ces deux-là
+// sont effectivement les deux moitiés d'un même geste.
+export const FENETRE_DE_TRAVAIL_MS = 10 * 60 * 1000;
+export const MIN_FENETRES_PARTAGEES = 8;
+export const ECART_MINIMUM = 3;
+// Les lancements du crochet ne comptent PAS : le post-commit lance un lot fixe à chaque commit, ce
+// qui n'est pas une combinaison choisie mais une seule commande. Les compter ferait ressortir le
+// contenu du crochet comme une découverte, ce qui est l'inverse d'une trouvaille.
+export const ORIGINE_SPONTANEE = "cli_direct";
+
+export function fenetresDeTravail(events = [], { fenetreMs = FENETRE_DE_TRAVAIL_MS, origine = ORIGINE_SPONTANEE } = {}) {
+  const ev = events.filter((e) => e?.origin === origine && e?.at).sort((a, b) => a.at - b.at);
+  if (!ev.length) return [];
+  const out = []; let cur = [ev[0]];
+  for (const e of ev.slice(1)) {
+    if (e.at - cur[cur.length - 1].at <= fenetreMs) cur.push(e);
+    else { out.push(cur); cur = [e]; }
+  }
+  out.push(cur);
+  return out;
+}
+
+export function combinaisonsSpontanees(events = [], prestations = PRESTATIONS, { fenetreMs = FENETRE_DE_TRAVAIL_MS, minFenetres = MIN_FENETRES_PARTAGEES, ecartMin = ECART_MINIMUM, max = 8 } = {}) {
+  const fen = fenetresDeTravail(events, { fenetreMs });
+  if (fen.length < minFenetres) {
+    return { mesurable: false, pourquoi: `seulement ${fen.length} fenêtre(s) de travail dans le compteur — trop peu pour distinguer une habitude d'un hasard`, paires: [], fenetres: fen.length };
+  }
+  const N = fen.length, seul = {}, ensemble = {};
+  for (const f of fen) {
+    const s = [...new Set(f.map((x) => x.toolSlug))].sort();
+    for (const a of s) seul[a] = (seul[a] ?? 0) + 1;
+    for (let i = 0; i < s.length; i++) for (let j = i + 1; j < s.length; j++) ensemble[`${s[i]}|${s[j]}`] = (ensemble[`${s[i]}|${s[j]}`] ?? 0) + 1;
+  }
+  // DÉJÀ NOMMÉE = DÉJÀ TROUVÉE : une paire que le catalogue réunit déjà dans une même offre n'est
+  // pas une découverte, et la proposer ferait un rapport qui se félicite de ce qui existe.
+  const dejaNommees = new Set();
+  for (const p of prestations) {
+    const o = (p.outils ?? []).map(normaliserNomDOutil).sort();
+    for (let i = 0; i < o.length; i++) for (let j = i + 1; j < o.length; j++) dejaNommees.add(`${o[i]}|${o[j]}`);
+  }
+  const paires = Object.entries(ensemble)
+    .filter(([, v]) => v >= minFenetres)
+    .map(([k, v]) => {
+      const [a, b] = k.split("|");
+      const attendu = (seul[a] / N) * (seul[b] / N) * N;
+      return { a, b, ensemble: v, ecart: +(v / attendu).toFixed(1), deja: dejaNommees.has([normaliserNomDOutil(a), normaliserNomDOutil(b)].sort().join("|")) };
+    })
+    .filter((p) => p.ecart >= ecartMin && !p.deja)
+    .sort((x, y) => y.ecart - x.ecart)
+    .slice(0, max);
+  return { mesurable: true, paires, fenetres: N };
+}
+
+// CE QUI S'EMBOÎTE — A écrit un registre, B le lit. La chaîne est dans le dépôt : les registres se
+// LISENT dans la liste déclarée de Doc-Report (jamais recopiés), et les lecteurs se cherchent dans
+// la source réelle de chaque script.
+//
+// LE MÊME PIÈGE QUE CI-DESSUS, SOUS UNE AUTRE FORME : quatre outils lisent PRESQUE TOUS les
+// registres — Doc-Report, le contrôleur de Ronde, le filet de sécurité, HYPER-SCAN-CHECKPOINT. Ce
+// sont des AGRÉGATEURS : leur métier est de tout relire, pas de former un duo avec chacun. Le seuil
+// se DÉRIVE de la distribution (un lecteur qui couvre plus de la moitié des registres agrège), il
+// ne se liste pas — le jour où un cinquième agrégateur naît, il sera écarté sans qu'on y pense.
+// LE SEUIL NE SE CHOISIT PAS, IL SE LIT — même discipline que le seuil des offres concurrentes.
+// Distribution mesurée le 2026-09-27 sur 55 registres : doc-report 98 %, circle-tasks 56 %,
+// check-house 38 %, hyper-scan-checkpoint 31 %, puis une CHUTE FRANCHE à 16 % et en dessous. Le
+// trou entre 31 et 16 est net, le seuil se pose dedans, et la distribution s'imprime avec le
+// résultat pour qu'on puisse vérifier que le trou tient encore.
+export const PART_AGREGATEUR = 0.25;
+
+export function emboitements({ registres = [], sourceParOutil = {}, prestations = PRESTATIONS, partAgregateur = PART_AGREGATEUR, max = 8 } = {}) {
+  if (!registres.length || !Object.keys(sourceParOutil).length) {
+    return { mesurable: false, pourquoi: "sans la liste des registres déclarés ET la source des outils, « rien ne s'emboîte » et « je n'ai rien lu » s'écrivent pareil", chaines: [], agregateurs: [] };
+  }
+  // UN OUTIL QUI LIT SON PROPRE REGISTRE N'EST PAS UN EMBOÎTEMENT, et le rater est l'erreur déjà
+  // payée deux fois ici : ARGUS s'appelle `check-argus.mjs`, donc comparer au seul slug le faisait
+  // sortir comme « argus → check-argus ». Le registre déclare lui-même son `scriptPath` : on s'en
+  // sert, plutôt que de deviner le nom du fichier depuis celui de l'outil.
+  const dossiers = registres
+    .map((r) => ({ proprio: r.slug, script: String(r.scriptPath ?? "").replace(/^scripts\//, "").replace(/\.mjs$/, ""), dossier: String(r.path ?? "").replace(/\/$/, "") }))
+    .filter((r) => r.proprio && r.dossier);
+  const lecteursPar = {};
+  const combien = {};
+  for (const { proprio, script, dossier } of dossiers) {
+    const l = Object.entries(sourceParOutil).filter(([slug, src]) => slug !== proprio && slug !== script && String(src).includes(`${dossier}/`)).map(([slug]) => slug);
+    lecteursPar[`${proprio}|${dossier}`] = l;
+    for (const s of l) combien[s] = (combien[s] ?? 0) + 1;
+  }
+  const distribution = Object.entries(combien).map(([slug, n]) => ({ slug, lus: n, part: Math.round((n / dossiers.length) * 100) })).sort((a, b) => b.lus - a.lus);
+  const agregateurs = distribution.filter((d) => d.lus >= dossiers.length * partAgregateur).map((d) => d.slug);
+  const dejaNommees = new Set();
+  for (const p of prestations) {
+    const o = (p.outils ?? []).map(normaliserNomDOutil).sort();
+    for (let i = 0; i < o.length; i++) for (let j = i + 1; j < o.length; j++) dejaNommees.add(`${o[i]}|${o[j]}`);
+  }
+  const chaines = [];
+  for (const [cle, lecteurs] of Object.entries(lecteursPar)) {
+    const [proprio, dossier] = cle.split("|");
+    for (const l of lecteurs) {
+      if (agregateurs.includes(l)) continue;
+      if (dejaNommees.has([normaliserNomDOutil(proprio), normaliserNomDOutil(l)].sort().join("|"))) continue;
+      chaines.push({ produit: proprio, lit: l, via: `${dossier}/` });
+    }
+  }
+  return { mesurable: true, chaines: chaines.slice(0, max), total: chaines.length, agregateurs, distribution, registres: dossiers.length };
+}
+
+export function formatCombinaisonsLines(spont, emb) {
+  const out = ["", "🔗 COMBINAISONS D'OUTILS — ce que le dépôt fait déjà sans lui avoir donné de nom (tâche #715)"];
+  out.push("   HORS PORTÉE, et c'est ce qui sépare une proposition d'un verdict : rien ici ne dit qu'une combinaison est UTILE. Elle dit qu'elle est RÉELLE — déjà pratiquée, ou déjà branchée. Décider qu'elle mérite un nom reste un jugement.");
+  out.push("");
+  out.push("   ① CE QUI ARRIVE DÉJÀ TOUT SEUL (fenêtres de travail du compteur d'usage)");
+  if (!spont?.mesurable) out.push(`      🚨 PAS MESURÉ — ${spont?.pourquoi ?? "raison non fournie"}`);
+  else if (!spont.paires.length) out.push(`      ✅ sur ${spont.fenetres} fenêtres, aucune paire hors catalogue ne dépasse le seuil d'affinité — tout ce qui se pratique porte déjà un nom.`);
+  else {
+    out.push(`      ${spont.paires.length} paire(s) sur ${spont.fenetres} fenêtres, classées par ÉCART À L'ATTENDU et non par fréquence brute (sans quoi l'outil qu'on lance avant tout le monde raflerait la tête sans former de duo avec personne) :`);
+    for (const p of spont.paires) out.push(`      · ${p.a} + ${p.b} — ${p.ensemble} fenêtres ensemble, ×${p.ecart} l'attendu`);
+  }
+  out.push("");
+  out.push("   ② CE QUI S'EMBOÎTE (A écrit un registre, B le lit)");
+  if (!emb?.mesurable) out.push(`      🚨 PAS MESURÉ — ${emb?.pourquoi ?? "raison non fournie"}`);
+  else if (!emb.chaines.length) out.push("      ✅ aucune chaîne producteur → lecteur hors catalogue et hors agrégateurs.");
+  else {
+    out.push(`      ${emb.total} chaîne(s) sur ${emb.registres} registres, dont les ${emb.chaines.length} premières.`);
+    out.push(`      Agrégateurs écartés (ils relisent tout par métier, ce n'est pas un duo) : ${emb.agregateurs.join(", ") || "aucun"}`);
+    out.push(`      Distribution des lecteurs, imprimée pour qu'on vérifie que le trou où se pose le seuil tient encore : ${(emb.distribution ?? []).slice(0, 8).map((d) => `${d.slug} ${d.part}%`).join(" · ")}`);
+    for (const c of emb.chaines) out.push(`      · ${c.produit} → ${c.lit} (via ${c.via})`);
+  }
+  out.push("");
+  out.push("   ③ LES EXIGENCES QUE PERSONNE NE VÉRIFIE → c'est la question de THE-EQUALIZER, pas la nôtre : `node scripts/the-equalizer.mjs confronter`. La refaire ici serait un second calcul sur la même donnée, qui finirait par diverger de celui qui décide vraiment (leçon L29).");
+  return out;
 }
 
 export function formatOutilsMuetsLines(r) {
@@ -2064,6 +2225,26 @@ function main() {
   // entre « les deux listes s'accordent » et « tout le monde est couvert ».
   console.log("");
   for (const ligne of formatOutilsMuetsLines(findOutilsMuets({ recensement: recenserLesScripts(), charteText: lireLaCharte() }))) console.log(ligne);
+  // LES COMBINAISONS (#715) SORTENT DANS LE MÊME RAPPORT, et c'est cohérent avec les deux blocs
+  // ci-dessus : ce rapport répond aux questions SUR le catalogue. « Deux offres se marchent-elles
+  // dessus ? », « qui n'a pas d'offre ? », « quelle offre manque encore un nom ? » sont trois
+  // faces du même sujet, et les répartir sur trois rendez-vous les rendrait invisibles.
+  console.log("");
+  for (const ligne of formatCombinaisonsLines(...mesurerLesCombinaisons())) console.log(ligne);
+}
+
+export function mesurerLesCombinaisons({ history = null, registres = null, root = ROOT, lireDossier = readdirSync, lireFichier = readFileSync } = {}) {
+  let evenements = [];
+  try { evenements = (history ?? loadToolUsageHistory()).events ?? []; } catch { /* le bloc dira « pas mesuré » plutôt que de rendre zéro */ }
+  let regs = registres;
+  const sourceParOutil = {};
+  try {
+    for (const f of lireDossier(join(root, "scripts"))) {
+      if (!f.endsWith(".mjs")) continue;
+      try { sourceParOutil[f.replace(/\.mjs$/, "")] = lireFichier(join(root, "scripts", f), "utf8"); } catch { /* fichier suivant */ }
+    }
+  } catch { /* idem */ }
+  return [combinaisonsSpontanees(evenements), emboitements({ registres: regs ?? REGISTRIES_DOC_REPORT, sourceParOutil })];
 }
 
 export function lireLaCharte({ root = ROOT, readFile = readFileSync, exists = existsSync } = {}) {

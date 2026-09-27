@@ -37,16 +37,18 @@ import { auditLecons, leconsPourTache, enregistrerRemontee } from "./tool-learni
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
 
-// Même discipline honnête que le reste du paysage (loadJson() de circle-tasks.mjs/tool-usage.mjs) :
-// un historique absent ou corrompu retombe sur "aucun événement connu", jamais une erreur qui
-// bloquerait un simple rappel.
-export function loadToolUsageHistory(readFile = (u) => readFileSync(u, "utf8")) {
-  try {
-    return JSON.parse(readFile(USAGE_HISTORY_URL));
-  } catch {
-    return { events: [] };
-  }
-}
+// LE LECTEUR A DÉMÉNAGÉ CHEZ LE PROPRIÉTAIRE DU MAGASIN (2026-09-27, tâche #715) : il est défini
+// dans tool-usage.mjs, le fichier qui ÉCRIT ces événements. Il restait ici pour des raisons
+// d'histoire — tool-brain se trouvait être son premier lecteur — et forçait tout autre lecteur à
+// importer tool-brain, donc le catalogue, donc un cycle. Réexporté pour ne casser aucun appelant.
+// PIÈGE ESM, PAYÉ DEUX FOIS DANS LA MÊME NUIT (2026-09-27) : `export { X } from "..."` réexporte X
+// pour les appelants SANS le lier dans la portée locale de ce fichier. `rapportDesMuets()` appelle
+// `loadToolUsageHistory()` juste en dessous — avec le seul réexport, elle plantait sur « is not
+// defined », et le verrou de Ronde qui s'appuie dessus passait de « propre » à « pas mesuré ».
+// Rien dans la relecture ne le montre : la ligne a l'air parfaitement correcte. On importe ET on
+// réexporte.
+import { loadToolUsageHistory } from "./tool-usage.mjs";
+export { loadToolUsageHistory };
 
 // --- 1. Consultation à la demande (inchangé depuis la première version) ---
 // Seuil de correspondance déjà fixé par suggestPrestationsForTask() elle-même (score >= 2 mots

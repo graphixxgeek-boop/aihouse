@@ -4539,6 +4539,76 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.equal(findOutilsMuets({}).mesurable,false,'with no recensement it refuses to conclude rather than printing an empty gap list that would read as a clean bill of health');
   }
 
+  // LES COMBINAISONS D'OUTILS (2026-09-27, tâche #715) — sa demande durait depuis le début de
+  // l'Agence, et les tentatives précédentes échouaient toutes pour la même raison : elles
+  // partaient des OUTILS. 75 outils font 2 775 paires, et un classement sur ce volume a l'air
+  // intelligent tout en étant du bruit. Une combinaison utile se LIT dans ce qui se pratique déjà
+  // ou dans ce qui est déjà branché — elle ne s'imagine pas.
+  {
+    const {combinaisonsSpontanees,fenetresDeTravail,emboitements}=await import('../scripts/le-coordinateur.mjs');
+    // ① CE QUI ARRIVE DÉJÀ TOUT SEUL. Le piège a été MESURÉ avant d'être craint : compté en brut,
+    // le palmarès est trusté par l'outil qu'on lance avant tous les autres (agent-du-temps : on lit
+    // l'heure avant d'écrire, donc il accompagne tout le monde). Ce n'est pas une combinaison,
+    // c'est un rituel — et le compte brut ne sait pas les distinguer. On lit donc l'ÉCART À
+    // L'ATTENDU, et l'omniprésent retombe de lui-même à ×1.
+    const t=(min)=>1e12+min*60*1000;
+    const ev=[];
+    // 12 fenêtres où A et B tombent ensemble ; « partout » est présent dans TOUTES les fenêtres.
+    for (let i=0;i<12;i++) ev.push({toolSlug:'a',origin:'cli_direct',at:t(i*60)},{toolSlug:'b',origin:'cli_direct',at:t(i*60+1)},{toolSlug:'partout',origin:'cli_direct',at:t(i*60+2)});
+    for (let i=12;i<40;i++) ev.push({toolSlug:'c'+(i%7),origin:'cli_direct',at:t(i*60)},{toolSlug:'partout',origin:'cli_direct',at:t(i*60+1)});
+    const r=combinaisonsSpontanees(ev,[],{minFenetres:8});
+    assert.equal(fenetresDeTravail(ev).length,40,'events split into working windows by the gap between them, never by a calendar day: two runs ten minutes apart are one session, an hour apart are two');
+    assert.deepEqual(r.paires.map((p)=>`${p.a}+${p.b}`),['a+b'],'only the pair with a real affinity comes out: the ubiquitous tool shares a window with everyone, which is a RITUAL and not a combination — counted raw it would top the ranking while pairing with nobody');
+    // LE CONTRE-TEST DANS L'AUTRE SENS — une paire que le catalogue réunit DÉJÀ n'est pas une
+    // découverte, et la proposer ferait un rapport qui se félicite de ce qui existe.
+    assert.deepEqual(combinaisonsSpontanees(ev,[{demande:'x',outils:['a','b'],cout:'gratuit'}],{minFenetres:8}).paires,[],'a pair the catalogue already names in one offer is not a finding');
+    assert.equal(combinaisonsSpontanees([],[],{minFenetres:8}).mesurable,false,'and with too few windows it refuses to conclude: "no affinity found" and "not enough data to tell" are the same zero otherwise (leçon L11)');
+
+    // ② CE QUI S'EMBOÎTE. Deux bruits écartés, chacun DÉRIVÉ et non listé : l'outil qui lit son
+    // PROPRE registre (ARGUS s'appelle check-argus.mjs — comparer au seul slug le sortait comme
+    // « argus → check-argus », l'erreur déjà payée deux fois ici), et l'AGRÉGATEUR, dont le métier
+    // est de tout relire et qui formerait donc un faux duo avec chaque outil du dépôt.
+    // Huit registres, pas quatre : sous le seuil d'agrégation (25 %), un lecteur d'UN seul registre
+    // doit rester un lecteur ordinaire. Avec quatre registres il en couvrirait déjà 25 % et serait
+    // écarté comme agrégateur — la fixture aurait alors testé l'inverse de ce qu'elle annonce.
+    const regs=['argus','kpi','zz','yy','ww','vv','uu','tt'].map((n)=>({slug:n,path:`docs/${n}/`,scriptPath:n==='argus'?'scripts/check-argus.mjs':n==='kpi'?'scripts/kpi-report.mjs':`scripts/${n}.mjs`}));
+    const src={
+      'check-argus':'je relis docs/argus/ parce que je suis ARGUS',
+      'lecteur':'je lis docs/argus/ pour en faire autre chose',
+      'tout-lire':regs.map((r)=>r.path).join(' '),
+      'kpi-report':'docs/kpi/',
+    };
+    const e=emboitements({registres:regs,sourceParOutil:src,prestations:[]});
+    assert.deepEqual(e.chaines.map((c)=>`${c.produit}→${c.lit}`),['argus→lecteur'],'a tool reading its OWN registry under a different script name is not an interlocking, and an aggregator that reads nearly every registry is not a duo — both are excluded by derivation, never by a list of names that would go stale');
+    assert.ok(e.agregateurs.includes('tout-lire'),'the aggregator is NAMED rather than silently dropped: knowing who was set aside is what lets a reader check the threshold still makes sense');
+    assert.ok(Array.isArray(e.distribution)&&e.distribution.length,'and the reader distribution is carried out with the result, because a threshold that cannot be re-checked is a threshold nobody will trust');
+    assert.equal(emboitements({}).mesurable,false,'with no registry list and no sources it refuses to conclude rather than reporting an empty, reassuring list');
+  }
+
+  // LE RÉEXPORT QUI NE LIE PAS (2026-09-27, leçon L36). `export { X } from "..."` rend X disponible
+  // aux APPELANTS et ne crée AUCUNE liaison locale : une fonction du même fichier qui appelle X
+  // plante sur « is not defined », à l'exécution seulement. La moitié visible marche, donc tout ce
+  // qui n'exerce pas le chemin interne reste vert — c'est ce qui l'a fait passer deux fois en une
+  // nuit, sur AXES_EXEMPLES_MAX puis sur loadToolUsageHistory.
+  {
+    const {findReexportsNonLies,auditReexports,formatReexportsLines}=await import('../scripts/safe-export.mjs');
+    assert.deepEqual(findReexportsNonLies('export { foo } from "./a.mjs";\nfunction bar(){ return foo(1); }','t').map((e)=>e.nom),['foo'],'the real defect is caught: a name re-exported without being imported, and called in the same file');
+    // LES CINQ FAÇONS D'AVOIR RAISON, et elles ne sont pas décoratives : au PREMIER passage réel ce
+    // détecteur a accusé SEPT noms dont les SEPT étaient légitimes. Un garde-fou qui accuse à tort
+    // cesse d'être lu (L4) — celui-ci serait mort à son premier rapport.
+    assert.equal(findReexportsNonLies('import { foo } from "./a.mjs";\nexport { foo } from "./a.mjs";\nfoo(1);','t').length,0,'a name both imported AND re-exported is perfectly correct — this is the most common legitimate shape, and accusing it was the first real false positive');
+    assert.equal(findReexportsNonLies('export { foo } from "./a.mjs";\nfunction foo(){}\nfoo(1);','t').length,0,'a name declared in the file and also re-exported is bound too');
+    assert.equal(findReexportsNonLies('export { foo } from "./a.mjs";\nconst d={source:"foo()"};','t').length,0,'a name quoted inside a STRING is a description, never a call — this was the second real false positive (source: "typeDeScript()")');
+    assert.equal(findReexportsNonLies('export { foo } from "./a.mjs";\n// on appelle foo() ailleurs','t').length,0,'and a name in a comment is not a call either');
+    assert.equal(findReexportsNonLies('export { foo } from "./a.mjs";\nconst x=1;','t').length,0,'re-exporting without calling locally is the ordinary case and must stay silent');
+    // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25). Le zéro attendu ici n'est une bonne nouvelle que
+    // parce que les six cas ci-dessus ont prouvé que l'outil mord (BP4).
+    const reel=auditReexports();
+    assert.equal(reel.mesurable,true,'the probe must be able to MEASURE against the real repository — unmeasurable means the wiring broke, and it would pass silently');
+    assert.deepEqual(reel.ecarts,[],'and no file in the real repository may re-export a name it calls without binding it');
+    assert.match(formatReexportsLines(reel)[0],/aucun nom réexporté/,'the clean case says what was checked and on how many files, never a bare green');
+  }
+
   // LE MENU S'OUVRE AUX PÉRIODIQUES (2026-09-25, décision de l'utilisateur) — et deux pièges se
   // referment en même temps, chacun mesuré sur la vraie table plutôt que craint.
   {
@@ -7477,7 +7547,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
 // sens (bonne pratique BP4) : un verrou doit mordre sur le défaut qu'il vise, et laisser passer le
 // cas propre — et, troisième sens propre à ce mécanisme, un verrou qui NE PEUT PAS mesurer ne doit
 // jamais bloquer, parce qu'un refus qu'on ne sait pas expliquer est un faux positif incorrigible
-// (leçon L30).
+// (leçon L36).
 async function testVerrousDOuverture() {
   const { VERROUS_D_OUVERTURE, findVerrousActifs, formatVerrousLines, ouvrirRonde } = await import('../scripts/circle-tasks.mjs');
 
@@ -7514,7 +7584,7 @@ async function testVerrousDOuverture() {
     'outil-muet-au-compteur': { rapportDesMuetsImpl: () => ({ silenceMesurable: false, pourquoiSilenceNonMesure: 'aucun lecteur de source' }) },
     'registre-hors-ronde': { existingPathsImpl: [], declaresImpl: [] },
   });
-  assert.equal(aveugle.actifs.length, 0, 'an unmeasurable lock must NOT block: refusing a Ronde over a defect nobody can name is the one false positive that cannot be corrected (leçon L30)');
+  assert.equal(aveugle.actifs.length, 0, 'an unmeasurable lock must NOT block: refusing a Ronde over a defect nobody can name is the one false positive that cannot be corrected (leçon L36)');
   assert.equal(aveugle.nonMesures.length, 1, 'but it must be counted as unmeasured, never folded into the clean ones');
   assert.match(formatVerrousLines(aveugle)[0], /PAS MESURÉ/, 'and said out loud — "nothing found" and "could not look" must never read the same (leçons L5/L11)');
   assert.match(formatVerrousLines(aveugle)[0], /aucun lecteur de source/, 'with the real reason carried through, not a generic shrug');
@@ -15430,7 +15500,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(reel944.ouvertes > 50, 'and it must really be reading the repository rather than an empty stub');
   assert.deepEqual(reel944.fantomes, [], 'the eight real phantoms found the day this guard was written were closed the same day — if this ever fails again, a task was closed under a new number instead of updating its own row, which docs/systeme-de-suivi.md §2 forbids');
 
-  console.log("Passed: la ligne fantôme (2026-09-26, tâche #944) — une tâche faite dont la ligne dit encore « ouverte ». La règle était écrite depuis le 2026-09-19 (« à la clôture d'une tâche, sa ligne est mise à jour, statut, pas une nouvelle ligne ») et absolument rien ne la portait, donc elle a cessé d'être vraie sans que quiconque le sache — huit fois, dont quatre de la même matinée. Le coût n'est pas du rangement : la file mentait sur sa propre taille, 129 tâches restantes annoncées pour 121 réelles, si bien que « épuiser la file » n'avait plus de fin mesurable et que les plus anciennes tâches encore ouvertes remontaient du travail déjà rendu. Le détecteur est étroit par choix et le prix est déclaré : il n'accuse que si une ligne CLÔTURÉE, de numéro PLUS GRAND, nomme la tâche dans sa cellule sous-sujet — la convention réelle du suivi, vérifiée sur 825 lignes. La première version, plus large, en rendait seize dont quatre fausses : trois lignes qui OUVRAIENT une suite plutôt que de clore, et une qui citait sa voisine dans son détail pour expliquer qu'elle n'y touchait pas. Un vrai cas manqué coûte moins cher qu'un faux accusé (leçon L30), et un fantôme dont la ligne de clôture n'emploie pas le mot « tâche » passe donc inaperçu — c'est dit plutôt que tu.");
+  console.log("Passed: la ligne fantôme (2026-09-26, tâche #944) — une tâche faite dont la ligne dit encore « ouverte ». La règle était écrite depuis le 2026-09-19 (« à la clôture d'une tâche, sa ligne est mise à jour, statut, pas une nouvelle ligne ») et absolument rien ne la portait, donc elle a cessé d'être vraie sans que quiconque le sache — huit fois, dont quatre de la même matinée. Le coût n'est pas du rangement : la file mentait sur sa propre taille, 129 tâches restantes annoncées pour 121 réelles, si bien que « épuiser la file » n'avait plus de fin mesurable et que les plus anciennes tâches encore ouvertes remontaient du travail déjà rendu. Le détecteur est étroit par choix et le prix est déclaré : il n'accuse que si une ligne CLÔTURÉE, de numéro PLUS GRAND, nomme la tâche dans sa cellule sous-sujet — la convention réelle du suivi, vérifiée sur 825 lignes. La première version, plus large, en rendait seize dont quatre fausses : trois lignes qui OUVRAIENT une suite plutôt que de clore, et une qui citait sa voisine dans son détail pour expliquer qu'elle n'y touchait pas. Un vrai cas manqué coûte moins cher qu'un faux accusé (leçon L36), et un fantôme dont la ligne de clôture n'emploie pas le mot « tâche » passe donc inaperçu — c'est dit plutôt que tu.");
 }
 
 // ————————————————————————————————————————————————————————————————————————

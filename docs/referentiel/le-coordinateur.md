@@ -81,3 +81,74 @@ personne » s'écrivent tous les deux zéro.
 
 Sortie : à chaque passage de `node scripts/le-coordinateur.mjs`, sous le rapport d'offres
 concurrentes — même rapport, deux questions voisines, aucune ne remplaçant l'autre.
+
+## Les combinaisons d'outils, enfin — et elles se mesurent, elles ne s'imaginent pas
+
+*(Tâche #715, 2026-09-27. Sa demande durait depuis le début de l'Agence : « je veux un calcul
+complexe pour imaginer des combinaisons pertinentes [...] c'est une des vocations du catalogue que
+je n'ai toujours pas réussi à mettre en place correctement depuis le début de l'agence : HELP ! »)*
+
+**Pourquoi ça n'avait jamais marché.** Les tentatives précédentes partaient des OUTILS. 75 outils
+font 2 775 paires et 67 525 trios ; un classement sur ce volume a l'air intelligent et n'est que du
+bruit, sans aucun moyen de faire la différence. **Une combinaison utile ne se déduit pas d'un stock
+disponible** — elle se lit dans ce qui se passe déjà, ou dans un besoin auquel personne ne répond.
+
+**Deux générateurs mécaniques, un troisième délégué. Jamais un calcul sur toutes les paires.**
+
+### ① Ce qui arrive déjà tout seul — `combinaisonsSpontanees()`
+
+Le compteur d'usage horodate chaque lancement. Deux outils qui tombent sans cesse dans la même
+fenêtre de travail forment une combinaison que l'agent fait déjà sans lui avoir donné de nom.
+
+**Le piège a été mesuré avant d'être craint.** Compté en brut, le palmarès est trusté par
+`agent-du-temps` : 70 fenêtres avec MOÏSE, 69 avec ecotoken, 38 avec tool-brain. Ce n'est pas une
+combinaison, c'est un **rituel** — on lit l'heure avant d'écrire, donc il accompagne tout le monde.
+Le compte brut mesure la fréquence, jamais l'affinité. On lit donc l'**écart à l'attendu** : combien
+de fois la paire tombe ensemble, rapporté à ce que leurs fréquences respectives prédiraient si elles
+ne s'appelaient jamais. L'omniprésent retombe à ×1 et disparaît de lui-même.
+
+Premier passage réel, sur 530 fenêtres : `always-new-code + clone-hunter` ×21, `axa-check +
+clone-hunter` ×18,4, `argus + le-coordinateur` ×18,2, `smart-conso-token + the-king` ×13,9.
+
+Les lancements du crochet post-commit ne comptent pas : il lance un lot fixe à chaque commit, ce qui
+est **une seule commande**, pas une combinaison choisie. Les compter ferait ressortir le contenu du
+crochet comme une découverte.
+
+### ② Ce qui s'emboîte — `emboitements()`
+
+A écrit un registre que B sait lire : la chaîne existe déjà dans le dépôt, il suffit de la suivre.
+Les registres se LISENT dans la liste déclarée de Doc-Report, les lecteurs se cherchent dans la
+source réelle de chaque script.
+
+**Deux bruits écartés, tous deux dérivés :**
+- **Un outil qui lit son propre registre.** ARGUS s'appelle `check-argus.mjs`, donc comparer au seul
+  slug le faisait sortir en « argus → check-argus ». Le registre déclare son `scriptPath` : on s'en
+  sert. C'est l'erreur « SANS FICHE, 22 fois », déjà payée deux fois ici.
+- **Les agrégateurs**, dont le métier est de tout relire et qui formeraient donc un faux duo avec
+  chaque outil du dépôt. **Le seuil ne se choisit pas, il se lit** : sur 55 registres, la
+  distribution donne doc-report 98 %, circle-tasks 56 %, check-house 38 %, hyper-scan-checkpoint
+  31 %, puis une chute franche à 16 %. Le trou est net, le seuil (25 %) se pose dedans, et la
+  distribution s'imprime **avec** le résultat pour qu'on vérifie que le trou tient encore.
+
+Mesure : 112 chaînes brutes → **70 réelles** une fois ces deux bruits retirés.
+
+### ③ Les exigences que personne ne vérifie — délégué, jamais refait
+
+C'est la question de THE-EQUALIZER (`confronterCadreExterne()`, tâche #1003). La réimplémenter ici
+serait un second calcul sur la même donnée, qui finirait par diverger de celui qui décide vraiment
+(leçon L29). Le rapport renvoie vers `node scripts/the-equalizer.mjs confronter`.
+
+### Ce que ce rapport ne dit jamais
+
+**Rien ici ne dit qu'une combinaison est UTILE.** Il dit qu'elle est RÉELLE — déjà pratiquée, ou
+déjà branchée. Décider qu'elle mérite un nom reste un jugement, et LE-COORDINATEUR ne raisonne
+jamais lui-même. Une paire que le catalogue réunit déjà dans une même offre est écartée : la
+proposer ferait un rapport qui se félicite de ce qui existe.
+
+**Un effet de bord corrigé en chemin** : `loadToolUsageHistory()` vivait dans `tool-brain.mjs`, qui
+n'écrit rien dans ce fichier et se trouvait seulement en être le premier lecteur. Tout outil voulant
+lire l'historique devait donc importer tool-brain, lequel importe le catalogue — un cycle dès que le
+catalogue veut lire l'historique à son tour. Le lecteur a rejoint `tool-usage.mjs`, le fichier qui
+ÉCRIT ces événements ; tool-brain le réexporte, aucun appelant n'est cassé.
+
+Sortie : à chaque passage de `node scripts/le-coordinateur.mjs`.

@@ -70,6 +70,25 @@ export { loadJson };
 // Enregistre une sollicitation RÉELLE d'un outil. `toolSlug` : identifiant stable de l'outil (même
 // convention que slugifyAgentName() de le-coordinateur.mjs, ex. "argus", "the-final-judge") — jamais
 // deviné ici, toujours fourni par l'appelant qui sait déjà quel outil il vient de solliciter.
+// LE LECTEUR VIT CHEZ LE PROPRIÉTAIRE DU MAGASIN (2026-09-27, tâche #715). Il vivait dans
+// tool-brain.mjs, qui n'écrit rien dans ce fichier et se trouvait seulement être son premier
+// lecteur. Résultat : tout outil voulant lire l'historique devait importer tool-brain, lequel
+// importe le catalogue — donc un cycle dès que le catalogue veut lire l'historique à son tour.
+// Le déplacer ici n'ajoute aucune connaissance nouvelle : il rejoint le fichier qui écrit ces
+// mêmes événements, et tool-brain continue de l'exposer pour ses appelants historiques.
+//
+// MÊME DISCIPLINE HONNÊTE QUE LE RESTE DU PAYSAGE : un historique absent ou corrompu retombe sur
+// « aucun événement connu », jamais une erreur qui bloquerait un simple rappel. L'appelant qui a
+// besoin de distinguer « vide » de « illisible » doit le demander explicitement, et les deux
+// générateurs de combinaisons le font (ils refusent de conclure sous le seuil de mesurabilité).
+export function loadToolUsageHistory(readFile = (u) => readFileSync(u, "utf8")) {
+  try {
+    return JSON.parse(readFile(HISTORY_PATH));
+  } catch {
+    return { events: [] };
+  }
+}
+
 export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomething = undefined) {
   if (!toolSlug) throw new Error("recordToolUsage: toolSlug obligatoire — un usage ne peut jamais être anonyme.");
   if (!USAGE_ORIGINS.includes(origin)) throw new Error(`recordToolUsage: origin inconnue "${origin}" — attendu l'une de ${USAGE_ORIGINS.join(", ")}`);

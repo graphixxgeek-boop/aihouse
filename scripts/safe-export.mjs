@@ -1056,6 +1056,12 @@ function main() {
   for (const n of nonPortables) console.log(`· ${n.fichier} — ${n.pourquoi}`);
   const deps = findDependancesOutillage(blueprints);
 
+  // LE CODE TIENDRAIT-IL DEBOUT ? (2026-09-27, leçon L36.) Question voisine de la précédente et
+  // distincte : « partirait-il » demande s'il est détachable, celle-ci s'il s'exécutera. Un
+  // réexport sans liaison locale se lit parfaitement et plante au premier appel interne — et le
+  // défaut voyage avec l'outil, donc il arrive intact dans le dépôt qui l'adopte.
+  for (const ligne of formatReexportsLines(auditReexports())) console.log(ligne);
+
   // LE TROISIÈME SENS, ENFIN BRANCHÉ (2026-09-23, tâche #218). Les trois détecteurs ci-dessus
   // examinent les blueprints QUI EXISTENT. Celui-ci pose la question inverse, et c'est la plus
   // importante pour la MOITIÉ 1 de l'évolutivité (pouvoir partir) : quels outils n'en ont AUCUN ?
@@ -1279,6 +1285,93 @@ export function findVocabulaireAmbigu(texte, entree, { surnoms = SURNOMS_DECLARE
 
 // L'INSTANCE HISTORIQUE, gardée sous son nom parce que la charte le cite : elle ne fait plus que
 // choisir son entrée dans le registre. Un nom cité ailleurs ne se change jamais en silence.
+// LE RÉEXPORT QUI NE LIE PAS (2026-09-27, leçon L36, payée DEUX FOIS dans la même nuit).
+// `export { X } from "./ailleurs.mjs"` rend X disponible aux APPELANTS de ce module et ne crée
+// AUCUNE liaison locale. Toute fonction du même fichier qui appelle `X(...)` plante sur « is not
+// defined » — à l'exécution seulement, jamais à la lecture, jamais à `node --check`.
+//
+// CE QUI LE REND MÉCHANT, ET POURQUOI IL MÉRITE UN GARDE-FOU PLUTÔT QU'UNE LEÇON : la moitié
+// visible marche. Les appelants externes voient X, l'import se résout, et tout ce qui n'exerce pas
+// le chemin interne reste vert. Les deux fois, le défaut n'a été trouvé qu'en lançant un outil
+// tiers qui, lui, passait par là. Une leçon écrite ne l'aurait pas empêché une troisième fois
+// (Article 27 : ce qu'aucun mécanisme ne porte n'existera plus à la session suivante).
+//
+// LA DÉTECTION EST EXACTE, PAS HEURISTIQUE : on lit les noms réexportés par cette forme, et on
+// cherche un appel `nom(` dans le reste du fichier. Un fichier qui réexporte sans appeler est
+// parfaitement légitime et n'est jamais signalé — c'est même le cas le plus courant.
+export const MOTIF_REEXPORT_SANS_LIEN = /^\s*export\s*\{([^}]*)\}\s*from\s*["'][^"']+["']\s*;?\s*$/gm;
+
+export function findReexportsNonLies(source = "", chemin = "?") {
+  const out = [];
+  const reexportes = [];
+  let m;
+  const motif = new RegExp(MOTIF_REEXPORT_SANS_LIEN.source, "gm");
+  while ((m = motif.exec(String(source)))) {
+    for (const brut of m[1].split(",")) {
+      // `X as Y` : c'est Y qui serait lié chez l'appelant, mais NI l'un NI l'autre localement.
+      const nom = brut.trim().split(/\s+as\s+/)[0].trim();
+      if (nom && /^[A-Za-z_$][\w$]*$/.test(nom) && nom !== "default") reexportes.push(nom);
+    }
+  }
+  if (!reexportes.length) return out;
+  // UN NOM PEUT ÊTRE RÉEXPORTÉ **ET** LIÉ PAR AILLEURS, et c'est parfaitement correct : le fichier
+  // l'importe normalement pour son usage interne, puis le réexporte pour ses appelants. Sans cette
+  // vérification, le premier passage réel accusait SEPT noms dont les SEPT étaient légitimes —
+  // `familleDeLaCategorie` est importé ligne 21 et réexporté ligne 2068, les autres sont définis
+  // dans le fichier même. Un garde-fou qui accuse à tort cesse d'être lu (leçon L4), et celui-ci
+  // serait mort à son premier rapport. On écarte donc tout nom déjà lié, de l'une des deux façons
+  // possibles : importé par un `import { … }` ordinaire, ou déclaré ici.
+  const lies = new Set();
+  for (const imp of String(source).matchAll(/^\s*import\s*\{([^}]*)\}\s*from\s*["'][^"']+["']/gm)) {
+    for (const brut of imp[1].split(",")) {
+      const parts = brut.trim().split(/\s+as\s+/);
+      const nom = (parts[1] ?? parts[0] ?? "").trim();
+      if (nom) lies.add(nom);
+    }
+  }
+  for (const d of String(source).matchAll(/^\s*(?:export\s+)?(?:async\s+)?(?:function|class|const|let|var)\s+([A-Za-z_$][\w$]*)/gm)) lies.add(d[1]);
+  // ON NE CHERCHE UN APPEL QUE DANS DU VRAI CODE, et ça s'est vérifié au premier passage réel :
+  // sur sept noms signalés, DEUX l'étaient à tort — `source: "typeDeScript()"` est une chaîne de
+  // caractères qui DÉCRIT une fonction, jamais un appel. Un garde-fou qui accuse à tort cesse
+  // d'être lu (leçon L4), et celui-ci serait mort à son premier rapport. On neutralise donc, avant
+  // de chercher : les lignes de réexport elles-mêmes (sinon le nom compterait dans sa propre
+  // déclaration), les commentaires, et le contenu des chaînes de caractères — sans toucher au
+  // reste, parce qu'une découpe approximative rate des appels réels et c'est le défaut inverse.
+  const corps = String(source)
+    .replace(new RegExp(MOTIF_REEXPORT_SANS_LIEN.source, "gm"), "")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/^\s*\/\/.*$/gm, " ")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/`(?:[^`\\]|\\.)*`/g, "``");
+  for (const nom of [...new Set(reexportes)]) {
+    if (lies.has(nom)) continue;
+    if (new RegExp(`\\b${nom}\\s*\\(`).test(corps)) {
+      out.push({ chemin, nom, pourquoi: `\`${nom}\` est réexporté sans être importé, et appelé dans ce même fichier : l'appel plantera sur « is not defined » à l'exécution. Écrire les deux lignes — \`import { ${nom} } from …\` puis \`export { ${nom} }\`.` });
+    }
+  }
+  return out;
+}
+
+export function auditReexports({ root = ROOT, lireDossier = readdirSync, lireFichier = readFileSync } = {}) {
+  let fichiers = [];
+  try { fichiers = lireDossier(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return { mesurable: false, pourquoi: "scripts/ illisible — « aucun réexport cassé » et « je n'ai rien lu » s'écrivent pareil", ecarts: [] }; }
+  const ecarts = [];
+  for (const f of fichiers) {
+    let src = "";
+    try { src = lireFichier(join(root, "scripts", f), "utf8"); } catch { continue; }
+    ecarts.push(...findReexportsNonLies(src, `scripts/${f}`));
+  }
+  return { mesurable: true, ecarts, fichiers: fichiers.length };
+}
+
+export function formatReexportsLines(r) {
+  if (!r?.mesurable) return [`   🚨 PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`];
+  if (!r.ecarts.length) return [`   ✅ réexports : aucun nom réexporté sans liaison locale sur ${r.fichiers} fichiers (leçon L36).`];
+  return ["   ⚠️  RÉEXPORT SANS LIAISON LOCALE — l'appel plantera à l'exécution, jamais à la lecture (leçon L36) :",
+    ...r.ecarts.map((e) => `      · ${e.chemin} — ${e.pourquoi}`)];
+}
+
 export function findGardienAmbigu(texte, options = {}) {
   return findVocabulaireAmbigu(texte, VOCABULAIRE_RESERVE.find((v) => v.terme === "gardien"), options);
 }

@@ -1096,6 +1096,34 @@ signal.
 **Porté par** : **aucun mécanisme** — rien ne peut lire ce que j'annonce dans la conversation.
 C'est la même limite honnête que les Articles 29 et 30 : la déclarer EST la protection
 (Article 27).
+## L36 — `export { X } from "..."` réexporte X sans le lier dans le fichier qui l'écrit
+
+Une ligne qui a l'air parfaitement correcte, et qui casse la moitié de ce qu'elle promet. Le
+réexport **rend X disponible aux appelants** de ce module ; il **ne crée aucune liaison locale**.
+Toute fonction du même fichier qui appelle X plante sur « is not defined » — à l'exécution
+seulement, jamais à la lecture, jamais à `node --check`.
+
+**Ce qui le rend méchant** : la moitié visible marche. Les appelants externes voient X, donc
+l'import se résout, donc tout ce qui n'exerce pas le chemin interne reste vert. Ici, le verrou de
+Ronde qui s'appuyait dessus est passé de « propre » à « pas mesuré », et « pas mesuré » ressemble à
+une panne de câblage plutôt qu'à une faute de frappe d'une ligne.
+
+**Le geste** : quand un fichier a besoin de X *et* doit l'exposer, on écrit les deux lignes —
+`import { X } from "..."` puis `export { X }`. Jamais la forme condensée.
+
+**Terrain** : quand je déplace une fonction d'un fichier à un autre en gardant l'ancien point d'entrée · mots : réexport, export, déménagement, cycle, import, defined · fichiers : scripts/*.mjs
+
+**Porté par** : `findReexportsNonLies` et `auditReexports` (SAFE-EXPORT), lancés à chaque passage.
+Le filet de sécurité seul ne suffisait pas : un test qui importe X depuis l'extérieur passe pendant
+que l'intérieur est cassé — c'est exactement ce qui est arrivé, deux fois.
+
+*Payée DEUX FOIS dans la même nuit, le 2026-09-27, à quelques heures d'intervalle et sans que la
+première m'apprenne la seconde : d'abord sur `AXES_EXEMPLES_MAX` lors de la scission de CASSANDRA-RH
+vers le classificateur, puis sur `loadToolUsageHistory()` en le déménageant de tool-brain vers
+tool-usage pour casser un cycle d'import. Deux déménagements, la même ligne condensée, la même
+panne. C'est ce qui justifie une entrée : une erreur qui se répète le jour même n'est pas une
+étourderie, c'est un réflexe manquant.*
+
 
 # Bonnes pratiques
 
