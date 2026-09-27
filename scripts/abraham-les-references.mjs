@@ -30,7 +30,7 @@
 
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere } from "./lib-shell.mjs";
+import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -55,7 +55,10 @@ export function fichiersDuDepot({ racine = ".", exclure = new Set() } = {}) {
       const rel = relative(racine, p);
       if (exclure.has(rel)) continue;
       if (!/\.(mjs|ts|tsx|js|md|txt)$/.test(e.name)) continue;
-      try { if (statSync(p).size > 2_000_000) continue; out[rel] = readFileSync(p, "utf8"); } catch { /* illisible : ignoré */ }
+      // LE DÉCOR PARTAGÉ (2026-09-27) : ce balayage coûtait 4 083 lectures et 18,3 Mo, et un
+      // second appel en recoûtait autant. Le contenu est désormais mis en commun, invalidé par
+      // mtime+taille+inode — donc un fichier modifié est bien relu (cf. lib-shell).
+      try { if (statSync(p).size > 2_000_000) continue; out[rel] = lireFichierPartage(p); } catch { /* illisible : ignoré */ }
     }
   };
   walk(racine);

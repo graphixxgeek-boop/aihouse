@@ -15,7 +15,11 @@
 // IL AVERTIT, IL PROPOSE, IL NE BLOQUE JAMAIS (calibrage explicite). Un gardien qui bloque sur un
 // sujet sans rapport avec le travail en cours pousse à désactiver le crochet — et on perd tout.
 
+// LE DÉCOR PARTAGÉ (2026-09-27) : les lectures par défaut passent par le cache commun de
+// lib-shell, invalidé par mtime+taille+inode — un fichier modifié est donc bien relu. Les
+// paramètres restent injectables : un test qui passe son propre `lire` n'est pas touché.
 import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
+import { lireFichierPartage } from "./lib-shell.mjs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, porteeDe, sh } from "./lib-shell.mjs";
@@ -106,7 +110,7 @@ export function declarationDuFichier(texte = "") {
 // LA CORRECTION EST UN PRINCIPE, jamais un mot rattrapé : la frontière se définit comme « pas une
 // lettre », ce qui couvre d'avance tout nom accentué qu'on ajoutera demain (Article 24).
 export const MARQUES_DE_CE_PROJET = /(?<!\p{L})(?:Lia|Noé)(?!\p{L})|la maison|l'enquête|Gemini|aihouse/u;
-export function findFuitesDeSpecificite(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {
+export function findFuitesDeSpecificite(fichiers = [], { readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   const fuites = [];
   for (const f of fichiers) {
     let texte;
@@ -285,7 +289,7 @@ export const PREFIXES_GARDE_FOU = /^(?:find|check|audit|verif)/i;
 // bouge ici. C'est la différence entre lire et recopier.
 const PORTEUR_DE_LECON = /\*\*Port[ée] par\*\*\s*:([^\n]*)/g;
 export const REGISTRES_CITANT_DES_GARDE_FOUS = ["docs/referentiel/standards.md", "docs/referentiel/lecons.md"];
-export function gardeFousCitesParLesRegistres({ root = ROOT, readFileImpl = readFileSync, registres = REGISTRES_CITANT_DES_GARDE_FOUS } = {}) {
+export function gardeFousCitesParLesRegistres({ root = ROOT, readFileImpl = lireFichierPartage, registres = REGISTRES_CITANT_DES_GARDE_FOUS } = {}) {
   const cites = new Set();
   const ajouter = (fragment) => { for (const m of String(fragment).matchAll(/`(\w+)\(\)`/g)) cites.add(m[1]); };
   for (const r of registres) {
@@ -308,7 +312,7 @@ export function estUnGardeFou(nom, cites = new Set()) {
   return cites.has(nom) || PREFIXES_GARDE_FOU.test(nom);
 }
 
-export function findGardeFousSansRaison(fichiers = [], { readFileImpl = readFileSync, root = ROOT, cites } = {}) {
+export function findGardeFousSansRaison(fichiers = [], { readFileImpl = lireFichierPartage, root = ROOT, cites } = {}) {
   const perimetre = cites ?? gardeFousCitesParLesRegistres({ root, readFileImpl });
   const sans = [];
   for (const f of fichiers) {
@@ -380,7 +384,7 @@ export function estMentionSansConsigne(ligne = "") {
   return MOTIF_CITEE_POUR_ETRE_ECARTEE.test(t) || MOTIF_GESTE_NOMME.test(t) || MOTIF_RECIT.test(t);
 }
 
-export function findDependancesOutillage(fichiers = [], { readFileImpl = readFileSync, root = ROOT, quelleQueSoitLaDeclaration = false } = {}) {
+export function findDependancesOutillage(fichiers = [], { readFileImpl = lireFichierPartage, root = ROOT, quelleQueSoitLaDeclaration = false } = {}) {
   const trouvees = [];
   for (const f of fichiers) {
     let texte;
@@ -406,7 +410,7 @@ export function findDependancesOutillage(fichiers = [], { readFileImpl = readFil
   return trouvees;
 }
 
-export function findMentionsSansConsigne(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {
+export function findMentionsSansConsigne(fichiers = [], { readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   const out = [];
   for (const f of fichiers) {
     let texte;
@@ -473,7 +477,7 @@ export const NE_PART_PAS_ET_C_EST_NORMAL = {
   "sites-env": "charge l'environnement de CE site.",
 };
 
-export function findScriptsNonPortables(scripts = [], { readFileImpl = readFileSync, root = ROOT, portee = porteeDe, exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
+export function findScriptsNonPortables(scripts = [], { readFileImpl = lireFichierPartage, root = ROOT, portee = porteeDe, exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
   const trouves = [];
   for (const f of scripts) {
     const slug = f.replace(/^scripts\//, "").replace(/\.mjs$/, "");
@@ -520,7 +524,7 @@ export function findScriptsNonPortables(scripts = [], { readFileImpl = readFileS
 // vraiment. Jusqu'ici SAFE-EXPORT disait si un outil AVAIT L'AIR exportable ; il ne disait jamais
 // CE QU'IL FAUDRAIT EMPORTER. Une exportabilité qu'on ne sait pas exécuter n'est pas une
 // exportabilité, c'est une opinion sur du code.
-export function manifesteDExport(slug, { root = ROOT, readFileImpl = readFileSync, exists = existsSync } = {}) {
+export function manifesteDExport(slug, { root = ROOT, readFileImpl = lireFichierPartage, exists = existsSync } = {}) {
   const script = `scripts/${slug}.mjs`;
   let source;
   try { source = readFileImpl(join(root, script), "utf8"); } catch {
@@ -595,7 +599,7 @@ export const SECTIONS_ATTENDUES = [
   { cle: "garde-fous", motif: /garde-fou|limite honnête|ce qu'il ne|jamais/i, pourquoi: "sans ses limites, l'outil sera cru au-delà de ce qu'il sait faire" },
 ];
 
-export function findBlueprintsMalConstruits(blueprints = [], { readFileImpl = readFileSync, root = ROOT } = {}) {
+export function findBlueprintsMalConstruits(blueprints = [], { readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   const defauts = [];
   for (const b of blueprints) {
     let texte;
@@ -669,7 +673,7 @@ export const BLUEPRINT_SOUS_UN_AUTRE_NOM = {
 // AUCUNE ligne dans l'inventaire (Smart Breaker y figure sous son surnom). Les deux sources se
 // complètent, la lue l'emportant sur la recopiée quand les deux parlent — jamais l'inverse, sans
 // quoi une entrée oubliée à la main continuerait de masquer la vérité du dépôt.
-export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = existsSync, readFileImpl = readFileSync, exemptes = SANS_BLUEPRINT_ASSUME, alias = BLUEPRINT_SOUS_UN_AUTRE_NOM, aliasImpl = undefined } = {}) {
+export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = existsSync, readFileImpl = lireFichierPartage, exemptes = SANS_BLUEPRINT_ASSUME, alias = BLUEPRINT_SOUS_UN_AUTRE_NOM, aliasImpl = undefined } = {}) {
   const lus = aliasImpl === undefined ? aliasDocumentaires({ root, readFileImpl }) : aliasImpl;
   // La carte lue est indexée par CHEMIN de script (`scripts/x.mjs`) ; on la ramène au slug.
   const parSlug = new Map();
@@ -708,7 +712,7 @@ export function findOutilsSansBlueprint(outils = [], { root = ROOT, exists = exi
 // sur un classificateur d'origine écrit en double).
 export const BLUEPRINT_DE_L_AGENCE = "docs/agence-exportable-conception.md";
 
-export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = existsSync, readFileImpl = readFileSync, aliasImpl = undefined } = {}) {
+export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = existsSync, readFileImpl = lireFichierPartage, aliasImpl = undefined } = {}) {
   if (!vitalite?.mesurable) {
     return { mesurable: false, pourquoi: "la vitalité du parc n'a pas été fournie ou n'est pas mesurable : sans elle on ne peut que compter des blueprints manquants, jamais dire lesquels comptent" };
   }
@@ -890,7 +894,7 @@ export const DIMENSIONS_DU_RELAI = [
     sansQuoi: "le successeur sautera des étapes sans savoir qu'elles existaient" },
 ];
 
-export function relaisDeModele({ root = ROOT, dimensions = DIMENSIONS_DU_RELAI, exists = existsSync, readFileImpl = readFileSync } = {}) {
+export function relaisDeModele({ root = ROOT, dimensions = DIMENSIONS_DU_RELAI, exists = existsSync, readFileImpl = lireFichierPartage } = {}) {
   const resultats = dimensions.map((d) => {
     const presents = d.documents.filter((c) => exists(join(root, c)));
     const absents = d.documents.filter((c) => !exists(join(root, c)));
@@ -1003,7 +1007,7 @@ export const ACCORD_REQUIS = "accord explicite de l'utilisateur, daté";
 // que CLONE-HUNTER traque — pire, deux mémoires divergentes auraient vite donné deux disciplines
 // différentes sur la même question. Le chemin suit la convention de registre déjà sans exception du
 // projet (`docs/<outil>/`), donc un troisième Gardien s'y branche sans qu'on touche à cette ligne.
-export function loadMemoire({ root = ROOT, readFileImpl = readFileSync, fichier = MEMOIRE_FILE } = {}) {
+export function loadMemoire({ root = ROOT, readFileImpl = lireFichierPartage, fichier = MEMOIRE_FILE } = {}) {
   return loadJsonArray(fichier, { root, readFileImpl });
 }
 
@@ -1650,7 +1654,7 @@ export function findGardienAmbigu(texte, options = {}) {
 // LE BALAYAGE RÉEL, sur les documents normatifs seulement (cf. portée ci-dessus). C'est ce que
 // SAFE-EXPORT fait remonter dans ses écarts : une dette de vocabulaire est une dette de REPRISE,
 // donc son domaine, jamais celui d'un Gardien sacré du code.
-export function scanVocabulaire({ root = ROOT, termes = VOCABULAIRE_RESERVE, readFileImpl = readFileSync, listDirImpl = readdirSync } = {}) {
+export function scanVocabulaire({ root = ROOT, termes = VOCABULAIRE_RESERVE, readFileImpl = lireFichierPartage, listDirImpl = readdirSync } = {}) {
   const cibles = ["CLAUDE.md"];
   try {
     for (const f of listDirImpl(join(root, "docs/referentiel"))) if (f.endsWith(".md")) cibles.push(`docs/referentiel/${f}`);
@@ -1912,7 +1916,7 @@ export function dependancesInternes(source = "") {
 // CE QU'ELLE NE FAIT PAS : elle n'invente aucun chemin. Un script absent de la table garde la
 // dérivation par son nom, qui est le cas majoritaire et reste le comportement par défaut.
 export const MOTIF_LIGNE_INVENTAIRE = /^\|(.+)\|\s*$/;
-export function aliasDocumentaires({ root = ROOT, readFileImpl = readFileSync, fichier = "CLAUDE.md" } = {}) {
+export function aliasDocumentaires({ root = ROOT, readFileImpl = lireFichierPartage, fichier = "CLAUDE.md" } = {}) {
   let texte = "";
   try { texte = readFileImpl(join(root, fichier), "utf8"); } catch { return null; }
   const carte = new Map();
@@ -1932,7 +1936,7 @@ export function aliasDocumentaires({ root = ROOT, readFileImpl = readFileSync, f
   return carte.size ? carte : null;
 }
 
-export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT, exemptes = EXEMPTES_DU_KIT, aliasImpl = undefined } = {}) {
+export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = existsSync, readFileImpl = lireFichierPartage, niveaux = NIVEAUX_DE_KIT, pieces = PIECES_DU_KIT, exemptes = EXEMPTES_DU_KIT, aliasImpl = undefined } = {}) {
   const kit = kitAttendu(niveauVitalite, { niveaux });
   if (!kit) return { mesurable: false, pourquoi: `aucun niveau de kit ne correspond à la vitalité « ${niveauVitalite} » — un niveau de vitalité sans kit rendrait l'outil invisible à l'export sans que personne ne le voie` };
   // L'EXEMPTION EST UN ÉTAT À PART, jamais un kit complet par défaut : un fichier dispensé et un
@@ -1984,7 +1988,7 @@ export function etatDuKit(ligne = {}, niveauVitalite, { root = ROOT, exists = ex
   };
 }
 
-export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSync, readFileImpl = readFileSync, niveaux = NIVEAUX_DE_KIT } = {}) {
+export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSync, readFileImpl = lireFichierPartage, niveaux = NIVEAUX_DE_KIT } = {}) {
   if (!vitalite?.mesurable) {
     return { mesurable: false, pourquoi: "la vitalité du parc n'a pas été fournie ou n'est pas mesurable : sans elle on ne peut pas savoir QUEL kit chaque fichier doit porter, et compter des pièces sans savoir lesquelles sont dues ne mesure rien" };
   }
@@ -2157,7 +2161,7 @@ export const PIECES_DU_KIT_AGENCE = [
 // plus qu'un test d'existence.
 export const MARQUEUR_PLAN_AGENCE = /plan de l'Agence|blueprint de l'Agence|l'Agence comme un tout/i;
 
-export function mesurerLeKitDeLAgence({ root = ROOT, exists = existsSync, readFileImpl = readFileSync, pieces = PIECES_DU_KIT_AGENCE } = {}) {
+export function mesurerLeKitDeLAgence({ root = ROOT, exists = existsSync, readFileImpl = lireFichierPartage, pieces = PIECES_DU_KIT_AGENCE } = {}) {
   const detail = pieces.map((p) => {
     const present = exists(join(root, p.chemin));
     if (!present) return { ...p, present: false, pourquoi: "le fichier n'existe pas" };
@@ -2344,7 +2348,7 @@ export function codeSansCommentaires(src = "") {
   return String(src).replace(/^\s*\/\/[^\n]*$/gm, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
 }
 
-export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, marqueurs = MARQUEURS_DE_NON_PORTABILITE } = {}) {
+export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, marqueurs = MARQUEURS_DE_NON_PORTABILITE } = {}) {
   let fichiers = [];
   try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => String(f).endsWith(".mjs")); } catch { /* dossier illisible */ }
   if (!fichiers.length) {

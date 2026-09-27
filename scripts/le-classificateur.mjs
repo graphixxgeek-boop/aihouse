@@ -19,7 +19,11 @@
 // existant n'a eu à changer une ligne. Ce n'est pas une facilité, c'est ce qui permet de déplacer
 // du code sans mêler un déménagement à une modification — deux changements dans un seul commit
 // sont impossibles à relire quand quelque chose casse.
+// LE DÉCOR PARTAGÉ (2026-09-27) : les lectures par défaut passent par le cache commun de
+// lib-shell, invalidé par mtime+taille+inode — un fichier modifié est donc bien relu. Les
+// paramètres restent injectables : un test qui passe son propre `lire` n'est pas touché.
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { lireFichierPartage } from "./lib-shell.mjs";
 import { join } from "node:path";
 import { AGENT_CATEGORIES, rangDeLaCategorie, familleDeLaCategorie, printReliabilityNotice, listerLesFichiers } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -255,7 +259,7 @@ export function propagerParDelegation(lignes, importeDe, cle, { suites = null } 
 
 // LE RECENSEMENT COMPLET. Il refuse de répondre plutôt que de rendre un tableau vide quand il n'a
 // rien pu lire (leçon L5) : une population de zéro script se lit exactement comme un dépôt propre.
-export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lire = readFileSync, classes = CLASSES_TRANSVERSES } = {}) {
+export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lire = lireFichierPartage, classes = CLASSES_TRANSVERSES } = {}) {
   let noms = [];
   try { noms = lireDossier(join(root, "scripts")); } catch { return { mesurable: false, pourquoi: "le dossier scripts/ est illisible — aucune population mesurée, ce qui n'est jamais la même chose qu'une population vide" }; }
   const chemins = [];
@@ -467,7 +471,7 @@ export function estLanceurVivant(chemin, lanceurs = LANCEURS_VIVANTS) {
   return lanceurs.find((l) => c === l.prefixe || c.startsWith(l.prefixe))?.quoi ?? null;
 }
 
-export function quiLappelle(chemin, { root = ROOT, lire = readFileSync, lireDossier = readdirSync, lanceurs = LANCEURS_VIVANTS } = {}) {
+export function quiLappelle(chemin, { root = ROOT, lire = lireFichierPartage, lireDossier = readdirSync, lanceurs = LANCEURS_VIVANTS } = {}) {
   const cible = `node ${String(chemin)}`;
   const vivants = [];
   const archives = [];
@@ -494,7 +498,7 @@ export function quiLappelle(chemin, { root = ROOT, lire = readFileSync, lireDoss
   return { vivants: [...new Set(vivants)].sort(), archives: [...new Set(archives)].sort() };
 }
 
-export function bibliothequesLancables({ recensement = null, root = ROOT, lire = readFileSync, types = TYPES_BIBLIOTHEQUE } = {}) {
+export function bibliothequesLancables({ recensement = null, root = ROOT, lire = lireFichierPartage, types = TYPES_BIBLIOTHEQUE } = {}) {
   if (!recensement?.mesurable) {
     return { mesurable: false, pourquoi: recensement?.pourquoi ?? "aucun recensement fourni — sans lire les fichiers, aucune porte n'est observable" };
   }
@@ -1329,7 +1333,7 @@ export const POSTE_PAR_RANG = {
 export const REFERENTIEL_ORGANISATION = "docs/referentiel/organisation-agence.md";
 export const MOTIF_AXE_DECLARE = /^###\s+Axe\s+([A-Z])\s*[—-]\s*(.+)$/gm;
 
-export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = readFileSync, axes = AXES_DE_CLASSIFICATION, rangs = true, familles = true, exportabilite = true } = {}) {
+export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = lireFichierPartage, axes = AXES_DE_CLASSIFICATION, rangs = true, familles = true, exportabilite = true } = {}) {
   let src = texte;
   if (src == null) { try { src = lire(join(root, REFERENTIEL_ORGANISATION), "utf8"); } catch { src = null; } }
   if (src == null) return { mesure: "pas mesuré", pourquoi: `${REFERENTIEL_ORGANISATION} est illisible — sans le document, aucune divergence ne peut être constatée, et un vert rendu ici ressemblerait à un accord` };
@@ -2148,7 +2152,7 @@ export function classerUnDocument(chemin, texte = "", { alias = null, executable
   return { chemin: c, etat: "A-INSTRUIRE", pourquoi: "aucun signal ne tranche — ni archive, ni pièce de kit, ni document du jeu", source: "aucune" };
 }
 
-export function chargerLesDocuments({ root = ROOT, racines = ["docs"], enPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+export function chargerLesDocuments({ root = ROOT, racines = ["docs"], enPlus = ["CLAUDE.md"], listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
   // Parcours partagé (lib-shell, 2026-09-27, tâche #993) — cf. le commentaire de listerLesFichiers()
   // pour la raison. Le filtre et la lecture restent ici : ils sont propres à cet outil.
   const docs = [];

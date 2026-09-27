@@ -16,5 +16,14 @@
     "succes": 296,
     "anomalies": 2,
     "vert": false
+  },
+  {
+    "quand": "2026-09-27T19:26:34.220Z",
+    "totalMs": 92134,
+    "code": 0,
+    "groupes": 288,
+    "succes": 298,
+    "anomalies": 2,
+    "vert": false
   }
 ]

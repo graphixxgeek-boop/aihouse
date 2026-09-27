@@ -16113,6 +16113,58 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE DÉCOR PARTAGÉ (2026-09-27, chantier du filet) — et son invalidation, qui est tout
+// ————————————————————————————————————————————————————————————————————————
+// Le défaut était mesuré, jamais supposé : `/proc/self/io` disait 21 911 lectures et 108,6 Mo pour
+// sept fonctions de balayage, et un SECOND appel à la même fonction recoûtait exactement autant.
+// Aucun cache nulle part. C'est le partage de décor (« shared fixture »), technique standard, et
+// le gain se prend À PROTECTION STRICTEMENT ÉGALE : aucun test retiré, aucun test affaibli.
+//
+// L'INVALIDATION EST LE CŒUR DE LA SÛRETÉ, et c'est elle que ces assertions protègent. Un cache
+// qui rendrait du contenu périmé ferait passer un test qui devrait échouer — infiniment pire que
+// les 107 secondes qu'on cherche à réduire.
+{
+  const sh = await import('../scripts/lib-shell.mjs');
+  sh.viderLeDecorPartage();
+
+  let lectures = 0;
+  const contenus = { '/faux/a.txt': 'version 1' };
+  const stats = { '/faux/a.txt': { mtimeMs: 100, size: 9, ino: 7 } };
+  const statImpl = (c) => { if (!stats[c]) throw new Error('ENOENT'); return stats[c]; };
+  const lireImpl = (c) => { lectures++; return contenus[c]; };
+
+  assert.equal(sh.lireFichierPartage('/faux/a.txt', { statImpl, lireImpl }), 'version 1', 'the first read returns the content');
+  assert.equal(lectures, 1, 'and it really read once');
+  assert.equal(sh.lireFichierPartage('/faux/a.txt', { statImpl, lireImpl }), 'version 1', 'the second call returns the same content');
+  assert.equal(lectures, 1, 'WITHOUT reading again — that is the whole point: 21 911 reads measured across seven scans, the same files over and over');
+
+  // MUST CATCH — LE CAS QUI COMPTE : un fichier modifié DOIT être relu. Un cache qui rendrait
+  // l'ancien contenu ferait passer un test qui devrait échouer.
+  contenus['/faux/a.txt'] = 'version 2';
+  stats['/faux/a.txt'] = { mtimeMs: 200, size: 9, ino: 7 };
+  assert.equal(sh.lireFichierPartage('/faux/a.txt', { statImpl, lireImpl }), 'version 2', 'MUST INVALIDATE: a modified file is read again — a cache returning stale content would make a test pass when it should fail, which is infinitely worse than the 107 seconds we are trying to cut');
+  assert.equal(lectures, 2, 'and the read really happened');
+
+  // MÊME mtime MAIS TAILLE DIFFÉRENTE : la clé mord aussi. Deux écritures dans la même
+  // milliseconde ne sont pas impossibles, et mtime seul les confondrait.
+  contenus['/faux/a.txt'] = 'v3 plus long';
+  stats['/faux/a.txt'] = { mtimeMs: 200, size: 12, ino: 7 };
+  assert.equal(sh.lireFichierPartage('/faux/a.txt', { statImpl, lireImpl }), 'v3 plus long', 'MUST INVALIDATE on size too: two writes inside the same millisecond are not impossible, and mtime alone would confuse them');
+
+  // UN FICHIER ILLISIBLE N'EST JAMAIS MIS EN CACHE — sinon une absence deviendrait définitive.
+  lectures = 0;
+  try { sh.lireFichierPartage('/faux/absent.txt', { statImpl, lireImpl: () => { lectures++; throw new Error('ENOENT'); } }); } catch { /* attendu */ }
+  assert.equal(lectures, 1, 'an unreadable file falls through to the real read rather than being cached as absent: caching an absence would make it permanent for the whole run');
+
+  // LE COMPTEUR EXISTE POUR QUE LE GAIN SOIT MESURABLE, jamais affirmé.
+  const st = sh.statistiquesDuDecorPartage();
+  assert.ok(st.demandes > 0 && st.evitees > 0, 'the counter must report real requests and real avoided reads — a shared fixture whose usefulness is unknown is an optimisation kept out of superstition');
+  assert.ok(st.tauxPct > 0 && st.tauxPct <= 100, 'and its rate must be a real percentage, never a negative or impossible figure (Article 32, faille 3)');
+
+  console.log("Passed: le décor partagé (2026-09-27, chantier du filet) — la première marche de l'échelle standard du métier pour une suite lente, et la seule qui se prenne À PROTECTION STRICTEMENT ÉGALE : aucun test retiré, aucun test affaibli, chacun voit exactement le même contenu qu'avant. Le défaut était MESURÉ dans /proc/self/io et jamais supposé — 21 911 lectures et 108,6 Mo pour sept fonctions de balayage, et un second appel à la même fonction recoûtant exactement autant, parce qu'aucun cache n'existait nulle part. Après branchement : 4 666 lectures et 23,4 Mo. CE QUE CES ASSERTIONS PROTÈGENT N'EST PAS LE GAIN, C'EST L'INVALIDATION : la clé est mtime + taille + inode, donc un fichier modifié est bien relu, y compris quand seule sa taille change dans la même milliseconde. Un cache qui rendrait du contenu périmé ferait passer un test qui devrait échouer — infiniment pire que les 107 secondes qu'on cherche à réduire. Un fichier illisible n'est jamais mis en cache non plus, sinon une absence deviendrait définitive pour toute l'exécution. Et le compteur existe pour que le gain soit MESURABLE plutôt qu'affirmé : un partage de décor dont on ne sait pas s'il sert est une optimisation qu'on garde par superstition.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA DETTE ET LE SOUPÇON (2026-09-26, tâche #943)
 // ————————————————————————————————————————————————————————————————————————
 // Le détecteur de dettes accusait à tort : un commit qui touchait le CONTRÔLEUR d'un process pour

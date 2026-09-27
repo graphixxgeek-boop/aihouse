@@ -6,7 +6,7 @@
 // mutualisation de docs/regles-de-travail.md §7ter est censée empêcher désormais).
 
 import { execSync } from "node:child_process";
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 // PERSONNAGES — HORS DE L'ÉQUIPE, JAMAIS UNE CATÉGORIE DE L'ORGANIGRAMME (2026-09-21, tâche #245,
@@ -920,4 +920,50 @@ export function sansLeBlocGenere(texte = "") {
   if (i === -1) return t;
   const j = t.indexOf(FIN_BLOC_GENERE, i);
   return j === -1 ? t.slice(0, i) : t.slice(0, i) + t.slice(j + FIN_BLOC_GENERE.length);
+}
+
+
+// =============================================================================================
+// LE DÉCOR PARTAGÉ — une seule lecture par fichier, pour toute l'exécution
+// =============================================================================================
+// LE DÉFAUT EST MESURÉ, jamais supposé (2026-09-27, chantier du filet). Le filet met 107 s, et
+// 12 blocs sur 286 en portent 66 %. Ces douze testent tous l'Agence qui s'examine elle-même, et
+// chacun fait rebalayer TOUT le dépôt à l'outil qu'il vérifie. Chiffres réels, lus dans
+// `/proc/self/io` : `fichiersDuDepot` coûte 4 083 lectures et 18,3 Mo — et un SECOND appel en
+// recoûte 4 082. Aucun cache nulle part. Sept fonctions de balayage lisent 108,6 Mo à elles seules.
+//
+// C'EST LA TECHNIQUE STANDARD DU MÉTIER, pas une invention maison : le partage de décor
+// (« shared fixture »). Le gain se prend À PROTECTION STRICTEMENT ÉGALE — aucun test n'est retiré,
+// aucun test n'est affaibli, chacun voit exactement le même contenu qu'avant.
+//
+// L'INVALIDATION EST LE CŒUR DE LA SÛRETÉ, et c'est ce qui distingue un cache d'un bug : la clé
+// est `mtime + taille + numéro d'inode`. Si un test écrit un fichier puis le relit, la clé change
+// et le cache manque — le test voit le nouveau contenu, jamais l'ancien. Un cache qui rendrait du
+// contenu périmé ferait passer un test qui devrait échouer : ce serait bien pire que les 107 s.
+const CACHE_LECTURES = new Map();
+const COMPTEUR_CACHE = { demandes: 0, lectures: 0, octetsEvites: 0 };
+
+export function lireFichierPartage(chemin, { statImpl = statSync, lireImpl = readFileSync } = {}) {
+  COMPTEUR_CACHE.demandes++;
+  let cle;
+  try { const st = statImpl(chemin); cle = `${st.mtimeMs}:${st.size}:${st.ino}`; }
+  catch { COMPTEUR_CACHE.lectures++; return lireImpl(chemin, "utf8"); }
+  const vu = CACHE_LECTURES.get(chemin);
+  if (vu && vu.cle === cle) { COMPTEUR_CACHE.octetsEvites += vu.contenu.length; return vu.contenu; }
+  COMPTEUR_CACHE.lectures++;
+  const contenu = lireImpl(chemin, "utf8");
+  CACHE_LECTURES.set(chemin, { cle, contenu });
+  return contenu;
+}
+
+// ON PEUT TOUJOURS LE VIDER, et c'est une porte de sortie délibérée : un test qui manipule le
+// système de fichiers d'une façon que `mtime` ne voit pas doit pouvoir repartir de zéro.
+export function viderLeDecorPartage() { CACHE_LECTURES.clear(); }
+
+// LE COMPTEUR EXISTE POUR QUE LE GAIN SOIT MESURABLE, jamais affirmé. Un partage de décor dont on
+// ne sait pas s'il sert est exactement le genre d'optimisation qu'on garde par superstition.
+export function statistiquesDuDecorPartage() {
+  const { demandes, lectures, octetsEvites } = COMPTEUR_CACHE;
+  return { demandes, lectures, evitees: demandes - lectures, octetsEvites,
+    tauxPct: demandes ? ((demandes - lectures) / demandes) * 100 : 0 };
 }
