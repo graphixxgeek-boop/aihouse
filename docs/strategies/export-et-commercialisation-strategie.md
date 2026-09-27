@@ -137,6 +137,33 @@
 
 — source : dérivé des chiffres Cloudflare ci-dessus croisés avec l'empreinte disque mesurée le 2026-09-26
 
+## 4bis. LES QUATRE MOMENTS D'ARRIVÉE DE L'AGENCE (2026-09-27, idée de l'utilisateur)
+
+**Son idée, dans ses mots** : « les 4 possibilités : intégration de l'agence AVANT / À LA SOURCE /
+EN COURS / À LA FIN d'un projet (de site web, de jeu…) ».
+
+**Pourquoi c'est structurant et pas un simple découpage commercial** : l'Agence ne rend pas le même
+service selon le moment où elle arrive, et surtout elle n'a pas les mêmes DROITS. Arrivée avant, elle
+peut imposer une architecture ; arrivée à la fin, elle ne peut plus que constater et proposer. Un
+outil qui suppose toujours le même moment se trompera trois fois sur quatre.
+
+| Moment | Ce que l'Agence peut faire | Ce qu'elle ne peut plus faire | Le geste type |
+|---|---|---|---|
+| **AVANT** — le projet n'existe pas encore | poser l'architecture : comment le filet de sécurité sera bâti, comment les tests seront découpés, où vivront les registres | rien à rattraper : c'est la position idéale | **prescrire** un gabarit |
+| **À LA SOURCE** — le projet démarre | brancher les garde-fous dès le premier commit, avant qu'aucune dette ne naisse | plus de table rase totale, mais presque | **installer** la machinerie |
+| **EN COURS** — le projet tourne depuis des mois | mesurer l'existant, nommer les dettes, proposer des corrections encadrées | imposer une architecture : ce serait une réécriture, pas une intégration | **diagnostiquer** puis proposer |
+| **À LA FIN** — le projet est livré ou figé | rendre un état des lieux, préparer la reprise par quelqu'un d'autre | changer quoi que ce soit au produit | **documenter** et transmettre |
+
+**LA CONSÉQUENCE POUR CHAQUE OUTIL, et c'est le vrai apport de cette grille** : un outil doit savoir
+dans lequel de ces quatre mondes il se trouve, ou au minimum déclarer celui qu'il suppose. Un outil
+qui suppose « EN COURS » et qu'on lance « AVANT » ne trouvera rien et se croira inutile ; un outil
+qui suppose « AVANT » et qu'on lance « À LA FIN » proposera une réécriture que personne ne veut.
+
+**Le cas d'école, mesuré le jour même** : EZECHIEL-LES-TESTS suppose « EN COURS » — il enquête sur un
+filet qui existe déjà, et le chemin de ce filet est **écrit en dur** dans son code
+(`FILET = "scripts/check-house.mjs"`). Sur un autre projet il ne saurait ni trouver le filet, ni en
+proposer un s'il n'y en a pas. Trois manques identifiés, trois tâches ouvertes.
+
 ## 5. LES DÉCISIONS DÉJÀ PRISES
 
 *ce qui ne se rediscute plus, avec la date et qui a tranché*
