@@ -259,6 +259,92 @@ export function enregistrerBapteme(entree, { root = ".", lire = readFileSync, ec
   return { enregistre: true, ligne };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LE REGISTRE SE SÈME DEPUIS LE DÉPÔT, IL NE SE TAPE PAS (2026-09-27, tâche #706)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LE CONSTAT QUI A OUVERT CE CHANTIER, et il était mesuré : « 81 noms en service sur 81 jamais
+// validés au registre des baptêmes (le registre n'existe pas encore : le total EST le compte) ».
+// Un registre qui n'existe pas rend le même chiffre qu'un registre où personne n'a jamais rien
+// inscrit — c'est la leçon L13 dans sa forme la plus pure, et elle portait ici sur la règle que
+// l'utilisateur a demandée en premier : « je dois toujours choisir les noms ».
+//
+// LA TROUVAILLE, ET ELLE CHANGE LE TRAVAIL À FAIRE : plusieurs de ces baptêmes SONT documentés,
+// depuis des jours, dans le commentaire de tête de l'outil lui-même — « SAFE-EXPORT (2026-09-22,
+// nom donné par l'utilisateur) ». La preuve était écrite à l'endroit exact où ce projet écrit le
+// POURQUOI à côté du QUOI (Article 27). Elle n'avait simplement aucun lecteur.
+//
+// ON SÈME DONC LE REGISTRE DEPUIS LE DÉPÔT au lieu de le retaper (Article 24 : un registre se LIT).
+// Ce qui est semé n'est jamais une supposition : c'est une trace ÉCRITE qui dit noir sur blanc que
+// l'utilisateur a nommé, et le registre cite le fichier et la ligne où elle se lit. Un baptême
+// qu'aucune trace ne porte n'est PAS semé — il reste dans la dette, où il doit être.
+//
+// LE FAUX POSITIF A ÉTÉ RENCONTRÉ EN MESURANT, jamais en relisant le motif : « SON mot » attrapait
+// « SON motif de titre » dans abraham-les-references, qui n'a rien d'un baptême. 7 candidats → 6
+// vrais. Une limite de mot suffit, et c'est bien parce que l'outil a tourné pour de vrai qu'elle
+// existe (leçon L2).
+export const MOTIFS_BAPTEME = [
+  { motif: /nom donné par l'utilisateur/i, quoi: "le commentaire de tête déclare que l'utilisateur a nommé cet outil" },
+  { motif: /\bSON mot\b/, quoi: "le commentaire de tête déclare que le nom est un mot de l'utilisateur" },
+  { motif: /nom choisi par l'utilisateur/i, quoi: "le commentaire de tête déclare que l'utilisateur a choisi ce nom" },
+  { motif: /surnom donné par l'utilisateur/i, quoi: "le commentaire de tête déclare un surnom donné par l'utilisateur" },
+];
+// La trace est cherchée dans l'EN-TÊTE seulement : un « nom donné par l'utilisateur » cité au
+// milieu d'un fichier parle presque toujours d'un AUTRE outil (check-house.mjs en cite quatre).
+// Chercher dans tout le fichier attribuerait à check-house les baptêmes de quatre autres.
+export const LIGNES_D_ENTETE = 40;
+export const MOTIF_DATE = /\b(20\d\d-\d\d-\d\d)\b/;
+
+export function findBaptemesDocumentes(fichiers = [], { lire, motifs = MOTIFS_BAPTEME, entete = LIGNES_D_ENTETE } = {}) {
+  const trouves = [];
+  for (const f of fichiers) {
+    let lignes;
+    try { lignes = String(lire(f)).split("\n").slice(0, entete); } catch { continue; }
+    for (let i = 0; i < lignes.length; i++) {
+      const m = motifs.find((x) => x.motif.test(lignes[i]));
+      if (!m) continue;
+      trouves.push({
+        fichier: f,
+        ligne: i + 1,
+        nom: String(f).replace(/^scripts\//, "").replace(/\.mjs$/, ""),
+        // LA DATE SE LIT SUR LA LIGNE, elle ne se devine pas (Article 32). Sans elle, le baptême
+        // est semé SANS date plutôt qu'avec la date du jour : inscrire aujourd'hui un baptême du
+        // 22 septembre serait falsifier l'histoire que ce registre existe pour garder.
+        date: MOTIF_DATE.exec(lignes[i])?.[1] ?? null,
+        preuve: lignes[i].trim(),
+        quoi: m.quoi,
+      });
+      break;
+    }
+  }
+  return trouves;
+}
+
+export function semerLeRegistre(baptemes = [], { root = ".", lire = readFileSync, ecrire = writeFileSync, dejaLa = "" } = {}) {
+  const semes = [], ignores = [];
+  for (const b of baptemes) {
+    if (new RegExp(`\\*\\*${b.nom.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\*\\*`, "i").test(dejaLa)) { ignores.push({ ...b, pourquoi: "déjà au registre" }); continue; }
+    enregistrerBapteme({
+      objet: "outil", nomRetenu: b.nom, parUtilisateur: true,
+      // LE « POURQUOI » CITE LA PREUVE, jamais une affirmation de l'agent : c'est ce qui distingue
+      // un registre semé d'un registre inventé. Le jour où quelqu'un doute, il ouvre le fichier.
+      pourquoi: `${b.quoi} — ${b.fichier}:${b.ligne}`,
+    }, { root, lire, ecrire, date: b.date ?? "date non lue" });
+    semes.push(b);
+  }
+  return { semes, ignores };
+}
+
+export function formatSemisLines(r, { nonValidesApres = null } = {}) {
+  const L = ["", "🕊️  REGISTRE DES BAPTÊMES — semé depuis les traces écrites du dépôt (tâche #706)"];
+  L.push(`   ${r.semes.length} baptême(s) inscrit(s), ${r.ignores.length} déjà présent(s).`);
+  for (const b of r.semes) L.push(`      · ${b.nom} — ${b.date ?? "date non lue"} — ${b.fichier}:${b.ligne}`);
+  if (nonValidesApres !== null) L.push(`   Reste ${nonValidesApres} nom(s) en service sans trace écrite de baptême : ce sont les VRAIS candidats à lui présenter.`);
+  L.push("   CE QUI N'EST JAMAIS SEMÉ : un nom sans trace écrite. Le registre garde ce qui est PROUVÉ,");
+  L.push("   jamais ce qui est probable — un registre qu'on complète au jugé ne prouve plus rien (L13).");
+  return L;
+}
+
 // Les noms déjà en service que l'utilisateur n'a jamais validés : la dette de nommage, à purger
 // APRÈS la classification — séquence qu'il a posée lui-même, et qui a sa raison : renommer avant
 // de savoir dans quel groupe vit un outil produirait un nom qui ne veut plus rien dire ensuite.
@@ -295,6 +381,24 @@ function mainGouvernance(root) {
   const registreTexte = registreExiste ? readFileSync(join(root, REGISTRE), "utf8") : "";
   const nomsEnService = readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, ""));
   for (const l of formatNomsLines({ provisoires, nonValides: findNomsNonValides(nomsEnService, registreTexte), registreExiste })) console.log(l);
+
+  // LE SEMIS (2026-09-27, tâche #706). Il s'affiche TOUJOURS, il n'écrit que sous `--semer` : une
+  // commande lue à chaque Ronde qui créerait un registre au passage serait une surprise, jamais un
+  // service — le même arbitrage que `poserMentionIceberg()`, et pour la même raison.
+  const scripts = readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => join("scripts", f));
+  const documentes = findBaptemesDocumentes(scripts, { lire: (f) => readFileSync(join(root, f), "utf8") });
+  const aSemer = documentes.filter((b) => !new RegExp(`\\*\\*${b.nom}\\*\\*`, "i").test(registreTexte));
+  if (process.argv.includes("--semer")) {
+    const r = semerLeRegistre(documentes, { root, dejaLa: registreTexte });
+    const apres = readFileSync(join(root, REGISTRE), "utf8");
+    for (const l of formatSemisLines(r, { nonValidesApres: findNomsNonValides(nomsEnService, apres).length })) console.log(l);
+  } else {
+    console.log("");
+    console.log(`🕊️  REGISTRE DES BAPTÊMES — ${documentes.length} baptême(s) DOCUMENTÉ(S) dans le dépôt, ${aSemer.length} pas encore au registre.`);
+    for (const b of aSemer) console.log(`      · ${b.nom} — ${b.date ?? "date non lue"} — ${b.fichier}:${b.ligne}`);
+    if (aSemer.length) console.log("   → `node scripts/agent-des-noms.mjs --semer` les inscrit, en citant la ligne qui le prouve.");
+    console.log("   CE QUI N'EST JAMAIS SEMÉ : un nom sans trace écrite. Ceux-là restent la dette, et c'est à lui de les trancher.");
+  }
   console.log(`\nHORS PORTÉE : aucun mécanisme ne peut empêcher un nom d'être choisi — il peut seulement rendre impossible de l'OUBLIER. Et la dette ci-dessus se purge APRÈS la classification, jamais avant : renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien dire.`);
 
   // LE PLAN D'ACTION (2026-09-25, tâche #863 — reste mesuré de #803/#833).

@@ -16715,3 +16715,55 @@ async function testSaisineIntegraleEtSeuil() {
   console.log("Passed: la saisine elle-même n'était jamais archivée (2026-09-27, tâches #723 et #724). Le trou a été trouvé en essayant de répondre à une de ses questions, et c'est ce qui le rend incontestable : il demandait de comparer son cahier des charges d'origine pour AGENT-DU-TEMPS à ce qui avait été construit, et c'était impossible — le dépôt garde MES réponses et MON découpage de sa demande, jamais SA formulation. Les quatre saisines archivées portent 695, 602, 1 631 et 5 409 caractères de citations, c'est-à-dire des extraits que j'ai choisis. Un rapport qui archive les réponses sans la question rend toute vérification ultérieure impossible : on ne peut plus savoir si un point a été mal compris, ni si un point a été oublié, puisque la seule liste de points qui existe est celle que j'ai faite. La correction est un REFUS et pas un avertissement, parce qu'un avertissement se saute et que le texte perdu l'est pour de bon. Le cas le plus vicieux est couvert : un RÉSUMÉ déposé à la place du texte aurait l'air d'une archive, ce qui est pire qu'un champ vide. Les quatre saisines d'avant la règle DÉCLARENT leur perte avec sa raison plutôt que de la combler — fabriquer un texte plausible serait une pièce à conviction falsifiée — et l'échappatoire est fermée par la DATE et non par la bonne foi : une saisine d'aujourd'hui ne peut pas se déclarer perdue. Côté déclenchement, le seuil de demandes est DÉRIVÉ du corpus réel (4, la plus petite saisine qui ait mérité le process) et le compte SOUS-DÉCLARE : trois demandes en prose continue sont comptées zéro, et une liste à puces qui finit par des points d'interrogation n'est pas comptée deux fois. Le seuil de caractères, lui, ne PEUT pas être dérivé aujourd'hui — précisément parce que #723 n'existait pas — et il se déclare provisoire au lieu de se faire passer pour une mesure.");
 }
 await testSaisineIntegraleEtSeuil();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LE REGISTRE DES BAPTÊMES SE SÈME DEPUIS LE DÉPÔT (2026-09-27, tâche #706)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testRegistreDesBaptemes() {
+  const A = await import('../scripts/agent-des-noms.mjs');
+  const faux = {
+    'scripts/safe-export.mjs': '#!/usr/bin/env node\n// SAFE-EXPORT (2026-09-22, nom donné par l\'utilisateur) — le scan d\'exportabilité\n',
+    // LE FAUX POSITIF RÉEL, rencontré en MESURANT et jamais en relisant le motif : « SON mot »
+    // attrapait « SON motif de titre ». 7 candidats sur le vrai dépôt, dont un qui n'a rien d'un
+    // baptême. Un garde-fou qui accuse à tort cesse d'être lu (L4) — ici il aurait inscrit au
+    // registre un nom que l'utilisateur n'a jamais choisi, ce qui est bien pire : le registre
+    // existe précisément pour prouver qui a nommé quoi.
+    'scripts/abraham-les-references.mjs': '// ABRAHAM\n// de ses appelants lui passe SON motif de titre, SES exceptions et SES chemins\n',
+    // LA TRACE EST CHERCHÉE DANS L'EN-TÊTE SEULEMENT : check-house cite quatre baptêmes d'AUTRES
+    // outils dans ses commentaires de test. Chercher dans tout le fichier les lui attribuerait.
+    'scripts/ordinaire.mjs': '// un outil ordinaire\n' + '// blabla\n'.repeat(50) + '// (2026-09-22, nom donné par l\'utilisateur)\n',
+  };
+  const lire = (f) => faux[f] ?? '';
+  const t = A.findBaptemesDocumentes(Object.keys(faux), { lire });
+  assert.deepEqual(t.map((x) => x.nom), ['safe-export'], 'MUST CATCH the real baptism and MUST LET PASS both near cases: "SON motif" is not "SON mot", and a trace buried past the header belongs to some OTHER tool the file merely mentions');
+  assert.equal(t[0].date, '2026-09-22', 'the date is READ off the line, never today (Article 32) — stamping a 22 September baptism with today\'s date would falsify the very history this registry exists to keep');
+  assert.ok(t[0].preuve.includes('nom donné par'), 'and the proof travels with the entry: the registry cites the line, so anyone who doubts opens the file');
+
+  // UN BAPTÊME SANS DATE LISIBLE ne s'invente pas de date — même refus que partout ailleurs ici.
+  const sansDate = A.findBaptemesDocumentes(['x.mjs'], { lire: () => '// X — nom donné par l\'utilisateur\n' });
+  assert.equal(sansDate[0].date, null, 'a traceable baptism with no readable date is recorded WITHOUT one rather than with an invented one');
+
+  // LE SEMIS N'ÉCRIT JAMAIS DEUX FOIS le même nom : relancé à chaque Ronde, il doublerait le
+  // registre, et un registre qui grossit tout seul cesse d'être une preuve.
+  let ecrit = '';
+  const dejaLa = '| 2026-09-22 | outil | **safe-export** | hors série | — | déjà là |';
+  const r = A.semerLeRegistre(t, { lire: () => dejaLa, ecrire: (_, c) => { ecrit = c; }, dejaLa });
+  assert.equal(r.semes.length, 0, 'MUST NOT DOUBLE-WRITE: a name already in the registry is skipped — rerun at every Ronde, it would otherwise inflate itself and stop being a proof');
+  assert.equal(r.ignores.length, 1, 'and the skip is reported rather than silent');
+
+  // LE REFUS DE FOND RESTE INTACT : un mécanisme ne peut pas prouver que l'utilisateur a choisi,
+  // mais il peut refuser de l'inventer. Ce que le semis apporte n'est pas une dispense — c'est une
+  // PREUVE ÉCRITE, lue dans le dépôt, à laquelle il adosse le `parUtilisateur: true`.
+  assert.throws(() => A.enregistrerBapteme({ objet: 'outil', nomRetenu: 'x' }, { lire: () => '', ecrire: () => {} }), /CHOISI PAR L'UTILISATEUR/, 'a name recorded without parUtilisateur is refused — the seeding does not weaken that rule, it feeds it written evidence');
+
+  // ET SUR LE VRAI DÉPÔT : le registre existe désormais, donc la dette cesse de mesurer sa propre
+  // absence (leçon L13 — « 81 sur 81 » ne disait rien d'autre que « le registre n'existe pas »).
+  const registre = fs.readFileSync('docs/agent-des-noms/registre.md', 'utf8');
+  const enService = fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs')).map((f) => f.replace(/\.mjs$/, ''));
+  const restants = A.findNomsNonValides(enService, registre);
+  assert.ok(restants.length < enService.length, `the registry now holds real baptisms, so the debt measures a debt instead of its own absence: ${restants.length} unvalidated out of ${enService.length}, no longer all of them`);
+  assert.ok(!restants.includes('safe-export'), 'and a tool the user demonstrably named is no longer counted against him');
+
+  console.log(`Passed: le registre des baptêmes se sème depuis le dépôt (2026-09-27, tâche #706). Le constat de départ était « 81 noms en service sur 81 jamais validés », et il ne disait rien : le registre n'existait pas, donc le total ÉTAIT le compte — un registre absent et un registre où personne n'a rien inscrit rendent le même chiffre (leçon L13), et ça portait sur la toute première règle qu'il a demandée, « je dois toujours choisir les noms ». LA TROUVAILLE change le travail à faire : plusieurs de ces baptêmes SONT documentés depuis des jours, dans le commentaire de tête de l'outil lui-même — « SAFE-EXPORT (2026-09-22, nom donné par l'utilisateur) ». La preuve était écrite à l'endroit exact où ce projet écrit le POURQUOI à côté du QUOI ; elle n'avait aucun lecteur. Le registre se sème donc depuis le dépôt au lieu d'être retapé (Article 24), et ce qui est semé n'est jamais une supposition : c'est une trace écrite, et le registre cite le fichier et la ligne où elle se lit. Un nom sans trace n'est PAS semé — il reste dans la dette, où il doit être. Le faux positif a été rencontré en MESURANT et jamais en relisant le motif : « SON mot » attrapait « SON motif de titre », 7 candidats pour 6 vrais, et ici un faux positif n'aurait pas seulement fait du bruit — il aurait inscrit au registre un nom que l'utilisateur n'a jamais choisi, dans le document qui existe pour prouver le contraire. La date se LIT sur la ligne et ne se remplace jamais par celle du jour (Article 32) : dater d'aujourd'hui un baptême du 22 septembre falsifierait l'histoire que ce registre garde. Mesuré sur le vrai dépôt : 6 baptêmes prouvés inscrits, dette réelle 81 → 75, et ces 75 sont enfin les VRAIS candidats à lui présenter.`);
+}
+await testRegistreDesBaptemes();
