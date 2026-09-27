@@ -334,6 +334,24 @@ désormais couvert pour de vrai.
 Kit de l'Agence **100 %** (après écriture des deux pièces manquantes). Fichiers :
 **🟠 EXPORT DÉGRADÉ** — 4 kits incomplets sur des VITAUX/ESSENTIELS, 27 ailleurs.
 
+## RÈGLE — on ne parle JAMAIS d'exportabilité sans donner la portabilité dans la même phrase
+
+*(Posée par l'utilisateur le 2026-09-27 : « noter quelque part que lorsqu'on parle d'exportabilité,
+ca doit systématiquement embarquer/inclure la PORTABILITE ».)*
+
+**L'exportabilité seule est un chiffre trompeur**, et ce n'est pas une opinion : mesurée le jour où
+la règle est née, elle valait 100 % pendant que la portabilité valait 49 %. Annoncer le premier sans
+le second, c'est annoncer que l'Agence est prête à partir alors que la moitié ne tournerait pas.
+
+**Conséquence opératoire, valable pour l'outil comme pour l'agent** : tout rapport, tout compte
+rendu, toute ligne de KPI qui cite un taux d'exportabilité **cite le taux de portabilité à côté**.
+Le rapport `safe-export export` les imprime déjà l'un sous l'autre, et c'est délibéré : les séparer
+rendrait la confusion possible à nouveau.
+
+**Les deux mots, une fois pour toutes** :
+- **EXPORTABILITÉ = EXTRACTION.** Tout est-il dans le carton ? (blueprint, fiche, registre)
+- **PORTABILITÉ = COMPATIBILITÉ.** Est-ce que ça s'adapte au nouvel endroit ?
+
 ## EXPORTABILITÉ ET PORTABILITÉ — deux mesures, jamais une moyenne (2026-09-27, tâche #1034)
 
 ### L'image qui rend la distinction évidente
