@@ -618,5 +618,95 @@
         "attrapee": true
       }
     ]
+  },
+  {
+    "quand": "2026-09-27T20:34:33.411Z",
+    "tauxPct": 83.33333333333334,
+    "resultats": [
+      {
+        "chemin": "lib/dialogue.ts",
+        "ligne": 25,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/angel-of-ia-process.mjs",
+        "ligne": 201,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/check-level-target.mjs",
+        "ligne": 83,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/circle-process-guardian.mjs",
+        "ligne": 85,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/criticite.mjs",
+        "ligne": 70,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/ezechiel-les-tests.mjs",
+        "ligne": 89,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/hooks/banniere.mjs",
+        "ligne": 53,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/le-classificateur.mjs",
+        "ligne": 41,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/memento.mjs",
+        "ligne": 44,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/ou-on-en-est.mjs",
+        "ligne": 188,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/report-template.mjs",
+        "ligne": 111,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/simulation-visiteur.mjs",
+        "ligne": 78,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      }
+    ]
   }
 ]
