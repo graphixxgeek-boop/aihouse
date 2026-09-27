@@ -73,7 +73,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**88 fichier(s)** dans ce dossier.
+**89 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -159,10 +159,11 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [circle-signal-2026-09-23T21-49-13-836Z.txt](circle-signal-2026-09-23T21-49-13-836Z.txt) | — |
 | [circle-signal-2026-09-24T21-48-39-572Z.txt](circle-signal-2026-09-24T21-48-39-572Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-671Z.txt](circle-signal-2026-09-25T14-14-12-671Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
 | [historique.jsonl](historique.jsonl) | — |
 | [ronde-2026-09-21T23-26-29.html](ronde-2026-09-21T23-26-29.html) | — |
 | [ronde-2026-09-21T23-26-29.txt](ronde-2026-09-21T23-26-29.txt) | — |
 | [ronde-2026-09-25T14-08-43.html](ronde-2026-09-25T14-08-43.html) | — |
 | [ronde-2026-09-25T14-08-43.txt](ronde-2026-09-25T14-08-43.txt) | — |
+| [tri-2026-09-27T02-42Z.txt](tri-2026-09-27T02-42Z.txt) | — |
+| [tri-2026-09-27T02-44Z.txt](tri-2026-09-27T02-44Z.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

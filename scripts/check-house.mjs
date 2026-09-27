@@ -3026,6 +3026,38 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // Contre le VRAI registre (Article 25) : après la correction, plus aucune contradiction.
   assert.deepEqual(findStatutsContredits(loadRowsPourStatuts()).contredits,[],'the real suivi must hold no row whose status contradicts a later closure — eight did before the arrow fix, and each one inflated every count built on top');
 
+  // LE TRI D'UN CHANTIER (2026-09-27, tâche #998) — les deux contre-épreuves de BP4, et la
+  // première est exactement l'erreur que j'ai commise en l'écrivant : lire la case de rituel
+  // « Clôture » comme si elle portait une date. Elle porte « OUI » ou rien (FORMAT_TACHE), et
+  // huit lignes réelles y portaient « NON » — le tri les a déclarées « déjà faites », c'est-à-dire
+  // le contraire exact de ce qu'elles disaient. Ce test fige la lecture correcte.
+  const {signesDeDejaFaite,proximiteAvecLeChantier,trierPourUnChantier,formatTriLines,casesDeRituelMalRemplies,loadAllTaskRows:loadRowsPourTri,OPEN_KEYS:OPEN_TRI}=await import('../scripts/check-tasks-details.mjs');
+  assert.deepEqual(signesDeDejaFaite({numero:1,statut:'Ouverte',cloture:'NON'}),[],'CE QU\'IL DOIT LAISSER PASSER : une case de rituel « Clôture » à NON dit que les questions de clôture n\'ont PAS été posées — la lire comme une clôture oubliée ferait clôturer un travail non fait');
+  assert.equal(signesDeDejaFaite({numero:1,statut:'Ouverte',cloture:'OUI'}).length,1,'CE QU\'IL DOIT ATTRAPER : la même case cochée OUI sur une ligne encore ouverte est une vraie contradiction — le rituel de clôture a eu lieu, le statut n\'a pas suivi');
+  assert.equal(signesDeDejaFaite({numero:2,statut:'Ouverte',cloture:''},{cloturesAilleurs:new Set(['2'])}).length,1,'et le premier signal reste le plus fort : une AUTRE ligne qui déclare sa clôture');
+  assert.deepEqual(signesDeDejaFaite({numero:3,statut:'Ouverte',cloture:null}),[],'une cellule ILLISIBLE (un `|` non échappé dans le Détail) n\'est jamais une cellule remplie : accuser sur un défaut de format est le faux positif de la leçon L4');
+  // Les accents, des deux côtés ou d'aucun : `motsSignificatifs` dépouille « baptême » en
+  // « bapteme », le registre garde l'accent. Sans la même normalisation, le score tombait à zéro
+  // en silence, ce qui se lit comme « cette tâche ne touche pas au chantier ».
+  assert.deepEqual(proximiteAvecLeChantier({sousSujet:'cree le registre des baptêmes'},['bapteme']).touches,['bapteme'],'le rapprochement doit survivre aux accents du registre, sans quoi il rend zéro sans jamais dire pourquoi');
+  assert.equal(proximiteAvecLeChantier({sousSujet:'refonte graphique du trottoir'},['bapteme','renommage']).score,0,'et il ne doit rien inventer sur une ligne qui ne parle pas du chantier');
+  assert.equal(trierPourUnChantier([],{libelle:'renommage'}).mesurable,false,'aucune tâche ouverte : PAS MESURÉ, jamais « rien ne bloque »');
+  assert.equal(trierPourUnChantier([{numero:1,statusKey:'ouverte',statut:'Ouverte',sousSujet:'x',detail:''}],{libelle:'de la le'}).mesurable,false,'un libellé sans mot significatif rendrait une colonne 2 vide qui se lirait comme « rien ne bloque » : il refuse de conclure');
+  const triFictif=trierPourUnChantier([
+    {numero:1,statusKey:'ouverte',statut:'Ouverte',sousSujet:'le renommage des rangs',detail:'',cloture:''},
+    {numero:2,statusKey:'ouverte',statut:'Ouverte',sousSujet:'refonte graphique',detail:'',cloture:''},
+    {numero:3,statusKey:'ouverte',statut:'Ouverte',sousSujet:'un truc fini',detail:'',cloture:'OUI'},
+    {numero:4,statusKey:'terminee',statut:'Terminée',sousSujet:'renommage déjà fait',detail:'',cloture:'OUI'},
+  ],{libelle:'renommage'});
+  assert.deepEqual([triFictif.dejaFaites.length,triFictif.bloquantes.length,triFictif.peuventAttendre.length],[1,1,1],'les trois colonnes se remplissent chacune une fois, et les lignes CLOSES ne sont jamais triées : on trie ce qui reste à faire');
+  assert.ok(formatTriLines(trierPourUnChantier([{numero:1,statusKey:'ouverte',statut:'Ouverte',sousSujet:'refonte',detail:'',cloture:''}],{libelle:'renommage'}))
+    .some(l=>l.includes('pas un bulletin de santé')),'une colonne 1 vide doit le DIRE : un zéro nu se lit comme « rien à clôturer », alors qu\'il peut vouloir dire « je ne sais pas voir »');
+  assert.ok(casesDeRituelMalRemplies([{numero:1,ouverture:'2026-09-27T00:33Z',cloture:''}]).length===1&&casesDeRituelMalRemplies([{numero:2,ouverture:'OUI',cloture:'NON'}]).length===0,'l\'angle mort se mesure : une DATE dans une case qui attend OUI/NON aveugle le second signal, et une case correctement remplie ne doit jamais être comptée comme un défaut');
+  // Contre le VRAI registre (Article 25) : il tourne, il trie, et il ne range personne deux fois.
+  const triReel=trierPourUnChantier(loadRowsPourTri(),{libelle:'renommage nomenclature baptême noms classification'});
+  assert.ok(triReel.mesurable,'le tri doit être mesurable sur le vrai registre');
+  assert.equal(triReel.dejaFaites.length+triReel.bloquantes.length+triReel.peuventAttendre.length,loadRowsPourTri().filter(r=>OPEN_TRI.has(r.statusKey)).length,'les trois colonnes doivent couvrir EXACTEMENT les tâches ouvertes, sans doublon ni oubli — une tâche perdue entre deux colonnes est une tâche qui disparaît');
+
   const {splitTableRow}=await import('../scripts/check-suivi-fidelity.mjs');
   const escaped=splitTableRow('| t1 | S | s | normal | commande : `git log \\| grep x` | terminée — fidèle |');
   assert.equal(escaped.length,6,'a literal escaped pipe inside a cell must never be treated as an extra column separator');

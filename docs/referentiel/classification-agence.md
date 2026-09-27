@@ -2,7 +2,7 @@
 
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-26 23:02 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-27 02:51 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -150,7 +150,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `check-spirit.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.dp` | ⌨️ 🥇 🎬 🔎🗃️💳⚠️🎯🪞🧭 |
 | `check-suivi-fidelity.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.a9` | ⌨️ 🥇 👼 🔎🌱⚠️🎯🧭 |
 | `check-tasks-details.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dz` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🎯🪞🧭 |
-| `circle-process-guardian.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dt` | ⌨️ 🥇 👼 🔎🌱⚠️🎯🪞🧭 |
+| `circle-process-guardian.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dv` | ⌨️ 🥇 👼 🔎📄🌱⚠️🎯🪞🧭 |
 | `circle-tasks.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.c7` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🪞🧭 |
 | `data-archangel.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.cn` | ⌨️ 🥇 👼 🔎📄🗃️🎯🪞🧭 |
 | `ecotoken.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dh` | ⌨️ 🥇 👑 🔎🗃️⚠️🎯🪞🧭 |
@@ -230,7 +230,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `judge-persona-shared.mjs` | — | `4.0.-.0` | 📚 🧱 · — |
 | `lib-json.mjs` | — | `4.0.-.0` | 📚 🧱 · — |
 | `lib-markdown-table.mjs` | — | `4.0.-.0` | 📚 🧱 · — |
-| `lib-shell.mjs` | — | `4.0.-.x` | 📚 🧱 · 🔎⚠️ |
+| `lib-shell.mjs` | — | `4.0.-.1d` | 📚 🧱 · 🔎🌱⚠️ |
 | `memento-weight.mjs` | — | `4.0.-.4` | 📚 🧱 · 🗃️ |
 | `priorites.mjs` | — | `4.0.-.74` | 📚 🧱 · 🧭 |
 | `report-template.mjs` | — | `4.0.-.9y` | 📚 🧱 · 📄🗃️⚠️🎯🧭 |
@@ -359,11 +359,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `abraham-les-references.mjs` · `agent-des-noms.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-harmonia.mjs` · `check-house.mjs` · `check-profil-utilisateur.mjs` · `check-spirit.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `clone-hunter.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `hooks/check-last-commit.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `integration-outil.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `process-simulation-guardian.mjs` · `pure-gold-unity.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `the-equalizer.mjs` · `tool-brain.mjs` · `tool-learning.mjs` · `x-port-blindtest.mjs`
 
-### (ct) 📄 Les rapporteurs HTML - rend un rapport HTML — 21
+### (ct) 📄 Les rapporteurs HTML - rend un rapport HTML — 22
 
 > produit une page, donc quelque chose que l'utilisateur LIT vraiment
 
-`abraham-les-references.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-tasks-details.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `html-report.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `ou-on-en-est.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `the-deep-reader.mjs` · `the-final-judge.mjs` · `the-screener-capture.mjs`
+`abraham-les-references.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `html-report.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `ou-on-en-est.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `the-deep-reader.mjs` · `the-final-judge.mjs` · `the-screener-capture.mjs`
 
 ### (ct) 🗃️ Les enregistreurs - tient un registre — 44
 
@@ -377,11 +377,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `api-providers.mjs` · `check-gemini-quota.mjs` · `check-profile.mjs` · `check-spirit.mjs`
 
-### (ct) 🌱 Les évolutifs - porte un garde-fou d'évolutivité — 16
+### (ct) 🌱 Les évolutifs - porte un garde-fou d'évolutivité — 17
 
 > contient une fonction qui refuse une liste recopiée à la main : elle compare une copie à sa source et crie quand les deux divergent (Article 24). C'est ce qui permet à un registre de grossir sans qu'une copie oubliée se périme en silence.
 
-`abraham-les-references.mjs` · `always-new-code.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `criticite.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `le-coordinateur.mjs` · `moise-tables-de-loi.mjs` · `process-simulation-guardian.mjs`
+`abraham-les-references.mjs` · `always-new-code.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `criticite.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `le-coordinateur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `process-simulation-guardian.mjs`
 
 ### (ct) ⚠️ Les heuristiques - déclare sa marge d'erreur — 49
 
@@ -423,23 +423,12 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce qui part avec l'Agence
 
 ```
-=== CE QUI PART AVEC L'AGENCE — 437 documents, couverture 98 % ===
+=== CE QUI PART AVEC L'AGENCE — 448 documents, couverture 100 % ===
 
-  📦 PART — 195 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
-  🏠 RESTE — 12 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
-  🗄️ MEMOIRE — 221 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
-  ❓ A-INSTRUIRE — 9 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
-
-  LES 9 À INSTRUIRE, un par un — aucun n'est rangé par défaut :
-      ❓ docs/strategies/charte-et-referentiel-strategie.md
-      ❓ docs/strategies/classification-et-nivellement-strategie.md
-      ❓ docs/strategies/donnees-et-mesure-strategie.md
-      ❓ docs/strategies/export-et-commercialisation-strategie.md
-      ❓ docs/strategies/gestion-des-taches-strategie.md
-      ❓ docs/strategies/le-jeu-et-le-site-strategie.md
-      ❓ docs/strategies/outillage-et-garde-fous-strategie.md
-      ❓ docs/strategies/process-et-ronde-strategie.md
-      ❓ docs/strategies/renommage-en-masse-strategie.md
+  📦 PART — 202 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
+  🏠 RESTE — 14 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
+  🗄️ MEMOIRE — 232 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
+  ❓ A-INSTRUIRE — 0 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
 
   HORS PORTÉE : elle dit si un document PEUT partir, jamais s'il est à jour ni s'il est bon. Un document générique et périmé sort « PART » — c'est THE-EQUALIZER et la relecture périodique qui répondent à l'autre question.
 ```

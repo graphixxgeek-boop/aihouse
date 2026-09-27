@@ -45,7 +45,7 @@ import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, planDactionDepuisEcarts } from "./report-template.mjs";
 
 // ————————————————————————————————————————————————————————————————————————
 // RESPONSABLE DE L'ORGANISATION DES TÂCHES (2026-09-23, chantier 3 du plan de nuit)
@@ -3007,6 +3007,12 @@ function main() {
     console.log(`\nHORS PORTÉE : cet outil voit qu'un constat ne conclut pas ; il ne dit jamais si le constat MÉRITAIT une suite — ça se lit, et ça se tranche avec l'utilisateur.`);
     return;
   }
+  // Sous-commande `tri` (2026-09-27, tâche #998) : les tâches ouvertes rangées en trois colonnes
+  // devant UN chantier nommé en argument. Sous-commande à part de `bilan`, et la frontière est
+  // nette : `bilan` dit OÙ ON EN EST sur tout le projet, `tri` dit CE QUI BARRE LA ROUTE d'un
+  // chantier précis. Les fondre rendrait un rapport qui répond à deux questions à la fois, donc
+  // à aucune des deux au moment où on se la pose.
+  if (process.argv[2] === "tri") return triCli(process.argv);
   const [, , zoomArg = "en_cours", formatArg = "liste"] = process.argv;
   const zoom = ZOOM_LEVELS.includes(zoomArg) ? zoomArg : "en_cours";
   const format = FORMATS.includes(formatArg) ? formatArg : "liste";
@@ -3663,6 +3669,223 @@ export function formatChantier5Lines(rows = [], { ouvertes = null } = {}) {
   if (!origines.mesurable) L.push(`  ⚠️ ${origines.pourquoi}`);
   for (const e of malSignalees.slice(0, 5)) L.push(`  · ${numeroTache(e.numero)} — ${e.quoi} : ${e.pourquoi}`);
   return L;
+}
+
+
+// ===========================================================================================
+// LE TRI D'UN CHANTIER (2026-09-27, tâche #998)
+// ===========================================================================================
+// LA DEMANDE, MOT POUR MOT : « Je vous fais le tri d'abord — Je passe les 36 en revue et je vous
+// rends une liste à trois colonnes : celles qui sont en fait déjà faites (à clôturer), celles qui
+// bloquent vraiment le renommage, celles qui peuvent attendre après. Vous tranchez sur une liste
+// courte plutôt que sur 36. » (sa réponse en fenêtre de calibrage, 2026-09-27).
+//
+// POURQUOI UNE SOUS-COMMANDE ET PAS UN TRI FAIT À LA MAIN DANS UNE RÉPONSE (Article 31) : une
+// liste à trois colonnes écrite de tête est un jugement que rien ne peut rejouer. Le lendemain,
+// personne — ni lui, ni moi, ni l'IA qui reprend — ne peut savoir sur quoi elle reposait. Lue par
+// une commande, elle se relance, et elle change quand le registre change.
+//
+// POURQUOI LE CHANTIER SE PASSE EN ARGUMENT, jamais écrit en dur (Article 24) : « renommage » est
+// le chantier d'aujourd'hui. Le même geste servira pour le suivant sans qu'on touche à ce code.
+// Un tri qui ne saurait trier que le renommage serait à réécrire au chantier d'après.
+//
+// LES TROIS COLONNES, ET CE QU'ELLES VALENT — elles ne valent PAS la même chose, et le dire est
+// la moitié de l'outil :
+//   · DÉJÀ FAITE  → repose sur deux signaux FORTS et mécaniques (voir plus bas). Presque sûr.
+//   · BLOQUE      → repose sur une proximité de VOCABULAIRE. C'est une présomption, jamais une
+//                   preuve : l'outil montre les mots qui ont déclenché le rapprochement pour que
+//                   la présomption se vérifie d'un coup d'œil au lieu de se croire.
+//   · PEUT ATTENDRE → la colonne par défaut, et c'est un aveu : « rien n'indique que ça bloque »
+//                   n'est pas « ça ne bloque pas ». Une tâche qui bloquerait sans jamais employer
+//                   le vocabulaire du chantier atterrit ici, et aucun programme ne peut l'en
+//                   sortir. C'est la limite honnête de ce tri, écrite plutôt que tue (leçon L11).
+
+// LE SIGNAL QUE J'AI POSÉ FAUX, ET CE QU'IL M'A COÛTÉ DE NE PAS LIRE LE FORMAT (2026-09-27).
+// La première version de ce tri lisait la cellule « Clôture » comme une DATE de clôture : une
+// ligne qui la portait remplie tout en restant « Ouverte » était forcément une clôture oubliée.
+// Le premier passage réel a rendu huit tâches « en fait déjà faites ». C'était faux sur toute la
+// ligne : dans `FORMAT_TACHE` (scripts/criticite.mjs), `cloture` n'est pas une date, c'est la CASE
+// DU RITUEL — « OUI quand les trois questions de clôture ont été posées ». Les huit lignes
+// portaient « NON », c'est-à-dire exactement le contraire de ce que je leur faisais dire.
+//
+// Article 19 pris à l'envers : j'ai lu le nom d'un champ et j'ai deviné son sens au lieu d'aller
+// lire sa définition, qui existait, à deux fichiers d'ici. Et le coût aurait été réel : faire
+// clôturer huit travaux non faits. Un garde-fou qui accuse à tort cesse d'être lu (leçon L4) —
+// ici il aurait fait pire que d'être ignoré, il aurait été suivi.
+export const CASE_RITUEL_COCHEE = /^\s*OUI\s*$/i;
+export const MOTIF_DATE_ISO = /^\s*\d{4}-\d{2}-\d{2}T/;
+
+// LES DEUX SEULS SIGNAUX FORTS, et les deux qui ont été ÉCARTÉS — les écarts comptent autant.
+//   ÉCARTÉ 1 : « la tâche annonce un fichier, et ce fichier existe ». Faux ami : une tâche qui dit
+//   « corriger le 98 % périmé dans le-classificateur.md » annonce un fichier qui existe depuis
+//   toujours, et elle n'est pas faite pour autant.
+//   ÉCARTÉ 2 : « le détail contient le mot terminé ». Mesuré sur le registre réel : 5 lignes, et
+//   les cinq employaient le mot dans une phrase ordinaire (« une fois terminé », « je n'ai pas
+//   terminé »). Un motif qui attrape la prose d'un projet qui écrit beaucoup n'est pas un signal.
+export function signesDeDejaFaite(row = {}, { cloturesAilleurs = new Set() } = {}) {
+  const signes = [];
+  if (Number.isFinite(row.numero) && cloturesAilleurs.has(String(row.numero))) {
+    signes.push("une autre ligne du registre déclare explicitement sa clôture (« CLÔTURE DE #n »)");
+  }
+  // `null` veut dire « cellule illisible » (une ligne dont le Détail contient un `|` non échappé),
+  // jamais « cellule remplie » : les confondre accuserait une ligne sur un défaut de format.
+  if (typeof row.cloture === "string" && CASE_RITUEL_COCHEE.test(row.cloture)) {
+    signes.push(`sa case de rituel « Clôture » est cochée OUI — les trois questions de clôture ont donc été posées — alors que son statut dit encore « ${String(row.statut ?? "?").trim()} »`);
+  }
+  return signes;
+}
+
+// L'ANGLE MORT DU SIGNAL CI-DESSUS, MESURÉ ET DIT PLUTÔT QUE TU (leçon L11). La case du rituel
+// attend « OUI » ou rien ; 35 lignes du registre y portent une DATE — une confusion de format qui
+// commence à la tâche #958 et que j'ai moi-même prolongée le 2026-09-27. Sur ces lignes-là, le
+// second signal ne peut RIEN voir : elles ne diront jamais « déjà faite », quoi qu'il en soit.
+// Un tri qui ne le dirait pas rendrait un « 0 » qui a l'air d'un bulletin de santé.
+export function casesDeRituelMalRemplies(rows = []) {
+  return rows.filter((r) => MOTIF_DATE_ISO.test(String(r.ouverture ?? "")) || MOTIF_DATE_ISO.test(String(r.cloture ?? "")));
+}
+
+// La proximité se mesure sur les mots SIGNIFICATIFS du chantier (les vides sont déjà filtrés par
+// `motsSignificatifs`, partagé avec le filtre anti-doublon — écrit une fois, pas deux). On rend
+// les mots qui ont matché, jamais un score nu : un score nu ne se vérifie pas, une liste de mots
+// se vérifie en une seconde.
+export function proximiteAvecLeChantier(row = {}, termes = []) {
+  // LES ACCENTS SE PERDENT DES DEUX CÔTÉS OU D'AUCUN — trouvé en lançant, pas en relisant.
+  // `motsSignificatifs` dépouille ses mots de leurs accents (« baptême » → « bapteme ») ; le texte
+  // du registre, lui, les garde. Chercher les uns dans l'autre ne rendait jamais rien sur les
+  // mots accentués, sans que rien ne le signale : le score tombait simplement à zéro, ce qui se
+  // lit comme « cette tâche ne touche pas au chantier ». La même normalisation des deux côtés,
+  // jamais deux mesures qui divergent en silence (leçon L29).
+  const texte = aplatir(` ${String(row.motCle ?? "")} ${String(row.sujet ?? "")} ${String(row.sousSujet ?? "")} ${String(row.detail ?? "")} `);
+  const touches = [...new Set(termes)].filter((t) => t.length >= 4 && texte.includes(t));
+  return { score: touches.length, touches };
+}
+
+// Écrite ici plutôt que recopiée à deux endroits : c'est exactement la normalisation que
+// `motsSignificatifs` applique à ses mots, et les deux doivent rester la même ou le rapprochement
+// cesse de fonctionner sans le dire.
+export function aplatir(texte = "") {
+  return String(texte).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+export function trierPourUnChantier(rows = [], { libelle = "", seuil = 1 } = {}) {
+  const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+  if (!ouvertes.length) {
+    return { mesurable: false, libelle, termes: [],
+      pourquoi: "aucune tâche ouverte lue dans le suivi : il n'y a rien à trier, ce qui n'est pas la même chose qu'un tri qui ne trouve rien" };
+  }
+  // `motsSignificatifs` rend un **Set**, jamais un tableau — et le premier passage réel l'a prouvé
+  // en deux secondes : `termes.length` valait `undefined`, donc le test « aucun mot significatif »
+  // se déclenchait sur un libellé qui en portait cinq, et l'outil refusait de conclure sur des
+  // données parfaitement mesurables. Un faux « PAS MESURÉ » est plus sournois qu'un faux vert :
+  // il a l'air prudent.
+  const termes = [...motsSignificatifs(libelle)];
+  if (!termes.length) {
+    return { mesurable: false, libelle, termes: [],
+      pourquoi: "le libellé du chantier ne contient aucun mot significatif : sans vocabulaire, la colonne « bloque » ne peut être que vide, et une colonne vide se lirait comme « rien ne bloque »" };
+  }
+  // Les clôtures annoncées se lisent sur TOUT le registre, closes comprises : c'est justement une
+  // ligne POSTÉRIEURE qui clôture une ligne restée ouverte.
+  const cloturesAilleurs = new Set([...rows.map((r) => r.detail ?? "").join("\n").matchAll(MOTIF_CLOTURE)].map((m) => m[1]));
+  const dejaFaites = [], bloquantes = [], peuventAttendre = [];
+  for (const r of ouvertes) {
+    const signes = signesDeDejaFaite(r, { cloturesAilleurs });
+    if (signes.length) { dejaFaites.push({ row: r, signes }); continue; }
+    const p = proximiteAvecLeChantier(r, termes);
+    if (p.score >= seuil) bloquantes.push({ row: r, ...p });
+    else peuventAttendre.push({ row: r, ...p });
+  }
+  // Les présumées bloquantes sont rendues de la plus proche à la moins proche : c'est l'ordre dans
+  // lequel il les tranchera, et une liste non triée oblige à tout lire pour trouver le sommet.
+  bloquantes.sort((a, b) => b.score - a.score || (a.row.numero ?? 0) - (b.row.numero ?? 0));
+  return { mesurable: true, libelle, termes, ouvertes: ouvertes.length, dejaFaites, bloquantes, peuventAttendre,
+    aveugleSur: casesDeRituelMalRemplies(rows) };
+}
+
+export function formatTriLines(tri) {
+  if (!tri?.mesurable) return [`TRI : PAS MESURÉ — ${tri?.pourquoi ?? "aucune donnée"}`];
+  const L = [];
+  const vignette = (e, suffixe = "") => `  ${ligneDeTache(e.row) ?? "?"}${suffixe}`;
+  L.push(`Chantier visé : « ${tri.libelle} »`);
+  L.push(`Vocabulaire retenu (${tri.termes.length} mot(s)) : ${tri.termes.join(", ")}`);
+  L.push(`Tâches OUVERTES passées en revue : ${tri.ouvertes}`);
+  L.push("");
+  L.push(`— COLONNE 1 — EN FAIT DÉJÀ FAITES, à clôturer : ${tri.dejaFaites.length}`);
+  L.push(`  (deux signaux FORTS : une autre ligne la déclare close, ou sa case de rituel « Clôture » est cochée OUI)`);
+  for (const e of tri.dejaFaites) { L.push(vignette(e)); for (const s of e.signes) L.push(`      → ${s}`); }
+  if (!tri.dejaFaites.length) L.push("  (aucune — et ce zéro n'est pas un bulletin de santé, voir l'angle mort ci-dessous)");
+  if (tri.aveugleSur.length) {
+    L.push(`  ⚠️ ANGLE MORT : ${tri.aveugleSur.length} ligne(s) portent une DATE dans une case de rituel qui attend « OUI » ou rien.`);
+    L.push(`     Le second signal ne peut rien voir sur elles : ${tri.aveugleSur.map((r) => numeroTache(r.numero)).join(", ")}`);
+  }
+  L.push("");
+  L.push(`— COLONNE 2 — BLOQUENT PROBABLEMENT LE CHANTIER : ${tri.bloquantes.length}`);
+  L.push(`  (présomption de VOCABULAIRE, jamais une preuve — les mots qui ont déclenché le rapprochement sont montrés pour être vérifiés)`);
+  for (const e of tri.bloquantes) L.push(vignette(e, `   [${e.touches.join(" · ")}]`));
+  if (!tri.bloquantes.length) L.push("  (aucune)");
+  L.push("");
+  L.push(`— COLONNE 3 — PEUVENT ATTENDRE : ${tri.peuventAttendre.length}`);
+  L.push(`  (aucun mot du chantier ne s'y trouve — ce qui n'est PAS la preuve qu'elles ne bloquent pas)`);
+  for (const e of tri.peuventAttendre) L.push(vignette(e));
+  if (!tri.peuventAttendre.length) L.push("  (aucune)");
+  return L;
+}
+
+// La sous-commande. Le LIVRABLE est le fichier (Article 31, faille 3) ; ce qui s'imprime n'en est
+// que l'écho, pour qu'on puisse juger sans ouvrir. Et comme partout ici : sans heure LUE, on
+// n'écrit rien (Article 32) — un tri daté au jugé vaut moins qu'un tri absent.
+function triCli(argv) {
+  const libelle = argv.slice(3).join(" ");
+  if (!libelle) {
+    console.error('usage : check-tasks-details tri "<le chantier visé, en toutes lettres>"');
+    console.error('exemple : node scripts/check-tasks-details.mjs tri "renommage nomenclature baptême des noms"');
+    process.exit(2);
+  }
+  const rows = loadAllTaskRows();
+  const tri = trierPourUnChantier(rows, { libelle });
+  let maintenant;
+  try { maintenant = execSync("node scripts/agent-du-temps.mjs", { encoding: "utf8" }).match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z)/)?.[1]; } catch { /* traité juste après */ }
+  if (!maintenant) { console.log("⚠️ Rien écrit — l'heure n'a pas pu être LUE (Article 32)."); return; }
+
+  const trait = "=".repeat(92);
+  const L = [trait, `TRI DES TÂCHES OUVERTES POUR UN CHANTIER`,
+    `Produit par : scripts/check-tasks-details.mjs tri · le ${maintenant} (heure LUE, source système)`, trait, "",
+    "CE QUE CE TRI PEUT ET NE PEUT PAS DIRE, avant les chiffres :",
+    "  · la colonne 1 repose sur le registre lui-même qui se contredit : signal fort, presque sûr.",
+    "  · la colonne 2 repose sur une proximité de MOTS : c'est une présomption à vérifier d'un œil.",
+    "  · la colonne 3 est la colonne par défaut : « rien n'indique que ça bloque » n'est jamais",
+    "    « ça ne bloque pas ». Une tâche bloquante qui n'emploierait pas le vocabulaire du chantier",
+    "    tomberait ici, et aucun programme ne peut l'en sortir.", "",
+    ...formatTriLines(tri)];
+  const texte = L.join("\n") + "\n";
+  try { mkdirSync(OUT_DIR, { recursive: true }); } catch { /* déjà là */ }
+  const chemin = join(OUT_DIR, `tri-${maintenant.replace(/[:]/g, "-")}.txt`);
+  writeFileSync(chemin, texte, "utf8");
+  console.log(texte);
+  console.log(`\nÉcrit : ${chemin.replace(ROOT, "")}`);
+  recordCliUsage("check-tasks-details", { origine: "demande" });
+
+  // Sans tri mesurable il n'y a rien à conclure, et fabriquer un plan vide ferait passer un refus
+  // de conclure pour un « rien à faire ». Le rapport, lui, a déjà été écrit et dit pourquoi.
+  if (!tri.mesurable) return;
+
+  // LE PLAN D'ACTION (Article 28). Les deux colonnes actionnables appellent des gestes OPPOSÉS —
+  // la 1 se répare en corrigeant le registre, la 2 en faisant le travail — donc deux libellés
+  // distincts, jamais une formule commune qui obligerait à rouvrir le rapport pour savoir quoi
+  // faire. La colonne 3 n'entre pas au plan : « peut attendre » est précisément l'absence de geste.
+  const ecarts = [
+    ...tri.dejaFaites.map((e) => ({ quoi: `${numeroTache(e.row.numero)} est marquée ouverte alors que le registre la dit close`,
+      quoiFaire: `vérifier puis METTRE À JOUR la ligne existante (jamais en ajouter une : docs/systeme-de-suivi.md §2)` })),
+    ...tri.bloquantes.map((e) => ({ quoi: `${numeroTache(e.row.numero)} touche au vocabulaire du chantier (${e.touches.join(", ")})`,
+      quoiFaire: `confirmer avec l'utilisateur qu'elle bloque vraiment, et la traiter AVANT d'ouvrir le chantier` })),
+  ];
+  if (tri.aveugleSur.length) ecarts.unshift({
+    quoi: `${tri.aveugleSur.length} ligne(s) portent une DATE dans une case de rituel qui attend « OUI » ou rien — la colonne 1 est aveugle sur elles`,
+    quoiFaire: `remettre « OUI »/vide dans les cases Ouverture et Clôture (docs/systeme-de-suivi.md, FORMAT_TACHE) — la date de clôture n'a pas de case, elle vit dans le Détail`,
+  });
+  imprimerPlanDaction(planDactionDepuisEcarts(ecarts, {
+    toolSlug: "check-tasks-details", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire,
+  }));
+  console.log(`\nHORS PORTÉE : ce tri dit ce que le REGISTRE laisse voir. Il ne sait pas si une tâche est réellement faite, ni si elle bloque réellement — les deux se tranchent en les lisant.`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
