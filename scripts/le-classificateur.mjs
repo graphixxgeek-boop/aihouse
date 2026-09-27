@@ -1826,6 +1826,12 @@ export function nomsDesExecutables({ root = ROOT, listDirImpl = readdirSync, dos
 // (Article 28) : chacune porte donc la sienne, et elles sont peu nombreuses par construction —
 // tout ce qui pouvait se dériver l'a été avant d'arriver ici.
 export const EXCEPTIONS_D_EXPORT = [
+  // AJOUTÉ LE 2026-09-27 (tâche #1032). Il ne se dérive par aucune règle et c'est normal : ce n'est
+  // ni un blueprint d'outil, ni une fiche, ni un registre — c'est l'architecture d'un FILET DE
+  // SÉCURITÉ, écrite pour être suivie sur n'importe quel projet. SAFE-EXPORT tranchait que le filet
+  // « ne s'exporte pas, il se réécrit », ce qui est vrai de son CONTENU et laissait partir son
+  // architecture avec — c'est exactement ce trou que ce document ferme, donc il PART.
+  { chemin: "docs/architecture-du-filet.md", etat: "PART", pourquoi: "l'architecture générique d'un filet de sécurité — neuf règles et leur coût mesuré, pas une ligne sur ce jeu-ci. C'est la pièce que SAFE-EXPORT laissait partir avec le contenu du filet, et ce qu'Ezechiel PRESCRIT sur un projet qui n'a pas encore de filet (tâche #1031)." },
   { chemin: "docs/carnet-de-bord.md", etat: "MEMOIRE", pourquoi: "l'état vivant du travail EN COURS sur ce projet-ci : il n'a aucun sens ailleurs, et ce n'est pas une règle" },
   { chemin: "docs/idees-a-trancher.md", etat: "MEMOIRE", pourquoi: "registre des idées de CE projet en attente d'arbitrage" },
   { chemin: "docs/peur-de-l-export.md", etat: "PART", pourquoi: "il raisonne sur ce qui empêche une Agence de partir — c'est le sujet même du second projet, et il vaut pour n'importe quel outillage" },
@@ -2001,6 +2007,14 @@ export const NATURE_INDETERMINEE = { cle: "indeterminee", icone: "❓", quoi: "a
 // chacune porte sa raison — une exception sans raison n'est pas une décision, c'est un rangement
 // arbitraire (Article 28).
 export const EXCEPTIONS_DE_NATURE = [
+  // AJOUTÉ LE 2026-09-27 (tâche #1032), et c'est un manque du détecteur, jamais du document :
+  // aucun motif de nature ne reconnaît « l'architecture d'un FILET DE SÉCURITÉ ». Ce n'est pas un
+  // blueprint (il ne décrit aucun outil de l'Agence), pas une fiche, pas un process — c'est un
+  // CADRE-CIBLE : il dit à quoi la chose devrait ressembler, pour qu'on puisse la construire ainsi
+  // dès le premier jour au lieu de la redresser après coup.
+  { chemin: "docs/architecture-du-filet.md", cle: "cadre-cible", icone: "🎯",
+    quoi: "il dit à quoi un filet de sécurité DEVRAIT ressembler, pour qu'on le construise ainsi plutôt que de le redresser après coup",
+    pourquoi: "ni blueprint (il ne décrit aucun outil), ni fiche, ni process : c'est la cible que l'Agence PRESCRIT sur un projet qui n'a pas encore de filet, et les neuf règles y portent chacune le coût réellement mesuré qui l'a fait naître" },
   // SES DEUX ARBITRAGES DU 2026-09-27, en fenêtre dédiée, sur les quatre documents que l'axe ne
   // savait pas ranger. L'Article 28 réserve ce troisième état — « à trancher » — à une décision
   // qui n'est pas celle de l'agent ; elle a été rendue, et elle est écrite ici avec sa raison.

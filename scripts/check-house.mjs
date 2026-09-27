@@ -16234,6 +16234,47 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// IL PRESCRIT LÀ OÙ IL N'Y A RIEN (2026-09-27, tâche #1031)
+// ————————————————————————————————————————————————————————————————————————
+// SA DEMANDE : « saura sinon suggérer la création d'un filet de sécurité avec la bonne
+// architecture ». C'est le moment « AVANT » ou « À LA SOURCE » de la grille des quatre moments
+// d'arrivée : là, l'Agence ne constate plus, elle PRESCRIT.
+{
+  const e = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // IL SE TAIT QUAND UN FILET EXISTE, et ce n'est pas un détail de confort : servir une
+  // prescription à un projet qui a déjà son filet est du bruit, et le bruit est exactement ce qui
+  // fait cesser de lire un outil (leçon L6).
+  const dejaLa = e.prescrireUnFilet({ trouve: true, chemin: 'scripts/check-house.mjs' });
+  assert.equal(dejaLa.prescrire, false, 'un projet qui a déjà un filet ne reçoit pas de prescription : il reçoit une enquête');
+  assert.deepEqual(e.formatPrescriptionLines(dejaLa), [], 'et la prescription ne produit alors AUCUNE ligne — un titre suivi du vide serait encore du bruit');
+
+  // ET IL PRESCRIT QUAND IL N'Y A RIEN, parce qu'un outil qui se contente de dire « pas de filet
+  // trouvé » laisse son lecteur exactement où il était.
+  const rien = e.prescrireUnFilet(e.detecterLeFilet({}));
+  assert.equal(rien.prescrire, true, 'sans filet, il y a tout à construire — et l\'architecture se prescrit AVANT la première ligne');
+  const lignes = e.formatPrescriptionLines(rien).join('\n');
+  assert.ok(e.REGLES_D_ARCHITECTURE.every((r) => lignes.includes(r.regle)), 'chaque règle de l\'architecture doit sortir dans le rapport, jamais rester dans le script');
+  assert.ok(e.REGLES_D_ARCHITECTURE.every((r) => lignes.includes(r.prix)), 'ET chaque règle sort AVEC LE COÛT RÉEL qui l\'a fait naître : une règle sans son prix se discute, une règle avec son prix se suit');
+  assert.ok(lignes.includes(e.DOCUMENT_D_ARCHITECTURE), 'le rapport renvoie au document qui porte le détail, plutôt que de le recopier (Article 24)');
+
+  // LE DOCUMENT EXISTE VRAIMENT, et c'est le garde-fou qui compte : un renvoi vers un fichier
+  // absent est pire qu'une absence de renvoi — il ressemble à un lien (Article 28, la référence
+  // morte). Vérifié contre le vrai disque, jamais déclaré.
+  assert.ok(fs.existsSync(e.DOCUMENT_D_ARCHITECTURE), `le document d'architecture cité doit exister réellement sur le disque — ${e.DOCUMENT_D_ARCHITECTURE} est introuvable`);
+  const doc = fs.readFileSync(e.DOCUMENT_D_ARCHITECTURE, 'utf8');
+  assert.equal(e.REGLES_D_ARCHITECTURE.length, 9, 'les neuf règles sont un nombre, pas une approximation : en ajouter une sans toucher au document les ferait diverger en silence');
+  for (const r of e.REGLES_D_ARCHITECTURE) {
+    assert.ok(new RegExp(`###\\s*${r.n}\\.`).test(doc), `MUST NOT DIVERGE: la règle ${r.n} résumée par l'outil doit avoir sa section dans ${e.DOCUMENT_D_ARCHITECTURE} — un résumé qui survit à la disparition de ce qu'il résume est exactement la dette que l'Article 24 interdit`);
+  }
+  for (const m of e.MARCHES_SI_LE_MONOLITHE_EXISTE) {
+    assert.ok(m.length > 20, 'chaque marche est décrite, jamais réduite à un mot-clé que seul son auteur comprend');
+  }
+
+  console.log("Passed: Ezechiel prescrit là où il n'y a rien (2026-09-27, tâche #1031). Sa demande était claire — « saura sinon suggérer la création d'un filet de sécurité avec la bonne architecture » — et jusqu'ici la réponse était non : il savait dire ce qui ne va pas dans un filet QUI EXISTE, il n'avait aucune notion de ce à quoi un bon filet ressemble. C'est le moment « AVANT » ou « À LA SOURCE » de la grille des quatre moments d'arrivée : là, l'Agence ne constate plus, elle PRESCRIT. NEUF RÈGLES, ET CHACUNE SORT AVEC LE COÛT RÉELLEMENT MESURÉ QUI L'A FAIT NAÎTRE — une règle sans son prix se discute, une règle avec son prix se suit : les 18,6 s que valent les tests écrits au niveau du fichier, les 19,5 s inséparables qui plafonnent toute parallélisation, les 12 blocs qui portaient 66 % du temps, les 3 défauts trouvés par le voyant de santé sur une suite entièrement verte, les deux tests verts et vides dont un survivait à l'inversion qu'il prétendait vérifier. IL SE TAIT QUAND UN FILET EXISTE, et ce n'est pas du confort : une prescription servie par-dessus l'existant est du bruit, et le bruit est ce qui fait cesser de lire un outil. CE QUE CES ASSERTIONS PROTÈGENT EST LA NON-DIVERGENCE (Article 24) : le résumé porté par l'outil et le document qui le détaille doivent rester d'accord, donc chaque règle numérotée dans le script doit avoir sa section dans le document — sinon le résumé survivrait à la disparition de ce qu'il résume, et le renvoi ressemblerait encore à un lien alors qu'il ne mènerait plus nulle part. Le document est vérifié PRÉSENT sur le vrai disque, jamais déclaré : une référence morte est pire qu'une absence de référence.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
 // LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et

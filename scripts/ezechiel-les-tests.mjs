@@ -144,6 +144,59 @@ export function filetResolu({ root = ROOT, argv = process.argv, force = false } 
 let _filetResolu_detection = null;
 export function derniereDetection() { return _filetResolu_detection; }
 
+// --- CE QU'IL SAIT PRESCRIRE LÀ OÙ IL N'Y A RIEN (2026-09-27, tâche #1031) ---------------------
+// SA DEMANDE : « saura sinon suggérer la création d'un filet de sécurité avec la bonne
+// architecture ». Jusqu'ici Ezechiel savait dire ce qui ne va pas dans un filet QUI EXISTE ; il
+// n'avait aucune notion de ce à quoi un bon filet ressemble, donc il ne pouvait rien proposer.
+// C'est le moment « AVANT » ou « À LA SOURCE » de la grille des quatre moments d'arrivée (#1028) :
+// arrivé là, l'Agence ne constate plus, elle PRESCRIT.
+//
+// LES RÈGLES NE SONT PAS RECOPIÉES ICI, elles sont RÉSUMÉES et renvoient au document qui les porte
+// (Article 24 : un registre se lit, il ne se duplique pas — et une liste recopiée diverge au
+// premier ajout). Chaque règle porte le coût RÉELLEMENT MESURÉ qui l'a fait naître : une règle sans
+// son prix se discute, une règle avec son prix se suit.
+export const DOCUMENT_D_ARCHITECTURE = "docs/architecture-du-filet.md";
+
+export const REGLES_D_ARCHITECTURE = [
+  { n: 1, regle: "un test vit dans un BLOC autonome, lançable seul, dès le premier jour", prix: "les ~70 tests écrits au niveau du fichier valent 18,6 s qui se rejouent dans chaque part parallèle" },
+  { n: 2, regle: "une préparation partagée est un investissement ; un ÉTAT partagé est une dette", prix: "19,5 s sur 78 s inséparables, c'est le plafond de toute parallélisation" },
+  { n: 3, regle: "chaque test porte à côté de lui la RAISON de son existence", prix: "sans elle, le prochain lecteur supprime le test au premier rangement" },
+  { n: 4, regle: "le message d'échec est une PHRASE, jamais une étiquette", prix: "il est lu au pire moment, des mois plus tard, souvent par quelqu'un d'autre" },
+  { n: 5, regle: "deux contre-tests par détecteur : un qu'il doit attraper, un voisin qu'il doit laisser passer", prix: "un garde-fou qui accuse à tort cesse d'être lu, ce qui est pire que son absence" },
+  { n: 6, regle: "un test qu'on n'a jamais vu ÉCHOUER ne prouve rien — le casser exprès", prix: "deux tests verts et vides trouvés sur ce projet, dont un qui survivait à l'inversion qu'il vérifiait" },
+  { n: 7, regle: "aucune assertion ne mesure une DURÉE — chercher la valeur invariante derrière", prix: "un test passait au repos et mentait sous charge depuis des jours" },
+  { n: 8, regle: "le FONCTIONNEMENT de la suite se surveille à part de son contenu", prix: "3 défauts trouvés au premier passage du voyant de santé, sur une suite entièrement verte" },
+  { n: 9, regle: "la durée se mesure PAR BLOC, et l'historique se garde", prix: "12 blocs portaient 66 % du temps — invisible sans mesure par bloc" },
+];
+
+export const MARCHES_SI_LE_MONOLITHE_EXISTE = [
+  "mutualiser les lectures de fichiers (aucun test modifié)",
+  "mutualiser les appels aux outils externes (le coût d'ouvrir un processus est invisible à l'unité)",
+  "étendre ces deux partages à TOUS les outils, pas seulement à celui qui faisait mal",
+  "paralléliser — en dernier, et seulement une fois mesuré que le temps restant est du CALCUL",
+  "découper le monolithe — la seule marche qui lève le plafond, et elle se décide avec le propriétaire du projet",
+];
+
+// IL NE PRESCRIT QUE QUAND IL N'Y A RIEN, et c'est délibéré : servir cette liste à un projet qui a
+// déjà un filet serait du bruit, et le bruit est exactement ce qui fait cesser de lire un outil.
+export function prescrireUnFilet(detection = {}) {
+  if (detection?.trouve) {
+    return { prescrire: false, pourquoi: `un filet existe déjà (${detection.chemin}) — l'enquête vaut mieux qu'une prescription, et prescrire par-dessus l'existant serait du bruit`, regles: [], marches: MARCHES_SI_LE_MONOLITHE_EXISTE, document: DOCUMENT_D_ARCHITECTURE };
+  }
+  return { prescrire: true, regles: REGLES_D_ARCHITECTURE, marches: MARCHES_SI_LE_MONOLITHE_EXISTE, document: DOCUMENT_D_ARCHITECTURE,
+    pourquoi: "aucun filet détecté : il n'y a rien à enquêter, mais il y a tout à construire — et l'architecture se prescrit AVANT la première ligne, jamais après" };
+}
+
+export function formatPrescriptionLines(p = {}) {
+  if (!p.prescrire) return [];
+  const L = ["", "=== AUCUN FILET ICI — VOICI CELUI QU'IL FAUDRAIT CONSTRUIRE ===", `  ${p.pourquoi}`, ""];
+  for (const r of p.regles) L.push(`  ${String(r.n).padStart(2)}. ${r.regle}`, `      → ${r.prix}`);
+  L.push("", "  SI UN MONOLITHE EXISTE DÉJÀ, les marches dans l'ordre du moins risqué au plus risqué :");
+  p.marches.forEach((m, i) => L.push(`      ${i + 1}. ${m}`));
+  L.push("", `  Le détail de chaque règle, avec les chiffres qui l'ont fait naître : ${p.document}`);
+  return L;
+}
+
 export function formatDetectionLines(d = {}) {
   if (d.trouve) return [`Filet détecté : ${d.chemin} (par ${PISTES_DU_FILET.find((p) => p.cle === d.piste)?.quoi ?? d.piste} — fiabilité ${d.force})`];
   const L = ["🚨 AUCUN FILET TROUVÉ — l'enquête est impossible, et ce n'est pas un résultat vide :", `   ${d.pourquoi}`, "   Ce qui a été essayé :"];
@@ -1636,7 +1689,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // en silence le fichier qu'il étudie rend un rapport invérifiable — si la détection se trompe,
   // tout ce qui suit est faux sans jamais le dire.
   const chemin = filetResolu();
-  for (const l of formatDetectionLines(derniereDetection() ?? { trouve: true, chemin, piste: "option", force: "certaine" })) console.log(l);
+  const detection = derniereDetection() ?? { trouve: true, chemin, piste: "option", force: "certaine" };
+  for (const l of formatDetectionLines(detection)) console.log(l);
+  // LÀ OÙ IL N'Y A RIEN, IL PRESCRIT (tâche #1031) : un outil qui se contente de dire « pas de
+  // filet trouvé » laisse son lecteur exactement où il était.
+  for (const l of formatPrescriptionLines(prescrireUnFilet(detection))) console.log(l);
   const e = enqueter({ durees, filet: chemin });
   for (const l of formatEnqueteLines(e)) console.log(l);
   const plan = planDeLEnquete(e);
