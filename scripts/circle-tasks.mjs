@@ -814,6 +814,8 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // AJOUTÉ LE 2026-09-27 (vérification à froid, tâches #436/#773) : ce garde-fou a refusé le commit
   // qui créait ce dossier, et il avait raison de DEMANDER — la réponse s'écrit ici.
   "rapports-verification-froid": "un rapport par vérification à froid (Article 25) — déclenché par une demande ou par une vague de travail, jamais à date fixe : lui donner un item de Ronde inventerait un passage périodique là où il n'y en a pas. Les outils qu'il relance, eux, ont déjà chacun le leur",
+  // AJOUTÉ LE 2026-09-27 (tâche #1026) : même refus du même garde-fou, et il a eu raison de demander.
+  "ezechiel-les-tests": "le registre des enquêtes sur le filet de sécurité — une ligne par enquête, déclenchée quand le filet ralentit ou qu'un chantier le touche, jamais à date fixe. Une enquête lancée sans raison rendrait le même rapport que la veille, et lui donner un item de Ronde inventerait un passage périodique là où il n'y en a pas.",
   "contexte-projet": "les archives historiques transmises par l'utilisateur : des pièces d'ENTRÉE, jamais des sorties de l'Agence",
   "templates": "les gabarits dont sortent les pièces de kit — un moule ne s'accumule pas, il sert. A ABSORBÉ docs/gabarits/ le 2026-09-26 : deux dossiers pour une même chose, dont un ne portait qu'un fichier, et personne ne pouvait savoir lequel consulter",
   // LES DEUX REGISTRES NÉS LE 2026-09-26 en comblant les kits d'export, et le garde-fou a mordu à

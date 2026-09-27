@@ -7988,8 +7988,15 @@ async function testKitsDExport() {
   const { vitaliteDuParc } = await import('../scripts/le-classificateur.mjs');
   const reel = mesurerLesKits({ vitalite: vitaliteDuParc() });
   assert.equal(reel.mesurable, true, 'against the real repository the kits must actually be measurable');
-  assert.equal(reel.total + reel.exemptes, 90, 'and account for the whole fleet — every file is either owed a kit or dispensed with a written reason, never simply absent from the count');
-  assert.ok(reel.exemptes > 0 && reel.exemptes < 15, `the exemptions must stay a short list of real cases (currently ${reel.exemptes} of 90): a long one would mean the rule has become optional`);
+  // LE CHIFFRE SE DÉRIVE, IL NE SE RECOPIE PAS (2026-09-27, tâche #1026 — Article 24). Il était
+  // écrit 90 en dur, et l'arrivée du 91e outil a fait tomber le test : pas parce que le parc était
+  // mal compté, mais parce qu'un outil de plus avait rejoint l'équipe. C'est la troisième fois de
+  // la journée qu'un nombre recopié punit une arrivée ou une réussite (leçon L37 : corriger une
+  // occurrence ne corrige pas la CLASSE). Ce qui est VRAIMENT exigé ne dépend d'aucun total : tout
+  // fichier du parc est soit redevable d'un kit, soit dispensé avec sa raison — jamais absent.
+  const parc = vitaliteDuParc().total;
+  assert.equal(reel.total + reel.exemptes, parc, `and account for the whole fleet — every file is either owed a kit or dispensed with a written reason, never simply absent from the count (currently ${reel.total} owed + ${reel.exemptes} exempt = ${parc} in the fleet)`);
+  assert.ok(reel.exemptes > 0 && reel.exemptes < 15, `the exemptions must stay a short list of real cases (currently ${reel.exemptes} of ${parc}): a long one would mean the rule has become optional`);
   // L'OPTIONNEL NE SE FILTRE PAS — l'angle mort exact qu'il a vu. L'assertion vit désormais sur une
   // FIXTURE et non sur l'état réel, et le déplacement est la bonne nouvelle : le 2026-09-26 à 20h,
   // les 82 kits dus sont tenus, donc plus AUCUN optionnel incomplet ne traîne dans le vrai dépôt.
@@ -15778,6 +15785,46 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(!/\.\.\.missing\.map\(/.test(srcDoc919), 'doc-report main() must not reference the removed `missing` variable: it crashed the whole report before its plan d\'action, and a tool that dies before its conclusion is a tool whose conclusion nobody has ever read');
 
   console.log("Passed: sept détecteurs qui ne parlaient nulle part (2026-09-26, tâche #919) — ils existaient, ils étaient testés, et aucun code hors de la suite de tests ne les appelait. La distinction qui décide de leur place vient de la tâche elle-même : un garde-fou qui protège un invariant du CODE appartient aux tests et nulle part ailleurs ; un garde-fou qui dit quelque chose sur LE PROJET doit parler dans le rapport que lit un humain. Ces sept-là parlent du projet — un outil qu'on ordonne de lancer à la main sans jamais écrire sa commande, un outil déclaré heuristique qui ne prononce jamais son avertissement, une section devenue introuvable faute de sommaire, un membre hors de tout organigramme, une activité à enjeu que rien ne gouverne. Ce qui est vérifié ici n'est pas qu'ils fonctionnent, c'est qu'ils sont APPELÉS : un test qui vérifie une fonction sans vérifier qu'on l'appelle est précisément ce qui les a laissés muets. Et le câblage a fait tomber autre chose : doc-report mourait sur un ReferenceError avant son plan d'action depuis le matin même, si bien que sa conclusion n'avait jamais été imprimée une seule fois. Trouvé en lançant l'outil pour de vrai, jamais en relisant le diff.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// EZECHIEL-LES-TESTS (2026-09-27, tâche #1026) — l'enquêteur du filet, et ses TROIS défauts
+// ————————————————————————————————————————————————————————————————————————
+// Les trois assertions qui suivent ne vérifient pas qu'Ezechiel « marche » : elles verrouillent les
+// trois faux positifs qu'il a produits à son PREMIER vrai passage. Chacun accusait à tort, et un
+// garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+{
+  const ez = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // DÉFAUT 1 — cinq lignes de succès consécutives sont UN groupe, pas cinq. Compter chacune créait
+  // quatre groupes au corps vide, donc quatre « aucune assertion » parfaitement faux.
+  const cinqSuites = ["assert.ok(1);", "console.log('Passed: un');", "console.log('Passed: deux');", "console.log('Passed: trois');"].join("\n");
+  assert.equal(ez.decouperEnGroupes(cinqSuites).length, 1, 'MUST CATCH: consecutive success lines enumerate the SUBJECTS of one block, they never open new groups — counting each one manufactured empty groups and accused them of having no assertion');
+  // MUST LET PASS : deux groupes réellement séparés par du code restent deux groupes.
+  const deuxVrais = ["assert.ok(1);", "console.log('Passed: un');", "assert.ok(2);", "console.log('Passed: deux');"].join("\n");
+  assert.equal(ez.decouperEnGroupes(deuxVrais).length, 2, 'MUST LET PASS: two blocks genuinely separated by code are two groups — a merge rule too wide would hide real empty groups');
+
+  // DÉFAUT 2 — une ligne qui appelle une assertion n'importe rien : c'est une fixture.
+  const fixture = "assert.equal(f({fichier:'./scripts/inexistant-xyz.mjs'}), 1, 'peu importe');";
+  assert.deepEqual(ez.citationsMortes(fixture, { existe: () => false }).mortes, [], "MUST LET PASS: a path invented for a test fixture is not an import — eight such paths were denounced as missing files on the first real pass, and none of them was one");
+  // MUST CATCH : un vrai import vers un fichier absent reste dénoncé — c'est le défaut qui fait
+  // tomber le filet ENTIER, donc bloque tout commit.
+  const vraiImport = "const m = await import('../scripts/vraiment-absent.mjs');";
+  assert.equal(ez.citationsMortes(vraiImport, { existe: () => false }).mortes.length, 1, 'MUST CATCH: a real import towards a missing file still bites — it does not break one test, it breaks the whole net');
+
+  // DÉFAUT 3 — un surcoût négatif est du bruit de mesure, jamais un gain.
+  const bruit = ez.comparerLesCouches({ nuMs: 116000, couvertureMs: 107000, typageMs: 6000 });
+  assert.equal(bruit.surcoutNegligeable, true, 'MUST CATCH: an instrumented run measured FASTER than the bare run proves the two durations sit in the same error margin, never that instrumentation is free');
+  assert.ok(bruit.partTestsPct <= 100 && bruit.partEnveloppePct >= 0, 'and no share may go negative: « l\'enveloppe -3 % » read as a result when it only said the measurement could not tell the two apart (Article 32, faille 3)');
+  // MUST LET PASS : un vrai surcoût se mesure normalement.
+  const vrai = ez.comparerLesCouches({ nuMs: 100000, couvertureMs: 160000, typageMs: 0 });
+  assert.equal(vrai.surcoutNegligeable, false, 'MUST LET PASS: a genuine overhead is still measured and reported');
+  assert.ok(vrai.partEnveloppePct > 30, 'and it still dominates the verdict when it genuinely does');
+
+  // IL REFUSE DE CONCLURE SANS LES DURÉES (leçons L5/L11) — une absence de mesure n'est jamais un vert.
+  assert.equal(ez.comparerLesCouches({}).mesurable, false, 'with no durations at all it must declare NOT MEASURED, never compute a verdict from nothing');
+
+  console.log("Passed: EZECHIEL-LES-TESTS (2026-09-27, tâche #1026) — l'enquêteur du filet de sécurité, et les trois faux positifs qu'il a produits à son premier vrai passage, verrouillés ici dans les deux sens. Cinq lignes de succès consécutives sont UN groupe et pas cinq, sans quoi quatre groupes au corps vide se faisaient accuser de n'avoir aucune assertion. Une ligne qui appelle une assertion n'importe rien : huit chemins de fixture étaient dénoncés comme des fichiers disparus, et aucun ne l'était. Un surcoût négatif est du bruit de mesure et se déclare comme tel, au lieu de produire « l'enveloppe -3 % », un pourcentage négatif qui se lit comme un résultat alors qu'il dit seulement qu'on n'a pas su distinguer. Et sans les trois durées, il rend PAS MESURÉ plutôt qu'un verdict : optimiser un filet sans savoir d'où vient son temps est exactement ce que cet outil existe pour empêcher.");
 }
 
 // ————————————————————————————————————————————————————————————————————————
