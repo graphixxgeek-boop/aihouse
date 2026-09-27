@@ -4659,6 +4659,27 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.equal(exemptionDuKit('scripts/argus.mjs'),null,'and leaves an ordinary tool alone — without this the exemption would excuse everything');
   }
 
+  // UNE MENTION N'EST PAS UNE CONSIGNE (2026-09-27, tâche #910). Le relai signalait « 4 dépendances
+  // à un outillage particulier » dans les documents de mémoire et de conduite ; lues une par une,
+  // la quasi-totalité n'en étaient pas — du récit au passé, une phrase qui DÉCLARE l'indépendance,
+  // et la phrase de l'Article 27 elle-même, c'est-à-dire LA RÈGLE QUI INTERDIT LA CHOSE.
+  {
+    const {estMentionSansConsigne,findDependancesOutillage}=await import('../scripts/safe-export.mjs');
+    // CE QU'IL DOIT ATTRAPER : une consigne qui nomme l'outil sans nommer le geste.
+    assert.equal(estMentionSansConsigne('Crée la tâche avec TaskCreate.'),false,'an instruction naming only the tool is a real dependency: an AI without it cannot follow the sentence');
+    // ET LES TROIS FAÇONS DE N'ORDONNER RIEN, chacune trouvée pour de vrai dans les documents de relai.
+    assert.equal(estMentionSansConsigne('le crochet pre-commit la lance à chaque commit'),true,'narrative in the past tense recounts what happened HERE — an AI without that hook understands it perfectly, nothing is asked of it');
+    assert.equal(estMentionSansConsigne('tout agent (Claude Code ou autre) qui reprend ce projet'),true,'a sentence that DECLARES independence was being counted as a dependency');
+    assert.equal(estMentionSansConsigne('le livrer en fichier séparé (`SendUserFile`)'),true,'when the generic GESTURE is named, the tool is only the concrete mechanism — transposable as is');
+    assert.equal(estMentionSansConsigne("une IA qui arrive sans le gestionnaire de tâches de Claude Code doit pouvoir travailler"),true,'and the Article 27 sentence itself must never be flagged: the detector was accusing the rule that forbids the thing');
+    // LE COMPTE ÉCARTÉ RESTE VISIBLE : le taire ferait disparaître le jour où une mention devient
+    // une consigne, et un compte qui baisse sans qu'on sache ce qui en est sorti ne se vérifie pas.
+    const faux={'a.md':'# x\nle crochet post-commit passait déjà ces mêmes fichiers\nCrée la tâche avec TaskCreate.\n'};
+    const d=findDependancesOutillage(['a.md'],{readFileImpl:()=>faux['a.md'],root:'',quelleQueSoitLaDeclaration:true});
+    assert.equal(d[0].occurrences,1,'only the instruction counts as a dependency');
+    assert.equal(d[0].mentions,1,'and the set-aside mention is counted and kept, never silently dropped');
+  }
+
   // LE MENU S'OUVRE AUX PÉRIODIQUES (2026-09-25, décision de l'utilisateur) — et deux pièges se
   // referment en même temps, chacun mesuré sur la vraie table plutôt que craint.
   {

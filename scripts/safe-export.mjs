@@ -351,6 +351,35 @@ export const DEPENDANCES_OUTILLAGE = /TaskCreate|TaskUpdate|AskUserQuestion|Send
 // faisait sauter CLAUDE.md et les règles de travail, c'est-à-dire exactement les documents à
 // examiner. Le résultat était « aucune dépendance » sur trois documents jamais ouverts : la forme
 // la plus dangereuse du zéro (leçon L11). Le comportement par défaut ne change pas d'un iota.
+// UNE MENTION N'EST PAS UNE CONSIGNE (2026-09-27, tâche #910), et le relai le prouvait par l'absurde.
+// Il signalait « 4 dépendances à un outillage particulier » dans les documents de mémoire et de
+// conduite. Lues une par une, la quasi-totalité n'en étaient pas :
+//   · « le crochet pre-commit la lance à chaque commit » — du RÉCIT au passé, qui raconte ce qui
+//     s'est produit ici. Une IA sans ce crochet le comprend parfaitement ; rien ne lui est demandé.
+//   · « tout agent (Claude Code ou autre) » — une phrase qui DÉCLARE l'indépendance, comptée comme
+//     une dépendance.
+//   · la phrase de l'Article 27 elle-même — le détecteur accusait LA RÈGLE QUI INTERDIT LA CHOSE.
+//   · « le livrer en fichier séparé (`SendUserFile`) » — le GESTE est nommé, l'outil n'est que le
+//     mécanisme concret entre parenthèses : transposable tel quel.
+//
+// UN SIGNAL QUI MÉLANGE LA RÈGLE ET SON CONTRE-EXEMPLE NE SE TRAITE PAS : on ne peut ni le corriger
+// ni le classer sans rouvrir chaque ligne, donc on cesse de le lire (leçon L4).
+//
+// LE PARTAGE EST CELUI QUE CE DÉPÔT A DÉJÀ FAIT, sur exactement la même question. Au retrait de
+// `lib/reference.ts` (tâche #1000) : « les renvois NARRATIFS restent tels quels — effacer le
+// POURQUOI d'un correctif parce que le fichier a bougé est exactement ce que les Articles 19 et 27
+// interdisent », seules les ÉTAPES DE PROCESS ont été corrigées. Une phrase qui RACONTE n'engage
+// personne ; une phrase qui ORDONNE engage. Ce filtre-ci applique le même partage, et il ÉTEND
+// celui qui existait déjà plutôt que d'en poser un second à côté (Article 31, leçon L29).
+export const MOTIF_RECIT = /\b(a été|ont été|était|étaient|s'est|se sont|avait|avaient|passait|lançait|lance à chaque|faisait|venait|j'ai |on a |il a fallu)\b/i;
+export const MOTIF_GESTE_NOMME = /\b(en fichier|fichier joint|fichier séparé|une question|poser la question|créer une tâche|le geste|mécanisme concret|ou autre|gestionnaire de tâches|documents seuls)\b/i;
+export const MOTIF_CITEE_POUR_ETRE_ECARTEE = /sans |jamais |ne dépend|indépendam|plutôt que/i;
+
+export function estMentionSansConsigne(ligne = "") {
+  const t = String(ligne);
+  return MOTIF_CITEE_POUR_ETRE_ECARTEE.test(t) || MOTIF_GESTE_NOMME.test(t) || MOTIF_RECIT.test(t);
+}
+
 export function findDependancesOutillage(fichiers = [], { readFileImpl = readFileSync, root = ROOT, quelleQueSoitLaDeclaration = false } = {}) {
   const trouvees = [];
   for (const f of fichiers) {
@@ -361,10 +390,31 @@ export function findDependancesOutillage(fichiers = [], { readFileImpl = readFil
     // Une dépendance CITÉE POUR ÊTRE ÉCARTÉE n'en est pas une — le texte qui dit « une IA sans
     // crochet git doit pouvoir travailler » nomme forcément le crochet git. Sans cette distinction,
     // le détecteur signalerait le plus fort des garde-fous d'exportabilité comme un défaut.
-    const reelles = lignes.filter((l) => !/sans |jamais |ne dépend|indépendam|plutôt que/i.test(l));
-    if (reelles.length) trouvees.push({ fichier: f, occurrences: reelles.length, exemple: reelles[0].trim().slice(0, 100) });
+    // ÉLARGI LE 2026-09-27 (tâche #910) À DEUX AUTRES FORMES QUI N'ORDONNENT RIEN — et les quatre
+    // « dépendances » du relai en étaient : voir estMentionSansConsigne() pour le détail.
+    const reelles = lignes.filter((l) => !estMentionSansConsigne(l));
+    const ecartees = lignes.filter((l) => estMentionSansConsigne(l));
+    // LE CONTRAT DE CETTE FONCTION NE CHANGE PAS, et un test l'a rappelé en refusant un commit :
+    // la LONGUEUR du tableau rendu est le nombre de fichiers qui portent une VRAIE dépendance, et
+    // plusieurs appelants la lisent comme ça. Un fichier dont toutes les mentions sont écartées ne
+    // rentre donc pas dans le tableau — les compter ici aurait changé silencieusement ce que
+    // mesurent ces appelants, exactement la divergence qu'on venait de corriger ailleurs (L29).
+    // Les mentions écartées se demandent à part, par findMentionsSansConsigne() : elles restent
+    // visibles — les taire ferait disparaître le jour où l'une deviendrait une consigne.
+    if (reelles.length) trouvees.push({ fichier: f, occurrences: reelles.length, exemple: reelles[0].trim().slice(0, 100), mentions: ecartees.length });
   }
   return trouvees;
+}
+
+export function findMentionsSansConsigne(fichiers = [], { readFileImpl = readFileSync, root = ROOT } = {}) {
+  const out = [];
+  for (const f of fichiers) {
+    let texte;
+    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    const ecartees = texte.split("\n").filter((l) => DEPENDANCES_OUTILLAGE.test(l) && estMentionSansConsigne(l));
+    if (ecartees.length) out.push({ fichier: f, mentions: ecartees.length, exemple: ecartees[0].trim().slice(0, 100) });
+  }
+  return out;
 }
 
 // ————————————————————————————————————————————————————————————————————————

@@ -1,0 +1,144 @@
+RAPPORT DE NUIT — dimanche 27 septembre 2026, arrêté à 08h50 UTC (10h50 Paris)
+Heure LUE via agent-du-temps (source : système — les deux API de temps rendent HTTP 403 ici).
+Branche claude/jolly-bell-ks9lhb · de 5647b80 à 7b74a6e · 4 commits poussés.
+
+================================================================================
+CE QUI A ÉTÉ FAIT — 8 tâches closes, 1 avancée, 1 ouverte, 1 leçon
+================================================================================
+
+Toutes suivent votre ordre : d'abord organisation et classification, puis export.
+
+#996  check-spirit refuse désormais d'être importé
+      Tout son code vit au niveau du module, boucle de provocations comprise : un
+      simple import() lançait l'outil entier sans passer par Smart Conso API. La
+      garde tombe AVANT les quatre effets de bord du fichier. Ce jour-là aucun
+      quota consommé — mais seulement parce que le conteneur refuse le réseau :
+      c'est le réseau qui avait protégé, pas la prudence.
+
+#748  quelqu'un garde enfin l'histoire de l'Agence
+      Votre question — « QUI garde et surveille l'histoire ? » — avait pour
+      réponse honnête PERSONNE. Le rôle revient à data-archangel par extension
+      plutôt qu'à un 82e script. Il couvre DEUX des quatre atteintes que la tâche
+      nommait, et sa sortie le dit à chaque passage : un veilleur qui laisse
+      croire qu'il en couvre quatre est pire qu'un veilleur absent.
+      Trouvé à son premier passage : un transcript de simulation avait perdu
+      1 245 lignes nettes, et personne ne l'aurait vu.
+
+#1015 la même mesure rendait deux réponses selon la forme de son entrée
+      Trouvé en débloquant #996 : le filet de sécurité a refusé son propre commit.
+      Le recensement construit son graphe en Set et ne le convertit en tableaux
+      qu'en RENDANT son résultat ; la fonction lisait .length, indéfini sur un Set.
+      Résultat : check-house était classé « coûte de vrais appels API » alors qu'il
+      MOQUE l'appel. L'assertion n'a pas été touchée — elle avait raison.
+
+#714  le catalogue se mesure contre le dépôt, plus contre une seconde liste
+      Le garde-fou qui veillait sur le catalogue comparait deux listes écrites à
+      la main l'une à l'autre. Il rendait « aucun outil muet » pendant que la table
+      sur laquelle il se fonde ignorait 27 des 90 scripts réels.
+      MESURE : onze outils parfaitement lançables n'avaient AUCUNE offre — donc
+      invisibles à tool-brain, donc jamais recommandés, donc jamais lancés, et leur
+      zéro d'usage se lisait ensuite comme un verdict sur eux. 58 → 69 offres.
+      Une seconde invisibilité est tombée avec la première : six de ces onze
+      n'enregistraient jamais leur passage, et le verrou qui vérifie ça ne les
+      voyait pas non plus, pour la même raison. Corrigé. Verrous actifs 1 → 0.
+
+#715  les combinaisons d'outils — la demande qui durait depuis le début de l'Agence
+      Elle échouait toujours pour la même raison : partir des OUTILS. 75 outils
+      font 2 775 paires, et un classement sur ce volume a l'air intelligent tout
+      en étant du bruit. Une combinaison utile se LIT dans ce qui se pratique déjà.
+      ① Le compteur horodate chaque lancement. Le piège a été mesuré avant d'être
+        craint : compté brut, le palmarès est trusté par agent-du-temps, qu'on
+        lance avant tout le monde — c'est un RITUEL, pas un duo. On lit donc
+        l'écart à l'attendu, et l'omniprésent disparaît de lui-même.
+        Sur 530 fenêtres : always-new-code + clone-hunter ×21, argus +
+        le-coordinateur ×18,2, smart-conso-token + the-king ×13,9.
+      ② A écrit un registre que B lit : 112 chaînes brutes → 70 réelles une fois
+        écartés l'outil qui lit son propre registre et les agrégateurs.
+      ③ Les exigences que personne ne vérifie : c'est déjà THE-EQUALIZER. On
+        renvoie vers lui plutôt que de refaire un second calcul sur la même donnée.
+
+#1017 le réexport qui ne lie pas — et il m'a coûté deux chantiers dans la nuit
+      `export { X } from "..."` rend X disponible aux appelants SANS le lier
+      localement : une fonction du même fichier qui l'appelle plante à
+      l'exécution, jamais à la lecture. Payé deux fois à quelques heures d'écart.
+      Une leçon écrite ne l'aurait pas empêché une troisième fois : c'est
+      maintenant un garde-fou dans SAFE-EXPORT.
+      SON PREMIER PASSAGE A ACCUSÉ SEPT NOMS, LES SEPT À TORT — deux cités dans
+      une chaîne de caractères, cinq liés par ailleurs. Corrigé avant livraison :
+      un garde-fou qui accuse à tort cesse d'être lu, et celui-ci serait mort à
+      son premier rapport.
+
+#908  le plan de la machine, GÉNÉRÉ
+      « Un acheteur qui reçoit quatre-vingts plans de pièces détachées n'a pas
+      reçu le plan de la machine. » Les deux documents génériques existants n'y
+      répondent pas et ne le doivent pas : ils sont écrits sans nommer un seul
+      fichier, pour pouvoir voyager. Il manquait leur pendant instancié.
+      `node scripts/safe-export.mjs plan-machine` le régénère depuis la chaîne
+      réelle. L'ordre d'installation se CALCULE — c'est la seule définition qui ne
+      soit pas une opinion. 13 paliers, 47 fichiers, 11 points d'entrée.
+      Un cycle réel trouvé et NOMMÉ plutôt que masqué : le-coordinateur ↔
+      doc-report (antérieur à cette nuit).
+
+#907  deux mesures du même outil se contredisaient
+      La liste des 19 fichiers vitaux sans blueprint n'en comptait plus que 7 — les
+      quatre pièces de plomberie que la tâche nommait ont leur blueprint depuis.
+      Et les 7 restants étaient, DANS LE MÊME RAPPORT trois lignes plus bas, les
+      7 « dispensés avec raison ». Le même outil affirmait les deux à la fois.
+      Il n'y a pas deux règles, il y en a une : on la lit. 7 bloquants → 0.
+
+#910  une mention n'est pas une consigne — AVANCÉE, PAS CLOSE (voir plus bas)
+
+#1016 OUVERTE : la table maîtresse des outils est écrite à la main et ignore 27
+      des 90 scripts réels. Hors portée de #714, mais nommé plutôt que tu.
+
+Leçon L36 enregistrée, avec un vrai porteur mécanique plutôt qu'une discipline.
+
+================================================================================
+CE QUI ATTEND VOTRE ARBITRAGE — je ne l'ai pas tranché seul
+================================================================================
+
+1. #910 — UN CROCHET GIT EST-IL « UN OUTILLAGE PARTICULIER » ?
+   J'ai réglé la moitié claire : du récit au passé, une phrase qui DÉCLARE
+   l'indépendance, et la phrase de l'Article 27 elle-même étaient comptées comme
+   des dépendances — le détecteur accusait la règle qui interdit la chose. Les
+   deux documents de mémoire passent à zéro.
+   Restent 18 lignes dans regles-de-travail.md, presque toutes du type « cet outil
+   tourne au crochet post-commit ». L'Article 27 dit noir sur blanc « sans ses
+   crochets git », mais git est universel, et une IA qui lit cette phrase comprend
+   et lance l'outil à la main. Séparer `TaskCreate`/`SendUserFile` (propres à un
+   outillage) de `crochet post-commit` (contextuel) changerait ce que le détecteur
+   MESURE. C'est un arbitrage, pas un correctif.
+
+2. #1016 — la table maîtresse : la DÉRIVER du recensement (mais elle porte des
+   colonnes qu'aucune sonde ne devine : coût réel en API, déclenchement, statut),
+   ou la garder manuelle avec un garde-fou qui signale tout script absent ?
+   La seconde est probablement la bonne — mais il faudra accepter de la compléter
+   27 fois.
+
+3. #1010 (buildReport 236 s) et #1013 (la sonde ne suit pas le shell) attendent
+   toujours, inchangés depuis hier.
+
+================================================================================
+LES BORNES QUE VOUS AVIEZ POSÉES — toutes tenues
+================================================================================
+  · périmètre sensible : rien touché de ce que Lia et Noé disent ou font, rien de
+    visible par le visiteur, rien de difficile à défaire.
+  · PAS de renommage en masse : aucun.
+  · PAS de modification de CLAUDE.md : aucune. #910 en a souffert — deux des
+    quatre dépendances y vivent, dont une vraie consigne — et c'est noté plutôt
+    que contourné.
+
+================================================================================
+COMMENT J'AI TRAVAILLÉ
+================================================================================
+  · chaque tâche : tool-brain avant (Article 31), reprise des notes avant
+    (Article 30) — et elle a changé #907 et #908, qui portaient tous deux sur un
+    état du dépôt qui n'existait plus.
+  · chaque correction : contre-tests dans les DEUX sens (BP4). 8 tâches, une
+    cinquantaine de contre-tests, dont plusieurs écrits APRÈS qu'un premier
+    passage réel ait accusé à tort.
+  · chaque commit : suite complète verte, ligne de suivi dans le MÊME commit,
+    heure LUE jamais tapée. Le filet a refusé six commits cette nuit, et il avait
+    raison les six fois — dont deux pour un horodatage que j'avais tapé de
+    mémoire, et deux pour un document neuf non classé.
+  · réveil court ré-armé en premier à chaque tour, comme la nuit dernière.
