@@ -25,7 +25,7 @@
 // ligne ne bouge ici.
 
 import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from "node:fs";
-import { listerLesFichiers, DEBUT_BLOC_GENERE, FIN_BLOC_GENERE, sansLeBlocGenere } from "./lib-shell.mjs";
+import { listerLesFichiers, DEBUT_BLOC_GENERE, FIN_BLOC_GENERE, sansLeBlocGenere, lireFichierPartage } from "./lib-shell.mjs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
@@ -159,7 +159,7 @@ export const FICHIERS_DE_VERIFICATION = ["scripts/check-house.mjs", "scripts/che
 const MARQUEUR_LECTEUR_TABLE = /^export\s+const\s+LECTEUR_DE_TABLE\s*=\s*\[([\s\S]*?)^\];/m;
 const LECTURE_DISQUE = /(readFileSync|readdirSync|existsSync|readFile\(|readdir\()/;
 
-export function lecteursDeTableDeclares({ root = ROOT, readFileImpl = readFileSync, scripts } = {}) {
+export function lecteursDeTableDeclares({ root = ROOT, readFileImpl = lireFichierPartage, scripts } = {}) {
   const fichiers = scripts ?? scriptFiles(root);
   const declares = [];
   for (const f of fichiers) {
@@ -178,7 +178,7 @@ export function lecteursDeTableDeclares({ root = ROOT, readFileImpl = readFileSy
 // QUI LIT QUOI, mesuré sur le vrai code plutôt que déclaré. Un outil "lit" une source s'il en cite
 // le chemin hors déclaration — heuristique assumée : c'est une mention, jamais une preuve de
 // lecture effective. Déclarée comme telle dans l'avertissement de fiabilité.
-export function mapReaders({ root = ROOT, readFileImpl = readFileSync, sources, scripts } = {}) {
+export function mapReaders({ root = ROOT, readFileImpl = lireFichierPartage, sources, scripts } = {}) {
   const srcs = sources ?? listDataSources();
   const fichiers = scripts ?? scriptFiles(root);
   const lecteursPar = new Map(srcs.map((s) => [s.id, []]));
@@ -423,7 +423,7 @@ export const MOTIF_PRODUCTEUR = /docs\/([a-z0-9-]+)\//;
 //   · écrit et jamais rouvert  — produit, archivé, et hors de portée de tout le monde.
 export const ETATS_D_ARCHIVE = ["relu par un outil", "listé par un index", "écrit et jamais rouvert"];
 
-export function inventaireDesRapports({ root = ROOT, racine = "docs", lireDossier = readdirSync, lire = readFileSync, exists = existsSync, scripts = null } = {}) {
+export function inventaireDesRapports({ root = ROOT, racine = "docs", lireDossier = readdirSync, lire = lireFichierPartage, exists = existsSync, scripts = null } = {}) {
   let dossiers = [];
   try {
     dossiers = lireDossier(join(root, racine), { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name);
@@ -844,7 +844,7 @@ export const CONSOMMATEURS_DE_TENDANCE = [
 
 // findTendancesOrphelines() — une série produite et lue par personne. Le sens 1 du métier de cet
 // outil, appliqué aux séries.
-export function findTendancesOrphelines(carte, { consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = readFileSync, exists = existsSync } = {}) {
+export function findTendancesOrphelines(carte, { consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = lireFichierPartage, exists = existsSync } = {}) {
   const orphelines = [];
   for (const c of consommateurs) {
     const chemin = join(root, `docs/${c.outil}/serie.json`);
@@ -867,7 +867,7 @@ export function findTendancesOrphelines(carte, { consommateurs = CONSOMMATEURS_D
 // findOutilsPrivesDeTendance() — le sens 2 : un outil qui DEVRAIT exploiter une tendance et ne
 // connaît même pas le mécanisme. Se vérifie sur le code réel (importe-t-il serie-temporelle ?),
 // jamais sur une intention déclarée en commentaire.
-export function findOutilsPrivesDeTendance({ consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = readFileSync } = {}) {
+export function findOutilsPrivesDeTendance({ consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   const prives = [];
   for (const c of consommateurs) {
     let code;
@@ -881,7 +881,7 @@ export function findOutilsPrivesDeTendance({ consommateurs = CONSOMMATEURS_DE_TE
 // par moi » : ni l'agent ni lui ne peuvent exploiter une tendance qu'on ne leur montre pas. Rend la
 // liste des séries réellement disponibles, avec leur nombre de points — donc ce qui est déjà
 // exploitable et ce qui est encore trop jeune pour dire quoi que ce soit.
-export function tendanceBriefing({ consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = readFileSync, exists = existsSync, minPoints = 4 } = {}) {
+export function tendanceBriefing({ consommateurs = CONSOMMATEURS_DE_TENDANCE, root = ROOT, readFileImpl = lireFichierPartage, exists = existsSync, minPoints = 4 } = {}) {
   return consommateurs.map((c) => {
     const rel = `docs/${c.outil}/serie.json`;
     if (!exists(join(root, rel))) return { outil: c.outil, etat: "aucune série", points: 0, exploitable: false };
@@ -897,7 +897,7 @@ export function tendanceBriefing({ consommateurs = CONSOMMATEURS_DE_TENDANCE, ro
   });
 }
 
-export function buildDataArchangelReport({ root = ROOT, readFileImpl = readFileSync, now = Date.now() } = {}) {
+export function buildDataArchangelReport({ root = ROOT, readFileImpl = lireFichierPartage, now = Date.now() } = {}) {
   const carte = mapReaders({ root, readFileImpl });
   const orphelines = findOrphanData(carte, { root });
   const suggestions = suggestMissingConnections(carte);
@@ -1155,7 +1155,7 @@ export function verdictDeLIndex(nature, fichiers) {
 // La date lue dans le NOM du fichier : le seul lien fiable entre un dépôt et sa ligne de journal.
 export const MOTIF_DATE_DE_FICHIER = /(\d{4}-\d{2}-\d{2})/;
 
-export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
   let dossiers = [];
   try { dossiers = listDirImpl(join(root, racine), { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => `${racine}/${e.name}`); } catch { /* racine illisible */ }
   if (!dossiers.length) {

@@ -29,7 +29,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { printReliabilityNotice, sh } from "./lib-shell.mjs";
+import { printReliabilityNotice, sh, lireFichierPartage } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { dernierPlanDeDepart } from "./check-tasks-details.mjs";
 import { recentCommits, findCommitsMissingSuiviUpdate } from "./check-suivi-fidelity.mjs";
@@ -626,7 +626,7 @@ function latestNightPlan({ root = ROOT } = {}) {
   } catch { return null; }
 }
 
-export function findArretPremature({ planPath, suiviTexte = "", readFileImpl = readFileSync, root = ROOT } = {}) {
+export function findArretPremature({ planPath, suiviTexte = "", readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   if (!planPath) return { mesure: "pas mesuré", raison: "aucun plan de nuit fourni — sans plan, « prématuré » n'a pas de sens", chantiers: [] };
   let plan = "";
   try { plan = readFileImpl(join(root, planPath), "utf8"); } catch { return { mesure: "pas mesuré", raison: `${planPath} est illisible`, chantiers: [] }; }
@@ -671,7 +671,7 @@ export function findArretPremature({ planPath, suiviTexte = "", readFileImpl = r
 // de ses étapes) est au moins CITÉ dans son document. Un fichier jamais nommé n'y est certainement
 // pas décrit ; un fichier nommé peut l'être mal. Le garde-fou attrape donc le cas grossier, pas le
 // cas subtil — et c'est déjà celui qui s'est produit deux fois en deux jours.
-export function findMecanismesAbsentsDuProcess({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+export function findMecanismesAbsentsDuProcess({ processes = PROCESSES, root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   const manques = [];
   for (const p of processes) {
     if (!p.doc) continue;
@@ -752,7 +752,7 @@ export function extraireSection(texte, titre) {
   return fin === -1 ? source.slice(debut) : source.slice(debut, debut + titre.length + fin);
 }
 
-export function mecanismesDuProcess(p, { root = ROOT, readFileImpl = readFileSync } = {}) {
+export function mecanismesDuProcess(p, { root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   // UN PROCESS PEUT VIVRE DANS UNE SECTION, PAS DANS TOUT UN FICHIER (2026-09-23). Le process de
   // simulation déclare `docs/regles-de-travail.md` comme document — or ce fichier est AUSSI la
   // référence maîtresse de tout le paysage, et il nomme au passage des dizaines de mécanismes qui
@@ -834,7 +834,7 @@ export function findMecanismesAbsentsDuDocument(options = {}) {
 // LE VERDICT LISIBLE, process par process : combien de mécanismes des deux côtés, combien d'un seul.
 // Jamais un pourcentage vert sur un dénominateur vide — zéro mécanisme trouvé se DIT (« pas
 // mesuré »), il ne se rend jamais comme une conformité.
-export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync } = {}) {
+export function etatConnexionProcessGardien({ processes = PROCESSES, root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   // UN GARDIEN PEUT SERVIR PLUSIEURS PROCESS, et sans cette précaution chacun se voit reprocher les
   // mécanismes de l'autre. Cas réel du 2026-09-23 : circle-process-guardian garde la Ronde ET
   // l'intégration d'un item à la Ronde ; les 33 mécanismes de la première étaient comptés comme
@@ -988,7 +988,7 @@ export const EXIGENCES_GABARIT_PROCESS = [
   },
 ];
 
-export function findProcessHorsGabarit({ processes = PROCESSES, root = ROOT, readFileImpl = readFileSync, exigences = EXIGENCES_GABARIT_PROCESS } = {}) {
+export function findProcessHorsGabarit({ processes = PROCESSES, root = ROOT, readFileImpl = lireFichierPartage, exigences = EXIGENCES_GABARIT_PROCESS } = {}) {
   const ecarts = [];
   for (const p of processes) {
     if (!p.doc) continue;

@@ -39,7 +39,7 @@ import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsA
 // L'étiquette criticité/urgence/mot-clé — lue chez son propriétaire, jamais recalculée ici.
 import { etiquetteDeLaTache, findMotsClesEnCollision, findChampsManquants, FORMAT_TACHE, findRituelManquant, formatRituelLines, QUESTIONS_DE_CLOTURE, CONSIGNE_D_OUVERTURE, PREMIERE_TACHE_AVEC_RITUEL } from "./criticite.mjs";
 import { findMotsClesManquants } from "./check-suivi-fidelity.mjs";
-import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
+import { daysSince, printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { recordRegistryWrite } from "./tool-usage.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
@@ -259,7 +259,7 @@ export const OPEN_KEYS = new Set(["ouverte", "enCours", "autre"]);
 // lui-même, qui contient les trois mots qu'il cherche.
 export const MOTIF_LISTE_OUVERTURE = /\[\s*"ouverte"\s*,\s*"enCours"/;
 
-export function findListesDOuvertureEnDur({ source = null, lire = readFileSync, chemin = new URL(import.meta.url).pathname } = {}) {
+export function findListesDOuvertureEnDur({ source = null, lire = lireFichierPartage, chemin = new URL(import.meta.url).pathname } = {}) {
   let texte = source;
   if (texte === null) { try { texte = lire(chemin, "utf8"); } catch { return { mesurable: false, pourquoi: `le fichier source (${chemin}) n'a pas pu être lu : aucune copie n'a été cherchée, ce qui n'est jamais la même chose qu'aucune copie trouvée` }; } }
   const copies = [];
@@ -780,7 +780,7 @@ const CITATION_UTILISATEUR = /«([^»]{40,})»/g;
 // fichier qui ne serait qu'un collage de citations avec deux lignes de liaison, assez bas pour ne
 // jamais réclamer de la longueur pour de la longueur (la règle dit « synthétisé », pas « long »).
 const PROSE_AGENT_MINIMUM = 400;
-export function findChantierFilesMissingValueRestitution({ readFileImpl = readFileSync, exists = existsSync } = {}) {
+export function findChantierFilesMissingValueRestitution({ readFileImpl = lireFichierPartage, exists = existsSync } = {}) {
   const findings = [];
   for (const [chantier, { file }] of Object.entries(CHANTIER_PRELIMINARY_FILES)) {
     const full = join(ROOT, file);
@@ -1174,7 +1174,7 @@ export function criticalEye(rows, { stagnant = [], standing = [], figures = null
 // se tromper — l'archive seule ignore ce qui s'est passé depuis, le suivi seul ignore d'où on part.
 export const MOTIF_TOTAL_ARCHIVE = /(\d+)\s*tâche\(s\)\s*affichée\(s\)\s*sur\s*(\d+)\s*au total/;
 
-export function lireRapportsArchives({ dossier = OUT_DIR, readDir = readdirSync, readFile = readFileSync } = {}) {
+export function lireRapportsArchives({ dossier = OUT_DIR, readDir = readdirSync, readFile = lireFichierPartage } = {}) {
   let fichiers;
   try { fichiers = readDir(dossier).filter((f) => f.endsWith(".html")); }
   catch { return { mesurable: false, pourquoi: `le dossier des rapports archivés (${dossier}) n'a pas pu être lu — rien n'a été mesuré, ce qui n'est jamais la même chose que rien trouvé` }; }
@@ -1312,7 +1312,7 @@ export function mesurerRotation(rows = [], numerosDeReference = []) {
 // À LUI, jamais à ce dont l'agent se souvient »). On la LIT plutôt que de la recopier.
 export const MOTIF_NUMERO_DE_PLAN = /^#(\d+) \|/gm;
 
-export function lireNumerosDuPlan(chemin, readFile = readFileSync) {
+export function lireNumerosDuPlan(chemin, readFile = lireFichierPartage) {
   let texte;
   try { texte = readFile(chemin, "utf8"); }
   catch { return { mesurable: false, pourquoi: `le plan de départ (${chemin}) n'a pas pu être lu — rien n'a été mesuré` }; }

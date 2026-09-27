@@ -18,7 +18,7 @@ import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "no
 import { join } from "node:path";
 import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
-import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie, lireFichierPartage } from "./lib-shell.mjs";
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -83,7 +83,7 @@ export function datesDesNuits({ root = ROOT, lireDossier = readdirSync, dossier 
   return [...dates].sort();
 }
 
-export function datesDesSaisines({ root = ROOT, lireDossier = readdirSync, lire = readFileSync, dossier = DOSSIER_SAISINES } = {}) {
+export function datesDesSaisines({ root = ROOT, lireDossier = readdirSync, lire = lireFichierPartage, dossier = DOSSIER_SAISINES } = {}) {
   let fichiers = [];
   try { fichiers = lireDossier(join(root, dossier)); } catch { return null; }
   const dates = [];
@@ -626,7 +626,7 @@ export function narrateNewArrivals(newArrivals, badgeResults) {
 // TROIS ÉTATS, jamais deux (même discipline que la note de santé des rapports) : un objectif chiffré,
 // une absence ASSUMÉE et écrite, ou un vrai trou. Confondre les deux derniers pousserait à inventer
 // des objectifs creux pour verdir un tableau, exactement ce que le badge évite déjà.
-export function objectivesCoverage({ root = ROOT, readFileImpl = readFileSync, slugs } = {}) {
+export function objectivesCoverage({ root = ROOT, readFileImpl = lireFichierPartage, slugs } = {}) {
   let registre = "";
   try { registre = readFileImpl(join(root, "docs/objectifs-vs-resultats/registre.md"), "utf8"); }
   catch { return { mesurable: false, raison: "registre d'objectifs illisible — rien ne peut être affirmé sur la couverture" }; }
@@ -758,7 +758,7 @@ export function countFunctionalities(source) {
   return { fonctions, partagees, invocables, poidsTokens: estimateTokens(source) };
 }
 
-export function functionalityCensus({ root = ROOT, readFileImpl = readFileSync, scripts = AGENT_SCRIPT_FILES } = {}) {
+export function functionalityCensus({ root = ROOT, readFileImpl = lireFichierPartage, scripts = AGENT_SCRIPT_FILES } = {}) {
   const lignes = [];
   const nonMesurables = [];
   for (const [slug, chemin] of Object.entries(scripts)) {

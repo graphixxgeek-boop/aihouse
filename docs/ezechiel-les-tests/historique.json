@@ -34,5 +34,14 @@
     "succes": 299,
     "anomalies": 2,
     "vert": false
+  },
+  {
+    "quand": "2026-09-27T20:42:20.107Z",
+    "totalMs": 65369,
+    "code": 0,
+    "groupes": 289,
+    "succes": 299,
+    "anomalies": 2,
+    "vert": false
   }
 ]

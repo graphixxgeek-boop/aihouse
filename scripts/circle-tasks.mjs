@@ -32,7 +32,7 @@ import { scanDocumentWeight, listDatedNarrativeMarkers } from "./smart-conso-tok
 // #613) — elles ne servent qu'à CLAUDE.md, donc elles appartiennent à l'agent de ce périmètre.
 import { extractRuleUnits, findRedundantRulePairs, diagnosticCharte } from "./moise-tables-de-loi.mjs";
 import { analyserDocument, classerDocument, compterObligations, fichiersDuDepot } from "./abraham-les-references.mjs";
-import { AGENT_CATEGORIES, walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, walkDocsPaths, daysSince, sh, shouldSnapshotText, printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
 import { checkChantierFileFreshness, loadAllTaskRows, detectPendingIdeaCandidates, loadIdeaDecisions, findIdeasNeedingDecision, IDEES_REGISTRY_PATH } from "./check-tasks-details.mjs";
 import { auditHtmlDecisions, REGISTRIES as DOC_REPORT_REGISTRIES } from "./doc-report.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -1953,7 +1953,7 @@ export function findEtapesDeQuestionsManquantes(poseesParEtape, contexte = {}, o
 // GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) : l'inventaire ci-dessus reflète un tableau écrit dans
 // docs/circle-process-detail.txt. Les deux doivent dire la même chose, et rien ne doit pouvoir
 // diverger en silence — c'est exactement le patron des autres registres du projet.
-export function findEtapesDivergentesDuDocument({ root = ROOT, readFileImpl = readFileSync, inventaire = INVENTAIRE_QUESTIONS } = {}) {
+export function findEtapesDivergentesDuDocument({ root = ROOT, readFileImpl = lireFichierPartage, inventaire = INVENTAIRE_QUESTIONS } = {}) {
   let texte;
   try { texte = readFileImpl(join(root, "docs/circle-process-detail.txt"), "utf8"); } catch { return []; }
   const total = inventaire.filter((e) => !e.requisSi).reduce((a, e) => ({ min: a.min + e.min, max: a.max + e.max }), { min: 0, max: 0 });
@@ -1973,7 +1973,7 @@ export const QUESTIONS_SANS_REPONSE_PATH = "docs/circle-tasks/questions-sans-rep
 // Trois états, jamais deux — le même principe que partout ailleurs dans ce paysage.
 export const ETATS_QUESTION = ["répondue", "sans réponse", "jamais posée"];
 
-export function loadQuestionsSansReponse({ root = ROOT, readFileImpl = readFileSync } = {}) {
+export function loadQuestionsSansReponse({ root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   return loadJsonArray(QUESTIONS_SANS_REPONSE_PATH, { root, readFileImpl });
 }
 
@@ -2046,7 +2046,7 @@ export function enAttenteProchaineRonde(registre = [], { max = MAX_TENTATIVES_PA
 // n'est pas une série perdue, et les mélanger ferait réapparaître le défaut qu'on vient de corriger.
 export const SERIES_PASSEES_PATH = "docs/circle-tasks/series-passees.json";
 
-export function loadSeriesPassees({ root = ROOT, readFileImpl = readFileSync } = {}) {
+export function loadSeriesPassees({ root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   return loadJsonArray(SERIES_PASSEES_PATH, { root, readFileImpl });
 }
 
@@ -2287,7 +2287,7 @@ export const FAITS_D_OUVERTURE = [
 // tout l'objet de la règle qu'il a posée.
 export const REPONDANT_VALIDE = "utilisateur";
 
-export function loadOuverture({ root = ROOT, readFileImpl = readFileSync } = {}) {
+export function loadOuverture({ root = ROOT, readFileImpl = lireFichierPartage } = {}) {
   try {
     return JSON.parse(readFileImpl(join(root, OUVERTURE_PATH), "utf8"));
   } catch {

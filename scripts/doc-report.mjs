@@ -28,7 +28,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
@@ -289,7 +289,7 @@ export function findEngineCodeInRegistries(registries = REGISTRIES) {
 // Article 24) — à étendre seulement quand un futur registre confirme réellement écrire un fichier
 // par passage ET indexer chacun d'eux, jamais par simple présomption.
 export const REPORT_PER_RUN_REGISTRIES = ["argus"];
-export function findOrphanReportFiles(registries = REGISTRIES.filter((r) => REPORT_PER_RUN_REGISTRIES.includes(r.slug)), { listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []), readFileImpl = readFileSync, existsImpl = existsSync } = {}) {
+export function findOrphanReportFiles(registries = REGISTRIES.filter((r) => REPORT_PER_RUN_REGISTRIES.includes(r.slug)), { listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []), readFileImpl = lireFichierPartage, existsImpl = existsSync } = {}) {
   const findings = [];
   for (const r of registries) {
     const dir = join(ROOT, r.path);
@@ -397,7 +397,7 @@ export function findDeclarationsSansRaison(declares = APPELS_NON_GARDIENS_HYPER_
   return declares.filter((d) => String(d.raison ?? "").trim().length < 60).map((d) => d.scriptPath);
 }
 
-function readScriptSource(scriptPath, readFileImpl = readFileSync) {
+function readScriptSource(scriptPath, readFileImpl = lireFichierPartage) {
   try {
     return readFileImpl(join(ROOT, scriptPath), "utf8");
   } catch {
@@ -408,7 +408,7 @@ function readScriptSource(scriptPath, readFileImpl = readFileSync) {
 // Vrai seulement si le script producteur importe réellement html-report.mjs (grep du texte source,
 // jamais une présomption sur le nom de l'outil). Un scriptPath introuvable rapporte `undefined`
 // (jamais confondu avec `false` — "on ne sait pas" n'est pas "l'outil ne le fait pas").
-export function checkHtmlWiring(scriptPath, readFileImpl = readFileSync) {
+export function checkHtmlWiring(scriptPath, readFileImpl = lireFichierPartage) {
   if (!scriptPath) return undefined;
   const source = readScriptSource(scriptPath, readFileImpl);
   if (source == null) return undefined;
@@ -435,7 +435,7 @@ export function flagFindBoosterCandidates(registries = REGISTRIES, recommendImpl
 // Compare la décision actée à la réalité du code — le seul rôle de "gardien" de ce module. Ne
 // tranche jamais lui-même une décision manquante ; une valeur `decision` absente est elle-même un
 // gap (cf. findRegistriesMissingDecision()).
-export function auditHtmlDecisions(registries = REGISTRIES, readFileImpl = readFileSync) {
+export function auditHtmlDecisions(registries = REGISTRIES, readFileImpl = lireFichierPartage) {
   return registries.map((r) => {
     if (r.decision === "texte" || r.decision === "archived_html") {
       return { ...r, wired: undefined, mismatch: false };
@@ -504,7 +504,7 @@ export const DECISION_A_DECLARER = "aucun script du même nom : indécidable mé
 // cinq fois.
 export const SCRIPTS_HORS_INDICE = new Set(["scripts/check-house.mjs", "scripts/doc-report.mjs"]);
 
-export function scriptsQuiNommentLeDossier(slug, { listDirImpl = readdirSync, readFileImpl = readFileSync, root = ROOT, horsIndice = SCRIPTS_HORS_INDICE } = {}) {
+export function scriptsQuiNommentLeDossier(slug, { listDirImpl = readdirSync, readFileImpl = lireFichierPartage, root = ROOT, horsIndice = SCRIPTS_HORS_INDICE } = {}) {
   let fichiers = [];
   try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return null; }
   const trouves = [];
@@ -518,7 +518,7 @@ export function scriptsQuiNommentLeDossier(slug, { listDirImpl = readdirSync, re
   return trouves;
 }
 
-export function derivedDecisionForSlug(slug, { existsImpl = existsSync, readFileImpl = readFileSync, listDirImpl = readdirSync, root = ROOT } = {}) {
+export function derivedDecisionForSlug(slug, { existsImpl = existsSync, readFileImpl = lireFichierPartage, listDirImpl = readdirSync, root = ROOT } = {}) {
   const scriptPath = `scripts/${slug}.mjs`;
   const abs = join(root, scriptPath);
   if (!existsImpl(abs)) {
@@ -553,7 +553,7 @@ export function derivedDecisionForSlug(slug, { existsImpl = existsSync, readFile
 // Le remplaçant du « trancher 24 fois » : pour chaque dossier sans décision enregistrée, on DÉRIVE
 // quand c'est possible et on NOMME ce qui reste. Le compte des deux moitiés est imprimé, parce
 // qu'un outil qui ne dirait que la moitié dérivée laisserait croire le travail fini.
-export function deriverLesDecisionsManquantes(realDocsDirs, { registries = REGISTRIES, nonRegistres = DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES, existsImpl = existsSync, readFileImpl = readFileSync, listDirImpl = readdirSync, root = ROOT } = {}) {
+export function deriverLesDecisionsManquantes(realDocsDirs, { registries = REGISTRIES, nonRegistres = DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES, existsImpl = existsSync, readFileImpl = lireFichierPartage, listDirImpl = readdirSync, root = ROOT } = {}) {
   // LES NON-REGISTRES SORTENT DE L'ÉCART, et c'est une correction de cause plutôt qu'un
   // ajustement de seuil (2026-09-26). Une décision HTML/texte est une décision de FORMAT DE
   // RAPPORT : un dossier de plans écrits à la main, ou les archives d'entrée transmises par
@@ -620,7 +620,7 @@ export function registryAge(registry) {
 // Un script enregistre-t-il réellement son propre passage ? Lu dans le vrai fichier, jamais supposé
 // depuis une liste tenue à la main (Article 24). Un chemin absent ou illisible répond honnêtement
 // "non mesurable" plutôt que de trancher dans un sens ou dans l'autre.
-export function scriptRecordsItsUsage(scriptPath, readFileImpl = readFileSync) {
+export function scriptRecordsItsUsage(scriptPath, readFileImpl = lireFichierPartage) {
   if (!scriptPath) return false;
   try {
     return /recordCliUsage\s*\(/.test(readFileImpl(join(ROOT, scriptPath), "utf8"));
@@ -632,7 +632,7 @@ export function scriptRecordsItsUsage(scriptPath, readFileImpl = readFileSync) {
 // Assemble l'index global, croisé avec le compteur d'usage (tâche #166) pour signaler un outil dont
 // les rapports ne sont jamais consultés (toolsNeverUsed()) — jamais un second calcul de "jamais
 // utilisé", toujours la même fonction que CASSANDRA-RH réutilisera plus tard.
-export function buildDocReportIndex({ registries = REGISTRIES, usageHistory = { events: [] }, readFileImpl = readFileSync } = {}) {
+export function buildDocReportIndex({ registries = REGISTRIES, usageHistory = { events: [] }, readFileImpl = lireFichierPartage } = {}) {
   const audited = auditHtmlDecisions(registries, readFileImpl);
   const neverUsed = new Set(toolsNeverUsed(usageHistory, registries.map((r) => r.slug)));
   const rows = audited.map((r) => ({
@@ -900,7 +900,7 @@ export function findToolsMissingReliability(toolsTableMarkdown, registry = TOOL_
 export const RELIABILITY_SCRIPT_FILES = Object.fromEntries(
   Object.keys(TOOL_RELIABILITY).map((slug) => [slug, scriptPourSlug(slug)]),
 );
-export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { scriptFor = RELIABILITY_SCRIPT_FILES, readFileImpl = readFileSync, existsImpl = existsSync } = {}) {
+export function findHeuristicToolsWithoutNotice(registry = TOOL_RELIABILITY, { scriptFor = RELIABILITY_SCRIPT_FILES, readFileImpl = lireFichierPartage, existsImpl = existsSync } = {}) {
   const manques = [];
   for (const [slug, entry] of Object.entries(registry)) {
     if (entry.nature !== "heuristique") continue;
@@ -1007,7 +1007,7 @@ export const FILE_WRITER_NATURES = {
 
 // Tout script qui écrit un fichier doit être connu : soit déclaré comme produisant un rapport dans
 // REGISTRIES, soit classé explicitement ci-dessus. Ni l'un ni l'autre = un émetteur dans l'ombre.
-export function findUnclassifiedFileWriters({ registries = REGISTRIES, natures = FILE_WRITER_NATURES, listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []), readFileImpl = readFileSync } = {}) {
+export function findUnclassifiedFileWriters({ registries = REGISTRIES, natures = FILE_WRITER_NATURES, listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []), readFileImpl = lireFichierPartage } = {}) {
   const declares = new Set(registries.map((r) => r.scriptPath).filter(Boolean));
   const inconnus = [];
   for (const nom of listDirImpl(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort()) {
@@ -1051,7 +1051,7 @@ export function toolsBoundByReportTemplate({ registries = REGISTRIES, natures = 
 //
 // LA RÈGLE MÉCANIQUE : la ligne qui déclenche main() doit être la DERNIÈRE instruction du module.
 // Tout ce qui est déclaré après elle est inaccessible au moment où elle part.
-export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
   let fichiers = [];
   try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return []; }
   const ecarts = [];
@@ -1158,7 +1158,7 @@ export function mesurerRapport(texte) {
   return { utiles, pointe, chiffres, densite: utiles ? chiffres / utiles : 0 };
 }
 
-function parcourirRapports({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync }) {
+function parcourirRapports({ dossier, listDirImpl = readdirSync, readFileImpl = lireFichierPartage }) {
   let fichiers = [];
   try { fichiers = listDirImpl(dossier).filter((f) => f.endsWith(".txt")); } catch { return null; }
   const vus = [];
@@ -1170,7 +1170,7 @@ function parcourirRapports({ dossier, listDirImpl = readdirSync, readFileImpl = 
   return vus;
 }
 
-export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync, seuil = SEUIL_RAPPORT_MAIGRE, seuilDensite = SEUIL_DENSITE_RAPPORT } = {}) {
+export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, seuil = SEUIL_RAPPORT_MAIGRE, seuilDensite = SEUIL_DENSITE_RAPPORT } = {}) {
   const vus = parcourirRapports({ dossier, listDirImpl, readFileImpl });
   if (!vus) return [];
   return vus
@@ -1187,7 +1187,7 @@ export function findRapportsQuiPointent({ dossier, listDirImpl = readdirSync, re
 //
 // Ce n'est pas un écart et ce n'est pas non plus rien : c'est le cas que le compte de lignes ne
 // sait pas juger seul, et le nommer évite qu'on le redécouvre en le prenant pour un défaut.
-export function findRapportsCourtsMaisDenses({ dossier, listDirImpl = readdirSync, readFileImpl = readFileSync, seuil = SEUIL_RAPPORT_MAIGRE, seuilDensite = SEUIL_DENSITE_RAPPORT } = {}) {
+export function findRapportsCourtsMaisDenses({ dossier, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, seuil = SEUIL_RAPPORT_MAIGRE, seuilDensite = SEUIL_DENSITE_RAPPORT } = {}) {
   const vus = parcourirRapports({ dossier, listDirImpl, readFileImpl });
   if (!vus) return [];
   return vus
@@ -1217,7 +1217,7 @@ export function findRapportsCourtsMaisDenses({ dossier, listDirImpl = readdirSyn
 // SA LIMITE, déclarée : il repère une écriture par la forme du code (un chemin `docs/x/` passé à
 // une fonction d'écriture). Un script qui construirait son chemin autrement lui échappe. Il
 // attrape donc le cas courant, jamais tous les cas — et le dire vaut mieux que le laisser croire.
-export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
   let fichiers = [];
   try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return []; }
   const ecarts = [];
@@ -1488,7 +1488,7 @@ export function formatJumeauxLines(j) {
 // auto-référentiel), et c'est pourquoi elle est fermée ici avant d'avoir coûté quoi que ce soit.
 export const MOTIF_RAPPORT_JUMEAUX = /^rapports-jumeaux-/;
 
-export function chargerLesRapports({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, racine = "docs" } = {}) {
+export function chargerLesRapports({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, racine = "docs" } = {}) {
   // Le parcours vient de lib-shell (2026-09-27, tâche #993) : il était recopié ici, dans
   // le-classificateur.mjs et trois fois dans data-archangel.mjs. Le FILTRE reste ici, parce qu'il
   // est propre à cet outil ; la LECTURE aussi, parce que ce qu'on fait d'un fichier illisible

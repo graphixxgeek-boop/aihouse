@@ -30,7 +30,7 @@ import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
 
 import { auditLecons, leconsPourTache, enregistrerRemontee } from "./tool-learning.mjs";
 
@@ -301,7 +301,7 @@ export function muetsAuCompteurLines(rapport) {
 // `muets` ; le verrou d'ouverture de Ronde (circle-tasks.mjs) en avait besoin à son tour, et le
 // recopier aurait fabriqué exactement le doublon que CLONE-HUNTER traque. Un seul câblage, deux
 // appelants : la sous-commande qui SIGNALE au commit, et le verrou qui BLOQUE l'ouverture.
-export function rapportDesMuets({ readFileImpl = readFileSync, history = null } = {}) {
+export function rapportDesMuets({ readFileImpl = lireFichierPartage, history = null } = {}) {
   let sourceCrochet = "";
   try { sourceCrochet = readFileImpl(new URL("./hooks/post-commit", import.meta.url), "utf8"); } catch { /* le classement reste juste, en moins large */ }
   let offert = "";

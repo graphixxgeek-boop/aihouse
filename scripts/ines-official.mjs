@@ -23,6 +23,7 @@ import { join, extname } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { lireFichierPartage } from "./lib-shell.mjs";
 
 export const FLATTEN_SCOPES = ["code", "code_et_docs"];
 
@@ -123,7 +124,7 @@ export function renderEditionSummary(summary) {
 // Enrichissement confirmé "oui maintenant" #1 : table des matières en tête de l'édition.
 // Enrichissement confirmé "oui maintenant" #2 : datage/versionnage explicite dans l'en-tête, même
 // esprit que renderNamedCatalog() de LE-COORDINATEUR.
-export function buildConsolidatedEdition({ scope, files, annotations, version, date, summary = null, readFileImpl = readFileSync }) {
+export function buildConsolidatedEdition({ scope, files, annotations, version, date, summary = null, readFileImpl = lireFichierPartage }) {
   if (!FLATTEN_SCOPES.includes(scope)) throw new Error(`buildConsolidatedEdition: périmètre inconnu "${scope}"`);
   const toc = buildTableOfContents(files, annotations);
   const header = [
