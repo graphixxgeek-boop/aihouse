@@ -16376,6 +16376,36 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE BANC A TROUVÉ DEUX DÉFAUTS, ET L'UN D'EUX ÉTAIT DANS LE BANC (2026-09-27)
+// ————————————————————————————————————————————————————————————————————————
+{
+  const se = await import('../scripts/safe-export.mjs');
+  const fep = await import('../scripts/filet-en-parts.mjs');
+
+  // (1) LE FAUX POSITIF DU MESUREUR. Le banc lance chaque outil SANS ARGUMENT, et cinq d'entre eux
+  // sortent en erreur pour la meilleure des raisons : ils réclament un argument et refusent
+  // proprement. Les compter comme non portables était une erreur du MESUREUR, jamais un défaut du
+  // mesuré — et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+  assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Usage: node scripts/x.mjs <arg>' }).cle, 'attend-un-argument', 'un outil qui imprime son mode d\'emploi et refuse de tourner à vide n\'est pas non portable : c\'est le banc qui l\'a mal appelé');
+  assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Error: ENOENT machin' }).cle, 'non-portable', 'MUST STILL BITE: un vrai plantage sur un fichier absent reste non portable — la nouvelle catégorie ne doit rien absorber d\'autre que le mode d\'emploi');
+  const avecArg = se.synthetiserLeTemoin([{ outil: 'a', verdict: { cle: 'attend-un-argument' } }, { outil: 'b', verdict: { cle: 'non-portable' } }], { exemptes: {} });
+  assert.equal(avecArg.tiennentDebout, 1, 'et « attend un argument » tient debout : refuser proprement à vide est un comportement sain, pas une panne');
+
+  // (2) LE DÉFAUT QUE LE TÉMOIN A RÉVÉLÉ DANS LE RUNNER PARALLÈLE, et il était silencieux ici :
+  // sur un dépôt sans relevé de durées, TOUS les blocs pèsent zéro, donc le remplissage de sacs
+  // prend toujours la première part — 120 blocs dans la part 1, ZÉRO dans les trois autres. La
+  // parallélisation ne parallélisait plus rien, et personne ne pouvait le voir sur CE dépôt-ci où
+  // les mesures existent toujours.
+  const sansPoids = [10, 20, 30, 40, 50, 60, 70, 80].map((n) => ({ debut: n, fin: n + 5, ms: 0 }));
+  const repli = fep.repartir(sansPoids, 4);
+  assert.deepEqual(repli.map((p) => p.blocs.length), [2, 2, 2, 2], 'MUST NOT COLLAPSE: sans aucune mesure de durée, la répartition se fait au NOMBRE de blocs — tout mettre dans la première part serait une parallélisation qui ne parallélise rien, en silence');
+  const avecPoids = fep.repartir([{ debut: 1, ms: 900 }, { debut: 2, ms: 100 }, { debut: 3, ms: 100 }, { debut: 4, ms: 100 }], 2);
+  assert.deepEqual(avecPoids.map((p) => p.ms).sort((a, b) => b - a), [900, 300], 'et AVEC des mesures, l\'équilibrage par le poids reprend la main : le repli ne doit pas remplacer la vraie répartition, seulement la remplacer quand elle est impossible');
+
+  console.log("Passed: le banc d'essai a trouvé deux défauts, et l'un d'eux était DANS LE BANC (2026-09-27, tâche #1034). PREMIER — LE FAUX POSITIF DU MESUREUR : le banc lance chaque outil SANS ARGUMENT, et cinq d'entre eux sortaient en erreur pour la meilleure des raisons du monde, à savoir qu'ils réclament un argument et refusent proprement de tourner à vide. Les compter comme non portables était une erreur du MESUREUR et jamais un défaut du mesuré — la leçon L4 en direct, un garde-fou qui accuse à tort cesse d'être lu. D'où un quatrième verdict, et le taux passe de 73 à 79 % sans qu'une seule ligne n'ait été corrigée ailleurs : la mesure était fausse, pas le parc. La nouvelle catégorie n'absorbe QUE le mode d'emploi, vérifié par le contre-test : un vrai plantage sur un fichier absent reste non portable. SECOND — LE DÉFAUT QUE LE TÉMOIN A RÉVÉLÉ DANS LE RUNNER PARALLÈLE, et il est le plus beau cas de la journée pour justifier un témoin étranger : sur un dépôt sans relevé de durées, TOUS les blocs pèsent zéro, donc le remplissage de sacs prend systématiquement la première part — 120 blocs dans la part 1, ZÉRO dans les trois autres. La parallélisation ne parallélisait plus rien, EN SILENCE, et personne ne pouvait le voir sur ce dépôt-ci où les mesures existent toujours. Sans poids, on répartit désormais au NOMBRE ; avec poids, l'équilibrage réel reprend la main — le repli remplace la vraie répartition seulement quand elle est impossible, jamais autrement.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
 // LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et

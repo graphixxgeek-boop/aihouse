@@ -395,10 +395,11 @@ Les huit outils du premier essai étaient un sondage. **Le banc d'essai lance ma
 outils lançables** dans le dépôt étranger et classe ce qui se passe :
 
 ```
-53 / 73 outils tiennent debout  —  73 %
-  ✅ 38 portables      il tourne et rend un résultat sur un dépôt qu'il ne connaît pas
-  ⚪ 15 honnêtes       il tourne et DÉCLARE ce qu'il ne peut pas mesurer
-  💥 20 non portables  il s'arrête sur une hypothèse qui n'est vraie que chez nous
+58 / 73 outils tiennent debout  —  79 %
+  ✅ 38 portables         il tourne et rend un résultat sur un dépôt qu'il ne connaît pas
+  ⚪ 15 honnêtes          il tourne et DÉCLARE ce qu'il ne peut pas mesurer
+  🔤  5 attendent un argument  il refuse correctement de tourner à vide — le banc l'avait mal appelé
+  💥 15 non portables     il s'arrête sur une hypothèse qui n'est vraie que chez nous
   ( 8 hors sujet, nommés : ils servent le PRODUIT et n'ont jamais eu à partir)
 ```
 
@@ -420,6 +421,24 @@ problème, et seule la mesure dit où il est vraiment.**
 **Le geste** : `node scripts/safe-export.mjs temoin --ou=<chemin d'un dépôt étranger>`. Il REFUSE de
 tourner sans cible plutôt que de viser ce dépôt-ci par défaut — mesurer que l'Agence marche chez
 elle serait un satisfecit sur une question que personne n'a posée.
+
+### Le banc a trouvé deux défauts, et l'un d'eux était DANS le banc
+
+**Premier — le faux positif du mesureur.** Le banc lance chaque outil sans argument, et cinq d'entre
+eux sortaient en erreur pour la meilleure des raisons : ils **réclament un argument et refusent
+proprement**. Les compter comme non portables était une erreur du MESUREUR, jamais un défaut du
+mesuré. **Le taux passe de 73 à 79 % sans qu'une ligne n'ait été corrigée ailleurs : la mesure était
+fausse, pas le parc.** D'où un quatrième verdict, qui n'absorbe QUE le mode d'emploi — un vrai
+plantage sur fichier absent reste non portable.
+
+**Second — et c'est le plus beau cas de la journée pour justifier un témoin étranger.** Le runner
+parallèle, sur un dépôt **sans relevé de durées**, mettait **120 blocs dans la part 1 et ZÉRO dans
+les trois autres** : tous les blocs pesant zéro, le remplissage prenait toujours la première part.
+**La parallélisation ne parallélisait plus rien, en silence.** Personne ne pouvait le voir ici, où
+les mesures existent toujours. Sans poids, la répartition se fait désormais au nombre.
+
+**L'enseignement pour l'export** : un outil se teste sur un dépôt qui **manque de quelque chose**.
+Chez nous, tout est là depuis toujours — c'est précisément ce qui rend nos angles morts invisibles.
 
 ### La cinquième contrainte d'export, née de là
 

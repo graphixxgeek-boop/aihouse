@@ -107,8 +107,20 @@ export function poidsDesBlocs(blocs = [], mesures = []) {
 // remplissage de sacs (« longest processing time first »). Placer un bloc de 6 s en dernier oblige
 // une part à l'attendre seule ; le placer en premier laisse aux petits le soin d'égaliser. La
 // littérature du domaine le donne comme le gain le plus simple à prendre sur une suite parallèle.
+// LE REPLI À L'AVEUGLE, TROUVÉ PAR LE PROJET TÉMOIN (2026-09-27). Sur un dépôt sans relevé de
+// durées, TOUS les blocs pèsent zéro : le remplissage de sacs prend alors systématiquement la
+// première part (elle est toujours « la moins chargée », à égalité), et le témoin l'a montré en
+// clair — 120 blocs dans la part 1, ZÉRO dans les trois autres. La parallélisation ne parallélisait
+// plus rien, en silence, et personne ne l'aurait vu ici où les mesures existent toujours.
+// SANS POIDS, ON RÉPARTIT AU NOMBRE, et le rapport le dit déjà en toutes lettres.
 export function repartir(blocs = [], combien = PARTS_PAR_DEFAUT) {
   const parts = Array.from({ length: Math.max(1, combien) }, () => ({ blocs: [], ms: 0 }));
+  const aveugle = blocs.every((b) => !(b.ms > 0));
+  if (aveugle) {
+    [...blocs].sort((x, y) => x.debut - y.debut).forEach((b, i) => parts[i % parts.length].blocs.push(b));
+    for (const p of parts) p.blocs.sort((x, y) => x.debut - y.debut);
+    return parts;
+  }
   for (const b of [...blocs].sort((x, y) => (y.ms ?? 0) - (x.ms ?? 0))) {
     const p = parts.reduce((a, c) => (c.ms < a.ms ? c : a));
     p.blocs.push(b); p.ms += b.ms ?? 0;

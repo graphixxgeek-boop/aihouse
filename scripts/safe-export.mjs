@@ -2395,15 +2395,24 @@ export function codeSansCommentaires(src = "") {
 export const VERDICTS_DU_TEMOIN = [
   { cle: "portable", icone: "✅", quoi: "il tourne et rend un résultat" },
   { cle: "honnete", icone: "⚪", quoi: "il tourne et DÉCLARE ce qu'il ne peut pas mesurer — un succès d'export, jamais un échec" },
+  { cle: "attend-un-argument", icone: "🔤", quoi: "il réclame un argument et refuse correctement — le banc l'a lancé à vide, ce n'est pas un défaut de portabilité" },
   { cle: "non-portable", icone: "💥", quoi: "il s'arrête sur une hypothèse qui n'est vraie que chez nous" },
 ];
 
 export const MOTIFS_D_HONNETETE = /PAS MESUR[ÉE]|pas mesur[ée]|NON MESUR[ÉE]|introuvable ici|aucune donnée/;
 
+// LE QUATRIÈME VERDICT EST NÉ D'UN FAUX POSITIF DE CE BANC (2026-09-27, premier passage complet) :
+// il lance chaque outil SANS ARGUMENT, et quatre d'entre eux — check-level-target, tool-usage,
+// rapport-gros-prompt, smart-conso-api — sortent en erreur pour la meilleure des raisons : ils
+// réclament un argument et refusent proprement. Les compter comme non portables était une erreur du
+// MESUREUR, pas un défaut du mesuré, et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+export const MOTIFS_D_ARGUMENT_MANQUANT = /^\s*(Usage|usage|Utilisation)\s*:|^usage :/m;
+
 // Le verdict se lit sur DEUX choses, jamais une : le code de sortie ET ce qui a été dit. Un outil
 // qui sort en 0 sans rien dire n'est pas la même chose qu'un outil qui sort en 0 en déclarant son
 // impuissance — et c'est la seconde catégorie qu'il ne faut pas compter comme un échec.
 export function verdictDuTemoin({ code, sortie = "" } = {}) {
+  if (code !== 0 && MOTIFS_D_ARGUMENT_MANQUANT.test(String(sortie))) return { cle: "attend-un-argument", pourquoi: "il imprime son mode d'emploi et refuse de tourner à vide — le banc l'a lancé sans argument, la faute est au banc" };
   if (code !== 0) return { cle: "non-portable", pourquoi: `il s'arrête (code ${code}) : ${(String(sortie).match(/Error: [^\n]{0,90}/) ?? ["cause non lisible dans sa sortie"])[0]}` };
   if (MOTIFS_D_HONNETETE.test(String(sortie))) return { cle: "honnete", pourquoi: "il tourne et déclare ce qu'il ne peut pas mesurer ici — c'est le comportement attendu au moment « AVANT »" };
   return { cle: "portable", pourquoi: "il tourne et rend un résultat sur un dépôt qu'il ne connaît pas" };
@@ -2423,7 +2432,8 @@ export function synthetiserLeTemoin(passages = [], { exemptes = NE_PART_PAS_ET_C
     (parVerdict[p.verdict.cle] ??= []).push(p);
   }
   const total = passages.length - horsSujet.length;
-  const tiennentDebout = (parVerdict.portable?.length ?? 0) + (parVerdict.honnete?.length ?? 0);
+  // « attend un argument » tient debout lui aussi : refuser proprement à vide est un comportement sain.
+  const tiennentDebout = (parVerdict.portable?.length ?? 0) + (parVerdict.honnete?.length ?? 0) + (parVerdict["attend-un-argument"]?.length ?? 0);
   return { mesurable: true, total, parVerdict, tiennentDebout, horsSujet,
     tauxPct: total ? (tiennentDebout / total) * 100 : 0,
     // LE TAUX COMPTE « HONNÊTE » DU BON CÔTÉ, et cette décision est le cœur du dispositif :
