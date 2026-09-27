@@ -3058,6 +3058,49 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.ok(triReel.mesurable,'le tri doit être mesurable sur le vrai registre');
   assert.equal(triReel.dejaFaites.length+triReel.bloquantes.length+triReel.peuventAttendre.length,loadRowsPourTri().filter(r=>OPEN_TRI.has(r.statusKey)).length,'les trois colonnes doivent couvrir EXACTEMENT les tâches ouvertes, sans doublon ni oubli — une tâche perdue entre deux colonnes est une tâche qui disparaît');
 
+  // LES DEUX GARDE-FOUS DE FORME DE LA LIGNE DE SUIVI (2026-09-27, tâche #999), chacun avec ses
+  // deux contre-épreuves de BP4 — un cas qu'il DOIT attraper, un cas voisin qu'il doit LAISSER
+  // PASSER. Les deux sont nés du même réflexe, et c'est lui qui compte : avant de réparer 40
+  // lignes à la main, écrire le détecteur qui empêche la 41e.
+  const {findCasesDeRituelMalRemplies,findLignesMalFormees,frontiereDuDetail}=await import('../scripts/check-suivi-fidelity.mjs');
+  const ligneAvecDate='| 1 | 2026-09-27T02:00Z | mc | S | ss | RECOMMANDE-NECESSAIRE | PROJET | 2026-09-27T02:00Z | | du détail | Ouverte |';
+  const ligneCorrecte='| 2 | 2026-09-27T02:00Z | mc | S | ss | RECOMMANDE-NECESSAIRE | PROJET | OUI | NON | du détail | Ouverte |';
+  const litUneLigne=(l)=>({dossier:'x',readDir:()=>['s.md'],readFile:()=>l,exists:()=>true});
+  {
+    const f=litUneLigne(ligneAvecDate);
+    const r=findCasesDeRituelMalRemplies(f.dossier,f.readDir,f.readFile,f.exists);
+    assert.equal(r.ecarts.length,1,'CE QU\'IL DOIT ATTRAPER : une DATE dans la case « ouverture », qui n\'accepte que OUI ou rien — 40 lignes réelles étaient dans ce cas et rendaient aveugle toute lecture de ces deux cases');
+    assert.equal(r.ecarts[0].champ,'ouverture','et il nomme LAQUELLE des deux cases, parce que les deux se remplissent à des moments différents');
+    const g=litUneLigne(ligneCorrecte);
+    assert.deepEqual(findCasesDeRituelMalRemplies(g.dossier,g.readDir,g.readFile,g.exists).ecarts,[],'CE QU\'IL DOIT LAISSER PASSER : OUI et NON sont les deux valeurs prévues — accuser NON ferait exactement l\'erreur que ce détecteur répare');
+    assert.equal(findCasesDeRituelMalRemplies('/inexistant',()=>[],()=>'',()=>false).mesurable,false,'et un dossier absent rend PAS MESURÉ, jamais « aucun écart » (leçon L11)');
+  }
+  {
+    // La frontière se RECONNAÎT au vocabulaire fermé des champs de tête, jamais en comptant les
+    // colonnes : le registre porte cinq formats successifs (7 à 11 colonnes) et une ligne trop
+    // longue ne dit pas duquel elle vient.
+    assert.equal(frontiereDuDetail(['1','ts','mc','S','ss','RECOMMANDE-NECESSAIRE','PROJET','OUI','NON','détail','Ouverte']),9,'onze colonnes : le Détail commence après les deux cases du rituel');
+    assert.equal(frontiereDuDetail(['1','ts','mc','S','ss','NORMAL-UTILE','détail','Terminée']),6,'huit colonnes, ni « pour qui » ni rituel : le Détail commence juste après la criticité');
+    assert.equal(frontiereDuDetail(['1','ts','mc','S','ss','pas une criticité','détail','Ouverte']),null,'et sans criticité reconnue il rend null plutôt que de deviner — une frontière devinée décalerait toute la ligne');
+    const trop='| 3 | 2026-09-27T02:00Z | mc | S | ss | RECOMMANDE-NECESSAIRE | PROJET | OUI | NON | début du détail | suite en trop | Ouverte |';
+    const f=litUneLigne(trop);
+    const r=findLignesMalFormees(f.dossier,f.readDir,f.readFile,f.exists);
+    assert.equal(r.ecarts.length,1,'CE QU\'IL DOIT ATTRAPER : une cellule de trop — loadAllTaskRows déclare alors la ligne illisible et rend null pour ses champs de tête tardifs, donc le lecteur canonique devient aveugle sur elle');
+    assert.equal(r.ecarts[0].surplus,1,'et il chiffre le surplus, parce qu\'une cellule de trop et quatre ne se réparent pas pareil');
+    const g=litUneLigne(ligneCorrecte);
+    assert.deepEqual(findLignesMalFormees(g.dossier,g.readDir,g.readFile,g.exists).ecarts,[],'CE QU\'IL DOIT LAISSER PASSER : une ligne au format exact');
+    // LE CAS VOISIN LE PLUS DANGEREUX, et il a failli me tromper en comptant à la main : une
+    // barre verticale ÉCHAPPÉE dans le Détail est parfaitement légitime, et un compte naïf de `|`
+    // la lit comme une cellule de trop. splitTableRow la recolle ; le détecteur doit donc se taire.
+    const echappee='| 4 | 2026-09-27T02:00Z | mc | S | ss | NORMAL-UTILE | PROJET | OUI | NON | un détail citant `git log \\| grep x` | Terminée |';
+    const h=litUneLigne(echappee);
+    assert.deepEqual(findLignesMalFormees(h.dossier,h.readDir,h.readFile,h.exists).ecarts,[],'une barre ÉCHAPPÉE dans le Détail est légitime et ne doit jamais compter comme une cellule de trop — deux lignes réelles (#582, #826) sont dans ce cas et mon propre comptage à la main les avait accusées');
+  }
+  // CONTRE LE VRAI REGISTRE (Article 25) : les deux défauts ont été réparés le 2026-09-27, et
+  // c'est ce qu'on affirme — jamais « il doit en rester », qui punirait le ménage.
+  assert.deepEqual(findCasesDeRituelMalRemplies().ecarts,[],'le vrai suivi ne doit plus porter aucune date dans une case de rituel — 74 en portaient avant la réparation du 2026-09-27');
+  assert.deepEqual(findLignesMalFormees().ecarts,[],'ni aucune ligne mal formée — trois en étaient, et loadAllTaskRows était aveugle sur elles');
+
   const {splitTableRow}=await import('../scripts/check-suivi-fidelity.mjs');
   const escaped=splitTableRow('| t1 | S | s | normal | commande : `git log \\| grep x` | terminée — fidèle |');
   assert.equal(escaped.length,6,'a literal escaped pipe inside a cell must never be treated as an extra column separator');

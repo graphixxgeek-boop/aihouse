@@ -292,6 +292,39 @@ sections, et chacune répond à une question qu'il a posée dans la même journ�
 | 2. Les blocs | ce qui se traite ensemble, et dans quel panier |
 | 3. Le format + 3bis. Le rituel | les tâches sont-elles écrites comme il l'a demandé |
 
+### La sous-commande `tri` — ce qui barre la route d'UN chantier
+
+*(2026-09-27, tâche #998. Sa demande en fenêtre de calibrage : « Je vous fais le tri d'abord — je
+passe les 36 en revue et je vous rends une liste à trois colonnes [...] Vous tranchez sur une liste
+courte plutôt que sur 36. »)*
+
+`node scripts/check-tasks-details.mjs tri "<le chantier visé, en toutes lettres>"` écrit un `.txt`
+daté dans `docs/check-tasks-details/`. Le chantier se passe **en argument**, jamais écrit en dur
+(Article 24) : le même geste servira au chantier suivant.
+
+**La frontière avec `bilan`, et elle est nette** : `bilan` dit OÙ ON EN EST sur tout le projet,
+`tri` dit CE QUI BARRE LA ROUTE d'un chantier précis. Les fondre rendrait un rapport qui répond à
+deux questions à la fois, donc à aucune des deux au moment où on se la pose.
+
+**Les trois colonnes ne valent PAS la même chose, et le dire est la moitié de l'outil :**
+
+| Colonne | Sur quoi elle repose | Ce qu'elle vaut |
+|---|---|---|
+| 1. En fait déjà faites | une autre ligne déclare sa clôture, **ou** sa case de rituel « Clôture » est cochée OUI | signal fort et mécanique |
+| 2. Bloquent probablement | une proximité de VOCABULAIRE avec le libellé du chantier | une présomption, montrée avec les mots qui l'ont déclenchée |
+| 3. Peuvent attendre | aucun mot du chantier ne s'y trouve | la colonne par défaut, et c'est un aveu |
+
+**L'angle mort est dit plutôt que tu** (leçon L11) : les deux cases du rituel attendent « OUI » ou
+rien, et 35 lignes y portaient une DATE — sur celles-là, le second signal de la colonne 1 ne pouvait
+rien voir. Un « 0 » en colonne 1 n'est donc jamais un bulletin de santé tant que cet angle mort
+subsiste, et le rapport l'imprime à côté du zéro plutôt qu'en note de bas de page.
+
+**L'erreur commise en l'écrivant, gardée ici parce qu'elle est instructive** : la première version
+lisait `cloture` comme une DATE de clôture. C'est la case du RITUEL. Le premier passage réel a
+déclaré huit tâches « en fait déjà faites » : les huit portaient « NON », c'est-à-dire l'exact
+contraire. Article 19 pris à l'envers — lire le nom d'un champ et deviner son sens au lieu d'aller
+lire sa définition, qui existait à deux fichiers de là.
+
 ### Ce que la confrontation a révélé sur le chiffre de départ lui-même
 
 **« Les 117 de départ » n'ont jamais été 117 tâches.** `#117` est le NUMÉRO de la première tâche

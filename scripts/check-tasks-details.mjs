@@ -3736,12 +3736,15 @@ export function signesDeDejaFaite(row = {}, { cloturesAilleurs = new Set() } = {
 }
 
 // L'ANGLE MORT DU SIGNAL CI-DESSUS, MESURÉ ET DIT PLUTÔT QUE TU (leçon L11). La case du rituel
-// attend « OUI » ou rien ; 35 lignes du registre y portent une DATE — une confusion de format qui
-// commence à la tâche #958 et que j'ai moi-même prolongée le 2026-09-27. Sur ces lignes-là, le
-// second signal ne peut RIEN voir : elles ne diront jamais « déjà faite », quoi qu'il en soit.
-// Un tri qui ne le dirait pas rendrait un « 0 » qui a l'air d'un bulletin de santé.
+// attend « OUI » ou rien ; une ligne qui y porte une DATE ne dira JAMAIS « déjà faite », quoi qu'il
+// en soit. Un tri qui tairait ça rendrait un « 0 » qui a l'air d'un bulletin de santé.
+//
+// LE DÉTECTEUR VIT CHEZ check-suivi-fidelity, PAS ICI (Article 24) : c'est la maison des garde-fous
+// du suivi, et une seconde copie du même motif aurait divergé au premier changement de format. Il
+// est seulement IMPORTÉ ici, pour que le tri puisse nommer son propre angle mort.
 export function casesDeRituelMalRemplies(rows = []) {
-  return rows.filter((r) => MOTIF_DATE_ISO.test(String(r.ouverture ?? "")) || MOTIF_DATE_ISO.test(String(r.cloture ?? "")));
+  const D = /^\s*\d{4}-\d{2}-\d{2}T/;
+  return rows.filter((r) => D.test(String(r.ouverture ?? "")) || D.test(String(r.cloture ?? "")));
 }
 
 // La proximité se mesure sur les mots SIGNIFICATIFS du chantier (les vides sont déjà filtrés par
@@ -3833,6 +3836,17 @@ export function formatTriLines(tri) {
 // La sous-commande. Le LIVRABLE est le fichier (Article 31, faille 3) ; ce qui s'imprime n'en est
 // que l'écho, pour qu'on puisse juger sans ouvrir. Et comme partout ici : sans heure LUE, on
 // n'écrit rien (Article 32) — un tri daté au jugé vaut moins qu'un tri absent.
+async function rafraichirIndexDuDossier() {
+  try {
+    const da = await import("./data-archangel.mjs");
+    const r = da.reparerLesIndex(da.mesurerLesIndex(), { etats: ["sans contrat", "incomplet"] });
+    const moi = (r?.repares ?? []).find((x) => x.chemin.includes("check-tasks-details"));
+    if (moi) console.log(`Index du dossier remis à jour : ${moi.chemin} (${moi.fichiers} fichiers).`);
+  } catch (e) {
+    console.log(`⚠️ L'index du dossier n'a pas pu être remis à jour (${e?.message ?? e}) — le rapport est écrit, mais le sommaire de docs/check-tasks-details/ ne le nomme pas encore.`);
+  }
+}
+
 function triCli(argv) {
   const libelle = argv.slice(3).join(" ");
   if (!libelle) {
@@ -3863,6 +3877,16 @@ function triCli(argv) {
   console.log(texte);
   console.log(`\nÉcrit : ${chemin.replace(ROOT, "")}`);
   recordCliUsage("check-tasks-details", { origine: "demande" });
+  // L'INDEX DU DOSSIER SE RAFRAÎCHIT ICI, ET C'EST UNE CORRECTION À LA CAUSE (Article 3).
+  // Déposer un fichier dans `docs/check-tasks-details/` rend son sommaire généré incomplet, et le
+  // filet de sécurité refuse alors le commit — ce qui s'est produit DEUX FOIS de suite en écrivant
+  // cette sous-commande. Demander à l'agent de penser à lancer la réparation après chaque passage
+  // serait une obligation confiée à sa mémoire, c'est-à-dire aucune obligation (Article 27).
+  // L'import est DYNAMIQUE, comme partout ailleurs dans ce paysage : en tête, il ferait entrer
+  // data-archangel dans la chaîne du crochet post-commit, où il n'a rien à faire. Et un échec ne
+  // fait jamais tomber le rapport — il se DIT, parce qu'un index muet qu'on croit à jour est pire
+  // qu'un index dont on sait qu'il a pris du retard.
+  rafraichirIndexDuDossier();
 
   // Sans tri mesurable il n'y a rien à conclure, et fabriquer un plan vide ferait passer un refus
   // de conclure pour un « rien à faire ». Le rapport, lui, a déjà été écrit et dit pourquoi.

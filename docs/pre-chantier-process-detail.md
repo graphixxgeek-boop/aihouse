@@ -47,6 +47,7 @@ le format ne l'était pas. Il n'y avait donc rien à inventer : il y avait à un
 | # | Étape | Qui la porte |
 |---|---|---|
 | **A** | **L'idée est-elle validée ?** Lui demander : est-ce qu'on crée vraiment ce chantier ? **La suite ne vaut que si la réponse est OUI.** | une question de calibrage, jamais une supposition |
+| **A bis** | **Qu'est-ce qui barre déjà la route ?** Les tâches ouvertes rangées en trois colonnes devant ce chantier, AVANT de l'ouvrir — sans quoi on démarre par-dessus des tâches qu'il fallait clore d'abord *(2026-09-27, #998)* | `check-tasks-details tri "<chantier>"` |
 | **B1** | Créer la TÂCHE « nouveau chantier » dans `docs/suivi/` | le système de suivi |
 | **B2** | Créer le RAPPORT « STRATÉGIE DE CHANTIER » tout de suite, à partir des éléments existants à date | `check-tasks-details strategie creer` |
 | **B3** | **LIER les deux** — la stratégie porte le numéro de tâche, et le dit en tête | mécanique : le squelette l'inscrit, et crie s'il manque |

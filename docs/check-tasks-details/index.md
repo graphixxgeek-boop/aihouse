@@ -73,7 +73,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**89 fichier(s)** dans ce dossier.
+**88 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -164,6 +164,5 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [ronde-2026-09-21T23-26-29.txt](ronde-2026-09-21T23-26-29.txt) | — |
 | [ronde-2026-09-25T14-08-43.html](ronde-2026-09-25T14-08-43.html) | — |
 | [ronde-2026-09-25T14-08-43.txt](ronde-2026-09-25T14-08-43.txt) | — |
-| [tri-2026-09-27T02-42Z.txt](tri-2026-09-27T02-42Z.txt) | — |
-| [tri-2026-09-27T02-44Z.txt](tri-2026-09-27T02-44Z.txt) | — |
+| [tri-2026-09-27T03-13Z.txt](tri-2026-09-27T03-13Z.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

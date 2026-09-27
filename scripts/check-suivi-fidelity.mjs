@@ -454,6 +454,122 @@ export function findHorodatagesFuturs(sessionsDir = SESSIONS_DIR, now = new Date
   return futurs.sort((a, b) => a.numero - b.numero);
 }
 
+// LES DEUX CASES DU RITUEL, ET CE QU'ELLES N'ACCEPTENT PAS (2026-09-27, tâche #999).
+//
+// CE QUE DIT LE FORMAT, et il le dit sans ambiguïté : dans `FORMAT_TACHE` (scripts/criticite.mjs),
+// `ouverture` vaut « OUI quand la tâche s'est ouverte en respectant les process » et `cloture`
+// « OUI quand les trois questions de clôture ont été posées ». Le vocabulaire est FERMÉ —
+// `CASE_COCHEE = "OUI"` — et le commentaire d'origine le souligne : « OUI ou rien : une case à
+// moitié cochée n'existe pas, et un troisième mot ferait revenir le flou que la case existe pour
+// retirer ».
+//
+// CE QUE PORTAIENT LES LIGNES : 35 y avaient écrit un horodatage, de #958 à #992. La confusion est
+// compréhensible — deux cases vides à droite d'une colonne « Horodatage » appellent des dates — et
+// c'est exactement pour ça qu'elle ne se corrige pas par la vigilance : elle se corrige par un
+// détecteur.
+//
+// POURQUOI CE N'EST PAS COSMÉTIQUE, et c'est le fil rouge de ce projet : toute lecture de ces deux
+// cases devient AVEUGLE sur ces lignes-là. Le tri de chantier (#998) ne peut pas y voir une clôture
+// oubliée ; `findRituelManquant` ne peut pas y voir un rituel sauté. Un garde-fou qui ne voit pas
+// rend un vert, et un vert se lit comme une bonne nouvelle (leçon L11).
+//
+// SA DÉCISION DU 2026-09-27, en fenêtre de calibrage : « Remettre OUI/vide, la date part ». Rien
+// n'est perdu — la date d'ouverture vit déjà dans la colonne Horodatage juste à côté, la date de
+// clôture dans le Détail. Les deux autres options (ajouter deux vraies colonnes de date, ou
+// supprimer les cases) ont été écartées : la première est une migration de 11 à 13 colonnes, la
+// seconde jetterait un contrôle que 83 lignes portent correctement.
+export const MOTIF_DATE_DANS_UNE_CASE = /^\s*\d{4}-\d{2}-\d{2}T/;
+export const VALEURS_DE_CASE_ADMISES = ["OUI", ""];
+
+export function findCasesDeRituelMalRemplies(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return { mesurable: false, ecarts: [], lignesLues: 0,
+    pourquoi: "aucun dossier de sessions lu : rien à confronter, ce qui n'est pas la même chose qu'aucun écart" };
+  const ecarts = [];
+  let lignesLues = 0;
+  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
+    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
+      if (!/^\|\s*\d+\s*\|/.test(ligne)) continue;
+      const cells = splitTableRow(ligne);
+      // Les deux cases vivent APRÈS « Pour qui » et AVANT « Détail » : on les lit par leur position
+      // de tête, jamais par un index fixe compté depuis la fin — un `|` non échappé dans le Détail
+      // découpe la ligne en dix, douze, quinze cellules, et un index depuis la fin tombe alors au
+      // milieu d'une phrase. C'est la même prudence qui a déjà évité trois accusations fausses.
+      if (cells.length < 11) continue;   // ligne restée à un format antérieur : rien à reprocher
+      lignesLues += 1;
+      for (const [i, champ] of [[7, "ouverture"], [8, "cloture"]]) {
+        const v = String(cells[i] ?? "").trim();
+        if (!MOTIF_DATE_DANS_UNE_CASE.test(v)) continue;
+        ecarts.push({ numero: Number(cells[0]), file, champ, valeur: v,
+          pourquoi: `la case « ${champ} » porte une date (${v}) alors qu'elle n'accepte que « OUI » ou rien — toute lecture de cette case est aveugle sur cette ligne` });
+      }
+    }
+  }
+  return { mesurable: true, ecarts, lignesLues,
+    pourquoi: lignesLues === 0
+      ? "aucune ligne au format complet (11 colonnes) : les deux cases n'existent pas encore sur ce registre, et ce zéro ne certifie rien"
+      : `${ecarts.length} écart(s) sur ${lignesLues} ligne(s) au format complet` };
+}
+
+// LES LIGNES MAL FORMÉES — plus de cellules que le format n'en porte (2026-09-27, tâche #999,
+// trouvé en réparant les cases du rituel et pas en le cherchant).
+//
+// POURQUOI CE N'EST PAS UN DÉTAIL DE MISE EN PAGE : `loadAllTaskRows` traite toute ligne plus
+// longue que le format comme ILLISIBLE et rend `null` pour ses trois champs de tête tardifs. Le
+// lecteur canonique du registre devient donc AVEUGLE sur ces lignes-là — et la nuit du 2026-09-27
+// il l'était sur les CINQ tâches les plus récentes, c'est-à-dire celles qu'on relit le plus.
+//
+// DEUX CAUSES, jamais confondues parce qu'elles se réparent à l'opposé :
+//   · une barre verticale NON ÉCHAPPÉE dans le texte du Détail (souvent dans un extrait de code
+//     entre accents graves) — elle doit s'écrire `\|` ;
+//   · une CELLULE SURNUMÉRAIRE, une barre de trop tapée en écrivant la ligne.
+//
+// COMMENT LA FRONTIÈRE SE TROUVE SANS DEVINER L'ÉPOQUE DE LA LIGNE : le registre porte cinq
+// formats successifs (7 à 11 colonnes) et une ligne trop longue ne dit pas duquel elle vient. On
+// ne compte donc pas — on RECONNAÎT : la criticité, « pour qui » et les deux cases du rituel ont
+// chacun un vocabulaire fermé. Tout ce qui suit le dernier champ de tête reconnu, jusqu'à
+// l'avant-dernière cellule incluse, est du Détail ; la dernière est le statut. Aucune position
+// écrite en dur, donc un douzième champ demain ne casse rien (Article 24).
+const MOTIF_CRITICITE = /^\s*(?:PRIORITAIRE-OBLIGATOIRE|RECOMMANDE(?:-[A-Z]+)?|NORMAL(?:-[A-Z]+)?|SENSIBLE(?:-[A-Z-]+)?|A-?\s?TRANCHER|critique|important|normal|autre)\s*$/i;
+const MOTIF_POUR_QUI = /^\s*(?:PROJET|DETTE-ENVERS-L-?'?L?UTILISATEUR)\s*$/i;
+const MOTIF_CASE_RITUEL = /^\s*(?:OUI|NON|)\s*$/i;
+
+export function frontiereDuDetail(cells = []) {
+  let i = cells.findIndex((c) => MOTIF_CRITICITE.test(String(c)));
+  if (i === -1) return null;   // pas de criticité reconnue : on ne devine pas, on s'abstient
+  i += 1;
+  if (MOTIF_POUR_QUI.test(String(cells[i] ?? "x"))) i += 1;
+  // Les deux cases du rituel ne se lisent QUE si les DEUX sont présentes et admises : une seule
+  // cellule vide juste après « pour qui » peut tout aussi bien être un Détail vide, et avancer
+  // d'un cran sur cette seule foi décalerait la frontière.
+  if (MOTIF_CASE_RITUEL.test(String(cells[i] ?? "x")) && MOTIF_CASE_RITUEL.test(String(cells[i + 1] ?? "x"))) i += 2;
+  return i;
+}
+
+export function findLignesMalFormees(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return { mesurable: false, ecarts: [], lignesLues: 0,
+    pourquoi: "aucun dossier de sessions lu : rien à confronter, ce qui n'est pas la même chose qu'aucun écart" };
+  const ecarts = [];
+  let lignesLues = 0;
+  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
+    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
+      if (!/^\|\s*\d+\s*\|/.test(ligne)) continue;
+      lignesLues += 1;
+      const cells = splitTableRow(ligne);
+      const debutDetail = frontiereDuDetail(cells);
+      if (debutDetail === null) continue;
+      // Bien formée : exactement une cellule de Détail, puis le statut.
+      const surplus = cells.length - (debutDetail + 2);
+      if (surplus <= 0) continue;
+      ecarts.push({ numero: Number(cells[0]), file, cellules: cells.length, surplus,
+        pourquoi: `${surplus} cellule(s) de trop : le Détail est découpé en ${surplus + 1} morceaux, donc \`loadAllTaskRows\` déclare cette ligne illisible et rend null pour ses champs de tête tardifs — le lecteur canonique du registre est aveugle sur elle` });
+    }
+  }
+  return { mesurable: true, ecarts, lignesLues,
+    pourquoi: lignesLues === 0
+      ? "aucune ligne de tâche lue : ce zéro dit qu'il n'y a rien à mesurer, jamais que le registre est propre"
+      : `${ecarts.length} ligne(s) mal formée(s) sur ${lignesLues} lue(s)` };
+}
+
 export function findTaskNumberIssues(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return [];
   const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
@@ -855,6 +971,34 @@ function main() {
     for (const f of futurs.slice(0, 12)) console.log(`   - n°${f.numero} — ${f.horodatage} (+${f.avanceMinutes} min) — ${f.file}`);
     if (futurs.length > 12) console.log(`   … et ${futurs.length - 12} autre(s).`);
     console.log("   Cause racine, qu'aucune mécanique ne peut empêcher : ces dates sont TAPÉES, jamais lues sur une horloge. Lire l'heure réelle avant d'écrire une ligne, jamais extrapoler une heure de session plausible.");
+  }
+
+  // LES DEUX GARDE-FOUS DE FORME DE LA LIGNE (2026-09-27, tâche #999). Ils sortent ici, dans le
+  // rapport, et pas seulement en export : un mécanisme qui ne sort jamais du script est une
+  // intention (leçon L2 — trois fois payée dans ce dépôt).
+  console.log("\n=== Garde-fou cases du rituel (elles n'acceptent que « OUI » ou rien) ===\n");
+  const rituel = findCasesDeRituelMalRemplies();
+  if (!rituel.mesurable) {
+    console.log(`PAS MESURÉ — ${rituel.pourquoi}`);
+  } else if (!rituel.ecarts.length) {
+    console.log(`Aucune case mal remplie sur ${rituel.lignesLues} ligne(s) au format complet — les deux cases restent lisibles par tous les garde-fous qui s'appuient dessus.`);
+  } else {
+    console.log(`${rituel.ecarts.length} case(s) portent une DATE au lieu de « OUI » ou rien, sur ${rituel.lignesLues} ligne(s) au format complet.`);
+    for (const e of rituel.ecarts.slice(0, 12)) console.log(`   - n°${e.numero} — case « ${e.champ} » = ${e.valeur}`);
+    if (rituel.ecarts.length > 12) console.log(`   … et ${rituel.ecarts.length - 12} autre(s).`);
+    console.log("   Conséquence : toute lecture de ces deux cases est AVEUGLE sur ces lignes — le tri de chantier n'y voit pas de clôture oubliée, le contrôle de rituel n'y voit pas de rituel sauté, et les deux rendent un vert qui se lit comme une bonne nouvelle.");
+  }
+
+  console.log("\n=== Garde-fou lignes mal formées (plus de cellules que le format n'en porte) ===\n");
+  const malFormees = findLignesMalFormees();
+  if (!malFormees.mesurable) {
+    console.log(`PAS MESURÉ — ${malFormees.pourquoi}`);
+  } else if (!malFormees.ecarts.length) {
+    console.log(`Aucune ligne mal formée sur ${malFormees.lignesLues} lue(s) — le lecteur canonique du registre les voit toutes.`);
+  } else {
+    console.log(`${malFormees.ecarts.length} ligne(s) portent des cellules en trop, sur ${malFormees.lignesLues} lue(s).`);
+    for (const e of malFormees.ecarts.slice(0, 12)) console.log(`   - n°${e.numero} — ${e.cellules} cellules (${e.surplus} de trop) — ${e.file}`);
+    console.log("   Deux causes, qui se réparent à l'opposé : une barre verticale non échappée dans le Détail (elle s'écrit `\\|`), ou une cellule surnuméraire tapée en écrivant la ligne.");
   }
 
   console.log("\n=== Garde-fou fraîcheur du suivi (commits récents sans mise à jour docs/suivi/) ===\n");

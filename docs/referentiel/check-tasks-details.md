@@ -285,6 +285,67 @@ mieux que le code ce qu'il ne faut pas refaire :
 ouverte · 343 lignes longues, dont **39 sans résumé de tête exploitable** · origines déclarées
 159/609 (utilisateur 119, outil 40, agent 0 non mesurable), 450 lignes silencieuses.
 
+## Sous-commande `tri` — ce qui barre la route d'UN chantier *(2026-09-27, tâche #998)*
+
+`node scripts/check-tasks-details.mjs tri "<le chantier visé, en toutes lettres>"`
+
+**Sa demande**, en fenêtre de calibrage : « Je vous fais le tri d'abord — je passe les 36 en revue
+et je vous rends une liste à trois colonnes : celles qui sont en fait déjà faites (à clôturer),
+celles qui bloquent vraiment le renommage, celles qui peuvent attendre après. Vous tranchez sur une
+liste courte plutôt que sur 36. »
+
+**Pourquoi une sous-commande et pas un tri écrit à la main** (Article 31) : une liste à trois
+colonnes écrite de tête est un jugement que rien ne peut rejouer. Le lendemain, personne — ni lui,
+ni l'agent, ni l'IA qui reprend — ne peut savoir sur quoi elle reposait.
+
+**Le chantier se passe en ARGUMENT**, jamais écrit en dur (Article 24) : un tri qui ne saurait trier
+que le renommage serait à réécrire au chantier d'après.
+
+### Les trois colonnes, et ce que chacune vaut
+
+| Colonne | Signal | Fiabilité |
+|---|---|---|
+| **1. En fait déjà faites** | une autre ligne du registre déclare sa clôture (`CLÔTURE DE #n`), **ou** sa case de rituel « Clôture » est cochée OUI alors que le statut dit encore ouverte | **fort**, mécanique |
+| **2. Bloquent probablement** | proximité de vocabulaire avec le libellé du chantier, les mots qui ont matché étant **affichés** | une présomption à vérifier d'un œil, jamais une preuve |
+| **3. Peuvent attendre** | aucun mot du chantier ne s'y trouve | la colonne par défaut — « rien n'indique que ça bloque » n'est jamais « ça ne bloque pas » |
+
+### Les deux signaux ÉCARTÉS, et pourquoi l'écart compte autant
+
+- **« la tâche annonce un fichier, et ce fichier existe »** — faux ami : une tâche qui dit
+  « corriger le 98 % périmé dans `le-classificateur.md` » annonce un fichier qui existe depuis
+  toujours, et elle n'est pas faite pour autant.
+- **« le détail contient le mot terminé »** — mesuré sur le registre réel : 5 lignes, et les cinq
+  employaient le mot dans une phrase ordinaire (« une fois terminé », « je n'ai pas terminé »). Un
+  motif qui attrape la prose d'un projet qui écrit beaucoup n'est pas un signal.
+
+### L'angle mort, mesuré et dit plutôt que tu *(leçon L11)*
+
+Les deux cases du rituel attendent « OUI » ou rien. **35 lignes y portaient une DATE** (#958 à #992)
+— sur celles-là, le second signal de la colonne 1 ne peut rien voir. Le rapport imprime cet angle
+mort **à côté du zéro**, pas en note : un « 0 » nu se lirait comme « rien à clôturer » alors qu'il
+peut vouloir dire « je ne sais pas voir ». Corrigé sous la tâche #999.
+
+### L'erreur commise en l'écrivant — Article 19 pris à l'envers
+
+La première version lisait `cloture` comme une DATE de clôture. Dans `FORMAT_TACHE`
+(`scripts/criticite.mjs`) c'est la **case du rituel** : « OUI quand les trois questions de clôture
+ont été posées ». Le premier passage réel a déclaré **huit tâches « en fait déjà faites »** — les
+huit portaient « NON », c'est-à-dire l'exact contraire de ce qu'on leur faisait dire. Le coût aurait
+été réel : faire clôturer huit travaux non faits. Un garde-fou qui accuse à tort cesse d'être lu
+(leçon L4) ; celui-ci aurait fait pire, il aurait été suivi.
+
+Deux autres bugs au même premier passage, tous deux invisibles à la relecture et évidents à
+l'exécution : `motsSignificatifs` rend un **Set** et non un tableau, donc `.length` valait
+`undefined` et l'outil refusait de conclure sur des données parfaitement mesurables (un faux
+« PAS MESURÉ » est plus sournois qu'un faux vert, il a l'air prudent) ; et les accents se perdaient
+d'un seul côté du rapprochement (« baptême » → « bapteme » côté mots, accentué côté registre), donc
+le score tombait à zéro **en silence**.
+
+### Première mesure réelle
+
+Chantier « renommage nomenclature baptême noms classification », 100 tâches ouvertes :
+**colonne 1 = 0** (avec 35 lignes en angle mort), **colonne 2 = 22**, **colonne 3 = 78**.
+
 ## L'émiettement de la file — a-t-on coupé trop fin ? (2026-09-25, tâche #735)
 
 `node scripts/check-tasks-details.mjs emiettement`
