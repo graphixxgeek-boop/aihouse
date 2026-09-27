@@ -81,6 +81,9 @@ const metrics = { turns: 0, primaryKeyUnavailableAtStart: 0, attempts: 0, succes
 // du trafic réel (cooldown, ordre de rotation) s'ajustent — toute évolution de la logique reste une
 // intervention délibérée (agent ou humain), documentée le jour même (Article 13 de CLAUDE.md).
 const consecutiveFailures = new Map<string, number>();
+// La durée décidée, gardée à côté de l'échéance : l'échéance sert le moteur, la durée sert la
+// vérification (cf. __cooldownDurationForTests). Aucune conséquence sur le comportement du jeu.
+const cooldownDuration = new Map<string, number>();
 const QUOTA_COOLDOWN_BASE_MS = 15 * 60 * 1000;
 const QUOTA_COOLDOWN_MAX_MS = 4 * 60 * 60 * 1000;
 const TRANSIENT_COOLDOWN_BASE_MS = 60 * 1000;
@@ -115,17 +118,20 @@ export function recordKeyStatus(rawKey: string, status: number, model: string): 
     const outcome: KeyEpisode["outcome"] = status === 401 ? "401" : status === 403 ? "403" : status === 429 ? "429" : status === 503 ? "503" : "OK";
     episodes.push({ fingerprint: fingerprint(rawKey), model, outcome, at: Date.now() });
     if (episodes.length > 200) episodes.shift();
-    if (status === 401 || status === 403) { metrics.invalidFailures++; cooldownUntil.set(rawKey, Infinity); return; }
+    if (status === 401 || status === 403) { metrics.invalidFailures++; cooldownUntil.set(rawKey, Infinity); cooldownDuration.set(rawKey, Infinity); return; }
     if (status === 429 || status === 503) {
         if (status === 429) metrics.quotaFailures++; else metrics.transientFailures++;
         const streak = (consecutiveFailures.get(rawKey) ?? 0) + 1;
         consecutiveFailures.set(rawKey, streak);
         const [base, max] = status === 429 ? [QUOTA_COOLDOWN_BASE_MS, QUOTA_COOLDOWN_MAX_MS] : [TRANSIENT_COOLDOWN_BASE_MS, TRANSIENT_COOLDOWN_MAX_MS];
-        cooldownUntil.set(rawKey, Date.now() + Math.min(max, base * 2 ** (streak - 1)));
+        const duree = Math.min(max, base * 2 ** (streak - 1));
+        cooldownDuration.set(rawKey, duree);
+        cooldownUntil.set(rawKey, Date.now() + duree);
         return;
     }
     metrics.successes++;
     consecutiveFailures.delete(rawKey);
+    cooldownDuration.delete(rawKey);
     cooldownUntil.delete(rawKey); // réponse définitive et saine : efface un éventuel cooldown périmé
 }
 
@@ -138,7 +144,17 @@ export function getGeminiKeyMetrics() { return { ...metrics }; }
 export function getGeminiKeyEpisodes() { return [...episodes]; }
 
 /** Réservé aux tests (`scripts/check-house.mjs`) : repart d'un état neuf, déterministe. */
-export function __resetGeminiKeyRotationForTests(): void { rotation = 0; cooldownUntil.clear(); consecutiveFailures.clear(); episodes.length = 0; metrics.turns = 0; metrics.primaryKeyUnavailableAtStart = 0; metrics.attempts = 0; metrics.successes = 0; metrics.quotaFailures = 0; metrics.transientFailures = 0; metrics.invalidFailures = 0; }
+export function __resetGeminiKeyRotationForTests(): void { rotation = 0; cooldownUntil.clear(); cooldownDuration.clear(); consecutiveFailures.clear(); episodes.length = 0; metrics.turns = 0; metrics.primaryKeyUnavailableAtStart = 0; metrics.attempts = 0; metrics.successes = 0; metrics.quotaFailures = 0; metrics.transientFailures = 0; metrics.invalidFailures = 0; }
+
+/** Réservé aux tests : la DURÉE de cooldown décidée pour cette clé, invariante dans le temps.
+ * NÉE D'UN VRAI FAUX ROUGE (2026-09-27, tâche #1041) : le test du recul adaptatif comparait trois
+ * lectures de `__cooldownRemainingForTests()`, qui DÉCROÎT à chaque milliseconde écoulée. Sur une
+ * machine au repos l'écart restait sous les 5 % de tolérance et le test passait ; en lançant le
+ * filet en quatre parts simultanées, les millisecondes perdues entre deux lectures ont suffi à le
+ * faire échouer. Le test ne mentait pas seulement sous charge : il mesurait DÉJÀ la mauvaise chose,
+ * en silence. La durée décidée, elle, ne bouge pas — c'est la règle du doublement qu'on veut
+ * vérifier, jamais la vitesse de la machine qui la lit. */
+export function __cooldownDurationForTests(rawKey: string): number { return cooldownDuration.get(rawKey) ?? 0; }
 
 /** Réservé aux tests : millisecondes restantes avant la fin du cooldown d'une clé (0 si saine). */
 export function __cooldownRemainingForTests(rawKey: string): number { return Math.max(0, (cooldownUntil.get(rawKey) ?? 0) - Date.now()); }

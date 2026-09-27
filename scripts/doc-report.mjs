@@ -224,6 +224,7 @@ export const REGISTRIES = [
   // s'ouvrirait après coup, c'est-à-dire trop tard pour le geste qu'elle est censée encadrer.
   { slug: "agent-des-noms", label: "AGENT DES NOMS", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/agent-des-noms/", decision: "texte", scriptPath: "scripts/agent-des-noms.mjs" },
   { slug: "agent-du-temps", label: "AGENT-DU-TEMPS", family: "(f) 👑 La Gouvernance Royale", path: "docs/agent-du-temps/", decision: "texte", scriptPath: "scripts/agent-du-temps.mjs" },
+  { slug: "filet-en-parts", label: "FILET-EN-PARTS", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/filet-en-parts/", decision: "texte", scriptPath: "scripts/filet-en-parts.mjs" },
   { slug: "abraham-les-references", label: "ABRAHAM-LES-REFERENCES", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/abraham-les-references/", decision: "texte", scriptPath: "scripts/abraham-les-references.mjs" },
   { slug: "moise-tables-de-loi", label: "MOÏSE-TABLES-DE-LOI", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/moise-tables-de-loi/", decision: "texte", scriptPath: "scripts/moise-tables-de-loi.mjs" },
   { slug: "integration-outil", label: "integration-outil", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/integration-outil/", decision: "texte", scriptPath: "scripts/integration-outil.mjs" },

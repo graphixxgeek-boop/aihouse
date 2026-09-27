@@ -137,6 +137,14 @@ export const AGENT_CATEGORIES = {
   // volet du critère double n'est donc pas rempli, même si le second (gratuit à chaque commit) l'est.
   // Membre, jamais Gardien sacré : il analyse un DOCUMENT, pas la qualité du code.
   "abraham-les-references": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
+  // filet-en-parts (2026-09-27) : Membre, jamais Gardien sacré — il ne scanne aucune qualité de
+  // code, il LANCE la suite qui la scanne, et il ne tourne pas à chaque commit (le mode séquentiel
+  // reste la référence du crochet). Aucun des deux volets du critère double n'est rempli.
+  // RANGÉ CHEZ LES PROPHÈTES, et la raison est écrite plutôt que devinée : aucune famille « tests »
+  // n'existe dans ce tableau, et en créer une est une décision de nom qui revient à l'utilisateur.
+  // Une suite trop lente est de la dette technique, ce qui est exactement le domaine de cette
+  // famille — le jour où une famille « tests » est créée, cette ligne la rejoint.
+  "filet-en-parts": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   "moise-tables-de-loi": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // Les Agents Cadre (Direction/CODIR) — nom acté le 2026-09-22
   "cassandra-rh": "Agent Cadre — (f) 👑 La Gouvernance Royale",
@@ -627,6 +635,7 @@ export const TOOL_RELIABILITY = {
   // de son verdict est soit une lecture littérale du référentiel, soit un chiffre rendu par un
   // contrôleur qui porte déjà, lui, son propre avertissement s'il en a besoin.
 
+  "filet-en-parts": { nature: "heuristique", pourquoi: "la séparation socle/déplaçable est lue dans le TEXTE : un bloc qui toucherait l'état commun à travers une fonction appelée ailleurs resterait invisible et serait déplacé à tort. Le mode séquentiel reste la référence, et le message d'échec le rappelle en toutes lettres." },
   "abraham-les-references": { nature: "heuristique", pourquoi: "la forme de numérotation d'un document est DÉRIVÉE par essais successifs, le poids en tokens est estimé, et une règle dont le mécanisme est décrit en prose sans être nommé compte comme sans porteur — il sous-déclare plutôt qu'il n'invente, et refuse de découper un document dont aucune forme ne ressort" },
   "moise-tables-de-loi": { nature: "heuristique", pourquoi: "le poids en tokens est estimé, la nature d'un Article est PROPOSÉE depuis des signaux mécaniques, et un porteur décrit en prose sans être nommé compte comme absent — elle sous-déclare plutôt qu'elle n'invente, mais ne remplace jamais une lecture" },
   "the-equalizer": { nature: "mecanique", pourquoi: "il n'estime rien : il relit le référentiel des standards et relaie des verdicts déjà calculés ailleurs" },

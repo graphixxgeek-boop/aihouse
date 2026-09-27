@@ -2166,19 +2166,26 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // à son délai de base dès qu'elle répond à nouveau normalement. Vérifié directement sur les
   // millisecondes de cooldown restantes, jamais en attendant réellement l'horloge.
   __resetGeminiKeyRotationForTests();
-  const {recordKeyStatus:recordStatusForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
+  const {recordKeyStatus:recordStatusForTests,__cooldownDurationForTests}=await import('../.sites-runtime/test-gemini-keys.mjs');
   recordStatusForTests('test-backoff-key',429);
-  const first=__cooldownRemainingForTests('test-backoff-key');
+  const first=__cooldownDurationForTests('test-backoff-key');
   recordStatusForTests('test-backoff-key',429);
-  const second=__cooldownRemainingForTests('test-backoff-key');
+  const second=__cooldownDurationForTests('test-backoff-key');
   recordStatusForTests('test-backoff-key',429);
-  const third=__cooldownRemainingForTests('test-backoff-key');
-  assert.ok(second>first*1.9&&second<first*2.1,'a second consecutive 429 must roughly double the cooldown compared to the first');
-  assert.ok(third>second*1.9&&third<second*2.1,'a third consecutive 429 must roughly double it again');
+  const third=__cooldownDurationForTests('test-backoff-key');
+  // ON LIT LA DURÉE DÉCIDÉE, JAMAIS LE TEMPS RESTANT, et la différence n'est pas théorique : les
+  // trois lectures utilisaient `__cooldownRemainingForTests()`, qui DÉCROÎT à chaque milliseconde.
+  // Sur une machine au repos l'écart tenait dans la tolérance de 5 % et le test passait ; lancé en
+  // quatre parts simultanées (filet-en-parts, 2026-09-27), les millisecondes perdues entre deux
+  // lectures ont suffi à le faire échouer. Le parallélisme n'a pas créé ce défaut, IL L'A RÉVÉLÉ :
+  // le test mesurait déjà la vitesse de la machine au lieu de la règle du doublement. La durée
+  // décidée ne bouge pas, donc l'égalité peut redevenir EXACTE au lieu d'être approximative.
+  assert.equal(second,first*2,'a second consecutive 429 must double the cooldown DURATION decided for that key — read as a fixed duration, never as a remaining time that the clock eats away while the test runs');
+  assert.equal(third,second*2,'and a third doubles it again, exactly');
   recordStatusForTests('test-backoff-key',200);
   recordStatusForTests('test-backoff-key',429);
-  const afterSuccess=__cooldownRemainingForTests('test-backoff-key');
-  assert.ok(afterSuccess<first*1.1,'a single success must reset the streak, so the very next failure gets the base cooldown again, not a continuation of the escalation');
+  const afterSuccess=__cooldownDurationForTests('test-backoff-key');
+  assert.equal(afterSuccess,first,'a single success must reset the streak, so the very next failure gets the base cooldown DURATION again — exactly the first one, not a continuation of the escalation');
   console.log('Passed: a key failing repeatedly gets an automatically escalating cooldown with no human tuning needed, and a single success instantly resets it back to the base delay.');
 }
 

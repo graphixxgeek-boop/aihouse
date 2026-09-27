@@ -255,6 +255,9 @@ export function formatTable(rows) {
 // triées par nombre d'outils croissant) — jamais un ordre historique arbitraire (Pack Sentinelle, un
 // combo à 3 outils, était auparavant en toute première ligne).
 export const PRESTATIONS = [
+  // FILET-EN-PARTS (2026-09-27) — la prestation réclamée nommément par le garde-fou d'intégration
+  // à la seconde où l'outil est né.
+  { nom: "Pack Filet en parts", description: "Lance la suite de tests en plusieurs parts simultanées au lieu d'une seule qui se déroule du début à la fin, puis remet la sortie dans l'ordre du fichier. Ne modifie jamais le filet : il en écrit des copies dérivées, donc le mode séquentiel reste la référence en cas de doute.", demande: "Lancer le filet de sécurité plus vite, en parallèle, pendant un gros chantier ou une vague de commits", outils: ["filet-en-parts"], cout: "0 appel API — mais sature les processeurs le temps du lancement", tokensEstimes: "négligeable" },
   // 2026-09-22 — les trois derniers arrivés, absents du catalogue depuis leur naissance. Aucun des
   // sept garde-fous d'intégration ne couvrait PRESTATIONS : ils vérifient chacun leur registre, et
   // celui-ci n'avait personne. Trouvé au premier vrai passage d'integration-outil.mjs, qui existe

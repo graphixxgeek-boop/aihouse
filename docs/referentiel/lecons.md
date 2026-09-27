@@ -1223,6 +1223,31 @@ contre le vrai fichier avant de conclure — est l'Article 25 et se déclare ici
 
 *Observée le 2026-09-27 sur la tâche #1027, en branchant les apports de l'état de l'art.*
 
+**L40 — Un test qui mesure une DURÉE mesure la vitesse de la machine, pas la règle.**
+*(2026-09-27, tâche #1041, trouvé en lançant le filet en quatre parts simultanées.)* Le test du recul
+adaptatif des clés API comparait trois lectures du temps RESTANT avant la fin d'un délai — une
+valeur qui décroît à chaque milliseconde. Sur une machine au repos, l'écart tenait dans la tolérance
+de 5 % et le test passait depuis des jours ; sous charge, les millisecondes perdues entre deux
+lectures ont suffi à le faire échouer. **La parallélisation n'a pas créé ce défaut, elle l'a
+RÉVÉLÉ** : le test mesurait déjà la mauvaise chose, en silence, et aurait menti le premier jour où
+la machine aurait été occupée. **La correction ne consiste jamais à élargir la tolérance** — c'est
+masquer le symptôme (Article 3) : on lit la valeur DÉCIDÉE, qui ne bouge pas, et l'égalité redevient
+EXACTE au lieu d'être approximative. Corollaire pour tout le projet : une assertion écrite avec une
+marge de tolérance sur un temps est un aveu qu'on mesure une horloge ; chercher la valeur invariante
+qui se cache derrière.
+
+**L41 — Une copie dérivée d'un fichier doit emporter TOUTES ses dépendances, ou elle teste le passé.**
+*(Même tâche, et c'est le défaut le plus grave de la journée parce qu'il était SILENCIEUX.)* Le
+runner parallèle écrit des copies du filet ; il redirigeait vers un dossier par part les écritures du
+préambule, mais pas les lectures faites plus bas par les blocs. Une part relisait donc les modules du
+jeu transpilés lors d'un lancement PRÉCÉDENT. Tant que le code du jeu ne bougeait pas, tout était
+vert. À la première modification de `lib/gemini-keys.ts`, une part a crié « fonction inconnue » sur
+une fonction qui existait bel et bien — et c'est seulement à ce moment-là qu'on a su que les trois
+autres travaillaient depuis le début sur une copie périmée. **Un test qui passe sur du code que
+personne n'exécute est pire qu'un test qui échoue** : il rend un vert vide. Règle générale : quand on
+dérive une copie d'un fichier pour l'exécuter ailleurs, la redirection porte sur TOUT le fichier,
+jamais sur la partie qu'on a en tête.
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

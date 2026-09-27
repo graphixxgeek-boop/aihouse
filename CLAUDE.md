@@ -948,6 +948,7 @@ tableau garde ce qui doit rester sous les yeux en permanence.)*
 | Nom | Ce que c'est | Architecture | Instanciation | Script |
 |---|---|---|---|---|
 | THE-EQUALIZER | le rassembleur de verdicts : tout est-il à niveau, et que ne vérifie personne ? | `docs/the-equalizer-blueprint.md` | `docs/referentiel/the-equalizer.md` | `scripts/the-equalizer.mjs` |
+| filet-en-parts | lance le filet de sécurité en plusieurs parts simultanées, sans jamais modifier le filet lui-même (il en écrit des copies dérivées) | `docs/filet-en-parts-blueprint.md` | `docs/referentiel/filet-en-parts.md` | `scripts/filet-en-parts.mjs` |
 | Abraham-les-references | l'outil MAÎTRE des documents à règles numérotées : découpage en unités, porteur réel, citations, pertinence, redondances, mémoire des opérations — sur N'IMPORTE quel document, jamais un seul | `docs/abraham-les-references-blueprint.md` | `docs/referentiel/abraham-les-references.md` | `scripts/abraham-les-references.mjs` |
 | ALWAYS-NEW-CODE | l'outil qui rend concrète l'épreuve de la page blanche | `docs/always-new-code-blueprint.md` | `docs/referentiel/always-new-code.md` | `scripts/always-new-code.mjs` |
 | AGENT DES NOMS | minimise le risque technique d'un renommage en masse — et tient le registre de qui a nommé quoi | `docs/agent-des-noms-blueprint.md` | `docs/referentiel/agent-des-noms.md` | `scripts/agent-des-noms.mjs` |

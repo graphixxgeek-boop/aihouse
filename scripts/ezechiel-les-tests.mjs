@@ -607,6 +607,152 @@ export function etatPartageEntreBlocs(src = "", groupes = []) {
   };
 }
 
+// --- (8) LES OBSTACLES AU PARALLÈLE : ce qui refuse d'être séparé ------------------------------
+// LA QUESTION N'EST PAS « PEUT-ON PARALLÉLISER » MAIS « QU'EST-CE QUI REFUSE DE L'ÊTRE », et elle
+// se pose AVANT d'essayer (arbitrage explicite de l'utilisateur, 2026-09-27 : « Ezechiel cherche
+// d'abord »). La raison est la nature de la panne qu'on évite : deux blocs qui écrivent au même
+// endroit ne se gênent jamais tant qu'ils passent l'un après l'autre, et se gênent UNE FOIS SUR
+// TROIS dès qu'ils tournent ensemble. Un test qui échoue une fois sur trois est le pire genre de
+// panne, parce qu'on ne sait jamais s'il est réparé.
+//
+// DEUX OBSTACLES DE NATURES DIFFÉRENTES, et les confondre ferait rater le second :
+//   1. LA COLLISION — deux blocs écrivent dans le même fichier. Ils peuvent aller dans deux parts
+//      différentes à condition de ne pas viser le même chemin.
+//   2. L'ATTACHE — un bloc dépend de ce qu'un autre a laissé derrière lui (une variable du
+//      préambule qu'il modifie, la base de données partagée qu'il fait avancer). Ceux-là ne
+//      peuvent pas être séparés du tout : ils doivent rester ensemble, dans l'ordre.
+//
+// TROIS ÉTATS, JAMAIS DEUX, et c'est ce qui empêche le faux vert : une écriture dont le chemin
+// n'est pas écrit en clair (construit dans une variable, un `mkdtemp`) n'est PAS une écriture sans
+// danger — c'est une écriture qu'on ne sait pas lire. Elle sort dans sa propre colonne
+// « indéterminées » (leçon L5/L11 : « rien trouvé » n'est pas « pas pu regarder »).
+export const MOTIFS_ECRITURE = /\b(writeFileSync|appendFileSync|mkdirSync|rmSync|renameSync|copyFileSync|unlinkSync)\s*\(\s*([^,)]*)/g;
+
+// Les noms par lesquels un bloc touche l'état que le préambule a construit : la base SQLite en
+// mémoire et la porte d'entrée de l'API. Un bloc qui les appelle fait AVANCER un état commun —
+// invisible dans le texte autrement, puisque rien ne s'écrit dans une variable.
+// `world` a rejoint la liste après le premier lancement réel du runner parallèle : un bloc qui
+// réassigne `world` laisse derrière lui un état dont un test du niveau du fichier dépend vingt
+// lignes plus bas. Sans lui, blanchir ce bloc faisait échouer une assertion parfaitement saine.
+export const TOUCHES_L_ETAT_COMMUN = /\b(post|sqlite|initialize|readWorld|db|world)\s*[.(=]/;
+
+// UNE DÉFINITION DE MÉTHODE N'EST PAS UN APPEL, et c'est le faux positif du premier passage réel.
+// Ce filet injecte des systèmes de fichiers factices — `{ writeFileSync(p, content) { … } }` — qui
+// n'écrivent rien du tout : ils rangent dans un objet en mémoire. Trois blocs sur seize étaient
+// accusés pour ça. La forme d'une définition est reconnaissable sans ambiguïté : des paramètres qui
+// sont des noms nus, suivis d'une accolade ouvrante. Un vrai appel passe une expression.
+export const MOTIF_DEFINITION_DE_METHODE = /^\s*\(?\s*[\w$]*(?:\s*,\s*[\w$]+)*\s*\)\s*\{/;
+
+export function estUneDefinition(apresLAppel = "") {
+  return MOTIF_DEFINITION_DE_METHODE.test(String(apresLAppel));
+}
+
+export function cheminLitteral(expression = "") {
+  const t = String(expression).trim();
+  const m = /^(['"])([^'"]*)\1\s*$/.exec(t);
+  return m ? m[2] : null;
+}
+
+// RÉSOUDRE CE QU'ON PEUT PLUTÔT QUE DE LE RENDRE À LIRE À LA MAIN. Onze écritures « indéterminées »
+// sur le vrai filet, et les lire une par une aurait été un travail à refaire à chaque passage — la
+// définition même d'un outil qui ne sert qu'à moitié. La plupart passent par une variable déclarée
+// deux lignes plus haut dans le MÊME bloc, et deux formes suffisent à les trancher toutes :
+//   · `const X = 'chemin/en/clair'` → X vaut ce chemin, et une collision redevient visible ;
+//   · `const X = mkdtempSync(...)` → X est UNIQUE PAR CONSTRUCTION, c'est la garantie même de
+//     mkdtemp, donc deux blocs qui en partent ne peuvent pas se rencontrer.
+// `path.join(X, 'suite')` hérite de X dans les deux cas. Ce qui ne rentre dans aucune des deux
+// formes reste indéterminé — on ne devine jamais (L5/L11).
+export function resoudreLesChemins(texteDuBloc = "") {
+  const noms = new Map();
+  for (const m of String(texteDuBloc).matchAll(/(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*([^\n;]+)/g)) {
+    const [, nom, expr] = m;
+    const lit = cheminLitteral(expr);
+    if (lit !== null) { noms.set(nom, { litteral: lit }); continue; }
+    if (/\bmkdtempSync\s*\(/.test(expr)) { noms.set(nom, { unique: true }); continue; }
+    const j = /^path\.join\(\s*([A-Za-z_$][\w$]*)\s*,\s*(['"\`])([^'"\`]*)\2\s*\)/.exec(expr.trim());
+    if (j) {
+      const base = noms.get(j[1]);
+      if (base?.unique) noms.set(nom, { unique: true });
+      else if (base?.litteral !== undefined) noms.set(nom, { litteral: `${base.litteral}/${j[3]}` });
+    }
+  }
+  return noms;
+}
+
+// Rend soit un chemin en clair, soit { unique: true }, soit null quand on ne sait pas.
+export function cheminResolu(expression = "", noms = new Map()) {
+  const t = String(expression).trim();
+  const lit = cheminLitteral(t);
+  if (lit !== null) return { litteral: lit };
+  const nu = /^([A-Za-z_$][\w$]*)$/.exec(t);
+  if (nu) return noms.get(nu[1]) ?? null;
+  const j = /^path\.join\(\s*([A-Za-z_$][\w$]*)\s*(?:,\s*(['"\`])([^'"\`]*)\2\s*)?\)?/.exec(t);
+  if (j) {
+    const base = noms.get(j[1]);
+    if (base?.unique) return { unique: true };
+    if (base?.litteral !== undefined) return { litteral: j[3] ? `${base.litteral}/${j[3]}` : base.litteral };
+  }
+  return null;
+}
+
+export function obstaclesAuParallele(src = "", groupes = []) {
+  if (!groupes.length) return { mesurable: false, pourquoi: "aucun bloc découpé : sans blocs, il n'y a rien à répartir et « aucun obstacle » ne voudrait rien dire" };
+
+  // (a) LES ÉCRITURES, chemin par chemin, en séparant ce qu'on sait lire de ce qu'on ne sait pas.
+  const parChemin = new Map();
+  const indetermines = [];
+  let uniquesParConstruction = 0;
+  for (const g of groupes) {
+    const nu = String(g.texte).split("\n").map((l) => l.replace(/\/\/.*$/, "")).join("\n");
+    const noms = resoudreLesChemins(nu);
+    for (const m of nu.matchAll(new RegExp(MOTIFS_ECRITURE.source, "g"))) {
+      if (estUneDefinition(nu.slice(m.index + m[0].length - String(m[2]).length))) continue;
+      const resolu = cheminResolu(m[2], noms);
+      if (resolu?.unique) { uniquesParConstruction++; continue; }
+      const chemin = resolu?.litteral ?? null;
+      if (chemin === null) { indetermines.push({ ligne: g.ligne, titre: g.titre, appel: m[1], extrait: String(m[2]).trim().slice(0, 60) }); continue; }
+      if (!parChemin.has(chemin)) parChemin.set(chemin, new Set());
+      parChemin.get(chemin).add(g.ligne);
+    }
+  }
+  const collisions = [];
+  for (const [chemin, blocs] of parChemin) {
+    if (blocs.size > 1) collisions.push({ chemin, blocs: [...blocs].sort((a, b) => a - b), combien: blocs.size });
+  }
+  collisions.sort((a, b) => b.combien - a.combien);
+
+  // (b) LES ATTACHES : les blocs qui font avancer l'état commun du préambule. Ils ne se séparent
+  // pas — ils forment un seul paquet qui doit rester dans l'ordre, et donc dans une seule part.
+  const attaches = groupes.filter((g) => TOUCHES_L_ETAT_COMMUN.test(String(g.texte))).map((g) => g.ligne);
+
+  return {
+    mesurable: true,
+    collisions, indetermines, attaches, uniquesParConstruction,
+    libres: groupes.length - attaches.length,
+    total: groupes.length,
+    // LIMITE DÉCLARÉE (Article 27) : Ezechiel lit du TEXTE. Une écriture faite par une fonction
+    // appelée depuis le bloc lui est invisible, et un chemin construit à l'exécution aussi. Ce
+    // qu'il rend réduit le risque, il ne le supprime jamais — et le dire vaut mieux que de laisser
+    // croire à une garantie.
+    horsPortee: "lu par le texte : une écriture faite à l'intérieur d'une fonction appelée par le bloc reste invisible. Réduit le risque, ne le supprime pas.",
+  };
+}
+
+export function formatObstaclesLines(o = {}) {
+  const L = ["", "=== CE QUI REFUSE D'ÊTRE SÉPARÉ — avant de paralléliser ==="];
+  if (!o.mesurable) { L.push(`  🚨 PAS MESURÉ — ${o.pourquoi}`); return L; }
+  L.push(`  ${o.total} bloc(s) · ${o.attaches.length} attaché(s) à l'état commun · ${o.libres} librement déplaçable(s)`);
+  if (!o.collisions.length) L.push("  ✅ aucune collision d'écriture entre deux blocs sur un chemin lisible");
+  else {
+    L.push(`  🚨 ${o.collisions.length} chemin(s) écrit(s) par PLUSIEURS blocs — à isoler avant de les séparer :`);
+    for (const c of o.collisions.slice(0, 10)) L.push(`     ${c.chemin} — ${c.combien} blocs (lignes ${c.blocs.slice(0, 6).join(", ")}${c.blocs.length > 6 ? "…" : ""})`);
+  }
+  if (o.uniquesParConstruction) L.push(`  ✅ ${o.uniquesParConstruction} écriture(s) dans un dossier temporaire unique par construction (mkdtemp) — deux blocs ne peuvent pas s'y rencontrer`);
+  if (o.indetermines.length) L.push(`  ⚠️  ${o.indetermines.length} écriture(s) dont le chemin reste illisible même après résolution — ni sûres ni dangereuses : NON MESURÉES`);
+  L.push(`  ↳ ${o.horsPortee}`);
+  return L;
+}
+
 // --- (4) UN ÉCHANTILLON N'EST PAS UN VERDICT ---------------------------------------------------
 // La littérature est nette et chiffrée : un échantillon aléatoire de 10 % perd 26 % du pouvoir de
 // détection ; à 60 %, seulement 6 %. Notre passe de robustesse en teste quatre sur des dizaines de

@@ -339,6 +339,7 @@ export const SLUGS_COUVERTS_PAR_AXA = [
   "agent-du-temps",
   "moise-tables-de-loi",
   "abraham-les-references",
+  "filet-en-parts",
   "integration-outil",
   "argus",
   "harmonia",
