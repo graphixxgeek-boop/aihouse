@@ -23,6 +23,7 @@ export const PROCESS_HOTE = "semi-autonome";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 export const MODE_PATH = ".mode-de-travail.json";
@@ -121,7 +122,13 @@ export function formatModes(modes = MODES, courant = null) {
   return l.join("\n");
 }
 
+// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
+// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
+// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
+// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
+// précisément ça — une invisibilité qui en cachait une autre.
 if (import.meta.url === `file://${process.argv[1]}`) {
+  recordCliUsage("modes-de-travail");
   const demande = process.argv[2];
   if (demande) { const e = passerEnMode(demande); console.log(`Mode de travail : ${e.slug} (depuis ${e.depuis}).`); }
   console.log(formatModes(MODES, modeCourant()));

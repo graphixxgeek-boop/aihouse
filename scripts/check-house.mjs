@@ -4508,6 +4508,37 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.deepEqual(findToolsMissingFromMenu(sampleTable,fakeMenu),['NOUVEL-OUTIL'],'a real costly/on-demand tool absent from every menu entry must be flagged by name, while a free always-deployed tool and one already present in the menu must never be flagged');
   assert.deepEqual(findToolsMissingFromMenu(sampleTable,[{demande:'x',outils:['THE-SCREENER','NOUVEL-OUTIL'],cout:'réel'}]),[],'once every menu-worthy tool is covered by at least one entry, the guard must report a genuinely empty gap list, never a false positive');
 
+  // LE CATALOGUE MESURÉ CONTRE LE DÉPÔT, PAS CONTRE UNE SECONDE LISTE ÉCRITE À LA MAIN (2026-09-27,
+  // tâche #714). Le garde-fou ci-dessus confronte la table maîtresse au catalogue : deux listes
+  // manuelles, qui peuvent s'accorder parfaitement tout en ignorant la même chose. Le jour de cette
+  // correction il rendait « aucun outil muet » alors que la table ignorait 27 des 90 scripts réels
+  // et que ONZE outils lançables n'avaient aucune offre — un zéro qui mesurait un silence (L11).
+  {
+    const {findOutilsMuets,nomsCandidatsDUnScript,PORTE_COMMANDABLE}=await import('../scripts/le-coordinateur.mjs');
+    const rec={lignes:[
+      {chemin:'scripts/muet.mjs',type:'commande-documentee',portes:[PORTE_COMMANDABLE]},
+      {chemin:'scripts/check-truc.mjs',type:'commande-documentee',portes:[PORTE_COMMANDABLE]},
+      {chemin:'scripts/lib-json.mjs',type:'bibliotheque-partagee',portes:['importé par 8 fichier(s)']},
+      {chemin:'scripts/hooks/banniere.mjs',type:'crochet',portes:[PORTE_COMMANDABLE]},
+    ]};
+    // L'INVENTAIRE DE LA CHARTE RATTACHE UN SCRIPT À SON NOM D'OUTIL, et c'est indispensable : le
+    // catalogue cite TRUC, le fichier s'appelle check-truc.mjs, et une comparaison sur le nom de
+    // fichier accuserait un outil parfaitement catalogué (l'erreur « SANS FICHE, 22 fois », déjà payée).
+    const inv=[{script:'scripts/check-truc.mjs',instanciation:'docs/referentiel/truc.md'}];
+    const menu=[{demande:'x',outils:['TRUC'],cout:'gratuit'}];
+    const r=findOutilsMuets({recensement:rec,inventaire:inv,prestations:menu});
+    assert.deepEqual(r.muets.map((m)=>m.chemin),['scripts/muet.mjs'],'only the genuinely offer-less commandable tool is named: a shared library owes no offer, a hook is launched by git rather than ordered, and a tool catalogued under its TOOL name must never be accused because its FILE is named differently');
+    assert.equal(r.commandables,2,'the population counted is derived from the command-line door and the derived type, never from a list of names that would go stale at the next arrival');
+    // LE CONTRE-TEST DANS L'AUTRE SENS — une offre ajoutée pour ce dernier muet doit vraiment fermer
+    // l'écart, sinon la mesure ne prouve rien de ce qu'elle annonce.
+    assert.deepEqual(findOutilsMuets({recensement:rec,inventaire:inv,prestations:[...menu,{demande:'y',outils:['muet'],cout:'gratuit'}]}).muets,[],'adding the missing offer is what closes the gap — if it did not, the measure would not be measuring the catalogue at all');
+    assert.deepEqual(nomsCandidatsDUnScript('scripts/check-truc.mjs',inv),['check-truc.mjs','check-truc','truc'],'three candidate names are tried for each script: the file, the file without its extension, and the tool name resolved through the charter inventory');
+    // ET IL REFUSE DE CONCLURE SANS RECENSEMENT : « personne n'est muet » et « je n'ai regardé
+    // personne » s'écrivent tous les deux zéro, et c'est exactement la confusion que ce dépôt a
+    // déjà payée ailleurs (leçon L11).
+    assert.equal(findOutilsMuets({}).mesurable,false,'with no recensement it refuses to conclude rather than printing an empty gap list that would read as a clean bill of health');
+  }
+
   // LE MENU S'OUVRE AUX PÉRIODIQUES (2026-09-25, décision de l'utilisateur) — et deux pièges se
   // referment en même temps, chacun mesuré sur la vraie table plutôt que craint.
   {

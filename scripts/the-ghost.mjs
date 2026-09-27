@@ -24,6 +24,7 @@ import { fileURLToPath } from "node:url";
 import { sh } from "./lib-shell.mjs";
 import { loadLastRun } from "./circle-tasks.mjs";
 import { printReportHeader } from "./report-template.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const STATE_PATH = fileURLToPath(new URL("../.the-ghost-session.json", import.meta.url));
 
@@ -135,4 +136,9 @@ function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
+// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
+// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
+// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
+// précisément ça — une invisibilité qui en cachait une autre.
+if (import.meta.url === `file://${process.argv[1]}`) { recordCliUsage("the-ghost"); main(); }

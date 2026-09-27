@@ -51,6 +51,10 @@ import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-chec
 import { THEMES, parseCoverage, recommendZone } from "./always-new-code.mjs";
 import { classifyCheckLevel } from "./check-level-target.mjs";
 import { lastTouchDays, relativeStaleness } from "./clean-dirty-old.mjs";
+// #714 — le catalogue se mesure contre le DÉPÔT RÉEL : le recensement dérive qui est lançable,
+// l'inventaire de la charte rattache un script à son nom d'outil. Aucun cycle : le-classificateur
+// ne nous importe pas (vérifié avant, Article 19).
+import { recenserLesScripts, inventaireDeLaCharte } from "./le-classificateur.mjs";
 import { findUnconfirmedBursts } from "./smart-conso-api.mjs";
 import { summarizeHistory, findJudgeSpawnsWithoutConsultation, filterIndexRowsByVersion } from "./smart-conso-token.mjs";
 import { checkWeightBudget } from "./ecotoken.mjs";
@@ -340,6 +344,23 @@ export const PRESTATIONS = [
   { nom: "Pack Discipline d'exécution", description: "Vérifie que les règles de travail ont été TENUES, des deux côtés (agent et utilisateur). Son apport propre : croiser le compteur d'usage des outils avec l'historique git pour savoir si les outils à consulter avant d'agir l'ont vraiment été avant. Ne désigne un manquement que sur une origine déclarée sciemment ; une trace qui ne prouve rien est montrée sans accuser personne.", demande: "Savoir si les règles de travail ont été respectées, et par qui", outils: ["angel-of-ia-process"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Circulation des données", description: "Inventorie tout ce que l'équipe a accumulé (journaux, registres, séries chiffrées), dit qui relit quoi, et repère la donnée qu'on paie à produire sans que rien ne l'exploite. Sert aussi l'agent directement : « briefing <sujet> » liste tout ce que l'équipe sait déjà sur un sujet, avant de repartir de zéro.", demande: "Savoir ce que l'équipe sait déjà sur un sujet, ou repérer une donnée produite que rien n'exploite", outils: ["data-archangel"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Discipline de simulation", description: "Référent du protocole de simulation, consulté AVANT le lancement plutôt qu'après : récite les cinq leçons déjà payées par une simulation entière, vérifie que le scénario couvre les neuf moments exigés et que Smart Conso API a été consultée, bloque un lancement défaillant (passage en force possible avec raison écrite archivée), puis contrôle le journal réel et les cinq étapes d'archivage.", demande: "Lancer une simulation sans refaire une erreur qui a déjà coûté une heure de quota, et vérifier ensuite que rien n'a été sauté", outils: ["process.simulation.guardian"], cout: "0 appel API pour le contrôle lui-même — la simulation qui suit, elle, en fera beaucoup", tokensEstimes: "faible" },
+  // LES ONZE MUETS (2026-09-27, tâche #714). Ils ne manquaient pas par négligence : le garde-fou qui
+  // veillait sur ce catalogue comparait deux listes ÉCRITES À LA MAIN l'une à l'autre, et rendait
+  // « aucun outil muet » pendant que la table sur laquelle il se fondait ignorait 27 des 90 scripts
+  // réels. Mesurés cette fois contre le DÉPÔT (findOutilsMuets()), onze outils parfaitement
+  // lançables n'avaient jamais eu d'entrée ici — donc invisibles à tool-brain, donc jamais
+  // recommandés, donc jamais lancés, et leur zéro d'usage se lisait ensuite comme un verdict sur eux.
+  { nom: "Pack Niveau attendu", description: "Calcule, AVANT de vérifier quoi que ce soit, le niveau de vérification que mérite le changement en cours et quelle combinaison d'outils l'atteint — plutôt que de choisir au jugé une fois lancé.", demande: "Savoir jusqu'où pousser la vérification avant de commencer, et avec quels outils", outils: ["CHECK-LEVEL-TARGET"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Fidélité du suivi", description: "Relit chaque fichier de session et signale les clôtures qui ont sauté la déclaration de fidélité, les fichiers annoncés mais absents, et les horodatages datés dans le futur.", demande: "Vérifier que le suivi des tâches dit la vérité — clôtures incomplètes, fichiers fantômes, dates impossibles", outils: ["check-suivi-fidelity"], cout: "0 appel API — lit docs/suivi/", tokensEstimes: "faible" },
+  { nom: "Pack Déroulé de Ronde", description: "Vérifie mécaniquement que le processus complet de la Ronde a bien été suivi, et peut la bloquer. Contrôleur de process, jamais un Gardien sacré : il surveille des ÉTAPES, pas la qualité du code.", demande: "Savoir si la Ronde a été menée jusqu'au bout, ou par où elle a été écourtée", outils: ["circle-process-guardian"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Criticité", description: "Sépare la CRITICITÉ d'une tâche (sa gravité intrinsèque) de son RETARD (depuis combien de temps elle attend) — deux axes que l'ancienne échelle mélangeait en un seul rang.", demande: "Savoir ce qui est grave, distinctement de ce qui traîne", outils: ["criticite"], cout: "0 appel API — lit docs/suivi/", tokensEstimes: "faible" },
+  { nom: "Pack Régie de simulation", description: "Orchestre les étapes purement MÉCANIQUES du protocole de simulation complète (Article 18) : archivage des fichiers, extraction du résumé compact, rapport KPI. Jamais les deux index de jugement, qui restent la plume de l'agent.", demande: "Ne pas dépendre de ma mémoire pour les étapes sans jugement d'une simulation complète", outils: ["LE-RÉGISSEUR"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Mode de travail", description: "Dit dans quel mode on travaille en ce moment — l'utilisateur est-il là pour répondre, une fenêtre de question est-elle possible — au lieu de le supposer. Déclaré une fois, lu partout.", demande: "Savoir si je peux poser une question bloquante maintenant, ou si l'utilisateur dort", outils: ["modes-de-travail"], cout: "0 appel API", tokensEstimes: "négligeable" },
+  { nom: "Pack Points de coupe", description: "Propose mécaniquement des points de coupe candidats dans une fonction géante, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste.", demande: "Découper une fonction devenue trop grosse sans la lire ligne à ligne", outils: ["route-booster"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Lancement de simulation", description: "LE pilote committé de la simulation intégrale (Article 18, étape 1) — celui qui existe pour de bon, là où le script était autrefois réécrit à la volée puis perdu avec son dossier temporaire.", demande: "Lancer une simulation complète de bout en bout", outils: ["run-simulation"], cout: "réel — c'est la simulation elle-même, consulter Smart Conso API avant (Article 22)", tokensEstimes: "élevé côté agent si le transcript est relu" },
+  { nom: "Pack Résumé de journal", description: "Extrait un résumé compact des actions d'un journal de simulation brut (tirages de bonus, changements de pièce, révélation, progression de l'enquête) — ce qui permet d'archiver l'essentiel avant de jeter un journal de plusieurs mégaoctets.", demande: "Garder ce qui compte d'une simulation sans archiver un fichier énorme", outils: ["summarize-simulation-log"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Nuit autonome", description: "Petit orchestrateur du mode nocturne autonome : il tient le déroulé quand l'utilisateur dort ou laisse l'agent travailler seul.", demande: "Travailler seul pendant la nuit sans perdre le fil ni m'arrêter", outils: ["THE-GHOST"], cout: "0 appel API", tokensEstimes: "faible" },
+  { nom: "Pack Compteur d'usage", description: "Le cumul permanent, depuis le début du projet, de qui a réellement été lancé — la donnée qui permet à CASSANDRA-RH de juger si un outil a toujours sa place. Un zéro y mesure un silence, jamais une inactivité prouvée.", demande: "Savoir quels outils ne sont jamais sollicités, et depuis quand", outils: ["tool-usage"], cout: "0 appel API", tokensEstimes: "négligeable" },
   { nom: "Pack Cerveau central", description: "Généralise find-brain à tout le catalogue PRESTATIONS : à partir d'une description de tâche et/ou d'un fichier ciblé, indique quelle(s) prestation(s) et quel(s) outil(s) de recherche utiliser, sans rien recalculer soi-même. Délivre aussi le rapport de Ronde (outils jamais sollicités, auto-diagnostic borné à son propre périmètre).", demande: "Savoir quel outil ou quelle combinaison d'outils déjà existante utiliser pour une tâche donnée, sans avoir à y réfléchir soi-même", outils: ["tool-brain"], cout: "0 appel API", tokensEstimes: "faible" },
   { nom: "Pack Chasse aux clones", description: "Scanne lib/scripts/app/components (hors components/ui, vendored) à la recherche de blocs dupliqués — v1 littérale (lignes identiques après normalisation d'espaces) ET v2 (blocs structurellement identiques sous renommage bijectif cohérent d'identifiants) — regroupés par cluster et triés par impact réel.", demande: "Trouver un bloc de logique recopié au lieu d'être factorisé, même renommé — duplication réelle dans le code", outils: ["clone-hunter"], cout: "0 appel API — heuristique texte, zéro parseur AST", tokensEstimes: "faible à modéré — sortie compacte des clusters trouvés" },
   { nom: "Pack Objectifs", description: "Confronte chaque objectif chiffré du registre (par entité/période) au résultat réel déjà mesuré par tool-usage.mjs, avec un statut atteint/en dessous/dépassé/pas de données. Surnom : R/O-Guardian (2026-09-21).", demande: "Vérifier si un objectif fixé sur un outil ou une entité a été atteint sur sa période", outils: ["objectifs-vs-resultats"], cout: "0 appel API — relit un historique déjà écrit, jamais un second calcul", tokensEstimes: "faible — sortie compacte, une ligne par objectif" },
@@ -928,6 +949,80 @@ export function findToolsMissingFromMenu(toolsTableMarkdown = lireTableMaitresse
     .filter(isMenuWorthy)
     .map((row) => primaryToolName(row.tool))
     .filter((primaryName) => !auMenu.has(normaliserNomDOutil(primaryName)));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE CATALOGUE MESURÉ DEPUIS LE DÉPÔT, JAMAIS DEPUIS UNE SECONDE LISTE ÉCRITE À LA MAIN
+// (2026-09-27, tâche #714 — sa question était « est-ce que le catalogue du coordinateur se met à
+// jour en auto ? », et la réponse mesurée reste non.)
+//
+// CE QUI EXISTAIT DÉJÀ, ET POURQUOI CE N'ÉTAIT PAS SUFFISANT. `findToolsMissingFromMenu()`
+// ci-dessus compare la TABLE MAÎTRESSE (un tableau Markdown écrit à la main dans
+// docs/regles-de-travail.md §7ter) au catalogue PRESTATIONS (une liste écrite à la main ici). Deux
+// listes manuelles confrontées l'une à l'autre : elles peuvent parfaitement s'accorder pendant que
+// les deux ignorent la même chose. Mesure du jour — le garde-fou rendait « aucun outil muet », et
+// la table sur laquelle il se fonde ne connaissait que 63 des 90 scripts réels. Son vert ne disait
+// pas « tout le monde a une offre », il disait « je n'ai pas regardé les autres » (leçon L11 : un
+// zéro mesure un silence, jamais une absence de problème). Les deux fonctions restent, parce
+// qu'elles ne posent pas la même question — celle-ci demande « qui, dans le DÉPÔT, n'a pas
+// d'offre ? », l'autre « la table et le catalogue se contredisent-ils ? ».
+//
+// QUI DOIT UNE OFFRE SE DÉRIVE, IL NE SE LISTE PAS (Article 24). Le catalogue existe pour qu'on
+// sache quoi COMMANDER : en doit une exactement ce qu'on peut lancer, c'est-à-dire tout fichier
+// dont le classificateur a dérivé une porte « ligne de commande ». Un crochet git, une bibliothèque
+// partagée, un script d'installation n'ont rien à offrir à un lecteur et ne sont jamais accusés —
+// sans qu'aucun de leurs noms soit écrit ici, donc sans que la règle se périme au prochain arrivant.
+//
+// LE RAPPROCHEMENT PASSE PAR L'INVENTAIRE DE LA CHARTE, JAMAIS PAR LE NOM DU FICHIER. C'est une
+// erreur que ce dépôt a déjà payée (« SANS FICHE, 22 fois », le-classificateur) : le catalogue cite
+// ARGUS, le script s'appelle `check-argus.mjs`, et une comparaison sur le nom de fichier accuse un
+// outil parfaitement catalogué. L'inventaire de CLAUDE.md porte déjà le lien script → fiche, et le
+// nom de l'outil est celui de sa fiche. Trois candidats sont donc essayés pour chaque script : le
+// nom du fichier, ce nom sans son extension, et le nom d'outil résolu par l'inventaire.
+export const PORTE_COMMANDABLE = "ligne de commande";
+
+export function nomsCandidatsDUnScript(chemin, inventaire = []) {
+  const base = String(chemin).replace(/^scripts\//, "");
+  const noms = [base, base.replace(/\.(mjs|js|sh)$/, "")];
+  for (const e of inventaire) {
+    if (e?.script !== chemin) continue;
+    const fiche = String(e.instanciation ?? "").split("/").pop() ?? "";
+    if (fiche) noms.push(fiche.replace(/\.md$/, ""));
+  }
+  return noms.filter(Boolean);
+}
+
+export function findOutilsMuets({ recensement = null, inventaire = null, prestations = PRESTATIONS, charteText = null } = {}) {
+  if (!recensement?.lignes?.length) {
+    return { mesurable: false, pourquoi: "aucun recensement de scripts fourni — sans lui, « personne n'est muet » et « je n'ai regardé personne » s'écrivent tous les deux zéro (leçon L11)", muets: [], commandables: 0 };
+  }
+  const inv = inventaire ?? (charteText ? inventaireDeLaCharte(charteText) : []);
+  const auMenu = new Set(prestations.flatMap((p) => p.outils ?? []).map(normaliserNomDOutil));
+  // UN CROCHET NE SE COMMANDE PAS, il est lancé par git — et il lui arrive d'avoir une porte
+  // « ligne de commande » parce qu'un document écrit comment l'exécuter à la main pour le déboguer.
+  // L'exclusion se lit sur le TYPE dérivé par le classificateur, jamais sur un nom de fichier.
+  const commandables = recensement.lignes.filter((l) => (l.portes ?? []).includes(PORTE_COMMANDABLE) && l.type !== "crochet");
+  const muets = commandables
+    .filter((l) => !nomsCandidatsDUnScript(l.chemin, inv).some((n) => auMenu.has(normaliserNomDOutil(n))))
+    .map((l) => ({ chemin: l.chemin, type: l.type ?? "?", candidats: nomsCandidatsDUnScript(l.chemin, inv) }));
+  return { mesurable: true, muets, commandables: commandables.length, total: recensement.lignes.length };
+}
+
+export function formatOutilsMuetsLines(r) {
+  const out = ["", "🗂️  CATALOGUE — qui, dans le dépôt, n'a aucune offre ? (tâche #714)"];
+  if (!r?.mesurable) {
+    out.push(`   🚨 PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`);
+    return out;
+  }
+  out.push(`   ${r.commandables} fichier(s) lançables en ligne de commande sur ${r.total} — les autres (crochets, bibliothèques, scripts d'installation) n'ont rien à offrir à un lecteur et ne sont jamais comptés.`);
+  if (!r.muets.length) {
+    out.push("   ✅ chacun d'eux est cité par au moins une offre du catalogue.");
+    return out;
+  }
+  out.push(`   ⚠️  ${r.muets.length} outil(s) lançables et ABSENTS du catalogue — invisibles à tool-brain, donc jamais recommandés, donc jamais lancés : leur zéro d'usage se lira ensuite comme un verdict sur eux.`);
+  for (const m of r.muets) out.push(`      · ${m.chemin} (${m.type})`);
+  out.push("   Une offre manquante se corrige en ajoutant une entrée à PRESTATIONS — jamais en retirant l'outil de la mesure.");
+  return out;
 }
 
 // Garde-fou de fraîcheur (2026-09-21, audit d'évolutivité) : `AGENT_SCRIPT_FILES` (axa-check.mjs,
@@ -1963,6 +2058,17 @@ function main() {
   // tient encore.
   console.log("");
   for (const ligne of formatOffresConcurrentesLines(findOffresConcurrentes())) console.log(ligne);
+  // LE MÊME RAPPORT PORTE LES DEUX QUESTIONS, parce qu'aucune ne remplace l'autre : celle
+  // ci-dessus demande si deux offres se marchent dessus, celle-ci qui n'a AUCUNE offre. Mesurée
+  // contre le dépôt réel plutôt que contre la table écrite à la main (#714) : c'est la différence
+  // entre « les deux listes s'accordent » et « tout le monde est couvert ».
+  console.log("");
+  for (const ligne of formatOutilsMuetsLines(findOutilsMuets({ recensement: recenserLesScripts(), charteText: lireLaCharte() }))) console.log(ligne);
+}
+
+export function lireLaCharte({ root = ROOT, readFile = readFileSync, exists = existsSync } = {}) {
+  const chemin = join(root, "CLAUDE.md");
+  return exists(chemin) ? readFile(chemin, "utf8") : "";
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

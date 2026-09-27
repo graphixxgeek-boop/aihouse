@@ -1,6 +1,7 @@
 // ICEBERG: membre
 import { readFileSync } from "node:fs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 // Extrait un résumé compact des actions d'un journal complet de simulation (messages.json) —
 // tirages de bonus, changements de pièce, révélation, jardin ouvert, progression de l'enquête.
@@ -262,4 +263,9 @@ function main() {
   console.log(formatSummary(events, { lastRound, dossierFound, shape, phase2: checkPhase2Autonomy(entries), observateur: checkObserverIdentified(entries) }));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
+// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
+// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
+// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
+// précisément ça — une invisibilité qui en cachait une autre.
+if (import.meta.url === `file://${process.argv[1]}`) { recordCliUsage("summarize-simulation-log"); main(); }

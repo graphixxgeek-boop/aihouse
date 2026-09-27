@@ -22,6 +22,7 @@ import { join } from "node:path";
 // 2026-09-23, qui a laissé un même défaut survivre trois simulations). Ici, on se contente de
 // tendre l'état à chaque tour — trois lignes, rien à vérifier.
 import { creerSuiviMemoire, ecrireConstatMemoire, formatSuiviMemoire } from "./memento.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 const BASE = process.env.SIM_BASE_URL ?? "http://127.0.0.1:5173";
 const OUT_DIR = process.env.SIM_OUT_DIR ?? "/tmp/ronde/sim";
@@ -297,6 +298,12 @@ async function main() {
 // porteur de la leçon L14, a donc réinitialisé la maison et tenté de jouer une partie — puis s'est
 // arrêtée sur `process.exit(1)` faute de serveur. Un module qui AGIT à l'import ne peut pas être
 // testé, et c'est précisément ce qui l'avait laissé sans test jusqu'ici.
+// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
+// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
+// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
+// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
+// précisément ça — une invisibilité qui en cachait une autre.
 if (import.meta.url === `file://${process.argv[1]}`) {
+  recordCliUsage("run-simulation");
   main().catch((err) => { log(`❌ ${err.stack ?? err}`); process.exit(1); });
 }

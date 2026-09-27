@@ -28,6 +28,7 @@
 export const PROCESS_HOTE = "etat-des-taches";
 
 import { PALIERS, PALIERS_PAR_CLE, calculerPalier, rangDe } from "./priorites.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 // LES QUATRE NIVEAUX, calibrés par l'utilisateur en fenêtre le 2026-09-23 (« 4 niveaux nommés »,
 // choisis contre une note sur 100 et contre une échelle à 3). Assez de nuance pour trancher, assez
@@ -357,4 +358,9 @@ export function formatEchelleCriticite(niveaux = NIVEAUX_CRITICITE, crans = URGE
   return l.join("\n");
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) console.log(formatEchelleCriticite());
+// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
+// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
+// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
+// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
+// précisément ça — une invisibilité qui en cachait une autre.
+if (import.meta.url === `file://${process.argv[1]}`) { recordCliUsage("criticite"); console.log(formatEchelleCriticite()); }
