@@ -56,6 +56,7 @@ export const DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES = [
   { path: "docs/plans/", pourquoi: "les plans de chantier — écrits à la main pour un chantier donné, jamais produits passage après passage par un outil. Un plan n'a pas de producteur périodique, donc pas d'équipe propriétaire." },
   { path: "docs/rapports-de-nuit/", pourquoi: "les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas." },
   { path: "docs/rapports-gros-prompt/", pourquoi: "les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs." },
+  { path: "docs/rapports-verification-froid/", pourquoi: "les vérifications à froid (Article 25) — un dossier par vérification, déclenché par une demande ou une vague de travail, jamais à date fixe et jamais produit par un outil unique : il RASSEMBLE les passages de plusieurs outils et l'analyse qui les lit. Les outils qu'il convoque ont chacun leur propre registre ; celui-ci n'appartient donc à aucune équipe, et le dire vaut mieux que de lui en inventer une (2026-09-27, tâches #436/#773)." },
   { path: "docs/contexte-projet/", pourquoi: "les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties." },
   // LES QUATRE QUE LA GÉNÉRATION D'INDEX A RÉVÉLÉS (2026-09-26, tâche #982). Ils n'ont pas changé
   // de nature : ils ont reçu une TABLE DES MATIÈRES, et le garde-fou reconnaît un registre à la
@@ -1355,10 +1356,39 @@ export function signatureDuPassage(texte = "") {
   return m.length ? m.join(" | ") : null;
 }
 
+// LE NOM COURT QUI NE POUVAIT JAMAIS MATCHER (2026-09-27, tâches #436/#773 — trouvé parce qu'un
+// rapport de plus a changé le corpus, jamais en relisant le code).
+//
+// LE DÉFAUT : `memeChose()` compare par racines de mots et exige DEUX mots en commun, mais
+// `motsDuNom()` jette les mots de trois lettres ou moins. « the-king » se réduit donc à UN seul
+// mot, « king » — et deux dépôts du MÊME outil, `the-king.txt` et `the-king-signal.txt`, étaient
+// classés « deux OUTILS DIFFÉRENTS », c'est-à-dire dans le seul palier qui appelle une action.
+//
+// CE N'EST PAS UNE OCCURRENCE, C'EST UNE CLASSE (leçon L37) : tout outil dont le nom commence par
+// un mot court — « the-… », « el-… », « la-… » — était structurellement hors de portée de la règle
+// écrite juste au-dessus pour rattraper exactement ces renommages d'items de Ronde. Corriger le
+// seul cas THE-KING aurait laissé les suivants arriver un par un.
+//
+// LA RÈGLE AJOUTÉE EST UN PRINCIPE, jamais une liste de suffixes à tenir à jour (Article 24) : si
+// TOUS les mots du nom le plus court se retrouvent dans le plus long, c'est le même outil sous un
+// nom rallongé. Ici on compte les mots courts, précisément parce que c'est leur perte qui créait
+// le trou. Le cas à NE PAS attraper reste protégé : `check-house` et `check-spirit` partagent un
+// mot mais aucun n'est inclus dans l'autre, donc ils restent deux outils différents.
+export function memeOutilMalgreLeSuffixe(a, b) {
+  if (memeChose(a, b)) return true;
+  const mots = (n) => String(n).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ")
+    .toLowerCase().split(/\s+/).filter((m) => m.length > 1);
+  const ma = mots(a), mb = mots(b);
+  if (!ma.length || !mb.length) return false;
+  const [court, long] = ma.length <= mb.length ? [ma, mb] : [mb, ma];
+  const setLong = new Set(long);
+  return court.every((m) => setLong.has(m));
+}
+
 export function natureDuJumelage(chemins = [], { dossiersDArchive = ["docs/simulations"], signatures = [] } = {}) {
   const dossiers = [...new Set(chemins.map((c) => String(c).split("/").slice(0, 2).join("/")))];
   const noms = chemins.map(nomDOutilDuRapport);
-  const memeOutil = noms.every((n) => memeChose(n, noms[0]));
+  const memeOutil = noms.every((n) => memeOutilMalgreLeSuffixe(n, noms[0]));
   // LE MÊME PASSAGE, DEUX FICHIERS — trouvé au premier vrai passage, deux fois : la Ronde du
   // 2026-09-22 a déposé `clean-dirty-old.txt` ET `gardien-clean-dirty-old.txt`, puis
   // `safe-export.txt` ET `gardien-safe-export.txt`. Un seul contrôle a eu lieu ; le second fichier

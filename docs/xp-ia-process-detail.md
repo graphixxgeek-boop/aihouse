@@ -181,6 +181,15 @@ Tout ce process est atteignable depuis les documents seuls, sans une ligne de co
 - **Le contrôleur** : `scripts/angel-of-ia-process.mjs`, qui porte la règle `xp-lecons` et refuse
   d'être au vert tant qu'elle n'a pas reçu de réponse. C'est le contrôleur de la CONDUITE, jamais
   d'un déroulé : ce process décrit un comportement à tenir, pas les étapes d'une activité.
+  **CE PROCESS NE POSSÈDE PAS SON CONTRÔLEUR, il y loge une règle parmi d'autres** — et ça se dit
+  ici plutôt que de se déduire (Article 27). angel porte TOUTES les règles de conduite du projet
+  (`resume-contextualise`, `reprise-des-notes`, `outil-obligatoire`, `temps-reel-lu`, et celles
+  ajoutées depuis) ; leur liste se LIT dans `REGLES` du script, jamais recopiée ici, sans quoi ce
+  document se périmerait à la règle suivante (Article 24). **Conséquence pratique, et c'est elle
+  qui manquait** : un changement d'angel ne concerne ce process-ci que s'il touche `xp-lecons`.
+  Une règle de conduite ajoutée pour un tout autre sujet ne demande aucune mise à jour de ce
+  document — vérifié le 2026-09-27 (tâches #436/#773), où deux règles neuves sans rapport avec
+  l'XP avaient été facturées ici par le détecteur de dettes.
 - **Ce document**, enregistré chez `god-of-all-process` comme les cinq autres process.
 - **Les tests** : `scripts/check-house.mjs`, qui échouent si un maillon se débranche.
 

@@ -1171,6 +1171,13 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
   //     contrôleur de deux process à la fois : le modifier produisait deux lignes identiques pour
   //     un seul geste. Les process concernés sont NOMMÉS dans l'écart, jamais multipliés par lui.
   const PARTAGES = new Set(["scripts/check-house.mjs"]);
+  // QUI GARDE PLUSIEURS PROCESS ? La question se DÉRIVE des process déclarés, jamais d'une liste
+  // recopiée (Article 24) : un treizième process déclaré demain change ce compte tout seul.
+  const combienDeProcess = new Map();
+  for (const p of processes) {
+    if (!p.doc || !p.gardien) continue;
+    combienDeProcess.set(p.gardien, (combienDeProcess.get(p.gardien) ?? 0) + 1);
+  }
   const parCle = new Map();
   for (const c of commits) {
     for (const p of processes) {
@@ -1206,7 +1213,74 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
       if (!touche.length || c.fichiers.includes(p.doc)) continue;
       for (const fichier of touche) {
         const cle = `${c.hash}|${fichier}`;
-        if (!parCle.has(cle)) parCle.set(cle, { commit: c.hash, sujet: c.sujet, fichier, processes: [], docs: [], lien: docsAilleurs(fichier, c.fichiers).length ? "a-confirmer" : "direct", documenteAilleurs: docsAilleurs(fichier, c.fichiers) });
+        // LE GARDIEN PARTAGÉ (2026-09-27, vérification à froid des tâches #436/#773). QUATRE
+        // gardiens sur douze gardent PLUSIEURS process : god en garde trois (semi-autonome, nuit,
+        // meta), moïse deux, circle-process-guardian deux, check-tasks-details deux. Tout
+        // changement de l'un d'eux était donc facturé à TOUS ses process, sauf à mettre à jour
+        // TOUS leurs documents dans le même commit — c'est-à-dire à documenter des process que le
+        // changement ne concernait pas.
+        //
+        // MESURÉ : huit dettes annoncées sur mes commits du jour, et les huit portaient sur un
+        // process frère. Le point de contrôle de nuit était documenté dans le document du mode
+        // autonome — correctement — et la dette tombait sur le mode SEMI-autonome, qu'il ne touche
+        // pas. Un garde-fou qui accuse à tort cesse d'être lu (L4), et celui-ci le fait
+        // STRUCTURELLEMENT, pas par accident : il ne peut pas se corriger tout seul.
+        //
+        // LA RÈGLE NE FAIT TAIRE PERSONNE, ELLE DÉGRADE — exactement comme la règle voisine du
+        // 2026-09-26, et pour la même raison : si le commit a mis à jour le document d'AU MOINS UN
+        // process gardé par ce même script, le travail A ÉTÉ documenté, et lequel des process
+        // frères était concerné n'est pas connaissable mécaniquement. Un commit qui ne documente
+        // RIEN reste une dette pleine et entière.
+        // LA RÈGLE RETENUE EST UN PRINCIPE, JAMAIS UNE RUSTINE (corollaire de l'Article 17) : ma
+        // première version dégradait quand un process FRÈRE avait été documenté. Mesurée, elle ne
+        // rattrapait que 4 des 8 fausses dettes — parce qu'elle décrivait le symptôme (« un frère
+        // a bougé ») et pas la cause (« ce changement ne concerne pas ce process-ci »).
+        //
+        // LE PRINCIPE : un changement de gardien ne concerne un process QUE S'IL LE NOMME. Le
+        // diff mentionne-t-il le slug du process, ou le chemin de son document ? Si oui, le lien
+        // est DIRECT et la dette reste pleine — la sévérité de 2026-09-25 est intacte là où elle
+        // sert. Si non, le changement porte sur autre chose que ce process, et l'écart devient un
+        // soupçon à confirmer plutôt qu'une accusation.
+        //
+        // IL DÉGRADE, IL NE FAIT JAMAIS TAIRE : le soupçon reste affiché, et nommé. Ce qui
+        // disparaît est l'accusation structurelle — celle qu'un gardien partagé produit
+        // mécaniquement, sur des process que le commit n'a jamais approchés.
+        // L'ORDRE DES ARGUMENTS EST LE HASH PUIS `--` PUIS LE CHEMIN, et je viens de refaire
+        // l'erreur inverse dans la même session : écrit `-- <fichier> <hash>`, git lit le hash
+        // comme un chemin et rend le diff de HEAD pour tous les commits. C'est mot pour mot le
+        // défaut payé par la tâche #1014 ce matin — la leçon L37 (« corriger une occurrence ne
+        // corrige pas la CLASSE ») vérifiée sur son auteur, quelques heures après l'avoir écrite.
+        // Trouvé en vérifiant que les trois dettes restantes nommaient vraiment leur process :
+        // aucune ne le faisait, et c'est le diff qui était faux.
+        // LA RÈGLE NE S'APPLIQUE QU'À L'AMBIGUÏTÉ QU'ELLE CORRIGE, jamais au-delà. Un gardien qui
+        // ne garde QU'UN process ne pose aucune question : le changer, c'est changer ce process-là,
+        // et la dette reste pleine sans qu'on ait à lire le diff. C'est le cas fondateur de 2026-09-25
+        // et il ne bouge pas d'un pouce. Ma première version appliquait le test du nom à TOUT le
+        // monde — le filet a refusé, et il avait raison : elle aurait absous un commit qui change le
+        // seul gardien d'un process sans documenter, exactement le trou que ce détecteur bouche.
+        const partage = (combienDeProcess.get(fichier) ?? 0) > 1;
+        const diff = !partage ? null : (() => { try { return shImpl(`git show --format= ${c.hash} -- ${JSON.stringify(fichier)}`, { cwd: root, maxBuffer: 5e7 }); } catch { return null; } })();
+        // UN DIFF ILLISIBLE NE DÉGRADE RIEN : sans lui, on ne peut pas dire que le changement ne
+        // nomme pas le process, seulement qu'on n'a pas pu regarder (L5). On reste sur la règle
+        // stricte plutôt que d'absoudre par défaut d'information.
+        // ON CHERCHE LA DÉCLARATION DU PROCESS, JAMAIS SON NOM EN PROSE. Premier essai : le slug
+        // nu. Il a rendu « nuit » trois fois sur un diff qui parlait du « point de contrôle de
+        // nuit » — un slug de quatre lettres qui est aussi un mot courant du français collisionne
+        // avec la prose, et le commentaire qui EXPLIQUE un changement se met alors à le prouver.
+        // Ce qui distingue un vrai lien est la déclaration (`slug: "nuit"`) ou le chemin du
+        // document : ni l'un ni l'autre ne s'écrit par accident dans une phrase.
+        const declaration = `slug: ${JSON.stringify(p.slug)}`;
+        // UN DIFF VIDE EST UNE NON-MESURE, exactement comme un diff illisible : sur un fichier
+        // réellement modifié, `git show` ne rend jamais rien. Le traiter comme « le changement ne
+        // nomme pas ce process » absoudrait sur une absence d'information (L5) — on reste strict.
+        const nomme = !partage || !diff || diff.includes(declaration) || (p.doc && diff.includes(p.doc));
+        const ailleurs = docsAilleurs(fichier, c.fichiers);
+        const lien = nomme ? (ailleurs.length ? "a-confirmer" : "direct") : "a-confirmer";
+        const pourquoiSoupcon = nomme ? ailleurs : [...ailleurs, `le diff de ${fichier} ne nomme ni « ${p.slug} » ni son document : ce gardien en garde plusieurs, et ce changement ne semble pas porter sur celui-ci`];
+        if (!parCle.has(cle)) parCle.set(cle, { commit: c.hash, sujet: c.sujet, fichier, processes: [], docs: [], lien, documenteAilleurs: pourquoiSoupcon });
+        // Un même fichier peut concerner plusieurs process : si l'UN d'eux est nommé, la dette est
+        // pleine pour l'entrée entière. Dégrader sur le plus indulgent effacerait le vrai lien.
+        else if (lien === "direct") parCle.get(cle).lien = "direct";
         parCle.get(cle).processes.push(p.slug ?? p.nom);
         parCle.get(cle).docs.push(p.doc);
       }

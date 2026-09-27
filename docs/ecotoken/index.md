@@ -54,3 +54,4 @@ reproposer en tête ce qui a déjà été refusé.)*
 |---|---|
 | [circle-signal-2026-09-27T00-12-15-442Z.txt](ronde/circle-signal-2026-09-27T00-12-15-442Z.txt) | 2026-09-27 |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
+| 2026-09-27 13:52 | 25877 | 2788 | à trancher | 18 aparté(s) narratif(s) daté(s) |

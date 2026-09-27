@@ -1,0 +1,53 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il croise des horodatages : une consultation faite dans une session sans commit lui reste invisible, et un commit groupant plusieurs heures élargit la fenêtre — un signal daté, jamais une preuve. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : non renseignée (à déposer par l'agent — cf. god-of-all-process)
+Produit le : dimanche 27 septembre 2026 à 13h48 (UTC)
+État du code : 2ff7e6c sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : angel-of-ia-process — inchangé depuis le dimanche 27 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== angel-of-ia-process — discipline d'exécution des règles de travail ===
+Surveille la CONDUITE (agent et utilisateur), jamais le déroulé d'une activité — ça, c'est god-of-all-process.
+
+— Discipline d'exécution (angel-of-ia-process) —
+0 manquement(s), 18 règle(s) non vérifiable(s) sans réponse.
+  ? [agent] Faire évaluer le travail fait ENTRE deux Rondes — une nuit autonome, une vague de correctifs, une simulation — et jamais seulement ce qu'une Ronde a couvert. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Documenter chaque tâche substantielle dans docs/suivi/ DANS LE MÊME commit que le travail décrit. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Pousser au fil de l'eau : ce qui n'est pas poussé n'existe pas si la session s'interrompt. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser au moins trois questions de vérification AVANT ou PENDANT l'exécution, jamais après coup — et plus si le sujet contient plus de décisions réelles. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Traiter point par point une demande qui en contient plusieurs, sans jamais noyer les points dans une synthèse. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser les questions dans une vraie fenêtre à choix, avec leur contexte rappelé, jamais en texte libre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [les deux] Après la livraison d'un transcript : l'utilisateur le lit pendant que l'agent travaille, en parallèle et non l'un après l'autre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Le signal « voici mes commentaires » ouvre un second passage sur le même transcript, que l'agent doit attendre et reconnaître. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Pour chaque demande, passer par un OUTIL plutôt que de faire à la main — et tout rapport livré est LE FICHIER produit par un outil, nommé avec l'horodatage de son passage, suivi de l'analyse et du plan d'action. Faire à la main est la quatrième issue, et elle exige une raison écrite dans docs/suivi/. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ne jamais taper une date, une heure ou une durée de mémoire : les LIRE (agent-du-temps) et déclarer leur SOURCE. Toute fraîcheur se calcule sur une heure lue, et le temps de l'utilisateur — présent ou endormi — compte autant que celui de la machine. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Quand une obligation de CLAUDE.md apparaît, disparaît ou change, répercuter LE JOUR MÊME dans les documents du référentiel qui la portent — ou écrire pourquoi il n'y avait rien à répercuter. Une règle changée d'un seul côté s'applique en silence pendant des semaines. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Dès qu'une saisine porte plusieurs demandes distinctes, la passer au compteur (`node scripts/rapport-gros-prompt.mjs seuil <message.txt>`) et PROPOSER le process gros prompt quand il se déclenche — jamais l'imposer, jamais le sauter parce que le message avait l'air simple. Et le rapport produit archive la SAISINE INTÉGRALE, sans quoi il n'archive que mon découpage de sa demande (tâche #723). — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] En mode autonome, ARMER le réveil (send_later, 15 min) AVANT de terminer le tour, systématiquement. Un tour qui se termine sans réveil armé arrête la nuit, quoi qu'annonce le compte rendu. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Aux trois moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ne jamais s'arrêter sur un message court : seule une demande explicite interrompt le travail en cours. Tenir le compte de la série en cours, et sortir le rappel léger dès le 2e message court, l'alerte plus forte dès le 5e — les seuils sont ceux que l'utilisateur a demandés, pas les miens. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+
+=== LE TRAVAIL QUE PERSONNE N'A ÉVALUÉ ===
+⚠️  697 unité(s) de travail (697 tâche(s), 428 commit(s)) depuis 2026-09-22, et aucune évaluation ne les couvre
+   REMÈDE : lancer l'évaluation maintenant, sans attendre une Ronde : `node scripts/cassandra-rh.mjs rapport` pour le côté DEV et `node scripts/angel-of-ia-process.mjs` pour le côté CONDUITE. Une évaluation qui n'existe qu'à la Ronde laisse hors de tout jugement ce qui se fait entre deux Rondes — une nuit entière de travail, par exemple.
+
+Croisement des horodatages : 10 commit(s) examiné(s), 0 consultation(s) de jugement faite(s) après coup, 0 signal(aux) non concluant(s).
+Limite honnête : une consultation dans une session sans commit reste invisible, et un commit groupant plusieurs heures élargit la fenêtre — c'est un signal daté, jamais une preuve.
+Deux origines sont écartées du verdict : « verification » (relancer un outil pour voir s'il marche encore n'est pas le consulter) et « cli_direct » (le compteur sait qu'un outil a été lancé, jamais pourquoi — insuffisant pour nommer un manquement).
+
+=== OÙ J'AI BUTÉ SUR UNE SAISINE ===
+Sur 3 incompréhension(s) réellement enregistrée(s) : 0 venaient de la saisine, 3 de moi (0 % côté saisine).
+→ La réponse honnête à ta question « est-ce que mes prompts sont assez bien écrits ? » est OUI : aucun blocage mesuré ne vient de ton écriture.
+  Et les 3 de mon côté, nommées plutôt que tues — les taire rendrait le chiffre ci-dessus flatteur pour toi et faux :
+  · [precedent-non-cherche] « livre moi le rapport de gros prompt par rapport au gros prompt d hier soir stp » — lance rapport-gros-prompt.mjs, l outil qui existe depuis le 2026-09-24
+  · [process-non-lu] « le rapport de gros prompt est document deja prevu, pas un document que tu dois inventer toi » — que je lise le process et les references AVANT de construire quoi que ce soit
+  · [precedent-non-cherche] « je veux un fichier HTML de reponses a TOUTES les questions du gros prompt » — un SECOND document, distinct : ses QUESTIONS avec une reponse chacune, au format deja formalise dans docs/reponses/
+
+=== Plan d'action ===
+  → RETENU · 18 règle(s) de conduite sur 19 SANS RÉPONSE — angel a demandé, rien n'a été déclaré : ni tenues ni manquées, seulement non dites — ex. eval-hors-ronde, suivi-meme-commit, push-au-fil-de-l-eau (+15) — tâche [RECOMMANDEE] : répondre aux règles de conduite en attente (node scripts/angel-of-ia-process.mjs, puis déclarer) — un vert obtenu en laissant la moitié des règles sans réponse serait un faux vert
+  → RETENU · 697 unité(s) de travail (697 tâche(s), 428 commit(s)) depuis 2026-09-22, et aucune évaluation ne les couvre — tâche [RECOMMANDEE] : lancer l'évaluation maintenant, sans attendre une Ronde : `node scripts/cassandra-rh.mjs rapport` pour le côté DEV et `node scripts/angel-of-ia-process.mjs` pour le côté CONDUITE. Une évaluation qui n'existe qu'à la Ronde laisse hors de tout jugement ce qui se fait entre deux Rondes — une nuit entière de travail, par exemple.

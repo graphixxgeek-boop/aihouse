@@ -8274,6 +8274,15 @@ async function testRapportsJumeaux() {
   assert.deepEqual(avecSonPropreDepot.map((r) => r.chemin), ['docs/doc-report/coherence.txt'], 'MUST LET PASS the neighbouring report and MUST EXCLUDE its own deposit: the repository has already paid this auto-referential family once (find-booster, task #182), and here it is closed before costing anything');
   assert.equal(dr.MOTIF_RAPPORT_JUMEAUX.test('rapports-jumeaux-2026-09-26.txt'), true, 'the exclusion is a declared pattern rather than a name buried in the loop');
   assert.equal(dr.MOTIF_RAPPORT_JUMEAUX.test('rapports-jumeaux-index.md'), true, 'and it holds whatever suffix a future deposit takes');
+  // LE NOM COURT QUI NE POUVAIT JAMAIS MATCHER (2026-09-27, tâches #436/#773). memeChose() exige
+  // deux mots en commun et motsDuNom() jette les mots de trois lettres ou moins : « the-king » se
+  // réduisait à UN mot, si bien que deux dépôts du même outil tombaient dans « entre-outils », le
+  // seul palier qui appelle une action. C'est une CLASSE, pas une occurrence (L37) — tout outil
+  // dont le nom commence par un mot court y échappait.
+  assert.equal(dr.memeOutilMalgreLeSuffixe('the-king-signal', 'the-king'), true, 'MUST CATCH: a Ronde item suffix added to a tool whose name starts with a short word is the SAME tool renamed, never two tools overlapping — the two-common-words rule could never fire here because words of three letters or fewer are dropped');
+  assert.equal(dr.memeOutilMalgreLeSuffixe('check-house', 'check-spirit'), false, 'MUST LET PASS: two genuinely different tools that share one word — neither name is contained in the other, and widening this far would silence the only tier that calls for action');
+  assert.equal(dr.memeOutilMalgreLeSuffixe('argus', 'harmonia'), false, 'MUST LET PASS: two tools with nothing in common stay two tools');
+
   assert.equal(dr.MOTIF_RAPPORT_JUMEAUX.test('rapport-jumeaux-2026-09-26.txt'), false, 'MUST LET PASS: a near name that is not this tool\'s deposit stays in the corpus — an exclusion too wide would silently shrink what gets compared');
 
   // LE DÉPÔT LUI-MÊME (Article 31, faille 3 : le livrable est le FICHIER).
@@ -17083,3 +17092,52 @@ async function testProcessDocumentsDeReference() {
   console.log("Passed: le process « documents-de-reference » et son étape 9 (2026-09-27, tâche #846). La surprise de l'instruction était que HUIT ÉTAPES SUR DIX existaient déjà, chacune exigée par la charte ET portée par un mécanisme réel : ce qui manquait n'était pas le contenu, c'était qu'elles ne soient nulle part rassemblées en une suite dont on puisse voir les trous — un agent devait les retrouver de mémoire, précisément ce que l'Article 30 interdit. LE SEUL TROU SANS AUCUN PORTEUR était « répercuter dans les autres documents » : la charte l'exige le jour même (Article 13) et rien ne vérifiait que ça avait été fait, ce qui est la leçon L1 sur la règle qui gouverne la charte elle-même. MON PREMIER ESSAI DE MESURE ÉTAIT FAUX ET C'EST LA LEÇON L11 : j'ai compté les unités de règle, qui valent 33 et n'ont pas bougé d'un iota sur 80 commits, y compris pendant les passes d'allègement qui ont réécrit des Articles entiers — elles comptent les ARTICLES, pas les obligations, donc un détecteur bâti dessus n'aurait mordu qu'à la création ou la suppression d'un Article. Trouvé en MESURANT, jamais en relisant. La bonne mesure est le nombre d'OBLIGATIONS, et elle distingue trois cas sur le vrai dépôt : une charte retouchée sans qu'aucune règle bouge (rien à répercuter, et crier là ferait taire le contrôle sur du travail d'entretien), un changement correctement répercuté, et une dette. Sur 80 commits réels : 1 changement d'obligation, correctement répercuté, zéro dette. LE NOM ET LE SORT DE L'ÉTAPE 9 ONT ÉTÉ TRANCHÉS PAR L'UTILISATEUR en fenêtre dédiée — les noms se choisissent ici par lui, et un process acté sans lui serait un process que personne n'a voulu. Son choix « la construire, elle demande » est le même compromis que les six règles qu'angel-of-ia-process demande au lieu de deviner : le mécanisme ne saura jamais si les autres documents DEVAIENT bouger, il sait dire qu'une obligation a changé d'un seul côté et poser la question.");
 }
 await testProcessDocumentsDeReference();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LE GARDIEN PARTAGÉ ACCUSAIT DES PROCESS QU'IL N'AVAIT PAS TOUCHÉS (2026-09-27, tâches #436/#773)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testGardienPartageNAccusePlusSesFreres() {
+  const G = await import('../scripts/god-of-all-process.mjs');
+
+  // LE DÉFAUT EST STRUCTUREL, JAMAIS ACCIDENTEL : quatre gardiens sur douze gardent PLUSIEURS
+  // process — god en garde trois. Tout changement de l'un d'eux était donc facturé à TOUS ses
+  // process, sauf à mettre à jour TOUS leurs documents dans le même commit, c'est-à-dire à
+  // documenter des process que le changement ne concernait pas. Un garde-fou qui accuse à tort
+  // cesse d'être lu (L4), et celui-ci le faisait par construction : il ne pouvait pas se corriger.
+  const gardiensPartages = Object.values(G.PROCESSES.reduce((m, p) => { (m[p.gardien] ??= []).push(p.slug); return m; }, {})).filter((v) => v.length > 1);
+  assert.ok(gardiensPartages.length >= 3, 'the premise holds on the real repository: several guardians govern more than one process, which is what made the over-declaration structural');
+
+  const faire = (diff) => (cmd) => {
+    if (cmd.includes('git log')) return 'aaa11111\tsujet test\nscripts/god-of-all-process.mjs';
+    if (cmd.includes('git show')) return diff;
+    return '';
+  };
+  // MUST CATCH — la DÉCLARATION d'un process change et son document ne bouge pas : dette pleine.
+  // La sévérité de 2026-09-25 (neuf dettes réelles laissées passer) est intacte là où elle sert.
+  const dette = G.findChangementsIndirectsSansMiseAJour({ nbCommits: 1, shImpl: faire('+  slug: "nuit",\n+  const x = 1;') });
+  assert.ok(dette.some((e) => e.lien !== 'a-confirmer'), 'MUST CATCH: a change touching a process DECLARATION without updating its document stays a full debt — weakening that link is exactly what let nine real debts through on 2026-09-25');
+  // MUST LET PASS — le même fichier, un diff qui ne nomme aucun process : soupçon, jamais dette.
+  const soupcon = G.findChangementsIndirectsSansMiseAJour({ nbCommits: 1, shImpl: faire('+  const x = 1;\n+  const y = 2;') });
+  assert.ok(soupcon.length && soupcon.every((e) => e.lien === 'a-confirmer'), 'MUST LET PASS: the same guardian changed for another reason is a SUSPICION, never an accusation — and it stays displayed, so nothing is silenced');
+
+  // LE PIÈGE DU PREMIER ESSAI, ET IL EST INSTRUCTIF : chercher le slug NU rendait « nuit » trois
+  // fois sur un diff qui parlait du « point de contrôle de nuit ». Un slug de quatre lettres qui
+  // est aussi un mot courant du français collisionne avec la prose — et le commentaire qui
+  // EXPLIQUE un changement se met alors à le prouver. On cherche la DÉCLARATION, qui ne s'écrit
+  // jamais par accident dans une phrase.
+  const prose = G.findChangementsIndirectsSansMiseAJour({ nbCommits: 1, shImpl: faire('+  // le point de contrôle de nuit, lancé chaque nuit\n+  const x = 1;') });
+  assert.ok(prose.every((e) => e.lien === 'a-confirmer'), 'MUST NOT be fooled by prose: "nuit" written in a comment is not a declaration — a four-letter slug that is also a common French word collides with prose, and the comment EXPLAINING a change would start proving it');
+
+  // ET LE DIFF ILLISIBLE NE DÉGRADE RIEN (L5) : sans lui on ne peut pas dire que le changement ne
+  // nomme pas le process, seulement qu'on n'a pas pu regarder. On reste strict plutôt que
+  // d'absoudre par défaut d'information.
+  const illisible = G.findChangementsIndirectsSansMiseAJour({ nbCommits: 1, shImpl: (cmd) => {
+    if (cmd.includes('git log')) return 'aaa11111\tsujet\nscripts/god-of-all-process.mjs';
+    if (cmd.includes('git show')) throw new Error('git absent');
+    return '';
+  } });
+  assert.ok(illisible.some((e) => e.lien !== 'a-confirmer'), 'an unreadable diff keeps the strict rule: "I could not look" must never absolve (L5)');
+
+  console.log(`Passed: le gardien partagé accusait des process qu'il n'avait pas touchés (2026-09-27, vérification à froid des tâches #436 et #773). C'est la vérification à froid qui l'a trouvé, en instruisant UNE PAR UNE les huit dettes documentaires annoncées sur mes propres commits du jour — les huit portaient sur un process FRÈRE. Le défaut est STRUCTUREL et pas accidentel : ${gardiensPartages.length} gardiens gardent plusieurs process, god en garde trois, donc tout changement de l'un d'eux était facturé à TOUS ses process sauf à mettre à jour TOUS leurs documents dans le même commit — c'est-à-dire à documenter des process que le changement ne concernait pas. Un garde-fou qui accuse à tort cesse d'être lu (L4), et celui-ci le faisait par construction. MA PREMIÈRE RÈGLE DÉCRIVAIT LE SYMPTÔME : dégrader quand un process frère avait été documenté. Mesurée, elle ne rattrapait que 4 des 8 — parce qu'elle disait « un frère a bougé » là où il fallait dire « ce changement ne concerne pas celui-ci ». LA RÈGLE RETENUE EST UN PRINCIPE : un changement de gardien ne concerne un process que s'il NOMME sa déclaration ou son document. DEUX PIÈGES TRAVERSÉS EN CHEMIN, tous deux trouvés en vérifiant et jamais en relisant : (1) j'ai réécrit l'ordre des arguments git à l'envers — le hash lu comme un chemin, le diff de HEAD rendu pour tous les commits — c'est-à-dire MOT POUR MOT le défaut payé par la tâche #1014 ce matin, la leçon L37 vérifiée sur son auteur quelques heures après l'avoir écrite ; (2) chercher le slug nu rendait « nuit » trois fois sur un diff qui parlait du « point de contrôle de nuit » : un slug de quatre lettres qui est aussi un mot courant collisionne avec la prose, et le commentaire qui EXPLIQUE un changement se met à le prouver. Mesure finale sur 30 commits réels : 19 dettes annoncées → 0 dette et 19 soupçons, tous affichés et nommés. Le détecteur DÉGRADE, il ne fait jamais taire.`);
+}
+await testGardienPartageNAccusePlusSesFreres();
