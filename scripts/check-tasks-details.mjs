@@ -2941,6 +2941,21 @@ function bilanCli() {
   try { mkdirSync(OUT_DIR, { recursive: true }); } catch { /* déjà là */ }
   const chemin = join(OUT_DIR, `bilan-taches-${maintenant.replace(/[:]/g, "-")}.txt`);
   writeFileSync(chemin, texte, "utf8");
+  // LE MÊME OUBLI QUE `themes`, DANS LA SOUS-COMMANDE D'À CÔTÉ (2026-09-27). Corrigé chez `themes`
+  // le matin même, il vivait encore ici : le bilan écrivait son fichier sans jamais appeler
+  // `appendIndexRow()`, et c'est le filet qui l'a trouvé en REFUSANT le commit — l'index promet la
+  // liste complète du dossier, en retard il ment. Un rapport que le registre ignore est un rapport
+  // que personne ne retrouvera (Article 24).
+  // CE QUE ÇA APPREND, ET C'EST PLUS GROS QUE CES DEUX LIGNES : corriger une sous-commande ne
+  // corrige pas ses sœurs. Le jour où une TROISIÈME sous-commande écrira un rapport, elle oubliera
+  // pareil — le geste « écrire un fichier » et le geste « l'inscrire » restent deux appels séparés
+  // que rien n'oblige à voyager ensemble.
+  // Le bilan n'a ni zoom ni forme au sens du registre : il déclare ce qu'il EST plutôt que de
+  // laisser un vide qui se lirait comme une donnée manquante.
+  appendIndexRow({
+    file: chemin, zoom: "bilan", format: "texte",
+    count: conf?.maintenant?.ouvertes ?? 0, total: conf?.maintenant?.total ?? rows.length, regressions: [], stagnant: [],
+  });
   console.log(texte);
   console.log(`\nÉcrit : ${chemin.replace(ROOT, "")}`);
   return chemin;
