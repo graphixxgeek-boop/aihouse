@@ -195,6 +195,15 @@ représentatifs, ce qui est pire, parce qu'on ne les vérifie pas.*
 d'origine, et l'absence a été trouvée par la couche de remise à niveau — une leçon sans le coût qui
 l'a produite se lit comme un conseil, pas comme une leçon.)*
 
+*(Deuxième occurrence, 2026-09-27, tâche #1045 — et elle nomme le MÉCANISME exact, qui manquait : un
+`try/catch` qui avale une exception et rend une liste VIDE. Une entrée du catalogue portait `slug:`
+là où le code attend `outils:` ; `checkAgentOnboarding()` levait donc une erreur, l'appelant
+l'attrapait, et l'audit d'intégration annonçait tranquillement **0 outil incomplet**. Zéro parce
+qu'il avait planté, affiché comme zéro parce que tout va bien. Trouvé en comparant la sortie avant
+et après un `git stash`, jamais en relisant le code. **Règle qui en sort** : un `catch` qui rend une
+valeur NEUTRE (0, liste vide, `true`) doit rendre un état « pas mesuré » à la place — sinon il
+fabrique le seul verdict que personne ne va vérifier.)*
+
 **Porté par** : `relanceCircleTasks()` (`scripts/circle-tasks.mjs`) — un compte illisible rend `mesurable: false`, jamais un retard de zéro.
 
 **Terrain** : quand un outil annonce un nombre, un pourcentage ou un verdict · mots : mesure, compteur, pourcentage, verdict, couverture, note · fichiers : scripts/*.mjs
@@ -1032,6 +1041,14 @@ humain peut être un nom trompeur pour un score de ressemblance.
 plutôt que de supposer qu'un ajout ne casse rien. Et se demander une fois : **à quoi ce nom
 ressemble-t-il, pour une machine qui compare des mots ?**
 
+*(Deuxième occurrence, 2026-09-27, tâche #1041, et elle est plus violente parce que le fichier était
+ÉPHÉMÈRE : le runner parallèle écrivait ses copies du filet dans `scripts/`, le dossier que
+SAFE-EXPORT balaie à chaque commit. Le runner **faisait échouer son propre test** — il posait dans
+le terrain scanné les fichiers que le scanner refuse. Un fichier temporaire n'est pas moins un
+fichier : les copies vivent depuis dans `.sites-runtime/`. **Le geste général** : un outil qui
+génère des fichiers les écrit hors des dossiers que ses pairs lisent, jamais dedans « juste le
+temps du passage ».)*
+
 **Terrain** : quand je crée un fichier dans docs/ ou scripts/, en particulier une archive ou un document au nom proche d'un existant · mots : créer, archiver, nouveau fichier, déposer, nommer · fichiers : docs/**, scripts/*.mjs
 
 **Porté par** : `DOSSIERS_JAMAIS_DESTINATION` + `archivesNonDeclarees()` (`scripts/ecotoken.mjs`)
@@ -1275,6 +1292,29 @@ soixante-dix offres, et seule la mesure le dit.** Ce qui a réglé le problème 
 mais la DONNÉE : enrichir la demande de l'offre du vocabulaire qu'un lecteur emploie vraiment. Règle
 générale : avant de raffiner un algorithme de rapprochement, regarder si la chaîne qu'on cherche à
 rapprocher est simplement absente du texte qu'on lit.
+
+
+**L44 — Un garde-fou d'idempotence qui cherche la chaîne qu'il vient d'écrire se déclare toujours satisfait.**
+*(2026-09-27, tâche #1036, sur un ajout d'imports en masse.)* Le script ajoutait une ligne
+`import` dans quarante-trois fichiers, et se protégeait des doublons en vérifiant d'abord que la
+ligne n'y était pas déjà. Mais la vérification portait sur le texte APRÈS écriture dans la même
+passe : **sept fichiers ont été annoncés « déjà à jour » sans que rien n'y soit ajouté.** Et rien
+ne l'a signalé : `node --check` passe, parce qu'un identifiant manquant est une erreur d'EXÉCUTION
+et non de syntaxe — le fichier est parfaitement bien formé, il est simplement faux. Le défaut n'est
+apparu qu'en lançant les outils un par un. **Deux règles en sortent** : une garde d'idempotence se
+vérifie sur l'état LU AVANT la passe, jamais sur ce qu'on vient de produire ; et après une
+modification en masse, on RELIT le contenu écrit fichier par fichier au lieu de se fier à un
+« 43/43 traités » que le script s'est décerné lui-même.
+
+**L45 — Une clé de dédoublonnage plus courte que ce qui distingue deux résultats en efface un.**
+*(2026-09-27, tâche #1040, en recollant les sorties du filet lancé en parts.)* Le recollage
+dédoublonnait les lignes de succès sur leurs quarante premiers caractères — assez pour reconnaître
+un doublon de l'épine, pas assez pour séparer deux tests dont les libellés commencent pareil.
+Résultat : **298 succès affichés au lieu de 299**, et la ligne perdue était un vrai test, pas un
+doublon. Un compte qui baisse d'une unité ne ressemble pas à un bug, il ressemble à un test
+supprimé — c'est ce qui rend l'erreur coûteuse à trouver. **Le geste** : on dédoublonne sur la
+valeur ENTIÈRE et on ordonne sur le préfixe, jamais l'inverse ; une troncature sert à classer, elle
+ne sert jamais à identifier.
 
 
 # Bonnes pratiques
