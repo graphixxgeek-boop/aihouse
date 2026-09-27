@@ -1100,6 +1100,11 @@ function main() {
         console.log(`  HORS PORTÉE : ${e.horsPortee}`);
       }
       console.log("");
+      // LA PORTABILITÉ (2026-09-27) rejoint `export` pour une raison précise : elle DOIT être lue
+      // à côté du taux d'exportabilité, jamais ailleurs. Séparées, les deux mesures se feraient
+      // confondre — et c'est exactement la confusion que ce bloc existe pour empêcher.
+      for (const l of formatPortabiliteLines(mesurerLaPortabilite())) console.log(l);
+      console.log("");
       // LES KITS rejoignent `export` plutôt qu'une commande à part : c'est la même question posée
       // plus finement (« que doit-il partir avec lui ? » au lieu de « a-t-il un plan ? »), et deux
       // commandes sur le même sujet finiraient par se contredire.
@@ -2299,6 +2304,91 @@ export function alerteExportLines(kits, agence) {
   if (a.reste) l.push(`  🟡 ${a.reste} autre(s) kit(s) incomplet(s), sur des fichiers utiles ou optionnels.`);
   if (!a.alerte && !a.reste) l.push("  Rien à signaler : chaque fichier dû porte son kit complet, et l'Agence porte le sien.");
   return l;
+}
+
+
+// =============================================================================================
+// LA PORTABILITÉ — la seconde moitié de l'export, et personne ne la mesurait
+// =============================================================================================
+// TROUVAILLE DU 2026-09-27, née d'une question de l'utilisateur sur l'exportabilité des documents
+// de référence. Elle tient en une phrase : **« l'outil part » ne veut pas dire « l'outil marche
+// ailleurs »**, et jusqu'ici seule la première moitié était vérifiée.
+//
+// LA PREUVE EST DANS CE DÉPÔT, et elle est gênante : EZECHIEL-LES-TESTS a été déclaré exportable le
+// jour de sa création — blueprint, fiche, registre, kit complet — et le chemin du filet qu'il
+// enquête est écrit EN DUR dans son code. Sur un autre dépôt il cherche un fichier qui n'existe
+// pas. Le kit était complet ; l'outil était inutilisable.
+//
+// POURQUOI LES DEUX CHIFFRES NE DOIVENT JAMAIS FUSIONNER : un taux unique « d'exportabilité » à
+// 95 % se lit comme une garantie que 95 % de l'Agence fonctionnera ailleurs. C'est faux, et c'est
+// le patron exact des leçons L5/L11 — deux questions différentes, deux mesures, jamais une moyenne.
+//
+//   EXPORTABLE = l'outil a ses PIÈCES pour partir (blueprint, fiche, registre) — déjà mesuré.
+//   PORTABLE   = l'outil FONCTIONNE une fois arrivé, sans qu'on touche à son code — mesuré ici.
+
+// CE QUI TRAHIT UNE DÉPENDANCE À CE DÉPÔT-CI. Vocabulaire fermé et assumé : ce sont les noms de CE
+// projet, donc la liste ne peut pas « se périmer » au sens de l'Article 24 — elle décrit un état de
+// fait, elle ne reflète aucun autre système. Chaque entrée dit ce qu'elle coûte une fois ailleurs.
+export const MARQUEURS_DE_NON_PORTABILITE = [
+  { cle: "filet", motif: /["'`][^"'`]*check-house\.mjs["'`]/, quoi: "le chemin du filet de sécurité de CE projet", coute: "l'outil cherche un fichier qui n'existe pas sur l'autre dépôt" },
+  { cle: "charte", motif: /["'`][^"'`]*CLAUDE\.md["'`]/, quoi: "le nom du fichier de charte de CE projet", coute: "un autre projet nomme sa charte autrement, ou n'en a pas" },
+  { cle: "moteur-du-jeu", motif: /["'`][^"'`]*lib\/(lia|life|simulation|perception|dialogue|story|playback)\.ts["'`]/, quoi: "un fichier du moteur du produit", coute: "rien de tout ça n'existe ailleurs : l'outil est lié au produit, pas à l'outillage" },
+  { cle: "dossier-referentiel", motif: /["'`]docs\/referentiel\//, quoi: "l'arborescence documentaire de CE projet", coute: "un autre projet range ses documents autrement" },
+  { cle: "dossier-suivi", motif: /["'`]docs\/suivi\//, quoi: "l'emplacement du suivi de CE projet", coute: "idem : l'outil lit un dossier absent et rend zéro, ce qui se lit comme « rien à signaler »" },
+  { cle: "personnages", motif: /["'`][^"'`]*\b(Lia|Noé|Noe)\b[^"'`]*["'`]/, quoi: "un nom propre du produit", coute: "l'outil parle d'un personnage qui n'existe pas dans le projet d'accueil" },
+];
+
+// UN CHEMIN CITÉ POUR EXPLIQUER N'EST PAS UN CHEMIN EXÉCUTÉ — leçon L38, payée trois fois le même
+// jour sur un autre outil. On retire les commentaires AVANT de chercher, jamais après.
+export function codeSansCommentaires(src = "") {
+  return String(src).replace(/^\s*\/\/[^\n]*$/gm, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
+}
+
+export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, marqueurs = MARQUEURS_DE_NON_PORTABILITE } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => String(f).endsWith(".mjs")); } catch { /* dossier illisible */ }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun script lu : rendre « tout est portable » sur zéro fichier serait un satisfecit sur du vide (leçon L13)" };
+  }
+  const lignes = [];
+  for (const f of fichiers) {
+    let src; try { src = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
+    const nu = codeSansCommentaires(src);
+    const trouves = marqueurs.filter((m) => m.motif.test(nu));
+    if (trouves.length) lignes.push({ fichier: `scripts/${f}`, marqueurs: trouves.map((m) => m.cle), combien: trouves.length });
+  }
+  lignes.sort((a, b) => b.combien - a.combien);
+  const parMarqueur = {};
+  for (const l of lignes) for (const m of l.marqueurs) parMarqueur[m] = (parMarqueur[m] ?? 0) + 1;
+  return {
+    mesurable: true, examines: fichiers.length, lies: lignes.length,
+    portables: fichiers.length - lignes.length,
+    tauxPct: ((fichiers.length - lignes.length) / fichiers.length) * 100,
+    lignes, parMarqueur,
+    // LA LIMITE EST LE CŒUR DU RÉSULTAT, pas une note en bas de page : un balayage de texte trouve
+    // les chemins écrits en dur. Il ne prouve JAMAIS qu'un outil sans chemin en dur fonctionne
+    // ailleurs — seule une exécution contre un autre dépôt le prouverait. « Portable » ici veut
+    // donc dire « rien ne le retient visiblement », jamais « vérifié à l'arrivée ».
+    horsPortee: "un balayage de texte trouve les chemins écrits en dur ; il ne prouve pas qu'un outil sans chemin en dur FONCTIONNE ailleurs. Seule une exécution contre un autre dépôt le prouverait — c'est l'étape 2 du plan, et elle n'est pas faite.",
+  };
+}
+
+export function formatPortabiliteLines(p, { combien = 10 } = {}) {
+  if (!p?.mesurable) return [`PORTABILITÉ : PAS MESURÉE — ${p?.pourquoi ?? "aucune donnée"}`];
+  const L = ["=== PORTABILITÉ — l'outil fonctionne-t-il une fois ARRIVÉ ? ===",
+    `  ${p.lies} script(s) sur ${p.examines} portent un chemin ou un nom de CE dépôt DANS LEUR CODE.`,
+    `  ${p.tauxPct.toFixed(0)} % ne sont retenus par rien de visible.`, ""];
+  L.push("  Les plus liés :");
+  for (const l of p.lignes.slice(0, combien)) L.push(`   ${l.fichier.padEnd(38)} ${l.marqueurs.join(", ")}`);
+  if (p.lignes.length > combien) L.push(`   … et ${p.lignes.length - combien} autre(s)`);
+  L.push("", "  Par type de dépendance :");
+  for (const [k, v] of Object.entries(p.parMarqueur).sort((a, b) => b[1] - a[1])) {
+    const m = MARQUEURS_DE_NON_PORTABILITE.find((x) => x.cle === k);
+    L.push(`   ${String(v).padStart(3)} × ${k} — ${m?.coute ?? ""}`);
+  }
+  L.push("", `  ⚠️ EXPORTABLE ET PORTABLE SONT DEUX MESURES, jamais une moyenne : un outil peut avoir son kit complet et rester inutilisable ailleurs. C'est arrivé le jour où ce constat est né.`);
+  L.push(`  HORS PORTÉE : ${p.horsPortee}`);
+  return L;
 }
 
 // LE LANCEUR EN TOUT DERNIER (déplacé le 2026-09-26) : les constantes du kit d'export ont

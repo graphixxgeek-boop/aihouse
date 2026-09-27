@@ -16060,6 +16060,43 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// EXPORTABLE N'EST PAS PORTABLE (2026-09-27, tâche #1034)
+// ————————————————————————————————————————————————————————————————————————
+// La trouvaille tient en une phrase : « l'outil part » ne veut pas dire « l'outil marche
+// ailleurs », et jusqu'ici seule la première moitié était mesurée. La preuve est dans ce dépôt et
+// elle est gênante : EZECHIEL-LES-TESTS a été déclaré exportable le jour de sa création — kit
+// complet — avec le chemin du filet écrit EN DUR dans son code. Mesure du jour : 100 %
+// d'exportabilité, 49 % de portabilité. Les deux chiffres ne doivent JAMAIS fusionner (L5/L11).
+{
+  const sp = await import('../scripts/safe-export.mjs');
+
+  // MUST CATCH : un chemin de CE dépôt écrit dans le CODE retient l'outil ici.
+  const dur = sp.mesurerLaPortabilite({ listDirImpl: () => ['x.mjs'], readFileImpl: () => 'const F = "scripts/check-house.mjs";' });
+  assert.equal(dur.lies, 1, 'MUST CATCH: a path of THIS repository written in the code means the tool looks for a file that does not exist elsewhere — exactly what happened to Ezechiel on the day it was declared exportable');
+  // MUST LET PASS : le même chemin CITÉ dans un commentaire n'est pas exécuté (leçon L38).
+  const cite = sp.mesurerLaPortabilite({ listDirImpl: () => ['x.mjs'], readFileImpl: () => '// on enquête sur "scripts/check-house.mjs" dans ce projet\nconst F = process.argv[2];' });
+  assert.equal(cite.lies, 0, 'MUST LET PASS: a path quoted in a COMMENT is not executed — the third time this exact class of defect showed up today, and the rule is now applied before searching, never after (leçon L38)');
+  assert.equal(cite.tauxPct, 100, 'and a tool that takes its path as an argument is held back by nothing visible');
+
+  // MUST REFUSE : zéro script lu n'est jamais « tout est portable ».
+  assert.equal(sp.mesurerLaPortabilite({ listDirImpl: () => [] }).mesurable, false, 'no script read is never a clean bill of portability (leçon L13)');
+
+  // LA LIMITE EST DANS LE RÉSULTAT, pas en note de bas de page.
+  assert.ok(dur.horsPortee.includes('ne prouve pas'), "MUST SAY SO: a text scan finds hardcoded paths, it never proves a tool without them WORKS elsewhere — only running it against another repository would, and « portable » here means « nothing visibly holds it back »");
+
+  // CHAQUE MARQUEUR DIT CE QU'IL COÛTE UNE FOIS AILLEURS — un nom seul n'apprendrait rien.
+  assert.ok(sp.MARQUEURS_DE_NON_PORTABILITE.every((m) => m.cle && m.quoi && m.coute && m.coute.length > 20), 'every marker carries what it is AND what it costs once elsewhere: a bare label would let a future reader think it is a style rule');
+
+  // EN DIRECT SUR LE VRAI DÉPÔT (Article 25) — et les deux chiffres restent séparés.
+  const reel = sp.mesurerLaPortabilite();
+  assert.equal(reel.mesurable, true, 'the portability measure must actually run against the real scripts/ folder');
+  assert.ok(reel.examines > 60, `on the whole fleet (currently ${reel.examines})`);
+  assert.ok(reel.lies > 0, `and it must find something: a repository this tied to its own paths cannot return zero — if it ever does, the markers stopped matching rather than the fleet becoming portable (currently ${reel.lies})`);
+
+  console.log("Passed: exportable n'est pas portable (2026-09-27, tâche #1034) — la seconde moitié de l'export, que personne ne mesurait. La trouvaille tient en une phrase : « l'outil part » ne veut pas dire « l'outil marche ailleurs ». La preuve est dans ce dépôt et elle est gênante : Ezechiel a été déclaré exportable le jour de sa création, kit complet, avec le chemin du filet écrit EN DUR dans son code — sur un autre dépôt il cherche un fichier qui n'existe pas. Mesuré ce jour-là : 100 % d'exportabilité, 49 % de portabilité. LES DEUX CHIFFRES NE FUSIONNENT JAMAIS, et c'est l'invariant que ces assertions protègent : un taux unique à 95 % se lirait comme une garantie que 95 % de l'Agence fonctionnera ailleurs, ce qui est faux — deux questions différentes, deux mesures, jamais une moyenne (leçons L5/L11). Le détecteur retire les commentaires AVANT de chercher, parce qu'un chemin cité pour expliquer n'est pas un chemin exécuté : troisième fois que cette classe de défaut se présente dans la journée, et elle est désormais corrigée pour la classe. Et sa limite est DANS le résultat plutôt qu'en note de bas de page : un balayage de texte trouve les chemins en dur, il ne prouve jamais qu'un outil sans chemin en dur FONCTIONNE ailleurs — seule une exécution contre un autre dépôt le prouverait, et c'est l'étape 2 du plan.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA DETTE ET LE SOUPÇON (2026-09-26, tâche #943)
 // ————————————————————————————————————————————————————————————————————————
 // Le détecteur de dettes accusait à tort : un commit qui touchait le CONTRÔLEUR d'un process pour

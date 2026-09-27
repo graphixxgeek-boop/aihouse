@@ -62,3 +62,41 @@ répare donc toute seule au lieu de se périmer.
 un détecteur qui accuse presque tout a presque toujours tort. La cause était son propre marqueur,
 qui cherchait une formule que le dépôt n'employait pas. **Vérifier un verdict massif avant de le
 rapporter** est la première règle d'usage de cet outil.
+
+## Les DEUX mesures de l'export, et pourquoi une seule ne suffit jamais
+
+*(Ajouté le 2026-09-27, après qu'un outil déclaré exportable le jour de sa création s'est révélé
+inutilisable ailleurs.)*
+
+Un outil qui doit servir sur un autre projet pose **deux questions distinctes**, et un outillage
+d'export qui n'en mesure qu'une donne une fausse assurance.
+
+**1. EXPORTABILITÉ — a-t-il ses PIÈCES pour partir ?**
+Son plan générique, sa fiche d'instanciation, son registre. C'est la question du carton de
+déménagement : rien ne manque dedans.
+
+**2. PORTABILITÉ — FONCTIONNE-t-il une fois arrivé, sans qu'on touche à son code ?**
+C'est la question de l'armoire une fois le carton ouvert : entre-t-elle dans la nouvelle pièce ?
+
+**Les deux ne se moyennent jamais.** Un taux unique se lit comme une garantie de fonctionnement
+qu'il n'est pas. Les deux chiffres s'affichent côte à côte dans le même rapport, précisément pour
+qu'on ne puisse pas lire l'un en croyant lire l'autre.
+
+### Comment mesurer la portabilité mécaniquement
+
+On cherche, **dans le code et jamais dans les commentaires**, ce qui trahit une dépendance au dépôt
+d'origine : un chemin de fichier du projet, le nom d'un document propre au projet, une arborescence
+supposée, un nom propre du produit. Chaque marqueur porte **ce qu'il coûte une fois ailleurs** — un
+nom seul laisserait croire à une règle de style.
+
+**Le cas le plus dangereux à nommer explicitement** : un outil qui lit un dossier absent ne plante
+pas. Il rend zéro, et zéro ressemble trait pour trait à « rien à signaler ». C'est le défaut qu'un
+balayage de texte attrape et qu'une exécution naïve manquerait.
+
+### La limite, qui va DANS le résultat
+
+Un balayage de texte trouve les chemins écrits en dur ; il ne prouve pas qu'un outil sans chemin en
+dur fonctionne ailleurs. La seule preuve est un **projet témoin** : un dépôt minuscule à
+l'arborescence volontairement différente, contre lequel tout l'outillage est lancé. Trois verdicts
+et non deux — **portable**, **honnête** (l'outil dit « pas mesurable » avec sa raison, ce qui est un
+bon résultat), **non portable**.

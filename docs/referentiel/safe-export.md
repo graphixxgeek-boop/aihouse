@@ -333,3 +333,63 @@ désormais couvert pour de vrai.
 
 Kit de l'Agence **100 %** (après écriture des deux pièces manquantes). Fichiers :
 **🟠 EXPORT DÉGRADÉ** — 4 kits incomplets sur des VITAUX/ESSENTIELS, 27 ailleurs.
+
+## EXPORTABILITÉ ET PORTABILITÉ — deux mesures, jamais une moyenne (2026-09-27, tâche #1034)
+
+### L'image qui rend la distinction évidente
+
+**Un déménagement.**
+
+- **L'EXPORTABILITÉ, c'est le carton.** Le meuble est emballé, la notice de montage est dedans, le
+  sachet de vis est étiqueté. Rien ne manque. C'est ce que SAFE-EXPORT mesurait déjà : chaque outil
+  a-t-il son blueprint, sa fiche, son registre ?
+- **La PORTABILITÉ, c'est ce qui se passe une fois le carton ouvert dans le nouvel appartement.**
+  L'armoire construite pour un plafond de 2,60 m n'entre pas dans une pièce de 2,40 m. Le carton
+  était parfait. L'armoire est inutilisable.
+
+**EZECHIEL-LES-TESTS est cette armoire**, et c'est ce qui a fait naître la mesure : déclaré
+exportable le jour même de sa création, kit complet, blueprint, fiche, registre — et le chemin du
+filet qu'il enquête écrit EN DUR dans son code. Sur un autre dépôt, il cherche un fichier qui
+n'existe pas.
+
+### Les chiffres du 2026-09-27, côte à côte
+
+| Mesure | Résultat | Ce qu'elle dit |
+|---|---|---|
+| **Exportabilité** | **100 %** (40/40 vitaux, 3/3 essentiels, 25/25 utiles, 16/16 optionnels) | chaque outil a ses pièces pour partir |
+| **Portabilité** | **49 %** — 42 scripts sur 82 portent un chemin ou un nom de CE dépôt dans leur code | la moitié ne tournerait pas telle quelle ailleurs |
+
+### Pourquoi les deux chiffres ne doivent JAMAIS fusionner
+
+Un taux unique « d'exportabilité » à 95 % se lit comme **une garantie que 95 % de l'Agence
+fonctionnera ailleurs**. C'est faux, et c'est exactement le patron des leçons L5/L11 : deux
+questions différentes, deux mesures, jamais une moyenne. Fusionnés, les deux chiffres donneraient
+un nombre rassurant qui ne décrit aucune réalité — et on ne découvrirait le problème qu'à
+l'arrivée, c'est-à-dire au pire moment.
+
+### Les cinq liens qui retiennent un outil ici, et ce que chacun coûte
+
+| Lien | Combien | Ce qu'il coûte une fois ailleurs |
+|---|---|---|
+| `docs/referentiel/` | 22 | un autre projet range ses documents autrement |
+| le filet (`check-house.mjs`) | 17 | l'outil cherche un fichier qui n'existe pas |
+| `docs/suivi/` | 17 | l'outil lit un dossier absent et rend zéro — **ce qui se lit comme « rien à signaler »** |
+| la charte (`CLAUDE.md`) | 16 | un autre projet nomme sa charte autrement, ou n'en a pas |
+| les personnages | 16 | l'outil parle de quelqu'un qui n'existe pas dans le projet d'accueil |
+
+Le troisième est le plus dangereux : un outil qui lit un dossier absent ne plante pas. Il rend zéro,
+et zéro ressemble trait pour trait à « tout va bien ».
+
+### Qui gère la portabilité à l'Agence
+
+**SAFE-EXPORT**, et c'est délibéré : c'est le même sujet, donc le même rapport. Les deux chiffres
+s'affichent l'un sous l'autre dans `node scripts/safe-export.mjs export`, précisément pour qu'on ne
+puisse pas lire l'un en croyant lire l'autre. **Aucun outil nouveau n'a été créé** — l'Article 31
+demande d'étendre plutôt que de construire quand un outil couvre déjà le terrain.
+
+### La limite, déclarée dans le résultat plutôt qu'en note de bas de page
+
+Un balayage de texte trouve les chemins écrits en dur. **Il ne prouve jamais qu'un outil sans chemin
+en dur FONCTIONNE ailleurs.** « Portable » veut donc dire ici « rien ne le retient visiblement »,
+jamais « vérifié à l'arrivée ». La seule preuve serait de le lancer contre un autre dépôt — c'est
+l'étape 3 du plan ci-dessous, et elle n'est pas faite.

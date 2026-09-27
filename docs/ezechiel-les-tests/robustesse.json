@@ -32,5 +32,501 @@
         "attrapee": true
       }
     ]
+  },
+  {
+    "quand": "2026-09-27T18:28:06.614Z",
+    "tauxPct": 78.57142857142857,
+    "resultats": [
+      {
+        "chemin": "lib/dialogue.ts",
+        "ligne": 25,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/abraham-les-references.mjs",
+        "ligne": 103,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/agent-des-noms.mjs",
+        "ligne": 125,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/agent-du-temps.mjs",
+        "ligne": 48,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/always-new-code.mjs",
+        "ligne": 59,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/angel-of-ia-process.mjs",
+        "ligne": 201,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/axa-check.mjs",
+        "ligne": 123,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/cassandra-rh.mjs",
+        "ligne": 79,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/check-argus.mjs",
+        "ligne": 41,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/check-harmonia.mjs",
+        "ligne": 40,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/check-level-target.mjs",
+        "ligne": 83,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/check-profil-utilisateur.mjs",
+        "ligne": 53,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/check-spirit.mjs",
+        "ligne": 30,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/check-suivi-fidelity.mjs",
+        "ligne": 38,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/check-tasks-details.mjs",
+        "ligne": 165,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/circle-process-guardian.mjs",
+        "ligne": 85,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/circle-tasks.mjs",
+        "ligne": 772,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/clean-dirty-old.mjs",
+        "ligne": 54,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/clone-hunter.mjs",
+        "ligne": 97,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/corpus-mesure.mjs",
+        "ligne": 77,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/criticite.mjs",
+        "ligne": 70,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/data-archangel.mjs",
+        "ligne": 208,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/doc-report.mjs",
+        "ligne": 139,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/ecotoken.mjs",
+        "ligne": 83,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/el-professor.mjs",
+        "ligne": 83,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/ezechiel-les-tests.mjs",
+        "ligne": 89,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/find-booster.mjs",
+        "ligne": 50,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/find-brain.mjs",
+        "ligne": 54,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/gemini-key-health.mjs",
+        "ligne": 39,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/god-of-all-process.mjs",
+        "ligne": 748,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/hooks/banniere.mjs",
+        "ligne": 53,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/hyper-scan-checkpoint.mjs",
+        "ligne": 60,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/ines-official.mjs",
+        "ligne": 43,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/integration-outil.mjs",
+        "ligne": 386,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/kpi-report.mjs",
+        "ligne": 56,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/le-classificateur.mjs",
+        "ligne": 37,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/le-coordinateur.mjs",
+        "ligne": 128,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/le-regisseur.mjs",
+        "ligne": 104,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/lib-shell.mjs",
+        "ligne": 114,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/memento-weight.mjs",
+        "ligne": 67,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/memento.mjs",
+        "ligne": 44,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/messages-courts.mjs",
+        "ligne": 79,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/modes-de-travail.mjs",
+        "ligne": 75,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/moise-tables-de-loi.mjs",
+        "ligne": 107,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/objectifs-vs-resultats.mjs",
+        "ligne": 69,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/ou-on-en-est.mjs",
+        "ligne": 188,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/priorites.mjs",
+        "ligne": 97,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/process-simulation-guardian.mjs",
+        "ligne": 172,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/pure-gold-unity.mjs",
+        "ligne": 46,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/rapport-gros-prompt.mjs",
+        "ligne": 57,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/report-template.mjs",
+        "ligne": 111,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/route-booster.mjs",
+        "ligne": 29,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/run-simulation.mjs",
+        "ligne": 41,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/safe-export.mjs",
+        "ligne": 85,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/serie-temporelle.mjs",
+        "ligne": 76,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/simulation-visiteur.mjs",
+        "ligne": 78,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/smart-conso-api.mjs",
+        "ligne": 40,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/smart-conso-token.mjs",
+        "ligne": 154,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": false
+      },
+      {
+        "chemin": "scripts/summarize-simulation-log.mjs",
+        "ligne": 43,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/tasks-process-guardian.mjs",
+        "ligne": 106,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/the-deep-reader.mjs",
+        "ligne": 78,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/the-equalizer.mjs",
+        "ligne": 111,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/the-final-judge.mjs",
+        "ligne": 40,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/the-ghost.mjs",
+        "ligne": 87,
+        "operateur": "superieur-ou-egal",
+        "quoi": "un seuil inclusif devient exclusif : le cas limite exact n'est plus couvert",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/the-king.mjs",
+        "ligne": 158,
+        "operateur": "et-logique",
+        "quoi": "un ET devient un OU : une condition qui exigeait deux choses n'en exige plus qu'une",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/the-screener-capture.mjs",
+        "ligne": 48,
+        "operateur": "difference-stricte",
+        "quoi": "une différence devient une égalité",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/tool-brain.mjs",
+        "ligne": 90,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/tool-learning.mjs",
+        "ligne": 82,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/tool-usage.mjs",
+        "ligne": 97,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      },
+      {
+        "chemin": "scripts/x-port-blindtest.mjs",
+        "ligne": 92,
+        "operateur": "egalite-stricte",
+        "quoi": "une égalité devient une différence",
+        "attrapee": true
+      }
+    ]
   }
 ]

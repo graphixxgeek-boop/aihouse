@@ -240,6 +240,57 @@ ailleurs ». Ezechiel est dans le kit d'export et pourtant le chemin du filet es
 son code. **Être exportable et être portable sont deux choses différentes**, et seule la première
 est aujourd'hui vérifiée.
 
+## 4quater. LE PLAN D'ACTION PORTABILITÉ (2026-09-27, tâche #1034)
+
+**Sa demande** : « pour la PORTABILITE tu me diras ton plan d'action ». Trois étapes, dans cet
+ordre, et chacune conditionne la suivante.
+
+### Étape 1 — MESURER (faite le jour même)
+
+`mesurerLaPortabilite()` dans SAFE-EXPORT balaie les 82 scripts et compte ceux qui portent, **dans
+leur code et non dans leurs commentaires**, un chemin ou un nom propre à ce dépôt. Résultat :
+**42 sur 82, soit 49 % de portabilité contre 100 % d'exportabilité**. Les deux chiffres s'affichent
+côte à côte, et un contre-test du filet interdit qu'ils fusionnent jamais.
+
+### Étape 2 — CLASSER, parce qu'un lien n'est pas forcément un défaut
+
+**C'est l'étape que personne ne saute impunément** : traiter les 42 comme 42 bugs serait un chantier
+absurde. Trois catégories, et une seule appelle du travail :
+
+| Catégorie | Ce que c'est | Le geste |
+|---|---|---|
+| **PARAMÉTRABLE** | l'outil lit un chemin qui pourrait être un argument avec ce chemin comme défaut | une ligne : `{ dossier = "docs/suivi/" } = {}` — le comportement d'ici ne change pas d'un iota |
+| **À DÉCOUPLER** | l'outil suppose une structure, pas seulement un chemin (« il existe un dossier par outil », « la charte est numérotée par Articles ») | du vrai travail : faire DÉTECTER la structure au lieu de la supposer |
+| **LÉGITIMEMENT LIÉ** | l'outil sert le PRODUIT, pas l'outillage | rien à faire — il ne part pas, et c'est écrit |
+
+**La première catégorie est probablement la plus grosse**, et elle coûte presque rien. C'est là que
+le taux monte vite, sans risque.
+
+### Étape 3 — PROUVER, avec un PROJET TÉMOIN
+
+Les deux premières étapes reposent sur la lecture du texte. **La seule preuve est l'exécution.**
+
+Un **projet témoin** : un dépôt minuscule et synthétique, avec une arborescence VOLONTAIREMENT
+différente (pas de `docs/referentiel/`, une charte nommée autrement, un filet nommé autrement, aucun
+personnage). On lance toute l'Agence dessus, et on classe :
+
+- **PORTABLE** — l'outil rend un résultat sensé ;
+- **HONNÊTE** — l'outil rend « PAS MESURÉ » avec sa raison : c'est un **bon** résultat, pas un échec ;
+- **NON PORTABLE** — l'outil plante, ou pire, rend un résultat qui parle du projet d'origine.
+
+**Le piège que ce test ferme, et il est le vrai enjeu** : un outil qui lit un dossier absent ne
+plante pas. Il rend zéro, et zéro se lit comme « rien à signaler ». Sans projet témoin, ce cas-là
+est **invisible** — et c'est le plus probable des trois.
+
+C'est la technique standard du métier pour tester un outillage : un dépôt de fixture. Elle est
+gratuite, elle tourne en secondes, et elle se rejoue à chaque Ronde.
+
+### Ce qui reste à trancher
+
+L'ordre entre l'étape 2 et l'étape 3 est discutable : construire le projet témoin d'abord donnerait
+la classification **par la mesure** au lieu de la donner par la lecture. C'est plus sûr et plus
+long. Décision de l'utilisateur.
+
 ## 5. LES DÉCISIONS DÉJÀ PRISES
 
 *ce qui ne se rediscute plus, avec la date et qui a tranché*
