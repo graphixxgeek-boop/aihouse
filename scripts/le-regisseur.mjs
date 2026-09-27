@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readd
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -235,9 +235,7 @@ function imprimerPlan(ecarts) {
     libelle: (e) => e.quoi,
     tache: (e) => e.quoiFaire,
   });
-  console.log("");
-  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 function main() {

@@ -28,7 +28,7 @@ import { listerLesFichiers } from "./lib-shell.mjs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { printReportHeader, buildPlanDaction, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { LOCAL_JOURNALS, REGISTRIES, DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES } from "./doc-report.mjs";
@@ -1468,8 +1468,7 @@ function main() {
       if (par("sans index")) ecarts.push({ pourquoi: `${par("sans index")} dossier(s) sans aucun index : \`index --generer\` les écrit sans rien écraser` });
     }
     const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "data-archangel", tache: "traiter dossier par dossier — compléter un catalogue, rattraper un journal, ou CHOISIR une nature pour un index qui n'en a pas ; jamais un remplacement en masse, la prose qui explique un dossier valant mieux qu'une liste" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const ligne of plan.lignes) console.log(ligne);
+    imprimerPlanDaction(plan);
     const chemin = `docs/data-archangel/systeme-des-index-${new Date().toISOString().slice(0, 10)}.txt`;
     writeFileSync(join(ROOT, chemin), [...lignes, "", PLAN_ACTION_TITRE, ...plan.lignes].join("\n") + "\n", "utf8");
     console.log(`\nRapport déposé : ${chemin}`);
@@ -1532,8 +1531,7 @@ function main() {
   }
   console.log(formatDataArchangelReport(r));
   const plan = planDactionCirculation(r);
-  console.log(`\n${PLAN_ACTION_TITRE}`);
-  console.log(plan.lignes.join("\n"));
+  imprimerPlanDaction(plan);
 }
 
 

@@ -14,7 +14,7 @@ import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join, relative } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 // La mémoire des écarts déjà tranchés est RELAYÉE depuis SAFE-EXPORT, jamais réécrite ici (§7ter).
 // Deux mémoires séparées auraient vite donné deux disciplines différentes sur la même question.
 import { loadMemoire, filtrerDejaTranches } from "./safe-export.mjs";
@@ -175,8 +175,7 @@ function main() {
     tache: (e) => e.defaut.startsWith("marqueur")
       ? `trancher le TODO laissé en ${e.fichier} : le faire ou l'effacer`
       : `confirmer à la main que ${e.fichier} n'a plus besoin de ce champ, puis le retirer` });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planArgus.lignes) console.log(l);
+  imprimerPlanDaction(planArgus);
 
   const outDir = join(ROOT, "docs/argus");
   if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });

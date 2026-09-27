@@ -40,7 +40,7 @@ import { join } from "node:path";
 import { sh as shBase, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { verifyRondeProcess } from "./circle-process-guardian.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -354,13 +354,11 @@ function main() {
       constat: String(t.constat ?? t.message ?? t), etat: "retenu",
       tache: t.tache ?? "requalifier ce constat auprès de l'outil qui l'a produit, jamais le traiter deux fois",
     })), { toolSlug: "hyper-scan-checkpoint" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of planHyper.lignes) console.log(l);
+    imprimerPlanDaction(planHyper);
   } catch {
     // Un passage qui n'a rien collecté ne doit pas casser le rapport : l'absence se dit, elle ne
     // plante pas.
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    console.log("Aucune trouvaille collectée par ce passage — un passage léger ne remonte rien de lui-même.");
+    imprimerPlanDaction({ lignes: ["Aucune trouvaille collectée par ce passage — un passage léger ne remonte rien de lui-même."] });
   }
 }
 

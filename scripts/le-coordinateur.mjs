@@ -1597,13 +1597,29 @@ export function formatBadgeChangeAnnouncement(result, avant, apres) {
     `🔄 MISE À JOUR DE BADGE — ${result.agentName}`,
     border,
     `Ce qui a changé : ${diffs.join(" · ")}`,
+    ...lignesGarantiesDuBloc(result),
+    border,
+  ].join("\n");
+}
+
+// LES CINQ LIGNES GARANTIES, ÉCRITES UNE SEULE FOIS (2026-09-27, tâche #993, constat de
+// CLONE-HUNTER). Les deux blocs — CERTIFICATION et MISE À JOUR — restent bien deux fonctions
+// distinctes : l'enquête du 2026-09-22 avait tranché que cette séparation est DÉLIBÉRÉE (certifier
+// n'est pas mettre à jour), et elle le reste. Ce qui était recopié, c'est leur CORPS commun.
+//
+// Et c'est précisément ce corps qui ne pouvait pas se permettre d'être écrit deux fois : le
+// commentaire d'en-dessous PROMET « les mêmes lignes garanties dans CET ORDRE à chaque annonce ».
+// Une garantie recopiée est une garantie qui peut diverger — il suffisait d'ajouter une ligne à la
+// certification et de l'oublier à la mise à jour pour que la promesse cesse d'être vraie sans que
+// rien ne le dise. Elle est désormais tenue par construction.
+function lignesGarantiesDuBloc(result) {
+  return [
     `Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`,
     `Câblage : ${result.message}`,
     `Statut : ${result.badge}`,
     `Combine typiquement avec : ${result.companions?.length ? result.companions.join(", ") : "aucune combinaison connue dans le catalogue PRESTATIONS"}`,
     `Couverture : ${result.couverture.label}`,
-    border,
-  ].join("\n");
+  ];
 }
 
 // Le bloc lui-même : toujours visuellement séparé (bordures ASCII, jamais une phrase noyée dans un
@@ -1622,11 +1638,7 @@ export function formatBadgeCeremonyAnnouncement(result) {
     border,
     `🎖️ CERTIFICATION — ${result.agentName}`,
     border,
-    `Description : ${result.description || "non renseignée (colonne « Ce qu'il détecte/régule » absente de la table maîtresse)"}`,
-    `Câblage : ${result.message}`,
-    `Statut : ${result.badge}`,
-    `Combine typiquement avec : ${result.companions?.length ? result.companions.join(", ") : "aucune combinaison connue dans le catalogue PRESTATIONS"}`,
-    `Couverture : ${result.couverture.label}`,
+    ...lignesGarantiesDuBloc(result),
     border,
   ].join("\n");
 }

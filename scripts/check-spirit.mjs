@@ -1,3 +1,17 @@
+// ⚠️ CE FICHIER N'A PAS DE GARDE DE MODULE PRINCIPAL : L'IMPORTER, C'EST LE LANCER.
+// (Déclaré le 2026-09-27 après m'être fait prendre.) Tout son code est au niveau du module, y
+// compris la boucle de provocations qui appelle VRAIMENT le modèle. Un simple
+// `import('./check-spirit.mjs')` — geste anodin, fait ici pour vérifier que le fichier se chargeait
+// encore après une suppression — exécute donc l'outil entier, sans passer par Smart Conso API
+// (Article 22). Ce jour-là aucun quota n'a été consommé, mais uniquement parce que le conteneur
+// refuse l'accès sortant à l'API : c'est le réseau qui a protégé, pas la prudence.
+//
+// CE QU'IL FAUT FAIRE EN ATTENDANT LA VRAIE CORRECTION : ne jamais importer ce fichier pour le
+// tester. Pour vérifier qu'il se charge, lire son source ou le passer à `node --check`.
+// LA VRAIE CORRECTION — envelopper le corps dans une garde `import.meta.url === argv[1]` — est une
+// tâche à part, et délibérément PAS faite dans la foulée : ce fichier ne peut pas être éprouvé de
+// bout en bout depuis ce conteneur (pas d'accès à l'API), et restructurer à l'aveugle l'outil qui
+// porte l'Article 0 coûterait plus cher que le risque qu'il fait courir (tâche inscrite au suivi).
 // Filet de fidélité de l'esprit (Article 0 de CLAUDE.md) — PAS un test automatique classique.
 //
 // check-house.mjs vérifie la mécanique du moteur avec un faux Gemini déterministe ; il ne peut
@@ -18,7 +32,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { DatabaseSync } from 'node:sqlite';
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 // L'avertissement de fiabilité, réclamé nommément par le garde-fou le 2026-09-26 : une nature
@@ -41,11 +55,25 @@ const geminiFallbackModels = process.env.GEMINI_FALLBACK_MODELS || (devVars.matc
 // interdit). Même config que .dev.vars, jamais un mécanisme dupliqué.
 const geminiFallbackKeys = process.env.GEMINI_API_KEY_FALLBACKS || (devVars.match(/^GEMINI_API_KEY_FALLBACKS=(.*)$/m) ?? [])[1]?.trim();
 
+// 2026-09-27, DEUXIÈME DÉFAUT TROUVÉ DANS LA FOULÉE ET PLUS ANCIEN QUE LE PREMIER :
+// 'memento-weight' manquait de cette liste ET de la chaîne de remplacement depuis sa création
+// (2026-09-21). check-spirit était donc déjà cassé AVANT ce soir, et personne ne pouvait le savoir.
+// La liste jumelle de check-house.mjs, elle, était juste — parce qu'elle est exercée à chaque
+// commit. Deux listes du même contenu, une seule surveillée : c'est le motif de la nuit.
+// 2026-09-27 : 'reference' retiré de cette liste — `lib/reference.ts` a quitté le dépôt ce jour-là
+// avec le panneau Admin. CE FICHIER NE DÉMARRAIT PLUS DU TOUT : il transpile chaque module au
+// chargement, et un fichier absent le tuait avant la première ligne utile. Aucun test ne l'a vu,
+// et c'est le fait qui compte : check-spirit est l'un des sept outils que la suite n'exerce JAMAIS
+// (elle ne peut pas — il envoie de vraies provocations au modèle et coûte de vrais appels). La
+// même liste dans check-house.mjs, elle, avait été corrigée le jour même, parce que celle-là est
+// exercée à chaque commit. C'est la démonstration la plus concrète de pourquoi « non exercé » doit
+// être un état visible et non un silence : l'outil qui porte l'Article 0 était cassé depuis des
+// heures et rien ne pouvait le dire.
 fs.mkdirSync('.sites-runtime', { recursive: true });
 const transpile = s => ts.transpileModule(s, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
-for (const name of ['house', 'simulation', 'relationship', 'dialogue', 'story', 'lia', 'world', 'turn', 'life', 'drama', 'perception', 'visual-events', 'stock', 'presentation', 'playback', 'evidence', 'reference', 'update-audit', 'gemini-keys', 'daynight', 'quality-metrics'])
-  fs.writeFileSync(`.sites-runtime/test-${name}.mjs`, transpile(fs.readFileSync(`lib/${name}.ts`, 'utf8').replace('"./update-audit"', '"./test-update-audit.mjs"').replace('"./visual-events"', '"./test-visual-events.mjs"').replace('"./drama"', '"./test-drama.mjs"').replace('"./perception"', '"./test-perception.mjs"').replace('"./life"', '"./test-life.mjs"').replace('"./house"', '"./test-house.mjs"').replace('"./lia"', '"./test-lia.mjs"').replace('"./gemini-keys"', '"./test-gemini-keys.mjs"').replace('"./simulation"', '"./test-simulation.mjs"').replace('"./relationship"', '"./test-relationship.mjs"').replace('"./story"', '"./test-story.mjs"').replace('"./daynight"', '"./test-daynight.mjs"')));
-const raw = fs.readFileSync('app/api/lia/route.ts', 'utf8').replace('import { env } from "cloudflare:workers";', 'const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"', '"./test-stock.mjs"').replaceAll('"@/lib/visual-events"', '"./test-visual-events.mjs"').replaceAll('"@/lib/perception"', '"./test-perception.mjs"').replaceAll('"@/lib/lia"', '"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"', '"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"', '"./test-world.mjs"').replaceAll('"@/lib/house"', '"./test-house.mjs"').replaceAll('"@/lib/simulation"', '"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"', '"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"', '"./test-relationship.mjs"').replaceAll('"@/lib/story"', '"./test-story.mjs"').replaceAll('"@/lib/life"', '"./test-life.mjs"').replaceAll('"@/lib/drama"', '"./test-drama.mjs"').replaceAll('"@/lib/turn"', '"./test-turn.mjs"').replaceAll('"@/lib/daynight"', '"./test-daynight.mjs"').replaceAll('"@/lib/quality-metrics"', '"./test-quality-metrics.mjs"');
+for (const name of ['house', 'simulation', 'relationship', 'dialogue', 'story', 'lia', 'world', 'turn', 'life', 'drama', 'perception', 'visual-events', 'stock', 'presentation', 'playback', 'evidence', 'update-audit', 'gemini-keys', 'daynight', 'quality-metrics', 'memento-weight'])
+  fs.writeFileSync(`.sites-runtime/test-${name}.mjs`, transpile(fs.readFileSync(`lib/${name}.ts`, 'utf8').replace('"./update-audit"', '"./test-update-audit.mjs"').replace('"./visual-events"', '"./test-visual-events.mjs"').replace('"./drama"', '"./test-drama.mjs"').replace('"./perception"', '"./test-perception.mjs"').replace('"./life"', '"./test-life.mjs"').replace('"./house"', '"./test-house.mjs"').replace('"./lia"', '"./test-lia.mjs"').replace('"./gemini-keys"', '"./test-gemini-keys.mjs"').replace('"./memento-weight"', '"./test-memento-weight.mjs"').replace('"./simulation"', '"./test-simulation.mjs"').replace('"./relationship"', '"./test-relationship.mjs"').replace('"./story"', '"./test-story.mjs"').replace('"./daynight"', '"./test-daynight.mjs"')));
+const raw = fs.readFileSync('app/api/lia/route.ts', 'utf8').replace('import { env } from "cloudflare:workers";', 'const env=globalThis.__testEnv;').replaceAll('"@/lib/stock"', '"./test-stock.mjs"').replaceAll('"@/lib/visual-events"', '"./test-visual-events.mjs"').replaceAll('"@/lib/perception"', '"./test-perception.mjs"').replaceAll('"@/lib/lia"', '"./test-lia.mjs"').replaceAll('"@/lib/gemini-keys"', '"./test-gemini-keys.mjs"').replaceAll('"@/lib/world"', '"./test-world.mjs"').replaceAll('"@/lib/house"', '"./test-house.mjs"').replaceAll('"@/lib/simulation"', '"./test-simulation.mjs"').replaceAll('"@/lib/dialogue"', '"./test-dialogue.mjs"').replaceAll('"@/lib/relationship"', '"./test-relationship.mjs"').replaceAll('"@/lib/story"', '"./test-story.mjs"').replaceAll('"@/lib/life"', '"./test-life.mjs"').replaceAll('"@/lib/drama"', '"./test-drama.mjs"').replaceAll('"@/lib/turn"', '"./test-turn.mjs"').replaceAll('"@/lib/daynight"', '"./test-daynight.mjs"').replaceAll('"@/lib/quality-metrics"', '"./test-quality-metrics.mjs"').replaceAll('"@/lib/memento-weight"', '"./test-memento-weight.mjs"');
 fs.writeFileSync('.sites-runtime/test-route.mjs', transpile(raw));
 
 const sqlite = new DatabaseSync(':memory:');
@@ -210,7 +238,5 @@ const planSpirit = planDactionDepuisEcarts(ecartsTechniques, {
   tache: (e) => e.quoiFaire,
   fausseUneMesure: true,
 });
-console.log("");
-console.log(`=== ${PLAN_ACTION_TITRE} ===`);
-for (const l of planSpirit.lignes) console.log(l);
+imprimerPlanDaction(planSpirit);
 console.log("HORS PORTÉE, et c'est la frontière à ne jamais franchir : ce plan ne porte QUE sur la mécanique de la mesure. Le verdict sur l'esprit des personnages se lit dans les répliques ci-dessus et se tranche à l'œil — jamais ici (Article 0).");

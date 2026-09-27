@@ -95,10 +95,7 @@ export function summarizeActions(entries) {
     prevEvidenceLen = evidenceLen;
 
     for (const d of entry?.response?.decisions ?? []) {
-      if (d.room && prevRoom[d.actor] !== undefined && prevRoom[d.actor] !== d.room) {
-        events.push({ round, type: "move", detail: `acteur ${d.actor} : ${prevRoom[d.actor]} → ${d.room}` });
-      }
-      if (d.room) prevRoom[d.actor] = d.room;
+      pousserLesDeplacements(events, round, d, prevRoom);
     }
   }
   return events;
@@ -107,6 +104,20 @@ export function summarizeActions(entries) {
 // Extraction pour la forme à plat. Même vocabulaire d'événements que l'autre forme (bonus,
 // revelation, evidence, move) pour que tout ce qui lit ce résumé — index des simulations, HARMONIA,
 // ARGUS — n'ait jamais à savoir de quelle forme venait le journal.
+// LE CHANGEMENT DE PIÈCE, DÉTECTÉ UNE SEULE FOIS (2026-09-27, tâche #993, constat de CLONE-HUNTER).
+// Les deux formes de journal — structurée et à plat — se lisent différemment, mais « l'acteur était
+// ici, il est maintenant là » est le MÊME fait dans les deux. Écrit deux fois, il pouvait diverger :
+// la forme du libellé (`acteur X : salon → cuisine`) est lue par l'index des simulations, HARMONIA
+// et ARGUS, et une seule des deux copies corrigée aurait produit deux vocabulaires pour un même
+// événement, exactement ce que le commentaire d'en-dessous promet d'éviter.
+function pousserLesDeplacements(events, round, decision, prevRoom) {
+  const { actor, room } = decision ?? {};
+  if (room && prevRoom[actor] !== undefined && prevRoom[actor] !== room) {
+    events.push({ round, type: "move", detail: `acteur ${actor} : ${prevRoom[actor]} → ${room}` });
+  }
+  if (room) prevRoom[actor] = room;
+}
+
 export function summarizeFlatActions(entries) {
   const events = [];
   let prevEvidence = 0;
@@ -125,10 +136,7 @@ export function summarizeFlatActions(entries) {
     if (evidence > prevEvidence) events.push({ round, type: "evidence", detail: evidence });
     prevEvidence = Math.max(prevEvidence, evidence);
     for (const d of entry?.decisions ?? []) {
-      if (d.room && prevRoom[d.actor] !== undefined && prevRoom[d.actor] !== d.room) {
-        events.push({ round, type: "move", detail: `acteur ${d.actor} : ${prevRoom[d.actor]} → ${d.room}` });
-      }
-      if (d.room) prevRoom[d.actor] = d.room;
+      pousserLesDeplacements(events, round, d, prevRoom);
     }
   }
   return events;

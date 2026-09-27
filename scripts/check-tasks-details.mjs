@@ -39,7 +39,7 @@ import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsA
 import { etiquetteDeLaTache, findMotsClesEnCollision, findChampsManquants, FORMAT_TACHE, findRituelManquant, formatRituelLines, QUESTIONS_DE_CLOTURE, CONSIGNE_D_OUVERTURE, PREMIERE_TACHE_AVEC_RITUEL } from "./criticite.mjs";
 import { findMotsClesManquants } from "./check-suivi-fidelity.mjs";
 import { daysSince, printReliabilityNotice } from "./lib-shell.mjs";
-import { renderTextReport } from "./report-template.mjs";
+import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { recordRegistryWrite } from "./tool-usage.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
@@ -3070,8 +3070,7 @@ function main() {
       pourquoi: "la fraîcheur se mesure sur des dates, pas sur le contenu : un fichier ancien peut être simplement fini" })),
   ];
   const planTaches = buildPlanDaction(constatsTaches, { toolSlug: "check-tasks-details" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planTaches.lignes) console.log(l);
+  imprimerPlanDaction(planTaches);
 }
 
 

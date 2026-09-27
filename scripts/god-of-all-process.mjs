@@ -42,7 +42,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 // silencieusement amputé de sa moitié conduite.
 import { auditWorkingRules, angelSectionLines } from "./angel-of-ia-process.mjs";
 import { recordFunctionUsage } from "./tool-usage.mjs";
-import { readAgentSession, SESSION_FILE, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { readAgentSession, SESSION_FILE, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -2230,8 +2230,7 @@ function main() {
   ];
   const planGod = planDactionDepuisEcarts(ecartsGod, { toolSlug: "god-of-all-process",
     libelle: (e) => `${e.fichier} — ${e.defaut}`, tache: (e) => e.tache });
-  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planGod.lignes) console.log(l);
+  imprimerPlanDaction(planGod);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

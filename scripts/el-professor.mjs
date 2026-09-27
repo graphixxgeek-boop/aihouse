@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 // Copie de présentation jetable, jamais committée (même patron que KPI_HTML_PATH de
@@ -111,8 +111,7 @@ function main() {
       tache: `retrouver la simulation de ${note} et la réinscrire à l'index, ou retirer la note devenue sans objet` })),
   ];
   const planProf = buildPlanDaction(constatsProf, { toolSlug: "el-professor" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planProf.lignes) console.log(l);
+  imprimerPlanDaction(planProf);
 }
 
 // ============================================================================================

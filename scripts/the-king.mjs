@@ -18,7 +18,7 @@ import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard } from "
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = process.cwd();
@@ -261,8 +261,7 @@ function main() {
       pourquoi: "vocabulaire partagé + polarité opposée est un signal mécanique, jamais une contradiction prouvée — trancher la philosophie du projet n'est pas une décision d'outil" })),
   ];
   const planRoi = buildPlanDaction(constatsRoi, { toolSlug: "the-king" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planRoi.lignes) console.log(l);
+  imprimerPlanDaction(planRoi);
 
 }
 

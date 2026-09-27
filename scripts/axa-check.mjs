@@ -22,7 +22,7 @@ import { sh, printReliabilityNotice, scriptPourSlug } from "./lib-shell.mjs";
 import { SENSITIVE_NODES, LEVEL_ORDER } from "./check-level-target.mjs";
 import { THEME_PRIMARY_FILE, parseNumstat, churnSignal, churnSignalMesure } from "./always-new-code.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -512,8 +512,7 @@ function main() {
   const planAxa = planDactionDepuisEcarts(fragilesTousFichiers, { toolSlug: "axa-check", fausseUneMesure: true,
     libelle: (f) => `${f.fichier} — ${f.name}() : ${f.reasons.join(", ")}`,
     tache: (f) => `écrire un test réel pour ${f.name}() dans ${f.fichier}, ou déclarer sa vérification via record-check si elle a été faite à la main` });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planAxa.lignes) console.log(l);
+  imprimerPlanDaction(planAxa);
 
   console.log(`\nPour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]`);
 }

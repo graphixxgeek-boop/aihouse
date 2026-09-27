@@ -30,7 +30,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const FUSEAU = "Europe/Paris";
@@ -270,8 +270,7 @@ async function main() {
   if (m.mesurable && m.source === "système") ecarts.push({ pourquoi: "l'heure vient de l'horloge locale : les API de temps sont refusées par la politique réseau de l'environnement, à autoriser si une heure indépendante de la machine est voulue" });
   if (!h.mesurable) ecarts.push({ pourquoi: "aucune mesure historisée : la première estimation comparée au réel n'a encore rien à ajuster" });
   const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "agent-du-temps", tache: "autoriser un domaine de temps, ou acter que l'horloge système suffit — la décision est à l'utilisateur, jamais à l'agent" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

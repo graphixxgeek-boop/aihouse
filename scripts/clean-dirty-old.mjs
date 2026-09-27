@@ -25,7 +25,7 @@ import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -152,8 +152,7 @@ function main() {
     // La section de plan d'action s'affiche MÊME VIDE (2026-09-23) : un rapport qui s'arrête sans
     // elle se lit comme un rapport qui a oublié de conclure. Dire « rien à faire » est un résultat.
     const planVide = buildPlanDaction([], { toolSlug: "clean-dirty-old" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of planVide.lignes) console.log(l);
+    imprimerPlanDaction(planVide);
     return;
   }
 
@@ -180,8 +179,7 @@ function main() {
     etat: "a-trancher",
     pourquoi: "ancienneté relative, jamais une dette constatée : à confronter d'abord à une décision déjà assumée ailleurs (Article 19)",
   })), { toolSlug: "clean-dirty-old" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planCDO.lignes) console.log(l);
+  imprimerPlanDaction(planCDO);
 
   console.log("\nRappel avant d'agir sur l'une de ces zones (Article 19) : vérifier d'abord que ce n'est pas déjà une");
   console.log("décision assumée et documentée ailleurs (docs/referentiel/parametres.md, points-fragiles.md) — un code");

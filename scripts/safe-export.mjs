@@ -19,7 +19,7 @@ import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardi
 import { join } from "node:path";
 import { printReliabilityNotice, porteeDe, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
 
@@ -1156,8 +1156,7 @@ function main() {
   }
   for (const l of formatGardiensSansMesureLines(findGardiensSansMesureDeCorpus(sourcesGardiens))) console.log(l);
 
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 
   const sonde = proposerSondePoussee(tri.gardes);
   console.log(sonde.propose ? `\n🔍 Sonde profonde proposée : ${sonde.raison}` : `\n· Aucune sonde proposée : ${sonde.raison}`);

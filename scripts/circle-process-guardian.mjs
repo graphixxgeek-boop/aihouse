@@ -48,7 +48,7 @@ import { walkDocsPaths, sh, outilsHorsPortee, porteeDe, GARDIEN_DOMAINS, pairesP
 // bibliothèque. Aucun cycle : le-classificateur n'importe rien d'ici.
 import { recenserLesScripts } from "./le-classificateur.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -1363,8 +1363,7 @@ function main() {
   }
 
   const plan = planDactionRonde({ result, mapDrift, countDrift, sansChangelog });
-  console.log(`\n${PLAN_ACTION_TITRE}`);
-  console.log(plan.lignes.join("\n"));
+  imprimerPlanDaction(plan);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

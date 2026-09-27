@@ -16,7 +16,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE, CASE_COCHEE, PREMIERE_TACHE_AVEC_RITUEL, QUESTIONS_DE_CLOTURE } from "./criticite.mjs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const SESSIONS_DIR = join(ROOT, "docs/suivi/sessions");
@@ -955,9 +955,7 @@ function main() {
     tache: (e) => e.quoiFaire,
     fausseUneMesure: true,
   });
-  console.log("");
-  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

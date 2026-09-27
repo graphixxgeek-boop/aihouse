@@ -36,7 +36,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { reliabilityNotice } from "./lib-shell.mjs";
-import { renderTextReport } from "./report-template.mjs";
+import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -295,8 +295,7 @@ function main() {
     : [{ constat: "aucune comparaison effectuée : lancé à froid, sans les deux états de mémoire qu'il lui faut", etat: "a-trancher",
         pourquoi: "ce silence ne dit RIEN sur la santé de la mémoire — le sollicter pendant une simulation est la seule façon d'en obtenir un vrai verdict" }];
   const planMemoire = buildPlanDaction(constatsMemoire, { toolSlug: "memory-audit" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planMemoire.lignes) console.log(l);
+  imprimerPlanDaction(planMemoire);
   if (!findings.length) {
     console.log("\nPAS MESURÉ, et ce n'est pas un vert : memory-audit compare une mémoire de personnage à son état précédent.");
     console.log("Aucun état de jeu n'est fourni en ligne de commande, donc rien n'a été comparé — ce silence ne dit rien sur la santé de la mémoire.");

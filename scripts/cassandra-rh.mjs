@@ -18,7 +18,7 @@ import { join } from "node:path";
 import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie } from "./lib-shell.mjs";
-import { renderTextReport } from "./report-template.mjs";
+import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
@@ -3681,8 +3681,7 @@ async function main() {
     if (r.mesurable && !r.discriminant) constats.push({ etat: "retenu", constat: r.pourquoiPeuDiscriminant, tache: `donner un registre atteignable aux ${r.sansRegistre.length} membres qui n'en ont pas — c'est ce qui débloque la mesure, jamais durcir la cible` });
     if (r.mesurable && r.sousLaCible.length) constats.push({ etat: "a-trancher", constat: `${r.sousLaCible.length} membre(s) sous la cible de ${r.cible}`, pourquoi: "un outil peut avoir trouvé peu parce que son terrain est propre — c'est une question de lecture, jamais un verdict de paresse (Article 16)" });
     const plan = buildPlanDaction(constats, { toolSlug: "cassandra-rh" });
-    console.log(`\n${PLAN_ACTION_TITRE}`);
-    console.log(plan.lignes.join("\n"));
+    imprimerPlanDaction(plan);
     return;
   }
   if (sub === "cadrage") {
@@ -3787,8 +3786,7 @@ async function main() {
     console.log(`\nHORS PORTÉE : ${rec.horsPortee}`);
     // Le plan lui-même vit dans `planDuRecensement()`, exporté et testé — jamais ici (leçon L2).
     const plan = buildPlanDaction(planDuRecensement(ecarts), { toolSlug: "cassandra-rh" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of plan.lignes) console.log(l);
+    imprimerPlanDaction(plan);
     return;
   }
   // CONVOCATION (2026-09-24) — la commande existe le jour même où les fonctions sont écrites.
@@ -3826,8 +3824,7 @@ async function main() {
       convocations.map((c) => ({ etat: "a-trancher", constat: `${c.qui.toUpperCase()} convoqué sur « ${c.sujet} » [${c.motif}]`, pourquoi: c.question })),
       { toolSlug: "cassandra-rh", tache: "porter chaque convocation à l'utilisateur en question ouverte, et n'en clore aucune sans son accord daté et sa raison écrite" },
     );
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of plan.lignes) console.log(l);
+    imprimerPlanDaction(plan);
     return;
   }
   if (sub === "redondance") {
@@ -3861,8 +3858,7 @@ async function main() {
           pourquoi: "l'écart est mesuré, la raison ne l'est pas — un outil peut s'écarter de ses semblables à bon droit (Article 19)" }))),
         { toolSlug: "cassandra-rh" },
       );
-      console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-      for (const l of plan.lignes) console.log(l);
+      imprimerPlanDaction(plan);
     }
     return;
   }
@@ -4232,8 +4228,7 @@ export function renderOrganigrammeReport(org, { dateLabel } = {}) {
     })),
   ];
   const planRH = buildPlanDaction(constatsRH, { toolSlug: "cassandra-rh" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planRH.lignes) console.log(l);
+  imprimerPlanDaction(planRH);
 }
 
 // LE LANCEUR EN DERNIER (2026-09-23, deuxième occurrence du même bug en une heure). Il était au

@@ -28,7 +28,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
-import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { recordCliUsage, USAGE_ORIGINS } from "./tool-usage.mjs";
 // SÉRIE-TEMPORELLE (2026-09-22) : angel est le PREMIER outil branché sur le mécanisme partagé
 // d'historisation, et ce n'est pas un hasard — il avait déjà construit son propre historique la
@@ -1147,8 +1147,7 @@ function main() {
   }
 
   const plan = planDactionConduite({ audit, nonEvalue });
-  console.log(`\n${PLAN_ACTION_TITRE}`);
-  console.log(plan.lignes.join("\n"));
+  imprimerPlanDaction(plan);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

@@ -16,7 +16,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -242,8 +242,7 @@ function main() {
       // disait simplement jamais sous forme de suite à donner.
       const planConso = planDactionDepuisEcarts(findings, { toolSlug: "smart-conso-api", fausseUneMesure: true,
         libelle: (f) => f.constat, tache: (f) => f.piste });
-      console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-      for (const l of planConso.lignes) console.log(l);
+      imprimerPlanDaction(planConso);
     }
     reportUnconfirmedBursts(healthData, sessionLog);
     return;

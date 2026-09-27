@@ -29,7 +29,7 @@ import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -812,8 +812,7 @@ function main() {
   const planDoc = planDactionDepuisEcarts([...ecartsDocReport, ...ecartsMuets], { toolSlug: "doc-report",
     libelle: (e) => `${e.fichier} — ${e.defaut}`,
     tache: (e) => e.tache });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planDoc.lignes) console.log(l);
+  imprimerPlanDaction(planDoc);
 }
 
 

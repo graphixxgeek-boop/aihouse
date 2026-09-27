@@ -34,7 +34,7 @@ import { printReliabilityNotice } from "./lib-shell.mjs";
 // La mémoire vient de SAFE-EXPORT, comme celle d'ARGUS (tâche #214) : une seule discipline
 // d'écartement pour tous les Gardiens, jamais une par outil.
 import { loadMemoire, filtrerDejaTranches } from "./safe-export.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -669,8 +669,7 @@ function main() {
   const plan = planDactionDepuisEcarts(problemes, { toolSlug: "clone-hunter",
     libelle: (c) => `[${c.detecteurs.join("+")}] ${formatClusterSummary(c)} — ${motifDuCluster(c).motif}`,
     tache: (c) => motifDuCluster(c).tache });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();

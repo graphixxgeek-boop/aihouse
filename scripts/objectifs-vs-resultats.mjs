@@ -33,7 +33,7 @@ import { dataRows } from "./lib-markdown-table.mjs";
 import { loadToolUsageHistory } from "./tool-brain.mjs";
 import { parseKpiHistoryCsv, KPI_HISTORY_PATH } from "./kpi-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
 
@@ -243,8 +243,7 @@ function main() {
   const planObj = buildPlanDaction(constatsObjectifs, { toolSlug: "objectifs-vs-resultats" });
   printReportHeader({ tool: "objectifs-vs-resultats", title: "objectifs-vs-resultats — rapport", scriptPath: "scripts/objectifs-vs-resultats.mjs" });
   console.log(formatObjectifsReport(rows));
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planObj.lignes) console.log(l);
+  imprimerPlanDaction(planObj);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

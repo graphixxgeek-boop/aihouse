@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 // CHECK-LEVEL-TARGET (2026-09-19, cf. docs/check-level-target-blueprint.md et
@@ -238,8 +238,7 @@ function main() {
       ...(divergence?.missingFromHarmonia ?? []).map((n) => ({ constat: `nœud « ${n} » déclaré sensible, absent de harmonia.md`, etat: "retenu", fausseUneMesure: true,
         tache: `documenter « ${n} » dans harmonia.md, ou le retirer des nœuds sensibles` })),
     ], { toolSlug: "check-level-target" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of planNiveau.lignes) console.log(l);
+    imprimerPlanDaction(planNiveau);
     if (divergence.missingFromHere.length || divergence.missingFromHarmonia.length) {
       console.log("⚠️  SENSITIVE_NODES a divergé de harmonia.md (garde-fou de fraîcheur, 2026-09-21) :");
       if (divergence.missingFromHere.length) console.log(`   présent dans harmonia.md, absent d'ici : ${divergence.missingFromHere.join(", ")}`);

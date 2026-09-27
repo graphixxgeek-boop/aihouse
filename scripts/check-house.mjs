@@ -8303,6 +8303,34 @@ async function testSystemeDesIndex() {
   assert.ok(ecritsJournal[0].includes('r-2026-09-01.txt') && ecritsJournal[0].includes('r-2026-09-02.txt'), 'the rebuilt block must KEEP what it had already reconstituted and ADD the new deposit — rebuilt against the full text it would keep only the newcomer, and the two passes would contradict each other forever');
   const strippe = da.sansLeBlocGenere(`avant\n${da.DEBUT_BLOC_GENERE}\ndedans\n${da.FIN_BLOC_GENERE}\naprès`);
   assert.ok(strippe.includes('avant') && strippe.includes('après') && !strippe.includes('dedans'), 'stripping the generated block must leave the hand-written text on both sides intact and nothing of the machine-written middle');
+  // L'IMPRESSION DU PLAN D'ACTION, ÉCRITE UNE SEULE FOIS (2026-09-27, tâche #993).
+  //
+  // LE CHIFFRE A DÛ ÊTRE MESURÉ DEUX FOIS, et la première mesure était fausse : « 37 outils
+  // recopient ce bloc » comptait les lignes contenant PLAN_ACTION_TITRE, or chaque outil en a une
+  // rien que pour l'importer. Annoncé à l'utilisateur, puis corrigé devant lui. La vraie mesure est
+  // plus modeste ET plus gênante : ~28 sites impriment `=== Plan d'action ===` puis bouclent,
+  // 4 le font en deux console.log, 5 impriment le titre TOUT NU sans les `===`, 1 en Markdown.
+  //
+  // LE DÉFAUT N'EST DONC PAS LA RECOPIE MAIS CE QU'ELLE A LAISSÉ ARRIVER : la même section du même
+  // gabarit s'affichait sous TROIS apparences selon l'outil. Le gabarit unifié (tâche #199) ne
+  // pouvait rien contre un bloc que chaque outil réécrivait. Une section recopiée DÉRIVE.
+  {
+    const rt = await import('../scripts/report-template.mjs');
+    const sorties = [];
+    rt.imprimerPlanDaction({ lignes: ['a', 'b'] }, { log: (l) => sorties.push(l) });
+    assert.deepEqual(sorties, ['', `=== ${rt.PLAN_ACTION_TITRE} ===`, 'a', 'b'], 'one rendering and one only: a blank line, the framed title, then the lines — this exact shape is what the 43 converted sites used to write each in their own way');
+    const vide = [];
+    rt.imprimerPlanDaction(undefined, { log: (l) => vide.push(l) });
+    assert.deepEqual(vide, ['', `=== ${rt.PLAN_ACTION_TITRE} ===`], 'called without a plan it must still print the heading rather than throw: several real sites pass a plan built inline, and a crash there would take down the whole report over a missing section');
+    // En direct contre le vrai dépôt : plus aucun site n'imprime le plan à sa façon. Les quatre
+    // derniers usages du titre ne sont PAS des impressions (écriture dans un fichier, empilement
+    // dans un tableau, sonde de source, gabarit lui-même) — les forcer ici aurait été l'indirection
+    // inutile que l'enquête du 2026-09-22 avait justement écartée.
+    const sourcesImpr = fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs') && f !== 'report-template.mjs')
+      .filter((f) => /console\.log\(`[^`]*\$\{PLAN_ACTION_TITRE\}/.test(fs.readFileSync(path.join('scripts', f), 'utf8')));
+    assert.deepEqual(sourcesImpr, ['the-equalizer.mjs'], `every tool must print its action plan through the shared function — only the-equalizer keeps its own Markdown heading, because its report IS Markdown. Any other name here means a site was written back by hand: ${sourcesImpr.join(', ')}`);
+  }
+
   // LE SCRIPT D'UN OUTIL SE DÉDUIT DE SON NOM (2026-09-27, tâche #993, suite du constat ci-dessous).
   // Le garde-fou de divergence n'était que la moitié du travail : mesure faite, sur les 68 outils du
   // registre de fiabilité, 57 ont pour script `scripts/<slug>.mjs` et 11 font exception. Les deux

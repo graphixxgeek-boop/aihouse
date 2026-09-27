@@ -31,7 +31,7 @@ import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "n
 import { join, relative } from "node:path";
 import { decouperEnUnites, pairesParJaccard, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 
 // --- 1. LE BALAYAGE DU DÉPÔT ----------------------------------------------------------------
@@ -1137,8 +1137,7 @@ function main() {
       ? [{ pourquoi: `${r.aInstruire.length} paire(s) de documents couvrent le même terrain sans qu'aucun ne cite l'autre` }]
       : [];
     const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "instruire chaque paire une par une — fusionner, déclarer la frontière dans l'un des deux, ou écarter avec la raison écrite ; jamais un retrait en masse" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const ligne of plan.lignes) console.log(ligne);
+    imprimerPlanDaction(plan);
     console.log(`\nRapport déposé : ${deposerRapportDocumentsJumeaux(lignes)}`);
     return;
   }
@@ -1210,8 +1209,7 @@ function main() {
   if (r.porteursFantomes.length) ecarts.push({ pourquoi: `${r.porteursFantomes.length} règle(s) nomment un mécanisme introuvable` });
   if (r.recouvrements.length) ecarts.push({ pourquoi: `${r.recouvrements.length} paire(s) de règles se recouvrent sans que rien ne dise laquelle prime` });
   const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "porter la question à l'utilisateur — Abraham ne tranche jamais la pertinence d'une règle" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

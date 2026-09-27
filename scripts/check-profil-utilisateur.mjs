@@ -10,7 +10,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -73,11 +73,10 @@ function main() {
   if (!mesure.mesurable) {
     // Le plan d'action s'imprime QUAND MÊME, et sa seule ligne est l'absence de mesure : sortir
     // ici en silence rendrait ce passage indiscernable d'un passage réussi.
-    console.log(`\n${PLAN_ACTION_TITRE}`);
-    console.log(planDactionDepuisEcarts([{ pourquoi: `corpus non mesurable — ${mesure.pourquoi}` }], {
+    imprimerPlanDaction(planDactionDepuisEcarts([{ pourquoi: `corpus non mesurable — ${mesure.pourquoi}` }], {
       toolSlug: "check-profil-utilisateur",
       tache: "vérifier que le système de profil utilisateur existe et porte des fiches avant de lire ce verdict comme un feu vert",
-    }).lignes.join("\n"));
+    }));
     return;
   }
   const indexText = readFileSync(INDEX_PATH, "utf8");
@@ -107,9 +106,7 @@ function main() {
     libelle: (e) => e.quoi,
     tache: (e) => e.quoiFaire,
   });
-  console.log("");
-  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

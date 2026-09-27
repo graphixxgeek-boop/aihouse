@@ -30,7 +30,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
@@ -321,9 +321,7 @@ function mainGouvernance(root) {
       : "créer le registre des baptêmes, ou décider qu'il n'en faut pas : tant qu'il n'existe pas, ce chiffre mesure son absence et non une dette de nommage",
   });
   const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "agent-des-noms", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire });
-  console.log("");
-  console.log(`=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
   console.log("HORS PORTÉE de ce plan : aucune de ces tâches ne propose un NOM. Les noms se choisissent par l'utilisateur — ce plan prépare sa décision, il ne la prend jamais.");
 }
 

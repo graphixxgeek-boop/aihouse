@@ -28,7 +28,7 @@ import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE, ETATS_CONSTAT } from "./report-template.mjs";
@@ -1622,8 +1622,7 @@ function main() {
     ...constatsRemontees(remontees, groupes, auditL.lecons ?? []),
   ];
   const planAppr = buildPlanDaction(constatsApprentissage, { toolSlug: "tool-learning" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planAppr.lignes) console.log(l);
+  imprimerPlanDaction(planAppr);
   for (const g of surMoi.geles) console.log(`   ⏸️  ${g.outil} : ${g.note} (jugé « ${g.verdict} » le ${g.depuis}).`);
   for (const c of surMoi.chezLUtilisateur) console.log(`   ⏳ ${c.outil} : ${c.note}.`);
   if (surMoi.questionObligatoire) console.log(`\n🔴 ${surMoi.action}`);

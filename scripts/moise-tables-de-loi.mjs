@@ -54,7 +54,7 @@ import { join, relative } from "node:path";
 import { printReliabilityNotice, decouperEnUnites, sh } from "./lib-shell.mjs";
 import * as A from "./abraham-les-references.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { estimateTokens } from "./smart-conso-token.mjs";
 // PAS d'import statique d'ecotoken, et c'est délibéré. ecotoken a besoin de `buildClaudeMdRuleTable`
 // (ci-dessous, propre à CLAUDE.md) pendant que Moïse a besoin de son compteur d'obligations
@@ -1087,8 +1087,7 @@ async function main() {
     if (d.mesurable && d.fraicheur.perimee) ecarts.push({ pourquoi: `instrument périmé — ${d.fraicheur.pourquoi}` });
     if (d.mesurable && !d.memoire.mesurable) ecarts.push({ pourquoi: "aucune mémoire d'opération : le diagnostic ne peut pas dire ce qui a déjà été tenté" });
     const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "moise-tables-de-loi", fausseUneMesure: true, tache: "traiter avant de décider quoi que ce soit sur la charte" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of plan.lignes) console.log(l);
+    imprimerPlanDaction(plan);
     return;
   }
 
@@ -1161,8 +1160,7 @@ async function main() {
     fausseUneMesure: true,
     tache: "régénérer l'instrument AVANT toute décision d'allègement — jamais décider sur une mesure périmée",
   });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

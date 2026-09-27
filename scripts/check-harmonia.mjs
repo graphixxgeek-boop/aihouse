@@ -10,7 +10,7 @@ import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -245,8 +245,7 @@ async function main() {
   }
 
   const plan = buildPlanDaction(constats, { toolSlug: "harmonia" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of plan.lignes) console.log(l);
+  imprimerPlanDaction(plan);
 }
 
 

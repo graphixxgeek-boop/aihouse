@@ -230,6 +230,34 @@ export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = []
 export const ETATS_CONSTAT = ["retenu", "ecarte", "a-trancher"];
 export const PLAN_ACTION_TITRE = "Plan d'action";
 
+// L'IMPRESSION DU PLAN, ÉCRITE UNE SEULE FOIS (2026-09-27, tâche #993).
+//
+// LE CONSTAT, ET IL A DEMANDÉ D'ÊTRE MESURÉ DEUX FOIS. Un premier comptage annonçait « 37 outils
+// recopient ce bloc » : il comptait les lignes contenant `PLAN_ACTION_TITRE`, or chaque outil en a
+// une rien que pour l'importer. Le chiffre était faux, dit à l'utilisateur, puis corrigé. La vraie
+// mesure est à la fois plus modeste et plus gênante :
+//   · ~28 sites impriment `=== Plan d'action ===` puis bouclent sur `plan.lignes` ;
+//   ·   4 le font en deux `console.log` au lieu d'un `\n` ;
+//   ·   5 impriment le titre TOUT NU, sans les `===` ;
+//   ·   1 imprime `## Plan d'action`.
+//
+// LE VRAI DÉFAUT N'EST DONC PAS LA RECOPIE, C'EST CE QU'ELLE A LAISSÉ ARRIVER : la même section
+// s'affiche sous TROIS apparences selon l'outil qui la produit. Le gabarit unifié des rapports
+// (tâche #199) existe précisément pour l'empêcher, et il ne pouvait rien contre un bloc que chaque
+// outil réécrivait à sa façon. Une section recopiée n'est pas seulement lourde : elle DÉRIVE.
+//
+// Ce que la fonction garantit : un rendu unique, une ligne vide avant (jamais deux, jamais zéro),
+// et le titre encadré. Les appelants qui n'IMPRIMENT pas — celui qui écrit dans un fichier, celui
+// qui empile dans un tableau, la sonde qui cherche le motif dans du source — gardent leur code :
+// leur sujet n'est pas l'affichage, et les forcer ici aurait été une indirection pour rien
+// (c'est exactement la raison pour laquelle l'enquête du 2026-09-22 avait ÉCARTÉ un helper voisin).
+export function imprimerPlanDaction(plan, { log = console.log } = {}) {
+  log("");
+  log(`=== ${PLAN_ACTION_TITRE} ===`);
+  for (const ligne of plan?.lignes ?? []) log(ligne);
+  return plan;
+}
+
 // LE NIVEAU D'UNE TÂCHE (2026-09-23, demande explicite : « chaque rapport suit la logique :
 // CONSTAT >> TÂCHES RECOMMANDÉES OU OBLIGATOIRES »).
 //

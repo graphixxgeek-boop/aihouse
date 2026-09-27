@@ -34,7 +34,7 @@ import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { checkPhase2Autonomy, formatPhase2Autonomy, checkObserverIdentified, formatObserverIdentified, detectJournalShape } from "./summarize-simulation-log.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -414,8 +414,7 @@ function main() {
     // n'existait pas, et il se lisait donc comme le premier.
     console.log(`\nVerdict : ${!v.mesurable ? `🚨 PAS MESURÉ — aucune des ${v.total} étapes d'après n'a pu être vérifiée (nom de la simulation absent)` : v.ok ? `process respecté sur tout ce qui est vérifiable (${v.mesurees}/${v.total} étapes réellement regardées)` : "⚠️ des points restent ouverts"}`);
     const plan = planDactionPostflight(v);
-    console.log(`\n${PLAN_ACTION_TITRE}`);
-    console.log(plan.lignes.join("\n"));
+    imprimerPlanDaction(plan);
     return;
   }
   console.log("Usage : node scripts/process-simulation-guardian.mjs [brief | postflight <journal.json> [nomDeLaSimu]]");

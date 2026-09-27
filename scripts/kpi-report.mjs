@@ -39,7 +39,7 @@ import {burstComplianceScore} from './smart-conso-api.mjs';
 import {computeAdoptionKpi, checkKnowledgeFreshness} from './smart-conso-token.mjs';
 import {persistContextWeightSamples, averageContextWeightByActor, loadHistory as loadMementoWeightHistory} from './memento-weight.mjs';
 import {recordCliUsage} from './tool-usage.mjs';
-import { buildPlanDaction, PLAN_ACTION_TITRE, readAgentSession } from "./report-template.mjs";
+import { buildPlanDaction, PLAN_ACTION_TITRE, readAgentSession, imprimerPlanDaction } from "./report-template.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { suivreLaTendance, formatTendanceLines, SENS } from './serie-temporelle.mjs';
 
@@ -995,8 +995,7 @@ async function main() {
         pourquoi: "un point fragile est une zone identifiée EN ATTENTE d'une décision de conception, jamais un bug actif — le traiter comme une tâche automatique reviendrait à trancher à la place de l'utilisateur" }] : []),
     ];
     const planKpi = buildPlanDaction(constatsKpi, { toolSlug: "kpi-report" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of planKpi.lignes) console.log(l);
+    imprimerPlanDaction(planKpi);
     const stats = repoStats();
     const health = codeHealthScore(tscErrors, tests.passed, tests.expected, tests.coverageScore);
     section('KPI global — Robustesse du code');

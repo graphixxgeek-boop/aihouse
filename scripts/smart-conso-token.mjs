@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice, qualifierIndicateur, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 import { suivreLaTendance, formatTendanceLines, SENS } from "./serie-temporelle.mjs";
@@ -1362,8 +1362,7 @@ async function main() {
     etat: "a-trancher",
     pourquoi: "auto-diagnostic : l'outil signale une dérive de sa PROPRE mesure, et l'Article 22 lui interdit de s'auto-ajuster — la correction est une décision humaine",
   })), { toolSlug: "smart-conso-token" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planToken.lignes) console.log(l);
+  imprimerPlanDaction(planToken);
   console.log(`Bilan investissement (${7} derniers jours) : ${ratio.message}`);
   const findings = diagnoseAdviceAccuracy(history, now);
   console.log(`Auto-diagnostic (agent + outils) : ${findings.length ? findings.length + " constat(s) — voir le rapport détaillé si besoin" : "aucun constat pour l'instant"}.`);

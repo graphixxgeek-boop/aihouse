@@ -23,7 +23,7 @@ import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/always-new-code/index.md");
@@ -310,8 +310,7 @@ function main() {
     });
   }
   const planANC = buildPlanDaction(constatsANC, { toolSlug: "always-new-code" });
-  console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-  for (const l of planANC.lignes) console.log(l);
+  imprimerPlanDaction(planANC);
 
   const perf = alwaysNewCodePerformance(indexText);
   console.log("\n--- Performance de l'outil (KPI) ---");

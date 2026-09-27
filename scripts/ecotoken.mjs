@@ -34,7 +34,7 @@ import { buildClaudeMdRuleTable } from "./moise-tables-de-loi.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -1836,8 +1836,7 @@ function main() {
       etat: "a-trancher",
       pourquoi: "alléger la charte, c'est retirer du texte qui fait loi : le garde-fou de l'Article 13 impose de NE PAS couper en cas de doute, et ce choix n'appartient jamais à l'outil qui l'a proposé",
     })), { toolSlug: "ecotoken" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of planEco.lignes) console.log(l);
+    imprimerPlanDaction(planEco);
     return;
   }
   if (sub === "scan") {
@@ -1944,8 +1943,7 @@ function main() {
       etat: "a-trancher",
       pourquoi: "alléger la charte, c'est retirer du texte qui fait loi : en cas de doute, l'Article 13 tranche pour NE PAS couper",
     })), { toolSlug: "ecotoken" });
-    console.log(`\n=== ${PLAN_ACTION_TITRE} ===`);
-    for (const l of planPlan.lignes) console.log(l);
+    imprimerPlanDaction(planPlan);
     return;
   }
   const report = buildEcotokenReport({ charterText: texte });

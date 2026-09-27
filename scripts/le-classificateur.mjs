@@ -86,7 +86,7 @@ export const CLASSES_TRANSVERSES = [
     sonde: (src) => /printReliabilityNotice/.test(src) },
   { cle: "conclut-en-plan-daction", libelle: "(ct) 🎯 Les pro-actifs - conclut par un plan d'action",
     quoi: "transforme ses constats en gestes (Article 28) au lieu de s'arrêter au rapport",
-    sonde: (src) => /PLAN_ACTION_TITRE|buildPlanDaction|planDactionDepuisEcarts/.test(src) },
+    sonde: (src) => /PLAN_ACTION_TITRE|buildPlanDaction|planDactionDepuisEcarts|imprimerPlanDaction/.test(src) },
   { cle: "compte-son-usage", libelle: "(ct) 🪞 Les auto-conscients - enregistre son propre usage",
     quoi: "sait dire s'il a servi — sans quoi personne ne peut constater qu'un outil n'est jamais sollicité",
     sonde: (src) => /recordCliUsage/.test(src) },

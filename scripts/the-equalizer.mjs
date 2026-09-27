@@ -332,6 +332,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log(formatANiveau({ exigences, verdicts, fantomes, integration, dateLabel: dateEnToutesLettres() }));
   const constats = constatsANiveau({ verdicts, fantomes, integration });
   console.log("");
+  // LA SEULE EXCEPTION À imprimerPlanDaction() (2026-09-27, tâche #993), et elle est déclarée
+  // plutôt que subie : le rapport de THE-EQUALIZER est du MARKDOWN, pas du texte de terminal. Le
+  // titre y prend un `##` pour rester un vrai titre de niveau 2 dans le document rendu ; le forcer
+  // à `=== … ===` casserait sa structure là où ça la corrigerait partout ailleurs.
   console.log(`## ${PLAN_ACTION_TITRE}`);
   console.log(planDactionDepuisEcarts(constats, { toolSlug: "the-equalizer", tache: "mettre l'Agence à niveau" }).lignes.join("\n"));
 }
