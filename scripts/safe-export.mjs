@@ -1077,6 +1077,33 @@ function main() {
   // LA COMMANDE « export » (2026-09-26, tâche #906) : le croisement vitalité × blueprint et
   // l'empreinte disque, joignables sans lancer le balayage complet — ce sont les deux chiffres
   // qu'il a demandés pour décider, pas pour surveiller.
+  // LA COMMANDE « temoin » (2026-09-27, tâche #1034 étape 3) : lance les outils dans un dépôt
+  // ÉTRANGER et classe ce qui se passe vraiment. C'est la portabilité MESURÉE, là où `export` rend
+  // la portabilité LUE — les deux chiffres ne disent pas la même chose et doivent rester distincts.
+  // `--ou=<chemin>` est OBLIGATOIRE : un banc d'essai qui viserait ce dépôt-ci par défaut
+  // mesurerait que l'Agence marche chez elle, ce que personne n'a jamais mis en doute.
+  if (process.argv[2] === "temoin") {
+    printReliabilityNotice("safe-export");
+    recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    const ou = (process.argv.find((a) => a.startsWith("--ou=")) ?? "").split("=")[1];
+    if (!ou) {
+      console.log("🚨 PAS MESURÉ — aucun dépôt témoin donné. `node scripts/safe-export.mjs temoin --ou=<chemin d'un dépôt ÉTRANGER>`.");
+      console.log("   Viser ce dépôt-ci par défaut mesurerait que l'Agence marche chez elle : personne ne l'a jamais mis en doute, et le chiffre serait un satisfecit.");
+      return;
+    }
+    return import("./le-classificateur.mjs").then(async (lc) => {
+      const { spawnSync } = await import("node:child_process");
+      const rec = lc.recenserLesScripts();
+      const noms = [...new Set((rec.lignes ?? rec).map((l) => String(l.chemin ?? l.fichier ?? "")).filter((c) => c.endsWith(".mjs")).map((c) => c.replace(/^scripts\//, "").replace(/\.mjs$/, "")))]
+        .filter((n) => !n.startsWith("hooks/") && n !== "check-house" && n !== "lib-shell");
+      const passages = noms.map((outil) => {
+        const r = spawnSync(process.execPath, [`scripts/${outil}.mjs`], { cwd: ou, timeout: 60000, encoding: "utf8" });
+        return { outil, verdict: verdictDuTemoin({ code: r.status ?? 1, sortie: `${r.stdout ?? ""}\n${r.stderr ?? ""}` }) };
+      });
+      for (const l of formatTemoinLines(synthetiserLeTemoin(passages), { ou })) console.log(l);
+    });
+  }
+
   if (process.argv[2] === "export") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
@@ -2346,6 +2373,75 @@ export const MARQUEURS_DE_NON_PORTABILITE = [
 // jour sur un autre outil. On retire les commentaires AVANT de chercher, jamais après.
 export function codeSansCommentaires(src = "") {
   return String(src).replace(/^\s*\/\/[^\n]*$/gm, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
+}
+
+// =============================================================================================
+// LE BANC D'ESSAI DU TÉMOIN — la portabilité MESURÉE au lieu d'être lue
+// =============================================================================================
+// SON ARBITRAGE, MOT POUR MOT (2026-09-27) : « construire le projet témoin d'abord est plus sûr —
+// la classification viendrait de la mesure au lieu de la lecture — OK on fait ça ». `mesurerLaPortabilite()`
+// juste en dessous LIT le code et compte les chemins de ce dépôt ; ici, on LANCE les outils dans un
+// dépôt étranger et on regarde ce qui se passe vraiment. Les deux ne disent pas la même chose, et
+// c'est exactement pour ça qu'ils coexistent : un chemin cité n'est pas forcément un défaut, et un
+// outil sans aucun chemin suspect peut quand même mourir sur une hypothèse invisible.
+//
+// TROIS VERDICTS, JAMAIS DEUX, et c'est tout le dispositif : le premier essai a montré qu'Ezechiel
+// rendait sept fois « pas mesuré » et rendait la main proprement. Compter ces sept-là comme des
+// échecs pousserait les outils à FABRIQUER des réponses là où il n'y a pas de données — l'exact
+// contraire de la discipline de ce projet. « Pas mesuré » est un SUCCÈS d'export.
+//
+// CE N'EST PAS UN OUTIL DE PLUS (Article 31) : c'est le même sujet que la portabilité lue, dans le
+// même fichier, et deux rapports séparés sur le même sujet finiraient par se contredire.
+export const VERDICTS_DU_TEMOIN = [
+  { cle: "portable", icone: "✅", quoi: "il tourne et rend un résultat" },
+  { cle: "honnete", icone: "⚪", quoi: "il tourne et DÉCLARE ce qu'il ne peut pas mesurer — un succès d'export, jamais un échec" },
+  { cle: "non-portable", icone: "💥", quoi: "il s'arrête sur une hypothèse qui n'est vraie que chez nous" },
+];
+
+export const MOTIFS_D_HONNETETE = /PAS MESUR[ÉE]|pas mesur[ée]|NON MESUR[ÉE]|introuvable ici|aucune donnée/;
+
+// Le verdict se lit sur DEUX choses, jamais une : le code de sortie ET ce qui a été dit. Un outil
+// qui sort en 0 sans rien dire n'est pas la même chose qu'un outil qui sort en 0 en déclarant son
+// impuissance — et c'est la seconde catégorie qu'il ne faut pas compter comme un échec.
+export function verdictDuTemoin({ code, sortie = "" } = {}) {
+  if (code !== 0) return { cle: "non-portable", pourquoi: `il s'arrête (code ${code}) : ${(String(sortie).match(/Error: [^\n]{0,90}/) ?? ["cause non lisible dans sa sortie"])[0]}` };
+  if (MOTIFS_D_HONNETETE.test(String(sortie))) return { cle: "honnete", pourquoi: "il tourne et déclare ce qu'il ne peut pas mesurer ici — c'est le comportement attendu au moment « AVANT »" };
+  return { cle: "portable", pourquoi: "il tourne et rend un résultat sur un dépôt qu'il ne connaît pas" };
+}
+
+// UN OUTIL QUI SERT LE PRODUIT N'A PAS À ÊTRE PORTABLE, et le compter comme un échec fausserait le
+// chiffre dans le mauvais sens : `check-spirit` provoque les personnages du jeu, `run-framework`
+// lance CE site — ils ne partent pas, et c'est écrit depuis longtemps. LA LISTE NE SE RECOPIE PAS
+// (Article 24) : c'est le registre `NE_PART_PAS_ET_C_EST_NORMAL` du même fichier, celui-là même
+// qui sert déjà à l'exportabilité. Un second registre finirait par diverger du premier.
+export function synthetiserLeTemoin(passages = [], { exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
+  if (!passages.length) return { mesurable: false, pourquoi: "aucun outil lancé : un banc d'essai vide rendrait « tout est portable » sur zéro mesure (leçon L5/L11)" };
+  const parVerdict = {};
+  const horsSujet = [];
+  for (const p of passages) {
+    if (Object.hasOwn(exemptes, p.outil)) { horsSujet.push({ ...p, pourquoi: exemptes[p.outil] }); continue; }
+    (parVerdict[p.verdict.cle] ??= []).push(p);
+  }
+  const total = passages.length - horsSujet.length;
+  const tiennentDebout = (parVerdict.portable?.length ?? 0) + (parVerdict.honnete?.length ?? 0);
+  return { mesurable: true, total, parVerdict, tiennentDebout, horsSujet,
+    tauxPct: total ? (tiennentDebout / total) * 100 : 0,
+    // LE TAUX COMPTE « HONNÊTE » DU BON CÔTÉ, et cette décision est le cœur du dispositif :
+    // un taux qui punirait l'honnêteté pousserait à fabriquer des réponses.
+    quoi: "part des outils qui TIENNENT DEBOUT sur un dépôt étranger — ceux qui rendent un résultat ET ceux qui déclarent honnêtement ne pas pouvoir" };
+}
+
+export function formatTemoinLines(t = {}, { ou = "" } = {}) {
+  const L = ["", `=== LE BANC D'ESSAI DU TÉMOIN${ou ? ` — ${ou}` : ""} ===`];
+  if (!t.mesurable) { L.push(`  🚨 PAS MESURÉ — ${t.pourquoi}`); return L; }
+  L.push(`  ${t.tiennentDebout}/${t.total} outils tiennent debout (${t.tauxPct.toFixed(0)} %) — ${t.quoi}`);
+  if (t.horsSujet?.length) L.push(`  (${t.horsSujet.length} outil(s) hors sujet, retirés du calcul avec leur raison écrite : ils servent le PRODUIT et n'ont jamais eu à partir — ${t.horsSujet.map((h) => h.outil).join(", ")})`);
+  for (const v of VERDICTS_DU_TEMOIN) {
+    const liste = t.parVerdict[v.cle] ?? [];
+    L.push(`  ${v.icone} ${String(liste.length).padStart(2)} ${v.cle} — ${v.quoi}`);
+    for (const p of liste.slice(0, 12)) L.push(`       ${p.outil} : ${p.verdict.pourquoi}`);
+  }
+  return L;
 }
 
 export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, marqueurs = MARQUEURS_DE_NON_PORTABILITE } = {}) {

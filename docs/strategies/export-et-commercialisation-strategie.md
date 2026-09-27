@@ -389,6 +389,38 @@ preuve de l'utilité du témoin : la détection automatique du filet, écrite qu
 pointait vers NOTRE filet à l'intérieur du dépôt étranger. Parce que **l'Agence emporte ses propres
 crochets avec elle**, et que le crochet nomme notre fichier.
 
+### Le PREMIER CHIFFRE DE PORTABILITÉ VENU D'UN LANCEMENT RÉEL (2026-09-27)
+
+Les huit outils du premier essai étaient un sondage. **Le banc d'essai lance maintenant TOUS les
+outils lançables** dans le dépôt étranger et classe ce qui se passe :
+
+```
+53 / 73 outils tiennent debout  —  73 %
+  ✅ 38 portables      il tourne et rend un résultat sur un dépôt qu'il ne connaît pas
+  ⚪ 15 honnêtes       il tourne et DÉCLARE ce qu'il ne peut pas mesurer
+  💥 20 non portables  il s'arrête sur une hypothèse qui n'est vraie que chez nous
+  ( 8 hors sujet, nommés : ils servent le PRODUIT et n'ont jamais eu à partir)
+```
+
+**LA COMPARAISON AVEC LE CHIFFRE LU EST LE VRAI ENSEIGNEMENT.** La lecture du code disait
+**49 % de portabilité** (42 scripts sur 82 portent un chemin de ce dépôt) ; le lancement réel dit
+**73 %**. Les deux sont justes, et **ils ne mesurent pas la même chose** : un chemin cité n'est pas
+forcément un défaut — beaucoup d'outils citent `docs/referentiel/` et savent très bien vivre sans.
+Inversement, un outil sans aucun chemin suspect peut mourir sur une hypothèse invisible. **C'est
+exactement pourquoi l'arbitrage « le témoin d'abord » était le bon : la lecture surestime le
+problème, et seule la mesure dit où il est vraiment.**
+
+**Deux décisions de calcul, et chacune protège contre un chiffre flatteur dans un sens différent :**
+
+- **« Honnête » compte du BON côté.** Un taux qui punirait l'honnêteté pousserait les outils à
+  fabriquer des réponses là où il n'y a pas de données.
+- **Les outils qui servent le produit sortent du calcul, mais ils sont NOMMÉS.** Un dénominateur
+  qu'on réduit sans dire qui on retire est un dénominateur qu'on choisit.
+
+**Le geste** : `node scripts/safe-export.mjs temoin --ou=<chemin d'un dépôt étranger>`. Il REFUSE de
+tourner sans cible plutôt que de viser ce dépôt-ci par défaut — mesurer que l'Agence marche chez
+elle serait un satisfecit sur une question que personne n'a posée.
+
 ### La cinquième contrainte d'export, née de là
 
 **CE QUI NE DOIT PAS VOYAGER est aussi important que ce qui voyage.** Le kit d'export doit lister

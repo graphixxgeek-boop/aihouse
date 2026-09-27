@@ -16309,6 +16309,45 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE BANC D'ESSAI DU TÉMOIN — la portabilité MESURÉE (2026-09-27, #1034 étape 3)
+// ————————————————————————————————————————————————————————————————————————
+// SON ARBITRAGE : « construire le projet témoin d'abord est plus sûr — la classification viendrait
+// de la mesure au lieu de la lecture ». `mesurerLaPortabilite()` LIT le code et compte les chemins
+// de ce dépôt ; le banc, lui, LANCE les outils dans un dépôt étranger et regarde ce qui se passe.
+{
+  const se = await import('../scripts/safe-export.mjs');
+
+  // TROIS VERDICTS, JAMAIS DEUX, et c'est tout le dispositif. Le verdict se lit sur DEUX choses :
+  // le code de sortie ET ce qui a été dit — un outil qui sort en 0 sans rien dire n'est pas la
+  // même chose qu'un outil qui sort en 0 en déclarant son impuissance.
+  assert.equal(se.verdictDuTemoin({ code: 0, sortie: 'voici le rapport' }).cle, 'portable', 'un outil qui tourne et rend un résultat sur un dépôt inconnu est portable');
+  assert.equal(se.verdictDuTemoin({ code: 0, sortie: '⚪ PAS MESURÉ — pas de charte ici' }).cle, 'honnete', 'MUST NOT COUNT AS A FAILURE: un outil qui tourne et DÉCLARE ce qu\'il ne peut pas mesurer est un succès d\'export — c\'est le comportement attendu au moment « AVANT », et le punir pousserait les outils à FABRIQUER des réponses là où il n\'y a pas de données');
+  assert.equal(se.verdictDuTemoin({ code: 1, sortie: 'Error: ENOENT machin' }).cle, 'non-portable', 'et un outil qui s\'arrête sur une hypothèse qui n\'est vraie que chez nous est non portable, avec la cause citée');
+  assert.ok(/ENOENT/.test(se.verdictDuTemoin({ code: 1, sortie: 'Error: ENOENT machin' }).pourquoi), 'la cause est REPRISE dans le verdict : « il plante » sans la raison n\'est pas instruisible');
+
+  // LE TAUX COMPTE « HONNÊTE » DU BON CÔTÉ — c'est la décision qui fait tenir tout le reste.
+  const t = se.synthetiserLeTemoin([
+    { outil: 'a', verdict: { cle: 'portable' } }, { outil: 'b', verdict: { cle: 'honnete' } }, { outil: 'c', verdict: { cle: 'non-portable' } },
+  ], { exemptes: {} });
+  assert.equal(t.tiennentDebout, 2, 'portable ET honnête tiennent debout tous les deux : un taux qui punirait l\'honnêteté est un taux qui encourage le mensonge');
+  assert.equal(Math.round(t.tauxPct), 67, 'et le taux se calcule sur ces deux-là contre le total');
+
+  // UN OUTIL QUI SERT LE PRODUIT SORT DU CALCUL, AVEC SA RAISON — et la liste ne se recopie pas :
+  // c'est le registre d'exemption qui sert déjà à l'exportabilité (Article 24).
+  const avecExempt = se.synthetiserLeTemoin([
+    { outil: 'a', verdict: { cle: 'portable' } }, { outil: 'check-spirit', verdict: { cle: 'non-portable' } },
+  ]);
+  assert.equal(avecExempt.total, 1, 'check-spirit provoque les personnages du jeu : il n\'a jamais eu à partir, donc le compter comme un échec de portabilité fausserait le chiffre dans le mauvais sens');
+  assert.ok(avecExempt.horsSujet[0].pourquoi.length > 20, 'et il sort du calcul AVEC sa raison écrite, jamais retiré en silence');
+  assert.ok(se.formatTemoinLines(avecExempt).join(' ').includes('check-spirit'), 'les écartés sont NOMMÉS dans le rapport : un dénominateur qu\'on réduit sans dire qui on retire est un dénominateur qu\'on choisit');
+
+  // UN BANC VIDE N'EST JAMAIS « TOUT EST PORTABLE » (leçon L5/L11).
+  assert.equal(se.synthetiserLeTemoin([]).mesurable, false, 'aucun outil lancé n\'est pas un bon résultat, c\'est une absence de mesure');
+
+  console.log("Passed: le banc d'essai du témoin (2026-09-27, tâche #1034, étape 3). Son arbitrage commandait la forme : « construire le projet témoin d'abord est plus sûr — la classification viendrait de la MESURE au lieu de la LECTURE ». Les deux mesures coexistent désormais dans le même fichier et ne se confondent pas : `mesurerLaPortabilite()` LIT le code et compte les chemins de ce dépôt, le banc LANCE les outils dans un dépôt étranger et regarde ce qui se passe vraiment — un chemin cité n'est pas forcément un défaut, et un outil sans aucun chemin suspect peut mourir sur une hypothèse invisible. TROIS VERDICTS ET JAMAIS DEUX, c'est tout le dispositif : « pas mesuré » est un SUCCÈS d'export, parce qu'un taux qui punirait l'honnêteté pousserait les outils à fabriquer des réponses là où il n'y a pas de données — l'exact contraire de la discipline de ce projet. Le verdict se lit sur DEUX choses, le code de sortie ET ce qui a été dit : sortir en 0 sans rien dire n'est pas sortir en 0 en déclarant son impuissance. Un outil qui sert le PRODUIT sort du calcul avec sa raison écrite et son nom cité — un dénominateur qu'on réduit sans dire qui on retire est un dénominateur qu'on choisit — et la liste des écartés ne se recopie pas : c'est le registre d'exemption qui sert déjà à l'exportabilité (Article 24). MESURE RÉELLE SUR LE VRAI TÉMOIN, sindresorhus/slugify @3b17b2e : 53 outils sur 73 tiennent debout, soit 73 % — 38 portables, 15 honnêtes, 20 non portables, 8 hors sujet nommés. C'est le premier chiffre de portabilité de ce projet qui vienne d'un lancement réel et non d'une lecture de code.");
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
 // LA PREMIÈRE MARCHE PORTAIT SUR LES LECTURES DE FICHIERS, celle-ci sur les SOUS-PROCESSUS, et
