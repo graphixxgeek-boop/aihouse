@@ -31,6 +31,8 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { printReliabilityNotice, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { dernierPlanDeDepart } from "./check-tasks-details.mjs";
+import { recentCommits, findCommitsMissingSuiviUpdate } from "./check-suivi-fidelity.mjs";
 // LE RELAIS D'ANGEL, RENDU RÉEL (2026-09-23). Il existait depuis le 2026-09-22 comme un PARAMÈTRE
 // (`sectionAngel`) que god attendait qu'on lui tende — et personne ne le lui tendait jamais :
 // `grep sectionAngel` ne trouvait aucun appelant. L'Article 26 promet « une seule voix, jamais une
@@ -1361,6 +1363,97 @@ export function comparerPlanEtRapport({ planTexte = null, rapportTexte = null } 
   };
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LE POINT DE CONTRÔLE DE NUIT (2026-09-27, tâche #732, seconde moitié)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LA PREMIÈRE MOITIÉ DE #732 EST FAITE DEPUIS LE 2026-09-27 et se lit dans
+// `docs/mode-auto-process-guardian.md` : le réveil est passé de 45 à 15 minutes, avec un filet
+// horaire derrière, et les deux réglages sont historisés avec leur raison. Ce qui MANQUAIT est la
+// raison d'être du réglage, et elle était dans la tâche depuis le premier jour : « ce qu'un rappel
+// rapproché apporte vraiment, c'est un POINT DE CONTRÔLE forcé ».
+//
+// UN RÉVEIL N'EST PAS UN CONTRÔLE, ET C'EST TOUT LE DÉFAUT. Un agent réveillé au milieu d'un
+// chantier reprend ce chantier — il ne s'arrête pas pour regarder où il en est. Le réveil donnait
+// donc la cadence sans jamais donner le regard, et la tâche nommait précisément ce que ça coûte :
+// « c'est exactement ce qui aurait attrapé le décalage de colonnes de ce soir en dix minutes au
+// lieu de trois heures ».
+//
+// LES TROIS QUESTIONS SONT CELLES DE LA TÂCHE, mot pour mot, et chacune est MESURÉE plutôt que
+// posée. Une question posée à un agent qui vient de travailler vingt minutes reçoit la réponse que
+// l'agent croit vraie ; c'est précisément la mémoire à laquelle on ne peut pas se fier (L11, et
+// l'Article 32 par l'autre bout). Les trois se lisent donc sur git et sur le suivi.
+//
+// IL NE BLOQUE RIEN, il REGARDE. Un point de contrôle qui interromprait la nuit serait pire que
+// son absence — et le rythme, lui, est déjà garanti par les deux réveils.
+export const MOTIF_NUMERO_COMMIT = /#(\d{2,4})\b/g;
+
+export function numerosDesCommits(lignes = []) {
+  const parNumero = new Map();
+  for (const l of lignes) {
+    const vus = new Set();
+    for (const m of String(l).matchAll(MOTIF_NUMERO_COMMIT)) {
+      const n = Number(m[1]);
+      if (vus.has(n)) continue;
+      vus.add(n);
+      if (!parNumero.has(n)) parNumero.set(n, []);
+      parNumero.get(n).push(l);
+    }
+  }
+  return parNumero;
+}
+
+export function pointDeControle({ planTexte = null, commits = null, suiviFrais = null, depuis = null } = {}) {
+  // TROIS REFUS DE CONCLURE, ET CHACUN COUVRE UN FAUX VERT DIFFÉRENT. Sans plan, « rien n'a dérivé »
+  // serait rendu sur zéro donnée. Sans liste de commits, « tout est en ordre » dirait seulement
+  // qu'on n'a pas regardé. Un plan sans numéro rendrait 100 % de couverture, le plus faux des verts.
+  if (planTexte == null) return { mesurable: false, pourquoi: "aucun PLAN DE DÉPART trouvé — sans lui, « je n'ai pas dérivé » est une affirmation sur rien : il n'y a pas de cap auquel se comparer" };
+  if (commits == null) return { mesurable: false, pourquoi: "la liste des commits n'a pas pu être lue — « rien à signaler » dirait alors seulement que personne n'a regardé (leçon L11)" };
+  const plan = numerosDuPlan(planTexte);
+  if (!plan.length) return { mesurable: false, pourquoi: "le plan de départ ne porte AUCUN numéro de tâche : une couverture calculée sur zéro rendrait 100 %, le plus faux des verts" };
+
+  const faits = numerosDesCommits(commits);
+  const touchees = plan.filter((n) => faits.has(n));
+  const intouchees = plan.filter((n) => !faits.has(n));
+  const horsPlan = [...faits.keys()].filter((n) => !plan.includes(n)).sort((a, b) => a - b);
+  return {
+    mesurable: true,
+    // QUESTION 1 — OÙ J'EN SUIS.
+    ou: { total: plan.length, touchees, intouchees, commits: commits.length, depuis },
+    // QUESTION 2 — LE CARNET DE BORD DIT-IL LA VÉRITÉ. Relayé de check-suivi-fidelity plutôt que
+    // recalculé : deux mesures de la même question finissent par diverger (L29).
+    carnet: suiviFrais ?? { mesurable: false, pourquoi: "la fraîcheur du suivi n'a pas été fournie — elle se lit chez check-suivi-fidelity, jamais recalculée ici (L29)" },
+    // QUESTION 3 — AI-JE DÉRIVÉ DU PLAN. Une tâche hors plan n'est PAS une faute : une nuit trouve
+    // des choses. Elle devient un signal quand elle DOMINE — quand on a passé la nuit ailleurs.
+    derive: {
+      horsPlan,
+      partHorsPlan: faits.size ? Math.round((horsPlan.length / faits.size) * 100) : null,
+      dominante: faits.size >= 3 && horsPlan.length > touchees.length,
+    },
+    horsPortee: "il lit les NUMÉROS des messages de commit : un travail réel qui n'en cite aucun est invisible ici, et c'est un plancher, jamais un compte exact. Il REGARDE, il ne bloque jamais — un point de contrôle qui interromprait la nuit serait pire que son absence.",
+  };
+}
+
+export function formatPointDeControleLines(p) {
+  if (!p?.mesurable) return ["", "🚨 POINT DE CONTRÔLE — PAS MESURÉ", `   ${p?.pourquoi ?? "raison non fournie"}`];
+  const L = ["", "🧭 POINT DE CONTRÔLE DE NUIT — les trois questions de la tâche #732, mesurées et non posées", ""];
+  L.push(`1. OÙ J'EN SUIS — ${p.ou.touchees.length}/${p.ou.total} tâche(s) du plan touchée(s) par un commit${p.ou.depuis ? ` depuis ${p.ou.depuis}` : ""}, sur ${p.ou.commits} commit(s).`);
+  if (p.ou.intouchees.length) L.push(`   Pas encore touchées : ${p.ou.intouchees.map((n) => "#" + n).join(" ")}`);
+  L.push("");
+  L.push(`2. LE CARNET DE BORD DIT-IL LA VÉRITÉ — ${p.carnet.mesurable === false ? `⚠️ ${p.carnet.pourquoi}` : (p.carnet.retards?.length ? `🟠 ${p.carnet.retards.length} commit(s) substantiel(s) sans mise à jour du suivi` : "✅ aucun commit récent n'a sauté la mise à jour du suivi")}`);
+  L.push("");
+  if (!p.derive.horsPlan.length) L.push("3. AI-JE DÉRIVÉ DU PLAN — non : tout ce qui a été commité était au plan.");
+  else {
+    L.push(`3. AI-JE DÉRIVÉ DU PLAN — ${p.derive.horsPlan.length} tâche(s) hors plan (${p.derive.partHorsPlan} % du travail) : ${p.derive.horsPlan.map((n) => "#" + n).join(" ")}`);
+    L.push(p.derive.dominante
+      ? "   🟠 ET ELLES DOMINENT : plus de travail hors plan que dedans. Ce n'est pas une faute en soi — une nuit trouve des choses — mais c'est le moment de se demander si le plan tient encore."
+      : "   Ce n'est pas un écart : une nuit trouve des choses. C'est noté pour que le plan suivant en tienne compte.");
+  }
+  L.push("");
+  L.push(`   HORS PORTÉE : ${p.horsPortee}`);
+  return L;
+}
+
 export function formatComparaisonLines(c) {
   if (!c?.mesurable) return [`⚠️ NON MESURABLE — ${c?.pourquoi ?? "raison inconnue"}`];
   const L = [`=== PLAN DE DÉPART ↔ RAPPORT DE NUIT — ${c.total} tâche(s) au départ ===`, ""];
@@ -2203,6 +2296,26 @@ function main() {
   }
   if (tache === "schemas") {
     console.log(planchesDesSchemas());
+    return;
+  }
+  // LE POINT DE CONTRÔLE DE NUIT (2026-09-27, tâche #732). Sous-commande plutôt que ligne du rappel
+  // post-commit : il n'a de sens qu'EN MODE AUTONOME, et une section de plus à chaque commit de
+  // journée serait le bruit qui rend un contrôle invisible (L6).
+  if (tache === "checkpoint") {
+    const plan = dernierPlanDeDepart();
+    const lire = (f) => { try { return readFileSync(f.startsWith("/") ? f : join(ROOT, f), "utf8"); } catch { return null; } };
+    let commits = null, suiviFrais = null, depuis = null;
+    try {
+      const cs = recentCommits(30);
+      commits = cs.map((c) => c.subject);
+      // LA FRAÎCHEUR EST RELAYÉE, jamais recalculée ici : deux mesures de la même question finissent
+      // par diverger, et celle-ci a déjà son propriétaire (L29).
+      suiviFrais = { mesurable: true, retards: findCommitsMissingSuiviUpdate(cs) };
+      depuis = cs.length ? `les ${cs.length} derniers commits` : null;
+    } catch (e) {
+      suiviFrais = { mesurable: false, pourquoi: `la fraîcheur du suivi n'a pas pu être lue (${e.message})` };
+    }
+    for (const l of formatPointDeControleLines(pointDeControle({ planTexte: plan ? lire(plan) : null, commits, suiviFrais, depuis }))) console.log(l);
     return;
   }
   // LA CHAÎNE SUR LES DOCUMENTS (2026-09-25, tâche #834) : l'autre moitié du terrain de

@@ -16767,3 +16767,45 @@ async function testRegistreDesBaptemes() {
   console.log(`Passed: le registre des baptêmes se sème depuis le dépôt (2026-09-27, tâche #706). Le constat de départ était « 81 noms en service sur 81 jamais validés », et il ne disait rien : le registre n'existait pas, donc le total ÉTAIT le compte — un registre absent et un registre où personne n'a rien inscrit rendent le même chiffre (leçon L13), et ça portait sur la toute première règle qu'il a demandée, « je dois toujours choisir les noms ». LA TROUVAILLE change le travail à faire : plusieurs de ces baptêmes SONT documentés depuis des jours, dans le commentaire de tête de l'outil lui-même — « SAFE-EXPORT (2026-09-22, nom donné par l'utilisateur) ». La preuve était écrite à l'endroit exact où ce projet écrit le POURQUOI à côté du QUOI ; elle n'avait aucun lecteur. Le registre se sème donc depuis le dépôt au lieu d'être retapé (Article 24), et ce qui est semé n'est jamais une supposition : c'est une trace écrite, et le registre cite le fichier et la ligne où elle se lit. Un nom sans trace n'est PAS semé — il reste dans la dette, où il doit être. Le faux positif a été rencontré en MESURANT et jamais en relisant le motif : « SON mot » attrapait « SON motif de titre », 7 candidats pour 6 vrais, et ici un faux positif n'aurait pas seulement fait du bruit — il aurait inscrit au registre un nom que l'utilisateur n'a jamais choisi, dans le document qui existe pour prouver le contraire. La date se LIT sur la ligne et ne se remplace jamais par celle du jour (Article 32) : dater d'aujourd'hui un baptême du 22 septembre falsifierait l'histoire que ce registre garde. Mesuré sur le vrai dépôt : 6 baptêmes prouvés inscrits, dette réelle 81 → 75, et ces 75 sont enfin les VRAIS candidats à lui présenter.`);
 }
 await testRegistreDesBaptemes();
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LE POINT DE CONTRÔLE DE NUIT (2026-09-27, tâche #732, seconde moitié)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+async function testPointDeControleDeNuit() {
+  const G = await import('../scripts/god-of-all-process.mjs');
+  const plan = '#100 | sujet | titre\n#200 | sujet | titre\n#300 | sujet | titre\n';
+
+  // LES TROIS REFUS DE CONCLURE, et chacun couvre un faux vert DIFFÉRENT — c'est ce qui les rend
+  // non redondants. Un point de contrôle qui rend « rien à signaler » sur des données absentes est
+  // pire que pas de point de contrôle : il ferme la question.
+  assert.equal(G.pointDeControle({ commits: [] }).mesurable, false, 'MUST REFUSE: with no starting plan, "I have not drifted" is a claim about nothing — there is no course to compare against');
+  assert.equal(G.pointDeControle({ planTexte: plan }).mesurable, false, 'MUST REFUSE: with no commit list, "nothing to report" would only say that nobody looked (lesson L11)');
+  assert.equal(G.pointDeControle({ planTexte: 'un plan sans le moindre numéro', commits: [] }).mesurable, false, 'MUST REFUSE: a plan with zero task numbers would compute 100 % coverage — the falsest of greens');
+
+  const p = G.pointDeControle({ planTexte: plan, commits: ['#100 fait ceci', '#997 trouvé', '#998 trouvé', '#999 trouvé'] });
+  assert.deepEqual(p.ou.touchees, [100], 'question 1 is MEASURED off the commits, never asked — an agent woken mid-chantier answers what it believes, and that belief is exactly what cannot be trusted');
+  assert.deepEqual(p.ou.intouchees, [200, 300], 'and what has NOT been touched is named, since that is the half an agent forgets');
+  assert.deepEqual(p.derive.horsPlan, [997, 998, 999], 'question 3 sees the off-plan work');
+  // UN MÊME NUMÉRO CITÉ DEUX FOIS DANS LE MÊME COMMIT ne compte qu'une fois : sans ça, un message
+  // qui répète « #999 » gonflerait la part hors plan et déclencherait une alerte sur rien.
+  assert.equal(G.numerosDesCommits(['#42 et encore #42 dans le même message']).size, 1, 'a number repeated inside one commit message counts once — otherwise a wordy message alone would trip the drift alarm');
+
+  // « HORS PLAN » N'EST PAS UNE FAUTE, et le confondre avec une faute est le piège de ce contrôle :
+  // une nuit trouve des choses, et les lui reprocher pousserait à ne plus rien trouver. Le signal
+  // ne se déclenche que quand le hors-plan DOMINE.
+  assert.equal(p.derive.dominante, true, 'MUST CATCH: more off-plan work than on-plan, on enough commits to mean something, is the moment to ask whether the plan still holds');
+  const petit = G.pointDeControle({ planTexte: plan, commits: ['#998 trouvé', '#999 trouvé en chemin'] });
+  assert.equal(petit.derive.dominante, false, 'MUST LET PASS: two finds and nothing on plan is not yet drift — under three distinct task numbers there is not enough evidence to call the plan dead, and a checkpoint that cries on two commits stops being read (L4)');
+  const fidele = G.pointDeControle({ planTexte: plan, commits: ['#100 a', '#200 b', '#300 c'] });
+  assert.deepEqual(fidele.derive.horsPlan, [], 'and a night entirely on plan reports no drift at all');
+
+  // LA FRAÎCHEUR DU SUIVI EST RELAYÉE, jamais recalculée ici : deux mesures de la même question
+  // finissent par diverger (L29), et celle-ci a déjà son propriétaire chez check-suivi-fidelity.
+  assert.equal(G.pointDeControle({ planTexte: plan, commits: ['#100 x'] }).carnet.mesurable, false, 'with no freshness relayed in, question 2 says so rather than inventing an answer');
+  assert.ok(G.formatPointDeControleLines(G.pointDeControle({ planTexte: plan, commits: ['#100 x'] })).join('\n').includes('jamais recalculée ici'), 'and the reason travels with the result rather than living in a comment');
+
+  assert.ok(G.formatPointDeControleLines({ mesurable: false, pourquoi: 'x' })[1].includes('PAS MESURÉ'), 'an unmeasurable checkpoint prints PAS MESURÉ, never a clean-looking silence');
+
+  console.log("Passed: un réveil n'est pas un contrôle (2026-09-27, tâche #732, seconde moitié). La première moitié était faite — le rappel est passé de 45 à 15 minutes, avec un filet horaire derrière, et les deux réglages sont historisés avec leur raison dans le process. Ce qui manquait est la RAISON D'ÊTRE du réglage, écrite dans la tâche depuis le premier jour : « ce qu'un rappel rapproché apporte vraiment, c'est un POINT DE CONTRÔLE forcé ». Un agent réveillé au milieu d'un chantier reprend ce chantier ; il ne s'arrête pas pour regarder où il en est. Le réveil donnait la cadence sans jamais donner le regard, et la tâche disait ce que ça coûte : « c'est exactement ce qui aurait attrapé le décalage de colonnes de ce soir en dix minutes au lieu de trois heures ». Les trois questions sont celles de la tâche, mot pour mot, et chacune est MESURÉE plutôt que posée — une question posée à un agent qui vient de travailler vingt minutes reçoit la réponse qu'il croit vraie, et c'est précisément la mémoire à laquelle on ne peut pas se fier. Trois refus de conclure, couvrant trois faux verts différents : pas de plan, pas de commits, un plan sans numéro. « Hors plan » n'est jamais traité comme une faute — une nuit trouve des choses, et le lui reprocher pousserait à ne plus rien trouver ; le signal ne tombe que quand le hors-plan DOMINE, et jamais sous trois commits. La fraîcheur du suivi est relayée de check-suivi-fidelity plutôt que recalculée (L29). Lancé pour de vrai sur le dépôt : 22 tâches du plan sur 103 touchées, 42 % du travail hors plan, carnet de bord à jour.");
+}
+await testPointDeControleDeNuit();

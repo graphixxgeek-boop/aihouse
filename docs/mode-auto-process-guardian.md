@@ -245,6 +245,49 @@ notification continue — le rendu se fait une seule fois, au seuil d'arrêt, en
 arrêt avec ce dispositif, et c'est l'utilisateur lui-même qui l'a constaté (« la nuit derniere tu as
 reussi à ne pas t'arreter »). C'est cette réussite-là que cette section met à l'abri.
 
+## LE POINT DE CONTRÔLE — ce que le réveil de 15 minutes est censé servir (2026-09-27, tâche #732)
+
+**LE RÉGLAGE CI-DESSUS N'EST QUE LA MOITIÉ DE LA TÂCHE, et c'est la moitié facile.** Passer de 45 à
+15 minutes donne une cadence. Mais la tâche disait autre chose depuis le premier jour : « ce qu'un
+rappel rapproché apporte vraiment, c'est un **POINT DE CONTRÔLE forcé** ».
+
+**UN RÉVEIL N'EST PAS UN CONTRÔLE.** Un agent réveillé au milieu d'un chantier reprend ce chantier
+— il ne s'arrête pas pour regarder où il en est. Le réveil donnait donc le rythme sans jamais donner
+le regard, et la tâche nommait précisément ce que ça coûte : « c'est exactement ce qui aurait
+attrapé le décalage de colonnes de ce soir en dix minutes au lieu de trois heures ».
+
+**LE GESTE, une commande :** `node scripts/god-of-all-process.mjs checkpoint`.
+
+**LES TROIS QUESTIONS SONT MESURÉES, jamais posées** — et c'est le point qui compte. Une question
+posée à un agent qui vient de travailler vingt minutes reçoit la réponse que l'agent *croit* vraie,
+c'est-à-dire précisément la mémoire à laquelle on ne peut pas se fier.
+
+| | La question de la tâche | Ce qui la mesure |
+|---|---|---|
+| **1** | où j'en suis | les tâches du plan de départ touchées par un commit, et surtout celles qui ne l'ont pas été |
+| **2** | le carnet de bord dit-il la vérité | la fraîcheur du suivi, **relayée** de `check-suivi-fidelity`, jamais recalculée (L29) |
+| **3** | ai-je dérivé du plan | les numéros commités qui n'étaient pas au plan, et leur part du travail |
+
+**« HORS PLAN » N'EST JAMAIS UNE FAUTE, et les confondre serait le piège de ce contrôle** : une nuit
+trouve des choses, et les lui reprocher pousserait à ne plus rien trouver. Le signal ne tombe que
+quand le hors-plan **DOMINE** — plus de travail à côté que dedans — et jamais sous trois numéros de
+tâche distincts, faute de quoi il crierait sur deux commits et cesserait d'être lu (L4).
+
+**IL REGARDE, IL NE BLOQUE JAMAIS.** Un point de contrôle qui interromprait la nuit serait pire que
+son absence ; le rythme, lui, est déjà garanti par les deux réveils.
+
+**TROIS REFUS DE CONCLURE**, chacun couvrant un faux vert différent : sans plan de départ, « je n'ai
+pas dérivé » est une affirmation sur rien ; sans liste de commits, « rien à signaler » dit seulement
+que personne n'a regardé ; un plan sans aucun numéro rendrait 100 % de couverture, le plus faux des
+verts.
+
+**SA LIMITE, écrite dans sa propre sortie** : il lit les NUMÉROS des messages de commit. Un travail
+réel qui n'en cite aucun lui est invisible — c'est un plancher, jamais un compte exact.
+
+**Premier passage réel, le 2026-09-27** : 22 tâches du plan sur 103 touchées, 42 % du travail hors
+plan, carnet de bord à jour. Un outil qui trouve quelque chose à son premier passage n'est pas une
+intention (leçon L2).
+
 ## Toute modification INDIRECTE d'un process se solde par une mise à jour DIRECTE de son document
 
 *(2026-09-23, demande explicite de l'utilisateur : « ajoute que le process maître indique que toute
