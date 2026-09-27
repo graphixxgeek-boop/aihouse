@@ -15921,6 +15921,32 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(croise.sansAucuneAssertion.length, 1, 'and it is named separately, because that is the shortlist a human can decide on in ten minutes');
   assert.ok(croise.horsPortee.includes('pas un groupe à retirer'), 'MUST SAY SO: a SLOW group is not a group to remove — a sweep that reads the whole repository takes time because it is doing its job, and forgetting that would turn this tool into a test-shredder');
 
+  // ---- LES QUATRE APPORTS DE L'ÉTAT DE L'ART (2026-09-27) — recherche archivée dans
+  // docs/recherches/filet-de-securite-etat-de-l-art.md, jamais dans une réponse de chat. Deux des
+  // quatre détecteurs ont produit un faux positif massif à leur premier passage réel (5 225
+  // assertions dénoncées, et 7 variables « partagées » qui ne l'étaient pas) : les contre-tests
+  // ci-dessous verrouillent la version corrigée dans les DEUX sens.
+  assert.equal(ezl.assertionsConditionnelles('try { assert.ok(f()); } catch { }').length, 1, "MUST CATCH: an assertion inside a try whose catch swallows the error can never turn the test red — it is worse than a missing test, because it returns green");
+  assert.equal(ezl.assertionsConditionnelles('try { assert.ok(f()); } catch (e) { throw e; }').length, 0, 'MUST LET PASS: a catch that RETHROWS lets the assertion fail normally — flagging it would have been a false positive even with correct counting, and this repository writes plenty of them');
+  assert.equal(ezl.assertionsConditionnelles('const x = 1; assert.ok(x);').length, 0, 'MUST LET PASS: an assertion outside any try is the normal case — the first version counted try-depth by looking for `} catch` at line start, missed this repo\'s inline `} catch { continue; }`, never came back down, and denounced 5 225 assertions (leçon L4)');
+
+  assert.equal(ezl.blocsQuiLisentLeDisque([{ ligne: 1, titre: 'x', texte: 'const c = readFileSync("a");' }]).length, 1, 'MUST CATCH: a block reading real files is both where the seconds come from AND what breaks when a file moves — naming them ties cost to fragility in one list');
+  assert.equal(ezl.blocsQuiLisentLeDisque([{ ligne: 1, titre: 'x', texte: '// readFileSync ici est un commentaire' }]).length, 0, 'MUST LET PASS: a mention in a comment reads no file');
+
+  const partageSrc = 'let compteur = 0;';
+  assert.equal(ezl.etatPartageEntreBlocs(partageSrc, [{ ligne: 1, texte: 'compteur = 1; assert.ok(1);' }, { ligne: 2, texte: 'compteur += 1; assert.ok(2);' }]).partagees.length, 1, 'MUST CATCH: two blocks writing one file-level variable make each depend on what the previous left behind — the third cause of flakiness in the literature, and the quietest one in a single sequential file');
+  assert.equal(ezl.etatPartageEntreBlocs(partageSrc, [{ ligne: 1, texte: 'const compteur = 1; assert.ok(1);' }, { ligne: 2, texte: 'const compteur = 2; assert.ok(2);' }]).partagees.length, 0, "MUST LET PASS: two LOCAL declarations that merely share a name are not a shared variable — this exact confusion reported « 38 blocks write into r » on the first real pass");
+  assert.equal(ezl.etatPartageEntreBlocs('let plot = 1;\nlet plot = 2;', [{ ligne: 1, texte: 'plot = 3;' }, { ligne: 2, texte: 'plot = 4;' }]).partagees.length, 0, 'MUST LET PASS: a name declared twice PROVES it is block-scoped — you cannot redeclare a file-level `let`, so the declarations are in different blocks');
+
+  assert.equal(ezl.couvertureDeLEchantillon(4, 72).palier, 'anecdotique', 'MUST SAY SO: 4 mutations out of 72 modules describes the sample and nothing else — the literature measures a 26 % loss of detection power at 10 % sampling, so announcing « 100 % caught » as a verdict on the suite would be the most flattering kind of lie');
+  assert.equal(ezl.couvertureDeLEchantillon(50, 72).palier, 'représentatif', 'and at 60 %+ the loss drops to about 6 %, so the score does carry to the whole');
+  assert.equal(ezl.couvertureDeLEchantillon(0, 0).mesurable, false, 'a rate with no denominator is not a rate');
+
+  assert.equal(ezl.percentilesDeDuree(Array.from({ length: 9 }, (_, i) => ({ ms: i }))).mesurable, false, 'MUST REFUSE: percentiles over 9 points would describe chance, not the suite');
+  const formes = ezl.percentilesDeDuree([...Array.from({ length: 19 }, () => ({ ms: 1 })), { ms: 10000 }]);
+  assert.ok(formes.forme.includes('MONSTRES'), 'MUST DISTINGUISH: one giant among small ones is « a handful of monsters » — a short, targeted chantier');
+  assert.ok(ezl.percentilesDeDuree(Array.from({ length: 20 }, () => ({ ms: 100 }))).forme.includes('PLATEAU'), 'and an even spread is « a long plateau » — no big culprit, so no quick win to hope for. The two call for completely different work, which a top-N alone never says');
+
   // ---- LE RECOLLAGE DU CHRONO — un groupe qui imprime cinq succès consomme cinq lignes, pas une.
   const recolle = ezl.recollerLeChrono([{ ligne: 1, titre: 'a', sujets: 2 }, { ligne: 2, titre: 'b', sujets: 1 }],
     [{ ms: 100, texte: 'Passed: x' }, { ms: 300, texte: 'Passed: y' }, { ms: 900, texte: 'Passed: z' }]);

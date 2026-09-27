@@ -1166,6 +1166,63 @@ relisant du code : la couverture blueprint annonçait 77 plans sur 83 dus, et le
 existaient tous. Après correction : 83 sur 83, 100 % aux quatre niveaux de vitalité.*
 
 
+## L38 — Un outil qui analyse un fichier de TESTS doit séparer le code exécuté du code CITÉ
+
+**Le motif, et il s'est présenté TROIS fois dans la même journée** — sur les imports, sur les lignes
+de succès, puis sur les assertions. À chaque fois, un détecteur d'Ezechiel dénonçait une fixture
+écrite dans une chaîne de caractères à l'intérieur de son propre contre-test. Il s'accusait
+lui-même.
+
+**Pourquoi c'est structurel et pas une inattention** : un fichier de tests a pour métier de CITER du
+code. `const fixture = "await import('./absent.mjs')"` n'importe rien ; `"console.log('Passed: x')"`
+n'imprime rien ; `"assert.ok(f().then(...))"` n'assertionne rien. Tout détecteur qui cherche un
+motif de code dans un fichier de tests rencontrera ce cas — ce n'est pas une exception, c'est la
+règle du terrain.
+
+**Ce qui coûte cher** : le voyant de santé annonçait « 4 blocs sautés », c'est-à-dire une anomalie
+BLOQUANTE, sur quatre fixtures parfaitement inoffensives. Un signal bloquant qui se trompe est pire
+qu'un signal absent — on apprend à l'ignorer, et il ne sert plus le jour où il a raison (L4).
+
+**La correction qui compte n'est pas la troisième, c'est la généralisation** : une seule fonction
+(`dansUneChaine()`) porte désormais la distinction, et les trois détecteurs l'appellent. C'est la
+leçon L37 appliquée pour de bon — corriger la CLASSE, pas l'occurrence.
+
+**Terrain** : quand j'écris un détecteur qui lit un fichier de tests · mots : détecteur, filet, test, fixture, contre-test, assertion, citer · fichiers : scripts/ezechiel-les-tests.mjs, scripts/check-house.mjs
+
+**Porté par** : `dansUneChaine()` (`scripts/ezechiel-les-tests.mjs`) et les contre-tests du filet qui
+vérifient, pour chacun des trois détecteurs, qu'une fixture citée ne mord pas.
+
+*Observée le 2026-09-27 sur les tâches #1026 et #1027.*
+
+## L39 — Un détecteur qui compte une profondeur (accolades, `try`) est faux jusqu'à preuve du contraire
+
+**Deux des quatre détecteurs issus de l'état de l'art ont produit un faux positif MASSIF à leur
+premier passage réel** — 5 225 assertions dénoncées sur 5 225, et 7 variables « partagées » dont
+aucune ne l'était. Les deux reposaient sur un comptage : profondeur de `try`, portée d'un `let`.
+
+**La cause est toujours la même** : le comptage suppose une forme d'écriture, et le vrai fichier en
+emploie une autre. Le `try` était refermé par `} catch { continue; }` EN LIGNE, là où le détecteur
+cherchait `} catch` en début de ligne — la profondeur ne redescendait jamais. Le `let` était en
+colonne 0 parce que ce fichier n'indente pas certains blocs — une variable locale ressemblait à une
+variable de fichier.
+
+**Ce qui a sauvé les deux, et c'est le geste à retenir** : les lancer contre le VRAI fichier avant
+de les déclarer finis (Article 25). Un détecteur de profondeur vérifié sur une fixture de trois
+lignes passe toujours ; c'est sur 17 000 lignes réelles qu'il s'effondre.
+
+**La preuve la plus simple bat le comptage le plus fin** : la version retenue ne compte plus rien.
+Un nom déclaré DEUX fois prouve qu'il est local — on ne redéclare pas un `let` de fichier. Et un
+`try` n'est un problème que si son `catch` avale l'erreur, ce qui se lit sans compter quoi que ce
+soit. Chercher la propriété qui se vérifie directement, plutôt que de raffiner le comptage.
+
+**Terrain** : quand j'écris un détecteur qui suit une portée, un niveau ou un imbriquement · mots : profondeur, accolade, portée, imbriqué, compter, niveau, scope · fichiers : scripts/ezechiel-les-tests.mjs
+
+**Porté par** : les contre-tests du filet sur `assertionsConditionnelles()` et
+`etatPartageEntreBlocs()`, qui verrouillent chacun le cas qui l'a piégé. Le réflexe général — lancer
+contre le vrai fichier avant de conclure — est l'Article 25 et se déclare ici.
+
+*Observée le 2026-09-27 sur la tâche #1027, en branchant les apports de l'état de l'art.*
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

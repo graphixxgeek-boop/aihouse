@@ -800,6 +800,11 @@ export function mostRecentDate(text) {
 // (« cet outil apparaît-il quelque part, ou a-t-on écrit pourquoi il n'apparaît pas ? ») en partant
 // de deux bouts différents — une seule liste de raisons, jamais deux qui divergeraient.
 export const CIRCLE_AUTO_COVERED_REGISTRIES = {
+  // (2026-09-27) Le dossier des recherches extérieures : ce n'est pas le registre d'un outil, c'est
+  // une bibliothèque de matière collectée dehors. Aucune Ronde n'a à le relire périodiquement — une
+  // recherche ne se périme pas de la même façon qu'une mesure, et son plan d'action est déjà porté
+  // par les tâches qu'elle a ouvertes.
+  "recherches": "bibliothèque de collectes extérieures (état de l'art), pas le registre d'un outil : rien à relancer, et chaque fiche porte déjà son plan d'action",
   // LES HUIT QUE LA GÉNÉRATION D'INDEX A RÉVÉLÉS (2026-09-26, tâche #983). Ils n'ont pas changé de
   // nature en recevant une table des matières : ce garde-fou reconnaît un registre à la présence
   // d'un `index.md`, et il a donc raison de DEMANDER — la réponse s'écrit ici plutôt que le signal

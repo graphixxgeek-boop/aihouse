@@ -478,6 +478,174 @@ export function croiserCoutEtProtection(groupes = [], mesures = []) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// CE QUE L'ÉTAT DE L'ART A APPORTÉ (2026-09-27) — quatre trous qu'Ezechiel ne voyait pas
+// ---------------------------------------------------------------------------------------------
+// Recherche archivée dans `docs/recherches/filet-de-securite-etat-de-l-art.md`, sur demande
+// explicite de l'utilisateur : « fais aussi des recherches sur le web pour voir s'il lui manque des
+// choses ». Six constats retenus, dont quatre deviennent des détecteurs ici. Les deux autres (le
+// Test Impact Analysis, et l'historique rouge/vert par bloc) sont ÀTRANCHER et restent dehors :
+// le premier changerait la nature du filet — il ne protégerait plus tout à chaque commit — et
+// cette décision n'est pas celle de l'agent (Article 16).
+
+// --- (1) LES ASSERTIONS QUI PEUVENT NE JAMAIS S'EXÉCUTER -------------------------------------
+// Le smell « Conditional Logic », et la quatrième des cinq formes de test qui ne peut pas échouer :
+// « chemins d'assertion qui ne peuvent jamais rougir — expect avalé par un try/catch, assertion
+// dans un callback qui ne se déclenche jamais ». C'est pire qu'un test absent : un test absent se
+// voit, celui-ci rend du vert.
+// LA PREMIÈRE VERSION ÉTAIT FAUSSE ET LE PREMIER PASSAGE RÉEL L'A DIT : elle comptait la profondeur
+// des `try` en cherchant `} catch` EN DÉBUT DE LIGNE, alors que ce dépôt les écrit en ligne
+// (`} catch { continue; }`). La profondeur ne redescendait jamais et tout ce qui suivait le premier
+// try était dénoncé — 5 225 assertions, soit presque toutes. Une alarme qui accuse tout n'accuse
+// plus personne (leçon L4).
+//
+// LA VERSION RETENUE EST AUSSI PLUS JUSTE SUR LE FOND : un `try` n'est un problème que si son
+// `catch` AVALE l'erreur. Un catch qui relance (`throw`) laisse l'assertion rougir normalement —
+// le dénoncer aurait été un faux positif même avec un comptage correct.
+export function assertionsConditionnelles(src = "") {
+  const texte = String(src);
+  const trouvees = [];
+  for (const m of texte.matchAll(/\btry\s*\{/g)) {
+    const debut = m.index + m[0].length;
+    if (dansUneChaine(texte.slice(texte.lastIndexOf("\n", m.index) + 1, texte.indexOf("\n", m.index)), m.index - texte.lastIndexOf("\n", m.index) - 1)) continue;
+    // On avance en comptant les accolades jusqu'à celle qui ferme le try. La fenêtre est bornée :
+    // au-delà, c'est qu'on s'est perdu dans une chaîne ou un gabarit, et on préfère ne rien dire.
+    let profondeur = 1, k = debut;
+    const borne = Math.min(texte.length, debut + 20000);
+    while (k < borne && profondeur > 0) {
+      const c = texte[k];
+      if (c === "{") profondeur++;
+      else if (c === "}") profondeur--;
+      k++;
+    }
+    if (profondeur !== 0) continue;
+    const corps = texte.slice(debut, k - 1);
+    if (!/\bassert\.[a-zA-Z]+\(/.test(corps)) continue;
+    // Le catch commence juste après. On regarde s'il RELANCE : dans ce cas l'assertion rougit
+    // normalement, et il n'y a rien à signaler.
+    const apres = texte.slice(k, k + 400);
+    const mc = /^\s*catch\s*(?:\([^)]*\))?\s*\{/.exec(apres);
+    if (!mc) continue;
+    let p2 = 1, q = mc.index + mc[0].length;
+    while (q < apres.length && p2 > 0) { const c = apres[q]; if (c === "{") p2++; else if (c === "}") p2--; q++; }
+    const corpsCatch = apres.slice(mc.index + mc[0].length, Math.max(mc.index + mc[0].length, q - 1));
+    if (/\bthrow\b/.test(corpsCatch)) continue;
+    const ligne = texte.slice(0, m.index).split("\n").length;
+    const combien = (corps.match(/\bassert\.[a-zA-Z]+\(/g) ?? []).length;
+    trouvees.push({ ligne, combien, cause: "try dont le catch avale l'erreur", extrait: corpsCatch.trim().slice(0, 60) || "(catch vide)", pourquoi: `${combien} assertion(s) sont dans ce try, et son catch ne relance pas : si l'une échoue, l'erreur est avalée et le test reste vert — un test qui ne peut pas rougir n'est pas un test` });
+  }
+  return trouvees;
+}
+
+// --- (2) LE « MYSTERY GUEST » : un bloc qui dépend du disque réel ------------------------------
+// Le smell classique, et chez nous il croise directement le coût : un bloc qui balaie le dépôt met
+// du temps PARCE QU'il lit de vrais fichiers, et il casse le jour où un fichier bouge. Ce n'est
+// jamais une faute en soi — l'Article 25 EXIGE que les outils tournent contre le vrai dépôt — mais
+// savoir lesquels le font explique à la fois les secondes et la fragilité.
+export const MOTIFS_DISQUE = /\b(readFileSync|readdirSync|statSync|existsSync|execSync|spawnSync|globSync)\s*\(/;
+
+export function blocsQuiLisentLeDisque(groupes = []) {
+  const trouves = [];
+  for (const g of groupes) {
+    const nu = String(g.texte).replace(/\/\/[^\n]*/g, " ");
+    const combien = (nu.match(new RegExp(MOTIFS_DISQUE.source, "g")) ?? []).length;
+    if (combien) trouves.push({ ligne: g.ligne, titre: g.titre, combien });
+  }
+  return trouves;
+}
+
+// --- (3) L'ÉTAT PARTAGÉ ENTRE BLOCS : la dépendance à l'ordre ---------------------------------
+// Troisième cause de flakiness dans la littérature, et la plus silencieuse dans un fichier
+// SÉQUENTIEL comme le nôtre : un bloc laisse un état derrière lui, le suivant en dépend sans le
+// savoir, et le jour où l'ordre change les deux mentent. On ne peut pas relancer dans un autre
+// ordre (un seul fichier), mais on peut nommer le CARBURANT du problème : une variable modifiable
+// déclarée au niveau du fichier et écrite depuis plus d'un bloc.
+// DEUX FAUX POSITIFS CORRIGÉS AU PREMIER PASSAGE RÉEL, et ils se cumulaient. (1) Ce fichier écrit
+// certains blocs SANS indentation, si bien qu'un `let` local à un bloc commence en colonne 0 et
+// passait pour une variable de fichier : « plot » était déclaré TROIS fois, ce qui est impossible
+// au niveau du fichier et prouve donc l'inverse de ce qu'on affirmait. (2) Le motif d'écriture
+// attrapait `const r = …`, c'est-à-dire une DÉCLARATION d'une autre variable du même nom — d'où
+// « 38 blocs écrivent dans r ». Les deux règles ci-dessous ferment l'une et l'autre.
+export function etatPartageEntreBlocs(src = "", groupes = []) {
+  const lignes = String(src).split("\n");
+  const combienDeFois = new Map();
+  const globales = [];
+  for (let i = 0; i < lignes.length; i++) {
+    // ON COMPTE LES DÉCLARATIONS À TOUTE INDENTATION, mais on ne retient comme candidate que
+    // celle de la colonne 0. Troisième correction du même passage : « epoch » n'était déclaré
+    // qu'une fois en colonne 0 et passait le filtre, alors qu'il l'est encore deux fois plus bas,
+    // indenté — ce qui prouve la portée locale aussi sûrement qu'une redéclaration nue.
+    const decl = /(?:^|[;{]\s*)(?:const|let|var)\s+([A-Za-z_$][\w$]{1,})\s*=/.exec(lignes[i]);
+    if (decl) combienDeFois.set(decl[1], (combienDeFois.get(decl[1]) ?? 0) + 1);
+    const m = /^(?:let|var)\s+([A-Za-z_$][\w$]{1,})\s*=/.exec(lignes[i]);
+    if (m) globales.push({ nom: m[1], ligne: i + 1 });
+  }
+  // UN NOM DÉCLARÉ PLUSIEURS FOIS PROUVE QU'IL EST LOCAL À UN BLOC : on ne peut pas redéclarer un
+  // `let` au niveau du fichier. C'est la preuve la plus simple et la plus sûre de la portée.
+  const candidates = globales.filter((g) => combienDeFois.get(g.nom) === 1);
+  const partagees = [];
+  for (const g of candidates) {
+    const ecrivains = groupes.filter((bloc) => {
+      for (const m of String(bloc.texte).matchAll(new RegExp(`(?:^|[^\\w$.])${g.nom}\\s*(?:=[^=]|\\+=|-=|\\+\\+|--)`, "gm"))) {
+        // Une DÉCLARATION n'est pas une écriture dans la variable du dessus : c'en est une autre,
+        // qui porte seulement le même nom. C'est le second faux positif du premier passage.
+        const avant = String(bloc.texte).slice(Math.max(0, m.index - 12), m.index + 1);
+        if (/\b(?:const|let|var)\s*$/.test(avant)) continue;
+        return true;
+      }
+      return false;
+    });
+    if (ecrivains.length > 1) {
+      partagees.push({ ...g, blocs: ecrivains.map((b) => b.ligne), combien: ecrivains.length, pourquoi: `${ecrivains.length} blocs écrivent dans « ${g.nom} » : chacun dépend de ce que les précédents y ont laissé, et le jour où l'ordre change ils mentent tous les deux` });
+    }
+  }
+  return {
+    mesurable: true, partagees, globales: candidates.length, ecartees: globales.length - candidates.length,
+    // LIMITE DÉCLARÉE (Article 27) : Ezechiel lit du TEXTE, il n'analyse aucune portée. Un nom
+    // déclaré UNE seule fois mais à l'intérieur d'un bloc non indenté lui ressemble encore à une
+    // variable de fichier. Ce qu'il rend est donc « à vérifier », jamais une accusation.
+    horsPortee: "lu par le texte, jamais par une analyse de portée : un nom déclaré une seule fois dans un bloc non indenté ressemble encore à une variable de fichier. À vérifier, jamais un verdict.",
+  };
+}
+
+// --- (4) UN ÉCHANTILLON N'EST PAS UN VERDICT ---------------------------------------------------
+// La littérature est nette et chiffrée : un échantillon aléatoire de 10 % perd 26 % du pouvoir de
+// détection ; à 60 %, seulement 6 %. Notre passe de robustesse en teste quatre sur des dizaines de
+// modules — dire « 100 % attrapées » sans dire sur quoi serait le plus flatteur des mensonges.
+export function couvertureDeLEchantillon(testees = 0, cibles = 0) {
+  if (!cibles) return { mesurable: false, pourquoi: "aucune cible connue : sans elles, un taux n'a pas de dénominateur" };
+  const pct = (testees / cibles) * 100;
+  return {
+    mesurable: true, testees, cibles, pct,
+    // Les trois paliers viennent directement des chiffres de la littérature, jamais d'une intuition.
+    palier: pct >= 60 ? "représentatif" : pct >= 10 ? "indicatif" : "anecdotique",
+    pourquoi: pct >= 60
+      ? "à ce taux, la littérature mesure une perte de pouvoir de détection d'environ 6 % : le score vaut pour l'ensemble"
+      : pct >= 10
+        ? "à ce taux, la littérature mesure une perte de pouvoir de détection d'environ 26 % : le score renseigne, il ne conclut pas"
+        : "en dessous de 10 %, le score décrit l'échantillon et rien d'autre — l'annoncer comme un verdict sur la suite serait faux",
+  };
+}
+
+// --- (5) LES PERCENTILES PLUTÔT QUE LE SEUL TOP-N ----------------------------------------------
+// « Temperature proxy : les percentiles de durée des tests ». Un top-12 dit où sont les gros ; les
+// percentiles disent si la suite est un long plateau ou une poignée de monstres — et ce sont deux
+// chantiers complètement différents.
+export function percentilesDeDuree(mesures = []) {
+  const ms = mesures.map((m) => m.ms).filter((n) => Number.isFinite(n)).sort((a, b) => a - b);
+  if (ms.length < 10) return { mesurable: false, pourquoi: `${ms.length} mesure(s) : des percentiles sur si peu décriraient le hasard, pas la suite` };
+  const p = (q) => ms[Math.min(ms.length - 1, Math.floor(ms.length * q))];
+  const total = ms.reduce((a, b) => a + b, 0);
+  const top5pct = ms.slice(Math.floor(ms.length * 0.95)).reduce((a, b) => a + b, 0);
+  return {
+    mesurable: true, p50: p(0.5), p90: p(0.9), p99: p(0.99), max: ms[ms.length - 1],
+    partDesCinqPourCentLesPlusLents: (top5pct / total) * 100,
+    forme: (top5pct / total) * 100 >= 40
+      ? "UNE POIGNÉE DE MONSTRES — les 5 % les plus lents portent l'essentiel du temps : le chantier est court et ciblé"
+      : "UN LONG PLATEAU — le temps est réparti : il n'y a pas de gros coupable, donc pas de gain rapide à espérer",
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
 // LE CHRONOMÈTRE PAR GROUPE — sans lui, le croisement coût/protection n'a rien à croiser
 // ---------------------------------------------------------------------------------------------
 // « Des secondes gagnées À PROTECTION ÉGALE », dans ses mots, est le seul gain qui compte. Encore
@@ -830,9 +998,15 @@ export function enqueter({ root = ROOT, lire = null, existe = null, durees = {} 
     perimetres: chevauchementsDePerimetre(),
     fraicheur: fraicheurDuFilet(src, { root, lire: lireF }),
     asyncs: assertionsNonAttendues(src),
+    // Les quatre apports de l'état de l'art (2026-09-27) — recherche archivée dans
+    // docs/recherches/filet-de-securite-etat-de-l-art.md, jamais dans une réponse de chat.
+    conditionnelles: assertionsConditionnelles(src),
+    disque: blocsQuiLisentLeDisque(groupes),
+    ordre: etatPartageEntreBlocs(src, groupes),
     // Le croisement n'a lieu que si une mesure existe pour de vrai — sinon il dit « pas mesuré ».
     chrono,
     cout: chrono.presentes ? croiserCoutEtProtection(groupes, chrono.mesures) : { mesurable: false, pourquoi: chrono.pourquoi },
+    percentiles: chrono.presentes ? percentilesDeDuree(chrono.mesures) : { mesurable: false, pourquoi: chrono.pourquoi },
     // LA VOCATION ULTIME A ENFIN SON JUGE : l'effet du dernier changement sur le temps, et ce
     // qu'il a coûté en protection. Les deux se lisent sur l'HISTORIQUE, jamais sur un relevé seul.
     gain: (() => { const h = lireHistorique({ root, lire: lireF }); return h.length >= 2 ? comparerDeuxReleves(h[h.length - 2], h[h.length - 1]) : { mesurable: false, pourquoi: `un seul relevé chronométré (${h.length}) : avec un seul on connaît un état, jamais un effet` }; })(),
@@ -930,6 +1104,27 @@ export function formatEnqueteLines(e) {
     L.push(`  → ${e.cout.horsPortee}`);
   }
 
+  L.push("", "=== LA FORME DE LA SUITE : un plateau, ou une poignée de monstres ? ===");
+  if (!e.percentiles.mesurable) L.push(`  PAS MESURÉ — ${e.percentiles.pourquoi}`);
+  else {
+    L.push(`  médiane ${s(e.percentiles.p50)} · 9 blocs sur 10 sous ${s(e.percentiles.p90)} · le pire ${s(e.percentiles.max)}`);
+    L.push(`  Les 5 % les plus lents portent ${e.percentiles.partDesCinqPourCentLesPlusLents.toFixed(0)} % du temps total.`);
+    L.push(`  → ${e.percentiles.forme}`);
+  }
+
+  L.push("", "=== LES ASSERTIONS QUI PEUVENT NE JAMAIS S'EXÉCUTER ===");
+  L.push(`  ${e.conditionnelles.length} assertion(s) sous un try/catch qui peut les avaler.`);
+  for (const c of e.conditionnelles.slice(0, 8)) L.push(`   🚨 ligne ${c.ligne} (${c.cause}) — ${c.extrait}`);
+
+  L.push("", "=== LES BLOCS QUI LISENT LE VRAI DISQUE ===");
+  L.push(`  ${e.disque.length} bloc(s) sur ${e.filet.groupes} lisent des fichiers réels — c'est à la fois d'où viennent les secondes ET ce qui casse quand un fichier bouge.`);
+  for (const d of e.disque.slice(0, 6)) L.push(`   ${String(d.combien).padStart(3)} lecture(s)  ligne ${d.ligne} — ${d.titre.slice(0, 58)}`);
+  L.push("  (ce n'est jamais une faute en soi : l'Article 25 EXIGE que les outils tournent contre le vrai dépôt)");
+
+  L.push("", "=== LA DÉPENDANCE À L'ORDRE (état partagé entre blocs) ===");
+  L.push(`  ${e.ordre.partagees.length} variable(s) modifiable(s) écrite(s) par plus d'un bloc, sur ${e.ordre.globales} déclarée(s) au niveau du fichier.`);
+  for (const v of e.ordre.partagees.slice(0, 6)) L.push(`   🟠 « ${v.nom} » (ligne ${v.ligne}) — ${v.pourquoi}`);
+
   L.push("", "=== LA FRONTIÈRE AVEC MOÏSE ET ABRAHAM ===");
   if (e.perimetres.collisions.length) for (const c of e.perimetres.collisions) L.push(`   🚨 ${c.outils.join(" et ")} revendiquent le même objet — ${c.pourquoi}`);
   else L.push("  Aucun chevauchement : MOÏSE tient la charte, Abraham tout document à règles numérotées, Ezechiel le filet et sa machinerie.");
@@ -971,6 +1166,12 @@ export function planDeLEnquete(e) {
   }
   if (e.asyncs.length) {
     ecarts.push({ constat: `${e.asyncs.length} assertion(s) portent sur une promesse jamais attendue`, etat: "retenu", niveau: "obligatoire", tache: "ajouter l'attente manquante — ces assertions passent quoi qu'on casse dans le code, donc elles décorent un vert (BP2)" });
+  }
+  if (e.conditionnelles.length) {
+    ecarts.push({ constat: `${e.conditionnelles.length} assertion(s) peuvent être avalées par un try/catch`, etat: "retenu", niveau: "obligatoire", tache: "sortir l'assertion du try, ou faire échouer le catch explicitement — un test qui ne peut pas rougir n'est pas un test, et il rend du vert" });
+  }
+  if (e.ordre.partagees.length) {
+    ecarts.push({ constat: `${e.ordre.partagees.length} variable(s) partagée(s) en écriture entre plusieurs blocs`, etat: "a-trancher", niveau: "recommandee", tache: "regarder chacune : un bloc qui dépend de ce qu'un autre a laissé est la troisième cause de flakiness de la littérature, et la plus silencieuse dans un fichier séquentiel — mais un compteur global délibéré est un choix légitime" });
   }
   if (e.perimetres.collisions.length) {
     ecarts.push({ constat: `${e.perimetres.collisions.length} chevauchement(s) de périmètre entre MOÏSE, Abraham et Ezechiel`, etat: "retenu", niveau: "obligatoire", tache: "retirer l'objet en double : deux outils sur le même objet, c'est deux réponses possibles à la même question (leçon L29)" });

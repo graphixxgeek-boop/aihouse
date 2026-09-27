@@ -1,0 +1,20 @@
+[
+  {
+    "quand": "2026-09-27T16:44:38.422Z",
+    "totalMs": 106042,
+    "code": 0,
+    "groupes": 286,
+    "succes": 296,
+    "anomalies": 2,
+    "vert": false
+  },
+  {
+    "quand": "2026-09-27T16:46:24.330Z",
+    "totalMs": 105730,
+    "code": 0,
+    "groupes": 286,
+    "succes": 296,
+    "anomalies": 2,
+    "vert": false
+  }
+]

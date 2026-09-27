@@ -90,3 +90,27 @@ un test à chaque passage du filet : elle est vérifiable, pas promise.
 et fusionne leurs alertes, sans jamais refaire leur analyse. MOÏSE et Ezechiel restent convocables
 seuls sur leur périmètre, et déposent alors leur verdict dans le registre d'alertes partagé —
 c'est par ce registre qu'Abraham « veille » même quand on ne l'a pas appelé.
+
+## Les quatre apports de l'état de l'art (2026-09-27)
+
+Recherche archivée dans `docs/recherches/filet-de-securite-etat-de-l-art.md` — six constats retenus,
+deux laissés à trancher, deux écartés avec leur raison.
+
+| Détecteur | La question qu'il pose | Sur notre filet |
+|---|---|---|
+| `assertionsConditionnelles()` | une assertion peut-elle être avalée par un `try/catch` ? | **0** |
+| `blocsQuiLisentLeDisque()` | quels blocs dépendent de fichiers réels ? (le *Mystery Guest*) | **37 sur 286** — c'est à la fois d'où viennent les secondes et ce qui casse quand un fichier bouge |
+| `etatPartageEntreBlocs()` | un bloc dépend-il de ce qu'un autre a laissé ? (3ᵉ cause de flakiness) | **0** |
+| `percentilesDeDuree()` | la suite est-elle un long plateau ou une poignée de monstres ? | **une poignée de monstres** : les 5 % les plus lents portent 72 % du temps |
+| `couvertureDeLEchantillon()` | le score de robustesse vaut-il pour toute la suite ? | **anecdotique** (4 cassures sur 72 modules) — la littérature mesure 26 % de perte de pouvoir de détection à 10 % d'échantillonnage, donc le score renseigne sans conclure |
+
+**Deux d'entre eux ont produit un faux positif massif à leur premier passage réel** (5 225
+assertions dénoncées, 7 variables « partagées » qui ne l'étaient pas), tous deux parce qu'ils
+comptaient une profondeur que le vrai fichier n'écrit pas comme prévu. Les deux corrections et leur
+raison vivent dans le code, et la leçon générale dans `docs/referentiel/lecons.md` (L39).
+
+**Ce qui reste hors d'Ezechiel, et c'est une décision, pas un oubli** : le *Test Impact Analysis*
+(ne relancer que les tests concernés par le diff) est le levier le plus lourd que la recherche ait
+identifié — mais il change la NATURE du filet, qui ne protégerait plus tout à chaque commit. Cette
+décision appartient à l'utilisateur (Article 16), et elle est posée dans le plan d'action de la
+recherche.

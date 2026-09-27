@@ -1843,6 +1843,10 @@ export const EXCEPTIONS_D_EXPORT = [
   // je te propose le tri »). LE CRITÈRE, ET IL SE TIENT EN UNE QUESTION : un autre projet piloté
   // par IA referait-il ce raisonnement ? S'il le referait, l'emporter lui épargne des semaines ;
   // s'il n'en a que faire, l'emporter lui impose du bruit sur un jeu qui n'est pas le sien.
+  // La recherche extérieure est le cas le plus clairement transportable de tout le dossier : elle
+  // ne parle pas de CE projet, elle parle de l'état de l'art d'un problème que tout projet
+  // rencontre. Elle PART, sans hésitation (2026-09-27).
+  { chemin: "docs/recherches/filet-de-securite-etat-de-l-art.md", etat: "PART", pourquoi: "l'état de l'art de la santé et de la rapidité d'une suite de tests : aucune ligne n'est propre à ce projet, et refaire cette collecte ailleurs coûterait exactement le même temps" },
   { chemin: "docs/strategies/renommage-en-masse-strategie.md", etat: "PART", pourquoi: "renommer à grande échelle sans casser l'histoire est un problème que TOUT outillage rencontre — le raisonnement ne doit surtout pas être refait de zéro" },
   { chemin: "docs/strategies/classification-et-nivellement-strategie.md", etat: "PART", pourquoi: "comment ranger un outillage et le mettre à niveau : la question se repose à l'identique ailleurs, et elle a coûté des semaines ici" },
   { chemin: "docs/strategies/process-et-ronde-strategie.md", etat: "PART", pourquoi: "la vérification périodique — un projet piloté par IA en a besoin quel que soit son sujet" },

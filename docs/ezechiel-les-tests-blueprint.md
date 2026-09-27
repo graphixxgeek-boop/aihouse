@@ -86,3 +86,27 @@ voyant avait raison de crier sur l'écart ; c'est le dénombrement qui mentait.*
 ce qu'un fichier de tests DIT doit toujours distinguer le code exécuté du code cité — et corriger
 cette distinction une fois ne suffit pas : elle se corrige pour la CLASSE entière, jamais pour
 l'occurrence qu'on vient de voir.
+
+## Ce que l'état de l'art extérieur a ajouté, et ce qu'il n'a PAS changé
+
+Une recherche extérieure a été menée pour confronter la conception à ce que la littérature sait
+déjà. **Elle a ajouté quatre détecteurs et zéro principe** — et c'est le résultat le plus
+intéressant : les fondations (un enquêteur jamais un chirurgien, la limite déclarée plutôt que tue,
+« pas mesuré » plutôt qu'un vert sur zéro donnée) n'ont été contredites nulle part.
+
+Les quatre apports, chacun répondant à une question qu'aucun des six axes d'origine ne posait :
+
+1. **Une assertion peut-elle être avalée ?** Un `try` dont le `catch` ne relance pas rend le test
+   incapable de rougir. C'est pire qu'un test absent : un test absent se voit.
+2. **Quels blocs dépendent du disque réel ?** Le smell « Mystery Guest ». Chez un outillage qui
+   DOIT tourner contre le vrai dépôt, ce n'est jamais une faute — mais ça explique à la fois les
+   secondes et la fragilité, dans une seule liste.
+3. **Un bloc dépend-il de ce qu'un autre a laissé ?** La dépendance à l'ordre est la troisième
+   cause de flakiness de la littérature, et la plus silencieuse dans un fichier séquentiel.
+4. **Un échantillon n'est pas un verdict.** La littérature chiffre la perte de pouvoir de détection
+   selon le taux d'échantillonnage ; un score de mutation doit donc dire sur quoi il porte, sans
+   quoi « 100 % attrapées » est le plus flatteur des mensonges.
+
+**Et une mesure qui remplace un top-N** : les percentiles de durée disent si la suite est un long
+plateau ou une poignée de monstres — deux chantiers complètement différents, qu'un classement des
+dix plus gros ne distingue jamais.
