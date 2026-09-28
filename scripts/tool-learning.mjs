@@ -1255,6 +1255,29 @@ export const DECLENCHEURS_XP = [
     pourquoi: "le rythme régulier ; le risque à surveiller est d'écrire pour remplir, d'où « rien à retenir » comme réponse valable", mecanisable: false },
   { cle: "ronde-et-evaluation", libelle: "à chaque Ronde et à chaque évaluation",
     pourquoi: "ces moments font déjà le bilan d'une période, donc on y voit ce qu'on ne voit pas tâche par tâche", mecanisable: true },
+  // LE QUATRIÈME MOMENT, ET C'EST LE PLUS FÉCOND (2026-09-28, tâche #749). Sa demande : « nouvelle
+  // leçon à apprendre ! mais je ne dois pas te le dire à chaque fois ! réfléchis à ça avec l'outil
+  // dédié ».
+  //
+  // LE TROU ÉTAIT IDENTIFIABLE PRÉCISÉMENT. Les trois moments ci-dessus supposent tous un SIGNAL :
+  // quelque chose bloque, un compte rendu se termine, une période se clôt. Or la leçon qui a motivé
+  // cette tâche — une sonde qui comptait une MENTION du nom d'un outil pour une présentation, sans
+  // pouvoir lire que la phrase disait le contraire — n'est passée par AUCUN des trois : rien n'a
+  // bloqué, l'outil a rendu un résultat parfaitement VERT, et c'est en LISANT ce résultat que le
+  // défaut est apparu.
+  //
+  // LE MOMENT MANQUANT EST DONC : un outil rend un résultat qui ne correspond pas à ce que je sais
+  // du terrain. C'est le seul qu'aucune mécanique ne peut déclencher — une machine ne sait pas ce
+  // que l'agent sait du terrain, et si elle le savait elle aurait déjà corrigé la sonde.
+  //
+  // MESURÉ SUR LA NUIT DU 2026-09-28, qui l'a validé avant même qu'il soit écrit : sur les sept
+  // trouvailles de la même famille (un signal ADJACENT lu comme le signal visé), AUCUNE n'a fait
+  // échouer un test. Toutes sont venues d'un rapport vert lu avec le terrain en tête —
+  // TOOL-LEARNING accusant un outil amélioré le matin même, 21 Agents « sans badge » qui les ont
+  // tous, un relancement « à l'aveugle » qui était le comportement voulu.
+  { cle: "resultat-vert-qui-detonne", libelle: "un outil rend un résultat VERT qui ne correspond pas à ce que je sais du terrain",
+    pourquoi: "le plus fécond, et le seul qu'aucune mécanique ne peut déclencher : rien ne bloque, rien n'échoue, le rapport est vert — le défaut n'apparaît qu'en LISANT. Sur la nuit du 2026-09-28, les sept trouvailles de la classe « signal adjacent » sont TOUTES venues de là, et aucune n'a fait échouer un test",
+    mecanisable: false },
 ];
 
 // CE QUI N'A PAS ÉTÉ RETENU, ÉCRIT PLUTÔT QUE TU (Article 27) : « quand je refais une erreur déjà

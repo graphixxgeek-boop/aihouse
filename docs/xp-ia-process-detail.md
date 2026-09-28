@@ -70,7 +70,7 @@ empêché quoi que ce soit (leçon L7). Un maillon cassé produit un constat, et
 
 ---
 
-## Partie 3 — Les trois moments déclencheurs, et celui qui a été écarté
+## Partie 3 — Les quatre moments déclencheurs, et celui qui a été écarté
 
 **Retenus** (choix explicite de l'utilisateur) :
 
@@ -81,6 +81,26 @@ empêché quoi que ce soit (leçon L7). Un maillon cassé produit un constat, et
    Non détectable : c'est angel qui demande.
 3. **Chaque Ronde et chaque évaluation** — ces moments font déjà le bilan d'une période entière,
    donc on y voit ce qu'on ne voit pas tâche par tâche.
+4. **Un outil rend un résultat VERT qui ne correspond pas à ce que je sais du terrain**
+   *(ajouté le 2026-09-28, tâche #749 — sa demande : « nouvelle leçon à apprendre ! mais je ne dois
+   pas te le dire à chaque fois ! réfléchis à ça avec l'outil dédié »)*.
+
+   **Le trou était identifiable précisément** : les trois moments ci-dessus supposent tous un
+   SIGNAL — quelque chose bloque, un compte rendu se termine, une période se clôt. La leçon qui a
+   motivé la tâche (une sonde qui comptait une *mention* du nom d'un outil pour une *présentation*,
+   sans pouvoir lire que la phrase disait le contraire) n'est passée par **aucun** des trois :
+   rien n'a bloqué, l'outil a rendu un résultat **parfaitement vert**, et c'est en **lisant** ce
+   résultat que le défaut est apparu.
+
+   **C'est le seul des quatre qu'aucune mécanique ne peut déclencher** : une machine ne sait pas ce
+   que l'agent sait du terrain, et si elle le savait, elle aurait déjà corrigé la sonde. D'où la
+   surveillance par question (angel, `xp-lecons`), jamais par mécanisme — Article 27.
+
+   **Sa fécondité est mesurée, pas supposée.** Sur la nuit du 2026-09-28, sept trouvailles de la
+   même famille — un signal **adjacent** lu comme le signal visé — sont **toutes** venues de là, et
+   **aucune n'a fait échouer un test** : TOOL-LEARNING accusant d'immobilisme un outil amélioré le
+   matin même, 21 Agents déclarés « sans badge » qui l'avaient tous, un relancement dit « à
+   l'aveugle » qui était le comportement voulu.
 
 **ÉCARTÉ, et c'est écrit plutôt que tu** : « quand je refais une erreur déjà faite » a été proposé
 et **non retenu**. C'était le signal le plus fort du lot — mais aussi le seul qu'aucune mécanique ne
@@ -235,7 +255,7 @@ et « le schéma de revue à présenter ».)*
               │
               ▼
    ┌──────────────────────┐
-   │ 1. CAPTER            │  aux trois moments déclencheurs (Partie 3)
+   │ 1. CAPTER            │  aux quatre moments déclencheurs (Partie 3)
    │    enregistrerXp()   │  « rien à retenir » est une réponse pleine
    └──────────┬───────────┘
               ▼

@@ -114,7 +114,15 @@ export const REGLES_SURVEILLEES = [
   // « RIEN À RETENIR » EST UNE RÉPONSE PLEINE ET ENTIÈRE, et ce n'est pas une politesse : exiger une
   // trouvaille à chaque passage ferait écrire pour se taire, ce qui remplirait le registre de bruit
   // et le rendrait illisible — donc détruirait exactement ce qu'on essaie de construire.
-  { id: "xp-lecons", cote: "agent", observable: false, regle: "Aux trois moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne.", source: "docs/xp-ia-process-detail.md" },
+  { id: "xp-lecons", cote: "agent", observable: false, regle: "Aux QUATRE moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation · un outil rend un résultat VERT qui ne correspond pas à ce que je sais du terrain), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne.", source: "docs/xp-ia-process-detail.md" },
+  // LE QUATRIÈME MOMENT A ÉTÉ AJOUTÉ LE 2026-09-28 (tâche #749), et c'est le seul des quatre qu'AUCUN
+  // signal ne précède : les trois premiers supposent que quelque chose se produise — un blocage, une
+  // fin de compte rendu, une clôture de période. Le quatrième se déclenche sur un rapport VERT, lu
+  // par quelqu'un qui connaît le terrain. Une machine ne peut pas savoir ce que l'agent sait du
+  // terrain ; si elle le savait, elle aurait déjà corrigé la sonde. D'où la surveillance par
+  // question, jamais par mécanisme (Article 27) — et sa fécondité est MESURÉE, pas supposée : sur
+  // la nuit du 2026-09-28, les sept trouvailles de la classe « un signal adjacent lu comme le
+  // signal visé » en sont TOUTES venues, et aucune n'a fait échouer un test.
   // MESSAGES-COURTS (2026-09-23, volets (b) et (c) de la tâche #572). La règle elle-même — continuer
   // par défaut, s'arrêter seulement sur une demande explicite — est portée par
   // `scripts/messages-courts.mjs` et testée. Ce qui ne peut PAS l'être : qu'elle ait été appliquée.
