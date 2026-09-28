@@ -20,6 +20,7 @@
 // de la dream team). Aucune dépendance externe, aucun réseau, un seul fichier auto-suffisant.
 
 import { buildReportFrame } from "./report-template.mjs";
+import { reliabilityNotice } from "./lib-shell.mjs";
 
 export function escapeHtml(text) {
   return String(text ?? "")
@@ -268,4 +269,45 @@ export function renderHtmlReport({ tool, title, subtitle, dateLabel, blocks = []
 </body>
 </html>
 `;
+}
+
+// =============================================================================================
+// LE RAPPORT HTML D'UN AGENT SÉPARÉ — une seule forme pour les deux (2026-09-28, tâche #997)
+// =============================================================================================
+// THE-FINAL-JUDGE et THE-DEEP-READER construisaient le MÊME rapport, à trois mots près : le titre,
+// le sous-titre et le slug. Tout le reste était recopié — l'horodatage par défaut, l'emplacement
+// générique de la phrase de fiabilité, le corps en bloc `code` non reformaté, et le pied qui dit
+// la même chose des deux : **conseiller uniquement, jamais un exécutant ni une décision
+// automatique**.
+//
+// CE PIED N'EST PAS UNE FORMULE, C'EST LA RÈGLE QUI GOUVERNE CES DEUX OUTILS. Écrite en deux
+// exemplaires, elle pouvait être adoucie dans l'un sans que l'autre bouge — et c'est exactement le
+// genre de dérive qu'aucun test n'attrape, puisque les deux rapports resteraient parfaitement
+// valides. Une phrase qui porte une limite d'autorité s'écrit UNE fois.
+//
+// LE TEXTE DU RAPPORT RESTE UN BLOC `code`, jamais reformaté ni résumé : ce que rend un agent
+// séparé coûte un vrai appel, et le retoucher à l'affichage reviendrait à payer un avis pour en
+// lire un autre.
+// L'AVERTISSEMENT EST PASSÉ, JAMAIS ALLÉ CHERCHER ICI — ET C'EST UN GARDE-FOU QUI L'A EXIGÉ
+// (2026-09-28). Ma première version appelait `reliabilityNotice(slug)` depuis ce fichier partagé :
+// le rapport sortait identique, et le détecteur `findHeuristicToolsWithoutNotice()` s'est mis à
+// accuser LES DEUX outils de ne jamais avertir. Il avait raison. Il vérifie que chaque outil
+// héuristique NOMME son slug dans un vrai appel d'avertissement, parce que deux outils peuvent
+// vivre dans le même fichier et que l'un couvrirait alors l'autre.
+//
+// J'AURAIS PU ÉLARGIR LE DÉTECTEUR À CETTE QUATRIÈME FORME. C'eût été desserrer un garde-fou pour
+// faire passer mon propre changement — le geste exact que ce projet refuse. L'avertissement est
+// donc récupéré CHEZ L'APPELANT, qui y nomme son slug, et passé ici en valeur. La factorisation
+// garde tout ce qu'elle apportait, et la vérification garde toute sa sévérité.
+export function buildRapportDAgentSepareHtml(slug, reportText, { title, subtitle, dateLabel, notice = null, renderImpl = renderHtmlReport } = {}) {
+  return renderImpl({
+    title,
+    subtitle,
+    dateLabel: dateLabel ?? new Date().toISOString(),
+    blocks: [
+      ...(notice ? [{ type: "note", text: notice }] : []),
+      { type: "code", text: reportText },
+    ],
+    footer: `${slug.toUpperCase()} — conseiller uniquement, jamais un exécutant ni une décision automatique.`,
+  });
 }

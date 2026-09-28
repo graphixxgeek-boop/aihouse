@@ -23,7 +23,7 @@
 // nombre d'interventions relues) reste local.
 
 import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
-import { renderHtmlReport } from "./html-report.mjs";
+import { renderHtmlReport, buildRapportDAgentSepareHtml } from "./html-report.mjs";
 import { reliabilityNotice } from "./lib-shell.mjs";
 import { dataRows, numericColumn, performanceDePassages } from "./lib-markdown-table.mjs";
 
@@ -39,18 +39,15 @@ export { extractPersonaBlock };
 // l'agent séparé puis réconcilié par l'agent orchestrateur — cette fonction est le point
 // d'intégration réel, appelée à la main au moment de LIVRER un rapport, jamais un second calcul.
 export function buildDeepReaderReportHtml(reportText, { title = "THE-DEEP-READER — rapport", subtitle, dateLabel } = {}) {
-  return renderHtmlReport({
+  // Forme partagée avec l'autre agent séparé : la raison vit à côté de `buildRapportDAgentSepareHtml()`.
+  return buildRapportDAgentSepareHtml("the-deep-reader", reportText, {
+    // L'avertissement se récupère ICI, en nommant le slug : c'est ce que vérifie
+    // `findHeuristicToolsWithoutNotice()`, et le lui cacher derrière un appel partagé aurait
+    // demandé de desserrer le garde-fou pour faire passer la factorisation.
+    notice: reliabilityNotice("the-deep-reader"),
     title,
     subtitle: subtitle ?? "Relecture lourde du suivi (conversation vs docs/suivi), agent séparé — cf. docs/referentiel/the-deep-reader.md.",
-    dateLabel: dateLabel ?? new Date().toISOString(),
-    blocks: [
-      // L'emplacement générique d'en-tête (2026-09-22, tâche #198) : la phrase de fiabilité vient du
-      // registre partagé TOOL_RELIABILITY, jamais réécrite à la main ici — un outil mécanique n'en
-      // reçoit aucune, et changer la formulation se fait en UN endroit pour tout le paysage.
-      ...(reliabilityNotice("the-deep-reader") ? [{ type: "note", text: reliabilityNotice("the-deep-reader") }] : []),
-      { type: "code", text: reportText },
-    ],
-    footer: "THE-DEEP-READER — conseiller uniquement, jamais un exécutant ni une décision automatique.",
+    dateLabel,
   });
 }
 

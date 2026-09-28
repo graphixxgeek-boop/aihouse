@@ -23,7 +23,7 @@
 // fois divergentes (règle anti-doublon §7ter). Seul le signal propre à CE personnage (citation d'un
 // vrai fichier du dépôt) reste local.
 
-import { renderHtmlReport } from "./html-report.mjs";
+import { renderHtmlReport, buildRapportDAgentSepareHtml } from "./html-report.mjs";
 import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
 import { reliabilityNotice } from "./lib-shell.mjs";
 
@@ -53,17 +53,14 @@ export function detectGenericReport(reportText) {
 // un bloc "code" (pas "paragraph") pour préserver la mise en page du texte libre (sauts de ligne,
 // sections), jamais reformaté ni résumé.
 export function buildFinalJudgeReportHtml(reportText, { title = "THE-FINAL-JUDGE — rapport", subtitle, dateLabel } = {}) {
-  return renderHtmlReport({
+  // Forme partagée avec l'autre agent séparé : la raison vit à côté de `buildRapportDAgentSepareHtml()`.
+  return buildRapportDAgentSepareHtml("the-final-judge", reportText, {
+    // L'avertissement se récupère ICI, en nommant le slug : c'est ce que vérifie
+    // `findHeuristicToolsWithoutNotice()`, et le lui cacher derrière un appel partagé aurait
+    // demandé de desserrer le garde-fou pour faire passer la factorisation.
+    notice: reliabilityNotice("the-final-judge"),
     title,
     subtitle: subtitle ?? "Audit indépendant de code et de produit, agent séparé — cf. docs/referentiel/the-final-judge.md.",
-    dateLabel: dateLabel ?? new Date().toISOString(),
-    blocks: [
-      // L'emplacement générique d'en-tête (2026-09-22, tâche #198) : la phrase de fiabilité vient du
-      // registre partagé TOOL_RELIABILITY, jamais réécrite à la main ici — un outil mécanique n'en
-      // reçoit aucune, et changer la formulation se fait en UN endroit pour tout le paysage.
-      ...(reliabilityNotice("the-final-judge") ? [{ type: "note", text: reliabilityNotice("the-final-judge") }] : []),
-      { type: "code", text: reportText },
-    ],
-    footer: "THE-FINAL-JUDGE — conseiller uniquement, jamais un exécutant ni une décision automatique.",
+    dateLabel,
   });
 }

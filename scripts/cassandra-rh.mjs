@@ -4063,19 +4063,17 @@ async function main() {
   if (sub === "fiche") {
     const demande = (process.argv[3] ?? "").replace(/^scripts\//, "").replace(/\.mjs$/, "");
     if (!demande) { console.log("\nUsage : node scripts/cassandra-rh.mjs fiche <nom-de-l-outil>"); return; }
-    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
-    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
+    // TROISIÈME ET QUATRIÈME COPIE DU MÊME CONTEXTE (2026-09-28, tâche #997, second passage) : le
+    // premier passage en avait factorisé deux, CLONE-HUNTER a rendu les deux autres au suivant.
+    // C'est la leçon L37 vue de l'intérieur — corriger une occurrence ne corrige pas la classe —
+    // et la preuve qu'un outil qui REVIENT vaut mieux qu'un scan fait une fois.
+    const { fichiers, lu, offert, machine } = contexteIceberg();
     if (!fichiers.includes(`${demande}.mjs`)) {
       console.log(`\nPAS DE FICHE — aucun script « scripts/${demande}.mjs » dans le dépôt. Ce n'est pas une fiche vide : c'est un nom qui ne désigne rien ici.`);
       const proches = fichiers.map((f) => f.replace(/\.mjs$/, "")).filter((n) => n.includes(demande.slice(0, 5)) || demande.includes(n.slice(0, 5)));
       if (proches.length) console.log(`Peut-être : ${proches.slice(0, 5).join(", ")}`);
       return;
     }
-    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
-      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
-    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
-      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
-      lire: lu });
     const itemsRonde = new Set();
     for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);
     const src = lu(`scripts/${demande}.mjs`);
