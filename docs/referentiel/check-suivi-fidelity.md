@@ -146,3 +146,48 @@ deux LIGNES sont corrigées, le VOCABULAIRE ne s'élargit pas.** Accepter « FAI
 **Et `findStatutsNonReconnus()` nomme désormais ce qui sort du vocabulaire**, affiché même à zéro —
 même doctrine que l'abstention silencieuse de #1087 : on ne devine pas, mais on ne se tait pas non
 plus. Sans ce compteur, la prochaine ligne compterait faux en silence pendant des jours.
+
+## Le format déclaré doit décrire les lignes réelles (2026-09-28, tâche #1099)
+
+**Le défaut** : `FORMAT_TACHE` (`scripts/criticite.mjs`) déclarait `detail` en 7ᵉ position. Les
+lignes du registre y portent **« pour qui »** depuis la tâche #825 — 270 lignes sur 374, soit
+**72 %**. Tout lecteur qui dérivait la position du détail de ce tableau lisait donc « PROJET ».
+
+**Ce que ça a coûté** : trois commits d'affilée écrits dans la mauvaise colonne de la ligne #695,
+le 2026-09-28 ; le détail d'origine écrasé, puis reconstruit depuis git.
+
+**Pourquoi aucun test ne pouvait le voir** : chaque moitié était cohérente avec elle-même. Le
+format se lisait bien, les lignes se lisaient bien — seul leur ACCORD était faux, et rien ne
+regardait l'accord. La divergence était même écrite en commentaire et renvoyée à une « tâche notée
+séparément » qui n'a jamais existé.
+
+### Les trois pièces
+
+- **`FORMAT_TACHE` déclare l'ordre réel** : `… | criticite | pourQui | ouverture | cloture |
+  detail | statut |`. Le fichier fait foi, parce que c'est lui qu'on lit.
+- **`lireLigneDeTache(cells)`** rend des champs **nommés**, jamais un indice à calculer. Les
+  longueurs lisibles (8, 9, 11) sont **dérivées** du format et de ses seuils : les champs à seuil
+  se retirent par GROUPES de même date, jamais un champ isolé au milieu d'un groupe né le même
+  jour — c'est pourquoi 10 colonnes n'est pas une forme valide.
+- **`findOrdreFormatDivergent()`** sonde le vocabulaire de six champs sur le vrai registre. Un
+  ordre qui se décale ne rate pas une ligne : il les rate toutes, donc la proportion le trahit.
+  Seuil : `PART_MAX_HORS_VOCABULAIRE`, 20 % — exiger zéro ferait crier le garde-fou sur une
+  criticité au vocabulaire neuf, et un garde-fou qui crie à tort cesse d'être lu (leçon L4).
+
+### Les deux abstentions, aussi importantes que les lectures
+
+- Un champ **antérieur à son seuil** vaut `null`, jamais chaîne vide. « Absent parce
+  qu'antérieur » et « présent mais vide » appellent des gestes opposés : les confondre accuserait
+  146 lignes historiques d'un manquement qu'elles ne pouvaient pas commettre.
+- Une **forme inconnue** est déclarée ILLISIBLE plutôt que devinée. Une valeur devinée ne se
+  distingue plus ensuite d'une valeur lue (leçons L5/L11).
+
+### Ce qui n'a PAS été normalisé, et pourquoi la mesure a renversé la décision
+
+Rembourrer les 146 lignes courtes à 11 colonnes ferait lire « pour qui présent mais vide » là où
+la vérité est « antérieure au seuil » — donc **recréerait** le faux positif de masse que le
+mécanisme `depuis` existe pour empêcher. Seul ce qui était réellement cassé a été repris : six
+barres finales manquantes, la ligne #910 privée de sa cellule de détail, et l'en-tête du tableau,
+qui ne décrivait aucune des 226 lignes au format complet.
+
+**État au 2026-09-28** : 377 lignes lues, 0 illisible, 0 divergence.

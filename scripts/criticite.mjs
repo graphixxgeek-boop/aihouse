@@ -204,7 +204,6 @@ export const FORMAT_TACHE = [
   { champ: "sujet", obligatoire: true, quoi: "le domaine (« Process / Ronde »), pour regrouper" },
   { champ: "sousSujet", obligatoire: true, quoi: "ce dont il s'agit, en une phrase lisible sans contexte" },
   { champ: "criticite", obligatoire: true, quoi: "un des quatre niveaux — jamais un mot de retard, qui appartient à la vignette" },
-  { champ: "detail", obligatoire: false, quoi: "le pourquoi : ce qui l'a déclenchée, ce qui a été décidé, ce qui reste" },
   // « POUR QUI » (2026-09-25, tâche #825 — constat DEEP-READER 2, TaskList #229). Décision prise
   // avec lui le 2026-09-22 et écrite dans le plan de nuit, chantier 1.1 : « un champ « pour qui »
   // sur chaque tâche : PROJET ou DETTE-ENVERS-L'UTILISATEUR. Même registre, même étiquetage. »
@@ -245,6 +244,25 @@ export const FORMAT_TACHE = [
   // est DÉRIVÉE du nombre de champs portant un seuil (check-suivi-fidelity).
   { champ: "ouverture", obligatoire: false, depuis: 872, quoi: "OUI quand la tâche s'est ouverte en respectant les process et en consultant les outils (Articles 26 et 31)" },
   { champ: "cloture", obligatoire: false, depuis: 872, quoi: "OUI quand les trois questions de clôture ont été posées : harmoniser, fiabiliser, optimiser (#703)" },
+  // `detail` VIENT ICI, APRÈS LES CHAMPS À SEUIL, ET C'EST LE FICHIER RÉEL QUI L'IMPOSE
+  // (2026-09-28, tâche #1099). Il était déclaré en 7ᵉ position, juste après `criticite` — or les
+  // lignes du registre l'écrivent en AVANT-DERNIER, après « pour qui » et les deux cases :
+  //     … | Criticité | Pour qui | Ouverture | Clôture | Détail | Statut |
+  //
+  // LA DIVERGENCE ÉTAIT CONNUE, DÉCLARÉE EN COMMENTAIRE DANS check-tasks-details, ET RENVOYÉE À
+  // UNE « tâche notée séparément » QUI N'A JAMAIS ÉTÉ ÉCRITE. C'est exactement le cas que
+  // l'Article 28 nomme le plus vicieux : un constat qui annonce une tâche inexistante ressemble à
+  // un lien, ce qui est pire qu'une absence.
+  //
+  // CE QU'ELLE A COÛTÉ, MESURÉ SUR LES 374 LIGNES RÉELLES : 270 d'entre elles (72 %) portent
+  // « pour qui » en 7ᵉ cellule. Tout lecteur qui dérivait la position de `detail` de CE tableau y
+  // trouvait donc « PROJET ». C'est la cause racine de trois commits d'affilée écrits dans la
+  // mauvaise colonne de la ligne #695 le 2026-09-28 — le détail d'origine écrasé, reconstruit
+  // depuis git.
+  //
+  // LE FICHIER FAIT FOI, PARCE QUE C'EST LUI QU'ON LIT. Un format déclaré qui ne décrit pas les
+  // données qu'il prétend décrire n'est pas une norme : c'est un piège qui a l'air d'une norme.
+  { champ: "detail", obligatoire: false, quoi: "le pourquoi : ce qui l'a déclenchée, ce qui a été décidé, ce qui reste" },
   { champ: "statut", obligatoire: true, quoi: "à faire / en cours / terminée / écartée avec sa raison (Article 28)" },
 ];
 
@@ -342,6 +360,63 @@ export function findPourQuiInvalide(rows = [], { valeurs = POUR_QUI_VALEURS } = 
 }
 
 const champVide = (v) => v === undefined || v === null || String(v).trim() === "";
+
+// ————————————————————————————————————————————————————————————————————————
+// LE LECTEUR NOMMÉ D'UNE LIGNE DE TÂCHE (2026-09-28, tâche #1099)
+// ————————————————————————————————————————————————————————————————————————
+// SA RAISON D'ÊTRE, ET ELLE EST PAYÉE : partout dans l'outillage, on lisait une cellule par un
+// calcul d'indice — `c[6 + i]`, `c[c.length - 2]`, `len - 3`. Chacun de ces calculs est juste pour
+// UNE forme de ligne et faux pour les autres, et le registre en compte plusieurs par construction,
+// puisque trois champs ont rejoint le format après coup. Un calcul d'indice ne peut pas être juste
+// partout ; un lecteur qui RECONNAÎT les colonnes, si.
+//
+// CE QUE ÇA A COÛTÉ EN VRAI : trois commits d'affilée écrits dans la mauvaise colonne de la même
+// ligne le 2026-09-28, le détail d'origine écrasé et reconstruit depuis git. L'indice utilisé
+// (`len - 3`) n'était juste que pour une ligne se terminant par une barre ; celle-là n'en avait pas.
+//
+// LA RÈGLE DE DÉRIVATION, ET ELLE NE SE RECOPIE PAS (Article 24) : une ligne courte est une ligne
+// ANCIENNE, écrite avant que certains champs n'existent. On retire donc les champs à seuil en
+// commençant par les plus RÉCENTS, et jamais un champ isolé au milieu d'un groupe arrivé le même
+// jour : `ouverture` et `cloture` sont nés ensemble (#872), donc soit les deux, soit aucun.
+// Un douzième champ ajouté demain avec son propre `depuis` sera lu sans qu'on touche à ceci.
+//
+// ET QUAND LA FORME NE SE RECONNAÎT PAS, ON REFUSE DE LIRE. Une ligne dont le Détail contient une
+// barre non échappée se découpe en 12 ou 15 cellules : les positions ne veulent plus rien dire.
+// Rendre des champs devinés sur une telle ligne serait pire que de ne rien rendre, parce que rien
+// ne distinguerait ensuite la valeur devinée de la valeur lue (leçons L5/L11).
+export function groupesDeSeuil(format = FORMAT_TACHE) {
+  const seuils = [...new Set(format.filter((f) => f.depuis).map((f) => f.depuis))].sort((a, b) => a - b);
+  return seuils.map((depuis) => ({ depuis, champs: format.filter((f) => f.depuis === depuis).map((f) => f.champ) }));
+}
+
+// longueursLisibles() — les tailles de ligne qu'on sait lire, DÉRIVÉES du format et de ses groupes.
+// Elle existe pour que le garde-fou et le lecteur ne puissent pas diverger : un seul calcul.
+export function longueursLisibles(format = FORMAT_TACHE) {
+  const groupes = groupesDeSeuil(format);
+  const longueurs = [format.length];
+  let n = format.length;
+  for (const g of [...groupes].reverse()) { n -= g.champs.length; longueurs.push(n); }
+  return longueurs.sort((a, b) => a - b);
+}
+
+export function lireLigneDeTache(cells = [], { format = FORMAT_TACHE } = {}) {
+  const c = Array.isArray(cells) ? cells : [];
+  if (!longueursLisibles(format).includes(c.length)) {
+    return { lisible: false, cellules: c.length, champs: null,
+      pourquoi: `${c.length} cellule(s) : aucune forme connue du registre n'a cette taille (${longueursLisibles(format).join(", ")}). La ligne n'est pas « incomplète », elle est ILLISIBLE — le plus souvent une barre non échappée dans le Détail — et deviner ses colonnes rendrait des valeurs fausses impossibles à distinguer des vraies` };
+  }
+  const absents = new Set();
+  let manque = format.length - c.length;
+  for (const g of [...groupesDeSeuil(format)].reverse()) {
+    if (manque <= 0) break;
+    for (const ch of g.champs) absents.add(ch);
+    manque -= g.champs.length;
+  }
+  const champs = {};
+  let i = 0;
+  for (const f of format) champs[f.champ] = absents.has(f.champ) ? null : String(c[i++] ?? "").trim();
+  return { lisible: true, cellules: c.length, champs, absents: [...absents] };
+}
 
 export function findChampsManquants(row = {}, { format = FORMAT_TACHE } = {}) {
   return format.filter((f) => f.obligatoire && champVide(row[f.champ]))

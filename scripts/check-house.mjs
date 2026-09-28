@@ -20569,3 +20569,77 @@ async function testMemeEvenementFactureDeuxFois() {
   console.log("Passed: le même événement facturé deux fois (2026-09-28, tâche #1098). Le voyant de santé d'Ezechiel annonçait, sur une suite ENTIÈREMENT VERTE, « 1 avertissement experimental » puis « 2 lignes de bruit sur la sortie d'erreur » — et les deux lignes de bruit ÉTAIENT cet avertissement : l'ExperimentalWarning de node:sqlite, plus la ligne « (Use `node --trace-warnings ...`) » que Node colle systématiquement derrière. Le même événement, facturé deux fois, dont une sous une étiquette qui suggère de l'inexpliqué. C'EST LA CLASSE DE #1074 — une population annoncée sans en retirer la part déjà expliquée — et elle coûte ici plus qu'un doublon d'affichage : cet avertissement-là NE PEUT PAS ÊTRE RETIRÉ, il vient du moteur, il dit vrai, et il dira vrai tant que node:sqlite sera expérimental. Une alerte « traite ce bruit » qu'aucune action légitime ne peut éteindre devient du décor (leçon L6), et elle emporte avec elle la seule alerte qui compte vraiment : celle qui se déclencherait le jour où une VRAIE ligne inattendue apparaîtrait. LE FILTRE RESTE ÉTROIT, ET C'EST CE QUI LE REND SÛR : seules sont écartées les lignes correspondant à un motif d'avertissement DÉJÀ nommé par le rapport, plus la ligne d'accompagnement du moteur. Un avertissement d'un genre inconnu compte toujours, une vraie erreur compte toujours, et la part écartée est ANNONCÉE dans le message plutôt qu'escamotée — un chiffre qui baisse sans dire pourquoi se lit comme une régression du détecteur.");
 }
 await testMemeEvenementFactureDeuxFois();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE FORMAT DÉCLARÉ NE DÉCRIVAIT PAS LES LIGNES RÉELLES (2026-09-28, tâche #1099)
+// ————————————————————————————————————————————————————————————————————————
+// `FORMAT_TACHE` déclarait `detail` en 7ᵉ position. Les lignes du registre y portent « pour qui »
+// depuis la tâche #825 — 270 lignes sur 374, soit 72 %. Tout lecteur qui DÉRIVAIT la position du
+// détail de ce tableau lisait donc « PROJET ». C'est la cause racine de trois commits d'affilée
+// écrits dans la mauvaise colonne de la ligne #695, le détail d'origine écrasé puis reconstruit
+// depuis git. La divergence était CONNUE, écrite en commentaire, et renvoyée à une « tâche notée
+// séparément » qui n'a jamais existé : le cas que l'Article 28 nomme le plus vicieux.
+async function testFormatDeclareContreLignesReelles() {
+  const c = await import('../scripts/criticite.mjs');
+  const s = await import('../scripts/check-suivi-fidelity.mjs');
+  const fs = await import('node:fs');
+
+  // L'ORDRE DÉCLARÉ EST CELUI DU FICHIER, et c'est la seule chose qui compte : un format qui ne
+  // décrit pas les données qu'il prétend décrire n'est pas une norme, c'est un piège qui y ressemble.
+  const ordre = c.FORMAT_TACHE.map((f) => f.champ);
+  assert.ok(ordre.indexOf('pourQui') < ordre.indexOf('detail'), '« pour qui » précède le détail dans le format déclaré, parce que c\'est ainsi que les lignes réelles sont écrites');
+  assert.equal(ordre[ordre.length - 1], 'statut', 'le statut reste la dernière colonne — c\'est l\'ancre de tous les lecteurs');
+  assert.equal(ordre[ordre.length - 2], 'detail', 'et le détail l\'avant-dernière : les deux ancres de fin sont ce qui permet de lire une ligne sans compter depuis la gauche');
+
+  // LES LONGUEURS LISIBLES SONT DÉRIVÉES, jamais énumérées (Article 24) : une ligne courte est une
+  // ligne ANCIENNE, et on retire les champs à seuil par GROUPES de même date — jamais un champ
+  // isolé au milieu d'un groupe né le même jour.
+  assert.deepEqual(c.longueursLisibles(), [8, 9, 11], 'trois formes, dérivées du format et de ses seuils : 8 (avant « pour qui »), 9 (avant les deux cases), 11 (complet). 10 n\'en est pas une, parce que les deux cases sont nées ensemble');
+  const g = c.groupesDeSeuil();
+  assert.deepEqual(g.map((x) => x.champs), [['pourQui'], ['ouverture', 'cloture']], 'les deux cases forment UN groupe : les séparer autoriserait une forme à 10 colonnes qui n\'a jamais existé');
+
+  // LE LECTEUR REND DES CHAMPS NOMMÉS, jamais un indice à calculer — c'est tout l'objet.
+  const onze = ['1', '2026-09-28T00:00Z', 'k', 'Sujet', 'Sous-sujet', 'NORMAL-UTILE', 'PROJET', 'OUI', 'OUI', 'le détail', 'Terminée'];
+  const huit = ['1', '2026-09-28T00:00Z', 'k', 'Sujet', 'Sous-sujet', 'NORMAL-UTILE', 'le détail', 'Terminée'];
+  for (const [ligne, quoi] of [[onze, 'complète'], [huit, 'historique']]) {
+    const lu = c.lireLigneDeTache(ligne);
+    assert.equal(lu.lisible, true, `une ligne ${quoi} se lit`);
+    assert.equal(lu.champs.detail, 'le détail', `et son DÉTAIL est le détail, sur la forme ${quoi} comme sur l'autre — c'est exactement ce qu'un calcul d'indice ne sait pas faire`);
+    assert.equal(lu.champs.statut, 'Terminée', `et son statut aussi (${quoi})`);
+  }
+  assert.equal(c.lireLigneDeTache(onze).champs.pourQui, 'PROJET', 'sur la forme complète, « pour qui » est lu à sa vraie place');
+  assert.equal(c.lireLigneDeTache(huit).champs.pourQui, null, 'ET SUR L\'ANCIENNE IL VAUT null, JAMAIS "" : « absent parce qu\'antérieur au seuil » et « présent mais vide » appellent des gestes opposés — les confondre accuserait 146 lignes d\'un manquement qu\'elles ne pouvaient pas commettre (leçon L4)');
+
+  // ON REFUSE DE LIRE CE QU'ON NE RECONNAÎT PAS (leçons L5/L11). Une ligne dont le détail contient
+  // une barre non échappée se découpe en 12 ou 15 cellules : deviner rendrait des valeurs fausses
+  // impossibles à distinguer des vraies.
+  const casse = c.lireLigneDeTache(new Array(14).fill('x'));
+  assert.equal(casse.lisible, false, 'MUST NOT GUESS: une forme inconnue est déclarée illisible');
+  assert.equal(casse.champs, null, 'et ses champs sont null en bloc, jamais un objet partiellement rempli qui se lirait comme une lecture réussie');
+  assert.ok(/ILLISIBLE/.test(casse.pourquoi), 'la raison dit « illisible » et non « incomplète » : les deux envoient chercher à des endroits différents');
+
+  // LE GARDE-FOU MORD — prouvé sur un ordre FAUSSÉ exprès, jamais déclaré (leçon L2).
+  const faux = c.FORMAT_TACHE.slice();
+  const i = faux.findIndex((f) => f.champ === 'detail'), j = faux.findIndex((f) => f.champ === 'pourQui');
+  [faux[i], faux[j]] = [faux[j], faux[i]];
+  let hors = 0, lus = 0;
+  for (const { ligne } of s.lignesDeTaches('docs/suivi/sessions', fs.readdirSync, (f) => fs.readFileSync(f, 'utf8'))) {
+    const lu = c.lireLigneDeTache(s.splitTableRow(ligne), { format: faux });
+    if (!lu.lisible || lu.champs.pourQui === null) continue;
+    lus += 1;
+    if (!/^\s*(?:PROJET|DETTE)/i.test(String(lu.champs.pourQui))) hors += 1;
+  }
+  assert.ok(lus > 100, 'la contre-épreuve porte sur un vrai corpus, jamais sur deux lignes fabriquées');
+  assert.ok(hors / lus > s.PART_MAX_HORS_VOCABULAIRE, `avec l'ordre faussé, ${hors}/${lus} valeurs de « pour qui » sortent du vocabulaire — très au-dessus du seuil de ${Math.round(s.PART_MAX_HORS_VOCABULAIRE * 100)} %, donc le garde-fou attrape bien la divergence qu'il existe pour attraper`);
+
+  // ET IL EST MUET AUJOURD'HUI, sur le VRAI registre — ce qui est le résultat attendu, jamais une
+  // preuve qu'il fonctionne : c'est la contre-épreuve juste au-dessus qui le prouve.
+  const reel = s.findOrdreFormatDivergent();
+  assert.equal(reel.mesurable, true, 'le garde-fou tourne contre le vrai registre (Article 25)');
+  assert.equal(reel.ecarts.length, 0, 'et il ne trouve aucune divergence aujourd\'hui, l\'ordre déclaré ayant été remis d\'accord avec le fichier');
+  assert.equal(reel.illisibles, 0, 'aucune ligne illisible ne subsiste : la ligne #910 à qui il manquait sa cellule de détail a été recomposée, et les six lignes sans barre finale refermées');
+  assert.ok(reel.lignesLues > 300, 'et le dénominateur est dit : un zéro sans son nombre de lignes lues est indiscernable d\'un balayage qui n\'a rien lu');
+
+  console.log("Passed: le format déclaré ne décrivait pas les lignes réelles (2026-09-28, tâche #1099). `FORMAT_TACHE` annonçait `detail` en 7ᵉ position ; 270 des 374 lignes du registre — 72 % — y portent « pour qui » depuis la tâche #825. TOUT LECTEUR QUI DÉRIVAIT LA POSITION DU DÉTAIL DE CE TABLEAU LISAIT DONC « PROJET ». C'est la cause racine de trois commits d'affilée écrits dans la mauvaise colonne de la ligne #695 le 2026-09-28, avec le détail d'origine écrasé puis reconstruit depuis git. CE QUI REND CE DÉFAUT INVISIBLE AUX TESTS : chaque moitié était parfaitement cohérente avec elle-même — le format se lisait bien, les lignes se lisaient bien, seul leur ACCORD était faux, et rien ne regardait l'accord. La divergence était même CONNUE et écrite en commentaire, renvoyée à une « tâche notée séparément » qui n'a jamais été écrite : exactement le cas que l'Article 28 appelle le plus vicieux, une référence morte qui ressemble à un lien. LA CORRECTION TIENT EN TROIS GESTES. Le format déclare désormais l'ordre réel. `lireLigneDeTache()` rend des champs NOMMÉS, dérivés du format et de ses seuils, si bien qu'aucun appelant n'a plus à calculer un indice — et un calcul d'indice ne peut pas être juste sur trois formes de ligne à la fois. `findOrdreFormatDivergent()` SONDE le vocabulaire de six champs sur le vrai registre : si l'ordre se remet à mentir, il ne ratera pas une ligne, il les ratera toutes. LES DEUX ABSTENTIONS SONT AUSSI IMPORTANTES QUE LES LECTURES : un champ antérieur à son seuil vaut `null` et jamais chaîne vide, sans quoi 146 lignes historiques seraient accusées d'un manquement qu'elles ne pouvaient pas commettre (leçon L4) ; et une forme inconnue est déclarée ILLISIBLE plutôt que devinée, parce qu'une valeur devinée ne se distingue plus ensuite d'une valeur lue (L5/L11). La morsure est prouvée sur un ordre faussé exprès — 273 valeurs sur 273 hors vocabulaire — jamais sur le silence du jour.");
+}
+await testFormatDeclareContreLignesReelles();

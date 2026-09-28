@@ -15,7 +15,7 @@
 
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE, CASE_COCHEE, PREMIERE_TACHE_AVEC_RITUEL, QUESTIONS_DE_CLOTURE } from "./criticite.mjs";
+import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE, CASE_COCHEE, PREMIERE_TACHE_AVEC_RITUEL, QUESTIONS_DE_CLOTURE, lireLigneDeTache } from "./criticite.mjs";
 import { sh, printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent, listerLeDossierGouvernant } from "./lib-shell.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -683,6 +683,70 @@ export function balayerLesLignesDeTaches(verdict, sessionsDir = SESSIONS_DIR, re
     if (ecart) ecarts.push(ecart);
   }
   return { mesurable: true, ecarts, lignesLues };
+}
+
+// findOrdreFormatDivergent() — LE FORMAT DÉCLARÉ DÉCRIT-IL ENCORE LES LIGNES RÉELLES ?
+// (2026-09-28, tâche #1099)
+//
+// LE TROU QU'IL FERME EST CELUI QUI A COÛTÉ LE PLUS CHER CETTE SEMAINE, et il était INVISIBLE :
+// `FORMAT_TACHE` déclarait `detail` en 7ᵉ position quand 270 des 374 lignes réelles y portent
+// « pour qui ». Aucun test ne pouvait le voir, parce que chaque moitié était cohérente avec
+// elle-même : le format se lisait bien, les lignes se lisaient bien, seul leur ACCORD était faux.
+// La divergence était même écrite en commentaire, renvoyée à une « tâche notée séparément » qui
+// n'a jamais existé — donc à personne.
+//
+// SON PRINCIPE : plutôt que de comparer deux listes (ce qui suppose une seconde liste à tenir à
+// jour, donc une seconde chose qui peut diverger — Article 24), il SONDE. Quatre champs du format
+// ont un vocabulaire reconnaissable ; si l'ordre déclaré se remet à mentir, la valeur trouvée à
+// leur place cessera de ressembler à ce qu'ils doivent contenir, en masse et d'un coup.
+//
+// POURQUOI UNE PROPORTION ET PAS UN ZÉRO ABSOLU : une ligne isolée peut légitimement porter une
+// valeur inattendue (une criticité au vocabulaire neuf, une case laissée vide). Exiger zéro ferait
+// crier le garde-fou sur du bruit, et un garde-fou qui crie à tort cesse d'être lu (leçon L4). Un
+// ordre qui se décale, lui, ne rate pas une ligne : il les rate TOUTES.
+export const SONDES_DU_FORMAT = [
+  { champ: "numero", motif: /^[0-9]+$/, quoi: "un numéro de tâche" },
+  { champ: "horodatage", motif: /^[0-9]{4}-[0-9]{2}-[0-9]{2}T/, quoi: "un horodatage" },
+  { champ: "criticite", motif: MOTIF_CRITICITE, quoi: "un niveau de criticité" },
+  { champ: "pourQui", motif: MOTIF_POUR_QUI, quoi: "PROJET ou DETTE-ENVERS-L-UTILISATEUR" },
+  { champ: "ouverture", motif: MOTIF_CASE_RITUEL, quoi: "OUI, NON, ou rien" },
+  { champ: "cloture", motif: MOTIF_CASE_RITUEL, quoi: "OUI, NON, ou rien" },
+];
+
+// Au-delà de cette part de lignes en désaccord sur un même champ, ce n'est plus une exception :
+// c'est l'ordre déclaré qui a cessé de décrire le fichier.
+export const PART_MAX_HORS_VOCABULAIRE = 0.2;
+
+export function findOrdreFormatDivergent(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return riennAPuEtreLu();
+  const vus = new Map(SONDES_DU_FORMAT.map((s) => [s.champ, { lus: 0, hors: 0, exemple: null }]));
+  let lignesLues = 0, illisibles = 0;
+  for (const { ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    lignesLues += 1;
+    const lu = lireLigneDeTache(splitTableRow(ligne));
+    if (!lu.lisible) { illisibles += 1; continue; }
+    for (const sonde of SONDES_DU_FORMAT) {
+      const v = lu.champs[sonde.champ];
+      if (v === null) continue;                 // champ absent d'une ligne ancienne : rien à dire
+      const etat = vus.get(sonde.champ);
+      etat.lus += 1;
+      if (!sonde.motif.test(String(v))) { etat.hors += 1; if (!etat.exemple) etat.exemple = String(v).slice(0, 40); }
+    }
+  }
+  const ecarts = [];
+  for (const sonde of SONDES_DU_FORMAT) {
+    const { lus, hors, exemple } = vus.get(sonde.champ);
+    if (!lus) continue;                          // jamais lu : pas mesuré, jamais « conforme »
+    const part = hors / lus;
+    if (part > PART_MAX_HORS_VOCABULAIRE) {
+      ecarts.push({ champ: sonde.champ, lus, hors, part,
+        pourquoi: `${hors} valeur(s) sur ${lus} (${Math.round(part * 100)} %) ne ressemblent pas à ${sonde.quoi} — exemple lu : « ${exemple} ». Au-delà de ${Math.round(PART_MAX_HORS_VOCABULAIRE * 100)} %, ce n'est plus une exception de saisie : l'ordre déclaré dans FORMAT_TACHE a cessé de décrire les lignes réelles, et TOUT lecteur qui en dérive une position lit la mauvaise colonne` });
+    }
+  }
+  return { mesurable: true, ecarts, lignesLues, illisibles,
+    pourquoi: lignesLues === 0
+      ? "aucune ligne de tâche lue : ce zéro dit qu'il n'y a rien à mesurer, jamais que le format est juste"
+      : `${SONDES_DU_FORMAT.length} champ(s) sondé(s) sur ${lignesLues - illisibles} ligne(s) lisible(s) (${illisibles} illisible(s), écartée(s) plutôt que devinée(s))` };
 }
 
 export function findLignesSansCriticiteReconnue(...args) {
