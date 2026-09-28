@@ -503,7 +503,15 @@ export const MOTIF_CIBLE_EN_ARGUMENT = /process\.argv\[\d+\]\s*(\?\?|\|\|)\s*["'
 // fonctions déjà appelées et déjà testées — on casserait du code qui marche pour plaire à une
 // sonde. Et la forme reconnue n'est pas n'importe quel paramètre : il faut que le défaut soit une
 // constante EXPORTÉE, ce qui est précisément la preuve qu'elle est faite pour être remplacée.
-export const MOTIF_DEFAUT_CONSTANTE = /[(,]\s*[a-zA-Z_$][\w$]*\s*=\s*([A-Z][A-Z0-9_]{3,})\s*[,)]/g;
+// L'ACCOLADE OUVRANTE COMPTE AUTANT QUE LA PARENTHÈSE (corrigé le 2026-09-28, tâche #902). Le motif
+// n'acceptait que `(` ou `,` avant le nom du paramètre, si bien qu'un PREMIER paramètre
+// déstructuré — `function main({ charte = CHARTE_PAR_DEFAUT })`, la forme la plus courante de ce
+// dépôt — passait pour non paramétrable. Trouvé en paramétrant les deux derniers scripts liés :
+// le détecteur continuait de les accuser APRÈS correction, ce qui est le signal le plus clair
+// qu'il regarde la mauvaise chose (leçon L4). La garde qui compte reste intacte : il faut qu'un
+// `export const` du même nom existe dans le fichier, donc un nom majuscule croisé par hasard
+// n'absout personne.
+export const MOTIF_DEFAUT_CONSTANTE = /[({,]\s*[a-zA-Z_$][\w$]*\s*=\s*([A-Z][A-Z0-9_]{3,})\s*[,)}]/g;
 
 export function constantesExporteesEnDefaut(code = "") {
   const t = String(code);
@@ -980,7 +988,10 @@ export const DIMENSIONS_DE_L_EXPORT = [
     cle: "portabilite-decouplee",
     quoi: "un outil mentionne-t-il encore ce projet-ci, même en exemple ?",
     ouLireLeDetail: "node scripts/safe-export.mjs export — bloc PORTABILITÉ (mesure la PLUS sévère des deux)",
-    lire: (m) => (m.portabilite?.mesurable ? { valeur: Math.round(m.portabilite.tauxPct), sur: 100, detail: `${m.portabilite.portables}/${m.portabilite.examines} scripts sans aucune mention, ${m.portabilite.lignes.length} encore liés — répartition : ${Object.entries(m.portabilite.parMarqueur ?? {}).map(([k, v]) => `${k} ${v}`).join(", ")}` } : null),
+    // LE DÉTAIL DIT LE CHIFFRE QUI DÉCIDE, pas seulement celui qui inquiète (2026-09-28) : « 43
+    // encore liés » fait refermer le rapport, « 2 à découpler » le fait ouvrir. Les deux sont
+    // vrais ; un seul appelle un geste.
+    lire: (m) => (m.portabilite?.mesurable ? { valeur: Math.round(m.portabilite.tauxPct), sur: 100, detail: `${m.portabilite.portables}/${m.portabilite.examines} scripts sans aucune mention, ${m.portabilite.lignes.length} encore liés — mais une fois CLASSÉS (étape 2 du plan) : ${m.portabilite.parCategorie?.["a-decoupler"] ?? "?"} à découpler pour de vrai, ${m.portabilite.parCategorie?.parametrable ?? "?"} déjà paramétrables, ${m.portabilite.parCategorie?.legitime ?? "?"} légitimement liés — répartition des marqueurs : ${Object.entries(m.portabilite.parMarqueur ?? {}).map(([k, v]) => `${k} ${v}`).join(", ")}` } : null),
   },
   {
     cle: "kits-des-membres",
@@ -1557,7 +1568,7 @@ function main() {
   if (process.argv[2] === "rapport") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
-    return Promise.all([import("./le-classificateur.mjs"), import("./check-tasks-details.mjs"), import("./check-suivi-fidelity.mjs")]).then(([lc, ctd]) => {
+    return Promise.all([import("./le-classificateur.mjs"), import("./check-tasks-details.mjs"), import("./check-suivi-fidelity.mjs")]).then(async ([lc, ctd]) => {
       const vitalite = lc.vitaliteDuParc();
       const kits = mesurerLesKits({ vitalite });
       const agence = mesurerLeKitDeLAgence();
@@ -1591,6 +1602,18 @@ function main() {
         mkdirSync(join(ROOT, "docs/safe-export"), { recursive: true });
         writeFileSync(dest, `${lignesTxt.join("\n")}\n\nVERDICT DU KIT : ${alerte.verdict ?? alerte.pourquoi}\n`, "utf8");
         console.log(`\nArchivé : docs/safe-export/rapport-export-central-${quand}.txt`);
+        // L'OUTIL QUI DÉPOSE UN FICHIER LE DÉCLARE LUI-MÊME (2026-09-28, tâche #902). Ce rapport
+        // écrit un fichier daté à CHAQUE passage, et l'index de son propre registre restait en
+        // arrière — si bien que le filet virait au ROUGE dès qu'on CONSULTAIT l'outil. C'est
+        // exactement le défaut du seuil recopié trouvé plus tôt la même nuit : un garde-fou que
+        // l'usage légitime fait crier apprend à ne plus s'en servir (leçons L4/L6). Déclarer ce
+        // qu'on vient d'écrire est le travail de celui qui l'écrit, jamais du commit suivant.
+        try {
+          const da = await import("./data-archangel.mjs");
+          const mesure = da.mesurerLesIndex();
+          da.reparerLesIndex(mesure);
+          da.genererLesIndexManquants(mesure);
+        } catch (e) { console.log(`\u26a0\ufe0f  index non mis \u00e0 jour (${e?.message ?? e}) \u2014 le rapport est \u00e9crit, mais son registre ne l'annonce pas encore.`); }
       } catch (e) { console.log(`\n⚠️  archivage impossible : ${e.message}`); }
       return undefined;
     });
@@ -2999,6 +3022,41 @@ export function formatTemoinLines(t = {}, { ou = "" } = {}) {
   return L;
 }
 
+// =============================================================================================
+// L'ÉTAPE 2 DU PLAN DE PORTABILITÉ — CLASSER, parce qu'un lien n'est pas forcément un défaut
+// =============================================================================================
+// ELLE ÉTAIT ÉCRITE DEPUIS LE 2026-09-27 ET JAMAIS FAITE (2026-09-28, tâche #902). La stratégie
+// d'export la nomme noir sur blanc : « c'est l'étape que personne ne saute impunément — traiter les
+// 43 comme 43 bugs serait un chantier absurde ». Et le rapport continuait d'afficher UN nombre, 43,
+// sans dire combien appellent vraiment du travail. Un nombre indifférencié ne se traite pas : il
+// décourage, ce qui est la façon la plus sûre de ne jamais commencer.
+//
+// LES TROIS CATÉGORIES SONT LES SIENNES, reprises mot pour mot de la stratégie — jamais réinventées
+// ici, sans quoi le rapport et la stratégie diraient deux choses (leçon L29) :
+//   · LÉGITIMEMENT LIÉ — l'outil sert le PRODUIT, ou ne quitte pas ce dépôt. Rien à faire, et c'est
+//     écrit depuis longtemps dans les deux registres de dispense.
+//   · PARAMÉTRABLE — l'outil OFFRE DÉJÀ un moyen de changer sa cible ; le chemin de ce projet n'est
+//     que sa valeur par défaut. Le taux monte vite ici, et sans risque.
+//   · À DÉCOUPLER — l'outil SUPPOSE la structure au lieu de la lire. C'est le seul vrai travail.
+//
+// LE CLASSEMENT SE DÉRIVE, IL NE S'ÉNUMÈRE PAS (Article 24) : les deux registres de dispense sont
+// lus, et `estParametrable()` — écrit pour #668 et déjà éprouvé sur les 86 scripts — répond à la
+// seconde question. Aucune liste tenue à la main, donc rien qui se périme au prochain outil.
+export const CATEGORIES_DE_LIEN = [
+  { cle: "legitime", quoi: "l'outil sert le PRODUIT ou ne quitte pas ce dépôt", geste: "rien — c'est écrit dans les registres de dispense" },
+  { cle: "parametrable", quoi: "l'outil offre déjà un moyen de changer sa cible ; ce chemin n'est que son défaut", geste: "rien de plus qu'un argument au moment d'arriver — le comportement d'ici ne change pas d'un iota" },
+  { cle: "a-decoupler", quoi: "l'outil SUPPOSE la structure au lieu de la lire", geste: "du vrai travail : faire DÉTECTER ce qui est supposé" },
+];
+
+export function classerLeLien(chemin, code, { exemptes = NE_PART_PAS_ET_C_EST_NORMAL, exemptesDuKit = EXEMPTES_DU_KIT } = {}) {
+  const slug = String(chemin).replace(/^scripts\//, "").replace(/\.mjs$/, "");
+  if (Object.hasOwn(exemptes, slug)) return { categorie: "legitime", pourquoi: exemptes[slug] };
+  const duKit = (exemptesDuKit ?? []).find((e) => e.motif.test(chemin));
+  if (duKit) return { categorie: "legitime", pourquoi: duKit.pourquoi };
+  if (estParametrable(code)) return { categorie: "parametrable", pourquoi: "il expose au moins une cible en paramètre par défaut : arriver ailleurs demande de la lui donner, pas de le réécrire" };
+  return { categorie: "a-decoupler", pourquoi: "aucune cible paramétrable trouvée : le chemin de ce projet est écrit dans son corps, donc il faut le faire détecter au lieu de le supposer" };
+}
+
 export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, marqueurs = MARQUEURS_DE_NON_PORTABILITE } = {}) {
   let fichiers = [];
   try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => String(f).endsWith(".mjs")); } catch { /* dossier illisible */ }
@@ -3010,7 +3068,10 @@ export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, r
     let src; try { src = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
     const nu = codeSansCommentaires(src);
     const trouves = marqueurs.filter((m) => m.motif.test(nu));
-    if (trouves.length) lignes.push({ fichier: `scripts/${f}`, marqueurs: trouves.map((m) => m.cle), combien: trouves.length });
+    if (trouves.length) {
+      const classe = classerLeLien(`scripts/${f}`, nu);
+      lignes.push({ fichier: `scripts/${f}`, marqueurs: trouves.map((m) => m.cle), combien: trouves.length, ...classe });
+    }
   }
   lignes.sort((a, b) => b.combien - a.combien);
   const parMarqueur = {};
@@ -3020,11 +3081,12 @@ export function mesurerLaPortabilite({ root = ROOT, listDirImpl = readdirSync, r
     portables: fichiers.length - lignes.length,
     tauxPct: ((fichiers.length - lignes.length) / fichiers.length) * 100,
     lignes, parMarqueur,
+    parCategorie: Object.fromEntries(CATEGORIES_DE_LIEN.map((c) => [c.cle, lignes.filter((l) => l.categorie === c.cle).length])),
     // LA LIMITE EST LE CŒUR DU RÉSULTAT, pas une note en bas de page : un balayage de texte trouve
     // les chemins écrits en dur. Il ne prouve JAMAIS qu'un outil sans chemin en dur fonctionne
     // ailleurs — seule une exécution contre un autre dépôt le prouverait. « Portable » ici veut
     // donc dire « rien ne le retient visiblement », jamais « vérifié à l'arrivée ».
-    horsPortee: "un balayage de texte trouve les chemins écrits en dur ; il ne prouve pas qu'un outil sans chemin en dur FONCTIONNE ailleurs. Seule une exécution contre un autre dépôt le prouverait — c'est l'étape 2 du plan, et elle n'est pas faite.",
+    horsPortee: "un balayage de texte trouve les chemins écrits en dur ; il ne prouve pas qu'un outil sans chemin en dur FONCTIONNE ailleurs. Seule une exécution contre un autre dépôt le prouve — c'est le banc témoin, et il tourne maintenant. LA LIMITE DU CLASSEMENT, dite plutôt que découverte plus tard : « PARAMÉTRABLE » veut dire que l'outil expose AU MOINS UNE cible en paramètre, pas que CHACUNE de ses mentions en soit une. C'est un indice fort — un outil qui a pris l'habitude de paramétrer une cible l'a généralement prise pour les autres — jamais une preuve par mention. Le trancher exigerait de relier chaque littéral à son paramètre, ce qui coûte une analyse de flot de données ; le dire coûte une phrase.",
   };
 }
 
@@ -3033,6 +3095,21 @@ export function formatPortabiliteLines(p, { combien = 10 } = {}) {
   const L = ["=== PORTABILITÉ — l'outil fonctionne-t-il une fois ARRIVÉ ? ===",
     `  ${p.lies} script(s) sur ${p.examines} portent un chemin ou un nom de CE dépôt DANS LEUR CODE.`,
     `  ${p.tauxPct.toFixed(0)} % ne sont retenus par rien de visible.`, ""];
+  // LE CLASSEMENT PASSE AVANT LA LISTE, et c'est délibéré : un lecteur qui voit d'abord « 43 »
+  // referme le rapport. Un lecteur qui voit d'abord « 2 à découpler » ouvre les deux.
+  if (p.parCategorie) {
+    L.push("  CE QUE CES LIENS COÛTENT VRAIMENT — l'étape 2 du plan de portabilité, classer avant de corriger :");
+    for (const c of CATEGORIES_DE_LIEN) {
+      L.push(`    ${String(p.parCategorie[c.cle] ?? 0).padStart(3)} ${c.cle.toUpperCase().padEnd(14)} ${c.quoi}`);
+      L.push(`        → ${c.geste}`);
+    }
+    const aFaire = (p.lignes ?? []).filter((l) => l.categorie === "a-decoupler");
+    if (aFaire.length) {
+      L.push(`  LES SEULS QUI APPELLENT DU TRAVAIL (${aFaire.length}) :`);
+      for (const l of aFaire) L.push(`    · ${l.fichier} — ${l.marqueurs.join(", ")} — ${l.pourquoi}`);
+    }
+    L.push("");
+  }
   L.push("  Les plus liés :");
   for (const l of p.lignes.slice(0, combien)) L.push(`   ${l.fichier.padEnd(38)} ${l.marqueurs.join(", ")}`);
   if (p.lignes.length > combien) L.push(`   … et ${p.lignes.length - combien} autre(s)`);

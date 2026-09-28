@@ -136,7 +136,18 @@ export function mechanicalCircleFindings(verifyRondeProcessImpl = verifyRondePro
   return findings.filter((f) => MECHANICAL_CHECKS.has(f.check));
 }
 
-function main() {
+// LES REPÈRES DE CE PROJET, PARAMÉTRABLES PLUTÔT QU'ÉCRITS DANS LE CORPS (2026-09-28, tâche #902).
+// Cet outil était l'UN DES DEUX SEULS, sur 43 scripts liés à ce dépôt, à ne rien offrir pour en
+// changer — le classement de l'étape 2 du plan de portabilité l'a isolé avec `tool-brain`. Les
+// valeurs par défaut sont exactement celles d'avant : le comportement d'ici ne change pas d'un
+// iota, et un projet d'accueil donne les siennes au lieu de réécrire l'outil.
+export const CHARTE_PAR_DEFAUT = "CLAUDE.md";
+export const REGISTRES_PAR_DEFAUT = [
+  ["Points fragiles ouverts", "docs/referentiel/points-fragiles.md"],
+  ["Suivi des tâches (index)", "docs/suivi/index.md"],
+];
+
+function main({ charte = CHARTE_PAR_DEFAUT, registresDuProjet = REGISTRES_PAR_DEFAUT } = {}) {
   recordCliUsage("hyper-scan-checkpoint");
   const now = new Date().toISOString();
   printReportHeader({ tool: "hyper-scan-checkpoint", title: "HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau)", scriptPath: "scripts/hyper-scan-checkpoint.mjs" });
@@ -226,8 +237,7 @@ function main() {
 
   console.log("\n--- Registres et historiques disponibles ---");
   const registries = [
-    ["Points fragiles ouverts", "docs/referentiel/points-fragiles.md"],
-    ["Suivi des tâches (index)", "docs/suivi/index.md"],
+    ...registresDuProjet,
     ["ARGUS (index)", "docs/argus/index.md"],
     ["HARMONIA (index)", "docs/harmonia/index.md"],
     ["Smart Conso API (index)", "docs/smart-conso-api/index.md"],
@@ -241,7 +251,7 @@ function main() {
     // suivis ici jusqu'à ce soir malgré leur pertinence pour un audit exceptionnel.
     ["SMART-CONSO-TOKEN (index)", "docs/smart-conso-token/index.md"],
     ["THE-FINAL-JUDGE (index)", "docs/the-final-judge/index.md"],
-    ["THE-DEEP-READER (index)", "docs/suivi/relectures-lourdes/index.md"],
+    ["THE-DEEP-READER (index)", `${registresDuProjet[1]?.[1]?.replace(/index\.md$/, "") ?? "docs/suivi/"}relectures-lourdes/index.md`],
     ["THE-KING (index)", "docs/the-king/index.md"],
     ["INES-official (index)", "docs/ines-official/index.md"],
     ["memory-audit (index)", "docs/memory-audit/index.md"],
@@ -268,9 +278,9 @@ function main() {
     console.log(`${perf.passages} passage(s) enregistré(s) · ${perf.totalFindings} trouvaille(s) confirmée(s) au total · ${perf.findingsPerPassage.toFixed(1)} en moyenne par passage · ${Math.round(perf.hitRate)}% des passages ont trouvé au moins une chose réelle.`);
   }
 
-  console.log("\n--- Charte (CLAUDE.md) ---");
+  console.log(`\n--- Charte (${charte}) ---`);
   // (2026-09-27, tâche #1034) — même classe que #1043 : la charte se lit, son absence se déclare.
-  const charterDoc = lireLeDocumentGouvernant("CLAUDE.md", { root: ROOT });
+  const charterDoc = lireLeDocumentGouvernant(charte, { root: ROOT });
   if (!charterDoc.trouve) {
     for (const l of ligneDocumentAbsent(charterDoc, { outil: "HYPER-SCAN-CHECKPOINT", aQuoiCaSert: "la relecture complète de la charte est l'étape 1 de sa liste" })) console.log(l);
   } else {

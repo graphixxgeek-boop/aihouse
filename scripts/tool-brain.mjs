@@ -301,11 +301,18 @@ export function muetsAuCompteurLines(rapport) {
 // `muets` ; le verrou d'ouverture de Ronde (circle-tasks.mjs) en avait besoin à son tour, et le
 // recopier aurait fabriqué exactement le doublon que CLONE-HUNTER traque. Un seul câblage, deux
 // appelants : la sous-commande qui SIGNALE au commit, et le verrou qui BLOQUE l'ouverture.
-export function rapportDesMuets({ readFileImpl = lireFichierPartage, history = null } = {}) {
+// LES DOCUMENTS QUI DÉCLARENT L'OFFRE, PARAMÉTRABLES (2026-09-28, tâche #902). Deux endroits de ce
+// fichier énuméraient la charte et les règles de travail directement dans leur corps — les deux
+// derniers scripts du dépôt, avec hyper-scan-checkpoint, à n'offrir aucun moyen d'en changer. Une
+// seule déclaration pour les deux : deux listes du même contenu finiraient par diverger (leçon
+// L29), et l'ordre différait déjà entre elles sans qu'aucune raison ne l'explique.
+export const DOCUMENTS_QUI_DECLARENT_L_OFFRE = ["../CLAUDE.md", "../docs/regles-de-travail.md"];
+
+export function rapportDesMuets({ readFileImpl = lireFichierPartage, history = null, documentsDeLOffre = DOCUMENTS_QUI_DECLARENT_L_OFFRE } = {}) {
   let sourceCrochet = "";
   try { sourceCrochet = readFileImpl(new URL("./hooks/post-commit", import.meta.url), "utf8"); } catch { /* le classement reste juste, en moins large */ }
   let offert = "";
-  for (const d of ["../docs/regles-de-travail.md", "../CLAUDE.md"]) {
+  for (const d of documentsDeLOffre) {
     try { offert += readFileImpl(new URL(d, import.meta.url), "utf8"); } catch { /* idem */ }
   }
   const lireSource = (slug) => {
@@ -587,7 +594,7 @@ async function main() {
     // L'OFFRE DÉCLARÉE en seconde source (leçon L24) : ce qui dit qu'un outil se lance, c'est une
     // commande écrite dans un document, jamais l'absence d'un motif dans son code.
     let offert = "";
-    for (const doc of ["../CLAUDE.md", "../docs/regles-de-travail.md"]) {
+    for (const doc of DOCUMENTS_QUI_DECLARENT_L_OFFRE) {
       try { offert += readFileSync(new URL(doc, import.meta.url), "utf8"); } catch { /* best-effort */ }
     }
     // Les items de Ronde viennent de circle-tasks.mjs LUI-MÊME, jamais d'une liste recopiée ici

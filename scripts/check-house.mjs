@@ -19422,3 +19422,51 @@ async function testLaSeptiemeDimensionDuRelai() {
   console.log(`Passed: la septième dimension mesurait sans rendre de chiffre (2026-09-28, tâche #902). MÊME FAMILLE EXACTE QUE LE BANC TÉMOIN, LE MÊME JOUR, et c'est ce qui rend la leçon utile : relaisDeModele() rendait « mesurable: true » depuis toujours — il lisait les documents, comptait les présents, cherchait les dépendances à un outillage — mais ne rendait AUCUN taux, et l'extracteur cherchait m.relais.taux. Le rapport affichait donc « NON MESURÉ » sur une mesure faite. Produire et ne pas rendre, c'est ne pas mesurer (L2). L'EXPORTABILITÉ SE CALCULE MAINTENANT SUR 7 DIMENSIONS SUR 7, ce qui était sa demande. LES DEUX CONDITIONS COMPTENT, JAMAIS UNE SEULE : un document parfait qui EXIGE un outillage particulier est inapplicable pour une IA qui ne l'a pas, et le compter bon serait le faux vert le plus coûteux du lot puisqu'il porte sur la reprise elle-même (Article 27). LE CHIFFRE EST HONNÊTE ET IL FAIT BAISSER LE TOTAL : ${reelles.taux} %, parce que ${reelles.resume.match(/(\\d+) ligne\\(s\\)/)?.[1] ?? "plusieurs"} lignes de la charte et des règles de travail EXIGENT un outillage que le successeur n'aura peut-être pas. Le coût est chiffré en lignes à reformuler plutôt que laissé en « il manque quelque chose » — sans ce nombre, on ne peut pas décider si c'est une minute ou une soirée. L'INTITULÉ A ÉTÉ RESSERRÉ en même temps : « une autre IA peut-elle reprendre l'Agence » est la QUESTION, pas ce qui se mesure, et un intitulé qui promet la réponse ferait lire 100 % comme « la reprise est assurée ».`);
 }
 await testLaSeptiemeDimensionDuRelai();
+
+// =============================================================================================
+// #902 — L'ÉTAPE 2 DU PLAN DE PORTABILITÉ : CLASSER AVANT DE CORRIGER
+// =============================================================================================
+// ELLE ÉTAIT ÉCRITE DEPUIS LE 2026-09-27 ET JAMAIS FAITE. La stratégie d'export la nomme noir sur
+// blanc — « c'est l'étape que personne ne saute impunément : traiter les 43 comme 43 bugs serait un
+// chantier absurde » — et le rapport continuait d'afficher UN nombre, 43, sans dire combien
+// appellent vraiment du travail. Un nombre indifférencié ne se traite pas : il décourage, ce qui
+// est la façon la plus sûre de ne jamais commencer.
+async function testClasserLesLiensAuProjet() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // LES TROIS CATÉGORIES SONT CELLES DE LA STRATÉGIE, jamais réinventées ici : deux vocabulaires
+  // pour le même classement finiraient par dire deux choses (leçon L29).
+  assert.deepEqual(SE.CATEGORIES_DE_LIEN.map((c) => c.cle), ['legitime', 'parametrable', 'a-decoupler']);
+
+  // LE CLASSEMENT SE DÉRIVE DES DEUX REGISTRES DE DISPENSE, jamais d'une liste tenue à la main.
+  assert.equal(SE.classerLeLien('scripts/check-spirit.mjs', 'const x = "Lia";').categorie, 'legitime',
+    'a tool whose SUBJECT is the game is legitimately tied — it never had to leave');
+  assert.equal(SE.classerLeLien('scripts/hooks/post-commit', 'const x = "CLAUDE.md";').categorie, 'legitime',
+    'and so is a file the kit registry already exempts: the two registries are READ, never recopied');
+
+  assert.equal(SE.classerLeLien('scripts/x.mjs', 'export const CIBLE_DEF = "docs/suivi/";\nfunction main({ dossier = CIBLE_DEF } = {}) {}').categorie, 'parametrable',
+    'a tool that already exposes a target only needs to be GIVEN another one on arrival');
+  assert.equal(SE.classerLeLien('scripts/x.mjs', 'const t = readFileSync("CLAUDE.md");').categorie, 'a-decoupler',
+    'and a tool with the path written in its body is the only case that calls for real work');
+
+  // L'ACCOLADE OUVRANTE COMPTE AUTANT QUE LA PARENTHÈSE, et l'oublier a coûté deux fausses
+  // accusations APRÈS correction — le signal le plus clair qu'un détecteur regarde la mauvaise
+  // chose (leçon L4). La forme `main({ x = CONST })` est la plus courante de ce dépôt.
+  assert.deepEqual(SE.constantesExporteesEnDefaut('export const FOO_BAR = 1;\nfunction main({ x = FOO_BAR } = {}) {}'), ['FOO_BAR'],
+    'a DESTRUCTURED first parameter is as parameterisable as a positional one');
+  assert.deepEqual(SE.constantesExporteesEnDefaut('export const FOO_BAR = 1;\nfunction main(x = FOO_BAR) {}'), ['FOO_BAR'],
+    'and the positional form keeps working');
+  assert.deepEqual(SE.constantesExporteesEnDefaut('const FOO_BAR = 1;\nfunction main({ x = FOO_BAR } = {}) {}'), [],
+    'MUST NOT absolve a constant that is not EXPORTED: an arriving project cannot override what it cannot import — that guard is the whole point');
+
+  // LA MESURE SUR LE DÉPÔT RÉEL, et c'est elle qui donne le chiffre du compte rendu.
+  const p = SE.mesurerLaPortabilite();
+  assert.ok(p.mesurable);
+  assert.equal(p.lies, Object.values(p.parCategorie).reduce((a, b) => a + b, 0),
+    'the classification must lose nobody: every tied script lands in exactly one category, never dropped in silence');
+  assert.equal(p.parCategorie['a-decoupler'], 0,
+    'checked live: after this pass, ZERO scripts require real decoupling work — the 43 raw mentions are defaults or legitimate ties');
+
+  console.log(`Passed: l'étape 2 du plan de portabilité, écrite le 2026-09-27 et jamais faite (2026-09-28, tâche #902). Sa stratégie la nomme noir sur blanc — « c'est l'étape que personne ne saute impunément : traiter les 43 comme 43 bugs serait un chantier absurde » — et le rapport continuait d'afficher UN nombre, 43, sans dire combien appellent vraiment du travail. Un nombre indifférencié ne se traite pas : il décourage, ce qui est la façon la plus sûre de ne jamais commencer. LE CLASSEMENT SE DÉRIVE, IL NE S'ÉNUMÈRE PAS : les deux registres de dispense sont LUS, et estParametrable() — écrit pour #668, déjà éprouvé sur 86 scripts — répond à la seconde question. RÉSULTAT : 43 liens → ${p.parCategorie.legitime} légitimes, ${p.parCategorie.parametrable} déjà paramétrables, ${p.parCategorie['a-decoupler']} à découpler. DEUX OUTILS ONT ÉTÉ PARAMÉTRÉS POUR DE VRAI en chemin (hyper-scan-checkpoint et tool-brain, les deux seuls du dépôt à n'offrir aucun moyen de changer leur cible) — et le détecteur a continué de les accuser APRÈS correction, ce qui est le signal le plus clair qu'il regarde la mauvaise chose (L4) : son motif n'acceptait que « ( » ou « , » avant un nom de paramètre, si bien qu'un PREMIER paramètre déstructuré — la forme la plus courante de ce dépôt — passait pour non paramétrable. La garde qui compte reste intacte, et le contre-test la vérifie : sans « export const », rien n'est absous, parce qu'un projet d'accueil ne peut pas surcharger ce qu'il ne peut pas importer. LA LIMITE EST DÉCLARÉE plutôt que découverte plus tard : « PARAMÉTRABLE » veut dire que l'outil expose AU MOINS UNE cible, pas que CHACUNE de ses mentions en soit une — un indice fort, jamais une preuve par mention.`);
+}
+await testClasserLesLiensAuProjet();

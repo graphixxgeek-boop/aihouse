@@ -1,0 +1,45 @@
+=== RAPPORT EXPORT CENTRAL — où en est l'Agence, et ce qu'il lui reste à savoir faire ===
+
+EXPORTABILITÉ GLOBALE : 88 % — moyenne de 7 dimension(s) RÉELLEMENT mesurée(s) sur 7.
+
+--- CE QU'ON SAIT FAIRE (5) — dimension mesurée et au-dessus de 80 % ---
+  ✅ 100 %  un outil peut-il recevoir d'autres cibles, ou les a-t-il écrites en dur ?
+         86/86 scripts reconfigurables, 0 avec une cible écrite en dur
+  ✅ 100 %  chaque outil emporte-t-il ses cinq pièces (blueprint, source, fiche, registre, dépendances) ?
+         82/82 kits complets, 0 incomplets, 0 dispensés avec raison écrite
+  ✅ 100 %  l'Agence elle-même emporte-t-elle son propre kit (plan, installation, carte, organisation, standards, leçons) ?
+         0 pièce(s) manquante(s), 0 non vérifiée(s)
+  ✅ 100 %  chaque outil a-t-il un plan réutilisable ailleurs, et les vitaux d'abord ?
+         82/82 outils dus ont un blueprint · 0 bloquant(s) (vital ou essentiel sans plan)
+  ✅ 100 %  l'Agence a-t-elle été installée POUR DE VRAI ailleurs, et y tourne-t-elle ?
+         68/68 outils tiennent debout sur /tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin, mesuré le 2026-09-28 sur e825c18 (passage précédent : 67/70 — dénominateur passé de 70 à 68, donc une part de l'écart vient de qui est COMPTÉ, pas de qui tient debout) — ⚠️ PÉRIMÉ : 5 fichier(s) de scripts/ ont changé depuis, ce taux décrit une Agence antérieure
+
+--- CE QU'ON NE SAIT PAS ENCORE FAIRE (2) ---
+  🟠 48 %  un outil mentionne-t-il encore ce projet-ci, même en exemple ?
+         40/83 scripts sans aucune mention, 43 encore liés — mais une fois CLASSÉS (étape 2 du plan) : 2 à découpler pour de vrai, 36 déjà paramétrables, 5 légitimement liés — répartition des marqueurs : filet 18, charte 16, moteur-du-jeu 5, dossier-referentiel 24, dossier-suivi 17, personnages 16
+         détail : node scripts/safe-export.mjs export — bloc PORTABILITÉ (mesure la PLUS sévère des deux)
+  🟠 67 %  le matériel de reprise est-il là pour une AUTRE IA — tous les documents, et aucun qui suppose notre outillage ?
+         2/3 dimension(s) du relai complètes ET libres de tout outillage particulier — 20 ligne(s) dans CLAUDE.md et docs/regles-de-travail.md EXIGENT un outillage que le successeur n'aura peut-être pas : c'est le coût exact de l'écart, en lignes à reformuler. Mesure l'EXISTENCE et l'INDÉPENDANCE, jamais la SUFFISANCE : aucune mécanique ne dira qu'un modèle inconnu s'en sortira, et le déclarer EST la protection (Article 27)
+         détail : node scripts/safe-export.mjs export — bloc RELAIS
+
+--- CE QUI EST EN COURS : 2 tâche(s) ouverte(s) sur l'export, sur 64 ouvertes ---
+  #800 [A-TRANCHER] Agence / lequel des trois axes fait monter le majeur ?
+  #902 [PRIORITAIRE-OBLIGATOIRE] Agence / EXPORT ET COMMERCIALISATION — le chantier existait sans tâche, donc sans existence dan
+
+--- LA PENTE, parce qu'un chiffre sans sa pente est la moitié de l'information ---
+  fuites                       stable (7 point(s), plus bas = mieux)
+  blueprints-mal-construits    stable (7 point(s), plus bas = mieux)
+  dependances-outillage        stable (7 point(s), plus bas = mieux)
+  blueprints-total             en hausse (non jugée) (7 point(s), neutre — la lecture humaine tranche)
+
+OÙ VIT QUOI, et c'est la réponse à « chez qui est ce document ? » :
+  · LA MESURE, ici, chez SAFE-EXPORT — septième Gardien sacré, déjà propriétaire du chiffre.
+  · LA DÉCISION et le plan de route, dans docs/strategies/export-et-commercialisation-strategie.md.
+  · LE RÉCIT des passages du banc témoin, dans docs/safe-export/.
+Un second détenteur du même chiffre est la façon dont deux chiffres finissent par diverger.
+
+HORS PORTÉE : ce rapport RASSEMBLE, il ne juge pas. Une dimension au-dessus de la barre dit
+que la mesure est tenue, jamais que la question est close — et la barre elle-même est un
+choix, pas un fait.
+
+VERDICT DU KIT : ✅ EXPORT PRÊT — tout ce qui est dû est tenu, et l'Agence porte son propre kit

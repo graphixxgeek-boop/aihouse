@@ -605,3 +605,58 @@ assurée », alors qu'aucune mécanique ne peut le dire. La dimension s'appelle 
 de reprise est-il là », et le `horsPortee` garde sa consigne du 2026-09-26 : ne pas se servir de sa
 propre compréhension comme étalon — elle prouve qu'on était là, jamais qu'un modèle arrivant à froid
 s'en sortira.
+
+## L'étape 2 du plan de portabilité : classer avant de corriger (2026-09-28, tâche #902)
+
+**Elle était écrite depuis le 2026-09-27 et jamais faite.** La stratégie d'export la nomme noir sur
+blanc : « c'est l'étape que personne ne saute impunément — traiter les 43 comme 43 bugs serait un
+chantier absurde ». Et le rapport continuait d'afficher **un** nombre, 43, sans dire combien
+appellent vraiment du travail.
+
+**Un nombre indifférencié ne se traite pas : il décourage**, ce qui est la façon la plus sûre de ne
+jamais commencer.
+
+### Le résultat, et il change complètement la lecture du 48 %
+
+| Catégorie | Combien | Le geste |
+|---|---|---|
+| **LÉGITIMEMENT LIÉ** | 5 | rien — l'outil sert le produit ou ne quitte pas ce dépôt, et c'est écrit dans les deux registres de dispense |
+| **PARAMÉTRABLE** | 38 | rien de plus qu'un argument au moment d'arriver ; le comportement d'ici ne change pas d'un iota |
+| **À DÉCOUPLER** | **0** | — |
+
+Les 43 mentions brutes restent : ce sont des **valeurs par défaut** et des liens assumés, pas des
+chemins qui retiennent l'Agence. Le taux brut de 48 % est inchangé et reste affiché — il mesure la
+question la plus sévère — mais le chiffre qui décide d'un geste est désormais **zéro**.
+
+**Le classement se DÉRIVE, il ne s'énumère pas** (Article 24) : les deux registres de dispense sont
+lus, et `estParametrable()` — écrit pour #668, déjà éprouvé sur 86 scripts — répond à la seconde
+question. Aucune liste tenue à la main, donc rien qui se périme au prochain outil.
+
+### Deux outils paramétrés pour de vrai, et un détecteur qui les accusait quand même
+
+`hyper-scan-checkpoint` et `tool-brain` étaient **les deux seuls du dépôt** à n'offrir aucun moyen
+de changer leur cible. Leurs repères sont désormais des constantes exportées avec la valeur d'ici
+pour défaut.
+
+**Et le détecteur a continué de les accuser APRÈS correction** — le signal le plus clair qu'il
+regarde la mauvaise chose (leçon L4). Son motif n'acceptait que `(` ou `,` avant un nom de
+paramètre, si bien qu'un **premier paramètre déstructuré** — `main({ charte = CHARTE_PAR_DEFAUT })`,
+la forme la plus courante de ce dépôt — passait pour non paramétrable. La garde qui compte reste
+intacte, et le contre-test la vérifie : sans `export const`, rien n'est absous, parce qu'un projet
+d'accueil ne peut pas surcharger ce qu'il ne peut pas importer.
+
+### La limite, déclarée plutôt que découverte plus tard
+
+« PARAMÉTRABLE » veut dire que l'outil expose **au moins une** cible en paramètre, pas que **chacune**
+de ses mentions en soit une. C'est un indice fort — un outil qui a pris l'habitude de paramétrer une
+cible l'a généralement prise pour les autres — **jamais une preuve par mention**. Le trancher
+exigerait de relier chaque littéral à son paramètre, ce qui coûte une analyse de flot de données ;
+le dire coûte une phrase.
+
+### Un garde-fou que l'usage légitime faisait crier
+
+`safe-export rapport` écrit un fichier daté à **chaque** passage, et l'index de son propre registre
+restait en arrière — si bien que le filet virait au **rouge dès qu'on consultait l'outil**. Même
+défaut que le seuil recopié trouvé la même nuit : un garde-fou que l'usage légitime fait crier
+apprend à ne plus s'en servir (leçons L4/L6). Le rapport met désormais l'index à jour lui-même.
+**Déclarer ce qu'on vient d'écrire est le travail de celui qui l'écrit, jamais du commit suivant.**
