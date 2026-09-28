@@ -664,18 +664,32 @@ export function frontiereDuDetail(cells = []) {
 // ferait pire. Mais une ligne écartée sans bruit est une ligne que PLUS AUCUN contrôle ne regarde,
 // et personne ne peut le savoir. Ce compteur existe pour que le prochain trou du vocabulaire
 // remonte le jour où il apparaît, au lieu de cacher 18 % du registre pendant des semaines.
-export function findLignesSansCriticiteReconnue(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+// balayerLesLignesDeTaches() — LE BALAYAGE, ÉCRIT UNE SEULE FOIS (2026-09-28, tâche #1088).
+// Trois détecteurs de ce fichier partageaient le même squelette au caractère près : refuser un
+// dossier absent par `riennAPuEtreLu()`, compter les lignes lues, découper chaque ligne, et rendre
+// `{ mesurable, ecarts, lignesLues }`. Seul le VERDICT sur une ligne les distingue.
+//
+// CLONE-HUNTER l'a signalé au commit même où j'écrivais le troisième — et il avait raison : c'est
+// la forme de dette qui se recopie une fois de plus à chaque détecteur qui rejoint le fichier.
+// Le dénominateur compte autant que les écarts : un détecteur qui rend zéro sans dire combien il a
+// lu est indiscernable d'un détecteur qui n'a rien lu (leçons L5/L11), d'où `lignesLues` porté ici.
+export function balayerLesLignesDeTaches(verdict, sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return riennAPuEtreLu();
   const ecarts = [];
   let lignesLues = 0;
   for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
     lignesLues += 1;
-    const cells = splitTableRow(ligne);
-    if (frontiereDuDetail(cells) !== null) continue;
-    ecarts.push({ numero: Number(cells[0]), file, valeur: String(cells[5] ?? "").trim().slice(0, 40),
-      pourquoi: "aucune criticité reconnue dans cette ligne : elle est donc écartée de TOUS les contrôles de forme, silencieusement — soit la valeur est fautive, soit le vocabulaire du lecteur a pris du retard sur celui du registre" });
+    const ecart = verdict(splitTableRow(ligne), file);
+    if (ecart) ecarts.push(ecart);
   }
   return { mesurable: true, ecarts, lignesLues };
+}
+
+export function findLignesSansCriticiteReconnue(...args) {
+  return balayerLesLignesDeTaches((cells, file) => (frontiereDuDetail(cells) !== null ? null : {
+    numero: Number(cells[0]), file, valeur: String(cells[5] ?? "").trim().slice(0, 40),
+    pourquoi: "aucune criticité reconnue dans cette ligne : elle est donc écartée de TOUS les contrôles de forme, silencieusement — soit la valeur est fautive, soit le vocabulaire du lecteur a pris du retard sur celui du registre",
+  }), ...args);
 }
 
 export function findLignesMalFormees(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
@@ -995,19 +1009,14 @@ export function etatDuStatut(statut = "") {
   return STATUTS_RECONNUS.find((s) => s.motif.test(n)) ?? null;
 }
 
-export function findStatutsNonReconnus(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return riennAPuEtreLu();
-  const ecarts = [];
-  let lignesLues = 0;
-  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
-    lignesLues += 1;
-    const cells = splitTableRow(ligne);
+export function findStatutsNonReconnus(...args) {
+  return balayerLesLignesDeTaches((cells, file) => {
     const brut = String(cells[cells.length - 1] ?? "").trim();
-    if (etatDuStatut(brut)) continue;
-    ecarts.push({ numero: Number(cells[0]), file, statut: brut.slice(0, 50),
-      pourquoi: "statut hors du vocabulaire reconnu : les outils de la file ne savent pas si cette tâche attend encore quelque chose, et par défaut ils la comptent ouverte" });
-  }
-  return { mesurable: true, ecarts, lignesLues };
+    return etatDuStatut(brut) ? null : {
+      numero: Number(cells[0]), file, statut: brut.slice(0, 50),
+      pourquoi: "statut hors du vocabulaire reconnu : les outils de la file ne savent pas si cette tâche attend encore quelque chose, et par défaut ils la comptent ouverte",
+    };
+  }, ...args);
 }
 
 export function estEcartee(statut = "") {
