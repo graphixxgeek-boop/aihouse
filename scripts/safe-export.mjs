@@ -477,10 +477,124 @@ export const NE_PART_PAS_ET_C_EST_NORMAL = {
   "sites-env": "charge l'environnement de CE site.",
 };
 
-export function findScriptsNonPortables(scripts = [], { readFileImpl = lireFichierPartage, root = ROOT, portee = porteeDe, exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
+// ————————————————————————————————————————————————————————————————————————
+// CE QUI COMPTE COMME UNE CIBLE PARAMÉTRABLE (élargi le 2026-09-28, tâche #668)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA FORME HISTORIQUE — `{ root = … }`, `{ chemin = … }` — reste la principale : c'est le
+// vocabulaire du paysage, adopté exprès plutôt que d'élargir la sonde à n'importe quel nom (la
+// décision de la première moitié de #668, et elle tient).
+//
+// LA DEUXIÈME FORME : UNE CIBLE PASSÉE EN ARGUMENT DE LIGNE DE COMMANDE. `route-booster` écrit
+// `process.argv[2] ?? "app/api/lia/route.ts"` — sa cible EST déjà remplaçable, par la voie la plus
+// directe qui soit, et il était pourtant accusé. Un outil dont on change la cible en tapant un mot
+// après son nom est exactement ce que « portable » veut dire.
+export const MOTIF_CIBLE_EN_ARGUMENT = /process\.argv\[\d+\]\s*(\?\?|\|\|)\s*["'`]/;
+
+// LA QUATRIÈME FORME : UN DÉFAUT DE PARAMÈTRE QUI EST UNE CONSTANTE EXPORTÉE. `check-level-target`
+// écrit `findSensitiveNodesDivergingFromHarmonia(texte, nodes = SENSITIVE_NODES)` et EXPORTE
+// `SENSITIVE_NODES` : la liste de cibles est remplaçable par construction — on passe la sienne — et
+// elle est publiée pour qu'un projet d'accueil sache ce qu'il remplace. C'est exactement la forme
+// portable, sous un autre nom que celui du paysage.
+//
+// POURQUOI ÉLARGIR ICI ET PAS RENOMMER, alors que la première moitié de #668 avait tranché
+// l'inverse : là-bas il s'agissait de paramètres NEUFS que j'écrivais, et adopter le vocabulaire du
+// paysage ne coûtait rien. Ici, renommer `nodes` en `{ noeuds = … }` changerait la signature de
+// fonctions déjà appelées et déjà testées — on casserait du code qui marche pour plaire à une
+// sonde. Et la forme reconnue n'est pas n'importe quel paramètre : il faut que le défaut soit une
+// constante EXPORTÉE, ce qui est précisément la preuve qu'elle est faite pour être remplacée.
+export const MOTIF_DEFAUT_CONSTANTE = /[(,]\s*[a-zA-Z_$][\w$]*\s*=\s*([A-Z][A-Z0-9_]{3,})\s*[,)]/g;
+
+export function constantesExporteesEnDefaut(code = "") {
+  const t = String(code);
+  const out = [];
+  for (const m of t.matchAll(MOTIF_DEFAUT_CONSTANTE)) {
+    if (new RegExp(`export\\s+const\\s+${m[1]}\\b`).test(t) && !out.includes(m[1])) out.push(m[1]);
+  }
+  return out;
+}
+
+export function estParametrable(code = "") {
+  return /\{\s*(root|registres?|fichiers?|chemin|dossiers?)\s*=/.test(String(code))
+    || MOTIF_CIBLE_EN_ARGUMENT.test(String(code))
+    || constantesExporteesEnDefaut(code).length > 0;
+}
+
+// LA TROISIÈME FORME N'EST PAS UNE PARAMÉTRABILITÉ, C'EST UNE ABSENCE DE CIBLE : le nom n'apparaît
+// que dans une PHRASE adressée à un humain. `check-gemini-quota` imprime « L'app (lib/lia.ts,
+// route.ts) n'appelle que Gemini » — une note au lecteur, jamais un fichier qu'il ouvre. Le
+// détecteur retirait déjà les COMMENTAIRES pour cette raison exacte (« les commentaires racontent
+// souvent l'histoire du projet sans que le CODE en dépende ») ; il ne retirait pas les messages,
+// qui sont la même chose adressée à quelqu'un d'autre. C'est la leçon déjà payée en #832 : une
+// MENTION n'est pas un USAGE.
+//
+// LA MESURE EST FAITE LIGNE PAR LIGNE, ET CE CHOIX EST UNE CORRECTION. Ma première version
+// découpait les CHAÎNES du fichier avec une expression régulière, et elle a fait exactement le
+// dégât qu'on attend d'un pseudo-parseur : une apostrophe française quelque part suffit à
+// désynchroniser l'appariement des guillemets, à avaler des pans entiers de code, et donc à effacer
+// les marqueurs `{ chemin = … }` qui rendaient quatre outils parfaitement portables. Le détecteur
+// s'est mis à accuser Abraham, circle-tasks, the-equalizer et SAFE-EXPORT lui-même — quatre faux
+// rouges créés en voulant en retirer un. Une lecture ligne à ligne ne peut rien avaler.
+//
+// LE CRITÈRE PORTE SUR LA CHAÎNE, JAMAIS SUR LA LIGNE, et c'est la SECONDE correction du même
+// jour — la première version comptait les mots de la ligne entière et rangeait
+// `const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");` parmi les phrases : huit
+// identifiants suffisaient. C'était un FAUX VERT, c'est-à-dire pire que le faux rouge qu'on
+// retirait — un vrai chemin en dur, déclaré propre.
+//
+// UNE PHRASE EST UNE CHAÎNE LONGUE ET ESPACÉE : au moins 40 caractères et au moins 4 espaces. Une
+// cible ne l'est jamais : `"lib/life.ts"` et `"utf8"` n'ont aucun espace. Les deux populations ne
+// se chevauchent pas, et c'est ce qui rend ce critère sûr là où le comptage de mots ne l'était pas.
+export const LONGUEUR_POUR_ETRE_UNE_PHRASE = 40;
+export const ESPACES_POUR_ETRE_UNE_PHRASE = 4;
+// UN MOTIF PAR TYPE DE GUILLEMET, et c'est la TROISIÈME correction du même détecteur — chacune a
+// été trouvée en vérifiant le résultat plutôt qu'en le croyant. Un seul motif dont la classe
+// interdisait les trois guillemets à la fois coupait la chaîne à la première APOSTROPHE FRANÇAISE :
+// « L'app (lib/lia.ts) n'appelle que Gemini » se découpait en morceaux trop courts pour être
+// reconnus comme une phrase, et le message repassait pour une cible. Trois motifs séparés, chacun
+// n'interdisant que SON propre guillemet, lisent le texte français comme il s'écrit.
+//
+// Appariement par LIGNE dans tous les cas : une mauvaise paire ne peut abîmer que sa propre ligne,
+// jamais avaler un pan de fichier comme le faisait la toute première version.
+export const MOTIFS_CHAINE = [/"([^"\n]*)"/g, /'([^'\n]*)'/g, /`([^`\n]*)`/g];
+
+export function estUnePhrase(ligne = "", { longueur = LONGUEUR_POUR_ETRE_UNE_PHRASE, espaces = ESPACES_POUR_ETRE_UNE_PHRASE } = {}) {
+  for (const motif of MOTIFS_CHAINE) {
+    for (const m of String(ligne).matchAll(motif)) {
+      const contenu = m[1];
+      if (contenu.length >= longueur && (contenu.match(/ /g) ?? []).length >= espaces) return true;
+    }
+  }
+  return false;
+}
+
+export function sansLesPhrases(code = "", options = {}) {
+  return String(code).split("\n").filter((l) => !estUnePhrase(l, options)).join("\n");
+}
+
+// LA SECONDE DÉCLARATION D'EXEMPTION EXISTAIT ET CE DÉTECTEUR NE LA VOYAIT PAS (2026-09-28,
+// tâche #668). Le dépôt porte DEUX registres de « ceci ne part pas », écrits à deux moments et pour
+// deux raisons : `NE_PART_PAS_ET_C_EST_NORMAL` (des outils dont le SUJET est le jeu) et
+// `EXEMPTES_DU_KIT` (des fichiers qui ne quittent pas ce dépôt du tout — les crochets git, le
+// script d'installation de l'environnement, le lanceur du produit). Ce détecteur n'honorait que le
+// premier, si bien qu'il reprochait à `scripts/hooks/check-last-commit.mjs` de n'être pas portable
+// — un CROCHET GIT, dont la charte déclare noir sur blanc, avec sa raison, qu'il ne partira jamais.
+//
+// ACCUSER UN FICHIER DONT LE PROJET A DÉJÀ DÉCIDÉ QU'IL RESTE, c'est le faux rouge le plus coûteux
+// de tous : il crée du travail qui ne doit pas être fait, et un garde-fou qui en crée cesse d'être
+// lu (leçon L4). La correction LIT le second registre au lieu de recopier son contenu ici
+// (Article 24) : une quatrième exemption demain sera honorée sans qu'on y pense.
+export function estExemptDuKit(chemin = "", exemptions = EXEMPTES_DU_KIT) {
+  return exemptions.some((e) => e.motif.test(String(chemin)));
+}
+
+export function findScriptsNonPortables(scripts = [], { readFileImpl = lireFichierPartage, root = ROOT, portee = porteeDe, exemptes = NE_PART_PAS_ET_C_EST_NORMAL, exemptionsDuKit = null } = {}) {
   const trouves = [];
   for (const f of scripts) {
     const slug = f.replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    // Un fichier qui ne quitte pas ce dépôt n'a pas à être portable : lui reprocher de ne pas
+    // l'être, c'est réclamer un travail que la charte interdit justement de faire.
+    if (estExemptDuKit(f, exemptionsDuKit ?? EXEMPTES_DU_KIT)) continue;
     // La portée se LIT ; un outil dont personne n'a déclaré la portée n'est PAS jugé, parce que
     // deviner qu'il appartient à l'Agence pour ensuite le condamner serait accuser sur une
     // supposition (leçon L5 : ne pas pouvoir regarder n'autorise aucune conclusion).
@@ -491,13 +605,19 @@ export function findScriptsNonPortables(scripts = [], { readFileImpl = lireFichi
     try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
     // Les commentaires racontent souvent l'histoire du projet (« trouvé en simulant Lia ») sans que
     // le CODE en dépende. On ne juge donc que le code, chaînes et identifiants — jamais le récit.
-    const code = texte.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+    const sansCommentaires = texte.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+    // La PARAMÉTRABILITÉ se juge sur le code entier ; seule la recherche d'une CIBLE écarte les
+    // phrases. Les confondre a coûté quatre faux rouges (cf. le commentaire de sansLesPhrases).
+    const code = sansLesPhrases(sansCommentaires);
     const fuites = [];
     for (const a of ARTEFACTS_DU_JEU) if (a.motif.test(code)) fuites.push(a.quoi);
     const cheminsDurs = [...code.matchAll(MOTIF_CHEMIN_PROJET)].map((m) => m[1]);
     // Un chemin en dur n'est un défaut que s'il n'est PAS paramétrable : tout ce paysage passe ses
     // chemins en option avec une valeur par défaut, et c'est exactement la forme portable.
-    const parametrables = /\{\s*(root|registres?|fichiers?|chemin|dossiers?)\s*=/.test(code);
+    // DEUX FORMES PORTABLES DE PLUS, reconnues le 2026-09-28 (tâche #668) après avoir instruit les
+    // huit derniers candidats un par un, comme l'Article 19 l'exige. Elles n'élargissent pas le
+    // détecteur par confort : chacune répond à un FAUX ROUGE réel, constaté sur un outil nommé.
+    const parametrables = estParametrable(sansCommentaires);
     // LA PARAMÉTRABILITÉ VAUT POUR LES DEUX, et l'oublier accusait vingt-six outils dont ARGUS et
     // le filet de sécurité lui-même. Un outil de l'Agence a parfaitement le droit de SCANNER le
     // jeu — c'est le métier d'ARGUS, de HARMONIA, de check-house. Ce qui n'est pas portable, c'est

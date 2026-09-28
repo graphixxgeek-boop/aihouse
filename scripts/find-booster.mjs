@@ -25,7 +25,13 @@ const FUNCTION_RE = /^(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][A-Za-z0-
 
 // Les 8 thèmes HARMONIA (docs/referentiel/harmonia.md) et quelques mots-clés associés — tenus à la
 // main, comme THEME_PRIMARY_FILE d'always-new-code.mjs : approximatif, à recalibrer avec l'usage.
-const HARMONIA_THEME_KEYWORDS = {
+//
+// EXPORTÉE ET REMPLAÇABLE DEPUIS LE 2026-09-28 (tâche #668). Cette carte est le VOCABULAIRE DE CE
+// PROJET-CI : ses thèmes, ses personnages, ses mécaniques. Tant qu'elle était enfermée dans le
+// module, find-booster ne pouvait chercher par concept que dans ce jeu-ci — alors que chercher par
+// concept dans un gros fichier n'a rien de propre à ce projet. Elle est donc publiée (pour qu'un
+// projet d'accueil sache ce qu'il remplace) et injectable (pour qu'il puisse le faire).
+export const HARMONIA_THEME_KEYWORDS = {
   "Fatigue": ["fatigue", "sommeil", "sleep", "dort"],
   "Cycle jour/nuit": ["jour", "nuit", "minuit", "daynight"],
   "Enquête": ["enquête", "enquete", "indice", "preuve", "evidence"],
@@ -193,9 +199,9 @@ function entryHaystack(entry) {
   return `${entry.name} ${entry.description}`.toLowerCase();
 }
 
-export function tagHarmoniaThemes(entry) {
+export function tagHarmoniaThemes(entry, themes = HARMONIA_THEME_KEYWORDS) {
   const haystack = entryHaystack(entry);
-  return Object.entries(HARMONIA_THEME_KEYWORDS)
+  return Object.entries(themes)
     .filter(([, keywords]) => keywords.some((k) => haystack.includes(k)))
     .map(([theme]) => theme);
 }

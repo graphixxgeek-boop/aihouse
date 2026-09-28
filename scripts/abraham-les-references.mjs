@@ -77,6 +77,45 @@ export const estDuCode = (chemin) => EXT_CODE.has(chemin.slice(chemin.lastIndexO
 const MOTIF_FONCTION_CITEE = /`([a-zA-Z][a-zA-Z0-9_]{3,})\(\)`/g;
 const MOTIF_SCRIPT_CITE = /`(scripts\/[a-z0-9-]+\.mjs)`/g;
 
+// ————————————————————————————————————————————————————————————————————————
+// UN OUTIL CITÉ PAR SON NOM EST AUSSI UN PORTEUR (2026-09-28, tâche #659)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE DÉFAUT ÉTAIT MESURABLE ET IL ACCUSAIT À TORT. La classification ne reconnaissait un porteur
+// que sous deux formes : `uneFonction()` ou `scripts/un-fichier.mjs`. Or cette charte nomme ses
+// mécanismes comme l'équipe les appelle — ALWAYS-NEW-CODE, SAFE-EXPORT, CASSANDRA-RH — et ces
+// vingt noms-là étaient invisibles. Conséquence directe : l'Article 7 sortait comme la SEULE règle
+// « vitale et sans protection » de tout le document, alors qu'il nomme ALWAYS-NEW-CODE deux fois
+// en six lignes. Un garde-fou qui accuse la règle la mieux documentée cesse d'être lu (leçon L4).
+//
+// LA CORRECTION PORTE SUR LA CLASSE, JAMAIS SUR L'OCCURRENCE (leçon L37) : on ne réécrit pas
+// l'Article 7 pour qu'il plaise au détecteur — ce serait corriger le symptôme (Article 3). C'est
+// le détecteur qui apprend la troisième forme.
+//
+// ELLE NE PEUT PAS CRÉER DE FAUX FANTÔME, et c'est la précaution qui la rend sûre. Un nom en
+// capitales n'est PAS une promesse de mécanisme : « PROCESS INTEGRATION » ou « LUI-MÊME » n'en
+// sont pas. Un tel nom compte donc comme porteur quand un script lui correspond, et est IGNORÉ
+// sinon — jamais rangé en « fantôme », contrairement à `uneFonction()` qui, elle, promet
+// explicitement l'existence d'un mécanisme. Sur le vrai dépôt : 27 candidats, 20 vrais outils.
+const MOTIF_OUTIL_NOMME = /\b([A-ZÉÈÀÎÔ][A-ZÉÈÀÎÔ0-9]*(?:-[A-ZÉÈÀÎÔ0-9]+)+)\b/g;
+
+export function sansAccent(texte = "") {
+  return String(texte).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Le nom se RÉSOUT contre les fichiers réellement présents, jamais contre une liste d'outils
+// recopiée qui se périmerait au prochain venu (Article 24). Deux formes acceptées : le script
+// exact, et le script unique qui commence par ce nom (`THE-SCREENER` → `the-screener-capture.mjs`)
+// — « unique » parce que deux candidats rendraient le renvoi ambigu, et un renvoi ambigu vaut
+// moins que pas de renvoi.
+export function scriptDeLOutilNomme(nom = "", fichiers = {}) {
+  const slug = sansAccent(nom).toLowerCase();
+  const exact = `scripts/${slug}.mjs`;
+  if (Object.prototype.hasOwnProperty.call(fichiers, exact)) return exact;
+  const candidats = Object.keys(fichiers).filter((c) => c.startsWith(`scripts/${slug}-`) && c.endsWith(".mjs"));
+  return candidats.length === 1 ? candidats[0] : null;
+}
+
 // UN MÉCANISME VOLONTAIREMENT MANUEL N'EST PAS UN MÉCANISME MANQUANT (2026-09-27, tâche #1023).
 // Demande explicite de l'utilisateur : « Abraham doit distinguer "aucun mécanisme n'existe" de
 // "le mécanisme est volontairement manuel, et c'est écrit à côté" ».
@@ -101,14 +140,22 @@ export function porteursDeclares(texteUnite = "", fichiers = {}, { corpusComplet
   const nommes = new Set();
   for (const m of String(texteUnite).matchAll(MOTIF_FONCTION_CITEE)) nommes.add({ type: "fonction", nom: m[1] });
   for (const m of String(texteUnite).matchAll(MOTIF_SCRIPT_CITE)) nommes.add({ type: "script", nom: m[1] });
-  const trouves = []; const fantomes = [];
+  // Les outils nommés rejoignent les porteurs TROUVÉS directement : ils ont déjà été résolus
+  // contre le disque, et un nom non résolu n'entre jamais dans la liste (cf. le commentaire de
+  // MOTIF_OUTIL_NOMME — il ne peut donc pas produire de fantôme).
+  const parLeNom = [];
+  for (const m of String(texteUnite).matchAll(MOTIF_OUTIL_NOMME)) {
+    const chemin = scriptDeLOutilNomme(m[1], fichiers);
+    if (chemin && !parLeNom.includes(chemin)) parLeNom.push(chemin);
+  }
+  const trouves = [...parLeNom]; const fantomes = [];
   for (const n of nommes) {
     const existe = n.type === "script"
       ? Object.prototype.hasOwnProperty.call(fichiers, n.nom)
       : Object.entries(fichiers).some(([chemin, contenu]) => estDuCode(chemin) && new RegExp(`function\\s+${n.nom}\\b|const\\s+${n.nom}\\s*=`).test(contenu));
     (existe ? trouves : fantomes).push(n.nom);
   }
-  if (!nommes.size) return { etat: "sans porteur", trouves: [], fantomes: [], pourquoi: "ne nomme aucun mécanisme — sa prose est son seul mécanisme (Article 27)" };
+  if (!nommes.size && !parLeNom.length) return { etat: "sans porteur", trouves: [], fantomes: [], pourquoi: "ne nomme aucun mécanisme — sa prose est son seul mécanisme (Article 27)" };
   if (fantomes.length && !corpusComplet) {
     return { etat: "a-confirmer", trouves, fantomes, pourquoi: `${fantomes.length} mécanisme(s) n'ont pas été trouvés DANS LE CORPUS FOURNI (${fantomes.join(", ")}) — ce qui ne prouve pas qu'ils n'existent pas, seulement qu'on ne les a pas cherchés partout. Relancer avec corpusComplet: true pour trancher` };
   }

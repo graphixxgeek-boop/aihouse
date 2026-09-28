@@ -232,7 +232,11 @@ export function alwaysNewCodePerformance(indexText) {
 
 const HARMONIA_MD_PATH = join(ROOT, "docs/referentiel/harmonia.md");
 
-function main() {
+// LA CARTE THÈME → FICHIER EST INJECTABLE COMME LA LISTE DES THÈMES (2026-09-28, tâche #668).
+// `THEMES` l'était déjà (`themes = THEMES`), pas sa carte : un projet d'accueil pouvait donc donner
+// ses propres thèmes mais pas dire quel fichier chacun désigne — une moitié de portabilité, qui
+// ressemble à la portabilité entière tant qu'on ne l'essaie pas.
+function main({ themes = THEMES, fichiersParTheme = THEME_PRIMARY_FILE } = {}) {
   recordCliUsage("always-new-code");
   printReportHeader({ tool: "always-new-code", title: "ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit)", scriptPath: "scripts/always-new-code.mjs" });
   let divergence = { missingFromThemes: [], missingFromHarmonia: [] };
@@ -261,13 +265,13 @@ function main() {
   if (!rec) {
     console.log("Aucun thème configuré.");
   } else if (rec.ambiguous) {
-    console.log(`Zone demandée "${rec.requestedZone}" ne correspond à aucun thème connu (${THEMES.join(", ")}).`);
+    console.log(`Zone demandée "${rec.requestedZone}" ne correspond à aucun thème connu (${themes.join(", ")}).`);
     console.log("=> À CLARIFIER AVEC L'UTILISATEUR avant de continuer (consultation bidirectionnelle, docs/regles-de-travail.md §7ter).");
   } else {
     const age = rec.daysSinceLastPass === undefined ? "jamais examinée" : `dernier passage il y a ${rec.daysSinceLastPass} jour(s)`;
     console.log(`Zone recommandée : ${rec.zone} (${rec.source}, ${age})`);
 
-    const file = THEME_PRIMARY_FILE[rec.zone];
+    const file = fichiersParTheme[rec.zone];
     if (file) {
       const numstat = sh(`git log --numstat --pretty=format:"" -- ${file}`, { cwd: ROOT });
       const stats = parseNumstat(numstat);

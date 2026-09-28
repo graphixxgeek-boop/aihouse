@@ -291,3 +291,58 @@ promettent de rester alignées et qui divergent sans que rien ne le signale.
 porte un process sans employer un seul de ses mots reste invisible ici, et deux textes peuvent se
 contredire avec des mots entièrement différents. Les conflits se lisent sur **deux mots français** :
 c'est une question posée, jamais un arbitrage rendu.
+
+## La troisième forme de porteur : un outil cité par son NOM (2026-09-28, tâche #659)
+
+**SA DEMANDE, dans le gros prompt du 2026-09-28** : « revois aussi les niveaux de protection de
+chaque regle, on avait mis ca en place, regarde si ce système est toujours cohérent et s'il tourne
+bien. »
+
+**IL TOURNAIT, ET IL ÉTAIT AVEUGLE À UNE FORME.** La classification ne reconnaissait un porteur que
+sous deux écritures : `` `uneFonction()` `` et `` `scripts/<nom-du-script>.mjs` `` — écrit ici avec un
+chevron plutôt qu'un nom d'exemple, parce qu'un chemin d'illustration se lit comme un renvoi réel et fait
+sonner le garde-fou des chemins morts. Or la charte nomme
+ses mécanismes comme l'équipe les appelle — **ALWAYS-NEW-CODE, SAFE-EXPORT, CASSANDRA-RH** — et
+**vingt** noms de ce genre y sont cités. Ils étaient tous invisibles.
+
+**LE FAUX ROUGE QUE ÇA PRODUISAIT, et il portait sur la loi suprême** : l'Article 7 sortait comme
+la **seule** règle « vitale et sans protection » de tout le document. Il nomme ALWAYS-NEW-CODE
+**deux fois en six lignes**. Un garde-fou qui accuse la règle la mieux documentée cesse d'être lu
+(leçon L4).
+
+**LA CORRECTION PORTE SUR LA CLASSE, JAMAIS SUR L'OCCURRENCE** (leçon L37) : on ne réécrit pas
+l'Article 7 pour qu'il plaise au détecteur — ce serait corriger le symptôme (Article 3). C'est le
+détecteur qui apprend la forme.
+
+**ELLE NE PEUT PAS CRÉER DE FAUX FANTÔME, et c'est ce qui la rend sûre.** Un nom en capitales n'est
+pas une promesse de mécanisme — « PROCESS INTEGRATION », « LUI-MÊME » n'en sont pas. Un tel nom
+compte donc comme porteur **quand un script lui répond**, et est **ignoré** sinon : jamais rangé en
+fantôme, contrairement à `uneFonction()` qui, elle, promet explicitement l'existence d'un mécanisme.
+Sur le vrai dépôt : 27 candidats, 20 vrais outils.
+
+**LE NOM SE RÉSOUT CONTRE LE DISQUE** (Article 24), jamais contre une liste recopiée qui se
+périmerait au prochain outil. Deux formes acceptées : le script exact, et le script **unique** qui
+commence par ce nom (`THE-SCREENER` → `the-screener-capture.mjs`). Deux candidats rendent NULL —
+**un renvoi ambigu vaut moins que pas de renvoi**. L'accent est retiré avant résolution
+(`LE-RÉGISSEUR` → `le-regisseur.mjs`).
+
+**LE NIVEAU BLOQUANT RESTE VÉRIFIÉ EN LISANT**, jamais supposé d'après le nom : le script doit
+réellement être lancé par un crochet git ou importé par le filet. Sans cette barrière, la correction
+aurait troqué un faux rouge contre un faux vert — et le contre-test qui l'assure est précisément
+celui qui vérifie qu'`always-new-code.mjs` est vraiment importé par `check-house.mjs`.
+
+### L'effet mesuré, sur les deux documents normatifs
+
+| | avant | après |
+|---|---|---|
+| **CLAUDE.md** — 🔴 critiques | 1 | **0** |
+| **CLAUDE.md** — 🟠 à niveler | 6 | 4 |
+| **CLAUDE.md** — 🟢 à niveau | 16 | **22** |
+| **CLAUDE.md** — règles VITALES sans protection | 1 | **0** (les 9 sont bloquantes) |
+| **regles-de-travail.md** — 🟢 à niveau | 9 | **13** |
+
+**CE QUE ÇA CHANGE POUR LA QUESTION #659**, et c'est le plus important : sa prémisse — « la charte
+est moins bien protégée que les règles de travail » — **reposait sur une mesure aveugle**. L'écart
+réel est bien plus petit, et il n'y a plus aucune règle vitale sans protection. La question de
+généraliser le mécanisme DEMANDÉE aux Articles restants reste ouverte et reste la sienne
+(Article 16) — mais elle se pose désormais sur 4 règles à niveler, pas sur une loi suprême nue.

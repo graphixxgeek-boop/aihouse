@@ -9222,6 +9222,170 @@ async function testCroisementProcessEtRegles() {
 }
 await testCroisementProcessEtRegles();
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// UN OUTIL CITÉ PAR SON NOM EST AUSSI UN PORTEUR (2026-09-28, tâche #659)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, dans le gros prompt du 2026-09-28 : « revois aussi les niveaux de protection de
+// chaque regle, on avait mis ca en place, regarde si ce système est toujours cohérent et s'il
+// tourne bien. » Il tournait ; il était AVEUGLE à une forme, et cette cécité produisait le plus
+// visible des faux rouges — la seule règle « vitale et sans protection » de toute la charte était
+// l'Article 7, qui nomme ALWAYS-NEW-CODE deux fois en six lignes.
+async function testOutilNommeEstUnPorteur() {
+  const AB = await import('../scripts/abraham-les-references.mjs');
+
+  // ── 1. LES TROIS FORMES SONT RECONNUES, et la troisième est celle qui manquait.
+  const fichiers = {
+    'scripts/always-new-code.mjs': 'export function zoom() {}',
+    'scripts/the-screener-capture.mjs': 'export function capture() {}',
+    'scripts/autre.mjs': 'export function existeVraiment() {}',
+  };
+  const parLeNom = AB.porteursDeclares('Un outil la rend concrète : ALWAYS-NEW-CODE.', fichiers);
+  assert.equal(parLeNom.etat, 'porté', 'a rule naming its tool the way the team names it — ALWAYS-NEW-CODE — must count as carried. Before this, only `uneFonction()` and `scripts/x.mjs` were seen, and twenty real tool names cited in the charter were invisible: Article 7 came out as the single "vital and unprotected" rule of the whole document while naming its carrier twice in six lines, and a guard that accuses the best-documented rule stops being read (lesson L4)');
+  assert.deepEqual(parLeNom.trouves, ['scripts/always-new-code.mjs'], 'the name must resolve to the real script on disk, never to a recopied list of tools that would expire at the next one added (Article 24)');
+
+  // ── 2. ELLE NE PEUT PAS CRÉER DE FAUX FANTÔME, et c'est ce qui la rend sûre.
+  // Un nom en capitales n'est PAS une promesse de mécanisme, contrairement à `uneFonction()`.
+  const pasUnOutil = AB.porteursDeclares('Étape 4 : PROCESS INTEGRATION, à faire par LUI-MÊME.', fichiers);
+  assert.equal(pasUnOutil.etat, 'sans porteur', 'a capitalised phrase that matches no script must be IGNORED, never reported as a phantom: "PROCESS INTEGRATION" and "LUI-MÊME" promise no mechanism, and turning them into phantoms would trade the false red this fix removes for a worse one');
+  assert.deepEqual(pasUnOutil.fantomes, [], 'and it must add nothing to the phantom list');
+
+  // ── 3. UNE FONCTION CITÉE RESTE UNE PROMESSE, donc elle peut toujours être un fantôme.
+  const fantome = AB.porteursDeclares('protégée par `fonctionQuiNexistePas()`.', fichiers, { corpusComplet: true });
+  assert.equal(fantome.etat, 'fantôme', 'a cited function() still promises a mechanism explicitly, so a missing one must still be reported — the new leniency applies only to capitalised names, never to the two forms that were already strict');
+
+  // ── 4. L'ACCENT ET LE SUFFIXE, deux formes réelles du dépôt.
+  assert.equal(AB.sansAccent('LE-RÉGISSEUR'), 'LE-REGISSEUR', 'accents must be stripped before resolving: the tool is written LE-RÉGISSEUR and the file is le-regisseur.mjs');
+  assert.equal(AB.scriptDeLOutilNomme('THE-SCREENER', fichiers), 'scripts/the-screener-capture.mjs', 'a tool whose script carries a suffix must still resolve when exactly ONE candidate starts with its name');
+  assert.equal(AB.scriptDeLOutilNomme('THE-SCREENER', { ...fichiers, 'scripts/the-screener-autre.mjs': '' }), null, 'two candidates must resolve to NOTHING: an ambiguous reference is worth less than no reference, and picking one at random would attribute a rule to a mechanism nobody chose');
+  assert.equal(AB.scriptDeLOutilNomme('INCONNU-TOTAL', fichiers), null, 'a name matching no script must resolve to null');
+
+  // ── 5. EN DIRECT SUR LA VRAIE CHARTE (Article 25) : le faux rouge a disparu, et il a disparu
+  // parce que le mécanisme est RÉELLEMENT exécuté — vérifié en lisant, jamais supposé.
+  const texteCharte = fs.readFileSync('CLAUDE.md', 'utf8');
+  const art7 = texteCharte.slice(texteCharte.indexOf('**Article 7 —'), texteCharte.indexOf('**Article 8 —'));
+  assert.ok(art7.includes('ALWAYS-NEW-CODE'), 'this test rests on Article 7 naming ALWAYS-NEW-CODE; if the charter stops doing so, the test must fail loudly rather than pass on a premise that no longer holds');
+  const reel = AB.porteursDeclares(art7, AB.fichiersDuDepot({ racine: '.' }));
+  assert.deepEqual(reel.trouves, ['scripts/always-new-code.mjs'], 'against the REAL repository, Article 7 must resolve to the real script');
+  const garantie = AB.niveauGarantie(reel, art7, { lire: (c) => fs.readFileSync(c, 'utf8') });
+  assert.equal(garantie.cle, 'bloquante', 'and its guarantee must be BLOQUANTE, because always-new-code.mjs is genuinely imported by check-house.mjs — read, never assumed. Were it merely named and never run, the correct answer would be level 4 ("exists, nothing launches it"), and this assertion would be the one to catch a fix that traded a false red for a false green');
+
+  console.log("Passed: un outil cité par son NOM compte désormais comme porteur (2026-09-28, tâche #659) — la troisième forme, celle que l'équipe emploie vraiment. Sa demande était de vérifier que le système des niveaux de protection « tourne bien » : il tournait, et il était aveugle à vingt noms d'outils cités dans la charte, ce qui faisait sortir l'Article 7 comme la SEULE règle vitale et sans protection du document alors qu'il nomme ALWAYS-NEW-CODE deux fois en six lignes. La correction porte sur la CLASSE et non sur l'occurrence (leçon L37) : on n'a pas réécrit l'Article pour plaire au détecteur, c'est le détecteur qui a appris la forme. Elle ne peut pas créer de faux fantôme — un nom en capitales n'est pas une promesse de mécanisme, contrairement à `uneFonction()`, donc il compte quand un script lui répond et est ignoré sinon. L'accent est retiré avant résolution (LE-RÉGISSEUR → le-regisseur.mjs), un suffixe est accepté quand UN seul candidat correspond, et deux candidats rendent NULL parce qu'un renvoi ambigu vaut moins que pas de renvoi. Mesuré sur les deux documents normatifs : CLAUDE.md passe de 1 critique à ZÉRO et de 16 à 22 règles à niveau, ses neuf règles VITALES sont toutes bloquantes ; les règles de travail passent de 9 à 13 à niveau. Le niveau BLOQUANT reste vérifié en LISANT les crochets et le filet, jamais supposé d'après le nom — sans quoi la correction aurait troqué un faux rouge contre un faux vert.");
+}
+await testOutilNommeEstUnPorteur();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LES DEUX REGISTRES DE « CECI NE PART PAS » (2026-09-28, tâche #668)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Le dépôt en porte DEUX, écrits à deux moments et pour deux raisons : NE_PART_PAS_ET_C_EST_NORMAL
+// (des outils dont le SUJET est le jeu) et EXEMPTES_DU_KIT (des fichiers qui ne quittent pas ce
+// dépôt du tout). Le détecteur de portabilité n'honorait que le premier, et reprochait donc à
+// scripts/hooks/check-last-commit.mjs de n'être pas portable — un CROCHET GIT, dont la charte
+// déclare noir sur blanc, avec sa raison, qu'il ne partira jamais.
+async function testExemptionDuKitHonoree() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // ── 1. LES TROIS EXEMPTIONS DÉCLARÉES SONT RECONNUES, et rien d'autre ne l'est.
+  assert.equal(SE.estExemptDuKit('scripts/hooks/check-last-commit.mjs'), true, 'a git hook must be recognised as exempt: EXEMPTES_DU_KIT declares, with its reason, that hooks are the WIRING of the Agency to this repository and never travel');
+  assert.equal(SE.estExemptDuKit('scripts/install-pnpm.sh'), true, 'the environment installer describes THIS container and never travels');
+  assert.equal(SE.estExemptDuKit('scripts/safe-export.mjs'), false, 'an ordinary Agency tool is NOT exempt — the exemption must stay narrow, or it would excuse the whole landscape from being portable at all');
+
+  // ── 2. LE DÉTECTEUR HONORE LE REGISTRE, et il le LIT plutôt que de le recopier (Article 24).
+  // Contre-test dans les deux sens : le crochet sort de l'accusation, l'outil ordinaire y reste.
+  const faux = {
+    'scripts/hooks/faux-crochet.mjs': 'const cible = "lib/life.ts"; export function f(){ return cible; }',
+    'scripts/faux-outil.mjs': 'const cible = "lib/life.ts"; export function g(){ return cible; }',
+  };
+  const lire = (chemin) => {
+    const cle = Object.keys(faux).find((k) => String(chemin).endsWith(k));
+    if (!cle) throw new Error('absent');
+    return faux[cle];
+  };
+  const accuses = SE.findScriptsNonPortables(Object.keys(faux), { readFileImpl: lire, portee: () => 'agence' }).map((t) => t.fichier);
+  assert.ok(!accuses.includes('scripts/hooks/faux-crochet.mjs'), 'a file under scripts/hooks/ must NOT be accused of non-portability: accusing a file the project has already decided will stay is the costliest false red of all, because it creates work that must not be done (lesson L4)');
+  assert.ok(accuses.includes('scripts/faux-outil.mjs'), 'and an ordinary tool with the same hardcoded target MUST still be accused — otherwise the fix would have traded a false red for a false green, and the detector would stop detecting');
+
+  // ── 3. LE REGISTRE EST INJECTABLE, donc une quatrième exemption demain sera honorée sans qu'on
+  // touche à cette fonction (« un nouveau venu hérite de tout ce que l'équipe sait déjà faire »).
+  const avecUneDeplus = SE.findScriptsNonPortables(Object.keys(faux), {
+    readFileImpl: lire, portee: () => 'agence',
+    exemptionsDuKit: [...SE.EXEMPTES_DU_KIT, { motif: /^scripts\/faux-outil\.mjs$/, pourquoi: 'exemption de test' }],
+  }).map((t) => t.fichier);
+  assert.deepEqual(avecUneDeplus, [], 'the exemption registry must be READ at call time, never baked in: adding one entry must silence exactly that file, with no change to this function (Article 24)');
+
+  // ── 4. EN DIRECT SUR LE VRAI DÉPÔT (Article 25) : plus aucun crochet accusé.
+  const reels = SE.findScriptsNonPortables(SE.fichiersSourcesDuProjet().filter((f) => f.startsWith('scripts/') && f.endsWith('.mjs')));
+  assert.ok(!reels.some((t) => t.fichier.startsWith('scripts/hooks/')), `no git hook may remain in the real non-portability list (currently ${reels.map((t) => t.fichier).join(', ')})`);
+
+  console.log("Passed: les DEUX registres de « ceci ne part pas » sont désormais honorés par le détecteur de portabilité (2026-09-28, tâche #668). Le dépôt en portait deux, écrits à deux moments et pour deux raisons — NE_PART_PAS_ET_C_EST_NORMAL pour les outils dont le SUJET est le jeu, EXEMPTES_DU_KIT pour les fichiers qui ne quittent pas ce dépôt du tout — et le détecteur n'en lisait qu'un. Il reprochait donc à scripts/hooks/check-last-commit.mjs de n'être pas portable, alors que la charte déclare noir sur blanc, avec sa raison, qu'un crochet git est le CÂBLAGE de l'Agence à ce dépôt-ci et ne partira jamais. Accuser un fichier dont le projet a déjà décidé qu'il reste est le faux rouge le plus coûteux : il crée du travail qui ne doit pas être fait, et un garde-fou qui en crée cesse d'être lu (leçon L4). La correction LIT le second registre plutôt que d'en recopier le contenu (Article 24), donc une quatrième exemption demain sera honorée sans qu'on touche à la fonction — et le contre-test vérifie dans les deux sens : le crochet sort de l'accusation, l'outil ordinaire portant exactement la même cible en dur y reste.");
+}
+await testExemptionDuKitHonoree();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LES QUATRE FORMES D'UNE CIBLE REMPLAÇABLE (2026-09-28, tâche #668)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Instruire les huit derniers candidats un par un, comme l'Article 19 l'exige, a montré que TROIS
+// d'entre eux n'avaient aucun défaut : leur cible était déjà remplaçable, sous une forme que le
+// détecteur ne connaissait pas. Élargir un détecteur est dangereux — on troque un faux rouge
+// contre un faux vert, qui coûte bien plus cher — donc chaque élargissement est ici encadré par un
+// contre-test DANS LES DEUX SENS : la forme portable passe, et un vrai défaut reste refusé.
+async function testFormesDeCibleRemplacable() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // ── LE CAS QUI DOIT TOUJOURS ÊTRE REFUSÉ. On le pose d'abord : si ce garde-fou tombe, tous les
+  // assouplissements qui suivent deviennent des trous, et le détecteur ne détecte plus rien.
+  const vraimentEnDur = 'const cible = "lib/life.ts";\nexport function f() { return readFileSync(cible); }';
+  assert.equal(SE.estParametrable(vraimentEnDur), false, 'a genuinely hardcoded target with no way to point it elsewhere must STILL be refused — this is the assertion that keeps the three relaxations below honest, and it is written first on purpose');
+
+  // ── FORME 1 (historique) : le vocabulaire du paysage.
+  assert.equal(SE.estParametrable('export function f({ chemin = "lib/life.ts" } = {}) {}'), true, 'the landscape vocabulary { chemin = … } stays the main form');
+
+  // ── FORME 2 : la cible passée en ARGUMENT DE LIGNE DE COMMANDE.
+  // route-booster écrivait `process.argv[2] ?? "app/api/lia/route.ts"` — sa cible est remplaçable
+  // par la voie la plus directe qui soit, en tapant un mot après le nom de l'outil, et il était
+  // pourtant accusé.
+  assert.equal(SE.estParametrable('const target = process.argv[2] ?? "app/api/lia/route.ts";'), true, 'a target taken from the command line with a default is replaceable by the most direct means there is: typing a word after the tool name');
+  assert.equal(SE.estParametrable('const target = "app/api/lia/route.ts";'), false, 'the same path WITHOUT the argv fallback must stay refused — the relaxation must hang on the argument, never on the path');
+
+  // ── FORME 3 : un défaut de paramètre qui est une CONSTANTE EXPORTÉE.
+  // check-level-target écrit `(texte, nodes = SENSITIVE_NODES)` et EXPORTE SENSITIVE_NODES : la
+  // liste est remplaçable par construction, et publiée pour qu'un projet d'accueil sache ce qu'il
+  // remplace. L'export est la condition, et il n'est pas décoratif.
+  const exportee = 'export const SENSITIVE_NODES = [];\nexport function f(t, nodes = SENSITIVE_NODES) { return nodes; }';
+  assert.deepEqual(SE.constantesExporteesEnDefaut(exportee), ['SENSITIVE_NODES'], 'a parameter default that is an EXPORTED constant must be recognised: exporting it is what proves it is meant to be replaced');
+  const nonExportee = 'const SENSITIVE_NODES = [];\nexport function f(t, nodes = SENSITIVE_NODES) { return nodes; }';
+  assert.deepEqual(SE.constantesExporteesEnDefaut(nonExportee), [], 'the same constant NOT exported must not count: a host project cannot replace what it cannot see, so the form would be portability in appearance only');
+
+  // ── FORME 4 (qui n'en est pas une) : le nom n'est pas une cible, c'est une PHRASE.
+  // check-gemini-quota imprime « L'app (lib/lia.ts, route.ts) n'appelle que Gemini » — une note au
+  // lecteur, jamais un fichier qu'il ouvre. Le détecteur retirait déjà les COMMENTAIRES pour cette
+  // raison exacte ; il ne retirait pas les messages, qui sont la même chose adressée à quelqu'un.
+  assert.equal(SE.estUnePhrase('  const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");'), false, 'a real target must NEVER be taken for prose. This is the assertion that caught my own first version, which counted the WORDS of the line: eight identifiers were enough, and a genuine hardcoded path was being declared clean — a false green, worse than the false red it removed');
+  assert.equal(SE.estUnePhrase('  throw new Error("export type Life introuvable dans lib/life.ts — ARGUS ne peut pas verifier les champs");'), true, 'a long, spaced sentence addressed to a human is prose, not a target');
+  assert.equal(SE.estUnePhrase("  console.log(`Note : la cle la plus prometteuse. L'app (lib/lia.ts) n'appelle que Gemini, ceci reste un diagnostic`);"), true, "a French APOSTROPHE inside the message must not break the reading: one single pattern forbidding all three quote characters at once cut the string at « L'app » and the message passed for a target again — three separate patterns, each forbidding only its own quote, read French as it is written");
+  assert.equal(SE.sansLesPhrases('const a = "lib/life.ts";\nconsole.log("une phrase longue avec beaucoup de mots dedans ici");').includes('lib/life.ts'), true, 'stripping prose must keep the target lines intact');
+
+  // ── LE DÉGÂT QUE LA LECTURE LIGNE À LIGNE ÉVITE, et il est arrivé pour de vrai.
+  // Ma première version découpait les CHAÎNES du fichier entier : une apostrophe française
+  // désynchronisait l'appariement, avalait des pans de code, effaçait les marqueurs « { chemin = } »
+  // de quatre outils parfaitement portables — Abraham, circle-tasks, the-equalizer et SAFE-EXPORT
+  // lui-même se sont mis à être accusés. Quatre faux rouges créés en voulant en retirer un.
+  const piege = `const x = "l'apostrophe casse tout";\nexport function f({ chemin = "a.md" } = {}) {}`;
+  assert.equal(SE.estParametrable(piege), true, 'a French apostrophe anywhere in the file must never cost a tool its recognised parameterisation: the line-by-line reading cannot swallow anything, where the whole-file one did');
+
+  // ── EN DIRECT SUR LE VRAI DÉPÔT (Article 25).
+  const reels = SE.findScriptsNonPortables(SE.fichiersSourcesDuProjet().filter((f) => f.startsWith('scripts/') && f.endsWith('.mjs')));
+  assert.deepEqual(reels.map((t) => t.fichier), [], `no Agency script may be left with a target it cannot point elsewhere: 14 at the opening of task #668, 8 before this pass, 0 now (currently ${reels.map((t) => t.fichier).join(', ')})`);
+
+  console.log("Passed: les quatre formes d'une cible remplaçable (2026-09-28, tâche #668) — instruire les huit derniers candidats UN PAR UN, comme l'Article 19 l'exige, a montré que la moitié n'avait aucun défaut : leur cible était déjà remplaçable sous une forme que le détecteur ne connaissait pas. Une cible passée en argument de ligne de commande (route-booster), un défaut de paramètre qui est une constante EXPORTÉE (check-level-target), et un nom qui n'apparaît que dans une PHRASE adressée à un humain (check-gemini-quota) — le détecteur retirait déjà les commentaires pour cette raison exacte, il ne retirait pas les messages, qui sont la même chose adressée à quelqu'un. Les quatre vrais défauts ont été corrigés en donnant au paysage son vocabulaire (check-argus, always-new-code, find-booster) plutôt qu'en retirant la lecture. Élargir un détecteur est dangereux, donc chaque assouplissement est encadré dans les DEUX sens, et le contre-test « vraiment en dur » est écrit en PREMIER. Deux de mes propres versions ont été rattrapées par ces tests : l'une comptait les mots de la LIGNE et rangeait `readFileSync(join(ROOT, \"lib/life.ts\"))` parmi les phrases — un faux vert ; l'autre découpait les chaînes du FICHIER entier et une apostrophe française avalait des pans de code, créant quatre faux rouges là où on en retirait un. Résultat mesuré sur le vrai dépôt : 14 outils non portables à l'ouverture de #668, 8 avant cette passe, ZÉRO maintenant — et la portabilité reconfigurable du rapport export central passe de 91 % à 100 % (86/86), l'exportabilité globale de 88 % à 90 %.");
+}
+await testFormesDeCibleRemplacable();
+
+
+
+
 
 
 

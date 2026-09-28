@@ -96,10 +96,18 @@ export function findTodoMarkers(files) {
   return found;
 }
 
-function main() {
+// LES CIBLES DE CE PROJET, DÉCLARÉES ET REMPLAÇABLES (2026-09-28, tâche #668). Elles étaient
+// écrites en dur dans `main()`, ce qui rendait ARGUS inutilisable ailleurs — or son métier, repérer
+// un champ déclaré et jamais lu, n'a rien de propre à ce jeu-ci. Le remède n'est jamais de retirer
+// la lecture : la cible passe en option avec sa valeur d'aujourd'hui par défaut, et la constante
+// est EXPORTÉE pour qu'un projet d'accueil sache ce qu'il remplace (même geste que THE-KING).
+export const FICHIER_DU_TYPE_SUIVI = "lib/life.ts";
+export const DOSSIERS_A_BALAYER = ["lib", "app", "components"];
+
+function main({ chemin = FICHIER_DU_TYPE_SUIVI, dossiers = DOSSIERS_A_BALAYER } = {}) {
   recordCliUsage("argus");
-  const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");
-  const files = walk(join(ROOT, "lib")).concat(walk(join(ROOT, "app"))).concat(walk(join(ROOT, "components")).filter(f => existsSync(join(ROOT, "components"))));
+  const lifeSource = readFileSync(join(ROOT, chemin), "utf8");
+  const files = dossiers.filter((d) => existsSync(join(ROOT, d))).flatMap((d) => walk(join(ROOT, d)));
   const dead = findDeadLifeFields(files, lifeSource);
   // LE DÉNOMINATEUR DU SECOND SCAN (2026-09-25, tâche #601). Les deux scans d'ARGUS ne se
   // comportent PAS pareil face à une absence, et c'est ce qui rendait le second dangereux :

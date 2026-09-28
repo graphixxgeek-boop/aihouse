@@ -122,6 +122,35 @@ export const REGLES_SURVEILLEES = [
   // Le rappel du 2e message court et l'alerte du 5e sont des demandes explicites de l'utilisateur
   // (« un rappel leger dès le 2e », « une alerte plus forte quand ca devient couteux ») : les taire
   // parce qu'elles sont gênantes à dire serait décider à sa place de ce qu'il veut savoir.
+  // ————————————————————————————————————————————————————————————————————
+  // LES TROIS MOTS D'ORDRE PERMANENTS (2026-09-28, tâche #703)
+  // ————————————————————————————————————————————————————————————————————
+  //
+  // SA DEMANDE, en deux temps : « je veux que ce soit dans la logique des process [...] insufflées
+  // à chaque etape et chaque endroit du projet », puis « on ajoute harmonise [...] on le rajoute
+  // partout aux memes endroits ».
+  //
+  // ET C'EST LUI QUI A ATTRAPÉ LE DÉFAUT, d'une pique : « est-ce que c'est bien dans les process ?
+  // est-ce que c'est harmonisé ? fiabilisé ? optimisé ? ;))) ». Les mots étaient ÉCRITS dans les
+  // règles de travail, et RIEN ne les imposait. Une intention écrite n'a jamais empêché quoi que
+  // ce soit (leçon L2) — d'où trois règles surveillées plutôt qu'un paragraphe de plus.
+  //
+  // TROIS QUESTIONS, JAMAIS QUATRE, et chacune couvre ce qu'aucune autre ne couvre. Le seul
+  // quatrième candidat sérieux (« un mécanisme le porte-t-il ? ») est déjà tenu par l'Article 27 et
+  // SAFE-EXPORT, quand les trois autres n'avaient personne. Et une question rituelle à quatre
+  // devient une case qu'on coche sans penser — exactement le faux vert qu'on traque partout ici.
+  //
+  // ELLES SONT SÉPARÉES, ET C'EST DÉLIBÉRÉ. Fondues en une seule (« la tâche est-elle bien
+  // finie ? »), elles se répondraient d'un oui global qui ne prouve rien. Séparées, chacune exige
+  // de regarder un endroit différent : le filet, le périmètre, le reste du dépôt.
+  //
+  // NON OBSERVABLES PAR NATURE, comme leurs voisines : aucun fichier sur disque ne dit qu'on s'est
+  // posé une question à la clôture d'une tâche. Angel DEMANDE donc, et refuse d'être au vert sans
+  // réponse — la seule protection possible pour une règle qui ne se joue que dans la conversation,
+  // et l'écrire ainsi vaut mieux que de la confier à la mémoire d'un agent (Article 27).
+  { id: "fiabiliser", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à FIABILISER : est-ce que ça marche vraiment — le filet passe-t-il, le cas limite est-il couvert, ai-je VU le test échouer quand il le devait ? Un « oui » qui ne s'appuie sur aucun passage réel n'est pas une réponse.", source: "CLAUDE.md, mots d'ordre permanents · docs/regles-de-travail.md · tâche #703" },
+  { id: "optimiser", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à OPTIMISER : peut-on faire mieux, et est-ce COMPLET — reste-t-il une moitié du besoin non traitée, un chemin plus court, une mesure qu'on aurait pu rendre au lieu d'une impression ?", source: "CLAUDE.md, mots d'ordre permanents · docs/regles-de-travail.md · tâche #703" },
+  { id: "harmoniser", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à HARMONISER : est-ce raccordé au reste — même format que ses voisins, registre à jour, documenté au même endroit que les autres, et rien qui dise deux fois la même chose de deux façons ?", source: "CLAUDE.md, mots d'ordre permanents (ajout du 2026-09-24, « on ajoute harmonise ») · tâche #703" },
   { id: "messages-courts", cote: "agent", observable: false, regle: "Ne jamais s'arrêter sur un message court : seule une demande explicite interrompt le travail en cours. Tenir le compte de la série en cours, et sortir le rappel léger dès le 2e message court, l'alerte plus forte dès le 5e — les seuils sont ceux que l'utilisateur a demandés, pas les miens.", source: "docs/mode-semi-autonome-process-detail.md + scripts/messages-courts.mjs" },
 ];
 

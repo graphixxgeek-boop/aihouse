@@ -411,3 +411,85 @@ Un balayage de texte trouve les chemins écrits en dur. **Il ne prouve jamais qu
 en dur FONCTIONNE ailleurs.** « Portable » veut donc dire ici « rien ne le retient visiblement »,
 jamais « vérifié à l'arrivée ». La seule preuve serait de le lancer contre un autre dépôt — c'est
 l'étape 3 du plan ci-dessous, et elle n'est pas faite.
+
+## Les quatre formes d'une cible remplaçable (2026-09-28, tâche #668)
+
+**LE POINT DE DÉPART** : 14 outils accusés de n'être pas portables à l'ouverture de #668, 8 encore
+après le premier passage. Instruire les huit derniers **un par un**, comme l'Article 19 l'exige, a
+montré que **la moitié n'avait aucun défaut** : leur cible était déjà remplaçable, sous une forme
+que le détecteur ne connaissait pas.
+
+| Forme | Exemple réel | Ce qui la rend portable |
+|---|---|---|
+| **1. Le vocabulaire du paysage** | `{ chemin = … }`, `{ root = … }` | forme historique, inchangée |
+| **2. Une cible en ARGUMENT** | `route-booster` : `process.argv[2] ?? "app/api/lia/route.ts"` | on la change en tapant un mot après le nom de l'outil |
+| **3. Un défaut de paramètre qui est une CONSTANTE EXPORTÉE** | `check-level-target` : `(texte, nodes = SENSITIVE_NODES)` | remplaçable par construction, et **publiée** pour qu'un projet d'accueil sache ce qu'il remplace |
+| **4. (qui n'en est pas une) Le nom est dans une PHRASE** | `check-gemini-quota` : « L'app (lib/lia.ts) n'appelle que Gemini » | ce n'est pas une cible, c'est une note au lecteur |
+
+**LA QUATRIÈME EST LA PLUS SUBTILE, et elle comble une incohérence du détecteur lui-même** : il
+retirait déjà les COMMENTAIRES, en disant exactement pourquoi (« les commentaires racontent souvent
+l'histoire du projet sans que le CODE en dépende »). Il ne retirait pas les **messages**, qui sont
+la même chose adressée à quelqu'un d'autre. C'est la leçon déjà payée en #832 : **une MENTION n'est
+pas un USAGE**.
+
+**POURQUOI ÉLARGIR ICI QUAND LA PREMIÈRE MOITIÉ DE #668 AVAIT TRANCHÉ L'INVERSE** (« j'adopte le
+vocabulaire plutôt que d'élargir la sonde ») : là-bas il s'agissait de paramètres NEUFS que
+j'écrivais, et adopter le vocabulaire ne coûtait rien. Ici, renommer `nodes` en `{ noeuds = … }`
+changerait la signature de fonctions déjà appelées et déjà testées — **on casserait du code qui
+marche pour plaire à une sonde**. Et la forme 3 n'est pas n'importe quel paramètre : le défaut doit
+être une constante **exportée**, ce qui est précisément la preuve qu'elle est faite pour être
+remplacée.
+
+### Les quatre vrais défauts, corrigés en donnant le vocabulaire — jamais en retirant la lecture
+
+- **`check-argus`** : `readFileSync(join(ROOT, "lib/life.ts"))` en dur dans son `main()`. Son métier
+  — repérer un champ déclaré et jamais lu — n'a rien de propre à ce jeu. Passe en
+  `{ chemin = FICHIER_DU_TYPE_SUIVI, dossiers = DOSSIERS_A_BALAYER }`, les deux exportés.
+- **`always-new-code`** : `THEMES` était déjà injectable, **pas sa carte** `THEME_PRIMARY_FILE` — un
+  projet d'accueil pouvait donner ses thèmes mais pas dire quel fichier chacun désigne. *Une moitié
+  de portabilité ressemble à la portabilité entière tant qu'on ne l'essaie pas.*
+- **`find-booster`** : sa carte concept → mots-clés est le VOCABULAIRE de ce projet (ses thèmes, ses
+  personnages). Elle est désormais exportée et injectable.
+- **`hooks/check-last-commit`** : accusé à tort — voir ci-dessous.
+
+### Deux versions de ma propre correction rattrapées par les contre-tests
+
+Élargir un détecteur est dangereux : on troque un faux rouge contre un faux vert, qui coûte bien
+plus cher. Deux tentatives ont été prises en flagrant délit, et c'est la raison d'être du contre-test
+« vraiment en dur », écrit **en premier** :
+
+1. **Le comptage de MOTS DE LA LIGNE** rangeait
+   `const lifeSource = readFileSync(join(ROOT, "lib/life.ts"), "utf8");` parmi les phrases : huit
+   identifiants suffisaient. **Un faux vert sur un vrai chemin en dur.** Le critère porte désormais
+   sur la CHAÎNE : au moins 40 caractères et 4 espaces — une cible n'en a aucun.
+2. **Le découpage des chaînes du FICHIER entier** par expression régulière : une apostrophe
+   française désynchronisait l'appariement, avalait des pans de code et effaçait les marqueurs
+   `{ chemin = … }` de quatre outils parfaitement portables — Abraham, circle-tasks, the-equalizer et
+   SAFE-EXPORT lui-même se sont mis à être accusés. **Quatre faux rouges créés en voulant en retirer
+   un.** La lecture se fait ligne à ligne, avec un motif par type de guillemet, et ne peut donc plus
+   rien avaler.
+
+### Le second registre d'exemption, qui existait et que le détecteur ne lisait pas
+
+Le dépôt porte **deux** registres de « ceci ne part pas » : `NE_PART_PAS_ET_C_EST_NORMAL` (des outils
+dont le SUJET est le jeu) et `EXEMPTES_DU_KIT` (des fichiers qui ne quittent pas ce dépôt — crochets
+git, script d'installation, lanceur du produit). Le détecteur n'honorait que le premier et
+reprochait donc à `scripts/hooks/check-last-commit.mjs` de n'être pas portable, alors que la charte
+déclare noir sur blanc, **avec sa raison**, qu'un crochet git est le câblage de l'Agence à ce
+dépôt-ci. **Accuser un fichier dont le projet a déjà décidé qu'il reste est le faux rouge le plus
+coûteux : il crée du travail qui ne doit pas être fait** (leçon L4). La correction LIT le second
+registre au lieu d'en recopier le contenu (Article 24).
+
+### Le résultat, mesuré
+
+| | avant #668 | avant cette passe | après |
+|---|---|---|---|
+| Scripts non portables | 14 | 8 | **0** |
+| Portabilité **reconfigurable** | — | 91 % (78/86) | **100 % (86/86)** |
+| Exportabilité globale | — | 88 % | **90 %** |
+
+**LA LIMITE, DÉCLARÉE** : la mesure reste au grain du FICHIER — un outil qui offre une option quelque
+part est déclaré reconfigurable même si une autre de ses cibles reste en dur. C'était déjà vrai de
+la forme historique ; l'élargissement ne l'aggrave pas, mais ne le corrige pas non plus. Et le
+détecteur pose **une question, jamais un verdict** : savoir si un couplage au jeu est un défaut ou
+la nature même de l'outil demande de lire ce qu'il fait.

@@ -273,3 +273,38 @@ clair avec ses phrases** : les taire aurait rendu le premier chiffre flatteur po
 ne peut lire ça dans un fichier. C'est l'agent qui enregistre le cas au moment où il bute, et
 déclarer cette limite EST la protection (Article 27) — comme pour `resume-contextualise` ci-dessus,
 il n'y a pas de test à faire passer et il n'y en aura jamais.
+
+## Les trois mots d'ordre permanents (2026-09-28, tâche #703)
+
+`fiabiliser` · `optimiser` · `harmoniser` — trois règles de CONDUITE surveillées, posées à la
+clôture de chaque tâche.
+
+**SA DEMANDE, en deux temps** : « je veux que ce soit dans la logique des process [...] insufflées à
+chaque etape et chaque endroit du projet », puis « on ajoute harmonise [...] on le rajoute partout
+aux memes endroits ».
+
+**ET C'EST LUI QUI A ATTRAPÉ LE DÉFAUT**, d'une pique : « est-ce que c'est bien dans les process ?
+est-ce que c'est harmonisé ? fiabilisé ? optimisé ? ;))) ». Les mots étaient **écrits** dans les
+règles de travail, et **rien ne les imposait**. Une intention écrite n'a jamais empêché quoi que ce
+soit (leçon L2) — d'où trois règles surveillées plutôt qu'un paragraphe de plus.
+
+| Mot d'ordre | La question qu'il pose | Où il fait regarder |
+|---|---|---|
+| **FIABILISER** | est-ce que ça marche *vraiment* — le filet passe-t-il, le cas limite est-il couvert, ai-je VU le test échouer quand il le devait ? | le filet de sécurité |
+| **OPTIMISER** | peut-on faire mieux, et est-ce COMPLET — reste-t-il une moitié du besoin, un chemin plus court, une mesure au lieu d'une impression ? | le périmètre de la tâche |
+| **HARMONISER** | est-ce raccordé au reste — même format que ses voisins, registre à jour, documenté au même endroit, rien qui dise deux fois la même chose ? | le reste du dépôt |
+
+**TROIS, JAMAIS QUATRE**, et c'est une décision explicite. Le seul quatrième candidat sérieux
+(« un mécanisme le porte-t-il ? ») est déjà tenu par l'Article 27 et SAFE-EXPORT, quand les trois
+autres n'avaient personne. Et **une question rituelle à quatre devient une case qu'on coche sans
+penser** — exactement le faux vert que ce projet traque partout.
+
+**ELLES SONT SÉPARÉES, ET C'EST DÉLIBÉRÉ.** Fondues en une seule (« la tâche est-elle bien
+finie ? »), elles se répondraient d'un oui global qui ne prouve rien. Séparées, chacune oblige à
+regarder un endroit différent.
+
+**NON OBSERVABLES PAR NATURE**, comme leurs voisines : aucun fichier sur disque ne dit qu'on s'est
+posé une question à la clôture d'une tâche. Angel **DEMANDE** donc, et refuse d'être au vert sans
+réponse — la seule protection possible pour une règle qui ne se joue que dans la conversation, et
+l'écrire ainsi vaut mieux que de la confier à la mémoire d'un agent qui changera de session
+(Article 27).
