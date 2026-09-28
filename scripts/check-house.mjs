@@ -16231,7 +16231,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const largeMuets = pgu2.findDetecteursMuets({ extraire: pgu2.fonctionsExporteesDe }).filter((f) => f.etat === 'muet');
   const etroitMuets = pgu2.findDetecteursMuets().filter((f) => f.etat === 'muet');
   assert.ok(largeMuets.length >= etroitMuets.length, 'the wide mode can only find at least as much as the narrow one, since detectors are a subset of exported functions');
-  assert.ok(largeMuets.length < etroitMuets.length + 20, 'and the widening was MEASURED before being written rather than assumed useful: 12 mute detectors against 15 mute functions, three more findings and no deluge — the first of the three was fichesParScript(), written that very night in CASSANDRA and left dead an hour later when another function replaced it, so the widening paid for itself immediately');
+  // LE MÊME PIÈGE QUE LE PLANCHER À QUINZE, ET TROUVÉ LE MÊME JOUR (corrigé le 2026-09-28) : cette
+  // borne s'écrivait « moins que l'étroit + 20 ». Le jour où l'étroit est tombé À ZÉRO — plus un
+  // seul détecteur muet, donc un SUCCÈS — la borne s'est resserrée à 20 et le filet a viré au
+  // rouge. **Une borne exprimée en écart à un nombre qui s'améliore se retourne contre le travail**,
+  // exactement comme le plancher à quinze de CLONE-HUNTER.
+  //
+  // CE QUE L'ASSERTION VEUT DIRE est « le mode large ne déverse pas », et ça se mesure contre SA
+  // PROPRE POPULATION : les fonctions exportées du dépôt. Une part, jamais un écart (Article 24).
+  // ET LE DÉNOMINATEUR EST CELUI QU'ON CROIT — vérifié, pas supposé. Mon premier essai divisait par
+  // `findDetecteursMuets()` en entier, en croyant y trouver TOUTES les fonctions exportées : elle
+  // ne rend que celles qui portent un signalement. Le taux était donc calculé sur la mauvaise
+  // population — le défaut même que ce bloc de tests traque ailleurs, commis en le corrigeant.
+  const outilsExamines = new Set(pgu2.findDetecteursMuets({ extraire: pgu2.fonctionsExporteesDe }).map((f) => f.outil)).size;
+  assert.ok(outilsExamines > 0, 'the population must be non-empty, otherwise the bound below is measured on nothing (leçon L11)');
+  assert.ok(largeMuets.length < outilsExamines,
+    'and the widening does not deluge: fewer than one mute exported function per tool examined — a bound DERIVED from its own population, never a fixed offset from a number that improves, because such an offset tightens as the code gets better and ends up punishing success (the previous one broke the day the narrow count reached zero)');
 
   // VERSION ET RICHESSE (2026-09-24, chantier 3.4) — deux échelles séparées, à sa demande.
   const vFausse = crh2.versionDepuisGit('scripts/x.mjs', { sh: () => { throw new Error('git absent'); } });

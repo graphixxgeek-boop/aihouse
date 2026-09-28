@@ -73,7 +73,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**103 fichier(s)** dans ce dossier.
+**107 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -156,6 +156,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [1790559675397-en_cours-liste.html](1790559675397-en_cours-liste.html) | — |
 | [1790561400713-themes.html](1790561400713-themes.html) | — |
 | [1790562193722-projet_entier-arborescence.html](1790562193722-projet_entier-arborescence.html) | — |
+| [1790568474691-en_cours-liste.html](1790568474691-en_cours-liste.html) | — |
 | [bilan-taches-2026-09-25T16-42Z.txt](bilan-taches-2026-09-25T16-42Z.txt) | — |
 | [bilan-taches-2026-09-25T16-59Z.txt](bilan-taches-2026-09-25T16-59Z.txt) | — |
 | [bilan-taches-2026-09-25T17-09Z.txt](bilan-taches-2026-09-25T17-09Z.txt) | — |
@@ -167,11 +168,14 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [bilan-taches-2026-09-26T11-39Z.txt](bilan-taches-2026-09-26T11-39Z.txt) | — |
 | [bilan-taches-2026-09-26T12-12Z.txt](bilan-taches-2026-09-26T12-12Z.txt) | — |
 | [bilan-taches-2026-09-27T09-35Z.txt](bilan-taches-2026-09-27T09-35Z.txt) | — |
+| [bilan-taches-2026-09-28T05-37Z.txt](bilan-taches-2026-09-28T05-37Z.txt) | — |
+| [bilan-taches-2026-09-28T07-29Z.txt](bilan-taches-2026-09-28T07-29Z.txt) | — |
 | [circle-signal-2026-09-22T17-19-15-255Z.txt](circle-signal-2026-09-22T17-19-15-255Z.txt) | — |
 | [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-836Z.txt](circle-signal-2026-09-23T21-49-13-836Z.txt) | — |
 | [circle-signal-2026-09-24T21-48-39-572Z.txt](circle-signal-2026-09-24T21-48-39-572Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-671Z.txt](circle-signal-2026-09-25T14-14-12-671Z.txt) | — |
+| [compactage-calibrage-2026-09-28.md](compactage-calibrage-2026-09-28.md) | — |
 | [historique.jsonl](historique.jsonl) | — |
 | [ronde-2026-09-21T23-26-29.html](ronde-2026-09-21T23-26-29.html) | — |
 | [ronde-2026-09-21T23-26-29.txt](ronde-2026-09-21T23-26-29.txt) | — |

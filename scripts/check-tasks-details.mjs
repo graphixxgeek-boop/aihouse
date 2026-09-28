@@ -2984,6 +2984,16 @@ function main() {
   // sous-commande existante ne réunissait : d'où on part, où on en est, et comment le reste
   // s'organise. Le livrable est le FICHIER (Article 31) ; ce qui s'imprime ici n'en est que l'écho.
   if (process.argv[2] === "bilan") return bilanCli();
+  if (process.argv[2] === "compactage") {
+    recordCliUsage("check-tasks-details");
+    const rows = loadAllTaskRows().filter((r) => !OPEN_KEYS.has(r.statusKey) && String(r.horodatage ?? "") >= (process.argv[3] ?? "2026-09-25"));
+    const m = mesurerLesCalibrages(rows);
+    for (const l of formatCalibrageLines(m)) console.log(l);
+    imprimerPlanDaction(planDactionDepuisEcarts(
+      m.mesurable ? [{ pourquoi: `${m.taches} r\u00e9cit(s) ferm\u00e9(s) p\u00e8sent ${m.avant.toLocaleString("fr-FR")} caract\u00e8res recharg\u00e9s \u00e0 chaque lecture, et le calibrage n'est pas choisi` }] : [],
+      { toolSlug: "check-tasks-details", tache: "lire docs/check-tasks-details/compactage-calibrage-2026-09-28.md et trancher entre A, B et C \u2014 l'arbitrage porte sur ce qu'on veut pouvoir relire dans six semaines, jamais sur un pourcentage (Article 16)" }));
+    return undefined;
+  }
   if (process.argv[2] === "themes") return themesCli();
   if (process.argv[2] === "strategie") return strategieCli(process.argv);
   // LES TROIS COURBES, joignables en une commande — un mécanisme que personne ne peut lancer
@@ -3254,6 +3264,128 @@ export function selectionnerPourArchive(rows = [], { avant, ouvertes = OPEN_KEYS
     (fermee && ancienne ? retenues : gardees).push(r);
   }
   return { mesurable: true, avant, retenues, gardees };
+}
+
+// =============================================================================================
+// COMPACTER LE RÉCIT D'UNE TÂCHE FERMÉE (2026-09-28, tâche #1053)
+// =============================================================================================
+// SA DÉCISION, en fenêtre dédiée : on garde « le constat, la décision, et sa raison » — les trois
+// choses qui empêchent la prochaine IA de rouvrir un arbitrage déjà rendu (Article 27). Le récit
+// du COMMENT et les chiffres intermédiaires partent en archive.
+//
+// POURQUOI CE N'EST PAS UNE TRONCATURE, ET C'EST TOUT L'ENJEU : couper à 400 caractères couperait
+// au milieu d'une phrase, et surtout garderait le DÉBUT — qui est presque toujours le contexte,
+// pas la décision. Les récits de ce dépôt sont structurés en SEGMENTS, chacun ouvert par un
+// en-tête en gras et en capitales. On garde donc des segments entiers, jamais un nombre de
+// caractères.
+//
+// LA MESURE QUI A DÉCIDÉ DE LA FORME : sur 281 tâches fermées depuis le 2026-09-25, 215 portent
+// ces en-têtes et la médiane du récit fait 1 989 caractères pour 400 visés. Les 66 sans en-tête
+// ne sont pas forçables — pour elles, la fonction le DIT et ne propose rien, plutôt que de couper
+// au jugé.
+//
+// LA LISTE DE MARQUEURS EST CHOISIE À LA MAIN, ET C'EST DÉCLARÉ (Article 24, seconde exception) :
+// les en-têtes sont des phrases françaises libres, pas un vocabulaire contrôlé — aucune
+// dérivation n'était possible. Elle se périmera donc si le style d'écriture change, et c'est le
+// prix accepté : la solution de rechange était de ne rien pouvoir proposer du tout.
+export const MARQUEURS_DE_DECISION = [
+  "DÉCISION", "DECISION", "TRANCHÉ", "TRANCHE", "SA DEMANDE", "SON ARBITRAGE", "ARBITRAGE",
+  "CHOIX", "POURQUOI", "RAISON", "CE QUI RESTE", "CE QUI EST RETENU", "RETENU", "ÉCARTÉ", "ECARTE",
+  "LIMITE", "CLÔTURE", "CLOTURE", "RÉSULTAT", "RESULTAT", "MESURE", "MESURÉ", "CE QUE ÇA CHANGE",
+];
+
+export const MOTIF_ENTETE_DE_SEGMENT = /\*\*([A-ZÉÈÀÎÔÇ][^*]{4,120}?)\*\*/g;
+
+// Découpe un récit en segments : chacun commence à un en-tête en gras capitales et court jusqu'au
+// suivant. Le texte AVANT le premier en-tête est un segment sans en-tête — c'est l'ouverture, et
+// elle porte presque toujours le constat.
+export function segmentsDuRecit(detail = "") {
+  const t = String(detail);
+  const entetes = [...t.matchAll(new RegExp(MOTIF_ENTETE_DE_SEGMENT.source, "g"))]
+    .filter((m) => /[A-ZÉÈÀÎÔÇ]{4,}/.test(m[1]));
+  if (!entetes.length) return [{ entete: null, texte: t.trim(), debut: 0 }];
+  const out = [];
+  if (entetes[0].index > 0) out.push({ entete: null, texte: t.slice(0, entetes[0].index).trim(), debut: 0 });
+  entetes.forEach((m, k) => {
+    const fin = entetes[k + 1]?.index ?? t.length;
+    out.push({ entete: m[1].trim(), texte: t.slice(m.index, fin).trim(), debut: m.index });
+  });
+  return out.filter((sg) => sg.texte);
+}
+
+export function porteUneDecision(entete = "", marqueurs = MARQUEURS_DE_DECISION) {
+  const e = String(entete).toUpperCase();
+  return marqueurs.some((m) => e.includes(m));
+}
+
+// TROIS ÉTATS, JAMAIS DEUX. Un récit sans en-tête n'est pas « déjà compact » : c'est un récit
+// qu'on ne sait pas découper, et le dire vaut mieux que de rendre une proposition au jugé.
+export function compacterLeRecit(detail = "", { cible = 400, marqueurs = MARQUEURS_DE_DECISION } = {}) {
+  const t = String(detail).trim();
+  if (t.length <= cible) return { etat: "deja-court", garde: t, retire: "", gain: 0 };
+  const segments = segmentsDuRecit(t);
+  if (segments.length <= 1) {
+    return { etat: "non-decoupable", garde: t, retire: "", gain: 0,
+      pourquoi: "aucun en-tête en gras capitales : ce récit ne se découpe pas en segments, et le couper au caractère prendrait le contexte en gardant le début plutôt que la décision" };
+  }
+  // L'OUVERTURE EST TOUJOURS GARDÉE : elle porte le constat, c'est-à-dire la première des trois
+  // choses qu'il a demandé de conserver.
+  const gardes = [], retires = [];
+  segments.forEach((sg, k) => {
+    const estOuverture = k === 0;
+    (estOuverture || porteUneDecision(sg.entete, marqueurs) ? gardes : retires).push(sg);
+  });
+  const garde = gardes.map((sg) => sg.texte).join(" ");
+  return {
+    etat: "compactable", garde, retire: retires.map((sg) => sg.texte).join("\n\n"),
+    gain: t.length - garde.length,
+    segments: segments.length, gardesCount: gardes.length,
+    entetesRetirees: retires.map((sg) => sg.entete).filter(Boolean),
+  };
+}
+
+// LA COMMANDE QUI REND LE CALIBRAGE (2026-09-28, tâche #1053). Elle N'APPLIQUE RIEN : elle mesure
+// trois façons de compacter et dépose un document où l'utilisateur lit le résultat SUR DU VRAI
+// TEXTE, parce qu'un pourcentage ne dit pas si la décision a survécu à la coupe.
+//
+// POURQUOI UNE COMMANDE ET PAS UN SCRIPT JETABLE : trois fonctions posées sans appelant sont trois
+// intentions (leçon L2), et le détecteur de fonctions muettes l'a dit dans la minute — il les a
+// comptées dès que je les ai écrites. Il avait raison.
+export const CALIBRAGES_DE_COMPACTAGE = [
+  { cle: "A", quoi: "l'ouverture seule (le constat)", garder: (sg) => sg.slice(0, 1) },
+  { cle: "B", quoi: "l'ouverture + tout segment dont l'en-tête annonce une décision, une raison, une mesure ou une limite",
+    garder: (sg) => sg.filter((x, k) => k === 0 || porteUneDecision(x.entete)) },
+  { cle: "C", quoi: "l'ouverture + le DERNIER segment (souvent le résultat)",
+    garder: (sg) => (sg.length > 1 ? [sg[0], sg.at(-1)] : sg.slice(0, 1)) },
+];
+
+export function mesurerLesCalibrages(rows = [], { calibrages = CALIBRAGES_DE_COMPACTAGE } = {}) {
+  if (!rows.length) {
+    return { mesurable: false, pourquoi: "aucune tâche fermée lue : rendre une économie sur zéro récit serait un chiffre sur du vide (leçon L13)" };
+  }
+  const avant = rows.reduce((a, r) => a + String(r.detail ?? "").trim().length, 0);
+  const resultats = calibrages.map((c) => {
+    const total = rows.reduce((a, r) => {
+      const t = String(r.detail ?? "").trim();
+      const sg = segmentsDuRecit(t);
+      return a + c.garder(sg).map((x) => x.texte).join(" ").length;
+    }, 0);
+    return { ...c, total, economie: avant ? Math.round((1 - total / avant) * 100) : 0, moyenne: Math.round(total / rows.length) };
+  });
+  const etats = {};
+  for (const r of rows) { const e = compacterLeRecit(String(r.detail ?? "").trim()).etat; etats[e] = (etats[e] ?? 0) + 1; }
+  return { mesurable: true, taches: rows.length, avant, resultats, etats };
+}
+
+export function formatCalibrageLines(m = {}) {
+  if (!m.mesurable) return [`\u{1F6A8} COMPACTAGE : PAS MESURÉ — ${m.pourquoi}`];
+  const L = ["=== COMPACTAGE DES RÉCITS FERMÉS — trois calibrages, aucun appliqué ===", "",
+    `  ${m.taches} tâche(s) fermée(s) · ${m.avant.toLocaleString("fr-FR")} caractères de récit rechargés à chaque lecture du registre.`,
+    `  États : ${Object.entries(m.etats).map(([k, v]) => `${v} ${k}`).join(" · ")} — un récit sans en-tête n'est PAS « déjà court », c'est un récit qu'on ne sait pas découper, et le dire vaut mieux que de couper au jugé.`, ""];
+  for (const r of m.resultats) L.push(`  ${r.cle} — ${String(r.economie).padStart(2)} % d'économie · ${String(r.moyenne).padStart(4)} car. en moyenne · ${r.quoi}`);
+  L.push("");
+  L.push("  HORS PORTÉE : ces chiffres disent le VOLUME, jamais si la décision a survécu à la coupe. C'est pour ça que le document déposé montre du VRAI texte avant/après : le choix se fait à la lecture, pas sur un pourcentage.");
+  return L;
 }
 
 export const ENTETE_ARCHIVE = "## Tâches archivées";
