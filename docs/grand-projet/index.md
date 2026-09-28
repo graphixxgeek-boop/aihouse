@@ -125,6 +125,29 @@ là où la lecture le justifie — en disant ce que je change et pourquoi, jamai
 Inscrit ici plutôt que supposé (Article 16). Les questions lui sont posées en fenêtre dédiée dès
 que l'assainissement en cours est terminé.
 
+## CE DOSSIER *EST* LA « DATA QUI ALIMENTE LES STRATÉGIES »
+
+**Sa consigne, écrite en tête de SES DEUX fichiers** : « CE DOC DOIT ÊTRE ENREGISTRÉ AU MÊME ENDROIT
+QUE LE FICHIER DE RÉPONSES QUE TU VAS M'ENVOYER : DATA QUI ALIMENTENT LES STRATÉGIES ».
+**L'endroit, c'est ici.** Ses deux commandes, les sept lots d'audits, ma trace de lecture, ses
+49 questions, la vue globale, le plan d'action : un seul dossier, une seule porte — ce fichier.
+
+**Comment on le retrouve sans connaître ce chemin** *(Article 30 — la reprise des notes)* :
+
+```
+node scripts/data-archangel.mjs notes "<le sujet>"
+```
+
+Vérifié le 2026-09-28 : sur « rationalisation », la commande remonte six fichiers de ce dossier, la
+vue globale et le plan d'action compris. **Un agent qui arrive demain sans une ligne de notre
+conversation les trouve.**
+
+**La nuance honnête, parce qu'elle compte** : la commande `briefing` du même outil rend **zéro** sur
+ce dossier, et c'est voulu. `briefing` ne regarde que les **sources de données produites par un
+outil** — des registres, des journaux, des séries chiffrées. Ce dossier n'en est pas un : il ne
+mesure rien, il avance. **« Que produisons-nous ? » et « qu'avons-nous décidé ? » sont deux
+questions différentes**, et c'est `notes` qui répond à la seconde.
+
 ## Les fichiers de ce dossier
 
 | Fichier | Ce qu'il porte |
