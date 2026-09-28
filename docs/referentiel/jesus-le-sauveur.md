@@ -75,3 +75,43 @@ l'outil : un seuil décrété qu'on présenterait comme dérivé serait pire que
 
 Il ne corrige rien seul · il ne touche jamais à CLAUDE.md · il ne reproche aucune attente à
 personne · il ne refait pas le travail d'EZECHIEL, de MOÏSE ni d'ABRAHAM.
+
+## Deux pouvoirs de plus, et quatre chiffres faux avant le bon (2026-09-28)
+
+Sur son choix en fenêtre dédiée, JESUS a reçu deux sondes supplémentaires.
+
+### ③ Les alertes écartées de l'affichage
+
+**Mesure du jour : 501 lignes réparties sur 38 sections, écrites à CHAQUE commit** dans
+`.banniere-post-commit.txt`, « relu à la demande » — c'est-à-dire par quelqu'un qui doit y penser.
+
+**Première version FAUSSE, gardée écrite dans le code** : elle cherchait dans ce fichier les lignes
+de comptage que la bannière imprime à l'écran. Ce fichier n'est pas la bannière, **c'est son
+contraire** : la part écartée. La sonde rendait donc « PAS MESURÉ » — un refus juste sur une
+question mal posée.
+
+**Ce qu'elle refuse de dire** : la part réellement LUE. Elle n'est pas mesurable depuis ce fichier,
+donc `partVue` vaut `null` et jamais un pourcentage fabriqué.
+
+### ④ Mes propres allers-retours — QUATRE CHIFFRES FAUX D'AFFILÉE
+
+C'est la partie la plus instructive de tout l'outil, et elle est écrite en entier pour que personne
+ne refasse le chemin :
+
+| Version | Chiffre | Pourquoi il était faux |
+|---|---|---|
+| 1 | 66 % | comptait le crochet post-commit, qui lance tous les Gardiens sacrés du code d'affilée — légitime |
+| 2 | 56 % | filtrait par origine, mais le crochet lance ses outils en sous-processus `cli_direct` |
+| 3 | 46 % | exigeait « pas de commit entre les deux », or **le crochet tourne APRÈS le commit** : tous ses passages tombent structurellement entre deux commits |
+| 4 | 51 % | comptait encore les enregistrements de FONCTION — 1 688 pour le seul `angel-of-ia-process`, posés par `recordFunctionUsage()` à l'intérieur d'un passage |
+| **5** | **42 %** | ne garde que les vraies sollicitations, hors rafale du crochet |
+
+**Chacun était plus crédible que le précédent** — c'est exactement ainsi qu'un chiffre faux finit
+par être cru : à force d'être corrigé, il prend l'air d'un chiffre travaillé.
+
+**Le premier nommé est une vraie trouvaille** : `data-archangel`, 254 relances rapprochées. C'est
+`index --generer` puis `index --completer` lancés à la suite avant chaque commit — deux commandes là
+où une suffirait.
+
+**Sans git, la sonde REFUSE de conclure** : sans les dates de commit, rien ne distingue une relance
+d'une rafale.

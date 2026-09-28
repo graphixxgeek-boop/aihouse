@@ -20753,7 +20753,54 @@ async function testJesusLeSauveur() {
   assert.ok(/ABSENT DU DÉPÔT/.test(ampute.maillons[2].etat) && /pas la même chose que/.test(ampute.maillons[2].etat), 'et son état dit explicitement que cet angle ne sera pas couvert — jamais un silence qui se lirait comme un feu vert');
   assert.ok(J.lignesDeLaCascade(ampute).some((l) => /chaîne est INCOMPLÈTE/.test(l)), 'le rapport le crie plutôt que de rendre un verdict qui aurait l\'air entier');
 
-  // ⑦ IL TOURNE POUR DE VRAI CONTRE LE DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre
+  // ⑦ LES ALERTES ÉCARTÉES DE L'AFFICHAGE. Première version FAUSSE, gardée en mémoire dans le code :
+  // elle cherchait dans le fichier de reste les lignes de comptage que la bannière imprime à
+  // l'écran. Ce fichier n'est pas la bannière — c'est son contraire, la part écartée. Elle rendait
+  // donc « PAS MESURÉ » : un refus juste sur une question mal posée.
+  assert.equal(J.alertesEcarteesDeLAffichage({ banniere: null }).mesurable, false, 'sans fichier de reste, PAS MESURÉ — son absence n\'est pas « zéro alerte écartée »');
+  const reste = J.alertesEcarteesDeLAffichage({ banniere: '=== SECTION A ===\nune ligne\nune autre\n\n=== SECTION B ===\nencore une' });
+  assert.equal(reste.ecartees, 5, 'les lignes non vides sont comptées');
+  assert.equal(reste.sections, 2, 'et les sections nommées avec elles : elles disent combien de sujets distincts dorment là-dedans');
+  assert.equal(reste.partVue, null, 'LA PART RÉELLEMENT LUE RESTE `null` ET JAMAIS UN POURCENTAGE INVENTÉ : elle n\'est pas mesurable depuis ce fichier, et la fabriquer serait exactement le défaut que cet outil traque');
+
+  // ⑧ MES ALLERS-RETOURS — QUATRE CHIFFRES FAUX D'AFFILÉE AVANT LE BON, et c'est la partie la plus
+  // instructive de tout cet outil. 66 %, puis 56 %, puis 46 %, puis 51 % : chacun plus crédible que
+  // le précédent, parce qu'à force d'être corrigé un chiffre prend l'air d'un chiffre travaillé.
+  //   · 66 % comptait le crochet post-commit, qui lance tous les Gardiens sacrés du code d'affilée — légitime ;
+  //   · 56 % filtrait par origine, mais le crochet lance ses outils en sous-processus `cli_direct` ;
+  //   · 46 % exigeait « pas de commit entre les deux », or LE CROCHET TOURNE APRÈS LE COMMIT, donc
+  //     tous ses passages tombent structurellement entre deux commits ;
+  //   · 51 % comptait encore les enregistrements de FONCTION — 1 688 pour le seul angel, posés par
+  //     recordFunctionUsage() à l'intérieur d'un passage, jamais un passage de plus.
+  const commitsFaux = () => String(Math.floor((J0 - 3600000) / 1000));
+  // UN ENREGISTREMENT DE FONCTION NE COMPTE JAMAIS.
+  const quefonctions = { events: [
+    { toolSlug: 'x', origin: 'fonction', fonction: 'f', at: J0 },
+    { toolSlug: 'x', origin: 'fonction', fonction: 'g', at: J0 + 1000 },
+  ] };
+  assert.equal(J.mesAllersRetours({ history: quefonctions, shImpl: commitsFaux }).mesurable, false, 'MUST NOT COUNT: un registre qui ne contient que des enregistrements de fonction ne porte AUCUNE sollicitation — et le dire est un résultat, jamais un zéro');
+  // LA RAFALE DU CROCHET EST ÉCARTÉE : des passages serrés juste APRÈS un commit sont le crochet.
+  const tCommit = J0;
+  const rafale = { events: [
+    { toolSlug: 'g', origin: 'cli_direct', at: tCommit + 1000 },
+    { toolSlug: 'g', origin: 'cli_direct', at: tCommit + 5000 },
+    { toolSlug: 'g', origin: 'cli_direct', at: tCommit + 9000 },
+  ] };
+  const rr = J.mesAllersRetours({ history: rafale, shImpl: () => String(Math.floor(tCommit / 1000)), minimum: 1 });
+  assert.equal(rr.total, 0, 'MUST NOT ACCUSE THE HOOK: trois passages serrés dans les deux minutes suivant un commit sont sa rafale, jamais mes relances — et l\'accuser serait le faux positif de la leçon L4 sur le geste le plus sain du dépôt');
+  assert.equal(rr.ecartesRafale, 3, 'et les passages écartés sont COMPTÉS, jamais escamotés : un total qui baisse sans dire pourquoi se lit comme une régression du détecteur');
+  // ET IL MORD sur une vraie relance : loin du commit, serrée, sans commit entre les deux (L2).
+  const vraie = { events: [
+    { toolSlug: 'h', origin: 'cli_direct', at: tCommit + 600000 },
+    { toolSlug: 'h', origin: 'cli_direct', at: tCommit + 660000 },
+  ] };
+  const vr = J.mesAllersRetours({ history: vraie, shImpl: () => String(Math.floor(tCommit / 1000)), minimum: 1 });
+  assert.equal(vr.total, 1, 'une relance du même outil une minute après, dix minutes APRÈS le commit, est bien la mienne');
+  assert.deepEqual(vr.relances.map((r) => r.slug), ['h'], 'et l\'outil relancé est nommé, parce que c\'est lui qui dit ce qui n\'a pas répondu du premier coup');
+  // SANS GIT, ON REFUSE : sans les dates de commit, rien ne distingue une relance d'une rafale.
+  assert.equal(J.mesAllersRetours({ history: vraie, shImpl: () => { throw new Error('pas de git'); } }).mesurable, false, 'sans git, la sonde REFUSE de conclure plutôt que de rendre un chiffre qui confondrait le crochet et moi');
+
+  // ⑨ IL TOURNE POUR DE VRAI CONTRE LE DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre
   // le vrai dépôt n'est pas un outil, c'est une intention.
   const reel = J.passage();
   assert.equal(reel.decisions.mesurable, true, 'la file réelle est lue');

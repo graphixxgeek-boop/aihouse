@@ -284,7 +284,7 @@ export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir
 // additionner des verdicts ne les croise pas.
 export function causesIndirectes(sondes = {}) {
   const trouvailles = [];
-  const { filet, remedes, arrivant, alertes, decisions } = sondes;
+  const { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours } = sondes;
 
   // ① Un remède dort ET le coût qu'il devait retirer est toujours payé → la lourdeur est
   //    entièrement évitable, ce qu'aucune des deux sondes ne dit seule.
@@ -325,6 +325,16 @@ export function causesIndirectes(sondes = {}) {
     });
   }
 
+  // ⑥ Beaucoup d'alertes produites ET des relances rapprochées → on relance parce qu'on n'a pas vu
+  //    passer la réponse. Les deux sondes sont calmes séparément : produire beaucoup n'est pas une
+  //    faute, relancer non plus. Leur rencontre décrit un cercle.
+  if (bruit?.mesurable && allersRetours?.mesurable && bruit.ecartees > 200 && allersRetours.total > 20) {
+    trouvailles.push({
+      quoi: `${bruit.ecartees} lignes sont écartées de l'affichage à chaque commit, et ${allersRetours.total} relances rapprochées ont lieu hors rafale du crochet`,
+      pourquoi: "produire beaucoup n'est pas une faute, relancer non plus — mais ensemble elles décrivent un cercle : ce qui n'est pas vu passer se redemande. C'est le coût du changement de contexte, celui qui ne s'impute à aucune tâche parce qu'il se paie ENTRE elles",
+    });
+  }
+
   // ⑤ Une alerte dort depuis longtemps → elle n'apprend plus rien à personne, mais elle occupe la
   //    place de celle qui compterait.
   for (const v of alertes?.vieilles ?? []) {
@@ -338,6 +348,118 @@ export function causesIndirectes(sondes = {}) {
     pourquoi: trouvailles.length
       ? `${trouvailles.length} cause(s) indirecte(s) : chacune naît du CROISEMENT de deux mesures dont aucune n'alerte seule`
       : "aucun croisement ne ressort aujourd'hui — ce qui ne dit pas qu'il n'y a pas de lourdeur, seulement qu'aucune paire surveillée ne se rencontre" };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LES ALERTES PRODUITES CONTRE LES ALERTES LUES (2026-09-28, son choix de pouvoirs)
+// ————————————————————————————————————————————————————————————————————————
+// LA FATIGUE D'ALERTE MESURÉE CHEZ NOUS. La littérature donne 35 à 91 % d'avertissements non
+// actionnables, et le mécanisme est toujours le même : passé un certain volume, on cesse de tout
+// lire, y compris ce qui compte. Ce dépôt a déjà payé deux cas documentés — le garde-fou des axes
+// qui criait sur son propre doublon pendant des jours, l'avertissement moteur facturé deux fois.
+//
+// PREMIÈRE VERSION, FAUSSE, ET GARDÉE ÉCRITE : elle cherchait dans `.banniere-post-commit.txt` les
+// lignes « N ligne(s) au total, M retenue(s) » que la bannière imprime à l'écran. Elle n'en trouvait
+// aucune et rendait « PAS MESURÉ » — un refus juste sur une question mal posée. **Ce fichier N'EST
+// PAS la bannière : c'est exactement son contraire.** Il contient le RESTE, la part écartée de
+// l'affichage, « relue à la demande, jamais perdue ».
+//
+// CE QUI SE MESURE DONC VRAIMENT, ET C'EST PLUS DIRECT : le fichier lui-même EST la part que
+// personne ne voit passer. Sa taille est le volume écrit à chaque commit pour un lecteur qui
+// devrait penser à l'ouvrir — et l'ouvrir n'arrive jamais tout seul.
+//
+// CE QUE CETTE SONDE NE DIT PAS, et le taire serait malhonnête : une ligne écartée n'est pas une
+// ligne inutile. Le tri est délibéré et il existe pour rendre la bannière lisible. Ce que ce chiffre
+// mesure est le VOLUME derrière le filtre, jamais la qualité de ce qui s'y trouve.
+export function alertesEcarteesDeLAffichage({ banniere = lire(".banniere-post-commit.txt") } = {}) {
+  if (banniere == null) return pasMesure("les alertes produites contre les alertes lues", "aucune bannière post-commit sur le disque — elle n'existe qu'après un commit, et son absence n'est pas « zéro alerte »");
+  const lignes = banniere.split("\n").filter((l) => l.trim());
+  // Les sections nommées du reste : elles disent combien de sujets distincts dorment là-dedans.
+  const sections = lignes.filter((l) => /^===/.test(l)).length;
+  if (!lignes.length) return pasMesure("les alertes écartées de l'affichage", "le fichier de reste est vide — ce qui voudrait dire que la bannière montre tout, et mérite d'être vérifié plutôt que cru");
+  return { mesurable: true, ecartees: lignes.length, sections,
+    // La part VUE n'est pas calculable depuis ce fichier seul, et l'inventer serait exactement ce
+    // que cet outil traque. On rend le volume écarté, qui est un fait, et on dit ce qu'on ignore.
+    partVue: null,
+    pourquoi: `${lignes.length} ligne(s) réparties sur ${sections} section(s) sont écrites à CHAQUE commit dans le fichier de reste, « relu à la demande » — c'est-à-dire par quelqu'un qui doit y penser. La part réellement lue n'est pas mesurable d'ici, et l'inventer serait précisément le défaut que cet outil traque` };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// MES PROPRES ALLERS-RETOURS (2026-09-28, son choix de pouvoirs)
+// ————————————————————————————————————————————————————————————————————————
+// LE CHANGEMENT DE CONTEXTE EST LE COÛT LE PLUS INVISIBLE DE TOUS, parce qu'il ne s'impute à AUCUNE
+// tâche : il se paie ENTRE elles. Relancer deux fois le même outil sans rien avoir changé entre les
+// deux, c'est ne pas avoir obtenu la réponse du premier coup.
+//
+// LE PIÈGE ÉVITÉ, ET IL A FAILLI PRODUIRE UN CHIFFRE ENTIÈREMENT FAUX : une première mesure a
+// compté 3 824 relances rapprochées sur 5 750 passages — 66 %. C'était absurde, et pour une raison
+// simple : le crochet post-commit lance TOUS les gardiens à chaque commit, donc des dizaines de
+// passages du même outil se suivent légitimement. Accuser ce mécanisme aurait été le faux positif
+// exact de la leçon L4, sur le geste le plus sain du dépôt.
+//
+// LE FILTRE PAR ORIGINE NE SUFFIT PAS NON PLUS — mesuré : le crochet lance ses outils en
+// sous-processus, donc ils s'enregistrent eux aussi comme `cli_direct`. Le repli naïf donnait
+// encore 56 %.
+//
+// ET LE TEST « UN COMMIT ENTRE LES DEUX » NE SUFFISAIT PAS NON PLUS — troisième version, troisième
+// faux chiffre évité de justesse : 46 %, dont 1 178 relances attribuées au seul angel-of-ia-process.
+// La raison est évidente une fois dite, et invisible avant : **le crochet tourne APRÈS le commit**,
+// donc TOUS ses passages tombent entre deux commits. Le test ne pouvait structurellement pas les
+// voir. Trois mesures de suite auraient été livrées fausses, chacune plus crédible que la
+// précédente — c'est exactement ainsi qu'un chiffre faux finit par être cru.
+//
+// ET IL RESTAIT UNE QUATRIÈME FAUSSE MESURE DERRIÈRE — 51 %, dont 910 relances attribuées au seul
+// angel-of-ia-process. Vérification faite sur ses événements réels : **les 1 688 sont d'origine
+// `fonction`**, sans exception. Ce ne sont pas des sollicitations de l'outil, ce sont des
+// enregistrements de FONCTION INTERNE posés par `recordFunctionUsage()` — l'exécution d'une
+// fonction à l'intérieur d'un passage, jamais un passage de plus.
+//
+// QUATRE CHIFFRES FAUX D'AFFILÉE SUR LA MÊME QUESTION, chacun plus crédible que le précédent — 66 %,
+// puis 56 %, puis 46 %, puis 51 %. C'est exactement ainsi qu'un chiffre faux finit par être cru : à
+// force d'être corrigé, il prend l'air d'un chiffre travaillé. Les quatre sont écrits ici pour que
+// personne ne refasse le chemin.
+//
+// CE QUI TRANCHE VRAIMENT, ET C'EST DOUBLE : on ne garde que les vraies SOLLICITATIONS (jamais les
+// enregistrements de fonction), et on écarte la RAFALE du crochet, qui lance ses outils dans les
+// secondes suivant un commit. Le reste est à moi.
+export const FENETRE_ALLER_RETOUR_MS = 10 * 60 * 1000;
+// LA RAFALE DU CROCHET : les outils qu'il lance s'enregistrent tous dans les secondes qui suivent
+// un commit. Deux minutes couvre largement un passage complet des gardiens, et rester généreux ici
+// est le bon côté de l'erreur : mieux vaut sous-compter mes relances que d'accuser le crochet.
+export const RAFALE_DU_CROCHET_MS = 120 * 1000;
+
+export function mesAllersRetours({ history = loadToolUsageHistory(), fenetre = FENETRE_ALLER_RETOUR_MS, rafale = RAFALE_DU_CROCHET_MS, shImpl = sh, minimum = 3 } = {}) {
+  // UN ENREGISTREMENT DE FONCTION N'EST PAS UNE SOLLICITATION : `recordFunctionUsage()` note qu'une
+  // fonction a tourné À L'INTÉRIEUR d'un passage. Les compter reviendrait à facturer un passage
+  // autant de fois qu'il exécute de fonctions.
+  const events = (history?.events ?? []).filter((e) => typeof e.at === "number" && e.at > 0 && e.origin !== "fonction" && !e.fonction);
+  if (!events.length) return pasMesure("mes allers-retours", "le compteur d'usage ne porte aucune SOLLICITATION datée — il peut porter des enregistrements de fonction, qui ne sont pas la même chose");
+  let commits = null;
+  try {
+    const brut = String(shImpl('git log --format=%ct -n 400')).trim();
+    commits = brut ? brut.split("\n").map((x) => Number(x) * 1000).filter(Number.isFinite).sort((a, b) => a - b) : [];
+  } catch { commits = null; }
+  if (commits === null) return pasMesure("mes allers-retours", "git est illisible ici : sans les dates de commit, impossible de distinguer une relance de ma part d'un passage du crochet — et les deux n'ont rien à voir");
+  const unCommitEntre = (a, b) => commits.some((c) => c > a && c < b);
+  const dansLaRafale = (t) => commits.some((c) => t >= c && t - c <= rafale);
+  events.sort((x, y) => x.at - y.at);
+  const horsRafale = events.filter((e) => !dansLaRafale(e.at));
+  const par = new Map(); const dernier = new Map();
+  for (const e of horsRafale) {
+    const prec = dernier.get(e.toolSlug);
+    if (prec !== undefined && e.at - prec < fenetre && !unCommitEntre(prec, e.at)) {
+      par.set(e.toolSlug, (par.get(e.toolSlug) ?? 0) + 1);
+    }
+    dernier.set(e.toolSlug, e.at);
+  }
+  const relances = [...par.entries()].filter(([, n]) => n >= minimum).map(([slug, n]) => ({ slug, relances: n })).sort((a, b) => b.relances - a.relances);
+  const total = [...par.values()].reduce((a, b) => a + b, 0);
+  const ecartes = events.length - horsRafale.length;
+  return { mesurable: true, relances, total, passages: horsRafale.length, ecartesRafale: ecartes,
+    part: horsRafale.length ? total / horsRafale.length : null,
+    pourquoi: total
+      ? `${total} relance(s) rapprochée(s) sans commit entre les deux, sur ${horsRafale.length} passages retenus (${Math.round(100 * total / horsRafale.length)} %) — ${ecartes} passage(s) écarté(s) comme rafale du crochet, qui n'est jamais une friction. C'est le coût qui ne s'impute à aucune tâche, parce qu'il se paie ENTRE elles`
+      : `aucune relance rapprochée hors rafale sur ${horsRafale.length} passages retenus (${ecartes} écarté(s) comme rafale du crochet)` };
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -419,8 +541,10 @@ export function passage(options = {}) {
   const arrivant = coutDUnArrivant(options);
   const alertes = alertesQuiNeSEteignentPas(options);
   const decisions = decisionsEnAttente(options);
-  const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions });
-  return { filet, remedes, arrivant, alertes, decisions, croisements };
+  const bruit = alertesEcarteesDeLAffichage(options);
+  const allersRetours = mesAllersRetours(options);
+  const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours });
+  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, croisements };
 }
 
 export function lignesDuPassage(p) {
@@ -438,6 +562,9 @@ export function lignesDuPassage(p) {
   dire("② LES OBLIGATIONS — ce que coûte un outil de plus", p.arrivant);
   dire("③ LES ALERTES QUE PERSONNE N'ÉTEINT", p.alertes,
     (s) => (s.vieilles ?? []).map((v) => `· ${v.jours} j — ${v.outil ?? v.source ?? "origine non nommée"} : ${String(v.quoi ?? v.constat ?? "").slice(0, 90)}`));
+  dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
+  dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,
+    (s) => (s.relances ?? []).slice(0, 6).map((r) => `· ${r.slug} : ${r.relances} relance(s) rapprochée(s) sans commit entre les deux`));
   dire("④ LES FRICTIONS DE L'ÉCHANGE — depuis quand une décision attend", p.decisions,
     (s) => (s.attentes ?? []).slice(0, 8).map((a) => `· ${a.jours ?? "?"} j — #${a.numero} ${a.sujet}`));
   L.push("=== LA VUE 360 — les causes INDIRECTES, celles qu'aucune sonde ne voit seule ===");
