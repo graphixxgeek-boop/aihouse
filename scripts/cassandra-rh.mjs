@@ -2199,18 +2199,29 @@ export function classerIceberg(fichiers = [], { lire, offert = "", machine = new
     // lire ça — elle voit une porte, pas qui a le droit de la pousser. Le fichier, lui, le sait.
     // L'inverse resterait un désaccord rapporté : un fichier qui se déclarerait MEMBRE sans être
     // présenté nulle part mentirait sur un fait vérifiable, et la mesure aurait raison contre lui.
-    // UNE DÉCLARATION « PLOMBERIE » L'EMPORTE AUSSI SUR « LANCÉ PAR LA MACHINE » (2026-09-28,
-    // tâche #1013). Elle l'emportait déjà sur le point d'entrée depuis son arbitrage du
-    // 2026-09-24 ; en faisant suivre le shell à la sonde, `pnpm-install` devenait « lancé par la
-    // machine », donc INFRASTRUCTURE par dérivation — et sa déclaration plomberie, qui est SA
-    // décision à lui, se serait mise à ressortir comme un désaccord par simple effet de bord d'une
-    // correction de mesure. Corriger une sonde ne doit jamais rouvrir un arbitrage humain.
-    // L'ASYMÉTRIE EST CONSERVÉE, et c'est elle qui empêche l'abus : seule « plomberie » gagne, et
-    // seulement vers le BAS. Un fichier qui se déclarerait MEMBRE sans être présenté nulle part
-    // mentirait sur un fait vérifiable, et la mesure aurait raison contre lui. Se déclarer moins
-    // qu'on n'est n'a jamais servi personne ; se déclarer plus, si.
+    // « LANCÉ PAR LA MACHINE » L'EMPORTE SUR LA DÉCLARATION — ARBITRAGE DE L'UTILISATEUR DU
+    // 2026-09-28, qui a RENVERSÉ le choix que j'avais fait quelques heures plus tôt, et il faut
+    // lire les deux temps pour comprendre la règle.
+    //
+    // CE QUI S'EST PASSÉ : en faisant suivre le shell à la sonde (#1013), `pnpm-install` est devenu
+    // « lancé par la machine », donc INFRASTRUCTURE par dérivation — alors qu'il DÉCLARE plomberie
+    // depuis son arbitrage du 2026-09-24. J'avais protégé cette déclaration pour ne pas contredire
+    // une décision humaine par effet de bord. Question posée en fenêtre dédiée, réponse nette :
+    // **« laisse la mesure gagner »**.
+    //
+    // POURQUOI C'EST COHÉRENT, et pas un simple changement d'avis : « lancé par la machine » est un
+    // FAIT vérifiable — le chemin existe dans package.json, puis dans le shell, puis dans l'appel
+    // node. Une déclaration ne peut pas rendre faux un chemin qui existe. La déclaration garde son
+    // pouvoir là où la mesure ne voit pas : sur le POINT D'ENTRÉE, parce qu'une porte ouverte ne dit
+    // pas qui a le droit de la pousser, et que le fichier, lui, le sait. Sur un chemin d'exécution
+    // réel, elle ne l'a pas.
+    //
+    // CE QUE ÇA PRODUIT, ET C'EST VOULU : `pnpm-install` ressort désormais en DÉSACCORD — dérivé
+    // infrastructure, déclaré plomberie. Ce désaccord est le signal, pas le bug : il demande de
+    // revoir la mention dans le fichier, ce qui est une décision à prendre en connaissance de cause
+    // plutôt qu'un silence obtenu en protégeant la déclaration.
     const derive = presente ? "membre"
-      : (parLaMachine && !seDeclarePlomberie) ? "infrastructure"
+      : parLaMachine ? "infrastructure"
       : (convocable && !seDeclarePlomberie) ? "oublie"
       : "plomberie";
     const declare = mentionIceberg(src);

@@ -10260,13 +10260,21 @@ await testVerrousDOuverture();
   assert.equal(lanceParLaMachine({ packageJson: paquetFaux, lire: () => '# un commentaire qui cite pnpm-install.mjs sans le lancer' }).has('pnpm-install'), false, 'COUNTER-TEST: a .mjs merely MENTIONED in a shell comment is not a call — the name must follow a `node` (lesson L4)');
   assert.equal(lanceParLaMachine({ packageJson: paquetFaux, lire: () => { throw new Error('illisible'); } }).has('pnpm-install'), false, 'an unreadable shell adds nothing rather than guessing — « introuvable » and « n\'appelle rien » are not the same thing (lesson L5)');
   assert.deepEqual([...lanceParLaMachine({ packageJson: paquetFaux })], [...lanceParLaMachine({ packageJson: paquetFaux, lire: null })], 'COUNTER-TEST: with no reader passed the behaviour is EXACTLY what it was before — full backward compatibility for every pre-existing caller');
-  // ET SURTOUT : CORRIGER UNE SONDE NE DOIT PAS ROUVRIR UN ARBITRAGE HUMAIN. En suivant le shell,
-  // pnpm-install devenait « lancé par la machine » donc INFRASTRUCTURE par dérivation — alors qu'il
-  // DÉCLARE plomberie sur la décision explicite de l'utilisateur du 2026-09-24. Sa déclaration
-  // l'emportait déjà sur le point d'entrée ; elle l'emporte désormais aussi sur la machine.
+  // LA FRONTIÈRE ENTRE CE QUE LA DÉCLARATION PEUT ET CE QU'ELLE NE PEUT PAS, tranchée par
+  // l'utilisateur le 2026-09-28 — et il a RENVERSÉ mon choix de quelques heures plus tôt.
+  // J'avais protégé la déclaration « plomberie » contre « lancé par la machine », pour ne pas
+  // contredire son arbitrage du 2026-09-24 par effet de bord. Sa réponse, en fenêtre dédiée :
+  // « laisse la mesure gagner ». C'est cohérent : « lancé par la machine » est un FAIT vérifiable
+  // — le chemin existe dans package.json, puis dans le shell, puis dans l'appel node — et une
+  // déclaration ne rend pas faux un chemin qui existe.
   const lirePlomberie = (f) => ({ 'declare-plomberie.mjs': '// ICEBERG: plomberie\nif (import.meta.url === x) main(); process.argv;' }[f]);
-  const classe = classerIceberg(['declare-plomberie.mjs'], { lire: lirePlomberie, offert: '', machine: new Set(['declare-plomberie']) })[0];
-  assert.equal(classe.groupe, 'plomberie', 'a file declaring PLOMBERIE keeps it even when the machine launches it — fixing a measurement must never contradict a human arbitration as a side effect');
+  const lanceParMachine = classerIceberg(['declare-plomberie.mjs'], { lire: lirePlomberie, offert: '', machine: new Set(['declare-plomberie']) })[0];
+  assert.equal(lanceParMachine.groupe, 'infrastructure', 'HIS ARBITRATION OF 2026-09-28: a real execution path beats a declaration — the machine launching the file is a fact, and a declaration cannot make a fact false');
+  assert.equal(lanceParMachine.declare, 'plomberie', 'and the declaration is still READ, so the disagreement surfaces instead of being silenced — that disagreement is the signal, not the bug');
+  // CE QUE LA DÉCLARATION GARDE, et c'est la moitié qui n'a pas bougé : le POINT D'ENTRÉE. Une
+  // porte ouverte ne dit pas qui a le droit de la pousser ; le fichier, lui, le sait.
+  const classe = classerIceberg(['declare-plomberie.mjs'], { lire: lirePlomberie, offert: '', machine: new Set() })[0];
+  assert.equal(classe.groupe, 'plomberie', 'where the measure CANNOT see — an entry point whose only arguments are internal flags no human types — the declaration still wins, exactly as decided on 2026-09-24');
   // L'ASYMÉTRIE EST CE QUI EMPÊCHE L'ABUS : seule « plomberie » gagne, et seulement vers le BAS.
   const lireMenteur = (f) => ({ 'se-dit-membre.mjs': '// ICEBERG: membre\nexport function x(){}' }[f]);
   const menteur = classerIceberg(['se-dit-membre.mjs'], { lire: lireMenteur, offert: '', machine: new Set() })[0];
