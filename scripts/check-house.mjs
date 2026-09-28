@@ -20529,3 +20529,43 @@ async function testAlerteQuiAffirmaitSansMesurer() {
   console.log("Passed: l'alerte qui affirmait « depuis des semaines » sans le mesurer (2026-09-28, tâche #1097). Le palier le plus grave de la relance de Ronde disait : « une trentaine de vérifications gratuites dorment depuis des SEMAINES ». Son seul déclencheur est un compte de COMMITS. Le 2026-09-28 il l'a affirmé QUATRE HEURES après une Ronde réellement faite, au terme d'une journée à trente et un commits — et l'heure de la dernière Ronde était pourtant stockée depuis toujours par recordCircleTasksRun(), simplement jamais lue. C'EST ENCORE LA MÊME FAMILLE — un signal ADJACENT (le nombre de commits) présenté comme le signal visé (le temps écoulé) — et c'est la troisième de la journée dont la donnée juste existait déjà à côté. CE QUI NE CHANGE PAS, ET C'EST DÉLIBÉRÉ : le seuil reste en COMMITS. Trente commits sans Ronde méritent l'alerte quelle que soit l'heure, parce que ce sont trente occasions où une vérification aurait pu trouver quelque chose. Ce qui change est ce que l'alerte DIT d'elle-même. POURQUOI ÇA COMPTE PLUS QU'UNE FORMULATION : un garde-fou dont le palier le plus grave affirme une chose fausse LE JOUR OÙ IL SE DÉCLENCHE apprend à être ignoré tous les autres jours (L4) — et celui-ci est le dernier rempart avant qu'une trentaine de vérifications gratuites ne dorment pour de bon. LE PALIER DÉCLARÉ A ÉTÉ CORRIGÉ AUSSI : laisser la promesse fausse dans le registre pendant qu'on la retire du message aurait déplacé le problème d'un cran, là où l'agent le lit tout autant. Et sans heure stockée, l'alerte se tait là-dessus plutôt que d'inventer une durée plausible.");
 }
 await testAlerteQuiAffirmaitSansMesurer();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE MÊME ÉVÉNEMENT FACTURÉ DEUX FOIS (2026-09-28, tâche #1098)
+// ————————————————————————————————————————————————————————————————————————
+// Le voyant de santé d'Ezechiel annonçait, sur une suite entièrement verte, « 1 avertissement
+// experimental » PUIS « 2 lignes de bruit sur la sortie d'erreur ». Les deux lignes de bruit
+// ÉTAIENT cet avertissement : l'`ExperimentalWarning` de `node:sqlite` et la ligne
+// d'accompagnement que Node colle derrière. Le même événement, compté deux fois, dont une sous une
+// étiquette qui suggère de l'inexpliqué.
+async function testMemeEvenementFactureDeuxFois() {
+  const e = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // LE CAS RÉEL, RELEVÉ SUR LE FILET DU JOUR — les deux seules lignes de la sortie d'erreur.
+  const lignesDuJour = [
+    { flux: 'sortie', texte: 'Passed: un bloc' },
+    { flux: 'erreur', texte: '(node:17403) ExperimentalWarning: SQLite is an experimental feature and might change at any time' },
+    { flux: 'erreur', texte: '(Use `node --trace-warnings ...` to show where the warning was created)' },
+  ];
+  const sante = e.santeDuFilet({ code: 0, ms: 1000, lignes: lignesDuJour, groupes: [{ sujets: 1 }] });
+  const cles = sante.anomalies.map((a) => a.cle);
+  assert.ok(cles.includes('experimental'), 'l\'avertissement du moteur reste annoncé : il ne s\'agissait jamais de le taire, seulement de ne pas le facturer une seconde fois');
+  assert.ok(!cles.includes('bruit'), 'MUST NOT DOUBLE-COUNT: les deux lignes de la sortie d\'erreur ÉTANT cet avertissement, il ne reste rien d\'inexpliqué — un « traite ce bruit » qu\'aucune action légitime ne peut éteindre devient du décor (leçon L6)');
+
+  // CONTRE-TEST (BP4) — UNE VRAIE LIGNE INATTENDUE DOIT TOUJOURS RESSORTIR. C'est la seule alerte
+  // qui compte ici, et c'est précisément celle que le doublon noyait.
+  const avecVraiBruit = e.santeDuFilet({ code: 0, ms: 1000, lignes: [...lignesDuJour, { flux: 'erreur', texte: 'Error: quelque chose est tombé dans un coin' }], groupes: [{ sujets: 1 }] });
+  const bruit = avecVraiBruit.anomalies.find((a) => a.cle === 'bruit');
+  assert.ok(bruit, 'une ligne que rien n\'explique déclenche toujours l\'alerte : le filtre écarte le connu, il n\'éteint pas l\'alerte');
+  assert.ok(/^1 ligne\(s\) INEXPLIQUÉE\(S\)/.test(bruit.quoi), 'et elle en annonce UNE, pas trois — le compte est la part inexpliquée, jamais la population entière');
+  assert.ok(/2 autre\(s\) déjà rattachée\(s\)/.test(bruit.quoi), 'la part écartée est dite, jamais escamotée : un chiffre qui baisse sans expliquer pourquoi se lit comme une régression du détecteur');
+
+  // LA RÈGLE RESTE ÉTROITE, et c'est ce qui la rend sûre : un avertissement d'un genre inconnu
+  // n'est rattaché à rien, donc il compte. Sans cette borne, le filtre deviendrait un tapis.
+  assert.equal(e.ligneDejaExpliquee('(node:1) DeprecationWarning: x'), true, 'un avertissement DÉJÀ déclaré dans les motifs est rattaché');
+  assert.equal(e.ligneDejaExpliquee('(Use `node --trace-warnings ...` to show where the warning was created)'), true, 'la ligne d\'accompagnement du moteur est la SUITE du message précédent, jamais un second événement');
+  assert.equal(e.ligneDejaExpliquee('(node:1) SomeBrandNewWarning: inconnu au bataillon'), false, 'MUST STILL COUNT: un avertissement d\'un genre que personne n\'a déclaré n\'est rattaché à rien — le filtre écarte ce qui est NOMMÉ ailleurs, jamais tout ce qui ressemble à un avertissement');
+
+  console.log("Passed: le même événement facturé deux fois (2026-09-28, tâche #1098). Le voyant de santé d'Ezechiel annonçait, sur une suite ENTIÈREMENT VERTE, « 1 avertissement experimental » puis « 2 lignes de bruit sur la sortie d'erreur » — et les deux lignes de bruit ÉTAIENT cet avertissement : l'ExperimentalWarning de node:sqlite, plus la ligne « (Use `node --trace-warnings ...`) » que Node colle systématiquement derrière. Le même événement, facturé deux fois, dont une sous une étiquette qui suggère de l'inexpliqué. C'EST LA CLASSE DE #1074 — une population annoncée sans en retirer la part déjà expliquée — et elle coûte ici plus qu'un doublon d'affichage : cet avertissement-là NE PEUT PAS ÊTRE RETIRÉ, il vient du moteur, il dit vrai, et il dira vrai tant que node:sqlite sera expérimental. Une alerte « traite ce bruit » qu'aucune action légitime ne peut éteindre devient du décor (leçon L6), et elle emporte avec elle la seule alerte qui compte vraiment : celle qui se déclencherait le jour où une VRAIE ligne inattendue apparaîtrait. LE FILTRE RESTE ÉTROIT, ET C'EST CE QUI LE REND SÛR : seules sont écartées les lignes correspondant à un motif d'avertissement DÉJÀ nommé par le rapport, plus la ligne d'accompagnement du moteur. Un avertissement d'un genre inconnu compte toujours, une vraie erreur compte toujours, et la part écartée est ANNONCÉE dans le message plutôt qu'escamotée — un chiffre qui baisse sans dire pourquoi se lit comme une régression du détecteur.");
+}
+await testMemeEvenementFactureDeuxFois();

@@ -141,3 +141,33 @@ répéterait simplement la constante.
 
 **filet-en-parts hérite de la même détection par IMPORT, jamais par copie** (Article 24) : le jour
 où une piste de plus est ajoutée ici, l'autre outil en profite sans qu'on y touche.
+
+## Le bruit, c'est ce que personne n'a déjà nommé (2026-09-28, tâche #1098)
+
+**Le défaut** : sur une suite ENTIÈREMENT VERTE, le voyant de santé annonçait « 1 avertissement
+`experimental` » **puis** « 2 lignes de bruit sur la sortie d'erreur ». Les deux lignes de bruit
+ÉTAIENT cet avertissement : l'`ExperimentalWarning` de `node:sqlite`, plus la ligne
+« (Use `node --trace-warnings ...`) » que Node colle systématiquement derrière chaque
+avertissement. Le même événement, facturé deux fois, dont une sous une étiquette qui suggère de
+l'inexpliqué.
+
+**Pourquoi ça coûte plus qu'un doublon d'affichage** : cet avertissement-là **ne peut pas être
+retiré**. Il vient du moteur, il dit vrai, et il dira vrai tant que `node:sqlite` sera
+expérimental. Une alerte « traite ce bruit » qu'**aucune action légitime ne peut éteindre** devient
+du décor (leçon L6) — et elle emporte avec elle la seule alerte qui compte ici : celle qui se
+déclencherait le jour où une VRAIE ligne inattendue apparaîtrait sur la sortie d'erreur.
+
+**Ce que fait `ligneDejaExpliquee()`** : une ligne de la sortie d'erreur est écartée du compte de
+bruit si elle correspond à un motif de `MOTIFS_D_AVERTISSEMENT` **que le rapport annonce déjà par
+ailleurs**, ou si c'est la ligne d'accompagnement du moteur (`MOTIF_LIGNE_D_ACCOMPAGNEMENT`).
+
+**Le filtre reste étroit, et c'est ce qui le rend sûr** : un avertissement d'un genre que personne
+n'a déclaré n'est rattaché à rien, donc il compte ; une vraie erreur compte toujours. Le filtre
+écarte ce qui est NOMMÉ ailleurs, jamais tout ce qui ressemble à un avertissement.
+
+**La part écartée est ANNONCÉE**, jamais escamotée : le message dit « (2 autre(s) déjà rattachée(s)
+à un avertissement nommé ci-dessus, donc jamais recomptée(s) ici) ». Un chiffre qui baisse sans
+dire pourquoi se lit comme une régression du détecteur.
+
+**La classe, pas l'occurrence** (leçon L37) : c'est la même famille que la tâche #1074 — une
+population annoncée sans en retirer la part déjà expliquée.

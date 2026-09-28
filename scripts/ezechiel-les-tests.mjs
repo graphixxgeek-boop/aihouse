@@ -1078,6 +1078,36 @@ export const MOTIFS_D_AVERTISSEMENT = [
   { cle: "promesse-non-gerée", motif: /UnhandledPromiseRejection|unhandled rejection/i, quoi: "une promesse a échoué sans que personne ne l'attrape : selon la version du moteur, ça passe en silence aujourd'hui et fait tomber la suite demain" },
 ];
 
+// LA LIGNE D'ACCOMPAGNEMENT DU MOTEUR, déclarée nommément (2026-09-28, tâche #1098). Node imprime
+// « (Use `node --trace-warnings ...` to show where the warning was created) » juste après chaque
+// avertissement : c'est la SUITE du même message, jamais un second événement.
+export const MOTIF_LIGNE_D_ACCOMPAGNEMENT = /^\s*\(Use `node --trace-warnings/;
+
+// ligneDejaExpliquee() — une ligne de la sortie d'erreur est-elle DÉJÀ rattachée à un avertissement
+// que le rapport nomme par ailleurs ?
+//
+// LE DÉFAUT QU'ELLE CORRIGE (2026-09-28, tâche #1098) : le compte de « bruit » additionnait TOUTES
+// les lignes de la sortie d'erreur, y compris celles que la ligne juste au-dessus venait de nommer.
+// Le filet du 2026-09-28 en donnait le cas pur : deux lignes sur la sortie d'erreur, et les deux
+// étaient l'`ExperimentalWarning` de `node:sqlite` plus sa ligne d'accompagnement. Le rapport
+// annonçait donc « 1 avertissement experimental » ET « 2 lignes de bruit » — le même événement,
+// facturé deux fois, dont une sous une étiquette qui suggère du bruit inexpliqué.
+//
+// POURQUOI ÇA COMPTE PLUS QU'UN DOUBLON D'AFFICHAGE : cet avertissement-là ne peut pas être retiré.
+// Il vient du moteur, il dit vrai, et il dira vrai tant que `node:sqlite` sera expérimental. Une
+// alerte « traite ce bruit » qu'AUCUNE action légitime ne peut éteindre devient du décor (L6), et
+// elle emporte avec elle la seule alerte qui compte ici — celle qui se déclencherait le jour où une
+// VRAIE ligne inattendue apparaîtrait sur la sortie d'erreur.
+//
+// LA RÈGLE RESTE ÉTROITE, et c'est ce qui la rend sûre : seules sont écartées les lignes qui
+// correspondent à un motif d'avertissement DÉJÀ déclaré, plus la ligne d'accompagnement que le
+// moteur colle derrière. Tout le reste compte, y compris un avertissement d'un genre inconnu.
+export function ligneDejaExpliquee(texte, motifs = MOTIFS_D_AVERTISSEMENT) {
+  const t = String(texte ?? "");
+  if (MOTIF_LIGNE_D_ACCOMPAGNEMENT.test(t)) return true;
+  return motifs.some((m) => m.motif.test(t));
+}
+
 export function santeDuFilet({ code = null, ms = null, lignes = [], groupes = [] } = {}) {
   if (code === null || !lignes.length) {
     return { mesurable: false, pourquoi: "il faut une EXÉCUTION réelle de la suite : sa santé de fonctionnement ne se lit pas dans le texte du fichier, seulement dans ce qui se passe quand on la lance (leçons L5/L11)" };
@@ -1102,9 +1132,14 @@ export function santeDuFilet({ code = null, ms = null, lignes = [], groupes = []
     const n = (texteComplet.match(new RegExp(a.motif.source, "gi")) ?? []).length;
     if (n) anomalies.push({ cle: a.cle, gravite: "à surveiller", quoi: `${n} avertissement(s) « ${a.cle} » pendant l'exécution`, pourquoi: a.quoi });
   }
-  const bruit = lignes.filter((l) => l.flux === "erreur" && String(l.texte).trim()).length;
+  // LE BRUIT, C'EST CE QUE PERSONNE N'A DÉJÀ NOMMÉ (2026-09-28, tâche #1098) : les lignes rattachées
+  // à un avertissement que le rapport annonce déjà sont retirées du compte, jamais additionnées une
+  // seconde fois sous une étiquette qui suggère de l'inexpliqué.
+  const surErreur = lignes.filter((l) => l.flux === "erreur" && String(l.texte).trim());
+  const bruit = surErreur.filter((l) => !ligneDejaExpliquee(l.texte)).length;
+  const expliquees = surErreur.length - bruit;
   if (code === 0 && bruit) {
-    anomalies.push({ cle: "bruit", gravite: "à surveiller", quoi: `${bruit} ligne(s) écrites sur la sortie d'erreur alors que la suite est verte`, pourquoi: "du bruit toléré finit par cacher le vrai message le jour où il arrive — c'est ainsi qu'une alerte réelle passe inaperçue" });
+    anomalies.push({ cle: "bruit", gravite: "à surveiller", quoi: `${bruit} ligne(s) INEXPLIQUÉE(S) sur la sortie d'erreur alors que la suite est verte${expliquees ? ` (${expliquees} autre(s) déjà rattachée(s) à un avertissement nommé ci-dessus, donc jamais recomptée(s) ici)` : ""}`, pourquoi: "du bruit toléré finit par cacher le vrai message le jour où il arrive — c'est ainsi qu'une alerte réelle passe inaperçue" });
   }
   const bloquantes = anomalies.filter((a) => a.gravite === "bloquante");
   return {
