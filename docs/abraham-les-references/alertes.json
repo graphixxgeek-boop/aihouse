@@ -6,7 +6,7 @@
     },
     "ezechiel-les-tests": {
       "quand": "2026-09-28",
-      "combien": 6
+      "combien": 5
     },
     "abraham-les-references": {
       "quand": "2026-09-27",
@@ -48,15 +48,6 @@
       "gravite": "bloquante",
       "constat": "d'où vient le temps n'a pas été mesuré",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-28"
-    },
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "1 test(s) appellent une fonction qui n'existe plus",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "bloquante",
-      "constat": "1 test(s) appellent une fonction qui n'existe plus",
-      "depuis": "2026-09-27",
       "vueLe": "2026-09-28"
     },
     {
