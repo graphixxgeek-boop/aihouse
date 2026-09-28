@@ -52,7 +52,7 @@ import { join } from "node:path";
 import { printReliabilityNotice, motsDuNom, normaliserNom, memeChose } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { dependancesInternes, aliasDocumentaires, tientUneMemoire, exemptionDuKit } from "./safe-export.mjs";
-import { buildPlanDaction, ETATS_CONSTAT } from "./report-template.mjs";
+import { buildPlanDaction, ETATS_CONSTAT, printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const OUTIL = "x-port-blindtest";
@@ -529,7 +529,7 @@ async function commandeSujet() {
   const cible = join(ROOT, DOSSIER, `consigne-${basePourDocs(sujet.chemin)}-${jour}.txt`);
   mkdirSync(join(ROOT, DOSSIER), { recursive: true });
   writeFileSync(cible, promptAveugle(dossier));
-  console.log(`=== X-Port BLINDTEST — sujet tiré ===\n`);
+  console.log("--- SUJET TIRÉ ---\n");
   console.log(`  SUJET   : ${sujet.chemin}  [${sujet.vitalite}]`);
   console.log(`  MOTIF   : ${sujet.motif}`);
   console.log(`  PHASE   : ${sujet.phase}${sujet.restants ? ` — ${sujet.restants} membre(s) encore jamais testés` : ""}`);
@@ -597,8 +597,14 @@ async function commandeConformite() {
 }
 
 async function main() {
-  printReliabilityNotice("il compare des NOMS de fonctions entre une documentation et un code — une documentation excellente qui ne nomme rien sera comptée comme incomplète, et un pronostic reste un jugement, jamais une mesure exacte.");
+  // LE CADRE PARTAGÉ PLUTÔT QUE TROIS GESTES À LA MAIN (2026-09-28, tâche #902, signalé par
+  // pure-gold-unity). Il écrivait son titre en dur, datait sa sortie lui-même et imprimait son
+  // avertissement HORS du cadre. Son avertissement est conservé MOT POUR MOT — c'est le sien, il
+  // dit une limite réelle de la mesure, et l'unification porte sur la PLACE d'une phrase, jamais
+  // sur son contenu.
   recordCliUsage(OUTIL, { commande: process.argv[2] ?? "aide" });
+  printReportHeader({ tool: OUTIL, title: "X-Port BLINDTEST — le test à l'aveugle de la qualité d'un kit d'export", scriptPath: "scripts/x-port-blindtest.mjs" });
+  printReliabilityNotice("il compare des NOMS de fonctions entre une documentation et un code — une documentation excellente qui ne nomme rien sera comptée comme incomplète, et un pronostic reste un jugement, jamais une mesure exacte.");
   const cmd = process.argv[2];
   if (cmd === "sujet") return commandeSujet();
   if (cmd === "juger") return commandeJuger(process.argv[3], process.argv[4]);

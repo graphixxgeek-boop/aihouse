@@ -23,7 +23,7 @@ import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { toolsBoundByReportTemplate, findRapportsQuiPointent, findRapportsCourtsMaisDenses, REGISTRIES } from "./doc-report.mjs";
-import { findOutilsSansPlanDaction, SANS_CONSTAT_PROPRE, printReportHeader } from "./report-template.mjs";
+import { findOutilsSansPlanDaction, SANS_CONSTAT_PROPRE, printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -420,8 +420,38 @@ function main() {
   // se l'appliquer.
   printReportHeader({ tool: "pure-gold-unity", title: "pure-gold-unity — unification réelle des rapports", scriptPath: "scripts/pure-gold-unity.mjs" });
   recordCliUsage("pure-gold-unity");
-  console.log(formatUnityReport(scanUnity()));
-  console.log(formatRapportsComplets(auditRapportsComplets()));
+  const scan = scanUnity();
+  const audit = auditRapportsComplets();
+  console.log(formatUnityReport(scan));
+  console.log(formatRapportsComplets(audit));
+
+  // LE PLAN D'ACTION, ET L'IRONIE EST LA MÊME QUE POUR L'EN-TÊTE (2026-09-28, tâche #902) : l'outil
+  // qui compte les rapports SANS plan d'action figurait dans sa propre liste, et s'y est vu depuis
+  // le premier jour sans que ça déclenche rien. Un contrôleur qui ne s'applique pas sa règle
+  // enseigne qu'on peut ne pas se l'appliquer — et l'Article 28 est formel : un rapport n'est fini
+  // que quand ses constats sont devenus des tâches.
+  //
+  // LES QUATRE FAMILLES RESTENT SÉPARÉES, jamais agrégées en un chiffre : elles appellent quatre
+  // gestes différents, et les fondre produirait une tâche fourre-tout que personne n'appliquerait.
+  const ecarts = [];
+  if (scan.mesurables && scan.conformes < scan.mesurables) {
+    ecarts.push({ pourquoi: `${scan.mesurables - scan.conformes} rapport(s) sur ${scan.mesurables} n'emploient pas le gabarit partagé`,
+      quoiFaire: "brancher `printReportHeader()` : l'en-tête déclare l'outil, sa fraîcheur et sa fiabilité, et un rapport qui ne les déclare pas se lit sans savoir ce qu'il vaut" });
+  }
+  if (audit.sansPlan?.length) {
+    ecarts.push({ pourquoi: `${audit.sansPlan.length} outil(s) ne concluent JAMAIS par un plan d'action : ${audit.sansPlan.join(", ")}`,
+      quoiFaire: "Article 28 : un rapport n'est fini que quand ses constats sont devenus des tâches — brancher `planDactionDepuisEcarts()` sur ce que l'outil a déjà trouvé" });
+  }
+  if (audit.vertsSansMesure?.mesurable && audit.vertsSansMesure.outils?.length) {
+    ecarts.push({ pourquoi: `${audit.vertsSansMesure.outils.length} outil(s) peuvent afficher un signe de réussite sans avoir de mot pour dire qu'ils n'ont rien mesuré : ${audit.vertsSansMesure.outils.join(", ")}`,
+      quoiFaire: "leur donner la formulation d'absence de donnée — sans elle, « je n'ai pas pu regarder » se lit exactement comme « rien à signaler » (leçons L5/L11)" });
+  }
+  if (audit.muets?.length) {
+    ecarts.push({ pourquoi: `${audit.muets.length} détecteur(s) construits, exportés, et appelés par personne`,
+      quoiFaire: "les brancher ou écrire pourquoi ils dorment — un mécanisme qui n'émet rien est une intention (leçon L2)" });
+  }
+  imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "pure-gold-unity",
+    libelle: (e) => e.pourquoi, tache: (e) => e.quoiFaire }));
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main();

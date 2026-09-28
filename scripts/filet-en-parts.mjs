@@ -38,7 +38,7 @@ import { spawn } from "node:child_process";
 import { cpus } from "node:os";
 import { TOUCHES_L_ETAT_COMMUN, filetResolu } from "./ezechiel-les-tests.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction } from "./report-template.mjs";
 
 // MÊME DÉFAUT QUE CELUI D'EZECHIEL, CORRIGÉ POUR LA CLASSE ET PAS POUR L'OCCURRENCE (leçon L37) :
 // un chemin de CE dépôt écrit en constante rendrait ce runner inutilisable ailleurs. La détection
@@ -270,6 +270,28 @@ async function main() {
     console.log("   Si le mode séquentiel est vert et le parallèle rouge, la faute est au parallélisme, jamais au code testé.");
     for (const r of rate) console.log((r.err || r.out).split("\n").slice(-12).join("\n"));
   }
+
+  // LE PLAN D'ACTION MANQUAIT, ET LE MOT POUR DIRE « JE N'AI RIEN MESURÉ » AUSSI (2026-09-28, tâche
+  // #902, signalé par pure-gold-unity). Cet outil était le dernier des quarante-sept à conclure sur
+  // un chiffre sans jamais dire ce qu'il faut en FAIRE (Article 28) — et le seul à pouvoir
+  // afficher un ✅ sans porter nulle part de quoi dire qu'il n'avait pas pu mesurer.
+  //
+  // CE SECOND POINT EST LE PLUS DANGEREUX SUR CET OUTIL PRÉCISÉMENT : il découpe le filet en parts,
+  // et une part qui n'aurait rien lancé du tout sortirait en code 0 avec zéro succès — ce qui
+  // ressemble trait pour trait à une part qui a tout passé. Un filet qui ment dans ce sens-là est
+  // le pire objet du dépôt.
+  const ecarts = [];
+  if (rate.length) {
+    ecarts.push({ pourquoi: `${rate.length} part(s) sur ${parts.length} sortent en échec`,
+      quoiFaire: "relancer `node scripts/check-house.mjs` en séquentiel AVANT de conclure : si le séquentiel est vert, la faute est au parallélisme et jamais au code testé" });
+  }
+  if (!recolle.lignes.length) {
+    ecarts.push({ pourquoi: "🚨 PAS MESURÉ — aucune ligne de succès recollée : les parts ont rendu la main sans qu'aucun test ne se déclare passé",
+      quoiFaire: "ne PAS lire ce passage comme un filet vert : zéro succès ressemble trait pour trait à zéro échec. Relancer en séquentiel, qui reste la référence" });
+  }
+  imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "filet-en-parts",
+    libelle: (e) => e.pourquoi, tache: (e) => e.quoiFaire }));
+
   process.exit(rate.length ? 1 : 0);
 }
 

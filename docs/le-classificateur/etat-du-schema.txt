@@ -15,15 +15,15 @@
                 aucune échelle de maturité n'existe dans le dépôt. L'idée d'un code 0/1/2/3 a été formulée puis EFFACÉE sans qu'aucune tâche ne la porte (retrouvée par data-archangel le 2026-09-24) — c'est le seul des cinq niveaux qu'il nomme qui n'a aucun porteur.
          ce qui la porte : #747 #800
 
-🟠  48 %  3. HARMONISATION — normaliser les noms, formats, statuts, contrats d'interface et conventions
+🟠  54 %  3. HARMONISATION — normaliser les noms, formats, statuts, contrats d'interface et conventions
            7 %  les noms en service ont-ils été VALIDÉS par l'utilisateur ?  (77 nom(s) en service jamais validés au registre des baptêmes)
-          89 %  les rapports suivent-ils tous le gabarit partagé ?  (5 rapport(s) hors gabarit)
+         100 %  les rapports suivent-ils tous le gabarit partagé ?  (0 rapport(s) hors gabarit)
          ce qui la porte : #636 #679 #696 #703 #733 #740 #745 #747 #768 #775 #790 #800 #810 #929 #936 #988 #1020 #1066
 
 🟠  76 %  4. PROCESS INTEGRATION — construire les liens, dépendances, déclencheurs et échanges entre agents
           52 %  les données produites par un outil sont-elles relues par un autre ?  (37 source(s) que seul leur producteur relit)
          100 %  les process déclarés portent-ils VRAIMENT un document ET un contrôleur ?  (0 process déclaré(s) sans document ou sans contrôleur, sur 13)
-         ce qui la porte : #490 #603 #636 #679 #700 #704 #721 #760 #805 #814 #1019 #1020 #1069
+         ce qui la porte : #490 #603 #636 #679 #700 #704 #721 #805 #814 #1019 #1020
 
 ✅ 100 %  5. ORGANISATION GÉNÉRALE — installer la gouvernance, les autorités, les responsabilités et les arbitrages
          100 %  les rangs d'organisation sont-ils déclarés et sans divergence ?  (0 rang(s) divergent(s) entre catégories déclarées et rangs réels)

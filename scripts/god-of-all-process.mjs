@@ -47,7 +47,7 @@ import { normaliserNomDOutil } from "./le-coordinateur.mjs";
 // silencieusement amputé de sa moitié conduite.
 import { auditWorkingRules, angelSectionLines } from "./angel-of-ia-process.mjs";
 import { recordFunctionUsage } from "./tool-usage.mjs";
-import { readAgentSession, SESSION_FILE, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { readAgentSession, SESSION_FILE, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, printReportHeader} from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -2542,8 +2542,14 @@ function main() {
     for (const l of detteDuDernierCommitLines(detteDuDernierCommit())) console.log(l);
     return;
   }
-  printReliabilityNotice("god-of-all-process");
+  // LE CADRE PARTAGÉ PLUTÔT QUE TROIS GESTES À LA MAIN (2026-09-28, tâche #902, signalé par
+  // pure-gold-unity). Ce fichier écrivait son titre en dur, datait sa sortie lui-même et imprimait
+  // l'avertissement de fiabilité HORS du cadre — trois des quatre indices d'un rapport non
+  // unifié. Le cadre les rend tous les trois, dans le même ordre que les quarante-cinq autres, et
+  // l'intérêt n'est pas l'esthétique : un lecteur qui doit deviner où chaque rapport range sa
+  // fraîcheur et sa fiabilité finit par ne plus les lire.
   recordCliUsage("god-of-all-process");
+  printReportHeader({ tool: "god-of-all-process", title: "god-of-all-process — le référent de la discipline d'exécution", scriptPath: "scripts/god-of-all-process.mjs" });
   const tache = process.argv.slice(2).filter((a) => !a.startsWith("--")).join(" ");
   // LA PLANCHE DES SCHÉMAS, à la demande. Sortie sur la sortie standard plutôt qu'écrite d'office :
   // un fichier généré à chaque appel se périmerait dès que quelqu'un oublierait de le relancer, et
@@ -2660,7 +2666,7 @@ function main() {
     }
     return;
   }
-  console.log("=== god-of-all-process — état du dispositif ===\n");
+  console.log("--- ÉTAT DU DISPOSITIF ---\n");
   for (const b of buildGodReportBlocks()) console.log(b.text, "\n");
 
   // UNE VÉRIFICATION QUI NE SORTAIT JAMAIS D'ICI (2026-09-26, tâche #919) —
