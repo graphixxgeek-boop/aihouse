@@ -849,6 +849,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // recherche ne se périme pas de la même façon qu'une mesure, et son plan d'action est déjà porté
   // par les tâches qu'elle a ouvertes.
   "recherches": "bibliothèque de collectes extérieures (état de l'art), pas le registre d'un outil : rien à relancer, et chaque fiche porte déjà son plan d'action",
+  // (2026-09-28) Le dossier du GRAND PROJET : ce n'est le registre d'AUCUN outil, c'est l'espace de
+  // travail d'un chantier — les sources qu'il fournit, l'inventaire d'absorption, la stratégie, le
+  // plan d'action. Une Ronde n'a rien à y relire périodiquement : ce dossier ne mesure rien et ne
+  // se périme pas, il AVANCE. Ce qui s'y décide devient une tâche du suivi, et c'est le suivi que
+  // la Ronde regarde déjà.
+  "grand-projet": "espace de travail d'un chantier (sources, absorption, stratégie, plan d'action), pas le registre d'un outil : il ne mesure rien, il avance — et ce qui s'y décide devient une tâche du suivi, que la Ronde relit déjà",
   // LES HUIT QUE LA GÉNÉRATION D'INDEX A RÉVÉLÉS (2026-09-26, tâche #983). Ils n'ont pas changé de
   // nature en recevant une table des matières : ce garde-fou reconnaît un registre à la présence
   // d'un `index.md`, et il a donc raison de DEMANDER — la réponse s'écrit ici plutôt que le signal

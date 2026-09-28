@@ -2126,6 +2126,14 @@ export const EXCEPTIONS_D_EXPORT = [
   // ne parle pas de CE projet, elle parle de l'état de l'art d'un problème que tout projet
   // rencontre. Elle PART, sans hésitation (2026-09-27).
   { chemin: "docs/recherches/filet-de-securite-etat-de-l-art.md", etat: "PART", pourquoi: "l'état de l'art de la santé et de la rapidité d'une suite de tests : aucune ligne n'est propre à ce projet, et refaire cette collecte ailleurs coûterait exactement le même temps" },
+  // LE DOSSIER DU GRAND PROJET (2026-09-28) — toutes ses pièces partent AVEC l'Agence, et pour
+  // une raison qui n'est pas évidente : ce ne sont pas des documents sur CE projet-ci, ce sont les
+  // pièces d'une MÉTHODE — comment on absorbe un corpus massif sans trancher trop tôt, comment on
+  // sépare la parole du commanditaire de la matière préparée, comment on n'organise pas par sujet
+  // avant de connaître les sujets. Le contenu sera propre à ce projet ; la structure ne l'est pas.
+  { chemin: "docs/grand-projet/index.md", etat: "PART", pourquoi: "la porte d'entrée d'un chantier massif : sa structure — sources séparées de l'absorption, absorption séparée de l'analyse, trois traitements déclarés par document — est une méthode réutilisable, jamais un contenu propre à ce dépôt" },
+  { chemin: "docs/grand-projet/notes-de-travail.md", etat: "PART", pourquoi: "les pièges anticipés AVANT de les rencontrer — trancher pendant la lecture, laisser le volume de la matière parler plus fort que le commanditaire, croire qu'on a lu, ranger par sujet trop tôt : aucun n'est propre à ce projet-ci" },
+  { chemin: "docs/grand-projet/01-absorption/inventaire.md", etat: "PART", pourquoi: "le gabarit d'inventaire d'absorption : un document = une ligne, un traitement décidé une seule fois. Vide aujourd'hui, et c'est la FORME qui voyage, jamais son contenu" },
   { chemin: "docs/recherches/ralentissements-causes-indirectes.md", etat: "PART", pourquoi: "ce que le monde extérieur sait des causes de ralentissement d'un projet — la fluidité, la dette de process, la fatigue d'alerte : rien n'y est propre à ce dépôt, et c'est précisément la collecte qui a façonné JESUS-LE-SAUVEUR avant sa première ligne de code" },
   { chemin: "docs/strategies/renommage-en-masse-strategie.md", etat: "PART", pourquoi: "renommer à grande échelle sans casser l'histoire est un problème que TOUT outillage rencontre — le raisonnement ne doit surtout pas être refait de zéro" },
   { chemin: "docs/strategies/classification-et-nivellement-strategie.md", etat: "PART", pourquoi: "comment ranger un outillage et le mettre à niveau : la question se repose à l'identique ailleurs, et elle a coûté des semaines ici" },
