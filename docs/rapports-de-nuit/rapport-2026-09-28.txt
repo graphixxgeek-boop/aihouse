@@ -484,3 +484,33 @@ LE COMPTE AVANT / APRÈS — ce que tu avais demandé, et la réponse est franch
 
   Corrigé : on ne devine pas la date manquante, on DIT combien de passages elle
   empêche de compter. Filet 348 au vert.
+
+
+--------------------------------------------------------------------------------
+14h50 — TROIS TROUVAILLES EN UNE HEURE, ET TOUTES LA MÊME FORME
+--------------------------------------------------------------------------------
+
+  La lecture des rapports VERTS est de loin le mécanisme le plus productif de la
+  journée. Trois trouvailles en une heure, et le schéma est identique à chaque
+  fois : LA DONNÉE JUSTE ÉTAIT DÉJÀ STOCKÉE À CÔTÉ du chiffre approximatif.
+
+  1. « objectif 1, résultat 491 » — sur une unité que rien ne mesurait.
+     Cinq faux « dépassés » devenus cinq chantiers honnêtes.
+
+  2. Douze et cinquante-cinq passages réels jetés du calcul parce que leur heure
+     est perdue — alors que le compteur enregistre explicitement cette perte.
+     Le verdict « tool-learning est en dessous de sa cible » changeait de sens.
+
+  3. L'alerte de Ronde affirmant « depuis des semaines » quatre heures après une
+     Ronde faite — alors que l'heure de la dernière Ronde est stockée à chaque
+     enregistrement, et n'était lue par personne.
+
+  CE QUE J'EN TIRE, ET C'EST AU JOURNAL (entrée 28) :
+  le défaut n'est presque jamais dans la mesure. Quelqu'un a fait le travail
+  honnête en amont — déclarer l'unité, marquer un horodatage perdu, enregistrer
+  la date. C'est le CONSOMMATEUR en aval qui ne lit pas ce qu'on lui a laissé.
+  Le réflexe qui paie coûte trente secondes : devant un chiffre qui sent
+  l'approximation, ouvrir la structure de données qui l'alimente et regarder
+  quels champs elle porte vraiment.
+
+  ÉTAT : filet 349 au vert, arbre propre, tout poussé.

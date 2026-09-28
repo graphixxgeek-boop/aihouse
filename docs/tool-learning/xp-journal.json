@@ -229,5 +229,13 @@
     "lecon": "Les trois trouvailles de la journée sont de la même famille — un signal adjacent servi à la place du signal visé — mais les deux premières ACCUSAIENT à tort et celle-ci FÉLICITAIT à tort. La différence décide de leur durée de vie : un « en dessous » fait ouvrir le dossier, un « dépassé » de deux ordres de grandeur passe pour une bonne nouvelle. LE RÉFLEXE À PRENDRE : dans un tableau d'objectifs, lire les DÉPASSEMENTS SPECTACULAIRES avant les manques. Un résultat 400 fois supérieur à sa cible ne dit presque jamais qu'on a bien travaillé — il dit qu'on ne mesure pas ce qu'on croit.",
     "rienARetenir": false,
     "date": "2026-09-28T14:24:55.928Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Quand un rapport affiche un chiffre APPROXIMATIF, la donnée exacte est souvent déjà stockée juste à côté — trois fois en une heure.",
+    "contexte": "Tâches #1095, #1096, #1097, toutes trouvées en relisant des rapports VERTS avec le terrain en tête. (1) Un objectif comparé à un comptage de lancements pendant que l'unité déclarée pointait vers une colonne d'index jamais lue. (2) Des passages réels jetés du calcul parce que leur heure est perdue, alors que le compteur enregistre explicitement cette perte. (3) Une alerte affirmant « depuis des semaines » alors que l'heure de la dernière Ronde est stockée à chaque enregistrement.",
+    "lecon": "Le schéma est toujours le même : quelqu'un a fait le travail honnête en AMONT — déclarer l'unité réelle, marquer un horodatage perdu, enregistrer la date de passage — et le CONSOMMATEUR en aval ne lit pas ce qu'on lui a laissé. Le défaut n'est donc presque jamais dans la mesure, il est dans le chemin entre la mesure et son affichage. LE RÉFLEXE CONCRET, et il coûte trente secondes : devant un chiffre qui sent l'approximation, ouvrir la structure de données qui l'alimente et regarder quels champs elle porte VRAIMENT. Trois fois sur trois aujourd'hui, le champ juste était là, inutilisé.",
+    "rienARetenir": false,
+    "date": "2026-09-28T14:53:03.525Z"
   }
 ]
