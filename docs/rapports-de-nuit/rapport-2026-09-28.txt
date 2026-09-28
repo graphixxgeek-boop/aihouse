@@ -453,3 +453,34 @@ LE COMPTE AVANT / APRÈS — ce que tu avais demandé, et la réponse est franch
   arbitrage, pas un correctif.
 
   ÉTAT : filet 347 au vert, arbre propre, tout poussé.
+
+
+--------------------------------------------------------------------------------
+14h40 — LE MÊME RAPPORT, L'AUTRE BOUT, ET UN VERDICT QUI CHANGE DE SENS
+--------------------------------------------------------------------------------
+
+  Après avoir corrigé les faux « dépassés », j'ai regardé les lignes à « résultat
+  0 » du même rapport. Deux d'entre elles mentaient aussi, dans l'autre sens.
+
+    rapport-gros-prompt : « objectif 2, résultat 0 »  →  12 passages réels
+    tool-learning       : « objectif 4, résultat 3 »  →  55 passages réels
+
+  Leur heure a été perdue. Et le compteur fait déjà exactement ce qu'il faut : il
+  enregistre ces passages avec une marque « horodatage perdu » plutôt que de les
+  jeter ou de leur inventer une date. C'est ta règle sur le temps, appliquée au
+  compteur lui-même.
+
+  MAIS LE RAPPORT D'OBJECTIFS NE LISAIT PAS CETTE MARQUE. Son filtrage compare
+  une date à des bornes ; une date absente tombe hors de toutes les bornes, donc
+  ces passages disparaissaient sans un mot.
+
+  Le verdict « tool-learning est en dessous de sa cible » change entièrement de
+  sens quand on sait qu'il détient 55 passages non datables.
+
+  ET C'EST LA MÊME CLASSE QUE CE MATIN, POUR LA DEUXIÈME FOIS DANS LA JOURNÉE :
+  un correctif appliqué à certains appelants et pas à tous, pendant que la
+  doctrine est écrite noir sur blanc ailleurs. Deux sujets sans rapport, même
+  forme d'oubli.
+
+  Corrigé : on ne devine pas la date manquante, on DIT combien de passages elle
+  empêche de compter. Filet 348 au vert.
