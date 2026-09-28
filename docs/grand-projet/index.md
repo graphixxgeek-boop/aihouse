@@ -89,7 +89,48 @@ créé aujourd'hui serait à défaire demain, ce qui est exactement le travers q
 Les sujets vivront en sous-dossiers de `00-sources/02-documents-prepares/` et de
 `04-arborescence-des-taches/`, là où ils apparaîtront pour de vrai.
 
+## Ses quatre calibrages, tranchés le 2026-09-28 avant l'arrivée du prompt
+
+**① L'ORDRE** — « tu dois attendre de TOUT absorber avant de commencer l'analyse ». Ses deux
+fichiers se lisent en premier parce qu'ils cadrent la lecture, mais **on n'y répond qu'une fois le
+corpus entier absorbé**. Beaucoup de ses questions trouveront probablement leur réponse dans la
+matière préparée.
+
+**② PENDANT L'ABSORPTION : rien.** Aucun point d'étape, aucune impression partielle. Il reçoit
+**UN** point quand la vue globale est là. C'est cohérent avec ① : lui livrer une lecture partielle
+l'inviterait à trancher sur un dixième du corpus, ce que sa propre consigne interdit.
+
+**③ LA TRANSMISSION — il déposera les fichiers DANS LE DÉPÔT, pas dans la conversation.** Il
+comptait les coller ici et a demandé conseil ; le conseil est net et la raison est mécanique :
+
+> Un document collé dans la conversation est payé **en entier, une seule fois, et pour toujours** —
+> il occupe la mémoire de travail même après avoir été déposé sur disque, même s'il s'avère inutile.
+> Un document poussé dans le dépôt n'est payé **qu'au moment où on le lit, et seulement pour la
+> partie qu'on lit**. Sur des centaines de pages, l'écart n'est pas un confort : c'est la différence
+> entre pouvoir tout absorber et ne pas pouvoir.
+
+**Où il les dépose** : `docs/grand-projet/00-sources/01-sa-demande/` pour ses deux fichiers,
+`docs/grand-projet/00-sources/02-documents-prepares/` pour le reste. **Comment, sans ligne de
+commande** : sur GitHub, ouvrir le dossier, « Add file » → « Upload files », glisser-déposer,
+valider. Plusieurs fichiers à la fois, aucune connaissance de git requise.
+
+**④ LE CLASSEMENT — j'ai de la marge, et il l'a dit ainsi** : « je pense que tu reprendras
+sensiblement la même organisation que moi, mais je veux te laisser de la marge ». Donc : **son
+rangement est le point de départ**, pas une contrainte. Je le reproduis d'abord, et je m'en écarte
+là où la lecture le justifie — en disant ce que je change et pourquoi, jamais en silence.
+*(Il précisera lui-même l'étendue de cette marge.)*
+
 ## Ce qui reste à trancher avec lui
 
 Inscrit ici plutôt que supposé (Article 16). Les questions lui sont posées en fenêtre dédiée dès
 que l'assainissement en cours est terminé.
+
+## Les fichiers de ce dossier
+
+| Fichier | Ce qu'il porte |
+|---|---|
+| [`index.md`](index.md) | ce fichier : la porte d'entrée, les règles du dossier, les calibrages tranchés |
+| [`notes-de-travail.md`](notes-de-travail.md) | ce qui n'est qu'à moi : les pièges anticipés, la discipline de lecture, le journal |
+| [`01-absorption/inventaire.md`](01-absorption/inventaire.md) | un document = une ligne : poids, thème, traitement décidé une seule fois |
+| [`00-sources/01-sa-demande/README.md`](00-sources/01-sa-demande/README.md) | pourquoi ses deux fichiers ont un statut que les autres n'ont pas |
+| [`00-sources/02-documents-prepares/README.md`](00-sources/02-documents-prepares/README.md) | pourquoi le volume n'est pas l'autorité, et l'entrée à l'inventaire avant lecture |

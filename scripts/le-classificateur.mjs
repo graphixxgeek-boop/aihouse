@@ -2131,6 +2131,8 @@ export const EXCEPTIONS_D_EXPORT = [
   // pièces d'une MÉTHODE — comment on absorbe un corpus massif sans trancher trop tôt, comment on
   // sépare la parole du commanditaire de la matière préparée, comment on n'organise pas par sujet
   // avant de connaître les sujets. Le contenu sera propre à ce projet ; la structure ne l'est pas.
+  { chemin: "docs/grand-projet/00-sources/01-sa-demande/README.md", etat: "PART", pourquoi: "la règle de séparation entre la parole du commanditaire et la matière préparée : sur n'importe quel corpus massif, confondre les deux est le glissement qu'on ne voit jamais se produire" },
+  { chemin: "docs/grand-projet/00-sources/02-documents-prepares/README.md", etat: "PART", pourquoi: "pourquoi le volume n'est pas l'autorité, et pourquoi chaque document entre à l'inventaire AVANT d'être lu — deux règles de méthode, vraies hors de ce dépôt" },
   { chemin: "docs/grand-projet/index.md", etat: "PART", pourquoi: "la porte d'entrée d'un chantier massif : sa structure — sources séparées de l'absorption, absorption séparée de l'analyse, trois traitements déclarés par document — est une méthode réutilisable, jamais un contenu propre à ce dépôt" },
   { chemin: "docs/grand-projet/notes-de-travail.md", etat: "PART", pourquoi: "les pièges anticipés AVANT de les rencontrer — trancher pendant la lecture, laisser le volume de la matière parler plus fort que le commanditaire, croire qu'on a lu, ranger par sujet trop tôt : aucun n'est propre à ce projet-ci" },
   { chemin: "docs/grand-projet/01-absorption/inventaire.md", etat: "PART", pourquoi: "le gabarit d'inventaire d'absorption : un document = une ligne, un traitement décidé une seule fois. Vide aujourd'hui, et c'est la FORME qui voyage, jamais son contenu" },
