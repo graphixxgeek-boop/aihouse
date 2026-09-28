@@ -117,6 +117,49 @@ CE QUE LA NUIT A APPRIS, ET QUI VAUT PLUS QUE LES CORRECTIFS
 --------------------------------------------------------------------------------
 ÉTAT DU CODE
 --------------------------------------------------------------------------------
-  Filet : 332 blocs au vert à chaque commit. Tout est poussé au fil de l'eau.
+  Filet : 335 blocs au vert à chaque commit. Tout est poussé au fil de l'eau.
   Aucune action du périmètre sensible : rien qui change ce que Lia et Noé disent
   ou font, aucun renommage en masse, CLAUDE.md non modifié.
+
+
+--------------------------------------------------------------------------------
+SUITE DE LA MATINÉE — 09h08 à 09h41 (heure lue, source système)
+--------------------------------------------------------------------------------
+
+  TROIS TÂCHES DE PLUS, ET C'EST TROIS FOIS LA MÊME FAMILLE D'ERREUR.
+  La septième, huitième et neuvième occurrence de ce que cette nuit n'a cessé de
+  trouver : un nom AFFICHÉ recopié tel quel dans un chemin de fichier, le chemin
+  interrogé, et l'absence de réponse lue comme une réponse négative.
+
+  #1076 — TOOL-LEARNING accusait CLONE-HUNTER d'être « resté immobile » le jour
+  même où son script recevait trois améliorations. Le registre stocke le nom en
+  majuscules ; il était collé dans « scripts/<NOM>.mjs » ; ce fichier n'existe pas ;
+  git ne proteste pas, il rend une sortie vide ; une sortie vide se lit « aucun
+  commit ». L'accusation était donc INEXTINGUIBLE : quoi que je fasse, elle serait
+  revenue à l'identique.
+
+  #1077 — LE MÊME DÉFAUT, MAIS SUR 21 AGENTS SUR 54. La cellule « Outil » de la
+  table maîtresse porte souvent son script entre parenthèses. Passée brute à la
+  fonction qui construit les chemins du kit, elle fabriquait cinq manques par
+  Agent — instanciation, registre, blueprint, absence de CLAUDE.md, absence du
+  suivi — pour des outils parfaitement complets. 39 % de l'équipe accusée en
+  permanence.
+  CE QUI REND CELUI-LÀ PLUS GRAVE : IL AVAIT DÉJÀ ÉTÉ CORRIGÉ, le 21 septembre,
+  sur deux appelants sur trois — et le commentaire écrit ce jour-là certifie que
+  les trois étaient alignés. Le troisième ne l'était pas.
+
+  #1078 — LA VRAIE CAUSE, ET C'EST LA TROUVAILLE LA PLUS UTILE DES TROIS.
+  J'ai cherché pourquoi une règle aussi simple avait pu être oubliée. Réponse :
+  elle était RECOPIÉE À L'IDENTIQUE dans cinq endroits, en plus de la fonction
+  censée la porter. Cinq copies, c'est cinq endroits où un sixième appelant peut
+  l'oublier. Les cinq passent maintenant par la fonction, et un garde-fou refuse
+  qu'une sixième copie réapparaisse.
+
+  CE QUE J'EN RETIENS, ET C'EST ÉCRIT AU JOURNAL (entrée 23) :
+  quand je trouve un correctif DÉJÀ appliqué ailleurs, la bonne question n'est
+  jamais « ai-je couvert tous les appelants ? » mais « pourquoi un appelant peut-il
+  l'oublier ? ». Corriger les appelants un par un reconduit le défaut au prochain
+  venu ; déplacer la vérification DANS la fonction appelée le ferme.
+
+  ÉTAT : filet 335 blocs au vert, exit 0, tout poussé. Toujours aucune action du
+  périmètre sensible.

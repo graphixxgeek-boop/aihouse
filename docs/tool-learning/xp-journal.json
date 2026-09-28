@@ -189,5 +189,13 @@
     "quoiFaire": "Quand une assertion porte un chiffre, se demander dans quel SENS il bougera si le travail réussit — et si la réponse est « il baisse », réécrire l’assertion sur une PART de sa propre population plutôt que sur un écart ou un plancher. Et vérifier le dénominateur : mon premier essai de correction divisait par une fonction qui ne rend QUE les cas signalés, en croyant y trouver toute la population — le défaut même que je corrigeais, commis en le corrigeant.",
     "tache": 1053,
     "date": "2026-09-28T07:58:52.184Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Une règle recopiée est une règle qui sera oubliée — et le commentaire qui certifie qu'elle s'applique partout est le signe, pas la preuve.",
+    "contexte": "Tâches #1076, #1077, #1078, dans la même heure. Trois fois la même famille : un nom d'affichage (majuscules, ou portant son script entre parenthèses) recopié tel quel dans un chemin de fichier, puis interrogé — et l'absence de réponse lue comme une réponse négative.",
+    "lecon": "Quand je trouve un correctif qui a DÉJÀ été appliqué ailleurs, la question utile n'est jamais « ai-je couvert tous les appelants ? » mais « pourquoi cette règle peut-elle être oubliée par un appelant ? ». La réponse a été la même les trois fois : elle était RECOPIÉE au lieu d'être appelée. Corriger les appelants un par un reconduit le défaut au prochain venu ; déplacer la vérification DANS la fonction appelée le ferme. Et un commentaire qui affirme « le même découpage est déjà établi ailleurs » ne prouve rien : il décrivait trois sites alignés alors qu'un seul sur trois l'était.",
+    "rienARetenir": false,
+    "date": "2026-09-28T09:44:31.338Z"
   }
 ]
