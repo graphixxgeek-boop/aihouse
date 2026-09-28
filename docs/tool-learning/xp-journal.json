@@ -213,5 +213,13 @@
     "lecon": "Mesuré avant d'agir : 5 sur 59, soit 8 %. Les 54 autres sont de vraies fonctions des gardiens, et leur absence des documents est un vrai écart — le détecteur avait raison. Ce qui m'a sauvé n'est pas la prudence, c'est d'avoir compté avant de conclure, et ça a pris trente secondes. LE PIÈGE EST SYMÉTRIQUE DU QUATRIÈME DÉCLENCHEUR AJOUTÉ LE MÊME JOUR : celui-ci dit de se méfier d'un rapport vert qui détonne avec le terrain ; celui-là dit de se méfier autant d'un rapport qui CONFIRME trop bien la classe d'erreur qu'on a en tête. Une grille de lecture fraîche est le moment où l'on est le plus susceptible de desserrer un garde-fou juste.",
     "rienARetenir": false,
     "date": "2026-09-28T11:48:45.132Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Le quatrième moment a mordu le jour même où il a été écrit — et sur la loi la plus protégée du projet.",
+    "contexte": "Tâche #1091. Smart Conso API, dont l'Article 22 rend la consultation OBLIGATOIRE avant toute action coûteuse, rendait « ok » pendant que 20 provocations sur 20 étaient refusées par le moteur. Rien n'avait échoué, rien n'avait bloqué, le rapport était vert.",
+    "lecon": "Ce n'est pas le calcul qui était faux, c'est son ÂGE : le registre qu'il lit n'avait rien reçu depuis cinq jours, et son propre commentaire le présentait comme « le vrai trafic API ». DEUX CHOSES À RETENIR. (1) Un « ok » est le verdict qu'on ne re-vérifie jamais — c'est donc là qu'il faut imprimer l'âge de la donnée, pas sur les alertes. (2) Plus une règle est OBLIGATOIRE, moins on regarde ce sur quoi elle s'appuie : l'obligation déplace l'attention du fond vers le geste. Là où une consigne dit « consulte X avant d'agir », la question utile n'est pas « ai-je consulté ? » mais « X sait-il encore quelque chose ? ».",
+    "rienARetenir": false,
+    "date": "2026-09-28T13:28:58.102Z"
   }
 ]

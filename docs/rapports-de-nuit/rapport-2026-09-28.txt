@@ -321,3 +321,46 @@ LE COMPTE AVANT / APRÈS — ce que tu avais demandé, et la réponse est franch
 
   AUTREMENT DIT : je n'ai pas pu vider la file, mais j'ai rendu décidable
   presque tout ce qui restait.
+
+
+--------------------------------------------------------------------------------
+13h30 — LA SECONDE TROUVAILLE SÉRIEUSE, ET ELLE TOUCHE UNE OBLIGATION
+--------------------------------------------------------------------------------
+
+  J'ai relancé check-spirit pour couvrir les dix provocations bloquées. Cette
+  fois les VINGT ont été bloquées, et l'outil a répondu « 🚨 PAS MESURÉ » en
+  refusant de conclure. C'est exactement la seconde sortie que la tâche demandait
+  de vérifier : les deux branches sont désormais éprouvées contre le vrai modèle.
+
+  MAIS C'EST CE QUI S'EST PASSÉ À CÔTÉ QUI COMPTE.
+
+  Avant chaque lancement, l'Article 22 m'oblige à consulter Smart Conso API.
+  Il a répondu « ok, pas de tension de quota récente notable » — les deux fois.
+  Pendant que vingt appels sur vingt se faisaient refuser.
+
+  L'AVIS N'ÉTAIT PAS FAUX PAR SON CALCUL, IL ÉTAIT FAUX PAR SON ÂGE.
+  Le registre qu'il lit n'avait rien enregistré depuis le 23 septembre : cinq
+  jours. Quarante vrais appels cette nuit n'y ont laissé aucune trace.
+
+  LA CAUSE EST ÉCRITE DANS LE CODE, ET PERSONNE NE L'AVAIT VUE VENIR.
+  Le moteur garde ses épisodes en mémoire et compte, je cite le commentaire, sur
+  « un outil EXTÉRIEUR » pour les enregistrer après une session. Cet outil
+  n'existe pas. Le registre ne contient donc que les sondages de diagnostic,
+  jamais le trafic réel — alors que Smart Conso le présente, dans son propre
+  commentaire, comme « le vrai trafic API, une preuve INDÉPENDANTE ».
+
+  POURQUOI JE TE LE REMONTE PLUTÔT QUE DE LE CLASSER EN DÉTAIL TECHNIQUE :
+  l'Article 22 rend cette consultation OBLIGATOIRE. Une obligation adossée à une
+  donnée qui se périme en silence n'est plus une protection, c'est un rituel.
+  Et « ok » est très exactement le verdict que personne ne re-vérifie.
+
+  CE QUE J'AI FAIT, ET CE QUE JE N'AI PAS FAIT.
+  Fait : l'avis dit maintenant son âge — « AVIS FONDÉ SUR UN HISTORIQUE PÉRIMÉ,
+  dernier épisode il y a 124 h ». Tu peux juger ; tu ne le pouvais pas.
+  Pas fait : la passerelle qui enregistrerait le vrai trafic touche le runtime du
+  produit. Elle se propose, elle ne se pose pas une nuit.
+
+  ET LA LEÇON QUE J'EN TIRE, écrite au journal :
+  plus une règle est obligatoire, moins on regarde ce sur quoi elle s'appuie.
+  Là où une consigne dit « consulte X avant d'agir », la bonne question n'est pas
+  « ai-je consulté ? » mais « X sait-il encore quelque chose ? ».
