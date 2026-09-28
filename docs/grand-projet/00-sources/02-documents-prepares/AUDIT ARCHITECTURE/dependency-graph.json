@@ -1,0 +1,3236 @@
+{
+  "nodes": [
+    "app/api/admin/route.ts",
+    "app/api/lia/route.ts",
+    "app/api/world/route.ts",
+    "app/chatgpt-auth.ts",
+    "app/layout.tsx",
+    "app/page.tsx",
+    "cloudflare-env.d.ts",
+    "components/house-view.tsx",
+    "components/progressive-text.tsx",
+    "components/ui/accordion.tsx",
+    "components/ui/alert-dialog.tsx",
+    "components/ui/alert.tsx",
+    "components/ui/aspect-ratio.tsx",
+    "components/ui/attachment.tsx",
+    "components/ui/avatar.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/breadcrumb.tsx",
+    "components/ui/bubble.tsx",
+    "components/ui/button-group.tsx",
+    "components/ui/button.tsx",
+    "components/ui/calendar.tsx",
+    "components/ui/card.tsx",
+    "components/ui/carousel.tsx",
+    "components/ui/chart.tsx",
+    "components/ui/checkbox.tsx",
+    "components/ui/collapsible.tsx",
+    "components/ui/combobox.tsx",
+    "components/ui/command.tsx",
+    "components/ui/context-menu.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/direction.tsx",
+    "components/ui/drawer.tsx",
+    "components/ui/dropdown-menu.tsx",
+    "components/ui/empty.tsx",
+    "components/ui/field.tsx",
+    "components/ui/form.tsx",
+    "components/ui/hover-card.tsx",
+    "components/ui/input-group.tsx",
+    "components/ui/input-otp.tsx",
+    "components/ui/input.tsx",
+    "components/ui/item.tsx",
+    "components/ui/kbd.tsx",
+    "components/ui/label.tsx",
+    "components/ui/marker.tsx",
+    "components/ui/menubar.tsx",
+    "components/ui/message-scroller.tsx",
+    "components/ui/message.tsx",
+    "components/ui/native-select.tsx",
+    "components/ui/navigation-menu.tsx",
+    "components/ui/pagination.tsx",
+    "components/ui/popover.tsx",
+    "components/ui/progress.tsx",
+    "components/ui/radio-group.tsx",
+    "components/ui/resizable.tsx",
+    "components/ui/scroll-area.tsx",
+    "components/ui/select.tsx",
+    "components/ui/separator.tsx",
+    "components/ui/sheet.tsx",
+    "components/ui/sidebar.tsx",
+    "components/ui/skeleton.tsx",
+    "components/ui/slider.tsx",
+    "components/ui/sonner.tsx",
+    "components/ui/spinner.tsx",
+    "components/ui/switch.tsx",
+    "components/ui/table.tsx",
+    "components/ui/tabs.tsx",
+    "components/ui/textarea.tsx",
+    "components/ui/toggle-group.tsx",
+    "components/ui/toggle.tsx",
+    "components/ui/tooltip.tsx",
+    "db/index.ts",
+    "db/schema.ts",
+    "drizzle.config.ts",
+    "eslint.config.mjs",
+    "examples/d1/app/api/notes/route.ts",
+    "examples/d1/db/schema.ts",
+    "hooks/use-mobile.ts",
+    "lib/daynight.ts",
+    "lib/dialogue.ts",
+    "lib/drama.ts",
+    "lib/evidence.ts",
+    "lib/face-render.ts",
+    "lib/gemini-keys.ts",
+    "lib/house.ts",
+    "lib/lia.ts",
+    "lib/life.ts",
+    "lib/memento-weight.ts",
+    "lib/perception.ts",
+    "lib/playback.ts",
+    "lib/presentation-version.ts",
+    "lib/presentation.ts",
+    "lib/quality-metrics.ts",
+    "lib/relationship.ts",
+    "lib/simulation.ts",
+    "lib/stock.ts",
+    "lib/story.ts",
+    "lib/turn.ts",
+    "lib/update-audit.ts",
+    "lib/utils.ts",
+    "lib/visual-events.ts",
+    "lib/world.ts",
+    "next.config.ts",
+    "postcss.config.mjs",
+    "scripts/abraham-les-references.mjs",
+    "scripts/agent-des-noms.mjs",
+    "scripts/agent-du-temps.mjs",
+    "scripts/always-new-code.mjs",
+    "scripts/angel-of-ia-process.mjs",
+    "scripts/api-providers.mjs",
+    "scripts/axa-check.mjs",
+    "scripts/cassandra-rh.mjs",
+    "scripts/check-argus.mjs",
+    "scripts/check-gemini-quota.mjs",
+    "scripts/check-harmonia.mjs",
+    "scripts/check-house.mjs",
+    "scripts/check-level-target.mjs",
+    "scripts/check-profil-utilisateur.mjs",
+    "scripts/check-profile.mjs",
+    "scripts/check-spirit.mjs",
+    "scripts/check-suivi-fidelity.mjs",
+    "scripts/check-tasks-details.mjs",
+    "scripts/circle-process-guardian.mjs",
+    "scripts/circle-tasks.mjs",
+    "scripts/clean-dirty-old.mjs",
+    "scripts/clone-hunter.mjs",
+    "scripts/corpus-mesure.mjs",
+    "scripts/criticite.mjs",
+    "scripts/data-archangel.mjs",
+    "scripts/doc-report.mjs",
+    "scripts/ecotoken.mjs",
+    "scripts/el-professor.mjs",
+    "scripts/execution-profile.mjs",
+    "scripts/ezechiel-les-tests.mjs",
+    "scripts/filet-en-parts.mjs",
+    "scripts/find-booster.mjs",
+    "scripts/find-brain.mjs",
+    "scripts/gemini-key-health.mjs",
+    "scripts/god-of-all-process.mjs",
+    "scripts/hooks/banniere.mjs",
+    "scripts/hooks/check-last-commit.mjs",
+    "scripts/hooks/install.mjs",
+    "scripts/html-report.mjs",
+    "scripts/hyper-scan-checkpoint.mjs",
+    "scripts/ines-official.mjs",
+    "scripts/install-ci.mjs",
+    "scripts/integration-outil.mjs",
+    "scripts/judge-persona-shared.mjs",
+    "scripts/kpi-report.mjs",
+    "scripts/le-classificateur.mjs",
+    "scripts/le-coordinateur.mjs",
+    "scripts/le-regisseur.mjs",
+    "scripts/lib-json.mjs",
+    "scripts/lib-markdown-table.mjs",
+    "scripts/lib-shell.mjs",
+    "scripts/memento-weight.mjs",
+    "scripts/memento.mjs",
+    "scripts/messages-courts.mjs",
+    "scripts/modes-de-travail.mjs",
+    "scripts/moise-tables-de-loi.mjs",
+    "scripts/objectifs-vs-resultats.mjs",
+    "scripts/ou-on-en-est.mjs",
+    "scripts/pnpm-install.mjs",
+    "scripts/priorites.mjs",
+    "scripts/process-simulation-guardian.mjs",
+    "scripts/pure-gold-unity.mjs",
+    "scripts/rapport-gros-prompt.mjs",
+    "scripts/report-template.mjs",
+    "scripts/route-booster.mjs",
+    "scripts/run-framework.mjs",
+    "scripts/run-simulation.mjs",
+    "scripts/safe-export.mjs",
+    "scripts/sauvegarde-projet.mjs",
+    "scripts/serie-temporelle.mjs",
+    "scripts/simulation-visiteur.mjs",
+    "scripts/sites-env.mjs",
+    "scripts/smart-conso-api.mjs",
+    "scripts/smart-conso-token.mjs",
+    "scripts/summarize-simulation-log.mjs",
+    "scripts/tasks-process-guardian.mjs",
+    "scripts/the-deep-reader.mjs",
+    "scripts/the-equalizer.mjs",
+    "scripts/the-final-judge.mjs",
+    "scripts/the-ghost.mjs",
+    "scripts/the-king.mjs",
+    "scripts/the-screener-capture.mjs",
+    "scripts/tool-brain.mjs",
+    "scripts/tool-learning.mjs",
+    "scripts/tool-usage.mjs",
+    "scripts/x-port-blindtest.mjs",
+    "vite.config.ts"
+  ],
+  "edges": [
+    {
+      "from": "app/api/admin/route.ts",
+      "to": "lib/gemini-keys.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/admin/route.ts",
+      "to": "lib/memento-weight.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/admin/route.ts",
+      "to": "lib/quality-metrics.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/admin/route.ts",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/daynight.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/dialogue.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/drama.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/gemini-keys.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/lia.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/life.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/perception.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/quality-metrics.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/relationship.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/stock.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/story.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/turn.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/visual-events.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/lia/route.ts",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/world/route.ts",
+      "to": "lib/presentation-version.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/api/world/route.ts",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "components/house-view.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "components/progressive-text.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/evidence.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/face-render.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/lia.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/playback.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/presentation-version.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/presentation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/relationship.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/story.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/visual-events.ts",
+      "kind": "static"
+    },
+    {
+      "from": "app/page.tsx",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/evidence.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/face-render.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/perception.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/relationship.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/visual-events.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/house-view.tsx",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/accordion.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/alert-dialog.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/alert-dialog.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/alert.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/attachment.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/attachment.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/avatar.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/badge.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/breadcrumb.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/bubble.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/button-group.tsx",
+      "to": "components/ui/separator.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/button-group.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/button.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/calendar.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/calendar.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/card.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/carousel.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/carousel.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/chart.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/checkbox.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/combobox.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/combobox.tsx",
+      "to": "components/ui/input-group.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/combobox.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/command.tsx",
+      "to": "components/ui/dialog.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/command.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/context-menu.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/dialog.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/dialog.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/drawer.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/dropdown-menu.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/empty.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/field.tsx",
+      "to": "components/ui/label.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/field.tsx",
+      "to": "components/ui/separator.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/field.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/form.tsx",
+      "to": "components/ui/label.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/form.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/hover-card.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/input-group.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/input-group.tsx",
+      "to": "components/ui/input.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/input-group.tsx",
+      "to": "components/ui/textarea.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/input-group.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/input-otp.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/input.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/item.tsx",
+      "to": "components/ui/separator.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/item.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/kbd.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/label.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/marker.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/menubar.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/message-scroller.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/message-scroller.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/message.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/native-select.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/navigation-menu.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/pagination.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/pagination.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/popover.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/progress.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/radio-group.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/resizable.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/scroll-area.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/select.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/separator.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sheet.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "components/ui/button.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "components/ui/input.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "components/ui/separator.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "components/ui/sheet.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "components/ui/skeleton.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "components/ui/tooltip.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "hooks/use-mobile.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/sidebar.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/skeleton.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/slider.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/spinner.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/switch.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/table.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/tabs.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/textarea.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/toggle-group.tsx",
+      "to": "components/ui/toggle.tsx",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/toggle-group.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/toggle.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "components/ui/tooltip.tsx",
+      "to": "lib/utils.ts",
+      "kind": "static"
+    },
+    {
+      "from": "db/index.ts",
+      "to": "db/schema.ts",
+      "kind": "static"
+    },
+    {
+      "from": "examples/d1/app/api/notes/route.ts",
+      "to": "db/index.ts",
+      "kind": "static"
+    },
+    {
+      "from": "examples/d1/app/api/notes/route.ts",
+      "to": "examples/d1/db/schema.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/drama.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/evidence.ts",
+      "to": "lib/perception.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/face-render.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/lia.ts",
+      "to": "lib/gemini-keys.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/lia.ts",
+      "to": "lib/memento-weight.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/lia.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/life.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/perception.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/perception.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/perception.ts",
+      "to": "lib/story.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/perception.ts",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/quality-metrics.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/relationship.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/relationship.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/relationship.ts",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/simulation.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/stock.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/story.ts",
+      "to": "lib/dialogue.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/story.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/story.ts",
+      "to": "lib/life.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/story.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/life.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/perception.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/relationship.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/story.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/turn.ts",
+      "to": "lib/world.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/world.ts",
+      "to": "lib/daynight.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/world.ts",
+      "to": "lib/house.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/world.ts",
+      "to": "lib/lia.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/world.ts",
+      "to": "lib/life.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/world.ts",
+      "to": "lib/relationship.ts",
+      "kind": "static"
+    },
+    {
+      "from": "lib/world.ts",
+      "to": "lib/simulation.ts",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/abraham-les-references.mjs",
+      "to": "scripts/angel-of-ia-process.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/abraham-les-references.mjs",
+      "to": "scripts/god-of-all-process.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/abraham-les-references.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/abraham-les-references.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/abraham-les-references.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/abraham-les-references.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/agent-des-noms.mjs",
+      "to": "scripts/data-archangel.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/agent-des-noms.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/agent-des-noms.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/agent-des-noms.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/agent-du-temps.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/agent-du-temps.mjs",
+      "to": "scripts/modes-de-travail.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/agent-du-temps.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/agent-du-temps.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/always-new-code.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/always-new-code.mjs",
+      "to": "scripts/lib-markdown-table.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/always-new-code.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/always-new-code.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/always-new-code.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/angel-of-ia-process.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/angel-of-ia-process.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/angel-of-ia-process.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/angel-of-ia-process.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/axa-check.mjs",
+      "to": "scripts/always-new-code.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/axa-check.mjs",
+      "to": "scripts/check-level-target.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/axa-check.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/axa-check.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/axa-check.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/axa-check.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/axa-check.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/kpi-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/objectifs-vs-resultats.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/cassandra-rh.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-argus.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-argus.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-argus.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-argus.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-argus.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-gemini-quota.mjs",
+      "to": "scripts/api-providers.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-gemini-quota.mjs",
+      "to": "scripts/gemini-key-health.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-gemini-quota.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-gemini-quota.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-harmonia.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-harmonia.mjs",
+      "to": "scripts/kpi-report.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-harmonia.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-harmonia.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-harmonia.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "lib/dialogue.ts",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/agent-des-noms.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/agent-du-temps.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/always-new-code.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/angel-of-ia-process.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/axa-check.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/cassandra-rh.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-argus.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-harmonia.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-level-target.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-profil-utilisateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-spirit.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/circle-process-guardian.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/circle-tasks.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/clone-hunter.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/criticite.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/data-archangel.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/ecotoken.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/el-professor.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/ezechiel-les-tests.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/filet-en-parts.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/find-booster.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/find-brain.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/gemini-key-health.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/god-of-all-process.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/hooks/banniere.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/hyper-scan-checkpoint.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/ines-official.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/integration-outil.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/judge-persona-shared.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/kpi-report.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/le-regisseur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/memento-weight.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/memento.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/memento.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/messages-courts.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/modes-de-travail.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/moise-tables-de-loi.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/objectifs-vs-resultats.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/ou-on-en-est.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/priorites.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/process-simulation-guardian.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/pure-gold-unity.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/rapport-gros-prompt.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/route-booster.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/run-simulation.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/simulation-visiteur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/smart-conso-api.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/summarize-simulation-log.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/tasks-process-guardian.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/the-deep-reader.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/the-equalizer.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/the-final-judge.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/the-ghost.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/the-king.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/the-screener-capture.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/tool-learning.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-house.mjs",
+      "to": "scripts/x-port-blindtest.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-level-target.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-level-target.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-level-target.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-profil-utilisateur.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-profil-utilisateur.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-profil-utilisateur.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-profil-utilisateur.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-profile.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-spirit.mjs",
+      "to": "scripts/check-spirit.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-spirit.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-spirit.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-spirit.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-suivi-fidelity.mjs",
+      "to": "scripts/criticite.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-suivi-fidelity.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-suivi-fidelity.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-suivi-fidelity.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/criticite.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/data-archangel.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/priorites.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/check-tasks-details.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-process-guardian.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-process-guardian.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-process-guardian.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-process-guardian.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-process-guardian.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/moise-tables-de-loi.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/the-king.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/circle-tasks.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/axa-check.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/check-level-target.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/lib-markdown-table.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clean-dirty-old.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clone-hunter.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clone-hunter.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clone-hunter.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clone-hunter.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/clone-hunter.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/criticite.mjs",
+      "to": "scripts/priorites.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/criticite.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/circle-tasks.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/kpi-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/data-archangel.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/doc-report.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/doc-report.mjs",
+      "to": "scripts/find-booster.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/doc-report.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/doc-report.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/doc-report.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/doc-report.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ecotoken.mjs",
+      "to": "scripts/check-level-target.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ecotoken.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ecotoken.mjs",
+      "to": "scripts/moise-tables-de-loi.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ecotoken.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ecotoken.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ecotoken.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/el-professor.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/el-professor.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/el-professor.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/el-professor.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ezechiel-les-tests.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/ezechiel-les-tests.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ezechiel-les-tests.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ezechiel-les-tests.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/filet-en-parts.mjs",
+      "to": "scripts/ezechiel-les-tests.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/filet-en-parts.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/filet-en-parts.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-booster.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-booster.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-booster.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-booster.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-brain.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-brain.mjs",
+      "to": "scripts/find-booster.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-brain.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-brain.mjs",
+      "to": "scripts/route-booster.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/find-brain.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/angel-of-ia-process.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/god-of-all-process.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/always-new-code.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/axa-check.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/cassandra-rh.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/check-argus.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/check-harmonia.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/circle-tasks.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/clone-hunter.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/el-professor.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/moise-tables-de-loi.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hooks/check-last-commit.mjs",
+      "to": "scripts/tool-learning.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/hooks/install.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/html-report.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/html-report.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hyper-scan-checkpoint.mjs",
+      "to": "scripts/circle-process-guardian.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hyper-scan-checkpoint.mjs",
+      "to": "scripts/lib-markdown-table.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hyper-scan-checkpoint.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hyper-scan-checkpoint.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/hyper-scan-checkpoint.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ines-official.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ines-official.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ines-official.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ines-official.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/install-ci.mjs",
+      "to": "scripts/execution-profile.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/install-ci.mjs",
+      "to": "scripts/sites-env.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/cassandra-rh.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/god-of-all-process.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/integration-outil.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/axa-check.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/cassandra-rh.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/gemini-key-health.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/memento-weight.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/moise-tables-de-loi.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/smart-conso-api.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/the-equalizer.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/kpi-report.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/agent-des-noms.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/data-archangel.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/god-of-all-process.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/pure-gold-unity.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-classificateur.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/always-new-code.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/axa-check.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/check-level-target.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/ecotoken.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/hyper-scan-checkpoint.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/smart-conso-api.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-coordinateur.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-regisseur.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-regisseur.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-regisseur.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/le-regisseur.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/memento-weight.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/memento.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/memento.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/memento.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/messages-courts.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/messages-courts.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/modes-de-travail.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/ecotoken.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/smart-conso-token.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/moise-tables-de-loi.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/objectifs-vs-resultats.mjs",
+      "to": "scripts/kpi-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/objectifs-vs-resultats.mjs",
+      "to": "scripts/lib-markdown-table.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/objectifs-vs-resultats.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/objectifs-vs-resultats.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/objectifs-vs-resultats.mjs",
+      "to": "scripts/tool-brain.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/objectifs-vs-resultats.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ou-on-en-est.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ou-on-en-est.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/ou-on-en-est.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/process-simulation-guardian.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/process-simulation-guardian.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/process-simulation-guardian.mjs",
+      "to": "scripts/summarize-simulation-log.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/process-simulation-guardian.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/pure-gold-unity.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/pure-gold-unity.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/pure-gold-unity.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/rapport-gros-prompt.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/rapport-gros-prompt.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/rapport-gros-prompt.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/rapport-gros-prompt.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/report-template.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/route-booster.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/route-booster.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/route-booster.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/run-framework.mjs",
+      "to": "scripts/execution-profile.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/run-simulation.mjs",
+      "to": "scripts/memento.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/run-simulation.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/agent-du-temps.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/corpus-mesure.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/data-archangel.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/safe-export.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/sauvegarde-projet.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/sauvegarde-projet.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/serie-temporelle.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-api.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-api.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-api.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-api.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-token.mjs",
+      "to": "scripts/check-suivi-fidelity.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-token.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-token.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-token.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-token.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/smart-conso-token.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/summarize-simulation-log.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/summarize-simulation-log.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tasks-process-guardian.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tasks-process-guardian.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-deep-reader.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-deep-reader.mjs",
+      "to": "scripts/judge-persona-shared.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-deep-reader.mjs",
+      "to": "scripts/lib-markdown-table.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-deep-reader.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-equalizer.mjs",
+      "to": "scripts/check-tasks-details.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/the-equalizer.mjs",
+      "to": "scripts/circle-tasks.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/the-equalizer.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/the-equalizer.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-equalizer.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-equalizer.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-final-judge.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-final-judge.mjs",
+      "to": "scripts/judge-persona-shared.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-final-judge.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-ghost.mjs",
+      "to": "scripts/circle-tasks.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-ghost.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-ghost.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-ghost.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-king.mjs",
+      "to": "scripts/abraham-les-references.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-king.mjs",
+      "to": "scripts/clean-dirty-old.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-king.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-king.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-king.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-king.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-screener-capture.mjs",
+      "to": "scripts/html-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-screener-capture.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/the-screener-capture.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/circle-tasks.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/doc-report.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/ecotoken.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/find-brain.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/le-coordinateur.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/tool-learning.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-brain.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-learning.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-learning.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-learning.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-learning.mjs",
+      "to": "scripts/serie-temporelle.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-learning.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/tool-usage.mjs",
+      "to": "scripts/lib-json.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/x-port-blindtest.mjs",
+      "to": "scripts/le-classificateur.mjs",
+      "kind": "dynamic"
+    },
+    {
+      "from": "scripts/x-port-blindtest.mjs",
+      "to": "scripts/lib-shell.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/x-port-blindtest.mjs",
+      "to": "scripts/report-template.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/x-port-blindtest.mjs",
+      "to": "scripts/safe-export.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "scripts/x-port-blindtest.mjs",
+      "to": "scripts/tool-usage.mjs",
+      "kind": "static"
+    },
+    {
+      "from": "vite.config.ts",
+      "to": "scripts/execution-profile.mjs",
+      "kind": "static"
+    }
+  ]
+}
