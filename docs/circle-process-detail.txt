@@ -1721,3 +1721,54 @@ grave du dispositif, une mécanique qui trancherait rendrait le verdict le moins
 
 SANS SES RÉPONSES, LA MESURE REFUSE DE CONCLURE : « zéro écart » ressemblerait trait pour
 trait à un alignement parfait (leçon L11).
+
+
+═══════════════════════════════════════════════════════════════════════════════
+PARTIE 19 — L'ITEM « export-central », ET POURQUOI IL EST SÉPARÉ DE SON VOISIN
+(2026-09-28, tâche #1061)
+═══════════════════════════════════════════════════════════════════════════════
+
+SA DEMANDE, mot pour mot, dans son gros prompt du 2026-09-28 : « livraison periodique
+à la ronde dans un encart bien visible dans la conversation. (respect du process RONDE,
+mise à jour au passage) ». La parenthèse compte autant que la demande : ajouter un item
+à la Ronde EST une modification de process, et elle se reflète le jour même dans ce
+document — sans quoi findChangementsIndirectsSansMiseAJour() la signale comme une dette,
+à raison.
+
+CE QU'IL LANCE : `node scripts/safe-export.mjs rapport`. Gratuit — il n'appelle que des
+mesures déjà écrites et relit la file de tâches, zéro appel API.
+
+POURQUOI IL NE SE FOND PAS DANS `safe-export-kits`, qui vit dans la même famille.
+Les deux items parlent d'export et c'est exactement ce qui rend la confusion facile :
+  · `safe-export-kits` répond à « QUE DOIT-IL PARTIR AVEC LUI ? » — un tableau de
+    conformité pièce par pièce, outil par outil.
+  · `export-central` répond à « OÙ EN EST-ON, GLOBALEMENT ? » — un pourcentage, ce
+    qu'on sait faire, et ce qu'on ne sait pas encore faire.
+Les fondre ferait disparaître la vue d'ensemble derrière le tableau de conformité, et
+c'est précisément la vue d'ensemble qui manquait : son objectif écrit était « ne pas se
+perdre sur le sujet de l'export […] tout me semble éparpillé », et l'éparpillement est
+mesuré, pas ressenti — data-archangel compte 248 fichiers qui portent le sujet.
+
+CE QU'IL APPORTE ET QU'AUCUN AUTRE ITEM NE PORTE : la catégorie « CE QU'ON NE SAIT PAS
+ENCORE FAIRE ». Elle réunit deux populations que tout le reste du paysage sépare — les
+dimensions mesurées SOUS leur barre, et celles qu'aucun outil ne sait mesurer du tout.
+Au premier passage, deux sur sept sont dans le second cas : « une autre IA peut-elle
+reprendre l'Agence sans cette conversation ? » et « l'Agence a-t-elle été installée POUR
+DE VRAI ailleurs ? ». Une question sans réponse EST une chose qu'on ne sait pas faire,
+et aucun tableau de chiffres ne la montre.
+
+L'ENCART EST LA MOITIÉ DE L'ITEM, jamais un ornement. Un rapport archivé que personne ne
+lit ne répond pas à sa demande, qui portait explicitement sur ce qui remonte DANS LA
+CONVERSATION. L'encart tient en quelques lignes : le pourcentage global AVEC son
+dénominateur, la liste de ce qu'on ne sait pas encore faire, le nombre de tâches d'export
+ouvertes.
+
+LE DÉNOMINATEUR NE S'OMET JAMAIS. « 88 % » seul cache que deux dimensions sur sept ne
+sont pas mesurées du tout — et une dimension non mesurée n'est ni zéro ni cent : la
+compter à zéro punirait l'outil qui refuse honnêtement de conclure, la compter à cent
+serait le faux vert le plus cher. Elle sort du calcul ET se montre à côté.
+
+SON DOSSIER DE DÉPÔT est `docs/safe-export/central/` et non `docs/safe-export/` — même
+précédent que `ecotoken-scan` et `safe-export-kits` : les artefacts de Ronde ne se
+mélangent pas aux fichiers datés que l'outil écrit lui-même, sinon l'index du registre ne
+distingue plus un passage demandé d'un passage périodique.

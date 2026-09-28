@@ -61,10 +61,10 @@
     },
     {
       "outil": "ezechiel-les-tests",
-      "cle": "2 groupe(s) coûtent du temps sans porter une seule assertion",
+      "cle": "4 groupe(s) coûtent du temps sans porter une seule assertion",
       "objet": "scripts/check-house.mjs",
       "gravite": "à surveiller",
-      "constat": "2 groupe(s) coûtent du temps sans porter une seule assertion",
+      "constat": "4 groupe(s) coûtent du temps sans porter une seule assertion",
       "depuis": "2026-09-28",
       "vueLe": "2026-09-28"
     }

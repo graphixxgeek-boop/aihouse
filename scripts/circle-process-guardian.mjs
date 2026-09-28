@@ -859,6 +859,12 @@ export function verifyHyperScanProcess({
 // apparaisse sans jamais avoir été consigné.
 export const CIRCLE_ITEMS_CHANGELOG = [
   {
+    date: "2026-09-28",
+    itemId: "export-central",
+    changement: "ajout",
+    pourquoi: "Sa demande du 2026-09-28, dans son gros prompt : « livraison periodique à la ronde dans un encart bien visible dans la conversation. (respect du process RONDE, mise à jour au passage) ». SON OBJECTIF COMMANDE LA FORME, et il l'a écrit lui-même : « ne pas se perdre sur le sujet de l'export, car beaucoup de choses ont déjà été faites et on a aussi déjà reflechi à beaucoup de choses, mais tout me semble éparpillé ». L'ÉPARPILLEMENT EST MESURÉ, PAS RESSENTI : data-archangel compte 248 fichiers qui portent le sujet. POURQUOI UN ITEM DISTINCT DE `safe-export-kits`, qui vit juste au-dessus dans la même famille : les kits répondent à « que doit-il partir avec lui ? », celui-ci répond à « OÙ EN EST-ON, globalement ». Les fondre ferait disparaître la vue d'ensemble derrière un tableau de conformité, et c'est précisément la vue d'ensemble qui manquait. CE QU'IL APPORTE ET QU'AUCUN AUTRE ITEM NE PORTE : la catégorie « CE QU'ON NE SAIT PAS ENCORE FAIRE », qui réunit les dimensions sous la barre ET celles qu'aucun outil ne sait mesurer aujourd'hui — au premier passage, deux sur sept (« une autre IA peut-elle reprendre l'Agence sans cette conversation ? » et « a-t-elle été installée POUR DE VRAI ailleurs ? »). Une question sans réponse EST une chose qu'on ne sait pas faire, et aucun tableau de chiffres ne la montre. GRATUIT, donc ici plutôt que sur demande : il n'appelle que des mesures déjà écrites et relit la file de tâches. L'ENCART EST LA MOITIÉ DE L'ITEM : un rapport archivé que personne ne lit ne répond pas à sa demande, qui portait explicitement sur ce qui remonte DANS LA CONVERSATION — et le dénominateur ne s'omet jamais, parce que « 88 % » seul cache que deux dimensions sur sept ne sont pas mesurées du tout.",
+  },
+  {
     date: "2026-09-26",
     itemId: "systeme-des-index",
     changement: "ajout",

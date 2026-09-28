@@ -1,0 +1,11 @@
+EXPORTABILITÉ GLOBALE : 88 % — moyenne de 5 dimension(s) RÉELLEMENT mesurée(s) sur 7.
+  ✅ 91 %  un outil peut-il recevoir d'autres cibles, ou les a-t-il écrites en dur ?
+  ✅ 100 %  chaque outil emporte-t-il ses cinq pièces (blueprint, source, fiche, registre, dépendances) ?
+  ✅ 100 %  l'Agence elle-même emporte-t-elle son propre kit (plan, installation, carte, organisation, standards, leçons) ?
+  ✅ 100 %  chaque outil a-t-il un plan réutilisable ailleurs, et les vitaux d'abord ?
+--- CE QU'ON NE SAIT PAS ENCORE FAIRE (3) ---
+  🟠 48 %  un outil mentionne-t-il encore ce projet-ci, même en exemple ?
+  ⬜ NON MESURÉ  une AUTRE IA peut-elle reprendre l'Agence sans cette conversation-ci ?
+  ⬜ NON MESURÉ  l'Agence a-t-elle été installée POUR DE VRAI ailleurs, et y tourne-t-elle ?
+--- CE QUI EST EN COURS : 5 tâche(s) ouverte(s) sur l'export, sur 84 ouvertes ---
+VERDICT DU KIT : ✅ EXPORT PRÊT — tout ce qui est dû est tenu, et l'Agence porte son propre kit

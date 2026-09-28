@@ -170,6 +170,29 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer `node scripts/safe-export.mjs kits` (SAFE-EXPORT). Il mesure DEUX populations, jamais une : le kit de l'Agence comme un tout (mesurerLeKitDeLAgence(), 6 pièces — plan, installation, carte, organisation, standards, leçons) et le kit de chaque fichier de l'outillage (mesurerLesKits(), 5 pièces, exemptions écrites comprises), puis rend le verdict d'alerteExport() à quatre paliers. LIRE D'ABORD LA LIGNE D'ALERTE, jamais les tableaux : elle dit en un mot si l'Agence est emportable aujourd'hui, et c'est la seule chose que les chiffres seuls ne disent pas. Un palier 🔴 ou 🟠 ouvre une vraie tâche dans docs/suivi/ (Article 28), jamais une note dans un compte rendu. Écrire le signal via recordCircleItemReport('safe-export-kits', ...) — le fichier daté complet, lui, est déjà écrit par l'outil dans docs/safe-export/.",
     producesReport: true,
   },
+  // export-central (2026-09-28, tâche #1061, sa demande : « livraison periodique à la ronde dans un
+  // encart bien visible dans la conversation. (respect du process RONDE, mise à jour au passage) »).
+  //
+  // POURQUOI IL EST DISTINCT DE `safe-export-kits`, QUI EST JUSTE AU-DESSUS : les kits répondent à
+  // « que doit-il partir avec lui ? ». Celui-ci répond à « OÙ EN EST-ON, globalement ». Son objectif
+  // à lui, dans ses mots, est de « ne pas se perdre sur le sujet de l'export, car beaucoup de choses
+  // ont déjà été faites [...] mais tout me semble éparpillé » — et l'éparpillement est mesuré :
+  // data-archangel compte 248 fichiers qui portent le sujet. Fondre les deux items ferait disparaître
+  // la vue d'ensemble derrière un tableau de conformité.
+  //
+  // CE QU'IL APPORTE ET QU'AUCUN AUTRE ITEM NE PORTE : la catégorie « CE QU'ON NE SAIT PAS ENCORE
+  // FAIRE », qui réunit les dimensions sous la barre ET celles qu'aucun outil ne sait mesurer
+  // aujourd'hui. Une question sans réponse est une chose qu'on ne sait pas faire, et c'est
+  // précisément ce qu'aucun tableau de chiffres ne montre.
+  {
+    id: "export-central",
+    theme: "KPI & scans",
+    label: "Le rapport EXPORT central — où on en est, ce qu'on sait faire, ce qu'on ne sait pas encore faire",
+    cout: "gratuit — il n'appelle que des mesures déjà écrites et relit la file de tâches, zéro appel API",
+    tokensEstimes: "faible — l'encart tient en quelques lignes ; le détail complet part dans le fichier daté",
+    execute: "Lancer `node scripts/safe-export.mjs rapport` (SAFE-EXPORT). REMONTER DANS LA CONVERSATION un encart de quelques lignes, jamais le rapport entier : le pourcentage global AVEC son dénominateur de dimensions réellement mesurées, la liste de ce qu'on ne sait pas encore faire, et le nombre de tâches d'export ouvertes. C'est sa demande explicite — « un encart bien visible dans la conversation ». LE DÉNOMINATEUR N'EST JAMAIS OMIS : « 88 % » seul cache que deux dimensions sur sept ne sont pas mesurées du tout, et une dimension non mesurée n'est ni zéro ni cent. Le fichier daté complet est déjà écrit par l'outil dans docs/safe-export/ ; écrire le signal via recordCircleItemReport('export-central', ...).",
+    producesReport: true,
+  },
   // systeme-des-index (2026-09-26, tâche #982, sa demande : « vérifier l'indexation générale […]
   // est-ce que tous les fichiers sont bien équipés comme il se doit ? »). Gratuit, et surtout :
   // c'est une mesure qui ne peut que se DÉGRADER entre deux passages, puisque chaque outil dépose
@@ -1554,6 +1577,7 @@ export const CIRCLE_REPORT_FOLDERS = {
   "clean-dirty-old-signal": "docs/clean-dirty-old/",
   "smart-conso-api-scan": "docs/smart-conso-api/",
   "ines-official-signal": "docs/ines-official/",
+  "export-central": "docs/safe-export/central/",
   "profil-utilisateur-guard": "docs/profil-utilisateur/",
   "html-wiring-check": "docs/html-wiring-check/",
   "ecotoken-scan": "docs/ecotoken/ronde/",
