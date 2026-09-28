@@ -85,6 +85,7 @@ DEEP-READER 8 confirmé en direct.
 | #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup | tranchée | **2026-09-25 : une cérémonie par CHANGEMENT RÉEL, jamais une par outil et par passage.** Tant que le motif ne bouge pas, rien n'est republié. Remesuré le jour même : 20 en attente, toutes sur le même motif. |
 | #805 | File — 87 % de tâches légères et 49 thèmes : émiettement, ou rythme sain ? | à trancher |
 | #1079 | Suivi — un commit de SUITE compte-t-il comme « sans mise à jour du suivi » ? (3 issues, et le commit accusé est le mien) | à trancher |
+| #1092 | Conso — personne n'enregistre le trafic API réel : Smart Conso ne juge que des sondages, alors que l'Article 22 le rend obligatoire (3 formes) | à trancher |
 | #814 | Données — les sources fraîches restantes : lecteur réel, ou absence assumée ? | à trancher |
 
 Trois d'entre elles (#747, #760, #767) attendaient depuis plusieurs jours **sans être visibles nulle
