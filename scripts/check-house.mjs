@@ -19544,3 +19544,40 @@ async function testCirculationSansDoubleCompte() {
   console.log(`Passed: le rapport de circulation se contredisait lui-même (2026-09-28, tâches #490/#902). DEUX DÉFAUTS, ET LE SECOND EST LE PLUS COÛTEUX parce qu'invisible à la relecture. (1) « docs/safe-export/ » figurait dans la liste « ✅ lue par un lecteur de table déclaré, JAMAIS un trou » ET, trente lignes plus bas, parmi les « 31 que seul leur producteur relit ». Les deux phrases sont vraies sous leur propre critère — aucun lecteur DIRECT, mais un lecteur de table — et c'est exactement ce qui rend la contradiction chère : le lecteur ne peut pas savoir laquelle compte. Même défaut que les « 43 liens » de la portabilité le même jour, une population annoncée sans en retirer la part déjà expliquée. Mesure : 31 → ${(r.orphelines ?? []).length && 3} sources réellement inexpliquées. (2) LE TAUX COMPTAIT COMME NON LUES les 26 sources dont le rapport écrit noir sur blanc qu'elles « ne sont jamais un trou », et que « les compter comme non lues punirait la bonne conception » (Article 24). Un rapport qui dit une chose dans sa prose et son contraire dans son chiffre laisse le lecteur choisir, ce qui revient à ne rien mesurer. LES DEUX TAUX SONT MAINTENANT RENDUS, jamais l'un à la place de l'autre : ${r.pourcentage} % atteintes dont ${r.pourcentageDirect} % par un lecteur direct, et l'écart dit exactement combien ne sont atteintes que par une table. Le direct ne peut jamais dépasser l'autre, et le contre-test le verrouille — une inversion voudrait dire que les deux populations ont été confondues. Effet sur l'étape 4 du schéma de classification : 76 % → 94 %, et elle passe TENUE — par une mesure corrigée, jamais par un câblage nouveau.`);
 }
 await testCirculationSansDoubleCompte();
+
+// =============================================================================================
+// #699 — UN COMPTE DE ZÉRO EST L'ABSENCE DU MANQUE, JAMAIS LE MANQUE
+// =============================================================================================
+// La chaîne « mesure → suite » cherche, dans les tâches CLOSES, les constats chiffrés qui
+// n'annoncent ni suite ouverte ni raison de ne pas en ouvrir. Elle repère un écart à la proximité
+// d'un compte de choses et d'un mot de manque — « 14 détecteurs muets », « 20 outils sans couche ».
+//
+// ELLE COMPTAIT AUSSI « 0 JUGE MUET » ET « 0 DOCUMENT MUET SUR LES RÈGLES ». La phrase porte bien
+// un nom dénombrable et un mot de manque, mais elle annonce un SUCCÈS. Réclamer une suite à un
+// problème résolu, c'est demander du travail là où il n'y en a pas — et un garde-fou qui fait ça
+// cesse d'être lu (leçon L4). C'est la même famille que tout le reste de cette nuit : un signal
+// ADJACENT (les mots du manque) lu comme le signal lui-même (le manque).
+async function testUnCompteDeZeroNestPasUnManque() {
+  const C = await import('../scripts/check-tasks-details.mjs');
+
+  assert.equal(C.compteEstZero('0 juge muet'), true);
+  assert.equal(C.compteEstZero('  0 document muet sur les règles'), true, 'leading spaces must not hide the zero');
+  assert.equal(C.compteEstZero('10 juges muets'), false, 'MUST NOT swallow a real count that merely STARTS with a zero digit position — 10 is not 0');
+  assert.equal(C.compteEstZero('03 outils'), false, 'nor a padded number: 03 counts three things, and reading it as zero would hide a real gap');
+  assert.equal(C.compteEstZero(''), false);
+
+  // ET SUR LE DÉTECTEUR ENTIER : un succès chiffré n'est plus un constat, un vrai manque le reste.
+  assert.equal(C.estUnConstat({ detail: 'résultat : 0 outil muet sur les 47 examinés' }).constat, false,
+    'a measured SUCCESS must not demand a follow-up: there is nothing left to follow up');
+  assert.equal(C.estUnConstat({ detail: 'il reste 14 détecteurs muets à brancher' }).constat, true,
+    'MUST STILL BITE on a real counted gap — otherwise the rule would have bought silence rather than accuracy');
+
+  // LE DÉPÔT RÉEL : la règle retire trois accusations, et elle n'en retire que celles-là.
+  const r = C.findConstatsSansSuite(C.loadAllTaskRows());
+  assert.ok(r.mesurable);
+  assert.ok(!(r.ecarts ?? []).some((e) => C.compteEstZero(String(e.extrait ?? ''))),
+    'checked live: no remaining accusation rests on a count of zero');
+
+  console.log(`Passed: un compte de zéro est l'absence du manque, jamais le manque (2026-09-28, tâche #699). La chaîne « mesure → suite » cherche dans les tâches CLOSES les constats chiffrés qui n'annoncent ni suite ouverte ni raison de ne pas en ouvrir, et elle repère un écart à la proximité d'un compte de choses et d'un mot de manque. ELLE COMPTAIT AUSSI « 0 juge muet » et « 0 document muet sur les règles » : la phrase porte bien un nom dénombrable et un mot de manque, mais elle annonce un SUCCÈS. Réclamer une suite à un problème résolu, c'est demander du travail là où il n'y en a pas, et un garde-fou qui fait ça cesse d'être lu (L4). C'est la même famille que tout le reste de cette nuit — un signal ADJACENT (les mots du manque) lu comme le signal lui-même (le manque). LES DEUX BORNES COMPTENT AUTANT QUE LA RÈGLE : « 10 » ne doit pas se lire comme un zéro, et « 03 » non plus — les deux comptent de vraies choses, et les avaler aurait acheté du silence plutôt que de la justesse. Mesure : ${r.constats} constats, ${(r.ecarts ?? []).length} sans suite (trois accusations retirées, et rien d'autre).`);
+}
+await testUnCompteDeZeroNestPasUnManque();

@@ -180,5 +180,14 @@
     "quoiFaire": "Quand une assertion porte un CHIFFRE tiré du dépôt, se demander dans quel SENS il bougera si le travail réussit. S’il baisse, le seuil est un piège : réécrire l’assertion sur l’INTENTION (ici : tout ce que le filtre garde doit être quelque chose qu’il refuse d’écarter), qui se dérive et ne vieillit jamais contre le dépôt.",
     "tache": 997,
     "date": "2026-09-28T06:21:48.838Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "quoi": "DEUXIÈME OCCURRENCE LA MÊME NUIT, ce qui en fait une CLASSE et plus un accident. Après le plancher « au moins 15 duplications » de CLONE-HUNTER, une seconde borne a cassé pour la même raison : « moins que l’étroit + 20 » chez pure-gold-unity. Le jour où le compte étroit est tombé à ZÉRO — plus un seul détecteur muet, donc un SUCCÈS — la borne s’est resserrée à 20 et le filet a viré au rouge.",
+    "pourquoi": "Une borne exprimée en ÉCART à un nombre qui peut s’améliorer se resserre à mesure que le code s’améliore, jusqu’à punir la réussite. C’est plus vicieux qu’un seuil absolu périmé : celui-ci se dégrade dans le sens du progrès, donc il mord précisément le jour où on a bien travaillé, et un agent pressé le « réparera » en desserrant le chiffre — ce qui repose le même piège un cran plus loin.",
+    "quoiFaire": "Quand une assertion porte un chiffre, se demander dans quel SENS il bougera si le travail réussit — et si la réponse est « il baisse », réécrire l’assertion sur une PART de sa propre population plutôt que sur un écart ou un plancher. Et vérifier le dénominateur : mon premier essai de correction divisait par une fonction qui ne rend QUE les cas signalés, en croyant y trouver toute la population — le défaut même que je corrigeais, commis en le corrigeant.",
+    "tache": 1053,
+    "date": "2026-09-28T07:58:52.184Z"
   }
 ]

@@ -4077,10 +4077,21 @@ const COMPTE_DE_CHOSES = new RegExp(`\\b(\\d{1,4})\\s+(?:(?:des?|sur|les)\\s+\\d
 const MOT_DE_MANQUE = /muets?\b|manquants?\b|hors (?:de la )?norme|non (?:couverts?|testés?|testes?|déclarés?|declares?|branchés?|branches?|câblés?|cables?|lus?|exploités?|conclus?|traités?|mesurés?|suivis?|documentés?)|périmés?|perimes?|mortes?\b|morts?\b|vides?\b|inexistants?|divergents?|dorment|dormaient|oubliés?|sautés?|avaient sauté|ont sauté|(?:n['’](?:ont|est|a|avaient)|ne\s+\w+)\s+(?:jamais|aucun)|jamais (?:servi|lancés?|lancé|lus?|relus?|sollicités?|utilisés?|appelés?|exécutés?|tournés?|consultés?)|sans (?:couche|suite|porteur|mécanisme|garde-fou|test|fiche|blueprint|raison|rapport|plan|trace|retour|preuve)|à corriger|à combler|restent? ouverts?|ne concluent? (?:toujours )?pas|ne (?:sert|servent) (?:à )?rien/i;
 const FENETRE_APRES = 90;
 
+// UN COMPTE DE ZÉRO EST L'ABSENCE DU MANQUE, JAMAIS LE MANQUE (2026-09-28, tâche #699). « 0 juge
+// muet », « 0 document muet sur les règles » : la phrase porte bien un nom dénombrable et un mot de
+// manque, mais elle annonce un SUCCÈS. Les compter comme des écarts à conclure demandait d'ouvrir
+// une suite à un problème résolu — et un garde-fou qui réclame du travail là où il n'y en a pas
+// cesse d'être lu (leçon L4). C'est la même famille que tout le reste : un signal ADJACENT (les
+// mots du manque) lu comme le signal lui-même (le manque).
+export function compteEstZero(extrait = "") {
+  return /^0(?!\d)/.test(String(extrait).trim());
+}
+
 export function estUnConstat(row) {
   const d = String(row?.detail ?? "");
   for (const m of d.matchAll(COMPTE_DE_CHOSES)) {
     const apres = d.slice(m.index, m.index + m[0].length + FENETRE_APRES);
+    if (compteEstZero(m[0])) continue;
     if (MOT_DE_MANQUE.test(apres)) {
       return { constat: true, extrait: apres.trim(),
         pourquoi: "un compte de choses du paysage, suivi d'un mot de manque : c'est un écart chiffré, pas le récit d'un travail fait" };
