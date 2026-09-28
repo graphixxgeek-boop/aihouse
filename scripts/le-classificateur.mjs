@@ -2038,6 +2038,13 @@ export const MOTIFS_PART = [
   // les règles de travail, et elle voyage pour la même raison.
   { motif: /^docs\/[a-z0-9-]+-process-detail\.md$/, pourquoi: "le détail d'un process de travail : il vaut pour n'importe quel projet piloté par IA" },
   { motif: /^docs\/mode-[a-z0-9-]+\.md$/, pourquoi: "un mode de travail de l'agent, jamais une règle du jeu" },
+  // AJOUTÉ LE 2026-09-28 (tâche #936), ET LA NUANCE EST ÉCRITE PARCE QU'ELLE N'EST PAS ÉVIDENTE :
+  // les GESTES eux-mêmes (Ctrl+Entrée, /fast…) sont propres à l'interface d'ici et ne voyagent
+  // pas tels quels. Ce qui voyage est le reste du document : le constat qu'un agent connaît des
+  // choses sur l'outil de son utilisateur sans jamais les lui dire, et la règle d'entretien à deux
+  // qui en découle. Un projet d'accueil garde la forme et refait la liste — c'est exactement le
+  // rapport qu'entretient `regles-de-travail.md`, qui part lui aussi en contenant des choses d'ici.
+  { motif: /^docs\/gestes-de-l-interface\.md$/, pourquoi: "le PRINCIPE voyage (un agent doit écrire ce qu'il sait de l'interface de son utilisateur) ; les gestes eux-mêmes se refont à l'arrivée" },
 ];
 
 // Ce qui reste : les documents qui gouvernent le JEU. Le signal n'est pas le dossier — les fiches
@@ -2216,8 +2223,15 @@ export const NATURES_DE_DOCUMENT = [
   // naît un à chaque outil construit.
   { cle: "rapport", icone: "📊", quoi: "le dépôt d'un passage d'outil — un constat à un instant, jamais une règle",
     motif: /^docs\/[a-z0-9-]+\/.*\d{4}-\d{2}-\d{2}/ },
+  // LA RÉFÉRENCE SE RECONNAÎT NORMALEMENT À SON DOSSIER, et deux documents font exception à la
+  // RACINE de `docs/` : les règles de travail et les gestes de l'interface. Tous deux sont des
+  // sources de vérité sur un sujet — comment on travaille ensemble, ce que l'outil de
+  // l'utilisateur sait faire — et tous deux vivent à la racine parce qu'ils s'adressent à LUI
+  // autant qu'à l'agent, là où `docs/referentiel/` est le carnet de l'agent. Les nommer ici est
+  // la réponse que le filet demande lui-même à un document neuf d'une nature inconnue : « un motif
+  // à ajouter, jamais un défaut du document ».
   { cle: "reference", icone: "📖", quoi: "la règle telle qu'elle s'applique aujourd'hui — la source de vérité d'un sujet",
-    motif: /^docs\/referentiel\// },
+    motif: /^docs\/(referentiel\/|gestes-de-l-interface\.md$)/ },
   { cle: "mode", icone: "🎚️", quoi: "un mode de travail de l'agent : comment il se conduit dans une situation donnée",
     motif: /^docs\/mode-[a-z0-9-]+\.md$/ },
   // LES DEUX DERNIERS MOTIFS SONT VOLONTAIREMENT LARGES, ET ILS SONT EN DERNIER POUR ÇA. Tout ce
