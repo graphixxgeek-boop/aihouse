@@ -221,5 +221,13 @@
     "lecon": "Ce n'est pas le calcul qui était faux, c'est son ÂGE : le registre qu'il lit n'avait rien reçu depuis cinq jours, et son propre commentaire le présentait comme « le vrai trafic API ». DEUX CHOSES À RETENIR. (1) Un « ok » est le verdict qu'on ne re-vérifie jamais — c'est donc là qu'il faut imprimer l'âge de la donnée, pas sur les alertes. (2) Plus une règle est OBLIGATOIRE, moins on regarde ce sur quoi elle s'appuie : l'obligation déplace l'attention du fond vers le geste. Là où une consigne dit « consulte X avant d'agir », la question utile n'est pas « ai-je consulté ? » mais « X sait-il encore quelque chose ? ».",
     "rienARetenir": false,
     "date": "2026-09-28T13:28:58.102Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Un faux VERT qui accuse se fait corriger vite ; un faux vert qui FÉLICITE peut tenir des semaines.",
+    "contexte": "Tâche #1095. Le rapport objectifs/résultats affichait « objectif 1 trouvaille suivie d'un geste sur la charte, résultat réel 491 » — sur un document non modifié une seule fois. Cinq lignes déclaraient une source en prose illisible par le code, qui retombait sur le comptage de lancements en réimprimant l'unité déclarée.",
+    "lecon": "Les trois trouvailles de la journée sont de la même famille — un signal adjacent servi à la place du signal visé — mais les deux premières ACCUSAIENT à tort et celle-ci FÉLICITAIT à tort. La différence décide de leur durée de vie : un « en dessous » fait ouvrir le dossier, un « dépassé » de deux ordres de grandeur passe pour une bonne nouvelle. LE RÉFLEXE À PRENDRE : dans un tableau d'objectifs, lire les DÉPASSEMENTS SPECTACULAIRES avant les manques. Un résultat 400 fois supérieur à sa cible ne dit presque jamais qu'on a bien travaillé — il dit qu'on ne mesure pas ce qu'on croit.",
+    "rienARetenir": false,
+    "date": "2026-09-28T14:24:55.928Z"
   }
 ]
