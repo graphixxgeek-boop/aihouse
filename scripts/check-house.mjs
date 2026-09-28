@@ -19715,3 +19715,59 @@ async function testAxesPubliesSansDoublon() {
   console.log(`Passed: le garde-fou des axes criait sur sa propre répétition (2026-09-28). « Le référentiel déclare 11 axes, le code en publie 12 » s'affichait à CHAQUE passage du classificateur, et les deux s'accordaient pourtant : « exportabilite » figure dans AXES_DE_CLASSIFICATION ET était rajouté par son propre drapeau, si bien que la liste publiée comptait douze entrées dont une en double. UN GARDE-FOU QUI ACCUSE À TORT CESSE D'ÊTRE LU (L4), et celui-ci le faisait depuis assez longtemps pour être devenu du décor (L6) — c'est la forme la plus discrète de l'échec d'un contrôle : il parle, il a l'air de travailler, et plus personne ne l'écoute. LA CORRECTION N'ACHÈTE PAS LE SILENCE, et les trois contre-tests le vérifient : le drapeau AJOUTE toujours l'axe quand la liste de l'appelant ne le porte pas, il n'ajoute rien quand il y est déjà (le cas qui criait), et une vraie divergence mord encore. Déduplication d'une répétition, jamais suppression du mécanisme. Mesure : 11 déclarés contre 11 publiés, et le classificateur se tait enfin sur ce point.`);
 }
 await testAxesPubliesSansDoublon();
+
+// =============================================================================================
+// #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
+// =============================================================================================
+// LE BILAN D'INVESTISSEMENT DIT « NON CONCLUANT » À CHAQUE COMMIT depuis des jours, et la tâche
+// nomme elle-même la cause : « ce n'est pas l'outil, c'est moi qui ne classe pas au fil de l'eau ».
+// Deux actions sur onze portent une classification.
+//
+// UN REPROCHE ÉCRIT N'EST PAS UNE MÉCANIQUE (Article 27) : « classe au fil de l'eau » a été écrit,
+// lu, et tenu 2 fois sur 11 — pas un défaut de volonté, une obligation qui ne repose que sur la
+// mémoire d'un agent.
+//
+// LA DÉRIVATION A DONC ÉTÉ CONSTRUITE — puis ÉCARTÉE, et c'est le résultat le plus utile de la
+// tâche. Branchée, elle faisait passer le bilan de « 2/11, non concluant » à « 11/11
+// investissement ». Mesure sur 935 commits réels : 73 % touchent `scripts/`, donc le signal est
+// vrai presque toujours et ne distingue RIEN. Un indicateur qui vaut 100 % par CONSTRUCTION est
+// exactement le défaut pour lequel cette fonction a déjà été corrigée le 2026-09-22 — une mesure
+// adjacente servie à la place de la mesure visée, et flatteuse donc invisible.
+async function testDerivationEcarteeParcequElleFlatte() {
+  const SCT = await import('../scripts/smart-conso-token.mjs');
+
+  // LA DÉRIVATION EXISTE ET FONCTIONNE — on ne l'écarte pas parce qu'elle est cassée.
+  const commits = [{ at: 1_500, 'aTouchéScripts': true }, { at: 90_000_000, 'aTouchéScripts': false }];
+  assert.equal(SCT.classificationDerivee({ at: 1_000 }, { commits }).classification, 'investissement',
+    'a script changed within the hour after the action: something was BUILT, and the derivation says so');
+  assert.equal(SCT.classificationDerivee({ at: 1_000 }, { commits }).source, 'dérivée',
+    'and it says it is DERIVED, never passing for a judgement — that distinction is the whole safeguard');
+  assert.equal(SCT.classificationDerivee({ at: 1_000, classification: 'sans_retour' }, { commits }).source, 'déclarée',
+    'a declared classification always wins: the derivation never overwrites a human verdict');
+  assert.equal(SCT.classificationDerivee({ at: 80_000_000 }, { commits }).classification, null,
+    'and no script change means NOT DERIVABLE, never "sans retour" — absence of a mechanical signal is not a verdict');
+
+  // MAIS ELLE NE REMPLIT PAS LE RATIO, et c'est vérifié sur la fonction qui compte : seule une
+  // classification DÉCLARÉE entre dans le taux.
+  const hist = { actions: [{ at: 1_000, classification: 'investissement' }, { at: 2_000 }, { at: 3_000 }] };
+  const r = SCT.computeInvestmentRatio(hist, 4_000, 7, { commits });
+  assert.equal(r.total, 1, 'only the DECLARED classification feeds the ratio: a derived one would inflate it by construction');
+  assert.equal(r.nonClassees, 2, 'and the unclassified ones stay counted as unclassified, visibly');
+
+  // LE DIAGNOSTIC DIT POURQUOI, avec le chiffre qui a motivé l'écart.
+  const d = SCT.diagnosticDeClassification(hist, 4_000, { commits: [{ at: 1_500, 'aTouchéScripts': true }, { at: 1_600, 'aTouchéScripts': true }] });
+  assert.equal(d.mesurable, true);
+  assert.equal(d.partDuSignal, 100);
+  assert.match(d.verdict, /TROP FAIBLE/, 'when nearly every commit touches scripts/, the derivation distinguishes nothing and the diagnostic says so');
+  assert.match(d.aTrancher, /REFUSE sans classification/, 'and it names the only correction that would hold — a mechanism, not a reminder — while leaving the decision to the user');
+
+  // ET LE SIGNAL DISCRIMINANT EST RECONNU COMME TEL : on n'a pas codé « toujours trop faible ».
+  const discriminant = SCT.diagnosticDeClassification(hist, 4_000, {
+    commits: [{ at: 1_500, 'aTouchéScripts': true }, ...Array.from({ length: 9 }, (_, i) => ({ at: 5_000 + i, 'aTouchéScripts': false }))],
+  });
+  assert.ok(discriminant.partDuSignal <= 50);
+  assert.match(discriminant.verdict, /mérite d'être reconsidérée/, 'a genuinely discriminating signal must be reported as worth reconsidering — the verdict is measured, never hardcoded');
+
+  console.log(`Passed: une dérivation construite, mesurée, et écartée parce qu'elle flattait (2026-09-28, tâche #492). LE BILAN DIT « NON CONCLUANT » À CHAQUE COMMIT depuis des jours, et la tâche nomme la cause elle-même : « ce n'est pas l'outil, c'est moi qui ne classe pas au fil de l'eau » — 2 actions sur 11. UN REPROCHE ÉCRIT N'EST PAS UNE MÉCANIQUE (Article 27) : « classe au fil de l'eau » a été écrit, lu, et tenu deux fois sur onze ; ce n'est pas un défaut de volonté, c'est une obligation qui ne repose que sur la mémoire d'un agent. LA DÉRIVATION A DONC ÉTÉ CONSTRUITE PUIS ÉCARTÉE, et c'est le résultat le plus utile de la tâche : branchée, elle faisait passer le bilan de « 2/11, non concluant » à « 11/11 investissement ». Mesure sur 935 commits réels : 73 % touchent scripts/, donc « un script a changé dans l'heure » est vrai presque toujours et ne distingue rien. Un indicateur qui vaut 100 % PAR CONSTRUCTION est exactement le défaut pour lequel cette fonction a déjà été corrigée le 2026-09-22 — une mesure adjacente servie à la place de la mesure visée, et flatteuse donc invisible. LA CONSTRUIRE POUR LA JETER N'EST PAS UNE PERTE : c'est ce qui permet de dire POURQUOI on ne la prend pas, avec un chiffre plutôt qu'une impression. Elle reste exportée et testée comme DIAGNOSTIC, et le verdict « trop faible » est MESURÉ et non codé en dur — le contre-test vérifie qu'un signal réellement discriminant serait, lui, rendu comme méritant d'être reconsidéré.`);
+}
+await testDerivationEcarteeParcequElleFlatte();

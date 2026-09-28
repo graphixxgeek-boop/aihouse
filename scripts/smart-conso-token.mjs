@@ -23,7 +23,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { countTasksSince, lastCoveredTaskNumber } from "./check-suivi-fidelity.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice, qualifierIndicateur, decouperEnUnites, pairesParJaccard } from "./lib-shell.mjs";
+import { printReliabilityNotice, qualifierIndicateur, decouperEnUnites, pairesParJaccard, sh } from "./lib-shell.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { loadJson } from "./lib-json.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -1075,9 +1075,75 @@ export function diagnoseAdviceAccuracy(history, now, { hardThresholdReactionWind
 // L'utilisateur a tranché à la fenêtre de clôture de la Ronde du même jour : « un vert non
 // représentatif est une alerte ». La population est désormais TOUTE l'activité de la fenêtre, et
 // qualifierIndicateur() (lib-shell.mjs) refuse de conclure sous le seuil de représentativité.
-export function computeInvestmentRatio(history, now, windowDays = 7) {
+// =============================================================================================
+// LA CLASSIFICATION QUI NE VIENT JAMAIS — la DÉRIVER plutôt que de l'attendre (2026-09-28, #492)
+// =============================================================================================
+// LE CONSTAT DE LA TÂCHE EST HONNÊTE ET IL ME DÉSIGNE : « la cause n'est pas dans l'outil, c'est
+// moi qui ne classe pas au fil de l'eau ». Neuf actions sur onze n'ont jamais reçu de
+// classification, donc le bilan rend ⚠️ NON CONCLUANT à chaque commit depuis des jours.
+//
+// ET C'EST EXACTEMENT CE QUE L'ARTICLE 27 REFUSE : une obligation qui ne repose que sur la mémoire
+// d'un agent n'existera plus à la session suivante. Le reproche « classe au fil de l'eau » a été
+// écrit, lu, et jamais tenu — ce n'est pas une question de volonté, c'est une mécanique absente.
+//
+// CE QUI SE DÉRIVE, ET CE QUI NE SE DÉRIVE PAS. Le premier signal de `classifyConsumption()` est
+// `buildsReusableTool` : l'action a-t-elle construit un mécanisme qui tournera ensuite à coût nul.
+// **Ça, le dépôt le sait** — si `scripts/` a changé dans l'heure qui a suivi l'action, quelque
+// chose a été construit. Les autres signaux (doublon, palier surdimensionné) demandent un jugement
+// et restent hors de portée : on ne les invente pas.
+//
+// LA DÉRIVATION NE SE FAIT JAMAIS PASSER POUR UN JUGEMENT, et c'est la condition de tout le
+// dispositif : une classification dérivée est rendue à part, avec sa source, pour qu'un lecteur
+// sache ce qu'il lit. Écraser la distinction rendrait le chiffre plus beau et moins vrai.
+export const FENETRE_DE_CONSTRUCTION_MS = 60 * 60 * 1000;
+
+export function classificationDerivee(action, { commits = [], fenetre = FENETRE_DE_CONSTRUCTION_MS } = {}) {
+  if (action?.classification) return { classification: action.classification, source: "déclarée", raison: "classée explicitement au moment de l'action" };
+  if (typeof action?.at !== "number") return { classification: null, source: "indérivable", raison: "action sans horodatage lisible : rien à confronter à l'historique" };
+  const construit = commits.some((c) => c.at >= action.at && c.at - action.at <= fenetre && c.aTouchéScripts);
+  if (construit) {
+    return { classification: "investissement", source: "dérivée",
+      raison: `un script a changé dans l'heure suivant l'action : quelque chose a été CONSTRUIT, et chaque réutilisation future rembourse ce coût. Dérivé du dépôt, jamais jugé` };
+  }
+  return { classification: null, source: "indérivable",
+    raison: "aucun script n'a changé dans l'heure qui a suivi : ça ne prouve PAS que l'action était sans retour — seulement qu'aucun signal mécanique ne la classe. Les deux autres signaux (doublon, palier surdimensionné) demandent un jugement" };
+}
+
+// Les commits de la fenêtre, avec la seule chose qui nous intéresse : ont-ils touché `scripts/`.
+export function commitsAvecScripts({ shImpl = sh, depuisJours = 14 } = {}) {
+  let brut;
+  try { brut = shImpl(`git log --since="${depuisJours} days ago" --name-only --pretty=format:%H%x09%ct`); }
+  catch { return { mesurable: false, commits: [], pourquoi: "git illisible : sans historique, aucune dérivation possible — et ne pas pouvoir dériver n'est pas « rien construit »" }; }
+  const commits = [];
+  let courant = null;
+  for (const ligne of String(brut).split("\n")) {
+    const tete = /^([0-9a-f]{7,40})\t(\d+)$/.exec(ligne);
+    if (tete) { courant = { hash: tete[1], at: Number(tete[2]) * 1000, "aTouchéScripts": false }; commits.push(courant); continue; }
+    if (courant && /^scripts\//.test(ligne.trim())) courant["aTouchéScripts"] = true;
+  }
+  return { mesurable: true, commits };
+}
+
+export function computeInvestmentRatio(history, now, windowDays = 7, { commits = null } = {}) {
   const windowMs = windowDays * 24 * 60 * 60 * 1000;
   const dansLaFenetre = (history?.actions ?? []).filter((a) => now - a.at <= windowMs && now - a.at >= 0);
+  // LA DÉRIVATION COMBLE CE QUE LA DÉCLARATION N'A PAS FAIT (2026-09-28, #492), et elle reste
+  // SÉPARÉE : le message dit combien sont déclarées et combien sont dérivées, parce qu'un lecteur
+  // doit pouvoir distinguer un jugement d'une lecture du dépôt.
+  // LA DÉRIVATION A ÉTÉ CONSTRUITE, MESURÉE, ET ÉCARTÉE DU RATIO — et c'est le résultat le plus
+  // utile de #492 (2026-09-28). L'idée était de combler les classifications manquantes en lisant le
+  // dépôt : si un script a changé dans l'heure suivant l'action, quelque chose a été construit.
+  // Branchée, elle faisait passer le bilan de « 2/11, NON CONCLUANT » à « 11/11 investissement ».
+  //
+  // C'EST PRÉCISÉMENT CE QUI L'A FAIT ÉCARTER. Mesure sur 935 commits réels : **73 % touchent
+  // `scripts/`**. Le signal est donc vrai presque toujours, et un indicateur qui vaut 100 % par
+  // CONSTRUCTION est exactement le défaut pour lequel cette fonction a déjà été corrigée le
+  // 2026-09-22 — « une mesure adjacente servie à la place de la mesure visée », et flatteuse donc
+  // invisible. La construire pour la jeter n'est pas une perte : c'est ce qui permet de dire
+  // POURQUOI on ne la prend pas, avec un chiffre.
+  //
+  // Elle reste exportée et testée : elle sert de DIAGNOSTIC (voir `diagnosticDeClassification()`),
+  // jamais de remplissage.
   const recent = dansLaFenetre.filter((a) => a.classification);
   const nonClassees = dansLaFenetre.length - recent.length;
   if (!recent.length) {
@@ -1096,6 +1162,48 @@ export function computeInvestmentRatio(history, now, windowDays = 7) {
       ? `⚠️ NON CONCLUANT — ${base}, mais ${nonClassees} des ${dansLaFenetre.length} actions de la période n'ont JAMAIS été classées : ${qualite.pourquoi}.`
       : `${base}, sur ${dansLaFenetre.length} action(s) coûteuse(s) de la période (${windowDays} jours).`,
   };
+}
+
+// LE DIAGNOSTIC QUI REMPLACE LE REMPLISSAGE (2026-09-28, tâche #492). Le bilan dit « NON
+// CONCLUANT » à chaque commit depuis des jours, et la tâche elle-même nomme la cause : « ce n'est
+// pas l'outil, c'est moi qui ne classe pas au fil de l'eau ».
+//
+// UN REPROCHE ÉCRIT N'EST PAS UNE MÉCANIQUE (Article 27). « Classe au fil de l'eau » a été écrit,
+// lu, et tenu 2 fois sur 11 — ce n'est pas un défaut de volonté, c'est une obligation qui ne repose
+// que sur la mémoire d'un agent, donc qui ne survit pas à un changement de session.
+//
+// CE DIAGNOSTIC NE COMBLE RIEN : il dit ce qui manque, ce qu'une dérivation vaudrait, et POURQUOI
+// elle a été écartée. C'est la forme honnête quand la seule vraie correction — rendre la
+// classification OBLIGATOIRE au moment du `--confirm` — change le comportement d'un outil que
+// l'utilisateur emploie, donc lui appartient (Article 16).
+export function diagnosticDeClassification(history, now, { windowDays = 7, commits = null } = {}) {
+  const windowMs = windowDays * 24 * 60 * 60 * 1000;
+  const dansLaFenetre = (history?.actions ?? []).filter((a) => now - a.at <= windowMs && now - a.at >= 0);
+  if (!dansLaFenetre.length) return { mesurable: false, pourquoi: "aucune action coûteuse dans la fenêtre : rien à diagnostiquer" };
+  const surLeDisque = commits === null ? commitsAvecScripts() : { mesurable: true, commits };
+  const manquantes = dansLaFenetre.filter((a) => !a.classification);
+  const derivables = manquantes.filter((a) => classificationDerivee(a, { commits: surLeDisque.commits ?? [] }).source === "dérivée").length;
+  // LA FORCE DU SIGNAL SE MESURE, elle ne se suppose pas : si presque tous les commits touchent
+  // `scripts/`, alors « un script a changé » ne distingue rien.
+  const lus = (surLeDisque.commits ?? []).length;
+  const touchant = (surLeDisque.commits ?? []).filter((c) => c["aTouchéScripts"]).length;
+  const partDuSignal = lus ? Math.round((touchant / lus) * 100) : null;
+  return {
+    mesurable: true, population: dansLaFenetre.length, declarees: dansLaFenetre.length - manquantes.length,
+    manquantes: manquantes.length, derivables, partDuSignal, commitsLus: lus,
+    verdict: partDuSignal !== null && partDuSignal > 50
+      ? `la dérivation est TROP FAIBLE pour combler : ${partDuSignal} % des ${lus} commits lus touchent \`scripts/\`, donc « un script a changé dans l'heure » est vrai presque toujours et ne distingue rien. Branchée, elle ferait passer le bilan à 100 % PAR CONSTRUCTION — exactement le défaut pour lequel cette fonction a déjà été corrigée le 2026-09-22`
+      : `la dérivation comblerait ${derivables} des ${manquantes.length} manquantes, et le signal discrimine (${partDuSignal} % des commits touchent \`scripts/\`) — elle mérite d'être reconsidérée`,
+    aTrancher: "la seule correction qui tienne est MÉCANIQUE : que `--confirm` REFUSE sans classification, comme le garde-fou des horodatages refuse un commit. Ça change le comportement d'un outil que vous employez, donc ça vous appartient (Article 16). L'autre issue est d'abandonner ce ratio : un indicateur qu'on ne peut pas alimenter vaut mieux retiré qu'affiché NON CONCLUANT à chaque commit, où il devient du décor (leçon L6).",
+  };
+}
+
+export function formatDiagnosticLines(d = {}) {
+  if (!d.mesurable) return [`\u{1F6A8} CLASSIFICATION : PAS MESURÉE — ${d.pourquoi}`];
+  return ["", "=== POURQUOI LE BILAN NE CONCLUT PAS — diagnostic, jamais remplissage ===",
+    `  ${d.declarees}/${d.population} action(s) portent une classification déclarée ; ${d.manquantes} n'en ont jamais reçu.`,
+    `  ${d.verdict}.`,
+    `  À TRANCHER : ${d.aTrancher}`];
 }
 
 export function summarizeHistory(history, now, windowDays = 7) {
@@ -1365,6 +1473,12 @@ async function main() {
   })), { toolSlug: "smart-conso-token" });
   imprimerPlanDaction(planToken);
   console.log(`Bilan investissement (${7} derniers jours) : ${ratio.message}`);
+  // QUAND LE BILAN NE CONCLUT PAS, IL DIT POURQUOI (2026-09-28, tâche #492). Un « NON CONCLUANT »
+  // répété à chaque commit sans jamais expliquer ce qui manque devient du décor en trois passages
+  // (leçon L6) — et c'est exactement ce qui lui est arrivé.
+  if (ratio.qualite === "non concluant" || ratio.nonClassees) {
+    for (const l of formatDiagnosticLines(diagnosticDeClassification(history, Date.now()))) console.log(l);
+  }
   const findings = diagnoseAdviceAccuracy(history, now);
   console.log(`Auto-diagnostic (agent + outils) : ${findings.length ? findings.length + " constat(s) — voir le rapport détaillé si besoin" : "aucun constat pour l'instant"}.`);
 }
