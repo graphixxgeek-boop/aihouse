@@ -27,7 +27,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { printReliabilityNotice, listerLesFichiers, lireFichierPartage } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -1432,8 +1432,65 @@ export function enregistrerRemontee(idsServis = [], { toutes = [], root = ROOT, 
   return c;
 }
 
-export function analyseRemontees(compteur = { occasions: 0, entrees: {} }, lecons = [], jugements = [], { seuils = SEUILS_REMONTEES } = {}) {
+// ————————————————————————————————————————————————————————————————————————
+// UNE LEÇON CITÉE DANS LE DÉPÔT A SERVI, QUOI QUE DISE LE COMPTEUR DE REMONTÉES
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE DÉFAUT, ET IL A FAILLI COÛTER CHER (2026-09-28, tâche #1051). Le rapport de Ronde annonçait
+// « L7, L34, L37, L39 ne sont JAMAIS remontées — poids mort dans un registre qui ne cesse de
+// grossir », et j'ai relayé ce constat à l'utilisateur en l'appelant du poids mort. Il a répondu
+// « purge les 4 leçons mortes ». **Elles ne l'étaient pas** : mesuré avant d'exécuter, L37 est citée
+// DIX-HUIT fois dans le dépôt, dont quatre dans du code vivant (doc-report, god-of-all-process,
+// ezechiel×2), et L7 dix fois dont un test de check-house. Supprimer L37 aurait cassé dix-huit
+// renvois — exactement la dette de reprise que l'Article 27 nomme : un nom propre sans définition
+// atteignable.
+//
+// LA CAUSE EST UNE CONFUSION DE MESURE, jamais un défaut des leçons : le compteur de remontées
+// enregistre si le TERRAIN déclaré d'une leçon partage un mot avec la phrase que je tape à
+// tool-brain. Il mesure donc MON VOCABULAIRE au moment de décrire une tâche, pas l'utilité de la
+// leçon. Le terrain de L37 est « corriger, même défaut, ailleurs, dérive » : des mots qu'on emploie
+// en CORRIGEANT, jamais en annonçant ce qu'on va faire. Elle ne pouvait pas remonter, et elle a
+// pourtant guidé dix-huit passages.
+//
+// C'EST LA LEÇON L5 APPLIQUÉE AU REGISTRE DES LEÇONS LUI-MÊME : « je n'ai rien trouvé » et « je
+// n'ai pas pu regarder » se ressemblent dans un rapport. Le silence du compteur disait le second et
+// s'affichait comme le premier.
+//
+// LA CORRECTION : compter aussi les CITATIONS RÉELLES dans le dépôt, et les faire primer. Une
+// leçon citée dans du code ou de la documentation a servi, quel que soit le compteur — c'est une
+// preuve écrite, là où la remontée n'est qu'une occasion offerte. Le registre du suivi est exclu
+// du décompte : y raconter une leçon n'est pas s'en servir, et l'y compter ferait qu'une leçon
+// devient « vivante » du seul fait qu'on a écrit qu'elle était morte.
+export const CITATIONS_HORS_PORTEE = ["docs/referentiel/lecons.md", "docs/suivi/"];
+
+export function citationsDansLeDepot(lecons = [], { root = ROOT, lister = null, lire = null, horsPortee = CITATIONS_HORS_PORTEE } = {}) {
+  const listeur = lister ?? ((racines) => listerLesFichiers(racines, { root, garder: (c) => /\.(mjs|ts|tsx|md)$/.test(c) }));
+  const lecteur = lire ?? ((chemin) => lireFichierPartage(join(root, chemin)));
+  let fichiers = [];
+  try { fichiers = listeur(["scripts", "lib", "docs", "app"]); }
+  catch { return { mesurable: false, pourquoi: "le dépôt n'a pas pu être parcouru — sans lecture, « zéro citation » voudrait dire « je n'ai pas pu regarder », jamais « personne ne s'en sert » (leçon L5)", parLecon: new Map() }; }
+  const utiles = fichiers.filter((c) => !horsPortee.some((h) => String(c).startsWith(h)));
+  if (!utiles.length) return { mesurable: false, pourquoi: "aucun fichier lisible hors du registre lui-même", parLecon: new Map() };
+  const parLecon = new Map(lecons.map((l) => [l.id, 0]));
+  for (const chemin of utiles) {
+    let texte = "";
+    try { texte = lecteur(chemin) ?? ""; } catch { continue; }
+    for (const l of lecons) {
+      // Le mot « leçon » (ou « lesson ») doit être là : sans lui, « L7 » attrape n'importe quel
+      // identifiant de trois caractères, et un garde-fou qui accuse à tort cesse d'être lu (L4).
+      const motif = new RegExp(`(le[cç]ons?|lessons?|BP)\\s*(?:[^.\\n]{0,40}?)\\b${l.id}\\b|\\b${l.id}\\b(?:[^.\\n]{0,40}?)(le[cç]ons?|lessons?)`, "gi");
+      const n = (texte.match(motif) ?? []).length;
+      if (n) parLecon.set(l.id, (parLecon.get(l.id) ?? 0) + n);
+    }
+  }
+  return { mesurable: true, fichiers: utiles.length, parLecon };
+}
+
+export function analyseRemontees(compteur = { occasions: 0, entrees: {} }, lecons = [], jugements = [], { seuils = SEUILS_REMONTEES, citations = null } = {}) {
   const appliquees = new Set(jugements.filter((j) => j.verdict === "appliquée" && j.entree).map((j) => j.entree));
+  // Les citations priment sur le silence du compteur, jamais l'inverse : une preuve écrite dans le
+  // dépôt bat une occasion qui n'a pas été offerte. Sans mesure de citations, rien ne change.
+  const citees = citations?.mesurable ? citations.parLecon : null;
   const etats = lecons.map((l) => {
     // Une entrée absorbée par une fusion n'est plus jugée : elle ne sert plus, c'est le but.
     if (l.fusionneeDans) return { id: l.id, etat: "renvoi", detail: `fusionnée dans ${l.fusionneeDans} — conservée comme renvoi pour que les citations existantes mènent quelque part` };
@@ -1441,11 +1498,16 @@ export function analyseRemontees(compteur = { occasions: 0, entrees: {} }, lecon
     if (!e) return { id: l.id, etat: "jamais observée", detail: "le compteur ne l'a pas encore vue passer — aucune conclusion possible" };
     const occasions = Math.max(0, compteur.occasions - (e.occasionsALObservation ?? 0));
     if (occasions < seuils.occasionsAvantDeJuger) return { id: l.id, etat: "trop tôt", remontees: e.remontees, occasions, detail: `${occasions} occasion(s) depuis son arrivée, il en faut ${seuils.occasionsAvantDeJuger} pour qu'un silence veuille dire quelque chose` };
-    if (!e.remontees) return { id: l.id, etat: "jamais servie", remontees: 0, occasions, detail: `jamais remontée en ${occasions} occasions — soit son terrain est mal déclaré, soit elle n'a plus lieu d'être` };
+    const nbCitations = citees?.get(l.id) ?? 0;
+    if (!e.remontees && nbCitations > 0) return { id: l.id, etat: "appliquée sans être remontée", remontees: 0, citations: nbCitations, occasions, detail: `jamais remontée en ${occasions} occasions, mais CITÉE ${nbCitations} fois dans le dépôt — ce n'est donc pas la leçon qui est morte, c'est son TERRAIN qui ne l'atteint jamais (les mots qui la déclenchent ne sont pas ceux qu'on emploie en décrivant une tâche). À reformuler, jamais à retirer : la supprimer casserait ${nbCitations} renvois (Article 27)` };
+    if (!e.remontees) return { id: l.id, etat: "jamais servie", remontees: 0, citations: nbCitations, occasions, detail: `jamais remontée en ${occasions} occasions${citees ? " ET jamais citée dans le dépôt" : ""} — soit son terrain est mal déclaré, soit elle n'a plus lieu d'être` };
     if (e.remontees >= seuils.remonteesAvantDeDouter && !appliquees.has(l.id)) return { id: l.id, etat: "sert sans effet connu", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois et jamais jugée appliquée — soit elle ne sert à rien telle qu'elle est écrite, soit personne n'a encore tranché` };
     return { id: l.id, etat: "vivante", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois${appliquees.has(l.id) ? ", et jugée appliquée au moins une fois" : ""}` };
   });
-  return { occasions: compteur.occasions, etats, aRetirer: etats.filter((e) => e.etat === "jamais servie").map((e) => e.id), sansEffet: etats.filter((e) => e.etat === "sert sans effet connu").map((e) => e.id) };
+  return { occasions: compteur.occasions, etats, citationsMesurees: Boolean(citees),
+    aRetirer: etats.filter((e) => e.etat === "jamais servie").map((e) => e.id),
+    aReformuler: etats.filter((e) => e.etat === "appliquée sans être remontée").map((e) => e.id),
+    sansEffet: etats.filter((e) => e.etat === "sert sans effet connu").map((e) => e.id) };
 }
 
 export function formatRemontees(analyse, groupes = []) {
@@ -1462,6 +1524,9 @@ export function formatRemontees(analyse, groupes = []) {
 
 export function constatsRemontees(analyse, groupes = [], lecons = []) {
   return [
+    ...(analyse.aReformuler ?? []).map((id) => ({
+      constat: `${id} n'est jamais remontée, mais elle est CITÉE ${analyse.etats.find((e) => e.id === id)?.citations} fois dans le dépôt — le silence vient de son terrain, pas d'elle`,
+      etat: A_TRANCHER, tache: `réécrire le « Terrain » de ${id} avec les mots qu'on emploie en DÉCRIVANT une tâche, pas ceux qu'on emploie en la faisant — jamais la retirer, ses citations pointeraient dans le vide` })),
     ...analyse.aRetirer.map((id) => ({
       constat: `${id} n'est jamais remontée en ${analyse.etats.find((e) => e.id === id)?.occasions} occasions — poids mort dans un registre qui ne cesse de grossir`,
       etat: A_TRANCHER, tache: `reformuler le terrain de ${id} pour qu'elle atteigne enfin les situations où elle s'applique, ou la retirer du registre` })),
@@ -1568,7 +1633,11 @@ function main() {
   console.log("");
   for (const l of formatChaineXp(chaine)) console.log(l);
   // L'EFFET RÉEL DU DISPOSITIF (tâche #222) : est-ce que ressortir sert, et que faut-il retirer.
-  const remontees = analyseRemontees(loadRemontees(), auditL.mesure === "mesuré" ? auditL.lecons : [], journalXp.filter((e) => e.nature === "jugement"));
+  // Les citations réelles sont lues AVANT le verdict (#1051) : sans elles, « jamais remontée »
+  // s'affiche comme « poids mort » alors qu'il veut dire « son terrain ne l'atteint pas ».
+  const lecComptees = auditL.mesure === "mesuré" ? auditL.lecons : [];
+  const citations = citationsDansLeDepot(lecComptees);
+  const remontees = analyseRemontees(loadRemontees(), lecComptees, journalXp.filter((e) => e.nature === "jugement"), { citations });
   const groupes = auditL.mesure === "mesuré" ? groupesEquivalents(auditL.lecons) : [];
   console.log("");
   for (const l of formatRemontees(remontees, groupes)) console.log(l);

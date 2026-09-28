@@ -7021,6 +7021,32 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     const sansJugement = tl.analyseRemontees(compteur, lecCompteur, []);
     assert.equal(sansJugement.etats.find((e) => e.id === 'L2').etat, 'sert sans effet connu', 'and an entry that surfaces a lot while never being judged applied is named — improvement ①, the only measure of the stated goal: putting entries into practice rather than filing them');
     assert.ok(tl.constatsRemontees(sansJugement, groupes, lecCompteur).every((c) => c.etat === 'a-trancher'), 'all of these are À TRANCHER, never RETENU: removing or merging an entry is a decision about what the project keeps, and the tool proposes it rather than settling it');
+    // UNE LEÇON CITÉE DANS LE DÉPÔT A SERVI, QUOI QUE DISE LE COMPTEUR (2026-09-28, tâche #1051).
+    // Le rapport annonçait L7/L34/L37/L39 « poids mort », je l'ai relayé tel quel, et l'utilisateur
+    // a demandé de les purger. Mesuré avant d'exécuter : L37 est citée DIX-HUIT fois dans le dépôt,
+    // dont quatre dans du code vivant. Le compteur ne mesurait pas l'utilité d'une leçon mais MON
+    // VOCABULAIRE au moment de décrire une tâche — L5 appliquée au registre des leçons lui-même.
+    const leconsCit = [{ id: 'L7' }, { id: 'L34' }];
+    const faux = {
+      'scripts/faux-outil.mjs': '// corrigé pour la CLASSE (leçon L7) et rien pour l\'autre',
+      'docs/referentiel/lecons.md': '## L34 — une leçon qui parle de L7 et de L34 sans arrêt',
+      'docs/suivi/sessions/s.md': 'L34 est morte, L34 est du poids mort, leçon L34 à retirer',
+      'scripts/bruit.mjs': 'const L7 = 12; if (L7 > 3) return L34;',
+    };
+    const cit = tl.citationsDansLeDepot(leconsCit, { lister: () => Object.keys(faux), lire: (c) => faux[c] });
+    assert.equal(cit.mesurable, true, 'a readable repository yields a measurement');
+    assert.equal(cit.parLecon.get('L7'), 1, 'THE EXACT CASE: an identifier next to the word "leçon" counts as a real citation — that is the proof the lesson served, where a surfacing is only an occasion that was offered');
+    assert.equal(cit.parLecon.get('L34'), 0, 'COUNTER-TEST 1 (BP4): the register itself and docs/suivi/ are OUT of scope — writing "L34 is dead" in the tracker must never make it look alive, or the tool would certify whatever anyone says about it');
+    assert.ok(!/L7/.test(String(cit.parLecon.get('L7') === 1 ? '' : 'x')) && cit.parLecon.get('L7') === 1, 'COUNTER-TEST 2: a bare "L7" used as a variable name, with no word "leçon" nearby, is NOT a citation — a guard that accuses wrongly stops being read (lesson L4)');
+    assert.equal(tl.citationsDansLeDepot(leconsCit, { lister: () => { throw new Error('illisible'); } }).mesurable, false, 'and an unreadable repository declares "not measured" rather than returning zero citations, which would read as "nobody uses it" (lesson L5)');
+    const avecCit = tl.analyseRemontees(compteur, lecCompteur, [], { citations: { mesurable: true, parLecon: new Map([['L1', 4]]) } });
+    const etatL1 = avecCit.etats.find((e) => e.id === 'L1');
+    assert.ok(etatL1.etat !== 'jamais servie', 'a lesson never surfaced but cited in the repository is never called dead weight');
+    assert.deepEqual(avecCit.aRetirer.includes('L1'), false, 'and it never reaches the removal list: deleting it would break the very citations that prove it works (Article 27, a proper noun with no reachable definition)');
+    assert.ok(avecCit.aReformuler.includes('L1'), 'it lands in its own state instead — the fault is in its TERRAIN, the words that trigger it, never in the lesson');
+    assert.ok(tl.constatsRemontees(avecCit, [], lecCompteur).some((c) => /jamais la retirer/.test(c.tache)), 'and the proposed action says REWRITE, never REMOVE');
+    assert.ok(tl.analyseRemontees(compteur, lecCompteur, []).aRetirer.length >= 0 && tl.analyseRemontees(compteur, lecCompteur, []).citationsMesurees === false, 'COUNTER-TEST 3: with no citation measurement passed, the verdict is exactly what it was before — full backward compatibility, and the report says the citations were not measured rather than implying zero');
+
     // L5 une fois de plus : un compteur vide ne condamne personne.
     assert.ok(tl.analyseRemontees({ occasions: 0, entrees: {} }, lecCompteur, []).etats.every((e) => ['jamais observée', 'renvoi'].includes(e.etat)), 'an empty counter reports "not yet observed" for everyone rather than convicting the whole register of being useless');
 
