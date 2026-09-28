@@ -1,0 +1,122 @@
+================================================================================
+NUIT AUTONOME DU 2026-09-28 — RAPPORT
+Écrit au fil de l'eau, pas à la fin : ce qui n'est pas écrit n'existe pas.
+================================================================================
+
+DE QUOI IL S'AGIT
+  Ton gros prompt du 2026-09-27 au soir, avec ses cinq chapitres dans ton ordre :
+  urgentes/critiques → classification & organisation → process → référentiel →
+  export, puis « épuise la file ».
+
+  Ta consigne : « continues sans t'arreter, ne t'arrete pas jusqu'à ce que toutes
+  les taches possibles soient epuisées ».
+
+LE COMPTE, AVANT / APRÈS
+  Référence figée au départ : 83 tâches ouvertes.
+  Aujourd'hui : 57 ouvertes.
+  27 closes depuis · 1 née depuis · 13 nées ET fermées dans la période.
+  (Cette dernière ligne est invisible aux trois autres, qui se lisent toutes sur
+  l'état final — sans elle, une période productive se lit comme une période vide.)
+
+--------------------------------------------------------------------------------
+CE QUI EST FERMÉ
+--------------------------------------------------------------------------------
+
+  #711  le régime d'écriture d'un document : AUTO, FIGÉ, et le cumul MIXTE.
+  #1069 un process n'est pas le seul porteur possible — le croisement sur-accusait.
+  #760  ligne fantôme : l'Article 30 était écrit et validé, la ligne disait « ouverte ».
+  #1073 les deux derniers rapports hors gabarit, et l'outil du gabarit qui s'y trouvait.
+  #1074 le rapport de circulation se contredisait : prose contre chiffre.
+  #795  le « quart qui écrit pour personne » — une bonne part n'existait pas.
+  #1039 les deux lignes que le filet ne surveillait pas (+ un vrai bug trouvé en écrivant le test).
+  #1066 Abraham accusait l'Article 13 de mentir sur ses propres mécanismes.
+  #575  tool-brain est-il le point d'entrée : mesuré, jamais déclaré.
+  #490  #566  une seule question portée par trois tâches : rassemblée dans #814.
+  #936  les gestes de l'interface : ce que je savais et ne lui disais pas.
+  #1075 le garde-fou des axes criait sur sa propre répétition.
+  #492  une dérivation construite, mesurée, et jetée parce qu'elle flattait.
+
+--------------------------------------------------------------------------------
+LES CHAPITRES DE TON GROS PROMPT
+--------------------------------------------------------------------------------
+
+CLASSIFICATION → ORGANISATION : « on en est où par rapport au schéma ? »
+  1 CLASSIFICATION      91 %  ✅
+  2 NIVELLEMENT        100 %  ✅
+  3 HARMONISATION       54 %  🟠
+  4 PROCESS INTEGRATION 94 %  ✅   (76 % → 94 % cette nuit)
+  5 ORGANISATION       100 %  ✅
+
+  Quatre étapes sur cinq tenues. CE QUI RESTE À L'ÉTAPE 3 EST ENTIÈREMENT TA
+  DÉCISION : 77 noms en service jamais validés au registre des baptêmes (#1020,
+  les 7 familles t'attendent). Le gabarit des rapports, lui, est passé de 96 % à
+  100 % — tout ce qui pouvait se faire sans toi est fait.
+
+  Honnêteté sur l'étape 4 : ses 18 points viennent d'une MESURE CORRIGÉE, pas
+  d'un câblage nouveau. Le rapport comptait comme « non lues » 26 sources dont il
+  écrivait lui-même, trente lignes plus haut, qu'elles ne sont jamais un trou.
+
+EXPORT : « un calcul qui donne le pourcentage d'exportabilité »
+  7 dimensions sur 7 sont maintenant MESURÉES (5 l'étaient).
+  · le banc témoin tourne pour de vrai sur un dépôt étranger : 68/68, 100 %
+  · la portabilité classée (étape 2 de ton plan, écrite le 27 et jamais faite) :
+    43 liens → 5 légitimes, 38 déjà paramétrables, ZÉRO à découpler
+  · la septième dimension mesurait sans rendre de chiffre : 67 %, et ce chiffre
+    FAIT BAISSER le total — une absence remplacée par un fait
+  Exportabilité globale : 88 %, sur 7 dimensions réellement mesurées.
+
+PROCESS
+  13 process, 0 conflit. Le croisement sur-accusait de 4 : un process n'est pas le
+  seul porteur possible, une règle de CONDUITE est portée par angel. Et une
+  référence morte de naissance trouvée au passage (« §1001 », écrite le 22/09
+  alors que ce document n'a jamais eu de section 1001).
+
+RÉFÉRENTIEL
+  Fiches mises à jour le jour même pour chaque chantier : doc-report, safe-export,
+  abraham-les-references, angel-of-ia-process, tool-brain, data-archangel,
+  clone-hunter. Plus un document neuf : docs/gestes-de-l-interface.md.
+
+--------------------------------------------------------------------------------
+CE QUI T'ATTEND — six décisions, toutes préparées
+--------------------------------------------------------------------------------
+
+  #1053  compacter les récits fermés : TROIS calibrages mesurés (A 77 %, B 58 %,
+         C 58 %) et le avant/après sur du vrai texte.
+         → docs/check-tasks-details/compactage-calibrage-2026-09-28.md
+  #997   CLONE-HUNTER 22 → 11 : les onze derniers rangés en trois familles.
+         → docs/clone-hunter/decisions-a-prendre-2026-09-28.md
+  #814   les 6 données sans lecteur : un lecteur, ou une absence assumée écrite ?
+  #492   rendre la classification obligatoire au --confirm, ou abandonner le ratio ?
+  #936   une règle surveillée pour les gestes d'interface, ou le document suffit ?
+  #1020  les 77 noms — les 7 familles sont prêtes.
+
+--------------------------------------------------------------------------------
+CE QUE LA NUIT A APPRIS, ET QUI VAUT PLUS QUE LES CORRECTIFS
+--------------------------------------------------------------------------------
+
+  UN SEUIL QUI SE RETOURNE CONTRE LE TRAVAIL. Deux fois la même nuit, un test a
+  viré au rouge PARCE QUE J'AVAIS RÉUSSI : « au moins 15 duplications », puis
+  « moins que l'étroit + 20 ». Une borne exprimée en écart à un nombre qui
+  s'améliore se resserre à mesure qu'on travaille bien. C'est pire qu'un seuil
+  périmé : il mord le jour où on a bien fait, et un agent pressé le « répare » en
+  baissant le chiffre — ce qui repose le piège un cran plus loin.
+
+  UN SIGNAL ADJACENT LU COMME LE SIGNAL. Revenu six fois : les mots du manque pris
+  pour le manque, un chemin cité pris pour un chemin exécuté, une mention prise
+  pour un usage, une population annoncée sans en retirer la part déjà expliquée.
+
+  UN GARDE-FOU QUI ACCUSE À TORT DEVIENT DU DÉCOR. Le classificateur criait
+  « 11 axes contre 12 » à chaque passage, sur son propre doublon. Je l'ai vu passer
+  une dizaine de fois cette nuit sans m'y arrêter — c'est la forme la plus discrète
+  de l'échec d'un contrôle : il parle, il a l'air de travailler, personne ne l'écoute.
+
+  ET UNE FOIS, J'AI FAILLI DESSERRER UN GARDE-FOU POUR FAIRE PASSER MON PROPRE
+  CHANGEMENT. Une factorisation cachait le slug que le détecteur cherche ; élargir
+  le détecteur aurait été plus simple. C'est l'appelant qui a été corrigé.
+
+--------------------------------------------------------------------------------
+ÉTAT DU CODE
+--------------------------------------------------------------------------------
+  Filet : 332 blocs au vert à chaque commit. Tout est poussé au fil de l'eau.
+  Aucune action du périmètre sensible : rien qui change ce que Lia et Noé disent
+  ou font, aucun renommage en masse, CLAUDE.md non modifié.
