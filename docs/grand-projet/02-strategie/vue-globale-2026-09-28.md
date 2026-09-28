@@ -7,6 +7,11 @@
 **Son calibrage ② disait : rien pendant l'absorption, UN point quand la vue globale est là.**
 La voici. Ce document est ce point, et il est le seul.
 
+**Ce document porte le POURQUOI ; le plan porte le QUOI et le QUAND.** Les étapes, leur ordre et
+leur raccord aux tâches vivent dans `docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md`, qui renvoie ici
+chaque fois qu'une raison lui manque. Frontière posée le 2026-09-28, après que le détecteur de
+documents jumeaux ait mesuré 35 % de recouvrement entre les deux.
+
 ---
 
 ## 1. Ce qui a été lu

@@ -1599,6 +1599,16 @@ export function familleDeLaPaire(a, b, options = {}) {
 // Deux documents peuvent parfaitement couvrir le même terrain si l'un dit où s'arrête l'autre :
 // c'est même la bonne pratique de ce dépôt. Un document qui cite le CHEMIN de l'autre sait qu'il
 // existe — le recouvrement est alors assumé, jamais un doublon ignoré.
+// SA LIMITE EST DÉCLARÉE PLUTÔT QU'ÉLARGIE (2026-09-28, tâche #1116). Il ne reconnaît qu'un chemin
+// écrit DEPUIS LA RACINE (`docs/x/y.md`). Un lien RELATIF entre deux documents voisins
+// (`../02-strategie/y.md`) est une citation tout aussi réelle, et il ne la voit pas : deux documents
+// qui se renvoient l'un à l'autre relativement continuent donc d'être comptés comme un recouvrement
+// non déclaré. Le cas est arrivé pour de vrai le soir même, sur la vue globale et le plan d'action
+// du grand chantier. ÉLARGIR AURAIT ÉTÉ LE MAUVAIS GESTE À CETTE HEURE-LÀ : résoudre les chemins
+// relatifs change ce que le détecteur voit sur TOUT le dépôt, et rien ne dit qu'il ne se mettrait
+// pas à taire une vraie paire. La frontière a donc été écrite avec le chemin canonique des deux
+// côtés, ce qui est de toute façon meilleur pour qui lit le fichier seul (Article 27). Élargir reste
+// possible, mesure à l'appui, le jour où quelqu'un le décide.
 export function citeLAutre(texteA, cheminB) {
   return String(texteA).includes(String(cheminB));
 }

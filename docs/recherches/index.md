@@ -20,3 +20,4 @@ est RETENU, ce qui est ÉCARTÉ avec sa raison, et ce qui reste À TRANCHER par 
 |---|---|---|
 | `filet-de-securite-etat-de-l-art.md` | santé et rapidité d'une suite de tests : les *test smells*, les tests qui ne peuvent pas échouer, le mutation testing et son échantillonnage, la flakiness, le Test Impact Analysis | 2026-09-27, pour compléter EZECHIEL-LES-TESTS |
 | `ralentissements-causes-indirectes.md` | ce qui ralentit un projet quand la cause n'est pas là où on regarde : la fluidité (l'attente pèse plus que le travail), la dette de process, la fatigue d'alerte, la théorie des files | 2026-09-28, pour équiper JESUS-LE-SAUVEUR |
+| `marche-agents-code-2026-09-28.md` | le marché des agents de code et des runtimes d'agents : adoption réelle (90 % hebdomadaire, vérifié), prix pratiqués, modèles open core, et la catégorie Gartner « AI-augmented code modernization » | 2026-09-28, à sa demande explicite AVANT le plan d'action du grand changement |

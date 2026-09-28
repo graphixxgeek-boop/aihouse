@@ -137,6 +137,7 @@ que l'assainissement en cours est terminé.
 | [`01-absorption/ce-que-jai-lu.md`](01-absorption/ce-que-jai-lu.md) | la trace de l'absorption : un bloc par document lu, ce qu'il DIT et ses chiffres — jamais ce que j'en conclus |
 | [`01-absorption/questions-consolidees.md`](01-absorption/questions-consolidees.md) | ses 49 questions extraites de SES deux fichiers, en une seule liste, avec leur origine |
 | [`02-strategie/vue-globale-2026-09-28.md`](02-strategie/vue-globale-2026-09-28.md) | **la vue globale** : ce que les sept lots disent, leurs chiffres revérifiés, ce qu'ils ne pouvaient pas voir, et ce que je recommande |
+| [`03-plan-daction/plan-daction-2026-09-28.md`](03-plan-daction/plan-daction-2026-09-28.md) | **le plan d'action** : quatre fils menés ensemble, ce qui vient après la carte, et le raccord avec les 54 tâches ouvertes |
 | [`00-sources/01-sa-demande/README.md`](00-sources/01-sa-demande/README.md) | pourquoi ses deux fichiers ont un statut que les autres n'ont pas |
 | [`00-sources/02-documents-prepares/README.md`](00-sources/02-documents-prepares/README.md) | pourquoi le volume n'est pas l'autorité, et l'entrée à l'inventaire avant lecture |
 
