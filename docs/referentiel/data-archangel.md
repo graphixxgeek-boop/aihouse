@@ -203,3 +203,50 @@ pile au moment où il a raison de se taire (leçon L4).
 **Ce qu'il a trouvé à son premier vrai passage** : un transcript de simulation avait perdu
 **1 245 lignes nettes**, et personne ne l'aurait vu. Un outil qui trouve quelque chose dès son
 premier passage n'est pas une intention (leçon L2).
+
+## Le rapport se contredisait lui-même — deux nombres pour la même question (2026-09-28, tâches #490 / #902)
+
+**Deux défauts, et le second est le plus coûteux parce qu'invisible à la relecture.**
+
+### 1. Une source comptée deux fois, dans deux listes qui se contredisent
+
+`docs/safe-export/` figurait dans la liste **« ✅ lue par un lecteur de table déclaré — jamais un
+trou »** et, trente lignes plus bas, parmi les **« 31 que seul leur producteur relit »**.
+
+Les deux phrases sont vraies sous leur propre critère — aucun lecteur **direct**, mais un lecteur de
+**table** — et c'est exactement ce qui rend la contradiction chère : **le lecteur ne peut pas savoir
+laquelle compte.**
+
+C'est le même défaut que les « 43 liens » de la portabilité, trouvé le même jour : **une population
+annoncée sans en retirer la part déjà expliquée**. Un nombre gonflé ne fait pas travailler plus, il
+fait refermer le rapport.
+
+**Mesure : 31 → 3 sources réellement inexpliquées**, et le bloc **dit** ce qu'il a retiré — une
+soustraction muette est indiscernable d'un oubli.
+
+### 2. Le taux disait le contraire de la prose qui l'accompagnait
+
+Le pourcentage comptait comme **non lues** les 26 sources dont le rapport écrit noir sur blanc
+qu'elles « ne sont jamais un trou », et que « les compter comme non lues **punirait la bonne
+conception** » (Article 24 : un chemin *dérivé* d'un registre vaut mieux qu'un chemin recopié).
+
+**Un rapport qui dit une chose dans sa prose et son contraire dans son chiffre laisse le lecteur
+choisir, ce qui revient à ne rien mesurer.**
+
+### Les deux taux sont rendus, jamais l'un à la place de l'autre
+
+| Taux | La question à laquelle il répond |
+|---|---|
+| **atteintes** (88 %) | un autre outil arrive-t-il à cette donnée, directement ou par une table déclarée et corroborée ? |
+| **directes** (52 %) | quelqu'un ouvre-t-il ce fichier **en le nommant** ? |
+
+L'écart entre les deux dit exactement combien de sources ne sont atteintes **que** par une table.
+Le taux direct ne peut jamais dépasser l'autre — il répond à une question strictement plus étroite —
+et un contre-test verrouille cette inégalité : une inversion voudrait dire que les deux populations
+ont été confondues.
+
+### L'effet sur le schéma, dit franchement
+
+L'étape 4 du schéma de classification passe de **76 % à 94 %**, et devient **TENUE**. Cette hausse
+vient d'une **mesure corrigée**, jamais d'un câblage nouveau — et le dire vaut mieux que de laisser
+croire à dix-huit points de travail.

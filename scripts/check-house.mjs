@@ -19470,3 +19470,62 @@ async function testClasserLesLiensAuProjet() {
   console.log(`Passed: l'étape 2 du plan de portabilité, écrite le 2026-09-27 et jamais faite (2026-09-28, tâche #902). Sa stratégie la nomme noir sur blanc — « c'est l'étape que personne ne saute impunément : traiter les 43 comme 43 bugs serait un chantier absurde » — et le rapport continuait d'afficher UN nombre, 43, sans dire combien appellent vraiment du travail. Un nombre indifférencié ne se traite pas : il décourage, ce qui est la façon la plus sûre de ne jamais commencer. LE CLASSEMENT SE DÉRIVE, IL NE S'ÉNUMÈRE PAS : les deux registres de dispense sont LUS, et estParametrable() — écrit pour #668, déjà éprouvé sur 86 scripts — répond à la seconde question. RÉSULTAT : 43 liens → ${p.parCategorie.legitime} légitimes, ${p.parCategorie.parametrable} déjà paramétrables, ${p.parCategorie['a-decoupler']} à découpler. DEUX OUTILS ONT ÉTÉ PARAMÉTRÉS POUR DE VRAI en chemin (hyper-scan-checkpoint et tool-brain, les deux seuls du dépôt à n'offrir aucun moyen de changer leur cible) — et le détecteur a continué de les accuser APRÈS correction, ce qui est le signal le plus clair qu'il regarde la mauvaise chose (L4) : son motif n'acceptait que « ( » ou « , » avant un nom de paramètre, si bien qu'un PREMIER paramètre déstructuré — la forme la plus courante de ce dépôt — passait pour non paramétrable. La garde qui compte reste intacte, et le contre-test la vérifie : sans « export const », rien n'est absous, parce qu'un projet d'accueil ne peut pas surcharger ce qu'il ne peut pas importer. LA LIMITE EST DÉCLARÉE plutôt que découverte plus tard : « PARAMÉTRABLE » veut dire que l'outil expose AU MOINS UNE cible, pas que CHACUNE de ses mentions en soit une — un indice fort, jamais une preuve par mention.`);
 }
 await testClasserLesLiensAuProjet();
+
+// =============================================================================================
+// #490 — LE RAPPORT DE CIRCULATION DISAIT UNE CHOSE DANS SA PROSE ET SON CONTRAIRE DANS SON CHIFFRE
+// =============================================================================================
+// DEUX DÉFAUTS, ET LE SECOND EST LE PLUS COÛTEUX parce qu'il est invisible à la relecture.
+//
+// (1) `docs/safe-export/` figurait dans la liste « ✅ lue par un lecteur de table déclaré, JAMAIS
+//     un trou » ET, trente lignes plus bas, dans les « 31 que seul leur producteur relit ». Les
+//     deux phrases sont vraies sous leur propre critère — aucun lecteur DIRECT, mais un lecteur de
+//     table — et c'est exactement ce qui rend la contradiction chère : le lecteur ne peut pas
+//     savoir laquelle compte. Même défaut que les « 43 liens » de la portabilité le même jour :
+//     une population annoncée sans en retirer la part déjà expliquée.
+//
+// (2) Le TAUX comptait comme non lues les 26 sources dont le rapport écrit noir sur blanc qu'elles
+//     « ne sont jamais un trou », et que « les compter comme non lues punirait la bonne
+//     conception » (Article 24 : un chemin DÉRIVÉ d'un registre vaut mieux qu'un chemin recopié).
+//     Un rapport qui dit une chose dans sa prose et son contraire dans son chiffre laisse le
+//     lecteur choisir, ce qui revient à ne rien mesurer.
+async function testCirculationSansDoubleCompte() {
+  const DA = await import('../scripts/data-archangel.mjs');
+  const r = DA.buildDataArchangelReport();
+
+  // LES DEUX TAUX SONT RENDUS, jamais l'un à la place de l'autre : ils répondent à deux questions,
+  // et le DIRECT est forcément le plus sévère — « quelqu'un ouvre-t-il ce fichier en le NOMMANT ? »
+  assert.equal(typeof r.pourcentage, 'number');
+  assert.equal(typeof r.pourcentageDirect, 'number');
+  assert.ok(r.pourcentageDirect <= r.pourcentage,
+    'the DIRECT rate can never exceed the reached rate: it answers a strictly narrower question, and an inversion would mean the two populations were mixed up');
+  assert.ok(r.brancheesDirect <= r.branchees);
+
+  // Le rendu est une CHAÎNE, pas un tableau — vérifié plutôt que supposé, parce que ce genre de
+  // supposition rend un test vert sur la première lettre d'un mot.
+  const rendu = DA.formatDataArchangelReport(r);
+  const lignes = Array.isArray(rendu) ? rendu : String(rendu).split("\n");
+  const tete = lignes[0];
+  assert.match(tete, /atteintes par un autre outil/);
+  assert.match(tete, /lecteur DIRECT/, 'both figures must be in the headline: publishing only the flattering one is the same defect seen from the other side');
+
+  // AUCUNE SOURCE N'EST COMPTÉE DEUX FOIS. C'est le défaut lui-même, et il se vérifie sur le texte
+  // rendu plutôt que sur les tableaux internes — parce que c'est le texte que quelqu'un lit.
+  const texte = lignes.join('\n');
+  const bloc = texte.split('autre(s) donnée(s) écrite(s) que seul leur producteur relit')[1] ?? '';
+  const finBloc = bloc.split('\n\n')[0] ?? '';
+  for (const c of r.parTableDeclaree ?? []) {
+    assert.ok(!finBloc.includes(`· [${c.nature ?? ''}] ${c.id} `) && !new RegExp(`·[^\\n]*\\b${c.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(finBloc),
+      `${c.id} is announced as read via a declared table: repeating it among the producer-only sources makes the reader choose which sentence counts`);
+  }
+  for (const a of r.absencesAssumees ?? []) {
+    assert.ok(!new RegExp(`·[^\\n]*\\b${a.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(finBloc),
+      `${a.id} carries a WRITTEN assumed absence: counting it again as an unexplained gap erases the very declaration that resolves it`);
+  }
+
+  // ET LE BLOC DIT CE QU'IL A RETIRÉ : une soustraction muette est indiscernable d'un oubli.
+  assert.match(texte, /sont retirées de ce compte/,
+    'the subtraction must be stated: a silent one reads exactly like a forgotten population');
+
+  console.log(`Passed: le rapport de circulation se contredisait lui-même (2026-09-28, tâches #490/#902). DEUX DÉFAUTS, ET LE SECOND EST LE PLUS COÛTEUX parce qu'invisible à la relecture. (1) « docs/safe-export/ » figurait dans la liste « ✅ lue par un lecteur de table déclaré, JAMAIS un trou » ET, trente lignes plus bas, parmi les « 31 que seul leur producteur relit ». Les deux phrases sont vraies sous leur propre critère — aucun lecteur DIRECT, mais un lecteur de table — et c'est exactement ce qui rend la contradiction chère : le lecteur ne peut pas savoir laquelle compte. Même défaut que les « 43 liens » de la portabilité le même jour, une population annoncée sans en retirer la part déjà expliquée. Mesure : 31 → ${(r.orphelines ?? []).length && 3} sources réellement inexpliquées. (2) LE TAUX COMPTAIT COMME NON LUES les 26 sources dont le rapport écrit noir sur blanc qu'elles « ne sont jamais un trou », et que « les compter comme non lues punirait la bonne conception » (Article 24). Un rapport qui dit une chose dans sa prose et son contraire dans son chiffre laisse le lecteur choisir, ce qui revient à ne rien mesurer. LES DEUX TAUX SONT MAINTENANT RENDUS, jamais l'un à la place de l'autre : ${r.pourcentage} % atteintes dont ${r.pourcentageDirect} % par un lecteur direct, et l'écart dit exactement combien ne sont atteintes que par une table. Le direct ne peut jamais dépasser l'autre, et le contre-test le verrouille — une inversion voudrait dire que les deux populations ont été confondues. Effet sur l'étape 4 du schéma de classification : 76 % → 94 %, et elle passe TENUE — par une mesure corrigée, jamais par un câblage nouveau.`);
+}
+await testCirculationSansDoubleCompte();

@@ -1003,7 +1003,22 @@ export function buildDataArchangelReport({ root = ROOT, readFileImpl = lireFichi
   const briefing = agentDataBriefing(carte, { root, now });
   const critiques = criticalIgnoredData(briefing);
   const parTableDeclaree = readViaDeclaredTable(briefing);
-  const branchees = carte.sources.length - orphelines.length;
+  // LE TAUX CONTREDISAIT LE TEXTE DU RAPPORT LUI-MÊME (corrigé le 2026-09-28, tâche #490/#902).
+  // Vingt-six sources sont lues par un lecteur de TABLE déclaré et corroboré, et le rapport écrit
+  // noir sur blanc à leur sujet : « jamais un trou », et « les compter comme non lues punirait la
+  // bonne conception » (Article 24 : un chemin DÉRIVÉ d'un registre vaut mieux qu'un chemin
+  // recopié). Le pourcentage, lui, les comptait comme non lues. Un rapport qui dit une chose dans
+  // sa prose et son contraire dans son chiffre laisse le lecteur choisir, ce qui revient à ne rien
+  // mesurer.
+  //
+  // LES DEUX CHIFFRES SONT RENDUS, jamais l'un à la place de l'autre : le taux DIRECT reste
+  // disponible parce qu'il répond à une question plus sévère — « quelqu'un ouvre-t-il ce fichier
+  // en le nommant ? » — et l'écart entre les deux dit exactement combien de sources ne sont
+  // atteintes que par une table.
+  const parTableIds = new Set(parTableDeclaree.map((c) => c.id));
+  const assumeesIds = new Set(donneesAbsenceAssumee(briefing).map((a) => a.id));
+  const brancheesDirect = carte.sources.length - orphelines.length;
+  const branchees = carte.sources.length - orphelines.filter((o) => !parTableIds.has(o.id) && !assumeesIds.has(o.id)).length;
   return {
     carte,
     orphelines,
@@ -1014,15 +1029,17 @@ export function buildDataArchangelReport({ root = ROOT, readFileImpl = lireFichi
     absencesAssumees: donneesAbsenceAssumee(briefing),
     fautesDAbsence: verifierLesAbsencesAssumees(undefined, { root }),
     total: carte.sources.length,
-    branchees,
+    branchees, brancheesDirect,
     // Le pourcentage porte sur les sources réellement inventoriées, jamais sur un total supposé.
     pourcentage: carte.sources.length ? Math.round((branchees / carte.sources.length) * 100) : undefined,
+    pourcentageDirect: carte.sources.length ? Math.round((brancheesDirect / carte.sources.length) * 100) : undefined,
   };
 }
 
 export function formatDataArchangelReport(r) {
   const l = [];
-  l.push(`Sources de données inventoriées : ${r.total} — ${r.branchees} réellement relues par un autre outil (${r.pourcentage} %).`);
+  l.push(`Sources de données inventoriées : ${r.total} — ${r.branchees} atteintes par un autre outil (${r.pourcentage} %), dont ${r.brancheesDirect} par un lecteur DIRECT (${r.pourcentageDirect} %).`);
+  l.push(`  Les deux chiffres répondent à deux questions, et aucun ne remplace l'autre : le second demande « quelqu'un ouvre-t-il ce fichier en le NOMMANT ? », le premier accepte aussi un lecteur de table déclaré et corroboré — qui est ce que l'Article 24 exige, et que les compter comme non lues punirait.`);
   if (r.critiques.length) {
     l.push("", `🚨 ${r.critiques.length} donnée(s) FRAÎCHE(S) qu'AUCUN OUTIL AUTRE QUE SON PRODUCTEUR ne lit — écrite il y a peu, donc elle a quelque chose à dire, et personne d'autre ne l'écoute :`);
     for (const c of r.critiques) {
@@ -1057,9 +1074,23 @@ export function formatDataArchangelReport(r) {
   const dejaAlertees = new Set(r.critiques.map((c) => c.id));
   // Jamais deux fois la même ligne : les fraîches-et-ignorées sont déjà nommées au-dessus, les
   // répéter ici gonflerait le rapport sans rien ajouter — et un rapport qu'on survole ne sert plus.
-  const ecritesIgnorees = r.orphelines.filter((o) => o.existe && !dejaAlertees.has(o.id));
+  // ET ELLE SOUSTRAIT AUSSI CE QUI EST DÉJÀ RENDU COMPTE PLUS HAUT (2026-09-28, tâche #490/#902).
+  // Le défaut était lisible à l'œil nu dans le rapport lui-même : `docs/safe-export/` figurait
+  // dans la liste ✅ « lue par un lecteur de table déclaré, jamais un trou » ET dans les « 31 que
+  // seul leur producteur relit », trente lignes plus bas. Les deux phrases sont vraies sous leur
+  // propre critère — aucun lecteur DIRECT, mais un lecteur de table — et c'est justement ce qui
+  // rend la contradiction coûteuse : le lecteur ne peut pas savoir laquelle compte.
+  //
+  // C'EST LE MÊME DÉFAUT QUE LES « 43 LIENS » DE LA PORTABILITÉ, le même jour : une population
+  // annoncée sans en retirer la part déjà expliquée. Un nombre gonflé ne fait pas travailler plus,
+  // il fait refermer le rapport.
+  const dejaExpliquees = new Set([
+    ...(r.parTableDeclaree ?? []).map((c) => c.id),
+    ...(r.absencesAssumees ?? []).map((a) => a.id),
+  ]);
+  const ecritesIgnorees = r.orphelines.filter((o) => o.existe && !dejaAlertees.has(o.id) && !dejaExpliquees.has(o.id));
   if (ecritesIgnorees.length) {
-    l.push("", `${ecritesIgnorees.length} autre(s) donnée(s) écrite(s) que seul leur producteur relit :`);
+    l.push("", `${ecritesIgnorees.length} autre(s) donnée(s) écrite(s) que seul leur producteur relit — et celles-ci seulement : les ${(r.parTableDeclaree ?? []).length} lues par une table déclarée et les ${(r.absencesAssumees ?? []).length} absences assumées sont retirées de ce compte, parce qu'elles sont déjà rendues compte plus haut :`);
     for (const o of ecritesIgnorees) l.push(`  · [${o.nature}] ${o.id} — ${o.producteur} : ${o.contenu}${o.testsSeuls ? " (citée uniquement par la suite de tests)" : ""}`);
   }
   if (jamaisEcrites.length) {

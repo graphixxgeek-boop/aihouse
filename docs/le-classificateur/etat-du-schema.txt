@@ -20,8 +20,8 @@
          100 %  les rapports suivent-ils tous le gabarit partagé ?  (0 rapport(s) hors gabarit)
          ce qui la porte : #636 #679 #696 #703 #733 #740 #745 #747 #768 #775 #790 #800 #810 #929 #936 #988 #1020 #1066
 
-🟠  76 %  4. PROCESS INTEGRATION — construire les liens, dépendances, déclencheurs et échanges entre agents
-          52 %  les données produites par un outil sont-elles relues par un autre ?  (37 source(s) que seul leur producteur relit)
+✅  94 %  4. PROCESS INTEGRATION — construire les liens, dépendances, déclencheurs et échanges entre agents
+          88 %  les données produites par un outil sont-elles relues par un autre ?  (9 source(s) que seul leur producteur relit)
          100 %  les process déclarés portent-ils VRAIMENT un document ET un contrôleur ?  (0 process déclaré(s) sans document ou sans contrôleur, sur 13)
          ce qui la porte : #490 #603 #636 #679 #700 #704 #721 #805 #814 #1019 #1020
 
