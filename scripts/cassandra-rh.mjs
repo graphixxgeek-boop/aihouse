@@ -2115,10 +2115,45 @@ export function poserMentionIceberg(source, groupe) {
 }
 
 // Ce que la MACHINE lance, lu dans package.json et dans les crochets git — jamais devine.
-export function lanceParLaMachine({ packageJson = "", crochets = [] } = {}) {
-  const dedans = [packageJson, ...crochets].join("\n");
+//
+// LA CHAÎNE FAIT DEUX SAUTS, LA SONDE N'EN SUIVAIT QU'UN (2026-09-28, tâche #1013). `package.json`
+// nomme `scripts/install-pnpm.sh`, la sonde le trouvait, et s'arrêtait là. Or ce shell appelle
+// `node scripts/pnpm-install.mjs` À TROIS ENDROITS : le vrai chemin est
+// `package.json` → shell → node, et le maillon final ressortait donc « rien ne l'atteint » alors
+// qu'il tourne à chaque installation de dépendances.
+//
+// POURQUOI C'EST PLUS QU'UN DÉTAIL : cette sonde alimente le classement iceberg et, par ricochet,
+// la question « peut-on retirer ce fichier ? ». Un faux « personne ne l'appelle » sur un script
+// d'installation est exactement le type d'erreur qui se paie une fois, très cher.
+//
+// LE SAUT SUPPLÉMENTAIRE SE DÉRIVE, il ne se recopie pas (Article 24) : on lit les `.sh` que la
+// première passe a trouvés et on y récolte les mêmes motifs, sans jamais nommer un fichier en dur.
+// Un shell illisible ne fabrique aucune conclusion — il est simplement sauté, parce qu'« introuvable »
+// et « n'appelle rien » ne sont pas la même chose (leçon L5).
+export function lanceParLaMachine({ packageJson = "", crochets = [], lire = null } = {}) {
+  const recolter = (texte, dans) => { for (const m of String(texte).matchAll(/scripts\/([a-z0-9._/-]+)\.(?:mjs|sh)/gi)) dans.add(m[1].replace(/^hooks\//, "")); };
   const noms = new Set();
-  for (const m of dedans.matchAll(/scripts\/([a-z0-9._/-]+)\.(?:mjs|sh)/gi)) noms.add(m[1].replace(/^hooks\//, ""));
+  recolter([packageJson, ...crochets].join("\n"), noms);
+  if (typeof lire !== "function") return noms;
+  // DANS UN SHELL, LE CHEMIN EST CONSTRUIT, PAS ÉCRIT — et c'est ce qui a fait échouer ma première
+  // version de ce saut. `install-pnpm.sh` appelle `node "${script_dir}/pnpm-install.mjs"` : le
+  // motif `scripts/…` ne peut pas matcher, puisque le dossier vient d'une variable. On récolte donc
+  // le NOM DE FICHIER seul, ce qui suffit — un slug est tout ce dont le classement a besoin — et
+  // uniquement derrière un `node`, pour ne pas ramasser un `.mjs` cité dans un commentaire.
+  // Trouvé en LANÇANT la sonde après correction : elle rendait toujours 13 noms, exactement les
+  // mêmes qu'avant (leçon L11 — un motif qui ne PEUT pas matcher ressemble à un motif qui ne
+  // matche pas).
+  const MOTIF_NODE_DANS_UN_SHELL = /\bnode\b[^\n]*?\/([a-z0-9._-]+)\.mjs/gi;
+  // Un seul saut de plus, et jamais en boucle : un shell qui en appellerait un autre n'existe pas
+  // ici, et le suivre à l'infini demanderait une protection contre les cycles pour un gain nul.
+  // La limite est DÉCLARÉE plutôt que subie.
+  for (const nom of [...noms]) {
+    let texte = null;
+    try { texte = lire(`scripts/${nom}.sh`); } catch { texte = null; }
+    if (!texte) continue;
+    recolter(texte, noms);
+    for (const m of String(texte).matchAll(MOTIF_NODE_DANS_UN_SHELL)) noms.add(m[1]);
+  }
   return noms;
 }
 
@@ -2164,8 +2199,18 @@ export function classerIceberg(fichiers = [], { lire, offert = "", machine = new
     // lire ça — elle voit une porte, pas qui a le droit de la pousser. Le fichier, lui, le sait.
     // L'inverse resterait un désaccord rapporté : un fichier qui se déclarerait MEMBRE sans être
     // présenté nulle part mentirait sur un fait vérifiable, et la mesure aurait raison contre lui.
+    // UNE DÉCLARATION « PLOMBERIE » L'EMPORTE AUSSI SUR « LANCÉ PAR LA MACHINE » (2026-09-28,
+    // tâche #1013). Elle l'emportait déjà sur le point d'entrée depuis son arbitrage du
+    // 2026-09-24 ; en faisant suivre le shell à la sonde, `pnpm-install` devenait « lancé par la
+    // machine », donc INFRASTRUCTURE par dérivation — et sa déclaration plomberie, qui est SA
+    // décision à lui, se serait mise à ressortir comme un désaccord par simple effet de bord d'une
+    // correction de mesure. Corriger une sonde ne doit jamais rouvrir un arbitrage humain.
+    // L'ASYMÉTRIE EST CONSERVÉE, et c'est elle qui empêche l'abus : seule « plomberie » gagne, et
+    // seulement vers le BAS. Un fichier qui se déclarerait MEMBRE sans être présenté nulle part
+    // mentirait sur un fait vérifiable, et la mesure aurait raison contre lui. Se déclarer moins
+    // qu'on n'est n'a jamais servi personne ; se déclarer plus, si.
     const derive = presente ? "membre"
-      : parLaMachine ? "infrastructure"
+      : (parLaMachine && !seDeclarePlomberie) ? "infrastructure"
       : (convocable && !seDeclarePlomberie) ? "oublie"
       : "plomberie";
     const declare = mentionIceberg(src);
@@ -3860,7 +3905,8 @@ async function main() {
     const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
       "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
     const machine = lanceParLaMachine({ packageJson: lu("package.json"),
-      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
+      lire: lu });
     const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
     // POSER LES MENTIONS, SUR DEMANDE EXPLICITE SEULEMENT (2026-09-27, tâche #737, second volet).
     // Jamais au fil de l'eau : cette commande est lue à chaque Ronde, et une lecture qui ÉCRIT dans
@@ -3993,7 +4039,8 @@ async function main() {
     const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
       "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
     const machine = lanceParLaMachine({ packageJson: lu("package.json"),
-      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
+      lire: lu });
     const itemsRonde = new Set();
     for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);
     const src = lu(`scripts/${demande}.mjs`);
@@ -4069,7 +4116,8 @@ async function main() {
     const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
       "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
     const machine = lanceParLaMachine({ packageJson: lu("package.json"),
-      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu) });
+      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
+      lire: lu });
     const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
     const itemsRonde = new Set();
     for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);

@@ -10220,6 +10220,35 @@ await testVerrousDOuverture();
     'biblio.mjs': 'export function aide(){}',                                         // ni l'un ni l'autre
   }[f]);
   const offertIceberg = 'Pour diagnostiquer : node scripts/outil-documente.mjs. Voir aussi outil-garde et lance-et-offert.';
+
+  // LA CHAÎNE FAIT DEUX SAUTS, LA SONDE N'EN SUIVAIT QU'UN (2026-09-28, tâche #1013).
+  // `package.json` nomme `scripts/install-pnpm.sh`, la sonde s'arrêtait là, et `pnpm-install.mjs`
+  // — que ce shell appelle à TROIS endroits — ressortait « rien ne l'atteint » alors qu'il tourne
+  // à chaque installation de dépendances. Un faux « personne ne l'appelle » sur un script
+  // d'installation est le type d'erreur qui se paie une fois, très cher.
+  const paquetFaux = '"prepare": "bash scripts/install-pnpm.sh"';
+  const shellFaux = 'script_dir=$(dirname "$0")\n  node "${script_dir}/pnpm-install.mjs" --hold-install-locks\n';
+  assert.equal(lanceParLaMachine({ packageJson: paquetFaux }).has('pnpm-install'), false, 'the defect, reproduced: without the extra hop the final link of the chain is invisible');
+  const deuxSauts = lanceParLaMachine({ packageJson: paquetFaux, lire: (f) => (f === 'scripts/install-pnpm.sh' ? shellFaux : null) });
+  assert.ok(deuxSauts.has('pnpm-install'), 'THE EXACT CASE: package.json → shell → node is TWO hops, and the probe now follows both');
+  assert.ok(deuxSauts.has('install-pnpm'), 'and the intermediate link stays in the set — following further never loses what was already found');
+  // LE PIÈGE QUI A FAIT ÉCHOUER MA PREMIÈRE VERSION, mesuré plutôt que relu : dans un shell le
+  // chemin est CONSTRUIT (`"${script_dir}/pnpm-install.mjs"`), donc le motif `scripts/…` ne peut
+  // pas matcher. On récolte le nom de fichier seul, et seulement derrière un `node`.
+  assert.equal(lanceParLaMachine({ packageJson: paquetFaux, lire: () => '# un commentaire qui cite pnpm-install.mjs sans le lancer' }).has('pnpm-install'), false, 'COUNTER-TEST: a .mjs merely MENTIONED in a shell comment is not a call — the name must follow a `node` (lesson L4)');
+  assert.equal(lanceParLaMachine({ packageJson: paquetFaux, lire: () => { throw new Error('illisible'); } }).has('pnpm-install'), false, 'an unreadable shell adds nothing rather than guessing — « introuvable » and « n\'appelle rien » are not the same thing (lesson L5)');
+  assert.deepEqual([...lanceParLaMachine({ packageJson: paquetFaux })], [...lanceParLaMachine({ packageJson: paquetFaux, lire: null })], 'COUNTER-TEST: with no reader passed the behaviour is EXACTLY what it was before — full backward compatibility for every pre-existing caller');
+  // ET SURTOUT : CORRIGER UNE SONDE NE DOIT PAS ROUVRIR UN ARBITRAGE HUMAIN. En suivant le shell,
+  // pnpm-install devenait « lancé par la machine » donc INFRASTRUCTURE par dérivation — alors qu'il
+  // DÉCLARE plomberie sur la décision explicite de l'utilisateur du 2026-09-24. Sa déclaration
+  // l'emportait déjà sur le point d'entrée ; elle l'emporte désormais aussi sur la machine.
+  const lirePlomberie = (f) => ({ 'declare-plomberie.mjs': '// ICEBERG: plomberie\nif (import.meta.url === x) main(); process.argv;' }[f]);
+  const classe = classerIceberg(['declare-plomberie.mjs'], { lire: lirePlomberie, offert: '', machine: new Set(['declare-plomberie']) })[0];
+  assert.equal(classe.groupe, 'plomberie', 'a file declaring PLOMBERIE keeps it even when the machine launches it — fixing a measurement must never contradict a human arbitration as a side effect');
+  // L'ASYMÉTRIE EST CE QUI EMPÊCHE L'ABUS : seule « plomberie » gagne, et seulement vers le BAS.
+  const lireMenteur = (f) => ({ 'se-dit-membre.mjs': '// ICEBERG: membre\nexport function x(){}' }[f]);
+  const menteur = classerIceberg(['se-dit-membre.mjs'], { lire: lireMenteur, offert: '', machine: new Set() })[0];
+  assert.notEqual(menteur.derive, 'membre', 'COUNTER-TEST (BP4): a file declaring itself MEMBRE while presented nowhere still disagrees with the measure — claiming LESS than you are has never harmed anyone, claiming MORE has');
   const machineIceberg = new Set(['lance-et-offert', 'lance-et-muet']);
   const clsIceberg = Object.fromEntries(classerIceberg(
     ['outil-documente.mjs','outil-garde.mjs','lance-et-offert.mjs','lance-et-muet.mjs','orphelin.mjs','biblio.mjs'],
