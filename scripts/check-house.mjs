@@ -19681,3 +19681,37 @@ async function testToolBrainEstIlLePointDEntree() {
   console.log(`Passed: tool-brain est-il vraiment le point d'entrée (2026-09-28, tâche #575). SA QUESTION : « c'est devenu ton point d'entree pour les outils ? tu utilises ? tout fonctionne ? », avec son exigence habituelle — une mesure RÉELLE depuis le compteur, jamais une déclaration d'intention. LA RÉPONSE, MESURÉE : ${reel.passages} passages enregistrés, et ${reel.precedes} des ${reel.spontanes} appels SPONTANÉS ont été précédés d'une consultation dans les dix minutes, soit ${reel.taux} % sur tout l'historique et ${reel.tauxRecent} % sur les 24 dernières heures — la discipline s'est nettement améliorée, et c'est le second chiffre qui se corrige. LES APPELS DICTÉS PAR UN CROCHET OU UN PROCESS SONT EXCLUS du dénominateur : ils n'avaient pas à passer par ici, et les compter accuserait d'un manquement qui n'existe pas (L4). CE QUI NE SE MESURE PAS EST DIT AVEC LE CHIFFRE : c'est une PRÉCÉDENCE, jamais un usage — le compteur sait qu'un outil a tourné et quand, il ne saura jamais si la consultation a servi. Et la fenêtre de dix minutes est un CHOIX : le contre-test montre qu'une fenêtre assez large crédite tout, ce qui est précisément pourquoi le rapport imprime la fenêtre au lieu de la cacher. LA MESURE EST RENDUE À CHAQUE RAPPORT plutôt que produite une fois : un chiffre produit dans une conversation disparaît avec elle, et la question se repose à chaque période.`);
 }
 await testToolBrainEstIlLePointDEntree();
+
+// =============================================================================================
+// LE GARDE-FOU DES AXES CRIAIT SUR SA PROPRE RÉPÉTITION (2026-09-28)
+// =============================================================================================
+// « Le référentiel déclare 11 axes, le code en publie 12 » s'affichait à CHAQUE passage du
+// classificateur. Les deux s'accordaient pourtant : `exportabilite` figure dans
+// AXES_DE_CLASSIFICATION **et** était rajouté par son propre drapeau, si bien que la liste publiée
+// comptait douze entrées dont une en double.
+//
+// UN GARDE-FOU QUI ACCUSE À TORT CESSE D'ÊTRE LU (leçon L4) — et celui-ci le faisait depuis assez
+// longtemps pour être devenu du décor (leçon L6). C'est la forme la plus discrète de l'échec d'un
+// contrôle : il parle, il a l'air de travailler, et plus personne ne l'écoute.
+async function testAxesPubliesSansDoublon() {
+  const LC = await import('../scripts/le-classificateur.mjs');
+
+  const r = LC.axesDivergentDuReferentiel();
+  assert.equal(r.mesure, 'mesuré');
+  assert.equal(new Set(r.publies).size, r.publies.length, 'the published axes must never contain the same key twice: the count is what the whole comparison rests on');
+  assert.equal(r.divergent, false, `checked live: the referentiel and the code now agree (${r.declares.length} vs ${r.publies.length})`);
+
+  // LE DRAPEAU GARDE SON SENS POUR UN APPELANT QUI PASSERAIT D'AUTRES AXES — la déduplication ne
+  // doit pas le rendre inerte, sans quoi on aurait réparé le symptôme en supprimant la fonction.
+  const sansExport = LC.axesDivergentDuReferentiel({ axes: [{ cle: 'iceberg' }], rangs: false, familles: false, exportabilite: true });
+  assert.deepEqual(sansExport.publies, ['iceberg', 'exportabilite'], 'the flag still ADDS the axis when the caller\'s list does not carry it — deduplication removes a repetition, never the mechanism');
+  const avecExport = LC.axesDivergentDuReferentiel({ axes: [{ cle: 'exportabilite' }], rangs: false, familles: false, exportabilite: true });
+  assert.deepEqual(avecExport.publies, ['exportabilite'], 'and it adds nothing when the axis is already there — which is exactly the case that was crying');
+
+  // ET LA DIVERGENCE RESTE DÉTECTABLE : on n'a pas acheté le silence.
+  const vraieDivergence = LC.axesDivergentDuReferentiel({ axes: [{ cle: 'a' }, { cle: 'b' }], rangs: false, familles: false, exportabilite: false });
+  assert.equal(vraieDivergence.divergent, true, 'MUST STILL BITE on a real divergence — the fix removed a false accusation, never the ability to accuse');
+
+  console.log(`Passed: le garde-fou des axes criait sur sa propre répétition (2026-09-28). « Le référentiel déclare 11 axes, le code en publie 12 » s'affichait à CHAQUE passage du classificateur, et les deux s'accordaient pourtant : « exportabilite » figure dans AXES_DE_CLASSIFICATION ET était rajouté par son propre drapeau, si bien que la liste publiée comptait douze entrées dont une en double. UN GARDE-FOU QUI ACCUSE À TORT CESSE D'ÊTRE LU (L4), et celui-ci le faisait depuis assez longtemps pour être devenu du décor (L6) — c'est la forme la plus discrète de l'échec d'un contrôle : il parle, il a l'air de travailler, et plus personne ne l'écoute. LA CORRECTION N'ACHÈTE PAS LE SILENCE, et les trois contre-tests le vérifient : le drapeau AJOUTE toujours l'axe quand la liste de l'appelant ne le porte pas, il n'ajoute rien quand il y est déjà (le cas qui criait), et une vraie divergence mord encore. Déduplication d'une répétition, jamais suppression du mécanisme. Mesure : 11 déclarés contre 11 publiés, et le classificateur se tait enfin sur ce point.`);
+}
+await testAxesPubliesSansDoublon();

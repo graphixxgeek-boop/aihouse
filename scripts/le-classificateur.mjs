@@ -1601,7 +1601,14 @@ export function axesDivergentDuReferentiel({ texte = null, root = ROOT, lire = l
   // dans AXES_DE_CLASSIFICATION reviendrait à reprocher à chaque script de ne pas porter son
   // propre kit d'export, alors que c'est SAFE-EXPORT qui le sait (corrigé le 2026-09-26, le filet
   // de sécurité ayant refusé la première version en une seconde).
-  const publies = [...axes.map((a) => a.cle), ...(rangs ? ["rang"] : []), ...(familles ? ["famille"] : []), ...(exportabilite ? ["exportabilite"] : [])];
+  // ET LA LISTE SE DÉDOUBLONNE, parce que le garde-fou criait sur SA PROPRE RÉPÉTITION (2026-09-28).
+  // `exportabilite` a rejoint `AXES_DE_CLASSIFICATION` après que ce drapeau l'y ait ajouté de son
+  // côté : la liste publiée en comptait donc DOUZE dont un en double, et l'alerte « le référentiel
+  // déclare 11 axes, le code en publie 12 » s'affichait à chaque passage alors que les deux
+  // s'accordaient. **Un garde-fou qui accuse à tort cesse d'être lu** (leçon L4), et celui-ci le
+  // faisait depuis assez longtemps pour être devenu du décor (leçon L6). Le drapeau reste : il
+  // garde son sens pour un appelant qui passerait des axes où l'exportabilité ne figure pas.
+  const publies = [...new Set([...axes.map((a) => a.cle), ...(rangs ? ["rang"] : []), ...(familles ? ["famille"] : []), ...(exportabilite ? ["exportabilite"] : [])])];
   return {
     mesure: "mesuré",
     declares: declares.map((d) => `Axe ${d.lettre} — ${d.titre}`),
