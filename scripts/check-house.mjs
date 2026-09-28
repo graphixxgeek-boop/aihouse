@@ -8415,6 +8415,37 @@ async function testDocumentsJumeaux() {
   // UN CORPUS D'UN SEUL DOCUMENT N'EST JAMAIS « AUCUN DOUBLON ».
   assert.equal(trouverDocumentsJumeaux([{ chemin: 'a.md', texte: 'x' }]).mesurable, false, 'one document means nothing to compare, and answering "no duplicates" on it would be a clean bill issued on nothing');
 
+  // LE COUPLE BLUEPRINT ↔ INSTANCIATION (2026-09-28, tâche #1033). 82 blueprints ont chacun leur
+  // instanciation, et rien ne vérifiait qu'ils disent encore la même chose — « une règle affinée
+  // d'un côté et pas de l'autre, c'est une question de semaines », exactement ce que l'Article 24
+  // interdit. ÉCARTÉ PAR LA MESURE AVANT D'ÊTRE ÉCRIT : comparer les SECTIONS par vocabulaire
+  // commun ne sépare rien — sur 527 sections de blueprint la distribution du meilleur recouvrement
+  // est une courbe LISSE sans le moindre creux, et à 0,10 elle déclarerait « sans vis-à-vis » 226
+  // sections sur 527. Un blueprint est générique et son instanciation particulière : elles ont le
+  // DROIT de ne pas se ressembler. Le signal qui discrimine est celui que la tâche nomme, le TEMPS.
+  const faussesTouches = new Map([
+    ['docs/x-blueprint.md', 1700000000], ['docs/referentiel/x.md', 1700000000 - 200 * 86400],
+    ['docs/y-blueprint.md', 1700000000], ['docs/referentiel/y.md', 1700000000 - 3600],
+  ]);
+  const div = ab.divergenceDesCouples({ lister: () => ['x-blueprint.md', 'y-blueprint.md'], existe: () => true, touches: faussesTouches });
+  assert.deepEqual(div.ecarts.map((e) => e.nom), ['x'], 'MUST BITE: a couple whose two halves were last touched 200 days apart is exactly the drift this guard exists for — and it is silent on the real repository today, so its power is proven on a fixture, never on the state of the day (lesson L2)');
+  assert.equal(div.ecarts[0].enRetard, 'docs/referentiel/x.md', 'and it names WHICH of the two is behind: « they diverge » sends nobody anywhere, « the instanciation is the one lagging » sends you to a file');
+  // LE PIÈGE MESURÉ AVANT LA MISE EN SERVICE, et il a fallu DEUX corrections : un seuil dérivé
+  // d'un corpus qui CONTIENT l'anomalie se laisse pousser au-dessus d'elle. « Deux fois le 90ᵉ
+  // centile » de [0,04 ; 200] vaut 400, donc l'anomalie s'excluait elle-même. La médiane est
+  // insensible à une valeur extrême — mais sur DEUX valeurs aucune statistique ne tient, d'où le
+  // corpus minimum, exactement le remède déjà écrit le même soir pour le mot rare (leçon L43).
+  assert.equal(ab.seuilDivergence([0.04, 200]).seuil, ab.PLANCHER_DIVERGENCE_JOURS, 'COUNTER-TEST 1: below the minimum corpus the declared floor governs ALONE — on two values the anomaly IS the corpus and would push the threshold above itself');
+  assert.equal(ab.seuilDivergence([0.04, 200]).derive, false, 'and the report says so rather than passing a floor off as a measurement (BP5)');
+  const lent = ab.seuilDivergence(Array.from({ length: 40 }, () => 30));
+  assert.ok(lent.derive && lent.seuil === 300, 'COUNTER-TEST 2: a repository that genuinely works slower raises its own threshold — the derived part exists so the guard does not accuse a whole parc of a rhythm that is simply its own');
+  assert.ok(!div.ecarts.some((e) => e.nom === 'y'), 'COUNTER-TEST 3 (BP4): a couple kept in step is left alone — a guard that accuses wrongly stops being read (lesson L4)');
+  assert.equal(ab.divergenceDesCouples({ lister: () => { throw new Error('illisible'); } }).mesurable, false, 'an unreadable docs/ declares PAS MESURÉ rather than returning zero divergences, which would read as « everything is in step » (lesson L5)');
+  const sansDate = ab.divergenceDesCouples({ lister: () => ['x-blueprint.md'], existe: () => true, touches: new Map() });
+  assert.equal(sansDate.nonMesurables.length, 1, 'a couple with no git trace is DECLARED non-measurable rather than counted as compliant — the third state the register has always required');
+  assert.equal(sansDate.ecarts.length, 0, 'and it never becomes an accusation on the strength of a missing date');
+  assert.ok(ab.couplesBlueprintInstanciation().couples.length >= 80, 'checked live against the real repository: the couples are READ from disk, never listed by hand (Article 24) — 82 on 2026-09-28');
+
   // MORD SUR UNE FIXTURE — le pouvoir de détection ne se garde jamais sur l'état du dépôt du jour.
   const fixture = trouverDocumentsJumeaux([
     { chemin: 'docs/un/alpha.md', texte: 'cartographie obligations articles charte allegement porteur mecanique inventaire discipline' },

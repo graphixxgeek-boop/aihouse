@@ -30,7 +30,7 @@
 
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage } from "./lib-shell.mjs";
+import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage, dernieresTouchesPartagees } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -1335,6 +1335,17 @@ function main() {
           constat: `${paire.a} et ${paire.b} partagent ${Math.round((paire.recouvrement ?? 0) * 100)} % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà` });
       }
     } catch { /* un scan impossible ne fabrique aucune alerte : mieux vaut ne rien déposer que déposer du vide */ }
+    // LES COUPLES BLUEPRINT ↔ INSTANCIATION (#1033) déposent ici et pas ailleurs : c'est la seule
+    // commande qui tourne dans la chaîne automatique, et un garde-fou qu'on doit penser à lancer
+    // n'est pas un garde-fou (leçon L2). Silencieux tant que rien ne dérive, ce qui est le cas
+    // le jour où il est écrit — et c'est le résultat attendu, jamais une preuve qu'il fonctionne.
+    try {
+      const div = divergenceDesCouples();
+      for (const e of (div.ecarts ?? []).slice(0, 20)) {
+        siennes.push({ cle: `couple désynchronisé : ${e.nom}`, objet: e.enRetard, gravite: "a-instruire",
+          constat: `${e.nom} — ${Math.round(e.jours)} jours entre la dernière retouche du blueprint et celle de son instanciation ; le retardataire est ${e.enRetard}` });
+      }
+    } catch { /* idem : pas de dépôt plutôt qu'un dépôt vide */ }
     deposerAlertes("abraham-les-references", siennes);
     const reg = lireRegistre();
     const s = synthetiserLesAlertes(reg.alertes, { passages: reg.passages });
@@ -1349,6 +1360,23 @@ function main() {
     imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "traiter chaque alerte sur le périmètre de l'outil qui l'a levée — Abraham rassemble, il ne corrige jamais à la place de MOÏSE ni d'Ezechiel" }));
     return;
   }
+  // « couples » : la lecture à la demande du garde-fou blueprint ↔ instanciation (#1033). Le dépôt
+  // d'alertes se fait dans « assainissement », qui tourne tout seul ; cette commande-ci sert à LIRE
+  // le détail, avec le seuil et sa dérivation imprimés — un seuil qu'on ne peut pas vérifier est un
+  // seuil qu'on subit.
+  if (arg1 === "couples") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — les couples blueprint ↔ instanciation", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const d = divergenceDesCouples();
+    for (const l of formatDivergenceLines(d)) console.log(l);
+    const ecarts = d.mesurable
+      ? d.ecarts.map((e) => ({ pourquoi: `${e.nom} : ${Math.round(e.jours)} jours d'écart, le retardataire est ${e.enRetard}` }))
+      : [{ pourquoi: `les couples n'ont PAS pu être mesurés — ${d.pourquoi}` }];
+    imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "relire le document le plus récent du couple et reporter ce qui doit l'être dans l'autre, ou déclarer que le changement ne concernait que ce côté-là — Abraham signale un écart de RYTHME, il ne juge jamais le fond" }));
+    return;
+  }
+
   // « documents-jumeaux » : le pendant, à l'échelle du DÉPÔT, de findPairesRedondantes() qui ne
   // regardait que l'intérieur d'un document. Commande à part pour la même raison que « classer » :
   // elle ÉCRIT un fichier.
@@ -1436,6 +1464,131 @@ function main() {
   if (r.recouvrements.length) ecarts.push({ pourquoi: `${r.recouvrements.length} paire(s) de règles se recouvrent sans que rien ne dise laquelle prime` });
   const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "porter la question à l'utilisateur — Abraham ne tranche jamais la pertinence d'une règle" });
   imprimerPlanDaction(plan);
+}
+
+
+// ————————————————————————————————————————————————————————————————————————
+// LE COUPLE BLUEPRINT ↔ INSTANCIATION (2026-09-28, tâche #1033)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE TROU, écrit dans la tâche qui l'ouvre : 82 blueprints ont chacun leur instanciation, et RIEN
+// ne vérifie qu'ils disent encore la même chose. « Une règle affinée d'un côté et pas de l'autre,
+// c'est une question de semaines » — exactement ce que l'Article 24 interdit : un commentaire qui
+// promet une synchronisation future n'est jamais une protection.
+//
+// POURQUOI ABRAHAM ET PAS MOÏSE : MOÏSE ne connaît qu'un document, la charte. Abraham traite
+// n'importe quel document à règles, donc lui seul peut prendre un couple quelconque.
+//
+// CE QUI A ÉTÉ ESSAYÉ D'ABORD ET ÉCARTÉ PAR LA MESURE, et c'est le cœur de cette fiche parce que
+// le prochain agent aura la même idée en premier : **comparer les SECTIONS des deux documents par
+// recouvrement de vocabulaire**. Mesuré sur les 82 couples réels — 527 sections de blueprint, 710
+// d'instanciation — la distribution du meilleur recouvrement est une courbe LISSE, sans le moindre
+// creux : 8 sections à 0, 121 à 0,05, 168 à 0,10, 95 à 0,15, et ainsi de suite jusqu'à 0,75. Poser
+// un seuil dedans revient à le choisir, et à 0,10 il déclarerait « sans vis-à-vis » 226 sections de
+// blueprint sur 527 et 405 d'instanciation sur 710. **C'est normal et ce n'est pas un défaut** : un
+// blueprint est générique et son instanciation est particulière, ils ont le DROIT de ne pas se
+// ressembler. Un garde-fou qui accuse la moitié d'un parc cesse d'être lu (leçon L4), et un seuil
+// qui ne se pose pas dans un creux n'est pas dérivé, il est décrété (BP5).
+//
+// LE SIGNAL QUI DISCRIMINE VRAIMENT est celui que la tâche nomme elle-même : **le TEMPS**. Une
+// divergence, concrètement, c'est un côté retouché et l'autre laissé en arrière. C'est mécanique,
+// sans interprétation, et ça se lit dans l'historique — donc aucun faux positif possible sur le
+// FAIT ; seule son importance reste à juger, et elle reste humaine.
+//
+// LE SEUIL SE DÉRIVE DU PARC, il ne se recopie pas (Article 24) : deux fois le 90ᵉ centile des
+// écarts observés, avec un plancher pour qu'un dépôt parfaitement synchrone ne produise pas un
+// seuil minuscule qui accuserait tout le monde. Mesure du 2026-09-28 : 82 couples mesurables,
+// écart médian 0,2 jour, maximum 7,9 — et RIEN entre 14 jours et l'infini. Le seuil tombe donc
+// aujourd'hui dans une zone réellement vide, ce qui veut dire que **ce garde-fou est silencieux au
+// moment où il est écrit**. C'est le résultat attendu, jamais une preuve qu'il fonctionne : sa
+// morsure est vérifiée sur un couple fabriqué exprès (leçon L2, bonne pratique BP2).
+export const PLANCHER_DIVERGENCE_JOURS = 14;
+
+export function couplesBlueprintInstanciation({ root = ".", lister = readdirSync, existe = null } = {}) {
+  const ilExiste = existe ?? ((c) => { try { statSync(join(root, c)); return true; } catch { return false; } });
+  let fichiers = [];
+  try { fichiers = lister(join(root, "docs")); }
+  catch { return { mesurable: false, pourquoi: "docs/ illisible — sans lecture, « aucun couple » voudrait dire « je n'ai pas pu regarder » (leçon L5)", couples: [] }; }
+  const couples = [];
+  for (const f of fichiers.map(String)) {
+    if (!f.endsWith("-blueprint.md")) continue;
+    const nom = f.slice(0, -"-blueprint.md".length);
+    const instanciation = `docs/referentiel/${nom}.md`;
+    if (ilExiste(instanciation)) couples.push({ nom, blueprint: `docs/${f}`, instanciation });
+  }
+  if (!couples.length) return { mesurable: false, pourquoi: "aucun blueprint n'a d'instanciation en face — rien à comparer, ce qui n'est jamais la même chose que « tout concorde »", couples: [] };
+  return { mesurable: true, couples };
+}
+
+// LA STATISTIQUE COMPTE AUTANT QUE LE FAIT DE DÉRIVER, et le contre-test l'a prouvé avant la
+// première mise en service. Première version : « deux fois le 90ᵉ centile ». Sur les 82 couples
+// réels elle donnait 10,8 j, plancher 14, tout allait bien. Sur le couple FABRIQUÉ pour vérifier
+// que le garde-fou mord — un retard de 200 jours — le 90ᵉ centile d'un corpus de deux valeurs VAUT
+// 200, le seuil devenait 400, et **l'anomalie s'était poussée elle-même hors de portée**.
+//
+// LA RÈGLE GÉNÉRALE QUI EN SORT : un seuil dérivé d'un corpus qui CONTIENT l'anomalie doit reposer
+// sur une statistique que l'anomalie ne déplace pas. La MÉDIANE ne bouge pas quand une valeur
+// extrême apparaît ; un centile haut, si. Le facteur 10 est large exprès : la médiane du parc est
+// de 0,2 jour, donc c'est le plancher qui gouverne aujourd'hui, et la part dérivée ne sert qu'à
+// éviter d'accuser un dépôt entier qui travaillerait légitimement plus lentement.
+// EN DESSOUS D'UNE CERTAINE TAILLE, IL N'Y A PAS DE CORPUS — et c'est la seconde fois de la même
+// nuit que ce piège se referme (l'autre était le « mot rare » du catalogue, leçon L43). Sur DEUX
+// écarts, n'importe quelle statistique est l'anomalie elle-même : médiane comme centile. Le parc
+// réel en porte 82, largement de quoi dériver ; un dépôt qui démarre, non. Le plancher gouverne
+// alors seul, et il est DÉCLARÉ plutôt que calculé — un chiffre annoncé comme mesuré alors qu'il
+// ne l'est pas ne se rediscute jamais (BP5).
+export const MIN_COUPLES_POUR_DERIVER = 20;
+
+export function seuilDivergence(ecarts = [], { plancher = PLANCHER_DIVERGENCE_JOURS, minCorpus = MIN_COUPLES_POUR_DERIVER } = {}) {
+  const valeurs = ecarts.filter(Number.isFinite).sort((a, b) => a - b);
+  if (valeurs.length < minCorpus) {
+    return { seuil: plancher, derive: false, corpus: valeurs.length,
+      pourquoi: `plancher déclaré de ${plancher} j : ${valeurs.length} couple(s) mesurés, il en faut ${minCorpus} pour qu'une statistique veuille dire quelque chose — en dessous, l'anomalie qu'on cherche EST le corpus et déplacerait le seuil au-dessus d'elle-même` };
+  }
+  const m = valeurs.length % 2 ? valeurs[(valeurs.length - 1) / 2] : (valeurs[valeurs.length / 2 - 1] + valeurs[valeurs.length / 2]) / 2;
+  const derive = Math.max(plancher, Math.round(m * 10));
+  return { seuil: derive, derive: derive > plancher, mediane: m, corpus: valeurs.length,
+    pourquoi: `dérivé du parc : dix fois l'écart MÉDIAN (${m.toFixed(1)} j) sur ${valeurs.length} couples, jamais en dessous du plancher de ${plancher} j — la médiane parce qu'une anomalie ne la déplace pas, là où un centile haut se laisse pousser au-dessus d'elle-même` };
+}
+
+export function divergenceDesCouples({ root = ".", lister = readdirSync, existe = null, touches = null } = {}) {
+  const inv = couplesBlueprintInstanciation({ root, lister, existe });
+  if (!inv.mesurable) return { mesurable: false, pourquoi: inv.pourquoi, ecarts: [] };
+  const t = touches ?? dernieresTouchePourLeParc();
+  if (!t) return { mesurable: false, pourquoi: "l'historique git n'a pas pu être lu — sans dates, « aucune divergence » serait un satisfecit rendu sur zéro donnée (leçon L5)", ecarts: [] };
+  const mesures = []; const nonMesurables = [];
+  for (const c of inv.couples) {
+    const a = t.get(c.blueprint); const b = t.get(c.instanciation);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) { nonMesurables.push({ ...c, pourquoi: "l'un des deux fichiers n'a aucune trace dans l'historique (jamais committé ?)" }); continue; }
+    mesures.push({ ...c, jours: Math.abs(a - b) / 86400, enRetard: a > b ? c.instanciation : c.blueprint });
+  }
+  const s = seuilDivergence(mesures.map((m) => m.jours));
+  const ecarts = mesures.filter((m) => m.jours > s.seuil).sort((x, y) => y.jours - x.jours);
+  return { mesurable: true, couples: inv.couples.length, compares: mesures.length, nonMesurables, seuil: s, ecarts,
+    mediane: mesures.length ? mesures.map((m) => m.jours).sort((a, b) => a - b)[Math.floor(mesures.length / 2)] : null,
+    maximum: mesures.length ? Math.max(...mesures.map((m) => m.jours)) : null };
+}
+
+function dernieresTouchePourLeParc() {
+  try { return dernieresTouchesPartagees(); } catch { return null; }
+}
+
+export function formatDivergenceLines(d) {
+  if (!d?.mesurable) return ["=== COUPLES BLUEPRINT ↔ INSTANCIATION : PAS MESURÉ ===", `  ${d?.pourquoi}`, "", "  Ce n'est PAS « aucune divergence »."];
+  const L = [`=== COUPLES BLUEPRINT ↔ INSTANCIATION — ${d.compares} couple(s) comparé(s) sur ${d.couples} ===`, ""];
+  L.push(`  Écart médian ${d.mediane.toFixed(1)} j · maximum ${d.maximum.toFixed(1)} j · seuil ${d.seuil.seuil} j (${d.seuil.pourquoi}).`);
+  if (d.nonMesurables.length) L.push(`  ⚪ ${d.nonMesurables.length} couple(s) NON mesurable(s) : ${d.nonMesurables.map((c) => c.nom).join(", ")} — déclarés plutôt que comptés conformes.`);
+  L.push("");
+  if (!d.ecarts.length) {
+    L.push("  ✅ Aucun couple au-delà du seuil. Ce que ça dit exactement : aucun blueprint n'a été retouché sans que son instanciation");
+    L.push("     le soit dans la foulée, et réciproquement. Ce que ça NE dit PAS : que les deux documents disent la même chose — la");
+    L.push("     concordance de FOND n'est pas mécanisable, seule la concordance de RYTHME l'est.");
+  }
+  for (const e of d.ecarts) {
+    L.push(`  🟠 ${e.nom} — ${Math.round(e.jours)} jours d'écart · le retardataire est ${e.enRetard}`);
+    L.push(`      l'un des deux a été retouché et l'autre non : relire le plus récent et reporter ce qui doit l'être, ou déclarer que le changement ne concernait que ce côté-là`);
+  }
+  return L;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

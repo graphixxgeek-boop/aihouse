@@ -1317,6 +1317,23 @@ valeur ENTIÈRE et on ordonne sur le préfixe, jamais l'inverse ; une troncature
 ne sert jamais à identifier.
 
 
+**L46 — Un seuil dérivé d'un corpus qui CONTIENT l'anomalie se laisse pousser au-dessus d'elle.**
+*(2026-09-28, tâche #1033, trouvé par le contre-test AVANT la première mise en service — donc avant
+qu'un seul faux verdict ne sorte.)* Le garde-fou des couples blueprint ↔ instanciation dérive son
+seuil du parc réel, comme l'Article 24 l'exige. Première version : « deux fois le 90ᵉ centile des
+écarts ». Sur les 82 couples réels elle donnait 10,8 jours, tout allait bien. Sur le couple
+FABRIQUÉ pour vérifier qu'elle mord — un retard de 200 jours — **le 90ᵉ centile d'un corpus de deux
+valeurs vaut 200**, le seuil devenait 400, et l'anomalie s'était exclue elle-même. Deuxième
+version, la médiane : insensible à une valeur extrême, mais sur DEUX valeurs elle vaut encore
+l'anomalie. **La vraie règle tient en deux temps** : (1) une statistique ROBUSTE — la médiane, jamais
+un centile haut, parce qu'un centile haut suit l'anomalie qu'on cherche ; (2) un CORPUS MINIMUM en
+dessous duquel seul un plancher déclaré gouverne — sous ce seuil, l'anomalie *est* le corpus. C'est
+la deuxième fois de la même nuit que le second point se paie (L43, le mot rare : 60 % des racines
+d'un catalogue de 70 offres sont uniques), et c'est ce qui en fait une règle plutôt qu'un accident.
+**Corollaire pour BP5** : dériver un seuil ne suffit pas, il faut dire DE QUELLE statistique et sur
+QUEL corpus minimum — sans ces deux précisions, « dérivé » rassure sans protéger.
+
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

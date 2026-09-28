@@ -143,3 +143,53 @@ le chevauchement que la frontière interdit — et sur le filet cela coûterait 
    apporte, que personne d'autre ne voit.
 3. **Un passage SANS alerte est enregistré comme un passage.** Un registre vide rend PAS MESURÉ :
    « aucune alerte » et « personne n'a regardé » se ressemblent trait pour trait.
+
+## Le garde-fou des couples blueprint ↔ instanciation (#1033, 2026-09-28)
+
+**Ce qu'il surveille** : les 82 couples `docs/<outil>-blueprint.md` ↔ `docs/referentiel/<outil>.md`.
+Rien ne vérifiait qu'ils disent encore la même chose — « une règle affinée d'un côté et pas de
+l'autre, c'est une question de semaines », ce que l'Article 24 interdit explicitement.
+
+**Pourquoi Abraham et pas MOÏSE** : MOÏSE ne connaît qu'un document, la charte. Abraham traite
+n'importe quel document à règles, donc lui seul peut prendre un couple quelconque.
+
+**Ce qui a été essayé et ÉCARTÉ par la mesure**, parce que le prochain agent aura la même idée :
+comparer les SECTIONS des deux documents par recouvrement de vocabulaire. Mesuré sur les 82 couples
+réels — 527 sections de blueprint, 710 d'instanciation — la distribution du meilleur recouvrement
+est une courbe **lisse, sans le moindre creux**, et un seuil à 0,10 déclarerait « sans vis-à-vis »
+226 sections sur 527. C'est normal : un blueprint est générique, son instanciation est
+particulière, elles ont le **droit** de ne pas se ressembler. Un seuil qui ne se pose pas dans un
+creux est décrété, pas dérivé (BP5), et un garde-fou qui accuse la moitié d'un parc cesse d'être lu
+(L4).
+
+**Le signal retenu est le TEMPS** — celui que la tâche nomme elle-même. Une divergence, c'est un
+côté retouché et l'autre laissé en arrière. Mécanique, sans interprétation : aucun faux positif
+possible sur le FAIT ; seule son importance reste à juger, et elle reste humaine.
+
+| Ce qu'il rend | Valeur mesurée le 2026-09-28 |
+|---|---|
+| Couples comparés | 82 sur 82 (aucun non mesurable) |
+| Écart médian | 0,2 jour |
+| Écart maximum | 7,9 jours |
+| Seuil appliqué | 14 jours (plancher — le parc est trop synchrone pour que la part dérivée s'applique) |
+| Écarts signalés | **0** |
+
+**Il est silencieux le jour où il est écrit, et c'est le résultat attendu.** Sa morsure est prouvée
+sur un couple fabriqué (retard de 200 jours), jamais sur l'état du dépôt du jour — leçon L2.
+
+**Le seuil, et les deux pièges qu'il a fallu payer** (leçon **L46**) : il se dérive du parc, mais
+(1) sur une statistique ROBUSTE — la médiane, jamais un centile haut, qui suit l'anomalie qu'on
+cherche et se laisse pousser au-dessus d'elle ; (2) seulement au-dessus d'un **corpus minimum de
+20 couples**, en dessous duquel seul le plancher déclaré gouverne, parce qu'alors l'anomalie *est*
+le corpus.
+
+**Ce qu'il ne dit PAS, et c'est écrit dans sa propre sortie** : que les deux documents disent la
+même chose. La concordance de FOND n'est pas mécanisable ; seule la concordance de RYTHME l'est.
+
+**Où il tourne** : dans `assainissement`, la commande de la chaîne automatique — un garde-fou qu'on
+doit penser à lancer n'est pas un garde-fou (L2). `node scripts/abraham-les-references.mjs couples`
+en donne la lecture détaillée à la demande, seuil et dérivation imprimés : un seuil qu'on ne peut
+pas vérifier est un seuil qu'on subit.
+
+**Délibérément PAS un item de Ronde** : il tourne déjà à chaque commit, et lui ajouter un
+rendez-vous périodique gonflerait le registre sans rien couvrir de plus.
