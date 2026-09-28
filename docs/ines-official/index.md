@@ -7,6 +7,7 @@ l'historique léger, jamais le contenu lui-même.)*
 
 | Version | Date | Périmètre | Fichiers | Taille |
 |---|---|---|---|---|
+| v1 | 2026-09-28 | code seul | 179 | 8,0 Mo | *(tâche #574 — produite pour la Ronde du 2026-09-28. **Le corps vit dans `.ines-official-latest-code.txt`, gitignored ET dans un conteneur éphémère** : il disparaît avec la session si personne ne le télécharge. C'est très exactement ce que son « rappelle-moi de SAUVEGARDER cette version une fois produite » anticipait.)* |
 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
