@@ -413,3 +413,43 @@ LE COMPTE AVANT / APRÈS — ce que tu avais demandé, et la réponse est franch
     là où elle n'est pas — trois fois cet après-midi, mesurer m'a évité de
     desserrer un garde-fou juste ;
   · plus une règle est obligatoire, moins on regarde ce sur quoi elle s'appuie.
+
+
+--------------------------------------------------------------------------------
+14h20 — LA TROISIÈME TROUVAILLE, ET C'EST LA PLUS SOURNOISE DES TROIS
+--------------------------------------------------------------------------------
+
+  Je relisais un rapport VERT avec le terrain en tête — l'exercice que le
+  quatrième moment du process XP a rendu obligatoire ce matin. Le rapport
+  objectifs/résultats affichait, pour MOÏSE :
+
+    « objectif 1 trouvaille réellement suivie d'un geste sur la charte,
+      résultat réel 491 trouvaille réellement suivie d'un geste sur la charte »
+
+  491 gestes sur CLAUDE.md. Un document que je n'ai pas touché une seule fois de
+  toute la nuit, puisque tu me l'as interdit.
+
+  LE CHIFFRE COMPTAIT LES PASSAGES DU CROCHET POST-COMMIT.
+  Cinq lignes du registre déclarent leur source en PROSE — un chemin d'index,
+  une colonne — que le code ne sait pas ouvrir. Elles retombaient sur le
+  comptage de lancements, et le rendu réimprimait l'unité déclarée par-dessus.
+
+  ET LA NOTE DU REGISTRE DIT EXACTEMENT LE CONTRAIRE, mot pour mot :
+  « c'est le seul compteur qui ne peut pas se remplir tout seul ».
+  Il se remplissait entièrement tout seul.
+
+  POURQUOI JE LA TROUVE PLUS SOURNOISE QUE LES DEUX AUTRES :
+  un verdict « DÉPASSÉ » ne se re-vérifie jamais. Un « en dessous » fait ouvrir
+  le dossier ; un dépassement de deux ordres de grandeur passe pour une bonne
+  nouvelle. Les deux trouvailles précédentes de la journée accusaient à tort —
+  celle-ci FÉLICITAIT à tort, et c'est ce qui l'a rendue invisible.
+
+  CORRIGÉ : une source déclarée que le code ne sait pas lire rend maintenant
+  « pas de données », et le plan d'action nomme la mesure qui manque.
+  Cinq faux « dépassés » sont devenus cinq chantiers honnêtes.
+
+  CE QUI TE REVIENT : ces cinq mesures n'existent pas encore. Les construire ou
+  réviser les unités pour qu'elles pointent vers un signal lisible est un
+  arbitrage, pas un correctif.
+
+  ÉTAT : filet 347 au vert, arbre propre, tout poussé.
