@@ -20251,3 +20251,46 @@ async function testAbstentionSilencieuseDuRegistre() {
   console.log(`Passed: 18 % du registre échappait à tous les contrôles, en silence (2026-09-28, tâche #1087). TROUVÉ EN RÉPARANT MA PROPRE ERREUR, et c'est ce qui rend le cas instructif : j'avais écrit de la prose dans la colonne Criticité de la ligne #695, TROIS COMMITS DE SUITE, et rien ne l'avait signalé. LA CAUSE TIENT EN UNE LIGNE : quand la criticité n'est pas reconnue, \`frontiereDuDetail()\` rend null et la ligne est écartée de TOUS les contrôles de forme. L'abstention est JUSTE — deviner ferait pire, et son commentaire le dit — mais L'ABSTENTION SILENCIEUSE NE L'EST PAS : une ligne écartée sans bruit est une ligne que plus aucun contrôle ne regarde, et personne ne peut le savoir. C'est le défaut que ce paysage corrige partout ailleurs, commis par le garde-fou du registre lui-même. LA MESURE, ET ELLE EST PLUS GROSSE QUE MON ERREUR : 66 lignes sur 364 — 18 % du registre — étaient dans ce cas. AUCUNE N'ÉTAIT UNE FAUTE DE SAISIE : CRITIQUE-STRUCTURANT ×21, MOYENNE ×17, NORMAL-NON-PRIORITAIRE ×10, ELEVEE ×8, PRIORITAIRE ×5, RECOMMANDEE ×4, FAIBLE ×1 — sept valeurs parfaitement légitimes qu'un vocabulaire se déclarant « fermé » ignorait. Le vocabulaire avait grandi, son lecteur non : l'Article 24 dans sa forme la plus discrète. DEUX CORRECTIFS, ET LE SECOND COMPTE PLUS QUE LE PREMIER : les sept valeurs sont reconnues (aujourd'hui), et surtout l'abstention est désormais COMPTÉE ET AFFICHÉE, même à zéro (demain). Sans le second, le prochain trou du vocabulaire cacherait à nouveau des dizaines de lignes pendant des semaines. LE MOTIF RESTE FERMÉ POUR AUTANT : de la prose collée dans la cellule n'est toujours PAS reconnue — on n'a pas remplacé la reconnaissance par un « tout passe », ce qui aurait effacé le problème au lieu de le résoudre.`);
 }
 await testAbstentionSilencieuseDuRegistre();
+
+// ————————————————————————————————————————————————————————————————————————
+// DEUX FAÇONS DE NE PLUS ATTENDRE, ET DEUX TÂCHES INVISIBLES (2026-09-28, tâche #1088)
+// ————————————————————————————————————————————————————————————————————————
+// Deux défauts distincts, trouvés en instruisant #763. (1) Une tâche « écartée » — on a regardé, et
+// on a DÉCIDÉ de ne pas la faire — était comptée OUVERTE : elle remontait dans la file et dans les
+// « plus anciennes encore ouvertes », alors que plus personne n'attend rien d'elle. (2) Deux tâches
+// closes portaient « FAIT » dans leur statut : parfaitement clair pour un lecteur humain, invisible
+// pour tous les outils de la file.
+async function testDeuxFaconsDeNePlusAttendre() {
+  const C = await import('../scripts/check-suivi-fidelity.mjs');
+
+  // ── 1. « ÉCARTÉE » EST TERMINALE, MAIS RESTE DISTINCTE DE « TERMINÉE ». L'Article 28 pose
+  // exactement cette distinction pour un constat ; elle vaut tout autant pour une tâche.
+  assert.equal(C.estCloturee("Écartée — décision de l'utilisateur"), true, 'a discarded task waits for nobody: counting it open invents a delay that does not exist');
+  assert.equal(C.estEcartee("Écartée — décision de l'utilisateur"), true, 'and it must stay recognisable AS discarded — renaming it "terminée" would erase the decision and its meaning');
+  assert.equal(C.estEcartee("Terminé"), false, 'a task actually DONE is not a task discarded: the two labels must never merge');
+
+  // ── 2. LES AUTRES SENS (BP4) : rien de ce qui attend vraiment ne devient clos.
+  for (const ouvert of ['Ouverte', 'En cours', 'à faire', 'A-TRANCHER', 'en attente de décision']) {
+    assert.equal(C.estCloturee(ouvert), false, `a task genuinely waiting must stay open: ${ouvert}`);
+  }
+  assert.equal(C.estCloturee('Ouverte → Terminée (clôturée par #783)'), true, 'and the transition form, already handled since the arrow fix, must keep working');
+
+  // ── 3. LE VOCABULAIRE RESTE ÉTROIT, ET CE QUI EN SORT EST NOMMÉ. L'élargir à chaque synonyme
+  // rencontré finirait par tout accepter, donc par ne plus rien signifier — même doctrine que
+  // l'abstention de #1087 : on ne devine pas, mais on ne se tait pas non plus.
+  assert.equal(C.etatDuStatut('FAIT'), null, '"FAIT" must NOT be silently accepted — the row gets corrected, the vocabulary does not get widened');
+  assert.equal(C.etatDuStatut('OK'), null, 'nor any other synonym');
+  assert.equal(C.etatDuStatut('Terminée — fidèle')?.etat, 'terminée');
+  assert.equal(C.etatDuStatut('Écartée')?.etat, 'écartée');
+
+  // ── 4. SUR LE VRAI REGISTRE (Article 25) : plus aucun statut hors vocabulaire.
+  const r = C.findStatutsNonReconnus();
+  assert.equal(r.mesurable, true);
+  assert.ok(r.lignesLues >= 300, `the guard must read the real register (currently ${r.lignesLues})`);
+  assert.deepEqual(r.ecarts, [], 'no row may carry a status the queue tools cannot read');
+  const rien = C.findStatutsNonReconnus('dossier-qui-nexiste-pas', () => [], () => '', () => false);
+  assert.equal(rien.mesurable, false, 'and a missing register is a non-measure, never "zero unreadable statuses"');
+
+  console.log("Passed: deux façons de ne plus attendre, et deux tâches invisibles (2026-09-28, tâche #1088). Trouvé en instruisant #763, qui portait « Ouverte → Terminée » — et ce cas-là, lui, était DÉJÀ traité : la flèche est gérée depuis la correction des statuts en transition. C'EST LE PREMIER ENSEIGNEMENT, et il vaut d'être dit : mon balayage à la main la comptait ouverte, l'outil du dépôt non. J'avais recompté à côté d'une fonction qui savait déjà lire (Article 31). DEUX VRAIS DÉFAUTS SONT SORTIS DE CETTE VÉRIFICATION. (1) UNE TÂCHE « ÉCARTÉE » ÉTAIT COMPTÉE OUVERTE. Or écartée veut dire : on a regardé, et on a DÉCIDÉ de ne pas la faire. Plus personne n'attend rien d'elle — pourtant elle remontait dans la file et dans les « plus anciennes encore ouvertes », c'est-à-dire un retard qui n'existe pas, exactement le défaut déjà corrigé ici pour les statuts en transition. L'Article 28 pose cette distinction pour un constat (RETENU / ÉCARTÉ) ; elle vaut tout autant pour une tâche, et les deux labels restent DISTINCTS : on ne renomme pas « écartée » en « terminée », ce qui effacerait la décision. (2) DEUX TÂCHES CLOSES PORTAIENT « FAIT ». Parfaitement clair pour un lecteur humain, invisible pour tous les outils de la file, qui les comptaient ouvertes des jours après leur clôture. LE CHOIX DE CORRECTION EST LE POINT DÉLICAT, et il va dans le sens inverse de la facilité : les deux LIGNES sont corrigées, le VOCABULAIRE ne s'élargit pas. Accepter « FAIT », puis « OK », puis « réglé » finirait par tout accepter, donc par ne plus rien signifier — et un garde-fou nomme désormais ce qui sort du vocabulaire, pour que la prochaine ligne soit corrigée au lieu de compter faux en silence.");
+}
+await testDeuxFaconsDeNePlusAttendre();

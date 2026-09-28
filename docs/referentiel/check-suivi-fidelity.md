@@ -116,3 +116,33 @@ nouveau des dizaines de lignes pendant des semaines.
 **Le motif reste fermé pour autant** : de la prose collée dans la cellule n'est toujours pas
 reconnue. On n'a pas remplacé la reconnaissance par un « tout passe », ce qui aurait effacé le
 problème au lieu de le résoudre.
+
+## Deux façons de ne plus attendre, et deux tâches invisibles (2026-09-28, tâche #1088)
+
+**Trouvé en instruisant #763**, qui porte le statut « Ouverte → Terminée (clôturée par #783) ». Et
+**ce cas-là était déjà traité** : la flèche est gérée depuis la correction des statuts en
+transition. **C'est le premier enseignement** — un balayage à la main la comptait ouverte, l'outil
+du dépôt non. Recompter à côté d'une fonction qui sait déjà lire est un coût pur (Article 31).
+
+**Deux vrais défauts sont sortis de cette vérification.**
+
+**(1) Une tâche « écartée » était comptée OUVERTE.** Or écartée veut dire : *on a regardé, et on a
+décidé de ne pas la faire*. Plus personne n'attend rien d'elle — pourtant elle remontait dans la
+file et dans les « plus anciennes encore ouvertes », c'est-à-dire **un retard qui n'existe pas**,
+exactement le défaut déjà corrigé ici pour les statuts en transition.
+
+L'Article 28 pose cette distinction pour un constat (RETENU / ÉCARTÉ) ; **elle vaut tout autant pour
+une tâche**. Les deux labels restent **distincts** : `estCloturee()` reconnaît les deux comme
+terminales, `estEcartee()` les sépare. On ne renomme pas « écartée » en « terminée », ce qui
+effacerait la décision et son sens.
+
+**(2) Deux tâches closes portaient « FAIT ».** Parfaitement clair pour un lecteur humain, invisible
+pour tous les outils de la file, qui les comptaient ouvertes des jours après leur clôture.
+
+**Le choix de correction est le point délicat, et il va dans le sens inverse de la facilité : les
+deux LIGNES sont corrigées, le VOCABULAIRE ne s'élargit pas.** Accepter « FAIT », puis « OK », puis
+« réglé » finirait par tout accepter, donc par ne plus rien signifier.
+
+**Et `findStatutsNonReconnus()` nomme désormais ce qui sort du vocabulaire**, affiché même à zéro —
+même doctrine que l'abstention silencieuse de #1087 : on ne devine pas, mais on ne se tait pas non
+plus. Sans ce compteur, la prochaine ligne compterait faux en silence pendant des jours.

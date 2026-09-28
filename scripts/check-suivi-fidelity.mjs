@@ -959,8 +959,64 @@ export function tachesCitees(texte = "") {
   return out;
 }
 
+// DEUX FAÇONS DE NE PLUS ATTENDRE, ET ELLES NE SE CONFONDENT PAS (2026-09-28, tâche #1088). Une
+// tâche « terminée » a été FAITE ; une tâche « écartée » a été DÉCIDÉE — on a regardé, et on ne la
+// fait pas. L'Article 28 pose exactement cette distinction pour un constat (RETENU / ÉCARTÉ), et
+// elle vaut tout autant pour une tâche.
+//
+// CE QUI ÉTAIT FAUX N'ÉTAIT NI L'UNE NI L'AUTRE : une tâche écartée était comptée OUVERTE. Elle
+// remontait donc dans la file, dans les « plus anciennes encore ouvertes », dans toute mesure de
+// retard — alors que plus personne n'attend rien d'elle. **Un retard qui n'existe pas**, exactement
+// le défaut déjà corrigé ici même pour les statuts en transition (« A → B »).
+//
+// LES DEUX LABELS RESTENT DISTINCTS : on ne renomme pas « écartée » en « terminée », ce qui
+// effacerait la décision et son sens. On reconnaît seulement que les deux sont TERMINALES.
+// STATUTS_RECONNUS — le vocabulaire des états, et le garde-fou qui nomme ce qui en sort
+// (2026-09-28, tâche #1088). Deux tâches réelles portaient « FAIT » : parfaitement claires pour un
+// lecteur humain, invisibles pour tous les outils de la file, qui les comptaient OUVERTES des jours
+// après leur clôture.
+//
+// LE GARDE-FOU NE DEVINE PAS, ET NE SE TAIT PAS NON PLUS — même doctrine que l'abstention de la
+// tâche #1087 : élargir le vocabulaire à chaque synonyme rencontré (« FAIT », « OK », « réglé »)
+// finirait par tout accepter, donc par ne plus rien signifier. On garde donc un vocabulaire étroit,
+// et on NOMME ce qui en sort, pour que la ligne soit corrigée au lieu de compter faux en silence.
+export const STATUTS_RECONNUS = [
+  { motif: /^termin/, etat: "terminée", quoi: "elle a été FAITE" },
+  { motif: /^ecart/, etat: "écartée", quoi: "on a regardé, et on a DÉCIDÉ de ne pas la faire (Article 28)" },
+  { motif: /^ouvert/, etat: "ouverte", quoi: "elle attend d'être faite" },
+  { motif: /^en cours/, etat: "en cours", quoi: "elle est commencée" },
+  { motif: /^a faire/, etat: "ouverte", quoi: "elle attend d'être faite" },
+  { motif: /^a-?\s?trancher/, etat: "ouverte", quoi: "elle attend une décision de l'utilisateur" },
+  { motif: /^en attente/, etat: "ouverte", quoi: "elle attend quelque chose ou quelqu'un" },
+];
+
+export function etatDuStatut(statut = "") {
+  const n = normaliserStatut(statut);
+  return STATUTS_RECONNUS.find((s) => s.motif.test(n)) ?? null;
+}
+
+export function findStatutsNonReconnus(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return riennAPuEtreLu();
+  const ecarts = [];
+  let lignesLues = 0;
+  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    lignesLues += 1;
+    const cells = splitTableRow(ligne);
+    const brut = String(cells[cells.length - 1] ?? "").trim();
+    if (etatDuStatut(brut)) continue;
+    ecarts.push({ numero: Number(cells[0]), file, statut: brut.slice(0, 50),
+      pourquoi: "statut hors du vocabulaire reconnu : les outils de la file ne savent pas si cette tâche attend encore quelque chose, et par défaut ils la comptent ouverte" });
+  }
+  return { mesurable: true, ecarts, lignesLues };
+}
+
+export function estEcartee(statut = "") {
+  return /^ecart/.test(normaliserStatut(statut));
+}
+
 export function estCloturee(statut = "") {
-  return /^termin/.test(normaliserStatut(statut));
+  const n = normaliserStatut(statut);
+  return /^termin/.test(n) || /^ecart/.test(n);
 }
 
 // Rend TOUJOURS `mesurable` : un suivi illisible ou vide ne peut pas rendre « aucun fantôme », qui
@@ -1187,6 +1243,19 @@ function main() {
   // n'est pas reconnue est écartée de TOUS les contrôles ci-dessus — 66 lignes sur 364 l'étaient
   // sans que rien ne le dise. Le compteur s'affiche même à zéro : c'est le seul moyen que le
   // prochain trou du vocabulaire remonte le jour où il apparaît.
+  // LE VOCABULAIRE DES STATUTS (2026-09-28, tâche #1088) : deux tâches réelles portaient « FAIT »,
+  // claires pour un lecteur, invisibles pour tous les outils de la file. Affiché même à zéro.
+  const statutsInconnus = findStatutsNonReconnus();
+  if (!statutsInconnus.mesurable) {
+    console.log(`⚪ PAS MESURÉ — ${statutsInconnus.pourquoi}`);
+  } else if (!statutsInconnus.ecarts.length) {
+    console.log(`Tous les statuts sont dans le vocabulaire reconnu, sur ${statutsInconnus.lignesLues} ligne(s).`);
+  } else {
+    console.log(`⚠️ ${statutsInconnus.ecarts.length} statut(s) hors vocabulaire sur ${statutsInconnus.lignesLues} ligne(s) — les outils de la file les comptent OUVERTS par défaut.`);
+    for (const e of statutsInconnus.ecarts.slice(0, 12)) console.log(`   - n°${e.numero} — « ${e.statut} » — ${e.file}`);
+    console.log("   À corriger dans la ligne, jamais en élargissant le vocabulaire à chaque synonyme : accepter « FAIT », « OK », « réglé » finirait par tout accepter, donc par ne plus rien signifier.");
+  }
+
   const sansCriticite = findLignesSansCriticiteReconnue();
   if (!sansCriticite.mesurable) {
     console.log(`⚪ PAS MESURÉ — ${sansCriticite.pourquoi}`);
