@@ -205,5 +205,13 @@
     "lecon": "`frontiereDuDetail()` existe précisément pour ça et RECONNAÎT les colonnes au lieu de les compter. Le réflexe utile n'est pas « fais attention en calculant l'index » — c'est « quelqu'un dans l'équipe sait-il déjà lire cette ligne ? » (Article 31). Et le corollaire vaut plus que l'erreur : ce sont les formats ANCIENS qui piègent, parce qu'on teste mentalement sur celui qu'on vient d'écrire. Bonus réel : réparer cette erreur a fait remonter que 18 % du registre échappait en silence à tous les contrôles — une erreur bien instruite vaut mieux qu'une erreur évitée.",
     "rienARetenir": false,
     "date": "2026-09-28T11:29:45.010Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "La classe d'erreur qu'on vient de trouver sept fois devient une grille de lecture — et une grille de lecture fait voir la classe là où elle n'est pas.",
+    "contexte": "Tâche #721. Après sept trouvailles de la famille « un signal ADJACENT lu comme le signal visé » dans la même nuit, j'ai lu la liste des 59 écarts process↔gardien de god-of-all-process, vu `sansAccents` et `scriptPourSlug` dedans, et conclu que le détecteur comptait des utilitaires partagés pour des mécanismes de process. J'étais sur le point de le retoucher.",
+    "lecon": "Mesuré avant d'agir : 5 sur 59, soit 8 %. Les 54 autres sont de vraies fonctions des gardiens, et leur absence des documents est un vrai écart — le détecteur avait raison. Ce qui m'a sauvé n'est pas la prudence, c'est d'avoir compté avant de conclure, et ça a pris trente secondes. LE PIÈGE EST SYMÉTRIQUE DU QUATRIÈME DÉCLENCHEUR AJOUTÉ LE MÊME JOUR : celui-ci dit de se méfier d'un rapport vert qui détonne avec le terrain ; celui-là dit de se méfier autant d'un rapport qui CONFIRME trop bien la classe d'erreur qu'on a en tête. Une grille de lecture fraîche est le moment où l'on est le plus susceptible de desserrer un garde-fou juste.",
+    "rienARetenir": false,
+    "date": "2026-09-28T11:48:45.132Z"
   }
 ]
