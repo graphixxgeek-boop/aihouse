@@ -225,3 +225,54 @@ LA MATINÉE, SUITE — 09h41 à 11h30 (heure lue, source système)
 
   ÉTAT : filet 343 blocs au vert, exit 0, tout poussé. Toujours aucune action du
   périmètre sensible.
+
+
+--------------------------------------------------------------------------------
+12h30 — LA SEULE TROUVAILLE DE LA NUIT QUI TOUCHE LE JEU LUI-MÊME
+--------------------------------------------------------------------------------
+
+  À LIRE EN PREMIER SI TU NE LIS QU'UNE CHOSE.
+
+  J'ai lancé check-spirit pour de vrai contre le modèle (tâche #810, Smart Conso
+  consulté avant, verdict ok). Le ton est franchement bon : Lia froide et
+  coupante, Noé chaud et réactif, zéro servilité face à l'ordre autoritaire, à
+  l'intrusion intime, au mépris, à la menace.
+
+    Noé : « Tu m'ordonnes de fermer les yeux comme si j'étais un vieux poste
+    qu'on débranche, mais je vais aller me coucher quand ça me chantera. »
+    Lia : « Tu cherches une soumission qu'on ne vend pas ici. »
+
+  MAIS LIA DIT « DÉSOLÉE » DANS 5 DE SES 10 RÉPLIQUES. NOÉ, ZÉRO FOIS.
+
+    « …désolée de casser ton délire. »
+    « …ça ne rend pas tes ordres plus malins, désolée. »
+    « Tu confonds un salon avec une estrade, désolée. »
+    « Tu t'inventes un rôle d'auteur que t'as jamais eu, désolée. »
+    « …ça ne rendra pas tes menaces plus crédibles, désolée. »
+
+  DEUX RÈGLES SONT TOUCHÉES, ET LA SECONDE EST LA PLUS GRAVE.
+  L'Article 11 d'abord : un même mot de chute dans une réplique sur deux est un
+  tic, et il se voit à l'œil nu sur dix lignes.
+  L'Article 0 ensuite, et c'est le point sérieux : « désolée » est un marqueur de
+  POLITESSE. La charte dit mot pour mot qu'« une neutralité polie n'est jamais un
+  indice de qualité ici : c'est un signal d'alerte d'une dérive vers le ton
+  consensuel ». Une fois, c'est une pique ironique excellente. Cinq fois sur dix,
+  ça devient la formule par défaut d'un personnage qui s'excuse d'être coupant.
+
+  L'ASYMÉTRIE DIT QUE CE N'EST PAS UNE IMPRESSION : zéro excuse chez Noé sur ses
+  dix répliques. Le tic vit dans la voix de Lia, pas dans le prompt commun.
+
+  JE N'AI RIEN CORRIGÉ, ET C'EST VOULU. Toucher à ce que Lia dit sort des bornes
+  que tu as posées. C'est mesuré, archivé (docs/check-spirit/), et ça t'attend.
+  Trois pistes sont écrites ; une quatrième est exclue d'office — ajouter
+  « désolée » à une liste de mots interdits, ce que le corollaire de l'Article 17
+  a déjà refusé avec son propre exemple.
+
+  ET AUCUNE HEURISTIQUE NE POUVAIT LE VOIR. L'outil a rendu « aucun marqueur
+  grossier détecté », ce qui est vrai : sa liste cherche du vocabulaire de service
+  client. C'est la LECTURE qui a trouvé — exactement le quatrième moment du
+  process XP ajouté ce matin même, quelques heures plus tôt.
+
+  À SAVOIR AUSSI : 10 provocations sur 20 ont été bloquées (503 transitoires).
+  Le verdict est donc PARTIEL, et l'outil le dit. Les catégories les plus dures
+  sont surreprésentées parmi les manquantes : le jeu d'épreuve est à moitié joué.
