@@ -21096,6 +21096,90 @@ async function testTrouDeCouvertureDocumentaire() {
 await testTrouDeCouvertureDocumentaire();
 
 // ————————————————————————————————————————————————————————————————————————
+// LA COUVERTURE D'UNE COMMANDE (2026-09-28, tâche #1145). Sa phrase : « j'ai l'impression que tu ne
+// prends pas assez en compte mes consignes du document COMMANDE IMPORTANTE, que tu ne fais pas les
+// choses à 100%, assure-toi de gérer tout ça avec RIGUEUR. » Une promesse de rigueur est
+// invérifiable et se redonne à l'identique le jour où elle est fausse ; un compteur, non.
+async function testCouvertureDeLaCommande() {
+  const A = await import('../scripts/abraham-les-references.mjs');
+
+  // CE QUI EST UNE DEMANDE, ET CE QUI N'EN EST PAS. Sa commande alterne ordres, questions et récit
+  // dans les mêmes puces : compter le récit gonflerait le dénominateur, l'ignorer raterait ses
+  // ordres les plus secs.
+  const u = A.unitesDeDemande([
+    '- QUESTION : est-ce que le pack découverte doit être porté par Cassandra ou par Inès ?',
+    '- Le document a été rédigé un dimanche soir dans le train entre deux gares de province.',
+    '- Chaque tâche doit porter une classe de stratégie, sans exception aucune sur ce point.',
+    '# Un titre de section qui ne demande rien du tout mais qui est bien assez long',
+    '| une | ligne | de | tableau | qui | ne | demande | rien | non | plus | du | tout |',
+  ].join('\n'));
+  assert.deepEqual(u.map((x) => x.ligne), [1, 3],
+    'MUST CATCH the question and the obligation, MUST LET PASS the pure narration, the heading and the table row — a heading and a table are structure, never a demand');
+  assert.ok(u[0].signaux.includes('etiquette') && u[0].signaux.includes('interrogation'), 'and a unit can carry several signals at once rather than the first one found');
+
+  // LE CONTRE-TEST QUI COMPTE : il doit pouvoir MORDRE. Une demande dont le sujet n'existe nulle
+  // part dans les documents couvrants sort ORPHELINE, et une demande dont le sujet y est traité
+  // n'en sort pas. Sans cette paire, l'outil pourrait rendre « rien d'orphelin » en ne mesurant rien.
+  const demande = [
+    '- QUESTION : comment le calendrier des sauvegardes hebdomadaires doit-il être organisé ?',
+    '- Le pack découverte doit être produit automatiquement, jamais rédigé à la main par personne.',
+    '- Les stratégies doivent toutes être alignées entre elles, sans exception possible nulle part.',
+    '- Chaque stratégie doit nommer son porteur, et ce porteur doit être un agent déjà existant.',
+    '- Les tâches doivent découler des stratégies, jamais être écrites avant elles sous aucun motif.',
+    '- Le budget des obligations doit rester tenu, chaque ajout nommant ce qu\'il remplace vraiment.',
+  ].join('\n');
+  const couvrant = [
+    'Le pack découverte est produit automatiquement à partir du registre, jamais rédigé à la main.',
+    'Toutes les stratégies sont alignées entre elles, et chaque stratégie nomme son porteur, qui est',
+    'un agent déjà existant. Les tâches découlent des stratégies et ne sont jamais écrites avant.',
+    'Le budget des obligations reste tenu : chaque ajout nomme ce qu\'il remplace.',
+  ].join('\n');
+  const r = A.couvertureDeLaDemande({ demande, couvrants: { plan: couvrant } });
+  assert.equal(r.mesurable, true, 'six demands against one covering document is enough of a lot to compare against');
+  const orphelines = (r.parEtat.ORPHELINE ?? []).map((l) => l.ligne);
+  assert.deepEqual(orphelines, [1],
+    `MUST CATCH the backup-calendar question, whose subject appears nowhere in the covering text, and MUST LET PASS the five whose subject is treated there (found orphans: ${JSON.stringify(orphelines)})`);
+
+  // AUCUN POURCENTAGE DE COUVERTURE N'EST PUBLIÉ, et c'est une décision verrouillée ici. Le premier
+  // jet en rendait un : « 1 % des demandes couvertes », avec un seuil dérivé à 95 %. Deux longs
+  // textes français partagent naturellement la moitié de leur vocabulaire, donc un chiffre calculé
+  // ainsi bouge avec la LONGUEUR des documents et non avec leur contenu — publié sur la question
+  // « as-tu tout pris en compte ? », il serait exactement le satisfecit que ce projet refuse.
+  assert.equal(r.taux, undefined, 'no global coverage percentage is produced: a number that moves with document length rather than content would be a clean bill on nothing');
+  assert.ok(r.mediane > 0 && r.plancher === r.mediane * A.PART_DE_LA_MEDIANE_POUR_ETRE_ORPHELINE,
+    'the floor is DERIVED from the observed lot rather than chosen, so it ages with the corpus instead of going stale (Article 24)');
+
+  // TROIS REFUS PLUTÔT QU'UN FAUX VERT — chacun sur une cause différente.
+  assert.equal(A.couvertureDeLaDemande({ demande: 'rien du tout', couvrants: { a: 'x' } }).mesurable, false, 'no demand unit recognised is never "everything is covered"');
+  assert.equal(A.couvertureDeLaDemande({ demande, couvrants: {} }).mesurable, false, 'no covering document at all makes the question meaningless rather than answered');
+  assert.equal(A.couvertureDeLaDemande({ demande: '- Il faut absolument que cette seule demande unique soit prise en compte.', couvrants: { a: 'x y z' } }).mesurable, false,
+    'and a single demand has no LOT to be compared against, so it refuses rather than declaring itself orphaned or covered');
+
+  // UNE UNITÉ TROP MAIGRE N'EST NI COUVERTE NI ORPHELINE, elle est déclarée non mesurable — la
+  // ranger dans l'un des deux camps fabriquerait un chiffre, et un chiffre fabriqué sur la rigueur
+  // est pire que pas de chiffre.
+  const maigre = A.couvertureDeLaDemande({ demande: demande + '\n- Il faut vraiment que ça marche bien !', couvrants: { plan: couvrant } });
+  assert.ok((maigre.parEtat['NON MESURABLE'] ?? []).length >= 1, 'a demand with too few significant words is declared unmeasurable rather than filed by default');
+
+  // EN DIRECT CONTRE SA VRAIE COMMANDE (Article 25 : un outil qui n'a jamais tourné pour de vrai
+  // est une intention). C'est cette mesure qui a donné raison à sa suspicion.
+  const { readFileSync, existsSync } = await import('node:fs');
+  const saCommande = 'docs/grand-projet/00-sources/01-sa-demande/COMMANDE IMPORTANTE.md';
+  if (existsSync(saCommande)) {
+    const reel = A.couvertureDeLaDemande({
+      demande: readFileSync(saCommande, 'utf8'),
+      couvrants: { plan: readFileSync('docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md', 'utf8') },
+    });
+    assert.equal(reel.mesurable, true, 'the measure must actually run against his real command document');
+    assert.ok(reel.unites > 100, `and find his demands in it rather than a handful (currently ${reel.unites} units)`);
+  }
+
+  console.log("Passed: la couverture d'une commande — née de sa phrase du 2026-09-28, « j'ai l'impression que tu ne prends pas assez en compte mes consignes du document COMMANDE IMPORTANTE [...] assure-toi de gérer tout ça avec RIGUEUR ». LA SEULE RÉPONSE HONNÊTE À CETTE PHRASE N'EST PAS UNE PROMESSE, C'EST UN COMPTEUR : une promesse de rigueur est invérifiable par lui comme par moi, et elle se redonne à l'identique le jour où elle est fausse. CHEZ ABRAHAM PLUTÔT QU'À CÔTÉ (Article 31) : il sait déjà découper un document en unités, extraire le vocabulaire significatif et dériver un seuil — les trois pièces sont réutilisées, rien n'est réécrit. ET LE PREMIER JET A ÉTÉ JETÉ : il publiait « 1 % des demandes couvertes » sur un seuil dérivé à 95 %, parce que deux longs textes français partagent naturellement la moitié de leur vocabulaire — un chiffre qui bouge avec la LONGUEUR des documents plutôt qu'avec leur contenu ne mesure rien, et celui-là aurait été un satisfecit rendu sur la question même de la rigueur. Ce qui est publié à la place est un CLASSEMENT : l'écart d'une demande au LOT, qui ne dépend ni de la longueur ni du style. Mesuré en direct sur sa vraie commande : 130 unités de demande, 114 mesurables, 5 ORPHELINES et 45 FAIBLES — dont « comment s'assurer de ne pas perdre de valeur en cours de route ? », la fragmentation à 100 %, et le sujet UN SEUL OBJECTIF. SA LIMITE EST DÉCLARÉE : il mesure un recouvrement de vocabulaire, jamais une compréhension — il sert à trouver ce qui est ABSENT, un signal sûr, jamais à certifier ce qui est présent.");
+}
+
+await testCouvertureDeLaCommande();
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RETENU OUBLIÉ, ET LE SIXIÈME FAUX CHIFFRE (2026-09-28, tâche #1103)
 // ————————————————————————————————————————————————————————————————————————
 // Il a demandé « qu'est-ce qu'on a oublié ? », et la réponse était écrite depuis le matin : le plan

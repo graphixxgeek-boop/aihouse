@@ -16,6 +16,11 @@ correctement stp dans le déroulé de départ, un mauvais départ peut nous coû
 Puis, en refusant deux de mes questions : « il faut aller moins vite je pense », et « tu me l'as
 lu ? on va pas un peu vite ? tu es sûr d'avoir TOUT pris en compte ? »
 
+> **FRONTIÈRE, écrite des deux côtés.** Ce document porte les DÉCISIONS. La parole brute dont elles
+> sortent — ses phrases, citées et rangées par sujet — vit dans
+> `docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md`, un document distinct qu'il ne faut
+> jamais confondre avec celui-ci : là-bas on lit CE QU'IL A DIT, ici CE QUI EN A ÉTÉ DÉCIDÉ.
+
 **Ce document répond aux deux.** Il écrit ce qui est tranché, il écrit ce qui ne l'est PAS et
 pourquoi, et il répond à sa question de confiance avec une mesure plutôt qu'avec une promesse.
 

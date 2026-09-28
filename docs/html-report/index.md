@@ -9,4 +9,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/plan-daction.html` | `docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md` | 27518 | 2026-09-28 23:20Z |
 | `docs/grand-projet/html/questions-en-cours-de-route.html` | `docs/grand-projet/02-strategie/questions-en-cours-de-route.md` | 16595 | 2026-09-28 23:20Z |
 | `docs/grand-projet/html/vue-globale.html` | `docs/grand-projet/02-strategie/vue-globale-2026-09-28.md` | 25847 | 2026-09-28 23:20Z |
-| `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 18710 | 2026-09-28 23:43Z |
+| `docs/grand-projet/html/notes-des-echanges-de-depart.html` | `docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md` | 19305 | 2026-09-28 23:56Z |
+| `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 19122 | 2026-09-28 23:56Z |

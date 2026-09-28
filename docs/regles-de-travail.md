@@ -102,6 +102,55 @@ donc si la reprise a eu lieu, et refuse d'être au vert sans réponse. C'est la 
 possible pour une règle qui ne se joue pas sur le disque, et la déclarer ainsi vaut mieux que de la
 confier à la mémoire d'un agent (Article 27).
 
+## 0ter. L'ESCALADE — l'ordre dans lequel tout travail se conçoit
+
+*(2026-09-28, tâche #1146. Sa consigne, donnée DEUX fois le même soir à vingt minutes d'intervalle —
+ce qui ne se produit jamais par hasard.)*
+
+> « 1/ on calibre finement, sur tous les points. 2/ on définit une cible, un objectif. et ensuite
+> 3/ un chemin pour y arriver avec de grandes étapes. Ensuite, 4/ chaque étape est divisée en
+> sous-étapes. 5/ Ensuite, chaque sous-étape est subdivisée en bloc de tâches, eux-mêmes subdivisés
+> en tâches individuelles. Tu vois l'arborescence ? **TOUT va dans le même sens, tout est
+> cohérent.** Je veux que tu respectes ce système d'escalade **DÈS LA CONCEPTION DU PLAN DE
+> CHANTIER, et PARTOUT DANS NOTRE TRAVAIL.** »
+
+**L'ordre, et il ne se réarrange pas :**
+
+```
+① CALIBRAGE FIN  →  ② LA CIBLE  →  ③ LES GRANDES ÉTAPES  →  ④ LES SOUS-ÉTAPES
+                                                          →  ⑤ LES BLOCS DE TÂCHES
+                                                          →  ⑥ LES TÂCHES INDIVIDUELLES
+```
+
+**Ce que chaque niveau interdit au suivant.** On ne définit pas une cible avant d'avoir calibré ; on
+ne trace pas d'étapes avant d'être d'accord sur la cible ; **on ne crée aucune tâche avant que le
+cadre soit fixé** — sa phrase exacte : « une fois que ce cadre est fixé, je pense que tu peux
+créer/modifier les tâches ».
+
+**POURQUOI CETTE RÈGLE EXISTE, ET ELLE A ÉTÉ PAYÉE LE JOUR MÊME.** Seize tâches (#1125–#1140)
+avaient été ouvertes sous un plan qu'il n'avait pas calibré. Elles ont dû repasser « À TRANCHER ».
+La cause n'était pas de l'inattention : **l'Article 28 de la charte refuse un constat annoncé qui
+pointerait vers une tâche inexistante**, et ce garde-fou — écrit pour empêcher qu'un rapport meure
+sans suite — a produit l'inverse exact de son intention en forçant une cristallisation prématurée.
+Une obligation de FORME qui force une décision de FOND est un défaut, pas une discipline. *(#1141.)*
+
+**Ce que ça change pour les questions de calibrage** : elles se posent dans l'ordre de l'escalade.
+Une question de niveau ⑤ posée avant un accord de niveau ② ne produit pas une réponse — elle produit
+**une supposition déguisée en décision**. Constaté le soir même : à la question « que reçoit
+l'acheteur de l'Agence ? », il a répondu « il y a un chemin de décision avant, il faut aller moins
+vite je pense ». Il avait raison.
+
+**Ne jamais confondre l'escalade avec la CHAÎNE DE DÉCISION du projet** (but ultime → philosophie et
+politique → les trois stratégies → les chantiers). Ce sont deux arborescences distinctes : la chaîne
+dit **qui commande quoi**, l'escalade dit **comment on découpe le travail**. Elles se rejoignent en
+un seul point, et il est structurant : **la CIBLE du niveau ② doit sortir du BUT ULTIME de la
+chaîne**. Détail : `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` §3.
+
+**Son porteur** : aucun mécanisme ne peut lire un plan en cours de conception dans une conversation.
+Comme pour les Articles 29 et 30, la règle est déclarée ici et **la déclarer EST la protection**
+(Article 27). Ce qui se vérifie mécaniquement, en revanche, c'est le RÉSULTAT : un plan de chantier
+de ce dépôt doit montrer ses six niveaux, et une tâche née sans étape parente est un écart.
+
 ## 1. Rythme et intégration des demandes
 
 L'utilisateur spécifie rarement une fonctionnalité en un seul message complet : il la construit

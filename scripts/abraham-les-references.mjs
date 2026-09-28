@@ -1962,6 +1962,29 @@ export function formatAlertesLines(s) {
 
 async function main() {
   const [, , arg1, arg2] = process.argv;
+  // `couverture <demande.md> <couvrant.md> [...]` — la commande née de sa phrase du 2026-09-28
+  // (tâche #1145) : « assure-toi de gérer tout ça avec RIGUEUR ». Elle prend SA commande et les
+  // documents censés y répondre, et rend les demandes que personne n'a écrites. Elle est à lancer
+  // à la main, sur demande : confronter deux corpus n'a de sens qu'au moment où l'on prétend que
+  // le second répond au premier, jamais à chaque commit.
+  if (arg1 === "couverture") {
+    const [demandeChemin, ...couvrantsChemins] = process.argv.slice(3);
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — ce que sa commande demande, et que personne n'a écrit", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    if (!demandeChemin || !couvrantsChemins.length) {
+      console.log("Usage : node scripts/abraham-les-references.mjs couverture <demande.md> <couvrant.md> [couvrant2.md …]");
+      console.log("  Le premier fichier est CE QUI EST DEMANDÉ ; les suivants sont ce qui est censé y répondre.");
+      process.exitCode = 2;
+      return;
+    }
+    const { readFileSync } = await import("node:fs");
+    const lire = (c) => readFileSync(c, "utf8");
+    const couvrants = Object.fromEntries(couvrantsChemins.map((c) => [c, lire(c)]));
+    const r = couvertureDeLaDemande({ demande: lire(demandeChemin), couvrants });
+    for (const l of formatCouvertureLines(r)) console.log(l);
+    return;
+  }
   // « assainissement » : le point d'entrée à grande échelle, tranché par l'utilisateur le
   // 2026-09-27. Il LIT le registre partagé et fusionne ; il ne relance jamais les deux autres, et
   // ce n'est pas une paresse — refaire leur analyse serait le chevauchement que la frontière des
@@ -2288,6 +2311,149 @@ export function formatDivergenceLines(d) {
     L.push(`  🟠 ${e.nom} — ${Math.round(e.jours)} jours d'écart · le retardataire est ${e.enRetard}`);
     L.push(`      l'un des deux a été retouché et l'autre non : relire le plus récent et reporter ce qui doit l'être, ou déclarer que le changement ne concernait que ce côté-là`);
   }
+  return L;
+}
+
+
+// --- 9. LA COUVERTURE D'UNE COMMANDE -----------------------------------------------------------
+//
+// POURQUOI CETTE PARTIE EXISTE, ET C'EST SA PHRASE QUI L'A CRÉÉE (2026-09-28, tâche #1145) :
+// « j'ai l'impression que tu ne prends pas assez en compte mes consignes du document COMMANDE
+// IMPORTANTE, que tu ne fais pas les choses à 100%, assure-toi de gérer tout ça avec RIGUEUR. »
+//
+// LA SEULE RÉPONSE HONNÊTE À CETTE PHRASE N'EST PAS UNE PROMESSE, C'EST UN COMPTEUR. Une promesse
+// de rigueur est invérifiable — par lui comme par moi — et elle se redonne à l'identique le jour
+// où elle est fausse. Le soir même, la mesure a montré qu'il avait raison : sa commande dit
+// « philo » 14 fois, la vue globale 0 fois. Ce constat-là avait été produit par un script jetable,
+// donc irreproductible : exactement le défaut que la rigueur réclamée doit fermer.
+//
+// CHEZ ABRAHAM PLUTÔT QU'À CÔTÉ (Article 31) : il est l'outil maître des documents à règles, il
+// sait déjà découper un document en unités, extraire le vocabulaire significatif d'une unité et
+// dériver un seuil de terrain commun. Tout ce qui suit réutilise ces trois pièces ; rien n'est
+// réécrit.
+//
+// SA LIMITE EST DÉCLARÉE ET ELLE EST RÉELLE : il mesure un RECOUVREMENT DE VOCABULAIRE, jamais une
+// compréhension. Un document qui NOMME un sujet sans le traiter passera pour le couvrir — c'est la
+// même famille d'erreur que « mentionner n'est pas dépendre », payée plusieurs fois sur ce dépôt.
+// Il sert donc à trouver ce qui est ABSENT (un signal sûr : ce qu'aucun mot ne rejoint n'est
+// sûrement pas traité), jamais à certifier ce qui est présent.
+
+// CE QUI FAIT D'UNE LIGNE UNE DEMANDE, et pas du contexte. Sa commande alterne les deux en
+// permanence : une même puce peut poser une question, donner un ordre, ou seulement raconter.
+// Compter le contexte comme une demande gonflerait le dénominateur et rendrait la couverture
+// flatteusement basse ; l'ignorer raterait ses ordres les plus secs.
+export const MOTIFS_DE_DEMANDE = [
+  { cle: "etiquette", motif: /^\s*-?\s*(QUESTION|REMARQUE|OBJECTIF|ATTENDU|CONSIGNE|IMPORTANT|COMMANDE|RAPPEL|PRECISION|PRÉCISION)\b/i },
+  { cle: "interrogation", motif: /\?\s*$/ },
+  { cle: "obligation", motif: MOTIF_OBLIGATION_FR },
+  { cle: "imperatif", motif: /\b(donne|donnez|fais|faites|mets|mettez|trouve|assure|vérifie|verifie|propose|explique|aide|dis)[- ]?(moi|nous|toi)?\b/i },
+];
+
+export const MOTS_MINIMUM_POUR_MESURER = 4;
+
+export function unitesDeDemande(texte = "") {
+  const lignes = String(texte).split("\n");
+  const unites = [];
+  for (const [i, brute] of lignes.entries()) {
+    const ligne = brute.trim();
+    if (ligne.length < 30) continue;                       // trop court pour porter une demande
+    if (/^\|/.test(ligne) || /^#{1,6}\s/.test(ligne)) continue;  // tableaux et titres : de la structure
+    const signaux = MOTIFS_DE_DEMANDE.filter((m) => m.motif.test(ligne)).map((m) => m.cle);
+    if (!signaux.length) continue;
+    unites.push({ ligne: i + 1, texte: ligne, signaux, mots: motsSignificatifs(ligne) });
+  }
+  return unites;
+}
+
+// IL N'Y A PAS DE « POURCENTAGE DE COUVERTURE », ET C'EST UNE DÉCISION, PAS UN MANQUE.
+// Le premier jet en produisait un : il a rendu « 1 % des demandes couvertes », avec un seuil dérivé
+// à 95 %. Le chiffre était absurde dans les deux sens — deux longs textes français partagent
+// naturellement la moitié de leur vocabulaire, donc un seuil dérivé de cette médiane devient
+// inatteignable, et le même calcul sur une population plus lâche aurait rendu « 90 % couvert ».
+// UN CHIFFRE QUI BOUGE AVEC LA LONGUEUR DES DOCUMENTS PLUTÔT QU'AVEC LEUR CONTENU NE MESURE RIEN,
+// et publié sur la question « as-tu tout pris en compte ? » il serait exactement le satisfecit que
+// ce projet refuse.
+//
+// CE QUI SE MESURE VRAIMENT, ET QUI NE SE TRUQUE PAS : l'ÉCART d'une demande au LOT. Une demande
+// dont le vocabulaire est nettement moins repris que celui de ses voisines est une demande que
+// personne n'a écrite — et ce signal-là ne dépend ni de la longueur ni du style, seulement de la
+// comparaison des unités entre elles. L'outil rend donc un CLASSEMENT des demandes les moins
+// reprises, jamais une note.
+export const PART_DE_LA_MEDIANE_POUR_ETRE_ORPHELINE = 0.5;
+
+export function couvertureDeLaDemande({ demande = "", couvrants = {} } = {}) {
+  const unites = unitesDeDemande(demande);
+  if (!unites.length) {
+    return { mesurable: false, pourquoi: "aucune unité de demande reconnue dans ce document : ce zéro dit que le découpage n'a rien trouvé, jamais que tout est couvert" };
+  }
+  const vocabulaires = Object.fromEntries(Object.entries(couvrants).map(([c, t]) => [c, motsSignificatifs(t)]));
+  if (!Object.keys(vocabulaires).length) {
+    return { mesurable: false, pourquoi: "aucun document couvrant fourni : sans eux la question « est-ce pris en compte ? » n'a pas d'objet" };
+  }
+
+  // TROIS ÉTATS, JAMAIS DEUX — et le troisième est ce qui empêche ce compteur de mentir. Une unité
+  // dont le vocabulaire est trop maigre pour être comparée n'est ni reprise ni orpheline. La ranger
+  // dans l'un des deux camps fabriquerait un chiffre, et un chiffre fabriqué sur la rigueur est
+  // pire que pas de chiffre du tout.
+  const lignes = unites.map((u) => {
+    if (u.mots.size < MOTS_MINIMUM_POUR_MESURER) {
+      return { ...u, etat: "NON MESURABLE", meilleur: null, taux: null,
+        pourquoi: `${u.mots.size} mot(s) significatif(s) seulement : trop peu pour qu'un recouvrement veuille dire quoi que ce soit` };
+    }
+    let meilleur = null, taux = 0;
+    for (const [chemin, vocab] of Object.entries(vocabulaires)) {
+      const c = couvertureDuVocabulaire(u.mots, vocab);
+      if (c > taux) { taux = c; meilleur = chemin; }
+    }
+    return { ...u, meilleur, taux };
+  });
+
+  const mesurees = lignes.filter((l) => l.taux !== null);
+  if (mesurees.length < PAIRES_MINIMUM_POUR_UN_SEUIL) {
+    return { mesurable: false, unites: lignes.length,
+      pourquoi: `${mesurees.length} unité(s) mesurable(s) seulement : sous ${PAIRES_MINIMUM_POUR_UN_SEUIL}, comparer une demande au lot n'a pas de sens — il n'y a pas de lot` };
+  }
+  const tries = mesurees.map((l) => l.taux).sort((a, b) => a - b);
+  const mediane = tries.length % 2 ? tries[(tries.length - 1) / 2] : (tries[tries.length / 2 - 1] + tries[tries.length / 2]) / 2;
+  const plancher = mediane * PART_DE_LA_MEDIANE_POUR_ETRE_ORPHELINE;
+
+  for (const l of mesurees) {
+    l.etat = l.taux < plancher ? "ORPHELINE" : (l.taux < mediane ? "FAIBLE" : "REPRISE");
+    l.pourquoi = `${Math.round(l.taux * 100)} % de son vocabulaire se retrouve dans ${l.meilleur ?? "aucun document"} — le lot est à ${Math.round(mediane * 100)} %`;
+  }
+
+  const parEtat = {};
+  for (const l of lignes) (parEtat[l.etat] ??= []).push(l);
+  for (const g of Object.values(parEtat)) g.sort((a, b) => (a.taux ?? 0) - (b.taux ?? 0));
+  return {
+    mesurable: true, mediane, plancher, unites: lignes.length, lignes, parEtat,
+    mesurees: mesurees.length,
+    orphelines: (parEtat.ORPHELINE ?? []).length,
+    pourquoi: `${lignes.length} unité(s) de demande, ${mesurees.length} mesurable(s) · le lot se reprend à ${Math.round(mediane * 100)} %, une demande passe ORPHELINE sous ${Math.round(plancher * 100)} %`,
+  };
+}
+
+export function formatCouvertureLines(r, { limite = 15 } = {}) {
+  if (!r?.mesurable) return ["=== COUVERTURE DE LA COMMANDE : PAS MESURÉ ===", `  ${r?.pourquoi}`, "", "  Ce n'est PAS « tout est couvert »."];
+  const L = [`=== COUVERTURE DE LA COMMANDE — ${r.orphelines} demande(s) ORPHELINE(S) sur ${r.mesurees} mesurable(s) ===`, "", `  ${r.pourquoi}`, ""];
+  for (const etat of ["ORPHELINE", "FAIBLE", "REPRISE", "NON MESURABLE"]) {
+    const g = r.parEtat[etat] ?? [];
+    if (!g.length) continue;
+    const icone = { ORPHELINE: "🚨", FAIBLE: "🟠", REPRISE: "✅", "NON MESURABLE": "⚪" }[etat];
+    const combien = etat === "ORPHELINE" ? limite : 3;
+    L.push(`  ${icone} ${etat} — ${g.length}`);
+    for (const l of g.slice(0, combien)) {
+      L.push(`     ligne ${l.ligne} · ${l.texte.slice(0, 140)}${l.texte.length > 140 ? "…" : ""}`);
+      L.push(`        ${l.pourquoi}`);
+    }
+    if (g.length > combien) L.push(`     … et ${g.length - combien} autre(s)`);
+    L.push("");
+  }
+  L.push("  CE QUE CE CLASSEMENT DIT, ET CE QU'IL NE DIT PAS. Il compare les demandes ENTRE ELLES : une demande");
+  L.push("  ORPHELINE est nettement moins reprise que ses voisines, donc probablement jamais écrite nulle part.");
+  L.push("  C'est un signal SÛR sur l'absence. Une demande REPRISE ne prouve qu'une chose : quelqu'un a écrit sur");
+  L.push("  le même sujet — jamais qu'il l'a traitée. Il n'y a volontairement AUCUN pourcentage de couverture :");
+  L.push("  un tel chiffre bougerait avec la longueur des documents plutôt qu'avec leur contenu.");
   return L;
 }
 
