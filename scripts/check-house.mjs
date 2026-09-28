@@ -20488,3 +20488,44 @@ async function testHorodatagePerduDansLesObjectifs() {
   console.log("Passed: un horodatage perdu n'est pas une absence de passage — deuxième consommateur (2026-09-28, tâche #1096). LE COMPTEUR FAIT DÉJÀ LA BONNE CHOSE, et c'est ce qui rend l'oubli instructif : un événement dont l'heure n'a pas pu être lue est enregistré avec `horodatagePerdu: true` plutôt que jeté ou daté au hasard — l'Article 32 appliqué au compteur lui-même — et `findOutilsCitesSansPassage()` honore ce troisième état dans son propre champ. LE RAPPORT OBJECTIFS/RÉSULTATS, LUI, NE L'HONORAIT PAS. Son filtrage par période compare `e.at` à des bornes ; un `at` nul tombe hors de TOUTE borne, donc ces passages disparaissaient sans un mot. CAS RÉELS TROUVÉS : `rapport-gros-prompt` affichait « objectif 2, résultat 0 » en détenant DOUZE passages réels non datables, et `tool-learning` « 3, en dessous » en en détenant CINQUANTE-CINQ — son verdict change entièrement de sens. « Zéro fois » et « douze fois, à une date inconnue » ne se lisent pas du tout pareil. C'EST LA MÊME CLASSE QUE LA TÂCHE #1078, quelques heures plus tôt : un correctif appliqué à certains appelants et pas à tous, pendant que la doctrine est écrite noir sur blanc ailleurs. ON NE DEVINE PAS LA DATE MANQUANTE — on dit combien de passages elle empêche de compter. Et le contre-test verrouille l'autre sens : sans passage perdu, la phrase n'apparaît pas, parce que remplacer un silence par du bruit sur chaque ligne aurait été le remède pire que le mal.");
 }
 await testHorodatagePerduDansLesObjectifs();
+
+// ————————————————————————————————————————————————————————————————————————
+// L'ALERTE QUI AFFIRMAIT « DEPUIS DES SEMAINES » SANS LE MESURER (2026-09-28, tâche #1097)
+// ————————————————————————————————————————————————————————————————————————
+// Le palier le plus grave de la relance de Ronde disait : « une trentaine de vérifications
+// gratuites dorment depuis des SEMAINES ». Son seul déclencheur est un compte de COMMITS. Le
+// 2026-09-28 il l'a affirmé QUATRE HEURES après une Ronde réellement faite, au terme d'une journée
+// à trente et un commits. L'heure de la dernière Ronde était pourtant stockée depuis toujours par
+// recordCircleTasksRun() — et personne ne la lisait.
+async function testAlerteQuiAffirmaitSansMesurer() {
+  const C = await import('../scripts/circle-tasks.mjs');
+  const now = Date.parse('2026-09-28T14:45:00Z');
+
+  // ── 1. LE SEUIL EN COMMITS NE BOUGE PAS. Trente commits sans Ronde méritent l'alerte quelle que
+  // soit l'heure : ce sont trente occasions où une vérification aurait pu trouver quelque chose.
+  const recent = C.relanceCircleTasks(31, { lastRunAt: Date.parse('2026-09-28T10:12:00Z'), now });
+  assert.equal(recent.palier, 'alerte', 'the commit threshold still fires — what changes is what the alert SAYS, never when it speaks');
+
+  // ── 2. ET ELLE DIT LE VRAI TEMPS, court comme long.
+  assert.match(C.relanceMessage(recent), /depuis 5 h/, 'four hours after a real Ronde, the alert must say hours — not "weeks"');
+  assert.ok(!/semaines/.test(C.relanceMessage(recent)), 'and must no longer assert a duration it never measured');
+  const vieux = C.relanceCircleTasks(31, { lastRunAt: Date.parse('2026-09-10T10:00:00Z'), now });
+  assert.match(C.relanceMessage(vieux), /depuis 18 jour/, 'and a genuinely old Ronde must read as genuinely old — the fix must not blunt the real case');
+
+  // ── 3. SANS HEURE, ELLE SE TAIT LÀ-DESSUS plutôt que d'inventer (L5/L11, Article 32).
+  const sans = C.relanceCircleTasks(31, { now });
+  assert.match(C.relanceMessage(sans), /un temps que ce compteur ne mesure pas/, 'with no stored hour it must say so, never fall back on a plausible-sounding duration');
+
+  // ── 4. LES PALIERS BAS SONT INTACTS (BP4) : on n'a pas touché ce qui marchait.
+  assert.equal(C.relanceCircleTasks(3, { now }).palier, null, 'below the first threshold, still nothing');
+  assert.equal(C.relanceCircleTasks(10, { now }).palier, 'rappel');
+  assert.equal(C.relanceCircleTasks(20, { now }).palier, 'proposition');
+  assert.equal(C.relanceCircleTasks(NaN, { now }).mesurable, false, 'and an unmeasurable count is still a NON-measure, never a delay of zero');
+
+  // ── 5. LE PALIER DÉCLARÉ NE PROMET PLUS CE QU'IL NE SAIT PAS. Le texte du registre est lu par
+  // l'agent autant que le message : le laisser mentir aurait déplacé le problème d'un cran.
+  assert.ok(!C.RELANCE_PALIERS.some((p) => /semaines/.test(p.quoi)), 'the declared tier must not promise "weeks" either — moving a false claim into the registry is not fixing it');
+
+  console.log("Passed: l'alerte qui affirmait « depuis des semaines » sans le mesurer (2026-09-28, tâche #1097). Le palier le plus grave de la relance de Ronde disait : « une trentaine de vérifications gratuites dorment depuis des SEMAINES ». Son seul déclencheur est un compte de COMMITS. Le 2026-09-28 il l'a affirmé QUATRE HEURES après une Ronde réellement faite, au terme d'une journée à trente et un commits — et l'heure de la dernière Ronde était pourtant stockée depuis toujours par recordCircleTasksRun(), simplement jamais lue. C'EST ENCORE LA MÊME FAMILLE — un signal ADJACENT (le nombre de commits) présenté comme le signal visé (le temps écoulé) — et c'est la troisième de la journée dont la donnée juste existait déjà à côté. CE QUI NE CHANGE PAS, ET C'EST DÉLIBÉRÉ : le seuil reste en COMMITS. Trente commits sans Ronde méritent l'alerte quelle que soit l'heure, parce que ce sont trente occasions où une vérification aurait pu trouver quelque chose. Ce qui change est ce que l'alerte DIT d'elle-même. POURQUOI ÇA COMPTE PLUS QU'UNE FORMULATION : un garde-fou dont le palier le plus grave affirme une chose fausse LE JOUR OÙ IL SE DÉCLENCHE apprend à être ignoré tous les autres jours (L4) — et celui-ci est le dernier rempart avant qu'une trentaine de vérifications gratuites ne dorment pour de bon. LE PALIER DÉCLARÉ A ÉTÉ CORRIGÉ AUSSI : laisser la promesse fausse dans le registre pendant qu'on la retire du message aurait déplacé le problème d'un cran, là où l'agent le lit tout autant. Et sans heure stockée, l'alerte se tait là-dessus plutôt que d'inventer une durée plausible.");
+}
+await testAlerteQuiAffirmaitSansMesurer();

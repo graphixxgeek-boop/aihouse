@@ -448,7 +448,9 @@ try {
   const commitsSinceLastRun = Number.isFinite(totalCommitCount) ? totalCommitCount - (lastRun.lastRunCommitCount ?? 0) : NaN;
   // RELANCE À PALIERS (2026-09-22) — remplace le rappel unique, que j'ai ignoré quatorze fois de
   // suite. Un message qu'on peut lire sans rien faire n'est pas un mécanisme.
-  const msg = relanceMessage(relanceCircleTasks(commitsSinceLastRun));
+  // `lastRunAt` est passé depuis 2026-09-28 (tâche #1097) : l'heure de la dernière Ronde était
+  // stockée et jamais lue, si bien que l'alerte affirmait « depuis des semaines » sans le savoir.
+  const msg = relanceMessage(relanceCircleTasks(commitsSinceLastRun, { lastRunAt: lastRun.lastRunAt ?? null }));
   if (msg) console.log(`${msg}\n`);
 } catch { /* best-effort, jamais bloquant */ }
 

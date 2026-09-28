@@ -66,3 +66,35 @@ item coûteux de plus demain est reconnu sans qu'on y pense (Article 24).
 déjà le mode autonome sans condition, et ils se déclenchent simplement parce qu'un lancement en
 ligne de commande ne DÉCLARE pas ce mode — des faits de conversation, qui « se réparent en
 déclarant, pas en corrigeant le process », comme le contrôleur de process le dit lui-même.
+
+## L'alerte qui affirmait « depuis des semaines » sans le mesurer (2026-09-28, tâche #1097)
+
+**Le palier le plus grave de la relance de Ronde disait** : « une trentaine de vérifications
+gratuites dorment **depuis des semaines** ». Son seul déclencheur est un compte de **commits**.
+
+**Le 2026-09-28, il l'a affirmé QUATRE HEURES après une Ronde réellement faite**, au terme d'une
+journée à trente et un commits. L'heure de la dernière Ronde était pourtant stockée depuis toujours
+par `recordCircleTasksRun()` (`lastRunAt`) — simplement **jamais lue**.
+
+**C'est la même famille que les deux trouvailles précédentes du jour** : un signal **adjacent** (le
+nombre de commits) présenté comme le signal visé (le temps écoulé), avec la donnée juste disponible
+juste à côté.
+
+**Ce qui ne change pas, et c'est délibéré** : le seuil reste en **commits**. Trente commits sans
+Ronde méritent l'alerte quelle que soit l'heure — ce sont trente occasions où une vérification
+aurait pu trouver quelque chose. Ce qui change est ce que l'alerte **dit d'elle-même** :
+
+| Situation | Ce qu'elle dit maintenant |
+|---|---|
+| Ronde faite il y a 4 h | « 31 commits sans Ronde, **depuis 5 h** » |
+| Ronde faite il y a 18 jours | « 31 commits sans Ronde, **depuis 18 jour(s)** » |
+| Aucune heure stockée | « **depuis un temps que ce compteur ne mesure pas** » |
+
+**Pourquoi ça compte plus qu'une formulation** : un garde-fou dont le palier le plus grave affirme
+une chose fausse **le jour où il se déclenche** apprend à être ignoré tous les autres jours (L4) —
+et celui-ci est le dernier rempart avant qu'une trentaine de vérifications gratuites ne dorment pour
+de bon.
+
+**Le palier déclaré a été corrigé aussi** : laisser la promesse fausse dans `RELANCE_PALIERS`
+pendant qu'on la retire du message aurait déplacé le problème d'un cran, là où l'agent le lit tout
+autant. Le filet vérifie les deux.

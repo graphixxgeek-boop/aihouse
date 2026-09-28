@@ -1495,17 +1495,40 @@ export function shouldRemindCircleTasks(commitsSinceLastRun) {
 export const RELANCE_PALIERS = [
   { seuil: 8, palier: "rappel", quoi: "mention discrète en bas du compte rendu de commit" },
   { seuil: 15, palier: "proposition", quoi: "proposition explicite à l'utilisateur, avec le retard chiffré — jamais une simple mention qu'on peut survoler" },
-  { seuil: 30, palier: "alerte", quoi: "le retard devient un constat en soi : à ce stade, des vérifications gratuites dorment depuis des semaines et personne ne sait ce qu'elles auraient trouvé" },
+  { seuil: 30, palier: "alerte", quoi: "le retard devient un constat en soi : à ce stade, une trentaine de commits sont passés sans qu'aucune vérification gratuite les regarde, et personne ne sait ce qu'elles auraient trouvé" },
 ];
 
-export function relanceCircleTasks(commitsSinceLastRun, { paliers = RELANCE_PALIERS } = {}) {
+// `lastRunAt` (2026-09-28, tâche #1097) : l'HEURE de la dernière Ronde était déjà stockée par
+// recordCircleTasksRun() et n'était lue par personne. Le palier le plus grave affirmait pourtant
+// « des vérifications gratuites dorment depuis des SEMAINES » sur la seule foi d'un compte de
+// COMMITS — et le 2026-09-28 il l'a affirmé quatre heures après une Ronde réellement faite, au
+// terme d'une journée à trente et un commits.
+//
+// LE SEUIL EN COMMITS RESTE LE BON DÉCLENCHEUR, et il ne bouge pas : trente commits sans Ronde
+// méritent une alerte quelle que soit l'heure, parce que ce sont trente occasions où une
+// vérification aurait pu trouver quelque chose. Ce qui change est ce que l'alerte DIT : elle ne
+// prétend plus connaître un temps écoulé qu'elle ne mesurait pas. Quand l'heure est disponible,
+// elle la donne ; quand elle ne l'est pas, elle se tait là-dessus.
+//
+// Un garde-fou dont le palier le plus grave affirme une chose fausse le jour où il se déclenche
+// apprend à être ignoré les autres jours (L4) — et celui-ci est le dernier rempart avant qu'une
+// trentaine de vérifications gratuites ne dorment pour de bon.
+export function relanceCircleTasks(commitsSinceLastRun, { paliers = RELANCE_PALIERS, lastRunAt = null, now = Date.now() } = {}) {
   // Un compte non mesurable n'est PAS un retard de zéro : c'est une absence de mesure, et la
   // confondre avec « tout va bien » serait la faute que ce paysage passe son temps à corriger.
   if (!Number.isFinite(commitsSinceLastRun)) return { mesurable: false, raison: "nombre de commits depuis la dernière Ronde non mesurable — ni un retard, ni une absence de retard" };
+  const heures = Number.isFinite(lastRunAt) && lastRunAt > 0 ? Math.max(0, (now - lastRunAt) / 3_600_000) : null;
   const atteints = paliers.filter((p) => commitsSinceLastRun >= p.seuil);
-  if (!atteints.length) return { mesurable: true, palier: null, commits: commitsSinceLastRun };
+  if (!atteints.length) return { mesurable: true, palier: null, commits: commitsSinceLastRun, heuresDepuis: heures };
   const courant = atteints.at(-1);
-  return { mesurable: true, palier: courant.palier, seuil: courant.seuil, commits: commitsSinceLastRun, quoi: courant.quoi };
+  return { mesurable: true, palier: courant.palier, seuil: courant.seuil, commits: commitsSinceLastRun, quoi: courant.quoi, heuresDepuis: heures };
+}
+
+// depuisQuand() — la phrase qui accompagne le compte, et qui n'affirme que ce qui est mesuré.
+export function depuisQuand(heures) {
+  if (heures === null || heures === undefined) return "depuis un temps que ce compteur ne mesure pas";
+  if (heures < 24) return `depuis ${Math.round(heures)} h`;
+  return `depuis ${Math.round(heures / 24)} jour(s)`;
 }
 
 export function relanceMessage(relance) {
@@ -1513,7 +1536,7 @@ export function relanceMessage(relance) {
   if (!relance.palier) return null;
   if (relance.palier === "rappel") return `🔄 ${relance.commits} commits sans Ronde périodique (CIRCLE-TASKS) — envisage de la relancer.`;
   if (relance.palier === "proposition") return `🔄 ${relance.commits} commits sans Ronde — au-delà de ${relance.seuil}, ce n'est plus un rappel : je te PROPOSE de la lancer maintenant (node scripts/circle-tasks.mjs). Le rappel discret n'a rien changé pendant ${relance.commits - RELANCE_PALIERS[0].seuil} commits.`;
-  return `🚨 ${relance.commits} commits sans Ronde. À ce stade ce n'est plus un retard, c'est un constat : une trentaine de vérifications gratuites dorment depuis des semaines, et personne ne sait ce qu'elles auraient trouvé entre-temps.`;
+  return `🚨 ${relance.commits} commits sans Ronde, ${depuisQuand(relance.heuresDepuis)}. À ce stade ce n'est plus un retard, c'est un constat : une trentaine de vérifications gratuites n'ont rien vu passer de ces ${relance.commits} commits, et personne ne sait ce qu'elles auraient trouvé entre-temps.`;
 }
 
 // À appeler explicitement par l'agent une fois une vraie ronde effectuée (au moins un item traité),
