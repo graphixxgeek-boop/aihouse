@@ -20863,3 +20863,68 @@ async function testJesusLeSauveur() {
   console.log("Passed: JESUS-LE-SAUVEUR, ce qui freine le projet, causes indirectes comprises (2026-09-28, tâche #1103). Sa demande : « un agent dédié à s'assurer que le projet avance toujours à bon rythme, sans être freiné par des lourdeurs », puis « surtout, il voit les causes INDIRECTES, INATTENDUES ». LA RECHERCHE EXTÉRIEURE A CHANGÉ SA CONCEPTION AVANT LA PREMIÈRE LIGNE, et sans elle cet outil aurait mesuré des durées de TRAVAIL — l'erreur exacte que la littérature documente : dans une chaîne de livraison, la part réellement travaillée tourne autour de 15 %, tout le reste est de l'ATTENTE, et passer de 15 à 30 % divise le délai par deux. D'où la sonde centrale, la seule du projet qui mesure une durée d'ATTENTE : depuis combien de temps chaque décision attend une réponse. DEUX DÉFAUTS PAYÉS AUX DEUX PREMIERS PASSAGES RÉELS, et les deux sont gardés en contre-tests. PREMIER : une liste de « remèdes connus » écrite à la main a rendu « les 3 remèdes sont sollicités » sur un cas dont je savais qu'il était faux — filet-en-parts affichait 33 passages, donc « utilisé », alors que 30 d'entre eux tombaient pendant sa propre construction la veille. Le compte cumulé masquait tout. La sonde est devenue DÉRIVÉE : « quelle part de l'usage d'un outil tient à son seul jour de naissance ? » — un calcul qui couvre les soixante-dix outils au lieu des trois auxquels j'avais pensé (Article 24). SECOND : ainsi corrigée, elle accusait cinq outils NÉS LA VEILLE de n'avoir plus resservi — pour eux le jour un EST aujourd'hui, donc 100 % de leur usage y tombe par construction. Vrai arithmétiquement, faux réellement : la définition même du faux positif que la leçon L4 interdit, et il criait d'autant plus fort que le projet construisait bien. D'où la condition d'OPPORTUNITÉ, posée avant le ratio et jamais après : un outil de moins de trois jours est NON JUGEABLE, jamais « sain », et le rapport dit son dénominateur en trois parts. CE QU'IL A TROUVÉ À SON PREMIER VRAI PASSAGE : la mesure de temps sur laquelle on s'appuyait annonçait 65 s alors que le filet en met 95, et 58 commits l'avaient périmée sans que rien ne le dise. La vue 360 vit à part parce qu'additionner des verdicts ne les croise pas : une cause indirecte naît de la RENCONTRE de deux mesures dont aucune n'alerte seule.");
 }
 await testJesusLeSauveur();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE TROU DE COUVERTURE DOCUMENTAIRE (2026-09-28, tâche #1104)
+// ————————————————————————————————————————————————————————————————————————
+// IL L'A TROUVÉ EN POSANT UNE AUTRE QUESTION, et c'est le plus gros trou de la journée. Il
+// s'interrogeait sur trois dossiers lourds, et il a vu plus loin que sa propre question : « si
+// Abraham s'arrête aux docs de référence AVEC RÈGLE, qui gère LES AUTRES DOCS ? équipe Abraham si
+// besoin. » Mesuré le jour même : 396 documents sur 482 — 82 % — n'appartenaient au périmètre de
+// PERSONNE, ni Abraham, ni MOÏSE, ni Ezechiel, ni JESUS. C'est la forme de trou la plus difficile à
+// voir, parce que chaque maillon avait raison de ne pas s'en occuper.
+async function testTrouDeCouvertureDocumentaire() {
+  const A = await import('../scripts/abraham-les-references.mjs');
+
+  // LA FRONTIÈRE ENTRE LES DEUX CAPACITÉS SE LIT SUR LE DOCUMENT LUI-MÊME, jamais sur son dossier :
+  // un document porte des règles numérotées ou n'en porte pas, et c'est un fait sur son texte.
+  assert.equal(A.porteDesReglesNumerotees('**Article 12 — quelque chose.**'), true, 'un Article numéroté est reconnu');
+  assert.equal(A.porteDesReglesNumerotees('### 3.2 Une section'), true, 'une section numérotée aussi');
+  assert.equal(A.porteDesReglesNumerotees('# Un titre\n\ndu texte ordinaire'), false, 'et un document ordinaire ne l\'est pas — c\'est lui qui relève de l\'hygiène');
+
+  // UNE ABSENCE EST UN RÉSULTAT (leçons L5/L11). Sur un dépôt sans docs/, la sonde le DÉCLARE.
+  const vide = A.hygieneDocumentaire({ lireDir: () => { throw new Error('ENOENT'); } });
+  assert.equal(vide.mesurable, false, 'sans dossier de documents, PAS MESURÉ et jamais « zéro orphelin »');
+  assert.ok(/RÉSULTAT/.test(vide.pourquoi), 'et la raison dit que c\'est un résultat, pas un silence qui vaudrait feu vert');
+
+  // ELLE TROUVE UN ORPHELIN, et c'est le cœur du signal : un document que RIEN ne cite existe,
+  // coûte à maintenir, et personne ne peut le trouver.
+  const faux = {
+    'docs': [{ name: 'orphelin.md', isDirectory: () => false }, { name: 'cite.md', isDirectory: () => false }],
+    'scripts': [{ name: 'un-outil.mjs', isDirectory: () => false }],
+  };
+  const textes = {
+    'docs/orphelin.md': '# personne ne me nomme',
+    'docs/cite.md': '# moi si',
+    'scripts/un-outil.mjs': 'lit docs/cite.md',
+  };
+  const h = A.hygieneDocumentaire({ lireDir: (d) => faux[d] ?? [], lireFic: (f) => textes[f] ?? '' });
+  assert.equal(h.mesurable, true, 'elle tourne sur un corpus fabriqué');
+  assert.deepEqual(h.orphelins, ['docs/orphelin.md'], 'seul le document que RIEN ne cite ressort — celui qu\'un script nomme est atteignable, donc hors sujet');
+  // UN FICHIER NE SE CITE PAS LUI-MÊME : sans cette exclusion, tout document écrivant son propre
+  // nom en tête passerait pour atteignable, et la sonde ne trouverait jamais rien.
+  const narcisse = A.hygieneDocumentaire({
+    lireDir: (d) => (d === 'docs' ? [{ name: 'moi.md', isDirectory: () => false }] : []),
+    lireFic: () => '# docs/moi.md — je me nomme moi-même',
+  });
+  assert.deepEqual(narcisse.orphelins, ['docs/moi.md'], 'MUST NOT SELF-SATISFY: un document qui écrit son propre chemin reste orphelin');
+
+  // LES DOCUMENTS À RÈGLES SONT COMPTÉS À PART, jamais mélangés : ils relèvent de l'autre capacité,
+  // et les additionner rendrait le chiffre de l'hygiène incompréhensible.
+  const melange = A.hygieneDocumentaire({
+    lireDir: (d) => (d === 'docs' ? [{ name: 'regle.md', isDirectory: () => false }, { name: 'plat.md', isDirectory: () => false }] : []),
+    lireFic: (f) => (f === 'docs/regle.md' ? '**Article 1 — x.**' : '# rien'),
+  });
+  assert.equal(melange.avecRegles, 1, 'le document à règles est compté séparément');
+  assert.equal(melange.sansRegles, 1, 'et le dénominateur de l\'hygiène ne porte que sur les autres');
+
+  // ET ELLE TOURNE CONTRE LE VRAI DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre le
+  // vrai dépôt n'est pas un outil, c'est une intention.
+  const reel = A.hygieneDocumentaire();
+  assert.equal(reel.mesurable, true, 'sur ce dépôt, elle mesure pour de vrai');
+  assert.ok(reel.documents > 400, `et elle lit tous les documents (${reel.documents} aujourd'hui)`);
+  assert.ok(reel.avecRegles > 50 && reel.sansRegles > 300, 'les deux populations sont réelles et très déséquilibrées — c\'est exactement le trou : la grande majorité des documents n\'ont aucune règle numérotée');
+
+  console.log("Passed: le trou de couverture documentaire (2026-09-28, tâche #1104). IL L'A TROUVÉ EN POSANT UNE AUTRE QUESTION, et c'est le plus gros trou de la journée : il s'interrogeait sur trois dossiers lourds et a vu plus loin que sa propre question — « si Abraham s'arrête aux docs de référence AVEC RÈGLE, qui gère LES AUTRES DOCS ? équipe Abraham si besoin ». MESURÉ LE JOUR MÊME : 396 documents sur 482, soit 82 %, n'appartenaient au périmètre de PERSONNE — ni Abraham (documents à règles), ni MOÏSE (la charte), ni Ezechiel (le filet), ni JESUS (tout ce qui est hors documents). C'est la forme de trou la plus difficile à voir, parce que CHAQUE MAILLON AVAIT RAISON de ne pas s'en occuper : la frontière entre les quatre était juste, c'est la COUVERTURE de l'un d'eux qui était courte. LA RÉPONSE EST D'ÉLARGIR UNE CAPACITÉ, JAMAIS D'AJOUTER UN CINQUIÈME MAILLON — un maillon de plus aurait redécoupé une frontière qui ne posait pas de problème. Abraham couvre désormais TOUS les documents, avec deux capacités distinctes : l'analyse profonde pour ceux qui portent des règles, l'hygiène pour les autres. LE SIGNAL CHOISI EST LE PLUS DUR À CONTESTER : un document que RIEN ne cite — ni index, ni autre document, ni code. Il existe, il coûte à maintenir, et personne ne peut le trouver, ce qui revient à payer un document pour qu'il n'existe pas. PREMIER PASSAGE RÉEL : 34 orphelins, et presque tous des BLUEPRINTS — écrits parce que la règle du 2026-09-26 les rend obligatoires pour tout outil, puis jamais reliés à rien. La règle a produit les fichiers ; rien n'a produit leur chemin d'accès. ELLE NE DOUBLE PAS l'item de Ronde sur les index, et la frontière est nette : celui-là vérifie qu'un INDEX tient son contrat, celle-ci demande si un fichier est atteignable depuis N'IMPORTE OÙ — un document peut être absent d'un index et parfaitement cité ailleurs, et l'inverse aussi. Et un fichier ne se cite jamais lui-même, sans quoi tout document écrivant son propre nom en tête passerait pour atteignable.");
+}
+await testTrouDeCouvertureDocumentaire();

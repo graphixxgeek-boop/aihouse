@@ -634,8 +634,13 @@ export const CASCADE = [
     perimetre: "tout ce qui est HORS documents : le rythme, les obligations, l'attention, l'attente",
     seulALeVoir: "le coût d'une règle en temps réel, et le fait qu'un outil censé la porter ne sert plus" },
   { rang: 2, qui: "ABRAHAM-LES-REFERENCES", script: "scripts/abraham-les-references.mjs", niveau: "standard",
-    perimetre: "tout document à règles numérotées, et le chapeau des DOCUMENTS",
-    seulALeVoir: "un renvoi mort, une règle sans porteur réel, deux documents qui se recouvrent" },
+    // SON PÉRIMÈTRE A ÉTÉ ÉLARGI LE 2026-09-28 (tâche #1104), sur un trou qu'il a vu en posant une
+    // autre question : « si Abraham s'arrête aux docs de référence AVEC RÈGLE, qui gère LES AUTRES
+    // DOCS ? ». Réponse mesurée : PERSONNE — 396 documents sur 482, soit 82 %, tombaient entre les
+    // mailles de la cascade. On élargit une capacité plutôt que d'ajouter un cinquième maillon :
+    // la frontière entre les quatre était juste, c'est la COUVERTURE d'un maillon qui était courte.
+    perimetre: "TOUS les documents — analyse profonde de ceux qui portent des règles, hygiène pour les autres — et le chapeau des DOCUMENTS",
+    seulALeVoir: "un renvoi mort, une règle sans porteur réel, deux documents qui se recouvrent, et un document que RIEN ne cite" },
   { rang: 3, qui: "MOÏSE-TABLES-DE-LOI", script: "scripts/moise-tables-de-loi.mjs", niveau: "standard",
     perimetre: "la charte seule",
     seulALeVoir: "un Article disparu, renuméroté, inséré au milieu, ou vidé de ses obligations" },

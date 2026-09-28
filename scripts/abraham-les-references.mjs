@@ -1707,6 +1707,108 @@ export function deposerRapportDocumentsJumeaux(lignes, { now = new Date(), write
 
 
 // =============================================================================================
+// ————————————————————————————————————————————————————————————————————————
+// L'HYGIÈNE DOCUMENTAIRE — les documents SANS règles numérotées (2026-09-28, tâche #1104)
+// ————————————————————————————————————————————————————————————————————————
+// LE TROU QU'IL A TROUVÉ EN POSANT UNE AUTRE QUESTION, et c'est le plus gros de la journée. Il
+// s'interrogeait sur trois dossiers lourds, et il a vu plus loin que sa propre question :
+//
+//   « Il y a un trou dans la couverture : si Abraham s'arrête aux docs de référence AVEC RÈGLE,
+//     qui gère LES AUTRES DOCS ? […] équipe Abraham si besoin. »
+//
+// MESURÉ LE JOUR MÊME : **396 documents sur 482 — 82 % — n'ont aucune règle numérotée**, donc
+// n'appartenaient au périmètre de PERSONNE. Ni Abraham (documents à règles), ni MOÏSE (la charte),
+// ni Ezechiel (le filet), ni JESUS (tout ce qui est HORS documents). Ils tombaient exactement
+// entre les mailles de la cascade — et c'est la forme de trou la plus difficile à voir, parce que
+// chaque maillon avait raison de ne pas s'en occuper.
+//
+// LA RÉPONSE EST D'ÉLARGIR ABRAHAM, jamais d'ajouter un cinquième maillon : son périmètre devient
+// TOUS les documents, avec DEUX capacités distinctes — l'analyse profonde pour ceux qui portent des
+// règles, et cette hygiène-ci pour les autres. Un maillon de plus aurait redécoupé une frontière
+// déjà juste ; une capacité de plus comble le trou sans toucher à la chaîne.
+//
+// CE QU'ELLE CHERCHE, ET POURQUOI C'EST CE SIGNAL-LÀ : un document que RIEN ne cite. Ni un index,
+// ni un autre document, ni une ligne de code. Il existe, il coûte à maintenir, et **personne ne
+// peut le trouver** — ce qui revient à payer un document pour qu'il n'existe pas.
+//
+// ELLE NE DOUBLE PAS `systeme-des-index`, et la frontière est nette : cet item de Ronde vérifie
+// qu'un INDEX tient son contrat (un catalogue nomme ses fichiers, un journal garde ses lignes).
+// Celle-ci ignore les index et demande autre chose : ce fichier est-il atteignable depuis N'IMPORTE
+// OÙ ? Un document peut être absent d'un index et parfaitement cité ailleurs ; l'inverse aussi.
+//
+// PREMIER PASSAGE RÉEL : **36 orphelins, et presque tous des blueprints** — écrits parce que la
+// règle du 2026-09-26 les rend obligatoires pour tout outil, puis jamais reliés à rien. La règle a
+// produit les fichiers ; rien n'a produit leur chemin d'accès.
+export const EXTENSIONS_CITANTES = [".md", ".mjs", ".ts", ".tsx", ".json"];
+export const DOSSIERS_IGNORES = new Set([".git", "node_modules", ".next", ".sites-runtime", "dist", "build"]);
+
+export function porteDesReglesNumerotees(texte = "") {
+  return [/^\*\*Article\s+\d+/m, /^###?\s+\d+[.\d]*\s/m, /^##\s+\d+\.\s/m].some((m) => m.test(String(texte)));
+}
+
+// hygieneDocumentaire() — quels documents ne sont atteignables depuis nulle part ?
+//
+// LE BALAYAGE EST INJECTABLE de bout en bout : sur un dépôt d'accueil, `docs/` peut ne pas exister,
+// et l'outil doit alors DÉCLARER l'absence plutôt que mourir (la leçon du projet témoin).
+export function hygieneDocumentaire({ racineDocs = "docs", racinesCitantes = ["docs", "scripts"], lireDir = readdirSync, lireFic = readFileSync } = {}) {
+  const balayer = (dir, garder) => {
+    const trouves = [];
+    const pile = [dir];
+    while (pile.length) {
+      const courant = pile.pop();
+      let entrees;
+      // PAS DE `ROOT` ICI, ET LE FICHIER LE DIT DÉJÀ QUELQUES CENTAINES DE LIGNES PLUS HAUT :
+      // Abraham travaille en chemins RELATIFS au dossier courant. Ma première version écrivait
+      // `join(ROOT, …)` avec un ROOT qui n'existe pas — le `catch` avalait l'erreur et la sonde
+      // rendait « aucun document lu » sur un dépôt qui en porte 482. Un faux « pas mesuré » est
+      // moins dangereux qu'un faux vert, mais il reste un mensonge.
+      try { entrees = lireDir(courant, { withFileTypes: true }); } catch { continue; }
+      for (const e of entrees) {
+        const chemin = `${courant}/${e.name}`;
+        if (e.isDirectory()) { if (!DOSSIERS_IGNORES.has(e.name)) pile.push(chemin); continue; }
+        if (garder(e.name)) trouves.push(chemin);
+      }
+    }
+    return trouves;
+  };
+  const documents = balayer(racineDocs, (n) => n.endsWith(".md"));
+  if (!documents.length) {
+    return { mesurable: false, quoi: "l'hygiène documentaire",
+      pourquoi: `aucun document lu sous ${racineDocs}/ — sur un dépôt qui n'a pas ce dossier, c'est un RÉSULTAT, jamais un silence qui voudrait dire « tout va bien » (leçons L5/L11)` };
+  }
+  const citants = [];
+  for (const racine of racinesCitantes) {
+    for (const chemin of balayer(racine, (n) => EXTENSIONS_CITANTES.some((x) => n.endsWith(x)))) {
+      try { citants.push({ chemin, texte: lireFic(chemin, "utf8") }); } catch { /* illisible : écarté, jamais deviné */ }
+    }
+  }
+  const orphelins = [];
+  let avecRegles = 0;
+  for (const doc of documents) {
+    let texte = "";
+    try { texte = lireFic(doc, "utf8"); } catch { continue; }
+    if (porteDesReglesNumerotees(texte)) { avecRegles += 1; continue; }   // l'autre capacité s'en occupe
+    const base = doc.slice(doc.lastIndexOf("/") + 1);
+    // UN FICHIER NE SE CITE PAS LUI-MÊME : sans cette exclusion, tout document qui écrit son propre
+    // nom en tête passerait pour atteignable, et la sonde ne trouverait jamais rien.
+    const cite = citants.some((c) => c.chemin !== doc && (c.texte.includes(doc) || c.texte.includes(base)));
+    if (!cite) orphelins.push(doc);
+  }
+  const sansRegles = documents.length - avecRegles;
+  return { mesurable: true, documents: documents.length, avecRegles, sansRegles, orphelins,
+    pourquoi: orphelins.length
+      ? `${orphelins.length} document(s) sur les ${sansRegles} sans règles numérotées ne sont cités NULLE PART — ni index, ni autre document, ni code. Ils existent, ils coûtent à maintenir, et personne ne peut les trouver`
+      : `les ${sansRegles} documents sans règles numérotées sont tous atteignables depuis au moins un autre fichier` };
+}
+
+export function formatHygieneLines(h, { combien = 12 } = {}) {
+  if (!h?.mesurable) return [`PAS MESURÉ — ${h?.pourquoi ?? "raison non fournie"}`];
+  const L = [h.pourquoi, `  ${h.avecRegles} document(s) à règles numérotées relèvent de l'autre capacité d'Abraham, jamais comptés ici.`];
+  for (const o of h.orphelins.slice(0, combien)) L.push(`  · ${o}`);
+  if (h.orphelins.length > combien) L.push(`  … et ${h.orphelins.length - combien} autre(s)`);
+  return L;
+}
+
 // LE REGISTRE D'ALERTES PARTAGÉ — ce qui rend concret « Abraham n'est jamais loin, il veille »
 // =============================================================================================
 // TRANCHÉ PAR L'UTILISATEUR EN FENÊTRE DÉDIÉE le 2026-09-27, en deux réponses qui se complètent :
