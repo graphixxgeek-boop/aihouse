@@ -144,6 +144,12 @@ export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOUR
 // remise HTML actée). scriptPath : le script producteur, pour vérifier la décision "delivery_html"
 // (null quand aucun script unique ne produit ce registre, ex. les archives manuelles de simulation).
 export const REGISTRIES = [
+  // check-spirit a produit son PREMIER passage archivé le 2026-09-28 (tâche #810) : jusque-là il
+  // affichait ses réponses à l'écran sans rien déposer, donc il n'avait pas de registre — et n'en
+  // avait pas besoin. Un transcript de vraies répliques du modèle, lui, ne se rejoue pas : il se
+  // garde, parce que c'est la seule trace de ce que les personnages ont RÉELLEMENT dit un jour
+  // donné, et que l'Article 0 se juge dessus. Famille Tarantino : c'est la qualité narrative.
+  { slug: "check-spirit", label: "check-spirit", family: "(f) 🎬 La Suite Tarantino - Simulation & qualité narrative", path: "docs/check-spirit/", decision: "texte", scriptPath: "scripts/check-spirit.mjs" },
   { slug: "argus", label: "ARGUS", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/argus/", decision: "texte", scriptPath: "scripts/check-argus.mjs" },
   { slug: "harmonia", label: "HARMONIA", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/harmonia/", decision: "texte", scriptPath: "scripts/check-harmonia.mjs" },
   { slug: "axa-check", label: "AXA-CHECK", family: "(f) 🛡️ Les Gardiens Sacrés du Code", path: "docs/axa-check/", decision: "texte", scriptPath: "scripts/axa-check.mjs" },
