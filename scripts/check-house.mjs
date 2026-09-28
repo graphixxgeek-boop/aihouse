@@ -19904,3 +19904,39 @@ await testCelluleBruteAuLieuDuNomPropre();
 
   console.log("Passed: la règle du nom propre vit à un seul endroit (2026-09-28, tâche #1077, suite). Le correctif de la tâche ferme le cas trouvé ; celui-ci ferme sa REPRODUCTION, et c'est la vraie leçon de la journée. Le découpage `split(/[/(]/)[0].trim()` était recopié À L'IDENTIQUE dans CINQ endroits — tool-brain ×2, doc-report, cassandra-rh ×2 — en plus de `primaryToolName()` qui le porte. Cinq copies d'une règle, c'est cinq endroits où un sixième appelant peut l'oublier, et c'est très exactement ce qui est arrivé à `badgeWarningsForOutils()` : la règle existait, elle était écrite cinq fois, et un appelant sur trois ne l'appliquait pas pendant qu'un commentaire certifiait le contraire. Les cinq passent désormais par la fonction, et ce garde-fou refuse qu'une sixième copie réapparaisse (Article 24 : une règle se DÉRIVE, elle ne se recopie pas). Il vérifie aussi que la fonction porteuse existe encore et découpe encore — sans quoi il serait au vert sur un dépôt où la règle aurait purement disparu.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// UN SCRIPT QUI SE TAIT N'A RIEN À METTRE AU GABARIT (2026-09-28, tâche #1080)
+// ————————————————————————————————————————————————————————————————————————
+// pure-gold-unity comptait THE-DEEP-READER et THE-FINAL-JUDGE parmi les rapports « à migrer ». Les
+// deux fichiers ne contiennent AUCUN console.log et AUCUN writeFileSync : ce sont des
+// orchestrateurs d'agent séparé, où c'est l'AGENT qui rédige le rapport. Brancher un en-tête sur
+// une sortie qui n'existe pas est impossible, donc le reproche ne pouvait jamais être éteint (L6).
+// L'outil le soupçonnait — sa ligne disait « à vérifier à la main : produit-il vraiment un
+// rapport ? » — mais il les comptait quand même comme fautifs : une question posée dans une note
+// n'a jamais retiré personne d'un dénominateur.
+{
+  const PGU = await import('../scripts/pure-gold-unity.mjs');
+
+  // LE TROISIÈME ÉTAT EXISTE : ni conforme, ni à migrer — non mesurable, AVEC SA RAISON.
+  const muet = PGU.auditToolUnity('x.mjs', { readFileImpl: () => 'export function f() { return 1; }\n' });
+  assert.equal(muet.mesurable, false, 'a script that prints nothing and writes nothing produces no report: it can be neither compliant nor at fault');
+  assert.match(muet.raison, /aucun rapport/, 'and the reason must be stated, never a silent removal from the denominator');
+
+  // CE N'EST PAS UNE ÉCHAPPATOIRE (BP4), et le critère est étroit dans les deux sens : un SEUL
+  // console.log suffit à rester mesuré — et à être déclaré fautif s'il n'a pas le gabarit.
+  const parle = PGU.auditToolUnity('y.mjs', { readFileImpl: () => 'console.log("=== Y ===");\n' });
+  assert.equal(parle.mesurable, true, 'one single console.log is enough to stay measured — otherwise the third state becomes a way out');
+  assert.equal(parle.conforme, false, 'and a tool that speaks without the shared header is still at fault');
+  const ecrit = PGU.auditToolUnity('z.mjs', { readFileImpl: () => 'writeFileSync(p, texte);\n' });
+  assert.equal(ecrit.mesurable, true, 'a tool that writes a report file stays measured too, even silent on stdout');
+
+  // BRANCHÉ SUR LE VRAI DÉPÔT (Article 25) : les deux cas réels sont bien ceux-là, et le total
+  // reste AFFICHÉ — 47 tenus dont 45 mesurables, jamais 45 présentés comme le tout.
+  const reel = PGU.scanUnity();
+  assert.equal(reel.total, reel.mesurables + reel.nonMesurables.length, 'the bound total must always equal measurable + non-measurable: a tool must never simply vanish from the count');
+  assert.ok(reel.nonMesurables.length <= 3, `the third state must stay rare — if it grows, the criterion has become a way out rather than an honest limit (currently ${reel.nonMesurables.length})`);
+  assert.equal(reel.aMigrer.length, 0, 'and with the real repository, every tool that actually produces a report goes through the shared template');
+
+  console.log(`Passed: un script qui se tait n'a rien à mettre au gabarit (2026-09-28, tâche #1080). pure-gold-unity comptait THE-DEEP-READER et THE-FINAL-JUDGE parmi les rapports « à migrer » — deux fichiers qui ne contiennent AUCUN console.log et AUCUN writeFileSync. Ce sont des orchestrateurs d'agent séparé : c'est l'AGENT qui rédige le rapport, jamais le script. Brancher un en-tête sur une sortie qui n'existe pas est impossible, donc le reproche ne pouvait JAMAIS être éteint — L6, pour la troisième fois de la journée, et toujours la même famille : un signal ADJACENT (cet outil figure-t-il au registre des producteurs de rapport ?) lu comme le signal visé (imprime-t-il un rapport ?). L'OUTIL LE SOUPÇONNAIT DÉJÀ, et c'est ce qui rend le cas instructif : sa propre ligne disait « à vérifier à la main : produit-il vraiment un rapport ? » — puis il le comptait fautif quand même. Une question posée dans une note n'a jamais retiré personne d'un dénominateur. LE TROISIÈME ÉTAT EST DÉCLARÉ, JAMAIS UNE SUPPRESSION : le total reste affiché (47 tenus, ${reel.mesurables} mesurables), et chaque non-mesurable porte sa raison. ET CE N'EST PAS UNE ÉCHAPPATOIRE : un SEUL console.log ou un SEUL writeFileSync suffit à rester mesuré, et le contre-test vérifie qu'un outil qui parle sans gabarit reste fautif. Le critère constate, il ne nomme personne — aucune exception par nom d'outil.`);
+}

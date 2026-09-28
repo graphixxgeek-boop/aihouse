@@ -15,10 +15,11 @@ décision HTML/texte et de l'index global des rapports — plus, depuis le 2026-
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**2 fichier(s)** dans ce dossier.
+**3 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [coherence-outil-rapport-2026-09-26.txt](coherence-outil-rapport-2026-09-26.txt) | — |
 | [rapports-jumeaux-2026-09-26.txt](rapports-jumeaux-2026-09-26.txt) | — |
+| [rapports-jumeaux-2026-09-28.txt](rapports-jumeaux-2026-09-28.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

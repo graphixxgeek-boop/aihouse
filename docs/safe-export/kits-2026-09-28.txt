@@ -18,7 +18,7 @@
 
   HORS PORTÉE : cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.
 
-=== LES KITS D'EXPORT — 85/85 kit(s) complet(s), 7 dispensé(s) avec raison ===
+=== LES KITS D'EXPORT — 82/82 kit(s) complet(s), 10 dispensé(s) avec raison ===
 
   LA RÈGLE, depuis sa correction du 2026-09-26 : le KIT COMPLET est dû à TOUT fichier de l'Agence.
   Un optionnel exporté sans son plan est un optionnel irrécupérable — et il partira quand même,
@@ -30,7 +30,7 @@
   🔴 1. vital             40/40   100 %        7      100 %
   🟠 2. essentiel          3/3    100 %        0      100 %
   🟡 3. utile             26/26   100 %        0      100 %
-  ⚪ 4. optionnel         16/16   100 %        0      100 %
+  ⚪ 4. optionnel         13/13   100 %        3      100 %
 
   PIÈCES DUES, les mêmes pour tous : blueprint + source + fiche + registre + dependances
   · le registre est SANS OBJET pour un fichier qui n'écrit rien — jamais « manquant » : lui
@@ -41,8 +41,10 @@
   🟡 utile : il fait gagner du temps ici, et il devra pouvoir le faire ailleurs : même kit dû, réparé après les deux premiers
   ⚪ optionnel : personne ne le lance ici, mais il partira quand même avec l'Agence — et un optionnel exporté sans son plan est un optionnel irrécupérable
 
-  ⚪ 3 DISPENSE(S) ÉCRITE(S) — un fichier dispensé n'entre pas dans le taux, sinon la dispense le rendrait flatteur :
+  ⚪ 5 DISPENSE(S) ÉCRITE(S) — un fichier dispensé n'entre pas dans le taux, sinon la dispense le rendrait flatteur :
      /^scripts\/install-pnpm\.sh$/ — il installe l'environnement de CE conteneur : il décrit la machine d'ici, jamais un outil à remonter ailleurs
+     /^scripts\/install-ci/ — il installe les dépendances de CE dépôt en intégration continue : il décrit la machine d'ici, jamais un outil à remonter ailleurs
+     /^scripts\/pnpm-install/ — il installe les dépendances de CE dépôt : il décrit la machine d'ici, jamais un outil à remonter ailleurs
      /^scripts\/hooks\// — les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit
      /^scripts\/run-framework/ — il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison
 
@@ -135,12 +137,12 @@
   scripts/build-verified.sh                           ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/clone-hunter.mjs                            ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/gemini-key-health.mjs                       ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
-  scripts/install-ci.mjs                              ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
-  scripts/install-ci.sh                               ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/install-ci.mjs                              ⚪ optionnel  dispensé  aucune pièce due, par décision écrite
+  scripts/install-ci.sh                               ⚪ optionnel  dispensé  aucune pièce due, par décision écrite
   scripts/judge-persona-shared.mjs                    ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/memento-weight.mjs                          ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/memento.mjs                                 ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
-  scripts/pnpm-install.mjs                            ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
+  scripts/pnpm-install.mjs                            ⚪ optionnel  dispensé  aucune pièce due, par décision écrite
   scripts/pure-gold-unity.mjs                         ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/simulation-visiteur.mjs                     ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/sites-env.sh                                ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)

@@ -58,6 +58,21 @@ export function auditToolUnity(scriptPath, { root = ROOT, readFileImpl = readFil
     // corriger (une absence de mesure présentée comme une mesure).
     return { scriptPath, mesurable: false, raison: "fichier introuvable ou illisible" };
   }
+  // LE TROISIÈME ÉTAT, ET IL MANQUAIT (2026-09-28, tâche #1080). Un script qui n'imprime RIEN et
+  // n'écrit AUCUN fichier ne produit pas de rapport : il n'a donc rien à mettre au gabarit, et le
+  // compter « à migrer » est un reproche auquel aucun travail ne peut répondre — on ne branche pas
+  // un en-tête sur une sortie qui n'existe pas (L6). C'est le cas réel de THE-DEEP-READER et de
+  // THE-FINAL-JUDGE : deux orchestrateurs d'agent séparé, où c'est l'AGENT qui rédige le rapport,
+  // jamais le script. L'outil le soupçonnait déjà — sa propre ligne disait « à vérifier à la main :
+  // produit-il vraiment un rapport ? » — mais il les comptait quand même comme fautifs, et cette
+  // question posée dans une note n'a jamais retiré personne d'un dénominateur.
+  //
+  // CE N'EST PAS UNE ÉCHAPPATOIRE, et le critère est volontairement étroit : un SEUL `console.log`
+  // ou un SEUL `writeFileSync` suffit à rester mesuré. Un outil qui parle doit se mettre au
+  // gabarit ; seul celui qui se tait en est dispensé, et il l'est par constat, jamais par son nom.
+  if (!/console\.log\s*\(/.test(source) && !/writeFileSync\s*\(/.test(source)) {
+    return { scriptPath, mesurable: false, raison: "n'imprime rien et n'écrit aucun fichier — aucun rapport à mettre au gabarit (orchestrateur d'agent séparé : c'est l'agent qui rédige)" };
+  }
   const voies = VOIES_CONFORMES.filter((v) => v.marqueur.test(source));
   const indices = INDICES_MANUELS.filter((i) => i.marqueur.test(source)).map((i) => i.indice);
   return {
