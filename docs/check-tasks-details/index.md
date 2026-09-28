@@ -73,7 +73,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**107 fichier(s)** dans ce dossier.
+**110 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -157,6 +157,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [1790561400713-themes.html](1790561400713-themes.html) | — |
 | [1790562193722-projet_entier-arborescence.html](1790562193722-projet_entier-arborescence.html) | — |
 | [1790568474691-en_cours-liste.html](1790568474691-en_cours-liste.html) | — |
+| [1790587238921-en_cours-liste.html](1790587238921-en_cours-liste.html) | — |
 | [bilan-taches-2026-09-25T16-42Z.txt](bilan-taches-2026-09-25T16-42Z.txt) | — |
 | [bilan-taches-2026-09-25T16-59Z.txt](bilan-taches-2026-09-25T16-59Z.txt) | — |
 | [bilan-taches-2026-09-25T17-09Z.txt](bilan-taches-2026-09-25T17-09Z.txt) | — |
@@ -170,6 +171,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [bilan-taches-2026-09-27T09-35Z.txt](bilan-taches-2026-09-27T09-35Z.txt) | — |
 | [bilan-taches-2026-09-28T05-37Z.txt](bilan-taches-2026-09-28T05-37Z.txt) | — |
 | [bilan-taches-2026-09-28T07-29Z.txt](bilan-taches-2026-09-28T07-29Z.txt) | — |
+| [bilan-taches-2026-09-28T08-55Z.txt](bilan-taches-2026-09-28T08-55Z.txt) | — |
 | [circle-signal-2026-09-22T17-19-15-255Z.txt](circle-signal-2026-09-22T17-19-15-255Z.txt) | — |
 | [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-836Z.txt](circle-signal-2026-09-23T21-49-13-836Z.txt) | — |
@@ -183,6 +185,7 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | [ronde-2026-09-25T14-08-43.txt](ronde-2026-09-25T14-08-43.txt) | — |
 | [ronde-2026-09-28T02-37-00.html](ronde-2026-09-28T02-37-00.html) | — |
 | [ronde-2026-09-28T02-37-00.txt](ronde-2026-09-28T02-37-00.txt) | — |
+| [scission-decision-2026-09-28.md](scission-decision-2026-09-28.md) | — |
 | [tri-2026-09-27T03-13Z.txt](tri-2026-09-27T03-13Z.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
 | 2026-09-27T04:07:59.475Z | projet_entier | arborescence | 941 | 941 | 0 | 86 | /home/user/aihouse/docs/check-tasks-details/1790482079470-projet_entier-arborescence.html |
