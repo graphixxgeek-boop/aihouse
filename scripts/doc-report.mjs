@@ -28,7 +28,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
@@ -1515,6 +1515,117 @@ export function deposerRapportJumeaux(lignes, { root = ROOT, now = new Date(), w
   const chemin = join(dossier, `rapports-jumeaux-${now.toISOString().slice(0, 10)}.txt`);
   writeImpl(chemin, lignes.join("\n") + "\n", "utf8");
   return chemin;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// LES DOCUMENTS QU'UN OUTIL RÉÉCRIT EN ENTIER, SANS LE DIRE (2026-09-28, tâche #711)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// LE VRAI RISQUE N'EST PAS « UN FICHIER SANS RÉGIME DÉCLARÉ », et c'est ce que la mesure a montré :
+// le dépôt porte 471 documents `.md`, dont 381 sans aucun signal mécanique. Exiger une mention en
+// tête de chacun demanderait 381 JUGEMENTS — une obligation qu'on ne peut pas honorer se contourne,
+// et on aurait tamponné 471 en-têtes sans réfléchir, ce qui est pire que rien.
+//
+// LE RISQUE EST ÉTROIT ET IL SE NOMME : un document qu'un outil RÉÉCRIT EN ENTIER, qui ne porte NI
+// le bloc généré NI de mention de régime. Là, quelqu'un peut y écrire une note de bonne foi et la
+// perdre au passage suivant — **sans erreur, sans message, sans trace**. Partout ailleurs, ou bien
+// le générateur n'écrit qu'entre ses marqueurs (et la prose autour est protégée), ou bien personne
+// ne réécrit le fichier.
+//
+// LES CHEMINS SE LISENT DANS LE CODE DES OUTILS, jamais dans une liste tenue à la main : une
+// constante `X_PATH = "docs/….md"` suivie d'une écriture est la signature d'un document régénéré, et
+// un outil de plus demain sera vu sans qu'on y pense (Article 24).
+export const MOTIF_CHEMIN_ECRIT = /(?:const|let)\s+([A-Z][A-Z0-9_]*(?:_PATH|_FILE))\s*=\s*["'`](docs\/[^"'`]+\.md)["'`]/g;
+
+// AJOUTER À LA FIN N'EST PAS RÉÉCRIRE, et confondre les deux accusait quatre fichiers à tort au
+// premier passage — dont `docs/idees-a-trancher.md`, le registre où vivent SES arbitrages. Une
+// écriture de la forme `prior + ligne` conserve tout ce qui précède : rien ne peut s'y perdre, et
+// la signaler serait le faux rouge le plus coûteux du lot, puisqu'il porterait sur le fichier le
+// plus précieux. Les marqueurs de concaténation sont lus DANS l'appel d'écriture lui-même.
+// L'AJOUT S'ÉCRIT DE DEUX FAÇONS DANS CE DÉPÔT, et n'en reconnaître qu'une accusait à tort. La
+// concaténation (`prior + ligne`) était vue ; l'INTERPOLATION dans un gabarit
+// (`${existant.replace(...)}\n${ligne}`) ne l'était pas — et c'est la forme qu'emploie
+// `enregistrerOperation()`, si bien que `docs/referentiel/charte-operations.md` passait pour réécrit
+// en entier alors qu'il est alimenté ligne à ligne. Les deux formes comptent.
+export const MARQUEURS_D_AJOUT = /\b(prior|avant|dejaLa|déjàLà|existant|precedent|précédent|ancien|contenu)\b\s*(\+|\.replace)|\$\{\s*(prior|avant|dejaLa|existant|precedent|ancien|contenu)\b|\+\s*\b(row|ligne|entree|entrée)\b/;
+export const FENETRE_APPEL = 400;
+
+// Un vrai appel d'écriture : n'importe quel identifiant qui commence par `write` ou `ecrire`, suivi
+// d'une parenthèse, et la constante dans la fenêtre de ses arguments. Le nom de la fonction varie
+// d'un outil à l'autre (`writeFileSync`, `writeFileImpl`, `ecrire`) et n'en fixer qu'un aurait
+// rendu la sonde aveugle aux deux autres — le défaut qu'elle vient justement de commettre.
+export const MOTIF_APPEL_ECRITURE = /\b(?:write[A-Za-z]*|ecrire[A-Za-z]*|écrire[A-Za-z]*)\s*\(/g;
+
+export function appelDEcritureSur(code = "", nomConstante = "") {
+  const t = String(code);
+  for (const m of t.matchAll(MOTIF_APPEL_ECRITURE)) {
+    const args = t.slice(m.index, m.index + FENETRE_APPEL);
+    if (new RegExp(`\\b${nomConstante}\\b`).test(args.split("\n")[0] ?? "")) return true;
+  }
+  return false;
+}
+
+export function ecritureEstUnAjout(code = "", nomConstante = "") {
+  const t = String(code);
+  // LE MÊME MOTIF D'APPEL QUE `appelDEcritureSur`, et pas un second écrit à côté : deux lectures de
+  // « qu'est-ce qu'un appel d'écriture » finiraient par diverger, et c'est exactement ce qui est
+  // arrivé ici — celle-ci ne connaissait que `writeFileSync`, donc elle ne voyait pas l'ajout fait
+  // par `ecrire(…)` et accusait un fichier alimenté ligne à ligne (Article 24).
+  for (const m of t.matchAll(new RegExp(MOTIF_APPEL_ECRITURE.source, "g"))) {
+    const fenetre = t.slice(m.index, m.index + FENETRE_APPEL);
+    if (!new RegExp(`\\b${nomConstante}\\b`).test(fenetre.split("\n")[0] ?? "")) continue;
+    if (MARQUEURS_D_AJOUT.test(fenetre)) return true;
+  }
+  return false;
+}
+
+export function documentsReecritsEnEntier({ sources = new Map() } = {}) {
+  const parChemin = new Map();
+  for (const [script, code] of sources) {
+    const t = String(code);
+    if (!/writeFileSync|writeFile\(/.test(t)) continue;
+    for (const m of t.matchAll(MOTIF_CHEMIN_ECRIT)) {
+      const [, nom, chemin] = m;
+      // LA CONSTANTE DOIT ÊTRE RÉELLEMENT ÉCRITE, et ma première version ne le vérifiait pas
+      // vraiment : une de ses deux branches acceptait le nom suivi de n'importe quoi puis d'une
+      // parenthèse, ce qu'on trouve dans du code de LECTURE ordinaire. Résultat :
+      // `docs/referentiel/lecons.md` était accusé alors que rien ne l'écrit — sa constante ne sert
+      // qu'à le lire. Un chemin seulement LU n'a jamais fait perdre une note à personne.
+      //
+      // La vérification porte donc sur un vrai APPEL d'écriture, quel que soit le nom de la
+      // fonction (`writeFileSync`, `writeFileImpl`, `ecrire`…), avec la constante DANS ses
+      // arguments — pas ailleurs dans le fichier.
+      if (!appelDEcritureSur(t, nom)) continue;
+      if (ecritureEstUnAjout(t, nom)) continue;
+      if (!parChemin.has(chemin)) parChemin.set(chemin, []);
+      if (!parChemin.get(chemin).includes(script)) parChemin.get(chemin).push(script);
+    }
+  }
+  return parChemin;
+}
+
+export function findDocumentsSansRegime({ sources = new Map(), lireDocument = null } = {}) {
+  if (!sources.size || typeof lireDocument !== "function") {
+    return { mesurable: false, aRisque: [], proteges: [],
+      pourquoi: "aucune source d'outil lue ou aucun lecteur de document fourni : rien n'a été confronté, ce qui n'est PAS « aucun document à risque »" };
+  }
+  const ecrits = documentsReecritsEnEntier({ sources });
+  const aRisque = [], proteges = [];
+  for (const [chemin, scripts] of ecrits) {
+    const texte = lireDocument(chemin);
+    if (texte === null || texte === undefined) continue;   // le document n'existe pas encore : rien à perdre
+    const r = regimeDEcriture(texte, chemin);
+    if (r.regime) { proteges.push({ chemin, scripts, regime: r.regime, source: r.source }); continue; }
+    aRisque.push({ chemin, scripts,
+      pourquoi: `réécrit en entier par ${scripts.join(", ")}, et ne porte ni bloc généré ni mention de régime : une note écrite à la main y disparaîtrait au passage suivant, sans erreur et sans trace` });
+  }
+  return {
+    mesurable: true, aRisque, proteges, examines: ecrits.size,
+    pourquoi: aRisque.length
+      ? `${aRisque.length} document(s) réécrits en entier sans dire qu'ils le sont`
+      : `les ${ecrits.size} document(s) réécrits en entier le disent tous`,
+    horsPortee: "Elle ne voit qu'une constante `X_PATH` passée DIRECTEMENT à un appel d'écriture. Une indirection lui échappe, et le cas est connu plutôt que supposé : `le-classificateur` écrit `const cible = process.argv[3] ?? CLASSIFICATION_PATH` puis écrit `cible` — le document est bien réécrit en entier, et cette sonde ne le voit pas. Élargir à une analyse de flot de données coûterait plus que ce que ça rapporte ; nommer la limite et l'exemple connu coûte une phrase. Elle ne dit pas non plus si le régime déclaré est le BON, seulement qu'il est déclaré.",
+  };
 }
 
 if (process.argv[2] === "jumeaux") {

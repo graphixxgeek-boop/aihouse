@@ -139,6 +139,8 @@ export const CHARTE = "CLAUDE.md";
 // outil qui ne peut servir que sur ce dépôt-ci a raté la moitié de sa mission (SAFE-EXPORT,
 // Article 27). Seul `TABLE_REGLES_PATH` garde son nom historique, parce qu'il existait avant et que
 // le renommer casserait des renvois pour un gain nul.
+// La mention que tout document RÉÉCRIT EN ENTIER doit porter (cf. regimeDEcriture, lib-shell).
+export const MENTION_REGIME_AUTO = "<!-- RÉGIME: AUTO — ce fichier est régénéré en entier, toute note écrite à la main y sera perdue au passage suivant -->";
 export const CARTOGRAPHIE_PATH = "docs/referentiel/charte-cartographie.md";
 export const OPERATIONS_PATH = "docs/referentiel/charte-operations.md";
 export const TABLE_REGLES_PATH = "docs/referentiel/claude-md-regles.md";
@@ -1209,7 +1211,12 @@ async function main() {
 
   if (commande === "cartographie") {
     const carto = buildCartographie({ mesurerObligations: budgetInstructions });
-    const texte = renderCartographie(carto);
+    // LE RÉGIME D'ÉCRITURE EST ÉMIS PAR LE GÉNÉRATEUR, jamais posé à la main dans le fichier
+    // (2026-09-28, tâche #711) : un fichier réécrit EN ENTIER effacerait une mention qu'on y aurait
+    // écrite, donc la seule place où elle survit est ici, dans ce qui l'écrit. Sans elle, quelqu'un
+    // peut ajouter une note de bonne foi et la perdre au passage suivant — sans erreur, sans
+    // message, sans trace.
+    const texte = `${MENTION_REGIME_AUTO}\n${renderCartographie(carto)}`;
     writeFileSync(join(ROOT, CARTOGRAPHIE_PATH), texte, "utf8");
     // L'écriture s'enregistre AU MOMENT où elle a lieu, jamais par un rappel à l'agent : le
     // compteur d'usage doit pouvoir dire qu'un registre a été alimenté sans que quiconque s'en
@@ -1239,7 +1246,7 @@ async function main() {
       `*(Régénéré le ${new Date().toISOString().slice(0, 10)} par \`node scripts/moise-tables-de-loi.mjs table\`. Fichier de référence UNIQUE tenu à jour — jamais un dossier+index séparé (calibrage explicite du 2026-09-20). À régénérer AVANT toute décision d'allègement : la version précédente datait du 2026-09-20 et s'arrêtait à l'Article 23, six Articles derrière la réalité, et un instrument périmé ne rend pas une erreur — il rend des chiffres qui ont l'air justes.)*`,
       "",
     ].join("\n");
-    writeFileSync(join(ROOT, TABLE_REGLES_PATH), `${entete}${renderClaudeMdRuleTable(table)}\n`, "utf8");
+    writeFileSync(join(ROOT, TABLE_REGLES_PATH), `${MENTION_REGIME_AUTO}\n${entete}${renderClaudeMdRuleTable(table)}\n`, "utf8");
     recordRegistryWrite(TABLE_REGLES_PATH, { par: "moise-tables-de-loi" });
     console.log(`\nTable de classification régénérée : ${TABLE_REGLES_PATH} (${table.rows.length} Articles, ${table.redondances.length} redondance(s) possible(s)).`);
     return;

@@ -2515,7 +2515,10 @@ async function main() {
     // pour trouver. Un outil qui produit un document crée le dossier qui l'accueille.
     mkdirSync(dirname(join(ROOT, cible)), { recursive: true });
     mkdirSync(dirname(join(ROOT, CLASSIFICATION_HTML)), { recursive: true });
-    writeFileSync(join(ROOT, cible), `${frontiere}\n${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n\n## Les documents — ce que chacun porte\n\n\`\`\`\n${lignesNature.join("\n")}\n\`\`\`\n`, "utf8");
+    // LE RÉGIME D'ÉCRITURE EST ÉMIS PAR LE GÉNÉRATEUR (2026-09-28, tâche #711) : ce document est
+    // réécrit EN ENTIER, donc une mention posée à la main dedans serait effacée au passage suivant.
+    // La seule place où elle survit est ici.
+    writeFileSync(join(ROOT, cible), `<!-- RÉGIME: AUTO — ce fichier est régénéré en entier, toute note écrite à la main y sera perdue au passage suivant -->\n${frontiere}\n${doc.markdown}\n\n## Les documents — ce qui part avec l'Agence\n\n\`\`\`\n${lignesDocs.join("\n")}\n\`\`\`\n\n## Les documents — ce que chacun porte\n\n\`\`\`\n${lignesNature.join("\n")}\n\`\`\`\n`, "utf8");
     try { mkdirSync(join(ROOT, "docs/le-classificateur"), { recursive: true }); } catch { /* déjà là */ }
     writeFileSync(join(ROOT, CLASSIFICATION_HTML), renderHtmlReport({
       tool: "le-classificateur",

@@ -953,6 +953,88 @@ export function sansLeBlocGenere(texte = "") {
 }
 
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LE RÉGIME D'ÉCRITURE D'UN DOCUMENT : AUTO, FIGÉ, MIXTE (2026-09-28, tâche #711)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, mot pour mot : « peut-on verifier que l'outil dedié sait distinguer les fichiers qui
+// doivent se mettre à jour tout seul des fichiers qui doivent etre historisés en l'etat, est-ce que
+// le cumul des 2 existe ».
+//
+// LES TROIS RÉGIMES :
+//   · **AUTO**  — régénéré par un outil, à ne jamais éditer à la main (une édition serait écrasée) ;
+//   · **FIGÉ**  — une archive, à ne jamais régénérer (une régénération la détruirait) ;
+//   · **MIXTE** — un socle auto ET des notes humaines à préserver. **C'est le cas qui pose problème**,
+//     et c'est le seul qui puisse faire perdre du travail sans que rien ne le dise.
+//
+// CE QUI A ÉTÉ MESURÉ AVANT D'ÉCRIRE UNE LIGNE, parce que la réponse change tout : le dépôt porte
+// 471 documents `.md`. Exiger une mention en tête de chacun demanderait 471 éditions — et surtout
+// 381 JUGEMENTS, puisque seuls 90 portent un signal mécanique. Une obligation qu'on ne peut pas
+// honorer se contourne : on aurait tamponné 471 en-têtes sans réfléchir, ce qui est pire que rien.
+//
+// D'OÙ LE CHOIX, ET IL EST LE CŒUR DE CETTE FONCTION : **la nature se DÉDUIT de ce qui existe
+// déjà**, et la mention explicite n'est exigée QUE là où la déduction ne suffit pas. Un fichier qui
+// porte le bloc généré est AUTO sans qu'on ait rien à écrire dessus (Article 24 : on dérive, on ne
+// recopie pas). C'est exactement l'inverse d'une liste centrale, que l'Article 24 interdit, et
+// exactement l'inverse d'un tampon universel, que personne ne lirait.
+//
+// LE VRAI RISQUE N'EST PAS « UN FICHIER SANS NATURE DÉCLARÉE ». C'est un fichier qu'un générateur
+// RÉÉCRIT EN ENTIER alors qu'il porte de la prose humaine : là, et seulement là, du travail
+// disparaît en silence. Le reste est de la paperasse.
+
+// LE NOM : « RÉGIME D\'ÉCRITURE » ET NON « NATURE ». Sa demande disait « nature AUTO ou FIGÉ »,
+// mais `le-classificateur` exporte DÉJÀ un `natureDuDocument()` qui répond à une tout autre
+// question — ce qu\'un document PORTE (loi, blueprint, fiche). Deux fonctions exportées du même
+// nom dans un même dépôt sont la dette de reprise que l\'Article 20bis nomme : « une IA lisant le
+// mot ne peut pas savoir lequel a parlé ». AUTO/FIGÉ/MIXTE décrit COMMENT le fichier s\'écrit,
+// donc un RÉGIME. Le mot de sa demande reste dans la fiche, avec la raison du changement — à lui
+// de confirmer le nom, comme tous les noms de ce projet.
+// LE MOT DU RÉGIME N'EST JAMAIS SEUL DANS LE COMMENTAIRE, et l'oublier a coûté une fausse alerte
+// entière (2026-09-28) : la première version exigeait `-->` COLLÉ au mot, alors que la mention
+// émise par les générateurs porte la phrase qui explique le risque à l'humain qui ouvre le fichier
+// (« toute note écrite à la main y sera perdue »). Trois fichiers portaient déjà la mention et la
+// sonde les accusait quand même : une sonde qui ne reconnaît pas la protection qu'on vient de poser
+// est pire qu'une sonde absente, parce qu'elle pousse à poser la protection DEUX fois (leçon L4).
+// Le lookahead empêche AUTO de mordre sur un mot plus long (AUTOMATIQUE) ; il ne peut pas s'écrire
+// `\b` parce que le É de FIGÉ n'est pas un caractère de mot pour JavaScript sans le drapeau `u`.
+export const MENTION_REGIME = /<!--\s*(?:RÉGIME|REGIME)\s*:\s*(AUTO|FIG[EÉ]|MIXTE)(?![A-Za-zÉéÈè])[^\n]*?-->/i;
+export const DOSSIERS_FIGES = [/^docs\/contexte-projet\//, /^docs\/simulations\//, /^docs\/suivi\/archives\//];
+
+export function regimeDeclare(texte = "") {
+  const m = MENTION_REGIME.exec(String(texte));
+  if (!m) return null;
+  const n = m[1].toUpperCase().replace("FIGE", "FIGÉ");
+  return n;
+}
+
+// La nature DÉDUITE, et chaque signal dit d'où il vient : un verdict dont on ne peut pas retracer la
+// cause ne se conteste pas, donc il ne s'améliore jamais.
+export function regimeDeduit(texte = "", chemin = "") {
+  const t = String(texte);
+  if (DOSSIERS_FIGES.some((r) => r.test(chemin))) return { regime: "FIGÉ", signal: "vit dans un dossier d'archives déclaré" };
+  const aBlocGenere = t.includes(DEBUT_BLOC_GENERE);
+  const proseAutour = aBlocGenere && sansLeBlocGenere(t).replace(/\s/g, "").length > 200;
+  if (aBlocGenere && proseAutour) return { regime: "MIXTE", signal: "porte un bloc généré ET de la prose écrite autour" };
+  if (aBlocGenere) return { regime: "AUTO", signal: "porte le bloc généré et rien d'autre de substantiel" };
+  return { regime: null, signal: "aucun signal mécanique : le régime ne se déduit pas, il se déclare" };
+}
+
+export function regimeDEcriture(texte = "", chemin = "") {
+  const declaree = regimeDeclare(texte);
+  const deduite = regimeDeduit(texte, chemin);
+  // LA DÉCLARATION L'EMPORTE TOUJOURS sur la déduction, et le désaccord est RENDU plutôt que tu :
+  // quelqu'un a écrit une intention, et une sonde qui la contredit est soit un signal utile, soit
+  // une sonde à corriger — dans les deux cas on veut le savoir.
+  return {
+    regime: declaree ?? deduite.regime,
+    source: declaree ? "déclaré" : (deduite.regime ? "déduit" : "inconnu"),
+    signal: deduite.signal,
+    desaccord: declaree && deduite.regime && declaree !== deduite.regime
+      ? `déclaré ${declaree}, mais les signaux du fichier disent ${deduite.regime} (${deduite.signal})`
+      : null,
+  };
+}
+
 // =============================================================================================
 // LE DÉCOR PARTAGÉ — une seule lecture par fichier, pour toute l'exécution
 // =============================================================================================

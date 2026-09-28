@@ -19054,3 +19054,88 @@ async function testGardienPartageNAccusePlusSesFreres() {
   console.log(`Passed: le gardien partagé accusait des process qu'il n'avait pas touchés (2026-09-27, vérification à froid des tâches #436 et #773). C'est la vérification à froid qui l'a trouvé, en instruisant UNE PAR UNE les huit dettes documentaires annoncées sur mes propres commits du jour — les huit portaient sur un process FRÈRE. Le défaut est STRUCTUREL et pas accidentel : ${gardiensPartages.length} gardiens gardent plusieurs process, god en garde trois, donc tout changement de l'un d'eux était facturé à TOUS ses process sauf à mettre à jour TOUS leurs documents dans le même commit — c'est-à-dire à documenter des process que le changement ne concernait pas. Un garde-fou qui accuse à tort cesse d'être lu (L4), et celui-ci le faisait par construction. MA PREMIÈRE RÈGLE DÉCRIVAIT LE SYMPTÔME : dégrader quand un process frère avait été documenté. Mesurée, elle ne rattrapait que 4 des 8 — parce qu'elle disait « un frère a bougé » là où il fallait dire « ce changement ne concerne pas celui-ci ». LA RÈGLE RETENUE EST UN PRINCIPE : un changement de gardien ne concerne un process que s'il NOMME sa déclaration ou son document. DEUX PIÈGES TRAVERSÉS EN CHEMIN, tous deux trouvés en vérifiant et jamais en relisant : (1) j'ai réécrit l'ordre des arguments git à l'envers — le hash lu comme un chemin, le diff de HEAD rendu pour tous les commits — c'est-à-dire MOT POUR MOT le défaut payé par la tâche #1014 ce matin, la leçon L37 vérifiée sur son auteur quelques heures après l'avoir écrite ; (2) chercher le slug nu rendait « nuit » trois fois sur un diff qui parlait du « point de contrôle de nuit » : un slug de quatre lettres qui est aussi un mot courant collisionne avec la prose, et le commentaire qui EXPLIQUE un changement se met à le prouver. Mesure finale sur 30 commits réels : 19 dettes annoncées → 0 dette et 19 soupçons, tous affichés et nommés. Le détecteur DÉGRADE, il ne fait jamais taire.`);
 }
 await testGardienPartageNAccusePlusSesFreres();
+
+// =============================================================================================
+// #711 — LE RÉGIME D'ÉCRITURE : AUTO, FIGÉ, MIXTE
+// =============================================================================================
+// SA DEMANDE : « peut-on vérifier que l'outil dédié sait distinguer les fichiers qui doivent se
+// mettre à jour tout seuls des fichiers qui doivent être historisés en l'état, est-ce que le cumul
+// des 2 existe ». Oui pour les trois, et le cumul s'appelle MIXTE — un bloc généré entouré de prose
+// écrite à la main.
+//
+// CE QUI EST PROTÉGÉ ICI N'EST PAS LA PAPERASSE MAIS LA PERTE SILENCIEUSE. Sur 471 documents, 90
+// seulement portent un signal mécanique : exiger un en-tête sur chacun aurait demandé 381 jugements
+// humains, c'est-à-dire une obligation que personne n'aurait tenue (Article 27). Le risque RÉEL est
+// étroit : un document qu'un outil réécrit EN ENTIER et qui ne dit nulle part qu'il est régénéré.
+// Là, et là seulement, une note écrite à la main disparaît sans erreur et sans trace.
+async function testRegimeDEcritureDunDocument() {
+  const L = await import('../scripts/lib-shell.mjs');
+  const D = await import('../scripts/doc-report.mjs');
+
+  // LE CONTRE-TEST QUI AURAIT ÉVITÉ LE BUG DU JOUR (2026-09-28). La première version du motif
+  // exigeait `-->` COLLÉ au mot du régime. Or la mention réellement émise par les générateurs porte
+  // la phrase qui explique le risque à l'humain qui ouvre le fichier. Résultat : trois documents
+  // venaient d'être protégés, et la sonde continuait de les accuser. Une sonde qui ne reconnaît pas
+  // la protection qu'on vient de poser pousse à la poser deux fois (L4).
+  assert.equal(L.regimeDeclare('<!-- RÉGIME: AUTO — ce fichier est régénéré en entier, toute note écrite à la main y sera perdue au passage suivant -->'), 'AUTO',
+    'the emitted marker carries an explanatory sentence before the closing arrow: a probe that only accepts the bare word does not recognise the protection it just asked for');
+  assert.equal(L.regimeDeclare('<!-- RÉGIME: AUTO -->'), 'AUTO', 'the bare form must keep working');
+  assert.equal(L.regimeDeclare('<!-- REGIME : FIGE -->'), 'FIGÉ', 'unaccented and loosely spaced: nobody retypes a marker character by character');
+  assert.equal(L.regimeDeclare('<!-- RÉGIME: MIXTE — bloc généré + prose -->'), 'MIXTE', 'the third regime, which is the cumulation he asked about');
+
+  // ET IL NE MORD PAS SUR UN MOT PLUS LONG : `AUTO` est le début de `AUTOMATIQUE`, et une
+  // alternation nue aurait avalé la suite jusqu'à la flèche. Le lookahead ne peut pas s'écrire `\b`
+  // parce que le É de FIGÉ n'est pas un caractère de mot pour JavaScript sans le drapeau `u`.
+  assert.equal(L.regimeDeclare('<!-- RÉGIME: AUTOMATIQUE -->'), null, 'MUST NOT bite AUTO out of a longer word');
+  assert.equal(L.regimeDeclare('# un titre\net de la prose ordinaire'), null, 'no marker means no declaration, never a default');
+
+  // LA DÉDUCTION, quand rien n'est déclaré — et chaque verdict dit d'où il vient : un verdict dont
+  // on ne peut pas retracer la cause ne se conteste pas, donc il ne s'améliore jamais.
+  assert.equal(L.regimeDeduit('du texte', 'docs/contexte-projet/archive.md').regime, 'FIGÉ', 'a declared archive folder is FIGÉ without anyone writing it on each file');
+  const auto = L.regimeDeduit(`${L.DEBUT_BLOC_GENERE}\nx\n`, 'docs/x.md');
+  assert.equal(auto.regime, 'AUTO', 'a generated block and nothing substantial around it is AUTO');
+  const mixte = L.regimeDeduit(`${'de la prose écrite à la main. '.repeat(20)}\n${L.DEBUT_BLOC_GENERE}\nx\n`, 'docs/x.md');
+  assert.equal(mixte.regime, 'MIXTE', 'a generated block WITH prose around it is the cumulation — the exact case he asked whether we could see');
+  assert.equal(L.regimeDeduit('rien de mécanique', 'docs/x.md').regime, null,
+    'and when no signal exists the answer is "unknown", never a guess: "I could not look" must never read as "there is nothing" (L5/L11)');
+
+  // LA DÉCLARATION L'EMPORTE, ET LE DÉSACCORD EST RENDU plutôt que tu. Quelqu'un a écrit une
+  // intention ; une sonde qui la contredit est soit un signal utile, soit une sonde à corriger —
+  // dans les deux cas on veut le savoir.
+  const desaccord = L.regimeDEcriture(`<!-- RÉGIME: FIGÉ -->\n${L.DEBUT_BLOC_GENERE}\nx\n`, 'docs/x.md');
+  assert.equal(desaccord.regime, 'FIGÉ', 'the declaration wins');
+  assert.ok(desaccord.desaccord, 'and the contradiction with the mechanical signals is RENDERED, never swallowed');
+
+  // LA SONDE SUR LE DÉPÔT RÉEL : zéro à risque aujourd'hui. Mais un zéro ne vaut que si la sonde
+  // sait encore accuser (BP2) — on lui fabrique donc un cas coupable.
+  const sources = new Map([['scripts/faux.mjs',
+    'const DANGER_PATH = "docs/faux-en-danger.md";\nwriteFileSync(DANGER_PATH, tout);\n']]);
+  const coupable = D.findDocumentsSansRegime({ sources, lireDocument: () => '# un document écrit à la main' });
+  assert.equal(coupable.aRisque.length, 1, 'a document rewritten whole with no marker MUST still be accused — a probe that can no longer fail proves nothing (BP2)');
+
+  // ET L'AJOUT N'EST PAS UNE RÉÉCRITURE : quatre fichiers étaient accusés à tort au premier passage,
+  // dont `docs/idees-a-trancher.md`, le registre où vivent SES arbitrages — le faux rouge le plus
+  // coûteux du lot, puisqu'il aurait porté sur le fichier le plus précieux.
+  const ajout = new Map([['scripts/faux.mjs',
+    'const REGISTRE_PATH = "docs/registre.md";\nwriteFileSync(REGISTRE_PATH, prior + ligne);\n']]);
+  assert.equal(D.findDocumentsSansRegime({ sources: ajout, lireDocument: () => '# prose' }).aRisque.length, 0,
+    'appending keeps everything that came before: nothing can be lost there, so accusing it is a false red');
+  const interpole = new Map([['scripts/faux.mjs',
+    'const REGISTRE_PATH = "docs/registre.md";\necrire(REGISTRE_PATH, `${existant.replace(/x/, "y")}\\n${ligne}`);\n']]);
+  assert.equal(D.findDocumentsSansRegime({ sources: interpole, lireDocument: () => '# prose' }).aRisque.length, 0,
+    'and the SECOND way this repo writes an append — interpolation in a template, which is what enregistrerOperation() does — counts too');
+
+  // UN CHEMIN SEULEMENT LU N'A JAMAIS FAIT PERDRE UNE NOTE À PERSONNE : `docs/referentiel/lecons.md`
+  // était accusé alors que sa constante ne sert qu'à le lire.
+  const lecture = new Map([['scripts/faux.mjs',
+    'const LECONS_PATH = "docs/referentiel/lecons.md";\nconst t = readFileSync(LECONS_PATH, "utf8");\nwriteFileSync(autre, t);\n']]);
+  assert.equal(D.findDocumentsSansRegime({ sources: lecture, lireDocument: () => '# prose' }).aRisque.length, 0,
+    'a path that is only READ is never at risk');
+
+  // RIEN LU N'EST PAS « RIEN À RISQUE » (L5/L11), et la sonde le dit au lieu de rendre un zéro
+  // rassurant sur zéro donnée.
+  assert.equal(D.findDocumentsSansRegime({}).mesurable, false, 'with nothing read, the verdict is "not measured", never "nothing found"');
+
+  console.log(`Passed: le régime d'écriture d'un document — AUTO, FIGÉ, et le cumul MIXTE qu'il demandait. CE QUI A ÉTÉ MESURÉ AVANT DE DÉCIDER : 471 documents .md, 90 seulement portent un signal mécanique — exiger un en-tête sur chacun aurait demandé 381 jugements humains, c'est-à-dire une obligation que personne n'aurait tenue. Le régime se DÉDUIT donc de ce qui existe, et le risque réel est étroit : un document qu'un outil réécrit EN ENTIER sans dire nulle part qu'il est régénéré. LA SONDE A ÉTÉ RESSERRÉE TROIS FOIS, chaque fois contre le dépôt réel et jamais de mémoire : 8 accusations → 6 (l'ajout par concaténation n'est pas une réécriture) → 3 (une branche trop lâche prenait du code de LECTURE pour une écriture) → 2 (l'ajout par interpolation dans un gabarit, la forme qu'emploie enregistrerOperation, comptait aussi). LE BUG DU JOUR ÉTAIT LE PLUS INSTRUCTIF : les trois générateurs émettaient bien la mention, et la sonde continuait de les accuser — son motif exigeait la flèche fermante COLLÉE au mot, alors que la mention émise porte la phrase qui explique le risque à l'humain qui ouvre le fichier. Une sonde qui ne reconnaît pas la protection qu'on vient de poser pousse à la poser deux fois (L4). Aujourd'hui : 2 documents réécrits en entier, 2 protégés, 0 à risque — et le contre-test fabrique exprès un coupable, parce qu'un zéro ne vaut que si la sonde sait encore accuser.`);
+}
+await testRegimeDEcritureDunDocument();
