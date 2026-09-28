@@ -192,3 +192,39 @@ le court-circuite. Détail complet : `docs/smart-conso-api-blueprint.md` et
 `docs/referentiel/smart-conso-api.md`.
 
 
+
+## « Épuisé » ne veut pas dire « bloqué » (2026-09-28, tâche #493)
+
+**Le constat qui traînait depuis cinq jours** : « 1 relancement confirmé dans les 10 minutes
+suivant un épisode d'épuisement réel », affiché à chaque passage, signalé stagnant 18 rapports de
+suite. La tâche portait une consigne précise : établir s'il s'agit d'un relancement à l'aveugle ou
+d'un faux positif, **et ne poser un garde-fou que si la cause peut se reproduire**.
+
+**Instruit sur les données réelles, et la réponse est nette.** Le 2026-09-21 à 23h07 :
+
+| Clé | Dernier état avant 23:07:23 |
+|---|---|
+| …tDvQ | **OK** à 23:06:54 |
+| …wLeQ | QUOTA_ÉPUISÉ à 23:07:23 — **et OK à la même milliseconde** |
+| …xyOA | **OK** à 23:06:54 |
+
+Une clé sur trois épuisée, deux saines vingt-neuf secondes plus tôt, et la clé épuisée portant
+elle-même un signal favorable au même instant (un modèle épuisé, un autre disponible sur la même
+clé). La simulation lancée trois minutes après **n'était pas un relancement à l'aveugle** : c'était
+le passage à une clé saine — **la raison d'être même de Smart Breaker**.
+
+**Le constat reprochait donc un comportement correct**, et le faisait à chaque passage. Un
+garde-fou qui accuse à tort cesse d'être lu (L4) ; une alarme qu'aucune action légitime ne peut
+éteindre devient du décor (L6).
+
+**Pas de garde-fou nouveau** — la consigne l'interdisait, la cause n'étant pas reproductible
+puisqu'il n'y avait pas de faute. **La sonde, elle, est corrigée** : `blocageTotalA()` demande
+désormais **s'il restait quelque chose d'utilisable** au lieu de **s'il existait un épisode
+d'épuisement**. Une clé est utilisable quand son dernier signal favorable est au moins aussi récent
+que son dernier épuisement — donc une clé jamais épuisée l'est, et une clé épuisée puis revenue
+aussi. **Le dernier signal décide, jamais le pire jamais vu.**
+
+**Les quatre sens sont vérifiés par le filet**, et le premier compte plus que les autres : un
+**vrai** blocage total mord toujours. Sans lui, le correctif aurait acheté du silence plutôt que de
+la justesse. Et l'absence de donnée ne vaut jamais accusation : ne pas savoir n'est pas « il a
+relancé à l'aveugle » (L5/L11).

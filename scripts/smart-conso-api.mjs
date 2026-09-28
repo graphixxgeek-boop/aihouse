@@ -170,6 +170,31 @@ export function burstComplianceScore(healthData, sessionLog, opts = {}) {
 // SCHÉMAS RÉELS dans l'historique déjà accumulé (`.gemini-key-health.json` partagé avec Smart
 // Breaker, `.smart-conso-session.json` propre à cet outil) — jamais un jugement sur le code du jeu
 // lui-même, seulement sur la façon dont l'agent a réellement sollicité l'API par le passé.
+// blocageTotalA() — restait-il quelque chose d'utilisable à cet instant ? Une clé est jugée
+// utilisable quand son DERNIER signal favorable est au moins aussi récent que son dernier
+// épuisement : une clé épuisée puis redevenue OK est utilisable, et une clé jamais épuisée l'est
+// aussi. S'il reste ne serait-ce qu'une clé utilisable, relancer est le comportement voulu, pas une
+// faute — c'est le passage à une clé saine, la raison d'être de Smart Breaker.
+//
+// L'ABSENCE DE DONNÉE NE VAUT JAMAIS ACCUSATION : sans aucun épisode lisible, on ne sait pas, donc
+// on ne reproche pas (leçons L5/L11). La fonction rend alors false, et le constat ne se déclenche
+// pas.
+export function blocageTotalA(healthData, instant) {
+  const cles = Object.values(healthData?.keys ?? {});
+  if (!cles.length) return false;
+  let auMoinsUneLue = false;
+  for (const cle of cles) {
+    const eps = (cle?.episodes ?? []).filter((e) => typeof e?.at === "number" && e.at <= instant);
+    if (!eps.length) continue;
+    auMoinsUneLue = true;
+    const dernierEpuise = Math.max(...eps.filter((e) => e.outcome === "QUOTA_ÉPUISÉ").map((e) => e.at), -Infinity);
+    const dernierOk = Math.max(...eps.filter((e) => e.outcome !== "QUOTA_ÉPUISÉ").map((e) => e.at), -Infinity);
+    if (dernierEpuise === -Infinity) return false;       // jamais épuisée : utilisable
+    if (dernierOk >= dernierEpuise) return false;        // épuisée puis revenue : utilisable
+  }
+  return auMoinsUneLue;
+}
+
 export function scanConsumptionPatterns(healthData, sessionLog, now) {
   const findings = [];
   const exhaustionRate = recentExhaustionRate(healthData, now, 2);
@@ -183,6 +208,18 @@ export function scanConsumptionPatterns(healthData, sessionLog, now) {
   // Repère un relancement trop rapproché après un épisode d'épuisement confirmé — schéma réel
   // rencontré le 2026-09-18/19 (une simulation relancée immédiatement après un blocage total a
   // épuisé les modèles de repli en quelques minutes).
+  //
+  // « ÉPUISÉ » NE VEUT PAS DIRE « BLOQUÉ », ET LES CONFONDRE RENDAIT CE CONSTAT FAUX (2026-09-28,
+  // tâche #493). Le seul relancement jamais signalé par cette sonde a été instruit en détail : le
+  // 2026-09-21 à 23h07, UNE clé sur trois a rendu QUOTA_ÉPUISÉ ; les deux autres étaient OK
+  // vingt-neuf secondes plus tôt, et la clé épuisée portait elle-même un OK à la MÊME milliseconde
+  // (un modèle épuisé, un autre disponible sur la même clé). La simulation lancée trois minutes
+  // après n'était donc pas un relancement à l'aveugle : c'était exactement ce que Smart Breaker
+  // existe pour faire — passer à une clé saine. Le reproche visait un comportement CORRECT.
+  //
+  // Encore un signal ADJACENT lu comme le signal visé : « un épisode d'épuisement existe » n'est
+  // pas « l'API était bloquée ». Ce qui compte est qu'il ne restait RIEN d'utilisable, et c'est ce
+  // que la sonde mesure désormais. La borne de dix minutes, elle, est inchangée.
   const episodes = [];
   for (const key of Object.values(healthData?.keys ?? {})) {
     for (const ep of key?.episodes ?? []) if (typeof ep?.at === "number") episodes.push(ep);
@@ -193,7 +230,9 @@ export function scanConsumptionPatterns(healthData, sessionLog, now) {
   for (const ep of episodes) {
     if (ep.outcome !== "QUOTA_ÉPUISÉ") continue;
     const relaunch = confirmedActions.find((a) => a.at > ep.at && a.at - ep.at <= 10 * 60 * 1000);
-    if (relaunch) quickRelaunches++;
+    if (!relaunch) continue;
+    if (!blocageTotalA(healthData, ep.at)) continue;
+    quickRelaunches++;
   }
   if (quickRelaunches > 0) {
     findings.push({

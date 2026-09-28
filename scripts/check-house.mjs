@@ -19966,3 +19966,41 @@ await testCelluleBruteAuLieuDuNomPropre();
 
   console.log("Passed: une copie du code n'est pas une mémoire (2026-09-28, tâche #1082). Trouvé en déroulant la Ronde, et c'est un conflit entre deux outils qui avaient chacun raison : lancer INES-official écrit sa copie consolidée du dépôt, et le filet virait AUSSITÔT au rouge. La mesure de contrôle d'agent-des-noms — « un slug qui n'existe NULLE PART ne fait rien perdre », écrite précisément pour qu'une mesure qui trouve toujours quelque chose ne dise rien — trouvait son propre slug-témoin, parce que la copie du code contient le test qui le cite. UN GARDE-FOU QUI SE TROUVE LUI-MÊME DANS UNE COPIE DE LUI-MÊME N'EST PLUS UN GARDE-FOU, et la Ronde se serait retrouvée en conflit permanent avec le filet : chaque passage de l'item INES aurait cassé le commit suivant. LE RAISONNEMENT, ET IL VAUT AU-DELÀ DU CAS : une édition consolidée est une COPIE régénérable de `scripts/` et de `docs/`, jamais une mémoire accumulée par un outil. Un renommage n'y perd rien — on régénère, et la copie suit. Les compter revient à compter le MÊME code deux fois, la seconde sous l'étiquette « donnée ». L'EXCLUSION EST DÉCLARÉE MANUELLE ET SA RAISON EST ÉCRITE À CÔTÉ (ce que l'Article 24 autorise expressément) : « être une copie du code » n'est pas une propriété que le fichier porte, c'est une propriété de l'outil qui l'écrit, donc elle ne se dérive pas. Et la borne est VÉRIFIÉE plutôt que promise : deux entrées, pas une de plus, et le contre-test confirme qu'un outil ayant une vraie mémoire voit toujours son registre entier menacé.");
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// « ÉPUISÉ » NE VEUT PAS DIRE « BLOQUÉ » (2026-09-28, tâche #493)
+// ————————————————————————————————————————————————————————————————————————
+// Smart Conso API signalait « 1 relancement confirmé dans les 10 minutes suivant un épisode
+// d'épuisement réel », et la tâche demandait d'établir si c'était un relancement à l'aveugle ou un
+// faux positif. Instruit sur les données réelles : le 2026-09-21 à 23h07, UNE clé sur trois a rendu
+// QUOTA_ÉPUISÉ ; les deux autres étaient OK vingt-neuf secondes plus tôt, et la clé épuisée portait
+// elle-même un OK à la MÊME milliseconde (un modèle épuisé, un autre disponible sur la même clé).
+// La simulation lancée trois minutes après était donc le passage à une clé saine — la raison d'être
+// même de Smart Breaker. Le constat reprochait un comportement CORRECT.
+async function testEpuiseNestPasBloque() {
+  const SCA = await import('../scripts/smart-conso-api.mjs');
+
+  // LES QUATRE CAS, dont les deux qui comptent le plus (BP4) : la sonde doit encore MORDRE sur un
+  // vrai blocage total, sans quoi le correctif aurait acheté le silence plutôt que la justesse.
+  const toutEpuise = { keys: { a: { episodes: [{ at: 1000, outcome: 'QUOTA_ÉPUISÉ' }] }, b: { episodes: [{ at: 900, outcome: 'QUOTA_ÉPUISÉ' }] } } };
+  assert.equal(SCA.blocageTotalA(toutEpuise, 2000), true, 'when every key is exhausted, relaunching blind IS the fault this probe exists to name');
+  const uneSaine = { keys: { a: { episodes: [{ at: 1000, outcome: 'QUOTA_ÉPUISÉ' }] }, b: { episodes: [{ at: 900, outcome: 'OK' }] } } };
+  assert.equal(SCA.blocageTotalA(uneSaine, 2000), false, 'one healthy key left means relaunching is the DESIGNED behaviour — rotating to it is what Smart Breaker is for');
+  const revenue = { keys: { a: { episodes: [{ at: 1000, outcome: 'QUOTA_ÉPUISÉ' }, { at: 1500, outcome: 'OK' }] } } };
+  assert.equal(SCA.blocageTotalA(revenue, 2000), false, 'a key exhausted then healthy again is usable: the latest signal decides, never the worst one ever seen');
+  assert.equal(SCA.blocageTotalA({ keys: {} }, 2000), false, 'and no data is never an accusation — not knowing is not "he relaunched blind" (L5/L11)');
+
+  // SUR LES VRAIES DONNÉES DU DÉPÔT (Article 25) : l'épisode réellement instruit ne doit plus être
+  // compté, et le constat disparaît de la sortie.
+  const { readFileSync: lire493, existsSync: existe493 } = await import('node:fs');
+  if (existe493('.gemini-key-health.json') && existe493('.smart-conso-session.json')) {
+    const sante = JSON.parse(lire493('.gemini-key-health.json', 'utf8'));
+    const session = JSON.parse(lire493('.smart-conso-session.json', 'utf8'));
+    assert.equal(SCA.blocageTotalA(sante, Date.parse('2026-09-21T23:07:23.022Z')), false, 'the real episode this task investigated was never a total block: two of three keys were OK twenty-nine seconds earlier');
+    const constats = SCA.scanConsumptionPatterns(sante, session, Date.now());
+    assert.ok(!constats.some((c) => /relancement/.test(c.constat)), 'so the quick-relaunch finding must no longer be reported — it named a correct behaviour, and a probe that accuses correct behaviour stops being read (L4)');
+  }
+
+  console.log("Passed: « épuisé » ne veut pas dire « bloqué » (2026-09-28, tâche #493). La tâche traînait depuis cinq jours et 18 rapports consécutifs, avec une consigne précise : établir si le relancement signalé était une faute de ma part ou un faux positif de détection, et ne poser un garde-fou QUE si la cause peut se reproduire. INSTRUIT SUR LES DONNÉES RÉELLES, ET LA RÉPONSE EST NETTE : le 2026-09-21 à 23h07, UNE clé sur trois a rendu QUOTA_ÉPUISÉ. Les deux autres étaient OK vingt-neuf secondes plus tôt, et la clé épuisée portait elle-même un OK à la MÊME milliseconde — un modèle épuisé, un autre disponible sur la même clé. La simulation lancée trois minutes après n'était donc pas un relancement à l'aveugle : c'était le passage à une clé saine, c'est-à-dire la raison d'être même de Smart Breaker. LE CONSTAT REPROCHAIT UN COMPORTEMENT CORRECT, et il le faisait à chaque passage depuis cinq jours. DONC PAS DE GARDE-FOU NOUVEAU — la consigne était explicite — mais la SONDE corrigée : elle demande maintenant s'il restait quelque chose d'utilisable, au lieu de s'il existait un épisode d'épuisement. Encore la même famille qu'ailleurs cette nuit : un signal ADJACENT (un épisode existe) lu comme le signal visé (il ne restait rien). LES QUATRE SENS SONT VÉRIFIÉS, et le premier est le plus important : un vrai blocage total mord toujours. Une clé revenue à la santé est utilisable — le dernier signal décide, jamais le pire jamais vu. Et l'absence de donnée ne vaut jamais accusation.");
+}
+await testEpuiseNestPasBloque();
