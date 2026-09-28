@@ -2131,6 +2131,7 @@ export const EXCEPTIONS_D_EXPORT = [
   // pièces d'une MÉTHODE — comment on absorbe un corpus massif sans trancher trop tôt, comment on
   // sépare la parole du commanditaire de la matière préparée, comment on n'organise pas par sujet
   // avant de connaître les sujets. Le contenu sera propre à ce projet ; la structure ne l'est pas.
+  { chemin: "docs/grand-projet/01-absorption/lire-les-sources.md", etat: "PART", pourquoi: "lire un corpus Word sans perdre les styles, et surtout POURQUOI un convertisseur ne devient pas un membre de l équipe : le coût d entrée ne se justifie que pour un outil qui rend un jugement" },
   { chemin: "docs/grand-projet/00-sources/01-sa-demande/README.md", etat: "PART", pourquoi: "la règle de séparation entre la parole du commanditaire et la matière préparée : sur n'importe quel corpus massif, confondre les deux est le glissement qu'on ne voit jamais se produire" },
   { chemin: "docs/grand-projet/00-sources/02-documents-prepares/README.md", etat: "PART", pourquoi: "pourquoi le volume n'est pas l'autorité, et pourquoi chaque document entre à l'inventaire AVANT d'être lu — deux règles de méthode, vraies hors de ce dépôt" },
   { chemin: "docs/grand-projet/index.md", etat: "PART", pourquoi: "la porte d'entrée d'un chantier massif : sa structure — sources séparées de l'absorption, absorption séparée de l'analyse, trois traitements déclarés par document — est une méthode réutilisable, jamais un contenu propre à ce dépôt" },

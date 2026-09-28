@@ -131,6 +131,7 @@ que l'assainissement en cours est terminé.
 |---|---|
 | [`index.md`](index.md) | ce fichier : la porte d'entrée, les règles du dossier, les calibrages tranchés |
 | [`notes-de-travail.md`](notes-de-travail.md) | ce qui n'est qu'à moi : les pièges anticipés, la discipline de lecture, le journal |
+| [`01-absorption/lire-les-sources.md`](01-absorption/lire-les-sources.md) | comment lire du Word et du texte, vérifié avant que les fichiers arrivent |
 | [`01-absorption/inventaire.md`](01-absorption/inventaire.md) | un document = une ligne : poids, thème, traitement décidé une seule fois |
 | [`00-sources/01-sa-demande/README.md`](00-sources/01-sa-demande/README.md) | pourquoi ses deux fichiers ont un statut que les autres n'ont pas |
 | [`00-sources/02-documents-prepares/README.md`](00-sources/02-documents-prepares/README.md) | pourquoi le volume n'est pas l'autorité, et l'entrée à l'inventaire avant lecture |
