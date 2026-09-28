@@ -284,7 +284,7 @@ export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir
 // additionner des verdicts ne les croise pas.
 export function causesIndirectes(sondes = {}) {
   const trouvailles = [];
-  const { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours } = sondes;
+  const { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles } = sondes;
 
   // ① Un remède dort ET le coût qu'il devait retirer est toujours payé → la lourdeur est
   //    entièrement évitable, ce qu'aucune des deux sondes ne dit seule.
@@ -332,6 +332,15 @@ export function causesIndirectes(sondes = {}) {
     trouvailles.push({
       quoi: `${bruit.ecartees} lignes sont écartées de l'affichage à chaque commit, et ${allersRetours.total} relances rapprochées ont lieu hors rafale du crochet`,
       pourquoi: "produire beaucoup n'est pas une faute, relancer non plus — mais ensemble elles décrivent un cercle : ce qui n'est pas vu passer se redemande. C'est le coût du changement de contexte, celui qui ne s'impute à aucune tâche parce qu'il se paie ENTRE elles",
+    });
+  }
+
+  // ⑦ Une fluidité basse ET des décisions qui attendent → la file ne traîne pas parce qu'on
+  //    travaille lentement, mais parce qu'elle attend. Les deux sondes sont calmes séparément.
+  if (fluidite?.mesurable && decisions?.mesurable && fluidite.mediane < 0.4 && decisions.attentes.length) {
+    trouvailles.push({
+      quoi: `${Math.round((1 - fluidite.mediane) * 100)} % du délai d'une tâche est de l'attente, et ${decisions.attentes.length} décisions attendent en ce moment`,
+      pourquoi: "c'est le constat central de toute la littérature sur le sujet, vérifié ici : on gagne beaucoup plus en retirant de l'attente qu'en travaillant plus vite. Passer la fluidité de 15 à 30 % divise le délai par deux — aucune optimisation de code n'approche ce rendement",
     });
   }
 
@@ -460,6 +469,135 @@ export function mesAllersRetours({ history = loadToolUsageHistory(), fenetre = F
     pourquoi: total
       ? `${total} relance(s) rapprochée(s) sans commit entre les deux, sur ${horsRafale.length} passages retenus (${Math.round(100 * total / horsRafale.length)} %) — ${ecartes} passage(s) écarté(s) comme rafale du crochet, qui n'est jamais une friction. C'est le coût qui ne s'impute à aucune tâche, parce qu'il se paie ENTRE elles`
       : `aucune relance rapprochée hors rafale sur ${horsRafale.length} passages retenus (${ecartes} écarté(s) comme rafale du crochet)` };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA FLUIDITÉ RÉELLE DE LA FILE (2026-09-28, son choix de pouvoirs)
+// ————————————————————————————————————————————————————————————————————————
+// C'EST LE CHIFFRE QUE LA RECHERCHE DÉSIGNE COMME LE PLUS RENTABLE, et il n'existait nulle part
+// ici : sur une tâche TERMINÉE, quelle part du délai total a été du travail, et quelle part de
+// l'attente ? Les repères extérieurs : 15 % est courant, passer à 30 % divise le délai par deux,
+// 40 % est excellent.
+//
+// COMMENT ELLE SE CALCULE SANS INVENTER QUOI QUE CE SOIT : l'ouverture est l'horodatage de la ligne
+// de suivi ; la clôture est le DERNIER commit qui cite le numéro de la tâche ; les jours travaillés
+// sont les jours DISTINCTS où un commit la cite. Tout vient de git et du registre, rien d'une
+// impression.
+//
+// CE QU'ELLE SURESTIME, ET LE TAIRE SERAIT MALHONNÊTE : un jour où un seul commit cite la tâche
+// compte pour un jour TRAVAILLÉ ENTIER. La fluidité rendue est donc un PLAFOND — la vraie est plus
+// basse. C'est le bon côté de l'erreur : on ne veut pas d'un chiffre qui dramatise, on veut un
+// chiffre dont on sait dans quel sens il penche.
+//
+// ET ELLE REFUSE DE CONCLURE SOUS UN CORPUS MINIMUM : une moyenne sur trois tâches ressemble à une
+// statistique sans en être une (BP5, la leçon payée deux fois le 2026-09-27).
+//
+// LA RESTRICTION AUX TÂCHES QUI ONT RÉELLEMENT DURÉ, et elle a été payée au premier passage réel :
+// la première version rendait **une fluidité médiane de 100 %** sur 260 tâches. Arithmétiquement
+// juste, et entièrement creux — la majorité des tâches s'ouvrent et se ferment LE MÊME JOUR, donc
+// leur fluidité vaut 1 par construction : elles n'ont jamais attendu. La médiane ne mesurait donc
+// que la proportion de tâches faites d'un trait.
+//
+// C'EST LA CINQUIÈME FOIS DE LA JOURNÉE QU'UNE PREMIÈRE MESURE FLATTE, et c'est la forme la plus
+// dangereuse du faux vert : un « 100 % » ne se re-vérifie jamais, là où un chiffre bas fait ouvrir
+// le dossier (journal XP, entrée 27). La fluidité ne se mesure donc que sur les tâches qui ont
+// PASSÉ AU MOINS UNE NUIT — les seules où une attente a pu exister — et le nombre de tâches
+// écartées pour cette raison est DIT, jamais escamoté.
+export const DUREE_MINIMALE_JOURS = 2;
+export const CORPUS_MINIMUM_FLUIDITE = 10;
+
+export function fluiditeDeLaFile({ dossier = "docs/suivi/sessions", lireDir = readdirSync, lireFic = readFileSync, shImpl = sh, minimum = CORPUS_MINIMUM_FLUIDITE } = {}) {
+  const abs = join(ROOT, dossier);
+  let fichiers;
+  try { fichiers = lireDir(abs).filter((f) => f.endsWith(".md")); }
+  catch { return pasMesure("la fluidité de la file", `${dossier} est introuvable — sur un autre dépôt ce registre n'existe pas, et c'est un résultat`); }
+  const fermees = [];
+  for (const f of fichiers) {
+    let texte; try { texte = lireFic(join(abs, f), "utf8"); } catch { continue; }
+    for (const ligne of texte.split("\n")) {
+      if (!ligne.startsWith("| ")) continue;
+      const cells = ligne.split("|").slice(1).map((c) => c.trim());
+      if (cells.length && cells[cells.length - 1] === "") cells.pop();
+      if (!cells.length || !/^\d+$/.test(cells[0])) continue;
+      if (!/^termin/i.test(cells[cells.length - 1] ?? "")) continue;
+      const ouverte = Date.parse(cells[1] ?? "");
+      if (!Number.isFinite(ouverte)) continue;
+      fermees.push({ numero: Number(cells[0]), ouverte, sujet: (cells[3] ?? "").replace(/\*\*/g, "").slice(0, 60) });
+    }
+  }
+  if (!fermees.length) return pasMesure("la fluidité de la file", "aucune tâche terminée et datée : il n'y a rien à mesurer, ce qui n'est jamais « tout va bien »");
+  const mesurees = [];
+  for (const t of fermees) {
+    let dates;
+    try {
+      const brut = String(shImpl(`git log --format=%ct --grep="#${t.numero}\\b" -E`)).trim();
+      dates = brut ? brut.split("\n").map((x) => Number(x) * 1000).filter(Number.isFinite) : [];
+    } catch { return pasMesure("la fluidité de la file", "git est illisible ici : sans les dates de commit, la part travaillée ne se distingue pas de la part attendue"); }
+    if (!dates.length) continue;                       // jamais citée en commit : rien à mesurer sur elle
+    const fin = Math.max(...dates);
+    const ecouleJours = Math.max(1, Math.round((fin - t.ouverte) / 86_400_000));
+    const joursTravailles = new Set(dates.map((d) => new Date(d).toISOString().slice(0, 10))).size;
+    mesurees.push({ ...t, ecouleJours, joursTravailles, fluidite: Math.min(1, joursTravailles / ecouleJours) });
+  }
+  // SEULES LES TÂCHES QUI ONT PASSÉ AU MOINS UNE NUIT PEUVENT AVOIR ATTENDU. Les autres ne sont pas
+  // « fluides » : elles sont hors sujet, et les compter noierait la mesure dans des 100 % gratuits.
+  const memeJour = mesurees.filter((t) => t.ecouleJours < DUREE_MINIMALE_JOURS).length;
+  const duree = mesurees.filter((t) => t.ecouleJours >= DUREE_MINIMALE_JOURS);
+  if (duree.length < minimum) {
+    return { mesurable: false, quoi: "la fluidité de la file",
+      pourquoi: `${duree.length} tâche(s) ont duré plus d'une journée, il en faut ${minimum} : une médiane sur si peu ressemble à une statistique sans en être une (${memeJour} tâche(s) écartée(s) parce qu'ouvertes et fermées le même jour — elles n'ont jamais pu attendre, et les compter rendrait un 100 % gratuit)` };
+  }
+  const tries = [...duree].sort((a, b) => a.fluidite - b.fluidite);
+  const mediane = tries[Math.floor(tries.length / 2)].fluidite;
+  return { mesurable: true, mesurees: duree.length, memeJour, fermees: fermees.length, mediane,
+    lesPlusLentes: tries.slice(0, 5).map((t) => ({ numero: t.numero, sujet: t.sujet, fluidite: t.fluidite, ecouleJours: t.ecouleJours, joursTravailles: t.joursTravailles })),
+    pourquoi: `fluidité médiane ${Math.round(mediane * 100)} % sur les ${duree.length} tâche(s) ayant passé au moins une nuit — donc ${Math.round((1 - mediane) * 100)} % du délai est de l'attente. ${memeJour} tâche(s) faites d'un trait sont ÉCARTÉES : leur fluidité vaut 1 par construction, jamais par mérite. Et c'est un PLAFOND : un jour portant un seul commit compte pour un jour travaillé entier, donc la vraie fluidité est plus basse` };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LE COÛT D'UN ARTICLE, VU DU DEHORS (2026-09-28, sa question : « pourquoi chez Jesus ? »)
+// ————————————————————————————————————————————————————————————————————————
+// LA DÉCISION, ET ELLE SUIT LA CASCADE : la mesure du coût d'un Article se COUPE en deux.
+//   · MOÏSE voit le DEDANS — combien d'obligations un Article porte, s'il a été vidé, renuméroté.
+//     C'est un fait sur le document, et c'est son périmètre : il le fait déjà, JESUS ne le refait
+//     jamais (Article 24 : un registre se LIT, il ne se recopie pas).
+//   · JESUS voit le DEHORS — quel code applique réellement cet Article, et s'il a jamais changé une
+//     décision. Ça n'est écrit NULLE PART dans la charte, donc aucun outil de document ne peut le
+//     lire. C'est précisément la définition de son périmètre : tout ce qui n'est dans aucun fichier
+//     de règles.
+//
+// CE QUE LA SONDE NE DIT JAMAIS, et c'est sa limite honnête : un Article sans porteur dans le code
+// n'est PAS inutile. Beaucoup des règles les plus importantes de ce projet ne PEUVENT pas avoir de
+// porteur mécanique — « avoir réellement compris avant d'agir » ne se teste pas — et la charte le
+// déclare elle-même (Article 27 : déclarer l'impossibilité EST la protection). La sonde rend donc
+// un FAIT, jamais un verdict : voici ceux que rien n'applique et que rien ne cite.
+export function coutDesArticlesVuDuDehors({ charte = lire("CLAUDE.md"), racines = ["scripts", "docs/suivi"], lireDir = readdirSync, lireFic = readFileSync } = {}) {
+  if (charte == null) return pasMesure("le coût des Articles vu du dehors", "CLAUDE.md est introuvable — sur un autre dépôt, la charte porte un autre nom, et supposer serait pire que déclarer");
+  const numeros = [...new Set([...charte.matchAll(/\*\*Article\s+(\d+)(?:bis)?\s*[—-]/g)].map((m) => Number(m[1])))].sort((a, b) => a - b);
+  if (!numeros.length) return pasMesure("le coût des Articles vu du dehors", "aucun Article reconnu dans la charte — sa forme a peut-être changé, et découper au jugé rendrait un tableau entièrement faux");
+  const textes = { code: [], suivi: [] };
+  const balayer = (dir, sac) => {
+    let entrees; try { entrees = lireDir(join(ROOT, dir), { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const chemin = `${dir}/${e.name}`;
+      if (e.isDirectory()) { balayer(chemin, sac); continue; }
+      if (!/\.(mjs|md)$/.test(e.name)) continue;
+      try { sac.push(lireFic(join(ROOT, chemin), "utf8")); } catch { /* illisible : écarté, jamais deviné */ }
+    }
+  };
+  balayer("scripts", textes.code);
+  balayer("docs/suivi", textes.suivi);
+  if (!textes.code.length) return pasMesure("le coût des Articles vu du dehors", "aucun fichier de code lu : le dénominateur serait vide, et tous les Articles paraîtraient sans porteur");
+  const compter = (sac, n) => {
+    const motif = new RegExp(`Article\\s+${n}\\b`, "g");
+    return sac.reduce((t, txt) => t + (txt.match(motif) ?? []).length, 0);
+  };
+  const articles = numeros.map((n) => ({ numero: n, dansLeCode: compter(textes.code, n), dansLeSuivi: compter(textes.suivi, n) }));
+  const muets = articles.filter((a) => a.dansLeCode === 0 && a.dansLeSuivi === 0);
+  return { mesurable: true, articles, muets, lus: numeros.length, fichiersCode: textes.code.length,
+    pourquoi: muets.length
+      ? `${muets.length} Article(s) sur ${numeros.length} ne sont cités NI dans le code NI dans le suivi : ${muets.map((a) => a.numero).join(", ")}. CE N'EST PAS UN VERDICT — beaucoup des règles les plus importantes ne PEUVENT pas avoir de porteur mécanique, et la charte le déclare elle-même. C'est un fait, à confronter au DEDANS que MOÏSE mesure`
+      : `les ${numeros.length} Articles sont cités au moins une fois dans le code ou dans le suivi` };
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -605,8 +743,10 @@ export function passage(options = {}) {
   const decisions = decisionsEnAttente(options);
   const bruit = alertesEcarteesDeLAffichage(options);
   const allersRetours = mesAllersRetours(options);
-  const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours });
-  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, croisements };
+  const fluidite = fluiditeDeLaFile(options);
+  const articles = coutDesArticlesVuDuDehors(options);
+  const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles });
+  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, croisements };
 }
 
 export function lignesDuPassage(p) {
@@ -624,9 +764,13 @@ export function lignesDuPassage(p) {
   dire("② LES OBLIGATIONS — ce que coûte un outil de plus", p.arrivant);
   dire("③ LES ALERTES QUE PERSONNE N'ÉTEINT", p.alertes,
     (s) => (s.vieilles ?? []).map((v) => `· ${v.jours} j — ${v.outil ?? v.source ?? "origine non nommée"} : ${String(v.quoi ?? v.constat ?? "").slice(0, 90)}`));
+  dire("② LES OBLIGATIONS — les Articles que rien n'applique et que rien ne cite", p.articles,
+    (s) => (s.muets ?? []).slice(0, 10).map((a) => `· Article ${a.numero} — 0 citation dans le code, 0 dans le suivi`));
   dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
   dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,
     (s) => (s.relances ?? []).slice(0, 6).map((r) => `· ${r.slug} : ${r.relances} relance(s) rapprochée(s) sans commit entre les deux`));
+  dire("④ LA FLUIDITÉ — quelle part du délai est du travail, quelle part de l'attente", p.fluidite,
+    (s) => (s.lesPlusLentes ?? []).map((t) => `· #${t.numero} ${Math.round(t.fluidite * 100)} % — ${t.joursTravailles} j travaillé(s) sur ${t.ecouleJours} j écoulés — ${t.sujet}`));
   dire("④ LES FRICTIONS DE L'ÉCHANGE — depuis quand une décision attend", p.decisions,
     (s) => (s.attentes ?? []).slice(0, 8).map((a) => `· ${a.jours ?? "?"} j — #${a.numero} ${a.sujet}`));
   L.push("=== LA VUE 360 — les causes INDIRECTES, celles qu'aucune sonde ne voit seule ===");

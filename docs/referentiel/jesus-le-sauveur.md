@@ -164,3 +164,43 @@ les outils un par un.
 node scripts/jesus-le-sauveur.mjs cascade [niveau] <sujet>
 node scripts/abraham-les-references.mjs assainissement     # puis le ramassage
 ```
+
+## Les deux derniers pouvoirs (2026-09-28)
+
+### La fluidité réelle de la file — **50 %**
+
+**Mesure du jour : fluidité médiane 50 %** sur les 39 tâches ayant passé au moins une nuit. Donc
+**la moitié du délai d'une tâche est de l'attente**, pas du travail.
+
+**Comment elle se calcule sans rien inventer** : l'ouverture est l'horodatage de la ligne de suivi ;
+la clôture est le dernier commit citant le numéro ; les jours travaillés sont les jours distincts où
+un commit la cite. Tout vient de git et du registre.
+
+**CINQUIÈME FAUX VERT DE LA JOURNÉE, évité de justesse.** La première version rendait **100 % sur
+260 tâches** — arithmétiquement juste, entièrement creux : la majorité des tâches s'ouvrent et se
+ferment le même jour, donc leur fluidité vaut 1 **par construction**, jamais par mérite. La médiane
+ne mesurait que la proportion de tâches faites d'un trait. **221 tâches sont désormais écartées pour
+cette raison, et le nombre est dit.**
+
+**Ce qu'elle surestime, déclaré dans sa propre sortie** : un jour portant un seul commit compte pour
+un jour travaillé entier. Le chiffre rendu est donc un **PLAFOND** — la vraie fluidité est plus
+basse. C'est le bon côté de l'erreur : on sait dans quel sens il penche.
+
+### Le coût d'un Article, vu du DEHORS
+
+**La décision, prise sur sa question « pourquoi chez Jesus ? c'est pas chez Moïse ? » : la mesure se
+COUPE en deux, et la coupure suit la cascade.**
+
+| | Qui | Ce qu'il voit |
+|---|---|---|
+| **DEDANS** | MOÏSE | combien d'obligations un Article porte, s'il a été vidé, renuméroté — un fait sur le document |
+| **DEHORS** | JESUS | quel code l'applique réellement, qui le cite — ça n'est écrit nulle part dans la charte |
+
+**JESUS ne recalcule jamais la moitié de MOÏSE : il l'obtient en l'appelant par la cascade**
+(Article 24 — un registre se LIT, il ne se recopie pas).
+
+**Sa limite, écrite dans sa propre sortie** : un Article sans porteur dans le code **n'est pas
+inutile**. Beaucoup des règles les plus importantes du projet ne PEUVENT pas avoir de porteur
+mécanique — « avoir réellement compris avant d'agir » ne se teste pas — et la charte le déclare
+elle-même (Article 27 : déclarer l'impossibilité EST la protection). La sonde rend un **fait**,
+jamais un verdict. **État du jour : les 33 Articles sont tous cités au moins une fois.**

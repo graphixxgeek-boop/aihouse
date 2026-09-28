@@ -20816,7 +20816,42 @@ async function testJesusLeSauveur() {
   // SANS GIT, ON REFUSE : sans les dates de commit, rien ne distingue une relance d'une rafale.
   assert.equal(J.mesAllersRetours({ history: vraie, shImpl: () => { throw new Error('pas de git'); } }).mesurable, false, 'sans git, la sonde REFUSE de conclure plutôt que de rendre un chiffre qui confondrait le crochet et moi');
 
-  // ⑨ IL TOURNE POUR DE VRAI CONTRE LE DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre
+  // ⑨ LA FLUIDITÉ — le chiffre que la recherche désigne comme le plus rentable, et un CINQUIÈME
+  // faux vert évité le même jour. La première version rendait 100 % sur 260 tâches : arithmétiquement
+  // juste et entièrement creux, parce que la majorité s'ouvrent et se ferment LE MÊME JOUR, donc
+  // leur fluidité vaut 1 par construction — elles n'ont jamais pu attendre. C'est la forme la plus
+  // dangereuse du faux vert : un « 100 % » ne se re-vérifie jamais (journal XP, entrée 27).
+  const jourMs = 86400000;
+  const tCom = (n) => String(Math.floor(n / 1000));
+  const filFic = { 'a.md': '| 1 | 2026-09-20T08:00Z | k | Sujet | ss | NORMAL | PROJET | OUI | OUI | d | Terminée |\n' };
+  const litDir = () => ['a.md'];
+  const litFic = (f) => filFic['a.md'];
+  // Une seule tâche : il REFUSE de conclure plutôt que de rendre une médiane sur un point.
+  const maigre = J.fluiditeDeLaFile({ lireDir: litDir, lireFic: litFic, shImpl: () => tCom(Date.parse('2026-09-25T08:00Z')) });
+  assert.equal(maigre.mesurable, false, 'sous le corpus minimum, la fluidité REFUSE de conclure : une médiane sur un point ressemble à une statistique sans en être une (BP5)');
+  assert.ok(/même jour/.test(maigre.pourquoi) || /il en faut/.test(maigre.pourquoi), 'et sa raison dit ce qui manque, jamais un simple « pas mesuré » nu');
+  // Le CONTRE-TEST du faux vert : dix tâches faites d'un trait ne doivent JAMAIS produire un 100 %.
+  const dUnTrait = {};
+  let lignes = '';
+  for (let n = 1; n <= 12; n++) lignes += `| ${n} | 2026-09-20T08:00Z | k${n} | Sujet | ss | NORMAL | PROJET | OUI | OUI | d | Terminée |\n`;
+  dUnTrait['a.md'] = lignes;
+  const memeJour = J.fluiditeDeLaFile({ lireDir: () => ['a.md'], lireFic: () => dUnTrait['a.md'], shImpl: () => tCom(Date.parse('2026-09-20T18:00Z')) });
+  assert.equal(memeJour.mesurable, false, 'MUST NOT FLATTER: douze tâches ouvertes et fermées le même jour ne rendent PAS « 100 % de fluidité » — elles n\'ont jamais attendu, donc il n\'y a rien à mesurer sur elles');
+  assert.ok(/écartée\(s\) parce qu'ouvertes et fermées le même jour/.test(memeJour.pourquoi), 'et le nombre d\'écartées est DIT : un zéro sans son dénominateur se lit « tout va bien »');
+  // ET IL MESURE VRAIMENT quand les tâches ont duré — un jour travaillé sur quatre écoulés.
+  assert.ok(/PLAFOND/.test(J.fluiditeDeLaFile().pourquoi ?? ''), 'sur le vrai registre, la mesure DÉCLARE qu\'elle surestime : un jour portant un seul commit compte pour un jour travaillé entier, donc on sait dans quel sens le chiffre penche');
+
+  // ⑩ LE COÛT D'UN ARTICLE, VU DU DEHORS — et la coupure suit la cascade. MOÏSE voit le DEDANS
+  // (combien d'obligations), JESUS le DEHORS (quel code l'applique, qui le cite). JESUS ne
+  // recalcule jamais la moitié de MOÏSE : il l'obtient en l'appelant (Article 24).
+  assert.equal(J.coutDesArticlesVuDuDehors({ charte: null }).mesurable, false, 'sans charte sur le disque — le cas de tout autre dépôt — la sonde le DÉCLARE au lieu de mourir');
+  assert.equal(J.coutDesArticlesVuDuDehors({ charte: 'aucun article ici' }).mesurable, false, 'et une charte dont aucun Article ne ressort rend « pas mesuré » plutôt qu\'un tableau vide qui se lirait comme « rien à signaler »');
+  const arts = J.coutDesArticlesVuDuDehors();
+  assert.equal(arts.mesurable, true, 'sur le vrai dépôt, elle tourne');
+  assert.ok(arts.lus > 25, `et elle lit les Articles réels (${arts.lus} aujourd'hui), jamais une liste recopiée`);
+  assert.ok(/CE N'EST PAS UN VERDICT/.test(arts.pourquoi) || /cités au moins une fois/.test(arts.pourquoi), 'LA LIMITE EST DITE DANS LA SORTIE : un Article sans porteur mécanique n\'est pas inutile — beaucoup des règles les plus importantes ne PEUVENT pas en avoir, et la charte le déclare elle-même (Article 27)');
+
+  // ⑪ IL TOURNE POUR DE VRAI CONTRE LE DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre
   // le vrai dépôt n'est pas un outil, c'est une intention.
   const reel = J.passage();
   assert.equal(reel.decisions.mesurable, true, 'la file réelle est lue');
