@@ -20004,3 +20004,60 @@ async function testEpuiseNestPasBloque() {
   console.log("Passed: « épuisé » ne veut pas dire « bloqué » (2026-09-28, tâche #493). La tâche traînait depuis cinq jours et 18 rapports consécutifs, avec une consigne précise : établir si le relancement signalé était une faute de ma part ou un faux positif de détection, et ne poser un garde-fou QUE si la cause peut se reproduire. INSTRUIT SUR LES DONNÉES RÉELLES, ET LA RÉPONSE EST NETTE : le 2026-09-21 à 23h07, UNE clé sur trois a rendu QUOTA_ÉPUISÉ. Les deux autres étaient OK vingt-neuf secondes plus tôt, et la clé épuisée portait elle-même un OK à la MÊME milliseconde — un modèle épuisé, un autre disponible sur la même clé. La simulation lancée trois minutes après n'était donc pas un relancement à l'aveugle : c'était le passage à une clé saine, c'est-à-dire la raison d'être même de Smart Breaker. LE CONSTAT REPROCHAIT UN COMPORTEMENT CORRECT, et il le faisait à chaque passage depuis cinq jours. DONC PAS DE GARDE-FOU NOUVEAU — la consigne était explicite — mais la SONDE corrigée : elle demande maintenant s'il restait quelque chose d'utilisable, au lieu de s'il existait un épisode d'épuisement. Encore la même famille qu'ailleurs cette nuit : un signal ADJACENT (un épisode existe) lu comme le signal visé (il ne restait rien). LES QUATRE SENS SONT VÉRIFIÉS, et le premier est le plus important : un vrai blocage total mord toujours. Une clé revenue à la santé est utilisable — le dernier signal décide, jamais le pire jamais vu. Et l'absence de donnée ne vaut jamais accusation.");
 }
 await testEpuiseNestPasBloque();
+
+// ————————————————————————————————————————————————————————————————————————
+// LA CONCORDANCE À DEUX OUTILS (2026-09-28, tâche #695, volet E des failles IA)
+// ————————————————————————————————————————————————————————————————————————
+// Le chiffre qui a motivé ce volet : la vérification par une source INDÉPENDANTE est la seule
+// mitigation mesurée qui fasse tomber le taux de « faux succès » — un résultat annoncé juste et qui
+// ne l'est pas — d'environ 48 % à 3 %. Aucune relecture par le même outil n'en approche : un outil
+// qui se relit reproduit son propre angle mort, et cette seule nuit en a donné sept exemples.
+async function testConcordanceADeuxOutils() {
+  const RT = await import('../scripts/report-template.mjs');
+  const base = { constat: 'X est cassé', etat: 'retenu', tache: 'réparer X' };
+  const ligne = (p) => p.lignes.find((l) => /RETENU|CORROBORER/.test(l)) ?? '';
+
+  // ── 1. UN CONSTAT CRITIQUE SEUL N'ENTRE PAS EN ACTION, mais il reste VISIBLE et nommé : c'est un
+  // report d'action, jamais un rejet — une trouvaille effacée serait pire que non corroborée.
+  const seul = RT.buildPlanDaction([{ ...base, critique: true }], { toolSlug: 'argus' });
+  assert.match(ligne(seul), /À CORROBORER/, 'a critical finding with no second source must not trigger action on its own');
+  assert.match(ligne(seul), /X est cassé/, 'and it must stay visible and named: deferring the action is not deleting the finding');
+  assert.equal(seul.aCorroborer.length, 1, 'the plan must count what is waiting for a second measure');
+
+  // ── 2. L'AUTO-CORROBORATION EST REFUSÉE, et c'est la moitié de la règle : remplir la case avec
+  // son propre nom satisfait la forme et rate entièrement le fond.
+  const soi = RT.buildPlanDaction([{ ...base, critique: true, corrobore: { outil: 'argus', constat: 'idem' } }], { toolSlug: 'argus' });
+  assert.match(ligne(soi), /À CORROBORER/, 'a tool corroborating ITSELF is not an independent verification');
+  assert.match(ligne(soi), /LUI-MÊME/, 'and the report must say so, rather than silently treating it as missing');
+
+  // ── 3. UN SECOND OUTIL RÉELLEMENT DIFFÉRENT LIBÈRE L'ACTION, et le sceau nomme qui a confirmé —
+  // sans le nom, la lecture ne peut pas juger si la source était vraiment indépendante.
+  const autre = RT.buildPlanDaction([{ ...base, critique: true, corrobore: { outil: 'harmonia', constat: 'même zone' } }], { toolSlug: 'argus' });
+  assert.match(ligne(autre), /→ RETENU \[confirmé par harmonia\]/, 'a genuinely independent second tool releases the action, and names itself');
+
+  // ── 4. RIEN NE CHANGE POUR LES CONSTATS ORDINAIRES (BP4) : le mécanisme est opt-in, et un
+  // dispositif qui modifierait la sortie de tout le paysage du jour au lendemain serait refusé.
+  const ordinaire = RT.buildPlanDaction([base], { toolSlug: 'argus' });
+  assert.match(ligne(ordinaire), /→ RETENU · X est cassé/, 'an ordinary finding must render exactly as before — the mechanism is opt-in');
+  assert.equal(ordinaire.aCorroborer.length, 0);
+
+  // ── 5. LA DÉCLARATION EST PAR ÉCART, jamais par outil : dans une même liste, l'un peut être
+  // critique et l'autre non. C'est ce que le premier usage réel exige.
+  const melange = RT.planDactionDepuisEcarts([{ n: 'a', sensible: true }, { n: 'b', sensible: false }], {
+    toolSlug: 'axa-check', libelle: (x) => x.n, tache: 't',
+    critique: (x) => x.sensible,
+    corrobore: (x) => (x.sensible ? { outil: 'harmonia', constat: 'carte des nœuds sensibles' } : null),
+  });
+  assert.equal(melange.lignes.filter((l) => /confirmé par harmonia/.test(l)).length, 1, 'only the sensitive one carries the seal');
+  assert.equal(melange.lignes.filter((l) => /→ RETENU · b/.test(l)).length, 1, 'and the ordinary one is untouched');
+
+  // ── 6. LE PREMIER USAGE EST RÉEL, PAS FABRIQUÉ (leçon L2) : AXA-CHECK déclare bien critique le
+  // constat dont la gravité vient d'une carte tenue par un AUTRE outil.
+  const { readFileSync: lire695 } = await import('node:fs');
+  const axa = lire695('scripts/axa-check.mjs', 'utf8');
+  assert.match(axa, /critique: prochesDunNoeudSensible/, 'AXA-CHECK must be a real caller: a mechanism wired only onto an invented case looks like it works, which is worse than not being wired at all');
+  assert.match(axa, /outil: "harmonia"/, 'and its second source must be the tool that actually holds the sensitive-node map');
+
+  console.log("Passed: la concordance à deux outils (2026-09-28, tâche #695, volet E des failles IA). LE CHIFFRE QUI A MOTIVÉ CE VOLET : la vérification par une source INDÉPENDANTE est la seule mitigation mesurée qui fasse tomber le taux de « faux succès » — un résultat annoncé juste et qui ne l'est pas — d'environ 48 % à 3 %. Aucune relecture par le MÊME outil n'en approche, parce qu'un outil qui se relit reproduit son propre angle mort : cette seule nuit en a donné sept exemples d'affilée. CE QUE LE MÉCANISME FAIT : un constat déclaré `critique` n'entre pas en action seul — il s'affiche « À CORROBORER » jusqu'à porter le nom d'un SECOND outil, forcément différent de celui qui rapporte. CE QU'IL NE FAIT PAS, ET C'EST ESSENTIEL : il n'efface jamais la trouvaille. Le constat reste visible, chiffré et nommé ; c'est le passage à l'ACTION qui attend, pas la mesure. L'AUTO-CORROBORATION EST REFUSÉE NOMMÉMENT, parce que remplir la case avec son propre nom satisfait la forme et rate tout le fond. LE PREMIER USAGE EST RÉEL ET N'A PAS ÉTÉ FABRIQUÉ POUR L'OCCASION (leçon L2) : dans AXA-CHECK, une fonction fragile PROCHE D'UN NŒUD SENSIBLE — du code non testé là où une casse se propage, et qui fausse en plus le score de robustesse que tout le paysage consulte. Sa gravité est établie par la carte d'HARMONIA, dérivée et vérifiée mécaniquement contre elle depuis le 2026-09-21 : la seconde source existait déjà, elle n'a pas été inventée. ET LE MÉCANISME EST OPT-IN : un constat ordinaire s'affiche exactement comme avant, parce qu'un dispositif qui changerait la sortie de tout le paysage du jour au lendemain serait refusé plutôt qu'adopté. CE QUI EST DIT FRANCHEMENT PLUTÔT QUE LAISSÉ CROIRE : sur le dépôt d'AUJOURD'HUI, ce critère ne correspond à AUCUN cas — zéro fonction fragile ne se trouve près d'un nœud sensible, les trois nœuds vivant dans des fichiers de jeu bien couverts. Ce zéro est un BON résultat, pas un mécanisme muet, et la nuance compte : le câblage porte sur un critère réel qui se déclenchera le jour où un tel cas apparaîtra, ce qui n'est pas la même chose qu'un mécanisme branché sur un cas inventé pour avoir l'air de tourner.");
+}
+await testConcordanceADeuxOutils();

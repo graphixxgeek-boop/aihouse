@@ -321,6 +321,43 @@ export function prioriteDuPlan(toolSlug, { gardiens = GARDIEN_DOMAINS } = {}) {
     : { prioritaire: false, raison: "outil hors du rang de Gardien sacré : plan à traiter dans l'ordre normal" };
 }
 
+// etatDeCorroboration() — LA CONCORDANCE À DEUX OUTILS (2026-09-28, tâche #695, volet E du plan
+// « failles des IA »).
+//
+// CE QUE LA RECHERCHE DIT, ET C'EST LE CHIFFRE QUI A MOTIVÉ LE VOLET : la vérification par une
+// source INDÉPENDANTE est la seule mitigation mesurée qui fasse tomber le taux de « faux succès »
+// — un résultat annoncé juste et qui ne l'est pas — d'environ 48 % à 3 %. Aucune relecture par le
+// même outil, si soigneuse soit-elle, n'approche ce résultat : un outil qui se relit reproduit son
+// propre angle mort, et cette nuit en a donné sept exemples d'affilée.
+//
+// COMMENT ÇA S'APPLIQUE ICI, ET CE QUE ÇA NE FAIT PAS. Un constat peut se déclarer `critique`. Dans
+// ce cas, il n'entre pas en action seul : il s'affiche « À CORROBORER » jusqu'à porter un
+// `corrobore: { outil, constat }` nommant un SECOND outil, forcément différent de celui qui
+// rapporte. Ce n'est JAMAIS un rejet — le constat reste visible, chiffré et nommé ; c'est le
+// passage à l'ACTION qui attend une seconde mesure.
+//
+// POURQUOI « DIFFÉRENT DE CELUI QUI RAPPORTE » EST LA MOITIÉ DE LA RÈGLE : un outil qui se
+// corrobore lui-même satisfait la forme et rate entièrement le fond. La condition porte sur
+// l'INDÉPENDANCE, jamais sur le fait qu'une case soit remplie.
+//
+// CE QUI RESTE HORS MÉCANIQUE, ET C'EST DÉCLARÉ PLUTÔT QUE TU (Article 27) : rien ne peut vérifier
+// que le second outil a vraiment regardé la même chose. `corrobore.constat` est là pour que la
+// lecture puisse en juger ; aucune machine ne le fera à sa place.
+//
+// ENFIN, C'EST OPT-IN, ET C'EST UN CHOIX. Quels constats méritent l'étiquette `critique` est une
+// décision de conception, pas une déduction : la poser d'office sur tout ce qu'un Gardien sacré du code trouve
+// bloquerait le paysage entier du jour au lendemain. L'étiquette se pose outil par outil, et la
+// liste de ceux qui la portent est une question ouverte pour l'utilisateur (Article 16).
+export function etatDeCorroboration(constat, toolSlug) {
+  if (!constat?.critique) return { exigee: false, tenue: true };
+  const c = constat.corrobore;
+  if (!c?.outil) return { exigee: true, tenue: false, pourquoi: "aucun second outil ne l'a confirmé" };
+  if (String(c.outil) === String(toolSlug)) {
+    return { exigee: true, tenue: false, pourquoi: `il se corrobore LUI-MÊME (${c.outil}) — un outil qui se relit reproduit son propre angle mort, ce qui satisfait la forme et rate tout le fond` };
+  }
+  return { exigee: true, tenue: true };
+}
+
 export function buildPlanDaction(constats = [], { toolSlug } = {}) {
   const inconnus = constats.filter((c) => !ETATS_CONSTAT.includes(c.etat));
   if (inconnus.length) throw new Error(`buildPlanDaction(): état inconnu "${inconnus[0].etat}" — attendu ${ETATS_CONSTAT.join(", ")}. Un constat sans état déclaré est un constat dont personne ne répond.`);
@@ -339,19 +376,28 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
     lignes.push("Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.");
     return { lignes, retenus: [], sansTache: [], vide: true, prioritaire: prio.prioritaire };
   }
+  const aCorroborer = [];
   for (const c of constats) {
     if (c.etat === "retenu") {
       // Le NIVEAU accompagne toujours la tâche (2026-09-23) : une tâche sans niveau laisse à la
       // lecture le soin de deviner si elle presse, et une lecture qui devine se trompe.
       const n = c.tache ? niveauDeLaTache(c) : null;
       const etiquette = n ? ` [${n.niveau.toUpperCase()}]` : "";
-      lignes.push(`  → RETENU · ${c.constat}${c.tache ? ` — tâche${etiquette} : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
+      const corro = etatDeCorroboration(c, toolSlug);
+      if (corro.exigee && !corro.tenue) {
+        aCorroborer.push(c);
+        lignes.push(`  🔁 À CORROBORER · ${c.constat} — constat CRITIQUE : ${corro.pourquoi}. Il ne déclenche donc pas d'action tant qu'un SECOND outil indépendant ne l'a pas confirmé${c.tache ? ` (tâche visée${etiquette} : ${c.tache})` : ""}`);
+        continue;
+      }
+      const sceau = corro.exigee ? ` [confirmé par ${c.corrobore.outil}]` : "";
+      lignes.push(`  → RETENU${sceau} · ${c.constat}${c.tache ? ` — tâche${etiquette} : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
     }
     else if (c.etat === "ecarte") lignes.push(`  ✗ ÉCARTÉ · ${c.constat} — ${c.pourquoi ?? "⚠️ écarté sans raison écrite, ce qui n'est pas une décision"}`);
     else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
   }
   if (sansTache.length) lignes.push("", `⚠️ ${sansTache.length} constat(s) retenu(s) sans tâche associée — un constat retenu qui ne devient pas une tâche est un constat oublié.`);
-  return { lignes, retenus, sansTache, vide: false, toolSlug, prioritaire: prio.prioritaire };
+  if (aCorroborer.length) lignes.push("", `🔁 ${aCorroborer.length} constat(s) CRITIQUE(S) en attente d'une seconde mesure indépendante — jamais un rejet : la vérification par un second outil est la seule mitigation mesurée qui fasse tomber le faux succès d'environ 48 % à 3 %.`);
+  return { lignes, retenus, sansTache, aCorroborer, vide: false, toolSlug, prioritaire: prio.prioritaire };
 }
 
 // planDactionDepuisEcarts() (2026-09-23) — le raccourci qui rend le câblage tenable.
@@ -368,13 +414,21 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
 //
 // `toucheLeJeu` et `fausseUneMesure` sont DÉCLARÉS par l'outil appelant, jamais déduits d'un nom de
 // fichier : seul l'outil sait si ce qu'il mesure touche le produit ou la mesure elle-même.
-export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, libelle = (e) => String(e?.message ?? e?.pourquoi ?? e) } = {}) {
+//
+// `critique` et `corrobore` (2026-09-28, volet E) sont DÉCLARÉS par écart, et le plus souvent par
+// une fonction : dans une même liste, un écart peut être critique et le suivant non. Les laisser
+// vides est le comportement d'avant, à l'identique — aucun outil ne change de sortie tant qu'il ne
+// les déclare pas.
+export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = (e) => String(e?.message ?? e?.pourquoi ?? e) } = {}) {
+  const resoudre = (v, e) => (typeof v === "function" ? v(e) : v);
   const constats = (ecarts ?? []).map((e) => ({
     constat: libelle(e),
     etat: "retenu",
     tache: typeof tache === "function" ? tache(e) : (tache ?? "à qualifier par l'agent à la lecture du rapport"),
     toucheLeJeu,
     fausseUneMesure,
+    critique: Boolean(resoudre(critique, e)),
+    corrobore: resoudre(corrobore, e) ?? null,
   }));
   return buildPlanDaction(constats, { toolSlug });
 }

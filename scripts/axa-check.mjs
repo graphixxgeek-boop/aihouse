@@ -570,8 +570,27 @@ function main() {
   // `fausseUneMesure: true`, et ce n'est pas un détail de forme : une fonction non couverte gonfle
   // silencieusement le score de robustesse global que TOUT le reste du paysage consulte comme un
   // fait. Ce n'est pas seulement du code fragile, c'est un indicateur faux.
+  //
+  // LE PREMIER USAGE RÉEL DE LA CONCORDANCE À DEUX OUTILS (2026-09-28, tâche #695, volet E). Une
+  // fonction fragile PROCHE D'UN NŒUD SENSIBLE est le constat le plus grave que rend cet outil :
+  // du code non testé, là où une casse se propage, et qui fausse en plus le score de robustesse que
+  // tout le paysage consulte. C'est donc `critique`.
+  //
+  // ET LA SECONDE SOURCE EXISTE DÉJÀ, elle n'a pas été inventée pour l'occasion : la liste des
+  // nœuds sensibles vient de `check-level-target`, qui la DÉRIVE de la carte d'HARMONIA et dont
+  // l'écart est vérifié mécaniquement (`findSensitiveNodesDivergingFromHarmonia()`, 2026-09-21).
+  // La gravité de ce constat est donc établie par un outil AUTRE que celui qui la rapporte —
+  // exactement ce que le volet E demande, et la raison pour laquelle ce cas a été choisi comme
+  // premier usage plutôt qu'un cas fabriqué pour faire tourner le mécanisme (leçon L2 : un
+  // mécanisme qui ne sort pas du script est une intention ; un mécanisme câblé sur un cas inventé
+  // est pire, il a l'air de marcher).
+  const prochesDunNoeudSensible = (f) => (f?.reasons ?? []).some((r) => /nœud sensible/.test(String(r)));
   const planAxa = planDactionDepuisEcarts(fragilesTousFichiers, { toolSlug: "axa-check", fausseUneMesure: true,
     libelle: (f) => `${f.fichier} — ${f.name}() : ${f.reasons.join(", ")}`,
+    critique: prochesDunNoeudSensible,
+    corrobore: (f) => (prochesDunNoeudSensible(f)
+      ? { outil: "harmonia", constat: "le nœud sensible qui rend ce constat grave vient de la carte HARMONIA, dérivée et vérifiée contre elle — jamais d'une liste tenue ici" }
+      : null),
     tache: (f) => `écrire un test réel pour ${f.name}() dans ${f.fichier}, ou déclarer sa vérification via record-check si elle a été faite à la main` });
   imprimerPlanDaction(planAxa);
 
