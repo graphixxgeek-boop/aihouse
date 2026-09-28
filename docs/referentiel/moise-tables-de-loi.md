@@ -205,3 +205,45 @@ protège. La question est posée, la décision reste humaine.
 **Ce qu'elle suggère quand elle se déclenche** : relire une fois en se demandant si le récit du
 POURQUOI pourrait vivre dans le référentiel (le geste déjà éprouvé de la *progressive disclosure*),
 et garder tel quel si la réponse est non. Jamais couper une obligation pour faire du chiffre.
+
+## Le rappel tournant — re-présenter les obligations graves EN COURS de session (2026-09-28, tâche #695, volet C)
+
+**La dérive d'attention est mesurée, pas une impression** : courbe en U, décrochage au-delà de 10 à
+15 tours, et les 18 modèles de pointe testés se dégradent tous. Le symptôme décrit est mot pour mot
+celui de ce projet : **« les règles sont toujours là, l'attention est ailleurs »**.
+
+**D'où la conséquence qui surprend : alléger la charte ne suffit pas.** Un document plus court est
+toujours lu au tour 1 et toujours oublié au tour 40 — le problème n'est pas sa taille, c'est que
+**rien ne le re-présente en cours de route**.
+
+**Pourquoi chez MOÏSE et pas dans un outil neuf** : il est déjà l'agent du seul périmètre de la
+charte, il lit déjà CLAUDE.md article par article, et il tourne déjà à **chaque commit** via le
+crochet. Le canal existait ; il n'y avait qu'à s'en servir (Article 31 : étendre plutôt qu'agir à
+côté).
+
+**La liste ne se recopie pas** (Article 24) : elle se **lit** dans le « Protocole d'application » de
+l'Article 20 — l'endroit où la charte déclare elle-même l'ordre dans lequel ses règles s'appliquent.
+Onze obligations en sortent aujourd'hui, Article 0 compris. Un tableau tenu à la main ici se
+périmerait au premier Article ajouté.
+
+**Une seule par passage, et elle tourne.** Rappeler douze règles d'un coup est exactement ce qui ne
+marche pas : c'est la charte au tour 1, une seconde fois. Le rang avance sur le nombre de commits,
+donc **tout seul**, sans dépendre d'aucune mémoire d'agent (Article 27).
+
+**Le rappel porte la QUESTION que l'Article pose**, jamais le numéro nu : un numéro n'apprend rien à
+quelqu'un qui a justement cessé d'y penser.
+
+**📜 n'est pas une alerte, et cette distinction décide de sa forme.** Lui donner ⚠️ pour qu'il passe
+le filtre du crochet aurait été crier au loup à chaque commit, donc le condamner à devenir du décor
+(L4, L6). Il a son propre marqueur — celui que la charte emploie déjà pour la traçabilité
+(Article 16) — et le filtre gagne une catégorie qu'il n'avait pas : **ce qui exige une ACTION, et ce
+qui doit être RE-PRÉSENTÉ**.
+
+**Il s'imprime même quand tout est vert**, et c'est le cœur du volet : c'est très exactement quand
+tout est vert depuis quarante tours que l'attention est ailleurs.
+
+**La leçon L2 a été payée ici même, en dix minutes.** Le premier jet plaçait l'impression à la fin
+du corps de l'outil — or la sous-commande par défaut rend la main avant d'y arriver. **Le rappel
+n'est jamais sorti une seule fois**, sur le volet même qui existe pour qu'on n'oublie rien. Il est
+désormais imprimé après le corps, quelle que soit la sous-commande, et le filet vérifie qu'il sort
+ET qu'il survit au filtre du crochet.

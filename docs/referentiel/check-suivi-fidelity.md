@@ -76,3 +76,43 @@ que d'en inventer un** (leçon L30), et un garde-fou qui accuse à tort cesse d'
 
 **Ce qu'il ne fera jamais** : dire si le travail a été bien fait. Il compare des états de lignes,
 pas des résultats.
+
+## L'abstention silencieuse — 18 % du registre échappait à tous les contrôles (2026-09-28, tâche #1087)
+
+**Trouvé en réparant une erreur de l'agent, et c'est ce qui rend le cas instructif.** De la prose
+avait été écrite dans la colonne **Criticité** de la ligne #695, **trois commits de suite**, et rien
+ne l'avait signalé.
+
+**La cause tient en une ligne.** Quand la criticité n'est pas reconnue, `frontiereDuDetail()` rend
+`null` et la ligne est écartée de **tous** les contrôles de forme. L'abstention est **juste** —
+deviner ferait pire, et son commentaire le dit — **mais l'abstention SILENCIEUSE ne l'est pas** :
+une ligne écartée sans bruit est une ligne que plus aucun contrôle ne regarde, et personne ne peut
+le savoir. C'est le défaut que ce paysage corrige partout ailleurs, commis ici par le garde-fou du
+registre lui-même.
+
+**La mesure est plus grosse que l'erreur qui l'a révélée : 66 lignes sur 364 — 18 % du registre.**
+Et **aucune n'était une faute de saisie** :
+
+| Valeur ignorée | Occurrences |
+|---|---|
+| `CRITIQUE-STRUCTURANT` | 21 |
+| `MOYENNE` | 17 |
+| `NORMAL-NON-PRIORITAIRE` | 10 |
+| `ELEVEE` | 8 |
+| `PRIORITAIRE` | 5 |
+| `RECOMMANDEE` | 4 |
+| `FAIBLE` | 1 |
+
+Sept valeurs parfaitement légitimes qu'un vocabulaire **se déclarant « fermé »** ignorait. Le
+vocabulaire avait grandi, son lecteur non : **l'Article 24 dans sa forme la plus discrète**.
+(`NORMAL-NON-PRIORITAIRE` explique à lui seul le motif d'origine : il acceptait `NORMAL-` suivi d'UN
+mot, jamais d'un second tiret.)
+
+**Deux correctifs, et le second compte plus que le premier.** Les sept valeurs sont reconnues
+(**aujourd'hui**) ; surtout, `findLignesSansCriticiteReconnue()` **compte et affiche** les lignes
+écartées, **même à zéro** (**demain**). Sans ce second, le prochain trou du vocabulaire cacherait à
+nouveau des dizaines de lignes pendant des semaines.
+
+**Le motif reste fermé pour autant** : de la prose collée dans la cellule n'est toujours pas
+reconnue. On n'a pas remplacé la reconnaissance par un « tout passe », ce qui aurait effacé le
+problème au lieu de le résoudre.

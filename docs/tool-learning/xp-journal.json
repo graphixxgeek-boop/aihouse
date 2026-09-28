@@ -197,5 +197,13 @@
     "lecon": "Quand je trouve un correctif qui a DÉJÀ été appliqué ailleurs, la question utile n'est jamais « ai-je couvert tous les appelants ? » mais « pourquoi cette règle peut-elle être oubliée par un appelant ? ». La réponse a été la même les trois fois : elle était RECOPIÉE au lieu d'être appelée. Corriger les appelants un par un reconduit le défaut au prochain venu ; déplacer la vérification DANS la fonction appelée le ferme. Et un commentaire qui affirme « le même découpage est déjà établi ailleurs » ne prouve rien : il décrivait trois sites alignés alors qu'un seul sur trois l'était.",
     "rienARetenir": false,
     "date": "2026-09-28T09:44:31.338Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Quand un outil du dépôt sait déjà faire le geste, le faire à la main ne coûte pas seulement du temps : ça produit une erreur que l'outil aurait rendue impossible.",
+    "contexte": "Tâche #1087. En mettant à jour une ligne de suivi, j'ai calculé la position de la colonne Détail comme « len - 3 ». Vrai pour les lignes récentes, qui finissent par une barre verticale ; faux pour les anciennes, qui n'en ont pas. Trois commits ont écrit dans la colonne Criticité, et le dernier a écrasé le Détail d'origine.",
+    "lecon": "`frontiereDuDetail()` existe précisément pour ça et RECONNAÎT les colonnes au lieu de les compter. Le réflexe utile n'est pas « fais attention en calculant l'index » — c'est « quelqu'un dans l'équipe sait-il déjà lire cette ligne ? » (Article 31). Et le corollaire vaut plus que l'erreur : ce sont les formats ANCIENS qui piègent, parce qu'on teste mentalement sur celui qu'on vient d'écrire. Bonus réel : réparer cette erreur a fait remonter que 18 % du registre échappait en silence à tous les contrôles — une erreur bien instruite vaut mieux qu'une erreur évitée.",
+    "rienARetenir": false,
+    "date": "2026-09-28T11:29:45.010Z"
   }
 ]

@@ -629,7 +629,21 @@ export function findCasesDeRituelMalRemplies(sessionsDir = SESSIONS_DIR, readDir
 // chacun un vocabulaire fermé. Tout ce qui suit le dernier champ de tête reconnu, jusqu'à
 // l'avant-dernière cellule incluse, est du Détail ; la dernière est le statut. Aucune position
 // écrite en dur, donc un douzième champ demain ne casse rien (Article 24).
-const MOTIF_CRITICITE = /^\s*(?:PRIORITAIRE-OBLIGATOIRE|RECOMMANDE(?:-[A-Z]+)?|NORMAL(?:-[A-Z]+)?|SENSIBLE(?:-[A-Z-]+)?|A-?\s?TRANCHER|critique|important|normal|autre)\s*$/i;
+// LE VOCABULAIRE SE DISAIT « FERMÉ », ET IL AVAIT GRANDI DE SEPT VALEURS SANS QUE SON LECTEUR LE
+// SACHE (2026-09-28, tâche #1087). Mesuré sur les 364 lignes réelles : 66 d'entre elles — 18 % du
+// registre — portaient une criticité parfaitement légitime que ce motif ne reconnaissait pas
+// (CRITIQUE-STRUCTURANT ×21, MOYENNE ×17, NORMAL-NON-PRIORITAIRE ×10, ELEVEE ×8, PRIORITAIRE ×5,
+// RECOMMANDEE ×4, FAIBLE ×1). Aucune n'était une faute de saisie.
+//
+// ET LA CONSÉQUENCE EST PIRE QUE LE CHIFFRE : quand la criticité n'est pas reconnue,
+// `frontiereDuDetail()` rend `null` et la ligne est SILENCIEUSEMENT écartée de tous les contrôles.
+// L'abstention est juste — on ne devine pas — mais **l'abstention SILENCIEUSE ne l'est pas** :
+// 18 % du registre échappait à la vérification, et rien ne le disait. C'est le défaut que ce
+// paysage corrige partout ailleurs, commis par le garde-fou du registre lui-même.
+//
+// `NORMAL-NON-PRIORITAIRE` explique à lui seul pourquoi le motif d'origine ratait : il acceptait
+// `NORMAL-` suivi d'UN mot, jamais d'un second tiret. Le motif accepte désormais les composés.
+const MOTIF_CRITICITE = /^\s*(?:PRIORITAIRE-OBLIGATOIRE|PRIORITAIRE|CRITIQUE(?:-[A-Z-]+)?|RECOMMANDEE?(?:-[A-Z-]+)?|NORMAL(?:-[A-Z-]+)?|SENSIBLE(?:-[A-Z-]+)?|A-?\s?TRANCHER|ELEVEE|MOYENNE|FAIBLE|critique|important|normal|autre)\s*$/i;
 const MOTIF_POUR_QUI = /^\s*(?:PROJET|DETTE-ENVERS-L-?'?L?UTILISATEUR)\s*$/i;
 const MOTIF_CASE_RITUEL = /^\s*(?:OUI|NON|)\s*$/i;
 
@@ -643,6 +657,25 @@ export function frontiereDuDetail(cells = []) {
   // d'un cran sur cette seule foi décalerait la frontière.
   if (MOTIF_CASE_RITUEL.test(String(cells[i] ?? "x")) && MOTIF_CASE_RITUEL.test(String(cells[i + 1] ?? "x"))) i += 2;
   return i;
+}
+
+// findLignesSansCriticiteReconnue() — L'ABSTENTION CESSE D'ÊTRE SILENCIEUSE (2026-09-28, #1087).
+// `frontiereDuDetail()` a raison de s'abstenir quand elle ne reconnaît pas la criticité : deviner
+// ferait pire. Mais une ligne écartée sans bruit est une ligne que PLUS AUCUN contrôle ne regarde,
+// et personne ne peut le savoir. Ce compteur existe pour que le prochain trou du vocabulaire
+// remonte le jour où il apparaît, au lieu de cacher 18 % du registre pendant des semaines.
+export function findLignesSansCriticiteReconnue(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(sessionsDir)) return riennAPuEtreLu();
+  const ecarts = [];
+  let lignesLues = 0;
+  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    lignesLues += 1;
+    const cells = splitTableRow(ligne);
+    if (frontiereDuDetail(cells) !== null) continue;
+    ecarts.push({ numero: Number(cells[0]), file, valeur: String(cells[5] ?? "").trim().slice(0, 40),
+      pourquoi: "aucune criticité reconnue dans cette ligne : elle est donc écartée de TOUS les contrôles de forme, silencieusement — soit la valeur est fautive, soit le vocabulaire du lecteur a pris du retard sur celui du registre" });
+  }
+  return { mesurable: true, ecarts, lignesLues };
 }
 
 export function findLignesMalFormees(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
@@ -1148,6 +1181,21 @@ function main() {
     console.log(`${malFormees.ecarts.length} ligne(s) portent des cellules en trop, sur ${malFormees.lignesLues} lue(s).`);
     for (const e of malFormees.ecarts.slice(0, 12)) console.log(`   - n°${e.numero} — ${e.cellules} cellules (${e.surplus} de trop) — ${e.file}`);
     console.log("   Deux causes, qui se réparent à l'opposé : une barre verticale non échappée dans le Détail (elle s'écrit `\\|`), ou une cellule surnuméraire tapée en écrivant la ligne.");
+  }
+
+  // L'ABSTENTION CESSE D'ÊTRE SILENCIEUSE (2026-09-28, tâche #1087). Une ligne dont la criticité
+  // n'est pas reconnue est écartée de TOUS les contrôles ci-dessus — 66 lignes sur 364 l'étaient
+  // sans que rien ne le dise. Le compteur s'affiche même à zéro : c'est le seul moyen que le
+  // prochain trou du vocabulaire remonte le jour où il apparaît.
+  const sansCriticite = findLignesSansCriticiteReconnue();
+  if (!sansCriticite.mesurable) {
+    console.log(`⚪ PAS MESURÉ — ${sansCriticite.pourquoi}`);
+  } else if (!sansCriticite.ecarts.length) {
+    console.log(`Aucune ligne écartée faute de criticité reconnue, sur ${sansCriticite.lignesLues} lue(s) — donc aucune ligne n'échappe en silence aux contrôles ci-dessus.`);
+  } else {
+    console.log(`⚠️ ${sansCriticite.ecarts.length} ligne(s) sur ${sansCriticite.lignesLues} sont ÉCARTÉES DE TOUS LES CONTRÔLES faute de criticité reconnue.`);
+    for (const e of sansCriticite.ecarts.slice(0, 12)) console.log(`   - n°${e.numero} — valeur lue : « ${e.valeur} » — ${e.file}`);
+    console.log("   Deux causes, et la seconde est la plus fréquente : soit la valeur est fautive, soit le vocabulaire du lecteur (MOTIF_CRITICITE) a pris du retard sur celui qu'emploie réellement le registre.");
   }
 
   console.log("\n=== Garde-fou fraîcheur du suivi (commits récents sans mise à jour docs/suivi/) ===\n");

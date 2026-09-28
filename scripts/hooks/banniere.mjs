@@ -39,6 +39,18 @@ import { appendFileSync, writeFileSync } from "node:fs";
 // son erreur ne s'affiche nulle part (leçon L4, prise à l'envers).
 export const MARQUEURS_D_ACTION = ["🚨", "🔴", "⚠️"];
 
+// 📜 EST UNE CATÉGORIE DISTINCTE, JAMAIS UNE QUATRIÈME ALERTE (2026-09-28, volet C des « failles
+// des IA »). Le filtre gardait ce qui exige une ACTION ; il lui manquait ce qui doit être
+// RE-PRÉSENTÉ. La dérive d'attention est mesurée — courbe en U, décrochage au-delà de 10-15 tours,
+// « les règles sont toujours là, l'attention est ailleurs » — et la seule réponse est un rappel qui
+// revient en cours de route, puisque alléger la charte ne suffit pas.
+//
+// POURQUOI PAS ⚠️, ET C'EST TOUT L'INTÉRÊT DE LA SÉPARATION : un rappel déguisé en alerte crie au
+// loup à chaque commit, donc se condamne à devenir du décor (L4, L6). 📜 est le marqueur que la
+// charte emploie déjà pour la traçabilité (Article 16), et il dit exactement ce qu'il est.
+export const MARQUEUR_DE_RAPPEL = "📜";
+export const MARQUEURS_RETENUS = [...MARQUEURS_D_ACTION, MARQUEUR_DE_RAPPEL];
+
 // MAIS ⚠️ SERT AUSSI À DEUX LIGNES DE FORMULAIRE que CHAQUE outil imprime, et les laisser passer
 // rendrait deux lignes de bruit par outil — soit précisément ce qu'on retire. Elles sont écartées
 // par leur TEXTE, qui est fixe et connu, jamais par une heuristique sur la forme : une exclusion
@@ -54,7 +66,7 @@ export const MOTIF_TITRE = /^\s*(?:===|##|——)/;
 
 export const JOURNAL = ".banniere-post-commit.txt";
 
-export function hierarchiser(sortie = "", { marqueurs = MARQUEURS_D_ACTION, motifTitre = MOTIF_TITRE } = {}) {
+export function hierarchiser(sortie = "", { marqueurs = MARQUEURS_RETENUS, motifTitre = MOTIF_TITRE } = {}) {
   const lignes = String(sortie).split("\n");
   const retenues = [];
   let dernierTitre = null, titreDejaSorti = null;

@@ -192,6 +192,66 @@ const ARTICLE_HEADING_PATTERN = /\*\*Article (\d+) — ([^*]+?)\.\*\*/g;
 // cette fonction existait : la preuve que le geste devait avoir un domicile nommé.
 const TOP_HEADING_PATTERN = /^## /gm;
 
+// ————————————————————————————————————————————————————————————————————————
+// LE RAPPEL TOURNANT — re-présenter les obligations graves EN COURS de session
+// (2026-09-28, tâche #695, volet C des « failles des IA »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA DÉRIVE D'ATTENTION EST MESURÉE, PAS UNE IMPRESSION : courbe en U, décrochage au-delà de 10 à
+// 15 tours, et les 18 modèles de pointe testés se dégradent tous. Le symptôme décrit est mot pour
+// mot celui de ce projet : « les règles sont toujours là, l'attention est ailleurs ».
+//
+// D'OÙ LA CONSÉQUENCE QUI SURPREND : ALLÉGER LA CHARTE NE SUFFIT PAS. Un document plus court est
+// toujours lu au tour 1 et toujours oublié au tour 40 — le problème n'est pas sa taille, c'est que
+// rien ne le REPRÉSENTE en cours de route. La seule réponse est un rappel qui revient.
+//
+// POURQUOI ICI, ET PAS DANS UN OUTIL NEUF : MOÏSE est déjà l'agent du seul périmètre de la charte,
+// il lit déjà CLAUDE.md article par article, et il tourne déjà à CHAQUE commit via le crochet. Le
+// canal existe ; il n'y avait qu'à s'en servir (Article 31 : étendre plutôt qu'agir à côté).
+//
+// ET LE RAPPEL N'EST PAS UNE ALERTE — c'est la distinction qui décide de sa forme. Lui donner ⚠️
+// pour qu'il passe le filtre du crochet serait crier au loup à chaque commit, donc le condamner à
+// devenir du décor (L4, L6). Il porte son propre marqueur 📜, celui que la charte emploie déjà pour
+// la traçabilité (Article 16), et le filtre le laisse passer comme une catégorie DISTINCTE : ce qui
+// exige une action, et ce qui doit être re-présenté.
+//
+// LA LISTE NE SE RECOPIE PAS (Article 24) : elle se LIT dans le « Protocole d'application » de
+// l'Article 20, qui est l'endroit où la charte déclare elle-même l'ordre dans lequel ses règles
+// s'appliquent. Un tableau tenu à la main ici se périmerait au premier Article ajouté.
+export const MOTIF_PROTOCOLE = /\*\*Protocole d'application\*\*[\s\S]*?(?=\n\*\*Article|\n## )/;
+
+export function obligationsLesPlusGraves(texteCharte = "") {
+  const bloc = String(texteCharte).match(MOTIF_PROTOCOLE)?.[0];
+  if (!bloc) return { mesurable: false, pourquoi: "le « Protocole d'application » de l'Article 20 est introuvable dans la charte — la liste se LIT là, elle ne se recopie pas ici (Article 24), donc sans lui il n'y a rien à rappeler plutôt qu'une liste inventée" };
+  // Chaque « Article N (…) » du protocole, dans l'ordre où la charte les enchaîne. Le libellé entre
+  // parenthèses est la QUESTION que l'Article pose — c'est elle qu'on rappelle, jamais le numéro nu,
+  // qui n'apprend rien à quelqu'un qui a justement cessé d'y penser.
+  const obligations = [];
+  const vus = new Set();
+  for (const m of bloc.matchAll(/Articles?\s+([0-9]+(?:\s*(?:et|,)\s*[0-9]+)*)\s*\(([^)]{10,400})\)/g)) {
+    const cle = `${m[1]}`;
+    if (vus.has(cle)) continue;
+    vus.add(cle);
+    obligations.push({ articles: m[1].replace(/\s+/g, " ").trim(), question: m[2].replace(/\s+/g, " ").trim() });
+  }
+  if (!obligations.length) return { mesurable: false, pourquoi: "le protocole a été trouvé mais aucune obligation n'a pu en être lue — un format qui a changé, jamais une charte sans obligations" };
+  return { mesurable: true, obligations };
+}
+
+// rappelTournant() — UNE obligation par passage, jamais la liste entière. Rappeler douze règles
+// d'un coup est exactement ce qui ne marche pas : c'est la charte au tour 1, une seconde fois.
+// Le rang tourne sur le NOMBRE DE COMMITS, donc il avance tout seul et ne dépend d'aucune mémoire
+// d'agent (Article 27).
+export function rappelTournant(etat, compteurDeCommits) {
+  if (!etat?.mesurable) return { ligne: null, pourquoi: etat?.pourquoi };
+  const n = etat.obligations.length;
+  const o = etat.obligations[((Number(compteurDeCommits) || 0) % n + n) % n];
+  return {
+    ligne: `📜 RAPPEL DE CHARTE (${((Number(compteurDeCommits) || 0) % n) + 1}/${n}) — Article ${o.articles} : ${o.question}`,
+    obligation: o,
+  };
+}
+
 export function extractRuleUnits(text) {
   return decouperEnUnites(text, ARTICLE_HEADING_PATTERN, {
     motifBorneSuperieure: TOP_HEADING_PATTERN,
@@ -1173,7 +1233,7 @@ export function etatDuProcess({ root = ROOT } = {}) {
 
 // ---------------------------------------------------------------------------------------------
 
-async function main() {
+async function corpsPrincipal() {
   const [, , commande = "rapport", ...args] = process.argv;
   // L'outil en APPELLE un autre plutôt que de recopier sa mesure (demande explicite de
   // l'utilisateur : « cet agent outil appelle les autres outils dont il a besoin »). Import
@@ -1357,6 +1417,29 @@ async function main() {
     tache: "régénérer l'instrument AVANT toute décision d'allègement — jamais décider sur une mesure périmée",
   });
   imprimerPlanDaction(plan);
+}
+
+// imprimerLeRappelTournant() — appelé APRÈS le corps, quelle que soit la sous-commande. Le premier
+// jet le mettait à la fin du corps, et il ne sortait JAMAIS : la sous-commande par défaut rend la
+// main avant d'y arriver. C'est très exactement la leçon L2 — un mécanisme qui ne sort pas du
+// script est une intention — et elle a été payée ici en dix minutes, sur le volet qui l'invoque.
+export function imprimerLeRappelTournant({ log = console.log, root = ROOT, shImpl = sh } = {}) {
+  let charte = "";
+  try { charte = readFileSync(join(root, CHARTE), "utf8"); } catch { /* il se tait plutôt que d'inventer */ }
+  const etat = obligationsLesPlusGraves(charte);
+  let commits = 0;
+  try { commits = Number(shImpl("git rev-list --count HEAD", { cwd: root }).trim()); } catch { commits = 0; }
+  const r = rappelTournant(etat, Number.isFinite(commits) ? commits : 0);
+  // Il s'imprime MÊME QUAND TOUT EST VERT, et c'est le coeur du volet C : c'est très exactement
+  // quand tout est vert depuis quarante tours que l'attention est ailleurs.
+  if (r.ligne) log(`\n${r.ligne}`);
+  else if (r.pourquoi) log(`\n⚪ PAS MESURÉ — le rappel de charte n'a pas pu être produit : ${r.pourquoi}.`);
+  return r;
+}
+
+async function main() {
+  await corpsPrincipal();
+  imprimerLeRappelTournant();
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

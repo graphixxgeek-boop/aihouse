@@ -20164,3 +20164,90 @@ async function testModeReparation() {
   console.log("Passed: le mode réparation, la zone rouge (2026-09-28, tâche #695, volet D des failles IA). LE CHIFFRE : plus de 65 % des incidents graves surviennent en CORRECTION et en CONFIGURATION, pas en écriture de fonctionnalité — et tout l'outillage de ce projet est tourné vers la construction. LE DÉFAUT ÉTAIT ÉCRIT NOIR SUR BLANC, ET C'EST UNE INVERSION, PAS UN OUBLI : `corrige` et `fix` vivaient dans le registre LÉGER de CHECK-LEVEL-TARGET. L'outil chargé de dire quel niveau de vérification déployer ABAISSAIT donc la vigilance sur très exactement la zone que la mesure désigne comme la plus dangereuse — le mot qui devrait alerter était celui qui rassurait. LA CORRECTION EST UN PLANCHER, JAMAIS UN SAUT DE NIVEAU : une réparation ou une configuration ne descend plus sous « standard », le niveau où les Gardiens sacrés du code tournent de toute façon — donc un plancher qui ne coûte rien. Relever d'office à « approfondi » aurait été l'erreur symétrique : un outil qui crie à chaque correction cesse d'être lu (L4). L'EXEMPTION EST LA MOITIÉ DE LA RÈGLE : une coquille ou un renommage sont des réparations sans risque, et quand ce sont les SEULS signaux, le niveau léger reste mérité — sans cette exemption le plancher s'appliquerait à tout et deviendrait du décor. LE PLANCHER RELÈVE ET NE RABAISSE JAMAIS : une demande déjà classée « approfondie » le reste, parce qu'un plancher qui plafonnerait aussi serait un nivellement. ET IL NE S'APPLIQUE JAMAIS EN SILENCE : le niveau relevé porte sa raison chiffrée, parce qu'un outil qui remonte un niveau sans dire pourquoi se fait contourner dès la deuxième fois. ENFIN, LA CONFIGURATION EST COUVERTE : elle est nommée dans le même chiffre que la correction, et rien du tout ne la regardait avant.");
 }
 await testModeReparation();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE RAPPEL TOURNANT (2026-09-28, tâche #695, volet C des failles IA)
+// ————————————————————————————————————————————————————————————————————————
+// La dérive d'attention est MESURÉE, pas une impression : courbe en U, décrochage au-delà de 10 à
+// 15 tours, et les 18 modèles de pointe testés se dégradent tous. Le symptôme décrit est mot pour
+// mot celui de ce projet : « les règles sont toujours là, l'attention est ailleurs ». D'où la
+// conséquence qui surprend : ALLÉGER LA CHARTE NE SUFFIT PAS — un document plus court est toujours
+// lu au tour 1 et toujours oublié au tour 40. La seule réponse est un rappel qui revient.
+async function testRappelTournantDeLaCharte() {
+  const M = await import('../scripts/moise-tables-de-loi.mjs');
+  const B = await import('../scripts/hooks/banniere.mjs');
+  const { readFileSync: lireC } = await import('node:fs');
+
+  // ── 1. LA LISTE SE LIT DANS LA CHARTE, elle ne se recopie pas ici (Article 24). Un tableau tenu
+  // à la main se périmerait au premier Article ajouté.
+  const etat = M.obligationsLesPlusGraves(lireC('CLAUDE.md', 'utf8'));
+  assert.equal(etat.mesurable, true, 'the obligations must be READ from the charter itself');
+  assert.ok(etat.obligations.length >= 8, `and the real protocol must yield a real list (currently ${etat.obligations.length})`);
+  assert.ok(etat.obligations.some((o) => o.articles === '0'), "Article 0 — the supreme law — must be among them, otherwise the reminder skips the one rule everything else bends to");
+
+  // ── 2. UNE SEULE PAR PASSAGE, ET ELLE TOURNE. Rappeler douze règles d'un coup est exactement ce
+  // qui ne marche pas : c'est la charte au tour 1, une seconde fois.
+  const r0 = M.rappelTournant(etat, 0), r1 = M.rappelTournant(etat, 1);
+  assert.match(r0.ligne, /^📜 RAPPEL DE CHARTE \(1\//, 'one reminder per pass, numbered so the reader sees it is a rotation');
+  assert.notEqual(r0.ligne, r1.ligne, 'and the next commit must show a DIFFERENT one — a reminder that repeats is the drift it is meant to fight');
+  assert.equal(M.rappelTournant(etat, etat.obligations.length).ligne, r0.ligne, 'the rotation wraps around rather than stopping');
+  assert.match(r0.ligne, /:\s\S/, 'the reminder must carry the QUESTION the article asks, never the bare number — a number teaches nothing to someone who has stopped thinking about it');
+
+  // ── 3. UNE CHARTE ILLISIBLE NE PRODUIT PAS UN RAPPEL INVENTÉ (L5/L11).
+  const vide = M.obligationsLesPlusGraves('');
+  assert.equal(vide.mesurable, false, 'no charter means nothing to recall — never a fabricated list');
+  assert.equal(M.rappelTournant(vide, 0).ligne, null);
+
+  // ── 4. 📜 N'EST PAS UNE ALERTE, et c'est la distinction qui décide de sa forme : lui donner ⚠️
+  // pour passer le filtre serait crier au loup à chaque commit, donc le condamner au décor (L4/L6).
+  assert.ok(!B.MARQUEURS_D_ACTION.includes(B.MARQUEUR_DE_RAPPEL), 'the reminder must NOT be counted among the action markers — a reminder dressed as an alert cries wolf every commit');
+  assert.ok(B.MARQUEURS_RETENUS.includes(B.MARQUEUR_DE_RAPPEL), 'but the hook must keep it: what must be RE-PRESENTED is a category the filter did not have');
+
+  // ── 5. IL SORT VRAIMENT DU SCRIPT, ET IL SURVIT AU FILTRE (leçon L2, payée ici même en dix
+  // minutes : le premier jet le plaçait à la fin du corps, où la sous-commande par défaut rend la
+  // main avant d'y arriver — il n'est JAMAIS sorti une seule fois).
+  const lignes = [];
+  const rendu = M.imprimerLeRappelTournant({ log: (l) => lignes.push(l), shImpl: () => '42' });
+  assert.ok(rendu.ligne, 'the printer must actually produce a line against the real charter');
+  assert.equal(lignes.length, 1, 'and print exactly one');
+  const filtre = B.hierarchiser(lignes.join('\n'));
+  assert.equal(filtre.gardees, 1, 'and that line must survive the post-commit filter — a reminder nobody sees is an intention');
+
+  console.log(`Passed: le rappel tournant de la charte (2026-09-28, tâche #695, volet C des failles IA). LA DÉRIVE D'ATTENTION EST MESURÉE, PAS UNE IMPRESSION : courbe en U, décrochage au-delà de 10 à 15 tours, les 18 modèles de pointe testés se dégradent tous — et le symptôme décrit est mot pour mot celui de ce projet, « les règles sont toujours là, l'attention est ailleurs ». D'OÙ LA CONSÉQUENCE QUI SURPREND, ET QUI EST TOUT L'INTÉRÊT DU VOLET : ALLÉGER LA CHARTE NE SUFFIT PAS. Un document plus court est toujours lu au tour 1 et toujours oublié au tour 40 — le problème n'est pas sa taille, c'est que rien ne le REPRÉSENTE en cours de route. POURQUOI CHEZ MOÏSE ET PAS DANS UN OUTIL NEUF : il est déjà l'agent du seul périmètre de la charte, il lit déjà CLAUDE.md article par article, et il tourne déjà à CHAQUE commit. Le canal existait, il n'y avait qu'à s'en servir (Article 31 : étendre plutôt qu'agir à côté). LA LISTE NE SE RECOPIE PAS : elle se LIT dans le « Protocole d'application » de l'Article 20, l'endroit où la charte déclare elle-même l'ordre de ses règles — ${etat.obligations.length} obligations lues aujourd'hui, et un tableau tenu à la main ici se périmerait au premier Article ajouté. UNE SEULE PAR PASSAGE, ET ELLE TOURNE : rappeler douze règles d'un coup, c'est la charte au tour 1 une seconde fois. LE RAPPEL PORTE LA QUESTION QUE L'ARTICLE POSE, jamais le numéro nu — un numéro n'apprend rien à quelqu'un qui a justement cessé d'y penser. ET 📜 N'EST PAS UNE ALERTE : lui donner ⚠️ pour qu'il passe le filtre du crochet aurait été crier au loup à chaque commit, donc le condamner au décor. Il a son propre marqueur, et le filtre gagne une catégorie qu'il n'avait pas — ce qui exige une ACTION, et ce qui doit être RE-PRÉSENTÉ. ENFIN, LA LEÇON L2 A ÉTÉ PAYÉE ICI MÊME, EN DIX MINUTES : le premier jet plaçait l'impression à la fin du corps de l'outil, où la sous-commande par défaut rend la main avant d'y arriver. Le rappel n'est jamais sorti une seule fois, sur le volet même qui existe pour qu'on n'oublie rien.`);
+}
+await testRappelTournantDeLaCharte();
+
+// ————————————————————————————————————————————————————————————————————————
+// 18 % DU REGISTRE ÉCHAPPAIT À TOUS LES CONTRÔLES, EN SILENCE (2026-09-28, tâche #1087)
+// ————————————————————————————————————————————————————————————————————————
+// Trouvé en réparant ma propre erreur : j'avais écrit de la prose dans la colonne Criticité de la
+// ligne #695, trois commits de suite, et RIEN ne l'avait signalé. La cause tient en une ligne de
+// `frontiereDuDetail()` : quand la criticité n'est pas reconnue, elle rend `null` et la ligne est
+// écartée de tous les contrôles de forme. L'abstention est JUSTE — deviner ferait pire — mais
+// l'abstention SILENCIEUSE ne l'est pas.
+async function testAbstentionSilencieuseDuRegistre() {
+  const C = await import('../scripts/check-suivi-fidelity.mjs');
+
+  // ── 1. LE VOCABULAIRE SE DISAIT « FERMÉ » ET AVAIT GRANDI DE SEPT VALEURS. Les sept sont des
+  // criticités parfaitement légitimes du registre réel, aucune n'était une faute de saisie.
+  for (const v of ['CRITIQUE-STRUCTURANT', 'MOYENNE', 'NORMAL-NON-PRIORITAIRE', 'ELEVEE', 'PRIORITAIRE', 'RECOMMANDEE', 'FAIBLE', 'RECOMMANDE-NECESSAIRE', 'A-TRANCHER']) {
+    assert.notEqual(C.frontiereDuDetail(['1', 'h', 'k', 'sujet', 'source', v, 'détail', 'Terminé']), null, `a criticality value really in use must be recognised: ${v}`);
+  }
+
+  // ── 2. MAIS IL RESTE FERMÉ (BP4) : on n'a pas remplacé la reconnaissance par un « tout passe ».
+  assert.equal(C.frontiereDuDetail(['1', 'h', 'k', 'sujet', 'source', 'RECOMMANDE-NECESSAIRE **prose collée ici**', 'détail', 'Terminé']), null, 'prose glued into the criticality cell must still NOT be recognised — that is the very error this task started from');
+  assert.equal(C.frontiereDuDetail(['1', 'h', 'k', 'sujet', 'source', 'n_importe quoi', 'détail', 'Terminé']), null, 'and an arbitrary value must not be waved through');
+
+  // ── 3. L'ABSTENTION EST DÉSORMAIS COMPTÉE, jamais silencieuse — c'est le vrai correctif.
+  const r = C.findLignesSansCriticiteReconnue();
+  assert.equal(r.mesurable, true);
+  assert.ok(r.lignesLues >= 300, `the counter must actually read the real register (currently ${r.lignesLues} rows)`);
+  assert.deepEqual(r.ecarts, [], `no row may escape the checks in silence — 66 of 364 did before this guard (currently ${r.ecarts.length})`);
+
+  // ── 4. ET IL SAIT DIRE QU'IL N'A RIEN PU LIRE, plutôt que de rendre un zéro rassurant (L5/L11).
+  const rien = C.findLignesSansCriticiteReconnue('dossier-qui-nexiste-pas', () => [], () => '', () => false);
+  assert.equal(rien.mesurable, false, 'a missing register is a non-measure, never "zero rows escaping"');
+
+  console.log(`Passed: 18 % du registre échappait à tous les contrôles, en silence (2026-09-28, tâche #1087). TROUVÉ EN RÉPARANT MA PROPRE ERREUR, et c'est ce qui rend le cas instructif : j'avais écrit de la prose dans la colonne Criticité de la ligne #695, TROIS COMMITS DE SUITE, et rien ne l'avait signalé. LA CAUSE TIENT EN UNE LIGNE : quand la criticité n'est pas reconnue, \`frontiereDuDetail()\` rend null et la ligne est écartée de TOUS les contrôles de forme. L'abstention est JUSTE — deviner ferait pire, et son commentaire le dit — mais L'ABSTENTION SILENCIEUSE NE L'EST PAS : une ligne écartée sans bruit est une ligne que plus aucun contrôle ne regarde, et personne ne peut le savoir. C'est le défaut que ce paysage corrige partout ailleurs, commis par le garde-fou du registre lui-même. LA MESURE, ET ELLE EST PLUS GROSSE QUE MON ERREUR : 66 lignes sur 364 — 18 % du registre — étaient dans ce cas. AUCUNE N'ÉTAIT UNE FAUTE DE SAISIE : CRITIQUE-STRUCTURANT ×21, MOYENNE ×17, NORMAL-NON-PRIORITAIRE ×10, ELEVEE ×8, PRIORITAIRE ×5, RECOMMANDEE ×4, FAIBLE ×1 — sept valeurs parfaitement légitimes qu'un vocabulaire se déclarant « fermé » ignorait. Le vocabulaire avait grandi, son lecteur non : l'Article 24 dans sa forme la plus discrète. DEUX CORRECTIFS, ET LE SECOND COMPTE PLUS QUE LE PREMIER : les sept valeurs sont reconnues (aujourd'hui), et surtout l'abstention est désormais COMPTÉE ET AFFICHÉE, même à zéro (demain). Sans le second, le prochain trou du vocabulaire cacherait à nouveau des dizaines de lignes pendant des semaines. LE MOTIF RESTE FERMÉ POUR AUTANT : de la prose collée dans la cellule n'est toujours PAS reconnue — on n'a pas remplacé la reconnaissance par un « tout passe », ce qui aurait effacé le problème au lieu de le résoudre.`);
+}
+await testAbstentionSilencieuseDuRegistre();
