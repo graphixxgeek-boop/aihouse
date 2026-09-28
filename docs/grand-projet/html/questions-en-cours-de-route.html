@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ses questions en cours de route</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">28 septembre 2026</div>
+    <h1>Ses questions en cours de route</h1>
+    <p class="sub">La réponse, sa demande inavouée, et l'action en face</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Sa consigne du 2026-09-28 : « enregistre bien ma question et ta réponse dans les notes du GRAND PROJET pour la prochaine mise à jour de la stratégie de ce chantier ». Puis, quelques minutes plus tard : « je te perturbe avec une question isolée, c'est pas bon : intègre ta réponse aux fichiers que tu vas me livrer ».)</em></p>
+<p><strong>Pourquoi ce fichier existe séparément.</strong> Une question posée entre deux livrables se perd : elle est répondue dans la conversation, la conversation se termine, et la réponse meurt avec elle (Article 27). Or plusieurs de ses questions de passage ont <strong>changé le plan</strong> — ce ne sont pas des apartés, ce sont des décisions. Elles vivent donc ici, datées, avec ce qu'elles ont modifié.</p>
+<p><strong>Ce qui distingue ce fichier de <code>01-absorption/questions-consolidees.md</code></strong> : celui-là porte les 49 questions écrites dans ses DEUX documents, à répondre en bloc. Celui-ci porte les questions qu'il pose <strong>pendant le travail</strong>, et qui appellent une réponse immédiate.</p>
+<hr>
+<h3>Q-R1 · La tuyauterie de l'Agence (2026-09-28, 22h40)</h3>
+<div class="highlight"><p><strong>Sa question</strong> : « la tuyauterie de l'agence, elle est exportable, ou bien l'agence se branche
+sur la tuyauterie du projet qu'elle rejoint, ou bien les questions d'infrastructure dépendent des
+cas ? »</p></div>
+<p><strong>Sa troisième hypothèse est la bonne, mais « ça dépend » n'est pas la réponse : ce sont TROIS COUCHES, chacune avec une règle fixe.</strong> Mesuré sur les 84 scripts réels, pas déduit :</p>
+<table><thead><tr><th>Couche</th><th>Combien</th><th>La règle</th></tr></thead><tbody><tr><td><strong>EMPORTÉE</strong> — la plomberie interne (<code>lib-shell</code>, <code>tool-usage</code>, <code>report-template</code>, <code>html-report</code>, <code>lib-json</code>, <code>lib-markdown-table</code>)</td><td><strong>67 scripts</strong></td><td>elle part avec l'Agence, entière. Rien du projet hôte n'y entre.</td></tr><tr><td><strong>EXIGÉE</strong> — ce que l'Agence suppose présent : un disque, un shell, git</td><td><strong>72 scripts</strong></td><td>elle s'y BRANCHE, elle ne l'apporte jamais. Universel : tout projet de code en a un.</td></tr><tr><td><strong>ADAPTÉE</strong> — un fournisseur précis (Gemini, Cloudflare)</td><td><strong>5 scripts</strong></td><td>la seule couche qui dépend du cas : <code>check-gemini-quota</code>, <code>check-house</code>, <code>check-profile</code>, <code>check-spirit</code>, <code>sites-env</code>.</td></tr></tbody></table>
+<p><strong>Donc : 94 % de l'Agence est indépendante de l'infrastructure du projet qu'elle rejoint.</strong></p>
+<p><strong>DEUX corrections en chemin, et le chiffre a bougé DANS LES DEUX SENS</strong> — c'est ce qui le rend croyable :</p>
+<ul><li>Le premier passage comptait SIX scripts liés à un fournisseur. Quatre ne faisaient que le <strong>nommer</strong> — dans un commentaire ou dans un registre déclaré. <em>Mentionner n'est pas dépendre</em>, exactement la correction que <code>data-archangel</code> a déjà payée sur son propre compteur. Traitée comme une CLASSE (on retire commentaires et déclarations avant de mesurer), jamais comme quatre exceptions. <strong>96 %.</strong></li><li>Puis un contre-test a montré que le motif ratait la dépendance la PLUS courante du dépôt : <code>\bGEMINI\b</code> ne reconnaît pas <code>GEMINI_API_KEY</code>, parce que le tiret bas est un caractère de mot. <strong>94 %, et 5 adaptateurs au lieu de 3.</strong></li></ul>
+<p><strong>Le chiffre a baissé parce que la mesure est devenue juste, jamais parce que l'Agence s'est dégradée.</strong> Une mesure qui ne descend jamais ne mesure rien.</p>
+<hr>
+<h3>Q-R2 · Et si l'hôte ne peut pas fournir ? (2026-09-28, 22h50)</h3>
+<div class="highlight"><p><strong>Sa question</strong> : « si l'hôte ne peut pas fournir les éléments, alors safe-export résout la
+question et met ce qu'il faut en place, c'est comme ça ? »</p></div>
+<p><strong>Non — et il ne doit pas.</strong> La réponse diffère par couche, et les confondre produirait un outil dangereux :</p>
+<ul><li><strong>EXIGÉE manquante</strong> (pas de git, pas de shell, pas de Node) → <strong>on REFUSE, on ne répare pas.</strong> Un outil qui installerait git à la place de son hôte modifierait la machine de quelqu'un d'autre pour se rendre installable. C'est la définition d'un logiciel en qui on ne peut pas avoir confiance. Ce qui manque se <strong>DIT</strong>, avant l'installation.</li><li><strong>ADAPTÉE manquante</strong> (pas de clé Gemini, pas de Cloudflare) → <strong>on DÉGRADE proprement.</strong> L'outil concerné refuse avec sa raison écrite, tout le reste tourne. <strong>Ce n'est pas une théorie</strong> : le banc témoin a mesuré <strong>68/68 outils debout sur un dépôt étranger sans nos clés</strong>, précisément parce que ceux qui en ont besoin refusent au lieu de planter.</li><li><strong>EMPORTÉE</strong> → sans objet : elle arrive avec l'Agence.</li></ul>
+<hr>
+<h3>Ce que ces deux questions ont CHANGÉ dans l'outillage</h3>
+<p><strong>Il avait raison sur le fond</strong> : <em>« ce genre de question devrait être anticipé par safe-export »</em>. SAFE-EXPORT mesurait les liens vers CE dépôt-ci ; il ne mesurait nulle part ce que l'Agence <strong>exige de son hôte</strong>. Or c'est la première question d'un acheteur. Deux ajouts :</p>
+<ul><li><strong><code>node scripts/safe-export.mjs tuyauterie</code></strong> — la répartition des trois couches, dérivée des imports réels. Devient la <strong>huitième dimension</strong> du rapport d'exportabilité.</li><li><strong><code>node scripts/safe-export.mjs accueil</code></strong> — le contrôle à lancer <strong>dans le projet d'arrivée</strong> : il dit ce qui manque AVANT d'installer. Le banc témoin, lui, teste chez nous sur un dépôt que nous choisissons — ce n'est pas la même question, et rien ne répondait à celle de l'acheteur. <em>(Sa première version rendait « REFUSÉ » sur une machine qui avait tout, faute d'avoir importé le lanceur partagé. Un contrôle d'accueil qui refuse à tort ferait renoncer un acheteur dont la machine convient — pire que pas de contrôle du tout.)</em></li></ul>
+<hr>
+<h3>Et sa vraie inquiétude derrière la question</h3>
+<div class="highlight"><p>« j'espère juste que ce genre de question est prévu dans la stratégie du plan d'action »</p></div>
+<p><strong>Réponse honnête : elle ne l'était PAS, et le plan a été corrigé.</strong> Le plan couvrait la rationalisation et la modularisation ; il ne disait rien du <strong>contrat d'hôte</strong> — c'est-à-dire de ce que l'Agence promet à celui qui l'installe. Ce n'est pas un détail d'infrastructure : c'est la première page du mode d'emploi d'un produit.</p>
+<p><strong>C'est exactement pour ça que ses questions de passage ne sont pas des perturbations.</strong> Celle-ci a trouvé un trou que ni les sept audits ni mon plan n'avaient vu.</p>
+<hr>
+<h2>LES ACTIONS EN FACE — une par question, jamais une réponse qui meurt</h2>
+<p><em>(Sa demande, le 2026-09-28 : « j'espère aussi que pour chaque question et réponse du fichier, ou groupe de réponses, il y a des actions en face, en face de ma demande inavouée, à calibrer avec toi ». C'est l'Article 28 appliqué aux réponses — et ce tableau devient le GABARIT du grand fichier de réponses à ses 49 questions.)</em></p>
+<p><strong>Quatre colonnes, et la troisième est celle qu'il réclame</strong> : ce qu'il demande vraiment derrière sa question. Une question technique cache presque toujours une inquiétude qui ne se dit pas.</p>
+<table><thead><tr><th>#</th><th>Sa demande INAVOUÉE, telle que je la lis</th><th>L'action</th><th>État</th></tr></thead><tbody><tr><td><strong>Q-R1</strong></td><td><em>« Est-ce que mon Agence est vraiment vendable, ou est-ce qu'elle est collée à ce projet-ci sans que je le voie ? »</em></td><td>La mesure existe et elle est rassurante : <strong>96 %</strong>. Elle devient la <strong>8ᵉ dimension</strong> du rapport d'exportabilité, donc elle sera re-mesurée à chaque passage au lieu d'être une réponse d'un soir.</td><td><strong>RETENU — fait</strong></td></tr><tr><td><strong>Q-R1</strong></td><td><em>« Et les 3 qui restent, ça veut dire que je suis coincé ? »</em></td><td>Non : <code>check-spirit</code> appelle vraiment Gemini, <code>sites-env</code> décrit Cloudflare, <code>check-house</code> les simule. Les trois sont des <strong>adaptateurs</strong>, pas du cœur. Les remplacer est une journée, pas un chantier.</td><td><strong>RETENU — à chiffrer dans le BUILD MAP (#1118)</strong></td></tr><tr><td><strong>Q-R2</strong></td><td><em>« Est-ce que l'acheteur va se retrouver bloqué, et est-ce que ce sera de ma faute ? »</em></td><td>Non, à une condition qui est maintenant outillée : il doit <strong>savoir avant d'installer</strong>. D'où <code>safe-export accueil</code>, à lancer chez lui.</td><td><strong>RETENU — fait</strong></td></tr><tr><td><strong>Q-R2</strong></td><td><em>« Est-ce que mon Agence doit se débrouiller toute seule, quoi qu'il arrive ? »</em></td><td><strong>Non, et c'est une décision de conception, pas une limite.</strong> Une Agence qui installerait git chez son hôte serait un logiciel en qui on ne peut pas avoir confiance. <strong>Refuser proprement est une qualité commerciale</strong>, pas un aveu.</td><td><strong>À TRANCHER avec lui — c'est une promesse produit, pas un choix technique</strong></td></tr><tr><td><strong>les deux</strong></td><td><em>« Est-ce que je pose des questions qui vous font perdre du temps ? »</em></td><td>Elles ont trouvé un trou que <strong>ni les sept audits ni mon plan</strong> n'avaient vu. Le contrat d'hôte n'était nulle part.</td><td><strong>RETENU — le plan est corrigé</strong></td></tr></tbody></table>
+<h3>Ce qui lui revient, et rien d'autre</h3>
+<p><strong>Une seule chose est à trancher, et elle n'est pas technique</strong> : <em>l'Agence refuse-t-elle proprement, ou tente-t-elle de s'installer coûte que coûte ?</em> Ma recommandation est ferme — <strong>refuser proprement</strong> — mais c'est une <strong>promesse faite à un acheteur</strong>, donc elle lui appartient. Elle rejoint la liste de calibrage.</p></main>
+  <div class="divider"></div><footer><p>Source : docs/grand-projet/02-strategie/questions-en-cours-de-route.md — régénérable, jamais écrit à la main.</p></footer>
+</div>
+</body>
+</html>

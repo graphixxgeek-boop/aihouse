@@ -193,6 +193,21 @@ Dans cet ordre, qui est celui des audits et que je valide :
 4. **`check-house`** transformé en moteur de caractérisation + runner, jamais découpé par taille.
 5. **`/api/lia` en DERNIER**, sous la protection de l'Article 0.
 
+### LE CONTRAT D'HÔTE — ajouté le 2026-09-28 parce qu'il manquait, et c'est lui qui l'a trouvé
+
+Sa question — *« la tuyauterie de l'Agence est-elle exportable, ou se branche-t-elle sur celle du
+projet qu'elle rejoint ? »* — a révélé que **ni les sept audits ni ce plan** ne disaient ce que
+l'Agence **promet à celui qui l'installe**. Ce n'est pas un détail d'infrastructure : c'est la
+première page du mode d'emploi d'un produit.
+
+**Trois couches, trois règles fixes** (mesuré : `node scripts/safe-export.mjs tuyauterie`) —
+EMPORTÉE (67 scripts, part avec l'Agence) · EXIGÉE (72, elle s'y branche, ne l'apporte jamais) ·
+ADAPTÉE (5, la seule qui dépend du cas). **94 % indépendante de l'infrastructure de son hôte.**
+Et si l'hôte ne fournit pas : **on refuse proprement et on le dit avant** (`safe-export accueil`),
+jamais on n'installe quoi que ce soit à sa place.
+
+Le détail et les actions : `docs/grand-projet/02-strategie/questions-en-cours-de-route.md`.
+
 ### LA LIGNE ROUGE, et elle n'est pas négociable
 
 > **Toute étape qui touche au chemin du dialogue passe par `check-spirit` AVANT et APRÈS, et le

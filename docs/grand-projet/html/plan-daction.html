@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le plan d'action du GRAND CHANGEMENT</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">28 septembre 2026</div>
+    <h1>Le plan d'action du GRAND CHANGEMENT</h1>
+    <p class="sub">Quatre fils menés ensemble — la carte, le frein, la dette, la parole</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Tâches #1100 accueillir l'ENORME PROMPT · #1101 tout doit être prêt · #1113 point de non-retour · #1114 lien tâche↔chantier. Écrit le 2026-09-28 après absorption complète des 20 sources, la vue globale <code>../02-strategie/vue-globale-2026-09-28.md</code>, et la recherche de marché <code>../../recherches/marche-agents-code-2026-09-28.md</code> qu'il a demandée avant le plan.)</em></p>
+<div class="highlight"><p><strong>Sa demande fondatrice, et elle gouverne la FORME de ce plan</strong> : « mener un grand changement dans
+l'agence, <strong>en embarquant plusieurs sujets à la fois</strong>, plutôt que de tout faire à la file et tout
+devoir défaire à chaque fois. »</p></div>
+<div class="highlight"><p><strong>LA FRONTIÈRE AVEC LA VUE GLOBALE, écrite pour qu'aucun des deux ne redise l'autre</strong> :
+<code>docs/grand-projet/02-strategie/vue-globale-2026-09-28.md</code> porte le <strong>POURQUOI</strong> — le diagnostic, les chiffres
+revérifiés, ce que les audits ne pouvaient pas voir, et les raisons de chaque choix. <strong>Ce document
+ne porte que le QUOI et le QUAND</strong> : les étapes, leur ordre, et à quelle tâche chacune se
+raccorde. Chaque fois qu'une raison manque ici, elle est là-bas, et le renvoi est explicite.
+*(Frontière posée le 2026-09-28 après que le détecteur de documents jumeaux ait mesuré 35 % de
+recouvrement entre les deux — il avait raison, et c'est le garde-fou qui a gagné.)*</p></div>
+<hr>
+<h3>0. Ce que ce plan doit produire, et comment on saura qu'il a réussi</h3>
+<p><strong>Destination écrite</strong> — c'est la règle que les trois audits posent en premier et que j'adopte pour chaque étape : <em>aucune étape sans destination</em>. « Ranger les outils » n'en est pas une. « Qu'un outil neuf coûte UN registre au lieu de dix » en est une.</p>
+<p>Les <strong>dix critères de fin</strong> viennent du plan directeur, et ils sont testables. Je les reprends tels quels parce qu'ils sont bons, en marquant ceux que je considère atteignables dans ce chantier-ci :</p>
+<table><thead><tr><th>#</th><th>Critère</th><th>Ce chantier</th></tr></thead><tbody><tr><td>1</td><td>un nouveau venu comprend les grandes branches sans connaître l'histoire</td><td><strong>oui</strong></td></tr><tr><td>2</td><td>un nouvel agent découvre les contrats sans lire 97 000 lignes</td><td><strong>oui</strong></td></tr><tr><td>3</td><td>un outil peut être retiré sans enquête archéologique</td><td><strong>oui</strong></td></tr><tr><td>4</td><td>un composant s'exporte avec ses dépendances</td><td>plus tard</td></tr><tr><td>5</td><td>le modèle IA change sans réécrire le domaine</td><td>plus tard</td></tr><tr><td>6</td><td>la base change sans réécrire les règles métier</td><td>plus tard</td></tr><tr><td>7</td><td>les tests visent des contrats</td><td>partiellement</td></tr><tr><td>8</td><td><strong>les outils de gouvernance ne deviennent pas une seconde jungle</strong></td><td><strong>oui — c'est le cœur</strong></td></tr><tr><td>9</td><td>le produit s'explique en quelques minutes</td><td><strong>oui (fil D)</strong></td></tr><tr><td>10</td><td>une équipe extérieure crée une agence sans connaître Maison IA</td><td>plus tard</td></tr></tbody></table>
+<hr>
+<h3>1. LES QUATRE FILS, menés ENSEMBLE</h3>
+<p>C'est sa demande, et c'est aussi ce que la structure impose : le fil A débloque D, le fil B protège A pendant qu'il se construit, et le fil C attaque la cause que A ne fait que décrire.</p>
+<pre><code>        A — LA CARTE  ────────────────►  D — LA PAROLE
+        (sans elle, rien)                 (dérivée de A)
+              │
+              ├──► B — LE FREIN   (protège A pendant qu'elle se construit)
+              │
+              └──► C — LA DETTE   (traite la cause que A décrit)</code></pre>
+<hr>
+<h3>FIL A — LA CARTE</h3>
+<p><strong>Destination</strong> : chaque fichier de l'outillage sait à quelle grande branche il appartient, et ça se LIT, ça ne se recopie pas.</p>
+<h4>A1 — Le dixième axe, <code>couche</code> <em>(tâche #1117)</em></h4>
+<p><em>Pourquoi cet axe et pas une taxonomie neuve : vue globale, §4.3.</em></p>
+<p><strong>Dix valeurs, qu'il a validées en fenêtre dédiée</strong> : <code>CORE</code> · <code>PROJECT</code> · <code>TOOLS</code> · <code>WORK</code> · <code>QUALITY</code> · <code>OBSERVABILITY</code> · <code>GOVERNANCE</code> · <code>KNOWLEDGE</code> · <code>EXPORT</code> · <code>ADAPTERS</code>.</p>
+<p><strong>Comment il se remplit</strong> : dérivé, comme les neuf autres — de ce qu'un outil lit, écrit, et de qui l'appelle. Ce qui ne se dérive pas reçoit <code>inconnu</code>, jamais une supposition.</p>
+<p><strong>Garde-fou</strong> : signale sans bloquer, avec un contre-test qui fabrique exprès un fichier sans couche — sinon le zéro ne prouve rien.</p>
+<h4>A2 — LE BUILD MAP — le document que personne n'a produit <em>(tâche #1118)</em></h4>
+<p>Le dernier lot l'annonce et ne le livre pas. C'est le seul qui permettrait de commencer sans avancer à l'aveugle. <strong>Une ligne par composant</strong>, et tout ce qui peut l'être est dérivé :</p>
+<table><thead><tr><th>Champ</th><th>Dérivé ?</th></tr></thead><tbody><tr><td>origine historique (fichier, date de naissance)</td><td><strong>oui</strong>, git</td></tr><tr><td>couche</td><td><strong>oui</strong>, A1</td></tr><tr><td>lignes, fonctions exportées, consommateurs</td><td><strong>oui</strong></td></tr><tr><td>dépendances entrantes et sortantes</td><td><strong>oui</strong></td></tr><tr><td>registres qui le nomment</td><td><strong>oui</strong></td></tr><tr><td>maturité R0→R6</td><td><strong>partiellement</strong> — dérivable jusqu'à R2, jugé au-delà</td></tr><tr><td>responsabilité en une phrase</td><td><strong>non</strong> — écrit à la main, une fois</td></tr><tr><td>décision (garder / fusionner / déplacer / transformer / déprécier / supprimer / extraire)</td><td><strong>non</strong> — <strong>la sienne</strong></td></tr></tbody></table>
+<p><strong>Ce que l'outil fera et ne fera pas</strong> : il PROPOSE une décision à partir du score, il ne la prend jamais. <em>(Même doctrine que <code>check-tasks-details</code> face à <code>god-of-all-process</code> : l'un propose une forme, l'autre constate le manque, et les fusionner donnerait un outil qui se satisfait tout seul.)</em></p>
+<h4>A3 — Les routes autorisées</h4>
+<p>Écrire quelle couche peut appeler quelle couche, et le vérifier mécaniquement. Les interdictions que je reprends des audits, parce qu'elles sont justes et qu'elles nous visent : <code>POLICY → orchestration cachée</code> · <code>REPORT → mutation d'état</code> · <code>OBSERVABILITY → mutation d'exécution</code> · <code>KNOWLEDGE → décision de permission</code> · <code>TOOL → implémentation d'un autre TOOL</code>. Et la règle générale : <strong>une branche inférieure ne devient pas l'autorité d'une branche supérieure parce qu'un fichier historique l'importe.</strong></p>
+<h4>A4 — Les sept séparations à PROTÉGER</h4>
+<p>La rationalisation fusionne ; elle doit aussi <strong>empêcher</strong> des fusions. Les sept, reprises telles quelles : Tool Usage ≠ KPI · Policy ≠ Check · Simulation ≠ Production · Knowledge ≠ Governance · Model Gateway ≠ Domain · Repository ≠ World Domain · <strong>Final Judge ≠ moteur de règles</strong>.</p>
+<hr>
+<h3>FIL B — LE FREIN</h3>
+<p><strong>Destination</strong> : qu'aucun outil nouveau n'agrandisse le problème pendant qu'on le range.</p>
+<h4>B1 — Aucun outil neuf sans couche déclarée</h4>
+<p><code>integration-outil</code> exige déjà un blueprint, une fiche, un registre. Il exigera <strong>la couche</strong>, et refusera un <code>inconnu</code> non justifié. Une ligne, dans un mécanisme qui existe.</p>
+<h4>B2 — Le gel des grandes capacités</h4>
+<p><em>« Aucun composant nouveau sans place architecturale explicite »</em> — c'est le principe n°6 du plan directeur, et c'est la seule règle de charte que ce chantier me paraît devoir ajouter. <strong>Je la montrerai avant de l'écrire</strong> (sa borne : « CLAUDE.md est autorisé mais tu me montres avant »).</p>
+<hr>
+<h3>FIL C — LA DETTE</h3>
+<p><strong>Destination</strong> : que le coût d'entrée d'un outil passe de <strong>dix registres à un</strong>.</p>
+<p><em>Le paradoxe que ce fil traite, et ses chiffres : vue globale, §4.2. A le décrit ; C le traite.</em></p>
+<h4>C1 — Les dix registres, mesurés puis dérivés <em>(tâche #1119)</em></h4>
+<p>Mesurer d'abord <strong>lesquels des dix sont dérivables</strong> du fichier lui-même. Mon hypothèse, à vérifier : la majorité. Chaque registre dérivé disparaît de la liste à remplir sans rien perdre. <em>(Tâches existantes concernées : #814, #823.)</em></p>
+<h4>C2 — Les 480 lignes de bannière par commit</h4>
+<p>Un fichier que personne n'ouvre, écrit à chaque commit. Ce n'est pas du volume, c'est du <strong>décor</strong> au sens de la leçon L6. Décider ce qui reste visible et ce qui se lit à la demande.</p>
+<h4>C3 — Les deux outils dormants</h4>
+<p><code>claudius-minimus</code> et <code>hyper-scan-checkpoint</code> : aucun usage hors de leur propre construction. La question R6 des audits s'applique — <em>« un outil peut avoir été utile, intelligent, documenté, testé, et ne plus avoir de raison d'exister. C'est normal. »</em> <strong>Après la carte</strong>, jamais avant : il faut d'abord savoir quelle capacité ils portaient.</p>
+<hr>
+<h3>FIL D — LA PAROLE</h3>
+<p><strong>Destination</strong> : qu'il ait ses réponses, et que le PACK DÉCOUVERTE existe — <strong>dérivé</strong>, comme il l'a tranché.</p>
+<h4>D1 — Ses 49 réponses</h4>
+<p>Un fichier HTML, point par point, en reprenant sa question avant d'y répondre, avec le compte des questions agrégées. Les questions de marché s'appuient sur la recherche déjà enregistrée. <em>(Tâche #1112 pour la liste — faite ; la réponse est le livrable suivant après ce plan.)</em></p>
+<h4>D2 — Le PACK DÉCOUVERTE, dérivé</h4>
+<ul><li><strong>la LISTE</strong> se dérive du registre des documents, qui existe ;</li><li><strong>la PRÉSENTATION</strong> se dérive de la carte des capacités + l'organigramme + les KPI ;</li><li><strong>les deux versions ADMIN / COMMERCIALISABLE</strong> sont <strong>un onzième axe dérivé</strong>, pas 1 140 étiquettes posées à la main — et un axe dérivé est <strong>rétroactif par construction</strong>, ce qui répond exactement à son « avec effet rétroactif ».</li></ul>
+<h4>D3 — Les trois stratégies</h4>
+<p>AGENCE · JEU · PROJET ENTIER. Elles se dérivent en grande partie des chantiers et tâches déjà ouverts. <strong>Ce qui reste écrit à la main est le peu qui compte : l'objectif, les bornes, les arbitrages — c'est-à-dire ses décisions.</strong></p>
+<hr>
+<h3>2. CE QUI VIENT APRÈS LA CARTE, et pas avant</h3>
+<p>Dans cet ordre, qui est celui des audits et que je valide :</p>
+<ul><li><strong>Les contrats</strong>, et seulement les nécessaires : <code>Finding</code> (le plus utile chez nous — sept gardiens rendent sept formats), <code>Report</code>, <code>Tool</code>, <code>Task</code>, puis <code>ModelGateway</code> et <code>Repository</code>.</li><li><strong>Le Transaction Engine</strong> <em>(tâche #1120)</em> — <em>le seul vrai trou de toute l'architecture</em>. Nous avons des garde-fous qui REFUSENT (le filet, les crochets) ; nous n'avons rien qui ANNULE. <strong>Je le mets avant les extractions, contre l'ordre proposé par les audits</strong>, parce qu'une extraction sans retour arrière est exactement le geste que sa demande de « sauvegarde de référence » cherche à couvrir.</li><li><strong>Les premières extractions</strong> : <code>daynight</code> (14/14 tests de caractérisation déjà passants chez l'auditeur), puis <code>gemini-keys</code>, puis <code>relationship</code>.</li><li><strong><code>check-house</code></strong> transformé en moteur de caractérisation + runner, jamais découpé par taille.</li><li><strong><code>/api/lia</code> en DERNIER</strong>, sous la protection de l'Article 0.</li></ul>
+<h4>LE CONTRAT D'HÔTE — ajouté le 2026-09-28 parce qu'il manquait, et c'est lui qui l'a trouvé</h4>
+<p>Sa question — <em>« la tuyauterie de l'Agence est-elle exportable, ou se branche-t-elle sur celle du projet qu'elle rejoint ? »</em> — a révélé que <strong>ni les sept audits ni ce plan</strong> ne disaient ce que l'Agence <strong>promet à celui qui l'installe</strong>. Ce n'est pas un détail d'infrastructure : c'est la première page du mode d'emploi d'un produit.</p>
+<p><strong>Trois couches, trois règles fixes</strong> (mesuré : <code>node scripts/safe-export.mjs tuyauterie</code>) — EMPORTÉE (67 scripts, part avec l'Agence) · EXIGÉE (72, elle s'y branche, ne l'apporte jamais) · ADAPTÉE (5, la seule qui dépend du cas). <strong>94 % indépendante de l'infrastructure de son hôte.</strong> Et si l'hôte ne fournit pas : <strong>on refuse proprement et on le dit avant</strong> (<code>safe-export accueil</code>), jamais on n'installe quoi que ce soit à sa place.</p>
+<p>Le détail et les actions : <code>docs/grand-projet/02-strategie/questions-en-cours-de-route.md</code>.</p>
+<h4>LA LIGNE ROUGE, et elle n'est pas négociable</h4>
+<div class="highlight"><p><strong>Toute étape qui touche au chemin du dialogue passe par <code>check-spirit</code> AVANT et APRÈS, et le
+résultat se LIT.</strong></p></div>
+<p>📜 Article 0. <em>La raison — pourquoi les audits ont raison de classer <code>/api/lia</code> en risque très élevé mais pour la mauvaise raison — est au §4.1 de la vue globale.</em></p>
+<hr>
+<h3>3. LE RACCORD AVEC LA FILE EXISTANTE — réponse à #1114</h3>
+<p><strong>54 tâches ouvertes aujourd'hui.</strong> Voici où elles tombent. C'est le lien qui n'existait pas, et il répond à la crainte exacte de #1114 : <em>« quand le plan sera écrit, rien ne saura dire quelles tâches il rend caduques »</em>.</p>
+<table><thead><tr><th>Fil</th><th>Tâches déjà ouvertes qui y appartiennent</th></tr></thead><tbody><tr><td><strong>A — LA CARTE</strong></td><td>#745 (fusionner des agents pour réduire l'effectif) · #793 (check-house, un quart de l'outillage) · #705 (découpe d'outil) · #1005 (deux <code>chargerLesDocuments</code>) · #902 (export et commercialisation)</td></tr><tr><td><strong>B — LE FREIN</strong></td><td><em>aucune — le fil est neuf</em></td></tr><tr><td><strong>C — LA DETTE</strong></td><td>#814 (registres sans lecteur) · #823 (compteur d'usage) · #819 (filet en parts par défaut) · #1053 (compacter les récits fermés) · #1092 (trafic API réel) · #704 (ecotoken)</td></tr><tr><td><strong>D — LA PAROLE</strong></td><td>#696 (modèle de gouvernance) · #767 et #790 (charte) · #1067 (recouvrement 18↔26) · #717 (profil utilisateur)</td></tr><tr><td><strong>Hors chantier, à garder telles quelles</strong></td><td>#700 · #703 · #679 · #681 · #699 · #708 · #710 · #721 · #725 · #845 · #1019 · #1079 · #1102 · #1113 · #1114</td></tr><tr><td><strong>Reportées après le grand chantier</strong></td><td>les 9 tâches de renommage + la refonte graphique (sa décision du 2026-09-28)</td></tr></tbody></table>
+<p><strong>Ce que ça change concrètement</strong> : <strong>17 tâches sur 54 sont absorbées par un fil.</strong> Elles ne disparaissent pas — elles cessent d'être des chantiers indépendants et deviennent des étapes d'un fil, ce qui les empêche d'être refaites séparément. <strong>C'est exactement ce qu'il voulait éviter : « tout faire à la file et tout devoir défaire à chaque fois ».</strong></p>
+<hr>
+<h3>4. CE QUE JE NE FERAI PAS, et pourquoi</h3>
+<p><em>Les raisons de chacun de ces refus sont au §6 de la vue globale. Ils sont repris ici sous forme de liste parce qu'un plan doit pouvoir se lire seul le jour où on l'exécute.</em></p>
+<p>Pas de taxonomie concurrente · pas de déplacement de fichiers avant la carte · pas d'étiquetage manuel rétroactif · pas de MCP, d'event bus ni de monorepo à ce stade · pas de suppression d'outil avant la carte · <strong>pas de renommage</strong> (sa décision : c'est l'étape récompense, après).</p>
+<hr>
+<h3>5. L'ORDRE VERROUILLÉ, et il vient de lui</h3>
+<div class="highlight"><p>« Je veux bien une sauvegarde de référence, mais <strong>juste après que tu aies finalisé ton plan
+d'action, avant de commencer quoi que ce soit concrètement</strong> : je garde la trace de où on en est +
+où on se dirige. »</p></div>
+<pre><code>   ce plan
+      ↓
+   ses calibrages (au moins 50 questions, sa demande)
+      ↓
+   SAUVEGARDE DE RÉFÉRENCE   ← l'étiquette nommée, avec le plan DEDANS
+      ↓
+   première action concrète (fil A1)</code></pre>
+<p><strong>La sauvegarde ne marque plus un état, elle marque un état ET une intention.</strong> Le plan doit être dedans, sinon la trace dit d'où on part sans dire où on va.</p>
+<hr>
+<h3>6. PLAN D'ACTION — les constats de ce document et leur suite (Article 28)</h3>
+<table><thead><tr><th>#</th><th>Constat</th><th>État</th><th>Suite</th></tr></thead><tbody><tr><td>1</td><td>Notre classement n'a pas d'axe « couche » — mesuré sur l'axe <code>type</code></td><td><strong>RETENU</strong></td><td><strong>tâche #1117</strong> — fil A1</td></tr><tr><td>2</td><td>Le BUILD MAP n'existe pas ; le dernier lot l'annonce et ne le livre pas</td><td><strong>RETENU</strong></td><td><strong>tâche #1118</strong> — fil A2</td></tr><tr><td>3</td><td>Un outil neuf coûte dix registres</td><td><strong>RETENU</strong></td><td><strong>tâche #1119</strong> — fil C1, absorbe #814 et #823</td></tr><tr><td>4</td><td>Le Transaction Engine est le seul vrai trou de l'architecture</td><td><strong>RETENU</strong></td><td><strong>tâche #1120</strong>, après la carte</td></tr><tr><td>5</td><td>17 tâches ouvertes sur 54 appartiennent à un fil</td><td><strong>RETENU</strong></td><td>c'est #1114, qui reçoit sa réponse ici</td></tr><tr><td>6</td><td>Les chiffres de marché de l'audit : le seul vérifiable l'est, les autres sont des sources secondaires</td><td><strong>ÉCARTÉ comme blocage</strong></td><td><em>raison écrite</em> : ils cadrent, ils ne décident pas. Revérification à la source au moment de répondre à Q9, pas avant</td></tr><tr><td>7</td><td>Le positionnement « runtime d'agences » vise le marché le plus disputé de 2026</td><td><strong>À TRANCHER</strong></td><td><strong>tâche #1121</strong> — question commerciale, pas technique : elle lui revient (Article 16)</td></tr><tr><td>8</td><td>Les deux outils dormants n'ont servi qu'à se construire</td><td><strong>RETENU</strong></td><td>fil C3 de <strong>#1119</strong>, <strong>après</strong> la carte</td></tr><tr><td>9</td><td>La ligne rouge <code>check-spirit</code> sur tout ce qui touche au dialogue</td><td><strong>RETENU</strong></td><td>inscrite dans <strong>#1116</strong>, s'applique dès la première étape</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Source : docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md — régénérable, jamais écrit à la main.</p></footer>
+</div>
+</body>
+</html>

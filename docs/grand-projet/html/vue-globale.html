@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La vue globale du GRAND PROJET</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">28 septembre 2026</div>
+    <h1>La vue globale du GRAND PROJET</h1>
+    <p class="sub">Ce que disent les 20 sources, leurs chiffres revérifiés, et ce que je recommande</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Tâches #1111 absorption · #1112 questions · #1113 point de non-retour · #1114 lien tâche↔chantier. Écrit le 2026-09-28 après lecture des 20 documents, et pas une minute avant : c'est son ordre — « tout absorber pour avoir une vue globale AVANT de commencer à VRAIMENT analyser ».)</em></p>
+<p><strong>Son calibrage ② disait : rien pendant l'absorption, UN point quand la vue globale est là.</strong> La voici. Ce document est ce point, et il est le seul.</p>
+<p><strong>Ce document porte le POURQUOI ; le plan porte le QUOI et le QUAND.</strong> Les étapes, leur ordre et leur raccord aux tâches vivent dans <code>docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md</code>, qui renvoie ici chaque fois qu'une raison lui manque. Frontière posée le 2026-09-28, après que le détecteur de documents jumeaux ait mesuré 35 % de recouvrement entre les deux.</p>
+<hr>
+<h3>1. Ce qui a été lu</h3>
+<p>Vingt documents, environ 64 000 mots, 141 pages. Ses deux fichiers d'abord — parce que je ne peux pas exercer l'autorité qu'il me donne sans avoir lu le document qui la borne — puis les sept lots préparés, dans leur ordre de production.</p>
+<p><strong>Sur les « APRÈS » dans les noms de dossier</strong> (<code>AUDIT NIVEAU 2 APRES ARCHITECTURE</code>) : il l'a précisé lui-même, ils forment une chaîne <strong>de lecture</strong>, jamais un ordre d'exécution. C'est important au-delà du détail : chacun de ces documents propose SON plan en 10 ou 12 étapes, et <strong>aucun de ces plans n'est le nôtre</strong>. L'ordre du chantier reste entier à décider.</p>
+<p>Trace complète de la lecture : <code>../01-absorption/ce-que-jai-lu.md</code>. Ses 49 questions, extraites et rassemblées : <code>../01-absorption/questions-consolidees.md</code>.</p>
+<hr>
+<h3>2. Les sept lots disent tous la même chose, et c'est rassurant</h3>
+<p>Cinq idées reviennent chez tous, produites à des jours d'intervalle et par des analyses différentes. Quand des analyses indépendantes convergent, ce n'est plus un avis, c'est un constat.</p>
+<ul><li><strong>Ne pas commencer par découper les gros fichiers.</strong> Les frontières existent déjà dans les têtes ; elles n'existent pas encore dans le code. Le travail est de les rendre techniques.</li><li><strong>Frontière d'abord, extraction ensuite</strong> (« Boundary First, Extraction Later »). On pose une façade, puis un adaptateur, puis un contrat — et on n'extrait qu'après.</li><li><strong>Rationaliser AVANT de modulariser</strong>, sous peine de « transformer le bric-à-brac en bric-à-brac modulaire » : cent modules techniquement indépendants et une organisation toujours mauvaise.</li><li><strong>Le projet n'est pas à refaire.</strong> « Conserver l'intelligence, changer la géométrie. »</li><li><strong>Ne rien supprimer qui a une raison historique écrite</strong> — et ils citent notre propre Article 19 pour le dire.</li></ul>
+<p><strong>Et une convergence de méthode qui vaut pour tout le chantier</strong> : chaque étape doit avoir une DESTINATION écrite. « Découper check-house » n'en est pas une ; « séparer le moteur de détection du rapporteur pour que le moteur serve seul » en est une. C'est ce qui empêche le refactoring infini.</p>
+<hr>
+<h3>3. Leurs chiffres, revérifiés contre le dépôt RÉEL</h3>
+<p>Les sept lots ont analysé une <strong>archive du 28 septembre à 13h35, sans <code>.git/</code> et sans <code>node_modules/</code></strong>. Ils le déclarent honnêtement et s'interdisent d'en conclure quoi que ce soit sur l'exécution. J'ai relancé la mesure sur le dépôt vivant, ce soir.</p>
+<table><thead><tr><th></th><th>Eux (archive 13h35)</th><th><strong>Le dépôt réel, 2026-09-28 au soir</strong></th></tr></thead><tbody><tr><td>fichiers <code>.mjs</code> dans <code>scripts/</code></td><td>86</td><td><strong>87</strong></td></tr><tr><td>lignes dans <code>scripts/</code></td><td>82 490</td><td><strong>84 542</strong></td></tr><tr><td>lignes de code au total</td><td>95 397</td><td><strong>97 149</strong></td></tr><tr><td><code>check-house.mjs</code></td><td>20 342</td><td><strong>21 004</strong></td></tr><tr><td>documents <code>.md</code></td><td>481</td><td><strong>498</strong></td></tr><tr><td>fichiers dans <code>docs/</code></td><td>1 098</td><td><strong>1 140</strong></td></tr></tbody></table>
+<p><strong>Aucun écart n'est une erreur de leur part</strong> : le dépôt a bougé pendant qu'ils l'analysaient. Mais ça dit une chose utile pour la suite : <strong>un audit sur instantané vieillit en quelques heures sur ce projet.</strong> Tout ce qui sera décidé devra donc être DÉRIVÉ du dépôt au moment où on l'exécute, jamais recopié d'un de ces rapports — ce qui est exactement la règle qu'il a lui-même écrite dans sa commande : <em>« tous les rapports sont constitués à partir de données dérivées »</em>.</p>
+<p><strong>Le chiffre qui recadre tout, et il est confirmé</strong> : <code>scripts/</code> porte <strong>87 %</strong> du code du dépôt. L'Agence n'est pas l'outillage du jeu. C'est le plus gros logiciel des deux.</p>
+<hr>
+<h3>4. Ce que les audits ne pouvaient pas voir, et qui change la conduite</h3>
+<p>Ce sont des regards extérieurs sur une archive. Cinq choses leur échappent, et elles sont à moi.</p>
+<h4>4.1 — Le SITE n'apparaît nulle part, et c'est le trou le plus grave</h4>
+<p>Les sept lots parlent de <code>/api/lia</code> comme d'un fichier de 1 817 lignes qui mélange HTTP, DB, verrou, domaine et Gemini. C'est exact. <strong>Mais aucun ne dit ce qu'il y a dedans</strong> : c'est là que vit l'esprit de Lia et Noé, la seule chose que la charte appelle « loi suprême » (Article 0).</p>
+<p>Ils classent tous <code>/api/lia</code> en « risque très élevé, à faire en dernier ». <strong>Ils ont raison, et pour la mauvaise raison</strong> : ils le disent risqué parce qu'il est couplé. Il est risqué parce qu'un ton ne se teste pas comme une fonction. <code>daynight</code> a 14 tests de caractérisation qui prouvent son comportement ; le ton de Noé n'a que <code>check-spirit</code>, qui coûte de vrais appels API et se lit à l'œil humain.</p>
+<p><strong>Ce que ça impose, et que je poserai comme une ligne rouge du chantier</strong> : toute étape qui touche au chemin du dialogue passe par <code>check-spirit</code> AVANT et APRÈS, et le résultat se lit, il ne se coche pas. C'est la seule chose de tout ce corpus que je considère comme non négociable.</p>
+<h4>4.2 — Leur paradoxe central se vérifie chez nous, avec nos propres chiffres</h4>
+<p>Le lot rationalisation écrit : <em>« la documentation de l'Agence est souvent plus mature que son architecture logicielle ; les mécanismes de gouvernance sont plus structurés que les composants qu'ils gouvernent »</em>. Il le déduit de la structure. <strong>Nos propres mesures, faites indépendamment cette semaine, disent la même chose en chiffres</strong> :</p>
+<ul><li><strong>10 registres</strong> à renseigner pour qu'un outil neuf rejoigne l'Agence (mesuré par JESUS, #1103) ;</li><li><strong>480 lignes de bannière</strong> écrites à chaque commit dans un fichier que personne n'ouvre ;</li><li><strong>42 %</strong> de mes propres passages d'outils sont des relances rapprochées, pas des usages ;</li><li><strong>2 outils</strong> n'ont jamais servi qu'à se construire eux-mêmes.</li></ul>
+<p>Deux analyses qui ne se sont pas parlé arrivent au même endroit. <strong>Le diagnostic est donc établi, pas discutable.</strong></p>
+<h4>4.3 — Notre classification existe déjà, et il lui manque exactement UNE chose</h4>
+<p>Les audits proposent une taxonomie neuve de 15 types (CORE SERVICE, DOMAIN MODULE, TOOL, ORCHESTRATOR, GUARDIAN, REGISTRY, INFRASTRUCTURE, ADAPTER…) et présentent ça comme « la correction architecturale la plus importante de toute la phase ».</p>
+<p><strong>Nous avons déjà neuf axes de classification</strong>, dérivés et mesurés à chaque passage : <code>iceberg</code>, <code>type</code>, <code>moment</code>, <code>domaine</code>, <code>destinataire</code>, <code>cherche</code>, <code>vitalite</code>, <code>exportabilite</code>, <code>nature</code>.</p>
+<p>J'ai regardé ce que notre axe <code>type</code> dit réellement. Ses valeurs sont : <em>crochet · filet-de-sécurité · commande-documentée · commande-sans-fiche · bibliothèque-partagée · bibliothèque-solitaire · infrastructure-shell · exécution-directe-non-documentée</em>.</p>
+<p><strong>C'est la NATURE DU FICHIER, jamais la COUCHE ARCHITECTURALE.</strong> Notre classification sait dire qu'un fichier est une commande documentée ; elle ne sait pas dire s'il appartient au CORE, au TOOL SYSTEM, à la GOUVERNANCE ou aux ADAPTERS. <strong>Les audits ont donc raison sur le manque, et tort sur le remède</strong> : il ne faut pas une nouvelle taxonomie à côté des neuf axes — il faut <strong>un dixième axe</strong>, <code>couche</code>, dérivé comme les autres. Un axe de plus dans une machine qui en porte déjà neuf coûte une journée ; une taxonomie concurrente coûte un an et deux sources de vérité.</p>
+<h4>4.4 — Ils recommandent de construire six composants que nous avons déjà, en morceaux</h4>
+<p>Le fichier LITTÉRATURE conseille de démarrer par six composants : Workspace, Tool Broker, Model Gateway, Policy Engine, Transaction Engine, Supervisor. Le conseil est bon <strong>pour qui part de zéro</strong>. Chez nous, cinq des six existent déjà, éparpillés :</p>
+<table><thead><tr><th>Composant conseillé</th><th>Ce que nous avons déjà, dispersé</th></tr></thead><tbody><tr><td>Tool Broker</td><td><code>tool-brain</code> + <code>find-brain</code> + <code>find-booster</code> + <code>route-booster</code> + une part de <code>le-coordinateur</code></td></tr><tr><td>Policy Engine</td><td><code>the-king</code> + <code>angel-of-ia-process</code> + <code>god-of-all-process</code> + <code>check-level-target</code></td></tr><tr><td>Observability</td><td><code>tool-usage</code> + <code>kpi-report</code> + <code>serie-temporelle</code> + <code>smart-conso-token</code> + <code>smart-conso-api</code></td></tr><tr><td>Knowledge</td><td><code>data-archangel</code> + <code>memento</code> + <code>abraham-les-references</code> + <code>doc-report</code></td></tr><tr><td>Export</td><td><code>safe-export</code> + <code>x-port-blindtest</code> + <code>integration-outil</code></td></tr><tr><td><strong>Transaction Engine</strong></td><td><strong>rien. C'est le seul qui manque vraiment.</strong></td></tr></tbody></table>
+<p><strong>Le seul trou réel de toute la liste est le Transaction Engine</strong> — préparer une modification, la prévisualiser, l'appliquer, la vérifier, et pouvoir revenir en arrière. Nous avons des garde-fous qui REFUSENT (le filet, les crochets), nous n'avons rien qui ANNULE.</p>
+<h4>4.5 — Le marché : leurs chiffres ne sont pas vérifiés, et je le dis plutôt que de les citer</h4>
+<p>Le lot rationalisation avance « 90 % des développeurs professionnels utilisent des coding agents chaque semaine (JetBrains 2026) » et décrit l'état du marché (Copilot, Codex, Agents API d'OpenAI, Devin, LangGraph). <strong>Je n'ai vérifié aucun de ces chiffres</strong>, et ils commandent une décision commerciale — donc ils seront revérifiés par des recherches web enregistrées sur disque, comme sa propre consigne l'exige, avant de fonder quoi que ce soit.</p>
+<p>Ce qui me paraît juste <strong>sans avoir besoin d'un chiffre</strong>, c'est la conclusion : construire « encore un agent qui code » nous mettrait face à Claude Code, Copilot, Codex et Cursor. La différenciation possible est ailleurs, et elle est déjà ce que ce projet fait sans l'avoir nommé : <strong>gouverner des agents plutôt qu'en être un.</strong></p>
+<hr>
+<h3>5. LA TENSION CENTRALE, et c'est le point le plus important de ce document</h3>
+<p>Sa commande demande, entre autres : trois documents de STRATÉGIE GLOBALE · un PACK DÉCOUVERTE (une liste, une présentation de 6-8 pages, des annexes à la demande, le tout en DEUX versions) · des <strong>étiquettes ADMIN/UTILISATEUR posées partout avec effet rétroactif</strong> · des process nouveaux pour le jeu, l'agence et le projet entier.</p>
+<p>Les sept lots disent, eux, que le problème actuel est que <strong>la gouvernance est déjà plus grosse que ce qu'elle gouverne</strong> — et l'un d'eux en fait une loi : <em>« la gouvernance doit être plus petite que ce qu'elle gouverne »</em>.</p>
+<p><strong>Les deux sont vrais en même temps, et ce n'est pas une contradiction : c'est un problème d'ORDRE.</strong></p>
+<p>Écrire aujourd'hui trois stratégies à la main, un pack de présentation et des étiquettes rétroactives sur 1 140 fichiers, c'est ajouter une douzième couche documentaire à un système dont le diagnostic unanime est qu'il en porte déjà trop. <strong>Et c'est précisément le geste que sa propre règle interdit</strong> : <em>« tous les rapports et documents sont constitués à partir de données DÉRIVÉES, sauf raison valable ou évidente »</em>.</p>
+<p><strong>La sortie est écrite dans sa commande, par lui.</strong> Presque tout ce qu'il demande est <strong>dérivable</strong> une fois la carte des capacités posée :</p>
+<ul><li>la <strong>présentation de l'Agence</strong> se dérive de la carte des capacités + de l'organigramme + des KPI ;</li><li>la <strong>liste du PACK DÉCOUVERTE</strong> se dérive du registre des documents, qui existe déjà ;</li><li>l'étiquette <strong>ADMIN / UTILISATEUR</strong> est un dixième axe de classification, dérivé, pas 1 140 étiquettes posées à la main — et un axe dérivé est rétroactif par construction, ce qui répond exactement à son « avec effet rétroactif » ;</li><li>les <strong>stratégies</strong> se dérivent en grande partie des chantiers et des tâches déjà ouverts.</li></ul>
+<p><strong>Ce qui ne se dérive pas et qui restera écrit à la main, c'est le peu qui compte</strong> : l'objectif, les bornes, les arbitrages. C'est-à-dire <strong>ses décisions à lui</strong>, pas des documents.</p>
+<p><strong>Et ça répond à sa dernière question de commande</strong> — <em>« un gros chantier… ou pas ? Je me demande si finalement tout n'est pas déjà là sous nos yeux, et qu'il manquait de le formaliser et de l'instituer »</em>. <strong>Sa réponse est la bonne, et elle se scinde en deux</strong> :</p>
+<ul><li><strong>la STRATÉGIE est surtout une RÉVÉLATION</strong> — petit chantier, quelques jours ;</li><li><strong>la RATIONALISATION est un VRAI chantier</strong> — celui qui prend du temps.</li></ul>
+<hr>
+<h3>6. Ce que je recommande, en tant que juge final</h3>
+<p>Il me l'a donné explicitement : <em>« pour décider de la mise en place concrète, TU ES LE JUGE FINAL QUI TRANCHE, à la lumière de mes consignes et de mes intentions profondes. »</em> Voici donc un avis, pas un menu.</p>
+<h4>La forme du chantier : QUATRE fils menés ensemble, jamais à la file</h4>
+<p>C'est sa demande fondatrice — <em>« embarquer plusieurs sujets à la fois plutôt que tout faire à la file et tout devoir défaire à chaque fois »</em> — et elle est techniquement la bonne.</p>
+<table><thead><tr><th>Fil</th><th>Ce qu'il produit</th><th>Pourquoi il ne peut pas attendre</th></tr></thead><tbody><tr><td><strong>A — LA CARTE</strong></td><td>l'axe <code>couche</code> dérivé, les 87 fichiers placés, les capacités nommées</td><td>tout le reste en dépend, et rien d'autre n'en dépend</td></tr><tr><td><strong>B — LE FREIN</strong></td><td>arrêter l'ajout : aucun outil neuf sans place architecturale déclarée</td><td>chaque jour sans lui agrandit ce qu'il faudra ranger</td></tr><tr><td><strong>C — LA DETTE</strong></td><td>le coût d'entrée d'un outil (10 registres) ramené à un, par dérivation</td><td>c'est la cause du paradoxe, pas son symptôme</td></tr><tr><td><strong>D — LA PAROLE</strong></td><td>ses 49 réponses, le PACK DÉCOUVERTE, les stratégies — <strong>dérivés de A</strong></td><td>il en a besoin pour décider la suite, et A les rend peu coûteux</td></tr></tbody></table>
+<p><strong>Ce qui vient APRÈS, et seulement après</strong> : les contrats (Model Gateway, Repository, Tool, Finding), puis les premières extractions (<code>daynight</code>, <code>gemini-keys</code>, <code>relationship</code>), puis <code>check-house</code>, puis <code>/api/lia</code> en dernier — ce dernier sous la protection de l'Article 0.</p>
+<h4>Trois règles que je poserais pour tout le chantier</h4>
+<ul><li><strong>Aucune étape sans destination écrite.</strong> Pas « ranger les outils » mais « qu'un outil neuf coûte UN registre au lieu de dix ».</li><li><strong>Aucun changement sans retour arrière.</strong> C'est le Transaction Engine, et c'est le seul vrai trou de l'architecture. Il vient en premier des composants, pas en dernier.</li><li><strong>Le site reste le juge.</strong> Une rationalisation qui n'a pas fait tourner une simulation n'a rien prouvé. C'est déjà écrit dans la charte ; ce chantier est le moment où ça compte le plus.</li></ul>
+<h4>Ce que je ne recommande PAS, et pourquoi</h4>
+<ul><li><strong>Pas de nouvelle taxonomie</strong> à côté de nos neuf axes : un dixième axe, dérivé.</li><li><strong>Pas de déplacement de fichiers</strong> dans une arborescence <code>agency/core/...</code> avant que la carte existe. Déplacer 87 fichiers ne crée aucune frontière ; ça casse 10 registres.</li><li><strong>Pas d'étiquetage manuel rétroactif.</strong> Dérivé ou rien.</li><li><strong>Pas de MCP, d'event bus ni de monorepo</strong> à ce stade : les trois lots les plus sérieux le déconseillent explicitement, et je suis d'accord — ce sont des réponses à des problèmes que nous n'avons pas encore.</li><li><strong>Pas de suppression d'outil</strong> avant que la carte dise quelle capacité il portait. La question R6 (« qu'est-ce qui doit disparaître ? ») est légitime, mais elle vient après la carte, jamais avant.</li></ul>
+<hr>
+<h3>7. Le point de non-retour — sa décision, et ce qu'elle change</h3>
+<p>Il l'a tranché pendant que j'écrivais : <em>« je veux bien une sauvegarde de référence, mais juste après que tu aies finalisé ton plan d'action, avant de commencer quoi que ce soit concrètement : je garde la trace de où on en est + où on se dirige. »</em></p>
+<p><strong>Ce n'est pas un détail de calendrier.</strong> La sauvegarde ne marque plus un ÉTAT, elle marque <strong>un état ET une intention</strong>. Le plan d'action doit donc être DEDANS — sinon la trace dit d'où on part sans dire où on va, et c'est la moitié qu'il réclame.</p>
+<p>Ordre verrouillé : <strong>plan d'action finalisé → sauvegarde de référence → première action concrète.</strong></p>
+<hr>
+<h3>8. Ce qui manque encore, et que personne n'a produit</h3>
+<p>Le dernier lot annonce lui-même le document suivant et ne le fournit pas : le <strong>BUILD MAP</strong> — composant par composant, son origine historique, son nouveau nom, sa responsabilité, son contrat, ses dépendances entrantes et sortantes, son niveau de maturité, son ordre de migration, ses tests et ses critères de sortie.</p>
+<p><strong>C'est le seul document qui permettrait de commencer sans avancer à l'aveugle, et il n'existe pas.</strong> C'est donc le premier livrable du fil A.</p>
+<hr>
+<h3>9. Où on en est</h3>
+<ul><li><strong>Absorption</strong> : terminée, 20/20.</li><li><strong>Questions</strong> : rassemblées, 49, aucune répondue — c'est la prochaine grosse livraison.</li><li><strong>Analyse</strong> : ce document.</li><li><strong>Plan d'action détaillé</strong> : à écrire, et c'est l'étape suivante.</li><li><strong>Sauvegarde de référence</strong> : après le plan, avant toute action. Sa décision.</li></ul></main>
+  <div class="divider"></div><footer><p>Source : docs/grand-projet/02-strategie/vue-globale-2026-09-28.md — régénérable, jamais écrit à la main.</p></footer>
+</div>
+</body>
+</html>

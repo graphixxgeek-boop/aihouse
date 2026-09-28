@@ -8733,6 +8733,42 @@ async function testSystemeDesIndex() {
   // de mordre se garde sur une fixture, jamais sur l'état du dépôt du jour (même correction que
   // pour le détecteur de rapports jumeaux, quelques heures plus tôt).
   assert.equal(reel.aTraiter.length, 0, `no folder is left to treat: 51 on the first pass, 0 once the missing indexes were generated, the mute ones completed under their prose and the journals caught up (currently ${reel.aTraiter.map((x) => x.dossier).join(', ')})`);
+  // LA TUYAUTERIE ET LE CONTRÔLE D'ACCUEIL (2026-09-28, ses deux questions du soir : « la
+  // tuyauterie de l'agence est-elle exportable ? » puis « et si l'hôte ne peut pas fournir ? »).
+  {
+    const se = await import('../scripts/safe-export.mjs');
+    const faux = {
+      "scripts/a.mjs": 'import { sh } from "./lib-shell.mjs";',
+      "scripts/b.mjs": 'import { readFileSync } from "node:fs";',
+      "scripts/c.mjs": 'const k = process.env.GEMINI_API_KEY;',
+      // CELUI-CI EST LE CONTRE-TEST QUI COMPTE : il NOMME Gemini sans en dépendre. Au premier
+      // passage, quatre scripts réels étaient accusés pour exactement ça.
+      "scripts/d.mjs": '// on parle de GEMINI dans ce commentaire\nexport const REGISTRE = [\n  "WRANGLER",\n];\nconst x = 1;',
+    };
+    const t = se.tuyauterieDeLAgence({
+      listDirImpl: () => Object.keys(faux).map((f) => f.replace("scripts/", "")),
+      readFileImpl: (chemin) => faux[`scripts/${String(chemin).split("/").pop()}`] ?? "",
+    });
+    assert.deepEqual(t.parCouche.emportee, ['scripts/a.mjs'], 'the plumbing the Agency CARRIES is what it imports from itself');
+    assert.deepEqual(t.parCouche.exigee, ['scripts/b.mjs'], 'what it EXPECTS of a host is the disk, the shell, git — universal, and it never brings them');
+    assert.deepEqual(t.parCouche.adaptee, ['scripts/c.mjs'], "MUST NOT accuse a script that merely NAMES a provider in a comment or a declared registry: mentioning is not depending. Four real scripts were wrongly counted at the first pass, and this is the same correction data-archangel already paid on its own counter — treated as a CLASS, never as four exceptions (lesson L37)");
+    assert.equal(t.taux, 75, 'the rate counts only the adapted layer: the other two are not faults — one leaves with the Agency, the other is universal — and counting them against it would accuse wrongly (lesson L4)');
+    assert.equal(se.tuyauterieDeLAgence({ listDirImpl: () => [] }).mesurable, false, 'no script read declares PAS MESURÉ rather than « no host dependency », which would be a clean bill issued on nothing (lesson L13)');
+
+    // LE CONTRÔLE D'ACCUEIL doit pouvoir dire OUI et NON — sa première version disait « REFUSÉ »
+    // sur une machine qui avait tout, faute d'avoir importé le lanceur partagé. Un contrôle qui
+    // refuse à tort ferait renoncer un acheteur dont la machine convient : pire qu'aucun contrôle.
+    const toutVa = se.controleDAccueil({ shImpl: () => 'ok' });
+    assert.equal(toutVa.verdict, 'ACCUEILLI', 'MUST SAY YES on a host that answers: the guard has to be able to accept, or its refusal means nothing');
+    const rienNeVa = se.controleDAccueil({ shImpl: () => { throw new Error('command not found'); } });
+    assert.equal(rienNeVa.verdict, 'REFUSÉ', 'MUST SAY NO when a required tool is missing');
+    assert.ok(rienNeVa.bloquants.length >= 3 && rienNeVa.eteints.length >= 1, 'and it separates what BLOCKS the install from what merely switches a tool off — the buyer has the right to know which before buying, not after');
+    const sansPython = se.controleDAccueil({ shImpl: (cmd) => { if (/python/.test(cmd)) throw new Error('absent'); return 'ok'; } });
+    assert.equal(sansPython.verdict, 'ACCUEILLI, avec des outils éteints', 'MUST STILL ACCEPT a host missing only an optional tool: refusing there would turn a switched-off feature into a closed door');
+    // Vérifié en vrai sur cette machine (Article 25) : la mesure ne vaut que branchée.
+    assert.equal(se.controleDAccueil().verdict, 'ACCUEILLI', 'checked live on the real machine, which does have node, git and a shell');
+  }
+
   // LES ANCRES — rejoindre un détail précis dans un corpus de dizaines de milliers de mots
   // (2026-09-28, tâche #725, rouverte par lui le soir même après avoir été dépriorisée le matin).
   {
@@ -10107,6 +10143,55 @@ await testVerrousDOuverture();
   assert.ok(html.includes(THEME_CSS.trim().slice(0, 40)), 'the shared dark theme must be embedded inline in every report, for the same visual identity across all future "pretty" deliverables (the dream-team photo, KPI reports, EL-PROFESSOR notes, ...) — never a per-report reinvented style');
   const minimal = renderHtmlReport({ title: 'Minimal' });
   assert.ok(!minimal.includes('undefined') && !minimal.includes('null'), 'a report with no subtitle/blocks/footer must render cleanly with those sections simply absent, never leak a literal "undefined" or "null" into the page');
+  // LIRE DU MARKDOWN — doc-HTML apprend d'où vient le contenu (2026-09-28, tâche #1116, sa demande
+  // « redonne-moi en HTML bien construit, lisible, au bon format »).
+  {
+    const hr = await import('../scripts/html-report.mjs');
+    const md = [
+      '<!-- une mention de régime, qui ne concerne pas le lecteur -->',
+      '# Le titre de la page',
+      '## Une section',
+      'Du texte avec du **gras**, du `code` et un [lien](https://exemple.fr).',
+      '',
+      '> une citation mise en avant',
+      '',
+      '| a | b |',
+      '|---|---|',
+      '| 1 | 2 |',
+      '',
+      '- premier item',
+      '- second item',
+      '',
+      '```',
+      'du code brut',
+      '```',
+    ].join('\n');
+    const blocs = hr.blocsDepuisMarkdown(md);
+    const types = blocs.map((b) => b.type);
+    assert.ok(!types.includes(undefined), 'every line of a real document must land in a typed block');
+    assert.deepEqual(blocs.filter((b) => b.type === 'heading').map((b) => b.level), [1, 2], 'headings keep their LEVEL: a two-hundred-line document flattened to one heading size is unreadable, and that is exactly what he asked to fix');
+    assert.equal(blocs.filter((b) => b.type === 'table').length, 1, 'a Markdown table becomes one table block');
+    assert.deepEqual(blocs.find((b) => b.type === 'table').rows, [['1', '2']], "MUST DROP the |---|---| separator row: keeping it would print a row of dashes in the middle of the rendered table");
+    assert.deepEqual(blocs.find((b) => b.type === 'list').items, ['premier item', 'second item'], 'a bullet list becomes one list block with its items');
+    assert.equal(blocs.filter((b) => b.type === 'highlight').length, 1, 'a blockquote becomes a prominent block, because that is what a quotation of his own words deserves');
+    assert.ok(!blocs.some((b) => JSON.stringify(b).includes('une mention de régime')), "MUST DROP an HTML comment: the regime mention is an instruction to the tooling, never content for the reader");
+
+    const html = hr.renderDocumentHtml({ markdown: md, dateLabel: '28 septembre 2026' });
+    assert.ok(html.includes('<strong>gras</strong>') && html.includes('<code>code</code>') && html.includes('href="https://exemple.fr"'), 'inline emphasis, code and links must survive into the page — a document rendered without them reads as one flat block');
+    // LE TITRE APPARAÎT DEUX FOIS DANS UNE PAGE CORRECTE — dans <title> et dans <h1> — et ma
+    // première version de ce test comptait les deux, donc échouait sur un rendu juste. Ce qu'il
+    // faut interdire est le TROISIÈME : le même texte redescendu en <h2> dans le corps.
+    assert.ok(!/<h2>Le titre de la page<\/h2>/.test(html), "MUST NOT repeat the level-1 title as a body heading: it already becomes the page title, and showing it a third time is the mark of a conversion nobody looked at");
+    assert.ok(/<title>Le titre de la page<\/title>/.test(html) && /<h1>Le titre de la page<\/h1>/.test(html), 'and it must land where a title belongs — the browser tab and the page header');
+    // LE CONTRE-TEST QUI COMPTE LE PLUS : l'échappement doit survivre à la réintroduction du gras.
+    const injection = hr.renderDocumentHtml({ markdown: 'Un **essai** <script>alert(1)</script> et `<b>x</b>`.', title: 'T' });
+    assert.ok(!injection.includes('<script>'), 'MUST NOT let raw HTML written inside a document reach the page: inline emphasis is re-introduced AFTER escaping, and reversing that order would open an injection');
+    assert.ok(injection.includes('<strong>essai</strong>'), 'and the escaping must not cost the emphasis — both at once is the whole point of that ordering');
+
+    const vide = hr.blocsDepuisMarkdown('');
+    assert.deepEqual(vide, [], 'an empty document produces no blocks rather than one empty paragraph');
+  }
+
   console.log("Passed: html-report.mjs's escapeHtml() neutralizes every HTML-significant character (including a real <script> injection attempt) and handles a missing value honestly, renderBlock() renders each of its block types faithfully (heading/paragraph/list/table/code/image/dialogue/tree) with text always escaped, an image block with no src renders as an honest empty string while one with no caption simply omits the figcaption, a dialogue block gets Lia's or Noé's own distinct speaker class or a neutral fallback for anyone else (mirroring the game's own Article 11 voice separation), a tree block renders real nested lists matching its structure, an unknown or null block renders as an honest empty string rather than crashing, renderHtmlReport() refuses a report with no title, always produces a complete self-contained document with the shared dark theme embedded and every spec field (title, subtitle, date, blocks, footer) actually present, and a minimal report with only a title never leaks a literal undefined/null into the page.");
 }
 

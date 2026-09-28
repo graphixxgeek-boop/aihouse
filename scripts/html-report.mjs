@@ -131,6 +131,129 @@ export function renderBlock(block) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LIRE DU MARKDOWN — pour qu'un document du dépôt devienne une page lisible (2026-09-28, #1116)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE : « redonne-moi en HTML bien construit, lisible, au bon format : la vue globale, le
+// plan d'action ». Et sa COMMANDE en annonce d'autres — le fichier de réponses, le PACK DÉCOUVERTE,
+// la présentation de l'Agence. Écrire chacune à la main aurait produit autant de pages que de
+// demandes, chacune avec sa mise en forme : exactement la divergence que l'Article 24 interdit.
+//
+// POURQUOI ICI : ce fichier EST le moteur de rendu (doc-HTML). Il porte déjà le vocabulaire des
+// blocs et le thème partagé ; il ne savait pas d'où venait le contenu. Lui apprendre à lire le
+// Markdown du dépôt fait de n'importe quel document une page, par le même chemin que les rapports
+// d'outils — donc avec la même identité visuelle, sans un seul gabarit de plus.
+//
+// LES SOULIGNEMENTS EN LIGNE SONT RÉINTRODUITS APRÈS L'ÉCHAPPEMENT, jamais avant : échapper d'abord
+// puis reconnaître `**gras**` sur le texte DÉJÀ échappé est la seule façon d'avoir les deux à la
+// fois — un rendu fidèle et aucune injection possible. L'ordre inverse laisserait passer du HTML
+// écrit dans un document.
+export function renderInline(texte) {
+  return escapeHtml(String(texte ?? ""))
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2">$1</a>');
+}
+
+export function blocsDepuisMarkdown(markdown) {
+  const lignes = String(markdown ?? "").split("\n");
+  const blocs = [];
+  let i = 0;
+  // Un paragraphe se termine sur une ligne vide ou sur le début d'un autre bloc : on accumule, on
+  // vide, jamais l'inverse — sinon deux paragraphes voisins fusionnent en un mur de texte.
+  let para = [];
+  const viderPara = () => { if (para.length) { blocs.push({ type: "paragraph", text: para.join(" ") }); para = []; } };
+  while (i < lignes.length) {
+    const l = lignes[i];
+    // Les commentaires HTML d'un document généré (la mention de régime, par exemple) ne sont pas du
+    // contenu : les rendre afficherait au lecteur une consigne qui ne le concerne pas.
+    if (/^<!--/.test(l)) { viderPara(); while (i < lignes.length && !/-->/.test(lignes[i])) i += 1; i += 1; continue; }
+    if (/^\s*$/.test(l)) { viderPara(); i += 1; continue; }
+    if (/^---+\s*$/.test(l)) { viderPara(); blocs.push({ type: "rule" }); i += 1; continue; }
+    const titre = l.match(/^(#{1,6})\s+(.+)$/);
+    if (titre) { viderPara(); blocs.push({ type: "heading", level: titre[1].length, text: titre[2] }); i += 1; continue; }
+    if (/^```/.test(l)) {
+      viderPara();
+      const corps = [];
+      i += 1;
+      while (i < lignes.length && !/^```/.test(lignes[i])) { corps.push(lignes[i]); i += 1; }
+      i += 1;
+      blocs.push({ type: "code", text: corps.join("\n") });
+      continue;
+    }
+    if (/^>\s?/.test(l)) {
+      viderPara();
+      const corps = [];
+      while (i < lignes.length && /^>\s?/.test(lignes[i])) { corps.push(lignes[i].replace(/^>\s?/, "")); i += 1; }
+      blocs.push({ type: "highlight", paragraphs: corps.join("\n").split(/\n\s*\n/).filter(Boolean) });
+      continue;
+    }
+    if (/^\s*\|/.test(l)) {
+      viderPara();
+      const brutes = [];
+      while (i < lignes.length && /^\s*\|/.test(lignes[i])) { brutes.push(lignes[i]); i += 1; }
+      const cellules = (r) => r.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+      // La ligne de séparation `|---|---|` n'est pas une donnée : la garder ajouterait une rangée de
+      // tirets au milieu du tableau rendu.
+      const lignesUtiles = brutes.filter((r) => !/^\s*\|[\s:|-]+\|?\s*$/.test(r));
+      if (lignesUtiles.length) blocs.push({ type: "table", headers: cellules(lignesUtiles[0]), rows: lignesUtiles.slice(1).map(cellules) });
+      continue;
+    }
+    if (/^\s*([-*]|\d+\.)\s+/.test(l)) {
+      viderPara();
+      const items = [];
+      while (i < lignes.length && /^\s*([-*]|\d+\.)\s+/.test(lignes[i])) {
+        items.push(lignes[i].replace(/^\s*([-*]|\d+\.)\s+/, ""));
+        i += 1;
+        // Une puce qui se poursuit sur la ligne suivante appartient au même item : sans ça, la
+        // suite d'une phrase devient une puce orpheline.
+        while (i < lignes.length && /^\s{2,}\S/.test(lignes[i]) && !/^\s*([-*]|\d+\.)\s+/.test(lignes[i])) {
+          items[items.length - 1] += " " + lignes[i].trim();
+          i += 1;
+        }
+      }
+      blocs.push({ type: "list", items });
+      continue;
+    }
+    para.push(l.trim());
+    i += 1;
+  }
+  viderPara();
+  return blocs;
+}
+
+// Le rendu des blocs issus d'un document diffère de celui des rapports d'outils sur un seul point,
+// et il compte : les titres gardent leur NIVEAU (h2 à h6) au lieu d'être tous des h2. Un document de
+// deux cents lignes sans hiérarchie visible est illisible, et c'est précisément ce qu'il demande.
+export function renderBlockDocument(block) {
+  if (block?.type === "heading" && block.level) return `<h${Math.min(block.level + 1, 6)}>${renderInline(block.text)}</h${Math.min(block.level + 1, 6)}>`;
+  if (block?.type === "rule") return "<hr>";
+  if (block?.type === "paragraph") return `<p>${renderInline(block.text)}</p>`;
+  if (block?.type === "list") return `<ul>${(block.items || []).map((x) => `<li>${renderInline(x)}</li>`).join("")}</ul>`;
+  if (block?.type === "highlight") {
+    const ps = (block.paragraphs || []).map((x) => `<p>${renderInline(x)}</p>`).join("");
+    return `<div class="highlight">${ps}</div>`;
+  }
+  if (block?.type === "table") {
+    const thead = `<tr>${(block.headers || []).map((h) => `<th>${renderInline(h)}</th>`).join("")}</tr>`;
+    const tbody = (block.rows || []).map((r) => `<tr>${r.map((c) => `<td>${renderInline(c)}</td>`).join("")}</tr>`).join("");
+    return `<table><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+  }
+  return renderBlock(block);
+}
+
+export function renderDocumentHtml({ markdown, title, subtitle, dateLabel, footer } = {}) {
+  const blocs = blocsDepuisMarkdown(markdown);
+  // LE PREMIER TITRE DE NIVEAU 1 DEVIENT LE TITRE DE LA PAGE, jamais un h2 de plus : l'afficher
+  // deux fois est la marque d'une conversion faite sans regarder le résultat.
+  const premier = blocs.findIndex((b) => b.type === "heading" && b.level === 1);
+  const titre = title ?? (premier > -1 ? blocs[premier].text : "Document");
+  const corps = blocs.filter((_, k) => k !== premier);
+  return renderHtmlReport({ title: titre, subtitle, dateLabel, footer, blocks: [], corpsHtml: corps.map(renderBlockDocument).join("\n") });
+}
+
 // Thème partagé — même palette que la première page produite dans ce style (photo de la dream
 // team), pour une identité visuelle cohérente d'un rapport à l'autre.
 export const THEME_CSS = `
@@ -239,13 +362,16 @@ export const THEME_CSS = `
 // l'emplacement générique d'en-tête (aujourd'hui l'avertissement de fiabilité), sans que l'appelant
 // ait à y penser. C'est tout l'intérêt du gabarit : la phrase transverse suivante arrivera par le
 // même chemin, en UN endroit, jamais en repassant sur chaque outil.
-export function renderHtmlReport({ tool, title, subtitle, dateLabel, blocks = [], footer } = {}) {
+// `corpsHtml` (2026-09-28, #1116) — un corps DÉJÀ rendu, pour les documents dont les titres gardent
+// leur niveau. Le gabarit, l'en-tête, le thème et le pied restent partagés : c'est le seul endroit
+// où deux rendus pouvaient diverger, et la leçon L26 dit exactement ce qu'il en coûte.
+export function renderHtmlReport({ tool, title, subtitle, dateLabel, blocks = [], footer, corpsHtml = null } = {}) {
   if (!title) throw new Error("renderHtmlReport() requires a title — jamais un rapport sans titre");
   // Le cadre unique (report-template.mjs) plutôt que les arguments bruts : les rendus texte et HTML
   // consomment la MÊME description, sinon l'un appliquerait une partie du gabarit que l'autre oublie.
   const frame = buildReportFrame({ tool, title, subtitle, dateLabel, blocks, footer });
   const avecSlots = [...frame.slots.map((texte) => ({ type: "note", text: texte })), ...frame.blocks];
-  const body = avecSlots.map(renderBlock).join("\n");
+  const body = corpsHtml ?? avecSlots.map(renderBlock).join("\n");
   dateLabel = frame.dateLabel;
   return `<!DOCTYPE html>
 <html lang="fr">

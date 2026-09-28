@@ -964,6 +964,161 @@ export const BARRE_DE_DIMENSION = 80;
 // qui compte comme « une question d'export » est un jugement, mais chaque valeur, elle, est lue.
 // Une dimension qui rend `null` n'est pas à zéro — elle est NON MESURÉE, et les deux se lisent à
 // l'opposé l'un de l'autre.
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LA TUYAUTERIE — ce que l'Agence EMPORTE, ce qu'elle EXIGE, ce qui dépend du cas
+// (2026-09-28, sa question : « la tuyauterie de l'agence est-elle exportable, ou bien l'agence se
+// branche-t-elle sur la tuyauterie du projet qu'elle rejoint, ou bien ça dépend des cas ? »)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION ÉTAIT JUSTE, ET LE TROU ÉTAIT RÉEL. SAFE-EXPORT mesurait déjà les liens vers CE
+// dépôt-ci — « cet outil nomme-t-il Lia, la charte, docs/suivi ? ». Il ne mesurait nulle part ce
+// que l'Agence **EXIGE DE SON HÔTE**. Or c'est la première question d'un acheteur : *de quoi ai-je
+// besoin pour l'accueillir ?* Un rapport d'exportabilité qui ne répond pas à ça laisse deviner.
+//
+// LA RÉPONSE N'EST PAS « ÇA DÉPEND » : CE SONT TROIS COUCHES, chacune avec sa règle fixe.
+//   · EMPORTÉE — la plomberie interne de l'Agence. Elle part avec elle, entière. Rien du projet
+//     hôte n'y entre.
+//   · EXIGÉE — ce que l'Agence suppose présent chez l'hôte sans l'apporter : un disque, un shell,
+//     un git. Universel : tout projet de code en a un. Elle s'y BRANCHE, elle ne les fournit pas.
+//   · ADAPTÉE — ce qui est propre à un fournisseur (Cloudflare, Gemini). C'est la seule couche qui
+//     « dépend du cas », et elle doit rester mince, sans quoi l'Agence n'est portable que sur un
+//     projet qui lui ressemble.
+//
+// POURQUOI LA MESURE EST DÉRIVÉE ET NON DÉCLARÉE : une liste tenue à la main des prérequis se
+// périmerait au premier outil qui importe un module de plus (Article 24). On lit les imports réels.
+export const COUCHES_DE_TUYAUTERIE = [
+  { cle: "emportee", quoi: "la plomberie interne — part avec l'Agence", motif: /from\s+["']\.\/(lib-shell|lib-json|lib-markdown-table|report-template|html-report|tool-usage)\.mjs["']/ },
+  { cle: "exigee", quoi: "ce que l'Agence attend de son hôte — elle s'y branche, elle ne l'apporte pas", motif: /from\s+["']node:(fs|child_process|path|os|url|crypto)["']|\bgit (log|rev-parse|status|diff|ls-files)/ },
+  { cle: "adaptee", quoi: "propre à un fournisseur — la seule couche qui dépend du cas", motif: /\bGEMINI|WRANGLER|MINIFLARE|cloudflare|\bOPENAI/ },
+  // LA BORNE DE MOT FINALE ÉTAIT UNE ERREUR, et le contre-test l'a attrapée avant la livraison :
+  // `\bGEMINI\b` ne reconnaît PAS `GEMINI_API_KEY`, parce que le tiret bas est un caractère de mot.
+  // La dépendance la plus courante du dépôt échappait donc à la mesure censée la compter.
+];
+
+export function tuyauterieDeLAgence({ root = ROOT, readFileImpl = lireFichierPartage, listDirImpl = readdirSync, couches = COUCHES_DE_TUYAUTERIE } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => `scripts/${f}`); } catch { /* illisible */ }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun script lu : rendre « aucune dépendance d'hôte » sur du vide serait un satisfecit (leçon L13)" };
+  }
+  const parCouche = Object.fromEntries(couches.map((c) => [c.cle, []]));
+  for (const f of fichiers) {
+    let texte = "";
+    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    // MENTIONNER N'EST PAS DÉPENDRE — et sans cette coupe, le premier passage accusait SIX scripts
+    // d'être liés à un fournisseur quand DEUX le sont vraiment. `check-house`, `safe-export`,
+    // `god-of-all-process` et `ecotoken` ne font que NOMMER Gemini ou Cloudflare, dans un
+    // commentaire ou dans un registre déclaré. C'est très exactement la correction que
+    // data-archangel a déjà payée sur son propre compteur (« déclarer n'est pas lire »), et la
+    // refaire ici plutôt que de recopier la liste des innocents traite la CLASSE, pas l'occurrence
+    // (leçon L37).
+    const code = texte.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/^export const [A-Z_0-9]+ = [\s\S]*?^\];$/gm, "");
+    for (const c of couches) if (c.motif.test(code)) parCouche[c.cle].push(f);
+  }
+  const examines = fichiers.length;
+  // LE TAUX EST CELUI DE LA COUCHE « ADAPTÉE », ET C'EST LE SEUL QUI DÉCIDE : plus il y a d'outils
+  // liés à un fournisseur, moins l'Agence se pose ailleurs. Les deux autres couches ne sont pas des
+  // défauts — l'une part, l'autre est universelle — et les compter contre l'Agence accuserait à
+  // tort (leçon L4).
+  const independants = examines - parCouche.adaptee.length;
+  return {
+    mesurable: true,
+    examines,
+    parCouche,
+    taux: Math.round((independants / examines) * 100),
+    horsPortee: "elle lit les IMPORTS et les mots du code, jamais l'exécution réelle : un module chargé dynamiquement lui échappe, et un simple commentaire citant Gemini compte comme une mention. C'est un indice de couche, jamais une preuve de dépendance.",
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LE CONTRÔLE D'ACCUEIL — et si l'hôte ne peut PAS fournir ? (2026-09-28, sa question)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION : « si l'hôte ne peut pas fournir les éléments, alors safe-export résout la question
+// et met ce qu'il faut en place, c'est comme ça ? »
+//
+// NON, ET IL NE DOIT PAS. La réponse diffère par couche, et les confondre produirait un outil
+// dangereux.
+//
+//   · EXIGÉE manquante (pas de git, pas de shell, pas de Node) → **on REFUSE, on ne répare pas.**
+//     Un outil qui installerait git à la place de son hôte modifierait la machine de quelqu'un
+//     d'autre pour se rendre installable. C'est la définition d'un logiciel en qui on ne peut pas
+//     avoir confiance. Ce qui manque se DIT, avant l'installation, jamais après.
+//   · ADAPTÉE manquante (pas de clé Gemini, pas de Cloudflare) → **on DÉGRADE proprement.** L'outil
+//     concerné refuse avec sa raison écrite, tout le reste tourne. Ce n'est pas une théorie : le
+//     banc témoin a mesuré 68/68 outils debout sur un dépôt étranger SANS nos clés, précisément
+//     parce que ceux qui en ont besoin refusent au lieu de planter.
+//   · EMPORTÉE → sans objet : elle arrive avec l'Agence.
+//
+// CE QUE SA QUESTION A RÉVÉLÉ, ET C'ÉTAIT UN VRAI TROU : le banc témoin teste CHEZ NOUS, sur un
+// dépôt que NOUS choisissons. Rien ne permettait à un acheteur de savoir, AVANT d'installer, si sa
+// machine convient. Un rapport d'exportabilité qui ne répond pas à « puis-je l'accueillir ? »
+// oblige à essayer pour savoir.
+export const PREREQUIS_DE_L_HOTE = [
+  { cle: "node", quoi: "un Node récent — l'Agence est écrite en JavaScript", sonde: ({ shImpl }) => shImpl("node --version").trim(), requis: true },
+  { cle: "git", quoi: "un dépôt git — 24 outils lisent l'historique pour dater et mesurer", sonde: ({ shImpl }) => shImpl("git rev-parse --is-inside-work-tree").trim(), requis: true },
+  { cle: "shell", quoi: "un shell POSIX — 18 outils lancent des commandes", sonde: ({ shImpl }) => shImpl("echo ok").trim(), requis: true },
+  // FACULTATIF N'EST PAS ACCESSOIRE : son absence ne bloque pas l'installation, elle éteint des
+  // outils précis — et l'acheteur a le droit de savoir LESQUELS avant d'acheter, pas après.
+  { cle: "python3", quoi: "Python 3 — seulement pour lire des documents Word", sonde: ({ shImpl }) => shImpl("python3 --version").trim(), requis: false, eteint: "la lecture des .docx" },
+];
+
+export function controleDAccueil({ prerequis = PREREQUIS_DE_L_HOTE, shImpl } = {}) {
+  // `sh` DE LIB-SHELL, jamais un execSync recopié ici : c'est le lanceur partagé du dépôt, et la
+  // première version de ce contrôle a échoué faute de l'avoir importé — elle rendait « REFUSÉ » sur
+  // une machine qui avait tout. Un contrôle d'accueil qui refuse à tort est pire qu'aucun contrôle :
+  // il ferait renoncer un acheteur dont la machine convient (leçon L4).
+  const run = shImpl ?? ((cmd) => sh(cmd));
+  const lignes = [];
+  for (const p of prerequis) {
+    try {
+      lignes.push({ ...p, present: true, valeur: p.sonde({ shImpl: run }) });
+    } catch (e) {
+      lignes.push({ ...p, present: false, valeur: String(e.message ?? e).split("\n")[0].slice(0, 80) });
+    }
+  }
+  const bloquants = lignes.filter((l) => l.requis && !l.present);
+  const eteints = lignes.filter((l) => !l.requis && !l.present);
+  return {
+    mesurable: true,
+    lignes,
+    bloquants,
+    eteints,
+    verdict: bloquants.length ? "REFUSÉ" : eteints.length ? "ACCUEILLI, avec des outils éteints" : "ACCUEILLI",
+    horsPortee: "elle vérifie que l'outil RÉPOND, jamais qu'il répondra à tout ce dont l'Agence a besoin : une version de Node trop ancienne répond quand même à --version. C'est un contrôle de présence, pas de compatibilité.",
+  };
+}
+
+export function formatAccueilLines(a) {
+  if (!a?.mesurable) return [`=== CONTRÔLE D'ACCUEIL : PAS MESURÉ — ${a?.pourquoi} ===`];
+  const l = [`=== CONTRÔLE D'ACCUEIL — ${a.verdict} ===`, ""];
+  for (const x of a.lignes) {
+    const marque = x.present ? "✅" : x.requis ? "🚫" : "⚠️ ";
+    l.push(`  ${marque} ${x.cle.padEnd(8)} ${x.present ? x.valeur : "ABSENT"} — ${x.quoi}`);
+    if (!x.present && !x.requis) l.push(`        sans lui, ${x.eteint} ne marche pas ; tout le reste tourne.`);
+  }
+  l.push("");
+  if (a.bloquants.length) l.push(`  L'AGENCE NE S'INSTALLE PAS ICI, et elle ne va rien installer à votre place : ${a.bloquants.map((b) => b.cle).join(", ")} manque(nt). Un outil qui modifierait votre machine pour se rendre installable serait un outil en qui on ne peut pas avoir confiance.`);
+  else l.push("  L'hôte fournit tout ce qui est exigé. Ce qui dépend d'un fournisseur (clés de modèle) n'empêche pas l'installation : les outils concernés refusent avec leur raison, le reste tourne.");
+  l.push("");
+  l.push(`  HORS PORTÉE : ${a.horsPortee}`);
+  return l;
+}
+
+export function formatTuyauterieLines(t) {
+  if (!t?.mesurable) return [`=== LA TUYAUTERIE : PAS MESURÉ — ${t.pourquoi} ===`, "", "Ce n'est PAS « aucune dépendance »."];
+  const l = [`=== LA TUYAUTERIE DE L'AGENCE — ${t.examines} scripts, ${t.taux} % indépendants d'un fournisseur ===`, ""];
+  for (const c of COUCHES_DE_TUYAUTERIE) {
+    const n = t.parCouche[c.cle].length;
+    l.push(`  ${c.cle.toUpperCase().padEnd(9)} ${String(n).padStart(3)} script(s) — ${c.quoi}`);
+  }
+  l.push("");
+  l.push(`  CE QUI DÉPEND DU CAS, nommément : ${t.parCouche.adaptee.map((f) => f.replace("scripts/", "")).join(", ") || "aucun"}`);
+  l.push("");
+  l.push(`  HORS PORTÉE : ${t.horsPortee}`);
+  return l;
+}
+
 export const DIMENSIONS_DE_L_EXPORT = [
   // DEUX MESURES DE PORTABILITÉ, ET LES CONFONDRE SERAIT LE DÉFAUT QUE CE RAPPORT EXISTE POUR
   // FERMER (constaté au premier passage, 2026-09-28). Le dépôt en porte deux, toutes deux justes,
@@ -992,6 +1147,12 @@ export const DIMENSIONS_DE_L_EXPORT = [
     // encore liés » fait refermer le rapport, « 2 à découpler » le fait ouvrir. Les deux sont
     // vrais ; un seul appelle un geste.
     lire: (m) => (m.portabilite?.mesurable ? { valeur: Math.round(m.portabilite.tauxPct), sur: 100, detail: `${m.portabilite.portables}/${m.portabilite.examines} scripts sans aucune mention, ${m.portabilite.lignes.length} encore liés — mais une fois CLASSÉS (étape 2 du plan) : ${m.portabilite.parCategorie?.["a-decoupler"] ?? "?"} à découpler pour de vrai, ${m.portabilite.parCategorie?.parametrable ?? "?"} déjà paramétrables, ${m.portabilite.parCategorie?.legitime ?? "?"} légitimement liés — répartition des marqueurs : ${Object.entries(m.portabilite.parMarqueur ?? {}).map(([k, v]) => `${k} ${v}`).join(", ")}` } : null),
+  },
+  {
+    cle: "tuyauterie",
+    quoi: "que faut-il chez l'hôte pour accueillir l'Agence, et qu'est-ce qu'elle apporte elle-même ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs tuyauterie",
+    lire: (m) => (m.tuyauterie?.mesurable ? { valeur: m.tuyauterie.taux, sur: 100, detail: `${m.tuyauterie.parCouche.emportee.length} script(s) emportent la plomberie interne · ${m.tuyauterie.parCouche.exigee.length} s'appuient sur le disque, le shell ou git de l'hôte (universel) · ${m.tuyauterie.parCouche.adaptee.length} sont liés à un fournisseur précis, et c'est la seule couche qui dépend du cas` } : null),
   },
   {
     cle: "kits-des-membres",
@@ -1426,6 +1587,20 @@ function main() {
   // la portabilité LUE — les deux chiffres ne disent pas la même chose et doivent rester distincts.
   // `--ou=<chemin>` est OBLIGATOIRE : un banc d'essai qui viserait ce dépôt-ci par défaut
   // mesurerait que l'Agence marche chez elle, ce que personne n'a jamais mis en doute.
+  // `tuyauterie` et `accueil` (2026-09-28, ses deux questions du soir). La première répond « que
+  // faut-il chez l'hôte ? » depuis NOTRE dépôt ; la seconde répond « cette machine-ci convient-elle ? »
+  // là où on la lance. Deux questions voisines et jamais la même : l'une se lit avant de vendre,
+  // l'autre avant d'installer.
+  if (process.argv[2] === "tuyauterie") {
+    recordCliUsage("safe-export");
+    for (const l of formatTuyauterieLines(tuyauterieDeLAgence())) console.log(l);
+    return;
+  }
+  if (process.argv[2] === "accueil") {
+    recordCliUsage("safe-export");
+    for (const l of formatAccueilLines(controleDAccueil())) console.log(l);
+    return;
+  }
   if (process.argv[2] === "temoin") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
@@ -1584,6 +1759,7 @@ function main() {
         })(),
         kits, agence,
         relais: relaisDeModele(),
+        tuyauterie: tuyauterieDeLAgence(),
         temoin: dernierPassageDuBanc(),
         tendances: tendancesExport(),
         taches: tachesOuvertesExport({ lignes, estOuverte: (r) => ctd.OPEN_KEYS.has(r.statusKey) }),
