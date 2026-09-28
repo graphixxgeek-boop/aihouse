@@ -19628,3 +19628,56 @@ async function testLesDeuxLignesSansSurveillance() {
   console.log(`Passed: les deux lignes que le filet ne surveillait pas (2026-09-28, tâche #1039). EZECHIEL LES A TROUVÉES EN LES CASSANT : il a remplacé une égalité stricte par une différence dans chacune, et le filet est resté VERT. POURQUOI CELLES-LÀ MÉRITENT UN TEST QUAND UNE SURVIVANTE N'EN MÉRITE PAS TOUJOURS — et la nuance est de lui : une survivante dit que le filet ne surveille pas cette ligne, jamais qu'un test manque ; la ligne peut être sans conséquence observable, et la couvrir alourdirait le filet qu'on est justement en train d'alléger. Ces deux-ci portent des VERDICTS lus souvent, et dans les deux cas l'erreur irait dans le SENS RASSURANT. « Ce script est-il convocable ? » décide du rang d'un fichier dans toute la classification, et la comparaison inversée aurait déclaré le paysage entier non convocable — ou l'inverse. « L'état du code est-il retrouvable ? » s'imprime en tête de CHAQUE rapport : là, la mutation confondait « dépôt illisible » et « arbre propre », donc un dépôt qu'on n'a PAS PU LIRE se serait affiché comme un état retrouvable, en haut de tout ce que produit le paysage. Une erreur dedans ne casse rien — elle se propage sans bruit, et c'est exactement ce qui la rend chère.`);
 }
 await testLesDeuxLignesSansSurveillance();
+
+// =============================================================================================
+// #575 — TOOL-BRAIN EST-IL VRAIMENT LE POINT D'ENTRÉE ?
+// =============================================================================================
+// SA QUESTION, mot pour mot : « est-ce que tout fonctionne bien : c'est devenu ton point d'entree
+// pour les outils ? tu utilises ? tout fonctionne ? ». Et son exigence, la même que pour #573 :
+// une mesure RÉELLE depuis le compteur d'usage, jamais une déclaration d'intention.
+//
+// CE QUI SE MESURE ET CE QUI NE SE MESURE PAS : le compteur sait qu'un outil a tourné et quand, il
+// ne saura jamais si la consultation a SERVI. Ce qu'on peut établir est une PRÉCÉDENCE — un appel
+// spontané a-t-il été précédé, de peu, par un passage de tool-brain. Indice fort de la discipline
+// réelle, jamais preuve qu'elle a été suivie, et c'est écrit dans le rapport.
+async function testToolBrainEstIlLePointDEntree() {
+  const TB = await import('../scripts/tool-brain.mjs');
+
+  // UN APPEL DICTÉ PAR UN CROCHET N'AVAIT PAS À PASSER PAR ICI, et le compter accuserait d'un
+  // manquement qui n'existe pas (leçon L4). Seuls les appels que l'agent décide comptent.
+  const ev = [
+    { toolSlug: 'tool-brain', origin: 'cli_direct', at: 1_000 },
+    { toolSlug: 'argus', origin: 'cli_direct', at: 2_000 },              // précédé
+    { toolSlug: 'harmonia', origin: 'cli_direct', at: 10_000_000 },      // trop loin
+    { toolSlug: 'clone-hunter', origin: 'automatique_post_commit', at: 11_000_000 }, // hors sujet
+  ];
+  const p = TB.precedenceDeToolBrain(ev, { fenetre: 60_000, maintenant: 11_000_000, sur24h: false });
+  assert.equal(p.mesurable, true);
+  assert.equal(p.spontanes, 2, 'a hook-driven call is EXCLUDED from the denominator: it never had to pass through here');
+  assert.equal(p.precedes, 1);
+  assert.equal(p.taux, 50);
+
+  // LA FENÊTRE EST UN CHOIX, ET LE CHANGER CHANGE LE CHIFFRE — d'où le fait qu'elle soit rendue.
+  assert.equal(TB.precedenceDeToolBrain(ev, { fenetre: 20_000_000, sur24h: false }).taux, 100,
+    'a wide enough window credits everything: the figure depends on a declared choice, which is exactly why the report prints it');
+
+  // RIEN LU N'EST PAS ZÉRO POUR CENT (L5/L11) : les deux absences possibles se distinguent, parce
+  // qu'elles appellent deux gestes opposés — câbler le compteur, ou constater qu'on ne décide rien.
+  assert.equal(TB.precedenceDeToolBrain([]).mesurable, false, 'no timestamped event means NOT MEASURED, never a discipline rate of zero');
+  const sansSpontane = TB.precedenceDeToolBrain([{ toolSlug: 'x', origin: 'automatique_post_commit', at: 1 }]);
+  assert.equal(sansSpontane.mesurable, false);
+  assert.match(sansSpontane.pourquoi, /SPONTAN/, 'and "nothing was decided by the agent" is a DIFFERENT absence from "nothing was recorded"');
+
+  // LE RENDU DIT LES DEUX CHIFFRES, jamais le seul flatteur.
+  const lignes = TB.formatPrecedenceLines(TB.precedenceDeToolBrain(ev, { fenetre: 60_000, maintenant: 11_000_000 }));
+  assert.ok(lignes.some((l) => /HORS PORT/.test(l)), 'the limit travels with the figure, never in a separate note');
+
+  // ET LA MESURE RÉELLE, celle qui répond à sa question.
+  const TU = await import('../scripts/tool-usage.mjs');
+  const reel = TB.precedenceDeToolBrain(TU.loadToolUsageHistory().events ?? []);
+  assert.equal(reel.mesurable, true, 'checked live: the real counter answers the question instead of an intention');
+  assert.ok(reel.passages > 0);
+
+  console.log(`Passed: tool-brain est-il vraiment le point d'entrée (2026-09-28, tâche #575). SA QUESTION : « c'est devenu ton point d'entree pour les outils ? tu utilises ? tout fonctionne ? », avec son exigence habituelle — une mesure RÉELLE depuis le compteur, jamais une déclaration d'intention. LA RÉPONSE, MESURÉE : ${reel.passages} passages enregistrés, et ${reel.precedes} des ${reel.spontanes} appels SPONTANÉS ont été précédés d'une consultation dans les dix minutes, soit ${reel.taux} % sur tout l'historique et ${reel.tauxRecent} % sur les 24 dernières heures — la discipline s'est nettement améliorée, et c'est le second chiffre qui se corrige. LES APPELS DICTÉS PAR UN CROCHET OU UN PROCESS SONT EXCLUS du dénominateur : ils n'avaient pas à passer par ici, et les compter accuserait d'un manquement qui n'existe pas (L4). CE QUI NE SE MESURE PAS EST DIT AVEC LE CHIFFRE : c'est une PRÉCÉDENCE, jamais un usage — le compteur sait qu'un outil a tourné et quand, il ne saura jamais si la consultation a servi. Et la fenêtre de dix minutes est un CHOIX : le contre-test montre qu'une fenêtre assez large crédite tout, ce qui est précisément pourquoi le rapport imprime la fenêtre au lieu de la cacher. LA MESURE EST RENDUE À CHAQUE RAPPORT plutôt que produite une fois : un chiffre produit dans une conversation disparaît avec elle, et la question se repose à chaque période.`);
+}
+await testToolBrainEstIlLePointDEntree();

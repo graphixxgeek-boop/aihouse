@@ -70,3 +70,43 @@ idée partagée est très précise peut être manquée — « détecter un doubl
 **Ce qu'il ne fera jamais** : dire « c'est déjà fait ». Il rend des **candidates à lire**. Aucune
 mécanique ne peut juger qu'une fonction trouvée fait vraiment ce qu'on veut, et un outil qui
 trancherait à ma place ferait réutiliser du code au petit bonheur — plus cher que de le réécrire.
+
+## Tool-brain est-il vraiment le point d'entrée ? — mesuré, jamais déclaré (2026-09-28, tâche #575)
+
+**Sa question, mot pour mot** : « est-ce que tout fonctionne bien : c'est devenu ton point d'entree
+pour les outils ? tu utilises ? tout fonctionne ? ». Et son exigence, la même que pour #573 : **une
+mesure réelle depuis le compteur d'usage, jamais une déclaration d'intention.**
+
+### La réponse, mesurée
+
+| | |
+|---|---|
+| passages de tool-brain enregistrés | **278** |
+| appels **spontanés** précédés d'une consultation dans les 10 min | **1 194 / 3 112 — 38 %** sur tout l'historique |
+| les mêmes, sur les **24 dernières heures** | **537 / 884 — 61 %** |
+
+**La discipline s'est nettement améliorée**, et c'est le second chiffre qui se corrige : le cumul
+dit l'habitude installée, les 24 heures disent celle d'aujourd'hui.
+
+### Ce qui entre dans le dénominateur, et ce qui n'y entre pas
+
+Seuls les appels **spontanés** comptent — ceux que l'agent décide lui-même. Un outil lancé par le
+crochet post-commit ou dicté par un process n'avait pas à passer par tool-brain : le compter
+accuserait d'un manquement qui n'existe pas, et un garde-fou qui accuse à tort cesse d'être lu
+(leçon L4).
+
+### Ce que la mesure ne dit pas, écrit à côté du chiffre
+
+C'est une **PRÉCÉDENCE, jamais un USAGE**. Le compteur sait qu'un outil a tourné et quand ; il ne
+saura jamais si la consultation a **servi** — un agent peut consulter puis faire autre chose.
+
+Et **la fenêtre de dix minutes est un choix** : assez large pour couvrir une consultation suivie
+d'une vraie lecture de code, assez étroite pour qu'un passage du matin ne crédite pas tout
+l'après-midi. Le changer change le chiffre, et un contre-test le montre — une fenêtre assez large
+crédite 100 %. C'est précisément pour ça que le rapport **imprime la fenêtre** au lieu de la cacher.
+
+### Pourquoi c'est rendu à chaque rapport, et pas mesuré une fois
+
+Un chiffre produit dans une conversation disparaît avec elle, et la question « est-ce devenu ton
+point d'entrée ? » se repose à chaque période. `precedenceDeToolBrain()` sort donc dans
+`node scripts/tool-brain.mjs rapport`, à côté du reste.

@@ -493,6 +493,70 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
 // CE QU'IL LIT : les rapports les plus récents déposés par les outils. Un rapport qui NOMME un
 // outil sans qu'aucun passage de cet outil ne soit enregistré dans la fenêtre est un rapport qui
 // cite sans avoir lancé.
+// =============================================================================================
+// TOOL-BRAIN EST-IL VRAIMENT LE POINT D'ENTRÉE ? (2026-09-28, tâche #575)
+// =============================================================================================
+// SA QUESTION, mot pour mot : « est-ce que tout fonctionne bien : c'est devenu ton point d'entree
+// pour les outils ? tu utilises ? tout fonctionne ? ». Et son exigence, la même que pour #573 :
+// **une mesure réelle depuis le compteur d'usage, jamais une déclaration d'intention.**
+//
+// CE QUI SE MESURE, ET CE QUI NE SE MESURE PAS. Le compteur sait qu'un outil a tourné et quand.
+// Il ne saura jamais si la consultation a SERVI — un agent peut consulter puis faire autre chose.
+// Ce qu'on peut établir est donc une PRÉCÉDENCE : un appel spontané a-t-il été précédé, de peu,
+// par un passage de tool-brain. C'est un indice fort de la discipline réelle, jamais une preuve
+// qu'elle a été suivie.
+//
+// POURQUOI « SPONTANÉ » ET PAS TOUS LES APPELS : un outil lancé par le crochet post-commit ou
+// dicté par un process n'avait pas à passer par tool-brain — le compter accuserait l'agent d'un
+// manquement qui n'existe pas (leçon L4). Seuls les appels que l'agent décide lui-même comptent.
+//
+// LA FENÊTRE EST DÉCLARÉE, PAS DEVINÉE : dix minutes. Assez large pour couvrir une consultation
+// suivie d'une vraie lecture de code, assez étroite pour qu'un passage du matin ne crédite pas
+// tout l'après-midi. C'est un choix, et le changer change le chiffre — d'où le fait qu'il soit
+// rendu dans le rapport plutôt que caché.
+export const FENETRE_DE_PRECEDENCE_MS = 10 * 60 * 1000;
+export const ORIGINE_SPONTANEE = "cli_direct";
+
+export function precedenceDeToolBrain(events = [], { fenetre = FENETRE_DE_PRECEDENCE_MS, maintenant = null, sur24h = true } = {}) {
+  const tries = events.filter((e) => typeof e?.at === "number").sort((a, b) => a.at - b.at);
+  if (!tries.length) {
+    return { mesurable: false, pourquoi: "aucun événement horodaté dans le compteur : rendre un taux de discipline sur zéro passage serait un verdict sur du vide (leçon L13)" };
+  }
+  const passages = tries.filter((e) => e.toolSlug === "tool-brain").map((e) => e.at);
+  const spontanes = tries.filter((e) => e.origin === ORIGINE_SPONTANEE && e.toolSlug !== "tool-brain");
+  if (!spontanes.length) {
+    return { mesurable: false, passages: passages.length,
+      pourquoi: "aucun appel SPONTANÉ enregistré : seuls ceux-là avaient à passer par tool-brain, et sans eux il n'y a pas de discipline à mesurer" };
+  }
+  const precede = (e) => passages.some((t) => e.at - t >= 0 && e.at - t <= fenetre);
+  const total = spontanes.filter(precede).length;
+  const fin = maintenant ?? tries.at(-1).at;
+  const recents = sur24h ? spontanes.filter((e) => fin - e.at < 24 * 3600 * 1000) : [];
+  const recentsPrecedes = recents.filter(precede).length;
+  return {
+    mesurable: true, passages: passages.length,
+    spontanes: spontanes.length, precedes: total, taux: Math.round((total / spontanes.length) * 100),
+    recents: recents.length, recentsPrecedes, tauxRecent: recents.length ? Math.round((recentsPrecedes / recents.length) * 100) : null,
+    fenetreMinutes: Math.round(fenetre / 60000),
+    horsPortee: "une PRÉCÉDENCE, jamais un USAGE : le compteur sait qu'un outil a tourné et quand, il ne saura jamais si la consultation a servi. Et la fenêtre est un CHOIX — la changer change le chiffre.",
+  };
+}
+
+export function formatPrecedenceLines(p = {}) {
+  if (!p.mesurable) return ["", `\u{1F6A8} POINT D'ENTRÉE : PAS MESURÉ — ${p.pourquoi}`];
+  const L = ["", "=== TOOL-BRAIN EST-IL LE POINT D'ENTRÉE ? — mesuré, jamais déclaré ==="];
+  L.push(`  ${p.passages} passage(s) de tool-brain enregistrés au compteur.`);
+  L.push(`  ${p.precedes}/${p.spontanes} appels SPONTANÉS ont été précédés d'une consultation dans les ${p.fenetreMinutes} minutes — ${p.taux} % sur tout l'historique.`);
+  if (p.tauxRecent !== null) {
+    const sens = p.tauxRecent > p.taux ? "la discipline s'est AMÉLIORÉE" : p.tauxRecent < p.taux ? "la discipline a RECULÉ" : "la discipline est stable";
+    L.push(`  Sur les 24 dernières heures : ${p.recentsPrecedes}/${p.recents} — ${p.tauxRecent} %, donc ${sens}.`);
+    L.push("  LES DEUX CHIFFRES COMPTENT : le cumul dit l'habitude installée, les 24 h disent celle d'aujourd'hui — et c'est la seconde qui se corrige.");
+  }
+  L.push("  (Un outil lancé par le crochet ou dicté par un process est EXCLU : il n'avait pas à passer par ici, et le compter accuserait d'un manquement qui n'existe pas.)");
+  L.push(`  HORS PORTÉE : ${p.horsPortee}`);
+  return L;
+}
+
 export const FENETRE_RAPPORTS_EXAMINES = 12;
 
 export async function lignesFaille8({ history, now = Date.now(), racine = null } = {}) {
@@ -614,6 +678,10 @@ async function main() {
     } catch { /* absent : le garde-fou dira PAS MESURÉ plutôt que d'inventer un vert */ }
     console.log(formatToolBrainReport({ history, checkLastCommitSource, lireSource, offert, itemsRonde, sourceCrochets, sourcesDesOutils }));
     for (const l of await lignesFaille8({ history })) console.log(l);
+    // LA RÉPONSE À SA QUESTION DE #575, rendue à chaque rapport plutôt que mesurée une fois : un
+    // chiffre produit dans une conversation disparaît avec elle, et la question « est-ce devenu ton
+    // point d'entrée ? » se repose à chaque période.
+    for (const l of formatPrecedenceLines(precedenceDeToolBrain(history?.events ?? []))) console.log(l);
     return;
   }
 
