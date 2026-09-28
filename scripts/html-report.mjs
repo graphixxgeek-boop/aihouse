@@ -437,3 +437,85 @@ export function buildRapportDAgentSepareHtml(slug, reportText, { title, subtitle
     footer: `${slug.toUpperCase()} — conseiller uniquement, jamais un exécutant ni une décision automatique.`,
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA LIGNE DE COMMANDE — parce qu'une génération faite une seule fois à la main
+// ne sera jamais refaite (2026-09-28, tâche #1114, leçon L2).
+//
+// Les trois pages HTML du grand projet ont d'abord été produites par un script jetable écrit dans
+// la conversation. Elles étaient justes ce soir-là, et FAUSSES dès la première correction du
+// Markdown : personne — moi comprise — n'aurait su comment les refaire. Un livrable dérivé d'un
+// autre fichier doit avoir un GESTE, pas un souvenir.
+//
+//   node scripts/html-report.mjs document <source.md> <sortie.html> [--titre "…"] [--sous-titre "…"]
+//
+// Le titre par défaut se lit sur le premier `# ` du Markdown : le document se décrit déjà lui-même,
+// et le redemander en argument serait une occasion de plus de le laisser diverger (Article 24).
+export async function documentDepuisFichier(source, sortie, { titre = null, sousTitre = null, readImpl = null, writeImpl = null } = {}) {
+  const { readFileSync, writeFileSync, mkdirSync } = await import("node:fs");
+  const { dirname } = await import("node:path");
+  const lire = readImpl ?? ((p) => readFileSync(p, "utf8"));
+  const ecrire = writeImpl ?? ((p, c) => { mkdirSync(dirname(p), { recursive: true }); writeFileSync(p, c, "utf8"); });
+
+  const markdown = lire(source);
+  const premierTitre = (markdown.match(/^#\s+(.+)$/m) ?? [])[1] ?? source;
+  const html = renderDocumentHtml({
+    markdown,
+    title: titre ?? premierTitre.trim(),
+    subtitle: sousTitre ?? `Page générée depuis ${source} — jamais écrite à la main.`,
+    dateLabel: new Date().toISOString(),
+    footer: `Dérivé de ${source} par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.`,
+  });
+  ecrire(sortie, html);
+  inscrireAuRegistre({ source, sortie, octets: html.length, readImpl: lire, writeImpl: ecrire });
+  return { source, sortie, octets: html.length };
+}
+
+// LE REGISTRE EST DÉRIVÉ DE CHAQUE PASSAGE, jamais tenu à la main (Article 24, et le garde-fou des
+// kits d'export l'a exigé le soir même : un fichier qui ÉCRIT doit un registre). Ce qu'il porte
+// n'est pas décoratif — c'est la seule réponse à la question « cette page HTML vient de quel
+// Markdown, et de quand ? ». Sans elle, une page dérivée devient indiscernable d'une page écrite à
+// la main, et personne ne sait plus laquelle des deux corriger.
+export const REGISTRE_DOC_HTML = "docs/html-report/index.md";
+export const EN_TETE_REGISTRE = `# doc-HTML — les pages dérivées, et leur source
+
+*(Registre ÉCRIT PAR L'OUTIL à chaque génération, jamais à la main. Une ligne par passage : la page
+produite, le Markdown dont elle sort, sa taille et l'heure. Corriger une page se fait TOUJOURS dans
+sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
+
+| Page produite | Source Markdown | Octets | Généré le |
+|---|---|---|---|
+`;
+
+export function inscrireAuRegistre({ source, sortie, octets, quand = null, readImpl, writeImpl, registre = REGISTRE_DOC_HTML }) {
+  let texte = EN_TETE_REGISTRE;
+  try {
+    const existant = readImpl(registre);
+    if (existant && existant.includes("| Page produite |")) texte = existant.replace(/\n+$/, "") + "\n";
+  } catch {
+    // pas encore de registre : l'en-tête ci-dessus fait le premier passage.
+  }
+  const horodatage = quand ?? new Date().toISOString().slice(0, 16).replace("T", " ") + "Z";
+  // UNE PAGE RÉGÉNÉRÉE REMPLACE SA LIGNE, elle ne s'empile pas : un registre qui grossit à chaque
+  // passage cesserait de répondre « d'où vient cette page ? » pour ne plus répondre qu'« a-t-elle
+  // déjà été produite ? », ce qui n'intéresse personne.
+  const lignes = texte.split("\n").filter((l) => !l.startsWith(`| \`${sortie}\``));
+  while (lignes.length && lignes[lignes.length - 1].trim() === "") lignes.pop();
+  lignes.push(`| \`${sortie}\` | \`${source}\` | ${octets} | ${horodatage} |`);
+  writeImpl(registre, lignes.join("\n").replace(/\n+$/, "") + "\n");
+  return registre;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const [action, source, sortie] = process.argv.slice(2);
+  if (action !== "document" || !source || !sortie) {
+    console.log('Usage : node scripts/html-report.mjs document <source.md> <sortie.html> [--titre "…"] [--sous-titre "…"]');
+    process.exit(2);
+  }
+  const arg = (nom) => {
+    const i = process.argv.indexOf(nom);
+    return i > -1 ? process.argv[i + 1] : null;
+  };
+  const r = await documentDepuisFichier(source, sortie, { titre: arg("--titre"), sousTitre: arg("--sous-titre") });
+  console.log(`✅ ${r.sortie} — ${r.octets} octets, dérivés de ${r.source}`);
+}

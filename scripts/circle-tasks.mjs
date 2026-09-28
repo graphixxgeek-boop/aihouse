@@ -849,6 +849,12 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // recherche ne se périme pas de la même façon qu'une mesure, et son plan d'action est déjà porté
   // par les tâches qu'elle a ouvertes.
   "recherches": "bibliothèque de collectes extérieures (état de l'art), pas le registre d'un outil : rien à relancer, et chaque fiche porte déjà son plan d'action",
+  // (2026-09-28) Le registre de doc-HTML : il se RÉÉCRIT SEUL à chaque génération de page, et une
+  // page régénérée remplace sa ligne au lieu de s'empiler. Il ne peut donc pas prendre de retard —
+  // ce qui est exactement ce qu'un item de Ronde va vérifier. Lui en donner un ferait relire à
+  // chaque Ronde une liste qui est vraie par construction : le passage périodique le plus inutile
+  // qui soit, et le genre d'obligation vide que ce projet retire plutôt qu'il n'ajoute.
+  "html-report": "registre réécrit par l'outil à chaque génération, une ligne par page dérivée et jamais d'empilement : il est vrai par construction, donc un passage de Ronde n'y trouverait rien à rattraper",
   // (2026-09-28) Le dossier du GRAND PROJET : ce n'est le registre d'AUCUN outil, c'est l'espace de
   // travail d'un chantier — les sources qu'il fournit, l'inventaire d'absorption, la stratégie, le
   // plan d'action. Une Ronde n'a rien à y relire périodiquement : ce dossier ne mesure rien et ne

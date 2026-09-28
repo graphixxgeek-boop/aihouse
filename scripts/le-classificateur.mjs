@@ -2012,6 +2012,15 @@ export const MOTIFS_MEMOIRE = [
   // `00-sources/` est une ENTRÉE figée, propre à ce chantier : le projet ne l'entretient pas et ne
   // l'emporte pas.
   { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "une source qu'il a déposée : une entrée figée, propre à ce chantier, que le projet n'entretient pas et n'emporte pas" },
+  // ET CE QUE J'EN TIRE EST DE LA MÉMOIRE AUSSI — une règle DÉRIVÉE plutôt que trois exceptions
+  // recopiées (2026-09-28, tâche #725, Article 24). Les trois premiers documents de stratégie du
+  // grand projet avaient chacun leur ligne d'exception ; le quatrième (`couverture-de-sa-demande`)
+  // a fait échouer le filet le soir même de sa création, ce qui EST la preuve qu'une liste tenue à
+  // la main se périme au fichier suivant. L'analyse d'un corpus propre à CE projet — ses chiffres,
+  // ses outils, ses tensions, ses questions à lui — ne sert nulle part ailleurs ; ce qui voyage est
+  // la MÉTHODE (confronter les chiffres d'un audit au dépôt réel, écrire la demande inavouée en
+  // face de la question posée), et elle vit dans la charte et les blueprints, jamais ici.
+  { motif: /^docs\/grand-projet\/02-strategie\//, pourquoi: "l'analyse d'un corpus propre à CE chantier : ses chiffres, ses tensions, ses questions à lui. Ce qui voyage est la MÉTHODE, écrite ailleurs — jamais le contenu" },
   { motif: /^docs\/simulations\//, pourquoi: "les conversations archivées de Lia et Noé" },
   { motif: /^docs\/plans\//, pourquoi: "un plan de chantier est la photographie d'un moment" },
   { motif: /^docs\/rapports-de-nuit\//, pourquoi: "le compte rendu d'une nuit précise" },
@@ -2142,8 +2151,6 @@ export const EXCEPTIONS_D_EXPORT = [
   { chemin: "docs/grand-projet/00-sources/02-documents-prepares/README.md", etat: "PART", pourquoi: "pourquoi le volume n'est pas l'autorité, et pourquoi chaque document entre à l'inventaire AVANT d'être lu — deux règles de méthode, vraies hors de ce dépôt" },
   { chemin: "docs/grand-projet/index.md", etat: "PART", pourquoi: "la porte d'entrée d'un chantier massif : sa structure — sources séparées de l'absorption, absorption séparée de l'analyse, trois traitements déclarés par document — est une méthode réutilisable, jamais un contenu propre à ce dépôt" },
   { chemin: "docs/grand-projet/notes-de-travail.md", etat: "PART", pourquoi: "les pièges anticipés AVANT de les rencontrer — trancher pendant la lecture, laisser le volume de la matière parler plus fort que le commanditaire, croire qu'on a lu, ranger par sujet trop tôt : aucun n'est propre à ce projet-ci" },
-  { chemin: "docs/grand-projet/02-strategie/questions-en-cours-de-route.md", etat: "MEMOIRE", pourquoi: "ses questions à lui, sur son projet. Ce qui voyage est la FORME — une question posée pendant le travail, sa réponse, LA DEMANDE INAVOUÉE qu'elle cache, et l'action en face : sans elle, une réponse donnée en conversation meurt avec la conversation" },
-  { chemin: "docs/grand-projet/02-strategie/vue-globale-2026-09-28.md", etat: "MEMOIRE", pourquoi: "l'analyse d'un corpus propre à CE projet : ses chiffres, ses outils, ses tensions. Ce qui voyage est la MÉTHODE — confronter les chiffres d'un audit au dépôt réel, chercher ce que l'auditeur externe ne pouvait pas voir, et distinguer ce qui se dérive de ce qui s'écrit à la main" },
   { chemin: "docs/grand-projet/01-absorption/ce-que-jai-lu.md", etat: "MEMOIRE", pourquoi: "la trace de lecture d'un corpus déposé : elle vaut pour CE corpus-ci et ne servira nulle part ailleurs — c'est la FORME du fichier qui voyage (un bloc par document, ce qu'il dit et ses chiffres, jamais ce qu'on en conclut), pas son contenu" },
   { chemin: "docs/grand-projet/01-absorption/questions-consolidees.md", etat: "MEMOIRE", pourquoi: "les questions de l'utilisateur sur SON projet : rien n'y est réutilisable ailleurs. Ce qui voyage est la règle qui l'a fait naître — une question restée dans le corps d'une commande ne sera pas posée — et elle vit dans la charte, pas ici" },
   { chemin: "docs/grand-projet/00-sources/index.md", etat: "PART", pourquoi: "la règle qui refuse un second catalogue à côté du premier, et la hiérarchie entre la parole du commanditaire et la matière préparée : deux principes de méthode, vrais sur n'importe quel corpus déposé" },

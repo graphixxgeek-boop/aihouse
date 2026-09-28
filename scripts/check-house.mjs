@@ -12042,7 +12042,18 @@ await testVerrousDOuverture();
     // dans son code sans qu'aucun document ne l'écrive, et celui-là n'est pas une bibliothèque.
     const fausses = CASSANDRA.bibliothequesLancables({ recensement: CASSANDRA.recenserLesScripts() });
     assert.equal(fausses.mesurable, true, 'checked live against the real repository, never on a fixture: the question was asked about twelve real files');
-    assert.ok(fausses.examines >= 20, `every file typed as a library is examined, ${fausses.examines} of them today`);
+    // LE NOMBRE SE DÉRIVE DU RECENSEMENT, il ne se recopie pas (Article 24 — corrigé le 2026-09-28).
+    // Cette assertion exigeait « au moins 20 » : un chiffre gravé le jour de sa naissance. Le soir
+    // où doc-HTML a reçu une vraie ligne de commande, il a cessé d'être une bibliothèque pour
+    // devenir une commande documentée — un reclassement PARFAITEMENT JUSTE, dérivé automatiquement
+    // — et le filet l'a puni comme une régression. Un test qui tombe quand le dépôt s'améliore est
+    // un test qui sera désactivé, jamais lu (leçon L4). Ce qui vaut d'être verrouillé est ce que le
+    // message disait déjà : TOUT fichier typé bibliothèque est examiné, aucun ne passe à côté.
+    const recensement = CASSANDRA.recenserLesScripts();
+    const typesBibliotheque = Object.keys(recensement.parType).filter((t) => t.startsWith('bibliotheque'));
+    const dues = typesBibliotheque.reduce((n, t) => n + recensement.parType[t].length, 0);
+    assert.equal(fausses.examines, dues, `every file typed as a library is examined — ${fausses.examines} examined for ${dues} due, across ${typesBibliotheque.join(' + ')}`);
+    assert.ok(dues > 10, `and the population is real rather than empty (currently ${dues}): a probe measuring nothing would report a clean bill on zero files`);
     // LA SONDE RESSERRÉE — le contre-test de l'erreur commise en la construisant. Sa première
     // version cherchait `import.meta.url` tout court et accusait cinq fichiers qui l'emploient pour
     // calculer un CHEMIN. Un garde qui accuse à tort cesse d'être lu (leçon L4).
