@@ -15,6 +15,63 @@ import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 // l'intention. Ne tranche jamais seul en cas de vrai doute (marge de confiance étroite) — signale
 // et laisse confirmer.
 
+// ————————————————————————————————————————————————————————————————————————
+// LE MODE RÉPARATION — la zone rouge (2026-09-28, tâche #695, volet D des « failles des IA »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE CHIFFRE : plus de 65 % des incidents graves surviennent en CORRECTION et en CONFIGURATION,
+// pas en écriture de fonctionnalité. Notre outillage, lui, est tourné vers la construction.
+//
+// ET LE DÉFAUT ÉTAIT ICI, NOIR SUR BLANC : `corrige` et `fix` vivaient dans le registre LÉGER.
+// Autrement dit, cet outil ABAISSAIT la vigilance attendue sur très exactement la zone que la
+// mesure désigne comme la plus dangereuse. Ce n'est pas un oubli de vocabulaire, c'est une
+// inversion : le mot qui devrait alerter était celui qui rassurait.
+//
+// LA CORRECTION EST UN PLANCHER, JAMAIS UN SAUT DE NIVEAU. Une demande de réparation ou de
+// configuration ne peut plus descendre sous `standard` — le niveau où les Gardiens sacrés du code
+// tournent de toute façon, donc un plancher qui ne coûte rien. Relever d'office à `approfondi`
+// aurait été l'erreur symétrique : un outil qui crie à chaque correction cesse d'être lu (L4).
+//
+// L'EXEMPTION EST NOMMÉE, ET ELLE EST LA MOITIÉ DE LA RÈGLE : une coquille ou un renommage sont
+// des réparations sans risque. Quand ce sont les SEULS signaux présents, le niveau léger reste
+// mérité. Sans cette exemption, le plancher s'appliquerait à tout et deviendrait du décor.
+const SIGNAUX_MODE_REPARATION = [
+  /\bcorrige\b/i, /\bcorriger\b/i, /\bcorrectif\b/i, /\bfix\b/i, /\br[ée]pare\b/i, /\bd[ée]bug/i,
+  /\br[ée]gression\b/i, /\bbug\b/i, /\bplantage\b/i, /\bcasse\b/i,
+  /\bconfigure\b/i, /\bconfiguration\b/i, /\bparam[èe]tre\b/i, /\bvariable d'environnement\b/i,
+  /\.env\b/i, /\bd[ée]ploie/i, /\bd[ée]ploiement\b/i,
+];
+
+// Les réparations sans risque : quand elles sont SEULES, le plancher ne s'applique pas.
+// « faute de frappe » a été OUBLIÉE au premier jet, et c'est le filet qui l'a dit : une assertion
+// existante exigeait que « corrige cette faute de frappe » reste légère, et elle avait raison. Une
+// liste d'exemptions incomplète ne se répare pas en desserrant le test qui la trouve.
+const REPARATIONS_SANS_RISQUE = [/\btypo\b/i, /\bcoquille\b/i, /faute de frappe/i, /\brenomme\b/i, /\brenommage\b/i];
+
+export const PLANCHER_MODE_REPARATION = "standard";
+
+// modeReparation() — la demande relève-t-elle de la zone rouge, et faut-il relever le plancher ?
+// Elle rend aussi POURQUOI, parce qu'un niveau relevé sans raison lisible se lit comme un caprice
+// de l'outil et finit par être contourné.
+export function modeReparation(text) {
+  const t = String(text ?? "");
+  const signaux = SIGNAUX_MODE_REPARATION.filter((re) => re.test(t));
+  if (!signaux.length) return { enZoneRouge: false };
+  const sansRisque = REPARATIONS_SANS_RISQUE.some((re) => re.test(t));
+  // « Corrige la typo » : le seul signal de risque est le mot « corrige », et la demande dit
+  // elle-même de quoi il retourne. Le plancher ne s'applique pas — mais la zone rouge est quand
+  // même SIGNALÉE, parce que la reconnaissance de motifs peut se tromper et que le lecteur doit
+  // pouvoir en juger.
+  if (sansRisque && signaux.length <= 1) {
+    return { enZoneRouge: true, plancher: null, pourquoi: "réparation déclarée sans risque (coquille ou renommage) — le plancher ne s'applique pas, mais la zone reste nommée : ce jugement vient d'une reconnaissance de motifs, jamais d'une compréhension de la demande" };
+  }
+  return {
+    enZoneRouge: true,
+    plancher: PLANCHER_MODE_REPARATION,
+    pourquoi: "MODE RÉPARATION : plus de 65 % des incidents graves surviennent en correction et en configuration, pas en écriture de fonctionnalité — et l'outillage de ce projet est tourné vers la construction. Le niveau ne descend donc pas sous « standard », où les Gardiens sacrés du code tournent de toute façon",
+  };
+}
+
 const SIGNALS = {
   leger: [
     /\bcorrige\b/i, /\bfix\b/i, /\btypo\b/i, /\brenomme\b/i, /petit changement/i,
@@ -80,14 +137,15 @@ export function classifyCheckLevel(text) {
   const top = ranked[0], second = ranked[1];
   const topScore = scores[top], secondScore = scores[second];
 
+  const reparation = modeReparation(text);
   if (topScore === 0) {
-    return {
+    return appliquerPlancherDeReparation({
       level: "standard",
       confidence: "faible",
       needsConfirmation: false,
       reasoning: "Aucun signal explicite détecté dans la demande — niveau par défaut pour un travail de code ordinaire (cf. Article 20 : ARGUS/HARMONIA tournent de toute façon à chaque changement).",
       ...TOOLS_BY_LEVEL.standard,
-    };
+    }, reparation);
   }
 
   const margin = (topScore - secondScore) / topScore;
@@ -111,7 +169,7 @@ export function classifyCheckLevel(text) {
     }
   }
 
-  return {
+  return appliquerPlancherDeReparation({
     level: top,
     confidence: needsConfirmation ? "doute réel" : "claire",
     needsConfirmation,
@@ -119,6 +177,31 @@ export function classifyCheckLevel(text) {
       ? `Signaux comparables entre "${top}" et "${second}" (marge ${Math.round(margin * 100)}%) — les deux niveaux impliquent des outils/coûts différents, confirmation nécessaire avant d'agir.`
       : `Signaux les plus forts pour le niveau "${top}".`) + flavorNote,
     ...toolsInfo,
+  }, reparation);
+}
+
+// appliquerPlancherDeReparation() — le plancher RELÈVE, jamais ne rabaisse. Une demande déjà
+// classée « approfondi » reste approfondie : un plancher qui plafonnerait aussi serait un
+// nivellement, et perdrait exactement l'information qu'on cherche à gagner.
+//
+// Et il ne s'applique JAMAIS en silence : le niveau relevé porte sa raison chiffrée dans le
+// `reasoning`. Un outil qui remonte un niveau sans dire pourquoi se fait contourner à la deuxième
+// fois — c'est déjà la règle de la pression de registre juste en dessous, et elle vaut ici aussi.
+export function appliquerPlancherDeReparation(resultat, reparation) {
+  if (!reparation?.enZoneRouge) return resultat;
+  const note = ` ⚙️ ${reparation.pourquoi}.`;
+  if (!reparation.plancher) return { ...resultat, reasoning: resultat.reasoning + note, zoneRouge: true };
+  const iActuel = LEVEL_ORDER.indexOf(resultat.level);
+  const iPlancher = LEVEL_ORDER.indexOf(reparation.plancher);
+  if (iActuel >= iPlancher) return { ...resultat, reasoning: resultat.reasoning + note, zoneRouge: true };
+  return {
+    ...resultat,
+    level: reparation.plancher,
+    confidence: resultat.confidence === "claire" ? "claire" : resultat.confidence,
+    reasoning: `${resultat.reasoning} ⚙️ Niveau RELEVÉ de « ${resultat.level} » à « ${reparation.plancher} » — ${reparation.pourquoi}.`,
+    zoneRouge: true,
+    releveParLeModeReparation: true,
+    ...TOOLS_BY_LEVEL[reparation.plancher],
   };
 }
 

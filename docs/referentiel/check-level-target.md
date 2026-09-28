@@ -92,3 +92,41 @@ de harmonia.md et rapportent tout écart dans les deux sens, câblé dans `main(
 
 `docs/check-level-target/` — évolutions de la règle (signaux ajoutés/retirés, poids recalibrés),
 jamais un journal par appel individuel (cf. blueprint, fréquence d'usage trop élevée pour ça).
+
+## Le mode réparation — la zone rouge (2026-09-28, tâche #695, volet D des « failles des IA »)
+
+**Le chiffre.** Plus de **65 % des incidents graves** surviennent en **correction** et en
+**configuration**, pas en écriture de fonctionnalité. L'outillage de ce projet, lui, est tourné vers
+la construction.
+
+**Et le défaut était écrit noir sur blanc dans cet outil** : `corrige` et `fix` vivaient dans le
+registre **LÉGER**. Autrement dit, l'outil chargé de dire quel niveau de vérification déployer
+**abaissait** la vigilance attendue sur très exactement la zone que la mesure désigne comme la plus
+dangereuse. **Ce n'est pas un oubli de vocabulaire, c'est une inversion** : le mot qui devrait
+alerter était celui qui rassurait.
+
+**La correction est un PLANCHER, jamais un saut de niveau.** Une demande de réparation ou de
+configuration ne descend plus sous `standard` — le niveau où les Gardiens sacrés du code tournent de
+toute façon, donc **un plancher qui ne coûte rien**. Relever d'office à `approfondi` aurait été
+l'erreur symétrique : un outil qui crie à chaque correction cesse d'être lu (L4).
+
+**L'exemption est la moitié de la règle.** Une coquille (`typo`, `coquille`, `faute de frappe`) ou
+un renommage sont des réparations sans risque : quand ce sont les **seuls** signaux, le niveau léger
+reste mérité. Sans cette exemption, le plancher s'appliquerait à tout et deviendrait du décor. La
+zone rouge est tout de même **nommée** dans ces cas-là, parce que ce verdict vient d'une
+reconnaissance de motifs et jamais d'une compréhension de la demande.
+
+**Le plancher relève et ne rabaisse jamais.** Une demande déjà classée `approfondi` le reste : un
+plancher qui plafonnerait aussi serait un nivellement, et perdrait l'information qu'on cherche à
+gagner.
+
+**Et il ne s'applique jamais en silence** : le niveau relevé porte sa raison chiffrée dans le
+`reasoning`. Un outil qui remonte un niveau sans dire pourquoi se fait contourner dès la deuxième
+fois — c'est déjà la règle de la pression de registre, et elle vaut ici aussi.
+
+**Une borne existante a été réécrite sur son intention, jamais desserrée.** Le filet exigeait que
+« corrige ce bug d'affichage » reste `leger`, avec pour raison écrite « never over-trigger the
+EXPENSIVE tiers ». `standard` n'est pas un palier coûteux : l'intention est intacte, c'est le
+chiffre qui bougeait. **Et une seconde assertion a trouvé un vrai trou dans ce travail** —
+« faute de frappe » manquait à la liste des réparations sans risque. Une liste incomplète ne se
+répare pas en desserrant le test qui la trouve.

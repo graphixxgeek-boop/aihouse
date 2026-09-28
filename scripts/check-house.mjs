@@ -2923,7 +2923,18 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // historiques de l'utilisateur qui ont motivé sa création (cf. Article 21) — la meilleure preuve
   // que l'heuristique reconnaît ce qu'elle est censée reconnaître, pas une fixture inventée seule.
   const {classifyCheckLevel}=await import('../scripts/check-level-target.mjs');
-  assert.equal(classifyCheckLevel("corrige ce bug d'affichage stp").level,'leger','a trivial fix request must never over-trigger the expensive tiers');
+  // CETTE BORNE A ÉTÉ RÉÉCRITE SUR SON INTENTION, JAMAIS DESSERRÉE (2026-09-28, volet D). Elle
+  // exigeait la valeur littérale « leger », et le mode réparation la porte désormais à « standard ».
+  // Son intention écrite est « never over-trigger the EXPENSIVE tiers » — or `standard` n'est PAS
+  // un palier coûteux : c'est le niveau où les Gardiens sacrés du code tournent de toute façon à
+  // chaque commit, donc zéro coût ajouté. L'intention est intacte ; c'est le chiffre qui bougeait.
+  // La vérifier sur sa valeur plutôt que sur son intention aurait fait échouer un travail JUSTE —
+  // exactement la classe d'erreur relevée deux fois cette nuit (journal XP, entrées 21 et 22).
+  {
+    const trivial = classifyCheckLevel("corrige ce bug d'affichage stp");
+    assert.ok(!['approfondi', 'exceptionnel'].includes(trivial.level), `a trivial fix request must never over-trigger the EXPENSIVE tiers (got ${trivial.level})`);
+    assert.equal(trivial.level, 'standard', 'and since 2026-09-28 it lands on the free floor rather than the lightest tier: over 65% of serious incidents happen during repair, so a fix is not the place to lower vigilance');
+  }
   assert.equal(classifyCheckLevel('').level,'standard','no signal at all must fall back to the safe default (standard), never a silent leger that could under-check real work');
   const approfondi=classifyCheckLevel("verifie que toutes les consignes ont bien été traitées : beaucoup de choses ont evolué. verifie que tout est bien conecté, identifie les eventuelles erereurs ou bugs latents. verifie toutes les combinaisons possibles");
   assert.equal(approfondi.level,'approfondi','the real 2026-09-19 historical prompt that motivated this whole tool must classify as approfondi, not just standard');
@@ -20110,3 +20121,46 @@ async function testAbstentionCalibree() {
   console.log(`Passed: l'abstention calibrée — le droit de dire « je ne sais pas », avec un degré (2026-09-28, tâche #695, volet F des failles IA). CE QUE LA RECHERCHE DIT : avec la vérification indépendante du volet E, l'abstention calibrée est l'AUTRE mitigation qui tient réellement contre le faux succès, et les deux ne se remplacent pas — la première attrape ce qu'un outil affirme à tort, la seconde ce qu'il affirme SANS BASE. CE QUE LE DÉPÔT SAVAIT DÉJÀ FAIRE, MESURÉ PLUTÔT QUE SUPPOSÉ : ${abstenants.length} scripts sur ${scripts.length} savent déjà s'abstenir, ce qui est un acquis réel de ce projet et non un manque. MAIS QUINZE D'ENTRE EUX S'ABSTIENNENT SANS AUCUN DEGRÉ : ils disent « je n'ai pas pu mesurer » et s'arrêtent là — or « je n'ai rien pu lire du tout » et « j'ai lu, mais je ne suis sûr qu'à moitié » appellent deux réactions OPPOSÉES, et les rendre de la même façon oblige la lecture à deviner laquelle on lui sert. CE QUE LA FORME PARTAGÉE EXIGE, ET C'EST SON APPORT PRINCIPAL : nommer CE QUI MANQUERAIT pour savoir. Sans ça, « pas mesuré » est un cul-de-sac que personne ne peut lever, et une mesure impossible pour toujours est indiscernable d'une mesure oubliée hier. LE PALIER NE S'INVENTE PAS : les trois niveaux sont ceux qu'ARGUS emploie depuis toujours ici, et un quatrième mot inventé au passage est refusé — rouvrir le vocabulaire flottant que l'Article 20bis a fermé coûterait plus que ça ne rapporte. ET « PROBABLE » SANS RAISON EST REFUSÉ AUSSI : ce n'est pas un degré de confiance, c'est une précaution de style. AUCUN OUTIL NE CHANGE D'OFFICE — ${adoptants.length} adoptant(s) réel(s) aujourd'hui, et le compte est REMESURÉ à chaque passage plutôt que promis, parce que c'est la seule façon qu'un dispositif opt-in ne devienne pas du décor sans que personne ne s'en aperçoive.`);
 }
 await testAbstentionCalibree();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE MODE RÉPARATION — la zone rouge (2026-09-28, tâche #695, volet D des failles IA)
+// ————————————————————————————————————————————————————————————————————————
+// Plus de 65 % des incidents graves surviennent en CORRECTION et en CONFIGURATION, pas en écriture
+// de fonctionnalité — et l'outillage de ce projet est tourné vers la construction. Le défaut était
+// écrit noir sur blanc dans CHECK-LEVEL-TARGET : `corrige` et `fix` vivaient dans le registre
+// LÉGER. L'outil ABAISSAIT donc la vigilance attendue sur très exactement la zone que la mesure
+// désigne comme la plus dangereuse. Ce n'est pas un oubli de vocabulaire, c'est une inversion :
+// le mot qui devrait alerter était celui qui rassurait.
+async function testModeReparation() {
+  const CLT = await import('../scripts/check-level-target.mjs');
+
+  // ── 1. LE CAS QUI A MOTIVÉ LE VOLET : une correction de bug ne peut plus être classée légère.
+  const bug = CLT.classifyCheckLevel('corrige le bug de déplacement');
+  assert.equal(bug.level, 'standard', 'a bug fix must no longer be classified as the LIGHTEST level — that was the inversion');
+  assert.equal(bug.releveParLeModeReparation, true, 'and the raise must be marked, not silent');
+  assert.match(bug.reasoning, /65 %/, 'the reasoning must carry the measured reason: a level raised without a readable cause reads as a whim and gets worked around');
+
+  // ── 2. L'EXEMPTION EST LA MOITIÉ DE LA RÈGLE (L4) : une coquille reste légère. Sans elle, le
+  // plancher s'appliquerait à tout et deviendrait du décor.
+  const typo = CLT.classifyCheckLevel('corrige la typo');
+  assert.equal(typo.level, 'leger', 'a declared risk-free repair keeps its light level: a tool that shouts at every correction stops being read');
+  assert.equal(typo.zoneRouge, true, 'but the zone is still NAMED — this verdict comes from pattern matching, never from understanding the request');
+
+  // ── 3. LE PLANCHER RELÈVE, JAMAIS NE RABAISSE (BP4). Un plancher qui plafonnerait aussi serait
+  // un nivellement, et perdrait l'information qu'on cherche à gagner.
+  const lourd = CLT.classifyCheckLevel('corrige ce bug, vérification approfondie exigée');
+  assert.equal(lourd.level, 'approfondi', 'an already-deep request stays deep: the floor lifts, it never caps');
+  assert.equal(lourd.releveParLeModeReparation, undefined, 'and it is not reported as raised when it was already above the floor');
+
+  // ── 4. LA CONSTRUCTION N'EST PAS TOUCHÉE : rien ne change hors de la zone rouge.
+  const neuf = CLT.classifyCheckLevel('ajoute une nouvelle pièce à la maison');
+  assert.equal(neuf.zoneRouge, undefined, 'writing a new feature is not the red zone — the measure says the opposite');
+  assert.ok(!/65 %/.test(neuf.reasoning), 'and its reasoning must stay unchanged');
+
+  // ── 5. LA CONFIGURATION COMPTE AUTANT QUE LA CORRECTION, et c'est explicitement dans le chiffre.
+  const conf = CLT.classifyCheckLevel("configure la variable d'environnement de la clé");
+  assert.equal(conf.level, 'standard', 'configuration is named in the same measure as correction, and was covered by nothing at all before');
+
+  console.log("Passed: le mode réparation, la zone rouge (2026-09-28, tâche #695, volet D des failles IA). LE CHIFFRE : plus de 65 % des incidents graves surviennent en CORRECTION et en CONFIGURATION, pas en écriture de fonctionnalité — et tout l'outillage de ce projet est tourné vers la construction. LE DÉFAUT ÉTAIT ÉCRIT NOIR SUR BLANC, ET C'EST UNE INVERSION, PAS UN OUBLI : `corrige` et `fix` vivaient dans le registre LÉGER de CHECK-LEVEL-TARGET. L'outil chargé de dire quel niveau de vérification déployer ABAISSAIT donc la vigilance sur très exactement la zone que la mesure désigne comme la plus dangereuse — le mot qui devrait alerter était celui qui rassurait. LA CORRECTION EST UN PLANCHER, JAMAIS UN SAUT DE NIVEAU : une réparation ou une configuration ne descend plus sous « standard », le niveau où les Gardiens sacrés du code tournent de toute façon — donc un plancher qui ne coûte rien. Relever d'office à « approfondi » aurait été l'erreur symétrique : un outil qui crie à chaque correction cesse d'être lu (L4). L'EXEMPTION EST LA MOITIÉ DE LA RÈGLE : une coquille ou un renommage sont des réparations sans risque, et quand ce sont les SEULS signaux, le niveau léger reste mérité — sans cette exemption le plancher s'appliquerait à tout et deviendrait du décor. LE PLANCHER RELÈVE ET NE RABAISSE JAMAIS : une demande déjà classée « approfondie » le reste, parce qu'un plancher qui plafonnerait aussi serait un nivellement. ET IL NE S'APPLIQUE JAMAIS EN SILENCE : le niveau relevé porte sa raison chiffrée, parce qu'un outil qui remonte un niveau sans dire pourquoi se fait contourner dès la deuxième fois. ENFIN, LA CONFIGURATION EST COUVERTE : elle est nommée dans le même chiffre que la correction, et rien du tout ne la regardait avant.");
+}
+await testModeReparation();
