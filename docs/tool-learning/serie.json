@@ -56,7 +56,7 @@
     "sens": "plus bas = mieux"
    },
    "diagnostics-ignores": {
-    "valeur": 1,
+    "valeur": 0,
     "sens": "plus bas = mieux"
    },
    "verdicts-refutes": {

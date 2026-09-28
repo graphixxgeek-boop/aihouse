@@ -19771,3 +19771,53 @@ async function testDerivationEcarteeParcequElleFlatte() {
   console.log(`Passed: une dérivation construite, mesurée, et écartée parce qu'elle flattait (2026-09-28, tâche #492). LE BILAN DIT « NON CONCLUANT » À CHAQUE COMMIT depuis des jours, et la tâche nomme la cause elle-même : « ce n'est pas l'outil, c'est moi qui ne classe pas au fil de l'eau » — 2 actions sur 11. UN REPROCHE ÉCRIT N'EST PAS UNE MÉCANIQUE (Article 27) : « classe au fil de l'eau » a été écrit, lu, et tenu deux fois sur onze ; ce n'est pas un défaut de volonté, c'est une obligation qui ne repose que sur la mémoire d'un agent. LA DÉRIVATION A DONC ÉTÉ CONSTRUITE PUIS ÉCARTÉE, et c'est le résultat le plus utile de la tâche : branchée, elle faisait passer le bilan de « 2/11, non concluant » à « 11/11 investissement ». Mesure sur 935 commits réels : 73 % touchent scripts/, donc « un script a changé dans l'heure » est vrai presque toujours et ne distingue rien. Un indicateur qui vaut 100 % PAR CONSTRUCTION est exactement le défaut pour lequel cette fonction a déjà été corrigée le 2026-09-22 — une mesure adjacente servie à la place de la mesure visée, et flatteuse donc invisible. LA CONSTRUIRE POUR LA JETER N'EST PAS UNE PERTE : c'est ce qui permet de dire POURQUOI on ne la prend pas, avec un chiffre plutôt qu'une impression. Elle reste exportée et testée comme DIAGNOSTIC, et le verdict « trop faible » est MESURÉ et non codé en dur — le contre-test vérifie qu'un signal réellement discriminant serait, lui, rendu comme méritant d'être reconsidéré.`);
 }
 await testDerivationEcarteeParcequElleFlatte();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE NOM AFFICHÉ N'EST PAS LE NOM DU FICHIER (2026-09-28, tâche #1076)
+// ————————————————————————————————————————————————————————————————————————
+// TOOL-LEARNING reprochait à CLONE-HUNTER d'être resté immobile depuis le 2026-09-26 — le jour même
+// où son script avait reçu trois améliorations. La cause n'était ni la date ni le verdict : le
+// registre stocke le nom d'USAGE en majuscules (« CLONE-HUNTER »), et ce nom était interpolé tel
+// quel dans `scripts/${outil}.mjs`. `scripts/CLONE-HUNTER.mjs` n'existe pas, `git log` sur un chemin
+// inexistant rend une sortie VIDE, et une sortie vide se lit « aucun commit depuis ». L'accusation
+// était donc PERMANENTE et AUCUN travail réel ne pouvait l'éteindre (leçon L4 : un garde-fou qui
+// accuse à tort cesse d'être lu ; leçon L6 : une alarme qu'aucune action ne peut éteindre devient
+// du décor). Même classe d'erreur que le reste de cette série : un signal ADJACENT (le chemin
+// existe-t-il ?) lu comme le signal visé (a-t-il reçu un commit ?).
+async function testNomAfficheNestPasLeNomDuFichier() {
+  const tl1076 = await import('../scripts/tool-learning.mjs');
+
+  // LA RÉSOLUTION PASSE PAR LE RÉSOLVEUR PARTAGÉ, jamais par une minuscule naïve — et c'est
+  // vérifié sur les cas qu'une minuscule casserait (Article 24 : un registre se LIT).
+  assert.equal(tl1076.cheminDuScript('CLONE-HUNTER'), 'scripts/clone-hunter.mjs', 'the uppercase display name must resolve to the real file — this is the exact failure that made the accusation permanent');
+  assert.equal(tl1076.cheminDuScript('ARGUS'), 'scripts/check-argus.mjs', 'and a tool whose file name differs from its usage name must resolve through the shared exceptions registry, never through a naive lowercase');
+  assert.equal(tl1076.cheminDuScript('Smart Breaker'), 'scripts/check-gemini-quota.mjs', 'including a two-word display name: the slug is derived, not guessed');
+  assert.equal(tl1076.cheminDuScript('OUTIL-QUI-NEXISTE-PAS'), null, 'a name resolving to no real file must return null — without it, an unresolved name would fall back onto an empty git log, that is onto the silent accusation this fix removes');
+
+  // LES DEUX SENS (BP4), sur le VRAI dépôt (Article 25) : un outil réellement touché depuis la date
+  // ne doit PAS être signalé, un outil réellement non touché doit l'être encore.
+  const { execSync: execT } = await import('node:child_process');
+  const exec1076 = (cmd) => execT(cmd, { encoding: 'utf8' });
+  assert.equal(tl1076.touchesDepuisGit('CLONE-HUNTER', '2026-09-26', { execImpl: exec1076 }), true, 'CLONE-HUNTER really was committed to after 2026-09-26: the guard must now see it');
+  assert.equal(tl1076.touchesDepuisGit('CLONE-HUNTER', '2099-01-01', { execImpl: exec1076 }), false, 'and the guard must still bite when there genuinely is no commit — a fix that silences every case would be worse than the bug');
+
+  // UNE ABSENCE DE MESURE NE SE LIT JAMAIS COMME UN REPROCHE (leçons L5/L11) : script introuvable
+  // et git en échec rendent tous deux « touché », c'est-à-dire « je ne sais pas, donc je n'accuse
+  // pas ».
+  assert.equal(tl1076.touchesDepuisGit('OUTIL-QUI-NEXISTE-PAS', '2026-09-26', { execImpl: () => '' }), true, 'an unresolvable tool is a non-measure, never a reproach');
+  assert.equal(tl1076.touchesDepuisGit('CLONE-HUNTER', '2026-09-26', { execImpl: () => { throw new Error('git down'); } }), true, 'and a failing git is a non-measure too');
+
+  // LE VERDICT RÉEL EST BIEN RETOMBÉ : le registre porte un seul verdict « immobile », et son outil
+  // a bel et bien été touché depuis. Branché sur le vrai fichier, jamais sur un cas fabriqué.
+  const { readFileSync: lire1076, existsSync: existe1076 } = await import('node:fs');
+  if (existe1076('docs/tool-learning/verdicts.json')) {
+    const verdicts = JSON.parse(lire1076('docs/tool-learning/verdicts.json', 'utf8'));
+    const immobiles = verdicts.filter((v) => v.verdict === 'immobile');
+    for (const v of immobiles) {
+      assert.notEqual(tl1076.cheminDuScript(v.outil), null, `every tool named in the real verdict registry must resolve to a real script, otherwise it is accused on a path that does not exist: ${v.outil}`);
+    }
+  }
+
+  console.log("Passed: une accusation permanente qu'aucun travail ne pouvait éteindre (2026-09-28, tâche #1076). TOOL-LEARNING reprochait à CLONE-HUNTER d'être « resté immobile depuis le 2026-09-26 » le jour même où son script recevait trois améliorations. La cause n'était ni la date, ni le verdict, ni la mémoire de l'outil : le registre stocke le nom d'USAGE en majuscules, et ce nom était interpolé tel quel dans un chemin de fichier. `scripts/CLONE-HUNTER.mjs` n'existe pas ; `git log` sur un chemin inexistant rend une sortie VIDE ; une sortie vide se lit « aucun commit depuis ». Le reproche était donc structurellement inextinguible — exactement la leçon L6 (une alarme qu'aucune action légitime ne peut éteindre devient du décor) précédée de la L4 (un garde-fou qui accuse à tort cesse d'être lu). LA CORRECTION NE FABRIQUE PAS UN SECOND RÉSOLVEUR : elle passe par `scriptPourSlug()` de lib-shell, celui qui connaît déjà les cas qu'une minuscule naïve casserait (ARGUS → check-argus.mjs, Smart Breaker → check-gemini-quota.mjs). ET LE `null` EST LA MOITIÉ DU CORRECTIF : sans lui, un nom non résolu retomberait sur le même git log vide, c'est-à-dire sur la même accusation silencieuse.");
+}
+await testNomAfficheNestPasLeNomDuFichier();

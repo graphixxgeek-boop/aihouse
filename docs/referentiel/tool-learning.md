@@ -306,3 +306,43 @@ ligne sans ce segment est tronquée, point. Une **absence déclarée** (`· aucu
 passe, parce qu'elle est une décision écrite et non un oubli — c'est le cas de BP1, dont la raison
 a été déplacée DANS la ligne, là où le garde-fou la lit, plutôt que dans une note à côté qu'aucun
 mécanisme ne reliait à la règle (Article 24).
+
+## Le nom affiché n'est pas le nom du fichier (2026-09-28, tâche #1076)
+
+**Le reproche était inextinguible, et c'est ce qui le rendait grave.** À la Ronde du 2026-09-28,
+l'outil affichait : « CLONE-HUNTER : jugé *immobile* le 2026-09-26, aucun commit sur son script
+depuis, revu 0 fois. » Le script de CLONE-HUNTER avait reçu trois améliorations **cette nuit-là**.
+
+**La cause n'est ni la date, ni le verdict, ni la mémoire de l'outil.** `docs/tool-learning/verdicts.json`
+stocke le nom d'**usage**, en majuscules. `touchesDepuisGit()` l'interpolait tel quel :
+
+```
+git log --since=<date> --oneline -- scripts/CLONE-HUNTER.mjs
+```
+
+Ce fichier n'existe pas. **`git log` sur un chemin inexistant ne proteste pas : il rend une sortie
+vide** — et une sortie vide se lit « aucun commit depuis ». L'accusation revenait donc à chaque
+passage, à l'identique, **quoi qu'on fasse sur l'outil visé**.
+
+C'est la leçon **L6** dans sa forme pure (une alarme qu'aucune action légitime ne peut éteindre
+devient du décor), précédée de la **L4** (un garde-fou qui accuse à tort cesse d'être lu), et la
+sixième occurrence en une nuit de la classe récurrente de ce projet : **un signal ADJACENT** (ce
+chemin existe-t-il ?) **lu comme le signal visé** (a-t-il reçu un commit ?).
+
+**La correction ne fabrique pas un second résolveur** (Article 24) : `cheminDuScript()` dérive le
+slug du nom affiché puis passe par `scriptPourSlug()` de `lib-shell`, le résolveur partagé qui
+connaît les cas qu'une simple minuscule casserait — ARGUS → `check-argus.mjs`, Smart Breaker →
+`check-gemini-quota.mjs`.
+
+**Le `null` est la moitié du correctif.** Quand un nom ne se résout vers aucun fichier réel,
+`cheminDuScript()` rend `null` et `touchesDepuisGit()` rend `true`, c'est-à-dire s'abstient. Sans
+ce `null`, un nom non résolu retomberait sur le même `git log` vide : la même accusation
+silencieuse, seulement plus rare — donc encore moins repérable. **Script introuvable et `git` en
+panne se traitent pareil : « je n'ai pas pu regarder » ne se lit jamais « il n'a rien fait »**
+(leçons L5/L11).
+
+**Contre-testé dans les deux sens, sur le vrai dépôt** (BP4, Article 25) : un outil réellement
+touché depuis la date n'est plus signalé, un outil réellement non touché l'est encore. Un correctif
+qui aurait acheté le silence général aurait été pire que le défaut. Le filet vérifie en plus que
+**tout outil portant un verdict « immobile » dans le registre réel se résout vers un script qui
+existe** — sans quoi il serait accusé sur un chemin fantôme.

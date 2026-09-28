@@ -27,7 +27,7 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { printReliabilityNotice, listerLesFichiers, lireFichierPartage } from "./lib-shell.mjs";
+import { printReliabilityNotice, listerLesFichiers, lireFichierPartage, scriptPourSlug } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
@@ -361,9 +361,40 @@ export function jugerLAgent(historique = [], options = {}) {
 // renvoie `true` (« on ne sait pas » se lit comme « touché »), pour ne JAMAIS fabriquer un reproche
 // à partir d'une absence de mesure : accuser sur une commande ratée serait précisément le défaut
 // que cet outil existe pour nommer chez les autres.
-export function touchesDepuisGit(outil, date, { execImpl } = {}) {
+//
+// LE NOM AFFICHÉ N'EST PAS LE NOM DU FICHIER, et les confondre fabriquait un reproche PERMANENT
+// (2026-09-28, trouvé à la Ronde). Le registre stocke le nom d'usage en majuscules (« CLONE-HUNTER »),
+// et ce nom était interpolé tel quel : `scripts/CLONE-HUNTER.mjs` n'existe pas, `git log` sur un
+// chemin inexistant rend une sortie VIDE — donc « aucun commit depuis », donc une accusation que
+// AUCUN travail réel ne pouvait éteindre. CLONE-HUNTER était accusé d'être resté immobile le jour
+// même où son script avait été amélioré trois fois. C'est la classe d'erreur récurrente de ce
+// projet (un signal ADJACENT lu comme le signal lui-même) doublée de la leçon L4 : un garde-fou
+// qui accuse à tort cesse d'être lu.
+//
+// La résolution passe donc par `scriptPourSlug()` (lib-shell), le résolveur PARTAGÉ qui connaît
+// aussi les cas qu'une simple minuscule casserait (ARGUS → check-argus.mjs, Smart Breaker →
+// check-gemini-quota.mjs). Un registre se LIT, il ne se devine pas (Article 24).
+export function slugDOutil(outil) {
+  return String(outil).trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+// Rend le chemin du script d'un outil, ou `null` quand il ne se résout vers AUCUN fichier réel.
+// Le `null` est essentiel : sans lui, un nom non résolu retomberait sur un `git log` vide, c'est-à-
+// dire exactement sur l'accusation silencieuse que ce correctif supprime.
+export function cheminDuScript(outil, { existsImpl } = {}) {
+  const existe = existsImpl ?? ((c) => existsSync(join(ROOT, c)));
+  const chemin = scriptPourSlug(slugDOutil(outil));
+  return existe(chemin) ? chemin : null;
+}
+
+export function touchesDepuisGit(outil, date, { execImpl, existsImpl } = {}) {
+  const chemin = cheminDuScript(outil, { existsImpl });
+  // Script introuvable = RIEN N'A PU ÊTRE LU. On ne sait pas, donc on ne reproche pas (même règle
+  // que l'échec de git ci-dessous) : « je n'ai pas pu regarder » ne se lit jamais « il n'a rien
+  // fait » (leçons L5/L11).
+  if (!chemin) return true;
   try {
-    const out = execImpl(`git log --since=${date} --oneline -- scripts/${outil}.mjs`);
+    const out = execImpl(`git log --since=${date} --oneline -- ${chemin}`);
     return String(out).trim().length > 0;
   } catch {
     return true;
