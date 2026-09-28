@@ -20061,3 +20061,52 @@ async function testConcordanceADeuxOutils() {
   console.log("Passed: la concordance à deux outils (2026-09-28, tâche #695, volet E des failles IA). LE CHIFFRE QUI A MOTIVÉ CE VOLET : la vérification par une source INDÉPENDANTE est la seule mitigation mesurée qui fasse tomber le taux de « faux succès » — un résultat annoncé juste et qui ne l'est pas — d'environ 48 % à 3 %. Aucune relecture par le MÊME outil n'en approche, parce qu'un outil qui se relit reproduit son propre angle mort : cette seule nuit en a donné sept exemples d'affilée. CE QUE LE MÉCANISME FAIT : un constat déclaré `critique` n'entre pas en action seul — il s'affiche « À CORROBORER » jusqu'à porter le nom d'un SECOND outil, forcément différent de celui qui rapporte. CE QU'IL NE FAIT PAS, ET C'EST ESSENTIEL : il n'efface jamais la trouvaille. Le constat reste visible, chiffré et nommé ; c'est le passage à l'ACTION qui attend, pas la mesure. L'AUTO-CORROBORATION EST REFUSÉE NOMMÉMENT, parce que remplir la case avec son propre nom satisfait la forme et rate tout le fond. LE PREMIER USAGE EST RÉEL ET N'A PAS ÉTÉ FABRIQUÉ POUR L'OCCASION (leçon L2) : dans AXA-CHECK, une fonction fragile PROCHE D'UN NŒUD SENSIBLE — du code non testé là où une casse se propage, et qui fausse en plus le score de robustesse que tout le paysage consulte. Sa gravité est établie par la carte d'HARMONIA, dérivée et vérifiée mécaniquement contre elle depuis le 2026-09-21 : la seconde source existait déjà, elle n'a pas été inventée. ET LE MÉCANISME EST OPT-IN : un constat ordinaire s'affiche exactement comme avant, parce qu'un dispositif qui changerait la sortie de tout le paysage du jour au lendemain serait refusé plutôt qu'adopté. CE QUI EST DIT FRANCHEMENT PLUTÔT QUE LAISSÉ CROIRE : sur le dépôt d'AUJOURD'HUI, ce critère ne correspond à AUCUN cas — zéro fonction fragile ne se trouve près d'un nœud sensible, les trois nœuds vivant dans des fichiers de jeu bien couverts. Ce zéro est un BON résultat, pas un mécanisme muet, et la nuance compte : le câblage porte sur un critère réel qui se déclenchera le jour où un tel cas apparaîtra, ce qui n'est pas la même chose qu'un mécanisme branché sur un cas inventé pour avoir l'air de tourner.");
 }
 await testConcordanceADeuxOutils();
+
+// ————————————————————————————————————————————————————————————————————————
+// L'ABSTENTION CALIBRÉE (2026-09-28, tâche #695, volet F des failles IA)
+// ————————————————————————————————————————————————————————————————————————
+// Avec la vérification indépendante (volet E), l'abstention calibrée est l'AUTRE mitigation qui
+// tient réellement contre le faux succès. Les deux ne se remplacent pas : la première attrape ce
+// qu'un outil affirme à tort, la seconde ce qu'il affirme sans base.
+async function testAbstentionCalibree() {
+  const RT = await import('../scripts/report-template.mjs');
+
+  // ── 1. L'ABSTENTION DOIT DIRE CE QUI MANQUERAIT POUR SAVOIR. Sans ça, « pas mesuré » est un
+  // cul-de-sac que personne ne peut lever, et une mesure impossible pour toujours est
+  // indiscernable d'une mesure simplement oubliée hier.
+  const a = RT.jeNeSaisPas({ quoi: 'la couverture de X', pourquoi: 'le relevé est absent', ceQuiManque: 'lancer le filet avec instrumentation' });
+  assert.equal(a.mesurable, false);
+  assert.match(a.ligne, /⚪ PAS MESURÉ/, 'the abstention must use the marker the rest of the landscape already uses');
+  assert.match(a.ligne, /Pour le savoir, il faudrait/, 'and it must name the way out');
+  assert.throws(() => RT.jeNeSaisPas({ quoi: 'a', pourquoi: 'b' }), /CE QUI MANQUERAIT/, 'an abstention with no way out is refused');
+  assert.throws(() => RT.jeNeSaisPas({ quoi: 'a' }), /POURQUOI/, 'and so is one with no cause');
+
+  // ── 2. LE PALIER NE S'INVENTE PAS (Article 20bis) : trois niveaux, ceux qu'ARGUS emploie déjà.
+  assert.deepEqual(RT.PALIERS_DE_CONFIANCE, ['confirmé', 'probable', 'à surveiller'], 'the three tiers must stay the ones already in use — a fourth word invented in passing reopens the floating vocabulary');
+  const v = RT.avecConfiance('3 blocs dupliqués', 'probable', 'deux blocs qui se ressemblent ne sont pas toujours deux blocs à factoriser');
+  assert.match(v.ligne, /\[confiance : probable — /, 'a verdict must carry its tier AND the reason for it');
+  assert.throws(() => RT.avecConfiance('v', 'certain', 'x'), /palier inconnu/, 'an unknown tier is refused rather than passed through');
+  assert.throws(() => RT.avecConfiance('v', 'probable'), /RAISON/, '"probable" with no reason is not a degree of confidence, it is a stylistic precaution');
+
+  // ── 3. AUCUN OUTIL NE CHANGE D'OFFICE (BP4) : c'est une forme offerte, jamais imposée — un
+  // dispositif qui réécrirait la sortie des 47 outils du jour au lendemain serait refusé.
+  const ordinaire = RT.buildPlanDaction([{ constat: 'X', etat: 'retenu', tache: 't' }], { toolSlug: 'argus' });
+  assert.ok(ordinaire.lignes.some((l) => /→ RETENU · X/.test(l)), 'a tool that does not call these helpers renders exactly as it did yesterday');
+
+  // ── 4. IL Y A UN APPELANT RÉEL (leçon L2), et son abstention est vraiment rendue.
+  const { readFileSync: lireF } = await import('node:fs');
+  assert.match(lireF('scripts/route-booster.mjs', 'utf8'), /jeNeSaisPas\(\{/, 'the mechanism must have at least one real caller: a helper nobody calls is an intention');
+
+  // ── 5. L'ADOPTION EST MESURÉE À CHAQUE PASSAGE, jamais supposée — c'est la seule façon qu'un
+  // dispositif opt-in ne devienne pas du décor sans que personne ne s'en aperçoive (L6).
+  const { readdirSync: listerF } = await import('node:fs');
+  const scripts = listerF('scripts').filter((f) => f.endsWith('.mjs') && f !== 'check-house.mjs');
+  const MOTIF_ABST = /PAS MESUR[EÉ]|mesurable:\s*false|non mesurable/i;
+  const abstenants = scripts.filter((f) => MOTIF_ABST.test(lireF(`scripts/${f}`, 'utf8')));
+  const adoptants = scripts.filter((f) => /jeNeSaisPas\(|avecConfiance\(/.test(lireF(`scripts/${f}`, 'utf8')));
+  assert.ok(abstenants.length >= 40, `the landscape's existing ability to abstain must not silently vanish (currently ${abstenants.length} of ${scripts.length})`);
+  assert.ok(adoptants.length >= 1, 'and the shared form must have at least one adopter');
+
+  console.log(`Passed: l'abstention calibrée — le droit de dire « je ne sais pas », avec un degré (2026-09-28, tâche #695, volet F des failles IA). CE QUE LA RECHERCHE DIT : avec la vérification indépendante du volet E, l'abstention calibrée est l'AUTRE mitigation qui tient réellement contre le faux succès, et les deux ne se remplacent pas — la première attrape ce qu'un outil affirme à tort, la seconde ce qu'il affirme SANS BASE. CE QUE LE DÉPÔT SAVAIT DÉJÀ FAIRE, MESURÉ PLUTÔT QUE SUPPOSÉ : ${abstenants.length} scripts sur ${scripts.length} savent déjà s'abstenir, ce qui est un acquis réel de ce projet et non un manque. MAIS QUINZE D'ENTRE EUX S'ABSTIENNENT SANS AUCUN DEGRÉ : ils disent « je n'ai pas pu mesurer » et s'arrêtent là — or « je n'ai rien pu lire du tout » et « j'ai lu, mais je ne suis sûr qu'à moitié » appellent deux réactions OPPOSÉES, et les rendre de la même façon oblige la lecture à deviner laquelle on lui sert. CE QUE LA FORME PARTAGÉE EXIGE, ET C'EST SON APPORT PRINCIPAL : nommer CE QUI MANQUERAIT pour savoir. Sans ça, « pas mesuré » est un cul-de-sac que personne ne peut lever, et une mesure impossible pour toujours est indiscernable d'une mesure oubliée hier. LE PALIER NE S'INVENTE PAS : les trois niveaux sont ceux qu'ARGUS emploie depuis toujours ici, et un quatrième mot inventé au passage est refusé — rouvrir le vocabulaire flottant que l'Article 20bis a fermé coûterait plus que ça ne rapporte. ET « PROBABLE » SANS RAISON EST REFUSÉ AUSSI : ce n'est pas un degré de confiance, c'est une précaution de style. AUCUN OUTIL NE CHANGE D'OFFICE — ${adoptants.length} adoptant(s) réel(s) aujourd'hui, et le compte est REMESURÉ à chaque passage plutôt que promis, parce que c'est la seule façon qu'un dispositif opt-in ne devienne pas du décor sans que personne ne s'en aperçoive.`);
+}
+await testAbstentionCalibree();

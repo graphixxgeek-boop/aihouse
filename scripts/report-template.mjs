@@ -321,6 +321,62 @@ export function prioriteDuPlan(toolSlug, { gardiens = GARDIEN_DOMAINS } = {}) {
     : { prioritaire: false, raison: "outil hors du rang de Gardien sacré : plan à traiter dans l'ordre normal" };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ABSTENTION CALIBRÉE — le droit de dire « je ne sais pas », avec un degré
+// (2026-09-28, tâche #695, volet F des « failles des IA »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// CE QUE LA RECHERCHE DIT : avec la vérification indépendante (volet E), l'abstention calibrée est
+// l'AUTRE mitigation qui tient réellement contre le faux succès. Les deux ne se remplacent pas : la
+// première attrape ce qu'un outil affirme à tort, la seconde ce qu'il affirme sans base.
+//
+// CE QUE LE DÉPÔT SAVAIT DÉJÀ FAIRE, MESURÉ PLUTÔT QUE SUPPOSÉ : sur 82 scripts, 49 savent déjà
+// s'abstenir (« ⚪ PAS MESURÉ », « mesurable: false ») — c'est beaucoup, et c'est un acquis réel de
+// ce projet. Mais 15 d'entre eux s'abstiennent SANS AUCUN degré : ils disent « je n'ai pas pu
+// mesurer » et s'arrêtent là. Or « je n'ai rien pu lire du tout » et « j'ai lu mais je ne suis sûr
+// qu'à moitié » appellent deux réactions opposées, et les rendre de la même façon oblige la lecture
+// à deviner laquelle des deux on lui sert.
+//
+// CE QUE CES DEUX FONCTIONS AJOUTENT, ET CE QU'ELLES N'AJOUTENT PAS. Elles donnent une FORME
+// unique à l'abstention et au verdict incertain, dans le gabarit partagé — donc disponible aux 47
+// outils d'un coup, jamais outil par outil (Article 24 : un nouveau venu hérite de ce que l'équipe
+// sait déjà faire). Elles ne transforment aucun outil d'office : un outil qui ne les appelle pas
+// rend exactement ce qu'il rendait hier.
+//
+// LE PALIER NE S'INVENTE PAS. Les trois niveaux sont ceux qu'ARGUS emploie depuis toujours dans ce
+// dépôt (confirmé / probable / à surveiller) : reprendre son vocabulaire plutôt qu'en créer un
+// quatrième est la moitié du travail (Article 24, et le rangement de l'Article 20bis).
+export const PALIERS_DE_CONFIANCE = ["confirmé", "probable", "à surveiller"];
+
+// jeNeSaisPas() — l'abstention, dans la seule forme qui serve à quelque chose. Elle EXIGE de dire
+// ce qui manquerait pour savoir : sans ça, « pas mesuré » est un cul-de-sac que personne ne peut
+// lever, et une mesure impossible pour toujours est indiscernable d'une mesure oubliée hier.
+export function jeNeSaisPas({ quoi, pourquoi, ceQuiManque } = {}) {
+  if (!quoi || !pourquoi) throw new Error("jeNeSaisPas() exige QUOI n'a pas pu être mesuré et POURQUOI — une abstention sans objet ni cause ne se distingue pas d'un oubli.");
+  if (!ceQuiManque) throw new Error("jeNeSaisPas() exige CE QUI MANQUERAIT pour savoir — sans ça l'abstention est un cul-de-sac que personne ne peut lever, et une mesure impossible pour toujours ressemble trait pour trait à une mesure oubliée hier.");
+  return {
+    mesurable: false,
+    quoi,
+    pourquoi,
+    ceQuiManque,
+    ligne: `⚪ PAS MESURÉ — ${quoi} : ${pourquoi}. Pour le savoir, il faudrait ${ceQuiManque}.`,
+    // Ce n'est PAS un zéro, et le dire fait partie du rendu : c'est très exactement la confusion
+    // que ce paysage passe son temps à corriger ailleurs (leçons L5/L11).
+    jamaisUnZero: true,
+  };
+}
+
+// avecConfiance() — un verdict qui porte son propre degré. Le palier est REFUSÉ s'il n'est pas l'un
+// des trois : un quatrième mot inventé au passage rouvrirait la porte au vocabulaire flottant que
+// l'Article 20bis a fermée.
+export function avecConfiance(verdict, palier, pourquoi) {
+  if (!PALIERS_DE_CONFIANCE.includes(palier)) {
+    throw new Error(`avecConfiance() : palier inconnu « ${palier} » — attendu ${PALIERS_DE_CONFIANCE.join(", ")}. Un quatrième mot inventé au passage rouvre le vocabulaire flottant que l'Article 20bis a fermé.`);
+  }
+  if (!pourquoi) throw new Error("avecConfiance() exige la RAISON du palier — « probable » sans raison n'est pas un degré de confiance, c'est une précaution de style.");
+  return { verdict, confiance: palier, pourquoi, ligne: `${verdict} [confiance : ${palier} — ${pourquoi}]` };
+}
+
 // etatDeCorroboration() — LA CONCORDANCE À DEUX OUTILS (2026-09-28, tâche #695, volet E du plan
 // « failles des IA »).
 //

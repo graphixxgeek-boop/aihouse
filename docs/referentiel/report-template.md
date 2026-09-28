@@ -69,3 +69,42 @@ le jour où un tel cas apparaîtra.
 `critique` est une décision de conception, pas une déduction : la poser d'office sur tout ce qu'un
 Gardien sacré du code trouve bloquerait le paysage entier du jour au lendemain. La liste des outils qui la
 portent se décide avec l'utilisateur (Article 16).
+
+## L'abstention calibrée (2026-09-28, tâche #695, volet F des « failles des IA »)
+
+**Ce que la recherche dit.** Avec la vérification indépendante (volet E ci-dessus), l'abstention
+calibrée est **l'autre** mitigation qui tient réellement contre le faux succès. Les deux ne se
+remplacent pas : la première attrape ce qu'un outil affirme **à tort**, la seconde ce qu'il affirme
+**sans base**.
+
+**Ce que le dépôt savait déjà faire, mesuré plutôt que supposé** : sur 82 scripts, **49 savent déjà
+s'abstenir** (`⚪ PAS MESURÉ`, `mesurable: false`). C'est un acquis réel de ce projet, pas un manque.
+
+**Mais quinze d'entre eux s'abstiennent sans aucun degré** : ils disent « je n'ai pas pu mesurer »
+et s'arrêtent là. Or **« je n'ai rien pu lire du tout » et « j'ai lu, mais je ne suis sûr qu'à
+moitié » appellent deux réactions opposées** — les rendre de la même façon oblige la lecture à
+deviner laquelle on lui sert.
+
+**Deux fonctions, dans le gabarit partagé**, donc disponibles aux 47 outils d'un coup plutôt
+qu'outil par outil (Article 24) :
+
+- **`jeNeSaisPas({ quoi, pourquoi, ceQuiManque })`** — rend la ligne `⚪ PAS MESURÉ` dans la forme
+  déjà employée partout, et **exige de nommer ce qui manquerait pour savoir**. C'est son apport
+  principal : sans ça, « pas mesuré » est un cul-de-sac que personne ne peut lever, et **une mesure
+  impossible pour toujours est indiscernable d'une mesure simplement oubliée hier**.
+- **`avecConfiance(verdict, palier, pourquoi)`** — attache un degré déclaré. Les trois paliers sont
+  **ceux qu'ARGUS emploie depuis toujours** ici : `confirmé` / `probable` / `à surveiller`. Un
+  quatrième mot inventé au passage est **refusé** — rouvrir le vocabulaire flottant que
+  l'Article 20bis a fermé coûterait plus que ça ne rapporte. Et **« probable » sans raison est
+  refusé aussi** : ce n'est pas un degré de confiance, c'est une précaution de style.
+
+**Aucun outil ne change d'office.** C'est une forme **offerte**, jamais imposée : un outil qui ne
+les appelle pas rend exactement ce qu'il rendait hier. Un dispositif qui réécrirait la sortie des 47
+outils du jour au lendemain serait refusé plutôt qu'adopté.
+
+**Premier appelant réel** : `route-booster`, dont l'abstention existait déjà et disait l'essentiel —
+ce qu'elle ne faisait pas, c'était le dire dans la **même forme** que les autres, et nommer la
+sortie de secours.
+
+**L'adoption est remesurée à chaque passage du filet**, jamais promise. C'est la seule façon qu'un
+dispositif opt-in ne devienne pas du décor sans que personne ne s'en aperçoive (L6).

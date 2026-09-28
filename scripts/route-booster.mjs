@@ -17,6 +17,7 @@
 import { readFileSync } from "node:fs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { jeNeSaisPas } from "./report-template.mjs";
 
 // L'avertissement de fiabilité, réclamé nommément par le garde-fou le 2026-09-26 : une nature
 // « heuristique » déclarée dans un registre et jamais imprimée ne prévient personne.
@@ -120,9 +121,17 @@ function main() {
   let proposals;
   try { proposals = proposeDecomposition(target); }
   catch (e) {
-    console.log(`⚪ PAS MESURÉ — \`${target}\` est illisible ici (${e?.code ?? e?.message ?? "cause inconnue"}).`);
+    // PREMIER USAGE RÉEL DE L'ABSTENTION CALIBRÉE (2026-09-28, volet F). Cette abstention existait
+    // déjà et disait l'essentiel ; ce qu'elle ne faisait pas, c'était le dire dans la MÊME forme
+    // que les autres. Elle passe par le gabarit partagé, qui EXIGE de nommer ce qui manquerait
+    // pour savoir — sans quoi « pas mesuré » est un cul-de-sac que personne ne peut lever.
+    const abst = jeNeSaisPas({
+      quoi: `les points de coupe de \`${target}\``,
+      pourquoi: `ce fichier est illisible ici (${e?.code ?? e?.message ?? "cause inconnue"})`,
+      ceQuiManque: "passer en argument le chemin d'un gros fichier réellement présent : node scripts/route-booster.mjs <chemin>",
+    });
+    console.log(abst.ligne);
     console.log("   Ce n'est PAS « aucun point de coupe » : rien n'a été lu, et les deux se lisent à l'opposé l'un de l'autre.");
-    console.log("   usage : node scripts/route-booster.mjs <chemin du gros fichier à découper>");
     return;
   }
   console.log(`route-booster — ${proposals.length} point(s) de coupe candidat(s) dans ${target} :\n`);
