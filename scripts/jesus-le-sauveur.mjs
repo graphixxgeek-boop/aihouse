@@ -865,13 +865,13 @@ export function lignesDuPassage(p) {
   dire("① LE TEMPS MACHINE — les outils qui n'ont servi qu'à se construire", p.remedes,
     (s) => (s.abandonnes ?? []).map((d) => `· ${d.slug} : ${d.jourUn}/${d.passages} passages le jour un (${Math.round(d.part * 100)} %), premier passage il y a ${d.joursDepuisNaissance} j, rien depuis ${d.joursDepuisDernier} j`));
   dire("② LES OBLIGATIONS — ce que coûte un outil de plus", p.arrivant);
-  dire("③ LES ALERTES QUE PERSONNE N'ÉTEINT", p.alertes,
-    (s) => (s.vieilles ?? []).map((v) => `· ${v.jours} j — ${v.outil ?? v.source ?? "origine non nommée"} : ${String(v.quoi ?? v.constat ?? "").slice(0, 90)}`));
   dire("② LES OBLIGATIONS — les Articles que rien n'applique et que rien ne cite", p.articles,
     (s) => (s.muets ?? []).slice(0, 10).map((a) => `· Article ${a.numero} — 0 citation dans le code, 0 dans le suivi`));
+  dire("③ LES ALERTES QUE PERSONNE N'ÉTEINT", p.alertes,
+    (s) => (s.vieilles ?? []).map((v) => `· ${v.jours} j — ${v.outil ?? v.source ?? "origine non nommée"} : ${String(v.quoi ?? v.constat ?? "").slice(0, 90)}`));
+  dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
   dire("③ LE TAUX D'ACTIONNABILITÉ — combien de constats RETENUS sont devenus une tâche", p.actionnabilite,
     (s) => (s.orphelins ?? []).slice(0, 5).map((o) => `· ${o.tacheMorte ? `tâche #${o.tacheMorte} ANNONCÉE mais absente` : "aucune tâche annoncée"} — ${o.constat}`));
-  dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
   dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,
     (s) => (s.relances ?? []).slice(0, 6).map((r) => `· ${r.slug} : ${r.relances} relance(s) rapprochée(s) sans commit entre les deux`));
   dire("④ LA FLUIDITÉ — quelle part du délai est du travail, quelle part de l'attente", p.fluidite,
