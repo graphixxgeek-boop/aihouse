@@ -3871,6 +3871,25 @@ function lireLHeure() {
   try { return new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC"; } catch { return null; }
 }
 
+// LE CLASSEMENT ICEBERG SE MONTAIT DEUX FOIS À L'IDENTIQUE (2026-09-28, tâche #997, signalé par
+// CLONE-HUNTER) — dans `iceberg` et dans `cadrage`. Huit lignes qui déclarent QUATRE choses : quels
+// scripts existent, comment on les lit, ce qui compte comme « offert à l'agent », et ce qui compte
+// comme « lancé par la machine ». Les deux dernières sont des DÉCISIONS de classement, pas de la
+// plomberie : les laisser en double voulait dire qu'ajouter demain un sixième document offert dans
+// une seule des deux sous-commandes rendait DEUX vérités différentes sur le même dépôt, sans que
+// rien ne crie. Le rangement d'un outil ne peut pas dépendre de la sous-commande par laquelle on
+// le regarde.
+function contexteIceberg() {
+  const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
+  const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
+  const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
+    "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
+  const machine = lanceParLaMachine({ packageJson: lu("package.json"),
+    crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
+    lire: lu });
+  return { fichiers, lu, offert, machine, lignes: classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine }) };
+}
+
 async function main() {
   printReliabilityNotice("cassandra-rh");
   recordCliUsage("cassandra-rh");
@@ -3911,14 +3930,7 @@ async function main() {
   // l'utilisateur le soir même. Sous-commande à part et non un bloc du bilan RH, parce qu'elle ne
   // juge personne — elle RANGE. Confondre les deux ferait lire un classement comme un verdict.
   if (sub === "iceberg") {
-    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
-    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
-    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
-      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
-    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
-      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
-      lire: lu });
-    const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    const { fichiers, lu, offert, machine, lignes } = contexteIceberg();
     // LA TABLE MAÎTRESSE CONTRE LE DÉPÔT RÉEL (#1016), rendue ICI et pas chez le coordinateur.
     // La fonction vit avec la table, dans le-coordinateur ; mais elle a besoin du classement
     // iceberg pour savoir si un script absent est un OUTIL ou une bibliothèque, et ce classement
@@ -4134,14 +4146,7 @@ async function main() {
   }
   if (sub === "cadrage") {
     console.log(CASSANDRA_PERSONA);
-    const fichiers = readdirSync(join(ROOT, "scripts")).filter((f) => f.endsWith(".mjs")).sort();
-    const lu = (f) => { try { return readFileSync(join(ROOT, f), "utf8"); } catch { return ""; } };
-    const offert = ["CLAUDE.md", "docs/regles-de-travail.md", "scripts/le-coordinateur.mjs",
-      "scripts/circle-tasks.mjs", "scripts/tool-brain.mjs"].map(lu).join("\n");
-    const machine = lanceParLaMachine({ packageJson: lu("package.json"),
-      crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
-      lire: lu });
-    const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    const { fichiers, lu, offert, machine, lignes } = contexteIceberg();
     const itemsRonde = new Set();
     for (const m of lu("scripts/circle-tasks.mjs").matchAll(/id:\s*"([a-z0-9-]+)"/g)) itemsRonde.add(m[1]);
     // Le TYPE se LIT dans le recensement plutôt que d'être recalculé ici : il demande un contexte

@@ -515,8 +515,8 @@ export function findHorodatagesFuturs(sessionsDir = SESSIONS_DIR, now = new Date
   if (!exists(sessionsDir)) return [];
   const limite = now instanceof Date ? now : new Date(now);
   const futurs = [];
-  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
-    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
+  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    {
       const m = /^\|\s*(\d+)\s*\|\s*(\d{4}-\d{2}-\d{2}T\d{2}:\d{2})Z?\s*\|/.exec(ligne);
       if (!m) continue;
       const quand = new Date(`${m[2]}:00Z`);
@@ -553,17 +553,42 @@ export function findHorodatagesFuturs(sessionsDir = SESSIONS_DIR, now = new Date
 // clôture dans le Détail. Les deux autres options (ajouter deux vraies colonnes de date, ou
 // supprimer les cases) ont été écartées : la première est une migration de 11 à 13 colonnes, la
 // seconde jetterait un contrôle que 83 lignes portent correctement.
+// LE MÊME PARCOURS DANS TROIS SONDES, ET LA MÊME PHRASE DE NON-MESURE DANS QUATRE (2026-09-28,
+// tâche #997, signalé par CLONE-HUNTER). Treize fonctions de ce fichier prennent les mêmes quatre
+// paramètres injectables ; trois réécrivaient mot pour mot « pour chaque .md, pour chaque ligne qui
+// commence par un numéro de tâche ».
+//
+// CE QUI EST EN JEU N'EST PAS LA PLACE PRISE, c'est le CRITÈRE : ce qui compte comme « une ligne de
+// tâche » (`|` puis un nombre) était écrit trois fois. Le jour où le format bouge — et il a déjà
+// bougé deux fois cette semaine — une sonde corrigée et deux oubliées rendraient trois vérités
+// différentes sur le même registre, et rien ne le dirait. Une seule définition, donc.
+export const MOTIF_LIGNE_DE_TACHE = /^\|\s*\d+\s*\|/;
+
+export function* lignesDeTaches(sessionsDir, readDir, readFile) {
+  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
+    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
+      if (!MOTIF_LIGNE_DE_TACHE.test(ligne)) continue;
+      yield { file, ligne };
+    }
+  }
+}
+
+// LA NON-MESURE SE DIT D'UNE SEULE VOIX. « Rien lu » n'est pas « aucun écart » (leçons L5/L11), et
+// cette phrase-là est trop importante pour vivre en quatre exemplaires qui pourraient diverger.
+export function riennAPuEtreLu() {
+  return { mesurable: false, ecarts: [], lignesLues: 0,
+    pourquoi: "aucun dossier de sessions lu : rien \u00e0 confronter, ce qui n'est pas la m\u00eame chose qu'aucun \u00e9cart" };
+}
+
 export const MOTIF_DATE_DANS_UNE_CASE = /^\s*\d{4}-\d{2}-\d{2}T/;
 export const VALEURS_DE_CASE_ADMISES = ["OUI", ""];
 
 export function findCasesDeRituelMalRemplies(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return { mesurable: false, ecarts: [], lignesLues: 0,
-    pourquoi: "aucun dossier de sessions lu : rien à confronter, ce qui n'est pas la même chose qu'aucun écart" };
+  if (!exists(sessionsDir)) return riennAPuEtreLu();
   const ecarts = [];
   let lignesLues = 0;
-  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
-    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
-      if (!/^\|\s*\d+\s*\|/.test(ligne)) continue;
+  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    {
       const cells = splitTableRow(ligne);
       // Les deux cases vivent APRÈS « Pour qui » et AVANT « Détail » : on les lit par leur position
       // de tête, jamais par un index fixe compté depuis la fin — un `|` non échappé dans le Détail
@@ -621,13 +646,11 @@ export function frontiereDuDetail(cells = []) {
 }
 
 export function findLignesMalFormees(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return { mesurable: false, ecarts: [], lignesLues: 0,
-    pourquoi: "aucun dossier de sessions lu : rien à confronter, ce qui n'est pas la même chose qu'aucun écart" };
+  if (!exists(sessionsDir)) return riennAPuEtreLu();
   const ecarts = [];
   let lignesLues = 0;
-  for (const file of readDir(sessionsDir).filter((f) => f.endsWith(".md"))) {
-    for (const ligne of readFile(join(sessionsDir, file)).split("\n")) {
-      if (!/^\|\s*\d+\s*\|/.test(ligne)) continue;
+  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    {
       lignesLues += 1;
       const cells = splitTableRow(ligne);
       const debutDetail = frontiereDuDetail(cells);

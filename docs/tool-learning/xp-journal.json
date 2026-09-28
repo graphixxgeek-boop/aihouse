@@ -171,5 +171,14 @@
     "pourquoi": "C'est la même famille que tout le reste de la nuit : j'ai supposé un fait (le drapeau existe) au lieu de le lire. La supposition coûtait ici 10 Mo et une annulation ; elle a coûté ailleurs 327 horodatages invalides et quatre faux rouges.",
     "contexte": "tâche #1072, conversion des rapports au gabarit partagé",
     "date": "2026-09-28T04:59:39.074Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "quoi": "UN TEST QUI PUNIT LE PROGRÈS. En descendant les duplications de CLONE-HUNTER de 22 à 13 (tâche #997, demande explicite « tout jusqu’à zéro »), le filet est passé au ROUGE — une assertion exigeait « au moins 15 duplications réelles gardées par le filtre », un plancher écrit à la main le jour où le dépôt en comptait plus. Le test cassait donc pour avoir fait exactement ce que la tâche demandait.",
+    "pourquoi": "C’est l’Article 24 vu par un angle neuf : un seuil recopié ne se contente pas de se périmer, il peut se retourner CONTRE le travail. Un test qui casse quand le code s’améliore est pire qu’un test absent — il apprend à ne pas améliorer, et un agent pressé le « corrigera » en baissant le chiffre plutôt qu’en réparant sa nature.",
+    "quoiFaire": "Quand une assertion porte un CHIFFRE tiré du dépôt, se demander dans quel SENS il bougera si le travail réussit. S’il baisse, le seuil est un piège : réécrire l’assertion sur l’INTENTION (ici : tout ce que le filtre garde doit être quelque chose qu’il refuse d’écarter), qui se dérive et ne vieillit jamais contre le dépôt.",
+    "tache": 997,
+    "date": "2026-09-28T06:21:48.838Z"
   }
 ]

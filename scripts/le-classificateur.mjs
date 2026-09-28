@@ -292,37 +292,37 @@ export function recenserLesScripts({ root = ROOT, lireDossier = readdirSync, lir
   // en long et en large — l'accusation portait sur l'endroit où j'avais regardé, pas sur le dépôt.
   let documentation = "";
   try { documentation += lire(join(root, "CLAUDE.md"), "utf8"); } catch { /* absent */ }
-  const lireDocs = (dossier, profondeur = 0) => {
-    if (profondeur > 2) return;
+  // LE MÊME BALAYAGE POUR DEUX CORPUS (2026-09-28, tâche #997, signalé par CLONE-HUNTER). Les deux
+  // ne diffèrent que par DEUX choses — jusqu'où descendre, et dans quels sous-dossiers. Tout le
+  // reste était recopié : les extensions retenues, la tolérance à un dossier illisible, la
+  // tolérance à un fichier illisible. Trois décisions de LECTURE en double, dont aucune n'aurait
+  // crié si l'une des deux copies avait été corrigée seule — et les deux corpus auraient alors
+  // décrit deux dépôts différents pour le même dossier. Les deux vraies différences restent des
+  // paramètres : les masquer aurait fondu deux corpus qui ne doivent surtout pas l'être.
+  const balayerLeCorpus = (dossier, { jusqua, descendreDans, profondeur = 0 }) => {
+    if (profondeur > jusqua) return "";
     let entrees = [];
-    try { entrees = lireDossier(join(root, dossier), { withFileTypes: true }); } catch { return; }
+    try { entrees = lireDossier(join(root, dossier), { withFileTypes: true }); } catch { return ""; }
+    let texte = "";
     for (const e of entrees) {
       const nom = e.name ?? e;
       const estDossier = typeof e.isDirectory === "function" ? e.isDirectory() : false;
-      if (estDossier) { lireDocs(`${dossier}/${nom}`, profondeur + 1); continue; }
+      if (estDossier) {
+        if (descendreDans(dossier, nom)) texte += balayerLeCorpus(`${dossier}/${nom}`, { jusqua, descendreDans, profondeur: profondeur + 1 });
+        continue;
+      }
       if (!/\.(md|txt)$/.test(nom)) continue;
-      try { documentation += lire(join(root, `${dossier}/${nom}`), "utf8"); } catch { /* illisible */ }
+      try { texte += lire(join(root, `${dossier}/${nom}`), "utf8"); } catch { /* illisible */ }
     }
+    return texte;
   };
-  lireDocs("docs");
+  documentation += balayerLeCorpus("docs", { jusqua: 2, descendreDans: () => true });
   // Le corpus d'INSTRUCTIONS : ce qui dit quoi faire, par opposition à ce qui raconte ce qui a été
   // fait. La frontière se dérive du chemin — un registre d'outil et le suivi sont de l'historique.
   let instructions = "";
   try { instructions += lire(join(root, "CLAUDE.md"), "utf8"); } catch { /* absent */ }
   try { instructions += lire(join(root, "package.json"), "utf8"); } catch { /* absent */ }
-  const lireInstructions = (dossier, profondeur = 0) => {
-    if (profondeur > 1) return;
-    let entrees = [];
-    try { entrees = lireDossier(join(root, dossier), { withFileTypes: true }); } catch { return; }
-    for (const e of entrees) {
-      const nom = e.name ?? e;
-      const estDossier = typeof e.isDirectory === "function" ? e.isDirectory() : false;
-      if (estDossier) { if (dossier === "docs" && nom === "referentiel") lireInstructions(`${dossier}/${nom}`, profondeur + 1); continue; }
-      if (!/\.(md|txt)$/.test(nom)) continue;
-      try { instructions += lire(join(root, `${dossier}/${nom}`), "utf8"); } catch { /* illisible */ }
-    }
-  };
-  lireInstructions("docs");
+  instructions += balayerLeCorpus("docs", { jusqua: 1, descendreDans: (dossier, nom) => dossier === "docs" && nom === "referentiel" });
 
   // Qui importe qui — dérivé des imports réels, jamais d'une carte tenue à la main. Le SENS de
   // l'arête est gardé en plus du simple compteur, parce qu'une classe peut se propager le long

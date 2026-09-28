@@ -15428,7 +15428,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const { gardes, ecartes } = ch.ecarterLesPontsDeReexport(reels, texteReel);
   assert.equal(gardes.length + ecartes.length, reels.length, 'the split must lose nothing: everything is either kept or named as excluded, never dropped in silence');
   assert.ok(ecartes.length >= 1, 'and against THIS repository it must genuinely exclude the cassandra-rh re-export bridge — a filter that never fires on the case that motivated it is an intention, not a mechanism (leçon L2)');
-  assert.ok(gardes.length >= 15, 'while leaving the real duplications untouched: the filter removes a non-problem, it never shrinks the report');
+  // LE SEUIL ÉTAIT UN CHIFFRE RECOPIÉ, ET IL PUNISSAIT LE PROGRÈS (corrigé le 2026-09-28, tâche
+  // #997). Cette assertion exigeait « au moins 15 gardes » — un plancher écrit à la main le jour où
+  // le dépôt en comptait plus. La nuit où les duplications sont réellement descendues sous 15, le
+  // filet est passé au ROUGE pour avoir fait exactement ce que la tâche demandait. Un test qui
+  // casse quand le code s'améliore est pire qu'un test absent : il apprend à ne pas améliorer.
+  //
+  // CE QUE L'ASSERTION VOULAIT DIRE se vérifie sans aucun chiffre : le filtre n'écarte QUE des ponts
+  // de réexport, donc tout ce qu'il garde doit être quelque chose qu'il refuse d'écarter. C'est le
+  // même contrôle, dérivé au lieu d'être recopié (Article 24), et il vieillira avec le dépôt au lieu
+  // de vieillir contre lui.
+  assert.ok(gardes.every((c) => ch.estUnPontDeReexport(c, texteReel) === false),
+    'while leaving the real duplications untouched: everything KEPT must be something the filter genuinely refuses to exclude — the filter removes a non-problem, it never shrinks the report');
 
   console.log('Passed: CLONE-HUNTER reports one alert per PROBLEM and gives each its own reason (2026-09-23, task #217) — it grouped by anchor, so the same duplication found from two shifted starts produced two alerts, which is how one pair of twin functions became three. Merging on overlapping REGIONS also makes v2\'s standing promise exact at last: "never already counted by v1" was true of its anchor and false of its region, since its block began one line earlier and enclosed v1\'s. The real risk here was over-merging, and it is bounded first: two genuinely different duplications between the same file pair stay two problems, clusters touching different file sets never merge, the merged problem keeps the largest span and remembers both detectors, and the raw alert count behind it stays visible so the regrouping can be audited instead of trusted. The single phrase repeated 29 times is replaced by a reason derived from what the tool already knew — same file versus spread across tools, and block size — because a debt that recopies itself into every new tool is not the same problem as two twins in one file, and one sentence for both erased exactly that difference.');
 }

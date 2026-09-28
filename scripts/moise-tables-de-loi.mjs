@@ -481,17 +481,28 @@ export function renderCartographie(carto, { date = new Date().toISOString().slic
 // décider quoi alléger datait de trois jours et s'arrêtait à l'Article 23, six Articles derrière la
 // réalité. Un instrument périmé ne se signale pas tout seul — il rend des chiffres, et ils ont
 // l'air justes.
+// DEUX SONDES COMPARAIENT LA CHARTE À UNE TABLE DE LA MÊME FAÇON (2026-09-28, tâche #997, signalé
+// par CLONE-HUNTER) : la table des règles et la cartographie. Ce qui était recopié n'est pas une
+// boucle, c'est une DÉFINITION — « un article présent dans un document généré, c'est un nombre en
+// première cellule d'une ligne de table ». Une définition écrite deux fois se met à dire deux choses
+// le jour où la forme des tables bouge, et les deux sondes rendraient alors des verdicts opposés
+// sur le même dépôt sans que rien ne le signale.
+export function articlesAttendusEtPresents(charte, documentGenere) {
+  const attendus = extractRuleUnits(charte).map((u) => u.article);
+  const presents = new Set();
+  for (const ligne of String(documentGenere ?? "").split("\n")) {
+    const m = ligne.match(/^\|\s*(\d+)\s*\|/);
+    if (m) presents.add(Number(m[1]));
+  }
+  return { attendus, presents };
+}
+
 export function findArticlesAbsentsDeLaTable({ root = ROOT, cheminTable = TABLE_REGLES_PATH } = {}) {
   const charte = lire(CHARTE, root);
   const table = lire(cheminTable, root);
   if (charte == null) return { mesurable: false, pourquoi: `${CHARTE} introuvable` };
   if (table == null) return { mesurable: false, pourquoi: `${cheminTable} n'existe pas — rien à comparer, et ce silence ne dit pas que tout va bien` };
-  const attendus = extractRuleUnits(charte).map((u) => u.article);
-  const presents = new Set();
-  for (const ligne of table.split("\n")) {
-    const m = ligne.match(/^\|\s*(\d+)\s*\|/);
-    if (m) presents.add(Number(m[1]));
-  }
+  const { attendus, presents } = articlesAttendusEtPresents(charte, table);
   const absents = attendus.filter((a) => !presents.has(a));
   return { mesurable: true, attendus: attendus.length, presents: presents.size, absents };
 }
@@ -501,12 +512,7 @@ export function cartographiePerimee({ root = ROOT } = {}) {
   const carto = lire(CARTOGRAPHIE_PATH, root);
   if (charte == null) return { mesurable: false, pourquoi: `${CHARTE} introuvable` };
   if (carto == null) return { mesurable: true, perimee: true, pourquoi: "la cartographie n'a jamais été générée" };
-  const attendus = extractRuleUnits(charte).map((u) => u.article);
-  const presents = new Set();
-  for (const ligne of carto.split("\n")) {
-    const m = ligne.match(/^\|\s*(\d+)\s*\|/);
-    if (m) presents.add(Number(m[1]));
-  }
+  const { attendus, presents } = articlesAttendusEtPresents(charte, carto);
   const manquants = attendus.filter((a) => !presents.has(a));
   const enTrop = [...presents].filter((a) => !attendus.includes(a));
   if (manquants.length || enTrop.length) {

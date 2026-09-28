@@ -5,7 +5,7 @@
 
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-28 05:24 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-28 06:17 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
