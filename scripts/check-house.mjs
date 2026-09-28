@@ -20741,14 +20741,30 @@ async function testJesusLeSauveur() {
   // Sa description exacte : s'adresser à JESUS pour un sujet de charte ne saute pas les autres, ça
   // fixe seulement qui parle en premier ; ensuite Abraham, ensuite MOÏSE, « pour être sûr qu'il n'y
   // a pas un problème connexe indirect au problème dans la charte ».
-  const casc = J.cascadePour("un Article de la charte nous freine");
-  assert.deepEqual(casc.maillons.map((m) => m.rang), [1, 2, 3], 'la chaîne va du plus LARGE au plus ÉTROIT, jamais l\'inverse : le plus étroit conclurait avant que le plus large ait parlé, et son verdict aurait l\'air complet');
-  assert.deepEqual(casc.maillons.map((m) => m.qui), ['JESUS-LE-SAUVEUR', 'ABRAHAM-LES-REFERENCES', 'MOÏSE-TABLES-DE-LOI'], 'les trois maillons, dans l\'ordre qu\'il a décrit');
-  assert.ok(casc.maillons.every((m) => m.present), 'les trois scripts existent réellement sur le disque — une chaîne qui nomme un maillon absent promet une couverture qu\'elle n\'a pas');
+  const casc = J.cascadePour("un Article de la charte nous freine", { niveau: "approfondi" });
+  assert.deepEqual(casc.maillons.map((m) => m.rang), [1, 2, 3, 4], 'la chaîne va du plus LARGE au plus ÉTROIT, jamais l\'inverse : le plus étroit conclurait avant que le plus large ait parlé, et son verdict aurait l\'air complet');
+  assert.deepEqual(casc.maillons.map((m) => m.qui), ['JESUS-LE-SAUVEUR', 'ABRAHAM-LES-REFERENCES', 'MOÏSE-TABLES-DE-LOI', 'EZECHIEL-LES-TESTS'], 'EZECHIEL EN FAIT PARTIE — il manquait à la première version, l\'utilisateur l\'a rappelé (« ne l\'oublions pas »), et sa place tombe d\'elle-même : il est le plus étroit de tous, un FICHIER précis');
+  assert.ok(casc.maillons.every((m) => m.present), 'les quatre scripts existent réellement sur le disque — une chaîne qui nomme un maillon absent promet une couverture qu\'elle n\'a pas');
   assert.ok(/Aucun n'est sauté parce que le précédent s'est tu/.test(casc.pourquoi), 'LE CŒUR DE LA RÈGLE : un maillon muet n\'autorise jamais à s\'arrêter, parce que le silence de l\'un ne dit rien de ce que le suivant verra');
+
+  // LES DEUX AXES SONT ORTHOGONAUX, et les confondre donnerait un curseur unique qui ne règle rien :
+  // la CASCADE dit jusqu'où on regarde EN LARGEUR, le NIVEAU dit jusqu'où on CREUSE. Une réparation
+  // de coquille veut une largeur complète et une profondeur minimale ; un audit de charte l'inverse.
+  const leger = J.cascadePour("corrige cette coquille", { niveau: "leger" });
+  assert.deepEqual(leger.maillons.map((m) => m.qui), ['JESUS-LE-SAUVEUR'], 'au niveau le plus bas, un seul maillon est convoqué : creuser coûte, et le coût se décide');
+  assert.deepEqual(leger.differes.map((m) => m.qui), ['ABRAHAM-LES-REFERENCES', 'MOÏSE-TABLES-DE-LOI', 'EZECHIEL-LES-TESTS'], 'DIFFÉRÉ N\'EST PAS MUET, et c\'est toute la valeur de la nuance : les trois autres sont NOMMÉS, avec ce qu\'on ne saura donc pas — « rien à dire » et « pas convoqué » n\'envoient pas au même endroit');
+  assert.ok(J.lignesDeLaCascade(leger).some((l) => /ce qu'on ne saura donc pas/.test(l)), 'et le rapport écrit noir sur blanc le prix du niveau choisi, plutôt que de laisser croire à une couverture complète');
+  assert.equal(J.maillonsPourNiveau('nawak').mesurable, false, 'un niveau inconnu est REFUSÉ : en choisir un au hasard reviendrait à décider du coût à la place de l\'utilisateur');
+
+  // LE RASSEMBLEUR EST NOMMÉ DANS LA CHAÎNE, jamais laissé implicite : la cascade DÉROULE,
+  // `assainissement` RAMASSE. Deux gestes opposés, donc jamais interchangeables.
+  assert.equal(casc.rassembleur.qui, 'ABRAHAM-LES-REFERENCES', 'le rassembleur est nommé, et c\'est Abraham : il tient déjà le registre d\'alertes partagé');
+  assert.ok(/assainissement/.test(casc.rassembleur.commande), 'avec sa commande exacte, pour qu\'elle n\'ait pas à être retrouvée');
+  assert.ok(/ÂGE/.test(casc.rassembleur.quoi), 'et ce qu\'il apporte que personne d\'autre ne voit : l\'âge des alertes — invisible quand on lance les outils un par un');
+
   // UN MAILLON ABSENT SE DÉCLARE, IL NE SE CONTOURNE PAS — c'est la différence entre « rien trouvé »
   // et « pas regardé », et c'est ce que le projet témoin a appris en sortant du dépôt (L5/L11).
-  const ampute = J.cascadePour("x", { existe: (c) => !/moise/.test(c) });
+  const ampute = J.cascadePour("x", { niveau: "approfondi", existe: (c) => !/moise/.test(c) });
   assert.deepEqual(ampute.absents, ['MOÏSE-TABLES-DE-LOI'], 'un maillon manquant est NOMMÉ');
   assert.ok(/ABSENT DU DÉPÔT/.test(ampute.maillons[2].etat) && /pas la même chose que/.test(ampute.maillons[2].etat), 'et son état dit explicitement que cet angle ne sera pas couvert — jamais un silence qui se lirait comme un feu vert');
   assert.ok(J.lignesDeLaCascade(ampute).some((l) => /chaîne est INCOMPLÈTE/.test(l)), 'le rapport le crie plutôt que de rendre un verdict qui aurait l\'air entier');

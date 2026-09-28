@@ -485,23 +485,65 @@ export function mesAllersRetours({ history = loadToolUsageHistory(), fenetre = F
 // PERSONNE N'EST SAUTÉ PARCE QUE LE PRÉCÉDENT N'A RIEN TROUVÉ. C'est le cœur du « rien ne passe à
 // la trappe » : un maillon muet n'autorise jamais à s'arrêter, parce que le silence de l'un ne dit
 // rien de ce que le suivant verra. Un maillon ABSENT du dépôt se déclare, il ne se contourne pas.
+// L'ORDRE EST UNE LARGEUR DÉCROISSANTE, ET C'EST CE QUI REND LA CHAÎNE JUSTE : chaque maillon voit
+// STRICTEMENT MOINS que le précédent, et voit DANS CE MOINS ce que le précédent ne saurait pas lire.
+// EZECHIEL y a été AJOUTÉ le 2026-09-28 sur son rappel — « comment s'inscrit Ezechiel dans la
+// cascade ? ne l'oublions pas » — et sa place tombe d'elle-même : il est le plus étroit de tous,
+// un FICHIER précis. Il manquait, et son absence était exactement le genre de trou que la chaîne
+// existe pour fermer.
 export const CASCADE = [
-  { rang: 1, qui: "JESUS-LE-SAUVEUR", script: "scripts/jesus-le-sauveur.mjs",
+  { rang: 1, qui: "JESUS-LE-SAUVEUR", script: "scripts/jesus-le-sauveur.mjs", niveau: "leger",
     perimetre: "tout ce qui est HORS documents : le rythme, les obligations, l'attention, l'attente",
     seulALeVoir: "le coût d'une règle en temps réel, et le fait qu'un outil censé la porter ne sert plus" },
-  { rang: 2, qui: "ABRAHAM-LES-REFERENCES", script: "scripts/abraham-les-references.mjs",
+  { rang: 2, qui: "ABRAHAM-LES-REFERENCES", script: "scripts/abraham-les-references.mjs", niveau: "standard",
     perimetre: "tout document à règles numérotées, et le chapeau des DOCUMENTS",
     seulALeVoir: "un renvoi mort, une règle sans porteur réel, deux documents qui se recouvrent" },
-  { rang: 3, qui: "MOÏSE-TABLES-DE-LOI", script: "scripts/moise-tables-de-loi.mjs",
+  { rang: 3, qui: "MOÏSE-TABLES-DE-LOI", script: "scripts/moise-tables-de-loi.mjs", niveau: "standard",
     perimetre: "la charte seule",
     seulALeVoir: "un Article disparu, renuméroté, inséré au milieu, ou vidé de ses obligations" },
+  { rang: 4, qui: "EZECHIEL-LES-TESTS", script: "scripts/ezechiel-les-tests.mjs", niveau: "approfondi",
+    perimetre: "le filet et sa machinerie — un FICHIER précis qui fait perdre du temps",
+    seulALeVoir: "un bloc sauté, un test vert et vide, une assertion qui ne peut pas échouer, d'où vient le temps" },
 ];
+
+// LE SECOND AXE, ET IL EXISTAIT DÉJÀ SANS ÊTRE BRANCHÉ (2026-09-28, sa question : « est-ce que tous
+// ces outils ont un mode léger/ciblé/lourd ? on avait parlé des couches et des modes light/target/
+// warrior, ça en est où ? »).
+//
+// RÉPONSE MESURÉE : le système existe depuis le 2026-09-19 et s'appelle CHECK-LEVEL-TARGET. Il
+// porte QUATRE niveaux — `leger`, `standard`, `approfondi`, `exceptionnel` — il sait les DÉDUIRE
+// d'une phrase, et il dit déjà quels outils tournent à chaque niveau. Ce qui manquait n'était donc
+// pas le système : c'est que la cascade ne le consultait pas.
+//
+// LES DEUX AXES SONT ORTHOGONAUX, ET C'EST TOUT L'INTÉRÊT — les confondre donnerait un réglage
+// unique qui ne sait rien régler :
+//   · la CASCADE dit JUSQU'OÙ ON REGARDE EN LARGEUR : combien de périmètres sont couverts ;
+//   · le NIVEAU dit JUSQU'OÙ ON CREUSE : ce que ça coûte, et ce qu'on accepte de payer.
+// Une réparation de coquille veut une largeur complète et une profondeur minimale ; un audit de
+// charte veut l'inverse. Un seul curseur ne peut pas rendre les deux.
+export const NIVEAUX = ["leger", "standard", "approfondi", "exceptionnel"];
+
+// maillonsPourNiveau() — QUI PARLE À CE NIVEAU. Un maillon dont le niveau dépasse celui demandé
+// n'est PAS silencieux : il est DIFFÉRÉ, et le rapport le nomme. La distinction est toute la
+// valeur de la chaîne — « rien à dire » et « pas convoqué » n'envoient pas au même endroit.
+export function maillonsPourNiveau(niveau = "standard", { cascade = CASCADE, ordre = NIVEAUX } = {}) {
+  const plafond = ordre.indexOf(niveau);
+  if (plafond === -1) {
+    return { mesurable: false, pourquoi: `niveau « ${niveau} » inconnu : les niveaux sont ${ordre.join(", ")}. Choisir un niveau au hasard reviendrait à décider du coût à la place de l'utilisateur` };
+  }
+  const convoques = cascade.filter((m) => ordre.indexOf(m.niveau) <= plafond);
+  const differes = cascade.filter((m) => ordre.indexOf(m.niveau) > plafond);
+  return { mesurable: true, niveau, convoques, differes,
+    pourquoi: `${convoques.length} maillon(s) convoqué(s) au niveau « ${niveau} »${differes.length ? `, ${differes.length} DIFFÉRÉ(S) faute de niveau : ${differes.map((m) => m.qui).join(", ")} — différé n'est pas muet, et la nuance décide où l'on va chercher ensuite` : ", aucun différé : la largeur est complète"}` };
+}
 
 // LE SUJET DÉCIDE DU POINT D'ENTRÉE, JAMAIS DE L'ARRÊT. Adresser un sujet de charte à JESUS ne
 // saute pas les deux autres : ça fixe seulement qui parle en premier. La cascade se déroule ensuite
 // en entier, dans l'ordre du rang.
-export function cascadePour(sujet = "", { cascade = CASCADE, existe = (c) => existsSync(join(ROOT, c)) } = {}) {
-  const maillons = cascade.map((m) => ({
+export function cascadePour(sujet = "", { cascade = CASCADE, niveau = "standard", existe = (c) => existsSync(join(ROOT, c)) } = {}) {
+  const parNiveau = maillonsPourNiveau(niveau, { cascade });
+  const retenus = parNiveau.mesurable ? parNiveau.convoques : cascade;
+  const maillons = retenus.map((m) => ({
     ...m,
     present: existe(m.script),
     // Un maillon absent n'est pas « rien à dire » : c'est un angle qu'on ne couvre pas, et la
@@ -509,14 +551,23 @@ export function cascadePour(sujet = "", { cascade = CASCADE, existe = (c) => exi
     etat: existe(m.script) ? "à convoquer" : "ABSENT DU DÉPÔT — cet angle ne sera pas couvert, et ce n'est pas la même chose que « rien trouvé »",
   }));
   return {
-    mesurable: true, sujet, maillons,
+    mesurable: true, sujet, niveau, maillons,
+    differes: parNiveau.mesurable ? parNiveau.differes : [],
     absents: maillons.filter((m) => !m.present).map((m) => m.qui),
-    pourquoi: `${maillons.length} maillon(s), du plus large au plus étroit. Aucun n'est sauté parce que le précédent s'est tu : le silence de l'un ne dit rien de ce que le suivant verra`,
+    // LE RASSEMBLEUR EST NOMMÉ DANS LA CHAÎNE, jamais laissé implicite (2026-09-28, sa question :
+    // « l'autre outil, assainissement — quel est son rôle par rapport à la cascade ? »). La réponse
+    // tient en une phrase : la cascade DÉROULE, `assainissement` RAMASSE. Ce sont deux gestes
+    // opposés, et c'est pour ça qu'ils ne se remplacent pas — une chaîne qui ramasserait elle-même
+    // devrait garder la mémoire de ses passages, ce qu'un registre partagé fait déjà mieux.
+    rassembleur: { qui: "ABRAHAM-LES-REFERENCES", commande: "node scripts/abraham-les-references.mjs assainissement",
+      quoi: "ramasse les alertes déposées par les maillons dans le registre partagé, dit leur ÂGE, et signale celles qui traînent — ce que personne ne voit en lançant les outils un par un" },
+    pourquoi: `${maillons.length} maillon(s) au niveau « ${niveau} », du plus large au plus étroit. Aucun n'est sauté parce que le précédent s'est tu : le silence de l'un ne dit rien de ce que le suivant verra`,
   };
 }
 
 export function lignesDeLaCascade(c) {
   const L = [`=== LA CASCADE DES PROPHÈTES DU TEMPS${c.sujet ? ` — sujet : « ${c.sujet} »` : ""} ===`];
+  L.push(`  Deux axes qui ne se recouvrent jamais : la LARGEUR (qui regarde) et la PROFONDEUR (jusqu'où). Niveau demandé : « ${c.niveau} ».`);
   L.push("  Du plus large au plus étroit. Chacun regarde ce qu'il est SEUL à savoir voir, puis passe la main.");
   L.push("");
   for (const m of c.maillons) {
@@ -524,6 +575,17 @@ export function lignesDeLaCascade(c) {
     L.push(`     périmètre : ${m.perimetre}`);
     L.push(`     lui seul voit : ${m.seulALeVoir}`);
     L.push(`     ${m.present ? `node ${m.script}` : "— rien à lancer"}`);
+    L.push("");
+  }
+  for (const d of c.differes ?? []) {
+    L.push(`  ⏸ ${d.rang}. ${d.qui} — DIFFÉRÉ : demande le niveau « ${d.niveau} », non atteint ici`);
+    L.push(`     ce qu'on ne saura donc pas : ${d.seulALeVoir}`);
+    L.push("");
+  }
+  if (c.rassembleur) {
+    L.push(`  ↳ PUIS LE RASSEMBLEUR — ${c.rassembleur.qui}`);
+    L.push(`     ${c.rassembleur.quoi}`);
+    L.push(`     ${c.rassembleur.commande}`);
     L.push("");
   }
   L.push(`  ${c.pourquoi}.`);
@@ -604,7 +666,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   });
   const sousCommande = process.argv[2];
   if (sousCommande === "cascade") {
-    for (const l of lignesDeLaCascade(cascadePour(process.argv.slice(3).join(" ")))) console.log(l);
+    // LE NIVEAU SE DONNE, OU SE DÉDUIT DU SUJET PAR CHECK-LEVEL-TARGET — jamais décidé au hasard.
+    const args = process.argv.slice(3);
+    const iNiveau = args.findIndex((a) => NIVEAUX.includes(a));
+    const niveau = iNiveau === -1 ? "standard" : args[iNiveau];
+    const sujet = args.filter((_, k) => k !== iNiveau).join(" ");
+    for (const l of lignesDeLaCascade(cascadePour(sujet, { niveau }))) console.log(l);
   } else {
     const p = passage();
     for (const l of lignesDuPassage(p)) console.log(l);

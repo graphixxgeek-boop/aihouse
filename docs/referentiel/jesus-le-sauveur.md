@@ -115,3 +115,52 @@ où une suffirait.
 
 **Sans git, la sonde REFUSE de conclure** : sans les dates de commit, rien ne distingue une relance
 d'une rafale.
+
+## Le système complet : deux axes qui ne se recouvrent jamais (2026-09-28)
+
+Né de ses trois questions du même jour : *« comment s'inscrit Ezechiel dans la cascade ? »* ·
+*« est-ce que tous ces outils ont un mode léger/ciblé/lourd ? on avait parlé des modes light/target/
+warrior, ça en est où ? »* · *« l'autre outil, assainissement — quel est son rôle ? »*
+
+### ① LA LARGEUR — la cascade, quatre maillons
+
+| Rang | Qui | Périmètre | Lui seul voit |
+|---|---|---|---|
+| 1 | **JESUS** | tout ce qui est HORS documents | le coût réel d'une règle, et qu'un outil censé la porter ne sert plus |
+| 2 | **ABRAHAM** | tout document à règles numérotées | un renvoi mort, une règle sans porteur, deux documents qui se recouvrent |
+| 3 | **MOÏSE** | la charte seule | un Article disparu, renuméroté, vidé de ses obligations |
+| 4 | **EZECHIEL** | le filet — un FICHIER précis | un bloc sauté, un test vert et vide, d'où vient le temps |
+
+**EZECHIEL manquait à la première version.** Il l'a rappelé, et sa place tombe d'elle-même : la
+chaîne est une **largeur décroissante**, il en est le terme le plus étroit.
+
+### ② LA PROFONDEUR — le niveau, et il existait déjà
+
+**Réponse mesurée à sa question « ça en est où ? » : le système existe depuis le 2026-09-19 et
+s'appelle CHECK-LEVEL-TARGET.** Quatre niveaux — `leger`, `standard`, `approfondi`,
+`exceptionnel` — qu'il sait déjà DÉDUIRE d'une phrase. **Ce qui manquait n'était pas le système :
+c'est que la cascade ne le consultait pas.**
+
+### Pourquoi deux axes et pas un seul curseur
+
+**Les confondre donnerait un réglage unique qui ne sait rien régler.** Une réparation de coquille
+veut une largeur complète et une profondeur minimale ; un audit de charte veut l'inverse. Un seul
+curseur ne peut pas rendre les deux.
+
+**Et « différé » n'est jamais « muet »** : un maillon que le niveau n'atteint pas est NOMMÉ dans le
+rapport, avec ce qu'on ne saura donc pas. « Rien à dire » et « pas convoqué » n'envoient pas au même
+endroit.
+
+### ③ LE RASSEMBLEUR — `assainissement`, et il n'est pas un cinquième maillon
+
+**La cascade DÉROULE, `assainissement` RAMASSE.** Deux gestes opposés, donc jamais
+interchangeables : une chaîne qui ramasserait elle-même devrait garder la mémoire de ses passages,
+ce qu'un registre partagé fait déjà mieux.
+
+Ce qu'il apporte et que personne d'autre ne voit : **l'ÂGE des alertes** — invisible quand on lance
+les outils un par un.
+
+```
+node scripts/jesus-le-sauveur.mjs cascade [niveau] <sujet>
+node scripts/abraham-les-references.mjs assainissement     # puis le ramassage
+```
