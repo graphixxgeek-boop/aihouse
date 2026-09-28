@@ -255,6 +255,9 @@ export function formatTable(rows) {
 // triées par nombre d'outils croissant) — jamais un ordre historique arbitraire (Pack Sentinelle, un
 // combo à 3 outils, était auparavant en toute première ligne).
 export const PRESTATIONS = [
+  // JESUS-LE-SAUVEUR (2026-09-28) — la prestation réclamée par le garde-fou d'intégration le jour
+  // de sa naissance, comme pour filet-en-parts juste en dessous.
+  { nom: "Pack Anti-lourdeurs", description: "Cherche tout ce qui freine le projet, y compris là où on ne regarde pas : le temps machine, les obligations qui coûtent plus qu'elles ne rapportent, les alertes que plus personne ne lit, et le temps qu'une décision passe en attente. Il mesure l'ATTENTE plutôt que le travail, et croise ses sondes — une cause indirecte naît de la rencontre de deux mesures dont aucune n'alerte seule. Il signale et propose, il ne corrige jamais seul.", demande: "Savoir pourquoi le projet ralentit, avant un gros chantier ou quand quelque chose traîne sans qu'on sache quoi", outils: ["jesus-le-sauveur"], cout: "0 appel API — il lit des registres déjà écrits", tokensEstimes: "faible : quelques milliers de tokens pour lire son rapport et son plan d'action" },
   // FILET-EN-PARTS (2026-09-27) — la prestation réclamée nommément par le garde-fou d'intégration
   // à la seconde où l'outil est né.
   { nom: "Pack Filet en parts", description: "Lance la suite de tests en plusieurs parts simultanées au lieu d'une seule qui se déroule du début à la fin, puis remet la sortie dans l'ordre du fichier. Ne modifie jamais le filet : il en écrit des copies dérivées, donc le mode séquentiel reste la référence en cas de doute.", demande: "Lancer le filet de sécurité plus vite, en parallèle, pendant un gros chantier ou une vague de commits", outils: ["filet-en-parts"], cout: "0 appel API — mais sature les processeurs le temps du lancement", tokensEstimes: "négligeable" },

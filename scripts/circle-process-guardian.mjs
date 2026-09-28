@@ -993,6 +993,10 @@ export const CIRCLE_ITEMS_CHANGELOG = [
     date: "2026-09-23", itemId: "the-equalizer", changement: "ajout",
     pourquoi: "Le verdict d'ensemble contre le référentiel des standards. À la Ronde plutôt qu'au commit pour une raison de fond : « tout est-il à niveau ? » est une question de période — répétée à chaque commit elle rendrait le même verdict des dizaines de fois d'affilée, et un signal qui ne change jamais cesse d'être lu.",
   },
+  {
+    date: "2026-09-28", itemId: "jesus-le-sauveur", changement: "ajout",
+    pourquoi: "Demande explicite de l'utilisateur, qui l'a aussi nommé : « un agent dédié à s'assurer que le projet avance toujours à bon rythme, sans être freiné par des lourdeurs », puis « surtout, il voit les causes INDIRECTES, inattendues ». À LA RONDE **ET** CONVOCABLE, ce qui n'est pas une contradiction : il a choisi les deux dans la même fenêtre — « membre permanent, il tourne tout seul à intervalles réguliers » et « on le convoque chaque gros chantier ». PAS UN GARDIEN SACRÉ pour autant (Article 20bis) : ceux-là tournent à CHAQUE commit, gratuitement et mécaniquement. Ce qu'il apporte et que personne d'autre ne porte : une mesure de l'ATTENTE plutôt que du travail — la recherche extérieure établit que la part réellement travaillée d'un délai tourne autour de 15 %, et que passer de 15 à 30 % le divise par deux, donc le gain est dans le retrait d'attente, pas dans la vitesse — plus un CROISEMENT délibérément séparé de ses sondes, parce qu'une cause indirecte ne vit jamais dans une sonde : elle naît de la rencontre de deux qui, seules, ont l'air calmes.",
+  },
 ];
 
 // Garde-fou mécanique du registre ci-dessus (Article 24) : un item réel jamais consigné est une

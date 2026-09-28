@@ -133,6 +133,15 @@ export function familleDeLaCategorie(categorie) {
 }
 
 export const AGENT_CATEGORIES = {
+  // JESUS REJOINT LES PROPHÈTES, avec ABRAHAM, MOÏSE et EZECHIEL — c'est la série que
+  // l'utilisateur a nommée « les Prophètes du Temps » le 2026-09-28, et lui en est le chapeau
+  // général : chacun des trois autres tient un périmètre étroit (un fichier, un document, une
+  // catégorie de documents), lui prend tout ce qui n'est dans aucun fichier.
+  //
+  // MEMBRE, ET SURTOUT PAS GARDIEN SACRÉ (Article 20bis) : le critère d'un Gardien est de délivrer
+  // un scan de qualité ET de tourner gratuitement à CHAQUE commit. JESUS est convoqué — à la Ronde
+  // et avant un gros chantier. La distinction est écrite ici pour qu'aucune reprise ne le range mal.
+  "jesus-le-sauveur": "Membre premium — (f) 📜 Les Prophètes - Dette & Structure du code",
   // Membre, jamais Gardien sacré : il scanne un DOCUMENT, pas la qualité du code — le premier
   // volet du critère double n'est donc pas rempli, même si le second (gratuit à chaque commit) l'est.
   // Membre, jamais Gardien sacré : il analyse un DOCUMENT, pas la qualité du code.
@@ -715,6 +724,9 @@ export const TOOL_RELIABILITY = {
   "messages-courts": { nature: "mécanique", pourquoi: "il rend un texte déjà écrit, sans jugement" },
   "modes-de-travail": { nature: "mécanique", pourquoi: "il rapporte le mode déclaré, tel qu'il est stocké" },
   "sites-env": { nature: "mécanique", pourquoi: "il liste la configuration réellement présente, sans l'interpréter" },
+  // JESUS lit des registres déjà écrits et compte : rien n'y est interprété. Ses SEUILS, eux, sont
+  // déclarés et pas encore dérivés d'un creux (BP5) — c'est ce que l'avertissement doit dire.
+  "jesus-le-sauveur": { nature: "heuristique", pourquoi: "il compte des faits (durées, passages, âges) mais ses seuils — la part du jour un, le délai d'opportunité, l'âge d'une alerte devenue décor — sont DÉCLARÉS et non encore dérivés d'un creux de la distribution : un croisement peut donc ressortir un peu tôt ou un peu tard" },
   "tool-usage": { nature: "mécanique", pourquoi: "un compteur d'événements enregistrés : il compte ce qui a été écrit, ni plus ni moins" },
   "run-framework": { nature: "mécanique", pourquoi: "il lance le serveur et rapporte ce que le processus a dit" },
   "run-simulation": { nature: "mécanique", pourquoi: "il exécute une simulation et rapporte ce qui s'est passé — le JUGEMENT sur la simulation appartient à EL-PROFESSOR, qui porte son propre avertissement" },

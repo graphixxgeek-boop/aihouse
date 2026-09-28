@@ -144,6 +144,7 @@ export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOUR
 // remise HTML actée). scriptPath : le script producteur, pour vérifier la décision "delivery_html"
 // (null quand aucun script unique ne produit ce registre, ex. les archives manuelles de simulation).
 export const REGISTRIES = [
+  { slug: "jesus-le-sauveur", label: "JESUS-LE-SAUVEUR", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/jesus-le-sauveur/", decision: "texte", scriptPath: "scripts/jesus-le-sauveur.mjs" },
   // check-spirit a produit son PREMIER passage archivé le 2026-09-28 (tâche #810) : jusque-là il
   // affichait ses réponses à l'écran sans rien déposer, donc il n'avait pas de registre — et n'en
   // avait pas besoin. Un transcript de vraies répliques du modèle, lui, ne se rejoue pas : il se

@@ -783,6 +783,27 @@ export const CIRCLE_ITEMS = [
     periodicityTracked: true,
     producesReport: true,
   },
+  // JESUS-LE-SAUVEUR REJOINT LA RONDE (2026-09-28, tâche #1103), et ce n'est pas une contradiction
+  // avec « on le convoque à chaque gros chantier » : les deux sont vrais. La Ronde est le moment
+  // périodique où le projet fait son point, donc l'endroit naturel pour qu'un membre permanent
+  // parle sans qu'on ait à y penser ; et il reste convocable à la demande avant un gros chantier.
+  // C'est exactement ce que l'utilisateur a choisi en fenêtre dédiée : « Membre permanent de
+  // l'Agence — il tourne tout seul à intervalles réguliers », puis « on le convoque chaque gros
+  // chantier ».
+  //
+  // IL N'EST PAS POUR AUTANT UN GARDIEN SACRÉ DU CODE (Article 20bis) : ceux-là tournent à CHAQUE
+  // commit, gratuitement et mécaniquement. Lui parle à la Ronde et sur convocation — la distinction
+  // est écrite pour qu'aucune reprise ne le range mal.
+  {
+    id: "jesus-le-sauveur",
+    theme: "Audit lourd",
+    label: "JESUS-LE-SAUVEUR — ce qui freine le projet, causes indirectes comprises",
+    cout: "gratuit (zéro appel réseau) — il lit des registres déjà écrits, il n'en produit aucun nouveau",
+    tokensEstimes: "faible : quelques milliers de tokens pour lire son rapport et son plan d'action",
+    execute: "Lancer node scripts/jesus-le-sauveur.mjs, LIRE son plan d'action, et ajouter la ligne du passage à docs/jesus-le-sauveur/index.md — un registre qui ne garde pas le chiffre ne permet aucune tendance d'un passage à l'autre. Ce qu'il signale ne se corrige jamais dans le même geste : il propose, la décision reste humaine (cf. docs/referentiel/jesus-le-sauveur.md).",
+    periodicityTracked: true,
+    producesReport: true,
+  },
 ];
 
 // Signal de fraîcheur MÉCANIQUE, jamais inventé (2026-09-20) : la date la plus récente mentionnée

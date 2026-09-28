@@ -19,3 +19,4 @@ est RETENU, ce qui est ÉCARTÉ avec sa raison, et ce qui reste À TRANCHER par 
 | Fiche | Le sujet | Quand elle a été faite |
 |---|---|---|
 | `filet-de-securite-etat-de-l-art.md` | santé et rapidité d'une suite de tests : les *test smells*, les tests qui ne peuvent pas échouer, le mutation testing et son échantillonnage, la flakiness, le Test Impact Analysis | 2026-09-27, pour compléter EZECHIEL-LES-TESTS |
+| `ralentissements-causes-indirectes.md` | ce qui ralentit un projet quand la cause n'est pas là où on regarde : la fluidité (l'attente pèse plus que le travail), la dette de process, la fatigue d'alerte, la théorie des files | 2026-09-28, pour équiper JESUS-LE-SAUVEUR |

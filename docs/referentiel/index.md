@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-28. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**113 fichier(s).**
+**114 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -55,6 +55,7 @@
 | [ines-official.md](ines-official.md) | — |
 | [install-ci.md](install-ci.md) | — |
 | [integration-outil.md](integration-outil.md) | — |
+| [jesus-le-sauveur.md](jesus-le-sauveur.md) | — |
 | [judge-persona-shared.md](judge-persona-shared.md) | — |
 | [kpi-historique.csv](kpi-historique.csv) | — |
 | [chantier2-2026-09-19.txt](kpi-rapports/chantier2-2026-09-19.txt) | kpi-rapports |
