@@ -816,7 +816,87 @@ export function nommeLeProcess(texte = "", p = {}) {
 // jamais vue trouver quelque chose ne prouve rien par son zéro). Comme pour la SOURCE d'une heure
 // (Article 32), ce qui compte n'est pas que la valeur soit bonne mais qu'on sache d'où elle vient :
 // un seuil imposé présenté comme dérivé serait la pire des deux erreurs, parce qu'invisible.
-export function croiserProcessEtRegles({ processes = [], sections = [], seuil: seuilImpose = null, docsDesProcess = new Map(), cheminDesRegles = "docs/regles-de-travail.md" } = {}) {
+// =============================================================================================
+// LE TROISIÈME REGISTRE : LES RÈGLES SURVEILLÉES D'ANGEL (2026-09-28, tâche #1069)
+// =============================================================================================
+// LE CROISEMENT SUR-ACCUSAIT, ET C'EST LA MÊME FAMILLE D'ERREUR QUE TOUTES CELLES DE LA NUIT :
+// un signal ADJACENT lu comme le signal lui-même. Il comparait les process de `god-of-all-process`
+// aux sections des règles de travail, et concluait « 13 règles que rien n'exécute ». Or un process
+// n'est pas le seul porteur possible : une règle de CONDUITE est portée par `angel-of-ia-process`,
+// qui la DEMANDE à chaque passage et refuse d'être au vert sans réponse. Compter ces règles-là
+// comme orphelines accusait le dispositif de ne pas faire ce qu'il fait — et un garde-fou qui
+// accuse à tort cesse d'être lu (leçon L4).
+//
+// LE LIEN EST EXACT, JAMAIS DEVINÉ, et c'est ce qui le rend meilleur que la couverture de
+// vocabulaire employée partout ailleurs ici : chaque règle surveillée porte un champ `source` qui
+// NOMME sa section (« docs/regles-de-travail.md §0bis »). On lit la référence écrite au lieu de
+// mesurer une ressemblance — quand la donnée exacte existe, l'approximation n'a plus d'excuse.
+//
+// ET LE REGISTRE SE LIT, IL NE SE RECOPIE PAS (Article 24) : une règle surveillée ajoutée demain
+// est prise en compte le jour même, sans que personne touche à cette fonction.
+export const MOTIF_SECTION_CITEE = /\u00a7\s*([0-9]+(?:bis|ter|quater|quinquies)?)/gi;
+export const MOTIF_TITRE_CITE = /\u00ab\s*([^\u00bb]{6,120}?)\s*\u00bb/g;
+
+// DEUX FORMES DE RÉFÉRENCE EXACTE, ET PAS UNE DE PLUS : le numéro de section (§0bis) et le titre cité
+// entre guillemets (« OPTIMISER et FIABILISER »). La seconde existe parce que TOUTES LES SECTIONS NE
+// SONT PAS NUMÉROTÉES — « OPTIMISER et FIABILISER » n'a pas de numéro, donc un matcher qui ne
+// connaîtrait que le § la déclarerait orpheline pour toujours, alors que deux règles surveillées la
+// portent. LES DEUX FORMES SONT EXACTES : on lit une référence ÉCRITE, jamais une ressemblance de
+// vocabulaire. C'est délibéré — l'approximation a sa place ailleurs dans ce fichier ; ici la donnée
+// exacte existe, et s'en passer serait un choix, pas une contrainte.
+export function sectionsCiteesParAngel(regles = [], cheminDesRegles = "docs/regles-de-travail.md") {
+  const parSection = new Map();
+  const ajouter = (cle, id) => {
+    if (!cle) return;
+    if (!parSection.has(cle)) parSection.set(cle, []);
+    if (!parSection.get(cle).includes(id)) parSection.get(cle).push(id);
+  };
+  for (const r of regles) {
+    const src = String(r?.source ?? "");
+    if (!src.includes(cheminDesRegles)) continue;   // une règle qui ne cite que la charte ne porte pas une règle de travail
+    for (const m of src.matchAll(new RegExp(MOTIF_SECTION_CITEE.source, "gi"))) ajouter(m[1].toLowerCase(), r.id);
+    for (const m of src.matchAll(new RegExp(MOTIF_TITRE_CITE.source, "g"))) ajouter(cleDeTitre(m[1]), r.id);
+  }
+  return parSection;
+}
+
+// LA CLÉ D'UN TITRE : sans accents, sans casse, sans ponctuation, et tronquée à sa TÊTE — la partie
+// avant le tiret long. Un titre se cite rarement en entier, et exiger le sous-titre complet aurait
+// rendu cette forme inutilisable en pratique, donc jamais employée.
+export function cleDeTitre(titre = "") {
+  return sansAccent(String(titre).split(/\s+\u2014\s+/)[0])
+    .toLowerCase().replace(/^\s*[0-9]+(?:bis|ter|quater|quinquies)?\s*\.\s*/, "").replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+// Le numéro d'une section, lu sur son titre : « 0bis. AVANT D'OUVRIR… » → « 0bis ».
+export function numeroDeSection(titre = "") {
+  const m = /^\s*([0-9]+(?:bis|ter|quater|quinquies)?)\s*\./i.exec(String(titre));
+  return m ? m[1].toLowerCase() : null;
+}
+
+// Les clés sous lesquelles une section peut être citée : son numéro s'il en a un, ET la clé de son
+// titre dans tous les cas. Une section non numérotée reste donc atteignable, au lieu d'être
+// orpheline par accident de mise en forme.
+export function clesDeSection(titre = "") {
+  const n = numeroDeSection(titre);
+  return [n, cleDeTitre(titre)].filter(Boolean);
+}
+
+// LA RÉFÉRENCE MORTE EST UNE TROUVAILLE, PAS UN DÉCHET DE CALCUL. Une règle surveillée qui cite une
+// section INEXISTANTE ressemble à un porteur et n'en est pas un — pire qu'une absence, parce qu'elle
+// rassure. Elle est donc rendue à part, jamais silencieusement ignorée.
+export function citationsMortesDAngel(regles = [], sections = [], cheminDesRegles = "docs/regles-de-travail.md") {
+  const reels = new Set(sections.flatMap((s) => clesDeSection(s.titre)));
+  const mortes = [];
+  for (const [num, ids] of sectionsCiteesParAngel(regles, cheminDesRegles)) {
+    if (reels.has(num)) continue;
+    mortes.push({ section: num, regles: ids,
+      pourquoi: `la r\u00e8gle surveill\u00e9e cite ${cheminDesRegles} \u00a7${num}, qui n'existe pas dans ce document : un renvoi mort ressemble \u00e0 un lien, ce qui est pire qu'une absence` });
+  }
+  return mortes;
+}
+
+export function croiserProcessEtRegles({ processes = [], sections = [], seuil: seuilImpose = null, docsDesProcess = new Map(), cheminDesRegles = "docs/regles-de-travail.md", reglesSurveillees = [] } = {}) {
   if (!processes.length || !sections.length) {
     return { mesurable: false,
       pourquoi: `croisement impossible : ${processes.length} process et ${sections.length} section(s) lues — un registre vide ne dit pas « aucun écart », il dit qu'il n'y avait rien à confronter` };
@@ -868,10 +948,23 @@ export function croiserProcessEtRegles({ processes = [], sections = [], seuil: s
   // ── SORTIE 2 : une règle de travail qu'aucun process n'exécute.
   const reglesSansProcess = [];
   const sectionsExaminees = [];
+  const porteesParAngel = [];
+  const citeesParAngel = sectionsCiteesParAngel(reglesSurveillees, cheminDesRegles);
   sections.forEach((s, j) => {
     if (!sectionPorteUneObligation(s)) return;   // prose sans obligation : rien à exécuter
     sectionsExaminees.push(s.titre);
     if (processes.some((p) => nommeLeProcess(s.texte ?? "", p))) return;
+    // UN PROCESS N'EST PAS LE SEUL PORTEUR POSSIBLE (#1069). Une règle de CONDUITE est portée par
+    // `angel-of-ia-process`, qui la demande à chaque passage et refuse d'être au vert sans réponse.
+    // La compter comme orpheline accusait le dispositif de ne pas faire ce qu'il fait (L4). Le lien
+    // se LIT sur le champ `source` de la règle surveillée, jamais sur une ressemblance de mots.
+    const parAngel = clesDeSection(s.titre).flatMap((c) => citeesParAngel.get(c) ?? []);
+
+    if (parAngel && parAngel.length) {
+      porteesParAngel.push({ section: s.titre, obligations: compterObligations(s.texte ?? ""), regles: parAngel,
+        pourquoi: `aucun process ne l'exécute, et c'est normal : ${parAngel.join(", ")} la surveille${parAngel.length > 1 ? "nt" : ""} comme règle de conduite — angel la DEMANDE et refuse d'être au vert sans réponse` });
+      return;
+    }
     const proche = plusProcheParSection(j);
     const surSeuil = seuil !== null && proche && proche.couverture >= seuil;
     const n = compterObligations(s.texte ?? "");
@@ -948,6 +1041,8 @@ export function croiserProcessEtRegles({ processes = [], sections = [], seuil: s
     sectionsAvecObligation: sectionsExaminees.length,
     sectionsSansObligation: sections.length - sectionsExaminees.length,
     processSansRegle, reglesSansProcess, conflits, processMuetsSurLesRegles,
+    porteesParAngel, citationsMortesDAngel: citationsMortesDAngel(reglesSurveillees, sections, cheminDesRegles),
+    reglesSurveilleesLues: reglesSurveillees.length,
     pairesComparees: eligibles.length, pairesTotales: processes.length * sections.length, plusProche, seuil, seuilDerive,
     catalogues: [...catalogues].map((j) => sections[j].titre),
     horsPortee: "Le vocabulaire partagé est un SIGNAL, jamais une preuve. Une règle qui porte un process sans employer un seul de ses mots reste invisible ici, et deux textes peuvent se contredire avec des mots entièrement différents. Les conflits se lisent sur DEUX mots français (« jamais » face à « toujours ») : c'est une question posée, jamais un arbitrage rendu — l'arbitrage est humain (Article 16).",
@@ -977,6 +1072,21 @@ export function formatCroisementLines(r = {}) {
   for (const s of r.reglesSansProcess) {
     L.push(`   ${s.etat === "ABSENT" ? "🚨" : "🟠"} ${s.etat.padEnd(24)} ${s.section}`);
     L.push(`          ${s.pourquoi}`);
+  }
+  // LE TROISIÈME REGISTRE EST AFFICHÉ À PART, jamais fondu dans ② (#1069) : une règle portée par
+  // angel n'est PAS une règle orpheline, et la ranger dans le même compte referait exactement
+  // l'erreur que ce registre vient de corriger. Elle ne disparaît pas du rapport pour autant :
+  // on dit QUI la porte, parce qu'une protection réelle mais invisible est supprimable sans que
+  // personne s'en aperçoive.
+  if (r.reglesSurveilleesLues) {
+    L.push(`   ↳ ${r.porteesParAngel?.length ?? 0} autre(s) section(s) sans process sont portées par une RÈGLE SURVEILLÉE d'angel-of-ia-process (${r.reglesSurveilleesLues} règle(s) lues) — un process n'est pas le seul porteur possible.`);
+    for (const a of r.porteesParAngel ?? []) L.push(`      ✅ ${a.section}  ←  ${a.regles.join(", ")}`);
+  } else {
+    L.push("   ⚠️  AUCUNE règle surveillée ne lui a été passée : le compte ② ci-dessus SUR-ACCUSE mécaniquement, puisqu'un porteur possible n'a pas été regardé.");
+  }
+  if (r.citationsMortesDAngel?.length) {
+    L.push(`   🚨 ${r.citationsMortesDAngel.length} référence(s) MORTE(S) : une règle surveillée cite une section qui n'existe pas — ça ressemble à un lien, ce qui est pire qu'une absence.`);
+    for (const m of r.citationsMortesDAngel) L.push(`      §${m.section} cité par ${m.regles.join(", ")} — introuvable dans le document`);
   }
   L.push("");
 
@@ -1797,7 +1907,14 @@ async function main() {
       if (!p.doc || docsDesProcess.has(p.doc)) continue;
       try { docsDesProcess.set(p.doc, readFileSync(p.doc, "utf8")); } catch { docsDesProcess.set(p.doc, null); }
     }
-    const r = croiserProcessEtRegles({ processes: PROCESSES, sections: mesurerSections(texteRegles), docsDesProcess, cheminDesRegles: cheminRegles });
+    // LE TROISIÈME REGISTRE SE LIT, IL NE SE RECOPIE PAS (Article 24, #1069) : une règle surveillée
+    // ajoutée demain chez angel est prise en compte le jour même. Et son absence ne se comble pas
+    // par une supposition — si l'import échoue, la fonction le DIT au lieu de sur-accuser en
+    // silence, parce qu'un compte rendu faux dans le sens rassurant est le pire des deux.
+    let reglesSurveillees = [];
+    try { ({ REGLES_SURVEILLEES: reglesSurveillees } = await import("./angel-of-ia-process.mjs")); }
+    catch { reglesSurveillees = []; }
+    const r = croiserProcessEtRegles({ processes: PROCESSES, sections: mesurerSections(texteRegles), docsDesProcess, cheminDesRegles: cheminRegles, reglesSurveillees });
     const lignes = formatCroisementLines(r);
     for (const ligne of lignes) console.log(ligne);
     // LES TROIS SORTIES DONNENT TROIS ÉCARTS SÉPARÉS, jamais un seul agrégé : elles appellent trois
@@ -1808,6 +1925,7 @@ async function main() {
     if (r.mesurable && r.reglesSansProcess.length) ecarts.push({ pourquoi: `${r.reglesSansProcess.length} règle(s) porteuse(s) d'obligation qu'aucun process n'exécute` });
     if (r.mesurable && r.conflits.length) ecarts.push({ pourquoi: `${r.conflits.length} paire(s) process ↔ règle en conflit possible` });
     if (r.mesurable && r.processMuetsSurLesRegles?.length) ecarts.push({ pourquoi: `${r.processMuetsSurLesRegles.length} process dont le document ne cite jamais les règles de travail` });
+    if (r.mesurable && r.citationsMortesDAngel?.length) ecarts.push({ pourquoi: `${r.citationsMortesDAngel.length} règle(s) surveillée(s) citent une section des règles de travail qui n'existe pas — un renvoi mort ressemble à un lien, ce qui est pire qu'une absence` });
     imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "instruire chaque ligne une par une : écrire la règle manquante, donner un process à la règle orpheline, ou ARBITRER le conflit — l'arbitrage est une décision humaine (Article 16), jamais un correctif d'agent" }));
     mkdirSync("docs/abraham-les-references", { recursive: true });
     const chemin = `docs/abraham-les-references/croisement-process-regles-${new Date().toISOString().slice(0, 10)}.txt`;

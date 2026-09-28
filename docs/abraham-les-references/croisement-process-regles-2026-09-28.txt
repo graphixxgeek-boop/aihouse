@@ -6,12 +6,10 @@ Section(s) CATALOGUE, écartées comme preuve de portage : 7ter. Le paysage des 
 ① 0 process sur 13 que RIEN ne nomme dans les règles de travail
    ✅ chaque process déclaré est nommé au moins une fois côté règles de travail.
 
-② 12 règle(s) de travail sur 30 porteuse(s) d'obligation qu'AUCUN process n'exécute
+② 9 règle(s) de travail sur 30 porteuse(s) d'obligation qu'AUCUN process n'exécute
    (0 section(s) ne posent aucune obligation : de la prose de cadrage, à qui réclamer un process fabriquerait du travail — écarté exprès, jamais oublié)
    🚨 ABSENT                   0. Relecture périodique, pas seulement en début de session
           porte 1 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
-   🚨 ABSENT                   0bis. AVANT D'OUVRIR UN CHANTIER : on reprend d'abord les notes
-          porte 4 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🚨 ABSENT                   1. Rythme et intégration des demandes
           porte 2 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🟠 TERRAIN COMMUN SANS NOM  3. Rigueur variable, jamais uniforme
@@ -20,8 +18,6 @@ Section(s) CATALOGUE, écartées comme preuve de portage : 7ter. Le paysage des 
           porte 1 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🟠 TERRAIN COMMUN SANS NOM  3ter. Toute expérience vécue doit alimenter un outil, jamais rester dans la conversation
           porte 10 obligation(s) et ne nomme aucun process ; « documents-de-reference » en reprend 62 % du vocabulaire — le lien existe peut-être, il n'est simplement écrit nulle part
-   🚨 ABSENT                   4. Git et livraison
-          porte 3 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🚨 ABSENT                   4bis. Annoncer CHAQUE tâche traitée, même minime
           porte 4 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🚨 ABSENT                   5. Sécurité et discrétion
@@ -30,8 +26,10 @@ Section(s) CATALOGUE, écartées comme preuve de portage : 7ter. Le paysage des 
           porte 21 obligation(s) et ne nomme aucun process ; « documents-de-reference » en reprend 46 % du vocabulaire — le lien existe peut-être, il n'est simplement écrit nulle part
    🚨 ABSENT                   B.1. Outils concrets derrière les règles universelles de la Partie A
           porte 2 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
-   🚨 ABSENT                   OPTIMISER et FIABILISER — les deux mots d'ordre permanents
-          porte 4 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
+   ↳ 3 autre(s) section(s) sans process sont portées par une RÈGLE SURVEILLÉE d'angel-of-ia-process (22 règle(s) lues) — un process n'est pas le seul porteur possible.
+      ✅ 0bis. AVANT D'OUVRIR UN CHANTIER : on reprend d'abord les notes  ←  reprise-des-notes
+      ✅ 4. Git et livraison  ←  suivi-meme-commit, push-au-fil-de-l-eau
+      ✅ OPTIMISER et FIABILISER — les deux mots d'ordre permanents  ←  fiabiliser, optimiser
 
 ③ 0 paire(s) en CONFLIT possible — terrain commun et polarité opposée
    ✅ aucune, sur 377 paire(s) réellement ÉLIGIBLES (sur 390 possibles ; les sections catalogue sont écartées), seuil dérivé 0.375.

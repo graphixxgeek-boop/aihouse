@@ -377,3 +377,70 @@ plutôt que sur un lien écrit.
 
 **LA LIMITE, DÉCLARÉE** : elle vérifie qu'une fiche est ATTEIGNABLE, jamais qu'elle est à jour ni
 qu'elle sert. Une fiche fausse et bien citée lui paraît saine.
+
+## Le troisième registre du croisement : un process n'est pas le seul porteur possible (2026-09-28, tâche #1069)
+
+**Le croisement sur-accusait**, et c'est la même famille d'erreur que toutes celles trouvées cette
+nuit-là : **un signal ADJACENT lu comme le signal lui-même**.
+
+Il comparait les process déclarés par `god-of-all-process` aux sections de
+`docs/regles-de-travail.md`, et concluait « 13 règles de travail portent des obligations qu'aucun
+process n'exécute ». Or **un process n'est pas le seul porteur possible** : une règle de CONDUITE
+est portée par `angel-of-ia-process`, qui la DEMANDE à chaque passage et refuse d'être au vert sans
+réponse. Compter ces règles-là comme orphelines accusait le dispositif de ne pas faire ce qu'il
+fait — et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+
+**Mesure : 13 → 9 orphelines réelles**, trois sections rendues à leur porteur.
+
+### Le lien se LIT, il ne se devine pas — et c'est ce qui le distingue du reste de ce croisement
+
+Partout ailleurs ici, le lien entre un process et une règle est une **couverture de vocabulaire**,
+faute de mieux. Pour ce troisième registre, la donnée exacte existe : chaque règle surveillée porte
+un champ `source` qui **NOMME** sa section. On lit une référence écrite plutôt que de mesurer une
+ressemblance. S'en passer aurait été un choix, pas une contrainte.
+
+### Deux formes de référence exacte, et pas une de plus
+
+| Forme | Exemple | Pourquoi elle existe |
+|---|---|---|
+| le numéro de section | `docs/regles-de-travail.md §0bis` | la forme courante |
+| le titre cité entre guillemets | `docs/regles-de-travail.md « OPTIMISER et FIABILISER »` | **toutes les sections ne sont pas numérotées** |
+
+La seconde n'est pas un confort. « OPTIMISER et FIABILISER » n'a pas de numéro : un matcher qui
+n'aurait connu que le `§` l'aurait déclarée orpheline **pour toujours**, alors que deux règles
+surveillées la portent. Une section ne doit pas devenir orpheline par accident de mise en forme.
+
+La clé d'un titre est tronquée à sa **tête** — la part avant le tiret long. Un titre se cite
+rarement en entier, et exiger le sous-titre complet aurait rendu la forme inutilisable en pratique,
+donc jamais employée.
+
+### La référence morte est une trouvaille, pas un déchet de calcul
+
+Une règle surveillée qui cite une section **inexistante** ressemble à un porteur et n'en est pas
+un — **pire qu'une absence, parce qu'elle rassure** : on croit la règle doublement ancrée quand elle
+ne l'est qu'une fois. Elle est donc rendue à part, jamais silencieusement ignorée.
+
+**Elle a rapporté au premier passage** : `consultation-avant` citait « §7ter et §1001 » depuis le
+2026-09-22, et `docs/regles-de-travail.md` **n'a jamais porté de section 1001** — vérifié sur la
+version du dépôt à cette date, pas supposé. Son intention n'étant pas récupérable, elle n'a pas été
+devinée : la référence morte a été retirée, avec la raison écrite à côté. §7ter porte la règle à lui
+seul.
+
+### Sans le registre, l'outil le DIT plutôt que de sur-accuser en silence
+
+Si aucune règle surveillée ne lui est passée, le rapport écrit noir sur blanc que son compte ②
+**sur-accuse mécaniquement**, puisqu'un porteur possible n'a pas été regardé. Un compte rendu faux
+dans le sens rassurant est le pire des deux ; celui-ci serait faux dans le sens accusateur, ce qui
+coûte tout autant — il fabrique du travail qui n'existe pas.
+
+### Le registre se LIT, il ne se recopie pas
+
+Une règle surveillée ajoutée demain chez angel est prise en compte le jour même, sans que personne
+touche à cette fonction (Article 24).
+
+### Ce qui reste à trancher, et qui n'est pas de mon ressort
+
+Le troisième mot d'ordre, **HARMONISER**, a été ajouté le 2026-09-24 (« on ajoute harmonise ») et
+`angel` le surveille — mais la section des règles de travail s'appelle toujours « OPTIMISER et
+FIABILISER — **les deux** mots d'ordre permanents » et ne le mentionne nulle part. Renommer une
+section de ce document est une décision de l'utilisateur, pas un correctif d'agent.

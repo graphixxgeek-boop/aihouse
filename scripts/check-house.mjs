@@ -19139,3 +19139,86 @@ async function testRegimeDEcritureDunDocument() {
   console.log(`Passed: le régime d'écriture d'un document — AUTO, FIGÉ, et le cumul MIXTE qu'il demandait. CE QUI A ÉTÉ MESURÉ AVANT DE DÉCIDER : 471 documents .md, 90 seulement portent un signal mécanique — exiger un en-tête sur chacun aurait demandé 381 jugements humains, c'est-à-dire une obligation que personne n'aurait tenue. Le régime se DÉDUIT donc de ce qui existe, et le risque réel est étroit : un document qu'un outil réécrit EN ENTIER sans dire nulle part qu'il est régénéré. LA SONDE A ÉTÉ RESSERRÉE TROIS FOIS, chaque fois contre le dépôt réel et jamais de mémoire : 8 accusations → 6 (l'ajout par concaténation n'est pas une réécriture) → 3 (une branche trop lâche prenait du code de LECTURE pour une écriture) → 2 (l'ajout par interpolation dans un gabarit, la forme qu'emploie enregistrerOperation, comptait aussi). LE BUG DU JOUR ÉTAIT LE PLUS INSTRUCTIF : les trois générateurs émettaient bien la mention, et la sonde continuait de les accuser — son motif exigeait la flèche fermante COLLÉE au mot, alors que la mention émise porte la phrase qui explique le risque à l'humain qui ouvre le fichier. Une sonde qui ne reconnaît pas la protection qu'on vient de poser pousse à la poser deux fois (L4). Aujourd'hui : 2 documents réécrits en entier, 2 protégés, 0 à risque — et le contre-test fabrique exprès un coupable, parce qu'un zéro ne vaut que si la sonde sait encore accuser.`);
 }
 await testRegimeDEcritureDunDocument();
+
+// =============================================================================================
+// #1069 — LE TROISIÈME REGISTRE : UN PROCESS N'EST PAS LE SEUL PORTEUR POSSIBLE
+// =============================================================================================
+// LE CROISEMENT SUR-ACCUSAIT, ET C'EST LA MÊME FAMILLE D'ERREUR QUE TOUTES CELLES DE LA NUIT : un
+// signal ADJACENT lu comme le signal lui-même. Il comparait les process de `god-of-all-process` aux
+// sections des règles de travail et concluait « 13 règles que rien n'exécute » — alors qu'une règle
+// de CONDUITE est portée par `angel-of-ia-process`, qui la DEMANDE à chaque passage et refuse
+// d'être au vert sans réponse. Compter ces règles-là comme orphelines accusait le dispositif de ne
+// pas faire ce qu'il fait, et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+async function testTroisiemeRegistreDuCroisement() {
+  const AB = await import('../scripts/abraham-les-references.mjs');
+  const A = await import('../scripts/angel-of-ia-process.mjs');
+
+  // LA RÉFÉRENCE SE LIT, ELLE NE SE DEVINE PAS. Partout ailleurs dans ce croisement le lien est une
+  // couverture de vocabulaire, faute de mieux ; ici la donnée exacte existe (le champ `source` de
+  // la règle NOMME sa section), et s'en passer serait un choix, pas une contrainte.
+  const parNumero = AB.sectionsCiteesParAngel([
+    { id: 'r1', source: 'docs/regles-de-travail.md §0bis' },
+    { id: 'r2', source: 'docs/regles-de-travail.md §4' },
+    { id: 'r3', source: 'docs/regles-de-travail.md §4' },
+  ]);
+  assert.deepEqual(parNumero.get('0bis'), ['r1'], 'a rule naming §0bis carries §0bis');
+  assert.deepEqual(parNumero.get('4'), ['r2', 'r3'], 'and two rules can carry the same section');
+
+  // UNE RÈGLE QUI NE CITE QUE LA CHARTE NE PORTE PAS UNE RÈGLE DE TRAVAIL : ce sont deux documents,
+  // et confondre leurs numérotations ferait rattacher l'Article 16 à la section 16.
+  assert.equal(AB.sectionsCiteesParAngel([{ id: 'r', source: 'CLAUDE.md Article 16' }]).size, 0,
+    'a source naming only the charter must never be read as carrying a work rule: two documents, two numberings');
+
+  // TOUTES LES SECTIONS NE SONT PAS NUMÉROTÉES, et c'est un vrai cas du dépôt, pas une hypothèse :
+  // « OPTIMISER et FIABILISER » n'a pas de numéro. Un matcher qui ne connaîtrait que le § la
+  // déclarerait orpheline POUR TOUJOURS, alors que deux règles surveillées la portent.
+  const parTitre = AB.sectionsCiteesParAngel([
+    { id: 'fiabiliser', source: 'docs/regles-de-travail.md « OPTIMISER et FIABILISER »' },
+  ]);
+  assert.deepEqual(parTitre.get(AB.cleDeTitre('OPTIMISER et FIABILISER — les deux mots d’ordre permanents')), ['fiabiliser'],
+    'a section cited by its quoted title must be reachable: a section without a number would otherwise be orphan by accident of formatting');
+  assert.deepEqual(AB.clesDeSection('0bis. AVANT D’OUVRIR UN CHANTIER : on reprend d’abord les notes'),
+    ['0bis', 'avant d ouvrir un chantier on reprend d abord les notes'],
+    'a numbered section is reachable by BOTH keys, so neither citation style is a trap');
+
+  // LA RÉFÉRENCE MORTE EST UNE TROUVAILLE, PAS UN DÉCHET DE CALCUL — et elle a rapporté dès le
+  // premier passage : `consultation-avant` citait « §7ter et §1001 » depuis le 2026-09-22, et ce
+  // document n'a JAMAIS porté de section 1001 (vérifié sur la version de ce jour-là, pas supposé).
+  // Un renvoi mort ressemble à un lien, ce qui est pire qu'une absence : on croit la règle
+  // doublement ancrée quand elle ne l'est qu'une fois.
+  const mortes = AB.citationsMortesDAngel(
+    [{ id: 'r', source: 'docs/regles-de-travail.md §1001' }],
+    [{ titre: '4. Git et livraison' }]);
+  assert.equal(mortes.length, 1, 'a rule citing a section that does not exist MUST be reported, never silently dropped');
+  assert.equal(mortes[0].section, '1001');
+  assert.equal(AB.citationsMortesDAngel([{ id: 'r', source: 'docs/regles-de-travail.md §4' }], [{ titre: '4. Git et livraison' }]).length, 0,
+    'and a live reference must NOT be reported: a probe that cries on a working link is the one nobody reads (L4)');
+
+  // ET LE DÉPÔT RÉEL EST PROPRE AUJOURD'HUI — mais ce zéro-là ne vaut que parce que le contre-test
+  // ci-dessus prouve que la sonde sait encore accuser (BP2).
+  const { readFileSync } = await import('node:fs');
+  const sectionsReelles = AB.mesurerSections(readFileSync('docs/regles-de-travail.md', 'utf8'));
+  assert.deepEqual(AB.citationsMortesDAngel(A.REGLES_SURVEILLEES, sectionsReelles), [],
+    'checked live: no surveilled rule points at a section of the work rules that does not exist');
+
+  // SANS LE REGISTRE, L'OUTIL DOIT LE DIRE PLUTÔT QUE DE SUR-ACCUSER EN SILENCE (L5/L11) : un compte
+  // rendu faux dans le sens rassurant est le pire des deux, et celui-ci est faux dans le sens
+  // accusateur — tout aussi coûteux, puisqu'il fabrique du travail qui n'existe pas.
+  const sansRegistre = AB.formatCroisementLines({
+    mesurable: true, processes: 1, sections: 1, sectionsAvecObligation: 1, sectionsSansObligation: 0,
+    processSansRegle: [], reglesSansProcess: [], conflits: [], processMuetsSurLesRegles: [],
+    pairesComparees: 1, pairesTotales: 1, plusProche: null, seuil: 0.1, seuilDerive: true, catalogues: [],
+    reglesSurveilleesLues: 0, porteesParAngel: [], citationsMortesDAngel: [],
+  });
+  assert.ok(sansRegistre.some((l) => l.includes('SUR-ACCUSE')),
+    'with no surveilled registry passed, the report must SAY that its count over-accuses — never print a number it knows is inflated');
+
+  // LA MESURE SUR LE DÉPÔT RÉEL, et c'est elle qui donne le chiffre du compte rendu.
+  const PROCESSES = (await import('../scripts/god-of-all-process.mjs')).PROCESSES;
+  const croise = AB.croiserProcessEtRegles({ processes: PROCESSES, sections: sectionsReelles, reglesSurveillees: A.REGLES_SURVEILLEES });
+  assert.ok(croise.porteesParAngel.length >= 3,
+    'checked live: at least three work-rule sections that no process executes ARE carried by a surveilled rule — that is the over-accusation this task removed');
+
+  console.log(`Passed: le troisième registre du croisement process ↔ règles (2026-09-28, tâche #1069). LE CROISEMENT SUR-ACCUSAIT, et c'est la même famille d'erreur que toutes celles de la nuit — un signal ADJACENT lu comme le signal lui-même : il comparait les process de god-of-all-process aux sections des règles de travail et concluait « 13 règles que rien n'exécute », alors qu'une règle de CONDUITE est portée par angel-of-ia-process, qui la DEMANDE à chaque passage et refuse d'être au vert sans réponse. Compter ces règles-là comme orphelines accusait le dispositif de ne pas faire ce qu'il fait (L4). MESURE : 13 → 9 orphelines réelles, ${croise.porteesParAngel.length} sections rendues à leur porteur. LE LIEN SE LIT AU LIEU DE SE DEVINER, et c'est ce qui le distingue du reste de ce croisement : chaque règle surveillée NOMME sa section dans son champ source. Partout ailleurs ici le lien est une couverture de vocabulaire faute de mieux ; ici la donnée exacte existe, et s'en passer aurait été un choix, pas une contrainte. DEUX FORMES EXACTES ET PAS UNE DE PLUS — le numéro (§0bis) et le titre cité entre guillemets — parce que toutes les sections ne sont pas numérotées : « OPTIMISER et FIABILISER » n'a pas de numéro, et un matcher qui n'aurait connu que le § l'aurait déclarée orpheline pour toujours alors que deux règles la portent. TROUVAILLE DU PREMIER PASSAGE : une référence MORTE DE NAISSANCE, « §1001 », écrite le 2026-09-22 dans consultation-avant alors que ce document n'a jamais porté de section 1001 — vérifié sur la version de ce jour-là, pas supposé. Un renvoi mort ressemble à un lien, ce qui est pire qu'une absence : on croit la règle doublement ancrée quand elle ne l'est qu'une fois. Retirée, avec la raison écrite à côté plutôt que l'intention devinée. Et sans registre passé, le rapport DIT qu'il sur-accuse au lieu d'imprimer un chiffre qu'il sait gonflé.`);
+}
+await testTroisiemeRegistreDuCroisement();
