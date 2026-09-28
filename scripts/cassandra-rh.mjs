@@ -16,7 +16,7 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, findScriptsAbsentsDeLaTable, formatScriptsAbsentsLines, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
+import { parseToolsTable, lireTableMaitresse, slugifyAgentName, primaryToolName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, findScriptsAbsentsDeLaTable, formatScriptsAbsentsLines, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie, lireFichierPartage } from "./lib-shell.mjs";
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
@@ -259,7 +259,7 @@ export function teamRoster(toolsTableMarkdown) {
   return parseToolsTable(toolsTableMarkdown)
     .filter((row) => CERTIFIABLE_STATUTS.includes(row.statut))
     .map((row) => {
-      const primaryName = row.tool.split(/[/(]/)[0].trim();
+      const primaryName = primaryToolName(row.tool);
       const slug = slugifyAgentName(primaryName);
       // `category` reste le RANG et rien d'autre (2026-09-25, #754) : c'est le sens qu'il a
       // toujours eu ici — le regroupement du roster compte des Gardiens et des Membres, pas des
@@ -4568,7 +4568,7 @@ export function buildOrganigramme({
   registries = DOC_REPORT_REGISTRIES,
 } = {}) {
   const rows = parseToolsTable(toolsTableMarkdown);
-  const nomPrincipal = (row) => row.tool.split(/[/(]/)[0].trim();
+  const nomPrincipal = (row) => primaryToolName(row.tool);
   const gardienSlugs = new Set(Object.keys(gardienDomains));
 
   const socle = rows.filter((r) => r.statut === "Infrastructure").map(nomPrincipal);

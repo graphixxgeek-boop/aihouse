@@ -19869,3 +19869,38 @@ async function testCelluleBruteAuLieuDuNomPropre() {
   console.log(`Passed: 21 Agents sur 54 accusés de n'avoir pas leur badge, tous complets (2026-09-28, tâche #1077). La cellule « Outil » de la table maîtresse porte son script entre parenthèses — « SAFE-EXPORT (\`scripts/safe-export.mjs\`) » — et elle était passée BRUTE à une fonction qui SLUGIFIE son argument. Le slug obtenu, \`safe-export-scripts-safe-export-mjs\`, ne correspond à rien sur le disque : CINQ manques fabriqués par Agent (instanciation, registre, blueprint, absent de CLAUDE.md, absent du suivi), à chaque passage, et AUCUN travail ne pouvait éteindre l'accusation — L6 précédée de L4, pour la seconde fois de la journée. CE QUI REND CELUI-CI PIRE QUE LE PRÉCÉDENT : IL AVAIT DÉJÀ ÉTÉ CORRIGÉ. Le 2026-09-21, sur DEUX appelants sur trois — et le commentaire écrit ce jour-là certifie que le découpage est « déjà établi ailleurs dans ce fichier (badgeWarningsForOutils(), findToolsMissingFromMenu()) ». Il ne l'était pas dans badgeWarningsForOutils(). Un correctif appliqué occurrence par occurrence, puis certifié par un commentaire que rien ne vérifie, n'est pas un correctif (L37, Article 27). LA VÉRIFICATION VIT DONC DANS LA FONCTION APPELÉE, là où aucun appelant présent ou futur ne peut l'oublier, et elle REFUSE au lieu de découper à la place de l'appelant : découper masquerait qu'il lit la mauvaise colonne, et l'agentOverrides indexé par nom propre continuerait d'être manqué sans bruit. Mesure réelle : ${aPrecision.length} lignes certifiables sur ${rows1077.length} portent une précision entre parenthèses.`);
 }
 await testCelluleBruteAuLieuDuNomPropre();
+
+// ————————————————————————————————————————————————————————————————————————
+// LA RÈGLE DU NOM PROPRE VIT À UN SEUL ENDROIT (2026-09-28, tâche #1077, suite)
+// ————————————————————————————————————————————————————————————————————————
+// La correction ci-dessus ferme le cas trouvé. Celle-ci ferme sa REPRODUCTION, et c'est la vraie
+// leçon : le découpage `split(/[/(]/)[0].trim()` était recopié à l'identique dans cinq endroits
+// (tool-brain ×2, doc-report, cassandra-rh ×2) en plus de primaryToolName() qui le porte. Cinq
+// copies d'une règle, c'est cinq endroits où un sixième appelant peut l'oublier — et c'est
+// exactement ce qui est arrivé à badgeWarningsForOutils(). Les cinq passent désormais par la
+// fonction, et ce garde-fou refuse qu'une sixième copie réapparaisse (Article 24 : une règle se
+// DÉRIVE, elle ne se recopie pas).
+{
+  const { readdirSync: lireDossier1077b, readFileSync: lire1077b } = await import('node:fs');
+  const MOTIF_DECOUPAGE = /\.split\(\/\[\/\(\]\/\)\[0\]/;
+  const copies = [];
+  for (const f of lireDossier1077b('scripts').filter((f) => f.endsWith('.mjs'))) {
+    if (f === 'check-house.mjs') continue; // ce fichier-ci cite le motif pour le chercher
+    const texte = lire1077b(`scripts/${f}`, 'utf8');
+    for (const [i, ligne] of texte.split('\n').entries()) {
+      if (!MOTIF_DECOUPAGE.test(ligne)) continue;
+      // La seule occurrence légitime est le corps de primaryToolName() lui-même.
+      if (f === 'le-coordinateur.mjs' && texte.split('\n').slice(Math.max(0, i - 3), i).some((l) => l.includes('function primaryToolName'))) continue;
+      copies.push(`scripts/${f}:${i + 1}`);
+    }
+  }
+  assert.deepEqual(copies, [], `the proper-name split must live ONLY inside primaryToolName(): every other site calls it. A copy is how badgeWarningsForOutils() came to miss the rule while a comment certified it applied there. Copies found: ${copies.join(', ')}`);
+
+  // ET LA FONCTION EXISTE TOUJOURS ET FAIT TOUJOURS SON TRAVAIL — sans quoi ce garde-fou serait au
+  // vert sur un dépôt où la règle aurait purement disparu (L5/L11 : « rien trouvé » n'est pas
+  // « je n'ai pas pu regarder », et un garde-fou vide se lit comme un garde-fou satisfait).
+  const C1077b = await import('../scripts/le-coordinateur.mjs');
+  assert.equal(C1077b.primaryToolName('SAFE-EXPORT (`scripts/safe-export.mjs`)'), 'SAFE-EXPORT', 'and the single holder of the rule must still strip the precision');
+
+  console.log("Passed: la règle du nom propre vit à un seul endroit (2026-09-28, tâche #1077, suite). Le correctif de la tâche ferme le cas trouvé ; celui-ci ferme sa REPRODUCTION, et c'est la vraie leçon de la journée. Le découpage `split(/[/(]/)[0].trim()` était recopié À L'IDENTIQUE dans CINQ endroits — tool-brain ×2, doc-report, cassandra-rh ×2 — en plus de `primaryToolName()` qui le porte. Cinq copies d'une règle, c'est cinq endroits où un sixième appelant peut l'oublier, et c'est très exactement ce qui est arrivé à `badgeWarningsForOutils()` : la règle existait, elle était écrite cinq fois, et un appelant sur trois ne l'appliquait pas pendant qu'un commentaire certifiait le contraire. Les cinq passent désormais par la fonction, et ce garde-fou refuse qu'une sixième copie réapparaisse (Article 24 : une règle se DÉRIVE, elle ne se recopie pas). Il vérifie aussi que la fonction porteuse existe encore et découpe encore — sans quoi il serait au vert sur un dépôt où la règle aurait purement disparu.");
+}

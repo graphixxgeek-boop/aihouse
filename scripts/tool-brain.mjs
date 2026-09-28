@@ -24,7 +24,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName, inventaireDesFonctions, chercherUneFonctionExistante, formatFonctionExistanteLines } from "./le-coordinateur.mjs";
+import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName, primaryToolName, inventaireDesFonctions, chercherUneFonctionExistante, formatFonctionExistanteLines } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -152,7 +152,7 @@ export function knownToolSlugsFromPrestations(prestations = PRESTATIONS) {
     prestations
       .flatMap((p) => p.outils)
       .filter((o) => !EST_UN_CHEMIN.test(String(o).trim()))
-      .map((o) => slugifyAgentName(o.split(/[/(]/)[0].trim())),
+      .map((o) => slugifyAgentName(primaryToolName(o))),
   )];
 }
 
@@ -196,7 +196,7 @@ export function packsRealises(history, prestations = PRESTATIONS, { fenetreMinut
   return multi.map((p) => {
     const slugs = p.outils
       .filter((o) => !EST_UN_CHEMIN.test(String(o).trim()))
-      .map((o) => slugifyAgentName(o.split(/[/(]/)[0].trim()));
+      .map((o) => slugifyAgentName(primaryToolName(o)));
     let realisations = 0;
     // Pour chaque événement, on regarde si la fenêtre qui s'ouvre là contient tous les outils du
     // pack. Fenêtre glissante simple : un pack réalisé deux fois de suite compte deux fois, mais

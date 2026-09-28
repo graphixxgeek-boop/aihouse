@@ -29,7 +29,7 @@ import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage } from "./lib-shell.mjs";
-import { parseToolsTable, slugifyAgentName } from "./le-coordinateur.mjs";
+import { parseToolsTable, slugifyAgentName, primaryToolName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -873,7 +873,7 @@ export function findUnnavigableSections(markdown, seuils = SEUIL_SECTION_INTROUV
 export function findToolsMissingReliability(toolsTableMarkdown, registry = TOOL_RELIABILITY) {
   const known = new Set(Object.keys(registry));
   return parseToolsTable(toolsTableMarkdown)
-    .map((row) => ({ tool: row.tool, slug: slugifyAgentName(row.tool.split(/[/(]/)[0].trim()) }))
+    .map((row) => ({ tool: row.tool, slug: slugifyAgentName(primaryToolName(row.tool)) }))
     .filter(({ slug }) => !known.has(slug));
 }
 
