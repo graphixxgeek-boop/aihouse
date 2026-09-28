@@ -413,3 +413,33 @@ de ce qui s'efface n'est pas une décision d'agent.
 
 
 *(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*
+
+| #1067 | Charte — les Articles 18 et 26 se recouvrent à 19 % sans que rien ne dise lequel prime | à trancher |
+
+## #1067 — deux Articles sur le même terrain, et aucune frontière écrite
+
+**Trouvé par Abraham-les-références** à la Ronde du 2026-09-28, sur `CLAUDE.md` :
+`18 ↔ 26 — 19 % de vocabulaire commun`, sans frontière déclarée.
+
+**Ce que chacun dit aujourd'hui.** L'Article 18 : un gros process se suit EN ENTIER, dans son ordre,
+sans être raccourci de sa propre initiative. L'Article 26 : les process se respectent, et
+god-of-all-process en est le référent de la discipline d'exécution.
+
+**Pourquoi ce n'est pas mécaniquement un doublon.** Un recouvrement de vocabulaire seul n'a jamais
+valu doublon dans ce projet — la charte contient légitimement des paires qui parlent du même
+terrain. Ce qui ouvre une question, c'est le recouvrement **sans frontière écrite** : rien ne dit
+lequel prime quand les deux s'appliquent à la même situation.
+
+**Même nature que #623**, qui a relevé trois recouvrements dans `docs/regles-de-travail.md` et que
+l'utilisateur a choisi de noter sans y toucher (« Note-les, on verra plus tard »).
+
+**Les deux issues, et elles lui appartiennent :**
+- écrire la frontière manquante dans l'un des deux (« à ne pas confondre avec l'Article X, qui
+  traite de… ») ;
+- ou constater que le recouvrement est un choix de conception assumé, et le DÉCLARER — ce qui est
+  une décision pleine et entière, jamais un abandon (Article 28).
+
+**Ce qui n'est PAS proposé** : fusionner les deux Articles. Les numéros d'Article ne se renumérotent
+jamais (ils sont cités tels quels dans le code et la documentation), et l'Article 23 montre la forme
+que prend une fusion ici — le numéro reste occupé et renvoie vers son hôte. Abraham ne tranche jamais
+la pertinence d'une règle, et l'agent non plus sur la charte.

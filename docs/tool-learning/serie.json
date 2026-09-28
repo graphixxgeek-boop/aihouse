@@ -42,5 +42,27 @@
     "sens": "plus bas = mieux"
    }
   }
+ },
+ {
+  "date": "2026-09-28",
+  "methode": "v1",
+  "mesures": {
+   "outils-apprenants": {
+    "valeur": 2,
+    "sens": "plus haut = mieux"
+   },
+   "archive-seulement": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   },
+   "diagnostics-ignores": {
+    "valeur": 1,
+    "sens": "plus bas = mieux"
+   },
+   "verdicts-refutes": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   }
+  }
  }
 ]
