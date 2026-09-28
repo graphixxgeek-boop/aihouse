@@ -1268,6 +1268,44 @@ export function lignesDeTableau(texte = "") {
   return Math.max(0, lignes.length - (lignes.length ? 1 : 0));
 }
 
+// UN INDEX PEUT DÉLÉGUER SON CATALOGUE, À CONDITION DE LE DÉCLARER (2026-09-28, tâche #1111).
+//
+// LE CAS RÉEL QUI L'A FAIT NAÎTRE, et il ne se refermait par aucun des trois contrats existants :
+// `docs/grand-projet/` est un ESPACE DE TRAVAIL, pas un dépôt de rapports. Ses fichiers sources
+// arrivent par dizaines, et leur catalogue existe déjà — c'est `01-absorption/inventaire.md`, qui
+// porte pour chacun son poids, son thème, le traitement décidé et la date d'absorption. Recopier
+// ces noms dans l'index aurait créé LA SECONDE LISTE que l'Article 24 interdit : deux listes du
+// même contenu divergent, toujours, et celle qui ment a l'air juste.
+//
+// LES DEUX ISSUES QUI ONT ÉTÉ ÉCARTÉES, avec leur raison, parce qu'elles paraissaient plus simples.
+// (1) Exclure ce dossier de la mesure : la garantie « rien de déposé n'est sans annonce » serait
+// perdue là où il va y avoir le plus de fichiers du dépôt — exactement le mauvais endroit.
+// (2) Deviner la délégation en suivant les liens de l'index : un index cite des documents pour
+// mille raisons, et une délégation devinée avalerait silencieusement n'importe quel voisin.
+//
+// LA DÉLÉGATION EST DONC UNE DÉCLARATION EXPLICITE, et elle est générique : n'importe quel dossier
+// peut s'en servir demain sans qu'on touche à ce fichier. Elle ne franchit qu'un seul niveau —
+// un document délégué ne délègue pas à son tour — parce qu'une chaîne de renvois redevient
+// indevinable pour qui lit l'index, et qu'une boucle s'y installerait sans que rien ne le dise.
+export const MOTIF_CATALOGUE_DELEGUE = /<!--\s*catalogue-delegue\s*:\s*([^\s>]+?)\s*-->/g;
+
+export function texteAvecDelegations(texte, dossier, { root = ROOT, readFileImpl = lireFichierPartage } = {}) {
+  if (texte == null) return { texte: null, delegues: [] };
+  const delegues = [];
+  let morceaux = String(texte);
+  for (const m of String(texte).matchAll(MOTIF_CATALOGUE_DELEGUE)) {
+    const cible = m[1];
+    // Un chemin qui remonte hors du dossier n'est pas une délégation : ce serait un index qui
+    // s'annexe le catalogue d'un voisin, et sa complétude ne voudrait plus rien dire.
+    if (cible.includes("..") || cible.startsWith("/")) continue;
+    try {
+      morceaux += "\n" + readFileImpl(join(root, dossier, cible), "utf8");
+      delegues.push(`${dossier}/${cible}`);
+    } catch { /* cible absente : la délégation ne compte pas, et l'index redevient seul responsable */ }
+  }
+  return { texte: morceaux, delegues };
+}
+
 export function natureDeLIndex(texte, fichiers = [], { partCatalogue = PART_MINIMALE_DE_CATALOGUE, minJournal = LIGNES_MINIMALES_DE_JOURNAL } = {}) {
   if (texte == null) return { cle: "absent", cites: 0, lignes: 0 };
   const cites = fichiers.filter((f) => String(texte).includes(String(f).split("/").pop())).length;
@@ -1316,11 +1354,13 @@ export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = re
     const fichiers = listerLesFichiers(dir, { root, listDirImpl, garder: estUnDepot });
     let texte = null;
     try { texte = readFileImpl(join(root, dir, "index.md"), "utf8"); } catch { /* pas d'index : c'est un état, pas une erreur */ }
-    const nature = natureDeLIndex(texte, fichiers);
+    const { texte: annonce, delegues } = texteAvecDelegations(texte, dir, { root, readFileImpl });
+    const nature = natureDeLIndex(annonce, fichiers);
+    nature.delegues = delegues;
     // Le nombre de dépôts SANS TRACE se calcule ici, où le texte et les fichiers sont tous deux
     // sous la main, et il est passé au verdict plutôt que redevine par lui (leçon L29).
-    if (nature.cle === "journal") nature.sansTrace = depotsSansTrace(texte, fichiers).length;
-    lignes.push({ dossier: dir, fichiers: fichiers.length, nature: nature.cle, cites: nature.cites, lignesIndex: nature.lignes, ...verdictDeLIndex(nature, fichiers.length) });
+    if (nature.cle === "journal") nature.sansTrace = depotsSansTrace(annonce, fichiers).length;
+    lignes.push({ dossier: dir, fichiers: fichiers.length, nature: nature.cle, cites: nature.cites, lignesIndex: nature.lignes, delegues, ...verdictDeLIndex(nature, fichiers.length) });
   }
   const total = lignes.reduce((a, l) => a + l.fichiers, 0);
   const parEtat = {};
@@ -1415,6 +1455,15 @@ export function formatIndexLines(r) {
     l.push("");
     l.push(`  LES ${r.aTraiter.length} À TRAITER, du plus gros écart au plus petit :`);
     for (const x of r.aTraiter) l.push(`      · ${x.dossier} — ${x.pourquoi}`);
+  }
+  // UNE DÉLÉGATION QUI NE SE VOIT PAS EST UNE EXCEPTION QUI S'OUBLIE : elle est imprimée, parce
+  // qu'un dossier « à jour » grâce à un catalogue tenu ailleurs n'est pas dans le même état qu'un
+  // dossier dont l'index nomme tout lui-même, et que la différence doit se lire sans ouvrir le code.
+  const avecDelegation = r.lignes.filter((x) => x.delegues?.length);
+  if (avecDelegation.length) {
+    l.push("");
+    l.push(`  ${avecDelegation.length} index délègue(nt) leur catalogue, et c'est DÉCLARÉ chez eux, jamais deviné :`);
+    for (const x of avecDelegation) l.push(`      · ${x.dossier} → ${x.delegues.join(", ")}`);
   }
   l.push("");
   l.push(`  HORS PORTÉE : ${r.horsPortee}`);

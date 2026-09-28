@@ -8568,6 +8568,13 @@ async function testDocumentsJumeaux() {
   assert.equal(fixture.aInstruire.length, 1, 'MUST CATCH on a fixture: two documents covering the same ground, in different folders, with neither citing the other');
   assert.equal(fixture.aInstruire[0].nature, 'meme-terrain-non-declare', 'and the nature says what is missing — a written border, never a verdict that one of the two is wrong');
 
+  // CE QU'IL DÉPOSE N'EST PAS CE QUE NOUS ENTRETENONS (2026-09-28, tâche #1111). Ses sources du
+  // grand chantier portent un résumé À CÔTÉ de sa version longue — c'est ce qu'il a voulu donner,
+  // pas une redondance à corriger, et ni l'un ni l'autre n'est à nous pour être fondu.
+  assert.ok(ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/grand-projet/00-sources/02-documents-prepares/TARGET_ARCHITECTURE_V1.md')), "MUST EXCLUDE: a source he deposited is an INPUT, frozen, that nobody will rewrite — proposing to merge two documents neither of which is ours is an alarm that can never be turned off (lesson L6)");
+  assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/grand-projet/01-absorption/inventaire.md')), 'MUST LET PASS: everything WE write for the grand chantier outside the sources folder stays compared — an exclusion that swallowed the whole chantier would blind the detector exactly where it earns its keep');
+  assert.ok(ab.HORS_PORTEE_DOCUMENTS.every((h) => h.pourquoi), 'and every exclusion carries its written reason, because a scope that shrinks without saying why is how a measure quietly stops meaning anything');
+
   // EN DIRECT SUR LES 382 DOCUMENTS RÉELS (Article 25).
   const reel = trouverDocumentsJumeaux(chargerLesDocuments());
   assert.equal(reel.mesurable, true, 'the document-twin detector must actually run against the real docs/ tree');
@@ -8726,6 +8733,23 @@ async function testSystemeDesIndex() {
   // de mordre se garde sur une fixture, jamais sur l'état du dépôt du jour (même correction que
   // pour le détecteur de rapports jumeaux, quelques heures plus tôt).
   assert.equal(reel.aTraiter.length, 0, `no folder is left to treat: 51 on the first pass, 0 once the missing indexes were generated, the mute ones completed under their prose and the journals caught up (currently ${reel.aTraiter.map((x) => x.dossier).join(', ')})`);
+  // LA DÉLÉGATION DÉCLARÉE (2026-09-28, tâche #1111). `docs/grand-projet/` est un ESPACE DE
+  // TRAVAIL : ses sources arrivent par dizaines et leur catalogue existe déjà — l'inventaire
+  // d'absorption, qui porte pour chacune son poids, son traitement et sa date. Recopier ces noms
+  // dans l'index aurait créé la SECONDE LISTE que l'Article 24 interdit.
+  const lire = (chemin) => {
+    if (String(chemin).endsWith('docs/delegue/index.md')) return 'un index\n<!-- catalogue-delegue: sous/liste.md -->';
+    if (String(chemin).endsWith('docs/delegue/sous/liste.md')) return '| a.txt | b.txt |';
+    throw new Error('absent');
+  };
+  const avecDelegation = da.texteAvecDelegations('un index\n<!-- catalogue-delegue: sous/liste.md -->', 'docs/delegue', { root: '.', readFileImpl: lire });
+  assert.deepEqual(avecDelegation.delegues, ['docs/delegue/sous/liste.md'], 'MUST FOLLOW a declared delegation: the announcement may live in another document, and naming the same files twice is how two lists start to diverge');
+  assert.ok(avecDelegation.texte.includes('a.txt'), 'and what the delegated catalogue names counts as announced, which is the whole point');
+  assert.deepEqual(da.texteAvecDelegations('un index qui cite [liste](sous/liste.md) sans rien déléguer', 'docs/delegue', { root: '.', readFileImpl: lire }).delegues, [], "MUST NOT GUESS: an index cites documents for a thousand reasons — a delegation inferred from a link would silently swallow any neighbour, and its completeness would stop meaning anything");
+  assert.deepEqual(da.texteAvecDelegations('<!-- catalogue-delegue: ../voisin/liste.md -->', 'docs/delegue', { root: '.', readFileImpl: lire }).delegues, [], 'MUST REFUSE a path climbing out of the folder: that would be an index annexing a neighbour\'s catalogue to declare itself complete');
+  assert.deepEqual(da.texteAvecDelegations('<!-- catalogue-delegue: sous/disparu.md -->', 'docs/delegue', { root: '.', readFileImpl: lire }).delegues, [], 'and a delegation whose target is gone counts for nothing — the index becomes responsible again rather than staying green on a dead link');
+  assert.ok(mesurerLesIndex().lignes.some((x) => x.dossier === 'docs/grand-projet' && x.delegues?.length === 1 && x.etat === 'à jour'), 'checked live: the one real delegation makes the grand-chantier folder honestly complete — its 25 files are named, 5 in the index and 20 in the inventory');
+
   const fixtureTrouee = mesurerLesIndex({
     listDirImpl: (d) => (String(d).endsWith('docs')
       ? [{ name: 'creux', isDirectory: () => true }]

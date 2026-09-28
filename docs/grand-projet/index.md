@@ -131,7 +131,20 @@ que l'assainissement en cours est terminé.
 |---|---|
 | [`index.md`](index.md) | ce fichier : la porte d'entrée, les règles du dossier, les calibrages tranchés |
 | [`notes-de-travail.md`](notes-de-travail.md) | ce qui n'est qu'à moi : les pièges anticipés, la discipline de lecture, le journal |
+| [`00-sources/index.md`](00-sources/index.md) | pourquoi le catalogue des sources vit dans l'inventaire et pas là — deux listes du même contenu divergent toujours |
 | [`01-absorption/lire-les-sources.md`](01-absorption/lire-les-sources.md) | comment lire du Word et du texte, vérifié avant que les fichiers arrivent |
 | [`01-absorption/inventaire.md`](01-absorption/inventaire.md) | un document = une ligne : poids, thème, traitement décidé une seule fois |
 | [`00-sources/01-sa-demande/README.md`](00-sources/01-sa-demande/README.md) | pourquoi ses deux fichiers ont un statut que les autres n'ont pas |
 | [`00-sources/02-documents-prepares/README.md`](00-sources/02-documents-prepares/README.md) | pourquoi le volume n'est pas l'autorité, et l'entrée à l'inventaire avant lecture |
+
+**Les documents SOURCES ne figurent pas dans ce tableau, et c'est voulu** : ils sont des `.docx`
+et des `.txt`, ils arriveront par centaines, et leur catalogue est
+[`01-absorption/inventaire.md`](01-absorption/inventaire.md) — qui porte bien plus qu'une liste de
+noms. Ce tableau-ci ne recense que la STRUCTURE du dossier, qui elle ne bouge presque pas.
+
+<!-- catalogue-delegue: 01-absorption/inventaire.md -->
+
+*(La ligne ci-dessus n'est pas décorative : elle DÉCLARE au système des index que le catalogue des
+sources vit dans l'inventaire. Sans elle, ce dossier passerait pour mal annoncé alors que chacun de
+ses fichiers y est nommé — et la seule façon de le faire taire aurait été d'y recopier les noms,
+c'est-à-dire de créer la seconde liste que l'Article 24 interdit.)*

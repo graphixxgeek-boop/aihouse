@@ -1497,6 +1497,18 @@ export const HORS_PORTEE_DOCUMENTS = [
   // Les simulations sont des ARCHIVES de conversations. Deux transcripts se ressemblent parce que
   // c'est le même jeu, et c'est doc-report qui les compare, sur leur substance exacte.
   { motif: /^docs\/simulations\//, pourquoi: "archives de conversations : leur ressemblance est normale, et doc-report les compare déjà" },
+  // CE QU'IL DÉPOSE N'EST PAS CE QUE NOUS ENTRETENONS (2026-09-28, tâche #1111). Ce dossier porte
+  // les sources du grand chantier telles qu'il nous les a données : ses deux commandes, et sept
+  // lots d'audits produits ailleurs. Ce détecteur cherche la redondance que le PROJET entretient —
+  // deux documents que nous maintenons tous les deux, dont l'un pourrait donc être fondu dans
+  // l'autre. Ici il n'y a rien à entretenir : ce sont des ENTRÉES figées, que personne ne réécrira.
+  // Et la paire trouvée au premier passage est exactement ce qu'il a voulu donner : un résumé À
+  // CÔTÉ de sa version longue (« Target Architecture v1 PRESENTATION » et le document complet).
+  // La signaler reviendrait à proposer de fusionner deux documents dont ni l'un ni l'autre ne nous
+  // appartient — une alerte qu'on ne peut pas éteindre finit par ne plus être lue (leçon L6).
+  // L'exclusion porte sur le seul dossier des SOURCES : tout ce que nous écrivons ailleurs dans le
+  // chantier reste comparé, et c'est là que ce détecteur sert le plus.
+  { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "sources déposées par l'utilisateur : des entrées figées que le projet n'entretient pas, et dont un résumé à côté de sa version longue est voulu" },
 ];
 
 export const TAILLE_MINIMALE_DOCUMENT = 800;

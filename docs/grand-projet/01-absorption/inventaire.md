@@ -7,9 +7,28 @@ fois, jamais oublié. Rempli au fur et à mesure de l'absorption, AVANT toute an
 `syntheses/`) · **EXTRAIT** (une partie sert telle quelle → citée verbatim là où elle sert) ·
 **INTÉGRAL** (le détail compte entièrement → reste dans `00-sources/`, consulté à la demande).
 
-| Document | Qui l'a écrit | Poids | Thème | Traitement | Absorbé le | Où va le résultat |
+| Document | Qui l'a écrit | Poids | Groupe | Traitement | Absorbé le | Pourquoi ce traitement |
 |---|---|---|---|---|---|---|
-| *(vide — le dossier attend le prompt massif)* | | | | | | |
+| `01-sa-demande/COMMANDE IMPORTANTE.docx` | **LUI** | ~10216 mots | sa demande | **INTÉGRAL** | *(inventorié, non lu)* | sa parole — rien ne s'en résume |
+| `01-sa-demande/QUESTIONS.docx` | **LUI** | ~2771 mots | sa demande | **INTÉGRAL** | *(inventorié, non lu)* | sa parole — rien ne s'en résume |
+| `02-documents-prepares/AUDIT ARCHITECTURE/AUDIT ARCHITECTURE - notes.docx` | pas lui | ~643 mots | AUDIT ARCHITECTURE | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/AUDIT ARCHITECTURE/AUDIT_ARCHITECTURAL_2026-09-28.md` | pas lui | ~4449 mots | AUDIT ARCHITECTURE | **INTÉGRAL** | *(inventorié, non lu)* | audit ou plan de fond : le détail porte le raisonnement |
+| `02-documents-prepares/AUDIT ARCHITECTURE/component-inventory.csv` | pas lui | ~21 mots | AUDIT ARCHITECTURE | EXTRAIT | *(inventorié, non lu)* | donnée structurée — on y puise, on ne la lit pas en entier |
+| `02-documents-prepares/AUDIT ARCHITECTURE/dependency-graph.json` | pas lui | ~3840 mots | AUDIT ARCHITECTURE | EXTRAIT | *(inventorié, non lu)* | donnée structurée — on y puise, on ne la lit pas en entier |
+| `02-documents-prepares/AUDIT ARCHITECTURE/report.json` | pas lui | ~1587 mots | AUDIT ARCHITECTURE | EXTRAIT | *(inventorié, non lu)* | donnée structurée — on y puise, on ne la lit pas en entier |
+| `02-documents-prepares/AUDIT GENERAL CHATGPT.docx` | pas lui | ~10237 mots | racine | **INTÉGRAL** | *(inventorié, non lu)* | audit ou plan de fond : le détail porte le raisonnement |
+| `02-documents-prepares/AUDIT NIVEAU 2 APRES ARCHITECTURE/DUE_DILIGENCE_NIVEAU_2_2026-09-28.md` | pas lui | ~2795 mots | AUDIT NIVEAU 2 APRES ARCHITECTURE | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/AUDIT NIVEAU 2 APRES ARCHITECTURE/Le niveau 2 de due diligence est terminé.docx` | pas lui | ~448 mots | AUDIT NIVEAU 2 APRES ARCHITECTURE | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/LITTERATURE POUR INSPIRATION/LITTERATURE SUR LE SUJET - jamais des consignes.docx` | pas lui | ~11657 mots | LITTERATURE POUR INSPIRATION | SYNTHÈSE | *(inventorié, non lu)* | inspiration, jamais une consigne — on en tire des idées, pas des règles |
+| `02-documents-prepares/RATIONNALISATION APRES AUDIT N2/ANALYSE RATIONNALISATION APRES AUDIT DE NIVEAU 2.docx` | pas lui | ~4253 mots | RATIONNALISATION APRES AUDIT N2 | **INTÉGRAL** | *(inventorié, non lu)* | audit ou plan de fond : le détail porte le raisonnement |
+| `02-documents-prepares/SOCLE PLAN DIRECTEUR APRES RATIONNALISATION/PLAN DIRECTEUR DE LA RATIONNALISATION  PRESENTATION.docx` | pas lui | ~497 mots | SOCLE PLAN DIRECTEUR APRES RATIONNALISATION | EXTRAIT | *(inventorié, non lu)* | résumé d'un document long présent à côté — sert d'entrée en matière |
+| `02-documents-prepares/SOCLE PLAN DIRECTEUR APRES RATIONNALISATION/PLAN_DIRECTEUR_RATIONALISATION_AGENCE_2026-09-28.md` | pas lui | ~5025 mots | SOCLE PLAN DIRECTEUR APRES RATIONNALISATION | **INTÉGRAL** | *(inventorié, non lu)* | audit ou plan de fond : le détail porte le raisonnement |
+| `02-documents-prepares/THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION/AGENCY_AUDIT_EXECUTIVE_2026-09-28.md` | pas lui | ~707 mots | THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION/CAPABILITY_MAP_AGENCY_2026-09-28.md` | pas lui | ~700 mots | THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION/Capability Map PRESENTATION.docx` | pas lui | ~496 mots | THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION | EXTRAIT | *(inventorié, non lu)* | résumé d'un document long présent à côté — sert d'entrée en matière |
+| `02-documents-prepares/THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION/RESPONSIBILITY_MAP_AGENCY_2026-09-28.md` | pas lui | ~554 mots | THE CAPACIBILITY MAP APRES PLAN DIRECTEUR RATIONNALISATION | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/United Target Architecture v1 APRES CAPACIBILITY MAP/TARGET_ARCHITECTURE_V1_AGENCY_2026-09-28.md` | pas lui | ~2630 mots | United Target Architecture v1 APRES CAPACIBILITY MAP | SYNTHÈSE | *(inventorié, non lu)* | court et dense : une fiche suffira |
+| `02-documents-prepares/United Target Architecture v1 APRES CAPACIBILITY MAP/Target Architecture v1 PRESENTATION.docx` | pas lui | ~332 mots | United Target Architecture v1 APRES CAPACIBILITY MAP | EXTRAIT | *(inventorié, non lu)* | résumé d'un document long présent à côté — sert d'entrée en matière |
 
 ## Ce que cet inventaire garantit, et c'est sa seule raison d'être
 
