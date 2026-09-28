@@ -691,20 +691,51 @@ export function racinesSignificatives(text) {
 // comporte exactement comme avant (aucun appelant existant ne casse). Seules les lignes de statut
 // "Agent" peuvent porter un badge (cf. docs/regles-de-travail.md, section badge) — un outil
 // Utilitaire nommé ou Infrastructure référencé dans `outils` ne déclenche jamais cette vérification.
+// LE MÊME TRAVAIL REFAIT SEPT MILLE FOIS (2026-09-28, tâche #1010). Mesuré avant de toucher quoi que
+// ce soit, parce qu'une cause supposée n'est pas une cause (Article 19) : l'état des tâches mettait
+// QUATRE MINUTES, et un seul appel à `suggestPrestationsForTask()` coûtait **2 272 ms avec le
+// contexte de badge contre 2 ms sans**. Le reste du rapport est négligeable à côté — lire les 985
+// lignes du suivi prend 22 ms.
+//
+// LA CAUSE, une fois mesurée, est bête : cette fonction est appelée pour CHAQUE prestation du
+// catalogue (70) sur CHAQUE tâche ouverte (89), soit plus de six mille fois — et chaque appel
+// reparse la table des outils puis relance `checkAgentOnboarding()`, qui relit le dépôt. Le même
+// contexte, les mêmes outils, le même verdict, recalculés du début à chaque fois.
+//
+// POURQUOI UNE MÉMOÏSATION ET PAS UNE RÉÉCRITURE : le verdict est une fonction PURE du couple
+// (contexte, outil). Rien à repenser, rien à déplacer — seulement à ne pas refaire. Le cache est
+// une `WeakMap` sur l'OBJET contexte : un contexte reconstruit est une clé neuve, donc le cache ne
+// peut pas servir une réponse périmée, et il disparaît tout seul quand le contexte n'est plus
+// référencé. Un cache qu'il faudrait penser à vider serait un bug en attente.
+//
+// CE QUE ÇA NE CHANGE PAS, et c'est la seule chose qui compte : la réponse. Le filet compare la
+// sortie mémoïsée à la sortie directe sur le vrai catalogue.
+const cacheBadgeParContexte = new WeakMap();
+
+function memoireDuContexte(ctx) {
+  let m = cacheBadgeParContexte.get(ctx);
+  if (!m) { m = { rows: parseToolsTable(ctx.toolsTableMarkdown), verdicts: new Map() }; cacheBadgeParContexte.set(ctx, m); }
+  return m;
+}
+
 function badgeWarningsForOutils(outils, onboardingContext) {
   if (!onboardingContext?.toolsTableMarkdown) return [];
-  const rows = parseToolsTable(onboardingContext.toolsTableMarkdown);
+  const { rows, verdicts } = memoireDuContexte(onboardingContext);
   const warnings = [];
   for (const outil of outils) {
     const primaryName = primaryToolName(outil);
     const row = rows.find((r) => r.tool.toLowerCase().includes(primaryName.toLowerCase()) || primaryName.toLowerCase().includes(r.tool.toLowerCase()));
     if (!row || !CERTIFIABLE_STATUTS.includes(row.statut)) continue;
-    const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
-    const result = checkAgentOnboarding(row.tool, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides });
+    if (!verdicts.has(row.tool)) {
+      const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
+      verdicts.set(row.tool, checkAgentOnboarding(row.tool, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides }));
+    }
+    const result = verdicts.get(row.tool);
     if (!result.complet) warnings.push(`${row.tool} n'a pas son badge (${result.gaps.join(" ; ")})`);
   }
   return warnings;
 }
+
 
 // ————————————————————————————————————————————————————————————————————————
 // « EST-CE QUE ÇA EXISTE DÉJÀ ? » (2026-09-26, tâche #746)

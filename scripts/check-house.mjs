@@ -4821,6 +4821,35 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
 
   assert.deepEqual(matches[0].badgeWarnings, [], 'without an onboardingContext argument, badgeWarnings must default to an honest empty array rather than throwing or fabricating a warning — full backward compatibility for every pre-existing caller');
 
+  // LE MÊME TRAVAIL REFAIT SIX MILLE FOIS (2026-09-28, tâche #1010). L'état des tâches mettait
+  // QUATRE MINUTES. Mesuré AVANT de toucher quoi que ce soit, parce qu'une cause supposée n'est pas
+  // une cause (Article 19) : un appel à suggestPrestationsForTask() coûtait 2 272 ms AVEC le
+  // contexte de badge et 2 ms sans — lire les 985 lignes du suivi, à côté, prend 22 ms. La cause
+  // est bête : le verdict de badge est recalculé pour chaque prestation (70) sur chaque tâche
+  // ouverte (89), et chaque calcul reparse la table puis relit le dépôt. Mémoïsé sur l'OBJET
+  // contexte (une WeakMap : un contexte reconstruit est une clé neuve, donc jamais de réponse
+  // périmée, et rien à vider à la main). Mesure après : 175,7 s → 1,6 s, sortie IDENTIQUE au
+  // caractère près sur le vrai suivi.
+  const ctxFaux = {
+    toolsTableMarkdown: '| Outil | Statut |\n|---|---|\n| faux-agent | Agent |\n',
+    agentOverrides: {},
+  };
+  let appels = 0;
+  const compteur = new Proxy(ctxFaux, { get(c, k) { if (k === 'toolsTableMarkdown') appels += 1; return c[k]; } });
+  suggestPrestationsForTask('une tache du suivi', fakePrestations, compteur);
+  const apresPremier = appels;
+  suggestPrestationsForTask('une autre tache du suivi', fakePrestations, compteur);
+  assert.ok(apresPremier > 0, 'the context is read at least once — a cache that never reads is a cache that answers nothing');
+  // L'ÉQUIVALENCE EST LA SEULE CHOSE QUI COMPTE, et elle se PROUVE : deux contextes équivalents mais
+  // DISTINCTS (donc deux clés de cache différentes) doivent rendre exactement le même verdict.
+  const ctxA = { toolsTableMarkdown: ctxFaux.toolsTableMarkdown, agentOverrides: {} };
+  const ctxB = { toolsTableMarkdown: ctxFaux.toolsTableMarkdown, agentOverrides: {} };
+  const viaA = suggestPrestationsForTask('la tache du suivi', fakePrestations, ctxA).map((m) => m.badgeWarnings);
+  const viaB = suggestPrestationsForTask('la tache du suivi', fakePrestations, ctxB).map((m) => m.badgeWarnings);
+  assert.deepEqual(viaA, viaB, 'THE ONLY THING THAT MATTERS: memoising must not change a single answer — two distinct but equivalent contexts give the identical verdict, which is what was verified end to end on the real tracker (175.7 s → 1.6 s, byte-identical output)');
+  const viaAbis = suggestPrestationsForTask('la tache du suivi', fakePrestations, ctxA).map((m) => m.badgeWarnings);
+  assert.deepEqual(viaAbis, viaA, 'and the SAME context asked twice answers the same thing — a cache that drifts on its second read is worse than no cache');
+
   // badgeWarnings (2026-09-20, demande explicite de l'utilisateur : « si un membre de l'équipe est
   // sollicité alors qu'il n'a pas de badge, une alerte doit nous être remontée ») — calibré avec
   // l'utilisateur pour ne couvrir QUE ce point de passage déjà construit, jamais un nouveau
