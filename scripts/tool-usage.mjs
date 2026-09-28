@@ -128,6 +128,17 @@ export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomethi
 // LA CORRECTION HONORE LES DEUX FORMES plutôt que de réécrire trente et un appels : quand onze
 // outils écrivent la même chose, c'est l'API qui manque, pas eux (leçon L37 — on corrige la classe).
 // Un nombre reste un horodatage ; un objet apporte `{ now, origin }`.
+// POURQUOI CHAQUE OUTIL DOIT L'APPELER, ÉCRIT ICI ET NULLE PART AILLEURS (2026-09-27, tâche #714 ;
+// rapatrié le 2026-09-28 par #997). Sans cet appel, le compteur ne voit jamais l'outil tourner :
+// son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure le silence du compteur,
+// jamais l'inactivité de l'outil (leçon L11). Six outils sont restés muets des mois parce qu'ils
+// étaient absents du catalogue, donc invisibles au verrou qui vérifie précisément ça — une
+// invisibilité qui en cachait une autre.
+//
+// CETTE RAISON VIVAIT EN SIX EXEMPLAIRES, un par outil corrigé, et CLONE-HUNTER l'a vu. Ce n'est
+// pas qu'une redite : six copies veulent dire six endroits à corriger et AUCUN qui fasse autorité —
+// le POURQUOI doit vivre à côté du QUOI (Article 27), et le QUOI est ici, pas chez l'appelant. Les
+// six sites portent désormais une ligne qui renvoie à celle-ci.
 export function recordCliUsage(toolSlug, nowOuOptions = undefined, env = process.env) {
   try {
     const options = (nowOuOptions && typeof nowOuOptions === "object") ? nowOuOptions : {};

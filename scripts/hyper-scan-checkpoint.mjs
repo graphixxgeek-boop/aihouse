@@ -43,6 +43,7 @@ import { recordCliUsage } from "./tool-usage.mjs";
 import { verifyRondeProcess } from "./circle-process-guardian.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { dataRows, numericColumn, performanceDePassages } from "./lib-markdown-table.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const INDEX_PATH = join(ROOT, "docs/hyper-scan-checkpoint/index.md");
@@ -75,23 +76,13 @@ export function lastCheckpointCommit(indexText) {
 // référence. Colonne "Trouvailles" de l'index = nombre de trouvailles CONFIRMÉES (jamais des
 // candidats non vérifiés) pour ce passage précis.
 export function checkpointPerformance(indexText) {
-  const dataRows = indexText
-    .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Commit couvert"));
-  const counts = dataRows
-    .map((row) => row.split("|").map((c) => c.trim()))
-    .filter((cols) => cols.length >= 5 && /^\d+$/.test(cols[4]))
-    .map((cols) => Number(cols[4]));
-  if (!counts.length) return undefined;
-  const passages = counts.length;
-  const totalFindings = counts.reduce((a, b) => a + b, 0);
-  const passagesAvecTrouvaille = counts.filter((n) => n > 0).length;
-  return {
-    passages,
-    totalFindings,
-    findingsPerPassage: totalFindings / passages,
-    hitRate: (passagesAvecTrouvaille / passages) * 100,
-  };
+  // LA LECTURE DE TABLE ET LE KPI VIENNENT DU MODULE PARTAGÉ (2026-09-28, tâche #997). Ce bloc les
+  // réécrivait tous les deux à la main alors que `lib-markdown-table` les rend depuis 2026-09-19 :
+  // un assistant partagé qu'on ne connaît pas ne sert à rien, et le doublon revient par la porte de
+  // celui qui ignorait son existence. Le contrat public ne bouge pas d'un champ.
+  const p = performanceDePassages(numericColumn(dataRows(indexText, "Commit couvert"), 4));
+  if (!p) return undefined;
+  return { passages: p.passages, totalFindings: p.total, findingsPerPassage: p.parPassage, hitRate: p.hitRate };
 }
 
 // LE RÉSUMÉ DOIT COMPTER CE QU'ARGUS COMPTE, pas ce qu'il AFFICHE (corrigé le 2026-09-23, trouvé en

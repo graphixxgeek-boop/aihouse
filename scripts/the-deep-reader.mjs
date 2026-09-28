@@ -25,6 +25,7 @@
 import { extractPersonaBlock, missingSectionsSignal, tooShortSignal } from "./judge-persona-shared.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { reliabilityNotice } from "./lib-shell.mjs";
+import { dataRows, numericColumn, performanceDePassages } from "./lib-markdown-table.mjs";
 
 export { extractPersonaBlock };
 
@@ -73,21 +74,11 @@ export function detectGenericReport(reportText) {
 // et rapporte le taux réel de passages ayant confirmé au moins un écart — jamais un nombre de
 // passages lancés, qui ne dit rien sur l'utilité réelle de l'outil.
 export function rereadPerformance(indexText) {
-  const dataRows = (indexText || "")
-    .split("\n")
-    .filter((l) => l.startsWith("|") && !/^\|\s*-+\s*\|/.test(l) && !l.includes("Dernière tâche couverte"));
-  const counts = dataRows
-    .map((row) => row.split("|").map((c) => c.trim()))
-    .filter((cols) => cols.length >= 4 && /^\d+$/.test(cols[3]))
-    .map((cols) => Number(cols[3]));
-  if (!counts.length) return undefined;
-  const passages = counts.length;
-  const totalEcarts = counts.reduce((a, b) => a + b, 0);
-  const passagesAvecEcart = counts.filter((n) => n > 0).length;
-  return {
-    passages,
-    totalEcarts,
-    ecartsParPassage: totalEcarts / passages,
-    hitRate: (passagesAvecEcart / passages) * 100,
-  };
+  // MÊME RAPATRIEMENT QUE CHEZ HYPER-SCAN-CHECKPOINT (2026-09-28, tâche #997) : la lecture de table
+  // et le KPI viennent du module partagé. Le `|| ""` qui protégeait ici d'un index absent vit
+  // désormais dans `dataRows` — une précaution recopiée est une précaution qu'un troisième
+  // appelant oubliera. Le contrat public ne bouge pas d'un champ.
+  const p = performanceDePassages(numericColumn(dataRows(indexText, "Dernière tâche couverte"), 3));
+  if (!p) return undefined;
+  return { passages: p.passages, totalEcarts: p.total, ecartsParPassage: p.parPassage, hitRate: p.hitRate };
 }

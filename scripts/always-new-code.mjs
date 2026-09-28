@@ -20,7 +20,7 @@
 
 import { statSync, readFileSync, existsSync } from "node:fs";
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
-import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
+import { dataRows, numericColumn, performanceDePassages } from "./lib-markdown-table.mjs";
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -223,11 +223,12 @@ export function churnSignal(stats) {
 // l'utilisateur, contrairement aux autres outils qui ont attendu plusieurs passages réels).
 // Absence honnête (undefined) tant qu'aucun passage n'a été enregistré — jamais un 0 % déguisé.
 export function alwaysNewCodePerformance(indexText) {
-  const counts = numericColumn(dataRows(indexText, "Zone examinée"), 3);
-  if (!counts.length) return undefined;
-  const passages = counts.length;
-  const totalFindings = counts.reduce((a, b) => a + b, 0);
-  return { passages, totalFindings, findingsPerPassage: totalFindings / passages };
+  // LE KPI VIENT DU MODULE PARTAGÉ (2026-09-28, tâche #997) : quatre outils le recalculaient à
+  // l'identique. L'absence honnête — `undefined` plutôt qu'un 0 % — y est désormais impossible à
+  // oublier pour le cinquième.
+  const p = performanceDePassages(numericColumn(dataRows(indexText, "Zone examinée"), 3));
+  if (!p) return undefined;
+  return { passages: p.passages, totalFindings: p.total, findingsPerPassage: p.parPassage };
 }
 
 const HARMONIA_MD_PATH = join(ROOT, "docs/referentiel/harmonia.md");

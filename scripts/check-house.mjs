@@ -1650,46 +1650,40 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // totalement inerte tant qu'il n'est pas explicitement configuré (Article 8, zéro changement de
   // comportement par défaut). Isolé en fin de fichier pour ne jamais décaler le compteur partagé
   // de crypto.randomUUID() (voir commentaire ligne 5) dont dépendent des tests antérieurs.
-  const priorFetch=globalThis.fetch;
-  const epoch=(await readWorld(db)).epoch;
-  globalThis.__testEnv.GEMINI_FALLBACK_MODELS='gemini-flash-latest';
-  let primaryAttempts=0,fallbackCalls=0;
-  globalThis.fetch=async(url,options)=>{
-    if(url==='https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent'){primaryAttempts++;return Response.json({error:{code:'rate_limit_exceeded'}},{status:429});}
-    assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent');fallbackCalls++;
-    // Rejoue EXACTEMENT la même requête (payload/headers déjà validés par le mock par défaut) sur
-    // l'URL du modèle principal, pour prouver que seul le nom du modèle change, jamais le contenu.
-    return priorFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent',options);
+  //
+  // DEUX STATUTS DÉCLENCHEURS, UN SEUL SCÉNARIO (factorisé le 2026-09-28, tâche #997, signalé par
+  // CLONE-HUNTER). Le 503 a rejoint le 429 le 2026-09-18, preuve concrète en simulation réelle le
+  // jour même : la requête lourde de l'application obtient parfois un 503 plutôt qu'un 429 pour un
+  // modèle pourtant confirmé en quota épuisé par sonde directe au même instant — même cause, donc
+  // le repli doit couvrir les deux. Les deux blocs étaient alors recopiés à l'identique, et SEUL LE
+  // STATUT CHANGEAIT : un troisième statut demain aurait fait une troisième copie, et une
+  // assertion renforcée dans l'une des trois n'aurait pas suivi dans les autres. AUCUNE ASSERTION
+  // N'EST PERDUE DANS LA FUSION — chacune est vérifiée pour chaque statut, ce qui était déjà le cas
+  // et le RESTE par construction plutôt que par recopie.
+  const scenarioDeRepli = async ({ statut, code, mot }) => {
+    const priorFetch = globalThis.fetch;
+    const epoch = (await readWorld(db)).epoch;
+    globalThis.__testEnv.GEMINI_FALLBACK_MODELS = 'gemini-flash-latest';
+    let primaryAttempts = 0, fallbackCalls = 0;
+    globalThis.fetch = async (url, options) => {
+      if (url === 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent') {
+        primaryAttempts++; return Response.json({ error: { code } }, { status: statut });
+      }
+      assert.equal(url, 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent');
+      fallbackCalls++;
+      // Rejoue EXACTEMENT la même requête (payload/headers déjà validés par le mock par défaut) sur
+      // l'URL du modèle principal, pour prouver que seul le nom du modèle change, jamais le contenu.
+      return priorFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent', options);
+    };
+    const r = await post(input('interact', 1, { epoch }));
+    assert.equal(r.status, 200, `a configured fallback model must let the turn succeed despite a primary-model ${statut}`);
+    assert.equal(primaryAttempts, 2, `both independent character calls must hit the primary model first (${statut})`);
+    assert.equal(fallbackCalls, 2, `both independent character calls must retry against the configured fallback model exactly once on a ${statut}`);
+    globalThis.fetch = priorFetch; delete globalThis.__testEnv.GEMINI_FALLBACK_MODELS;
+    console.log(`Passed: Gemini model fallback stays completely inert unless GEMINI_FALLBACK_MODELS is explicitly configured (proven by every earlier test in this suite), and once configured, both independent character calls recover from a primary-model ${statut} (${mot}) by replaying the exact same request against the fallback model.`);
   };
-  const r=await post(input('interact',1,{epoch}));
-  assert.equal(r.status,200,'a configured fallback model must let the turn succeed despite a primary-model 429');
-  assert.equal(primaryAttempts,2,'both independent character calls must hit the primary model first');
-  assert.equal(fallbackCalls,2,'both independent character calls must retry against the configured fallback model exactly once');
-  globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_FALLBACK_MODELS;
-  console.log('Passed: Gemini model fallback stays completely inert (single-model URL, proven by every earlier test in this suite) unless GEMINI_FALLBACK_MODELS is explicitly configured, and once configured, both independent character calls recover from a primary-model 429 by replaying the exact same request against the fallback model.');
-}
-
-{
-  // Repli sur 503 (2026-09-18, preuve concrète en simulation réelle le jour même : la requête
-  // réelle et lourde de l'application obtient parfois un 503 plutôt qu'un 429 pour un modèle
-  // pourtant confirmé en quota épuisé par sonde directe au même instant — même cause, donc le
-  // repli doit couvrir les deux). Mêmes garanties que le bloc 429 ci-dessus, jamais dupliquées :
-  // ce bloc ne revérifie que ce qui diffère (le statut déclencheur), pas déjà couvert par lui.
-  const priorFetch=globalThis.fetch;
-  const epoch=(await readWorld(db)).epoch;
-  globalThis.__testEnv.GEMINI_FALLBACK_MODELS='gemini-flash-latest';
-  let primaryAttempts=0,fallbackCalls=0;
-  globalThis.fetch=async(url,options)=>{
-    if(url==='https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent'){primaryAttempts++;return Response.json({error:{code:'unavailable'}},{status:503});}
-    assert.equal(url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent');fallbackCalls++;
-    return priorFetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-latest:generateContent',options);
-  };
-  const r=await post(input('interact',1,{epoch}));
-  assert.equal(r.status,200,'a configured fallback model must let the turn succeed despite a primary-model 503');
-  assert.equal(primaryAttempts,2,'both independent character calls must hit the primary model first');
-  assert.equal(fallbackCalls,2,'both independent character calls must retry against the configured fallback model exactly once on a 503');
-  globalThis.fetch=priorFetch;delete globalThis.__testEnv.GEMINI_FALLBACK_MODELS;
-  console.log('Passed: Gemini model fallback also recovers from a primary-model 503 (proven in real simulation to signal the same underlying quota exhaustion as a 429 on a heavy real request), not only a 429.');
+  await scenarioDeRepli({ statut: 429, code: 'rate_limit_exceeded', mot: 'quota par modèle épuisé' });
+  await scenarioDeRepli({ statut: 503, code: 'unavailable', mot: 'même cause, vue en simulation réelle' });
 }
 
 {

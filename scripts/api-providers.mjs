@@ -68,10 +68,23 @@ async function probeGemini(key, model, { heavy = false } = {}) {
       const retryDelay = body?.error?.details?.find(d => d.retryDelay)?.retryDelay;
       return { status: "QUOTA_ÉPUISÉ", ms, detail: (quotaId ?? message.slice(0, 80)) + (retryDelay ? ` (retryDelay Google: ${retryDelay}, souvent trompeur pour un quota journalier)` : "") };
     }
-    return { status: `HTTP ${r.status}`, ms, detail: message.slice(0, 100) };
+    return statutHttpInattendu(r.status, ms, message);
   } catch (e) {
-    return { status: "ERREUR_RÉSEAU", ms: Date.now() - started, detail: e.message };
+    return statutErreurReseau(e, started);
   }
+}
+
+// LES DEUX SORTIES D'ÉCHEC SONT LES MÊMES POUR TOUS LES FOURNISSEURS, et elles étaient recopiées dans
+// chacun (2026-09-28, tâche #997, signalé par CLONE-HUNTER). Le risque n'est pas la place prise :
+// c'est qu'un fournisseur ajouté demain recopie la forme de travers — un champ oublié, un libellé
+// différent — et que Smart Breaker lise alors un état qu'il ne connaît pas. Nommées une fois, elles
+// deviennent le contrat que tout nouveau fournisseur hérite sans y penser (Article 24).
+export function statutHttpInattendu(status, ms, message = "") {
+  return { status: `HTTP ${status}`, ms, detail: String(message).slice(0, 100) };
+}
+
+export function statutErreurReseau(e, depuis) {
+  return { status: "ERREUR_RÉSEAU", ms: Date.now() - depuis, detail: e?.message ?? String(e) };
 }
 
 // Fournisseur payant/différent fourni en exemple concret (OpenAI) : appel minimal (1 token en
@@ -91,9 +104,9 @@ async function probeOpenAI(key, model) {
     const body = await r.json().catch(() => ({}));
     const message = body?.error?.message ?? "";
     if (r.status === 429) return { status: "QUOTA_ÉPUISÉ", ms, detail: message.slice(0, 80) };
-    return { status: `HTTP ${r.status}`, ms, detail: message.slice(0, 100) };
+    return statutHttpInattendu(r.status, ms, message);
   } catch (e) {
-    return { status: "ERREUR_RÉSEAU", ms: Date.now() - started, detail: e.message };
+    return statutErreurReseau(e, started);
   }
 }
 

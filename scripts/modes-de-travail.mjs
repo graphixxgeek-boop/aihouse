@@ -122,11 +122,7 @@ export function formatModes(modes = MODES, courant = null) {
   return l.join("\n");
 }
 
-// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
-// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
-// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
-// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
-// précisément ça — une invisibilité qui en cachait une autre.
+// LE PASSAGE S'ENREGISTRE : la raison complète vit à côté de `recordCliUsage()` (scripts/tool-usage.mjs).
 if (import.meta.url === `file://${process.argv[1]}`) {
   recordCliUsage("modes-de-travail");
   const demande = process.argv[2];

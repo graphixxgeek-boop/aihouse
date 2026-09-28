@@ -22,7 +22,7 @@ import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { sh, printReliabilityNotice, derniereTouchePartagee } from "./lib-shell.mjs";
-import { dataRows, numericColumn } from "./lib-markdown-table.mjs";
+import { dataRows, numericColumn, performanceDePassages } from "./lib-markdown-table.mjs";
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { LIB_MAP, FILE_TO_ZONES, collectCoverage, robustnessScore } from "./axa-check.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -97,11 +97,12 @@ export function delegationQuestions(file) {
 // Même mécanique que alwaysNewCodePerformance()/checkpointPerformance() : absence honnête tant
 // qu'aucun passage n'a été enregistré, jamais un 0% déguisé.
 export function cleanDirtyOldPerformance(indexText) {
-  const counts = numericColumn(dataRows(indexText, "Zone signalée"), 3);
-  if (!counts.length) return undefined;
-  const passages = counts.length;
-  const totalFindings = counts.reduce((a, b) => a + b, 0);
-  return { passages, totalFindings, findingsPerPassage: totalFindings / passages };
+  // LE KPI VIENT DU MODULE PARTAGÉ (2026-09-28, tâche #997) : quatre outils le recalculaient à
+  // l'identique. L'absence honnête — `undefined` plutôt qu'un 0 % — y est désormais impossible à
+  // oublier pour le cinquième.
+  const p = performanceDePassages(numericColumn(dataRows(indexText, "Zone signalée"), 3));
+  if (!p) return undefined;
+  return { passages: p.passages, totalFindings: p.total, findingsPerPassage: p.parPassage };
 }
 
 // --- Orchestration réelle ---------------------------------------------------------------------

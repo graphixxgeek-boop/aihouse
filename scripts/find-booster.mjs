@@ -42,11 +42,31 @@ export const HARMONIA_THEME_KEYWORDS = {
   "Relation Lia/Noé": ["attraction", "attirance", "couple", "relation"],
 };
 
+// DEUX GESTES QUI SE RÉPÉTAIENT DANS CINQ ET DEUX EXTRACTEURS (2026-09-28, tâche #997, signalé par
+// CLONE-HUNTER). Ils sont minuscules, et c'est justement ce qui les rendait invisibles : personne
+// ne relit une ligne de normalisation. Le coût réel n'est pas la place prise, c'est qu'une
+// correction appliquée à l'un des cinq ne l'aurait pas été aux quatre autres — et rien n'aurait
+// signalé l'écart. Nommés plutôt qu'inlinés, ils disent aussi ce qu'ils font.
+
+// Une source se donne en texte ou déjà découpée en lignes : les deux formes sont acceptées partout.
+export function lignesDeLaSource(source) {
+  return Array.isArray(source) ? source : String(source ?? "").split("\n");
+}
+
+// L'ÉTIQUETTE EST LA TÊTE DE LA DESCRIPTION, coupée à la première parenthèse ou au premier tiret
+// long — là où une phrase de commentaire passe de l'annonce à l'explication. Le repli sur la
+// description entière n'est pas décoratif : une description qui COMMENCE par une parenthèse rendrait
+// sinon une étiquette vide, donc une entrée d'index sans nom.
+export function etiquetteDepuisLaDescription(description) {
+  const d = String(description ?? "");
+  return (d.split(/\s*[(\u2014]/)[0] || d).trim();
+}
+
 // Extrait chaque fonction nommée top-level et le bloc de commentaire contigu qui la précède
 // immédiatement — jamais une nouvelle convention d'annotation, juste ce qui existe déjà. Sert les
 // fichiers découpés en fonctions (route.ts une fois découpé, la plupart de lib/).
 export function extractFunctionIndex(source) {
-  const lines = Array.isArray(source) ? source : source.split("\n");
+  const lines = lignesDeLaSource(source);
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     const match = FUNCTION_RE.exec(lines[i]);
@@ -73,7 +93,7 @@ const BLOCK_START_RE = /^\{$/;
 // sur sa ligne dans le style de ce projet. Un bloc sans commentaire n'a honnêtement rien à indexer,
 // jamais un nom fabriqué à partir de rien.
 export function extractBlockIndex(source) {
-  const lines = Array.isArray(source) ? source : source.split("\n");
+  const lines = lignesDeLaSource(source);
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     if (!BLOCK_START_RE.test(lines[i])) continue;
@@ -85,7 +105,7 @@ export function extractBlockIndex(source) {
     }
     if (!commentLines.length) continue;
     const description = commentLines.join(" ").trim();
-    const label = (description.split(/\s*[(—]/)[0] || description).trim();
+    const label = etiquetteDepuisLaDescription(description);
     entries.push({ name: label, line: i + 1, description });
   }
   return entries;
@@ -103,7 +123,7 @@ export function extractBlockIndex(source) {
 // motif, sautées ici sans réanalyse. Un commentaire suivi d'une ligne vide ou d'une accolade
 // fermante seule est ignoré : il clôt une section plutôt que d'en ouvrir une, jamais un vrai titre.
 export function extractCommentedStatementIndex(source, { excludeLines = new Set() } = {}) {
-  const lines = Array.isArray(source) ? source : source.split("\n");
+  const lines = lignesDeLaSource(source);
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     if (!/^\s*\/\//.test(lines[i]) || excludeLines.has(i + 1)) continue;
@@ -118,7 +138,7 @@ export function extractCommentedStatementIndex(source, { excludeLines = new Set(
     const next = lines[j];
     if (commentLines.length < 2 || !next || !next.trim() || /^\s*\}\s*$/.test(next)) continue;
     const description = commentLines.join(" ").trim();
-    const label = (description.split(/\s*[(—]/)[0] || description).trim();
+    const label = etiquetteDepuisLaDescription(description);
     entries.push({ name: label, line: start + 1, description });
   }
   return entries;
@@ -133,7 +153,7 @@ const HEADING_RE = /^(#{2,4})\s+(.+)$/;
 // description est le premier paragraphe qui le suit (jusqu'à la ligne vide ou le prochain titre) —
 // jamais un résumé fabriqué au-delà de ce qui est réellement écrit juste après.
 export function extractHeadingIndex(source) {
-  const lines = Array.isArray(source) ? source : source.split("\n");
+  const lines = lignesDeLaSource(source);
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     const match = HEADING_RE.exec(lines[i]);
@@ -178,7 +198,7 @@ const DESCRIPTION_PREVIEW_LENGTH = 200;
 // modifiant le motif lui-même (qui doit rester capable de matcher n'importe où sur une vraie ligne de
 // code, ex. plusieurs entrées sur une seule ligne compactée).
 export function extractTitledArrayIndex(source) {
-  const lines = Array.isArray(source) ? source : source.split("\n");
+  const lines = lignesDeLaSource(source);
   const entries = [];
   for (let i = 0; i < lines.length; i++) {
     if (/^\s*\/\//.test(lines[i])) continue;

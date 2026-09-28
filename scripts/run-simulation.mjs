@@ -298,11 +298,7 @@ async function main() {
 // porteur de la leçon L14, a donc réinitialisé la maison et tenté de jouer une partie — puis s'est
 // arrêtée sur `process.exit(1)` faute de serveur. Un module qui AGIT à l'import ne peut pas être
 // testé, et c'est précisément ce qui l'avait laissé sans test jusqu'ici.
-// LE PASSAGE S'ENREGISTRE (2026-09-27, tâche #714). Sans cet appel, le compteur d'usage ne voit
-// jamais cet outil tourner : son zéro se lit ensuite comme « il ne sert à rien » alors qu'il mesure
-// le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
-// des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
-// précisément ça — une invisibilité qui en cachait une autre.
+// LE PASSAGE S'ENREGISTRE : la raison complète vit à côté de `recordCliUsage()` (scripts/tool-usage.mjs).
 if (import.meta.url === `file://${process.argv[1]}`) {
   recordCliUsage("run-simulation");
   main().catch((err) => { log(`❌ ${err.stack ?? err}`); process.exit(1); });
