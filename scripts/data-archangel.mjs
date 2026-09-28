@@ -119,11 +119,27 @@ export const ETATS_LECTURE = ["lue directement", "lue via un registre", "jamais 
 // corps contient au moins un chemin de source connu. Aucune liste à tenir — une table de registres
 // créée demain est reconnue le jour même, ce qui est le minimum pour un garde-fou dont le sujet
 // EST l'évolutivité.
+// LE SLASH FINAL NE DOIT RIEN DÉCIDER (2026-09-28, tâches #490/#566). Les identifiants de source
+// portent un slash final (`docs/sauvegardes/`) ; les tables, elles, sont écrites à la main et n'en
+// portent pas toujours (`"sauvegarde": "docs/sauvegardes"`). Une comparaison littérale rendait donc
+// « personne ne lit ce dossier » pour un dossier lu à chaque Ronde, à cause d'UN caractère absent.
+//
+// Corriger la table aurait réglé ce cas-ci et laissé le suivant : la prochaine entrée écrite sans
+// slash retomberait dans le trou. On normalise donc la COMPARAISON, une fois, pour tout le monde
+// (Article 24 : la règle vaut pour le membre qui arrivera demain).
+function memeChemin(a = "", b = "") {
+  const net = (x) => String(x).replace(/\/+$/, "");
+  return net(a) === net(b);
+}
+
 export function registresIndirects(texte, sources) {
   const trouvees = new Map();
   for (const m of String(texte ?? "").matchAll(/^export const\s+([A-Z_][A-Z0-9_]*)\s*=\s*[[{][\s\S]*?^[\]}];?$/gm)) {
     const [corps, nom] = [m[0], m[1]];
-    const chemins = sources.filter((s) => corps.includes(s.id)).map((s) => s.id);
+    // Le corps est balayé une fois pour en extraire ses chaînes de chemin, puis comparé sans le
+    // slash final — jamais un `includes()` brut, qui dépend d'un caractère d'écriture.
+    const cites = new Set([...corps.matchAll(/["'`]((?:docs|scripts|\.)[^"'`]*)["'`]/g)].map((x) => String(x[1]).replace(/\/+$/, "")));
+    const chemins = sources.filter((s) => cites.has(String(s.id).replace(/\/+$/, "")) || corps.includes(s.id)).map((s) => s.id);
     if (chemins.length) trouvees.set(nom, chemins);
   }
   return trouvees;
@@ -230,7 +246,22 @@ export function mapReaders({ root = ROOT, readFileImpl = lireFichierPartage, sou
         for (const chemin of chemins) {
           if (lecteursPar.get(chemin)?.includes(f)) continue;
           const liste = indirectsPar.get(chemin);
-          if (liste && !liste.some((e) => e.fichier === f)) liste.push({ fichier: f, via: nom });
+          // LA CLÉ DE DÉDOUBLONNAGE EST LE COUPLE (fichier, table), JAMAIS LE FICHIER SEUL
+          // (2026-09-28, tâches #490/#566).
+          //
+          // LE DÉFAUT, et c'était une CLASSE entière de faux négatifs, pas deux cas isolés. Un même
+          // fichier emploie souvent plusieurs tables ; `circle-process-guardian.mjs` emploie
+          // CIRCLE_ITEMS **et** CIRCLE_REPORT_FOLDERS. En ne gardant que la PREMIÈRE rencontrée, on
+          // jetait l'autre — or ce n'est pas un doublon : ce sont deux faits différents. Et c'est
+          // précisément CIRCLE_REPORT_FOLDERS qui porte le crédit de « lecteur de table DÉCLARÉ »,
+          // le seul qui sorte une donnée de l'alerte. Le tri des tables suffisait donc à décider
+          // si un dossier passait pour lu ou pour orphelin.
+          //
+          // CE QUE ÇA COÛTAIT, mesuré : `docs/data-archangel/` est un dossier de dépôt d'item de
+          // Ronde, ouvert à chaque passage par le lecteur générique construit pour ça (#566) — et
+          // il figurait dans l'alerte « personne ne la lit ». Le chantier aurait pu se conclure en
+          // lui inventant un lecteur qu'il avait déjà.
+          if (liste && !liste.some((e) => e.fichier === f && e.via === nom)) liste.push({ fichier: f, via: nom });
         }
       }
     }
@@ -786,8 +817,76 @@ export function formatReprisesLines(r, { parLieu = 6 } = {}) {
 // PHRASE citant un chemin prise pour une constante de chemin, leçon L28).
 //
 // CE QUI RESTE EST GRATUIT ET SUFFIT : dire ce que la mesure mesure vraiment.
-export function criticalIgnoredData(briefing, { seuilFraicheurJours = 2 } = {}) {
-  return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0 && !(l.lueParTableDeclaree ?? []).length);
+// ════════════════════════════════════════════════════════════════════════════════════════
+// LA SECONDE ISSUE — L'ABSENCE ASSUMÉE, ÉCRITE NOIR SUR BLANC (2026-09-28, tâches #490/#566)
+// ════════════════════════════════════════════════════════════════════════════════════════
+//
+// #490 posait la règle depuis le 2026-09-23 : « Deux issues par donnée, jamais une troisième : un
+// lecteur réel, ou une absence assumée écrite noir sur blanc. » La PREMIÈRE issue existait et se
+// mesurait. La SECONDE n'existait nulle part — il n'y avait aucun endroit où l'écrire, donc aucune
+// donnée ne pouvait jamais sortir de l'alerte autrement qu'en recevant un lecteur.
+//
+// CE QUE ÇA PRODUISAIT, et c'est le défaut que ce projet connaît sous le nom de leçon L6 : une
+// alerte qu'AUCUNE ACTION LÉGITIME NE PEUT ÉTEINDRE devient du décor en deux passages, et on cesse
+// alors de lire la liste où se cachent les vrais manques. Certaines de ces données n'ont PAS
+// vocation à être relues par un outil — une mémoire anti-doublon est faite pour son producteur, et
+// lui inventer un lecteur serait fabriquer du travail que personne n'a voulu.
+//
+// POURQUOI UN REGISTRE ET PAS UN COMMENTAIRE : un commentaire promettant que « c'est normal » est
+// une intention, jamais un mécanisme (Article 24). Ici la déclaration est LUE, elle est datée, elle
+// porte sa raison, et deux garde-fous la vérifient — sans quoi ce serait une case à cocher pour
+// faire taire l'alerte, c'est-à-dire exactement le contraire de ce que #490 demande.
+//
+// LES DEUX GARDE-FOUS, ET AUCUN N'EST DÉCORATIF :
+//   · une déclaration sans raison lisible est REFUSÉE (une absence sans raison n'est pas une
+//     décision, c'est un abandon déguisé — même règle que l'Article 28 pour un constat ÉCARTÉ) ;
+//   · une déclaration qui vise une donnée qui N'EXISTE PLUS est signalée : elle ne protège plus
+//     rien et masquerait le jour où un homonyme réapparaîtrait.
+//
+// CE QU'ELLE N'AUTORISE PAS : y inscrire une donnée QUI DEVRAIT être lue. La liste est volontairement
+// courte et chaque entrée dit pourquoi un lecteur-outil n'aurait rien à en faire.
+export const LONGUEUR_MIN_RAISON_ABSENCE = 60;
+
+export const ABSENCES_ASSUMEES = [
+  {
+    donnee: ".banniere-post-commit.txt",
+    depuis: "2026-09-28",
+    raison: "Son lecteur est l'AGENT, pas un outil : c'est la bannière complète du dernier commit, écrasée à chaque passage, que le crochet réduit à ce qui exige une action et qui se relit à la demande quand on veut le contexte entier. Un outil qui la relirait relirait la sortie d'outils qu'il peut appeler lui-même — il n'apprendrait rien qu'il ne sache déjà.",
+  },
+  {
+    donnee: ".cassandra-rh-known-members.json",
+    depuis: "2026-09-28",
+    raison: "C'est une mémoire anti-doublon, faite pour son seul producteur : elle retient les slugs déjà vus afin de n'accueillir un nouveau membre qu'une fois. Son contenu n'a de sens que pour la décision « ai-je déjà salué celui-là ? », que personne d'autre ne prend. Un second lecteur n'aurait littéralement rien à en tirer.",
+  },
+];
+
+// La vérification, faite sur le disque réel plutôt que crue sur parole.
+export function verifierLesAbsencesAssumees(absences = ABSENCES_ASSUMEES, { root = ROOT, existe = existsSync } = {}) {
+  const fautes = [];
+  for (const a of absences) {
+    if (!a.donnee) { fautes.push({ donnee: "(sans nom)", pourquoi: "une absence assumée sans donnée nommée ne protège rien" }); continue; }
+    if (String(a.raison ?? "").trim().length < LONGUEUR_MIN_RAISON_ABSENCE) {
+      fautes.push({ donnee: a.donnee, pourquoi: `raison trop courte (${String(a.raison ?? "").trim().length} caractères) : une absence sans raison écrite n'est pas une décision, c'est un abandon déguisé` });
+    }
+    if (!existe(join(root, a.donnee))) {
+      fautes.push({ donnee: a.donnee, pourquoi: "la donnée visée n'existe plus : la déclaration ne protège plus rien et masquerait un homonyme qui réapparaîtrait" });
+    }
+  }
+  return fautes;
+}
+
+export function criticalIgnoredData(briefing, { seuilFraicheurJours = 2, absences = ABSENCES_ASSUMEES } = {}) {
+  const assumees = new Set(absences.map((a) => String(a.donnee).replace(/\/+$/, "")));
+  return briefing.filter((l) => l.ageJours !== undefined && l.ageJours <= seuilFraicheurJours && l.lecteurs === 0 && !(l.lueParTableDeclaree ?? []).length
+    && !assumees.has(String(l.id).replace(/\/+$/, "")));
+}
+
+// Les absences assumées se MONTRENT, elles ne se taisent pas : une donnée sortie de l'alerte sans
+// qu'on puisse voir pourquoi est indiscernable d'une donnée oubliée.
+export function donneesAbsenceAssumee(briefing, { absences = ABSENCES_ASSUMEES } = {}) {
+  const parId = new Map(absences.map((a) => [String(a.donnee).replace(/\/+$/, ""), a]));
+  return briefing.filter((l) => parId.has(String(l.id).replace(/\/+$/, "")))
+    .map((l) => ({ ...l, absence: parId.get(String(l.id).replace(/\/+$/, "")) }));
 }
 
 // LA MÊME POPULATION, MAIS L'AUTRE MOITIÉ : fraîche, sans lecteur direct, et lue par un lecteur de
@@ -912,6 +1011,8 @@ export function buildDataArchangelReport({ root = ROOT, readFileImpl = lireFichi
     briefing,
     critiques,
     parTableDeclaree,
+    absencesAssumees: donneesAbsenceAssumee(briefing),
+    fautesDAbsence: verifierLesAbsencesAssumees(undefined, { root }),
     total: carte.sources.length,
     branchees,
     // Le pourcentage porte sur les sources réellement inventoriées, jamais sur un total supposé.
@@ -935,6 +1036,14 @@ export function formatDataArchangelReport(r) {
         : " — personne ne la frôle, même par une table : l'absence assumée est ici l'issue la plus probable.";
       l.push(`  · ${c.id} (${c.producteur}, ${c.ageJours} j) — ${c.contenu}${annotation}`);
     }
+  }
+  if (r.absencesAssumees?.length) {
+    l.push("", `📄 ${r.absencesAssumees.length} donnée(s) SANS LECTEUR, ET C'EST ASSUMÉ — la seconde issue de #490, écrite plutôt que sous-entendue :`);
+    for (const a of r.absencesAssumees) l.push(`  · ${a.id} (depuis le ${a.absence.depuis}) — ${a.absence.raison}`);
+  }
+  if (r.fautesDAbsence?.length) {
+    l.push("", `🚨 ${r.fautesDAbsence.length} déclaration(s) d'absence assumée REFUSÉE(S) — elles ne protègent rien :`);
+    for (const f of r.fautesDAbsence) l.push(`  · ${f.donnee} — ${f.pourquoi}`);
   }
   if (r.parTableDeclaree?.length) {
     l.push("", `✅ ${r.parTableDeclaree.length} donnée(s) fraîche(s) sans lecteur direct, mais lue(s) par un lecteur de table DÉCLARÉ et corroboré — jamais un trou :`);

@@ -8852,6 +8852,83 @@ async function testSystemeDesIndex() {
 
 await testSystemeDesIndex();
 
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// LA CIRCULATION DES DONNÉES — deux faux négatifs de CLASSE, et la seconde issue de #490
+// ══════════════════════════════════════════════════════════════════════════════════════════
+async function testCirculationDesDonnees() {
+  const da = await import('../scripts/data-archangel.mjs');
+
+  // ── FAUX NÉGATIF 1 : la clé de dédoublonnage jetait la table qui compte ──────────────────
+  // Un fichier emploie souvent PLUSIEURS tables. En n'en gardant que la première, on jetait
+  // l'autre — or ce ne sont pas des doublons, ce sont deux faits différents, et c'est
+  // CIRCLE_REPORT_FOLDERS qui porte le crédit de « lecteur déclaré ».
+  const srcDeuxTables = [{ id: 'docs/zz-truc/', producteur: 'zz', contenu: 'x', scriptPath: 'scripts/zz.mjs' }];
+  const texteDeuxTables = [
+    'export const TABLE_A = {',
+    '  "un": "docs/zz-truc/",',
+    '};',
+    'export const TABLE_B = {',
+    '  "deux": "docs/zz-truc/",',
+    '};',
+  ].join('\n');
+  const deux = da.registresIndirects(texteDeuxTables, srcDeuxTables);
+  assert.deepEqual([...deux.keys()].sort(), ['TABLE_A', 'TABLE_B'], 'the two tables that carry the same path must BOTH be found — keeping only one loses the fact that matters');
+  const carteDeux = da.mapReaders({
+    sources: srcDeuxTables,
+    scripts: ['scripts/lecteur.mjs'],
+    readFileImpl: () => `${texteDeuxTables}\nfunction f(){ return [TABLE_A, TABLE_B]; }`,
+  });
+  const viaDeux = (carteDeux.indirectsPar.get('docs/zz-truc/') ?? []).map((e) => e.via).sort();
+  assert.deepEqual(viaDeux, ['TABLE_A', 'TABLE_B'], 'a single file employing two tables must be recorded ONCE PER TABLE: the de-duplication key is the (file, table) pair, never the file alone. Keeping only the first meant the alphabetical order of tables decided whether a folder counted as read or as orphaned — and docs/data-archangel/, a Ronde deposit folder opened at every pass by the generic reader built for it (#566), sat in the "nobody reads this" alert because of it');
+
+  // L'AUTRE SENS (BP4) : le même fichier cité deux fois pour la MÊME table reste UNE entrée,
+  // sinon le compte de lecteurs s'inflaterait tout seul.
+  const carteMeme = da.mapReaders({
+    sources: srcDeuxTables,
+    scripts: ['scripts/lecteur.mjs'],
+    readFileImpl: () => `export const TABLE_A = {\n  "un": "docs/zz-truc/",\n};\nfunction f(){ return TABLE_A; }\nfunction g(){ return TABLE_A; }`,
+  });
+  assert.equal((carteMeme.indirectsPar.get('docs/zz-truc/') ?? []).length, 1, 'and the same file employing the SAME table twice stays a single entry — otherwise the reader count would inflate itself');
+
+  // ── FAUX NÉGATIF 2 : un slash final de moins et le chemin ne se reconnaît plus ───────────
+  const srcSlash = [{ id: 'docs/zz-slash/', producteur: 'zz', contenu: 'x', scriptPath: 'scripts/zz.mjs' }];
+  const sansSlash = da.registresIndirects('export const T = {\n  "a": "docs/zz-slash",\n};', srcSlash);
+  assert.deepEqual([...sansSlash.keys()], ['T'], 'a table entry written WITHOUT the trailing slash must still match a source id that carries one: one missing character made a folder read at every Ronde report as "nobody reads it". Fixing the table would have fixed this case and left the next one — the comparison is normalised instead');
+  const avecSlash = da.registresIndirects('export const T = {\n  "a": "docs/zz-slash/",\n};', srcSlash);
+  assert.deepEqual([...avecSlash.keys()], ['T'], 'and the form WITH the slash keeps working — a normalisation that fixed one spelling by breaking the other would be a swap, not a fix');
+  // L'AUTRE SENS (BP4) : un chemin qui ne figure PAS dans la table n'est pas crédité.
+  assert.equal(da.registresIndirects('export const T = {\n  "a": "docs/autre-chose/",\n};', srcSlash).size, 0, 'and a path absent from the table is NOT credited — a normalisation that matched everything would turn the whole measure green while measuring nothing (leçon L5)');
+
+  // ── LA SECONDE ISSUE DE #490 : l'absence assumée, et ses deux garde-fous ─────────────────
+  assert.ok(da.ABSENCES_ASSUMEES.length > 0, 'the assumed-absence registry must actually carry entries: an empty one would prove nothing and #490 would still have only one of its two issues');
+  assert.deepEqual(da.verifierLesAbsencesAssumees(), [], 'and every real entry must pass its own guards against the real repository (Article 25)');
+  assert.deepEqual(
+    da.verifierLesAbsencesAssumees([{ donnee: 'CLAUDE.md', depuis: 'x', raison: 'parce que' }], { existe: () => true }).map((f) => f.pourquoi.slice(0, 20)),
+    ['raison trop courte ('],
+    'a declaration whose reason is too short is REFUSED: an absence without a written reason is not a decision, it is an abandonment in disguise — the same rule Article 28 applies to a finding set aside');
+  assert.equal(
+    da.verifierLesAbsencesAssumees([{ donnee: 'docs/zz-disparu.txt', depuis: 'x', raison: 'une raison bien assez longue pour passer le plancher de soixante caractères sans problème' }], { existe: () => false }).length,
+    1,
+    'and a declaration aimed at a file that no longer exists is named: it protects nothing any more, and would mask the day a namesake reappeared');
+
+  // L'EFFET, sur le VRAI dépôt (Article 25) — jamais sur des lignes fabriquées seulement.
+  const briefingReel = da.agentDataBriefing(da.mapReaders());
+  const critiquesReelles = da.criticalIgnoredData(briefingReel).map((c) => c.id);
+  assert.ok(!critiquesReelles.includes('docs/data-archangel/'), 'against the real repository, docs/data-archangel/ must no longer be accused: it IS a Ronde deposit folder read by the generic reader');
+  assert.ok(!critiquesReelles.includes('docs/sauvegardes/'), 'nor docs/sauvegardes/, for the same reason — it was only ever the missing trailing slash');
+  for (const a of da.ABSENCES_ASSUMEES) {
+    assert.ok(!critiquesReelles.includes(a.donnee), `a declared assumed absence leaves the alert (${a.donnee}) — an alert no legitimate action can extinguish becomes scenery in two passes (leçon L6)`);
+  }
+  // ET L'AUTRE SENS, qui est le plus important : l'alerte n'est pas vidée. Une mesure qui rend
+  // zéro après une correction est le faux vert le plus cher qui soit.
+  assert.ok(critiquesReelles.length > 0, `the alert must still name the genuine gaps — emptying it would be the expensive kind of green. It currently names ${critiquesReelles.length}: ${critiquesReelles.join(', ')}`);
+  assert.ok(da.donneesAbsenceAssumee(briefingReel).length === da.ABSENCES_ASSUMEES.length, 'and the assumed absences are SHOWN rather than silenced: a source that left the alert without anyone being able to see why is indistinguishable from a forgotten one');
+
+  console.log("Passed: la circulation des données — deux faux négatifs de CLASSE corrigés le 2026-09-28 (tâches #490/#566). Le premier : la clé de dédoublonnage des lectures indirectes était le FICHIER, alors que l'information portée est la TABLE ; un fichier employant CIRCLE_ITEMS et CIRCLE_REPORT_FOLDERS n'était retenu que sous la première, et c'est la seconde qui porte le crédit de lecteur déclaré — l'ordre des tables décidait donc si un dossier passait pour lu ou pour orphelin. Le second : un slash final absent d'une table écrite à la main suffisait à ce qu'un dossier lu à chaque Ronde soit compté sans lecteur ; la comparaison est normalisée une fois pour tout le monde plutôt que la table corrigée pour ce cas-ci. Enfin la seconde issue que #490 réclamait depuis cinq jours sans qu'aucun endroit n'existe pour l'écrire : l'absence assumée, refusée sans raison lisible et signalée si elle vise une donnée disparue. Mesure réelle : 10 données accusées → 6, dont 2 fausses accusations et 2 absences désormais déclarées avec leur raison.");
+}
+await testCirculationDesDonnees();
+
+
 
 
 
