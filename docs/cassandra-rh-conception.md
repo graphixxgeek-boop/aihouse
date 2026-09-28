@@ -485,3 +485,27 @@ n'aurait rien séparé — elle aurait réparti le même bloc sur deux fichiers.
 que la scission ne couvre pas — juger si la structure DOCUMENTAIRE du projet entier reste saine, et
 si un pôle mérite son propre document. Le construire aujourd'hui pour un rôle qu'un autre outil
 vient de prendre serait un doublon.
+
+## Comment lire `trous-de-couverture`, et pourquoi une dégradation n'accuse pas les tests (2026-09-28, tâche #1094)
+
+**Le cas réel** : CASSANDRA a rendu `trous-de-couverture : EN DÉGRADATION` le jour même où treize
+blocs de test rejoignaient le filet. Contre-intuitif au point qu'on soupçonne l'indicateur.
+
+**L'indicateur est juste, et sa sémantique mérite d'être écrite ici une bonne fois** : il compte les
+**outils portant au moins une fonction non couverte**, jamais un pourcentage de lignes. Ajouter
+vingt fonctions et treize blocs de test peut donc parfaitement le faire **monter** — et c'est le
+comportement voulu.
+
+**Ce que la dégradation dit exactement** : on construit plus vite qu'on ne couvre. C'est un fait sur
+le RYTHME, jamais un reproche sur les tests. Un dépôt qui n'ajoute rien et ne teste rien garde un
+indicateur stable, ce qui serait le pire des trois états.
+
+**La vérification qui a suivi, et elle a trouvé** : deux fonctions écrites ce jour-là n'avaient
+aucun test **direct** — `balayerLesLignesDeTaches()` (porteuse du contrat de deux détecteurs) et
+`appliquerPlancherDeReparation()` (porteuse de la règle « relève, jamais ne rabaisse »). Les deux
+étaient éprouvées seulement à travers leurs appelants, donc jamais sur leurs propres bords. Les deux
+ont désormais leur test direct.
+
+**La règle de lecture, pour la prochaine fois** : quand cette tendance se dégrade, ne pas chercher
+un défaut dans l'indicateur — chercher ce qui a été **ajouté** depuis le dernier point, et vérifier
+d'abord les fonctions qui portent un contrat pour d'autres. Ce sont celles qui ne cassent pas seules.

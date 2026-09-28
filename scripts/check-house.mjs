@@ -20339,3 +20339,49 @@ async function testAvisFondeSurDonneePerimee() {
   console.log("Passed: un avis OBLIGATOIRE fondé sur une donnée périmée (2026-09-28, tâche #1091). LE CONSTAT EST NET : le 2026-09-28, check-spirit a passé QUARANTE appels réels au modèle — deux passages de vingt, dont un entièrement bloqué par le moteur. `.gemini-key-health.json` n'a enregistré AUCUN épisode : son dernier datait du 2026-09-23, cinq jours plus tôt. Et pendant que vingt provocations sur vingt se faisaient refuser, Smart Conso API répondait « ok, pas de tension de quota récente notable ». L'AVIS N'ÉTAIT PAS FAUX PAR SON CALCUL, IL ÉTAIT FAUX PAR SON ÂGE : il n'y a effectivement aucune tension récente ENREGISTRÉE, parce que plus rien ne s'enregistre. LA CAUSE EST DOCUMENTÉE, et c'est ce qui rend le cas exemplaire : `lib/gemini-keys.ts` écrit noir sur blanc que le runtime garde ses épisodes EN MÉMOIRE et compte sur « un outil EXTÉRIEUR » pour les persister après une session. Cet outil n'existe pas. Le registre ne contient donc que les sondages de diagnostic, jamais le trafic réel — alors que Smart Conso le présente dans son propre commentaire comme « le vrai trafic API, une preuve INDÉPENDANTE ». POURQUOI ÇA COMPTE PLUS QU'UN CHIFFRE FAUX : l'Article 22 rend cette consultation OBLIGATOIRE avant toute action coûteuse. Une obligation adossée à une donnée qui se périme en silence n'est plus une protection, c'est un rituel — et « ok » est exactement le verdict qu'on ne re-vérifie jamais. CE QUI EST FAIT, ET CE QUI NE L'EST PAS : la passerelle qui persisterait le vrai trafic touche le runtime du produit, donc elle se propose et ne se pose pas une nuit. Ce qui est fait est la seule chose honnête en attendant — l'avis DIT désormais l'âge de ce sur quoi il se prononce, et le lecteur peut juger. Il ne le pouvait pas.");
 }
 await testAvisFondeSurDonneePerimee();
+
+// ————————————————————————————————————————————————————————————————————————
+// LES DEUX FONCTIONS QUE J'AI ÉCRITES AUJOURD'HUI SANS LES COUVRIR (2026-09-28, tâche #1094)
+// ————————————————————————————————————————————————————————————————————————
+// CASSANDRA a signalé « trous-de-couverture : en dégradation » le jour où j'ai ajouté treize blocs
+// de test. Contre-intuitif, donc à regarder — c'est le quatrième moment du process XP. Explication
+// mesurée : j'ai ajouté des fonctions plus vite que je ne les ai couvertes, et DEUX des miennes
+// n'avaient aucun test DIRECT. Les deux sont des porteuses de contrat, ce qui est précisément le
+// pire endroit où laisser un trou : elles ne cassent pas seules, elles emportent leurs appelants.
+async function testCeQueJaiEcritSansLeCouvrir() {
+  const C = await import('../scripts/check-suivi-fidelity.mjs');
+  const CLT = await import('../scripts/check-level-target.mjs');
+
+  // ── balayerLesLignesDeTaches() : elle porte le contrat { mesurable, ecarts, lignesLues } pour
+  // DEUX détecteurs. Elle n'était éprouvée qu'à travers eux — donc si elle cessait de compter ou
+  // d'refuser un dossier absent, les deux se dégraderaient ENSEMBLE et en silence.
+  const faux = { "s.md": "| 1 | h | k | sujet | source | RECOMMANDE-NECESSAIRE | détail | Ouverte\n| 2 | h | k | sujet | source | MOYENNE | détail | Terminé\n" };
+  const lire = () => faux["s.md"];
+  const balayage = C.balayerLesLignesDeTaches(() => null, "d", () => ["s.md"], lire, () => true);
+  assert.equal(balayage.mesurable, true);
+  assert.equal(balayage.lignesLues, 2, 'the sweep must count every row it read, even when the verdict finds nothing — a zero without its denominator is indistinguishable from a sweep that read nothing');
+  assert.deepEqual(balayage.ecarts, []);
+  const avecEcart = C.balayerLesLignesDeTaches((cells, file) => ({ numero: Number(cells[0]), file }), "d", () => ["s.md"], lire, () => true);
+  assert.equal(avecEcart.ecarts.length, 2, 'and it must collect exactly what the verdict returns, never filter it itself');
+  const absent = C.balayerLesLignesDeTaches(() => null, "d", () => [], () => "", () => false);
+  assert.equal(absent.mesurable, false, 'a missing folder is a NON-measure — the refusal must live in the shared sweep, not be re-written by each caller');
+
+  // ── appliquerPlancherDeReparation() : elle porte la règle « le plancher RELÈVE, jamais ne
+  // rabaisse ». Elle n'était éprouvée qu'à travers classifyCheckLevel, donc jamais sur ses propres
+  // bords — et un plancher qui plafonnerait aussi serait un nivellement invisible.
+  const bas = CLT.appliquerPlancherDeReparation({ level: 'leger', confidence: 'claire', reasoning: 'R' }, { enZoneRouge: true, plancher: 'standard', pourquoi: 'P' });
+  assert.equal(bas.level, 'standard', 'it must LIFT a level below the floor');
+  assert.equal(bas.releveParLeModeReparation, true, 'and say so');
+  const haut = CLT.appliquerPlancherDeReparation({ level: 'exceptionnel', confidence: 'claire', reasoning: 'R' }, { enZoneRouge: true, plancher: 'standard', pourquoi: 'P' });
+  assert.equal(haut.level, 'exceptionnel', 'and NEVER lower one already above it — a floor that also caps is a levelling, and it would lose exactly the information we are trying to gain');
+  assert.equal(haut.releveParLeModeReparation, undefined, 'nor claim to have raised what it did not touch');
+  const hors = CLT.appliquerPlancherDeReparation({ level: 'leger', confidence: 'claire', reasoning: 'R' }, { enZoneRouge: false });
+  assert.equal(hors.level, 'leger', 'outside the red zone it must change strictly nothing');
+  assert.equal(hors.zoneRouge, undefined);
+  const nomme = CLT.appliquerPlancherDeReparation({ level: 'leger', confidence: 'claire', reasoning: 'R' }, { enZoneRouge: true, plancher: null, pourquoi: 'réparation sans risque' });
+  assert.equal(nomme.level, 'leger', 'a declared risk-free repair keeps its level');
+  assert.equal(nomme.zoneRouge, true, 'but the zone is still NAMED — the verdict comes from pattern matching, and the reader must be able to judge it');
+
+  console.log("Passed: les deux fonctions que j'ai écrites aujourd'hui sans les couvrir (2026-09-28, tâche #1094). CASSANDRA a signalé « trous-de-couverture : EN DÉGRADATION » le jour même où j'ajoutais treize blocs de test. C'est contre-intuitif, donc c'est à regarder — le quatrième moment du process XP, ajouté ce matin, dit exactement ça : un rapport qui détonne avec ce qu'on croit savoir du terrain. EXPLICATION MESURÉE, ET ELLE EST SUR MOI : j'ai ajouté des fonctions plus vite que je ne les ai couvertes. DEUX des miennes n'avaient aucun test DIRECT, et ce sont les deux pires candidates — des PORTEUSES DE CONTRAT, qui ne cassent pas seules mais emportent leurs appelants. `balayerLesLignesDeTaches()` porte { mesurable, ecarts, lignesLues } pour DEUX détecteurs : si elle cessait de compter ou de refuser un dossier absent, les deux se dégraderaient ENSEMBLE et en silence — et son dénominateur est précisément ce qui distingue « rien trouvé » de « rien lu ». `appliquerPlancherDeReparation()` porte la règle « le plancher RELÈVE, jamais ne rabaisse » : elle n'était éprouvée qu'à travers son appelant, donc jamais sur ses propres bords, et un plancher qui plafonnerait aussi serait un nivellement invisible. LA LEÇON N'EST PAS « il faut tester davantage » : c'est qu'une couverture qui se DÉGRADE pendant qu'on ajoute des tests dit quelque chose de précis — on construit plus vite qu'on ne couvre — et que ce signal-là ne se lit qu'en le croyant plutôt qu'en le rationalisant.");
+}
+await testCeQueJaiEcritSansLeCouvrir();
