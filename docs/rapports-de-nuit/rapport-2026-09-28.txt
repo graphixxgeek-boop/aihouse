@@ -276,3 +276,48 @@ LA MATINÉE, SUITE — 09h41 à 11h30 (heure lue, source système)
   À SAVOIR AUSSI : 10 provocations sur 20 ont été bloquées (503 transitoires).
   Le verdict est donc PARTIEL, et l'outil le dit. Les catégories les plus dures
   sont surreprésentées parmi les manquantes : le jeu d'épreuve est à moitié joué.
+
+
+--------------------------------------------------------------------------------
+LE COMPTE AVANT / APRÈS — ce que tu avais demandé, et la réponse est franche
+--------------------------------------------------------------------------------
+
+  Ta demande : « redis-moi combien de tâches tu penses faire. Fais le compte
+  avant/après comme d'habitude. »
+
+  AVANT (référence figée au départ de la nuit) ...... 83 tâches ouvertes
+  APRÈS (mesuré à 13h00) ........................... 51 tâches ouvertes
+  FERMÉES OU INSTRUITES ............................ 32
+
+  ET LE CHIFFRE QUI COMPTE VRAIMENT N'EST PAS CELUI-LÀ.
+  J'ai classé les 51 restantes par PROPRIÉTAIRE, mécaniquement :
+
+    33 sont À TOI — elles portent « à trancher », « ta décision »,
+       « nécessite sa présence », ou tu les as toi-même dépriorisées.
+     7 sont du RENOMMAGE — tu as posé « pas de renommage en masse » comme
+       borne de cette nuit, et #1020 dit « plus tard, ce n'est pas urgent ».
+    11 tombaient dans « à moi » au premier tri.
+
+  MAIS EN LES OUVRANT UNE PAR UNE, LES ONZE SE RÉDUISENT À ZÉRO :
+    #492 instruite cette nuit, la décision est tienne · #612 tu as écrit
+    « on ne touche rien » · #636 et #1005 sont du renommage · #705 est
+    produite en dossier, la coupe est ta décision · #721 ne garde qu'un volet,
+    54 jugements à mener avec toi · #745, #790, #1019 sont des arbitrages ·
+    #679 et #696 demandent l'un un choix entre deux formes, l'autre tes
+    réponses à vingt questions.
+
+  DONC, ET JE PRÉFÈRE TE LE DIRE NET PLUTÔT QUE DE MEUBLER : la file
+  ATTEIGNABLE SANS TOI est épuisée. Ce qui reste n'attend pas du travail,
+  ça attend des décisions — les tiennes.
+
+  CE QUE J'AI FAIT DE CE CONSTAT PLUTÔT QUE M'ARRÊTER :
+  · j'ai rassemblé les trois modifications de CLAUDE.md en UN seul avant/après
+    à approuver, avec le coût en obligations de chacune ;
+  · j'ai donné à #679 la comparaison qu'elle réclamait : les deux formes entre
+    lesquelles tu dois choisir ont été construites cette nuit pour d'autres
+    raisons, donc elles sont comparables sur pièces au lieu d'être imaginées ;
+  · j'ai rafraîchi les chiffres périmés sur lesquels tu allais décider
+    (#793 : 12 052 → 20 297 lignes ; #687 : 1 378 → 4 489).
+
+  AUTREMENT DIT : je n'ai pas pu vider la file, mais j'ai rendu décidable
+  presque tout ce qui restait.
