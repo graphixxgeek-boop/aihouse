@@ -19581,3 +19581,50 @@ async function testUnCompteDeZeroNestPasUnManque() {
   console.log(`Passed: un compte de zéro est l'absence du manque, jamais le manque (2026-09-28, tâche #699). La chaîne « mesure → suite » cherche dans les tâches CLOSES les constats chiffrés qui n'annoncent ni suite ouverte ni raison de ne pas en ouvrir, et elle repère un écart à la proximité d'un compte de choses et d'un mot de manque. ELLE COMPTAIT AUSSI « 0 juge muet » et « 0 document muet sur les règles » : la phrase porte bien un nom dénombrable et un mot de manque, mais elle annonce un SUCCÈS. Réclamer une suite à un problème résolu, c'est demander du travail là où il n'y en a pas, et un garde-fou qui fait ça cesse d'être lu (L4). C'est la même famille que tout le reste de cette nuit — un signal ADJACENT (les mots du manque) lu comme le signal lui-même (le manque). LES DEUX BORNES COMPTENT AUTANT QUE LA RÈGLE : « 10 » ne doit pas se lire comme un zéro, et « 03 » non plus — les deux comptent de vraies choses, et les avaler aurait acheté du silence plutôt que de la justesse. Mesure : ${r.constats} constats, ${(r.ecarts ?? []).length} sans suite (trois accusations retirées, et rien d'autre).`);
 }
 await testUnCompteDeZeroNestPasUnManque();
+
+// =============================================================================================
+// #1039 — LES DEUX LIGNES QUE LE FILET NE SURVEILLAIT PAS
+// =============================================================================================
+// EZECHIEL LES A TROUVÉES EN LES CASSANT (2026-09-27) : il a remplacé une égalité stricte par une
+// différence dans chacune, et le filet est resté VERT. Son arbitrage, en fenêtre dédiée le
+// 2026-09-28 : « Écrire un test pour chacune ».
+//
+// POURQUOI CELLES-LÀ MÉRITENT UN TEST QUAND UNE SURVIVANTE N'EN MÉRITE PAS TOUJOURS : une
+// survivante dit que le filet ne surveille pas cette ligne, jamais qu'un test manque — la ligne
+// peut être sans conséquence observable, et la couvrir alourdirait le filet pour rien. Ces deux-ci
+// portent des VERDICTS lus souvent, et dans les deux cas l'erreur irait dans le sens rassurant :
+//   · « ce script est-il convocable ? » décide du rang d'un fichier dans toute la classification ;
+//   · « l'état du code est-il retrouvable ? » s'imprime en tête de CHAQUE rapport du paysage.
+// Une erreur dedans ne casse rien : elle se propage sans bruit.
+async function testLesDeuxLignesSansSurveillance() {
+  const LC = await import('../scripts/le-classificateur.mjs');
+  const RT = await import('../scripts/report-template.mjs');
+
+  // (1) LA PORTE D'ENTRÉE D'UN SCRIPT. La forme réelle, celle qu'emploient les quatre-vingts
+  // fichiers du dépôt, doit être reconnue — et la mutation d'Ezechiel (=== devenu !==) la rendrait
+  // aveugle à tous, donc déclarerait le paysage entier non convocable.
+  assert.equal(LC.MOTIF_PORTE_CLI.test('if (import.meta.url === `file://${process.argv[1]}`) main();'), true,
+    'the real launcher form must be recognised: this single pattern decides whether a file counts as callable, and with it its rank in the whole classification');
+  assert.equal(LC.MOTIF_PORTE_CLI.test('if (import.meta.url !== `file://${process.argv[1]}`) main();'), false,
+    'MUST NOT accept the inverted comparison — that is the exact mutation the net let through, and it would have called every script callable or none');
+  assert.equal(LC.MOTIF_PORTE_CLI.test('const x = import.meta.url;'), false,
+    'and merely mentioning import.meta.url is not a door: a script that reads its own URL is not one you can call');
+
+  // (2) LES TROIS ÉTATS DE L'ARBRE DE TRAVAIL, et la distinction est tout l'enjeu : `undefined`
+  // (dépôt illisible) et `false` (arbre propre) ne veulent pas dire la même chose. La mutation les
+  // confondait dans le sens le plus coûteux — un dépôt qu'on n'a PAS PU LIRE se serait imprimé en
+  // tête de chaque rapport comme un arbre propre, c'est-à-dire un état retrouvable.
+  const propre = RT.repoState({ shImpl: (args) => (args[0] === 'status' ? '' : 'abc1234') });
+  assert.equal(propre.travauxNonEnregistres, false, 'an empty porcelain means a CLEAN tree — false, never undefined');
+
+  const sale = RT.repoState({ shImpl: (args) => (args[0] === 'status' ? ' M fichier.mjs' : 'abc1234') });
+  assert.equal(sale.travauxNonEnregistres, true, 'a non-empty porcelain means uncommitted work');
+
+  const illisible = RT.repoState({ shImpl: () => { throw new Error('git absent'); } });
+  assert.equal(illisible.travauxNonEnregistres, undefined,
+    'AND AN UNREADABLE REPOSITORY IS undefined, NEVER false: "I could not look" printed as "the tree is clean" would put a false green at the head of every report in the landscape (leçons L5/L11)');
+  assert.equal(illisible.commit, undefined, 'the same honesty applies to the commit itself');
+
+  console.log(`Passed: les deux lignes que le filet ne surveillait pas (2026-09-28, tâche #1039). EZECHIEL LES A TROUVÉES EN LES CASSANT : il a remplacé une égalité stricte par une différence dans chacune, et le filet est resté VERT. POURQUOI CELLES-LÀ MÉRITENT UN TEST QUAND UNE SURVIVANTE N'EN MÉRITE PAS TOUJOURS — et la nuance est de lui : une survivante dit que le filet ne surveille pas cette ligne, jamais qu'un test manque ; la ligne peut être sans conséquence observable, et la couvrir alourdirait le filet qu'on est justement en train d'alléger. Ces deux-ci portent des VERDICTS lus souvent, et dans les deux cas l'erreur irait dans le SENS RASSURANT. « Ce script est-il convocable ? » décide du rang d'un fichier dans toute la classification, et la comparaison inversée aurait déclaré le paysage entier non convocable — ou l'inverse. « L'état du code est-il retrouvable ? » s'imprime en tête de CHAQUE rapport : là, la mutation confondait « dépôt illisible » et « arbre propre », donc un dépôt qu'on n'a PAS PU LIRE se serait affiché comme un état retrouvable, en haut de tout ce que produit le paysage. Une erreur dedans ne casse rien — elle se propage sans bruit, et c'est exactement ce qui la rend chère.`);
+}
+await testLesDeuxLignesSansSurveillance();

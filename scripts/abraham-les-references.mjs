@@ -28,7 +28,7 @@
 // de ses appelants lui passe SON motif de titre, SES exceptions et SES chemins ; lui ne sait rien
 // d'eux. C'est la condition pour qu'il parte vers un autre projet (Article 27).
 
-import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, relative } from "node:path";
 import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage, dernieresTouchesPartagees, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -136,7 +136,30 @@ export function mecanismeDeclareManuel(texte = "") {
 // L'APPELANT. Un fichier simplement absent de ce corpus se lisait comme un fichier inexistant —
 // une non-mesure prise pour une preuve (leçons L5/L11). Sans déclaration explicite que le corpus
 // est complet, un mécanisme introuvable devient « à confirmer », jamais « fantôme ».
-export function porteursDeclares(texteUnite = "", fichiers = {}, { corpusComplet = false } = {}) {
+// UN CHEMIN SE VÉRIFIE SUR LE DISQUE, JAMAIS SEULEMENT DANS LE CORPUS FOURNI (2026-09-28, tâche
+// #1066, trouvé à la Ronde). Le résolveur cherchait `scripts/check-house.mjs` parmi les clés de
+// l'objet `fichiers` reçu ; quand l'appelant ne passe que les DOCUMENTS, le fichier le plus
+// évident du dépôt sortait « fantôme ». Résultat : l'Article 13 — **la règle qui exige que les
+// documents reflètent le code réel** — était accusé de nommer un mécanisme introuvable, alors que
+// ses seize noms existent tous.
+//
+// **Un outil qui accuse à tort la règle qu'il sert décrédibilise cette règle**, et c'est plus cher
+// qu'un faux positif ordinaire (leçon L4).
+//
+// LA CORRECTION NE DESSERRE RIEN, et c'est la condition : un nom qui a la FORME D'UN CHEMIN se
+// tranche sur le disque, où la réponse est définitive ; un nom de FONCTION continue d'exiger le
+// corpus de code, parce que seul le corpus peut dire où elle est définie. Un chemin qui n'existe
+// vraiment pas reste donc un fantôme — vérifié dans les deux sens, sans quoi on aurait échangé un
+// faux positif contre un faux négatif.
+export function porteursDeclares(texteUnite = "", fichiers = {}, { corpusComplet = false, existeSurLeDisque = null } = {}) {
+  // Abraham travaille depuis la racine du dépôt, comme le reste de ce fichier — il n'a pas de
+  // constante ROOT, et lui en inventer une ici la ferait diverger de la sienne. LE `catch` A FAILLI
+  // ME COÛTER CHER : ma première version écrivait `join(ROOT, chemin)` avec un ROOT qui n'existe
+  // pas dans ce fichier, et le try/catch avalait la ReferenceError en rendant `false` — le
+  // correctif avait l'air posé et ne corrigeait rien. Un catch muet sur une erreur de PROGRAMMATION
+  // est exactement le faux vert que ce dépôt traque ailleurs ; c'est le contre-test qui l'a montré,
+  // pas la relecture.
+  const surLeDisque = existeSurLeDisque ?? ((chemin) => existsSync(chemin));
   const nommes = new Set();
   for (const m of String(texteUnite).matchAll(MOTIF_FONCTION_CITEE)) nommes.add({ type: "fonction", nom: m[1] });
   for (const m of String(texteUnite).matchAll(MOTIF_SCRIPT_CITE)) nommes.add({ type: "script", nom: m[1] });
@@ -151,7 +174,7 @@ export function porteursDeclares(texteUnite = "", fichiers = {}, { corpusComplet
   const trouves = [...parLeNom]; const fantomes = [];
   for (const n of nommes) {
     const existe = n.type === "script"
-      ? Object.prototype.hasOwnProperty.call(fichiers, n.nom)
+      ? (Object.prototype.hasOwnProperty.call(fichiers, n.nom) || surLeDisque(n.nom))
       : Object.entries(fichiers).some(([chemin, contenu]) => estDuCode(chemin) && new RegExp(`function\\s+${n.nom}\\b|const\\s+${n.nom}\\s*=`).test(contenu));
     (existe ? trouves : fantomes).push(n.nom);
   }

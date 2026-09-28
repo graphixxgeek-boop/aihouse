@@ -102,7 +102,16 @@ export function readAgentSession({ root = ROOT, readFileImpl = readFileSync } = 
 export function repoState({ shImpl } = {}) {
   const run = shImpl ?? ((args) => execFileSync("git", args, { cwd: ROOT, encoding: "utf8" }).trim());
   const safe = (args) => { try { return run(args) || undefined; } catch { return undefined; } };
-  const dirtyRaw = safe(["status", "--porcelain"]);
+  // LA DISTINCTION QUE LE COMMENTAIRE CI-DESSOUS PROMETTAIT N'ÉTAIT PAS IMPLÉMENTÉE (2026-09-28,
+  // tâche #1039, trouvé en ÉCRIVANT le test qu'il avait demandé). `safe()` rend `undefined` aussi
+  // bien quand git échoue que quand il répond une chaîne VIDE — or une porcelaine vide est
+  // exactement ce que rend un arbre PROPRE. Les deux états les plus opposés du dispositif, « je
+  // n'ai pas pu lire » et « tout est enregistré », se confondaient donc depuis toujours, et le
+  // résultat s'imprime en tête de CHAQUE rapport du paysage.
+  //
+  // Le test l'a montré en dix secondes, et la relecture ne l'avait jamais vu : le commentaire
+  // décrivait l'intention si clairement qu'on lisait l'intention à la place du code.
+  const dirtyRaw = (() => { try { return run(["status", "--porcelain"]); } catch { return undefined; } })();
   return {
     commit: safe(["rev-parse", "--short", "HEAD"]),
     branche: safe(["rev-parse", "--abbrev-ref", "HEAD"]),
