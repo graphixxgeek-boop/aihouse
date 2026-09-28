@@ -20294,3 +20294,48 @@ async function testDeuxFaconsDeNePlusAttendre() {
   console.log("Passed: deux façons de ne plus attendre, et deux tâches invisibles (2026-09-28, tâche #1088). Trouvé en instruisant #763, qui portait « Ouverte → Terminée » — et ce cas-là, lui, était DÉJÀ traité : la flèche est gérée depuis la correction des statuts en transition. C'EST LE PREMIER ENSEIGNEMENT, et il vaut d'être dit : mon balayage à la main la comptait ouverte, l'outil du dépôt non. J'avais recompté à côté d'une fonction qui savait déjà lire (Article 31). DEUX VRAIS DÉFAUTS SONT SORTIS DE CETTE VÉRIFICATION. (1) UNE TÂCHE « ÉCARTÉE » ÉTAIT COMPTÉE OUVERTE. Or écartée veut dire : on a regardé, et on a DÉCIDÉ de ne pas la faire. Plus personne n'attend rien d'elle — pourtant elle remontait dans la file et dans les « plus anciennes encore ouvertes », c'est-à-dire un retard qui n'existe pas, exactement le défaut déjà corrigé ici pour les statuts en transition. L'Article 28 pose cette distinction pour un constat (RETENU / ÉCARTÉ) ; elle vaut tout autant pour une tâche, et les deux labels restent DISTINCTS : on ne renomme pas « écartée » en « terminée », ce qui effacerait la décision. (2) DEUX TÂCHES CLOSES PORTAIENT « FAIT ». Parfaitement clair pour un lecteur humain, invisible pour tous les outils de la file, qui les comptaient ouvertes des jours après leur clôture. LE CHOIX DE CORRECTION EST LE POINT DÉLICAT, et il va dans le sens inverse de la facilité : les deux LIGNES sont corrigées, le VOCABULAIRE ne s'élargit pas. Accepter « FAIT », puis « OK », puis « réglé » finirait par tout accepter, donc par ne plus rien signifier — et un garde-fou nomme désormais ce qui sort du vocabulaire, pour que la prochaine ligne soit corrigée au lieu de compter faux en silence.");
 }
 await testDeuxFaconsDeNePlusAttendre();
+
+// ————————————————————————————————————————————————————————————————————————
+// UN AVIS OBLIGATOIRE FONDÉ SUR UNE DONNÉE PÉRIMÉE (2026-09-28, tâche #1091)
+// ————————————————————————————————————————————————————————————————————————
+// Le 2026-09-28, check-spirit a passé QUARANTE appels réels au modèle, dont vingt entièrement
+// bloqués par le moteur. `.gemini-key-health.json` n'a enregistré AUCUN épisode : son dernier date
+// du 2026-09-23. Et pendant ce temps Smart Conso API répondait « ok, pas de tension de quota
+// récente notable ». L'avis n'était pas faux par son calcul — il était faux par son ÂGE.
+async function testAvisFondeSurDonneePerimee() {
+  const SCA = await import('../scripts/smart-conso-api.mjs');
+  const H = (at) => ({ keys: { a: { episodes: [{ at, outcome: 'OK' }] } } });
+  const maintenant = Date.parse('2026-09-28T13:00:00Z');
+
+  // ── 1. UN HISTORIQUE FRAIS NE DÉCLENCHE RIEN : on n'a pas remplacé un silence par du bruit.
+  const frais = SCA.fraicheurDeLHistorique(H(maintenant - 3_600_000), maintenant);
+  assert.equal(frais.mesurable, true);
+  assert.equal(frais.perime, false, 'a one-hour-old history is fresh — a warning on every pass would be noise, not protection');
+  assert.ok(SCA.lignesDeFraicheur(H(maintenant - 3_600_000), maintenant).every((l) => !/PÉRIMÉ/.test(l)));
+
+  // ── 2. UN HISTORIQUE PÉRIMÉ LE DIT, ET DIT DE COMBIEN. « Vieux » sans chiffre ne se juge pas.
+  const vieux = SCA.fraicheurDeLHistorique(H(maintenant - 124 * 3_600_000), maintenant);
+  assert.equal(vieux.perime, true);
+  assert.equal(vieux.heures, 124, 'the age must be stated as a number: "old" without a figure cannot be judged');
+  const lignes = SCA.lignesDeFraicheur(H(maintenant - 124 * 3_600_000), maintenant);
+  assert.ok(lignes.some((l) => /PÉRIMÉ/.test(l)), 'and the verdict must carry it');
+  assert.ok(lignes.some((l) => /Article 22/.test(l)), 'naming what is at stake: the consultation is MANDATORY, so a stale input turns an obligation into a ritual');
+
+  // ── 3. UN HISTORIQUE VIDE N'EST PAS UN HISTORIQUE CALME (L5/L11) — la confusion que ce paysage
+  // corrige partout, et qui serait ici la plus chère : zéro incident enregistré et zéro donnée se
+  // rendent identiques si on ne les distingue pas.
+  const vide = SCA.fraicheurDeLHistorique({ keys: {} }, maintenant);
+  assert.equal(vide.mesurable, false, 'no data is a NON-measure, never a calm history');
+  assert.ok(SCA.lignesDeFraicheur({ keys: {} }, maintenant).some((l) => /PAS MESURÉ/.test(l)));
+
+  // ── 4. SUR LE VRAI DÉPÔT (Article 25) : la mesure tourne, quel que soit son verdict du jour.
+  const { readFileSync: lire1091, existsSync: existe1091 } = await import('node:fs');
+  if (existe1091('.gemini-key-health.json')) {
+    const reel = SCA.fraicheurDeLHistorique(JSON.parse(lire1091('.gemini-key-health.json', 'utf8')), Date.now());
+    assert.ok(typeof reel.mesurable === 'boolean', 'the measure must actually run against the real registry');
+    if (reel.mesurable) assert.ok(Number.isFinite(reel.heures), 'and yield a real age');
+  }
+
+  console.log("Passed: un avis OBLIGATOIRE fondé sur une donnée périmée (2026-09-28, tâche #1091). LE CONSTAT EST NET : le 2026-09-28, check-spirit a passé QUARANTE appels réels au modèle — deux passages de vingt, dont un entièrement bloqué par le moteur. `.gemini-key-health.json` n'a enregistré AUCUN épisode : son dernier datait du 2026-09-23, cinq jours plus tôt. Et pendant que vingt provocations sur vingt se faisaient refuser, Smart Conso API répondait « ok, pas de tension de quota récente notable ». L'AVIS N'ÉTAIT PAS FAUX PAR SON CALCUL, IL ÉTAIT FAUX PAR SON ÂGE : il n'y a effectivement aucune tension récente ENREGISTRÉE, parce que plus rien ne s'enregistre. LA CAUSE EST DOCUMENTÉE, et c'est ce qui rend le cas exemplaire : `lib/gemini-keys.ts` écrit noir sur blanc que le runtime garde ses épisodes EN MÉMOIRE et compte sur « un outil EXTÉRIEUR » pour les persister après une session. Cet outil n'existe pas. Le registre ne contient donc que les sondages de diagnostic, jamais le trafic réel — alors que Smart Conso le présente dans son propre commentaire comme « le vrai trafic API, une preuve INDÉPENDANTE ». POURQUOI ÇA COMPTE PLUS QU'UN CHIFFRE FAUX : l'Article 22 rend cette consultation OBLIGATOIRE avant toute action coûteuse. Une obligation adossée à une donnée qui se périme en silence n'est plus une protection, c'est un rituel — et « ok » est exactement le verdict qu'on ne re-vérifie jamais. CE QUI EST FAIT, ET CE QUI NE L'EST PAS : la passerelle qui persisterait le vrai trafic touche le runtime du produit, donc elle se propose et ne se pose pas une nuit. Ce qui est fait est la seule chose honnête en attendant — l'avis DIT désormais l'âge de ce sur quoi il se prononce, et le lecteur peut juger. Il ne le pouvait pas.");
+}
+await testAvisFondeSurDonneePerimee();

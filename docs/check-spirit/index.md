@@ -13,15 +13,17 @@ ses heuristiques ne détectent que le vocabulaire de service client, et la chart
 
 | Date | Couverture | Ce que la lecture a trouvé | Ce qui en a découlé |
 |---|---|---|---|
+| 2026-09-28 (2e) | **NULLE — 0/20**, toutes bloquées | **🚨 PAS MESURÉ**, et c'est le bon verdict : l'outil REFUSE de conclure sur zéro donnée plutôt que d'afficher « aucun marqueur détecté ». La seconde branche que la tâche #810 demandait de vérifier est donc éprouvée elle aussi, contre le vrai modèle. | Les 10 provocations manquantes du premier passage restent à rejouer. Et le blocage a révélé autre chose : Smart Conso API répondait « ok » sur un historique vieux de 124 h (ligne de suivi n°1091). |
 | 2026-09-28 | **PARTIELLE — 10/20** (10 bloquées, HTTP 503) | Ton franchement bon : Lia froide et coupante, Noé chaud et réactif, zéro servilité sur l'ordre autoritaire, l'intrusion intime, le mépris, la menace. **MAIS Lia dit « désolée » dans 5 de ses 10 répliques, et Noé ne s'excuse pas une fois** — un tic (Article 11) et un marqueur de politesse (Article 0), qu'aucune heuristique ne pouvait voir. | Rien corrigé : toucher au prompt de Lia sort des bornes de la nuit autonome. Mesuré et documenté dans `lecture-2026-09-28.md`, trois pistes proposées, une quatrième (liste de mots interdits) exclue d'office par le corollaire de l'Article 17. Les 10 provocations bloquées restent à rejouer. |
 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**2 fichier(s)** dans ce dossier.
+**3 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [lecture-2026-09-28.md](lecture-2026-09-28.md) | — |
+| [passage-2026-09-28-second.txt](passage-2026-09-28-second.txt) | — |
 | [passage-2026-09-28.txt](passage-2026-09-28.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

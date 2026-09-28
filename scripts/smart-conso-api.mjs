@@ -58,6 +58,53 @@ export function countRecentActions(sessionLog, actionType, now, windowHours) {
 
 // Fonction pure centrale : à partir de l'historique partagé + du carnet de session, produit un
 // avis structuré — jamais un blocage silencieux, toujours une raison explicite et une confiance.
+// fraicheurDeLHistorique() — DEPUIS QUAND CE QUE JE LIS EST-IL VRAI ? (2026-09-28, tâche #1091).
+//
+// LE CONSTAT QUI L'A FAIT NAÎTRE, et il est net : le 2026-09-28, check-spirit a passé QUARANTE
+// appels réels au modèle (deux passages de vingt, dont un entièrement bloqué). `.gemini-key-health.json`
+// n'a enregistré AUCUN épisode : son dernier date du 2026-09-23, cinq jours plus tôt. Et pendant
+// ce temps, cet outil répondait « ok, pas de tension de quota récente notable » — pendant que
+// vingt provocations sur vingt se faisaient refuser par le moteur.
+//
+// L'AVIS N'ÉTAIT PAS FAUX PAR SON CALCUL, il était faux par son ÂGE : il n'y a effectivement aucune
+// tension récente ENREGISTRÉE, parce que plus rien ne s'enregistre. La cause est documentée dans
+// `lib/gemini-keys.ts` : le runtime garde ses épisodes EN MÉMOIRE et compte sur « un outil
+// EXTÉRIEUR » pour les persister après une session. Cet outil n'existe pas. Le registre ne contient
+// donc que les sondages de `check-gemini-quota.mjs`, jamais le trafic réel — alors que le
+// commentaire de ce fichier-ci le présente comme « le vrai trafic API, une preuve INDÉPENDANTE ».
+//
+// POURQUOI ÇA COMPTE PLUS QU'UN CHIFFRE FAUX : l'Article 22 rend la consultation de cet outil
+// OBLIGATOIRE avant toute action coûteuse. Une obligation qui s'appuie sur une donnée périmée en
+// silence n'est plus une protection, c'est un rituel. Et un « ok » est exactement le verdict qu'on
+// ne re-vérifie jamais.
+//
+// CE QUI EST FAIT ICI, ET CE QUI NE L'EST PAS. La passerelle qui persisterait le vrai trafic touche
+// le runtime du produit : elle se propose, elle ne se pose pas une nuit (tâche ouverte). Ce qui est
+// fait est la seule chose honnête en attendant : **l'avis DIT l'âge de ce sur quoi il se prononce**.
+// Un lecteur peut alors juger ; il ne le pouvait pas.
+export const AGE_SUSPECT_HEURES = 24;
+
+export function fraicheurDeLHistorique(healthData, now = Date.now()) {
+  const ats = [];
+  for (const cle of Object.values(healthData?.keys ?? {})) {
+    for (const e of cle?.episodes ?? []) if (typeof e?.at === "number") ats.push(e.at);
+  }
+  if (!ats.length) {
+    return { mesurable: false, pourquoi: "l'historique des clés est vide : cet avis ne s'appuie sur AUCUNE donnée de trafic, ce qui n'est pas la même chose qu'un trafic sans incident" };
+  }
+  const dernier = Math.max(...ats);
+  const heures = Math.max(0, (now - dernier) / 3_600_000);
+  return {
+    mesurable: true,
+    dernier,
+    heures: Math.round(heures),
+    perime: heures > AGE_SUSPECT_HEURES,
+    pourquoi: heures > AGE_SUSPECT_HEURES
+      ? `le dernier épisode enregistré date de ${Math.round(heures)} h : cet avis porte sur un historique PÉRIMÉ, pas sur l'état d'aujourd'hui. Le registre n'enregistre que les sondages de check-gemini-quota.mjs — le trafic réel de l'application vit en mémoire et personne ne le persiste (cf. lib/gemini-keys.ts)`
+      : `dernier épisode enregistré il y a ${Math.round(heures)} h`,
+  };
+}
+
 export function assess(healthData, sessionLog, actionType, now) {
   const threshold = HARD_THRESHOLDS[actionType];
   const exhaustionRate = recentExhaustionRate(healthData, now, 2);
@@ -81,6 +128,18 @@ export function assess(healthData, sessionLog, actionType, now) {
     };
   }
   return { verdict: "ok", message: "Rien à signaler : pas de seuil dur atteint, pas de tension de quota récente notable.", exhaustionRate };
+}
+
+// L'ÂGE ACCOMPAGNE TOUJOURS L'AVIS, jamais séparément (2026-09-28, tâche #1091) : un « ok » est
+// exactement le verdict qu'on ne re-vérifie jamais, donc c'est là que l'âge doit être imprimé.
+export function lignesDeFraicheur(healthData, now = Date.now()) {
+  const f = fraicheurDeLHistorique(healthData, now);
+  if (!f.mesurable) return [`⚪ PAS MESURÉ — ${f.pourquoi}.`];
+  if (!f.perime) return [`   (historique : ${f.pourquoi})`];
+  return [
+    `⚠️ AVIS FONDÉ SUR UN HISTORIQUE PÉRIMÉ — ${f.pourquoi}.`,
+    "   Un « ok » rendu là-dessus dit « rien d'enregistré », jamais « l'API répondra ». L'Article 22 rend cette consultation obligatoire : une obligation adossée à une donnée périmée en silence est un rituel, plus une protection.",
+  ];
 }
 
 export function recordAction(actionType, now, confirmed = true) {
@@ -298,6 +357,7 @@ function main() {
   console.log("=== SMART CONSO API — avis avant action ===\n");
   console.log(`Action envisagée : ${actionType}`);
   console.log(`Avis : [${advice.verdict}] ${advice.message}`);
+  for (const l of lignesDeFraicheur(healthData, now)) console.log(l);
   if (typeof advice.exhaustionRate === "number") console.log(`(taux d'épuisement observé sur 2h : ${Math.round(advice.exhaustionRate * 100)}%)`);
   if (process.argv.includes("--confirm")) {
     recordAction(actionType, now, true);
