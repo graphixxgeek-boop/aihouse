@@ -284,7 +284,7 @@ export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir
 // additionner des verdicts ne les croise pas.
 export function causesIndirectes(sondes = {}) {
   const trouvailles = [];
-  const { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles } = sondes;
+  const { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite } = sondes;
 
   // ① Un remède dort ET le coût qu'il devait retirer est toujours payé → la lourdeur est
   //    entièrement évitable, ce qu'aucune des deux sondes ne dit seule.
@@ -601,6 +601,103 @@ export function coutDesArticlesVuDuDehors({ charte = lire("CLAUDE.md"), racines 
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LE TAUX D'ACTIONNABILITÉ (2026-09-28) — le RETENU de la recherche qui avait été OUBLIÉ
+// ————————————————————————————————————————————————————————————————————————
+// IL A DEMANDÉ « qu'est-ce qu'on a oublié ? », ET LA RÉPONSE ÉTAIT ÉCRITE DEPUIS LE MATIN.
+// Le plan d'action de la fiche de recherche (docs/recherches/ralentissements-causes-indirectes.md)
+// portait QUATRE constats RETENUS. Trois ont été codés le jour même. Le quatrième — « le taux
+// d'actionnabilité des alertes » — ne l'a jamais été, et rien ne le disait.
+//
+// C'EST EXACTEMENT CE QUE L'ARTICLE 28 EXISTE POUR EMPÊCHER, commis sur le rapport qui a servi à
+// construire l'outil qui traque ce genre de chose. Un plan d'action dont un RETENU ne devient
+// jamais du travail est un constat oublié — et il est d'autant mieux caché que les trois autres
+// ont été faits : le rapport a l'air traité.
+//
+// CE QU'IL MESURE, ET POURQUOI C'EST LE CHIFFRE DE LA FATIGUE D'ALERTE : la littérature donne 35 à
+// 91 % d'avertissements non actionnables, mais ce taux-là se mesure sur des avertissements
+// d'analyseur. Ici, l'équivalent exact existe et personne ne le calculait : parmi tous les constats
+// que les rapports de ce dépôt ont RETENUS — donc jugés dignes d'action par l'outil lui-même —
+// combien sont réellement devenus une tâche ?
+//
+// IL NE REFAIT PAS LE TRAVAIL DE god-of-all-process (Article 24/31) : `checkActionChain()` sait
+// déjà juger UN plan d'action contre le suivi. Ce qu'elle ne fait pas, c'est le TAUX sur l'ensemble.
+//
+// ————————————————————————————————————————————————————————————————————————
+// ET LE PREMIER PASSAGE A RENDU « 0 % SUR 323 CONSTATS ». CE CHIFFRE EST FAUX, ET IL N'A PAS ÉTÉ
+// LIVRÉ — c'est le sixième faux chiffre écarté dans la construction de cet outil, et le plus
+// spectaculaire. Un « 0 % » ACCUSE, donc il aurait été regardé ; mais il aurait envoyé chercher un
+// problème qui n'existe pas, pendant que le vrai restait invisible.
+//
+// LA CAUSE, ET C'EST UNE VRAIE TROUVAILLE SUR L'ARTICLE 28 : un plan d'action écrit sa tâche EN
+// PROSE — « tâche [RECOMMANDEE] : relancer avec les trois durées » — et **ne cite jamais son
+// NUMÉRO**. Je cherchais donc dans le texte quelque chose que le format ne contient pas. Les 5 qui
+// portaient un « #1234 » le portaient par hasard, dans le libellé du constat.
+//
+// CE QUE ÇA RÉVÈLE VAUT MIEUX QUE LE TAUX : **la chaîne de l'Article 28 n'est pas vérifiable
+// mécaniquement à l'échelle**. `checkActionChain()` la vérifie sur UN plan, au moment où il est
+// produit, parce que l'agent lui passe le numéro qu'il vient d'écrire. Mais une fois le rapport sur
+// le disque, plus rien ne relie ses constats retenus aux tâches réelles — 323 constats sans
+// traçabilité arrière.
+//
+// LA SONDE DÉCLARE DONC L'IMPOSSIBILITÉ plutôt que de rendre un pourcentage fabriqué (leçons
+// L5/L11, et Article 27 : déclarer une impossibilité EST la protection). Elle rend le VOLUME, qui
+// est un fait, et nomme ce qui manquerait pour rendre le taux calculable.
+export const MOTIF_RETENU = /^\s*→?\s*RETENU\s*·\s*(.+?)\s*—\s*tâche\s*\[/gim;
+export const MOTIF_TACHE_CITEE = /#(\d{2,5})\b/;
+
+export function tauxDActionnabilite({ racineRapports = "docs", lireDir = readdirSync, lireFic = readFileSync, suivi = null, minimum = 10 } = {}) {
+  const suiviTexte = suivi ?? (() => {
+    let t = "";
+    try {
+      for (const f of lireDir("docs/suivi/sessions")) {
+        if (f.endsWith(".md")) { try { t += lireFic(join("docs/suivi/sessions", f), "utf8"); } catch { /* illisible */ } }
+      }
+    } catch { return null; }
+    return t;
+  })();
+  if (suiviTexte == null) {
+    return pasMesure("le taux d'actionnabilité", "le registre des tâches est introuvable : sans lui on peut voir qu'un constat n'annonce aucune tâche, jamais vérifier qu'une tâche annoncée existe pour de vrai — deux questions différentes");
+  }
+  // On balaie les rapports déposés par les outils : ce sont eux qui portent les plans d'action.
+  const fichiers = [];
+  const pile = [racineRapports];
+  while (pile.length) {
+    const courant = pile.pop();
+    let entrees; try { entrees = lireDir(courant, { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${courant}/${e.name}`;
+      if (e.isDirectory()) { if (!/^(suivi|contexte-projet|archives)$/.test(e.name)) pile.push(chemin); continue; }
+      if (e.name.endsWith(".md") || e.name.endsWith(".txt")) fichiers.push(chemin);
+    }
+  }
+  let retenus = 0, avecTache = 0, tacheReelle = 0;
+  const orphelins = [];
+  for (const f of fichiers) {
+    let texte; try { texte = lireFic(f, "utf8"); } catch { continue; }
+    if (!texte.includes("RETENU ·")) continue;
+    for (const ligne of texte.split("\n")) {
+      if (!/RETENU\s*·/.test(ligne)) continue;
+      retenus += 1;
+      const m = ligne.match(MOTIF_TACHE_CITEE);
+      if (!m) { orphelins.push({ fichier: f, constat: ligne.replace(/^\s*[→\-\s]*/, "").slice(0, 90) }); continue; }
+      avecTache += 1;
+      // LA RÉFÉRENCE MORTE EST PIRE QU'UNE ABSENCE : elle ressemble à un lien. Même vérification
+      // que checkActionChain(), et pour la même raison.
+      if (new RegExp(`\\|\\s*${m[1]}\\s*\\|`).test(suiviTexte)) tacheReelle += 1;
+      else orphelins.push({ fichier: f, constat: ligne.slice(0, 90), tacheMorte: m[1] });
+    }
+  }
+  if (retenus < minimum) {
+    return { mesurable: false, quoi: "le taux d'actionnabilité",
+      pourquoi: `${retenus} constat(s) RETENU(S) trouvé(s) dans les rapports, il en faut ${minimum} : un taux sur si peu ressemble à une statistique sans en être une (BP5)` };
+  }
+  // LE TAUX N'EST PAS CALCULABLE, ET C'EST LA TROUVAILLE. On rend le volume — un fait — et on dit
+  // précisément ce qui manque, plutôt qu'un pourcentage que le format ne permet pas de produire.
+  return { mesurable: false, quoi: "le taux d'actionnabilité", retenus, avecNumero: avecTache, volumeMesure: true,
+    pourquoi: `${retenus} constat(s) RETENU(S) dorment dans les rapports du dépôt, et le taux d'actionnabilité N'EST PAS CALCULABLE — pas par manque de données, par manque de LIEN : un plan d'action écrit sa tâche en PROSE (« tâche [RECOMMANDEE] : … ») et ne cite jamais son NUMÉRO. Seuls ${avecTache} portent un « #nnnn », et par hasard, dans le libellé du constat. checkActionChain() vérifie la chaîne sur UN plan au moment où il est produit ; une fois le rapport sur le disque, plus rien ne relie ses constats aux tâches réelles. CE QUI LE RENDRAIT CALCULABLE : que le plan d'action inscrive le numéro de la tâche qu'il a fait naître` };
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LA CASCADE DES PROPHÈTES DU TEMPS — « rien ne passe à la trappe »
 // ————————————————————————————————————————————————————————————————————————
 // SA DESCRIPTION EXACTE, le 2026-09-28 : « SI on s'adresse à Jesus pour intervenir sur la charte,
@@ -750,8 +847,9 @@ export function passage(options = {}) {
   const allersRetours = mesAllersRetours(options);
   const fluidite = fluiditeDeLaFile(options);
   const articles = coutDesArticlesVuDuDehors(options);
-  const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles });
-  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, croisements };
+  const actionnabilite = tauxDActionnabilite(options);
+  const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite });
+  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite, croisements };
 }
 
 export function lignesDuPassage(p) {
@@ -771,6 +869,8 @@ export function lignesDuPassage(p) {
     (s) => (s.vieilles ?? []).map((v) => `· ${v.jours} j — ${v.outil ?? v.source ?? "origine non nommée"} : ${String(v.quoi ?? v.constat ?? "").slice(0, 90)}`));
   dire("② LES OBLIGATIONS — les Articles que rien n'applique et que rien ne cite", p.articles,
     (s) => (s.muets ?? []).slice(0, 10).map((a) => `· Article ${a.numero} — 0 citation dans le code, 0 dans le suivi`));
+  dire("③ LE TAUX D'ACTIONNABILITÉ — combien de constats RETENUS sont devenus une tâche", p.actionnabilite,
+    (s) => (s.orphelins ?? []).slice(0, 5).map((o) => `· ${o.tacheMorte ? `tâche #${o.tacheMorte} ANNONCÉE mais absente` : "aucune tâche annoncée"} — ${o.constat}`));
   dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
   dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,
     (s) => (s.relances ?? []).slice(0, 6).map((r) => `· ${r.slug} : ${r.relances} relance(s) rapprochée(s) sans commit entre les deux`));

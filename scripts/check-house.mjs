@@ -20928,3 +20928,43 @@ async function testTrouDeCouvertureDocumentaire() {
   console.log("Passed: le trou de couverture documentaire (2026-09-28, tâche #1104). IL L'A TROUVÉ EN POSANT UNE AUTRE QUESTION, et c'est le plus gros trou de la journée : il s'interrogeait sur trois dossiers lourds et a vu plus loin que sa propre question — « si Abraham s'arrête aux docs de référence AVEC RÈGLE, qui gère LES AUTRES DOCS ? équipe Abraham si besoin ». MESURÉ LE JOUR MÊME : 396 documents sur 482, soit 82 %, n'appartenaient au périmètre de PERSONNE — ni Abraham (documents à règles), ni MOÏSE (la charte), ni Ezechiel (le filet), ni JESUS (tout ce qui est hors documents). C'est la forme de trou la plus difficile à voir, parce que CHAQUE MAILLON AVAIT RAISON de ne pas s'en occuper : la frontière entre les quatre était juste, c'est la COUVERTURE de l'un d'eux qui était courte. LA RÉPONSE EST D'ÉLARGIR UNE CAPACITÉ, JAMAIS D'AJOUTER UN CINQUIÈME MAILLON — un maillon de plus aurait redécoupé une frontière qui ne posait pas de problème. Abraham couvre désormais TOUS les documents, avec deux capacités distinctes : l'analyse profonde pour ceux qui portent des règles, l'hygiène pour les autres. LE SIGNAL CHOISI EST LE PLUS DUR À CONTESTER : un document que RIEN ne cite — ni index, ni autre document, ni code. Il existe, il coûte à maintenir, et personne ne peut le trouver, ce qui revient à payer un document pour qu'il n'existe pas. PREMIER PASSAGE RÉEL : 34 orphelins, et presque tous des BLUEPRINTS — écrits parce que la règle du 2026-09-26 les rend obligatoires pour tout outil, puis jamais reliés à rien. La règle a produit les fichiers ; rien n'a produit leur chemin d'accès. ELLE NE DOUBLE PAS l'item de Ronde sur les index, et la frontière est nette : celui-là vérifie qu'un INDEX tient son contrat, celle-ci demande si un fichier est atteignable depuis N'IMPORTE OÙ — un document peut être absent d'un index et parfaitement cité ailleurs, et l'inverse aussi. Et un fichier ne se cite jamais lui-même, sans quoi tout document écrivant son propre nom en tête passerait pour atteignable.");
 }
 await testTrouDeCouvertureDocumentaire();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE RETENU OUBLIÉ, ET LE SIXIÈME FAUX CHIFFRE (2026-09-28, tâche #1103)
+// ————————————————————————————————————————————————————————————————————————
+// Il a demandé « qu'est-ce qu'on a oublié ? », et la réponse était écrite depuis le matin : le plan
+// d'action de la fiche de recherche portait QUATRE constats RETENUS, trois ont été codés le jour
+// même, le quatrième jamais — et rien ne le disait. C'est exactement ce que l'Article 28 existe
+// pour empêcher, commis sur le rapport qui a servi à construire l'outil qui traque ce genre de
+// chose, et d'autant mieux caché que les trois autres étaient faits : le rapport avait l'air traité.
+async function testRetenuOublieEtSixiemeFauxChiffre() {
+  const J = await import('../scripts/jesus-le-sauveur.mjs');
+
+  // SANS LE REGISTRE DES TÂCHES, ON REFUSE : on pourrait voir qu'un constat n'annonce aucune tâche,
+  // jamais vérifier qu'une tâche annoncée existe pour de vrai. Deux questions différentes.
+  const sansSuivi = J.tauxDActionnabilite({ suivi: null, lireDir: () => { throw new Error('ENOENT'); } });
+  assert.equal(sansSuivi.mesurable, false, 'sans registre des tâches, PAS MESURÉ');
+
+  // ET SURTOUT — LE SIXIÈME FAUX CHIFFRE, ÉCARTÉ PLUTÔT QUE LIVRÉ. Le premier passage rendait
+  // « 0 % sur 323 constats ». Un 0 % ACCUSE, donc il aurait été regardé — et il aurait envoyé
+  // chercher un problème inexistant pendant que le vrai restait invisible. La cause est une vraie
+  // trouvaille sur l'Article 28 : un plan d'action écrit sa tâche EN PROSE et ne cite jamais son
+  // NUMÉRO, donc je cherchais dans le texte ce que le format ne contient pas.
+  const faux = {
+    'docs': [{ name: 'rapport.md', isDirectory: () => false }],
+  };
+  const textes = { 'docs/rapport.md': Array.from({ length: 12 }, (_, i) => `  → RETENU · constat ${i} — tâche [RECOMMANDEE] : faire quelque chose`).join('\n') };
+  const r = J.tauxDActionnabilite({ lireDir: (d) => faux[d] ?? [], lireFic: (f) => textes[f] ?? '', suivi: '| 1 | x |' });
+  assert.equal(r.mesurable, false, 'MUST NOT FABRICATE: le taux est déclaré NON CALCULABLE plutôt que rendu à 0 % — un pourcentage que le format ne permet pas de produire est une invention, même quand il accuse');
+  assert.equal(r.retenus, 12, 'mais le VOLUME est rendu, parce que lui est un fait');
+  assert.ok(/ne cite jamais son NUMÉRO/.test(r.pourquoi), 'et la raison nomme la cause exacte : le plan écrit sa tâche en prose');
+  assert.ok(/CE QUI LE RENDRAIT CALCULABLE/.test(r.pourquoi), 'ET CE QUI MANQUERAIT POUR LE RENDRE CALCULABLE — une impossibilité déclarée sans son remède est une impasse, avec son remède c\'est une tâche (Article 27)');
+
+  // SOUS LE CORPUS MINIMUM, il refuse aussi — mais pour une autre raison, et il la distingue.
+  const maigre = J.tauxDActionnabilite({ lireDir: (d) => (d === 'docs' ? [{ name: 'r.md', isDirectory: () => false }] : []), lireFic: () => '  → RETENU · un seul — tâche [RECOMMANDEE] : x', suivi: '| 1 |' });
+  assert.equal(maigre.mesurable, false, 'un seul constat ne fait pas un corpus');
+  assert.ok(/il en faut/.test(maigre.pourquoi), 'et la raison donnée est le CORPUS, jamais confondue avec l\'absence de lien — deux impossibilités différentes appellent deux gestes différents');
+
+  console.log("Passed: le RETENU oublié, et le sixième faux chiffre (2026-09-28, tâche #1103). Il a demandé « qu'est-ce qu'on a oublié ? » et LA RÉPONSE ÉTAIT ÉCRITE DEPUIS LE MATIN : le plan d'action de la fiche de recherche portait QUATRE constats RETENUS, trois ont été codés le jour même, le quatrième — « le taux d'actionnabilité des alertes » — jamais, et rien ne le disait. C'est exactement ce que l'Article 28 existe pour empêcher, commis sur le rapport qui a servi à construire l'outil qui traque ce genre de chose, et d'autant mieux caché que les trois autres étaient faits : le rapport avait l'air traité. PUIS LE PREMIER PASSAGE A RENDU « 0 % SUR 323 CONSTATS », et ce chiffre N'A PAS ÉTÉ LIVRÉ — sixième faux chiffre écarté dans la construction de cet outil, et le plus spectaculaire. Un « 0 % » ACCUSE, donc il aurait été regardé ; mais il aurait envoyé chercher un problème inexistant pendant que le vrai restait invisible. LA CAUSE EST UNE VRAIE TROUVAILLE SUR L'ARTICLE 28 : un plan d'action écrit sa tâche EN PROSE — « tâche [RECOMMANDEE] : … » — et ne cite JAMAIS son numéro ; je cherchais donc dans le texte ce que le format ne contient pas, et les 5 qui portaient un « #nnnn » le portaient par hasard. CE QUE ÇA RÉVÈLE VAUT MIEUX QUE LE TAUX : la chaîne de l'Article 28 n'est pas vérifiable mécaniquement À L'ÉCHELLE. checkActionChain() la vérifie sur UN plan, au moment où il est produit, parce que l'agent lui passe le numéro qu'il vient d'écrire ; une fois le rapport sur le disque, plus rien ne relie ses constats retenus aux tâches réelles — 323 constats sans traçabilité arrière. LA SONDE DÉCLARE DONC L'IMPOSSIBILITÉ, rend le VOLUME qui est un fait, et NOMME CE QUI MANQUERAIT pour la lever : que le plan inscrive le numéro de la tâche qu'il a fait naître. Une impossibilité déclarée sans son remède est une impasse ; avec son remède, c'est une tâche.");
+}
+await testRetenuOublieEtSixiemeFauxChiffre();
