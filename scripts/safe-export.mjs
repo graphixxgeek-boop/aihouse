@@ -800,6 +800,189 @@ export function mesurerLExportabilite({ root = ROOT, vitalite = null, exists = e
 // qui s'arrête, une archive qu'on purge, une simulation de plus — chacun la dément. Elle sert à
 // savoir si l'ordre de grandeur est « quelques dizaines de Mo » ou « plusieurs Go », jamais à
 // prévoir une facture.
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// LE RAPPORT EXPORT CENTRAL (2026-09-28, tâche #1060)
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE, mot pour mot : « je veux que quelque part, on centralise toutes les questions liées
+// à l'export, qu'on sache dire ou on en est, qu'on sache dire pourquoi et comment l'agence est
+// exportable avec une vision globale. Qu'on sache répertorié tout ce qu'on sait faire en termes
+// d'EXPORT, et aussi ce qu'on ne sait pas encore faire. Je veux un calcul qui donne le pourcentage
+// d'exportabilité de l'agence. [...] je veux que ce rapport prenne en compte les taches ouvertes au
+// sujet de l'EXPORT. »
+//
+// SON OBJECTIF, ET C'EST LUI QUI COMMANDE LA FORME : « ne pas se perdre sur le sujet de l'export,
+// car beaucoup de choses ont déjà été faites [...] mais tout me semble éparpillé ». L'éparpillement
+// est mesuré, pas ressenti : `data-archangel notes export` rend **248 fichiers** qui portent le
+// sujet. Le rapport ne doit donc RIEN réécrire — il doit RASSEMBLER et NOMMER OÙ.
+//
+// POURQUOI CHEZ SAFE-EXPORT ET PAS AILLEURS : il détient déjà la mesure. Poser ce rapport ailleurs
+// créerait un second endroit où lire le même pourcentage, et c'est exactement ainsi que deux
+// chiffres finissent par diverger. La MESURE vit chez l'outil ; la DÉCISION reste dans
+// `docs/strategies/export-et-commercialisation-strategie.md`. Deux domiciles, deux natures.
+//
+// CE QU'IL N'INVENTE PAS, et c'est ce qui le distingue d'un résumé : les trois listes — su-faire,
+// pas-encore-su-faire, tâches ouvertes — sont DÉRIVÉES (Article 24). « Ce qu'on sait faire » est
+// l'ensemble des dimensions qu'un outil mesure vraiment et qui tiennent leur barre ; « ce qu'on ne
+// sait pas encore faire » réunit celles qui ne la tiennent pas ET celles qui rendent « pas
+// mesurable » — une question à laquelle personne ne sait répondre aujourd'hui est précisément une
+// chose qu'on ne sait pas encore faire, et c'est la catégorie qu'aucune sortie existante ne donne.
+// Les tâches, elles, se LISENT dans la file : une liste recopiée serait périmée au prochain commit.
+
+export const BARRE_DE_DIMENSION = 80;
+
+// Les dimensions de l'export, chacune avec son extracteur. Une liste DÉCLARÉE et non devinée : ce
+// qui compte comme « une question d'export » est un jugement, mais chaque valeur, elle, est lue.
+// Une dimension qui rend `null` n'est pas à zéro — elle est NON MESURÉE, et les deux se lisent à
+// l'opposé l'un de l'autre.
+export const DIMENSIONS_DE_L_EXPORT = [
+  // DEUX MESURES DE PORTABILITÉ, ET LES CONFONDRE SERAIT LE DÉFAUT QUE CE RAPPORT EXISTE POUR
+  // FERMER (constaté au premier passage, 2026-09-28). Le dépôt en porte deux, toutes deux justes,
+  // qui rendaient **91 %** et **48 %** le même jour — et la stratégie citait la première pendant
+  // que la commande `export` affichait la seconde. Un lecteur pressé en aurait conclu que l'une
+  // des deux ment. Aucune ne ment : elles ne posent pas la même question.
+  //   · RECONFIGURABLE — un outil nomme-t-il une cible de ce projet SANS offrir de paramètre pour
+  //     en changer ? C'est le défaut réparable, celui qu'on corrige un outil à la fois (#668).
+  //   · DÉCOUPLÉ — un outil mentionne-t-il ce projet, TOUT COURT ? Bien plus sévère, et c'est la
+  //     vraie question du jour où l'Agence part : un outil paramétrable mais qui parle de Lia dans
+  //     ses exemples partira quand même en parlant de Lia.
+  // L'écart de 43 points entre les deux N'EST PAS UN BRUIT : c'est l'information. Il dit
+  // exactement combien d'outils sont réparables « au paramètre » et combien demandent un vrai
+  // travail de découplage.
+  {
+    cle: "portabilite-reconfigurable",
+    quoi: "un outil peut-il recevoir d'autres cibles, ou les a-t-il écrites en dur ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs export — et la tâche #668, traitée un outil à la fois",
+    lire: (m) => (m.reconfigurable?.mesurable ? { valeur: Math.round(m.reconfigurable.taux), sur: 100, detail: `${m.reconfigurable.portables}/${m.reconfigurable.examines} scripts reconfigurables, ${m.reconfigurable.nonPortables} avec une cible écrite en dur` } : null),
+  },
+  {
+    cle: "portabilite-decouplee",
+    quoi: "un outil mentionne-t-il encore ce projet-ci, même en exemple ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs export — bloc PORTABILITÉ (mesure la PLUS sévère des deux)",
+    lire: (m) => (m.portabilite?.mesurable ? { valeur: Math.round(m.portabilite.tauxPct), sur: 100, detail: `${m.portabilite.portables}/${m.portabilite.examines} scripts sans aucune mention, ${m.portabilite.lignes.length} encore liés — répartition : ${Object.entries(m.portabilite.parMarqueur ?? {}).map(([k, v]) => `${k} ${v}`).join(", ")}` } : null),
+  },
+  {
+    cle: "kits-des-membres",
+    quoi: "chaque outil emporte-t-il ses cinq pièces (blueprint, source, fiche, registre, dépendances) ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs kits",
+    lire: (m) => (m.kits?.mesurable ? { valeur: m.kits.total ? Math.round((m.kits.complets / m.kits.total) * 100) : null, sur: 100, detail: `${m.kits.complets}/${m.kits.total} kits complets, ${m.kits.incomplets?.length ?? 0} incomplets, ${m.kits.exemptes?.length ?? 0} dispensés avec raison écrite` } : null),
+  },
+  {
+    cle: "kit-de-l-agence",
+    quoi: "l'Agence elle-même emporte-t-elle son propre kit (plan, installation, carte, organisation, standards, leçons) ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs kits — bloc AGENCE",
+    lire: (m) => (m.agence?.mesurable ? { valeur: m.agence.taux ?? null, sur: 100, detail: `${m.agence.manquantes?.length ?? 0} pièce(s) manquante(s), ${m.agence.nonVerifiees?.length ?? 0} non vérifiée(s)` } : null),
+  },
+  {
+    cle: "blueprints",
+    quoi: "chaque outil a-t-il un plan réutilisable ailleurs, et les vitaux d'abord ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs export — bloc EXPORTABILITÉ",
+    lire: (m) => {
+      if (!m.exportabilite?.mesurable) return null;
+      const n = m.exportabilite.niveaux ?? {};
+      const dus = Object.values(n).reduce((a, d) => a + (d.dus ?? d.total ?? 0), 0);
+      const ok = Object.values(n).reduce((a, d) => a + (d.avecBlueprint ?? 0), 0);
+      return { valeur: dus ? Math.round((ok / dus) * 100) : null, sur: 100, detail: `${ok}/${dus} outils dus ont un blueprint · ${m.exportabilite.bloquants?.length ?? 0} bloquant(s) (vital ou essentiel sans plan)` };
+    },
+  },
+  {
+    cle: "relais-de-modele",
+    quoi: "une AUTRE IA peut-elle reprendre l'Agence sans cette conversation-ci ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs export — bloc RELAIS",
+    lire: (m) => (m.relais?.mesurable ? { valeur: m.relais.taux ?? m.relais.tauxPct ?? null, sur: 100, detail: m.relais.resume ?? `${(m.relais.dimensions ?? []).length} dimension(s) examinée(s)` } : null),
+  },
+  {
+    cle: "preuve-par-le-banc",
+    quoi: "l'Agence a-t-elle été installée POUR DE VRAI ailleurs, et y tourne-t-elle ?",
+    ouLireLeDetail: "node scripts/safe-export.mjs temoin — et docs/strategies/export-et-commercialisation-strategie.md",
+    lire: (m) => (m.temoin?.mesurable ? { valeur: m.temoin.taux ?? null, sur: 100, detail: m.temoin.resume ?? "" } : null),
+  },
+];
+
+// LA LECTURE DES TÂCHES OUVERTES SUR L'EXPORT — dans la file, jamais recopiée (Article 24). Le
+// rapprochement se fait sur le TEXTE de la ligne : un thème seul raterait les tâches d'export
+// rangées sous « Agence » ou « Charte », et elles existent.
+export const MOTIF_TACHE_EXPORT = /export|portab|blueprint|kit d|essaimage|agence exportable/i;
+
+export function tachesOuvertesExport({ lignes = [], estOuverte = null, motif = MOTIF_TACHE_EXPORT } = {}) {
+  if (!lignes.length) {
+    return { mesurable: false, pourquoi: "aucune ligne de suivi fournie : rendre « zéro tâche d'export ouverte » sans avoir lu la file serait un vert sur du vide (leçon L5)" };
+  }
+  const ouvertes = lignes.filter((r) => (estOuverte ? estOuverte(r) : true));
+  const retenues = ouvertes.filter((r) => motif.test(`${r.sujet ?? ""} ${r.sousSujet ?? ""}`));
+  return { mesurable: true, sur: ouvertes.length, retenues: retenues.map((r) => ({ numero: r.numero, criticite: String(r.criticite ?? "").trim(), sujet: String(r.sujet ?? "").replace(/\*\*/g, "").slice(0, 95) })) };
+}
+
+export function rapportExportCentral(mesures = {}, { barre = BARRE_DE_DIMENSION, dimensions = DIMENSIONS_DE_L_EXPORT } = {}) {
+  const sait = [], saitPas = [], nonMesure = [];
+  for (const d of dimensions) {
+    let lu = null;
+    try { lu = d.lire(mesures); } catch { lu = null; }
+    if (!lu || lu.valeur === null || lu.valeur === undefined) { nonMesure.push({ ...d, pourquoi: "aucune mesure disponible aujourd'hui" }); continue; }
+    (lu.valeur >= barre ? sait : saitPas).push({ ...d, ...lu });
+  }
+  // LE POURCENTAGE GLOBAL est la MOYENNE DES DIMENSIONS MESURÉES, et son dénominateur est dit.
+  // Compter une dimension non mesurée comme zéro punirait l'honnêteté de l'outil qui refuse de
+  // conclure ; la compter comme 100 serait le faux vert le plus cher. Elle est donc EXCLUE du
+  // calcul et NOMMÉE à côté — un pourcentage dont on ignore l'assiette ne veut rien dire.
+  const mesurees = [...sait, ...saitPas];
+  const global = mesurees.length ? Math.round(mesurees.reduce((a, d) => a + d.valeur, 0) / mesurees.length) : null;
+  return {
+    mesurable: mesurees.length > 0,
+    pourquoi: mesurees.length ? undefined : "aucune dimension d'export n'a pu être mesurée : un pourcentage sur zéro dimension ressemblerait à une mesure",
+    global, mesurees: mesurees.length, total: dimensions.length, barre,
+    sait, saitPas, nonMesure,
+    taches: mesures.taches ?? { mesurable: false, pourquoi: "la file n'a pas été fournie" },
+    tendances: mesures.tendances ?? [],
+  };
+}
+
+export function formatRapportExportLines(r = {}) {
+  if (!r.mesurable) return [`🚨 EXPORT : PAS MESURÉ — ${r.pourquoi}`, "Ce n'est PAS « tout va bien »."];
+  const L = [];
+  L.push("=== RAPPORT EXPORT CENTRAL — où en est l'Agence, et ce qu'il lui reste à savoir faire ===");
+  L.push("");
+  L.push(`EXPORTABILITÉ GLOBALE : ${r.global} % — moyenne de ${r.mesurees} dimension(s) RÉELLEMENT mesurée(s) sur ${r.total}.`);
+  if (r.nonMesure.length) {
+    L.push(`  ⚠️ ${r.nonMesure.length} dimension(s) sont HORS du calcul faute de mesure. Les compter à zéro punirait`);
+    L.push("     l'outil qui refuse de conclure ; les compter à 100 serait le faux vert le plus cher.");
+  }
+  L.push("");
+  L.push(`--- CE QU'ON SAIT FAIRE (${r.sait.length}) — dimension mesurée et au-dessus de ${r.barre} % ---`);
+  for (const d of r.sait) { L.push(`  ✅ ${d.valeur} %  ${d.quoi}`); L.push(`         ${d.detail}`); }
+  if (!r.sait.length) L.push("  (aucune pour l'instant)");
+  L.push("");
+  L.push(`--- CE QU'ON NE SAIT PAS ENCORE FAIRE (${r.saitPas.length + r.nonMesure.length}) ---`);
+  for (const d of r.saitPas) { L.push(`  🟠 ${d.valeur} %  ${d.quoi}`); L.push(`         ${d.detail}`); L.push(`         détail : ${d.ouLireLeDetail}`); }
+  for (const d of r.nonMesure) { L.push(`  ⬜ NON MESURÉ  ${d.quoi}`); L.push(`         ${d.pourquoi} — et ne pas savoir répondre EST une chose qu'on ne sait pas encore faire.`); L.push(`         détail : ${d.ouLireLeDetail}`); }
+  if (!r.saitPas.length && !r.nonMesure.length) L.push("  (rien — vérifier que ce n'est pas la mesure qui est trop indulgente)");
+  L.push("");
+  if (r.taches?.mesurable) {
+    L.push(`--- CE QUI EST EN COURS : ${r.taches.retenues.length} tâche(s) ouverte(s) sur l'export, sur ${r.taches.sur} ouvertes ---`);
+    for (const t of r.taches.retenues) L.push(`  #${t.numero} [${t.criticite}] ${t.sujet}`);
+    if (!r.taches.retenues.length) L.push("  (aucune — ce qui mérite un regard : l'export est-il vraiment sans reste ?)");
+  } else {
+    L.push(`--- CE QUI EST EN COURS : PAS MESURÉ — ${r.taches?.pourquoi}`);
+  }
+  L.push("");
+  if (r.tendances?.length) {
+    L.push("--- LA PENTE, parce qu'un chiffre sans sa pente est la moitié de l'information ---");
+    for (const t of r.tendances.slice(0, 8)) L.push(`  ${String(t.cle).padEnd(28)} ${t.tendance} (${t.points} point(s), ${t.sens})`);
+    L.push("");
+  }
+  L.push("OÙ VIT QUOI, et c'est la réponse à « chez qui est ce document ? » :");
+  L.push("  · LA MESURE, ici, chez SAFE-EXPORT — septième Gardien sacré, déjà propriétaire du chiffre.");
+  L.push("  · LA DÉCISION et le plan de route, dans docs/strategies/export-et-commercialisation-strategie.md.");
+  L.push("  · LE RÉCIT des passages du banc témoin, dans docs/safe-export/.");
+  L.push("Un second détenteur du même chiffre est la façon dont deux chiffres finissent par diverger.");
+  L.push("");
+  L.push("HORS PORTÉE : ce rapport RASSEMBLE, il ne juge pas. Une dimension au-dessus de la barre dit");
+  L.push("que la mesure est tenue, jamais que la question est close — et la barre elle-même est un");
+  L.push("choix, pas un fait.");
+  return L;
+}
+
 export const HORIZONS_DE_PROJECTION = [
   { cle: "1 mois", jours: 30 },
   { cle: "2 mois", jours: 60 },
@@ -1207,6 +1390,51 @@ function main() {
     });
   }
 
+  // `rapport` (2026-09-28, tâche #1060) — LE rapport central de l'export. Il ne recalcule RIEN :
+  // il appelle les mesures qui existent déjà et les rassemble, plus la file de tâches. Un rapport
+  // qui referait les calculs deviendrait un second détenteur des mêmes chiffres, et deux
+  // détenteurs divergent toujours (leçon L29).
+  if (process.argv[2] === "rapport") {
+    printReliabilityNotice("safe-export");
+    recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    return Promise.all([import("./le-classificateur.mjs"), import("./check-tasks-details.mjs"), import("./check-suivi-fidelity.mjs")]).then(([lc, ctd]) => {
+      const vitalite = lc.vitaliteDuParc();
+      const kits = mesurerLesKits({ vitalite });
+      const agence = mesurerLeKitDeLAgence();
+      let lignes = []; try { lignes = ctd.loadAllTaskRows(); } catch { lignes = []; }
+      const mesures = {
+        exportabilite: mesurerLExportabilite({ vitalite }),
+        portabilite: mesurerLaPortabilite(),
+        reconfigurable: (() => {
+          const sc = fichiersSourcesDuProjet().filter((f) => String(f).startsWith("scripts/"));
+          if (!sc.length) return { mesurable: false };
+          const np = findScriptsNonPortables(sc);
+          return { mesurable: true, examines: sc.length, nonPortables: np.length, portables: sc.length - np.length, taux: ((sc.length - np.length) / sc.length) * 100 };
+        })(),
+        kits, agence,
+        relais: relaisDeModele(),
+        temoin: { mesurable: false },
+        tendances: tendancesExport(),
+        taches: tachesOuvertesExport({ lignes, estOuverte: (r) => ctd.OPEN_KEYS.has(r.statusKey) }),
+      };
+      const r = rapportExportCentral(mesures);
+      const lignesTxt = formatRapportExportLines(r);
+      for (const l of lignesTxt) console.log(l);
+      const alerte = alerteExport(kits, agence);
+      console.log("");
+      console.log(`VERDICT DU KIT : ${alerte.verdict ?? alerte.pourquoi}`);
+      // Le rapport s'ARCHIVE, sinon il n'a pas de pente : un rapport qu'on ne retrouve pas est un
+      // rapport qu'on refait (Article 28, et le registre de SAFE-EXPORT existe pour ça).
+      const quand = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+      const dest = join(ROOT, "docs/safe-export", `rapport-export-central-${quand}.txt`);
+      try {
+        mkdirSync(join(ROOT, "docs/safe-export"), { recursive: true });
+        writeFileSync(dest, `${lignesTxt.join("\n")}\n\nVERDICT DU KIT : ${alerte.verdict ?? alerte.pourquoi}\n`, "utf8");
+        console.log(`\nArchivé : docs/safe-export/rapport-export-central-${quand}.txt`);
+      } catch (e) { console.log(`\n⚠️  archivage impossible : ${e.message}`); }
+      return undefined;
+    });
+  }
   if (process.argv[2] === "kits") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });

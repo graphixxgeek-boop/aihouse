@@ -8928,6 +8928,79 @@ async function testCirculationDesDonnees() {
 }
 await testCirculationDesDonnees();
 
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// LE RAPPORT EXPORT CENTRAL (2026-09-28, tâche #1060)
+// ══════════════════════════════════════════════════════════════════════════════════════════
+async function testRapportExportCentral() {
+  const se = await import('../scripts/safe-export.mjs');
+
+  // ── UNE DIMENSION NON MESURÉE N'EST NI ZÉRO NI CENT ────────────────────────────────────
+  // C'est le cœur du rapport : la compter à zéro punirait l'outil qui refuse honnêtement de
+  // conclure, la compter à cent serait le faux vert le plus cher. Elle sort du calcul ET se
+  // montre à part — un pourcentage dont on ignore l'assiette ne veut rien dire.
+  const dims = [
+    { cle: 'a', quoi: 'question A', ouLireLeDetail: 'x', lire: () => ({ valeur: 100, detail: 'plein' }) },
+    { cle: 'b', quoi: 'question B', ouLireLeDetail: 'y', lire: () => ({ valeur: 40, detail: 'bas' }) },
+    { cle: 'c', quoi: 'question C', ouLireLeDetail: 'z', lire: () => null },
+  ];
+  const r = se.rapportExportCentral({}, { dimensions: dims, barre: 80 });
+  assert.equal(r.global, 70, 'the global figure averages ONLY the dimensions actually measured: (100+40)/2 = 70. Counting the unmeasured one as zero would give 47 and punish the tool that honestly refuses to conclude; counting it as 100 would give 80 and be the most expensive green there is');
+  assert.equal(r.mesurees, 2, 'and the denominator is stated, never hidden');
+  assert.equal(r.total, 3, 'next to the full count, so the gap between the two is visible');
+  assert.deepEqual([r.sait.map((d) => d.cle), r.saitPas.map((d) => d.cle), r.nonMesure.map((d) => d.cle)], [['a'], ['b'], ['c']], 'the three populations stay separate: above the bar, below the bar, and not measured at all — merging the last two would turn "we cannot answer" into "we answered badly", which are opposite problems');
+
+  // ── UNE DIMENSION QUI LÈVE UNE ERREUR NE FAIT PAS TOMBER LE RAPPORT ────────────────────
+  const rErr = se.rapportExportCentral({}, { dimensions: [...dims, { cle: 'd', quoi: 'D', ouLireLeDetail: 'w', lire: () => { throw new Error('boum'); } }], barre: 80 });
+  assert.equal(rErr.nonMesure.length, 2, 'a dimension whose extractor throws lands in "not measured" rather than crashing the whole report: one broken measure must never hide the five that work');
+
+  // ── AUCUNE DIMENSION MESURABLE = PAS DE MESURE, jamais un zéro (leçon L5) ──────────────
+  const rVide = se.rapportExportCentral({}, { dimensions: [{ cle: 'x', quoi: 'X', ouLireLeDetail: '', lire: () => null }] });
+  assert.equal(rVide.mesurable, false, 'with nothing measurable the report says PAS MESURÉ rather than rendering 0 % — a zero reads as a verdict, an absence reads as an absence');
+  assert.match(se.formatRapportExportLines(rVide).join('\n'), /PAS MESURÉ[\s\S]*Ce n'est PAS/, 'and it says out loud that this is not "all is well"');
+
+  // ── LES TÂCHES SE LISENT DANS LA FILE, jamais recopiées (Article 24) ───────────────────
+  const lignes = [
+    { numero: 1, sujet: 'Exportabilité / les candidats non portables', criticite: 'X', statusKey: 'ouverte' },
+    { numero: 2, sujet: 'Charte / Article 12', criticite: 'Y', statusKey: 'ouverte' },
+    { numero: 3, sujet: 'Agence / le blueprint qui manque', criticite: 'Z', statusKey: 'ouverte' },
+    { numero: 4, sujet: 'Exportabilité / déjà close', criticite: 'W', statusKey: 'terminee' },
+  ];
+  const t = se.tachesOuvertesExport({ lignes, estOuverte: (r2) => r2.statusKey === 'ouverte' });
+  assert.deepEqual(t.retenues.map((x) => x.numero), [1, 3], 'export tasks are found by the TEXT of the row, never by theme alone: #3 is filed under "Agence" and would be missed by a theme filter, and export tasks really are filed there');
+  assert.equal(t.sur, 3, 'and the denominator is the OPEN rows, so "6 of 85" can be read as a share rather than a bare count');
+  assert.ok(!t.retenues.some((x) => x.numero === 4), 'a closed export task is not "in progress" — including it would make the queue look busier than it is');
+  assert.equal(se.tachesOuvertesExport({ lignes: [] }).mesurable, false, 'and an empty queue is PAS MESURÉ, never "zero export tasks open": the second would be a green built on having read nothing (leçon L5)');
+
+  // ── CONTRE LE VRAI DÉPÔT (Article 25) — jamais seulement des lignes fabriquées ─────────
+  const lc = await import('../scripts/le-classificateur.mjs');
+  const ctd = await import('../scripts/check-tasks-details.mjs');
+  const vitalite = lc.vitaliteDuParc();
+  const scriptsReels = se.fichiersSourcesDuProjet().filter((f) => String(f).startsWith('scripts/'));
+  const npReels = se.findScriptsNonPortables(scriptsReels);
+  const reel = se.rapportExportCentral({
+    exportabilite: se.mesurerLExportabilite({ vitalite }),
+    portabilite: se.mesurerLaPortabilite(),
+    reconfigurable: { mesurable: true, examines: scriptsReels.length, nonPortables: npReels.length, portables: scriptsReels.length - npReels.length, taux: ((scriptsReels.length - npReels.length) / scriptsReels.length) * 100 },
+    kits: se.mesurerLesKits({ vitalite }),
+    agence: se.mesurerLeKitDeLAgence(),
+    relais: se.relaisDeModele(),
+    taches: se.tachesOuvertesExport({ lignes: ctd.loadAllTaskRows(), estOuverte: (x) => ctd.OPEN_KEYS.has(x.statusKey) }),
+  });
+  assert.equal(reel.mesurable, true, 'the report must actually run against the real repository, never conclude only on fixtures');
+  assert.ok(reel.mesurees >= 4, `at least four dimensions must be really measurable today (currently ${reel.mesurees}/${reel.total}) — fewer would mean the report has become decoration`);
+  assert.ok(reel.global > 0 && reel.global <= 100, `and the global figure must be a real percentage (currently ${reel.global} %)`);
+  assert.ok(reel.taches.retenues.length > 0, 'and it must find the open export tasks that genuinely exist in the queue — finding none would mean the matching stopped working, not that the subject is closed');
+
+  // LES DEUX PORTABILITÉS RESTENT DEUX (2026-09-28). Le dépôt en porte deux, toutes deux justes,
+  // qui rendaient 91 % et 48 % le même jour. Les fondre en une seule ferait mentir l'une des deux.
+  const cles = [...reel.sait, ...reel.saitPas, ...reel.nonMesure].map((d) => d.cle);
+  assert.ok(cles.includes('portabilite-reconfigurable') && cles.includes('portabilite-decouplee'), 'the two portability measures must stay SEPARATE and separately named: "can this tool be reconfigured?" and "does this tool still mention this project at all?" are different questions whose answers differed by 43 points on the day the report was built. Publishing one as the other is exactly the divergence this report exists to prevent');
+
+  console.log("Passed: le rapport EXPORT central (2026-09-28, tâche #1060) — sa demande était de CENTRALISER (« tout me semble éparpillé », et data-archangel compte 248 fichiers qui portent le sujet), jamais de recalculer : il appelle les mesures existantes et les rassemble, parce qu'un second détenteur du même chiffre est la façon dont deux chiffres finissent par diverger. Trois populations séparées plutôt que deux — au-dessus de la barre, en dessous, et NON MESURÉE : compter cette dernière à zéro punirait l'outil qui refuse honnêtement de conclure, la compter à cent serait le faux vert le plus cher, donc elle sort du calcul et se montre à côté. Les tâches se lisent dans la file par le TEXTE de la ligne et non par le thème, parce que de vraies tâches d'export sont rangées sous « Agence ». Et le premier passage a trouvé ce qu'aucune relecture n'aurait vu : le dépôt portait DEUX pourcentages de portabilité, 91 % et 48 %, tous deux justes et répondant à deux questions différentes, l'un cité par la stratégie pendant que l'autre s'affichait dans la commande. Ils restent deux, nommés séparément, et l'écart de 43 points est désormais l'information plutôt que la confusion.");
+}
+await testRapportExportCentral();
+
+
 
 
 
