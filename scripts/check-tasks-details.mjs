@@ -2562,7 +2562,12 @@ export const SEPARATEUR_THEME = " / ";
 export const FAMILLES_DE_THEMES = {
   "Process & Ronde": ["Process", "Ronde", "Conduite"],
   "Charte & référentiel": ["Charte", "Documentation", "Standards", "Idées"],
-  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Badge"],
+  // « Projet » a rejoint la famille le 2026-09-28 (tâches #1100/#1101) : l'ENORME CHANTIER annoncé
+  // par l'utilisateur est une demande d'évolution profonde « dans la conception de l'agence », donc
+  // il appartient bien à cette famille-ci et non au jeu. Le garde-fou de cette liste l'a attrapé au
+  // commit même où le thème est né, ce qui est précisément son travail : la seule liste tenue à la
+  // main de cet outil ne peut pas se périmer en silence (Article 24).
+  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Badge", "Projet"],
   "Suivi & file": ["Suivi", "File", "XP"],
   "Nommage & vocabulaire": ["Nommage", "TOOL_PORTEE"],
   "Outillage & garde-fous": ["Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille"],
