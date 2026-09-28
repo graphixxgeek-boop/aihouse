@@ -152,3 +152,46 @@ catalogue veut lire l'historique à son tour. Le lecteur a rejoint `tool-usage.m
 ÉCRIT ces événements ; tool-brain le réexporte, aucun appelant n'est cassé.
 
 Sortie : à chaque passage de `node scripts/le-coordinateur.mjs`.
+
+## 21 Agents sur 54 accusés de n'avoir pas leur badge — tous complets (2026-09-28, tâche #1077)
+
+**Ce que le rapport affichait**, sur SAFE-EXPORT, CASSANDRA-RH, CLONE-HUNTER, AGENT DES NOMS,
+Abraham-les-references, tool-brain et quinze autres :
+
+> ⚠️ SAFE-EXPORT n'a pas son badge (instanciation manquante ; registre manquant ; blueprint
+> manquant ; absent de CLAUDE.md ; aucune mention trouvée dans `docs/suivi/`)
+
+…où chacune des cinq pièces était cherchée sous le slug fabriqué
+`safe-export` + `-scripts-safe-export-mjs` (écrit ici en deux morceaux exprès : collé, il forme un
+chemin que le garde-fou des liens morts signalerait à juste titre comme une citation cassée — et il
+l'a fait à la première rédaction de cette fiche).
+
+**Les cinq manques étaient fabriqués.** SAFE-EXPORT a sa fiche, son registre, son blueprint, sa
+ligne dans CLAUDE.md et ses lignes de suivi. Le slug cherché, lui, n'existera jamais.
+
+**La cause tient en une colonne.** La cellule « Outil » de la table maîtresse
+(`docs/regles-de-travail.md` §7ter) porte souvent son script entre parenthèses :
+`SAFE-EXPORT (\`scripts/safe-export.mjs\`)`. `badgeWarningsForOutils()` passait cette cellule
+**brute** à `checkAgentOnboarding()`, qui **slugifie** son argument : le nom de l'outil se retrouvait
+collé au chemin de son propre script, et les cinq pièces du kit étaient cherchées là.
+`agentOverrides` était lu avec la même clé brute, donc l'override déclaré par nom propre était
+manqué lui aussi.
+
+**Ce qui rend ce défaut plus grave que le chiffre : il avait déjà été corrigé.** Le 2026-09-21, sur
+**deux appelants sur trois** — et le commentaire écrit ce jour-là certifie que le découpage est
+« déjà établi ailleurs dans ce fichier (`badgeWarningsForOutils()`, `findToolsMissingFromMenu()`) ».
+Il ne l'était pas dans `badgeWarningsForOutils()`. **Un correctif appliqué occurrence par
+occurrence, puis certifié par un commentaire que rien ne vérifie, n'est pas un correctif** — c'est
+la leçon **L37** (corriger la CLASSE, jamais l'occurrence) doublée de l'Article 27 (aucune
+obligation ne repose sur la mémoire d'un agent, ni sur un écrit que rien ne contrôle).
+
+**La correction ferme la classe.** `assertNomPropreDAgent()` (`lib-shell.mjs`) vit **dans la
+fonction appelée**, là où aucun appelant présent ou futur ne peut l'oublier. Elle **refuse** au lieu
+de découper à la place de l'appelant : découper masquerait qu'il lit la mauvaise colonne, et
+l'`agentOverrides` continuerait d'être manqué en silence. Un refus nommé se répare une fois ; une
+correction muette se reproduit au prochain appelant.
+
+**Mesure** : 21 lignes certifiables sur 54 portent une précision entre parenthèses — 39 % de
+l'équipe était accusée en permanence, et aucun travail ne pouvait éteindre l'accusation (L6,
+précédée de L4). Le filet vérifie désormais, sur la VRAIE table, que `primaryToolName()` retire
+bien cette précision pour chacune d'elles et que le résultat passe le garde-fou.

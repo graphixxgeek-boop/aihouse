@@ -19821,3 +19821,51 @@ async function testNomAfficheNestPasLeNomDuFichier() {
   console.log("Passed: une accusation permanente qu'aucun travail ne pouvait éteindre (2026-09-28, tâche #1076). TOOL-LEARNING reprochait à CLONE-HUNTER d'être « resté immobile depuis le 2026-09-26 » le jour même où son script recevait trois améliorations. La cause n'était ni la date, ni le verdict, ni la mémoire de l'outil : le registre stocke le nom d'USAGE en majuscules, et ce nom était interpolé tel quel dans un chemin de fichier. `scripts/CLONE-HUNTER.mjs` n'existe pas ; `git log` sur un chemin inexistant rend une sortie VIDE ; une sortie vide se lit « aucun commit depuis ». Le reproche était donc structurellement inextinguible — exactement la leçon L6 (une alarme qu'aucune action légitime ne peut éteindre devient du décor) précédée de la L4 (un garde-fou qui accuse à tort cesse d'être lu). LA CORRECTION NE FABRIQUE PAS UN SECOND RÉSOLVEUR : elle passe par `scriptPourSlug()` de lib-shell, celui qui connaît déjà les cas qu'une minuscule naïve casserait (ARGUS → check-argus.mjs, Smart Breaker → check-gemini-quota.mjs). ET LE `null` EST LA MOITIÉ DU CORRECTIF : sans lui, un nom non résolu retomberait sur le même git log vide, c'est-à-dire sur la même accusation silencieuse.");
 }
 await testNomAfficheNestPasLeNomDuFichier();
+
+// ————————————————————————————————————————————————————————————————————————
+// 21 AGENTS SUR 54 ACCUSÉS DE N'AVOIR PAS LEUR BADGE — TOUS COMPLETS (2026-09-28, tâche #1077)
+// ————————————————————————————————————————————————————————————————————————
+// La cellule « Outil » de la table maîtresse porte souvent son script entre parenthèses :
+// « SAFE-EXPORT (`scripts/safe-export.mjs`) ». Passée BRUTE à checkAgentOnboarding(), qui slugifie
+// son argument, elle produisait `safe-export-scripts-safe-export-mjs` — un chemin qui n'existe
+// nulle part — donc CINQ manques fabriqués (instanciation, registre, blueprint, absence de
+// CLAUDE.md, absence du suivi) pour un Agent parfaitement complet, à chaque passage.
+//
+// CE BUG AVAIT DÉJÀ ÉTÉ CORRIGÉ, le 2026-09-21, SUR DEUX APPELANTS SUR TROIS — et le commentaire
+// écrit ce jour-là affirme noir sur blanc que le découpage est « déjà établi ailleurs dans ce
+// fichier (badgeWarningsForOutils(), findToolsMissingFromMenu()) ». Il ne l'était pas dans
+// badgeWarningsForOutils(). C'est la leçon L37 dans sa forme exacte : corriger la CLASSE, jamais
+// l'occurrence — et un commentaire qui certifie les trois sites n'a jamais vérifié un seul.
+// D'où une assertion DANS la fonction appelée, là où aucun appelant ne peut l'oublier (Article 27).
+async function testCelluleBruteAuLieuDuNomPropre() {
+  const C1077 = await import('../scripts/le-coordinateur.mjs');
+  const S1077 = await import('../scripts/lib-shell.mjs');
+
+  // ELLE MORD sur la forme exacte qui a produit les 21 fausses accusations.
+  assert.throws(() => S1077.assertNomPropreDAgent('SAFE-EXPORT (`scripts/safe-export.mjs`)', 'test()'), /NOM PROPRE/, 'the raw master-table cell must be refused, not silently trimmed: trimming would hide that the caller reads the wrong column, and agentOverrides indexed by proper name would keep being missed in silence');
+
+  // LES AUTRES SENS (BP4) : un nom propre passe, y compris accentué — la normalisation des accents
+  // est un acquis de 2026-09-23 qu'un garde-fou trop large aurait repris.
+  assert.doesNotThrow(() => S1077.assertNomPropreDAgent('SAFE-EXPORT', 'test()'), 'a proper name must pass');
+  assert.doesNotThrow(() => S1077.assertNomPropreDAgent('MOÏSE-TABLES-DE-LOI', 'test()'), 'an accented proper name must pass too');
+
+  // ET LE VRAI DÉFAUT RESTE DÉTECTÉ : un Agent qui n'existe nulle part est toujours incomplet.
+  const fantome = C1077.checkAgentOnboarding('OUTIL-FANTOME', { toolsTableMarkdown: '| Outil | Coût | Déclenchement |\n|---|---|---|\n' });
+  assert.equal(fantome.complet, false, 'a genuinely missing agent must still be reported incomplete — a fix that bought silence would be worse than the bug');
+  assert.ok(fantome.gaps.length >= 1, 'and its gaps must be named');
+
+  // BRANCHÉ SUR LA VRAIE TABLE (Article 25) : la population réellement concernée est mesurée ici,
+  // jamais recopiée d'un chiffre écrit une fois — et c'est ce que l'ancien code slugifiait entier.
+  const { readFileSync: lire1077 } = await import('node:fs');
+  const rows1077 = C1077.parseToolsTable(lire1077('docs/regles-de-travail.md', 'utf8')).filter((r) => C1077.CERTIFIABLE_STATUTS.includes(r.statut));
+  const aPrecision = rows1077.filter((r) => /[(/]/.test(r.tool));
+  assert.ok(rows1077.length >= 40, 'the master table must still be read: a parser returning almost nothing would make this whole test vacuous');
+  assert.ok(aPrecision.length > 0, 'and rows carrying a parenthesised precision must still exist — the day they all stop, this guard has nothing left to protect and should be revisited rather than kept as scenery');
+  for (const r of aPrecision) {
+    assert.notEqual(C1077.primaryToolName(r.tool), r.tool, `primaryToolName() must actually strip the precision, otherwise the fix is cosmetic: ${r.tool}`);
+    assert.doesNotThrow(() => S1077.assertNomPropreDAgent(C1077.primaryToolName(r.tool), 'test()'), `and what it returns must be accepted by the guard: ${r.tool}`);
+  }
+
+  console.log(`Passed: 21 Agents sur 54 accusés de n'avoir pas leur badge, tous complets (2026-09-28, tâche #1077). La cellule « Outil » de la table maîtresse porte son script entre parenthèses — « SAFE-EXPORT (\`scripts/safe-export.mjs\`) » — et elle était passée BRUTE à une fonction qui SLUGIFIE son argument. Le slug obtenu, \`safe-export-scripts-safe-export-mjs\`, ne correspond à rien sur le disque : CINQ manques fabriqués par Agent (instanciation, registre, blueprint, absent de CLAUDE.md, absent du suivi), à chaque passage, et AUCUN travail ne pouvait éteindre l'accusation — L6 précédée de L4, pour la seconde fois de la journée. CE QUI REND CELUI-CI PIRE QUE LE PRÉCÉDENT : IL AVAIT DÉJÀ ÉTÉ CORRIGÉ. Le 2026-09-21, sur DEUX appelants sur trois — et le commentaire écrit ce jour-là certifie que le découpage est « déjà établi ailleurs dans ce fichier (badgeWarningsForOutils(), findToolsMissingFromMenu()) ». Il ne l'était pas dans badgeWarningsForOutils(). Un correctif appliqué occurrence par occurrence, puis certifié par un commentaire que rien ne vérifie, n'est pas un correctif (L37, Article 27). LA VÉRIFICATION VIT DONC DANS LA FONCTION APPELÉE, là où aucun appelant présent ou futur ne peut l'oublier, et elle REFUSE au lieu de découper à la place de l'appelant : découper masquerait qu'il lit la mauvaise colonne, et l'agentOverrides indexé par nom propre continuerait d'être manqué sans bruit. Mesure réelle : ${aPrecision.length} lignes certifiables sur ${rows1077.length} portent une précision entre parenthèses.`);
+}
+await testCelluleBruteAuLieuDuNomPropre();

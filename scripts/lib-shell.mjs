@@ -280,6 +280,31 @@ export function assertNotAPersonnage(name, callerLabel) {
   }
 }
 
+// assertNomPropreDAgent() — LE GARDE-FOU DE LA CLASSE, PAS DE L'OCCURRENCE (2026-09-28, tâche
+// #1077, leçon L37). La cellule « Outil » de la table maîtresse porte souvent son script entre
+// parenthèses : « SAFE-EXPORT (`scripts/safe-export.mjs`) ». Passée telle quelle à une fonction qui
+// SLUGIFIE son argument, elle produit `safe-export-scripts-safe-export-mjs` — un slug qui ne
+// correspondra jamais à rien, ni sur le disque ni dans un registre. L'outil est alors déclaré
+// incomplet avec CINQ manques fabriqués, à chaque passage, et AUCUN travail ne peut éteindre
+// l'accusation : c'est la leçon L6 (une alarme inextinguible devient du décor) précédée de la L4.
+//
+// CE BUG A DÉJÀ ÉTÉ CORRIGÉ UNE FOIS, le 2026-09-21, sur DEUX appelants — et le commentaire écrit
+// ce jour-là affirmait que les trois étaient alignés. Le troisième ne l'était pas. Un correctif
+// appliqué occurrence par occurrence et certifié par un commentaire n'est pas un correctif : c'est
+// pourquoi la vérification vit désormais DANS la fonction appelée, là où aucun appelant ne peut
+// l'oublier (Article 27 : aucune obligation ne repose sur la mémoire d'un agent).
+//
+// Elle REFUSE plutôt que de corriger en silence : découper à la place de l'appelant masquerait le
+// fait qu'il lit la mauvaise colonne, et l'`agentOverrides` indexé par nom propre continuerait
+// d'être manqué sans que rien ne le dise. Un refus nommé se répare une fois ; une correction muette
+// se reproduit au prochain appelant.
+export function assertNomPropreDAgent(name, callerLabel) {
+  const brut = String(name ?? "");
+  if (/[(/]/.test(brut)) {
+    throw new Error(`${callerLabel} attend le NOM PROPRE d'un Agent, jamais la cellule brute de la table maîtresse : reçu "${brut}". Cette cellule porte son script entre parenthèses, et la slugifier entière fabrique un chemin qui n'existe nulle part — donc un Agent complet déclaré incomplet, à chaque passage, sans qu'aucun travail puisse l'éteindre. Utiliser primaryToolName(row.tool) (le-coordinateur.mjs), et indexer agentOverrides par ce même nom propre.`);
+  }
+}
+
 export function sh(cmd, { cwd, verbose = false, env } = {}) {
   try {
     return execSync(cmd, { cwd, env, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });

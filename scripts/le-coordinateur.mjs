@@ -44,7 +44,7 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { sh, assertNotAPersonnage, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, assertNomPropreDAgent, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles, REGISTRIES as REGISTRIES_DOC_REPORT } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
@@ -727,8 +727,17 @@ function badgeWarningsForOutils(outils, onboardingContext) {
     const row = rows.find((r) => r.tool.toLowerCase().includes(primaryName.toLowerCase()) || primaryName.toLowerCase().includes(r.tool.toLowerCase()));
     if (!row || !CERTIFIABLE_STATUTS.includes(row.statut)) continue;
     if (!verdicts.has(row.tool)) {
-      const overrides = onboardingContext.agentOverrides?.[row.tool] ?? {};
-      verdicts.set(row.tool, checkAgentOnboarding(row.tool, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides }));
+      // LE NOM PROPRE, JAMAIS LA CELLULE BRUTE (2026-09-28, tâche #1077). Le commentaire
+      // d'integrationAudit() affirmait depuis le 2026-09-21 que « le même découpage est déjà établi
+      // ailleurs dans ce fichier (badgeWarningsForOutils(), findToolsMissingFromMenu()) » — ici il
+      // ne l'était PAS. Le correctif de l'époque a été appliqué à deux appelants sur trois, et
+      // l'écrit a certifié les trois. `row.tool` vaut « SAFE-EXPORT (`scripts/safe-export.mjs`) » :
+      // slugifié entier, il donne `safe-export-scripts-safe-export-mjs`, un chemin qui n'existera
+      // jamais, donc CINQ manques fabriqués pour un Agent parfaitement complet. `agentOverrides`
+      // est indexé par nom propre lui aussi — le lire avec la cellule brute ratait l'override.
+      const primaire = primaryToolName(row.tool);
+      const overrides = onboardingContext.agentOverrides?.[primaire] ?? {};
+      verdicts.set(row.tool, checkAgentOnboarding(primaire, { ...onboardingContext, ownKnowledge: row.statut !== CLASSIQUE_STATUT, ...overrides }));
     }
     const result = verdicts.get(row.tool);
     if (!result.complet) warnings.push(`${row.tool} n'a pas son badge (${result.gaps.join(" ; ")})`);
@@ -1453,6 +1462,7 @@ export function checkAgentOnboarding(agentName, {
   ownKnowledge = true,
 } = {}) {
   assertNotAPersonnage(agentName, "checkAgentOnboarding()");
+  assertNomPropreDAgent(agentName, "checkAgentOnboarding()");
   const gaps = [];
   const slug = slugifyAgentName(agentName);
   const nameLower = agentName.toLowerCase();
