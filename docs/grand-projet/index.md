@@ -134,6 +134,8 @@ que l'assainissement en cours est terminé.
 | [`00-sources/index.md`](00-sources/index.md) | pourquoi le catalogue des sources vit dans l'inventaire et pas là — deux listes du même contenu divergent toujours |
 | [`01-absorption/lire-les-sources.md`](01-absorption/lire-les-sources.md) | comment lire du Word et du texte, vérifié avant que les fichiers arrivent |
 | [`01-absorption/inventaire.md`](01-absorption/inventaire.md) | un document = une ligne : poids, thème, traitement décidé une seule fois |
+| [`01-absorption/ce-que-jai-lu.md`](01-absorption/ce-que-jai-lu.md) | la trace de l'absorption : un bloc par document lu, ce qu'il DIT et ses chiffres — jamais ce que j'en conclus |
+| [`01-absorption/questions-consolidees.md`](01-absorption/questions-consolidees.md) | ses 49 questions extraites de SES deux fichiers, en une seule liste, avec leur origine |
 | [`00-sources/01-sa-demande/README.md`](00-sources/01-sa-demande/README.md) | pourquoi ses deux fichiers ont un statut que les autres n'ont pas |
 | [`00-sources/02-documents-prepares/README.md`](00-sources/02-documents-prepares/README.md) | pourquoi le volume n'est pas l'autorité, et l'entrée à l'inventaire avant lecture |
 
