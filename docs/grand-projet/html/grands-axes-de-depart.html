@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LES GRANDS AXES DE DÉPART DU GRAND CHANGEMENT</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-28T23:43:30.554Z</div>
+    <h1>LES GRANDS AXES DE DÉPART DU GRAND CHANGEMENT</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le mardi 29 septembre 2026 à 01h41, heure de Paris — heure LUE, source système. Tâches #1141 · #1143 · #1144. Il a demandé de « poser les grands axes de départ de cet énorme chantier », et de ne rien enchaîner de plus avant demain.)</em></p>
+<hr>
+<h3>À QUI CE DOCUMENT S'ADRESSE, ET POURQUOI IL EXISTE</h3>
+<p><strong>Le contexte.</strong> Nous préparons le grand changement de l'Agence. Avant de construire quoi que ce soit, il fallait s'accorder sur la direction : où on va, et de quelle manière.</p>
+<p><strong>Sa demande, dans ses mots.</strong> « des grandes lignes découleront tout le reste, organisons-nous correctement stp dans le déroulé de départ, un mauvais départ peut nous coûter cher par la suite. » Puis, en refusant deux de mes questions : « il faut aller moins vite je pense », et « tu me l'as lu ? on va pas un peu vite ? tu es sûr d'avoir TOUT pris en compte ? »</p>
+<p><strong>Ce document répond aux deux.</strong> Il écrit ce qui est tranché, il écrit ce qui ne l'est PAS et pourquoi, et il répond à sa question de confiance avec une mesure plutôt qu'avec une promesse.</p>
+<hr>
+<h3>1. CE QU'IL A TRANCHÉ CE SOIR — quatre axes, et ils tiennent</h3>
+<table><thead><tr><th>Axe</th><th>Sa décision</th><th>Ce que ça engage</th></tr></thead><tbody><tr><td><strong>LE CADRE</strong></td><td>On installe <strong>un système de stratégies</strong>, pas un grand ménage technique</td><td>La rationalisation devient <strong>un chantier parmi d'autres</strong> à l'intérieur de ce système, plus le sujet principal</td></tr><tr><td><strong>LE BUDGET</strong></td><td><strong>Souple</strong>, pas strict <em>(contre ma recommandation, et c'est noté comme tel)</em></td><td>On tient le compte de ce qu'on ajoute et de ce qu'on aurait pu retirer ; <strong>rien ne bloque</strong>, on fait le bilan à la fin</td></tr><tr><td><strong>L'AUTORITÉ</strong></td><td><strong>THE-KING vérifie et alerte</strong>, il ne décide pas</td><td>Son rôle s'étend à la stratégie globale, mais la décision reste humaine — conforme à ce que ses propres audits exigent</td></tr><tr><td><strong>LA MÉTHODE</strong></td><td>J'avance seule cette nuit sur les grands axes ; <strong>demain, 50 questions ou plus</strong></td><td>Rien de structurant ne s'écrit sans lui. Cette nuit = poser le cadre, jamais remplir</td></tr></tbody></table>
+<p><strong>Sur le budget, la précision qui compte</strong> : « souple » ne veut pas dire « oublié ». Chaque fois que ce chantier ajoutera une obligation (un Article, un axe de classification, un champ de tâche), la note dira <strong>ce qu'elle remplace ou ce qu'elle aurait pu remplacer</strong>. Le bilan se fera à la fin, et c'est lui qui tranchera ce qu'on retire. La différence avec la version stricte : personne n'est bloqué le jour où on est pressés.</p>
+<hr>
+<h3>2. CE QU'IL A REFUSÉ DE TRANCHER — et il a eu raison</h3>
+<p>Je lui ai demandé ce que reçoit exactement l'acheteur dans la version « il n'y a qu'un projet de jeu ». Sa réponse :</p>
+<div class="highlight"><p>« je ne sais pas pour l'instant, ça dépend des choix qu'on fait sur <strong>ce qu'est l'agence en tant
+que produit fini</strong> et ce qu'elle peut apporter à l'utilisateur […] <strong>il y a un chemin de décision
+avant, il faut aller moins vite je pense</strong> »</p></div>
+<p><strong>Il a raison, et voici pourquoi ma question était mal placée.</strong> Je demandais le CONTENU du carton avant qu'on ait décidé <strong>à qui on le livre et pour quoi faire</strong>. Tant qu'on ne sait pas ce que l'Agence est censée apporter à quelqu'un d'autre que lui, la liste de ce qu'elle emporte ne peut pas se décider — elle se devinerait, et une devinette prise pour une décision est exactement ce que ce chantier doit arrêter de produire.</p>
+<p><strong>Ce que je retiens comme règle pour la suite du calibrage</strong> : une question de détail posée avant sa question amont ne produit pas une réponse, elle produit une supposition déguisée en décision.</p>
+<hr>
+<h3>3. LA CHAÎNE DE DÉCISION — reconstituée de SES mots, jamais inventée</h3>
+<p>Le « chemin de décision avant » qu'il nomme existe déjà, écrit dans sa propre commande. Le voici, remis dans l'ordre, chaque maillon appuyé sur une de ses phrases :</p>
+<pre><code>   ① LE BUT ULTIME
+      « Quel est le but ultime du projet porté par Philo et Politique, est-ce que ce but
+        est défini quelque part ? [...] CE but ultime est important, DE LUI DÉCOULE TOUT
+        LE RESTE. »
+                              ↓
+   ② PHILOSOPHIE ET POLITIQUE          ← le point le PLUS FIXE, mais pas immobile
+      « le seul point plus fixe est &quot;philo et politique&quot; mais lui aussi peut bouger avec
+        le temps, suivant notre manière de travailler »
+      « les règles les plus fixes sont celles de la charte, elles fixent la partie fixe
+        de philosophie et politique »
+                              ↓
+   ③ LA STRATÉGIE GLOBALE DU PROJET ENTIER
+      « la synthèse globale [...] Projet Agence + Projet Jeu + Autre + Vision aérienne,
+        stratégique. Tout est lié, en harmonie avec politique et philosophie. »
+                              ↓
+        ┌─────────────────────┴─────────────────────┐
+   ④ STRATÉGIE AGENCE                        ⑤ STRATÉGIE JEU
+      (les deux « en harmonie avec politique et philosophie », ses mots exacts,
+       répétés à l'identique pour chacune des trois)
+                              ↓
+   ⑥ LES STRATÉGIES DE CHANTIER ET DE TÂCHES
+      « les stratégies de tâches alimentent PAR ESCALADE la stratégie globale,
+        ET VICE VERSA : tu vois la dynamique ? »</code></pre>
+<p><strong>Trois choses que cette chaîne dit et que je n'avais pas placées :</strong></p>
+<ul><li><strong>Ça ne descend pas, ça circule.</strong> Il écrit « et vice versa ». Une décision prise sur une tâche peut remonter jusqu'à faire bouger la philosophie. C'est une <strong>boucle</strong>, pas une pyramide — et il ajoute lui-même le risque : « il faut FIABILISER le fonctionnement de cette dynamique, sans quoi on court vers l'incohérence globale, non ? »</li><li><strong>La charte est le socle du socle.</strong> Elle « fixe la partie fixe de philosophie et politique ». Donc toucher à la charte, c'est toucher au point le plus haut de la chaîne — ce qui justifie après coup sa borne permanente (« tu me montres avant »).</li><li><strong>Le but ultime commande tout, et il pose trois questions dessus</strong> : est-il défini quelque part ? est-il BIEN défini ? correspond-il à notre direction ? <strong>Les trois sont ouvertes.</strong></li></ul>
+<hr>
+<h3>4. SA QUESTION DE CONFIANCE — « tu me l'as lu ? tu es sûr d'avoir TOUT pris en compte ? »</h3>
+<p><strong>La réponse honnête est : oui je l'ai lu, non je ne l'avais pas placé — et ce n'est pas la même chose.</strong> Sa commande figure dans ma trace de lecture comme lue INTÉGRALEMENT (~10 200 mots). Mais lire n'est pas structurer, et voici la mesure plutôt que mon impression :</p>
+<table><thead><tr><th>Où</th><th>Mentions de « philo »</th><th>Mentions de « but ultime »</th></tr></thead><tbody><tr><td><strong>Sa commande à lui</strong></td><td><strong>14</strong></td><td><strong>1</strong> <em>(et il écrit « de lui découle tout le reste »)</em></td></tr><tr><td>Ma vue globale</td><td><strong>0</strong></td><td><strong>0</strong></td></tr><tr><td>Mon plan d'action</td><td>2 <em>(dans une seule ligne, sur l'escalade)</em></td><td><strong>0</strong></td></tr><tr><td>Ma trace de lecture</td><td>1</td><td><strong>0</strong></td></tr></tbody></table>
+<p><strong>Ce que ce tableau dit exactement</strong> : j'avais retenu philo-et-politique comme <strong>un lien parmi d'autres</strong> dans le fil ALIGNEMENT. Lui en fait <strong>la RACINE de toute la chaîne</strong>, et il le répète à l'identique pour chacune des trois stratégies. Ma vue globale — le document censé porter le diagnostic — ne le nomme pas une seule fois.</p>
+<p><strong>Sa suspicion était juste, et elle était même plus précise que mon aveu de la veille.</strong> J'avais reconnu que mon premier plan avait été bâti « avec le vocabulaire des audits » ; le vrai défaut est plus profond : <strong>j'avais gardé l'ARCHITECTURE des audits</strong> (une carte, des contrats, des extractions) alors que sa commande porte une architecture différente, qui part du but et descend par la philosophie.</p>
+<p><strong>Ce que ça change concrètement</strong> : la stratégie globale ne peut pas s'écrire avant qu'on ait répondu à ses trois questions sur le but ultime. C'est le premier bloc de questions de demain.</p>
+<hr>
+<h3>5. CE QUE JE NE SAIS PAS ENCORE, ET QUE JE NE DEVINERAI PAS</h3>
+<p>Il évoque « une version de l'agence qui aide à modulariser le code existant, je crois, je ne sais plus ». <strong>Je ne l'ai pas retrouvée dans ses documents sources</strong> : le mot « modulariser » y désigne partout la modularisation de NOTRE Agence, jamais un service rendu au code de quelqu'un d'autre.</p>
+<p><strong>Deux pistes réelles, à ouvrir demain avec lui plutôt qu'à trancher cette nuit</strong> : <code>docs/agence-exportable-conception.md</code> et <code>docs/referentiel/organisation-globale-projet.md</code> — les deux seuls documents du dépôt qui parlent de l'Agence comme d'un produit destiné à quelqu'un d'autre. C'est très probablement là que dort l'idée qu'il a en tête.</p>
+<p><strong>Pourquoi je ne conclus pas</strong> : un zéro de recherche n'est jamais la preuve qu'il n'y a rien à savoir, seulement que ce mot-là ne ressort pas. Conclure ici reviendrait à fabriquer la réponse qu'il attend au lieu de la retrouver.</p>
+<hr>
+<h3>6. CE QUI SE PASSE MAINTENANT — pour qu'il puisse dormir</h3>
+<p><strong>Cette nuit, moi</strong> <em>(rien de structurant, uniquement ce qui se vérifie et se jette si c'est faux)</em> :</p>
+<ul><li>Poser cette chaîne de décision comme colonne vertébrale du chantier, et <strong>corriger la vue globale et le plan</strong> pour qu'ils partent du but ultime au lieu de partir de la carte technique.</li><li><strong>Préparer les 50 questions et plus</strong> de demain, groupées par étage de la chaîne — le but ultime d'abord, la frontière des deux lectures en dernier, puisqu'elle en dépend.</li><li>Chercher l'idée « une Agence qui aide à modulariser du code existant » dans les deux documents nommés ci-dessus, et lui rapporter ce que j'y trouve — sans rien en conclure.</li></ul>
+<p><strong>Demain, ensemble</strong> : les questions, dans l'ordre de la chaîne. Rien ne commence concrètement avant la sauvegarde de référence qu'il a demandée (#1113).</p>
+<p><strong>Ce qui ne bouge pas d'ici là</strong> : aucun renommage (c'est l'étape récompense, après le chantier), rien qui change ce que Lia et Noé disent ou font, rien d'irréversible, et rien d'écrit dans la charte sans qu'il le voie avant.</p>
+<hr>
+<h3>7. PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>La chaîne de décision (but ultime → philo → 3 stratégies → chantiers) n'était nulle part écrite, alors qu'elle est entièrement dans sa commande</td><td><strong>RETENU</strong></td><td>tâche <strong>#1143</strong> — l'écrire comme colonne vertébrale, et corriger la vue globale et le plan qui partent du mauvais bout</td></tr><tr><td>Les trois questions sur le BUT ULTIME (défini ? bien défini ? conforme à notre direction ?) sont ouvertes et commandent tout le reste</td><td><strong>RETENU</strong></td><td>tâche <strong>#1144</strong> — premier bloc des questions de demain, avant tout le reste</td></tr><tr><td>La frontière des deux lectures (ce que reçoit l'acheteur) a été posée trop tôt</td><td><strong>ÉCARTÉ pour l'instant, avec sa raison écrite</strong></td><td>elle dépend de « ce qu'est l'Agence en tant que produit fini » : la question se repose APRÈS cette décision-là, jamais avant</td></tr><tr><td>L'idée d'une Agence qui aide à modulariser du code existant est introuvable dans les sources</td><td><strong>À TRANCHER</strong></td><td>deux documents candidats nommés au §5 ; lui demander demain si c'est bien de ça qu'il parle</td></tr><tr><td>Le budget d'obligations est SOUPLE et non strict</td><td><strong>RETENU</strong></td><td>chaque ajout de ce chantier note ce qu'il remplace ou aurait pu remplacer ; bilan à la fin, décision à lui</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
