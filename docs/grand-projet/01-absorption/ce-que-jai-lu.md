@@ -7,6 +7,14 @@ conclus. L'analyse vient après l'absorption complète — son ordre, pas le mie
 **Pourquoi il existe** : son piège numéro trois, écrit avant de le rencontrer — *croire qu'on a lu*.
 Un document parcouru sans trace se confond, trois heures plus tard, avec un document lu.
 
+**CE QUE LES « APRÈS » DANS LES NOMS DE DOSSIER VEULENT DIRE, et il a tenu à le préciser lui-même
+le 2026-09-28** : « j'ai mis ça pour former une chaîne oui, pour guider la LECTURE et la
+compréhension initiale, UNIQUEMENT, **ce n'est pas un ordre d'exécution** ». Donc
+`AUDIT NIVEAU 2 APRES ARCHITECTURE` dit dans quel ordre ces documents ont été PRODUITS et dans quel
+ordre les lire pour les comprendre — jamais dans quel ordre agir. Ça compte parce que ces documents
+proposent chacun leur propre plan en 10 ou 12 étapes : **leur ordre de lecture n'est pas le nôtre**,
+et l'ordre du chantier reste entièrement à décider avec lui.
+
 ---
 
 ## 1 — COMMANDE IMPORTANTE.docx (LUI · ~10 200 mots · INTÉGRAL · lu le 2026-09-28)
