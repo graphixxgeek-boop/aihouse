@@ -93,3 +93,32 @@ ordinaire. Corriger le cas tordu ne devait pas casser le cas droit.
 **Effet mesuré** : cinq faux « dépassés » (moise-tables-de-loi, abraham-les-references,
 filet-en-parts, agent-du-temps, agent-des-noms) sont devenus cinq chantiers honnêtes — « objectif
 fixé, mais aucun signal mesuré sur la période ».
+
+## Un horodatage perdu n'est pas une absence de passage (2026-09-28, tâche #1096)
+
+**Le compteur d'usage fait déjà la bonne chose**, et c'est ce qui rend l'oubli instructif : un
+événement dont l'heure n'a pas pu être lue est enregistré avec `horodatagePerdu: true` plutôt que
+jeté ou daté au hasard — l'Article 32 appliqué au compteur lui-même. `findOutilsCitesSansPassage()`
+(`tool-usage.mjs`) honore ce troisième état et le rend dans son propre champ.
+
+**Ce module-ci ne l'honorait pas.** Son filtrage par période compare `e.at` à des bornes ; un `at`
+nul tombe hors de **toute** borne, donc ces passages disparaissaient **sans un mot**.
+
+**Deux cas réels, et le second change un verdict** :
+
+| Outil | Affiché avant | Réalité |
+|---|---|---|
+| `rapport-gros-prompt` | « objectif 2, résultat **0** » | 12 passages réels, heure perdue |
+| `tool-learning` | « objectif 4, résultat **3** — en dessous » | **55** passages réels, heure perdue |
+
+« Zéro fois » et « douze fois, à une date inconnue » ne se lisent pas du tout pareil — et le verdict
+« en dessous » de `tool-learning` change entièrement de sens.
+
+**C'est la même classe que la tâche #1078**, quelques heures plus tôt : un correctif appliqué à
+certains appelants et pas à tous, pendant que la doctrine est écrite noir sur blanc ailleurs.
+
+**Ce qui est fait, et ce qui ne l'est pas** : on ne devine pas la date manquante — on **dit** combien
+de passages elle empêche de compter. Le total reste celui de la période ; la perte s'affiche à côté.
+
+**Et le contre-test verrouille l'autre sens** : sans passage perdu, la phrase n'apparaît pas.
+Remplacer un silence par du bruit sur chaque ligne aurait été le remède pire que le mal.

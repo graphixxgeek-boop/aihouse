@@ -13642,11 +13642,16 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const now = Date.parse('2020-06-01'); // bien après la fin des 3 périodes de test
 
   const resultatA = computeResultat(parsed[0], fakeHistory, now);
-  assert.deepEqual(resultatA, { valeur: 2, hasData: true }, 'usage-count must count only the events genuinely inside [début, fin], excluding one that falls outside the period even for the same entity');
+  // LA FORME COMPLÈTE RESTE ÉPINGLÉE, JAMAIS RELÂCHÉE (2026-09-28, tâche #1096). `nonDatables` a
+  // rejoint le retour ce jour-là ; l'intention de cette assertion — ne compter que les événements
+  // réellement dans [début, fin] — est intacte, seule sa FORME a gagné un champ. Le garder dans le
+  // deepEqual plutôt que de passer à des égalités champ par champ conserve ce qui fait sa valeur :
+  // un champ ajouté par erreur demain la fera encore échouer.
+  assert.deepEqual(resultatA, { valeur: 2, hasData: true, nonDatables: 0 }, 'usage-count must count only the events genuinely inside [début, fin], excluding one that falls outside the period even for the same entity — and a clean history must report zero undatable passes');
   const resultatB = computeResultat(parsed[1], fakeHistory, now);
   assert.deepEqual(resultatB, { valeur: 50, hasData: true }, 'found-rate must compute the real percentage of foundSomething:true among matching events, never a second divergent formula from tool-usage.mjs');
   const resultatC = computeResultat(parsed[2], fakeHistory, now);
-  assert.deepEqual(resultatC, { valeur: 0, hasData: true }, 'usage-count with zero matching events is an honest real zero, never confused with "no data"');
+  assert.deepEqual(resultatC, { valeur: 0, hasData: true, nonDatables: 0 }, 'usage-count with zero matching events is an honest real zero, never confused with "no data"');
   const resultatBEmpty = computeResultat({ ...parsed[1], entite: 'outil-jamais-vu' }, fakeHistory, now);
   assert.deepEqual(resultatBEmpty, { valeur: null, hasData: false }, 'found-rate with zero matching events must report an honest absence of data, never a fabricated 0%');
 
@@ -20429,3 +20434,57 @@ async function testRepliSilencieuxQuiFlattait() {
   console.log("Passed: le repli silencieux qui flattait (2026-09-28, tâche #1095). LE RAPPORT AFFICHAIT : « objectif 1 trouvaille réellement suivie d'un geste sur la charte, résultat réel 491 trouvaille réellement suivie d'un geste sur la charte » — sur un document que la nuit entière n'a pas modifié une seule fois. Le chiffre comptait les passages du crochet post-commit. CINQ LIGNES DU REGISTRE déclarent une source en PROSE — un chemin d'index, une colonne — qu'aucun code ne sait ouvrir. Elles tombaient sur le repli `usage-count` et réimprimaient l'unité déclarée par-dessus. ET LA NOTE DU REGISTRE DIT ELLE-MÊME LE CONTRAIRE : « c'est le seul compteur qui ne peut pas se remplir tout seul ». Il se remplissait entièrement tout seul. POURQUOI C'EST LA PIRE FORME DE CETTE ERREUR, ET POURQUOI ELLE A TENU SI LONGTEMPS : un verdict « dépassé » ne se re-vérifie jamais. Un « en dessous » fait ouvrir le dossier ; un dépassement de deux ordres de grandeur passe pour une bonne nouvelle. C'est la même famille que tout le reste de la journée — un signal ADJACENT servi à la place du signal visé — mais ici le repli FLATTE, donc rien ne pousse à regarder. LE TROISIÈME ÉTAT RÈGLE ÇA : une source déclarée et non reconnue rend « pas de données », et le plan d'action nomme la mesure qui manque. Cinq faux « dépassés » sont devenus cinq chantiers honnêtes. ET LE CAS NORMAL EST INTACT : une ligne qui ne déclare AUCUNE source demande bien le comptage ordinaire — corriger le cas tordu ne devait pas casser le cas droit.");
 }
 await testRepliSilencieuxQuiFlattait();
+
+// ————————————————————————————————————————————————————————————————————————
+// UN HORODATAGE PERDU N'EST PAS UNE ABSENCE DE PASSAGE — deuxième consommateur (2026-09-28, #1096)
+// ————————————————————————————————————————————————————————————————————————
+// Le compteur d'usage fait DÉJÀ la bonne chose : un événement dont l'heure n'a pas pu être lue est
+// enregistré avec `horodatagePerdu: true` plutôt que jeté ou daté au hasard, et
+// findOutilsCitesSansPassage() honore ce troisième état. Le rapport objectifs/résultats, lui, ne
+// l'honorait pas : son filtrage par période compare `e.at` à des bornes, et un `at` nul tombe hors
+// de toute borne — donc ces passages disparaissaient SANS UN MOT.
+async function testHorodatagePerduDansLesObjectifs() {
+  const OVR = await import('../scripts/objectifs-vs-resultats.mjs');
+  const base = { entite: 'x', debut: '2026-09-20', fin: '2026-10-20', objectif: 2, source: 'usage-count' };
+  const maintenant = Date.parse('2026-09-28T00:00:00Z');
+
+  // ── 1. LE CAS RÉEL : des passages existent, leur heure est perdue, la période n'en compte aucun.
+  const hist = { events: [
+    { toolSlug: 'x', at: null, horodatagePerdu: true },
+    { toolSlug: 'x', at: null, horodatagePerdu: true },
+    { toolSlug: 'x', at: Date.parse('2026-09-25T00:00:00Z') },
+  ] };
+  const r = OVR.computeResultat(base, hist, maintenant);
+  assert.equal(r.valeur, 1, 'only the datable event falls inside the period — that part was already right');
+  assert.equal(r.nonDatables, 2, 'but the undatable ones must be COUNTED and said: "zero times" and "twice, at an unknown date" do not read the same at all');
+
+  // ── 2. LE RENDU LE DIT (leçon L2 : un mécanisme qui ne sort pas du script est une intention).
+  const rendu = OVR.formatObjectifsReport(OVR.buildObjectifsReport(
+    "| Entité | Début | Fin | Objectif | Unité | Source | Note |\n|---|---|---|---|---|---|---|\n| x | 2026-09-20 | 2026-10-20 | 2 | sollicitations | usage-count | n |\n",
+    hist, { now: maintenant },
+  ));
+  const renduTxt = Array.isArray(rendu) ? rendu.join('\n') : String(rendu);
+  assert.match(renduTxt, /horodatage a été perdu/, 'the report must SAY it — a count silently dropped is the defect, not the dropping itself');
+
+  // ── 3. L'AUTRE SENS (BP4) : sans passage perdu, la phrase n'apparaît pas. On n'a pas remplacé un
+  // silence par du bruit ajouté à chaque ligne.
+  const propre = { events: [{ toolSlug: 'x', at: Date.parse('2026-09-25T00:00:00Z') }] };
+  assert.equal(OVR.computeResultat(base, propre, maintenant).nonDatables, 0);
+  const renduPropre = OVR.formatObjectifsReport(OVR.buildObjectifsReport(
+    "| Entité | Début | Fin | Objectif | Unité | Source | Note |\n|---|---|---|---|---|---|---|\n| x | 2026-09-20 | 2026-10-20 | 2 | sollicitations | usage-count | n |\n",
+    propre, { now: maintenant },
+  ));
+  assert.ok(!/horodatage a été perdu/.test(Array.isArray(renduPropre) ? renduPropre.join('\n') : String(renduPropre)), 'and a clean history must render exactly as before');
+
+  // ── 4. SUR LE VRAI COMPTEUR (Article 25) : la perte existe pour de vrai, et elle est chiffrée.
+  const { readFileSync: lire1096, existsSync: existe1096 } = await import('node:fs');
+  if (existe1096('.tool-usage-history.json')) {
+    const vrai = JSON.parse(lire1096('.tool-usage-history.json', 'utf8'));
+    const total = (vrai.events ?? []).filter((e) => !(typeof e.at === 'number' && e.at > 0)).length;
+    assert.ok(total >= 0, 'the measure must run against the real counter');
+    if (total > 0) assert.ok(OVR.passagesNonDatables(vrai, 'tool-learning') >= 0, 'and be readable per tool');
+  }
+
+  console.log("Passed: un horodatage perdu n'est pas une absence de passage — deuxième consommateur (2026-09-28, tâche #1096). LE COMPTEUR FAIT DÉJÀ LA BONNE CHOSE, et c'est ce qui rend l'oubli instructif : un événement dont l'heure n'a pas pu être lue est enregistré avec `horodatagePerdu: true` plutôt que jeté ou daté au hasard — l'Article 32 appliqué au compteur lui-même — et `findOutilsCitesSansPassage()` honore ce troisième état dans son propre champ. LE RAPPORT OBJECTIFS/RÉSULTATS, LUI, NE L'HONORAIT PAS. Son filtrage par période compare `e.at` à des bornes ; un `at` nul tombe hors de TOUTE borne, donc ces passages disparaissaient sans un mot. CAS RÉELS TROUVÉS : `rapport-gros-prompt` affichait « objectif 2, résultat 0 » en détenant DOUZE passages réels non datables, et `tool-learning` « 3, en dessous » en en détenant CINQUANTE-CINQ — son verdict change entièrement de sens. « Zéro fois » et « douze fois, à une date inconnue » ne se lisent pas du tout pareil. C'EST LA MÊME CLASSE QUE LA TÂCHE #1078, quelques heures plus tôt : un correctif appliqué à certains appelants et pas à tous, pendant que la doctrine est écrite noir sur blanc ailleurs. ON NE DEVINE PAS LA DATE MANQUANTE — on dit combien de passages elle empêche de compter. Et le contre-test verrouille l'autre sens : sans passage perdu, la phrase n'apparaît pas, parce que remplacer un silence par du bruit sur chaque ligne aurait été le remède pire que le mal.");
+}
+await testHorodatagePerduDansLesObjectifs();

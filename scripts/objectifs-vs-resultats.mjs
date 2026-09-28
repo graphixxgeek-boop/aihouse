@@ -97,6 +97,27 @@ function eventsInPeriod(history, entite, debut, finEffective) {
   return (history?.events ?? []).filter((e) => e.toolSlug === entite && e.at >= start && e.at <= end);
 }
 
+// passagesNonDatables() — UN HORODATAGE PERDU N'EST PAS UNE ABSENCE DE PASSAGE (2026-09-28,
+// tâche #1096).
+//
+// LE COMPTEUR FAIT DÉJÀ LA BONNE CHOSE, et c'est ce qui rend l'oubli instructif : un événement dont
+// l'heure n'a pas pu être lue est enregistré avec `horodatagePerdu: true` plutôt que jeté ou daté
+// au hasard — l'Article 32 appliqué au compteur lui-même. `findOutilsCitesSansPassage()`
+// (tool-usage.mjs) honore ce troisième état et le rend dans son propre champ.
+//
+// CE MODULE-CI NE L'HONORAIT PAS. Son filtrage par période compare `e.at` à des bornes ; un `at`
+// nul tombe hors de toute borne, donc ces passages disparaissaient SANS UN MOT. Cas réel :
+// `rapport-gros-prompt` affichait « objectif 2, résultat 0 » alors que le compteur détient DOUZE
+// passages réels dont on sait qu'ils ont eu lieu et dont on ignore quand. « Zéro fois » et « douze
+// fois, à une date inconnue » ne se lisent pas du tout pareil.
+//
+// C'est la même classe que la tâche #1078 : un correctif appliqué à certains appelants et pas à
+// tous, pendant que la doctrine est écrite. On ne devine pas la date manquante — on dit combien de
+// passages elle nous empêche de compter.
+export function passagesNonDatables(history, entite) {
+  return (history?.events ?? []).filter((e) => e.toolSlug === entite && !(typeof e.at === "number" && e.at > 0)).length;
+}
+
 // kpiRowsInPeriod() — même discipline de bornage que eventsInPeriod() ci-dessus, sur horodatage
 // (chaîne ISO, jamais parsée en nombre par parseKpiHistoryCsv puisqu'elle contient "T"/"Z") plutôt
 // que sur `at` (timestamp numérique côté tool-usage). Ne retient que les lignes où la colonne
@@ -181,7 +202,8 @@ export function computeResultat(row, history, now = Date.now(), kpiRows = []) {
   if (row.source && !SOURCES_RECONNUES.includes(row.source)) {
     return { valeur: null, hasData: false, sourceIllisible: row.source };
   }
-  return { valeur: events.length, hasData: true };
+  const nonDatables = passagesNonDatables(history, row.entite);
+  return { valeur: events.length, hasData: true, nonDatables };
 }
 
 export function periodStatus(row, now = Date.now()) {
@@ -204,7 +226,7 @@ export function computeStatus(row, resultat) {
 export function buildObjectifsReport(markdown, history, { now = Date.now(), kpiRows = [] } = {}) {
   return parseObjectifsTable(markdown).map((row) => {
     const resultat = computeResultat(row, history, now, kpiRows);
-    return { ...row, resultat: resultat.valeur, hasData: resultat.hasData, statut: computeStatus(row, resultat), periode: periodStatus(row, now) };
+    return { ...row, resultat: resultat.valeur, hasData: resultat.hasData, nonDatables: resultat.nonDatables ?? 0, statut: computeStatus(row, resultat), periode: periodStatus(row, now) };
   });
 }
 
@@ -225,7 +247,11 @@ export function formatObjectifsReport(rows) {
   return rows
     .map((r) => {
       const uniteTxt = r.unite ? ` ${r.unite}` : "";
-      const resultatTxt = r.hasData ? `${r.resultat}${uniteTxt}` : "pas de données";
+      // LE PASSAGE NON DATABLE SE DIT, jamais ne se tait (2026-09-28, tâche #1096) : « 0 » et
+      // « 0 sur la période, plus N passages réels dont l'heure est perdue » sont deux informations
+      // différentes, et la seconde empêche de conclure que l'outil n'a jamais servi.
+      const perduTxt = r.nonDatables ? ` — plus ${r.nonDatables} passage(s) réel(s) dont l'horodatage a été perdu, donc non datables et jamais comptés ici` : "";
+      const resultatTxt = r.hasData ? `${r.resultat}${uniteTxt}${perduTxt}` : "pas de données";
       return `${STATUT_ICON[r.statut] ?? ""} ${r.entite} (${r.debut} → ${r.fin}, ${r.periode}) : objectif ${r.objectif}${uniteTxt}, résultat réel ${resultatTxt} — ${r.statut}${r.note ? ` (${r.note})` : ""}`;
     })
     .join("\n");
