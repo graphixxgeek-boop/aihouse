@@ -60,3 +60,40 @@ Il range ce qu'il peut MESURER. La finalité d'un composant ne se déduit jamais
 dit ce qu'une chose TOUCHE, jamais pourquoi elle existe. Toute catégorie qui repose sur une
 intention se tient donc à la main, avec sa raison écrite à côté — et cette nature manuelle se
 déclare, elle ne se cache pas derrière une fausse sonde.
+
+## Rapprocher un schéma d'avancement plutôt que le recalculer
+
+Un projet outillé finit toujours par porter un **schéma d'étapes** : classer, niveler, harmoniser,
+relier, gouverner. Chacune de ces étapes est en général DÉJÀ mesurée quelque part, par l'outil qui
+s'en occupe. Ce qui manque n'est jamais la mesure : c'est de les voir **côte à côte, le long du
+schéma**, pour savoir si l'avancement est uniforme ou si une étape traîne.
+
+**La règle de construction, transposable telle quelle** : le rapprochement LIT les mesures
+existantes, il n'en RECALCULE aucune. Deux détenteurs du même chiffre sont la façon dont deux
+chiffres finissent par diverger.
+
+**Le piège à désamorcer d'emblée, et il est systématique** : l'indicateur tautologique. Un ratio
+dont les deux membres sortent de la même valeur — « les X déclarés sur les X déclarés » — rend
+100 % à tous les coups et ne mesure RIEN, tout en ayant l'apparence parfaite d'un indicateur. La
+protection n'est pas la vigilance : c'est un **test à population uniforme**. On construit un dépôt
+fictif où chaque population vaut délibérément la même fraction (3 sur 7, par exemple) ; tout
+indicateur qui rend 100 % sur cette sonde se compare à lui-même, et le test refuse. Cette sonde
+attrape aussi ceux qu'on écrira demain, ce qu'aucune relecture ne peut promettre.
+
+**Trois séparations d'honnêteté**, qui valent pour tout rapport d'avancement :
+
+- un indicateur non mesurable **sort de la moyenne** et reste **visible à côté** avec sa raison
+  écrite — à zéro il punirait l'honnêteté, à cent il fabriquerait le faux vert le plus cher ;
+- une étape dont aucun indicateur n'est mesurable rend **PAS MESURÉE**, jamais « 0 % » : « on a
+  regardé et rien n'est fait » et « on n'a pas pu regarder » se lisent à l'opposé ;
+- **une source qui tombe n'emporte pas les autres** : chaque lecture est protégée séparément, sinon
+  le tout premier import cassé rend le rapport entier aveugle.
+
+**Nommer ce que personne ne porte.** Une étape qu'aucune tâche ouverte ne réclame doit le DIRE, en
+nommant l'ambiguïté — « soit elle est finie, soit personne ne s'en occupe, et les deux se
+ressemblent » — plutôt que de laisser le lecteur choisir la lecture flatteuse.
+
+**Vérifier l'homonymie avant de nommer la fonction.** Un dépôt outillé porte vite plusieurs
+« états », plusieurs « schémas ». Deux fonctions exportées du même nom, dans le même dépôt, pour
+deux objets différents, sont une dette de reprise : le prochain lecteur ne peut pas savoir laquelle
+a parlé. Le nom se choisit après un scan des exports, jamais avant.

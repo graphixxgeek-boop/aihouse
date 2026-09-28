@@ -716,6 +716,261 @@ export function formatVitaliteLines(v, { echelle = VITALITE } = {}) {
 
 export const FAMILLE_HORS_AGENCE = "(f) 🚧 Les Hors Agence - servent le produit, jamais l'outillage";
 
+
+// ══════════════════════════════════════════════════════════════════════════════════════════
+// L'ÉTAT DU SCHÉMA EN CINQ ÉTAPES (2026-09-28, tâche #1056)
+// ══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, mot pour mot, dans son gros prompt du 2026-09-28 :
+// « ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ? »
+//   1 CLASSIFICATION     — définir les familles d'agents, objets, données, livrables, événements
+//   2 NIVELLEMENT        — définir les niveaux de responsabilité, criticité, autonomie,
+//                          habilitation et maturité
+//   3 HARMONISATION      — normaliser les noms, formats, statuts, contrats d'interface,
+//                          conventions
+//   4 PROCESS INTEGRATION — construire les liens, dépendances, déclencheurs, échanges
+//   5 ORGANISATION GÉNÉRALE — installer la gouvernance, les autorités, les responsabilités,
+//                          les arbitrages
+//
+// POURQUOI CE N'EST PAS UNE RÉPONSE EN PROSE. Chacune des cinq étapes est DÉJÀ mesurée quelque
+// part — par cet outil, par agent-des-noms, par god-of-all-process, par data-archangel. Ce qui
+// manquait n'est aucune de ces mesures : c'est de les voir CÔTE À CÔTE, le long du schéma. Sans
+// cette vue, on ne peut pas dire si l'avancement est uniforme ou si une étape traîne — et c'est
+// exactement ce qu'il demande.
+//
+// CE QU'IL NE FAIT PAS, ET C'EST DÉLIBÉRÉ : il ne RECALCULE aucune mesure. Deux comptages du même
+// axe finiraient par diverger (c'est écrit en toutes lettres dans le document de classification
+// lui-même, pour les axes portés ailleurs). Il LIT, il rapproche, il nomme l'étape.
+//
+// UN INDICATEUR NON MESURABLE N'EST NI ZÉRO NI CENT — même règle que le rapport export central
+// (#1060) : il sort du calcul de l'étape et se montre à côté. Une étape dont AUCUN indicateur
+// n'est mesurable rend « PAS MESURÉE », jamais « 0 % » : les deux se lisent à l'opposé.
+
+export const ETAPES_DU_SCHEMA = [
+  {
+    n: 1,
+    cle: "classification",
+    motsDeTache: ["classification", "classer", "rangement", "famille", "axe", "type"],
+    titre: "CLASSIFICATION",
+    quoi: "définir les familles d'agents, objets, données, livrables et événements",
+    indicateurs: [
+      { cle: "type", quoi: "chaque fichier porte-t-il un TYPE (ce qu'il EST) ?", lire: (m) => m.axes?.TYPE ?? null },
+      { cle: "famille", quoi: "chaque fichier porte-t-il une FAMILLE (ce sur quoi il travaille) ?", lire: (m) => m.axes?.FAMILLE ?? null },
+      { cle: "classes", quoi: "chaque fichier porte-t-il au moins une CLASSE TRANSVERSE (ce qu'il sait FAIRE) ?", lire: (m) => m.axes?.["CLASSES TRANSVERSES"] ?? null },
+      // PAS DE RAPPORT DE SOI À SOI (leçon de la tâche #226) : « les sources inventoriées sur les
+      // sources inventoriées » rendrait 100 % à tous les coups. Les DOCUMENTS, eux, ont deux vrais
+      // ratios — combien portent un classement, sur le nombre réel de documents du dépôt.
+      { cle: "documents-exportabilite", quoi: "les DOCUMENTS portent-ils un classement d'exportabilité (ce qui part avec l'Agence) ?", lire: (m) => (m.documents?.mesurable ? { valeur: m.documents.classesExport, sur: m.documents.total, detail: `${m.documents.total - m.documents.classesExport} document(s) sans classement d'exportabilité sur ${m.documents.total}` } : null) },
+      { cle: "documents-nature", quoi: "les DOCUMENTS portent-ils une NATURE (ce que chacun porte) ?", lire: (m) => (m.documents?.mesurable ? { valeur: m.documents.classesNature, sur: m.documents.total, detail: `${m.documents.total - m.documents.classesNature} document(s) sans nature sur ${m.documents.total}` } : null) },
+    ],
+  },
+  {
+    n: 2,
+    cle: "nivellement",
+    motsDeTache: ["nivellement", "rang", "niveau", "vitalite", "vitalité", "maturit", "criticit", "habilitation"],
+    titre: "NIVELLEMENT",
+    quoi: "définir les niveaux de responsabilité, criticité, autonomie, habilitation et maturité",
+    indicateurs: [
+      { cle: "rang", quoi: "chaque fichier porte-t-il un RANG (ce qu'il VAUT) ?", lire: (m) => m.axes?.RANG ?? null },
+      // Le ratio confronte les fichiers RÉELLEMENT classés au parc entier : un fichier illisible
+      // reste non mesuré et se voit, au lieu d'être rangé d'office en « optionnel ».
+      { cle: "vitalite", quoi: "chaque fichier porte-t-il une VITALITÉ (ce que l'Agence perd sans lui) ?", lire: (m) => (m.vitalite?.mesurable ? { valeur: m.vitalite.mesures, sur: m.vitalite.total, detail: `${m.vitalite.total - m.vitalite.mesures} fichier(s) non mesuré(s) sur ${m.vitalite.total} — vital / essentiel / utile / optionnel, dérivés de la chaîne quotidienne` } : null) },
+      { cle: "maturite", quoi: "existe-t-il une échelle de MATURITÉ par outil (0/1/2/3) ?", lire: () => null, pourquoiNonMesure: "aucune échelle de maturité n'existe dans le dépôt. L'idée d'un code 0/1/2/3 a été formulée puis EFFACÉE sans qu'aucune tâche ne la porte (retrouvée par data-archangel le 2026-09-24) — c'est le seul des cinq niveaux qu'il nomme qui n'a aucun porteur." },
+    ],
+  },
+  {
+    n: 3,
+    cle: "harmonisation",
+    motsDeTache: ["harmonis", "nommage", "renommage", "nom", "gabarit", "unif", "convention", "format"],
+    titre: "HARMONISATION",
+    quoi: "normaliser les noms, formats, statuts, contrats d'interface et conventions",
+    indicateurs: [
+      { cle: "noms-valides", quoi: "les noms en service ont-ils été VALIDÉS par l'utilisateur ?", lire: (m) => (m.noms?.mesurable ? { valeur: m.noms.valides, sur: m.noms.total, detail: `${m.noms.total - m.noms.valides} nom(s) en service jamais validés au registre des baptêmes` } : null) },
+      { cle: "gabarit-rapports", quoi: "les rapports suivent-ils tous le gabarit partagé ?", lire: (m) => (m.gabarit?.mesurable ? { valeur: m.gabarit.conformes, sur: m.gabarit.total, detail: `${m.gabarit.total - m.gabarit.conformes} rapport(s) hors gabarit` } : null) },
+    ],
+  },
+  {
+    n: 4,
+    cle: "process-integration",
+    motsDeTache: ["process", "circulation", "declencheur", "déclencheur", "dependance", "dépendance", "integration", "intégration", "branch"],
+    titre: "PROCESS INTEGRATION",
+    quoi: "construire les liens, dépendances, déclencheurs et échanges entre agents",
+    indicateurs: [
+      { cle: "circulation", quoi: "les données produites par un outil sont-elles relues par un autre ?", lire: (m) => (m.circulation?.mesurable ? { valeur: m.circulation.branchees, sur: m.circulation.total, detail: `${m.circulation.total - m.circulation.branchees} source(s) que seul leur producteur relit` } : null) },
+      { cle: "process-surveilles", quoi: "les process déclarés portent-ils VRAIMENT un document ET un contrôleur ?", lire: (m) => (m.process?.mesurable ? { valeur: m.process.surveilles, sur: m.process.total, detail: `${m.process.total - m.process.surveilles} process déclaré(s) sans document ou sans contrôleur, sur ${m.process.total}` } : null) },
+    ],
+  },
+  {
+    n: 5,
+    cle: "organisation-generale",
+    motsDeTache: ["organisation", "gouvernance", "autorit", "arbitrage", "responsabilit", "organigramme"],
+    titre: "ORGANISATION GÉNÉRALE",
+    quoi: "installer la gouvernance, les autorités, les responsabilités et les arbitrages",
+    indicateurs: [
+      { cle: "rangs-declares", quoi: "les rangs d'organisation sont-ils déclarés et sans divergence ?", lire: (m) => (m.rangs?.mesurable ? { valeur: m.rangs.total - m.rangs.divergents, sur: m.rangs.total, detail: `${m.rangs.divergents} rang(s) divergent(s) entre catégories déclarées et rangs réels` } : null) },
+      { cle: "arbitrages", quoi: "les décisions en attente d'arbitrage sont-elles toutes inscrites ?", lire: (m) => (m.arbitrages?.mesurable ? { valeur: m.arbitrages.inscrits, sur: m.arbitrages.total, detail: `${m.arbitrages.total - m.arbitrages.inscrits} idée(s) en attente et non inscrites au registre` } : null) },
+    ],
+  },
+];
+
+// LA LECTURE DES AXES SE FAIT SUR LE DOCUMENT GÉNÉRÉ, jamais par un second comptage (Article 24 :
+// un registre se LIT). `docs/referentiel/classification-agence.md` est produit par cet outil même
+// et porte la couverture de chaque axe ; le recompter ici créerait deux chiffres pour un seul fait.
+export const MOTIF_LIGNE_D_AXE = /^\|\s*\*\*([A-ZÉÈ ]+)\*\*\s*\|[^|]*\|[^|]*\|\s*\*\*(\d+)\s*\/\s*(\d+)\*\*/;
+
+export function axesDepuisLeDocument(markdown = "") {
+  const axes = {};
+  for (const ligne of String(markdown).split("\n")) {
+    const m = ligne.match(MOTIF_LIGNE_D_AXE);
+    if (!m) continue;
+    const [, nom, couvre, total] = m;
+    axes[nom.trim()] = { valeur: Number(couvre), sur: Number(total), detail: `${couvre} / ${total} fichiers` };
+  }
+  return Object.keys(axes).length ? axes : null;
+}
+
+export function etatDesCinqEtapes(mesures = {}, { etapes = ETAPES_DU_SCHEMA, barre = 90 } = {}) {
+  const rendu = etapes.map((e) => {
+    const mesures_ = [], nonMesures = [];
+    for (const ind of e.indicateurs) {
+      let lu = null;
+      try { lu = ind.lire(mesures); } catch { lu = null; }
+      if (!lu || lu.valeur === null || lu.valeur === undefined || !lu.sur) {
+        nonMesures.push({ ...ind, pourquoi: ind.pourquoiNonMesure ?? "aucune mesure disponible aujourd'hui" });
+      } else {
+        mesures_.push({ ...ind, ...lu, pct: Math.round((lu.valeur / lu.sur) * 100) });
+      }
+    }
+    const pct = mesures_.length ? Math.round(mesures_.reduce((a, i) => a + i.pct, 0) / mesures_.length) : null;
+    return {
+      ...e, mesures: mesures_, nonMesures, pct,
+      etat: pct === null ? "PAS MESURÉE" : pct >= barre ? "TENUE" : "EN COURS",
+      taches: (Array.isArray(mesures.taches) ? mesures.taches : []).filter((t) => (e.motsDeTache ?? [e.cle]).some((mot) => new RegExp(mot.replace(/-/g, "[- ]?"), "i").test(`${t.sujet} ${t.sousSujet ?? ""}`))),
+    };
+  });
+  return { mesurable: rendu.some((e) => e.pct !== null), etapes: rendu, barre };
+}
+
+export function formatCinqEtapesLines(r = {}) {
+  if (!r.mesurable) return ["🚨 LE SCHÉMA : PAS MESURÉ — aucune étape n'a pu l'être. Ce n'est PAS « tout va bien »."];
+  const L = ["=== OÙ EN EST-ON SUR LE SCHÉMA EN CINQ ÉTAPES ===", ""];
+  for (const e of r.etapes) {
+    const tete = e.pct === null ? "⬜ PAS MESURÉE" : `${e.etat === "TENUE" ? "✅" : "🟠"} ${String(e.pct).padStart(3)} %`;
+    L.push(`${tete}  ${e.n}. ${e.titre} — ${e.quoi}`);
+    for (const i of e.mesures) L.push(`         ${String(i.pct).padStart(3)} %  ${i.quoi}  (${i.detail})`);
+    for (const i of e.nonMesures) L.push(`         ⬜ NON MESURÉ  ${i.quoi}`), L.push(`                ${i.pourquoi}`);
+    if (e.taches?.length) L.push(`         ce qui la porte : ${e.taches.map((t) => "#" + t.numero).join(" ")}`);
+    else L.push("         ⚠️ AUCUNE tâche ouverte ne porte cette étape — ce qui veut dire soit qu'elle est finie, soit que personne ne s'en occupe, et les deux se ressemblent");
+    L.push("");
+  }
+  L.push(`Barre : ${r.barre} % — au-dessus, l'étape est dite TENUE. La barre est un choix, pas un fait.`);
+  L.push("HORS PORTÉE : il RAPPROCHE des mesures existantes, il n'en recalcule AUCUNE — deux comptages");
+  L.push("du même axe finiraient par diverger. Une étape « tenue » dit que ses indicateurs le sont,");
+  L.push("jamais que la question est close.");
+  return L;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA COLLECTE DES MESURES (2026-09-28, tâche #1056)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// ELLE IMPORTE À LA DEMANDE plutôt qu'en tête de fichier : ce module est chargé par beaucoup de
+// monde, et tirer data-archangel, pure-gold-unity, god-of-all-process et check-tasks-details à
+// chaque import, pour une commande qu'on lance rarement, alourdirait tout le reste.
+//
+// CHAQUE SOURCE EST PROTÉGÉE SÉPARÉMENT : une seule qui tombe laisse SON indicateur NON MESURÉ,
+// jamais à zéro, et jamais elle n'emporte les autres avec elle. C'est la règle du rapport export
+// central (#1060), reprise ici parce qu'elle vaut partout : une absence de mesure et un zéro se
+// lisent à l'opposé, donc ils ne doivent jamais se confondre.
+//
+// AUCUN INDICATEUR N'EST UN RAPPORT DE SOI À SOI. Le piège est celui de la tâche #226 (« KPI
+// Qualité de sortie : une tautologie ») : compter « les process déclarés sur les process
+// déclarés » rend 100 % à tous les coups et ne mesure RIEN. Chaque ratio ci-dessous confronte donc
+// deux populations réellement différentes — les process déclarés contre ceux qui ont vraiment un
+// document ET un contrôleur, les idées candidates contre celles qui sont vraiment inscrites au
+// registre des arbitrages.
+export async function mesurerLesCinqEtapes({ root = ROOT, lire = readFileSync } = {}) {
+  const m = {};
+  const essai = async (nom, fn) => { try { m[nom] = await fn(); } catch (e) { m[nom] = { mesurable: false, pourquoi: String(e?.message ?? e) }; } };
+
+  await essai("axes", async () => axesDepuisLeDocument(lire(join(root, CLASSIFICATION_PATH), "utf8")));
+  await essai("vitalite", async () => {
+    const v = vitaliteDuParc();
+    return v?.total ? { mesurable: true, total: v.total, mesures: v.mesures } : { mesurable: false };
+  });
+  await essai("documents", async () => {
+    const d = classerLesDocuments();
+    const n = natureDesDocuments();
+    if (!d?.examines) return { mesurable: false };
+    return {
+      mesurable: true,
+      total: d.examines,
+      classesExport: Math.round((d.couverture / 100) * d.examines),
+      classesNature: n?.examines ? Math.round((n.couverture / 100) * n.examines) : 0,
+    };
+  });
+  await essai("sources", async () => {
+    const { buildDataArchangelReport } = await import("./data-archangel.mjs");
+    const r = buildDataArchangelReport({ root });
+    return { mesurable: true, total: r.total, branchees: r.branchees };
+  });
+  // LA CIRCULATION SE LIT SUR LE MÊME RAPPORT QUE L'INVENTAIRE, jamais par un second appel : deux
+  // appels seraient deux photos de deux instants, et l'écart entre elles passerait pour un
+  // résultat alors qu'il ne serait qu'un décalage d'horloge.
+  m.circulation = m.sources?.mesurable
+    ? { mesurable: true, total: m.sources.total, branchees: m.sources.branchees }
+    : { mesurable: false };
+  await essai("noms", async () => {
+    const { findNomsNonValides, REGISTRE } = await import("./agent-des-noms.mjs");
+    const chemin = join(root, REGISTRE);
+    const registre = existsSync(chemin) ? lire(chemin, "utf8") : "";
+    const enService = readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, ""));
+    if (!enService.length) return { mesurable: false };
+    return { mesurable: true, total: enService.length, valides: enService.length - findNomsNonValides(enService, registre).length };
+  });
+  await essai("gabarit", async () => {
+    const { scanUnity } = await import("./pure-gold-unity.mjs");
+    const s = scanUnity({ root });
+    return s.mesurables ? { mesurable: true, total: s.mesurables, conformes: s.conformes } : { mesurable: false };
+  });
+  await essai("process", async () => {
+    const { PROCESSES } = await import("./god-of-all-process.mjs");
+    if (!PROCESSES?.length) return { mesurable: false };
+    // LE RATIO CONFRONTE DEUX POPULATIONS DIFFÉRENTES : tous les process déclarés d'un côté, ceux
+    // qui portent VRAIMENT un document ET un contrôleur de l'autre. Un process déclaré sans
+    // contrôleur est une intention (leçon L2) ; le compter comme intégré rendrait l'étape 4
+    // toujours verte.
+    const surveilles = PROCESSES.filter((p) => p.doc && p.gardien).length;
+    return { mesurable: true, total: PROCESSES.length, surveilles };
+  });
+  await essai("rangs", async () => {
+    const d = axesDivergentDuReferentiel();
+    if (d.mesure !== "mesuré") return { mesurable: false, pourquoi: d.pourquoi };
+    const total = Object.keys(AGENT_CATEGORIES).length;
+    return { mesurable: true, total, divergents: (d.ecarts ?? d.divergences ?? []).length };
+  });
+  await essai("arbitrages", async () => {
+    const CTD = await import("./check-tasks-details.mjs");
+    const candidats = CTD.detectPendingIdeaCandidates(CTD.loadAllTaskRows());
+    if (!candidats.length) return { mesurable: true, total: 0, inscrits: 0, aucunCandidat: true };
+    const chemin = join(root, CTD.IDEES_REGISTRY_PATH);
+    const decisions = existsSync(chemin) ? CTD.loadIdeaDecisions(lire(chemin, "utf8")) : {};
+    const enAttente = CTD.findIdeasNeedingDecision(candidats, decisions).length;
+    return { mesurable: true, total: candidats.length, inscrits: candidats.length - enAttente };
+  });
+  // LES TÂCHES OUVERTES, pour dire QUI PORTE chaque étape. Sans elles, la ligne « aucune tâche ne
+  // porte cette étape » serait vraie partout et ne voudrait plus rien dire — une alerte qu'aucune
+  // action ne peut éteindre devient du décor (leçon L6).
+  await essai("taches", async () => {
+    const { loadAllTaskRows } = await import("./check-tasks-details.mjs");
+    // L'état se lit sur `statusKey`, la clé NORMALISÉE que le suivi produit — jamais sur le texte
+    // libre du statut, qui porte des phrases entières (« terminée — écart : … ») et qu'un motif
+    // finirait toujours par mal découper.
+    return loadAllTaskRows().filter((r) => r.statusKey === "ouverte" || r.statusKey === "enCours");
+  });
+  return m;
+}
+
 export const ORG_RANKS = {
   socle: { label: "Socle", singulier: "Socle", emoji: "🧱", population: "type", echelon: null,
     promotionVers: null, condition: "AUCUNE promotion, et ce n'est pas un plafond : il n'a jamais candidaté. Le promouvoir serait lui inventer une ambition qu'il n'a pas.",
@@ -2217,7 +2472,7 @@ export function formatDocumentsLines(r) {
   return l;
 }
 
-function main() {
+async function main() {
   printReliabilityNotice("le-classificateur");
   recordCliUsage("le-classificateur");
   const sub = process.argv[2];
@@ -2291,7 +2546,31 @@ function main() {
     for (const l of formatVitaliteLines(vitaliteDuParc())) console.log(l);
     return;
   }
-  console.log("\nUsage : node scripts/le-classificateur.mjs [classification [chemin] | vitalite]");
+  // `schema` (2026-09-28, tâche #1056) — sa question du gros prompt, mot pour mot : « ON EN EST OU
+  // PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ? ». Livré en texte ET en HTML : c'est un document de
+  // rangement, et sa règle permanente est qu'il se remet en HTML.
+  if (sub === "schema") {
+    const mesures = await mesurerLesCinqEtapes();
+    const r = etatDesCinqEtapes(mesures);
+    const lignes = formatCinqEtapesLines(r);
+    for (const l of lignes) console.log(l);
+    const dossier = join(ROOT, "docs/le-classificateur");
+    mkdirSync(dossier, { recursive: true });
+    const txt = join(dossier, "etat-du-schema.txt");
+    const html = join(dossier, "etat-du-schema.html");
+    writeFileSync(txt, `${lignes.join("\n")}\n`, "utf8");
+    writeFileSync(html, renderHtmlReport({
+      tool: "le-classificateur",
+      title: "Où en est-on sur le schéma en cinq étapes",
+      subtitle: "Classification · Nivellement · Harmonisation · Process integration · Organisation générale — mesures rapprochées, jamais recalculées",
+      blocks: [{ type: "pre", text: lignes.join("\n") }],
+    }), "utf8");
+    console.log(`\nÉcrit : docs/le-classificateur/etat-du-schema.txt`);
+    console.log(`Écrit : docs/le-classificateur/etat-du-schema.html  ← la version de remise`);
+    recordRegistryWrite?.("le-classificateur", "docs/le-classificateur/etat-du-schema.txt");
+    return;
+  }
+  console.log("\nUsage : node scripts/le-classificateur.mjs [classification [chemin] | etat | vitalite | schema]");
 }
 
 
@@ -2480,4 +2759,4 @@ async function etatCli() {
 // main() partait avant les `const` écrits en dessous — leur zone morte temporelle. C'est le
 // défaut exact que findLanceursPrematures() refuse, et il s'est produit ici à la seconde où une
 // constante a rejoint la fin du fichier. Troisième outil du dépôt à le payer.
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(e); process.exitCode = 1; });

@@ -339,3 +339,65 @@ au lieu d'en éclairer.
 
 **Une population de plus** rejoint la liste par une entrée dans `POPULATIONS_A_CLASSER`, et rien
 d'autre ne change.
+
+## L'état du schéma en cinq étapes (depuis le 2026-09-28)
+
+`node scripts/le-classificateur.mjs schema` — livré en texte **et en HTML**
+(`docs/le-classificateur/etat-du-schema.txt` et `.html`), comme tout document de rangement.
+
+**SA QUESTION, mot pour mot, dans le gros prompt du 2026-09-28** : « ON EN EST OU PAR RAPPORT AU
+SCHEMA : TOUT EST BIEN OK ? », suivie des cinq étapes qu'il avait posées lui-même :
+
+| # | Étape | Ce qu'elle installe |
+|---|---|---|
+| 1 | **CLASSIFICATION** | définir les familles d'agents, objets, données, livrables et événements |
+| 2 | **NIVELLEMENT** | définir les niveaux de responsabilité, criticité, autonomie, habilitation et maturité |
+| 3 | **HARMONISATION** | normaliser les noms, formats, statuts, contrats d'interface et conventions |
+| 4 | **PROCESS INTEGRATION** | construire les liens, dépendances, déclencheurs et échanges entre agents |
+| 5 | **ORGANISATION GÉNÉRALE** | installer la gouvernance, les autorités, les responsabilités et les arbitrages |
+
+**POURQUOI CE N'EST PAS UNE RÉPONSE EN PROSE.** Chacune des cinq étapes était DÉJÀ mesurée quelque
+part — par cet outil, par agent-des-noms, par pure-gold-unity, par god-of-all-process, par
+data-archangel, par check-tasks-details. Ce qui manquait n'était aucune de ces mesures : c'était de
+les voir **côte à côte, le long du schéma**. Sans cette vue, impossible de dire si l'avancement est
+uniforme ou si une étape traîne — et c'est exactement ce qu'il demande.
+
+**CE QU'IL NE FAIT PAS, ET C'EST DÉLIBÉRÉ** : il ne RECALCULE aucune mesure. Il LIT, il rapproche,
+il nomme l'étape. Deux comptages du même axe finiraient par diverger — c'est écrit en toutes
+lettres dans le document de classification lui-même, et le rapport export central (#1060) l'a
+prouvé le même jour en trouvant deux pourcentages de portabilité qui se contredisaient.
+
+**LE PIÈGE QU'IL A FALLU DÉSAMORCER, et le premier jet y était tombé trois fois.** Un indicateur
+dont les deux membres du ratio sortent de la même valeur — « les process déclarés sur les process
+déclarés » — rend **100 % à tous les coups** et ne mesure RIEN : c'est la tâche #226 en personne
+(« KPI Qualité de sortie : une tautologie »). Trois des indicateurs étaient écrits ainsi (les
+données, la vitalité, les process). Chacun confronte désormais deux populations réellement
+différentes, et le filet de sécurité porte une **sonde « 3 sur 7 partout »** : si un indicateur
+rend 100 % sur un dépôt fictif où chaque population vaut délibérément 3 sur 7, c'est qu'il se
+compare à lui-même, et le test refuse.
+
+**Trois règles d'honnêteté, les mêmes que le rapport export central** :
+
+- un indicateur **non mesurable** sort de la moyenne et reste **visible à côté**, avec la raison
+  écrite — le compter à zéro punirait l'honnêteté, le compter à cent serait le faux vert le plus cher ;
+- une étape dont **aucun** indicateur n'est mesurable rend **PAS MESURÉE**, jamais « 0 % » : les
+  deux se lisent à l'opposé ;
+- une **source qui tombe** laisse son seul indicateur aveugle et n'emporte jamais les quatre autres.
+
+**Une étape que personne ne porte le dit**, en nommant l'ambiguïté plutôt qu'en la masquant :
+« aucune tâche ouverte ne porte cette étape — ce qui veut dire soit qu'elle est finie, soit que
+personne ne s'en occupe, et les deux se ressemblent ».
+
+**Le seul niveau du schéma qui n'a AUCUN porteur** : la **maturité**. Une échelle 0/1/2/3 par outil
+a été formulée puis effacée du dépôt sans qu'aucune tâche ne la reprenne (retrouvée par
+data-archangel le 2026-09-24). L'indicateur existe donc, et il affiche NON MESURÉ avec cette raison
+— plutôt que de disparaître, ce qui aurait rendu l'étape 2 faussement complète.
+
+**Le nom, et pourquoi il n'est pas `etatDuSchema()`** : god-of-all-process exporte déjà une
+fonction de ce nom, qui parle des **maillons d'un process** et non des cinq étapes. Deux fonctions
+exportées du même nom dans un même dépôt sont la dette de reprise que l'Article 20bis nomme. D'où
+`etatDesCinqEtapes()` / `formatCinqEtapesLines()`, et un contre-test qui refuse le retour de
+l'homonyme.
+
+**Une étape ou un indicateur de plus** rejoint la liste par une entrée dans `ETAPES_DU_SCHEMA`, et
+rien d'autre ne change — chaque indicateur déclare lui-même comment il se lit (`lire(m)`).

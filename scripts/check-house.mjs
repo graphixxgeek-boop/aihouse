@@ -9000,6 +9000,98 @@ async function testRapportExportCentral() {
 }
 await testRapportExportCentral();
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// L'ÉTAT DU SCHÉMA EN CINQ ÉTAPES (2026-09-28, tâche #1056)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, mot pour mot, dans son gros prompt : « ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT
+// EST BIEN OK ? » — et le seul mauvais service à lui rendre serait un « oui » construit sur des
+// indicateurs qui ne peuvent pas dire non. Ces contre-tests portent donc, dans les DEUX sens, sur
+// ce qui rendrait la réponse fausse : une étape non mesurée qui passerait pour tenue, un
+// indicateur qui se compare à lui-même, et une étape tenue qu'on dégraderait sans raison.
+async function testEtatDuSchemaEnCinqEtapes() {
+  const LC = await import('../scripts/le-classificateur.mjs');
+
+  // ── 1. UNE ÉTAPE SANS AUCUNE MESURE REND « PAS MESURÉE », JAMAIS 0 %.
+  // Les deux se lisent à l'opposé : 0 % dit « on a regardé et rien n'est fait », PAS MESURÉE dit
+  // « on n'a pas pu regarder ». Confondre les deux est le faux vert (ou le faux rouge) le plus cher
+  // du projet — c'est exactement ce que check-spirit a appris le 2026-09-25 (leçons L5/L11).
+  const aveugle = LC.etatDesCinqEtapes({}, { etapes: [{ n: 1, cle: 'x', titre: 'X', quoi: 'q', indicateurs: [{ cle: 'i', quoi: 'q', lire: () => null }] }] });
+  assert.equal(aveugle.etapes[0].pct, null, 'an indicator that returns nothing must leave the step UNMEASURED (pct null), never 0 % — "we looked and nothing is done" and "we could not look" read as opposites, and a 0 % here would send someone to fix a step that may well be finished');
+  assert.equal(aveugle.etapes[0].etat, 'PAS MESURÉE', 'an unmeasured step must SAY so in its state, not borrow the wording of a measured one');
+  assert.equal(aveugle.mesurable, false, 'a report whose every step is unmeasured must declare itself unmeasurable — otherwise its header reads like a verdict rendered on zero data');
+  assert.ok(LC.formatCinqEtapesLines(aveugle)[0].includes('PAS MESURÉ'), 'the unmeasurable case must be the FIRST thing the reader sees, and it must not be phrased as "all good"');
+
+  // ── 2. UN INDICATEUR NON MESURABLE SORT DU CALCUL, il ne le tire ni vers le haut ni vers le bas.
+  // Contre-test dans les deux sens : avec un seul indicateur à 100 % et un non mesurable, la
+  // moyenne doit valoir 100 (pas 50, qui serait « compté à zéro ») ; et le non mesurable doit
+  // rester VISIBLE à côté, sinon on l'aurait silencieusement effacé, ce qui est pire.
+  const mixte = LC.etatDesCinqEtapes({ a: 4 }, { etapes: [{ n: 1, cle: 'x', titre: 'X', quoi: 'q', indicateurs: [
+    { cle: 'plein', quoi: 'q', lire: (m) => ({ valeur: m.a, sur: m.a, detail: 'd' }) },
+    { cle: 'absent', quoi: 'q', lire: () => null, pourquoiNonMesure: 'rien ne le porte' },
+  ] }] });
+  assert.equal(mixte.etapes[0].pct, 100, 'an UNMEASURABLE indicator must leave the average entirely — counting it as zero would punish a step for the honesty of an indicator that refuses to conclude, and 50 % here would send someone chasing a problem that was never measured');
+  assert.equal(mixte.etapes[0].nonMesures.length, 1, 'the unmeasurable indicator must stay VISIBLE beside the average — dropping it from the calculation must never mean dropping it from the report, or the reader would believe the step is fully covered');
+  assert.equal(mixte.etapes[0].nonMesures[0].pourquoi, 'rien ne le porte', 'an unmeasurable indicator must carry the WRITTEN reason it cannot be measured (Article 27: the why lives beside the what), never a bare blank that the next agent will read as an oversight and "fix" by deleting it');
+
+  // ── 3. LA BARRE EST UN SEUIL RÉEL, dans les deux sens.
+  const sous = LC.etatDesCinqEtapes({ v: 1, s: 2 }, { barre: 90, etapes: [{ n: 1, cle: 'x', titre: 'X', quoi: 'q', indicateurs: [{ cle: 'i', quoi: 'q', lire: (m) => ({ valeur: m.v, sur: m.s, detail: 'd' }) }] }] });
+  assert.equal(sous.etapes[0].etat, 'EN COURS', 'a step at 50 % must read EN COURS under a 90 % bar — a threshold that never refuses anything is scenery (lesson L6)');
+  const pile = LC.etatDesCinqEtapes({ v: 9, s: 10 }, { barre: 90, etapes: [{ n: 1, cle: 'x', titre: 'X', quoi: 'q', indicateurs: [{ cle: 'i', quoi: 'q', lire: (m) => ({ valeur: m.v, sur: m.s, detail: 'd' }) }] }] });
+  assert.equal(pile.etapes[0].etat, 'TENUE', 'a step exactly ON the bar must be held — an off-by-one here would quietly downgrade a finished step every time, and nobody would ever know why');
+
+  // ── 4. AUCUN INDICATEUR DU SCHÉMA RÉEL NE SE COMPARE À LUI-MÊME.
+  // C'est la tâche #226 en personne (« KPI Qualité de sortie : une tautologie ») : un ratio dont
+  // les deux membres sortent de la même valeur rend 100 % à tous les coups et ne mesure RIEN. Le
+  // premier jet de cette fonction en portait TROIS — les données, la vitalité et les process, tous
+  // écrits « total / total ». Ce contre-test les rattraperait s'ils revenaient.
+  const sonde = { axes: { TYPE: { valeur: 3, sur: 7 }, FAMILLE: { valeur: 3, sur: 7 }, 'CLASSES TRANSVERSES': { valeur: 3, sur: 7 }, RANG: { valeur: 3, sur: 7 } },
+    documents: { mesurable: true, total: 7, classesExport: 3, classesNature: 3 },
+    vitalite: { mesurable: true, total: 7, mesures: 3 },
+    sources: { mesurable: true, total: 7, branchees: 3 },
+    circulation: { mesurable: true, total: 7, branchees: 3 },
+    noms: { mesurable: true, total: 7, valides: 3 }, gabarit: { mesurable: true, total: 7, conformes: 3 },
+    process: { mesurable: true, total: 7, surveilles: 3 }, rangs: { mesurable: true, total: 7, divergents: 4 },
+    arbitrages: { mesurable: true, total: 7, inscrits: 3 } };
+  const reelSonde = LC.etatDesCinqEtapes(sonde);
+  for (const e of reelSonde.etapes) for (const i of e.mesures) {
+    assert.notEqual(i.pct, 100, `indicator "${i.cle}" of step ${e.n} returns 100 % on a probe where EVERY population is deliberately 3 out of 7 — which can only mean it compares a value to itself. A ratio of a number over that same number is a tautology (task #226): it answers 100 % whatever the repository does, so it can never raise an alarm, and its green is worth nothing`);
+    assert.ok(i.pct >= 0 && i.pct <= 100, `indicator "${i.cle}" must yield a percentage inside 0..100`);
+  }
+
+  // ── 5. LES MESURES SONT LUES, JAMAIS RECALCULÉES (Article 24 : un registre se LIT).
+  const doc = '| **TYPE** | ce qu\'il EST | rien | **92 / 92** | reste |\n| **FAMILLE** | x | y | **64 / 92** | z |\nligne sans rapport';
+  const axes = LC.axesDepuisLeDocument(doc);
+  assert.deepEqual(axes.TYPE, { valeur: 92, sur: 92, detail: '92 / 92 fichiers' }, 'axis coverage must be READ off the generated classification document, never recounted here — a second count of the same axis is how two numbers start to diverge, which is the very thing this document warns about in its own text');
+  assert.equal(axes.FAMILLE.valeur, 64, 'every axis line of the document must be read, not just the first');
+  assert.equal(Object.keys(axes).length, 2, 'a line that is not an axis line must not be read as one');
+  assert.equal(LC.axesDepuisLeDocument('rien du tout'), null, 'a document with no axis line must yield null (unmeasurable), never an empty object that would read downstream as "measured, and all axes are at zero"');
+
+  // ── 6. UNE ÉTAPE QUE PERSONNE NE PORTE LE DIT, et la ligne dit pourquoi c'est ambigu.
+  const orpheline = LC.etatDesCinqEtapes({ taches: [] }, { etapes: [{ n: 1, cle: 'x', titre: 'X', quoi: 'q', motsDeTache: ['zzz'], indicateurs: [{ cle: 'i', quoi: 'q', lire: () => ({ valeur: 1, sur: 1, detail: 'd' }) }] }] });
+  assert.ok(LC.formatCinqEtapesLines(orpheline).some((l) => l.includes('AUCUNE tâche')), 'a step no open task carries must say so — and say that "finished" and "abandoned by everyone" look identical from here, because a reader who is not told will assume the flattering one');
+  const portee = LC.etatDesCinqEtapes({ taches: [{ numero: 42, sujet: 'refonte du nommage', sousSujet: '' }] }, { etapes: [{ n: 1, cle: 'x', titre: 'X', quoi: 'q', motsDeTache: ['nommage'], indicateurs: [{ cle: 'i', quoi: 'q', lire: () => ({ valeur: 1, sur: 1, detail: 'd' }) }] }] });
+  assert.deepEqual(portee.etapes[0].taches.map((t) => t.numero), [42], 'a step whose subject a real open task names must be attributed that task — otherwise the "nobody carries this" warning fires everywhere and stops being read (lesson L4)');
+
+  // ── 7. LE NOM NE DOIT PAS REDEVENIR UN HOMONYME. god-of-all-process exporte déjà un
+  // `etatDuSchema()` qui parle d'une TOUTE AUTRE chose (les maillons d'un process). Deux fonctions
+  // exportées du même nom dans le même dépôt, c'est la dette de reprise que l'Article 20bis nomme :
+  // « une IA lisant "le gardien a validé" ne pouvait pas savoir lequel ».
+  const GOD = await import('../scripts/god-of-all-process.mjs');
+  assert.equal(typeof GOD.etatDuSchema, 'function', 'god-of-all-process must keep its own etatDuSchema() — this test exists because of it, not against it');
+  assert.equal(LC.etatDuSchema, undefined, 'le-classificateur must NOT export a second etatDuSchema(): god-of-all-process already exports one, about the links of a process rather than the five steps of the schema. Two exported functions of the same name in one repository is the exact naming debt Article 20bis forbids, and the homonym detector of agent-des-noms would report it');
+
+  // ── 8. UNE SOURCE QUI TOMBE N'EMPORTE PAS LES AUTRES. Contre-test réel : on fait échouer la
+  // lecture du document de classification et on vérifie que le reste est quand même mesuré.
+  const casse = await LC.mesurerLesCinqEtapes({ lire: (p) => { if (String(p).includes('classification-agence')) throw new Error('illisible'); return readFileSync(p, 'utf8'); } });
+  assert.ok(casse.axes && casse.axes.mesurable === false, 'a source that throws must degrade to an unmeasurable entry carrying its reason, never crash the collection');
+  assert.ok(casse.vitalite?.mesurable, 'one failing source must NOT take the others down with it — the whole point of measuring five steps separately is that a blind spot stays local');
+
+  console.log("Passed: l'état du schéma en cinq étapes (2026-09-28, tâche #1056) répond à sa question du gros prompt — « ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ? » — par des mesures rapprochées plutôt que par de la prose, et il est construit pour pouvoir répondre NON. Une étape sans mesure rend PAS MESURÉE et jamais 0 % (les deux se lisent à l'opposé) ; un indicateur non mesurable sort de la moyenne et reste visible à côté avec la raison écrite ; la barre refuse vraiment en dessous et accepte pile dessus. Le contre-test le plus utile est la sonde « 3 sur 7 partout » : le premier jet portait TROIS indicateurs tautologiques (données, vitalité, process, tous écrits total/total) qui rendaient 100 % quoi que fasse le dépôt — exactement la tâche #226 — et cette sonde les rattraperait s'ils revenaient. Les axes sont LUS sur le document généré et jamais recomptés (Article 24), une étape que personne ne porte le dit en nommant l'ambiguïté, une source qui tombe laisse son seul indicateur aveugle, et le nom reste distinct de l'etatDuSchema() de god-of-all-process, qui parle des maillons d'un process et non des cinq étapes (Article 20bis).");
+}
+await testEtatDuSchemaEnCinqEtapes();
+
+
 
 
 
