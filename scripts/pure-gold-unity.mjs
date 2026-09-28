@@ -21,10 +21,9 @@
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
-import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { toolsBoundByReportTemplate, findRapportsQuiPointent, findRapportsCourtsMaisDenses, REGISTRIES } from "./doc-report.mjs";
-import { findOutilsSansPlanDaction, SANS_CONSTAT_PROPRE } from "./report-template.mjs";
+import { findOutilsSansPlanDaction, SANS_CONSTAT_PROPRE, printReportHeader } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -414,9 +413,13 @@ export function formatRapportsComplets(audit) {
 }
 
 function main() {
-  printReliabilityNotice("pure-gold-unity");
+  // LE GABARIT PARTAGÉ, ET L'IRONIE VALAIT D'ÊTRE RELEVÉE (2026-09-28) : l'outil qui MESURE
+  // l'unification des rapports écrivait son propre titre en dur et imprimait l'avertissement hors
+  // du cadre — il était l'un des cinq qu'il dénonçait. Le corriger en premier n'est pas une
+  // coquetterie : un contrôleur qui ne s'applique pas sa propre règle enseigne qu'on peut ne pas
+  // se l'appliquer.
+  printReportHeader({ tool: "pure-gold-unity", title: "pure-gold-unity — unification réelle des rapports", scriptPath: "scripts/pure-gold-unity.mjs" });
   recordCliUsage("pure-gold-unity");
-  console.log("=== pure-gold-unity — unification réelle des rapports ===\n");
   console.log(formatUnityReport(scanUnity()));
   console.log(formatRapportsComplets(auditRapportsComplets()));
 }

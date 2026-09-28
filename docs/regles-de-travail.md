@@ -500,6 +500,14 @@ mécanisme de repli déjà en place, nouvelle tentative raisonnable) avant de no
 et rapporte alors avec le résultat obtenu — jamais un simple statut d'alerte sans avoir essayé,
 sauf si la recherche de solution elle-même prend un temps déraisonnable.
 
+**LE SONDAGE DU QUOTA A SON PROCESS ÉCRIT DEPUIS LE 2026-09-28** (`sonde-quota`,
+`docs/sonde-quota-process-detail.md`, tâche #1021), et ce n'est pas une formalité : sonder consomme
+de VRAIS appels API pour un diagnostic, et **lancé au mauvais moment il aggrave exactement le
+blocage qu'il mesure**. Sa première étape — consulter Smart Conso API — est la seule qui puisse
+l'arrêter, et elle ne souffre aucune exception « parce que c'est un diagnostic » (Article 22). Les
+étapes se demandent à `node scripts/god-of-all-process.mjs which "sonder le quota"`, jamais
+recopiées ici (Article 24).
+
 ## 6bis. Protocole de simulation complète (Article 18 de CLAUDE.md)
 
 *(Déplacé ici le 2026-09-21, à la demande explicite de l'utilisateur pendant une passe d'allègement

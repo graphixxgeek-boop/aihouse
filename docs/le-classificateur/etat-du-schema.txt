@@ -4,31 +4,31 @@
          100 %  chaque fichier porte-t-il un TYPE (ce qu'il EST) ?  (92 / 92 fichiers)
           70 %  chaque fichier porte-t-il une FAMILLE (ce sur quoi il travaille) ?  (64 / 92 fichiers)
           85 %  chaque fichier porte-t-il au moins une CLASSE TRANSVERSE (ce qu'il sait FAIRE) ?  (78 / 92 fichiers)
-         100 %  les DOCUMENTS portent-ils un classement d'exportabilité (ce qui part avec l'Agence) ?  (0 document(s) sans classement d'exportabilité sur 469)
-         100 %  les DOCUMENTS portent-ils une NATURE (ce que chacun porte) ?  (0 document(s) sans nature sur 469)
-         ce qui la porte : #492 #745 #747 #767 #800 #922 #988 #1056
+         100 %  les DOCUMENTS portent-ils un classement d'exportabilité (ce qui part avec l'Agence) ?  (0 document(s) sans classement d'exportabilité sur 472)
+         100 %  les DOCUMENTS portent-ils une NATURE (ce que chacun porte) ?  (0 document(s) sans nature sur 472)
+         ce qui la porte : #492 #745 #747 #767 #800 #922 #988
 
 ✅ 100 %  2. NIVELLEMENT — définir les niveaux de responsabilité, criticité, autonomie, habilitation et maturité
          100 %  chaque fichier porte-t-il un RANG (ce qu'il VAUT) ?  (92 / 92 fichiers)
          100 %  chaque fichier porte-t-il une VITALITÉ (ce que l'Agence perd sans lui) ?  (0 fichier(s) non mesuré(s) sur 92 — vital / essentiel / utile / optionnel, dérivés de la chaîne quotidienne)
          ⬜ NON MESURÉ  existe-t-il une échelle de MATURITÉ par outil (0/1/2/3) ?
                 aucune échelle de maturité n'existe dans le dépôt. L'idée d'un code 0/1/2/3 a été formulée puis EFFACÉE sans qu'aucune tâche ne la porte (retrouvée par data-archangel le 2026-09-24) — c'est le seul des cinq niveaux qu'il nomme qui n'a aucun porteur.
-         ce qui la porte : #747 #766 #800 #1056
+         ce qui la porte : #747 #800
 
 🟠  48 %  3. HARMONISATION — normaliser les noms, formats, statuts, contrats d'interface et conventions
            7 %  les noms en service ont-ils été VALIDÉS par l'utilisateur ?  (77 nom(s) en service jamais validés au registre des baptêmes)
           89 %  les rapports suivent-ils tous le gabarit partagé ?  (5 rapport(s) hors gabarit)
-         ce qui la porte : #636 #679 #696 #703 #733 #740 #745 #747 #768 #775 #790 #800 #810 #929 #936 #988 #1020 #1056 #1066
+         ce qui la porte : #636 #679 #696 #703 #733 #740 #745 #747 #768 #775 #790 #800 #810 #929 #936 #988 #1020 #1066
 
 🟠  76 %  4. PROCESS INTEGRATION — construire les liens, dépendances, déclencheurs et échanges entre agents
           52 %  les données produites par un outil sont-elles relues par un autre ?  (37 source(s) que seul leur producteur relit)
-         100 %  les process déclarés portent-ils VRAIMENT un document ET un contrôleur ?  (0 process déclaré(s) sans document ou sans contrôleur, sur 12)
-         ce qui la porte : #490 #603 #636 #679 #700 #704 #721 #726 #760 #805 #813 #814 #1019 #1020 #1021 #1056 #1057 #1058 #1059
+         100 %  les process déclarés portent-ils VRAIMENT un document ET un contrôleur ?  (0 process déclaré(s) sans document ou sans contrôleur, sur 13)
+         ce qui la porte : #490 #603 #636 #679 #700 #704 #721 #760 #805 #814 #1019 #1020 #1069
 
 ✅ 100 %  5. ORGANISATION GÉNÉRALE — installer la gouvernance, les autorités, les responsabilités et les arbitrages
          100 %  les rangs d'organisation sont-ils déclarés et sans divergence ?  (0 rang(s) divergent(s) entre catégories déclarées et rangs réels)
          100 %  les décisions en attente d'arbitrage sont-elles toutes inscrites ?  (0 idée(s) en attente et non inscrites au registre)
-         ce qui la porte : #624 #993 #636 #696 #710 #745 #747 #800 #845 #997 #1020 #1039 #1056
+         ce qui la porte : #624 #993 #636 #696 #710 #745 #747 #800 #845 #997 #1020 #1039
 
 Barre : 90 % — au-dessus, l'étape est dite TENUE. La barre est un choix, pas un fait.
 HORS PORTÉE : il RAPPROCHE des mesures existantes, il n'en recalcule AUCUNE — deux comptages

@@ -9684,6 +9684,48 @@ async function testFusionParContenance() {
 }
 await testFusionParContenance();
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LES NOMS EN ATTENTE, PRÉSENTÉS PAR FAMILLE (2026-09-28, tâche #1020)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA CONTRAINTE DE FORME commande toute cette fonction, et elle est citée mot pour mot : « je ne
+// fais pas des noms au cas par cas, je crée des séries de noms à l'intérieur d'une même famille ».
+// Une liste de soixante-dix-sept lignes à trancher une par une serait EXACTE et INUTILISABLE — et
+// c'est très exactement le genre de livrable qu'on produit en croyant bien faire.
+async function testPresentationParFamille() {
+  const ADN = await import('../scripts/agent-des-noms.mjs');
+  const r = await ADN.presentationParFamille();
+
+  // ── 1. ELLE MESURE VRAIMENT, et sur le vrai dépôt (Article 25).
+  assert.ok(r.mesurable, 'the presentation must actually run against the real repository');
+  assert.ok(r.total > 50 && r.nonValides > 0, `it must read the real tool population (currently ${r.nonValides} unvalidated out of ${r.total})`);
+  assert.equal(r.valides + r.nonValides, r.total, 'validated plus unvalidated must equal the whole: a presentation whose parts do not sum to the total is a presentation nobody can trust');
+
+  // ── 2. ELLE GROUPE, ET LE GROUPE EST LE LIVRABLE.
+  assert.ok(r.familles.length >= 2, 'the names must come out GROUPED — grouping is the deliverable, not a presentation detail');
+  assert.equal(r.familles.reduce((n, f) => n + f.combien, 0), r.nonValides, 'every unvalidated name must land in exactly one group — one lost in the grouping is one he will never be asked about');
+  assert.ok(r.familles[0].combien >= r.familles[r.familles.length - 1].combien, 'the biggest group comes first: it is where a series of names buys the most');
+
+  // ── 3. UN OUTIL SANS FAMILLE DÉCLARÉE N'EST PAS RANGÉ D'OFFICE AILLEURS.
+  // « Je ne sais pas de quelle famille il est » est une information utile à qui doit choisir une
+  // série : la cacher ferait choisir sur un groupe incomplet.
+  const sansFamille = r.familles.find((f) => /sans famille/.test(f.famille));
+  assert.ok(sansFamille, 'tools with no declared family must form their own NAMED group rather than be folded into a neighbour');
+
+  // ── 4. ELLE NE PROPOSE AUCUN NOM, et c'est non négociable.
+  const texte = ADN.formatPresentationLines(r).join('\n');
+  assert.ok(/aucun nom/i.test(texte), 'the output must SAY that it proposes no name: the names are the user\'s to choose, and an agent proposing seventy-seven of them would be choosing for him');
+  assert.ok(/PAR FAMILLE/.test(texte), 'and it must say WHY it groups — otherwise the next agent will "improve" it into a flat list');
+
+  // ── 5. UN DÉPÔT VIDE NE REND JAMAIS « TOUT EST VALIDÉ ».
+  const vide = await ADN.presentationParFamille({ root: '/tmp/un-dossier-qui-nexiste-pas-du-tout' }).catch(() => ({ mesurable: false }));
+  assert.equal(vide.mesurable, false, 'a repository with no scripts must report UNMEASURABLE, never a clean bill — "nothing read" and "nothing to validate" read as opposites');
+
+  console.log("Passed: les noms en attente de baptême sont présentés PAR FAMILLE (2026-09-28, tâche #1020). Sa contrainte de forme commande toute la fonction, et elle est citée mot pour mot : « je ne fais pas des noms au cas par cas, je crée des séries de noms à l'intérieur d'une même famille ». Une liste de 77 lignes à trancher une par une serait exacte et inutilisable — c'est le genre de livrable qu'on produit en croyant bien faire. La fonction range et compte ; elle ne propose AUCUN nom, et la sortie le DIT, parce qu'un agent qui proposerait soixante-dix-sept noms choisirait à la place de l'utilisateur. Un outil sans famille déclarée forme son propre groupe nommé plutôt que d'être rangé d'office ailleurs : « je ne sais pas de quelle famille il est » est une information utile à qui doit choisir une série. Premier passage réel : 77 noms sur 83 en attente, répartis en 7 groupes dont 29 sans famille déclarée.");
+}
+await testPresentationParFamille();
+
+
 
 
 

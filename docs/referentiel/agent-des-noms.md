@@ -123,3 +123,30 @@ Ce fichier et le script portent eux-mêmes un nom provisoire, marqué comme tel.
 l'outil s'est signalé LUI-MÊME — faute de date à côté de sa marque, il a refusé d'alerter plutôt que
 d'inventer une ancienneté. C'est le meilleur test possible de sa propre règle, et la bonne réaction :
 un aveu d'ignorance vaut mieux qu'une mesure fabriquée.
+
+## La présentation par famille (2026-09-28, tâche #1020)
+
+`node scripts/agent-des-noms.mjs familles`
+
+**SA CONTRAINTE DE FORME commande toute cette commande**, et elle est citée mot pour mot : « je ne
+fais pas des noms au cas par cas, **je crée des séries de noms à l'intérieur d'une même famille** ».
+
+Une liste de soixante-dix-sept lignes à trancher une par une serait **exacte et inutilisable** — et
+c'est très exactement le genre de livrable qu'on produit en croyant bien faire.
+
+**CE QU'ELLE NE FAIT PAS, ET CE N'EST PAS NÉGOCIABLE** : elle ne propose **aucun** nom. Les noms se
+choisissent par l'utilisateur, c'est une règle permanente du projet, et un agent qui proposerait
+soixante-dix-sept noms choisirait à sa place. Elle **prépare** sa décision : le groupe, ses membres,
+et combien de noms ce groupe attend. La sortie le dit explicitement, pour que le prochain agent ne
+l'« améliore » pas en liste plate.
+
+**UN OUTIL SANS FAMILLE DÉCLARÉE FORME SON PROPRE GROUPE NOMMÉ** plutôt que d'être rangé d'office
+ailleurs : « je ne sais pas de quelle famille il est » est une information utile à qui doit choisir
+une série, et la cacher ferait choisir sur un groupe incomplet.
+
+**LA SÉQUENCE QU'IL A POSÉE ET QUI TIENT** : cette purge se fait **après** la classification, jamais
+avant — renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien dire
+ensuite. La classification est close depuis le 2026-09-26, le verrou est donc levé.
+
+**Premier passage réel** : 77 noms sur 83 en attente, en 7 groupes — 29 sans famille déclarée,
+16 Anges de la coordination, 13 Gouvernance Royale, puis des groupes de 5 et moins.

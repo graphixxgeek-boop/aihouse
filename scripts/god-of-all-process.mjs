@@ -56,6 +56,41 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // (findProcessesWithoutGuardian/findProcessDocsMissing ci-dessous) : une entrée qui pointe vers un
 // fichier disparu se voit, jamais une promesse tenue à la main (Article 24).
 export const PROCESSES = [
+  // SONDER LE QUOTA GEMINI (2026-09-28, tâche #1021). Treizième process déclaré, et il ferme le
+  // dernier trou trouvé par la vérification à froid du 2026-09-27 : c'était la seule activité à
+  // enjeu du dépôt que ne gouvernait AUCUN process écrit.
+  //
+  // CE QUI LE REND PARTICULIER, et ce n'est pas un détail : sonder consomme de vrais appels API pour
+  // un simple diagnostic, et **lancé au mauvais moment il aggrave exactement le blocage qu'il
+  // mesure**. Essayer cinq modèles sur trois clés pendant que le quota sature rapproche du plafond
+  // au lieu d'en éloigner. D'où une première étape qui peut ARRÊTER le process, ce qu'aucun autre
+  // process de ce dépôt ne fait dès son ouverture.
+  {
+    slug: "sonde-quota",
+    nom: "Sonder le quota Gemini (Smart Breaker)",
+    quand: "avant de sonder les modèles et les clés, typiquement après un blocage HTTP 429/503 répété",
+    motsCles: ["quota", "gemini", "sonder", "sondage", "429", "503", "clé api", "smart breaker"],
+    doc: "docs/sonde-quota-process-detail.md",
+    gardien: "scripts/smart-conso-api.mjs",
+    // TROIS MAILLONS DU SCHÉMA N'ONT PAS D'OBJET ICI, et le déclarer est la seconde issue légitime
+    // (la première étant de les porter). Ce process ne produit pas un ENSEMBLE DE CONSTATS à trier :
+    // il rend UN état — un modèle et une clé disponibles, ou aucun — puis demande un geste manuel.
+    // Lui réclamer un plan d'action à trois états produirait une section vide écrite pour faire
+    // taire un contrôle, ce que l'Article 28 interdit explicitement.
+    maillonsSansObjet: {
+      "plan-action": "il ne produit pas un ensemble de constats à trier mais UN état (un modèle et une clé disponibles, ou aucun) : un plan à trois états serait une section vide écrite pour faire taire un contrôle (Article 28)",
+      questions: "la seule décision qu'il puisse appeler — basculer de clé ou de modèle en production — n'est pas la sienne et sort explicitement de son périmètre ; il mesure et propose",
+      taches: "un sondage ne crée pas de dette : soit une clé répond et le blocage est levé, soit aucune ne répond et c'est l'attente du quota, pas une tâche à inscrire",
+    },
+    etapes: [
+      { cle: "smart-conso-avant", libelle: "consulter Smart Conso API AVANT de sonder (`node scripts/smart-conso-api.mjs diagnostic --confirm`) — jamais une exception parce que c'est un diagnostic (Article 22). C'est la seule étape qui puisse arrêter le process.", preuve: { fichier: "docs/smart-conso-api/index.md" } },
+      { cle: "sonder", libelle: "lancer le sondage (`node scripts/check-gemini-quota.mjs`)", preuve: null },
+      { cle: "reporter", libelle: "reporter À LA MAIN la ligne suggérée dans `.dev.vars` — aucun code ne l'écrit, parce que c'est une action difficile à défaire sur un fichier que l'utilisateur possède", preuve: null },
+      { cle: "projet-distinct", libelle: "si un second projet Google existe, vérifier qu'il est bien DISTINCT avant d'ajouter sa clé aux replis : deux clés d'un même projet partagent le même quota, donc le repli ne replie rien", preuve: null },
+      { cle: "redemarrer", libelle: "redémarrer le serveur de développement, sans quoi `.dev.vars` n'est pas chargé — une variable d'environnement shell seule ne suffit PAS au runtime Cloudflare Workers ; vérifier qu'aucun `workerd` orphelin ne survit", preuve: null },
+      { cle: "consigner", libelle: "LIVRER le résultat du sondage à l'utilisateur et le consigner : le sondage a coûté de vrais appels, donc son résultat est une donnée qui se rapporte — écrire n'est pas livrer — et l'écart avec l'estimation rejoint la mémoire des estimations", preuve: { fichier: "docs/agent-du-temps/estimations.md" } },
+    ],
+  },
   {
     slug: "ronde",
     nom: "Ronde périodique (CIRCLE-TASKS)",

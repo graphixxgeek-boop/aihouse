@@ -30,8 +30,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
-import { printReliabilityNotice } from "./lib-shell.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, printReportHeader } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 export const OUTIL = "agent-des-noms";
@@ -565,18 +564,80 @@ function mainVerifier(root, ancien) {
   if (v.restesVivants.length > 40) console.log(`   … et ${v.restesVivants.length - 40} autre(s)`);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// LA PRÉSENTATION PAR FAMILLE (2026-09-28, tâche #1020)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// SA CONTRAINTE DE FORME, mot pour mot, et c'est elle qui commande toute cette fonction : « je ne
+// fais pas des noms au cas par cas, je crée des séries de noms à l'intérieur d'une même famille ».
+// Une liste de soixante-dix-sept lignes à trancher une par une serait donc INUTILISABLE pour lui,
+// même exacte — et c'est très exactement le genre de livrable qu'on produit en croyant bien faire.
+//
+// CE QU'ELLE NE FAIT PAS, ET CE N'EST PAS NÉGOCIABLE : elle ne propose AUCUN nom. Les noms se
+// choisissent par l'utilisateur, c'est une règle permanente du projet, et un agent qui proposerait
+// soixante-dix-sept noms choisirait à sa place. Elle PRÉPARE sa décision : le groupe, ce que chaque
+// outil fait, et combien de noms ce groupe attend.
+//
+// LA SÉQUENCE QU'IL A POSÉE ET QUI TIENT : cette purge se fait APRÈS la classification, jamais
+// avant — renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien
+// dire ensuite. La classification est close depuis le 2026-09-26, le verrou est donc levé.
+export async function presentationParFamille({ root = process.cwd(), lire = readFileSync } = {}) {
+  const { AGENT_CATEGORIES, familleDeLaCategorie } = await import("./lib-shell.mjs");
+  const registreTexte = existsSync(join(root, REGISTRE)) ? lire(join(root, REGISTRE), "utf8") : "";
+  const enService = readdirSync(join(root, "scripts")).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, ""));
+  const nonValides = findNomsNonValides(enService, registreTexte);
+  if (!enService.length) return { mesurable: false, pourquoi: "aucun script lu : rien à présenter, ce qui n'est pas la même chose que « tout est validé »" };
+  const familles = new Map();
+  for (const slug of nonValides) {
+    // Un outil sans catégorie déclarée n'est PAS rangé d'office ailleurs : il forme son propre
+    // groupe nommé, parce que « je ne sais pas de quelle famille il est » est une information utile
+    // à qui doit choisir une série — la cacher ferait choisir sur un groupe incomplet.
+    const famille = familleDeLaCategorie(AGENT_CATEGORIES[slug]) ?? "(sans famille déclarée)";
+    if (!familles.has(famille)) familles.set(famille, []);
+    familles.get(famille).push(slug);
+  }
+  return {
+    mesurable: true,
+    total: enService.length, nonValides: nonValides.length, valides: enService.length - nonValides.length,
+    familles: [...familles.entries()].map(([famille, slugs]) => ({ famille, slugs: slugs.sort(), combien: slugs.length }))
+      .sort((a, b) => b.combien - a.combien),
+    horsPortee: "Elle range et elle compte ; elle ne propose AUCUN nom. Et elle ne voit que les noms de fichiers du dossier scripts/ — un outil dont le nom d'usage diffère de son nom de fichier lui apparaît sous son nom de fichier.",
+  };
+}
+
+export function formatPresentationLines(r = {}) {
+  if (!r.mesurable) return [`🚨 PRÉSENTATION PAR FAMILLE : PAS MESURÉE — ${r.pourquoi}`];
+  const L = [`=== LES NOMS EN ATTENTE DE BAPTÊME, PAR FAMILLE — ${r.nonValides} sur ${r.total} (${r.valides} déjà validés) ===`, ""];
+  L.push("Présentés PAR FAMILLE et non un par un, parce que la règle du projet est une SÉRIE de noms");
+  L.push("à l'intérieur d'une même famille. Une liste de 77 lignes à trancher une par une serait");
+  L.push("exacte et inutilisable.");
+  L.push("");
+  for (const f of r.familles) {
+    L.push(`▸ ${f.famille} — ${f.combien} nom(s) à baptiser`);
+    for (let i = 0; i < f.slugs.length; i += 4) L.push(`    ${f.slugs.slice(i, i + 4).join(" · ")}`);
+    L.push("");
+  }
+  L.push("CE QUI N'EST PAS PROPOSÉ ICI, ET C'EST VOULU : aucun nom. Les noms se choisissent par");
+  L.push("l'utilisateur ; cette présentation prépare sa décision, elle ne la prend jamais.");
+  L.push(`HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 function main() {
   const root = process.cwd();
   const [cmd, a, b] = process.argv.slice(2);
-  console.log(`\n=== L'AGENT DES NOMS — l'utilisateur baptise, le mécanisme se souvient ===\n`);
+  // LE GABARIT PARTAGÉ (2026-09-28, tâche #1020). Le titre était écrit en dur et l'avertissement
+  // d'inexactitude imprimé à part, hors du cadre : deux des trois indices que pure-gold-unity
+  // relève. `printReportHeader()` place les deux au bon endroit et, surtout, il porte la version,
+  // l'état du code et la source — que chaque rapport écrivait autrement, ou pas du tout.
+  printReportHeader({ tool: "agent-des-noms", title: "L'AGENT DES NOMS — l'utilisateur baptise, le mécanisme se souvient", scriptPath: "scripts/agent-des-noms.mjs" });
   recordCliUsage("agent-des-noms", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });   // #763 : sans cette ligne, le compteur affichait 0 alors que l'outil tournait — un compteur empêché de compter rend exactement ce que rend un compteur qui n'a rien à compter
-  printReliabilityNotice("agent-des-noms");   // le slug en clair, jamais la constante : le garde-fou de doc-report cherche le NOM, et une indirection le rendrait muet
-  console.log("");
   if (cmd === "renommage") return mainRenommage(root, a, b);
   if (cmd === "verifier") return mainVerifier(root, a);
   if (cmd === "homonymes") return mainHomonymes(root);
+  if (cmd === "familles") return presentationParFamille({ root }).then((r) => { for (const l of formatPresentationLines(r)) console.log(l); });
   mainGouvernance(root);
-  console.log(`\nAUTRES COMMANDES : renommage <ancien> <nouveau> (le plan, avant) · verifier <ancien> (le reste, après) · homonymes (un nom, deux définitions)`);
+  console.log(`\nAUTRES COMMANDES : renommage <ancien> <nouveau> (le plan, avant) · verifier <ancien> (le reste, après) · homonymes (un nom, deux définitions) · familles (les noms en attente, groupés pour une décision par série)`);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

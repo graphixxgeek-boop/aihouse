@@ -30,6 +30,7 @@ import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 import { recordCliUsage } from "./tool-usage.mjs";
+import { printReportHeader } from "./report-template.mjs";
 
 export const OUTIL = "sauvegarde-projet";
 export const SCRIPT_PATH = "scripts/sauvegarde-projet.mjs";
@@ -166,12 +167,19 @@ export function ligneDeRegistre({ date, commit, nbCoffre, tailleCoffre, nbNotice
   return `| ${date} | ${commit} | ${nbCoffre} fichiers, ${mo(tailleCoffre)} | ${nbNotice} fichiers, ${mo(tailleNotice)} |`;
 }
 
+
 function main() {
   // LE PASSAGE S'ENREGISTRE (2026-09-26). Trouvé par un chemin détourné et c'est ce qui le rend
   // intéressant : cet outil venait de rejoindre le catalogue des prestations, donc le compteur
   // d'usage s'est mis à le regarder — et le verrou d'ouverture de Ronde a immédiatement refusé,
   // parce qu'il a une ligne de commande et n'enregistrait rien. Son zéro d'usage ne disait pas
   // « personne ne sauvegarde », il disait « personne ne compte », et les deux se ressemblent.
+  // LE GABARIT PARTAGÉ (2026-09-28). Il datait sa sortie lui-même et écrivait son rapport
+  // directement : deux des indices que pure-gold-unity relève. L'en-tête partagé porte la version,
+  // l'état du code et la source — trois faits que ce rapport ne donnait pas du tout, et qui
+  // comptent plus ici qu'ailleurs : une sauvegarde qu'on ne peut pas rattacher à un état du code
+  // est une sauvegarde qu'on ne saura pas restaurer.
+  printReportHeader({ tool: "sauvegarde-projet", title: "SAUVEGARDE DU PROJET — coffre daté des fichiers suivis", scriptPath: "scripts/sauvegarde-projet.mjs" });
   recordCliUsage("sauvegarde-projet", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const sh = (c) => execSync(c, { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   mkdirSync(DOSSIER, { recursive: true });

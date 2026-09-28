@@ -1,12 +1,12 @@
-=== CROISEMENT PROCESS ↔ RÈGLES DE TRAVAIL — 12 process, 30 section(s) ===
+=== CROISEMENT PROCESS ↔ RÈGLES DE TRAVAIL — 13 process, 30 section(s) ===
 
 Seuil de terrain commun : 0.375 (DÉRIVÉ : deux fois la médiane des couvertures NON NULLES observées, donc il vieillit avec les deux registres)
 Section(s) CATALOGUE, écartées comme preuve de portage : 7ter. Le paysage des outils de vigilance, et la consultation bidirectionnelle — elles couvrent plus de la moitié des process parce qu'elles les ÉNUMÈRENT, ce qui n'est pas les exécuter.
 
-① 0 process sur 12 que RIEN ne nomme dans les règles de travail
+① 0 process sur 13 que RIEN ne nomme dans les règles de travail
    ✅ chaque process déclaré est nommé au moins une fois côté règles de travail.
 
-② 13 règle(s) de travail sur 30 porteuse(s) d'obligation qu'AUCUN process n'exécute
+② 12 règle(s) de travail sur 30 porteuse(s) d'obligation qu'AUCUN process n'exécute
    (0 section(s) ne posent aucune obligation : de la prose de cadrage, à qui réclamer un process fabriquerait du travail — écarté exprès, jamais oublié)
    🚨 ABSENT                   0. Relecture périodique, pas seulement en début de session
           porte 1 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
@@ -26,8 +26,6 @@ Section(s) CATALOGUE, écartées comme preuve de portage : 7ter. Le paysage des 
           porte 4 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🚨 ABSENT                   5. Sécurité et discrétion
           porte 3 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
-   🚨 ABSENT                   6. Blocages externes (quota, réseau, service tiers)
-          porte 1 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
    🟠 TERRAIN COMMUN SANS NOM  9. Points de vigilance — compétences et psychologie, pour ne jamais devenir un obstacle
           porte 21 obligation(s) et ne nomme aucun process ; « documents-de-reference » en reprend 46 % du vocabulaire — le lien existe peut-être, il n'est simplement écrit nulle part
    🚨 ABSENT                   B.1. Outils concrets derrière les règles universelles de la Partie A
@@ -36,7 +34,7 @@ Section(s) CATALOGUE, écartées comme preuve de portage : 7ter. Le paysage des 
           porte 4 obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)
 
 ③ 0 paire(s) en CONFLIT possible — terrain commun et polarité opposée
-   ✅ aucune, sur 348 paire(s) réellement ÉLIGIBLES (sur 360 possibles ; les sections catalogue sont écartées), seuil dérivé 0.375.
+   ✅ aucune, sur 377 paire(s) réellement ÉLIGIBLES (sur 390 possibles ; les sections catalogue sont écartées), seuil dérivé 0.375.
       La paire la plus proche reste « simulation » ↔ « 6bis. Protocole de simulation complète (Article 18 de CLAUDE.md) » à 0.778 — le zéro est donc mérité, pas un silence.
 ④ 0 process dont le DOCUMENT ne cite jamais les règles de travail
    (l'autre sens du lien : ① et ② disent ce que les RÈGLES savent des process ; celle-ci dit ce qu'un PROCESS dit des règles — deux défauts distincts, jamais additionnés)
