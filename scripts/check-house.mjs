@@ -19940,3 +19940,29 @@ await testCelluleBruteAuLieuDuNomPropre();
 
   console.log(`Passed: un script qui se tait n'a rien à mettre au gabarit (2026-09-28, tâche #1080). pure-gold-unity comptait THE-DEEP-READER et THE-FINAL-JUDGE parmi les rapports « à migrer » — deux fichiers qui ne contiennent AUCUN console.log et AUCUN writeFileSync. Ce sont des orchestrateurs d'agent séparé : c'est l'AGENT qui rédige le rapport, jamais le script. Brancher un en-tête sur une sortie qui n'existe pas est impossible, donc le reproche ne pouvait JAMAIS être éteint — L6, pour la troisième fois de la journée, et toujours la même famille : un signal ADJACENT (cet outil figure-t-il au registre des producteurs de rapport ?) lu comme le signal visé (imprime-t-il un rapport ?). L'OUTIL LE SOUPÇONNAIT DÉJÀ, et c'est ce qui rend le cas instructif : sa propre ligne disait « à vérifier à la main : produit-il vraiment un rapport ? » — puis il le comptait fautif quand même. Une question posée dans une note n'a jamais retiré personne d'un dénominateur. LE TROISIÈME ÉTAT EST DÉCLARÉ, JAMAIS UNE SUPPRESSION : le total reste affiché (47 tenus, ${reel.mesurables} mesurables), et chaque non-mesurable porte sa raison. ET CE N'EST PAS UNE ÉCHAPPATOIRE : un SEUL console.log ou un SEUL writeFileSync suffit à rester mesuré, et le contre-test vérifie qu'un outil qui parle sans gabarit reste fautif. Le critère constate, il ne nomme personne — aucune exception par nom d'outil.`);
 }
+
+// ————————————————————————————————————————————————————————————————————————
+// UNE COPIE DU CODE N'EST PAS UNE MÉMOIRE (2026-09-28, tâche #1082)
+// ————————————————————————————————————————————————————————————————————————
+// Trouvé en déroulant la Ronde : lancer INES-official écrit sa copie consolidée du dépôt, et le
+// filet virait AUSSITÔT au rouge. La mesure de contrôle d'agent-des-noms — « un slug qui n'existe
+// NULLE PART ne fait rien perdre » — trouvait son propre slug-témoin, parce que la copie du code
+// contient le test qui le cite. Un garde-fou qui se trouve lui-même dans une copie de lui-même
+// n'est plus un garde-fou, et la Ronde se retrouvait en conflit permanent avec le filet.
+{
+  const ADN1082 = await import('../scripts/agent-des-noms.mjs');
+
+  // L'EXCLUSION EST ÉTROITE, et la borne est vérifiée plutôt que promise : deux entrées, les deux
+  // corps d'édition consolidée d'INES. Si elle grossit, c'est qu'elle sert d'échappatoire.
+  assert.equal(ADN1082.COPIES_REGENERABLES_DU_CODE.size, 2, 'the exclusion must stay limited to the consolidated code copies — it is an honest limit, never a way out');
+  for (const c of ADN1082.COPIES_REGENERABLES_DU_CODE) assert.match(c, /ines-official-latest/, 'and every excluded entry must be one of those copies, named');
+
+  // ELLE NE CACHE AUCUNE VRAIE PERTE : un outil qui a réellement une mémoire la voit toujours
+  // menacée, registre entier compris (BP4 — la garde qui compte est celle qui mord encore).
+  const reel = await ADN1082.impactsIndirects('the-king', { root: process.cwd() });
+  assert.ok(reel.mesurable && reel.touches.length >= 2, 'a tool with a real memory must still show what a rename would cost it');
+  assert.ok(reel.touches.some((t) => t.source === 'docs/the-king/'), 'including its whole registry folder');
+  assert.ok(!reel.touches.some((t) => ADN1082.COPIES_REGENERABLES_DU_CODE.has(t.source)), 'and no consolidated copy may appear among the losses: regenerating it after a rename fixes it by itself');
+
+  console.log("Passed: une copie du code n'est pas une mémoire (2026-09-28, tâche #1082). Trouvé en déroulant la Ronde, et c'est un conflit entre deux outils qui avaient chacun raison : lancer INES-official écrit sa copie consolidée du dépôt, et le filet virait AUSSITÔT au rouge. La mesure de contrôle d'agent-des-noms — « un slug qui n'existe NULLE PART ne fait rien perdre », écrite précisément pour qu'une mesure qui trouve toujours quelque chose ne dise rien — trouvait son propre slug-témoin, parce que la copie du code contient le test qui le cite. UN GARDE-FOU QUI SE TROUVE LUI-MÊME DANS UNE COPIE DE LUI-MÊME N'EST PLUS UN GARDE-FOU, et la Ronde se serait retrouvée en conflit permanent avec le filet : chaque passage de l'item INES aurait cassé le commit suivant. LE RAISONNEMENT, ET IL VAUT AU-DELÀ DU CAS : une édition consolidée est une COPIE régénérable de `scripts/` et de `docs/`, jamais une mémoire accumulée par un outil. Un renommage n'y perd rien — on régénère, et la copie suit. Les compter revient à compter le MÊME code deux fois, la seconde sous l'étiquette « donnée ». L'EXCLUSION EST DÉCLARÉE MANUELLE ET SA RAISON EST ÉCRITE À CÔTÉ (ce que l'Article 24 autorise expressément) : « être une copie du code » n'est pas une propriété que le fichier porte, c'est une propriété de l'outil qui l'écrit, donc elle ne se dérive pas. Et la borne est VÉRIFIÉE plutôt que promise : deux entrées, pas une de plus, et le contre-test confirme qu'un outil ayant une vraie mémoire voit toujours son registre entier menacé.");
+}

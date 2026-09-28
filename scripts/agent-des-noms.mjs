@@ -592,6 +592,15 @@ function mainVerifier(root, ancien) {
 // l'inventaire des données du dépôt, et un registre de plus demain sera pris en compte sans qu'on y
 // pense. On ne regarde QUE les données — un slug dans du CODE relève de l'impact technique, déjà
 // couvert par le plan de renommage, et le compter deux fois gonflerait l'alarme sans rien ajouter.
+// Les seules données qui sont des COPIES du dépôt plutôt que des mémoires accumulées. La liste est
+// courte et volontairement manuelle (Article 24 l'autorise expressément quand la nature manuelle est
+// écrite juste à côté) : elle ne peut pas se dériver, parce que « être une copie du code » n'est pas
+// une propriété que le fichier porte — c'est une propriété de l'outil qui l'écrit.
+export const COPIES_REGENERABLES_DU_CODE = new Set([
+  ".ines-official-latest-code.txt",
+  ".ines-official-latest-code_et_docs.txt",
+]);
+
 export async function impactsIndirects(slug, { root = process.cwd(), lire = readFileSync } = {}) {
   if (!slug) return { mesurable: false, pourquoi: "aucun slug donné : rien à mesurer" };
   let sources = [];
@@ -606,6 +615,15 @@ export async function impactsIndirects(slug, { root = process.cwd(), lire = read
   const touches = [];
   let lues = 0;
   for (const s of sources) {
+    // UNE COPIE DU CODE N'EST PAS UNE MÉMOIRE (2026-09-28, tâche #1082). Les éditions consolidées
+    // d'INES-official sont des COPIES régénérables de `scripts/` et de `docs/`, pas des données que
+    // l'outil a accumulées. Un renommage n'y perd donc rien : on régénère, et la copie suit. Les
+    // compter revient à compter le MÊME code deux fois, la seconde fois sous l'étiquette
+    // « donnée » — et ça s'est vu pour de vrai : la mesure de contrôle qui interroge un slug
+    // n'existant NULLE PART le trouvait quand même, parce que la copie du code contient le test
+    // qui cite ce slug-témoin. Un garde-fou qui se trouve lui-même dans une copie de lui-même
+    // n'est plus un garde-fou.
+    if (COPIES_REGENERABLES_DU_CODE.has(s.id)) continue;
     const chemin = join(root, s.id);
     let contenu = null;
     try {
