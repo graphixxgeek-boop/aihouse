@@ -163,3 +163,65 @@ SUITE DE LA MATINÉE — 09h08 à 09h41 (heure lue, source système)
 
   ÉTAT : filet 335 blocs au vert, exit 0, tout poussé. Toujours aucune action du
   périmètre sensible.
+
+
+--------------------------------------------------------------------------------
+LA MATINÉE, SUITE — 09h41 à 11h30 (heure lue, source système)
+--------------------------------------------------------------------------------
+
+  LA RONDE A ÉTÉ FAITE, ET DANS CET ORDRE-LÀ.
+  Le rappel post-commit était monté à « 36 commits sans Ronde ». Une commande
+  suffit à l'éteindre. Je l'ai tapée APRÈS avoir déroulé les items, pas avant.
+  Ce que les items ont rendu tient dans la ligne de suivi #1081 ; l'essentiel :
+  ARGUS 0 écart sur 192 fichiers lus, HARMONIA aucune connexion perdue,
+  CASSANDRA 54 membres tous certifiés, kits d'export ✅ PRÊT, ecotoken 24 % de
+  marge sous le budget, tool-brain 64 % de précédence sur 24 h contre 40 % en
+  cumul — la discipline s'améliore.
+
+  DEUX TROUVAILLES EN COURS DE RONDE, CORRIGÉES DANS LA FOULÉE.
+  · Deux outils comptés « rapport à migrer » alors qu'ils n'impriment RIEN —
+    ce sont des orchestrateurs d'agent séparé, c'est l'agent qui rédige.
+  · Lancer l'item INES faisait virer le filet au rouge sans qu'aucun code
+    n'ait changé : le garde-fou se trouvait lui-même dans une copie de lui-même.
+    Chaque Ronde aurait cassé le commit suivant.
+
+  #493, QUI TRAÎNAIT DEPUIS CINQ JOURS ET 18 RAPPORTS.
+  Le reproche — « un relancement confirmé dans les 10 minutes après un
+  épuisement » — était un FAUX POSITIF. Une clé sur trois était épuisée, les
+  deux autres saines vingt-neuf secondes plus tôt : la simulation lancée trois
+  minutes après était le passage à une clé saine, c'est-à-dire exactement ce que
+  Smart Breaker existe pour faire. Ta consigne disait de ne poser un garde-fou
+  QUE si la cause peut se reproduire : aucun garde-fou posé, la sonde corrigée.
+
+  #695 EST CLOSE — LES QUATRE VOLETS DES « FAILLES DES IA ».
+  · E — un constat critique n'entre plus en action sans une SECONDE mesure
+    indépendante. Le chiffre qui le motive : la vérification indépendante fait
+    tomber le faux succès d'environ 48 % à 3 %. Un outil qui se relit reproduit
+    son propre angle mort — cette nuit en a donné sept exemples.
+  · F — le droit de dire « je ne sais pas », avec un degré. Mesure : 49 des 82
+    scripts savaient déjà s'abstenir (un acquis réel), mais 15 le faisaient sans
+    aucun degré, alors que « je n'ai rien pu lire » et « je ne suis sûr qu'à
+    moitié » appellent deux réactions opposées.
+  · D — CHECK-LEVEL-TARGET classait « corrige » et « fix » dans le registre
+    LÉGER. Or plus de 65 % des incidents graves surviennent en réparation.
+    L'outil abaissait la vigilance sur la zone la plus dangereuse : une
+    inversion, pas un oubli.
+  · C — celui-ci renverse une idée reçue, et c'est le plus utile : ALLÉGER LA
+    CHARTE NE SUFFIT PAS. La dérive d'attention est mesurée (courbe en U,
+    décrochage au-delà de 10-15 tours) ; un document plus court est toujours lu
+    au tour 1 et toujours oublié au tour 40. MOÏSE re-présente donc UNE
+    obligation à chaque commit, lue dans la charte elle-même.
+
+  ET UNE ERREUR DE MA PART, QUI A RAPPORTÉ PLUS QU'ELLE N'A COÛTÉ.
+  J'ai écrit dans la mauvaise colonne d'une ligne de suivi, trois commits de
+  suite, parce que j'ai calculé une position au lieu d'appeler l'outil qui sait
+  la reconnaître. La ligne a été reconstruite depuis le dépôt.
+  Mais RIEN ne m'avait signalé l'erreur — et en cherchant pourquoi : quand la
+  colonne Criticité n'est pas reconnue, la ligne est écartée de TOUS les
+  contrôles, en silence. 66 lignes sur 364 — 18 % du registre — étaient dans ce
+  cas, et aucune n'était une faute de saisie : sept valeurs parfaitement
+  légitimes qu'un vocabulaire se déclarant « fermé » ignorait.
+  C'est corrigé, et surtout l'abstention est maintenant COMPTÉE même à zéro.
+
+  ÉTAT : filet 343 blocs au vert, exit 0, tout poussé. Toujours aucune action du
+  périmètre sensible.
