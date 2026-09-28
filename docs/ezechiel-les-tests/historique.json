@@ -43,5 +43,23 @@
     "succes": 299,
     "anomalies": 2,
     "vert": false
+  },
+  {
+    "quand": "2026-09-28T19:14:31.090Z",
+    "totalMs": 130248,
+    "code": 0,
+    "groupes": 336,
+    "succes": 354,
+    "anomalies": 1,
+    "vert": false
+  },
+  {
+    "quand": "2026-09-28T19:21:02.635Z",
+    "totalMs": 140312,
+    "code": 0,
+    "groupes": 336,
+    "succes": 354,
+    "anomalies": 1,
+    "vert": false
   }
 ]

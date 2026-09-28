@@ -526,13 +526,41 @@ export function fluiditeDeLaFile({ dossier = "docs/suivi/sessions", lireDir = re
     }
   }
   if (!fermees.length) return pasMesure("la fluidité de la file", "aucune tâche terminée et datée : il n'y a rien à mesurer, ce qui n'est jamais « tout va bien »");
+  // UN SEUL APPEL À GIT, JAMAIS UN PAR TÂCHE — et c'est une leçon payée en mesurant.
+  // La première version lançait `git log --grep` pour CHAQUE tâche fermée : 324 sous-processus,
+  // **15,2 secondes**, et comme deux blocs du filet appellent le passage complet, elle a fait
+  // grossir la suite de tests d'une trentaine de secondes à elle seule. JESUS ralentissait le
+  // projet qu'il existe pour accélérer.
+  //
+  // CE QUI L'A TROUVÉE MÉRITE D'ÊTRE ÉCRIT, parce que le premier coupable était le mauvais : le
+  // chronomètre d'Ezechiel attribuait 36 s au DERNIER bloc du filet, qui absorbe tout ce qui n'est
+  // rattaché à rien. J'ai « optimisé » une sonde d'Abraham sur cette foi — elle prenait déjà 1 s,
+  // le gain était nul, et le changement a été annulé. La vraie cause n'est apparue qu'en
+  // chronométrant chaque sonde SÉPARÉMENT. Une attribution n'est pas une mesure.
+  let journal;
+  try {
+    // LE SÉPARATEUR N'EST PAS UNE BARRE VERTICALE, et ça s'est vu au premier essai : `|` dans un
+    // format git passé au shell est interprété comme un TUBE, et la commande rendait une chaîne
+    // vide. Un `git log` muet ressemble à un dépôt sans commits.
+    journal = String(shImpl('git log --format=@@%ct@@%s%n%b'));
+  } catch { return pasMesure("la fluidité de la file", "git est illisible ici : sans les dates de commit, la part travaillée ne se distingue pas de la part attendue"); }
+  // On relève, en UNE passe, quelles dates portent quels numéros de tâche.
+  const datesParTache = new Map();
+  let horodatage = null;
+  for (const ligne of journal.split("\n")) {
+    const tete = ligne.match(/^@@(\d{9,11})@@/);
+    if (tete) horodatage = Number(tete[1]) * 1000;
+    if (horodatage === null) continue;
+    for (const m of ligne.matchAll(/#(\d{2,5})\b/g)) {
+      const n = Number(m[1]);
+      let sac = datesParTache.get(n);
+      if (!sac) { sac = new Set(); datesParTache.set(n, sac); }
+      sac.add(horodatage);
+    }
+  }
   const mesurees = [];
   for (const t of fermees) {
-    let dates;
-    try {
-      const brut = String(shImpl(`git log --format=%ct --grep="#${t.numero}\\b" -E`)).trim();
-      dates = brut ? brut.split("\n").map((x) => Number(x) * 1000).filter(Number.isFinite) : [];
-    } catch { return pasMesure("la fluidité de la file", "git est illisible ici : sans les dates de commit, la part travaillée ne se distingue pas de la part attendue"); }
+    const dates = [...(datesParTache.get(t.numero) ?? [])];
     if (!dates.length) continue;                       // jamais citée en commit : rien à mesurer sur elle
     const fin = Math.max(...dates);
     const ecouleJours = Math.max(1, Math.round((fin - t.ouverte) / 86_400_000));

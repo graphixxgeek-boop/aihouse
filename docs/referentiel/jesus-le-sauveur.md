@@ -204,3 +204,33 @@ inutile**. Beaucoup des règles les plus importantes du projet ne PEUVENT pas av
 mécanique — « avoir réellement compris avant d'agir » ne se teste pas — et la charte le déclare
 elle-même (Article 27 : déclarer l'impossibilité EST la protection). La sonde rend un **fait**,
 jamais un verdict. **État du jour : les 33 Articles sont tous cités au moins une fois.**
+
+## JESUS ralentissait le projet qu'il existe pour accélérer (2026-09-28)
+
+**Mesuré** : `fluiditeDeLaFile()` lançait **un `git log --grep` par tâche fermée** — 324
+sous-processus, **15,2 s**. Deux blocs du filet appellent le passage complet, donc elle a fait
+grossir la suite de tests d'une trentaine de secondes à elle seule.
+
+**Corrigé** : un SEUL `git log`, le rattachement des numéros de tâche fait en mémoire.
+**15,2 s → 0,1 s**, résultat strictement identique (50 % de fluidité médiane sur 39 tâches).
+**Filet : 132 s → 105 s.**
+
+### Le premier coupable était le mauvais, et c'est la partie instructive
+
+Le chronomètre d'Ezechiel attribuait **36 s au dernier bloc du filet** — celui que je venais
+d'écrire. J'ai « optimisé » une sonde d'Abraham sur cette foi.
+
+**Elle prenait déjà 1 seconde.** Le gain était nul (1,0 → 1,3 s, donc légèrement PIRE), et le
+changement a été annulé. La cause réelle n'est apparue qu'en chronométrant **chaque sonde
+séparément**.
+
+**Le dernier bloc d'une suite absorbe tout ce qui n'est rattaché à rien** — code au niveau du
+fichier, démontage du processus. C'est encore la classe d'erreur dominante de la journée : un
+signal ADJACENT (le temps jusqu'à la fin de l'exécution) lu comme le signal visé (le coût propre du
+bloc). **Une attribution n'est pas une mesure.**
+
+### Et le séparateur qui n'en était pas un
+
+Le premier `git log --format=%ct|%s` rendait une **chaîne vide** : le `|` passé au shell est un
+TUBE, pas un séparateur de champs. Un `git log` muet ressemble à un dépôt sans commits — et la
+sonde annonçait « 0 tâche mesurable » sur un registre qui en porte 324.
