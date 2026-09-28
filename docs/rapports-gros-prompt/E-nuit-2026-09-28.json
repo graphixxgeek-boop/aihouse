@@ -1,0 +1,179 @@
+{
+  "titre": "RAPPORT DE GROS PROMPT — ta saisine du 2026-09-28 au petit matin (5 chapitres, 13 points)",
+  "dateDuPrompt": "2026-09-28, 02h05 UTC, juste avant la nuit autonome",
+  "dateDuRapport": "2026-09-28",
+  "origine": "demande",
+  "points": [
+    {
+      "id": "A",
+      "sort": "retenu",
+      "taches": [
+        490,
+        566,
+        603,
+        659,
+        668,
+        679,
+        703,
+        726,
+        765,
+        766,
+        768,
+        813,
+        902,
+        988
+      ],
+      "sujet": "Les urgentes et les critiques, avant tout le reste",
+      "citation": "TRAITER TOUTES LES TACHES URGENTES ET CRITIQUES EN PRIORITE",
+      "reponse": "PÉRIMÈTRE MESURÉ, jamais estimé : 14 tâches ouvertes portent un palier critique ou obligatoire — 3 CRITIQUE-STRUCTURANT (#765, #766, #768), 9 PRIORITAIRE-OBLIGATOIRE (#490, #566, #603, #659, #668, #679, #813, #902, #988) et 2 RECOMMANDE-CRITIQUE (#703, #726). Elles passent AVANT les quatre chapitres suivants. Piège évité au passage : un filtre sur le mot « PRIORITAIRE » en attrape 19, parce que « NORMAL-NON-PRIORITAIRE » le contient — ce sont précisément les 10 que tu as dépriorisées hier, donc l'inverse de ce que tu demandes."
+    },
+    {
+      "id": "B1",
+      "sort": "retenu",
+      "taches": [
+        636,
+        696,
+        710,
+        733,
+        740,
+        745,
+        747,
+        775,
+        793,
+        800,
+        929,
+        993,
+        994,
+        995,
+        997,
+        1005
+      ],
+      "sujet": "CLASSIFICATION >>> ORGANISATION GÉNÉRALE : finir toutes les tâches du thème",
+      "citation": "CLASSIFICATION >>> ORGANISATION GENERALE : FINIR TOUTES LES TACHES « CLASSIFICATION >>> ORGANISATION GENERALE »",
+      "reponse": "19 tâches ouvertes portent ce terrain (thèmes Agence 9, Nommage 7, Organisation 3), dont 3 déjà comptées au chapitre A. Le thème « Classification » lui-même ne porte plus AUCUNE tâche ouverte — c'est un signal, pas un trou : le chantier de classement est clos, ce qui reste ouvert est en aval (nommage, organisation, gouvernance)."
+    },
+    {
+      "id": "B2",
+      "sort": "retenu",
+      "taches": [
+        1056
+      ],
+      "sujet": "Où en est-on par rapport au schéma en 5 étapes ?",
+      "citation": "ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ? 1 CLASSIFICATION · 2 NIVELLEMENT · 3 HARMONISATION · 4 PROCESS INTEGRATION · 5 ORGANISATION GENERALE",
+      "reponse": "À PRODUIRE PAR UN OUTIL, jamais de tête (Article 31). Le schéma vit dans docs/strategies/classification-et-nivellement-strategie.md et docs/referentiel/organisation-agence.md ; l'état réel se lit sur docs/referentiel/classification-agence.md, qui est GÉNÉRÉ donc jamais périmé. Livrable : un état étape par étape, chacune avec ce qui est fait, ce qui reste, et le nom de la tâche qui le porte — ou le constat qu'aucune ne le porte, ce qui est le vrai trou à trouver."
+    },
+    {
+      "id": "C1",
+      "sort": "retenu",
+      "taches": [
+        603,
+        936,
+        1019,
+        1020,
+        1021
+      ],
+      "sujet": "PROCESS : traiter toutes les tâches liées aux process",
+      "citation": "PROCESS : TRAITER TOUTES LES TACHES LIES AUX PROCESS",
+      "reponse": "6 tâches ouvertes sur les thèmes Process et Conduite, dont #603 et #703 déjà au chapitre A. #603 est marquée « nécessite sa présence » : elle demande explicitement de consolider les modes auto/semi-auto À DEUX — je la prépare sans l'appliquer (règle du périmètre sensible)."
+    },
+    {
+      "id": "C2",
+      "sort": "retenu",
+      "taches": [
+        1057
+      ],
+      "sujet": "Process sans règle de travail, règles de travail sans process, et conflits entre les deux",
+      "citation": "est-ce qu'on a aujourd'hui des process qui ne sont pas portés par des règles de travail et inversement des règles de travail non portés par des process, et est-ce qu'il y a des conflits entre les 2 ?",
+      "reponse": "C'est une MESURE CROISÉE, donc un outil (Article 31). L'outil maître des documents à règles numérotées existe déjà : Abraham-les-références sait découper un document en unités, nommer le porteur réel de chacune et signaler les redondances. Il tourne aujourd'hui sur UN document à la fois ; le croisement de DEUX registres (les process déclarés chez god-of-all-process ↔ les sections de docs/regles-de-travail.md) est ce qui manque. On l'ÉTEND plutôt que d'agir à côté — jamais un script jetable."
+    },
+    {
+      "id": "C3",
+      "sort": "retenu",
+      "taches": [
+        1058
+      ],
+      "sujet": "Quelle est la différence entre « règles de travail » et les process de l'Agence",
+      "citation": "quelle est la différence entre le document de référence « règle de travail » et les process renseignés à l'agence",
+      "reponse": "La réponse existe déjà en partie et doit être ÉCRITE quelque part d'atteignable (Article 27, le vocabulaire se définit là où il s'emploie) : god-of-all-process surveille des ÉTAPES (le déroulé d'une activité), angel-of-ia-process surveille des RÈGLES DE TRAVAIL (la conduite). Un process dit QUOI FAIRE DANS QUEL ORDRE ; une règle de travail dit COMMENT SE COMPORTER. La frontière est déjà codée dans les deux outils ; ce qui manque est le document qui la dit en trois lignes — exactement le défaut que #604 nomme pour un autre sujet."
+    },
+    {
+      "id": "C4",
+      "sort": "retenu",
+      "taches": [
+        1059
+      ],
+      "sujet": "S'assurer que le fichier règles de travail et les process sont bien liés",
+      "citation": "Assure-toi que le fichier regles de travail et process sont bien linkés.",
+      "reponse": "Vérification mécanique, et c'est le domaine d'HARMONIA (cohérence des liens déjà existants). Un lien manquant dans un sens n'est pas la même chose qu'un lien manquant dans l'autre : les deux se mesurent séparément."
+    },
+    {
+      "id": "C5",
+      "sort": "retenu",
+      "taches": [
+        659
+      ],
+      "sujet": "Les niveaux de protection de chaque règle : le système est-il toujours cohérent, tourne-t-il bien ?",
+      "citation": "revois aussi les niveaux de protection de chaque regle, on avait mis ca en place, regarde si ce système est toujours cohérent et s'il tourne bien.",
+      "reponse": "Le système existe et une tâche PRIORITAIRE-OBLIGATOIRE l'attend déjà : #659, « la charte est moins bien protégée que les règles de travail ». Son constat est contre-intuitif et mesuré : docs/regles-de-travail.md n'a AUCUNE règle critique sans porteur, quand CLAUDE.md en a deux critiques et onze à un cran du compte — parce que six règles hautes des règles de travail sont DEMANDÉES par angel-of-ia-process, mécanisme que la charte n'utilise presque pas alors qu'elle porte les règles les plus graves. La question qu'elle pose t'appartient et n'a jamais été tranchée."
+    },
+    {
+      "id": "D",
+      "sort": "retenu",
+      "taches": [
+        604,
+        623,
+        624,
+        629,
+        711,
+        760,
+        767,
+        790,
+        917,
+        1054
+      ],
+      "sujet": "RÉFÉRENTIEL : s'assurer que tout le référentiel est à jour",
+      "citation": "REFERENTIEL : TACHE CORRESPONDANTE : S'ASSURER QUE TOUT LE REFERENITIEL EST A JOUR",
+      "reponse": "13 tâches ouvertes sur Documentation et Charte, dont 3 déjà au chapitre A. LA RÈGLE QUI COMMANDE ICI est écrite dans l'Article 13 : la liste des documents à relire ne se recopie JAMAIS de mémoire, elle se lit sur la table des matières réelle de docs/referentiel/ — une liste figée se périme au premier outil créé, et celle qui vivait dans la charte en citait neuf quand le dossier en comptait cinquante-trois. Il en porte 113 aujourd'hui."
+    },
+    {
+      "id": "E1",
+      "sort": "retenu",
+      "taches": [
+        668,
+        902
+      ],
+      "sujet": "EXPORT : finir toutes les tâches du thème",
+      "citation": "EXPORT : FINIR TOUTES LES TACHES « EXPORT »",
+      "reponse": "3 tâches ouvertes citent l'export, dont deux au chapitre A : #668 (les candidats non portables, 8 restants sur 14) et #902 (le gros prompt export du 2026-09-26, huit points)."
+    },
+    {
+      "id": "E2",
+      "sort": "retenu",
+      "taches": [
+        1060
+      ],
+      "sujet": "LE RAPPORT EXPORT CENTRAL — le vrai livrable de cette nuit",
+      "citation": "je veux que quelque part, on centralise toutes les questions liées à l'export, qu'on sache dire ou on en est, qu'on sache dire pourquoi et comment l'agence est exportable avec une vision globale. Qu'on sache répertorié tout ce qu'on sait faire en termes d'EXPORT, et aussi ce qu'on ne sait pas encore faire. Je veux un calcul qui donne le pourcentage d'exportabilité de l'agence. Je veux la création d'un rapport qui synthetise TOUT au sujet de l'EXPORT. Aussi, je veux que ce rapport prenne en compte les taches ouvertes au sujet de l'EXPORT",
+      "reponse": "CE QUI EXISTE DÉJÀ, et il faut le savoir avant de construire (Article 30) : SAFE-EXPORT calcule un pourcentage réel — mesuré à 89 % (65/73) hier soir, contre 73 % à la première mesure — et docs/strategies/export-et-commercialisation-strategie.md porte déjà les décisions et le journal des trois passages du banc témoin. CE QUI MANQUE, et c'est exactement ce que tu nommes : rien ne RASSEMBLE le pourcentage, ce qu'on sait faire, ce qu'on ne sait pas encore faire, et les tâches ouvertes sur le sujet. Le rapport est donc une EXTENSION de SAFE-EXPORT (il détient déjà la mesure), pas un outil de plus — et il lit la file de tâches plutôt que de recopier une liste (Article 24)."
+    },
+    {
+      "id": "E3",
+      "sort": "a-trancher",
+      "taches": [],
+      "sujet": "Chez qui vit ce document ?",
+      "citation": "Chez qui est ce document ?",
+      "reponse": "MA RECOMMANDATION, à confirmer : chez SAFE-EXPORT, septième Gardien sacré, qui est déjà le propriétaire de la mesure d'exportabilité. Le mettre ailleurs créerait un second endroit où lire le même chiffre, et c'est ainsi que deux chiffres finissent par diverger. Le rapport vit donc dans docs/safe-export/, sa fiche dans docs/referentiel/safe-export.md, et la STRATÉGIE (les décisions, le plan de route) reste dans docs/strategies/export-et-commercialisation-strategie.md — la mesure chez l'outil, la décision chez la stratégie."
+    },
+    {
+      "id": "E4",
+      "sort": "retenu",
+      "taches": [
+        1061
+      ],
+      "sujet": "Livraison périodique à la Ronde, dans un encart bien visible",
+      "citation": "livraison periodique à la ronde dans un encart bien visible dans la conversation. (respect du process RONDE, mise à jour au passage).",
+      "reponse": "Le rapport devient un ITEM de la Ronde, avec son registre daté comme les douze autres — et son encart remonte dans la conversation. L'ajout d'un item à la Ronde est lui-même un changement de process : il se reflète le jour même dans le document du process (règle « toute modification indirecte d'un process se solde par une mise à jour directe de son document »), sans quoi god-of-all-process le signalera comme une dette, à raison."
+    }
+  ],
+  "texteIntegral": "fais un test une fois fini : fais un rapide etat des taches à partir de l'outil et partage le avec moi. ENsuite, voici le gros prompt : une fois que tu l'a lu, reprends le process auto nuit et enchaine. Voic le gros prompt,qui contient l'ordre des taches tel que je veux que tu l'execute. au-delà, epuise la file en cours. Redis moi combien de taches tu penses faire. Fais le compte avant/apres comme d'habitude. Assure, ne t'arrete en aucun cas, ajuste tes reveils, regarde tes notes, fais moi un super mode auto qui epuise VRAIMENT la file. Voici le gros prompt :\n\nTRAITER TOUTES LES TACHES URGENTES ET CRITIQUES EN PRIORITE\n\nCLASSIFICATION >>> ORGANISATION GENERALE : FINIR TOUTES LES TACHES « CLASSIFICATION >>> ORGANISATION GENERALE  »\n\nON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ?  \n-\t1 CLASSIFICATION Definir les familles d'agents, objets, donnees, livrables et evenements.\n-\t2 NIVELLEMENT Definir les niveaux de responsabilite, criticite, autonomie, habilitation et maturite.\n-\t3 HARMONISATION Normaliser les noms, formats, statuts, contrats d'interface et conventions.\n-\t4 PROCESS INTEGRATION Construire les liens, dependances, declencheurs et echanges entre agents.\n-\t5 ORGANISATION GENERALE Installer la gouvernance, les autorites, les responsabilites et arbitrages.\n-\t\n\n-\tPROCESS : TRAITER TOUTES LES TACHES LIES AUX PROCESS \n-\tCOHERENCE PROCESS VS REFERENTIEL VS CODE ; est-ce qu'on a aujourd'hui des process qui ne sont pas portés par des règles de travail et inversement des règles de travail non portés par des process, et est-ce qu'il y a des conflits entre les 2 ? quelle est la différence entre le document de référence « règle de travail » et les process renseignés à l'agence. Quel outil va t'aider pour cette partie ? Assure-toi que le fichier regles de travail et process sont bien linkés. Et revois aussi les niveaux de protection de chaque regle, on avait mis ca en place, regarde si ce système est toujours cohérent et s'il tourne bien. \nREFERENTIEL : TACHE CORRESPONDANTE : S'ASSURER QUE TOUT LE REFERENITIEL EST A JOUR\n\n\nEXPORT : FINIR TOUTES LES TACHES « EXPORT »\n-\tEXPORT : FAIRE UNE SYNTHESE GLOBALE / CENTRALISATION DE LA STRATEGIE EXPORT : je veux que quelque part, on centralise toutes les questions liées à l'export, qu'on sache dire ou on en est, qu'on sache dire pourquoi et comment l'agence est exportable avec une vision globale. Qu'on sache répertorié tout ce qu'on sait faire en termes d'EXPORT, et aussi ce qu'on ne sait pas encore faire. Je veux un calcul qui donne le pourcentage d'exportabilité de l'agence. Je veux la création d'un rapport qui synthetise TOUT au sujet de l'EXPORT. Aussi, je veux que ce rapport prenne en compte les taches ouvertes au sujet de l'EXPORT, pour avoir une vision claire de l'évolution en cours. Je veux un rapport complet qui nous aide. Chez qui est ce document ? \n-\tOBJECTIF : ne pas se perdre sur le sujet de l'export, car beaucoup de choses ont déjà été faites et on a aussi déjà reflechi à beaucoup de choses, mais tout me semble éparpillé : j'ai besoin que ce soit intégré à une stratégie globale sur le sujet, un plan de route generale qui nous guide sur ce theme, pour ne pas se perdre.\n-\tATTENDU : analyse profonde du besoin, mise en place du rapport, livraison periodique à la ronde dans un encart bien visible dans la conversation. (respect du process RONDE, mise à jour au passage)."
+}

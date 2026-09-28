@@ -11,10 +11,13 @@ fichier de session un sujet a été traité, sans avoir à tous les rouvrir.)*
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**6 fichier(s)** dans ce dossier.
+**9 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
+| [session_0151JrVYzJ2bdCShaXhFAjLo-archive.md](archives/session_0151JrVYzJ2bdCShaXhFAjLo-archive.md) | archives |
+| [session_0151JrVYzJ2bdCShaXhFAjLo-partie-1-archive.md](archives/session_0151JrVYzJ2bdCShaXhFAjLo-partie-1-archive.md) | archives |
+| [session_0151JrVYzJ2bdCShaXhFAjLo-partie-2-archive.md](archives/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2-archive.md) | archives |
 | [2026-09-20-nuit-autonome.md](relectures-lourdes/2026-09-20-nuit-autonome.md) | relectures-lourdes |
 | [2026-09-23-ronde-goat-max.md](relectures-lourdes/2026-09-23-ronde-goat-max.md) | relectures-lourdes |
 | [interventions-depuis-tache-178.txt](relectures-lourdes/interventions-depuis-tache-178.txt) | relectures-lourdes |

@@ -15915,8 +15915,31 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const plan930 = ctd930.dernierPlanDeDepart();
   const nums930 = plan930 ? ctd930.lireNumerosDuPlan(plan930) : { mesurable: false };
   if (nums930.mesurable) {
-    const reel930 = ctd930.mesurerRotation(ctd930.loadAllTaskRows(), nums930.numeros);
-    assert.ok(reel930.neesEtFermees > 0, 'against the real repository the figure must be non-zero: the period this measure was written in closed dozens of tasks that the three old lines showed as nothing at all');
+    const lignes930 = ctd930.loadAllTaskRows();
+    const reel930 = ctd930.mesurerRotation(lignes930, nums930.numeros);
+    // UNE PÉRIODE QUI N'A PAS COMMENCÉ N'EST PAS UNE PÉRIODE (2026-09-28). Cette assertion exigeait
+    // un chiffre non nul contre le DERNIER plan de départ trouvé sur disque — donc, le jour où l'on
+    // en fige un neuf, contre une période vieille de cinq minutes où rien n'a encore eu lieu. Elle
+    // ne pouvait passer qu'au MILIEU d'une nuit, et tombait à chaque DÉBUT de nuit, c'est-à-dire au
+    // pire moment : celui où l'on vient d'appliquer le process à la lettre. Un test qui punit le
+    // respect du process est de la même famille que celui qui punissait le succès de l'allègement
+    // (#1024) ou que le garde-fou qui accusait les sept lignes les plus à jour (#870) — il encode
+    // un ÉTAT là où il devrait vérifier un COMPORTEMENT.
+    //
+    // CE QUI EST VRAIMENT EXIGÉ, et qui reste vrai à tout moment : quand la période a produit du
+    // travail — c'est-à-dire quand au moins un numéro de tâche DÉPASSE le maximum de la référence —
+    // la quatrième population doit en voir. Sans un seul numéro au-delà, il n'y a rien à compter, et
+    // affirmer un non-zéro serait affirmer sur du vide, exactement ce que la ligne « PAS DE
+    // RÉFÉRENCE = PAS DE MESURE » interdit trois lignes plus haut (leçon L5), poussée d'un cran.
+    const borne930 = Math.max(...nums930.numeros);
+    const apres930 = lignes930.filter((r) => Number(r.numero) > borne930);
+    if (apres930.length) {
+      assert.ok(reel930.neesEtFermees > 0, `against the real repository, once the period HAS produced work (${apres930.length} task(s) numbered beyond #${borne930}), the figure must be non-zero: the period this measure was written in closed dozens of tasks that the three old lines showed as nothing at all`);
+    } else {
+      // Et on le DIT plutôt que de sauter en silence : un contrôle qui ne s'exécute pas ressemble
+      // trait pour trait à un contrôle qui passe, et c'est ainsi qu'un vert se vide de son sens.
+      assert.equal(reel930.neesEtFermees, 0, `the period opened by the frozen plan has produced no task beyond #${borne930} yet, so the ephemeral count must be a HONEST zero rather than a figure invented on an empty period`);
+    }
   }
 
   console.log("Passed: la quatrième population, nées ET fermées dans la période (2026-09-26, tâche #930) — les trois lignes de la confrontation se lisent toutes sur l'état final, si bien qu'une tâche née à six heures et fermée à sept n'apparaissait nulle part : ni dans « closes », puisqu'elle n'était pas dans la référence, ni dans « nées », puisqu'elle n'est plus ouverte. Une vraie nuit de vingt ouvertures et treize fermetures s'affichait « 0 close · 7 nées », trait pour trait ce qu'afficherait une nuit qui aurait ouvert sept tâches et n'aurait rien fait — un chiffre juste qui désigne la mauvaise réalité, le motif exact que ce projet traque partout. La frontière de période se lit sur les NUMÉROS et pas sur une date : ils sont uniques et strictement croissants, propriété qu'un autre garde-fou fait respecter à chaque passage, donc aucune horloge n'intervient et rien ne peut dériver. La quatrième ligne n'en remplace aucune : elle rend visible le travail qui ne laisse aucune trace dans un différentiel d'états. Contre le vrai dépôt, elle en compte soixante-treize.");

@@ -56,3 +56,5 @@ reproposer en tête ce qui a déjà été refusé.)*
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
 | 2026-09-27 13:52 | 25877 | 2788 | à trancher | 18 aparté(s) narratif(s) daté(s) |
 | 2026-09-27 14:03 | 25877 | 2788 | à trancher | 18 aparté(s) narratif(s) daté(s) |
+| 2026-09-28 01:40 | 22674 | 2042 | à trancher | 8 aparté(s) narratif(s) daté(s) |
+| 2026-09-28 01:41 | 22674 | 2042 | à trancher | 8 aparté(s) narratif(s) daté(s) |

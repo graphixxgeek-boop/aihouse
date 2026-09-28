@@ -1,0 +1,130 @@
+PLAN DE DÉPART — nuit autonome du 2026-09-28
+Figé à 2026-09-28T02:10Z (heure LUE, source système — cf. Article 32).
+
+Ce fichier est le « AVANT » de la confrontation avant/après du matin
+(node scripts/check-tasks-details.mjs bilan). Un avant/après sans « avant »
+n est pas une mesure, c est une impression — et une impression dira toujours
+que la nuit a ete bonne.
+
+83 tâche(s) ouverte(s) au départ.
+
+#390 | RECOMMANDE-NECESSAIRE | Outillage | Outillage / badge
+#490 | PRIORITAIRE-OBLIGATOIRE | Ronde | Ronde / plan d'action R1
+#492 | NORMAL-UTILE | Ronde | Ronde / plan d'action R3
+#493 | NORMAL-UTILE | Ronde | Ronde / plan d'action R4
+#566 | PRIORITAIRE-OBLIGATOIRE | Ronde | Ronde / lecteur générique
+#574 | NORMAL-UTILE | Ronde | Ronde / paramètre de lancement
+#575 | RECOMMANDE-NECESSAIRE | Outillage | Outillage / audit d'usage
+#603 | PRIORITAIRE-OBLIGATOIRE | Process | Process / conduite
+#604 | RECOMMANDE-NECESSAIRE | Documentation | Documentation / Article 18
+#612 | RECOMMANDE-NECESSAIRE | Outillage | Outillage / CIRCLE-TASKS
+#623 | RECOMMANDE-NECESSAIRE | Documentation | Documentation / docs/regles-de-travail.md (chantier #208)
+#624 | NORMAL-NON-PRIORITAIRE | Charte | Charte / CLAUDE.md (chantier #208)
+#629 | RECOMMANDE-NECESSAIRE | Documentation | Documentation / docs/referentiel (chantier #208)
+#636 | RECOMMANDE-NECESSAIRE | Organisation | Organisation / vocabulaire (chantier #208)
+#659 | PRIORITAIRE-OBLIGATOIRE | Charte | Charte / généraliser le mécanisme DEMANDÉE
+#668 | PRIORITAIRE-OBLIGATOIRE | Exportabilité | Exportabilité / les 14 candidats non portables
+#677 | RECOMMANDE-NECESSAIRE | Coordination | Coordination / Deux packs du catalogue formulés en mêmes mots — tool-brain remonte les deu
+#679 | PRIORITAIRE-OBLIGATOIRE | XP | XP / Leçon L23 sans porteur — forcer la lecture du DOCUMENT de process avant d'agir, jamai
+#681 | NORMAL-UTILE | XP | XP / Une erreur répétée la même nuit, et ce qu'elle dit d'une décision déjà prise
+#687 | NORMAL-UTILE | Suivi | Suivi / Faut-il scinder l'outil de suivi des tâches en deux ou trois agents ?
+#695 | RECOMMANDE-NECESSAIRE | Outillage | Outillage / Tâches C à F des failles IA — les quatre restantes, pour cette nuit
+#696 | RECOMMANDE-NECESSAIRE | Organisation | Organisation / Harmoniser le modèle de gouvernance de l'utilisateur avec l'existant — 20 q
+#699 | RECOMMANDE-NECESSAIRE | Suivi | Suivi / chaîne mesure → suite
+#700 | NORMAL-NON-PRIORITAIRE | Sauvegarde | Sauvegarde / coffre et notice
+#703 | RECOMMANDE-CRITIQUE | Conduite | Conduite / mots d'ordre permanents
+#704 | NORMAL-NON-PRIORITAIRE | Conso | Conso / tokens
+#705 | RECOMMANDE-NECESSAIRE | Outillage | Outillage / découpe
+#708 | NORMAL-NON-PRIORITAIRE | Suivi | Suivi / fiche de tâche
+#710 | NORMAL-NON-PRIORITAIRE | Organisation | Organisation / document total
+#711 | RECOMMANDE-NECESSAIRE | Documentation | Documentation / nature AUTO ou FIGÉ
+#717 | NORMAL-NON-PRIORITAIRE | Profil utilisateur | Profil utilisateur / les deux sens
+#721 | RECOMMANDE-NECESSAIRE | Ronde | Ronde / suites
+#725 | NORMAL-NON-PRIORITAIRE | Sauvegarde | Sauvegarde / l'agencement de la mémoire du projet
+#726 | RECOMMANDE-CRITIQUE | Ronde | Ronde / le process n'a pas été suivi
+#733 | NORMAL-NON-PRIORITAIRE | Nommage | Nommage / les séries d'hommages
+#740 | RECOMMANDE-NECESSAIRE | Nommage | Nommage / booster l'agent des noms : TOUS les impacts d'un renommage en série
+#745 | RECOMMANDE-NECESSAIRE | Agence | Agence / fusionner des agents pour réduire l'effectif — retrouver le sujet mis de côté
+#747 | A-TRANCHER | Nommage | Nommage / la nomenclature : un code de classe dans le nom
+#749 | RECOMMANDE-NECESSAIRE | XP | XP / le moment manquant : une leçon découverte en UTILISANT un outil
+#760 | A-TRANCHER | Charte | Charte / proposer un NOUVEL article (le trentième) pour la reprise des notes
+#765 | CRITIQUE-STRUCTURANT | Charte | Charte / Article 31 — tout passe par un OUTIL, et un rapport est TOUJOURS le rapport d'un 
+#766 | CRITIQUE-STRUCTURANT | Charte | Charte / Article 32 — le temps réel se LIT, jamais ne se déduit
+#767 | A-TRANCHER | Charte | Charte / quelles autres règles à fort levier manquent ?
+#768 | CRITIQUE-STRUCTURANT | Nommage | Nommage / l'outil de renommage PUISSANT, avec recherches web
+#775 | RECOMMANDE-NECESSAIRE | Nommage | Nommage / les deux collisions réelles à trancher avec lui (`PALIERS`, `recordOutcome`)
+#790 | RECOMMANDE-NECESSAIRE | Charte | Charte / les treize Articles muets : déclarer l'impossibilité, ou nommer le porteur qui ex
+#793 | RECOMMANDE-NECESSAIRE | Agence | Agence / check-house pèse un quart de tout l'outillage — 12 052 lignes
+#795 | RECOMMANDE-NECESSAIRE | Données | Données / un quart des sources de l'Agence écrit pour personne
+#800 | A-TRANCHER | Agence | Agence / lequel des trois axes fait monter le majeur ?
+#805 | A-TRANCHER | File | File / 87 % de tâches légères et 49 thèmes pour 116 ouvertes : est-ce un émiettement ou un
+#810 | RECOMMANDE-NECESSAIRE | check-spirit | check-spirit / relancer POUR DE VRAI une fois le correctif validé
+#813 | PRIORITAIRE-OBLIGATOIRE | Données | Données / dix registres FRAIS que sept à dix outils citaient sans jamais les OUVRIR
+#814 | A-TRANCHER | Données | Données / les registres restants : brancher un lecteur, ou déclarer l'absence assumée ?
+#819 | A-TRANCHER | Filet | Filet / trois options chiffrées : ne rien faire, regarder les 3 plus lents, ou un mode rap
+#823 | A-TRANCHER | Compteur d'usage | Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et le garde-fou est tom
+#830 | A-TRANCHER | Idées | Idées / « un outil qui vérifie la logique et les trous PARTOUT » — la question posée il y 
+#841 | A-TRANCHER | Ronde | Ronde / 30 commits sans Ronde — et c'est le seul endroit où le soupçon de #205 se vérifie 
+#842 | A-TRANCHER | Ronde | Ronde / « rentabiliser les trouvailles » : l'outil qui mesure ça existe, et son verdict es
+#845 | A-TRANCHER | File | File / les 5 plus anciennes tâches encore ouvertes, présentées pour arbitrage
+#861 | MOYENNE | Refonte graphique | Refonte graphique / son idée SQUID GAME vivait au suivi et nulle part dans le document de 
+#902 | PRIORITAIRE-OBLIGATOIRE | Agence | Agence / EXPORT ET COMMERCIALISATION — le chantier existait sans tâche, donc sans existenc
+#917 | A-TRANCHER | Charte | Charte / la charte promet une couche lourde à ARGUS et HARMONIA que le registre ne porte p
+#922 | A-TRANCHER | Données | Données / 3 dossiers pèsent 1 028 Ko sur 3 738 : garder N derniers, compacter, ou external
+#929 | RECOMMANDE | Nommage | Nommage / un seul script, DEUX identités : `check-spirit` et `check-spirit-mjs` — et c'est
+#936 | NORMAL-NON-PRIORITAIRE | Conduite | Conduite / CONTROL+ENTRÉE met un prompt en attente, et je ne le lui avais jamais dit — les
+#988 | PRIORITAIRE-OBLIGATOIRE | Nommage | Nommage / le registre des baptêmes : trois décisions prises, application REPORTÉE à sa dem
+#993 | RECOMMANDE-NECESSAIRE | Agence | Agence / les constats de CLONE-HUNTER : trois factorisations, chacune prouvée équivalente
+#994 | RECOMMANDE-NECESSAIRE | Agence | Agence / élargir le périmètre d'AXA-CHECK de 38 à 68 scripts, AVEC un troisième état « non
+#995 | RECOMMANDE-NECESSAIRE | Agence | Agence / CLONE-HUNTER : réunir les alertes dont le texte d'un bloc est CONTENU dans celui 
+#997 | RECOMMANDE | Agence | Agence / les 18 constats CLONE-HUNTER restants, à descendre jusqu'à zéro
+#1005 | RECOMMANDE-NECESSAIRE | Agence | Agence / deux fonctions `chargerLesDocuments()` dans deux fichiers, qui ne rendent pas la 
+#1019 | RECOMMANDE-NECESSAIRE | Process | Process / recalibrer le seuil en CARACTÈRES du process gros prompt, une fois trois vraies 
+#1020 | NORMAL-NON-PRIORITAIRE | Process | Process / présenter les 75 noms en service que l'utilisateur n'a jamais validés
+#1021 | RECOMMANDE-NECESSAIRE | Process | Process / sonder le quota Gemini sans process écrit
+#1039 | RECOMMANDEE | Outillage | Outillage / Deux lignes que le filet ne surveille pas
+#1053 | RECOMMANDE-NECESSAIRE | Données | Données / compacter les récits des 254 tâches fermées récentes
+#1054 | NORMAL-UTILE | Documentation | Documentation / le journal d'un chantier s'installe dans sa stratégie et la fait grossir
+#1056 | PRIORITAIRE-OBLIGATOIRE | Organisation | Organisation / où en est-on sur le schéma en 5 étapes, étape par étape
+#1057 | PRIORITAIRE-OBLIGATOIRE | Process | Process / croiser les process déclarés et les règles de travail : qui n'est porté par pers
+#1058 | RECOMMANDE-NECESSAIRE | Documentation | Documentation / écrire en trois lignes la différence entre une règle de travail et un proc
+#1059 | RECOMMANDE-NECESSAIRE | Documentation | Documentation / vérifier que le fichier règles de travail et les process se citent réellem
+#1060 | PRIORITAIRE-OBLIGATOIRE | Exportabilité | Exportabilité / LE RAPPORT EXPORT CENTRAL — où on en est, ce qu'on sait faire, ce qu'on ne
+#1061 | RECOMMANDE-NECESSAIRE | Ronde | Ronde / le rapport export devient un item de la Ronde, avec son encart visible dans la con
+
+═══════════════════════════════════════════════════════════════════════════
+CE QUE JE METS DE CÔTÉ — déclaré à la main (geste 3 de l'étape 0)
+═══════════════════════════════════════════════════════════════════════════
+
+Ce qui n'est pas nommé comme écarté ressemble, au matin, à un oubli — et
+l'agent de la nuit hésite dessus à trois heures parce que rien ne dit que
+c'était un choix.
+
+1. LE PÉRIMÈTRE SENSIBLE, intégralement (ses bornes, inchangées) :
+   · tout ce qui change ce que Lia et Noé disent ou font ;
+   · tout ce que voit le visiteur ;
+   · tout ce qui serait difficile à annuler.
+   → #861 (refonte graphique), #810 (check-spirit, appels API au modèle réel).
+   Règle : on prépare TOUT sauf l'application, sur une branche que rien n'utilise.
+
+2. LE RENOMMAGE EN MASSE — borne posée à la main, toujours active.
+   → #733, #740, #747, #768, #775, #929, #988 (thème Nommage, 7 tâches).
+   Je peux les INSTRUIRE et préparer, jamais appliquer un renommage.
+   C'est pour ça que #768 (CRITIQUE-STRUCTURANT) sera préparée, pas appliquée.
+
+3. CLAUDE.md — autorisé, MAIS « tu me montres avant ».
+   → #624 (l'avant/après de l'Article 19 est déjà produit et attend son accord),
+     #765, #766, #767, #790, #917.
+   Aucune modification appliquée à la charte sans qu'il l'ait vue.
+
+4. #603 — porte la mention « nécessite sa présence » dans le suivi : il a
+   demandé explicitement de consolider les modes auto/semi-auto À DEUX.
+   Préparée, jamais tranchée seule.
+
+5. TOUTE ACTION COÛTEUSE EN API sans passage préalable par Smart Conso API.
+   L'autorisation nocturne porte sur le fait de CONSOMMER, jamais sur le fait
+   de sauter la consultation (Article 22, tension déclarée du process).
+
+CE QUI N'EST PAS ÉCARTÉ, et qu'on pourrait croire l'être : l'outillage, la
+documentation, le référentiel, les tests, les garde-fous mécaniques. C'est le
+terrain de la nuit.

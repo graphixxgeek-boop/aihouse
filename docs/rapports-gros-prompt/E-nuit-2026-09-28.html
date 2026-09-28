@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAPPORT DE GROS PROMPT — ta saisine du 2026-09-28 au petit matin (5 chapitres, 13 points)</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-28</div>
+    <h1>RAPPORT DE GROS PROMPT — ta saisine du 2026-09-28 au petit matin (5 chapitres, 13 points)</h1>
+    <p class="sub">Saisine du 2026-09-28, 02h05 UTC, juste avant la nuit autonome · 13 point(s) · 50 tâche(s) associée(s)</p>
+  </header>
+  <div class="divider"></div>
+  <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : il découpe une demande longue en points par des marqueurs de texte : une demande formulée sans marqueur ressort en un seul bloc. À vérifier avant d'agir, jamais un verdict acquis.</p>
+<p class="note">Version de Claude : non renseignée (à déposer par l'agent — cf. god-of-all-process)
+Produit le : lundi 28 septembre 2026 à 02h15 (UTC)
+État du code : 697f37b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : rapport-gros-prompt — date de dernière modification inconnue
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir</p>
+<p class="note">Ton prompt du 2026-09-28, 02h05 UTC, juste avant la nuit autonome contient 13 point(s) distinct(s). Ils sont repris ci-dessous RÉORGANISÉS par sujet — jamais dans l'ordre où ils sont arrivés, qui est l'ordre où tu y as pensé, pas celui où ils se traitent.
+🟢 12 retenu(s) · ⚪ 0 écarté(s) · 🟠 1 à trancher par toi.</p>
+<h2>LA SAISINE, TELLE QU'ELLE EST ARRIVÉE</h2>
+<p class="note">3380 caractères, recopiés VERBATIM — ni recoupés, ni ré-indentés, ni tronqués. Le découpage en 13 point(s) ci-dessous est MON interprétation ; ceci est la source.
+
+fais un test une fois fini : fais un rapide etat des taches à partir de l'outil et partage le avec moi. ENsuite, voici le gros prompt : une fois que tu l'a lu, reprends le process auto nuit et enchaine. Voic le gros prompt,qui contient l'ordre des taches tel que je veux que tu l'execute. au-delà, epuise la file en cours. Redis moi combien de taches tu penses faire. Fais le compte avant/apres comme d'habitude. Assure, ne t'arrete en aucun cas, ajuste tes reveils, regarde tes notes, fais moi un super mode auto qui epuise VRAIMENT la file. Voici le gros prompt :
+
+TRAITER TOUTES LES TACHES URGENTES ET CRITIQUES EN PRIORITE
+
+CLASSIFICATION &gt;&gt;&gt; ORGANISATION GENERALE : FINIR TOUTES LES TACHES « CLASSIFICATION &gt;&gt;&gt; ORGANISATION GENERALE  »
+
+ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ?  
+-	1 CLASSIFICATION Definir les familles d'agents, objets, donnees, livrables et evenements.
+-	2 NIVELLEMENT Definir les niveaux de responsabilite, criticite, autonomie, habilitation et maturite.
+-	3 HARMONISATION Normaliser les noms, formats, statuts, contrats d'interface et conventions.
+-	4 PROCESS INTEGRATION Construire les liens, dependances, declencheurs et echanges entre agents.
+-	5 ORGANISATION GENERALE Installer la gouvernance, les autorites, les responsabilites et arbitrages.
+-	
+
+-	PROCESS : TRAITER TOUTES LES TACHES LIES AUX PROCESS 
+-	COHERENCE PROCESS VS REFERENTIEL VS CODE ; est-ce qu'on a aujourd'hui des process qui ne sont pas portés par des règles de travail et inversement des règles de travail non portés par des process, et est-ce qu'il y a des conflits entre les 2 ? quelle est la différence entre le document de référence « règle de travail » et les process renseignés à l'agence. Quel outil va t'aider pour cette partie ? Assure-toi que le fichier regles de travail et process sont bien linkés. Et revois aussi les niveaux de protection de chaque regle, on avait mis ca en place, regarde si ce système est toujours cohérent et s'il tourne bien. 
+REFERENTIEL : TACHE CORRESPONDANTE : S'ASSURER QUE TOUT LE REFERENITIEL EST A JOUR
+
+
+EXPORT : FINIR TOUTES LES TACHES « EXPORT »
+-	EXPORT : FAIRE UNE SYNTHESE GLOBALE / CENTRALISATION DE LA STRATEGIE EXPORT : je veux que quelque part, on centralise toutes les questions liées à l'export, qu'on sache dire ou on en est, qu'on sache dire pourquoi et comment l'agence est exportable avec une vision globale. Qu'on sache répertorié tout ce qu'on sait faire en termes d'EXPORT, et aussi ce qu'on ne sait pas encore faire. Je veux un calcul qui donne le pourcentage d'exportabilité de l'agence. Je veux la création d'un rapport qui synthetise TOUT au sujet de l'EXPORT. Aussi, je veux que ce rapport prenne en compte les taches ouvertes au sujet de l'EXPORT, pour avoir une vision claire de l'évolution en cours. Je veux un rapport complet qui nous aide. Chez qui est ce document ? 
+-	OBJECTIF : ne pas se perdre sur le sujet de l'export, car beaucoup de choses ont déjà été faites et on a aussi déjà reflechi à beaucoup de choses, mais tout me semble éparpillé : j'ai besoin que ce soit intégré à une stratégie globale sur le sujet, un plan de route generale qui nous guide sur ce theme, pour ne pas se perdre.
+-	ATTENDU : analyse profonde du besoin, mise en place du rapport, livraison periodique à la ronde dans un encart bien visible dans la conversation. (respect du process RONDE, mise à jour au passage).</p>
+<h2>Les urgentes et les critiques, avant tout le reste</h2>
+<p class="note">🟢 [A] RETENU — #490, #566, #603, #659, #668, #679, #703, #726, #765, #766, #768, #813, #902, #988
+   TA DEMANDE : « TRAITER TOUTES LES TACHES URGENTES ET CRITIQUES EN PRIORITE »
+   OÙ ÇA EN EST : PÉRIMÈTRE MESURÉ, jamais estimé : 14 tâches ouvertes portent un palier critique ou obligatoire — 3 CRITIQUE-STRUCTURANT (#765, #766, #768), 9 PRIORITAIRE-OBLIGATOIRE (#490, #566, #603, #659, #668, #679, #813, #902, #988) et 2 RECOMMANDE-CRITIQUE (#703, #726). Elles passent AVANT les quatre chapitres suivants. Piège évité au passage : un filtre sur le mot « PRIORITAIRE » en attrape 19, parce que « NORMAL-NON-PRIORITAIRE » le contient — ce sont précisément les 10 que tu as dépriorisées hier, donc l'inverse de ce que tu demandes.</p>
+<h2>CLASSIFICATION &gt;&gt;&gt; ORGANISATION GÉNÉRALE : finir toutes les tâches du thème</h2>
+<p class="note">🟢 [B1] RETENU — #636, #696, #710, #733, #740, #745, #747, #775, #793, #800, #929, #993, #994, #995, #997, #1005
+   TA DEMANDE : « CLASSIFICATION &gt;&gt;&gt; ORGANISATION GENERALE : FINIR TOUTES LES TACHES « CLASSIFICATION &gt;&gt;&gt; ORGANISATION GENERALE » »
+   OÙ ÇA EN EST : 19 tâches ouvertes portent ce terrain (thèmes Agence 9, Nommage 7, Organisation 3), dont 3 déjà comptées au chapitre A. Le thème « Classification » lui-même ne porte plus AUCUNE tâche ouverte — c'est un signal, pas un trou : le chantier de classement est clos, ce qui reste ouvert est en aval (nommage, organisation, gouvernance).</p>
+<h2>Où en est-on par rapport au schéma en 5 étapes ?</h2>
+<p class="note">🟢 [B2] RETENU — #1056
+   TA DEMANDE : « ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ? 1 CLASSIFICATION · 2 NIVELLEMENT · 3 HARMONISATION · 4 PROCESS INTEGRATION · 5 ORGANISATION GENERALE »
+   OÙ ÇA EN EST : À PRODUIRE PAR UN OUTIL, jamais de tête (Article 31). Le schéma vit dans docs/strategies/classification-et-nivellement-strategie.md et docs/referentiel/organisation-agence.md ; l'état réel se lit sur docs/referentiel/classification-agence.md, qui est GÉNÉRÉ donc jamais périmé. Livrable : un état étape par étape, chacune avec ce qui est fait, ce qui reste, et le nom de la tâche qui le porte — ou le constat qu'aucune ne le porte, ce qui est le vrai trou à trouver.</p>
+<h2>PROCESS : traiter toutes les tâches liées aux process</h2>
+<p class="note">🟢 [C1] RETENU — #603, #936, #1019, #1020, #1021
+   TA DEMANDE : « PROCESS : TRAITER TOUTES LES TACHES LIES AUX PROCESS »
+   OÙ ÇA EN EST : 6 tâches ouvertes sur les thèmes Process et Conduite, dont #603 et #703 déjà au chapitre A. #603 est marquée « nécessite sa présence » : elle demande explicitement de consolider les modes auto/semi-auto À DEUX — je la prépare sans l'appliquer (règle du périmètre sensible).</p>
+<h2>Process sans règle de travail, règles de travail sans process, et conflits entre les deux</h2>
+<p class="note">🟢 [C2] RETENU — #1057
+   TA DEMANDE : « est-ce qu'on a aujourd'hui des process qui ne sont pas portés par des règles de travail et inversement des règles de travail non portés par des process, et est-ce qu'il y a des conflits entre les 2 ? »
+   OÙ ÇA EN EST : C'est une MESURE CROISÉE, donc un outil (Article 31). L'outil maître des documents à règles numérotées existe déjà : Abraham-les-références sait découper un document en unités, nommer le porteur réel de chacune et signaler les redondances. Il tourne aujourd'hui sur UN document à la fois ; le croisement de DEUX registres (les process déclarés chez god-of-all-process ↔ les sections de docs/regles-de-travail.md) est ce qui manque. On l'ÉTEND plutôt que d'agir à côté — jamais un script jetable.</p>
+<h2>Quelle est la différence entre « règles de travail » et les process de l'Agence</h2>
+<p class="note">🟢 [C3] RETENU — #1058
+   TA DEMANDE : « quelle est la différence entre le document de référence « règle de travail » et les process renseignés à l'agence »
+   OÙ ÇA EN EST : La réponse existe déjà en partie et doit être ÉCRITE quelque part d'atteignable (Article 27, le vocabulaire se définit là où il s'emploie) : god-of-all-process surveille des ÉTAPES (le déroulé d'une activité), angel-of-ia-process surveille des RÈGLES DE TRAVAIL (la conduite). Un process dit QUOI FAIRE DANS QUEL ORDRE ; une règle de travail dit COMMENT SE COMPORTER. La frontière est déjà codée dans les deux outils ; ce qui manque est le document qui la dit en trois lignes — exactement le défaut que #604 nomme pour un autre sujet.</p>
+<h2>S'assurer que le fichier règles de travail et les process sont bien liés</h2>
+<p class="note">🟢 [C4] RETENU — #1059
+   TA DEMANDE : « Assure-toi que le fichier regles de travail et process sont bien linkés. »
+   OÙ ÇA EN EST : Vérification mécanique, et c'est le domaine d'HARMONIA (cohérence des liens déjà existants). Un lien manquant dans un sens n'est pas la même chose qu'un lien manquant dans l'autre : les deux se mesurent séparément.</p>
+<h2>Les niveaux de protection de chaque règle : le système est-il toujours cohérent, tourne-t-il bien ?</h2>
+<p class="note">🟢 [C5] RETENU — #659
+   TA DEMANDE : « revois aussi les niveaux de protection de chaque regle, on avait mis ca en place, regarde si ce système est toujours cohérent et s'il tourne bien. »
+   OÙ ÇA EN EST : Le système existe et une tâche PRIORITAIRE-OBLIGATOIRE l'attend déjà : #659, « la charte est moins bien protégée que les règles de travail ». Son constat est contre-intuitif et mesuré : docs/regles-de-travail.md n'a AUCUNE règle critique sans porteur, quand CLAUDE.md en a deux critiques et onze à un cran du compte — parce que six règles hautes des règles de travail sont DEMANDÉES par angel-of-ia-process, mécanisme que la charte n'utilise presque pas alors qu'elle porte les règles les plus graves. La question qu'elle pose t'appartient et n'a jamais été tranchée.</p>
+<h2>RÉFÉRENTIEL : s'assurer que tout le référentiel est à jour</h2>
+<p class="note">🟢 [D] RETENU — #604, #623, #624, #629, #711, #760, #767, #790, #917, #1054
+   TA DEMANDE : « REFERENTIEL : TACHE CORRESPONDANTE : S'ASSURER QUE TOUT LE REFERENITIEL EST A JOUR »
+   OÙ ÇA EN EST : 13 tâches ouvertes sur Documentation et Charte, dont 3 déjà au chapitre A. LA RÈGLE QUI COMMANDE ICI est écrite dans l'Article 13 : la liste des documents à relire ne se recopie JAMAIS de mémoire, elle se lit sur la table des matières réelle de docs/referentiel/ — une liste figée se périme au premier outil créé, et celle qui vivait dans la charte en citait neuf quand le dossier en comptait cinquante-trois. Il en porte 113 aujourd'hui.</p>
+<h2>EXPORT : finir toutes les tâches du thème</h2>
+<p class="note">🟢 [E1] RETENU — #668, #902
+   TA DEMANDE : « EXPORT : FINIR TOUTES LES TACHES « EXPORT » »
+   OÙ ÇA EN EST : 3 tâches ouvertes citent l'export, dont deux au chapitre A : #668 (les candidats non portables, 8 restants sur 14) et #902 (le gros prompt export du 2026-09-26, huit points).</p>
+<h2>LE RAPPORT EXPORT CENTRAL — le vrai livrable de cette nuit</h2>
+<p class="note">🟢 [E2] RETENU — #1060
+   TA DEMANDE : « je veux que quelque part, on centralise toutes les questions liées à l'export, qu'on sache dire ou on en est, qu'on sache dire pourquoi et comment l'agence est exportable avec une vision globale. Qu'on sache répertorié tout ce qu'on sait faire en termes d'EXPORT, et aussi ce qu'on ne sait pas encore faire. Je veux un calcul qui donne le pourcentage d'exportabilité de l'agence. Je veux la création d'un rapport qui synthetise TOUT au sujet de l'EXPORT. Aussi, je veux que ce rapport prenne en compte les taches ouvertes au sujet de l'EXPORT »
+   OÙ ÇA EN EST : CE QUI EXISTE DÉJÀ, et il faut le savoir avant de construire (Article 30) : SAFE-EXPORT calcule un pourcentage réel — mesuré à 89 % (65/73) hier soir, contre 73 % à la première mesure — et docs/strategies/export-et-commercialisation-strategie.md porte déjà les décisions et le journal des trois passages du banc témoin. CE QUI MANQUE, et c'est exactement ce que tu nommes : rien ne RASSEMBLE le pourcentage, ce qu'on sait faire, ce qu'on ne sait pas encore faire, et les tâches ouvertes sur le sujet. Le rapport est donc une EXTENSION de SAFE-EXPORT (il détient déjà la mesure), pas un outil de plus — et il lit la file de tâches plutôt que de recopier une liste (Article 24).</p>
+<h2>Chez qui vit ce document ?</h2>
+<p class="note">🟠 [E3] À TRANCHER
+   TA DEMANDE : « Chez qui est ce document ? »
+   OÙ ÇA EN EST : MA RECOMMANDATION, à confirmer : chez SAFE-EXPORT, septième Gardien sacré, qui est déjà le propriétaire de la mesure d'exportabilité. Le mettre ailleurs créerait un second endroit où lire le même chiffre, et c'est ainsi que deux chiffres finissent par diverger. Le rapport vit donc dans docs/safe-export/, sa fiche dans docs/referentiel/safe-export.md, et la STRATÉGIE (les décisions, le plan de route) reste dans docs/strategies/export-et-commercialisation-strategie.md — la mesure chez l'outil, la décision chez la stratégie.</p>
+<h2>Livraison périodique à la Ronde, dans un encart bien visible</h2>
+<p class="note">🟢 [E4] RETENU — #1061
+   TA DEMANDE : « livraison periodique à la ronde dans un encart bien visible dans la conversation. (respect du process RONDE, mise à jour au passage). »
+   OÙ ÇA EN EST : Le rapport devient un ITEM de la Ronde, avec son registre daté comme les douze autres — et son encart remonte dans la conversation. L'ajout d'un item à la Ronde est lui-même un changement de process : il se reflète le jour même dans le document du process (règle « toute modification indirecte d'un process se solde par une mise à jour directe de son document »), sans quoi god-of-all-process le signalera comme une dette, à raison.</p>
+<h2>Plan d'action</h2>
+<p class="note">  → RETENU · [A] ⬜ 🔴 18 données fraîches que personne ne lit — brancher un lecteur réel ou déc…
+       + 🔄 🔴 #490 : un seul lecteur pour les douze registres d'items de Ronde, et un t…
+       + ⬜ 🔴 Consolider ensemble le process des modes auto / semi-auto
+       + ⬜ 🔴 La charte est moins bien protégée que les règles de travail
+       + ⬜ 🔴 14 outils de l'Agence ont leurs cibles écrites en dur — à rendre paramétr…
+       + ⬜ 🔴 Constat le plus dur d'EVAL-IA du 2026-09-23, jamais transformé en tâche :…
+       + ⬜ 🔴 FIABILISER / OPTIMISER / HARMONISER — trois questions obligatoires à la c…
+       + ⬜ 🔴 Son reproche, littéral : « tu n'as pas du tout respecté le process de la …
+       + ⬜ ⚪ « pour chaque demande, tu dois utiliser un outil et non faire les choses …
+       + ⬜ ⚪ « ajoute aussi ta prise en compte du temps réel, au même niveau. C'est pa…
+       + ⬜ ⚪ « fais des recherches sur le web [...] anticipe TOUTES les conséquences p…
+       + ⬜ 🔴 AVANCE #490 (constat de data-archangel : « brancher un lecteur réel ou dé…
+       + ⬜ 🔴 Son gros prompt du 2026-09-26 : huit points distincts sur l'export (bluep…
+       + ⬜ 🔴 Sa demande : « cree le registre des baptêmes ». Après reprise des notes (… — tâche [RECOMMANDEE] : 490
+  → RETENU · [B1] ⬜ 🟠 Les 67 fichiers citant les trois noms `*-process-guardian` n'ont pas été …
+       + ⬜ 🟠 Sa consigne : « ce n'est pas une consigne à appliquer, c'est un exemple […
+       + ⬜ ⚪ La page web où TOUT le fonctionnement de l'Agence est consigné, régénérée…
+       + ⬜ ⚪ Son idée : « je veux rendre des hommages » — séries « grands codeurs », «…
+       + ⬜ 🟠 « quels sont TOUS les impacts, meme indirectes d'un changement de noms en…
+       + ⬜ 🟠 « voir si on peut reduire le nombre d'agents par fusion ? (sujet qu'on av…
+       + ⬜ ⚪ « avant le nom il y a un code qui est inseré selon la nomenclature de l'o…
+       + ⬜ 🟠 Découlent de #756 — Article 28 : un constat RETENU devient une tâche qui …
+       + ⬜ 🟠 Mesuré par `cassandra-rh iceberg` (#744), et ça donne enfin un chiffre à …
+       + ⬜ ⚪ Découle de #799 — la tâche #730 nommait trois candidats et le choix lui r…
+       + ⬜ ⚪ Trouvé en corrigeant les 4 outils muets du compteur d'usage, Ronde du 202…
+       + 🔄 🟠 Sa demande : « CLONE-HUNTER 17 clusters de code dupliqué identique — le s…
+       + ⬜ 🟠 Sa décision du 2026-09-27, après que je lui ai chiffré les enjeux : « Un …
+       + ⬜ 🟠 Sa décision du 2026-09-27, après avoir d'abord dit « ne touche pas au Gar…
+       + ⬜ ⚪ Son arbitrage du 2026-09-27 : « Tout, jusqu'à zéro » — puis « on va laiss…
+       + ⬜ 🟠 Trouvé en réparant #1004 — c'est la cause racine de ce défaut-là, isolée … — tâche [RECOMMANDEE] : 636
+  → RETENU · [B2] ⬜ 🔴 Son gros prompt du 2026-09-28, chapitre B : CLASSIFICATION · NIVELLEMENT … — tâche [RECOMMANDEE] : 1056
+  → RETENU · [C1] ⬜ 🔴 Consolider ensemble le process des modes auto / semi-auto
+       + ⬜ ⚪ Sa remarque : « tu aurais pu me dire qu'avec la commande CONTROL + ENTREE…
+       + ⬜ 🟠 Dépendance découverte en construisant #724 : son second seuil ne PEUT pas…
+       + ⬜ ⚪ Reste mesuré de #706 une fois le registre des baptêmes semé : la dette pa…
+       + ⬜ 🟠 Écrire le process de « Sonder le quota Gemini (Smart Breaker) », ou décla… — tâche [RECOMMANDEE] : 603
+  → RETENU · [C2] ⬜ 🔴 Son gros prompt du 2026-09-28, chapitre C : la mesure croisée qui n'exist… — tâche [RECOMMANDEE] : 1057
+  → RETENU · [C3] ⬜ 🟠 Son gros prompt du 2026-09-28 : la question posée montre que la frontière… — tâche [RECOMMANDEE] : 1058
+  → RETENU · [C4] ⬜ 🟠 Son gros prompt du 2026-09-28 : « Assure-toi que le fichier regles de tra… — tâche [RECOMMANDEE] : 1059
+  → RETENU · [C5] ⬜ 🔴 La charte est moins bien protégée que les règles de travail — tâche [RECOMMANDEE] : 659
+  → RETENU · [D] ⬜ 🟠 Écrire d'une seule pièce qui fait quoi autour d'une simulation
+       + ⬜ 🟠 3 recouvrements sans frontière déclarée dans les règles de travail — NOTÉ…
+       + 🔄 ⚪ Le avant/après complet de l'Article 19, produit et prêt — EN ATTENTE DE S…
+       + ⬜ 🟠 3 documents du référentiel possiblement orphelins — à vérifier sur le bon…
+       + ⬜ 🟠 Chaque fichier déclare sa nature : AUTO, FIGÉ ou MIXTE — et un contrôle r…
+       + ⬜ ⚪ Sa qualification : « règle importante », « process à établir fermement »
+       + ⬜ ⚪ « est-ce que tu vois d'autres types de règles qui manquent de ce type ? […
+       + ⬜ 🟠 Découle de #789 — treize décisions Article par Article, et la charte est …
+       + ⬜ ⚪ Constat du rapport `docs/cassandra-rh/couches-des-gardiens-2026-09-26.md`…
+       + ⬜ ⚪ `export-et-commercialisation-strategie.md` pèse 40 Ko, dont la moitié en … — tâche [RECOMMANDEE] : 604
+  → RETENU · [E1] ⬜ 🔴 14 outils de l'Agence ont leurs cibles écrites en dur — à rendre paramétr…
+       + ⬜ 🔴 Son gros prompt du 2026-09-26 : huit points distincts sur l'export (bluep… — tâche [RECOMMANDEE] : 668
+  → RETENU · [E2] ⬜ 🔴 Son gros prompt du 2026-09-28, chapitre E : le vrai livrable de la nuit — tâche [RECOMMANDEE] : 1060
+  ? À TRANCHER · [E3] Chez qui vit ce document ?
+  → RETENU · [E4] ⬜ 🟠 Son gros prompt du 2026-09-28 : « livraison periodique à la ronde dans un… — tâche [RECOMMANDEE] : 1061</p></main>
+  <div class="divider"></div><footer><p>HORS PORTÉE : ce rapport dit ce qui a été fait de chaque point ; il ne dit jamais si c'était la bonne chose à faire — ça se lit, et ça se tranche avec toi, point par point.</p></footer>
+</div>
+</body>
+</html>

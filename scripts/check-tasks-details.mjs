@@ -33,7 +33,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { categorizeAllSessions } from "./check-suivi-fidelity.mjs";
+import { categorizeAllSessions, estUneLigneDeTache, splitTableRow as decouperLigneDeTache } from "./check-suivi-fidelity.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsAsContext } from "./le-coordinateur.mjs";
 // L'étiquette criticité/urgence/mot-clé — lue chez son propriétaire, jamais recalculée ici.
@@ -3011,6 +3011,46 @@ function main() {
     for (const l of formatEmiettementLines(emiettementDesTaches(rows), dureeDeVieDesTaches(rows))) console.log(l);
     return;
   }
+  // `archiver` (2026-09-28, tâche #1024). PAR DÉFAUT IL NE FAIT RIEN D'AUTRE QUE MONTRER, et c'est
+  // délibéré : une commande qui réécrit le suivi ne doit jamais pouvoir partir d'une faute de
+  // frappe. `--appliquer` est le seul chemin vers le disque, et il n'y arrive que si les trois
+  // contrôles de archiverLesTaches() sont passés.
+  if (process.argv[2] === "archiver") {
+    const avant = process.argv.find((a) => /^\d{4}-\d{2}-\d{2}$/.test(a));
+    const appliquer = process.argv.includes("--appliquer");
+    if (!avant) {
+      console.log("\nUsage : node scripts/check-tasks-details.mjs archiver AAAA-MM-JJ [--appliquer]");
+      console.log("Archive les tâches FERMÉES créées avant cette date. Sans --appliquer, rien n'est écrit.");
+      return;
+    }
+    const rows = loadAllTaskRows();
+    const dossier = join(ROOT, "docs/suivi/sessions");
+    const textes = new Map();
+    for (const f of readdirSync(dossier).filter((f) => f.endsWith(".md"))) textes.set(f, readFileSync(join(dossier, f), "utf8"));
+    const r = archiverLesTaches(rows, textes, { avant });
+    console.log(`\n=== ARCHIVAGE DU SUIVI — ${appliquer ? "APPLIQUÉ" : "ESSAI À BLANC, rien n'est écrit"} ===\n`);
+    for (const l of formatArchivageLines(r)) console.log(l);
+    if (appliquer && r.mesurable && r.sur) {
+      const dest = join(ROOT, "docs/suivi/archives");
+      mkdirSync(dest, { recursive: true });
+      for (const f of r.fichiers) {
+        writeFileSync(join(dest, f.archive), f.texteArchive, "utf8");
+        writeFileSync(join(dossier, f.source), f.texteSource, "utf8");
+      }
+      console.log(`\n✅ ÉCRIT. ${r.fichiers.length} fichier(s) de travail allégé(s), autant d'archives créées.`);
+    } else if (appliquer) {
+      console.log("\n🚨 RIEN N'A ÉTÉ ÉCRIT : un contrôle a refusé l'opération (raison ci-dessus).");
+    }
+    return;
+  }
+
+  if (process.argv[2] === "cout") {
+    const rows = loadAllTaskRows();
+    const budget = Number(process.argv[3]) || BUDGET_DETAIL_PROPOSE;
+    console.log(`\n=== COÛT DU REGISTRE — ce que le suivi pèse, et où (tâche #1024) ===\n`);
+    for (const l of formatCoutDuRegistreLines(coutDuRegistre(rows, { budget }))) console.log(l);
+    return;
+  }
   if (process.argv[2] === "poids") {
     const rows = loadAllTaskRows();
     const ouvertes = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
@@ -3130,6 +3170,368 @@ function main() {
 // donc le haut du panier sans accuser la moitié du registre — un seuil qui alerte sur tout n'est
 // plus lu (leçon L4).
 export const SEUIL_TACHE_LONGUE = 1200;
+
+// LE COÛT DU REGISTRE — combien pèse le suivi, et OÙ (tâche #1024).
+//
+// POURQUOI IL EXISTE, et ce n'est pas la même question que `poidsDeLaTache` juste au-dessus. Le
+// poids d'une tâche dit s'il faut la DÉCOUPER — c'est une question de conduite de chantier. Celui-ci
+// dit ce que le registre COÛTE à recharger, ligne par ligne : une question de budget, pas de
+// méthode. Les confondre ferait proposer de découper une tâche parce qu'elle est chère à lire,
+// ce qui n'a aucun sens.
+//
+// LE FAIT QUI L'A DÉCLENCHÉ, mesuré le 2026-09-27 : une fois la charte allégée, `docs/suivi/sessions`
+// est passé DEVANT CLAUDE.md au classement de coût réel d'une session (47 % contre 45 %). Le suivi
+// est devenu le premier poste de coût du projet — et personne ne mesurait sa répartition interne.
+//
+// CE QU'IL SÉPARE, et c'est tout son intérêt : le coût des lignes OUVERTES (qu'on relit pour
+// travailler) de celui des lignes FERMÉES (qu'on ne relit presque jamais, mais qui se rechargent
+// pareil). Sans cette séparation, « alléger le suivi » est une intention sans cible.
+//
+// CE QU'IL NE DIT PAS, et il faut le lire en le sachant : il ne dit JAMAIS quoi couper. Un récit
+// long peut être le seul endroit où vit la raison d'une décision (Article 27), et la perdre coûte
+// infiniment plus cher que les tokens qu'elle occupe. Il rend une répartition ; l'arbitrage reste
+// humain.
+export const BUDGET_DETAIL_PROPOSE = 400;
+
+// ===========================================================================================
+// L'ARCHIVAGE DES TÂCHES FERMÉES DEPUIS LONGTEMPS (2026-09-28, tâche #1024)
+// ===========================================================================================
+//
+// SA DÉCISION, en fenêtre dédiée, et elle tient en une phrase : « il faut DISTINGUER les tâches
+// fermées depuis longtemps : celles-ci rejoignent un dossier d'archive, après que leur nom ait été
+// raccourci. Les tâches fermées récentes restent visibles immédiatement. »
+//
+// CE QUI EST DÉPLACÉ ET CE QUI NE L'EST PAS — la ligne rouge de tout ce mécanisme : le texte des
+// tâches n'est JAMAIS réécrit, jamais coupé, jamais résumé. Il est DÉPLACÉ, caractère pour
+// caractère, dans un second fichier. Ce qui reste dans le fichier de travail est un renvoi d'une
+// ligne : numéro + nom raccourci. Compacter n'est pas supprimer ; archiver l'est encore moins.
+//
+// POURQUOI LE RENVOI N'EST PAS UNE LIGNE DE TABLEAU, et ce détail décide de la justesse de tout le
+// reste : `estUneLigneDeTache()` reconnaît une tâche à sa forme de ligne de tableau. Un renvoi
+// écrit sous cette forme serait compté comme une tâche DE PLUS — la tâche archivée existerait
+// alors deux fois, une dans l'archive et une dans le fichier de travail, et la file entière
+// doublerait en silence. Le renvoi est donc une puce de liste, que rien ne prend pour une tâche.
+//
+// LES TROIS VÉRIFICATIONS AVANT ÉCRITURE, et aucune n'est optionnelle. Un archivage qui perd une
+// ligne est pire qu'un fichier lourd : le fichier lourd se lit, la ligne perdue ne revient pas.
+//   1. chaque ligne déplacée se retrouve TEXTUELLEMENT dans l'archive ;
+//   2. l'ensemble des numéros après opération est exactement celui d'avant — aucun perdu, aucun
+//      apparu, aucun dupliqué entre les deux fichiers ;
+//   3. le nombre de lignes de tâche conservées + déplacées égale le nombre lu au départ.
+// Une seule qui échoue ANNULE tout : rien n'est écrit, et la raison est nommée.
+
+// La longueur du nom raccourci. Elle n'est pas choisie ronde : mesurée sur le registre réel, la
+// colonne Sujet fait 44 caractères en médiane et 72 au neuvième décile — 80 laisse donc passer la
+// quasi-totalité des noms entiers et ne tronque que la longue traîne. Un renvoi doit rester
+// reconnaissable d'un coup d'œil ; le tronquer trop en ferait une référence qu'il faut résoudre
+// pour comprendre, c'est-à-dire exactement ce que l'archive est censée éviter.
+export const LONGUEUR_NOM_ARCHIVE = 80;
+
+export function nomRaccourci(row = {}, { longueur = LONGUEUR_NOM_ARCHIVE } = {}) {
+  // Le nom est le Sujet, débarrassé du gras markdown et des retours : c'est déjà l'intitulé que
+  // l'utilisateur lit dans tous les rapports. En fabriquer un autre ici créerait un second nom
+  // pour la même tâche, donc deux façons de la chercher.
+  const brut = String(row.sujet ?? "").replace(/\*\*/g, "").replace(/\s+/g, " ").trim();
+  if (!brut) return "(sans intitulé)";
+  return brut.length <= longueur ? brut : `${brut.slice(0, longueur - 1).trimEnd()}…`;
+}
+
+// LA SÉLECTION. Deux conditions, jamais une seule : la tâche est FERMÉE **et** son horodatage est
+// antérieur à la borne. Une tâche ouverte ancienne reste au chaud quoi qu'il arrive — c'est du
+// travail qui attend, pas de l'histoire.
+//
+// LIMITE DÉCLARÉE PLUTÔT QUE TUE (Article 32) : l'horodatage d'une ligne est sa date de CRÉATION,
+// jamais sa date de clôture, qu'aucune colonne ne porte aujourd'hui. « Fermée depuis longtemps »
+// est donc approché par « ouverte il y a longtemps ». Dans ce projet les tâches se ferment vite,
+// souvent le jour même, ce qui rend l'approximation honnête — mais c'est une approximation, et la
+// présenter comme une date de clôture serait exactement le faux qu'on chasse ailleurs.
+export function selectionnerPourArchive(rows = [], { avant, ouvertes = OPEN_KEYS } = {}) {
+  if (!avant) return { mesurable: false, pourquoi: "aucune borne de date fournie : archiver sans borne archiverait tout, y compris ce qui vient d'être fermé" };
+  const retenues = [], gardees = [];
+  for (const r of rows) {
+    const fermee = !ouvertes.has(r.statusKey);
+    const ancienne = String(r.horodatage ?? "") < String(avant);
+    (fermee && ancienne ? retenues : gardees).push(r);
+  }
+  return { mesurable: true, avant, retenues, gardees };
+}
+
+export const ENTETE_ARCHIVE = "## Tâches archivées";
+
+// Le numéro d'une ligne de tâche : sa PREMIÈRE cellule. Lu par le découpeur partagé plutôt que par
+// une expression régulière de plus — un second lecteur du même format finirait par diverger (L37).
+export function numeroDeLaLigne(ligne = "") {
+  const brut = (decouperLigneDeTache(ligne)[0] ?? "").trim();
+  return /^\d+$/.test(brut) ? Number(brut) : null;
+}
+
+// LA RÉÉCRITURE D'UN FICHIER, en mémoire et sans rien écrire sur le disque. Rendre le texte plutôt
+// que l'écrire est ce qui permet de tout vérifier avant de toucher au dépôt — et de tester la
+// fonction sans fabriquer de fichiers.
+export function reecrireFichierArchive(texteSource = "", numerosAArchiver = new Set(), { nomsCourts = new Map(), estLigneDeTache, numeroDeLigne } = {}) {
+  const lignes = String(texteSource).split("\n");
+  const gardees = [], deplacees = [];
+  for (const ligne of lignes) {
+    if (!estLigneDeTache(ligne)) { gardees.push(ligne); continue; }
+    const n = numeroDeLigne(ligne);
+    if (n != null && numerosAArchiver.has(n)) deplacees.push(ligne);
+    else gardees.push(ligne);
+  }
+  if (!deplacees.length) return { deplacees, texte: String(texteSource), renvois: [] };
+  const renvois = deplacees.map((ligne) => {
+    const n = numeroDeLigne(ligne);
+    return `- #${n} — ${nomsCourts.get(n) ?? "(sans intitulé)"}`;
+  });
+  // Le renvoi vers l'archive est écrit UNE FOIS pour toute la section, jamais répété sur chaque
+  // puce : 655 fois le même chemin serait 40 000 caractères réintroduits pour ne rien dire de plus.
+  const section = ["", ENTETE_ARCHIVE + ` (${deplacees.length})`, "",
+    "*(Leur texte intégral, intact et inchangé, vit dans le dossier `docs/suivi/archives/`. Rien",
+    "n'a été supprimé ni résumé : ces lignes ont été DÉPLACÉES, caractère pour caractère, pour que",
+    "le fichier de travail ne porte plus que ce qu'on relit vraiment. Se retrouvent par leur",
+    "numéro — cf. tâche #1024.)*", ""];
+  return { deplacees, renvois, texte: [...gardees, ...section, ...renvois, ""].join("\n") };
+}
+
+// L'EN-TÊTE D'UN FICHIER D'ARCHIVE. Il porte le tableau de colonnes complet, sinon les lignes
+// déplacées deviendraient illisibles pour tout lecteur du format — une archive qu'aucun outil ne
+// sait relire n'est pas une archive, c'est une perte différée.
+// LA LIGNE D'EN-TÊTE SE PREND SUR LA SOURCE, JAMAIS FABRIQUÉE — et la première version le
+// fabriquait, ce qui a coûté un premier passage entier.
+//
+// CE QUI S'EST PASSÉ, le 2026-09-28 : l'en-tête était dérivé de `FORMAT_TACHE`, dont les entrées
+// ne portent pas d'intitulé d'affichage. L'archive a donc reçu « | numero | horodatage | motCle |
+// … », les NOMS INTERNES des champs. Aucun de ces mots ne ressemble à « N° » ni à « Horodatage »,
+// donc `estUneLigneDeTache()` a pris chacune de ces trois lignes d'en-tête pour une TÂCHE : la file
+// est passée de 985 à 988 et les ouvertes de 76 à 79, trois tâches nées de rien. Le total a été
+// vérifié juste après l'écriture, l'écart vu tout de suite, et tout remis en place.
+//
+// LA CORRECTION EST STRUCTURELLE, pas cosmétique : l'en-tête de l'archive est désormais CELUI DE
+// SA SOURCE, copié tel quel. Une archive ne peut plus décrire d'autres colonnes que le fichier
+// dont elle vient, et le jour où une colonne sera ajoutée là-bas, elle suivra sans qu'on y touche
+// (Article 24 : on LIT, on ne recopie pas).
+export function ligneDEnteteDe(texteSource = "") {
+  for (const l of String(texteSource).split("\n")) {
+    if (/^\|\s*(?:N°|Numéro|Numero|Horodatage)\s*\|/.test(l)) return l;
+  }
+  return null;
+}
+
+export function enteteArchive(nomSource, avant, combien, ligneEntete = null) {
+  if (!ligneEntete) return null;
+  const colonnes = ligneEntete.split("|").filter((c, i, a) => i > 0 && i < a.length - 1);
+  return [
+    `# Archive du suivi — ${nomSource}`,
+    "",
+    `*(${combien} tâche(s) fermées et créées avant le ${avant}, DÉPLACÉES ici depuis le fichier de`,
+    "travail (tâche #1024). Leur texte est celui d'origine, caractère pour caractère : rien n'a été",
+    "résumé, coupé ni réécrit. Le fichier de travail garde un renvoi par numéro.",
+    "",
+    "Ce dossier est lu par les fonctions qui NUMÉROTENT et COMPTENT les tâches (`nextTaskNumber`,",
+    "`categorizeAllSessions`, `findTaskNumberIssues`, `countTasksSince`), jamais par les garde-fous",
+    "de fraîcheur : une tâche close depuis une semaine n'a pas à repasser un contrôle de fraîcheur",
+    "à chaque commit.)*",
+    "",
+    "## Tâches",
+    "",
+    ligneEntete,
+    `|${colonnes.map(() => "---").join("|")}|`,
+    "",
+  ].join("\n");
+}
+
+// L'OPÉRATION COMPLÈTE, EN MÉMOIRE ET VÉRIFIÉE AVANT TOUTE ÉCRITURE. Elle ne touche jamais le
+// disque : elle rend ce qu'il FAUDRAIT écrire, plus le verdict des trois contrôles. Le CLI décide
+// d'écrire ou non. Séparer les deux est ce qui permet de faire tourner l'opération à blanc sur le
+// vrai dépôt autant de fois qu'on veut sans aucun risque — et de la tester sans fabriquer de
+// fichiers. Un outil qui écrit en même temps qu'il calcule ne peut pas être essayé.
+// `reecrire` est injectable POUR POUVOIR SABOTER LES CONTRÔLES EN TEST. Un garde-fou qu'on n'a
+// jamais vu refuser ne prouve rien (BP2) : sans cette injection, « aucun numéro perdu » resterait
+// une phrase dans un commentaire, et c'est précisément ce genre de phrase qui se révèle fausse le
+// jour où elle devrait servir.
+export function archiverLesTaches(rows = [], textesParFichier = new Map(), { avant, reecrire = reecrireFichierArchive } = {}) {
+  const sel = selectionnerPourArchive(rows, { avant });
+  if (!sel.mesurable) return { mesurable: false, pourquoi: sel.pourquoi };
+  if (!sel.retenues.length) {
+    return { mesurable: true, sur: false, pourquoi: `aucune tâche fermée créée avant ${avant} : rien à déplacer`, fichiers: [], deplacees: 0 };
+  }
+
+  // LES LIGNES SANS NUMÉRO RESTENT SUR PLACE, ET L'ÉCART EST DIT PLUTÔT QUE TU (2026-09-28).
+  // Cinquante lignes réelles du tout premier fichier de session sont antérieures à la colonne N° :
+  // elles n'ont pas de numéro, donc pas de renvoi possible — un renvoi sans numéro serait une
+  // référence qu'on ne peut pas résoudre, c'est-à-dire pire qu'une ligne restée en place. Elles
+  // pèsent 1,8 % du registre et vivent dans un fichier qui n'est pas celui qu'on relit : le gain
+  // serait nul et le risque réel. Ce qui compte est que le compte annoncé ne mente pas — 655
+  // sélectionnées, 605 déplaçables, et l'outil DIT les cinquante au lieu de les faire disparaître
+  // de son propre rapport (c'est exactement ainsi qu'un écart devient invisible).
+  const sansNumero = sel.retenues.filter((r) => r.numero == null).length;
+  const parFichier = new Map();
+  for (const r of sel.retenues) {
+    if (r.numero == null) continue;
+    if (!parFichier.has(r.file)) parFichier.set(r.file, { numeros: new Set(), noms: new Map() });
+    parFichier.get(r.file).numeros.add(r.numero);
+    parFichier.get(r.file).noms.set(r.numero, nomRaccourci(r));
+  }
+
+  const fichiers = [];
+  let deplacees = 0;
+
+  for (const [nomFichier, { numeros, noms }] of parFichier) {
+    const source = textesParFichier.get(nomFichier);
+    if (source == null) {
+      return { mesurable: false, pourquoi: `le texte du fichier ${nomFichier} n'a pas été fourni : impossible de vérifier ce qui serait déplacé` };
+    }
+    const r = reecrire(source, numeros, { nomsCourts: noms, estLigneDeTache: estUneLigneDeTache, numeroDeLigne: numeroDeLaLigne });
+    const nomArchive = nomFichier.replace(/\.md$/, "") + "-archive.md";
+    const entete = enteteArchive(nomFichier, avant, r.deplacees.length, ligneDEnteteDe(source));
+    if (entete == null) {
+      return { mesurable: false, pourquoi: `${nomFichier} ne porte aucune ligne d'en-tête reconnaissable : impossible de donner à l'archive les mêmes colonnes que sa source, rien n'est écrit` };
+    }
+    const texteArchive = entete + r.deplacees.join("\n") + "\n";
+
+    // CONTRÔLE 1 — chaque ligne à archiver se retrouve TEXTUELLEMENT dans l'archive, COMPARÉE À LA
+    // SOURCE et jamais à la sortie du réécriveur.
+    //
+    // LA PREMIÈRE VERSION DE CE CONTRÔLE ÉTAIT CIRCULAIRE, et c'est le test de sabotage qui l'a
+    // montré, pas la relecture (BP2 : un garde-fou qu'on n'a jamais vu refuser ne prouve rien). Elle
+    // vérifiait que l'archive contient ce que le réécriveur DIT avoir déplacé — or l'archive est
+    // CONSTRUITE à partir de cette même liste. Elle ne pouvait donc rien attraper : un réécriveur
+    // qui tronquait chaque ligne à vingt caractères passait au vert, et 605 tâches réelles
+    // seraient parties amputées sans qu'aucun signal ne tombe.
+    //
+    // La comparaison se fait donc contre les lignes de la SOURCE, seule référence que le réécriveur
+    // n'a pas pu modifier. C'est ce qui fait la différence entre un contrôle et une formalité.
+    const lignesSource = new Map();
+    for (const l of source.split("\n")) { const n = numeroDeLaLigne(l); if (estUneLigneDeTache(l) && n != null) lignesSource.set(n, l); }
+    for (const n of numeros) {
+      const originale = lignesSource.get(n);
+      if (originale == null) continue;
+      if (!texteArchive.includes(originale)) {
+        return { mesurable: false, pourquoi: `la tâche #${n} de ${nomFichier} n'apparaît pas dans l'archive avec son texte d'origine (tronquée ou réécrite) : rien n'est écrit` };
+      }
+    }
+    // CONTRÔLE 2 — le compte des lignes de tâche est conservé, fichier par fichier.
+    const avantN = source.split("\n").filter(estUneLigneDeTache).length;
+    const apresN = r.texte.split("\n").filter(estUneLigneDeTache).length;
+    if (avantN !== apresN + r.deplacees.length) {
+      return { mesurable: false, pourquoi: `${nomFichier} : ${avantN} lignes au départ, ${apresN} conservées et ${r.deplacees.length} déplacées — le compte ne tombe pas juste, rien n'est écrit` };
+    }
+    // CONTRÔLE 3 — l'ensemble des NUMÉROS du fichier est exactement le même avant et après. Le
+    // compte seul ne suffirait pas : deux erreurs qui se compensent passeraient.
+    const numAvant = new Set(source.split("\n").filter(estUneLigneDeTache).map(numeroDeLaLigne).filter((n) => n != null));
+    const numApres = new Set([...r.texte.split("\n").filter(estUneLigneDeTache), ...r.deplacees].map(numeroDeLaLigne).filter((n) => n != null));
+    const perdus = [...numAvant].filter((n) => !numApres.has(n));
+    if (perdus.length) {
+      return { mesurable: false, pourquoi: `${nomFichier} : ${perdus.length} numéro(s) auraient disparu (${perdus.slice(0, 5).join(", ")}) — rien n'est écrit` };
+    }
+
+    deplacees += r.deplacees.length;
+    fichiers.push({ source: nomFichier, archive: nomArchive, deplacees: r.deplacees.length,
+      texteSource: r.texte, texteArchive, octetsLiberes: source.length - r.texte.length });
+  }
+
+  return { mesurable: true, sur: true, avant, fichiers, deplacees, sansNumero,
+    selectionnees: sel.retenues.length,
+    octetsLiberes: fichiers.reduce((a, f) => a + f.octetsLiberes, 0) };
+}
+
+export function formatArchivageLines(r = {}) {
+  if (!r.mesurable) return [`🚨 REFUSÉ — ${r.pourquoi}`, "Aucun fichier n'a été modifié."];
+  if (!r.sur) return [`Rien à faire — ${r.pourquoi}`];
+  const out = [`${r.selectionnees} tâche(s) fermées créées avant le ${r.avant}, dont ${r.deplacees} déplaçables.`, ""];
+  if (r.sansNumero) {
+    out.push(`  ⓘ ${r.sansNumero} restent sur place : antérieures à la colonne N°, elles n'ont pas de numéro,`);
+    out.push(`    donc aucun renvoi ne pourrait les retrouver. L'écart est dit, jamais absorbé en silence.`);
+    out.push("");
+  }
+  for (const f of r.fichiers) {
+    out.push(`  ${f.source}`);
+    out.push(`    → ${f.deplacees} ligne(s) vers docs/suivi/archives/${f.archive}`);
+    out.push(`    → le fichier de travail perd ${(f.octetsLiberes / 1000).toFixed(1)}k caractères`);
+  }
+  out.push("");
+  out.push(`Au total ${(r.octetsLiberes / 1000).toFixed(1)}k caractères quittent les fichiers de travail — DÉPLACÉS, jamais supprimés.`);
+  out.push("Les trois contrôles sont passés : chaque ligne retrouvée telle quelle dans l'archive, le");
+  out.push("compte conservées + déplacées égal au compte de départ, et aucun numéro disparu.");
+  return out;
+}
+
+export function coutDuRegistre(rows = [], { budget = BUDGET_DETAIL_PROPOSE, ouvertes = OPEN_KEYS } = {}) {
+  if (!rows.length) {
+    return { mesurable: false, pourquoi: "aucune ligne de suivi lue : une répartition sur zéro ligne ressemblerait à une mesure" };
+  }
+  const part = (r) => (ouvertes.has(r.statusKey) ? "ouverte" : "fermee");
+  const vide = () => ({ lignes: 0, detail: 0, reste: 0, longues: 0, economie: 0 });
+  const parts = { ouverte: vide(), fermee: vide() };
+  for (const r of rows) {
+    const p = parts[part(r)];
+    const detail = String(r.detail ?? "");
+    // Le « reste » est tout ce qui n'est PAS le détail : numéro, horodatage, mot-clé, sujet,
+    // criticité, cases de rituel, statut. Il est incompressible — c'est la ligne elle-même.
+    const reste = [r.numero, r.horodatage, r.motCle, r.sujet, r.sousSujet, r.criticite,
+      r.pourQui, r.ouverture, r.cloture, r.statut].map((v) => String(v ?? "").length)
+      .reduce((a, b) => a + b, 0);
+    p.lignes += 1;
+    p.detail += detail.length;
+    p.reste += reste;
+    if (detail.length > SEUIL_TACHE_LONGUE) p.longues += 1;
+    if (detail.length > budget) p.economie += detail.length - budget;
+  }
+  // LA RÉPARTITION PAR FICHIER, ajoutée le 2026-09-28 quand l'archivage a rendu la question
+  // nécessaire : depuis qu'un même registre vit dans plusieurs fichiers, le total ne dit plus rien
+  // sur le COÛT — seul compte ce que pèse le fichier qu'on rouvre. Un registre de deux millions de
+  // caractères dont on ne relit que 800 000 coûte 800 000, et afficher le total ferait croire à un
+  // problème qui n'existe plus (« un chiffre qui bouge n'est pas un chiffre qui s'améliore », L28,
+  // pris par l'autre bout : un chiffre qui NE bouge PAS n'est pas forcément un progrès absent).
+  const parFichier = new Map();
+  for (const r of rows) {
+    const f = String(r.file ?? "?");
+    if (!parFichier.has(f)) parFichier.set(f, { lignes: 0, detail: 0 });
+    const e = parFichier.get(f);
+    e.lignes += 1;
+    e.detail += String(r.detail ?? "").length;
+  }
+  const total = parts.ouverte.detail + parts.fermee.detail + parts.ouverte.reste + parts.fermee.reste;
+  const economieTotale = parts.ouverte.economie + parts.fermee.economie;
+  return {
+    mesurable: true, budget, total, economieTotale,
+    parts,
+    parFichier: [...parFichier.entries()].map(([fichier, v]) => ({ fichier, ...v, archive: /-archive\.md$/.test(fichier) })).sort((a, b) => b.detail - a.detail),
+    // La part du détail dans le coût total : c'est elle qui dit si compacter les récits est le bon
+    // levier, ou si c'est le NOMBRE de lignes qu'il faudrait regarder à la place.
+    partDuDetail: total ? Math.round(((parts.ouverte.detail + parts.fermee.detail) / total) * 100) : 0,
+  };
+}
+
+export function formatCoutDuRegistreLines(c = {}) {
+  if (!c.mesurable) return [`⚠️  NON MESURÉ — ${c.pourquoi}`];
+  const k = (n) => `${(n / 1000).toFixed(1)}k car.`;
+  const pct = (n) => (c.total ? `${Math.round((n / c.total) * 100)} %` : "—");
+  const out = [];
+  out.push(`Le registre pèse ${k(c.total)} au total, dont ${c.partDuDetail} % dans la seule colonne Détail.`);
+  out.push("");
+  out.push("                     lignes      Détail   (part)    reste   >1200 car.   économie à " + c.budget);
+  for (const [nom, p] of Object.entries(c.parts)) {
+    out.push(`  ${nom.padEnd(16)} ${String(p.lignes).padStart(6)}  ${k(p.detail).padStart(10)}  ${pct(p.detail).padStart(6)}  ${k(p.reste).padStart(9)}  ${String(p.longues).padStart(9)}   ${k(p.economie).padStart(10)}`);
+  }
+  out.push("");
+  const o = c.parts.ouverte, f = c.parts.fermee;
+  out.push(`Compacter les FERMÉES seules rendrait ${k(f.economie)} (${pct(f.economie)} du registre).`);
+  out.push(`Compacter TOUTES rendrait ${k(c.economieTotale)} (${pct(c.economieTotale)}) — soit ${k(o.economie)} de plus, sur ${o.lignes} lignes qu'on relit vraiment.`);
+  out.push("");
+  if (c.parFichier?.length) {
+    out.push("Par fichier — seul ce qui n'est PAS en archive se recharge quand on travaille :");
+    for (const f of c.parFichier) {
+      out.push(`  ${f.archive ? "📦 archive " : "▶ travail  "} ${String(f.lignes).padStart(4)} lignes  ${k(f.detail).padStart(10)}   ${f.fichier}`);
+    }
+    const travail = c.parFichier.filter((f) => !f.archive).reduce((a, f) => a + f.detail, 0);
+    out.push(`  → le coût réel est celui des lignes « travail » : ${k(travail)}, et non le total ci-dessus.`);
+    out.push("");
+  }
+  out.push("HORS PORTÉE : ceci dit ce que ça COÛTE, jamais ce qu'il faut couper. Un récit long est");
+  out.push("souvent le seul endroit où vit la raison d'une décision (Article 27) — la perdre coûte");
+  out.push("plus cher que les caractères qu'elle occupe. L'arbitrage reste humain.");
+  return out;
+}
 
 // Les signaux qui font le POIDS d'une tâche. Chacun est un fait lisible dans le texte, et chacun
 // porte ce qu'il coûte : le poids ne sert pas à classer, il sert à décider s'il faut DÉCOUPER.

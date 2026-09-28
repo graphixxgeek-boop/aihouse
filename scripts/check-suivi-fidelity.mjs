@@ -23,6 +23,72 @@ import { recordCliUsage } from "./tool-usage.mjs";
 const ROOT = new URL("..", import.meta.url).pathname;
 const SESSIONS_DIR = join(ROOT, "docs/suivi/sessions");
 
+// LE DOSSIER D'ARCHIVE DU SUIVI (2026-09-28, tâche #1024) — et pourquoi il vit À CÔTÉ de
+// `sessions/` plutôt que dedans.
+//
+// LE FAIT QUI L'A RENDU NÉCESSAIRE, mesuré le jour même : le fichier de session en cours pesait
+// 1,38 million de caractères, dont **94 % en tâches déjà fermées**. Le suivi était devenu le
+// premier poste de coût du projet (47 % d'une session, devant la charte à 45 %) — non parce qu'il
+// était mal tenu, mais parce qu'il gardait tout sous les yeux pour toujours.
+//
+// SA DÉCISION, prise en fenêtre dédiée : les tâches fermées DEPUIS LONGTEMPS rejoignent un dossier
+// d'archive, celles fermées récemment restent immédiatement visibles. Le texte intégral n'est
+// jamais touché — il est DÉPLACÉ. Compacter n'est pas supprimer, et archiver encore moins.
+//
+// POURQUOI UN DOSSIER SÉPARÉ ET PAS UN FICHIER DE PLUS DANS `sessions/` : `realSessionCost()`
+// (ecotoken) mesure le coût du suivi sur le fichier le PLUS RÉCEMMENT MODIFIÉ de `sessions/`. Une
+// archive posée là serait, le jour où on l'écrit, le fichier le plus récent — et la mesure de coût
+// se braquerait sur elle au lieu du fichier de travail. Le chiffre resterait juste et désignerait
+// la mauvaise cible, exactement le défaut que cette même fonction porte déjà écrit en commentaire.
+//
+// CE QUE ÇA OBLIGE, ET C'EST LE VRAI DANGER DE CE CHANTIER : les fonctions qui NUMÉROTENT ou
+// COMPTENT les tâches doivent voir l'archive, sans quoi `nextTaskNumber()` réattribuerait un
+// numéro déjà pris dès que les plus hauts numéros seraient archivés, et `categorizeAllSessions()`
+// perdrait 655 tâches d'un coup — donc tous les KPI, toutes les confrontations avant/après, et la
+// taille même de la file. Elles lisent donc DOSSIERS_DE_TACHES, jamais `sessions/` seul.
+//
+// CE QUE ÇA N'OBLIGE PAS, et la distinction est délibérée : les garde-fous de QUALITÉ (fraîcheur,
+// cases de rituel, lignes mal formées, horodatages futurs) restent sur `sessions/`. Une tâche
+// fermée il y a une semaine et archivée n'a pas à repasser un contrôle de fraîcheur à chaque
+// commit — les accuser serait le garde-fou qui crie toujours, donc celui qu'on cesse de lire (L4).
+export const ARCHIVES_DIR = join(ROOT, "docs/suivi/archives");
+
+// Les dossiers qui portent des lignes de tâche. Une LISTE, parce qu'un troisième dossier demain
+// (une seconde archive, un dossier par année) doit être vu par tout le monde sans qu'on retouche
+// une seule fonction — Article 24 : un registre se LIT, il ne s'énumère pas à chaque appel.
+export const DOSSIERS_DE_TACHES = [SESSIONS_DIR, ARCHIVES_DIR];
+
+// RÈGLE D'APPEL, écrite ici parce qu'elle n'est pas devinable : un appelant qui NOMME un dossier
+// veut CE dossier-là et rien d'autre (c'est ce que font tous les tests, avec un faux chemin). Seul
+// l'appel par défaut — celui du vrai dépôt — balaie sessions/ ET archives/. Sans cette règle, tout
+// test passant '/fake' se verrait servir en plus les vraies archives du dépôt, et ne testerait
+// plus ce qu'il croit tester.
+export function dossiersDeTaches(sessionsDir = SESSIONS_DIR) {
+  return sessionsDir === SESSIONS_DIR ? DOSSIERS_DE_TACHES : [sessionsDir];
+}
+
+// Le balayage partagé : rend un couple { dossier, fichier } par fichier de tâches réellement
+// présent. Un dossier absent est SAUTÉ, jamais une erreur — le dossier d'archive n'existe pas
+// tant que rien n'a été archivé, et exiger sa présence ferait échouer un dépôt tout neuf.
+export function listerLesFichiersDeTaches(sessionsDir = SESSIONS_DIR, readDir = readdirSync, exists = existsSync) {
+  const out = [];
+  for (const dossier of dossiersDeTaches(sessionsDir)) {
+    if (!exists(dossier)) continue;
+    // `index.md` EST EXCLU, ET CE N'EST PAS UN DÉTAIL DE RANGEMENT. Un index DÉCRIT un dossier ; il
+    // n'en fait jamais partie. Le dépôt exige un index par dossier de registre, et celui du dossier
+    // d'archive porte un tableau de sommaire (« | Fichier | Source | Lignes | … »). Ses lignes
+    // commencent par `|` et ne portent aucun des intitulés que `estUneLigneDeTache()` sait écarter :
+    // elles ont donc été comptées comme QUATRE TÂCHES dès son écriture — la file est passée de 985 à
+    // 992 et les ouvertes de 76 à 81, sans qu'une seule tâche soit née. Vu au contrôle qui suit
+    // chaque écriture, jamais à la relecture.
+    //
+    // La règle est générale plutôt que taillée sur ce cas (Article 24) : tout index de tout dossier
+    // de tâches est écarté, y compris celui que `sessions/` pourrait recevoir demain.
+    for (const fichier of readDir(dossier).filter((f) => f.endsWith(".md") && f !== "index.md")) out.push({ dossier, fichier });
+  }
+  return out;
+}
+
 // Découpe une ligne de tableau markdown sur "|", en respectant un "\|" échappé comme un caractère
 // littéral plutôt qu'un séparateur de colonne (2026-09-19, même relecture de fiabilité — aucune
 // ligne réelle n'a encore ce cas, mais une description citant une commande shell avec un tube, ou
@@ -280,11 +346,13 @@ export function normaliserStatut(statut = "") {
 
 export function categorizeAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
-  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
   const total = { terminee: [], enCours: [], ouverte: [], ecartee: [], autre: [] };
-  for (const file of files) {
-    const cats = categorizeTasks(readFile(join(sessionsDir, file)));
-    for (const key of Object.keys(total)) for (const entry of cats[key]) total[key].push({ ...entry, file });
+  // ARCHIVE COMPRISE : une tâche archivée reste une tâche du projet. L'oublier ici ferait fondre la
+  // file de 655 lignes sans qu'aucune ne soit close — un progrès qui n'a pas eu lieu (tâche #1024).
+  for (const { dossier, fichier } of listerLesFichiersDeTaches(sessionsDir, readDir, exists)) {
+    const cats = categorizeTasks(readFile(join(dossier, fichier)));
+    const archivee = dossier === ARCHIVES_DIR;
+    for (const key of Object.keys(total)) for (const entry of cats[key]) total[key].push({ ...entry, file: fichier, archivee });
   }
   return total;
 }
@@ -410,9 +478,14 @@ export function extractTaskNumbers(sessionText) {
 
 export function nextTaskNumber(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return TASK_NUMBER_SEED;
-  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
   let max = 0;
-  for (const file of files) for (const n of extractTaskNumbers(readFile(join(sessionsDir, file)))) if (n > max) max = n;
+  // ARCHIVE COMPRISE, ET C'EST LE POINT LE PLUS DANGEREUX DE L'ARCHIVAGE (tâche #1024) : le jour où
+  // les plus hauts numéros partiraient en archive, un balayage limité à sessions/ rendrait un
+  // maximum trop bas et RÉATTRIBUERAIT un numéro déjà pris. Deux tâches différentes porteraient le
+  // même numéro, et tous les renvois du dépôt pointeraient vers l'une ou l'autre au hasard.
+  for (const { dossier, fichier } of listerLesFichiersDeTaches(sessionsDir, readDir, exists)) {
+    for (const n of extractTaskNumbers(readFile(join(dossier, fichier)))) if (n > max) max = n;
+  }
   return max > 0 ? max + 1 : TASK_NUMBER_SEED;
 }
 
@@ -574,12 +647,13 @@ export function findLignesMalFormees(sessionsDir = SESSIONS_DIR, readDir = readd
 
 export function findTaskNumberIssues(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return [];
-  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
   const issues = [];
   const seenIn = new Map();
-  for (const file of files) {
+  // ARCHIVE COMPRISE : sans elle, un numéro réutilisé par erreur ne serait plus détecté dès que son
+  // premier porteur aurait été archivé — le doublon deviendrait invisible en vieillissant.
+  for (const { dossier, fichier: file } of listerLesFichiersDeTaches(sessionsDir, readDir, exists)) {
     let previous = -Infinity;
-    for (const n of extractTaskNumbers(readFile(join(sessionsDir, file)))) {
+    for (const n of extractTaskNumbers(readFile(join(dossier, file)))) {
       if (seenIn.has(n)) issues.push({ type: "duplicate", number: n, file, firstSeenIn: seenIn.get(n) });
       else seenIn.set(n, file);
       if (n <= previous) issues.push({ type: "not-increasing", number: n, file, previous });
@@ -598,9 +672,12 @@ export function findTaskNumberIssues(sessionsDir = SESSIONS_DIR, readDir = readd
 // volume de conversation à relire depuis cette borne, jamais un vrai compte de tokens.
 export function countTasksSince(sinceTaskNumber, sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
   if (!exists(sessionsDir)) return 0;
-  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
   let count = 0;
-  for (const file of files) for (const n of extractTaskNumbers(readFile(join(sessionsDir, file)))) if (n > sinceTaskNumber) count++;
+  // ARCHIVE COMPRISE : ce compte sert de borne de reprise à THE-DEEP-READER. L'amputer des tâches
+  // archivées lui ferait croire qu'il a moins à relire qu'en réalité.
+  for (const { dossier, fichier } of listerLesFichiersDeTaches(sessionsDir, readDir, exists)) {
+    for (const n of extractTaskNumbers(readFile(join(dossier, fichier)))) if (n > sinceTaskNumber) count++;
+  }
   return count;
 }
 
