@@ -1711,12 +1711,36 @@ function main() {
       console.log(`\n  ${rep.horsPortee}`);
       return;
     }
-    if (process.argv[3] === "--generer") {
+    // « --ranger » FAIT LES DEUX D'AFFILÉE, et c'est une friction MESURÉE qui l'a fait naître
+    // (2026-09-28, JESUS #1107). Avant chaque commit je lançais `--generer` PUIS `--completer` :
+    // deux commandes, systématiquement, dans cet ordre. Le compteur d'usage en garde la trace —
+    // **259 relances rapprochées de data-archangel**, le premier poste de mes propres
+    // allers-retours, loin devant tous les autres.
+    //
+    // POURQUOI DEUX COMMANDES ET PAS UNE, AU DÉPART : les gestes sont distincts — générer un index
+    // là où il n'y en a AUCUN, compléter celui qui existe et ment. La séparation est juste, et elle
+    // reste : `--generer` et `--completer` continuent d'exister seuls pour qui ne veut que l'un.
+    // Ce qui manquait n'était pas une fusion, c'est le RACCOURCI du cas courant — celui qu'on fait
+    // toujours dans le même ordre, avant chaque commit.
+    //
+    // L'ORDRE N'EST PAS LIBRE : générer d'abord, compléter ensuite. Un index qui vient de naître
+    // est complet par construction ; l'inverse repasserait sur des fichiers déjà traités pour rien.
+    if (process.argv[3] === "--generer" || process.argv[3] === "--ranger") {
       const g = genererLesIndexManquants(r, { horodatage: new Date().toISOString().slice(0, 10) });
       if (!g.mesurable) { console.log(`\nPAS MESURÉ — ${g.pourquoi}`); return; }
       console.log(`\n=== ${g.ecrits.length} index GÉNÉRÉ(S) — uniquement là où il n'en existait aucun ===\n`);
       for (const e of g.ecrits) console.log(`  ✅ ${e.chemin} — ${e.fichiers} fichier(s) listés${e.regeneration ? " (catalogue généré remis à jour)" : ""}`);
       console.log(`\n  ${g.horsPortee}`);
+      if (process.argv[3] !== "--ranger") return;
+      // LA SECONDE MOITIÉ SE MESURE À NOUVEAU, jamais sur l'état d'AVANT la génération : les index
+      // qui viennent d'être écrits ne doivent plus figurer parmi ceux « sans contrat », sinon on les
+      // compléterait juste après les avoir créés complets.
+      const r2 = mesurerLesIndex();
+      const rep = reparerLesIndex(r2, { etats: ["sans contrat", "incomplet"] });
+      if (!rep.mesurable) { console.log(`\nPAS MESURÉ — ${rep.pourquoi}`); return; }
+      console.log(`\n=== ${rep.repares.length} index COMPLÉTÉ(S) — sommaire ajouté SOUS la prose existante ===\n`);
+      for (const x of rep.repares) console.log(`  ✅ ${x.chemin} — ${x.fichiers} fichier(s)`);
+      console.log(`\n  ${rep.horsPortee}`);
       return;
     }
     const lignes = formatIndexLines(r);
