@@ -2006,6 +2006,12 @@ export const ETATS_D_EXPORT = [
 // en acceptant une commande de lancement trouvée dans un suivi.
 export const MOTIFS_MEMOIRE = [
   { motif: /^docs\/suivi\//, pourquoi: "le journal des tâches : l'histoire de ce projet-ci, jamais une règle" },
+  // CE QU'IL DÉPOSE EST DE LA MÉMOIRE, ET C'EST UNE RÈGLE PLUTÔT QUE DIX EXCEPTIONS (2026-09-28,
+  // tâche #725). Les copies lisibles de ses dix `.docx` sont arrivées d'un coup ; les lister une par
+  // une aurait été une liste tenue à la main, périmée au prochain dépôt (Article 24). Un document de
+  // `00-sources/` est une ENTRÉE figée, propre à ce chantier : le projet ne l'entretient pas et ne
+  // l'emporte pas.
+  { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "une source qu'il a déposée : une entrée figée, propre à ce chantier, que le projet n'entretient pas et n'emporte pas" },
   { motif: /^docs\/simulations\//, pourquoi: "les conversations archivées de Lia et Noé" },
   { motif: /^docs\/plans\//, pourquoi: "un plan de chantier est la photographie d'un moment" },
   { motif: /^docs\/rapports-de-nuit\//, pourquoi: "le compte rendu d'une nuit précise" },

@@ -8733,6 +8733,42 @@ async function testSystemeDesIndex() {
   // de mordre se garde sur une fixture, jamais sur l'état du dépôt du jour (même correction que
   // pour le détecteur de rapports jumeaux, quelques heures plus tôt).
   assert.equal(reel.aTraiter.length, 0, `no folder is left to treat: 51 on the first pass, 0 once the missing indexes were generated, the mute ones completed under their prose and the journals caught up (currently ${reel.aTraiter.map((x) => x.dossier).join(', ')})`);
+  // LES ANCRES — rejoindre un détail précis dans un corpus de dizaines de milliers de mots
+  // (2026-09-28, tâche #725, rouverte par lui le soir même après avoir été dépriorisée le matin).
+  {
+    const texte = [
+      '# Un vrai titre',
+      'du corps',
+      'FRAGMENT DE SCHEMA',
+      '     ↓',
+      'AUTRE FRAGMENT',
+      '7. Regles de gouvernance',
+      'REMARQUE : ceci est une etiquette',
+      'UN VRAI TITRE EN CAPITALES',
+      'suivi de prose bien assez longue pour compter comme une vraie phrase de douze mots au moins',
+    ].join('\n');
+    const a = da.ancresDuTexte(texte, 'x.md');
+    const parSignal = a.reduce((acc, x) => ({ ...acc, [x.signal]: (acc[x.signal] ?? 0) + 1 }), {});
+    assert.equal(parSignal.titre, 1, 'MUST CATCH a Markdown heading — the signal its author placed on purpose');
+    assert.equal(parSignal.numerote, 1, "MUST CATCH « 7. Regles de gouvernance » : 274 lines of the real corpus take this shape, and without it a search for « séparation des fonctions » returned the heading of a NEIGHBOURING table — an index that points one section off is worse than no index, because it makes you open the wrong passage with confidence");
+    assert.equal(parSignal.etiquette, 1, 'MUST CATCH his own label word: his two documents carry 12 358 words and ONE heading, so REMARQUE/OBJECTIF/ATTENDU is the only structure they have — and it is HIS, not one imposed on him');
+    assert.equal(parSignal.capitales, 1, 'MUST CATCH an all-caps line that IS followed by prose');
+    assert.ok(!a.some((x) => x.titre.includes('FRAGMENT')), "MUST NOT CATCH an ASCII-diagram fragment. Measured on the real corpus: 308 all-caps anchors, of which 286 — 93 % — were diagram fragments. Same class of error this repository pays over and over: an ADJACENT signal (the line is in capitals) read as the intended one (the line opens a section). An index that is 93 % noise is not read, and an index nobody reads does not exist (lesson L6)");
+    assert.ok(a.every((x) => x.mots !== undefined), 'every anchor carries the weight of its section: without it you cannot know whether it opens three lines or three pages, which is exactly what you want to know BEFORE going to read');
+
+    const vide = da.ancresDuCorpus({ listDirImpl: () => [] });
+    assert.equal(vide.mesurable, false, 'an unreadable corpus declares PAS MESURÉ rather than « zero anchors », which would read as « nothing to index » (lesson L13)');
+
+    const corpus = da.ancresDuCorpus();
+    assert.equal(corpus.mesurable, true, 'checked live against the real deposited corpus (Article 25)');
+    assert.ok(corpus.ancres.length > 500, `and it finds a usable number of sections (currently ${corpus.ancres.length})`);
+    assert.ok(Object.keys(corpus.parSignal).length >= 3, 'with at least three of the four signals actually firing on the real corpus — a single-signal map would mean three of them are decoration');
+    const trouve = da.chercherDansLesAncres(corpus, 'separation des fonctions');
+    assert.ok(trouve.trouves.some((t) => /Regles de gouvernance/.test(t.titre)), `checked live: searching « séparation des fonctions » must land on « 7. Regles de gouvernance » in his own COMMANDE — the exact case that proved the numbered signal was missing (currently ${trouve.trouves.map((t) => t.titre).join(' | ')})`);
+    const rien = da.chercherDansLesAncres(corpus, 'zzzmotquinexistepaszzz');
+    assert.deepEqual(rien.trouves, [], 'and a word that is genuinely absent returns nothing rather than a best guess');
+  }
+
   // LA DÉLÉGATION DÉCLARÉE (2026-09-28, tâche #1111). `docs/grand-projet/` est un ESPACE DE
   // TRAVAIL : ses sources arrivent par dizaines et leur catalogue existe déjà — l'inventaire
   // d'absorption, qui porte pour chacune son poids, son traitement et sa date. Recopier ces noms

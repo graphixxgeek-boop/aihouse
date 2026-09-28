@@ -28,7 +28,7 @@ import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSy
 import { listerLesFichiers, DEBUT_BLOC_GENERE, FIN_BLOC_GENERE, sansLeBlocGenere, lireFichierPartage } from "./lib-shell.mjs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { printReportHeader, buildPlanDaction, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -1351,7 +1351,8 @@ export function mesurerLesIndex({ root = ROOT, racine = "docs", listDirImpl = re
   }
   const lignes = [];
   for (const dir of dossiers) {
-    const fichiers = listerLesFichiers(dir, { root, listDirImpl, garder: estUnDepot });
+    const tous = listerLesFichiers(dir, { root, listDirImpl, garder: () => true });
+    const fichiers = tous.filter((f) => estUnDepot(f, tous));
     let texte = null;
     try { texte = readFileImpl(join(root, dir, "index.md"), "utf8"); } catch { /* pas d'index : c'est un état, pas une erreur */ }
     const { texte: annonce, delegues } = texteAvecDelegations(texte, dir, { root, readFileImpl });
@@ -1434,12 +1435,238 @@ export function genererLesIndexManquants(mesure, { root = ROOT, listDirImpl = re
       if (!estUnCatalogueGenere(texte)) continue;
       regeneration = true;
     }
-    const fichiers = listerLesFichiers(ligne.dossier, { root, listDirImpl, garder: estUnDepot });
+    const tousDuDossier = listerLesFichiers(ligne.dossier, { root, listDirImpl, garder: () => true });
+    const fichiers = tousDuDossier.filter((f) => estUnDepot(f, tousDuDossier));
     const chemin = `${ligne.dossier}/index.md`;
     writeImpl(join(root, chemin), contenuDIndexGenere(ligne.dossier, fichiers, { horodatage }), "utf8");
     ecrits.push({ chemin, fichiers: fichiers.length, regeneration });
   }
   return { mesurable: true, ecrits, horsPortee: "elle écrit là où aucun index n'existe, et RÉÉCRIT un catalogue qu'elle a elle-même signé et qui a pris du retard (sa promesse est la liste complète : en retard, il ment). Un index écrit à la main n'est jamais remplacé par une liste — la prose qui explique un dossier vaut mieux qu'un catalogue, et l'écraser la ferait disparaître." };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// LES ANCRES — rejoindre un détail précis dans un corpus de dizaines de milliers de mots
+// (2026-09-28, tâche #725, rouverte par lui après avoir été dépriorisée le matin même)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA DEMANDE D'ORIGINE, telle qu'elle est écrite dans #725 : « un outil ou extension qui gère les
+// fichiers de sauvegarde locale : comment la mémoire du projet est gérée, l'agencement et les liens
+// entre les différents dossiers ». Et sa relance du soir, qui en est le second étage : « tu vas
+// faire comment pour te référer rapidement aux documents ? tu vas étiqueter les paragraphes ? les
+// pages ? [...] un détail dans 60 000 lignes, qui va le lire ? »
+//
+// POURQUOI UNE EXTENSION ET PAS UN 88e SCRIPT (Article 31) : data-archangel porte déjà « l'accès de
+// l'agent lui-même à tout ce que l'équipe sait », et sa commande `notes` répond à « où ce sujet
+// a-t-il été traité ? » — **au niveau du fichier**. Ce qui manquait est l'étage en dessous :
+// l'INTÉRIEUR des documents. Sa tâche dit elle-même « un outil OU EXTENSION ».
+//
+// LE BON GRAIN EST LA SECTION, et les deux autres échouent pour des raisons opposées. Le DOCUMENT
+// est trop gros : « c'est dans l'audit d'architecture » veut dire 887 lignes à relire. Le
+// PARAGRAPHE est trop fin : des milliers d'adresses dont aucune ne dit de quoi elle parle. Une
+// section porte un titre, donc un sens, et tient en une lecture.
+//
+// ON NE RENUMÉROTE RIEN À LA MAIN, et c'est ce qui décide de tout : les documents d'un corpus
+// déposé sont des ENTRÉES FIGÉES — personne ne les réécrira. **Le numéro de ligne est donc déjà un
+// identifiant permanent et exact.** Poser une seconde numérotation reviendrait à tenir deux adresses
+// pour le même passage, et l'Article 24 dit ce qui leur arrive : elles divergent, et celle qui ment
+// a l'air juste.
+//
+// TROIS SIGNAUX, PARCE QUE LA MESURE EN A TROUVÉ TROIS — jamais un choix de confort. Sur le corpus
+// réel du grand chantier : 7 documents portent des titres Markdown, 10 n'en portent aucun (ils
+// viennent de Word, où tout est du style « Normal »), et les DEUX documents de l'utilisateur —
+// 12 358 mots à eux deux — portent **un seul titre**. Ce sont les moins structurés du corpus, et ce
+// sont les plus importants. Sans le troisième signal, l'outil serait resté aveugle là où il sert le
+// plus.
+//
+// LE TROISIÈME SIGNAL EST SA PROPRE STRUCTURE, PAS UNE QU'ON LUI IMPOSE : il écrit en posant des
+// mots-étiquettes en tête de ligne — REMARQUE, OBJECTIF, ATTENDU, QUESTION, CONSIGNE. Mesuré sur sa
+// commande : 19 REMARQUE, 7 ATTENDU. Les lire, c'est lire son plan à lui.
+//
+// AUCUNE CLASSIFICATION PAR THÈMES TENUE À LA MAIN : une liste de thèmes se périme au premier sujet
+// imprévu. `--cherche` interroge le corpus réel et ne se périme jamais (Article 24).
+export const ANCRES_RACINES = ["docs/grand-projet"];
+export const ANCRES_DEPOT = "docs/data-archangel/ancres";
+// Les trois signaux sont DÉCLARÉS, chacun avec son nom, pour que le rapport puisse dire lequel a
+// trouvé quoi — un lecteur qui voit « 12 sections » sans savoir d'où elles sortent ne peut pas juger
+// si la découpe est fidèle au document.
+export const MOTIFS_D_ANCRE = [
+  { cle: "titre", motif: /^(#{1,6})\s+(.+?)\s*$/, niveau: (m) => m[1].length, titre: (m) => m[2] },
+  // Une ligne courte, tout en capitales : c'est ainsi qu'un document venu de Word marque ses parties
+  // quand son auteur n'a pas employé les styles de titre. La borne haute de 90 caractères évite
+  // d'avaler une phrase entière écrite en capitales pour insister.
+  { cle: "capitales", motif: /^-?\s*([A-ZÉÈÀÙÇŒÆ0-9][A-ZÉÈÀÙÇŒÆ0-9 ,'’«»:()/«»._-]{6,90})\s*$/, niveau: () => 2, titre: (m) => m[1].trim(), exigeProse: true },
+  // Son mot-étiquette à lui. Il est cherché en TÊTE de ligne seulement : le même mot au milieu d'une
+  // phrase est une mention, jamais une ouverture de section — et les confondre remplirait la carte
+  // de fausses ancres, ce qui la rendrait illisible exactement là où elle doit servir.
+  // LE QUATRIÈME SIGNAL EST LE PLUS RÉPANDU DU CORPUS, et il manquait : 274 lignes de la forme
+  // « 7. Regles de gouvernance » ou « 12 PLAN D'ACTIONS ». C'est la façon dont un document venu de
+  // Word garde son plan quand ses styles de titre ont été perdus à la conversion — et sans lui, la
+  // carte pointait le mauvais endroit : une recherche sur « séparation des fonctions » rendait le
+  // titre d'un tableau voisin au lieu de « 7. Regles de gouvernance ». Un index qui désigne la
+  // section d'à côté est pire qu'un index absent : il fait ouvrir le mauvais passage avec confiance.
+  { cle: "numerote", motif: /^-?\s*(\d{1,2}(?:\.\d{1,2})*\.?\s+[A-ZÉÈÀÙÇ][^\n]{3,90})$/, niveau: (m) => 1 + (m[1].match(/\./g) ?? []).length, titre: (m) => m[1].trim(), exigeProse: false },
+  { cle: "etiquette", motif: /^-?\s*((?:REMARQUE|OBJECTIF|ATTENDU|QUESTION|CONSIGNE|IMPORTANT|NOTE|PARENTHESE|PARENTHÈSE|CONCLUSION|ANNEXE|PRECISION|PRÉCISION|RAPPEL|EXEMPLE|COMMANDE|INTRO)\b[^.\n]{0,80})/, niveau: () => 3, titre: (m) => m[1].trim() },
+];
+
+// UNE LIGNE EN CAPITALES N'EST PAS FORCÉMENT UN TITRE, ET LA MESURE EST SANS APPEL (2026-09-28).
+// Premier passage sur le corpus réel : 308 ancres « capitales », dont **286 — soit 93 % — étaient
+// des fragments de SCHÉMAS ASCII** (« PROGRES », « COMMIT ROLLBACK », « SHARED CORE »). Les audits
+// dessinent beaucoup, et un dessin s'écrit en capitales comme un titre.
+//
+// C'EST ENCORE LA MÊME CLASSE D'ERREUR que ce dépôt paie en boucle : un signal ADJACENT (la ligne
+// est en capitales) lu comme le signal VISÉ (la ligne ouvre une section). Un index à 93 % de bruit
+// ne se lit pas, et un index qu'on ne lit pas est un index qui n'existe pas (leçon L6).
+//
+// CE QUI SÉPARE LES DEUX, ET C'EST UN FAIT, PAS UN SEUIL DÉCRÉTÉ : un vrai titre est suivi de
+// PROSE ; un fragment de schéma est suivi d'autres fragments. La garde ne s'applique qu'au signal
+// des capitales — un titre Markdown et un mot-étiquette n'ont rien à prouver, leur auteur les a
+// posés exprès.
+export const MOTS_POUR_ETRE_DE_LA_PROSE = 12;
+export const LIGNES_REGARDEES_APRES = 3;
+
+export function ancresDuTexte(texte, document, { motifs = MOTIFS_D_ANCRE, motsProse = MOTS_POUR_ETRE_DE_LA_PROSE, apres = LIGNES_REGARDEES_APRES } = {}) {
+  const lignes = String(texte ?? "").split("\n");
+  const ancres = [];
+  for (let i = 0; i < lignes.length; i += 1) {
+    for (const s of motifs) {
+      const m = lignes[i].match(s.motif);
+      if (!m) continue;
+      if (s.exigeProse && !lignes.slice(i + 1, i + 1 + apres).some((l) => l.trim().split(/\s+/).filter(Boolean).length >= motsProse)) break;
+      ancres.push({ document, ligne: i + 1, signal: s.cle, niveau: s.niveau(m), titre: s.titre(m).trim() });
+      break; // Le premier signal qui reconnaît la ligne gagne : une même ligne n'ouvre qu'une section.
+    }
+  }
+  // LE POIDS SE CALCULE À LA FIN, quand la borne suivante est connue. Sans lui, une ancre ne dit pas
+  // si elle ouvre trois lignes ou trois pages — or c'est exactement ce qu'on veut savoir avant d'y
+  // aller.
+  for (let k = 0; k < ancres.length; k += 1) {
+    const fin = k + 1 < ancres.length ? ancres[k + 1].ligne - 1 : lignes.length;
+    ancres[k].mots = lignes.slice(ancres[k].ligne, fin).join(" ").split(/\s+/).filter(Boolean).length;
+  }
+  return ancres;
+}
+
+export function ancresDuCorpus({ root = ROOT, racines = ANCRES_RACINES, readFileImpl = lireFichierPartage, listDirImpl = readdirSync } = {}) {
+  const fichiers = [];
+  for (const racine of racines) {
+    const pile = [racine];
+    while (pile.length) {
+      const d = pile.pop();
+      let entrees = [];
+      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
+      for (const e of entrees) {
+        const chemin = `${d}/${e.name}`;
+        if (e.isDirectory()) { pile.push(chemin); continue; }
+        if (/\.(md|txt)$/i.test(e.name) && e.name !== "index.md") fichiers.push(chemin);
+      }
+    }
+  }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: `aucun document lisible sous ${racines.join(", ")} : rendre « zéro ancre » sur du vide serait un satisfecit (leçon L13)` };
+  }
+  const ancres = [];
+  const muets = [];
+  for (const f of fichiers.sort()) {
+    let texte = "";
+    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    const a = ancresDuTexte(texte, f);
+    // UN DOCUMENT SANS AUCUNE ANCRE SE DIT, il ne se tait pas (L5/L11) : c'est un bloc qu'on ne peut
+    // pas traverser, et c'est précisément l'information qu'il faut pour décider d'y remédier.
+    if (!a.length) muets.push({ document: f, mots: texte.split(/\s+/).filter(Boolean).length });
+    ancres.push(...a);
+  }
+  const parSignal = {};
+  for (const a of ancres) parSignal[a.signal] = (parSignal[a.signal] ?? 0) + 1;
+  return { mesurable: true, ancres, documents: fichiers.length, muets, parSignal };
+}
+
+export function chercherDansLesAncres(corpus, motif, { root = ROOT, readFileImpl = lireFichierPartage } = {}) {
+  if (!corpus?.mesurable) return corpus;
+  const re = new RegExp(String(motif).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+  const parDocument = new Map();
+  for (const a of corpus.ancres) {
+    if (!parDocument.has(a.document)) parDocument.set(a.document, []);
+    parDocument.get(a.document).push(a);
+  }
+  const trouves = [];
+  for (const [document, liste] of parDocument) {
+    let lignes = [];
+    try { lignes = readFileImpl(join(root, document), "utf8").split("\n"); } catch { continue; }
+    for (let k = 0; k < liste.length; k += 1) {
+      const fin = k + 1 < liste.length ? liste[k + 1].ligne - 1 : lignes.length;
+      const corps = lignes.slice(liste[k].ligne - 1, fin).join("\n");
+      if (!re.test(corps)) continue;
+      // LE TITRE COMPTE PLUS QUE LE CORPS : une section dont le TITRE porte le mot est presque
+      // toujours celle qu'on cherche, alors qu'une mention perdue dans un corps peut n'être qu'un
+      // passage. Sans ce tri, la bonne réponse se noie au milieu des mentions.
+      trouves.push({
+        ...liste[k],
+        occurrences: (corps.match(new RegExp(re.source, "gi")) ?? []).length,
+        dansLeTitre: re.test(liste[k].titre),
+      });
+    }
+  }
+  trouves.sort((a, b) => (Number(b.dansLeTitre) - Number(a.dansLeTitre)) || (b.occurrences - a.occurrences));
+  return { mesurable: true, motif: String(motif), trouves, fouilles: corpus.ancres.length };
+}
+
+// LE DÉPÔT EST LE LIVRABLE (Article 31, faille 3) : une carte qui ne vit que dans un terminal ne
+// peut être ni relue, ni comparée au passage précédent, ni citée par quiconque — ce qui est
+// exactement le reproche que cet outillage adresse aux autres.
+export function deposerLesAncres(corpus, { root = ROOT, dossier = ANCRES_DEPOT, now = new Date(), writeImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  mkdirImpl(join(root, dossier), { recursive: true });
+  const chemin = join(root, dossier, `ancres-${now.toISOString().slice(0, 10)}.md`);
+  const l = [
+    "<!-- RÉGIME AUTO — ce fichier est régénéré EN ENTIER par `node scripts/data-archangel.mjs ancres` :",
+    "     toute note écrite à la main y sera perdue au passage suivant. -->",
+    "",
+    `# La carte des ancres — ${corpus.ancres.length} sections dans ${corpus.documents} documents`,
+    "",
+    "**À quoi elle sert** : rejoindre un passage précis sans rouvrir un document entier. Chaque ligne",
+    "donne le fichier, le numéro de ligne — qui est une adresse **permanente**, puisque ces documents",
+    "sont figés — et le poids de la section, pour savoir ce qu'on va lire avant d'y aller.",
+    "",
+    "**Pour chercher plutôt que parcourir** : `node scripts/data-archangel.mjs ancres --cherche \"<le mot>\"`",
+    "",
+    ...formatAncresLines(corpus, { limite: 1000 }).map((x) => (x.startsWith("===") ? `## ${x.replace(/=/g, "").trim()}` : x)),
+  ];
+  writeImpl(chemin, l.join("\n") + "\n", "utf8");
+  return relative(root, chemin);
+}
+
+export function formatAncresLines(r, { limite = 12 } = {}) {
+  if (!r?.mesurable) return [`=== ANCRES : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « aucune ancre »."];
+  if (r.trouves) {
+    const l = [`=== OÙ EN PARLE-T-ON ? — « ${r.motif} » : ${r.trouves.length} section(s) sur ${r.fouilles} fouillée(s) ===`, ""];
+    if (!r.trouves.length) l.push("  Aucune section ne le mentionne. Ce n'est PAS la preuve que le corpus n'en parle pas : c'est la preuve que CE MOT-LÀ n'y figure pas. Réessayer avec le vocabulaire du sujet.");
+    for (const t of r.trouves.slice(0, 40)) {
+      l.push(`  ${t.dansLeTitre ? "★" : " "} ${t.document}:${t.ligne}  ${t.occurrences}×`);
+      l.push(`      ${t.titre.slice(0, 110)}`);
+    }
+    l.push("");
+    l.push("  ★ = le mot est dans le TITRE de la section, pas seulement dans son corps.");
+    return l;
+  }
+  const l = [`=== LES ANCRES DU CORPUS — ${r.ancres.length} section(s) dans ${r.documents} document(s) ===`, ""];
+  l.push(`  D'où viennent-elles : ${Object.entries(r.parSignal).map(([k, v]) => `${v} par ${k}`).join(" · ")}`);
+  if (r.muets.length) {
+    l.push("");
+    l.push(`  ${r.muets.length} document(s) SANS AUCUNE ANCRE — un bloc qu'on ne peut pas traverser, et c'est dit plutôt que tu :`);
+    for (const m of r.muets) l.push(`      · ${m.document} (${m.mots} mots)`);
+  }
+  l.push("");
+  let dernier = null;
+  let montre = 0;
+  for (const a of r.ancres) {
+    if (a.document !== dernier) { l.push(`  📄 ${a.document}`); dernier = a.document; montre = 0; }
+    if (montre >= limite) continue;
+    montre += 1;
+    if (montre === limite) { l.push(`      … (section suivante : \`--cherche\`)`); continue; }
+    l.push(`      ${String(a.ligne).padStart(5)} │ ${"  ".repeat(Math.max(0, a.niveau - 1))}${a.titre.slice(0, 96)}  (${a.mots} mots)`);
+  }
+  l.push("");
+  l.push("  HORS PORTÉE : elle découpe par SIGNAUX DE SURFACE — un titre, une ligne en capitales, un mot-étiquette. Une idée qui traverse plusieurs sections n'a pas d'ancre à elle ; pour ça, c'est `--cherche`.");
+  return l;
 }
 
 export function formatIndexLines(r) {
@@ -1535,14 +1762,26 @@ export function sommaireDesFichiers(dossier, fichiers = []) {
 // caché est un état local de l'outil (`.dernier-fichier-maitre.local.txt`), et un fichier dont le
 // nom finit par `index.md` est un index de sous-dossier — reprocher à un index de ne pas s'indexer
 // lui-même est exactement le faux rouge qui fait cesser de lire un garde-fou (leçon L4).
-export function estUnDepot(chemin = "") {
+// UNE COPIE LISIBLE N'EST PAS UN SECOND DÉPÔT (2026-09-28, tâche #725). Un `.docx` converti en
+// `.md` pour pouvoir être cherché est LE MÊME document sous une autre forme. Le compter deux fois
+// ferait promettre à l'index un catalogue de 39 entrées pour 29 documents réels, et obligerait à
+// tenir la conversion à la main dans l'inventaire — c'est-à-dire la seconde liste que l'Article 24
+// interdit. La règle est purement de CHEMIN : aucun fichier n'est lu pour en décider.
+export function estUneCopieLisible(chemin = "", fichiers = []) {
+  const m = String(chemin).match(/^(.*)\.(md|txt)$/i);
+  if (!m || !Array.isArray(fichiers)) return false;
+  return fichiers.some((f) => /\.docx$/i.test(f) && f.replace(/\.docx$/i, "") === m[1]);
+}
+
+export function estUnDepot(chemin = "", fichiers = []) {
   const base = String(chemin).split("/").pop() ?? "";
-  return !base.startsWith(".") && !base.endsWith("index.md");
+  if (base.startsWith(".") || base.endsWith("index.md")) return false;
+  return !estUneCopieLisible(chemin, fichiers);
 }
 
 export function depotsSansTrace(texte = "", fichiers = []) {
   const horsBloc = String(texte);
-  return fichiers.filter(estUnDepot).filter((f) => {
+  return fichiers.filter((f) => estUnDepot(f, fichiers)).filter((f) => {
     const base = String(f).split("/").pop();
     if (horsBloc.includes(base)) return false;
     const d = base.match(MOTIF_DATE_DE_FICHIER);
@@ -1588,7 +1827,8 @@ export function reparerLesIndex(mesure, { root = ROOT, listDirImpl = readdirSync
   const repares = [];
   for (const ligne of mesure.lignes) {
     if (!etats.includes(ligne.etat)) continue;
-    const fichiers = listerLesFichiers(ligne.dossier, { root, listDirImpl, garder: estUnDepot });
+    const tousDuDossier = listerLesFichiers(ligne.dossier, { root, listDirImpl, garder: () => true });
+    const fichiers = tousDuDossier.filter((f) => estUnDepot(f, tousDuDossier));
     if (!fichiers.length) continue;
     const chemin = `${ligne.dossier}/index.md`;
     let texte = "";
@@ -1745,6 +1985,23 @@ function main() {
   // « angel-of-index » — nom donné par l'utilisateur le 2026-09-26. « index » reste accepté et
   // c'est délibéré : le mot est celui qu'on tape spontanément, et refuser le mot naturel pour
   // imposer le nom propre ferait rater la commande à qui ne l'a pas mémorisée.
+  // `ancres` (2026-09-28, tâche #725) — la carte de l'INTÉRIEUR des documents. Chez data-archangel
+  // pour la même raison qu'`index` : un passage qu'aucune carte ne désigne est un passage qui ne
+  // circule pas, quelle que soit sa valeur. `index` dit quels FICHIERS existent ; `ancres` dit ce
+  // qu'il y a DEDANS et où exactement.
+  if (sub === "ancres") {
+    const cherche = process.argv.indexOf("--cherche");
+    const corpus = ancresDuCorpus();
+    const r = cherche > -1 && process.argv[cherche + 1] ? chercherDansLesAncres(corpus, process.argv[cherche + 1]) : corpus;
+    console.log("");
+    for (const l of formatAncresLines(r)) console.log(l);
+    if (cherche === -1 && corpus.mesurable) {
+      const chemin = deposerLesAncres(corpus);
+      console.log(`\nCarte déposée : ${chemin}`);
+    }
+    return;
+  }
+
   if (sub === "angel-of-index" || sub === "index") {
     const r = mesurerLesIndex();
     if (process.argv[3] === "--completer" || process.argv[3] === "--rattraper") {
