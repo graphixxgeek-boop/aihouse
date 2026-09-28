@@ -1,5 +1,7 @@
 # sauvegarde-projet — fiche d'instanciation
 
+*(Blueprint générique : `docs/sauvegarde-projet-blueprint.md` · script : `scripts/sauvegarde-projet.mjs` · registre : `docs/sauvegarde-projet/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/sauvegarde-projet.mjs` (2026-09-24, tâche #700) : produit le coffre (`.zip`) et la notice

@@ -1,3 +1,7 @@
+# doc-report — fiche d'instanciation
+
+*(Blueprint générique : `docs/doc-report-blueprint.md` · script : `scripts/doc-report.mjs` · registre : `docs/doc-report/index.md`.)*
+
 
 ## La décision HTML/texte se DÉRIVE, elle ne se recopie pas (2026-09-26, tâche #926)
 

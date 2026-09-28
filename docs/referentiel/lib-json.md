@@ -1,5 +1,7 @@
 # lib-json — fiche d'instanciation
 
+*(Blueprint générique : `docs/lib-json-blueprint.md` · script : `scripts/lib-json.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/lib-json.mjs` — le chargeur de JSON de l'Agence, **et le seul**. Accord explicite de

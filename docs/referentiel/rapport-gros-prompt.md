@@ -1,5 +1,7 @@
 # rapport-gros-prompt — fiche d'instanciation
 
+*(Blueprint générique : `docs/rapport-gros-prompt-blueprint.md` · script : `scripts/rapport-gros-prompt.mjs` · registre : `docs/rapport-gros-prompt/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/rapport-gros-prompt.mjs` (2026-09-24) : produit le rapport d'une saisine (un « gros

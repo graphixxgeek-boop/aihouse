@@ -1,5 +1,7 @@
 # tasks-process-guardian — fiche d'instanciation
 
+*(Blueprint générique : `docs/tasks-process-guardian-blueprint.md` · script : `scripts/tasks-process-guardian.mjs` · registre : `docs/tasks-process-guardian/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/tasks-process-guardian.mjs` (2026-09-22) : **contrôleur de process** (jamais un Gardien

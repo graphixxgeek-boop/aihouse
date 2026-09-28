@@ -1,5 +1,7 @@
 # LE-RÉGISSEUR — fiche d'instanciation
 
+*(Blueprint générique : `docs/le-regisseur-blueprint.md` · script : `scripts/le-regisseur.mjs` · registre : `docs/le-regisseur/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/le-regisseur.mjs` (2026-09-21) : orchestre les parties **mécaniques**, sans aucun jugement,

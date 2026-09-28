@@ -1,5 +1,7 @@
 # simulation-visiteur — fiche d'instanciation
 
+*(Blueprint générique : `docs/simulation-visiteur-blueprint.md` · script : `scripts/simulation-visiteur.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/simulation-visiteur.mjs` (2026-09-22) : le visiteur scripté qui dialogue avec Lia et Noé

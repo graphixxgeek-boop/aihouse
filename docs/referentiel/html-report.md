@@ -1,5 +1,7 @@
 # html-report — fiche d'instanciation
 
+*(Blueprint générique : `docs/html-report-blueprint.md` · script : `scripts/html-report.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/html-report.mjs` (2026-09-20), né après la « photo de la dream team », sur sa demande :

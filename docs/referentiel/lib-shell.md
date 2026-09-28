@@ -1,5 +1,7 @@
 # lib-shell — fiche d'instanciation
 
+*(Blueprint générique : `docs/lib-shell-blueprint.md` · script : `scripts/lib-shell.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/lib-shell.mjs`, extrait le 2026-09-19 après avoir trouvé la **même fonction réécrite à

@@ -1,5 +1,7 @@
 # gemini-key-health — fiche d'instanciation
 
+*(Blueprint générique : `docs/gemini-key-health-blueprint.md` · script : `scripts/gemini-key-health.mjs` · registre : `docs/gemini-key-health/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/gemini-key-health.mjs` (2026-09-18) : la mémoire fine, par clé et par modèle, du

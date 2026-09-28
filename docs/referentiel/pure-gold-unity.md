@@ -1,5 +1,7 @@
 # pure-gold-unity — fiche d'instanciation
 
+*(Blueprint générique : `docs/pure-gold-unity-blueprint.md` · script : `scripts/pure-gold-unity.mjs` · registre : `docs/pure-gold-unity/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/pure-gold-unity.mjs` (2026-09-22) : scanne les rapports du dépôt et signale ceux qui

@@ -1,5 +1,7 @@
 # sites-env — fiche d'instanciation
 
+*(Blueprint générique : `docs/sites-env-blueprint.md` · script : `scripts/sites-env.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/sites-env.mjs` : la résolution des valeurs d'environnement du projet — clés d'API, profil

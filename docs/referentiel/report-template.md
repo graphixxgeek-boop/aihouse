@@ -1,5 +1,7 @@
 # report-template — fiche d'instanciation
 
+*(Blueprint générique : `docs/report-template-blueprint.md` · script : `scripts/report-template.mjs` · registre : `docs/report-template/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/report-template.mjs` (2026-09-22, tâche #199), sur sa demande :

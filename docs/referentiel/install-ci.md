@@ -1,5 +1,7 @@
 # install-ci — fiche d'instanciation
 
+*(Blueprint générique : `docs/install-ci-blueprint.md` · script : `scripts/install-ci.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/install-ci.sh` et `scripts/install-ci.mjs` : l'installation des dépendances dans la chaîne

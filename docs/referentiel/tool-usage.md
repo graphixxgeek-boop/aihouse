@@ -1,5 +1,7 @@
 # tool-usage — fiche d'instanciation
 
+*(Blueprint générique : `docs/tool-usage-blueprint.md` · script : `scripts/tool-usage.mjs` · registre : `docs/tool-usage/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/tool-usage.mjs` (tâche #166, 2026-09-21) : le compteur d'usage réel des outils de l'Agence.

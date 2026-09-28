@@ -1,5 +1,7 @@
 # messages-courts — fiche d'instanciation
 
+*(Blueprint générique : `docs/messages-courts-blueprint.md` · script : `scripts/messages-courts.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/messages-courts.mjs` (2026-09-23, tâche #572) : empêche qu'un message court interrompe

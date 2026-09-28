@@ -1,5 +1,7 @@
 # priorites — fiche d'instanciation
 
+*(Blueprint générique : `docs/priorites-blueprint.md` · script : `scripts/priorites.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/priorites.mjs`, construit le 2026-09-23 après **32 calibrages** avec l'utilisateur.

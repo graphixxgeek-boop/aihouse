@@ -1,5 +1,7 @@
 # api-providers — fiche d'instanciation
 
+*(Blueprint générique : `docs/api-providers-blueprint.md` · script : `scripts/api-providers.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/api-providers.mjs` (2026-09-18) : le registre des fournisseurs d'API sondables par l'outil

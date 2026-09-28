@@ -1,5 +1,7 @@
 # criticite — fiche d'instanciation
 
+*(Blueprint générique : `docs/criticite-blueprint.md` · script : `scripts/criticite.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/criticite.mjs` (2026-09-23) : calcule la **criticité** d'une tâche du suivi, et l'**urgence**

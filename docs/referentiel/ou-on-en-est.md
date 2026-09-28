@@ -1,5 +1,7 @@
 # OÙ ON EN EST — fiche d'instanciation
 
+*(Blueprint générique : `docs/ou-on-en-est-blueprint.md` · script : `scripts/ou-on-en-est.mjs` · registre : `docs/ou-on-en-est/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/ou-on-en-est.mjs` (2026-09-23) : le récapitulatif de ce qui a été FAIT, et de ce que le

@@ -1,5 +1,7 @@
 # execution-profile — fiche d'instanciation
 
+*(Blueprint générique : `docs/execution-profile-blueprint.md` · script : `scripts/execution-profile.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/execution-profile.mjs` : lit `.sites-runtime/execution-profile.json` et rend le profil

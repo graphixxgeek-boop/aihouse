@@ -1,5 +1,7 @@
 # judge-persona-shared — fiche d'instanciation
 
+*(Blueprint générique : `docs/judge-persona-shared-blueprint.md` · script : `scripts/judge-persona-shared.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/judge-persona-shared.mjs` (2026-09-21, tâche #152) : le socle commun de THE-FINAL-JUDGE et

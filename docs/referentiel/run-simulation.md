@@ -1,5 +1,7 @@
 # run-simulation — fiche d'instanciation
 
+*(Blueprint générique : `docs/run-simulation-blueprint.md` · script : `scripts/run-simulation.mjs` · registre : `docs/run-simulation/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/run-simulation.mjs` (2026-09-22, tâche #356) : le pilote de simulation intégrale — l'étape 1

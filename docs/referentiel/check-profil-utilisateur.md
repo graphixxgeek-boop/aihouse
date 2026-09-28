@@ -1,5 +1,7 @@
 # check-profil-utilisateur — fiche d'instanciation
 
+*(Blueprint générique : `docs/check-profil-utilisateur-blueprint.md` · script : `scripts/check-profil-utilisateur.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/check-profil-utilisateur.mjs` (2026-09-19) : garde-fou du système de profil utilisateur.

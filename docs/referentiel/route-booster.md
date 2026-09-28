@@ -1,5 +1,7 @@
 # route-booster — fiche d'instanciation
 
+*(Blueprint générique : `docs/route-booster-blueprint.md` · script : `scripts/route-booster.mjs`.)*
+
 *(Surnom d'affichage : **find-deep-booster**. Surnom UNIQUEMENT, même patron que memory-audit et
 Smart Conso API — le fichier reste `scripts/route-booster.mjs`, jamais renommé sur disque, jamais
 réimporté sous un autre nom.)*

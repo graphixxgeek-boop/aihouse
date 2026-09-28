@@ -1,5 +1,7 @@
 # pnpm-install — fiche d'instanciation
 
+*(Blueprint générique : `docs/pnpm-install-blueprint.md` · script : `scripts/pnpm-install.mjs` · registre : `docs/pnpm-install/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/pnpm-install.mjs` : l'installation des dépendances, appelée par l'outillage d'installation

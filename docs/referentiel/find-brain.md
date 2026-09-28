@@ -1,5 +1,7 @@
 # find-brain — fiche d'instanciation
 
+*(Blueprint générique : `docs/find-brain-blueprint.md` · script : `scripts/find-brain.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/find-brain.mjs` (2026-09-21, 93 lignes) : décide, pour UN fichier donné, s'il faut lancer

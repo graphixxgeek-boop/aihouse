@@ -1,5 +1,7 @@
 # lib-markdown-table — fiche d'instanciation
 
+*(Blueprint générique : `docs/lib-markdown-table-blueprint.md` · script : `scripts/lib-markdown-table.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/lib-markdown-table.mjs`, extrait le 2026-09-19 en construisant CLEAN-DIRTY-OLD — au moment

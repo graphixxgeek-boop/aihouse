@@ -1,5 +1,7 @@
 # check-profile — le banc d'essai du DIAGNOSTIC PSYCHOLOGIQUE du dossier retourné
 
+*(Blueprint générique : `docs/check-profile-blueprint.md` · script : `scripts/check-profile.mjs`.)*
+
 *(Fiche créée le 2026-09-26, tâche #912 — elle manquait, et son absence a coûté un gel.)*
 
 ## Ce que c'est, en une phrase

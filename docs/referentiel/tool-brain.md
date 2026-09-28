@@ -1,3 +1,7 @@
+# tool-brain — fiche d'instanciation
+
+*(Blueprint générique : `docs/tool-brain-blueprint.md` · script : `scripts/tool-brain.mjs` · registre : `docs/tool-brain/index.md`.)*
+
 
 ## Le garde-fou de l'outil muet, câblé au commit (2026-09-26, tâche #778)
 

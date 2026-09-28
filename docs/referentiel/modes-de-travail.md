@@ -1,5 +1,7 @@
 # modes-de-travail — fiche d'instanciation
 
+*(Blueprint générique : `docs/modes-de-travail-blueprint.md` · script : `scripts/modes-de-travail.mjs` · registre : `docs/modes-de-travail/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/modes-de-travail.mjs` (2026-09-23) : les trois modes de travail du projet, déclarés une

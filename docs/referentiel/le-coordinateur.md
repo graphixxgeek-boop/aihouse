@@ -1,5 +1,7 @@
 # LE-COORDINATEUR — fiche d'instanciation
 
+*(Blueprint générique : `docs/le-coordinateur-blueprint.md` · script : `scripts/le-coordinateur.mjs` · registre : `docs/le-coordinateur/index.md`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/le-coordinateur.mjs` (2026-09-19), nommé par l'utilisateur et calibré par lui via

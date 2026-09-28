@@ -1,5 +1,7 @@
 # corpus-mesure — fiche d'instanciation
 
+*(Blueprint générique : `docs/corpus-mesure-blueprint.md` · script : `scripts/corpus-mesure.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/corpus-mesure.mjs` (2026-09-25, tâche #858, chantier #206) : empêche un **Gardien sacré** de

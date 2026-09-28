@@ -1,5 +1,7 @@
 # summarize-simulation-log — fiche d'instanciation
 
+*(Blueprint générique : `docs/summarize-simulation-log-blueprint.md` · script : `scripts/summarize-simulation-log.mjs`.)*
+
 ## Ce qu'il sert ici
 
 `scripts/summarize-simulation-log.mjs` (2026-09-19) : extrait un résumé compact des actions d'un
