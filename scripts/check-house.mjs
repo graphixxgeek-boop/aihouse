@@ -19372,3 +19372,53 @@ async function testLesVerdictsDuBancTemoin() {
   console.log(`Passed: les deux verdicts qui manquaient au banc témoin (2026-09-28, tâche #902). LE BANC COMPTAIT HUIT ÉCHECS DONT SIX N'EN ÉTAIENT PAS, et les six sont des erreurs du MESUREUR, jamais du mesuré — exactement comme le quatrième verdict né la veille. UN REFUS N'EST PAS UN PLANTAGE : check-gemini-quota ne trouvait pas .dev.vars — un fichier de SECRETS LOCAUX, absent de tout dépôt fraîchement cloné, y compris celui-ci chez quelqu'un d'autre — et disait proprement « GEMINI_API_KEY introuvable » avant de sortir. Un outil qui inventerait un résultat sans sa clé serait bien pire. LE CRITÈRE EST UN FAIT SUR LA SORTIE, JAMAIS UNE LISTE DE MOTS : un outil qui MEURT laisse une trace de pile, un outil qui refuse imprime une phrase — aucune liste de vocabulaire n'aurait couvert le prochain cas, cette distinction-là si, et le contre-test le prouve sur un vrai crash dont le message contient pourtant « introuvable ». UN PAQUET NPM MANQUANT EST UNE LIMITE DU BANC : il copie scripts/ et rien d'autre, délibérément, donc trois outils mouraient sur ERR_MODULE_NOT_FOUND avant leur première ligne. Ce verdict SORT du dénominateur, jamais du bon ni du mauvais côté — le compter comme un succès serait un faux vert, comme un échec facturerait à l'Agence un choix du banc. LES INSTALLEURS DE L'ENVIRONNEMENT D'ICI n'ont jamais eu à partir, et le registre des dispenses les décrivait déjà mot pour mot sans les contenir : leçon L37, on avait corrigé l'occurrence install-pnpm.sh et pas la classe. ET DEUX VRAIS DÉFAUTS CORRIGÉS : ARGUS et route-booster mouraient sur un ENOENT au lieu de déclarer, vérifiés en LANÇANT. Mesure : 65/73 puis 67/70 puis 68/68 — et le rapport DIT que le dénominateur a bougé, parce qu'un taux qui monte sans le dire est un chiffre qui ment poliment.`);
 }
 await testLesVerdictsDuBancTemoin();
+
+// =============================================================================================
+// #902 — LA SEPTIÈME DIMENSION MESURAIT SANS RENDRE DE CHIFFRE
+// =============================================================================================
+// MÊME FAMILLE EXACTE QUE LE BANC TÉMOIN, LE MÊME JOUR, ET C'EST CE QUI REND LA LEÇON UTILE :
+// `relaisDeModele()` rendait `mesurable: true` depuis toujours — il LISAIT les documents, comptait
+// les présents, cherchait les dépendances à un outillage — mais il ne rendait AUCUN taux, et
+// l'extracteur de la dimension cherchait `m.relais.taux`. Le rapport affichait donc « NON MESURÉ »
+// sur une mesure faite. Produire et ne pas rendre, c'est ne pas mesurer (leçon L2).
+//
+// L'INTITULÉ A ÉTÉ RESSERRÉ EN MÊME TEMPS, et c'était nécessaire : « une autre IA peut-elle
+// reprendre l'Agence ? » est la QUESTION, pas ce qui se mesure. Un intitulé qui promet la réponse
+// ferait lire 100 % comme « la reprise est assurée », alors qu'aucune mécanique ne peut le dire.
+async function testLaSeptiemeDimensionDuRelai() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // LE CÂBLAGE D'ABORD, encore : c'est lui qui manquait, pas la fonction.
+  const dim = SE.DIMENSIONS_DE_L_EXPORT.find((d) => d.cle === 'relais-de-modele');
+  assert.ok(dim.lire({ relais: { mesurable: true, taux: 67, resume: 'x' } }), 'the relay dimension must read a rate the function actually produces');
+  assert.equal(dim.lire({ relais: { mesurable: true, taux: 67, resume: 'x' } }).valeur, 67);
+
+  // LES DEUX CONDITIONS, JAMAIS UNE SEULE. Un document parfait qui dit « crée une tâche avec tel
+  // outil » est inapplicable pour une IA qui ne l'a pas : le compter bon serait le faux vert le
+  // plus coûteux du lot, puisqu'il porte sur la reprise elle-même (Article 27).
+  const faux = { exists: () => true, readFileImpl: () => 'il faut créer la tâche avec TaskCreate, puis AskUserQuestion' };
+  const avecDependance = SE.relaisDeModele({ ...faux, dimensions: [{ cle: 'x', quoi: 'x', documents: ['a.md'], sansQuoi: 'y' }] });
+  assert.equal(avecDependance.taux, 0, 'a dimension whose documents are all present but REQUIRE a particular tooling does not count: presence alone is not relay');
+  assert.match(avecDependance.resume, /ligne\(s\).*EXIGENT/, 'and the cost is QUANTIFIED in lines to reword — "something is missing" does not tell the reader whether it is a minute or an evening');
+
+  const propre = SE.relaisDeModele({ exists: () => true, readFileImpl: () => 'de la prose ordinaire, sans aucune consigne outillée',
+    dimensions: [{ cle: 'x', quoi: 'x', documents: ['a.md'], sansQuoi: 'y' }] });
+  assert.equal(propre.taux, 100, 'and a complete, tooling-free dimension counts fully — otherwise nothing could ever be earned');
+
+  const absent = SE.relaisDeModele({ exists: () => false, readFileImpl: () => '',
+    dimensions: [{ cle: 'x', quoi: 'x', documents: ['a.md'], sansQuoi: 'y' }] });
+  assert.equal(absent.taux, 0);
+  assert.match(absent.resume, /documents MANQUANTS/, 'a missing document and a tooling dependency are two different debts, and the sentence says which one it is');
+
+  // L'INTITULÉ NE DOIT PLUS PROMETTRE LA RÉPONSE : il décrit le MATÉRIEL de reprise, jamais la
+  // reprise. C'est sa consigne du 2026-09-26 — ne pas me servir de moi-même comme étalon.
+  assert.ok(/mat[ée]riel de reprise/i.test(dim.quoi), 'the label must describe what is MEASURED (the relay material), never promise the answer to the question it serves');
+
+  // ET SUR LE DÉPÔT RÉEL : sept dimensions sur sept sont mesurées, ce qui était le point.
+  const reelles = SE.relaisDeModele();
+  assert.equal(typeof reelles.taux, 'number', 'checked live: the relay produces a real rate on this repository');
+  assert.ok(reelles.taux >= 0 && reelles.taux <= 100);
+
+  console.log(`Passed: la septième dimension mesurait sans rendre de chiffre (2026-09-28, tâche #902). MÊME FAMILLE EXACTE QUE LE BANC TÉMOIN, LE MÊME JOUR, et c'est ce qui rend la leçon utile : relaisDeModele() rendait « mesurable: true » depuis toujours — il lisait les documents, comptait les présents, cherchait les dépendances à un outillage — mais ne rendait AUCUN taux, et l'extracteur cherchait m.relais.taux. Le rapport affichait donc « NON MESURÉ » sur une mesure faite. Produire et ne pas rendre, c'est ne pas mesurer (L2). L'EXPORTABILITÉ SE CALCULE MAINTENANT SUR 7 DIMENSIONS SUR 7, ce qui était sa demande. LES DEUX CONDITIONS COMPTENT, JAMAIS UNE SEULE : un document parfait qui EXIGE un outillage particulier est inapplicable pour une IA qui ne l'a pas, et le compter bon serait le faux vert le plus coûteux du lot puisqu'il porte sur la reprise elle-même (Article 27). LE CHIFFRE EST HONNÊTE ET IL FAIT BAISSER LE TOTAL : ${reelles.taux} %, parce que ${reelles.resume.match(/(\\d+) ligne\\(s\\)/)?.[1] ?? "plusieurs"} lignes de la charte et des règles de travail EXIGENT un outillage que le successeur n'aura peut-être pas. Le coût est chiffré en lignes à reformuler plutôt que laissé en « il manque quelque chose » — sans ce nombre, on ne peut pas décider si c'est une minute ou une soirée. L'INTITULÉ A ÉTÉ RESSERRÉ en même temps : « une autre IA peut-elle reprendre l'Agence » est la QUESTION, pas ce qui se mesure, et un intitulé qui promet la réponse ferait lire 100 % comme « la reprise est assurée ».`);
+}
+await testLaSeptiemeDimensionDuRelai();

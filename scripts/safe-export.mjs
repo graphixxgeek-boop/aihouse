@@ -1008,7 +1008,13 @@ export const DIMENSIONS_DE_L_EXPORT = [
   },
   {
     cle: "relais-de-modele",
-    quoi: "une AUTRE IA peut-elle reprendre l'Agence sans cette conversation-ci ?",
+    // L'INTITULÉ PROMETTAIT PLUS QUE LA MESURE (resserré le 2026-09-28, tâche #902). « Une autre IA
+    // peut-elle reprendre l'Agence » est la QUESTION ; ce qui se mesure est le matériel de reprise :
+    // les documents sont-ils tous là, et aucun ne suppose-t-il un outillage que le successeur
+    // n'aura pas. Un intitulé qui promet la réponse ferait lire 100 % comme « la reprise est
+    // assurée », alors qu'aucune mécanique ne peut le dire — et c'est exactement le faux vert que
+    // tout ce rapport existe pour éviter.
+    quoi: "le matériel de reprise est-il là pour une AUTRE IA — tous les documents, et aucun qui suppose notre outillage ?",
     ouLireLeDetail: "node scripts/safe-export.mjs export — bloc RELAIS",
     lire: (m) => (m.relais?.mesurable ? { valeur: m.relais.taux ?? m.relais.tauxPct ?? null, sur: 100, detail: m.relais.resume ?? `${(m.relais.dimensions ?? []).length} dimension(s) examinée(s)` } : null),
   },
@@ -1209,8 +1215,32 @@ export function relaisDeModele({ root = ROOT, dimensions = DIMENSIONS_DU_RELAI, 
     return { ...d, presents, absents, dependances, complet: !absents.length };
   });
   const incompletes = resultats.filter((r) => !r.complet);
+  // LE TAUX MANQUAIT, ET SON ABSENCE COÛTAIT UNE DIMENSION ENTIÈRE (2026-09-28, tâche #902). Cette
+  // fonction MESURE depuis toujours — elle rend `mesurable: true` — mais elle ne rendait aucun
+  // chiffre, si bien que le rapport central affichait « NON MESURÉ » sur une mesure faite. Même
+  // famille exacte que le banc témoin le même jour : produire et ne pas rendre, c'est ne pas
+  // mesurer (leçon L2).
+  //
+  // CE QUE LE TAUX COMPTE, ET IL FAUT LE DIRE SOUS PEINE DE SURPROMETTRE : une dimension compte
+  // quand TOUS ses documents existent ET qu'aucun ne s'appuie sur un outillage particulier. Les
+  // deux conditions, jamais une seule — un document parfait qui dit « crée une tâche avec tel
+  // outil » est inapplicable pour une IA qui ne l'a pas, et le compter bon serait le faux vert le
+  // plus coûteux du lot, puisqu'il porte sur la reprise elle-même.
+  const acquises = resultats.filter((r) => r.complet && !r.dependances.length);
   return {
     mesurable: true, dimensions: resultats, incompletes: incompletes.map((r) => r.cle),
+    taux: resultats.length ? Math.round((acquises.length / resultats.length) * 100) : null,
+    // LE COÛT DE L'ÉCART EST CHIFFRÉ, jamais laissé en « il manque quelque chose » : une dimension
+    // qui échoue pour DIX-NEUF lignes à reformuler n'appelle pas le même geste qu'une qui échoue
+    // pour une. Sans ce nombre, le lecteur ne peut pas décider si c'est une soirée ou une minute.
+    resume: `${acquises.length}/${resultats.length} dimension(s) du relai complètes ET libres de tout outillage particulier`
+      + (incompletes.length ? ` — documents MANQUANTS : ${incompletes.map((r) => r.cle).join(", ")}` : "")
+      + (() => {
+        const lignes = resultats.flatMap((r) => r.dependances).reduce((a, d) => a + d.occurrences, 0);
+        const fichiers = [...new Set(resultats.flatMap((r) => r.dependances).map((d) => d.fichier))];
+        return lignes ? ` — ${lignes} ligne(s) dans ${fichiers.join(" et ")} EXIGENT un outillage que le successeur n'aura peut-être pas : c'est le coût exact de l'écart, en lignes à reformuler` : "";
+      })()
+      + `. Mesure l'EXISTENCE et l'INDÉPENDANCE, jamais la SUFFISANCE : aucune mécanique ne dira qu'un modèle inconnu s'en sortira, et le déclarer EST la protection (Article 27)`,
     // CE QU'AUCUNE MÉCANIQUE NE PEUT VÉRIFIER, déclaré plutôt que tu (Article 27) : qu'un document
     // présent soit SUFFISANT. On vérifie qu'il existe et qu'il ne s'appuie pas sur un outillage
     // particulier ; on ne vérifie pas qu'un modèle inconnu, demain, en tirera ce qu'il faut.

@@ -561,3 +561,47 @@ deux viennent de vrais correctifs et le reste d'une mesure enfin juste.
 Installer les dépendances déclarées **dans le dépôt témoin** avant de lancer, ce qui rendrait les
 trois « paquet absent » mesurables. Ce n'est pas fait, parce que ça change le témoin — or tout son
 intérêt est d'être **pauvre en outillage**.
+
+## La septième dimension mesurait sans rendre de chiffre (2026-09-28, tâche #902)
+
+**Même famille exacte que le banc témoin, le même jour** — et c'est ce qui rend la leçon utile
+plutôt qu'anecdotique.
+
+`relaisDeModele()` rendait `mesurable: true` **depuis toujours**. Il lisait les documents, comptait
+les présents, cherchait les dépendances à un outillage particulier. Mais il ne rendait **aucun
+taux**, et l'extracteur de la dimension cherchait `m.relais.taux`. Le rapport central affichait donc
+« NON MESURÉ » sur une mesure faite. **Produire et ne pas rendre, c'est ne pas mesurer** (leçon L2).
+
+**L'exportabilité se calcule désormais sur 7 dimensions sur 7**, ce qui était sa demande.
+
+### Les deux conditions comptent, jamais une seule
+
+Une dimension du relai n'est acquise que si **tous** ses documents existent **et** qu'aucun
+n'EXIGE un outillage particulier. Un document parfaitement écrit qui dit « crée une tâche avec tel
+outil » est inapplicable pour une IA qui ne l'a pas : le compter bon serait le faux vert le plus
+coûteux du lot, puisqu'il porte sur **la reprise elle-même** (Article 27).
+
+### Le chiffre est honnête, et il fait BAISSER le total
+
+**67 %** — et l'exportabilité globale passe de 91 % à 88 %. Ce n'est pas une régression : c'est une
+absence remplacée par un fait. Deux dimensions sur trois sont acquises ; la troisième échoue parce
+que **20 lignes** de `CLAUDE.md` et `docs/regles-de-travail.md` exigent un outillage que le
+successeur n'aura peut-être pas.
+
+**Le coût est chiffré en lignes à reformuler**, jamais laissé en « il manque quelque chose » : une
+dimension qui échoue pour vingt lignes n'appelle pas le même geste qu'une qui échoue pour une, et
+sans ce nombre le lecteur ne peut pas décider si c'est une minute ou une soirée.
+
+**Ce que fermer cet écart demande, et pourquoi ce n'est pas un geste d'agent** : reformuler ces
+lignes pour qu'elles nomment l'INTENTION (« une vraie fenêtre de questions à choix ») avec l'outil
+en exemple, plutôt que l'outil comme exigence. Ce sont des règles de travail et des Articles de la
+charte — leur formulation appartient à l'utilisateur.
+
+### L'intitulé a été resserré en même temps, et c'était nécessaire
+
+« Une AUTRE IA peut-elle reprendre l'Agence sans cette conversation-ci ? » est la **question**, pas
+ce qui se mesure. Un intitulé qui promet la réponse ferait lire 100 % comme « la reprise est
+assurée », alors qu'aucune mécanique ne peut le dire. La dimension s'appelle désormais « le matériel
+de reprise est-il là », et le `horsPortee` garde sa consigne du 2026-09-26 : ne pas se servir de sa
+propre compréhension comme étalon — elle prouve qu'on était là, jamais qu'un modèle arrivant à froid
+s'en sortira.

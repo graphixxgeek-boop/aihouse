@@ -28,7 +28,7 @@ l'autre, jamais des rapports à lire.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**16 fichier(s)** dans ce dossier.
+**18 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -46,6 +46,8 @@ l'autre, jamais des rapports à lire.
 | [rapport-export-central-2026-09-28-06-25.txt](rapport-export-central-2026-09-28-06-25.txt) | — |
 | [rapport-export-central-2026-09-28-06-29.txt](rapport-export-central-2026-09-28-06-29.txt) | — |
 | [rapport-export-central-2026-09-28-06-40.txt](rapport-export-central-2026-09-28-06-40.txt) | — |
+| [rapport-export-central-2026-09-28-06-49.txt](rapport-export-central-2026-09-28-06-49.txt) | — |
+| [rapport-export-central-2026-09-28-06-50.txt](rapport-export-central-2026-09-28-06-50.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-350Z.txt](ronde/circle-signal-2026-09-27T00-12-15-350Z.txt) | ronde |
 | [serie.json](serie.json) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
