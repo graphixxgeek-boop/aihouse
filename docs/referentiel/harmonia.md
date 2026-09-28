@@ -133,3 +133,15 @@ où le rapport tourne.
 
 **Sa limite, déclarée** : il voit qu'une colonne ne se remplit plus, jamais POURQUOI. Un calcul
 cassé et un choix assumé de ne plus la produire se lisent pareil dans un CSV.
+
+## La « couche lourde » de l'Article 20 : un GESTE, jamais une commande (2026-09-28, tâche #917)
+
+**La démonstration complète vit dans `docs/referentiel/argus.md`**, et elle n'est écrite qu'une fois
+exprès : la recopier ici créerait deux textes à tenir d'accord sur un même fait, ce qui est la façon
+dont deux documents finissent par diverger (Article 24). *À ne pas confondre avec la partie mécanique
+d'HARMONIA décrite plus haut, qui tourne à chaque commit et ne coûte rien.*
+
+**Ce qu'il faut en retenir ici** : la seconde partie « à vrai raisonnement » que l'Article 20 promet
+à HARMONIA comme à ARGUS est un **geste de l'agent**, pas une commande — elle ne figurera donc jamais
+au catalogue PRESTATIONS, parce qu'un catalogue liste des commandes. Aucun mécanisme ne la porte, et
+le déclarer EST la protection (Article 27).

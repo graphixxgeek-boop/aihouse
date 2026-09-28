@@ -664,7 +664,11 @@ export function findRecouvrementsNonDeclares(mesures = [], { seuil = 0.18, prefi
     .map(({ a, b, jaccard, motsPartages }) => {
       const ta = parNumero.get(a)?.texte ?? "";
       const tb = parNumero.get(b)?.texte ?? "";
-      const motif = (n) => new RegExp(`(?:frontière|distinct|jamais confondu|à ne pas confondre)[^.]{0,80}${prefixe}\\s+${n}\\b`, "i");
+      // L'ESPACE APRÈS LE PRÉFIXE EST FACULTATIF (2026-09-28, tâche #623). Le motif exigeait
+      // « § 8 » alors que la typographie française écrit « §8 » — une frontière parfaitement écrite
+      // restait donc invisible, et le recouvrement continuait d'être signalé. Un garde-fou qu'aucune
+      // écriture normale ne peut satisfaire est un garde-fou qu'on finit par ignorer (leçon L6).
+      const motif = (n) => new RegExp(`(?:frontière|distinct|jamais confondu|à ne pas confondre)[^.]{0,120}${prefixe}\\s*${n}\\b`, "i");
       return { a, b, jaccard, motsPartages, frontiereDeclaree: motif(b).test(ta) || motif(a).test(tb) };
     })
     .filter((p) => !p.frontiereDeclaree);
@@ -992,6 +996,51 @@ export function formatCroisementLines(r = {}) {
   L.push("");
   L.push(`HORS PORTÉE : ${r.horsPortee}`);
   return L;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// UNE FICHE ATTEIGNABLE PAR CONVENTION N'EST PAS ORPHELINE (2026-09-28, tâche #629)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// LE VERDICT D'ORIGINE ÉTAIT FAUX, ET LA TÂCHE LE SOUPÇONNAIT DÉJÀ. Trois documents étaient dits
+// « orphelins » — `charte-cartographie.md`, `organisation-globale-projet.md`, `process-calibres.md` —
+// parce que le balayage n'explorait qu'un seul dossier. Mesurés sur le dépôt ENTIER, ils sont cités
+// par 10, 8 et 4 fichiers. Un balayage trop étroit ne rend pas une réponse incomplète : il rend une
+// réponse FAUSSE, avec l'air d'être juste.
+//
+// LE BALAYAGE CORRECT EN TROUVE 19 AUTRES, ET AUCUNE N'EST ORPHELINE NON PLUS. Ce sont des fiches
+// d'outils que rien ne cite nommément — et c'est exactement ce que la charte a décidé : « une règle
+// énoncée une fois vaut mieux qu'autant de chemins recopiés ». La fiche d'un outil vit dans
+// `docs/referentiel/<outil>.md`, et cette CONVENTION est le lien. Les recopier partout serait la
+// redondance que le 2026-09-22 a justement retirée.
+//
+// D'OÙ LA RÈGLE EN DEUX TEMPS, et c'est elle qui rend la mesure utile plutôt qu'alarmiste :
+// une fiche est orpheline si RIEN ne la cite **ET** qu'aucun outil ne porte son nom. Sans le second
+// critère, le contrôle dénoncerait dix-huit fiches parfaitement atteignables — et un garde-fou qui
+// accuse la conformité cesse d'être lu (leçon L4).
+export const INDEX_DE_DOSSIER = /(^|\/)index\.md$/;
+
+export function findFichesOrphelines({ fiches = [], textesDuDepot = new Map(), existeOutil = () => false } = {}) {
+  if (!fiches.length || !textesDuDepot.size) {
+    return { mesurable: false, orphelines: [], parConvention: [],
+      pourquoi: "aucune fiche ou aucun texte lu : rien n'a été confronté, ce qui n'est jamais la même chose que « aucune orpheline »" };
+  }
+  const orphelines = [], parConvention = [];
+  for (const fiche of fiches) {
+    if (INDEX_DE_DOSSIER.test(fiche)) continue;   // la table des matières d'un dossier n'est pas une fiche
+    const citee = [...textesDuDepot].some(([chemin, texte]) => chemin !== fiche && String(texte).includes(fiche));
+    if (citee) continue;
+    const slug = fiche.replace(/^.*\//, "").replace(/\.md$/, "");
+    if (existeOutil(slug)) parConvention.push({ fiche, slug });
+    else orphelines.push({ fiche, slug, pourquoi: `rien ne cite « ${fiche} » et aucun outil ne porte le nom « ${slug} » : ni lien écrit, ni lien par convention — cette fiche n'est atteignable par personne (Article 27)` });
+  }
+  return {
+    mesurable: true, orphelines, parConvention, examinees: fiches.length,
+    pourquoi: orphelines.length
+      ? `${orphelines.length} fiche(s) qu'aucun lien ni aucune convention n'atteint`
+      : `aucune orpheline sur ${fiches.length} fiche(s) : ${parConvention.length} ne sont citées nulle part mais portent le nom d'un outil réel, donc la convention les atteint`,
+    horsPortee: "Elle vérifie qu'une fiche est ATTEIGNABLE, jamais qu'elle est à jour ni qu'elle sert : une fiche fausse et bien citée lui paraît saine.",
+  };
 }
 
 // --- 7. LE DOCUMENT D'ACCUEIL -----------------------------------------------------------------

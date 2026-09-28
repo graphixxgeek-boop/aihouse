@@ -346,3 +346,34 @@ est moins bien protégée que les règles de travail » — **reposait sur une m
 réel est bien plus petit, et il n'y a plus aucune règle vitale sans protection. La question de
 généraliser le mécanisme DEMANDÉE aux Articles restants reste ouverte et reste la sienne
 (Article 16) — mais elle se pose désormais sur 4 règles à niveler, pas sur une loi suprême nue.
+
+## Une fiche atteignable par CONVENTION n'est pas orpheline (2026-09-28, tâche #629)
+
+**LE VERDICT D'ORIGINE ÉTAIT FAUX, ET LA TÂCHE LE SOUPÇONNAIT DÉJÀ.** Trois documents étaient dits
+« orphelins » — `charte-cartographie.md`, `organisation-globale-projet.md`, `process-calibres.md` —
+parce que le balayage n'explorait **qu'un seul dossier**. Mesurés sur le dépôt entier, ils sont cités
+par **10, 8 et 4** fichiers.
+
+**Un balayage trop étroit ne rend pas une réponse incomplète : il rend une réponse FAUSSE, avec l'air
+d'être juste.**
+
+**LE BALAYAGE CORRECT EN TROUVE 19 AUTRES, ET AUCUNE N'EST ORPHELINE NON PLUS.** Ce sont des fiches
+d'outils que rien ne cite nommément — et c'est exactement ce que la charte a décidé le 2026-09-22 :
+« une règle énoncée une fois vaut mieux qu'autant de chemins recopiés ». La fiche d'un outil vit
+dans `docs/referentiel/<outil>.md`, et **cette convention EST le lien**. Les recopier partout serait
+la redondance que ce jour-là a justement retirée.
+
+### La règle en deux temps
+
+Une fiche est orpheline si **rien ne la cite** *et* **qu'aucun outil ne porte son nom**.
+
+Sans le second critère, le contrôle dénoncerait dix-huit fiches parfaitement atteignables — et **un
+garde-fou qui accuse la conformité cesse d'être lu** (leçon L4). L'index généré d'un dossier n'est
+pas une fiche et n'est jamais compté.
+
+**Résultat sur le vrai dépôt : 106 fiches, ZÉRO orpheline, 18 tenues par la seule convention** — et
+ce dernier nombre est affiché, jamais tu : le lecteur doit savoir combien reposent sur une règle
+plutôt que sur un lien écrit.
+
+**LA LIMITE, DÉCLARÉE** : elle vérifie qu'une fiche est ATTEIGNABLE, jamais qu'elle est à jour ni
+qu'elle sert. Une fiche fausse et bien citée lui paraît saine.

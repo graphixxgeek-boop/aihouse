@@ -150,3 +150,51 @@ ensuite. La classification est close depuis le 2026-09-26, le verrou est donc le
 
 **Premier passage réel** : 77 noms sur 83 en attente, en 7 groupes — 29 sans famille déclarée,
 16 Anges de la coordination, 13 Gouvernance Royale, puis des groupes de 5 et moins.
+
+## Les impacts INDIRECTS d'un renommage (2026-09-28, tâche #740)
+
+`node scripts/agent-des-noms.mjs renommage <ancien> <nouveau>` les imprime désormais **dans le
+plan**, et non à part : ils changent le risque du renommage, donc ils se lisent au moment où on le
+décide.
+
+**CE QUE LE PLAN COUVRAIT, ET C'ÉTAIT ÉTROIT** : l'impact TECHNIQUE seul — imports, commandes,
+chemins, mentions. Tout ce qui casse **bruyamment**.
+
+**CE QU'IL NE DISAIT PAS** : un outil renommé **perd sa mémoire**. Le compteur d'usage est indexé par
+slug, les registres vivent dans `docs/<slug>/`, les cérémonies de badge et les objectifs chiffrés
+portent le slug. Le lendemain d'un renommage, l'outil ressort « jamais sollicité » et « tout neuf » —
+ce qui fausse d'un coup CASSANDRA-RH (qui lit l'usage) et CLEAN-DIRTY-OLD (qui lit l'ancienneté).
+
+**RIEN NE CASSE, ET C'EST BIEN LE PROBLÈME.** Un import brisé se voit à la première exécution ; une
+mémoire perdue ne se voit jamais — elle se lit comme un outil neuf, l'inverse exact de la vérité.
+L'Article 27 le dit autrement : ce qui n'est plus atteignable n'existe plus.
+
+**Mesuré sur `the-king`** : 8 sources de données portent son slug, dont **37 événements d'usage** et
+**son registre entier**, qui deviendrait un dossier orphelin.
+
+**Les sources se lisent chez data-archangel**, jamais recopiées (Article 24) : un registre de plus
+demain est pris en compte sans qu'on y pense. Et seules les DONNÉES sont regardées — le slug dans du
+code relève de l'impact technique, déjà couvert, et le compter deux fois gonflerait l'alarme.
+
+### Ce qui se sait ailleurs, et ce qu'on en retient (recherche demandée par #740)
+
+| Pratique établie | Ce qu'elle vaut ici |
+|---|---|
+| **Cycle déprécier → remplacer → retirer**, avec une intensité croissante (avertissement doux, dur, extinction progressive, retrait) | **Transposable tel quel.** Ce dépôt n'a aujourd'hui que le retrait sec. |
+| **Marqueur de dépréciation qui RELIE l'ancien nom au nouveau**, pendant une période de grâce (Lean : plusieurs mois, étendus à 13 après retour des utilisateurs) | **La plus utile des cinq.** Le registre des baptêmes est déjà l'endroit : il enregistrerait `ancien → nouveau`, et la mémoire cesserait d'être perdue. |
+| **Double écriture pendant la transition** (écrire dans l'ancien ET le nouveau schéma) | **Réponse directe au problème mesuré** : le compteur d'usage enregistrerait sous les deux slugs pendant la grâce, et l'historique survivrait au renommage. |
+| **Centraliser l'expertise de migration dans une seule équipe** | Déjà le cas : agent-des-noms est ce point unique. |
+| **Tester le chemin de mise à jour sur un instantané d'avant le renommage** | Transposable : un renommage se rejoue sur une copie avant d'être appliqué. |
+
+**CE QUI RESTE À TRANCHER, ET C'EST À LUI** : introduire un **alias de slug** (l'ancien nom continue
+d'être reconnu par le compteur et les registres pendant une période déclarée) coûte une indirection
+permanente dans tout ce qui lit un slug. C'est un choix d'architecture, et il en porte le coût dans
+la durée — donc il lui revient (Article 16). La mesure ci-dessus dit seulement **ce qu'un renommage
+sans alias ferait perdre**, chiffre à l'appui.
+
+**Sources** : [Software Engineering at Google —
+Deprecation](https://abseil.io/resources/swe-book/html/ch15.html) · [Growing Mathlib: maintenance of
+a large scale mathematical library](https://arxiv.org/pdf/2508.21593) · [Database Migrations in the
+Real World](https://blog.jetbrains.com/idea/2025/02/database-migrations-in-the-real-world/) ·
+[Breaking Changes in Software Ecosystems: A Systematic Literature
+Review](https://arxiv.org/pdf/2605.24397)

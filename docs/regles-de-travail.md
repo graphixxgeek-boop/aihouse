@@ -2586,6 +2586,21 @@ promotion en « classique » est une question distincte, pas encore posée à l'
 
 ## 8. Profil de collaboration observé
 
+> **LA FRONTIÈRE ENTRE LES §8, §9 ET §10** *(écrite le 2026-09-28, tâche #623 — Abraham signalait
+> trois recouvrements de vocabulaire sans qu'aucun ne dise lequel prime)*. Les trois parlent de la
+> même personne et partagent donc naturellement leur vocabulaire ; **leur OBJET est différent, et
+> c'est lui qui départage** :
+> · **§8 décrit** — qui il est comme collaborateur, ce qu'on a observé de sa façon de travailler.
+>   Descriptif, jamais prescriptif : il n'impose rien, il renseigne.
+> · **§9 prévient** — ce qui, dans cette façon de travailler, peut devenir un OBSTACLE, et le geste
+>   qui l'évite. Prescriptif et tourné vers l'agent.
+> · **§10 conserve** — le MÉCANISME qui fait que rien ne se perd entre deux interruptions. Ni un
+>   portrait ni une précaution : une machinerie de suivi.
+> **En cas de doute sur où ranger une observation neuve** : si elle dit *comment il est*, §8 ; si
+> elle dit *ce que je dois faire pour ne pas gêner*, §9 ; si elle dit *où va l'information*, §10.
+> Le recouvrement de vocabulaire est donc assumé et n'est pas une redondance à réduire.
+
+
 *(Champ volontairement large, à la demande explicite de l'utilisateur : « tout ce qui est utile
 pour l'IA de comprendre à mon sujet pour travailler le plus efficacement possible ». Registre
 strictement professionnel/projet — aucune donnée personnelle hors du cadre de collaboration.)*
@@ -2672,6 +2687,10 @@ l'historique de conversation ») :
   généralisée à tout rapport volumineux.
 
 ## 9. Points de vigilance — compétences et psychologie, pour ne jamais devenir un obstacle
+
+> *À ne pas confondre avec le §10, qui n'est ni un portrait ni une précaution mais le MÉCANISME de
+> conservation : ici on évite une friction, là-bas on empêche une perte. La frontière complète des
+> trois sections est écrite en tête du §8.*
 
 *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur : « indique des points de
 vigilance me concernant [...] afin que ces éléments ne deviennent pas des obstacles à une

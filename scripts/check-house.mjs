@@ -8477,6 +8477,22 @@ await testRapportsJumeaux();
 
 async function testDocumentsJumeaux() {
   const ab = await import('../scripts/abraham-les-references.mjs');
+  // L'ESPACE APRÈS LE PRÉFIXE EST FACULTATIF (2026-09-28, tâche #623). Le motif exigeait « § 8 »
+  // alors que la typographie française écrit « §8 » : une frontière parfaitement écrite restait
+  // invisible, et le recouvrement continuait d'être signalé. Un garde-fou qu'aucune écriture normale
+  // ne peut satisfaire est un garde-fou qu'on finit par ignorer (leçon L6).
+  {
+    const mots = 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda';
+    const sans = [{ numero: 1, texte: mots }, { numero: 2, texte: mots }];
+    assert.equal(ab.findRecouvrementsNonDeclares(sans, { prefixe: '§' }).length, 1, 'MUST CATCH: two rules sharing their vocabulary with NO frontier written must still be reported — this is the assertion that keeps the relaxation below honest');
+    for (const ecriture of ['§ 2', '§2']) {
+      const avec = [{ numero: 1, texte: `${mots} à ne pas confondre avec ${ecriture}` }, { numero: 2, texte: mots }];
+      assert.equal(ab.findRecouvrementsNonDeclares(avec, { prefixe: '§' }).length, 0, `MUST LET PASS: a frontier written "${ecriture}" must count. French typography writes §2 without a space, and demanding the space made a correctly written frontier invisible`);
+    }
+    const reelles = ab.analyserDocument({ texte: fs.readFileSync('docs/regles-de-travail.md', 'utf8'), chemin: 'docs/regles-de-travail.md' });
+    assert.deepEqual((reelles.recouvrements ?? []).map((p) => `${p.a}↔${p.b}`), [], `checked live: no pair of work rules may overlap without a written frontier — §8, §9 and §10 share their vocabulary because they describe the same person, and the frontier written on 2026-09-28 says what departs them: §8 DESCRIBES, §9 PREVENTS, §10 CONSERVES (currently ${(reelles.recouvrements ?? []).map((p) => `${p.a}↔${p.b}`).join(', ')})`);
+  }
+
   const { familleDeLaPaire, affixesCommuns, membresDuMemeEnsemble, citeLAutre, trouverDocumentsJumeaux, chargerLesDocuments } = ab;
 
   // LES CINQ FAMILLES LÉGITIMES SE DÉRIVENT DU NOMMAGE, jamais d'une liste (Article 24) : la mesure
@@ -9724,6 +9740,97 @@ async function testPresentationParFamille() {
   console.log("Passed: les noms en attente de baptême sont présentés PAR FAMILLE (2026-09-28, tâche #1020). Sa contrainte de forme commande toute la fonction, et elle est citée mot pour mot : « je ne fais pas des noms au cas par cas, je crée des séries de noms à l'intérieur d'une même famille ». Une liste de 77 lignes à trancher une par une serait exacte et inutilisable — c'est le genre de livrable qu'on produit en croyant bien faire. La fonction range et compte ; elle ne propose AUCUN nom, et la sortie le DIT, parce qu'un agent qui proposerait soixante-dix-sept noms choisirait à la place de l'utilisateur. Un outil sans famille déclarée forme son propre groupe nommé plutôt que d'être rangé d'office ailleurs : « je ne sais pas de quelle famille il est » est une information utile à qui doit choisir une série. Premier passage réel : 77 noms sur 83 en attente, répartis en 7 groupes dont 29 sans famille déclarée.");
 }
 await testPresentationParFamille();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LES IMPACTS INDIRECTS D'UN RENOMMAGE (2026-09-28, tâche #740)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Le plan de renommage ne couvrait que l'impact TECHNIQUE — imports, chemins, mentions : tout ce
+// qui casse BRUYAMMENT. Un outil renommé perd aussi sa MÉMOIRE : le compteur d'usage est indexé par
+// slug, les registres vivent dans docs/<slug>/. Le lendemain, l'outil ressort « jamais sollicité »
+// et « tout neuf » — et rien ne casse, ce qui est précisément le problème.
+async function testImpactsIndirectsDunRenommage() {
+  const ADN = await import('../scripts/agent-des-noms.mjs');
+
+  // ── 1. EN DIRECT SUR LE VRAI DÉPÔT (Article 25), sur un outil dont on sait qu'il a une mémoire.
+  const r = await ADN.impactsIndirects('the-king', { root: process.cwd() });
+  assert.ok(r.mesurable, 'the measure must actually run against the real repository');
+  assert.ok(r.touches.length >= 2, `renaming a tool with a real history must show what it would lose (currently ${r.touches.length} sources)`);
+  assert.ok(r.touches.some((t) => t.source.includes('tool-usage')), 'the usage counter must be among them: it is indexed by slug, so a rename makes a tool look "never used" the day after');
+  assert.ok(r.touches.some((t) => t.source === 'docs/the-king/'), 'and its own registry folder must be named as a WHOLE that would be orphaned — not as a count of lines, because the whole thing is what is lost');
+
+  // ── 2. UN SLUG QUI N'EXISTE NULLE PART NE FAIT RIEN PERDRE, et le dit.
+  const rien = await ADN.impactsIndirects('outil-qui-na-jamais-existe-nulle-part', { root: process.cwd() });
+  assert.ok(rien.mesurable, 'an unknown slug is still measurable — there is simply nothing to lose');
+  assert.deepEqual(rien.touches, [], 'and nothing must be reported: a measure that always finds something would say nothing');
+  assert.ok(/aucune donnée/.test(rien.pourquoi), 'the empty case must SAY that this rename loses no memory, rather than print an empty section the reader must interpret');
+
+  // ── 3. UN INVENTAIRE ILLISIBLE N'EST JAMAIS « RIEN À PERDRE ».
+  const aveugle = await ADN.impactsIndirects('the-king', { root: '/tmp/dossier-sans-depot-du-tout' });
+  assert.equal(aveugle.mesurable, false, 'if the data inventory cannot be read, the answer is UNMEASURABLE: "we do not know what this rename would lose" and "it would lose nothing" are opposites, and the second one green-lights a rename that destroys a history');
+
+  // ── 4. UN SLUG VIDE NE MESURE RIEN.
+  assert.equal((await ADN.impactsIndirects('')).mesurable, false, 'no slug, no measure');
+
+  // ── 5. LA SORTIE DIT POURQUOI C'EST DANGEREUX, pas seulement ce qui est touché.
+  const texte = ADN.formatImpactsIndirectsLines(r).join('\n');
+  assert.ok(/Rien ne casse/.test(texte), 'the output must name the trap: nothing breaks, which is exactly why nobody notices — a broken import shows up at the first run, a lost memory reads as a brand-new tool');
+  assert.ok(/HORS PORTÉE/.test(texte), 'and it must declare its limit: it looks only at DATA, because the slug in CODE is the technical impact the rename plan already covers');
+
+  console.log("Passed: les impacts INDIRECTS d'un renommage sont mesurés et imprimés dans le plan (2026-09-28, tâche #740). Le plan ne couvrait que l'impact technique — imports, chemins, mentions : tout ce qui casse BRUYAMMENT. Un outil renommé perd aussi sa MÉMOIRE, parce que le compteur d'usage est indexé par slug, que les registres vivent dans docs/<slug>/ et que les cérémonies de badge portent le slug : le lendemain, il ressort « jamais sollicité » et « tout neuf », ce qui fausse d'un coup CASSANDRA-RH et CLEAN-DIRTY-OLD. Rien ne casse, et c'est le problème : un import brisé se voit à la première exécution, une mémoire perdue se lit comme un outil neuf — l'inverse exact de la vérité (Article 27 : ce qui n'est plus atteignable n'existe plus). Mesuré sur the-king : 8 sources de données, dont 37 événements d'usage et son registre entier. Les sources se lisent chez data-archangel et jamais recopiées (Article 24), et seules les DONNÉES sont regardées, parce que compter aussi le code gonflerait l'alarme sans rien ajouter. Un inventaire illisible rend NON MESURÉ et jamais « rien à perdre » : le second autoriserait un renommage qui détruit un historique.");
+}
+await testImpactsIndirectsDunRenommage();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// UNE FICHE ATTEIGNABLE PAR CONVENTION N'EST PAS ORPHELINE (2026-09-28, tâche #629)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Le verdict d'origine était FAUX, et la tâche le soupçonnait : trois documents étaient dits
+// orphelins parce que le balayage n'explorait qu'un seul dossier. Mesurés sur le dépôt entier, ils
+// sont cités 10, 8 et 4 fois. Un balayage trop étroit ne rend pas une réponse incomplète — il rend
+// une réponse FAUSSE avec l'air d'être juste.
+async function testFichesOrphelines() {
+  const AB = await import('../scripts/abraham-les-references.mjs');
+
+  // ── 1. LA RÈGLE EN DEUX TEMPS : ni lien écrit, NI lien par convention.
+  const textes = new Map([['docs/autre.md', 'voir docs/referentiel/citee.md pour le détail']]);
+  const fiches = ['docs/referentiel/citee.md', 'docs/referentiel/convention.md', 'docs/referentiel/perdue.md'];
+  const r = AB.findFichesOrphelines({ fiches, textesDuDepot: textes, existeOutil: (s) => s === 'convention' });
+  assert.deepEqual(r.orphelines.map((o) => o.slug), ['perdue'], 'only a fiche that NOTHING cites AND whose name matches no tool is orphaned: without the second criterion the check would denounce eighteen perfectly reachable fiches, and a guard that accuses conformity stops being read (lesson L4)');
+  assert.deepEqual(r.parConvention.map((o) => o.slug), ['convention'], 'a fiche reachable only by the naming convention must be COUNTED and named, not silently dropped — the reader needs to know how many rest on the convention alone');
+
+  // ── 2. L'INDEX D'UN DOSSIER N'EST PAS UNE FICHE.
+  const avecIndex = AB.findFichesOrphelines({ fiches: ['docs/referentiel/index.md'], textesDuDepot: textes, existeOutil: () => false });
+  assert.deepEqual(avecIndex.orphelines, [], "a folder's generated table of contents is not a fiche and must never be reported as orphaned");
+
+  // ── 3. RIEN LU N'EST JAMAIS « AUCUNE ORPHELINE ».
+  assert.equal(AB.findFichesOrphelines({ fiches: [], textesDuDepot: textes }).mesurable, false, 'no fiche read means UNMEASURABLE');
+  assert.equal(AB.findFichesOrphelines({ fiches, textesDuDepot: new Map() }).mesurable, false, 'no repository text read means UNMEASURABLE too: "nothing confronted" and "no orphan" are opposites');
+
+  // ── 4. SUR LE VRAI DÉPÔT (Article 25) : la mesure qui corrige le verdict d'origine.
+  const R = process.cwd();
+  const tous = [];
+  const marche = (d) => { for (const e of fs.readdirSync(path.join(R, d), { withFileTypes: true })) { const p = d + '/' + e.name; if (e.isDirectory()) { if (!/node_modules|\.git/.test(p)) marche(p); } else if (/\.(md|mjs|txt)$/.test(e.name)) tous.push(p); } };
+  marche('docs'); marche('scripts'); tous.push('CLAUDE.md');
+  const textesReels = new Map(tous.map((p) => { try { return [p, fs.readFileSync(path.join(R, p), 'utf8')]; } catch { return [p, '']; } }));
+  const fichesReelles = fs.readdirSync(path.join(R, 'docs/referentiel')).filter((f) => f.endsWith('.md')).map((f) => 'docs/referentiel/' + f);
+  const reel = AB.findFichesOrphelines({ fiches: fichesReelles, textesDuDepot: textesReels,
+    existeOutil: (s) => fs.existsSync(path.join(R, `scripts/${s}.mjs`)) || fs.existsSync(path.join(R, `scripts/check-${s}.mjs`)) });
+  assert.deepEqual(reel.orphelines, [], `no fiche of the real repository may be unreachable by BOTH a written link and the naming convention (currently ${reel.orphelines.map((o) => o.slug).join(', ')})`);
+  assert.ok(reel.parConvention.length > 5, `and the convention must really be carrying weight — if this ever drops to zero, either every fiche got cited or the convention stopped being read (currently ${reel.parConvention.length})`);
+
+  // ── 5. LES TROIS DOCUMENTS ACCUSÉS À TORT SONT BIEN CITÉS, et cette assertion garde la correction.
+  for (const nom of ['charte-cartographie', 'organisation-globale-projet', 'process-calibres']) {
+    const chemin = `docs/referentiel/${nom}.md`;
+    const citants = tous.filter((p) => p !== chemin && (textesReels.get(p) ?? '').includes(chemin));
+    assert.ok(citants.length >= 3, `"${nom}" was declared orphaned by a sweep that explored ONE folder; swept over the whole repository it is cited ${citants.length} times. A too-narrow sweep does not return an incomplete answer — it returns a FALSE one that looks right.`);
+  }
+
+  console.log("Passed: une fiche atteignable par CONVENTION n'est pas orpheline (2026-09-28, tâche #629). Le verdict d'origine était faux et la tâche le soupçonnait : trois documents étaient dits orphelins parce que le balayage n'explorait qu'un seul dossier — mesurés sur le dépôt entier ils sont cités 10, 8 et 4 fois. Un balayage trop étroit ne rend pas une réponse incomplète, il rend une réponse FAUSSE avec l'air d'être juste. Le balayage correct trouve 19 fiches que rien ne cite nommément, et aucune n'est orpheline non plus : ce sont des fiches d'outils, et la charte a décidé que « une règle énoncée une fois vaut mieux qu'autant de chemins recopiés » — la fiche vit dans docs/referentiel/<outil>.md, et cette CONVENTION est le lien. D'où la règle en deux temps : orpheline si rien ne la cite ET qu'aucun outil ne porte son nom. Sans le second critère, le contrôle dénoncerait dix-huit fiches parfaitement atteignables, et un garde-fou qui accuse la conformité cesse d'être lu. Résultat sur le vrai dépôt : 106 fiches, ZÉRO orpheline, 18 tenues par la seule convention.");
+}
+await testFichesOrphelines();
+
+
 
 
 

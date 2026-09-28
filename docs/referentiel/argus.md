@@ -153,3 +153,32 @@ sont « les Gardiens sacrés du code ») et la fiche dédiée de chacun (`docs/r
 chacune avec son propre blueprint générique) — jamais répété ici.
 
 
+
+## La « couche lourde » de l'Article 20 : un GESTE, jamais une commande (2026-09-28, tâche #917)
+
+**L'ÉCART QUI A OUVERT LA QUESTION** : l'Article 20 affirme que « ARGUS et HARMONIA ajoutent en plus,
+sur demande, une seconde partie à vrai raisonnement (coût réel, Article 8) », et **aucun des deux
+n'est déclaré coûtant dans le catalogue PRESTATIONS**. Trois lectures étaient possibles, et elles
+appelaient des gestes opposés.
+
+**L'INVESTIGATION TRANCHE, ET LA RÉPONSE ÉTAIT DANS LE CODE DEPUIS LE DÉBUT.** L'en-tête de
+`check-argus.mjs` le dit en toutes lettres : la partie raisonnement « reste hors de portée d'un
+script déterministe **par nature** — elle se fait à la demande, avec une vraie réflexion, jamais
+simulée ici par une fausse promesse de couverture totale ».
+
+| Lecture | Verdict |
+|---|---|
+| La couche lourde existe et le catalogue est en dette | **FAUX** — il n'y a aucune commande à y inscrire |
+| Elle n'existe pas, la charte promet du vide | **FAUX** — la charte ne promet pas un outil, elle décrit un geste |
+| C'est un geste de l'AGENT, porté par aucun mécanisme | **VRAI** |
+
+**DONC, ET C'EST CE QUE L'ARTICLE 27 EXIGE** : cette couche n'est portée par **aucun mécanisme**, et
+le déclarer noir sur blanc EST la protection. Elle ne s'inscrira jamais au catalogue PRESTATIONS,
+parce qu'un catalogue liste des commandes et que celle-ci n'en est pas une. Concrètement : relancer
+l'outil en RÉFLÉCHISSANT vraiment — chercher la combinaison jamais envisagée, la conséquence
+oubliée, le lien discret — est un travail d'agent qui coûte de vrais tokens (Article 22 /
+SMART-CONSO-TOKEN), et rien ne peut vérifier qu'il a eu lieu.
+
+**CE QUE ÇA CHANGE POUR QUI LIT LE CATALOGUE** : son silence sur ce point n'est pas un oubli. Un
+outil absent du catalogue des prestations coûteuses n'est pas forcément gratuit en tout — il peut
+porter une part qui ne se lance pas, et qui se fait.

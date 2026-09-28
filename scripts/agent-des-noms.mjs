@@ -27,7 +27,7 @@
 // GÉNÉRIQUE : rien ici ne connaît ce projet. Un autre projet piloté par IA réutilise ce fichier tel
 // quel — seules les séries d'hommages sont propres à un goût, et elles sont déclarées à part.
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, printReportHeader } from "./report-template.mjs";
@@ -442,8 +442,14 @@ function mainRenommage(root, ancien, nouveau) {
   if (!parFichier.size) console.log("   (aucun) — le nom ne vit dans aucun import ni aucun chemin de registre : le renommage est de la prose.");
   for (const [f, n] of [...parFichier].sort((a, b) => b[1] - a[1])) console.log(`   ${String(n).padStart(4)} × ${f}`);
   console.log("");
-  console.log(`APRÈS COUP, relancer : node scripts/agent-des-noms.mjs verifier ${ancien}`);
-  console.log(`   Un renommage à moitié fait est PIRE qu'un renommage pas fait : les deux noms coexistent et personne ne sait lequel fait foi.`);
+  // LES IMPACTS INDIRECTS (2026-09-28, tâche #740), imprimés dans le PLAN et non à part : ils
+  // changent le risque du renommage, donc ils se lisent au moment où on le décide — pas après.
+  return impactsIndirects(ancien, { root }).then((imp) => {
+    for (const l of formatImpactsIndirectsLines(imp)) console.log(l);
+    console.log("");
+    console.log(`APRÈS COUP, relancer : node scripts/agent-des-noms.mjs verifier ${ancien}`);
+    console.log(`   Un renommage à moitié fait est PIRE qu'un renommage pas fait : les deux noms coexistent et personne ne sait lequel fait foi.`);
+  });
 }
 
 // ============================================================================================
@@ -562,6 +568,89 @@ function mainVerifier(root, ancien) {
   console.log(v.propre ? `✅ ${v.pourquoi}` : `🔴 ${v.pourquoi}`);
   for (const o of v.restesVivants.slice(0, 40)) console.log(`   ${o.chemin}:${o.numero}`);
   if (v.restesVivants.length > 40) console.log(`   … et ${v.restesVivants.length - 40} autre(s)`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// LES IMPACTS INDIRECTS D'UN RENOMMAGE (2026-09-28, tâche #740)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// CE QUE LE PLAN DE RENOMMAGE COUVRAIT, ET C'ÉTAIT ÉTROIT : l'impact TECHNIQUE seul — imports,
+// commandes, chemins, mentions. Tout ce qui casse bruyamment.
+//
+// CE QU'IL NE DISAIT PAS, ET C'EST CE QUI FAIT MAL : un outil renommé **perd sa mémoire**. Le
+// compteur d'usage est indexé par slug, les registres vivent dans `docs/<slug>/`, les objectifs
+// chiffrés et les lignes de KPI portent le slug. Le lendemain d'un renommage, l'outil ressort
+// « jamais sollicité » et « tout neuf » — ce qui fausse d'un coup CASSANDRA-RH (qui lit l'usage),
+// CLEAN-DIRTY-OLD (qui lit l'ancienneté) et le suivi des objectifs.
+//
+// **RIEN NE CASSE, ET C'EST BIEN LE PROBLÈME.** Un import brisé se voit à la première exécution ;
+// une mémoire perdue ne se voit jamais — elle se lit comme un outil neuf, ce qui est exactement
+// l'inverse de la vérité. L'Article 27 le dit autrement : ce qui n'est plus atteignable n'existe
+// plus.
+//
+// LES SOURCES SE LISENT CHEZ data-archangel, jamais recopiées ici (Article 24) : c'est lui qui tient
+// l'inventaire des données du dépôt, et un registre de plus demain sera pris en compte sans qu'on y
+// pense. On ne regarde QUE les données — un slug dans du CODE relève de l'impact technique, déjà
+// couvert par le plan de renommage, et le compter deux fois gonflerait l'alarme sans rien ajouter.
+export async function impactsIndirects(slug, { root = process.cwd(), lire = readFileSync } = {}) {
+  if (!slug) return { mesurable: false, pourquoi: "aucun slug donné : rien à mesurer" };
+  let sources = [];
+  try {
+    const { mapReaders } = await import("./data-archangel.mjs");
+    sources = mapReaders({ root }).sources ?? [];
+  } catch { /* le rapport dira PAS MESURÉ plutôt que d'inventer un zéro */ }
+  if (!sources.length) {
+    return { mesurable: false, slug,
+      pourquoi: "l'inventaire des données n'a pas pu être lu : on ne sait pas ce que ce renommage ferait perdre, ce qui n'est PAS la même chose que « il ne ferait rien perdre »" };
+  }
+  const touches = [];
+  let lues = 0;
+  for (const s of sources) {
+    const chemin = join(root, s.id);
+    let contenu = null;
+    try {
+      if (!existsSync(chemin)) continue;
+      // Un DOSSIER porte le slug dans son nom ; un FICHIER le porte dans son contenu. Les deux
+      // comptent, et pour des raisons différentes : l'un est un registre entier qui devient
+      // orphelin, l'autre des lignes qui cessent d'être rattachées.
+      lues += 1;
+      if (statSync(chemin).isDirectory()) {
+        if (s.id.includes(slug)) touches.push({ source: s.id, nature: s.nature, quoi: "registre ENTIER — son dossier porte le nom : renommé, il devient un dossier orphelin et l'outil repart sans historique", occurrences: null });
+        continue;
+      }
+      contenu = lire(chemin, "utf8");
+    } catch { continue; }
+    const n = (String(contenu).match(new RegExp(slug.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g")) ?? []).length;
+    if (n) touches.push({ source: s.id, nature: s.nature, quoi: `${n} occurrence(s) du slug dans une donnée : elles ne suivront PAS le renommage`, occurrences: n });
+  }
+  // AUCUNE SOURCE LUE N'EST JAMAIS « RIEN À PERDRE » (leçons L5/L11). L'inventaire est déclaré dans
+  // le CODE de data-archangel : il répond donc même sur une racine vide, et sans ce garde-fou la
+  // fonction rendrait « ce renommage ne fait perdre aucune mémoire » alors qu'elle n'a rien pu
+  // ouvrir. Un faux vert ici autorise un renommage qui détruit un historique.
+  if (!lues) {
+    return { mesurable: false, slug, touches: [],
+      pourquoi: `${sources.length} source(s) sont déclarées et AUCUNE n'a pu être ouverte sous cette racine : on ne sait pas ce que ce renommage ferait perdre, ce qui n'est PAS « il ne ferait rien perdre »` };
+  }
+  return {
+    mesurable: true, slug, touches, sourcesLues: lues,
+    total: touches.reduce((a, t) => a + (t.occurrences ?? 1), 0),
+    pourquoi: touches.length
+      ? `${touches.length} source(s) de données portent ce slug : un renommage les laisse derrière, et l'outil ressort « jamais sollicité » et « tout neuf » le lendemain`
+      : "aucune donnée du dépôt ne porte ce slug : ce renommage ne fait perdre aucune mémoire",
+    horsPortee: "Elle ne regarde QUE les données. Le slug dans du CODE relève de l'impact technique, déjà couvert par le plan de renommage, et le compter ici gonflerait l'alarme sans rien ajouter. Elle ne dit pas non plus COMMENT migrer une mémoire — seulement ce qui serait perdu si on ne le faisait pas.",
+  };
+}
+
+export function formatImpactsIndirectsLines(r = {}) {
+  if (!r.mesurable) return [`⬜ IMPACTS INDIRECTS : PAS MESURÉS — ${r.pourquoi}`];
+  const L = ["", `--- CE QUE « ${r.slug} » PERDRAIT EN CHANGEANT DE NOM (impacts INDIRECTS) ---`];
+  L.push("  Rien ne casse, et c'est le problème : un import brisé se voit à la première exécution,");
+  L.push("  une mémoire perdue se lit comme un outil neuf — l'inverse exact de la vérité.");
+  if (!r.touches.length) { L.push(`  ✅ ${r.pourquoi}`); return L; }
+  for (const t of r.touches) L.push(`  🟠 ${t.source} (${t.nature}) — ${t.quoi}`);
+  L.push(`  → ${r.pourquoi}`);
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
