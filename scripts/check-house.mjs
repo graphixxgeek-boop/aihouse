@@ -857,6 +857,24 @@ assert.deepEqual(new Set(result.story.life.mirrorKnownBy),new Set([1,2]));
 assert.ok(result.decisions.some(d=>d.actor===1&&["Un truc à te dire : dans la chambre, il y a un miroir qui ne reflète rien. J'ai bougé devant, rien ne suit.","Écoute, dans la chambre il y a un miroir bizarre : dégradé gris-bleu, et aucun reflet ne bouge avec toi.","Il faut que je te parle de ce miroir dans la chambre. Un dégradé gris, sans le moindre reflet mobile.","J'ai un truc à te raconter : ce miroir dans la chambre ne renvoie rien du tout.","Tant que j'y pense : la chambre a un miroir qui ne reflète rien, juste ce dégradé gris terne.","Une chose à te signaler : dans la chambre, ce miroir ne renvoie ni visage ni mouvement, seulement du gris."].some(s=>d.reply.includes(s))));
 console.log('Passed: exhausted-theme direction, contribution memory, explicit remote object references, fixed gender identity and mirror validation only with a published observation.');
 
+// LES ANCRES DE PIÈCE, LES CHEMINS ENTRE ELLES, ET LA STABILITÉ D'UNE DESTINATION.
+// (Ce groupe travaillait sans une ligne d'explication : Ezechiel le signalait à chaque commit dans
+// « CE QUI N'A PAS DE RAISON ÉCRITE », sans titre, et le signal restait sans suite. Un test dont on
+// ne sait pas ce qu'il protège est le premier qu'on supprimera en croyant faire le ménage —
+// Article 27, le POURQUOI vit à côté du QUOI.)
+//
+// CE QU'IL PROTÈGE, et chaque assertion répond à un défaut qui se voit à l'écran :
+//   · deux ancres d'une même paire ne sont jamais confondues — sinon les deux personnages visent
+//     le même point et se superposent ;
+//   · aucune ancre ne tombe sur une case bloquée, et un chemin existe depuis CHAQUE autre pièce —
+//     sinon un déplacement annoncé dans le dialogue n'arrive jamais (Article 2 : la cohérence entre
+//     ce qui se dit et ce qui se voit) ;
+//   · aucune case du chemin rendu n'est bloquée, et il finit bien sur l'ancre demandée ;
+//   · une même intention rend TOUJOURS la même destination — une destination qui varierait à
+//     chaque appel ferait osciller un personnage sur place ;
+//   · l'activité écrite dans la réplique choisit l'ancre (l'enceinte, le livre), et une clé
+//     inconnue retombe proprement sur l'ancre par défaut au lieu de planter.
+// Le jardin est traité à part partout, parce qu'il n'a pas les mêmes murs.
 {
 const {roomAnchors,residentDestination,blocked,pathBetween,centers,rooms}=await import('../.sites-runtime/test-house.mjs');
 let checked=0;for(const [room,anchors] of Object.entries(roomAnchors))for(const [key,pair] of Object.entries(anchors)){assert.notDeepEqual(pair[0],pair[1]);for(const point of pair){assert.ok(!blocked(...point,room==='jardin'),room+' '+key+' blocked');for(const origin of Object.entries(centers).filter(([room])=>room!=="jardin").map(([,center])=>center)){const route=pathBetween(origin,point,room==="jardin");assert.ok(route.length,room+' '+key+' unreachable');assert.ok(route.every(p=>!blocked(...p,room==="jardin")));assert.deepEqual(route.at(-1),point);checked++;}}}
@@ -9383,6 +9401,184 @@ async function testFormesDeCibleRemplacable() {
 }
 await testFormesDeCibleRemplacable();
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// L'ARTICLE 31, FAILLE 8 — « je cite un outil sans l'avoir lancé » (2026-09-28, tâche #765)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// L'Article la nomme lui-même « LA PLUS VICIEUSE », et la ferme ainsi : « tout rapport nomme
+// l'outil ET l'horodatage réel de son passage, et le compteur d'usage en garde la trace. Un outil
+// cité sans passage enregistré est un outil qui n'a pas tourné. » Le compteur gardait bien la
+// trace ; RIEN ne la confrontait. Une obligation sans vérificateur ne survit pas au changement de
+// session (Article 27).
+async function testArticle31Faille8() {
+  const TU = await import('../scripts/tool-usage.mjs');
+
+  // ── 1. CE QUE L'ARTICLE VISE EST UNE ATTRIBUTION, PAS UNE MENTION.
+  // Ma première version cherchait le simple nom et accusait NEUF rapports sur douze — dont
+  // l'archive verbatim d'un prompt de l'utilisateur : elle reprochait à un texte de contenir les
+  // mots de quelqu'un d'autre. Troisième fois de la même nuit que « une mention n'est pas un
+  // usage » se paie (leçon #832), sous trois formes différentes.
+  // Une liste RÉALISTE : le seuil d'inventaire est une PART du parc connu, donc un jeu d'essai à
+  // trois outils déclarerait « inventaire » dès la deuxième citation. Un contre-test bâti trop
+  // petit prouverait l'inverse de ce qu'il croit prouver.
+  const slugs = ['cassandra-rh', 'safe-export', 'the-final-judge', ...Array.from({ length: 17 }, (_, k) => `outil-${k}`)];
+  assert.deepEqual(TU.outilsCitesDans("D'après CASSANDRA-RH, tout va bien.", slugs), ['cassandra-rh'], 'an attribution phrase — the exact wording the Article itself uses — must be recognised');
+  assert.deepEqual(TU.outilsCitesDans('safe-export signale 3 écarts.', slugs), ['safe-export'], 'a tool followed by a verb of assertion is also an attribution');
+  assert.deepEqual(TU.outilsCitesDans('La liste : safe-export, the-final-judge, cassandra-rh.', slugs), [], 'a bare listing claims NOTHING about a passage: accusing it would demand that the whole landscape had run before one may enumerate it');
+  assert.deepEqual(TU.outilsCitesDans('il faudra consulter safe-export avant de lancer.', slugs), [], 'a plan written in the future tense states no passage either — and this is exactly what accused my own departure plan');
+
+  // ── 2. ELLE MORD POUR DE VRAI. Sans cette assertion, tout ce qui précède pourrait n'être qu'un
+  // détecteur devenu si prudent qu'il ne détecte plus rien.
+  const maintenant = 1_700_000_000_000;
+  const histoire = { events: [{ toolSlug: 'cassandra-rh', origin: 'cli_direct', at: maintenant - 3600 * 1000 }] };
+  const fabrique = TU.findOutilsCitesSansPassage("D'après CASSANDRA-RH et d'après safe-export, tout va bien.", slugs, { history: histoire, now: maintenant });
+  assert.deepEqual(fabrique.sansPassage, ['safe-export'], 'MUST CATCH: a tool given as a SOURCE with no recorded passage in the window is exactly what the Article calls unverifiable — and cassandra-rh, which did run, must not be caught with it');
+
+  // ── 3. L'AUTEUR D'UN RAPPORT N'EST PAS UNE CITATION. C'était l'accusation la plus absurde des
+  // trois trouvées au premier passage : safe-export accusé dans SON PROPRE rapport, qu'il venait
+  // de produire.
+  const sienPropre = TU.findOutilsCitesSansPassage("D'après safe-export, 0 écart.", slugs, { history: histoire, now: maintenant, auteur: 'safe-export' });
+  assert.deepEqual(sienPropre.sansPassage, [], 'a report naming its own producer must never be accused: it produced the report, therefore it ran');
+
+  // ── 4. UN INVENTAIRE ÉNUMÈRE, IL NE CITE PAS — et le seuil est DÉRIVÉ, jamais choisi.
+  const parc = ['a-outil', 'b-outil', 'c-outil', 'd-outil', 'e-outil', 'f-outil'];
+  const inventaire = TU.findOutilsCitesSansPassage("D'après a-outil, d'après b-outil, d'après c-outil, d'après d-outil.", parc, { history: { events: [] }, now: maintenant });
+  assert.equal(inventaire.mesurable, false, 'a text naming more than a third of the known tools is an INVENTORY: it must be declared unmeasurable rather than accused, because demanding that the whole landscape ran before one may list it is absurd');
+  assert.equal(inventaire.inventaire, true, 'and it must SAY that this is why, so a reader never mistakes it for "nothing found"');
+
+  // ── 5. UN HORODATAGE PERDU N'EST PAS UNE ABSENCE DE PASSAGE.
+  // 327 événements réels portaient un `at` qui n'était pas un nombre : on sait que l'outil a
+  // tourné, on ne sait plus quand. Les compter comme « n'a pas tourné » transformerait une lacune
+  // de mesure en accusation (leçons L5/L11).
+  const perdu = { events: [{ toolSlug: 'safe-export', origin: 'cli_direct', at: null, horodatagePerdu: true }] };
+  const r5 = TU.findOutilsCitesSansPassage("D'après safe-export, tout va bien.", slugs, { history: perdu, now: maintenant });
+  assert.deepEqual(r5.sansPassage, [], 'a tool whose only events have a LOST timestamp must not be accused of never running');
+  assert.deepEqual(r5.horodatagePerdu, ['safe-export'], 'but the loss must be SAID, in its own field: "we know it ran, we no longer know when" is a third state, not a green');
+
+  // ── 6. UN HISTORIQUE VIDE NE DIT JAMAIS « AUCUN FAUTIF ».
+  const vide = TU.findOutilsCitesSansPassage("D'après safe-export.", slugs, { history: { events: [] }, now: maintenant });
+  assert.equal(vide.mesurable, false, 'an empty usage history makes the check UNMEASURABLE: "no recorded passage at all" and "this tool did not run" read as opposites');
+
+  // ── 7. LE COMPTEUR REFUSE DÉSORMAIS UN HORODATAGE QUI N'EN EST PAS UN.
+  // C'est la racine du défaut : 31 appels sur 11 outils écrivaient `recordCliUsage("slug", {…})`,
+  // le second paramètre était `now`, et l'objet devenait l'horodatage. Aucune erreur n'apparaissait
+  // jamais — recordCliUsage avale ses exceptions par conception — et onze outils passaient pour
+  // n'avoir JAMAIS tourné dans toute fenêtre de temps, en silence, depuis des semaines.
+  assert.throws(() => TU.recordToolUsage('x', 'cli_direct', { origin: 'cli_direct' }), /horodatage invalide/, 'a non-numeric timestamp must be REFUSED at the source: silently storing it is what made the defect invisible for weeks');
+  assert.equal(TU.reparerHorodatagesPerdus({ events: [{ toolSlug: 'a', at: { o: 1 } }, { toolSlug: 'b', at: 12 }] }).repares, 1, 'the repair must normalise exactly the broken events and leave the sound ones untouched');
+  assert.equal(TU.reparerHorodatagesPerdus({ events: [{ toolSlug: 'a', at: { o: 1 } }] }).history.events[0].horodatagePerdu, true, 'and it must DECLARE the loss rather than delete the event: the event still proves the tool ran, only the hour is gone');
+
+  // ── 8. EN DIRECT SUR LE VRAI HISTORIQUE (Article 25) : plus un seul horodatage cassé.
+  const reelle = TU.loadToolUsageHistory();
+  const casses = (reelle.events ?? []).filter((e) => e.at !== null && typeof e.at !== 'number');
+  assert.deepEqual(casses, [], `no event of the real usage history may carry a timestamp that is neither a number nor a declared loss (currently ${casses.length}); 327 of 4931 did before this pass, across eleven tools, and nothing had ever said so`);
+
+  console.log("Passed: la faille 8 de l'Article 31 — « je cite un outil sans l'avoir lancé » — a enfin un vérificateur (2026-09-28, tâche #765). L'Article la nomme lui-même « la plus vicieuse » et dit que le compteur d'usage en garde la trace : la trace existait, RIEN ne la confrontait, et une obligation sans vérificateur ne survit pas au changement de session (Article 27). Le premier passage réel a immédiatement trouvé ce qu'aucune relecture n'aurait vu : 327 événements sur 4 931 — 6,6 % de l'historique, onze outils — portaient un `at` qui n'était pas un nombre, parce que 31 appels écrivaient `recordCliUsage(\"slug\", { origin })` alors que le second paramètre est l'horodatage. Aucune erreur n'est jamais apparue, le compteur avalant ses exceptions par conception, et onze outils passaient donc pour n'avoir JAMAIS tourné dans toute fenêtre de temps, en silence, depuis des semaines. Corrigé à la CLASSE : l'API honore les deux formes d'appel (quand onze outils écrivent la même chose, c'est l'API qui manque), le compteur REFUSE désormais un horodatage non numérique, et les 327 événements sont normalisés en « horodatage perdu » déclaré plutôt que supprimés — le fait qu'ils prouvent survit, la perte se voit. Le détecteur lui-même a dû être resserré trois fois : il visait le simple NOM et accusait neuf rapports sur douze, dont l'archive verbatim d'un prompt de l'utilisateur. Il ne compte désormais qu'une ATTRIBUTION — les mots mêmes de l'Article, « d'après X » —, exclut l'auteur d'un rapport, et déclare INVENTAIRE un texte qui nomme plus du tiers du parc. Chaque assouplissement est encadré par une assertion qui prouve qu'il mord encore.");
+}
+await testArticle31Faille8();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// ÉCRIRE DANS UNE LIGNE DU SUIVI SANS LA CASSER (2026-09-28, tâche #1071)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Une ligne du registre s'écrit `| a | b | c |`. Découpée sur « | », elle rend
+// ["", "a", "b", "c", ""] : le dernier élément n'est PAS la dernière cellule, c'est la chaîne vide
+// qui suit la barre finale. Écrire dedans AJOUTE une colonne et décale tout — le statut part dans
+// le Détail, le Détail dans « pour qui », et le lecteur canonique déclare la ligne illisible, donc
+// la tâche devient invisible à tout ce qui compte les tâches.
+//
+// CE CONTRE-TEST EXISTE PARCE QUE J'AI COMMIS LE DÉFAUT TROIS FOIS dans la même nuit — #604, puis
+// #765 ET #766 une heure après avoir corrigé le premier. Une erreur qu'on répète après l'avoir vue
+// n'est pas un défaut d'attention, c'est un geste mal outillé (leçon L37 : corriger la CLASSE).
+async function testEcrireDansUneLigneDeSuivi() {
+  const CSF = await import('../scripts/check-suivi-fidelity.mjs');
+  const ligne = '| 7 | 2026-01-01T00:00Z | mc | Sujet | Sous-sujet | NORMAL-UTILE | ancien détail | Ouverte |';
+
+  // ── 1. LE COMPTE DE CELLULES NE BOUGE PAS. C'est l'assertion qui aurait attrapé les trois fois.
+  assert.equal(CSF.cellulesDe(ligne).length, 8, 'the two border empties must never be counted as cells — mistaking the trailing one for the last cell is the whole defect');
+  const close = CSF.avecDetailEtStatut(ligne, ' neuf ', ' Terminée — fidèle ');
+  assert.equal(CSF.cellulesDe(close).length, 8, 'writing the detail and the status must leave the column count UNCHANGED: adding one shifts every field after it, and the canonical reader then declares the row unreadable');
+  assert.deepEqual(CSF.cellulesDe(close).map((c) => c.trim()).slice(-2), ['neuf', 'Terminée — fidèle'], 'the detail must land in the second-to-last cell and the status in the last — that is the whole contract');
+
+  // ── 2. LES CELLULES DE TÊTE SONT INTACTES. Une écriture qui décale ne se voit pas à l'œil :
+  // « une ligne mal formée s'affiche presque normalement » (tâche #826).
+  assert.deepEqual(CSF.cellulesDe(close).map((c) => c.trim()).slice(0, 6), ['7', '2026-01-01T00:00Z', 'mc', 'Sujet', 'Sous-sujet', 'NORMAL-UTILE'], 'no head cell may move');
+
+  // ── 3. UNE BARRE FINALE MANQUANTE EST RÉPARÉE, jamais aggravée. C'est l'état exact dans lequel
+  // mes trois lignes se sont retrouvées, et la fonction doit savoir en sortir plutôt qu'y ajouter.
+  const sansBarre = '| 7 | h | mc | s | ss | NORMAL-UTILE | d | Ouverte';
+  assert.equal(CSF.cellulesDe(sansBarre).length, 8, 'a row missing its closing pipe still has eight real cells — dropping the last one would silently delete the status');
+  assert.ok(CSF.avecDetailEtStatut(sansBarre, ' d2 ', ' T ').endsWith('| T |'), 'and recomposing must put the closing pipe back rather than leave the row half-formed');
+
+  // ── 4. LES DEUX ÉCRITURES SONT INDÉPENDANTES : on peut ne toucher qu'au statut.
+  assert.deepEqual(CSF.cellulesDe(CSF.avecDetailEtStatut(ligne, null, ' Écartée ')).map((c) => c.trim()).slice(-2), ['ancien détail', 'Écartée'], 'passing null for the detail must leave it untouched — a closure that rewrites a detail it did not mean to would lose the reason a task existed');
+
+  // ── 5. ELLE NE CASSE RIEN QUAND ON LUI DONNE N'IMPORTE QUOI.
+  assert.deepEqual(CSF.cellulesDe(''), [], 'an empty string has no cells');
+  assert.equal(CSF.avecDetailEtStatut('pas une ligne', ' x ', ' y '), 'pas une ligne', 'a line that is not a table row must be returned untouched rather than turned into one');
+
+  // ── 6. LES LIGNES RÉELLEMENT RÉPARÉES CETTE NUIT le sont restées (Article 25).
+  const ctd = await import('../scripts/check-tasks-details.mjs');
+  const vraies = ctd.loadAllTaskRows();
+  for (const n of [604, 765, 766]) {
+    const r = vraies.find((x) => x.numero === n);
+    assert.ok(r, `task #${n} must still be readable by the canonical reader`);
+    assert.ok(/^Termin/.test(String(r.statut).trim()), `task #${n} must carry its status in the STATUS cell, not in the detail — all three were broken exactly this way on 2026-09-28 and repaired by hand before this helper existed`);
+  }
+
+  console.log("Passed: écrire dans une ligne du suivi sans la casser (2026-09-28, tâche #1071). Une ligne `| a | b | c |` découpée sur « | » rend [\"\", \"a\", \"b\", \"c\", \"\"] : le dernier élément n'est pas la dernière cellule, c'est le vide qui suit la barre finale. Écrire dedans ajoute une colonne, le statut part dans le Détail, le Détail dans « pour qui », et le lecteur canonique déclare la ligne illisible — donc la tâche disparaît de tout ce qui compte les tâches, sans que rien ne se voie à l'œil. J'ai commis ce défaut TROIS FOIS dans la même nuit, sur #604 puis sur #765 et #766 une heure après avoir corrigé le premier : une erreur qu'on répète après l'avoir vue n'est pas un défaut d'attention, c'est un geste mal outillé. Les quatre fonctions vivent chez check-suivi-fidelity, PROPRIÉTAIRE du format — il le lit, il le valide, il en connaît les cinq variantes historiques — plutôt que dans un fichier neuf qui aurait créé un second détenteur du même format et réclamé un blueprint, une fiche et neuf inscriptions de registre pour quatre fonctions de quatre lignes.");
+}
+await testEcrireDansUneLigneDeSuivi();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// UN ITEM COÛTEUX N'EST PAS UN ITEM MUET (2026-09-28, tâche #726)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// `x-port-blindtest` était accusé de « n'avoir jamais écrit un seul signal — son étape passe pour
+// faite à chaque Ronde et rien ne l'atteste ». C'est exact, et c'est sa CONCEPTION : il porte
+// `costly: true`, son étape 2 demande un agent séparé donc de vrais tokens (Article 22), et il ne
+// tourne QUE coché explicitement. Lui reprocher son silence, c'est lui reprocher de respecter la
+// règle qui le gouverne — une alerte qu'aucune action légitime ne peut éteindre (leçon L6).
+async function testItemCouteuxNestPasMuet() {
+  const CPG = await import('../scripts/circle-process-guardian.mjs');
+
+  // ── 1. LA LISTE DES COÛTEUX SE LIT DANS LE REGISTRE, jamais recopiée (Article 24).
+  const { CIRCLE_ITEMS } = await import('../scripts/circle-tasks.mjs');
+  const couteuxReels = CPG.itemsCouteux();
+  assert.ok(couteuxReels.size > 0, 'the real Ronde registry must declare at least one costly item, otherwise this whole distinction would be scenery');
+  assert.deepEqual([...couteuxReels].sort(), CIRCLE_ITEMS.filter((i) => i.costly).map((i) => i.id).sort(), 'the set must be DERIVED from CIRCLE_ITEMS at call time: a costly item added tomorrow must be recognised without touching this function');
+  assert.ok(couteuxReels.has('x-port-blindtest'), 'x-port-blindtest is the item this fix exists for — if it stops being costly, this test must fail loudly rather than pass on a premise that no longer holds');
+
+  // ── 2. LES QUATRE ÉTATS, et le quatrième ne se confond avec aucun des trois.
+  const dossiers = { 'un-couteux': 'docs/faux-couteux/', 'un-normal': 'docs/faux-normal/' };
+  const vide = () => [];
+  const r = CPG.tendanceDesSignauxDeRonde({
+    folders: dossiers, couteux: new Set(['un-couteux']), listDirImpl: vide, readFileImpl: () => '',
+  });
+  const parItem = Object.fromEntries(r.map((x) => [x.item, x.etat]));
+  assert.equal(parItem['un-couteux'], 'coûteux, jamais coché', 'a costly item with no signal must get its OWN state, never "jamais écrit": the two call for opposite gestures — one is the design, the other is a real gap');
+  assert.equal(parItem['un-normal'], 'dossier absent', 'and a non-costly item must keep the state it had — the exemption must stay narrow, or it would silence every genuinely mute item');
+
+  // ── 3. ELLE MORD ENCORE. Sans cette assertion, le correctif pourrait avoir simplement éteint
+  // le détecteur : un item gratuit et muet doit toujours être signalé.
+  const muetReel = CPG.tendanceDesSignauxDeRonde({
+    folders: { 'un-normal': 'docs/faux-normal/' }, couteux: new Set(),
+    listDirImpl: () => ['index.md'], readFileImpl: () => '',
+  });
+  assert.equal(muetReel[0].etat, 'jamais écrit', 'a free item whose folder holds only its index is still reported: the costly tolerance must never become a hole');
+
+  // ── 4. SUR LE VRAI DÉPÔT (Article 25) : plus aucun item coûteux dans les muets.
+  const reels = CPG.tendanceDesSignauxDeRonde();
+  const muetsAccuses = reels.filter((x) => x.etat === 'jamais écrit' || x.etat === 'dossier absent').map((x) => x.item);
+  assert.ok(!muetsAccuses.some((i) => couteuxReels.has(i)), `no costly item may remain among the mute ones on the real repository (currently ${muetsAccuses.join(', ') || 'none'})`);
+
+  console.log("Passed: un item COÛTEUX n'est pas un item muet (2026-09-28, tâche #726) — quatre états au lieu de trois dans la tendance des signaux de Ronde. x-port-blindtest était accusé de n'avoir jamais écrit un signal, ce qui est exact et ce qui est sa CONCEPTION : il porte costly:true, son étape 2 demande un agent séparé donc de vrais tokens (Article 22), et il ne tourne que coché explicitement. Lui reprocher son silence, c'est lui reprocher de respecter la règle qui le gouverne, et c'est une alerte qu'aucune action légitime ne peut éteindre (leçon L6). La liste des coûteux se LIT dans CIRCLE_ITEMS à chaque appel, donc un item coûteux de plus demain est reconnu sans qu'on touche à la fonction (Article 24). Et le contre-test vérifie dans les deux sens : un item GRATUIT dont le dossier ne porte que son index est toujours signalé, sans quoi la tolérance serait devenue un trou.");
+}
+await testItemCouteuxNestPasMuet();
+
+
+
+
 
 
 
@@ -16568,6 +16764,18 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // MUST LET PASS : deux groupes réellement séparés par du code restent deux groupes.
   const deuxVrais = ["assert.ok(1);", "console.log('Passed: un');", "assert.ok(2);", "console.log('Passed: deux');"].join("\n");
   assert.equal(ez.decouperEnGroupes(deuxVrais).length, 2, 'MUST LET PASS: two blocks genuinely separated by code are two groups — a merge rule too wide would hide real empty groups');
+
+  // LE MÊME DÉFAUT À UN CARACTÈRE PRÈS (2026-09-28). Le premier correctif ne recollait que les
+  // lignes STRICTEMENT consécutives ; check-house en écrit quatre d'affilée séparées par une ligne
+  // BLANCHE, et les trois dernières ressortaient donc comme « aucune assertion » à chaque commit.
+  // Six faux « ne mord pas » sur un fichier dont c'est justement le métier de mordre — leçon L4
+  // pour la seconde fois sur le même détecteur, ce qui est très exactement ce que la leçon L37 dit :
+  // corriger une occurrence ne corrige pas la classe.
+  const avecDesBlancs = "assert.ok(1);\nconsole.log('Passed: un');\n\nconsole.log('Passed: deux');\n\nconsole.log('Passed: trois');";
+  assert.equal(ez.decouperEnGroupes(avecDesBlancs).length, 1, 'MUST CATCH: success lines separated only by BLANK lines still belong to one block — between two of them there is no BODY, therefore there cannot be a second group, and the reasoning closes the case for good');
+  assert.equal(ez.groupesSansMorsure(ez.decouperEnGroupes(avecDesBlancs)).muets.length, 0, 'and none of them may be reported as assertion-free: the assertion sits above, in the same block');
+  const vraimentVide = "assert.ok(1);\nconsole.log('Passed: un');\nconst x = 2;\nconsole.log('Passed: deux');";
+  assert.equal(ez.groupesSansMorsure(ez.decouperEnGroupes(vraimentVide)).muets.length, 1, 'MUST STILL CATCH: a block with a real body and no assertion is still reported — the blank-line tolerance must not become a hole, or the detector would stop detecting the very thing it exists for');
 
   // DÉFAUT 2 — une ligne qui appelle une assertion n'importe rien : c'est une fixture.
   const fixture = "assert.equal(f({fichier:'./scripts/inexistant-xyz.mjs'}), 1, 'peu importe');";

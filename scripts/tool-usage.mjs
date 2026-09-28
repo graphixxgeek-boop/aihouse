@@ -92,6 +92,16 @@ export function loadToolUsageHistory(readFile = (u) => readFileSync(u, "utf8")) 
 export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomething = undefined) {
   if (!toolSlug) throw new Error("recordToolUsage: toolSlug obligatoire — un usage ne peut jamais être anonyme.");
   if (!USAGE_ORIGINS.includes(origin)) throw new Error(`recordToolUsage: origin inconnue "${origin}" — attendu l'une de ${USAGE_ORIGINS.join(", ")}`);
+  // UN HORODATAGE QUI N'EST PAS UN NOMBRE EST REFUSÉ (2026-09-28, tâche #765). Il ne l'était pas, et
+  // ça a coûté 327 événements sur 4 931 — 6,6 % de l'historique — dont l'`at` était un OBJET. Aucune
+  // erreur n'est jamais apparue : `recordCliUsage` avale ses exceptions par conception (le compteur
+  // ne doit jamais bloquer la vraie sortie d'un outil), et une comparaison `at >= limite` sur un
+  // objet rend simplement `false`. Résultat : onze outils passaient pour n'avoir JAMAIS tourné dans
+  // toute fenêtre de temps, en silence, depuis des semaines. Refuser ici rend le défaut visible au
+  // test, là où le try/catch de l'appelant le rendait invisible en production.
+  if (typeof now !== "number" || !Number.isFinite(now)) {
+    throw new Error(`recordToolUsage: horodatage invalide pour "${toolSlug}" (${typeof now}) — un « at » qui n'est pas un nombre rend l'événement invisible à toute fenêtre de temps, sans jamais lever d'erreur.`);
+  }
   const history = loadJson(HISTORY_PATH, { events: [] });
   history.events = history.events ?? [];
   history.events.push({ toolSlug, origin, at: now, ...(typeof foundSomething === "boolean" ? { foundSomething } : {}) });
@@ -110,11 +120,36 @@ export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomethi
 // compteur enregistrait les deux à l'identique, et l'accusation était donc fausse. Encore la même
 // famille : un signal adjacent lu comme le signal visé. `TOOL_USAGE_ORIGIN=verification` marque
 // désormais ces passages, et angel les écarte de son croisement d'horodatages.
-export function recordCliUsage(toolSlug, now = Date.now(), env = process.env) {
+// DEUX FORMES D'APPEL, ET LA SECONDE N'ÉTAIT PAS PRÉVUE (2026-09-28, tâche #765). Trente et un
+// appels répartis sur onze outils écrivent `recordCliUsage("slug", { origin: … })` — une forme
+// parfaitement naturelle, et que personne n'avait déclarée. Le second paramètre étant `now`,
+// l'objet devenait l'horodatage, et l'événement sortait invisible de toute fenêtre de temps.
+//
+// LA CORRECTION HONORE LES DEUX FORMES plutôt que de réécrire trente et un appels : quand onze
+// outils écrivent la même chose, c'est l'API qui manque, pas eux (leçon L37 — on corrige la classe).
+// Un nombre reste un horodatage ; un objet apporte `{ now, origin }`.
+export function recordCliUsage(toolSlug, nowOuOptions = undefined, env = process.env) {
   try {
-    const declaree = env?.TOOL_USAGE_ORIGIN;
+    const options = (nowOuOptions && typeof nowOuOptions === "object") ? nowOuOptions : {};
+    const now = typeof nowOuOptions === "number" ? nowOuOptions : (typeof options.now === "number" ? options.now : Date.now());
+    const declaree = options.origin ?? env?.TOOL_USAGE_ORIGIN;
     recordToolUsage(toolSlug, USAGE_ORIGINS.includes(declaree) ? declaree : "cli_direct", now);
   } catch { /* best-effort, jamais bloquant — cf. commentaire ci-dessus */ }
+}
+
+// LES 327 ÉVÉNEMENTS DÉJÀ ABÎMÉS ne se jettent pas : ils prouvent qu'un outil a tourné, et seule
+// l'HEURE est perdue. Les supprimer effacerait onze outils de leurs totaux d'usage ; les laisser
+// tels quels laisse un objet là où un nombre est attendu. Ils sont donc normalisés en
+// `at: null, horodatagePerdu: true` — le fait survit, la perte est DÉCLARÉE, et une fenêtre de
+// temps les écarte en le sachant plutôt que par accident.
+export function reparerHorodatagesPerdus(history = { events: [] }) {
+  let repares = 0;
+  const events = (history.events ?? []).map((e) => {
+    if (typeof e.at === "number" && Number.isFinite(e.at)) return e;
+    repares += 1;
+    return { ...e, at: null, horodatagePerdu: true };
+  });
+  return { history: { ...history, events }, repares };
 }
 
 // Statistiques cumulées, jamais remises à zéro (décision explicite de l'utilisateur : le total
@@ -432,6 +467,112 @@ export function formatOriginesJamaisEcritesLines(r) {
   if (r.cheminSansUsage.length) L.push(`   (${r.cheminSansUsage.length} origine(s) ont un chemin mais aucun événement à ce jour : ${r.cheminSansUsage.join(", ")} — un chemin non emprunté n'est pas un chemin absent.)`);
   L.push(`   HORS PORTÉE : ${r.horsPortee}`);
   return L;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LA FAILLE 8 DE L'ARTICLE 31, ENFIN MÉCANIQUE (2026-09-28, tâche #765)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// L'ARTICLE LA NOMME LUI-MÊME COMME « LA PLUS VICIEUSE » : « je cite un outil sans l'avoir lancé.
+// Une phrase comme "d'après CASSANDRA..." est invérifiable si l'outil n'a pas tourné. → Tout
+// rapport nomme l'outil ET l'horodatage réel de son passage, et le compteur d'usage
+// (recordCliUsage) en garde la trace. Un outil cité sans passage enregistré est un outil qui n'a
+// pas tourné. »
+//
+// LE COMPTEUR GARDAIT BIEN LA TRACE — ET PERSONNE NE LA CONFRONTAIT. La preuve existait, le
+// vérificateur n'existait pas : exactement la forme d'obligation qui ne repose que sur la mémoire
+// d'un agent, et qui disparaît donc à la session suivante (Article 27). Écrire « le compteur en
+// garde la trace » n'a jamais empêché personne de citer un outil qu'il n'avait pas lancé.
+//
+// CE QU'ELLE VÉRIFIE, ET RIEN DE PLUS : pour chaque outil NOMMÉ dans un texte, existe-t-il un
+// passage enregistré dans la fenêtre qui précède ? Elle ne dit pas si le rapport est bon, ni si
+// l'outil a trouvé quelque chose — seulement s'il a tourné.
+//
+// TROIS ÉTATS, JAMAIS DEUX, parce que « pas de passage » et « pas d'historique » se réparent à
+// l'opposé : lancer l'outil, ou aller voir pourquoi le compteur est vide.
+
+export const FENETRE_CITATION_HEURES = 24;
+
+// CE QUE L'ARTICLE VISE EST UNE ATTRIBUTION, PAS UNE MENTION — et ses propres mots le disent :
+// « une phrase comme "d'après CASSANDRA..." est invérifiable si l'outil n'a pas tourné ». Nommer un
+// outil dans une liste, dans un plan au futur, ou dans la citation d'une demande de l'utilisateur
+// n'affirme RIEN sur un passage. Ma première version cherchait le simple nom et accusait neuf
+// rapports sur douze, dont l'archive verbatim d'un prompt de l'utilisateur : elle reprochait à un
+// texte de contenir les mots de quelqu'un d'autre.
+//
+// C'EST LA TROISIÈME FOIS DE LA MÊME NUIT que ce dépôt paie « une MENTION n'est pas un USAGE »
+// (leçon #832) — après les phrases de SAFE-EXPORT et les sections catalogue d'Abraham. La classe
+// est la même à chaque fois : un signal ADJACENT lu comme le signal visé.
+//
+// Un nom d'outil s'écrit de plusieurs façons — EN CAPITALES (CASSANDRA-RH) ou en slug
+// (cassandra-rh) — et les deux comptent : n'en reconnaître qu'une laisserait la faille ouverte pour
+// l'autre (leçon L37).
+export const MOTIFS_ATTRIBUTION = [
+  (n) => new RegExp(`(?:d'apr[èe]s|selon|source\\s*:|mesur[ée]\\s+par|trouv[ée]\\s+par|relev[ée]\\s+par|signal[ée]\\s+par|d'?apres)\\s+[«"'\`]?${n}`, "i"),
+  (n) => new RegExp(`${n}\\s*[»"'\`]?\\s+(?:dit|affirme|annonce|rend|compte|conclut|a\\s+trouv|signale|mesure|indique|rapporte)`, "i"),
+];
+
+export function outilsCitesDans(texte = "", slugsConnus = []) {
+  const t = String(texte);
+  return slugsConnus.filter((slug) => {
+    const s = String(slug);
+    if (s.length < 4) return false;   // un slug trop court produirait des coïncidences
+    const formes = [s, s.replace(/-/g, "[- ]"), s.toUpperCase().replace(/-/g, "[- ]")];
+    return formes.some((f) => MOTIFS_ATTRIBUTION.some((m) => m(f).test(t)));
+  });
+}
+
+// TROIS EXCLUSIONS, TROUVÉES AU PREMIER VRAI PASSAGE (2026-09-28), et sans elles la vérification
+// accusait neuf rapports sur douze — un garde-fou qui accuse tout le monde n'accuse plus personne
+// (leçon L4). Chacune répond à un cas concret vu sur le disque, aucune n'est une précaution
+// théorique.
+//
+// (1) L'AUTEUR D'UN RAPPORT N'EST PAS UNE CITATION. `safe-export` était accusé dans SON PROPRE
+//     rapport : il l'a produit, donc il a tourné. C'était l'accusation la plus absurde des trois.
+//
+// (2) UN INVENTAIRE ÉNUMÈRE, IL NE CITE PAS. Le rapport des kits nomme les vingt-cinq outils du
+//     parc parce que c'est son sujet ; le récapitulatif de Ronde fait pareil. Les traiter comme des
+//     citations de source revient à exiger que le parc entier ait tourné pour qu'on puisse en
+//     DRESSER LA LISTE. Le seuil est DÉRIVÉ, jamais choisi : au-delà du tiers des outils connus,
+//     c'est un inventaire. Même raisonnement que les sections catalogue du croisement d'Abraham.
+//
+// (3) UN HORODATAGE PERDU N'EST PAS UNE ABSENCE DE PASSAGE. Les 327 événements réparés portent
+//     `horodatagePerdu: true` : on sait que l'outil a tourné, on ne sait plus quand. Le compter
+//     comme « n'a pas tourné » serait transformer une lacune de mesure en accusation — très
+//     exactement ce que ce dépôt appelle un faux rouge (leçons L5/L11).
+export const PART_POUR_ETRE_UN_INVENTAIRE = 1 / 3;
+
+export function findOutilsCitesSansPassage(texte = "", slugsConnus = [], {
+  history = null, now = Date.now(), fenetreHeures = FENETRE_CITATION_HEURES, readFile = undefined,
+  auteur = null, partInventaire = PART_POUR_ETRE_UN_INVENTAIRE,
+} = {}) {
+  const h = history ?? (readFile ? loadToolUsageHistory(readFile) : loadToolUsageHistory());
+  const events = h?.events ?? [];
+  const tous = outilsCitesDans(texte, slugsConnus);
+  if (slugsConnus.length && tous.length > slugsConnus.length * partInventaire) {
+    return { mesurable: false, cites: tous, sansPassage: [], inventaire: true,
+      pourquoi: `ce texte nomme ${tous.length} outils sur ${slugsConnus.length} : c'est un INVENTAIRE, pas une citation de sources. Exiger que le parc entier ait tourné pour qu'on puisse en dresser la liste serait absurde.` };
+  }
+  const cites = tous.filter((slug) => slug !== auteur);
+  if (!events.length) {
+    return { mesurable: false, cites, sansPassage: [],
+      pourquoi: "aucun événement d'usage enregistré : on ne peut pas dire si les outils cités ont tourné, ce qui n'est PAS la même chose que « ils n'ont pas tourné »" };
+  }
+  const limite = now - fenetreHeures * 3600 * 1000;
+  const sansPassage = [], horodatagePerdu = [];
+  for (const slug of cites) {
+    const siens = events.filter((e) => e.toolSlug === slug);
+    if (siens.some((e) => typeof e.at === "number" && e.at >= limite && e.at <= now)) continue;
+    if (siens.some((e) => e.horodatagePerdu)) { horodatagePerdu.push(slug); continue; }
+    sansPassage.push(slug);
+  }
+  return {
+    mesurable: true, cites, sansPassage, horodatagePerdu, fenetreHeures,
+    pourquoi: sansPassage.length
+      ? `${sansPassage.length} outil(s) nommés sans aucun passage enregistré dans les ${fenetreHeures} dernières heures : ${sansPassage.join(", ")} — un outil cité sans passage est un outil qui n'a pas tourné (Article 31, faille 8)`
+      : `les ${cites.length} outil(s) nommés ont tous un passage enregistré dans la fenêtre${horodatagePerdu.length ? ` (${horodatagePerdu.length} avec un horodatage perdu : on sait qu'ils ont tourné, plus quand)` : ""}`,
+    horsPortee: "Elle vérifie qu'un outil a TOURNÉ, jamais que ce qu'on en dit est exact : un rapport peut citer un vrai passage et en tirer une conclusion fausse. Et elle ne voit que les outils qu'elle connaît — un nom absent du registre des slugs lui est invisible.",
+  };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

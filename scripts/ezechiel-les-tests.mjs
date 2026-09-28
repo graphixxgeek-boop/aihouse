@@ -293,8 +293,18 @@ export function decouperEnGroupes(src = "") {
   const vraiGroupe = (l) => { const m = MOTIF_FIN_DE_GROUPE.exec(l); return m ? !dansUneChaine(l, m.index) : false; };
   for (let i = 0; i < lignes.length; i++) {
     if (!vraiGroupe(lignes[i])) continue;
+    // DES LIGNES « Passed » SÉPARÉES PAR DU VIDE APPARTIENNENT ENCORE AU MÊME GROUPE (2026-09-28).
+    // Le premier correctif ne recollait que les lignes STRICTEMENT consécutives ; check-house en
+    // écrit quatre d'affilée séparées par une ligne blanche, et les trois dernières ressortaient
+    // donc comme « aucune assertion ». C'est la même leçon L4 que la fois précédente, à un
+    // caractère près — et le raisonnement qui la ferme est définitif : entre deux « Passed » il n'y
+    // a que du blanc, donc il n'y a PAS DE CORPS, donc il ne peut pas y avoir de second groupe.
     let fin = i;
-    while (fin + 1 < lignes.length && vraiGroupe(lignes[fin + 1])) fin++;
+    for (let j = i + 1; j < lignes.length; j++) {
+      if (lignes[j].trim() === "") continue;
+      if (!vraiGroupe(lignes[j])) break;
+      fin = j;
+    }
     const corps = lignes.slice(debut, fin + 1);
     const titres = corps.filter((l) => vraiGroupe(l))
       .map((l) => (l.match(/Passed\s*:\s*([^'"`]{0,120})/) ?? [, ""])[1].trim()).filter(Boolean);

@@ -1233,4 +1233,65 @@ function main() {
 // le silence du compteur, jamais l'inactivité de l'outil (leçon L11). Ces six-là sont restés muets
 // des mois parce qu'ils étaient absents du catalogue, donc invisibles au verrou qui vérifie
 // précisément ça — une invisibilité qui en cachait une autre.
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// ÉCRIRE DANS UNE LIGNE DU SUIVI SANS LA CASSER (2026-09-28, tâche #1071)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// LE DÉFAUT QUE CES QUATRE FONCTIONS RENDENT IMPOSSIBLE, et il a été commis TROIS FOIS dans la même
+// nuit, de bonne foi à chaque fois. Une ligne du registre s'écrit `| a | b | c |`. Découpée sur
+// « | », elle rend `["", "a", "b", "c", ""]` : le dernier élément n'est PAS la dernière cellule,
+// c'est la chaîne vide qui suit la barre finale. Écrire dedans AJOUTE une colonne et décale tout.
+//
+// CE QUE ÇA COÛTE : le statut se retrouve dans le Détail, le Détail dans la cellule « pour qui », et
+// le lecteur canonique déclare la ligne illisible — donc la tâche devient invisible à tout ce qui
+// compte les tâches. Rien ne se voit à l'œil : « une ligne mal formée s'affiche presque
+// normalement », comme le disait déjà la tâche #826.
+//
+// POURQUOI UN GESTE OUTILLÉ PLUTÔT QU'UNE ATTENTION SOUTENUE : le défaut a été commis sur #604, puis
+// sur #765 ET #766, une heure après avoir corrigé le premier. Une erreur qu'on répète après l'avoir
+// vue n'est pas un défaut d'attention, c'est un geste mal outillé (leçon L37 : corriger la CLASSE).
+//
+// POURQUOI ICI ET PAS DANS UN FICHIER NEUF : ce module est déjà le PROPRIÉTAIRE du format des
+// lignes de suivi — il le lit, il le valide, il en connaît les cinq variantes historiques. Mettre
+// l'écriture ailleurs aurait créé un second détenteur du même format, ce qui est très exactement la
+// façon dont deux lectures d'une même chose finissent par diverger (Article 24). Et un fichier de
+// plus aurait réclamé un blueprint, une fiche et neuf inscriptions de registre pour quatre
+// fonctions de quatre lignes : l'Article 31 dit d'ÉTENDRE avant de construire.
+
+// Les vraies cellules d'une ligne de tableau markdown, sans les deux vides de bordure.
+export function cellulesDe(ligne = "") {
+  const parts = String(ligne).split("|");
+  if (parts.length < 3) return [];
+  // La bordure gauche est toujours là sur une ligne de tâche ; la droite peut manquer si quelqu'un
+  // l'a mangée — on ne la retire que si elle est VIDE, sinon on effacerait une vraie cellule.
+  const debut = parts[0].trim() === "" ? 1 : 0;
+  const fin = parts[parts.length - 1].trim() === "" ? parts.length - 1 : parts.length;
+  return parts.slice(debut, fin);
+}
+
+// Recompose une ligne à partir de ses vraies cellules, bordures comprises.
+export function ligneDe(cellules = []) {
+  return `|${cellules.join("|")}|`;
+}
+
+// Remplace UNE cellule par son index depuis la fin (0 = la dernière vraie cellule, donc le statut),
+// et rend la ligne recomposée. C'est le geste qui manquait : il ne peut pas ajouter de colonne.
+export function avecCelluleDepuisLaFin(ligne = "", indexDepuisLaFin = 0, valeur = "") {
+  const c = cellulesDe(ligne);
+  if (!c.length) return ligne;
+  const i = c.length - 1 - indexDepuisLaFin;
+  if (i < 0) return ligne;
+  c[i] = valeur;
+  return ligneDe(c);
+}
+
+// Le geste courant : clôturer une tâche, c'est écrire son Détail (avant-dernière cellule) et son
+// statut (dernière). Les deux d'un coup, parce que les séparer est justement ce qui a raté.
+export function avecDetailEtStatut(ligne = "", detail = null, statut = null) {
+  let out = ligne;
+  if (detail !== null) out = avecCelluleDepuisLaFin(out, 1, detail);
+  if (statut !== null) out = avecCelluleDepuisLaFin(out, 0, statut);
+  return out;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) { recordCliUsage("check-suivi-fidelity"); main(); }

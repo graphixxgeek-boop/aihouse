@@ -671,8 +671,19 @@ export const LECTEUR_DE_TABLE = [
   { table: "CIRCLE_REPORT_FOLDERS", quoi: "ouvre le contenu de chaque dossier de signaux pour comparer les passes et en tirer une tendance — jamais seulement le chemin" },
 ];
 
+// UN ITEM COÛTEUX N'EST PAS UN ITEM MUET (2026-09-28, tâche #726). `x-port-blindtest` était accusé
+// de « n'avoir jamais écrit un seul signal » : c'est exact, et c'est sa CONCEPTION. Il porte
+// `costly: true` — son étape 2 demande un agent séparé, donc de vrais tokens (Article 22) — et il ne
+// tourne QUE si l'utilisateur le coche explicitement. Lui reprocher son silence, c'est lui reprocher
+// de respecter la règle qui le gouverne, et c'est une alerte qu'aucune action légitime ne peut
+// éteindre (leçon L6). La liste des items coûteux se LIT dans CIRCLE_ITEMS, jamais recopiée ici.
+export function itemsCouteux(items = CIRCLE_ITEMS) {
+  return new Set((items ?? []).filter((i) => i.costly).map((i) => i.id));
+}
+
 export function tendanceDesSignauxDeRonde({
   folders = CIRCLE_REPORT_FOLDERS,
+  couteux = null,
   root = ROOT,
   listDirImpl = (dir) => (existsSync(dir) ? readdirSync(dir) : []),
   readFileImpl = readFileSync,
@@ -695,8 +706,11 @@ export function tendanceDesSignauxDeRonde({
       // rapports (`scan-*`), simplement aucun SIGNAL DE RONDE — écrire « n'a jamais rien écrit »
       // aurait été faux et l'aurait fait passer pour mort alors qu'il travaille.
       const autresFichiers = contenu.filter((f) => f !== "index.md" && !f.endsWith("-index.md"));
-      const etat = !contenu.length ? "dossier absent" : autresFichiers.length ? "produit hors Ronde" : "jamais écrit";
-      resultats.push({ item, dossier, etat, passages: 0, autresFichiers: autresFichiers.length });
+      const lesCouteux = couteux ?? itemsCouteux();
+      // QUATRE SITUATIONS, pas trois : un item COÛTEUX qui n'a jamais écrit respecte sa règle.
+      const etat = lesCouteux.has(item) ? "coûteux, jamais coché"
+        : !contenu.length ? "dossier absent" : autresFichiers.length ? "produit hors Ronde" : "jamais écrit";
+      resultats.push({ item, dossier, etat, passages: 0, autresFichiers: autresFichiers.length, couteux: lesCouteux.has(item) });
       continue;
     }
     const derniers = fichiers.slice(-passages);
@@ -720,7 +734,9 @@ export function formatTendanceSignaux(resultats = []) {
   const horsRonde = resultats.filter((r) => r.etat === "produit hors Ronde");
   const repetes = resultats.filter((r) => r.etat === "répété");
   const l = [];
+  const couteuxMuets = resultats.filter((r) => r.etat === "coûteux, jamais coché");
   if (!jamais.length && !horsRonde.length && !repetes.length) {
+    if (couteuxMuets.length) l.push(`💰 ${couteuxMuets.length} item(s) COÛTEUX n'ont jamais écrit de signal, et c'est leur conception : ils ne tournent que cochés explicitement (Article 22). ${couteuxMuets.map((r) => r.item).join(", ")}`);
     l.push(`Tendance des signaux de Ronde : ${resultats.length} item(s) suivi(s), aucun muet et aucun qui se répète — chaque passage trouve du neuf.`);
     return l.join("\n");
   }

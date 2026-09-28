@@ -6,7 +6,7 @@
     },
     "ezechiel-les-tests": {
       "quand": "2026-09-28",
-      "combien": 6
+      "combien": 3
     },
     "abraham-les-references": {
       "quand": "2026-09-27",
@@ -16,29 +16,11 @@
   "alertes": [
     {
       "outil": "ezechiel-les-tests",
-      "cle": "6 groupe(s) impriment « Passed » sans aucune assertion",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "à surveiller",
-      "constat": "6 groupe(s) impriment « Passed » sans aucune assertion",
-      "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-28"
-    },
-    {
-      "outil": "ezechiel-les-tests",
       "cle": "4 groupe(s) portent une assertion sur une valeur littérale",
       "objet": "scripts/check-house.mjs",
       "gravite": "à surveiller",
       "constat": "4 groupe(s) portent une assertion sur une valeur littérale",
       "depuis": "2026-09-27",
-      "vueLe": "2026-09-28"
-    },
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "1 groupe(s) sans raison écrite",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "à surveiller",
-      "constat": "1 groupe(s) sans raison écrite",
-      "depuis": "2026-09-27T16:31:30.968Z",
       "vueLe": "2026-09-28"
     },
     {
@@ -57,15 +39,6 @@
       "gravite": "à surveiller",
       "constat": "la suite elle-même n'est pas au vert : 2 anomalie(s) de fonctionnement",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-28"
-    },
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "5 groupe(s) coûtent du temps sans porter une seule assertion",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "à surveiller",
-      "constat": "5 groupe(s) coûtent du temps sans porter une seule assertion",
-      "depuis": "2026-09-28",
       "vueLe": "2026-09-28"
     }
   ]

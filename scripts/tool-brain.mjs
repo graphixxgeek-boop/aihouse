@@ -21,14 +21,14 @@
 // outils + §7ter), jamais de blueprint ni de registre séparés (`checkAgentOnboarding()`,
 // `le-coordinateur.mjs`, paramètre `ownKnowledge: false`).
 
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName, inventaireDesFonctions, chercherUneFonctionExistante, formatFonctionExistanteLines } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
-import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines } from "./tool-usage.mjs";
+import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines, findOutilsCitesSansPassage } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
 
@@ -471,6 +471,71 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
   return lines.join("\n");
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LA FAILLE 8 DE L'ARTICLE 31, AU RAPPORT (2026-09-28, tâche #765)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// « LA PLUS VICIEUSE », dans les mots de l'Article : citer un outil sans l'avoir lancé. La preuve
+// existait — le compteur d'usage garde chaque passage — et RIEN ne la confrontait : une obligation
+// sans vérificateur ne survit pas au changement de session (Article 27).
+//
+// POURQUOI CHEZ TOOL-BRAIN plutôt que dans un outil de plus : c'est lui qui est « plugué
+// directement » à l'agent, et lui qui délivre déjà le KPI d'usage réel à chaque Ronde. La faille 8
+// est une question d'usage : elle est chez elle.
+//
+// CE QU'IL LIT : les rapports les plus récents déposés par les outils. Un rapport qui NOMME un
+// outil sans qu'aucun passage de cet outil ne soit enregistré dans la fenêtre est un rapport qui
+// cite sans avoir lancé.
+export const FENETRE_RAPPORTS_EXAMINES = 12;
+
+export async function lignesFaille8({ history, now = Date.now(), racine = null } = {}) {
+  const L = ["", "=== ARTICLE 31, FAILLE 8 — un outil CITÉ a-t-il vraiment TOURNÉ ? ==="];
+  let slugs = [];
+  try {
+    const { AGENT_CATEGORIES } = await import("./lib-shell.mjs");
+    slugs = Object.keys(AGENT_CATEGORIES);
+  } catch { /* le rapport dira PAS MESURÉ plutôt que d'inventer un vert */ }
+  if (!slugs.length) {
+    L.push("  ⬜ PAS MESURÉ — la liste des outils connus n'a pas pu être lue. Ce n'est PAS « aucun outil cité à tort ».");
+    return L;
+  }
+  const base = racine ?? fileURLToPath(new URL("../docs/", import.meta.url));
+  let rapports = [];
+  try {
+    for (const d of readdirSync(base, { withFileTypes: true }).filter((e) => e.isDirectory())) {
+      const dossier = join(base, d.name);
+      for (const f of readdirSync(dossier).filter((f) => f.endsWith(".txt"))) {
+        try { rapports.push({ chemin: `docs/${d.name}/${f}`, mtime: statSync(join(dossier, f)).mtimeMs, complet: join(dossier, f) }); } catch { /* suivant */ }
+      }
+    }
+  } catch { /* idem */ }
+  if (!rapports.length) {
+    L.push("  ⬜ PAS MESURÉ — aucun rapport déposé n'a pu être lu. Ce n'est PAS « aucun outil cité à tort ».");
+    return L;
+  }
+  rapports = rapports.sort((a, b) => b.mtime - a.mtime).slice(0, FENETRE_RAPPORTS_EXAMINES);
+  const fautifs = [];
+  for (const r of rapports) {
+    let texte = "";
+    try { texte = readFileSync(r.complet, "utf8"); } catch { continue; }
+    // La fenêtre part de la DATE DU RAPPORT, jamais de maintenant : un rapport d'il y a trois jours
+    // doit être jugé sur ce qui avait tourné à ce moment-là, sinon tout le passé serait fautif.
+    // L'AUTEUR SE DÉDUIT DU DOSSIER, jamais d'une liste tenue à la main : un rapport déposé dans
+    // `docs/<outil>/` a été produit par cet outil-là. Une convention déjà vraie partout ici.
+    const auteur = r.chemin.split("/")[1];
+    const v = findOutilsCitesSansPassage(texte, slugs, { history, now: r.mtime, auteur });
+    if (v.mesurable && v.sansPassage.length) fautifs.push({ rapport: r.chemin, outils: v.sansPassage });
+  }
+  if (!fautifs.length) {
+    L.push(`  ✅ aucun, sur les ${rapports.length} rapport(s) les plus récents : chaque outil nommé a un passage enregistré dans les 24 h précédant son rapport.`);
+  } else {
+    L.push(`  🚨 ${fautifs.length} rapport(s) sur ${rapports.length} nomment un outil sans passage enregistré :`);
+    for (const f of fautifs.slice(0, 8)) L.push(`     · ${f.rapport} — ${f.outils.join(", ")}`);
+  }
+  L.push("  HORS PORTÉE : il vérifie qu'un outil a TOURNÉ, jamais que ce qu'on en dit est exact — un rapport peut citer un vrai passage et en tirer une conclusion fausse.");
+  return L;
+}
+
 async function main() {
   printReliabilityNotice("tool-brain");
   recordCliUsage("tool-brain");
@@ -541,6 +606,7 @@ async function main() {
         .map((f) => { try { return readFileSync(join(dossier, f), "utf8"); } catch { return ""; } });
     } catch { /* absent : le garde-fou dira PAS MESURÉ plutôt que d'inventer un vert */ }
     console.log(formatToolBrainReport({ history, checkLastCommitSource, lireSource, offert, itemsRonde, sourceCrochets, sourcesDesOutils }));
+    for (const l of await lignesFaille8({ history })) console.log(l);
     return;
   }
 
