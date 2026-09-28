@@ -847,6 +847,27 @@ export function decouperEnUnites(texte, motifUnite, { motifBorneSuperieure = /^#
   });
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES DEUX MARQUEURS DE POLARITÉ (déplacés ici le 2026-09-28, tâche #1057)
+// ————————————————————————————————————————————————————————————————————————
+//
+// Un terrain commun (fort recouvrement de vocabulaire) ne dit rien à lui seul : deux règles qui
+// parlent du même sujet sont normales, et un bon document en contient plusieurs. Ce qui fait une
+// TENSION est le terrain commun PLUS une polarité opposée — un « jamais » d'un côté, un
+// « toujours » de l'autre.
+//
+// POURQUOI ILS VIVENT ICI PLUTÔT QUE CHEZ LEUR PREMIER UTILISATEUR. Ils sont nés locaux dans
+// THE-KING, qui cherche les tensions de la philosophie. Le croisement process ↔ règles de travail
+// (Abraham, 2026-09-28) a besoin de la même lecture. Les recopier aurait reproduit exactement la
+// dette que le commentaire de SEUIL_JACCARD_STRICT raconte : deux valeurs qui se promettent de
+// rester alignées, et qui divergent sans que rien ne le signale (Article 24). Ils sont donc
+// partagés dès leur DEUXIÈME utilisation, jamais à la troisième.
+//
+// LEUR LIMITE, DÉCLARÉE : ils lisent deux mots français. Une contradiction formulée sans « jamais »
+// ni « toujours » leur restera invisible — c'est un signal, jamais une preuve.
+export const MARQUEUR_NEGATION = /\bjamais\b/i;
+export const MARQUEUR_ABSOLU = /\btoujours\b/i;
+
 // pairesParJaccard() — compare toutes les paires d'ensembles de mots et rend celles qui dépassent un
 // seuil de similarité de Jaccard.
 //

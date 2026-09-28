@@ -109,3 +109,43 @@ dupliqués de 25 à 17.
    courantes déjà couvertes.
 3. Pour chaque document à périmètre fort, écrire un agent de périmètre qui l'appelle et n'ajoute
    que ses adaptateurs. Pour tous les autres, l'appeler en ligne de commande suffit.
+
+## Croiser deux registres de règles, sans que la mesure mente
+
+Deux registres finissent toujours par coexister dans un projet outillé : les **process** (des suites
+d'étapes qui engagent) et les **règles de travail** (des obligations de conduite). Ils se
+chevauchent sans jamais se recouvrir, et personne ne sait dire ce que l'un porte que l'autre ignore.
+
+**Trois questions, trois sorties, jamais une seule.** Un process que rien ne porte, une règle
+qu'aucun process n'exécute, une paire qui se contredit : trois gestes différents, et les fondre en
+un seul verdict ferait réparer le mauvais défaut. La troisième ne se corrige jamais seule — un
+conflit entre deux règles est un arbitrage, donc humain.
+
+**Choisir la mesure d'après la FORME des deux populations, jamais par habitude.** Jaccard
+(intersection / union) suppose deux ensembles de taille comparable. Croiser un descriptif de douze
+mots avec une section de plusieurs centaines l'écrase : sur un cas réel, la paire la plus proche de
+tout le document rendait 0,069, aucun seuil ne pouvait se déclencher, et tout tombait dans le même
+état. **Un état qu'aucune donnée réelle ne peut atteindre est du décor**, et l'unanimité qu'il
+produit se lit comme un résultat. La bonne mesure pour ce cas est asymétrique : la PART du petit
+vocabulaire qui se retrouve dans le grand.
+
+**Dériver le seuil, et exclure les paires nulles de la dérivation.** Deux fois la médiane observée
+est un patron solide — il vieillit avec les données. Mais les paires à recouvrement nul ne disent
+rien de l'endroit où passe la frontière : sur une population majoritairement nulle, la médiane vaut
+0, le seuil vaut 0, tout le franchit, et la mesure s'éteint en continuant d'imprimer un nombre. Un
+seuil à zéro n'est jamais permissif : c'est un interrupteur déguisé.
+
+**Reconnaître les entrées CATALOGUE.** Tout corpus porte une section qui énumère tout le reste. Elle
+recouvre mécaniquement le vocabulaire de chacun, et la compter comme porteuse rendrait la première
+sortie verte pour la pire des raisons — **énumérer n'est pas exécuter**. Le critère se dérive
+(« recouvre plus de la moitié de l'autre registre »), jamais une liste de titres tenue à la main.
+
+**Le zéro porte sur ce qui a VRAIMENT été examiné.** Quand une population est exclue de la
+recherche, elle doit l'être aussi du dénominateur : annoncer « la plus proche » en citant une paire
+écartée décrit une population que la mesure n'a pas regardée, exactement le défaut qu'un
+dénominateur existe pour éviter.
+
+**Un seuil imposé se déclare.** La dérivation est le défaut ; un seuil passé en argument sert à
+éprouver le détecteur sur un cas dont on connaît la réponse — sans quoi son zéro ne prouve rien.
+Mais le rapport doit dire lequel des deux il a employé : un seuil imposé présenté comme dérivé est
+la pire des deux erreurs, parce qu'invisible.

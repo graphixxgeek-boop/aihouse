@@ -30,7 +30,7 @@
 
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage, dernieresTouchesPartagees } from "./lib-shell.mjs";
+import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage, dernieresTouchesPartagees, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -639,7 +639,11 @@ export function mesurerSections(texte = "", { motifSection = /^## /, motifUnite 
     const lignesTableau = bloc.split("\n").filter((l) => l.trim().startsWith("|")).length;
     const unites = motifUnite ? (bloc.match(new RegExp(motifUnite.source, "g")) || []).length : 0;
     return {
-      titre: b.titre, lignes: fin - b.debut, tokens: estimerTokens(bloc), unites, lignesTableau,
+      // LE TEXTE DE LA SECTION EST RENDU (2026-09-28, tâche #1057) : le croisement process ↔ règles
+      // de travail en a besoin pour comparer les vocabulaires. Un champ ajouté ne casse aucun
+      // appelant, là où un second découpage du même document aurait créé deux lectures qui
+      // divergeraient (Article 24).
+      titre: b.titre, texte: bloc, lignes: fin - b.debut, tokens: estimerTokens(bloc), unites, lignesTableau,
       // Le critère est mécanique et se trompe vers la PRUDENCE : une section qui contient ne
       // serait-ce qu'une règle n'est jamais classée inventaire, parce qu'un inventaire ne porte
       // jamais de règle.
@@ -647,6 +651,300 @@ export function mesurerSections(texte = "", { motifSection = /^## /, motifUnite 
         : (lignesTableau > 4 || (bloc.match(/`(docs|scripts|lib)\//g) || []).length > 8) ? NATURES.INVENTAIRE.cle : "prose de cadrage",
     };
   });
+}
+
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+// 7bis. LE CROISEMENT PROCESS ↔ RÈGLES DE TRAVAIL (2026-09-28, tâche #1057)
+// ══════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, mot pour mot, dans son gros prompt du 2026-09-28 : « est-ce qu'on a aujourd'hui des
+// process qui ne sont pas portés par des règles de travail et inversement des règles de travail
+// non portées par des process, et est-ce qu'il y a des conflits entre les 2 ? »
+//
+// POURQUOI ICI ET PAS DANS UN OUTIL DE PLUS. Abraham est déjà l'outil MAÎTRE des documents à règles
+// numérotées : il découpe en unités, nomme le porteur réel de chacune, mesure les redondances. Il
+// savait faire tout ça sur UN document. Ce qui manquait est le CROISEMENT de deux registres —
+// les process déclarés chez god-of-all-process ↔ les sections de docs/regles-de-travail.md. On
+// l'ÉTEND, jamais un script jetable à côté (Article 31, obligation 2).
+//
+// TROIS SORTIES, JAMAIS UNE SEULE, parce qu'elles appellent trois gestes différents et que les
+// confondre ferait réparer le mauvais défaut :
+//   1. un PROCESS que rien, côté règles de travail, ne porte  → écrire la règle, ou dire pourquoi
+//      le process se suffit à lui-même ;
+//   2. une RÈGLE DE TRAVAIL qu'aucun process n'exécute        → lui donner un process, ou accepter
+//      qu'elle ne repose que sur la mémoire de qui la lit (leçon L1) ;
+//   3. une PAIRE QUI SE CONTREDIT                             → arbitrer, et c'est une décision
+//      humaine (Article 16), jamais un correctif d'agent.
+//
+// LES DEUX REGISTRES SE LISENT, ils ne se recopient pas (Article 24) : la liste des process arrive
+// de `PROCESSES`, celle des règles du découpage réel du document. Un treizième process demain, ou
+// une section de plus, entre sans qu'on touche à cette fonction.
+//
+// LA LIMITE, DÉCLARÉE PLUTÔT QUE TUE, et elle est la même que partout où ce dépôt compare des
+// textes : le vocabulaire partagé est un SIGNAL, jamais une preuve. Une règle qui porte un process
+// sans employer un seul de ses mots restera invisible ici, et deux règles peuvent se contredire
+// avec des mots entièrement différents. C'est pourquoi la sortie 1 distingue « NOMMÉ » de
+// « TERRAIN COMMUN SANS NOM » : le second est une question posée, jamais un verdict rendu.
+
+// LA MESURE N'EST PAS JACCARD ICI, ET LE PREMIER PASSAGE L'A PROUVÉ (2026-09-28).
+//
+// Jaccard compare deux ensembles de taille comparable. Un process se décrit en une douzaine de
+// mots ; une section de règles de travail en compte plusieurs centaines. Sur cette paire-là,
+// Jaccard est écrasé par l'union : la paire la PLUS proche de tout le document rendait 0,069, si
+// bien qu'aucun seuil raisonnable ne pouvait jamais se déclencher. Un état qu'aucune donnée réelle
+// ne peut atteindre est du décor (leçon L6) — il aurait rangé les douze process en « ABSENT » et
+// cette unanimité se serait lue comme un résultat.
+//
+// LA BONNE QUESTION EST ASYMÉTRIQUE : « quelle PART du vocabulaire du process se retrouve dans
+// cette section ? » — donc intersection sur la taille du PLUS PETIT des deux, jamais sur l'union.
+// Mesurée ainsi, la même comparaison s'étale de 0 à 0,93 et devient lisible.
+export function couvertureDuVocabulaire(petit, grand) {
+  if (!petit?.size) return 0;
+  return [...petit].filter((w) => grand.has(w)).length / petit.size;
+}
+
+// LE SEUIL SE DÉRIVE, IL NE SE CHOISIT PAS (Article 24), sur le patron déjà éprouvé par
+// `protegerLaCharte()` : DEUX FOIS LA MÉDIANE des couvertures réellement observées. Il vieillit
+// donc avec les deux registres — un process ou une section de plus le déplace tout seul, là où un
+// 0,10 écrit à la main se serait périmé au premier ajout. Sous quatre paires il REFUSE de conclure
+// plutôt que d'inventer un seuil : un seuil inventé vaut moins que pas de seuil.
+export const PAIRES_MINIMUM_POUR_UN_SEUIL = 4;
+
+// LES PAIRES À COUVERTURE NULLE SORTENT DU CALCUL, et ce n'est pas un détail de confort : c'est
+// un défaut REL trouvé par le contre-test de cette fonction. Deux textes qui ne partagent pas un
+// mot ne disent rien de l'endroit où passe la frontière du « terrain commun » — ils disent
+// seulement qu'ils n'ont rien à voir. Sur une population majoritairement nulle, la médiane vaut 0,
+// le seuil dérivé vaut 0, et alors TOUT franchit le seuil : chaque section devient un catalogue,
+// la population éligible tombe à zéro, et l'outil rend « aucun conflit » sur zéro paire examinée.
+// Un seuil à zéro n'est pas un seuil permissif — c'est un interrupteur qui éteint la mesure en se
+// faisant passer pour elle.
+export function seuilDeTerrainCommun(couvertures = []) {
+  const valeurs = [...couvertures].filter((c) => c > 0).sort((a, b) => a - b);
+  if (valeurs.length < PAIRES_MINIMUM_POUR_UN_SEUIL) return null;
+  const mediane = valeurs.length % 2
+    ? valeurs[(valeurs.length - 1) / 2]
+    : (valeurs[valeurs.length / 2 - 1] + valeurs[valeurs.length / 2]) / 2;
+  return Math.min(0.95, 2 * mediane);
+}
+
+// UNE SECTION CATALOGUE N'EST PAS UNE PREUVE, et sans cette distinction le résultat entier serait
+// faux. « §7ter — Le paysage des outils de vigilance » nomme TOUS les outils du dépôt : elle couvre
+// donc le vocabulaire de chacun des douze process à plus de 70 %. Conclure qu'elle « porte » un
+// process en particulier serait absurde — elle les énumère, elle n'en exécute aucun. Le critère est
+// mécanique et dérivé, jamais une liste de titres tenue à la main : une section qui couvre plus de
+// la MOITIÉ des process est un catalogue, et son recouvrement ne compte pas comme un porteur.
+export const PART_POUR_ETRE_UN_CATALOGUE = 0.5;
+
+export function sectionsCatalogue(couverturesParSection = [], nbProcess = 0, seuil = null) {
+  if (!nbProcess || seuil === null) return new Set();
+  const out = new Set();
+  couverturesParSection.forEach((couvs, j) => {
+    const combien = couvs.filter((c) => c >= seuil).length;
+    if (combien / nbProcess > PART_POUR_ETRE_UN_CATALOGUE) out.add(j);
+  });
+  return out;
+}
+
+// Une section de prose qui ne pose AUCUNE obligation n'a pas à être exécutée par un process — lui
+// en réclamer un fabriquerait du travail. Le partage se fait sur le compteur d'obligations déjà
+// construit ici, jamais sur une liste de titres tenue à la main qui se périmerait à la première
+// section ajoutée.
+export function sectionPorteUneObligation(section = {}, motif = MOTIF_OBLIGATION_FR) {
+  return compterObligations(String(section.texte ?? ""), motif) > 0;
+}
+
+export function nommeLeProcess(texte = "", p = {}) {
+  const t = String(texte).toLowerCase();
+  return [p.slug, p.nom, p.doc, p.gardien].filter(Boolean).map(String)
+    .some((c) => t.includes(c.toLowerCase()));
+}
+
+// LE SEUIL PEUT ÊTRE IMPOSÉ, ET ALORS LE RAPPORT LE DIT — jamais en silence. La dérivation reste
+// le défaut, et c'est ce que la commande utilise ; un seuil passé en argument sert à éprouver le
+// détecteur sur un cas dont on connaît la réponse (leçon de la tâche #836 : une sonde qu'on n'a
+// jamais vue trouver quelque chose ne prouve rien par son zéro). Comme pour la SOURCE d'une heure
+// (Article 32), ce qui compte n'est pas que la valeur soit bonne mais qu'on sache d'où elle vient :
+// un seuil imposé présenté comme dérivé serait la pire des deux erreurs, parce qu'invisible.
+export function croiserProcessEtRegles({ processes = [], sections = [], seuil: seuilImpose = null, docsDesProcess = new Map(), cheminDesRegles = "docs/regles-de-travail.md" } = {}) {
+  if (!processes.length || !sections.length) {
+    return { mesurable: false,
+      pourquoi: `croisement impossible : ${processes.length} process et ${sections.length} section(s) lues — un registre vide ne dit pas « aucun écart », il dit qu'il n'y avait rien à confronter` };
+  }
+  const motsProcess = processes.map((p) => motsSignificatifs([p.nom, p.quand, (p.motsCles ?? []).join(" "), (p.etapes ?? []).join(" ")].filter(Boolean).join(" ")));
+  const motsSections = sections.map((s) => motsSignificatifs(s.texte ?? s.titre ?? ""));
+  const texteDesRegles = sections.map((s) => s.texte ?? "").join("\n");
+
+  // La matrice complète, calculée UNE fois : les trois sorties la relisent, aucune ne la recompte.
+  const couv = processes.map((_, i) => sections.map((__, j) => couvertureDuVocabulaire(motsProcess[i], motsSections[j])));
+  const toutes = couv.flat();
+  const seuil = seuilImpose ?? seuilDeTerrainCommun(toutes);
+  const seuilDerive = seuilImpose === null;
+  const catalogues = sectionsCatalogue(sections.map((_, j) => processes.map((__, i) => couv[i][j])), processes.length, seuil);
+
+  const plusProcheParProcess = (i) => {
+    let best = null;
+    sections.forEach((s, j) => {
+      if (catalogues.has(j)) return;
+      if (!best || couv[i][j] > best.couverture) best = { titre: s.titre, couverture: Math.round(couv[i][j] * 1000) / 1000 };
+    });
+    return best;
+  };
+  const plusProcheParSection = (j) => {
+    let best = null;
+    processes.forEach((p, i) => {
+      if (!best || couv[i][j] > best.couverture) best = { process: p.slug ?? p.nom, couverture: Math.round(couv[i][j] * 1000) / 1000 };
+    });
+    return best;
+  };
+
+  // ── SORTIE 1 : un process que rien ne nomme côté règles de travail.
+  const processSansRegle = [];
+  processes.forEach((p, i) => {
+    if (nommeLeProcess(texteDesRegles, p)) return;
+    const proche = plusProcheParProcess(i);
+    const surSeuil = seuil !== null && proche && proche.couverture >= seuil;
+    processSansRegle.push({
+      process: p.slug ?? p.nom, nom: p.nom, doc: p.doc, proche,
+      etat: seuil === null ? "PAS MESURÉ" : surSeuil ? "TERRAIN COMMUN SANS NOM" : "ABSENT",
+      pourquoi: seuil === null
+        ? "trop peu de paires pour dériver un seuil : on ne sait pas si un terrain commun existe, ce qui n'est pas la même chose que « il n'y en a pas »"
+        : surSeuil
+          ? `aucune section ne le NOMME, mais « ${proche.titre} » reprend ${Math.round(proche.couverture * 100)} % de son vocabulaire — une règle le porte peut-être sans le dire, et c'est une question, jamais un verdict`
+          : "aucune section ne le nomme, et aucune (hors sections catalogue) ne reprend son vocabulaire : côté règles de travail, ce process n'est porté par personne",
+    });
+  });
+
+  // ── SORTIE 2 : une règle de travail qu'aucun process n'exécute.
+  const reglesSansProcess = [];
+  const sectionsExaminees = [];
+  sections.forEach((s, j) => {
+    if (!sectionPorteUneObligation(s)) return;   // prose sans obligation : rien à exécuter
+    sectionsExaminees.push(s.titre);
+    if (processes.some((p) => nommeLeProcess(s.texte ?? "", p))) return;
+    const proche = plusProcheParSection(j);
+    const surSeuil = seuil !== null && proche && proche.couverture >= seuil;
+    const n = compterObligations(s.texte ?? "");
+    reglesSansProcess.push({
+      section: s.titre, obligations: n, lignes: s.lignes, proche,
+      etat: seuil === null ? "PAS MESURÉ" : surSeuil ? "TERRAIN COMMUN SANS NOM" : "ABSENT",
+      pourquoi: surSeuil
+        ? `porte ${n} obligation(s) et ne nomme aucun process ; « ${proche.process} » en reprend ${Math.round(proche.couverture * 100)} % du vocabulaire — le lien existe peut-être, il n'est simplement écrit nulle part`
+        : `porte ${n} obligation(s) qu'aucun process n'exécute et dont aucun ne reprend le vocabulaire — elle ne repose que sur la mémoire de qui la lit (leçon L1)`,
+    });
+  });
+
+  // ── SORTIE 3 : une paire qui se contredit — terrain commun ET polarité opposée. Les deux
+  // marqueurs viennent du sol partagé, jamais recopiés (Article 24).
+  const conflits = [];
+  if (seuil !== null) {
+    processes.forEach((p, i) => {
+      const texteP = [p.nom, p.quand, (p.etapes ?? []).join(" ")].filter(Boolean).join(" ");
+      const pNeg = MARQUEUR_NEGATION.test(texteP), pAbs = MARQUEUR_ABSOLU.test(texteP);
+      if (!pNeg && !pAbs) return;
+      sections.forEach((s, j) => {
+        if (couv[i][j] < seuil || catalogues.has(j)) return;
+        const sNeg = MARQUEUR_NEGATION.test(s.texte ?? ""), sAbs = MARQUEUR_ABSOLU.test(s.texte ?? "");
+        if ((pNeg && sAbs && !sNeg) || (pAbs && sNeg && !sAbs)) {
+          conflits.push({ process: p.slug ?? p.nom, section: s.titre, couverture: Math.round(couv[i][j] * 1000) / 1000 });
+        }
+      });
+    });
+  }
+
+  // ── SORTIE 4 : LE LIEN DANS L'AUTRE SENS (2026-09-28, tâche #1059). Sa demande : « Assure-toi que
+  // le fichier regles de travail et process sont bien linkés. » Les sorties ① et ② regardent un
+  // seul sens — ce que les RÈGLES disent des process. Celle-ci regarde ce que le DOCUMENT d'un
+  // process dit des règles de travail, et le défaut n'est pas le même : un process qui ne cite pas
+  // les règles qui le gouvernent fait travailler sans elles, là où une règle qui ne cite aucun
+  // process ne dit pas QUAND elle s'applique. Les additionner en un seul chiffre effacerait la
+  // distinction, donc ils restent deux sorties.
+  //
+  // TROIS ÉTATS, jamais deux : un document qu'on n'a pas pu lire n'est PAS un document muet.
+  const processMuetsSurLesRegles = [];
+  for (const p of processes) {
+    if (!p.doc) continue;
+    const texte = docsDesProcess.get(p.doc) ?? docsDesProcess.get(p.slug);
+    if (texte === undefined || texte === null) {
+      processMuetsSurLesRegles.push({ process: p.slug ?? p.nom, doc: p.doc, etat: "PAS LU",
+        pourquoi: `son document (${p.doc}) n'a pas pu être lu — ce n'est PAS « il ne cite rien », les deux appellent des gestes opposés` });
+      continue;
+    }
+    // Un process DONT le document EST le fichier des règles n'a évidemment rien à citer : il y est.
+    if (p.doc === cheminDesRegles) continue;
+    if (String(texte).includes(cheminDesRegles.replace(/^docs\//, "").replace(/\.md$/, ""))) continue;
+    processMuetsSurLesRegles.push({ process: p.slug ?? p.nom, doc: p.doc, etat: "MUET",
+      pourquoi: `son document ne cite jamais ${cheminDesRegles} : qui suit ce process ne saura pas quelles règles de conduite s'y appliquent` });
+  }
+
+  // LE DÉNOMINATEUR DU ZÉRO (leçon de la tâche #836) : « aucun conflit » ne se lit pas sans savoir
+  // combien de paires ont été comparées, ni à quelle distance se tenait la plus proche.
+  //
+  // IL PORTE SUR LES PAIRES RÉELLEMENT ÉLIGIBLES, jamais sur toutes. La toute première version
+  // annonçait « la plus proche à 0,929 » alors que cette paire-là est une section CATALOGUE, donc
+  // exclue de la recherche de conflits : le dénominateur décrivait une population que la mesure
+  // n'avait pas examinée, ce qui est exactement le défaut que ce dénominateur existe pour éviter.
+  const eligibles = [];
+  let plusProche = null;
+  processes.forEach((p, i) => sections.forEach((s, j) => {
+    if (catalogues.has(j)) return;
+    eligibles.push(1);
+    if (!plusProche || couv[i][j] > plusProche.couverture) plusProche = { process: p.slug ?? p.nom, section: s.titre, couverture: Math.round(couv[i][j] * 1000) / 1000 };
+  }));
+
+  return {
+    mesurable: true,
+    processes: processes.length, sections: sections.length,
+    sectionsAvecObligation: sectionsExaminees.length,
+    sectionsSansObligation: sections.length - sectionsExaminees.length,
+    processSansRegle, reglesSansProcess, conflits, processMuetsSurLesRegles,
+    pairesComparees: eligibles.length, pairesTotales: processes.length * sections.length, plusProche, seuil, seuilDerive,
+    catalogues: [...catalogues].map((j) => sections[j].titre),
+    horsPortee: "Le vocabulaire partagé est un SIGNAL, jamais une preuve. Une règle qui porte un process sans employer un seul de ses mots reste invisible ici, et deux textes peuvent se contredire avec des mots entièrement différents. Les conflits se lisent sur DEUX mots français (« jamais » face à « toujours ») : c'est une question posée, jamais un arbitrage rendu — l'arbitrage est humain (Article 16).",
+  };
+}
+
+export function formatCroisementLines(r = {}) {
+  if (!r.mesurable) return [`🚨 CROISEMENT PROCESS ↔ RÈGLES : PAS MESURÉ — ${r.pourquoi}`];
+  const L = [`=== CROISEMENT PROCESS ↔ RÈGLES DE TRAVAIL — ${r.processes} process, ${r.sections} section(s) ===`, ""];
+  L.push(`Seuil de terrain commun : ${r.seuil === null
+    ? "NON CALCULÉ — moins de quatre paires partagent le moindre mot, donc aucune médiane ne tient. Ce n'est PAS « aucun terrain commun »."
+    : `${Math.round(r.seuil * 1000) / 1000} (${r.seuilDerive ? "DÉRIVÉ : deux fois la médiane des couvertures NON NULLES observées, donc il vieillit avec les deux registres" : "IMPOSÉ par l'appelant — ce chiffre n'a PAS été mesuré sur ces données"})`}`);
+  if (r.catalogues?.length) L.push(`Section(s) CATALOGUE, écartées comme preuve de portage : ${r.catalogues.join(" · ")} — elles couvrent plus de la moitié des process parce qu'elles les ÉNUMÈRENT, ce qui n'est pas les exécuter.`);
+  L.push("");
+
+  L.push(`① ${r.processSansRegle.length} process sur ${r.processes} que RIEN ne nomme dans les règles de travail`);
+  if (!r.processSansRegle.length) L.push("   ✅ chaque process déclaré est nommé au moins une fois côté règles de travail.");
+  for (const p of r.processSansRegle) {
+    L.push(`   ${p.etat === "ABSENT" ? "🚨" : "🟠"} ${p.etat.padEnd(24)} ${p.process}`);
+    L.push(`          ${p.pourquoi}`);
+  }
+  L.push("");
+
+  L.push(`② ${r.reglesSansProcess.length} règle(s) de travail sur ${r.sectionsAvecObligation} porteuse(s) d'obligation qu'AUCUN process n'exécute`);
+  L.push(`   (${r.sectionsSansObligation} section(s) ne posent aucune obligation : de la prose de cadrage, à qui réclamer un process fabriquerait du travail — écarté exprès, jamais oublié)`);
+  if (!r.reglesSansProcess.length) L.push("   ✅ chaque règle porteuse d'obligation nomme un process qui l'exécute.");
+  for (const s of r.reglesSansProcess) {
+    L.push(`   ${s.etat === "ABSENT" ? "🚨" : "🟠"} ${s.etat.padEnd(24)} ${s.section}`);
+    L.push(`          ${s.pourquoi}`);
+  }
+  L.push("");
+
+  L.push(`③ ${r.conflits.length} paire(s) en CONFLIT possible — terrain commun et polarité opposée`);
+  if (!r.conflits.length) {
+    L.push(`   ✅ aucune, sur ${r.pairesComparees} paire(s) réellement ÉLIGIBLES (sur ${r.pairesTotales} possibles ; les sections catalogue sont écartées), seuil dérivé ${r.seuil === null ? "NON CALCULÉ" : Math.round(r.seuil * 1000) / 1000}.`);
+    if (r.plusProche) L.push(`      La paire la plus proche reste « ${r.plusProche.process} » ↔ « ${r.plusProche.section} » à ${r.plusProche.couverture} — le zéro est donc mérité, pas un silence.`);
+  }
+  for (const c of r.conflits) L.push(`   🚨 « ${c.process} » ↔ « ${c.section} » (${c.couverture}) — à ARBITRER, jamais à corriger seul`);
+  L.push(`④ ${(r.processMuetsSurLesRegles ?? []).length} process dont le DOCUMENT ne cite jamais les règles de travail`);
+  L.push("   (l'autre sens du lien : ① et ② disent ce que les RÈGLES savent des process ; celle-ci dit ce qu'un PROCESS dit des règles — deux défauts distincts, jamais additionnés)");
+  if (!(r.processMuetsSurLesRegles ?? []).length) L.push("   ✅ chaque document de process renvoie aux règles de travail.");
+  for (const m of r.processMuetsSurLesRegles ?? []) {
+    L.push(`   ${m.etat === "PAS LU" ? "⬜" : "🟠"} ${m.etat.padEnd(8)} ${m.process.padEnd(24)} ${m.doc}`);
+    L.push(`          ${m.pourquoi}`);
+  }
+  L.push("");
+  L.push(`HORS PORTÉE : ${r.horsPortee}`);
+  return L;
 }
 
 // --- 7. LE DOCUMENT D'ACCUEIL -----------------------------------------------------------------
@@ -1309,7 +1607,7 @@ export function formatAlertesLines(s) {
   return L;
 }
 
-function main() {
+async function main() {
   const [, , arg1, arg2] = process.argv;
   // « assainissement » : le point d'entrée à grande échelle, tranché par l'utilisateur le
   // 2026-09-27. Il LIT le registre partagé et fusionne ; il ne relance jamais les deux autres, et
@@ -1380,6 +1678,47 @@ function main() {
   // « documents-jumeaux » : le pendant, à l'échelle du DÉPÔT, de findPairesRedondantes() qui ne
   // regardait que l'intérieur d'un document. Commande à part pour la même raison que « classer » :
   // elle ÉCRIT un fichier.
+  // « croisement » (2026-09-28, tâche #1057) — sa question du gros prompt, chapitre C. Les deux
+  // registres se LISENT au moment de l'exécution : les process chez god-of-all-process (import à
+  // la demande, pour ne pas alourdir tous les autres appels d'Abraham), les règles par le
+  // découpage réel du document. Un process ou une section de plus entre sans qu'on y touche.
+  if (arg1 === "croisement") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — croisement process ↔ règles de travail", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const { PROCESSES } = await import("./god-of-all-process.mjs");
+    const cheminRegles = arg2 ?? "docs/regles-de-travail.md";
+    let texteRegles = null;
+    try { texteRegles = readFileSync(cheminRegles, "utf8"); } catch { texteRegles = null; }
+    if (texteRegles === null) {
+      console.log(`\n🚨 PAS MESURÉ — ${cheminRegles} est illisible : rien à confronter, ce qui n'est PAS « aucun écart ».`);
+      return;
+    }
+    // Les documents des process se LISENT ici et se passent à la fonction, qui reste pure : c'est
+    // ce qui permet de l'éprouver sur un cas fabriqué, sans toucher au dépôt.
+    const docsDesProcess = new Map();
+    for (const p of PROCESSES) {
+      if (!p.doc || docsDesProcess.has(p.doc)) continue;
+      try { docsDesProcess.set(p.doc, readFileSync(p.doc, "utf8")); } catch { docsDesProcess.set(p.doc, null); }
+    }
+    const r = croiserProcessEtRegles({ processes: PROCESSES, sections: mesurerSections(texteRegles), docsDesProcess, cheminDesRegles: cheminRegles });
+    const lignes = formatCroisementLines(r);
+    for (const ligne of lignes) console.log(ligne);
+    // LES TROIS SORTIES DONNENT TROIS ÉCARTS SÉPARÉS, jamais un seul agrégé : elles appellent trois
+    // gestes différents, et les fondre en une ligne ferait produire une tâche fourre-tout que
+    // personne n'appliquerait.
+    const ecarts = [];
+    if (r.mesurable && r.processSansRegle.length) ecarts.push({ pourquoi: `${r.processSansRegle.length} process que rien ne nomme dans les règles de travail` });
+    if (r.mesurable && r.reglesSansProcess.length) ecarts.push({ pourquoi: `${r.reglesSansProcess.length} règle(s) porteuse(s) d'obligation qu'aucun process n'exécute` });
+    if (r.mesurable && r.conflits.length) ecarts.push({ pourquoi: `${r.conflits.length} paire(s) process ↔ règle en conflit possible` });
+    if (r.mesurable && r.processMuetsSurLesRegles?.length) ecarts.push({ pourquoi: `${r.processMuetsSurLesRegles.length} process dont le document ne cite jamais les règles de travail` });
+    imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references", tache: "instruire chaque ligne une par une : écrire la règle manquante, donner un process à la règle orpheline, ou ARBITRER le conflit — l'arbitrage est une décision humaine (Article 16), jamais un correctif d'agent" }));
+    mkdirSync("docs/abraham-les-references", { recursive: true });
+    const chemin = `docs/abraham-les-references/croisement-process-regles-${new Date().toISOString().slice(0, 10)}.txt`;
+    writeFileSync(chemin, lignes.join("\n") + "\n", "utf8");
+    console.log(`\nRapport déposé : ${chemin}`);
+    return;
+  }
   if (arg1 === "documents-jumeaux") {
     printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM-LES-REFERENCES — deux documents qui disent la même chose", scriptPath: "scripts/abraham-les-references.mjs" });
     printReliabilityNotice("abraham-les-references");
@@ -1591,4 +1930,4 @@ export function formatDivergenceLines(d) {
   return L;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error(e); process.exitCode = 1; });

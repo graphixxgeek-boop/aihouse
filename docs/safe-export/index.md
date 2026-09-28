@@ -28,12 +28,13 @@ l'autre, jamais des rapports à lire.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**10 fichier(s)** dans ce dossier.
+**11 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [circle-signal-2026-09-28T02-57-00-528Z.txt](central/circle-signal-2026-09-28T02-57-00-528Z.txt) | central |
 | [exportabilite-2026-09-26.txt](exportabilite-2026-09-26.txt) | — |
+| [journal-du-banc-temoin.md](journal-du-banc-temoin.md) | — |
 | [kits-2026-09-26.txt](kits-2026-09-26.txt) | — |
 | [kits-2026-09-28.txt](kits-2026-09-28.txt) | — |
 | [memoire.json](memoire.json) | — |

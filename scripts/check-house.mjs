@@ -9091,6 +9091,138 @@ async function testEtatDuSchemaEnCinqEtapes() {
 }
 await testEtatDuSchemaEnCinqEtapes();
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LE CROISEMENT PROCESS ↔ RÈGLES DE TRAVAIL (2026-09-28, tâche #1057)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA QUESTION, mot pour mot : « est-ce qu'on a aujourd'hui des process qui ne sont pas portés par
+// des règles de travail et inversement des règles de travail non portées par des process, et
+// est-ce qu'il y a des conflits entre les 2 ? » Trois questions, donc trois sorties séparées — et
+// ces contre-tests portent d'abord sur ce qui rendrait chacune inutilisable : un état qu'aucune
+// donnée réelle ne peut atteindre, un seuil recopié à la main, et un zéro rendu sur une population
+// que la mesure n'a pas examinée.
+async function testCroisementProcessEtRegles() {
+  const AB = await import('../scripts/abraham-les-references.mjs');
+
+  // ── 1. LA MESURE EST ASYMÉTRIQUE, ET C'EST TOUT L'ENJEU.
+  // Un process se décrit en une douzaine de mots, une section des règles de travail en compte
+  // plusieurs centaines. Jaccard (intersection/union) est écrasé par l'union sur une telle paire :
+  // le premier jet, écrit ainsi, plafonnait à 0,069 sur TOUT le document, si bien qu'aucun seuil
+  // raisonnable ne pouvait jamais se déclencher et que les douze process tombaient en « ABSENT ».
+  const petit = new Set(['simulation', 'transcript', 'dossier']);
+  const grand = new Set(['simulation', 'transcript', ...Array.from({ length: 200 }, (_, k) => `mot${k}`)]);
+  assert.equal(Math.round(AB.couvertureDuVocabulaire(petit, grand) * 100), 67, 'coverage must answer "what SHARE of the small vocabulary appears in the large one" — 2 of 3 here. Jaccard on the same pair yields under 0.01 and would make every comparison look equally distant, which is how a real first version rated the whole document at 0.069 and could never fire');
+  assert.equal(AB.couvertureDuVocabulaire(new Set(), grand), 0, 'an empty vocabulary must yield 0, never NaN — a NaN propagates into the threshold and silently disables the whole measure');
+
+  // ── 2. LE SEUIL EST DÉRIVÉ, JAMAIS ÉCRIT À LA MAIN (Article 24), et il REFUSE sous 4 paires.
+  assert.equal(AB.seuilDeTerrainCommun([0.1, 0.2, 0.3, 0.4]), 0.5, 'the threshold must be twice the MEDIAN of the coverages actually observed — the pattern protegerLaCharte() already uses — so it ages with both registries instead of expiring at the first process added');
+  assert.equal(AB.seuilDeTerrainCommun([0.1, 0.2, 0.3]), null, 'under four pairs the threshold must be REFUSED rather than invented: an invented threshold is worth less than no threshold, and it would read exactly like a measured one');
+  assert.ok(AB.seuilDeTerrainCommun([0.9, 0.9, 0.9, 0.9]) <= 0.95, 'the derived threshold must stay under 1 — at exactly 1 nothing could ever reach it and the whole "terrain commun" state would become scenery again (lesson L6)');
+
+  // LE DÉFAUT QUE CE CONTRE-TEST A TROUVÉ, et il désactivait l'outil entier en silence : sur une
+  // population majoritairement nulle, la médiane vaut 0, le seuil dérivé vaut 0, TOUT le franchit,
+  // chaque section devient un catalogue, la population éligible tombe à zéro — et le rapport
+  // annonce « aucun conflit » sur zéro paire examinée. Un seuil à zéro n'est pas un seuil
+  // permissif : c'est un interrupteur qui éteint la mesure en se faisant passer pour elle.
+  assert.equal(AB.seuilDeTerrainCommun([0, 0, 0, 0, 0, 0.4]), null, 'coverages of exactly zero must be EXCLUDED from the derivation: two texts sharing no word say nothing about where the common-ground line sits, and a median of zero yields a threshold of zero, which silently disables the entire measure while still printing a number');
+  assert.equal(AB.seuilDeTerrainCommun([0, 0.1, 0.2, 0.3, 0.4]), 0.5, 'the non-zero coverages must still drive the threshold once there are enough of them — excluding zeros must not also exclude the real signal');
+
+  // ── 3. UNE SECTION CATALOGUE N'EST PAS UNE PREUVE DE PORTAGE.
+  // §7ter énumère TOUS les outils du dépôt : elle couvre le vocabulaire des douze process à plus de
+  // 70 %. La compter comme porteuse rendrait la sortie 1 systématiquement verte, pour la pire des
+  // raisons — une section qui les ÉNUMÈRE n'en EXÉCUTE aucun.
+  const parSection = [[0.9, 0.9, 0.9, 0.9], [0.9, 0.1, 0.1, 0.1]];
+  const cat = AB.sectionsCatalogue(parSection, 4, 0.25);
+  assert.deepEqual([...cat], [0], 'a section covering more than half the processes must be recognised as a CATALOGUE and excluded as evidence of carriage; a section covering one must not');
+  assert.equal(AB.sectionsCatalogue(parSection, 4, null).size, 0, 'with no derived threshold, no section may be declared a catalogue — that verdict would rest on a number that was never computed');
+
+  // ── 4. LES TROIS SORTIES SONT SÉPARÉES, et chacune répond à UNE de ses trois questions.
+  const processes = [
+    { slug: 'simulation', nom: 'protocole de simulation', quand: 'avant une simulation', motsCles: ['simulation'], etapes: ['archiver le transcript', 'toujours livrer le dossier'] },
+    { slug: 'orphelin', nom: 'process orphelin', quand: 'jamais', motsCles: ['zygomatique'], etapes: ['zygomatique kryptonite'] },
+  ];
+  const sections = [
+    { titre: 'A. simulation', texte: '## A. simulation\nOn doit archiver le transcript de chaque simulation, et toujours livrer le dossier. Le process simulation le dit.' },
+    { titre: 'B. règle seule', texte: "## B. règle seule\nIl faut doucement bercer la marmotte : c'est obligatoire, et personne ne l'exécute." },
+    { titre: 'C. prose', texte: '## C. prose\nCeci raconte une anecdote sans la moindre contrainte.' },
+    { titre: 'D. autre', texte: '## D. autre\nUn quatrième bloc de texte pour donner des paires à comparer.' },
+  ];
+  const r = AB.croiserProcessEtRegles({ processes, sections });
+  assert.ok(r.mesurable, 'two non-empty registries must yield a measurable crossing');
+  assert.ok(r.processSansRegle.some((p) => p.process === 'orphelin'), 'a process no section names must appear in output ①: that is literally the first of his three questions');
+  assert.ok(!r.processSansRegle.some((p) => p.process === 'simulation'), 'a process a section NAMES must not appear in output ① — accusing a correctly carried process is how a guard stops being read (lesson L4)');
+  assert.ok(r.reglesSansProcess.some((s) => s.section === 'B. règle seule'), 'a rule carrying obligations that names no process must appear in output ②');
+  assert.ok(!r.reglesSansProcess.some((s) => s.section === 'C. prose'), 'a section posing NO obligation must be left out of output ②: demanding a process for prose would manufacture work, and the report must say how many it set aside rather than silently dropping them');
+  assert.equal(r.sectionsSansObligation, 2, 'the number of obligation-free sections must be REPORTED, not hidden — it is the denominator that makes output ② readable');
+
+  // ── 5. LE ZÉRO DES CONFLITS PORTE SUR LA POPULATION RÉELLEMENT EXAMINÉE.
+  // La toute première version annonçait « la plus proche à 0,929 » alors que cette paire était une
+  // section catalogue, donc exclue de la recherche : le dénominateur décrivait une population que
+  // la mesure n'avait pas regardée — exactement le défaut qu'un dénominateur existe pour éviter.
+  assert.ok(r.pairesComparees <= r.pairesTotales, 'the pairs actually ELIGIBLE must never exceed the pairs possible');
+  assert.ok(r.plusProche && r.plusProche.couverture >= 0, 'the closest pair must be reported even when zero conflicts are found — "none found" and "nothing could be compared" read identically without it (task #836)');
+
+  // ── 6. UN REGISTRE VIDE NE DIT JAMAIS « AUCUN ÉCART ».
+  const vide = AB.croiserProcessEtRegles({ processes: [], sections });
+  assert.equal(vide.mesurable, false, 'an empty registry must make the crossing UNMEASURABLE — reporting "0 gaps" on zero processes is the cheapest false green there is');
+  assert.ok(/rien à confronter/.test(vide.pourquoi), 'the unmeasurable case must say WHY, in words a reader can act on');
+
+  // ── 7. UN CONFLIT RÉEL EST BIEN VU — sinon le zéro du vrai dépôt ne prouverait rien (BP2).
+  // Le jeu d'essai doit porter assez de paires NON NULLES pour que le seuil se dérive : sous
+  // quatre, la fonction refuse honnêtement de conclure — et un contre-test bâti trop mince aurait
+  // alors prouvé l'inverse de ce qu'il croit prouver, en confondant « rien trouvé » et « rien
+  // mesuré » dans le test même écrit pour interdire cette confusion.
+  const opposes = AB.croiserProcessEtRegles({
+    processes: [
+      { slug: 'p', nom: 'archivage transcript', quand: 'toujours', motsCles: ['transcript'], etapes: ['le transcript doit toujours être archivé'] },
+      { slug: 'q', nom: 'peinture aquarelle', quand: 'ensuite', motsCles: ['aquarelle'], etapes: ['aquarelle pinceau godet'] },
+      { slug: 'r', nom: 'botanique tropicale', quand: 'ensuite', motsCles: ['orchidee'], etapes: ['orchidee serre humidite'] },
+      { slug: 's', nom: 'navigation cotiere', quand: 'ensuite', motsCles: ['amarrage'], etapes: ['amarrage bouee cordage'] },
+    ],
+    sections: [
+      { titre: 'X', texte: 'Le transcript archivé ne doit jamais être archivé automatiquement.' },
+      { titre: 'Y', texte: 'aquarelle pinceau godet : on peint ensuite.' },
+      { titre: 'Z', texte: 'orchidee serre humidite, ensuite.' },
+      { titre: 'W', texte: 'amarrage bouee cordage, ensuite.' },
+    ],
+    seuil: 0.4,
+  });
+  assert.equal(opposes.conflits.length, 1, 'a deliberately built pair — shared vocabulary, "toujours" against "jamais" — must be DETECTED, otherwise a zero on the real repository would prove nothing about the repository and everything about a blind probe (the exact lesson of task #836)');
+
+  // ── 8. LES DEUX MARQUEURS DE POLARITÉ SONT PARTAGÉS, jamais recopiés.
+  const LS = await import('../scripts/lib-shell.mjs');
+  const TK = await import('../scripts/the-king.mjs');
+  assert.ok(LS.MARQUEUR_NEGATION instanceof RegExp && LS.MARQUEUR_ABSOLU instanceof RegExp, 'the two polarity markers must live in the shared floor: THE-KING and this crossing both read them, and two copies promising to stay aligned is the exact debt Article 24 forbids — the SEUIL_JACCARD_STRICT comment tells that story already');
+  assert.equal(TK.findPossibleTensions([
+    { partie: 'A', numero: 1, texte: 'Le transcript doit toujours être archivé sans exception aucune' },
+    { partie: 'A', numero: 2, texte: 'Le transcript archivé ne doit jamais être archivé sans exception aucune' },
+  ]).length, 1, 'THE-KING must keep detecting its own tensions after the markers moved to the shared floor — moving a constant must never quietly disable the tool it came from');
+
+  // ── 9. LE LIEN DANS L'AUTRE SENS (tâche #1059) : trois états, jamais deux.
+  // « Son document ne cite pas les règles » et « son document n'a pas pu être lu » appellent deux
+  // gestes opposés — écrire un renvoi, ou aller voir pourquoi le fichier manque. Les confondre
+  // enverrait réparer le mauvais défaut, et c'est le motif le plus récurrent de ce dépôt.
+  const lien = AB.croiserProcessEtRegles({
+    processes: [
+      { slug: 'cite', nom: 'process qui cite', doc: 'a.md', motsCles: ['alpha'], etapes: ['alpha'] },
+      { slug: 'muet', nom: 'process muet', doc: 'b.md', motsCles: ['beta'], etapes: ['beta'] },
+      { slug: 'illisible', nom: 'process illisible', doc: 'c.md', motsCles: ['gamma'], etapes: ['gamma'] },
+      { slug: 'estLesRegles', nom: 'process dont le doc EST les règles', doc: 'docs/regles-de-travail.md', motsCles: ['delta'], etapes: ['delta'] },
+    ],
+    sections: [{ titre: 'S1', texte: 'cite muet illisible estLesRegles : il faut tout nommer.' }, { titre: 'S2', texte: 'alpha beta' }, { titre: 'S3', texte: 'gamma delta' }, { titre: 'S4', texte: 'du texte.' }],
+    docsDesProcess: new Map([['a.md', 'voir docs/regles-de-travail.md'], ['b.md', 'rien du tout'], ['c.md', null], ['docs/regles-de-travail.md', 'le fichier lui-même']]),
+  });
+  const parSlug = Object.fromEntries((lien.processMuetsSurLesRegles ?? []).map((m) => [m.process, m.etat]));
+  assert.equal(parSlug.cite, undefined, 'a process whose document DOES cite the work rules must not be reported — accusing a compliant document is how a guard stops being read (lesson L4)');
+  assert.equal(parSlug.muet, 'MUET', 'a process whose document never cites the work rules must be reported: whoever follows that process will not know which conduct rules apply');
+  assert.equal(parSlug.illisible, 'PAS LU', 'an unreadable process document must be a THIRD state, never folded into "silent" — one asks for a cross-reference to be written, the other asks why the file is missing');
+  assert.equal(parSlug.estLesRegles, undefined, 'a process whose document IS the work-rules file has nothing to cite: it is already there, and reporting it would be a gap that no legitimate action can close (lesson L6)');
+
+  console.log("Passed: le croisement process ↔ règles de travail (2026-09-28, tâche #1057) répond à ses trois questions séparément — un process que rien ne porte, une règle qu'aucun process n'exécute, une paire qui se contredit — parce qu'elles appellent trois gestes différents et que les confondre ferait réparer le mauvais défaut. Il vit chez Abraham, l'outil MAÎTRE des documents à règles, plutôt que dans un script de plus (Article 31). Le premier jet employait Jaccard et ne pouvait PAS fonctionner : un process tient en douze mots, une section en plusieurs centaines, et l'union écrasait tout — la paire la plus proche de tout le document rendait 0,069, donc les douze process tombaient en « ABSENT » et cette unanimité se serait lue comme un résultat. La mesure est devenue asymétrique (quelle PART du vocabulaire du process se retrouve dans la section), le seuil se DÉRIVE de deux fois la médiane observée au lieu d'être écrit à la main (Article 24) et refuse de se calculer sous quatre paires, et une section CATALOGUE — celle qui énumère tous les outils et couvre donc tout le monde — est écartée comme preuve de portage, parce qu'énumérer n'est pas exécuter. Le zéro des conflits porte sur les paires réellement ÉLIGIBLES et non sur toutes : la première version annonçait une « plus proche » qui était justement une des paires exclues. Une QUATRIÈME sortie a suivi le même jour (tâche #1059, sa demande « Assure-toi que le fichier regles de travail et process sont bien linkés ») : le lien dans l'AUTRE sens, ce qu'un document de process dit des règles de travail — trois états et jamais deux, parce qu'un document muet et un document illisible appellent des gestes opposés, et parce qu'un process dont le document EST le fichier des règles n'a rien à citer. Premier passage réel : 12 process tous nommés côté règles, 13 règles porteuses d'obligation qu'aucun process n'exécute (ouvertes en #1069), 0 conflit sur 348 paires éligibles, et 7 documents de process qui ne citaient jamais les règles de travail — les sept renvois ont été écrits le jour même, donc la sortie ④ est verte sur le dépôt et son pouvoir de mordre se garde sur la fixture ci-dessus, jamais sur l'état du jour.");
+}
+await testCroisementProcessEtRegles();
+
+
 
 
 

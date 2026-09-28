@@ -30,6 +30,17 @@ Code (noms d'outils, capacités et limites propres à ce harnais) — une IA rep
 un autre outil doit lire la Partie A intégralement, puis chercher dans sa propre documentation
 l'équivalent de chaque mécanisme cité en Partie B plutôt que de supposer qu'il existe tel quel.
 
+
+> **Une RÈGLE DE TRAVAIL n'est pas un PROCESS, et la différence est définie ailleurs.** Ce document
+> décrit la CONDUITE — comment se comporter, en permanence, y compris entre deux activités. Un
+> process décrit des ÉTAPES — quoi faire et dans quel ordre, pendant une activité nommée. La
+> définition complète des deux, avec ce qui les sépare et ce qui peut basculer de l'un à l'autre,
+> vit dans `docs/referentiel/organisation-agence.md` ; la liste réelle des process se demande à
+> `node scripts/god-of-all-process.mjs which "<la tâche>"`, jamais recopiée ici (Article 24). Le
+> croisement mécanique des deux registres — qui n'est porté par personne, et où sont les conflits —
+> se lance avec `node scripts/abraham-les-references.mjs croisement`.
+> *(Renvoi ajouté le 2026-09-28, tâches #1058 et #1059.)*
+
 ## 0. Relecture périodique, pas seulement en début de session
 
 *(Ajouté le 2026-09-18, à la demande explicite de l'utilisateur, étendu le même jour à

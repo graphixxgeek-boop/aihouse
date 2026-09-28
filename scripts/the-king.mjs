@@ -15,7 +15,7 @@
 import { significantWords } from "./le-coordinateur.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
+import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -130,8 +130,14 @@ export function buildEvolutionDigest(principles, { avecGit = true, shImpl = sh }
     .map((p) => `${p.date} — ${p.partie}.${p.numero} ${p.titre}`);
 }
 
-const NEGATION_MARKER = /\bjamais\b/i;
-const ABSOLUTE_MARKER = /\btoujours\b/i;
+// LES DEUX MARQUEURS DE POLARITÉ VIVENT DÉSORMAIS DANS LE SOL PARTAGÉ (2026-09-28, tâche #1057).
+// Le croisement process ↔ règles de travail d'Abraham a besoin exactement de la même lecture — un
+// « jamais » face à un « toujours » sur le même terrain — et la recopier chez lui aurait créé la
+// dette que le commentaire de SEUIL_JACCARD_STRICT décrit dix lignes plus bas : deux valeurs qui
+// peuvent diverger sans que rien ne le signale. La seule protection est que les deux lisent la
+// MÊME constante (Article 24).
+const NEGATION_MARKER = MARQUEUR_NEGATION;
+const ABSOLUTE_MARKER = MARQUEUR_ABSOLU;
 
 // Détection de tension possible entre deux principes — un SIGNAL heuristique, jamais une
 // contradiction prouvée (aucun outil mécanique de ce projet ne peut lire le sens réel de deux

@@ -193,3 +193,101 @@ pas vérifier est un seuil qu'on subit.
 
 **Délibérément PAS un item de Ronde** : il tourne déjà à chaque commit, et lui ajouter un
 rendez-vous périodique gonflerait le registre sans rien couvrir de plus.
+
+## Le croisement process ↔ règles de travail (depuis le 2026-09-28)
+
+`node scripts/abraham-les-references.mjs croisement [chemin-des-règles]` — rapport déposé dans
+`docs/abraham-les-references/croisement-process-regles-<date>.txt`.
+
+**SA QUESTION, mot pour mot, dans son gros prompt du 2026-09-28** : « est-ce qu'on a aujourd'hui
+des process qui ne sont pas portés par des règles de travail et inversement des règles de travail
+non portées par des process, et est-ce qu'il y a des conflits entre les 2 ? »
+
+**POURQUOI ICI PLUTÔT QUE DANS UN OUTIL DE PLUS** (Article 31, obligation 2 : on ÉTEND avant de
+construire). Abraham est déjà l'outil MAÎTRE des documents à règles numérotées — il découpe en
+unités, nomme le porteur réel de chacune, mesure les redondances. Ce qui manquait n'était aucune de
+ces lectures : c'était le CROISEMENT de deux registres, les process déclarés chez
+`god-of-all-process` et les sections de `docs/regles-de-travail.md`. Les deux se LISENT à
+l'exécution (Article 24) : un treizième process ou une section de plus entrent sans qu'on touche au
+code.
+
+**TROIS SORTIES, JAMAIS UNE SEULE**, parce qu'elles appellent trois gestes différents :
+
+| # | Ce qu'elle trouve | Le geste qu'elle appelle |
+|---|---|---|
+| ① | un **process** que rien, côté règles de travail, ne nomme | écrire la règle, ou dire pourquoi le process se suffit |
+| ② | une **règle** porteuse d'obligation qu'aucun process n'exécute | lui donner un process, ou accepter qu'elle ne tienne qu'à la mémoire (leçon L1) |
+| ③ | une **paire qui se contredit** | ARBITRER — décision humaine (Article 16), jamais un correctif d'agent |
+| ④ | un **process dont le document** ne cite jamais les règles de travail | écrire le renvoi |
+
+**La quatrième est arrivée le même jour** (tâche #1059, sa demande : « Assure-toi que le fichier
+regles de travail et process sont bien linkés »), et elle regarde le lien dans l'AUTRE sens. ① et ②
+disent ce que les RÈGLES savent des process ; ④ dit ce qu'un PROCESS dit des règles. Les deux
+défauts ne sont pas le même : **un process qui ne cite pas les règles qui le gouvernent fait
+travailler sans elles**, là où une règle qui ne cite aucun process ne dit pas QUAND elle s'applique.
+Les additionner en un seul chiffre effacerait la distinction.
+
+**Trois états pour ④, jamais deux** : MUET (le document ne cite rien) · PAS LU (le document n'a pas
+pu être ouvert — ce n'est *pas* « il ne cite rien », les deux appellent des gestes opposés) ·
+et l'exemption d'un process dont le document EST le fichier des règles, qui n'a évidemment rien à
+citer. **Premier passage : 7 muets sur 12** ; les sept renvois ont été écrits le jour même, donc la
+sortie est verte sur le dépôt et son pouvoir de mordre se garde sur une fixture.
+
+### Le défaut du premier jet, et il rendait l'outil inutilisable sans en avoir l'air
+
+La première version comparait les deux registres par **Jaccard** (intersection / union), comme tout
+le reste du dépôt. Elle ne pouvait PAS fonctionner : un process se décrit en une douzaine de mots,
+une section des règles de travail en compte plusieurs centaines, et l'union écrase tout. **La paire
+la plus proche de tout le document rendait 0,069** — donc aucun seuil raisonnable ne pouvait se
+déclencher, les douze process tombaient en « ABSENT », et cette unanimité se serait lue comme un
+résultat. Un état qu'aucune donnée réelle ne peut atteindre est du décor (leçon L6).
+
+**La bonne question est asymétrique** : « quelle PART du vocabulaire du process se retrouve dans
+cette section ? » — intersection sur la taille du plus petit, jamais sur l'union. Mesurée ainsi, la
+même comparaison s'étale de 0 à 0,93 et devient lisible.
+
+### Trois protections, chacune née d'un vrai défaut
+
+- **Le seuil se DÉRIVE** (Article 24) : deux fois la médiane des couvertures **non nulles**
+  observées, sur le patron déjà éprouvé par `protegerLaCharte()`. Il vieillit donc avec les deux
+  registres. Sous quatre paires non nulles, il **refuse de se calculer** plutôt que d'inventer un
+  chiffre. *Les zéros sortent du calcul, et c'est un contre-test qui l'a trouvé* : sur une
+  population majoritairement nulle la médiane vaut 0, le seuil vaut 0, tout le franchit, chaque
+  section devient un catalogue, la population éligible tombe à zéro — et le rapport annonce
+  « aucun conflit » sur zéro paire examinée. **Un seuil à zéro n'est pas un seuil permissif : c'est
+  un interrupteur qui éteint la mesure en se faisant passer pour elle.**
+- **Une section CATALOGUE n'est pas une preuve de portage.** `§7ter — Le paysage des outils de
+  vigilance` nomme TOUS les outils du dépôt : elle couvre le vocabulaire des douze process à plus de
+  70 %. Conclure qu'elle en « porte » un serait absurde — elle les énumère, elle n'en exécute aucun.
+  Le critère est dérivé, jamais une liste de titres tenue à la main : une section qui couvre plus de
+  la moitié des process est un catalogue.
+- **Le zéro porte sur la population réellement ÉLIGIBLE** (leçon de la tâche #836). La première
+  version annonçait « la plus proche à 0,929 » alors que cette paire était justement une section
+  catalogue, donc exclue : le dénominateur décrivait une population que la mesure n'avait pas
+  regardée, ce qui est exactement le défaut qu'un dénominateur existe pour éviter.
+
+**Le seuil peut être IMPOSÉ, et alors le rapport le DIT** — même discipline que la SOURCE d'une
+heure (Article 32) : ce qui compte n'est pas que la valeur soit bonne, mais qu'on sache d'où elle
+vient. La commande n'impose jamais rien ; l'argument sert à éprouver le détecteur sur un cas dont
+on connaît la réponse, ce que la tâche #836 a établi comme obligatoire.
+
+**Les deux marqueurs de polarité** (« jamais » face à « toujours ») vivent désormais dans
+`lib-shell.mjs` et sont lus par THE-KING **et** par ce croisement. Les recopier aurait reproduit
+exactement la dette que le commentaire de `SEUIL_JACCARD_STRICT` raconte : deux valeurs qui se
+promettent de rester alignées et qui divergent sans que rien ne le signale.
+
+### Premier passage réel (2026-09-28)
+
+12 process · 30 sections · seuil dérivé **0,375** · 1 section catalogue écartée.
+
+- ① **0 process sur 12** que rien ne nomme côté règles de travail.
+- ② **13 règles sur 30** portent des obligations qu'aucun process n'exécute — dont
+  `§9 Points de vigilance` (21 obligations) et `§3ter Toute expérience vécue doit alimenter un
+  outil` (10 obligations).
+- ③ **0 conflit** sur 348 paires éligibles ; la plus proche reste `simulation ↔ §6bis` à 0,778, donc
+  le zéro est mérité et non un silence.
+
+**LA LIMITE, DÉCLARÉE** : le vocabulaire partagé est un SIGNAL, jamais une preuve. Une règle qui
+porte un process sans employer un seul de ses mots reste invisible ici, et deux textes peuvent se
+contredire avec des mots entièrement différents. Les conflits se lisent sur **deux mots français** :
+c'est une question posée, jamais un arbitrage rendu.

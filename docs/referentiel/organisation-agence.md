@@ -622,3 +622,81 @@ pas ses propres dossiers : ses trouvailles à lui (deux documents qui disent la 
 à l'écran sans jamais entrer dans la veille qu'il anime. **Un rassembleur qui ne se rassemble pas
 lui-même rend une synthèse incomplète en ayant l'air complète**, ce qui est pire qu'une synthèse
 absente. Corrigé le jour même : il dépose avant de lire.
+
+# Un PROCESS et une RÈGLE DE TRAVAIL — ce qui les sépare (2026-09-28, tâche #1058)
+
+**SA QUESTION, mot pour mot, dans son gros prompt du 2026-09-28** : « quelle est la différence entre
+le document de référence règle de travail et les process renseignés à l'agence ».
+
+**LA RÉPONSE EXISTAIT DÉJÀ, DÉDUITE DU CODE — AUCUNE PAGE NE LA DISAIT.** C'est exactement la dette
+de reprise que l'Article 27 nomme : un nom propre sans définition atteignable. Si la question se
+pose, c'est qu'elle manque ; et une IA qui reprend ce dépôt demain la reposerait à l'identique.
+
+| | **Un PROCESS** | **Une RÈGLE DE TRAVAIL** |
+|---|---|---|
+| Ce qu'il/elle dit | **quoi faire, et dans quel ordre** | **comment se comporter**, quel que soit le moment |
+| Sa forme | une suite d'ÉTAPES qui engage | une obligation de CONDUITE |
+| Quand ça s'applique | pendant une activité nommée (une Ronde, une simulation, une nuit autonome) | en permanence, y compris entre deux activités |
+| Où c'est déclaré | `PROCESSES` (`scripts/god-of-all-process.mjs`) + un document par process | `docs/regles-de-travail.md` + `REGLES_SURVEILLEES` (`scripts/angel-of-ia-process.mjs`) |
+| Qui le surveille | **god-of-all-process**, contrôleur de process | **angel-of-ia-process**, contrôleur de conduite |
+| Ce qu'un manquement produit | une étape sautée — visible dans le déroulé | un comportement pris — invisible sauf si on demande |
+| Sa gouvernance dans la charte | Articles 18 et 26 | Article 16, et les règles de travail elles-mêmes |
+
+**LA PHRASE À RETENIR, si on n'en retient qu'une** : *god surveille des ÉTAPES, angel surveille des
+RÈGLES DE TRAVAIL.* C'est déjà écrit dans l'Article 26 ; ce qui manquait était de le dire comme une
+DÉFINITION plutôt que comme une répartition de tâches entre deux outils.
+
+**POURQUOI LES DEUX NE FUSIONNENT PAS, et ce n'est pas un choix d'architecture mais une conséquence.**
+Une étape se CONSTATE — elle a eu lieu ou non, et un horodatage le dit. Une conduite ne se constate
+pas : aucun fichier sur disque ne porte le fait qu'une question a été posée avant d'agir plutôt
+qu'après. C'est pour cela qu'angel **DEMANDE** et refuse d'être au vert sans réponse, là où god
+**LIT**. Fondre les deux obligerait à traiter tout ce qu'angel surveille comme si c'était observable
+— et une règle déclarée tenue sans preuve est pire qu'une règle déclarée non mesurée.
+
+**UNE SEULE VOIX, JAMAIS DEUX** : angel ne livre pas son rapport lui-même, god le relaie dans une
+section clairement à part (Article 26). La séparation est dans ce qu'ils SURVEILLENT, jamais dans ce
+que l'utilisateur reçoit.
+
+**CE QUI PEUT BASCULER DE L'UN À L'AUTRE, et comment le reconnaître.** Une règle de travail dont
+l'application suit toujours le même enchaînement d'étapes est en train de devenir un process : c'est
+le signe qu'elle mérite un document et un contrôleur. À l'inverse, une étape d'un process qui
+s'applique en dehors de ce process est une règle de conduite déguisée. Le croisement mécanique des
+deux registres est mesuré par
+`node scripts/abraham-les-references.mjs croisement` (tâche #1057) — il dit lesquelles des deux
+populations n'a pas de correspondant dans l'autre, et le premier passage en a trouvé treize.
+
+# Qui fait quoi autour d'une simulation (2026-09-28, tâche #604)
+
+**NÉ D'UNE QUESTION DE L'UTILISATEUR** : « est-ce que EL-PROFESSOR est devenu le responsable des
+simulations ? (notamment /transcript) ». La réponse est non, et la répartition existait déjà — mais
+elle se DÉDUISAIT du code et de l'Article 18, sans qu'aucune page la dise. **Si la question s'est
+posée, c'est que ça manquait** (même raisonnement que #1058, même nature de dette : Article 27).
+
+**POURQUOI LA CONFUSION EST LOGIQUE, et il faut le dire plutôt que s'en étonner** : EL-PROFESSOR est
+le seul des trois dont on voit le RÉSULTAT. Les deux autres travaillent en coulisses — et ce qui est
+visible passe pour ce qui commande.
+
+| Rôle | Quand il intervient | Ce qu'il possède | Ce qu'il ne fait JAMAIS |
+|---|---|---|---|
+| **process-simulation-guardian**<br>*contrôleur de process* | **AVANT** le lancement, et il peut BLOQUER | le DÉROULÉ : le scénario, les étapes, leur ordre | il ne note rien, il ne touche pas au transcript |
+| **LE-RÉGISSEUR**<br>*membre de l'équipe* | **PENDANT et APRÈS**, sur les parties mécaniques | le TRANSCRIPT : il l'archive, le rend en HTML, résume le journal JSON | **aucun jugement** — ni note, ni verdict, ni index de jugement |
+| **EL-PROFESSOR**<br>*membre de l'équipe* | **APRÈS**, sur un texte déjà produit | la NOTE : /100 contre cinq thèmes de la charte, plafonnée par l'Article 0 | il ne produit pas le transcript, il ne contrôle pas le déroulé |
+
+**LA PHRASE À RETENIR** : *le contrôleur de process contrôle le DÉROULÉ, le régisseur possède le
+TRANSCRIPT, le professeur rend la NOTE.* Trois verbes, trois moments, aucun recouvrement.
+
+**POURQUOI LE CONTRÔLEUR DE PROCESS DE LA SIMULATION INTERVIENT AVANT et pas après, contrairement à
+celui de la Ronde** : une
+simulation coûte une heure de vrai quota Gemini. Constater un défaut de scénario après coup, c'est
+l'avoir déjà brûlée. Les deux bugs de `full_sim18` (aucun tour autonome en phase 2, observateur
+jamais identifié) étaient l'un et l'autre visibles dans le scénario AVANT le lancement ; personne ne
+les a regardés parce que rien ne le demandait.
+
+**LA FRONTIÈRE DU RÉGISSEUR EST STRICTE, et elle est le cœur de sa définition** : il orchestre les
+étapes qui ne demandent aucun jugement — archivage, extraction du résumé compact, rapport KPI — et
+**jamais** les index de jugement (`docs/simulations/index.md`, `docs/referentiel/kpi-index.md`), qui
+restent la plume de l'agent (Article 18).
+
+**UN QUATRIÈME, quand la simulation est graphique** : **THE-SCREENER** capture l'écran et rend une
+note graphique indicative. Il est au visuel ce qu'EL-PROFESSOR est au texte, et la même règle vaut —
+il note ce qui a été produit, il ne le produit pas.

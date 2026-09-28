@@ -22,12 +22,14 @@ ce qui en a été fait. Un passage sans suite se voit ici, jamais dans la sortie
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**5 fichier(s)** dans ce dossier.
+**7 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
+| [alertes.json](alertes.json) | — |
 | [classification-CLAUDE.html](classification-CLAUDE.html) | — |
 | [classification-docs-regles-de-travail.html](classification-docs-regles-de-travail.html) | — |
+| [croisement-process-regles-2026-09-28.txt](croisement-process-regles-2026-09-28.txt) | — |
 | [documents-jumeaux-2026-09-26.txt](documents-jumeaux-2026-09-26.txt) | — |
 | [documents-jumeaux-2026-09-27.txt](documents-jumeaux-2026-09-27.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-393Z.txt](ronde/circle-signal-2026-09-27T00-12-15-393Z.txt) | ronde |

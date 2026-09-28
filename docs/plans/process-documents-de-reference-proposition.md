@@ -1,5 +1,15 @@
 # Modifier un document de référence : le process qui manque (proposition)
 
+> **Les règles de travail s'appliquent AUSSI ici.** Ce document décrit des ÉTAPES — quoi faire et
+> dans quel ordre. Il ne remplace jamais `docs/regles-de-travail.md`, qui décrit la CONDUITE : la
+> façon de poser une question, de livrer, de commiter, de rendre compte, et elle vaut pendant ce
+> process comme en dehors. *(Renvoi ajouté le 2026-09-28, tâche #1059 — sa demande : « Assure-toi
+> que le fichier regles de travail et process sont bien linkés. » Le croisement d'Abraham avait
+> mesuré que sept documents de process, dont celui-ci, ne la citaient jamais. La différence exacte
+> entre un process et une règle de travail est définie dans
+> `docs/referentiel/organisation-agence.md`.)*
+
+
 *(2026-09-25, tâche #846 — instruction du constat TaskList #223. **Ce document PROPOSE, il n'acte
 rien** : un process porte un nom, et les noms se choisissent ici par l'utilisateur.)*
 
