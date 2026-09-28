@@ -308,3 +308,37 @@ posé une question à la clôture d'une tâche. Angel **DEMANDE** donc, et refus
 réponse — la seule protection possible pour une règle qui ne se joue que dans la conversation, et
 l'écrire ainsi vaut mieux que de la confier à la mémoire d'un agent qui changera de session
 (Article 27).
+
+## Une source de règle peut mourir en silence — la référence `§1001` (2026-09-28, tâche #1069)
+
+**Chaque règle surveillée porte un champ `source`** qui dit d'où elle vient : un § des règles de
+travail, un Article de la charte, une demande datée. Ce champ n'est pas décoratif — c'est lui qui
+permet à un autre outil de savoir quelle règle porte quelle section, et donc de ne pas accuser une
+règle d'être orpheline quand angel la surveille déjà.
+
+**Ce que le croisement d'Abraham a trouvé en apprenant à lire ce registre** : la règle
+`consultation-avant` citait `docs/regles-de-travail.md §7ter et §1001` depuis le 2026-09-22, et ce
+document **n'a jamais porté de section 1001** — vérifié sur la version du dépôt à cette date, pas
+supposé.
+
+**Pourquoi c'est pire qu'une absence** : un renvoi mort **ressemble à un lien**. On croit la règle
+doublement ancrée quand elle ne l'est qu'une fois, et personne ne va vérifier une référence qui a
+l'air d'exister. L'intention n'étant pas récupérable, elle n'a pas été devinée : la référence morte
+a été retirée, avec la raison écrite juste à côté dans le code. **§7ter porte la règle à lui seul.**
+
+### Deux sources rendues précises par la même passe
+
+`fiabiliser` et `optimiser` nommaient le fichier des règles de travail **sans dire quelle section**.
+Elles citent désormais leur section par son titre exact — `« OPTIMISER et FIABILISER »` — parce que
+cette section-là n'a pas de numéro et qu'une référence au seul fichier n'est pas vérifiable.
+
+**La forme d'une source vaut donc engagement** : soit un `§<numéro>`, soit un titre entre
+guillemets. Les deux sont exactes et se vérifient mécaniquement ; nommer le fichier seul ne se
+vérifie pas, et ce qui ne se vérifie pas se périme sans bruit.
+
+### Ce qui reste ouvert, et ne m'appartient pas
+
+`harmoniser` est surveillée depuis le 2026-09-24 (« on ajoute harmonise »), mais la section des
+règles de travail s'appelle toujours « OPTIMISER et FIABILISER — **les deux** mots d'ordre
+permanents » et ne la mentionne nulle part. Sa source ne peut donc citer aucune section, faute
+qu'elle existe. Renommer ou compléter une section de ce document est une décision de l'utilisateur.
