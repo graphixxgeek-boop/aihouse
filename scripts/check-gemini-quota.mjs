@@ -36,7 +36,14 @@ import { printReliabilityNotice } from "./lib-shell.mjs";
 // Breaker, cf. CLAUDE.md).
 recordCliUsage("smart-breaker");
 
-const devVars = readFileSync(new URL("../.dev.vars", import.meta.url), "utf8");
+// `.dev.vars` N'EXISTE PAS PARTOUT, ET MOURIR DESSUS ÉTAIT UN DÉFAUT D'EXPORT (2026-09-28, tâche
+// #902, trouvé par le banc témoin). Ce fichier porte les secrets LOCAUX : il est absent de tout
+// dépôt fraîchement cloné, y compris celui-ci chez quelqu'un d'autre. Un fichier de secrets
+// manquant n'est pas une anomalie — c'est le cas normal à l'arrivée. La clé peut d'ailleurs venir
+// de l'environnement seul, et le message juste en dessous le dit déjà : il n'était simplement
+// jamais atteint, parce que la lecture plantait avant.
+let devVars = "";
+try { devVars = readFileSync(new URL("../.dev.vars", import.meta.url), "utf8"); } catch { devVars = ""; }
 const key = (process.env.GEMINI_API_KEY ?? devVars.match(/^GEMINI_API_KEY=(.*)$/m)?.[1] ?? "").trim();
 if (!key) { console.error("GEMINI_API_KEY introuvable (ni process.env, ni .dev.vars)."); process.exit(1); }
 const fallbackKeysRaw = (devVars.match(/^GEMINI_API_KEY_FALLBACKS=(.*)$/m)?.[1] ?? "").split(",").map(k => k.trim()).filter(Boolean);

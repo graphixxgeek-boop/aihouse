@@ -19227,3 +19227,148 @@ async function testTroisiemeRegistreDuCroisement() {
   console.log(`Passed: le troisième registre du croisement process ↔ règles (2026-09-28, tâche #1069). LE CROISEMENT SUR-ACCUSAIT, et c'est la même famille d'erreur que toutes celles de la nuit — un signal ADJACENT lu comme le signal lui-même : il comparait les process de god-of-all-process aux sections des règles de travail et concluait « 13 règles que rien n'exécute », alors qu'une règle de CONDUITE est portée par angel-of-ia-process, qui la DEMANDE à chaque passage et refuse d'être au vert sans réponse. Compter ces règles-là comme orphelines accusait le dispositif de ne pas faire ce qu'il fait (L4). MESURE : 13 → 9 orphelines réelles, ${croise.porteesParAngel.length} sections rendues à leur porteur. LE LIEN SE LIT AU LIEU DE SE DEVINER, et c'est ce qui le distingue du reste de ce croisement : chaque règle surveillée NOMME sa section dans son champ source. Partout ailleurs ici le lien est une couverture de vocabulaire faute de mieux ; ici la donnée exacte existe, et s'en passer aurait été un choix, pas une contrainte. DEUX FORMES EXACTES ET PAS UNE DE PLUS — le numéro (§0bis) et le titre cité entre guillemets — parce que toutes les sections ne sont pas numérotées : « OPTIMISER et FIABILISER » n'a pas de numéro, et un matcher qui n'aurait connu que le § l'aurait déclarée orpheline pour toujours alors que deux règles la portent. TROUVAILLE DU PREMIER PASSAGE : une référence MORTE DE NAISSANCE, « §1001 », écrite le 2026-09-22 dans consultation-avant alors que ce document n'a jamais porté de section 1001 — vérifié sur la version de ce jour-là, pas supposé. Un renvoi mort ressemble à un lien, ce qui est pire qu'une absence : on croit la règle doublement ancrée quand elle ne l'est qu'une fois. Retirée, avec la raison écrite à côté plutôt que l'intention devinée. Et sans registre passé, le rapport DIT qu'il sur-accuse au lieu d'imprimer un chiffre qu'il sait gonflé.`);
 }
 await testTroisiemeRegistreDuCroisement();
+
+// =============================================================================================
+// #902 — LE BANC TÉMOIN MESURAIT POUR PERSONNE
+// =============================================================================================
+// LA LEÇON L2 DANS SA FORME LA PLUS PURE. Le banc témoin EXISTE, il TOURNE, il clone un vrai dépôt
+// étranger, y installe l'Agence entière et lance soixante-treize outils — et le rapport central
+// écrivait `temoin: { mesurable: false }` EN DUR, donc affichait « aucune mesure disponible
+// aujourd'hui » quelques secondes après que la mesure ait été faite. Une mesure qui n'est pas
+// rendue n'existe pas.
+//
+// SA DEMANDE ÉTAIT « je veux un calcul qui donne le pourcentage d'exportabilité de l'agence ». Le
+// pourcentage se calculait sur 5 dimensions mesurées sur 7 ; il s'en calcule 6 sur 7 maintenant,
+// et la sixième vaut 89 % — mesurée pour de vrai, jamais estimée.
+async function testLeBancTemoinEstLuParLeRapport() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // L'ASSERTION QUI COMPTE LE PLUS EST CELLE DU CÂBLAGE, pas celle de la fonction : un test sur
+  // `dernierPassageDuBanc()` seule serait resté VERT pendant que le rapport continuait d'écrire
+  // « non mesuré ». C'est exactement le défaut corrigé ici, et le tester à côté l'aurait manqué.
+  const dim = SE.DIMENSIONS_DE_L_EXPORT.find((d) => d.cle === 'preuve-par-le-banc');
+  assert.ok(dim, 'the bench dimension must exist in the declared registry');
+  assert.deepEqual(dim.lire({ temoin: { mesurable: true, taux: 89, resume: 'x' } }), { valeur: 89, sur: 100, detail: 'x' },
+    'the central report MUST read a real bench measurement: a probe wired to a hardcoded false is a measurement made for nobody (L2)');
+  assert.equal(dim.lire({ temoin: { mesurable: false } }), null,
+    'and with no bench passage the dimension stays NOT MEASURED — never zero, which would punish the tool that refuses to conclude');
+
+  // LA MÉMOIRE DU BANC : elle s'écrit, elle se relit, et la dernière l'emporte.
+  const disque = new Map();
+  const io = {
+    root: '/faux/',
+    readFileImpl: (c) => { if (!disque.has(c)) throw new Error('ENOENT'); return disque.get(c); },
+    writeFileImpl: (c, t) => disque.set(c, t),
+    mkdirImpl: () => {},
+  };
+  assert.equal(SE.enregistrerPassageDuBanc({ date: '2026-09-01T00:00:00Z', commit: 'aaa', taux: 50, debout: 5, examines: 10 }, io), 1);
+  assert.equal(SE.enregistrerPassageDuBanc({ date: '2026-09-28T00:00:00Z', commit: 'bbb', taux: 89, debout: 65, examines: 73, temoin: '/tmp/t' }, io), 2,
+    'a second passage is APPENDED, never overwritten: the slope of a measurement is half its information');
+
+  // RIEN ÉCRIT N'EST PAS ZÉRO POUR CENT (leçons L5/L11) — et c'est la distinction que tout ce
+  // rapport existe pour tenir.
+  const vide = SE.dernierPassageDuBanc({ root: '/vide/', readFileImpl: () => { throw new Error('ENOENT'); }, commitActuel: 'bbb' });
+  assert.equal(vide.mesurable, false, 'no registry means NOT MEASURED, never a rate of zero');
+  assert.ok(/jamais enregistré/.test(vide.pourquoi), 'and it says why, so the reader can tell "we never looked" from "it does not work"');
+
+  // LA FRAÎCHEUR EST PART DE LA MESURE, jamais un détail : un taux mesuré sur une Agence de la
+  // semaine dernière décrit la semaine dernière. La comparaison est un FAIT (git a-t-il vu bouger
+  // `scripts/` entre les deux commits), jamais un seuil d'âge choisi à la main (Article 24).
+  const aJour = SE.dernierPassageDuBanc({ ...io, commitActuel: 'bbb' });
+  assert.equal(aJour.taux, 89, 'the freshest passage is the one reported');
+  assert.equal(aJour.perime, false);
+  assert.ok(/à jour/.test(aJour.resume), 'same commit: the measurement still describes today');
+
+  const perime = SE.dernierPassageDuBanc({ ...io, commitActuel: 'ccc', shImpl: () => 'scripts/a.mjs\nscripts/b.mjs' });
+  assert.equal(perime.perime, true, 'scripts/ changed since the bench ran: the rate describes an EARLIER Agency and must say so');
+  assert.equal(perime.fichiersChangesDepuis, 2);
+  assert.ok(/PÉRIMÉ/.test(perime.resume), 'and it says it in the sentence the reader actually reads, never only in a field');
+
+  // GIT MUET NE VAUT PAS « À JOUR » : ne pas pouvoir comparer n'est pas la même chose que
+  // comparer et ne rien trouver — absoudre par défaut d'information est le faux vert le plus cher.
+  const inconnu = SE.dernierPassageDuBanc({ ...io, commitActuel: 'ccc', shImpl: () => { throw new Error('git absent'); } });
+  assert.equal(inconnu.perime, false);
+  assert.ok(/fraîcheur inconnue/.test(inconnu.resume), 'an unreadable git must say "freshness unknown", never imply the measurement is current');
+
+  // ET LE REGISTRE RÉEL PORTE LE PASSAGE DE CETTE NUIT : un mécanisme qu'on n'a jamais fait tourner
+  // pour de vrai est une intention (leçon L2, Article 25).
+  const reel = SE.dernierPassageDuBanc();
+  assert.equal(reel.mesurable, true, 'checked live: the real bench registry carries a measured passage — the mechanism was RUN, not merely written');
+  assert.ok(reel.taux >= 0 && reel.taux <= 100);
+
+  console.log(`Passed: le banc témoin mesurait pour personne (2026-09-28, tâche #902). LA LEÇON L2 DANS SA FORME LA PLUS PURE : le banc existe, il clone un vrai dépôt étranger, y installe l'Agence entière et lance 73 outils — et le rapport central écrivait « temoin: { mesurable: false } » EN DUR, donc affichait « aucune mesure disponible aujourd'hui » quelques secondes après que la mesure ait été faite. Une mesure qui n'est pas rendue n'existe pas. SA DEMANDE ÉTAIT « un calcul qui donne le pourcentage d'exportabilité » : il se calculait sur 5 dimensions sur 7, il s'en calcule 6 sur 7, et la sixième vaut ${reel.taux} % — MESURÉE sur github.com/sindresorhus/slugify, jamais estimée. POURQUOI UN REGISTRE ET PAS UN RECALCUL : le banc prend des minutes et demande le réseau ; le rapport central doit rester gratuit et instantané, il rassemble et ne recalcule jamais (L29). Le banc écrit son passage, le rapport le lit. LA FRAÎCHEUR EST PART DE LA MESURE : un taux mesuré sur une Agence de la semaine dernière décrit la semaine dernière. La comparaison est un FAIT — git a-t-il vu bouger scripts/ entre les deux commits — jamais un seuil d'âge choisi à la main (Article 24), et un git muet dit « fraîcheur inconnue » plutôt que d'absoudre par défaut d'information. L'ASSERTION QUI COMPTE LE PLUS EST CELLE DU CÂBLAGE : un test sur la seule fonction serait resté vert pendant que le rapport continuait d'écrire « non mesuré » — c'est le défaut lui-même, et le tester à côté l'aurait manqué.`);
+}
+await testLeBancTemoinEstLuParLeRapport();
+
+// =============================================================================================
+// #902 — LES DEUX VERDICTS QUI MANQUAIENT AU BANC, ET LE REGISTRE QU'IL N'HONORAIT PAS
+// =============================================================================================
+// LE BANC COMPTAIT HUIT ÉCHECS DONT SIX N'EN ÉTAIENT PAS. Trois familles, et chacune est une
+// erreur du MESUREUR, jamais du mesuré — exactement comme le quatrième verdict né le 2026-09-27 :
+//   · un outil qui REFUSE proprement faute d'un secret local (`.dev.vars` n'existe dans aucun
+//     dépôt fraîchement cloné, y compris celui-ci chez quelqu'un d'autre) ;
+//   · un outil qui réclame un PAQUET NPM que le banc n'a pas installé — le banc copie `scripts/`
+//     et rien d'autre, délibérément, donc la faute est au banc ;
+//   · les INSTALLEURS de l'environnement d'ici, qui n'ont jamais eu à partir et que le registre
+//     des dispenses décrivait déjà mot pour mot, sans les contenir (leçon L37 : on avait corrigé
+//     l'occurrence `install-pnpm.sh`, pas la classe).
+// Deux outils, eux, étaient de VRAIS défauts et ont été corrigés : ARGUS et route-booster mouraient
+// sur un ENOENT au lieu de déclarer ce qu'ils ne pouvaient pas mesurer.
+async function testLesVerdictsDuBancTemoin() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  // LE CRITÈRE EST UN FAIT SUR LA SORTIE, JAMAIS UNE LISTE DE MOTS (corollaire de l'Article 17) :
+  // un outil qui MEURT laisse une trace de pile, un outil qui refuse imprime une phrase. Aucune
+  // liste de vocabulaire n'aurait couvert le prochain cas ; cette distinction-là, si.
+  assert.equal(SE.verdictDuTemoin({ code: 1, sortie: 'GEMINI_API_KEY introuvable (ni process.env, ni .dev.vars).' }).cle, 'attend-une-configuration',
+    'a clean refusal naming the missing configuration is healthy behaviour, never a crash');
+  assert.equal(SE.verdictDuTemoin({ code: 1, sortie: "Error: ENOENT introuvable\n    at readFileSync (node:fs:440:20)" }).cle, 'non-portable',
+    'MUST NOT absolve a real crash just because its message contains the word "introuvable": the stack trace is what separates dying from refusing');
+  assert.equal(SE.verdictDuTemoin({ code: 1, sortie: 'boum' }).cle, 'non-portable',
+    'and a bare failure naming nothing stays non-portable — the refusal must SAY what is missing');
+
+  assert.equal(SE.verdictDuTemoin({ code: 1, sortie: "Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'typescript'\n    at x" }).cle, 'dependance-non-installee',
+    'a missing npm package is a limit of the BENCH, which copies scripts/ and nothing else — charging it to the Agency would be a false red');
+  assert.match(SE.verdictDuTemoin({ code: 1, sortie: "Cannot find package 'playwright' imported from y" }).pourquoi, /playwright/,
+    'and it NAMES the package, so the reader can tell a bench limit from a real coupling');
+
+  // CE VERDICT SORT DU DÉNOMINATEUR, jamais du bon côté ni du mauvais : le compter comme un succès
+  // serait un faux vert, le compter comme un échec facturerait à l'Agence un choix du banc. On ne
+  // mesure pas ce qu'on n'a pas mis en condition de répondre.
+  const synth = SE.synthetiserLeTemoin([
+    { outil: 'a', verdict: { cle: 'portable' } },
+    { outil: 'b', verdict: { cle: 'dependance-non-installee' } },
+  ], { exemptes: {}, exemptesDuKit: [] });
+  assert.equal(synth.total, 1, 'a bench limitation leaves the denominator: we do not measure what we did not put in a position to answer');
+  assert.equal(synth.tauxPct, 100);
+  assert.equal(synth.limiteDuBanc.length, 1, 'and it is NAMED, never silently dropped — an exclusion nobody can see is the one that inflates a rate');
+
+  // LE BANC HONORE LES DEUX REGISTRES, et c'est le défaut corrigé sur son voisin en #668 qui
+  // traînait encore ici : reprocher à un installeur de ne pas tourner ailleurs, c'est lui reprocher
+  // de faire son travail.
+  const avecKit = SE.synthetiserLeTemoin([
+    { outil: 'install-ci', verdict: { cle: 'non-portable' } },
+    { outil: 'abraham-les-references', verdict: { cle: 'portable' } },
+  ], { exemptes: {} });
+  assert.equal(avecKit.total, 1, 'an installer of THIS environment is out of scope, exactly as the kit registry already said of install-pnpm.sh');
+  assert.ok(avecKit.horsSujet.some((h) => h.outil === 'install-ci' && /machine d'ici/.test(h.pourquoi)),
+    'and it is excluded WITH the written reason, never silently: an exemption without a reason is an abandonment in disguise');
+
+  // LA BORNE : un vrai outil de l'Agence n'est jamais dispensé par ce chemin.
+  assert.equal(SE.synthetiserLeTemoin([{ outil: 'abraham-les-references', verdict: { cle: 'non-portable' } }], { exemptes: {} }).total, 1,
+    'a genuine Agency tool stays in the denominator whatever its verdict — the two registries exempt by CRITERION, never by convenience');
+
+  // LES DEUX VRAIS CORRECTIFS, vérifiés en LANÇANT plutôt qu'en relisant (Article 25) : les deux
+  // outils déclarent leur non-mesure au lieu de mourir, et le disent comme le reste du paysage —
+  // « ce n'est PAS aucun résultat », parce que les deux se lisent à l'opposé l'un de l'autre.
+  const { spawnSync } = await import('node:child_process');
+  for (const [script, arg] of [['scripts/route-booster.mjs', 'docs/un-fichier-qui-n-existe-pas.ts']]) {
+    const r = spawnSync(process.execPath, [script, arg], { encoding: 'utf8', timeout: 30000 });
+    assert.equal(r.status, 0, `${script} must DECLARE a non-measure on a missing target, never exit on an ENOENT`);
+    assert.match(`${r.stdout}`, /PAS MESUR/, `${script} must say it could not look`);
+    assert.match(`${r.stdout}`, /Ce n'est PAS/, `${script} must say what its silence is NOT — "could not look" reads exactly like "found nothing" otherwise (L5/L11)`);
+  }
+
+  console.log(`Passed: les deux verdicts qui manquaient au banc témoin (2026-09-28, tâche #902). LE BANC COMPTAIT HUIT ÉCHECS DONT SIX N'EN ÉTAIENT PAS, et les six sont des erreurs du MESUREUR, jamais du mesuré — exactement comme le quatrième verdict né la veille. UN REFUS N'EST PAS UN PLANTAGE : check-gemini-quota ne trouvait pas .dev.vars — un fichier de SECRETS LOCAUX, absent de tout dépôt fraîchement cloné, y compris celui-ci chez quelqu'un d'autre — et disait proprement « GEMINI_API_KEY introuvable » avant de sortir. Un outil qui inventerait un résultat sans sa clé serait bien pire. LE CRITÈRE EST UN FAIT SUR LA SORTIE, JAMAIS UNE LISTE DE MOTS : un outil qui MEURT laisse une trace de pile, un outil qui refuse imprime une phrase — aucune liste de vocabulaire n'aurait couvert le prochain cas, cette distinction-là si, et le contre-test le prouve sur un vrai crash dont le message contient pourtant « introuvable ». UN PAQUET NPM MANQUANT EST UNE LIMITE DU BANC : il copie scripts/ et rien d'autre, délibérément, donc trois outils mouraient sur ERR_MODULE_NOT_FOUND avant leur première ligne. Ce verdict SORT du dénominateur, jamais du bon ni du mauvais côté — le compter comme un succès serait un faux vert, comme un échec facturerait à l'Agence un choix du banc. LES INSTALLEURS DE L'ENVIRONNEMENT D'ICI n'ont jamais eu à partir, et le registre des dispenses les décrivait déjà mot pour mot sans les contenir : leçon L37, on avait corrigé l'occurrence install-pnpm.sh et pas la classe. ET DEUX VRAIS DÉFAUTS CORRIGÉS : ARGUS et route-booster mouraient sur un ENOENT au lieu de déclarer, vérifiés en LANÇANT. Mesure : 65/73 puis 67/70 puis 68/68 — et le rapport DIT que le dénominateur a bougé, parce qu'un taux qui monte sans le dire est un chiffre qui ment poliment.`);
+}
+await testLesVerdictsDuBancTemoin();

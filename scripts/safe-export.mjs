@@ -1413,7 +1413,17 @@ function main() {
         const r = spawnSync(process.execPath, [`scripts/${outil}.mjs`], { cwd: ou, timeout: 60000, encoding: "utf8" });
         return { outil, verdict: verdictDuTemoin({ code: r.status ?? 1, sortie: `${r.stdout ?? ""}\n${r.stderr ?? ""}` }) };
       });
-      for (const l of formatTemoinLines(synthetiserLeTemoin(passages), { ou })) console.log(l);
+      const synthese = synthetiserLeTemoin(passages);
+      for (const l of formatTemoinLines(synthese, { ou })) console.log(l);
+      // LE PASSAGE S'ENREGISTRE, sans quoi il ne sert qu'à celui qui regarde l'écran (leçon L2) :
+      // le rapport central affichait « aucune mesure disponible » quelques secondes après que la
+      // mesure ait été faite.
+      if (synthese.mesurable) {
+        const n = enregistrerPassageDuBanc({ date: new Date().toISOString(), temoin: ou, commit: pose.commit,
+          taux: synthese.tauxPct, debout: synthese.tiennentDebout, examines: synthese.total,
+          verdicts: Object.fromEntries(Object.entries(synthese.parVerdict).map(([k, v]) => [k, v.length])) });
+        console.log(`\n  Passage enregistré (${n} au total) : ${BANC_TEMOIN_PASSAGES} — c'est lui que lit le rapport central.`);
+      }
     });
   }
 
@@ -1533,7 +1543,7 @@ function main() {
         })(),
         kits, agence,
         relais: relaisDeModele(),
-        temoin: { mesurable: false },
+        temoin: dernierPassageDuBanc(),
         tendances: tendancesExport(),
         taches: tachesOuvertesExport({ lignes, estOuverte: (r) => ctd.OPEN_KEYS.has(r.statusKey) }),
       };
@@ -2162,6 +2172,13 @@ export const KIT_COMPLET = ["blueprint", "source", "fiche", "registre", "dependa
 // LES EXEMPTIONS, chacune avec sa raison, et elles sont rares par construction.
 export const EXEMPTES_DU_KIT = [
   { motif: /^scripts\/install-pnpm\.sh$/, pourquoi: "il installe l'environnement de CE conteneur : il décrit la machine d'ici, jamais un outil à remonter ailleurs" },
+  // AJOUTÉS LE 2026-09-28 (tâche #902, trouvés par le banc témoin) : ce sont les DEUX AUTRES
+  // installeurs de l'environnement d'ici, et ils tombent mot pour mot sous le critère écrit
+  // au-dessus — ils décrivent la machine, pas un outil. `install-pnpm.sh` y était, eux non, ce qui
+  // est la leçon L37 une fois de plus : on avait corrigé l'occurrence, pas la classe. Le banc les
+  // comptait donc comme « l'Agence ne part pas », alors qu'ils n'ont jamais eu à partir.
+  { motif: /^scripts\/install-ci/, pourquoi: "il installe les dépendances de CE dépôt en intégration continue : il décrit la machine d'ici, jamais un outil à remonter ailleurs" },
+  { motif: /^scripts\/pnpm-install/, pourquoi: "il installe les dépendances de CE dépôt : il décrit la machine d'ici, jamais un outil à remonter ailleurs" },
   { motif: /^scripts\/hooks\//, pourquoi: "les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit" },
   { motif: /^scripts\/run-framework/, pourquoi: "il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison" },
 ];
@@ -2754,6 +2771,8 @@ export const VERDICTS_DU_TEMOIN = [
   { cle: "portable", icone: "✅", quoi: "il tourne et rend un résultat" },
   { cle: "honnete", icone: "⚪", quoi: "il tourne et DÉCLARE ce qu'il ne peut pas mesurer — un succès d'export, jamais un échec" },
   { cle: "attend-un-argument", icone: "🔤", quoi: "il réclame un argument et refuse correctement — le banc l'a lancé à vide, ce n'est pas un défaut de portabilité" },
+  { cle: "attend-une-configuration", icone: "🔑", quoi: "il refuse PROPREMENT faute d'une configuration locale absente (une clé, un fichier de secrets) — un refus n'est pas un plantage" },
+  { cle: "dependance-non-installee", icone: "📦", quoi: "il manque un paquet npm que le banc n'a pas installé — une limite du BANC, jamais un défaut de l'outil" },
   { cle: "non-portable", icone: "💥", quoi: "il s'arrête sur une hypothèse qui n'est vraie que chez nous" },
 ];
 
@@ -2764,6 +2783,38 @@ export const MOTIFS_D_HONNETETE = /PAS MESUR[ÉE]|pas mesur[ée]|NON MESUR[ÉE]|
 // rapport-gros-prompt, smart-conso-api — sortent en erreur pour la meilleure des raisons : ils
 // réclament un argument et refusent proprement. Les compter comme non portables était une erreur du
 // MESUREUR, pas un défaut du mesuré, et un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+// LE CINQUIÈME VERDICT, ET IL NAÎT DU MÊME FAUX POSITIF QUE LE QUATRIÈME (2026-09-28, tâche #902).
+// `check-gemini-quota` arrivait sur le dépôt témoin, ne trouvait pas `.dev.vars` — un fichier de
+// SECRETS LOCAUX, absent de tout dépôt fraîchement cloné, y compris celui-ci chez quelqu'un
+// d'autre — et disait proprement « GEMINI_API_KEY introuvable » avant de sortir en 1. Le banc
+// comptait ça comme un plantage. C'est un REFUS, et un refus propre est le comportement voulu : un
+// outil qui inventerait un résultat sans sa clé serait bien pire.
+//
+// LE CRITÈRE EST UN FAIT SUR LA SORTIE, JAMAIS UNE LISTE DE MOTS (corollaire de l'Article 17) : un
+// outil qui MEURT laisse une trace de pile de Node ; un outil qui refuse imprime une phrase et
+// s'arrête. Aucune liste de vocabulaire n'aurait couvert le prochain cas ; cette distinction-là,
+// si. Le refus doit AUSSI nommer ce qui manque, sans quoi on absoudrait n'importe quelle sortie
+// en erreur sans trace.
+// LE SIXIÈME VERDICT, ET C'EST UNE LIMITE DU BANC QU'IL FAUT NOMMER PLUTÔT QUE FACTURER À L'OUTIL
+// (2026-09-28, tâche #902). Le banc copie `scripts/` et RIEN D'AUTRE — c'est délibéré, c'est
+// exactement ce que l'Agence prétend pouvoir emporter. Mais trois outils importent un paquet npm
+// (`typescript`, `playwright`) que le dépôt témoin n'a jamais installé, et Node meurt sur
+// ERR_MODULE_NOT_FOUND avant la première ligne de leur code.
+//
+// LES COMPTER COMME NON PORTABLES SERAIT FAUX, et dans le sens le plus coûteux : l'Agence DÉCLARE
+// ses dépendances — c'est l'une des cinq pièces du kit d'export, mesurée à 100 % par ailleurs. Un
+// outil qui réclame un paquet qu'on ne lui a pas installé se comporte exactement comme prévu. Ce
+// que ce verdict mesure vraiment, c'est que LE BANC ne fait pas `npm install` — et le dire coûte
+// une ligne, l'ignorer coûterait un chiffre faux.
+//
+// CE QU'IL FAUDRAIT POUR MESURER VRAIMENT, écrit ici pour que personne n'ait à le redécouvrir :
+// installer les dépendances déclarées dans le dépôt témoin avant de lancer. Ce n'est pas fait,
+// parce que ça change le témoin — or son intérêt est justement d'être PAUVRE EN OUTILLAGE.
+export const MOTIF_PAQUET_MANQUANT = /ERR_MODULE_NOT_FOUND|Cannot find package/;
+
+export const MOTIF_TRACE_DE_PILE = /\n\s+at\s+\S+/;
+export const MOTIF_CONFIGURATION_ABSENTE = /introuvable|manquante?|absente?|non configurée?|not (found|configured)/i;
+
 export const MOTIFS_D_ARGUMENT_MANQUANT = /^\s*(Usage|usage|Utilisation)\s*:|^usage :/m;
 
 // Le verdict se lit sur DEUX choses, jamais une : le code de sortie ET ce qui a été dit. Un outil
@@ -2771,6 +2822,12 @@ export const MOTIFS_D_ARGUMENT_MANQUANT = /^\s*(Usage|usage|Utilisation)\s*:|^us
 // impuissance — et c'est la seconde catégorie qu'il ne faut pas compter comme un échec.
 export function verdictDuTemoin({ code, sortie = "" } = {}) {
   if (code !== 0 && MOTIFS_D_ARGUMENT_MANQUANT.test(String(sortie))) return { cle: "attend-un-argument", pourquoi: "il imprime son mode d'emploi et refuse de tourner à vide — le banc l'a lancé sans argument, la faute est au banc" };
+  if (code !== 0 && MOTIF_PAQUET_MANQUANT.test(String(sortie))) {
+    return { cle: "dependance-non-installee", pourquoi: `il réclame un paquet npm que le banc n'a pas installé : ${(String(sortie).match(/Cannot find package '[^']+'/) ?? ["paquet non nommé dans sa sortie"])[0]} — le banc copie scripts/ et rien d'autre, donc la faute est au banc` };
+  }
+  if (code !== 0 && !MOTIF_TRACE_DE_PILE.test(String(sortie)) && MOTIF_CONFIGURATION_ABSENTE.test(String(sortie))) {
+    return { cle: "attend-une-configuration", pourquoi: `il refuse proprement (code ${code}, aucune trace de pile) en nommant ce qui manque : ${(String(sortie).match(/[^\n]*(?:introuvable|manquante?|absente?|non configurée?)[^\n]*/i) ?? ["une configuration locale"])[0].trim().slice(0, 90)}` };
+  }
   if (code !== 0) return { cle: "non-portable", pourquoi: `il s'arrête (code ${code}) : ${(String(sortie).match(/Error: [^\n]{0,90}/) ?? ["cause non lisible dans sa sortie"])[0]}` };
   if (MOTIFS_D_HONNETETE.test(String(sortie))) return { cle: "honnete", pourquoi: "il tourne et déclare ce qu'il ne peut pas mesurer ici — c'est le comportement attendu au moment « AVANT »" };
   return { cle: "portable", pourquoi: "il tourne et rend un résultat sur un dépôt qu'il ne connaît pas" };
@@ -2799,22 +2856,104 @@ export function installerLAgenceChez(ou, { root = ROOT, copier = null, lister = 
   }
 }
 
-export function synthetiserLeTemoin(passages = [], { exemptes = NE_PART_PAS_ET_C_EST_NORMAL } = {}) {
+// LE BANC HONORE LES DEUX REGISTRES, jamais un seul (2026-09-28, tâche #902). C'est mot pour mot le
+// défaut corrigé sur le détecteur voisin en #668, et il était encore là ici : `NE_PART_PAS` liste
+// les outils dont le SUJET est le jeu, `EXEMPTES_DU_KIT` les fichiers qui ne quittent pas ce dépôt
+// du tout (crochets git, installeurs de l'environnement d'ici). Reprocher à un installeur de ne pas
+// tourner ailleurs, c'est lui reprocher de faire son travail. Corriger une occurrence ne corrige
+// pas la CLASSE (leçon L37).
+export function synthetiserLeTemoin(passages = [], { exemptes = NE_PART_PAS_ET_C_EST_NORMAL, exemptesDuKit = EXEMPTES_DU_KIT } = {}) {
   if (!passages.length) return { mesurable: false, pourquoi: "aucun outil lancé : un banc d'essai vide rendrait « tout est portable » sur zéro mesure (leçon L5/L11)" };
   const parVerdict = {};
   const horsSujet = [];
   for (const p of passages) {
     if (Object.hasOwn(exemptes, p.outil)) { horsSujet.push({ ...p, pourquoi: exemptes[p.outil] }); continue; }
+    const duKit = (exemptesDuKit ?? []).find((e) => e.motif.test(`scripts/${p.outil}.mjs`) || e.motif.test(`scripts/${p.outil}`));
+    if (duKit) { horsSujet.push({ ...p, pourquoi: duKit.pourquoi }); continue; }
     (parVerdict[p.verdict.cle] ??= []).push(p);
   }
-  const total = passages.length - horsSujet.length;
-  // « attend un argument » tient debout lui aussi : refuser proprement à vide est un comportement sain.
-  const tiennentDebout = (parVerdict.portable?.length ?? 0) + (parVerdict.honnete?.length ?? 0) + (parVerdict["attend-un-argument"]?.length ?? 0);
-  return { mesurable: true, total, parVerdict, tiennentDebout, horsSujet,
+  // UNE LIMITE DU BANC SORT DU DÉNOMINATEUR, jamais du bon côté ni du mauvais : compter un paquet
+  // npm non installé comme un succès serait un faux vert, le compter comme un échec facturerait à
+  // l'Agence un choix du banc. On ne mesure pas ce qu'on n'a pas mis en condition de répondre.
+  const limiteDuBanc = parVerdict["dependance-non-installee"] ?? [];
+  const total = passages.length - horsSujet.length - limiteDuBanc.length;
+  // « attend un argument » et « attend une configuration » tiennent debout eux aussi : refuser
+  // proprement, en nommant ce qui manque, est un comportement sain — et le compter comme un échec
+  // pousserait un outil à fabriquer un résultat plutôt qu'à dire non.
+  const tiennentDebout = (parVerdict.portable?.length ?? 0) + (parVerdict.honnete?.length ?? 0)
+    + (parVerdict["attend-un-argument"]?.length ?? 0) + (parVerdict["attend-une-configuration"]?.length ?? 0);
+  return { mesurable: true, total, parVerdict, tiennentDebout, horsSujet, limiteDuBanc,
     tauxPct: total ? (tiennentDebout / total) * 100 : 0,
     // LE TAUX COMPTE « HONNÊTE » DU BON CÔTÉ, et cette décision est le cœur du dispositif :
     // un taux qui punirait l'honnêteté pousserait à fabriquer des réponses.
     quoi: "part des outils qui TIENNENT DEBOUT sur un dépôt étranger — ceux qui rendent un résultat ET ceux qui déclarent honnêtement ne pas pouvoir" };
+}
+
+// =============================================================================================
+// LA MÉMOIRE DU BANC — sans elle, le banc mesurait pour personne
+// =============================================================================================
+// LE DÉFAUT EST LA LEÇON L2 DANS SA FORME LA PLUS PURE (2026-09-28, tâche #902). Le banc témoin
+// EXISTE, il TOURNE, il rend un vrai chiffre sur un vrai dépôt étranger — et le rapport central
+// écrivait `temoin: { mesurable: false }` EN DUR, donc affichait « aucune mesure disponible
+// aujourd'hui » quelques secondes après que la mesure ait été faite. Une mesure qui n'est pas
+// rendue n'existe pas : c'est exactement ce que l'Article 28 dit d'un rapport sans suite.
+//
+// POURQUOI UN REGISTRE ET PAS UN RECALCUL À LA VOLÉE : le banc CLONE un dépôt étranger, y copie
+// l'Agence entière et lance soixante-treize outils. Ça prend des minutes et ça demande le réseau.
+// Le rapport central, lui, doit rester gratuit et instantané — il rassemble, il ne recalcule
+// jamais (leçon L29). Le banc écrit donc son passage, le rapport le lit.
+//
+// ET LA FRAÎCHEUR EST PART DE LA MESURE, jamais un détail : un taux mesuré sur une Agence de la
+// semaine dernière décrit la semaine dernière. Le registre garde donc le commit du dépôt au moment
+// du passage, et la lecture DIT si `scripts/` a bougé depuis. Ce n'est pas un seuil choisi — c'est
+// une comparaison de faits (Article 24), et elle ne peut pas se périmer.
+export const BANC_TEMOIN_PASSAGES = "docs/safe-export/banc-temoin-passages.json";
+
+export function enregistrerPassageDuBanc(passage, { root = ROOT, readFileImpl = readFileSync, writeFileImpl = writeFileSync, mkdirImpl = mkdirSync } = {}) {
+  let journal = [];
+  try { journal = JSON.parse(readFileImpl(join(root, BANC_TEMOIN_PASSAGES), "utf8")); } catch { journal = []; }
+  if (!Array.isArray(journal)) journal = [];
+  journal.push(passage);
+  try { mkdirImpl(join(root, "docs/safe-export"), { recursive: true }); } catch { /* déjà là */ }
+  writeFileImpl(join(root, BANC_TEMOIN_PASSAGES), JSON.stringify(journal, null, 2) + "\n", "utf8");
+  return journal.length;
+}
+
+export function dernierPassageDuBanc({ root = ROOT, readFileImpl = readFileSync, commitActuel = null, shImpl = sh } = {}) {
+  let journal = [];
+  try { journal = JSON.parse(readFileImpl(join(root, BANC_TEMOIN_PASSAGES), "utf8")); } catch {
+    return { mesurable: false, pourquoi: "le banc n'a jamais enregistré de passage — et ne pas savoir n'est pas la même chose que savoir que ça ne marche pas" };
+  }
+  const dernier = Array.isArray(journal) ? journal.at(-1) : null;
+  const precedent = Array.isArray(journal) && journal.length > 1 ? journal.at(-2) : null;
+  if (!dernier || typeof dernier.taux !== "number") {
+    return { mesurable: false, pourquoi: "le registre du banc existe mais ne porte aucun passage chiffré" };
+  }
+  let actuel = commitActuel;
+  if (actuel === null) { try { actuel = String(shImpl("git rev-parse --short HEAD")).trim(); } catch { actuel = null; } }
+  // L'AGENCE A-T-ELLE BOUGÉ DEPUIS ? On ne compare pas des dates — on demande à git si `scripts/`
+  // a changé entre le commit mesuré et celui d'aujourd'hui. Un fait, jamais une estimation d'âge.
+  let bouge = null;
+  if (actuel && dernier.commit && actuel !== dernier.commit) {
+    try { bouge = String(shImpl(`git diff --name-only ${dernier.commit}..${actuel} -- scripts/`)).trim().split("\n").filter(Boolean).length; }
+    catch { bouge = null; }
+  } else if (actuel && actuel === dernier.commit) bouge = 0;
+  const perime = bouge !== null && bouge > 0;
+  return {
+    mesurable: true, taux: Math.round(dernier.taux), date: dernier.date, temoin: dernier.temoin, commit: dernier.commit,
+    perime, fichiersChangesDepuis: bouge,
+    precedent: precedent ? { taux: Math.round(precedent.taux), debout: precedent.debout, examines: precedent.examines, date: precedent.date } : null,
+    // LE PASSAGE PRÉCÉDENT EST DIT, ET SON DÉNOMINATEUR AVEC (2026-09-28). Sans ça, un taux qui monte
+    // de 89 à 100 se lit comme onze points de progrès, alors qu'une partie peut venir d'outils SORTIS
+    // du calcul — exemptés ou mis hors mesure. Les deux sont légitimes, mais ce ne sont pas les
+    // mêmes faits, et un chiffre dont le dénominateur a bougé sans le dire est un chiffre qui ment
+    // poliment.
+    resume: `${dernier.debout}/${dernier.examines} outils tiennent debout sur ${dernier.temoin ?? "un dépôt étranger"}, mesuré le ${String(dernier.date ?? "").slice(0, 10)} sur ${dernier.commit ?? "un commit inconnu"}`
+      + (precedent ? ` (passage précédent : ${precedent.debout}/${precedent.examines} — dénominateur ${precedent.examines === dernier.examines ? "inchangé" : `passé de ${precedent.examines} à ${dernier.examines}, donc une part de l'écart vient de qui est COMPTÉ, pas de qui tient debout`})` : "")
+      + (perime ? ` — ⚠️ PÉRIMÉ : ${bouge} fichier(s) de scripts/ ont changé depuis, ce taux décrit une Agence antérieure`
+        : bouge === 0 ? " — à jour : l'Agence n'a pas bougé depuis ce passage"
+          : " — fraîcheur inconnue : impossible de comparer les commits"),
+  };
 }
 
 export function formatTemoinLines(t = {}, { ou = "" } = {}) {

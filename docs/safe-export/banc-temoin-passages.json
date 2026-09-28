@@ -1,0 +1,47 @@
+[
+  {
+    "date": "2026-09-28T06:29:13.735Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "e825c18",
+    "taux": 89.04109589041096,
+    "debout": 65,
+    "examines": 73,
+    "verdicts": {
+      "portable": 40,
+      "honnete": 20,
+      "non-portable": 8,
+      "attend-un-argument": 5
+    }
+  },
+  {
+    "date": "2026-09-28T06:37:04.633Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "e825c18",
+    "taux": 95.71428571428572,
+    "debout": 67,
+    "examines": 70,
+    "verdicts": {
+      "portable": 40,
+      "honnete": 21,
+      "attend-une-configuration": 1,
+      "attend-un-argument": 5,
+      "dependance-non-installee": 3,
+      "non-portable": 3
+    }
+  },
+  {
+    "date": "2026-09-28T06:39:56.317Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "e825c18",
+    "taux": 100,
+    "debout": 68,
+    "examines": 68,
+    "verdicts": {
+      "portable": 40,
+      "honnete": 22,
+      "attend-une-configuration": 1,
+      "attend-un-argument": 5,
+      "dependance-non-installee": 3
+    }
+  }
+]

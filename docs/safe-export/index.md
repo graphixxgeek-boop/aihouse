@@ -28,10 +28,11 @@ l'autre, jamais des rapports à lire.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**12 fichier(s)** dans ce dossier.
+**16 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
+| [banc-temoin-passages.json](banc-temoin-passages.json) | — |
 | [circle-signal-2026-09-28T02-57-00-528Z.txt](central/circle-signal-2026-09-28T02-57-00-528Z.txt) | central |
 | [exportabilite-2026-09-26.txt](exportabilite-2026-09-26.txt) | — |
 | [journal-du-banc-temoin.md](journal-du-banc-temoin.md) | — |
@@ -42,6 +43,9 @@ l'autre, jamais des rapports à lire.
 | [rapport-export-central-2026-09-28-02-49.txt](rapport-export-central-2026-09-28-02-49.txt) | — |
 | [rapport-export-central-2026-09-28-02-57.txt](rapport-export-central-2026-09-28-02-57.txt) | — |
 | [rapport-export-central-2026-09-28-04-05.txt](rapport-export-central-2026-09-28-04-05.txt) | — |
+| [rapport-export-central-2026-09-28-06-25.txt](rapport-export-central-2026-09-28-06-25.txt) | — |
+| [rapport-export-central-2026-09-28-06-29.txt](rapport-export-central-2026-09-28-06-29.txt) | — |
+| [rapport-export-central-2026-09-28-06-40.txt](rapport-export-central-2026-09-28-06-40.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-350Z.txt](ronde/circle-signal-2026-09-27T00-12-15-350Z.txt) | ronde |
 | [serie.json](serie.json) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

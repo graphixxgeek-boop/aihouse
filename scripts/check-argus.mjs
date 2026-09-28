@@ -106,9 +106,20 @@ export const DOSSIERS_A_BALAYER = ["lib", "app", "components"];
 
 function main({ chemin = FICHIER_DU_TYPE_SUIVI, dossiers = DOSSIERS_A_BALAYER } = {}) {
   recordCliUsage("argus");
-  const lifeSource = readFileSync(join(ROOT, chemin), "utf8");
+  // LE FICHIER DU PRODUIT PEUT NE PAS EXISTER, ET S'ARRÊTER LÀ ÉTAIT UN DÉFAUT D'EXPORT (2026-09-28,
+  // tâche #902, trouvé par le banc témoin). ARGUS mourait sur un ENOENT en arrivant sur un dépôt
+  // étranger, alors que la discipline de tout ce projet est de DÉCLARER ce qu'on ne peut pas
+  // mesurer. Un outil qui plante ne dit rien ; un outil qui dit « je n'ai pas pu regarder » dit la
+  // seule chose vraie. Le second scan (les marqueurs TODO) n'a besoin d'aucun de ces fichiers et
+  // continue de tourner — une absence ne doit pas emporter ce qui était mesurable.
+  let lifeSource = null;
+  try { lifeSource = readFileSync(join(ROOT, chemin), "utf8"); } catch { lifeSource = null; }
+  if (lifeSource === null) {
+    console.log(`\u26aa ARGUS — scan des champs : PAS MESURÉ. \`${chemin}\` est introuvable ici : ce projet n'a pas ce fichier, ou il le nomme autrement.`);
+    console.log("   Ce n'est PAS « aucun champ mort » — les deux se lisent à l'opposé l'un de l'autre. Le scan des marqueurs, lui, ne dépend d'aucun fichier du produit et continue ci-dessous.");
+  }
   const files = dossiers.filter((d) => existsSync(join(ROOT, d))).flatMap((d) => walk(join(ROOT, d)));
-  const dead = findDeadLifeFields(files, lifeSource);
+  const dead = lifeSource === null ? [] : findDeadLifeFields(files, lifeSource);
   // LE DÉNOMINATEUR DU SECOND SCAN (2026-09-25, tâche #601). Les deux scans d'ARGUS ne se
   // comportent PAS pareil face à une absence, et c'est ce qui rendait le second dangereux :
   //   · le scan des champs de life.ts échoue BRUYAMMENT — `extractLifeFields()` lève une erreur si

@@ -493,3 +493,71 @@ part est déclaré reconfigurable même si une autre de ses cibles reste en dur.
 la forme historique ; l'élargissement ne l'aggrave pas, mais ne le corrige pas non plus. Et le
 détecteur pose **une question, jamais un verdict** : savoir si un couplage au jeu est un défaut ou
 la nature même de l'outil demande de lire ce qu'il fait.
+
+## Le banc témoin mesurait pour personne — et il comptait six faux échecs (2026-09-28, tâche #902)
+
+**Sa demande, dans le gros prompt** : « Je veux un calcul qui donne le pourcentage d'exportabilité
+de l'agence ». Ce calcul existait, sur **5 dimensions mesurées sur 7**. Il s'en mesure **6 sur 7**
+aujourd'hui, et la sixième vaut **100 %** — mesurée pour de vrai, jamais estimée.
+
+### Le défaut : la leçon L2 dans sa forme la plus pure
+
+Le banc témoin **existe**. Il clone un vrai dépôt étranger (`github.com/sindresorhus/slugify`,
+figé sur `3b17b2e`), y installe l'Agence entière, lance tous les outils et rend un vrai chiffre.
+
+Et le rapport central écrivait `temoin: { mesurable: false }` **en dur** — donc affichait « aucune
+mesure disponible aujourd'hui » quelques secondes après que la mesure ait été faite. **Une mesure
+qui n'est pas rendue n'existe pas.**
+
+**La correction** : le banc écrit son passage dans `docs/safe-export/banc-temoin-passages.json`, le
+rapport le lit. Un registre plutôt qu'un recalcul, parce que le banc prend des minutes et demande le
+réseau là où le rapport central doit rester gratuit et instantané — il rassemble, il ne recalcule
+jamais (leçon L29).
+
+**La fraîcheur est part de la mesure**, jamais un détail : un taux mesuré sur une Agence de la
+semaine dernière décrit la semaine dernière. La lecture demande donc à git si `scripts/` a bougé
+entre le commit mesuré et celui d'aujourd'hui. C'est un **fait**, jamais un seuil d'âge choisi à la
+main (Article 24) — et un git muet dit « fraîcheur inconnue » plutôt que d'absoudre par défaut
+d'information.
+
+### Le banc comptait huit échecs, dont six n'en étaient pas
+
+Chacune des trois familles est une erreur du **mesureur**, jamais du mesuré — exactement comme le
+quatrième verdict né le 2026-09-27.
+
+| Famille | Ce que le banc lisait | Ce que c'est vraiment |
+|---|---|---|
+| **un refus propre** | `check-gemini-quota` sortait en 1 | `.dev.vars` porte les secrets LOCAUX : il est absent de **tout** dépôt fraîchement cloné, y compris celui-ci chez quelqu'un d'autre. Un outil qui inventerait un résultat sans sa clé serait bien pire. |
+| **un paquet npm absent** | trois outils mouraient sur `ERR_MODULE_NOT_FOUND` | le banc copie `scripts/` **et rien d'autre**, délibérément. C'est une limite du BANC. |
+| **les installeurs d'ici** | `install-ci`, `pnpm-install` comptés comme non portables | ils décrivent la machine d'ici et n'ont jamais eu à partir — le registre des dispenses les décrivait déjà **mot pour mot** sans les contenir (leçon L37 : on avait corrigé l'occurrence `install-pnpm.sh`, pas la classe). |
+
+**Le critère du refus propre est un FAIT sur la sortie, jamais une liste de mots** (corollaire de
+l'Article 17) : un outil qui **meurt** laisse une trace de pile de Node, un outil qui **refuse**
+imprime une phrase et s'arrête. Aucune liste de vocabulaire n'aurait couvert le prochain cas ;
+cette distinction-là, si. Le contre-test le prouve sur un vrai crash dont le message contient
+pourtant le mot « introuvable ».
+
+**Le paquet absent SORT du dénominateur**, jamais du bon côté ni du mauvais : le compter comme un
+succès serait un faux vert, le compter comme un échec facturerait à l'Agence un choix du banc. *On
+ne mesure pas ce qu'on n'a pas mis en condition de répondre.*
+
+### Et deux VRAIS défauts, corrigés
+
+`check-argus` (qui lit `lib/life.ts`) et `route-booster` (dont la cible par défaut est
+`app/api/lia/route.ts`) **mouraient sur un ENOENT** en arrivant sur un dépôt étranger. Tous deux
+déclarent désormais leur non-mesure, avec la phrase que tout le paysage emploie : « ce n'est PAS
+aucun résultat », parce que les deux se lisent à l'opposé l'un de l'autre. Vérifiés en **lançant**,
+jamais en relisant (Article 25).
+
+### La progression, et ce qu'elle doit à quoi
+
+**65/73 (89 %) → 67/70 (96 %) → 68/68 (100 %).** Le rapport **dit** que le dénominateur a bougé, et
+il le dit dans la phrase que le lecteur lit, pas seulement dans un champ : un taux qui monte sans
+dire que sa population a changé est un chiffre qui **ment poliment**. Sur les onze points gagnés,
+deux viennent de vrais correctifs et le reste d'une mesure enfin juste.
+
+### Ce qu'il faudrait pour aller plus loin, écrit ici pour que personne ne le redécouvre
+
+Installer les dépendances déclarées **dans le dépôt témoin** avant de lancer, ce qui rendrait les
+trois « paquet absent » mesurables. Ce n'est pas fait, parce que ça change le témoin — or tout son
+intérêt est d'être **pauvre en outillage**.

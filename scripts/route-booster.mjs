@@ -112,7 +112,19 @@ function main() {
   printReliabilityNotice("find-deep-booster");
   recordCliUsage("find-deep-booster");
   const target = process.argv[2] ?? "app/api/lia/route.ts";
-  const proposals = proposeDecomposition(target);
+  // LA CIBLE PAR DÉFAUT EST UN FICHIER DE CE PRODUIT-CI, ET MOURIR DESSUS ÉTAIT UN DÉFAUT D'EXPORT
+  // (2026-09-28, tâche #902, trouvé par le banc témoin). Arrivé sur un autre dépôt, cet outil
+  // s'arrêtait sur un ENOENT au lieu de dire ce qui manque. Il est pourtant parfaitement portable :
+  // il prend sa cible en argument, et c'est sa valeur par DÉFAUT qui est locale. Le dire coûte
+  // trois lignes et transforme un plantage en mode d'emploi.
+  let proposals;
+  try { proposals = proposeDecomposition(target); }
+  catch (e) {
+    console.log(`⚪ PAS MESURÉ — \`${target}\` est illisible ici (${e?.code ?? e?.message ?? "cause inconnue"}).`);
+    console.log("   Ce n'est PAS « aucun point de coupe » : rien n'a été lu, et les deux se lisent à l'opposé l'un de l'autre.");
+    console.log("   usage : node scripts/route-booster.mjs <chemin du gros fichier à découper>");
+    return;
+  }
   console.log(`route-booster — ${proposals.length} point(s) de coupe candidat(s) dans ${target} :\n`);
   for (const p of proposals) {
     console.log(`L${p.line + 1}-${p.endLine} [${p.kind}] risque=${p.riskScore} — ${p.label}`);
