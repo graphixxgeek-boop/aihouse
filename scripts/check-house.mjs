@@ -4804,6 +4804,28 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.deepEqual(parRacine.map((m) => m.nom), ['P'], 'the stemmed match finds the right offer and still leaves the unrelated one out — a false positive on a MANDATORY entry point costs more than the silence it replaces');
   assert.ok(parRacine[0].matched.every((w) => /^[a-z]+$/.test(w) && !['renomm', 'outil'].includes(w) === false || true) && parRacine[0].matched.includes('renommer'), 'and what is REPORTED back is the real word, never the root: a reader who sees "renomm" does not recognise his own request, and that field exists so he does');
   assert.deepEqual(suggestAvecRacines('la maison', racinesFaux), [], 'the threshold of two shared words is untouched — one word was never enough and still is not');
+  // LA TABLE MAÎTRESSE CONTRE LE DÉPÔT RÉEL (2026-09-28, tâche #1016). La table de
+  // docs/regles-de-travail.md §7ter est tenue À LA MAIN, et plusieurs garde-fous la lisent comme
+  // si elle était le recensement du dépôt : 62 lignes pour 83 scripts. `findToolsMissingFromMenu()`
+  // rendait « aucun outil muet » en se fondant dessus — un vert qui mesurait l'ignorance de la
+  // table, jamais la couverture du catalogue.
+  const { findScriptsAbsentsDeLaTable, formatScriptsAbsentsLines } = await import('../scripts/le-coordinateur.mjs');
+  // La table se RECONNAÎT à ses colonnes « Coût » et « Déclenchement », jamais à sa position dans
+  // le document — la fixture doit donc les porter, sinon parseToolsTable() rend une liste vide et
+  // le garde-fou ne compte plus que les fichiers cités. Trouvé en lançant le test, pas en le
+  // relisant : il accusait find-booster, pourtant déclaré.
+  const tableFausse = '| Outil | Coût | Déclenchement | Statut |\n|---|---|---|---|\n| ARGUS (check-argus.mjs) | 0 | commit | Agent |\n| find-booster | 0 | demande | Agent |\n';
+  const surDisque = ['check-argus', 'find-booster', 'lib-truc', 'outil-oublie'];
+  const groupes = { 'check-argus': 'membre', 'find-booster': 'membre', 'lib-truc': 'plomberie', 'outil-oublie': 'membre' };
+  const r1016 = findScriptsAbsentsDeLaTable({ toolsTableMarkdown: tableFausse, fichiers: surDisque, groupeDe: (s) => groupes[s] });
+  assert.deepEqual(r1016.manquants, ['outil-oublie'], 'THE EXACT CASE: only a genuine TOOL absent from the table is reported');
+  assert.deepEqual(r1016.horsSujet, ['lib-truc'], 'COUNTER-TEST 1 (BP4): a shared library is set aside and NAMED rather than silently dropped — a denominator you shrink without saying who you removed is a denominator you chose (lesson L5)');
+  assert.ok(!r1016.manquants.includes('check-argus'), 'COUNTER-TEST 2, and it is the one that kills the naive version: the table writes « ARGUS » where the file is check-argus.mjs, so matching on the slugified NAME alone reports 33 absences for 7 real ones — the FILE cited in the table counts too (lesson L4)');
+  const sansFiltre = findScriptsAbsentsDeLaTable({ toolsTableMarkdown: tableFausse, fichiers: surDisque });
+  assert.ok(sansFiltre.manquants.includes('lib-truc') && sansFiltre.filtreIceberg === false, 'with no iceberg classification the guard says so and reports everything — it never pretends to have filtered');
+  assert.equal(findScriptsAbsentsDeLaTable({ toolsTableMarkdown: '   ', fichiers: surDisque }).mesurable, false, 'an empty table declares PAS MESURÉ rather than reporting every script as missing, which would be an accusation built on nothing (lesson L5)');
+  assert.ok(formatScriptsAbsentsLines(r1016).some((l) => /décision humaine, jamais une génération/.test(l)), 'and the report says explicitly that filling the table is a human decision: it carries columns no probe can guess — real API cost, trigger, status');
+
   const bapteme = suggestAvecRacines('renommer un outil sans casser le code');
   assert.ok(bapteme.some((m) => m.outils.includes('agent-des-noms')), 'checked live against the real PRESTATIONS menu: the naming agent is now reachable from a rename request, which it was not this morning');
 

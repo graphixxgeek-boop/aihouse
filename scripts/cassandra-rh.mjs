@@ -16,7 +16,7 @@
 // n'est recalculée ici, jamais une seconde version qui pourrait diverger de l'originale.
 import { readFileSync, existsSync, rmSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
+import { parseToolsTable, lireTableMaitresse, slugifyAgentName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, findScriptsAbsentsDeLaTable, formatScriptsAbsentsLines, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie, lireFichierPartage } from "./lib-shell.mjs";
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
@@ -3908,6 +3908,18 @@ async function main() {
       crochets: ["scripts/hooks/post-commit", "scripts/hooks/pre-commit", "scripts/hooks/install.mjs"].map(lu),
       lire: lu });
     const lignes = classerIceberg(fichiers, { lire: (f) => lu(join("scripts", f)), offert, machine });
+    // LA TABLE MAÎTRESSE CONTRE LE DÉPÔT RÉEL (#1016), rendue ICI et pas chez le coordinateur.
+    // La fonction vit avec la table, dans le-coordinateur ; mais elle a besoin du classement
+    // iceberg pour savoir si un script absent est un OUTIL ou une bibliothèque, et ce classement
+    // vit ici. Comme cassandra importe déjà le coordinateur, l'inverse ferait un cycle : l'appelant
+    // qui possède les DEUX moitiés, c'est celui-ci. Sans le filtre, la sonde rendrait seize lignes
+    // pour sept vrais manques, et un garde-fou bruyant cesse d'être lu (leçon L4).
+    try {
+      const groupes = new Map(lignes.map((l) => [l.slug, l.groupe]));
+      const absents = findScriptsAbsentsDeLaTable({ toolsTableMarkdown: lu("docs/regles-de-travail.md"), groupeDe: (slug) => groupes.get(slug) });
+      console.log("");
+      for (const l of formatScriptsAbsentsLines(absents)) console.log(l);
+    } catch (e) { console.log(`\n⚪ Table maîtresse : PAS MESURÉ — ${e?.message ?? e}. Ce n'est pas « aucun script absent ».`); }
     // POSER LES MENTIONS, SUR DEMANDE EXPLICITE SEULEMENT (2026-09-27, tâche #737, second volet).
     // Jamais au fil de l'eau : cette commande est lue à chaque Ronde, et une lecture qui ÉCRIT dans
     // 79 fichiers au passage serait une surprise, pas un service. `--poser` est donc un geste, et le

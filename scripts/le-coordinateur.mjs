@@ -1265,6 +1265,75 @@ export function formatOutilsMuetsLines(r) {
 // main à chaque nouvel Agent sans que rien ne le signale. Réutilise `parseToolsTable()` (déjà ici,
 // jamais une seconde lecture), `slugifyAgentName()` (même découpage `primaryName` que partout
 // ailleurs dans ce fichier) — jamais un second calcul.
+// ————————————————————————————————————————————————————————————————————————
+// LA TABLE MAÎTRESSE EST TENUE À LA MAIN, ET PERSONNE NE VÉRIFIAIT CE QU'ELLE IGNORE (#1016)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE TROU : `docs/regles-de-travail.md` §7ter porte un tableau — une ligne par outil, avec son
+// coût, son déclenchement, son statut — que plusieurs garde-fous lisent comme s'il était le
+// recensement du dépôt. Il est écrit à la main. Mesuré le 2026-09-28 : **62 lignes pour 83 scripts
+// réels**. Et la démonstration est déjà payée : `findToolsMissingFromMenu()` rendait « aucun outil
+// muet » en se fondant sur cette table — un vert qui mesurait l'ignorance de la table, pas la
+// couverture du catalogue.
+//
+// LE PIÈGE, ET IL S'EST REFERMÉ DEUX FOIS CETTE NUIT AILLEURS (L43, L46) : la comparaison naïve
+// — slug du nom de l'outil contre nom de fichier — rend **33 absents, dont une large majorité de
+// faux**. Deux causes, toutes deux évitables : la table nomme « ARGUS » là où le fichier s'appelle
+// `check-argus.mjs` (le slug ne peut pas tomber juste), et la moitié du dossier `scripts/` n'est
+// pas faite d'outils du tout — bibliothèques partagées, infrastructure, scripts du produit.
+// Un garde-fou qui accuse trente-trois fois pour sept vrais manques cesse d'être lu (leçon L4).
+//
+// D'OÙ LES DEUX FILTRES, tous deux DÉRIVÉS et jamais recopiés (Article 24) :
+//   1. un script est « déclaré » si la table cite son NOM d'outil **ou** son nom de FICHIER —
+//      c'est la table elle-même qui fournit les deux, on ne devine rien ;
+//   2. un script n'est jugé que s'il est un OUTIL, ce que le classement iceberg de CASSANDRA sait
+//      déjà dire : plomberie et infrastructure n'ont rien à faire dans une table d'outils.
+// Mesure après les deux filtres : **33 → 16 → 7 vrais manques**. Les 9 écartés sont COMPTÉS et
+// nommés dans le résultat, jamais tus — un dénominateur qu'on réduit sans dire qui on retire est
+// un dénominateur qu'on choisit (leçon L5).
+//
+// CE QU'IL NE FAIT PAS, et c'est l'arbitrage de l'utilisateur, pas le mien : il n'écrit RIEN dans
+// la table. Deux issues restent ouvertes — la dériver (elle perdrait ses colonnes de jugement : le
+// coût réel en API, le déclenchement, le statut, qu'aucune sonde ne peut deviner) ou la garder
+// manuelle en acceptant de la compléter. Ce garde-fou ne tranche pas : il rend le chiffre sans
+// lequel la question ne peut pas être posée.
+export function findScriptsAbsentsDeLaTable({ toolsTableMarkdown = lireTableMaitresse(), fichiers = null, groupeDe = null, lister = readdirSync, root = ROOT } = {}) {
+  if (typeof toolsTableMarkdown !== "string" || !toolsTableMarkdown.trim()) {
+    return { mesurable: false, pourquoi: `${CHEMIN_TABLE_MAITRESSE} est vide ou illisible — « aucun script absent » serait alors un satisfecit rendu sur zéro donnée (leçon L5)`, manquants: [], horsSujet: [] };
+  }
+  let scripts = fichiers;
+  if (!scripts) {
+    try { scripts = lister(join(root, "scripts")).map(String).filter((f) => f.endsWith(".mjs")).map((f) => f.replace(/\.mjs$/, "")); }
+    catch { return { mesurable: false, pourquoi: "scripts/ illisible — rien n'a pu être recensé, ce qui n'est jamais la même chose qu'aucun manque", manquants: [], horsSujet: [] }; }
+  }
+  const declares = new Set();
+  for (const m of toolsTableMarkdown.matchAll(/([a-z0-9._-]+)\.mjs/gi)) declares.add(m[1]);
+  for (const row of parseToolsTable(toolsTableMarkdown)) declares.add(slugifyAgentName(primaryToolName(row.tool)));
+  const absents = scripts.filter((slug) => !declares.has(slug));
+  if (typeof groupeDe !== "function") {
+    return { mesurable: true, filtreIceberg: false, declares: declares.size, examines: scripts.length,
+      manquants: absents, horsSujet: [],
+      pourquoi: "sans le classement iceberg, tout script absent est rendu — y compris les bibliothèques et l'infrastructure, qui n'ont rien à faire dans une table d'outils" };
+  }
+  const estUnOutil = (slug) => ["membre", "oublie"].includes(groupeDe(slug));
+  return { mesurable: true, filtreIceberg: true, declares: declares.size, examines: scripts.length,
+    manquants: absents.filter(estUnOutil),
+    horsSujet: absents.filter((s) => !estUnOutil(s)) };
+}
+
+export function formatScriptsAbsentsLines(r) {
+  if (!r?.mesurable) return ["=== SCRIPTS ABSENTS DE LA TABLE MAÎTRESSE : PAS MESURÉ ===", `  ${r?.pourquoi}`, "", "  Ce n'est PAS « aucun script absent »."];
+  const L = [`=== SCRIPTS ABSENTS DE LA TABLE MAÎTRESSE — ${r.manquants.length} outil(s) sur ${r.examines} scripts examinés ===`, ""];
+  L.push(`  ${r.declares} nom(s) déclarés par la table (nom d'outil ou fichier cité).`);
+  if (r.horsSujet.length) L.push(`  ⚪ ${r.horsSujet.length} script(s) écartés parce qu'ils ne sont pas des outils (bibliothèque, infrastructure, plomberie) : ${r.horsSujet.join(", ")}.`);
+  if (!r.filtreIceberg) L.push("  ⚠️ Classement iceberg non fourni : la liste ci-dessous mélange les outils et le reste.");
+  L.push("");
+  if (!r.manquants.length) L.push("  ✅ Chaque outil du dépôt a sa ligne dans la table.");
+  for (const m of r.manquants) L.push(`  🟠 ${m} — aucune ligne de la table ne le nomme, ni par son nom ni par son fichier`);
+  if (r.manquants.length) L.push("      La table porte des colonnes qu'aucune sonde ne devine (coût réel, déclenchement, statut) : la compléter est une décision humaine, jamais une génération.");
+  return L;
+}
+
 export function findScriptsMissingFromAgentFiles(toolsTableMarkdown = lireTableMaitresse(), agentScriptFiles = AGENT_SCRIPT_FILES) {
   const known = new Set(Object.keys(agentScriptFiles));
   return parseToolsTable(toolsTableMarkdown)
@@ -2225,6 +2294,13 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
   const rulesMdText = existsSync(rulesMdPath) ? readFileSync(rulesMdPath, "utf8") : "";
   const missingAgentFiles = findScriptsMissingFromAgentFiles(rulesMdText);
   rows.push({ name: "AXA-CHECK (Agents absents d'AGENT_SCRIPT_FILES)", result: missingAgentFiles.length ? `à regarder (${missingAgentFiles.join(", ")})` : "ok", when: now });
+
+  // LA TABLE MAÎTRESSE CONTRE LE DÉPÔT RÉEL : la fonction vit ici, avec la table, mais son
+  // BRANCHEMENT vit chez CASSANDRA (#1016). Le filtre dont elle a besoin — « ce script est-il un
+  // outil ? » — est le classement iceberg, et cassandra-rh importe déjà ce fichier : l'importer en
+  // retour créerait un cycle. L'appelant qui possède les DEUX moitiés est donc CASSANDRA, et c'est
+  // là que la ligne est rendue. Sans le filtre, le garde-fou rendrait seize lignes pour sept vrais
+  // manques, et un garde-fou bruyant cesse d'être lu (leçon L4).
 
   // ecotoken (2026-09-22) : le poids de la charte est une donnée de réseau au même titre
   // que la couverture de test — c'est le seul document rechargé à chaque message. Lecture seule du
