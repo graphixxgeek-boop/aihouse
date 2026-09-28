@@ -15966,6 +15966,31 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const toutAmbigu = ["const g = await import('../scripts/a.mjs');", "const g = await import('../scripts/b.mjs');", "assert.ok(g.quelqueChose());"].join("\n");
   assert.equal(ezl.fraicheurDuFilet(toutAmbigu, { lire: () => 'export function autre() {}' }).mesurable, false, 'MUST REFUSE: if NO alias can be resolved there is nothing to compare, and « zéro périmé » would then be a clean bill of health handed out on zero data (leçons L5/L11)');
 
+  // CINQUIÈME FAUX POSITIF DE LA MÊME FONCTION, et il vient de l'autre côté (2026-09-28, #1052).
+  // Les quatre premiers venaient de ce qu'on LISAIT ; celui-ci vient de ce qu'on NOMME. Le filet
+  // importe ezechiel-les-tests sous l'alias `e`, et `e` est aussi, dans des dizaines de boucles,
+  // une entrée de dossier : `e.isDirectory()` était dénoncé à CHAQUE commit depuis des jours comme
+  // une fonction disparue d'ezechiel. Savoir laquelle des deux liaisons est active demande de
+  // suivre les portées — donc c'est une NON-MESURE, jamais une accusation.
+  const collision = [
+    "const net = await import('../scripts/faux-module.mjs');",
+    "assert.ok(net.fonctionVivante());",
+    "const ez = await import('../scripts/faux-module.mjs');",
+    "for (const ez of entrees) { if (ez.isDirectory()) continue; }",
+  ].join("\n");
+  const frColl = ezl.fraicheurDuFilet(collision, { lire: lireFaux });
+  assert.deepEqual(frColl.perimes, [], 'THE EXACT CASE: an alias that is ALSO an ordinary loop variable accuses nobody — a guard that accuses wrongly stops being read (lesson L4), and this one had been crying wolf at every commit for days');
+  assert.ok(frColl.aliasAmbigus.some((a) => a.alias === 'ez'), 'and the collision is DECLARED rather than hidden: a silent drop would look like a clean bill of health (lessons L5/L11)');
+  // CONTRE-TEST (BP4) : un alias PROPRE continue d'être jugé, sinon la correction aurait tué la sonde.
+  assert.equal(ezl.fraicheurDuFilet(fauxFilet, { lire: lireFaux }).perimes.length, 1, 'COUNTER-TEST: an alias bound ONLY by an import is still judged — the fix narrows the guard, it must not silence it');
+  // LE PIÈGE DU `\\s*` AVANT UNE NÉGATION, mesuré : la première version accusait 132 alias sur 150,
+  // parce que `\\s*` peut matcher zéro caractère et que la négation regardait alors « ␣await import ».
+  const propre = ["const seul = await import('../scripts/faux-module.mjs');", "assert.ok(seul.fonctionDisparue());"].join("\n");
+  assert.equal(ezl.fraicheurDuFilet(propre, { lire: lireFaux }).aliasAmbigus.length, 0, 'COUNTER-TEST 2: an import declaration must never denounce ITSELF as an ordinary assignment — the whitespace belongs to what is refused, never to what precedes it');
+  // LA LIGNE ÉTAIT PROMISE ET JAMAIS CALCULÉE : le rapport imprimait « ligne undefined ».
+  const avecBloc = ["/* un commentaire", "de bloc", "sur trois lignes */", "const m = await import('../scripts/faux-module.mjs');", "assert.ok(m.fonctionDisparue());"].join("\n");
+  assert.equal(ezl.fraicheurDuFilet(avecBloc, { lire: lireFaux }).perimes[0].ligne, 5, 'the reported line is EXACT even across a block comment: replacing a block by a single space crushes its newlines and the count drifts by thousands of lines — a finding nobody can go and check is a finding nobody treats');
+
   // ---- UN IMPORT CITÉ DANS UNE CHAÎNE N'EST PAS UN IMPORT (troisième faux positif, 2026-09-27).
   assert.equal(ezl.dansUneChaine(`const x = "await import('./a.mjs')";`, 20), true, 'MUST CATCH: an import written inside a string literal is a fixture — Ezechiel was accusing its OWN counter-test of importing a missing file');
   assert.equal(ezl.dansUneChaine("await import('./a.mjs');", 0), false, 'MUST LET PASS: a real import is not inside a string, and skipping it would blind the check that protects the whole net');

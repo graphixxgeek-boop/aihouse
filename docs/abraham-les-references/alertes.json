@@ -1,11 +1,11 @@
 {
   "passages": {
     "moise-tables-de-loi": {
-      "quand": "2026-09-27",
+      "quand": "2026-09-28",
       "combien": 0
     },
     "ezechiel-les-tests": {
-      "quand": "2026-09-27",
+      "quand": "2026-09-28",
       "combien": 6
     },
     "abraham-les-references": {
@@ -21,7 +21,7 @@
       "gravite": "à surveiller",
       "constat": "6 groupe(s) impriment « Passed » sans aucune assertion",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-27"
+      "vueLe": "2026-09-28"
     },
     {
       "outil": "ezechiel-les-tests",
@@ -30,7 +30,7 @@
       "gravite": "à surveiller",
       "constat": "4 groupe(s) portent une assertion sur une valeur littérale",
       "depuis": "2026-09-27",
-      "vueLe": "2026-09-27"
+      "vueLe": "2026-09-28"
     },
     {
       "outil": "ezechiel-les-tests",
@@ -39,7 +39,7 @@
       "gravite": "à surveiller",
       "constat": "1 groupe(s) sans raison écrite",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-27"
+      "vueLe": "2026-09-28"
     },
     {
       "outil": "ezechiel-les-tests",
@@ -48,7 +48,7 @@
       "gravite": "bloquante",
       "constat": "d'où vient le temps n'a pas été mesuré",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-27"
+      "vueLe": "2026-09-28"
     },
     {
       "outil": "ezechiel-les-tests",
@@ -57,7 +57,7 @@
       "gravite": "bloquante",
       "constat": "1 test(s) appellent une fonction qui n'existe plus",
       "depuis": "2026-09-27",
-      "vueLe": "2026-09-27"
+      "vueLe": "2026-09-28"
     },
     {
       "outil": "ezechiel-les-tests",
@@ -66,7 +66,7 @@
       "gravite": "à surveiller",
       "constat": "la suite elle-même n'est pas au vert : 2 anomalie(s) de fonctionnement",
       "depuis": "2026-09-27T16:31:30.968Z",
-      "vueLe": "2026-09-27"
+      "vueLe": "2026-09-28"
     }
   ]
 }

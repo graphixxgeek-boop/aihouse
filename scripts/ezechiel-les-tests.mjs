@@ -507,8 +507,37 @@ export function fraicheurDuFilet(src = "", { root = ROOT, lire = null } = {}) {
   }
   const alias = new Map(); const aliasAmbigus = [];
   for (const [nom, chemins] of candidats) {
-    if (chemins.size === 1) alias.set(nom, [...chemins][0]);
-    else aliasAmbigus.push({ alias: nom, modules: [...chemins], pourquoi: "ce nom d'alias désigne plusieurs modules selon le bloc : impossible de dire lequel est appelé, donc rien n'est affirmé sur lui" });
+    if (chemins.size !== 1) { aliasAmbigus.push({ alias: nom, modules: [...chemins], pourquoi: "ce nom d'alias désigne plusieurs modules selon le bloc : impossible de dire lequel est appelé, donc rien n'est affirmé sur lui" }); continue; }
+    // CINQUIÈME FAUX POSITIF DE CETTE MÊME FONCTION, et il vient de l'autre côté (2026-09-28,
+    // tâche #1052). Les quatre premiers venaient de ce qu'on LISAIT (commentaires, méthodes du
+    // langage, blocs d'export mal découpés) ; celui-ci vient de ce qu'on NOMME. Le filet importe
+    // ce module sous l'alias `e` — et `e` est aussi, dans des dizaines de boucles, une entrée de
+    // dossier. `e.isDirectory()` est un appel parfaitement légitime de Node, dénoncé depuis des
+    // jours comme « fonction disparue d'ezechiel-les-tests » à chaque commit.
+    //
+    // POURQUOI ON NE PEUT PAS TRANCHER, ET POURQUOI C'EST LA BONNE RÉPONSE : savoir laquelle des
+    // deux liaisons est active à un endroit donné demande de suivre les portées, ce qu'un motif de
+    // texte ne fait pas. Un alias qui porte AUSSI un nom de variable ordinaire est donc une
+    // NON-MESURE, jamais une accusation — exactement le traitement déjà réservé à l'alias qui
+    // désigne deux modules, quelques lignes plus haut. Corrigé pour la classe : tout alias, jamais
+    // le seul `e` (leçon L37), et le faux positif qui survit est plus cher que la mesure perdue
+    // (leçon L4 : un garde-fou qui accuse à tort cesse d'être lu).
+    const liaisonsOrdinaires = new RegExp(
+      `for\\s*\\(\\s*(?:const|let|var)\\s+${nom}\\s+(?:of|in)\\b`
+      + `|\\(\\s*${nom}\\s*\\)\\s*=>`
+      + `|,\\s*${nom}\\s*[,)]\\s*=>`
+      // LE `\\s*` AVANT LA NÉGATION ÉTAIT LE PIÈGE, et il a fait accuser 132 alias sur 150 au
+      // premier essai — donc la sonde entière. `\\s*` peut matcher ZÉRO caractère, la négation
+      // regardait alors « ␣await import » qui ne commence pas par « await », et la déclaration
+      // d'import se dénonçait elle-même. L'espace appartient à ce qu'on refuse, jamais à ce qui
+      // précède. Trouvé en LANÇANT la sonde, pas en relisant le motif (leçon L4, et c'est aussi le
+      // geste que la leçon L11 prescrit : vérifier un motif neuf sur un cas qui DOIT matcher).
+      + `|(?:const|let|var)\\s+${nom}\\s*=(?!\\s*await\\s+import)`);
+    if (liaisonsOrdinaires.test(String(src))) {
+      aliasAmbigus.push({ alias: nom, modules: [...chemins], pourquoi: `« ${nom} » sert aussi de variable ordinaire ailleurs dans le filet (boucle, paramètre, affectation) : on ne peut pas dire si un appel porte sur le module ou sur la variable, donc rien n'est affirmé sur lui` });
+      continue;
+    }
+    alias.set(nom, [...chemins][0]);
   }
   if (!alias.size) return { mesurable: false, pourquoi: "aucun module importé sous un alias n'a été reconnu — sans eux on ne peut relier aucun appel à un fichier, ce qui n'est jamais la même chose qu'une correspondance parfaite" };
   const exportsDe = new Map();
@@ -551,7 +580,17 @@ export function fraicheurDuFilet(src = "", { root = ROOT, lire = null } = {}) {
   // fonction `md` de check-harmonia. On scanne le code NU, jamais le fichier brut — exactement la
   // même correction que pour les chemins de fixture plus haut, et c'est la troisième fois que le
   // même principe s'applique : ce qui est écrit POUR ÊTRE LU n'est pas ce qui est EXÉCUTÉ.
-  const codeNu = String(src).replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, " ");
+  // LES SAUTS DE LIGNE SURVIVENT AU NETTOYAGE, sans quoi le numéro rendu est faux (#1052) : un
+  // commentaire de bloc remplacé par un simple espace écrase toutes ses lignes, et le compte
+  // dérive de plusieurs milliers de lignes sur ce fichier. Un commentaire sur UNE ligne garde déjà
+  // son `\n` (le motif s'arrête avant) ; un bloc, non — on le remplace donc par ses propres sauts
+  // de ligne. Mesuré : un appel ajouté à la toute fin était annoncé ligne 8535 sur 17 000.
+  const codeNu = String(src).replace(/\/\/[^\n]*/g, " ").replace(/\/\*[\s\S]*?\*\//g, (bloc) => bloc.replace(/[^\n]/g, " "));
+  // LA LIGNE ÉTAIT PROMISE ET JAMAIS CALCULÉE (#1052) : le rapport imprimait « ligne undefined »
+  // à chaque passage. Un constat qu'on ne peut pas aller vérifier est un constat qu'on ne traite
+  // pas — et les commentaires sont remplacés par des espaces plus haut, jamais supprimés, donc les
+  // sauts de ligne sont intacts et l'index rend le vrai numéro.
+  const ligneDe = (index) => codeNu.slice(0, index).split("\n").length;
   for (const m of codeNu.matchAll(/\b([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)\s*\(/g)) {
     const chemin = alias.get(m[1]);
     if (!chemin) continue;
@@ -562,7 +601,7 @@ export function fraicheurDuFilet(src = "", { root = ROOT, lire = null } = {}) {
     const cle = `${chemin}::${m[2]}`;
     if (vus.has(cle)) continue;
     vus.add(cle);
-    if (!noms.has(m[2])) perimes.push({ module: chemin, fonction: m[2], pourquoi: `le filet appelle « ${m[2]} » que ${chemin} n'exporte plus : le test ne vérifie plus rien, et il peut passer sur un \`undefined\` sans le dire` });
+    if (!noms.has(m[2])) perimes.push({ module: chemin, fonction: m[2], ligne: ligneDe(m.index), pourquoi: `le filet appelle « ${m[2]} » que ${chemin} n'exporte plus : le test ne vérifie plus rien, et il peut passer sur un \`undefined\` sans le dire` });
   }
   return { mesurable: true, appelsExamines, modulesSuivis: exportsDe.size, modulesIllisibles, aliasAmbigus, perimes };
 }
