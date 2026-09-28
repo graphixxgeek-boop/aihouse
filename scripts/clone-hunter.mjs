@@ -214,6 +214,59 @@ export function clusterDuplicates(pairs) {
     .sort((x, y) => (y.lines * y.occurrences.length) - (x.lines * x.occurrences.length));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// RÉUNIR LES ALERTES DONT UN BLOC EST CONTENU DANS UN AUTRE (2026-09-28, tâche #995)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// LE PROBLÈME EST RÉEL ET MESURÉ : un parcours de dossier factorisé le 2026-09-27 était UN problème
+// et l'outil l'affichait en TROIS alertes. `clusterDuplicates()` réunit déjà les alertes décrivant
+// le même bloc vu de deux ancres ; il ne réunit pas un bloc de dix lignes INCLUS dans un bloc de
+// douze aux mêmes endroits, qui est pourtant le même problème vu à deux profondeurs.
+//
+// LA MÉTHODE EST CONTRAINTE, ET C'EST VOULU : elle n'utilise qu'un FAIT que l'outil possède déjà —
+// les POSITIONS. Une alerte est absorbée quand CHACUNE de ses occurrences tombe entièrement dans une
+// occurrence d'une autre alerte, dans le même fichier. Jamais une ressemblance devinée : un
+// regroupement « par similarité » fondrait des problèmes distincts, le compte baisserait sans que la
+// dette baisse, et **un sous-comptage cache là où un sur-comptage se corrige à la lecture**.
+//
+// CE QUE ÇA NE RÉGLERA PAS, DIT D'AVANCE : deux blocs au texte DIFFÉRENT dans deux autres fichiers
+// peuvent être le même problème, et seul un humain le voit. Le regroupement complet de l'enquête du
+// 2026-09-22 (29 alertes → 14 problèmes) n'est pas mécanisable ; prétendre le contraire donnerait un
+// chiffre faux avec l'air d'être juste.
+export function occurrenceContient(grande, petite, lignesGrande, lignesPetite) {
+  return grande.file === petite.file
+    && grande.start <= petite.start
+    && grande.start + lignesGrande >= petite.start + lignesPetite;
+}
+
+export function clusterEstContenu(petit, grand) {
+  if (petit === grand) return false;
+  // Un cluster n'est absorbé que si TOUTES ses occurrences le sont : s'il en porte une ailleurs,
+  // il décrit quelque chose de plus, et le fondre perdrait cette information.
+  return petit.occurrences.every((po) => grand.occurrences.some((go) => occurrenceContient(go, po, grand.lines, petit.lines)));
+}
+
+export function fusionnerParContenance(clusters = []) {
+  // Du plus grand au plus petit : un bloc n'absorbe que des blocs plus courts que lui.
+  const tries = [...clusters].sort((a, b) => b.lines - a.lines || b.occurrences.length - a.occurrences.length);
+  const absorbes = new Set();
+  const dedans = new Map();
+  for (let i = 0; i < tries.length; i++) {
+    if (absorbes.has(i)) continue;
+    for (let j = 0; j < tries.length; j++) {
+      if (i === j || absorbes.has(j)) continue;
+      if (tries[j].lines > tries[i].lines) continue;
+      if (clusterEstContenu(tries[j], tries[i])) {
+        absorbes.add(j);
+        dedans.set(i, [...(dedans.get(i) ?? []), tries[j]]);
+      }
+    }
+  }
+  return tries
+    .map((c, i) => (absorbes.has(i) ? null : (dedans.has(i) ? { ...c, absorbe: dedans.get(i).length, absorbes: dedans.get(i) } : c)))
+    .filter(Boolean);
+}
+
 // --- v2 : quasi-duplication par renommage bijectif cohérent (tâche #177) ---
 //
 // tokenizeLine() : découpe une ligne déjà normalisée en tokens (identifiants, nombres, chaînes,
@@ -631,10 +684,15 @@ function main() {
   // quelles — elles portent une vraie information, littéral n'est pas renommage — mais le PLAN
   // D'ACTION, lui, travaille sur les problèmes et non sur les ancres. C'est la partie qu'on lit
   // pour agir : y répéter trois fois la même duplication la rend trois fois moins crédible.
-  const problemesBruts = fusionnerClusters([
+  // DEUX FUSIONS, ET ELLES NE FONT PAS LA MÊME CHOSE (2026-09-28, tâche #995).
+  // `fusionnerClusters()` réunit les alertes décrivant le MÊME bloc vu de deux ancres ;
+  // `fusionnerParContenance()` réunit un bloc de dix lignes INCLUS dans un bloc de douze aux mêmes
+  // endroits — le même problème vu à deux profondeurs. La seconde manquait, et un parcours de
+  // dossier factorisé le 2026-09-27 se lisait donc comme TROIS problèmes au lieu d'un.
+  const problemesBruts = fusionnerParContenance(fusionnerClusters([
     ...clusters.map((c) => ({ ...c, detecteur: "identique" })),
     ...nearClusters.map((c) => ({ ...c, detecteur: "renommage" })),
-  ]);
+  ]));
   // LES PONTS DE RÉEXPORT SORTENT DU PLAN, ET ON DIT COMBIEN (2026-09-26, tâche #931). Écartés
   // seulement du PLAN D'ACTION : ils restent dans les deux listes ci-dessus, parce qu'un Gardien
   // sacré qui ferait disparaître une trouvaille serait pire que celui qui en compte une de trop.

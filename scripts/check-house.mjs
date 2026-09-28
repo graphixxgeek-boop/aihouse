@@ -4314,6 +4314,24 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.ok(Array.isArray(perFile['lib/house.ts']),'a coverage entry whose URL matches a known LIB_MAP key must be mapped to its real source file, read from the real project source');
   assert.equal(perFile['lib/house.ts'].length,1,'the second process\'s identical coverage entry for the same file must be deduped, never double-counted');
   assert.deepEqual(collectCoverage('.sites-runtime/axa-check-nonexistent-dir'),{},'a coverage directory that was never produced must report an honest empty result, never crash the caller');
+
+  // LE PARCOURS DES RELEVÉS V8 EST ÉCRIT UNE SEULE FOIS (2026-09-28, tâche #997). Les deux collectes
+  // — par fichier de lib, par slug d'outil — ne différaient que par UNE ligne : la façon de
+  // reconnaître ce qu'une entrée V8 désigne. Tout le reste était dupliqué mot pour mot, et
+  // CLONE-HUNTER le signalait à chaque commit.
+  //
+  // CE CONTRE-TEST GARDE LA SEULE CHOSE QUI COMPTAIT : les DEUX façons de reconnaître une URL sont
+  // différentes et doivent le rester. `includes` pour les libs (le chemin transpilé ne finit pas
+  // par le nom du fichier), `endsWith` pour les scripts. Les confondre aurait été une
+  // simplification qui change le résultat, donc pas une simplification.
+  const {collecterDepuisV8}=await import('../scripts/axa-check.mjs');
+  const parCle=collecterDepuisV8(fixtureCovDir,(e)=>e.url.includes('house')?{cle:'X',fichier:'lib/house.ts'}:null,{readDir:()=>['proc-1.json'],readFile:()=>fakeCovJson});
+  assert.deepEqual(Object.keys(parCle),['X'],'the shared walker must key the result by whatever the resolver names, which is the only thing the two collectors ever disagreed on');
+  assert.deepEqual(collecterDepuisV8(fixtureCovDir,()=>null,{readDir:()=>['proc-1.json'],readFile:()=>fakeCovJson}),{},'a resolver that recognises nothing must yield an empty result, never a crash — the "no match" branch is the one a refactor silently drops');
+  let lectures=0;
+  collecterDepuisV8(fixtureCovDir,(e)=>e.url.includes('house')?{cle:'X',fichier:'lib/house.ts'}:null,{readDir:()=>['proc-1.json','proc-2.json'],readFile:()=>{lectures+=1;return fakeCovJson;}});
+  assert.equal(lectures,2,'every coverage file must still be read');
+  assert.deepEqual(Object.keys(collecterDepuisV8(fixtureCovDir,(e)=>e.url.includes('house')?{cle:'X',fichier:'lib/house.ts'}:null,{readDir:()=>['proc-1.json','proc-2.json'],readFile:()=>fakeCovJson})),['X'],'and the same key seen in two process runs must be kept ONCE — the de-duplication was in both originals and is the easiest line to lose in a merge');
   fs.rmSync(fixtureCovDir,{recursive:true,force:true});
   console.log("Passed: AXA-CHECK's function-level V8 coverage extraction correctly excludes the whole-script pseudo-entry, maps byte offsets back to real 1-indexed source lines, and tells a covered function from an uncovered one exactly; its robustness score is an honest percentage or an honest N/A on zero functions, never a fake number; its fragility enrichment only raises confidence above the baseline tier when a real HARMONIA sensitive-node match or a real churn signal is present, always naming the specific reason rather than a generic flag; its archived-simulation corroboration counts only genuine zone-marker matches and reports an honest absence rather than a fake zero when no simulations or no configured hint exist; and its coverage collector correctly maps a V8 URL to the real project source via LIB_MAP, dedupes repeated entries across multiple process coverage files, and reports an honest empty result for a directory that was never produced.");
 
@@ -9575,6 +9593,98 @@ async function testItemCouteuxNestPasMuet() {
   console.log("Passed: un item COÛTEUX n'est pas un item muet (2026-09-28, tâche #726) — quatre états au lieu de trois dans la tendance des signaux de Ronde. x-port-blindtest était accusé de n'avoir jamais écrit un signal, ce qui est exact et ce qui est sa CONCEPTION : il porte costly:true, son étape 2 demande un agent séparé donc de vrais tokens (Article 22), et il ne tourne que coché explicitement. Lui reprocher son silence, c'est lui reprocher de respecter la règle qui le gouverne, et c'est une alerte qu'aucune action légitime ne peut éteindre (leçon L6). La liste des coûteux se LIT dans CIRCLE_ITEMS à chaque appel, donc un item coûteux de plus demain est reconnu sans qu'on touche à la fonction (Article 24). Et le contre-test vérifie dans les deux sens : un item GRATUIT dont le dossier ne porte que son index est toujours signalé, sans quoi la tolérance serait devenue un trou.");
 }
 await testItemCouteuxNestPasMuet();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// TROIS ÉTATS DE COUVERTURE, ET UNE EXEMPTION QUI PORTE SA RAISON (2026-09-28, tâche #994)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Ce bloc PRÉPARE une décision qui n'est pas celle de l'agent : élargir le périmètre d'AXA-CHECK de
+// 39 à 68 scripts élargit ce qu'un Gardien sacré surveille, donc c'est à l'utilisateur de le dire.
+// Ce qui est de mon ressort, c'est que cette décision, le jour où elle est prise, ne produise pas
+// sept alertes qu'aucun geste ne peut faire taire (leçon L36, et un garde-fou qui crie sans issue
+// devient du décor — L6).
+async function testTroisEtatsDeCouverture() {
+  const AXA = await import('../scripts/axa-check.mjs');
+  const perSlug = { argus: [{ covered: true }, { covered: false }] };
+
+  // ── 1. LES TROIS ÉTATS NE SE CONFONDENT PAS, et c'est tout l'enjeu : « 0 % mesuré » dit que le
+  // code est exercé et mal couvert, « jamais exercé » dit qu'on n'a rien pu mesurer. Les deux
+  // s'affichent pareil dans un tableau et appellent des gestes opposés.
+  assert.deepEqual(AXA.etatDeCouverture('argus', perSlug), { etat: 'mesuré', pct: 50 }, 'a tool seen by the coverage run reports a real percentage');
+  assert.equal(AXA.etatDeCouverture('check-spirit', perSlug).etat, 'jamais exerçable', 'a tool that CANNOT be exercised must have its own state, never a missing measurement');
+  assert.ok(/appels API/.test(AXA.etatDeCouverture('check-spirit', perSlug).pourquoi), 'and the exemption must carry its WRITTEN reason: an exemption without a reason is not a decision, it is an abandonment in disguise (Article 28)');
+  assert.equal(AXA.etatDeCouverture('harmonia', perSlug).etat, 'NON MESURÉ', 'a tool neither measured nor exempted is UNMEASURED — a real gap to fill, and it must not be silently dropped the way an exemption is');
+
+  // ── 2. LES QUATRE EXEMPTIONS EXISTENT VRAIMENT SUR LE DISQUE (Article 24). Une liste tenue à la
+  // main est légitime — savoir qu'un script ne PEUT pas être exercé demande de lire ce qu'il fait —
+  // mais sans vérificateur elle se périme en silence, et un slug renommé laisserait une exemption
+  // qui ne protège plus rien, voire couvrirait un jour le mauvais fichier.
+  assert.deepEqual(AXA.findExemptionsSansScript(), [], 'every declared exemption must point at a script that really exists');
+  const faux = AXA.findExemptionsSansScript([{ slug: 'outil-fantome-qui-nexiste-pas', pourquoi: 'test' }]);
+  assert.equal(faux.length, 1, 'MUST CATCH: an exemption whose script is gone must be reported — otherwise the guard would never bite and the list could rot indefinitely');
+
+  // ── 3. CHAQUE EXEMPTION PORTE UNE VRAIE RAISON, pas une étiquette.
+  for (const e of AXA.JAMAIS_EXERCABLES) {
+    assert.ok(e.pourquoi && e.pourquoi.length > 40, `exemption "${e.slug}" must carry a reason a human can act on, not a label: the next agent decides whether to keep it by reading that sentence and nothing else`);
+  }
+  assert.ok(AXA.JAMAIS_EXERCABLES.some((e) => e.slug === 'check-spirit'), 'check-spirit must be among them — it is the case that proves the point: it stayed BROKEN from 2026-09-21 to 2026-09-27 without anything in the landscape being able to say so, and declaring that hole is the only protection available (Article 27)');
+
+  // ── 4. LE PÉRIMÈTRE N'A PAS ÉTÉ ÉLARGI TOUT SEUL. C'est la décision de l'utilisateur, et ce test
+  // existe pour que personne — moi compris — ne la prenne à sa place par une factorisation.
+  assert.ok(AXA.SLUGS_COUVERTS_PAR_AXA.length < 68, `the AXA perimeter must NOT have grown to 68 without an explicit decision: enlarging what a sacred Guardian watches belongs to the user, never to a refactor (currently ${AXA.SLUGS_COUVERTS_PAR_AXA.length})`);
+
+  console.log("Passed: trois états de couverture chez AXA-CHECK, et une exemption qui porte sa raison (2026-09-28, tâche #994). « 0 % mesuré » dit que le code est exercé et mal couvert ; « jamais exerçable » dit qu'on ne pourra jamais rien mesurer ; « NON MESURÉ » dit qu'on n'a rien mesuré cette fois et que c'est un trou à combler. Les trois s'affichaient pareil, et ils appellent trois gestes opposés. Les quatre exemptions déclarées — check-house qui ne peut pas s'exercer sous sa propre instrumentation, sites-env et run-framework qui demanderaient le vrai runtime, check-spirit qui coûte de vrais appels API — portent chacune sa raison écrite, parce qu'une exemption sans raison est un abandon déguisé (Article 28), et un garde-fou mécanique vérifie qu'aucune ne désigne un script disparu (Article 24). check-spirit est le cas qui prouve le point : il est resté CASSÉ six jours sans que rien dans le paysage puisse le dire. Ce bloc PRÉPARE l'élargissement de 39 à 68 scripts sans le décider : élargir ce qu'un Gardien sacré surveille appartient à l'utilisateur, et une assertion le garantit contre moi-même.");
+}
+await testTroisEtatsDeCouverture();
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// RÉUNIR LES ALERTES DONT UN BLOC EST CONTENU DANS UN AUTRE (2026-09-28, tâche #995)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// Un parcours de dossier factorisé le 2026-09-27 était UN problème et l'outil l'affichait en TROIS
+// alertes. clusterDuplicates() réunit déjà le même bloc vu de deux ancres ; il ne réunissait pas un
+// bloc de dix lignes INCLUS dans un bloc de douze aux mêmes endroits — le même problème vu à deux
+// profondeurs.
+async function testFusionParContenance() {
+  const CH = await import('../scripts/clone-hunter.mjs');
+
+  // ── 1. LA MÉTHODE N'UTILISE QUE LES POSITIONS, jamais une ressemblance devinée.
+  assert.equal(CH.occurrenceContient({ file: 'a.mjs', start: 10 }, { file: 'a.mjs', start: 12 }, 12, 5), true, 'lines 12..17 sit inside lines 10..22, in the same file');
+  assert.equal(CH.occurrenceContient({ file: 'a.mjs', start: 10 }, { file: 'b.mjs', start: 12 }, 12, 5), false, 'a different FILE is never containment, whatever the line numbers say');
+  assert.equal(CH.occurrenceContient({ file: 'a.mjs', start: 10 }, { file: 'a.mjs', start: 20 }, 5, 5), false, 'a block that starts after the other ends is not contained');
+
+  // ── 2. UN CLUSTER N'EST ABSORBÉ QUE SI **TOUTES** SES OCCURRENCES LE SONT. S'il en porte une
+  // ailleurs, il décrit quelque chose de PLUS, et le fondre perdrait cette information — un
+  // sous-comptage cache, là où un sur-comptage se corrige à la lecture.
+  const grand = { lines: 12, occurrences: [{ file: 'a.mjs', start: 10 }, { file: 'b.mjs', start: 30 }] };
+  const dedans = { lines: 5, occurrences: [{ file: 'a.mjs', start: 12 }, { file: 'b.mjs', start: 32 }] };
+  const debordant = { lines: 5, occurrences: [{ file: 'a.mjs', start: 12 }, { file: 'c.mjs', start: 99 }] };
+  assert.equal(CH.clusterEstContenu(dedans, grand), true, 'every occurrence inside one of the bigger cluster: same problem seen at two depths');
+  assert.equal(CH.clusterEstContenu(debordant, grand), false, 'MUST LET PASS: one occurrence elsewhere means the cluster says something MORE, and merging it would lose that');
+  assert.equal(CH.clusterEstContenu(grand, grand), false, 'a cluster never contains itself');
+
+  // ── 3. LA FUSION RÉDUIT, ET ELLE DIT CE QU'ELLE A ABSORBÉ.
+  const fusionnes = CH.fusionnerParContenance([grand, dedans, debordant]);
+  assert.equal(fusionnes.length, 2, 'three alerts describing two problems must come out as two');
+  const garde = fusionnes.find((c) => c.lines === 12);
+  assert.equal(garde.absorbe, 1, 'and the surviving alert must SAY how many it absorbed — a silent merge is a count that dropped without the debt dropping');
+  assert.ok(fusionnes.some((c) => c.occurrences.some((o) => o.file === 'c.mjs')), 'the cluster that reached elsewhere must survive');
+
+  // ── 4. ELLE NE FUSIONNE RIEN QUAND IL N'Y A RIEN À FUSIONNER.
+  const distincts = [{ lines: 8, occurrences: [{ file: 'x.mjs', start: 1 }] }, { lines: 8, occurrences: [{ file: 'y.mjs', start: 1 }] }];
+  assert.equal(CH.fusionnerParContenance(distincts).length, 2, 'two unrelated alerts must both survive: a grouping that shrinks the count without shrinking the debt is worse than no grouping');
+  assert.equal(CH.fusionnerParContenance([]).length, 0, 'an empty input yields an empty output');
+
+  // ── 5. SUR LE VRAI DÉPÔT (Article 25) : elle réduit réellement, et elle ne vide pas la liste.
+  const reels = CH.fusionnerParContenance([...CH.buildDuplicateReport(), ...CH.buildNearDuplicateReport()]);
+  assert.ok(reels.length > 0, 'the merge must never empty the real list — a Guardian that makes findings disappear is worse than one that counts one too many');
+  assert.ok(reels.length <= CH.buildDuplicateReport().length + CH.buildNearDuplicateReport().length, 'and it can only reduce, never invent');
+
+  console.log("Passed: CLONE-HUNTER réunit désormais les alertes dont un bloc est CONTENU dans un autre (2026-09-28, tâche #995). Un parcours de dossier factorisé le 2026-09-27 était UN problème affiché en TROIS alertes : clusterDuplicates() réunissait déjà le même bloc vu de deux ancres, mais pas un bloc de dix lignes inclus dans un bloc de douze aux mêmes endroits. La méthode est CONTRAINTE et c'est voulu : elle n'utilise que les POSITIONS, un fait que l'outil possède déjà, jamais une ressemblance devinée — un regroupement « par similarité » fondrait des problèmes distincts, le compte baisserait sans que la dette baisse, et un sous-comptage CACHE là où un sur-comptage se corrige à la lecture. Un cluster n'est absorbé que si TOUTES ses occurrences le sont : s'il en porte une ailleurs, il dit quelque chose de plus. L'alerte survivante déclare combien elle a absorbé, parce qu'une fusion silencieuse est un chiffre qui baisse sans qu'on sache pourquoi. Et ce que ça ne réglera PAS est dit d'avance : deux blocs au texte différent dans deux fichiers différents peuvent être le même problème, et seul un humain le voit — prétendre mécaniser ce regroupement-là donnerait un chiffre faux avec l'air d'être juste.");
+}
+await testFusionParContenance();
+
+
 
 
 

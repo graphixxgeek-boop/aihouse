@@ -153,3 +153,45 @@ dans `runNetworkCheck()`) a trouvé et permis de corriger 6 Agents réels invisi
 construction (the-king, ines-official, memory-audit, find-booster, objectifs-vs-resultats,
 cassandra-rh) — invisibles donc à la fois à la couverture AXA-CHECK et à la stagnation lue par
 CASSANDRA-RH.
+
+## Trois états de couverture, et une exemption qui porte sa raison (2026-09-28, tâche #994)
+
+**LE DÉFAUT** : « 0 % mesuré » et « jamais exercé » s'affichaient pareil, et ils appellent des
+gestes opposés — écrire un test, ou accepter une limite déclarée.
+
+| État | Ce qu'il dit | Le geste qu'il appelle |
+|---|---|---|
+| **mesuré** | le code est exercé, voici son pourcentage | l'améliorer s'il est bas |
+| **jamais exerçable** | il ne pourra JAMAIS l'être, et voici pourquoi | rien — c'est une limite déclarée |
+| **NON MESURÉ** | aucun relevé ne l'a vu passer cette fois | un vrai trou à combler |
+
+### Les quatre exemptions, chacune avec sa raison écrite
+
+| Slug | Pourquoi il ne pourra jamais être exercé |
+|---|---|
+| `check-house` | c'est la suite de tests elle-même : elle ne peut pas s'exercer sous sa propre instrumentation |
+| `sites-env` | l'exercer demanderait de démarrer le vrai runtime, ce qu'aucun test gratuit ne fait |
+| `run-framework` | il lance le PRODUIT, pas l'outillage — rang Hors Agence |
+| `check-spirit` | chacun de ses passages envoie de vraies provocations au vrai modèle : l'exercer à chaque commit coûterait de vrais appels API (Articles 8 et 22) |
+
+**UNE EXEMPTION SANS RAISON N'EST PAS UNE DÉCISION, c'est un abandon déguisé** (Article 28) — d'où
+la colonne de droite, et un test qui refuse une raison trop courte pour être actionnable.
+
+**`check-spirit` EST LE CAS QUI PROUVE LE POINT** : il est resté **cassé du 2026-09-21 au
+2026-09-27** sans que rien dans le paysage puisse le dire. L'exemption est légitime, **le trou
+qu'elle laisse est réel**, et le déclarer EST la protection (Article 27).
+
+**LA LISTE EST TENUE À LA MAIN, ET C'EST ASSUMÉ** : savoir qu'un script ne PEUT pas être exercé
+demande de lire ce qu'il fait, et aucune sonde ne sait ça. Mais une liste manuelle sans vérificateur
+se périme en silence — `findExemptionsSansScript()` refuse donc une exemption qui désigne un script
+disparu, sans quoi elle ne protégerait plus rien et pourrait un jour couvrir le mauvais fichier
+(Article 24).
+
+### Ce que ce bloc PRÉPARE sans le décider
+
+Élargir le périmètre de **39 à 68 scripts** élargit ce qu'un Gardien sacré surveille : c'est une
+décision de l'utilisateur, jamais une factorisation. Sur les 30 outils concernés, **23 sont
+réellement exercés** (gain immédiat) et **7 ne le sont jamais** — dont les quatre ci-dessus. Sans ce
+registre, l'élargissement produirait **sept alertes qu'aucun geste ne peut faire taire** (leçon L36),
+et un garde-fou qui crie sans issue devient du décor (L6). Une assertion du filet garantit que le
+périmètre n'a pas grandi tout seul.

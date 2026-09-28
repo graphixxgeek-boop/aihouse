@@ -206,3 +206,31 @@ disparaître une trouvaille serait pire que celui qui en compte une de trop.
 mord réellement sur CE dépôt (au moins un pont écarté — sinon c'est une intention, leçon L2), que le
 corpus lu n'est pas vide (sinon l'abstention ressemblerait trait pour trait à un verdict propre,
 leçon L11), et que rien n'est perdu entre les gardés et les écartés.
+
+## Réunir les alertes dont un bloc est CONTENU dans un autre (2026-09-28, tâche #995)
+
+**LE PROBLÈME EST RÉEL ET MESURÉ** : un parcours de dossier factorisé le 2026-09-27 était **un**
+problème, et l'outil l'affichait en **trois** alertes.
+
+`clusterDuplicates()` réunissait déjà les alertes décrivant le même bloc vu de **deux ancres**. Il ne
+réunissait pas un bloc de dix lignes **inclus** dans un bloc de douze aux mêmes endroits — le même
+problème vu à deux profondeurs. `fusionnerParContenance()` ferme ce cas, en second passage après la
+fusion existante.
+
+**LA MÉTHODE EST CONTRAINTE, ET C'EST VOULU** : elle n'utilise qu'un fait que l'outil possède
+déjà — les **POSITIONS**. Une alerte est absorbée quand *chacune* de ses occurrences tombe
+entièrement dans une occurrence d'une autre, **dans le même fichier**.
+
+**Jamais une ressemblance devinée.** Un regroupement « par similarité » fondrait des problèmes
+distincts : le compte baisserait sans que la dette baisse, et **un sous-comptage cache là où un
+sur-comptage se corrige à la lecture**.
+
+**UN CLUSTER N'EST ABSORBÉ QUE SI TOUTES SES OCCURRENCES LE SONT.** S'il en porte une ailleurs, il
+décrit quelque chose de **plus**, et le fondre perdrait cette information. L'alerte survivante
+déclare combien elle a absorbé (`absorbe`) : une fusion silencieuse est un chiffre qui baisse sans
+qu'on sache pourquoi.
+
+**CE QUE ÇA NE RÉGLERA PAS, DIT D'AVANCE** : deux blocs au texte **différent**, dans deux fichiers
+différents, peuvent être le même problème — et seul un humain le voit. Le regroupement complet de
+l'enquête du 2026-09-22 (29 alertes → 14 problèmes) n'est pas mécanisable, et prétendre le contraire
+donnerait un chiffre faux avec l'air d'être juste.

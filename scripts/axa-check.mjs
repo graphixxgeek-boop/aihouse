@@ -299,23 +299,41 @@ LIB_MAP["test-route.mjs"] = "app/api/lia/route.ts";
 // kpi-report.mjs qui lance déjà check-house.mjs pour ses propres métriques et peut réutiliser CE
 // MÊME lancement plutôt que d'en payer un second (règle anti-doublon, §7ter). N'efface jamais le
 // dossier lui-même — à la charge de l'appelant, qui sait s'il en a encore besoin.
-export function collectCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {
+// LE PARCOURS DES RELEVÉS V8, ÉCRIT UNE SEULE FOIS (2026-09-28, tâche #997). Les deux collectes —
+// par fichier de lib, par slug d'outil — faisaient exactement la même chose à UNE ligne près : la
+// façon de reconnaître, dans une entrée V8, ce qu'elle désigne. Tout le reste (lire le dossier,
+// parser le JSON, ignorer un doublon de process, lire la source, mesurer) était dupliqué mot pour
+// mot, et CLONE-HUNTER le signalait à chaque commit.
+//
+// CE QUI CHANGE ET CE QUI NE CHANGE PAS : la seule variable est `resoudre(entry)`, qui rend la CLÉ
+// du résultat et le FICHIER à lire, ou null. Les deux comportements d'origine sont conservés à
+// l'identique, y compris leurs deux façons différentes de reconnaître une URL — `includes` pour les
+// libs (le chemin transpilé ne finit pas par le nom du fichier), `endsWith` pour les scripts. Les
+// confondre aurait été une simplification qui change le résultat, donc pas une simplification.
+export function collecterDepuisV8(covDir, resoudre, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {
   const covFiles = existsSync(covDir) ? readDir(covDir) : [];
-  const perFile = {};
+  const out = {};
   for (const covFile of covFiles) {
     let data;
     try { data = JSON.parse(readFile(join(covDir, covFile))); } catch { continue; }
     for (const entry of data.result ?? []) {
-      const base = Object.keys(LIB_MAP).find((k) => entry.url.includes(k));
-      if (!base) continue;
-      const libFile = LIB_MAP[base];
-      if (perFile[libFile]) continue; // déjà vu dans un autre relevé de process
+      const cible = resoudre(entry);
+      if (!cible) continue;
+      const { cle, fichier } = cible;
+      if (out[cle]) continue; // déjà vu dans un autre relevé de process
       let source;
-      try { source = readFileSync(join(ROOT, libFile), "utf8"); } catch { continue; }
-      perFile[libFile] = functionCoverageFromV8(entry, source);
+      try { source = readFileSync(join(ROOT, fichier), "utf8"); } catch { continue; }
+      out[cle] = functionCoverageFromV8(entry, source);
     }
   }
-  return perFile;
+  return out;
+}
+
+export function collectCoverage(covDir, options = {}) {
+  return collecterDepuisV8(covDir, (entry) => {
+    const base = Object.keys(LIB_MAP).find((k) => entry.url.includes(k));
+    return base ? { cle: LIB_MAP[base], fichier: LIB_MAP[base] } : null;
+  }, options);
 }
 
 // Extension aux scripts/*.mjs des ~14 outils à badge (tâche #218, 2026-09-21, demande explicite de
@@ -380,23 +398,64 @@ export const SLUGS_COUVERTS_PAR_AXA = [
 // Vérifié : la dérivation reproduit les 38 chemins précédents à l'identique, aucun écart.
 export const AGENT_SCRIPT_FILES = Object.fromEntries(SLUGS_COUVERTS_PAR_AXA.map((slug) => [slug, scriptPourSlug(slug)]));
 
-export function collectScriptCoverage(covDir, { readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8") } = {}) {
-  const covFiles = existsSync(covDir) ? readDir(covDir) : [];
-  const perSlug = {};
-  for (const covFile of covFiles) {
-    let data;
-    try { data = JSON.parse(readFile(join(covDir, covFile))); } catch { continue; }
-    for (const entry of data.result ?? []) {
-      const match = Object.entries(AGENT_SCRIPT_FILES).find(([, path]) => entry.url.endsWith(path));
-      if (!match) continue;
-      const [slug, scriptPath] = match;
-      if (perSlug[slug]) continue; // déjà vu dans un autre relevé de process
-      let source;
-      try { source = readFileSync(join(ROOT, scriptPath), "utf8"); } catch { continue; }
-      perSlug[slug] = functionCoverageFromV8(entry, source);
-    }
-  }
-  return perSlug;
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+// CE QUI NE POURRA JAMAIS ÊTRE EXERCÉ, ET POURQUOI (2026-09-28, tâche #994)
+// ─────────────────────────────────────────────────────────────────────────────────────────────
+//
+// CE REGISTRE PRÉPARE UNE DÉCISION QUI N'EST PAS LA MIENNE. Élargir le périmètre d'AXA-CHECK de 39 à
+// 68 scripts est un élargissement de ce qu'un Gardien sacré surveille, donc une décision de
+// l'utilisateur — le commentaire de SLUGS_COUVERTS_PAR_AXA le dit déjà, et il a raison. Ce qui EST
+// de mon ressort, c'est de faire en sorte que cette décision, le jour où elle est prise, ne produise
+// pas sept alertes indélogeables.
+//
+// LE DANGER MESURÉ : sur les 30 outils qui rejoindraient le périmètre, 23 sont réellement exercés
+// par la suite de tests (gain immédiat) et 7 ne le sont JAMAIS. Sans ce registre, ces sept-là
+// afficheraient une couverture manquante que AUCUN geste ne peut faire taire — le faux positif que
+// la leçon L36 nomme, et qui transforme un garde-fou en décor (L6).
+//
+// QUATRE NE POURRONT JAMAIS L'ÊTRE, et la raison de chacun est écrite ici plutôt que sous-entendue,
+// parce qu'une exemption sans raison n'est pas une décision, c'est un abandon déguisé (Article 28).
+// Les trois autres sont des manques réels à combler, pas des exemptions : ils ne figurent pas ici.
+export const JAMAIS_EXERCABLES = [
+  { slug: "check-house", pourquoi: "c'est la suite de tests elle-même : elle ne peut pas s'exercer sous sa propre instrumentation sans se mesurer en train de se mesurer" },
+  { slug: "sites-env", pourquoi: "il charge l'environnement du site ; l'exercer demanderait de démarrer le vrai runtime, ce qu'aucun test gratuit ne fait" },
+  { slug: "run-framework", pourquoi: "il lance le PRODUIT, pas l'outillage — rang Hors Agence : le filet n'a rien à exercer chez lui" },
+  { slug: "check-spirit", pourquoi: "chacun de ses passages envoie de vraies provocations au vrai modèle : l'exercer à chaque commit coûterait de vrais appels API (Articles 8 et 22). Et c'est précisément pour ça qu'il est resté CASSÉ du 2026-09-21 au 2026-09-27 sans que rien ne le dise — l'exemption est légitime, le trou qu'elle laisse est réel, et le déclarer EST la protection (Article 27)." },
+];
+
+export function raisonDeNonExercice(slug, registre = JAMAIS_EXERCABLES) {
+  return (registre.find((e) => e.slug === slug) ?? {}).pourquoi ?? null;
+}
+
+// TROIS ÉTATS, JAMAIS DEUX. « 0 % mesuré » dit que le code est exercé et mal couvert ; « jamais
+// exercé » dit qu'on n'a rien pu mesurer. Les deux s'affichent pareil dans un tableau et appellent
+// des gestes opposés — écrire un test, ou accepter une limite déclarée.
+// LE GARDE-FOU DE LA LISTE TENUE À LA MAIN (Article 24). Elle est volontairement manuelle — savoir
+// qu'un script ne PEUT pas être exercé demande de lire ce qu'il fait, et aucune sonde ne sait ça —
+// mais une liste manuelle sans vérificateur se périme en silence : un slug renommé ou supprimé
+// laisserait une exemption qui ne protège plus rien, et un jour réexemptera le mauvais fichier.
+export function findExemptionsSansScript(registre = JAMAIS_EXERCABLES, { root = ROOT, existe = existsSync } = {}) {
+  return registre
+    .map((e) => ({ ...e, chemin: scriptPourSlug(e.slug) }))
+    .filter((e) => !e.chemin || !existe(join(root, e.chemin)))
+    .map((e) => ({ slug: e.slug, pourquoi: `« ${e.slug} » est exempté d'exercice mais aucun script ne porte ce nom : l'exemption ne protège plus rien et pourrait un jour couvrir le mauvais fichier` }));
+}
+
+export function etatDeCouverture(slug, perSlug, registre = JAMAIS_EXERCABLES) {
+  const pct = scriptRobustnessScore(slug, perSlug);
+  if (pct !== undefined) return { etat: "mesuré", pct };
+  const raison = raisonDeNonExercice(slug, registre);
+  if (raison) return { etat: "jamais exerçable", pct: null, pourquoi: raison };
+  return { etat: "NON MESURÉ", pct: null, pourquoi: "aucun relevé de couverture ne l'a vu passer — ce n'est PAS une couverture de 0 %, c'est une absence de mesure, et les deux appellent des gestes opposés" };
+}
+
+
+
+export function collectScriptCoverage(covDir, options = {}) {
+  return collecterDepuisV8(covDir, (entry) => {
+    const match = Object.entries(AGENT_SCRIPT_FILES).find(([, path]) => entry.url.endsWith(path));
+    return match ? { cle: match[0], fichier: match[1] } : null;
+  }, options);
 }
 
 export function scriptRobustnessScore(slug, perSlug) {
@@ -515,6 +574,31 @@ function main() {
     libelle: (f) => `${f.fichier} — ${f.name}() : ${f.reasons.join(", ")}`,
     tache: (f) => `écrire un test réel pour ${f.name}() dans ${f.fichier}, ou déclarer sa vérification via record-check si elle a été faite à la main` });
   imprimerPlanDaction(planAxa);
+
+  // LES TROIS ÉTATS DE COUVERTURE DES OUTILS (2026-09-28, tâche #994), imprimés ici plutôt que
+  // gardés en fonction exportée : un mécanisme que personne ne lance n'existe pas (leçon L2), et
+  // `findDetecteursMuets` l'aurait signalé au commit suivant — à juste titre.
+  {
+    const perSlugOutils = collectScriptCoverage(join(ROOT, ".sites-runtime/axa-coverage"));
+    const etats = SLUGS_COUVERTS_PAR_AXA.map((slug) => ({ slug, ...etatDeCouverture(slug, perSlugOutils) }));
+    const mesures = etats.filter((e) => e.etat === "mesuré");
+    const exemptes = etats.filter((e) => e.etat === "jamais exerçable");
+    const nonMesures = etats.filter((e) => e.etat === "NON MESURÉ");
+    console.log(`\n--- Couverture des OUTILS : ${mesures.length} mesuré(s) · ${exemptes.length} jamais exerçable(s) · ${nonMesures.length} NON MESURÉ(s), sur ${etats.length} ---`);
+    console.log("  Les trois ne se confondent jamais : « 0 % mesuré » dit que le code est exercé et mal couvert ; « jamais exerçable » dit qu'on ne pourra JAMAIS rien mesurer ; « NON MESURÉ » dit qu'on n'a rien mesuré cette fois, et c'est le seul des trois qui est un trou à combler.");
+    for (const e of exemptes) console.log(`  ⬜ ${e.slug} — ${e.pourquoi}`);
+    // AUCUNE MESURE DU TOUT N'EST UNE SEULE INFORMATION, jamais trente-huit. Le relevé de couverture
+    // est produit par le filet de sécurité sous NODE_V8_COVERAGE ; lancé seul, cet outil n'en a
+    // aucun, et lister alors tous les outils un par un donnerait l'impression de trente-huit trous
+    // là où il n'y en a qu'un : le relevé manque. La cause est dite, pas la conséquence répétée.
+    if (nonMesures.length === etats.length - exemptes.length) {
+      console.log(`  ❓ AUCUN relevé de couverture n'a été lu : les ${nonMesures.length} restants sont NON MESURÉS pour une seule et même raison, pas pour ${nonMesures.length}. Le relevé se produit en lançant le filet sous NODE_V8_COVERAGE — ce n'est donc pas trente-huit trous, c'est une mesure absente.`);
+    } else if (nonMesures.length) {
+      console.log(`  ❓ NON MESURÉ : ${nonMesures.map((e) => e.slug).join(", ")}`);
+    }
+    const exemptionsMortes = findExemptionsSansScript();
+    for (const x of exemptionsMortes) console.log(`  🚨 ${x.pourquoi}`);
+  }
 
   console.log(`\nPour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]`);
 }
