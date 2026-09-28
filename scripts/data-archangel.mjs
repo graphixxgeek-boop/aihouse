@@ -1149,8 +1149,18 @@ export function planDactionCirculation(r, { toolSlug = "data-archangel" } = {}) 
         : "pour chacune : lui donner un lecteur-outil, ou déclarer l'absence assumée avec sa raison",
     });
   }
+  // LE PLAN D'ACTION COMPTE LA MÊME POPULATION QUE LE RAPPORT (2026-09-28). Le corps du rapport
+  // retirait déjà les sources lues par une table déclarée et les absences assumées ; le plan, lui,
+  // repartait de `orphelines` en entier — si bien qu'il réclamait du travail sur 31 sources quand
+  // le texte, trente lignes plus haut, n'en montrait que 3. **Un rapport et son plan qui comptent
+  // deux populations différentes est le même défaut que celui qu'on venait de corriger, déplacé
+  // d'une section à l'autre.** Les deux lisent maintenant la même soustraction.
   const dejaAlertees = new Set(r.critiques.map((c) => c.id));
-  const ecritesIgnorees = r.orphelines.filter((o) => o.existe && !dejaAlertees.has(o.id));
+  const dejaExpliqueesPlan = new Set([
+    ...(r.parTableDeclaree ?? []).map((c) => c.id),
+    ...(r.absencesAssumees ?? []).map((a) => a.id),
+  ]);
+  const ecritesIgnorees = r.orphelines.filter((o) => o.existe && !dejaAlertees.has(o.id) && !dejaExpliqueesPlan.has(o.id));
   if (ecritesIgnorees.length) {
     constats.push({
       etat: "retenu",
