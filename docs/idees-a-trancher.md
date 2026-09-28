@@ -84,6 +84,7 @@ DEEP-READER 8 confirmé en direct.
 | #800 | Version de l'Agence — lequel des trois axes fait monter le majeur ? | à trancher |
 | #801 | Badge — la FAMILLE a disparu de la cérémonie, 23 cérémonies identiques d'un coup | tranchée | **2026-09-25 : une cérémonie par CHANGEMENT RÉEL, jamais une par outil et par passage.** Tant que le motif ne bouge pas, rien n'est republié. Remesuré le jour même : 20 en attente, toutes sur le même motif. |
 | #805 | File — 87 % de tâches légères et 49 thèmes : émiettement, ou rythme sain ? | à trancher |
+| #1079 | Suivi — un commit de SUITE compte-t-il comme « sans mise à jour du suivi » ? (3 issues, et le commit accusé est le mien) | à trancher |
 | #814 | Données — les sources fraîches restantes : lecteur réel, ou absence assumée ? | à trancher |
 
 Trois d'entre elles (#747, #760, #767) attendaient depuis plusieurs jours **sans être visibles nulle
@@ -443,3 +444,45 @@ l'utilisateur a choisi de noter sans y toucher (« Note-les, on verra plus tard 
 jamais (ils sont cités tels quels dans le code et la documentation), et l'Article 23 montre la forme
 que prend une fusion ici — le numéro reste occupé et renvoie vers son hôte. Abraham ne tranche jamais
 la pertinence d'une règle, et l'agent non plus sur la charte.
+
+---
+
+## Un commit de SUITE compte-t-il comme « sans mise à jour du suivi » ? (2026-09-28, tâche #1079)
+
+**Le cas réel, et il est à moi.** `check-suivi-fidelity` signale le commit `0b2ae63` : « 1 commit a
+changé du code ou de la charte sans jamais toucher `docs/suivi/` ». Ce commit ne contient qu'un
+fichier : `docs/referentiel/angel-of-ia-process.md`, la fiche écrite dans la foulée de la tâche
+**#1069**, dont la ligne de suivi existe bel et bien — écrite dans le commit précédent.
+
+**Pourquoi je ne tranche pas moi-même, et c'est le cœur du point.** Le commit accusé est le mien.
+Assouplir le garde-fou ferait disparaître mon propre reproche, et c'est très exactement le geste que
+je me suis interdit cette nuit sur un autre outil (« je refuse de desserrer un garde-fou pour faire
+passer mon propre changement »). Un garde-fou qu'on ajuste le jour où il mord son auteur ne protège
+plus rien.
+
+**Ce qui plaide POUR le garder tel quel :**
+- la règle est écrite « dans le MÊME commit », sans exception, et sa sévérité est ce qui l'a fait
+  tenir ;
+- « je citerai le numéro de tâche » est une échappatoire facile : n'importe quel message peut porter
+  un `#123` sans que la ligne décrive le travail du commit ;
+- la fiche aurait pu, et dû, partir dans le même commit que le reste de #1069.
+
+**Ce qui plaide POUR l'affiner :**
+- le but déclaré de la règle est d'attraper « la dérive réelle trouvée le 2026-09-19 » — du travail
+  qui atterrit sans aucune trace dans le suivi durable. Ici la trace existe ;
+- un reproche qu'aucune action ne peut éteindre devient du décor (L6) : l'historique ne se réécrit
+  pas, donc ce commit restera signalé tant qu'il sera dans la fenêtre glissante ;
+- c'est, encore une fois, un **signal adjacent** lu comme le signal visé : « ce commit touche-t-il
+  `docs/suivi/` ? » n'est pas « ce travail est-il tracé ? ».
+
+**Les trois issues, et elles lui appartiennent :**
+1. **Ne rien changer** — la sévérité est le service rendu, et un faux positif toutes les cinquante
+   fenêtres est un prix acceptable.
+2. **Affiner sur un critère VÉRIFIABLE** — un commit est tracé si son message cite un numéro de
+   tâche qui **existe réellement** dans `docs/suivi/`, la vérification portant sur l'existence de la
+   ligne, jamais sur la seule présence du `#`.
+3. **Affiner plus étroitement encore** — la même règle, mais uniquement pour un commit qui ne touche
+   QUE de la documentation (`docs/referentiel/`, un blueprint, un index), jamais du code.
+
+**Mon avis, demandé ou non, et il vaut ce qu'il vaut puisque je suis partie prenante** : l'issue 3.
+Elle répond au cas réel sans ouvrir l'échappatoire que l'issue 2 offrirait à un commit de code.
