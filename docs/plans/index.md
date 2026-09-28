@@ -2,12 +2,13 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-28. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**26 fichier(s).**
+**27 fichier(s).**
 
 | Fichier | |
 |---|---|
 | [article-19-avant-apres.html](article-19-avant-apres.html) | — |
 | [audit-gardiens-donnees-absentes-2026-09-23.md](audit-gardiens-donnees-absentes-2026-09-23.md) | — |
+| [charte-diffs-a-approuver-2026-09-28.md](charte-diffs-a-approuver-2026-09-28.md) | — |
 | [charte-impossibilites-non-declarees.md](charte-impossibilites-non-declarees.md) | — |
 | [charte-trois-mots-ordre-proposition-2026-09-28.md](charte-trois-mots-ordre-proposition-2026-09-28.md) | — |
 | [classification-cadrage.md](classification-cadrage.md) | — |
