@@ -364,3 +364,52 @@ LE COMPTE AVANT / APRÈS — ce que tu avais demandé, et la réponse est franch
   plus une règle est obligatoire, moins on regarde ce sur quoi elle s'appuie.
   Là où une consigne dit « consulte X avant d'agir », la bonne question n'est pas
   « ai-je consulté ? » mais « X sait-il encore quelque chose ? ».
+
+
+--------------------------------------------------------------------------------
+13h50 — OÙ ÇA EN EST, ET CE QUI T'ATTEND
+--------------------------------------------------------------------------------
+
+  LA RONDE EST FAITE, côté mécanique : tous ses items gratuits ont été déroulés,
+  y compris les trois que j'avais laissés (profil, sauvegarde, recap-evaluations).
+  Ce qui reste incomplet est dit plutôt que compté plein : les items COÛTEUX
+  demandent ton accord, et les faits de conversation qu'elle réclame — fenêtres
+  de questions, rapports remis en main propre — ne peuvent pas se déclarer en
+  ton absence.
+
+  LA SAUVEGARDE T'A ÉTÉ ENVOYÉE : le coffre (9,8 Mo) et la notice (1,0 Mo).
+  Le coffre est gitignored et ce conteneur est éphémère — il n'existe que parce
+  que tu l'as reçu.
+
+  CE QUI T'ATTEND, ET C'EST LE GROS DU RESTE :
+
+  · UN AVANT/APRÈS DE CLAUDE.md, en un seul document, avec le coût en
+    obligations de chaque point. Un des trois est une simple dette (la charte dit
+    « trois moments », il y en a quatre) ; un autre coûte +3 obligations.
+    → docs/plans/charte-diffs-a-approuver-2026-09-28.md
+
+  · LE TIC DE LIA, mesuré et non corrigé : « désolée » dans 5 répliques sur 10.
+    → docs/check-spirit/lecture-2026-09-28.md
+
+  · LA SCISSION DE L'OUTIL DES TÂCHES, mesurée : ta question « deux ou trois »
+    a une réponse chiffrée, et c'est « trois, ou rien ».
+    → docs/check-tasks-details/scission-decision-2026-09-28.md
+
+  · UNE OBLIGATION QUI S'APPUYAIT SUR DU PÉRIMÉ (#1091/#1092) : trois formes
+    possibles, dont une que le code a explicitement refusée à sa création.
+
+  · ET 33 AUTRES DÉCISIONS déjà instruites, chacune avec ses options chiffrées.
+
+  ÉTAT FINAL : filet 345 blocs au vert, exit 0, tout poussé à chaque étape.
+  Aucune action du périmètre sensible : rien qui change ce que Lia et Noé disent
+  ou font, aucun renommage en masse, CLAUDE.md non modifié — seulement préparé.
+
+  CE QUE J'AI APPRIS CETTE NUIT ET QUI EST ÉCRIT AU JOURNAL (entrées 23 à 26) :
+  · une règle recopiée est une règle qui sera oubliée, et le commentaire qui
+    certifie qu'elle s'applique partout est le signe, jamais la preuve ;
+  · quand un outil du dépôt sait faire le geste, le faire à la main produit une
+    erreur que l'outil aurait rendue impossible ;
+  · une grille de lecture fraîche fait voir sa classe d'erreur partout, y compris
+    là où elle n'est pas — trois fois cet après-midi, mesurer m'a évité de
+    desserrer un garde-fou juste ;
+  · plus une règle est obligatoire, moins on regarde ce sur quoi elle s'appuie.
