@@ -57,3 +57,39 @@ racine (au-delà du seul rappel automatique post-commit). Premier passage réel 
 
 `docs/objectifs-vs-resultats/index.md` (historique des changements du registre) et
 `docs/objectifs-vs-resultats/registre.md` (la table elle-même, source de vérité vivante).
+
+## Le repli silencieux qui flattait (2026-09-28, tâche #1095)
+
+**Ce que le rapport affichait** :
+
+> objectif **1** *trouvaille réellement suivie d'un geste sur la charte*,
+> résultat réel **491** *trouvaille réellement suivie d'un geste sur la charte* — dépassé
+
+Sur un document que la journée entière n'avait pas modifié une seule fois. **Le chiffre comptait les
+passages du crochet post-commit.**
+
+**La cause** : cinq lignes du registre déclarent une source en **prose** — `` `docs/moise-tables-de-loi/index.md`
+(colonne « Suite donnée ») ``, `` `docs/agent-du-temps/estimations.md` `` — qu'aucun code ne sait
+ouvrir. `computeResultat()` les faisait tomber sur son repli `usage-count`, et le rendu réimprimait
+l'**unité déclarée** par-dessus un nombre qui mesurait autre chose.
+
+**La note du registre disait elle-même le contraire** : « c'est le seul compteur qui ne peut pas se
+remplir tout seul ». Il se remplissait entièrement tout seul, 491 fois.
+
+**Pourquoi cette erreur-là tient plus longtemps que les autres** : un verdict « dépassé » ne se
+re-vérifie jamais. Un « en dessous » fait ouvrir le dossier ; un dépassement de deux ordres de
+grandeur passe pour une bonne nouvelle. C'est la même famille que le reste de cette journée — un
+signal **adjacent** servi à la place du signal visé — mais ici **le repli flatte**, donc rien ne
+pousse à regarder.
+
+**La correction** : une source **déclarée et non reconnue** rend désormais « pas de données », et le
+plan d'action nomme la mesure qui manque. Les sources réellement lisibles sont listées dans
+`SOURCES_RECONNUES` — une liste manuelle par nature, puisqu'elle décrit ce que le code implémente et
+ne peut donc se dériver d'ailleurs ; elle se met à jour le jour où une branche s'ajoute.
+
+**Le cas normal est intact** : une ligne qui ne déclare **aucune** source demande bien le comptage
+ordinaire. Corriger le cas tordu ne devait pas casser le cas droit.
+
+**Effet mesuré** : cinq faux « dépassés » (moise-tables-de-loi, abraham-les-references,
+filet-en-parts, agent-du-temps, agent-des-noms) sont devenus cinq chantiers honnêtes — « objectif
+fixé, mais aucun signal mesuré sur la période ».

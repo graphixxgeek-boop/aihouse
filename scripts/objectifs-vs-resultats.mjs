@@ -111,6 +111,13 @@ function kpiRowsInPeriod(kpiRows, debut, finEffectiveIso, column) {
   );
 }
 
+// Les sources que le code sait RÉELLEMENT lire. Toute autre valeur déclarée dans le registre est
+// une source documentaire — un chemin, une colonne d'index — qu'aucun mécanisme n'ouvre aujourd'hui.
+// La liste est courte et manuelle par nature (Article 24 l'autorise quand la nature manuelle est
+// écrite à côté) : elle décrit ce que `computeResultat()` implémente, et elle ne peut donc pas se
+// dériver d'ailleurs — elle se met à jour le jour où une branche s'ajoute juste en dessous.
+export const SOURCES_RECONNUES = ["usage-count", "found-rate", "contribution-count"];
+
 export function computeResultat(row, history, now = Date.now(), kpiRows = []) {
   const finBorne = Math.min(Date.parse(row.fin), now);
   const finEffectiveIso = new Date(finBorne).toISOString();
@@ -147,7 +154,33 @@ export function computeResultat(row, history, now = Date.now(), kpiRows = []) {
       ? { valeur: contributions.length, hasData: true }
       : { valeur: null, hasData: false };
   }
-  // "usage-count" par défaut — jamais une troisième source devinée pour une valeur inconnue.
+  // LE REPLI SILENCIEUX SUR « usage-count » ÉTAIT UN MENSONGE FLATTEUR (2026-09-28, tâche #1095).
+  //
+  // CE QUI SE PASSAIT, ET C'ÉTAIT INVISIBLE PARCE QUE ÇA DÉPASSAIT. Cinq lignes du registre
+  // déclarent une source en PROSE — « `docs/moise-tables-de-loi/index.md` (colonne "Suite donnée") »
+  // — qu'aucun code ne sait lire. Elles tombaient donc ici, et l'outil comptait des LANCEMENTS tout
+  // en réimprimant l'unité déclarée. Résultat affiché : « objectif 1 trouvaille réellement suivie
+  // d'un geste sur la charte, résultat réel 491 trouvaille réellement suivie d'un geste sur la
+  // charte ». Quatre cent quatre-vingt-onze gestes sur un document qui n'a pas été modifié une
+  // seule fois — le chiffre comptait les passages du crochet post-commit.
+  //
+  // LA NOTE DU REGISTRE DIT ELLE-MÊME LE CONTRAIRE : « c'est le seul compteur qui ne peut pas se
+  // remplir tout seul ». Il se remplissait entièrement tout seul.
+  //
+  // POURQUOI C'EST LA PIRE FORME DE L'ERREUR : un verdict « dépassé » ne se re-vérifie jamais. Un
+  // « en dessous » fait ouvrir le dossier ; un dépassement de deux ordres de grandeur passe pour
+  // une bonne nouvelle. Même famille que tout le reste de cette journée — un signal ADJACENT (le
+  // nombre de lancements) servi à la place du signal visé (l'unité déclarée) — mais ici le repli
+  // FLATTE, donc rien ne pousse à regarder.
+  //
+  // LE TROISIÈME ÉTAT, comme partout ailleurs dans ce paysage : une source qu'on ne sait pas lire
+  // rend « pas de données », jamais un nombre pris ailleurs. `usage-count` reste la valeur par
+  // défaut quand la source est VIDE — une ligne qui ne déclare rien demande bien le comptage
+  // ordinaire — mais une source DÉCLARÉE et non reconnue est une mesure impossible, pas une mesure
+  // de remplacement.
+  if (row.source && !SOURCES_RECONNUES.includes(row.source)) {
+    return { valeur: null, hasData: false, sourceIllisible: row.source };
+  }
   return { valeur: events.length, hasData: true };
 }
 

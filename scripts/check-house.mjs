@@ -20385,3 +20385,47 @@ async function testCeQueJaiEcritSansLeCouvrir() {
   console.log("Passed: les deux fonctions que j'ai écrites aujourd'hui sans les couvrir (2026-09-28, tâche #1094). CASSANDRA a signalé « trous-de-couverture : EN DÉGRADATION » le jour même où j'ajoutais treize blocs de test. C'est contre-intuitif, donc c'est à regarder — le quatrième moment du process XP, ajouté ce matin, dit exactement ça : un rapport qui détonne avec ce qu'on croit savoir du terrain. EXPLICATION MESURÉE, ET ELLE EST SUR MOI : j'ai ajouté des fonctions plus vite que je ne les ai couvertes. DEUX des miennes n'avaient aucun test DIRECT, et ce sont les deux pires candidates — des PORTEUSES DE CONTRAT, qui ne cassent pas seules mais emportent leurs appelants. `balayerLesLignesDeTaches()` porte { mesurable, ecarts, lignesLues } pour DEUX détecteurs : si elle cessait de compter ou de refuser un dossier absent, les deux se dégraderaient ENSEMBLE et en silence — et son dénominateur est précisément ce qui distingue « rien trouvé » de « rien lu ». `appliquerPlancherDeReparation()` porte la règle « le plancher RELÈVE, jamais ne rabaisse » : elle n'était éprouvée qu'à travers son appelant, donc jamais sur ses propres bords, et un plancher qui plafonnerait aussi serait un nivellement invisible. LA LEÇON N'EST PAS « il faut tester davantage » : c'est qu'une couverture qui se DÉGRADE pendant qu'on ajoute des tests dit quelque chose de précis — on construit plus vite qu'on ne couvre — et que ce signal-là ne se lit qu'en le croyant plutôt qu'en le rationalisant.");
 }
 await testCeQueJaiEcritSansLeCouvrir();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE REPLI SILENCIEUX QUI FLATTAIT (2026-09-28, tâche #1095)
+// ————————————————————————————————————————————————————————————————————————
+// « objectif 1 trouvaille réellement suivie d'un geste sur la charte, résultat réel 491 » — sur un
+// document qui n'a pas été modifié une seule fois. Le chiffre comptait les passages du crochet
+// post-commit : cinq lignes du registre déclarent une source en PROSE qu'aucun code ne sait lire,
+// et elles retombaient sur le comptage de lancements tout en réimprimant l'unité déclarée.
+async function testRepliSilencieuxQuiFlattait() {
+  const OVR = await import('../scripts/objectifs-vs-resultats.mjs');
+  const hist = { events: [{ toolSlug: 'x', at: Date.parse('2026-09-25T00:00:00Z') }, { toolSlug: 'x', at: Date.parse('2026-09-26T00:00:00Z') }] };
+  const base = { entite: 'x', debut: '2026-09-20', fin: '2026-10-20', objectif: 1 };
+  const maintenant = Date.parse('2026-09-28T00:00:00Z');
+
+  // ── 1. UNE SOURCE DÉCLARÉE MAIS ILLISIBLE NE VAUT PLUS UN NOMBRE PRIS AILLEURS.
+  const prose = OVR.computeResultat({ ...base, source: '`docs/moise-tables-de-loi/index.md` (colonne « Suite donnée »)' }, hist, maintenant);
+  assert.equal(prose.hasData, false, 'a declared-but-unreadable source is an IMPOSSIBLE measure, never a replacement one');
+  assert.equal(prose.valeur, null);
+  assert.ok(prose.sourceIllisible, 'and the report must be able to say WHICH source it could not read');
+
+  // ── 2. MAIS UNE SOURCE VIDE DEMANDE BIEN LE COMPTAGE ORDINAIRE (BP4) : on n'a pas cassé le cas
+  // normal en corrigeant le cas tordu.
+  const vide = OVR.computeResultat({ ...base, source: undefined }, hist, maintenant);
+  assert.equal(vide.hasData, true, 'a row declaring no source still asks for the ordinary count');
+  assert.equal(vide.valeur, 2);
+  const explicite = OVR.computeResultat({ ...base, source: 'usage-count' }, hist, maintenant);
+  assert.equal(explicite.valeur, 2, 'and an explicitly declared usage-count keeps working');
+
+  // ── 3. LA LISTE DES SOURCES LISIBLES DÉCRIT CE QUE LE CODE IMPLÉMENTE, et rien de plus.
+  assert.deepEqual(OVR.SOURCES_RECONNUES, ['usage-count', 'found-rate', 'contribution-count'], 'the readable-source list must describe exactly what computeResultat implements — a fourth entry here without a branch below would recreate the very lie this fixes');
+
+  // ── 4. SUR LE VRAI REGISTRE (Article 25) : plus aucune ligne ne peut afficher un « dépassé » de
+  // deux ordres de grandeur sur une unité que rien ne mesure.
+  const { readFileSync: lire1095 } = await import('node:fs');
+  const { readFileSync: lireHist } = await import('node:fs');
+  let vraiHist = { events: [] };
+  try { vraiHist = JSON.parse(lireHist('.tool-usage-history.json', 'utf8')); } catch { /* absent : la garde ci-dessous reste valable */ }
+  const rapport = OVR.buildObjectifsReport(lire1095('docs/objectifs-vs-resultats/registre.md', 'utf8'), vraiHist, { now: Date.now() });
+  const menteuses = rapport.filter((r) => r.hasData && r.source && !OVR.SOURCES_RECONNUES.includes(r.source) && !String(r.source).startsWith('kpi:'));
+  assert.deepEqual(menteuses.map((r) => r.entite), [], 'no row may report a figure under a unit the code cannot measure');
+
+  console.log("Passed: le repli silencieux qui flattait (2026-09-28, tâche #1095). LE RAPPORT AFFICHAIT : « objectif 1 trouvaille réellement suivie d'un geste sur la charte, résultat réel 491 trouvaille réellement suivie d'un geste sur la charte » — sur un document que la nuit entière n'a pas modifié une seule fois. Le chiffre comptait les passages du crochet post-commit. CINQ LIGNES DU REGISTRE déclarent une source en PROSE — un chemin d'index, une colonne — qu'aucun code ne sait ouvrir. Elles tombaient sur le repli `usage-count` et réimprimaient l'unité déclarée par-dessus. ET LA NOTE DU REGISTRE DIT ELLE-MÊME LE CONTRAIRE : « c'est le seul compteur qui ne peut pas se remplir tout seul ». Il se remplissait entièrement tout seul. POURQUOI C'EST LA PIRE FORME DE CETTE ERREUR, ET POURQUOI ELLE A TENU SI LONGTEMPS : un verdict « dépassé » ne se re-vérifie jamais. Un « en dessous » fait ouvrir le dossier ; un dépassement de deux ordres de grandeur passe pour une bonne nouvelle. C'est la même famille que tout le reste de la journée — un signal ADJACENT servi à la place du signal visé — mais ici le repli FLATTE, donc rien ne pousse à regarder. LE TROISIÈME ÉTAT RÈGLE ÇA : une source déclarée et non reconnue rend « pas de données », et le plan d'action nomme la mesure qui manque. Cinq faux « dépassés » sont devenus cinq chantiers honnêtes. ET LE CAS NORMAL EST INTACT : une ligne qui ne déclare AUCUNE source demande bien le comptage ordinaire — corriger le cas tordu ne devait pas casser le cas droit.");
+}
+await testRepliSilencieuxQuiFlattait();
