@@ -500,20 +500,31 @@ export const LIBELLE_ILLISIBLE = "[object Object]";
 // CE QUE ÇA NE CHANGE POUR PERSONNE, et c'est vérifié : `message` et `pourquoi` restent en
 // tête de chaîne, donc aucun appelant existant ne voit son libellé bouger, et un `libelle`
 // déclaré l'emporte toujours sur le défaut.
-export function libelleParDefaut(e, { champs = CHAMPS_DU_LIBELLE } = {}) {
-  for (const champ of champs) {
-    const v = e?.[champ];
-    if (v !== undefined && v !== null && String(v) !== "") return String(v);
-  }
-  return String(e);
-}
-
-export function tacheParDefaut(e, { champs = CHAMPS_DE_LA_TACHE } = {}) {
+// premierChampRenseigne() — LE DÉTAIL QUI A FAILLI PASSER, et il vaut d'être écrit
+// (2026-09-29, tâche #1201). Les deux fonctions ci-dessous étaient d'abord deux boucles
+// identiques, à leur seule valeur de repli près. CLONE-HUNTER les a signalées dans le commit
+// MÊME qui réparait un doublon — l'outil a donc mordu son auteur sur la faute qu'il venait de
+// corriger chez les autres, ce qui est exactement ce qu'on lui demande. La différence réelle
+// entre les deux tient au repli, jamais au parcours : c'est donc le parcours qui est partagé.
+export function premierChampRenseigne(e, champs = []) {
   for (const champ of champs) {
     const v = e?.[champ];
     if (v !== undefined && v !== null && String(v) !== "") return String(v);
   }
   return null;
+}
+
+// Le repli du LIBELLÉ est `String(e)` — un écart qui est déjà une chaîne de caractères doit
+// s'afficher tel quel, et un objet dont aucun champ connu ne parle doit produire « [object
+// Object] », que l'alarme de buildPlanDaction() saura nommer.
+export function libelleParDefaut(e, { champs = CHAMPS_DU_LIBELLE } = {}) {
+  return premierChampRenseigne(e, champs) ?? String(e);
+}
+
+// Le repli de la TÂCHE est `null` — c'est l'appelant qui décide de la phrase générique, parce
+// qu'une tâche inventée ici passerait pour une tâche écrite par l'outil.
+export function tacheParDefaut(e, { champs = CHAMPS_DE_LA_TACHE } = {}) {
+  return premierChampRenseigne(e, champs);
 }
 
 export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut } = {}) {

@@ -152,3 +152,11 @@ explicites n'ont pas été retirés des onze outils. Ils ne sont pas faux, seule
 retirer toucherait onze fichiers pour zéro changement de comportement, ce qui est un risque sans
 contrepartie pendant une nuit autonome. CLONE-HUNTER continuera donc de signaler cette paire, et
 c'est honnête : le vrai défaut qu'elle cachait est réparé, la ressemblance de surface reste.
+
+**Suite immédiate, et elle est instructive (2026-09-29, tâche #1201)** : les deux fonctions posées
+ci-dessus étaient elles-mêmes deux boucles identiques, à leur repli près. CLONE-HUNTER les a
+signalées dans le commit MÊME qui réparait le doublon d'origine — l'outil a mordu son auteur sur la
+faute qu'il venait de faire corriger chez onze autres. Le parcours est donc partagé
+(`premierChampRenseigne()`), et chaque repli reste écrit à côté de la fonction qui le porte : pour
+le libellé `String(e)`, pour la tâche `null`, parce qu'une tâche inventée dans le gabarit passerait
+pour une tâche écrite par l'outil.
