@@ -21059,6 +21059,60 @@ async function testDerniersDoublons() {
 }
 await testDerniersDoublons();
 
+// ————————————————————————————————————————————————————————————————————————
+// LE CHIFFRE ÉCRIT À LA MAIN, CONFRONTÉ À CE QUE LA MACHINE A ENREGISTRÉ
+// (2026-09-29, tâche #1208 — une des six données fraîches que personne ne lisait, #490)
+// ————————————————————————————————————————————————————————————————————————
+async function testConfronterLesParts() {
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+  const registre = (lignes) => `# filet-en-parts\n\n| Date | Parts | Durée | Séquentiel comparé |\n|---|---|---|---|\n${lignes.join('\n')}\n`;
+  const histo = (jours) => jours.map(([quand, s]) => ({ quand, totalMs: s * 1000, code: 0, succes: 300 }));
+
+  // ── 1. LE CHIFFRE ANNONCÉ QUI TOMBE DANS L'INTERVALLE DU JOUR EST CONFIRMÉ. Une main a le droit
+  // d'arrondir : le registre dit lui-même « à remplir à la main ».
+  const ok = E.confronterLesParts({
+    lire: () => registre(['| 2026-09-27 | 4 | 44 s | ✅ 78 s, 299 succès |']),
+    historique: histo([['2026-09-27T10:00:00Z', 65], ['2026-09-27T11:00:00Z', 106]]),
+  });
+  assert.equal(ok.verdicts[0].etat, 'confirmé', 'an announced figure that falls inside the day’s measured range is confirmed — reproaching a hand-written registry for rounding makes a guard nobody reads (leçon L4)');
+
+  // ── 2. CELUI QUI TOMBE DEHORS EST SIGNALÉ, et c'est le cas qui compte : un chiffre pris sur un
+  // autre jour, une autre machine, ou écrit de mémoire.
+  const faux = E.confronterLesParts({
+    lire: () => registre(['| 2026-09-27 | 4 | 44 s | ✅ 300 s |']),
+    historique: histo([['2026-09-27T10:00:00Z', 65], ['2026-09-27T11:00:00Z', 106]]),
+  });
+  assert.equal(faux.verdicts[0].etat, 'à revoir', 'a figure outside the measured range must be flagged: that is the whole point — a hand-written comparison nothing confronts');
+
+  // ── 3. SANS RELEVÉ CE JOUR-LÀ, ON S'ABSTIENT AU LIEU D'ACCUSER (leçon L5). Un jour sans mesure
+  // ne dit rien du chiffre annoncé, et le traiter comme un démenti serait un verdict sur zéro donnée.
+  const muet = E.confronterLesParts({
+    lire: () => registre(['| 2026-09-27 | 4 | 44 s | ✅ 78 s |']),
+    historique: histo([['2026-09-28T10:00:00Z', 70]]),
+  });
+  assert.equal(muet.verdicts[0].etat, 'pas confrontable', 'with no sequential run recorded that day the answer is "neither confirmed nor denied", never an accusation');
+
+  // ── 4. UN REGISTRE ABSENT N'EST JAMAIS UN ACCORD (leçon L11), et la ligne imprimée le DIT.
+  const absent = E.confronterLesParts({ lire: () => null });
+  assert.equal(absent.mesurable, false, 'an unreadable registry is "not measured", never "everything agrees"');
+  assert.match(E.formatConfrontationDesPartsLines(absent).join('\n'), /PAS MESUR/, 'and the printed line must say so, because a silence reads exactly like an agreement');
+  assert.equal(E.confronterLesParts({ lire: () => registre([]) }).mesurable, false, 'a registry with no row is not an agreement either');
+
+  // ── 5. LE PREMIER USAGE EST RÉEL, PAS FABRIQUÉ (leçon L2) : sur CE dépôt, il confronte vraiment
+  // la ligne écrite à la main, et il la confirme.
+  const reel = E.confronterLesParts();
+  assert.equal(reel.mesurable, true, 'against the real repository the reader must actually read the hand-written registry');
+  assert.ok(reel.confrontes >= 1, 'and actually confront at least one row — a reader wired onto nothing is an intention');
+
+  // ── 6. IL EST ÉMIS, PAS SEULEMENT EXPORTÉ (leçon L2, l'autre moitié).
+  const { readFileSync: lire1208 } = await import('node:fs');
+  assert.match(lire1208('scripts/ezechiel-les-tests.mjs', 'utf8'), /formatConfrontationDesPartsLines\(e\.parts\)/, 'the confrontation must be PRINTED in the report: a mechanism that never leaves the script is an intention');
+
+  console.log("Passed: le chiffre ecrit a la main, confronte a ce que la machine a enregistre (2026-09-29, tache #1208). D'OU CA VIENT : data-archangel signale depuis #490 des donnees FRAICHES que personne d'autre que leur producteur ne lit. docs/filet-en-parts/index.md en fait partie — et son contenu n'est pas anodin : chaque ligne porte une COMPARAISON ecrite a la main (« 44 s en 4 parts, contre 78 s en sequentiel »), exactement le genre de chiffre que l'Article 24 refuse de laisser sans verification. Le registre le dit lui-meme en tete : « a remplir a la main ». EZECHIEL EST LE SEUL QUI PUISSE LE CONFRONTER, parce qu'il tient le releve chronometre des passages SEQUENTIELS, ecrit par la machine : verifier une affirmation contre une mesure, jamais recalculer une donnee deja calculee (lecon L29). LE SEUIL SE DERIVE, IL NE SE CHOISIT PAS (BP5) : la premiere version reutilisait la marge de bruit de 3 % et signalait « a revoir » sur 78 s annonces contre 75 s mesures — un arrondi de main parfaitement legitime, et un garde-fou qui reproche a une main d'arrondir cesse d'etre lu. La regle est donc que le chiffre annonce doit tomber DANS l'intervalle des passages reellement chronometres ce jour-la : un arrondi y tombe toujours, un chiffre pris ailleurs en tombe dehors, et ce sont les mesures du jour qui font le seuil. MESURE : data-archangel passe de 6 donnees fraiches sans lecteur a 5, et la seule ligne du registre est CONFIRMEE — 78 s annonces, cinq passages ce jour-la entre 65 et 106 s.");
+}
+await testConfronterLesParts();
+
+
 
 
 

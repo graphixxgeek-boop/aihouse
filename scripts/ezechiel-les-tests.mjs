@@ -1291,6 +1291,97 @@ export function lireHistorique({ root = ROOT, lire = null } = {}) {
   return loadJsonArray(FICHIER_HISTORIQUE, { root, readFileImpl: lire ? () => lire(FICHIER_HISTORIQUE) : readFileSync });
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE CHIFFRE ÉCRIT À LA MAIN, CONFRONTÉ À CE QUE LA MACHINE A ENREGISTRÉ
+// (2026-09-29, tâche #1208 — le registre de FILET-EN-PARTS trouve enfin un lecteur)
+// ————————————————————————————————————————————————————————————————————————
+//
+// D'OÙ ÇA VIENT : data-archangel signale depuis la tâche #490 des données FRAÎCHES que personne
+// d'autre que leur producteur ne lit. `docs/filet-en-parts/index.md` en fait partie — et son
+// contenu n'est pas anodin : chaque ligne porte une COMPARAISON écrite à la main (« 44 s en 4
+// parts, ✅ 78 s en séquentiel »), c'est-à-dire exactement le genre de chiffre que l'Article 24
+// refuse de laisser sans vérification. Le registre le dit lui-même en tête : « à remplir à la
+// main ». Personne ne confrontait ces chiffres à quoi que ce soit.
+//
+// EZECHIEL EST LE SEUL QUI PUISSE LE FAIRE, et c'est pour ça que le lecteur vit ici plutôt
+// qu'ailleurs : il tient le relevé chronométré des passages SÉQUENTIELS du filet, écrit par la
+// machine. Confronter les deux, c'est vérifier une affirmation contre une mesure — pas recalculer
+// une donnée déjà calculée (leçon L29, qui interdit le second calcul divergent).
+//
+// CE QU'IL NE FAIT PAS, ET C'EST DÉLIBÉRÉ : il ne corrige jamais le registre, et il ne crie pas
+// sur un écart de quelques pour cent : le registre dit lui-même « à remplir à la main », et une
+// main a le droit d'arrondir. Il ne parle que si le chiffre annoncé tombe HORS de l'intervalle des
+// passages réellement chronométrés ce jour-là — un seuil que les mesures du jour fixent
+// elles-mêmes, ce qui évite d'en inventer un (BP5).
+export const REGISTRE_DES_PARTS = "docs/filet-en-parts/index.md";
+export const MOTIF_LIGNE_DE_PART = /^\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*(\d+)\s*\|\s*(\d+)\s*s\s*\|\s*([^|]*)\|/;
+export const MOTIF_SEQUENTIEL_ANNONCE = /(\d+)\s*s/;
+
+export function lignesDuRegistreDesParts(markdown = "") {
+  const out = [];
+  for (const ligne of String(markdown).split("\n")) {
+    const m = ligne.match(MOTIF_LIGNE_DE_PART);
+    if (!m) continue;
+    const annonce = m[4].match(MOTIF_SEQUENTIEL_ANNONCE);
+    out.push({ date: m[1], parts: Number(m[2]), partsSecondes: Number(m[3]), sequentielAnnonce: annonce ? Number(annonce[1]) : null });
+  }
+  return out;
+}
+
+export function confronterLesParts({ root = ROOT, lire = null, historique = null } = {}) {
+  const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
+  const brut = lireF(REGISTRE_DES_PARTS);
+  if (brut == null) {
+    return { mesurable: false, pourquoi: `${REGISTRE_DES_PARTS} est illisible — sur un autre dépôt ce registre n'existe pas, et c'est un résultat, jamais un zéro` };
+  }
+  const lignes = lignesDuRegistreDesParts(brut);
+  if (!lignes.length) {
+    return { mesurable: false, pourquoi: "aucune ligne de passage dans le registre des parts — rien à confronter, ce qui n'est pas la même chose qu'un accord" };
+  }
+  const releves = historique ?? lireHistorique({ root, lire });
+  const verdicts = [];
+  for (const l of lignes) {
+    if (l.sequentielAnnonce == null) { verdicts.push({ ...l, etat: "sans chiffre", pourquoi: "la ligne n'annonce aucune durée séquentielle : rien à confronter" }); continue; }
+    // LE MÊME JOUR, ET LE PLUS PROCHE : un relevé d'un autre jour ne dit rien de ce passage-là,
+    // le filet ayant grossi entre-temps. Sans relevé ce jour-là, on s'abstient AU LIEU d'accuser.
+    const duJour = releves.filter((r) => String(r?.quand ?? "").slice(0, 10) === l.date && r?.code === 0);
+    if (!duJour.length) { verdicts.push({ ...l, etat: "pas confrontable", pourquoi: `aucun passage séquentiel chronométré le ${l.date} : le chiffre annoncé n'est ni confirmé ni démenti` }); continue; }
+    // LE SEUIL SE DÉRIVE DES MESURES DU JOUR, IL NE SE CHOISIT PAS (BP5). Première version : la
+    // marge de bruit de 3 %, celle qui sert à comparer deux exécutions machine. Elle a signalé
+    // « à revoir » sur 78 s annoncés contre 75 s mesurés — un écart de 4 %, c'est-à-dire un
+    // arrondi de main parfaitement légitime dans un registre dont l'en-tête dit « à remplir à la
+    // main ». Un garde-fou qui reproche à une main d'arrondir cesse d'être lu (leçon L4).
+    //
+    // LA RÈGLE EST DONC CELLE-CI, et elle n'invente aucun chiffre : le séquentiel annoncé doit
+    // tomber DANS l'intervalle des passages séquentiels réellement chronométrés ce jour-là. Un
+    // arrondi y tombe toujours ; un chiffre pris sur un autre jour, une autre machine, ou écrit de
+    // mémoire en tombe dehors. Le nombre de mesures du jour fait le seuil, personne d'autre.
+    const secondes = duJour.map((r) => Math.round(r.totalMs / 1000));
+    const bas = Math.min(...secondes), haut = Math.max(...secondes);
+    const dedans = l.sequentielAnnonce >= bas && l.sequentielAnnonce <= haut;
+    const proche = duJour.reduce((x, y) => (Math.abs(y.totalMs / 1000 - l.sequentielAnnonce) < Math.abs(x.totalMs / 1000 - l.sequentielAnnonce) ? y : x));
+    const mesure = Math.round(proche.totalMs / 1000);
+    const ecartPct = mesure > 0 ? +(Math.abs(mesure - l.sequentielAnnonce) / mesure * 100).toFixed(1) : 0;
+    verdicts.push({ ...l, mesure, bas, haut, mesures: secondes.length, ecartPct, succes: proche.succes,
+      etat: dedans ? "confirmé" : "à revoir",
+      pourquoi: dedans
+        ? `${secondes.length} passage(s) séquentiel(s) chronométré(s) le ${l.date}, entre ${bas} et ${haut} s : le chiffre annoncé tombe dedans (le plus proche est à ${mesure} s, ${ecartPct} % d'écart)`
+        : `${secondes.length} passage(s) séquentiel(s) chronométré(s) le ${l.date}, entre ${bas} et ${haut} s : ${l.sequentielAnnonce} s annoncés tombent HORS de cet intervalle — le chiffre ne vient pas d'un passage de ce jour-là` });
+  }
+  return { mesurable: true, verdicts, confrontes: verdicts.filter((v) => v.etat === "confirmé" || v.etat === "à revoir").length, total: verdicts.length };
+}
+
+export function formatConfrontationDesPartsLines(c) {
+  if (!c?.mesurable) return [`FILET EN PARTS — 🚨 PAS MESURÉ : ${c?.pourquoi ?? "raison inconnue"}`];
+  const l = [`FILET EN PARTS — ${c.confrontes} ligne(s) confrontée(s) sur ${c.total} du registre écrit à la main :`];
+  for (const v of c.verdicts) {
+    const marque = v.etat === "confirmé" ? "✅" : v.etat === "à revoir" ? "⚠️" : "·";
+    l.push(`  ${marque} ${v.date} — ${v.parts} parts en ${v.partsSecondes} s, séquentiel annoncé ${v.sequentielAnnonce ?? "—"} s : ${v.pourquoi}`);
+  }
+  l.push("  Ce lecteur CONFRONTE, il ne corrige jamais : le registre est écrit à la main, et une main a le droit d'arrondir. Il ne parle que lorsque le chiffre annoncé tombe HORS de l'intervalle des passages réellement chronométrés ce jour-là — un seuil que les mesures du jour fixent elles-mêmes, jamais un chiffre choisi.");
+  return l;
+}
+
 // LE GAIN NE SE LIT QUE SUR DEUX RELEVÉS COMPARABLES. Deux exécutions dont l'une était rouge ne se
 // comparent pas : la rouge s'est arrêtée en chemin, donc elle est forcément « plus rapide ».
 export function comparerDeuxReleves(avant = null, apres = null) {
@@ -1405,6 +1496,11 @@ export function enqueter({ root = ROOT, lire = null, existe = null, durees = {},
     // qu'il a coûté en protection. Les deux se lisent sur l'HISTORIQUE, jamais sur un relevé seul.
     gain: (() => { const h = lireHistorique({ root, lire: lireF }); return h.length >= 2 ? comparerDeuxReleves(h[h.length - 2], h[h.length - 1]) : { mesurable: false, pourquoi: `un seul relevé chronométré (${h.length}) : avec un seul on connaît un état, jamais un effet` }; })(),
     protection: (() => { const r = lireRobustesse({ root, lire: lireF }); return r.length >= 2 ? comparerLaProtection(r[r.length - 2], r[r.length - 1]) : { mesurable: false, pourquoi: `${r.length} passe(s) de robustesse archivée(s) : il en faut deux pour dire ce qu'un allègement a coûté — lancer \`node scripts/ezechiel-les-tests.mjs robustesse\`` }; })(),
+    // LE REGISTRE ÉCRIT À LA MAIN DE FILET-EN-PARTS, CONFRONTÉ À CE QUE LA MACHINE A ENREGISTRÉ
+    // (2026-09-29, tâche #1208). Il rejoint le rapport plutôt que de vivre dans une sous-commande :
+    // un mécanisme qui ne sort pas du script est une intention (leçon L2), et la question qu'il
+    // pose — « le gain annoncé est-il celui qu'on a mesuré ? » — est exactement celle de cet outil.
+    parts: confronterLesParts({ root, lire }),
   };
 }
 
@@ -1425,6 +1521,8 @@ export function formatEnqueteLines(e) {
   L.push("");
 
   for (const l of formatGainLines(e.gain, e.protection)) L.push(l);
+  L.push("");
+  for (const l of formatConfrontationDesPartsLines(e.parts)) L.push(l);
   L.push("");
 
   L.push("=== LA CHAÎNE RÉELLE, lue dans les crochets ===");

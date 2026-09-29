@@ -171,3 +171,32 @@ dire pourquoi se lit comme une régression du détecteur.
 
 **La classe, pas l'occurrence** (leçon L37) : c'est la même famille que la tâche #1074 — une
 population annoncée sans en retirer la part déjà expliquée.
+
+## Le chiffre écrit à la main, confronté à ce que la machine a enregistré (2026-09-29, tâche #1208)
+
+**D'où ça vient** : data-archangel signale depuis la tâche #490 des données FRAÎCHES que personne
+d'autre que leur producteur ne lit. `docs/filet-en-parts/index.md` en faisait partie — et son
+contenu n'est pas anodin : chaque ligne porte une **comparaison écrite à la main** (« 44 s en 4
+parts, contre 78 s en séquentiel »), exactement le genre de chiffre que l'Article 24 refuse de
+laisser sans vérification. Le registre le dit lui-même en tête : « à remplir à la main ».
+
+**Pourquoi le lecteur vit ICI** : EZECHIEL est le seul qui tienne le relevé chronométré des passages
+SÉQUENTIELS, écrit par la machine. Confronter les deux, c'est vérifier une affirmation contre une
+mesure — jamais recalculer une donnée déjà calculée (leçon L29, qui interdit le second calcul
+divergent).
+
+**Le seuil se DÉRIVE, il ne se choisit pas (BP5)** : la première version réutilisait la marge de
+bruit de 3 % et signalait « à revoir » sur 78 s annoncés contre 75 s mesurés — un arrondi de main
+parfaitement légitime. Un garde-fou qui reproche à une main d'arrondir cesse d'être lu (leçon L4).
+La règle est donc que **le chiffre annoncé doit tomber DANS l'intervalle des passages réellement
+chronométrés ce jour-là** : un arrondi y tombe toujours, un chiffre pris sur un autre jour, une
+autre machine ou écrit de mémoire en tombe dehors. Ce sont les mesures du jour qui font le seuil.
+
+**Sans relevé ce jour-là, il s'abstient** : « ni confirmé ni démenti », jamais une accusation — un
+jour sans mesure ne dit rien du chiffre annoncé (leçon L5).
+
+**Mesuré** : data-archangel passe de 6 données fraîches sans lecteur à 5, et la seule ligne du
+registre est CONFIRMÉE — 78 s annoncés, cinq passages ce jour-là entre 65 et 106 s.
+
+**La commande** : c'est une section du rapport ordinaire (`node scripts/ezechiel-les-tests.mjs`),
+pas une sous-commande — un mécanisme qui ne sort pas du script est une intention (leçon L2).
