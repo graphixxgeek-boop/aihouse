@@ -11652,6 +11652,29 @@ await testVerrousDOuverture();
   assert.equal(natureDuDocument('docs/referentiel/principes.md').cle, 'reference', 'le référentiel est testé AVANT le motif large des dossiers d\'outils, sinon il tomberait en « rapport »');
   assert.equal(natureDuDocument('docs/suivi/sessions/x.md').cle, 'suivi', 'idem pour le suivi');
   assert.equal(natureDuDocument('docs/strategies/x-strategie.md').cle, 'strategie', 'idem pour les stratégies');
+  // LES TROIS FAMILLES DE LA CHARTE (2026-09-29, tâche #1230) — et ce test existe parce qu'une
+  // phrase fausse a failli entrer en tête du document le plus lu du projet. J'allais écrire « ce
+  // document est la charte du JEU » ; mesuré, 10 Articles sur 33 parlent du Jeu et 19 de
+  // l'outillage. Le classement est un JUGEMENT (donc une liste manuelle déclarée, Article 24) ;
+  // ce qui est mécanisé est sa COUVERTURE, dans les deux sens.
+  const moise = await import('../scripts/moise-tables-de-loi.mjs');
+  const charteReelle = fs.readFileSync(new URL('../CLAUDE.md', import.meta.url), 'utf8');
+  const familles = moise.findArticlesSansFamille(charteReelle);
+  assert.ok(familles.mesurable, 'le classement se vérifie contre la charte RÉELLE — un zéro non mesuré se lirait comme un zéro mesuré (L5)');
+  assert.deepEqual(familles.horsClassement, [], 'tout Article réel de CLAUDE.md appartient à exactement une famille — un Article ajouté demain et jamais classé serait invisible, et c\'est la copie qui se périme en silence que l\'Article 24 interdit');
+  assert.deepEqual(familles.introuvables, [], 'et aucune famille ne réclame un Article qui n\'existe plus (les variantes « bis » exceptées : l\'extraction ne lit que des numéros entiers, limite déclarée)');
+  // IL DOIT MORDRE DANS LES DEUX SENS, éprouvé sur des tables injectées — jamais sur le disque (L40) :
+  assert.deepEqual(moise.findArticlesSansFamille('', { table: [{ article: 99 }] }).horsClassement, ['99'], 'un Article réel que personne ne classe est signalé');
+  assert.deepEqual(
+    moise.findArticlesSansFamille('', { table: [{ article: 1 }], familles: { x: { articles: [1, 77] } } }).introuvables,
+    ['77'],
+    'et un Article classé qui a disparu de la charte l\'est aussi',
+  );
+  assert.equal(moise.familleDeLArticle(0), 'jeu', 'l\'Article 0 est du JEU — c\'est l\'esprit de Lia et Noé, et lui seul');
+  assert.equal(moise.familleDeLArticle(31), 'agence', 'l\'Article 31 (tout passe par un outil) est de l\'AGENCE : il n\'a rien à voir avec les personnages');
+  assert.equal(moise.familleDeLArticle(16), 'collaboration', 'et l\'Article 16 (les questions de vérification) ne gouverne ni l\'un ni l\'autre, mais notre façon de travailler ensemble');
+  assert.equal(moise.familleDeLArticle(404), null, 'un Article inconnu rend null plutôt qu\'une famille par défaut — un axe qui range tout ne range rien (L11)');
+
   assert.equal(natureDuDocument('CLAUDE.md').cle, 'loi', 'la charte OBLIGE — elle ne décrit pas, et aucun chemin ne peut le dire : c\'est la seule liste écrite à la main de cet axe, déclarée comme telle (Article 24)');
   assert.equal(natureDuDocument('docs/outil-resilience-api.md').cle, 'blueprint', 'l\'unique exception déclarée : CLAUDE.md dit en toutes lettres que ce fichier est le blueprint de Smart Breaker et « garde son nom d\'avant le surnom » — la raison est historique, aucun suffixe ne peut la trahir');
   assert.equal(natureDuDocument('docs/un-fichier-que-rien-ne-reconnait.md').cle, 'indeterminee', 'ET IL DOIT SAVOIR DIRE QU\'IL NE SAIT PAS : un axe qui range tout par défaut ne range rien (leçon L11)');

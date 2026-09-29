@@ -1446,4 +1446,59 @@ async function main() {
   imprimerLeRappelTournant();
 }
 
+// --- LES TROIS FAMILLES DE LA CHARTE (2026-09-29, tâche #1230) -------------------------------
+//
+// CE QUI L'A FAIT NAÎTRE, ET C'ÉTAIT UNE ERREUR SUR LE POINT D'ÊTRE COMMISE. J'allais écrire en
+// tête de CLAUDE.md « ce document est la charte du JEU ». L'utilisateur a objecté que beaucoup de
+// ses règles sont cruciales pour le fonctionnement de l'AGENCE. Mesuré : il avait raison, et
+// largement — **10 Articles sur 33 parlent du Jeu, 19 parlent de l'outillage, 4 de la
+// collaboration**. La phrase aurait été fausse pour 75 % du document le plus lu du projet.
+//
+// À QUOI SERT LE CLASSEMENT, au-delà de la ligne de portée : la famille AGENCE **est** le pack de
+// règles qu'un client devrait reprendre dans son propre document quand il installe l'Agence sur un
+// projet déjà en cours. Cette liste ne s'invente pas, elle se LIT — c'est la démarche du projet,
+// révéler plutôt qu'inventer.
+//
+// POURQUOI UNE LISTE À LA MAIN, ET POURQUOI ELLE EST LÉGITIME (Article 24, seconde exception) :
+// ranger un Article par famille est un JUGEMENT, jamais un signal mécanique — l'Article 8 sert le
+// Jeu par son objet et l'Agence par sa mécanique. Sa nature volontairement manuelle est donc
+// déclarée ici, noir sur blanc, comme l'Article 24 l'exige. **Ce qui est mécanisé est la
+// COUVERTURE** : `findArticlesSansFamille()` refuse qu'un Article réel de CLAUDE.md manque au
+// classement, ou qu'un Article classé n'existe plus. Sans ce garde-fou, le PROCHAIN Article écrit
+// (son numéro n'est pas cité ici : un nombre qui suit le mot « Article » est lu comme une
+// citation par le détecteur de renvois morts, et mon premier jet en a fabriqué un fantôme)
+// resterait invisible, et c'est exactement la copie qui se périme en silence.
+export const FAMILLES_DE_LA_CHARTE = {
+  jeu: { icone: "🎭", quoi: "le contenu, les personnages, la conversation — ne part JAMAIS avec l'Agence", articles: [0, 1, 2, 4, 8, 9, 10, 11, 12, 17] },
+  agence: { icone: "⚙️", quoi: "les conditions de fonctionnement de l'outillage — LE PACK que reprend un client", articles: [3, 5, 6, 7, 13, 18, 19, 20, "20bis", 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32] },
+  collaboration: { icone: "🤝", quoi: "la façon dont l'agent et l'humain travaillent ensemble — chaque client la réécrit à sa main", articles: [14, 15, 16, 29] },
+};
+
+export function familleDeLArticle(numero, familles = FAMILLES_DE_LA_CHARTE) {
+  const n = String(numero);
+  for (const [cle, f] of Object.entries(familles)) if (f.articles.some((a) => String(a) === n)) return cle;
+  return null;
+}
+
+// Les deux sens de l'écart, jamais un seul : un Article réel qu'aucune famille ne réclame, et un
+// Article classé qui n'existe plus dans la charte. Le second arrive à un renommage, le premier à
+// chaque ajout — et c'est le plus probable des deux.
+export function findArticlesSansFamille(texteCharte = "", { familles = FAMILLES_DE_LA_CHARTE, table = null } = {}) {
+  // `buildClaudeMdRuleTable()` rend { rows, redondances }, jamais un tableau nu — et le premier
+  // passage de ce garde-fou contre le vrai dépôt l'a prouvé en rendant « 33 Articles introuvables »
+  // là où il n'en manquait aucun. Encore un signal ADJACENT (une sortie mal dépliée) lu comme le
+  // signal visé (un classement incomplet). Un appelant peut aussi passer directement ses lignes.
+  const brut = table ?? buildClaudeMdRuleTable(texteCharte);
+  const rows = Array.isArray(brut) ? brut : (brut?.rows ?? []);
+  const reels = rows.map((r) => String(r.article));
+  const classes = Object.values(familles).flatMap((f) => f.articles.map(String));
+  const horsClassement = reels.filter((n) => !classes.includes(n));
+  // Un Article classé mais introuvable : on ne le réclame que s'il n'est pas une variante « bis »,
+  // que l'extraction par numéros entiers ne sait pas lire — sa limite est déclarée, pas un écart.
+  const introuvables = classes.filter((n) => !reels.includes(n) && !/bis$/.test(n));
+  return { horsClassement, introuvables, mesurable: reels.length > 0,
+    pourquoi: reels.length ? null : "la charte n'a rendu aucun Article — sans elle, « rien à signaler » et « je n'ai pas pu regarder » s'écrivent tous les deux zéro (L5)" };
+}
+
+
 if (import.meta.url === `file://${process.argv[1]}`) main();
