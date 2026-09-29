@@ -487,3 +487,40 @@ plus rien.
 
 **Mon avis, demandé ou non, et il vaut ce qu'il vaut puisque je suis partie prenante** : l'issue 3.
 Elle répond au cas réel sans ouvrir l'échappatoire que l'issue 2 offrirait à un commit de code.
+
+## #1175 — deux motifs de numéro de tâche dans le même fichier, qui ne s'accordent pas
+
+*(2026-09-29. Première trouvaille du détecteur de motifs quasi-jumeaux, tâche #1174.)*
+
+| Numéro | Sujet | Décision |
+|---|---|---|
+| #1175 | Outillage — deux motifs de numéro de tâche dans `god-of-all-process.mjs`, qui ne s'accordent ni en bas ni en haut de l'échelle | à trancher |
+
+**LE FAIT, en deux lignes.** `scripts/god-of-all-process.mjs` porte deux motifs qui lisent tous deux
+un numéro de tâche du même registre :
+
+- `MOTIF_NUMERO = /#(\d{1,5})\b/g` — accepte 1 à 5 chiffres ;
+- `MOTIF_NUMERO_COMMIT = /#(\d{2,4})\b/g` — accepte 2 à 4 chiffres.
+
+**POURQUOI PERSONNE NE L'A VU** : le registre est à #1175, donc quatre chiffres. Les deux motifs
+s'accordent sur toute la population réelle. C'est exactement la forme du défaut #1171 — la même
+notion écrite deux fois, presque pareil — mais prise **avant** qu'elle ne coûte quoi que ce soit.
+
+**CE QUI CASSERA, ET OÙ** : à #10000, le second cesse de reconnaître les numéros cités dans les
+messages de commit, sans rien dire. Or c'est lui qui alimente la chaîne rapport → tâche de
+l'Article 28 (`checkActionChain`), celle qui vérifie qu'une tâche annoncée existe pour de vrai. Une
+référence morte ressemble à un lien, ce qui est pire qu'une absence.
+
+**Les trois issues, et elles lui appartiennent :**
+
+1. **Ne rien changer** — les deux bornes sont des choix délibérés, et le cas ne se présentera pas
+   avant plusieurs mois de travail.
+2. **Élargir le second à `{2,5}`** — le plus petit geste possible. Contrepartie : il attraperait
+   aussi un `#12345` qui ne serait pas un numéro de tâche.
+3. **Une seule constante, lue par les deux** — `MOTIF_NUMERO_DE_TACHE` dans `criticite.mjs`, où vit
+   déjà le format des lignes de tâche. C'est la vraie réponse au sens de #1171 : on corrige le motif
+   là où il est DÉFINI, jamais chez celui qui s'en plaint.
+
+**Mon avis, et je suis partie prenante puisque c'est mon outil qui a trouvé ça** : l'issue 3, mais
+elle n'est pas anodine — elle change ce que **deux** lecteurs reconnaissent, dans le fichier même
+qui surveille les process. C'est pour ça qu'elle attend une décision au lieu d'être appliquée.

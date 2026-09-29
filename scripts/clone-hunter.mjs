@@ -655,6 +655,15 @@ export function formatClusterSummary(cluster) {
 function main() {
   printReportHeader({ tool: "clone-hunter", title: "CLONE-HUNTER — blocs de code dupliqués", scriptPath: "scripts/clone-hunter.mjs" });
   recordCliUsage("clone-hunter");
+  // LA TROISIÈME QUESTION A SA PROPRE COMMANDE, et elle n'est pas fondue dans le passage complet :
+  // les deux premiers détecteurs cherchent du code RECOPIÉ et rendent un plan d'action ; celui-ci
+  // pose des QUESTIONS sur des notions écrites plusieurs fois. Les mêler ferait entrer dans le plan
+  // des lignes que l'outil ne sait justement pas trancher (cf. son commentaire d'en-tête).
+  if (process.argv[2] === "motifs") {
+    const r = motifsQuasiJumeaux(collectFileLines(DEFAULT_ROOTS));
+    for (const l of formatMotifsQuasiJumeauxLines(r)) console.log(l);
+    return;
+  }
   // LE CORPUS AVANT TOUT VERDICT (2026-09-25, chantier #206). Mesuré le 2026-09-23 :
   // `findDuplicateBlocks` et `findNearDuplicateBlocks` rendent tous deux `[]` sur une entrée vide,
   // soit exactement ce qu'ils rendent sur un dépôt sans le moindre doublon.
@@ -729,6 +738,186 @@ function main() {
     libelle: (c) => `[${c.detecteurs.join("+")}] ${formatClusterSummary(c)} — ${motifDuCluster(c).motif}`,
     tache: (c) => motifDuCluster(c).tache });
   imprimerPlanDaction(plan);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LES MOTIFS QUASI-JUMEAUX — la MÊME NOTION écrite N fois, presque pareil (2026-09-29, #1174)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// POURQUOI CE TROISIÈME DÉTECTEUR EXISTE, ET IL EST NÉ D'UN DÉGÂT MESURÉ. Les deux premiers
+// cherchent du code RECOPIÉ : des lignes identiques (v1), ou identiques à un renommage près (v2).
+// Ni l'un ni l'autre ne peut voir le défaut qui a coûté le plus cher cette semaine, parce qu'il ne
+// duplique AUCUN bloc : quatre fonctions de `check-suivi-fidelity.mjs` testaient la clôture d'une
+// tâche à la main, chacune avec son propre petit motif — `/^termin[ée]e/i` pour trois d'entre
+// elles, `/^termin[ée]/i` pour la quatrième. Une lettre d'écart, quatre lignes isolées dans quatre
+// fonctions différentes : invisible à toute recherche de bloc recopié.
+//
+// LE COÛT, LUI, ÉTAIT ÉNORME : 317 lignes du registre sur 1 103 — 29 % — étaient lues « encore
+// ouverte » par un lecteur et « terminée » par un autre (tâche #1171). Et ce n'était pas la
+// première fois : le même défaut avait déjà été corrigé chez UN appelant le 2026-09-23, puis chez
+// UN AUTRE le 2026-09-24, la leçon écrite en commentaire à chaque fois, et jamais mécanisée.
+//
+// CE QU'IL CHERCHE : deux littéraux d'expression régulière qui se ressemblent presque — une ou
+// deux modifications de caractères — sans être identiques. C'est la signature exacte du défaut :
+// quelqu'un a réécrit de mémoire une notion qui existait déjà, et sa version diverge d'un détail.
+//
+// CE QU'IL NE FAIT JAMAIS, ET C'EST DÉLIBÉRÉ : trancher. Deux motifs presque identiques peuvent
+// parfaitement être deux choses différentes (`/^\|\s*-+\s*\|/` reconnaît la ligne de séparation
+// d'un tableau, `/^\|\s*\d+\s*\|/` une ligne de tâche : deux caractères d'écart, deux intentions
+// opposées). Chaque famille sort donc comme une QUESTION — même discipline que
+// `redondanceEntreOutils()`, et pour la même raison : un outil qui aurait tranché aurait fondu les
+// deux mauvais motifs.
+
+// La distance maximale entre deux écritures pour qu'on les tienne pour jumelles. Elle se DÉRIVE du
+// corpus réel (Article 24) plutôt que de se recopier : on essaie les valeurs croissantes et on
+// garde la dernière AVANT que le regroupement ne s'emballe. Mesuré sur ce dépôt le 2026-09-29 :
+// à 1 → 15 familles, la plus grosse à 4 membres · à 2 → 36 familles, toujours 4 · à 3 → 57
+// familles et la plus grosse passe à 9 · à 4 → 15. Le saut de 4 à 9 est le moment où la fermeture
+// transitive se met à enchaîner des motifs qui n'ont plus rien à voir : un qui ressemble à un
+// deuxième qui ressemble à un troisième finit par tout relier. On s'arrête juste avant.
+export const DISTANCES_A_ESSAYER = [1, 2, 3, 4];
+export const FACTEUR_D_EMBALLEMENT = 2;   // la plus grosse famille qui double : le signal d'arrêt
+
+export const LONGUEUR_MINIMALE_DU_MOTIF = 8;
+export const MOTIF_DE_LITTERAL_REGEX = /\/((?:[^/\\\n[]|\\.|\[(?:[^\]\\]|\\.)*\])+)\/([gimsuy]*)/g;
+// Un motif sans le moindre métacaractère n'est qu'un mot cherché dans du texte : deux mots proches
+// (`/corrige/` et `/corriger/`) ne sont pas deux écritures d'une même notion, ce sont deux mots.
+export const MOTIF_A_UN_METACARACTERE = /[\\^$*+?{}[\]|]/;
+
+// Distance de Levenshtein, ABANDONNÉE dès que l'écart de longueur dépasse la borne : sans ce
+// raccourci, comparer 1 200 motifs deux à deux coûterait des centaines de milliers de calculs
+// complets pour des paires qu'on sait déjà trop éloignées.
+export function distanceEntreEcritures(a, b, max) {
+  if (Math.abs(a.length - b.length) > max) return Infinity;
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 0; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+  }
+  return d[a.length][b.length];
+}
+
+// Relève chaque littéral d'expression régulière du corpus, avec TOUS ses lieux d'apparition.
+// `check-house.mjs` est écarté et la raison est écrite : le filet fabrique exprès des variantes
+// proches d'un même motif pour vérifier qu'un détecteur mord — les compter ferait crier l'outil
+// sur les contre-tests destinés à le protéger, ce qui est la façon la plus sûre de le faire taire.
+export const FICHIERS_HORS_RELEVE = ["check-house.mjs"];
+
+export function releverLesMotifs(fileLines = {}, { horsReleve = FICHIERS_HORS_RELEVE } = {}) {
+  const trouves = new Map();
+  // `collectFileLines()` rend une Map, un test en écrit plus volontiers une, et un objet nu est la
+  // forme la plus naturelle à écrire à la main : les trois sont acceptées plutôt qu'une seule.
+  // Le premier jet ne lisait qu'un objet nu et a rendu « 0 motif relevé » sur le vrai dépôt —
+  // une non-mesure honnête, mais une non-mesure quand même, et c'est le passage réel qui l'a dit
+  // (Article 25 : un outil qui n'a jamais tourné contre le vrai dépôt est une intention).
+  const entrees = fileLines instanceof Map ? fileLines.entries() : Object.entries(fileLines);
+  for (const [fichier, lignes] of entrees) {
+    if (horsReleve.some((h) => fichier.endsWith(h))) continue;
+    lignes.forEach((ligne, i) => {
+      if (/^\s*(?:\/\/|\*)/.test(ligne)) return;   // un motif cité en commentaire est une MENTION
+      for (const m of String(ligne).matchAll(MOTIF_DE_LITTERAL_REGEX)) {
+        const source = m[1];
+        if (source.length < LONGUEUR_MINIMALE_DU_MOTIF) continue;
+        if (!MOTIF_A_UN_METACARACTERE.test(source)) continue;
+        if (!trouves.has(source)) trouves.set(source, []);
+        trouves.get(source).push({ fichier, ligne: i + 1 });
+      }
+    });
+  }
+  return trouves;
+}
+
+// Regroupe par fermeture transitive à une distance donnée, et rend les familles de deux membres ou
+// plus. Deux écritures trouvées sur LA MÊME LIGNE ne sont jamais reliées : une énumération de
+// vocabulaire (`[/\bcorrige\b/, /\bcorriger\b/]`) est une liste voulue, pas un oubli.
+export function familiesDeMotifs(trouves, distance) {
+  const sources = [...trouves.keys()];
+  const parent = new Map(sources.map((s) => [s, s]));
+  const racine = (x) => { while (parent.get(x) !== x) x = parent.get(x); return x; };
+  const memeLigne = (a, b) => trouves.get(a).some((pa) => trouves.get(b).some((pb) => pa.fichier === pb.fichier && pa.ligne === pb.ligne));
+  for (let i = 0; i < sources.length; i++) {
+    for (let j = i + 1; j < sources.length; j++) {
+      const d = distanceEntreEcritures(sources[i], sources[j], distance);
+      if (d === 0 || d > distance) continue;
+      if (memeLigne(sources[i], sources[j])) continue;
+      const a = racine(sources[i]); const b = racine(sources[j]);
+      if (a !== b) parent.set(a, b);
+    }
+  }
+  const parRacine = new Map();
+  for (const s of sources) {
+    const r = racine(s);
+    if (!parRacine.has(r)) parRacine.set(r, []);
+    parRacine.get(r).push(s);
+  }
+  return [...parRacine.values()].filter((g) => g.length > 1);
+}
+
+// LE SEUIL SE DÉRIVE DU CORPUS, il ne se recopie pas. On monte tant que la plus grosse famille ne
+// s'emballe pas ; le premier palier qui la fait doubler est le signe que la fermeture transitive
+// relie des motifs sans rapport, et on rend le palier PRÉCÉDENT. La valeur retenue est imprimée
+// avec la série qui l'a produite : un seuil dont on ne voit pas la dérivation redevient un chiffre
+// écrit à la main que personne n'osera toucher.
+export function deriverLaDistance(trouves, { aEssayer = DISTANCES_A_ESSAYER, facteur = FACTEUR_D_EMBALLEMENT } = {}) {
+  const paliers = [];
+  let retenue = aEssayer[0];
+  for (const d of aEssayer) {
+    const familles = familiesDeMotifs(trouves, d);
+    const plusGrosse = familles.reduce((m, g) => Math.max(m, g.length), 0);
+    const precedent = paliers.at(-1);
+    paliers.push({ distance: d, familles: familles.length, plusGrosse });
+    if (precedent && plusGrosse >= precedent.plusGrosse * facteur) break;
+    retenue = d;
+  }
+  return { retenue, paliers };
+}
+
+export function motifsQuasiJumeaux(fileLines = {}, { distance = null, horsReleve = FICHIERS_HORS_RELEVE } = {}) {
+  const trouves = releverLesMotifs(fileLines, { horsReleve });
+  if (trouves.size < 2) {
+    return { mesurable: false, familles: [], motifsLus: trouves.size,
+      pourquoi: `${trouves.size} motif(s) relevé(s) dans le corpus : il n'y a rien à comparer, ce qui n'est PAS la même chose que « aucune divergence » (leçons L5/L11)` };
+  }
+  const derivation = distance === null ? deriverLaDistance(trouves) : { retenue: distance, paliers: [] };
+  const brutes = familiesDeMotifs(trouves, derivation.retenue);
+  const familles = brutes.map((membres) => {
+    const lieux = membres.flatMap((s) => trouves.get(s).map((o) => ({ ...o, source: s })));
+    const fichiers = [...new Set(lieux.map((l) => l.fichier))];
+    return { membres: membres.sort(), lieux, fichiers, ecritures: membres.length };
+  })
+    // LE CLASSEMENT DIT LEQUEL REGARDER EN PREMIER, et le critère n'est pas le nombre d'écritures
+    // mais le nombre de FICHIERS. Deux écritures d'une même notion dans un seul fichier est une
+    // question de style ; les mêmes dans six fichiers, c'est six lecteurs qui répondront
+    // différemment à la même question le jour où l'un d'eux sera corrigé et pas les autres.
+    .sort((a, b) => (b.fichiers.length - a.fichiers.length) || (b.ecritures - a.ecritures));
+  return { mesurable: true, familles, motifsLus: trouves.size, distance: derivation.retenue, paliers: derivation.paliers,
+    horsPortee: "une RESSEMBLANCE d'écriture, jamais une identité d'intention : deux motifs à deux caractères d'écart peuvent viser deux choses opposées. Chaque famille est une question posée, jamais un doublon constaté.",
+    pourquoi: familles.length
+      ? `${familles.length} famille(s) de motifs quasi-jumeaux sur ${trouves.size} motifs relevés, à une distance dérivée de ${derivation.retenue}`
+      : `aucune famille : les ${trouves.size} motifs relevés sont soit identiques entre eux, soit franchement différents` };
+}
+
+export function formatMotifsQuasiJumeauxLines(r, { limite = 12 } = {}) {
+  if (!r?.mesurable) return ["", `🚨 MOTIFS QUASI-JUMEAUX : PAS MESURÉ — ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = ["", "=== LA MÊME NOTION ÉCRITE PLUSIEURS FOIS, PRESQUE PAREIL — des QUESTIONS, jamais des verdicts ==="];
+  if (r.paliers?.length) {
+    L.push(`  Distance retenue : ${r.distance}, DÉRIVÉE du corpus — ${r.paliers.map((p) => `d=${p.distance} : ${p.familles} familles, plus grosse ${p.plusGrosse}`).join(" · ")}. On garde le dernier palier avant que la plus grosse famille ne double.`);
+  }
+  if (!r.familles.length) { L.push(`  ✅ ${r.pourquoi}`); return L; }
+  L.push(`  ${r.familles.length} famille(s) sur ${r.motifsLus} motifs relevés. Classées par nombre de FICHIERS concernés : une notion écrite de six façons dans six fichiers, ce sont six lecteurs qui divergeront le jour où l'un sera corrigé seul.`);
+  for (const f of r.familles.slice(0, limite)) {
+    L.push(`  · ${f.ecritures} écritures dans ${f.fichiers.length} fichier(s) — MÊME NOTION, OU DEUX NOTIONS DIFFÉRENTES ?`);
+    for (const m of f.membres) {
+      const ou = f.lieux.filter((l) => l.source === m);
+      L.push(`      /${m}/   ← ${ou.slice(0, 3).map((o) => `${o.fichier}:${o.ligne}`).join(", ")}${ou.length > 3 ? ` (+${ou.length - 3})` : ""}`);
+    }
+  }
+  if (r.familles.length > limite) L.push(`  … et ${r.familles.length - limite} famille(s) de plus.`);
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();

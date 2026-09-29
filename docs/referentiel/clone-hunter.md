@@ -234,3 +234,84 @@ qu'on sache pourquoi.
 différents, peuvent être le même problème — et seul un humain le voit. Le regroupement complet de
 l'enquête du 2026-09-22 (29 alertes → 14 problèmes) n'est pas mécanisable, et prétendre le contraire
 donnerait un chiffre faux avec l'air d'être juste.
+
+---
+
+## Le troisième détecteur — LA MÊME NOTION ÉCRITE PLUSIEURS FOIS, PRESQUE PAREIL
+
+*(2026-09-29, tâche #1174. `node scripts/clone-hunter.mjs motifs`.)*
+
+**LA PHRASE DE LA FICHE CI-DESSUS EST CELLE QUI A APPELÉ CE DÉTECTEUR** : « deux blocs au texte
+différent, dans deux fichiers différents, peuvent être le même problème — et seul un humain le
+voit ». Elle reste vraie en général. Mais il en existe une forme très précise que la machine SAIT
+voir, et le dépôt vient d'en payer le prix fort.
+
+**LE DÉGÂT QUI L'A FAIT NAÎTRE, mesuré le jour même (tâche #1171).** Quatre fonctions de
+`scripts/check-suivi-fidelity.mjs` testaient la clôture d'une tâche à la main, chacune avec son
+propre petit motif : `/^termin[ée]e/i` pour trois d'entre elles, `/^termin[ée]/i` pour la
+quatrième. **Une lettre d'écart.** Résultat : **317 lignes du registre sur 1 103 — 29 %** étaient
+lues « encore ouverte » par un lecteur et « terminée » par un autre. Aucun bloc n'était dupliqué,
+donc ni v1 (lignes identiques) ni v2 (renommage) ne pouvaient le voir. Et ce n'était pas la première
+fois : le même défaut avait été corrigé chez UN appelant le 2026-09-23, chez UN AUTRE le
+2026-09-24, la leçon écrite en commentaire à chaque fois, et jamais mécanisée.
+
+### Ce qu'il fait
+
+Il relève chaque **littéral d'expression régulière** du corpus et regroupe en **FAMILLES** ceux qui
+se ressemblent à une ou deux modifications de caractères près sans être identiques. C'est la
+signature exacte du défaut : quelqu'un a réécrit de mémoire une notion qui existait déjà, et sa
+version diverge d'un détail.
+
+### Les quatre choix de conception, et chacun a sa raison
+
+- **Des FAMILLES, jamais des paires.** Une date écrite de quatre façons produit six paires et
+  **un** problème. Le premier passage réel l'a montré : `/(\d{4}-\d{2}-\d{2})/`,
+  `/\d{4}-\d{2}-\d{2}/`, `/^\d{4}-\d{2}-\d{2}/` et `/^\d{4}-\d{2}-\d{2}$/` **dans neuf fichiers**.
+- **Classées par nombre de FICHIERS, jamais par nombre d'écritures.** Deux écritures dans un seul
+  fichier est une question de style ; les mêmes dans neuf fichiers, ce sont neuf lecteurs qui
+  divergeront le jour où l'un sera corrigé seul — exactement le scénario de #1171.
+- **La distance se DÉRIVE du corpus** (Article 24), elle ne se recopie pas : on monte tant que la
+  plus grosse famille ne double pas, et la dérivation s'imprime avec le résultat. Mesuré le
+  2026-09-29 : d=1 → 15 familles (plus grosse 4) · d=2 → 36 (4) · d=3 → 57 (**9**) · d=4 → 73 (15).
+  Le saut à 9 est le moment où la fermeture transitive enchaîne des motifs sans rapport.
+- **Chaque famille est une QUESTION, jamais un verdict.** Même discipline que
+  `redondanceEntreOutils()`, et pour la même raison : `/^\|\s*-+\s*\|/` reconnaît la ligne de
+  séparation d'un tableau et `/^\|\s*\d+\s*\|/` une ligne de tâche — deux caractères d'écart, deux
+  intentions opposées. Un outil qui aurait tranché aurait fondu les deux mauvais.
+
+### Les quatre silences volontaires, écrits pour qu'on ne les « améliore » pas
+
+- **Deux motifs sur la MÊME LIGNE ne forment jamais une famille** : une énumération de vocabulaire
+  (`[/\bcorrige\b/, /\bcorriger\b/]`) est une liste voulue, pas un oubli.
+- **Un motif sans métacaractère est ignoré** : deux mots proches sont deux mots, pas deux écritures
+  d'une notion.
+- **Un motif cité en commentaire est une MENTION**, jamais une écriture — la règle que tout ce dépôt
+  applique déjà.
+- **`check-house.mjs` est hors du relevé**, et la raison est écrite dans le code : le filet fabrique
+  exprès des variantes proches pour vérifier qu'un détecteur mord. Les compter ferait crier l'outil
+  sur les contre-tests destinés à le protéger, donc le ferait taire (leçon L4).
+
+### Ce qu'il a trouvé à son premier passage réel
+
+**34 familles sur 1 235 motifs relevés**, dont :
+
+| Ce qui est écrit plusieurs fois | Écritures | Fichiers |
+|---|---|---|
+| une date `AAAA-MM-JJ` | 4 | 9 |
+| une ligne de tableau markdown | 3 | 6 |
+| un chemin `docs/simulations/` (ancré ou non) | 2 | 5 |
+| une extension de fichier source | 5 formes réparties en 2 familles | 4 + 4 |
+| un **numéro de tâche** `#NNNN` | 4 | 3 |
+
+Le dernier est le plus net, et il est **dans un seul fichier** : `god-of-all-process.mjs` porte
+`MOTIF_NUMERO = /#(\d{1,5})\b/` et `MOTIF_NUMERO_COMMIT = /#(\d{2,4})\b/`. Les deux lisent des
+numéros de tâche du même registre et ne s'accordent ni sur le bas ni sur le haut de l'échelle. Rien
+ne casse aujourd'hui (le registre est à quatre chiffres) — c'est exactement la forme du défaut
+#1171, prise avant qu'elle ne coûte quelque chose. **Non corrigé : c'est une décision, pas un
+constat** (tâche ouverte).
+
+### Ce qu'il ne fera jamais
+
+Une **RESSEMBLANCE d'écriture, jamais une identité d'intention**. Il ne lit pas ce qu'un motif veut
+dire ; il voit que deux personnes ont écrit presque la même chose. La question « est-ce la même
+notion ? » reste entière, et c'est pour ça qu'elle est posée plutôt que tranchée.

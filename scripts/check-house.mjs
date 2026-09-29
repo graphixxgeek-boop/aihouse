@@ -3084,6 +3084,73 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   console.log('Passed: estStatutTermine()/estStatutEcarte() donnent UNE seule définition de « close » et de « écartée » aux quatre lecteurs du suivi — les onze orthographes réelles du registre sont reconnues, les sept non-clôtures refusées, findOpenTasks() et categorizeTasks() ne peuvent plus diverger d\'une seule ligne (ils divergeaient de 317 sur 1 103), une tâche écartée n\'est plus reproposée comme ouverte, et findClaimedFilesMissing() contrôle enfin les clôtures écrites « Terminé » sans -e final.');
 }
 {
+  // LES MOTIFS QUASI-JUMEAUX (2026-09-29, tâche #1174) — le troisième détecteur de CLONE-HUNTER.
+  //
+  // Le défaut qu'il cherche ne duplique AUCUN bloc, donc les deux premiers détecteurs sont
+  // structurellement aveugles dessus : quatre fonctions testant la même notion à la main, chacune
+  // avec son petit motif à une lettre près. C'est ce qui a rendu 317 lignes du suivi illisibles à
+  // trois garde-fous sur quatre (#1171), après deux corrections partielles du même défaut.
+  const CH = await import('../scripts/clone-hunter.mjs');
+
+  // ── 1. LE CAS FONDATEUR, reproduit tel quel : il DOIT sortir.
+  const corpus = {
+    'a.mjs': ['if (/^termin[ée]e/i.test(s)) return true;'],
+    'b.mjs': ['const ferme = /^termin[ée]/i.test(statut);'],
+    'c.mjs': ['export const OUVERT = /^ouverte|^en cours/;'],
+  };
+  const r = CH.motifsQuasiJumeaux(corpus, { distance: 2 });
+  assert.ok(r.mesurable, 'a corpus with several patterns must be measurable');
+  assert.equal(r.familles.length, 1, 'MUST CATCH: the two spellings of "terminée" one letter apart must form exactly one family — this is the defect that made 317 rows of the registry unreadable to three guards out of four');
+  assert.equal(r.familles[0].fichiers.length, 2, 'and the family must name the two FILES concerned, because a notion written two ways in two files is two readers that will diverge the day one of them is fixed alone');
+
+  // ── 2. IL NE DIT JAMAIS « DOUBLON », il pose une question — deux motifs proches peuvent viser
+  // deux choses opposées, et l'outil qui trancherait fondrait les deux mauvais.
+  const texte = CH.formatMotifsQuasiJumeauxLines(r).join('\n');
+  assert.ok(/OU DEUX NOTIONS DIFF/.test(texte), 'each family must be printed as a QUESTION, never as a verdict: /^\\|\\s*-+\\s*\\|/ and /^\\|\\s*\\d+\\s*\\|/ are two characters apart and mean opposite things');
+  assert.ok(/HORS PORT/.test(texte), 'the limit must travel with the finding, never in a separate note');
+
+  // ── 3. DEUX MOTIFS SUR LA MÊME LIGNE NE SONT JAMAIS UNE FAMILLE : une énumération de vocabulaire
+  // est une liste voulue, pas un oubli (cas réel : /\bcorrige\b/ et /\bcorriger\b/ côte à côte).
+  const memeLigne = { 'v.mjs': ['const MOTS = [/\\bcorrige\\b/, /\\bcorriger\\b/];'] };
+  assert.deepEqual(CH.motifsQuasiJumeaux(memeLigne, { distance: 2 }).familles, [], 'two near-identical patterns written side by side on ONE line are a deliberate vocabulary list, never a forgotten duplicate');
+
+  // ── 4. UN MOT N'EST PAS UNE NOTION. Sans métacaractère, deux motifs proches sont deux mots.
+  const mots = { 'm1.mjs': ['x = /bonjourxx/;'], 'm2.mjs': ['y = /bonsoirxx/;'] };
+  assert.deepEqual(CH.motifsQuasiJumeaux(mots, { distance: 2 }).familles, [], 'a plain word searched in text is not a shared notion — without a metacharacter there is nothing to have written two ways');
+
+  // ── 5. UN CORPUS VIDE NE REND JAMAIS « AUCUNE DIVERGENCE » (leçons L5/L11).
+  const vide = CH.motifsQuasiJumeaux({});
+  assert.equal(vide.mesurable, false, 'nothing read must report UNMEASURABLE, never a clean bill');
+  assert.ok(/PAS MESUR/.test(CH.formatMotifsQuasiJumeauxLines(vide)[1]), 'and the refusal must be printed as such');
+
+  // ── 6. UN COMMENTAIRE EST UNE MENTION, JAMAIS UNE ÉCRITURE — la règle que tout ce dépôt applique.
+  const enCommentaire = { 'a.mjs': ['// on citait /^termin[ée]e/i ici'], 'b.mjs': ['const f = /^termin[ée]/i;'] };
+  assert.deepEqual(CH.motifsQuasiJumeaux(enCommentaire, { distance: 2 }).familles, [], 'a pattern quoted in a comment is a MENTION: counting it would accuse the very comments that explain the code');
+
+  // ── 7. LE SEUIL SE DÉRIVE, IL NE SE RECOPIE PAS (Article 24), et la dérivation s'imprime.
+  const derive = CH.motifsQuasiJumeaux(corpus);
+  assert.ok(derive.paliers.length >= 1 && derive.distance >= 1, 'the distance must be derived from the corpus rather than written in, and the steps kept so the choice can be re-examined');
+  assert.ok(/DÉRIVÉE du corpus/.test(CH.formatMotifsQuasiJumeauxLines(derive).join('\n')), 'and the derivation must be PRINTED: a threshold whose derivation cannot be seen becomes a hand-written figure nobody dares touch');
+  // Le garde-fou d'emballement : au palier où la plus grosse famille double, on s'arrête AVANT.
+  const paliersFictifs = CH.deriverLaDistance(new Map([['aaaaaaaaaa', [{ fichier: 'a', ligne: 1 }]], ['aaaaaaaaab', [{ fichier: 'b', ligne: 1 }]], ['zzzzzzzzzz', [{ fichier: 'c', ligne: 1 }]]]));
+  assert.ok(paliersFictifs.retenue >= 1 && paliersFictifs.paliers.length >= 1, 'the derivation must always return a usable distance, even on a tiny corpus');
+
+  // ── 8. ET LE VRAI DÉPÔT, jamais seulement des cas fabriqués (Article 25) — mais sans exiger un
+  // CHIFFRE, qui bougera à chaque commit : on exige que la mesure AIT LIEU et se tienne debout.
+  const reel = CH.motifsQuasiJumeaux(CH.collectFileLines(CH.DEFAULT_ROOTS));
+  assert.ok(reel.mesurable && reel.motifsLus > 100, `the detector must really read the repository, never conclude on an empty sweep (${reel.motifsLus} patterns read)`);
+  for (const f of reel.familles) {
+    assert.ok(f.membres.length >= 2, 'a family of one is not a family');
+    assert.ok(f.lieux.length >= f.membres.length, 'every member must carry at least one real place, otherwise the reader cannot go and look');
+    assert.ok(new Set(f.membres).size === f.membres.length, 'a pattern must never appear twice in the same family');
+  }
+  // check-house est ÉCARTÉ et la raison est écrite : ce fichier fabrique exprès des variantes
+  // proches pour vérifier qu'un détecteur mord. Les compter ferait crier l'outil sur les
+  // contre-tests destinés à le protéger — donc le ferait taire (leçon L4).
+  assert.ok(!reel.familles.some((f) => f.fichiers.some((c) => c.endsWith('check-house.mjs'))), 'the net itself must stay out of the sweep: it manufactures near-twin patterns on purpose, and accusing them would be the guard crying on its own counter-tests');
+  console.log(`Passed: CLONE-HUNTER voit maintenant la MÊME NOTION ÉCRITE PLUSIEURS FOIS, PRESQUE PAREIL (2026-09-29, tâche #1174) — le défaut qui ne duplique aucun bloc et que ses deux premiers détecteurs ne pouvaient donc pas voir. Il est né d'un dégât mesuré : quatre fonctions testant la clôture d'une tâche avec trois motifs à une lettre près, 317 lignes sur 1 103 lues à l'envers, et deux corrections partielles du même défaut en deux jours sans que rien ne le mécanise. Il sort des FAMILLES et non des paires, classées par nombre de FICHIERS parce que c'est le nombre de lecteurs qui divergeront ; sa distance se DÉRIVE du corpus et la dérivation s'imprime ; et chaque famille est une QUESTION, jamais un verdict — deux motifs à deux caractères d'écart peuvent viser deux choses opposées, et l'outil qui trancherait fondrait les deux mauvais. Premier passage réel sur ${reel.motifsLus} motifs : ${reel.familles.length} familles, dont la date du projet écrite de quatre façons dans neuf fichiers et le numéro de tâche de quatre façons dans trois.`);
+}
+{
   // splitTableRow() (2026-09-19, même relecture de fiabilité) : le découpage partagé par
   // findOpenTasks()/findUnverifiedClosures() doit survivre à un "|" littéral échappé dans une
   // description (une commande shell avec un tube, un exemple de tableau cité) sans décaler la
