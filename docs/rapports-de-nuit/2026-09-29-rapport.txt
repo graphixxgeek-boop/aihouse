@@ -305,6 +305,32 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     vraie donnée, tôt ou tard, par quelqu'un de pressé.
 
 
+2nonies. UN DOUBLON QUI CACHAIT UN BUG — et c'est la meilleure surprise de la matinée
+--------------------------------------------------------------------------------------
+  CLONE-HUNTER signale treize blocs de code recopiés à chaque commit. J'en ai pris deux.
+
+  · LE PREMIER était ce qu'il annonçait : un parcours d'arborescence réécrit à la main alors que le
+    helper partagé était **importé en tête du même fichier**. Remplacé, et vérifié par mesure —
+    1 058 ancres et 2 documents muets avant, autant après.
+  · LE SECOND N'ÉTAIT PAS UN DOUBLON, c'était un symptôme. Les sept lignes recopiées dans
+    `jesus-le-sauveur` étaient un **QUATRIÈME lecteur du registre de suivi**, avec sa propre
+    définition de « terminée ». Son motif lit le DÉBUT du statut : une ligne « Ouverte → Terminée
+    (clôturée par #789) » commence par « ouverte », donc elle était comptée dans la file ACTIVE
+    alors qu'elle est close depuis des jours. **14 lignes dans ce cas.** JESUS annonçait une file
+    de 96 là où elle en compte 82 — c'est-à-dire **un ralentissement qui n'existait pas**, dans
+    l'outil dont le métier est justement de dire ce qui freine le projet.
+
+  CE QUI A ÉTÉ PRÉSERVÉ, ET C'EST AUSSI IMPORTANT QUE LA CORRECTION : JESUS écarte volontairement
+  les tâches « En attente — après le GRAND CHANTIER », avec sa raison écrite. C'est un JUGEMENT de
+  l'outil, pas un bug — 10 des 24 écarts bruts. Intact. Seuls les 14 vrais sont corrigés.
+
+  LA LEÇON, ET ELLE VAUT POUR LES DOUZE DOUBLONS QUI RESTENT : un détecteur de duplication qui mène
+  à un bug de LOGIQUE vaut mieux qu'un détecteur qui mène à une factorisation. Chaque doublon
+  restant se lit donc en se demandant d'abord POURQUOI ces deux blocs existent — jamais en les
+  fondant parce qu'ils se ressemblent. Deux d'entre eux sont d'ailleurs déjà instruits et LAISSÉS :
+  les fondre changerait le dénominateur d'un détecteur, ce qui est une décision et non un ménage.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
