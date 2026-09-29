@@ -379,3 +379,24 @@ exactement le défaut corrigé le même jour sur `NOT_REALLY_CODE`, vu par l'aut
 **Vérifié dans les deux sens** (BP4) : le vrai chemin d'archive est refusé, un document de
 référence ordinaire reste une destination parfaitement légitime, la charte réelle ne laisse aucune
 exclusion orpheline, et retirer la déclaration de la charte fait bien parler le garde-fou.
+
+## Un Article PROPOSÉ n'est pas un renvoi mort (2026-09-29, tâche #1157)
+
+`verifyNothingBroken()` vérifie que tout Article cité ailleurs dans le dépôt existe encore dans la
+charte. **Son message disait « n'existe PLUS » sans savoir ce que ce mot promettait** : il ne
+distinguait pas ce qui a été RETIRÉ de ce qui n'est PAS ENCORE ÉCRIT, et les deux se ressemblent
+trait pour trait.
+
+**Pourquoi ça compte plus que le cas du jour** : dans ce projet, rien ne s'écrit dans la charte sans
+que l'utilisateur le voie d'abord. **Proposer un Article avant de l'écrire est donc le geste NORMAL,
+pas l'exception** — et un garde-fou qui refuse le geste normal finit par être contourné (leçon L4).
+
+`matchesDArticleHorsProposition()` écarte une citation dont la PHRASE porte un marqueur de
+proposition (« proposé », « proposition », « à approuver », « attend ton accord », « un Article N »).
+**L'exemption est étroite par construction** : le marqueur doit être dans la phrase de la citation,
+jamais ailleurs dans le document — sans quoi un document qui parle vaguement de propositions
+éteindrait tous les contrôles qu'il contient. Deux contre-tests le verrouillent.
+
+**Un piège classique, trouvé par le contre-test et jamais en relisant** : `\bproposé\b` ne matchait
+RIEN. En JavaScript, « é » n'est pas un caractère de mot — il n'y a donc aucune frontière après lui,
+et la forme la plus courante du dépôt échappait au motif.

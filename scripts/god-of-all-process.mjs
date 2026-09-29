@@ -1180,6 +1180,92 @@ export function diffSeulementDesCommentaires(hash, fichier, { shImpl = sh, root 
   return lignes.every((l) => l === "" || l.startsWith("//") || l.startsWith("*") || l.startsWith("/*") || l.startsWith("*/") || l.startsWith("#"));
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// UNE FICHE EN RETARD SUR SON SCRIPT (2026-09-29, tâche #1159)
+//
+// LE TROU EST NÉ D'UN CONSTAT DE LA NUIT MÊME : quatre outils ont reçu une capacité nouvelle, et
+// AUCUN garde-fou n'a signalé que leur fiche ne le disait pas. `findChangementsIndirectsSansMiseAJour()`
+// rendait `[]`, et il avait raison de son point de vue : il surveille les PROCESS, jamais les fiches
+// d'outil. **Une dette documentaire qu'aucune mécanique ne voit est exactement celle qui s'installe.**
+//
+// CE QU'IL NE FAUT SURTOUT PAS MESURER, ET C'EST TOUTE LA DIFFICULTÉ : « le script a changé depuis
+// sa fiche » crierait à chaque refactor, à chaque correction de faute de frappe, à chaque
+// commentaire ajouté — un garde-fou qui accuse à tort cesse d'être lu (leçon L4), et celui-ci
+// accuserait quasiment tous les jours.
+//
+// CE QUI EST MESURÉ À LA PLACE : le script a-t-il gagné une FONCTION PUBLIQUE nouvelle depuis le
+// dernier passage sur sa fiche ? Un export nouveau est une capacité nouvelle — c'est-à-dire
+// exactement ce que l'Article 13 oblige à refléter. Un renommage interne, un commentaire, une
+// correction ne produisent aucun export nouveau et ne disent donc rien.
+//
+// IL NE TOURNE PAS AU COMMIT, et c'est assumé : il compare le contenu de deux versions de chaque
+// script, ce qui coûte deux appels git par outil. À la demande et à la Ronde, jamais dans un
+// crochet — un contrôle qui ralentit chaque commit finit par être décâblé.
+export const MOTIF_EXPORT_PUBLIC = /^export\s+(?:async\s+)?function\s+([A-Za-z0-9_$]+)/gm;
+
+export function exportsPublics(source = "") {
+  return new Set([...String(source).matchAll(MOTIF_EXPORT_PUBLIC)].map((m) => m[1]));
+}
+
+export function findFichesEnRetardSurLeurScript({ shImpl = sh, root = ROOT, existsImpl = existsSync, readImpl = null } = {}) {
+  const cwd = root.replace(/\/$/, "");
+  const lire = readImpl ?? ((c) => readFileSync(join(cwd, c), "utf8"));
+  let scripts = [];
+  try {
+    scripts = String(shImpl("git ls-files scripts/*.mjs", { cwd })).split("\n").map((l) => l.trim()).filter(Boolean);
+  } catch {
+    return { mesurable: false, pourquoi: "git illisible : aucune comparaison possible — et une absence de mesure n'est jamais un vert (leçon L5)" };
+  }
+  if (!scripts.length) return { mesurable: false, pourquoi: "aucun script listé par git : ce zéro dit qu'on n'a rien lu, jamais que tout est à jour" };
+
+  const ecarts = [];
+  let compares = 0, sansFiche = 0;
+  for (const script of scripts) {
+    const slug = script.replace(/^scripts\//, "").replace(/\.mjs$/, "");
+    const fiche = `docs/referentiel/${slug}.md`;
+    if (!existsImpl(join(cwd, fiche))) { sansFiche += 1; continue; }
+    let dateFiche = "";
+    try { dateFiche = String(shImpl(`git log -1 --format=%cI -- "${fiche}"`, { cwd })).trim(); } catch { /* fiche jamais committée */ }
+    if (!dateFiche) { sansFiche += 1; continue; }
+    let avant = "";
+    try { avant = String(shImpl(`git show "$(git rev-list -1 --before='${dateFiche}' HEAD)":${script}`, { cwd })); } catch { continue; }
+    let maintenant = "";
+    try { maintenant = lire(script); } catch { continue; }
+    compares += 1;
+    const nouveaux = [...exportsPublics(maintenant)].filter((n) => !exportsPublics(avant).has(n));
+    if (!nouveaux.length) continue;
+    // LE DERNIER FILTRE, ET IL ÉVITE LE FAUX POSITIF LE PLUS PROBABLE : si la fiche NOMME déjà la
+    // fonction, elle n'est pas en retard — même si son commit est antérieur, parce que rien ne dit
+    // que la fiche a été écrite après le code plutôt qu'en même temps dans un commit qui l'a touchée
+    // pour autre chose.
+    let texteFiche = "";
+    try { texteFiche = lire(fiche); } catch { /* illisible : on garde l'écart plutôt que de l'absoudre */ }
+    const nonDocumentes = nouveaux.filter((n) => !texteFiche.includes(n));
+    if (!nonDocumentes.length) continue;
+    ecarts.push({ script, fiche, nouveaux: nonDocumentes,
+      pourquoi: `${nonDocumentes.length} fonction(s) publique(s) nouvelle(s) depuis le dernier passage sur la fiche — ${nonDocumentes.slice(0, 4).join(", ")}${nonDocumentes.length > 4 ? "…" : ""}` });
+  }
+  return { mesurable: true, ecarts, compares, sansFiche,
+    pourquoi: `${compares} script(s) comparé(s) à leur fiche, ${sansFiche} sans fiche ou sans historique — ${ecarts.length} en retard` };
+}
+
+export function formatFichesEnRetardLines(r, { limite = 12 } = {}) {
+  if (!r?.mesurable) return ["=== FICHES EN RETARD SUR LEUR SCRIPT : PAS MESURÉ ===", `  ${r?.pourquoi}`, "", "  Ce n'est PAS « tout est à jour »."];
+  const L = [`=== FICHES EN RETARD SUR LEUR SCRIPT — ${r.ecarts.length} sur ${r.compares} comparée(s) ===`, "", `  ${r.pourquoi}`, ""];
+  if (!r.ecarts.length) {
+    L.push("  ✅ Aucune fiche en retard. Ce que ça dit exactement : aucun script n'a gagné de fonction PUBLIQUE");
+    L.push("     que sa fiche ne nomme pas. Ce que ça NE dit PAS : que les fiches décrivent JUSTE ce que fait le");
+    L.push("     code — un texte faux et un texte absent ne se ressemblent pas, et seul le second se mesure.");
+    return L;
+  }
+  for (const e of r.ecarts.slice(0, limite)) { L.push(`  🟠 ${e.script} → ${e.fiche}`); L.push(`     ${e.pourquoi}`); }
+  if (r.ecarts.length > limite) L.push(`  … et ${r.ecarts.length - limite} autre(s)`);
+  L.push("");
+  L.push("  UN EXPORT NOUVEAU EST UNE CAPACITÉ NOUVELLE, donc une obligation de l'Article 13. Ce contrôle ne dit");
+  L.push("  RIEN d'un refactor, d'un commentaire ou d'une correction : ils ne produisent aucun export nouveau.");
+  return L;
+}
+
 export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, shImpl = sh, root = ROOT, nbCommits = 15 } = {}) {
   let brut;
   try {
@@ -2538,6 +2624,15 @@ function main() {
   //     (Article 31). Un appel déclenché par un crochet n'est pas une sollicitation : l'y compter
   //     ferait passer god pour l'outil le plus consulté du dépôt sans que personne ne l'ait ouvert,
   //     et fausserait le seul chiffre qui dit la vérité sur mes réflexes.
+  // `fiches` — le contrôle né du constat du 2026-09-29 (#1159) : quatre outils avaient reçu une
+  // capacité et aucune mécanique ne voyait que leur fiche se taisait. À la demande et à la Ronde,
+  // jamais au commit : il compare deux versions de chaque script, soit deux appels git par outil.
+  if (process.argv[2] === "fiches") {
+    recordCliUsage("god-of-all-process");
+    for (const l of formatFichesEnRetardLines(findFichesEnRetardSurLeurScript())) console.log(l);
+    return;
+  }
+
   if (process.argv[2] === "dette") {
     for (const l of detteDuDernierCommitLines(detteDuDernierCommit())) console.log(l);
     return;

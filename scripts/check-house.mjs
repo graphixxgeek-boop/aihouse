@@ -21309,6 +21309,59 @@ async function testAideOuEncombre() {
 await testAideOuEncombre();
 
 // ————————————————————————————————————————————————————————————————————————
+// UNE FICHE EN RETARD SUR SON SCRIPT (2026-09-29, tâche #1159). Né du constat de la nuit même :
+// quatre outils avaient reçu une capacité nouvelle, et AUCUN garde-fou ne signalait que leur fiche
+// se taisait. Une dette documentaire qu'aucune mécanique ne voit est celle qui s'installe.
+async function testFichesEnRetard() {
+  const G = await import('../scripts/god-of-all-process.mjs');
+
+  assert.deepEqual([...G.exportsPublics('export function a(){}\nexport async function b(){}\nfunction c(){}\nexport const d = 1;')].sort(), ['a', 'b'],
+    'only exported FUNCTIONS count as a public capability: a private function and an exported constant are not new abilities');
+
+  // CE QU'IL NE FAUT SURTOUT PAS MESURER, ET LE CONTRE-TEST LE VERROUILLE : « le script a changé »
+  // crierait à chaque refactor, à chaque commentaire, à chaque faute de frappe corrigée — un garde-fou
+  // qui accuse à tort cesse d'être lu (leçon L4), et celui-là accuserait presque tous les jours.
+  const versions = {
+    'scripts/neuf.mjs': 'export function ancienne(){}\nexport function toute_neuve(){}',
+    'scripts/refactor.mjs': 'export function ancienne(){}\n// un commentaire ajouté, rien de plus',
+    'scripts/deja-dit.mjs': 'export function ancienne(){}\nexport function nommeeDansLaFiche(){}',
+  };
+  const fiches = {
+    'docs/referentiel/neuf.md': 'la fiche ne parle que de ancienne',
+    'docs/referentiel/refactor.md': 'la fiche ne parle que de ancienne',
+    'docs/referentiel/deja-dit.md': 'la fiche décrit ancienne et nommeeDansLaFiche',
+  };
+  const sh = (cmd) => {
+    if (cmd.startsWith('git ls-files')) return Object.keys(versions).join('\n');
+    if (cmd.includes('--format=%cI')) return '2026-09-01T00:00:00Z';
+    if (cmd.startsWith('git show')) return 'export function ancienne(){}';   // l'état AVANT la fiche
+    return '';
+  };
+  const r = G.findFichesEnRetardSurLeurScript({
+    shImpl: sh, existsImpl: (c) => Object.keys(fiches).some((f) => c.endsWith(f)),
+    readImpl: (c) => versions[c] ?? fiches[c] ?? (() => { throw new Error('absent'); })(),
+  });
+  assert.equal(r.mesurable, true, 'the guard runs on the fixture');
+  assert.deepEqual(r.ecarts.map((e) => e.script), ['scripts/neuf.mjs'],
+    'MUST CATCH the script that gained a public function its fiche never names; MUST LET PASS the one that only gained a comment (no new export at all) AND the one whose new function is already named in its fiche — the second exemption matters because a fiche can be written in the same commit that touched it for another reason');
+  assert.deepEqual(r.ecarts[0].nouveaux, ['toute_neuve'], 'and it names exactly which capability is undocumented, never a bare accusation');
+
+  // UNE ABSENCE DE MESURE N'EST JAMAIS UN VERT (leçon L5).
+  assert.equal(G.findFichesEnRetardSurLeurScript({ shImpl: () => { throw new Error('pas de git'); } }).mesurable, false, 'unreadable git reports "pas mesuré" rather than a clean bill');
+  assert.equal(G.findFichesEnRetardSurLeurScript({ shImpl: () => '' }).mesurable, false, 'and zero scripts listed says nothing was read, never that everything is up to date');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25) — sans exiger un chiffre, qui doit pouvoir descendre.
+  const reel = G.findFichesEnRetardSurLeurScript();
+  assert.equal(reel.mesurable, true, 'the guard must actually run against the real repository');
+  assert.ok(reel.compares > 50, `comparing every tool that has a fiche (currently ${reel.compares})`);
+  assert.ok(reel.ecarts.length >= 0, 'and the count is free to fall to zero — this assertion must never punish the day the debt is paid');
+
+  console.log("Passed: une fiche en retard sur son script (2026-09-29, tâche #1159). NÉ D'UN CONSTAT DE LA NUIT MÊME : quatre outils avaient reçu une capacité nouvelle et AUCUN garde-fou ne signalait que leur fiche se taisait — findChangementsIndirectsSansMiseAJour() rendait [] et avait raison de son point de vue, puisqu'il surveille les PROCESS et non les fiches d'outil. Une dette documentaire qu'aucune mécanique ne voit est exactement celle qui s'installe. CE QU'IL NE FAUT SURTOUT PAS MESURER EST TOUTE LA DIFFICULTÉ : « le script a changé depuis sa fiche » crierait à chaque refactor, à chaque commentaire, à chaque faute de frappe corrigée — le garde-fou accuserait presque tous les jours et cesserait d'être lu (leçon L4). CE QUI EST MESURÉ À LA PLACE : le script a-t-il gagné une FONCTION PUBLIQUE que sa fiche ne nomme pas ? Un export nouveau est une capacité nouvelle, c'est-à-dire exactement ce que l'Article 13 oblige à refléter, et rien d'autre ne produit ce signal. DEUX EXEMPTIONS, chacune avec son contre-test : un commentaire ajouté ne crée aucun export, et une fonction DÉJÀ NOMMÉE dans la fiche n'est pas en retard même si le commit de la fiche est antérieur — rien ne dit qu'elle n'a pas été écrite dans le même geste. IL NE TOURNE PAS AU COMMIT, et c'est assumé : deux appels git par outil ; à la demande et à la Ronde, parce qu'un contrôle qui ralentit chaque commit finit décâblé. PREMIER PASSAGE RÉEL : 77 scripts comparés, 7 sans fiche, 15 EN RETARD — dont check-tasks-details avec 16 fonctions publiques que sa fiche ne nomme pas.");
+}
+
+await testFichesEnRetard();
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RETENU OUBLIÉ, ET LE SIXIÈME FAUX CHIFFRE (2026-09-28, tâche #1103)
 // ————————————————————————————————————————————————————————————————————————
 // Il a demandé « qu'est-ce qu'on a oublié ? », et la réponse était écrite depuis le matin : le plan
