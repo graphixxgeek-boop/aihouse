@@ -3478,6 +3478,60 @@ export function formatPortabiliteLines(p, { combien = 10 } = {}) {
   return L;
 }
 
+// --- LES TROIS ZONES DE L'AGENCE (2026-09-29, tâche #1234) ------------------------------------
+//
+// CE QU'ELLES FERMENT. Mesuré le soir même : l'Agence n'avait AUCUNE existence technique — pas de
+// dossier, pas de manifeste, pas de point d'entrée — et elle n'était définie QUE PAR SOUSTRACTION,
+// par les deux registres ci-dessus qui disent ce qui ne part pas. Conséquence : déposer un fichier
+// dans `scripts/` l'enrôlait dans l'Agence sans que personne ne le décide.
+//
+// ELLES NE SONT PAS INVENTÉES, ELLES SONT LUES. Le découpage existait déjà, appliqué par
+// `NE_PART_PAS_ET_C_EST_NORMAL` et `EXEMPTES_DU_KIT` sans jamais avoir été nommé. Ce code ne crée
+// aucune liste nouvelle : il DÉRIVE les zones de ces deux registres, donc une exemption ajoutée
+// demain déplace automatiquement son fichier (Article 24 — un registre se LIT).
+//
+// LA ZONE 1 EST UN RESTE, ET C'EST VOULU : un fichier neuf est DANS l'Agence par défaut et doit se
+// justifier pour en sortir. L'inverse laisserait des orphelins invisibles, ce qui est précisément
+// le défaut qu'on ferme. Détail et interdits : `docs/manifeste-de-l-agence.md`.
+export const ZONES_DE_L_AGENCE = {
+  noyau: { icone: "⚙️", quoi: "l'outillage qui part en entier le jour de l'export — il ne parle pas du jeu et ne dépend pas de ce dépôt" },
+  produit: { icone: "🎭", quoi: "les outils dont le SUJET est le jeu : chez un client ils n'auraient rien à regarder" },
+  cablage: { icone: "🔌", quoi: "ce qui attache l'Agence à CETTE machine et à CE dépôt — ça se réinstalle ailleurs, ça ne voyage pas" },
+};
+
+// Le slug d'un fichier tel que `NE_PART_PAS_ET_C_EST_NORMAL` le nomme : sans le dossier, sans
+// l'extension, et sans le préfixe `check-` — la même convention que le reste du paysage.
+export function slugDuFichierAgence(chemin = "") {
+  return String(chemin).replace(/^scripts\//, "").replace(/\.(mjs|js|sh|ts)$/, "").replace(/^check-/, "");
+}
+
+export function zoneDuFichier(chemin, { nePartPas = NE_PART_PAS_ET_C_EST_NORMAL, exemptes = EXEMPTES_DU_KIT } = {}) {
+  if (estExemptDuKit(chemin, exemptes)) return "cablage";
+  const sansDossier = String(chemin).replace(/^scripts\//, "").replace(/\.(mjs|js|sh|ts)$/, "");
+  if (nePartPas[slugDuFichierAgence(chemin)] !== undefined || nePartPas[sansDossier] !== undefined) return "produit";
+  return "noyau";
+}
+
+// LES DEUX SENS, JAMAIS UN SEUL. La zone 1 étant un reste, rien ne peut être « hors zone » par
+// accident — ce que ce garde-fou attrape est donc l'AUTRE sens : une zone qui réclame un fichier
+// qui n'existe plus, ce qui arrive à chaque renommage. Et il rend le découpage VISIBLE : le jour où
+// la zone du produit passe de 9 à 15 outils, quelqu'un le saura.
+export function findFichiersHorsZone({ fichiers = null, root = ROOT, listerImpl = null, nePartPas = NE_PART_PAS_ET_C_EST_NORMAL, exemptes = EXEMPTES_DU_KIT } = {}) {
+  const tous = fichiers ?? (listerImpl ? listerImpl() : null);
+  if (!tous) return { mesurable: false, pourquoi: "la liste des fichiers n'a pas pu être établie — « aucun hors zone » et « je n'ai pas pu regarder » s'écrivent tous les deux zéro (L5)" };
+  const parZone = { noyau: [], produit: [], cablage: [] };
+  for (const f of tous) parZone[zoneDuFichier(f, { nePartPas, exemptes })].push(f);
+  // LES DEUX FORMES DU NOM, parce que le registre utilise les deux — et la première version de ce
+  // garde-fou a accusé `check-house`, `check-profile` et `check-spirit` d'avoir disparu alors
+  // qu'ils sont là : le registre les nomme AVEC leur préfixe, que le calcul de slug retire. Trois
+  // fausses accusations dès le premier passage, sur les trois outils les plus utilisés du dépôt
+  // (leçon L4). Le classement en zones, lui, essayait déjà les deux — l'incohérence était ici.
+  const slugsReels = new Set(tous.flatMap((f) => [slugDuFichierAgence(f), String(f).replace(/^scripts\//, "").replace(/\.(mjs|js|sh|ts)$/, "")]));
+  const reclamesIntrouvables = Object.keys(nePartPas).filter((s) => !slugsReels.has(s));
+  return { mesurable: true, parZone, reclamesIntrouvables, total: tous.length };
+}
+
+
 // LE LANCEUR EN TOUT DERNIER (déplacé le 2026-09-26) : les constantes du kit d'export ont
 // rejoint la fin du fichier, et main() serait parti avant elles — leur zone morte temporelle,
 // que findLanceursPrematures() refuse. Quatrième outil du dépôt à le payer : le défaut se

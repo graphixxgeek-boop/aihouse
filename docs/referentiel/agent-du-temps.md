@@ -99,3 +99,33 @@ Quand le chiffre EST fourni, un silence de plus de 4 heures est signalé : un co
 quelqu'un qui vient de parler ne convient pas à quelqu'un qui revient neuf heures plus tard
 (Article 29, pris par l'autre bout). Et même là, la mesure porte sa limite : **un silence ÉCRIT
 n'est pas une absence** — il peut lire sans écrire une ligne.
+
+## `coller` — l'horodatage qui se colle, jamais ne se tape *(2026-09-29, tâche #1235)*
+
+```
+node scripts/agent-du-temps.mjs coller <fichier>
+```
+
+**LA FAUTE QUI L'A FAIT NAÎTRE EST MESURÉE, PAS SUPPOSÉE : SIX FOIS EN DEUX JOURS.** Six fois
+l'agent a écrit dans une ligne de suivi une heure qu'il venait pourtant de LIRE avec cet outil, et
+six fois `findHorodatagesFuturs()` a refusé le commit. **Le garde-fou en aval fonctionne
+parfaitement — c'est le geste en amont qui est mauvais.**
+
+**Pourquoi une note n'aurait rien changé.** La faute ne vient pas d'un oubli de lire. L'enchaînement
+réel est : lire l'heure → rédiger une ligne longue → écrire l'heure **de mémoire**, plusieurs
+minutes plus tard. C'est exactement le mécanisme que l'Article 32 décrit — une IA n'a pas d'horloge,
+elle déduit l'heure du dernier horodatage vu passer, et cette déduction dérive à chaque minute de
+travail. Se promettre de mieux faire ne casse pas cet enchaînement ; **seul un geste qui SUPPRIME la
+frappe le peut**.
+
+**Le geste** : on écrit `@@MAINTENANT@@` dans la ligne, puis on lance la commande. Le jeton est
+remplacé par l'heure réellement lue, à la seconde où le fichier part sur le disque.
+
+**Elle REFUSE bruyamment quand le jeton est absent**, et c'est le cœur du dispositif : un zéro
+silencieux laisserait croire que l'horodatage a été collé alors que le jeton était mal orthographié
+— le défaut d'origine sous une autre forme, et bien plus difficile à voir.
+
+**Pourquoi une sous-commande et non un script à part** : toute la logique (`horodatageDeSuivi()`,
+`collerLHeure()`) vit déjà dans ce module. Un second fichier aurait été un doublon déguisé, et
+l'Article 31 tranche — s'il couvre le besoin à moitié, on l'ÉTEND plutôt que d'agir à côté. Son
+premier usage réel a été la ligne de suivi de sa propre tâche.

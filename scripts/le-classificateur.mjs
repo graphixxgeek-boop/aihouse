@@ -2125,6 +2125,15 @@ export const EXCEPTIONS_D_EXPORT = [
   { chemin: "docs/architecture-du-filet.md", etat: "PART", pourquoi: "l'architecture générique d'un filet de sécurité — neuf règles et leur coût mesuré, pas une ligne sur ce jeu-ci. C'est la pièce que SAFE-EXPORT laissait partir avec le contenu du filet, et ce qu'Ezechiel PRESCRIT sur un projet qui n'a pas encore de filet (tâche #1031)." },
   { chemin: "docs/carnet-de-bord.md", etat: "MEMOIRE", pourquoi: "l'état vivant du travail EN COURS sur ce projet-ci : il n'a aucun sens ailleurs, et ce n'est pas une règle" },
   { chemin: "docs/idees-a-trancher.md", etat: "MEMOIRE", pourquoi: "registre des idées de CE projet en attente d'arbitrage" },
+  // LES DEUX TEXTES DE L'AGENCE ELLE-MÊME (2026-09-29, tâches #1228 et #1234), et le premier a été
+  // trouvé par l'ironie de son propre classement : `loi-de-l-agence.md` — LA LOI QUI EXIGE QUE
+  // L'AGENCE SOIT EXPORTABLE — sortait « RESTE, ne part pas », au motif qu'elle « nomme les
+  // personnages 4 fois ». Elle les nomme exactement pour dire que l'Article 0 qui les gouverne NE
+  // gouverne PAS l'Agence. Le détecteur comptait les mentions ; il ne pouvait pas lire qu'elles
+  // servent à poser une frontière. Encore un signal ADJACENT lu comme le signal visé, et il tombait
+  // sur le seul document que l'export ne peut pas laisser derrière lui.
+  { chemin: "docs/loi-de-l-agence.md", etat: "PART", pourquoi: "le texte suprême de l'outillage : il part AVEC l'Agence, sans quoi elle arriverait chez son client sans la loi qui la gouverne. S'il nomme Lia et Noé, c'est uniquement pour déclarer qu'ils ne la concernent pas" },
+  { chemin: "docs/manifeste-de-l-agence.md", etat: "PART", pourquoi: "ce que l'Agence EST, déclaré positivement : ses trois zones, dérivées des registres de SAFE-EXPORT, et ce qu'il est interdit d'y mettre. Un produit qui arrive sans la définition de ses propres bords n'est pas installable" },
   { chemin: "docs/peur-de-l-export.md", etat: "PART", pourquoi: "il raisonne sur ce qui empêche une Agence de partir — c'est le sujet même du second projet, et il vaut pour n'importe quel outillage" },
   { chemin: "docs/referentiel/organisation-globale-projet.md", etat: "RESTE", pourquoi: "le document mère de CE projet : il décrit comment le jeu et l'Agence s'articulent ICI" },
   { chemin: "docs/referentiel/process-calibres.md", etat: "PART", pourquoi: "les process tels qu'un humain les a calibrés : la forme est réutilisable, et c'est la partie la plus chère à retrouver" },
@@ -2317,6 +2326,11 @@ export const DOCUMENTS_QUI_FONT_LOI = [
   // gouverne l'outillage, et il est le seul à partir avec l'Agence le jour de l'export. Les
   // confondre rendrait l'Agence inexportable sans que personne ne s'en aperçoive.
   { chemin: "docs/loi-de-l-agence.md", pourquoi: "le texte suprême de l'outillage, tranché par l'utilisateur le 2026-09-29 : l'Agence sert la finalité de celui qui l'emploie, jamais la sienne — distinct de l'Article 0, qui ne gouverne que le Jeu" },
+  // LA SIXIÈME, LE MÊME JOUR. Le manifeste DÉCRIT trois zones, ce qui n'obligerait à rien — mais
+  // il porte aussi quatre INTERDICTIONS (rien qui ne soit vrai que pour ce jeu-ci · rien qu'on ne
+  // puisse retirer · rien qui impose une finalité au client · rien d'auto-déclaré sans le dire).
+  // Un document qui interdit fait loi, quelle que soit la part de description qu'il contient.
+  { chemin: "docs/manifeste-de-l-agence.md", pourquoi: "il déclare ce que l'Agence EST — ses trois zones dérivées des registres de SAFE-EXPORT — et surtout ce qu'il est INTERDIT d'y mettre : quatre obligations qui gouvernent tout ajout futur à l'outillage" },
 ];
 
 export const NATURE_INDETERMINEE = { cle: "indeterminee", icone: "❓", quoi: "aucun signal ne tranche — dit plutôt que rangé par défaut" };

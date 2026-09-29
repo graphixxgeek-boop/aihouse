@@ -234,6 +234,28 @@ export function lireMesures({ root = ROOT, lire = readFileSync } = {}) {
 }
 
 async function main() {
+  // SOUS-COMMANDE `coller <fichier>` (2026-09-29, tâche #1235) — et elle vit ICI plutôt que dans un
+  // script à part, parce qu'un second fichier aurait été un doublon déguisé : toute la logique est
+  // déjà dans ce module. L'Article 31 le dit — s'il couvre le besoin à moitié, on l'ÉTEND plutôt
+  // que d'agir à côté. Elle sort AVANT l'en-tête de rapport : c'est un geste d'écriture, pas un
+  // rapport, et imprimer huit lignes d'en-tête pour coller un horodatage serait du bruit.
+  if (process.argv[2] === "coller") {
+    const fichier = process.argv[3];
+    if (!fichier) { console.error(`usage : node scripts/agent-du-temps.mjs coller <fichier>   (jeton : ${JETON_MAINTENANT})`); process.exitCode = 2; return; }
+    const { readFileSync, writeFileSync } = await import("node:fs");
+    const { texte, remplacements, heure } = collerLHeure(readFileSync(fichier, "utf8"));
+    if (!remplacements) {
+      // UN REFUS BRUYANT, ET C'EST LE CŒUR DU GESTE : un zéro silencieux laisserait croire que
+      // l'horodatage a été collé alors que le jeton était mal orthographié — le défaut d'origine
+      // sous une autre forme, et bien plus difficile à voir.
+      console.error(`🚨 aucun ${JETON_MAINTENANT} trouvé dans ${fichier} — rien n'a été écrit. Le jeton est-il bien orthographié ?`);
+      process.exitCode = 1; return;
+    }
+    writeFileSync(fichier, texte);
+    recordCliUsage("agent-du-temps");
+    console.log(`✅ ${remplacements} horodatage(s) collé(s) dans ${fichier} : ${heure} — LU, jamais tapé.`);
+    return;
+  }
   printReportHeader({ tool: "agent-du-temps", title: "AGENT-DU-TEMPS — l'heure fiable, et la mémoire des estimations", scriptPath: "scripts/agent-du-temps.mjs" });
   printReliabilityNotice("agent-du-temps");
   recordCliUsage("agent-du-temps");
@@ -273,5 +295,35 @@ async function main() {
   const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "agent-du-temps", tache: "autoriser un domaine de temps, ou acter que l'horloge système suffit — la décision est à l'utilisateur, jamais à l'agent" });
   imprimerPlanDaction(plan);
 }
+
+// --- L'HORODATAGE DE SUIVI, COLLÉ ET JAMAIS RETAPÉ (2026-09-29, tâche #1235) -------------------
+//
+// LA FAUTE EST MESURÉE, PAS SUPPOSÉE : SIX FOIS en deux jours j'ai écrit dans une ligne de suivi une
+// heure que je venais pourtant de LIRE — et six fois `findHorodatagesFuturs()` a refusé le commit.
+// Le garde-fou en aval marche parfaitement ; c'est le GESTE en amont qui est mauvais, et l'Article
+// 32 le décrit exactement : « une IA n'a pas d'horloge, elle déduit l'heure du dernier horodatage
+// vu passer dans son contexte, et cette déduction dérive à chaque minute de travail ».
+//
+// POURQUOI UNE NOTE NE SUFFIT PAS, ET C'EST TOUT L'ENJEU. La faute ne vient pas d'un oubli de lire :
+// je lis, puis je rédige une longue ligne, puis j'écris l'heure DE MÉMOIRE — plusieurs minutes plus
+// tard. Se promettre de mieux faire ne change rien à cet enchaînement ; seul un geste qui SUPPRIME
+// la frappe le peut. On écrit `@@MAINTENANT@@` dans la ligne, et cette fonction le remplace par
+// l'heure réellement lue, à la seconde où la ligne part sur le disque.
+export const JETON_MAINTENANT = "@@MAINTENANT@@";
+
+export function horodatageDeSuivi(maintenant = new Date()) {
+  const d = new Date(maintenant);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}T${p(d.getUTCHours())}:${p(d.getUTCMinutes())}Z`;
+}
+
+// Rend le texte avec le jeton remplacé, ET le nombre de remplacements — jamais l'un sans l'autre :
+// un zéro silencieux laisserait croire que le geste a eu lieu alors que le jeton était mal écrit.
+export function collerLHeure(texte = "", { maintenant = new Date() } = {}) {
+  const heure = horodatageDeSuivi(maintenant);
+  const morceaux = String(texte).split(JETON_MAINTENANT);
+  return { texte: morceaux.join(heure), remplacements: morceaux.length - 1, heure };
+}
+
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

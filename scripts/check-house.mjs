@@ -1,5 +1,14 @@
 // ICEBERG: membre
 import fs from 'node:fs';
+function listerFichiersDeScripts(dir = 'scripts') {
+  const out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = `${dir}/${e.name}`;
+    if (e.isDirectory()) out.push(...listerFichiersDeScripts(p)); else out.push(p);
+  }
+  return out;
+}
+
 import path from 'node:path';
 import os from 'node:os';
 import ts from 'typescript';
@@ -11652,6 +11661,42 @@ await testVerrousDOuverture();
   assert.equal(natureDuDocument('docs/referentiel/principes.md').cle, 'reference', 'le référentiel est testé AVANT le motif large des dossiers d\'outils, sinon il tomberait en « rapport »');
   assert.equal(natureDuDocument('docs/suivi/sessions/x.md').cle, 'suivi', 'idem pour le suivi');
   assert.equal(natureDuDocument('docs/strategies/x-strategie.md').cle, 'strategie', 'idem pour les stratégies');
+  // COLLER L'HEURE PLUTÔT QUE LA TAPER (2026-09-29, tâche #1235). SIX fois en deux jours j'ai écrit
+  // dans une ligne de suivi une heure que je venais de LIRE, et six fois findHorodatagesFuturs()
+  // a refusé le commit. Le garde-fou en aval marche ; c'est le geste en amont qui est mauvais.
+  // Une note ne casse pas l'enchaînement (lire → rédiger longuement → écrire de mémoire) : seul un
+  // geste qui SUPPRIME la frappe le peut.
+  const adt = await import('../scripts/agent-du-temps.mjs');
+  assert.equal(adt.horodatageDeSuivi(new Date(Date.UTC(2026, 8, 29, 20, 5))), '2026-09-29T20:05Z', 'le format est exactement celui du registre — un format approchant serait refusé par le lecteur du suivi');
+  const colle = adt.collerLHeure(`| 1 | ${adt.JETON_MAINTENANT} | x |`, { maintenant: new Date(Date.UTC(2026, 8, 29, 20, 5)) });
+  assert.equal(colle.texte, '| 1 | 2026-09-29T20:05Z | x |', 'le jeton est remplacé par l\'heure réellement lue');
+  assert.equal(colle.remplacements, 1, 'et le nombre de remplacements est RENDU — un zéro silencieux laisserait croire que le geste a eu lieu alors que le jeton était mal écrit, ce qui est le défaut d\'origine sous une autre forme');
+  assert.equal(adt.collerLHeure('aucun jeton ici').remplacements, 0, 'un texte sans jeton rend zéro, et l\'appelant DOIT refuser bruyamment plutôt qu\'écrire un fichier inchangé');
+  assert.equal(adt.collerLHeure(`${adt.JETON_MAINTENANT} et ${adt.JETON_MAINTENANT}`).remplacements, 2, 'plusieurs jetons sont tous remplacés, jamais le premier seulement');
+
+  // LES TROIS ZONES DE L'AGENCE (2026-09-29, tâche #1234) — parce qu'elle n'avait AUCUNE existence
+  // technique : définie seulement par soustraction, donc un fichier déposé dans scripts/ s'y
+  // enrôlait sans que personne ne le décide. Les zones ne sont pas inventées, elles sont DÉRIVÉES
+  // des deux registres que SAFE-EXPORT applique déjà (Article 24).
+  const se = await import('../scripts/safe-export.mjs');
+  assert.equal(se.zoneDuFichier('scripts/hooks/post-commit'), 'cablage', 'un crochet git attache l\'Agence à CE dépôt : il se réinstalle ailleurs, il ne voyage pas');
+  assert.equal(se.zoneDuFichier('scripts/check-spirit.mjs'), 'produit', 'un outil dont le SUJET est le jeu n\'aurait rien à regarder chez un client');
+  assert.equal(se.zoneDuFichier('scripts/argus.mjs'), 'noyau', 'et tout le reste est dans l\'Agence PAR DÉFAUT — un fichier neuf doit se justifier pour en sortir, jamais l\'inverse, sinon les orphelins restent invisibles');
+  assert.deepEqual(
+    se.findFichiersHorsZone({ fichiers: ['scripts/a.mjs'], nePartPas: { disparu: 'x' } }).reclamesIntrouvables,
+    ['disparu'],
+    'et le garde-fou MORD dans le seul sens où il peut mordre : une zone qui réclame un fichier disparu, ce qui arrive à chaque renommage',
+  );
+  assert.equal(se.findFichiersHorsZone({}).mesurable, false, 'sans liste de fichiers, « aucun hors zone » et « je n\'ai pas pu regarder » s\'écriraient tous les deux zéro (L5)');
+  // CONTRE LE VRAI DÉPÔT, et le premier passage a produit TROIS FAUSSES ACCUSATIONS : le registre
+  // nomme ses outils AVEC le préfixe check-, que le calcul de slug retire, donc check-house,
+  // check-profile et check-spirit passaient pour disparus (leçon L4).
+  const zonesReelles = se.findFichiersHorsZone({ fichiers: listerFichiersDeScripts() });
+  assert.ok(zonesReelles.mesurable && zonesReelles.total > 80, `les zones se mesurent sur les fichiers réels (actuellement ${zonesReelles.total})`);
+  assert.deepEqual(zonesReelles.reclamesIntrouvables, [], 'aucun outil déclaré « ne part pas » ne doit avoir disparu du dépôt');
+  assert.ok(zonesReelles.parZone.produit.length >= 5 && zonesReelles.parZone.cablage.length >= 5,
+    `et les trois zones sont toutes peuplées — un découpage qui mettrait tout dans une seule ne mesurerait rien (actuellement noyau ${zonesReelles.parZone.noyau.length}, produit ${zonesReelles.parZone.produit.length}, câblage ${zonesReelles.parZone.cablage.length})`);
+
   // LES TROIS FAMILLES DE LA CHARTE (2026-09-29, tâche #1230) — et ce test existe parce qu'une
   // phrase fausse a failli entrer en tête du document le plus lu du projet. J'allais écrire « ce
   // document est la charte du JEU » ; mesuré, 10 Articles sur 33 parlent du Jeu et 19 de
