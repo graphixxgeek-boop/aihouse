@@ -2027,6 +2027,13 @@ export const MOTIFS_MEMOIRE = [
   // n'avait aucune règle, et le PREMIER document vivant qu'on y dépose a fait échouer le filet le
   // soir même. Son voisin ne passait que grâce à la DATE dans son nom — un signal qu'un document
   // VIVANT ne peut pas porter sans mentir. Une règle DÉRIVÉE, donc, jamais une ligne de plus.
+  // LES SYNTHÈSES ANNOTÉES DE SES DOCUMENTS (2026-09-29, tâche #1236). Attention à ne PAS étendre
+  // la règle à tout `01-absorption/` : ce dossier est MIXTE, et c'est délibéré — `inventaire.md` et
+  // `lire-les-sources.md` sont des gabarits GÉNÉRIQUES qui partent (comment absorber un corpus Word
+  // sans perdre les styles vaut pour n'importe quel projet), tandis que la trace de lecture et les
+  // questions consolidées sont propres à ce chantier. Le sous-dossier `syntheses/`, lui, ne contient
+  // que des annotations de SES documents à LUI : toujours de la mémoire, jamais un gabarit.
+  { motif: /^docs\/grand-projet\/01-absorption\/syntheses\//, pourquoi: "l'annotation d'un document qu'il a déposé : elle n'a de sens qu'avec sa source, qui est elle-même propre à ce chantier. Ce qui voyage est la MÉTHODE d'annotation, écrite ailleurs" },
   { motif: /^docs\/grand-projet\/03-plan-daction\//, pourquoi: "le plan de CE chantier : où tombe chaque idée dans nos sept étapes à nous. La méthode de placement voyage, écrite dans la charte ; l'ordre de nos chantiers ne voyage nulle part" },
   { motif: /^docs\/simulations\//, pourquoi: "les conversations archivées de Lia et Noé" },
   { motif: /^docs\/plans\//, pourquoi: "un plan de chantier est la photographie d'un moment" },
