@@ -507,7 +507,9 @@ export function recentCommits(limit = 20, shImpl = sh, root = ROOT) {
   return hashes.map((hash) => ({
     hash,
     subject: shImpl(`git log -1 --format=%s ${hash}`, { cwd: root }).trim(),
-    filesChanged: shImpl(`git diff-tree --no-commit-id --name-only -r ${hash}`, { cwd: root }).trim().split("\n").filter(Boolean),
+    // Sans cette option, une fusion qui apporte des lignes de suivi passerait pour un commit
+    // qui ne touche aucun fichier de suivi — le garde-fou regarderait à côté sans le dire.
+    filesChanged: shImpl(`git diff-tree --no-commit-id --name-only -r --diff-merges=first-parent ${hash}`, { cwd: root }).trim().split("\n").filter(Boolean),
   }));
 }
 

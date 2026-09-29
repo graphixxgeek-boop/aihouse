@@ -57,11 +57,12 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**19 fichier(s)** dans ce dossier.
+**20 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [ancres-2026-09-28.md](ancres/ancres-2026-09-28.md) | ancres |
+| [ancres-2026-09-29.md](ancres/ancres-2026-09-29.md) | ancres |
 | [circle-signal-2026-09-22T17-20-06-065Z.txt](circle-signal-2026-09-22T17-20-06-065Z.txt) | — |
 | [circle-signal-2026-09-22T17-42-10-136Z.txt](circle-signal-2026-09-22T17-42-10-136Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-824Z.txt](circle-signal-2026-09-23T21-49-13-824Z.txt) | — |

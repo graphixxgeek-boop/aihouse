@@ -138,7 +138,10 @@ export function estUnFichierDeTest(chemin = "", source = "") {
 export function findTestsAffaiblisAvecLeCode(commit = "HEAD", { shImpl = sh } = {}) {
   let fichiers = [];
   try {
-    fichiers = String(shImpl(`git show --name-only --format="" ${commit}`) ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+    // `--first-parent` : sans lui, une FUSION rend zéro fichier et la fonction conclut « ce commit
+    // ne touche aucun fichier de code lisible ». Honnête par accident — elle dit « pas mesurable »
+    // plutôt que « rien trouvé » — mais faux quand même : les fichiers ÉTAIENT lisibles.
+    fichiers = String(shImpl(`git show --name-only --format="" --first-parent ${commit}`) ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
   } catch {
     return { mesurable: false, cas: [],
       pourquoi: "le commit n'a pas pu être lu : sans son contenu, répondre « aucun test affaibli » serait affirmer une mesure qui n'a pas eu lieu" };

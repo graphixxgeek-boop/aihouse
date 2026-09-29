@@ -1256,3 +1256,59 @@ export function assurerLeDossierDeSortie(fichier, { creerImpl = mkdirSync } = {}
   creerImpl(dossier, { recursive: true });
   return dossier;
 }
+
+// --- LA CÉCITÉ AUX FUSIONS, PRISE À LA CLASSE PLUTÔT QU'À L'OCCURRENCE (2026-09-29, tâche #1226).
+//
+// LE DÉFAUT. `git show --name-only` et `git diff-tree --name-only` ne rendent AUCUN fichier sur un
+// commit de FUSION — comportement normal de git, qui n'affiche pas de diff pour un commit à
+// plusieurs parents. Cinq fonctions du dépôt lisaient les fichiers d'un commit de cette façon, et
+// les cinq devenaient muettes dès qu'une fusion passait. La plus grave était
+// `detteDeRepercussion()` (MOÏSE) : sur une fusion apportant une modification de la charte, elle
+// concluait « ce commit ne touche pas CLAUDE.md, il n'y a rien à répercuter » — le protecteur de la
+// charte, aveugle, en rendant un résultat rassurant.
+//
+// ET LES DEUX COMMANDES NE SE CORRIGENT PAS DE LA MÊME FAÇON, ce que seule la mesure a dit :
+// `--first-parent` suffit à `git show` et ne change RIEN à `git diff-tree`, qui veut
+// `--diff-merges=first-parent`. Appliquer le même correctif partout, comme l'intuition le
+// soufflait, aurait laissé deux des cinq cassées en silence.
+//
+// POURQUOI UN GARDE-FOU ET PAS SEULEMENT CINQ CORRECTIFS (leçon L37, Article 24) : rien n'empêche
+// la sixième d'être écrite demain. Un nouveau venu doit hériter de ce que l'équipe a déjà appris,
+// sans qu'on y pense.
+//
+// LE MOTIF A DÛ ÊTRE RESSERRÉ DEUX FOIS, dès son premier passage sur le vrai dépôt — et c'est la
+// leçon L4 qui l'imposait : un garde-fou qui accuse à tort cesse d'être lu.
+//   · il s'arrêtait au premier guillemet, donc `git show --name-only --format="" --first-parent`
+//     était accusé À CAUSE de son propre `--format=""`, alors qu'il porte le correctif ;
+//   · il citait les faux appels d'un STUB DE TEST, qui sont des chaînes de décor et n'exécutent
+//     jamais rien — d'où `FICHIERS_AUX_FAUSSES_COMMANDES` en dessous, avec sa raison écrite.
+// On regarde donc jusqu'à la fin de la ligne plutôt que jusqu'au premier guillemet.
+export const MOTIF_SHOW_SANS_FUSION = /git show\b(?![^\n]*--first-parent)[^\n]*--name-only/;
+export const MOTIF_DIFFTREE_SANS_FUSION = /git diff-tree\b(?![^\n]*--diff-merges=)[^\n]*--name-only/;
+
+// Les fichiers dont les commandes git sont du DÉCOR, jamais des appels. Liste volontairement tenue
+// à la main, et cette nature volontaire est écrite ici comme l'Article 24 l'exige : le filet de
+// sécurité contient par construction de fausses commandes qu'il donne à manger à ses stubs.
+export const FICHIERS_AUX_FAUSSES_COMMANDES = {
+  "scripts/check-house.mjs": "le filet de sécurité : ses chaînes `git ...` sont des entrées de stub, comparées par cmd.includes() et jamais exécutées",
+};
+
+// Les lignes qui lisent les fichiers d'un commit sans dire quoi faire d'une fusion. `sources` est
+// une liste de { fichier, texte } — le lecteur reste à l'appelant, pour que le test n'ait jamais
+// besoin du disque (leçon L40 : un test qui lit une donnée vivante juge le dépôt, pas le code).
+export function findLecturesAveuglesAuxFusions(sources = []) {
+  const trouvailles = [];
+  for (const { fichier, texte } of sources) {
+    if (FICHIERS_AUX_FAUSSES_COMMANDES[fichier]) continue;
+    String(texte ?? "").split("\n").forEach((ligne, i) => {
+      // Une ligne de COMMENTAIRE explique le défaut, elle ne le commet pas : la citer serait
+      // reprocher à la documentation de nommer ce qu'elle documente (leçon L4).
+      if (/^\s*(\/\/|\*|\/\*)/.test(ligne)) return;
+      const quoi = MOTIF_SHOW_SANS_FUSION.test(ligne) ? "git show --name-only sans --first-parent"
+        : MOTIF_DIFFTREE_SANS_FUSION.test(ligne) ? "git diff-tree --name-only sans --diff-merges=first-parent"
+        : null;
+      if (quoi) trouvailles.push({ fichier, ligne: i + 1, quoi, extrait: ligne.trim().slice(0, 120) });
+    });
+  }
+  return trouvailles;
+}

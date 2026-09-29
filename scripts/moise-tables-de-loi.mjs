@@ -100,7 +100,11 @@ export const DOSSIER_REFERENTIEL = "docs/referentiel/";
 export function detteDeRepercussion(commit, { shImpl = sh, root = ROOT, compter = A.compterObligations, charte = "CLAUDE.md" } = {}) {
   const lire = (rev) => { try { return shImpl(`git show ${rev}:${charte}`, { cwd: root, maxBuffer: 5e7 }); } catch { return null; } };
   let fichiers;
-  try { fichiers = shImpl(`git diff-tree --no-commit-id --name-only -r ${commit}`, { cwd: root }).trim().split("\n").filter(Boolean); }
+  // LE PLUS GRAVE DES QUATRE. Sans cette option, une FUSION qui apporte une modification de la
+  // charte rendait une liste vide, donc le test `!fichiers.includes(charte)` juste en dessous
+  // concluait « ce commit ne touche pas CLAUDE.md : il n'y a rien à répercuter ». Le protecteur
+  // de la charte devenait aveugle, en annonçant un résultat rassurant.
+  try { fichiers = shImpl(`git diff-tree --no-commit-id --name-only -r --diff-merges=first-parent ${commit}`, { cwd: root }).trim().split("\n").filter(Boolean); }
   catch { return { mesurable: false, pourquoi: `le commit ${commit} est illisible — « aucune dette » et « je n'ai pas pu regarder » s'écrivent tous les deux zéro (L5)` }; }
   if (!fichiers.includes(charte)) return { mesurable: true, concerne: false, pourquoi: `ce commit ne touche pas ${charte} : il n'y a rien à répercuter` };
   const avant = lire(`${commit}~1`), apres = lire(commit);

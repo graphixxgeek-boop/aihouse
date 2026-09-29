@@ -34,7 +34,7 @@ import { buildClaudeMdRuleTable } from "./moise-tables-de-loi.mjs";
 // check-level-target n'importe pas ecotoken.
 import { SENSITIVE_NODES } from "./check-level-target.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent, lastCommitFiles } from "./lib-shell.mjs";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
 
@@ -1800,13 +1800,14 @@ export function buildEcotokenReport({ charterText, repoFiles } = {}) {
 }
 
 // Liste des fichiers du dernier commit, sans jamais faire échouer le crochet si git est muet.
-function lastCommitFilesSafe() {
-  try {
-    const out = execSync("git show --name-only --format= HEAD", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-    const files = String(out).split("\n").map((l) => l.trim()).filter(Boolean);
-    return files.length ? files : undefined;
-  } catch { return undefined; }
-}
+//
+// 2026-09-29, tâche #1226 — CETTE FONCTION ÉTAIT UNE COPIE, ET LA COPIE AVAIT LE BUG. Elle
+// reproduisait mot pour mot `lastCommitFiles()` de lib-shell.mjs, y compris sa cécité aux commits
+// de FUSION (`git show` n'affiche aucun diff pour un commit à plusieurs parents). Corriger
+// l'original sans elle aurait laissé la moitié du défaut en place, à l'identique — exactement ce
+// que CLONE-HUNTER traque. Elle n'est donc pas corrigée : elle est SUPPRIMÉE au profit de la
+// fonction partagée, qui porte le correctif et sa raison.
+const lastCommitFilesSafe = () => lastCommitFiles();
 
 function main() {
   // EN-TÊTE PARTAGÉ (2026-09-22, migration pure-gold-unity) — remplace le couple

@@ -3812,8 +3812,8 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     if(cmd.includes('git log -2 --format=%H'))return 'aaa\nbbb\n';
     if(cmd.includes('git log -1 --format=%s aaa'))return 'Premier commit\n';
     if(cmd.includes('git log -1 --format=%s bbb'))return 'Second commit\n';
-    if(cmd.includes('git diff-tree --no-commit-id --name-only -r aaa'))return 'lib/x.ts\ndocs/suivi/sessions/s.md\n';
-    if(cmd.includes('git diff-tree --no-commit-id --name-only -r bbb'))return '';
+    if(cmd.includes('git diff-tree --no-commit-id --name-only -r --diff-merges=first-parent aaa'))return 'lib/x.ts\ndocs/suivi/sessions/s.md\n';
+    if(cmd.includes('git diff-tree --no-commit-id --name-only -r --diff-merges=first-parent bbb'))return '';
     throw new Error('commande git inattendue dans le test : '+cmd);
   };
   assert.deepEqual(recentCommits(2,fakeSh,'/fake'),[{hash:'aaa',subject:'Premier commit',filesChanged:['lib/x.ts','docs/suivi/sessions/s.md']},{hash:'bbb',subject:'Second commit',filesChanged:[]}],'recentCommits() must correctly assemble the three separate git queries (hash list, subject, changed files) into one object per commit, in order, with an empty file list reported as [] rather than [""] for a commit touching nothing');
@@ -5970,6 +5970,41 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     reelle === undefined || (Array.isArray(reelle) && reelle.length > 0),
     'sur le vrai dépôt, lastCommitFiles() rend soit une liste non vide, soit `undefined` — jamais un tableau vide, qui se lirait comme « rien n\'a changé »',
   );
+  // LA CÉCITÉ AUX FUSIONS, VÉRIFIÉE À LA CLASSE (2026-09-29, tâche #1226). Cinq fonctions lisaient
+  // les fichiers d'un commit avec une commande muette sur une fusion ; les cinq sont corrigées, et
+  // ce détecteur empêche la sixième. Il est éprouvé sur des sources INJECTÉES — jamais sur le
+  // disque (leçon L40) — puis, une seule fois, contre le vrai dépôt, où zéro est le bon résultat.
+  const { findLecturesAveuglesAuxFusions, FICHIERS_AUX_FAUSSES_COMMANDES } = await import('../scripts/lib-shell.mjs');
+  assert.deepEqual(
+    findLecturesAveuglesAuxFusions([{ fichier: 'faux.mjs', texte: 'sh(`git show --name-only --format= HEAD`);' }]).map((t) => t.quoi),
+    ['git show --name-only sans --first-parent'],
+    'un `git show --name-only` sans --first-parent est vu : sur une fusion il ne rend aucun fichier',
+  );
+  assert.deepEqual(
+    findLecturesAveuglesAuxFusions([{ fichier: 'faux.mjs', texte: 'sh(`git diff-tree --no-commit-id --name-only -r ${h}`);' }]).map((t) => t.quoi),
+    ['git diff-tree --name-only sans --diff-merges=first-parent'],
+    'et diff-tree veut une AUTRE option que show — mesuré : --first-parent seul ne change rien à diff-tree',
+  );
+  assert.deepEqual(
+    findLecturesAveuglesAuxFusions([{ fichier: 'ok.mjs', texte: 'sh(`git show --name-only --format="" --first-parent ${c}`);\nsh(`git diff-tree --no-commit-id --name-only -r --diff-merges=first-parent ${h}`);' }]),
+    [],
+    'les deux formes CORRIGÉES ne sont pas accusées — y compris celle dont le --format="" avait fait trébucher le premier motif',
+  );
+  assert.deepEqual(
+    findLecturesAveuglesAuxFusions([{ fichier: 'x.mjs', texte: '// git show --name-only explique le défaut ici' }]),
+    [],
+    'une ligne de COMMENTAIRE explique le défaut, elle ne le commet pas — l\'accuser reviendrait à reprocher à la documentation de nommer ce qu\'elle documente (leçon L4)',
+  );
+  assert.deepEqual(
+    findLecturesAveuglesAuxFusions([{ fichier: 'scripts/check-house.mjs', texte: 'if(cmd.includes(\'git diff-tree --no-commit-id --name-only -r --diff-merges=first-parent aaa\'))return \'\';' }]),
+    [],
+    'le filet de sécurité est hors portée avec sa raison ÉCRITE : ses chaînes git sont des entrées de stub, jamais des appels',
+  );
+  assert.ok(
+    FICHIERS_AUX_FAUSSES_COMMANDES['scripts/check-house.mjs'],
+    'cette exemption porte sa raison, jamais un nom seul — une exclusion sans cause est une exclusion qu\'on ne peut plus juger',
+  );
+
   const fakeCharter = [
     '# Titre', 'intro', '',
     '## ARGUS — blueprint exportable', '', '`docs/argus-blueprint.md` documente l\'ARCHITECTURE du détecteur de trous — voir `docs/referentiel/argus.md`.', '',
