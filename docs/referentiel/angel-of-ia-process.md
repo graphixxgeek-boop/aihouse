@@ -342,3 +342,32 @@ vérifie pas, et ce qui ne se vérifie pas se périme sans bruit.
 règles de travail s'appelle toujours « OPTIMISER et FIABILISER — **les deux** mots d'ordre
 permanents » et ne la mentionne nulle part. Sa source ne peut donc citer aucune section, faute
 qu'elle existe. Renommer ou compléter une section de ce document est une décision de l'utilisateur.
+
+## Trois règles de conduite ajoutées le 2026-09-29 (tâches #1146, #1148, #1165)
+
+Angel surveille désormais **25 règles** au lieu de 22. Les trois nouvelles ont en commun d'être
+`observable: false` — et c'est exact, pas une facilité : **aucune mécanique ne peut voir qu'un plan
+se conçoit dans une conversation, ni qu'un document vient d'être créé sans sa ligne de parent.**
+Angel DEMANDE et refuse d'être au vert sans réponse, le seul dispositif possible quand la preuve
+n'existe pas.
+
+**`escalade`** — l'ordre dans lequel tout chantier se conçoit : ① calibrage fin sur TOUS les points
+→ ② la CIBLE → ③ les grandes étapes → ④ les sous-étapes → ⑤ les blocs de tâches → ⑥ les tâches
+individuelles. Chaque niveau interdit au suivant de commencer. **Elle a été payée le jour même** :
+seize tâches ouvertes sous un plan non calibré, qu'il a fallu repasser « À TRANCHER ».
+
+**`alignement-a-la-creation`** — déclarer le parent d'un document AU MOMENT de le créer, jamais dans
+une passe de rattrapage. **C'est la moitié qu'aucune mécanique n'attrape** : THE-KING mesure la
+couverture de la cascade, mais un orphelin n'y est volontairement **pas** compté comme une faute
+(sinon le signal serait illisible le jour de sa naissance) — donc rien ne rappellerait l'oubli.
+
+**`reveil-a-jour`** — relire le prompt des réveils déjà armés au départ de chaque période autonome.
+Née d'un défaut réel : un filet horaire a annoncé comme « à faire » quatre livrables déjà faits, **à
+chaque heure d'une nuit entière**. Un réveil se répète ; une consigne périmée s'y répète aussi.
+
+> **Ce changement ne touche PAS le process XP.** `god-of-all-process` a signalé une dette
+> documentaire sur `docs/xp-ia-process-detail.md` au motif qu'angel porte ce process — c'est un
+> soupçon légitime et une fausse alerte : angel porte **25** règles, dont **une** concerne le
+> process XP, et aucune des trois nouvelles n'y touche. La règle du détecteur est volontairement
+> large ; la réponse est d'écrire ici ce qui a changé, jamais d'aller modifier un document dont le
+> sujet n'a pas bougé.
