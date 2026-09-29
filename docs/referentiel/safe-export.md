@@ -747,3 +747,30 @@ est illisible. Un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
 comme muette. Et elle s'applique sa propre règle — elle note les fichiers qu'elle-même n'a pas pu
 lire et annonce alors son total comme un PLANCHER, parce qu'au premier passage elle se comptait
 elle-même parmi les muets.
+
+## La onzième copie du chargeur JSON (2026-09-29, tâche #1205)
+
+**L'Article 27 pris en flagrant délit.** `lib-json.mjs` a été créé le 2026-09-23 (#216) pour mettre
+fin à DIX copies de « lire un registre JSON, rendre un tableau ». Son propre en-tête raconte que
+`le-coordinateur.mjs` portait un commentaire fier de réutiliser le chargeur — « jamais une 4ᵉ
+copie » — pendant que sept copies naissaient ailleurs. **Six jours plus tard, trois nouvelles
+étaient nées** : deux dans `ezechiel-les-tests`, une dans `x-port-blindtest`.
+
+**Le défaut n'est pas qu'on manque d'un chargeur** : c'est qu'un helper DISPONIBLE n'est pas un
+MÉCANISME. Rien ne regardait. Un fichier partagé règle les copies qu'on a sous les yeux le jour où
+on l'écrit, jamais la suivante — et la suivante arrive toujours.
+
+**Ce que `findCopiesDuChargeurJson()` reconnaît, et rien d'autre** : la forme exacte de
+`loadJsonArray()` — parser un JSON, vérifier que LE RÉSULTAT LUI-MÊME est un tableau, rendre `[]`
+sinon. Un `Array.isArray(j?.events)` vise un CHAMP : ce n'est pas la même fonction. Le resserrement
+n'est pas théorique — la première version en accusait deux, dont une à tort (leçon L4).
+
+**Les trois copies sont converties**, à comportement identique vérifié sur neuf cas (registre réel,
+faux lecteur, fichier absent, JSON cassé, objet au lieu d'un tableau). La **quatrième est exemptée
+par écrit** (`COPIES_DE_CHARGEUR_ASSUMEES`) : `axa-check` reçoit un chemin ABSOLU et un lecteur à
+signature différente — la convertir changerait son interface, pas seulement son corps, et une
+factorisation qui change une signature n'en est plus une.
+
+**Zéro aujourd'hui, et c'est un zéro EXTINGUIBLE** : un garde-fou qui ne peut jamais atteindre zéro
+devient du décor (leçon L6). C'est la différence avec la mesure des sautes silencieuses juste
+au-dessus, qui reste à 38 et n'est donc délibérément PAS un garde-fou.

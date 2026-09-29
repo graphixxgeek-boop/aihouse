@@ -20924,6 +20924,69 @@ async function testPorteeDesAudits() {
 }
 await testPorteeDesAudits();
 
+// ————————————————————————————————————————————————————————————————————————
+// LA ONZIÈME COPIE DU CHARGEUR JSON — un helper disponible n'est pas un mécanisme
+// (2026-09-29, tâche #1205 — sixième doublon CLONE-HUNTER instruit)
+// ————————————————————————————————————————————————————————————————————————
+async function testCopiesDuChargeurJson() {
+  const SE = await import('../scripts/safe-export.mjs');
+  const faux = (fichiers, exemptes = {}) => SE.findCopiesDuChargeurJson({
+    root: '/fake', exemptes,
+    listDirImpl: () => Object.keys(fichiers),
+    readFileImpl: (p) => { const n = String(p).split('/').pop(); if (!(n in fichiers)) throw new Error('nope'); return fichiers[n]; },
+  });
+
+  // ── 1. LA FORME EXACTE DE loadJsonArray EST RECONNUE.
+  const copie = faux({ 'a.mjs': 'const j = JSON.parse(brut);\nreturn Array.isArray(j) ? j : [];' });
+  assert.equal(copie.copies.length, 1, 'a hand-written copy of loadJsonArray must be found: lib-json exists since 2026-09-23 to end ten of them, and three more were born in the six days that followed');
+
+  // ── 2. ET UN CHAMP N'EST PAS LE RÉSULTAT (leçon L4, et le resserrement n'est pas théorique :
+  // la première version en accusait deux, dont une à tort).
+  const champ = faux({ 'b.mjs': 'const j = JSON.parse(brut);\nreturn Array.isArray(j?.events) ? j.events : [];' });
+  assert.equal(champ.copies.length, 0, 'reading a FIELD of the parsed object is a different function — accusing it would make this guard the kind nobody reads');
+  const objet = faux({ 'c.mjs': 'const j = JSON.parse(brut);\nif (Array.isArray(j)) return { alertes: j };\nreturn { alertes: [] };' });
+  assert.equal(objet.copies.length, 0, 'and a loader that returns an OBJECT is not this shape either');
+
+  // ── 2bis. UN EXEMPLE QUI DÉCRIT LA FAUTE N'EST PAS LA FAUTE, et ce garde-fou l'a appris de la
+  // pire façon : au premier passage réel il accusait DEUX lignes de check-house.mjs — les fixtures
+  // du contre-test juste au-dessus, qui montrent la forme interdite dans une chaîne de caractères.
+  // Deuxième fois que ce projet paie cette leçon sur ce point précis (voir doc-report, #1168).
+  const dansUneChaine = faux({ 'd.mjs': "const exemple = 'const j = JSON.parse(x);';\nconst autre = 'return Array.isArray(j) ? j : [];';" });
+  assert.equal(dansUneChaine.copies.length, 0, 'a fixture that SHOWS the forbidden shape inside a string is not the shape — a guard that cannot tell accuses the very test written to prove it');
+  const dansUnCommentaire = faux({ 'e.mjs': '// const j = JSON.parse(x);\n// return Array.isArray(j) ? j : [];' });
+  assert.equal(dansUnCommentaire.copies.length, 0, 'and neither is a comment explaining it');
+  const t1205 = SE.sansCommentairesNiChaines('const a = 1;\n// parti\nconst j = JSON.parse(x);\nreturn Array.isArray(j) ? j : [];');
+  assert.equal(t1205.split('\n').length, 4, 'stripping must PRESERVE line numbering — a guard that names the wrong line sends the reader to innocent code');
+  assert.match(t1205, /Array\.isArray\(j\) \? j : \[\]/, 'and it must leave real code strictly untouched, otherwise it stops finding what it exists to find');
+
+  // ── 3. L'EXEMPTION EST DÉCLARÉE, JAMAIS DEVINÉE (Article 24).
+  assert.equal(faux({ 'a.mjs': 'const j = JSON.parse(brut);\nreturn Array.isArray(j) ? j : [];' }, { 'scripts/a.mjs': 'raison écrite' }).copies.length, 0, 'a declared exemption is honoured');
+  assert.ok(Object.values(SE.COPIES_DE_CHARGEUR_ASSUMEES).every((r) => String(r).length > 30), 'and every exemption must carry a real written reason — an exemption without one is an abandonment in disguise');
+
+  // ── 4. UNE MESURE IMPOSSIBLE NE REND JAMAIS UN ZÉRO (leçon L5), et ce qu'elle n'a pas lu se dit.
+  assert.equal(SE.findCopiesDuChargeurJson({ root: '/fake', listDirImpl: () => { throw new Error('nope'); } }), null, 'when scripts/ cannot be listed the answer is "not measured", never "no copies"');
+  assert.match(SE.formatCopiesDuChargeurJsonLines(null).join('\n'), /PAS MESUR/, 'and the printed line must say so');
+  const casse = SE.findCopiesDuChargeurJson({ root: '/fake', listDirImpl: () => ['ok.mjs', 'illisible.mjs'], readFileImpl: (p) => { if (String(p).includes('illisible')) throw new Error('nope'); return 'const x = 1;'; } });
+  assert.deepEqual(casse.nonLus, ['scripts/illisible.mjs'], 'files it could not read are named');
+  assert.match(SE.formatCopiesDuChargeurJsonLines(casse).join('\n'), /PLANCHER/, 'and the count is then announced as a FLOOR, never as complete');
+
+  // ── 5. SUR LE VRAI DÉPÔT : zéro, et c'est un zéro EXTINGUIBLE, pas une alarme décorative
+  // (leçon L6). Les trois copies du jour ont été converties, la quatrième est exemptée par écrit.
+  const reel = SE.findCopiesDuChargeurJson();
+  assert.ok(reel && reel.fichiersLus > 50, 'the live run must really read the repository — a guard verified on an empty corpus abstains, and an abstention reads like a clean result (leçon L11)');
+  assert.deepEqual(reel.copies, [], 'and against the real repository it must be at ZERO: a guard that can never reach zero becomes scenery');
+
+  // ── 6. LES TROIS CONVERSIONS SONT RÉELLES (leçon L2) : elles importent bien le chargeur partagé.
+  const { readFileSync: lire1205 } = await import('node:fs');
+  for (const f of ['scripts/ezechiel-les-tests.mjs', 'scripts/x-port-blindtest.mjs']) {
+    assert.match(lire1205(f, 'utf8'), /import \{ loadJsonArray \} from "\.\/lib-json\.mjs";/, `${f} must actually import the shared loader — a conversion announced and not made is the exact fault this task is about`);
+  }
+
+  console.log("Passed: la onzieme copie du chargeur JSON (2026-09-29, tache #1205). SIXIEME DOUBLON CLONE-HUNTER INSTRUIT, et c'est l'Article 27 pris en flagrant delit. lib-json.mjs a ete cree le 2026-09-23 pour mettre fin a DIX copies de « lire un registre JSON, rendre un tableau ». Son propre en-tete raconte que le-coordinateur portait un commentaire FIER de reutiliser le chargeur — « jamais une 4e copie » — pendant que sept copies naissaient ailleurs. SIX JOURS PLUS TARD, TROIS NOUVELLES ETAIENT NEES : deux dans ezechiel-les-tests, une dans x-port-blindtest. LE DEFAUT N'EST PAS QU'ON MANQUE D'UN CHARGEUR, c'est qu'un helper DISPONIBLE n'est pas un MECANISME : rien ne regardait. Un fichier partage regle les copies qu'on a sous les yeux le jour ou on l'ecrit, jamais la suivante — et la suivante arrive toujours. LES TROIS SONT CONVERTIES, a comportement identique verifie sur neuf cas (registre reel, faux lecteur, fichier absent, JSON casse, objet au lieu d'un tableau), et la QUATRIEME est exemptee PAR ECRIT : sa signature prend un chemin absolu, la convertir changerait son interface et pas seulement son corps. LE GARDE-FOU EST RESSERRE SUR LA FORME EXACTE, et ce n'est pas theorique : la premiere version en accusait deux dont une a tort, parce qu'un Array.isArray sur un CHAMP n'est pas la meme fonction (lecon L4). ZERO AUJOURD'HUI, ET C'EST UN ZERO EXTINGUIBLE : un garde-fou qui ne peut jamais atteindre zero devient du decor (lecon L6).");
+}
+await testCopiesDuChargeurJson();
+
+
 
 
 

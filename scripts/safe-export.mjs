@@ -1579,6 +1579,87 @@ export function tendancesExport(options = {}) {
 }
 
 // ————————————————————————————————————————————————————————————————————————
+// LA ONZIÈME COPIE DU CHARGEUR JSON (2026-09-29, tâche #1205)
+// ————————————————————————————————————————————————————————————————————————
+//
+// D'OÙ ÇA VIENT, ET C'EST L'ARTICLE 27 PRIS EN FLAGRANT DÉLIT. `lib-json.mjs` a été créé le
+// 2026-09-23 (#216) pour mettre fin à DIX copies de « lire un registre JSON, rendre un tableau ».
+// Son en-tête raconte lui-même que `le-coordinateur.mjs` portait un commentaire fier de réutiliser
+// le chargeur — « jamais une 4ᵉ copie » — pendant que sept copies naissaient ailleurs. Six jours
+// plus tard, TROIS NOUVELLES étaient nées : deux dans ezechiel-les-tests, une dans x-port-blindtest.
+//
+// LE DÉFAUT N'EST DONC PAS QU'ON MANQUE D'UN CHARGEUR : c'est qu'un helper DISPONIBLE n'est pas un
+// MÉCANISME. Rien ne regardait. Le fichier partagé règle le cas des copies qu'on a sous les yeux le
+// jour où on l'écrit, jamais celui de la suivante — et la suivante arrive toujours.
+//
+// CE QUE CE GARDE-FOU RECONNAÎT, ET RIEN D'AUTRE : la forme EXACTE de `loadJsonArray()` — parser un
+// JSON, puis vérifier que LE RÉSULTAT LUI-MÊME est un tableau, et rendre `[]` sinon. Un
+// `Array.isArray(j?.events)` vise un CHAMP : ce n'est pas la même fonction, et l'accuser ferait
+// exactement le garde-fou qu'on cesse de lire (leçon L4). Ce resserrement n'est pas théorique : la
+// première version en accusait deux, dont une à tort.
+export const COPIES_DE_CHARGEUR_ASSUMEES = {
+  // Sa signature ne colle pas : elle reçoit un chemin ABSOLU et un lecteur qui prend ce chemin
+  // entier, là où `loadJsonArray` prend un chemin RELATIF plus la racine. La convertir changerait
+  // sa signature, donc ses tests — une factorisation qui change une signature n'en est plus une.
+  "scripts/axa-check.mjs": "chemin absolu et lecteur à signature différente : la conversion changerait la signature publique, pas seulement le corps",
+};
+// LES CHAÎNES ET LES COMMENTAIRES SONT RETIRÉS AVANT DE CHERCHER, et ce garde-fou l'a appris de la
+// pire façon : au premier passage réel il accusait DEUX lignes de check-house.mjs — les fixtures de
+// son PROPRE contre-test, qui montrent la forme interdite à l'intérieur d'une chaîne de caractères.
+// Un exemple qui DÉCRIT la faute n'est pas la faute, et un garde-fou qui ne fait pas la différence
+// accuse le test écrit pour le prouver (leçon L4, et c'est la deuxième fois que ce projet la paie
+// sur ce point précis — voir la même correction dans doc-report, tâche #1168).
+// Les retours à la ligne sont PRÉSERVÉS : le numéro de ligne rendu doit rester celui du fichier.
+export function sansCommentairesNiChaines(source = "") {
+  return String(source)
+    .replace(/\/\*[\s\S]*?\*\//g, (bloc) => bloc.replace(/[^\n]/g, " "))
+    .replace(/^([ \t]*)\/\/.*$/gm, "$1")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/`(?:[^`\\]|\\.)*`/g, (t) => "``" + t.replace(/[^\n]/g, ""));
+}
+
+export const MOTIF_DECLARATION_JSON = /(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*JSON\.parse\(/;
+export const LIGNES_DE_LA_FORME_JSON = 3;
+
+export function findCopiesDuChargeurJson({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, exemptes = COPIES_DE_CHARGEUR_ASSUMEES } = {}) {
+  let fichiers;
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs") && f !== "lib-json.mjs"); } catch { return null; }
+  const copies = [];
+  const nonLus = [];
+  for (const f of fichiers.sort()) {
+    const chemin = `scripts/${f}`;
+    if (chemin in exemptes) continue;
+    let lignes;
+    try { lignes = sansCommentairesNiChaines(readFileImpl(join(root, chemin), "utf8")).split("\n"); } catch { nonLus.push(chemin); continue; }
+    for (let i = 0; i < lignes.length; i += 1) {
+      const m = lignes[i].match(MOTIF_DECLARATION_JSON);
+      if (!m) continue;
+      const nom = m[1].replace(/\$/g, "\\$");
+      const fenetre = lignes.slice(i, i + LIGNES_DE_LA_FORME_JSON).join("\n");
+      if (new RegExp(`Array\\.isArray\\(\\s*${nom}\\s*\\)\\s*\\?\\s*${nom}\\s*:\\s*\\[\\]`).test(fenetre)) {
+        copies.push({ fichier: chemin, ligne: i + 1, extrait: lignes[i].trim().slice(0, 100) });
+      }
+    }
+  }
+  return { copies, nonLus, fichiersLus: fichiers.length - nonLus.length };
+}
+
+export function formatCopiesDuChargeurJsonLines(r) {
+  if (!r) return ["🚨 PAS MESURÉ — le dossier scripts/ n'a pas pu être listé. Ce n'est pas un zéro."];
+  const l = [];
+  if (r.nonLus.length) l.push(`  ⚠️ ${r.nonLus.length} fichier(s) non lus, donc non vérifiés : ${r.nonLus.join(", ")} — le compte ci-dessous est un PLANCHER.`);
+  if (!r.copies.length) {
+    l.push(`CHARGEUR JSON : aucune copie de \`loadJsonArray()\` hors de lib-json.mjs, sur ${r.fichiersLus} fichier(s) lus.`);
+    return l;
+  }
+  l.push(`⚠️ ${r.copies.length} copie(s) de \`loadJsonArray()\` réécrites à la main plutôt qu'importées de lib-json.mjs :`);
+  for (const c of r.copies) l.push(`  · ${c.fichier}:${c.ligne} — ${c.extrait}`);
+  l.push("  lib-json.mjs existe depuis le 2026-09-23 pour ça. Un helper disponible n'est pas un mécanisme : celui-ci l'est.");
+  return l;
+}
+
+// ————————————————————————————————————————————————————————————————————————
 // LES SAUTES SILENCIEUSES (2026-09-29, tâche #1203) — une MESURE, pas une alarme
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -1926,6 +2007,14 @@ function main() {
   // réexport sans liaison locale se lit parfaitement et plante au premier appel interne — et le
   // défaut voyage avec l'outil, donc il arrive intact dans le dépôt qui l'adopte.
   for (const ligne of formatReexportsLines(auditReexports())) console.log(ligne);
+
+  // ET LE CODE RÉUTILISE-T-IL CE QUE L'AGENCE SAIT DÉJÀ FAIRE ? (2026-09-29, tâche #1205.) Voisine
+  // des deux précédentes et distincte : celles-là demandent si l'outil PART et s'il TIENT DEBOUT,
+  // celle-ci s'il emporte une copie de ce que le socle porte déjà. `lib-json.mjs` a été créé pour
+  // mettre fin à dix copies du même chargeur ; trois nouvelles sont nées dans les six jours qui ont
+  // suivi. Un helper disponible n'est pas un mécanisme — ce scan-ci en est un.
+  const copiesJson = findCopiesDuChargeurJson();
+  for (const ligne of formatCopiesDuChargeurJsonLines(copiesJson)) console.log(ligne);
 
   // LE TROISIÈME SENS, ENFIN BRANCHÉ (2026-09-23, tâche #218). Les trois détecteurs ci-dessus
   // examinent les blueprints QUI EXISTENT. Celui-ci pose la question inverse, et c'est la plus

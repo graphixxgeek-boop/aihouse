@@ -48,6 +48,7 @@
 // refaire le même diagnostic quatre-vingt-une fois de plus.
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { loadJsonArray } from "./lib-json.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, motsDuNom, normaliserNom, memeChose } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
@@ -136,9 +137,11 @@ export function choisirLeMembre({ lignes = [], passages = [], hasard = Math.rand
   return { mesurable: true, ...plusAncien, motif: `tout le parc est passé au moins une fois — au plus ancien (${vus.get(plusAncien.chemin) ?? "date inconnue"})`, phase: "rotation", restants: 0 };
 }
 
+// LE CHARGEUR EST CELUI DE L'AGENCE, PLUS UNE COPIE LOCALE (2026-09-29, tâche #1205) — même
+// raison qu'aux deux copies d'ezechiel-les-tests : `lib-json.mjs` existe depuis le 2026-09-23 pour
+// ça, et trois copies sont nées après lui. La signature ne bouge pas d'un caractère.
 export function chargerPassages({ root = ROOT, readFileImpl = readFileSync, fichier = FICHIER_PASSAGES } = {}) {
-  try { const brut = JSON.parse(readFileImpl(join(root, fichier), "utf8")); return Array.isArray(brut) ? brut : []; }
-  catch { return []; }
+  return loadJsonArray(fichier, { root, readFileImpl });
 }
 
 // ══════════════════════════════════════════════════════════════════════════

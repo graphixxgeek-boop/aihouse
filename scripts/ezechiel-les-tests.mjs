@@ -40,6 +40,7 @@
 // exprès et de relancer, ce que seule une passe à part peut faire.
 
 import { readFileSync, existsSync } from "node:fs";
+import { loadJsonArray } from "./lib-json.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { printReportHeader, imprimerPlanDaction, buildPlanDaction } from "./report-template.mjs";
@@ -1279,11 +1280,15 @@ export function formatRobustesseLines(v) {
 export const FICHIER_HISTORIQUE = "docs/ezechiel-les-tests/historique.json";
 export const FICHIER_ROBUSTESSE = "docs/ezechiel-les-tests/robustesse.json";
 
+// LE CHARGEUR EST CELUI DE L'AGENCE, PLUS UNE COPIE LOCALE (2026-09-29, tâche #1205).
+// Ces deux fonctions réécrivaient `lib-json.mjs` — le chargeur créé le 2026-09-23 (#216) pour
+// mettre fin à DIX copies de « lire un registre JSON, rendre un tableau ». Elles sont nées APRÈS
+// lui, ce qui est précisément ce que l'en-tête de ce chargeur redoutait : un helper disponible
+// n'est pas un mécanisme, et une intention écrite n'a jamais arrêté la copie suivante (Article 27).
+// Le paramètre `lire` est CONSERVÉ tel quel : les appelants et les tests l'utilisent, et une
+// factorisation qui change une signature au passage n'est plus une factorisation.
 export function lireHistorique({ root = ROOT, lire = null } = {}) {
-  const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
-  const brut = lireF(FICHIER_HISTORIQUE);
-  if (brut == null) return [];
-  try { const j = JSON.parse(brut); return Array.isArray(j) ? j : []; } catch { return []; }
+  return loadJsonArray(FICHIER_HISTORIQUE, { root, readFileImpl: lire ? () => lire(FICHIER_HISTORIQUE) : readFileSync });
 }
 
 // LE GAIN NE SE LIT QUE SUR DEUX RELEVÉS COMPARABLES. Deux exécutions dont l'une était rouge ne se
@@ -1314,10 +1319,7 @@ export function comparerDeuxReleves(avant = null, apres = null) {
 export const MARGE_DE_BRUIT_PCT = 3;
 
 export function lireRobustesse({ root = ROOT, lire = null } = {}) {
-  const lireF = lire ?? ((f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } });
-  const brut = lireF(FICHIER_ROBUSTESSE);
-  if (brut == null) return [];
-  try { const j = JSON.parse(brut); return Array.isArray(j) ? j : []; } catch { return []; }
+  return loadJsonArray(FICHIER_ROBUSTESSE, { root, readFileImpl: lire ? () => lire(FICHIER_ROBUSTESSE) : readFileSync });
 }
 
 // UNE PROTECTION PERDUE EST UN VETO, JAMAIS UNE REMARQUE. Chaque cassure est identifiée par
