@@ -21266,6 +21266,49 @@ async function testAlignementEnCascade() {
 await testAlignementEnCascade();
 
 // ————————————————————————————————————————————————————————————————————————
+// « EST-CE QUE L'AGENCE M'AIDE, OU EST-CE QUE JE M'Y PERDS ? » (2026-09-29, tâche #1155). Sa
+// question Q7, posée avec « sois honnête, pas besoin de me ménager » et « cette mesure
+// existe-t-elle aujourd'hui ? Il faut qu'elle soit mesurée ». Elle n'existait pas.
+async function testAideOuEncombre() {
+  const TB = await import('../scripts/tool-brain.mjs');
+
+  // LE PIÈGE ÉVITÉ EST LE CŒUR DE CE TEST : mesurer les tâches qui NOMMENT un outil rendrait un
+  // chiffre flatteur et faux — nommer n'est pas devoir. Seule la colonne ORIGINE est lue.
+  const parc = { lignes: [{ chemin: 'scripts/clone-hunter.mjs' }, { chemin: 'scripts/safe-export.mjs' }] };
+  const rows = [
+    { sousSujet: 'Trouvé par clone-hunter en déroulant la Ronde', detail: 'sans rapport', statut: 'Terminé' },
+    { sousSujet: 'Trouvé par safe-export', detail: 'x', statut: 'Ouverte' },
+    { sousSujet: 'Sa demande directe, aucun outil', detail: 'ce détail parle longuement de clone-hunter et de safe-export', statut: 'Terminé' },
+  ];
+  const m = await TB.mesurerAideOuEncombre({ rows, recensement: parc, history: [] });
+  assert.equal(m.mesurable, true, 'the measure runs on the fixture');
+  assert.equal(m.rapporte.ouvertesParUnOutil, 2,
+    'MUST CATCH the two rows whose ORIGIN names a tool, and MUST LET PASS the third, whose DÉTAIL names two tools but whose origin names none — on the real repository that distinction is 244 rows against 881, so reading the détail would produce a flattering, false number');
+  assert.equal(m.rapporte.closes, 1, 'and only the closed one among them counts as closed');
+  assert.equal(m.rapporte.partCloses, 50, 'the closure rate is computed on the tool-opened tasks, never on the whole registry');
+
+  // AUCUN SCORE UNIQUE, ET C'EST VERROUILLÉ ICI. Un chiffre unique sur « l'Agence est-elle
+  // utile ? » dépendrait de la pondération choisie, donc de l'humeur de qui la choisit.
+  assert.equal(m.score, undefined, 'no single score is produced: the two pans are weighed by the reader, never added up by the tool');
+  assert.ok(m.rapporte && m.coute, 'both pans are always returned, so neither can be read without the other');
+
+  // UNE SOURCE VIDE N'EST JAMAIS « L'AGENCE N'AIDE PAS » (leçon L5).
+  assert.equal((await TB.mesurerAideOuEncombre({ rows: [], recensement: parc, history: [] })).mesurable, false, 'an empty task registry refuses to conclude rather than reporting zero help');
+  assert.equal((await TB.mesurerAideOuEncombre({ rows, recensement: { lignes: [] }, history: [] })).mesurable, false, 'and an empty tool census does the same');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25) — c'est la mesure qu'il a demandée.
+  const reel = await TB.mesurerAideOuEncombre();
+  assert.equal(reel.mesurable, true, 'the measure must actually run against the real repository — a tool that never ran for real is an intention');
+  assert.ok(reel.rapporte.taches > 900, `on the whole registry (currently ${reel.rapporte.taches} rows)`);
+  assert.ok(reel.rapporte.ouvertesParUnOutil > 100 && reel.rapporte.ouvertesParUnOutil < reel.rapporte.taches,
+    `and it finds a real, non-trivial share opened by a tool without swallowing the whole registry (currently ${reel.rapporte.ouvertesParUnOutil}/${reel.rapporte.taches})`);
+
+  console.log("Passed: « est-ce que l'agence m'aide, ou est-ce que je m'y perds ? » — sa question Q7, posée le 2026-09-28 avec « sois honnête, pas besoin de me ménager » et « cette mesure existe-t-elle aujourd'hui ? Il faut qu'elle soit mesurée ». ELLE N'EXISTAIT PAS, et une question posée sur la valeur de TOUT le paysage ne peut pas rester sans instrument. CHEZ TOOL-BRAIN (Article 31) : c'est lui qui est plugué directement à l'agent et qui tient déjà le compteur d'usage — un outil de plus aurait coûté dix registres, soit précisément l'un des chiffres que cette mesure rapporte. AUCUN SCORE UNIQUE, ET C'EST LA DÉCISION CENTRALE : un chiffre sur « l'Agence est-elle utile ? » dépendrait entièrement de la pondération choisie, donc de l'humeur de qui la choisit — les deux plateaux se rendent séparés et c'est au lecteur de peser. LE PIÈGE ÉVITÉ EST GROS ET IL EST VERROUILLÉ PAR UN CONTRE-TEST : compter les tâches qui NOMMENT un outil rend 881 sur 1 090, un chiffre flatteur et faux, parce que nommer n'est pas devoir — seule la colonne ORIGINE est lue, et elle rend 244. RÉSULTAT RÉEL AU PREMIER PASSAGE : 244 tâches sur 1 090 ouvertes par un outil (22 %), dont 232 closes (95 %) — un travail trouvé par un outil est donc un travail qui aboutit ; en face, 93 fichiers d'outillage à tenir et 12 outils jamais sollicités. La réponse honnête tient en une phrase, et elle est dans les deux sens : l'Agence aide à TROUVER, et coûte à NAVIGUER.");
+}
+
+await testAideOuEncombre();
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RETENU OUBLIÉ, ET LE SIXIÈME FAUX CHIFFRE (2026-09-28, tâche #1103)
 // ————————————————————————————————————————————————————————————————————————
 // Il a demandé « qu'est-ce qu'on a oublié ? », et la réponse était écrite depuis le matin : le plan

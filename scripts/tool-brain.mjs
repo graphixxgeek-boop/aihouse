@@ -631,6 +631,15 @@ async function main() {
     return;
   }
 
+  // `aide-ou-encombre` — sa question Q7, celle qu'il a posée en demandant l'honnêteté (2026-09-29,
+  // tâche #1155). À la demande, jamais dans le crochet : elle lit tout le registre des tâches et
+  // tout le recensement, et une mesure de cette taille n'a pas sa place dans un post-commit.
+  if (rest[0] === "aide-ou-encombre") {
+    recordCliUsage(TOOL_BRAIN_SLUG);
+    for (const l of formatAideOuEncombreLines(await mesurerAideOuEncombre())) console.log(l);
+    return;
+  }
+
   if (rest[0] === "rapport") {
     const history = loadToolUsageHistory();
     let checkLastCommitSource;
@@ -740,6 +749,107 @@ async function main() {
   if (!prestations.length && !fileAdvice) {
     console.log("Vérifier manuellement si un outil existant répond déjà au besoin avant de foncer (Article 3, anti-doublon).");
   }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// « EST-CE QUE L'AGENCE M'AIDE, OU EST-CE QUE JE M'Y PERDS ? » (2026-09-29, tâche #1155)
+//
+// SA QUESTION, MOT POUR MOT, avec sa consigne : « est-ce que l'agence m'aide ou est-ce que je m'y
+// perds ? Sois honnête, pas besoin de me ménager. Cette mesure existe-t-elle aujourd'hui ? Il faut
+// qu'elle soit mesurée. » Elle n'existait pas. Une question posée sur la valeur de TOUT le paysage
+// ne peut pas rester sans instrument.
+//
+// CHEZ TOOL-BRAIN ET NULLE PART AILLEURS : c'est lui qui est « plugué directement » à l'agent, il
+// tient déjà le compteur d'usage réel et le KPI des outils jamais sollicités. L'étendre coûte une
+// fonction ; un outil de plus coûterait dix registres — le coût d'entrée que JESUS mesure, et qui
+// est précisément l'un des chiffres de cette mesure-ci.
+//
+// AUCUN SCORE UNIQUE, ET C'EST LA DÉCISION CENTRALE. Un chiffre unique sur « l'Agence est-elle
+// utile ? » serait exactement le satisfecit que ce projet refuse : il dépendrait entièrement de la
+// pondération choisie, donc de l'humeur de qui la choisit. **Les deux plateaux se rendent SÉPARÉS,
+// et c'est au lecteur de peser.** Même doctrine que le pourcentage refusé pour la couverture d'une
+// commande (#1145).
+//
+// LE PIÈGE ÉVITÉ, ET IL EST GROS : mesurer « combien de tâches NOMMENT un outil » rend 881 sur
+// 1 090 — un chiffre flatteur et faux, parce que nommer n'est pas devoir. Ce qui est mesuré ici est
+// la colonne ORIGINE seule : « d'où vient cette tâche ». Une tâche dont l'ORIGINE nomme un outil a
+// vraiment été ouverte par lui.
+// LES DEUX IMPORTS SONT DYNAMIQUES, et ce n'est pas un détail de style : `check-tasks-details` et
+// `cassandra-rh` tirent chacun une bonne partie du paysage derrière eux. Les importer en tête ferait
+// de tool-brain — qui est appelé par le crochet post-commit — un point de passage obligé vers eux,
+// et une erreur chez l'un casserait le crochet de tout le monde. Le même refus a déjà été opposé à
+// HARMONIA le 2026-09-25, pour exactement cette raison.
+export async function mesurerAideOuEncombre({ rows = null, recensement = null, history = null } = {}) {
+  let taches = rows, parc = recensement, usage = history;
+  try {
+    if (!taches) taches = (await import("./check-tasks-details.mjs")).loadAllTaskRows().filter(Boolean);
+    if (!parc) parc = (await import("./cassandra-rh.mjs")).recenserLesScripts();
+    if (!usage) usage = loadToolUsageHistory();
+  } catch (e) {
+    return { mesurable: false, pourquoi: `une des trois sources n'a pas pu être lue (${e.message}) — et une source manquante ne se remplace pas par un zéro (leçon L5)` };
+  }
+  if (!taches?.length || !parc?.lignes?.length) {
+    return { mesurable: false, pourquoi: "registre de tâches ou recensement d'outils vide : ce zéro dit qu'on n'a rien lu, jamais que l'Agence n'aide pas" };
+  }
+
+  const nomsOutils = parc.lignes
+    .map((l) => String(l.chemin ?? "").replace(/^scripts\//, "").replace(/\.mjs$/, "").toLowerCase())
+    .filter((n) => n.length > 5);
+
+  let ouvertesParUnOutil = 0, etCloses = 0;
+  const parOutil = {};
+  for (const r of taches) {
+    const origine = String(r.sousSujet ?? "").toLowerCase();
+    const trouve = nomsOutils.filter((n) => origine.includes(n));
+    if (!trouve.length) continue;
+    ouvertesParUnOutil += 1;
+    for (const n of trouve) parOutil[n] = (parOutil[n] ?? 0) + 1;
+    if (/^termin/i.test(String(r.statut ?? "").normalize("NFD").replace(/[̀-ͯ]/g, ""))) etCloses += 1;
+  }
+
+  const jamaisSollicites = (() => { try { return toolsNeverUsed(usage, knownToolSlugsFromPrestations()).length; } catch { return null; } })();
+
+  return {
+    mesurable: true,
+    // LE PLATEAU « ÇA RAPPORTE » — mesuré sur l'origine seule, jamais sur une mention.
+    rapporte: {
+      taches: taches.length,
+      ouvertesParUnOutil,
+      partOuvertes: Math.round((ouvertesParUnOutil / taches.length) * 100),
+      closes: etCloses,
+      partCloses: ouvertesParUnOutil ? Math.round((etCloses / ouvertesParUnOutil) * 100) : null,
+      meilleurs: Object.entries(parOutil).sort((a, b) => b[1] - a[1]).slice(0, 5),
+    },
+    // LE PLATEAU « ÇA COÛTE » — tout ce qu'il faut payer pour que le premier existe.
+    coute: {
+      outils: parc.lignes.length,
+      jamaisSollicites,
+      pourquoiJamais: jamaisSollicites === null ? "compteur d'usage illisible — déclaré, jamais compté comme zéro" : null,
+    },
+    pourquoi: `${ouvertesParUnOutil} tâche(s) sur ${taches.length} ont été OUVERTES par un outil (leur colonne origine le nomme), dont ${etCloses} closes · le parc compte ${parc.lignes.length} fichier(s)`,
+  };
+}
+
+export function formatAideOuEncombreLines(m) {
+  if (!m?.mesurable) return ["=== L'AGENCE AIDE-T-ELLE, OU ENCOMBRE-T-ELLE ? : PAS MESURÉ ===", `  ${m?.pourquoi}`, "", "  Ce n'est PAS « elle aide »."];
+  const L = ["=== L'AGENCE AIDE-T-ELLE, OU ENCOMBRE-T-ELLE ? — deux plateaux, jamais une note ===", ""];
+  L.push(`  ⚖️  CE QUE ÇA RAPPORTE`);
+  L.push(`     ${m.rapporte.ouvertesParUnOutil} tâche(s) sur ${m.rapporte.taches} ont été OUVERTES par un outil (${m.rapporte.partOuvertes} %)`);
+  L.push(`     dont ${m.rapporte.closes} closes (${m.rapporte.partCloses} %) — un travail trouvé par un outil est donc un travail qui aboutit`);
+  L.push(`     les plus trouveurs : ${m.rapporte.meilleurs.map(([n, c]) => `${n} (${c})`).join(" · ")}`);
+  L.push("");
+  L.push(`  ⚖️  CE QUE ÇA COÛTE`);
+  L.push(`     ${m.coute.outils} fichier(s) d'outillage à tenir`);
+  L.push(`     ${m.coute.jamaisSollicites === null ? m.coute.pourquoiJamais : `${m.coute.jamaisSollicites} outil(s) jamais sollicité(s)`}`);
+  L.push("");
+  L.push("  AUCUN SCORE UNIQUE N'EST PRODUIT, et c'est la décision centrale de cette mesure : un chiffre unique sur");
+  L.push("  « l'Agence est-elle utile ? » dépendrait entièrement de la pondération choisie, donc de l'humeur de qui");
+  L.push("  la choisit — ce serait le satisfecit que ce projet refuse. Les deux plateaux se pèsent, ils ne s'additionnent pas.");
+  L.push("");
+  L.push("  LA LIMITE, DÉCLARÉE : le plateau « rapporte » lit la colonne ORIGINE seule, jamais le détail. Mesurer les");
+  L.push("  tâches qui NOMMENT un outil rendrait 881 sur 1 090 — flatteur et faux, parce que nommer n'est pas devoir.");
+  return L;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();
