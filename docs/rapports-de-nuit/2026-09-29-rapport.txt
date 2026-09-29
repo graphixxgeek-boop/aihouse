@@ -66,6 +66,21 @@ LA RONDE, en mode autonome (72 commits d'écart)
   Onze scanners gratuits. Deux constats certains traités, les autres consignés.
 
 
+LE SECOND ÉTAGE DE #725 — LA CARTE DES DOSSIERS
+  `node scripts/data-archangel.mjs carte`. Ses quatre questions reçoivent chacune un signal DÉRIVÉ :
+  à quoi sert ce dossier · s'écrit-il tout seul · s'historise-t-il · de quoi dépend-il.
+  92 dossiers, 67 écrits par un script, 46 qui gardent une suite de passages datés. #725 est close.
+
+LA DETTE DE FICHES, DE 15 À 0
+  Un garde-fou neuf (`god-of-all-process fiches`) a trouvé 15 fiches d'outil dont le script avait
+  gagné une fonction publique qu'elles ne nommaient pas. Toutes réparées — et chaque section écrite
+  porte la RAISON, pas un résumé du code.
+
+TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
+  L'ESCALADE, l'ALIGNEMENT À LA CRÉATION et le RÉVEIL À JOUR sont désormais surveillées par angel
+  (25 règles au lieu de 22). Sans ça, elles disparaissaient à la session suivante.
+
+
 2. CE QUI A ÉTÉ TROUVÉ — et que personne ne cherchait
 ------------------------------------------------------
   · Le but du projet n'était écrit nulle part (ci-dessus).
@@ -80,6 +95,14 @@ LA RONDE, en mode autonome (72 commits d'écart)
     priorise pas.
   · Les 3 documents HTML venaient d'un script jetable : justes ce soir-là, faux à la première
     correction du Markdown.
+  · Un garde-fou annonçait depuis sa création quelque chose qu'il ne faisait pas : il promettait
+    d'ignorer les chemins cités en commentaire, et rien ne retirait les commentaires.
+  · Une mesure crédible et FAUSSE, arrêtée avant publication : elle annonçait que l'Agence n'a ni
+    système de tâches ni KPI. Cause réelle — et ce n'était pas la première trouvée.
+  · Un réveil a diffusé une consigne périmée à chaque heure de la nuit, et la leçon qui devait
+    l'empêcher existait depuis quatre jours sans aucun mécanisme pour la porter.
+  · Cinq frontières de documents jumeaux en une nuit : mes fiches sont trop longues (543 lignes
+    contre une médiane de 101).
 
 
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
