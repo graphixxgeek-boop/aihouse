@@ -4,6 +4,31 @@ Heure LUE (source système), pas devinée. Process `nuit` suivi dans son ordre.
 109 tâches ouvertes figées au départ (docs/rapports-de-nuit/plan-depart-2026-09-29.txt).
 
 
+SI TU NE LIS QUE DIX LIGNES, LIS CELLES-CI
+-------------------------------------------
+*(Ajouté en fin de nuit : le rapport a grossi jusqu'à dix-neuf sections, et te faire tout lire pour
+savoir ce qui compte serait exactement le travail que je suis censé t'épargner.)*
+
+  · **Rien de ce que j'ai touché ne peut avoir bougé Lia et Noé.** Compté sur git : cette nuit a
+    changé des fichiers de documentation et d'outillage, **zéro dans le jeu**. Tes bornes tiennent,
+    et c'est vérifiable plutôt qu'affirmé.
+  · **Le ton n'a PAS été mesuré cette nuit**, et ce n'est pas la même chose que « le ton va bien » —
+    je n'ai pas relancé le vérificateur, la raison est écrite et le manque est déclaré.
+  · **Le plus gros filon : les doublons de code ne parlaient jamais de duplication.** Huit instruits,
+    huit trouvailles d'une autre nature — un gabarit qui ne lisait pas un champ que onze outils
+    écrivent, deux contrôles qui ne voyaient que 44 % du registre, un chargeur partagé contourné
+    trois fois en six jours.
+  · **Deux fois j'ai refusé de faire tomber un compteur** en fabriquant ce qu'il réclamait. Les deux
+    sont devenues des questions pour toi plutôt que du travail pour moi.
+  · **La bannière des Gardiens est propre pour la première fois** — et le dernier avertissement à
+    s'éteindre était un avertissement que rien ne pouvait éteindre.
+  · **Trois fautes sont de moi et je les raconte** : un test écrit en double une heure après avoir
+    avoué la règle qui l'aurait évité, mes propres réveils qui te mentaient depuis des heures, et un
+    contre-test qui punissait le fait de documenter.
+  · **Ce qui t'attend** : les décisions en attente (§4), la Ronde — deux de ses douze étapes exigent
+    ta présence — et le calibrage, dont rien en aval n'a bougé sans toi.
+
+
 CE QU'IL AVAIT DEMANDÉ AVANT DE DORMIR
 --------------------------------------
 1. Respecter tout ce qui s'est dit dans les échanges de départ, et l'enregistrer.
