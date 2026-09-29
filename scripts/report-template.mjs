@@ -451,9 +451,19 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
     else if (c.etat === "ecarte") lignes.push(`  ✗ ÉCARTÉ · ${c.constat} — ${c.pourquoi ?? "⚠️ écarté sans raison écrite, ce qui n'est pas une décision"}`);
     else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
   }
+  // L'ALARME QUI MORD DANS L'AUTRE SENS (2026-09-29, tâche #1200). Le défaut de libellé couvre les
+  // champs que les outils écrivent AUJOURD'HUI ; le prochain qui nommera le sien autrement
+  // retombera sur String(objet) et imprimera « [object Object] ». Le rapport resterait vert :
+  // `reportHasPlanDaction()` verrait bien une section, `sansTache` ne verrait rien d'anormal, et
+  // le constat serait illisible sans que rien ne le dise. C'est exactement le faux vert que ce
+  // projet traque — un signal ADJACENT (« la section existe ») lu comme le signal visé (« le
+  // constat se lit »). L'accusation est sans ambiguïté possible : seul un objet stringifié produit
+  // cette chaîne, donc ce garde-fou ne peut pas accuser à tort (leçon L4).
+  const illisibles = constats.filter((c) => String(c.constat) === LIBELLE_ILLISIBLE || String(c.constat ?? "").trim() === "");
+  if (illisibles.length) lignes.push("", `🚨 ${illisibles.length} constat(s) dont le LIBELLÉ est illisible — l'écart porte son texte dans un champ que le libellé par défaut ne lit pas (connus : ${CHAMPS_DU_LIBELLE.join(", ")}). Déclarer \`libelle\` à l'appel, ou ajouter le champ à CHAMPS_DU_LIBELLE. Un constat illisible compte comme un constat rendu, ce qui est pire qu'une absence.`);
   if (sansTache.length) lignes.push("", `⚠️ ${sansTache.length} constat(s) retenu(s) sans tâche associée — un constat retenu qui ne devient pas une tâche est un constat oublié.`);
   if (aCorroborer.length) lignes.push("", `🔁 ${aCorroborer.length} constat(s) CRITIQUE(S) en attente d'une seconde mesure indépendante — jamais un rejet : la vérification par un second outil est la seule mitigation mesurée qui fasse tomber le faux succès d'environ 48 % à 3 %.`);
-  return { lignes, retenus, sansTache, aCorroborer, vide: false, toolSlug, prioritaire: prio.prioritaire };
+  return { lignes, retenus, sansTache, aCorroborer, illisibles, vide: false, toolSlug, prioritaire: prio.prioritaire };
 }
 
 // planDactionDepuisEcarts() (2026-09-23) — le raccourci qui rend le câblage tenable.
@@ -475,12 +485,43 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
 // une fonction : dans une même liste, un écart peut être critique et le suivant non. Les laisser
 // vides est le comportement d'avant, à l'identique — aucun outil ne change de sortie tant qu'il ne
 // les déclare pas.
-export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = (e) => String(e?.message ?? e?.pourquoi ?? e) } = {}) {
+export const CHAMPS_DU_LIBELLE = ["message", "pourquoi", "quoi"];
+export const CHAMPS_DE_LA_TACHE = ["quoiFaire"];
+export const LIBELLE_ILLISIBLE = "[object Object]";
+
+// libelleParDefaut() (2026-09-29, tâche #1200) — POURQUOI un nom de champ se DÉRIVE au lieu de se
+// recopier. Le chemin par défaut ne connaissait que `message` et `pourquoi` ; les outils qui
+// nomment leur champ `quoi` devaient donc RÉÉCRIRE `libelle: (e) => e.quoi` à chaque appel —
+// onze fois dans le dépôt, et sept fois `tache: (e) => e.quoiFaire` à côté. CLONE-HUNTER a
+// signalé deux de ces copies comme un doublon ; le doublon n'était que la trace visible du vrai
+// défaut, qui est que le gabarit ne savait pas lire un champ que onze outils écrivent
+// (Article 24 : un nouveau venu hérite de ce que l'équipe sait déjà faire).
+//
+// CE QUE ÇA NE CHANGE POUR PERSONNE, et c'est vérifié : `message` et `pourquoi` restent en
+// tête de chaîne, donc aucun appelant existant ne voit son libellé bouger, et un `libelle`
+// déclaré l'emporte toujours sur le défaut.
+export function libelleParDefaut(e, { champs = CHAMPS_DU_LIBELLE } = {}) {
+  for (const champ of champs) {
+    const v = e?.[champ];
+    if (v !== undefined && v !== null && String(v) !== "") return String(v);
+  }
+  return String(e);
+}
+
+export function tacheParDefaut(e, { champs = CHAMPS_DE_LA_TACHE } = {}) {
+  for (const champ of champs) {
+    const v = e?.[champ];
+    if (v !== undefined && v !== null && String(v) !== "") return String(v);
+  }
+  return null;
+}
+
+export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut } = {}) {
   const resoudre = (v, e) => (typeof v === "function" ? v(e) : v);
   const constats = (ecarts ?? []).map((e) => ({
     constat: libelle(e),
     etat: "retenu",
-    tache: typeof tache === "function" ? tache(e) : (tache ?? "à qualifier par l'agent à la lecture du rapport"),
+    tache: typeof tache === "function" ? tache(e) : (tache ?? tacheParDefaut(e) ?? "à qualifier par l'agent à la lecture du rapport"),
     toucheLeJeu,
     fausseUneMesure,
     critique: Boolean(resoudre(critique, e)),

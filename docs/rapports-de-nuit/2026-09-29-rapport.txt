@@ -331,6 +331,41 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   les fondre changerait le dénominateur d'un détecteur, ce qui est une décision et non un ménage.
 
 
+2decies. LE DERNIER DOUBLON DE LA LISTE, ET IL CACHAIT LE MÊME GENRE DE CHOSE
+-----------------------------------------------------------------------------
+  La règle écrite juste au-dessus a été appliquée au doublon suivant, et elle a repayé.
+
+  CE QUE CLONE-HUNTER MONTRAIT : cinq lignes identiques dans `check-profil-utilisateur` et
+  `le-regisseur` — le même appel au constructeur de plan d'action. Les fondre n'aurait rien réglé.
+
+  CE QUE LA QUESTION « POURQUOI CES DEUX BLOCS EXISTENT ? » A RENDU : le gabarit des rapports ne
+  savait lire le texte d'un constat que dans deux champs (`message`, `pourquoi`). Les outils qui
+  nomment le leur `quoi` devaient donc RÉAPPRENDRE la même chose au gabarit à chaque appel —
+  **onze fois** dans le dépôt, et **sept fois** pour la tâche associée juste à côté. Un nom de
+  champ recopié onze fois : exactement ce que l'Article 24 interdit.
+
+  MAIS LE VRAI TROU EST AILLEURS, ET IL EST PROSPECTIF. Le douzième outil qui nommera son champ
+  autrement n'aura pas d'erreur : son plan d'action imprimera « [object Object] » à la place du
+  constat, **et le rapport restera vert** — le contrôle qui vérifie qu'un rapport a bien un plan
+  d'action verra une section, et celui qui compte les constats sans tâche ne verra rien d'anormal.
+  Un signal ADJACENT (« la section existe ») lu comme le signal visé (« le constat se lit ») :
+  la classe d'erreur dominante de toute cette nuit, une dernière fois.
+
+  CE QUI EST FAIT : les deux listes de champs sont désormais LUES par le gabarit, et une alarme
+  nomme le champ inconnu quand un constat devient illisible. Elle ne peut pas accuser à tort —
+  seule la mise en texte d'un objet produit cette chaîne exacte.
+
+  MESURÉ, JAMAIS SUPPOSÉ : sept outils rejoués avant/après impriment des plans strictement
+  identiques (différence vide), et une sonde sur les 93 fichiers d'outils confirme qu'aucun n'est
+  aujourd'hui dans le cas illisible. Le trou était à venir, et il est dit comme tel.
+
+  CE QUE JE N'AI PAS FAIT, ET POURQUOI : je n'ai pas retiré les onze accès devenus inutiles. Ils ne
+  sont pas faux, seulement redondants ; les enlever toucherait onze fichiers pour zéro changement
+  de comportement — un risque sans contrepartie une nuit d'autonomie. CLONE-HUNTER continuera donc
+  de signaler cette paire, et c'est honnête : le défaut qu'elle cachait est réparé, la
+  ressemblance de surface reste.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.

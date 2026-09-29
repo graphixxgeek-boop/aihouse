@@ -20758,6 +20758,48 @@ async function testConcordanceADeuxOutils() {
 await testConcordanceADeuxOutils();
 
 // ————————————————————————————————————————————————————————————————————————
+// LE NOM DE CHAMP QUI SE DÉRIVE, ET L'ALARME POUR LE DOUZIÈME
+// (2026-09-29, tâche #1200 — parti d'un doublon signalé par CLONE-HUNTER)
+// ————————————————————————————————————————————————————————————————————————
+async function testLibelleParDefaut() {
+  const RT = await import('../scripts/report-template.mjs');
+  const ligne = (p) => p.lignes.join('\n');
+
+  // ── 1. LE CHAMP QUE ONZE OUTILS ÉCRIVENT EST ENFIN LU PAR LE GABARIT.
+  const q = RT.planDactionDepuisEcarts([{ quoi: 'un truc', quoiFaire: 'le faire' }], { toolSlug: 'x' });
+  assert.match(ligne(q), /→ RETENU · un truc/, 'the quoi field must be read by the default label: eleven tools write it, and each one had to re-teach the template the same thing');
+  assert.match(ligne(q), /tâche \[[A-Z]+\] : le faire/, 'and quoiFaire must become the task, for the same reason — seven callers were recopying that accessor too');
+
+  // ── 2. AUCUN APPELANT EXISTANT NE BOUGE : l'ordre de la chaîne le garantit.
+  assert.match(ligne(RT.planDactionDepuisEcarts([{ message: 'M', quoi: 'Q' }], { toolSlug: 'x' })), /→ RETENU · M/, 'message must stay ahead of quoi — a default that reorders the chain would silently change what existing tools print');
+  assert.match(ligne(RT.planDactionDepuisEcarts([{ pourquoi: 'P', quoi: 'Q' }], { toolSlug: 'x' })), /→ RETENU · P/, 'pourquoi must stay ahead of quoi, same reason');
+  assert.match(ligne(RT.planDactionDepuisEcarts([{ quoi: 'Q' }], { toolSlug: 'x', libelle: () => 'EXPLICITE' })), /→ RETENU · EXPLICITE/, 'a declared libelle must always beat the default');
+  assert.match(ligne(RT.planDactionDepuisEcarts([{ quoi: 'Q', quoiFaire: 'QF' }], { toolSlug: 'x', tache: 'FIXE' })), /tâche \[[A-Z]+\] : FIXE/, 'a declared tache must always beat quoiFaire');
+
+  // ── 3. L'ALARME MORD DANS L'AUTRE SENS (BP4) : le défaut couvre les champs d'aujourd'hui ; le
+  // douzième outil qui nommera le sien autrement doit être ACCUSÉ, pas servi en silence.
+  const inconnu = RT.planDactionDepuisEcarts([{ souci: 'un champ jamais vu' }], { toolSlug: 'x' });
+  assert.equal(inconnu.illisibles.length, 1, 'an ecart whose text lives in an unknown field produces "[object Object]" — the section still prints, reportHasPlanDaction() still says yes, and nothing would say the finding is unreadable');
+  assert.match(ligne(inconnu), /🚨 1 constat\(s\) dont le LIBELLÉ est illisible/, 'and the alarm must be PRINTED, not only returned: a mechanism that is not emitted is an intention (leçon L2)');
+  assert.match(ligne(inconnu), /connus : message, pourquoi, quoi/, 'the alarm must NAME the fields it knows, so the fix is readable without opening the template');
+
+  // ── 4. ET ELLE N'ACCUSE PAS À TORT (leçon L4) : seul un objet stringifié produit cette chaîne.
+  assert.equal(RT.planDactionDepuisEcarts([{ quoi: 'Q' }], { toolSlug: 'x' }).illisibles.length, 0, 'a healthy finding must never be accused');
+  assert.equal(RT.planDactionDepuisEcarts(['une chaîne toute simple'], { toolSlug: 'x' }).illisibles.length, 0, 'a plain string finding is perfectly readable and must never be accused either');
+  assert.equal(RT.planDactionDepuisEcarts([], { toolSlug: 'x' }).illisibles, undefined, 'an empty plan returns early and carries no illisibles list — nothing to accuse');
+
+  // ── 5. LE PREMIER USAGE EST RÉEL (leçon L2) : les copies existent bien dans le dépôt.
+  const { readFileSync: lire1200 } = await import('node:fs');
+  const regisseur = lire1200('scripts/le-regisseur.mjs', 'utf8');
+  const profil = lire1200('scripts/check-profil-utilisateur.mjs', 'utf8');
+  assert.ok(/libelle: \(e\) => e\.quoi/.test(regisseur) && /libelle: \(e\) => e\.quoi/.test(profil), 'the two blocks CLONE-HUNTER flagged must still be the real pair this task started from — if they vanish, this test is measuring nothing');
+
+  console.log("Passed: le nom de champ se DERIVE, et l'alarme pour le douzieme (2026-09-29, tache #1200). D'OU CA VIENT, ET C'EST LA LECON : CLONE-HUNTER a signale deux blocs quasi identiques dans check-profil-utilisateur et le-regisseur. Les fondre parce qu'ils se ressemblent n'aurait rien regle — la vraie question etait POURQUOI ils existent, et la reponse est que le gabarit ne savait pas lire le champ quoi, si bien que ONZE outils reecrivaient l'acces au libelle et SEPT reecrivaient l'acces a la tache. Un nom de champ recopie onze fois est exactement ce que l'Article 24 interdit : un nouveau venu doit HERITER de ce que l'equipe sait deja faire. CE QUI NE CHANGE POUR PERSONNE, et c'est mesure : message et pourquoi restent en tete de chaine, un libelle declare l'emporte toujours, et les sept outils rejoues avant/apres impriment des plans d'action strictement identiques. CE QUE CA FERME POUR DEMAIN : le douzieme outil qui nommera son champ autrement imprimait « [object Object] » dans son plan d'action SANS QUE RIEN NE LE DISE — reportHasPlanDaction() voyait une section, sansTache ne voyait rien d'anormal, et le rapport restait vert. Un signal ADJACENT (« la section existe ») lu comme le signal vise (« le constat se lit ») : la classe d'erreur dominante de toute cette nuit. L'alarme est desormais imprimee, elle NOMME les champs connus pour que la correction se lise sans ouvrir le gabarit, et elle ne peut pas accuser a tort puisque seule la stringification d'un objet produit cette chaine exacte (lecon L4).");
+}
+await testLibelleParDefaut();
+
+
+// ————————————————————————————————————————————————————————————————————————
 // L'ABSTENTION CALIBRÉE (2026-09-28, tâche #695, volet F des failles IA)
 // ————————————————————————————————————————————————————————————————————————
 // Avec la vérification indépendante (volet E), l'abstention calibrée est l'AUTRE mitigation qui

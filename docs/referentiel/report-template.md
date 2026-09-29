@@ -110,3 +110,45 @@ sortie de secours.
 
 **L'adoption est remesurée à chaque passage du filet**, jamais promise. C'est la seule façon qu'un
 dispositif opt-in ne devienne pas du décor sans que personne ne s'en aperçoive (L6).
+
+## Le nom de champ se DÉRIVE, et l'alarme pour le douzième (2026-09-29, tâche #1200)
+
+**D'où ça vient, et c'est toute la leçon.** CLONE-HUNTER a signalé deux blocs quasi identiques,
+`scripts/check-profil-utilisateur.mjs:110` et `scripts/le-regisseur.mjs:236` — le même appel de cinq
+lignes à `planDactionDepuisEcarts()`. Les fondre parce qu'ils se ressemblent n'aurait rien réglé. La
+question posée à la place, celle que la tâche #1199 avait inscrite en règle — *« POURQUOI ces deux
+blocs existent, jamais les fondre parce qu'ils se ressemblent »* — a rendu une réponse tout autre :
+le gabarit ne savait pas lire le champ `quoi`. Sa chaîne de libellé par défaut ne connaissait que
+`message` et `pourquoi`, si bien que **onze** outils réécrivaient `libelle: (e) => e.quoi` et
+**sept** réécrivaient `tache: (e) => e.quoiFaire` à côté. Le doublon n'était que la trace visible du
+vrai défaut : un nom de champ recopié onze fois, exactement ce que l'Article 24 interdit — *un
+nouveau venu hérite de ce que l'équipe sait déjà faire*.
+
+**Ce qui change** : `CHAMPS_DU_LIBELLE` (`message`, `pourquoi`, `quoi`) et `CHAMPS_DE_LA_TACHE`
+(`quoiFaire`) sont deux listes lues par `libelleParDefaut()` et `tacheParDefaut()`. Un outil dont
+les écarts portent l'un de ces noms n'a plus rien à déclarer.
+
+**Ce qui ne change pour personne, et c'est MESURÉ, jamais supposé** : `message` et `pourquoi`
+restent en tête de chaîne, un `libelle` ou un `tache` déclaré l'emporte toujours sur le défaut, et
+sept outils rejoués avant/après (`check-suivi-fidelity`, `agent-des-noms`, `le-regisseur`,
+`check-profil-utilisateur`, `check-tasks-details`, `integration-outil`, `filet-en-parts`)
+impriment des plans d'action **strictement identiques**.
+
+**L'alarme, et pourquoi elle compte plus que le défaut.** Le défaut couvre les champs écrits
+AUJOURD'HUI. Le douzième outil qui nommera le sien autrement — `souci`, `probleme`, `defaut` —
+retombe sur `String(objet)` et imprime `[object Object]` dans son plan d'action. **Et le rapport
+resterait vert** : `reportHasPlanDaction()` verrait bien une section, `sansTache` ne verrait rien
+d'anormal, et le constat serait illisible sans que rien ne le dise. Un signal ADJACENT (« la section
+existe ») lu comme le signal visé (« le constat se lit ») — la classe d'erreur dominante de toute
+cette nuit. `buildPlanDaction()` imprime donc désormais une ligne `🚨` qui NOMME les champs connus,
+pour que la correction se lise sans ouvrir le gabarit.
+
+**Elle ne peut pas accuser à tort (leçon L4)** : seule la stringification d'un objet produit cette
+chaîne exacte. Un écart sain, une chaîne de caractères toute simple et un plan vide ne sont jamais
+accusés — les trois cas sont couverts par un contre-test.
+
+**Ce qui n'a PAS été fait, avec sa raison écrite (Article 28, état ÉCARTÉ)** : les onze accès
+explicites n'ont pas été retirés des onze outils. Ils ne sont pas faux, seulement redondants ; les
+retirer toucherait onze fichiers pour zéro changement de comportement, ce qui est un risque sans
+contrepartie pendant une nuit autonome. CLONE-HUNTER continuera donc de signaler cette paire, et
+c'est honnête : le vrai défaut qu'elle cachait est réparé, la ressemblance de surface reste.
