@@ -522,6 +522,30 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   Un constat qui ne peut pas nommer son sujet est un constat qu'on relit et qu'on repose.
 
 
+2quindecies. LA RONDE EST DUE, ET JE NE L'AI PAS LANCÉE — ELLE T'ATTEND
+-------------------------------------------------------------------------
+  Une alarme revient à chaque commit : « quarante commits sans Ronde ». Elle a raison, et je ne l'ai
+  pas fait taire. Voilà pourquoi.
+
+  LA RONDE COMPTE DOUZE ÉTAPES, ET DEUX EXIGENT QUE TU SOIS LÀ : poser la fenêtre à cocher qui
+  choisit le programme, et poser les dix questions d'alignement — cinq de fond, avec ma réponse
+  PRÉVUE écrite avant la tienne, et le process qualifie lui-même un écart sur le fond de « problème
+  GRAVE ». Ce ne sont pas des formalités : ce sont les deux moments où la Ronde cesse d'être un
+  passage d'outils pour devenir une vérification que toi et moi voyons la même chose. Les sauter
+  pour faire tomber un compteur serait précisément le contournement que la charte interdit. Le
+  contrôleur me le confirme d'ailleurs : l'ouverture enregistrée a plus de 24 h, donc la Ronde ne
+  compterait pas comme faite même en la déroulant.
+
+  CE QUI A QUAND MÊME ÉTÉ COUVERT, un outil après l'autre plutôt qu'en bloc : le coordinateur de
+  toutes les vérifications gratuites (rien à signaler), THE-EQUALIZER, EL-PROFESSOR, les deux
+  contrôleurs de process, AXA-CHECK, CLONE-HUNTER, le contrôleur du suivi, data-archangel, EZECHIEL,
+  et le filet complet avant chacun des dix-sept commits. **La substance d'une Ronde a donc eu lieu ;
+  c'est la cérémonie qui manque, et elle manque parce qu'elle t'attend.**
+
+  Je ne l'ai pas pré-remplie non plus : te présenter un dossier déjà refermé t'enlèverait justement
+  la partie qui a besoin de toi.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
