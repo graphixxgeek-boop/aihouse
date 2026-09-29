@@ -264,6 +264,21 @@ export const NIVEAUX_GRAVITE = [
 // que vivent les mentions qui ne font rien. Un script, lui, ne compte que si un crochet git le
 // LANCE (`node scripts/x.mjs`) ou si le filet de sécurité l'IMPORTE — et l'import étant lui-même
 // une chaîne, il se cherche séparément, sur le texte brut.
+// SANS LES COMMENTAIRES SEULS — les chaînes RESTENT (2026-09-29, tâche #1168). Née d'un vrai faux
+// positif : le garde-fou des écrivains de registre (`findEcrivainsDeRegistreSansContribution`)
+// cherche un chemin `docs/x/` DANS les arguments d'un appel d'écriture. Son propre commentaire
+// annonçait que « citer un chemin dans un commentaire n'est pas écrire dedans » — mais rien ne
+// retirait les commentaires, et un commentaire qui MONTRE la forme du code déclenchait l'accusation.
+//
+// POURQUOI PAS `sansChainesNiCommentaires` : il retire aussi les chaînes, donc le chemin littéral
+// que ce garde-fou doit justement trouver. Deux besoins voisins, deux fonctions — les fondre
+// casserait l'un des deux.
+export function sansLesCommentaires(code = "") {
+  return String(code)
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
+}
+
 export function sansChainesNiCommentaires(code = "") {
   return String(code)
     .replace(/\/\*[\s\S]*?\*\//g, " ")

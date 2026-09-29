@@ -1669,6 +1669,167 @@ export function formatAncresLines(r, { limite = 12 } = {}) {
   return l;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// LA CARTE DES DOSSIERS — le second étage de #725 (2026-09-29, tâche #1167)
+//
+// SA DEMANDE, dans la tâche : « rien ne décrit la CARTE de la mémoire du projet — quel dossier sert
+// à quoi, lequel s'écrit tout seul, lequel s'historise, lequel dépend de quel autre. À DÉRIVER DU
+// DÉPÔT RÉEL, jamais une carte dessinée à la main qui se périmerait. »
+//
+// LE PREMIER ÉTAGE RÉPONDAIT « OÙ EST CE DÉTAIL ? » (les ancres, à l'intérieur des documents).
+// CELUI-CI RÉPOND « COMMENT CETTE MÉMOIRE EST-ELLE ORGANISÉE ? », un cran au-dessus : le dossier.
+//
+// QUATRE QUESTIONS, QUATRE SIGNAUX, ET AUCUN N'EST DEVINÉ :
+//   · à quoi il sert      → la NATURE de son index, déjà mesurée par mesurerLesIndex()
+//   · s'écrit-il tout seul → son index se déclare-t-il GÉNÉRÉ, et un script nomme-t-il ce chemin
+//   · s'historise-t-il    → ses fichiers portent-ils une date dans leur nom
+//   · de quoi dépend-il   → quels autres dossiers de docs/ ses fichiers citent
+//
+// CE QU'ELLE NE FAIT PAS, ET C'EST DÉLIBÉRÉ : elle ne JUGE pas. Elle ne dit pas qu'un dossier est
+// mal rangé, ni qu'une dépendance est de trop — ces jugements demandent de savoir ce que le projet
+// veut, et ce savoir n'est pas dans le dépôt. Elle décrit, et c'est déjà ce qui manquait.
+export const MOTIF_DOSSIER_DATE = /(20\d\d-\d\d-\d\d)/;
+export const MOTIF_CHEMIN_DOCS = /docs\/[a-z0-9][a-z0-9._-]*(?:\/[a-z0-9][a-z0-9._-]*)*/gi;
+
+export function dossierSHistorise(fichiers = []) {
+  const dates = fichiers.filter((f) => MOTIF_DOSSIER_DATE.test(f));
+  return { oui: dates.length >= 2, combien: dates.length,
+    pourquoi: dates.length >= 2
+      ? `${dates.length} fichiers portent une date dans leur nom : ce dossier garde des passages successifs`
+      : dates.length === 1
+        ? "un seul fichier daté : trop peu pour parler d'historique, et le dire vaut mieux que de trancher"
+        : "aucun fichier daté : ce dossier garde un état courant, jamais une suite de passages" };
+}
+
+// MENTIONNER N'EST PAS ÉCRIRE, et le premier jet est tombé dedans (2026-09-29). Il rendait
+// « docs/check-tasks-details est écrit par agent-des-noms » et « docs/circle-tasks par check-house »
+// — faux les deux fois : ces scripts NOMMENT le chemin, l'un dans un registre de renommage, l'autre
+// dans un test. C'est la famille d'erreur la plus fréquente de ce dépôt, et elle se reconnaît
+// toujours à la même forme : un signal ADJACENT (le chemin apparaît) lu comme le signal visé (le
+// chemin est écrit).
+//
+// DEUX SIGNAUX, ET QUAND ILS DIVERGENT ON LE DIT :
+//   · par CONVENTION — le dossier porte le nom d'un script, et la règle du dépôt est sans exception :
+//     le registre d'un outil vit dans `docs/<nom-de-l-outil>/`. C'est le signal le plus sûr.
+//   · par le CODE — un script nomme le chemin ET écrit quelque part (writeFileSync, mkdirSync, ou
+//     l'un des verbes d'écriture du dépôt). Plus faible, mais il attrape les dossiers dont le nom ne
+//     suit pas la convention.
+export const MOTIF_ECRITURE = /writeFileSync|mkdirSync|appendFileSync|\becrire\b|\bwriteImpl\b|\bdeposer/;
+
+// LE VERBE D'ÉCRITURE DOIT ÊTRE PRÈS DU CHEMIN, et ce resserrement est le second du même soir.
+// « Le script nomme le chemin ET écrit quelque part dans le fichier » rendait 91 dossiers sur 92
+// « écrits par un script » — dont docs/grand-projet attribué à check-house, qui ne fait que le
+// tester. Un script de 20 000 lignes écrit forcément quelque part : la condition était vide de sens.
+//
+// TROIS LIGNES DE PART ET D'AUTRE : assez pour qu'un `writeFileSync(join(root, "docs/x/…"))` étalé
+// sur plusieurs lignes soit vu, trop peu pour qu'une mention et une écriture sans rapport se
+// rencontrent par hasard.
+export const LIGNES_AUTOUR_DU_CHEMIN = 3;
+
+export function ecritPresDuChemin(source = "", dossier = "", { autour = LIGNES_AUTOUR_DU_CHEMIN } = {}) {
+  const lignes = String(source).split("\n");
+  for (const [i, l] of lignes.entries()) {
+    if (!l.includes(dossier)) continue;
+    const fenetre = lignes.slice(Math.max(0, i - autour), i + autour + 1).join("\n");
+    if (MOTIF_ECRITURE.test(fenetre)) return true;
+  }
+  return false;
+}
+
+export function quiEcritDans(dossier, sourcesDesScripts = new Map()) {
+  const nom = dossier.replace(/^docs\//, "");
+  const parConvention = [];
+  const parLeCode = [];
+  for (const [script, texte] of sourcesDesScripts) {
+    const t = String(texte);
+    if (script === `scripts/${nom}.mjs`) { parConvention.push(script); continue; }
+    if (ecritPresDuChemin(t, dossier)) parLeCode.push(script);
+  }
+  // LE SCRIPT HOMONYME L'EMPORTE, parce que la convention est une règle du dépôt et non une
+  // déduction. Les autres sont rendus à part plutôt que mélangés : un dossier peut légitimement
+  // être alimenté par plusieurs outils, et aplatir les deux listes perdrait lequel en est le maître.
+  return { parConvention, parLeCode, auteurs: [...parConvention, ...parLeCode] };
+}
+
+// UN CHEMIN CITÉ N'EST PAS UNE DÉPENDANCE S'IL N'EXISTE PAS. Le premier jet rendait « docs/X »
+// parmi les dépendances du référentiel — un chemin de fixture, pris dans un exemple de code. Une
+// carte qui invente une dépendance vaut moins qu'une carte qui en oublie une.
+export function dependancesDuDossier(dossier, textesDesFichiers = [], { dossiersConnus = null } = {}) {
+  const cites = new Set();
+  for (const t of textesDesFichiers) {
+    for (const m of String(t).matchAll(MOTIF_CHEMIN_DOCS)) {
+      const d = m[0].split("/").slice(0, 2).join("/");
+      if (!d || d === dossier) continue;
+      if (dossiersConnus && !dossiersConnus.has(d)) continue;
+      cites.add(d);
+    }
+  }
+  return [...cites].sort();
+}
+
+export function carteDesDossiers({ root = ROOT, index = null, listDirImpl = null, readFileImpl = null } = {}) {
+  const lister = listDirImpl ?? ((d) => { try { return readdirSync(join(root, d)); } catch { return []; } });
+  const lire = readFileImpl ?? ((c) => { try { return readFileSync(join(root, c), "utf8"); } catch { return ""; } });
+  const mesure = index ?? mesurerLesIndex({ root });
+  if (!mesure?.mesurable || !mesure.lignes?.length) {
+    return { mesurable: false, pourquoi: "aucun dossier lu : ce zéro dit qu'on n'a rien pu mesurer, jamais que la mémoire du projet est vide" };
+  }
+  // LES SOURCES DES SCRIPTS SONT LUES UNE FOIS, jamais une par dossier : 92 dossiers × 93 scripts
+  // ferait 8 556 relectures pour la même information.
+  const sourcesDesScripts = new Map();
+  for (const f of lister("scripts")) {
+    if (!f.endsWith(".mjs")) continue;
+    sourcesDesScripts.set(`scripts/${f}`, lire(`scripts/${f}`));
+  }
+
+  const dossiersConnus = new Set(mesure.lignes.map((l) => l.dossier));
+  const dossiers = mesure.lignes.map((l) => {
+    const fichiers = lister(l.dossier).filter((f) => !f.startsWith("."));
+    const textes = fichiers.filter((f) => f.endsWith(".md") || f.endsWith(".txt")).slice(0, 40).map((f) => lire(`${l.dossier}/${f}`));
+    const histoire = dossierSHistorise(fichiers);
+    const ecrivains = quiEcritDans(l.dossier, sourcesDesScripts);
+    return {
+      dossier: l.dossier, fichiers: l.fichiers, nature: l.nature, etatIndex: l.etat,
+      sEcritSeul: ecrivains.auteurs.length > 0,
+      maitre: ecrivains.parConvention[0] ?? null,
+      auteurs: ecrivains.auteurs, parLeCode: ecrivains.parLeCode,
+      historise: histoire.oui, combienDates: histoire.combien, pourquoiHistoire: histoire.pourquoi,
+      depend: dependancesDuDossier(l.dossier, textes, { dossiersConnus }),
+    };
+  });
+
+  const orphelins = dossiers.filter((d) => !d.sEcritSeul && !d.depend.length);
+  return {
+    mesurable: true, dossiers, total: dossiers.length,
+    ecritsSeuls: dossiers.filter((d) => d.sEcritSeul).length,
+    historises: dossiers.filter((d) => d.historise).length,
+    orphelins,
+    pourquoi: `${dossiers.length} dossier(s) de docs/ · ${dossiers.filter((d) => d.sEcritSeul).length} écrits par un script · ${dossiers.filter((d) => d.historise).length} qui gardent une suite de passages datés`,
+  };
+}
+
+export function formatCarteDesDossiersLines(c, { limite = 20 } = {}) {
+  if (!c?.mesurable) return ["=== LA CARTE DES DOSSIERS : PAS MESURÉ ===", `  ${c?.pourquoi}`, "", "  Ce n'est PAS « la mémoire du projet est vide »."];
+  const L = [`=== LA CARTE DES DOSSIERS — ${c.total} dossiers de la mémoire du projet ===`, "", `  ${c.pourquoi}`, ""];
+  const tri = [...c.dossiers].sort((a, b) => b.fichiers - a.fichiers);
+  L.push("  dossier                                  fic.  nature      écrit par            historise  dépend de");
+  for (const d of tri.slice(0, limite)) {
+    L.push(`  ${d.dossier.padEnd(40).slice(0, 40)} ${String(d.fichiers).padStart(4)}  ${String(d.nature).padEnd(11).slice(0, 11)} ${(d.maitre ? d.maitre.replace("scripts/", "").replace(".mjs", "") : d.parLeCode.length ? `? ${d.parLeCode[0].replace("scripts/", "").replace(".mjs", "")}` : "—").padEnd(20).slice(0, 20)} ${(d.historise ? `oui (${d.combienDates})` : "non").padEnd(10)} ${d.depend.slice(0, 3).join(" ")}`);
+  }
+  if (tri.length > limite) L.push(`  … et ${tri.length - limite} autre(s)`);
+  L.push("");
+  if (c.orphelins.length) {
+    L.push(`  ⚪ ${c.orphelins.length} dossier(s) qu'aucun script n'écrit ET qui ne citent aucun autre dossier :`);
+    L.push(`     ${c.orphelins.map((d) => d.dossier).join(" · ")}`);
+    L.push("     Ce n'est pas un défaut : un dossier écrit à la main et refermé sur lui-même est parfaitement légitime.");
+    L.push("");
+  }
+  L.push("  CETTE CARTE DÉCRIT, ELLE NE JUGE PAS. Elle ne dit pas qu'un dossier est mal rangé ni qu'une");
+  L.push("  dépendance est de trop : ces jugements demandent de savoir ce que le projet VEUT, et ce savoir");
+  L.push("  n'est pas dans le dépôt. Elle est entièrement DÉRIVÉE, donc elle ne peut pas se périmer.");
+  return L;
+}
+
 export function formatIndexLines(r) {
   if (!r?.mesurable) return [`=== SYSTÈME DES INDEX : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « tout est indexé »."];
   const l = [`=== LE SYSTÈME DES INDEX — ${r.examines} dossiers, ${r.fichiers} fichiers déposés ===`, ""];
@@ -1989,6 +2150,16 @@ function main() {
   // pour la même raison qu'`index` : un passage qu'aucune carte ne désigne est un passage qui ne
   // circule pas, quelle que soit sa valeur. `index` dit quels FICHIERS existent ; `ancres` dit ce
   // qu'il y a DEDANS et où exactement.
+  // `carte` (2026-09-29, tâche #1167) — le SECOND étage de #725. `ancres` répond « où est ce
+  // détail ? » à l'intérieur d'un document ; `carte` répond « comment cette mémoire est-elle
+  // organisée ? » un cran au-dessus : quel dossier sert à quoi, lequel s'écrit tout seul, lequel
+  // s'historise, lequel dépend de quel autre. Ses quatre questions, dans ses mots.
+  if (sub === "carte") {
+    console.log("");
+    for (const l of formatCarteDesDossiersLines(carteDesDossiers())) console.log(l);
+    return;
+  }
+
   if (sub === "ancres") {
     const cherche = process.argv.indexOf("--cherche");
     const corpus = ancresDuCorpus();

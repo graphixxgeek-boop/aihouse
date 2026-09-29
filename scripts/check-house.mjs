@@ -21378,6 +21378,59 @@ async function testFichesEnRetard() {
 await testFichesEnRetard();
 
 // ————————————————————————————————————————————————————————————————————————
+// LA CARTE DES DOSSIERS — le second étage de #725 (2026-09-29, tâche #1167). Sa demande : « rien ne
+// décrit la CARTE de la mémoire du projet — quel dossier sert à quoi, lequel s'écrit tout seul,
+// lequel s'historise, lequel dépend de quel autre. À DÉRIVER DU DÉPÔT RÉEL, jamais une carte
+// dessinée à la main qui se périmerait. »
+async function testCarteDesDossiers() {
+  const D = await import('../scripts/data-archangel.mjs');
+
+  // MENTIONNER N'EST PAS ÉCRIRE — et les deux contre-tests de cette paire sont le cœur du test.
+  // Le premier jet rendait 91 dossiers sur 92 « écrits par un script », parce qu'il suffisait qu'un
+  // script nomme le chemin ET écrive N'IMPORTE OÙ dans le fichier. Un script de 20 000 lignes écrit
+  // forcément quelque part : la condition était vide de sens.
+  assert.equal(D.ecritPresDuChemin('const c = "docs/x/index.md";\nwriteFileSync(c, t);', 'docs/x'), true,
+    'a write call within three lines of the path is a real write');
+  assert.equal(D.ecritPresDuChemin('// le registre vit dans docs/x/\n' + 'const a = 1;\n'.repeat(40) + 'writeFileSync(autreChose, t);', 'docs/x'), false,
+    'MUST LET PASS: a path merely MENTIONED far from any write is not a writer — that loose condition attributed docs/grand-projet to check-house, which only tests it');
+
+  const sources = new Map([
+    ['scripts/monoutil.mjs', 'rien du tout'],
+    ['scripts/autre.mjs', 'const p = "docs/monoutil/x.md"; writeFileSync(p, t);'],
+    ['scripts/bavard.mjs', '// je parle de docs/monoutil sans rien y écrire'],
+  ]);
+  const qui = D.quiEcritDans('docs/monoutil', sources);
+  assert.deepEqual(qui.parConvention, ['scripts/monoutil.mjs'],
+    'MUST CATCH the homonymous script as the OWNER even though its body says nothing: the repository rule is without exception — a tool registry lives in docs/<tool-name>/, and a convention is a rule, never a deduction');
+  assert.deepEqual(qui.parLeCode, ['scripts/autre.mjs'],
+    'and a second script that genuinely writes there is reported SEPARATELY rather than merged — a folder can legitimately be fed by several tools, and flattening the two lists would lose which one is its master');
+
+  // UN CHEMIN CITÉ QUI N'EXISTE PAS N'EST PAS UNE DÉPENDANCE. Le premier jet rendait « docs/X »
+  // parmi les dépendances du référentiel — un chemin de fixture pris dans un exemple de code.
+  assert.deepEqual(D.dependancesDuDossier('docs/a', ['voir docs/b et docs/inexistant'], { dossiersConnus: new Set(['docs/a', 'docs/b']) }), ['docs/b'],
+    'MUST CATCH the real neighbour and MUST LET PASS the invented one: a map that invents a dependency is worth less than a map that misses one');
+
+  // S'HISTORISER DEMANDE PLUS D'UN FICHIER DATÉ, et l'entre-deux se dit plutôt que de se trancher.
+  assert.equal(D.dossierSHistorise(['a-2026-09-01.md', 'b-2026-09-02.md']).oui, true, 'two dated files make a series of passages');
+  assert.equal(D.dossierSHistorise(['a-2026-09-01.md']).oui, false, 'one is too few to call it a history — and the reason says so rather than deciding silently');
+  assert.equal(D.dossierSHistorise(['index.md', 'notes.md']).oui, false, 'and a folder with no dated file keeps a current state, never a series');
+
+  // UN CORPUS VIDE N'EST JAMAIS « LA MÉMOIRE EST VIDE » (leçon L5).
+  assert.equal(D.carteDesDossiers({ index: { mesurable: true, lignes: [] } }).mesurable, false, 'no folder read refuses to conclude');
+  assert.equal(D.carteDesDossiers({ index: { mesurable: false } }).mesurable, false, 'and an unmeasurable index is passed through as unmeasurable rather than turned into an empty map');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25).
+  const reel = D.carteDesDossiers();
+  assert.equal(reel.mesurable, true, 'the map must actually be derived from the real docs/ tree');
+  assert.ok(reel.total > 50, `over every folder of the project memory (currently ${reel.total})`);
+  assert.ok(reel.ecritsSeuls > 10 && reel.ecritsSeuls < reel.total, `and it tells self-written folders from hand-written ones without swallowing everything (currently ${reel.ecritsSeuls}/${reel.total}) — the first version said 91 of 92, which measured nothing`);
+
+  console.log("Passed: la carte des dossiers, second étage de #725 (2026-09-29). SA DEMANDE : « rien ne décrit la CARTE de la mémoire du projet — quel dossier sert à quoi, lequel s'écrit tout seul, lequel s'historise, lequel dépend de quel autre. À DÉRIVER DU DÉPÔT RÉEL, jamais une carte dessinée à la main qui se périmerait. » Quatre questions, quatre signaux, aucun deviné. LE PREMIER JET EST TOMBÉ DANS LA FAMILLE D'ERREUR LA PLUS FRÉQUENTE DE CE DÉPÔT, et il a fallu deux resserrements : « le script nomme le chemin » attribuait docs/check-tasks-details à agent-des-noms, qui le cite dans un registre de renommage ; puis « il le nomme ET écrit quelque part » rendait 91 dossiers sur 92 écrits par un script, parce qu'un fichier de 20 000 lignes écrit forcément quelque part. Le verbe d'écriture doit être À TROIS LIGNES du chemin — assez pour voir un appel étalé, trop peu pour une rencontre de hasard. Mesure finale : 67 sur 92. DEUX SIGNAUX QUI NE SE MÉLANGENT PAS : le script HOMONYME est le maître (la règle du dépôt est sans exception, un registre vit dans docs/<nom-de-l-outil>/, et une convention est une règle jamais une déduction) ; les autres écrivains sont rendus à part, parce qu'un dossier peut légitimement être alimenté par plusieurs outils. ET UNE DÉPENDANCE INVENTÉE A ÉTÉ RETIRÉE : « docs/X », un chemin de fixture pris dans un exemple de code — une carte qui invente vaut moins qu'une carte qui oublie. ELLE DÉCRIT, ELLE NE JUGE PAS : dire qu'un dossier est mal rangé demanderait de savoir ce que le projet VEUT, et ce savoir n'est pas dans le dépôt.");
+}
+
+await testCarteDesDossiers();
+
+// ————————————————————————————————————————————————————————————————————————
 // LE RETENU OUBLIÉ, ET LE SIXIÈME FAUX CHIFFRE (2026-09-28, tâche #1103)
 // ————————————————————————————————————————————————————————————————————————
 // Il a demandé « qu'est-ce qu'on a oublié ? », et la réponse était écrite depuis le matin : le plan

@@ -23,6 +23,7 @@
 // AGENT_SCRIPT_FILES d'axa-check.mjs — un registre non listé ici est lui-même un gap réel (cf.
 // findRegistriesMissingDecision()), jamais une raison de deviner sa famille.
 
+import { sansLesCommentaires } from "./abraham-les-references.mjs";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
@@ -1232,6 +1233,12 @@ export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirIm
   for (const f of fichiers) {
     let texte;
     try { texte = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
+    // LES COMMENTAIRES SONT RETIRÉS AVANT DE CHERCHER (2026-09-29, tâche #1168). Ce bloc annonçait
+    // depuis sa création que « citer un chemin dans un commentaire n'est pas écrire dedans » — et
+    // rien ne le faisait. Un commentaire qui MONTRE la forme du code, par exemple pour l'expliquer,
+    // déclenchait l'accusation. Les CHAÎNES restent : c'est dans une chaîne que vit le chemin
+    // littéral que ce garde-fou doit trouver.
+    texte = sansLesCommentaires(texte);
     // Écrit-il vraiment dans un registre ? On cherche une écriture ET un chemin de registre, pas
     // l'un ou l'autre : citer `docs/argus/` dans un commentaire n'est pas écrire dedans.
     // RESSERRÉ IMMÉDIATEMENT (2026-09-23) : la première version testait « le fichier écrit quelque
