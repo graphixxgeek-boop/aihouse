@@ -437,6 +437,13 @@ export const JAMAIS_EXERCABLES = [
   // logique de fond — l'ordre des clés, la mémoire des échecs, la lecture des réponses — vit dans
   // gemini-key-health.mjs et api-providers.mjs, qui sont mesurés, eux.
   { slug: "smart-breaker", pourquoi: "check-gemini-quota.mjs n'exporte AUCUNE fonction (script à corps de premier niveau) et son corps sonde les clés pour de vrai : il n'y a rien à importer, et l'exercer coûterait des appels API à chaque commit. Le trou est réel — c'est l'outil du jour de la panne — et il est atténué par sa logique de fond, qui vit dans gemini-key-health.mjs et api-providers.mjs, mesurés eux" },
+  // AJOUTÉ LE 2026-09-29 (tâche #1220). THE-SCREENER était l'outil le plus faiblement couvert du
+  // paysage — 50 % — et le chiffre seul faisait lire « mal testé » là où la moitié non exercée est
+  // `captureOnce()`, qui lance un vrai navigateur Chromium contre un serveur de développement qui
+  // tourne. Aucun test gratuit ne fait ça, et l'exercer à chaque commit demanderait de démarrer le
+  // produit. Sa moitié PURE, elle, est bien exerçable : elle vient de recevoir ses tests, sur les
+  // trois branches de la page de capture.
+  { slug: "the-screener", pourquoi: "sa moitié utile, captureOnce(), lance un vrai navigateur contre un serveur de développement qui tourne : aucun test gratuit ne fait ça, et l'exercer à chaque commit demanderait de démarrer le produit. Sa moitié pure — la page qui accompagne la capture, et l'arbitrage sur la fenêtre qu'on s'autorise à fermer — est exercée, elle" },
 ];
 
 export function raisonDeNonExercice(slug, registre = JAMAIS_EXERCABLES) {

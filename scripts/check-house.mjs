@@ -13610,6 +13610,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(masquee.indexOf('MASQUÉE') < masquee.indexOf('<img'), 'the warning must come BEFORE the image: a reader must know the picture is worthless for grading before looking at it, never after');
   const nette = buildScreenerCaptureHtml({ ok: true, path: '/tmp/x.png', masque: false }, { url: 'http://x/' });
   assert.ok(!nette.includes('MASQUÉE') && nette.includes('<img'), 'a genuinely clear capture must carry no warning at all — the caveat appears only where it is true');
+  // DEUX CAS AJOUTÉS LE 2026-09-29 (tâche #1220), et ils arrivent par la mauvaise porte : j'avais
+  // écrit un SECOND bloc de tests pour cette fonction sans regarder que celui-ci existait — une
+  // tâche après avoir déclaré au contrôleur de conduite que je ne lançais pas la reprise des notes
+  // avant d'ouvrir un chantier (#1213). Le doublon est retiré, et ce qu'il apportait vraiment tient
+  // en deux lignes, ici, à leur place.
+  assert.match(buildScreenerCaptureHtml({ ok: false }, {}).replace(/\s+/g, ' '), /raison inconnue/, 'a failure with no reason attached must still say it failed, and say that the reason is unknown — printing nothing would read as an empty page rather than a failure');
+  for (const [nom, page] of [['masquée', masquee], ['nette', nette]]) {
+    assert.match(page, /ne prime jamais sur l/, `the ${nom} page must keep its reservation: this grade is indicative and never outranks the user's own judgement`);
+  }
   const ratee = buildScreenerCaptureHtml({ ok: false, error: 'timeout' }, { url: 'http://x/' });
   assert.ok(ratee.includes('Échec') && ratee.includes('timeout') && !ratee.includes('<img'), 'a real failure must stay distinct from a masked capture — "no image at all" and "an image showing nothing" are two different facts, never merged into one');
   console.log('Passed: THE-SCREENER (task #186) now tells a MASKED capture from a real one — the modal that covers the whole scene while the game has no observer yet, found the very first time the mechanism ran against a real session — and says so before the image rather than after, while keeping a genuine failure distinct from a picture that simply shows nothing worth grading.');
