@@ -116,7 +116,7 @@ règle, c'est l'application de la règle à deux systèmes distincts.
 
 ---
 
-## ▸ IDÉE 5 — Les 5 à 7 objectifs stratégiques, déclinés · **lignes 241 à fin**
+## ▸ IDÉE 5 — Les 5 à 7 objectifs stratégiques, déclinés · **lignes 241 à 320**
 
 **a. Ce que ça dit** — structurer la connaissance · garantir la fiabilité · assurer la traçabilité ·
 industrialiser l'exécution · créer de la valeur mesurable (+ gouvernance et amélioration continue en

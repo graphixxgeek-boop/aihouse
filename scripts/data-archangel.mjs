@@ -2157,6 +2157,22 @@ function main() {
   // détail ? » à l'intérieur d'un document ; `carte` répond « comment cette mémoire est-elle
   // organisée ? » un cran au-dessus : quel dossier sert à quoi, lequel s'écrit tout seul, lequel
   // s'historise, lequel dépend de quel autre. Ses quatre questions, dans ses mots.
+  // `syntheses` (2026-09-29, tâche #1242) — le TROISIÈME étage. `ancres` dit où est un détail dans
+  // un document ; `carte` dit comment la mémoire est organisée ; `syntheses` dit CE QUE J'EN AI
+  // RETENU, rangé par la SITUATION où j'en aurai besoin. C'est le seul des trois qui contient un
+  // jugement, et c'est pour ça qu'il LIT des fiches écrites à la main plutôt que de les produire.
+  if (sub === "syntheses") {
+    const r = buildIndexParSituation();
+    if (!r.mesurable) { console.log(`PAS MESURÉ — ${r.pourquoi}`); return; }
+    const chemin = `${ROOT}/${DOSSIER_SYNTHESES}/${FICHIER_INDEX_SITUATION}.md`;
+    writeFileSync(chemin, rendreIndexParSituation(r));
+    console.log(`\n✅ ${r.entrees.length} situation(s) dans ${r.documents} document(s) — index régénéré : ${DOSSIER_SYNTHESES}/${FICHIER_INDEX_SITUATION}.md`);
+    if (r.malFormees.length) {
+      console.log(`\n⚠️ ${r.malFormees.length} fiche(s) NON LUE(S), donc absentes de l'index — le compte ci-dessus est un PLANCHER :`);
+      for (const x of r.malFormees) console.log(`   · ${x.fichier} — ${x.pourquoi}`);
+    }
+    return;
+  }
   if (sub === "carte") {
     console.log("");
     for (const l of formatCarteDesDossiersLines(carteDesDossiers())) console.log(l);
@@ -2664,6 +2680,127 @@ async function classificationCli() {
   console.log(`\nÉcrit : ${txt}`);
   console.log(`Écrit : ${html}`);
 }
+
+// --- L'INDEX PAR SITUATION DES SYNTHÈSES (2026-09-29, tâche #1242) ---------------------------
+//
+// CE QU'IL FERME, ET C'ÉTAIT LE VRAI TROU. Six synthèses annotées, c'est six fichiers à choisir
+// avant de pouvoir lire. Au moment où je travaille, la question n'est jamais « que dit le document
+// sur l'architecture ? » mais « je suis en train de définir la philosophie — QU'EST-CE QUI EXISTE
+// LÀ-DESSUS ? ». L'index répond à celle-là, en récoltant la question (c) — « quand j'en aurai
+// besoin » — de chaque idée à travers tous les documents. C'est la pièce qui rentabilise
+// l'annotation ; sans elle on a de bonnes fiches et toujours le problème de savoir laquelle ouvrir.
+//
+// IL LIT, IL NE RECOPIE PAS (Article 24). Les réponses ne sont écrites qu'une fois, dans la
+// synthèse ; ici elles sont extraites à chaque passage. Une synthèse corrigée demain change l'index
+// sans que personne y pense.
+//
+// ET IL A AUDITÉ MA PROPRE ÉCRITURE DÈS LE PREMIER PASSAGE : deux fiches sur six avaient un défaut
+// de forme — une idée sans sa question (c), et un en-tête écrit « lignes 241 à fin » que le lecteur
+// ne savait pas lire. Un format qu'aucune machine ne relit dérive en silence.
+export const DOSSIER_SYNTHESES = "docs/grand-projet/01-absorption/syntheses";
+export const FICHIER_INDEX_SITUATION = "INDEX-PAR-SITUATION";
+
+// QUATRE VERDICTS, PAS QUATORZE. Le premier passage a trouvé 14 libellés distincts — « ACCORD »,
+// « ACCORD TOTAL », « ACCORD FORT », « ACCORD sur la structure », « ACCORD partiel »… C'est ma
+// rédaction qui varie, pas le sens : un index avec quatorze colonnes ne se lit plus. La nuance
+// reste dans la fiche, où elle a sa place ; l'index, lui, doit pouvoir se balayer d'un œil.
+// L'ordre compte : « DÉSACCORD » et « RÉSERVE » sont testés AVANT « ACCORD », parce que
+// « ACCORD sur le principe, RÉSERVE sur… » doit compter comme une réserve.
+export const VERDICTS_CANONIQUES = [
+  { motif: /DÉSACCORD|RÉSERVE/i, cle: "DÉSACCORD" },
+  { motif: /À (DISCUTER|TRANCHER)/i, cle: "À TRANCHER" },
+  { motif: /DÉJÀ|NOUS EN AVONS/i, cle: "DÉJÀ FAIT" },
+  { motif: /ACCORD/i, cle: "ACCORD" },
+  { motif: /NEUF/i, cle: "NEUF" },
+];
+
+export function normaliserLeVerdict(brut = "") {
+  const t = String(brut).trim();
+  for (const v of VERDICTS_CANONIQUES) if (v.motif.test(t)) return v.cle;
+  // JAMAIS DE CASE PAR DÉFAUT : un verdict qu'on ne sait pas ranger se dit, il ne se range pas
+  // dans le plus proche (leçon L11 — un axe qui range tout ne range rien).
+  return `NON CLASSÉ (${t.slice(0, 40)})`;
+}
+
+export function lireUneSynthese(nom, texte = "") {
+  const t = String(texte);
+  const idees = [...t.matchAll(/^## ▸ (?:BLOC|IDÉE) \d+ — (.+?) · \*\*lignes? ([\d à]+)\*\*/gm)].map((m) => ({ titre: m[1].trim(), lignes: m[2].trim() }));
+  const quand = [...t.matchAll(/^\*\*c\. Quand j'en aurai besoin\*\* — (.+?)(?=\n\n)/gms)].map((m) => m[1].replace(/\s+/g, " ").trim());
+  const verdicts = [...t.matchAll(/^\*\*d\. ([^*—\n]+)/gm)].map((m) => normaliserLeVerdict(m[1]));
+  // LES TROIS LISTES DOIVENT AVOIR LA MÊME LONGUEUR, et le dire quand ce n'est pas le cas : un
+  // décalage d'un cran apparierait la situation d'une idée au verdict de la suivante — pire qu'une
+  // absence, parce que ça ressemble à une réponse (leçon L5).
+  const coherent = idees.length === quand.length && idees.length === verdicts.length;
+  return { nom, idees, quand, verdicts, coherent,
+    pourquoi: coherent ? null : `format incohérent : ${idees.length} idée(s), ${quand.length} situation(s), ${verdicts.length} verdict(s) — un décalage apparierait une situation au verdict d'une autre idée` };
+}
+
+export const ICONES_DE_VERDICT = { "ACCORD": "✅", "NEUF": "🆕", "DÉSACCORD": "⚠️", "DÉJÀ FAIT": "🔁", "À TRANCHER": "❓" };
+export const SENS_DU_VERDICT = {
+  "DÉSACCORD": "conflit avec notre charte, ou réserve écrite — **à lire avant d'adopter quoi que ce soit**",
+  "NEUF": "une idée que le dépôt ne porte nulle part — c'est là qu'est la matière",
+  "ACCORD": "le document confirme quelque chose que nous faisons déjà — rien à construire, parfois à nommer",
+  "DÉJÀ FAIT": "nous l'avons construit sans le savoir — le risque est de le refaire",
+  "À TRANCHER": "une décision qui lui appartient",
+};
+export const ORDRE_DES_VERDICTS = ["DÉSACCORD", "NEUF", "ACCORD", "DÉJÀ FAIT", "À TRANCHER"];
+
+export function rendreIndexParSituation(r) {
+  const L = [];
+  const par = {};
+  for (const e of r.entrees) (par[e.verdict] = par[e.verdict] || []).push(e);
+  L.push("# INDEX PAR SITUATION — où trouver quoi, au moment où j'en ai besoin", "");
+  L.push("<!-- RÉGIME AUTO — ce fichier est régénéré EN ENTIER par");
+  L.push("     `node scripts/data-archangel.mjs syntheses` : toute note écrite à la main y sera perdue. -->", "");
+  L.push("> **Ce document est POUR MOI.** Il ne se lit pas en entier : il se balaie pour trouver la ligne");
+  L.push("> qui correspond à ce que je suis en train de faire, puis on saute à l'ancre.", "");
+  L.push("**Le trou qu'il ferme.** Six synthèses annotées, c'est six fichiers à choisir avant de pouvoir");
+  L.push("lire. Au moment du travail, la question n'est jamais « que dit le document sur l'architecture ? »");
+  L.push("mais « je définis la philosophie — **qu'est-ce qui existe là-dessus ?** ». Cet index répond à");
+  L.push(`celle-là : il récolte la question **(c) quand j'en aurai besoin** des ${r.entrees.length} idées annotées.`, "");
+  L.push("**Il LIT les synthèses, il ne les recopie pas** (Article 24) : une fiche corrigée demain change");
+  L.push("cet index sans que personne y pense.", "");
+  L.push(`## VUE D'ENSEMBLE — ${r.entrees.length} idées dans ${r.documents} documents`, "");
+  L.push("| Verdict | Combien | Ce que ça veut dire pour nous |", "|---|---|---|");
+  for (const k of ORDRE_DES_VERDICTS) if (par[k]) L.push(`| ${ICONES_DE_VERDICT[k]} **${k}** | ${par[k].length} | ${SENS_DU_VERDICT[k]} |`);
+  for (const k of Object.keys(par)) if (!ORDRE_DES_VERDICTS.includes(k)) L.push(`| ❔ **${k}** | ${par[k].length} | verdict que le lecteur ne sait pas ranger — dit plutôt que rangé par défaut |`);
+  L.push("", "---", "", `## LES ${r.entrees.length} SITUATIONS`, "");
+  for (const k of [...ORDRE_DES_VERDICTS, ...Object.keys(par).filter((x) => !ORDRE_DES_VERDICTS.includes(x))]) {
+    if (!par[k]) continue;
+    L.push(`### ${ICONES_DE_VERDICT[k] ?? "❔"} ${k} — ${par[k].length}`, "");
+    for (const e of par[k]) { L.push(`**${e.situation}**`); L.push(`> ${e.idee} · \`${e.document}\` · **source lignes ${e.lignes}**`, ""); }
+  }
+  if (r.malFormees.length) {
+    L.push("## ⚠️ FICHES NON LUES, donc absentes de cet index", "");
+    for (const x of r.malFormees) L.push(`- \`${x.fichier}\` — ${x.pourquoi}`);
+  }
+  return `${L.join("\n")}\n`;
+}
+
+export function buildIndexParSituation({ root = ROOT, listDirImpl = null, readFileImpl = null } = {}) {
+  const dossier = `${root}/${DOSSIER_SYNTHESES}`;
+  let fichiers;
+  // L'INDEX VIT DANS LE MÊME DOSSIER QUE CE QU'IL INDEXE, donc il se comptait lui-même : « 7
+  // documents » au premier passage, pour 6 synthèses. Il n'ajoutait aucune entrée (il n'a pas de
+  // bloc à lire), mais il faussait le compte annoncé — et un chiffre faux dans un rapport est pire
+  // qu'un chiffre absent, parce qu'il a l'air d'une mesure.
+  const exclus = new Set([`${FICHIER_INDEX_SITUATION}.md`]);
+  try { fichiers = (listDirImpl ? listDirImpl(dossier) : readdirSync(dossier)).filter((f) => f.endsWith(".md") && !exclus.has(f)).sort(); }
+  catch { return { mesurable: false, pourquoi: "le dossier des synthèses n'a pas pu être listé — « aucune situation » et « je n'ai pas pu regarder » s'écriraient tous les deux zéro (L5)" }; }
+  const entrees = [];
+  const malFormees = [];
+  for (const f of fichiers) {
+    const texte = readFileImpl ? readFileImpl(`${dossier}/${f}`) : readFileSync(`${dossier}/${f}`, "utf8");
+    const s = lireUneSynthese(f.replace(/\.md$/, ""), texte);
+    if (!s.coherent) { malFormees.push({ fichier: f, pourquoi: s.pourquoi }); continue; }
+    s.idees.forEach((idee, k) => entrees.push({
+      document: s.nom, idee: idee.titre, lignes: idee.lignes,
+      situation: s.quand[k], verdict: s.verdicts[k],
+    }));
+  }
+  return { mesurable: true, entrees, malFormees, documents: fichiers.length };
+}
+
 
 // LE LANCEUR EN TOUT DERNIER, jamais au milieu du fichier : main() partirait avant les
 // `const` écrits en dessous, qui seraient alors dans leur zone morte temporelle. Deux outils

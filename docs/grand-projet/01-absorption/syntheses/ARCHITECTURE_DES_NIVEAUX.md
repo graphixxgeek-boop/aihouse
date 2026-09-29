@@ -83,6 +83,8 @@ commercialisation` de l'autre.
 
 **b. Ce que ça nous apporte** — une position claire, à laquelle se confronter.
 
+**c. Quand j'en aurai besoin** — **chaque fois qu'un document extérieur traitera le jeu comme un moyen.** C'est le passage à citer pour rappeler pourquoi nous avons tranché autrement.
+
 **d. ⚠️ DÉSACCORD — ET C'EST LE SEUL VRAI CONFLIT DES SIX DOCUMENTS.** Notre **Article 0** dit que
 l'esprit de Lia et Noé est la **loi suprême du projet**. Ce passage fait du jeu un moyen et de
 l'Agence une fin. **Adopté tel quel, il inverse notre hiérarchie de valeur.**

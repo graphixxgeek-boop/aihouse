@@ -135,6 +135,13 @@ la source.
 | `syntheses/ARCHITECTURE_FONCTIONNELLE.md` | `ARCHITECTURE FONCTIONNELLE DU PROJET` | 4 idées, document entier |
 | `syntheses/DE_LA_STRATEGIE_A_LA_TACHE.md` | `DE LA STRATEGIE A LA TACHE` | 5 idées + le bilan des six — le plus long, le moins utilisable |
 
+**ET L'INDEX QUI LES REND UTILISABLES** : `syntheses/INDEX-PAR-SITUATION.md` — **régénéré**, jamais
+écrit à la main (`node scripts/data-archangel.mjs syntheses`). Il récolte la question « quand j'en
+aurai besoin » des **29 idées** annotées et les range par verdict : 6 désaccords, 9 neuves, 10
+accords, 3 déjà faites, 1 à trancher. Six fiches, c'est six fichiers à choisir avant de lire ; cet
+index répond à la seule question qui se pose au moment du travail — **qu'est-ce qui existe sur ce
+que je suis en train de faire ?**
+
 **LES SIX SONT FAITES.** La dernière porte en plus le BILAN D'ENSEMBLE : le seul désaccord réel, la
 contradiction interne au corpus, le passage le plus rentable, et le signal le plus fort — le
 rattachement des tâches à leur principe, réclamé par trois sources indépendantes.

@@ -11674,6 +11674,42 @@ await testVerrousDOuverture();
   assert.equal(adt.collerLHeure('aucun jeton ici').remplacements, 0, 'un texte sans jeton rend zéro, et l\'appelant DOIT refuser bruyamment plutôt qu\'écrire un fichier inchangé');
   assert.equal(adt.collerLHeure(`${adt.JETON_MAINTENANT} et ${adt.JETON_MAINTENANT}`).remplacements, 2, 'plusieurs jetons sont tous remplacés, jamais le premier seulement');
 
+  // L'INDEX PAR SITUATION DES SYNTHÈSES (2026-09-29, tâche #1242). Six fiches annotées, c'est six
+  // fichiers à choisir avant de pouvoir lire ; l'index récolte la question « quand j'en aurai
+  // besoin » de chaque idée et les range par verdict. Il LIT les fiches, il ne les recopie pas.
+  const da = await import('../scripts/data-archangel.mjs');
+  // ── LA NORMALISATION : quatre verdicts, pas quatorze. Le premier passage réel en a trouvé 14
+  // libellés distincts — c'est ma rédaction qui varie, pas le sens.
+  assert.equal(da.normaliserLeVerdict('ACCORD TOTAL'), 'ACCORD');
+  assert.equal(da.normaliserLeVerdict('NEUF comme MÉTHODE'), 'NEUF');
+  assert.equal(
+    da.normaliserLeVerdict('ACCORD sur le principe, RÉSERVE sur la taille'),
+    'DÉSACCORD',
+    'l\'ordre des motifs compte : une réserve l\'emporte sur l\'accord qui la précède, sinon la nuance la plus importante disparaît',
+  );
+  assert.match(da.normaliserLeVerdict('PEUT-ÊTRE'), /^NON CLASSÉ/, 'un verdict inconnu se DIT, il ne se range pas dans le plus proche (L11 — un axe qui range tout ne range rien)');
+  // ── LE LECTEUR : il refuse un décalage plutôt que d'apparier de travers.
+  const bonne = ['## ▸ IDÉE 1 — Titre · **lignes 10 à 20**', '', "**c. Quand j'en aurai besoin** — une situation.", '', '**d. NEUF** — x', ''].join('\n');
+  const lue = da.lireUneSynthese('faux', bonne);
+  assert.ok(lue.coherent && lue.idees.length === 1 && lue.quand[0] === 'une situation.' && lue.verdicts[0] === 'NEUF');
+  const bancale = bonne.replace("**c. Quand j'en aurai besoin** — une situation.", '');
+  assert.equal(
+    da.lireUneSynthese('faux', bancale).coherent,
+    false,
+    'une idée sans sa situation rend la fiche INCOHÉRENTE — un décalage d\'un cran apparierait la situation d\'une idée au verdict de la suivante, ce qui ressemble à une réponse et n\'en est pas (L5)',
+  );
+  // ── SUR LE VRAI DÉPÔT, et le premier passage a trouvé DEUX défauts de ma propre rédaction (une
+  // idée sans sa question (c), un en-tête « lignes 241 à fin » illisible) : un format qu'aucune
+  // machine ne relit dérive en silence.
+  const idx = da.buildIndexParSituation();
+  assert.ok(idx.mesurable, 'l\'index se mesure sur les vraies fiches');
+  assert.deepEqual(idx.malFormees, [], 'aucune fiche ne doit être illisible — une fiche non lue est absente de l\'index sans que rien ne le montre');
+  assert.ok(idx.entrees.length >= 25 && idx.documents === 6, `les six synthèses donnent leurs situations (actuellement ${idx.entrees.length} dans ${idx.documents} documents)`);
+  assert.ok(
+    !idx.entrees.some((e) => /^NON CLASSÉ/.test(e.verdict)),
+    'et tous les verdicts réels tombent dans les cinq cases canoniques — un « NON CLASSÉ » signale une rédaction à reprendre, jamais un défaut du lecteur',
+  );
+
   // LES TROIS ZONES DE L'AGENCE (2026-09-29, tâche #1234) — parce qu'elle n'avait AUCUNE existence
   // technique : définie seulement par soustraction, donc un fichier déposé dans scripts/ s'y
   // enrôlait sans que personne ne le décide. Les zones ne sont pas inventées, elles sont DÉRIVÉES
