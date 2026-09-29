@@ -54,6 +54,26 @@ signal à ne pas ignorer : l'agent s'oblige alors à les rouvrir et à les relir
 le travail en cours reste effectivement dans la bonne direction plutôt que de dériver
 progressivement sur la seule base d'un souvenir qui s'estompe.
 
+### LES DEUX LOIS SUPRÊMES, ET IL NE FAUT JAMAIS LES CONFONDRE *(2026-09-29)*
+
+Le projet en a **deux**, qui ne gouvernent pas la même chose. Les confondre est l'erreur qui rendrait
+l'Agence inexportable sans que personne ne s'en aperçoive.
+
+| | Le texte | Ce qu'il gouverne |
+|---|---|---|
+| **Le Jeu** | **Article 0** de `CLAUDE.md` | l'esprit de Lia et Noé. Il a toujours parlé d'eux, et **jamais de l'outillage** |
+| **L'Agence** | `docs/loi-de-l-agence.md` | *« L'Agence sert la finalité de celui qui l'emploie, jamais la sienne. »* |
+
+**Le test qui tranche en pratique** : une règle ajoutée à l'outillage qui ne serait vraie que pour
+la Maison IA vivante **viole la loi de l'Agence**. L'Agence n'aura jamais son propre Article 0 —
+elle l'imposerait au client suivant.
+
+**Et la conséquence de conception, à tenir dès aujourd'hui** : il faudra **plusieurs versions de
+l'Agence selon la taille du projet utilisateur** (sa demande du 2026-09-29, et déjà écrite dans
+`COMMANDE IMPORTANTE.md`). Donc tout ce qui se construit se conçoit en sachant qu'il faudra pouvoir
+**en retirer des morceaux sans casser le reste**. Une pièce qu'on ne peut pas enlever est une pièce
+qui empêchera la version allégée d'exister.
+
 ### Et SES DEUX DOCUMENTS PRIORITAIRES, ajoutés le 2026-09-29 sur sa demande explicite
 
 *(« MA COMMANDE IMPORTANTE, doc que tu dois relire regulierement, à noter ».)*

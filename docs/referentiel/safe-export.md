@@ -1,5 +1,12 @@
 # SAFE-EXPORT — instanciation propre à ce projet
 
+> **SON TEXTE DE RÉFÉRENCE, depuis le 2026-09-29 : `docs/loi-de-l-agence.md`.** SAFE-EXPORT mesurait
+> l'exportabilité depuis sa création **sans avoir de loi à citer**. Elle existe maintenant :
+> *« L'Agence sert la finalité de celui qui l'emploie, jamais la sienne. »* Ce que cet outil vérifie
+> n'est donc plus une précaution de bon sens, c'est la tenue d'un texte suprême — et sa définition
+> mesurable est simple : l'Agence a aujourd'hui UN client, exportable veut dire qu'un DEUXIÈME
+> serait possible.
+
 *(2026-09-22, nom donné par l'utilisateur. Septième Gardien sacré du code, par sa COUCHE LÉGÈRE
 seulement. Blueprint générique : `docs/safe-export-blueprint.md`.)*
 

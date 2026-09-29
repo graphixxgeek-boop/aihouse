@@ -2305,6 +2305,11 @@ export const DOCUMENTS_QUI_FONT_LOI = [
   { chemin: "docs/regles-de-travail.md", pourquoi: "la méthode de collaboration — la charte ordonne de la lire EN PLUS d'elle, jamais à sa place" },
   { chemin: "docs/philosophie-et-politique.md", pourquoi: "les valeurs et la façon de trancher un conflit de valeurs — texte fondateur, révisé exceptionnellement" },
   { chemin: "docs/systeme-de-suivi.md", pourquoi: "la structure du suivi durable : la charte en fait une obligation, pas une convention" },
+  // AJOUTÉ LE 2026-09-29 — LA CINQUIÈME, et le projet en a maintenant DEUX qui sont suprêmes.
+  // L'Article 0 de CLAUDE.md gouverne l'esprit de Lia et Noé, jamais l'outillage ; ce texte-ci
+  // gouverne l'outillage, et il est le seul à partir avec l'Agence le jour de l'export. Les
+  // confondre rendrait l'Agence inexportable sans que personne ne s'en aperçoive.
+  { chemin: "docs/loi-de-l-agence.md", pourquoi: "le texte suprême de l'outillage, tranché par l'utilisateur le 2026-09-29 : l'Agence sert la finalité de celui qui l'emploie, jamais la sienne — distinct de l'Article 0, qui ne gouverne que le Jeu" },
 ];
 
 export const NATURE_INDETERMINEE = { cle: "indeterminee", icone: "❓", quoi: "aucun signal ne tranche — dit plutôt que rangé par défaut" };
