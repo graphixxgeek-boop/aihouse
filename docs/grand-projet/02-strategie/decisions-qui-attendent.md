@@ -155,10 +155,21 @@ vocabulaire ou recevoir un chemin — et la première suffit.
 | **13 décisions en même temps** | chaque nouvelle ralentit **aussi** les faciles — propriété des files, jamais une opinion |
 | **La plus ancienne : 7 jours** | #390, dont la réponse tient en une ligne |
 | **45 leçons jamais jugées** | le registre grossit sans que personne sache s'il sert |
-| **6 registres sans lecteur** | six données fraîches que seul leur producteur relit |
+| **5 registres sans lecteur** | cinq données fraîches que seul leur producteur relit — il y en avait six |
 
 **Six des treize sont dans ce document avec une recommandation en une ligne.** Les sept autres sont
 des idées en attente dans `docs/idees-a-trancher.md`, qui ne bloquent rien.
+
+### CE QUI A BOUGÉ DEPUIS, ET C'EST MESURÉ *(mise à jour du 2026-09-29, nuit autonome)*
+
+| Ligne ci-dessus | Ce qu'elle dit aujourd'hui |
+|---|---|
+| **6 registres sans lecteur** | **5.** Celui du filet en parts en a reçu un VRAI (#1208) : il portait un gain de temps écrit à la main que rien ne vérifiait, et l'outil qui chronomètre le filet le confronte désormais à son propre relevé. Les cinq autres sont laissés exprès — leur inventer un lecteur pour faire descendre un compteur serait l'outil fabriqué pour cocher la case |
+| **La Ronde (#841), « 30 commits sans passage »** | **plus de 40.** Elle n'a pas été lancée cette nuit, et la raison est écrite (#1216) : deux de ses douze étapes exigent ta présence. La substance — dix outils passés un par un — a eu lieu ; c'est la cérémonie qui t'attend |
+| **Le nombre de décisions** | **deux de plus**, nées de la nuit et posées avec leur mesure : **#1203** (38 balayages de fichiers sur 42 perdent un fichier illisible en silence — corriger touche 14 outils, donc c'est ta décision) et **#1209** (le critère « donnée fraîche sans lecteur » convient-il au registre d'un OUTIL, dont le lecteur naturel est l'agent ?) |
+
+**Aucune de ces trois lignes n'a été corrigée de mémoire** : chacune vient d'un outil relancé cette
+nuit, et la commande qui la remesure est nommée dans la fiche correspondante.
 
 ---
 
