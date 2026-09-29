@@ -102,6 +102,25 @@ export const REGLES_SURVEILLEES = [
   { id: "reveil-arme", cote: "agent", observable: false, regle: "En mode autonome, ARMER le réveil (send_later, 15 min) AVANT de terminer le tour, systématiquement. Un tour qui se termine sans réveil armé arrête la nuit, quoi qu'annonce le compte rendu.", source: "nuit perdue du 2026-09-25, constatée par la comparaison plan de départ ↔ rapport de nuit" },
   { id: "reprise-des-notes", cote: "agent", observable: false, regle: "Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent.", source: "docs/regles-de-travail.md §0bis" },
   { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },
+  // L'ESCALADE (2026-09-28, tâche #1146) — sa consigne la plus structurante du soir, donnée DEUX fois
+  // à vingt minutes d'intervalle. Elle n'a aucun porteur possible ailleurs : aucun mécanisme ne peut
+  // savoir qu'un plan de chantier est en train de se concevoir dans une conversation. Angel DEMANDE,
+  // et refuse d'être au vert sans réponse — le seul dispositif possible, déjà éprouvé pour les
+  // Articles 29 et 30.
+  //
+  // ELLE A ÉTÉ PAYÉE LE JOUR MÊME, ce qui la met au-dessus d'une règle de confort : seize tâches
+  // ouvertes sous un plan non calibré, qu'il a fallu repasser « À TRANCHER ».
+  { id: "escalade", cote: "agent", observable: false, regle: "Concevoir tout chantier dans l'ordre : ① calibrage fin sur TOUS les points → ② la CIBLE → ③ les grandes étapes → ④ les sous-étapes → ⑤ les blocs de tâches → ⑥ les tâches individuelles. Chaque niveau interdit au suivant de commencer : aucune tâche n'est créée avant que le cadre soit fixé, et une question de niveau ⑤ posée avant un accord de niveau ② ne produit pas une réponse mais une supposition déguisée en décision.", source: "docs/regles-de-travail.md §0ter · tâche #1146" },
+  // L'ALIGNEMENT (2026-09-29, tâche #1148). Sa moitié mécanique vit chez THE-KING ; ce qui reste ici
+  // est le RÉFLEXE, qu'aucune mécanique n'attrape : déclarer le parent AU MOMENT de créer, jamais
+  // dans une passe de rattrapage. Un objet créé sans déclaration devient un orphelin de plus, et les
+  // orphelins ne sont volontairement pas comptés comme des fautes — donc rien ne le rappellera.
+  { id: "alignement-a-la-creation", cote: "agent", observable: false, regle: "Au moment de CRÉER un document de stratégie ou de plan, y écrire tout de suite la ligne « **DÉCOULE DE :** <chemin du parent> » — jamais dans une passe de rattrapage plus tard. THE-KING mesure la couverture, mais un orphelin n'est pas compté comme une faute : rien ne rappellera l'oubli.", source: "CLAUDE.md, proposition d'Article · THE-KING · tâche #1148" },
+  // LE RÉVEIL QUI MENT (2026-09-29, tâche #1165). La leçon existait depuis #831 — « un prompt de
+  // réveil est de la mémoire, jamais une source de vérité » — et elle n'a rien empêché : un filet
+  // horaire a diffusé une consigne périmée à chaque heure d'une nuit entière. Ce qui manquait n'était
+  // pas la leçon, c'était quelqu'un pour poser la question au bon moment.
+  { id: "reveil-a-jour", cote: "agent", observable: false, regle: "Au départ de chaque période autonome, RELIRE le prompt de tous les réveils déjà armés et le corriger s'il annonce comme « à faire » quelque chose de déjà fait. Un réveil se répète à chaque heure : une consigne périmée s'y répète aussi.", source: "tâches #831 et #1165" },
   { id: "decisions-en-attente", cote: "utilisateur", observable: true, regle: "Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend.", source: "docs/regles-de-travail.md §2" },
   // XP-LECONS (2026-09-23, process XP-IA-bonnes-pratiques-et-lecons, tâche #221). C'est le PREMIER
   // maillon de la chaîne de l'expérience : sans quelqu'un pour poser la question aux moments qui

@@ -423,6 +423,15 @@ export const PROCESSES = [
       // dessus — et l'audit du jour a justement trouvé quatre tâches faites mais jamais closes.
       { cle: "etat-taches", libelle: "analyser l'état des tâches (check-tasks-details) pour repérer ce qui peut être traité cette nuit", preuve: { dossier: "docs/check-tasks-details/", motif: /\.html$|\.txt$/ } },
       { cle: "plan", libelle: "reprendre le plan donné, sans en sauter une étape", preuve: null },
+      // LE RÉVEIL À JOUR (2026-09-29, tâche #1165). Le défaut s'est produit pour de vrai la nuit même :
+      // un filet horaire de la veille annonçait comme « ce qui vient maintenant » quatre livrables
+      // déjà faits, et il l'a répété À CHAQUE HEURE. Un réveil se répète ; une consigne périmée s'y
+      // répète aussi. La leçon existait depuis #831 (« un prompt de réveil est de la mémoire, jamais
+      // une source de vérité ») et n'avait aucun porteur — c'est ce trou-là que cette étape ferme.
+      //
+      // AUCUNE PREUVE SUR LE DISQUE, ET C'EST EXACT : un prompt de réveil vit chez le planificateur,
+      // pas dans le dépôt. L'étape est donc déclarée non vérifiable plutôt que comptée faite.
+      { cle: "reveil-a-jour", libelle: "relire le prompt des réveils DÉJÀ armés et corriger ce qui y est périmé — un réveil se répète, une consigne fausse aussi", preuve: null },
       // LES DEUX GRANDES ACTIVITÉS DE LA NUIT, ajoutées à la demande de l'utilisateur. Chacune
       // produit son PLAN D'ACTION, donc des tâches à traiter dans la MÊME nuit (Article 28) : c'est
       // ce qui transforme un scan nocturne en travail, plutôt qu'en un rapport de plus.

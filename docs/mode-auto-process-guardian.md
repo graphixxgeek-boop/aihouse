@@ -91,6 +91,35 @@ Un plan numéroté, dans son ordre à lui. Le plan **se suit dans cet ordre**, s
 urgente. Si une étape se révèle impossible, elle est dite comme telle dans le rapport, avec sa
 raison ; jamais silencieusement remplacée par autre chose.
 
+## RELIRE LES RÉVEILS DÉJÀ ARMÉS — l'étape ajoutée le 2026-09-29 (tâche #1165)
+
+**Le défaut s'est produit pour de vrai, et il a duré six heures.** Un filet horaire armé la veille
+annonçait encore, comme « ce qui vient maintenant », quatre livrables déjà faits — et il l'a répété
+**à chaque heure de la nuit**.
+
+**Ce qui rend ce défaut particulier** : un réveil se RÉPÈTE. Une consigne périmée ne se dit pas une
+fois, elle se redit à chaque passage, et chaque passage la rend un peu plus crédible.
+
+**La leçon existait pourtant, écrite noir sur blanc depuis la tâche #831** : « mes propres messages
+de réveil sont de la mémoire, jamais une source de vérité ». Elle n'a rien empêché, **parce
+qu'aucun mécanisme ne la portait** — elle le disait elle-même.
+
+**Le geste, au départ de chaque période autonome** : lister les réveils déjà armés, relire leur
+prompt, et corriger ce qui y est faux. Un ancien filet ne se supprime pas forcément — un second
+filet reste utile ; c'est son CONTENU qu'il faut remettre à jour.
+
+> **FRONTIÈRE avec `docs/xp-ia-process-detail.md`, que le détecteur de documents jumeaux a exigée.**
+> Les deux parlent de leçons payées et de mécanismes qui manquent, et ce n'est pas un hasard : une
+> nuit autonome est l'endroit où les défauts de méthode se voient le mieux. **Ils ne se confondent
+> pourtant jamais.** Ce document décrit LE CADRE d'une période de travail sans personne — ses
+> étapes, ses bornes, son seuil d'arrêt. L'autre décrit LA CHAÎNE par laquelle une leçon survit à
+> la session qui l'a vécue. Ici on lit comment travailler seul ; là-bas, comment ne pas réapprendre
+> deux fois la même chose.
+
+**Ce qui reste hors de toute mécanique** : un prompt de réveil vit chez le planificateur, pas dans
+le dépôt. `god-of-all-process` déclare donc cette étape NON VÉRIFIABLE plutôt que de la compter
+faite, et `angel-of-ia-process` la porte comme règle de conduite (`reveil-a-jour`).
+
 ## Les bornes — ce qui ne se fait jamais sans validation
 
 ### Le périmètre sensible (défini par l'utilisateur, 2026-09-22)
