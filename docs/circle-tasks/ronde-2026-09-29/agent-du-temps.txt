@@ -1,0 +1,38 @@
+⚠️  Attention, mes résultats peuvent être inexacts : l'heure elle-même est un fait, mais sa SOURCE ne l'est pas : quand le réseau est refusé il rend l'horloge locale, invérifiable depuis le conteneur — et un facteur d'ajustement calculé sur trois mesures reste une tendance, jamais une loi. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mardi 29 septembre 2026 à 05h46 (UTC)
+État du code : 980d048 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : agent-du-temps — inchangé depuis le dimanche 27 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== AGENT-DU-TEMPS — l'heure fiable, et la mémoire des estimations ===
+
+⚠️  Attention, mes résultats peuvent être inexacts : l'heure elle-même est un fait, mais sa SOURCE ne l'est pas : quand le réseau est refusé il rend l'horloge locale, invérifiable depuis le conteneur — et un facteur d'ajustement calculé sur trois mesures reste une tendance, jamais une loi. À vérifier avant d'agir, jamais un verdict acquis.
+
+=== L'HEURE ===
+
+  mardi 29 septembre 2026 à 07:46   (Europe/Paris)
+  horodatage de suivi (UTC, la forme que docs/suivi/ exige) : 2026-09-29T05:46Z
+  SOURCE : système
+  ⚠️  heure de l'horloge locale : honnête, mais invérifiable depuis ce conteneur. Les API de temps ont été essayées et ont échoué — le détail est dans `essais`.
+     · worldtimeapi : HTTP 403
+     · timeapi.io : HTTP 403
+
+=== LES ESTIMATIONS ===
+
+  2 mesure(s) historisée(s)
+  · 2026-09-23 — Ronde GOAT MAX (33 items) : 38 min estimées, 27 réelles → SUR-ESTIMÉE (+41 %)
+  · 2026-09-24 22h55 → 00h20 — Soirée de calibrage : 36 questions en 9 fenêtres, rapport de commande-en-masse, sauvegarde, Ronde rapide : 80 min estimées, 63 réelles → juste (+27 %)
+
+  AJUSTEMENT : pas encore — 2 mesure(s) sur 3 requises — en dessous, un passage atypique recalibrerait tout, et un facteur calculé sur deux points ressemble pourtant à une statistique
+
+--- LE TEMPS DE L'UTILISATEUR (Article 32, quatrième obligation) ---
+  MODE « autonome » — présent : false · une fenêtre peut bloquer : false
+     DÉCLARÉ par le mode de travail en cours, jamais observé : si le mode n'a pas été changé, il décrit l'intention d'hier
+  ❓ DEPUIS SA DERNIÈRE TRACE : NON LISIBLE DEPUIS LE DÉPÔT, et c'est une impossibilité DÉCLARÉE plutôt qu'un oubli : les lignes du suivi sont écrites par l'AGENT, y compris celles nées d'une demande de l'utilisateur. Deux tentatives ont rendu « 0,1 h » en pleine nuit autonome, alors qu'il dormait depuis des heures. Le seul porteur possible est l'horodatage du dernier message reçu, qui vit dans la conversation et pas sur le disque — un appelant qui l'a le passe en `derniereLigne`
+
+=== Plan d'action ===
+  → RETENU · l'heure vient de l'horloge locale : les API de temps sont refusées par la politique réseau de l'environnement, à autoriser si une heure indépendante de la machine est voulue — tâche [RECOMMANDEE] : autoriser un domaine de temps, ou acter que l'horloge système suffit — la décision est à l'utilisateur, jamais à l'agent

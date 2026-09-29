@@ -1,0 +1,6 @@
+Usage: node scripts/smart-conso-api.mjs <type-d'action|scan> [--confirm]
+Types connus : simulation, check-spirit, diagnostic, scan
+
+=== Garde-fou fiabilité — salves d'activité jamais confirmées ===
+
+Aucune salve d'activité récente sans consultation préalable — discipline respectée.

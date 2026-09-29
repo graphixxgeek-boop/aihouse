@@ -1,0 +1,59 @@
+⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mardi 29 septembre 2026 à 05h40 (UTC)
+État du code : 980d048 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : cli_direct
+Outil : safe-export — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 1/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+=== SAFE-EXPORT — exportabilité de l'Agence, lisibilité du projet ===
+
+· cible « agence » : l'outillage de travail est-il exportable vers un autre projet ?
+· cible « projet » : une autre IA reprendrait-elle ce code sans le casser ?
+
+SAFE-EXPORT — 85 blueprint(s) réellement analysé(s) — c'est le dénominateur de tout ce qui suit.
+
+--- LE CODE PARTIRAIT-IL ? 0 candidat(s) ---
+Jusqu'ici SAFE-EXPORT ne vérifiait que des DOCUMENTS : un outil pouvait avoir un blueprint parfait et
+planter à la première seconde dans un dépôt neuf. Ces lignes posent une QUESTION, jamais un verdict —
+savoir si un couplage au jeu est un défaut ou la nature même de l'outil demande de lire ce qu'il fait.
+   ✅ réexports : aucun nom réexporté sans liaison locale sur 84 fichiers (leçon L36).
+  fuites de spécificité : 0 fichier(s)
+  blueprints mal construits : 0
+  dépendances à un outillage particulier : 0
+
+0 écart(s) à regarder (0 écarté(s) avec votre accord explicite, jamais reposé(s)).
+
+📖 VOCABULAIRE — mesuré sur 108 document(s) normatif(s) : 0 emploi(s) ambigu(s).
+
+🧭 X6 — 122 garde-fou(s) exporté(s) sans une ligne d'explication, sur 117 fichier(s) source et 35 garde-fou(s) nommé(s) par un registre réel.
+   Ce que ce chiffre dit, et rien de plus : une absence d'EXPLICATION, jamais une absence de RAISON — juger si un commentaire explique vraiment reste hors de portée d'une mécanique.
+   Pourquoi ce périmètre et pas toutes les fonctions : la version large rend 298 cas, un mur plutôt qu'un signal. L'Article 27 craint précisément le garde-fou, qui ressemble toujours à du zèle tant qu'on ignore le bug qu'il a coûté.
+   • scripts/abraham-les-references.mjs:688 — findPairesRedondantes()
+   • scripts/abraham-les-references.mjs:1171 — findFichesOrphelines()
+   • scripts/agent-des-noms.mjs:297 — findBaptemesDocumentes()
+   • scripts/agent-des-noms.mjs:508 — findHomonymesExportes()
+   • scripts/always-new-code.mjs:68 — findThemesDivergingFromHarmonia()
+   • scripts/angel-of-ia-process.mjs:235 — checkConsultationOrder()
+   • scripts/angel-of-ia-process.mjs:338 — auditWorkingRules()
+   • scripts/angel-of-ia-process.mjs:595 — findJugesSansOutil()
+   • scripts/angel-of-ia-process.mjs:638 — findConstatsSansChiffre()
+   • scripts/cassandra-rh.mjs:2685 — findFamillesDivergentesParOutil()
+   … +112 autre(s).
+
+--- LES GARDIENS SACRÉS DÉCLARENT-ILS CE QU'ILS ONT REGARDÉ ? ---
+✅ Les 7 Gardien(s) sacré(s) vérifié(s) déclarent tous leur corpus avant de conclure.
+
+=== Plan d'action ===
+⏫ PLAN PRIORITAIRE — Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils.
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.
+
+· Aucune sonde proposée : aucun fichier ne concentre 3 écarts ou plus — des écarts éparpillés sont du bruit ordinaire, jamais un signal
+  fuites : stable
+  blueprints-mal-construits : stable
+  dependances-outillage : stable
+  blueprints-total : en hausse (non jugée)

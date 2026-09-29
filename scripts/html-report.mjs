@@ -21,6 +21,7 @@
 
 import { buildReportFrame } from "./report-template.mjs";
 import { reliabilityNotice } from "./lib-shell.mjs";
+import { recordCliUsage } from "./tool-usage.mjs";
 
 export function escapeHtml(text) {
   return String(text ?? "")
@@ -507,6 +508,12 @@ export function inscrireAuRegistre({ source, sortie, octets, quand = null, readI
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
+  // SANS CETTE LIGNE, L'OUTIL TOURNE ET LE COMPTEUR AFFICHE ZÉRO (2026-09-29, tâche #1184) — et un
+  // zéro d'usage se lit comme un verdict sur son utilité, jamais comme un compteur débranché. Le
+  // défaut n'est apparu qu'en DÉCLARANT son offre au catalogue le même jour : tant qu'il n'était
+  // annoncé nulle part, le verrou de Ronde ne pouvait pas le réclamer. Déclarer un outil, c'est
+  // aussi accepter d'être compté.
+  recordCliUsage("html-report", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
   const [action, source, sortie] = process.argv.slice(2);
   if (action !== "document" || !source || !sortie) {
     console.log('Usage : node scripts/html-report.mjs document <source.md> <sortie.html> [--titre "…"] [--sous-titre "…"]');

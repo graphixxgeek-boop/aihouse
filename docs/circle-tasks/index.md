@@ -13,11 +13,12 @@ tables, qui ne se lisent nulle part ailleurs.
 | 2026-09-26 | **Trois registres déclarés ne pouvaient STRUCTURELLEMENT pas être vus** : le garde-fou ne retenait que les chemins `docs/<slug>/index.md`, et `docs/referentiel/kpi-rapports/`, `docs/suivi/relectures-lourdes/`, `docs/ecotoken/ronde/` n'ont pas cette forme. Son vert ne disait pas « couverts », il disait « pas regardés » — et les deux se ressemblent trait pour trait. | Lecture de la liste DÉCLARÉE en plus du balayage du disque, rapprochement par le CHEMIN plutôt que par la ressemblance de nom. Aucun rapport n'était perdu ce jour-là, vérifié un par un : c'était une chance, pas une garantie. |
 | 2026-09-26 | **Les trois verrous d'ouverture ont mordu pour la première fois**, sur un défaut créé le matin même en corrigeant autre chose : inscrire `sauvegarde-projet` au catalogue l'a rendu visible au compteur d'usage, qui a découvert qu'il n'enregistrait jamais son passage. Son zéro ne disait pas « personne ne sauvegarde » mais « personne ne compte ». | `recordCliUsage` ajouté à la source. Premier vrai mordu du dispositif construit le jour même. |
 | 2026-09-26 | **Une exclusion juste sur UNE couche d'un outil finit par le dispenser de TOUTES.** SAFE-EXPORT était exclu de la Ronde au motif « tourne à CHAQUE commit » — exact pour sa couche légère, faux pour la mesure des kits d'export, que personne ne lançait jamais. Trouvé parce que l'utilisateur a demandé « qui scanne ? ». | Exclusion retirée, entrée `safe-export-kits` ajoutée, et l'étape « vérifier l'exclusion existante » inscrite dans le process d'intégration d'une entrée de Ronde. |
+| 2026-09-29 | **Deux outils LANÇABLES étaient absents du catalogue, et l'un des deux était à moi.** `ezechiel-les-tests` et `html-report` ont chacun une vraie commande et n'avaient aucune offre déclarée : invisibles à tool-brain, donc jamais recommandés, donc jamais lancés — et leur zéro d'usage se serait lu ensuite comme un verdict sur leur utilité plutôt que comme la conséquence de leur absence. J'ai construit la commande de `html-report` la nuit précédente et j'ai oublié de déclarer son offre : l'omission vient de celle qui connaissait le mieux l'outil, ce qui dit bien que le garde-fou ne remplace pas une mémoire, il remplace une confiance en sa mémoire. | Deux entrées ajoutées à PRESTATIONS, vérifiées en INTERROGEANT tool-brain (qui ne trouvait rien avant). Le décompte du coordinateur repasse à zéro. |
 
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**89 fichier(s)** dans ce dossier.
+**104 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -110,4 +111,19 @@ tables, qui ne se lisent nulle part ailleurs.
 | [the-king.txt](ronde-2026-09-27/the-king.txt) | ronde-2026-09-27 |
 | [tool-brain_rapport.txt](ronde-2026-09-27/tool-brain_rapport.txt) | ronde-2026-09-27 |
 | [tool-learning.txt](ronde-2026-09-27/tool-learning.txt) | ronde-2026-09-27 |
+| [agent-du-temps.txt](ronde-2026-09-29/agent-du-temps.txt) | ronde-2026-09-29 |
+| [cassandra-rh_rapport.txt](ronde-2026-09-29/cassandra-rh_rapport.txt) | ronde-2026-09-29 |
+| [clean-dirty-old.txt](ronde-2026-09-29/clean-dirty-old.txt) | ronde-2026-09-29 |
+| [data-archangel.txt](ronde-2026-09-29/data-archangel.txt) | ronde-2026-09-29 |
+| [ecotoken.txt](ronde-2026-09-29/ecotoken.txt) | ronde-2026-09-29 |
+| [god-of-all-process.txt](ronde-2026-09-29/god-of-all-process.txt) | ronde-2026-09-29 |
+| [le-coordinateur.txt](ronde-2026-09-29/le-coordinateur.txt) | ronde-2026-09-29 |
+| [ou-on-en-est.txt](ronde-2026-09-29/ou-on-en-est.txt) | ronde-2026-09-29 |
+| [pure-gold-unity.txt](ronde-2026-09-29/pure-gold-unity.txt) | ronde-2026-09-29 |
+| [safe-export.txt](ronde-2026-09-29/safe-export.txt) | ronde-2026-09-29 |
+| [smart-conso-api.txt](ronde-2026-09-29/smart-conso-api.txt) | ronde-2026-09-29 |
+| [the-equalizer.txt](ronde-2026-09-29/the-equalizer.txt) | ronde-2026-09-29 |
+| [the-king.txt](ronde-2026-09-29/the-king.txt) | ronde-2026-09-29 |
+| [tool-brain_rapport.txt](ronde-2026-09-29/tool-brain_rapport.txt) | ronde-2026-09-29 |
+| [tool-learning.txt](ronde-2026-09-29/tool-learning.txt) | ronde-2026-09-29 |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

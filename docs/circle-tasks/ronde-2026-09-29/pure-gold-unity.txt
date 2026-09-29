@@ -1,0 +1,46 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il reconnaît une conversion au gabarit à la présence d'un appel dans le code, jamais en lisant le rapport produit — un outil qui appellerait le cadre sans s'en servir passerait pour conforme. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : mardi 29 septembre 2026 à 05h45 (UTC)
+État du code : 980d048 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : pure-gold-unity — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 1/2 signal(aux) au vert — jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== pure-gold-unity — unification réelle des rapports ===
+
+Outils tenus par le gabarit : 48 (46 réellement mesurables)
+Conformes : 46/46 (100 %)
+⚠️ Non mesurables (2) : scripts/the-deep-reader.mjs — n'imprime rien et n'écrit aucun fichier — aucun rapport à mettre au gabarit (orchestrateur d'agent séparé : c'est l'agent qui rédige) ; scripts/the-final-judge.mjs — n'imprime rien et n'écrit aucun fichier — aucun rapport à mettre au gabarit (orchestrateur d'agent séparé : c'est l'agent qui rédige)
+✅ Tous les rapports mesurables passent par le gabarit partagé.
+
+--- Les trois critères d'un rapport complet (contenu / date / plan d'action) ---
+Critère 2 (date en toutes lettres) : porté par le gabarit partagé, mesuré juste au-dessus.
+
+Critère 1 — du contenu, jamais un simple renvoi : ✅ aucun rapport archivé ne se contente de pointer ailleurs.
+   ✅ 1 rapport(s) COURTS MAIS DENSES — ils portent leur donnée, le fichier qu'ils mentionnent est un complément et non un substitut. Jamais un écart :
+      · check-tasks-details — circle-signal-2026-09-25T14-14-12-671Z.txt (11 lignes, 42 chiffres à lui)
+
+Critère 3 — un plan d'action le cas échéant : ✅ tous les outils à constats concluent.
+
+Critère 4 — le rapport sort-il TOUT ce que l'outil sait détecter : ✅ aucun détecteur sans effet.
+Critère 5 — le rapport peut-il dire « tout va bien » sans rien avoir mesuré : ✅ chaque outil à verdict porte au moins une façon déclarée de dire qu'il n'a pas pu mesurer.
+
+   (13 autre(s) détecteur(s) sont portés par la SEULE suite de tests : ils protègent pour de vrai — le crochet pre-commit la lance à chaque commit — mais ne disent jamais rien dans le rapport de leur outil. Signalés, jamais comptés en faute.)
+   · abraham-les-references :: findFichesOrphelines()
+   · angel-of-ia-process :: findConstatsSansChiffre()
+   · check-tasks-details :: findListesDOuvertureEnDur()
+   · check-tasks-details :: findStatutsContredits()
+   · criticite :: findPaliersSansFamille()
+   · criticite :: findPourQuiInvalide()
+   · doc-report :: findDocumentsSansRegime()
+   · ecotoken :: findTriggersNotWired()
+   · god-of-all-process :: findMecanismesAbsentsDuGardien()
+   · god-of-all-process :: findMecanismesAbsentsDuDocument()
+   · kpi-report :: findColonnesSansNature()
+   · modes-de-travail :: findModesInconnusCites()
+   · safe-export :: findTermesNonDefinis()
+
+=== Plan d'action ===
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.

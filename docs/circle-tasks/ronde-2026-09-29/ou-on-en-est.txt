@@ -1,0 +1,7 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il résume un chemin parcouru à partir de lignes de suivi écrites à la main — ce que le suivi dit du projet, jamais ce qui a réellement été fait. À vérifier avant d'agir, jamais un verdict acquis.
+=== OÙ ON EN EST — ce qui a été fait, et ce que le projet y a gagné ===
+
+3 fichier(s) de session lu(s), 460 tâche(s) au total — c'est le dénominateur.
+0 terminée(s) sur la période (2026-09-28, 2026-09-29), 389 ouverte(s).
+
+Rapport HTML : /home/user/aihouse/docs/ou-on-en-est/ou-on-en-est.html
