@@ -1552,20 +1552,18 @@ export function ancresDuTexte(texte, document, { motifs = MOTIFS_D_ANCRE, motsPr
 }
 
 export function ancresDuCorpus({ root = ROOT, racines = ANCRES_RACINES, readFileImpl = lireFichierPartage, listDirImpl = readdirSync } = {}) {
-  const fichiers = [];
-  for (const racine of racines) {
-    const pile = [racine];
-    while (pile.length) {
-      const d = pile.pop();
-      let entrees = [];
-      try { entrees = listDirImpl(join(root, d), { withFileTypes: true }); } catch { continue; }
-      for (const e of entrees) {
-        const chemin = `${d}/${e.name}`;
-        if (e.isDirectory()) { pile.push(chemin); continue; }
-        if (/\.(md|txt)$/i.test(e.name) && e.name !== "index.md") fichiers.push(chemin);
-      }
-    }
-  }
+  // LE PARCOURS D'ARBORESCENCE ÉTAIT RÉÉCRIT À LA MAIN alors que `listerLesFichiers()` était DÉJÀ
+  // IMPORTÉE en tête de ce fichier (2026-09-29, tâche #1198 — signalé par CLONE-HUNTER, qui comptait
+  // ces sept lignes comme un doublon exact avec `lib-shell.mjs`). Le helper partagé prend un
+  // prédicat `garder`, ce qui couvre exactement le filtre appliqué ici. Ce n'est pas une préférence
+  // de style : deux parcours d'arborescence qui vivent séparément finissent par ne plus traiter de
+  // la même façon un lien symbolique, un dossier illisible ou un nom exotique — et l'écart se lit
+  // alors comme une différence de CORPUS, jamais comme le bug de recopie qu'il est.
+  const fichiers = listerLesFichiers(racines, {
+    root,
+    listDirImpl,
+    garder: (nom) => /\.(md|txt)$/i.test(nom) && nom !== "index.md",
+  });
   if (!fichiers.length) {
     return { mesurable: false, pourquoi: `aucun document lisible sous ${racines.join(", ")} : rendre « zéro ancre » sur du vide serait un satisfecit (leçon L13)` };
   }
