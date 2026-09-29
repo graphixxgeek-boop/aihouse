@@ -524,3 +524,80 @@ référence morte ressemble à un lien, ce qui est pire qu'une absence.
 **Mon avis, et je suis partie prenante puisque c'est mon outil qui a trouvé ça** : l'issue 3, mais
 elle n'est pas anodine — elle change ce que **deux** lecteurs reconnaissent, dans le fichier même
 qui surveille les process. C'est pour ça qu'elle attend une décision au lieu d'être appliquée.
+
+
+## #1192 — faut-il SUIVRE dans le temps la couverture des outils, maintenant qu'elle se mesure ?
+
+*(2026-09-29. Suite de #1189 et #1191.)*
+
+| Numéro | Sujet | Décision |
+|---|---|---|
+| #1192 | Données — faire entrer la couverture des outils au tableau de bord, ou la laisser à la bannière | à trancher |
+
+**LA CHAÎNE EST COMPLÈTE AUX DEUX TIERS.** La couverture des outils se **mesure** (#1189 : 39 outils
+au lieu de zéro) et se **voit** à chaque commit (#1191 : la bannière affiche enfin un chiffre). Il
+manque le troisième tiers : la **suivre dans le temps**, pour qu'une dégradation se voie au lieu
+d'être découverte par hasard comme cette nuit.
+
+**Ce que ça coûterait : presque rien.** `kpi-report.mjs` lance déjà le filet sous `NODE_V8_COVERAGE`
+et lit la couverture des libs depuis ce relevé. Une ligne de plus, sur le dossier déjà ouvert.
+
+**Pourquoi c'est quand même une décision.** Une colonne de plus s'ajoute à `KPI_HISTORY_COLUMNS`, à
+`NATURE_DES_COLONNES_KPI` et à `docs/referentiel/kpi-historique.csv` — **un historique committé**.
+Toutes les lignes passées porteraient une cellule vide. Or la déclaration de nature dit qu'une
+colonne « locale » restée vide est *une vraie connexion perdue* : le tableau de bord signalerait
+comme cassé un lien qui n'existait pas encore, sur tout l'historique.
+
+**Les trois issues, et elles t'appartiennent :**
+
+1. **Ne pas suivre** — la bannière suffit : un chiffre par commit se lit très bien.
+2. **Suivre**, en acceptant des cellules vides avant aujourd'hui — à condition de vérifier d'abord
+   que l'audit des colonnes ne regarde que les runs RÉCENTS.
+3. **Suivre dans un registre à part**, hors du CSV historique : ça évite la question, et ça ajoute
+   un endroit de plus à tenir.
+
+**Mon avis, et je suis partie prenante puisque c'est ma mesure** : l'issue 2 *si et seulement si*
+l'audit est borné aux runs récents ; sinon la 1 — un tableau de bord qui crie sur son propre passé
+est exactement le garde-fou qu'on cesse de lire.
+
+---
+
+## Voisinage déclaré : `docs/mode-auto-process-guardian.md`
+
+*(2026-09-29.)* Le process de nuit autonome est ce qui fait remonter la plupart des décisions
+inscrites ici. Le lien va dans un seul sens et ne fait pas de ces deux textes des jumeaux : l'un
+décrit des étapes, l'autre tient des choix en attente.
+
+**Pourquoi le rapprochement a eu lieu, et c'est une limite de la mesure** : elle compare des mots.
+Les deux ont grossi la même nuit sous la même plume. Ce n'est pas leur sujet qui se ressemble, c'est
+mon écriture — et une note longue pour l'expliquer créait aussitôt la paire suivante. Le
+raisonnement complet vit donc dans la ligne de suivi #1193, pas ici.
+
+## Voisinage déclaré : `docs/referentiel/organisation-agence.md`
+
+*(2026-09-29.)* Plusieurs décisions en attente ici portent sur l'organisation de l'outillage — qui
+garde quoi, quel outil appartient à quel rang. Le référentiel décrit cette organisation ; ce
+registre tient les choix qui la feraient bouger. Voisins par le sujet, jamais interchangeables.
+
+## #1193 — le détecteur de documents jumeaux rapproche-t-il les sujets, ou mon écriture ?
+
+*(2026-09-29.)*
+
+| Numéro | Sujet | Décision |
+|---|---|---|
+| #1193 | Outillage — faut-il que le détecteur de jumeaux tienne compte du vocabulaire propre au projet | à trancher |
+
+**Observé en direct** : déclarer un faux rapprochement a immédiatement créé le suivant. Zéro paire
+avant mes ajouts du jour, une après le premier, une autre après l'explication du premier.
+
+**Les trois issues :**
+
+1. **Ne rien changer** — déclarer un voisinage coûte trois lignes, et la boucle s'arrête dès qu'on
+   écrit court.
+2. **Écarter du calcul le vocabulaire propre au projet** (noms d'outils, mots de la charte), qui est
+   justement celui que tous mes documents partagent.
+3. **Comparer par section** plutôt que par document entier : deux textes longs finissent toujours par
+   se croiser quelque part ; deux sections qui disent la même chose sont un vrai doublon.
+
+**Mon avis** : la 2, parce qu'elle attaque la cause mesurée plutôt que le symptôme — mais elle change
+ce qu'un Gardien sacré détecte, donc elle se décide.
