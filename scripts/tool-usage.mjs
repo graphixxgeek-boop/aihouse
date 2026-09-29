@@ -18,7 +18,26 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { loadJson } from "./lib-json.mjs";
 
-const HISTORY_PATH = fileURLToPath(new URL("../.tool-usage-history.json", import.meta.url));
+// LE JOURNAL PEUT ÊTRE DÉTOURNÉ PAR L'ENVIRONNEMENT (2026-09-29, tâche #1181), et c'est la racine
+// d'un défaut constaté deux fois cette nuit plutôt qu'un confort de test.
+//
+// LE FAIT : `filet-en-parts` lance quatre parts du filet EN PARALLÈLE. Chacune isole déjà son
+// runtime (`SITES_RUNTIME_ROOT`) — mais les quatre écrivaient dans CE fichier-ci, en même temps.
+// Deux conséquences, toutes deux vues pour de vrai : des écritures perdues (le dernier qui écrit
+// gagne), et des tests qui LISENT ce journal en direct pendant que trois autres processus le
+// réécrivent. Résultat : une part rouge puis verte sur exactement le même code.
+//
+// ET C'EST LA MÊME CAUSE QUE LA TÂCHE #1172, prise par sa racine plutôt que par son symptôme
+// (Article 3) : là-bas, le filet écrivait de faux outils dans le journal de production ; ici il
+// le met en pièces à quatre mains. Un journal de production n'a rien à faire dans un test, dans
+// aucun des deux sens.
+//
+// L'ENV EST LU À CHAQUE APPEL, jamais figé au chargement du module : une part fixe la variable
+// avant de lancer son processus, mais un test qui la change en cours de route doit être suivi.
+const HISTORY_PATH_PAR_DEFAUT = fileURLToPath(new URL("../.tool-usage-history.json", import.meta.url));
+export function cheminDuJournal(env = process.env) {
+  return env?.TOOL_USAGE_HISTORY_PATH || HISTORY_PATH_PAR_DEFAUT;
+}
 
 // "cli_direct" (2026-09-21, correctif demandé explicitement après un audit honnête : le compteur
 // affichait ZÉRO sollicitation réelle pour tout le paysage malgré plusieurs vrais lancements d'outils
@@ -83,7 +102,7 @@ export { loadJson };
 // générateurs de combinaisons le font (ils refusent de conclure sous le seuil de mesurabilité).
 export function loadToolUsageHistory(readFile = (u) => readFileSync(u, "utf8")) {
   try {
-    return JSON.parse(readFile(HISTORY_PATH));
+    return JSON.parse(readFile(cheminDuJournal()));
   } catch {
     return { events: [] };
   }
@@ -102,10 +121,10 @@ export function recordToolUsage(toolSlug, origin, now = Date.now(), foundSomethi
   if (typeof now !== "number" || !Number.isFinite(now)) {
     throw new Error(`recordToolUsage: horodatage invalide pour "${toolSlug}" (${typeof now}) — un « at » qui n'est pas un nombre rend l'événement invisible à toute fenêtre de temps, sans jamais lever d'erreur.`);
   }
-  const history = loadJson(HISTORY_PATH, { events: [] });
+  const history = loadJson(cheminDuJournal(), { events: [] });
   history.events = history.events ?? [];
   history.events.push({ toolSlug, origin, at: now, ...(typeof foundSomething === "boolean" ? { foundSomething } : {}) });
-  writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
+  writeFileSync(cheminDuJournal(), JSON.stringify(history, null, 1));
   return history;
 }
 
@@ -197,10 +216,10 @@ export function toolUsageStats(history, toolSlug) {
 export function recordFunctionUsage(toolSlug, fonction, { now = Date.now(), foundSomething = undefined } = {}) {
   if (!fonction) throw new Error("recordFunctionUsage: fonction obligatoire — « l'outil a servi » sans dire par quoi n'est pas une mesure vérifiable.");
   try {
-    const history = loadJson(HISTORY_PATH, { events: [] });
+    const history = loadJson(cheminDuJournal(), { events: [] });
     history.events = history.events ?? [];
     history.events.push({ toolSlug, origin: "fonction", fonction, at: now, ...(typeof foundSomething === "boolean" ? { foundSomething } : {}) });
-    writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
+    writeFileSync(cheminDuJournal(), JSON.stringify(history, null, 1));
     return history;
   } catch { return null; /* best-effort, jamais bloquant — même discipline que recordCliUsage() */ }
 }
@@ -235,10 +254,10 @@ export function recordToolContribution(toolSlug, fichier, { nature = "registre",
   if (!toolSlug) throw new Error("recordToolContribution: toolSlug obligatoire — une contribution ne peut jamais être anonyme.");
   if (!fichier) throw new Error("recordToolContribution: fichier obligatoire — une contribution qui ne nomme pas ce qu'elle a alimenté n'est pas vérifiable.");
   if (!CONTRIBUTION_NATURES.includes(nature)) throw new Error(`recordToolContribution: nature inconnue "${nature}" — attendu l'une de ${CONTRIBUTION_NATURES.join(", ")}`);
-  const history = loadJson(HISTORY_PATH, { events: [] });
+  const history = loadJson(cheminDuJournal(), { events: [] });
   history.contributions = history.contributions ?? [];
   history.contributions.push({ toolSlug, fichier, nature, par, at: now });
-  writeFileSync(HISTORY_PATH, JSON.stringify(history, null, 1));
+  writeFileSync(cheminDuJournal(), JSON.stringify(history, null, 1));
   return history;
 }
 
@@ -323,7 +342,7 @@ function main() {
   }
   const foundSomething = foundSomethingArg === "confirme_utile" ? true : foundSomethingArg === "sans_trouvaille" ? false : undefined;
   recordToolUsage(toolSlug, origin, Date.now(), foundSomething);
-  const history = loadJson(HISTORY_PATH, { events: [] });
+  const history = loadJson(cheminDuJournal(), { events: [] });
   console.log(`Enregistré : ${toolSlug} (${origin}).`);
   console.log(JSON.stringify(toolUsageStats(history, toolSlug), null, 1));
 }

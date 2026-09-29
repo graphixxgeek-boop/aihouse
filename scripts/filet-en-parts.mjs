@@ -250,7 +250,16 @@ async function main() {
   });
 
   const t0 = Date.now();
-  const resultats = await Promise.all(chemins.map((c, i) => lancerUnePart(c, { env: { SITES_RUNTIME_ROOT: `${ROOT}.sites-runtime/p${i + 1}` } })));
+  // CHAQUE PART A SON PROPRE JOURNAL D'USAGE (2026-09-29, tâche #1181). Les parts isolaient déjà
+  // leur runtime ; elles écrivaient toutes dans le MÊME `.tool-usage-history.json`, en parallèle.
+  // Deux dégâts, vus l'un et l'autre cette nuit : des écritures perdues, et des tests qui lisent ce
+  // journal en direct pendant que trois autres processus le réécrivent — une part rouge puis verte
+  // sur exactement le même code. Le journal de production n'a rien à faire dans un test, et le
+  // filet n'a rien à écrire dedans (même cause que la tâche #1172, prise par sa racine).
+  const resultats = await Promise.all(chemins.map((c, i) => lancerUnePart(c, { env: {
+    SITES_RUNTIME_ROOT: `${ROOT}.sites-runtime/p${i + 1}`,
+    TOOL_USAGE_HISTORY_PATH: `${ROOT}.sites-runtime/p${i + 1}-tool-usage-history.json`,
+  } })));
   const total = Date.now() - t0;
 
   for (const c of chemins) { try { rmSync(c); } catch { /* déjà parti */ } }

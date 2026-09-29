@@ -11246,7 +11246,11 @@ await testVerrousDOuverture();
     assert.deepEqual(ovr.computeResultat({ entite: 'harmonia', source: 'contribution-count', debut: '2026-09-01', fin: '2026-09-30' }, h, Date.parse('2026-09-25')), { valeur: null, hasData: false }, '"zero contribution" and "not measured yet" are two different facts — rendering the second as a zero is the exact mistake this project keeps correcting');
   }
   {
-    const histPath = new URL('../.tool-usage-history.json', import.meta.url);
+    // LE CHEMIN SE DEMANDE AU MODULE, il ne se recopie pas (2026-09-29, tâche #1181 — Article 24).
+    // Depuis que chaque part du filet parallèle a son propre journal, un chemin écrit en dur ici
+    // lisait le journal par DÉFAUT pendant que recordToolUsage() écrivait dans celui de la part :
+    // le test voyait zéro événement là où il venait d'en écrire deux.
+    const histPath = (await import('../scripts/tool-usage.mjs')).cheminDuJournal();
     const { existsSync: exU, readFileSync: rdU, writeFileSync: wrU, unlinkSync: unU } = await import('node:fs');
     const hadFile = exU(histPath);
     const backup = hadFile ? rdU(histPath, 'utf8') : undefined;
