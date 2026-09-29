@@ -2021,6 +2021,13 @@ export const MOTIFS_MEMOIRE = [
   // la MÉTHODE (confronter les chiffres d'un audit au dépôt réel, écrire la demande inavouée en
   // face de la question posée), et elle vit dans la charte et les blueprints, jamais ici.
   { motif: /^docs\/grand-projet\/02-strategie\//, pourquoi: "l'analyse d'un corpus propre à CE chantier : ses chiffres, ses tensions, ses questions à lui. Ce qui voyage est la MÉTHODE, écrite ailleurs — jamais le contenu" },
+  // ET LE MÊME RAISONNEMENT VAUT POUR LE PLAN D'ACTION (2026-09-29, tâche #1231) — troisième
+  // démonstration de la même leçon, dans le même fichier. Le commentaire juste au-dessus raconte
+  // qu'une liste d'exceptions tenue à la main s'est périmée « au fichier suivant » ; ce dossier-ci
+  // n'avait aucune règle, et le PREMIER document vivant qu'on y dépose a fait échouer le filet le
+  // soir même. Son voisin ne passait que grâce à la DATE dans son nom — un signal qu'un document
+  // VIVANT ne peut pas porter sans mentir. Une règle DÉRIVÉE, donc, jamais une ligne de plus.
+  { motif: /^docs\/grand-projet\/03-plan-daction\//, pourquoi: "le plan de CE chantier : où tombe chaque idée dans nos sept étapes à nous. La méthode de placement voyage, écrite dans la charte ; l'ordre de nos chantiers ne voyage nulle part" },
   { motif: /^docs\/simulations\//, pourquoi: "les conversations archivées de Lia et Noé" },
   { motif: /^docs\/plans\//, pourquoi: "un plan de chantier est la photographie d'un moment" },
   { motif: /^docs\/rapports-de-nuit\//, pourquoi: "le compte rendu d'une nuit précise" },
