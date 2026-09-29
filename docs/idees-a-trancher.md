@@ -601,3 +601,33 @@ avant mes ajouts du jour, une après le premier, une autre après l'explication 
 
 **Mon avis** : la 2, parce qu'elle attaque la cause mesurée plutôt que le symptôme — mais elle change
 ce qu'un Gardien sacré détecte, donc elle se décide.
+
+## #1197 — l'estimation de la Ronde s'applique-t-elle à une Ronde AUTONOME ?
+
+*(2026-09-29. Rendue décidable par #1196, qui enregistre enfin le mode de chaque Ronde.)*
+
+| Numéro | Sujet | Décision |
+|---|---|---|
+| #1197 | Process — exempter ou non la Ronde autonome de l'estimation préalable | à trancher |
+
+**Le fait mesuré** : le registre d'estimations porte **deux lignes pour six Rondes** tenues.
+
+**Ta demande, mot pour mot** : « donne moi une estimation de temps à chaque fois en début de ronde
+selon le programme choisi », puis « compare à la fin ton estimation avec le temps reel et consigne
+le pour la prochaine fois, pour ajuster tes estimations ».
+
+**Ce qui rend la question légitime** : « donne-**MOI** ». L'estimation t'est destinée, pour que tu
+saches combien de temps tu attends. Une Ronde autonome tourne pendant que tu dors.
+
+**L'argument inverse, et il est réel** : la seconde moitié — comparer et consigner « pour ajuster
+tes estimations » — sert les PROCHAINES estimations. La durée réelle d'une Ronde autonome est une
+donnée aussi bonne qu'une autre pour ça.
+
+**Trois issues :**
+
+1. Exempter la Ronde autonome des **deux** gestes — simple, mais on perd des mesures gratuites.
+2. Exempter seulement l'**estimation préalable**, garder la mesure du réel.
+3. N'exempter de rien — l'estimation sert aussi d'auto-contrôle à l'agent.
+
+**Ma recommandation : la 2** — elle respecte le sens de « donne-moi » sans jeter ce que la seconde
+moitié de ta demande cherchait à obtenir.

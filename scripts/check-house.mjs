@@ -7722,8 +7722,31 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // --count HEAD") — never a second divergent commit-count calculation.
   const circleTasksSource = fs.readFileSync(new URL('../scripts/circle-tasks.mjs', import.meta.url), 'utf8');
   assert.ok(circleTasksSource.includes('"record-run"'), 'circle-tasks.mjs must expose a real "record-run" CLI subcommand — recordCircleTasksRun() must never stay reachable only via an improvised node -e call');
-  assert.ok(circleTasksSource.includes('recordCircleTasksRun(count)'), 'the record-run CLI branch must call the real recordCircleTasksRun(), never a second divergent write to .circle-tasks-last-run.json');
+  assert.ok(/recordCircleTasksRun\(count,/.test(circleTasksSource), 'the record-run CLI branch must call the real recordCircleTasksRun(), never a second divergent write to .circle-tasks-last-run.json');
   assert.ok(circleTasksSource.includes('git rev-list --count HEAD'), 'the record-run CLI branch must reuse the exact same commit-count command as the post-commit hook, never a second divergent counting method');
+
+  // LE MODE DE LA RONDE EST ENREGISTRÉ (2026-09-29, tâche #1196), et sans lui aucune règle « sauf en
+  // mode autonome » n'est vérifiable par quoi que ce soit. Mesuré : le registre d'estimations porte
+  // DEUX lignes pour SIX Rondes tenues, et rien ne permettait de dire si une Ronde sans estimation
+  // était une faute ou une exemption légitime — le document exempte explicitement le mode nocturne
+  // autonome de plusieurs autres étapes.
+  //
+  // ET L'ÉCRITURE S'INJECTE ENFIN : le commentaire ci-dessus disait qu'on ne pouvait pas appeler
+  // cette fonction sans écraser l'état réel. C'était vrai, et je l'ai écrasé pour de bon en la
+  // vérifiant d'un simple appel — la faute corrigée le matin même chez recordCircleItemReport
+  // (#1172), refaite le soir par celle qui l'avait corrigée. On peut maintenant la tester pour de
+  // vrai, sans toucher au disque.
+  {
+    const { recordCircleTasksRun } = await import('../scripts/circle-tasks.mjs');
+    let ecrit = null;
+    const faux = (_p, d) => { ecrit = JSON.parse(d); };
+    assert.equal(recordCircleTasksRun(7, 1234, { autonome: true, writeImpl: faux }).mode, 'autonome', 'a Ronde run in autonomous mode must record it: an exemption nobody can verify is not an exemption');
+    assert.equal(recordCircleTasksRun(7, 1234, { autonome: false, writeImpl: faux }).mode, 'interactive', 'and an interactive one must record that too, otherwise "autonomous" could never be told apart from "not recorded"');
+    assert.ok(!('mode' in recordCircleTasksRun(7, 1234, { writeImpl: faux })), 'MUST CATCH: with no mode supplied, NOTHING is written — the runs that predate this line have no mode, and inventing one for them would fabricate data (leçons L5/L11)');
+    assert.deepEqual(ecrit, { lastRunCommitCount: 7, lastRunAt: 1234 }, 'and what reaches the writer is exactly the state, never a second shape built for the occasion');
+    assert.ok(/writeImpl = writeFileSync/.test(circleTasksSource), 'MUST CATCH: the write must stay injectable — a function that writes to disk with no way to pass it a fake writer WILL be verified against the real data, sooner or later, by someone in a hurry');
+  }
+
 
   // groupCircleReportByTheme() (2026-09-20, idée explicite de l'utilisateur : proposer les items par
   // thème plutôt qu'un découpage arbitraire de 4). Chaque item réel doit porter un thème connu, se

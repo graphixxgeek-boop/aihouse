@@ -1589,9 +1589,36 @@ export function relanceMessage(relance) {
 // travail derrière chaque case cochée (aucun mécanisme ne peut le vérifier, même honnêteté que le
 // reste de ce paysage). `totalCommitCount` : le compte réel au moment du passage (`git rev-list
 // --count HEAD`), fourni par l'appelant.
-export function recordCircleTasksRun(totalCommitCount, now = Date.now()) {
+//
+// LE MODE EST ENREGISTRÉ (2026-09-29, tâche #1196), et sans lui aucune règle « sauf en mode
+// autonome » ne peut être vérifiée par quoi que ce soit.
+//
+// LE FAIT QUI L'A RENDU NÉCESSAIRE : le document du process pose une demande explicite de
+// l'utilisateur — « donne moi une estimation de temps À CHAQUE FOIS en début de ronde », puis
+// « compare à la fin ton estimation avec le temps réel et consigne-le ». Le registre
+// d'estimations porte DEUX lignes pour SIX Rondes tenues. Les quatre manquantes sont
+// probablement autonomes, et l'estimation y perd une partie de son sens — personne n'attend.
+//
+// MAIS « PROBABLEMENT » EST LE PROBLÈME : rien n'enregistrait le mode, donc aucun outil ne pouvait
+// dire si une Ronde sans estimation était une faute ou une exemption légitime. Le document exempte
+// explicitement le « mode nocturne autonome » de plusieurs autres étapes ; cette exemption-là
+// n'était vérifiable par personne, faute de savoir en quel mode la Ronde avait tourné.
+//
+// CE QUE ÇA N'ARBITRE PAS, et c'est délibéré : savoir SI l'estimation doit s'appliquer à une Ronde
+// autonome reste une décision de l'utilisateur (tâche #1197). Ici on rend seulement la question
+// DÉCIDABLE — un mode écrit est un fait ; sans lui, toute règle à exemption reste une intention.
+// L'ÉCRITURE S'INJECTE, et je viens de payer pour l'apprendre une seconde fois dans la même nuit.
+// En vérifiant cette fonction d'un simple appel, j'ai ÉCRASÉ l'état réel de la dernière Ronde avec
+// mes valeurs de test (commit n° 1, heure 2) — exactement la faute corrigée le matin même chez
+// `recordCircleItemReport` (tâche #1172), refaite ici par la personne qui l'avait corrigée. Une
+// fonction qui écrit sur le disque sans permettre qu'on lui passe un faux écrivain sera vérifiée
+// contre la vraie donnée, tôt ou tard, par quelqu'un de pressé.
+export function recordCircleTasksRun(totalCommitCount, now = Date.now(), { autonome = null, writeImpl = writeFileSync } = {}) {
   const state = { lastRunCommitCount: totalCommitCount, lastRunAt: now };
-  writeFileSync(LAST_RUN_PATH, JSON.stringify(state, null, 1));
+  // `null` VEUT DIRE « PAS ENREGISTRÉ », jamais « interactive » : les passages antérieurs à cette
+  // ligne n'ont pas de mode, et leur en inventer un serait fabriquer une donnée (leçons L5/L11).
+  if (autonome !== null) state.mode = autonome ? "autonome" : "interactive";
+  writeImpl(LAST_RUN_PATH, JSON.stringify(state, null, 1));
   return state;
 }
 
@@ -2585,7 +2612,7 @@ function recordRunCli() {
     process.exitCode = 1;
     return;
   }
-  const state = recordCircleTasksRun(count);
+  const state = recordCircleTasksRun(count, Date.now(), { autonome });
   console.log(`✅ Ronde CIRCLE-TASKS enregistrée comme faite au commit #${state.lastRunCommitCount} — le rappel post-commit repart de zéro à partir de maintenant.`);
 }
 
