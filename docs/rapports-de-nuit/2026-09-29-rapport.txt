@@ -486,6 +486,42 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     journal d'expérience. **Réparer vaut mieux que déclarer.**
 
 
+2quaterdecies. LA BANNIÈRE DES GARDIENS EST PROPRE, POUR LA PREMIÈRE FOIS
+---------------------------------------------------------------------------
+  À chaque commit, six Gardiens affichent leur verdict sur une ligne. L'un d'eux portait un ⚠️1
+  depuis six jours, et j'ai fini par regarder ce que c'était.
+
+  · C'ÉTAIT SMART BREAKER, l'outil du jour de la panne — le seul des quarante dont la couverture de
+    test était « non mesurée ». La cause n'est pas un test oublié : son script **n'expose
+    littéralement aucune fonction**. Il n'y a rien à importer, donc rien à exercer. Ce n'est pas un
+    test qui manque, c'est une surface qui n'existe pas — et par-dessus, son code sonde les vraies
+    clés, donc l'exercer coûterait des appels API à chaque commit.
+
+  · LE DEUXIÈME DÉFAUT ÉTAIT PLUS GRAVE, et c'est lui qui rendait l'alarme impossible à éteindre :
+    la bannière comptait « pas de mesure », ce qui mettait dans le même sac un TROU À COMBLER et une
+    LIMITE DÉCLARÉE. L'outil distingue soigneusement ces deux choses et écrit lui-même qu'elles ne
+    se confondent jamais ; la bannière, elle, les additionnait. **Une alarme que rien ne peut
+    éteindre finit par ne plus être lue — y compris le jour où elle a raison.**
+
+  · ET J'AI POSÉ UN GARDE-FOU SUR MA PROPRE EXEMPTION, parce qu'une raison se périme comme un
+    fichier : le jour où ce script exposera une fonction, il y aura une surface à tester, et
+    l'exemption la couvrirait en silence. Elle est donc vérifiée à chaque passage.
+
+  CE QUI NE CHANGE PAS, ET QUI EST ÉCRIT NOIR SUR BLANC : le trou reste réel. Le jour de la panne,
+  c'est le premier outil qu'on lance, et rien ne garantit mécaniquement qu'il marche encore —
+  exactement ce qui est arrivé au vérificateur du ton, resté cassé six jours sans que rien ne le
+  dise. Déclarer une limite n'est pas la combler ; c'est seulement cesser de la confondre avec un
+  oubli.
+
+  RÉSULTAT : ARGUS ✅ · HARMONIA ✅ · AXA-CHECK ✅ · CLEAN-DIRTY-OLD ✅ · ALWAYS-NEW-CODE ✅, et
+  CLONE-HUNTER à 8 grappes toutes instruites, dont deux délibérément laissées.
+
+  UN DERNIER DÉFAUT DU MÊME GENRE, TROUVÉ EN VÉRIFIANT MON PROPRE TRAVAIL : le contrôleur du suivi
+  signalait « 3 tâches ouvertes sans mot-clé exploitable — n°?, ?, ? ». Le constat était juste, mais
+  il ne nommait AUCUNE des trois : la fonction lisait un nom de champ que son appelant n'écrit pas.
+  Un constat qui ne peut pas nommer son sujet est un constat qu'on relit et qu'on repose.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
