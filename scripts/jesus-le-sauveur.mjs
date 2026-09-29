@@ -73,6 +73,16 @@ export function pasMesure(quoi, pourquoi) {
 
 // LE FILET EST LE SEUL COÛT MACHINE QUE L'AGENT PAIE À CHAQUE CHANTIER, plusieurs fois. Ce qui
 // compte n'est donc pas sa durée nue mais ce qu'elle DEVIENT multipliée par le nombre de passages.
+// LE SEUIL EST CHOISI À LA MAIN, ET SA RAISON EST MESURÉE — ce que l'Article 24 autorise
+// expressément à condition de l'écrire juste à côté plutôt que de le laisser passer pour dérivé.
+//
+// POURQUOI 10 % ET PAS 1 % : le même filet, lancé six fois dans la nuit du 2026-09-29 sans
+// qu'aucune ligne de test ne change entre deux passages, a rendu 52,7 s · 55,0 s · 57,5 s · 60,1 s
+// · 66,4 s · 71,3 s — soit **plus de 15 % d'écart entre le plus rapide et le plus lent**. Un seuil
+// en dessous de cette variance déclarerait « périmé » un chiffre parfaitement valable, et
+// l'alarme redeviendrait le décor qu'elle vient de cesser d'être.
+export const SEUIL_DE_DERIVE_DU_FILET = 0.10;
+
 export function coutDuFilet({ mesures = lireJson("docs/ezechiel-les-tests/mesures.json"), maintenant = Date.now(), shImpl = sh } = {}) {
   if (!mesures?.totalMs) {
     return pasMesure("le coût du filet", "aucune mesure enregistrée par Ezechiel — lancer `node scripts/ezechiel-les-tests.mjs mesurer` avant de conclure quoi que ce soit sur le temps");
@@ -86,20 +96,46 @@ export function coutDuFilet({ mesures = lireJson("docs/ezechiel-les-tests/mesure
       commitsDepuis = String(brut).trim() ? String(brut).trim().split("\n").length : 0;
     } catch { commitsDepuis = null; }   // pas de git : on ne devine pas, on retombe sur l'âge
   }
+  // COMBIEN LE FILET A-T-IL CHANGÉ, et pas seulement s'il a changé (voir la note ci-dessous).
+  let derive = null;
+  if (mesures.quand && commitsDepuis) {
+    try {
+      const avant = String(shImpl(`git show "$(git rev-list -1 --before='${mesures.quand}' HEAD)":scripts/check-house.mjs`)).split("\n").length;
+      const apres = String(shImpl("cat scripts/check-house.mjs")).split("\n").length;
+      if (avant > 0) derive = Math.abs(apres - avant) / avant;
+    } catch { derive = null; }
+  } else if (commitsDepuis === 0) derive = 0;
+
+  const perime = derive === null
+    ? (commitsDepuis === null ? (ageHeures !== null && ageHeures > 24) : commitsDepuis > 0)
+    : derive > SEUIL_DE_DERIVE_DU_FILET;
   return {
     mesurable: true, secondes, ageHeures,
-    // LA PÉREMPTION SE MESURE EN COMMITS DU FILET, JAMAIS EN HEURES — et le premier passage réel
-    // de cet outil a montré pourquoi. Un seuil de 24 h laissait passer une mesure de 20 h qui
+    // LA PÉREMPTION SE MESURE SUR LE FILET LUI-MÊME, JAMAIS SUR LES HEURES — et le premier passage
+    // réel de cet outil a montré pourquoi. Un seuil de 24 h laissait passer une mesure de 20 h qui
     // annonçait 65 s alors que le filet en met 95 : trente secondes d'écart, invisibles, sur le
-    // chiffre même qui sert à décider s'il faut optimiser. Ce qui périme une mesure de durée n'est
-    // pas le temps qui passe, c'est le FILET QUI A CHANGÉ depuis — et ça, git le sait.
-    commitsDepuis,
-    perime: commitsDepuis === null ? (ageHeures !== null && ageHeures > 24) : commitsDepuis > 0,
+    // chiffre même qui sert à décider s'il faut optimiser.
+    //
+    // MAIS « UN SEUL COMMIT SUFFIT » ÉTAIT TROP GROSSIER, et c'est la correction du 2026-09-29.
+    // Le filet reçoit un commit presque chaque jour : le signal était donc rouge en permanence, y
+    // compris trois heures après une mesure fraîche. **Une alarme qu'aucun travail ne peut éteindre
+    // cesse d'être une alarme et devient du décor** (leçon L6) — et la journée l'a montré : la
+    // mesure a été refaite, et JESUS a redit « périmé » au passage suivant.
+    //
+    // CE QUI EST MESURÉ À LA PLACE : de COMBIEN le filet a changé, en nombre de lignes. Une durée
+    // d'exécution suit la quantité de code testé ; un commit qui ajoute un test la déplace de
+    // quelques dixièmes de seconde, une refonte la déplace vraiment.
+    commitsDepuis, derive,
+    perime,
     pourquoi: ageHeures === null
       ? `${secondes.toFixed(0)} s au dernier relevé, dont la DATE est inconnue — l'âge d'une mesure fait partie de la mesure`
-      : commitsDepuis
-        ? `${secondes.toFixed(0)} s au relevé d'il y a ${ageHeures.toFixed(0)} h, mais le filet a reçu ${commitsDepuis} commit(s) DEPUIS : ce chiffre ne décrit plus le filet d'aujourd'hui, et il a l'air tout aussi juste qu'un chiffre frais`
-        : `${secondes.toFixed(0)} s au relevé d'il y a ${ageHeures.toFixed(0)} h, et le filet n'a pas bougé depuis`,
+      : derive === null
+        ? (commitsDepuis
+            ? `${secondes.toFixed(0)} s au relevé d'il y a ${ageHeures.toFixed(0)} h, et le filet a reçu ${commitsDepuis} commit(s) depuis — l'ampleur du changement n'a PAS pu être lue, donc on retombe sur le signal grossier`
+            : `${secondes.toFixed(0)} s au relevé d'il y a ${ageHeures.toFixed(0)} h`)
+        : perime
+          ? `${secondes.toFixed(0)} s au relevé d'il y a ${ageHeures.toFixed(0)} h, mais le filet a changé de ${Math.round(derive * 100)} % en taille depuis (${commitsDepuis} commit(s)) : ce chiffre ne décrit plus le filet d'aujourd'hui, et il a l'air tout aussi juste qu'un chiffre frais`
+          : `${secondes.toFixed(0)} s au relevé d'il y a ${ageHeures.toFixed(0)} h · le filet a bougé de ${Math.round(derive * 100)} % en taille (${commitsDepuis ?? 0} commit(s)), soit moins que l'écart entre deux exécutions du MÊME filet — la mesure tient encore`,
   };
 }
 

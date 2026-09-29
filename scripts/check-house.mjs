@@ -20852,11 +20852,27 @@ async function testJesusLeSauveur() {
   // ② LA PÉREMPTION SE MESURE EN COMMITS DU FILET, JAMAIS EN HEURES. Le premier passage réel a
   // montré pourquoi : un relevé de 20 h annonçait 65 s là où le filet en met 95, et le seuil de
   // 24 h le laissait passer pour frais. Ce qui périme une durée, c'est le code qui a changé.
-  const vieux = J.coutDuFilet({ mesures: { totalMs: 65000, quand: '2026-09-27T20:00Z' }, maintenant: Date.parse('2026-09-28T16:00Z'), shImpl: () => 'a1\nb2\nc3' });
+  // UN SEUL COMMIT NE SUFFIT PLUS, ET C'EST LA CORRECTION DU 2026-09-29 : le filet reçoit un commit
+  // presque chaque jour, donc le signal était rouge en PERMANENCE — y compris trois heures après une
+  // mesure fraîche, constaté le jour même. Une alarme qu'aucun travail ne peut éteindre cesse d'être
+  // une alarme et devient du décor (leçon L6). Ce qui est mesuré est désormais DE COMBIEN le filet a
+  // changé, en lignes : un commit qui ajoute un test déplace la durée de quelques dixièmes, une
+  // refonte la déplace vraiment.
+  const shDerive = (avant, apres) => (cmd) => {
+    if (cmd.startsWith('git log')) return 'a1\nb2\nc3';
+    if (cmd.startsWith('git show')) return Array(avant).fill('x').join('\n');
+    if (cmd.startsWith('cat ')) return Array(apres).fill('x').join('\n');
+    return '';
+  };
+  const vieux = J.coutDuFilet({ mesures: { totalMs: 65000, quand: '2026-09-27T20:00Z' }, maintenant: Date.parse('2026-09-28T16:00Z'), shImpl: shDerive(1000, 1400) });
   assert.equal(vieux.commitsDepuis, 3, 'les commits du filet depuis le relevé sont comptés');
-  assert.equal(vieux.perime, true, 'et trois commits suffisent à périmer la mesure, quel que soit son âge en heures');
+  assert.equal(vieux.perime, true, 'MUST CATCH: le filet a grossi de 40 %, bien au-delà de la variance d\'une exécution à l\'autre — la mesure ne décrit plus rien');
   assert.ok(/ne décrit plus le filet d'aujourd'hui/.test(vieux.pourquoi), 'la raison le DIT, plutôt que de laisser le chiffre parler seul — un chiffre périmé a l\'air aussi juste qu\'un chiffre frais');
+  const petitChangement = J.coutDuFilet({ mesures: { totalMs: 65000, quand: '2026-09-27T20:00Z' }, maintenant: Date.parse('2026-09-28T16:00Z'), shImpl: shDerive(1000, 1020) });
+  assert.equal(petitChangement.perime, false, 'MUST LET PASS: trois commits qui font grossir le filet de 2 % ne périment rien — le même filet rendait 52,7 s à 71,3 s selon les passages, soit plus de 15 % d\'écart sans qu\'une ligne change. Sans cette tolérance, le signal est rouge en permanence et redevient du décor (L6)');
+  assert.ok(/la mesure tient encore/.test(petitChangement.pourquoi), 'et il le dit franchement, avec le pourcentage réel — jamais un silence qui se lirait comme « non mesuré »');
   const frais = J.coutDuFilet({ mesures: { totalMs: 65000, quand: '2026-09-28T15:00Z' }, maintenant: Date.parse('2026-09-28T16:00Z'), shImpl: () => '' });
+  assert.equal(frais.derive, 0, 'un filet qu\'aucun commit n\'a touché a une dérive de zéro, jamais « indérivable »');
   assert.equal(frais.perime, false, 'CONTRE-TEST : un relevé qu\'aucun commit n\'a suivi reste valable, même s\'il vieillit');
   const sansGit = J.coutDuFilet({ mesures: { totalMs: 65000, quand: '2026-09-20T00:00Z' }, maintenant: Date.parse('2026-09-28T16:00Z'), shImpl: () => { throw new Error('pas de git'); } });
   assert.equal(sansGit.commitsDepuis, null, 'sans git on ne devine pas un nombre de commits');
