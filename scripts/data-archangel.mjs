@@ -858,6 +858,11 @@ export const ABSENCES_ASSUMEES = [
     depuis: "2026-09-28",
     raison: "C'est une mémoire anti-doublon, faite pour son seul producteur : elle retient les slugs déjà vus afin de n'accueillir un nouveau membre qu'une fois. Son contenu n'a de sens que pour la décision « ai-je déjà salué celui-là ? », que personne d'autre ne prend. Un second lecteur n'aurait littéralement rien à en tirer.",
   },
+  {
+    donnee: ".circle-tasks-last-run.json",
+    depuis: "2026-09-29",
+    raison: "C'est une mémoire anti-doublon, exactement au même titre que `.cassandra-rh-known-members.json` déclaré juste au-dessus : elle retient le commit de la dernière Ronde pour que le compteur « N commits sans Ronde » reparte de zéro, et elle n'a de sens que pour le processus qui l'écrit. Lui inventer un lecteur-outil reviendrait à demander à un tiers de relire un marque-page. Ce qui se LIT de la Ronde — ce qu'elle a trouvé — vit dans `docs/circle-tasks/index.md`, qui est un registre et non un état.",
+  },
 ];
 
 // La vérification, faite sur le disque réel plutôt que crue sur parole.
