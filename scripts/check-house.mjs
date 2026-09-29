@@ -21423,8 +21423,21 @@ async function testPagesHtmlPerimees() {
 
   // ── 4. UNE DATE MANQUANTE N'EST PAS UNE DATE ANCIENNE (leçon L5) : sans les deux, on s'abstient
   // et on le DIT, au lieu de compter la page comme à jour.
-  const muet = faux({ page: '', source: '2026-09-02T10:00:00Z' });
-  assert.equal(muet.perimees.length, 0, 'with no readable date nothing is accused');
+  // AFFINÉ LE 2026-09-29 (tâche #1233) — ET C'EST LE GARDE-FOU QUI CONFONDAIT DEUX CHOSES. Il
+  // rangeait « page sans date de commit » avec « source introuvable », donc il accusait CHAQUE page
+  // tout juste générée : le filet échouait exactement au moment où l'on crée une page, c'est-à-dire
+  // sur le geste normal (leçon L4). Or « périmée » veut dire « plus ANCIENNE que sa source », et une
+  // page jamais commitée vient d'être écrite : elle est la chose la plus récente du dépôt, donc
+  // périmée par rapport à rien. Les deux sens ne sont plus le même état.
+  const neuve = faux({ page: '', source: '2026-09-02T10:00:00Z' });
+  assert.equal(neuve.perimees.length, 0, 'a page with no commit date is never accused');
+  assert.deepEqual(neuve.pasEncoreCommitees.length, 1, 'it is named as BRAND NEW — logically it cannot be stale, since nothing is more recent than what was just written');
+  assert.equal(neuve.sansSource.length, 0, 'and it is NOT counted as unverifiable: that would make every freshly generated page a defect');
+  assert.match(D.formatPagesHtmlPerimeesLines(neuve).join('\n'), /pas encore commit/, 'the printed line says plainly that there is nothing to report');
+  // L'AUTRE SENS RESTE UNE ABSTENTION HONNÊTE : la page est datée, la source ne l'est pas, donc la
+  // comparaison est impossible — et le silence compterait la page comme à jour (leçon L5).
+  const muet = faux({ page: '2026-09-03T10:00:00Z', source: '' });
+  assert.equal(muet.perimees.length, 0, 'with an undatable source nothing is accused either');
   assert.equal(muet.sansSource.length, 1, 'but the page is named as NOT verified — silence would count it as fresh');
   assert.match(D.formatPagesHtmlPerimeesLines(muet).join('\n'), /PLANCHER/, 'and the printed count says it is a floor, never a complete check');
 

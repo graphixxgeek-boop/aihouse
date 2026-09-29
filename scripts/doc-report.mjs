@@ -473,6 +473,14 @@ export function findPagesHtmlPerimees({ root = ROOT, listDirImpl = readdirSync, 
   };
   const perimees = [];
   const sansSource = [];
+  // TROISIÈME ÉTAT, AJOUTÉ LE 2026-09-29 (tâche #1233) — ET C'EST MON PROPRE GARDE-FOU QUI
+  // CONFONDAIT DEUX CHOSES. Une page tout juste générée n'a pas encore de date de commit, et elle
+  // tombait dans `sansSource`, c'est-à-dire dans « page dont la source est introuvable » — un vrai
+  // défaut. Or une page JAMAIS COMMITÉE ne peut pas être périmée : elle est plus neuve que tout.
+  // Encore un signal ADJACENT (pas de date) lu comme le signal visé (pas de source), dans un outil
+  // que j'ai écrit hier. Le mélange faisait échouer le filet à chaque page neuve, c'est-à-dire
+  // exactement au moment où on en crée une — un garde-fou qui accuse le geste normal (leçon L4).
+  const pasEncoreCommitees = [];
   for (const page of pages.sort()) {
     const base = page.replace(/\.html$/, "");
     // La déclaration du générateur fait foi ; le rapprochement de noms n'est que le repli.
@@ -483,18 +491,29 @@ export function findPagesHtmlPerimees({ root = ROOT, listDirImpl = readdirSync, 
     const dPage = quand(`${DOSSIER_PAGES_HTML}/${page}`);
     const dSource = quand(source);
     // UNE DATE MANQUANTE N'EST PAS UNE DATE ANCIENNE (leçon L5) : sans les deux, on s'abstient.
-    if (!dPage || !dSource) { sansSource.push(`${page} (date de commit illisible)`); continue; }
+    // Mais on distingue POURQUOI elle manque : une page neuve (la source, elle, est datée) est un
+    // état transitoire bénin ; les deux dates manquantes, c'est git qui ne répond pas.
+    // LE CRITÈRE JUSTE EST PLUS SIMPLE QUE MON PREMIER JET, et il est logiquement étanche :
+    // « périmée » veut dire « plus ANCIENNE que sa source ». Une page qui n'a aucun commit vient
+    // d'être écrite à l'instant : elle est, par construction, la chose la plus récente du dépôt.
+    // Elle ne peut donc être périmée par rapport à RIEN — que sa source soit datée ou non.
+    if (!dPage) { pasEncoreCommitees.push(page); continue; }
+    // L'inverse, lui, reste une abstention honnête : la page est datée, la source ne l'est pas, donc
+    // la comparaison est impossible et on ne conclut pas (leçon L5).
+    if (!dSource) { sansSource.push(`${page} (source sans date de commit)`); continue; }
     if (dSource > dPage) perimees.push({ page, source, dPage, dSource });
   }
-  return { perimees, sansSource, examinees: pages.length };
+  return { perimees, sansSource, pasEncoreCommitees, examinees: pages.length };
 }
 
 export function formatPagesHtmlPerimeesLines(r) {
   if (!r) return ["PAGES HTML — 🚨 PAS MESURÉ : le dossier des pages n'a pas pu être listé. Ce n'est pas un zéro."];
   const l = [];
   if (r.sansSource.length) l.push(`  ⚠️ ${r.sansSource.length} page(s) dont la source n'a pas été retrouvée, donc NON vérifiées : ${r.sansSource.join(", ")} — le compte ci-dessous est un PLANCHER.`);
+  const neuves = r.pasEncoreCommitees ?? [];
+  if (neuves.length) l.push(`  📄 ${neuves.length} page(s) tout juste générée(s), pas encore commitée(s) : ${neuves.join(", ")} — plus neuves que leur source par construction, rien à signaler.`);
   if (!r.perimees.length) {
-    l.push(`PAGES HTML : les ${r.examinees - r.sansSource.length} page(s) vérifiée(s) sont à jour avec leur source.`);
+    l.push(`PAGES HTML : les ${r.examinees - r.sansSource.length - neuves.length} page(s) vérifiée(s) sont à jour avec leur source.`);
     return l;
   }
   l.push(`⚠️ ${r.perimees.length} page(s) HTML plus ancienne(s) que leur source, sur ${r.examinees} :`);
