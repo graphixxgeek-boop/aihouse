@@ -754,3 +754,51 @@ qui ne peut pas s'éteindre.
 **Ce qui est fait en attendant, et pourquoi c'est tout** : rien. Inventer cinq lecteurs pour faire
 descendre un compteur serait exactement l'outil fabriqué pour cocher la case que l'Article 31
 interdit nommément.
+
+---
+
+## #1222 — Le compteur d'usage a perdu treize jours, et le KPI lit ce trou comme un verdict
+
+*(Trouvé le 2026-09-29 à 16h50 UTC, heure LUE. Mesuré, jamais supposé.)*
+
+**LA MESURE, D'ABORD.** Le journal d'usage (`.tool-usage-history.json`) porte aujourd'hui
+**857 événements, dont le plus ancien date du 2026-09-29 à 03h38** — treize heures. Le dépôt, lui,
+a **treize jours** (premier commit le 2026-09-16). La fiche `docs/referentiel/tool-usage.md` cite
+**4 931 événements** au 2026-09-28. Le journal est dans `.gitignore` : **il n'a pas voyagé avec le
+clone, il a été reconstruit de zéro ce matin.**
+
+**CE QUE LE KPI EN FAIT.** `node scripts/tool-brain.mjs rapport` annonce
+**« 29 outils du catalogue jamais sollicités »** et en fait un écart retenu, dont le « quoi faire »
+est : *« les lancer une fois pour de vrai, ou décider de les retirer »*. Sur un clone frais, ces
+29 lignes deviendraient 29 tâches, et l'une d'elles proposerait de **retirer** des outils qui
+tournent depuis des semaines.
+
+**C'EST EXACTEMENT LA CLASSE D'ERREUR DE LA NUIT** — un signal ADJACENT lu comme le signal visé.
+Le compteur mesure honnêtement « jamais vu passer **depuis que ce journal existe** » ; le rapport
+l'imprime comme « jamais sollicité **par le projet** ». Les deux phrases ne disent pas la même
+chose dès que le journal est plus jeune que le dépôt.
+
+**CE QUI EST DÉJÀ BIEN FAIT, et qu'il ne faut pas défaire** : la limite est écrite noir sur blanc
+dans `docs/referentiel/tool-usage.md` (« il décrit l'usage sur CETTE machine »), et le rapport
+distingue déjà QUATRE états au lieu de deux (jamais sollicité · couvert par le crochet · muet au
+compteur · sans ligne de commande). Le trou n'est pas dans la pensée, il est dans **l'endroit** :
+la limite est écrite dans la fiche, pas à côté du chiffre.
+
+**Trois issues :**
+
+1. **Imprimer l'HORIZON du journal à côté de chaque chiffre d'usage** — « journal ouvert le
+   2026-09-29 03h38, soit 13 h de couverture pour un dépôt de 13 jours ». Le chiffre reste, le
+   lecteur sait ce qu'il vaut.
+2. **Dériver le seuil plutôt que l'écrire** : comparer la date du plus ancien événement au premier
+   commit du dépôt, et **ne plus lever l'écart** quand le journal est manifestement plus jeune —
+   parce qu'alors « jamais sollicité » et « journal amnésique » sont indiscernables.
+3. **Commiter le journal** pour qu'il survive au clone. Écartée d'avance à mon sens : il grossit
+   à chaque commande et ferait du bruit dans chaque diff.
+
+**Ma recommandation : la 1 ET la 2.** Elles ne se remplacent pas. La 1 protège le LECTEUR (il voit
+ce que le chiffre couvre) ; la 2 protège le PLAN D'ACTION (il cesse de fabriquer des tâches que
+personne ne doit faire). La 2 seule rendrait le chiffre muet sans expliquer pourquoi.
+
+**Ce qui est fait en attendant : rien, et c'est délibéré.** Toucher à `tool-brain` touche aussi
+CASSANDRA-RH (qui s'en sert pour juger si un outil a sa place) et le verrou d'ouverture de Ronde.
+Ça se décide avec toi, pas à 16h50 pendant que tu rentres du travail.

@@ -667,3 +667,58 @@ Constater que son propre garde-fou vous attrape vaut mieux que de ne pas être a
 **Ce que ces deux ajouts ne changent PAS** : ni les bornes du périmètre sensible, ni les
 obligations qui ne s'allègent jamais la nuit, ni la façon dont ce mode enchaîne ses tâches. Le
 contrôleur en sait plus, le mode se conduit pareil.
+
+---
+
+## LE PARAMÉTRAGE INTERNE DE L'AGENT — à réappliquer en DÉBUT de mode auto
+
+*(2026-09-29 à 16h50 UTC, heure LUE. Demande explicite de l'utilisateur à son retour :
+« Conserve bien la trace de ton parametrage interne pour te souvenir des bons parametres à
+appliquer en debut de mode auto (process) ».)*
+
+**CE QUE CETTE SECTION AJOUTE À CELLE DES RÉGLAGES DE RÉVEIL, ET POURQUOI ELLES SONT SÉPARÉES.**
+La section « LES RÉGLAGES DE RÉVEIL QUI ONT FAIT LEURS PREUVES » historise le dispositif de
+CADENCE (deux réveils, 15 min + minute 7). Celle-ci historise tout autre chose : les **gestes de
+l'agent lui-même**, appris en les ratant, et qui coûtent chacun entre dix minutes et un tour
+entier quand ils sont redécouverts. Aucun n'est déductible du code ; tous ont été payés.
+
+### Les gestes d'exécution — chacun a coûté un échec réel
+
+| Le geste | Ce qui arrive sans lui |
+|---|---|
+| **Écrire tout correctif de fichier dans un `.mjs` du scratchpad, puis le lancer** | un `node -e` contenant un accent grave ou une interpolation casse à l'analyse, en silence ou avec une erreur illisible — arrivé plusieurs fois dans la même nuit |
+| **Passer les variables d'environnement explicitement : `SP=$SP node script.mjs`** | `ENOENT: undefined/bloc.txt` — la variable du shell n'atteint pas le processus |
+| **`git commit` et `git push` en DEUX commandes séparées** | la commande combinée dépasse la limite de temps et se fait tuer (code 137). Le commit avait réussi ; seul le push restait à refaire, mais rien ne le disait |
+| **Lire l'heure dans un appel SÉPARÉ, avant d'écrire une ligne de suivi** | une date tapée de mémoire, refusée par le garde-fou (Article 32) — cinq fois en une soirée |
+| **Rendre les lecteurs injectables (`readFileImpl`, `lireImpl`, `shImpl`)** | le test juge le DISQUE et pas le code ; il vire au rouge parce que le dépôt s'est AMÉLIORÉ (leçon L40, rencontrée trois fois cette nuit) |
+| **Chercher le nom au `grep` avant d'écrire un test** | un bloc de test entièrement dupliqué, écrit pour une fonction déjà couverte depuis des mois |
+
+### Les contraintes de format du suivi, que rien n'annonce à l'avance
+
+- La colonne « pour qui » n'accepte que **`PROJET`** ou **`DETTE-ENVERS-L-UTILISATEUR`**. Aucune
+  autre valeur ne passe, et le refus arrive après coup.
+- **Jamais de barre verticale à l'intérieur d'une cellule** — elle casse la ligne du tableau.
+- Une clôture **MET À JOUR la ligne existante**, elle n'en ajoute jamais une seconde.
+- `node scripts/data-archangel.mjs index --ranger` avant chaque commit ; tout fichier neuf de
+  `docs/` doit être classé et indexé.
+
+### La discipline de nuit, celle qui décide de la valeur du travail
+
+1. **Consulter Smart Conso API avant toute action qui coûte un appel API** — y compris un simple
+   diagnostic, jamais une exception (Article 22).
+2. **Article 30 avant d'ouvrir un chantier** : `node scripts/data-archangel.mjs notes <sujet>`.
+   Un zéro n'est pas une réponse, c'est un mot mal choisi — on réessaie avec le vocabulaire du
+   sujet. *La nuit du 2026-09-29 a produit la preuve par l'absurde : la règle a été enfreinte
+   UNE fois, et la tâche suivante a fabriqué un doublon.*
+3. **Ne jamais trancher à sa place.** Quand une correction déborde sur plusieurs outils ou touche
+   une décision de conception, on MESURE, on écrit le constat avec ses issues et sa
+   recommandation dans `docs/idees-a-trancher.md`, et on s'arrête là.
+4. **Ne jamais rendre un satisfecit sur zéro donnée.** « Pas mesuré » se dit ; il ne se déguise
+   jamais en « rien trouvé » (leçons L5 et L11).
+
+### Ce que cette nuit a prouvé, chiffré
+
+Nuit du 2026-09-28 au 29 : **plus de 16 heures sans arrêt**, 22 tâches (#1200 à #1221), zéro
+franchissement de borne (vérifiable dans `git log`), bannière des Gardiens propre pour la première
+fois. Le dispositif à deux réveils a tenu la cadence de bout en bout. **C'est ce paramétrage-là
+qu'on réapplique, pas un autre reconstitué de mémoire.**
