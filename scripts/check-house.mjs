@@ -16024,7 +16024,34 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(texteReel.size > 50, 'the live counter-test must read the real repository — a filter checked against an empty corpus abstains, and an abstention reads exactly like a clean result (leçon L11)');
   const { gardes, ecartes } = ch.ecarterLesPontsDeReexport(reels, texteReel);
   assert.equal(gardes.length + ecartes.length, reels.length, 'the split must lose nothing: everything is either kept or named as excluded, never dropped in silence');
-  assert.ok(ecartes.length >= 1, 'and against THIS repository it must genuinely exclude the cassandra-rh re-export bridge — a filter that never fires on the case that motivated it is an intention, not a mechanism (leçon L2)');
+  assert.ok(ecartes.length >= 0 && Array.isArray(ecartes), 'the excluded list must always be a list, even empty');
+  // LE MÊME PIÈGE QUE #997, UNE SECONDE FOIS, ET IL FAUT LE DIRE (2026-09-29, tâche #1202).
+  // Cette ligne exigeait « au moins un écarté sur CE dépôt », et nommait le pont de cassandra-rh
+  // comme le cas réel qui la satisfaisait. Le jour où ce pont a été NETTOYÉ — 22 noms importés que
+  // le fichier n'employait nulle part, retirés — les 12 noms restants ont cessé de former une
+  // suite de cinq lignes identiques, le relevé n'a plus rien produit là, et le filet est passé au
+  // ROUGE pour avoir fait exactement ce que la tâche demandait. C'est la leçon L40 : une assertion
+  // qui lit la DONNÉE VIVANTE juge le disque, pas le code.
+  //
+  // CE QUI LA REMPLACE, ET POURQUOI C'EST PLUS FORT, PAS PLUS FAIBLE : le filtre est toujours
+  // exercé sur du TEXTE RÉEL du dépôt, mais sur le pont lui-même plutôt que sur le hasard qu'il
+  // franchisse le seuil de cinq lignes du relevé. Le couple réexport/import de cassandra-rh existe
+  // toujours (leçon L36 : le fondre réintroduirait un bug payé deux fois) ; on le localise dans le
+  // vrai fichier et on vérifie que le filtre le reconnaît. Ça ne peut ni s'éteindre quand le dépôt
+  // s'améliore, ni passer pour vert sur un corpus vide.
+  const lignesCassandra = texteReel.get('scripts/cassandra-rh.mjs');
+  assert.ok(Array.isArray(lignesCassandra) && lignesCassandra.length > 100, 'the live corpus must really contain cassandra-rh — without it this counter-test measures nothing (leçon L11)');
+  const ouvertures = [];
+  for (let i = 0; i < lignesCassandra.length; i += 1) {
+    if (!/^(export|import) \{$/.test(lignesCassandra[i])) continue;
+    for (let j = i + 1; j < Math.min(i + 60, lignesCassandra.length); j += 1) {
+      if (/^\} from "\.\/le-classificateur\.mjs";$/.test(lignesCassandra[j])) { ouvertures.push(i); break; }
+      if (!/^\s{2}[A-Za-z_$][\w$]*,?$/.test(lignesCassandra[j]) && !/^\s*(\/\/.*)?$/.test(lignesCassandra[j])) break;
+    }
+  }
+  assert.equal(ouvertures.length, 2, 'cassandra-rh must still carry BOTH halves of the L36 pair — if one disappears, the bug L36 describes is back and this test must say so loudly');
+  const pontReel = { lines: 5, occurrences: ouvertures.map((start) => ({ file: 'scripts/cassandra-rh.mjs', start: start + 1 })) };
+  assert.equal(ch.estUnPontDeReexport(pontReel, texteReel), true, 'and the filter must recognise that real pair, read from the real file: a filter proven only on invented text is an intention, not a mechanism (leçon L2)');
   // LE SEUIL ÉTAIT UN CHIFFRE RECOPIÉ, ET IL PUNISSAIT LE PROGRÈS (corrigé le 2026-09-28, tâche
   // #997). Cette assertion exigeait « au moins 15 gardes » — un plancher écrit à la main le jour où
   // le dépôt en comptait plus. La nuit où les duplications sont réellement descendues sous 15, le

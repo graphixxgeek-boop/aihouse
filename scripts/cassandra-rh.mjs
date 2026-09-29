@@ -1183,8 +1183,14 @@ export function tendancesRH(options = {}) {
 // classe transverse est une SONDE sur le source. Un script ajouté demain reçoit son type et ses
 // classes sans que personne y pense, et une classe nouvelle s'écrit en UN endroit pour TOUS.
 
-// LE RANGEMENT A DÉMÉNAGÉ CHEZ LE-CLASSIFICATEUR (2026-09-26), et tout est RÉEXPORTÉ ici : aucun
-// appelant n'a eu à changer une ligne. Même patron que `parseKpiHistoryCsv` plus haut, et pour la
+// LE RANGEMENT A DÉMÉNAGÉ CHEZ LE-CLASSIFICATEUR (2026-09-26), et aucun appelant n'a eu à changer
+// une ligne : les 40 noms qui existaient le jour de la scission sont réexportés ci-dessous.
+// LA PHRASE EXACTE COMPTE, et elle a été corrigée le 2026-09-29 : ce bloc a longtemps affirmé que
+// « tout » était réexporté, ce qui a cessé d'être vrai le jour suivant — LE-CLASSIFICATEUR en
+// exporte 105 aujourd'hui. Les 65 autres ne manquent à personne (le seul appelant,
+// integration-outil, en prend 5, tous présents), mais une promesse qui déborde son contenu est
+// une dette de reprise : le prochain agent la croirait sur parole. Un nom nouveau ne descend ici
+// que si un appelant en a besoin, et il est alors ajouté sciemment, jamais réputé déjà là. Même patron que `parseKpiHistoryCsv` plus haut, et pour la
 // même raison — un déménagement mêlé à une modification est impossible à relire le jour où quelque
 // chose casse. CASSANDRA continue de LIRE le classement ; l'inverse n'arrivera jamais.
 export {
@@ -1233,12 +1239,24 @@ export {
   ICONE_PAR_TYPE,
   FAMILLE_HORS_AGENCE,
 } from "./le-classificateur.mjs";
+// CE COUPLE N'EST PAS UN DOUBLON, ET IL NE DOIT JAMAIS ÊTRE FONDU (2026-09-29, tâche #1202).
+// CLONE-HUNTER le signale comme le plus gros bloc recopié du dépôt — 32 lignes × 2. La réponse
+// est écrite ici plutôt que laissée à retrouver : c'est la PAIRE qu'impose la leçon L36, payée
+// deux fois dans la même nuit du 2026-09-27. `export { X } from "..."` rend X disponible aux
+// APPELANTS de ce module et ne crée AUCUNE liaison locale : toute fonction d'ici qui appelle X
+// planterait sur « is not defined », à l'exécution seulement, jamais à `node --check`. Le bloc
+// du dessus sert les appelants, celui du dessous sert le code de ce fichier. Les fondre
+// réintroduirait le bug. `findReexportsNonLies()` (safe-export) le vérifie mécaniquement.
+//
+// CE QUI A CHANGÉ ICI, ET POURQUOI CE N'EST PLUS UN MIROIR : cette liste était une COPIE de
+// celle du dessus — 34 noms, dont 22 que ce fichier n'employait nulle part. Une copie tenue à
+// la main qui se périme en silence, exactement ce que l'Article 24 interdit. Elle ne porte plus
+// que les 12 noms réellement appelés ici ; les 30 autres restent réexportés au-dessus pour les
+// appelants, ce qui est leur seul rôle. Un nom ajouté au réexport n'a donc PLUS à être recopié
+// ici — il ne descend que le jour où du code de ce fichier l'appelle vraiment.
 import {
-  MOTIF_PORTE_CLI,
   TYPES_DE_SCRIPT,
   CLASSES_TRANSVERSES,
-  inventaireDeLaCharte,
-  portesDEntree,
   typeDeScript,
   classesDuScript,
   recenserLesScripts,
@@ -1246,28 +1264,9 @@ import {
   rangsQuiDivergent,
   carteDesAxes,
   AXES_DE_CLASSIFICATION,
-  FACETTES,
-  indiceDeClassification,
-  decoderIndice,
   POSTE_DE_TRAVAIL,
   POSTE_PAR_RANG,
-  REFERENTIEL_ORGANISATION,
-  MOTIF_AXE_DECLARE,
-  axesDivergentDuReferentiel,
-  CLASSIFICATION_PATH,
-  CLASSIFICATION_HTML,
-  blocsVersMarkdown,
-  OBLIGATIONS_DERIVEES,
-  posteDeTravail,
-  postesDeTousLesOutils,
-  blocsDeClassification,
-  documentDeClassification,
   ORG_RANKS,
-  HORS_AGENCE,
-  RANG_PAR_TYPE,
-  slugsParScript,
-  rangDuFichier,
-  croiserTypeEtRang,
 } from "./le-classificateur.mjs";
 
 
