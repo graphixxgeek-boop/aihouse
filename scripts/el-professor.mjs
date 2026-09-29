@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { renderHtmlReport } from "./html-report.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
+import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent, sh } from "./lib-shell.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -151,7 +151,57 @@ export function passagesDeLEsprit(markdown = "") {
   return out;
 }
 
-export function fraicheurDeLEsprit({ root = ROOT, lireImpl = null, maintenant = new Date() } = {}) {
+// LA DÉCLARATION DE NON-REMESURE, ET SES DEUX VERROUS (2026-09-29, tâche #1212).
+//
+// LE TROU QU'ELLE FERME : le plan d'action de cet outil propose lui-même deux issues — « relancer
+// check-spirit quand le quota le permet, OU écrire pourquoi le ton n'a pas à être remesuré
+// maintenant ». La seconde n'existait QUE dans cette phrase : aucun endroit du code ne savait lire
+// une telle raison, donc l'écrire ne changeait rien et le constat revenait identique à chaque
+// passage. Une issue qu'un outil propose sans pouvoir la reconnaître n'est pas une issue.
+//
+// CE QU'ELLE NE FAIT PAS, ET C'EST LE POINT LE PLUS IMPORTANT : elle n'éteint JAMAIS le fait que le
+// ton n'est pas mesuré. Ce fait reste imprimé tel quel. Elle change seulement son statut dans le
+// plan d'action : un trou DÉCLARÉ, daté et motivé, n'est plus un constat qu'on aurait oublié de
+// traiter. Sur la loi suprême du projet, faire taire l'alarme serait exactement la dérive que cet
+// outil existe pour empêcher.
+//
+// PREMIER VERROU — LA DATE. Une déclaration ne couvre que ce qui la précède : si un passage à vide
+// plus RÉCENT qu'elle apparaît, elle ne s'applique plus. Sans ça, une raison écrite une fois
+// couvrirait tous les trous à venir.
+//
+// SECOND VERROU, ET C'EST LUI QUI LA REND HONNÊTE — LE DÉCLENCHEUR DE LA CHARTE. La charte veut
+// check-spirit lancé « en priorité quand lib/lia.ts ou les personnalités changent ». Une
+// déclaration est donc ANNULÉE dès que l'un de ces fichiers bouge après elle. C'est vérifié sur
+// git, jamais sur une promesse : le jour où une personnalité change, aucune raison écrite la
+// veille ne tient plus.
+export const FICHIERS_DE_L_ESPRIT = ["lib/lia.ts", "app/api/lia/route.ts"];
+export const MOTIF_DECLARATION_NON_REMESURE = /^>\s*\*\*PAS REMESUR[ÉE] LE (\d{4}-\d{2}-\d{2})\s*—\s*RAISON\s*:\*\*\s*(.+)$/gm;
+
+export function declarationsDeNonRemesure(markdown = "") {
+  const out = [];
+  const motif = new RegExp(MOTIF_DECLARATION_NON_REMESURE.source, "gm");
+  let m;
+  while ((m = motif.exec(String(markdown)))) out.push({ date: m[1], raison: m[2].trim() });
+  return out.sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+export function declarationValide({ declarations = [], dernierPassage = null, shImpl = sh, fichiers = FICHIERS_DE_L_ESPRIT } = {}) {
+  const d = declarations[0];
+  if (!d) return { valide: false, pourquoi: "aucune déclaration écrite au registre" };
+  if (dernierPassage?.date && dernierPassage.date > d.date) {
+    return { valide: false, declaration: d, pourquoi: `un passage à vide du ${dernierPassage.date} est POSTÉRIEUR à la déclaration du ${d.date} : une raison ne couvre que ce qui la précède` };
+  }
+  for (const f of fichiers) {
+    let quand = "";
+    try { quand = String(shImpl(`git log -1 --format=%cI -- ${f}`)).trim(); } catch { return { valide: false, declaration: d, pourquoi: `git n'a pas pu dire quand ${f} a changé — sans cette date on ne peut pas savoir si la déclaration tient, et on ne le suppose pas (leçon L5)` }; }
+    if (quand && quand.slice(0, 10) > d.date) {
+      return { valide: false, declaration: d, pourquoi: `${f} a changé le ${quand.slice(0, 10)}, APRÈS la déclaration du ${d.date} : la charte veut check-spirit relancé en priorité quand les personnalités changent, donc la raison ne tient plus` };
+    }
+  }
+  return { valide: true, declaration: d, pourquoi: `déclaré le ${d.date}, et aucun fichier de l'esprit n'a bougé depuis : ${d.raison}` };
+}
+
+export function fraicheurDeLEsprit({ root = ROOT, lireImpl = null, maintenant = new Date(), shPourDeclaration = sh } = {}) {
   let texte = null;
   try { texte = (lireImpl ?? ((c) => readFileSync(join(root, c), "utf8")))(REGISTRE_ESPRIT); } catch { texte = null; }
   if (texte === null) {
@@ -176,6 +226,9 @@ export function fraicheurDeLEsprit({ root = ROOT, lireImpl = null, maintenant = 
     // a-t-il mesuré quelque chose ? Si non, la dernière chose que le projet sait de sa loi suprême
     // est qu'il n'a rien pu en savoir — et ça, ça se dit.
     dernierPassageAVide: !dernier.aMesure,
+    // LA DÉCLARATION EST JOINTE AU FAIT, JAMAIS À SA PLACE : le trou reste imprimé tel quel, et la
+    // déclaration dit seulement s'il est ASSUMÉ. Les deux se lisent ensemble ou pas du tout.
+    declaration: declarationValide({ declarations: declarationsDeNonRemesure(texte), dernierPassage: dernier.aMesure ? null : dernier, shImpl: shPourDeclaration }),
     horsPortee: "il date des passages et lit leur COUVERTURE, jamais ce que le ton valait : la lecture des répliques reste humaine, et le registre dit lui-même que les heuristiques ne détectent que le vocabulaire de service client.",
   };
 }
@@ -196,6 +249,11 @@ export function formatFraicheurDeLEspritLines(f) {
   }
   L.push(`  ${f.passages} passage(s) au registre. L'ÂGE EST RAPPORTÉ, JAMAIS JUGÉ : combien de jours sont « trop » dépend d'un rythme que cet outil ne connaît pas (BP5).`);
   L.push(`  HORS PORTÉE : ${f.horsPortee}`);
+  if (f?.dernierPassageAVide && f?.declaration) {
+    L.push(f.declaration.valide
+      ? `   ↳ NON REMESURÉ, ET C'EST ASSUMÉ : ${f.declaration.pourquoi}. Le ton reste NON MESURÉ — ceci dit seulement que le trou est déclaré, jamais qu'il est comblé.`
+      : `   ↳ aucune raison valable écrite au registre : ${f.declaration.pourquoi}`);
+  }
   return L;
 }
 
@@ -283,10 +341,22 @@ function main() {
   // un passage propre, et la confusion des deux est exactement ce que check-spirit a corrigé chez
   // lui le 2026-09-25 — la refaire ici, dans l'outil qui le relit, serait difficile à défendre.
   if (fraicheur.mesurable && fraicheur.dernierPassageAVide) {
+    // LE CONSTAT NE DISPARAÎT JAMAIS, IL CHANGE D'ÉTAT (2026-09-29, tâche #1212). Le plan proposait
+    // depuis toujours deux issues — relancer, ou écrire pourquoi on ne remesure pas — et la seconde
+    // n'existait que dans cette phrase : rien ne savait lire une raison écrite, donc le constat
+    // revenait identique à chaque passage, ce qui apprend à ne plus le lire (leçon L6).
+    //
+    // « ÉCARTÉ » N'EST PAS « RÉGLÉ », et sur la loi suprême du projet la nuance est tout : le trou
+    // reste imprimé, avec sa date et sa raison, et l'état « écarté » de l'Article 28 veut dire
+    // exactement ce qu'il dit — on a regardé, on a décidé de ne rien faire, et voici pourquoi.
+    // Une déclaration ne vaut que si aucun passage à vide plus récent ne l'a périmée, et qu'aucun
+    // fichier de l'esprit n'a bougé depuis : les deux verrous sont dans declarationValide().
+    const assume = fraicheur.declaration?.valide ? fraicheur.declaration : null;
     constatsProf.push({
       constat: `le dernier passage de check-spirit (${fraicheur.dernierPassage.libelle}) n'a RIEN mesuré — couverture « ${fraicheur.dernierPassage.couverture} » : la dernière chose que le projet sait de sa loi suprême est qu'il n'a rien pu en savoir`,
-      etat: "retenu", toucheLeJeu: true,
-      tache: "relancer check-spirit quand le quota le permet (Smart Conso API d'abord, Article 22), et inscrire le passage au registre — ou écrire pourquoi le ton n'a pas à être remesuré maintenant",
+      etat: assume ? "ecarte" : "retenu", toucheLeJeu: true,
+      pourquoi: assume ? `non remesuré, et c'est ASSUMÉ : ${assume.pourquoi}. Le ton reste NON MESURÉ — la déclaration dit que le trou est connu, jamais qu'il est comblé` : undefined,
+      tache: assume ? undefined : "relancer check-spirit quand le quota le permet (Smart Conso API d'abord, Article 22), et inscrire le passage au registre — ou écrire au registre une ligne « > **PAS REMESURÉ LE <date> — RAISON :** … », qui vaut tant qu'aucun fichier de l'esprit n'a bougé depuis",
     });
   }
   if (!fraicheur.mesurable) {

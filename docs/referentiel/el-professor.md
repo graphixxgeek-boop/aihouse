@@ -244,3 +244,34 @@ l'outil qui le relit, serait difficile à défendre.
   répliques reste humaine — le registre le dit lui-même : les heuristiques ne détectent que le
   vocabulaire de service client.
 - **Un registre illisible ou vide rend PAS MESURÉ**, jamais « mesuré récemment » (leçons L5/L11).
+
+## L'issue que le plan proposait sans savoir la reconnaître (2026-09-29, tâche #1212)
+
+**Le trou** : le plan d'action de cet outil proposait depuis toujours DEUX issues sur la fraîcheur de
+l'Article 0 — relancer check-spirit, **ou écrire pourquoi le ton n'a pas à être remesuré
+maintenant**. La seconde n'existait que dans cette phrase : aucun endroit du code ne savait lire une
+raison écrite, donc l'écrire ne changeait rien et le constat revenait identique à chaque passage —
+ce qui apprend à ne plus le lire (leçon L6). **Une issue qu'un outil propose sans pouvoir la
+reconnaître n'est pas une issue.**
+
+**Ce que le mécanisme ne fait PAS, et c'est le point le plus important** : il n'éteint jamais le
+fait que le ton n'est pas mesuré. L'alarme reste imprimée en entier, et la ligne ajoutée dit
+explicitement « le ton reste NON MESURÉ ». Sur la loi suprême du projet, faire taire l'alarme serait
+exactement la dérive que cet outil existe pour empêcher. **« Écarté » veut dire « on a regardé, on a
+décidé de ne rien faire, et voici pourquoi » — jamais « c'est réglé ».**
+
+**La forme de la déclaration**, au registre `docs/check-spirit/index.md` :
+
+```
+> **PAS REMESURÉ LE <AAAA-MM-JJ> — RAISON :** <le pourquoi, en toutes lettres>
+```
+
+**Les deux verrous, et ce sont eux qui la rendent honnête :**
+
+1. **La date** — une déclaration ne couvre que ce qui la PRÉCÈDE. Un passage à vide plus récent
+   qu'elle la périme. Sans ça, une raison écrite une fois couvrirait tous les trous à venir.
+2. **Le déclencheur de la charte** — elle est ANNULÉE dès qu'un fichier de l'esprit (`lib/lia.ts`,
+   `app/api/lia/route.ts`) bouge après elle. C'est vérifié **sur git**, jamais sur une promesse :
+   le jour où une personnalité change, aucune raison écrite la veille ne tient plus. Et si git ne
+   répond pas, la déclaration ne tient pas — une date inconnue n'est jamais une date ancienne
+   (leçon L5).

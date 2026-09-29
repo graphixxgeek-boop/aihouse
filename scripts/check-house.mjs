@@ -21146,6 +21146,63 @@ async function testConfronterLesParts() {
 }
 await testConfronterLesParts();
 
+// ————————————————————————————————————————————————————————————————————————
+// L'ISSUE QUE LE PLAN PROPOSAIT SANS SAVOIR LA RECONNAÎTRE, ET SES DEUX VERROUS
+// (2026-09-29, tâche #1212 — sur la loi suprême du projet, donc rien n'y est éteint)
+// ————————————————————————————————————————————————————————————————————————
+async function testDeclarationNonRemesure() {
+  const EP = await import('../scripts/el-professor.mjs');
+  const registre = (extra = '') => `# check-spirit\n\n${extra}| 2026-09-28 (2e) | **NULLE — 0/20**, toutes bloquées | PAS MESURÉ |\n`;
+  const jamais = () => '';
+
+  // ── 1. SANS DÉCLARATION, LE CONSTAT RESTE ENTIER.
+  const sans = EP.fraicheurDeLEsprit({ lireImpl: () => registre(), shPourDeclaration: jamais });
+  assert.equal(sans.dernierPassageAVide, true, 'an empty passage stays an empty passage');
+  assert.equal(sans.declaration.valide, false, 'with no written reason nothing is assumed');
+
+  // ── 2. AVEC UNE DÉCLARATION POSTÉRIEURE ET AUCUN FICHIER DE L'ESPRIT TOUCHÉ, LE TROU EST ASSUMÉ —
+  // et il reste IMPRIMÉ. « Écarté » n'est pas « réglé », et sur l'Article 0 la nuance est tout.
+  const avec = EP.fraicheurDeLEsprit({ lireImpl: () => registre('> **PAS REMESURÉ LE 2026-09-29 — RAISON :** rien de ce qui a été touché ne peut avoir bougé le ton.\n\n'), shPourDeclaration: jamais });
+  assert.equal(avec.declaration.valide, true, 'a dated reason, with no spirit file touched since, is a declared hole');
+  assert.equal(avec.dernierPassageAVide, true, 'and the hole is STILL a hole: declaring it never measures the tone');
+  const imprime = EP.formatFraicheurDeLEspritLines(avec).join('\n');
+  assert.match(imprime, /N'A RIEN MESURÉ/, 'the alarm itself must still be printed in full — on the supreme law, silencing is the very drift this tool exists to prevent');
+  assert.match(imprime, /reste NON MESURÉ/, 'and the printed line must say the tone is still unmeasured, beside the reason');
+
+  // ── 3. PREMIER VERROU — LA DATE. Une raison ne couvre que ce qui la précède, sinon elle
+  // couvrirait aussi tous les trous à venir.
+  const trouPlusRecent = `# check-spirit\n\n> **PAS REMESURÉ LE 2026-09-20 — RAISON :** vieille raison.\n\n| 2026-09-28 (2e) | **NULLE — 0/20**, toutes bloquées | PAS MESURÉ |\n`;
+  const perimee = EP.fraicheurDeLEsprit({ lireImpl: () => trouPlusRecent, shPourDeclaration: jamais });
+  assert.equal(perimee.declaration.valide, false, 'a reason older than the empty passage it would cover is void — otherwise one reason written once would cover every future hole');
+  assert.match(perimee.declaration.pourquoi, /POSTÉRIEUR/, 'and the refusal says why');
+
+  // ── 4. SECOND VERROU, ET C'EST LUI QUI LA REND HONNÊTE — LE DÉCLENCHEUR DE LA CHARTE. Le jour où
+  // une personnalité change, aucune raison écrite la veille ne tient plus.
+  const apresChangement = EP.declarationValide({
+    declarations: [{ date: '2026-09-29', raison: 'rien ne bouge' }],
+    dernierPassage: null,
+    shImpl: () => '2026-09-30T08:00:00+02:00',
+  });
+  assert.equal(apresChangement.valide, false, 'a spirit file changed AFTER the declaration voids it: the charter wants check-spirit rerun in priority when the personalities change');
+  assert.match(apresChangement.pourquoi, /lib\/lia\.ts/, 'and the refusal NAMES the file that moved');
+
+  // ── 5. SI GIT NE RÉPOND PAS, ON NE SUPPOSE PAS (leçon L5) : une date inconnue n'est pas une date
+  // ancienne.
+  const sansGit = EP.declarationValide({
+    declarations: [{ date: '2026-09-29', raison: 'r' }],
+    shImpl: () => { throw new Error('pas de git'); },
+  });
+  assert.equal(sansGit.valide, false, 'if git cannot say when the spirit files last moved, the declaration does NOT hold — an unknown date is never an old one');
+
+  // ── 6. LE PREMIER USAGE EST RÉEL (leçon L2) : la déclaration existe pour de vrai au registre.
+  const { readFileSync: lire1212 } = await import('node:fs');
+  assert.match(lire1212('docs/check-spirit/index.md', 'utf8'), /PAS REMESURÉ LE \d{4}-\d{2}-\d{2} — RAISON :/, 'the mechanism must be wired onto a real declaration in the real register, not onto an invented case');
+
+  console.log("Passed: l'issue que le plan proposait sans savoir la reconnaitre (2026-09-29, tache #1212). LE TROU : le plan d'action d'EL-PROFESSOR proposait depuis toujours DEUX issues sur la fraicheur de l'Article 0 — relancer check-spirit, OU ecrire pourquoi le ton n'a pas a etre remesure maintenant. La seconde n'existait QUE dans cette phrase : aucun endroit du code ne savait lire une raison ecrite, donc l'ecrire ne changeait rien et le constat revenait identique a chaque passage, ce qui apprend a ne plus le lire (lecon L6). Une issue qu'un outil propose sans pouvoir la reconnaitre n'est pas une issue. CE QUE LE MECANISME NE FAIT PAS, ET C'EST LE POINT LE PLUS IMPORTANT : il n'eteint JAMAIS le fait que le ton n'est pas mesure. L'alarme reste imprimee en entier, et la ligne ajoutee dit explicitement « le ton reste NON MESURE ». Sur la loi supreme du projet, faire taire l'alarme serait exactement la derive que cet outil existe pour empecher : « ecarte » veut dire « on a regarde et on a decide de ne rien faire, voici pourquoi », jamais « c'est regle ». LES DEUX VERROUS : une declaration ne couvre que ce qui la PRECEDE, sinon une raison ecrite une fois couvrirait tous les trous a venir ; et elle est ANNULEE des qu'un fichier de l'esprit bouge apres elle, ce qui est verifie SUR GIT et jamais sur une promesse — c'est exactement le declencheur que la charte nomme. Si git ne repond pas, la declaration ne tient pas : une date inconnue n'est jamais une date ancienne (lecon L5).");
+}
+await testDeclarationNonRemesure();
+
+
 
 
 
