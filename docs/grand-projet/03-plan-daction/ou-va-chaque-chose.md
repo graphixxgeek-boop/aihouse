@@ -73,6 +73,39 @@ DÉCLARATIONS, pas des constructions.)*
 2. **Le triptyque FIXE / CONFIGURABLE / PERSONNALISABLE**, trouvé dans la cinquième synthèse, est
    un SECOND axe qui croise nos trois zones sans les remplacer. Il rejoint **l'étape ④**.
 
+### 🌙 SES CONSIGNES DU 2026-09-29 AU COUCHER — à tenir toute la nuit
+
+**Elles sont écrites ICI et pas seulement dans un réveil**, parce qu'un prompt de réveil se périme
+et qu'un document se relit. Les trois premières sont des OBJECTIFS ; la quatrième est une méthode.
+
+**① LA CIBLE CHIFFRÉE EST 50, PAS 93.** Mesuré ce soir : la famille AGENCE de la charte porte
+**93 obligations**. Sa décision : *« 50 obligations pour l'agence, ça me semble bien du point de vue
+utilisateur, sinon : effet déceptif en découvrant ça »*. **Il faut donc en retirer 43**, et son
+argument n'est pas budgétaire mais d'EXPÉRIENCE : un client qui découvre 93 règles imposées se
+sent dépossédé avant d'avoir commencé. C'est la loi de l'Agence appliquée à sa propre charte.
+*(« On en reparle » — le chiffre est une cible, pas un ordre d'exécution immédiat.)*
+
+**② LA MUTUALISATION DES RÈGLES : OUI, C'EST CHEZ ABRAHAM.** Vérifié plutôt que supposé —
+`findPairesRedondantes()` et `findRecouvrementsNonDeclares()` vivent dans
+`abraham-les-references.mjs`, et c'est lui l'outil MAÎTRE des documents à règles numérotées, sur
+n'importe quel document. MOÏSE, lui, ne couvre que le périmètre de la charte. **C'est donc ABRAHAM
+qui sait dire quelles règles peuvent fusionner** ; MOÏSE dit si la structure tient après.
+
+**③ LA RELECTURE DE LA BIBLIOTHÈQUE, « juste pour l'exercice ».** Reprendre les documents déjà
+lus dans git avec la compréhension d'aujourd'hui, et se poser **ses quatre questions** :
+> *qu'est-ce que j'ai pu ne pas voir d'intéressant à ma première lecture ? · qu'est-ce que j'ai
+> manqué ? · qu'est-ce que je peux encore tirer de ces docs ? · est-ce que je maîtrise cette
+> bibliothèque, et je sais parfaitement ce qui va m'aider et quand m'en servir ?*
+
+**Pourquoi c'est plus qu'un exercice** : la quatrième question est la seule qui mesure quelque
+chose. Les trois premières produisent des trouvailles ; celle-là dit si la bibliothèque est
+réellement à ma main. **Et j'ai déjà la preuve que la réponse est « pas encore »** : j'ai lu ses six
+documents du soir sans ouvrir une seule fois la carte des ancres, construite deux jours plus tôt
+exactement pour ça.
+
+**④ EXPLOITER TOUTE LA DATA DE VALEUR** de la soirée passée et de la nuit à venir — *« LA
+VALEURRRR »*, ses mots. Rien de ce qui a été mesuré ne doit rester dans la conversation seule.
+
 ### CE QUI EST POSÉ ET ATTEND SA RÉPONSE *(au 2026-09-29, 21h53 UTC)*
 
 | Ce qui l'attend | Où |
