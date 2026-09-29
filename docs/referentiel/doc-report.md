@@ -135,3 +135,31 @@ avec la raison du changement — le nom définitif lui revient, comme tous les n
 
 **2 documents réécrits en entier · 2 protégés · 0 à risque.** Et le contre-test fabrique exprès un
 coupable, parce qu'un zéro ne vaut que si la sonde sait encore accuser (BP2).
+
+## La page HTML est-elle encore celle de sa source ? (2026-09-29, tâche #1218)
+
+**La règle existait, rien ne la vérifiait.** L'index du grand projet le dit noir sur blanc : les
+pages HTML sont « RÉGÉNÉRÉES depuis le Markdown par doc-HTML, jamais écrites à la main ». Personne
+ne regardait si une page correspondait encore à sa source. C'est une dérive parfaitement
+silencieuse : la page s'ouvre, elle est belle, elle est complète — **elle dit simplement autre chose
+que le document dont elle se réclame.**
+
+**Ce qui l'a motivée était un cas réel** : le dossier de décisions livré le matin annonçait trois
+chiffres qui avaient bougé dans la nuit (#1217), et il a fallu le vérifier À LA MAIN, page par page.
+Un geste fait à la main ne se refera pas tout seul demain (Article 31).
+
+**Le piège évité, et il aurait rendu l'outil FAUX** : comparer les dates de MODIFICATION des
+fichiers. Dans un dépôt fraîchement cloné, tous les fichiers portent la même date — celle du clone —
+donc la comparaison rendrait « tout est à jour » sur un dépôt où rien n'a été vérifié. **C'est la
+date du dernier COMMIT qui fait foi**, lue sur git.
+
+**La source se LIT dans la page, elle ne se devine pas du nom de fichier** (Article 24) : le
+générateur écrit lui-même sa provenance en pied de page. Le premier passage l'a prouvé — le rapport
+de nuit s'appelle `rapport-de-nuit-2026-09-29.html` et sa source `2026-09-29-rapport.txt`, les mêmes
+mots dans l'autre sens : introuvable par rapprochement de noms, parfaitement lisible dans le pied de
+page.
+
+**Sa limite honnête** : il ne compare pas les CONTENUS. Une page régénérée sans que sa source ait
+changé lui paraît à jour, et c'est correct. Il repère le cas courant — on a édité le document et
+oublié de régénérer la page — jamais tous les cas. Et une date de commit illisible ne compte jamais
+comme « à jour » : la page est nommée NON vérifiée, et le total s'annonce comme un PLANCHER.

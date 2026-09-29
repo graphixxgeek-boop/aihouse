@@ -21286,6 +21286,61 @@ async function testExemptionSmartBreaker() {
 }
 await testExemptionSmartBreaker();
 
+// ————————————————————————————————————————————————————————————————————————
+// LA PAGE HTML EST-ELLE ENCORE CELLE DE SA SOURCE ?
+// (2026-09-29, tâche #1218 — la règle existait, rien ne la vérifiait)
+// ————————————————————————————————————————————————————————————————————————
+async function testPagesHtmlPerimees() {
+  const D = await import('../scripts/doc-report.mjs');
+
+  // ── 1. LA SOURCE SE LIT DANS LA PAGE, ELLE NE SE DEVINE PAS DU NOM DE FICHIER (Article 24). Le
+  // générateur écrit lui-même sa provenance en pied de page ; la lire vaut mieux que rapprocher
+  // deux noms qui se ressemblent — et le premier passage l'a prouvé.
+  assert.equal(D.sourceDeclareeDansLaPage('<p>Dérivé de docs/x/y-2026.txt par doc-HTML. Toute correction…</p>'), 'docs/x/y-2026.txt', 'the page declares its own source: read it');
+  assert.equal(D.sourceDeclareeDansLaPage('<p>une page sans provenance</p>'), null, 'and a page that declares nothing must say null, never a guess');
+
+  // ── 2. UNE SOURCE PLUS RÉCENTE QUE SA PAGE EST SIGNALÉE.
+  const faux = (dates) => D.findPagesHtmlPerimees({
+    root: '/fake',
+    listDirImpl: () => ['p.html'],
+    listerImpl: () => ['docs/p.md'],
+    readFileImpl: () => '<p>Dérivé de docs/p.md par doc-HTML.</p>',
+    shImpl: (cmd) => (cmd.includes('p.html') ? dates.page : dates.source),
+  });
+  const perimee = faux({ page: '2026-09-01T10:00:00Z', source: '2026-09-02T10:00:00Z' });
+  assert.equal(perimee.perimees.length, 1, 'MUST CATCH: a source committed after its page means the page says something else than the document it claims to derive from');
+  assert.equal(faux({ page: '2026-09-03T10:00:00Z', source: '2026-09-02T10:00:00Z' }).perimees.length, 0, 'MUST LET PASS: a page regenerated after its source is up to date');
+
+  // ── 3. C'EST LA DATE DE COMMIT QUI FAIT FOI, ET LE PIÈGE MÉRITE SON CONTRE-TEST : dans un dépôt
+  // fraîchement cloné, tous les fichiers portent la MÊME date de modification — celle du clone.
+  // Comparer les mtimes rendrait « tout est à jour » sur un dépôt où rien n'a été vérifié.
+  const { readFileSync: lire1218 } = await import('node:fs');
+  const src = lire1218('scripts/doc-report.mjs', 'utf8');
+  assert.match(src, /git log -1 --format=%cI/, 'the freshness must be read from git, never from file mtimes — in a fresh clone every mtime is the clone time');
+
+  // ── 4. UNE DATE MANQUANTE N'EST PAS UNE DATE ANCIENNE (leçon L5) : sans les deux, on s'abstient
+  // et on le DIT, au lieu de compter la page comme à jour.
+  const muet = faux({ page: '', source: '2026-09-02T10:00:00Z' });
+  assert.equal(muet.perimees.length, 0, 'with no readable date nothing is accused');
+  assert.equal(muet.sansSource.length, 1, 'but the page is named as NOT verified — silence would count it as fresh');
+  assert.match(D.formatPagesHtmlPerimeesLines(muet).join('\n'), /PLANCHER/, 'and the printed count says it is a floor, never a complete check');
+
+  // ── 5. UN DOSSIER ABSENT NE REND JAMAIS UN ZÉRO.
+  assert.equal(D.findPagesHtmlPerimees({ root: '/fake', listDirImpl: () => { throw new Error('nope'); } }), null, 'an unlistable folder is "not measured", never "no stale page"');
+  assert.match(D.formatPagesHtmlPerimeesLines(null).join('\n'), /PAS MESUR/, 'and the printed line must say so');
+
+  // ── 6. SUR LE VRAI DÉPÔT (leçon L2) : il lit vraiment les pages, et il est à zéro — donc
+  // extinguible, donc ce n'est pas du décor (leçon L6).
+  const reel = D.findPagesHtmlPerimees();
+  assert.ok(reel && reel.examinees >= 10, `the check must really read the delivered pages (currently ${reel?.examinees})`);
+  assert.deepEqual(reel.perimees, [], 'and every delivered page must currently match its source');
+  assert.deepEqual(reel.sansSource, [], 'including the one whose name is its source’s words in the other order — which is exactly why the source is READ and not guessed');
+
+  console.log("Passed: la page HTML est-elle encore celle de sa source (2026-09-29, tache #1218). LA REGLE EXISTAIT, RIEN NE LA VERIFIAIT : l'index du grand projet dit noir sur blanc que les pages sont « REGENEREES depuis le Markdown, jamais ecrites a la main », et personne ne regardait si une page correspondait encore a sa source. C'est une derive parfaitement silencieuse : la page s'ouvre, elle est belle, elle est complete — elle dit simplement autre chose que le document dont elle se reclame. CE QUI L'A MOTIVEE ETAIT UN CAS REEL : le dossier de decisions livre le matin annoncait trois chiffres qui avaient bouge dans la nuit (tache #1217), et il a fallu le verifier A LA MAIN, page par page. LE PIEGE EVITE, ET IL AURAIT RENDU L'OUTIL FAUX : comparer les dates de MODIFICATION des fichiers. Dans un depot fraichement clone, tous les fichiers portent la meme date — celle du clone — donc la comparaison rendrait « tout est a jour » sur un depot ou rien n'a ete verifie. C'est la date du dernier COMMIT qui fait foi. LA SOURCE SE LIT DANS LA PAGE, ELLE NE SE DEVINE PAS : le generateur ecrit lui-meme sa provenance en pied de page, et le premier passage l'a prouve — le rapport de nuit s'appelle rapport-de-nuit-2026-09-29.html et sa source 2026-09-29-rapport.txt, les memes mots dans l'autre sens, introuvable par rapprochement de noms et parfaitement lisible dans le pied de page. Douze pages verifiees, zero perimee.");
+}
+await testPagesHtmlPerimees();
+
+
 
 
 

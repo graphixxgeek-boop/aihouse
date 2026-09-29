@@ -29,7 +29,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, sh } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName, primaryToolName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
@@ -417,6 +417,92 @@ function readScriptSource(scriptPath, readFileImpl = lireFichierPartage) {
 // Vrai seulement si le script producteur importe réellement html-report.mjs (grep du texte source,
 // jamais une présomption sur le nom de l'outil). Un scriptPath introuvable rapporte `undefined`
 // (jamais confondu avec `false` — "on ne sait pas" n'est pas "l'outil ne le fait pas").
+// ————————————————————————————————————————————————————————————————————————
+// LA PAGE HTML EST-ELLE ENCORE CELLE DE SA SOURCE ? (2026-09-29, tâche #1218)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LA RÈGLE EXISTAIT, RIEN NE LA VÉRIFIAIT. L'index du grand projet le dit noir sur blanc : les
+// pages HTML sont « RÉGÉNÉRÉES depuis le Markdown par doc-HTML, jamais écrites à la main ». Une
+// règle est bien posée, et personne ne regardait si une page correspondait encore à sa source. Or
+// c'est le genre de dérive parfaitement silencieuse : la page s'ouvre, elle est belle, elle est
+// complète — elle dit simplement autre chose que le document dont elle se réclame.
+//
+// CE QUI L'A MOTIVÉE, ET C'ÉTAIT UN CAS RÉEL : le dossier de décisions livré le matin annonçait
+// trois chiffres qui avaient bougé dans la nuit (tâche #1217). Il a fallu le vérifier À LA MAIN,
+// page par page, et ce geste-là ne se refera pas tout seul demain (Article 31).
+//
+// LE PIÈGE À ÉVITER, ET IL AURAIT RENDU CET OUTIL FAUX : comparer les dates de MODIFICATION des
+// fichiers. Dans un dépôt fraîchement cloné, tous les fichiers portent la même date — celle du
+// clone — donc la comparaison rendrait « tout est à jour » sur un dépôt où rien n'a été vérifié.
+// C'est la date du dernier COMMIT qui fait foi, et elle se lit sur git.
+//
+// CE QU'IL NE FAIT PAS : il ne compare pas les CONTENUS. Une page régénérée après coup sans que sa
+// source ait changé lui paraît à jour, et c'est correct ; une source modifiée puis remise à
+// l'identique aussi. Il repère le cas courant — on a édité le document et oublié de régénérer la
+// page — jamais tous les cas.
+export const DOSSIER_PAGES_HTML = "docs/grand-projet/html";
+export const EXTENSIONS_DE_SOURCE = [".md", ".txt"];
+
+// LA SOURCE SE LIT DANS LA PAGE, ELLE NE SE DEVINE PAS DU NOM DE FICHIER (Article 24). Le
+// générateur écrit lui-même « Dérivé de <source> par doc-HTML » en pied de page : c'est une
+// déclaration, et la lire vaut infiniment mieux que de rapprocher deux noms qui se ressemblent.
+// Le premier passage l'a prouvé : le rapport de nuit s'appelle `rapport-de-nuit-2026-09-29.html`
+// et sa source `2026-09-29-rapport.txt` — les mêmes mots dans l'autre sens, donc introuvable par
+// rapprochement de noms, et parfaitement lisible dans le pied de page.
+export const MOTIF_SOURCE_DECLAREE = /Dérivé de ([^\s<]+?) par doc-HTML/;
+
+export function sourceDeclareeDansLaPage(html = "") {
+  return String(html).match(MOTIF_SOURCE_DECLAREE)?.[1] ?? null;
+}
+
+export function trouverLaSource(base, { root = ROOT, listerImpl = listerLesFichiers } = {}) {
+  const candidats = listerImpl(["docs"], { root, garder: (nom) => EXTENSIONS_DE_SOURCE.some((e) => nom.endsWith(e)) })
+    .filter((c) => !c.includes(`${DOSSIER_PAGES_HTML}/`))
+    .filter((c) => {
+      const nom = c.split("/").pop();
+      return EXTENSIONS_DE_SOURCE.some((e) => nom === `${base}${e}`) || EXTENSIONS_DE_SOURCE.some((e) => nom.startsWith(`${base}-`) && nom.endsWith(e));
+    });
+  return candidats.sort()[0] ?? null;
+}
+
+export function findPagesHtmlPerimees({ root = ROOT, listDirImpl = readdirSync, shImpl = sh, listerImpl = listerLesFichiers, readFileImpl = lireFichierPartage } = {}) {
+  let pages;
+  try { pages = listDirImpl(join(root, DOSSIER_PAGES_HTML)).filter((f) => f.endsWith(".html")); } catch { return null; }
+  const quand = (chemin) => {
+    try { return String(shImpl(`git log -1 --format=%cI -- ${chemin}`, { cwd: root })).trim(); } catch { return ""; }
+  };
+  const perimees = [];
+  const sansSource = [];
+  for (const page of pages.sort()) {
+    const base = page.replace(/\.html$/, "");
+    // La déclaration du générateur fait foi ; le rapprochement de noms n'est que le repli.
+    let declaree = null;
+    try { declaree = sourceDeclareeDansLaPage(readFileImpl(join(root, DOSSIER_PAGES_HTML, page), "utf8")); } catch { declaree = null; }
+    const source = declaree ?? trouverLaSource(base, { root, listerImpl });
+    if (!source) { sansSource.push(page); continue; }
+    const dPage = quand(`${DOSSIER_PAGES_HTML}/${page}`);
+    const dSource = quand(source);
+    // UNE DATE MANQUANTE N'EST PAS UNE DATE ANCIENNE (leçon L5) : sans les deux, on s'abstient.
+    if (!dPage || !dSource) { sansSource.push(`${page} (date de commit illisible)`); continue; }
+    if (dSource > dPage) perimees.push({ page, source, dPage, dSource });
+  }
+  return { perimees, sansSource, examinees: pages.length };
+}
+
+export function formatPagesHtmlPerimeesLines(r) {
+  if (!r) return ["PAGES HTML — 🚨 PAS MESURÉ : le dossier des pages n'a pas pu être listé. Ce n'est pas un zéro."];
+  const l = [];
+  if (r.sansSource.length) l.push(`  ⚠️ ${r.sansSource.length} page(s) dont la source n'a pas été retrouvée, donc NON vérifiées : ${r.sansSource.join(", ")} — le compte ci-dessous est un PLANCHER.`);
+  if (!r.perimees.length) {
+    l.push(`PAGES HTML : les ${r.examinees - r.sansSource.length} page(s) vérifiée(s) sont à jour avec leur source.`);
+    return l;
+  }
+  l.push(`⚠️ ${r.perimees.length} page(s) HTML plus ancienne(s) que leur source, sur ${r.examinees} :`);
+  for (const p of r.perimees) l.push(`  · ${p.page} — ${p.source} a été commis le ${p.dSource.slice(0, 16)}, la page le ${p.dPage.slice(0, 16)} : la page dit autre chose que le document dont elle se réclame`);
+  l.push("  Elles se régénèrent, jamais ne se corrigent à la main : `node scripts/html-report.mjs document <source> <page>`.");
+  return l;
+}
+
 export function checkHtmlWiring(scriptPath, readFileImpl = lireFichierPartage) {
   if (!scriptPath) return undefined;
   const source = readScriptSource(scriptPath, readFileImpl);
@@ -819,6 +905,14 @@ function main() {
     ? `🔴 ${sansAvertissement.length} outil(s) déclaré(s) heuristique(s) dont le code ne prononce jamais son avertissement : ${sansAvertissement.map((x) => x.slug ?? x).join(", ")}`
     : "✅ Chaque outil déclaré heuristique prononce réellement son avertissement de marge.");
   for (const x of sansAvertissement) ecartsMuets.push({ fichier: String(x.slug ?? x), defaut: "déclaré heuristique et son code ne dit jamais son avertissement — une protection écrite qui ne sort jamais", tache: `faire prononcer son avertissement à ${x.slug ?? x}, ou corriger sa classification`, fausseUneMesure: true });
+
+  // LA PAGE HTML EST-ELLE ENCORE CELLE DE SA SOURCE ? (2026-09-29, tâche #1218.) La règle « les
+  // pages sont régénérées depuis le Markdown, jamais écrites à la main » était posée et rien ne la
+  // vérifiait. Une page périmée s'ouvre, elle est belle, elle est complète — elle dit simplement
+  // autre chose que le document dont elle se réclame.
+  const pagesHtml = findPagesHtmlPerimees();
+  for (const l of formatPagesHtmlPerimeesLines(pagesHtml)) console.log(l);
+  for (const p of pagesHtml?.perimees ?? []) ecartsMuets.push({ fichier: `${DOSSIER_PAGES_HTML}/${p.page}`, defaut: `plus ancienne que sa source ${p.source} : la page dit autre chose que le document dont elle se réclame`, tache: `régénérer la page depuis sa source — node scripts/html-report.mjs document ${p.source} ${DOSSIER_PAGES_HTML}/${p.page}`, fausseUneMesure: false });
 
   const planDoc = planDactionDepuisEcarts([...ecartsDocReport, ...ecartsMuets], { toolSlug: "doc-report",
     libelle: (e) => `${e.fichier} — ${e.defaut}`,
