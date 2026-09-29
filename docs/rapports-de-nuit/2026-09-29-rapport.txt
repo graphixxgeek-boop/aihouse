@@ -256,6 +256,35 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     écrites ; changer ce qu'un Gardien sacré détecte se décide, ça ne s'applique pas.
 
 
+2septies. DEUX OUTILS QUE J'AI RENONCÉ À CONSTRUIRE, ET POURQUOI C'EST UN RÉSULTAT
+-----------------------------------------------------------------------------------
+  Il restait sept « données fraîches qu'aucun outil ne lit » (ta tâche #490, une des plus
+  anciennes). La tentation était d'en déclarer six « absence assumée » d'un bloc — ce qui aurait
+  fait taire l'alarme au lieu d'y répondre. La liste des absences assumées porte d'ailleurs écrit,
+  dans son propre code, qu'elle est « volontairement COURTE ».
+
+  J'ai donc cherché ce qu'un lecteur pourrait vraiment en tirer, et prototypé DEUX idées contre le
+  vrai dépôt avant d'écrire la moindre ligne définitive :
+
+  · « UNE TROUVAILLE NOTÉE SANS AUCUNE SUITE DONNÉE » — le dernier maillon de l'Article 28 appliqué
+    aux registres. Mesuré : 26 registres portent une colonne de suite, 93 lignes lues, **UNE seule
+    suite vide**, et c'est une ligne de gabarit. Il ne trouverait rien. Au passage, le chiffre est
+    une bonne nouvelle qu'il fallait mesurer pour connaître : ces colonnes sont vraiment remplies.
+  · « UN OUTIL QUI TOURNE MAIS N'ÉCRIT PLUS À SON REGISTRE » — exactement le défaut trouvé à la main
+    sur check-spirit cette nuit. Mesuré : **26 registres sur 31** sont dans ce cas. Ce n'est pas une
+    trouvaille, c'est l'état NORMAL : un outil tourne souvent et ne journalise que quand il a
+    quelque chose à consigner. Crier sur 84 % du corpus, c'est la leçon L4 dans sa forme la plus pure.
+
+  UNE SEULE DÉCLARATION EST SORTIE DE TOUT ÇA : la mémoire anti-doublon de la Ronde rejoint les
+  absences assumées, au même titre que celle déjà déclarée pour CASSANDRA-RH — lui inventer un
+  lecteur reviendrait à demander à un tiers de relire un marque-page.
+
+  POURQUOI J'ÉCRIS ÇA ALORS QUE PRESQUE RIEN N'A ÉTÉ CONSTRUIT : sans cette trace, le prochain agent
+  repartira sur l'une des deux idées, la trouvera bonne — elles le sont — et paiera les deux
+  prototypes une seconde fois. Un essai mesuré et abandonné est un résultat ; ne pas l'écrire le
+  transforme en travail à refaire.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
