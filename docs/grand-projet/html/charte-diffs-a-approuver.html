@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les modifications de CLAUDE.md qui attendent ton accord</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T01:11:11.868Z</div>
+    <h1>Les modifications de CLAUDE.md qui attendent ton accord</h1>
+    <p class="sub">Page générée depuis docs/plans/charte-diffs-a-approuver-2026-09-28.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Produit le 2026-09-28. <strong>Rien n'est appliqué</strong> : ta borne pour la nuit autonome autorise CLAUDE.md « mais tu me montres avant ». Ce document EST le « avant ». Chaque entrée donne le texte actuel, le texte proposé, et ce que ça change concrètement.)</em></p>
+<p><strong>Pourquoi un seul document plutôt que trois tâches séparées</strong> : les trois touchent la charte, et <code>protegerLaCharte()</code> refuse un Article inséré au milieu ou vidé de ses obligations. Les traiter d'un bloc te permet de voir l'effet cumulé ; les traiter un par un entre deux chantiers est exactement ce que tu as refusé pour l'Article 19 (« garde-le pour la prochaine grosse revue de la charte »).</p>
+<hr>
+<h3>1. Le process XP est passé de TROIS à QUATRE moments <em>(tâche #749, faite le 2026-09-28)</em></h3>
+<p><strong>Portée : un mot, plus une phrase.</strong> Le quatrième moment existe déjà dans le code (<code>DECLENCHEURS_XP</code>), dans la règle surveillée d'angel, et dans <code>docs/xp-ia-process-detail.md</code>. <strong>Seule la charte dit encore « trois »</strong> — c'est donc une dette documentaire au sens de l'Article 13, pas une proposition nouvelle.</p>
+<p><strong>Aujourd'hui (CLAUDE.md, ligne 917) :</strong></p>
+<div class="highlight"><p><strong>Les trois moments où la question « y avait-il quelque chose à retenir ? » se pose</strong> : un
+garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de
+travail · chaque Ronde et chaque évaluation.</p></div>
+<p><strong>Proposé :</strong></p>
+<div class="highlight"><p><strong>Les quatre moments où la question « y avait-il quelque chose à retenir ? » se pose</strong> : un
+garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de
+travail · chaque Ronde et chaque évaluation · <strong>un outil rend un résultat VERT qui ne correspond
+pas à ce que je sais du terrain</strong>.</p></div>
+<p><strong>Ce que ça change concrètement.</strong> Les trois premiers supposent tous qu'il se PASSE quelque chose. Le quatrième se déclenche sur un rapport <strong>vert</strong>, lu par quelqu'un qui connaît le terrain — et sur la seule nuit du 27 au 28, <strong>sept trouvailles</strong> en sont venues, dont <strong>aucune n'a fait échouer un test</strong>. C'est le moment le plus fécond, et le seul qu'aucune mécanique ne peut déclencher.</p>
+<p><strong>Coût en obligations : zéro de plus.</strong> C'est la même règle, avec un déclencheur de plus.</p>
+<hr>
+<h3>2. Les trois mots d'ordre permanents <em>(tâche #703, mécanisme posé le 2026-09-28)</em></h3>
+<p><strong>Portée : un paragraphe à ajouter.</strong> Le mécanisme existe déjà — <code>fiabiliser</code>, <code>optimiser</code>, <code>harmoniser</code> sont trois règles de conduite surveillées par angel, qui les DEMANDE à chaque évaluation et refuse d'être au vert sans réponse. <strong>La charte, elle, ne les porte pas encore.</strong></p>
+<p><strong>Ta demande, dans tes mots</strong> : « je veux que ce soit dans la logique des process […] insufflées à chaque étape et chaque endroit du projet » + « on ajoute harmonise […] on le rajoute partout aux mêmes endroits ». Et ta pique qui a tout déclenché : « est-ce que c'est bien dans les process ? est-ce que c'est harmonisé ? fiabilisé ? optimisé ? ;))) » — les deux mots étaient <strong>écrits</strong> dans les règles de travail, et <strong>rien ne les imposait</strong>.</p>
+<p><strong>Proposé, à la suite de l'Article 20bis</strong> <em>(jamais inséré au milieu d'une numérotation : les numéros d'Article ne se renumérotent pas)</em> :</p>
+<div class="highlight"><p><strong>Les trois mots d'ordre permanents.</strong> À la clôture de CHAQUE tâche, trois questions, jamais
+quatre : <strong>FIABILISER</strong> — est-ce que ça marche, les tests passent-ils ? · <strong>OPTIMISER</strong> — peut-on
+faire mieux, est-ce complet ? · <strong>HARMONISER</strong> — est-ce raccordé au reste, au bon format ?
+Portées par <code>angel-of-ia-process</code>, qui les DEMANDE et refuse d'être au vert sans réponse — aucun
+fichier ne peut dire qu'on s'est posé une question, donc demander est la seule protection
+possible (Article 27).</p></div>
+<p><strong>Pourquoi s'arrêter à trois, et c'est ta décision d'origine</strong> : le seul quatrième candidat sérieux (« un mécanisme le porte-t-il ? ») est déjà tenu par l'Article 27 et SAFE-EXPORT, alors que les trois autres n'avaient personne. Et <strong>une question rituelle à quatre devient une case qu'on coche sans penser</strong> — exactement le faux vert qu'on traque.</p>
+<p><strong>Coût en obligations : +3.</strong> C'est le seul des trois points qui alourdit vraiment la charte, et c'est le chiffre à regarder si tu hésites.</p>
+<hr>
+<h3>3. L'Article 19 allégé — déjà arbitré, rappelé ici pour mémoire <em>(tâche #624)</em></h3>
+<p><strong>Tu as déjà tranché le 2026-09-28</strong> : « Garde-le pour la prochaine grosse revue de la charte ». Le avant/après est produit et prêt (<code>docs/plans/article-19-avant-apres.html</code>), mesuré à <strong>−28 %</strong> (904 → 650 tokens).</p>
+<p><strong>Il n'est rappelé ici que parce que « la prochaine grosse revue de la charte » est peut-être ce moment-ci.</strong> Si tu traites les points 1 et 2, le 3 se traite dans la même passe pour zéro coût d'attention supplémentaire. Sinon il attend, et c'est très bien.</p>
+<hr>
+<h3>4. L'ESCALADE — un Article de plus, à numéroter <em>(tâche #1146, nuit du 2026-09-29)</em></h3>
+<p><strong>Pourquoi il arrive ici.</strong> Tu m'as donné la main sur la charte cette nuit (« fais le nécessaire dans la charte et les process si besoin, je te laisse la main »). Ta borne permanente dit aussi « tu me montres avant ». <strong>Je n'ai pas tranché entre les deux : la règle est écrite dans <code>docs/regles-de-travail.md</code> §0ter, donc elle est ACTIVE, et l'Article te reste à valider.</strong> Rien n'est perdu si tu dis non ; la règle vit déjà ailleurs.</p>
+<p><strong>Pourquoi un Article et pas seulement les règles de travail.</strong> L'escalade gouverne la CONCEPTION de tout chantier. Une IA qui reprend le projet lit CLAUDE.md en entier, et ne lit <code>docs/regles-de-travail.md</code> qu'au moment où elle en a besoin. Une règle qui décide de l'ORDRE du travail arrive trop tard si on la découvre en cours de route — c'est l'argument de l'Article 27.</p>
+<p><strong>Texte proposé</strong> <em>(il rejoint la fin de la liste, jamais inséré au milieu)</em> :</p>
+<p><em>(Le numéro s'écrit <code>NN</code> et non <code>33</code> : un nouvel Article rejoint la FIN de la liste, donc son numéro dépend de ce qui aura été accepté d'ici là. Et écrire un numéro qui n'existe pas encore fait lire au garde-fou de la charte un renvoi mort — il a refusé le commit pour ça cette nuit même, et il avait raison de demander.)</em></p>
+<div class="highlight"><p><strong>Article NN — L'ESCALADE : l'ordre dans lequel tout travail se conçoit.</strong></p><p><em>(2026-09-28, sa consigne donnée DEUX fois le même soir à vingt minutes d'intervalle.)</em>
+<code>① CALIBRAGE FIN → ② LA CIBLE → ③ LES GRANDES ÉTAPES → ④ LES SOUS-ÉTAPES → ⑤ LES BLOCS DE TÂCHES
+→ ⑥ LES TÂCHES INDIVIDUELLES</code></p><p><strong>Chaque niveau interdit au suivant de commencer.</strong> On ne définit pas une cible avant d'avoir
+calibré ; on ne trace pas d'étapes avant d'être d'accord sur la cible ; <strong>on ne crée aucune tâche
+avant que le cadre soit fixé</strong>. Ses mots : « une fois que ce cadre est fixé, je pense que tu peux
+créer/modifier les tâches ». La règle vaut <strong>dès la conception du plan de chantier, et partout</strong>.</p><p><strong>ELLE A ÉTÉ PAYÉE LE JOUR MÊME, et la cause est la plus instructive</strong> : seize tâches ouvertes
+sous un plan non calibré, parce que l'<strong>Article 28</strong> refuse un constat annoncé pointant vers une
+tâche inexistante. Ce garde-fou existe pour empêcher qu'un rapport meure sans suite ; il a produit
+l'inverse de son intention. <strong>Une obligation de FORME qui force une décision de FOND est un
+défaut, jamais une discipline.</strong></p><p><strong>Ne jamais la confondre avec la CHAÎNE DE DÉCISION du projet</strong> (but ultime → philosophie et
+politique → les trois stratégies → les chantiers). La chaîne dit <strong>qui commande quoi</strong>, l'escalade
+dit <strong>comment on découpe le travail</strong>. Un seul point les relie, et il est structurant : la CIBLE
+du niveau ② sort du BUT ULTIME de la chaîne. Détail : <code>docs/regles-de-travail.md</code> §0ter.</p><p><strong>Aucun mécanisme ne peut lire un plan en cours de conception dans une conversation</strong> : comme pour
+les Articles 29 et 30, la déclarer ICI est la protection (Article 27). Ce qui reste vérifiable est
+le RÉSULTAT — un plan de chantier montre ses six niveaux, une tâche née sans étape parente est un
+écart.</p></div>
+<p><strong>Ce que ça change concrètement.</strong> Rien à mon rythme de travail : je l'applique déjà. Ce que ça change, c'est qu'une autre IA qui reprend le projet ne pourra plus créer des tâches avant le cadre sans enfreindre une règle écrite.</p>
+<p><strong>Le budget d'obligations</strong> <em>(tu l'as voulu SOUPLE, donc je note sans bloquer)</em> : cet Article <strong>+1</strong>. Ce qu'il pourrait remplacer : rien directement, mais il <strong>rend l'Article 18 plus court</strong> — « un gros process se suit en entier » devient un cas particulier de l'escalade. À voir ensemble à la prochaine passe d'allègement.</p>
+<hr>
+<h3>5. L'ALIGNEMENT EN CASCADE — un Article de plus, à numéroter <em>(tâche #1148, nuit du 2026-09-29)</em></h3>
+<p><strong>Pourquoi il arrive ici.</strong> Ta consigne : « des stratégies <strong>alignées</strong>, qui génèrent des stratégies de chantier <strong>alignées</strong>, des outils <strong>alignés</strong>, **<strong>tout</strong><strong> est aligné […] dès que tu commences à créer, il faut que cet axe </strong>*habite*<strong> ton travail ». </strong>Le mécanisme existe depuis cette nuit** (THE-KING, 40 % de couverture, 0 écart) ; l'Article, lui, est ce qui rend l'obligation lisible par quelqu'un qui ne lira jamais le code de THE-KING.</p>
+<p><strong>Texte proposé</strong> :</p>
+<div class="highlight"><p><strong>Article NN — TOUT DÉCOULE DU BUT, ET L'ALIGNEMENT SE VÉRIFIE.</strong></p><p><em>(2026-09-29, sa consigne : « tout est aligné […] il faut que cet axe habite ton travail ».)</em></p><p><strong>La cascade</strong> : <code>le but (philosophie et politique) → la stratégie du projet entier → stratégie
+Agence + stratégie Jeu → les stratégies de chantier → les outils → les tâches</code>. <strong>Elle remonte
+autant qu'elle descend</strong> — « les stratégies de tâches alimentent par escalade la stratégie
+globale, et vice versa » : c'est une boucle, jamais une pyramide.</p><p><strong>UN MOT NE FAIT PAS UN ALIGNEMENT.</strong> Tant que rien ne peut CONSTATER une incohérence, « aligné »
+reste une intention — et une intention n'a jamais empêché quoi que ce soit (leçon L2). <strong>Chaque
+objet du projet déclare donc le parent dont il découle</strong>, par une ligne visible
+<code><strong>DÉCOULE DE :</strong> chemin</code>, et THE-KING dit lesquels ne remontent nulle part.</p><p><strong>DEUX CAS SEULEMENT SONT DES FAUTES</strong>, et ils le sont quel que soit l'âge de l'objet : un parent
+déclaré <strong>qui n'existe pas</strong> (une référence morte ressemble à un lien, ce qui est pire qu'une
+absence) et un <strong>cycle</strong> (A découle de B qui découle de A — littéralement l'incohérence globale
+qu'il redoute). <strong>Un objet qui n'a jamais déclaré n'est PAS une faute</strong> : des centaines ont été
+écrits avant la règle, et les accuser d'un coup rendrait le signal illisible le jour de sa
+naissance (leçon L4). <strong>La couverture est un progrès à faire monter, jamais une dette à solder.</strong></p></div>
+<p><strong>Ce que ça change concrètement.</strong> Une ligne de plus en tête de chaque document de stratégie ou de plan créé à partir de maintenant. Rien de rétroactif, rien de bloquant.</p>
+<p><strong>Le budget d'obligations</strong> : cet Article <strong>+1</strong>. Ce qu'il pourrait remplacer : il <strong>absorbe une partie de l'Article 2</strong> (cohérence de bout en bout), qui reste vrai mais devient vérifiable ici.</p>
+<hr>
+<h3>Ce que je recommande, et pourquoi</h3>
+<p><strong>Le point 1 sans hésiter</strong> : ce n'est pas une proposition, c'est une dette documentaire — la charte dit « trois » là où le code, l'outil de surveillance et le document de détail disent « quatre ». L'Article 13 traite un écart doc/code comme un bug.</p>
+<p><strong>Le point 2 mérite ta pesée</strong> : le mécanisme tourne déjà sans la ligne de charte, donc rien n'est cassé aujourd'hui. Ce que la ligne ajoute, c'est que la règle survive à une reprise par une autre IA qui ne lirait pas <code>angel-of-ia-process</code> — ce qui est précisément l'argument de l'Article 27.</p>
+<p><strong>Le point 3 seulement si tu ouvres la revue</strong> — c'est ta décision déjà prise, je ne la rouvre pas.</p>
+<p><strong>Les points 4 et 5 sont les seuls que tu m'as explicitement autorisée à écrire</strong> (« fais le nécessaire dans la charte […] je te laisse la main »), et je ne l'ai pas fait. <strong>La raison est écrite plutôt que tue</strong> : ta borne « tu me montres avant » est permanente, l'autorisation était ponctuelle, et l'Article 14 demande une double confirmation quand une demande entre en tension avec la charte — écrire deux Articles pendant que tu dors, en m'appuyant sur une permission donnée à minuit, aurait été exactement la « petite concession » contre laquelle cet Article existe.</p>
+<p><strong>Les deux règles sont ACTIVES malgré tout</strong>, et c'est ce qui rend l'attente sans coût : l'escalade vit dans <code>docs/regles-de-travail.md</code> §0ter, l'alignement dans THE-KING et dans la Partie 0 de <code>docs/philosophie-et-politique.md</code>. <strong>Tu ne perds rien à dire non ; je ne perds rien à attendre.</strong></p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/plans/charte-diffs-a-approuver-2026-09-28.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

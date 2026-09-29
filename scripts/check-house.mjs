@@ -5811,6 +5811,22 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // Vérifier qu'un allègement n'a rien cassé.
   const broken = eco.verifyNothingBroken('**Article 0 — Hiérarchie.**', { 'x.mjs': 'cf. Article 0 et Article 7' }, [], () => null);
   assert.ok(broken.some(f => f.check === 'article-disparu' && /Article 7/.test(f.message)), 'an Article cited elsewhere but absent from the slimmed charter is a dead reference and must be caught');
+  // UN ARTICLE PROPOSÉ N'EST PAS UN RENVOI MORT (2026-09-29, tâche #1157). Le garde-fou lisait
+  // un numéro d’Article encore inexistant dans un document qui PROPOSE de l’écrire, et concluait à
+  // une référence morte. Son message le disait sans le savoir : « n'existe PLUS » — il ne distingue
+  // pas ce qui a été RETIRÉ de ce qui n'est PAS ENCORE ÉCRIT. Et ici, proposer un Article avant de
+  // l'écrire est le geste NORMAL : rien ne s'écrit dans la charte sans que l'utilisateur le voie.
+  {
+    const ECO = await import('../scripts/ecotoken.mjs');
+    assert.deepEqual(ECO.matchesDArticleHorsProposition("**Texte proposé** : Article 33 — L'ESCALADE"), [],
+      'MUST LET PASS: a citation in the same sentence as "proposé" is a proposal, never a dead reference — and a guard that refuses the normal gesture ends up being worked around (leçon L4)');
+    assert.deepEqual(ECO.matchesDArticleHorsProposition("## 4. L'ESCALADE — un Article 33 *(tâche #1146)*"), [],
+      'and announcing "un Article 33" is proposing one, never citing one');
+    assert.deepEqual(ECO.matchesDArticleHorsProposition("On applique l'Article 28 et l'Article 30."), ['28', '30'],
+      'MUST CATCH: ordinary citations stay caught, both of them — the exemption is narrow by design');
+    assert.deepEqual(ECO.matchesDArticleHorsProposition("Une proposition a été faite hier.\nOn applique l'Article 28."), ['28'],
+      'MUST CATCH: the word "proposition" on ANOTHER line never exempts — the marker must be in the citation\'s own sentence, otherwise a document that merely talks about proposals would silence every check inside it');
+  }
   assert.ok(!broken.some(f => /Article 0/.test(f.message)), 'an Article still present must never be flagged');
   assert.ok(eco.verifyNothingBroken('**Article 0 — x.**', {}, [{ outil: 'X', vers: null, cibleManquante: true }], () => null).some(f => f.check === 'cible-manquante'), 'content with nowhere to land must be refused before the section is removed, never dropped on the floor');
   // Vérifié en direct contre la vraie charte : aucun renvoi mort aujourd'hui.

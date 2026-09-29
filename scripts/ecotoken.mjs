@@ -1398,11 +1398,46 @@ export function verifyProtectiveSubstance(avant, apres, { socles = PHRASES_SOCLE
 // tout Article cité ailleurs dans le dépôt doit encore exister dans la charte allégée, et tout
 // contenu déplacé doit être arrivé à sa nouvelle adresse. Honnêteté : ceci vérifie que la RÉFÉRENCE
 // résout, jamais que le SENS a été préservé — cette lecture-là reste humaine.
+// UN ARTICLE PROPOSÉ N'EST PAS UN RENVOI MORT, et les deux se ressemblent trait pour trait
+// (2026-09-29, tâche #1157). Le garde-fou lisait un numéro d’Article encore inexistant dans un document qui PROPOSE
+// d'écrire le trente-quatrième Article et concluait à une référence morte. Il avait tort, et son
+// message le disait sans le savoir : « n'existe PLUS » — il ne sait pas distinguer ce qui a été
+// RETIRÉ de ce qui n'est PAS ENCORE ÉCRIT.
+//
+// POURQUOI ÇA COMPTE PLUS QUE LE CAS DU JOUR : ce projet a une règle permanente selon laquelle rien
+// ne s'écrit dans la charte sans que l'utilisateur le voie d'abord. Proposer un Article avant de
+// l'écrire est donc le geste NORMAL ici, pas l'exception — et un garde-fou qui refuse le geste
+// normal finit par être contourné (leçon L4). La précédente occurrence (#760) s'était résolue en
+// écrivant l'Article le soir même ; ce n'est pas toujours possible, et ça ne devrait pas l'être.
+//
+// L'EXEMPTION EST VOLONTAIREMENT ÉTROITE : elle ne vaut que si le mot « proposé » ou « proposition »
+// figure DANS LA MÊME PHRASE que la citation, ou si la ligne annonce un texte à approuver. Une
+// citation ordinaire perdue dans un document qui parle vaguement de propositions reste attrapée.
+export const MOTIF_ARTICLE_CITE = /Article\s+(\d{1,2})\b/g;
+// LE `\b` FINAL A DÛ SAUTER, ET C'EST UN PIÈGE CLASSIQUE : en JavaScript, « é » n'est pas un
+// caractère de mot, donc « proposé** » n'offre AUCUNE frontière après le « é » et le motif ne
+// matchait pas la forme la plus courante du dépôt. Trouvé par le contre-test, jamais en relisant.
+export const MOTIF_PROPOSITION_D_ARTICLE = /propos(?:e|é|ée|er|ition)|à approuver|attend (?:ton|votre|son) accord|\bun Article \d{1,2}\b/i;
+
+export function matchesDArticleHorsProposition(texte = "") {
+  const numeros = [];
+  for (const m of String(texte).matchAll(MOTIF_ARTICLE_CITE)) {
+    // La phrase qui porte la citation : bornée par un point, un saut de ligne ou le début du texte.
+    const avant = texte.lastIndexOf("\n", m.index);
+    const debut = Math.max(avant + 1, texte.lastIndexOf(". ", m.index) + 1, 0);
+    const finLigne = texte.indexOf("\n", m.index);
+    const phrase = texte.slice(debut, finLigne === -1 ? texte.length : finLigne);
+    if (MOTIF_PROPOSITION_D_ARTICLE.test(phrase)) continue;
+    numeros.push(m[1]);
+  }
+  return numeros;
+}
+
 export function verifyNothingBroken(newCharterText, repoFiles, deplacements = [], readFile = (p) => (existsSync(p) ? readFileSync(p, "utf8") : null)) {
   const findings = [];
   const citedArticles = new Set();
   for (const content of Object.values(repoFiles ?? {})) {
-    for (const m of String(content).matchAll(/Article\s+(\d{1,2})\b/g)) citedArticles.add(Number(m[1]));
+    for (const m of matchesDArticleHorsProposition(String(content))) citedArticles.add(Number(m));
   }
   for (const n of [...citedArticles].sort((a, b) => a - b)) {
     if (!new RegExp(`\\*\\*Article ${n}\\s`).test(newCharterText)) {
