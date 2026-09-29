@@ -261,5 +261,13 @@
     "lecon": "Un détecteur de duplication ne trouve pas de la duplication : il trouve les endroits où DEUX PERSONNES ONT EU LE MÊME BESOIN. La ressemblance n'est que le symptôme visible ; la question utile est ce que ce besoin partagé révèle du code autour. LE RÉFLEXE CONCRET, et il a payé huit fois sur huit : ne jamais fondre deux blocs parce qu'ils se ressemblent. D'abord chercher POURQUOI les deux existent — et dans deux cas sur huit la bonne réponse était de ne PAS les fondre, avec la raison écrite à côté du code.",
     "rienARetenir": false,
     "date": "2026-09-29T13:16:51.008Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "J'ai enfreint une règle UNE TÂCHE après l'avoir déclarée moi-même non tenue — et le geste qui l'aurait évitée coûtait dix secondes.",
+    "contexte": "Nuit du 2026-09-29, tâches #1213 puis #1220. En #1213 je réponds au contrôleur de conduite que la règle « lancer la reprise des notes avant d'ouvrir un chantier » n'est PAS tenue, et je le déclare noir sur blanc. En #1220, une tâche plus tard, j'écris un bloc de tests complet pour une fonction déjà testée depuis la tâche #186 — trois branches identiques, y compris l'assertion à laquelle je tenais le plus. Un `grep` du nom de la fonction dans le filet aurait suffi.",
+    "lecon": "Une règle qu'on vient de reconnaître non tenue n'est pas pour autant tenue la fois suivante : la reconnaître soulage, et le soulagement ressemble à une correction. C'est le même mécanisme que la promesse écrite en commentaire qui n'arrête aucune copie — sauf qu'ici la promesse et l'infraction sont à une heure d'écart. LE RÉFLEXE CONCRET, et il est plus petit que la règle générale : avant d'écrire une fonction ou un test, chercher son NOM dans le dépôt. Pas « faire la reprise des notes », qui est un geste long qu'on remet — juste `grep <nom>` dans check-house et dans scripts/. Une règle qu'on saute parce qu'elle coûte se remplace par le plus petit geste qui en capte l'essentiel, jamais par la promesse de mieux la suivre.",
+    "rienARetenir": false,
+    "date": "2026-09-29T16:31:23.692Z"
   }
 ]

@@ -604,6 +604,36 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   abandonne derrière soi.
 
 
+2octodecies. ET J'AI REFAIT LA MÊME FAUTE UNE HEURE APRÈS L'AVOIR AVOUÉE
+--------------------------------------------------------------------------
+  Celle-ci, je préfère te la raconter en entier, parce qu'elle dit quelque chose sur moi.
+
+  Vers midi, j'ai répondu au contrôleur de conduite qui attendait mes réponses depuis une semaine.
+  J'ai coché vingt et une règles, **dont deux en disant NON** — et l'une des deux était : « je n'ai
+  pas lancé la commande qui montre ce que le dépôt sait déjà avant d'ouvrir un chantier ».
+
+  UNE TÂCHE PLUS TARD, je me suis mis à écrire des tests pour l'outil le plus faiblement couvert du
+  paysage. J'ai écrit un bloc complet, soigné, avec l'assertion à laquelle je tenais le plus — que
+  l'avertissement « capture masquée » doit apparaître AVANT l'image, parce qu'un lecteur averti
+  après avoir regardé a déjà cru la photo.
+
+  **Ce bloc existait déjà depuis une semaine.** Mêmes trois branches, même assertion, écrit le jour
+  où le défaut avait été trouvé pour de vrai. Il m'aurait suffi de chercher le nom de la fonction
+  dans le filet : dix secondes.
+
+  CE QUE J'EN RETIENS, ET C'EST ÉCRIT AU JOURNAL D'EXPÉRIENCE : reconnaître une règle non tenue
+  SOULAGE, et le soulagement ressemble à une correction. C'est exactement le mécanisme de la
+  promesse écrite en commentaire qui n'arrête aucune copie — sauf qu'ici la promesse et l'infraction
+  sont à une heure d'écart. Le correctif n'est donc pas « je vais mieux faire la reprise des notes »,
+  qui est un geste long qu'on remet : c'est **le plus petit geste qui en capte l'essentiel** —
+  chercher le nom de ce qu'on s'apprête à écrire, avant de l'écrire.
+
+  Le bloc en trop est retiré. Les deux seules choses qu'il apportait vraiment sont fondues dans le
+  test qui existait, à leur place. Et la moitié de cet outil qui ne peut pas être testée — celle qui
+  lance un vrai navigateur — est maintenant déclarée avec sa raison, pour que son 50 % cesse de se
+  lire comme « mal testé ». **Le chiffre n'a pas bougé, et je ne prétends pas l'avoir amélioré.**
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
