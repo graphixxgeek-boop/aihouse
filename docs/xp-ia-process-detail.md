@@ -212,7 +212,15 @@ Tout ce process est atteignable depuis les documents seuls, sans une ligne de co
   d'être au vert tant qu'elle n'a pas reçu de réponse. C'est le contrôleur de la CONDUITE, jamais
   d'un déroulé : ce process décrit un comportement à tenir, pas les étapes d'une activité.
   **CE PROCESS NE POSSÈDE PAS SON CONTRÔLEUR, il y loge une règle parmi d'autres** — et ça se dit
-  ici plutôt que de se déduire (Article 27). angel porte TOUTES les règles de conduite du projet
+  ici plutôt que de se déduire (Article 27).
+
+  > **PORTÉE CHEZ SON CONTRÔLEUR :** `xp-lecons`
+  > *(2026-09-29, tâche #1179. Cette ligne n'est pas une redite du paragraphe : elle est LUE par
+  > `porteeDeclareeDuProcess()` chez god-of-all-process. L'exemption vivait en prose depuis le
+  > 2026-09-27 et le détecteur de dettes a quand même facturé ici, à l'identique, trois règles de
+  > conduite ajoutées le 2026-09-29 pour de tout autres sujets. Une exemption que seul un humain
+  > peut lire n'exempte rien.)*
+ angel porte TOUTES les règles de conduite du projet
   (`resume-contextualise`, `reprise-des-notes`, `outil-obligatoire`, `temps-reel-lu`, et celles
   ajoutées depuis) ; leur liste se LIT dans `REGLES` du script, jamais recopiée ici, sans quoi ce
   document se périmerait à la règle suivante (Article 24). **Conséquence pratique, et c'est elle

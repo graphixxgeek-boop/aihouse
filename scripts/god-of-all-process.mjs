@@ -1275,7 +1275,38 @@ export function formatFichesEnRetardLines(r, { limite = 12 } = {}) {
   return L;
 }
 
-export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, shImpl = sh, root = ROOT, nbCommits = 15 } = {}) {
+// LA PORTÉE DÉCLARÉE D'UN PROCESS CHEZ SON CONTRÔLEUR (2026-09-29, tâche #1179).
+//
+// Un document de process peut écrire, en une ligne visible : « **PORTÉE CHEZ SON CONTRÔLEUR :**
+// `xp-lecons` ». Il dit alors : *mon contrôleur héberge des règles qui ne me concernent pas, et
+// voici la mienne.* Le détecteur de dettes ne lui facture plus qu'un changement qui touche
+// vraiment cette portée-là.
+//
+// POURQUOI UNE DÉCLARATION DU DOCUMENT ET PAS UNE DÉDUCTION : le nombre de process gardés par un
+// fichier se dérive du registre, et pour `angel-of-ia-process.mjs` le registre dit « un » quand la
+// réalité dit « vingt-cinq règles pour une dizaine de sujets ». Aucune mécanique ne peut deviner
+// ça ; l'auteur du document, lui, le sait. Il le déclare, et la déclaration est lisible par les
+// deux côtés — c'est l'Article 27 pris par son bon bout.
+export const MOTIF_PORTEE_CHEZ_LE_CONTROLEUR = /(?:^|\n)[ \t]*(?:[>*\-|#]|\/\/)*[ \t]*(?:\*\*)?PORT[ÉE]E CHEZ SON CONTR[ÔO]LEUR\s*:?(?:\*\*)?\s*:?\s*`([^`\n]+)`/i;
+
+export function porteeDeclaree(texte = "") {
+  const m = String(texte).match(MOTIF_PORTEE_CHEZ_LE_CONTROLEUR);
+  return m ? m[1].trim() : null;
+}
+
+export function porteeDeclareeDuProcess(p, { root = ROOT, lireDocImpl = null } = {}) {
+  if (!p?.doc) return null;
+  const lire = lireDocImpl ?? ((chemin) => readFileSync(join(root, chemin), "utf8"));
+  try { return porteeDeclaree(lire(p.doc)); } catch { return null; }
+}
+
+// Le diff se lit dès que l'une des deux raisons existe : plusieurs process gardés par le même
+// fichier (la règle de 2026-09-25), ou une portée déclarée par le document (celle d'aujourd'hui).
+export function partageOuPortee(combien, portee) {
+  return (combien ?? 0) > 1 || Boolean(portee);
+}
+
+export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, shImpl = sh, root = ROOT, nbCommits = 15, lireDocImpl = null } = {}) {
   let brut;
   try {
     brut = shImpl(`git log -n ${nbCommits} --name-only --pretty=format:%H%x09%s`, { cwd: root.replace(/\/$/, "") });
@@ -1388,8 +1419,29 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
         // et il ne bouge pas d'un pouce. Ma première version appliquait le test du nom à TOUT le
         // monde — le filet a refusé, et il avait raison : elle aurait absous un commit qui change le
         // seul gardien d'un process sans documenter, exactement le trou que ce détecteur bouche.
+        // UN DOCUMENT PEUT DÉCLARER LA PORTÉE QU'IL A CHEZ SON CONTRÔLEUR (2026-09-29, tâche #1179),
+        // et sans ça la règle fondatrice ci-dessus se trompe de la même façon trois fois de suite.
+        //
+        // LE CAS RÉEL : `angel-of-ia-process.mjs` est enregistré comme le contrôleur d'UN SEUL
+        // process (`xp-ia`), donc `partage` vaut faux et la dette est pleine dès qu'il change. Mais
+        // angel porte en réalité TOUTES les règles de conduite du projet — vingt-cinq aujourd'hui,
+        // dont une seule concerne l'XP. Le registre dit « un », la réalité dit « beaucoup », et le
+        // compte dérivé du registre est donc faux POUR CE FICHIER-LÀ.
+        //
+        // La conséquence était mesurée avant d'être corrigée : deux règles de conduite ajoutées le
+        // 2026-09-27 pour un tout autre sujet ont été facturées à l'XP (tâches #436/#773), le
+        // document a alors écrit l'exemption EN PROSE… et trois règles ajoutées le 2026-09-29 ont
+        // été facturées à l'identique. Une exemption que seul un humain peut lire n'exempte rien
+        // (Article 27) : un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+        //
+        // CE QUE ÇA NE DESSERRE PAS : rien, sauf pour un document qui le DEMANDE explicitement. Sans
+        // ligne « PORTÉE CHEZ SON CONTRÔLEUR », le comportement est identique au caractère près, et
+        // le cas fondateur de 2026-09-25 — un gardien qui ne garde qu'un process, dette pleine sans
+        // lire le diff — ne bouge pas d'un pouce.
+        const portee = porteeDeclareeDuProcess(p, { root, lireDocImpl });
+        const doitLireLeDiff = partageOuPortee(combienDeProcess.get(fichier) ?? 0, portee);
         const partage = (combienDeProcess.get(fichier) ?? 0) > 1;
-        const diff = !partage ? null : (() => { try { return shImpl(`git show --format= ${c.hash} -- ${JSON.stringify(fichier)}`, { cwd: root, maxBuffer: 5e7 }); } catch { return null; } })();
+        const diff = !doitLireLeDiff ? null : (() => { try { return shImpl(`git show --format= ${c.hash} -- ${JSON.stringify(fichier)}`, { cwd: root, maxBuffer: 5e7 }); } catch { return null; } })();
         // UN DIFF ILLISIBLE NE DÉGRADE RIEN : sans lui, on ne peut pas dire que le changement ne
         // nomme pas le process, seulement qu'on n'a pas pu regarder (L5). On reste sur la règle
         // stricte plutôt que d'absoudre par défaut d'information.
@@ -1403,10 +1455,13 @@ export function findChangementsIndirectsSansMiseAJour({ processes = PROCESSES, s
         // UN DIFF VIDE EST UNE NON-MESURE, exactement comme un diff illisible : sur un fichier
         // réellement modifié, `git show` ne rend jamais rien. Le traiter comme « le changement ne
         // nomme pas ce process » absoudrait sur une absence d'information (L5) — on reste strict.
-        const nomme = !partage || !diff || diff.includes(declaration) || (p.doc && diff.includes(p.doc));
+        const nomme = !doitLireLeDiff || !diff || diff.includes(declaration) || (p.doc && diff.includes(p.doc)) || (portee ? diff.includes(portee) : false);
         const ailleurs = docsAilleurs(fichier, c.fichiers);
         const lien = nomme ? (ailleurs.length ? "a-confirmer" : "direct") : "a-confirmer";
-        const pourquoiSoupcon = nomme ? ailleurs : [...ailleurs, `le diff de ${fichier} ne nomme ni « ${p.slug} » ni son document : ce gardien en garde plusieurs, et ce changement ne semble pas porter sur celui-ci`];
+        const raisonDuSoupcon = portee && !partage
+          ? `le diff de ${fichier} ne touche pas \`${portee}\`, la seule portée que ${p.doc} déclare avoir chez ce contrôleur : ce contrôleur héberge des règles d'autres sujets, et ce changement ne semble pas porter sur celui-ci`
+          : `le diff de ${fichier} ne nomme ni « ${p.slug} » ni son document : ce gardien en garde plusieurs, et ce changement ne semble pas porter sur celui-ci`;
+        const pourquoiSoupcon = nomme ? ailleurs : [...ailleurs, raisonDuSoupcon];
         if (!parCle.has(cle)) parCle.set(cle, { commit: c.hash, sujet: c.sujet, fichier, processes: [], docs: [], lien, documenteAilleurs: pourquoiSoupcon });
         // Un même fichier peut concerner plusieurs process : si l'UN d'eux est nommé, la dette est
         // pleine pour l'entrée entière. Dégrader sur le plus indulgent effacerait le vrai lien.

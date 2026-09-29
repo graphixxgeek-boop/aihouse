@@ -15213,6 +15213,52 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: () => 'cccc333\tok\nscripts/faux-gardien.mjs\ndocs/faux-process.md' }), [], 'the rule itself is unchanged: code and document in the same commit is never a finding');
   assert.ok(typeof gitFaux === 'function', 'the command shape is asserted inside gitFaux, kept here so the check is not silently dropped');
   assert.deepEqual(god.findChangementsIndirectsSansMiseAJour({ processes: procFaux, shImpl: gitFaux }).map((e) => e.rattrape), ['cccc222'], 'and the same verdict holds when the history comes through a stub that also verifies the git command actually issued');
+  // LA PORTÉE DÉCLARÉE CHEZ SON CONTRÔLEUR (2026-09-29, tâche #1179) — et le contre-test mord dans
+  // les DEUX sens, sans quoi il ne prouverait rien (BP4).
+  //
+  // Le cas réel : `angel-of-ia-process.mjs` est enregistré comme le contrôleur d'UN seul process
+  // (`xp-ia`), donc le compte dérivé du registre dit « pas partagé » et la dette est pleine dès
+  // qu'il change. Mais angel porte vingt-cinq règles de conduite pour une dizaine de sujets. Le
+  // registre dit « un », la réalité dit « beaucoup », et l'exemption a vécu EN PROSE du 2026-09-27
+  // au 2026-09-29 — pendant lesquels le détecteur a facturé la même fausse dette deux fois de plus.
+  {
+    const procPortee = [{ slug: 'xpf', nom: 'faux xp', doc: 'docs/faux-xp.md', gardien: 'scripts/faux-angel.mjs', etapes: [] }];
+    const hist = ['dddd111\tfautif', 'scripts/faux-angel.mjs'].join('\n');
+    const lireAvecPortee = () => '# faux\n\n> **PORTÉE CHEZ SON CONTRÔLEUR :** `xp-lecons`\n';
+    const lireSansPortee = () => '# faux\n\nrien de déclaré ici.\n';
+    const shAvecDiff = (cmd) => (/git show/.test(cmd) ? '+  { cle: "escalade", libelle: "..." },' : hist);
+    const shDiffQuiTouche = (cmd) => (/git show/.test(cmd) ? '+  { cle: "xp-lecons", libelle: "..." },' : hist);
+
+    // ── SANS déclaration : rien ne change, au caractère près. Le cas fondateur de 2026-09-25 tient.
+    const sans = god.findChangementsIndirectsSansMiseAJour({ processes: procPortee, shImpl: shAvecDiff, lireDocImpl: lireSansPortee });
+    assert.equal(sans.length, 1, 'a guard registered for a single process still owes a full debt when it changes without its document — the 2026-09-25 founding case must not move an inch');
+    assert.match(sans[0].pourquoi, /n'existe plus tel quel/, 'MUST CATCH: without a declared scope the verdict stays the strict one; loosening it for everybody would absolve the very hole this detector plugs');
+
+    // ── AVEC déclaration, diff qui ne touche PAS la portée : l'accusation devient un soupçon nommé.
+    const avec = god.findChangementsIndirectsSansMiseAJour({ processes: procPortee, shImpl: shAvecDiff, lireDocImpl: lireAvecPortee });
+    assert.equal(avec.length, 1, 'it downgrades, it never silences: the finding stays visible');
+    assert.match(avec[0].pourquoi, /À CONFIRMER/, 'a change that does not touch the declared scope is a suspicion to confirm, never a debt — the same false accusation was issued three times before this');
+    assert.match(avec[0].pourquoi, /xp-lecons/, 'and the reason must NAME the declared scope, so the reader can check it rather than trust it');
+
+    // ── AVEC déclaration, diff qui TOUCHE la portée : la dette redevient pleine. Sans ce sens-là,
+    // la déclaration serait une échappatoire universelle plutôt qu'une information.
+    const touche = god.findChangementsIndirectsSansMiseAJour({ processes: procPortee, shImpl: shDiffQuiTouche, lireDocImpl: lireAvecPortee });
+    assert.equal(touche.length, 1, 'a change that really touches the declared scope must still be reported');
+    assert.match(touche[0].pourquoi, /n'existe plus tel quel/, 'MUST CATCH: declaring a scope must never become a blanket exemption — when the diff touches it, the debt is full again');
+
+    // ── UN DOCUMENT ILLISIBLE N'EXEMPTE RIEN : on ne sait pas, donc on reste strict (leçon L5).
+    const illisible = god.findChangementsIndirectsSansMiseAJour({ processes: procPortee, shImpl: shAvecDiff, lireDocImpl: () => { throw new Error('boum'); } });
+    assert.match(illisible[0].pourquoi, /n'existe plus tel quel/, 'an unreadable document must not absolve: "we could not look" and "there is nothing to see" are opposites');
+
+    // ── LE MOTIF LUI-MÊME, sur les formes réelles d'écriture.
+    assert.equal(god.porteeDeclaree('> **PORTÉE CHEZ SON CONTRÔLEUR :** `xp-lecons`'), 'xp-lecons', 'the declaration must be read in the form the documents actually use');
+    assert.equal(god.porteeDeclaree('PORTEE CHEZ SON CONTROLEUR : `abc`'), 'abc', 'and without accents, because a document written in a hurry loses them first');
+    assert.equal(god.porteeDeclaree('on parle ici de la portée chez son contrôleur en prose'), null, 'a MENTION in prose is not a declaration — the whole repository turns on this distinction');
+    // Et le VRAI document, jamais seulement une fixture (Article 25).
+    assert.equal(god.porteeDeclareeDuProcess({ doc: 'docs/xp-ia-process-detail.md' }), 'xp-lecons', 'checked live: the real xp-ia document must declare xp-lecons as its scope, otherwise the exemption it claims in prose is still unreadable by any mechanism');
+    console.log('Passed: un document de process peut déclarer LA PORTÉE QU\'IL A CHEZ SON CONTRÔLEUR (2026-09-29, tâche #1179), et le détecteur de dettes ne lui facture plus qu\'un changement qui la touche vraiment. Le cas réel : angel-of-ia-process est enregistré pour UN process alors qu\'il porte vingt-cinq règles de conduite pour une dizaine de sujets — le registre dit « un », la réalité dit « beaucoup », et trois règles ajoutées pour de tout autres sujets étaient facturées à l\'XP. L\'exemption existait en prose depuis le 2026-09-27 et n\'a rien exempté du tout, parce qu\'aucune mécanique ne lit de la prose (Article 27). Le contre-test mord dans les deux sens : sans déclaration le cas fondateur de 2026-09-25 ne bouge pas d\'un pouce, avec déclaration mais un diff qui TOUCHE la portée la dette redevient pleine, et un document illisible n\'exempte rien — « on n\'a pas pu regarder » et « il n\'y a rien à voir » sont des contraires.');
+  }
+
 
   // 4ter-bis. LA DETTE SIGNALÉE À SA NAISSANCE (2026-09-25, tâche #436 partie 2) — le détecteur
   // ci-dessus existait depuis deux jours et ne tournait QUE lancé à la main : neuf dettes s'étaient
