@@ -48,7 +48,17 @@ import { printReliabilityNotice, sh } from "./lib-shell.mjs";
 import { recordCliUsage, loadToolUsageHistory } from "./tool-usage.mjs";
 import { printReportHeader, buildPlanDaction, imprimerPlanDaction } from "./report-template.mjs";
 // LA DÉFINITION DE « CLOSE » SE LIT, ELLE NE SE RÉÉCRIT PAS (2026-09-29, tâche #1199) — cf. #1171.
-import { estStatutTermine, estStatutEcarte } from "./check-suivi-fidelity.mjs";
+// LE DÉCOUPAGE VIENT DU LECTEUR CANONIQUE, PLUS D'UNE COPIE LOCALE (2026-09-29, tâche #1207).
+// CLONE-HUNTER signalait ces sept lignes comme un doublon interne. Elles l'étaient, mais elles
+// étaient surtout un TROISIÈME découpeur de lignes de tâches, à côté de `splitTableRow()` que
+// check-suivi-fidelity porte depuis longtemps — et dont JESUS importait déjà la définition de
+// « close » depuis la tâche #1199. La copie ignorait les barres verticales ÉCHAPPÉES, que le
+// lecteur canonique sait lire : trois lignes du registre en portent aujourd'hui. Aucune n'est
+// mal lue pour l'instant, parce que JESUS ne prend que la PREMIÈRE et la DERNIÈRE cellule et
+// qu'une barre de plus au milieu ne les déplace pas — c'est mesuré, pas supposé. Mais le
+// prochain lecteur ajouté ici, s'il lit par POSITION, hériterait d'un découpeur qui ne connaît
+// pas l'échappement, et se tromperait sans rien faire rougir.
+import { estStatutTermine, estStatutEcarte, splitTableRow } from "./check-suivi-fidelity.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const REGISTRE = "docs/jesus-le-sauveur";
@@ -292,8 +302,7 @@ export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir
     let texte; try { texte = lireFic(join(abs, f), "utf8"); } catch { continue; }
     for (const ligne of texte.split("\n")) {
       if (!ligne.startsWith("| ")) continue;
-      const cells = ligne.split("|").slice(1).map((c) => c.trim());
-      if (cells.length && cells[cells.length - 1] === "") cells.pop();
+      const cells = splitTableRow(ligne);
       if (!cells.length || !/^\d+$/.test(cells[0])) continue;
       const statut = (cells[cells.length - 1] ?? "").toLowerCase();
       // JESUS AVAIT SA PROPRE DÉFINITION DE « CLOSE », ET ELLE COMPTAIT 14 TÂCHES DE TROP
@@ -561,8 +570,7 @@ export function fluiditeDeLaFile({ dossier = "docs/suivi/sessions", lireDir = re
     let texte; try { texte = lireFic(join(abs, f), "utf8"); } catch { continue; }
     for (const ligne of texte.split("\n")) {
       if (!ligne.startsWith("| ")) continue;
-      const cells = ligne.split("|").slice(1).map((c) => c.trim());
-      if (cells.length && cells[cells.length - 1] === "") cells.pop();
+      const cells = splitTableRow(ligne);
       if (!cells.length || !/^\d+$/.test(cells[0])) continue;
       // Même définition partagée qu'au-dessus : « Ouverte → Terminée » EST une clôture (#1199).
       if (!estStatutTermine(cells[cells.length - 1] ?? "")) continue;

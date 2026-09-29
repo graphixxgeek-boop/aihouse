@@ -21027,6 +21027,39 @@ async function testClePaireDOutils() {
 }
 await testClePaireDOutils();
 
+// ————————————————————————————————————————————————————————————————————————
+// LES DERNIERS DOUBLONS, CHACUN AVEC SON VERDICT ÉCRIT
+// (2026-09-29, tâche #1207 — huitième et dernier lot instruit)
+// ————————————————————————————————————————————————————————————————————————
+async function testDerniersDoublons() {
+  const { readFileSync: lire1207 } = await import('node:fs');
+
+  // ── 1. JESUS N'A PLUS SON PROPRE DÉCOUPEUR DE LIGNES. Il en portait un troisième, à côté du
+  // lecteur canonique dont il importait DÉJÀ la définition de « close » depuis #1199. La copie
+  // ignorait les barres verticales échappées — trois lignes du registre en portent.
+  const jesus = lire1207('scripts/jesus-le-sauveur.mjs', 'utf8');
+  assert.match(jesus, /import \{[^}]*splitTableRow[^}]*\} from "\.\/check-suivi-fidelity\.mjs"/, 'JESUS must use the canonical row splitter, not a third copy of it');
+  assert.equal((jesus.match(/ligne\.split\("\|"\)\.slice\(1\)/g) ?? []).length, 0, 'and not a single hand-rolled split may remain: the next reader added here would inherit a splitter that does not know about escaping, and would be wrong without making anything red');
+
+  // ── 2. LE MÊME RAPPORT NE SE CONSTRUIT PLUS QU'UNE FOIS. Ses cinq champs étaient écrits deux
+  // fois — une par rendu — avec DEUX appels séparés à l'horloge. Deux rendus du même rapport qui
+  // ne disent pas la même heure est un écart que personne ne cherche, parce qu'on suppose sans y
+  // penser qu'ils viennent de la même source.
+  const ctd = lire1207('scripts/check-tasks-details.mjs', 'utf8');
+  assert.match(ctd, /const contenuDuRapport = \{/, 'the shared report payload must exist');
+  assert.match(ctd, /renderTextReport\(\{ tool: "check-tasks-details", \.\.\.contenuDuRapport \}\)/, 'and BOTH renderings must be fed from it — otherwise the HTML and the text can carry different timestamps, or a footer changed on one side only');
+
+  // ── 3. CE QUI RESTE SIGNALÉ ET NE SERA PAS FONDU porte sa raison DANS le fichier, pas ici : un
+  // verdict rangé loin du code qu'il concerne est un verdict que le prochain agent ne lira pas
+  // (Article 27). Ce test vérifie seulement que la raison EXISTE là où on la cherchera.
+  assert.match(lire1207('scripts/api-providers.mjs', 'utf8'), /chaque fournisseur garde sa propre queue/i, 'api-providers must carry, beside the code, the reason its two probe tails stay separate');
+  assert.match(lire1207('scripts/cassandra-rh.mjs', 'utf8'), /CE COUPLE N'EST PAS UN DOUBLON/, 'and cassandra-rh must carry the reason its L36 pair must never be merged');
+
+  console.log("Passed: les derniers doublons, chacun avec son verdict ecrit (2026-09-29, tache #1207). HUITIEME ET DERNIER LOT. DEUX CORRECTIONS REELLES : JESUS portait un TROISIEME decoupeur de lignes de taches, alors qu'il importait deja la definition de « close » du lecteur canonique depuis #1199 — et sa copie ignorait les barres verticales ECHAPPEES, que trois lignes du registre portent aujourd'hui. Aucune n'est mal lue pour l'instant, parce que JESUS ne prend que la PREMIERE et la DERNIERE cellule et qu'une barre de plus au milieu ne les deplace pas : c'est MESURE, pas suppose. Mais le prochain lecteur ajoute la, s'il lit par position, heriterait d'un decoupeur qui ne connait pas l'echappement. Et check-tasks-details construisait le MEME rapport DEUX fois, une par rendu, avec deux appels separes a l'horloge : les deux versions d'un meme rapport pouvaient porter deux heures differentes, et un pied de page change d'un seul cote les aurait fait diverger en silence. DEUX ECARTS ASSUMES, avec leur raison ECRITE A COTE DU CODE et non dans un document lointain : les queues de sonde d'api-providers, parce que chaque fournisseur a son propre appel et que les deux sorties d'echec sont DEJA partagees depuis #997 ; et les deux lecteurs de summarize-simulation-log, qui lisent deux FORMATS de journal differents et dont les capacites divergent volontairement.");
+}
+await testDerniersDoublons();
+
+
 
 
 

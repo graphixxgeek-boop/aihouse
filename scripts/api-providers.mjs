@@ -74,6 +74,16 @@ async function probeGemini(key, model, { heavy = false } = {}) {
   }
 }
 
+// POURQUOI LA QUEUE DE SONDE RESTE RECOPIÉE CHEZ CHAQUE FOURNISSEUR (2026-09-29, tâche #1207).
+// CLONE-HUNTER signale les quatre dernières lignes de `probeGemini` et `probeOpenAI` comme un
+// doublon. Elles le sont, et elles le restent : chaque fournisseur garde sa propre queue parce que
+// tout ce qui la précède lui est propre — son adresse, ses en-têtes, son corps de requête, sa façon
+// d'annoncer un quota épuisé. Ce qui MÉRITAIT d'être partagé l'a déjà été le 2026-09-28 (#997) :
+// les deux SORTIES d'échec, juste en dessous. Les envelopper d'un cran de plus obligerait chaque
+// fournisseur à passer par une forme commune que le prochain, différent par nature, ne respecterait
+// pas — et c'est exactement pour permettre un fournisseur totalement différent que ce registre
+// existe. Verdict écrit ici plutôt qu'ailleurs : c'est ici qu'on le cherchera (Article 27).
+//
 // LES DEUX SORTIES D'ÉCHEC SONT LES MÊMES POUR TOUS LES FOURNISSEURS, et elles étaient recopiées dans
 // chacun (2026-09-28, tâche #997, signalé par CLONE-HUNTER). Le risque n'est pas la place prise :
 // c'est qu'un fournisseur ajouté demain recopie la forme de travers — un champ oublié, un libellé

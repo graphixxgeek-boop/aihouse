@@ -3105,13 +3105,20 @@ function main() {
   const onboardingContext = buildRealOnboardingContext();
   const report = buildReport({ zoom, format, allRows, history, onboardingContext });
 
-  const html = renderHtmlReport({
+  // LE MÊME RAPPORT NE SE CONSTRUIT QU'UNE FOIS (2026-09-29, tâche #1207). Ces cinq champs
+  // étaient écrits DEUX fois, une pour la version HTML et une pour la version texte — avec deux
+  // appels séparés à l'horloge, donc deux horodatages qui pouvaient déjà différer, et un pied de
+  // page qu'un changement d'un seul côté aurait fait diverger. Deux rendus du MÊME rapport qui ne
+  // disent pas la même chose est exactement le genre d'écart que personne ne cherche, parce qu'on
+  // suppose sans y penser qu'ils viennent de la même source. Maintenant, c'est vrai.
+  const contenuDuRapport = {
     title: report.title,
     subtitle: report.subtitle,
     dateLabel: new Date().toISOString(),
     blocks: report.blocks,
     footer: "check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.",
-  });
+  };
+  const html = renderHtmlReport(contenuDuRapport);
 
   if (!existsSync(OUT_DIR)) mkdirSync(OUT_DIR, { recursive: true });
   const outFile = join(OUT_DIR, `${Date.now()}-${zoom}-${format}.html`);
@@ -3129,14 +3136,7 @@ function main() {
   // un cul-de-sac. La version HTML reste produite (elle est plus agréable à parcourir), mais elle
   // s'ajoute au contenu au lieu de le remplacer. Même patron que partout ailleurs ici : un
   // mécanisme qui ne sort pas du script est une intention.
-  console.log(renderTextReport({
-    tool: "check-tasks-details",
-    title: report.title,
-    subtitle: report.subtitle,
-    dateLabel: new Date().toISOString(),
-    blocks: report.blocks,
-    footer: "check-tasks-details — lecture seule, docs/suivi/ reste l'unique source de vérité du projet.",
-  }));
+  console.log(renderTextReport({ tool: "check-tasks-details", ...contenuDuRapport }));
   console.log(`\nMême rapport en HTML : ${outFile}`);
   console.log(`Zoom : ${ZOOM_LABELS[zoom]} — Forme : ${FORMAT_LABELS[format]}`);
   console.log(`${report.meta.count} tâche(s) affichée(s) sur ${report.meta.total} au total.`);

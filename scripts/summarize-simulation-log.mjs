@@ -137,6 +137,14 @@ export function summarizeFlatActions(entries) {
     const evidence = entry?.evidence ?? 0;
     if (evidence > prevEvidence) events.push({ round, type: "evidence", detail: evidence });
     prevEvidence = Math.max(prevEvidence, evidence);
+    // POURQUOI CETTE BOUCLE RESSEMBLE À CELLE DU LECTEUR RICHE, ET RESTE SÉPARÉE (2026-09-29,
+    // tâche #1207). CLONE-HUNTER signale les deux queues comme un doublon. Les deux lecteurs
+    // convergent vers la MÊME liste d'événements — c'est voulu, et c'est ce qui les fait se
+    // ressembler à la fin — mais ils lisent deux FORMATS de journal différents et n'ont pas les
+    // mêmes capacités : celui-ci déduit la révélation du premier tour `chat` au lieu de lire le
+    // drapeau, et ne sait rien du jardin ni du lot tiré. Les fondre exigerait de faire semblant
+    // que le journal à plat porte ce qu'il ne porte pas. Ce qui pouvait être partagé l'est déjà :
+    // `pousserLesDeplacements()`, appelée par les deux.
     for (const d of entry?.decisions ?? []) {
       pousserLesDeplacements(events, round, d, prevRoom);
     }
