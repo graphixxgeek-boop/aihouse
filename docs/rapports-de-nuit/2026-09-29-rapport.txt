@@ -195,6 +195,30 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     employé seul, et aucune trace d'origine datée. Les trois corrigés, aucun contourné.
 
 
+2quater. LA FIN DE LA NUIT — et la plus grosse trouvaille est arrivée en dernier
+---------------------------------------------------------------------------------
+  · UN GARDIEN SACRÉ ÉTAIT AVEUGLE SUR 39 OUTILS SUR 40, depuis la création de cette mesure.
+    AXA-CHECK doit dire si l'outillage de l'Agence est testé ; il annonçait « 39 NON MESURÉS » à
+    chaque passage. La cause tenait en deux temps, et aucun des deux ne se voyait à la lecture :
+    la couverture des outils était collectée depuis un dossier que RIEN dans le dépôt n'écrit (le
+    chemin n'apparaît qu'une fois dans tout le code, et c'est la ligne qui le LIT) ; et même bien
+    pointé, le vrai relevé — produit par le filet trois lignes plus haut — était supprimé cent
+    lignes avant d'être relu. Le commentaire d'à côté disait pourtant la vérité mot pour mot.
+    On voit enfin : 39 outils mesurés, et les plus faibles nommés (filet-en-parts à 11 %,
+    the-screener à 50 %, hyper-scan-checkpoint à 62 %).
+  · UN SECOND DÉFAUT RÉVÉLÉ PAR LA RÉPARATION : la section n'imprimait QUE les problèmes.
+    Raisonnable quand la mesure était vide, absurde le jour où elle marche — trente-neuf outils
+    mesurés produisaient zéro ligne, et la réparation restait invisible dans son propre rapport.
+  · PERSONNE NE RELISAIT LE REGISTRE DE LA LOI SUPRÊME. check-spirit est le seul outil qui touche
+    la sortie RÉELLE du modèle. Ce que le silence cachait : son dernier passage a une couverture
+    NULLE — 0/20, toutes les provocations bloquées — et conclut « PAS MESURÉ ». La dernière chose
+    que le projet savait de l'Article 0 était donc qu'il n'avait rien pu en savoir.
+  · ET TROIS FOIS, LE FILET M'A REFUSÉ QUELQUE CHOSE, ET TROIS FOIS IL AVAIT RAISON : une flèche
+    dans une mesure chiffrée (« 8 → 7 ») que le lecteur de statuts prenait pour une transition
+    d'état, un thème rangé hors de toute famille, et une ligne de suivi oubliée sur un commit que
+    j'avais jugé trivial. La règle ne dit pas « sauf si c'est petit ».
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.

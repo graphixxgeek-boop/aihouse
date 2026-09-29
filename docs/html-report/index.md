@@ -17,4 +17,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/notes-des-echanges-de-depart.html` | `docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md` | 19489 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 20884 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/la-cible.html` | `docs/grand-projet/02-strategie/la-cible-2026-09-29.md` | 18098 | 2026-09-29 06:13Z |
-| `docs/grand-projet/html/rapport-de-nuit-2026-09-29.html` | `docs/rapports-de-nuit/2026-09-29-rapport.txt` | 21077 | 2026-09-29 06:14Z |
+| `docs/grand-projet/html/rapport-de-nuit-2026-09-29.html` | `docs/rapports-de-nuit/2026-09-29-rapport.txt` | 22944 | 2026-09-29 07:20Z |
