@@ -53,6 +53,28 @@ DÉCLARATIONS, pas des constructions.)*
 
 ---
 
+## ⏱️ CE QUI A BOUGÉ DEPUIS L'OUVERTURE DE CE DOCUMENT *(mise à jour du 2026-09-29, 21h30 UTC)*
+
+**L'étape ① est faite aux trois quarts, et ça s'est passé pendant qu'il lisait.**
+
+| Ce qui était en ① | État |
+|---|---|
+| Les deux blocs de 15 questions | ✅ **fait** — `02-strategie/questions-de-degrossissage.md`, livré |
+| Le manifeste de l'Agence | ✅ **fait** — `docs/manifeste-de-l-agence.md`, trois zones dérivées, quatre interdictions |
+| Les synthèses des six documents | ✅ **faites**, plus l'index par situation qui les rend utilisables |
+| **La PHILOSOPHIE** | 🟡 **commencée** — `02-strategie/les-cinq-impossibles.md` en est la première pièce, révélée |
+| **L'OBJECTIF ULTIME** | ⏳ **l'attend** — et les synthèses ont montré que notre cible actuelle échoue probablement au critère 2 |
+
+**Deux choses ont changé de place en chemin, et les deux sont des corrections de ma part :**
+
+1. **Le classement des Articles de la charte en trois familles** n'était nulle part dans ce plan —
+   il est né d'une objection de sa part, et il appartient à ① (c'est du SAVOIR). Il a produit le
+   chiffre le plus utile de la soirée : **75 % de la charte ne parle pas du Jeu.**
+2. **Le triptyque FIXE / CONFIGURABLE / PERSONNALISABLE**, trouvé dans la cinquième synthèse, est
+   un SECOND axe qui croise nos trois zones sans les remplacer. Il rejoint **l'étape ④**.
+
+---
+
 ## ÉTAPE ① — SAVOIR CE QU'ON A
 
 | Ce qui va là | Pourquoi ici, et pas ailleurs |
