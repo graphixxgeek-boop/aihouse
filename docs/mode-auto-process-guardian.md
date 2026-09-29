@@ -120,6 +120,30 @@ filet reste utile ; c'est son CONTENU qu'il faut remettre à jour.
 le dépôt. `god-of-all-process` déclare donc cette étape NON VÉRIFIABLE plutôt que de la compter
 faite, et `angel-of-ia-process` la porte comme règle de conduite (`reveil-a-jour`).
 
+### ET LE MÊME DÉFAUT EST REVENU LE SOIR MÊME — la règle ne suffisait pas (2026-09-29, tâche #1219)
+
+**Ce qui s'est passé** : j'ai déclaré `reveil-a-jour` RESPECTÉE dans la même nuit (tâche #1213), et
+c'était vrai — de la chaîne courte, que je réécrivais à chaque réarmement avec l'état réel. Les deux
+FILETS HORAIRES, eux, personne ne les touchait : l'un d'eux annonçait toujours « la Ronde autonome
+est faite » et « la dette de fiches est à 0 », des heures après que ces phrases avaient cessé d'être
+vraies. **La règle ne couvrait que ce que je réécrivais déjà.** Un réveil qu'on ne touche pas est
+précisément celui qui se périme.
+
+**LA CORRECTION N'EST PAS « MIEUX RELIRE », C'EST UNE RÈGLE DE CONCEPTION** : *un filet ne porte
+jamais d'état.* Sa seule raison d'être est de retomber quand le reste est mort, donc il doit rester
+vrai indéfiniment sans que personne y touche. Tout ce qui date dans son texte finira par mentir, et
+un filet qui ment est pire qu'un filet absent — il fait travailler sur un état qui n'existe plus.
+
+**Ce qu'un filet contient donc, et rien de plus** : le geste à faire en premier (réarmer la chaîne
+courte), **où lire l'état réel** (le journal git, l'état de l'arbre, les dernières lignes de
+`docs/suivi/sessions/`), le cadre qui ne se périme pas (l'ESCALADE, l'ALIGNEMENT EN CASCADE), et les
+bornes. Aucun chiffre, aucun « déjà fait », aucun « à venir ».
+
+**La chaîne courte, elle, PEUT porter l'état** — et doit le porter : elle est réécrite à chaque
+tour, donc son contenu est daté de quelques minutes. C'est la différence entre un message qu'on
+renouvelle et un message qu'on abandonne derrière soi.
+
+
 ## Les bornes — ce qui ne se fait jamais sans validation
 
 ### Le périmètre sensible (défini par l'utilisateur, 2026-09-22)
