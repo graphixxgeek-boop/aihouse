@@ -133,6 +133,8 @@ la source.
 | `syntheses/COMMENT_ASSURER_LA_COHERENCE.md` | `COMMENT ASSURER LA COHERENCE` | 4 idées, document entier |
 | `syntheses/ARCHITECTURE_DES_NIVEAUX.md` | `ARCHITECTURE DES NIVEAUX DU PROJET` | 7 idées, document entier — le plus structurant des six |
 | `syntheses/ARCHITECTURE_FONCTIONNELLE.md` | `ARCHITECTURE FONCTIONNELLE DU PROJET` | 4 idées, document entier |
+| `syntheses/DE_LA_STRATEGIE_A_LA_TACHE.md` | `DE LA STRATEGIE A LA TACHE` | 5 idées + le bilan des six — le plus long, le moins utilisable |
 
-**La dernière restante** — `DE LA STRATEGIE A LA TACHE` (5 960 mots) — est de loin la plus longue
-du corpus, et elle nourrit les étapes ③ et ④ plutôt que le cadre.
+**LES SIX SONT FAITES.** La dernière porte en plus le BILAN D'ENSEMBLE : le seul désaccord réel, la
+contradiction interne au corpus, le passage le plus rentable, et le signal le plus fort — le
+rattachement des tâches à leur principe, réclamé par trois sources indépendantes.
