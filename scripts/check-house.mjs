@@ -4531,7 +4531,14 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     // bannière ne l'aurait pas affichée de toute façon.
     const srcHook = fs.readFileSync('scripts/hooks/check-last-commit.mjs', 'utf8');
     assert.ok(!/etat\("AXA-CHECK", reveille\("axa-check"\), undefined\)/.test(srcHook), 'MUST CATCH: the banner must never again hard-code AXA-CHECK as unquantifiable — it was the one Gardien whose measure sits fifteen lines above, in that very file');
-    assert.ok(/scriptRobustnessScore\(slug, perSlugScriptCoverage\) === undefined/.test(srcHook), 'and what it counts must be a real finding: the tools whose coverage could NOT be measured — a tool nobody can measure is a blind spot, not a healthy tool');
+    // CE QU'ELLE COMPTE A ÉTÉ RESSERRÉ LE 2026-09-29 (tâche #1215), et l'intention est la même,
+    // servie plus exactement. La version de #1191 comptait « pas de score », ce qui additionnait
+    // DEUX des trois états qu'AXA-CHECK sépare soigneusement : « NON MESURÉ », un trou à combler,
+    // et « jamais exerçable », une limite déclarée avec sa raison écrite. Le seul cas réel du dépôt
+    // — smart-breaker, dont le script n'exporte aucune fonction — tombait donc dans le mauvais sac,
+    // et la bannière affichait un ⚠️ que RIEN ne pouvait éteindre. Une alarme indélogeable devient
+    // du décor (leçon L6). Ce qui reste exigé est inchangé : la bannière compte un vrai constat.
+    assert.ok(/etatDeCouverture\(slug, perSlugScriptCoverage\)\.etat === "NON MESURÉ"/.test(srcHook), 'and what it counts must be a real finding: the tools whose coverage could NOT be measured — counted with the function that knows the three states, so that a DECLARED limit never reads as a blind spot, and a blind spot never hides behind a declaration');
     assert.ok(/perSlugScriptCoverage === undefined\s*\n\s*\? undefined/.test(srcHook), 'while a missing coverage sweep must still render the honest ⚪ rather than a fabricated zero (leçons L5/L11)');
   console.log('Passed: la couverture des OUTILS se lit enfin dans le relevé que le filet vient de produire (2026-09-29, tâche #1189) — elle était collectée depuis un dossier que RIEN dans ce dépôt n\'écrit, et le vrai dossier était effacé cent lignes avant d\'être relu. Un Gardien sacré annonçait donc « 39 outils NON MESURÉS sur 40 » depuis la création de cette mesure, pendant que le commentaire d\'à côté disait correctement d\'où le relevé venait. Le test verrouille la CHAÎNE et jamais le chiffre : le dossier lu est celui que le filet remplit, la collecte précède la suppression, et une part déclarée inexerçable garde sa raison à côté de son pourcentage.');
   }
@@ -21236,6 +21243,49 @@ async function testCollisionNommeSesTaches() {
   console.log("Passed: un constat qui ne pouvait nommer aucun de ses sujets (2026-09-29, tache #1214). TROUVE EN VERIFIANT MON PROPRE TRAVAIL avec l'outil dont c'est le metier, comme l'Article 25 le demande. check-suivi-fidelity signalait « 3 taches ouvertes sans mot-cle exploitable — ex. n°?, ?, ? ». Le constat etait JUSTE — trois taches ouvertes partagent bien le meme mot-cle, donc citer ce mot ne dit plus laquelle — mais il ne nommait AUCUNE des trois. LA CAUSE : la fonction lisait le champ `numero`, et son seul appelant reel construit ses taches avec le champ `n`. Exactement la meme famille que la tache #1200, ou un gabarit de rapport ne savait pas lire le champ que onze outils ecrivaient : un nom de champ qui ne correspond pas, aucune erreur levee, et un resultat qui a l'air complet. CE QUE CA COUTAIT : un constat qui ne peut pas nommer son sujet est un constat qu'on relit et qu'on repose — il occupe la place d'une alerte sans jamais permettre d'agir. Il nomme desormais 740, 747 et 768 pour « nommage », 745 et 793 pour « agence », 767 et 790 pour « charte ». ET LE POINT D'INTERROGATION RESTE POSSIBLE, deliberement : une tache dont le numero est vraiment illisible se dit telle quelle plutot que d'etre ecartee en silence.");
 }
 await testCollisionNommeSesTaches();
+
+// ————————————————————————————————————————————————————————————————————————
+// LE ⚠️1 QUE RIEN NE POUVAIT ÉTEINDRE, ET LA RAISON QUI SE PÉRIME
+// (2026-09-29, tâche #1215)
+// ————————————————————————————————————————————————————————————————————————
+async function testExemptionSmartBreaker() {
+  const A = await import('../scripts/axa-check.mjs');
+
+  // ── 1. L'EXEMPTION EXISTE, ET SON MOTIF EST VÉRIFIABLE PLUTÔT QU'INVOQUÉ.
+  const e = A.JAMAIS_EXERCABLES.find((x) => x.slug === 'smart-breaker');
+  assert.ok(e, 'smart-breaker must be declared never-exercisable: its script exports nothing and its body probes the real keys');
+  assert.match(e.pourquoi, /n'exporte AUCUNE fonction/, 'and the reason must state the checkable fact, not just an intention');
+  const { readFileSync: lire1215 } = await import('node:fs');
+  assert.doesNotMatch(lire1215('scripts/check-gemini-quota.mjs', 'utf8'), /^export\s+(?:async\s+)?(?:function|const|let|class)\s/m, 'the fact itself must be TRUE on the real file — an exemption resting on a false premise is worse than none');
+
+  // ── 2. LES TROIS ÉTATS RESTENT TROIS. « jamais exerçable » n'est pas « NON MESURÉ » : le premier
+  // est une limite déclarée, le second un trou à combler, et ils appellent des gestes opposés.
+  assert.equal(A.etatDeCouverture('smart-breaker', {}).etat, 'jamais exerçable', 'a declared limit must not read as a hole');
+  assert.equal(A.etatDeCouverture('un-slug-inconnu', {}).etat, 'NON MESURÉ', 'and an undeclared absence must still read as a hole — declaring one slug must never blur the category');
+
+  // ── 3. LA BANNIÈRE NE COMPTE PLUS QUE LES VRAIS TROUS. Elle comptait « pas de score », ce qui
+  // additionnait les deux états — donc elle affichait un ⚠️ que rien ne pouvait éteindre, et une
+  // alarme indélogeable devient du décor (leçon L6).
+  const banniere = lire1215('scripts/hooks/check-last-commit.mjs', 'utf8');
+  assert.match(banniere, /etatDeCouverture\(slug, perSlugScriptCoverage\)\.etat === "NON MESURÉ"/, 'the banner must count with the function that knows the three states, never by the absence of a score');
+
+  // ── 4. LE SECOND GARDE-FOU : LA RAISON SE PÉRIME AUSSI, PAS SEULEMENT LE FICHIER. Le jour où
+  // quelqu'un ajoute un export, il y a une surface à tester et l'exemption la couvrirait en silence.
+  assert.deepEqual(A.findExemptionsDontLaRaisonADisparu(), [], 'today every "exports nothing" reason is still true');
+  const casse = A.findExemptionsDontLaRaisonADisparu(A.JAMAIS_EXERCABLES, { lireImpl: () => 'export function nouvelle() {}' });
+  assert.equal(casse.length, 1, 'MUST CATCH: the day the script starts exporting something, the exemption stops being true and must say so');
+  assert.match(casse[0].pourquoi, /en exporte désormais/, 'and the alert must name what changed');
+  const illisible = A.findExemptionsDontLaRaisonADisparu(A.JAMAIS_EXERCABLES, { lireImpl: () => { throw new Error('nope'); } });
+  assert.equal(illisible.length, 1, 'and an unreadable file is NOT a confirmation: the reason is neither confirmed nor denied, and it is not assumed (leçon L5)');
+
+  // ── 5. MUST LET PASS : une exemption dont la raison ne parle pas d'exports n'est jamais examinée
+  // par ce garde-fou — il vérifie un fait précis, pas une impression générale.
+  assert.deepEqual(A.findExemptionsDontLaRaisonADisparu([{ slug: 'check-house', pourquoi: 'la suite se mesurerait elle-même' }], { lireImpl: () => 'export function x() {}' }), [], 'a reason that says nothing about exports is out of this guard’s scope');
+
+  console.log("Passed: le ⚠️1 que rien ne pouvait eteindre (2026-09-29, tache #1215). CE QUE C'ETAIT : AXA-CHECK affichait un ⚠️1 a CHAQUE commit depuis la tache #1189, et c'etait smart-breaker — le seul des 40 outils dont la couverture etait NON MESUREE. LA CAUSE, verifiee et non supposee : check-gemini-quota.mjs n'exporte RIEN. C'est un script a corps de premier niveau, ce que la suite documentait deja nommement ailleurs. Il n'y a litteralement aucune fonction a importer, donc aucune a exercer — ce n'est pas un test qui manque, c'est une surface qui n'existe pas. Et son corps sonde les cles pour de vrai : l'exercer couterait des appels API a chaque commit, exactement comme check-spirit. L'EXEMPTION EST DONC DECLAREE AVEC SA RAISON, et le trou qu'elle laisse est dit franchement : le jour de la panne, cet outil est le premier qu'on lance, et rien ne garantit mecaniquement qu'il marche encore — c'est exactement ce qui est arrive a check-spirit, reste casse six jours sans que rien ne le dise. DEUXIEME DEFAUT TROUVE EN CHEMIN : la banniere comptait « pas de score », ce qui additionnait « NON MESURE » (un trou a combler) et « jamais exercable » (une limite declaree). AXA-CHECK separe soigneusement ces trois etats et dit lui-meme qu'ils ne se confondent jamais ; la banniere, elle, les melangeait — donc elle affichait un ⚠️ que rien ne pouvait eteindre, et une alarme indelogeable devient du decor. TROISIEME PIECE, et c'est celle qui empeche l'exemption de pourrir : une raison se perime aussi, pas seulement un fichier. Le jour ou quelqu'un ajoute un export a ce script, il y a une surface a tester et l'exemption la couvrirait en silence. Un garde-fou verifie donc que le fait invoque est TOUJOURS vrai, et un fichier illisible ne vaut jamais confirmation.");
+}
+await testExemptionSmartBreaker();
+
 
 
 

@@ -195,3 +195,33 @@ réellement exercés** (gain immédiat) et **7 ne le sont jamais** — dont les 
 registre, l'élargissement produirait **sept alertes qu'aucun geste ne peut faire taire** (leçon L36),
 et un garde-fou qui crie sans issue devient du décor (L6). Une assertion du filet garantit que le
 périmètre n'a pas grandi tout seul.
+
+## Le ⚠️1 que rien ne pouvait éteindre (2026-09-29, tâche #1215)
+
+**Ce que c'était** : AXA-CHECK affichait un `⚠️1` à CHAQUE commit depuis la tâche #1189, et c'était
+`smart-breaker` — le seul des 40 outils dont la couverture était NON MESURÉE.
+
+**La cause, vérifiée et non supposée** : `check-gemini-quota.mjs` n'exporte RIEN. C'est un script à
+corps de premier niveau, ce que la suite de tests documentait déjà nommément ailleurs. Il n'y a
+littéralement aucune fonction à importer, donc aucune à exercer — **ce n'est pas un test qui manque,
+c'est une surface qui n'existe pas**. Et son corps sonde les clés pour de vrai : l'exercer coûterait
+des appels API à chaque commit, exactement comme `check-spirit`.
+
+**L'exemption est donc déclarée avec sa raison, et le trou qu'elle laisse est dit franchement** : le
+jour de la panne, cet outil est le premier qu'on lance, et rien ne garantit mécaniquement qu'il
+marche encore — c'est exactement ce qui est arrivé à `check-spirit`, resté cassé six jours sans que
+rien ne le dise. Deux gestes l'atténuent, écrits plutôt que supposés : la charte impose de le lancer
+à la main dès un blocage 429/503 répété, et sa logique de fond vit dans `gemini-key-health.mjs` et
+`api-providers.mjs`, qui sont mesurés, eux.
+
+**Deuxième défaut trouvé en chemin** : la bannière de commit comptait « pas de score », ce qui
+additionnait « NON MESURÉ » (un trou à combler) et « jamais exerçable » (une limite déclarée). Cet
+outil sépare soigneusement ces trois états et dit lui-même qu'ils ne se confondent jamais ; la
+bannière, elle, les mélangeait — donc elle affichait un ⚠️ que rien ne pouvait éteindre, et une
+alarme indélogeable devient du décor (leçon L6). Elle compte désormais avec `etatDeCouverture()`.
+
+**Troisième pièce, et c'est celle qui empêche l'exemption de pourrir** : une RAISON se périme aussi,
+pas seulement un fichier. `findExemptionsDontLaRaisonADisparu()` vérifie que le fait invoqué — « ce
+script n'exporte aucune fonction » — est toujours vrai. Le jour où quelqu'un y ajoute un export, il
+y a une surface à tester et l'exemption la couvrirait en silence. Un fichier illisible ne vaut
+jamais confirmation (leçon L5).

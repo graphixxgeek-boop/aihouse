@@ -14,7 +14,7 @@ import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 // sans rien changer là où ça compte, très exactement la faute qu'on vient de corriger ailleurs.
 import { loadMemoire } from "../safe-export.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
-import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES, SLUGS_COUVERTS_PAR_AXA } from "../axa-check.mjs";
+import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, etatDeCouverture, LIB_MAP, AGENT_SCRIPT_FILES, SLUGS_COUVERTS_PAR_AXA } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport, fusionnerClusters } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
@@ -365,9 +365,15 @@ try {
     // angle mort, pas un outil sain — et c'est le seul chiffre honnête ici, puisque aucune barre de
     // couverture n'est déclarée et qu'en inventer une ferait juger sans critère (BP5).
     // Si le relevé lui-même manque, on rend `undefined` et le ⚪ redevient vrai.
+    // LA BANNIÈRE CONFONDAIT DEUX DES TROIS ÉTATS (corrigé le 2026-09-29, tâche #1215). Elle
+    // comptait « pas de score », ce qui mélange « NON MESURÉ » — un trou à combler — et « jamais
+    // exerçable », une limite DÉCLARÉE avec sa raison écrite. AXA-CHECK sépare soigneusement les
+    // trois et dit lui-même qu'ils ne se confondent jamais ; la bannière, elle, les additionnait,
+    // donc elle affichait un ⚠️ que rien ne pouvait éteindre — une alarme indélogeable devient du
+    // décor (leçon L6). On compte désormais avec la fonction qui connaît les trois états.
     etat("AXA-CHECK", reveille("axa-check"), perSlugScriptCoverage === undefined
       ? undefined
-      : SLUGS_COUVERTS_PAR_AXA.filter((slug) => scriptRobustnessScore(slug, perSlugScriptCoverage) === undefined).length),
+      : SLUGS_COUVERTS_PAR_AXA.filter((slug) => etatDeCouverture(slug, perSlugScriptCoverage).etat === "NON MESURÉ").length),
     etat("CLEAN-DIRTY-OLD", reveille("clean-dirty-old"), cleanDirtyOldFlagged === undefined ? undefined : (cleanDirtyOldFlagged ? 1 : 0)),
     etat("CLONE-HUNTER", reveille("clone-hunter"), cloneHunterFindingsCount),
     etat("ALWAYS-NEW-CODE", reveille("always-new-code"), alwaysNewCodeFlagged === undefined ? undefined : (alwaysNewCodeFlagged ? 1 : 0)),

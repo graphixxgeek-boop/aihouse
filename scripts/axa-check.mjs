@@ -422,6 +422,21 @@ export const JAMAIS_EXERCABLES = [
   { slug: "sites-env", pourquoi: "il charge l'environnement du site ; l'exercer demanderait de démarrer le vrai runtime, ce qu'aucun test gratuit ne fait" },
   { slug: "run-framework", pourquoi: "il lance le PRODUIT, pas l'outillage — rang Hors Agence : le filet n'a rien à exercer chez lui" },
   { slug: "check-spirit", pourquoi: "chacun de ses passages envoie de vraies provocations au vrai modèle : l'exercer à chaque commit coûterait de vrais appels API (Articles 8 et 22). Et c'est précisément pour ça qu'il est resté CASSÉ du 2026-09-21 au 2026-09-27 sans que rien ne le dise — l'exemption est légitime, le trou qu'elle laisse est réel, et le déclarer EST la protection (Article 27)." },
+  // AJOUTÉ LE 2026-09-29 (tâche #1215), et pour DEUX raisons qui tiennent chacune seule. D'abord
+  // `check-gemini-quota.mjs` n'exporte RIEN : c'est un script à corps de premier niveau, ce que la
+  // suite de tests documente déjà nommément ailleurs. Il n'y a littéralement aucune fonction à
+  // importer, donc aucune à exercer — ce n'est pas un test qui manque, c'est une surface qui
+  // n'existe pas. Ensuite son corps SONDE les clés pour de vrai : l'exercer coûterait des appels
+  // API à chaque commit, exactement comme check-spirit juste au-dessus (Articles 8 et 22).
+  //
+  // LE TROU QU'ELLE LAISSE EST RÉEL, ET LE DIRE EST TOUTE LA PROTECTION (Article 27) : le jour de
+  // la panne, cet outil est le premier qu'on lance, et rien ne garantit mécaniquement qu'il marche
+  // encore. C'est précisément ce qui est arrivé à check-spirit, resté cassé six jours sans que rien
+  // ne le dise. Deux gestes le couvrent malgré tout, et ils sont volontairement écrits ici plutôt
+  // que supposés : la charte impose de le lancer à la main dès un blocage 429/503 répété, et sa
+  // logique de fond — l'ordre des clés, la mémoire des échecs, la lecture des réponses — vit dans
+  // gemini-key-health.mjs et api-providers.mjs, qui sont mesurés, eux.
+  { slug: "smart-breaker", pourquoi: "check-gemini-quota.mjs n'exporte AUCUNE fonction (script à corps de premier niveau) et son corps sonde les clés pour de vrai : il n'y a rien à importer, et l'exercer coûterait des appels API à chaque commit. Le trou est réel — c'est l'outil du jour de la panne — et il est atténué par sa logique de fond, qui vit dans gemini-key-health.mjs et api-providers.mjs, mesurés eux" },
 ];
 
 export function raisonDeNonExercice(slug, registre = JAMAIS_EXERCABLES) {
@@ -440,6 +455,30 @@ export function findExemptionsSansScript(registre = JAMAIS_EXERCABLES, { root = 
     .map((e) => ({ ...e, chemin: scriptPourSlug(e.slug) }))
     .filter((e) => !e.chemin || !existe(join(root, e.chemin)))
     .map((e) => ({ slug: e.slug, pourquoi: `« ${e.slug} » est exempté d'exercice mais aucun script ne porte ce nom : l'exemption ne protège plus rien et pourrait un jour couvrir le mauvais fichier` }));
+}
+
+// LE SECOND GARDE-FOU DE LA LISTE MANUELLE (2026-09-29, tâche #1215). Le premier vérifie que le
+// script existe encore ; celui-ci vérifie que la RAISON tient encore. Une exemption qui s'appuie
+// sur « ce script n'exporte aucune fonction » cesse d'être vraie le jour où quelqu'un y ajoute un
+// export — et ce jour-là il y a une surface à tester, mais l'exemption continuerait de la couvrir
+// en silence. Une raison qui se périme sans prévenir est pire qu'une absence de raison : elle a
+// l'air d'une décision.
+export const MOTIF_RAISON_SANS_EXPORT = /n'exporte AUCUNE fonction/i;
+export const MOTIF_EXPORT_DE_FONCTION = /^export\s+(?:async\s+)?(?:function|const|let|class)\s/m;
+
+export function findExemptionsDontLaRaisonADisparu(registre = JAMAIS_EXERCABLES, { root = ROOT, lireImpl = null } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const out = [];
+  for (const e of registre) {
+    if (!MOTIF_RAISON_SANS_EXPORT.test(String(e.pourquoi ?? ""))) continue;
+    const chemin = scriptPourSlug(e.slug);
+    let source;
+    try { source = lire(chemin); } catch { out.push({ slug: e.slug, pourquoi: `« ${e.slug} » est exempté au motif qu'il n'exporte rien, mais ${chemin} n'a pas pu être lu : la raison n'est ni confirmée ni démentie, et on ne la suppose pas` }); continue; }
+    if (MOTIF_EXPORT_DE_FONCTION.test(source)) {
+      out.push({ slug: e.slug, pourquoi: `« ${e.slug} » est exempté au motif qu'il n'exporte AUCUNE fonction — or ${chemin} en exporte désormais. Il y a une surface à tester, et l'exemption la couvrirait en silence` });
+    }
+  }
+  return out;
 }
 
 export function etatDeCouverture(slug, perSlug, registre = JAMAIS_EXERCABLES) {
@@ -655,6 +694,8 @@ function main() {
     }
     const exemptionsMortes = findExemptionsSansScript();
     for (const x of exemptionsMortes) console.log(`  🚨 ${x.pourquoi}`);
+    // La raison d'une exemption se périme aussi, pas seulement son fichier (2026-09-29, #1215).
+    for (const x of findExemptionsDontLaRaisonADisparu()) console.log(`  🚨 ${x.pourquoi}`);
   }
 
   console.log(`\nPour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]`);
