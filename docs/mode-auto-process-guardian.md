@@ -260,7 +260,20 @@ le même ou un autre — les redevine, et un réglage redeviné est un réglage 
 qui n'est pas écrit n'existera plus demain, et ça vaut pour un intervalle en minutes comme pour une
 règle de la charte.
 
-**LES DEUX RÉVEILS, ET IL EN FAUT DEUX — c'est le cœur du dispositif :**
+**CORRECTION DU 2026-09-29 — ILS SONT TROIS, PAS DEUX, ET C'EST ACQUIS.** Cette section décrivait
+deux réveils. La nuit du 28 au 29 en a armé **TROIS**, et c'est ce dispositif-là qui a tenu plus de
+seize heures sans arrêt. Le troisième est un **SECOND filet horaire, indépendant du premier**, sur
+la même minute : il tombe même si le filet principal a échoué. Deux messages de plus par heure
+contre la suppression du point de défaillance unique. Sa décision au retour, mot pour mot : *« pas
+besoin de TESTER, on sait CE QUI FONCTIONNE »* — **ces réglages ne se rediscutent plus et ne se
+re-mesurent plus.** Le tableau ci-dessous garde les deux premiers ; le troisième est le jumeau du
+deuxième, à ceci près qu'il ne partage avec lui aucun mécanisme.
+
+**ET UN QUATRIÈME GESTE, QUI N'EST PAS UN RÉVEIL MAIS QUI FERME LE CYCLE** : à la fin du mode auto,
+on **DÉSACTIVE** les filets plutôt que de les supprimer. Réversible d'un clic, et leurs prompts
+restent lisibles pour la nuit suivante — un réglage supprimé est un réglage à redeviner.
+
+**LES DEUX PREMIERS RÉVEILS, ET IL EN FAUT AU MOINS DEUX — c'est le cœur du dispositif :**
 
 | | Le rythme | La garantie |
 |---|---|---|

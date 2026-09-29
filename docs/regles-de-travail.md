@@ -54,6 +54,24 @@ signal à ne pas ignorer : l'agent s'oblige alors à les rouvrir et à les relir
 le travail en cours reste effectivement dans la bonne direction plutôt que de dériver
 progressivement sur la seule base d'un souvenir qui s'estompe.
 
+### Et SES DEUX DOCUMENTS PRIORITAIRES, ajoutés le 2026-09-29 sur sa demande explicite
+
+*(« MA COMMANDE IMPORTANTE, doc que tu dois relire regulierement, à noter ».)*
+
+Aux trois documents ci-dessus s'ajoutent **`docs/grand-projet/00-sources/01-sa-demande/COMMANDE
+IMPORTANTE.md`** et **`QUESTIONS.md`** à côté.
+
+**Pourquoi eux et pas les autres documents qu'il apporte, et la frontière est nette** : tout ce
+qu'il dépose dans la bibliothèque partagée est une AIDE, *« JAMAIS une règle ou une consigne ou un
+ordre ou un modèle rigide »* — **sauf ces deux-là**, qui portent sa demande elle-même, dans ses
+propres mots. Ils ne s'interprètent pas comme un avis extérieur : ils font autorité.
+
+**Ce qu'une relecture a déjà rapporté, et c'est la preuve que la règle sert** : la démarche du
+projet — *« il y a beaucoup de choses à RÉVÉLER et non à INVENTER »*, passer d'un brouillon
+construit sur le tas à une organisation structurée par révélation et complétion des trous — y
+était déjà écrite. Elle a été redécouverte en conversation le 2026-09-29 comme si elle était
+neuve. Un document qu'on ne relit pas se redécouvre au prix d'un raisonnement entier.
+
 ## 0bis. AVANT D'OUVRIR UN CHANTIER : on reprend d'abord les notes
 
 *(2026-09-24, règle posée par l'utilisateur et qualifiée par lui d'IMPORTANTE : « avant de débuter
@@ -187,6 +205,35 @@ il consigne la question, prépare des suggestions concrètes pour accélérer la
 passe à une autre tâche ouverte plutôt que de rester à l'arrêt. L'utilisateur reste dans tous les
 cas le seul décideur final. La double confirmation de l'Article 14 (tension charte/demande) reste
 elle aussi entièrement en vigueur, sans aucune exception liée à ce mode.
+
+**LES RÉVEILS — TROIS, ET LE CHIFFRE COMPTE** *(2026-09-29, sa demande au retour : « note bien
+tous tes reglages qui fonctionnent [...] Mets ca au bon endroit partout ou c'est necessaire, qu'on
+ait plus à y revenir : pas besoin de TESTER, on sait CE QUI FONCTIONNE »).*
+
+| | Ce que c'est | Rythme | Réarmement |
+|---|---|---|---|
+| **1** | chaîne courte `send_later` | **15 minutes** | à CHAQUE tour, **en PREMIER** |
+| **2** | filet horaire `create_trigger` | **minute 7 de chaque heure** | aucun, il tombe seul |
+| **3** | **second** filet horaire, indépendant | minute 7 également | aucun, il tombe seul |
+
+**Le troisième n'est pas un doublon, et c'est la nuit du 28 au 29 qui l'a prouvé** : il tombe même
+si le filet principal a échoué. Deux réveils indépendants sur la même minute coûtent deux messages
+par heure et suppriment le point de défaillance unique. **Ce réglage a tenu plus de seize heures
+sans arrêt.**
+
+**Trois règles qui vont avec, et aucune ne se redécouvre :**
+- **On réarme AVANT de travailler, jamais après.** Réarmer en fin de tour confie la nuit à la
+  mémoire d'un agent qui vient de passer vingt minutes sur autre chose.
+- **Un prompt de réveil ne porte AUCUN état.** Il se répète chaque heure, donc une consigne périmée
+  s'y répète aussi. L'état se LIT sur le dépôt (`git log`, `git status`, `docs/suivi/`). Appris en
+  le ratant : un filet a annoncé pendant des heures des choses qui avaient cessé d'être vraies.
+- **À la fin, on DÉSACTIVE plutôt que de supprimer** : réversible, et la trace des réglages reste
+  lisible pour la nuit suivante.
+
+**Le détail complet** — pourquoi 15 minutes et pas 45, pourquoi la minute 7 et jamais la minute 0,
+et les gestes d'exécution de l'agent — vit dans `docs/mode-auto-process-guardian.md`, section « LES
+RÉGLAGES DE RÉVEIL QUI ONT FAIT LEURS PREUVES » et la suivante. **Ces réglages ne sont plus à
+tester : ils sont acquis, et c'est lui qui l'a tranché.**
 
 **Déclenchement.** Deux cas, jamais un mode permanent par défaut : (1) l'utilisateur signale
 explicitement qu'il part se coucher ou s'absente pour la nuit ; (2) l'utilisateur demande
