@@ -237,5 +237,29 @@
     "lecon": "Le schéma est toujours le même : quelqu'un a fait le travail honnête en AMONT — déclarer l'unité réelle, marquer un horodatage perdu, enregistrer la date de passage — et le CONSOMMATEUR en aval ne lit pas ce qu'on lui a laissé. Le défaut n'est donc presque jamais dans la mesure, il est dans le chemin entre la mesure et son affichage. LE RÉFLEXE CONCRET, et il coûte trente secondes : devant un chiffre qui sent l'approximation, ouvrir la structure de données qui l'alimente et regarder quels champs elle porte VRAIMENT. Trois fois sur trois aujourd'hui, le champ juste était là, inutilisé.",
     "rienARetenir": false,
     "date": "2026-09-28T14:53:03.525Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Un contre-test qui exige un ZÉRO sur le dépôt VIVANT finit par interdire d'écrire — trois fois en une heure, et la troisième a tranché.",
+    "contexte": "Nuit du 2026-09-29, tâches #1202, #1204 et #1210. (1) Une assertion exigeait « au moins un pont de réexport écarté sur CE dépôt » et nommait le cas qui la satisfaisait ; nettoyer ce cas a fait rougir le filet. (2) Une autre exigeait ZÉRO paire de documents jumeaux ; ajouter une décision au registre en a créé deux, écrire les deux frontières réclamées en a créé deux autres, et écarter le document en cause a déplacé le problème sur la fiche du détecteur lui-même.",
+    "lecon": "Le schéma est toujours le même, et il est vicieux parce que le test paraît EXIGEANT : une assertion calée sur l'état du dépôt du jour ne mesure pas le code, elle mesure le disque. Elle vire au rouge quand le dépôt s'AMÉLIORE — un doublon nettoyé, une documentation écrite — donc elle enseigne exactement le contraire de ce qu'on veut. LE RÉFLEXE CONCRET : devant un contre-test qui lit la donnée vivante, se demander « qu'est-ce qui le fait échouer ? ». Si la réponse contient « quelqu'un a amélioré quelque chose », l'assertion est le défaut. Ce qui doit rester sur le dépôt réel, c'est que le mécanisme TOURNE et que sa sortie soit bien formée ; le pouvoir de détection, lui, se prouve sur une fixture, qui ne bouge jamais.",
+    "rienARetenir": false,
+    "date": "2026-09-29T13:16:50.999Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Un outil qui propose une issue sans savoir la reconnaître transforme son propre constat en bruit permanent.",
+    "contexte": "Nuit du 2026-09-29, tâche #1212. Le plan d'action d'EL-PROFESSOR proposait depuis toujours deux issues sur la fraîcheur de l'Article 0 : relancer check-spirit, OU écrire pourquoi le ton n'a pas à être remesuré. La seconde n'existait que dans cette phrase — aucun code ne savait lire une raison écrite. J'ai écrit la raison en #1211, et le constat est revenu identique au passage suivant.",
+    "lecon": "Une issue nommée dans un plan d'action est une PROMESSE faite au lecteur : s'il la suit, quelque chose doit changer. Quand rien ne change, il apprend que ce constat est du décor, et il cesse de le lire — y compris le jour où il compte vraiment. LE RÉFLEXE CONCRET : en écrivant un plan d'action, relire chaque issue proposée en se demandant « si quelqu'un la prend, mon outil le verra-t-il ? ». Si non, soit on la câble, soit on ne la propose pas. Et le corollaire vaut aussi pour moi : une raison écrite dans le suivi n'est pas écrite là où l'outil regarde.",
+    "rienARetenir": false,
+    "date": "2026-09-29T13:16:51.006Z"
+  },
+  {
+    "nature": "captation",
+    "quoi": "Sur huit doublons instruits, pas UN seul n'avait la duplication pour vrai sujet.",
+    "contexte": "Nuit du 2026-09-29, tâches #1200 à #1207. Huit grappes signalées par CLONE-HUNTER, prises une par une avec la même question posée d'abord : POURQUOI ces deux blocs existent-ils ? Résultat : un gabarit qui ne savait pas lire un champ que onze outils écrivent, une paire qu'il ne fallait SURTOUT pas fondre mais dont 22 lignes étaient mortes, le préambule de balayage qui perd un fichier illisible en silence à 38 endroits sur 42, deux contrôles qui ne lisaient que 44 % du registre, un chargeur partagé contourné trois fois en six jours, une clé d'index écrite à quatre endroits, et un rapport construit deux fois avec deux horloges.",
+    "lecon": "Un détecteur de duplication ne trouve pas de la duplication : il trouve les endroits où DEUX PERSONNES ONT EU LE MÊME BESOIN. La ressemblance n'est que le symptôme visible ; la question utile est ce que ce besoin partagé révèle du code autour. LE RÉFLEXE CONCRET, et il a payé huit fois sur huit : ne jamais fondre deux blocs parce qu'ils se ressemblent. D'abord chercher POURQUOI les deux existent — et dans deux cas sur huit la bonne réponse était de ne PAS les fondre, avec la raison écrite à côté du code.",
+    "rienARetenir": false,
+    "date": "2026-09-29T13:16:51.008Z"
   }
 ]

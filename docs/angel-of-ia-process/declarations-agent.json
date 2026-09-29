@@ -1,10 +1,26 @@
 {
- "at": "2026-09-22T19:42:26.267Z",
+ "at": "2026-09-29T13:17:31.546Z",
  "faits": {
-  "suivi-meme-commit": true,
-  "push-au-fil-de-l-eau": true,
-  "questions-avant": true,
-  "point-par-point": false,
-  "fenetre-dediee": true
+  "eval-hors-ronde": "EL-PROFESSOR et god-of-all-process lancés sur la vague de cette nuit, hors Ronde — et le passage d'EL-PROFESSOR a directement produit la tâche #1212.",
+  "suivi-meme-commit": "13 tâches, 13 lignes de suivi, chacune dans le commit qui porte son travail.",
+  "push-au-fil-de-l-eau": "poussé après chaque commit, jamais groupé.",
+  "questions-avant": "aucune demande nouvelle reçue cette nuit : aucune question due, donc aucune posée.",
+  "point-par-point": "aucune demande à plusieurs points reçue cette nuit.",
+  "fenetre-dediee": "aucune question posée cette nuit, donc aucune fenêtre à ouvrir.",
+  "outil-obligatoire": false,
+  "temps-reel-lu": "heure LUE via agent-du-temps avant CHAQUE ligne de suivi, jamais tapée — 13 lectures pour 13 lignes.",
+  "repercussion-referentiel": "chaque changement de comportement a sa fiche mise à jour dans le MÊME commit (report-template, safe-export ×2, check-suivi-fidelity, le-coordinateur, ezechiel-les-tests, abraham-les-references, el-professor).",
+  "seuil-gros-prompt": "aucune saisine reçue cette nuit.",
+  "reveil-arme": "réveil réarmé avant chaque reprise de travail, sans exception.",
+  "reprise-des-notes": false,
+  "resume-contextualise": "aucun compte rendu final livré cette nuit — le rapport l'a été à 08:10, et la consigne était de ne pas le relivrer.",
+  "escalade": "aucun chantier ouvert : uniquement des correctifs d'outillage nés de constats d'outils, donc aucun niveau de l'escalade n'a été sauté.",
+  "alignement-a-la-creation": "aucun document de stratégie ni de plan créé cette nuit.",
+  "reveil-a-jour": "le prompt du réveil a été réécrit à CHAQUE réarmement avec l'état réel du dépôt, jamais recopié.",
+  "xp-lecons": "trois entrées écrites au journal XP pour cette nuit — le contre-test qui exige un zéro sur le dépôt vivant, l'outil qui propose une issue qu'il ne sait pas reconnaître, et les huit doublons dont aucun n'avait la duplication pour vrai sujet.",
+  "fiabiliser": "filet complet relancé avant chaque commit, et chaque correctif comparé AVANT/APRÈS sur la sortie réelle de l'outil ; quatre cassures délibérées vérifiées sur les contre-tests de #1200.",
+  "optimiser": "posé à chaque clôture, et deux tâches ne sont QUE cette question — #1203 (ne rien corriger et poser la question) et #1209 (refuser d'inventer cinq lecteurs).",
+  "harmoniser": "chaque tâche a sa fiche de référentiel mise à jour, sa ligne de suivi au même format que ses voisines, et son contre-test rangé avec les autres.",
+  "messages-courts": "aucun message reçu cette nuit."
  }
 }
