@@ -2234,7 +2234,24 @@ export function actionChainLines(resultats = []) {
 // vérifie deux choses mécaniques — un plan d'action annonce-t-il au moins une tâche, et ces tâches
 // existent-elles pour de vrai dans le suivi.
 export const MOTIF_SECTION_PLAN = /^#{1,4}\s*Plan d['’]action/im;
-export const MOTIF_TACHE_ANNONCEE = /(?:tâche|tache)\s*\*{0,2}#(\d+)/gi;
+// LE MOTIF EXIGEAIT UN MOT QUE LE DÉPÔT N'ÉCRIT PAS TOUJOURS (2026-09-30, tâche #1250).
+// Il réclamait « tâche » juste avant le numéro. Or la moitié des plans de ce dépôt écrivent
+// « → **#754** », « **#741**, **#744** » ou « (cf. #818) » — un rattachement parfaitement valide,
+// invisible au contrôle. MESURÉ sur les 188 constats RETENU de docs/ : l'ancien motif en voyait
+// 47, alors que **89 portent réellement un numéro**. Il en manquait 42, soit près de la moitié.
+//
+// LE COÛT EST CELUI DE LA LEÇON L4, et il est plus grave ici qu'ailleurs : un contrôle qui accuse
+// à tort cesse d'être lu, et celui-ci accusait la discipline la MIEUX tenue du projet. Pire, il
+// rendait le taux d'actionnabilité de l'Article 28 « non calculable » alors que la donnée était
+// là — un signal ADJACENT (« le mot tâche est absent ») lu comme le signal visé (« aucune tâche
+// n'est rattachée »).
+//
+// POURQUOI ÉLARGIR EST SANS RISQUE ICI, alors qu'ailleurs ce serait ouvrir la porte au bruit :
+// le numéro capté n'est jamais cru sur parole — la ligne suivante VÉRIFIE qu'il existe dans le
+// suivi durable. Un faux positif (un « #3 » qui n'était pas une tâche) ressort donc en référence
+// morte plutôt qu'en faux vert, et c'est le bon sens de l'erreur. Le plancher à deux chiffres
+// écarte au passage les « #1 » d'énumération, qui ne sont jamais des numéros de tâche ici.
+export const MOTIF_TACHE_ANNONCEE = /(?:t[âa]che\s*\*{0,2})?#(\d{2,5})\b/gi;
 
 // L'ESTIMATION AVANT DE LANCER — DANS TOUS LES PROCESS, OU EXEMPTÉE EXPRÈS (2026-09-25, tâche #843,
 // instruction de #242 : « estimation temps + tokens + API : consolider dans TOUS les process »).

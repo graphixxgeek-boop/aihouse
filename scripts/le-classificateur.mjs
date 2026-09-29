@@ -2034,6 +2034,20 @@ export const MOTIFS_MEMOIRE = [
   // questions consolidées sont propres à ce chantier. Le sous-dossier `syntheses/`, lui, ne contient
   // que des annotations de SES documents à LUI : toujours de la mémoire, jamais un gabarit.
   { motif: /^docs\/grand-projet\/01-absorption\/syntheses\//, pourquoi: "l'annotation d'un document qu'il a déposé : elle n'a de sens qu'avec sa source, qui est elle-même propre à ce chantier. Ce qui voyage est la MÉTHODE d'annotation, écrite ailleurs" },
+  // ET LA RÈGLE S'INVERSE POUR LE RESTE DU DOSSIER (2026-09-30, tâche #1256) — quatrième
+  // démonstration de la même leçon, et c'est le commentaire ci-dessus qui l'avait annoncée : il
+  // écrit qu'une liste tenue à la main « s'est périmée au fichier suivant », et le fichier suivant
+  // est arrivé. La relecture de la bibliothèque a fait échouer le filet le soir même, parce que
+  // les quatre fichiers de ce dossier étaient nommés un par un.
+  //
+  // CE QUI CHANGE, ET CE N'EST PAS UN ÉLARGISSEMENT AVEUGLE : la mise en garde du commentaire
+  // au-dessus reste vraie — ce dossier EST mixte. Mais les deux moitiés n'ont pas le même avenir.
+  // Les gabarits génériques sont DEUX, ils existent déjà, et un troisième serait une surprise :
+  // ce dossier parle de l'absorption de SON corpus à lui. Tout ce qu'on y déposera désormais sera
+  // de la mémoire de ce chantier. On nomme donc le cas RARE (les deux gabarits, déclarés PART
+  // juste en dessous, qui gagnent sur cette règle) et on DÉRIVE le cas fréquent — jamais l'inverse,
+  // qui oblige à penser au classement à chaque fichier écrit.
+  { motif: /^docs\/grand-projet\/01-absorption\//, pourquoi: "la mémoire de l'absorption de SON corpus : trace de lecture, questions consolidées, relecture. Ce qui voyage est la FORME de ces documents, écrite dans les gabarits du même dossier — jamais leur contenu" },
   { motif: /^docs\/grand-projet\/03-plan-daction\//, pourquoi: "le plan de CE chantier : où tombe chaque idée dans nos sept étapes à nous. La méthode de placement voyage, écrite dans la charte ; l'ordre de nos chantiers ne voyage nulle part" },
   { motif: /^docs\/simulations\//, pourquoi: "les conversations archivées de Lia et Noé" },
   { motif: /^docs\/plans\//, pourquoi: "un plan de chantier est la photographie d'un moment" },

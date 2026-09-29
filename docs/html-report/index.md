@@ -13,7 +13,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/questions-de-calibrage.html` | `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.md` | 18657 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 19320 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/notes-des-echanges-de-depart.html` | `docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md` | 19489 | 2026-09-29 06:13Z |
-| `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 20884 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/la-cible.html` | `docs/grand-projet/02-strategie/la-cible-2026-09-29.md` | 18098 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/decisions-qui-attendent.html` | `docs/grand-projet/02-strategie/decisions-qui-attendent.md` | 17653 | 2026-09-29 15:20Z |
 | `docs/grand-projet/html/rapport-de-nuit-2026-09-29.html` | `docs/rapports-de-nuit/2026-09-29-rapport.txt` | 53886 | 2026-09-29 16:39Z |
@@ -22,3 +21,9 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/questions-de-degrossissage.html` | `docs/grand-projet/02-strategie/questions-de-degrossissage.md` | 19484 | 2026-09-29 20:08Z |
 | `docs/grand-projet/html/les-cinq-impossibles.html` | `docs/grand-projet/02-strategie/les-cinq-impossibles.md` | 16275 | 2026-09-29 21:27Z |
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 13995 | 2026-09-29 22:01Z |
+| `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 24506 | 2026-09-29 23:14Z |
+| `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 15409 | 2026-09-29 23:14Z |
+| `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 19680 | 2026-09-29 23:14Z |
+| `docs/grand-projet/html/propriete-et-securite-du-projet.html` | `docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md` | 17123 | 2026-09-29 23:23Z |
+| `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 15916 | 2026-09-29 23:23Z |
+| `docs/grand-projet/html/relecture-de-la-bibliotheque.html` | `docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md` | 16723 | 2026-09-29 23:30Z |

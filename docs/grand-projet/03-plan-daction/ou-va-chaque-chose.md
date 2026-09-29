@@ -106,6 +106,43 @@ exactement pour ça.
 **④ EXPLOITER TOUTE LA DATA DE VALEUR** de la soirée passée et de la nuit à venir — *« LA
 VALEURRRR »*, ses mots. Rien de ce qui a été mesuré ne doit rester dans la conversation seule.
 
+### ✅ CE QUI A ÉTÉ FAIT PENDANT QU'IL DORMAIT *(nuit du 2026-09-29 au 30)*
+
+**Ses trois consignes du coucher sont traitées. Voici où, et ce qui en est sorti.**
+
+| Sa consigne | État | Le résultat, en une ligne |
+|---|---|---|
+| **① la cible de 50 obligations** | ✅ mesurée | `02-strategie/la-route-vers-50-obligations.md` — **sa voie supposée est fermée**, ABRAHAM ne trouve qu'UNE paire redondante. La vraie route existe : 9 Articles portent 47 des 93 obligations. **Atterrissage : 55**, non arrondi |
+| **② la mutualisation chez ABRAHAM ?** | ✅ vérifié | **oui, c'est bien lui** — et c'est justement lui qui dit que la fusion ne marchera pas. La bonne question a donné la mauvaise réponse, et seule la mesure pouvait le dire |
+| **③ la relecture de la bibliothèque** | ✅ faite | `01-absorption/relecture-de-la-bibliotheque.md` — **la TARGET ARCHITECTURE répondait déjà à « plusieurs versions ? »**, et j'ai construit ma réponse sans la rouvrir trois heures plus tôt |
+| **④ exploiter toute la data de valeur** | ✅ en continu | rien de mesuré n'est resté dans la conversation : 12 tâches, 7 documents, 4 défauts corrigés |
+
+**Ses trois questions nouvelles sont répondues :**
+
+| Sa question | Où |
+|---|---|
+| la **sécurité** du projet (copie, vol, piratage) | `02-strategie/propriete-et-securite-du-projet.md` — mesurée sur le dépôt, pas supposée : **aucun secret versionné, aucune clé dans l'historique**. Le vrai risque n°1 est la PERTE, pas le vol |
+| la **propriété juridique**, prouvable au tribunal | même document — **la discipline documentaire imposée pour l'ingénierie EST le dossier de preuve que le droit réclame**. Deux points signalés : l'article L. 113-9 face au Copilot de son employeur, et la faiblesse probante des horodatages git |
+| la **plaquette commerciale** de l'Agence aujourd'hui | `02-strategie/plaquette-de-l-agence.md` — **7 promesses sur 7 sont vraies, et TOUTE la fiction est commerciale**. L'Agence est un produit complet sans entreprise autour |
+
+**Et son GO sur la règle #767** : le texte est écrit, en entrée 6 de
+`docs/plans/charte-diffs-a-approuver-2026-09-28.md`. **Rien n'est appliqué** — sa borne « tu me
+montres avant » tient. J'y joins une question de séquence, née après son accord : son GO est
+arrivé AVANT sa cible de 50, et les deux vont en sens contraire.
+
+**Quatre défauts corrigés en chemin, et ils sont tous de la même famille** — *un signal ADJACENT
+lu comme le signal visé* :
+
+1. **tool-brain** ne lisait qu'un champ sur trois — **69 prestations sur 74 introuvables par leur
+   propre nom**. C'est la porte que l'Article 31 rend OBLIGATOIRE.
+2. **Le contrôle de la chaîne des tâches** voyait 47 constats rattachés là où **89** le sont.
+3. **Mon propre garde-fou de pages HTML** bloquait la seule façon correcte de le satisfaire —
+   troisième forme du même défaut, dans le même outil, dans la même nuit.
+4. **La liste de classement tenue à la main** s'est périmée au fichier suivant, exactement comme
+   son propre commentaire l'avait prédit. Elle est désormais dérivée.
+
+---
+
 ### CE QUI EST POSÉ ET ATTEND SA RÉPONSE *(au 2026-09-29, 21h53 UTC)*
 
 | Ce qui l'attend | Où |

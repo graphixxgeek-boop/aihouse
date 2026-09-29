@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE QUI RALENTIT LE PROJET — mesuré sur ses quatre axes, et ce que ça dit des « plusieurs versions »</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T23:14:03.693Z</div>
+    <h1>CE QUI RALENTIT LE PROJET — mesuré sur ses quatre axes, et ce que ça dit des « plusieurs versions »</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâches <strong>#1250</strong> et <strong>#1251</strong>. Sa demande, mot pour mot : « je veux une analyse complète du sujet : qu'est-ce qui ralentit le codage ET/OU l'IA ET/OU le jeu ET/OU l'agence […] POURQUOI : pour définir correctement si on va VRAIMENT proposer plusieurs versions ».)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/03-plan-daction/ou-va-chaque-chose.md</code>
+<em>il exécute une demande de son fichier de réponses ; il ne propose aucune étape nouvelle.</em></p></div>
+<p><strong>L'outil, et son passage réel</strong> <em>(Article 31, faille n°8 — un outil cité sans passage enregistré est un outil qui n'a pas tourné)</em> : <strong>JESUS-LE-SAUVEUR</strong>, <code>node scripts/jesus-le-sauveur.mjs</code>, passage du <strong>2026-09-29 à 23h06 UTC</strong>. 350 lignes rendues. Ce document commente son rapport ; il ne le remplace pas.</p>
+<hr>
+<h3>CE QU'IL FAUT SAVOIR AVANT DE LIRE : JESUS NE VOIT PAS LES QUATRE AXES</h3>
+<p>Tu en as nommé quatre — le codage, l'IA, le jeu, l'Agence. <strong>L'outil en couvre trois.</strong> Il mesure le rythme, les obligations, l'attention et l'attente : c'est-à-dire <strong>le codage, moi, et l'Agence</strong>. Il ne sait rien dire du <strong>JEU</strong> — ni de sa lenteur de rendu, ni de son temps de réponse, ni de ce qu'un visiteur ressentirait.</p>
+<p><strong>Je le dis en premier plutôt qu'en note de bas de page</strong>, parce que la conclusion d'un rapport qui tait ce qu'il n'a pas regardé se lit comme une conclusion sur tout. Le quatrième axe attend une mesure que personne n'a encore construite, et c'est une tâche, pas un oubli.</p>
+<hr>
+<h3>① LE PLUS GROS FREIN EST UNE FILE D'ATTENTE, ET ELLE EST DE TON CÔTÉ</h3>
+<p><strong>17 décisions attendent ta réponse. La plus ancienne depuis 7 jours.</strong></p>
+<table><thead><tr><th>Depuis</th><th>Tâche</th><th>Sujet</th></tr></thead><tbody><tr><td>7 j</td><td>#390</td><td>Outillage / badge</td></tr><tr><td>5 j</td><td>#767</td><td>Charte / quelles autres règles à fort levier manquent ?</td></tr><tr><td>5 j</td><td>#814</td><td>Données / brancher un lecteur, ou déclarer l'absence</td></tr><tr><td>4 j</td><td>#819 · #823 · #830 · #842 · #845</td><td>Filet · compteur d'usage · idées · Ronde · file</td></tr></tbody></table>
+<p><strong>Ce que JESUS ajoute, et que je n'aurais pas su dire seule</strong> : au-delà d'un certain remplissage, le temps d'attente d'une file <strong>n'augmente plus proportionnellement, il explose</strong>. Ce n'est pas un avis sur ton rythme de réponse — c'est une propriété des files d'attente. Concrètement : <strong>chaque décision de plus ralentit aussi toutes les autres, y compris les faciles.</strong></p>
+<p><strong>Ce n'est pas un reproche, et je ne l'écris pas comme tel.</strong> Tu travailles la journée, tu rentres à 18h40, et tu as répondu à quarante-neuf questions hier soir. Le problème n'est pas ta vitesse : c'est que <strong>je pose plus vite que ce qu'un humain peut trancher</strong>, et que rien dans mon fonctionnement ne me le fait sentir. Il n'y a que deux sorties possibles, et la première est la mienne :</p>
+<ul><li><strong>Grouper mes questions par lots tranchables en une fois</strong> plutôt que de les déposer au fil de l'eau. Un lot de huit décisions liées se tranche en dix minutes ; huit questions isolées, jamais.</li><li><strong>Déclarer un défaut</strong> pour les décisions dormantes : au bout de N jours, la question part avec l'option que je recommande, révisable. <em>(Celle-là est une décision, donc elle t'appartient — et oui, j'ai conscience que je viens d'ajouter une dix-huitième ligne à la file.)</em></li></ul>
+<h3>② QUARANTE POUR CENT DU DÉLAI EST DE L'ATTENTE, ET C'EST UN PLAFOND</h3>
+<p><strong>Fluidité médiane : 60 %</strong> sur les 47 tâches ayant passé au moins une nuit. Autrement dit, <strong>40 % du temps écoulé entre le début et la fin d'une tâche est de l'attente pure.</strong></p>
+<p>Deux précisions que l'outil impose et que je ne dilue pas :</p>
+<ul><li><strong>304 tâches sont ÉCARTÉES du calcul</strong> — celles faites d'un trait. Leur fluidité vaut 100 % par construction, jamais par mérite ; les compter aurait gonflé le chiffre sans rien mesurer.</li><li><strong>C'est un PLAFOND, pas une valeur.</strong> Un jour portant un seul commit compte pour une journée travaillée entière. La fluidité réelle est donc <strong>plus basse que 60 %</strong>.</li></ul>
+<p>Les pires cas nommés : <strong>#493 à 17 %</strong> (1 jour travaillé sur 6 écoulés), <strong>#574 et #776 à 20 %</strong>, <strong>#604 et #749 à 25 %</strong>. <em>(#776 est celle qui a laissé passer le défaut de tool-brain corrigé cette nuit — cinq jours écoulés pour une journée de travail, et la moitié du défaut restée en place.)</em></p>
+<p><strong>Ce que la recherche extérieure dit là-dessus</strong>, et c'est ce qui rend ce chiffre actionnable : passer de 15 % à 30 % de fluidité <strong>divise le délai par deux</strong>. Le gain vit dans la suppression de l'attente, jamais dans le fait de travailler plus vite. Nous sommes à 60 % — mieux que la moyenne citée, et l'attente reste le premier poste.</p>
+<h3>③ LE COÛT DE CE QUI N'EST PAS LU — et c'est un cercle, pas une ligne</h3>
+<p>Deux mesures que personne ne rapproche jamais, et que JESUS croise exprès :</p>
+<ul><li><strong>483 lignes réparties sur 34 sections</strong> sont écrites à CHAQUE commit dans le fichier de reste, « relu à la demande » — c'est-à-dire par quelqu'un qui doit y penser.</li><li><strong>273 relances rapprochées</strong> du même outil sans aucun commit entre les deux, sur 848 passages (<strong>32 %</strong>) — et ce, après avoir écarté les 105 rafales du crochet, qui ne sont pas des frictions. En tête : <strong>find-deep-booster 99</strong>, <strong>data-archangel 61</strong>, <strong>agent-du-temps 22</strong>.</li></ul>
+<p><strong>Prises séparément, aucune des deux n'alerte. Ensemble elles décrivent un cercle :</strong> ce qui n'est pas vu passer se redemande. C'est le coût du changement de contexte — celui <strong>qui ne s'impute à aucune tâche, parce qu'il se paie ENTRE elles</strong>, et c'est exactement pour ça qu'il n'apparaît dans aucun bilan.</p>
+<p><strong>Et c'est du côté de l'Agence, pas du tien.</strong> Une bannière de 483 lignes par commit n'est pas de l'information : c'est du bruit qui rend l'information invisible.</p>
+<h3>④ LE COÛT D'UN OUTIL DE PLUS : DIX REGISTRES, ET PERSONNE NE DISCUTE LA SOMME</h3>
+<p><strong>Dix registres à renseigner pour chaque outil qui arrive.</strong> JESUS le formule mieux que je ne saurais : <em>« pris un par un ils sont tous justifiés ; c'est leur SOMME que personne ne discute — et elle se paie à chaque nouvel outil, pour toujours ».</em></p>
+<p>C'est le même mécanisme que les 93 obligations de la charte : aucune règle n'est de trop, c'est leur accumulation qui pèse. Et la mesure de la nuit le confirme par l'autre bout — voir <code>la-route-vers-50-obligations.md</code>.</p>
+<h3>⑤ UN FREIN QUI N'EN ÉTAIT PAS UN, ET LA CORRECTION EST PLUS INTÉRESSANTE QUE LA MESURE</h3>
+<p>JESUS annonce : <em>« PAS MESURÉ — 341 constats RETENUS dorment dans les rapports, et le taux d'actionnabilité N'EST PAS CALCULABLE […] Seuls 5 portent un #nnnn »</em>.</p>
+<p><strong>J'ai vérifié avant de le répéter, et c'est faux.</strong> Le contrôle qui produit ce chiffre cherche le mot « tâche » juste avant le numéro. Or la moitié des plans de ce dépôt écrivent <code>→ <strong>#754</strong></code> ou <code><strong>#741</strong>, <strong>#744</strong></code> — un rattachement parfaitement valide, invisible au contrôle.</p>
+<p><strong>Mesuré sur les 188 constats RETENU de <code>docs/</code> :</strong></p>
+<pre><code>   le motif du contrôle en voyait ........  47   (25 %)
+   portent RÉELLEMENT un numéro .........  89   (47 %)
+   ─────────────────────────────────────────────
+   constats bien rattachés, vus nulle part  42</code></pre>
+<p><strong>Le contrôle accusait la discipline la mieux tenue du projet</strong>, et déclarait « non calculable » un taux dont la donnée était là. C'est la leçon L4 dans sa forme la plus coûteuse — et le même défaut que celui corrigé chez tool-brain deux heures plus tôt : <strong>un signal ADJACENT lu comme le signal visé.</strong> Corrigé, testé, mesuré <em>(tâche #1250)</em>.</p>
+<p><strong>Le vrai chiffre reste perfectible</strong> : 53 % des constats RETENU ne portent aucune tâche. Mais c'est un travail de rattrapage, pas un mécanisme cassé — et la différence entre les deux diagnostics aurait coûté une nuit de chantier inutile.</p>
+<hr>
+<h3>ET DONC : FAUT-IL VRAIMENT PLUSIEURS VERSIONS ?</h3>
+<p><strong>Ta question n'était pas « qu'est-ce qui rame ». Elle était : est-ce que ces freins justifient de découper l'Agence en plusieurs versions.</strong> Voici ce que la mesure répond, et ce qu'elle ne répond pas.</p>
+<h4>CE QUE LA MESURE SOUTIENT — et c'est un argument que je n'attendais pas</h4>
+<p><strong>Aucun des freins mesurés ne vient de la TAILLE du code. Tous viennent du NOMBRE D'OBLIGATIONS ET DE SIGNAUX.</strong> Dix registres par outil, 483 lignes de bannière par commit, 34 sections, 93 obligations de charte, 17 décisions en file. Pas une seule fois : « c'est trop gros », « ça compile trop lentement », « le fichier est trop long ».</p>
+<p><strong>C'est un argument FORT pour plusieurs versions, et un argument FAIBLE pour les découper comme on le ferait d'habitude.</strong> Découper par fonctionnalité — « la version qui fait les tâches », « la version qui fait les process » — ne soulagerait rien : les dix registres et la bannière sont transverses, ils suivraient chaque morceau.</p>
+<p><strong>Ce que la mesure suggère à la place : découper par NIVEAU D'EXIGENCE, pas par fonction.</strong></p>
+<table><thead><tr><th>Version</th><th>Ce qu'elle impose</th><th>Pour qui</th></tr></thead><tbody><tr><td><strong>Légère</strong></td><td>le filet de sécurité, le suivi, un ou deux Gardiens</td><td>quelqu'un qui veut que son projet tienne, sans discipline imposée</td></tr><tr><td><strong>Standard</strong></td><td>+ les process, la Ronde, la charte réduite</td><td>un projet suivi dans la durée</td></tr><tr><td><strong>Complète</strong></td><td>ce que nous avons aujourd'hui</td><td>quelqu'un qui accepte de payer la rigueur au prix fort</td></tr></tbody></table>
+<p><strong>Le juge, c'est la loi de l'Agence</strong> : <em>son expérience à lui passe toujours en premier.</em> Une Agence qui impose dix registres à quelqu'un qui en voulait deux sert sa propre cohérence, pas son client. C'est exactement l'argument que tu as donné toi-même pour la cible de 50 obligations — <em>« sinon : effet déceptif en découvrant ça »</em>. <strong>Les deux décisions sont la même décision, prise à deux endroits.</strong></p>
+<h4>CE QUE LA MESURE NE RÉPOND PAS, ET QUE JE NE VAIS PAS DEVINER</h4>
+<ul><li><strong>Combien de versions.</strong> Trois est la découpe naturelle du tableau ci-dessus ; rien dans les chiffres ne l'impose plutôt que deux ou quatre.</li><li><strong>Si les versions sont des PRODUITS ou des RÉGLAGES.</strong> Trois dépôts à maintenir, ou un dépôt et un curseur ? Ce n'est pas la même Agence, et ce n'est pas la même charge pour nous.</li><li><strong>Le quatrième axe, le JEU.</strong> Il n'est pas mesuré, donc il ne pèse dans aucune de ces phrases.</li></ul>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>Le contrôle de la chaîne ne voyait que 47 des 89 constats réellement rattachés</td><td><strong>RETENU</strong></td><td>tâche <strong>#1250</strong> — corrigé, testé, mesuré cette nuit</td></tr><tr><td>L'analyse des freins sur trois axes, et ce qu'elle dit des versions</td><td><strong>RETENU</strong></td><td>tâche <strong>#1251</strong> — ce document</td></tr><tr><td>Le JEU n'est mesuré par aucun outil de lenteur</td><td><strong>RETENU</strong></td><td>tâche <strong>#1252</strong> — construire la sonde, ou déclarer qu'on ne mesurera pas cet axe</td></tr><tr><td>17 décisions en file, dont la plus ancienne depuis 7 jours</td><td><strong>À TRANCHER</strong></td><td>deux sorties proposées ci-dessus, dont l'une est de mon côté (grouper) et l'autre de la sienne (un défaut au bout de N jours)</td></tr><tr><td>Combien de versions, et produits ou réglages</td><td><strong>À TRANCHER</strong></td><td>c'est une décision de cadre, à joindre à la séance sur l'objectif ultime</td></tr><tr><td>53 % des constats RETENU ne portent aucune tâche</td><td><strong>À TRANCHER</strong></td><td>rattrapage historique : par lot, par période, ou déclaré grandfathered — même question que les 242 clôtures sans déclaration de fidélité, et elle se tranche une fois pour les deux</td></tr><tr><td>Les 483 lignes de bannière par commit</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>une décision de calibrage a déjà été prise sur ce sujet (tool-brain centralise en une bannière unique) ; la rouvrir à 23h sans lui serait rouvrir ce qu'il a déjà tranché (leçon L22). À reposer seulement si le chiffre monte encore</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

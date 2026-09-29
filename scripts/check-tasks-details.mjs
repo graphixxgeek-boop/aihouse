@@ -2572,7 +2572,12 @@ export const FAMILLES_DE_THEMES = {
   "Nommage & vocabulaire": ["Nommage", "TOOL_PORTEE"],
   "Outillage & garde-fous": ["Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille"],
   "Données & mesure": ["Données", "Conso", "Sauvegarde", "Profil utilisateur"],
-  "Le jeu et le site": ["Refonte graphique", "check-spirit"],
+  // « Jeu » a rejoint la famille le 2026-09-30 (tâche #1252) — et son arrivée dit quelque chose.
+  // La famille du JEU, qui est pourtant la raison d'être du projet, n'avait jusque-là que deux
+  // thèmes, tous deux périphériques : l'apparence et le ton. Aucune tâche ouverte ne portait le
+  // thème « Jeu » lui-même. Le garde-fou l'a attrapé au commit même où le thème est né, ce qui
+  // est exactement son travail (Article 24).
+  "Le jeu et le site": ["Refonte graphique", "check-spirit", "Jeu"],
 };
 
 export function familleDuTheme(theme, familles = FAMILLES_DE_THEMES) {

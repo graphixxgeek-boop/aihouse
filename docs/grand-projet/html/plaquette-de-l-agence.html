@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA PLAQUETTE COMMERCIALE DE L'AGENCE — écrite aujourd'hui, avec l'écart écrit en face</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T23:23:12.535Z</div>
+    <h1>LA PLAQUETTE COMMERCIALE DE L'AGENCE — écrite aujourd'hui, avec l'écart écrit en face</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/plaquette-de-l-agence.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche <strong>#1255</strong>. Sa demande, et elle est astucieuse : produire <strong>la plaquette commerciale détaillée de l'Agence telle qu'elle est aujourd'hui</strong>, comme exercice — parce qu'écrire ce qu'on vendrait révèle l'écart entre la fiction et la réalité mieux qu'un audit.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/03-plan-daction/ou-va-chaque-chose.md</code>
+<em>il répond à une demande de son fichier de réponses ; il ne propose aucune étape nouvelle.</em></p></div>
+<hr>
+<h3>LA RÈGLE DE CE DOCUMENT, ET ELLE EST LA MOITIÉ DE L'EXERCICE</h3>
+<p><strong>Chaque promesse porte son étiquette, sans exception :</strong></p>
+<table><thead><tr><th>Étiquette</th><th>Ce qu'elle veut dire</th></tr></thead><tbody><tr><td>✅ <strong>VRAI</strong></td><td>mesuré aujourd'hui, le chiffre est dans le dépôt</td></tr><tr><td>🟠 <strong>VRAI ICI</strong></td><td>ça marche sur ce projet-ci ; rien ne prouve que ça marche ailleurs</td></tr><tr><td>🔴 <strong>FICTION</strong></td><td>ça n'existe pas, ou pas sous cette forme</td></tr></tbody></table>
+<p><strong>Sans ces étiquettes, la plaquette serait un mensonge poli.</strong> Avec elles, elle devient l'outil de diagnostic qu'il a demandé — et c'est exactement la règle #767 appliquée à nous-mêmes.</p>
+<hr>
+<h2>═══ LA PLAQUETTE ═══</h2>
+<h3>L'AGENCE CODEX</h3>
+<h4><em>Un atelier de développement qui refuse de vous mentir</em></h4>
+<hr>
+<h3>LE PROBLÈME QU'ELLE RÉSOUT</h3>
+<p>Vous faites développer un projet avec une IA. Elle est rapide, elle est docile, et <strong>elle vous dit que tout va bien</strong>. Trois semaines plus tard vous découvrez que la documentation décrit un code qui n'existe plus, qu'un correctif a réintroduit un bug déjà réglé, et que personne — ni vous, ni elle — ne sait plus pourquoi telle décision a été prise.</p>
+<p><strong>Le problème n'est pas que l'IA se trompe. C'est qu'elle ne sait pas qu'elle se trompe, et que rien ne le lui dit.</strong></p>
+<hr>
+<h3>CE QUE L'AGENCE MET EN PLACE</h3>
+<h4>① Un filet de sécurité qui ne dort jamais</h4>
+<p>✅ <strong>VRAI</strong> — <strong>378 vérifications</strong> tournent à chaque commit. Aucun changement ne passe sans elles. Elles ne testent pas que « le code marche » : elles testent que <strong>les règles que vous avez posées tiennent encore</strong>.</p>
+<h4>② Sept gardiens qui lisent votre code pendant que vous dormez</h4>
+<p>✅ <strong>VRAI</strong> — trous logiques, incohérences entre deux parties, code non testé, stagnation, duplication, exportabilité. <strong>Gratuits, mécaniques, à chaque commit.</strong></p>
+<h4>③ Une mémoire qui survit au changement d'IA</h4>
+<p>✅ <strong>VRAI</strong> — <strong>530 tâches</strong>, chacune datée, portant ce qui a été décidé <strong>et pourquoi</strong>. Le jour où vous changez de modèle, d'éditeur ou de prestataire, <strong>le nouveau venu lit et reprend</strong>. Ce n'est pas une promesse : c'est un dossier de 553 documents dans le dépôt.</p>
+<h4>④ Une charte que l'IA ne peut pas contourner en douce</h4>
+<p>🟠 <strong>VRAI ICI</strong> — vos règles à vous, numérotées, et des mécanismes qui <strong>refusent un commit</strong> quand l'une est violée. <em>(L'honnêteté oblige : une partie des règles n'est portée que par du texte, et le texte ne refuse rien. C'est écrit noir sur blanc dans notre propre charte.)</em></p>
+<h4>⑤ Une IA qui vous contredit</h4>
+<p>✅ <strong>VRAI</strong> — l'Agence impose à l'IA de signaler quand votre demande entre en tension avec vos propres règles, et d'exiger <strong>deux confirmations</strong> avant de l'exécuter. <em>Votre charte est protégée même contre vous.</em></p>
+<h4>⑥ Elle apprend de ses erreurs, et les erreurs sont écrites</h4>
+<p>✅ <strong>VRAI</strong> — <strong>46 leçons</strong> enregistrées, chacune née d'une erreur réellement payée, et ressorties automatiquement au moment où le même piège se représente.</p>
+<h4>⑦ Tout part avec vous</h4>
+<p>🟠 <strong>VRAI ICI</strong> — chaque outil est livré avec son plan de reconstruction, pour qu'il fonctionne ailleurs que chez nous. <em>(Mesuré : les kits existent. Qu'ils décrivent FIDÈLEMENT leur code n'est vérifié que par échantillon.)</em></p>
+<hr>
+<h3>EN CHIFFRES</h3>
+<table><thead><tr><th><strong>84</strong> outils</th><th>✅ mesuré</th></tr></thead><tbody><tr><td><strong>378</strong> vérifications à chaque commit</td><td>✅ mesuré</td></tr><tr><td><strong>46</strong> leçons tirées d'erreurs réelles</td><td>✅ mesuré</td></tr><tr><td><strong>530</strong> décisions tracées</td><td>✅ mesuré</td></tr><tr><td><strong>1 123</strong> commits en <strong>13 jours</strong></td><td>✅ mesuré</td></tr><tr><td><strong>0 €</strong> de coût d'exécution pour les gardiens</td><td>✅ mesuré — ils lisent des fichiers, jamais une API</td></tr></tbody></table>
+<hr>
+<h3>ILS L'UTILISENT</h3>
+<p>🔴 <strong>FICTION.</strong> <em>Un seul projet l'utilise, et c'est le nôtre.</em></p>
+<h3>TARIFS</h3>
+<p>🔴 <strong>FICTION.</strong> <em>Aucun tarif n'existe, aucun modèle économique n'est arrêté.</em></p>
+<h3>SUPPORT ET MISES À JOUR</h3>
+<p>🔴 <strong>FICTION.</strong> <em>Il n'y a ni support, ni canal, ni personne d'autre que nous deux.</em></p>
+<h3>INSTALLATION EN QUINZE MINUTES</h3>
+<p>🔴 <strong>FICTION, et c'est la plus grave.</strong> <em>L'Agence n'a jamais été installée ailleurs. Pas une fois. On ne sait pas combien de temps ça prend, ni si ça marche.</em></p>
+<hr>
+<h2>═══ FIN DE LA PLAQUETTE ═══</h2>
+<hr>
+<h3>CE QUE L'EXERCICE A RÉVÉLÉ, ET IL VALAIT LE DÉTOUR</h3>
+<p><strong>Son intuition était juste : écrire la plaquette révèle des choses qu'un audit ne montre pas.</strong> Quatre constats, du plus rassurant au plus gênant.</p>
+<h4>① LE PRODUIT EST PLUS RÉEL QUE JE NE LE PENSAIS</h4>
+<p><strong>Sept promesses sur sept sont VRAIES ou VRAIES ICI. Aucune fonctionnalité annoncée n'est inventée.</strong> C'est rare, et ça mérite d'être dit : ce qu'on décrirait dans une plaquette existe pour de vrai et se mesure. Je m'attendais à devoir écrire « fiction » sur la moitié des cases.</p>
+<h4>② TOUTE LA FICTION EST DU MÊME CÔTÉ, ET CE N'EST PAS UN HASARD</h4>
+<p>Regarde où tombent les quatre 🔴 : <strong>clients, tarifs, support, installation.</strong> Pas une seule fiction sur le PRODUIT. <strong>Toutes sur le COMMERCE.</strong></p>
+<p><strong>Ce que ça dit</strong> : l'Agence n'est pas un produit incomplet. <strong>C'est un produit complet sans entreprise autour.</strong> Ce sont deux problèmes très différents, et on les confondait en parlant de « commercialiser l'Agence » comme d'une seule tâche.</p>
+<h4>③ LA FICTION LA PLUS DANGEREUSE EST L'INSTALLATION, ET ELLE EST STRUCTURELLE</h4>
+<p><em>« Installation en quinze minutes »</em> est le genre de phrase qu'on écrit sans y penser. Or <strong>l'Agence n'a jamais tourné ailleurs que dans ce dépôt. Pas une fois.</strong></p>
+<p><strong>Tout le reste en dépend.</strong> Sans une installation réussie ailleurs, on ne peut chiffrer ni le temps, ni le support, ni le prix. <strong>C'est le premier maillon</strong>, et l'exercice le fait apparaître comme tel alors qu'aucune de nos listes ne le plaçait en tête.</p>
+<p><em>(Et c'est cohérent avec ce que la loi de l'Agence exige : l'expérience du client passe avant tout. Sa toute première expérience est l'installation.)</em></p>
+<h4>④ CE QUI SE VEND N'EST PAS CE QU'ON CONSTRUIT LE PLUS</h4>
+<p><strong>Mesuré ce soir</strong> : sur les 89 000 lignes d'outillage, la plaquette n'en mentionne qu'une poignée — le filet, les gardiens, le suivi, les leçons. <strong>Le reste ne se vend pas, et ne s'achète pas : il se subit.</strong> Dix registres à renseigner par outil, 483 lignes de bannière par commit, 93 obligations de charte : rien de tout ça n'a sa place dans une plaquette, parce que <strong>personne n'en veut</strong>.</p>
+<p><strong>C'est le même signal que la cible de 50 obligations, trouvé par un chemin complètement différent</strong> — et deux chemins indépendants qui arrivent au même endroit valent mieux qu'une conviction.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>La plaquette écrite, étiquette par étiquette</td><td><strong>RETENU</strong></td><td>tâche <strong>#1255</strong> — ce document</td></tr><tr><td>Toute la fiction est commerciale, aucune n'est produit</td><td><strong>RETENU</strong></td><td>tâche <strong>#1255</strong> — à porter à la séance sur l'objectif ultime : « commercialiser » est deux chantiers, pas un</td></tr><tr><td>L'Agence n'a jamais été installée ailleurs — c'est le premier maillon</td><td><strong>À TRANCHER</strong></td><td>quand, et sur quoi ? Un dépôt vide, un vrai second projet, ou une copie de celui-ci ? Trois réponses très différentes</td></tr><tr><td>Ce qui se vend est une petite partie de ce qu'on construit</td><td><strong>RETENU</strong></td><td>même constat que la cible de 50 obligations, par un autre chemin — rejoint <code>la-route-vers-50-obligations.md</code>, tâche <strong>#1248</strong></td></tr><tr><td>Tarifs, support, clients</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>ce ne sont pas des manques à combler cette nuit : ils découlent tous du modèle économique, qui est précisément ce que la séance sur l'objectif ultime doit trancher. Les traiter avant serait bâtir sur un pivot non choisi</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/plaquette-de-l-agence.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

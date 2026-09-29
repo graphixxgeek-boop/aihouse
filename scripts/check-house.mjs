@@ -4167,6 +4167,17 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.equal(auditPlansDeDocuments(docsPlans,null).mesurable,false,'without the suivi text it must declare NOT MEASURED: it could see that a plan announces nothing, never that an announced task truly exists');
   assert.equal(auditPlansDeDocuments([],'x').mesurable,false,'and an empty document list reads NOT MEASURED rather than "every plan is chained" — a green returned on zero files read is the defect this whole landscape exists against');
   assert.ok(plansDeDocumentsLines({mesurable:false,pourquoi:'rien'})[0].includes('PAS MESURÉ'),'a refusal renders as PAS MESURÉ, never as an empty section that would read like a clean bill of health');
+  // LE MOTIF EXIGEAIT UN MOT QUE LE DÉPÔT N'ÉCRIT PAS TOUJOURS (2026-09-30, tâche #1250).
+  // MESURÉ sur les 188 constats RETENU de docs/ : l'ancien motif, qui réclamait « tâche » juste
+  // avant le numéro, en voyait 47 — alors que 89 portent réellement un numéro. Il en manquait 42.
+  // C'est la leçon L4 dans sa forme la plus coûteuse : le contrôle accusait la discipline la MIEUX
+  // tenue du projet, et déclarait « non calculable » un taux dont la donnée était là.
+  const planNotationCourte = [{ chemin: 'docs/plans/fleche.md', texte: '## Plan d\'action\n- **RETENU** — Étape 1 → **#818**, **#819**' }];
+  const suiviDeuxTaches = '| 818 | x | y | z | a | UTILE | PROJET | d | Terminée |\n| 819 | x | y | z | a | UTILE | PROJET | d | Terminée |';
+  assert.deepEqual(auditPlansDeDocuments(planNotationCourte, suiviDeuxTaches).sains, ['docs/plans/fleche.md'], 'THE EXACT CASE: « → **#818**, **#819** » is a perfectly valid attachment and was invisible to the check, which demanded the literal word "tâche" first — a signal ADJACENT to the one aimed at, read as the one aimed at');
+  assert.deepEqual(auditPlansDeDocuments([{ chemin: 'docs/plans/enum.md', texte: '## Plan d\'action\n- voir le point #3 de la liste' }], suiviDeuxTaches).sansAucuneTache, ['docs/plans/enum.md'], 'COUNTER-TEST: a one-digit « #3 » is an enumeration marker, never a task number here — the two-digit floor keeps the widening from turning into noise');
+  assert.deepEqual(auditPlansDeDocuments([{ chemin: 'docs/plans/emprunt.md', texte: '## Plan d\'action\n- **RETENU** → **#7777**' }], suiviDeuxTaches).referencesMortes.map((r) => r.chemin), ['docs/plans/emprunt.md'], 'and widening stays safe because the number is never taken on trust: one that does not exist in the durable suivi comes back as a DEAD REFERENCE, not as a false green — the error falls on the right side');
+  console.log('Passed: MOTIF_TACHE_ANNONCEE now recognises the bare « → **#818** » notation the repository actually writes, not only « tâche #818 » — it saw 47 of the 188 real RETENU findings where 89 truly carry a number, and a check that wrongly accuses the best-kept discipline of the project is a check that stops being read (lesson L4); the widening stays safe because every captured number is still verified against the durable suivi.');
 
   // L'ESTIMATION AVANT LANCEMENT, PROCESS PAR PROCESS (2026-09-25, tâche #843 — instruction de #242).
   // MESURÉ AVANT DE CONCLURE : 2 process sur 10 portent l'étape, et ce sont précisément les deux qui
@@ -21553,11 +21564,27 @@ async function testPagesHtmlPerimees() {
     listDirImpl: () => ['p.html'],
     listerImpl: () => ['docs/p.md'],
     readFileImpl: () => '<p>Dérivé de docs/p.md par doc-HTML.</p>',
-    shImpl: (cmd) => (cmd.includes('p.html') ? dates.page : dates.source),
+    // `git status` est une question DIFFÉRENTE de `git log`, et le stub doit les distinguer :
+    // les confondre rendait une date non vide pour l'état du disque, donc « modifiée » pour
+    // toutes les pages — et plus aucune n'aurait jamais pu être déclarée périmée (tâche #1258).
+    shImpl: (cmd) => (cmd.includes('status') ? (dates.modifiee ?? '') : (cmd.includes('p.html') ? dates.page : dates.source)),
   });
   const perimee = faux({ page: '2026-09-01T10:00:00Z', source: '2026-09-02T10:00:00Z' });
   assert.equal(perimee.perimees.length, 1, 'MUST CATCH: a source committed after its page means the page says something else than the document it claims to derive from');
   assert.equal(faux({ page: '2026-09-03T10:00:00Z', source: '2026-09-02T10:00:00Z' }).perimees.length, 0, 'MUST LET PASS: a page regenerated after its source is up to date');
+  // ── 2bis. UN FICHIER MODIFIÉ SUR LE DISQUE N'EST PAS UN FICHIER ANCIEN (2026-09-30, tâche
+  // #1258), et le défaut a été trouvé par le geste le plus banal qui soit : modifier une source,
+  // régénérer sa page, et vouloir committer les deux ensemble. La page RÉGÉNÉRÉE porte encore la
+  // date de son ANCIEN commit, donc elle paraît plus vieille que sa source, donc le filet la
+  // déclarait périmée — et le crochet refusait le commit qui l'aurait justement remise à jour.
+  // LE GARDE-FOU BLOQUAIT LA SEULE FAÇON CORRECTE DE LE SATISFAIRE (leçon L4), et c'était la
+  // troisième forme du même signal adjacent dans le même outil : « pas de date » lu comme « pas
+  // de source », puis « date de commit ancienne » lu comme « contenu ancien ».
+  const regeneree = faux({ page: '2026-09-01T10:00:00Z', source: '2026-09-02T10:00:00Z', modifiee: ' M docs/grand-projet/html/p.html' });
+  assert.deepEqual(regeneree.perimees, [], 'THE EXACT CASE: a page with uncommitted changes on disk has just been rewritten — it cannot be stale relative to anything, whatever its last commit date says');
+  assert.deepEqual(regeneree.pasEncoreCommitees, ['p.html'], 'and it is NAMED as freshly written rather than silently dropped: a page removed from the denominator without saying so is a denominator you chose (lesson L5)');
+  assert.equal(D.aDesModifsNonCommitees('x', { shImpl: () => '', root: '/fake' }), false, 'COUNTER-TEST 1: a clean file reports no uncommitted change — otherwise nothing could ever be flagged stale again, and the fix would have quietly disabled the guard it repairs');
+  assert.equal(D.aDesModifsNonCommitees('x', { shImpl: () => { throw new Error('git muet'); }, root: '/fake' }), false, 'COUNTER-TEST 2: when git is mute we answer FALSE, so the page stays subject to the date comparison — one report too many beats a stale page slipping through, and the direction of the error is written rather than suffered');
 
   // ── 3. C'EST LA DATE DE COMMIT QUI FAIT FOI, ET LE PIÈGE MÉRITE SON CONTRE-TEST : dans un dépôt
   // fraîchement cloné, tous les fichiers portent la MÊME date de modification — celle du clone.

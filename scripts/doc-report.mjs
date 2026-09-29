@@ -498,12 +498,38 @@ export function findPagesHtmlPerimees({ root = ROOT, listDirImpl = readdirSync, 
     // d'être écrite à l'instant : elle est, par construction, la chose la plus récente du dépôt.
     // Elle ne peut donc être périmée par rapport à RIEN — que sa source soit datée ou non.
     if (!dPage) { pasEncoreCommitees.push(page); continue; }
+    // ET LE MÊME DÉFAUT UNE COUCHE PLUS LOIN (2026-09-30, tâche #1258) — trouvé deux heures après
+    // avoir écrit le commentaire ci-dessus, par le geste le plus banal qui soit : modifier une
+    // source, régénérer sa page, et vouloir committer les deux ensemble. La page RÉGÉNÉRÉE porte
+    // encore la date de son ANCIEN commit, donc elle paraît plus vieille que sa source, donc le
+    // filet la déclare périmée — et le crochet refuse le commit qui l'aurait justement remise à
+    // jour. Le garde-fou bloquait la seule façon correcte de le satisfaire.
+    //
+    // C'EST LA TROISIÈME FORME DU MÊME SIGNAL ADJACENT, dans le même outil, dans la même nuit :
+    // « pas de date de commit » lu comme « pas de source », puis « date de commit ancienne » lu
+    // comme « contenu ancien ». La date d'un commit ne dit rien du contenu du fichier sur le
+    // disque ; elle dit seulement quand il a été enregistré pour la dernière fois.
+    //
+    // LE CRITÈRE JUSTE, et il est du même genre que celui d'au-dessus : une page dont le disque
+    // diffère de sa version enregistrée vient d'être réécrite. Elle est donc, par construction,
+    // plus récente que n'importe quel commit — y compris celui de sa source.
+    if (aDesModifsNonCommitees(`${DOSSIER_PAGES_HTML}/${page}`, { shImpl, root })) { pasEncoreCommitees.push(page); continue; }
     // L'inverse, lui, reste une abstention honnête : la page est datée, la source ne l'est pas, donc
     // la comparaison est impossible et on ne conclut pas (leçon L5).
     if (!dSource) { sansSource.push(`${page} (source sans date de commit)`); continue; }
     if (dSource > dPage) perimees.push({ page, source, dPage, dSource });
   }
   return { perimees, sansSource, pasEncoreCommitees, examinees: pages.length };
+}
+
+// UN FICHIER MODIFIÉ SUR LE DISQUE N'EST PAS UN FICHIER ANCIEN (2026-09-30, tâche #1258).
+// Rendue injectable comme tout le reste de ce fichier, pour que le filet puisse la faire répondre
+// oui ET non sans dépendre de l'état réel du dépôt au moment où il tourne (leçon L40).
+// En cas de doute — git muet, erreur — on rend FALSE : on préfère un signalement de trop qu'une
+// page périmée qui passerait inaperçue, et le sens de l'erreur est écrit plutôt que subi.
+export function aDesModifsNonCommitees(chemin, { shImpl = sh, root = ROOT } = {}) {
+  try { return String(shImpl(`git status --porcelain -- ${chemin}`, { cwd: root })).trim().length > 0; }
+  catch { return false; }
 }
 
 export function formatPagesHtmlPerimeesLines(r) {

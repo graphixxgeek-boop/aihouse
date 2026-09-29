@@ -939,6 +939,15 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   "check-suivi-fidelity": "couvert EN CONTINU : il tourne déjà au crochet de commit, ce qui est plus fréquent qu'un item de Ronde",
   "circle-process-guardian": "couvert PAR LA RONDE ELLE-MÊME : il est consulté au lancement de chaque Ronde — lui donner un item de Ronde le ferait se vérifier lui-même",
   "the-ghost": "couvert PAR ÉVÉNEMENT : convoqué quand on cherche une trace disparue, jamais sur un rythme",
+  // recherches-web (2026-09-30, tâche #1253) : ce n'est PAS le registre d'un outil, et c'est la
+  // seule raison qui compte. Le garde-fou part de « un dossier docs/<slug>/index.md appartient à
+  // un outil, donc il doit tourner à un rythme » — vrai de tous les autres, faux de celui-ci.
+  // Il n'a aucun script, rien à lancer, et rien à mesurer périodiquement : il ARCHIVE des relevés
+  // de recherche web, déposés quand une recherche a lieu et jamais autrement. Lui donner un item
+  // de Ronde reviendrait à demander tous les quinze jours « avez-vous cherché quelque chose sur
+  // le web ? », ce qui n'est pas une vérification mais un rappel — et un rappel qui ne peut
+  // jamais rien trouver devient du décor (leçon L6).
+  "recherches-web": "couvert PAR ÉVÉNEMENT, et ce n'est pas le registre d'un outil : il archive des relevés de recherche web déposés au moment où la recherche a lieu. Aucun script, rien à lancer, rien qu'un passage périodique pourrait mesurer",
   // abraham-les-references (2026-09-23) : couvert PAR ÉVÉNEMENT — on l'appelle quand on analyse
   // un document précis, jamais sur un rythme. Un passage périodique analyserait des documents que
   // personne n'a demandé à regarder, et la tâche #612 cherche justement à REDUIRE les rapports.

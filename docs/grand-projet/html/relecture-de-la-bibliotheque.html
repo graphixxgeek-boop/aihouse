@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA RELECTURE DE LA BIBLIOTHÈQUE — ses quatre questions, et ce qu'elles ont sorti</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T23:30:01.275Z</div>
+    <h1>LA RELECTURE DE LA BIBLIOTHÈQUE — ses quatre questions, et ce qu'elles ont sorti</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche <strong>#1256</strong>. Sa consigne du coucher, mot pour mot : « prends le temps aussi de faire — juste pour l'exercice — la synthèse/relecture des docs dans git : une relecture rafraîchit. Pose-toi la question : avec ma compréhension actuelle du projet, qu'est-ce que j'ai pu ne pas voir d'intéressant à ma première lecture ? qu'est-ce que j'ai manqué ? qu'est-ce que je peux encore tirer de ces docs ? est-ce que je maîtrise cette bibliothèque, et je sais parfaitement qu'est-ce qui va m'aider, et quand m'en servir ? »)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/03-plan-daction/ou-va-chaque-chose.md</code>
+<em>il exécute la consigne ③ du bloc « SES CONSIGNES DU 2026-09-29 AU COUCHER ».</em></p></div>
+<hr>
+<h3>AVANT TOUT : UNE ALARME QUE J'AI SONNÉE, ET QUI ÉTAIT FAUSSE</h3>
+<p><strong>En ouvrant l'exercice, j'ai compté six synthèses pour une trentaine de fichiers déposés et j'ai conclu que je n'avais lu qu'un cinquième de sa bibliothèque.</strong> C'était faux, et j'ai vérifié avant de l'écrire.</p>
+<p><code>ce-que-jai-lu.md</code> porte <strong>dix blocs de trace, tous datés du 2026-09-28</strong>, et ils couvrent la totalité du corpus. Les six synthèses ne concernent que les six documents Copilot du 29, arrivés après. <strong>La bibliothèque est lue.</strong></p>
+<p><strong>Je le raconte plutôt que de l'effacer</strong>, parce que c'est la troisième fois de la soirée que la même faute se présente : <em>un signal ADJACENT — « il n'y a que six synthèses » — lu comme le signal visé — « je n'ai lu que six documents ».</em> La règle #767 s'applique à moi avant tout le monde.</p>
+<hr>
+<h3>① CE QUE JE N'AVAIS PAS VU À LA PREMIÈRE LECTURE — et c'est gênant</h3>
+<p><strong>La TARGET ARCHITECTURE répond déjà à la question « plusieurs versions ? », autrement et mieux que ma réponse de ce soir.</strong></p>
+<p>Ce soir, j'ai proposé <strong>trois versions par niveau d'exigence</strong> (légère / standard / complète), en m'appuyant sur les freins mesurés. Le document, lui, propose une <strong>échelle R0→R6 par COMPOSANT</strong> :</p>
+<pre><code>R0 inconnu → R1 compris → R2 frontière isolée → R3 extractible
+           → R4 exportable → R5 industrialisé → R6 produit distribué</code></pre>
+<p><strong>Ce ne sont pas deux réponses à la même question, et c'est ce qui rend la trouvaille utile.</strong> La mienne découpe <strong>le produit</strong> ; la sienne mesure <strong>la maturité de chaque morceau</strong>. Les deux se combinent : une version « légère » est un ensemble de composants <strong>R4 ou plus</strong>, et le reste ne peut pas partir. <strong>Ma proposition était incomplète sans savoir ce qui est réellement prêt.</strong></p>
+<p><strong>Et j'ai construit la mienne sans rouvrir la sienne, trois heures plus tôt dans la même nuit.</strong> C'est exactement ce que l'Article 30 existe pour empêcher. L'Article a fonctionné — il m'a fait rouvrir les notes — mais avec trois heures de retard sur le moment où ça comptait.</p>
+<h3>② CE QUE J'AI MANQUÉ — quatre phrases qui jugent notre travail de ce soir</h3>
+<p><strong>Elles étaient dans mes propres traces. Je ne les avais pas lues comme des verdicts sur nous.</strong></p>
+<p>**⓵ <em>« Un fichier séparé n'est pas automatiquement un module R3 ou R4. »</em><strong> → </strong>Ça vise directement notre manifeste.<strong> Nos trois zones (74 noyau / 9 produit / 10 câblage) sont mesurées </strong>par FICHIER<strong>. Le document dit que la séparation en fichiers ne prouve pas l'extractibilité. </strong>Notre mesure pourrait donc compter la bonne chose au mauvais endroit** — et c'est vérifiable, pas une inquiétude : il suffit de prendre trois fichiers « noyau » et d'essayer.</p>
+<p>**⓶ <em>« Le plus grand danger n'est pas de manquer de fonctionnalités. C'est de continuer à en ajouter AVANT que les nouvelles fonctionnalités aient une place architecturale explicite. »</em><strong> → </strong>Cette nuit j'ai ajouté<strong> une fonction de zone, un dossier de registre, une famille de thème, un poids par champ. </strong>Chacun justifié individuellement.<strong> C'est mot pour mot la « somme que personne ne discute » que JESUS mesure de son côté — </strong>deux sources indépendantes, même verdict**.</p>
+<p>**⓷ <em>« Un guardian ne doit pas devenir un orchestrateur caché »</em>, et <em>« Quality, Observability et Governance ne doivent pas devenir un second cœur caché. »</em><strong> → </strong>C'est déjà arrivé, et c'est mesuré<strong> : <code>check-house.mjs</code> pèse </strong>4,3 fois le jeu entier**. Le filet de sécurité EST le second cœur caché contre lequel le document met en garde.</p>
+<p><strong>⓸ La colonne « ne doit PAS posséder » de la RESPONSIBILITY MAP.</strong> → Elle dit ce qu'il faut <strong>retirer</strong>, pas seulement ranger. Et elle donne une <strong>route indépendante vers la cible de 50 obligations</strong> : « Quality ne doit pas posséder l'orchestration principale », « Knowledge ne doit pas posséder l'autorité de décision ». <strong>Deux chemins différents vers le même allègement valent mieux qu'une conviction</strong> — le premier est celui d'ABRAHAM ce soir.</p>
+<h3>③ CE QU'ON PEUT ENCORE TIRER DE CES DOCUMENTS — une chose, et elle est nommée</h3>
+<p><strong>Le document annonce lui-même sa suite, et il dit qu'elle n'existe pas :</strong></p>
+<div class="highlight"><p>Le <strong>BUILD MAP</strong> : origine historique · nouveau nom · responsabilité exacte · contrat ·
+dépendances entrantes et sortantes · niveau R0-R6 · ordre de migration · tests à créer ·
+critères de sortie — pour chaque composant.
+<strong>« C'est le document qui n'existe pas encore, et c'est celui qui permettrait de commencer. »</strong></p></div>
+<p><strong>Nous avons passé la soirée à écrire des documents de stratégie pendant que le seul document explicitement désigné comme la clé manquante attendait.</strong> Ce n'est pas un reproche à qui que ce soit — c'est le résultat de l'exercice qu'il a demandé, et c'est sa trouvaille la plus concrète.</p>
+<p><strong>Et il y a une bonne nouvelle dedans</strong> : une grande partie des colonnes du BUILD MAP est déjà mesurable par nos outils. Le nom, l'origine, les dépendances, les tests, la couverture — SAFE-EXPORT, AXA-CHECK, HARMONIA et LE-CLASSIFICATEUR les produisent déjà. <strong>Ce qui manque est le niveau R0-R6 et l'ordre de migration</strong>, c'est-à-dire du jugement, pas de la mesure.</p>
+<h3>④ EST-CE QUE JE MAÎTRISE CETTE BIBLIOTHÈQUE ? — la réponse est NON, et elle se chiffre</h3>
+<p><strong>C'est la seule des quatre questions qui mesure quelque chose, et voici la mesure.</strong></p>
+<table><thead><tr><th>Documents <strong>lus et tracés</strong></th><th><strong>10 blocs</strong> dans <code>ce-que-jai-lu.md</code> (~950 lignes)</th></tr></thead><tbody><tr><td>Documents <strong>rangés dans l'index par situation</strong></td><td><strong>6</strong> — ceux du 29 uniquement</td></tr><tr><td>Documents atteignables <strong>par la question qu'on se pose</strong></td><td><strong>6 sur 16</strong></td></tr></tbody></table>
+<p><strong>Le trou n'est pas la LECTURE, c'est la RÉCUPÉRATION.</strong> Quand je travaille, la question n'est jamais « que dit le document sur l'architecture ? » mais « je définis les versions du produit, qu'est-ce qui existe déjà là-dessus ? ». L'index par situation répond à celle-là — <strong>pour six documents sur seize.</strong></p>
+<p><strong>Et la preuve que ça coûte vraiment quelque chose est dans ce document même</strong> : la trouvaille ① vient d'un document qui n'est PAS dans l'index. Je ne l'ai pas retrouvée en travaillant ce soir ; je l'ai retrouvée parce qu'il m'a demandé de relire. <strong>Un savoir qu'on ne retrouve que sur demande expresse n'est pas maîtrisé.</strong></p>
+<p><strong>La réparation est petite et elle est nommée</strong> : étendre l'index par situation aux dix blocs de <code>ce-que-jai-lu.md</code>. L'outil existe (<code>data-archangel syntheses</code>), il lit déjà un dossier de fiches ; il faut lui apprendre à lire aussi un document à blocs.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>La relecture avec la compréhension d'aujourd'hui, et ses quatre trouvailles</td><td><strong>RETENU</strong></td><td>tâche <strong>#1256</strong> — ce document</td></tr><tr><td>L'index par situation ne couvre que 6 documents sur 16 : le savoir est lu mais non récupérable</td><td><strong>RETENU</strong></td><td>tâche <strong>#1257</strong> — étendre <code>data-archangel syntheses</code> aux blocs de <code>ce-que-jai-lu.md</code></td></tr><tr><td>Le BUILD MAP est désigné comme la clé manquante, et n'existe toujours pas</td><td><strong>À TRANCHER</strong></td><td>c'est un gros chantier et il touche l'ordre des étapes : à porter à la séance sur l'objectif ultime, jamais lancé de ma propre initiative</td></tr><tr><td>Nos trois zones sont mesurées par FICHIER, et « un fichier séparé n'est pas un module extractible »</td><td><strong>À TRANCHER</strong></td><td>vérifiable en une heure : prendre trois fichiers « noyau » et essayer de les sortir. Mais le résultat peut invalider le manifeste, donc c'est sa décision de l'ouvrir</td></tr><tr><td>« Un guardian ne doit pas devenir un orchestrateur caché » — c'est déjà arrivé</td><td><strong>RETENU</strong></td><td>rejoint <code>ce-qui-ralentit-le-projet.md</code>, tâche <strong>#1251</strong> : c'est le même constat que « ce qui se subit », vu par un troisième chemin</td></tr><tr><td>L'échelle R0→R6 croise notre découpe par niveau d'exigence</td><td><strong>RETENU</strong></td><td>rejoint <code>ce-qui-ralentit-le-projet.md</code>, tâche <strong>#1251</strong> — la proposition des trois versions y est amendée, jamais laissée fausse</td></tr><tr><td>Ma fausse alarme sur « six documents lus sur trente »</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>corrigée avant d'être écrite ailleurs, donc sans conséquence — mais racontée plutôt qu'effacée, parce que c'est la troisième occurrence de la même classe d'erreur dans la soirée et que la classe compte plus que l'occurrence (L37)</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
