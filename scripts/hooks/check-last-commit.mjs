@@ -14,7 +14,7 @@ import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 // sans rien changer là où ça compte, très exactement la faute qu'on vient de corriger ailleurs.
 import { loadMemoire } from "../safe-export.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
-import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "../axa-check.mjs";
+import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, LIB_MAP, AGENT_SCRIPT_FILES, SLUGS_COUVERTS_PAR_AXA } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
 import { buildDuplicateReport, buildNearDuplicateReport, fusionnerClusters } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
@@ -354,7 +354,20 @@ try {
   const bilan = [
     etat("ARGUS", reveille("argus"), argusFindingsCount),
     etat("HARMONIA", reveille("harmonia"), harmoniaFindingsCount),
-    etat("AXA-CHECK", reveille("axa-check"), undefined),
+    // AXA-CHECK ÉTAIT ⚪ PAR CONSTRUCTION, PAS PAR ABSENCE DE MESURE (2026-09-29, tâche #1191).
+    // Le `undefined` était écrit en dur : la bannière annonçait « mesure non chiffrable ici » pour
+    // le seul Gardien dont la mesure était calculée quinze lignes plus haut, dans ce fichier même.
+    // Tant que la couverture des outils était elle-même aveugle (#1189), personne ne pouvait le
+    // voir — les deux silences se couvraient l'un l'autre.
+    //
+    // CE QU'IL COMPTE, ET POURQUOI C'EST CELUI-LÀ : le nombre d'outils dont la couverture n'a PAS
+    // pu être mesurée. C'est une vraie trouvaille — un outil que personne ne peut mesurer est un
+    // angle mort, pas un outil sain — et c'est le seul chiffre honnête ici, puisque aucune barre de
+    // couverture n'est déclarée et qu'en inventer une ferait juger sans critère (BP5).
+    // Si le relevé lui-même manque, on rend `undefined` et le ⚪ redevient vrai.
+    etat("AXA-CHECK", reveille("axa-check"), perSlugScriptCoverage === undefined
+      ? undefined
+      : SLUGS_COUVERTS_PAR_AXA.filter((slug) => scriptRobustnessScore(slug, perSlugScriptCoverage) === undefined).length),
     etat("CLEAN-DIRTY-OLD", reveille("clean-dirty-old"), cleanDirtyOldFlagged === undefined ? undefined : (cleanDirtyOldFlagged ? 1 : 0)),
     etat("CLONE-HUNTER", reveille("clone-hunter"), cloneHunterFindingsCount),
     etat("ALWAYS-NEW-CODE", reveille("always-new-code"), alwaysNewCodeFlagged === undefined ? undefined : (alwaysNewCodeFlagged ? 1 : 0)),

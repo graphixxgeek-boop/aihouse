@@ -16,11 +16,11 @@
   "alertes": [
     {
       "outil": "ezechiel-les-tests",
-      "cle": "4 groupe(s) portent une assertion sur une valeur littérale",
+      "cle": "5 groupe(s) portent une assertion sur une valeur littérale",
       "objet": "scripts/check-house.mjs",
       "gravite": "à surveiller",
-      "constat": "4 groupe(s) portent une assertion sur une valeur littérale",
-      "depuis": "2026-09-27",
+      "constat": "5 groupe(s) portent une assertion sur une valeur littérale",
+      "depuis": "2026-09-29",
       "vueLe": "2026-09-29"
     },
     {

@@ -4524,7 +4524,16 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     // raison affichée à côté de son pourcentage, sinon le chiffre seul fait lire « mal couvert » là
     // où une part du code ne PEUT pas être couverte ici.
     assert.ok(/part déclarée inexerçable/.test(srcAxa), 'a declared unexercisable share must keep travelling next to the measured percentage, never be hidden by it');
-    console.log('Passed: la couverture des OUTILS se lit enfin dans le relevé que le filet vient de produire (2026-09-29, tâche #1189) — elle était collectée depuis un dossier que RIEN dans ce dépôt n\'écrit, et le vrai dossier était effacé cent lignes avant d\'être relu. Un Gardien sacré annonçait donc « 39 outils NON MESURÉS sur 40 » depuis la création de cette mesure, pendant que le commentaire d\'à côté disait correctement d\'où le relevé venait. Le test verrouille la CHAÎNE et jamais le chiffre : le dossier lu est celui que le filet remplit, la collecte précède la suppression, et une part déclarée inexerçable garde sa raison à côté de son pourcentage.');
+      // ET LA BANNIÈRE DOIT LE DIRE (2026-09-29, tâche #1191) : AXA-CHECK y était ⚪ « mesure non
+    // chiffrable ici » par un `undefined` ÉCRIT EN DUR, pour le seul Gardien dont la mesure est
+    // calculée quinze lignes plus haut dans ce même fichier. Les deux silences se couvraient l'un
+    // l'autre — tant que la couverture des outils était aveugle, personne ne pouvait voir que la
+    // bannière ne l'aurait pas affichée de toute façon.
+    const srcHook = fs.readFileSync('scripts/hooks/check-last-commit.mjs', 'utf8');
+    assert.ok(!/etat\("AXA-CHECK", reveille\("axa-check"\), undefined\)/.test(srcHook), 'MUST CATCH: the banner must never again hard-code AXA-CHECK as unquantifiable — it was the one Gardien whose measure sits fifteen lines above, in that very file');
+    assert.ok(/scriptRobustnessScore\(slug, perSlugScriptCoverage\) === undefined/.test(srcHook), 'and what it counts must be a real finding: the tools whose coverage could NOT be measured — a tool nobody can measure is a blind spot, not a healthy tool');
+    assert.ok(/perSlugScriptCoverage === undefined\s*\n\s*\? undefined/.test(srcHook), 'while a missing coverage sweep must still render the honest ⚪ rather than a fabricated zero (leçons L5/L11)');
+  console.log('Passed: la couverture des OUTILS se lit enfin dans le relevé que le filet vient de produire (2026-09-29, tâche #1189) — elle était collectée depuis un dossier que RIEN dans ce dépôt n\'écrit, et le vrai dossier était effacé cent lignes avant d\'être relu. Un Gardien sacré annonçait donc « 39 outils NON MESURÉS sur 40 » depuis la création de cette mesure, pendant que le commentaire d\'à côté disait correctement d\'où le relevé venait. Le test verrouille la CHAÎNE et jamais le chiffre : le dossier lu est celui que le filet remplit, la collecte précède la suppression, et une part déclarée inexerçable garde sa raison à côté de son pourcentage.');
   }
 }
 
