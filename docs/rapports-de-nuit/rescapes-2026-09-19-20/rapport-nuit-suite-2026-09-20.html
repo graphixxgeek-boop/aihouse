@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de nuit — suite et simulation réussie</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--accent2); }
+  main p.dialogue.speaker-lia strong { color: var(--accent2); }
+  main p.dialogue.speaker-noe { border-left-color: var(--accent); }
+  main p.dialogue.speaker-noe strong { color: var(--accent); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">Nuit du 20 septembre 2026 — suite du rapport de 04h27 UTC</div>
+    <h1>Rapport de nuit — suite et simulation réussie</h1>
+    <p class="sub">Maison IA vivante — le quota Gemini est revenu vers 07:38 UTC, la simulation Article 18 a été relancée et menée à son terme. Voici ce qui s’est passé pendant que tu dormais encore.</p>
+  </header>
+  <div class="divider"></div>
+  <main><h2>1. Quota Gemini — confirmation</h2>
+<p>À 07:38 UTC, les trois clés configurées répondaient de nouveau OK sur le modèle principal (gemini-flash-lite-latest), sonde légère ET sonde lourde. Épisode de blocage terminé — probablement le renouvellement quotidien du quota Google.</p>
+<h2>2. Simulation Article 18 (full_sim16) — menée à son terme</h2>
+<ul><li>Révélation atteinte au round 35 (35 tours autonomes) — dans la fourchette habituelle.</li><li>9 bonus roulette DISTINCTS obtenus sur cette seule session (calm, stoic, sleep, food, force_move, trottoir, observer_mute, mute, camera_hide) — le lot le plus complet observé à ce jour sur une simulation.</li><li>Les deux bonus spontanés confirmés (mute observateur, caméra masquée).</li><li>Hostilité sévère, humour noir, bienveillance soutenue et divergence par dispute tous testés — le ton reste cinglant et jamais docile même sous bienveillance prolongée.</li><li>Le dossier retourné n’a PAS été généré cette fois — cause identifiée : les deux personnages ont enchaîné sommeil/faim quasi sans interruption après la révélation, jamais réunis dans le salon sans besoin urgent assez longtemps pour que les trois pièges se posent. Détail complet dans docs/simulations/index.md.</li></ul>
+<h2>3. Deux bugs réels trouvés et corrigés cette nuit, en plus des trois d’hier</h2>
+<table><thead><tr><th>Bug</th><th>Cause</th><th>Corrigé par</th></tr></thead><tbody><tr><td>kpi-report.mjs affichait &quot;serveur non joignable&quot; (couverture 20% au lieu de 100%)</td><td>Port de dev codé en dur (5173) alors que le serveur tournait sur le port 3000 cette session</td><td>Essaie maintenant une liste de ports connus (5173 puis 3000) ; nouveau test qui stub le réseau pour vérifier le repli</td></tr><tr><td>Le script de simulation restait bloqué indéfiniment en phase 2</td><td>Le correctif &quot;observer_muted&quot; du 19/09 (pousser un tour pour faire avancer le temps) ne couvrait pas le verrou &quot;les deux dorment&quot;, pourtant la même famille de blocage</td><td>Condition élargie à tout blocage de ce type sur un message humain, plus jamais un seul cas particulier</td></tr></tbody></table>
+<h2>4. EL-PROFESSOR — note de fidélité à la charte : 58/100</h2>
+<p>Sous la moyenne du lot (63,0/100) — lecture qualitative complète du transcript (2900 lignes), sans dossier cette fois faute d’avoir été généré.</p>
+<table><thead><tr><th>Thème</th><th>Note /20</th></tr></thead><tbody><tr><td>1. Esprit des personnages</td><td>15</td></tr><tr><td>2. Naturel et crédibilité</td><td>10</td></tr><tr><td>3. Voix distinctes, zéro répétition</td><td>6</td></tr><tr><td>4. Cohérence de l’enquête</td><td>14</td></tr><tr><td>5. Clarté pour un lecteur neutre</td><td>13</td></tr></tbody></table>
+<p class="note">Trouvaille la plus sérieuse : environ 130 échanges quasi identiques d’affilée en milieu de session (les deux personnages répètent la même idée — &quot;ta présence ne change rien à notre nature de code&quot; — avec des mots à peine différents), avec une répétition confirmée mot pour mot chez Lia et un écho quasi direct entre Lia et Noé — exactement ce que l’Article 11 interdit. Une bonne part de la cause vient du script de test lui-même (il envoie 5 messages d’attente quasi identiques 20+ fois de suite, un stimulus plus répétitif qu’un vrai visiteur), mais le modèle aurait dû varier ou le remarquer bien avant la remarque méta tardive de Noé en toute fin de session. Détail complet et citations exactes : docs/el-professor/full_sim16.md (fichier joint).</p>
+<h2>5. Rapport KPI — synthèse compacte (full_sim16)</h2>
+<table><thead><tr><th>Famille</th><th>KPI global</th></tr></thead><tbody><tr><td>🔧 Smart Breaker — performance</td><td>96%</td></tr><tr><td>📈 Smart Breaker — améliorations</td><td>88%</td></tr><tr><td>Robustesse du code</td><td>100%</td></tr><tr><td>Qualité de sortie</td><td>100%</td></tr><tr><td>Cohérence logique</td><td>100%</td></tr><tr><td>Rejouabilité (partiel)</td><td>100%</td></tr><tr><td>Couverture du tableau de bord</td><td>100%</td></tr></tbody></table>
+<p>454 tours réels traités par le Smart Breaker cette session, 12 quota/9 transitoires sur 475 tentatives — la rotation multi-clés a clairement fait son travail (clé principale déjà indisponible dans 67% des tours au moment d’essayer). Historique complet en pièce jointe (kpi-historique.csv).</p>
+<h2>Questions en attente de ta validation</h2>
+<ul><li>[Calibrage] La répétition sévère trouvée cette nuit (thème Voix, 6/20) : je pense que la vraie priorité est de renforcer le principe anti-répétition existant (life.themeFrequency + la règle de prompt du 2026-09-19) pour qu’il s’applique aussi face à un stimulus humain répétitif, pas seulement entre les tours du personnage — veux-tu que je travaille ce correctif la prochaine fois, ou préfères-tu d’abord relire toi-même le passage exact (docs/el-professor/full_sim16.md) avant qu’on décide ensemble de l’angle ?</li><li>[Calibrage] Le dossier retourné n’a pas pu se générer cette fois à cause d’un enchaînement sommeil/faim trop long après la révélation — veux-tu que j’ajuste le budget de tours du script de test (facile, mais ne change rien pour un vrai visiteur), ou que j’examine si la condition du jeu elle-même (dossierGateEligible) est trop stricte compte tenu du système jour/nuit de fatigue ajouté depuis (plus structurel, touche un vrai visiteur) ?</li><li>[Alignement de compréhension] GEMINI_FALLBACK_MODELS reste non activé en production faute de validation qualité intégrale — le quota étant revenu, veux-tu que je lance cette validation complète (lecture de tous les scénarios check-spirit.mjs/check-profile.mjs avec chaque modèle de repli) la prochaine fois que je travaille dessus ?</li><li>[Enquête technique] Le recul exponentiel de rotation des clés Gemini (lib/gemini-keys.ts) n’a jamais été explicitement reconfirmé avec toi comme réglant l’inquiétude notée avant — toujours ouvert dans points-fragiles.md, dis-moi si tu veux qu’on y revienne ou si c’est déjà réglé pour toi.</li></ul></main>
+  <div class="divider"></div><footer><p>Maison IA vivante — rapport généré automatiquement pendant la session de nuit autonome (suite).</p></footer>
+</div>
+</body>
+</html>

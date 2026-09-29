@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>État des chantiers — Maison IA vivante</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--accent2); }
+  main p.dialogue.speaker-lia strong { color: var(--accent2); }
+  main p.dialogue.speaker-noe { border-left-color: var(--accent); }
+  main p.dialogue.speaker-noe strong { color: var(--accent); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">20 septembre 2026, matin</div>
+    <h1>État des chantiers — Maison IA vivante</h1>
+    <p class="sub">Arborescence détaillée : réalisé, en cours de calibrage, ouvert et non calibré.</p>
+  </header>
+  <div class="divider"></div>
+  <main><h2>🟢 RÉALISÉ</h2>
+<h2>→ Moteur de personnalité &amp; dialogue</h2>
+<ul><li>Registres Lia/Noé durcis (refus, désinvolture, argot modernisé), rythme de rapprochement de Noé ralenti</li><li>Réactivité &quot;à fleur de peau&quot;, pensées pré-sujet-sensible, déductions plus fines/drôles</li><li>Répliques de secours anti-écho générées plutôt que codées en dur</li><li>Système jour/nuit complet : horloge round-based, modificateur de fatigue, impact de personnalité (Lia plus coupante la nuit, Noé plus flou), réaction au minuit</li></ul>
+<h2>→ Espace, déplacement &amp; référentiels</h2>
+<ul><li>docs/referentiel/regles-du-temps.md et regles-de-l-espace.md (axes transversaux temps/espace)</li><li>docs/referentiel/regles-des-graphismes.md (base de jugement pour la future refonte)</li><li>Correctif trottoirGranted (trouvé par ARGUS)</li></ul>
+<h2>→ Réseau d’outils gratuits (mécaniques, 0 coût API)</h2>
+<ul><li>ARGUS (trous logiques) + HARMONIA (cohérence des liens) — tournent à chaque commit</li><li>AXA-CHECK (couverture réelle par fonction, V8) + CLEAN-DIRTY-OLD (stagnation relative)</li><li>ALWAYS-NEW-CODE (page blanche par zone) + CHECK-LEVEL-TARGET (niveau de vérification attendu)</li><li>HYPER-SCAN-CHECKPOINT (vérification exceptionnelle, a trouvé le bug negotiationLog le 18/09)</li><li>LE-COORDINATEUR (orchestrateur mince, menu des prestations)</li></ul>
+<h2>→ Qualité de simulation &amp; audit</h2>
+<ul><li>EL-PROFESSOR (note /100 par thème, 15 simulations notées dont full_sim16 cette nuit)</li><li>THE-SCREENER (captures Playwright + notation graphique — popup de pseudo encore à automatiser)</li><li>THE-FINAL-JUDGE (audit indépendant par agent séparé, 6 paliers d’intensité)</li><li>Carnet de correctifs à revalider + registre de points fragiles</li></ul>
+<h2>→ Régulation de consommation</h2>
+<ul><li>Smart Breaker (rotation de clés, repli de modèle/clé, recul exponentiel) — 96% de performance sur full_sim16</li><li>Smart Conso API (rythme des appels Gemini pendant le travail)</li><li>SMART-CONSO-TOKEN (poids des documents, schémas coûteux connus, auto-diagnostic sécurisé)</li></ul>
+<h2>→ Suivi, profil &amp; confort de travail</h2>
+<ul><li>docs/suivi/ (traçabilité durable, vérifiée par un crochet pre-commit bloquant)</li><li>Système d’historisation du profil utilisateur</li><li>CIRCLE-TASKS (Ronde périodique, 9 items + THE-FINAL-JUDGE) — regroupée PAR THÈME ce matin</li><li>Gabarit HTML de rapports (scripts/html-report.mjs)</li></ul>
+<h2>→ Cette nuit (quota Gemini revenu ~07h38 UTC)</h2>
+<ul><li>full_sim16 menée à son terme : révélation round 35, 9/9 bonus roulette distincts (record), les deux bonus spontanés confirmés</li><li>2 bugs réels trouvés et corrigés : port kpi-report.mjs (5173→3000), verrou &quot;les deux dorment&quot; dans le harnais de simulation</li><li>EL-PROFESSOR : 58/100 — répétition sévère trouvée en phase 2 (Article 11)</li></ul>
+<h2>→ Ce matin</h2>
+<ul><li>CIRCLE-TASKS : regroupement par thème (idée de l’utilisateur)</li><li>kpi-report.mjs : rapport HTML COMPLET (tous les chiffres), plus seulement la synthèse à 7 lignes</li></ul>
+<h2>🟡 EN COURS DE CALIBRAGE (approuvé cette session, pas encore exécuté)</h2>
+<ul><li>Renforcer le principe anti-répétition du prompt (lib/lia.ts) — pour couvrir un stimulus humain répétitif, pas seulement l’auto-répétition</li><li>Examiner dossierGateEligible (app/api/lia/route.ts) — interaction avec le système jour/nuit de fatigue, ajouté après ce mécanisme</li><li>Nouvelle famille tableau de bord &quot;Smart Conso&quot; : taux de respect des consignes (agent/outils — jamais l’utilisateur, aucune trace mécanique fiable) + tokens/API économisés + efficacité des process + indice de fraîcheur</li><li>Alléger CLAUDE.md (poids en tokens, ~28 800 tokens estimés) — choisi comme PRIORITÉ n°1 par l’utilisateur, point de départ déjà préparé (docs/smart-conso-token/scans/claude-md-narrative-candidates.md, 29 asides datées)</li><li>Nouvelles idées de prestations pour le catalogue CIRCLE-TASKS (à discuter)</li></ul>
+<h2>🔴 OUVERT, PAS ENCORE CALIBRÉ</h2>
+<ul><li>check-spirit.mjs : 18/20 scénarios restants à lire (2/20 lus avant l’épuisement de quota de la veille)</li><li>Validation qualité intégrale de GEMINI_FALLBACK_MODELS avant toute activation en production</li><li>Reconfirmation du recul exponentiel de rotation des clés Gemini (jamais explicitement reconfirmé)</li><li>Chantier 3 : arc relationnel Lia/Noé (loveRealized) — investigable sans nouvelle simulation, sur les archives existantes</li><li>Refonte graphique complète : trottoir 3D pathable, mode Observation/Instruments, mise en scène de la révélation, vignette, caméra dynamique</li><li>Mécaniques de diffusion (chantier 7 — après la refonte graphique)</li><li>Réécriture de la popup de bienvenue (après la refonte graphique)</li><li>Identité de marque du site (nom, domaine, logo) — signalée urgente avant mise en ligne</li></ul>
+<p class="note">Note de méthode (demande explicite de l’utilisateur) : pour valider les prochains correctifs (répétition, dossier), on peut faire des mini-simulations ciblées plutôt qu’une simulation complète à chaque fois — à calibrer au cas par cas selon ce qu’on veut vérifier.</p></main>
+  <div class="divider"></div><footer><p>Maison IA vivante — état des lieux généré à la demande de l’utilisateur.</p></footer>
+</div>
+</body>
+</html>

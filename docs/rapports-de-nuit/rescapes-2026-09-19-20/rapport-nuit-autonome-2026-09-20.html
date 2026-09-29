@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de nuit autonome</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--accent2); }
+  main p.dialogue.speaker-lia strong { color: var(--accent2); }
+  main p.dialogue.speaker-noe { border-left-color: var(--accent); }
+  main p.dialogue.speaker-noe strong { color: var(--accent); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">Nuit du 20 septembre 2026</div>
+    <h1>Rapport de nuit autonome</h1>
+    <p class="sub">Maison IA vivante — travail effectué pendant que tu dormais. Tout est commité et testé (128/128 blocs, tsc propre à part une erreur préexistante et sans rapport dans vite.config.ts).</p>
+  </header>
+  <div class="divider"></div>
+  <main><h2>Ce qui a été fait</h2>
+<ul><li>CIRCLE-TASKS (Ronde périodique) enrichi de 5 à 10 items : scans Smart Conso API/SMART-CONSO-TOKEN, photo de la dream team, THE-SCREENER — plus un champ tokensEstimes honnête sur chaque item.</li><li>Nouveau gabarit HTML réutilisable (scripts/html-report.mjs) : blocs génériques + code/image/dialogue, thème sombre partagé. Déjà appliqué à kpi-report.mjs (première application réelle).</li><li>CLAUDE.md complété : CIRCLE-TASKS et le gabarit HTML n’y étaient cités nulle part (trouvaille de la revue de cohérence).</li><li>check-spirit.mjs relancé : plantait au lancement, corrigé (voir bugs ci-dessous), puis exécuté réellement — 2/20 scénarios ont pu être lus avant épuisement confirmé du quota Gemini.</li><li>runNetworkCheck() de LE-COORDINATEUR relancé en direct : plantait aussi (voir bugs ci-dessous), corrigé.</li></ul>
+<h2>Trois bugs réels trouvés et corrigés</h2>
+<table><thead><tr><th>Bug</th><th>Cause</th><th>Garde-fou ajouté</th></tr></thead><tbody><tr><td>check-spirit.mjs plantait au tout premier lancement</td><td>Import &quot;@/lib/quality-metrics&quot; (ajouté le 19/09) jamais répercuté dans sa chaîne de remplacement d’alias, copie jamais synchronisée de celle de check-house.mjs</td><td>findMissingAliasReplacements() — vérifie en direct, contre les vrais fichiers, que les deux scripts couvrent bien tous les imports réels</td></tr><tr><td>runNetworkCheck() (LE-COORDINATEUR) plantait au lancement direct</td><td>Appel à summarizeTokenHistory, un nom qui n’a jamais existé (copié-collé fautif de summarizeHistory)</td><td>Nouveau test de fumée bout-en-bout qui appelle réellement runNetworkCheck() contre l’état du dépôt</td></tr><tr><td>CLAUDE.md incomplet</td><td>CIRCLE-TASKS et le gabarit HTML n’étaient cités nulle part, contrairement à LE-COORDINATEUR (même statut)</td><td>Deux paragraphes ajoutés, même format que LE-COORDINATEUR</td></tr></tbody></table>
+<p class="note">Les deux premiers bugs partagent la même cause profonde : une logique dupliquée (jamais partagée) entre deux scripts, qui dérive dès que l’un des deux change sans que l’autre suive — exactement le type de récidive que l’Article 3 de la charte interdit. Les deux garde-fous ajoutés ce soir empêchent une troisième occurrence de passer inaperçue.</p>
+<h2>Quota Gemini — statut réel</h2>
+<p>gemini-flash-lite-latest (le modèle principal du jeu) est confirmé épuisé sur les 3 clés configurées, malgré le changement de jour calendaire — vérifié par une sonde lourde ET par l’échec réel de 18 des 20 scénarios de check-spirit.mjs. Les 2 réponses obtenues sont dans le ton attendu (Lia froide et coupante, Noé réactif), un signal encourageant mais insuffisant pour valider le registre jour/nuit contre l’Article 0.</p>
+<p>Une reprise automatique est programmée pour 07:33 UTC (après le renouvellement quotidien probable du quota) : nouvelle tentative de check-spirit.mjs complet, puis la simulation Article 18 si le quota répond.</p>
+<h2>Questions en attente de ta validation</h2>
+<ul><li>GEMINI_FALLBACK_MODELS (repli sur gemini-flash-latest/gemini-3.5-flash) reste non activé, faute de validation qualité intégrale (lecture de tous les scénarios check-spirit.mjs/check-profile.mjs avec ce modèle) — veux-tu que je fasse cette validation la prochaine fois que le quota est disponible, pour avoir un vrai filet si le modèle principal s’épuise à nouveau en pleine simulation ?</li><li>Le recul exponentiel de rotation des clés Gemini (lib/gemini-keys.ts) n’a jamais été explicitement reconfirmé avec toi comme réglant l’inquiétude notée avant la compaction de session — toujours ouvert dans points-fragiles.md.</li><li>Les paliers rares de la charte (colère débridée, silence méprisant de Lia, vulnérabilité/respect sincères, dispute grave Lia/Noé) restent quasi jamais déclenchés dans les simulations notées — la prochaine simulation complète devrait-elle les pousser délibérément ?</li></ul></main>
+  <div class="divider"></div><footer><p>Maison IA vivante — rapport généré automatiquement pendant la session de nuit autonome.</p></footer>
+</div>
+</body>
+</html>
