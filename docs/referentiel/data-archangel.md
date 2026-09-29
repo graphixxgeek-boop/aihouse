@@ -297,3 +297,55 @@ lisible produite à côté de lui (un `.md` voisin d'un `.docx` du même nom). *
 complète des fichiers, jamais un index** : la première version passait `estUnDepot` directement à un
 `.filter()`, donc recevait un NUMÉRO comme second argument — un défaut invisible à la relecture,
 attrapé par le contre-test.
+
+## LA CARTE DES DOSSIERS — le second étage de #725 (2026-09-29, tâche #1167)
+
+```
+node scripts/data-archangel.mjs carte
+```
+
+**Sa demande, dans la tâche** : « rien ne décrit la CARTE de la mémoire du projet — quel dossier sert
+à quoi, lequel s'écrit tout seul, lequel s'historise, lequel dépend de quel autre. **À dériver du
+dépôt réel, jamais une carte dessinée à la main qui se périmerait.** »
+
+Le premier étage (les ANCRES) répond « où est ce détail ? » à l'intérieur d'un document. Celui-ci
+répond un cran au-dessus : **comment cette mémoire est-elle organisée ?**
+
+| Sa question | Le signal, dérivé |
+|---|---|
+| à quoi sert ce dossier | la NATURE de son index, déjà mesurée par `mesurerLesIndex()` |
+| s'écrit-il tout seul | `quiEcritDans()` — deux signaux séparés, voir ci-dessous |
+| s'historise-t-il | `dossierSHistorise()` — ses fichiers portent-ils une date |
+| de quoi dépend-il | `dependancesDuDossier()` — quels autres dossiers ses fichiers citent |
+
+**Mesure : 92 dossiers, 67 écrits par un script, 46 qui gardent une suite de passages datés.**
+
+### Deux resserrements, et c'est la famille d'erreur la plus fréquente de ce dépôt
+
+**① « Le script nomme le chemin »** attribuait `docs/check-tasks-details` à **agent-des-noms**, qui
+le cite dans un registre de renommage. *Mentionner n'est pas écrire.*
+
+**② « Il le nomme ET écrit quelque part dans le fichier »** rendait **91 dossiers sur 92** écrits par
+un script. Un fichier de 20 000 lignes écrit forcément quelque part : **la condition était vide de
+sens.** `ecritPresDuChemin()` exige donc le verbe d'écriture **à trois lignes du chemin** — assez
+pour voir un appel étalé sur plusieurs lignes, trop peu pour une rencontre de hasard.
+
+### Deux signaux d'écriture qui ne se mélangent jamais
+
+**Le script HOMONYME est le MAÎTRE** : la règle du dépôt est sans exception — un registre vit dans
+`docs/<nom-de-l-outil>/` — et **une convention est une règle, jamais une déduction**. Les autres
+écrivains sont rendus **à part** (`parLeCode`), parce qu'un dossier peut légitimement être alimenté
+par plusieurs outils : aplatir les deux listes perdrait lequel en est le maître.
+
+### Une dépendance inventée, retirée
+
+Le premier jet rendait « docs/X » parmi les dépendances du référentiel — un chemin de fixture pris
+dans un exemple de code. `dependancesDuDossier()` ne retient désormais que les dossiers qui existent
+vraiment : **une carte qui invente une dépendance vaut moins qu'une carte qui en oublie une.**
+
+### Ce qu'elle ne fait pas, et c'est délibéré
+
+**Elle DÉCRIT, elle ne JUGE pas.** Elle ne dit pas qu'un dossier est mal rangé ni qu'une dépendance
+est de trop : ces jugements demandent de savoir ce que le projet VEUT, et ce savoir n'est pas dans
+le dépôt. Elle est entièrement dérivée, donc elle ne peut pas se périmer — ce qu'il exigeait.
+

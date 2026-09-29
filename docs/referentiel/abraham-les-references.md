@@ -525,3 +525,27 @@ déclarées de ce paysage.
 > *(Trois frontières à déclarer coup sur coup en une nuit disent aussi quelque chose sur ma façon
 > d'écrire : mes sections de fiche sont longues et chargées en vocabulaire de leçon. Le détecteur a
 > raison de le remarquer — noté en #1164.)*
+
+## `sansLesCommentaires()` — pourquoi une seconde fonction, et pas un élargissement (2026-09-29, tâche #1168)
+
+ABRAHAM portait déjà `sansChainesNiCommentaires()`, employée partout où il faut mesurer le CODE sans
+que les exemples et les explications comptent.
+
+**Un garde-fou voisin avait besoin de l'inverse partiel.**
+`findEcrivainsDeRegistreSansContribution()` (doc-report) cherche un chemin `docs/x/` **dans les
+arguments d'un appel d'écriture**. Son propre commentaire annonçait, depuis sa création, que « citer
+un chemin dans un commentaire n'est pas écrire dedans » — **et rien ne retirait les commentaires**.
+Un commentaire qui MONTRE la forme du code, pour l'expliquer, déclenchait donc l'accusation.
+
+**Pourquoi ne pas réutiliser l'ancienne** : elle retire aussi les CHAÎNES — c'est-à-dire précisément
+l'endroit où vit le chemin littéral que ce garde-fou doit trouver. **Deux besoins voisins, deux
+fonctions ; les fondre casserait l'un des deux.**
+
+> **FRONTIÈRE avec `docs/referentiel/safe-export.md`** *(cinquième déclarée en une nuit, et ce
+> nombre dit quelque chose : à 543 lignes contre une médiane de 101, cette fiche partage assez de
+> vocabulaire avec toutes les autres grosses pour les rencontrer une à une)*. ABRAHAM est le maître
+> des DOCUMENTS À RÈGLES : découper, mesurer le porteur réel, trouver les redondances. SAFE-EXPORT
+> est le maître de L'EXPORTABILITÉ : ce qui part, ce qui manque au kit, ce que l'hôte doit fournir.
+> Ils se croisent sur les documents et ne s'y confondent jamais — l'un demande « cette règle est-elle
+> portée ? », l'autre « ce fichier peut-il partir ? ».
+
