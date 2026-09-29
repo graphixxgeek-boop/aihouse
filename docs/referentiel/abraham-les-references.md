@@ -485,3 +485,43 @@ fragmentation à 100 %, et le sujet UN SEUL OBJECTIF.
 
 **Sa limite, déclarée** : il mesure un recouvrement de vocabulaire, jamais une compréhension. Il
 sert à trouver ce qui est ABSENT — un signal sûr — jamais à certifier ce qui est présent.
+
+### La limite de cette mesure, trouvée en essayant de l'appliquer ailleurs (2026-09-29, tâche #1164)
+
+**L'ESSAI** : confronter la CAPABILITY MAP des audits (10 capacités, 71 sous-capacités) au référentiel
+réel, pour voir quelles capacités l'Agence ne couvre pas. Le résultat annonçait **« Task », « KPI »,
+« Plan », « Logs », « Blind test » ABSENTS** — alors que le dépôt porte `check-tasks-details`,
+`kpi-report`, `docs/plans/` et `x-port-blindtest`.
+
+**LA CAUSE N'EST PAS CELLE QU'ON CROIT D'ABORD.** Ma première explication — « les audits sont en
+anglais, le dépôt en français » — était fausse : `task` apparaît **1 515 fois** dans notre corpus,
+`kpi` **936**, `plan` **2 117**. La vraie cause est dans `motsSignificatifs()`, qui **écarte les mots
+de quatre lettres ou moins** : `task`, `kpi`, `plan`, `logs`, `mode` disparaissent tous avant la
+comparaison. Ce filtre est un bon choix pour de la prose française, où les mots courts sont des
+outils grammaticaux — **il est fatal sur des étiquettes techniques anglaises, qui sont courtes par
+convention.**
+
+**CE QUI EST DÉCLARÉ PLUTÔT QUE CORRIGÉ**, et c'est une décision : abaisser le seuil ferait entrer
+« dans », « avec », « pour » dans chaque comparaison, et rendrait tout proche de tout. La mesure de
+couverture **sert les demandes écrites en prose, jamais les taxonomies en étiquettes**. Une carte de
+capacités se LIT ; elle ne se mesure pas par recouvrement de vocabulaire.
+
+**POURQUOI CETTE NOTE EXISTE** : le rapport faux était crédible. Il aurait annoncé que l'Agence n'a
+ni système de tâches ni KPI — deux de ses plus grosses parties. *Un outil qui rend un résultat faux
+avec assurance coûte plus qu'un outil absent*, et c'est la raison d'être de toutes les limites
+déclarées de ce paysage.
+
+> **FRONTIÈRE, parce que le détecteur de documents jumeaux l'a demandée (2026-09-29).** Cette fiche
+> et `docs/xp-ia-process-detail.md` partagent beaucoup de vocabulaire — mesures fausses, limites
+> déclarées, leçons payées — et ce n'est pas un hasard : les deux racontent ce que le projet apprend
+> en se trompant. **Ils ne se confondent pourtant jamais.** Ce document décrit UN OUTIL et ses
+> capacités ; l'autre décrit LE PROCESS par lequel une leçon est découverte, enregistrée, analysée
+> et ressortie au bon moment. Ici on lit ce qu'ABRAHAM sait faire ; là-bas, comment une expérience
+> survit à la session qui l'a vécue. **Et pour la même raison, cette fiche n'est pas non plus
+> `docs/referentiel/lecons.md`** : le registre des leçons PORTE les leçons du projet, numérotées et
+> citables ; cette fiche ne fait que les invoquer là où elles expliquent un choix d'ABRAHAM. Les
+> trois documents se citent, ils ne se remplacent pas.
+>
+> *(Trois frontières à déclarer coup sur coup en une nuit disent aussi quelque chose sur ma façon
+> d'écrire : mes sections de fiche sont longues et chargées en vocabulaire de leçon. Le détecteur a
+> raison de le remarquer — noté en #1164.)*
