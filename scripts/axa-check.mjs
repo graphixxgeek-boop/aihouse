@@ -502,6 +502,24 @@ function main() {
   const covDir = mkdtempSync(join(tmpdir(), "axa-check-"));
   sh("node scripts/check-house.mjs", { cwd: ROOT, env: { ...process.env, NODE_V8_COVERAGE: covDir } });
   const perFile = collectCoverage(covDir);
+  // LA COUVERTURE DES OUTILS SE LIT DANS LE MÊME RELEVÉ, ET ELLE NE SE LISAIT NULLE PART
+  // (2026-09-29, tâche #1189).
+  //
+  // LE DÉFAUT, EN DEUX TEMPS, ET AUCUN DES DEUX NE SE VOIT À LA LECTURE. Plus bas, la couverture
+  // des outils était collectée depuis `.sites-runtime/axa-coverage` — un dossier que **rien dans
+  // ce dépôt n'écrit** : une seule occurrence du chemin, celle qui le LIT. Et même en le pointant
+  // vers le bon dossier, `covDir` était supprimé ici, cent lignes avant d'être relu.
+  //
+  // CONSÉQUENCE MESURÉE : « 39 outils NON MESURÉS sur 40 », à chaque passage, depuis la création de
+  // cette mesure. Le commentaire de la section disait pourtant, exactement : « le relevé de
+  // couverture est produit par le filet de sécurité sous NODE_V8_COVERAGE ». C'était vrai — et ce
+  // relevé-là, produit trois lignes plus haut, personne n'allait le chercher. Un AUTRE dossier
+  // était lu à sa place. C'est la leçon L2 dans un Gardien sacré : un mécanisme qu'on ne peut pas
+  // alimenter n'existe pas, et son « NON MESURÉ » permanent finit par se lire comme du décor (L6).
+  //
+  // Le relevé V8 contient TOUT ce que le processus a chargé — `scripts/` autant que `lib/` — donc
+  // la seconde collecte ne coûte pas un second lancement du filet : elle relit le même dossier.
+  const perSlugOutils = collectScriptCoverage(covDir);
   rmSync(covDir, { recursive: true, force: true });
   const archivedActions = loadArchivedSimulationActions();
   const ledger = loadDepthChecks();
@@ -599,7 +617,6 @@ function main() {
   // gardés en fonction exportée : un mécanisme que personne ne lance n'existe pas (leçon L2), et
   // `findDetecteursMuets` l'aurait signalé au commit suivant — à juste titre.
   {
-    const perSlugOutils = collectScriptCoverage(join(ROOT, ".sites-runtime/axa-coverage"));
     const etats = SLUGS_COUVERTS_PAR_AXA.map((slug) => ({ slug, ...etatDeCouverture(slug, perSlugOutils) }));
     const mesures = etats.filter((e) => e.etat === "mesuré");
     const exemptes = etats.filter((e) => e.etat === "jamais exerçable");
@@ -607,6 +624,26 @@ function main() {
     console.log(`\n--- Couverture des OUTILS : ${mesures.length} mesuré(s) · ${exemptes.length} jamais exerçable(s) · ${nonMesures.length} NON MESURÉ(s), sur ${etats.length} ---`);
     console.log("  Les trois ne se confondent jamais : « 0 % mesuré » dit que le code est exercé et mal couvert ; « jamais exerçable » dit qu'on ne pourra JAMAIS rien mesurer ; « NON MESURÉ » dit qu'on n'a rien mesuré cette fois, et c'est le seul des trois qui est un trou à combler.");
     for (const e of exemptes) console.log(`  ⬜ ${e.slug} — ${e.pourquoi}`);
+    // LES MESURÉS N'ÉTAIENT IMPRIMÉS NULLE PART, et ça ne se voyait pas tant qu'il n'y en avait
+    // AUCUN (2026-09-29, tâche #1189). La section ne montrait que les problèmes — parfaitement
+    // raisonnable quand la mesure était vide, absurde le jour où elle marche : trente-neuf outils
+    // mesurés produisaient zéro ligne, et la réparation restait invisible dans son propre rapport.
+    // On imprime donc les PLUS FAIBLES d'abord, qui sont la seule information actionnable, et le
+    // nombre total, qui dit que la mesure a bien eu lieu.
+    if (mesures.length) {
+      const parPct = [...mesures].sort((a, b) => a.pct - b.pct);
+      console.log(`  ${mesures.length} outil(s) réellement mesuré(s). Les plus faiblement couverts d'abord — c'est la seule partie actionnable :`);
+      for (const e of parPct.slice(0, 10)) {
+        // UNE LIMITE DÉCLARÉE NE DISPARAÎT PAS SOUS UN CHIFFRE. `check-spirit` est déclaré
+        // inexerçable parce que sa partie utile coûte de vrais appels API ; ses fonctions pures,
+        // elles, sont bien exercées et se mesurent. Les deux sont vrais et disent deux choses
+        // différentes : afficher le seul pourcentage ferait lire « mal couvert » là où une part du
+        // code ne PEUT pas être couverte ici. Le nombre et la raison voyagent donc ensemble.
+        const limite = raisonDeNonExercice(e.slug);
+        console.log(`    ${String(Math.round(e.pct)).padStart(3)} %  ${e.slug}${limite ? ` — ⬜ part déclarée inexerçable : ${limite}` : ""}`);
+      }
+      if (parPct.length > 10) console.log(`    … et ${parPct.length - 10} autre(s), mieux couvert(s).`);
+    }
     // AUCUNE MESURE DU TOUT N'EST UNE SEULE INFORMATION, jamais trente-huit. Le relevé de couverture
     // est produit par le filet de sécurité sous NODE_V8_COVERAGE ; lancé seul, cet outil n'en a
     // aucun, et lister alors tous les outils un par un donnerait l'impression de trente-huit trous

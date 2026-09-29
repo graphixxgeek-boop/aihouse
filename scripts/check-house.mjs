@@ -4501,6 +4501,29 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.equal(scriptRobustnessScore('argus',perSlug),50,'scriptRobustnessScore() must reuse robustnessScore() exactly (one of two functions covered = 50%), never a second scoring formula for scripts');
   assert.equal(scriptRobustnessScore('harmonia',perSlug),undefined,'a tool never seen in this coverage run must report an honest N/A, never a fabricated 0%');
   assert.deepEqual(collectScriptCoverage('.sites-runtime/axa-check-script-nonexistent-dir'),{},'a coverage directory that was never produced must report an honest empty result, never crash the caller');
+
+  // LE RELEVÉ DES OUTILS SE LIT DANS LE MÊME DOSSIER QUE CELUI DES LIBS (2026-09-29, tâche #1189).
+  //
+  // Le défaut tenait en deux temps, et aucun des deux ne se voyait à la lecture : la couverture des
+  // outils était collectée depuis `.sites-runtime/axa-coverage`, un dossier que RIEN dans ce dépôt
+  // n'écrit — une seule occurrence du chemin, celle qui le lit ; et même bien pointé, le vrai
+  // dossier était supprimé cent lignes avant d'être relu. Résultat : « 39 outils NON MESURÉS sur
+  // 40 » à chaque passage, depuis la création de la mesure, dans un Gardien sacré.
+  //
+  // CE TEST VERROUILLE LA CHAÎNE, jamais le chiffre : le chemin lu doit être celui que le filet
+  // vient de remplir, et il ne doit plus exister de lecture d'un dossier que personne n'écrit.
+  {
+    const srcAxa = fs.readFileSync('scripts/axa-check.mjs', 'utf8');
+    assert.ok(!/collectScriptCoverage\(join\(ROOT, ["'`]\.sites-runtime\/axa-coverage/.test(srcAxa), 'MUST CATCH: the tools coverage must never again be read from a directory nothing in this repository writes — that single line kept a Gardien sacré blind on 39 tools out of 40, while the comment beside it correctly said the reading came from the net run under NODE_V8_COVERAGE');
+    assert.ok(/const perSlugOutils = collectScriptCoverage\(covDir\);/.test(srcAxa), 'and it must read the very directory the net just filled, collected BEFORE that directory is removed');
+    const ordre = srcAxa.indexOf('collectScriptCoverage(covDir)') < srcAxa.indexOf('rmSync(covDir');
+    assert.ok(ordre, 'MUST CATCH: collecting after rmSync() would read an erased directory and rebuild the exact blindness this fixes — the order is the mechanism');
+    // Les DEUX vérités voyagent ensemble : un outil dont une part est déclarée inexerçable garde sa
+    // raison affichée à côté de son pourcentage, sinon le chiffre seul fait lire « mal couvert » là
+    // où une part du code ne PEUT pas être couverte ici.
+    assert.ok(/part déclarée inexerçable/.test(srcAxa), 'a declared unexercisable share must keep travelling next to the measured percentage, never be hidden by it');
+    console.log('Passed: la couverture des OUTILS se lit enfin dans le relevé que le filet vient de produire (2026-09-29, tâche #1189) — elle était collectée depuis un dossier que RIEN dans ce dépôt n\'écrit, et le vrai dossier était effacé cent lignes avant d\'être relu. Un Gardien sacré annonçait donc « 39 outils NON MESURÉS sur 40 » depuis la création de cette mesure, pendant que le commentaire d\'à côté disait correctement d\'où le relevé venait. Le test verrouille la CHAÎNE et jamais le chiffre : le dossier lu est celui que le filet remplit, la collecte précède la suppression, et une part déclarée inexerçable garde sa raison à côté de son pourcentage.');
+  }
   fs.rmSync(fixtureScriptCovDir,{recursive:true,force:true});
   console.log("Passed: AXA-CHECK's extension to scripts/*.mjs (task #218) correctly maps each badge-eligible tool's real, non-uniformly-named script file (ARGUS's check-argus.mjs, THE-SCREENER's the-screener-capture.mjs, etc. — never a guessed slug-based filename), reuses functionCoverageFromV8()/robustnessScore() verbatim rather than a second scoring formula, and reports an honest absence for a tool never seen in a given coverage run or a directory that was never produced.");
 }
