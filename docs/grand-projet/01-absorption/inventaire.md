@@ -104,3 +104,33 @@ Jumeaux en texte des `.docx` déjà inventoriés plus haut, même traitement et 
 - `00-sources/02-documents-prepares/texte/README.md` — la fiche de lecture des six ci-dessus, pas une source
 - `00-sources/02-documents-prepares/Architecture_fonctionnelle_Projet_Jeu_Agence_Client(Schema fonctionnel).csv` — le schéma fonctionnel, déjà lisible tel quel, traité en EXTRAIT (voir le tableau du 2026-09-29)
 - `00-sources/02-documents-prepares/Construire_PHILOSOPHIE_ET_POLITIQUE_jusqu'à_ARCHITECTURE_DES_NIVEAUX_et_ARCHITECTURE_FONCTIONNELLE.zip` — l'archive d'origine telle qu'il l'a déposée, conservée par principe : SANS OBJET à la lecture, tout son contenu étant listé ci-dessus
+
+---
+
+## LES SYNTHÈSES ANNOTÉES — ce que je tire des sources, pour MOI
+
+*(Ouvert le 2026-09-29 au soir. Sa consigne : « ce travail est POUR TOI MÊME […] je ne vais JAMAIS
+lire ces synthèses ». Elles ne sont donc pas un livrable : ce sont mes notes de lecture, rangées
+pour être retrouvables.)*
+
+**Ce que chacune contient** : les idées porteuses du document, annotées par six questions — ce que
+ça dit · ce que ça nous apporte · **quand j'en aurai besoin** · **accord, désaccord ou neuf vis-à-vis
+de notre charte** · déjà fait, à faire ou à trancher · **l'ancre** (fichier + ligne) pour revenir à
+la source.
+
+**Deux règles qui les gouvernent, et la seconde est sa contrainte** :
+1. **Aucune recopie.** La source reste entière à côté ; chaque bloc donne la ligne où y revenir.
+   Une seconde copie divergerait (Article 24).
+2. **Le grain se DÉRIVE, il ne se fixe pas.** Un seuil en nombre de mots, tiré du corpus entier,
+   s'est révélé faux dès le premier document — il écartait ses deux définitions fondatrices. On
+   garde donc les passages qui couvrent 80 % du contenu, **par document** ; et quand le découpage
+   automatique est trop grossier, on annote par IDÉE en ancrant à la ligne réelle.
+
+| Fichier | Source annotée | État |
+|---|---|---|
+| `syntheses/PHILOSOPHIE_ET_POLITIQUE.md` | `PHILOSOPHIE ET POLITIQUE` | 4 blocs, 82 % du contenu |
+| `syntheses/FIXER_UN_OBJECTIF_ULTIME.md` | `FIXER UN OBJECTIF ULTIME AU PROJET` | 5 idées, document entier |
+
+**Les quatre restantes** — `COMMENT ASSURER LA COHERENCE`, `ARCHITECTURE DES NIVEAUX`,
+`ARCHITECTURE FONCTIONNELLE`, `DE LA STRATEGIE A LA TACHE` — suivront dans cet ordre : les deux
+premières nourrissent le cadre, les deux dernières les étapes ③ et ④.
