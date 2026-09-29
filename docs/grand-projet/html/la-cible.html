@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA CIBLE — ce que ce projet cherche à obtenir</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T00:08:55.428Z</div>
+    <h1>LA CIBLE — ce que ce projet cherche à obtenir</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/la-cible-2026-09-29.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29, 02h15 heure de Paris — heure LUE, source système. Tâches #1144 · #1147. Niveau ② de son escalade : <code>calibrage → LA CIBLE → grandes étapes → sous-étapes → blocs → tâches</code>.)</em></p>
+<div class="highlight"><p><strong>FRONTIÈRE, écrite des deux côtés.</strong> Ce document propose la CIBLE et la mesure qui la rend
+nécessaire. La parole brute d'où elle sort vit dans
+<code>docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md</code>, les décisions déjà prises dans
+<code>docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md</code>, deux documents distincts
+qu'il ne faut jamais confondre avec celui-ci.</p></div>
+<hr>
+<h3>À QUI CE DOCUMENT S'ADRESSE</h3>
+<p><strong>Le contexte.</strong> Avant de dormir, il a posé la question qui commande tout le grand changement : « quel est le but ultime du projet porté par Philo et Politique, est-ce que ce but est défini quelque part ? Est-ce qu'il est bien défini ? Est-ce qu'il correspond à notre direction ? CE but ultime est important, <strong>de lui découle tout le reste</strong>. »</p>
+<p><strong>Sa demande.</strong> « Je me demande même si on doit pas en tout premier revoir le document politique et philosophie pour y inscrire <strong>notre but, la raison d'être de ce projet et ce que ce projet doit livrer</strong>. […] en priorité : commercialiser l'agence de la meilleure façon ; mais il y a aussi la partie jeu, il faut redéfinir tout ça proprement, <strong>rien n'est encore très clair</strong>. »</p>
+<p><strong>Ce que ce document fait.</strong> Il répond à ses trois questions <strong>par une mesure</strong>, puis il propose une cible — en séparant nettement ce qui est établi, ce que je propose, et ce qui lui revient.</p>
+<hr>
+<h3>1. SES TROIS QUESTIONS, RÉPONDUES PAR UNE MESURE</h3>
+<p><code>docs/philosophie-et-politique.md</code> — la boussole du projet, le point que sa propre chaîne de décision désigne comme <strong>le plus fixe de tous</strong> — compte 364 lignes et 19 principes. Voici ce qu'on y trouve :</p>
+<table><thead><tr><th>Mot cherché dans la boussole</th><th>Occurrences</th></tr></thead><tbody><tr><td><strong>« agence »</strong></td><td><strong>0</strong></td></tr><tr><td><strong>« but »</strong></td><td><strong>0</strong></td></tr><tr><td><strong>« raison d'être »</strong></td><td><strong>0</strong></td></tr><tr><td><strong>« commercial »</strong>, <strong>« vendre »</strong>, <strong>« acheteur »</strong></td><td><strong>0</strong></td></tr><tr><td>« exportab… »</td><td>1</td></tr><tr><td>« produit » au sens d'un livrable</td><td><strong>0</strong> <em>(les 5 occurrences sont le verbe « produire »)</em></td></tr></tbody></table>
+<p><strong>LES TROIS RÉPONSES, DANS SON ORDRE :</strong></p>
+<ul><li><strong>Le but est-il défini quelque part ? NON.</strong> Les 19 principes disent comment on travaille, ce qu'on refuse et comment on arbitre. <strong>Aucun ne dit à quoi ce projet sert, ce qu'il doit livrer, ni à qui.</strong> Le titre « Partie 1 — Philosophie (le pourquoi, les valeurs) » désigne le pourquoi des MÉTHODES, jamais le pourquoi du PROJET.</li><li><strong>Est-il bien défini ? SANS OBJET</strong> — mais il y a une quasi-réponse, et elle est plus gênante qu'une absence. L'en-tête du document décrit le projet comme « un projet créatif/narratif piloté par IA ». <strong>La boussole considère donc le JEU comme le projet, et l'Agence comme rien du tout : elle ne la nomme pas une seule fois.</strong></li><li><strong>Correspond-il à notre direction ? NON, et c'est la trouvaille.</strong> Sa direction, ce soir : « en priorité, commercialiser l'agence de la meilleure façon ». Sa commande écrite : « l'agence est un vrai projet, principal ici, <strong>le jeu n'est qu'un prétexte pour l'instant</strong> ». <strong>Le document le plus fixe de la chaîne pointe dans la direction inverse de celle qu'il énonce</strong> — et il le fait en silence, depuis le 2026-09-18.</li></ul>
+<p><strong>CE QUE CETTE MESURE EXPLIQUE, ET C'EST PLUS LARGE QUE LE DOCUMENT.</strong> Le mot « commercialiser » n'apparaît <strong>dans aucune décision du suivi et dans aucun document du référentiel</strong> — trois fichiers en tout dans le dépôt, dont deux sont sa propre commande et ma trace de lecture. La priorité qu'il énonce comme première n'existe nulle part dans ce qui gouverne le travail. Tout l'outillage a donc été construit <strong>sans cible commerciale déclarée</strong>, ce qui ne le rend pas mauvais — mais explique pourquoi la question « l'Agence est-elle finie ? » n'a jamais eu de réponse : on ne peut pas finir ce dont on n'a pas dit ce que ce serait.</p>
+<hr>
+<h3>2. CE QUI EST ÉTABLI — ses mots, pas mon interprétation</h3>
+<ul><li><strong>Il y a DEUX projets</strong>, et c'est exceptionnel : « il est exceptionnel qu'un projet contienne 2 projets comme le présent projet que je porte moi-même ».</li><li><strong>L'Agence est le projet principal</strong> : « l'agence est un vrai projet, principal ici, le jeu n'est qu'un prétexte pour l'instant ».</li><li><strong>Les deux se servent mutuellement</strong> : « l'agence est un prétexte pour construire le site, le site est un prétexte pour construire l'agence ».</li><li><strong>Le jeu est le juge de dernier ressort de l'Agence</strong> : un outil qui n'a jamais rien trouvé sur un vrai produit n'emportera rien d'éprouvé ailleurs.</li><li><strong>La priorité énoncée ce soir</strong> : « commercialiser l'agence de la meilleure façon ».</li><li><strong>Pour l'acheteur, l'Agence n'est pas un projet</strong> : « elle agit uniquement dans l'EXÉCUTION, elle ne s'inscrit pas pour l'utilisateur comme un 2e PROJET ».</li></ul>
+<hr>
+<h3>3. LA CIBLE QUE JE PROPOSE — et c'est une proposition, jamais une décision</h3>
+<div class="highlight"><p>### <strong>Rendre l'Agence Codex commercialisable comme aide exécutive autonome pour n'importe quel projet de code, et le démontrer en menant « Maison IA vivante » jusqu'à un jeu fini.</strong></p></div>
+<p><strong>Pourquoi cette formulation-là, et pas une autre</strong> — chaque morceau porte une raison :</p>
+<table><thead><tr><th>Le morceau</th><th>Pourquoi il est là</th></tr></thead><tbody><tr><td><strong>« commercialisable »</strong></td><td>sa priorité énoncée, et le mot manquait entièrement au dépôt. <strong>Commercialisable</strong>, pas « commercialisée » : le but est l'état du produit, jamais une vente qui ne dépend pas de nous</td></tr><tr><td><strong>« aide exécutive autonome »</strong></td><td>ses propres mots (« PRODUIT FINI = AIDE EXÉCUTIVE »). Ça exclut d'emblée que l'acheteur hérite d'une Agence qui se croit un second projet</td></tr><tr><td><strong>« pour n'importe quel projet de code »</strong></td><td>c'est le test d'exportabilité déjà mesuré par SAFE-EXPORT, et ça donne une borne vérifiable plutôt qu'une ambition</td></tr><tr><td><strong>« et le démontrer en menant le jeu jusqu'à un jeu fini »</strong></td><td>le jeu n'est pas relégué : il devient <strong>la preuve</strong>. C'est sa propre règle (« le site reste le juge de dernier ressort »), et ça donne au jeu une place dans la cible au lieu de le laisser en orphelin</td></tr></tbody></table>
+<p><strong>CE QUE CETTE CIBLE REND POSSIBLE, et qui ne l'était pas avant</strong> : on peut enfin répondre à sa question « quand pourra-t-on statuer que l'Agence est terminée ? ». Trois bornes candidates existent déjà et sont <strong>mesurées aujourd'hui</strong>, sans rien construire :</p>
+<table><thead><tr><th>Borne candidate</th><th>Mesure actuelle</th><th>Ce qu'elle dit</th></tr></thead><tbody><tr><td>l'exportabilité de SAFE-EXPORT</td><td><strong>88 %</strong> sur 7 dimensions (8 depuis le 2026-09-28)</td><td>ce qui part avec l'Agence est-il complet ?</td></tr><tr><td>le banc témoin sur dépôt étranger</td><td><strong>68/68 outils debout</strong></td><td>l'Agence tourne-t-elle ailleurs ?</td></tr><tr><td>l'indépendance de la tuyauterie</td><td><strong>94 %</strong> sur 84 scripts</td><td>l'Agence a-t-elle besoin de CE dépôt ?</td></tr></tbody></table>
+<p>Aucune des trois ne parle de commercialisation. <strong>C'est le quatrième axe qui manque</strong>, et la cible le rend nommable : <em>un acheteur peut-il installer et utiliser l'Agence sans nous ?</em></p>
+<hr>
+<h3>4. CE QUI RESTE À TRANCHER — et je ne le tranche pas</h3>
+<ul><li><strong>« Commercialiser » veut dire quoi exactement ?</strong> Vendre une licence, ouvrir le code, en faire un service ? Les trois mènent à des Agences différentes, et la cible ne le dit pas encore.</li><li><strong>Le jeu est-il vraiment une preuve, ou un projet à part entière ?</strong> S'il doit être fini POUR LUI-MÊME, il mérite sa place dans la cible autrement que comme démonstration.</li><li><strong>« N'importe quel projet de code » est-il la bonne ambition ?</strong> Une Agence qui vise tout le monde est plus dure à finir qu'une Agence qui vise un type de projet.</li><li><strong>Y a-t-il un troisième objet ?</strong> Sa commande écrit « Projet Agence + Projet Jeu + <strong>Autre</strong> + Vision aérienne » — et « Autre » n'a jamais été rempli.</li></ul>
+<hr>
+<h3>5. LA CASCADE, TELLE QU'ELLE DEVIENT UNE FOIS LA CIBLE POSÉE</h3>
+<pre><code>  PHILOSOPHIE ET POLITIQUE  ──── porte LE BUT (aujourd'hui muet : c'est ce que ce document répare)
+        │
+        ├── STRATÉGIE GLOBALE DU PROJET ENTIER ──── la cible ci-dessus
+        │        │
+        │        ├── STRATÉGIE AGENCE ──── rendre commercialisable : exportabilité,
+        │        │                          rationalisation, modularisation, pack découverte
+        │        │
+        │        └── STRATÉGIE JEU ──── mener à un jeu fini, qui sert de preuve
+        │
+        └── chaque STRATÉGIE DE CHANTIER nomme celle dont elle découle
+                 └── chaque OUTIL nomme le chantier qu'il sert
+                          └── chaque TÂCHE nomme l'étape dont elle relève</code></pre>
+<p><strong>« Aligné » ne veut rien dire tant que ce n'est pas vérifiable.</strong> C'est la seconde moitié de son instruction (« tout est aligné […] il faut que cet axe habite ton travail ») et c'est le livrable technique de cette nuit : que chaque objet DÉCLARE son parent, et qu'un outil puisse dire lesquels ne remontent nulle part. Sans ce mécanisme, l'alignement reste une intention — et une intention n'a jamais empêché quoi que ce soit (leçon L2).</p>
+<hr>
+<h3>6. PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>La boussole du projet ne nomme ni le but, ni ce qu'il doit livrer, ni l'Agence — 0 occurrence sur 364 lignes</td><td><strong>RETENU</strong></td><td>tâche <strong>#1147</strong> — une Partie 0 « LE BUT » y est ajoutée, portant ce qui est établi, ce qui est proposé et ce qui reste à trancher</td></tr><tr><td>« Commercialiser », sa priorité première, n'existe dans aucune décision ni aucun document du référentiel</td><td><strong>RETENU</strong></td><td>même tâche : la cible l'inscrit, et les questions de calibrage la précisent</td></tr><tr><td>La cible elle-même est une PROPOSITION : le niveau ① de son escalade (calibrage) n'est pas fait</td><td><strong>À TRANCHER</strong></td><td>tâche <strong>#1144</strong> — premier bloc des questions, dès son réveil</td></tr><tr><td>L'alignement en cascade n'est porté par aucun mécanisme</td><td><strong>RETENU</strong></td><td>tâche <strong>#1148</strong> — un objet déclare son parent, un outil dit lesquels ne remontent nulle part</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/la-cible-2026-09-29.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

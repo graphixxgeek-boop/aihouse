@@ -11,3 +11,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/vue-globale.html` | `docs/grand-projet/02-strategie/vue-globale-2026-09-28.md` | 25847 | 2026-09-28 23:20Z |
 | `docs/grand-projet/html/notes-des-echanges-de-depart.html` | `docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md` | 19305 | 2026-09-28 23:56Z |
 | `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 19122 | 2026-09-28 23:56Z |
+| `docs/grand-projet/html/la-cible.html` | `docs/grand-projet/02-strategie/la-cible-2026-09-29.md` | 17872 | 2026-09-29 00:08Z |

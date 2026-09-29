@@ -4,7 +4,7 @@
 (charte de contenu, propre à ce projet précis) et à `docs/regles-de-travail.md` (mécanique de
 collaboration, déjà exportable telle quelle), ce document est une EXTRACTION : il dégage les
 valeurs et les principes d'arbitrage qui gouvernent ce projet, formulés assez génériquement pour
-être réappliqués à un futur projet créatif/narratif piloté par IA — pas nécessairement n'importe
+être réappliqués à un futur projet piloté par IA — d'abord pensé pour la famille des projets créatifs/narratifs, **cadre élargi le 2026-09-29** quand la Partie 0 a nommé l'Agence Codex comme objet principal, ce que cet en-tête ignorait depuis sa rédaction — pas nécessairement n'importe
 quel projet, mais toute la famille des projets de ce type. C'est un texte fondateur, révisé
 exceptionnellement, pas au fil de l'eau comme les deux autres documents : pas de journal de
 versions ici, seulement le texte à jour.*
@@ -20,6 +20,97 @@ mais le principe lui-même est écrit pour tenir hors de ce contexte. Chaque pri
 étiquette : **[Explicite]** s'il reformule une règle déjà écrite noir sur blanc dans `CLAUDE.md`,
 **[Synthèse]** s'il rend explicite quelque chose qui n'existait jusqu'ici que dans les faits, sans
 avoir jamais été formulé comme tel.*
+
+---
+
+## Partie 0 — LE BUT : ce que ce projet cherche à obtenir
+
+*(Ajoutée le 2026-09-29, tâche #1147, sur sa demande explicite : « je me demande même si on doit pas
+en tout premier revoir le document politique et philosophie pour y inscrire **notre but, la raison
+d'être de ce projet et ce que ce projet doit livrer** ».)*
+
+> ### ⚠️ CETTE PARTIE EST UNE PROPOSITION, PAS ENCORE UNE DÉCISION
+>
+> Il l'a dit lui-même en la demandant : « **rien n'est encore très clair** ». Ce qui suit distingue
+> donc en permanence trois choses — **ce qui est ÉTABLI** (ses mots), **ce qui est PROPOSÉ** (par
+> moi, et qu'il valide ou corrige), et **ce qui reste À TRANCHER**. Rien ici n'a l'autorité des
+> parties 1 à 3 tant qu'il ne l'a pas validé. Le détail complet, avec la mesure qui l'a rendu
+> nécessaire, vit dans `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`.
+
+### 0.1 Pourquoi cette partie existait en creux, et ce que ça coûtait **[Synthèse, 2026-09-29]**
+
+Ce document portait 19 principes sur 364 lignes, et **aucun ne disait à quoi le projet sert, ce
+qu'il doit livrer, ni à qui**. Mesuré le jour où la question a été posée : le mot « agence »
+n'apparaissait **pas une seule fois**, pas plus que « but », « raison d'être », « commercialiser »,
+« vendre » ou « acheteur ». La « Partie 1 — le pourquoi » désignait le pourquoi des MÉTHODES, jamais
+celui du PROJET.
+
+**Ce que cette absence coûtait, et ce n'est pas théorique** : la question « quand pourra-t-on
+statuer que l'Agence est terminée ? » est restée sans réponse pendant des mois. On ne peut pas finir
+ce dont on n'a jamais dit ce que ce serait. Une boussole qui indique comment marcher sans indiquer
+où aller laisse avancer très proprement dans n'importe quelle direction.
+
+*Portée générale* : un document de valeurs qui ne nomme pas le but qu'il sert protège la manière et
+laisse la direction sans gardien. Les deux se déclarent, et le but se déclare EN PREMIER.
+
+### 0.2 Ce projet porte DEUX objets, et c'est une situation exceptionnelle **[Établi, 2026-09-29]**
+
+> « il est exceptionnel qu'un projet contienne 2 projets comme le présent projet que je porte
+> moi-même » · « l'agence est un vrai projet, **principal ici**, le jeu n'est qu'un prétexte pour
+> l'instant » · « l'agence est un prétexte pour construire le site, le site est un prétexte pour
+> construire l'agence »
+
+- **L'AGENCE CODEX** — l'outillage de travail, destiné à servir n'importe quel projet de code.
+  C'est le projet principal.
+- **MAISON IA VIVANTE** — le jeu où Lia et Noé découvrent qu'ils sont observés. Il sert de terrain
+  de preuve à l'Agence, **et c'est un rôle, pas une relégation** : un outil qui n'a jamais rien
+  trouvé sur un vrai produit n'emporte rien d'éprouvé vers le suivant.
+
+**La conséquence qui gouverne tout l'export** : pour un acheteur, l'Agence n'est PAS un second
+projet. « Elle agit uniquement dans l'EXÉCUTION, elle ne s'inscrit pas pour l'utilisateur comme un
+2e PROJET. » Tout ce qui, dans l'outillage, traite l'Agence comme un chantier à construire n'a aucun
+sens chez lui.
+
+### 0.3 LE BUT — proposé, à valider **[Proposition, 2026-09-29]**
+
+> **Rendre l'Agence Codex commercialisable comme aide exécutive autonome pour n'importe quel projet
+> de code, et le démontrer en menant « Maison IA vivante » jusqu'à un jeu fini.**
+
+**« Commercialisable » et non « commercialisée »** : le but est un ÉTAT DU PRODUIT, jamais une vente
+qui ne dépend pas de nous. **« Aide exécutive »** sont ses mots. **« Pour n'importe quel projet de
+code »** donne une borne vérifiable plutôt qu'une ambition. **« Le démontrer par le jeu »** donne au
+jeu sa place dans le but, au lieu de le laisser orphelin.
+
+**Quatre points restent à trancher, et ils ne se devinent pas** : ce que « commercialiser » recouvre
+exactement (licence, ouverture, service) · si le jeu est une preuve ou un projet à finir pour
+lui-même · si viser « n'importe quel projet » est la bonne ambition · et ce que recouvre le
+troisième objet, « Autre », que sa commande nomme sans jamais le remplir.
+
+### 0.4 TOUT DÉCOULE DU BUT, ET L'ALIGNEMENT SE VÉRIFIE **[Établi + Proposition, 2026-09-29]**
+
+> « reste dans le modèle en cascade de la stratégie globale qui dépend de philo et politique
+> (alignés), et qui inclut des stratégies **alignées**, qui génèrent des stratégies de chantier
+> **alignées**, des outils **alignés**, tout est aligné […] dès que tu commences à créer, il faut
+> que cet axe ***habite*** ton travail. »
+
+```
+  LE BUT (ci-dessus)  →  stratégie du projet entier  →  stratégie Agence + stratégie Jeu
+        →  stratégies de chantier  →  outils  →  tâches
+```
+
+**La cascade remonte autant qu'elle descend** : « les stratégies de tâches alimentent PAR ESCALADE
+la stratégie globale, **et vice versa** ». Une décision prise sur une tâche peut faire bouger le
+but ; c'est une boucle, jamais une pyramide. Et il nomme lui-même le risque : « il faut FIABILISER
+le fonctionnement de cette dynamique, sans quoi on court vers l'incohérence globale ».
+
+**« Aligné » ne veut rien dire tant que ce n'est pas vérifiable**, et c'est pourquoi ce principe
+n'est pas seulement écrit ici : **chaque objet du projet déclare le parent dont il découle**, et un
+mécanisme dit lesquels ne remontent nulle part. Sans cela, l'alignement resterait une intention — et
+une intention n'a jamais empêché quoi que ce soit.
+
+*Portée générale* : un principe de cohérence globale qui ne s'accompagne d'aucun moyen de constater
+une incohérence est un vœu. Déclarer le parent de chaque objet coûte une ligne ; ne pas le déclarer
+coûte la cohérence entière, sans qu'aucun signal ne prévienne.
 
 ---
 
