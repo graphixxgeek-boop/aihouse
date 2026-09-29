@@ -5931,9 +5931,45 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // déclarent chacun un domaine.
   assert.equal(Object.keys(GARDIEN_DOMAINS).length, 7, 'all SEVEN Gardiens must declare a domain (SAFE-EXPORT joined 2026-09-22, and its domain is docs/ + scripts/ rather than the game engine: its question is the Agency\'s exportability, and lib/ will never leave with the Agency)');
   assert.equal(typeof lastCommitFiles, 'function');
-  // Vérifié en direct contre le vrai dépôt : la liste du dernier commit est lisible, et elle
-  // contient bien des fichiers.
-  assert.ok((lastCommitFiles() ?? []).length > 0, 'the real last commit must expose its changed files — if git goes silent the fallback keeps every guardian awake, which the test above already covers');
+  // 2026-09-29, tâche #1225 — CETTE ASSERTION JUGEAIT LE DISQUE, ET LE DISQUE A EU RAISON D'ELLE.
+  // Elle exigeait `(lastCommitFiles() ?? []).length > 0` contre le VRAI dépôt. Un commit de FUSION
+  // n'expose aucun fichier à `git show` (comportement normal de git : pas de diff par défaut pour
+  // un commit à plusieurs parents), donc la première fusion venue a bloqué le commit suivant — sur
+  // un test qui ne mesurait aucun défaut du code. C'est la leçon L40 pour la quatrième fois cette
+  // semaine : un test qui lit une donnée VIVANTE juge l'état du dépôt, jamais la fonction.
+  // Ce qui est vérifié maintenant est le COMPORTEMENT, sur des sorties injectées — donc vrai quelle
+  // que soit la forme du dernier commit :
+  assert.deepEqual(
+    lastCommitFiles(() => 'a.mjs\nb.md\n'),
+    ['a.mjs', 'b.md'],
+    'une sortie git ordinaire donne la liste, découpée et débarrassée des lignes vides',
+  );
+  assert.equal(
+    lastCommitFiles(() => ''),
+    undefined,
+    'une sortie VIDE rend `undefined`, jamais un tableau vide : ne pas savoir ce qui a changé doit réveiller tous les Gardiens, jamais les endormir',
+  );
+  assert.equal(
+    lastCommitFiles(() => { throw new Error('not a git repository'); }),
+    undefined,
+    'git en échec rend `undefined` plutôt que de faire tomber le crochet',
+  );
+  // Et la commande envoyée porte bien `--first-parent`, faute de quoi une fusion redeviendrait
+  // silencieuse. C'est la seule chose qui ne se déduit pas du comportement ci-dessus.
+  let commandeVue = '';
+  lastCommitFiles((cmd) => { commandeVue = cmd; return 'x.md\n'; });
+  assert.ok(
+    /--first-parent/.test(commandeVue),
+    'sans --first-parent, un commit de fusion ne rend aucun fichier et la bannière annonce une ignorance qu\'elle n\'a pas',
+  );
+  // Vérifié en direct contre le vrai dépôt, mais SANS exiger un contenu que la forme du commit
+  // décide : la fonction répond, et ce qu'elle rend est soit une liste non vide, soit l'absence
+  // honnête. Ces deux-là sont justes ; un tableau vide ne le serait pas.
+  const reelle = lastCommitFiles();
+  assert.ok(
+    reelle === undefined || (Array.isArray(reelle) && reelle.length > 0),
+    'sur le vrai dépôt, lastCommitFiles() rend soit une liste non vide, soit `undefined` — jamais un tableau vide, qui se lirait comme « rien n\'a changé »',
+  );
   const fakeCharter = [
     '# Titre', 'intro', '',
     '## ARGUS — blueprint exportable', '', '`docs/argus-blueprint.md` documente l\'ARCHITECTURE du détecteur de trous — voir `docs/referentiel/argus.md`.', '',

@@ -561,9 +561,20 @@ export function gardienShouldRun(gardien, changedFiles, domains = GARDIEN_DOMAIN
 // Les fichiers du dernier commit, tels que git les rapporte. Retourne `undefined` plutôt qu'une
 // liste vide si git ne répond pas : une absence d'information doit faire tourner les Gardiens,
 // jamais les endormir (même principe d'absence honnête que le reste du paysage).
+//
+// POURQUOI `--first-parent`, ET IL A COÛTÉ UN COMMIT BLOQUÉ (2026-09-29, tâche #1225). Sans lui,
+// `git show --name-only` ne rend RIEN sur un commit de FUSION — c'est le comportement normal de
+// git, qui n'affiche pas de diff pour un commit à plusieurs parents. La liste vide devenait alors
+// `undefined`, c'est-à-dire « git n'a pas répondu », alors que git avait parfaitement répondu :
+// les fichiers étaient connaissables, il suffisait de dire par rapport à quel parent. Encore un
+// signal ADJACENT (pas de diff par défaut) lu comme le signal visé (on ne sait pas ce qui a
+// changé). Le repli restait SÛR — `gardienShouldRun` réveille tout le monde sur `undefined` — mais
+// la bannière annonçait une ignorance qu'elle n'avait pas, et ça se serait reproduit à chaque
+// fusion. `--first-parent` ne change RIEN sur un commit ordinaire (mesuré : mêmes 4 fichiers sur
+// 8324c7d) et rend sa vraie liste sur une fusion.
 export function lastCommitFiles(shImpl = sh, cwd = undefined) {
   try {
-    const out = shImpl("git show --name-only --format= HEAD", cwd ? { cwd } : {});
+    const out = shImpl("git show --name-only --format= --first-parent HEAD", cwd ? { cwd } : {});
     const files = String(out).split("\n").map((l) => l.trim()).filter(Boolean);
     return files.length ? files : undefined;
   } catch { return undefined; }
