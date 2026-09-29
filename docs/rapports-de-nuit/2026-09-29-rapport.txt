@@ -374,6 +374,52 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   ressemblance de surface reste.
 
 
+2undecies. HUIT DOUBLONS INSTRUITS, HUIT FOIS AUTRE CHOSE QUE DE LA DUPLICATION
+-------------------------------------------------------------------------------
+  La règle écrite plus haut a été appliquée jusqu'au bout de la liste, un doublon après l'autre.
+  Elle n'a pas failli une seule fois : à chaque fois, la ressemblance n'était que la partie visible.
+
+  · LE PLUS GROS DU DÉPÔT (32 lignes × 2) NE DEVAIT SURTOUT PAS ÊTRE FONDU. Les deux blocs de
+    `cassandra-rh` sont la paire qu'impose une leçon déjà payée deux fois : les fondre aurait
+    replanté un bug qui ne se voit ni à la lecture, ni à la vérification de syntaxe, seulement à
+    l'exécution. Mais 22 des 34 noms de la seconde liste n'étaient employés NULLE PART dans le
+    fichier — une copie tenue à la main qui avait déjà commencé à diverger. Retirés, la grappe
+    disparaît du relevé sans qu'un seul bloc ait été fondu.
+
+  · LE PRÉAMBULE DE TOUT BALAYAGE DE FICHIERS a mené au plus large constat de la série : il existe
+    42 fois dans l'outillage, et 38 de ces endroits **abandonnent un fichier illisible sans en
+    garder la moindre trace**. C'est « je n'ai pas pu regarder » qui se lit comme « il n'y a rien ».
+    JE N'AI RIEN CORRIGÉ, et c'est délibéré : 38 corrections dans 14 outils, c'est ta décision, pas
+    la mienne. La question t'attend avec trois issues et une recommandation, et le chiffre est
+    remesurable par une commande pour qu'on voie l'avant et l'après le jour où tu tranches.
+
+  · DEUX CONTRÔLES DU REGISTRE NE REGARDAIENT QUE LA MOITIÉ VIVANTE — 605 lignes de tâches sur
+    1 086 hors de leur champ, sans qu'une ligne ne le dise. Ce n'était pas une décision, c'était
+    la valeur par défaut d'un réglage. Mesuré : ZÉRO tâche encore ouverte dort dans les archives,
+    et 300 clôtures anciennes s'y trouvent qui noieraient les récentes. La portée reste la même,
+    mais elle est maintenant CHOISIE et écrite — et le zéro est SURVEILLÉ, parce qu'un angle mort
+    vide ne prévient pas quand il se remplit.
+
+  · LE CHARGEUR PARTAGÉ CRÉÉ POUR TUER DIX COPIES EN A VU NAÎTRE TROIS DE PLUS EN SIX JOURS. C'est
+    la démonstration la plus nette de la semaine : un outil DISPONIBLE n'est pas un MÉCANISME. Rien
+    ne regardait. Les trois sont converties, une quatrième est exemptée par écrit, et un garde-fou
+    cherche désormais la cinquième à chaque passage.
+
+  · UNE CLÉ ÉCRITE À QUATRE ENDROITS. Un seul de ces quatre oubliant une étape, et l'outil
+    proposait fièrement une association que le catalogue réunit déjà — sans que rien ne plante,
+    sans que rien ne rougisse. Un rapport qui se félicite de ce qui existe est la forme la plus
+    discrète d'un outil qui ment.
+
+  · ET LE DERNIER LOT a rendu deux petites choses vraies : un outil lisait le registre avec son
+    PROPRE découpeur alors qu'il empruntait déjà sa définition de « close » au lecteur officiel, et
+    un autre construisait le même rapport deux fois, avec deux lectures séparées de l'horloge — les
+    deux versions d'un même document pouvaient donc porter deux heures différentes.
+
+  CE QUE JE N'AI PAS FAIT, ET POURQUOI C'EST ÉCRIT DANS LE CODE : deux doublons restent, chacun
+  avec sa raison posée juste à côté plutôt que dans un document lointain — c'est là que le prochain
+  agent la cherchera. Le relevé passe de 14 grappes à 8.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
