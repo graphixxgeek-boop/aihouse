@@ -5040,6 +5040,43 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.deepEqual(parRacine.map((m) => m.nom), ['P'], 'the stemmed match finds the right offer and still leaves the unrelated one out — a false positive on a MANDATORY entry point costs more than the silence it replaces');
   assert.ok(parRacine[0].matched.every((w) => /^[a-z]+$/.test(w) && !['renomm', 'outil'].includes(w) === false || true) && parRacine[0].matched.includes('renommer'), 'and what is REPORTED back is the real word, never the root: a reader who sees "renomm" does not recognise his own request, and that field exists so he does');
   assert.deepEqual(suggestAvecRacines('la maison', racinesFaux), [], 'the threshold of two shared words is untouched — one word was never enough and still is not');
+  // TROIS CHAMPS, PAS UN (2026-09-29, tâche #1247) — la MÊME faute que la racine ci-dessus, prise
+  // par l'autre bout, et c'est pour ça qu'elle a survécu à sa correction : #776 a réparé la
+  // comparaison de deux ORTHOGRAPHES et laissé intacte la comparaison à UN SEUL CHAMP. Corriger
+  // l'occurrence sans voir la classe (leçon L37).
+  //
+  // CE QUI A ÉTÉ MESURÉ AVANT LA CORRECTION, sur le vrai catalogue : le rapprochement lisait les
+  // 1 032 mots de `demande` et ignorait les 2 478 de `description` et les 204 de `nom` — 28 % du
+  // texte. Conséquence chiffrée : **69 des 74 prestations étaient introuvables par leur propre
+  // nom**, sur le SEUL point d'entrée que l'Article 31 rend obligatoire.
+  const { motsGeneriquesDesNoms, POIDS_DES_CHAMPS } = await import('../scripts/le-coordinateur.mjs');
+  const troisChamps = [
+    { nom: 'Pack Anti-lourdeurs', description: 'Cherche tout ce qui freine le projet, y compris les alertes que personne ne lit', demande: 'Savoir pourquoi ça traîne', outils: ['jesus'], cout: '0' },
+    { nom: 'Pack Baptême', description: 'Renomme un outil sans casser le code', demande: 'Préparer un renommage', outils: ['noms'], cout: '0' },
+  ];
+  assert.deepEqual(suggestAvecRacines('anti-lourdeurs', troisChamps).map((m) => m.nom), ['Pack Anti-lourdeurs'], 'a single distinctive word of the NAME is enough on its own: a name is a strong, quiet signal, unlike a long description — that is what the per-field weighting buys, and weighting nom at 2 is what makes one word reach the threshold of 2');
+  // CE QUE LE POIDS 0,5 GARANTIT EXACTEMENT, écrit plutôt que supposé : la description SEULE ne
+  // suffit pas à deux mots, il lui en faut quatre. Ce test a d'abord échoué en accusant le code
+  // alors qu'il disait vrai — la fixture, elle, était plus maigre que le cas réel (leçon L40, prise
+  // ici à l'endroit : une fixture qui ne ressemble pas à l'entrée réelle juge autre chose).
+  assert.deepEqual(suggestAvecRacines('freine le projet', troisChamps), [], 'two description words alone stay BELOW the bar, and that is the deliberate design: 2 478 words of description would otherwise put the threshold within reach of any request at all');
+  assert.deepEqual(suggestAvecRacines('cherche les alertes que personne ne lit', troisChamps).map((m) => m.nom), ['Pack Anti-lourdeurs'], 'four description words DO reach it — the bar is higher for the noisiest field, never closed');
+  // ET LE VRAI CAS, SUR LE VRAI CATALOGUE, parce que c'est lui qui a révélé le défaut et que seule
+  // cette forme-là le protège d'un retour : sur la fixture, la même requête passe sous la barre.
+  const { PRESTATIONS: catalogueReel1247 } = await import('../scripts/le-coordinateur.mjs');
+  assert.ok(suggestAvecRacines('ce qui freine le projet', catalogueReel1247).some((m) => m.outils.includes('jesus-le-sauveur')), 'THE EXACT CASE THAT REVEALED IT: « ce qui freine le projet » returned NOTHING AT ALL before this fix, while the Pack Anti-lourdeurs description says word for word « Cherche tout ce qui freine le projet » — on the one entry point Article 31 makes mandatory, which is why the regression test runs against the real catalogue and not a fixture');
+  assert.ok(POIDS_DES_CHAMPS.nom > POIDS_DES_CHAMPS.demande && POIDS_DES_CHAMPS.demande > POIDS_DES_CHAMPS.description, 'the three weights must stay ordered nom > demande > description: flattening them into one concatenated field would put the two-word threshold within reach of any request at all, and an entry point that answers "yes" to everything is no better than the one that answered "no" to everything (lesson L5)');
+  assert.deepEqual(suggestAvecRacines('bonjour comment vas-tu', troisChamps), [], 'COUNTER-TEST, and it is the one that matters most here: widening the match must NOT open the door to noise — a request sharing nothing real still returns nothing, exactly as before');
+  // Le mot générique se DÉRIVE (Article 24) : « Pack » ouvre les 74 noms du catalogue, et compté
+  // comme un mot de nom il donnerait 2 points à TOUT LE MONDE dès qu'une demande le contient.
+  assert.ok(motsGeneriquesDesNoms(troisChamps).has('pack'), 'a word shared by more than half the names is derived as generic, never listed by hand — a hand-written list would go stale at the next prefix');
+  assert.deepEqual(suggestAvecRacines('pack', troisChamps), [], 'and the consequence is what counts: the generic word alone matches nobody, where counting it would have returned the whole catalogue');
+  // CONTRE-ÉPREUVE SUR LE VRAI CATALOGUE, jamais sur la seule fixture (leçon L40 prise à
+  // l'endroit : ici c'est bien le CODE qu'on juge, et le catalogue réel est son entrée normale).
+  const introuvablesParLeurNom = catalogueReel1247.filter((p) => !suggestAvecRacines(p.nom).some((m) => m.nom === p.nom)).map((p) => p.nom);
+  assert.ok(introuvablesParLeurNom.length <= 1, `at most one real prestation may be unreachable by its own name (was 69 before this fix, 1 after); still unreachable: ${introuvablesParLeurNom.join(', ')}`);
+  assert.deepEqual(introuvablesParLeurNom, ['Pack Où on en est'], 'and the ONE that remains is not a matcher defect but a NAME defect, which is why it is named here rather than worked around: « Où on en est » is made entirely of stopwords, so it carries no searchable word at all — a renaming question for the AGENT DES NOMS, never a special case buried in the matcher');
+  console.log('Passed: suggestPrestationsForTask() weighs the three real fields of a prestation (nom 2, demande 1, description 0,5) instead of reading demande alone — 69 of the 74 real prestations were unreachable by their own name before this fix, 1 after, and the nonsense request still returns nothing.');
   // LA TABLE MAÎTRESSE CONTRE LE DÉPÔT RÉEL (2026-09-28, tâche #1016). La table de
   // docs/regles-de-travail.md §7ter est tenue À LA MAIN, et plusieurs garde-fous la lisent comme
   // si elle était le recensement du dépôt : 62 lignes pour 83 scripts. `findToolsMissingFromMenu()`

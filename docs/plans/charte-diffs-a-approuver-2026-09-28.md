@@ -187,6 +187,60 @@ partie de l'Article 2** (cohérence de bout en bout), qui reste vrai mais devien
 
 ---
 
+## 6. LA MESURE AVANT L'OPINION — ton GO est donné, voici le texte *(tâche #767, nuit du 2026-09-29)*
+
+**Tu as dit oui, et je ne rouvre pas la décision.** Ce qui suit est le texte, plus une question de
+séquence que je te dois parce qu'elle est née APRÈS ton accord.
+
+**Ce qui la réclame, et ce sont trois sources indépendantes** : JESUS l'a proposée le 2026-09-24 ;
+un de tes documents Copilot la formule dans ses propres mots ; et le test des cinq impossibles,
+appliqué à nous-mêmes, a trouvé que **quatorze de nos vingt refus disent la même chose** sans
+qu'aucun Article ne la formule.
+
+**Texte proposé** *(il prendrait le numéro suivant, à la suite de la liste — jamais inséré au
+milieu)* :
+
+> **LA MESURE AVANT L'OPINION.**
+>
+> **Ne jamais laisser passer pour un fait ce qui n'en est pas un.** Une date supposée, un chiffre
+> jamais compté, une confiance sans raison, un zéro qui veut dire « je n'ai pas regardé », un
+> accord qui ressemble à une réponse : chacun de ces cinq coûte plus cher qu'une ignorance
+> déclarée, parce qu'une ignorance déclarée se répare et qu'un faux fait se propage.
+>
+> **Les trois obligations.** ① Toute affirmation qui porte une décision dit d'où elle vient —
+> mesurée, lue, ou supposée, et le mot est écrit. ② Une absence de mesure se dit « PAS MESURÉ »,
+> jamais « rien trouvé » : les deux se ressemblent et n'ont pas le même sens. ③ Un écart entre ce
+> qu'on croyait et ce qu'on a mesuré se dit explicitement, jamais corrigé en silence.
+>
+> **Ce qu'elle n'exige pas** : tout mesurer. Un avis reste un avis légitime — il doit seulement
+> être signalé comme tel.
+
+**Coût : trois obligations de plus.** Je te le dis net plutôt que de le noyer.
+
+### LA QUESTION DE SÉQUENCE, ET ELLE EST RÉELLE
+
+**Ton GO est arrivé AVANT ta cible de 50 obligations, dans la même soirée.** Les deux vont en sens
+contraire : celui-ci en ajoute trois, celle-là veut en retirer quarante-trois. Ce n'est pas une
+contradiction — trois contre quarante-trois ne décide de rien — mais l'ORDRE compte :
+
+- **Si on l'écrit maintenant**, il faudra le relire pendant la réduction, et une règle écrite puis
+  aussitôt rouverte est exactement le « faire puis défaire » que tu as interdit ce soir.
+- **Si on l'écrit à la fin de la réduction**, il arrive dans une charte déjà rangée, et il peut
+  même servir de tête de chapitre aux Articles qui en découlent.
+
+**Ce que je recommande : à la fin, et pas par prudence.** Cet Article dit « la mesure avant
+l'opinion » ; l'écrire avant d'avoir mesuré ce que la réduction laisse debout serait le seul
+endroit du projet où on l'appliquerait à l'envers.
+
+**Ce que ça ne coûte pas d'attendre** : la règle est DÉJÀ vivante. Les cinq impossibles la
+portent, les rapports distinguent déjà « PAS MESURÉ » de « rien trouvé », et AGENT-DU-TEMPS imprime
+sa source à chaque passage. Tu ne perds rien à ce qu'elle attende son tour ; elle ne perd rien non
+plus.
+
+**Dis-moi simplement « maintenant » si tu préfères l'inverse — c'est ta charte.**
+
+---
+
 ## Ce que je recommande, et pourquoi
 
 **Le point 1 sans hésiter** : ce n'est pas une proposition, c'est une dette documentaire — la charte
@@ -205,6 +259,11 @@ nécessaire dans la charte […] je te laisse la main »), et je ne l'ai pas fai
 ponctuelle, et l'Article 14 demande une double confirmation quand une demande entre en tension avec
 la charte — écrire deux Articles pendant que tu dors, en m'appuyant sur une permission donnée à
 minuit, aurait été exactement la « petite concession » contre laquelle cet Article existe.
+
+**Le point 6 est le seul que tu aies déjà approuvé**, et c'est pour ça que je ne le propose pas :
+je le SÉQUENCE. Mon conseil est de l'écrire à la fin de la réduction des obligations plutôt que
+maintenant, et la raison est dans l'Article lui-même — mesurer avant d'affirmer. Un mot de toi
+suffit à inverser ça.
 
 **Les deux règles sont ACTIVES malgré tout**, et c'est ce qui rend l'attente sans coût :
 l'escalade vit dans `docs/regles-de-travail.md` §0ter, l'alignement dans THE-KING et dans la

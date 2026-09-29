@@ -999,6 +999,62 @@ export function formatOffresConcurrentesLines(r) {
 // l'offre a été enrichie du vocabulaire qu'un lecteur emploie vraiment. Corriger la donnée, pas le
 // matcheur. Même geste que la tâche #777, qui avait refermé deux trous identiques de cette façon.
 
+// LE RAPPROCHEMENT NE LISAIT QUE 28 % DU CATALOGUE (2026-09-29, tâche #1247), et c'est la MÊME
+// faute que la racine des mots juste au-dessus (#776), prise par l'autre bout : là on comparait
+// deux ORTHOGRAPHES du même mot, ici on compare la demande à UN SEUL des trois champs qui
+// décrivent une prestation. Corriger la première sans voir la seconde, c'est corriger
+// l'occurrence et laisser la classe (leçon L37).
+//
+// MESURÉ AVANT DE TOUCHER QUOI QUE CE SOIT (Article 19), sur le vrai catalogue de 74 entrées :
+// 1 032 mots lus dans `demande`, 2 478 ignorés dans `description`, 204 ignorés dans `nom` —
+// et surtout **69 prestations sur 74 étaient introuvables par leur propre nom**.
+//
+// LE CAS QUI L'A RÉVÉLÉ : « ce qui freine le projet » ne trouvait PAS le Pack Anti-lourdeurs,
+// dont la description dit mot pour mot « Cherche tout ce qui freine le projet ». Le coût est
+// celui que le commentaire de #776 décrivait déjà, et il est pire ici parce que tool-brain est le
+// SEUL point d'entrée que l'Article 31 rend obligatoire : « aucune correspondance » se lit comme
+// « aucun outil ne sait faire ça », l'agent refait à la main ce qu'un outil savait faire, et
+// c'est mot pour mot l'échappatoire n°1 que ce même Article dit de fermer.
+//
+// POURQUOI UN POIDS PAR CHAMP, ET PAS UNE SIMPLE CONCATÉNATION DES TROIS. Coller les champs bout
+// à bout mettrait le seuil de deux mots à la portée de n'importe quelle demande : 2 478 mots de
+// description rendent deux recoupements triviaux, et un point d'entrée qui répond « oui » à tout
+// ne vaut pas mieux que celui qui répondait « non » à tout (leçon L5 — un axe qui classe tout ne
+// classe rien). Un NOM propre est au contraire un signal fort et peu bruyant : un seul mot suffit.
+// Une DESCRIPTION est le champ le plus long, donc le plus bavard : il en faut quatre.
+export const POIDS_DES_CHAMPS = Object.freeze({ nom: 2, demande: 1, description: 0.5 });
+
+// LE MOT GÉNÉRIQUE SE DÉRIVE, IL NE SE RECOPIE PAS (Article 24). Les 74 noms du catalogue
+// commencent tous par « Pack » : compté comme un mot de nom, il donnerait 2 points à TOUTES les
+// prestations dès qu'une demande contient ce mot. Une liste écrite à la main se périmerait au
+// premier préfixe suivant — on mesure donc ce qui est partagé par plus de la moitié des noms.
+export function motsGeneriquesDesNoms(prestations = PRESTATIONS) {
+  const compte = new Map();
+  for (const p of prestations) for (const w of new Set(significantWords(p.nom))) compte.set(w, (compte.get(w) ?? 0) + 1);
+  return new Set([...compte].filter(([, n]) => n > prestations.length / 2).map(([w]) => w));
+}
+
+// LE CATALOGUE SE DÉCOUPE UNE FOIS, PAS SIX MILLE (même raison mesurée que la mémoïsation des
+// badges ci-dessus, tâche #1010) : check-tasks-details appelle cette fonction pour chaque tâche
+// ouverte, et redécouper les 3 700 mots du catalogue à chaque passage referait le même travail
+// pour le même résultat. Clé WeakMap sur le TABLEAU de prestations : un catalogue reconstruit est
+// une clé neuve, donc jamais une réponse périmée, et rien à vider à la main.
+const cacheMotsDuCatalogue = new WeakMap();
+
+function motsDeLaPrestation(prestations) {
+  let m = cacheMotsDuCatalogue.get(prestations);
+  if (!m) {
+    const generiques = motsGeneriquesDesNoms(prestations);
+    m = new Map(prestations.map((p) => [p, {
+      nom: [...new Set(significantWords(p.nom))].filter((w) => !generiques.has(w)),
+      demande: [...new Set(significantWords(p.demande))],
+      description: [...new Set(significantWords(p.description))],
+    }]));
+    cacheMotsDuCatalogue.set(prestations, m);
+  }
+  return m;
+}
+
 export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, onboardingContext = null) {
   const taskWords = new Set(significantWords(taskLabel));
   if (!taskWords.size) return [];
@@ -1006,10 +1062,17 @@ export function suggestPrestationsForTask(taskLabel, prestations = PRESTATIONS, 
   // Le mot d'origine est celui qu'on RESTITUE dans `matched`, jamais la racine — un lecteur qui
   // voit « renomm » ne reconnaît pas sa propre demande, et ce champ existe pour qu'il la reconnaisse.
   const taskRacines = new Set([...taskWords].map(racineDuMot));
+  const mots = motsDeLaPrestation(prestations);
+  const recoupe = (liste) => liste.filter((w) => taskWords.has(w) || taskRacines.has(racineDuMot(w)));
   return prestations
     .map((p) => {
-      const matched = [...new Set(significantWords(p.demande).filter((w) => taskWords.has(w) || taskRacines.has(racineDuMot(w))))];
-      return { ...p, score: matched.length, matched, badgeWarnings: badgeWarningsForOutils(p.outils, onboardingContext) };
+      const champs = mots.get(p);
+      const parChamp = { nom: recoupe(champs.nom), demande: recoupe(champs.demande), description: recoupe(champs.description) };
+      const score = Object.entries(parChamp).reduce((s, [champ, l]) => s + l.length * POIDS_DES_CHAMPS[champ], 0);
+      // `matched` reste la liste à plat que les appelants existants lisent, la demande d'abord :
+      // c'est le champ le plus proche des mots de l'utilisateur, donc celui qu'il reconnaît.
+      const matched = [...new Set([...parChamp.demande, ...parChamp.nom, ...parChamp.description])];
+      return { ...p, score, matched, parChamp, badgeWarnings: badgeWarningsForOutils(p.outils, onboardingContext) };
     })
     .filter((p) => p.score >= 2)
     .sort((a, b) => b.score - a.score);

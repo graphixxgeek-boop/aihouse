@@ -51,8 +51,11 @@ import { loadToolUsageHistory } from "./tool-usage.mjs";
 export { loadToolUsageHistory };
 
 // --- 1. Consultation à la demande (inchangé depuis la première version) ---
-// Seuil de correspondance déjà fixé par suggestPrestationsForTask() elle-même (score >= 2 mots
-// significatifs partagés) — jamais un second seuil divergent ici.
+// Seuil de correspondance déjà fixé par suggestPrestationsForTask() elle-même (score >= 2) —
+// jamais un second seuil divergent ici. Le score n'est PLUS un simple compte de mots depuis le
+// 2026-09-29 (tâche #1247) : chaque champ de la prestation pèse différemment (nom 2, demande 1,
+// description 0,5), parce que le rapprochement ne lisait qu'un champ sur trois et que 69 des 74
+// prestations étaient alors introuvables par leur propre nom.
 export function adviseToolBrain({ taskDescription, filePath } = {}) {
   const prestations = taskDescription ? suggestPrestationsForTask(taskDescription) : [];
   const fileAdvice = filePath ? recommendFindBrain(filePath) : undefined;

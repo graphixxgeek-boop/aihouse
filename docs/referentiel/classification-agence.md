@@ -5,7 +5,7 @@
 
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-29 18:08 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-29 23:04 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -428,11 +428,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce qui part avec l'Agence
 
 ```
-=== CE QUI PART AVEC L'AGENCE — 536 documents, couverture 100 % ===
+=== CE QUI PART AVEC L'AGENCE — 550 documents, couverture 100 % ===
 
-  📦 PART — 224 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
-  🏠 RESTE — 15 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
-  🗄️ MEMOIRE — 297 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
+  📦 PART — 226 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
+  🏠 RESTE — 14 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
+  🗄️ MEMOIRE — 310 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
   ❓ A-INSTRUIRE — 0 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
 
   HORS PORTÉE : elle dit si un document PEUT partir, jamais s'il est à jour ni s'il est bon. Un document générique et périmé sort « PART » — c'est THE-EQUALIZER et la relecture périodique qui répondent à l'autre question.
@@ -441,13 +441,13 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce que chacun porte
 
 ```
-=== CE QUE CHAQUE DOCUMENT PORTE — 536 documents, couverture 100 % ===
+=== CE QUE CHAQUE DOCUMENT PORTE — 550 documents, couverture 100 % ===
 
   Second axe des documents, à côté de l'exportabilité : celui-là dit si un document PART,
   celui-ci dit ce qu'il PORTE. Les deux se croisent — une règle peut partir ou rester, une
   archive reste toujours, un gabarit part toujours.
 
-  ⚖️ LOI — 4 document(s) : un texte qui OBLIGE — il ne décrit pas, il impose
+  ⚖️ LOI — 6 document(s) : un texte qui OBLIGE — il ne décrit pas, il impose
   🗂️ INDEX — 137 document(s) : un catalogue : il dit ce que contient un dossier, il n'affirme rien lui-même
   🧩 GABARIT — 4 document(s) : un moule dont sortent d'autres documents — le plus exportable de tous
   📐 BLUEPRINT — 86 document(s) : l'architecture d'un outil, écrite pour être remontée ailleurs
@@ -458,14 +458,10 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
   📋 SUIVI — 8 document(s) : le journal des tâches — ce qui a été décidé, quand, et par qui
   🗄️ ARCHIVE — 3 document(s) : une mémoire figée : on la consulte, on ne la met jamais à jour
   🗺️ PLAN — 32 document(s) : la photographie d'un moment : ce qu'on comptait faire ce jour-là
-  📊 RAPPORT — 120 document(s) : le dépôt d'un passage d'outil — un constat à un instant, jamais une règle
+  📊 RAPPORT — 133 document(s) : le dépôt d'un passage d'outil — un constat à un instant, jamais une règle
   📖 REFERENCE — 105 document(s) : la règle telle qu'elle s'applique aujourd'hui — la source de vérité d'un sujet
   🎚️ MODE — 1 document(s) : un mode de travail de l'agent : comment il se conduit dans une situation donnée
   🗃️ REGISTRE — 4 document(s) : la mémoire d'un outil : ce qu'il a déjà vu, relue à son passage suivant
-  ❓ INDETERMINEE — 1 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut
-
-  LES 1 INDÉTERMINÉS, nommés un par un — aucun n'est rangé par défaut :
-      ❓ docs/loi-de-l-agence.md
 
   HORS PORTÉE : elle dit ce qu'un document PORTE, jamais s'il est à jour, ni s'il est bon, ni s'il part avec l'Agence — cette dernière question est l'autre axe, juste à côté, et les deux se croisent dans les quatre sens.
 ```
