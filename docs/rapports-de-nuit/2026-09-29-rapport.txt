@@ -219,6 +219,43 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     j'avais jugé trivial. La règle ne dit pas « sauf si c'est petit ».
 
 
+2quinquies. LA CHAÎNE LA PLUS INSTRUCTIVE, en trois maillons qui se cachaient l'un l'autre
+------------------------------------------------------------------------------------------
+  Elle mérite d'être lue d'un bloc, parce qu'aucun des trois défauts n'était visible tant que les
+  deux autres tenaient.
+
+  1. AXA-CHECK, un Gardien sacré, annonçait « 39 outils NON MESURÉS sur 40 » depuis la création de
+     cette mesure. Il lisait un dossier que RIEN dans le dépôt n'écrit.
+  2. Réparé, il a immédiatement nommé le maillon le plus faible du dépôt : `filet-en-parts` à 11 %,
+     1 fonction exercée sur 9. C'est l'outil qui découpe le filet et DÉCIDE QUELS TESTS TOURNENT —
+     celui avec lequel chaque commit de cette nuit a été validé. Un outil qui choisit ce qui est
+     testé, lui-même non testé : si son découpage perd un bloc, le rapport annonce simplement moins
+     de succès, et rien ne dit qu'un test a disparu. Testé sur ses PROPRIÉTÉS DE SÛRETÉ (aucun bloc
+     perdu ni dédoublé, le socle présent dans toutes les parts, le nombre de lignes préservé) :
+     11 % → 78 %.
+  3. Et la bannière de chaque commit annonçait AXA-CHECK « mesure non chiffrable ici » — par un
+     `undefined` écrit en dur, quinze lignes sous la mesure, dans le même fichier. Elle affiche
+     désormais un vrai chiffre : le nombre d'outils que personne ne peut mesurer.
+
+  CE QUE CETTE CHAÎNE DIT, et c'est plus utile que les trois correctifs : un silence peut en
+  protéger un autre. Tant que la mesure était aveugle, l'affichage en dur avait l'air juste ; tant
+  que l'affichage était en dur, réparer la mesure n'aurait rien montré. Aucun des deux ne pouvait
+  être trouvé en regardant l'autre.
+
+
+2sexies. DEUX DÉCISIONS NOUVELLES, POSÉES ET NON TRANCHÉES
+-----------------------------------------------------------
+  · **Faut-il SUIVRE dans le temps la couverture des outils ?** Elle se mesure maintenant et se voit
+    à chaque commit ; l'inscrire au tableau de bord ajouterait une colonne à un historique CSV
+    committé, et toutes les lignes passées porteraient une cellule vide — que le tableau de bord
+    lit précisément comme « connexion perdue ». Trois issues écrites, mon avis donné.
+  · **Le détecteur de documents jumeaux rapproche mon ÉCRITURE, pas les sujets.** Observé en direct :
+    déclarer un faux rapprochement a créé le suivant, parce que la note qui l'expliquait employait
+    le même vocabulaire. Zéro paire avant mes ajouts du jour, une après le premier, une autre après
+    l'explication du premier. Ce n'est pas leur sujet qui se ressemble, c'est ma plume. Trois issues
+    écrites ; changer ce qu'un Gardien sacré détecte se décide, ça ne s'applique pas.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
