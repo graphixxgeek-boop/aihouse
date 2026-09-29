@@ -73,6 +73,21 @@ DÉCLARATIONS, pas des constructions.)*
 2. **Le triptyque FIXE / CONFIGURABLE / PERSONNALISABLE**, trouvé dans la cinquième synthèse, est
    un SECOND axe qui croise nos trois zones sans les remplacer. Il rejoint **l'étape ④**.
 
+### CE QUI EST POSÉ ET ATTEND SA RÉPONSE *(au 2026-09-29, 21h53 UTC)*
+
+| Ce qui l'attend | Où |
+|---|---|
+| **Les 49 questions**, remises à jour en trois parties | il est en train d'y répondre — c'est la priorité, tout en découle |
+| **Les 30 questions de dégrossissage** | **MISES DE CÔTÉ à sa demande** — téléchargées, pas ouvertes. Elles ne bloquent rien : elles servent après les 49 |
+| Les 23 entrées « à trancher » | `docs/idees-a-trancher.md` |
+| Les 8 décisions par lots | `02-strategie/decisions-qui-attendent.md` |
+| Les 2 Articles de charte écrits, **non appliqués** | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` |
+| La Ronde | 73 commits sans passage — **rien d'urgent**, deux de ses douze étapes exigent sa présence |
+
+**Aucune de ces lignes n'est urgente ce soir**, et c'est mesuré plutôt qu'affirmé : le filet est
+vert, l'arbre est propre, rien n'est en attente de correction. Ce qui attend sont des DÉCISIONS,
+jamais des pannes.
+
 ---
 
 ## ÉTAPE ① — SAVOIR CE QU'ON A

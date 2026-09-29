@@ -329,6 +329,54 @@ export function recordRegistryWrite(chemin, { nature = "registre", now = Date.no
 // Un outil "jamais réellement sollicité" (utile à Doc-Report/#165 et à la future CASSANDRA-RH) :
 // aucun événement d'usage n'existe pour lui alors qu'il fait bien partie de la liste des outils
 // connus — jamais deviné, toujours comparé à une vraie liste fournie par l'appelant.
+// L'HORIZON DU JOURNAL — ce que ses chiffres COUVRENT réellement (2026-09-29, tâche #1244).
+//
+// LE DÉFAUT MESURÉ, ET IL N'EST PAS THÉORIQUE. Le 2026-09-29, le journal portait 857 événements
+// dont le plus ancien datait du MATIN MÊME, 03h38 — treize heures, pour un dépôt de treize JOURS.
+// La raison est connue et déclarée : le fichier est dans `.gitignore`, donc il n'a pas voyagé avec
+// le clone et s'est reconstruit de zéro. La fiche de l'outil le dit depuis toujours.
+//
+// CE QUI N'ALLAIT PAS N'EST DONC PAS LA LIMITE, C'EST L'ENDROIT OÙ ELLE EST ÉCRITE. Elle vivait
+// dans la fiche ; le rapport, lui, annonçait « 29 outils jamais sollicités » sans un mot. Et cet
+// écart devient un plan d'action dont le « quoi faire » propose de RETIRER des outils qui tournent
+// depuis des semaines. Un signal ADJACENT — jamais vu passer DEPUIS QUE CE JOURNAL EXISTE — lu
+// comme le signal visé : jamais sollicité PAR LE PROJET.
+//
+// Cette fonction ne corrige aucun chiffre : elle donne de quoi les LIRE. Ce qui reste une décision
+// (faut-il taire l'écart quand le journal est trop jeune ?) est dans `docs/idees-a-trancher.md`.
+export function horizonDuJournal(history, { maintenant = Date.now() } = {}) {
+  const ev = Array.isArray(history) ? history : (history?.events ?? []);
+  const dates = ev.map((e) => e?.at).filter((v) => typeof v === "number" && Number.isFinite(v));
+  if (!dates.length) {
+    return { mesurable: false, evenements: ev.length,
+      pourquoi: ev.length
+        ? `${ev.length} événement(s) mais AUCUN horodatage lisible — on sait qu'il s'est passé quelque chose, jamais quand`
+        : "le journal est vide : « aucun outil sollicité » et « le journal vient d'être créé » s'écriraient tous les deux zéro (L5)" };
+  }
+  const plusAncien = Math.min(...dates);
+  return {
+    mesurable: true,
+    evenements: ev.length,
+    sansHorodatage: ev.length - dates.length,
+    plusAncien,
+    plusRecent: Math.max(...dates),
+    heuresCouvertes: Math.round((maintenant - plusAncien) / 36e5),
+  };
+}
+
+// La phrase à imprimer À CÔTÉ de tout chiffre d'usage. Elle compare la couverture du journal à
+// l'âge du dépôt : sans cette comparaison, « 13 heures » n'a pas de sens — c'est énorme sur un
+// projet d'un jour, et c'est presque rien sur le nôtre.
+export function formatHorizonLine(h, { heuresDuDepot = null } = {}) {
+  if (!h?.mesurable) return `⚠️ HORIZON NON MESURÉ — ${h?.pourquoi ?? "journal illisible"}. Tout chiffre d'usage ci-dessous est à lire avec cette réserve.`;
+  const perdus = h.sansHorodatage ? `, dont ${h.sansHorodatage} sans horodatage` : "";
+  const base = `📅 Le journal couvre ${h.heuresCouvertes} h (${h.evenements} événement(s)${perdus}), depuis le ${new Date(h.plusAncien).toISOString().slice(0, 16).replace("T", " ")} UTC.`;
+  if (heuresDuDepot == null) return base;
+  const part = Math.round((100 * h.heuresCouvertes) / Math.max(heuresDuDepot, 1));
+  if (part >= 90) return `${base} Le dépôt en a ${heuresDuDepot} : la couverture est quasi complète.`;
+  return `${base} **Le dépôt en a ${heuresDuDepot} — le journal n'en couvre que ${part} %.** « Jamais sollicité » veut donc dire « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet ».`;
+}
+
 export function toolsNeverUsed(history, knownToolSlugs) {
   const used = new Set((history?.events ?? []).map((e) => e.toolSlug));
   return knownToolSlugs.filter((slug) => !used.has(slug));

@@ -28,7 +28,7 @@ import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName, p
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
-import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines, findOutilsCitesSansPassage } from "./tool-usage.mjs";
+import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines, findOutilsCitesSansPassage, horizonDuJournal, formatHorizonLine } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
 
@@ -389,7 +389,7 @@ export function diagnoseToolBrainSelf(history, { checkLastCommitSource, spontane
 // ronde [...] te faire des recommandations [...] eventuellement diagnostiquer des ameliorations à
 // apporter sur le systeme global "tool-brain" »). Disponible aux deux déclenchements demandés : à
 // chaque Ronde (cf. circle-tasks.mjs, item "tool-brain-report") ET à la demande (CLI ci-dessous).
-export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, lireSource, offert = "", itemsRonde, sourceCrochets, sourcesDesOutils, now = Date.now() } = {}) {
+export function formatToolBrainReport({ history, prestations = PRESTATIONS, checkLastCommitSource, lireSource, offert = "", itemsRonde, sourceCrochets, sourcesDesOutils, now = Date.now(), heuresDuDepot = null } = {}) {
   // `checkLastCommitSource` sert deux fois : à l'auto-diagnostic (est-ce que tool-brain est câblé ?)
   // et désormais à distinguer « jamais sollicité » de « couvert par le crochet ». Un seul fichier
   // lu, deux questions répondues — jamais une seconde lecture pour la même source.
@@ -411,6 +411,13 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
   const lines = [
     "=== tool-brain — rapport de Ronde ===",
     `Date : ${new Date(now).toISOString()}`,
+    "",
+    // L'HORIZON AVANT LE CHIFFRE, jamais après (2026-09-29, tâche #1244) : le journal d'usage n'est
+    // pas commité, donc il se reconstruit à chaque clone. Mesuré ce jour-là, il couvrait 6 % de la
+    // vie du dépôt — et ce rapport annonçait « 29 outils jamais sollicités » sans un mot là-dessus,
+    // avec un plan d'action qui propose de les RETIRER. La phrase passe DEVANT parce qu'un lecteur
+    // qui voit le chiffre d'abord ne revient pas sur la réserve.
+    formatHorizonLine(horizonDuJournal(history), { heuresDuDepot: heuresDuDepot ?? null }),
     "",
     neverUsed.length ? `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}.` : "Tous les outils connus du catalogue ont déjà été sollicités au moins une fois.",
     couvertsParLeCrochet.length ? `${couvertsParLeCrochet.length} outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : ${couvertsParLeCrochet.join(", ")} — leur silence n'est pas une inaction.` : "",

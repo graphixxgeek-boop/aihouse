@@ -11674,6 +11674,33 @@ await testVerrousDOuverture();
   assert.equal(adt.collerLHeure('aucun jeton ici').remplacements, 0, 'un texte sans jeton rend zéro, et l\'appelant DOIT refuser bruyamment plutôt qu\'écrire un fichier inchangé');
   assert.equal(adt.collerLHeure(`${adt.JETON_MAINTENANT} et ${adt.JETON_MAINTENANT}`).remplacements, 2, 'plusieurs jetons sont tous remplacés, jamais le premier seulement');
 
+  // L'HORIZON DU JOURNAL D'USAGE (2026-09-29, tâche #1244). Mesuré ce jour-là : le journal portait
+  // 857 événements dont le plus ancien datait du matin même — 13 h pour un dépôt de 13 JOURS,
+  // parce qu'il est dans .gitignore et s'est reconstruit au clone. La limite était écrite dans la
+  // fiche ; le RAPPORT, lui, annonçait « 29 outils jamais sollicités » sans un mot, avec un plan
+  // d'action proposant de les RETIRER.
+  const tu = await import('../scripts/tool-usage.mjs');
+  const hVide = tu.horizonDuJournal([]);
+  assert.equal(hVide.mesurable, false, 'un journal vide n\'a pas d\'horizon — « aucun outil sollicité » et « le journal vient d\'être créé » s\'écriraient tous les deux zéro (L5)');
+  assert.equal(tu.horizonDuJournal([{ slug: 'x' }]).mesurable, false, 'des événements SANS horodatage non plus : on sait qu\'il s\'est passé quelque chose, jamais quand');
+  const hz = tu.horizonDuJournal([{ at: Date.UTC(2026, 8, 29, 3, 0) }, { at: Date.UTC(2026, 8, 29, 9, 0) }, { slug: 'muet' }], { maintenant: Date.UTC(2026, 8, 29, 9, 0) });
+  assert.ok(hz.mesurable && hz.heuresCouvertes === 6 && hz.evenements === 3 && hz.sansHorodatage === 1,
+    `l\'horizon compte les heures couvertes ET les événements sans date, séparément (${JSON.stringify(hz)})`);
+  assert.match(
+    tu.formatHorizonLine(hz, { heuresDuDepot: 300 }),
+    /n'en couvre que 2 %/,
+    'et la phrase COMPARE à l\'âge du dépôt : « 6 h » n\'a aucun sens seul — énorme sur un projet d\'un jour, presque rien sur le nôtre',
+  );
+  assert.match(tu.formatHorizonLine(hz, { heuresDuDepot: 6 }), /quasi complète/, 'quand la couverture est bonne, elle le dit aussi — un avertissement qui ne s\'éteint jamais devient du décor (L6)');
+  assert.match(tu.formatHorizonLine(hVide), /NON MESURÉ/, 'un horizon illisible se DIT en tête, jamais ne se tait');
+  // ET LA PHRASE PASSE DEVANT LE CHIFFRE DANS LE VRAI RAPPORT : un lecteur qui voit d'abord
+  // « 31 outils jamais sollicités » ne revient pas sur la réserve écrite en dessous.
+  const rapportUsage = (await import('../scripts/tool-brain.mjs')).formatToolBrainReport({ history: [{ at: Date.now(), slug: 'x' }], heuresDuDepot: 300 });
+  const lignes = rapportUsage.split('\n');
+  const iHorizon = lignes.findIndex((l) => /Le journal couvre|HORIZON NON MESURÉ/.test(l));
+  const iChiffre = lignes.findIndex((l) => /jamais sollicité\(s\)|ont déjà été sollicités/.test(l));
+  assert.ok(iHorizon >= 0 && iChiffre > iHorizon, `la réserve doit précéder le chiffre (horizon ligne ${iHorizon}, chiffre ligne ${iChiffre})`);
+
   // L'INDEX PAR SITUATION DES SYNTHÈSES (2026-09-29, tâche #1242). Six fiches annotées, c'est six
   // fichiers à choisir avant de pouvoir lire ; l'index récolte la question « quand j'en aurai
   // besoin » de chaque idée et les range par verdict. Il LIT les fiches, il ne les recopie pas.
