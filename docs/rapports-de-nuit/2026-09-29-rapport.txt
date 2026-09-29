@@ -577,6 +577,33 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   Douze pages vérifiées, aucune périmée.
 
 
+2septdecies. MES PROPRES RÉVEILS TE MENTAIENT DEPUIS DES HEURES
+-----------------------------------------------------------------
+  Pour ne pas m'arrêter pendant la nuit, je m'envoie des réveils : une chaîne courte toutes les
+  quinze minutes, et deux filets horaires qui retombent si la chaîne meurt.
+
+  CE MATIN, J'AI ÉCRIT LA RÈGLE « relire les réveils armés et corriger ce qui y est faux » — parce
+  qu'un filet de la veille avait répété une consigne périmée à chaque heure de la nuit. Puis j'ai
+  déclaré cette règle RESPECTÉE. C'était vrai de la chaîne courte, que je réécris entièrement à
+  chaque tour avec l'état réel.
+
+  LES DEUX FILETS HORAIRES, PERSONNE NE LES TOUCHAIT. L'un annonçait toujours « la Ronde autonome
+  est faite » et « la dette de fiches est à 0 » — des heures après que ces phrases avaient cessé
+  d'être vraies. **La règle ne couvrait que ce que je réécrivais déjà**, et un réveil qu'on ne
+  touche pas est précisément celui qui se périme. Deuxième fois en un jour que ce défaut sort.
+
+  LA CORRECTION N'EST DONC PAS « JE VAIS MIEUX RELIRE » — ça, je l'avais déjà promis ce matin. C'est
+  une règle de conception : **un filet ne porte jamais d'état.** Sa raison d'être est de retomber
+  quand tout le reste est mort, donc il doit rester vrai indéfiniment sans que personne y touche.
+  Tout ce qui date dans son texte finira par mentir, et un filet qui ment est pire qu'un filet
+  absent : il fait travailler sur un état qui n'existe plus.
+
+  Les deux filets ne contiennent plus que le geste à faire en premier, OÙ lire l'état réel, le cadre
+  qui ne se périme pas, et tes bornes. La chaîne courte, elle, garde l'état — parce qu'elle est
+  réécrite à chaque tour. C'est la différence entre un message qu'on renouvelle et un message qu'on
+  abandonne derrière soi.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.

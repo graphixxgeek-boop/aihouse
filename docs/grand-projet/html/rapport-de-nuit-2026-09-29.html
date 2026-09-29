@@ -106,9 +106,9 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-29T15:46:00.541Z</div>
+    <div class="date">2026-09-29T16:03:46.368Z</div>
     <h1>Rapport de la nuit du 29 septembre 2026</h1>
-    <p class="sub">Cinquante et une tâches, et ce qu'elles ont trouvé</p>
+    <p class="sub">Cinquante-deux tâches, et ce qu'elles ont trouvé</p>
   </header>
   <div class="divider"></div>
   <main><p>RAPPORT DE LA NUIT AUTONOME DU 2026-09-29 ========================================= Heure LUE (source système), pas devinée. Process <code>nuit</code> suivi dans son ordre. 109 tâches ouvertes figées au départ (docs/rapports-de-nuit/plan-depart-2026-09-29.txt).</p>
@@ -223,6 +223,13 @@
 <p>PUIS J'AI CORRIGÉ LA CLASSE, PAS L'OCCASION. J'avais fait cette vérification à la main, page par page — et un geste fait à la main ne se refera pas tout seul demain. L'index du grand projet écrit que les pages sont « régénérées depuis le Markdown, jamais écrites à la main » : une règle bien posée, que <strong>personne ne vérifiait</strong>. Une page périmée s'ouvre, elle est belle, elle est complète, elle dit simplement autre chose que le document dont elle se réclame.</p>
 <p>DEUX PIÈGES ÉVITÉS, ET ILS MÉRITENT D'ÊTRE DITS parce que chacun aurait rendu l'outil inutile en ayant l'air de marcher. <strong>Comparer les dates de modification</strong> des fichiers aurait rendu « tout est à jour » dans un dépôt fraîchement cloné — le mien à chaque session — où tous les fichiers portent la même date, celle du clone. C'est la date du dernier enregistrement qui fait foi. Et <strong>deviner la source au nom du fichier</strong> ratait le rapport de nuit lui-même : la page s'appelle <code>rapport-de-nuit-2026-09-29</code> et sa source <code>2026-09-29-rapport</code>, les mêmes mots dans l'autre sens. Le générateur écrit sa provenance en bas de chaque page : il suffisait de la lire.</p>
 <p>Douze pages vérifiées, aucune périmée.</p>
+<p>2septdecies. MES PROPRES RÉVEILS TE MENTAIENT DEPUIS DES HEURES</p>
+<hr>
+<p>Pour ne pas m'arrêter pendant la nuit, je m'envoie des réveils : une chaîne courte toutes les quinze minutes, et deux filets horaires qui retombent si la chaîne meurt.</p>
+<p>CE MATIN, J'AI ÉCRIT LA RÈGLE « relire les réveils armés et corriger ce qui y est faux » — parce qu'un filet de la veille avait répété une consigne périmée à chaque heure de la nuit. Puis j'ai déclaré cette règle RESPECTÉE. C'était vrai de la chaîne courte, que je réécris entièrement à chaque tour avec l'état réel.</p>
+<p>LES DEUX FILETS HORAIRES, PERSONNE NE LES TOUCHAIT. L'un annonçait toujours « la Ronde autonome est faite » et « la dette de fiches est à 0 » — des heures après que ces phrases avaient cessé d'être vraies. <strong>La règle ne couvrait que ce que je réécrivais déjà</strong>, et un réveil qu'on ne touche pas est précisément celui qui se périme. Deuxième fois en un jour que ce défaut sort.</p>
+<p>LA CORRECTION N'EST DONC PAS « JE VAIS MIEUX RELIRE » — ça, je l'avais déjà promis ce matin. C'est une règle de conception : <strong>un filet ne porte jamais d'état.</strong> Sa raison d'être est de retomber quand tout le reste est mort, donc il doit rester vrai indéfiniment sans que personne y touche. Tout ce qui date dans son texte finira par mentir, et un filet qui ment est pire qu'un filet absent : il fait travailler sur un état qui n'existe plus.</p>
+<p>Les deux filets ne contiennent plus que le geste à faire en premier, OÙ lire l'état réel, le cadre qui ne se périme pas, et tes bornes. La chaîne courte, elle, garde l'état — parce qu'elle est réécrite à chaque tour. C'est la différence entre un message qu'on renouvelle et un message qu'on abandonne derrière soi.</p>
 <ul><li>CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI</li></ul>
 <hr>
 <p>· TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible. · Le renommage en masse — sa borne : c'est l'étape récompense, après le chantier. · LES DEUX ARTICLES DE CHARTE, écrits en entier mais NON appliqués. Il m'a donné la main ; sa borne « tu me montres avant » est permanente, l'autorisation était ponctuelle, et l'Article 14 exige une double confirmation. Les deux règles sont actives ailleurs, donc l'attente ne coûte rien. Texte prêt à coller : docs/plans/charte-diffs-a-approuver-2026-09-28.md, points 4 et 5. · Ouvrir de nouvelles tâches de CHANTIER — sa propre escalade l'interdit avant le cadre. · check-spirit et check-profile — vrais appels API, non nécessaires cette nuit.</p>
