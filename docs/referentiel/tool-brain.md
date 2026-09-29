@@ -114,3 +114,42 @@ crédite 100 %. C'est précisément pour ça que le rapport **imprime la fenêtr
 Un chiffre produit dans une conversation disparaît avec elle, et la question « est-ce devenu ton
 point d'entrée ? » se repose à chaque période. `precedenceDeToolBrain()` sort donc dans
 `node scripts/tool-brain.mjs rapport`, à côté du reste.
+
+## « Est-ce que l'agence m'aide, ou est-ce que je m'y perds ? » (2026-09-29, tâche #1155)
+
+**Sa question Q7, posée avec sa consigne** : « sois honnête, pas besoin de me ménager. Cette mesure
+existe-t-elle aujourd'hui ? Il faut qu'elle soit mesurée. » **Elle n'existait pas** — et une
+question posée sur la valeur de TOUT le paysage ne peut pas rester sans instrument.
+
+```
+node scripts/tool-brain.mjs aide-ou-encombre
+```
+
+**Pourquoi ici** : tool-brain est « plugué directement » à l'agent et tient déjà le compteur d'usage
+réel. Un outil de plus aurait coûté dix registres à remplir — soit précisément l'un des chiffres
+que cette mesure rapporte.
+
+**AUCUN SCORE UNIQUE, ET C'EST LA DÉCISION CENTRALE.** Un chiffre unique sur « l'Agence est-elle
+utile ? » dépendrait entièrement de la pondération choisie, donc de l'humeur de qui la choisit — ce
+serait exactement le satisfecit que ce projet refuse. **Les deux plateaux se rendent SÉPARÉS ; c'est
+au lecteur de peser.**
+
+**LE PIÈGE ÉVITÉ, et un contre-test le verrouille** : compter les tâches qui NOMMENT un outil rend
+**881 sur 1 090** — un chiffre flatteur et faux, parce que **nommer n'est pas devoir**. Seule la
+colonne ORIGINE est lue (« d'où vient cette tâche »), et elle rend **244**.
+
+**Premier passage réel.** *Ça rapporte* : 244 tâches sur 1 090 ouvertes par un outil (22 %), dont
+**232 closes (95 %)** — un travail trouvé par un outil est un travail qui aboutit ; les plus
+trouveurs sont circle-tasks (32), cassandra-rh (27), smart-conso-token (20). *Ça coûte* : 93
+fichiers d'outillage à tenir, 12 outils jamais sollicités.
+
+**La réponse honnête tient en une phrase, et elle va dans les deux sens : l'Agence aide à TROUVER,
+et coûte à NAVIGUER.**
+
+**Ce qui reste sa décision** : cette mesure doit-elle BLOQUER l'arrivée d'un outil de plus, ou
+seulement l'ÉCLAIRER ? Par défaut elle éclaire — c'est le choix réversible.
+
+**Détail d'implémentation qui porte une raison** : les imports de `check-tasks-details` et
+`cassandra-rh` sont DYNAMIQUES. tool-brain est appelé par le crochet post-commit ; les tirer en tête
+ferait qu'une erreur chez l'un casserait le crochet de tout le monde — le même refus a déjà été
+opposé à HARMONIA le 2026-09-25.

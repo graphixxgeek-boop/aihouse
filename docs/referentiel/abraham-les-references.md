@@ -444,3 +444,44 @@ Le troisième mot d'ordre, **HARMONISER**, a été ajouté le 2026-09-24 (« on 
 `angel` le surveille — mais la section des règles de travail s'appelle toujours « OPTIMISER et
 FIABILISER — **les deux** mots d'ordre permanents » et ne le mentionne nulle part. Renommer une
 section de ce document est une décision de l'utilisateur, pas un correctif d'agent.
+
+## La couverture d'une COMMANDE : ce qu'il a demandé, et que personne n'a écrit (2026-09-28, tâche #1145)
+
+**Sa phrase, qui a créé cette capacité** : « j'ai l'impression que tu ne prends pas assez en compte
+mes consignes du document COMMANDE IMPORTANTE, que tu ne fais pas les choses à 100%, assure-toi de
+gérer tout ça avec RIGUEUR. »
+
+**La seule réponse honnête à cette phrase n'est pas une promesse, c'est un compteur.** Une promesse
+de rigueur est invérifiable — par lui comme par l'agent — et elle se redonne à l'identique le jour
+où elle est fausse.
+
+```
+node scripts/abraham-les-references.mjs couverture <demande.md> <couvrant.md> [couvrant2.md …]
+```
+
+Le premier fichier est CE QUI EST DEMANDÉ ; les suivants sont ce qui est censé y répondre.
+
+**Comment il découpe.** `unitesDeDemande()` retient une ligne quand elle porte l'un des quatre
+signaux de demande — une étiquette (`QUESTION`, `REMARQUE`, `OBJECTIF`, `ATTENDU`…), un point
+d'interrogation final, un verbe d'obligation, ou un impératif adressé. Les titres et les lignes de
+tableau sont de la structure, jamais des demandes.
+
+**IL N'Y A PAS DE POURCENTAGE DE COUVERTURE, ET C'EST UNE DÉCISION.** Le premier jet en produisait
+un : « 1 % des demandes couvertes », sur un seuil dérivé à 95 %. Deux longs textes français
+partagent naturellement la moitié de leur vocabulaire, donc un seuil dérivé de cette médiane devient
+inatteignable — et le même calcul sur une population plus lâche aurait rendu « 90 % couvert ». **Un
+chiffre qui bouge avec la LONGUEUR des documents plutôt qu'avec leur contenu ne mesure rien**, et
+publié sur la question même de la rigueur il aurait été un satisfecit.
+
+**Ce qui est publié à la place est un CLASSEMENT** : l'écart d'une demande au LOT. Une demande dont
+le vocabulaire est nettement moins repris que celui de ses voisines est une demande que personne n'a
+écrite — et ce signal ne dépend ni de la longueur ni du style. Trois états : **ORPHELINE** (sous la
+moitié de la médiane) · **FAIBLE** · **REPRISE**, plus **NON MESURABLE** pour une unité trop maigre,
+qui n'est ni l'un ni l'autre.
+
+**Premier passage réel, sur sa commande** : 130 unités de demande, 114 mesurables, **5 ORPHELINES et
+45 FAIBLES** — dont « comment s'assurer de ne pas perdre de valeur en cours de route ? », la
+fragmentation à 100 %, et le sujet UN SEUL OBJECTIF.
+
+**Sa limite, déclarée** : il mesure un recouvrement de vocabulaire, jamais une compréhension. Il
+sert à trouver ce qui est ABSENT — un signal sûr — jamais à certifier ce qui est présent.

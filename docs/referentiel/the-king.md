@@ -116,3 +116,41 @@ où une refonte casserait la détection, le filet le dira — au lieu que le zé
 **Sa limite, inchangée et redite à chaque passage** : le vocabulaire partagé est un SIGNAL, jamais
 une contradiction prouvée. Deux principes peuvent se contredire avec des mots entièrement
 différents, et cette mesure ne les verra jamais.
+
+## L'ALIGNEMENT EN CASCADE : chaque objet déclare son parent (2026-09-29, tâche #1148)
+
+**Sa consigne** : « des stratégies **alignées**, qui génèrent des stratégies de chantier
+**alignées**, des outils **alignés**, ****tout**** est aligné […] dès que tu commences à créer, il
+faut que cet axe ***habite*** ton travail. »
+
+**Pourquoi chez THE-KING et nulle part ailleurs** : il veille déjà sur
+`docs/philosophie-et-politique.md`, qui est la RACINE de cette cascade, et l'utilisateur l'a
+lui-même désigné comme porteur de la stratégie globale — en tranchant, le 2026-09-28, qu'il
+**VÉRIFIE et ALERTE sans jamais décider**. Un outil à côté aurait créé une seconde autorité sur le
+même terrain.
+
+**UN MOT NE FAIT PAS UN ALIGNEMENT.** Tant que rien ne peut CONSTATER une incohérence, « aligné »
+reste une intention — et une intention n'a jamais empêché quoi que ce soit (leçon L2).
+
+**La déclaration est VISIBLE**, jamais un commentaire caché : une ligne
+`**DÉCOULE DE :** \`chemin/du/parent.md\` §x` dans le document. Ces documents sont lus par quelqu'un
+qui n'est pas développeur ; une ligne qu'il voit est une ligne qu'il peut corriger. La forme en
+commentaire (`// DÉCOULE DE : …`) reste acceptée pour les fichiers de code.
+
+**CINQ ÉTATS, DEUX SEULEMENT SONT DES ÉCARTS.**
+
+| État | Ce que ça veut dire | Est-ce une faute ? |
+|---|---|---|
+| **ALIGNÉ** | la remontée atteint la racine | — |
+| **ORPHELIN** | aucun parent déclaré | **non** : écrit avant la règle |
+| **INTERROMPU** | déclare un vrai parent, qui lui-même ne déclare rien | **non**, mais à compléter |
+| **PARENT_INTROUVABLE** | déclare un parent qui n'existe pas | **OUI** — une référence morte ressemble à un lien, ce qui est pire qu'une absence |
+| **CYCLE** | A découle de B qui découle de A | **OUI** — c'est littéralement l'incohérence globale qu'il nomme comme risque |
+
+**Pourquoi un orphelin n'est pas une faute, et c'est délibéré** : des centaines de documents ont été
+écrits avant que la règle existe. Les accuser tous au premier passage aurait rendu le signal
+illisible le jour même de sa naissance (leçon L4, déjà payée sept fois sur ce dépôt). **La
+couverture est un progrès à faire monter, jamais une dette à solder.**
+
+**Premier passage réel** : 40 %, 17 objets sur 42, 0 écart — la cascade est amorcée sur la cible,
+les 9 stratégies de chantier et les documents du grand projet, jamais sur zéro.
