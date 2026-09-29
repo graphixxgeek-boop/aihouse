@@ -453,6 +453,39 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     restent signalées à chaque passage de l'outil, là où elles se lisent.
 
 
+2terdecies. CE QUE LES CONTRÔLEURS ONT RELEVÉ, ET UN BULLETIN QUI DIT NON DEUX FOIS
+------------------------------------------------------------------------------------
+  La charte oblige à lire, après une vague de travail, ce que les deux contrôleurs ont relevé. Je
+  l'ai fait, et ça a produit trois choses.
+
+  · CHECK-SPIRIT N'A PAS ÉTÉ RELANCÉ, ET LA RAISON EST MESURÉE. Il consomme ton quota Gemini, celui
+    qui te sert à jouer. La charte le veut lancé en priorité quand les personnalités changent : la
+    condition n'est pas remplie, et c'est compté sur git — **101 fichiers changés cette nuit, 78
+    dans la documentation, 23 dans l'outillage, ZÉRO dans le jeu**. Smart Conso API a bien été
+    consulté avant de décider ; il rend « ok », en avertissant lui-même que son historique date de
+    147 heures. Le feu vert autorise, il n'oblige pas. **Le ton n'a donc PAS été mesuré cette nuit,
+    et ce n'est pas la même chose que « le ton va bien ».**
+
+  · PUIS L'OUTIL A REDEMANDÉ LA MÊME CHOSE, ET C'ÉTAIT LUI LE DÉFAUT. Son plan proposait depuis
+    toujours deux issues — relancer, ou écrire pourquoi on ne remesure pas. J'avais écrit la raison ;
+    le constat est revenu identique. **La seconde issue n'existait que dans la phrase** : aucun code
+    ne savait lire une raison écrite. Une issue qu'un outil propose sans pouvoir la reconnaître
+    n'est pas une issue, et un constat qui revient quoi qu'on fasse apprend à ne plus être lu. Le
+    mécanisme existe maintenant, avec deux verrous — une raison ne couvre que ce qui la précède, et
+    elle tombe dès qu'un fichier du jeu bouge, vérifié sur git. **Il n'éteint jamais l'alarme** :
+    elle reste imprimée en entier, et la ligne ajoutée dit noir sur blanc que le ton reste non
+    mesuré. Sur la loi suprême du projet, faire taire l'alarme serait la dérive même.
+
+  · ET LE CONTRÔLEUR DE CONDUITE ATTENDAIT 24 RÉPONSES DEPUIS UNE SEMAINE. La plupart de ses règles
+    ne se voient pas sur le disque — poser trois questions avant d'agir, lire l'heure au lieu de la
+    taper — donc il DEMANDE et refuse d'être au vert sans réponse. Je lui en ai donné 21, **dont
+    deux qui disent non** : je n'ai consulté le cerveau d'outils que deux fois sur treize tâches, et
+    je n'ai pas lancé la commande de reprise des notes avant d'ouvrir ces chantiers (lancée après
+    coup, elle rend 57 fichiers qui portaient déjà le sujet). Une troisième allait manquer aussi ;
+    je l'ai réparée plutôt que déclarée, en écrivant les trois leçons que cette nuit devait au
+    journal d'expérience. **Réparer vaut mieux que déclarer.**
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
