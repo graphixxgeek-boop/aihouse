@@ -103,6 +103,62 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
     l'empêcher existait depuis quatre jours sans aucun mécanisme pour la porter.
   · Cinq frontières de documents jumeaux en une nuit : mes fiches sont trop longues (543 lignes
     contre une médiane de 101).
+  · LE DÉTECTEUR DE TEST AFFAIBLI existait depuis cinq jours, entièrement testé, et RIEN NE
+    L'APPELAIT — or c'est lui qui garde la règle « jamais désactiver un test », celle qui protège
+    toutes les autres. Branché au crochet post-commit, plus une assertion qui vérifie le câblage.
+  · TREIZE LIGNES DE SUIVI portaient le statut « Fait » sans leur barre finale. Normalisées.
+    MAIS — et c'est moi qui l'ai trouvé en relisant mon propre travail une heure plus tard —
+    le commit qui les corrigeait annonçait un CHIFFRE FAUX (« 115 → 102 »). Remesuré : 92 non
+    terminées avant comme après, identique. La correction est écrite dans la ligne #1170 plutôt
+    que laissée telle quelle.
+  · ET LE CHIFFRE FAUX VENAIT D'UN VRAI DÉFAUT, bien plus gros : QUATRE LECTEURS DU MÊME REGISTRE
+    avec TROIS définitions de « terminée ». 317 lignes sur 1 103 — 29 % — étaient lues « encore
+    ouverte » par l'un et « terminée » par l'autre. La cause tient à une lettre : /^termin[ée]e/
+    exige un -e final que « Terminé » n'a pas, et « Terminé » est la forme LA PLUS COURANTE du
+    registre (222 lignes). Le rapport du garde-fou se contredisait lui-même à dix lignes
+    d'intervalle. Désaccord ramené à 0, et le contre-test porte sur la CLASSE : les deux lecteurs
+    ne peuvent plus diverger d'une ligne.
+  · QUATRE TESTS DU FILET jugeaient le code sur une donnée VIVANTE et non versionnée (le journal
+    d'usage) : le vert venait du disque, jamais du code, et le filet repassait au rouge dès qu'un
+    conteneur repartait à neuf. Pire : le filet ÉCRIVAIT dans cette donnée de production — quatre
+    faux outils (docs/fake-*) dormaient dans le vrai journal.
+  · ONZE APPELS écrivaient l'origine « demande » dans le compteur d'usage avec la clé FRANÇAISE
+    `origine:` que la fonction ne lisait pas. Les onze retombaient en silence sur « cli_direct ».
+    Rien ne cassait : le compteur comptait, il comptait juste autre chose.
+  · UNE SECONDE ORIGINE DU VOCABULAIRE, `automatique_post_commit`, n'est écrite par AUCUNE ligne
+    du dépôt. Elle rendait zéro depuis le premier jour, et ce zéro se lisait « inutilisée ».
+
+
+2bis. CE QUE J'AI CONSTRUIT PARCE QUE LA CLASSE RESTAIT OUVERTE
+---------------------------------------------------------------
+  Le défaut ci-dessus — la même notion écrite plusieurs fois, presque pareil — avait DÉJÀ été
+  corrigé à moitié deux fois, le 23 et le 24 septembre, la leçon écrite en commentaire à chaque
+  fois et jamais mécanisée. Corriger l'occurrence une troisième fois ne fermait rien.
+
+  CLONE-HUNTER a donc reçu un TROISIÈME DÉTECTEUR : il relève les motifs qui se ressemblent à une
+  ou deux modifications près sans être identiques, et les regroupe en FAMILLES classées par nombre
+  de FICHIERS — parce que c'est le nombre de lecteurs qui divergeront le jour où l'un sera corrigé
+  seul. La distance se DÉRIVE du corpus, et chaque famille sort comme une QUESTION, jamais un
+  verdict : deux motifs à deux caractères d'écart peuvent viser deux choses opposées.
+
+  PREMIER PASSAGE : 34 familles — dont SIX qui n'étaient pas des expressions régulières du tout
+  (une division, deux sortes de balises fermantes, un motif construit avec new RegExp). 18 % de
+  déchet évident, corrigé le soir même : 979 motifs, 28 familles, zéro déchet au contrôle.
+
+  PUIS LES 28 TRIÉES UNE PAR UNE, parce qu'un rapport n'est pas fini quand il est écrit :
+    - 18 ÉCARTÉES avec leur raison — deux notions différentes dont la ressemblance est un hasard
+      d'écriture. C'est exactement pour elles que l'outil pose une question au lieu de trancher.
+    - 10 RETENUES, dont une seule appelait une décision : deux motifs de NUMÉRO DE TÂCHE dans le
+      même fichier qui ne s'accordent ni en bas ni en haut de l'échelle (#1175, au registre).
+    - La DATE du projet est écrite de dix façons sur douze fichiers, alors que l'Article 32 en
+      fait son sujet. Le SLUG D'OUTIL est normalisé quatre fois dans treize fichiers — les quatre
+      traitent bien les accents, mais chacun l'a appris par SON PROPRE BUG, trois corrections
+      documentées de la même cause.
+    - ET LA LIGNE QUI JUSTIFIE D'AVOIR VÉRIFIÉ : l'extension de fichier source est écrite de
+      quatre façons, et l'une oublie .tsx. Lue seule, elle annonce qu'une mesure de portabilité
+      passe à côté de 65 composants React. VÉRIFIÉ : elle n'en passe aucun, parce que cet outil ne
+      balaie que scripts/ et lib/, qui n'en portent pas un seul. Un constat non vérifié aurait
+      produit un correctif qui ne corrige rien, et un chiffre alarmant dans un rapport.
 
 
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
