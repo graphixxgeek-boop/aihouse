@@ -546,6 +546,37 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   la partie qui a besoin de toi.
 
 
+2sexdecies. TON DOSSIER DE DÉCISIONS AVAIT VIEILLI PENDANT LA NUIT
+--------------------------------------------------------------------
+  La page que tu ouvriras en premier, c'est celle qui te demande de trancher. Elle annonçait trois
+  chiffres qui avaient bougé pendant que tu dormais — et une page de décision appuyée sur des
+  chiffres périmés ne fait pas perdre du temps, elle fait décider sur un état qui n'existe plus.
+
+  · « 6 registres sans lecteur » → **5**. Celui du filet en parts en a reçu un vrai.
+  · La Ronde, « 30 commits sans passage » → **plus de 40**, et la raison de ne pas l'avoir lancée
+    est écrite juste au-dessus.
+  · **Deux décisions de plus**, nées de la nuit et posées avec leur mesure.
+
+  J'ai AJOUTÉ un bloc « ce qui a bougé depuis » sous le tableau plutôt que de réécrire ses chiffres :
+  les écraser effacerait la trace du mouvement, or c'est le mouvement qui t'intéresse.
+
+  PUIS J'AI CORRIGÉ LA CLASSE, PAS L'OCCASION. J'avais fait cette vérification à la main, page par
+  page — et un geste fait à la main ne se refera pas tout seul demain. L'index du grand projet écrit
+  que les pages sont « régénérées depuis le Markdown, jamais écrites à la main » : une règle bien
+  posée, que **personne ne vérifiait**. Une page périmée s'ouvre, elle est belle, elle est complète,
+  elle dit simplement autre chose que le document dont elle se réclame.
+
+  DEUX PIÈGES ÉVITÉS, ET ILS MÉRITENT D'ÊTRE DITS parce que chacun aurait rendu l'outil inutile en
+  ayant l'air de marcher. **Comparer les dates de modification** des fichiers aurait rendu « tout
+  est à jour » dans un dépôt fraîchement cloné — le mien à chaque session — où tous les fichiers
+  portent la même date, celle du clone. C'est la date du dernier enregistrement qui fait foi. Et
+  **deviner la source au nom du fichier** ratait le rapport de nuit lui-même : la page s'appelle
+  `rapport-de-nuit-2026-09-29` et sa source `2026-09-29-rapport`, les mêmes mots dans l'autre sens.
+  Le générateur écrit sa provenance en bas de chaque page : il suffisait de la lire.
+
+  Douze pages vérifiées, aucune périmée.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
