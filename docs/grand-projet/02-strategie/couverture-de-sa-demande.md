@@ -2,6 +2,10 @@
 
 *(Sa consigne du 2026-09-28, avant d'aller dormir : « je veux que tu prennes du temps pour
 approfondir ta réflexion [...] te demander si tous les sujets couverts par mes idées / questions /
+
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *la preuve que la cible et le plan n'oublient rien de sa demande.*
+
 remarques / demandes sont bien pris en compte, si les audits sont bien pris en compte, si tout est
 bien cohérent et complet dans un seul plan ». Ce fichier est la PREUVE, pas la promesse.)*
 

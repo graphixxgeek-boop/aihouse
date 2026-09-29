@@ -2,6 +2,10 @@
 
 *(Tâches #1141 · #1143 · #1144 · #1145 · #1146. Ouvert dans la nuit du 2026-09-28 au 29, sur sa
 demande explicite : « Retiens tout ce qu'on se dit dans les notes du projet, c'est important ces
+
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *la parole brute dont la cible est sortie.*
+
 échanges de départ pour que tu puisses t'y référer. »)*
 
 ---

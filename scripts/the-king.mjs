@@ -17,7 +17,7 @@ import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync as fsReaddir, existsSync as fsExists } from "node:fs";
 import { join } from "node:path";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -231,6 +231,146 @@ export function philosophyFreshnessDays({ chemin = PHILOSOPHY_PATH } = {}) {
 // shouldSnapshotText() — un second appelant réel est apparu le même soir (la snapshot CLAUDE.md de
 // claude-md-weight-signal, cf. circle-tasks.mjs), jamais un second calcul divergent (Article 3).
 
+// ─────────────────────────────────────────────────────────────────────────────
+// L'ALIGNEMENT EN CASCADE — chaque objet déclare le parent dont il découle
+// (2026-09-29, tâche #1148)
+//
+// SA CONSIGNE, DONNÉE AVANT D'ALLER DORMIR : « reste dans le modèle en cascade de la stratégie
+// globale qui dépend de philo et politique (alignés), et qui inclut des stratégies **alignées**, qui
+// génèrent des stratégies de chantier **alignées**, des outils **alignés**, ****tout**** est aligné
+// […] dès que tu commences à créer, il faut que cet axe ***habite*** ton travail. »
+//
+// POURQUOI ÇA VIT CHEZ THE-KING ET NULLE PART AILLEURS : il est déjà le veilleur du document qui est
+// la RACINE de cette cascade, et l'utilisateur l'a lui-même désigné comme porteur de la stratégie
+// globale — en tranchant, le 2026-09-28, qu'il VÉRIFIE et ALERTE sans jamais décider. Construire un
+// outil à côté aurait créé une seconde autorité sur le même terrain (Article 31 : on étend).
+//
+// UN MOT NE FAIT PAS UN ALIGNEMENT. Tant que rien ne peut CONSTATER une incohérence, « aligné »
+// reste une intention — et une intention n'a jamais empêché quoi que ce soit (leçon L2). Ce qui
+// suit est le mécanisme minimal qui rend le mot vérifiable.
+//
+// CE QUI EST DÉLIBÉRÉMENT ABSENT, ET C'EST LA LEÇON L4 : la déclaration n'est PAS rendue obligatoire
+// d'un coup. Des centaines de documents existent, écrits avant que cette règle existe ; les accuser
+// tous au premier passage rendrait le signal illisible le jour même de sa naissance, et un garde-fou
+// qui accuse à tort cesse d'être lu. L'outil rend donc une COUVERTURE qui progresse, et ne compte
+// comme ÉCARTS que les deux cas qui sont fautifs quel que soit leur âge :
+//   · un parent DÉCLARÉ QUI N'EXISTE PAS — une référence morte ressemble à un lien, ce qui est pire
+//     qu'une absence (même doctrine que checkActionChain(), Article 28) ;
+//   · un CYCLE — A découle de B qui découle de A. Sans cette détection, la remontée boucle, et une
+//     cascade circulaire est précisément l'incohérence globale qu'il redoute.
+
+// LA DÉCLARATION EST VISIBLE, jamais un commentaire HTML caché. Ces documents sont lus par un humain
+// qui n'est pas développeur : une ligne qu'il voit est une ligne qu'il peut corriger. La forme en
+// commentaire reste acceptée pour les fichiers de code, où une ligne visible n'existe pas.
+export const MOTIF_DECOULE_DE = /(?:^|\n)[ \t]*(?:[>*\-|#]|\/\/)*[ \t]*(?:\*\*)?D[ÉE]COULE DE\s*:?(?:\*\*)?\s*[:\s]\s*`?([^`\n<|]+?)`?\s*(?:\||$)/im;
+export const RACINE_DE_LA_CASCADE = PHILOSOPHY_PATH;
+
+export function parentDeclare(texte = "") {
+  const m = MOTIF_DECOULE_DE.exec(String(texte));
+  if (!m) return null;
+  // LA CIBLE PEUT PORTER UNE PRÉCISION APRÈS LE CHEMIN (« …/la-cible.md §3 ») : on garde le chemin,
+  // on jette le reste. Exiger un chemin nu ferait refuser la forme la plus utile — celle qui dit de
+  // QUEL passage du parent l'objet découle.
+  const brut = m[1].trim().replace(/\s*[§#].*$/, "").replace(/\s*\(.*$/, "").trim();
+  return brut || null;
+}
+
+// TROIS ÉTATS, ET LE TROISIÈME EST CELUI QUI COMPTE. « Aligné » et « orphelin » se devinent ; ce qui
+// ne se devine pas, c'est une chaîne qui a l'air complète et ne mène nulle part.
+// LE PARCOURS S'APPELLE `remontee` ET NON `chemin`, et ce n'est pas cosmétique : le résultat est
+// fusionné dans un objet qui porte déjà `chemin` (le fichier). Nommer les deux pareil écrasait le
+// chemin du document par le tableau du parcours, et le rapport annonçait alors un tableau à la
+// place d'un nom de fichier — trouvé par le contre-test, jamais en relisant la ligne.
+export function remonterLaCascade(chemin, parents, { racine = RACINE_DE_LA_CASCADE, existe = null } = {}) {
+  const vus = [];
+  let courant = chemin;
+  while (courant) {
+    if (vus.includes(courant)) return { etat: "CYCLE", remontee: [...vus, courant], pourquoi: `la remontée boucle sur ${courant} : une cascade circulaire ne mène à aucune racine, et elle boucle sans fin pour qui la lit` };
+    vus.push(courant);
+    if (courant === racine) return { etat: "ALIGNE", remontee: vus, pourquoi: `remonte jusqu'à ${racine} en ${vus.length - 1} saut(s)` };
+    const suivant = parents.get(courant) ?? null;
+    if (suivant === null) {
+      return vus.length === 1
+        ? { etat: "ORPHELIN", remontee: vus, pourquoi: "aucun parent déclaré : rien ne dit de quoi cet objet découle" }
+        : { etat: "INTERROMPU", remontee: vus, pourquoi: `la chaîne s'arrête à ${courant}, qui ne déclare aucun parent — elle n'atteint donc jamais la racine` };
+    }
+    if (existe && !existe(suivant)) return { etat: "PARENT_INTROUVABLE", remontee: [...vus, suivant], pourquoi: `${courant} déclare découler de ${suivant}, qui n'existe pas — une référence morte ressemble à un lien, ce qui est pire qu'une absence` };
+    courant = suivant;
+  }
+  return { etat: "ORPHELIN", remontee: vus, pourquoi: "aucun parent déclaré" };
+}
+
+export const POPULATIONS_ALIGNABLES = [
+  { cle: "strategies", dossier: "docs/strategies", quoi: "les stratégies" },
+  { cle: "plans", dossier: "docs/plans", quoi: "les plans de chantier" },
+  { cle: "grand-projet", dossier: "docs/grand-projet/02-strategie", quoi: "la stratégie du grand changement" },
+  { cle: "grand-projet-plan", dossier: "docs/grand-projet/03-plan-daction", quoi: "le plan d'action du grand changement" },
+];
+
+export function mesurerLAlignement({ populations = POPULATIONS_ALIGNABLES, root = ROOT, racine = RACINE_DE_LA_CASCADE, lireImpl = null, listerImpl = null } = {}) {
+  const fsLire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const lister = listerImpl ?? ((d) => (fsExists(join(root, d))
+    ? fsReaddir(join(root, d)).filter((f) => f.endsWith(".md") && f !== "index.md").map((f) => `${d}/${f}`)
+    : []));
+  const objets = [];
+  for (const pop of populations) {
+    let fichiers = [];
+    try { fichiers = lister(pop.dossier); } catch { continue; }
+    for (const chemin of fichiers) {
+      let texte = "";
+      try { texte = fsLire(chemin); } catch { continue; }
+      objets.push({ chemin, population: pop.cle, quoi: pop.quoi, parent: parentDeclare(texte) });
+    }
+  }
+  if (!objets.length) {
+    return { mesurable: false, pourquoi: "aucun objet lu dans les populations déclarées : ce zéro dit qu'on n'a rien pu lire, jamais que tout est aligné" };
+  }
+  const parents = new Map(objets.filter((o) => o.parent).map((o) => [o.chemin, o.parent]));
+  const connus = new Set([...objets.map((o) => o.chemin), racine]);
+  const existe = (c) => connus.has(c) || (() => { try { fsLire(c); return true; } catch { return false; } })();
+
+  for (const o of objets) Object.assign(o, remonterLaCascade(o.chemin, parents, { racine, existe }));
+  const parEtat = {};
+  for (const o of objets) (parEtat[o.etat] ??= []).push(o);
+  const alignes = (parEtat.ALIGNE ?? []).length;
+  // LES ÉCARTS SONT LES DEUX SEULS CAS FAUTIFS QUEL QUE SOIT L'ÂGE DE L'OBJET (voir l'en-tête).
+  const ecarts = [...(parEtat.PARENT_INTROUVABLE ?? []), ...(parEtat.CYCLE ?? [])];
+  return {
+    mesurable: true, objets, parEtat, ecarts, racine,
+    total: objets.length, alignes,
+    couverture: Math.round((alignes / objets.length) * 100),
+    pourquoi: `${alignes}/${objets.length} objet(s) remontent jusqu'à ${racine} · ${ecarts.length} écart(s) fautif(s) quel que soit leur âge`,
+  };
+}
+
+export function formatAlignementLines(a, { limite = 12 } = {}) {
+  if (!a?.mesurable) return ["=== ALIGNEMENT EN CASCADE : PAS MESURÉ ===", `  ${a?.pourquoi}`, "", "  Ce n'est PAS « tout est aligné »."];
+  const L = [`=== ALIGNEMENT EN CASCADE — ${a.couverture} % des objets remontent jusqu'à la racine ===`, "", `  ${a.pourquoi}`, ""];
+  if (a.ecarts.length) {
+    L.push(`  🚨 ${a.ecarts.length} ÉCART(S) — fautifs quel que soit l'âge de l'objet :`);
+    for (const e of a.ecarts.slice(0, limite)) { L.push(`     ${e.chemin}`); L.push(`        ${e.pourquoi}`); }
+    L.push("");
+  } else {
+    L.push("  ✅ Aucun parent déclaré introuvable, aucun cycle. Ce que ça dit exactement : aucune chaîne ne");
+    L.push("     FAIT SEMBLANT de remonter quelque part. Ce que ça NE dit PAS : que tout le monde déclare.");
+    L.push("");
+  }
+  for (const etat of ["ORPHELIN", "INTERROMPU", "ALIGNE"]) {
+    const g = a.parEtat[etat] ?? [];
+    if (!g.length) continue;
+    const icone = { ORPHELIN: "⚪", INTERROMPU: "🟠", ALIGNE: "✅" }[etat];
+    L.push(`  ${icone} ${etat} — ${g.length}`);
+    for (const o of g.slice(0, etat === "ALIGNE" ? 3 : limite)) L.push(`     ${o.chemin}${etat === "ALIGNE" ? ` — ${o.pourquoi}` : ""}`);
+    if (g.length > (etat === "ALIGNE" ? 3 : limite)) L.push(`     … et ${g.length - (etat === "ALIGNE" ? 3 : limite)} autre(s)`);
+    L.push("");
+  }
+  L.push("  UN ORPHELIN N'EST PAS UNE FAUTE, et c'est délibéré : des centaines de documents ont été écrits");
+  L.push("  avant que cette règle existe, et les accuser tous rendrait le signal illisible le jour de sa");
+  L.push("  naissance (leçon L4). La couverture est un progrès à faire monter, jamais une dette à solder.");
+  L.push(`  POUR DÉCLARER : une ligne visible « **DÉCOULE DE :** \`chemin/du/parent.md\` §x » dans le document.`);
+  return L;
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
@@ -277,8 +417,21 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // partagé et une polarité opposée, ce qui est un SIGNAL, jamais une contradiction prouvée. La
   // classer « retenu » ferait d'une heuristique un verdict — et sur la philosophie du projet,
   // c'est précisément la décision qui ne m'appartient pas (Article 16).
+  // L'ALIGNEMENT EN CASCADE (2026-09-29, tâche #1148) — affiché depuis sa propre ligne de commande,
+  // jamais réservé à un appelant. Même raison que le digest en 2026-09-22 : un outil dont on a
+  // étendu le rôle et dont l'extension reste invisible depuis son CLI n'est pas un outil terminé.
+  const alignement = mesurerLAlignement({ root: ROOT, racine: chemin });
+  console.log("");
+  for (const l of formatAlignementLines(alignement)) console.log(l);
+
   const nonDates = principles.length - digest.length;
   const constatsRoi = [
+    // UN ÉCART D'ALIGNEMENT EST RETENU, UN ORPHELIN NE L'EST PAS — et la distinction est le cœur du
+    // dispositif. Un parent introuvable ou un cycle sont fautifs quel que soit l'âge de l'objet ;
+    // un orphelin n'est qu'un document écrit avant la règle, et en faire une tâche ouvrirait
+    // vingt-cinq dettes le jour même (leçon L4).
+    ...(alignement.mesurable ? alignement.ecarts.map((e) => ({ constat: `${e.chemin} : ${e.pourquoi}`, etat: "retenu",
+      tache: "corriger la déclaration « DÉCOULE DE » de ce document, ou créer le parent qu'elle nomme" })) : []),
     ...(nonDates > 0 ? [{ constat: `${nonDates} principe(s) sans aucune date : ni déclarée, ni retrouvable dans l'historique git`, etat: "retenu",
       tache: "dater ces principes à la main, ou écrire qu'ils précèdent le suivi" }] : []),
     ...tensions.map((t) => ({ constat: `tension possible entre « ${t.a} » et « ${t.b} » (vocabulaire partagé ${t.jaccard})`, etat: "a-trancher",

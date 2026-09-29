@@ -2,6 +2,10 @@
 
 *(Tâches #1111 absorption · #1112 questions · #1113 point de non-retour · #1114 lien tâche↔chantier.
 Écrit le 2026-09-28 après lecture des 20 documents, et pas une minute avant : c'est son ordre —
+
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *le diagnostic qui a précédé la cible.*
+
 « tout absorber pour avoir une vue globale AVANT de commencer à VRAIMENT analyser ».)*
 
 **Son calibrage ② disait : rien pendant l'absorption, UN point quand la vue globale est là.**

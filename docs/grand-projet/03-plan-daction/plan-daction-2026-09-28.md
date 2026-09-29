@@ -2,6 +2,10 @@
 
 *(Tâches #1100 · #1101 · #1113 · #1114 · #1116. Réécrit dans la nuit du 2026-09-28 au 29, sur sa
 consigne : « je veux que tu prennes du temps pour approfondir ta réflexion [...] je ne veux pas un
+
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *le plan qui met la cible en œuvre — à refondre une fois la cible validée.*
+
 plan d'action à la va-vite, je veux toute une stratégie cohérente dans tout son ensemble [...] comme
 avant de partir en guerre ».)*
 

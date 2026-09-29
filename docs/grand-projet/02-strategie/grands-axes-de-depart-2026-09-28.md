@@ -2,6 +2,10 @@
 
 *(Écrit le mardi 29 septembre 2026 à 01h41, heure de Paris — heure LUE, source système. Tâches
 #1141 · #1143 · #1144. Il a demandé de « poser les grands axes de départ de cet énorme chantier »,
+
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *les axes tranchés avec lui, qui ont conduit à la cible.*
+
 et de ne rien enchaîner de plus avant demain.)*
 
 ---

@@ -18375,12 +18375,22 @@ async function testDetteIndirecteIgnoreLesCommentaires() {
   assert.equal(god1014.diffSeulementDesCommentaires(COMMIT_POSE_ICEBERG, 'scripts/cassandra-rh.mjs'), false,
     'MUST LET PASS on the real repository: the SAME commit changed real code in this file, so the filter must not absolve it — one commit, both answers, which is what makes this pair a counter-test rather than a demonstration');
 
-  // LA FENÊTRE GLISSANTE GARDE UNE SEULE ASSERTION, celle qui reste vraie quel que soit le jour :
-  // le filtre ne doit JAMAIS tout faire taire. Le premier jet faisait exactement ça — 20 écarts
-  // ramenés à ZÉRO, parce que les arguments git étaient dans le mauvais ordre et que git lisait le
-  // hash comme un chemin, rendant le diff de HEAD pour chaque commit.
-  const apres1014 = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 30 }).length;
-  assert.ok(apres1014 > 0, `the filter must NOT silence the whole control: a control that never speaks is worse than the noise it replaces (got ${apres1014})`);
+  // LA FENÊTRE SE DÉRIVE DE L'ANCRE, elle ne se choisit pas (Article 24 — corrigé le 2026-09-29).
+  // Cette assertion lisait une fenêtre FIXE de 30 commits et exigeait qu'elle rende au moins un
+  // écart. Elle a tenu tant que les trente derniers commits en portaient un — puis une série de
+  // commits qui mettaient CHACUN leur process à jour l'a fait tomber. **Le test punissait donc
+  // exactement le comportement qu'il est censé encourager**, et c'est la même faute que la fenêtre
+  // « au moins 20 bibliothèques » corrigée la veille : un chiffre gravé le jour de sa naissance.
+  //
+  // CE QUI VAUT D'ÊTRE VERROUILLÉ EST L'INTENTION, jamais le chiffre : le filtre ne doit pas faire
+  // TAIRE le contrôle. On le vérifie donc sur une fenêtre qui contient l'époque de l'ancre — là où
+  // de vraies dettes existent, et qui reste atteignable quel que soit le nombre de commits ajoutés
+  // depuis. Et la propreté de la fenêtre RÉCENTE est lue pour ce qu'elle est : un succès.
+  const depuisLAncre = Number(vraiSh1014(`git rev-list --count ${COMMIT_POSE_ICEBERG}..HEAD`).trim()) + 20;
+  const surLAncre = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: depuisLAncre }).length;
+  assert.ok(surLAncre > 0, `the filter must NOT silence the whole control: over the ${depuisLAncre} commits back to the anchor era, where real debts are known to exist, it must still speak (got ${surLAncre})`);
+  const recents = god1014.findChangementsIndirectsSansMiseAJour({ nbCommits: 30 }).length;
+  assert.ok(recents >= 0 && recents <= surLAncre, `and the recent window can legitimately be clean — a clean recent window is the control working, never the control broken (recent ${recents}, anchor era ${surLAncre})`);
 
   console.log("Passed: huit fausses dettes documentaires en un seul commit (2026-09-27, tâche #1014). Le détecteur de changement indirect jugeait sur le FICHIER TOUCHÉ, jamais sur ce qui avait changé dedans : la pose des mentions // ICEBERG a ajouté une ligne de COMMENTAIRE en tête de 79 fichiers, et il a annoncé huit dettes de process, les huit fausses — aucun process n'avait bougé. Un garde-fou qui accuse à tort cesse d'être lu (L4), et le coût s'était déjà mesuré ici le 2026-09-26 : à force d'ignorer cette ligne, trois dettes réelles s'étaient cachées derrière. La règle retenue est GÉNÉRALE plutôt que taillée sur le cas du jour (Article 24) : un diff dont toutes les lignes ajoutées et retirées sont des commentaires ou du vide n'a pas modifié le comportement, donc n'a pas pu déplacer une règle. Risque résiduel assumé et écrit : dans ce dépôt le POURQUOI vit à côté du QUOI, donc un commentaire peut porter une règle — mais ce cas-là DOCUMENTE, il ne change pas le process, alors que huit accusations fausses éteignent le contrôle entier. Le premier jet était pire que le défaut : écrit `-- <fichier> <hash>`, git prenait le hash pour un chemin et rendait le diff de HEAD, faisant tomber le détecteur de 20 écarts à ZÉRO. Trouvé par la mesure avant/après, jamais en relisant la ligne — elle a l'air juste. Mesure finale sur le vrai dépôt : 20 → 12, les huit fausses du dernier commit disparaissent, les vraies dettes des commits précédents restent.");
 }
@@ -21178,6 +21188,66 @@ async function testCouvertureDeLaCommande() {
 }
 
 await testCouvertureDeLaCommande();
+
+// ————————————————————————————————————————————————————————————————————————
+// L'ALIGNEMENT EN CASCADE (2026-09-29, tâche #1148). Sa consigne avant d'aller dormir : « des
+// stratégies alignées, qui génèrent des stratégies de chantier alignées, des outils alignés,
+// ****tout**** est aligné […] dès que tu commences à créer, il faut que cet axe ***habite*** ton
+// travail. » UN MOT NE FAIT PAS UN ALIGNEMENT : tant que rien ne peut CONSTATER une incohérence,
+// « aligné » reste une intention, et une intention n'a jamais empêché quoi que ce soit (leçon L2).
+async function testAlignementEnCascade() {
+  const K = await import('../scripts/the-king.mjs');
+
+  // LA DÉCLARATION EST VISIBLE ET TOLÈRE LES FORMES RÉELLES — une ligne qu'un non-développeur peut
+  // écrire et corriger, dans une citation, avec ou sans gras, avec ou sans précision de section.
+  assert.equal(K.parentDeclare('> **DÉCOULE DE :** `docs/a.md`'), 'docs/a.md', 'the quoted, bolded form actually used in the documents is read');
+  assert.equal(K.parentDeclare('DECOULE DE : docs/b.md §3'), 'docs/b.md', 'and a section marker after the path is dropped rather than making the path unresolvable — the most useful form says WHICH part of the parent it derives from');
+  assert.equal(K.parentDeclare('// DÉCOULE DE : scripts/x.mjs'), 'scripts/x.mjs', 'the comment form is accepted too, for code files where a visible line does not exist');
+  assert.equal(K.parentDeclare('un texte qui parle de cascade et de parents sans rien déclarer'), null, 'MUST LET PASS: prose about the subject is not a declaration — otherwise every document discussing alignment would claim to be aligned');
+
+  // LA REMONTÉE, ET SES CINQ ISSUES. Les deux qui comptent sont les deux dernières.
+  const p = new Map([['a.md', 'b.md'], ['b.md', 'racine.md'], ['seul.md', 'fantome.md'], ['x.md', 'y.md'], ['y.md', 'x.md'], ['court.md', 'impasse.md']]);
+  const existe = (c) => ['a.md', 'b.md', 'racine.md', 'x.md', 'y.md', 'court.md', 'impasse.md', 'seul.md'].includes(c);
+  const opt = { racine: 'racine.md', existe };
+  assert.equal(K.remonterLaCascade('a.md', p, opt).etat, 'ALIGNE', 'a two-hop chain that reaches the root is aligned');
+  assert.equal(K.remonterLaCascade('orphelin.md', p, opt).etat, 'ORPHELIN', 'a file declaring nothing is an orphan, never an error');
+  assert.equal(K.remonterLaCascade('court.md', p, opt).etat, 'INTERROMPU', 'MUST CATCH: a chain that declares a real parent which itself declares nothing never reaches the root — and that is NOT the same as declaring nothing at all');
+  assert.equal(K.remonterLaCascade('seul.md', p, opt).etat, 'PARENT_INTROUVABLE', 'MUST CATCH: a declared parent that does not exist — a dead reference looks like a link, which is worse than an absence (same doctrine as checkActionChain)');
+  const cyc = K.remonterLaCascade('x.md', p, opt);
+  assert.equal(cyc.etat, 'CYCLE', 'MUST CATCH a cycle rather than looping forever: a circular cascade reaches no root, and it is exactly the "incohérence globale" he named as the risk');
+  assert.ok(cyc.remontee.length >= 3, 'and the cycle reports the path it looped on, so it can be cut at the right place');
+
+  // LES ÉCARTS SONT LES DEUX CAS FAUTIFS, JAMAIS LES ORPHELINS — et c'est la leçon L4 appliquée
+  // AVANT d'être payée. Des centaines de documents existent, écrits avant cette règle ; les accuser
+  // tous rendrait le signal illisible le jour de sa naissance.
+  const faux = {
+    'docs/f/aligne.md': '> **DÉCOULE DE :** `docs/philosophie-et-politique.md`',
+    'docs/f/orphelin.md': 'rien du tout',
+    'docs/f/mort.md': '> **DÉCOULE DE :** `docs/f/jamais-existe.md`',
+  };
+  const m = K.mesurerLAlignement({
+    populations: [{ cle: 'f', dossier: 'docs/f', quoi: 'fixture' }],
+    listerImpl: () => Object.keys(faux),
+    lireImpl: (c) => { if (c in faux) return faux[c]; throw new Error('absent'); },
+  });
+  assert.equal(m.mesurable, true, 'the measure runs on the fixture');
+  assert.deepEqual(m.ecarts.map((e) => e.chemin), ['docs/f/mort.md'], 'MUST CATCH the dead parent and MUST LET PASS the orphan: an orphan is a document older than the rule, never a fault');
+  assert.equal(m.couverture, 33, 'and the coverage is a progress to raise, never a debt to settle');
+
+  // UN CORPUS VIDE N'EST JAMAIS « TOUT EST ALIGNÉ ».
+  assert.equal(K.mesurerLAlignement({ populations: [], listerImpl: () => [], lireImpl: () => '' }).mesurable, false, 'nothing read is never a clean bill (leçon L5)');
+
+  // EN DIRECT CONTRE LE VRAI DÉPÔT (Article 25).
+  const reel = K.mesurerLAlignement();
+  assert.equal(reel.mesurable, true, 'the cascade must actually be measured against the real repository');
+  assert.ok(reel.total > 30, `on every strategy and plan document (currently ${reel.total})`);
+  assert.deepEqual(reel.ecarts.map((e) => e.chemin), [], `and no real document may declare a parent that does not exist, nor sit in a cycle: ${reel.ecarts.map((e) => `${e.chemin} — ${e.pourquoi}`).join(' | ')}`);
+  assert.ok(reel.alignes > 10, `with a cascade genuinely started rather than measured on zero (currently ${reel.alignes} aligned of ${reel.total})`);
+
+  console.log("Passed: l'alignement en cascade, né de sa consigne du 2026-09-29 avant d'aller dormir — « des stratégies alignées, qui génèrent des stratégies de chantier alignées, des outils alignés, tout est aligné [...] dès que tu commences à créer, il faut que cet axe habite ton travail ». UN MOT NE FAIT PAS UN ALIGNEMENT : tant que rien ne peut CONSTATER une incohérence, le mot reste une intention. CHEZ THE-KING ET NULLE PART AILLEURS (Article 31) : il veille déjà sur le document qui est la RACINE de la cascade, et l'utilisateur l'a lui-même désigné comme porteur de la stratégie globale en tranchant qu'il VÉRIFIE et ALERTE sans jamais décider — un outil à côté aurait créé une seconde autorité sur le même terrain. CE QUI EST DÉLIBÉRÉMENT ABSENT EST LE PLUS IMPORTANT : la déclaration n'est PAS rendue obligatoire d'un coup. Vingt-cinq documents du dépôt ont été écrits avant que la règle existe ; les accuser tous au premier passage aurait rendu le signal illisible le jour même de sa naissance (leçon L4, déjà payée sept fois ici). L'outil rend donc une COUVERTURE qui progresse — 39 % au premier passage, 16 objets sur 41 — et ne compte comme ÉCARTS que les deux cas fautifs quel que soit l'âge : un parent DÉCLARÉ QUI N'EXISTE PAS (une référence morte ressemble à un lien, ce qui est pire qu'une absence — même doctrine que checkActionChain) et un CYCLE (sans lui la remontée boucle, et une cascade circulaire est précisément l'incohérence globale qu'il nomme comme risque). Un cinquième état, INTERROMPU, distingue la chaîne qui déclare un vrai parent qui ne mène nulle part de celle qui ne déclare rien : les confondre ferait réparer le mauvais défaut.");
+}
+
+await testAlignementEnCascade();
 
 // ————————————————————————————————————————————————————————————————————————
 // LE RETENU OUBLIÉ, ET LE SIXIÈME FAUX CHIFFRE (2026-09-28, tâche #1103)

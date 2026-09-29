@@ -2,6 +2,10 @@
 
 *(Créée le 2026-09-26 05:44Z, liée à la tâche **#775**.)*
 
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *stratégie de CHANTIER : elle sert la cible du projet entier, et c'est à cette cible qu'elle doit rester alignée.*
+
+
 > **CE DOCUMENT NE RÉSUME JAMAIS.** Il AGRÈGE et il ORDONNE. Chaque idée y entre
 > intégralement, entre guillemets, avec sa source. Trouver sa place dans la stratégie est
 > le travail ; la raccourcir serait la perdre. En cas de conflit majeur entre une idée
