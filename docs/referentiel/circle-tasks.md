@@ -56,3 +56,45 @@ déroulé, précisément parce qu'un juge et son sujet ne peuvent pas être le m
 Il dit ce qui dort et depuis quand ; il ne juge ni la qualité d'un passage, ni si le résultat a été
 lu. C'est `circle-process-guardian` pour le déroulé, et `god-of-all-process` pour la discipline
 d'exécution — jamais lui.
+
+## LES DIX QUESTIONS D'ALIGNEMENT EN FIN DE RONDE (2026-09-27, tâche #769)
+
+**Sa demande, mot pour mot** : « je veux qu'à chaque ronde, à la fin, il y ait un moment où tu me
+poses 10 questions d'alignement de la compréhension aux 2 extrémités : **5 sur le fond**, pour être
+sûr de ma réponse à l'avance (en cas d'écart : problème grave), **5 sur des points de détail**, des
+frontières obscures. »
+
+**LA FINESSE DU DISPOSITIF EST DANS SON ASYMÉTRIE, et elle est voulue.** Les deux moitiés ne mesurent
+pas la même chose et ne se lisent pas de la même façon :
+
+- les **5 questions DE FOND** ne servent PAS à apprendre. L'agent doit connaître la réponse à
+  l'avance, et **un écart y est un PROBLÈME GRAVE** : le signal que les deux modèles du projet ont
+  divergé sans que personne le voie ;
+- les **5 questions DE DÉTAIL** servent l'inverse : les frontières floues, ce qui n'a jamais été
+  tranché. **Y apprendre quelque chose est normal.**
+
+**LE MÉCANISME QUI REND L'ÉCART MESURABLE, et sans lui tout le dispositif est décoratif : la
+prédiction s'écrit AVANT la réponse.** Une question de fond posée sans prédiction engagée par écrit
+ne produit aucun écart lisible — on relira sa réponse en se disant « c'est bien ce que je pensais »,
+et c'est exactement ce que cette tâche existe pour empêcher. Le registre de l'outil — le fichier `alignement.json` de son dossier, **créé au premier alignement et
+absent tant qu'aucun n'a eu lieu** — se remplit donc **en deux temps**, et le second refuse de
+toucher au premier.
+
+**UNE QUESTION DE DÉTAIL NE PORTE PAS DE PRÉDICTION, et c'est un refus, pas un oubli** : si la
+réponse est prévisible, ce n'est pas une frontière obscure — c'est une question de fond mal
+étiquetée, et la ranger du mauvais côté ferait disparaître un écart grave dans la moitié où l'on
+apprend.
+
+**Les quatre pièces.** `validerAlignement()` refuse une série mal formée (nature inconnue, question
+vide, question de fond sans prédiction, question de détail AVEC prédiction).
+`mesurerEcartsDAlignement()` compte les écarts — **et l'écart est DÉCLARÉ par l'utilisateur, jamais
+deviné par comparaison de texte** : deux phrases peuvent dire la même chose sans partager un mot, et
+l'inverse ; une mécanique qui trancherait ici rendrait le verdict le moins fiable du dispositif sur
+la moitié la plus grave. Sans réponses enregistrées, elle rend `mesurable: false` — « zéro écart »
+ressemblerait trait pour trait à un alignement parfait (leçon L11). `enregistrerAlignement()` écrit
+le registre, et `depuisQuand()` rend la phrase d'âge qui accompagne un compte **sans affirmer plus
+que ce qui est mesuré**.
+
+`formatAlignementLines()` rend la série lisible : les fautes de forme s'il y en a, les écarts graves
+un par un (question, prédiction, réponse réelle), et le refus explicite quand rien n'a encore été
+répondu.

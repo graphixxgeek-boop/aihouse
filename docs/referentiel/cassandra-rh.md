@@ -393,3 +393,63 @@ ceux qu'aucune mécanique ne tranchera.
 
 Le KPI « conclusion » du tableau de bord utilise désormais le même dénominateur que l'exigence,
 comme `nivellementParClasse()` le faisait déjà.
+
+## LE PROCESS GROS PROMPT : une occasion se mesure, jamais le temps qui passe
+
+**Le constat qui condamnait le compteur** : il disait envoyer ses grosses demandes « entre plusieurs
+demandes, jamais entre deux » — un rythme irrégulier qu'aucune durée ne décrit.
+
+**L'OCCASION SE MESURE DONC À LA PLACE DU TEMPS** : chaque période autonome est une occasion
+**déclarée par sa propre règle**. Une nuit qui démarre sans saisine archivée est un manque réel,
+datable, lisible sur le disque — jamais une impression. `datesDesNuits()` lit les nuits réelles,
+`datesDesSaisines()` lit les saisines, `nuitsSansSaisine()` croise les deux.
+
+**LA DATE SE LIT DANS LA SAISINE, jamais sur le fichier** : `A-minuit.json` ne porte aucune date dans
+son nom, et l'horodatage du fichier dit quand il a été RECOPIÉ, pas quand la demande est arrivée. Les
+deux divergent dès le premier déplacement de fichier.
+
+**LA FENÊTRE D'UN JOUR N'EST PAS UN CONFORT** : il envoie sa saisine AVANT la nuit, le plus souvent
+la veille au soir. Exiger la même date ferait crier le compteur **sur les nuits les mieux
+préparées** — le plus sûr moyen de le faire ignorer (leçon L4).
+
+**L'INVITATION, ET LES DEUX MOMENTS NE SE RESSEMBLENT PAS.** `inviterLeProcessGrosPrompt()` distingue
+un ÉVÉNEMENT net (une nuit s'annonce — ça s'anticipe) d'une DÉRIVE (des messages courts s'enchaînent
+sur des sujets différents — ça se rattrape). Le second est exactement le défaut qu'il dit avoir
+corrigé chez lui, « trop de prompts intempestifs » : le voir revenir est le signal que le process n'a
+pas pris. `formatGrosPromptLines()` rend les deux.
+
+## La notice d'accueil, et pourquoi elle ne résume JAMAIS
+
+`noticeDAccueil()` répond à son idée : « l'agence pourrait énoncer ses règles de fonctionnement ».
+Elle est **RÉGÉNÉRÉE depuis les process réels**, donc jamais périmée (Article 24) — une notice
+recopiée à la main mentirait au premier process ajouté, **et une notice qui ment sur les règles est
+pire qu'une absence de notice, parce qu'on la suit**.
+
+**Elle liste les process et leur nombre d'étapes ; elle ne les résume jamais.** Un résumé de process
+se périme sans qu'on le voie, et quelqu'un le suivrait à la place du vrai.
+
+## Les reconvocations : il ne clôt rien, il reconvoque d'un cran plus haut
+
+`reconvocationsDues()` relit le registre et rend les sursis dont l'échéance est passée. **Il ne clôt
+rien et ne retire rien** — il nomme les échéances déjà manquées.
+
+**LA DATE DU JOUR SE PASSE EN PARAMÈTRE, jamais `new Date()` pris à l'intérieur** : une fraîcheur
+calculée sur une heure devinée est fausse sans qu'on puisse le voir (Article 32), et un test qui ne
+peut pas fixer le jour ne teste rien de reproductible. Sans date fournie, il **refuse** de conclure.
+`formatReconvocationsLines()` rend la liste.
+
+## `poserMentionIceberg()` — figer un ÉTAT DÉCLARÉ à une date, jamais un second avis
+
+**L'objection qu'il faut se faire à soi-même avant d'écrire cette fonction** : poser 79 mentions
+DEPUIS la mesure **ne fabrique pas une seconde source indépendante**. Au moment du geste, les deux
+disent forcément la même chose, et un garde-fou qui compare une copie à son original ne mordra
+jamais.
+
+**Ce n'est pas le but.** Le but est de figer un état DÉCLARÉ à une date : à partir du lendemain, un
+fichier qui gagne un point d'entrée, perd sa présentation ou change de rôle verra **sa dérivation
+bouger pendant que sa déclaration reste** — et c'est exactement ce désaccord-là qui devient lisible.
+*La mention est un point de repère daté, jamais un second avis rendu le même jour.*
+
+**ELLE NE TOUCHE JAMAIS UN FICHIER QUI DÉCLARE DÉJÀ**, et surtout pas pour « corriger » un
+désaccord : un désaccord est précisément ce qu'on veut voir, et l'écraser en silence reviendrait à
+supprimer la mesure au lieu de la lire (Article 3 — on corrige la cause, jamais le symptôme).

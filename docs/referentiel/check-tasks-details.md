@@ -546,3 +546,53 @@ lire, donc **aucune dérive d'horloge possible** (Article 32).
 **Elle ne remplace aucune des trois autres** : elle rend visible le travail qui ne laisse aucune
 trace dans un différentiel d'états. Quand il n'y en a aucune, elle le dit explicitement plutôt que
 de n'afficher rien — une ligne absente se lit comme une ligne cassée.
+
+## L'ARCHIVAGE DU SUIVI : le rendre léger sans perdre une décision
+
+Le registre grossit — plus de mille lignes — et son POIDS devient un coût à chaque lecture.
+`coutDuRegistre()` le mesure, `formatCoutDuRegistreLines()` le rend lisible.
+
+**L'archivage ne se décide pas à la légère : une ligne archivée est une décision qu'on ne relira
+plus par hasard.** D'où trois précautions, chacune payée par une objection réelle.
+
+**① LA SÉLECTION EXIGE DEUX CONDITIONS, JAMAIS UNE.** `selectionnerPourArchive()` ne prend une ligne
+que si elle est **fermée** ET antérieure à la borne. Une tâche ouverte ancienne reste au chaud quoi
+qu'il arrive — **c'est du travail qui attend, pas de l'histoire.**
+
+**LIMITE DÉCLARÉE PLUTÔT QUE TUE** (Article 32) : l'horodatage d'une ligne est sa date de
+**CRÉATION**, jamais sa date de clôture — aucune colonne ne la porte aujourd'hui. « Fermée depuis
+longtemps » est donc approché par « ouverte il y a longtemps ». Dans ce projet les tâches se ferment
+vite, souvent le jour même, ce qui rend l'approximation honnête — **mais c'est une approximation, et
+la présenter comme une date de clôture serait exactement le faux qu'on chasse ailleurs.**
+
+**② L'OPÉRATION SE FAIT EN MÉMOIRE, ET SE VÉRIFIE AVANT D'ÉCRIRE.** `archiverLesTaches()` ne touche
+jamais le disque : elle rend ce qu'il FAUDRAIT écrire, plus le verdict de ses contrôles. Le CLI
+décide. **Séparer les deux est ce qui permet de la faire tourner à blanc sur le vrai dépôt autant de
+fois qu'on veut, sans aucun risque** — *un outil qui écrit en même temps qu'il calcule ne peut pas
+être essayé.* Les pièces : `reecrireFichierArchive()`, `ligneDEnteteDe()`, `enteteArchive()`,
+`numeroDeLaLigne()`, et `formatArchivageLines()` pour le rendu.
+
+**Le réécriveur est injectable POUR POUVOIR SABOTER LES CONTRÔLES EN TEST.** Un garde-fou qu'on n'a
+jamais vu refuser ne prouve rien (BP2) : sans cette injection, « aucun numéro perdu » resterait une
+phrase dans un commentaire — *et c'est précisément ce genre de phrase qui se révèle fausse le jour
+où elle devrait servir.*
+
+**③ LE RÉCIT SE COMPACTE SANS PERDRE SA DÉCISION.** `segmentsDuRecit()` découpe un détail à ses
+en-têtes en gras capitales — **le texte AVANT le premier en-tête est un segment à part, et c'est
+presque toujours lui qui porte le constat**. `porteUneDecision()` reconnaît un segment décisif,
+`compacterLeRecit()` propose la version courte, `mesurerLesCalibrages()` et
+`formatCalibrageLines()` mesurent l'effet.
+
+**TROIS ÉTATS, JAMAIS DEUX** : un récit sans en-tête n'est **pas** « déjà compact » — c'est un récit
+qu'on **ne sait pas découper**, et le dire vaut mieux que de rendre une proposition au jugé.
+
+## `compteEstZero()` — un compte de ZÉRO est l'absence du manque, jamais le manque (2026-09-28, tâche #699)
+
+« 0 juge muet », « 0 document muet sur les règles » : la phrase porte bien un nom dénombrable et un
+mot de manque, mais **elle annonce un SUCCÈS**. Les compter comme des écarts à conclure demandait
+d'ouvrir une suite à un problème résolu — et **un garde-fou qui réclame du travail là où il n'y en a
+pas cesse d'être lu** (leçon L4).
+
+C'est la même famille que presque tout ce que ce dépôt a corrigé : **un signal ADJACENT — les mots du
+manque — lu comme le signal lui-même, le manque.** `nomRaccourci()` sert le même souci de lisibilité
+sur les noms longs.

@@ -69,3 +69,29 @@ les items coûteux apparaissent, et c'est exactement ce que l'utilisateur a dema
 Deux de ses trois temps sont gratuits ; seul celui du milieu coûte. Le drapeau `costly` porte donc
 sur l'ensemble, et sa consigne dit lesquelles des étapes ne coûtent rien — sinon il paraîtrait deux
 fois plus cher qu'il n'est.
+
+## LA CONFORMITÉ DU KIT : les pièces sont là, mais disent-elles vrai ? (`verifierTousLesKits`)
+
+SAFE-EXPORT compte les pièces du kit et **déclare lui-même ne jamais lire leur contenu**. C'est
+exactement le trou que ce contrôle-ci occupe : **un document qui NOMME une fonction qui n'existe pas
+est pire qu'un document absent** — le premier rassure à tort, le second avertit.
+
+**Comment il s'y prend, et pourquoi dans cet ordre.**
+`indexDuDepot()` lit **une seule fois** tous les symboles exportés de `scripts/` et `lib/` — un index
+construit par fichier coûterait 83 relectures du dossier entier. `nomsCites()` relève les noms cités
+en `dos d'accent` dans un document. Tout nom cité qui n'est pas dans l'index est un **fantôme**.
+
+**LA NUANCE QUI ÉVITE LE FAUX ROUGE, et elle est subtile.** Un document a parfaitement le droit de
+citer un nom qui n'existe pas — s'il dit qu'il n'existe pas, ou s'il s'en sert comme d'un exemple de
+forme. `phraseAutourDu()` isole la phrase qui porte la citation et `natureDeLAbsence()` la classe.
+
+**L'EXEMPLE SE TESTE AVANT LA NÉGATION, et l'ordre n'est pas arbitraire** : une phrase qui déclare
+« ce sont des exemples de forme, pas des chemins réels » contient **les DEUX marqueurs**. Tester la
+négation d'abord rendait le bon verdict avec la MAUVAISE raison — *un rapport juste sur le fond et
+faux dans son explication, qui enverrait le prochain lecteur chercher au mauvais endroit.*
+
+**UN FICHIER DISPENSÉ N'EST PAS UN FICHIER NON MESURABLE**, et les confondre faussait la lecture du
+rapport entier : les sept dispensés (crochets git, installateur d'environnement, lanceur du produit)
+n'ont aucun document **par décision écrite**. Les compter comme « non mesurables » faisait lire sept
+trous là où il y a sept décisions. `verifierUnKit()` les rend donc conformes avec leur raison, et
+`verifierTousLesKits()` sépare les trois populations. `formatConformiteLines()` rend le verdict.

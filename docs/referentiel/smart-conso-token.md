@@ -518,3 +518,25 @@ message substantiel CLÔT la rafale — c'est précisément ce que l'alerte cher
 longueur de chaque tour (`enregistrerTour()`, journal local `.conso-tours.json`), donc la mesure
 dépend de sa discipline — la même limite honnête que tool-brain et que le reste de cet outil.
 L'écrire noir sur blanc est la seule protection possible (Article 27).
+
+## LE DIAGNOSTIC QUI REMPLACE LE REMPLISSAGE (2026-09-28, tâche #492)
+
+**Le bilan disait « NON CONCLUANT » à chaque commit depuis des jours**, et la tâche nommait
+elle-même la cause : « ce n'est pas l'outil, c'est moi qui ne classe pas au fil de l'eau ».
+
+**UN REPROCHE ÉCRIT N'EST PAS UNE MÉCANIQUE (Article 27).** « Classe au fil de l'eau » a été écrit,
+lu, et **tenu 2 fois sur 11** — ce n'est pas un défaut de volonté, c'est une obligation qui ne repose
+que sur la mémoire d'un agent, donc qui ne survit pas à un changement de session.
+
+**CE DIAGNOSTIC NE COMBLE RIEN, ET C'EST LA FORME HONNÊTE.** `diagnosticDeClassification()` dit ce
+qui manque, ce qu'une dérivation vaudrait, et **pourquoi elle a été écartée**. La seule vraie
+correction — rendre la classification OBLIGATOIRE au moment du `--confirm` — change le comportement
+d'un outil que l'utilisateur emploie, donc elle lui appartient (Article 16).
+
+**LA DÉRIVATION A ÉTÉ CONSTRUITE, MESURÉE, PUIS ÉCARTÉE PARCE QU'ELLE FLATTAIT.**
+`classificationDerivee()` regarde si un script a changé dans l'heure suivant une action coûteuse : si
+oui, quelque chose a été **CONSTRUIT**, et chaque réutilisation future rembourse ce coût —
+« investissement », dérivé du dépôt et jamais jugé. **Mais l'inverse ne se dérive pas** : aucun
+script modifié ne prouve PAS que l'action était sans retour, seulement qu'au bout d'une heure rien
+n'était encore visible. Rendre « sans retour » dans ce cas aurait produit un chiffre confortable et
+faux. `commitsAvecScripts()` fournit la matière, `formatDiagnosticLines()` rend le verdict.
