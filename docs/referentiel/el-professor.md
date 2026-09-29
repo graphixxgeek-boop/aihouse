@@ -202,3 +202,45 @@ corrigé. Et sans lecteur de fichier fourni, l'audit **refuse** plutôt que de r
 ce verdict-là dirait exactement ce que dit une sortie parfaite, et c'est le contraire de la vérité.
 
 `formatMotifsLines()` rend le taux, les défauts par famille et des exemples réels.
+
+---
+
+## Depuis quand l'Article 0 a-t-il été RÉELLEMENT mesuré ?
+
+*(2026-09-29, tâche #1187. `node scripts/el-professor.mjs` — imprimé avec le reste.)*
+
+**LE TROU PORTAIT SUR LA LOI SUPRÊME DU PROJET.** `check-spirit` est le seul outil qui touche la
+sortie **réelle** du modèle : il envoie de vraies provocations et rend de vraies répliques, et
+l'Article 0 se juge là-dessus. Son registre note, passage par passage, ce que la lecture humaine a
+trouvé. **Personne ne le relisait.** data-archangel le signalait comme donnée fraîche sans lecteur,
+et « être cité dans huit tables de registres » ne fait lire son CONTENU à personne.
+
+**CE QUE LE SILENCE CACHAIT** : le dernier passage enregistré (2026-09-28, second essai) a une
+couverture **NULLE — 0/20, toutes les provocations bloquées**, et conclut « PAS MESURÉ ». Autrement
+dit, **la dernière chose que le projet savait de sa loi suprême est qu'il n'avait rien pu en
+savoir** — et ce fait n'était écrit nulle part ailleurs que dans un tableau que rien n'ouvrait.
+
+### Pourquoi ici et pas dans un script neuf
+
+Article 31, obligation 2 : on ÉTEND l'outil dont c'est déjà le métier. EL-PROFESSOR répond « cette
+simulation a-t-elle été notée » ; la question d'ici est la même prise par l'autre bout, « le ton
+a-t-il été mesuré récemment, et la mesure a-t-elle abouti ». Interrogé le premier, tool-brain a
+d'ailleurs désigné EL-PROFESSOR sur cette demande.
+
+### La seule distinction qui compte, et elle est testée dans les deux sens
+
+**Un passage BLOQUÉ n'est pas un passage PROPRE.** Une couverture `NULLE` ou `0/20`, ou un verdict
+« PAS MESURÉ » dans la colonne voisine, dit que rien n'a été mesuré — pas que tout allait bien.
+Confondre les deux est exactement le défaut que check-spirit a corrigé **chez lui** le 2026-09-25,
+en cessant d'afficher « aucun marqueur grossier détecté » sur zéro donnée. Le refaire ici, dans
+l'outil qui le relit, serait difficile à défendre.
+
+### Ce qu'il ne fait pas, et c'est délibéré
+
+- **Aucun seuil n'est inventé** (BP5) : l'âge est **rapporté, jamais jugé**. Combien de jours sont
+  « trop » dépend d'un rythme de travail que cet outil ne connaît pas. Le seul signal rendu est un
+  FAIT : le dernier passage a-t-il mesuré quelque chose, oui ou non.
+- **Il date des passages et lit leur COUVERTURE, jamais ce que le ton valait.** La lecture des
+  répliques reste humaine — le registre le dit lui-même : les heuristiques ne détectent que le
+  vocabulaire de service client.
+- **Un registre illisible ou vide rend PAS MESURÉ**, jamais « mesuré récemment » (leçons L5/L11).

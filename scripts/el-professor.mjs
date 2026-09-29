@@ -96,6 +96,109 @@ export function findOrphanNotes(simIndexContent, elProfessorIndexContent) {
   return noted.filter((id) => !archived.has(id));
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// DEPUIS QUAND L'ARTICLE 0 A-T-IL ÉTÉ RÉELLEMENT MESURÉ ? (2026-09-29, tâche #1187)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// LE TROU, ET IL PORTE SUR LA LOI SUPRÊME DU PROJET. `check-spirit` est le SEUL outil qui touche la
+// sortie RÉELLE du modèle : il envoie de vraies provocations et rend de vraies répliques, et c'est
+// là-dessus que l'Article 0 se juge. Son registre note, passage par passage, ce que la lecture
+// humaine a trouvé. **Personne ne le relisait.** data-archangel le signalait comme donnée fraîche
+// sans lecteur ; le fait qu'il soit cité dans huit tables de registres ne fait lire son CONTENU à
+// personne — être listé n'est pas être lu.
+//
+// CE QUE ÇA CACHAIT, et c'est le genre de silence qui coûte cher : le dernier passage enregistré
+// (2026-09-28, second essai) a une couverture **NULLE — 0/20, toutes les provocations bloquées**,
+// et conclut « PAS MESURÉ ». Autrement dit, la dernière chose que le projet sait de sa loi suprême
+// est qu'il n'a rien pu en savoir. Ce fait n'était écrit nulle part ailleurs que dans un tableau
+// que rien n'ouvrait.
+//
+// POURQUOI CHEZ EL-PROFESSOR plutôt que dans un script neuf (Article 31, obligation 2) : c'est déjà
+// l'outil de la fidélité à la charte — il répond « cette simulation a-t-elle été notée ». La
+// question d'ici est la même prise par l'autre bout : « le ton a-t-il été mesuré récemment, et la
+// mesure a-t-elle abouti ». tool-brain l'a d'ailleurs désigné en premier sur cette demande.
+//
+// AUCUN SEUIL N'EST INVENTÉ (BP5) : l'âge est RAPPORTÉ, jamais jugé — combien de jours sont « trop »
+// dépend d'un rythme de travail que rien ici ne connaît. Le seul signal rendu est un FAIT : le
+// dernier passage a-t-il mesuré quelque chose, oui ou non.
+export const REGISTRE_ESPRIT = "docs/check-spirit/index.md";
+
+// Une couverture qui ne mesure rien se reconnaît à sa forme, jamais à une liste de libellés :
+// « NULLE », ou un numérateur à zéro (`0/20`). Un verdict « PAS MESURÉ » dans la colonne voisine
+// compte aussi — c'est le mot que l'outil imprime lui-même quand il refuse de conclure.
+export const MOTIF_COUVERTURE_NULLE = /\bNULLE\b|(?:^|[^0-9])0\s*\/\s*\d+/;
+export const MOTIF_REFUS_DE_CONCLURE = /PAS\s+MESUR[ÉE]/i;
+
+export function passagesDeLEsprit(markdown = "") {
+  const out = [];
+  for (const ligne of String(markdown).split("\n")) {
+    const m = ligne.match(/^\|\s*(\d{4}-\d{2}-\d{2})([^|]*)\|([^|]*)\|([^|]*)\|/);
+    if (!m) continue;
+    const couverture = m[3].trim();
+    const trouve = m[4].trim();
+    out.push({
+      date: m[1],
+      libelle: (m[1] + m[2]).trim(),
+      couverture,
+      // A MESURÉ ou N'A RIEN MESURÉ : les deux se lisent à l'opposé et les confondre est exactement
+      // le défaut que check-spirit a lui-même corrigé le 2026-09-25 en cessant d'afficher « aucun
+      // marqueur grossier détecté » sur zéro donnée — un satisfecit rendu sur rien, sur la loi
+      // suprême du projet.
+      aMesure: !(MOTIF_COUVERTURE_NULLE.test(couverture) || MOTIF_REFUS_DE_CONCLURE.test(trouve)),
+      trouve,
+    });
+  }
+  return out;
+}
+
+export function fraicheurDeLEsprit({ root = ROOT, lireImpl = null, maintenant = new Date() } = {}) {
+  let texte = null;
+  try { texte = (lireImpl ?? ((c) => readFileSync(join(root, c), "utf8")))(REGISTRE_ESPRIT); } catch { texte = null; }
+  if (texte === null) {
+    return { mesurable: false, pourquoi: `${REGISTRE_ESPRIT} illisible : on ne sait pas depuis quand le ton a été mesuré, ce qui n'est PAS la même chose que « il l'a été récemment » (leçons L5/L11)` };
+  }
+  const passages = passagesDeLEsprit(texte);
+  if (!passages.length) {
+    return { mesurable: false, passages: [], pourquoi: "aucun passage enregistré au registre de check-spirit : rien à dater, et ce zéro dit qu'on ne sait pas, jamais que tout va bien" };
+  }
+  const trie = [...passages].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
+  const dernier = trie[0];
+  const derniereMesure = trie.find((p) => p.aMesure) ?? null;
+  const jours = (d) => Math.floor((maintenant.getTime() - Date.parse(`${d}T00:00:00Z`)) / 86400000);
+  return {
+    mesurable: true,
+    passages: trie.length,
+    dernierPassage: dernier,
+    derniereMesure,
+    joursDepuisLaDerniereMesure: derniereMesure ? jours(derniereMesure.date) : null,
+    joursDepuisLeDernierPassage: jours(dernier.date),
+    // LE SEUL SIGNAL RENDU EST UN FAIT, jamais un jugement sur l'âge (BP5) : le dernier passage
+    // a-t-il mesuré quelque chose ? Si non, la dernière chose que le projet sait de sa loi suprême
+    // est qu'il n'a rien pu en savoir — et ça, ça se dit.
+    dernierPassageAVide: !dernier.aMesure,
+    horsPortee: "il date des passages et lit leur COUVERTURE, jamais ce que le ton valait : la lecture des répliques reste humaine, et le registre dit lui-même que les heuristiques ne détectent que le vocabulaire de service client.",
+  };
+}
+
+export function formatFraicheurDeLEspritLines(f) {
+  if (!f?.mesurable) return ["", `🚨 FRAÎCHEUR DE L'ARTICLE 0 : PAS MESURÉ — ${f?.pourquoi ?? "aucune donnée"}`];
+  const L = ["", "=== DEPUIS QUAND LE TON A-T-IL ÉTÉ RÉELLEMENT MESURÉ ? (Article 0) ==="];
+  if (f.derniereMesure) {
+    L.push(`  Dernière mesure RÉELLE : ${f.derniereMesure.libelle} — il y a ${f.joursDepuisLaDerniereMesure} jour(s). Couverture : ${f.derniereMesure.couverture}`);
+  } else {
+    L.push(`  🚨 AUCUN passage n'a jamais rien mesuré sur les ${f.passages} enregistré(s) : la loi suprême du projet n'a pas de mesure aboutie à son registre.`);
+  }
+  if (f.dernierPassageAVide) {
+    L.push(`  🚨 LE DERNIER PASSAGE (${f.dernierPassage.libelle}, il y a ${f.joursDepuisLeDernierPassage} j) N'A RIEN MESURÉ — couverture « ${f.dernierPassage.couverture} ».`);
+    L.push("     La dernière chose que le projet sait de sa loi suprême est donc qu'il n'a rien pu en savoir. Un passage bloqué n'est pas un passage propre.");
+  } else {
+    L.push(`  ✅ Le dernier passage (${f.dernierPassage.libelle}) a bien mesuré quelque chose.`);
+  }
+  L.push(`  ${f.passages} passage(s) au registre. L'ÂGE EST RAPPORTÉ, JAMAIS JUGÉ : combien de jours sont « trop » dépend d'un rythme que cet outil ne connaît pas (BP5).`);
+  L.push(`  HORS PORTÉE : ${f.horsPortee}`);
+  return L;
+}
+
 // Rapport HTML (2026-09-20, tâche #144 — checkHtmlWiring() signalait cet outil comme jamais câblé
 // malgré la règle « tous les rapports en HTML », cf. docs/regles-de-travail.md) : reprend la MÊME
 // donnée déjà calculée par main() (missing/orphans), jamais un second calcul.
@@ -171,6 +274,28 @@ function main() {
     ...orphans.map((note) => ({ constat: `note « ${note} » sans simulation correspondante dans l'index`, etat: "retenu",
       tache: `retrouver la simulation de ${note} et la réinscrire à l'index, ou retirer la note devenue sans objet` })),
   ];
+  // LA FRAÎCHEUR DE L'ARTICLE 0 (2026-09-29, tâche #1187), imprimée avant le plan pour que le
+  // lecteur ait le fait sous les yeux quand il lit le constat qui en découle.
+  const fraicheur = fraicheurDeLEsprit();
+  for (const l of formatFraicheurDeLEspritLines(fraicheur)) console.log(l);
+  // UN SEUL CONSTAT, ET C'EST UN FAIT, jamais un jugement sur l'âge (BP5) : le dernier passage du
+  // seul outil qui touche la sortie RÉELLE du modèle n'a rien mesuré. Un passage bloqué n'est pas
+  // un passage propre, et la confusion des deux est exactement ce que check-spirit a corrigé chez
+  // lui le 2026-09-25 — la refaire ici, dans l'outil qui le relit, serait difficile à défendre.
+  if (fraicheur.mesurable && fraicheur.dernierPassageAVide) {
+    constatsProf.push({
+      constat: `le dernier passage de check-spirit (${fraicheur.dernierPassage.libelle}) n'a RIEN mesuré — couverture « ${fraicheur.dernierPassage.couverture} » : la dernière chose que le projet sait de sa loi suprême est qu'il n'a rien pu en savoir`,
+      etat: "retenu", toucheLeJeu: true,
+      tache: "relancer check-spirit quand le quota le permet (Smart Conso API d'abord, Article 22), et inscrire le passage au registre — ou écrire pourquoi le ton n'a pas à être remesuré maintenant",
+    });
+  }
+  if (!fraicheur.mesurable) {
+    constatsProf.push({
+      constat: `la fraîcheur de l'Article 0 n'a pas pu être lue : ${fraicheur.pourquoi}`,
+      etat: "retenu",
+      tache: "rendre lisible le registre de check-spirit, ou déclarer que cette mesure n'est plus tenue",
+    });
+  }
   const planProf = buildPlanDaction(constatsProf, { toolSlug: "el-professor" });
   imprimerPlanDaction(planProf);
 }

@@ -379,11 +379,36 @@ export function categorizeTasks(sessionText) {
 //
 // Trouvé en instruisant #209 (« les 5 tâches en stagnation »), c'est-à-dire en cherchant tout
 // autre chose : la liste des plus anciennes ne ressemblait pas à ce que le suivi racontait.
+// Un nom d'état : des lettres, des espaces, des apostrophes, des tirets. Rien d'autre — pas de
+// chiffre, pas de pourcentage, pas de tiret cadratin, pas de parenthèse ni de deux-points, qui
+// sont les marques d'une phrase et jamais celles d'un état.
+export const MOTIF_NOM_D_ETAT = /^[\p{L}\s'’\-]+$/u;
+
 export function normaliserStatut(statut = "") {
   return String(statut)
     // La flèche d'abord : « A → B » se lit B. Faite avant tout le reste, sinon les nettoyages
     // ci-dessous s'appliqueraient à la partie gauche, celle qui n'est plus vraie.
-    .replace(/^.*?(?:→|->|=>)\s*/, "")
+    //
+    // MAIS TOUTE FLÈCHE N'EST PAS UNE TRANSITION (2026-09-29, tâche #1187), et je l'ai découvert en
+    // l'écrivant moi-même : une clôture qui rapporte une mesure — « Terminé — fidèle : les données
+    // sans lecteur passent de (8 → 7) » — se faisait couper à la flèche et rendait « 7), pas
+    // déduite du code », c'est-à-dire un statut qu'aucun outil de la file ne reconnaît. La ligne
+    // sortait du décompte des terminées, sur un ARTEFACT D'ÉCRITURE et non sur son état réel.
+    //
+    // LA RÈGLE EST UNE PROPRIÉTÉ, jamais une longueur (Article 24, BP5) : un nom d'état ne contient
+    // que des LETTRES, des espaces et des tirets. Les douze transitions réelles du registre ont
+    // trois parties gauches distinctes — « Ouverte », « en cours », « En attente de sa décision » —
+    // et toutes trois le vérifient. Une prose qui rapporte une mesure ne le vérifie jamais : elle
+    // porte des chiffres, un pourcentage, un tiret cadratin, une parenthèse ou un deux-points.
+    //
+    // MA PREMIÈRE VERSION NE BORNAIT QUE LA LONGUEUR, et le contre-test l'a refusée dans la minute :
+    // « Terminé — le taux passe de 44 % -> 80 % » tient en 32 caractères avant la flèche et se
+    // faisait donc couper comme une transition. Une longueur décrit la forme d'un exemple ; une
+    // propriété décrit ce qu'est un nom d'état. La seconde couvre le cas suivant, la première non.
+    //
+    // La borne de longueur reste, en seconde ceinture : 32 caractères, pour laisser respirer un
+    // libellé un peu plus long que le plus long connu (25) sans atteindre la taille d'une phrase.
+    .replace(/^(.{0,32}?)(?:→|->|=>)\s*/u, (tout, gauche) => (MOTIF_NOM_D_ETAT.test(gauche.trim()) ? "" : tout))
     .replace(/^[\s*_`]+/, "")
     .replace(/^\[\s*/, "")
     .replace(/\s*\]\s*$/, "")

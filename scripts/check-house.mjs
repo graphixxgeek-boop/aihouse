@@ -3065,6 +3065,24 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.ok(!estStatutEcarte('ouverte')&&!estStatutEcarte('Terminée'),'une tâche ouverte ou close n\'est pas une tâche écartée — les trois états appellent des gestes opposés');
 
   // LE CONTRE-TEST DE CLASSE : les deux lecteurs du registre ne peuvent plus diverger d'une ligne.
+  // TOUTE FLÈCHE N'EST PAS UNE TRANSITION (2026-09-29, tâche #1187) — trouvé en l'écrivant
+  // moi-même. Une clôture qui RAPPORTE UNE MESURE (« les données sans lecteur passent de 8 → 7 »)
+  // se faisait couper à la flèche et rendait un statut qu'aucun outil de la file ne reconnaît : la
+  // ligne sortait du décompte des terminées sur un artefact d'écriture, jamais sur son état réel.
+  //
+  // LA BORNE EST DÉRIVÉE DU CORPUS : les douze transitions réelles du registre ont trois parties
+  // gauches distinctes — « Ouverte » (7), « en cours » (8), « En attente de sa décision » (25).
+  // Aucune ne porte de parenthèse, de deux-points ni de point ; une phrase qui en porte n'est pas
+  // un nom d'état.
+  for (const [brut, attendu] of [
+    ['Ouverte → Terminée (clôturée par #785)', true],
+    ['En attente de sa décision → Terminée', true],
+    ['en cours → Terminé', true],
+    ['Ouverte → Avancée', false],
+  ]) assert.equal(estStatutTermine(brut), attendu, `la flèche d'une VRAIE transition doit continuer d'être lue : « ${brut} » vaut son état de DROITE, jamais celui de gauche`);
+  assert.ok(estStatutTermine('Terminé — fidèle : la mesure (8 → 7), pas déduite du code'), 'MUST CATCH: une flèche à l\'intérieur d\'une mesure chiffrée n\'est PAS une transition d\'état — la couper rendait « 7), pas déduite du code », un statut qu\'aucun outil de la file ne reconnaît, et la ligne sortait du décompte des terminées');
+  assert.ok(estStatutTermine('Terminé — le taux passe de 44 % -> 80 %'), 'et la même chose avec la flèche ASCII, qui s\'écrit tout aussi naturellement dans une phrase');
+
   const registre='| N° | Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|---|\n'
     +['1|t|S|s|normal|d|Terminé','2|t|S|s|normal|d|[Terminé]','3|t|S|s|normal|d|Fait','4|t|S|s|normal|d|ouverte','5|t|S|s|normal|d|en cours','6|t|S|s|normal|d|Écartée','7|t|S|s|normal|d|Ouverte → Terminée (clôturée par #785)','8|t|S|s|normal|d|bleu']
       .map(l=>'| '+l.split('|').join(' | ')+' |').join('\n');
@@ -10478,6 +10496,53 @@ await testVerrousDOuverture();
   assert.deepEqual(findMissingNotes(simIdx,elIdxComplete),[],'once every archived simulation has a matching note, nothing must be flagged');
   const elIdxOrphan='| Simulation | Note |\n|---|---|\n| full_sim | 82 |\n| full_sim99 | 60 |';
   assert.deepEqual(findOrphanNotes(simIdx,elIdxOrphan),['full_sim99'],'a note referencing a simulation id absent from the archive index (typo, stale rename) must be flagged as orphaned, the symmetric failure mode to a missing note — never silently ignored');
+
+  // LA FRAÎCHEUR DE L'ARTICLE 0 (2026-09-29, tâche #1187) — et le contre-test porte sur la seule
+  // distinction qui compte : un passage qui a MESURÉ contre un passage qui n'a RIEN mesuré.
+  //
+  // `check-spirit` est le seul outil qui touche la sortie RÉELLE du modèle ; son registre est la
+  // seule trace de ce que Lia et Noé ont vraiment dit. Personne ne le relisait — data-archangel le
+  // signalait comme donnée fraîche sans lecteur. Ce que ce silence cachait : le dernier passage
+  // enregistré a une couverture NULLE et conclut « PAS MESURÉ ».
+  {
+    const { passagesDeLEsprit, fraicheurDeLEsprit, formatFraicheurDeLEspritLines } = await import('../scripts/el-professor.mjs');
+    const reg = [
+      '| Date | Couverture | Ce que la lecture a trouvé | Suite |',
+      '|---|---|---|---|',
+      '| 2026-09-28 (2e) | **NULLE — 0/20**, toutes bloquées | **🚨 PAS MESURÉ** | rien |',
+      '| 2026-09-28 | **PARTIELLE — 10/20** | Ton franchement bon | rien |',
+      '| 2026-09-20 | COMPLÈTE — 20/20 | rien à signaler | rien |',
+    ].join('\n');
+    const p = passagesDeLEsprit(reg);
+    assert.equal(p.length, 3, 'every dated row of the passages table must be read, and only those');
+    assert.deepEqual(p.map((x) => x.aMesure), [false, true, true], 'MUST CATCH: a coverage of "NULLE — 0/20" has measured NOTHING while "PARTIELLE — 10/20" has measured something — confusing the two is exactly the defect check-spirit itself fixed on 2026-09-25, on the supreme law of the project');
+
+    const f = fraicheurDeLEsprit({ lireImpl: () => reg, maintenant: new Date('2026-09-30T00:00:00Z') });
+    assert.equal(f.mesurable, true);
+    assert.equal(f.derniereMesure.date, '2026-09-28', 'the last REAL measurement must skip the blocked passage and name the one that actually measured');
+    assert.equal(f.dernierPassageAVide, true, 'and the fact that the MOST RECENT passage measured nothing must be stated: the last thing the project knows about its supreme law is that it could not know anything');
+    assert.equal(f.joursDepuisLaDerniereMesure, 2, 'the age is counted from the real measurement, never from the blocked attempt that came after it');
+
+    // ── UN REGISTRE OÙ TOUT A MESURÉ NE DOIT RIEN SIGNALER : le détecteur doit mordre dans les deux
+    // sens, sinon il ne prouve rien (BP4).
+    const propre = ['| Date | Couverture | Trouvé | Suite |', '|---|---|---|---|', '| 2026-09-28 | COMPLÈTE — 20/20 | rien | rien |'].join('\n');
+    const fp = fraicheurDeLEsprit({ lireImpl: () => propre, maintenant: new Date('2026-09-29T00:00:00Z') });
+    assert.equal(fp.dernierPassageAVide, false, 'a registry whose latest passage really measured must raise nothing at all');
+    assert.ok(/✅/.test(formatFraicheurDeLEspritLines(fp).join('\n')), 'and say so plainly rather than stay silent');
+
+    // ── UN REGISTRE ILLISIBLE OU VIDE NE REND JAMAIS « MESURÉ RÉCEMMENT » (leçons L5/L11).
+    assert.equal(fraicheurDeLEsprit({ lireImpl: () => { throw new Error('boum'); } }).mesurable, false, 'an unreadable registry must report UNMEASURABLE, never a clean bill');
+    const vide = fraicheurDeLEsprit({ lireImpl: () => '| Date | Couverture |\n|---|---|' });
+    assert.equal(vide.mesurable, false, 'a registry with no passage at all must report UNMEASURABLE too: that zero says we do not know, never that all is well');
+    assert.ok(/PAS MESUR/.test(formatFraicheurDeLEspritLines(vide)[1]), 'and the refusal must be printed as such');
+
+    // ── ET LE VRAI REGISTRE, jamais seulement une fixture (Article 25) — sans exiger un CHIFFRE,
+    // qui bougera au prochain passage de check-spirit.
+    const reel = fraicheurDeLEsprit();
+    assert.equal(reel.mesurable, true, 'checked live: the real check-spirit registry must be readable — if it stops being, the supreme law of the project loses its only freshness signal');
+    assert.ok(reel.passages >= 1 && reel.dernierPassage.date, 'and carry at least one dated passage');
+    console.log(`Passed: EL-PROFESSOR lit enfin le registre de check-spirit — depuis quand l'Article 0 a-t-il été RÉELLEMENT mesuré (2026-09-29, tâche #1187). check-spirit est le seul outil qui touche la sortie RÉELLE du modèle, et personne ne relisait ce qu'il avait trouvé : data-archangel le signalait comme donnée fraîche sans lecteur, et être cité dans huit tables de registres ne fait lire son CONTENU à personne. Ce que ce silence cachait : le dernier passage enregistré a une couverture NULLE et conclut « PAS MESURÉ » — la dernière chose que le projet savait de sa loi suprême était qu'il n'avait rien pu en savoir, et ce fait n'était écrit nulle part ailleurs. La distinction centrale est testée dans les deux sens : un passage bloqué n'est pas un passage propre, et un registre où tout a mesuré ne signale rien. AUCUN SEUIL N'EST INVENTÉ : l'âge est rapporté, jamais jugé (BP5) — combien de jours sont « trop » dépend d'un rythme que cet outil ne connaît pas. Registre réel au moment du test : ${reel.passages} passage(s), dernier le ${reel.dernierPassage.date}.`);
+  }
 
   // UNE SIMULATION SANS TRANSCRIPT NE PEUT PAS ÊTRE NOTÉE (2026-09-29, tâche #1185 — L6 et L41).
   //
