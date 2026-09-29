@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LES DÉCISIONS QUI T'ATTENDENT, EN CINQ LOTS — au lieu de dix-sept questions isolées</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T23:42:06.266Z</div>
+    <h1>LES DÉCISIONS QUI T'ATTENDENT, EN CINQ LOTS — au lieu de dix-sept questions isolées</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche <strong>#1259</strong>. Ce document n'est pas une demande de plus : <strong>c'est la réparation d'un défaut que la nuit a mesuré, et il est de mon côté.</strong>)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md</code>
+<em>il applique la première des deux sorties que ce document propose — celle qui m'incombe.</em></p></div>
+<hr>
+<h3>POURQUOI CE DOCUMENT EXISTE, ET C'EST MOI LE PROBLÈME QU'IL RÉGLE</h3>
+<p><strong>JESUS a mesuré ce soir le premier frein du projet : 17 décisions t'attendent, la plus ancienne depuis 7 jours.</strong> Et il ajoute une chose que je n'aurais pas su dire : au-delà d'un certain remplissage, le temps d'attente d'une file <strong>n'augmente plus proportionnellement, il explose</strong>. Ce n'est pas un avis sur ton rythme — c'est une propriété des files. <strong>Chaque question de plus ralentit aussi toutes les autres, y compris les faciles.</strong></p>
+<p><strong>Le problème n'est pas ta vitesse de réponse. C'est que je pose plus vite qu'un humain ne peut trancher, et que rien dans mon fonctionnement ne me le fait sentir.</strong></p>
+<p><strong>Ce que je change, donc</strong> : au lieu de déposer une question quand elle naît, je les regroupe par <strong>PRINCIPE COMMUN</strong>. Les dix-sept qui t'attendent n'appellent en réalité que <strong>cinq décisions</strong> : dans chaque lot, une seule réponse tranche tout le reste.</p>
+<p><strong>Comment t'en servir</strong> : lis le principe, réponds une fois, et tout le lot tombe. Si un cas du lot te paraît différent des autres, dis-le — c'est l'information la plus utile que tu puisses me donner, elle veut dire que mon regroupement est faux.</p>
+<hr>
+<h3>LOT A — « Mesurer, ou déclarer qu'on ne mesurera pas »</h3>
+<p><strong>Le principe qui tranche les quatre :</strong> quand une chose n'est mesurée par personne, on a deux réponses honnêtes — <strong>construire la mesure</strong>, ou <strong>écrire noir sur blanc qu'on ne la fera pas, et pourquoi</strong>. Ce qui n'est jamais une réponse, c'est de laisser la question ouverte : une absence non déclarée finit par se lire comme un zéro.</p>
+<table><thead><tr><th>#</th><th>Ce qui n'est mesuré par personne</th></tr></thead><tbody><tr><td><strong>#1252</strong></td><td>la <strong>lenteur du JEU</strong> — c'est le quatrième axe que tu as nommé, et aucun outil ne le regarde</td></tr><tr><td><strong>#814</strong></td><td>les <strong>registres restants</strong> : brancher un lecteur, ou déclarer l'absence assumée</td></tr><tr><td><strong>#390</strong></td><td>ARGUS et CLONE-HUNTER sont mesurés <strong>à l'échelle du dépôt, jamais de l'outil</strong></td></tr><tr><td><strong>#823</strong></td><td>le <strong>compteur d'usage</strong> : une origine déclarée que rien n'écrit</td></tr></tbody></table>
+<p><strong>Ce que ça coûte de dire OUI aux quatre</strong> : quatre chantiers d'outillage, dont un (#1252) avec un coût en appels API réels. <strong>Ce que ça coûte de dire NON aux quatre</strong> : rien, à condition que ce soit écrit. Un « on ne mesure pas cet axe, parce que… » est une réponse pleine et entière. <strong>Mon avis</strong> : oui pour <strong>#1252 seulement</strong> — c'est le seul que tu as nommé toi-même. Les trois autres, déclarés non mesurés, sans regret.</p>
+<hr>
+<h3>LOT B — « Le rattrapage historique : par lot, par période, ou on tire un trait »</h3>
+<p><strong>Le principe qui tranche les trois :</strong> ce sont des dettes accumulées AVANT que la règle existe. Les relire une par une est un plan que personne n'appliquera jamais — et un plan que personne n'appliquera est pire qu'un renoncement assumé, parce qu'il continue de figurer comme « à faire ».</p>
+<table><thead><tr><th>Quoi</th><th>Combien</th></tr></thead><tbody><tr><td>clôtures de suivi <strong>sans déclaration de fidélité</strong></td><td><strong>242</strong></td></tr><tr><td>constats <strong>RETENU sans tâche rattachée</strong></td><td><strong>99</strong> (sur 188 — les 89 autres sont bien rattachés)</td></tr><tr><td><strong>#845</strong> les 5 plus anciennes tâches encore ouvertes</td><td>5</td></tr></tbody></table>
+<p><strong>Les trois réponses possibles, et <code>docs/systeme-de-suivi.md</code> autorise déjà la troisième</strong> : par lot · par période · <strong>déclarées « grandfathered »</strong> (on tire un trait à une date, et la règle ne vaut que pour la suite). <strong>Mon avis</strong> : <strong>grandfathered à une date</strong>, et la règle mécanique ne s'applique qu'après. C'est la seule option qui ne laisse pas un plan mort dans le suivi.</p>
+<hr>
+<h3>LOT C — La charte, et elle se traite en une seule séance</h3>
+<p><strong>Le principe qui tranche :</strong> <code>protegerLaCharte()</code> refuse un Article inséré au milieu ou vidé de ses obligations. Traiter ces changements <strong>un par un entre deux chantiers</strong> est exactement ce que tu as refusé pour l'Article 19 — <em>« garde-le pour la prochaine grosse revue de la charte »</em>. <strong>Donc : tout d'un bloc, ou rien.</strong></p>
+<table><thead><tr><th>Quoi</th><th>Où</th></tr></thead><tbody><tr><td><strong>6 entrées</strong> attendent ton accord, dont ton <strong>GO sur la #767</strong></td><td><code>docs/plans/charte-diffs-a-approuver-2026-09-28.md</code></td></tr><tr><td>la réduction <strong>93 → 55 obligations</strong> (9 Articles)</td><td><code>02-strategie/la-route-vers-50-obligations.md</code></td></tr><tr><td>les <strong>8 Articles</strong> qu'ABRAHAM signale comme ouvrant une question de pertinence</td><td>16, 17, 23, 25, 29, 30, 31, 32</td></tr><tr><td>le recouvrement <strong>18 ↔ 26</strong> sans frontière déclarée</td><td>la seule vraie redondance de la charte</td></tr></tbody></table>
+<p><strong>Mon avis</strong> : une séance dédiée, dans cet ordre — d'abord la réduction (elle change le paysage), ensuite les ajouts (#767 compris). L'inverse obligerait à relire ce qu'on vient d'écrire.</p>
+<hr>
+<h3>LOT D — Le cadre, et il appartient à la séance sur l'objectif ultime</h3>
+<p><strong>Le principe qui tranche :</strong> ce sont tous des <strong>moyens</strong>, et on ne choisit pas un moyen avant d'avoir la fin. Les trancher avant l'objectif ultime, c'est bâtir sur un pivot non choisi.</p>
+<table><thead><tr><th>Quoi</th><th>Ce qui l'a fait apparaître</th></tr></thead><tbody><tr><td><strong>combien de versions</strong>, et <strong>produits ou réglages ?</strong></td><td>l'analyse des freins — aucun ne vient de la taille du code, tous du nombre d'obligations</td></tr><tr><td>le <strong>BUILD MAP</strong></td><td>la TARGET ARCHITECTURE le nomme elle-même : <em>« le document qui n'existe pas encore, et celui qui permettrait de commencer »</em></td></tr><tr><td>nos <strong>trois zones sont mesurées par FICHIER</strong>, or « un fichier séparé n'est pas un module extractible »</td><td>la relecture — vérifiable en une heure, mais le résultat peut invalider le manifeste</td></tr><tr><td><strong>l'installation ailleurs</strong>, jamais faite une seule fois</td><td>la plaquette — c'est le premier maillon, et aucune de nos listes ne le plaçait en tête</td></tr></tbody></table>
+<p><strong>Mon avis</strong> : rien de tout ça ne se décide hors séance. Mais <strong>l'installation ailleurs</strong> mérite d'y entrer en premier : tant qu'elle n'a pas eu lieu, ni le prix, ni le support, ni le temps ne sont chiffrables.</p>
+<hr>
+<h3>LOT E — L'outillage, et c'est le seul lot où tu peux dire « fais au mieux »</h3>
+<p><strong>Le principe qui tranche :</strong> ce sont des décisions d'atelier. Elles ne touchent ni le Jeu, ni la charte, ni le cadre. <strong>Tu peux me déléguer le lot entier sans rien risquer</strong> — et c'est précisément le genre de question que je n'aurais pas dû mettre dans la même file que les autres.</p>
+<table><thead><tr><th>#</th><th>Quoi</th><th>Mon avis si tu délègues</th></tr></thead><tbody><tr><td><strong>#819</strong></td><td>le filet est lent : ne rien faire · regarder les 3 plus lents · un mode rapide</td><td>regarder les 3 plus lents</td></tr><tr><td><strong>#830</strong></td><td>« un outil qui vérifie la logique et les trous PARTOUT »</td><td>ARGUS le fait déjà pour le code ; l'étendre plutôt que construire</td></tr><tr><td><strong>#842</strong></td><td>« rentabiliser les trouvailles » : le registre grossit sans qu'on dise s'il sert</td><td>lire le verdict de TOOL-LEARNING à la prochaine Ronde</td></tr><tr><td><strong>#1257</strong></td><td>l'index par situation couvre 6 documents sur 16</td><td>l'étendre — c'est petit, et ça m'évite de rater ce que j'ai déjà lu</td></tr></tbody></table>
+<hr>
+<h3>CE QUE CE REGROUPEMENT NE RÈGLE PAS</h3>
+<p><strong>La seconde sortie proposée par l'analyse des freins reste entière, et elle est de ton côté</strong> : faut-il qu'une décision dormante depuis N jours parte <strong>avec l'option que je recommande</strong>, révisable à tout moment ? Je ne la prends pas moi-même — c'est exactement le genre de règle qui doit venir de toi.</p>
+<p><strong>Et j'ai conscience de l'ironie</strong> : ce document se termine par une dix-huitième question. La différence est qu'elle en remplace dix-sept.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>17 décisions isolées se regroupent en 5 lots à un seul principe chacun</td><td><strong>RETENU</strong></td><td>tâche <strong>#1259</strong> — ce document, et c'est la sortie qui m'incombait</td></tr><tr><td>Le LOT E n'aurait jamais dû être dans la même file que le cadre et la charte</td><td><strong>RETENU</strong></td><td>tâche <strong>#1259</strong> — désormais séparé, et délégable en bloc</td></tr><tr><td>Un défaut au bout de N jours pour les décisions dormantes</td><td><strong>À TRANCHER</strong></td><td>c'est la sortie qui lui incombe, et je ne la prends pas à sa place</td></tr><tr><td>Les 17 décisions elles-mêmes</td><td><strong>À TRANCHER</strong></td><td>c'est l'objet du document ; elles restent ouvertes dans le suivi, jamais closes par le seul fait d'avoir été rangées</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

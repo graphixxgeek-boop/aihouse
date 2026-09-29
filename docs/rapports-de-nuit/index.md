@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-29. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**21 fichier(s).**
+**22 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -20,6 +20,7 @@
 | [plan-nuit-2026-09-26.md](plan-nuit-2026-09-26.md) | — |
 | [rapport-2026-09-27-matin.txt](rapport-2026-09-27-matin.txt) | — |
 | [rapport-2026-09-28.txt](rapport-2026-09-28.txt) | — |
+| [rapport-2026-09-30.md](rapport-2026-09-30.md) | — |
 | [rapport-final-2026-09-26.md](rapport-final-2026-09-26.md) | — |
 | [README.md](rescapes-2026-09-19-20/README.md) | rescapes-2026-09-19-20 |
 | [audit-complet-2026-09-19.md](rescapes-2026-09-19-20/audit-complet-2026-09-19.md) | rescapes-2026-09-19-20 |

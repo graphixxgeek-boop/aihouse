@@ -27,3 +27,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/propriete-et-securite-du-projet.html` | `docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md` | 17123 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 15916 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/relecture-de-la-bibliotheque.html` | `docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md` | 16723 | 2026-09-29 23:30Z |
+| `docs/grand-projet/html/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 16665 | 2026-09-29 23:42Z |
+| `docs/grand-projet/html/les-deux-agents-experience.html` | `docs/grand-projet/02-strategie/les-deux-agents-experience.md` | 17282 | 2026-09-29 23:42Z |

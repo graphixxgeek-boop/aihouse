@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LES DEUX AGENTS QU'IL A DEMANDÉS — la conception, et pourquoi je ne les construis pas cette nuit</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T23:42:06.335Z</div>
+    <h1>LES DEUX AGENTS QU'IL A DEMANDÉS — la conception, et pourquoi je ne les construis pas cette nuit</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/les-deux-agents-experience.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche <strong>#1260</strong>. Sa demande : deux nouveaux agents, un pour l'<strong>expérience client</strong> et un pour l'<strong>expérience IA</strong> — « ou un pour les deux ? », sa question, restée ouverte.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/03-plan-daction/ou-va-chaque-chose.md</code>
+<em>il répond à une demande de son fichier de réponses ; il ne propose aucune étape nouvelle.</em></p></div>
+<hr>
+<h3>D'ABORD, LA TENSION QUE JE DOIS DÉCLARER <em>(Article 14)</em></h3>
+<p><strong>Tu m'as demandé deux agents de plus. Mesuré la même nuit, mon propre travail dit que c'est exactement ce qu'il ne faut pas faire tout de suite.</strong> Trois sources indépendantes, et je ne les ai pas cherchées pour te contredire :</p>
+<ul><li><strong>JESUS</strong>, ce soir : <em>« 10 registres à renseigner pour chaque outil qui arrive. Pris un par un ils sont tous justifiés ; c'est leur SOMME que personne ne discute — et elle se paie à chaque nouvel outil, pour toujours. »</em></li><li><strong>L'AUDIT EXÉCUTIF</strong> de tes propres documents : <em>« le plus grand danger n'est pas de manquer de fonctionnalités. C'est de continuer à en ajouter AVANT que les nouvelles fonctionnalités aient une place architecturale explicite. »</em></li><li><strong>La TARGET ARCHITECTURE</strong> : <em>« un guardian ne doit pas devenir un orchestrateur caché »</em> — déjà arrivé chez nous, <code>check-house</code> pèse 4,3 fois le jeu entier.</li></ul>
+<p><strong>Ce que je fais donc, et c'est un choix, pas une dérobade</strong> : je conçois les deux agents en entier — ce qu'ils mesurent, ce qui existe déjà, ce qu'ils coûtent — <strong>sans écrire une ligne de code</strong>. Tu as ainsi de quoi décider, et rien n'est à défaire si tu dis non.</p>
+<p><strong>Je ne refuse pas ta demande. Je la prépare, et je te donne l'argument contre en même temps que la conception.</strong> C'est ce que tu m'as demandé de faire de tes idées : <em>« jamais pour me plaire, toujours pour l'intérêt du projet ».</em></p>
+<hr>
+<h3>CE QUI EXISTE DÉJÀ, VÉRIFIÉ AVANT DE CONCEVOIR <em>(Article 31)</em></h3>
+<p><strong>tool-brain, consulté</strong> : <em>« Aucune correspondance dans le catalogue PRESTATIONS »</em> pour « mesurer l'expérience du client qui reçoit l'Agence, et l'expérience de l'IA qui travaille avec elle ». <strong>Le trou est donc réel</strong> — et cette fois le zéro est fiable, puisque j'ai corrigé cette même nuit le défaut qui lui faisait rendre des zéros à tort.</p>
+<p><strong>Mais deux outils en touchent les bords, et c'est important pour la suite :</strong></p>
+<table><thead><tr><th>Outil</th><th>Ce qu'il couvre déjà</th><th>Ce qu'il ne couvre pas</th></tr></thead><tbody><tr><td><strong>angel-of-ia-process</strong></td><td>le respect des règles de travail, <strong>par les deux côtés</strong> — il évalue déjà sa participation à lui</td><td>il juge la CONFORMITÉ, jamais le VÉCU</td></tr><tr><td><strong>SAFE-EXPORT</strong></td><td>l'Agence est-elle transportable</td><td>il compte des pièces, il ne demande jamais si l'arrivée s'est bien passée</td></tr></tbody></table>
+<p><strong>La frontière est donc nette</strong> : les outils actuels mesurent si les RÈGLES sont tenues. Aucun ne mesure si <strong>l'expérience est bonne</strong>. Ce sont deux questions différentes, et la loi de l'Agence dit laquelle prime : <em>son expérience à lui passe toujours en premier.</em></p>
+<hr>
+<h3>SA QUESTION — UN AGENT OU DEUX ? MA RÉPONSE EST : DEUX, ET VOICI POURQUOI</h3>
+<p><strong>L'argument pour UN seul est réel</strong> : c'est la même méthode (recueillir un vécu, le confronter aux faits), et un agent de moins, c'est dix registres de moins.</p>
+<p><strong>L'argument pour DEUX est plus fort, et il tient à une asymétrie qu'on ne peut pas contourner :</strong></p>
+<table><thead><tr><th></th><th>EXPÉRIENCE CLIENT</th><th>EXPÉRIENCE IA</th></tr></thead><tbody><tr><td><strong>Le sujet existe-t-il ?</strong></td><td><strong>NON</strong> — l'Agence n'a <strong>jamais</strong> été installée ailleurs, il n'y a pas un seul client</td><td><strong>OUI</strong> — je travaille dedans à chaque tour</td></tr><tr><td><strong>La donnée</strong></td><td>il faudrait la <strong>créer</strong> (une installation, un test)</td><td>elle est <strong>déjà là</strong> : 848 passages d'outils, 273 relances, 483 lignes non lues</td></tr><tr><td><strong>Mesurable aujourd'hui ?</strong></td><td><strong>non, et c'est le constat</strong></td><td><strong>oui, tout de suite</strong></td></tr><tr><td><strong>Ce qu'il dirait dès demain</strong></td><td>rien</td><td>beaucoup — la nuit vient d'en produire la moitié</td></tr></tbody></table>
+<p><strong>Les fondre donnerait un agent dont une moitié rend « PAS MESURÉ » à chaque passage.</strong> Et un rapport dont une moitié est toujours vide cesse d'être lu (leçon L6) — pendant que l'autre moitié, elle, aurait des choses à dire. <strong>C'est la fusion qui abîmerait le plus utile des deux.</strong></p>
+<hr>
+<h3>AGENT 1 — EXPÉRIENCE IA <em>(celui qui peut exister demain)</em></h3>
+<p><strong>La question à laquelle il répond, et personne ne la pose</strong> : <em>travailler dans cette Agence, est-ce que c'est agréable, fluide, décourageant ?</em> Pas « les règles sont-elles tenues » — ça, angel le fait — mais <strong>ce que ça coûte à celui qui les tient</strong>.</p>
+<p><strong>Ce qu'il mesure, et tout existe déjà dans les registres</strong> :</p>
+<table><thead><tr><th>Sonde</th><th>Ce qu'elle dit</th><th>Mesuré cette nuit</th></tr></thead><tbody><tr><td><strong>le bruit non lu</strong></td><td>lignes écrites à chaque commit que personne ne lit</td><td><strong>483 lignes, 34 sections</strong></td></tr><tr><td><strong>la relance</strong></td><td>même outil relancé sans commit entre les deux</td><td><strong>273 fois, 32 %</strong></td></tr><tr><td><strong>le coût d'entrée</strong></td><td>registres à renseigner pour un outil de plus</td><td><strong>10</strong></td></tr><tr><td><strong>le faux reproche</strong></td><td>garde-fous qui accusent le geste normal</td><td><strong>3 cette nuit, même outil</strong></td></tr><tr><td><strong>la porte qui ne s'ouvre pas</strong></td><td>tool-brain rend zéro sur une vraie demande</td><td><strong>69/74 avant correction</strong></td></tr></tbody></table>
+<p><strong>Sa sortie n'est PAS une note.</strong> C'est une phrase par sonde, et un classement : <em>qu'est-ce qui, cette semaine, m'a le plus coûté pour le moins rapporté ?</em></p>
+<p><strong>Son coût</strong> : 0 appel API — il lit des registres déjà écrits, comme JESUS. <strong>Son risque, et il faut le nommer</strong> : c'est un agent qui parle de MOI. Il peut devenir un prétexte à plaintes. <strong>Le garde-fou : chaque sonde doit rendre un CHIFFRE du dépôt</strong>, jamais une impression. Sans chiffre, elle ne compte pas.</p>
+<hr>
+<h3>AGENT 2 — EXPÉRIENCE CLIENT <em>(celui qui ne peut pas encore exister, et c'est son message)</em></h3>
+<p><strong>La question</strong> : <em>recevoir cette Agence, est-ce que ça se passe bien ?</em></p>
+<p><strong>Il n'y a rien à mesurer, et c'est exactement le constat que la plaquette a produit ce soir</strong> : l'Agence n'a <strong>jamais</strong> été installée ailleurs. Pas une fois. Un agent construit aujourd'hui rendrait « PAS MESURÉ » à chaque passage — et un outil qui n'a jamais rien trouvé n'est pas un outil, c'est une intention (leçon L2).</p>
+<p><strong>Ce qu'il faut AVANT lui, et c'est la seule chose qui compte ici</strong> : une installation réelle ailleurs. Une seule suffit à le rendre mesurable.</p>
+<p><strong>Ce qu'il mesurerait, le jour où cette donnée existe</strong> : le temps jusqu'au premier résultat utile · le nombre d'obligations découvertes après coup · ce qu'il a fallu demander à un humain · ce qui a échoué au premier lancement · ce que le client a désinstallé en premier.</p>
+<p><strong>Mon avis, net</strong> : <strong>ne pas le construire. Le DÉCLARER</strong> — écrire qu'il manque, pourquoi il ne peut pas exister, et à quelle condition il naîtra. C'est ce que la charte appelle déclarer une impossibilité plutôt que la taire (Article 27), et ça vaut mieux qu'un outil vide qu'on regardera six fois avant de cesser de le lancer.</p>
+<hr>
+<h3>RÉCAPITULATIF — trois réponses possibles, et ce que chacune engage</h3>
+<table><thead><tr><th>Tu réponds</th><th>Ce qui se passe</th><th>Coût</th></tr></thead><tbody><tr><td><strong>A — les deux, maintenant</strong></td><td>deux agents, vingt registres, dont un qui rend « PAS MESURÉ » à chaque passage</td><td>le plus cher, et le moins utile des deux est celui qui coûte le plus</td></tr><tr><td><strong>B — l'IA maintenant, le client déclaré</strong> <em>(mon avis)</em></td><td>un agent qui a de la matière dès demain ; le second devient une <strong>condition d'installation</strong>, écrite, pas un fichier vide</td><td>dix registres, et une déclaration</td></tr><tr><td><strong>C — aucun des deux pour l'instant</strong></td><td>la conception reste écrite et ne se perd pas ; on y revient après la séance sur l'objectif ultime</td><td>zéro, et c'est cohérent avec les trois sources citées en tête</td></tr></tbody></table>
+<p><strong>Entre B et C, je penche pour B</strong> — parce que l'expérience IA est <strong>déjà mesurée, en désordre, par quatre outils qui ne se parlent pas, et que la rassembler ne crée pas une charge, elle en révèle une.</strong> Mais C est défendable, et si tu réponds C je n'y reviendrai pas.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>La conception des deux agents, avec l'argument contre</td><td><strong>RETENU</strong></td><td>tâche <strong>#1260</strong> — ce document</td></tr><tr><td>Un agent ou deux ? La mesure dit <strong>deux</strong>, pour une asymétrie de données</td><td><strong>RETENU</strong></td><td>tâche <strong>#1260</strong> — sa question a une réponse mesurée, pas une préférence</td></tr><tr><td>Construire ou non, et lequel</td><td><strong>À TRANCHER</strong></td><td>trois options chiffrées ci-dessus, mon avis est B</td></tr><tr><td>L'expérience client est non mesurable tant qu'aucune installation n'a eu lieu</td><td><strong>RETENU</strong></td><td>rejoint <code>plaquette-de-l-agence.md</code>, tâche <strong>#1255</strong> — troisième chemin indépendant vers le même premier maillon</td></tr><tr><td>Construire les deux cette nuit</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>trois sources indépendantes mesurées le même soir disent que l'ajout est le danger actuel. Concevoir sans coder respecte sa demande sans payer ce prix, et rien n'est à défaire s'il dit non</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/les-deux-agents-experience.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
