@@ -197,3 +197,23 @@ correction muette se reproduit au prochain appelant.
 l'équipe était accusée en permanence, et aucun travail ne pouvait éteindre l'accusation (L6,
 précédée de L4). Le filet vérifie désormais, sur la VRAIE table, que `primaryToolName()` retire
 bien cette précision pour chacune d'elles et que le résultat passe le garde-fou.
+
+## La clé écrite quatre fois (2026-09-29, tâche #1206)
+
+**Ce que CLONE-HUNTER montrait** : cinq lignes construisant le même index de paires d'outils,
+recopiées dans `combinaisonsSpontanees` et `emboitements`.
+
+**Ce que la question « pourquoi les deux ? » a rendu** : la construction n'était que la moitié
+visible. La CLÉ de cet index était écrite **quatre fois** — deux pour la poser, deux pour
+l'interroger — chaque fois avec le même trio normaliser / trier / joindre.
+
+**Ce que cette dispersion risquait, et c'est un faux positif SILENCIEUX** : si un seul des quatre
+endroits oubliait la normalisation ou le tri, l'interrogation ne trouverait rien, la paire passerait
+pour inédite, et le rapport proposerait fièrement une association que le catalogue réunit déjà.
+Rien ne planterait, rien ne serait rouge — le rapport se féliciterait simplement de ce qui existe.
+
+**Une clé se construit à UN endroit, ou elle finit par ne plus se correspondre** :
+`clePaireDOutils()` la porte, `pairesDejaNommees()` construit l'index, `dejaNommee()` l'interroge.
+Comportement vérifié identique avant/après sur les deux fonctions, et un contre-test COMPTE les
+écritures à la main : si une cinquième réapparaît, le filet le dit au lieu de laisser la divergence
+s'installer.

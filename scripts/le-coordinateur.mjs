@@ -1146,6 +1146,36 @@ export function fenetresDeTravail(events = [], { fenetreMs = FENETRE_DE_TRAVAIL_
   return out;
 }
 
+// LA PAIRE DÉJÀ NOMMÉE : UNE SEULE ÉCRITURE DE LA CLÉ, POUR LES DEUX CÔTÉS (2026-09-29, #1206).
+// CLONE-HUNTER signalait les cinq lignes qui construisent cet index, recopiées dans
+// `combinaisonsSpontanees` et `emboitements`. La construction n'était que la moitié visible : la
+// CLÉ était écrite QUATRE fois — deux fois pour la poser, deux fois pour l'interroger, chaque fois
+// avec le même trio normaliser / trier / joindre.
+//
+// CE QUE CETTE DISPERSION RISQUAIT, ET C'EST UN FAUX POSITIF SILENCIEUX : si un seul des quatre
+// endroits oubliait la normalisation ou le tri, l'interrogation ne trouverait rien, la paire
+// passerait pour inédite, et le rapport proposerait fièrement une association que le catalogue
+// réunit déjà. Rien ne planterait, rien ne serait rouge — le rapport se féliciterait simplement de
+// ce qui existe. Une clé se construit à UN endroit, ou elle finit par ne plus se correspondre.
+export function clePaireDOutils(a, b) {
+  return [normaliserNomDOutil(a), normaliserNomDOutil(b)].sort().join("|");
+}
+
+// DÉJÀ NOMMÉE = DÉJÀ TROUVÉE : une paire que le catalogue réunit déjà dans une même offre n'est pas
+// une découverte, et la proposer ferait un rapport qui se félicite de ce qui existe.
+export function pairesDejaNommees(prestations = []) {
+  const set = new Set();
+  for (const p of prestations) {
+    const o = (p.outils ?? []).map(normaliserNomDOutil).sort();
+    for (let i = 0; i < o.length; i++) for (let j = i + 1; j < o.length; j++) set.add(clePaireDOutils(o[i], o[j]));
+  }
+  return set;
+}
+
+export function dejaNommee(set, a, b) {
+  return set.has(clePaireDOutils(a, b));
+}
+
 export function combinaisonsSpontanees(events = [], prestations = PRESTATIONS, { fenetreMs = FENETRE_DE_TRAVAIL_MS, minFenetres = MIN_FENETRES_PARTAGEES, ecartMin = ECART_MINIMUM, max = 8 } = {}) {
   const fen = fenetresDeTravail(events, { fenetreMs });
   if (fen.length < minFenetres) {
@@ -1159,17 +1189,13 @@ export function combinaisonsSpontanees(events = [], prestations = PRESTATIONS, {
   }
   // DÉJÀ NOMMÉE = DÉJÀ TROUVÉE : une paire que le catalogue réunit déjà dans une même offre n'est
   // pas une découverte, et la proposer ferait un rapport qui se félicite de ce qui existe.
-  const dejaNommees = new Set();
-  for (const p of prestations) {
-    const o = (p.outils ?? []).map(normaliserNomDOutil).sort();
-    for (let i = 0; i < o.length; i++) for (let j = i + 1; j < o.length; j++) dejaNommees.add(`${o[i]}|${o[j]}`);
-  }
+  const dejaNommees = pairesDejaNommees(prestations);
   const paires = Object.entries(ensemble)
     .filter(([, v]) => v >= minFenetres)
     .map(([k, v]) => {
       const [a, b] = k.split("|");
       const attendu = (seul[a] / N) * (seul[b] / N) * N;
-      return { a, b, ensemble: v, ecart: +(v / attendu).toFixed(1), deja: dejaNommees.has([normaliserNomDOutil(a), normaliserNomDOutil(b)].sort().join("|")) };
+      return { a, b, ensemble: v, ecart: +(v / attendu).toFixed(1), deja: dejaNommee(dejaNommees, a, b) };
     })
     .filter((p) => p.ecart >= ecartMin && !p.deja)
     .sort((x, y) => y.ecart - x.ecart)
@@ -1213,17 +1239,13 @@ export function emboitements({ registres = [], sourceParOutil = {}, prestations 
   }
   const distribution = Object.entries(combien).map(([slug, n]) => ({ slug, lus: n, part: Math.round((n / dossiers.length) * 100) })).sort((a, b) => b.lus - a.lus);
   const agregateurs = distribution.filter((d) => d.lus >= dossiers.length * partAgregateur).map((d) => d.slug);
-  const dejaNommees = new Set();
-  for (const p of prestations) {
-    const o = (p.outils ?? []).map(normaliserNomDOutil).sort();
-    for (let i = 0; i < o.length; i++) for (let j = i + 1; j < o.length; j++) dejaNommees.add(`${o[i]}|${o[j]}`);
-  }
+  const dejaNommees = pairesDejaNommees(prestations);
   const chaines = [];
   for (const [cle, lecteurs] of Object.entries(lecteursPar)) {
     const [proprio, dossier] = cle.split("|");
     for (const l of lecteurs) {
       if (agregateurs.includes(l)) continue;
-      if (dejaNommees.has([normaliserNomDOutil(proprio), normaliserNomDOutil(l)].sort().join("|"))) continue;
+      if (dejaNommee(dejaNommees, proprio, l)) continue;
       chaines.push({ produit: proprio, lit: l, via: `${dossier}/` });
     }
   }

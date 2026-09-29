@@ -20986,6 +20986,48 @@ async function testCopiesDuChargeurJson() {
 }
 await testCopiesDuChargeurJson();
 
+// ————————————————————————————————————————————————————————————————————————
+// LA CLÉ ÉCRITE QUATRE FOIS : un faux positif qui ne ferait jamais rougir personne
+// (2026-09-29, tâche #1206 — septième doublon CLONE-HUNTER instruit)
+// ————————————————————————————————————————————————————————————————————————
+async function testClePaireDOutils() {
+  const LC = await import('../scripts/le-coordinateur.mjs');
+
+  // ── 1. LA CLÉ NE DÉPEND PAS DE L'ORDRE, et c'est tout l'intérêt : « a avec b » et « b avec a »
+  // sont la même paire, sinon l'index répondrait non à la moitié des questions.
+  assert.equal(LC.clePaireDOutils('argus', 'harmonia'), LC.clePaireDOutils('harmonia', 'argus'), 'the pair key must not depend on the order of its two tools');
+
+  // ── 2. ELLE NORMALISE LES DEUX CÔTÉS. Un outil s'écrit de plusieurs façons dans ce dépôt
+  // (ARGUS, argus, check-argus) : une clé qui ne normalise qu'un côté ne se retrouve jamais.
+  assert.equal(LC.clePaireDOutils('ARGUS', 'harmonia'), LC.clePaireDOutils('argus', 'HARMONIA'), 'both sides must be normalised, or the same pair produces two different keys');
+
+  // ── 3. CE QUE LA DISPERSION RISQUAIT, JOUÉ POUR DE VRAI : une paire que le catalogue réunit déjà
+  // doit être reconnue comme déjà nommée. Si un seul des quatre endroits oubliait la normalisation
+  // ou le tri, elle passerait pour inédite — et le rapport proposerait fièrement ce qui existe
+  // déjà. Rien ne planterait, rien ne serait rouge : c'est un faux positif SILENCIEUX.
+  const prestations = [{ outils: ['argus', 'harmonia'] }];
+  const index = LC.pairesDejaNommees(prestations);
+  assert.equal(LC.dejaNommee(index, 'harmonia', 'argus'), true, 'a pair the catalogue already offers must be recognised WHATEVER the order it is asked in');
+  assert.equal(LC.dejaNommee(index, 'ARGUS', 'Harmonia'), true, 'and whatever the spelling');
+  assert.equal(LC.dejaNommee(index, 'argus', 'axa-check'), false, 'MUST LET PASS nothing: a genuinely new pair is never declared already named, or the tool would find nothing ever again');
+
+  // ── 4. L'INDEX EST VIDE QUAND IL N'Y A RIEN À INDEXER, sans jamais planter sur une offre qui ne
+  // déclare aucun outil.
+  assert.equal(LC.pairesDejaNommees([]).size, 0, 'an empty catalogue yields an empty index');
+  assert.equal(LC.pairesDejaNommees([{}, { outils: [] }, { outils: ['seul'] }]).size, 0, 'an offer with no tools, or a single one, forms no pair — and must never throw');
+
+  // ── 5. LA CLÉ N'EST PLUS ÉCRITE QU'À UN SEUL ENDROIT (leçon L2 : c'est le mécanisme, pas
+  // l'intention, qui tient). Si une cinquième écriture réapparaît, ce test le dit.
+  const { readFileSync: lire1206 } = await import('node:fs');
+  const src = lire1206('scripts/le-coordinateur.mjs', 'utf8');
+  const ecrituresALaMain = (src.match(/\.sort\(\)\.join\("\|"\)/g) ?? []).length;
+  assert.equal(ecrituresALaMain, 1, 'the pair key must be written in exactly ONE place: it was written FOUR times — twice to build the index, twice to query it — and a single one forgetting to normalise or sort would make the lookup miss in silence');
+
+  console.log("Passed: la cle ecrite quatre fois (2026-09-29, tache #1206). SEPTIEME DOUBLON CLONE-HUNTER INSTRUIT. CE QUE L'OUTIL MONTRAIT : cinq lignes construisant le meme index de paires, recopiees dans combinaisonsSpontanees et emboitements. CE QUE LA QUESTION « POURQUOI ? » A RENDU : la construction n'etait que la moitie visible. La CLE elle-meme etait ecrite QUATRE fois — deux pour la poser, deux pour l'interroger — chaque fois avec le meme trio normaliser / trier / joindre. CE QUE CETTE DISPERSION RISQUAIT, ET C'EST UN FAUX POSITIF SILENCIEUX : si un seul des quatre endroits oubliait la normalisation ou le tri, l'interrogation ne trouverait rien, la paire passerait pour inedite, et le rapport proposerait fierement une association que le catalogue reunit deja. Rien ne planterait, rien ne serait rouge — le rapport se feliciterait simplement de ce qui existe. Une cle se construit a UN endroit, ou elle finit par ne plus se correspondre. COMPORTEMENT VERIFIE IDENTIQUE avant et apres sur les deux fonctions, et la derniere assertion compte les ecritures a la main : si une cinquieme reapparait un jour, le filet le dit au lieu de laisser la divergence s'installer.");
+}
+await testClePaireDOutils();
+
+
 
 
 
