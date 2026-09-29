@@ -12554,6 +12554,18 @@ await testVerrousDOuverture();
   assert.equal(affaibli.cas.length, 1, 'THE CASE IT EXISTS FOR: a test that removes two assertions and adds one, in the same commit as the code it covers');
   assert.equal(affaibli.cas[0].perdues, 1, 'and it counts the NET loss, not the gross removals — a rewrite that keeps the same count is not a weakening');
   assert.match(affaibli.cas[0].question, /suppression légitime, ou cible déplacée/, 'it asks, it never accuses: removing a test is often perfectly legitimate, and a guard that accuses wrongly stops being read (leçon L4)');
+  // LE DÉTECTEUR EST-IL BRANCHÉ ? (2026-09-29, tâche #691). Il existait depuis cinq jours, testé par
+  // huit contre-tests, et AUCUN chemin de production ne l'appelait — seule cette suite le lançait.
+  // C'est la leçon L2 dans sa forme exacte, et elle était ici particulièrement coûteuse : ce
+  // détecteur garde la règle « jamais désactiver un test », c'est-à-dire celle qui protège toutes
+  // les autres. Un test qui vérifie le CÂBLAGE et non seulement la LOGIQUE est le seul qui puisse
+  // attraper ce défaut-là.
+  {
+    const crochet = fs.readFileSync('scripts/hooks/check-last-commit.mjs', 'utf8');
+    assert.ok(/findTestsAffaiblisAvecLeCode\s*\(/.test(crochet),
+      'MUST CATCH: the weakened-test detector must be CALLED by the post-commit hook, not merely tested here — it existed for five days, fully tested, and nothing ever ran it (leçon L2)');
+  }
+
   const grossi = findTestsAffaiblisAvecLeCode('X', { shImpl: shFaux([
     ['--name-only', 'scripts/a.test.mjs\nscripts/a.mjs\n'],
     ['-- scripts/a.test.mjs', '-  assert.equal(x, 1);\n+  assert.equal(x, 1);\n+  assert.equal(y, 2);\n'],

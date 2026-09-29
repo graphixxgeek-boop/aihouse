@@ -128,6 +128,27 @@ if (reveille("axa-check")) try {
   }
   perSlugScriptCoverage = collectScriptCoverage(covDir);
 
+  // LE TEST AFFAIBLI — CÂBLÉ LE 2026-09-29 (tâche #691), et c'est le geste qui manquait.
+  //
+  // Le détecteur existait depuis le 2026-09-24, il était testé par huit contre-tests… et AUCUN
+  // chemin de production ne l'appelait : seule la suite de tests le lançait. C'est la leçon L2 dans
+  // sa forme exacte — « un mécanisme qui ne sort pas du script est une intention » — et elle était
+  // ici particulièrement coûteuse, parce que ce détecteur garde la règle « jamais désactiver un
+  // test », c'est-à-dire la règle qui protège toutes les autres.
+  //
+  // POURQUOI AU POST-COMMIT ET NON AU PRE-COMMIT : il lit le DIFF du commit, donc il lui faut un
+  // commit. Et il ne doit pas bloquer — supprimer un test est souvent parfaitement légitime, ce que
+  // le détecteur dit lui-même en posant une QUESTION plutôt qu'une accusation (leçon L4).
+  try {
+    const { findTestsAffaiblisAvecLeCode } = await import("../axa-check.mjs");
+    const affaiblis = findTestsAffaiblisAvecLeCode();
+    if (affaiblis?.mesurable && affaiblis.cas?.length) {
+      console.log(`⚠️  ${affaiblis.cas.length} test(s) ont PERDU des assertions dans le commit même qui touche le code qu'ils protègent — AXA-CHECK :`);
+      for (const c of affaiblis.cas.slice(0, 5)) console.log(`   ↳ ${c.pourquoi ?? JSON.stringify(c)}`);
+      console.log("   C'est une QUESTION, jamais une accusation : retirer un test est souvent légitime. Mais l'affaiblir DANS le commit qui touche ce qu'il garde mérite d'être dit à voix haute.\n");
+    }
+  } catch { /* un détecteur qui explose ne doit jamais empêcher la bannière : il se tait, et son silence n'est pas un vert */ }
+
   // FIN DE GROS CHANTIER — le déclencheur qui manquait (2026-09-22, constat de l'utilisateur :
   // « quand on finalise un outil comme ça ou un gros morceau de code, la suite des gardiens devrait
   // faire une passe dans ce type de cas, sans que je sois obligé de demander »). Il avait raison :
