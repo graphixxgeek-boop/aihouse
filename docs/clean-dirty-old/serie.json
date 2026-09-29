@@ -54,5 +54,19 @@
     "sens": "neutre — la lecture humaine tranche"
    }
   }
+ },
+ {
+  "date": "2026-09-29",
+  "methode": "v1",
+  "mesures": {
+   "zones-anciennes": {
+    "valeur": 0,
+    "sens": "plus bas = mieux"
+   },
+   "fichiers-suivis": {
+    "valeur": 22,
+    "sens": "neutre — la lecture humaine tranche"
+   }
+  }
  }
 ]

@@ -1456,6 +1456,18 @@ export const COSTLY_SUBSTITUTES = {
   // c'est exactement ce que le test à l'aveugle est le seul à savoir faire. Le proposer à la place
   // répond "les pièces sont là", jamais "elles valent quelque chose".
   "x-port-blindtest": "safe-export-kits (gratuit, déjà dans cette Ronde — SAFE-EXPORT compte les pièces du kit) — jamais un remplacement : il dit que les pièces sont là, jamais ce qu'elles valent, qui est précisément l'objet du test à l'aveugle",
+  // jesus-le-sauveur (ajouté le 2026-09-29, DEUXIÈME fois que circle-process-guardian signale
+  // `missing-substitute` sur cet oubli-là — la première avait donné x-port-blindtest trois jours
+  // plus tôt). Le garde-fou fait son travail ; ce qui se répète, c'est qu'un item entre dans la
+  // Ronde sans qu'on pense à son substitut, et c'est exactement le « coût d'entrée » que JESUS
+  // lui-même mesure : dix registres à remplir par outil qui arrive.
+  //
+  // LE SUBSTITUT EST HONNÊTEMENT PARTIEL, ET LE DIRE EN FAIT PARTIE. JESUS cherche ce qui FREINE le
+  // projet, causes indirectes comprises — il croise des registres qu'aucun autre outil ne rapproche.
+  // CLEAN-DIRTY-OLD, lui, ne voit que la stagnation d'un fichier : il répond « ce code n'a pas
+  // bougé », jamais « voici pourquoi le projet avance moins vite ». Proposer l'un pour l'autre
+  // rendrait donc une partie du signal, jamais le signal.
+  "jesus-le-sauveur": "clean-dirty-old (gratuit, déjà dans cette Ronde) — jamais un remplacement : il voit la stagnation d'un fichier, jamais les causes indirectes que JESUS trouve en croisant plusieurs registres",
 };
 
 // recommendCircleSelectionWithPeriodicity() — étend recommendCircleSelection() SANS le modifier
