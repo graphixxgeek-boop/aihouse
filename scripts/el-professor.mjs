@@ -33,10 +33,58 @@ export function extractSimIds(markdown) {
   return [...new Set(ids)];
 }
 
-export function findMissingNotes(simIndexContent, elProfessorIndexContent) {
+// UNE SIMULATION SANS TRANSCRIPT NE PEUT PAS ÊTRE NOTÉE, et le réclamer sans fin est une alarme
+// qu'aucun travail ne peut éteindre (2026-09-29, tâche #1185 — leçons L6 et L41).
+//
+// LE CAS, ET C'EST LE SECOND DE SA CLASSE DANS LA MÊME NUIT. `full_sim` est signalée « archivée
+// sans note » à chaque passage. Or l'index des simulations écrit, EN GRAS, juste à côté de sa
+// ligne : « SON TRANSCRIPT EST PERDU, et il ne faut pas le chercher ». Noter une simulation, c'est
+// lire son DIALOGUE et le confronter à l'Article 0 ; sans transcript il n'y a rien à lire. La
+// demande était donc impossible à satisfaire, et son explication était écrite là où personne de
+// mécanique ne la lisait. C'est exactement la leçon L41, écrite deux heures plus tôt pour un tout
+// autre outil — ce qui montre que la classe est réelle et qu'elle se répète.
+//
+// LES DEUX CONDITIONS SONT EXIGÉES ENSEMBLE, et la seconde est ce qui distingue une décision d'un
+// oubli : (1) aucun fichier de transcript sur le disque — un FAIT ; (2) la ligne de l'index DIT
+// que la perte est connue — une DÉCISION. L'absence seule ferait taire une archive simplement pas
+// encore faite, ce qui est le contraire du service rendu (leçon L5 : « on n'a pas trouvé » n'est
+// jamais « il n'y a rien »).
+//
+// IL DÉGRADE, IL NE FAIT JAMAIS TAIRE : ces simulations sortent du décompte des notes manquantes
+// et s'affichent dans une section à elles, avec leur raison. Une trouvaille qui disparaît est pire
+// qu'une trouvaille de trop.
+export const MOTIF_TRANSCRIPT_PERDU = /transcript\s+(?:est\s+)?perdu|transcript\s+jamais\s+archiv/i;
+export const DOSSIER_SIMULATIONS = "docs/simulations";
+
+export function ligneDeLaSimulation(markdown = "", id = "") {
+  for (const ligne of String(markdown).split("\n")) {
+    const m = ligne.match(/^\|\s*(full_sim\S*)/);
+    if (m && m[1] === id) return ligne;
+  }
+  return null;
+}
+
+export function simulationsNonNotables(simIndexContent = "", { root = ROOT, listerImpl = null } = {}) {
+  let fichiers = [];
+  try { fichiers = (listerImpl ?? (() => readdirSync(join(root, DOSSIER_SIMULATIONS))))(); } catch { fichiers = []; }
+  // AUCUN FICHIER LU N'EST JAMAIS « AUCUN TRANSCRIPT » (leçons L5/L11) : sans dossier lisible on ne
+  // peut rien affirmer, donc on n'exempte personne et le décompte reste strict.
+  if (!fichiers.length) return [];
+  const out = [];
+  for (const id of extractSimIds(simIndexContent)) {
+    if (fichiers.some((f) => f.startsWith(`${id}_transcript.`))) continue;
+    const ligne = ligneDeLaSimulation(simIndexContent, id);
+    if (!ligne || !MOTIF_TRANSCRIPT_PERDU.test(ligne)) continue;
+    out.push({ id, pourquoi: "aucun transcript sur le disque, et l'index déclare la perte : noter une simulation c'est lire son dialogue, et il n'y a rien à lire" });
+  }
+  return out;
+}
+
+export function findMissingNotes(simIndexContent, elProfessorIndexContent, options = {}) {
   const archived = extractSimIds(simIndexContent);
   const noted = new Set(extractSimIds(elProfessorIndexContent));
-  return archived.filter((id) => !noted.has(id));
+  const horsPortee = new Set(simulationsNonNotables(simIndexContent, options).map((s) => s.id));
+  return archived.filter((id) => !noted.has(id) && !horsPortee.has(id));
 }
 
 // Symétrique de findMissingNotes : une note qui existe sans simulation archivée correspondante
@@ -86,6 +134,7 @@ function main() {
   const [simIndex, elProfessorIndex] = docs.map((d) => d.texte);
   const missing = findMissingNotes(simIndex, elProfessorIndex);
   const orphans = findOrphanNotes(simIndex, elProfessorIndex);
+  const nonNotables = simulationsNonNotables(simIndex);
 
   console.log("=== EL-PROFESSOR — partie mécanique (couverture des notes) ===\n");
   if (!missing.length) {
@@ -94,6 +143,10 @@ function main() {
     console.log(`${missing.length} simulation(s) archivée(s) sans note EL-PROFESSOR :`);
     for (const id of missing) console.log(`  - ${id}`);
     console.log("\nÀ noter avant de considérer la couverture complète (cf. docs/referentiel/el-professor.md).");
+  }
+  if (nonNotables.length) {
+    console.log(`\n${nonNotables.length} simulation(s) HORS DE PORTÉE de la notation, écartée(s) du décompte ci-dessus avec leur raison :`);
+    for (const s of nonNotables) console.log(`  - ${s.id} — ${s.pourquoi}`);
   }
   if (orphans.length) {
     console.log(`\n${orphans.length} note(s) EL-PROFESSOR sans simulation archivée correspondante (identifiant orphelin) :`);

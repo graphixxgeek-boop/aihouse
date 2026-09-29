@@ -10478,6 +10478,41 @@ await testVerrousDOuverture();
   assert.deepEqual(findMissingNotes(simIdx,elIdxComplete),[],'once every archived simulation has a matching note, nothing must be flagged');
   const elIdxOrphan='| Simulation | Note |\n|---|---|\n| full_sim | 82 |\n| full_sim99 | 60 |';
   assert.deepEqual(findOrphanNotes(simIdx,elIdxOrphan),['full_sim99'],'a note referencing a simulation id absent from the archive index (typo, stale rename) must be flagged as orphaned, the symmetric failure mode to a missing note — never silently ignored');
+
+  // UNE SIMULATION SANS TRANSCRIPT NE PEUT PAS ÊTRE NOTÉE (2026-09-29, tâche #1185 — L6 et L41).
+  //
+  // `full_sim` était réclamée à chaque passage alors que l'index des simulations écrit EN GRAS,
+  // sur sa propre ligne, que son transcript est PERDU. Noter une simulation, c'est lire son
+  // DIALOGUE et le confronter à l'Article 0 : sans transcript il n'y a rien à lire, donc une
+  // demande qu'aucun travail ne peut satisfaire — une alarme inextinguible devient du décor (L6).
+  {
+    const { simulationsNonNotables } = await import('../scripts/el-professor.mjs');
+    const idxPerdu = '| Simulation | Round |\n|---|---|\n| full_sim (sim1) | 44 | **SON TRANSCRIPT EST PERDU**, et il ne faut pas le chercher |\n| full_sim2 | 56 | rien de spécial |';
+    const surDisque = () => ['full_sim_actions.txt', 'full_sim2_transcript.txt'];
+
+    // ── LES DEUX CONDITIONS ENSEMBLE, et la seconde est ce qui distingue une décision d'un oubli.
+    const horsPortee = simulationsNonNotables(idxPerdu, { listerImpl: surDisque });
+    assert.deepEqual(horsPortee.map((s) => s.id), ['full_sim'], 'MUST CATCH: a simulation with no transcript on disk AND a declared loss in its index row is out of reach of grading — asking for it forever is an alarm no work can switch off');
+    assert.ok(horsPortee[0].pourquoi.includes('rien à lire'), 'and the reason must travel with it, never be left for the reader to reconstruct');
+    assert.deepEqual(findMissingNotes(idxPerdu, '| Simulation | Note |\n|---|---|', { listerImpl: surDisque }), ['full_sim2'], 'the ungradable one leaves the missing-notes count; the one that really has a transcript stays in it');
+
+    // ── L'ABSENCE SEULE N'EXEMPTE RIEN : une archive pas encore faite doit rester réclamée (L5).
+    const idxSansRaison = '| Simulation | Round |\n|---|---|\n| full_sim | 44 | rien de déclaré |';
+    assert.deepEqual(simulationsNonNotables(idxSansRaison, { listerImpl: () => ['full_sim_actions.txt'] }), [], 'MUST CATCH: a missing transcript with NO declared reason is an archive still owed, never an exemption — "we did not find it" is not "there is nothing there"');
+
+    // ── LA RAISON SEULE N'EXEMPTE RIEN NON PLUS : si le transcript est là, on note.
+    assert.deepEqual(simulationsNonNotables(idxPerdu, { listerImpl: () => ['full_sim_transcript.txt'] }), [], 'a row declaring a loss while the transcript is right there on disk must not exempt anything — the declaration explains a fact, it does not replace it');
+
+    // ── UN DOSSIER ILLISIBLE N'EXEMPTE PERSONNE : on ne sait pas, donc on reste strict.
+    assert.deepEqual(simulationsNonNotables(idxPerdu, { listerImpl: () => { throw new Error('boum'); } }), [], 'an unreadable directory must exempt nobody: nothing read is not nothing to find');
+
+    // ── ET LE VRAI DÉPÔT, jamais seulement une fixture (Article 25).
+    const reelSim = fs.readFileSync('docs/simulations/index.md', 'utf8');
+    const reelHors = simulationsNonNotables(reelSim);
+    assert.deepEqual(reelHors.map((s) => s.id), ['full_sim'], 'checked live: exactly the one simulation whose transcript the repository declares lost must be out of reach — no more, no less');
+    assert.deepEqual(findMissingNotes(reelSim, fs.readFileSync('docs/el-professor/index.md', 'utf8')), [], 'and with it set aside, every simulation that CAN be graded really has its note');
+    console.log('Passed: une simulation sans transcript ne peut pas être notée, et EL-PROFESSOR cesse de la réclamer sans fin (2026-09-29, tâche #1185). `full_sim` était signalée à chaque passage alors que l\'index écrit EN GRAS, sur sa ligne, que son transcript est PERDU — noter une simulation c\'est lire son dialogue et le confronter à l\'Article 0, donc une demande qu\'aucun travail ne pouvait satisfaire. Les DEUX conditions sont exigées ensemble : aucun transcript sur le disque (un FAIT) et une perte déclarée dans l\'index (une DÉCISION) ; l\'absence seule laisserait filer une archive simplement pas encore faite, la déclaration seule excuserait un transcript présent, et un dossier illisible n\'exempte personne. Il DÉGRADE sans jamais faire taire : la simulation sort du décompte et s\'affiche dans une section à elle, avec sa raison. C\'est la leçon L41 vérifiée sur un second outil dans la même nuit — un fait écrit en prose qu\'aucune mécanique ne lit produit une accusation permanente.');
+  }
   assert.deepEqual(findOrphanNotes(simIdx,elIdxComplete),[],'when every note matches a real archived simulation, nothing must be flagged as orphaned');
   // buildElProfessorCoverageHtml() (2026-09-20, tâche #144 — checkHtmlWiring() signalait cet outil
   // comme jamais câblé malgré la règle "tous les rapports en HTML").
