@@ -1,8 +1,8 @@
 # plans — table des matières
 
-*(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-28. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
+*(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-09-29. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**27 fichier(s).**
+**28 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -24,6 +24,7 @@
 | [nuit-2026-09-23-plan.md](nuit-2026-09-23-plan.md) | — |
 | [nuit-2026-09-24-plan.md](nuit-2026-09-24-plan.md) | — |
 | [nuit-2026-09-25-plan.md](nuit-2026-09-25-plan.md) | — |
+| [nuit-2026-09-29-plan.md](nuit-2026-09-29-plan.md) | — |
 | [plan-action-global-2026-09-22.md](plan-action-global-2026-09-22.md) | — |
 | [plan-attaque-claude-md.html](plan-attaque-claude-md.html) | — |
 | [plan-complet-jusquau-renommage.md](plan-complet-jusquau-renommage.md) | — |

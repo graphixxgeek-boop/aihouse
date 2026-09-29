@@ -1,0 +1,113 @@
+PLAN DE DEPART — nuit du 2026-09-29 (liste FIGEE des taches ouvertes au moment du depart)
+NOMBRE DE TACHES AU DEPART : 109
+Horodatage : 2026-09-29T00:01Z (heure LUE, source systeme)
+
+#642 | Ronde / THE-FINAL-JUDGE (GOAT MAX) | en cours → Terminée (clôturée par #785)
+#658 | Charte / les deux Articles critiques | Ouverte → Terminée (clôturée par #789)
+#670 | Évaluation / l'historique ne s'écrit pas tout seul | Ouverte → Terminée (clôturée par #784)
+#676 | Nuit / chantier 7 — la redondance FONCTIONNELLE entre outils, mesurée au lieu d'être supposée | Fait
+#678 | Nuit / chantier 5 — le poids d'une tâche, sa vignette, son résumé de tête et son origine | Fait
+#680 | Nuit / chantier 5.7 — l'historique d'EVAL-IA se lit, et ne peut plus mentir dans les deux sens où il mentait déjà | Fait
+#682 | La sous-commande `recensement` tombait sur ses propres trouvailles — et personne ne pouvait le savoir | Fait
+#683 | Le garde-fou de numérotation lisait un registre amputé — et a certifié « cohérente » un registre qui portait un doublon | Fait
+#684 | Le rapport de nuit complété — la trouvaille grave passe de six à huit occurrences | Fait
+#685 | Nuit / chantier 2.2 — uniformiser par famille : la norme dérivée de ce que les semblables font déjà | Fait
+#686 | Nuit / chantier 5.4 — absorber une redirection sans perdre la tâche qu'elle déplace | Fait
+#688 | Nuit / vérification finale — les deux dettes documentaires restantes, payées | Fait
+#689 | Nuit / chantier 8 — vérification finale close et rapport complété une dernière fois | Fait
+#691 | Tâche A des failles IA — détecter un test AFFAIBLI dans le même commit que le code qu'il devait attraper | Fait
+#692 | Tâche B des failles IA — déclarer que THE-FINAL-JUDGE est un mauvais détecteur de « faux succès », mesuré comme tel | Fait
+#693 | Fichier de réponses aux 35 questions du gros prompt du 2026-09-23 | Fait
+#694 | OPTIMISER et FIABILISER deviennent le régime par défaut, plus une consigne à répéter | Fait
+#730 | CASSANDRA-RH / fiabiliser les numéros de version + une version pour l'Agence entière | Ouverte → Terminée (clôturée par #799)
+#731 | Exportabilité / est-ce que l'outillage pèse sur quelqu'un ? | Ouverte → Terminée (clôturée par #797)
+#741 | Classification / 5e distinction : à QUI sert l'outil | Ouverte → Terminée (clôturée par #791)
+#742 | Classification / rapport complet de TOUTES les notes déjà prises | Ouverte → Terminée (clôturée par #786)
+#743 | Classification / cadrer le chantier : cible, signal de fin, lien avec l'organisation | Ouverte → Terminée (clôturée par #788)
+#744 | Agence / mesurer son poids, sa version, et le coût d'une réduction | Ouverte → Terminée (clôturée par #792)
+#754 | Classification / réconcilier les 6 Suites et les 9 familles | En attente de sa décision → Terminée (clôturée par #780)
+#755 | Classification / un garde-fou pour les quatre axes tenus à la main | Ouverte → Terminée (clôturée par #781)
+#756 | Vocabulaire / deux constantes DOMAINES homonymes | Ouverte → Terminée (clôturée par #782)
+#624 | Charte / CLAUDE.md (chantier #208) | EN COURS
+#725 | Sauvegarde / l'agencement de la mémoire du projet | En cours
+#993 | Agence / **les constats de CLONE-HUNTER : trois factorisations, chacune prouvée équivalente** | EN COURS
+#1110 | Projet / **l'arborescence du GRAND PROJET, posée AVANT l'arrivée du prompt massif** | En cours
+#492 | Ronde / plan d'action R3 | à faire
+#603 | Process / conduite | à faire — nécessite sa présence
+#612 | Outillage / CIRCLE-TASKS | À FAIRE
+#636 | Organisation / vocabulaire (chantier #208) | En attente — après le GRAND CHANTIER (#1100)
+#677 | Coordination / Deux packs du catalogue formulés en mêmes mots — tool-brain remonte les deux pour une seule question | Ouverte
+#679 | XP / Leçon L23 sans porteur — forcer la lecture du DOCUMENT de process avant d'agir, jamais sa déclaration dans le code | Ouverte
+#681 | XP / Une erreur répétée la même nuit, et ce qu'elle dit d'une décision déjà prise | Ouverte
+#696 | Organisation / Harmoniser le modèle de gouvernance de l'utilisateur avec l'existant — 20 questions avant toute construct | Ouverte
+#699 | Suivi / chaîne mesure → suite | Ouverte
+#700 | Sauvegarde / coffre et notice | Ouverte
+#703 | Conduite / mots d'ordre permanents | Ouverte
+#704 | Conso / tokens | Ouverte
+#705 | Outillage / découpe | Ouverte
+#708 | Suivi / fiche de tâche | Ouverte
+#710 | Organisation / document total | Ouverte
+#717 | Profil utilisateur / les deux sens | Ouverte
+#721 | Ronde / suites | Ouverte
+#733 | Nommage / les séries d'hommages | En attente — après le GRAND CHANTIER (#1100)
+#740 | Nommage / booster l'agent des noms : TOUS les impacts d'un renommage en série | En attente — après le GRAND CHANTIER (#1100)
+#745 | Agence / fusionner des agents pour réduire l'effectif — retrouver le sujet mis de côté | Ouverte
+#747 | Nommage / la nomenclature : un code de classe dans le nom | En attente — après le GRAND CHANTIER (#1100)
+#767 | Charte / quelles autres règles à fort levier manquent ? | Ouverte
+#768 | Nommage / l'outil de renommage PUISSANT, avec recherches web | En attente — après le GRAND CHANTIER (#1100)
+#775 | Nommage / les deux collisions réelles à trancher avec lui (`PALIERS`, `recordOutcome`) | En attente — après le GRAND CHANTIER (#1100)
+#790 | Charte / les treize Articles muets : déclarer l'impossibilité, ou nommer le porteur qui existe déjà | Ouverte
+#793 | Agence / check-house pèse un quart de tout l'outillage — 12 052 lignes | Ouverte
+#814 | Données / les registres restants : brancher un lecteur, ou déclarer l'absence assumée ? | Ouverte
+#819 | Filet / trois options chiffrées : ne rien faire, regarder les 3 plus lents, ou un mode rapide | Ouverte
+#823 | Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et le garde-fou est tombé deux fois dans ce qu'il tra | Ouverte
+#830 | Idées / **« un outil qui vérifie la logique et les trous PARTOUT » — la question posée il y a quatre jours, restée sans  | En attente
+#842 | Ronde / **« rentabiliser les trouvailles » : l'outil qui mesure ça existe, et son verdict est net — le registre grossit  | En attente
+#845 | File / les 5 plus anciennes tâches encore ouvertes, présentées pour arbitrage | Ouverte
+#861 | Refonte graphique / son idée SQUID GAME vivait au suivi et nulle part dans le document de son chantier | En attente — après le GRAND CHANTIER (#1100)
+#902 | Agence / **EXPORT ET COMMERCIALISATION — le chantier existait sans tâche, donc sans existence dans la file** | Ouverte
+#929 | Nommage / **un seul script, DEUX identités : `check-spirit` et `check-spirit-mjs` — et c'est un renommage, donc SA décis | En attente — après le GRAND CHANTIER (#1100)
+#988 | Nommage / **le registre des baptêmes : trois décisions prises, application REPORTÉE à sa demande** | En attente — après le GRAND CHANTIER (#1100)
+#994 | Agence / **élargir le périmètre d'AXA-CHECK de 38 à 68 scripts, AVEC un troisième état « non exercé »** | OUVERTE
+#997 | Agence / **les 18 constats CLONE-HUNTER restants, à descendre jusqu'à zéro** | OUVERTE
+#1005 | Agence / **deux fonctions `chargerLesDocuments()` dans deux fichiers, qui ne rendent pas la même chose** | Ouverte
+#1019 | Process / **recalibrer le seuil en CARACTÈRES du process gros prompt, une fois trois vraies saisines archivées** | Ouverte
+#1020 | Process / **présenter les 75 noms en service que l'utilisateur n'a jamais validés** | En attente — après le GRAND CHANTIER (#1100)
+#1053 | Données / **compacter les récits des 254 tâches fermées récentes** | Ouverte
+#1067 | Charte / **Articles 18 et 26 se recouvrent à 19 % sans que rien ne dise lequel prime** | Ouverte
+#1079 | Suivi / **un commit de SUITE compte-t-il comme « sans mise à jour du suivi » ? — et le commit accusé est le mien** | Ouverte
+#1092 | Conso / **personne n'enregistre le trafic API réel — le registre que Smart Conso lit ne voit que des sondages** | Ouverte
+#1100 | Projet / **ACCUEILLIR L'ENORME PROMPT — demande d'évolution profonde, événement capital dans la conception de l'agence** | Ouverte
+#1101 | Projet / **s'assurer EN AMONT que tout est prêt à accueillir une évolution profonde du code et du projet** | Ouverte
+#1102 | Conduite / **enregistrer le réglage de nuit qui a fonctionné : AUCUNE interruption sur une très longue période** | Ouverte
+#1104 | Agence / **le trou de couverture documentaire : 82 % des documents n'appartenaient au périmètre de personne** | En attente
+#1105 | Agence / **le RETENU oublié de ma propre fiche de recherche — et le sixième faux chiffre** | En attente
+#1113 | Projet / **le point de non-retour : une étiquette nommée sur l'état d'avant le grand changement** | Ouverte
+#1114 | Projet / **rien ne relie une tâche à un chantier — et le plan du grand changement va en rendre beaucoup caduques** | Ouverte
+#1117 | Projet / **le dixième axe de classement : la COUCHE architecturale, dérivée comme les neuf autres** | Ouverte
+#1118 | Projet / **le BUILD MAP — le document que le dernier audit annonce et ne livre pas** | Ouverte
+#1119 | Projet / **ramener le coût d'entrée d'un outil de DIX registres à UN** | Ouverte
+#1120 | Projet / **le Transaction Engine — le seul vrai trou de l'architecture** | Ouverte
+#1121 | Projet / **le positionnement commercial : « runtime d'agences » ou « agence pour codebases existantes » ?** | Ouverte
+#1125 | Projet / **la COUVERTURE de sa demande — la preuve que rien n'est oublié, mesurée et non promise** | À TRANCHER
+#1126 | Projet / **le BUDGET D'OBLIGATIONS — aucune obligation nouvelle sans une obligation retirée** | À TRANCHER
+#1127 | Projet / **le DOCUMENT MAÎTRE de stratégie globale, et qui le porte** | À TRANCHER
+#1128 | Projet / **l'axe STRATÉGIE sur les tâches et sur la classification** | À TRANCHER
+#1129 | Projet / **les DEUX règles de travail qu'il a posées et que rien ne porte** | À TRANCHER
+#1130 | Projet / **la DYNAMIQUE D'ESCALADE tâches ↔ stratégie ↔ philosophie, et sa FIABILISATION** | À TRANCHER
+#1131 | Projet / **l'outil qui RÉAGIT quand quelque chose est fait à l'envers de la stratégie** | À TRANCHER
+#1132 | Projet / **les TROIS BORNES qui diront « l'agence est terminée »** | À TRANCHER
+#1133 | Projet / **la PASSE GÉNÉRALE : objectifs, KPI et RH alignés sur les stratégies** | À TRANCHER
+#1134 | Projet / **adapter la CHARTE, les RÈGLES DE TRAVAIL, le RÉFÉRENTIEL et les PROCESS** | À TRANCHER
+#1135 | Projet / **réorganiser les fichiers de STRATÉGIES et de NOTES** | À TRANCHER
+#1136 | Projet / **le PACK DÉCOUVERTE, dérivé — et le SYSTÈME qui le livre** | À TRANCHER
+#1137 | Projet / **la STRATÉGIE DU JEU — la troisième partie de sa commande, jamais écrite** | À TRANCHER
+#1138 | Projet / **les DEUX stratégies globales séparées — avec les deux projets, et comme s'il n'y en avait qu'un** | À TRANCHER
+#1139 | Projet / **le CHANTIER FINALISATION — sauvegarder la version complète, migrer vers une version light** | À TRANCHER
+#1140 | Projet / **la version de l'Agence AVEC ou SANS les parties analyse-simulation** | À TRANCHER
+#1141 | Projet / **l'ORDRE remis d'aplomb : calibrage → stratégie → plan → tâches — et le garde-fou qui l'avait inversé** | À TRANCHER
+#1143 | Projet / **la CHAÎNE DE DÉCISION du chantier : but ultime → philo et politique → les trois stratégies** | Ouverte
+#1144 | Projet / **le BUT ULTIME porté par Philo et Politique : défini ? bien défini ? conforme à notre direction ?** | À TRANCHER
+#390 | Outillage / badge | en attente de décision
+#279 | Méthode de travail / Feuille de route | reportée — décision explicite de l'utilisateur, aucune régression
+#734 | Refonte graphique / thème SQUID GAME | Sortie de la file
