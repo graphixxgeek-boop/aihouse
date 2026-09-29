@@ -228,3 +228,17 @@ aussi. **Le dernier signal décide, jamais le pire jamais vu.**
 **vrai** blocage total mord toujours. Sans lui, le correctif aurait acheté du silence plutôt que de
 la justesse. Et l'absence de donnée ne vaut jamais accusation : ne pas savoir n'est pas « il a
 relancé à l'aveugle » (L5/L11).
+
+## L'ÂGE DE L'HISTORIQUE ACCOMPAGNE TOUJOURS L'AVIS (2026-09-28, tâche #1091)
+
+`fraicheurDeLHistorique()` mesure depuis combien de temps le registre des clés n'a rien enregistré ;
+`lignesDeFraicheur()` l'imprime **avec l'avis, jamais à part**.
+
+**Pourquoi c'est avec un « ok » que l'âge compte le plus** : un verdict rassurant est exactement
+celui qu'on ne re-vérifie jamais. Un avis « tout va bien » calculé sur un historique de trois jours
+ressemble trait pour trait à un avis calculé sur l'heure qui vient de passer.
+
+**Une absence de données n'est jamais un trafic sans incident** : l'historique vide rend
+`mesurable: false` avec sa raison, jamais un vert. Et la limite est déclarée dans le message même —
+le registre n'enregistre que les sondages de `check-gemini-quota.mjs` ; **le trafic réel de
+l'application vit en mémoire et personne ne le persiste**.

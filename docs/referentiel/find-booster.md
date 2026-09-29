@@ -223,3 +223,13 @@ documenté ci-dessus.
 
 
 *(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*
+
+## Deux pièces qui portent chacune une raison
+
+`lignesDeLaSource()` accepte une source **en texte ou déjà découpée en lignes** : les deux formes
+circulent dans le paysage, et exiger l'une obligerait chaque appelant à convertir.
+
+`etiquetteDepuisLaDescription()` prend la TÊTE de la description, coupée à la première parenthèse ou
+au premier tiret long — là où une phrase de commentaire passe de l'annonce à l'explication. **Le
+repli sur la description entière n'est pas décoratif** : une description qui COMMENCE par une
+parenthèse rendrait sinon une étiquette vide, c'est-à-dire une entrée d'index sans nom.

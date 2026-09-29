@@ -250,3 +250,50 @@ ont été confondues.
 L'étape 4 du schéma de classification passe de **76 % à 94 %**, et devient **TENUE**. Cette hausse
 vient d'une **mesure corrigée**, jamais d'un câblage nouveau — et le dire vaut mieux que de laisser
 croire à dix-huit points de travail.
+
+## LES ANCRES — rejoindre un détail précis dans 60 000 mots (2026-09-28, tâche #725)
+
+**Sa question, qui a créé cette capacité** : « tu vas faire comment pour te référer rapidement aux
+documents du projet dans git ? tu vas étiqueter les paragraphes ? les pages ? […] je veux que tu
+puisses rejoindre rapidement un détail dont tu as besoin, car **un détail dans 60 000 lignes, qui va
+le lire ?** »
+
+```
+node scripts/data-archangel.mjs ancres [--cherche "<mot>"]
+```
+
+**Le principe** : un corpus déposé ne se renumérote pas — ce serait réécrire ce qu'il a écrit. On
+pose donc une carte À CÔTÉ : `ancresDuTexte()` repère les points d'accroche d'un document,
+`ancresDuCorpus()` balaie les racines déclarées, `chercherDansLesAncres()` répond « ce sujet est
+traité à tel endroit », et `deposerLesAncres()` écrit le registre.
+
+**QUATRE SIGNAUX, ET LE QUATRIÈME A ÉTÉ AJOUTÉ PARCE QUE LA RECHERCHE POINTAIT À CÔTÉ** : les titres
+Markdown · les lignes tout en capitales · **les titres numérotés** · les étiquettes qu'il emploie
+lui-même (`REMARQUE`, `OBJECTIF`, `ATTENDU`, `QUESTION`…). Sans le troisième, une recherche sur
+« séparation des fonctions » rendait le titre du tableau VOISIN — une ancre qui désigne le mauvais
+paragraphe est pire qu'aucune ancre.
+
+**LE GARDE-FOU DE PROSE, ET IL A DIVISÉ LE BRUIT PAR QUATORZE** : une ligne en capitales n'est une
+ancre que si de la vraie prose la suit (au moins 12 mots dans les 3 lignes qui suivent). Sans lui,
+les fragments de schémas ASCII passaient pour des titres : **308 ancres dont 286 fausses, soit 93 %
+de bruit**. Avec lui : 22. Un index faux coûte plus cher qu'un index absent, parce qu'on lui fait
+confiance.
+
+`formatAncresLines()` rend le tout lisible : les documents les plus riches en ancres, et la réponse
+de la recherche quand un mot est donné.
+
+**Mesure actuelle** : 939 ancres sur 26 documents, dont 2 sans aucune ancre — et ce zéro-là est dit,
+jamais tu.
+
+## La DÉLÉGATION d'un catalogue, et les dépôts sans trace (2026-09-28)
+
+`texteAvecDelegations()` permet à un index de déléguer une partie de sa liste à un autre fichier, par
+un marqueur `<!-- catalogue-delegue: <chemin> -->`. **Un seul niveau, jamais deux** : une délégation
+qui délègue devient une chaîne que personne ne peut suivre. Un `..` ou un chemin absolu sont refusés,
+et une cible absente ne délègue rien plutôt que de casser la lecture.
+
+`estUnDepot()` et `estUneCopieLisible()` distinguent un fichier déposé par l'utilisateur d'une copie
+lisible produite à côté de lui (un `.md` voisin d'un `.docx` du même nom). **Le second prend la liste
+complète des fichiers, jamais un index** : la première version passait `estUnDepot` directement à un
+`.filter()`, donc recevait un NUMÉRO comme second argument — un défaut invisible à la relecture,
+attrapé par le contre-test.

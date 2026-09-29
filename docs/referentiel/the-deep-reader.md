@@ -208,3 +208,14 @@ Aucun blueprint générique séparé pour l'instant (contrairement à THE-FINAL-
 étroitement lié au système de suivi propre à ce projet (LE-PLANIFICATEUR), pas encore assez détaché
 pour justifier une forme réutilisable sur un autre projet — même raisonnement que LE-COORDINATEUR/
 CIRCLE-TASKS, documentés directement sans blueprint (`docs/regles-de-travail.md` §7ter).
+
+## Le point d'intégration HTML (`buildDeepReaderReportHtml`)
+
+**Trouvé par un garde-fou, jamais par une revue** : ce fichier était enregistré comme producteur de
+rapport HTML depuis sa création et **n'avait jamais importé `html-report.mjs`**. L'écart est resté
+invisible tant que le seul contrôle existant ne vérifiait que trois scripts codés en dur.
+
+THE-DEEP-READER n'a **ni `main()` ni ligne de commande** : le vrai rapport est écrit en prose par
+l'agent séparé, puis réconcilié par l'agent qui orchestre. `buildDeepReaderReportHtml()` est donc le
+point d'intégration réel — **appelé à la main au moment de LIVRER**, jamais un second calcul. Même
+forme que son cousin `buildFinalJudgeReportHtml()`, pour la même raison.

@@ -147,3 +147,11 @@ un oubli à combler en silence — déclarer une exigence engage l'Agence à la 
 
 **Deux refus de conclure**, chacun contre un faux vert : un cadre illisible et une liste d'exigences
 vide rendraient tous deux « aucun écart ».
+
+## Le document qui fait loi peut ne pas être là (`standardsAbsents`)
+
+THE-EQUALIZER lit ses exigences dans `docs/referentiel/standards.md`. **Sur un dépôt qui n'a pas
+encore écrit ses standards, il mourait** — et un plantage est le pire des verdicts, parce qu'il ne
+dit rien du tout. `standardsAbsents()` rend une ligne d'absence DÉCLARÉE plutôt qu'une erreur : elle
+nomme l'outil, ce qu'il cherchait, et à quoi ça sert. **Une absence dite vaut mieux qu'un `ENOENT`**,
+et c'est ce que l'Agence doit savoir faire le jour où elle arrive ailleurs.

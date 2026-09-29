@@ -660,3 +660,60 @@ restait en arrière — si bien que le filet virait au **rouge dès qu'on consul
 défaut que le seuil recopié trouvé la même nuit : un garde-fou que l'usage légitime fait crier
 apprend à ne plus s'en servir (leçons L4/L6). Le rapport met désormais l'index à jour lui-même.
 **Déclarer ce qu'on vient d'écrire est le travail de celui qui l'écrit, jamais du commit suivant.**
+
+## LA TUYAUTERIE : l'Agence l'emporte-t-elle, ou se branche-t-elle sur celle de l'hôte ? (2026-09-28)
+
+**Sa question, posée en passant et qui méritait un mécanisme** : « la tuyauterie de l'agence, elle
+est exportable, ou bien l'agence se branche sur la tuyauterie du projet qu'elle rejoint, ou bien les
+questions d'infrastructure dépendent des cas ? » Puis, en voyant la réponse : « **ce genre de
+question devrait être anticipé par safe-export** ».
+
+```
+node scripts/safe-export.mjs tuyauterie
+```
+
+**TROIS COUCHES, ET LA RÉPONSE EST « LES TROIS À LA FOIS »** — ce qui est exactement sa troisième
+hypothèse, et c'est la bonne :
+
+| Couche | Ce que c'est | Mesure |
+|---|---|---|
+| **EMPORTÉE** | la tuyauterie interne, qui part avec l'Agence (`lib-shell`, `lib-json`, `report-template`…) | 67 scripts |
+| **EXIGÉE** | ce que l'hôte doit fournir : Node, git, un shell | 72 scripts |
+| **ADAPTÉE** | ce qui se branche sur un service extérieur — une clé d'API, un runtime | 5 scripts |
+
+**Mesure : 84 scripts, 94 % d'indépendance.**
+
+**LE COMMENTAIRE ET LES CONSTANTES SONT RETIRÉS AVANT DE MESURER**, et ce n'est pas un détail :
+**mentionner n'est pas dépendre**. Un script qui EXPLIQUE la dépendance d'un autre dans son
+commentaire passerait sinon pour en dépendre.
+
+**UN DÉFAUT TROUVÉ EN AFFINANT LE MOTIF, ET IL A FAIT BAISSER LE CHIFFRE** : `\bGEMINI\b` ne matchait
+pas `GEMINI_API_KEY`, parce que le souligné EST un caractère de mot — **la dépendance la plus
+courante du dépôt échappait à la mesure**. Corrigé : 96 % → 94 %, 3 → 5 adaptateurs. *Le chiffre a
+baissé parce que la mesure est devenue vraie, jamais parce que quelque chose s'est dégradé.*
+
+## LE CONTRÔLE D'ACCUEIL : et si l'hôte ne peut pas fournir ? (2026-09-28)
+
+**Sa question suivante, immédiate** : « ok, et si l'hôte ne peut pas fournir les éléments, alors
+safe-export résout la question et met ce qu'il faut en place, c'est comme ça ? »
+
+```
+node scripts/safe-export.mjs accueil
+```
+
+**LA RÉPONSE EST NON, ET LE REFUS EST LE SERVICE.** SAFE-EXPORT **constate** ce que la machine offre
+et ce qui manque ; il n'installe rien. Installer Node ou git à la place de quelqu'un sur sa propre
+machine est précisément le genre de geste irréversible que ce projet n'accorde à aucun outil.
+
+`PREREQUIS_DE_L_HOTE` distingue le **requis** (node, git, un shell — sans eux rien ne tourne) du
+**facultatif** (python3, dont l'absence éteint seulement la lecture des `.docx`). `controleDAccueil()`
+rend donc un verdict en trois états, jamais deux : **prêt**, **dégradé** (il manque un facultatif, et
+on dit ce qu'on perd), **refusé** (il manque un requis).
+
+**UN CONTRE-TEST QUI A MORDU DÈS L'ÉCRITURE** : la première version rendait « REFUSÉ » sur une
+machine qui avait tout, parce qu'`execSync` n'était pas importé — un outil qui refuse toujours dit
+autant qu'un outil qui accepte toujours. Le contre-test exige désormais qu'il puisse répondre OUI.
+
+**Les fonctions** : `tuyauterieDeLAgence()` mesure les trois couches, `formatTuyauterieLines()` les
+rend lisibles ; `controleDAccueil()` constate ce que la machine offre, `formatAccueilLines()` rend le
+verdict en trois états.

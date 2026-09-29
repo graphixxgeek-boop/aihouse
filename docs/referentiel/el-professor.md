@@ -182,3 +182,23 @@ depuis CLAUDE.md le 2026-09-22.)* `docs/simulations/correctifs-a-revalider.md` s
 de CODE en attente de confirmation par une simulation réelle. C'est un carnet **distinct**, tenu en
 parallèle : EL-PROFESSOR note la fidélité d'un texte à la charte et n'ouvre jamais ce carnet pour
 établir sa note — les deux mesurent des choses différentes, et les croiser fausserait la note.
+
+## L'AUDIT DES MOTIFS DE DÉPLACEMENT (`auditMotifsDeDeplacement`)
+
+Quand un personnage se déplace, il donne un motif. Cet audit relit les transcripts archivés et compte
+les défauts de forme de ces motifs : **double point**, **majuscule au milieu d'une phrase**, et
+**pièce nommée deux fois**.
+
+**Le troisième a été corrigé au premier vrai passage, sur la ligne même qui avait motivé la tâche** :
+« Je bouge EN CUISINE : Je vais voir ce qu'il y a DANS LA CUISINE.. » nomme bien la cuisine deux
+fois, avec deux tournures différentes. `defautsDuMotif()` compte donc **toutes les locutions de la
+pièce ensemble**, jamais chacune de son côté — chercher la répétition d'UNE tournure la laissait
+passer, *et une sonde qui sous-déclare ressemble trait pour trait à une sortie plus propre qu'elle
+ne l'est.*
+
+**Le dénominateur est aussi soigné que le numérateur** : une ligne de DÉPART À DEUX (« Je te
+suis. ») n'a pas de motif, donc la compter ferait baisser le taux sans qu'aucun défaut ait été
+corrigé. Et sans lecteur de fichier fourni, l'audit **refuse** plutôt que de rendre « zéro défaut » —
+ce verdict-là dirait exactement ce que dit une sortie parfaite, et c'est le contraire de la vérité.
+
+`formatMotifsLines()` rend le taux, les défauts par famille et des exemples réels.

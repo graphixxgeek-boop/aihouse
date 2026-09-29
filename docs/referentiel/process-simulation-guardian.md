@@ -96,3 +96,18 @@ inquiétant des deux : un rapport **déclaré lu mais absent du disque**.
 
 **Étape de process correspondante** : `lecture-rapports` dans le process de simulation
 (`god-of-all-process.mjs`), placée AVANT le sondage et les questions de calibrage.
+
+## Le plan d'action du postflight (`planDactionPostflight`, 2026-09-25, tâche #863)
+
+Ce contrôleur trouvait de vrais écarts **et s'arrêtait au constat**, ce que l'Article 28 interdit :
+un rapport n'est fini que quand ses constats sont devenus des tâches.
+
+**UN CONSTAT PAR FAMILLE, jamais un par écart** — la forme a déjà coûté deux erreurs : un plan qui
+liste cinq étapes manquantes l'une après l'autre **se lit comme cinq problèmes** alors qu'il n'y en a
+qu'un (l'archivage n'a pas été fait). Le compte ET son dénominateur voyagent avec le constat, sans
+quoi « 3 manquantes » ne dit pas si c'est 3 sur 5 ou 3 sur cinquante.
+
+**LES NON-VÉRIFIABLES NE SONT PAS DES ÉCARTS**, et les confondre serait le faux rouge que ce projet
+traque : sans le nom de la simulation, cinq étapes ne sont pas « ratées », elles ne sont **PAS
+MESURÉES**. Elles reçoivent leur propre famille, avec la seule tâche qui les concerne — relancer en
+fournissant le nom.
