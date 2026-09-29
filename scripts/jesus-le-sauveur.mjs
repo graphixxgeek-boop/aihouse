@@ -47,6 +47,8 @@ import { join } from "node:path";
 import { printReliabilityNotice, sh } from "./lib-shell.mjs";
 import { recordCliUsage, loadToolUsageHistory } from "./tool-usage.mjs";
 import { printReportHeader, buildPlanDaction, imprimerPlanDaction } from "./report-template.mjs";
+// LA DÉFINITION DE « CLOSE » SE LIT, ELLE NE SE RÉÉCRIT PAS (2026-09-29, tâche #1199) — cf. #1171.
+import { estStatutTermine, estStatutEcarte } from "./check-suivi-fidelity.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const REGISTRE = "docs/jesus-le-sauveur";
@@ -294,7 +296,14 @@ export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir
       if (cells.length && cells[cells.length - 1] === "") cells.pop();
       if (!cells.length || !/^\d+$/.test(cells[0])) continue;
       const statut = (cells[cells.length - 1] ?? "").toLowerCase();
-      if (/^(termin|ecart|écart)/.test(statut)) continue;
+      // JESUS AVAIT SA PROPRE DÉFINITION DE « CLOSE », ET ELLE COMPTAIT 14 TÂCHES DE TROP
+      // (2026-09-29, tâche #1199). `/^(termin|ecart|écart)/` lit le DÉBUT du statut : une ligne
+      // « Ouverte → Terminée (clôturée par #789) » commence par « ouverte », donc elle était
+      // comptée dans la file ACTIVE alors qu'elle est close depuis des jours. Mesuré : 14 lignes
+      // dans ce cas. C'est le défaut de #1171, quatrième lecteur du même registre, dans l'outil
+      // dont le métier est justement de dire si la file est fluide — il annonçait une file plus
+      // longue qu'elle n'est, c'est-à-dire un ralentissement qui n'existait pas.
+      if (estStatutTermine(statut) || estStatutEcarte(statut)) continue;
       if (/grand chantier/.test(statut)) continue;      // reportées par lui : hors de la file active
       const criticite = cells[5] ?? "";
       taches.push({
@@ -555,7 +564,8 @@ export function fluiditeDeLaFile({ dossier = "docs/suivi/sessions", lireDir = re
       const cells = ligne.split("|").slice(1).map((c) => c.trim());
       if (cells.length && cells[cells.length - 1] === "") cells.pop();
       if (!cells.length || !/^\d+$/.test(cells[0])) continue;
-      if (!/^termin/i.test(cells[cells.length - 1] ?? "")) continue;
+      // Même définition partagée qu'au-dessus : « Ouverte → Terminée » EST une clôture (#1199).
+      if (!estStatutTermine(cells[cells.length - 1] ?? "")) continue;
       const ouverte = Date.parse(cells[1] ?? "");
       if (!Number.isFinite(ouverte)) continue;
       fermees.push({ numero: Number(cells[0]), ouverte, sujet: (cells[3] ?? "").replace(/\*\*/g, "").slice(0, 60) });
