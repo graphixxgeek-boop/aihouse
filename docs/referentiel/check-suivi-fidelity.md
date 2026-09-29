@@ -225,3 +225,24 @@ prévient pas quand il se remplit, et un silence se lit exactement comme un « r
 **Le squelette partagé** s'appelle `auditParFichier()`. Il écarte `index.md`, comme
 `listerLesFichiersDeTaches()` : un index DÉCRIT un dossier, il n'en fait pas partie — son tableau de
 sommaire a déjà été compté comme quatre tâches une fois.
+
+## Un constat qui ne pouvait nommer aucun de ses sujets (2026-09-29, tâche #1214)
+
+**Trouvé en vérifiant mon propre travail** avec l'outil dont c'est le métier (Article 25). Le rapport
+signalait : « 3 tâches ouvertes sans mot-clé exploitable — ex. n°?, ?, ? ».
+
+**Le constat était JUSTE** — trois tâches ouvertes partagent bien le même mot-clé, donc citer ce mot
+ne dit plus laquelle — **mais il ne nommait aucune des trois**.
+
+**La cause** : `findMotsClesEnCollision()` lisait le champ `numero`, et son seul appelant réel,
+`findMotsClesManquants()`, construit ses tâches avec le champ `n`. Aucune erreur levée, un résultat
+qui a l'air complet, et des points d'interrogation à la place des numéros. **Exactement la famille
+de la tâche #1200**, où le gabarit des rapports ne savait pas lire le champ que onze outils
+écrivaient.
+
+**Ce que ça coûtait** : un constat qui ne peut pas nommer son sujet est un constat qu'on relit et
+qu'on repose. Il occupe la place d'une alerte sans jamais permettre d'agir.
+
+**Le champ se lit désormais sous ses deux noms**, et le point d'interrogation reste possible
+délibérément : une tâche dont le numéro est vraiment illisible se dit telle quelle plutôt que d'être
+écartée en silence.

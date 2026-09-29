@@ -157,7 +157,15 @@ export function findMotsClesEnCollision(taches = []) {
     const m = String(t.motCle ?? "").trim().toLowerCase();
     if (!m) continue;
     if (!par.has(m)) par.set(m, []);
-    par.get(m).push(t.numero ?? "?");
+    // LE NUMÉRO SE LIT SOUS SES DEUX NOMS, ET IL A FALLU QUE LE DÉFAUT SORTE POUR LE VOIR
+    // (2026-09-29, tâche #1214). Cette fonction lisait `t.numero` ; son seul appelant réel,
+    // `findMotsClesManquants`, construit ses tâches avec le champ `n`. Résultat : TOUTES les
+    // collisions se signalaient « (?, ?, ?) ». Le constat était juste — trois tâches ouvertes
+    // partagent bien le même mot-clé — mais il ne nommait AUCUNE des trois, donc personne ne
+    // pouvait agir dessus : un constat qui ne peut pas nommer son sujet est un constat qu'on
+    // relit et qu'on repose. Exactement la même famille que la tâche #1200, où un gabarit ne
+    // savait pas lire le champ que onze outils écrivaient.
+    par.get(m).push(t.numero ?? t.n ?? "?");
   }
   return [...par.entries()].filter(([, ns]) => ns.length > 1)
     .map(([mot, numeros]) => ({ mot, numeros, pourquoi: `${numeros.length} tâches ouvertes portent « ${mot} » (${numeros.join(", ")}) — citer ce mot ne dira plus laquelle` }));

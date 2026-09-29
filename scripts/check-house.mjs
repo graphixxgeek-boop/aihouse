@@ -21202,6 +21202,42 @@ async function testDeclarationNonRemesure() {
 }
 await testDeclarationNonRemesure();
 
+// ————————————————————————————————————————————————————————————————————————
+// UN CONSTAT QUI NE POUVAIT NOMMER AUCUN DE SES SUJETS
+// (2026-09-29, tâche #1214)
+// ————————————————————————————————————————————————————————————————————————
+async function testCollisionNommeSesTaches() {
+  const CR = await import('../scripts/criticite.mjs');
+  const CS = await import('../scripts/check-suivi-fidelity.mjs');
+
+  // ── 1. LE CHAMP SE LIT SOUS SES DEUX NOMS. La fonction lisait `numero` ; son seul appelant réel
+  // construit ses tâches avec `n`. Toutes les collisions se signalaient donc « (?, ?, ?) ».
+  const sousN = CR.findMotsClesEnCollision([{ n: '740', motCle: 'nommage', statut: 'En cours' }, { n: '747', motCle: 'nommage', statut: 'Ouverte' }]);
+  assert.deepEqual(sousN[0].numeros, ['740', '747'], 'a collision must NAME the tasks that collide, whichever of the two field names carries the number');
+  const sousNumero = CR.findMotsClesEnCollision([{ numero: '1', motCle: 'x', statut: 'En cours' }, { numero: '2', motCle: 'x', statut: 'Ouverte' }]);
+  assert.deepEqual(sousNumero[0].numeros, ['1', '2'], 'and the historical field name keeps working — a fix that swaps one blind spot for another fixes nothing');
+
+  // ── 2. LE POINT D'INTERROGATION RESTE POSSIBLE, ET C'EST VOULU : une tâche sans numéro lisible
+  // doit se dire telle quelle, jamais être écartée en silence.
+  assert.deepEqual(CR.findMotsClesEnCollision([{ motCle: 'y', statut: 'En cours' }, { motCle: 'y', statut: 'Ouverte' }])[0].numeros, ['?', '?'], 'a task whose number really cannot be read still shows as "?" — hiding it would be worse than naming it badly');
+
+  // ── 3. MUST LET PASS : un mot-clé porté par UNE seule tâche ouverte n'est pas une collision, et
+  // une tâche CLOSE ne compte pas — on ne cite plus ce qui est fini.
+  assert.deepEqual(CR.findMotsClesEnCollision([{ n: '1', motCle: 'seul', statut: 'En cours' }]), [], 'one task per keyword is not a collision');
+  assert.deepEqual(CR.findMotsClesEnCollision([{ n: '1', motCle: 'z', statut: 'En cours' }, { n: '2', motCle: 'z', statut: 'Terminé — fidèle' }]), [], 'a closed task is no longer cited, so it cannot collide with anything');
+
+  // ── 4. SUR LE VRAI REGISTRE (leçon L2) : le constat nomme désormais de vrais numéros, et plus
+  // un seul « ? ».
+  const reel = CS.findMotsClesManquants().filter((h) => h.collision);
+  if (reel.length) {
+    assert.ok(reel.every((h) => !/\?/.test(String(h.n))), `against the real register every collision must name its tasks, never "?" (${reel.map((h) => h.pourquoi).join(' · ')})`);
+  }
+
+  console.log("Passed: un constat qui ne pouvait nommer aucun de ses sujets (2026-09-29, tache #1214). TROUVE EN VERIFIANT MON PROPRE TRAVAIL avec l'outil dont c'est le metier, comme l'Article 25 le demande. check-suivi-fidelity signalait « 3 taches ouvertes sans mot-cle exploitable — ex. n°?, ?, ? ». Le constat etait JUSTE — trois taches ouvertes partagent bien le meme mot-cle, donc citer ce mot ne dit plus laquelle — mais il ne nommait AUCUNE des trois. LA CAUSE : la fonction lisait le champ `numero`, et son seul appelant reel construit ses taches avec le champ `n`. Exactement la meme famille que la tache #1200, ou un gabarit de rapport ne savait pas lire le champ que onze outils ecrivaient : un nom de champ qui ne correspond pas, aucune erreur levee, et un resultat qui a l'air complet. CE QUE CA COUTAIT : un constat qui ne peut pas nommer son sujet est un constat qu'on relit et qu'on repose — il occupe la place d'une alerte sans jamais permettre d'agir. Il nomme desormais 740, 747 et 768 pour « nommage », 745 et 793 pour « agence », 767 et 790 pour « charte ». ET LE POINT D'INTERROGATION RESTE POSSIBLE, deliberement : une tache dont le numero est vraiment illisible se dit telle quelle plutot que d'etre ecartee en silence.");
+}
+await testCollisionNommeSesTaches();
+
+
 
 
 
