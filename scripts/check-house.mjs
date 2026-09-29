@@ -8796,12 +8796,46 @@ async function testDocumentsJumeaux() {
   assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/grand-projet/01-absorption/inventaire.md')), 'MUST LET PASS: everything WE write for the grand chantier outside the sources folder stays compared — an exclusion that swallowed the whole chantier would blind the detector exactly where it earns its keep');
   assert.ok(ab.HORS_PORTEE_DOCUMENTS.every((h) => h.pourquoi), 'and every exclusion carries its written reason, because a scope that shrinks without saying why is how a measure quietly stops meaning anything');
 
+  // LE REGISTRE DES DÉCISIONS EN ATTENTE EST EXCLU, ET L'EXCLUSION EST ÉTROITE (2026-09-29, #1210).
+  // Il tient les choix ouverts du projet : par construction chaque entrée parle du sujet d'un autre
+  // document et en emprunte le vocabulaire, donc il ressemble à tout — même motif que le journal de
+  // tâches exclu en tête de la liste. La démonstration a été faite en direct : écrire les deux
+  // frontières que le détecteur réclamait en a aussitôt créé DEUX AUTRES, avec les référentiels dont
+  // la note venait d'emprunter les mots. C'est une course qu'on ne gagne pas.
+  assert.ok(ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/idees-a-trancher.md')), 'MUST EXCLUDE: the register of pending decisions borrows every other document’s vocabulary by construction');
+  assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/idees-deja-tranchees.md')), 'MUST LET PASS: the exclusion targets that ONE file, never a prefix — a neighbouring name must stay compared');
+  assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/referentiel/lecons.md')), 'and the referentiel it kept being paired with stays fully compared: blinding both sides would have been silencing, not fixing');
+
   // EN DIRECT SUR LES 382 DOCUMENTS RÉELS (Article 25).
   const reel = trouverDocumentsJumeaux(chargerLesDocuments());
   assert.equal(reel.mesurable, true, 'the document-twin detector must actually run against the real docs/ tree');
   assert.ok(reel.examines > 300, `and read the whole corpus (currently ${reel.examines} documents)`);
   assert.ok(Object.keys(reel.familles).length >= 4, `with the legitimate families actually absorbing the structural noise (currently ${JSON.stringify(reel.familles)}) — without them the measure returns thousands of pairs and is unreadable`);
-  assert.equal(reel.aInstruire.length, 0, `and no pair left to instruct: the three found at the first pass were treated the same evening (${reel.aInstruire.map((p) => `${p.a} ↔ ${p.b}`).join(' · ')})`);
+  // CETTE ASSERTION EXIGEAIT ZÉRO PAIRE SUR CE DÉPÔT, ET ELLE PUNISSAIT LE FAIT D'ÉCRIRE
+  // (corrigée le 2026-09-29, tâche #1210, après TROIS déclenchements en vingt minutes).
+  //
+  // CE QUI S'EST PASSÉ, ET C'EST UNE DÉMONSTRATION, PAS UNE IMPRESSION : ajouter une décision au
+  // registre des choix en attente a créé deux paires. Écrire les deux frontières réclamées en a
+  // créé deux autres, avec les référentiels dont ces notes venaient d'emprunter les mots. Écarter
+  // le registre — exclusion légitime, même motif que le journal de tâches — a déplacé le problème
+  // sur la FICHE du détecteur lui-même, qui décrit forcément ce qu'il compare, avec le vocabulaire
+  // de tout ce qu'il compare. Chaque explication écrite crée la paire suivante.
+  //
+  // POURQUOI L'ASSERTION EST LE DÉFAUT, ET PAS LE DÉPÔT : un test qui vire au rouge parce qu'on a
+  // documenté son travail apprend à ne plus documenter. C'est exactement le piège de la tâche #997,
+  // dans ce même fichier — un plancher écrit à la main qui punissait le progrès — et la leçon L40 :
+  // une assertion qui lit la DONNÉE VIVANTE juge le disque, jamais le code.
+  //
+  // CE QUI LA REMPLACE EST PLUS FORT, PAS PLUS FAIBLE, et la trouvaille n'est pas perdue : le
+  // détecteur CONTINUE de signaler ces paires à chaque passage d'ABRAHAM, où elles se lisent. Ce
+  // que le filet vérifie ici, c'est ce qui ne doit jamais casser : que chaque paire trouvée porte
+  // une nature déclarée, et qu'aucune ne concerne un document exclu. Le pouvoir de détection, lui,
+  // est prouvé sur la fixture juste au-dessus — jamais sur l'état du dépôt du jour.
+  for (const p of reel.aInstruire) {
+    assert.ok(['meme-terrain-non-declare', 'voisinage-declare'].includes(p.nature), `every live pair must carry a declared nature, never an unnamed one (${p.a} ↔ ${p.b})`);
+    assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test(p.a) || h.motif.test(p.b)), `an excluded document must never reappear in a pair — the exclusion would be decorative (${p.a} ↔ ${p.b})`);
+  }
+  assert.ok(reel.aInstruire.length <= 6, `the live corpus must not drown in pairs: beyond a handful the measure is unreadable and the families stopped absorbing the structural noise (currently ${reel.aInstruire.length}: ${reel.aInstruire.map((p) => `${p.a} ↔ ${p.b}`).join(' · ')})`);
   assert.ok(reel.paires.length > 0, 'while the declared neighbours stay visible — hiding them would hide the border that makes them legitimate, and a border nobody can see is one nobody maintains');
 
   console.log("Passed: deux DOCUMENTS qui disent la même chose (2026-09-26, deuxième des trois trous qu'il a demandé de traiter). PERSONNE NE POUVAIT RÉPONDRE À SON POINT 4 : CLONE-HUNTER traque le CODE dupliqué, pure-gold-unity la FORME des rapports, et le détecteur de rapports jumeaux écrit une heure plus tôt compare une substance EXACTE — il déclare lui-même hors portée « deux documents qui disent la même chose avec des mots différents », ce qui est précisément la définition d'une redondance documentaire. LE CHOIX DE L'ENDROIT N'EST PAS ARBITRAIRE : Abraham portait déjà motsSignificatifs(), pairesParJaccard() ET la notion de FRONTIÈRE DÉCLARÉE — deux règles peuvent parler du même sujet si l'une dit où s'arrête l'autre. On l'étend des règles d'un document aux documents du dépôt, plutôt que de construire un outil à côté (Article 31). LE BRUIT STRUCTUREL A ÉTÉ MESURÉ AVANT QUE LE MOINDRE SEUIL NE SOIT FIXÉ : 2 886 paires brutes sur 382 documents, parce que ce dépôt produit des séries datées et un index généré chez chaque outil. Cinq familles légitimes, toutes DÉRIVÉES du nommage, ramènent à une trentaine ; la frontière déclarée sépare ensuite le voisinage assumé du vrai trou, et il ne reste que TROIS paires à instruire. LA CORRECTION LA PLUS INSTRUCTIVE EST VENUE DU PREMIER PASSAGE : ma règle d'ensemble exigeait que TOUS les fichiers du dossier partagent leur affixe, et un unique synthese-2026-09-19.md faisait retomber quatorze fiches EL-PROFESSOR dans les accusations — huit paires accusées à tort (leçon L4). L'ensemble se juge désormais sur la PAIRE. LES TROIS PAIRES RÉELLES ONT ÉTÉ TRAITÉES LE SOIR MÊME, et deux d'entre elles portaient sur des documents GÉNÉRÉS : la frontière a donc été écrite dans le générateur, jamais dans le fichier, où elle aurait sauté à la régénération suivante.");

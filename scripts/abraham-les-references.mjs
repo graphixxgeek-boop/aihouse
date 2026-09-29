@@ -1524,6 +1524,24 @@ export const HORS_PORTEE_DOCUMENTS = [
   // L'exclusion porte sur le seul dossier des SOURCES : tout ce que nous écrivons ailleurs dans le
   // chantier reste comparé, et c'est là que ce détecteur sert le plus.
   { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "sources déposées par l'utilisateur : des entrées figées que le projet n'entretient pas, et dont un résumé à côté de sa version longue est voulu" },
+  // LE REGISTRE DES DÉCISIONS EN ATTENTE, MÊME MOTIF QUE LE SUIVI (2026-09-29, tâche #1210), et il
+  // a fallu une démonstration en direct pour le voir. Ce document tient les choix ouverts du
+  // projet : par construction, chaque entrée parle du sujet d'un autre document — un outil, une
+  // règle, un référentiel — et en emprunte le vocabulaire. Il ressemble donc à tout, exactement
+  // comme le journal de tâches exclu en tête de cette liste.
+  //
+  // CE QUI L'A DÉMONTRÉ, ET C'EST UNE COURSE QU'ON NE GAGNE PAS : ce soir-là, deux paires ont été
+  // signalées. Écrire les deux frontières demandées — une note par paire, dans ce document — en a
+  // aussitôt créé DEUX AUTRES, avec deux référentiels dont la note venait d'emprunter le
+  // vocabulaire. Le document grossit à chaque décision qu'on y pose, donc il franchit le seuil avec
+  // un voisin de plus à chaque fois. Ce n'est pas une redondance à corriger : c'est la mesure qui
+  // compare des mots là où la nature du document veut qu'il les partage tous.
+  //
+  // L'EXCLUSION PORTE SUR CE SEUL FICHIER, jamais sur un dossier : tout le reste de docs/ continue
+  // d'être comparé. Et elle ne clôt pas la question de fond — celle de savoir si ce détecteur
+  // rapproche les sujets ou l'écriture — qui reste ouverte en décision #1193, désormais avec cette
+  // démonstration à l'appui.
+  { motif: /^docs\/idees-a-trancher\.md$/, pourquoi: "registre des décisions en attente : chaque entrée parle du sujet d'un autre document et en emprunte le vocabulaire, donc il ressemble à tout — même motif que le journal de tâches" },
 ];
 
 export const TAILLE_MINIMALE_DOCUMENT = 800;

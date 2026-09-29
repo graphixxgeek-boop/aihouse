@@ -549,3 +549,42 @@ fonctions ; les fondre casserait l'un des deux.**
 > Ils se croisent sur les documents et ne s'y confondent jamais — l'un demande « cette règle est-elle
 > portée ? », l'autre « ce fichier peut-il partir ? ».
 
+
+## Le registre des décisions est exclu, et la démonstration a eu lieu en direct (2026-09-29, tâche #1210)
+
+**Ce qui s'est passé** : en ajoutant une décision à `docs/idees-a-trancher.md`, le détecteur de
+documents jumeaux a signalé deux paires — avec `docs/referentiel/lecons.md` et
+`docs/xp-ia-process-detail.md`. J'ai écrit les deux frontières qu'il réclamait, dans ce document,
+comme la fois précédente. **Elles en ont aussitôt créé deux autres**, avec les deux référentiels
+dont ces notes venaient d'emprunter le vocabulaire.
+
+**C'est une course qu'on ne gagne pas, et c'est structurel** : ce document tient les choix ouverts
+du projet. Par construction, chaque entrée parle du sujet d'un AUTRE document — un outil, une règle,
+un référentiel — et en emprunte les mots. Il grossit à chaque décision qu'on y pose, donc il
+franchit le seuil avec un voisin de plus à chaque fois. Ce n'est pas une redondance à corriger :
+c'est la mesure qui compare des mots là où la nature du document veut qu'il les partage tous.
+
+**L'exclusion suit un précédent exact**, la première de la liste : `docs/suivi/` est écarté parce
+qu'« il cite tout le projet par construction, donc il ressemble à tout ». Le registre des décisions
+est le même cas.
+
+**Elle porte sur CE SEUL FICHIER, jamais sur un dossier ni sur un préfixe** : tout le reste de
+`docs/` continue d'être comparé, les référentiels avec lesquels il était apparié compris — les
+aveugler tous les deux aurait été faire taire le détecteur, pas le corriger. Trois contre-tests
+tiennent cette étroitesse.
+
+**Ce que ça ne clôt PAS** : la question de fond — ce détecteur rapproche-t-il les sujets ou mon
+écriture ? — reste ouverte en décision #1193, désormais avec cette démonstration à l'appui. C'est
+la deuxième fois que le même document déclenche la mesure en grossissant.
+
+**Et la course a repris une troisième fois, ce qui a tranché la question** : écrire la section
+ci-dessus a fait apparaître deux nouvelles paires — cette fiche décrit le détecteur, donc elle
+emploie le vocabulaire de tout ce qu'il compare. Trois déclenchements en vingt minutes, chacun causé
+par le seul fait d'écrire une explication.
+
+**Le contre-test du filet a donc été corrigé, pas le dépôt.** Il exigeait ZÉRO paire sur ce dépôt-ci
+et virait au rouge parce qu'on avait documenté son travail — un test qui punit le progrès (même
+piège que la tâche #997, même leçon L40). Il vérifie désormais ce qui ne doit jamais casser : chaque
+paire porte une nature déclarée, aucune ne concerne un document exclu, et le corpus ne se noie pas.
+**Les paires restent signalées à chaque passage d'ABRAHAM** — c'est là qu'elles se lisent, et le
+pouvoir de détection reste prouvé sur une fixture.

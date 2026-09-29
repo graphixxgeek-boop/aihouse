@@ -573,6 +573,23 @@ Les deux ont grossi la même nuit sous la même plume. Ce n'est pas leur sujet q
 mon écriture — et une note longue pour l'expliquer créait aussitôt la paire suivante. Le
 raisonnement complet vit donc dans la ligne de suivi #1193, pas ici.
 
+## Voisinage déclaré : `docs/referentiel/lecons.md`
+
+*(2026-09-29.)* La frontière est nette et vaut d'être dite : le registre des leçons tient ce que le
+projet a **déjà payé** — une erreur commise, sa cause, et ce qu'elle a coûté. Celui-ci tient ce qui
+**n'est pas encore décidé**. L'un regarde en arrière sur des faits acquis, l'autre en avant sur des
+choix ouverts. Ils se croisent souvent — presque chaque décision en attente cite la leçon qui
+l'éclaire — mais une leçon ne se rediscute pas et une décision n'est pas une expérience.
+
+## Voisinage déclaré : `docs/xp-ia-process-detail.md`
+
+*(2026-09-29.)* Celui-là décrit le PROCESS par lequel une expérience se découvre, s'enregistre et
+ressort au bon moment ; celui-ci est un REGISTRE de choix en attente. Le premier dit comment on
+apprend, le second ce qu'on n'a pas encore tranché. Le rapprochement vient de ce qu'ils parlent
+tous deux de décisions et de mécanismes, avec le même vocabulaire — exactement la limite que la
+décision #1193 juste en dessous met sur la table, et c'est la **deuxième fois** que ce même
+document déclenche la mesure en grossissant.
+
 ## Voisinage déclaré : `docs/referentiel/organisation-agence.md`
 
 *(2026-09-29.)* Plusieurs décisions en attente ici portent sur l'organisation de l'outillage — qui
@@ -687,3 +704,53 @@ chantier de 8 fichiers, donc elle attend ton feu vert.
 factorisée. Fondre trois préambules sur quatre-vingt-douze serait du rangement local sur un défaut
 général — et ça ferait disparaître du relevé la seule trace visible d'une question qui vaut d'être
 posée.
+
+## #1209 — le registre d'un OUTIL a-t-il vraiment besoin qu'un AUTRE outil le lise ?
+
+| Numéro | Sujet | Décision |
+|---|---|---|
+| #1209 | Outillage — le critère « donnée fraîche sans lecteur » convient-il aux registres d'outils | à trancher |
+
+**Comment la question est arrivée** : data-archangel signale depuis la tâche #490 les données
+FRAÎCHES qu'aucun outil autre que leur producteur ne relit. Elles étaient dix-huit, elles sont
+**cinq** — et j'en ai fermé une hier soir pour de bonnes raisons (#1208 : le registre de
+FILET-EN-PARTS annonçait un gain chiffré que rien ne confrontait ; EZECHIEL le confronte désormais
+à son propre relevé chronométré).
+
+**Les cinq qui restent ne se ressemblent pas à celle-là** : `docs/jesus-le-sauveur/`,
+`docs/doc-report/`, `docs/le-classificateur/`, `docs/the-screener/`, `docs/reponses/`. Ce sont les
+registres de sortie d'outils — ce que chacun a trouvé, passage après passage.
+
+**Le vrai doute, et il porte sur le CRITÈRE plutôt que sur les cinq** : « personne ne lit » veut
+dire ici « aucun AUTRE SCRIPT n'exploite le contenu ». Mais le lecteur naturel du registre d'un
+outil, c'est **l'agent** — moi — quand je veux savoir ce que cet outil a trouvé les fois
+précédentes. Un second script qui relirait ces lignes relirait la sortie d'un outil qu'il peut
+appeler lui-même : il n'apprendrait rien qu'il ne sache déjà, et ce raisonnement est DÉJÀ écrit
+dans le dépôt pour `.banniere-post-commit.txt`, déclarée « sans lecteur, et c'est assumé » pour
+exactement ce motif.
+
+**Ce qui empêche de conclure tout seul** : la différence entre les cinq et la sixième est réelle.
+Le registre de FILET-EN-PARTS portait une AFFIRMATION CHIFFRÉE qu'une mesure pouvait démentir —
+c'est ça qui méritait un lecteur, pas le fait d'être un registre. Les cinq portent des constats en
+prose. Mais je ne peux pas décider à ta place que « ce que JESUS a trouvé la semaine dernière »
+n'intéresse aucun autre outil : c'est un jugement sur la valeur de ces contenus, pas un fait.
+
+**Trois issues :**
+
+1. **Déclarer les cinq « sans lecteur, et c'est assumé »**, avec la raison écrite une fois pour
+   toutes : le registre d'un outil se lit par l'agent, et un second script n'en tirerait rien.
+2. **Affiner le critère plutôt que la liste** : ne compter comme trou que les données qui portent
+   un CHIFFRE ou une AFFIRMATION VÉRIFIABLE — comme celui de FILET-EN-PARTS. Un registre en prose
+   ne serait alors plus compté, et le compteur redeviendrait actionnable.
+3. **Ne rien changer** : garder les cinq visibles, en acceptant qu'un compteur qui ne descend pas
+   finit par ne plus être lu (leçon L6).
+
+**Ma recommandation : la 2.** C'est la seule qui corrige la MESURE plutôt que la liste — le
+défaut n'est pas que cinq registres manquent d'un lecteur, c'est que le critère met dans le même
+sac une affirmation chiffrée que personne ne vérifie et un journal de prose que personne n'a de
+raison de relire. La 1 ferait descendre le compteur sans rien apprendre ; la 3 laisse une alarme
+qui ne peut pas s'éteindre.
+
+**Ce qui est fait en attendant, et pourquoi c'est tout** : rien. Inventer cinq lecteurs pour faire
+descendre un compteur serait exactement l'outil fabriqué pour cocher la case que l'Article 31
+interdit nommément.
