@@ -62,7 +62,7 @@ l'Agence inexportable sans que personne ne s'en aperçoive.
 | | Le texte | Ce qu'il gouverne |
 |---|---|---|
 | **Le Jeu** | **Article 0** de `CLAUDE.md` | l'esprit de Lia et Noé. Il a toujours parlé d'eux, et **jamais de l'outillage** |
-| **L'Agence** | `docs/loi-de-l-agence.md` | *« L'Agence sert la finalité de celui qui l'emploie, jamais la sienne. »* |
+| **L'Agence** | `docs/loi-de-l-agence.md` | *« L'Agence sert la finalité de celui qui l'emploie, jamais la sienne »* — et **l'expérience de celui qui s'en sert passe toujours avant le confort de l'Agence** |
 
 **Le test qui tranche en pratique** : une règle ajoutée à l'outillage qui ne serait vraie que pour
 la Maison IA vivante **viole la loi de l'Agence**. L'Agence n'aura jamais son propre Article 0 —

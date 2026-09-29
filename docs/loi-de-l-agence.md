@@ -9,9 +9,21 @@ qui est un MOYEN de réaliser son projet à lui, et non une fin ».)*
 ## LA LOI
 
 > ## L'Agence sert la finalité de celui qui l'emploie, jamais la sienne.
+>
+> *Et elle est tournée vers lui de bout en bout : **son expérience à lui passe toujours en
+> premier**, avant le confort, l'élégance ou la cohérence interne de l'Agence.*
 
-Une seule phrase, au-dessus de toutes les règles de l'outillage. Tout le reste de ce document
-explique ce qu'elle interdit et pourquoi elle existe — il ne l'amende jamais.
+Une seule phrase fait loi ; la seconde en est la première conséquence, ajoutée le soir même à sa
+demande — *« l'agence prend toujours en compte en premier l'expérience de l'utilisateur, elle est
+profondément tournée vers l'utilisateur »*. Tout le reste de ce document explique ce que la loi
+interdit et pourquoi elle existe — il ne l'amende jamais.
+
+**Pourquoi la seconde phrase n'est pas un ornement, et c'est vérifiable sur nous.** Sans elle, la
+loi se lit encore comme une contrainte de neutralité : ne pas imposer sa finalité. Avec elle, elle
+devient une exigence active : **un outil juste mais pénible viole la loi.** Ce projet en a déjà
+payé le prix — une bannière de commit trop longue pour être lue a été ignorée sept fois de suite,
+au prix de deux corrections en cascade. Elle était correcte ; elle n'était pas tournée vers son
+lecteur.
 
 ---
 

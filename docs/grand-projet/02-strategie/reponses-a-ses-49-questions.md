@@ -506,3 +506,135 @@ changent — et c'est pourquoi le bloc A des questions de calibrage se répond e
 | Le **contrat de réceptacle** pour les outils de l'acheteur (C31) n'existe pas — c'est le manque le plus net de la partie export | **RETENU** | tâche **#1154** — à construire à l'étape ④ du chemin |
 | **Rien ne mesure si l'Agence aide ou encombre** (Q7), alors qu'il pose la question en premier | **RETENU** | tâche **#1155** — en faire une mesure réelle plutôt qu'une impression |
 | Onze réponses dépendent d'une cible non validée | **À TRANCHER** | bloc A des questions de calibrage (#1151) |
+
+---
+---
+
+# PARTIE II — CE QUI A CHANGÉ DEPUIS, ET QUI MODIFIE LES RÉPONSES CI-DESSUS
+
+*(Ajouté le 2026-09-29 au soir, heure LUE. Tout ce qui précède a été écrit pendant la nuit, AVANT
+ses six documents et AVANT la conversation du soir. Cette partie dit ce qui a bougé — jamais en
+réécrivant les réponses d'origine, pour qu'on puisse toujours voir ce qu'on croyait la veille.)*
+
+## LES CINQ DÉCISIONS PRISES CE SOIR, ET CE QU'ELLES DÉPLACENT
+
+| La décision | Les réponses qu'elle modifie |
+|---|---|
+| **① Le Jeu est le PREMIER CLIENT de l'Agence**, pas son banc d'essai | **C1-C5+C7**, **C16** |
+| **② L'Agence a sa propre loi suprême**, distincte de l'Article 0 | **C6+C8+C13+C14**, **C16** |
+| **③ Plusieurs versions de l'Agence selon la taille du projet utilisateur** | **C23-C34**, **Q8** |
+| **④ La méthode est de RÉVÉLER, pas d'inventer** | **C40+C45** — confirmée, plus seulement proposée |
+| **⑤ Les deux niveaux manquants : VISION et OBJECTIF ULTIME** | **C1-C5+C7**, **C11+C12+C15** |
+
+### ① et ② — ce que ça change vraiment pour C16 (« qu'est-ce que le projet AGENCE selon toi ? »)
+
+La réponse d'origine décrivait l'Agence. **Elle ne pouvait pas dire ce qui la gouverne, parce que
+rien ne la gouvernait.** C'est réglé : `docs/loi-de-l-agence.md`.
+
+**Et une mesure faite ce soir change le diagnostic** *(commandes : `ls scripts/`, recherche du mot
+« Agence » dans le code)* :
+
+> **L'Agence n'a AUCUNE existence technique.** Pas de dossier à elle — elle vit dans `scripts/`,
+> mélangée au reste. Pas de manifeste, pas de point d'entrée unique. Le mot « Agence » apparaît dans
+> **17 fichiers sur 87**, uniquement en prose de commentaire. La seule constante qui porte son nom
+> est un chemin vers une page HTML.
+
+**Pire, et c'est le point** : SAFE-EXPORT la définit **par SOUSTRACTION** — `NE_PART_PAS_ET_C_EST_NORMAL`
+et `EXEMPTES_DU_KIT` disent ce qui ne part pas. Il n'existe **aucune déclaration positive** de ce
+qu'EST l'Agence. **Conséquence concrète : déposer un fichier dans `scripts/` l'enrôle dans l'Agence
+sans que personne ne le décide.** On ne peut pas exporter proprement ce qui n'est pas délimité.
+
+### ③ — Q8 a maintenant ses vrais chiffres
+
+Le tableau « version de l'Agence ↔ taille du projet » était théorique. Mesuré le 2026-09-29 :
+
+| | Lignes |
+|---|---|
+| Le Jeu, notre code réel | **5 301** |
+| L'Agence (`scripts/`, 87 fichiers) | **89 111** |
+| **Rapport** | **16,8 pour 1** |
+| Le seul filet de sécurité | 22 636, soit **4,3 fois le Jeu entier** |
+| Les 11 fichiers de plus de 2 000 lignes | 53 336, soit **59 % de l'Agence** |
+
+**Projection** : le Jeu à 35-40 % donnerait ~**14 100 lignes** une fois fini, soit un rapport de
+**6,3 pour 1** sans toucher à l'Agence.
+
+**LA CORRECTION QUI CHANGE LA CIBLE**, et elle vaut avant toute coupe : les lignes de `scripts/`
+**ne coûtent rien** — elles s'exécutent, elles n'entrent jamais dans le contexte de l'agent. Ce qui
+coûte se recharge à chaque message ou à chaque commit : la charte **22 747 tokens à chaque
+message**, la bannière post-commit **~11 600 à chaque commit**, les règles de travail **75 196
+quand elles sont lues**. Alléger 89 000 lignes sans toucher à ces trois-là ne changerait presque
+rien à la facture.
+
+---
+---
+
+# PARTIE III — LES QUESTIONS NÉES DE CETTE CONVERSATION
+
+*(Elles ne font PAS partie de ses 49. Elles sont nées le 2026-09-29 après la fin du mode nuit, et
+elles sont rassemblées ici, à part, pour qu'il puisse les distinguer d'un coup d'œil.)*
+
+## A — LES TROIS CAS D'INSTALLATION *(son idée du soir)*
+
+**Son idée** : quand l'Agence est installée chez quelqu'un, il y a trois situations —
+**① pas de projet** (l'Agence précède, elle accompagne la définition du projet et propose ses
+propres schémas de départ, ce qui donne une utilisation OPTIMALE) · **② un projet existe déjà**
+(elle sait s'intégrer sans cannibaliser ni se faire mettre à l'index, utilisation ADAPTATIVE) ·
+**③ l'Agence arrive en fin de projet** (vérifier, faire les bilans, accompagner la finalisation).
+
+**MESURÉ, ET LA RÉPONSE EST NETTE : ces trois cas n'existent NULLE PART dans le dépôt.** Ni dans la
+charte, ni dans le référentiel, ni dans un outil, ni dans les documents de conception de l'export.
+Aucune trace.
+
+**Comment on est passé à côté — et la réponse est structurelle, jamais un oubli d'attention.** Tout
+ce qui a été construit l'a été depuis l'intérieur d'un projet **déjà existant et déjà en cours**.
+Le cas ② est notre situation permanente, à ce point permanent qu'il est devenu invisible : on ne
+nomme pas l'eau quand on est le poisson. Les cas ① et ③ n'ont jamais eu de raison d'apparaître,
+parce qu'aucun d'eux ne s'est jamais produit ici.
+
+**MON AVIS CRITIQUE, et il ne va pas dans le sens de sa demande** *(il m'a demandé de ne jamais
+chercher à lui plaire)* : **l'axe est juste, mais l'ordre proposé ne l'est pas.**
+
+- **Le cas ② est le seul qu'on puisse VÉRIFIER aujourd'hui** — c'est nous. Le traiter d'abord donne
+  une réponse éprouvée plutôt qu'imaginée, et il produit au passage la définition de l'Agence qui
+  manque (on ne sait pas « prendre sa place » sans savoir où l'on commence et où l'on s'arrête).
+- **Les cas ① et ③ sont conçus pour des utilisateurs qui n'existent pas encore.** Les construire
+  maintenant, c'est bâtir pour des clients imaginaires — le travers exact que ce projet reproche
+  partout ailleurs sous le nom de « l'outil fabriqué pour cocher la case ». Ils méritent d'être
+  **écrits comme intentions déclarées**, pas construits.
+- **Et il y a un piège dans le cas ①** : proposer une charte-type « parfaitement calibrée sur le
+  fonctionnement de l'Agence » est *exactement* ce que la loi de l'Agence interdit — imposer sa
+  philosophie au lieu de laisser le client projeter la sienne. La frontière existe mais elle est
+  fine : proposer une STRUCTURE vide (des emplacements, une numérotation stable, un référentiel
+  organisé) est légitime ; proposer un CONTENU de valeurs ne l'est pas.
+
+**QUESTIONS QUI RESTENT :** dans quel ordre ? · le cas ① propose-t-il une structure seule ou aussi
+du contenu ? · qui décide, dans le cas ②, de la place que prend l'Agence ?
+
+## B — CE QU'ON A OUBLIÉ D'AUTRE *(sa question : « qu'est-ce qu'on a oublié d'autre ? »)*
+
+Cherché avec la même méthode que pour les trois cas — mesuré, jamais supposé :
+
+| Le trou | État |
+|---|---|
+| **L'Agence n'a aucune existence technique** — pas de dossier, pas de manifeste, définie par soustraction | **jamais nommé nulle part** |
+| **La stratégie de SAUVEGARDE de la version finalisée** | demandée dans `COMMANDE IMPORTANTE.md`, **n'existe pas** |
+| **La stratégie de MIGRATION vers la version allégée** | idem, **n'existe pas** |
+| **Les recherches web enregistrées sur disque** (règle qu'il a posée, rétroactive) | **jamais appliquée** |
+| **Rien ne mesure si l'Agence aide ou encombre** (sa Q7) | tâche #1155, toujours ouverte |
+| **Aucun indicateur ne surveille la santé du JEU** — le seul instrument du ton coûte des appels API et ne tourne pas | **trou permanent** |
+
+## C — LES QUESTIONS OUVERTES, À TRANCHER AVEC LUI
+
+1. **Puis-je jouer le rôle de CLIENT de l'Agence et mesurer silencieusement ?** *(sa question)* —
+   techniquement oui, et je dirai comment. Reste à décider **quoi** mesurer, et **quand** le dire.
+2. **CLAUDE.md : tout remettre à jour, ou pas ?** Il dit préférer tout, et refuse de foncer par
+   « rigidité psychologique et aveuglement d'enthousiasme » — sa formule. **La frontière entre ce
+   qui bouge dans la GRANDE ÉVOLUTION et ce qui ne peut pas bouger n'est pas tracée.**
+3. **Quelle taille cible pour l'Agence ?** Il a constaté que le modèle ralentissait à mesure que le
+   code grossissait. **La cause n'est pas mesurée** — et la mesure de ce soir suggère que ce n'est
+   probablement PAS le nombre de lignes de `scripts/`.
+4. **L'OBJECTIF ULTIME** — à trancher en s'appuyant sur ses six documents et sur les notes.
+5. **Deux blocs de 15 questions de dégrossissage**, qu'il a demandés pour avancer avant les
+   suivantes.
+6. **Redéfinir la COMMANDE elle-même**, qu'il estime en train d'être mise à jour par nos échanges.
