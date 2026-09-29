@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LES DÉCISIONS QUI T'ATTENDENT — présentées par lots</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T01:58:31.331Z</div>
+    <h1>LES DÉCISIONS QUI T'ATTENDENT — présentées par lots</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/decisions-qui-attendent.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 — heure LUE, source système. Tâche #1163. JESUS le dit lui-même : « les lui présenter par lots est le seul geste qui reste de mon côté ».)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/02-strategie/la-cible-2026-09-29.md</code>
+<em>ce qui attend une décision retarde la cible autant que ce qui reste à construire.</em></p></div>
+<hr>
+<h3>POURQUOI CE DOCUMENT, ET POURQUOI MAINTENANT</h3>
+<p><strong>Le contexte.</strong> Treize décisions t'attendent, la plus ancienne depuis sept jours. Elles sont éparpillées dans le suivi, chacune au fond d'une ligne parmi mille.</p>
+<p><strong>Ce que JESUS mesure, et ce n'est pas une opinion sur ton rythme</strong> : « au-delà d'un certain remplissage, le temps d'attente d'une file n'augmente plus proportionnellement, <strong>il explose</strong> — donc chaque décision de plus ralentit AUSSI toutes les autres, y compris les faciles. C'est une propriété des files. »</p>
+<p><strong>Ce document ne te reproche rien.</strong> Il rassemble, il chiffre ce qui a changé depuis, et il donne ma recommandation pour chacune — pour que répondre coûte une minute au lieu d'une relecture.</p>
+<p><strong>Aucune n'est bloquante pour le grand chantier.</strong> Elles peuvent toutes attendre le calibrage.</p>
+<hr>
+<h3>LOT 1 — TROIS QUI SE RÉPONDENT EN UN MOT</h3>
+<h4>#819 — Le filet de sécurité : faut-il l'accélérer ? <em>(4 jours)</em></h4>
+<p><strong>CE QUI A CHANGÉ DEPUIS, ET ÇA CHANGE LA QUESTION.</strong> Le relevé sur lequel la décision reposait annonçait <strong>140 s</strong> ; il était périmé et personne ne le savait. Mesure refaite cette nuit : <strong>94 s</strong> — 33 % de gain qui existaient déjà. Et avec <code>filet-en-parts</code>, le même verdict tombe en <strong>~60 s d'horloge</strong>.</p>
+<p><strong>Les trois plus lents aujourd'hui</strong> : ABRAHAM 12,8 s · les idées à trancher 7,8 s · la classification 5,7 s — <strong>26,3 s, soit 28 % du total</strong> (contre 44 % à l'époque de la question).</p>
+<p><strong>Ma recommandation : (1) ne rien faire pour l'instant.</strong> Le gain plausible est passé de « 15 à 20 s sur 44 s » à « quelques secondes sur 60 ». L'option (3), un mode rapide au pre-commit, reste écartée : elle rendrait le garde-fou principal PARTIEL <strong>tout en affichant le même vert</strong> qu'un contrôle complet.</p>
+<hr>
+<h4>#842 — « Rentabiliser les trouvailles » : les leçons servent-elles ?</h4>
+<p><strong>L'outil existe et son verdict est net</strong> : <strong>aucune des 45 entrées n'a jamais été jugée appliquée</strong> — ni dans un sens, ni dans l'autre. 7 leçons ne sont jamais remontées sur 140 à 255 occasions chacune ; 11 remontent souvent sans jamais être jugées.</p>
+<p><strong>Pourquoi je ne tranche pas, et ce n'est pas une dérobade</strong> : <code>enregistrerXp()</code> REFUSE mécaniquement un jugement qui ne porte pas <code>parUtilisateur: true</code> — <strong>parce que tu l'as voulu ainsi</strong> (« c'est moi à la fin qui te dis si elle est propre »).</p>
+<p><strong>Ma recommandation</strong> : juger <strong>cinq</strong> entrées, pas quarante-cinq. Cinq suffisent à savoir si le registre sert, et quarante-cinq ne se font jamais.</p>
+<hr>
+<h4>#845 — Les cinq plus anciennes tâches ouvertes : on les garde ou on les écarte ?</h4>
+<p><strong>#147</strong> (objectifs chiffrés par membre) · <strong>#179</strong> (CASSANDRA connaît chaque membre) · <strong>#279</strong> (allègement de CLAUDE.md — <strong>reportée par toi, donc PAS en retard</strong>) · <strong>#390</strong> (échelle d'ARGUS) · <strong>#490</strong> (données que personne ne lit).</p>
+<p><strong>Pourquoi je ne tranche pas</strong> : écarter une tâche est une décision, et la leçon L22 interdit de rouvrir ou de fermer ce que tu as sciemment mis de côté.</p>
+<p><strong>Ma recommandation</strong> : #279 reste reportée (c'est ton choix), les quatre autres se rattachent aux étapes du chemin plutôt que d'être écartées.</p>
+<hr>
+<h3>LOT 2 — TROIS QUI DEMANDENT UN VRAI ARBITRAGE</h3>
+<h4>#767 — Deux règles à fort levier qui manquent à la charte <em>(4 jours)</em></h4>
+<p>Tu demandais : « est-ce que tu vois d'autres types de règles qui manquent de ce type ? »</p>
+<p><strong>(A) LA MESURE AVANT L'OPINION</strong> — ne jamais avancer un chiffre qu'on n'a pas mesuré, et dire « je n'ai pas mesuré » plutôt que d'estimer. <strong>C'est le fil rouge de tout ce projet et aucun Article ne le porte frontalement.</strong> <strong>(B) LE LIVRABLE EST UN FICHIER, JAMAIS UN MESSAGE</strong> — un message se perd dans le défilement et ne survit pas à une session.</p>
+<p><strong>Deux écartées volontairement</strong>, parce que déjà portées ailleurs : « rien ne se termine sans son verdict » (process XP) et « l'ordre des chantiers ne se réordonne jamais seul » (Article 26).</p>
+<p><strong>Ma recommandation : (A) oui, (B) non.</strong> (A) manque vraiment. (B) est déjà tenue dans les faits, et la charte porte 32 Articles — le budget, même souple, dit de préférer une seule.</p>
+<hr>
+<h4>#814 — Six registres : un lecteur, ou l'absence assumée ? <em>(4 jours)</em></h4>
+<p><code>.circle-tasks-last-run.json</code> · <code>docs/filet-en-parts/</code> · <code>docs/le-classificateur/</code> · <code>docs/the-screener/</code> · <code>docs/doc-report/</code> · <code>docs/reponses/</code>.</p>
+<p><strong>Ce qui a changé</strong> : le chiffre est passé de <strong>18 à 6</strong>, et deux des sorties étaient de <strong>fausses accusations dues à la mesure</strong>, pas de vrais trous.</p>
+<p><strong>Ma recommandation : l'absence assumée pour les six, écrite noir sur blanc.</strong> Une absence déclarée vaut mieux qu'un trou, et brancher six lecteurs qui ne serviront à personne coûterait six obligations de plus.</p>
+<hr>
+<h4>#830 — Un outil qui vérifie la logique et les trous PARTOUT ?</h4>
+<p><strong>La réponse technique est oui, mais pas dans la couche gratuite.</strong> ARGUS et HARMONIA ont deux couches ; une idée ou une conversation n'ont aucun motif à balayer, donc seule la couche à raisonnement peut les lire — <strong>elle est payante</strong>.</p>
+<p><strong>Trois formes</strong> : (A) une commande sur un texte fourni · (B) un passage sur un SUJET du dépôt, ce que tu demandais à l'origine · <strong>(C) une veille continue sur les conversations, que je DÉCONSEILLE</strong> — aucun accès mécanique à l'historique n'existe, et <strong>un outil qui prétendrait le lire mentirait</strong>.</p>
+<p><strong>Ma recommandation : (B), à la demande.</strong> C'est ta demande d'origine, et son coût est visible avant chaque passage.</p>
+<hr>
+<h3>LOT 3 — DEUX QUI SONT DÉJÀ RÉSOLUES, ET QU'IL SUFFIT DE FERMER</h3>
+<h4>#390 — ARGUS et CLONE-HUNTER sont mesurés à l'échelle du dépôt, pas de l'outil <em>(7 jours)</em></h4>
+<p>Un outil parfaitement propre affiche quand même <code>partiel</code> à cause d'une trouvaille <strong>ailleurs</strong> dans le dépôt. <strong>Ce n'est pas corrigeable uniformément</strong> : la couche mécanique d'ARGUS ne scanne que <code>lib/life.ts</code> et des marqueurs TODO — aucune trouvaille n'y est attribuable à un outil.</p>
+<p><strong>Deux lectures légitimes du palier</strong> : « le réseau est au vert » contre « CET outil est au vert ».</p>
+<p><strong>Ma recommandation : écarter avec sa raison écrite.</strong> C'est une imprécision consignée, pas un défaut, et elle est déjà dans <code>points-fragiles.md</code>.</p>
+<hr>
+<h4>#823 — L'origine « spontane » qu'aucun chemin automatique n'écrit</h4>
+<p><strong>Mesuré sur 78 fichiers et 2 197 événements : une seule origine déclarée sur six n'est jamais écrite.</strong> Le travail est fait, la mesure est nette.</p>
+<p><strong>Ma recommandation : fermer.</strong> Il ne reste qu'à décider si « spontane » doit être retirée du vocabulaire ou recevoir un chemin — et la première suffit.</p>
+<hr>
+<h3>CE QUE COÛTE DE NE PAS DÉCIDER, mesuré</h3>
+<table><thead><tr><th>Ce qui attend</th><th>Effet réel aujourd'hui</th></tr></thead><tbody><tr><td><strong>13 décisions en même temps</strong></td><td>chaque nouvelle ralentit <strong>aussi</strong> les faciles — propriété des files, jamais une opinion</td></tr><tr><td><strong>La plus ancienne : 7 jours</strong></td><td>#390, dont la réponse tient en une ligne</td></tr><tr><td><strong>45 leçons jamais jugées</strong></td><td>le registre grossit sans que personne sache s'il sert</td></tr><tr><td><strong>6 registres sans lecteur</strong></td><td>six données fraîches que seul leur producteur relit</td></tr></tbody></table>
+<p><strong>Six des treize sont dans ce document avec une recommandation en une ligne.</strong> Les sept autres sont des idées en attente dans <code>docs/idees-a-trancher.md</code>, qui ne bloquent rien.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>13 décisions attendent en même temps, la plus ancienne depuis 7 jours</td><td><strong>RETENU</strong></td><td>tâche <strong>#1163</strong> — ce document, huit décisions présentées par lots avec leur recommandation</td></tr><tr><td>La décision #819 reposait sur un relevé périmé (140 s au lieu de 94 s)</td><td><strong>RETENU</strong></td><td>déjà corrigé (#1152) : la question change, et la réponse recommandée aussi</td></tr><tr><td>Aucune des 45 leçons n'a jamais été jugée appliquée</td><td><strong>À TRANCHER</strong></td><td>#842 — et le mécanisme refuse de juger à sa place, par sa propre décision</td></tr><tr><td>Les cinq plus anciennes tâches ouvertes attendent un arbitrage</td><td><strong>À TRANCHER</strong></td><td>#845 — la leçon L22 interdit de fermer ce qu'il a mis de côté</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/decisions-qui-attendent.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

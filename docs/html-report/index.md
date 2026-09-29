@@ -16,3 +16,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/questions-de-calibrage.html` | `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.md` | 18657 | 2026-09-29 00:36Z |
 | `docs/grand-projet/html/reponses-a-ses-49-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 38966 | 2026-09-29 00:55Z |
 | `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 20367 | 2026-09-29 01:11Z |
+| `docs/grand-projet/html/decisions-qui-attendent.html` | `docs/grand-projet/02-strategie/decisions-qui-attendent.md` | 16104 | 2026-09-29 01:58Z |
