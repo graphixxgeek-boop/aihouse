@@ -130,7 +130,9 @@ la source.
 |---|---|---|
 | `syntheses/PHILOSOPHIE_ET_POLITIQUE.md` | `PHILOSOPHIE ET POLITIQUE` | 4 blocs, 82 % du contenu |
 | `syntheses/FIXER_UN_OBJECTIF_ULTIME.md` | `FIXER UN OBJECTIF ULTIME AU PROJET` | 5 idées, document entier |
+| `syntheses/COMMENT_ASSURER_LA_COHERENCE.md` | `COMMENT ASSURER LA COHERENCE` | 4 idées, document entier |
 
-**Les quatre restantes** — `COMMENT ASSURER LA COHERENCE`, `ARCHITECTURE DES NIVEAUX`,
-`ARCHITECTURE FONCTIONNELLE`, `DE LA STRATEGIE A LA TACHE` — suivront dans cet ordre : les deux
-premières nourrissent le cadre, les deux dernières les étapes ③ et ④.
+**Les trois restantes** — `ARCHITECTURE DES NIVEAUX` (3 444 mots), `ARCHITECTURE FONCTIONNELLE`
+(1 123) et `DE LA STRATEGIE A LA TACHE` (5 960) — suivront dans cet ordre. Les trois premières
+faites nourrissaient le CADRE (philosophie, objectif ultime, cohérence) ; celles-ci nourrissent les
+étapes ③ et ④, et elles sont nettement plus longues.
