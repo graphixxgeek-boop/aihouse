@@ -20,3 +20,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/reponses-aux-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 48671 | 2026-09-29 18:53Z |
 | `docs/grand-projet/html/reponses-a-ses-49-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 48671 | 2026-09-29 18:54Z |
 | `docs/grand-projet/html/questions-de-degrossissage.html` | `docs/grand-projet/02-strategie/questions-de-degrossissage.md` | 19484 | 2026-09-29 20:08Z |
+| `docs/grand-projet/html/les-cinq-impossibles.html` | `docs/grand-projet/02-strategie/les-cinq-impossibles.md` | 16275 | 2026-09-29 21:27Z |

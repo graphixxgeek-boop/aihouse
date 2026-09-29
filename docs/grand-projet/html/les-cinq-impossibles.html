@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les cinq impossibles</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T21:27:38.006Z</div>
+    <h1>Les cinq impossibles</h1>
+    <p class="sub">Notre philosophie, révélée depuis nos propres mécanismes — jamais inventée</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-09-29 au soir. <strong>Aucune de ces réponses n'a été inventée</strong> : chacune existait déjà dans la charte, dans une leçon, ou dans un mécanisme qui REFUSE pour de vrai. Ce document les rassemble, il ne les crée pas.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/01-absorption/syntheses/PHILOSOPHIE_ET_POLITIQUE.md</code>
+*le test des cinq impossibles vient de son document Copilot, et la synthèse l'a désigné comme le
+passage le plus rentable des six.*</p></div>
+<hr>
+<h3>POURQUOI CE TEST PLUTÔT QU'UN AUTRE</h3>
+<p>Le document propose cinq questions : <em>que refusons-nous absolument · que n'autoriserons-nous jamais · que n'automatiserons-nous jamais · que ne déléguerons-nous jamais · que ne sacrifierons-nous jamais ?</em> Avec cette remarque : <strong>« les réponses définissent souvent mieux la philosophie que les valeurs elles-mêmes »</strong>.</p>
+<p><strong>Il a raison, et pour une raison qu'il ne donne pas</strong> : une valeur affichée ne coûte rien. Un refus, si — il se paie en fonctionnalités qu'on n'aura pas. <strong>Ce qu'on refuse est donc vérifiable, là où ce qu'on proclame ne l'est pas.</strong></p>
+<p><strong>Et c'est la méthode du projet</strong> — <em>« il y a beaucoup de choses à RÉVÉLER et non à INVENTER »</em>. Chaque réponse ci-dessous porte donc <strong>son porteur réel</strong> : l'Article, la leçon, ou le mécanisme qui la fait tenir. <strong>Une réponse sans porteur n'est pas une conviction, c'est une intention</strong> — et il y en a, elles sont signalées comme telles.</p>
+<hr>
+<h3>① CE QUE NOUS NE SACRIFIERONS JAMAIS</h3>
+<table><thead><tr><th>Ce qu'on ne sacrifie pas</th><th>Son porteur</th></tr></thead><tbody><tr><td><strong>L'esprit de Lia et Noé</strong> — rugueux, sarcastique, jamais consensuel</td><td><strong>Article 0</strong>, loi suprême du Jeu · <code>check-spirit</code> est le seul outil qui touche la sortie RÉELLE</td></tr><tr><td><strong>La finalité de celui qui emploie l'Agence</strong>, jamais la sienne propre</td><td><code>docs/loi-de-l-agence.md</code>, et son interdiction testable : l'Agence n'aura jamais son propre Article 0</td></tr><tr><td><strong>La traçabilité</strong> — d'où vient un chiffre, qui a décidé quoi, pourquoi</td><td>Articles 27, 28 et 32, et leurs garde-fous qui refusent un commit</td></tr><tr><td><strong>L'expérience de celui qui s'en sert</strong>, avant le confort de l'Agence</td><td>la loi de l'Agence, seconde phrase — <em>un outil juste mais pénible viole la loi</em></td></tr></tbody></table>
+<p><strong>Le prix déjà payé pour le premier</strong> : deux cerveaux Gemini séparés au lieu d'un, alors qu'un seul coûterait moitié moins. L'Article 8 le dit explicitement — <em>« maintenue malgré son coût »</em>.</p>
+<hr>
+<h3>② CE QUE NOUS N'AUTORISERONS JAMAIS</h3>
+<table><thead><tr><th>Ce qui est interdit</th><th>Son porteur, et il REFUSE pour de vrai</th></tr></thead><tbody><tr><td><strong>Un satisfecit rendu sur zéro donnée</strong></td><td><code>jeNeSaisPas()</code> <strong>lève une erreur</strong> si on ne dit pas QUOI n'a pas pu être mesuré et POURQUOI — « une abstention sans objet ni cause ne se distingue pas d'un oubli »</td></tr><tr><td><strong>Un degré de confiance sans sa raison</strong></td><td><code>avecConfiance()</code> <strong>lève une erreur</strong> — « probable sans raison n'est pas un degré de confiance, c'est une précaution de style »</td></tr><tr><td><strong>Une date fabriquée plutôt que lue</strong></td><td><strong>trois</strong> fonctions distinctes lèvent une erreur en citant l'Article 32, et <code>findHorodatagesFuturs()</code> refuse le commit</td></tr><tr><td><strong>Un rapport sans titre</strong></td><td><code>buildReportFrame()</code> lève une erreur</td></tr><tr><td><strong>Désactiver un test pour obtenir du vert</strong></td><td>déclaré non négociable dans les règles de reprise</td></tr></tbody></table>
+<p><strong>Ce sont les seuls « jamais » du projet qui ne reposent pas sur ma mémoire</strong> : ils sont écrits en code, et le code refuse. <strong>C'est la forme la plus forte qu'un principe puisse prendre ici.</strong></p>
+<hr>
+<h3>③ CE QUE NOUS N'AUTOMATISERONS JAMAIS</h3>
+<table><thead><tr><th>Ce qui reste humain</th><th>Son porteur</th></tr></thead><tbody><tr><td><strong>Juger qu'une leçon a été APPLIQUÉE</strong></td><td><code>enregistrerXp()</code> <strong>lève une erreur</strong> sans <code>parUtilisateur: true</code> — « jamais l'agent sur son propre travail »</td></tr><tr><td><strong>Choisir un NOM</strong></td><td><code>agent-des-noms</code> <strong>lève la même erreur</strong> — « un nom n'est valable que CHOISI PAR L'UTILISATEUR »</td></tr><tr><td><strong>Ranger un Article par famille</strong></td><td>liste manuelle <strong>déclarée comme telle</strong> : c'est un jugement, aucun signal mécanique ne le rend. Seule la COUVERTURE est mécanisée</td></tr><tr><td><strong>Décider qu'un outil ne sert plus</strong></td><td>aucun mécanisme ne le fait, et c'est écrit : le compteur d'usage mesure des passages, jamais de l'utilité</td></tr></tbody></table>
+<p><strong>Le point commun des quatre, et c'est ça la conviction</strong> : <strong>on n'automatise jamais un jugement de VALEUR sur notre propre travail.</strong> On automatise la mesure ; on refuse d'automatiser le verdict.</p>
+<hr>
+<h3>④ CE QUE NOUS NE DÉLÉGUERONS JAMAIS</h3>
+<table><thead><tr><th>Ce qui lui revient</th><th>Son porteur</th></tr></thead><tbody><tr><td><strong>La décision finale, sur tout sujet</strong></td><td>le process du mode autonome : <em>« aucune autorité de décision supplémentaire n'est accordée »</em>, même la nuit</td></tr><tr><td><strong>Toute tension entre sa demande et la charte</strong></td><td><strong>Article 14</strong>, et sa DOUBLE confirmation — jamais après une seule</td></tr><tr><td><strong>Rouvrir ou fermer ce qu'il a sciemment mis de côté</strong></td><td>règle tenue dans les décisions en attente : écarter une tâche est une décision, pas un constat</td></tr><tr><td><strong>Ce qui fait LOI</strong></td><td>cinq documents seulement font loi, et leur liste est manuelle avec une raison par entrée</td></tr></tbody></table>
+<p><strong>Ce qu'on délègue en revanche volontiers</strong> : la mesure, le repérage, le refus mécanique, le rappel. <strong>La frontière est nette — les outils CONSTATENT, ils ne tranchent pas.</strong></p>
+<hr>
+<h3>⑤ CE QUE NOUS REFUSONS ABSOLUMENT</h3>
+<table><thead><tr><th>Le refus</th><th>D'où il vient, et ce qu'il a déjà coûté</th></tr></thead><tbody><tr><td><strong>Faire puis défaire</strong></td><td>sa consigne du 2026-09-29 : <em>« pas la peine de perdre du temps à faire puis défaire »</em>. C'est ce qui a placé le rangement de <code>scripts/</code> à l'étape ④ plutôt que ce soir</td></tr><tr><td><strong>Un outil fabriqué pour cocher une case</strong></td><td><strong>Article 31, faille 2</strong> : un script qui imprime ce que j'aurais écrit de tête n'est pas un outil. Critère : il doit pouvoir rendre un résultat que je ne connaissais pas d'avance</td></tr><tr><td><strong>Un garde-fou qui accuse à tort</strong></td><td><strong>leçon L4</strong>, payée cinq fois ce soir : un détecteur qui accuse le geste normal cesse d'être lu, et il est alors pire qu'absent</td></tr><tr><td><strong>Une copie tenue à la main sans rien qui détecte l'écart</strong></td><td><strong>Article 24</strong>, et quatre cas réels où la promesse de synchronisation avait déjà cessé d'être vraie</td></tr><tr><td><strong>Corriger une occurrence au lieu de la classe</strong></td><td><strong>leçon L37</strong> — ce soir encore, une correction a révélé quatre autres occurrences du même défaut</td></tr></tbody></table>
+<hr>
+<h3>CE QUE CE TEST RÉVÈLE, ET QUI N'ÉTAIT PAS VISIBLE AVANT</h3>
+<p><strong>1. Notre philosophie tient en une phrase, et elle porte sur la CONNAISSANCE, pas sur le code.</strong> Quatorze des vingt refus ci-dessus parlent de la même chose : <strong>ne jamais laisser passer pour un fait ce qui n'en est pas un.</strong> Une date supposée, un chiffre non mesuré, une confiance sans raison, un zéro qui veut dire « je n'ai pas regardé », un accord qui ressemble à une réponse. <strong>C'est ça notre conviction centrale</strong>, et aucun de nos 34 Articles ne la formule ainsi.</p>
+<p><strong>2. C'est exactement la règle que JESUS proposait d'ajouter à la charte</strong> — <em>« LA MESURE AVANT L'OPINION »</em>, tâche <strong>#767</strong>, en attente de son arbitrage depuis cinq jours. <strong>Trois sources indépendantes la réclament maintenant</strong> : JESUS, le document Copilot, et ce test appliqué à nous.</p>
+<p><strong>3. La différence de FORCE entre les cinq questions est mesurable.</strong> Les impossibles ② et ③ sont portés par du code qui lève une erreur — indestructibles. Les ① , ④ et ⑤ ne sont portés que par des textes — ils survivent à une session parce qu'ils sont écrits, jamais parce qu'ils sont vrais. <strong>Cette asymétrie est une information sur nous, pas un défaut à corriger</strong> : on ne mécanise pas un jugement de valeur, c'est justement l'impossible ③.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>Nos réponses aux cinq impossibles existaient, dispersées, jamais rassemblées</td><td><strong>RETENU</strong></td><td>tâche <strong>#1243</strong> — ce document</td></tr><tr><td>Notre conviction centrale (« ne jamais laisser passer pour un fait ce qui n'en est pas un ») n'est formulée dans aucun Article</td><td><strong>À TRANCHER</strong></td><td>c'est la règle #767, en attente depuis cinq jours et désormais réclamée par trois sources</td></tr><tr><td>Trois des cinq impossibles ne reposent que sur des textes</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>c'est l'impossible ③ lui-même : on ne mécanise pas un jugement de valeur. Le déclarer EST la protection (Article 27)</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/les-cinq-impossibles.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
