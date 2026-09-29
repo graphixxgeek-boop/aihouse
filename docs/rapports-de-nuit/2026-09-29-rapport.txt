@@ -420,6 +420,39 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   agent la cherchera. Le relevé passe de 14 grappes à 8.
 
 
+2duodecies. TROIS FOIS LE MÊME PIÈGE, ET LA TROISIÈME A TRANCHÉ
+----------------------------------------------------------------
+  Trois tâches de plus, et elles racontent une seule chose : ce qu'il faut refuser de faire.
+
+  · UN REGISTRE ANNONÇAIT UN GAIN QUE PERSONNE NE VÉRIFIAIT. Le registre du filet en parts porte,
+    sur chaque ligne, une comparaison écrite à la main — « 44 s en 4 parts, contre 78 s en
+    séquentiel ». Personne ne confrontait ce chiffre à quoi que ce soit, alors que l'outil qui
+    chronomètre le filet tient le relevé de la machine juste à côté. Il le confronte désormais. **Le
+    seuil se dérive des mesures du jour**, et ce détail a compté : ma première version reprenait la
+    marge de bruit de 3 % et accusait « 78 s annoncés contre 75 s mesurés » — c'est-à-dire qu'elle
+    reprochait à une main d'avoir arrondi, dans un registre dont l'en-tête dit « à remplir à la
+    main ». La règle retenue n'invente aucun chiffre : le nombre annoncé doit tomber dans
+    l'intervalle des passages réellement chronométrés ce jour-là.
+
+  · J'AI REFUSÉ D'INVENTER CINQ LECTEURS. Il restait cinq données fraîches que personne ne relit, et
+    rien n'était plus facile que de leur écrire cinq lecteurs pour afficher zéro. Ça aurait été
+    l'outil fabriqué pour cocher la case. En les comparant à celle que je venais vraiment de
+    traiter, la différence a sauté : l'une portait un CHIFFRE qu'une mesure pouvait démentir, les
+    cinq autres sont des journaux de prose. Le défaut n'est peut-être pas dans la liste mais dans la
+    mesure, qui met les deux dans le même sac. La question t'attend, avec trois issues.
+
+  · ET LE DÉTECTEUR DE DOCUMENTS JUMEAUX M'A FAIT COURIR TROIS FOIS. Écrire une décision a créé deux
+    paires ; écrire les deux frontières qu'il réclamait en a créé deux autres ; écarter le document
+    en cause — exclusion légitime, le journal de tâches l'est déjà pour le même motif — a déplacé le
+    problème sur la fiche du détecteur lui-même, qui décrit forcément ce qu'il compare. **Trois
+    déclenchements en vingt minutes, chacun causé par le seul fait d'écrire une explication.**
+
+    LE DÉFAUT N'ÉTAIT PAS DANS LE DÉPÔT, IL ÉTAIT DANS LE TEST : il exigeait zéro paire, donc il
+    virait au rouge parce qu'on avait documenté son travail. Un test qui punit le fait d'écrire
+    apprend à ne plus écrire. Il vérifie maintenant ce qui ne doit jamais casser, et les paires
+    restent signalées à chaque passage de l'outil, là où elles se lisent.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
