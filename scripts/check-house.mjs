@@ -20873,6 +20873,58 @@ async function testSautesSilencieuses() {
 }
 await testSautesSilencieuses();
 
+// ————————————————————————————————————————————————————————————————————————
+// LA PORTÉE QUI N'AVAIT JAMAIS ÉTÉ CHOISIE : 56 % du registre hors du regard
+// (2026-09-29, tâche #1204 — cinquième doublon CLONE-HUNTER instruit)
+// ————————————————————————————————————————————————————————————————————————
+async function testPorteeDesAudits() {
+  const C = await import('../scripts/check-suivi-fidelity.mjs');
+  const faux = (fichiers) => ({
+    readDir: () => Object.keys(fichiers),
+    readFile: (p) => fichiers[String(p).split('/').pop()],
+    exists: () => true,
+  });
+
+  // ── 1. LE SQUELETTE PARTAGÉ REND CE QUE LES DEUX JUMELLES RENDAIENT : les fichiers PORTANT un
+  // écart, jamais tous les fichiers lus. La nuance a déjà coûté une fois (#206) : compter les
+  // fichiers rendus comme « fichiers lus » afficherait « aucun fichier lu » sur un registre propre.
+  const f1 = faux({ 'a.md': 'AVEC', 'b.md': 'SANS' });
+  const r = C.auditParFichier((t) => (t.includes('AVEC') ? ['x'] : []), 'd', f1.readDir, f1.readFile, f1.exists);
+  assert.deepEqual(r, [{ file: 'a.md', hits: ['x'] }], 'only the files that CARRY a finding come back — a file with nothing is not a finding, and counting it as one would read as a clean registry');
+
+  // ── 2. UN INDEX DÉCRIT UN DOSSIER, IL N'EN FAIT PAS PARTIE. Le dossier d'archive en porte un, et
+  // son tableau de sommaire a déjà été compté comme quatre tâches une fois.
+  const f2 = faux({ 'index.md': 'AVEC', 'a.md': 'AVEC' });
+  assert.deepEqual(C.auditParFichier(() => ['x'], 'd', f2.readDir, f2.readFile, f2.exists).map((x) => x.file), ['a.md'], 'index.md must never be read as a task file — its summary table has already been counted as four tasks once');
+
+  // ── 3. UN DOSSIER ABSENT NE REND PAS UN TABLEAU VIDE QUI RESSEMBLERAIT À « RIEN TROUVÉ »… et ici
+  // il le fait, comme avant, PARCE QUE les deux appelantes historiques le font : la borne est
+  // gardée telle quelle plutôt que changée en douce sous couvert de factorisation.
+  assert.deepEqual(C.auditParFichier(() => ['x'], 'd', () => [], () => '', () => false), [], 'an absent folder yields the same empty result as before — a factorisation never changes behaviour on the side');
+
+  // ── 4. LE ZÉRO SURVEILLÉ, ET C'EST LE VRAI APPORT : une tâche encore ouverte dans une ARCHIVE est
+  // exactement celle qu'on oubliera. Il n'y en a aucune aujourd'hui, et un angle mort vide ne
+  // prévient pas quand il se remplit.
+  const ouverte = '| 1 | 2026-01-01T00:00Z | mot | Sujet | Sous | RECOMMANDE-UTILE | PROJET | OUI | | Détail | En cours |';
+  const f4 = faux({ 'vieux-archive.md': `| N° |\n|---|\n${ouverte}\n` });
+  const trouve = C.findTachesOuvertesArchivees('arch', f4.readDir, f4.readFile, f4.exists);
+  assert.equal(trouve.length, 1, 'an OPEN task sleeping in an archived file must be found: archiving answers a file’s SIZE, never a task’s closure');
+
+  // ── 5. ET IL N'ACCUSE PAS UNE ARCHIVE PROPRE (leçon L4).
+  const close = ouverte.replace('| En cours |', '| Terminé — fidèle |');
+  const f5 = faux({ 'vieux-archive.md': `| N° |\n|---|\n${close}\n` });
+  assert.deepEqual(C.findTachesOuvertesArchivees('arch', f5.readDir, f5.readFile, f5.exists), [], 'a closed task in an archive is never accused');
+
+  // ── 6. LE CHIFFRE RÉEL EST BIEN CELUI QU'ON ANNONCE (leçon L2 : mesuré, jamais supposé).
+  assert.deepEqual(C.findTachesOuvertesArchivees(), [], 'against the real repository the archives must currently hold zero open task — the figure the code comments state');
+  const vivantes = C.auditOpenTasks().reduce((n, x) => n + x.hits.length, 0);
+  assert.ok(vivantes > 0, 'and the live sessions must still hold some, otherwise both halves read zero and this test proves nothing (leçon L11)');
+
+  console.log("Passed: la portee qui n'avait jamais ete choisie (2026-09-29, tache #1204). CINQUIEME DOUBLON CLONE-HUNTER INSTRUIT AVEC LA MEME REGLE, et il a encore mene ailleurs. auditOpenTasks et auditAllSessions etaient deux blocs jumeaux au caractere pres — mais en cherchant POURQUOI ils existent tous les deux, la vraie trouvaille etait leur PORTEE : ils ne lisaient que sessions/, jamais archives/, SANS QU'UNE LIGNE NE LE DISE. Ce n'etait pas une decision, c'etait la valeur par defaut d'un parametre, et elle laissait 605 lignes de taches sur 1 086 hors de leur regard — 56 % du registre. CE QUI A ETE MESURE PLUTOT QUE SUPPOSE, et les deux moities comptent : taches OUVERTES dans les archives, ZERO — l'angle mort est reel et VIDE aujourd'hui, un zero constate et jamais presume (lecon L5). Clotures sans declaration, 300, qui s'ajouteraient aux 242 des sessions : c'est la population historique deja identifiee comme une masse a traiter par une decision d'ensemble, et les inclure noierait les clotures RECENTES, les seules sur lesquelles on peut encore agir. LA PORTEE EST DONC GARDEE, MAIS ELLE EST MAINTENANT CHOISIE ET ECRITE. Et le zero est SURVEILLE plutot que suppose : findTachesOuvertesArchivees() existe pour qu'il ne redevienne pas silencieusement non nul, et le rapport imprime la ligne MEME quand elle ne trouve rien — un angle mort vide ne previent pas quand il se remplit, et un silence se lit exactement comme un « rien a signaler ».");
+}
+await testPorteeDesAudits();
+
+
 
 
 // ————————————————————————————————————————————————————————————————————————

@@ -191,3 +191,37 @@ barres finales manquantes, la ligne #910 privée de sa cellule de détail, et l'
 qui ne décrivait aucune des 226 lignes au format complet.
 
 **État au 2026-09-28** : 377 lignes lues, 0 illisible, 0 divergence.
+
+## La portée qui n'avait jamais été choisie (2026-09-29, tâche #1204)
+
+**D'où ça vient** : CLONE-HUNTER signalait `auditOpenTasks` et `auditAllSessions` comme deux blocs
+jumeaux. Ils le sont — même squelette au caractère près, seul le détecteur appliqué les distingue.
+Mais en cherchant POURQUOI les deux existent, la vraie trouvaille était ailleurs : **leur portée**.
+
+**Le fait mesuré** : les deux ne lisaient que `docs/suivi/sessions/`, jamais `docs/suivi/archives/`,
+**sans qu'une ligne ne le dise**. Ce n'était pas une décision, c'était la valeur par défaut d'un
+paramètre — et elle laissait **605 lignes de tâches sur 1 086 hors de leur regard, soit 56 % du
+registre**. Une portée qu'on n'a pas choisie n'est pas une portée : c'est un angle mort dont
+personne ne peut mesurer la taille.
+
+**Ce que les archives contenaient vraiment, compté plutôt que supposé :**
+
+- **Tâches encore OUVERTES : 0.** L'angle mort est réel et VIDE aujourd'hui — un zéro constaté,
+  jamais présumé (leçon L5).
+- **Clôtures sans déclaration de fidélité : 300**, qui s'ajouteraient aux 242 des sessions. C'est la
+  population historique déjà identifiée (#1171) comme une masse à traiter par une décision
+  d'ensemble. Les inclure ferait passer le compte de 242 à 542 sans rien apprendre, et noierait les
+  clôtures RÉCENTES — les seules sur lesquelles on peut encore agir.
+
+**La portée reste donc `sessions/`, mais elle est maintenant CHOISIE et ÉCRITE**, avec ces deux
+chiffres à côté.
+
+**Et le zéro est SURVEILLÉ, pas supposé** : `findTachesOuvertesArchivees()` existe pour qu'il ne
+redevienne pas silencieusement non nul. Une tâche encore ouverte dans un fichier archivé est
+exactement celle qu'on oubliera — l'archivage répond à la TAILLE d'un fichier, jamais à la clôture
+d'une tâche. Le rapport imprime la ligne **même quand elle ne trouve rien** : un angle mort vide ne
+prévient pas quand il se remplit, et un silence se lit exactement comme un « rien à signaler ».
+
+**Le squelette partagé** s'appelle `auditParFichier()`. Il écarte `index.md`, comme
+`listerLesFichiersDeTaches()` : un index DÉCRIT un dossier, il n'en fait pas partie — son tableau de
+sommaire a déjà été compté comme quatre tâches une fois.

@@ -431,17 +431,47 @@ export function categorizeAllSessions(sessionsDir = SESSIONS_DIR, readDir = read
   return total;
 }
 
-export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return [];
-  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
+// auditParFichier() — LE BALAYAGE PAR FICHIER, ÉCRIT UNE SEULE FOIS (2026-09-29, tâche #1204).
+// CLONE-HUNTER signalait `auditOpenTasks` et `auditAllSessions` comme deux blocs jumeaux. Ils le
+// sont : même squelette au caractère près, seul le détecteur appliqué au texte les distingue.
+//
+// LA PORTÉE EST DÉSORMAIS DÉCLARÉE, ET C'EST LE VRAI APPORT DE CETTE FONCTION. Les deux ne lisaient
+// que `sessions/`, jamais `archives/` — sans qu'une ligne ne le dise. Ce n'était pas une décision,
+// c'était la valeur par défaut d'un paramètre, et elle laissait **605 lignes de tâches sur 1 086
+// hors de leur regard**, soit 56 % du registre. Une portée qu'on n'a pas choisie n'est pas une
+// portée, c'est un angle mort — et un angle mort dont personne ne peut mesurer la taille.
+export function auditParFichier(detecteur, dir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  if (!exists(dir)) return [];
   const results = [];
-  for (const file of files) {
-    const hits = findOpenTasks(readFile(join(sessionsDir, file)));
+  for (const file of readDir(dir).filter((f) => f.endsWith(".md") && f !== "index.md")) {
+    const hits = detecteur(readFile(join(dir, file)));
     if (hits.length) results.push({ file, hits });
   }
   return results;
 }
 
+// LA PORTÉE DE CES DEUX-CI RESTE `sessions/`, ET LA RAISON EST MESURÉE PLUTÔT QUE SUPPOSÉE :
+//   · tâches OUVERTES dans les archives : **0**. L'angle mort est réel et VIDE aujourd'hui — un
+//     zéro constaté, jamais un zéro présumé (leçon L5). `findTachesOuvertesArchivees()` juste en
+//     dessous existe pour qu'il ne redevienne pas silencieusement non nul.
+//   · clôtures sans déclaration dans les archives : **300**, qui s'ajouteraient aux 242 des
+//     sessions. C'est la population historique déjà identifiée (#1171) comme une masse à traiter
+//     par une décision d'ensemble, pas ligne à ligne. Les inclure ferait passer le compte de 242 à
+//     542 sans rien apprendre de neuf, et noierait les clôtures RÉCENTES, qui sont les seules sur
+//     lesquelles on peut encore agir.
+export function auditOpenTasks(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  return auditParFichier(findOpenTasks, sessionsDir, readDir, readFile, exists);
+}
+
+// findTachesOuvertesArchivees() — LE ZÉRO QUI DOIT RESTER SURVEILLÉ (2026-09-29, tâche #1204).
+// Une tâche encore OUVERTE dans un fichier archivé est exactement celle qu'on oubliera : l'archivage
+// répond à la taille d'un fichier, jamais à la clôture d'une tâche. Aujourd'hui il n'y en a aucune,
+// et c'est précisément pour ça que ce compteur existe — un angle mort vide ne prévient pas quand il
+// se remplit. Il ne double pas `auditOpenTasks` : celle-ci regarde les sessions vivantes, celle-là
+// l'endroit dont on a décidé de ne plus s'occuper.
+export function findTachesOuvertesArchivees(archivesDir = ARCHIVES_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+  return auditParFichier(findOpenTasks, archivesDir, readDir, readFile, exists);
+}
 // findCommitsMissingSuiviUpdate() (2026-09-19, à la demande explicite de l'utilisateur : « comment
 // nous assurer que le suivi est correctement fait et historisé ? peux-tu fiabiliser ? »). Trouvaille
 // réelle qui a motivé cette fonction : 7 des 8 derniers commits d'une même session avaient changé du
@@ -482,17 +512,8 @@ export function recentCommits(limit = 20, shImpl = sh, root = ROOT) {
 }
 
 export function auditAllSessions(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return [];
-  const files = readDir(sessionsDir).filter((f) => f.endsWith(".md"));
-  const results = [];
-  for (const file of files) {
-    const text = readFile(join(sessionsDir, file));
-    const hits = findUnverifiedClosures(text);
-    if (hits.length) results.push({ file, hits });
-  }
-  return results;
+  return auditParFichier(findUnverifiedClosures, sessionsDir, readDir, readFile, exists);
 }
-
 // LE DÉNOMINATEUR, MESURÉ POUR DE VRAI (2026-09-23, tâche #206) — et cette fonction existe parce
 // que le premier jet de la correction a reproduit le défaut qu'il corrigeait. Il réutilisait
 // `auditAllSessions()` pour compter « les fichiers lus », alors que celle-ci ne rend QUE les
@@ -1257,6 +1278,18 @@ function main() {
       for (const h of hits) console.log(`   - [${h.statut}] ${h.row}`);
     }
   }
+  // LA PORTÉE EST DITE, Y COMPRIS QUAND ELLE NE TROUVE RIEN (2026-09-29, tâche #1204). Cette
+  // section ne lit que `sessions/` ; les archives portent 605 des 1 086 lignes du registre. Une
+  // tâche encore OUVERTE là-bas est exactement celle qu'on oubliera, l'archivage répondant à la
+  // taille d'un fichier et jamais à la clôture d'une tâche. Il n'y en a aucune aujourd'hui — et
+  // c'est écrit noir sur blanc plutôt que tu, parce qu'un angle mort vide ne prévient pas quand il
+  // se remplit, et qu'un silence se lit exactement comme un « rien à signaler » (leçons L5 et L11).
+  const archivees = findTachesOuvertesArchivees();
+  const combien = archivees.reduce((n, r) => n + r.hits.length, 0);
+  console.log(combien === 0
+    ? "\nPortée : cette section lit les sessions vivantes. Vérifié aussi dans les archives : 0 tâche encore ouverte y dort."
+    : `\n⚠️ ${combien} tâche(s) encore OUVERTE(S) dorment dans des fichiers ARCHIVÉS — l'archivage répond à la taille d'un fichier, jamais à la clôture d'une tâche :`);
+  for (const { file, hits } of archivees) for (const h of hits) console.log(`   - [${h.statut}] ${file} — ${h.row}`);
 
   console.log("\n=== Garde-fou fidélité au prompt (docs/suivi/) ===\n");
   const results = auditAllSessions();
