@@ -359,6 +359,14 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   identiques (différence vide), et une sonde sur les 93 fichiers d'outils confirme qu'aucun n'est
   aujourd'hui dans le cas illisible. Le trou était à venir, et il est dit comme tel.
 
+  ET LA MEILLEURE PARTIE EST ARRIVÉE TOUTE SEULE. Les deux fonctions que je venais d'écrire pour
+  arrêter cette recopie étaient elles-mêmes deux boucles identiques. CLONE-HUNTER les a signalées
+  dans le commit MÊME qui réparait le doublon d'origine — l'outil a mordu son auteur sur la faute
+  qu'il venait de faire corriger chez onze autres. C'est plus probant que n'importe quel test écrit
+  pour l'occasion, et c'est la raison pour laquelle je l'écris ici plutôt que de le corriger en
+  silence. Corrigé dans la foulée, et selon la même règle : ce qui diffère entre les deux, c'est la
+  valeur de repli, jamais le parcours — donc c'est le parcours qui devient commun.
+
   CE QUE JE N'AI PAS FAIT, ET POURQUOI : je n'ai pas retiré les onze accès devenus inutiles. Ils ne
   sont pas faux, seulement redondants ; les enlever toucherait onze fichiers pour zéro changement
   de comportement — un risque sans contrepartie une nuit d'autonomie. CLONE-HUNTER continuera donc
