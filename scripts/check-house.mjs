@@ -3118,6 +3118,19 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   const mots = { 'm1.mjs': ['x = /bonjourxx/;'], 'm2.mjs': ['y = /bonsoirxx/;'] };
   assert.deepEqual(CH.motifsQuasiJumeaux(mots, { distance: 2 }).familles, [], 'a plain word searched in text is not a shared notion — without a metacharacter there is nothing to have written two ways');
 
+  // ── 4bis. LES QUATRE FAUX AMIS DU SLASH. Mesurés sur le premier passage réel : 6 des 34 familles
+  // rendues — 18 % — n'étaient pas des expressions régulières du tout, et un détecteur qui livre un
+  // cinquième de déchet évident cesse d'être lu (leçon L4). Le tri est donc dans l'outil.
+  const fauxAmis = {
+    'div.mjs': ['const part = (t / 100 * .3 - t / 100);', 'const autre = (u / 100 * .3 - u / 100);'],
+    'tpl.mjs': ['const h = items.map((i) => `<li>${i}</li>`).join("");', 'const g = cols.map((c) => `<td>${c}</td>`).join("");'],
+    'ctor.mjs': ['const m = new RegExp(`(node|bash|\\./|scripts/)\\s*${e}`);', 'const n = new RegExp(`(node|bash|\\./|scripts/)\\s+${e}`);'],
+    'vue.tsx': ['return (<div><button>a</button>}</div>);', 'return (<span><button>b</button>)}</span>);'],
+  };
+  assert.deepEqual(CH.motifsQuasiJumeaux(fauxAmis, { distance: 2 }).familles, [], 'MUST CATCH: a division, a closing tag in a template, a pattern built with new RegExp() and a JSX closing tag are NOT regex literals — six of the first real run\'s thirty-four families were exactly these, and a detector delivering a fifth of obvious rubbish stops being read (leçon L4)');
+  assert.ok(CH.estVraimentUnLitteral('const f = /^abc\\d+$/;', 10, '^abc\\d+$'), 'and the filter must not swallow a real literal: after "= " a slash opens a pattern');
+  assert.ok(!CH.estVraimentUnLitteral('const q = (a / 100 * b / 2);', 12, ' 100 * b '), 'a slash preceded by an identifier or a value is always the division operator');
+
   // ── 5. UN CORPUS VIDE NE REND JAMAIS « AUCUNE DIVERGENCE » (leçons L5/L11).
   const vide = CH.motifsQuasiJumeaux({});
   assert.equal(vide.mesurable, false, 'nothing read must report UNMEASURABLE, never a clean bill');
@@ -3148,7 +3161,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // proches pour vérifier qu'un détecteur mord. Les compter ferait crier l'outil sur les
   // contre-tests destinés à le protéger — donc le ferait taire (leçon L4).
   assert.ok(!reel.familles.some((f) => f.fichiers.some((c) => c.endsWith('check-house.mjs'))), 'the net itself must stay out of the sweep: it manufactures near-twin patterns on purpose, and accusing them would be the guard crying on its own counter-tests');
-  console.log(`Passed: CLONE-HUNTER voit maintenant la MÊME NOTION ÉCRITE PLUSIEURS FOIS, PRESQUE PAREIL (2026-09-29, tâche #1174) — le défaut qui ne duplique aucun bloc et que ses deux premiers détecteurs ne pouvaient donc pas voir. Il est né d'un dégât mesuré : quatre fonctions testant la clôture d'une tâche avec trois motifs à une lettre près, 317 lignes sur 1 103 lues à l'envers, et deux corrections partielles du même défaut en deux jours sans que rien ne le mécanise. Il sort des FAMILLES et non des paires, classées par nombre de FICHIERS parce que c'est le nombre de lecteurs qui divergeront ; sa distance se DÉRIVE du corpus et la dérivation s'imprime ; et chaque famille est une QUESTION, jamais un verdict — deux motifs à deux caractères d'écart peuvent viser deux choses opposées, et l'outil qui trancherait fondrait les deux mauvais. Premier passage réel sur ${reel.motifsLus} motifs : ${reel.familles.length} familles, dont la date du projet écrite de quatre façons dans neuf fichiers et le numéro de tâche de quatre façons dans trois.`);
+  console.log(`Passed: CLONE-HUNTER voit maintenant la MÊME NOTION ÉCRITE PLUSIEURS FOIS, PRESQUE PAREIL (2026-09-29, tâche #1174) — le défaut qui ne duplique aucun bloc et que ses deux premiers détecteurs ne pouvaient donc pas voir. Il est né d'un dégât mesuré : quatre fonctions testant la clôture d'une tâche avec trois motifs à une lettre près, 317 lignes sur 1 103 lues à l'envers, et deux corrections partielles du même défaut en deux jours sans que rien ne le mécanise. Il sort des FAMILLES et non des paires, classées par nombre de FICHIERS parce que c'est le nombre de lecteurs qui divergeront ; sa distance se DÉRIVE du corpus et la dérivation s'imprime ; et chaque famille est une QUESTION, jamais un verdict — deux motifs à deux caractères d'écart peuvent viser deux choses opposées, et l'outil qui trancherait fondrait les deux mauvais. Et il a fallu lui apprendre les QUATRE FAUX AMIS DU SLASH dès son premier tri : une division, une balise fermante dans un gabarit, un motif construit avec new RegExp() et une balise JSX représentaient 6 des 34 familles du premier jet. Après filtrage : ${reel.motifsLus} motifs relevés, ${reel.familles.length} familles, zéro déchet évident — dont la date du projet écrite de quatre façons dans neuf fichiers et le numéro de tâche de quatre façons dans trois.`);
 }
 {
   // splitTableRow() (2026-09-19, même relecture de fiabilité) : le découpage partagé par

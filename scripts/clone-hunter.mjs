@@ -806,6 +806,36 @@ export function distanceEntreEcritures(a, b, max) {
 // sur les contre-tests destinés à le protéger, ce qui est la façon la plus sûre de le faire taire.
 export const FICHIERS_HORS_RELEVE = ["check-house.mjs"];
 
+// LES TROIS FAUX AMIS DU SLASH, mesurés sur le premier passage réel : 6 des 34 familles rendues —
+// 18 % — n'étaient pas des expressions régulières du tout. Un détecteur qui livre un cinquième de
+// déchet évident cesse d'être lu (leçon L4), donc le tri se fait dans l'outil et pas dans la tête
+// du lecteur.
+//
+//   1. UNE DIVISION. `(t / 100 * .3 - t / 100)` donne un faux motif « / 100 * .3 - t / ». Un
+//      littéral d'expression régulière ne peut jamais suivre une valeur : ce qui précède son slash
+//      d'ouverture n'est jamais un identifiant, un chiffre, une parenthèse ou un crochet fermant,
+//      ni un point. Après ceux-là, un `/` est forcément l'opérateur.
+//   2. UNE BALISE FERMANTE DANS UN GABARIT. `` `<li>${x}</li>` `` donne « li>`).join("")}< ». Le
+//      candidat contient alors un accent grave, ce qu'aucun littéral d'expression régulière ne
+//      peut porter sur une ligne de code.
+//   3bis. UNE BALISE FERMANTE JSX. `</button>` ouvre un faux motif dans les fichiers `.tsx`, et le
+//      caractère qui précède est toujours un `<`. Une comparaison suivie d'un littéral d'expression
+//      régulière (`a < /x/.source.length`) serait le seul contre-exemple, et ce dépôt n'en porte
+//      aucun : le `<` rejoint donc la liste, avec cette réserve écrite plutôt que tue.
+//   3. UN MOTIF CONSTRUIT AVEC `new RegExp(...)`. Le motif y vit dans une CHAÎNE, et ses slashes
+//      internes (`\\./`, `scripts/`) se font lire comme des bornes de littéral. La ligne entière
+//      est écartée — ces motifs-là ne sont pas invisibles pour autant, ils sont simplement hors
+//      de portée de ce détecteur, et le dire vaut mieux que de rendre du bruit.
+export const AVANT_UN_SLASH_JAMAIS_UN_MOTIF = /[A-Za-z0-9_$)\].<]/;
+
+export function estVraimentUnLitteral(ligne, index, source) {
+  if (source.includes("`")) return false;
+  if (/new RegExp\s*\(/.test(ligne)) return false;
+  const avant = String(ligne).slice(0, index).replace(/\s+$/, "");
+  if (!avant) return true;
+  return !AVANT_UN_SLASH_JAMAIS_UN_MOTIF.test(avant.at(-1));
+}
+
 export function releverLesMotifs(fileLines = {}, { horsReleve = FICHIERS_HORS_RELEVE } = {}) {
   const trouves = new Map();
   // `collectFileLines()` rend une Map, un test en écrit plus volontiers une, et un objet nu est la
@@ -822,6 +852,7 @@ export function releverLesMotifs(fileLines = {}, { horsReleve = FICHIERS_HORS_RE
         const source = m[1];
         if (source.length < LONGUEUR_MINIMALE_DU_MOTIF) continue;
         if (!MOTIF_A_UN_METACARACTERE.test(source)) continue;
+        if (!estVraimentUnLitteral(ligne, m.index, source)) continue;
         if (!trouves.has(source)) trouves.set(source, []);
         trouves.get(source).push({ fichier, ligne: i + 1 });
       }

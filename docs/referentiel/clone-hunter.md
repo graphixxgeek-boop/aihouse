@@ -291,9 +291,28 @@ version diverge d'un détail.
   exprès des variantes proches pour vérifier qu'un détecteur mord. Les compter ferait crier l'outil
   sur les contre-tests destinés à le protéger, donc le ferait taire (leçon L4).
 
+### Les quatre faux amis du slash, appris au premier tri
+
+Le premier jet rendait **34 familles, dont 6 — 18 % — n'étaient pas des expressions régulières du
+tout**. Un détecteur qui livre un cinquième de déchet évident cesse d'être lu (leçon L4), donc le
+tri vit dans l'outil et pas dans la tête du lecteur :
+
+1. **une division** — `(t / 100 * .3 - t / 100)` donnait le faux motif `/ 100 * .3 - t /`. Un
+   littéral d'expression régulière ne suit jamais une valeur : le caractère avant son slash
+   d'ouverture n'est jamais un identifiant, un chiffre, une parenthèse ou un crochet fermant, ni un
+   point ;
+2. **une balise fermante dans un gabarit** — `` `<li>${x}</li>` `` donnait `li>`).join("")}<`. Le
+   candidat porte alors un accent grave, ce qu'aucun littéral ne peut contenir sur une ligne ;
+3. **une balise fermante JSX** — `</button>` dans un `.tsx`, toujours précédée d'un `<` ;
+4. **un motif construit avec `new RegExp(...)`** — le motif y vit dans une CHAÎNE et ses slashes
+   internes (`\./`, `scripts/`) se lisent comme des bornes. La ligne entière est écartée, et ces
+   motifs-là sont donc **hors de portée** de ce détecteur : le dire vaut mieux que rendre du bruit.
+
+Après filtrage : **979 motifs relevés, 28 familles, zéro déchet évident.**
+
 ### Ce qu'il a trouvé à son premier passage réel
 
-**34 familles sur 1 235 motifs relevés**, dont :
+**28 familles sur 979 motifs relevés**, dont :
 
 | Ce qui est écrit plusieurs fois | Écritures | Fichiers |
 |---|---|---|
@@ -309,6 +328,40 @@ numéros de tâche du même registre et ne s'accordent ni sur le bas ni sur le h
 ne casse aujourd'hui (le registre est à quatre chiffres) — c'est exactement la forme du défaut
 #1171, prise avant qu'elle ne coûte quelque chose. **Non corrigé : c'est une décision, pas un
 constat** (tâche ouverte).
+
+### Le tri des 28 — un rapport n'est pas fini quand il est écrit (Article 28)
+
+Chaque famille a été REGARDÉE, une par une. C'est la seule façon de savoir ce que vaut un détecteur
+neuf, et le résultat compte autant que la trouvaille : **la plupart des familles sont légitimes**, et
+un outil qui laisserait ses 28 lignes sans qualification deviendrait du décor en une semaine.
+
+**ÉCARTÉES — deux notions différentes, et la ressemblance est un hasard d'écriture (10 familles).**
+`/^\|\s*-+\s*\|/` reconnaît la ligne de séparation d'un tableau, `/^\|\s*\d+\s*\|/` une ligne de
+tâche : deux caractères d'écart, deux intentions opposées. Même chose pour `\s*\]\s*$` (fermer un
+crochet) contre `^\s*\}\s*$` (fermer une accolade), `#{1,6}` (n'importe quel titre markdown) contre
+`#{2,4}` (les seuls niveaux navigables), `.mjs|md` (un outil et sa fiche) contre `.mjs|sh` (ce qui
+s'exécute). **C'est exactement pour ces dix-là que l'outil pose une question au lieu de trancher :
+un outil qui aurait fusionné aurait fondu les mauvais.**
+
+**ÉCARTÉES — une capture en plus, ou une ancre, dans le même fichier pour deux usages (8 familles).**
+`/^([A-Za-z_$][\w$]*)$/` et `/^[A-Za-z_$][\w$]*$/` : l'un extrait, l'autre valide. Rien à unifier.
+
+**RETENUES — la même notion, écrite par plusieurs lecteurs (10 familles), et une seule est déjà une
+tâche.** Par ordre de portée :
+
+| La notion | Écritures | Fichiers | Ce qu'on en fait |
+|---|---|---|---|
+| un **numéro de tâche** `#NNNN` | 4 | 3 | **tâche #1175** — deux motifs dans le MÊME fichier qui ne s'accordent ni en bas ni en haut |
+| une **date** `AAAA-MM-JJ` | 10, en 4 familles | ~12 | à trancher : le projet a-t-il UNE notion de date ? (Article 32 en est le sujet) |
+| un **slug d'outil** | 4 | 13 | regardé : les quatre normalisent les accents, chacun à sa façon, et **chacun l'a appris par son propre bug** — trois corrections documentées de la même cause |
+| un **signal de Ronde** `circle-signal*.txt` | 2 | 2 | `tool-learning` exige le tiret, `circle-tasks` non — deux outils qui lisent LES MÊMES fichiers |
+| le statut **`à trancher`** | 2 | 2 | ancré chez l'un, pas chez l'autre — deux outils, un même registre |
+| une **extension de source** | 4 | 4 | `x-port-blindtest` oublie `.tsx` — **vérifié : sans effet**, il ne balaie que `scripts/` et `lib/`, qui n'en portent aucun |
+
+La ligne « extension de source » est celle qui montre le mieux à quoi sert la vérification : lue
+seule, elle annonçait qu'une mesure de portabilité passait à côté de 65 composants React. Elle n'en
+passe aucun, parce que le dossier n'est pas balayé. **Un constat non vérifié aurait produit un
+correctif qui ne corrigeait rien, et un chiffre alarmant dans un rapport.**
 
 ### Ce qu'il ne fera jamais
 
