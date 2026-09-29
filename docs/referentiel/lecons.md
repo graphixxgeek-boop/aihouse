@@ -1334,6 +1334,74 @@ d'un catalogue de 70 offres sont uniques), et c'est ce qui en fait une règle pl
 QUEL corpus minimum — sans ces deux précisions, « dérivé » rassure sans protéger.
 
 
+## L40 — Un test qui lit une donnée VIVANTE ne juge pas le code, il juge le disque
+
+*Payée le 2026-09-29 (tâches #1172 et #1181) : cinq tests au rouge en une nuit sans qu'une ligne du code testé ait bougé, quatre faux outils dormant dans le journal de production, et une part du filet parallèle rouge puis verte sur exactement le même code.*
+
+**Cinq tests du filet sont passés au rouge en une nuit sans qu'une ligne du code testé ait bougé.**
+Tous lisaient `.tool-usage-history.json`, le journal d'usage — une donnée non versionnée, qui repart
+à vide avec le conteneur. L'un exigeait qu'un outil nommé en dur y figure, un autre une note de 2/2,
+un troisième que la mesure soit simplement possible.
+
+**Le vert venait donc du disque, jamais du code.** Et le rouge aussi : les cinq accusaient des outils
+parfaitement sains, le jour où la machine avait été recréée. C'est la forme la plus coûteuse du
+faux signal, parce qu'elle décrédibilise le filet entier — on prend l'habitude de relancer jusqu'au
+vert, et c'est ainsi qu'un vrai rouge finit par passer.
+
+**LE DEUXIÈME ÉTAGE EST PIRE : le filet ÉCRIVAIT dans cette donnée.** Quatre contributions au nom
+d'outils inexistants (`docs/fake-*`) dormaient dans le vrai journal, posées par des tests qui
+injectaient pourtant un faux système de fichiers pour tout le reste — le seul appel non injecté
+suffisait. Un test qui écrit dans la donnée de production **fabrique la mesure qu'un autre test
+lira demain**. Et en parallèle, quatre parts écrivant le même fichier produisaient une part rouge
+puis verte sur exactement le même code.
+
+**LES DEUX GESTES, et ils ne se remplacent pas l'un l'autre :**
+- **Côté lecture** : le sujet se DÉRIVE de la donnée au lieu d'être nommé en dur, et quand la donnée
+  est vide le test le DIT (`NON MESURÉ`) au lieu de rendre un vert sur rien. On vérifie alors la
+  COHÉRENCE du chiffre — le numérateur tient dans son dénominateur — jamais sa valeur.
+- **Côté écriture** : tout chemin de donnée réelle s'injecte, et le chemin lui-même se demande au
+  module plutôt que de se recopier, sinon l'isolation d'un côté casse la lecture de l'autre (c'est
+  arrivé dans l'heure).
+
+**Le contre-exemple utile** : garder une vérification EN DIRECT contre le vrai dépôt reste juste
+(Article 25) — ce qui ne l'est pas, c'est d'en faire une assertion sur un CHIFFRE que le conteneur
+détermine. On exige que la mesure AIT LIEU et se tienne debout, pas qu'elle vaille une valeur.
+
+**Terrain** : quand j'écris un test qui lit un journal, un compteur, un registre daté ou un fichier non versionné · mots : journal, compteur, historique, en direct, live, vivante, non versionné, flaky, intermittent · fichiers : scripts/check-house.mjs, scripts/tool-usage.mjs, scripts/filet-en-parts.mjs
+
+**Porté par** : `cheminDuJournal()` (le chemin s'injecte), l'isolation par part dans
+`filet-en-parts.mjs`, et les quatre assertions réécrites en « mesure ou refus nommé ». Le réflexe
+général — ne jamais figer une valeur que le disque détermine — se déclare ici.
+
+
+## L41 — Une exemption écrite en PROSE n'exempte rien, et le garde-fou la refacture indéfiniment
+
+*Payée le 2026-09-29 (tâche #1179), et payée trois fois : la même fausse dette documentaire facturée les 2026-09-27 et 2026-09-29, avec l'exemption écrite en toutes lettres juste à côté depuis la première.*
+
+**La même fausse dette documentaire a été facturée TROIS FOIS**, à deux jours d'intervalle, avec son
+explication écrite juste à côté. Un document de process expliquait, en toutes lettres et très bien,
+pourquoi un changement de son contrôleur ne le concernait pas — le contrôleur héberge des règles
+d'une dizaine de sujets, une seule est la sienne. Le détecteur, lui, ne lit pas de la prose.
+
+**Ce qui rend le cas instructif : tout le monde avait raison.** La règle du détecteur est juste (un
+contrôleur de process qui n'en garde qu'un, le changer c'est changer ce process-là). L'exemption du document
+est juste aussi. Ce qui manquait, c'est que l'une soit LISIBLE par l'autre.
+
+**Le geste** : donner au document une ligne que la mécanique sait lire, à côté du paragraphe qui
+l'explique aux humains. Pas à la place — les deux servent des lecteurs différents, et la ligne seule
+ne dirait pas pourquoi.
+
+**ET LA DÉCLARATION NE DOIT JAMAIS DEVENIR UNE ÉCHAPPATOIRE** : le contre-test qui compte est celui
+qui vérifie que la dette **redevient pleine** quand le changement touche vraiment la portée
+déclarée. Sans ce sens-là, on n'a pas ajouté une information, on a ajouté une porte de sortie (BP4).
+
+**Terrain** : quand un garde-fou accuse quelque chose que je sais légitime, et que je m'apprête à l'expliquer en commentaire · mots : exemption, faux positif, dette, accusation, légitime, prose, déclaration · fichiers : scripts/god-of-all-process.mjs, docs/xp-ia-process-detail.md
+
+**Porté par** : `porteeDeclaree()` / `porteeDeclareeDuProcess()` chez god-of-all-process, et les cinq
+contre-tests qui vérifient les deux sens. Le réflexe général — quand j'explique un faux positif en
+prose, me demander si la mécanique pourrait lire cette explication — se déclare ici.
+
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne
