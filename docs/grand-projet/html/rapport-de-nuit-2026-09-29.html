@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de la nuit du 2026-09-29</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T06:14:19.216Z</div>
+    <h1>Rapport de la nuit du 2026-09-29</h1>
+    <p class="sub">Page générée depuis docs/rapports-de-nuit/2026-09-29-rapport.txt — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p>RAPPORT DE LA NUIT AUTONOME DU 2026-09-29 ========================================= Heure LUE (source système), pas devinée. Process <code>nuit</code> suivi dans son ordre. 109 tâches ouvertes figées au départ (docs/rapports-de-nuit/plan-depart-2026-09-29.txt).</p>
+<p>CE QU'IL AVAIT DEMANDÉ AVANT DE DORMIR</p>
+<hr>
+<ul><li>Respecter tout ce qui s'est dit dans les échanges de départ, et l'enregistrer.</li><li>Lancer le mode auto selon le process, mêmes réglages que la veille, 20 h sans s'arrêter.</li><li>Piste : revoir philosophie-et-politique pour y inscrire LE BUT, la raison d'être, et ce que le projet doit livrer. Sa priorité provisoire : commercialiser l'Agence.</li><li>L'ALIGNEMENT EN CASCADE doit HABITER le travail dès qu'on crée quelque chose.</li><li>« Fais le nécessaire dans la charte et les process si besoin, je te laisse la main. »</li></ul>
+<ul><li>CE QUI A ÉTÉ FAIT — dans l'ordre de SON escalade</li></ul>
+<hr>
+<p>LA CIBLE (niveau 2 de son escalade) Ses trois questions sur le but ultime, répondues PAR UNE MESURE et non par un avis. Sur les 364 lignes et 19 principes de la boussole du projet : « agence »          0 occurrence « but »             0 « raison d'être »   0 « commercialiser »  0 Le but n'était défini NULLE PART, et l'en-tête décrivait le projet comme « créatif/narratif » — c'est-à-dire l'inverse de la direction qu'il énonce. Le document le plus fixe de la chaîne pointait dans la mauvaise direction, en silence, depuis le 2026-09-18. Plus large : « commercialiser » n'existe dans AUCUNE décision du suivi ni AUCUN document du référentiel. Tout l'outillage a été construit sans cible commerciale déclarée — ce qui explique pourquoi « quand l'Agence est-elle finie ? » n'a jamais eu de réponse. → Une Partie 0 — LE BUT entre dans la boussole, séparant ce qui est ÉTABLI (ses mots), ce qui est PROPOSÉ (par moi) et ce qui reste À TRANCHER (4 points). Rien décidé à sa place.</p>
+<p>LE CHEMIN (niveaux 3 et 4) Sept étapes ordonnées par dépendance réelle, à la place des sept fils parallèles du plan précédent — des fils n'ont pas d'ordre, donc rien ne peut être « pas encore le moment ». 1 SAVOIR → 2 ALIGNER → 3 RATIONALISER → 4 MODULARISER → 5 INSTALLER → 7 FINALISER avec 6 LE JEU en parallèle, parce qu'il est la PREUVE. Deux ordres viennent des sources et ne se négocient pas : rationaliser AVANT les extractions, et le renommage EN DERNIER (son instruction).</p>
+<p>L'ALIGNEMENT, RENDU VÉRIFIABLE « Aligné » était un mot. C'est désormais un nombre : chaque objet déclare le parent dont il découle, THE-KING dit lesquels ne remontent nulle part. 40 %, 17 objets sur 42, 0 écart. Deux cas seulement sont des fautes (parent introuvable, cycle) ; un orphelin n'en est pas une.</p>
+<p>LE CALIBRAGE DE DEMAIN 50 questions, groupées par étage de l'escalade, chacune avec ma recommandation pour qu'il puisse dire « d'accord » sans rédiger. Le bloc A (la cible) se répond en premier.</p>
+<p>LA DETTE QUI LUI ÉTAIT DUE Ses 49 questions ont enfin leurs réponses : 28 réponses, 21 questions regroupées (le compte qu'il avait exigé), avec sa DEMANDE INAVOUÉE et l'action en face de chacune. Sa question Q7 — « est-ce que l'agence m'aide ou est-ce que je m'y perds ? sois honnête » — a désormais un instrument : 244 tâches sur 1 090 ont été OUVERTES par un outil (22 %), dont 232 closes (95 %) ; en face, 93 fichiers d'outillage et 12 outils jamais sollicités. Réponse écrite : l'Agence aide à TROUVER, et coûte à NAVIGUER.</p>
+<p>LES DÉCISIONS QUI L'ATTENDENT Huit présentées en trois lots, avec ce qui a changé depuis. Une a changé de réponse parce que sa mesure était fausse (#819).</p>
+<p>LA RONDE, en mode autonome (72 commits d'écart) Onze scanners gratuits. Deux constats certains traités, les autres consignés.</p>
+<p>LE SECOND ÉTAGE DE #725 — LA CARTE DES DOSSIERS <code>node scripts/data-archangel.mjs carte</code>. Ses quatre questions reçoivent chacune un signal DÉRIVÉ : à quoi sert ce dossier · s'écrit-il tout seul · s'historise-t-il · de quoi dépend-il. 92 dossiers, 67 écrits par un script, 46 qui gardent une suite de passages datés. #725 est close.</p>
+<p>LA DETTE DE FICHES, DE 15 À 0 Un garde-fou neuf (<code>god-of-all-process fiches</code>) a trouvé 15 fiches d'outil dont le script avait gagné une fonction publique qu'elles ne nommaient pas. Toutes réparées — et chaque section écrite porte la RAISON, pas un résumé du code.</p>
+<p>TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR L'ESCALADE, l'ALIGNEMENT À LA CRÉATION et le RÉVEIL À JOUR sont désormais surveillées par angel (25 règles au lieu de 22). Sans ça, elles disparaissaient à la session suivante.</p>
+<ul><li>CE QUI A ÉTÉ TROUVÉ — et que personne ne cherchait</li></ul>
+<hr>
+<p>· Le but du projet n'était écrit nulle part (ci-dessus). · La mesure du temps du filet était périmée : 140 s annoncés, 94 s réels. 33 % de gain qui existaient déjà et que personne ne voyait. · Puis : le signal « périmé » ne pouvait JAMAIS s'éteindre (un commit suffisait, et le filet en reçoit un par jour). Une alarme qu'aucun travail ne peut éteindre est du décor. · 15 fiches d'outil en retard sur leur script, qu'aucune mécanique ne voyait. Toutes réparées. · Un « undefined » latent dans l'alerte de fraîcheur de la Ronde, signalé pour la 2e fois en trois jours. · 109 tâches ouvertes réparties sur 97 THÈMES différents : une file aussi fragmentée ne se priorise pas. · Les 3 documents HTML venaient d'un script jetable : justes ce soir-là, faux à la première correction du Markdown. · Un garde-fou annonçait depuis sa création quelque chose qu'il ne faisait pas : il promettait d'ignorer les chemins cités en commentaire, et rien ne retirait les commentaires. · Une mesure crédible et FAUSSE, arrêtée avant publication : elle annonçait que l'Agence n'a ni système de tâches ni KPI. Cause réelle — et ce n'était pas la première trouvée. · Un réveil a diffusé une consigne périmée à chaque heure de la nuit, et la leçon qui devait l'empêcher existait depuis quatre jours sans aucun mécanisme pour la porter. · Cinq frontières de documents jumeaux en une nuit : mes fiches sont trop longues (543 lignes contre une médiane de 101). · LE DÉTECTEUR DE TEST AFFAIBLI existait depuis cinq jours, entièrement testé, et RIEN NE L'APPELAIT — or c'est lui qui garde la règle « jamais désactiver un test », celle qui protège toutes les autres. Branché au crochet post-commit, plus une assertion qui vérifie le câblage. · TREIZE LIGNES DE SUIVI portaient le statut « Fait » sans leur barre finale. Normalisées. MAIS — et c'est moi qui l'ai trouvé en relisant mon propre travail une heure plus tard — le commit qui les corrigeait annonçait un CHIFFRE FAUX (« 115 → 102 »). Remesuré : 92 non terminées avant comme après, identique. La correction est écrite dans la ligne #1170 plutôt que laissée telle quelle. · ET LE CHIFFRE FAUX VENAIT D'UN VRAI DÉFAUT, bien plus gros : QUATRE LECTEURS DU MÊME REGISTRE avec TROIS définitions de « terminée ». 317 lignes sur 1 103 — 29 % — étaient lues « encore ouverte » par l'un et « terminée » par l'autre. La cause tient à une lettre : /^termin[ée]e/ exige un -e final que « Terminé » n'a pas, et « Terminé » est la forme LA PLUS COURANTE du registre (222 lignes). Le rapport du garde-fou se contredisait lui-même à dix lignes d'intervalle. Désaccord ramené à 0, et le contre-test porte sur la CLASSE : les deux lecteurs ne peuvent plus diverger d'une ligne. · QUATRE TESTS DU FILET jugeaient le code sur une donnée VIVANTE et non versionnée (le journal d'usage) : le vert venait du disque, jamais du code, et le filet repassait au rouge dès qu'un conteneur repartait à neuf. Pire : le filet ÉCRIVAIT dans cette donnée de production — quatre faux outils (docs/fake-*) dormaient dans le vrai journal. · ONZE APPELS écrivaient l'origine « demande » dans le compteur d'usage avec la clé FRANÇAISE <code>origine:</code> que la fonction ne lisait pas. Les onze retombaient en silence sur « cli_direct ». Rien ne cassait : le compteur comptait, il comptait juste autre chose. · UNE SECONDE ORIGINE DU VOCABULAIRE, <code>automatique_post_commit</code>, n'est écrite par AUCUNE ligne du dépôt. Elle rendait zéro depuis le premier jour, et ce zéro se lisait « inutilisée ».</p>
+<p>2bis. CE QUE J'AI CONSTRUIT PARCE QUE LA CLASSE RESTAIT OUVERTE</p>
+<hr>
+<p>Le défaut ci-dessus — la même notion écrite plusieurs fois, presque pareil — avait DÉJÀ été corrigé à moitié deux fois, le 23 et le 24 septembre, la leçon écrite en commentaire à chaque fois et jamais mécanisée. Corriger l'occurrence une troisième fois ne fermait rien.</p>
+<p>CLONE-HUNTER a donc reçu un TROISIÈME DÉTECTEUR : il relève les motifs qui se ressemblent à une ou deux modifications près sans être identiques, et les regroupe en FAMILLES classées par nombre de FICHIERS — parce que c'est le nombre de lecteurs qui divergeront le jour où l'un sera corrigé seul. La distance se DÉRIVE du corpus, et chaque famille sort comme une QUESTION, jamais un verdict : deux motifs à deux caractères d'écart peuvent viser deux choses opposées.</p>
+<p>PREMIER PASSAGE : 34 familles — dont SIX qui n'étaient pas des expressions régulières du tout (une division, deux sortes de balises fermantes, un motif construit avec new RegExp). 18 % de déchet évident, corrigé le soir même : 979 motifs, 28 familles, zéro déchet au contrôle.</p>
+<p>PUIS LES 28 TRIÉES UNE PAR UNE, parce qu'un rapport n'est pas fini quand il est écrit :</p>
+<ul><li>18 ÉCARTÉES avec leur raison — deux notions différentes dont la ressemblance est un hasard d'écriture. C'est exactement pour elles que l'outil pose une question au lieu de trancher.</li><li>10 RETENUES, dont une seule appelait une décision : deux motifs de NUMÉRO DE TÂCHE dans le même fichier qui ne s'accordent ni en bas ni en haut de l'échelle (#1175, au registre).</li><li>La DATE du projet est écrite de dix façons sur douze fichiers, alors que l'Article 32 en fait son sujet. Le SLUG D'OUTIL est normalisé quatre fois dans treize fichiers — les quatre traitent bien les accents, mais chacun l'a appris par SON PROPRE BUG, trois corrections documentées de la même cause.</li><li>ET LA LIGNE QUI JUSTIFIE D'AVOIR VÉRIFIÉ : l'extension de fichier source est écrite de quatre façons, et l'une oublie .tsx. Lue seule, elle annonce qu'une mesure de portabilité passe à côté de 65 composants React. VÉRIFIÉ : elle n'en passe aucun, parce que cet outil ne balaie que scripts/ et lib/, qui n'en portent pas un seul. Un constat non vérifié aurait produit un correctif qui ne corrige rien, et un chiffre alarmant dans un rapport.</li></ul>
+<p>2ter. LA SUITE DE LA NUIT — sept trouvailles de plus, toutes de la même famille</p>
+<hr>
+<p>· L'ALIGNEMENT EN CASCADE, sa consigne d'avant de dormir, appliquée à la lettre : 44 % → 80 % des documents remontent jusqu'à la racine. Seize parents déclarés AVEC leur raison — jamais le seul chemin, parce qu'un rattachement sans raison est indiscernable d'un rattachement fait au nom du fichier. LES NEUF QUI RESTENT SONT UN CHOIX, écrit : les plans de nuit traversent TOUTES les stratégies, et leur inventer un parent ferait mentir la cascade. · LA MÊME FAUSSE DETTE DOCUMENTAIRE FACTURÉE TROIS FOIS, avec son explication écrite en toutes lettres juste à côté depuis la première. Le document d'un process expliquait très bien pourquoi un changement de son contrôleur ne le concernait pas — mais aucune mécanique ne lit de la prose. Un document peut maintenant DÉCLARER, en une ligne que la machine lit, la portée qu'il a chez son contrôleur. · EL-PROFESSOR RÉCLAMAIT UNE NOTE IMPOSSIBLE, et c'est le même défaut, sur un outil sans rapport, deux heures plus tard : il demandait à chaque passage de noter une simulation dont l'index déclare EN GRAS que le transcript est perdu. Sans transcript il n'y a rien à lire. Deux cas de la même classe dans la même nuit — c'est ce qui l'a fait écrire comme une leçon (L41). · LE FILET SE CONTREDISAIT LUI-MÊME : une part rouge, puis quatre vertes, puis une rouge, sans qu'une ligne du code testé ait bougé. Les quatre parts écrivaient dans le même journal d'usage. Un filet qui se contredit apprend à relancer jusqu'au vert, et c'est ainsi qu'un vrai rouge finit par passer. Chaque part a désormais son propre journal. · LA RONDE, lancée en forme autonome (quinze outils, rapports datés sur le disque). Sa trouvaille me vise : DEUX OUTILS LANÇABLES étaient absents du catalogue, dont un que j'avais construit la veille. Invisibles à tool-brain, donc jamais recommandés, donc jamais lancés — et leur zéro d'usage se serait lu comme un verdict sur leur utilité. Puis, dans l'heure, déclarer l'offre a révélé que l'un ne comptait même pas ses propres passages : déclarer un outil, c'est aussi accepter d'être compté. · L'IDENTITÉ DE SESSION n'avait jamais été déposée : tous les rapports de la nuit portaient un trou dans leur carte d'en-tête. · ET DEUX LEÇONS écrites au registre — L40 (un test qui lit une donnée vivante juge le disque, pas le code) et L41 (une exemption écrite en prose n'exempte rien). Le filet a refusé trois fois pendant leur écriture, et chaque refus était juste : mauvais côté du trait, un mot réservé employé seul, et aucune trace d'origine datée. Les trois corrigés, aucun contourné.</p>
+<ul><li>CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI</li></ul>
+<hr>
+<p>· TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible. · Le renommage en masse — sa borne : c'est l'étape récompense, après le chantier. · LES DEUX ARTICLES DE CHARTE, écrits en entier mais NON appliqués. Il m'a donné la main ; sa borne « tu me montres avant » est permanente, l'autorisation était ponctuelle, et l'Article 14 exige une double confirmation. Les deux règles sont actives ailleurs, donc l'attente ne coûte rien. Texte prêt à coller : docs/plans/charte-diffs-a-approuver-2026-09-28.md, points 4 et 5. · Ouvrir de nouvelles tâches de CHANTIER — sa propre escalade l'interdit avant le cadre. · check-spirit et check-profile — vrais appels API, non nécessaires cette nuit.</p>
+<ul><li>CE QUI ATTEND UNE DÉCISION</li></ul>
+<hr>
+<p>· LA CIBLE elle-même : validée, corrigée, ou refusée. Tout en découle. · Les deux Articles de charte (voir §3). · Les huit décisions du document « les décisions qui t'attendent ». · Les quatre points laissés ouverts dans la Partie 0 de la boussole.</p>
+<p>LES LIVRABLES, TOUS EN PAGE HTML</p>
+<hr>
+<p>docs/grand-projet/html/la-cible.html docs/grand-projet/html/le-chemin.html docs/grand-projet/html/questions-de-calibrage.html docs/grand-projet/html/reponses-a-ses-49-questions.html docs/grand-projet/html/decisions-qui-attendent.html docs/grand-projet/html/grands-axes-de-depart.html docs/grand-projet/html/notes-des-echanges-de-depart.html docs/grand-projet/html/charte-diffs-a-approuver.html</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/rapports-de-nuit/2026-09-29-rapport.txt par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
