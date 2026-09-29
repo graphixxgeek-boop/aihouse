@@ -18215,6 +18215,81 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   console.log("Passed: le banc d'essai a trouvé deux défauts, et l'un d'eux était DANS LE BANC (2026-09-27, tâche #1034). PREMIER — LE FAUX POSITIF DU MESUREUR : le banc lance chaque outil SANS ARGUMENT, et cinq d'entre eux sortaient en erreur pour la meilleure des raisons du monde, à savoir qu'ils réclament un argument et refusent proprement de tourner à vide. Les compter comme non portables était une erreur du MESUREUR et jamais un défaut du mesuré — la leçon L4 en direct, un garde-fou qui accuse à tort cesse d'être lu. D'où un quatrième verdict, et le taux passe de 73 à 79 % sans qu'une seule ligne n'ait été corrigée ailleurs : la mesure était fausse, pas le parc. La nouvelle catégorie n'absorbe QUE le mode d'emploi, vérifié par le contre-test : un vrai plantage sur un fichier absent reste non portable. SECOND — LE DÉFAUT QUE LE TÉMOIN A RÉVÉLÉ DANS LE RUNNER PARALLÈLE, et il est le plus beau cas de la journée pour justifier un témoin étranger : sur un dépôt sans relevé de durées, TOUS les blocs pèsent zéro, donc le remplissage de sacs prend systématiquement la première part — 120 blocs dans la part 1, ZÉRO dans les trois autres. La parallélisation ne parallélisait plus rien, EN SILENCE, et personne ne pouvait le voir sur ce dépôt-ci où les mesures existent toujours. Sans poids, on répartit désormais au NOMBRE ; avec poids, l'équilibrage réel reprend la main — le repli remplace la vraie répartition seulement quand elle est impossible, jamais autrement.");
 }
 
+// —————————————————————————————————————————————————
+// LE DÉCOUPEUR DU FILET N'ÉTAIT PAS TESTÉ — HUIT FONCTIONS SUR NEUF (2026-09-29, tâche #1190)
+// —————————————————————————————————————————————————
+//
+// Mesuré dès qu'AXA-CHECK a cessé d'être aveugle (#1189) : `filet-en-parts` est l'outil le plus
+// faiblement couvert du dépôt — 1 fonction exercée sur 9, 11 %. Or c'est LUI qui décide quels tests
+// tournent dans quelle part : **un outil qui choisit ce qui est testé, lui-même non testé**. Si son
+// découpage perd un bloc, le rapport annonce un nombre de succès plus petit et rien ne dit qu'un
+// test a disparu — c'est la forme la plus coûteuse du faux vert, et c'est avec cet outil que chaque
+// commit de cette nuit a été validé.
+//
+// CE QUE CE BLOC VERROUILLE, ce sont les PROPRIÉTÉS DE SÛRETÉ du découpage, jamais un chiffre.
+{
+  const fep = await import('../scripts/filet-en-parts.mjs');
+
+  // ── 1. UN BLOC JAMAIS REFERMÉ N'EST PAS UN BLOC. Son propre commentaire le dit : le rendre
+  // produirait une part tronquée au milieu d'une expression, donc un échec qui ressemble à un vrai.
+  const srcOuvert = ['const a = 1;', '{', '  assert.ok(true);', '// jamais refermé'].join('\n');
+  assert.deepEqual(fep.blocsDeNiveauZero(srcOuvert), [], 'MUST CATCH: an unclosed block must never be returned — a truncated part fails in a way that looks exactly like a real failure');
+
+  // ── 2. UN BLOC IMBRIQUÉ RESTE UN SEUL BLOC : deux en rendraient un morceau testé deux fois.
+  const srcImbrique = ['prelude();', '{', '  {', '    assert.ok(1);', '  }', '  assert.ok(2);', '}', 'apres();'].join('\n');
+  const imbrique = fep.blocsDeNiveauZero(srcImbrique);
+  assert.equal(imbrique.length, 1, 'a nested brace must not open a second top-level block, otherwise the same code would be scheduled into two parts at once');
+  assert.deepEqual(imbrique[0], { debut: 2, fin: 7 }, 'and the block must span from its opening brace line to its closing one, both included — these two numbers decide which lines a part keeps, so being off by one blanks a line that should run');
+  // LA RECONNAISSANCE NE PORTE QUE SUR UNE ACCOLADE SEULE EN COLONNE 0, et c'est une contrainte
+  // réelle du découpeur, pas un détail : `  {` indenté n'ouvre rien à ses yeux. Ça tient parce que
+  // le filet écrit ses blocs de tête ainsi, et ça se DÉCLARE ici plutôt que de se découvrir le jour
+  // où quelqu'un indentera un bloc de tête et verra une part tronquée sans comprendre pourquoi.
+  assert.deepEqual(fep.blocsDeNiveauZero(['  {', '  assert.ok(1);', '  }'].join('\n')), [], 'an indented brace opens nothing for the splitter: the net writes its top-level blocks at column 0, and saying so here beats discovering it the day someone indents one');
+
+  // ── 3. AUCUN BLOC NE DOIT DISPARAÎTRE ENTRE LE DÉCOUPAGE ET LES PARTS. C'est LA propriété de
+  // sûreté : un bloc perdu, c'est un test qui ne tourne plus, et le total de succès baisse sans que
+  // rien ne le nomme.
+  const blocs = Array.from({ length: 11 }, (_, i) => ({ debut: i * 10 + 1, fin: i * 10 + 5, ms: (i % 3) * 100 }));
+  const parts = fep.repartir(blocs, 4);
+  const replaces = parts.flatMap((p) => p.blocs.map((b) => b.debut)).sort((a, b) => a - b);
+  assert.deepEqual(replaces, blocs.map((b) => b.debut), 'MUST CATCH: every block must land in exactly one part — one lost block is one test that stops running, and the success total drops without anything naming it');
+  assert.equal(new Set(replaces).size, replaces.length, 'and no block may land in two parts at once, which would count one success twice');
+
+  // ── 4. LE SOCLE VA DANS TOUTES LES PARTS, LE RESTE DANS UNE SEULE. Un bloc du socle oublié dans
+  // une part la fait échouer sur un état commun absent — et le message ne parle alors pas du vrai
+  // sujet, ce qui est le pire guide pour qui débogue.
+  const srcSocle = ['const x = 1;', '{', '  process.env.SITES_RUNTIME_ROOT = "x";', '}', '{', '  assert.ok(1);', '}'].join('\n');
+  const tous = fep.blocsDeNiveauZero(srcSocle);
+  const { socle, deplacables } = fep.separerSocleEtDeplacables(srcSocle, tous);
+  assert.equal(socle.length + deplacables.length, tous.length, 'the split must lose nothing: every block is either common ground or movable, never neither');
+  const part1 = fep.genererLaPart(srcSocle, [], { numero: 1 });
+  assert.equal(part1.split('\n').length, srcSocle.split('\n').length, 'a generated part must keep the EXACT line count of the source: every reported line number must still point at the same line of the real net');
+  for (const b of socle) {
+    for (let n = b.debut; n <= b.fin; n++) assert.equal(part1.split('\n')[n - 1], srcSocle.split('\n')[n - 1], 'MUST CATCH: a common-ground block must survive in EVERY part — dropping it makes the part fail on missing shared state, and the message then names the wrong subject');
+  }
+
+  // ── 5. RECOLLER NE DOIT JAMAIS PERDRE UN SUCCÈS. Le défaut est documenté et il a coûté une unité :
+  // deux tests réels du filet partagent leurs 40 premiers caractères, et dédoublonner là-dessus en
+  // faisait disparaître un. On dédoublonne sur la ligne ENTIÈRE.
+  const srcDeux = ['console.log("Passed: once the investigation is overdue (round 12) it stops");',
+                   'console.log("Passed: once the investigation is overdue (round 40) it warns");'].join('\n');
+  const recolle = fep.recollerLesSorties([
+    'Passed: once the investigation is overdue (round 12) it stops',
+    'Passed: once the investigation is overdue (round 40) it warns',
+  ], srcDeux);
+  assert.equal(recolle.lignes.length, 2, 'MUST CATCH: two successes sharing their first 40 characters are TWO successes — deduplicating on the prefix silently lost one, and a counter that loses a unit in silence is exactly what this project refuses everywhere else');
+  assert.equal(recolle.doublons, 0, 'and neither may be counted as a duplicate of the other');
+  const rejoue = fep.recollerLesSorties(['Passed: a', 'Passed: a'], 'console.log("Passed: a");');
+  assert.equal(rejoue.lignes.length, 1, 'while the SAME line replayed by another part really is one success, kept once');
+  assert.equal(rejoue.doublons, 1, 'and counted as a duplicate rather than dropped in silence — an unexpected duplicate would mean a block runs twice, which is precisely what we want to see');
+
+  // ── 6. LE POIDS SE LIT SUR LES LIGNES DU BLOC, jamais sur celles du voisin : une mesure attribuée
+  // au mauvais bloc déséquilibre les parts sans que le total change, donc sans que rien ne le dise.
+  const peses = fep.poidsDesBlocs([{ debut: 1, fin: 5 }, { debut: 6, fin: 10 }], [{ ligne: 3, ms: 70 }, { ligne: 8, ms: 30 }, { ligne: 99, ms: 500 }]);
+  assert.deepEqual(peses.map((b) => b.ms), [70, 30], 'a measurement must be charged to the block whose lines contain it, and one outside every block must be charged to none');
+  console.log("Passed: le découpeur du filet est enfin testé (2026-09-29, tâche #1190) — 1 fonction exercée sur 9 quand AXA-CHECK a cessé d'être aveugle, alors que c'est LUI qui décide quels tests tournent dans quelle part. Un outil qui choisit ce qui est testé, lui-même non testé : si son découpage perd un bloc, le total de succès baisse et rien ne dit qu'un test a disparu. Les PROPRIÉTÉS DE SÛRETÉ sont verrouillées, jamais un chiffre : un bloc jamais refermé n'est pas un bloc, un bloc imbriqué reste UN bloc, aucun bloc ne disparaît ni ne se dédouble entre le découpage et les parts, le socle survit dans TOUTES les parts, une part garde le nombre de lignes exact de la source (sinon chaque numéro de ligne rapporté désigne autre chose), le recollage ne perd pas deux succès qui partagent leurs quarante premiers caractères, et un poids se charge au bloc dont les lignes le contiennent.");
+}
+
 // ————————————————————————————————————————————————————————————————————————
 // LES DATES DE GIT PARTAGÉES (2026-09-27, chantier du filet, deuxième marche)
 // ————————————————————————————————————————————————————————————————————————
