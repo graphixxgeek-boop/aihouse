@@ -1,5 +1,8 @@
 # Enquête — les 6 champs `lib/life.ts` signalés par ARGUS
 
+> **DÉCOULE DE :** `docs/strategies/le-jeu-et-le-site-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il enquête sur six champs de `lib/life.ts`, c'est-à-dire sur le moteur du jeu.)*
+
 **Tâche #214.** Décision de l'utilisateur : *« J'enquête d'abord, sans rien retirer. »*
 **Rien n'a été retiré. Aucune ligne de `lib/life.ts` n'a été touchée.**
 

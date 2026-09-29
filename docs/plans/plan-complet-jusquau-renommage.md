@@ -1,5 +1,8 @@
 # Plan complet, jusqu'au renommage en masse
 
+> **DÉCOULE DE :** `docs/strategies/renommage-en-masse-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — c'est le plan qui mène à l'étape récompense, le renommage en masse.)*
+
 *(Écrit le 2026-09-24, APRÈS la reprise des notes — la règle qu'il venait de poser, appliquée à
 sa propre demande. Sa consigne : « detaille ton plan APRES AVOIR retrouvé TOUTES les notes, de tous
 les chantiers ». Ce document remplace la version que j'aurais écrite de mémoire, et il est

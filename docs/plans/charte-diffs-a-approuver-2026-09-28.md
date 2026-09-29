@@ -1,5 +1,11 @@
 # Les modifications de CLAUDE.md qui attendent ton accord
 
+> **DÉCOULE DE :** `docs/strategies/charte-et-referentiel-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il ne contient que des diffs de CLAUDE.md en attente de son accord.
+> Il passait pour déclaré à ma première passe : une ligne plus bas CITE la syntaxe `DÉCOULE DE` pour
+> l'expliquer, et mon contrôle a pris la MENTION pour la déclaration. Exactement le défaut que ce
+> dépôt corrige partout ailleurs, commis dans le geste qui le corrigeait.)*
+
 *(Produit le 2026-09-28. **Rien n'est appliqué** : ta borne pour la nuit autonome autorise CLAUDE.md
 « mais tu me montres avant ». Ce document EST le « avant ». Chaque entrée donne le texte actuel, le
 texte proposé, et ce que ça change concrètement.)*

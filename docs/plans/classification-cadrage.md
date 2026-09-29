@@ -1,5 +1,8 @@
 # Cadrage du chantier de classification — cible, signal de fin, lien avec l'organisation
 
+> **DÉCOULE DE :** `docs/strategies/classification-et-nivellement-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — c'est le cadrage du rangement de l'outillage.)*
+
 *(Tâche #743, produit le 2026-09-25T09:05Z. Sa question : « quel est la cible souhaitée ? à quelle
 classification finale on veut arriver et pourquoi ? quel est le lien avec l'organisation ? [...]
 quel est le signal qui nous dira que la classification est ok ».)*

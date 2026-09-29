@@ -1,5 +1,8 @@
 # Le filet de sécurité coûte 44 secondes à chaque commit — où part ce temps ?
 
+> **DÉCOULE DE :** `docs/strategies/outillage-et-garde-fous-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il mesure le coût du filet de sécurité, le garde-fou qui les porte tous.)*
+
 *(Constat DEEP-READER 7, « optimiser check-house.mjs, seule puce non traitée ». Tâche #818.
 **Ce document propose, il n'applique rien** — et cette retenue est une règle, pas une prudence
 personnelle : voir « pourquoi je ne l'ai pas fait » plus bas.)*

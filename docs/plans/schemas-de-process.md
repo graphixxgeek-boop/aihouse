@@ -1,5 +1,8 @@
 # La planche des schémas de process
 
+> **DÉCOULE DE :** `docs/strategies/process-et-ronde-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — c'est la planche des schémas de process, générée par god-of-all-process.)*
+
 *Générée par `node scripts/god-of-all-process.mjs schemas` — dérivée des données de god,
 jamais recopiée à la main. Un process ajouté demain y apparaît sans que personne n'y pense.*
 

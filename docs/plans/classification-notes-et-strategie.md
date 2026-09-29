@@ -1,5 +1,8 @@
 # Classification de l'Agence — toutes les notes, et la stratégie pour en sortir
 
+> **DÉCOULE DE :** `docs/strategies/classification-et-nivellement-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — ce sont les notes de reprise du même sujet.)*
+
 *(Tâche #742, produit le 2026-09-24. Sa demande : « Tu pourras me faire un rapport complet de TOUTES
 les notes prises sur la classification ? tu dois avoir tout archivé quelquepart » — puis, le message
 suivant : « on doit d'abord etablir notre strategie pour construire la classification à partir de

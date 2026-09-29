@@ -1,5 +1,8 @@
 # Cartographie des critères transversaux — ce que le paysage vérifie, et depuis combien d'endroits
 
+> **DÉCOULE DE :** `docs/strategies/outillage-et-garde-fous-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il cartographie ce que le paysage d'outils vérifie, et depuis combien d'endroits.)*
+
 *(2026-09-23, chantier 9 du plan de nuit. Calibrage exact de l'utilisateur : « montrer, ne rien
 supprimer ». Produit par `cartographieCriteresTransverses()` — HARMONIA.)*
 

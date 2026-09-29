@@ -1,5 +1,8 @@
 # Les motifs de déplacement cassés à l'affichage — mesure, cause, et correction proposée
 
+> **DÉCOULE DE :** `docs/strategies/le-jeu-et-le-site-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il porte sur ce que le VISITEUR voit — les motifs de déplacement affichés.)*
+
 > **Rien n'a été corrigé.** Ce défaut change **ce que le visiteur voit**, périmètre que
 > l'utilisateur s'est réservé le 2026-09-24. Ce document mesure, explique, et propose — la décision
 > lui appartient. Tâches #642 (constat du juge) et #225 (correction technique).

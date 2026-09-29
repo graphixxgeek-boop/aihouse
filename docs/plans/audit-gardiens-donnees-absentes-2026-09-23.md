@@ -1,5 +1,8 @@
 # Les Gardiens peuvent-ils dire « tout va bien » sur des données absentes ? (tâche #206)
 
+> **DÉCOULE DE :** `docs/strategies/donnees-et-mesure-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il demande si un Gardien peut dire « tout va bien » sur une donnée ABSENTE : c'est la question de la mesure, prise par son bout le plus dangereux.)*
+
 *(2026-09-23, travail pris en plus du plan de nuit — le plan était terminé, et le process autonome
 prévoit qu'on pioche alors dans les tâches ouvertes non sensibles en le disant clairement. Celle-ci
 est de la même famille que les quatre trouvailles de la nuit, donc elle capitalise dessus.)*

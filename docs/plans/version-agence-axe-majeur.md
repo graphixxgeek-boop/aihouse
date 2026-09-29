@@ -1,5 +1,8 @@
 # La version de l'Agence entière — quel axe fait monter le majeur ?
 
+> **DÉCOULE DE :** `docs/strategies/export-et-commercialisation-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il pose la question du numéro de version de l'Agence entière, qui n'a de sens que pour ce qui PART.)*
+
 *(Tâche #799 close, question ouverte #800. Posée le 2026-09-25. Une seule décision à prendre,
 et elle est à toi : je ne l'ai pas prise à ta place.)*
 

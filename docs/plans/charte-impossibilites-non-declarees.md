@@ -1,5 +1,8 @@
 # Treize règles de la charte n'ont aucun mécanisme — et ne le disent pas
 
+> **DÉCOULE DE :** `docs/strategies/charte-et-referentiel-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il recense les obligations de la charte qu'aucun mécanisme ne porte.)*
+
 *(Tâche #658, mesuré le 2026-09-25T09:17Z par `node scripts/moise-tables-de-loi.mjs diagnostic`.
 **La charte n'a pas été modifiée** : c'est son document, et treize retouches ne se décident pas
 sans lui.)*

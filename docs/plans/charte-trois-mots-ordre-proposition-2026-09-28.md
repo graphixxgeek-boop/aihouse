@@ -1,5 +1,8 @@
 # Les trois mots d'ordre dans la charte — proposition à valider (tâche #703)
 
+> **DÉCOULE DE :** `docs/strategies/charte-et-referentiel-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — il propose un vocabulaire pour la charte elle-même.)*
+
 *(2026-09-28. **Ce document PROPOSE, il n'acte rien.** La borne posée pour la nuit autonome est
 explicite : CLAUDE.md est autorisé « mais tu me montres avant ». Le texte ci-dessous est donc écrit,
 prêt à coller, et **CLAUDE.md n'a pas été touché**. Le mécanisme, lui, EXISTE déjà : les trois

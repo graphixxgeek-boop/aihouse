@@ -1,5 +1,8 @@
 # memory-audit et les scripts de simulation — enquête, sans aucun changement
 
+> **DÉCOULE DE :** `docs/strategies/outillage-et-garde-fous-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — c'est une enquête sur un outil et ses scripts de simulation.)*
+
 *(Chantier 11 du plan de nuit. Tu avais demandé une enquête et une explication écrite, **aucun
 changement** : rien n'a été modifié dans le code. Les corrections possibles sont proposées à la fin,
 pour ta décision.)*

@@ -1,5 +1,8 @@
 # Enquête — les 29 clusters de CLONE-HUNTER sont-ils réels ?
 
+> **DÉCOULE DE :** `docs/strategies/outillage-et-garde-fous-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — c'est l'enquête sur les trouvailles d'un Gardien sacré.)*
+
 **Tâche #215.** Décision de l'utilisateur : *« Je vérifie d'abord si les 28 sont réels. »*
 (29 aujourd'hui : 16 littéraux + 13 par renommage.)
 **Rien n'a été factorisé. Aucune ligne de code n'a été modifiée pour cette enquête.**

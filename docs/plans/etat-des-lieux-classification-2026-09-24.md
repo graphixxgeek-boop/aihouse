@@ -1,5 +1,8 @@
 # État des lieux après classification — 2026-09-24
 
+> **DÉCOULE DE :** `docs/strategies/classification-et-nivellement-strategie.md`
+> *(Déclaré le 2026-09-29, tâche #1178 — c'est l'état des lieux du même sujet.)*
+
 *(Chantier 1.5 du plan de nuit `docs/plans/nuit-2026-09-24-plan.md`. Écrit après avoir lancé les
 deux classifications pour de vrai contre le dépôt réel, jamais depuis une lecture de mémoire —
 c'est la seule façon dont les cinq faux verdicts de la nuit sont apparus, et ils ont produit plus
