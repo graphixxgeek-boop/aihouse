@@ -4502,6 +4502,8 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.equal(scriptRobustnessScore('harmonia',perSlug),undefined,'a tool never seen in this coverage run must report an honest N/A, never a fabricated 0%');
   assert.deepEqual(collectScriptCoverage('.sites-runtime/axa-check-script-nonexistent-dir'),{},'a coverage directory that was never produced must report an honest empty result, never crash the caller');
 
+  fs.rmSync(fixtureScriptCovDir,{recursive:true,force:true});
+  console.log("Passed: AXA-CHECK's extension to scripts/*.mjs (task #218) correctly maps each badge-eligible tool's real, non-uniformly-named script file (ARGUS's check-argus.mjs, THE-SCREENER's the-screener-capture.mjs, etc. — never a guessed slug-based filename), reuses functionCoverageFromV8()/robustnessScore() verbatim rather than a second scoring formula, and reports an honest absence for a tool never seen in a given coverage run or a directory that was never produced.");
   // LE RELEVÉ DES OUTILS SE LIT DANS LE MÊME DOSSIER QUE CELUI DES LIBS (2026-09-29, tâche #1189).
   //
   // Le défaut tenait en deux temps, et aucun des deux ne se voyait à la lecture : la couverture des
@@ -4524,8 +4526,6 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.ok(/part déclarée inexerçable/.test(srcAxa), 'a declared unexercisable share must keep travelling next to the measured percentage, never be hidden by it');
     console.log('Passed: la couverture des OUTILS se lit enfin dans le relevé que le filet vient de produire (2026-09-29, tâche #1189) — elle était collectée depuis un dossier que RIEN dans ce dépôt n\'écrit, et le vrai dossier était effacé cent lignes avant d\'être relu. Un Gardien sacré annonçait donc « 39 outils NON MESURÉS sur 40 » depuis la création de cette mesure, pendant que le commentaire d\'à côté disait correctement d\'où le relevé venait. Le test verrouille la CHAÎNE et jamais le chiffre : le dossier lu est celui que le filet remplit, la collecte précède la suppression, et une part déclarée inexerçable garde sa raison à côté de son pourcentage.');
   }
-  fs.rmSync(fixtureScriptCovDir,{recursive:true,force:true});
-  console.log("Passed: AXA-CHECK's extension to scripts/*.mjs (task #218) correctly maps each badge-eligible tool's real, non-uniformly-named script file (ARGUS's check-argus.mjs, THE-SCREENER's the-screener-capture.mjs, etc. — never a guessed slug-based filename), reuses functionCoverageFromV8()/robustnessScore() verbatim rather than a second scoring formula, and reports an honest absence for a tool never seen in a given coverage run or a directory that was never produced.");
 }
 
 {
