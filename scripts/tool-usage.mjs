@@ -143,7 +143,18 @@ export function recordCliUsage(toolSlug, nowOuOptions = undefined, env = process
   try {
     const options = (nowOuOptions && typeof nowOuOptions === "object") ? nowOuOptions : {};
     const now = typeof nowOuOptions === "number" ? nowOuOptions : (typeof options.now === "number" ? options.now : Date.now());
-    const declaree = options.origin ?? env?.TOOL_USAGE_ORIGIN;
+    // `origine` EST ACCEPTÉ COMME `origin`, ET CE N'EST PAS UNE COMPLAISANCE (2026-09-29, #1173).
+    //
+    // LE FAIT MESURÉ : onze appels réels, dans trois outils, écrivaient `{ origine: "demande" }`
+    // — la clé en français, comme tout le reste de ce dépôt. Cette fonction ne lisait que
+    // `origin`, donc `declaree` valait `undefined`, donc les onze retombaient sur `cli_direct`.
+    // Résultat : l'origine « demande » n'a JAMAIS été écrite par les onze endroits qui croyaient
+    // l'écrire, et la dimension « qui a déclenché cet outil » du compteur était fausse d'autant.
+    //
+    // POURQUOI ACCEPTER PLUTÔT QUE CORRIGER LES ONZE ET S'EN TENIR LÀ : ce dépôt écrit son code en
+    // français. Exiger ici le seul mot anglais garantit que le douzième appel refera la faute, et
+    // elle est INVISIBLE — rien ne casse, le compteur compte, il compte juste autre chose.
+    const declaree = options.origin ?? options.origine ?? env?.TOOL_USAGE_ORIGIN;
     recordToolUsage(toolSlug, USAGE_ORIGINS.includes(declaree) ? declaree : "cli_direct", now);
   } catch { /* best-effort, jamais bloquant — cf. commentaire ci-dessus */ }
 }
@@ -407,11 +418,19 @@ export function formatUsagesSpontanesLines(u) {
 // chemin de code ne peut la produire, ce qui est un fait mécanique. Décider s'il faut la câbler ou
 // la retirer reste un jugement humain (Article 24 : le garde-fou détecte l'écart, il ne tranche pas).
 export const ORIGINES_ECRITES_PAR_UN_HELPER = {
-  // Les trois seules origines qu'un chemin AUTOMATIQUE produit tout seul. Les autres ne peuvent
-  // naître que d'un appel délibéré à recordToolUsage() — possible, mais que rien ne déclenche.
+  // Les origines qu'un chemin AUTOMATIQUE produit tout seul. Les autres ne peuvent naître que d'un
+  // appel délibéré à recordToolUsage() — possible, mais que rien ne déclenche.
   cli_direct: /recordCliUsage\s*\(/,
   fonction: /recordFunctionUsage\s*\(/,
   verification: /TOOL_USAGE_ORIGIN/,
+  // « demande » A UN CHEMIN, ET IL A TOUJOURS ÉTÉ CASSÉ (2026-09-29, tâche #1173). Onze appels
+  // réels l'écrivent dans trois outils — mais tous passaient la clé `origine:` (en français) que
+  // `recordCliUsage()` ne lisait pas, de sorte que les onze retombaient sur « cli_direct ». Le
+  // chemin existe donc bel et bien ; c'est son écriture qui était perdue en route, réparée le
+  // même jour. Sans cette entrée, le garde-fou ne pouvait l'attester que par le JOURNAL, c'est-à-
+  // dire par une donnée vivante et non versionnée : il passait au rouge dès que le conteneur
+  // repartait à neuf, en accusant un chemin parfaitement présent dans le code.
+  demande: /origine?\s*:\s*["'`]demande["'`]/,
 };
 
 // LA PREMIÈRE VERSION DE CE GARDE-FOU ÉTAIT AVEUGLE, et la deuxième criait au loup. Les deux sont

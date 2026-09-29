@@ -1699,7 +1699,7 @@ export function findFoldersWithoutItem(items = CIRCLE_ITEMS, folders = CIRCLE_RE
 // la main, qui casserait son format existant (Article 19). cassandra-rh-signal (rapport complet,
 // HTML) et le récapitulatif de fin de Ronde suivent chacun leur propre mécanisme déjà établi,
 // jamais celui-ci — cf. leur `execute` respectif.
-export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_REPORT_FOLDERS, now = Date.now(), writeFileImpl = writeFileSync, readFileImpl = readFileSync, existsImpl = existsSync, mkdirImpl = mkdirSync } = {}) {
+export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_REPORT_FOLDERS, now = Date.now(), writeFileImpl = writeFileSync, readFileImpl = readFileSync, existsImpl = existsSync, mkdirImpl = mkdirSync, recordContributionImpl = recordToolContribution } = {}) {
   const folder = folders[itemId];
   if (!folder) throw new Error(`recordCircleItemReport: aucun dossier connu pour l'item "${itemId}" (cf. CIRCLE_REPORT_FOLDERS)`);
   const fullFolder = join(ROOT, folder);
@@ -1720,7 +1720,13 @@ export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_R
   //
   // JAMAIS BLOQUANT : même discipline que recordCliUsage() — un compteur qui ferait échouer
   // l'écriture qu'il observe serait pire que pas de compteur.
-  try { recordToolContribution(itemId, `${folder}${fileName}`, { nature: "registre", now, par: "ronde" }); } catch { /* best-effort */ }
+  // LE COMPTEUR S'INJECTE COMME LE RESTE (2026-09-29, tâche #1172) — et l'oublier a pollué une
+  // vraie donnée du dépôt. Les tests de cette fonction injectent un faux système de fichiers pour
+  // que rien ne touche le disque ; ce seul appel-ci ne l'était pas, et écrivait donc pour de bon.
+  // Résultat retrouvé dans `.tool-usage-history.json` : quatre contributions au nom d'outils qui
+  // n'existent pas (`new-dossier-item`, `existing-tool-item`) pointant vers `docs/fake-*`. Un test
+  // qui écrit dans la donnée de production fabrique la mesure qu'un autre test lira demain.
+  try { recordContributionImpl(itemId, `${folder}${fileName}`, { nature: "registre", now, par: "ronde" }); } catch { /* best-effort */ }
 
   const primaryIndexPath = join(fullFolder, "index.md");
   const hasPrimaryIndex = existsImpl(primaryIndexPath);

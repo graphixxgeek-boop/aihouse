@@ -3035,6 +3035,55 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   console.log('Passed: findOpenTasks() flags exactly the rows whose status is not "terminée" (an "ouverte" and an "en cours" row alike), reports each one\'s real distinct status rather than a generic open label, never flags an already-closed row regardless of its fidelity wording, reports zero rather than crashing on a session with no task rows at all, and — closing a real blind spot found on 2026-09-19 — also flags a row whose Statut column is empty instead of silently ignoring it.');
 }
 {
+  // estStatutTermine()/estStatutEcarte() — UNE SEULE DÉFINITION DE « CLOSE », ET LE CONTRE-TEST
+  // PORTE SUR LA CLASSE, JAMAIS SUR L'OCCURRENCE (2026-09-29, tâche #1171 — leçon L37).
+  //
+  // Le défaut réparé : quatre lecteurs du même registre testaient la clôture à la main avec trois
+  // motifs différents, et 317 lignes sur 1 103 (29 %) étaient lues « encore ouverte » par l'un et
+  // « terminée » par l'autre. La cause tenait à une lettre — `/^termin[ée]e/` exige un -e final que
+  // « Terminé » n'a pas, et « Terminé » est la forme la plus courante du registre (222 lignes).
+  //
+  // Le premier test ci-dessous vérifie les orthographes réelles ; le SECOND est celui qui compte :
+  // il interdit à un futur lecteur de redéfinir « close » dans son coin, ce qui est exactement
+  // l'erreur commise trois fois de suite ici (2026-09-23, 2026-09-24, puis encore le 2026-09-28).
+  const M=await import('../scripts/check-suivi-fidelity.mjs');
+  const {estStatutTermine,estStatutEcarte,findOpenTasks,categorizeTasks,findClaimedFilesMissing}=M;
+  for (const forme of ['Terminé','terminé','TERMINÉ','Terminée','[Terminé]','**Terminée**','Fait','fait','terminé le 2026-09-23T20:40Z — fidèle','Ouverte → Terminée (clôturée par #785)','En attente de sa décision → Terminée']) {
+    assert.ok(estStatutTermine(forme),`« ${forme} » est une clôture réelle du registre et doit être reconnue comme telle — c'est la forme sans -e final qui a rendu 317 lignes illisibles à trois garde-fous sur quatre`);
+  }
+  // BP4 — un détecteur qui n'a jamais mordu ne prouve rien : il doit refuser dans l'autre sens.
+  // LIMITE CONNUE ET DÉCLARÉE plutôt que tue (Article 27) : la reconnaissance est un PRÉFIXE, donc
+  // un statut commençant par « terminer… » serait lu comme une clôture. Aucune ligne réelle n'est
+  // dans ce cas et le resserrer changerait le classement canonique qui vit ainsi depuis le
+  // 2026-09-23 — c'est une décision à part, pas un effet de bord de cette correction-ci. Le cas
+  // est donc absent de la liste ci-dessous, sciemment : ce contre-test aurait échoué, et le taire
+  // en le retirant sans l'écrire aurait caché la seule faiblesse connue de la définition.
+  for (const forme of ['ouverte','en cours','à faire','A-TRANCHER','En attente de sa décision','Ouverte → Avancée','']) {
+    assert.ok(!estStatutTermine(forme),`« ${forme} » n'est PAS une clôture : élargir le vocabulaire ne doit jamais devenir tout accepter, sinon le mot « terminée » cesse de signifier quelque chose (tâche #1088)`);
+  }
+  assert.ok(estStatutEcarte('Écartée')&&estStatutEcarte('Reportée')&&estStatutEcarte('Sortie de la file'),'les trois formes réelles de mise à l\'écart doivent être reconnues');
+  assert.ok(!estStatutEcarte('ouverte')&&!estStatutEcarte('Terminée'),'une tâche ouverte ou close n\'est pas une tâche écartée — les trois états appellent des gestes opposés');
+
+  // LE CONTRE-TEST DE CLASSE : les deux lecteurs du registre ne peuvent plus diverger d'une ligne.
+  const registre='| N° | Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |\n|---|---|---|---|---|---|---|\n'
+    +['1|t|S|s|normal|d|Terminé','2|t|S|s|normal|d|[Terminé]','3|t|S|s|normal|d|Fait','4|t|S|s|normal|d|ouverte','5|t|S|s|normal|d|en cours','6|t|S|s|normal|d|Écartée','7|t|S|s|normal|d|Ouverte → Terminée (clôturée par #785)','8|t|S|s|normal|d|bleu']
+      .map(l=>'| '+l.split('|').join(' | ')+' |').join('\n');
+  const c=categorizeTasks(registre);
+  const attendu=new Set([...c.enCours,...c.ouverte,...c.autre].map(e=>e.row));
+  const vues=findOpenTasks(registre).map(h=>h.row);
+  assert.equal(vues.length,attendu.size,`findOpenTasks() et categorizeTasks() doivent compter le MÊME nombre de tâches non closes (${vues.length} vs ${attendu.size}) — sur le registre réel ils divergeaient de 317 lignes, et le rapport du garde-fou se contredisait lui-même à dix lignes d'intervalle`);
+  for (const r of vues) assert.ok(attendu.has(r),'MUST CATCH: une ligne lue « encore ouverte » par findOpenTasks() alors que categorizeTasks() la classe close ou écartée — deux lecteurs du même registre qui répondent différemment à la même question');
+  assert.equal(c.ecartee.length,1,'la ligne « Écartée » doit être classée écartée');
+  assert.ok(!vues.some(r=>/Écartée/.test(r)),'une tâche ÉCARTÉE ne doit jamais être listée « encore ouverte » : ce serait reproposer à l\'utilisateur ce qu\'il a explicitement fermé (leçon L22)');
+  assert.ok(vues.some(r=>/bleu/.test(r)),'un statut que personne ne reconnaît doit rester visible comme non clos, jamais absorbé dans les terminées');
+
+  // findClaimedFilesMissing() contrôlait UNIQUEMENT ce qu'il croyait terminé : les mêmes 317 lignes
+  // n'ont donc jamais vu passer la vérification « les fichiers déclarés existent-ils vraiment ».
+  const ligneTerminéSansE='| 9 | t | S | s | normal | fichier `docs/absent-pour-de-bon.md` | Terminé |';
+  assert.equal(findClaimedFilesMissing(registre+'\n'+ligneTerminéSansE,()=>false).length,1,'MUST CATCH: une clôture écrite « Terminé » (sans -e) doit être contrôlée comme les autres — ce garde-fou était aveugle sur un tiers des clôtures du registre, dont la forme la plus courante');
+  console.log('Passed: estStatutTermine()/estStatutEcarte() donnent UNE seule définition de « close » et de « écartée » aux quatre lecteurs du suivi — les onze orthographes réelles du registre sont reconnues, les sept non-clôtures refusées, findOpenTasks() et categorizeTasks() ne peuvent plus diverger d\'une seule ligne (ils divergeaient de 317 sur 1 103), une tâche écartée n\'est plus reproposée comme ouverte, et findClaimedFilesMissing() contrôle enfin les clôtures écrites « Terminé » sans -e final.');
+}
+{
   // splitTableRow() (2026-09-19, même relecture de fiabilité) : le découpage partagé par
   // findOpenTasks()/findUnverifiedClosures() doit survivre à un "|" littéral échappé dans une
   // description (une commande shell avec un tube, un exemple de tableau cité) sans décaler la
@@ -7688,6 +7737,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
       readFileImpl: (p) => fakeFs.get(p),
       existsImpl: (p) => fakeFs.has(p),
       mkdirImpl: () => {},
+      recordContributionImpl: () => {},   // #1172 : sans ça, ce test écrivait un faux outil dans le VRAI .tool-usage-history.json
     };
     const res = recordCircleItemReport('new-dossier-item', 'Rien à signaler.', opts);
     assert.ok(res.filePath.startsWith('docs/fake-new-dossier/circle-signal-') && res.filePath.endsWith('.txt'), 'a brand-new dossier must receive a real dated .txt proof-of-execution file, never a placeholder');
@@ -7708,6 +7758,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
       readFileImpl: (p) => (isCurated(p) && !fakeFs.has(p) ? curatedContent : fakeFs.get(p)),
       existsImpl: (p) => isCurated(p) || fakeFs.has(p),
       mkdirImpl: () => {},
+      recordContributionImpl: () => {},   // #1172 : sans ça, ce test écrivait un faux outil dans le VRAI .tool-usage-history.json
     };
     const res = recordCircleItemReport('existing-tool-item', 'Fraîcheur : 0 jour.', opts);
     assert.equal(res.indexPath, 'docs/fake-existing-tool/circle-signals-index.md', 'a dossier that already owns a hand-curated index.md must never have it touched — the signal goes to a distinct sibling file instead');
@@ -7730,6 +7781,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
       readFileImpl: (p) => fakeFs.get(p),
       existsImpl: (p) => fakeFs.has(p),
       mkdirImpl: () => {},
+      recordContributionImpl: () => {},   // #1172 : sans ça, ce test écrivait un faux outil dans le VRAI .tool-usage-history.json
       listDirImpl: (dir) => written.filter((f) => f.startsWith(dir)).map((f) => f.slice(dir.length)),
     };
     const first = recordSnapshotIfChanged('snap-item', 'contenu v1', { ...opts, now: Date.parse('2026-09-22T01:00:00Z') });
@@ -9876,11 +9928,33 @@ async function testImpactsIndirectsDunRenommage() {
   const ADN = await import('../scripts/agent-des-noms.mjs');
 
   // ── 1. EN DIRECT SUR LE VRAI DÉPÔT (Article 25), sur un outil dont on sait qu'il a une mémoire.
-  const r = await ADN.impactsIndirects('the-king', { root: process.cwd() });
-  assert.ok(r.mesurable, 'the measure must actually run against the real repository');
-  assert.ok(r.touches.length >= 2, `renaming a tool with a real history must show what it would lose (currently ${r.touches.length} sources)`);
-  assert.ok(r.touches.some((t) => t.source.includes('tool-usage')), 'the usage counter must be among them: it is indexed by slug, so a rename makes a tool look "never used" the day after');
-  assert.ok(r.touches.some((t) => t.source === 'docs/the-king/'), 'and its own registry folder must be named as a WHOLE that would be orphaned — not as a count of lines, because the whole thing is what is lost');
+  //
+  // LE SLUG SE DÉRIVE, IL NE SE RECOPIE PAS (2026-09-29, tâche #1172 — Article 24). Ce test
+  // nommait `the-king` en dur et exigeait de le trouver dans le compteur d'usage. Or le compteur
+  // est une donnée VIVANTE, non versionnée : elle se vide avec le conteneur. Le test est donc
+  // tombé en rouge sans qu'une seule ligne de code ait bougé — il punissait l'état du disque,
+  // jamais le comportement mesuré. On demande maintenant au compteur QUI il connaît, et on teste
+  // celui-là ; s'il ne connaît personne, on le DIT plutôt que de rendre un vert sur rien (L5/L11).
+  let slugAvecMemoire = null;
+  try {
+    const hist = JSON.parse(fs.readFileSync('.tool-usage-history.json', 'utf8'));
+    const vus = [...(hist.events ?? []), ...(hist.contributions ?? [])].map((e) => e.toolSlug).filter(Boolean);
+    slugAvecMemoire = vus.find((sl) => fs.existsSync(`docs/${sl}/`)) ?? vus[0] ?? null;
+  } catch { /* pas d'historique lisible : on le dira */ }
+  if (!slugAvecMemoire) {
+    console.log('⚠️  NON MESURÉ : le compteur d\'usage ne connaît aucun outil sur ce disque (donnée vivante, non versionnée). L\'impact indirect d\'un renommage sur la MÉMOIRE n\'a donc pas pu être vérifié en direct — ce n\'est pas « aucun impact », c\'est « rien à lire ».');
+  } else {
+    const r = await ADN.impactsIndirects(slugAvecMemoire, { root: process.cwd() });
+    assert.ok(r.mesurable, 'the measure must actually run against the real repository');
+    assert.ok(r.touches.length >= 1, `renaming a tool with a real history must show what it would lose (currently ${r.touches.length} sources for "${slugAvecMemoire}")`);
+    assert.ok(r.touches.some((t) => t.source.includes('tool-usage')), `the usage counter must be among them for "${slugAvecMemoire}": it is indexed by slug, so a rename makes a tool look "never used" the day after`);
+  }
+  // Le dossier de registre, lui, est versionné : il se teste sur un outil dont le dossier EXISTE
+  // pour de vrai dans le dépôt, dérivé lui aussi plutôt que nommé en dur.
+  const slugAvecDossier = fs.readdirSync('docs').find((d) => fs.existsSync(`scripts/${d}.mjs`) && fs.statSync(`docs/${d}`).isDirectory());
+  assert.ok(slugAvecDossier, 'le dépôt doit porter au moins un outil ayant à la fois son script et son dossier de registre — sinon cette vérification ne mesure rien');
+  const rd = await ADN.impactsIndirects(slugAvecDossier, { root: process.cwd() });
+  assert.ok(rd.touches.some((t) => t.source === `docs/${slugAvecDossier}/`), `and its own registry folder must be named as a WHOLE that would be orphaned — not as a count of lines, because the whole thing is what is lost (testé sur "${slugAvecDossier}")`);
 
   // ── 2. UN SLUG QUI N'EXISTE NULLE PART NE FAIT RIEN PERDRE, et le dit.
   const rien = await ADN.impactsIndirects('outil-qui-na-jamais-existe-nulle-part', { root: process.cwd() });
@@ -9896,11 +9970,11 @@ async function testImpactsIndirectsDunRenommage() {
   assert.equal((await ADN.impactsIndirects('')).mesurable, false, 'no slug, no measure');
 
   // ── 5. LA SORTIE DIT POURQUOI C'EST DANGEREUX, pas seulement ce qui est touché.
-  const texte = ADN.formatImpactsIndirectsLines(r).join('\n');
+  const texte = ADN.formatImpactsIndirectsLines(rd).join('\n');   // #1172 : `rd` est toujours défini ; `r` dépendait d'une donnée vivante qui peut être vide
   assert.ok(/Rien ne casse/.test(texte), 'the output must name the trap: nothing breaks, which is exactly why nobody notices — a broken import shows up at the first run, a lost memory reads as a brand-new tool');
   assert.ok(/HORS PORTÉE/.test(texte), 'and it must declare its limit: it looks only at DATA, because the slug in CODE is the technical impact the rename plan already covers');
 
-  console.log("Passed: les impacts INDIRECTS d'un renommage sont mesurés et imprimés dans le plan (2026-09-28, tâche #740). Le plan ne couvrait que l'impact technique — imports, chemins, mentions : tout ce qui casse BRUYAMMENT. Un outil renommé perd aussi sa MÉMOIRE, parce que le compteur d'usage est indexé par slug, que les registres vivent dans docs/<slug>/ et que les cérémonies de badge portent le slug : le lendemain, il ressort « jamais sollicité » et « tout neuf », ce qui fausse d'un coup CASSANDRA-RH et CLEAN-DIRTY-OLD. Rien ne casse, et c'est le problème : un import brisé se voit à la première exécution, une mémoire perdue se lit comme un outil neuf — l'inverse exact de la vérité (Article 27 : ce qui n'est plus atteignable n'existe plus). Mesuré sur the-king : 8 sources de données, dont 37 événements d'usage et son registre entier. Les sources se lisent chez data-archangel et jamais recopiées (Article 24), et seules les DONNÉES sont regardées, parce que compter aussi le code gonflerait l'alarme sans rien ajouter. Un inventaire illisible rend NON MESURÉ et jamais « rien à perdre » : le second autoriserait un renommage qui détruit un historique.");
+  console.log("Passed: les impacts INDIRECTS d'un renommage sont mesurés et imprimés dans le plan (2026-09-28, tâche #740). Le plan ne couvrait que l'impact technique — imports, chemins, mentions : tout ce qui casse BRUYAMMENT. Un outil renommé perd aussi sa MÉMOIRE, parce que le compteur d'usage est indexé par slug, que les registres vivent dans docs/<slug>/ et que les cérémonies de badge portent le slug : le lendemain, il ressort « jamais sollicité » et « tout neuf », ce qui fausse d'un coup CASSANDRA-RH et CLEAN-DIRTY-OLD. Rien ne casse, et c'est le problème : un import brisé se voit à la première exécution, une mémoire perdue se lit comme un outil neuf — l'inverse exact de la vérité (Article 27 : ce qui n'est plus atteignable n'existe plus). Le slug testé se DÉRIVE désormais du compteur et du dépôt réels (#1172) : il était écrit en dur (`the-king`) contre une donnée VIVANTE et non versionnée, si bien que le test est tombé en rouge le jour où le compteur s'est vidé avec le conteneur — il punissait l'état du disque, jamais un comportement. Quand le compteur ne connaît personne, le test le DIT (NON MESURÉ) au lieu de rendre un vert sur rien. Les sources se lisent chez data-archangel et jamais recopiées (Article 24), et seules les DONNÉES sont regardées, parce que compter aussi le code gonflerait l'alarme sans rien ajouter. Un inventaire illisible rend NON MESURÉ et jamais « rien à perdre » : le second autoriserait un renommage qui détruit un historique.");
 }
 await testImpactsIndirectsDunRenommage();
 
@@ -11047,14 +11121,26 @@ await testVerrousDOuverture();
   assert.deepEqual(inecrite.jamaisEcrites, ['spontane'], 'the vocabulary declaration and a comment are MENTIONS, never writes — the first version of this guard matched its own declaration and therefore certified as wired the one origin known for certain to have no write path at all');
   // Et le vrai dépôt, jamais seulement des cas fabriqués (Article 25 : un outil qui n'a jamais
   // tourné contre le vrai dépôt est une intention). Le constat attendu est NOMMÉ, pas un seuil :
-  // si « spontane » finit câblée ou retirée, ce test doit être relu, jamais passer en silence.
+  // si l'une d'elles finit câblée ou retirée, ce test doit être relu, jamais passer en silence.
+  //
+  // ELLES SONT DEUX, PAS UNE (2026-09-29, tâche #1173) — et la seconde ne s'est montrée que le
+  // jour où le journal s'est vidé. `automatique_post_commit` fait partie du vocabulaire depuis le
+  // premier jour et **aucune ligne de ce dépôt ne l'écrit** : une seule mention, dans un
+  // commentaire de doc-report.mjs. Le test restait vert parce que le JOURNAL en portait des
+  // événements — une donnée vivante, non versionnée, qui disparaît avec le conteneur. Le vert
+  // venait donc du disque, jamais du code : exactement le signal adjacent pris pour le signal
+  // visé. La troisième, « demande », avait bien onze écritures réelles, toutes cassées par une
+  // clé en français que `recordCliUsage()` ne lisait pas ; elle est réparée et déclarée câblée.
+  const INECRITES_CONNUES = ['spontane', 'automatique_post_commit'];
   {
     const srcsReelles = fs.readdirSync('scripts').filter((f) => f.endsWith('.mjs')).map((f) => { try { return fs.readFileSync(path.join('scripts', f), 'utf8'); } catch { return ''; } });
     let journalReel = null;
     try { journalReel = JSON.parse(fs.readFileSync('.tool-usage-history.json', 'utf8')); } catch { /* absent en CI : le garde-fou le dira lui-même */ }
     const reel = findOriginesJamaisEcrites(srcsReelles, { historique: journalReel });
     assert.ok(reel.mesurable && reel.fichiersLus > 20, 'the guard must actually read the real scripts folder, never conclude on an empty sweep — a zero without its denominator is the defect this whole day was spent on');
-    assert.ok(!reel.jamaisEcrites.length || reel.jamaisEcrites.every((o) => o === 'spontane'), `the only origin the real repo cannot write is "spontane" (derived instead by usagesSpontanes()); any NEW unwritable origin must fail here rather than quietly become another counter that always reads zero — found: ${reel.jamaisEcrites.join(', ')}`);
+    assert.ok(reel.jamaisEcrites.every((o) => INECRITES_CONNUES.includes(o)), `the only origins the real repo cannot write are ${INECRITES_CONNUES.join(' and ')}; any NEW unwritable origin must fail here rather than quietly become another counter that always reads zero — found: ${reel.jamaisEcrites.join(', ')}`);
+    assert.ok(!reel.jamaisEcrites.includes('demande'), "MUST CATCH: l'origine « demande » a onze écritures réelles dans le code — la voir ici jamais écrite signifie que la clé d'option est repartie en vrille (elle l'a été : la clé française origine: que recordCliUsage() ne lisait pas, onze appels retombant en silence sur cli_direct)");
+    assert.ok(reel.jamaisEcrites.length <= INECRITES_CONNUES.length, "la liste des origines inécrites ne doit jamais s'allonger sans qu'on le décide : une catégorie que personne ne peut écrire rend toujours zéro, et ce zéro se lit comme inutilisée");
   }
   {
     const h = { events: [], contributions: [
@@ -13046,7 +13132,19 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // LES DEUX NOTES (2026-09-22, demande de l'utilisateur, calibrées en DEUX notes séparées) : l'une
   // dit comment va l'OUTIL, l'autre ce que vaut CE rapport-ci. Les fondre en un chiffre unique les
   // rendrait toutes les deux illisibles.
-  assert.match(healthLine('tool-brain'), /2\/2/, 'a tool really solicited and carrying a real objective must score full marks — checked live against the project\'s own journals, never a fixture');
+  // LE SUJET SE DÉRIVE DU JOURNAL, IL NE SE NOMME PAS EN DUR (2026-09-29, tâche #1172 — Article 24).
+  // Cette ligne exigeait 2/2 pour « tool-brain ». Or la moitié de la note se lit dans
+  // `.tool-usage-history.json`, une donnée VIVANTE et non versionnée qui repart à vide avec le
+  // conteneur : le test tombait en rouge sans qu'une ligne de code ait bougé, en accusant un outil
+  // parfaitement sain. On demande donc au journal QUI il connaît, on note celui-là, et s'il ne
+  // connaît personne on le DIT — « rien à lire » n'est pas « tout va bien » (leçons L5/L11).
+  let outilNote = null;
+  try {
+    const j = JSON.parse(fs.readFileSync('.tool-usage-history.json', 'utf8'));
+    outilNote = [...new Set((j.events ?? []).map((e) => e.toolSlug).filter(Boolean))].find((sl) => /2\/2/.test(healthLine(sl))) ?? null;
+  } catch { /* journal illisible : on le dira */ }
+  if (outilNote) assert.match(healthLine(outilNote), /2\/2/, `a tool really solicited and carrying a real objective must score full marks — checked live against the project's own journals, never a fixture (tested on "${outilNote}")`);
+  else console.log("⚠️  NON MESURÉ : aucun outil du journal d'usage n'atteint 2/2 sur ce disque (donnée vivante, non versionnée). La note haute n'a donc pas pu être vérifiée en direct — ce n'est pas « la note est cassée », c'est « il n'y a rien à noter ».");
   assert.match(healthLine('outil-qui-n-existe-pas'), /0\/2/, 'an unknown tool must score zero rather than be given the benefit of the doubt: a tool nobody can measure is not a healthy tool, it is an unmeasured one');
   // TROIS ÉTATS POUR L'OBJECTIF, jamais deux (2026-09-22) : chiffré, absent-mais-assumé, ou vraiment
   // absent. Vérifié en direct contre le vrai registre : argus est un Gardien automatique à chaque
@@ -13065,7 +13163,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(couverture.assumes.length>0&&couverture.chiffres.length>0,'both states must exist in practice: forcing a figure on a Gardien that runs at every commit would measure the number of commits, and having no assumed-absence state would push to invent hollow objectives to go green');
   assert.match(objectivesCoverageLines({mesurable:true,total:3,chiffres:['a'],assumes:[],trous:['b','c'],couverts:1}).join(' '),/branché\(s\) à RIEN/,'a member plugged to nothing must be named loudly — it is a decision never taken, not a fault of the tool');
   assert.match(objectivesCoverageLines({mesurable:false,raison:'illisible'}).join(' '),/illisible/,'an unreadable registry must be reported as unreadable, never as full coverage');
-  assert.match(healthLine('argus'), /2\/2/, 'a Gardien whose absence of objective is a written decision must not be penalised for it — inventing a frequency target for a tool that runs at every commit would measure the number of commits, nothing else');
+  // CETTE ASSERTION PORTAIT SUR LE TOTAL, ET LE TOTAL MÊLE DEUX CHOSES (2026-09-29, tâche #1172).
+  // Son intention est une règle sur les OBJECTIFS : une absence d'objectif écrite comme une décision
+  // ne doit rien coûter. Exiger 2/2 y ajoutait le second signal, celui de la SOLLICITATION, qui se
+  // lit dans le journal d'usage — donnée vivante, non versionnée, et vide dès qu'un conteneur
+  // repart à neuf (ici les crochets git ne sont même pas installés, donc argus ne tourne jamais).
+  // Résultat : une règle sur les objectifs tombait en rouge à cause de l'usage. On teste maintenant
+  // le signal que l'assertion vise vraiment, et la ligne suivante vérifie qu'il le DIT.
+  const signalObjectifArgus = toolHealth('argus').signaux.find((sig) => /objectif/i.test(sig.texte));
+  assert.ok(signalObjectifArgus && signalObjectifArgus.ok !== false, "a Gardien whose absence of objective is a written decision must not be penalised for it — inventing a frequency target for a tool that runs at every commit would measure the number of commits, nothing else");
   assert.ok(toolHealth('argus').signaux.some((sig) => /décision écrite/.test(sig.texte)), 'the deliberate absence must be NAMED as a decision in the signal, never silently counted as if an objective existed');
   // Cette assertion visait check-level-target quand il n'avait NI objectif NI décision écrite. Le
   // trou a été comblé le jour même (absence assumée : il est appelé par d'autres outils plutôt que
@@ -19891,10 +19997,23 @@ async function testToolBrainEstIlLePointDEntree() {
   // ET LA MESURE RÉELLE, celle qui répond à sa question.
   const TU = await import('../scripts/tool-usage.mjs');
   const reel = TB.precedenceDeToolBrain(TU.loadToolUsageHistory().events ?? []);
-  assert.equal(reel.mesurable, true, 'checked live: the real counter answers the question instead of an intention');
-  assert.ok(reel.passages > 0);
+  // LE JOURNAL D'USAGE EST UNE DONNÉE VIVANTE, NON VERSIONNÉE (2026-09-29, tâche #1172). Exiger
+  // `mesurable === true` revenait à exiger que le conteneur ait déjà vécu : le test tombait en
+  // rouge sur un dépôt frais, en accusant un outil qui n'a rien fait de mal. L'outil, LUI, a le
+  // bon comportement — il répond NON MESURÉ plutôt qu'un taux de zéro — et c'est ça qu'on vérifie :
+  // soit il mesure et le chiffre tient, soit il refuse de conclure et le DIT. Les deux sont justes ;
+  // ce qui ne le serait pas, c'est un taux rendu sur un journal vide (leçons L5/L11).
+  // ZÉRO PASSAGE EST UNE MESURE, PAS UNE PANNE : un dépôt frais où tool-brain n'a pas encore été
+  // consulté rend honnêtement 0 % de précédence. Le premier jet de ce contre-test exigeait
+  // `passages > 0` et se trompait donc de cible — on vérifie la COHÉRENCE du chiffre, jamais sa
+  // valeur, qui dépend de ce que le conteneur a vécu.
+  if (reel.mesurable) {
+    assert.ok(reel.spontanes > 0, 'a measurable rate needs a real denominator: without a single spontaneous call there is no discipline to measure, and the function must say so instead');
+    assert.ok(reel.precedes <= reel.spontanes && Number.isFinite(reel.taux) && reel.taux >= 0 && reel.taux <= 100, `the rate must stay inside its own denominator (${reel.precedes}/${reel.spontanes} = ${reel.taux} %) — a percentage above 100 or below 0 would mean the window is crediting passages that never happened`);
+  }
+  else assert.ok(/SPONTAN|aucun/i.test(reel.pourquoi ?? ''), "an empty journal must produce a NAMED refusal to conclude, never a rate of zero — « rien d'enregistré » et « rien de décidé » appellent deux gestes opposés");
 
-  console.log(`Passed: tool-brain est-il vraiment le point d'entrée (2026-09-28, tâche #575). SA QUESTION : « c'est devenu ton point d'entree pour les outils ? tu utilises ? tout fonctionne ? », avec son exigence habituelle — une mesure RÉELLE depuis le compteur, jamais une déclaration d'intention. LA RÉPONSE, MESURÉE : ${reel.passages} passages enregistrés, et ${reel.precedes} des ${reel.spontanes} appels SPONTANÉS ont été précédés d'une consultation dans les dix minutes, soit ${reel.taux} % sur tout l'historique et ${reel.tauxRecent} % sur les 24 dernières heures — la discipline s'est nettement améliorée, et c'est le second chiffre qui se corrige. LES APPELS DICTÉS PAR UN CROCHET OU UN PROCESS SONT EXCLUS du dénominateur : ils n'avaient pas à passer par ici, et les compter accuserait d'un manquement qui n'existe pas (L4). CE QUI NE SE MESURE PAS EST DIT AVEC LE CHIFFRE : c'est une PRÉCÉDENCE, jamais un usage — le compteur sait qu'un outil a tourné et quand, il ne saura jamais si la consultation a servi. Et la fenêtre de dix minutes est un CHOIX : le contre-test montre qu'une fenêtre assez large crédite tout, ce qui est précisément pourquoi le rapport imprime la fenêtre au lieu de la cacher. LA MESURE EST RENDUE À CHAQUE RAPPORT plutôt que produite une fois : un chiffre produit dans une conversation disparaît avec elle, et la question se repose à chaque période.`);
+  console.log(`Passed: tool-brain est-il vraiment le point d'entrée (2026-09-28, tâche #575). SA QUESTION : « c'est devenu ton point d'entree pour les outils ? tu utilises ? tout fonctionne ? », avec son exigence habituelle — une mesure RÉELLE depuis le compteur, jamais une déclaration d'intention. LA RÉPONSE, MESURÉE (ou son refus honnête de conclure quand le journal est vide, cf. #1172) : ${reel.passages ?? '—'} passages enregistrés, et ${reel.precedes} des ${reel.spontanes} appels SPONTANÉS ont été précédés d'une consultation dans les dix minutes, soit ${reel.taux} % sur tout l'historique et ${reel.tauxRecent} % sur les 24 dernières heures — la discipline s'est nettement améliorée, et c'est le second chiffre qui se corrige. LES APPELS DICTÉS PAR UN CROCHET OU UN PROCESS SONT EXCLUS du dénominateur : ils n'avaient pas à passer par ici, et les compter accuserait d'un manquement qui n'existe pas (L4). CE QUI NE SE MESURE PAS EST DIT AVEC LE CHIFFRE : c'est une PRÉCÉDENCE, jamais un usage — le compteur sait qu'un outil a tourné et quand, il ne saura jamais si la consultation a servi. Et la fenêtre de dix minutes est un CHOIX : le contre-test montre qu'une fenêtre assez large crédite tout, ce qui est précisément pourquoi le rapport imprime la fenêtre au lieu de la cacher. LA MESURE EST RENDUE À CHAQUE RAPPORT plutôt que produite une fois : un chiffre produit dans une conversation disparaît avec elle, et la question se repose à chaque période.`);
 }
 await testToolBrainEstIlLePointDEntree();
 

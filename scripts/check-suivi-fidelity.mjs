@@ -130,6 +130,50 @@ export function lignesDeTacheAvecStatut(sessionText) {
     });
 }
 
+// estStatutTermine()/estStatutEcarte() — LA MÊME QUESTION POSÉE QUATRE FOIS, ET TROIS RÉPONSES
+// DIFFÉRENTES (2026-09-29, tâche #1171).
+//
+// LE CHIFFRE AVANT L'EXPLICATION, parce que c'est lui qui rend la chose incontestable : sur les
+// 1 103 lignes du registre, **317 sont lues « encore ouverte » par un lecteur et « terminée » par
+// un autre** — 29 % du suivi, sur la question la plus simple qu'on puisse lui poser.
+//
+// LA CAUSE TIENT EN UNE LETTRE. Quatre fonctions testaient la clôture à la main, avec trois motifs
+// distincts : `/^termin[ée]e/i` (trois d'entre elles) et `/^termin[ée]/i` (la quatrième). Le
+// registre, lui, écrit « Terminé » sans -e final **222 fois**, « TERMINÉ » 24 fois. Le premier
+// motif exige ce -e : il rate donc la forme la PLUS COURANTE de clôture du projet. S'y ajoutent
+// « [Terminé] », « **Terminée** », « Fait », « terminé le 2026-09-23T… » et les transitions
+// « Ouverte → Terminée », toutes lues correctement par `categorizeTasks()` et par personne d'autre.
+//
+// CE QUE ÇA A PRODUIT, ET LES DEUX DÉGÂTS SONT OPPOSÉS :
+//   · `findOpenTasks()` annonçait **409 tâches encore ouvertes** là où il y en a 88. Le rapport du
+//     garde-fou se contredisait donc lui-même à dix lignes d'intervalle — « Ouvertes / à faire :
+//     85 » en tête, « 300 tâche(s) non fermée(s) » dans le détail juste en dessous, la première
+//     ligne du détail étant une tâche dont le statut est littéralement « [Terminé] ». Un garde-fou
+//     qui accuse 4,4 fois trop cesse d'être lu (leçon L4) — et il a cessé de l'être : c'est
+//     précisément dans cette section que j'ai pris le chiffre « 115 » du commit précédent, qui
+//     était faux (la mesure vraie ne bouge pas : 92 non terminées avant comme après).
+//   · `findClaimedFilesMissing()` fait l'inverse : il ne contrôle QUE ce qu'il croit terminé. Ces
+//     mêmes 317 lignes n'ont donc jamais vu passer la vérification « les fichiers que tu déclares
+//     avoir créés existent-ils vraiment ». Le garde-fou était aveugle sur un tiers des clôtures.
+//
+// ET LA LEÇON ÉTAIT DÉJÀ ÉCRITE DANS CE FICHIER, quarante lignes plus bas : « Un motif partagé se
+// corrige à l'endroit où il est DÉFINI, jamais chez celui qui s'en plaint ». Elle y a été écrite le
+// 2026-09-24 après exactement ce défaut, corrigé alors chez un seul appelant sur quatre. Le
+// 2026-09-23, `normaliserStatut()` a été écrit pour clore ce vocabulaire — et n'a été branché que
+// sur `categorizeTasks()`. Deux corrections partielles du même défaut, à un jour d'intervalle.
+//
+// D'OÙ CES DEUX FONCTIONS : une seule définition de « close », une seule de « écartée », sur le
+// statut NORMALISÉ. Une septième orthographe demain se reconnaît en un seul endroit.
+export function estStatutTermine(statut = "") {
+  const s = normaliserStatut(statut);
+  return /^termin[ée]/.test(s) || /^fait\b/.test(s);
+}
+
+export function estStatutEcarte(statut = "") {
+  const s = normaliserStatut(statut);
+  return /^ecart/.test(s) || /^report/.test(s) || /^abandon/.test(s) || /^sortie de la file/.test(s);
+}
+
 // Une ligne du tableau "| Horodatage | Sujet | Sous-sujet | Sensibilité | Description | Statut |"
 // est une clôture non vérifiée si son dernier champ (Statut) commence par "terminée" sans jamais
 // contenir "fidèle" ni "écart". Une tâche encore "ouverte"/"en cours" n'est jamais concernée — le
@@ -137,7 +181,7 @@ export function lignesDeTacheAvecStatut(sessionText) {
 export function findUnverifiedClosures(sessionText) {
   const hits = [];
   for (const { row, statut } of lignesDeTacheAvecStatut(sessionText)) {
-    if (/^termin[ée]e/i.test(statut) && !/fid[èe]le/i.test(statut) && !/[ée]cart/i.test(statut)) {
+    if (estStatutTermine(statut) && !/fid[èe]le/i.test(statut) && !/[ée]cart/i.test(statut)) {
       hits.push({ row: row.trim(), statut });
     }
   }
@@ -174,7 +218,7 @@ export function findCloturesSansRituel(sessionText, { depuis = PREMIERE_TACHE_AV
     // écrite. Accuser 870 lignes d'un coup est la leçon L4, payée deux fois dans ce fichier.
     if (!Number.isFinite(numero) || numero < depuis) continue;
     const statut = cells[cells.length - 1] ?? "";
-    if (!/^termin[ée]/i.test(statut)) continue;
+    if (!estStatutTermine(statut)) continue;
     // Une ligne portant des « | » en trop n'est pas une case vide : c'est une ligne mal formée, et
     // le geste qui la répare n'est pas le même. On ne la compte pas ici — un autre garde-fou la voit.
     if (cells.length > FORMAT_TACHE.length) continue;
@@ -207,7 +251,7 @@ const REPO_PATH_PATTERN = /`((?:docs|lib|app|scripts|components)\/[A-Za-z0-9_.\-
 export function findClaimedFilesMissing(sessionText, existsFn = existsSync, root = ROOT) {
   const hits = [];
   for (const { row, cells, statut } of lignesDeTacheAvecStatut(sessionText)) {
-    if (!/^termin[ée]e/i.test(statut)) continue;
+    if (!estStatutTermine(statut)) continue;
     // Description = avant-dernière colonne, jamais un index fixe (2026-09-20, ajout de la colonne
     // N° en première position, cf. extractTaskNumbers ci-dessous) : Description précède toujours
     // immédiatement Statut, que la ligne porte ou non cette nouvelle colonne — même principe de
@@ -232,7 +276,12 @@ export function findOpenTasks(sessionText) {
     // Un statut VIDE est une ligne mal formée (tableau markdown cassé) — un trou à signaler, jamais
     // un silence qui la laisserait invisible au garde-fou (trouvé le 2026-09-19 en relisant le
     // script à la demande explicite de l'utilisateur : « assure-toi encore de la fiabilité »).
-    if (!statut || !/^termin[ée]e/i.test(statut)) hits.push({ row: row.trim(), statut, cells });
+    // ÉCARTÉE N'EST PAS OUVERTE, et l'oublier ici rouvrait ce qu'il avait fermé. Une tâche
+    // écartée/reportée est une DÉCISION de l'utilisateur ; la lister sous « encore ouvertes » la lui
+    // repropose à chaque passage, ce qu'il a explicitement demandé qu'on ne fasse jamais (leçon L22,
+    // déjà écrite dans `categorizeTasks()` — et qui n'avait, elle non plus, été branchée qu'à un seul
+    // lecteur). Les deux tests viennent maintenant de la même définition que le classement.
+    if (!statut || (!estStatutTermine(statut) && !estStatutEcarte(statut))) hits.push({ row: row.trim(), statut, cells });
   }
   return hits;
 }
@@ -275,7 +324,7 @@ export function categorizeTasks(sessionText) {
   for (const { row, cells, statut } of lignesDeTacheAvecStatut(sessionText)) {
     const entry = { row: row.trim(), statut, cells, statutNormalise: normaliserStatut(statut) };
     const s = entry.statutNormalise;
-    if (/^termin[ée]/.test(s) || /^fait\b/.test(s)) buckets.terminee.push(entry);
+    if (estStatutTermine(s)) buckets.terminee.push(entry);
     else if (/^en cours/.test(s)) buckets.enCours.push(entry);
     // « en attente de décision » est une tâche OUVERTE qui attend l'utilisateur, jamais une
     // décision déjà prise : la ranger ailleurs la ferait disparaître de ce qu'il reste à trancher.
@@ -296,7 +345,7 @@ export function categorizeTasks(sessionText) {
     //   · « Sortie de la file » (#734) — c'est SA décision explicite du 2026-09-26 (« je sors #734
     //     SQUID GAME de la file, refonte graphique »). La compter ouverte la lui reproposerait à
     //     chaque passage, exactement ce que la leçon L22 interdit.
-    else if (/^ecart/.test(s) || /^report/.test(s) || /^abandon/.test(s) || /^sortie de la file/.test(s)) buckets.ecartee.push(entry);
+    else if (estStatutEcarte(s)) buckets.ecartee.push(entry);
     else buckets.autre.push(entry);
   }
   return buckets;
