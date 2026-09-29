@@ -1,0 +1,114 @@
+RAPPORT DE LA NUIT AUTONOME DU 2026-09-29
+=========================================
+Heure LUE (source système), pas devinée. Process `nuit` suivi dans son ordre.
+109 tâches ouvertes figées au départ (docs/rapports-de-nuit/plan-depart-2026-09-29.txt).
+
+
+CE QU'IL AVAIT DEMANDÉ AVANT DE DORMIR
+--------------------------------------
+1. Respecter tout ce qui s'est dit dans les échanges de départ, et l'enregistrer.
+2. Lancer le mode auto selon le process, mêmes réglages que la veille, 20 h sans s'arrêter.
+3. Piste : revoir philosophie-et-politique pour y inscrire LE BUT, la raison d'être, et ce que
+   le projet doit livrer. Sa priorité provisoire : commercialiser l'Agence.
+4. L'ALIGNEMENT EN CASCADE doit HABITER le travail dès qu'on crée quelque chose.
+5. « Fais le nécessaire dans la charte et les process si besoin, je te laisse la main. »
+
+
+1. CE QUI A ÉTÉ FAIT — dans l'ordre de SON escalade
+----------------------------------------------------
+
+LA CIBLE (niveau 2 de son escalade)
+  Ses trois questions sur le but ultime, répondues PAR UNE MESURE et non par un avis.
+  Sur les 364 lignes et 19 principes de la boussole du projet :
+      « agence »          0 occurrence
+      « but »             0
+      « raison d'être »   0
+      « commercialiser »  0
+  Le but n'était défini NULLE PART, et l'en-tête décrivait le projet comme « créatif/narratif » —
+  c'est-à-dire l'inverse de la direction qu'il énonce. Le document le plus fixe de la chaîne
+  pointait dans la mauvaise direction, en silence, depuis le 2026-09-18.
+  Plus large : « commercialiser » n'existe dans AUCUNE décision du suivi ni AUCUN document du
+  référentiel. Tout l'outillage a été construit sans cible commerciale déclarée — ce qui explique
+  pourquoi « quand l'Agence est-elle finie ? » n'a jamais eu de réponse.
+  → Une Partie 0 — LE BUT entre dans la boussole, séparant ce qui est ÉTABLI (ses mots), ce qui
+    est PROPOSÉ (par moi) et ce qui reste À TRANCHER (4 points). Rien décidé à sa place.
+
+LE CHEMIN (niveaux 3 et 4)
+  Sept étapes ordonnées par dépendance réelle, à la place des sept fils parallèles du plan
+  précédent — des fils n'ont pas d'ordre, donc rien ne peut être « pas encore le moment ».
+      1 SAVOIR → 2 ALIGNER → 3 RATIONALISER → 4 MODULARISER → 5 INSTALLER → 7 FINALISER
+      avec 6 LE JEU en parallèle, parce qu'il est la PREUVE.
+  Deux ordres viennent des sources et ne se négocient pas : rationaliser AVANT les extractions,
+  et le renommage EN DERNIER (son instruction).
+
+L'ALIGNEMENT, RENDU VÉRIFIABLE
+  « Aligné » était un mot. C'est désormais un nombre : chaque objet déclare le parent dont il
+  découle, THE-KING dit lesquels ne remontent nulle part. 40 %, 17 objets sur 42, 0 écart.
+  Deux cas seulement sont des fautes (parent introuvable, cycle) ; un orphelin n'en est pas une.
+
+LE CALIBRAGE DE DEMAIN
+  50 questions, groupées par étage de l'escalade, chacune avec ma recommandation pour qu'il
+  puisse dire « d'accord » sans rédiger. Le bloc A (la cible) se répond en premier.
+
+LA DETTE QUI LUI ÉTAIT DUE
+  Ses 49 questions ont enfin leurs réponses : 28 réponses, 21 questions regroupées (le compte
+  qu'il avait exigé), avec sa DEMANDE INAVOUÉE et l'action en face de chacune.
+  Sa question Q7 — « est-ce que l'agence m'aide ou est-ce que je m'y perds ? sois honnête » —
+  a désormais un instrument : 244 tâches sur 1 090 ont été OUVERTES par un outil (22 %), dont
+  232 closes (95 %) ; en face, 93 fichiers d'outillage et 12 outils jamais sollicités.
+  Réponse écrite : l'Agence aide à TROUVER, et coûte à NAVIGUER.
+
+LES DÉCISIONS QUI L'ATTENDENT
+  Huit présentées en trois lots, avec ce qui a changé depuis. Une a changé de réponse parce que
+  sa mesure était fausse (#819).
+
+LA RONDE, en mode autonome (72 commits d'écart)
+  Onze scanners gratuits. Deux constats certains traités, les autres consignés.
+
+
+2. CE QUI A ÉTÉ TROUVÉ — et que personne ne cherchait
+------------------------------------------------------
+  · Le but du projet n'était écrit nulle part (ci-dessus).
+  · La mesure du temps du filet était périmée : 140 s annoncés, 94 s réels. 33 % de gain qui
+    existaient déjà et que personne ne voyait.
+  · Puis : le signal « périmé » ne pouvait JAMAIS s'éteindre (un commit suffisait, et le filet en
+    reçoit un par jour). Une alarme qu'aucun travail ne peut éteindre est du décor.
+  · 15 fiches d'outil en retard sur leur script, qu'aucune mécanique ne voyait. Toutes réparées.
+  · Un « undefined » latent dans l'alerte de fraîcheur de la Ronde, signalé pour la 2e fois en
+    trois jours.
+  · 109 tâches ouvertes réparties sur 97 THÈMES différents : une file aussi fragmentée ne se
+    priorise pas.
+  · Les 3 documents HTML venaient d'un script jetable : justes ce soir-là, faux à la première
+    correction du Markdown.
+
+
+3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
+-----------------------------------------
+  · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
+  · Le renommage en masse — sa borne : c'est l'étape récompense, après le chantier.
+  · LES DEUX ARTICLES DE CHARTE, écrits en entier mais NON appliqués. Il m'a donné la main ; sa
+    borne « tu me montres avant » est permanente, l'autorisation était ponctuelle, et l'Article 14
+    exige une double confirmation. Les deux règles sont actives ailleurs, donc l'attente ne coûte
+    rien. Texte prêt à coller : docs/plans/charte-diffs-a-approuver-2026-09-28.md, points 4 et 5.
+  · Ouvrir de nouvelles tâches de CHANTIER — sa propre escalade l'interdit avant le cadre.
+  · check-spirit et check-profile — vrais appels API, non nécessaires cette nuit.
+
+
+4. CE QUI ATTEND UNE DÉCISION
+------------------------------
+  · LA CIBLE elle-même : validée, corrigée, ou refusée. Tout en découle.
+  · Les deux Articles de charte (voir §3).
+  · Les huit décisions du document « les décisions qui t'attendent ».
+  · Les quatre points laissés ouverts dans la Partie 0 de la boussole.
+
+
+LES LIVRABLES, TOUS EN PAGE HTML
+---------------------------------
+  docs/grand-projet/html/la-cible.html
+  docs/grand-projet/html/le-chemin.html
+  docs/grand-projet/html/questions-de-calibrage.html
+  docs/grand-projet/html/reponses-a-ses-49-questions.html
+  docs/grand-projet/html/decisions-qui-attendent.html
+  docs/grand-projet/html/grands-axes-de-depart.html
+  docs/grand-projet/html/notes-des-echanges-de-depart.html
+  docs/grand-projet/html/charte-diffs-a-approuver.html
