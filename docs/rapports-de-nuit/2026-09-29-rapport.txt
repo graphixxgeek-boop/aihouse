@@ -285,6 +285,26 @@ TROIS RÈGLES QUI N'AVAIENT AUCUN PORTEUR
   transforme en travail à refaire.
 
 
+2octies. CE QUI VALIDE TOUT LE RESTE, ET UNE FAUTE QUE J'AI PAYÉE
+------------------------------------------------------------------
+  · J'AI CASSÉ EXPRÈS MES QUATRE CONTRE-TESTS LES PLUS IMPORTANTS, un par un, en réintroduisant le
+    défaut que chacun garde, filet complet relancé à chaque fois, puis restauré. **Les quatre ont
+    mordu**, chacun par l'assertion écrite pour lui. Un test qui n'a jamais échoué ne prouve rien —
+    et j'avais écrit une dizaine de blocs cette nuit sans en éprouver un seul. Déclaré franchement :
+    les AUTRES blocs n'ont pas été cassés exprès, leur silence reste un silence.
+  · AUCUNE RÈGLE « SAUF EN MODE AUTONOME » N'ÉTAIT VÉRIFIABLE. Ton document de Ronde demande une
+    estimation « à chaque fois » ; le registre porte **deux lignes pour six Rondes**. Impossible de
+    dire si c'était une faute : le document exempte le mode nocturne autonome de plusieurs autres
+    étapes, et **rien n'enregistrait le mode**. L'exemption vivait dans le texte et nulle part
+    ailleurs. Le mode est maintenant écrit — la question devient décidable, et elle t'attend.
+  · ET UNE FAUTE DE MA PART, que je préfère écrire : en vérifiant la fonction d'enregistrement d'un
+    simple appel, **j'ai écrasé l'état réel de la dernière Ronde** avec mes valeurs de test. C'est
+    exactement le défaut que j'avais corrigé le matin même chez un autre outil, refait le soir par
+    celle qui l'avait corrigé. État restauré, écriture rendue injectable, contre-test qui l'exige.
+    Une fonction qui écrit sans permettre qu'on lui passe un faux écrivain SERA vérifiée contre la
+    vraie donnée, tôt ou tard, par quelqu'un de pressé.
+
+
 3. CE QUI A ÉTÉ MIS DE CÔTÉ, ET POURQUOI
 -----------------------------------------
   · TOUT ce qui touche Lia, Noé, l'écran, ou serait difficile à annuler — son périmètre sensible.
