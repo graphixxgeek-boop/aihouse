@@ -126,6 +126,11 @@ C'est précisément pourquoi il demande de les extraire.)*
 | C44 | L'annexe « modèle de gouvernance » : **qu'est-ce qu'on peut en tirer ?** « Beaucoup de choses je pense ! » |
 | C45 | Est-ce **un gros chantier de réorganisation** des fichiers de stratégies et de notes ? « Ces STRATÉGIES sont plus à révéler dans un premier temps qu'à réellement imaginer ? » |
 
+> **FRONTIÈRE, écrite des deux côtés.** Cette liste EXTRAIT, elle ne répond pas. Les réponses —
+> avec sa demande inavouée et l'action en face — vivent dans
+> `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md`, un document distinct qu'il ne
+> faut jamais confondre avec celui-ci : ici on lit CE QU'IL A DEMANDÉ, là-bas CE QUE J'Y RÉPONDS.
+
 ## Ce que cette liste ne fait pas encore
 
 - **Elle ne répond à rien.** Son arbitrage du 2026-09-28 : on ne répond qu'une fois le corpus
