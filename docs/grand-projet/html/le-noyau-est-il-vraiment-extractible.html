@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOS TROIS ZONES MESURENT-ELLES LA BONNE CHOSE ? — trois mesures, trois réponses</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-29T23:51:55.955Z</div>
+    <h1>NOS TROIS ZONES MESURENT-ELLES LA BONNE CHOSE ? — trois mesures, trois réponses</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche <strong>#1262</strong>. Il n'a pas demandé ce document : il vérifie une phrase de SES documents qui accusait le manifeste que j'ai écrit il y a deux jours — </em>« un fichier séparé n'est pas automatiquement un module extractible »*.)*</p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md</code>
+<em>il instruit un constat que la relecture avait classé « à trancher » ; il mesure, il ne tranche pas.</em></p></div>
+<hr>
+<h3>POURQUOI CE DOCUMENT EXISTE</h3>
+<p><strong>Le manifeste de l'Agence annonce trois zones : 74 fichiers « noyau », 9 « produit », 10 « câblage ».</strong> Ce chiffre dit, implicitement, que le noyau est un bloc propre qu'on pourrait emporter ailleurs. <strong>C'est ce « implicitement » qu'on va mesurer.</strong></p>
+<p>Une phrase de ta TARGET ARCHITECTURE en doute : <em>« un fichier séparé n'est pas automatiquement un module R3 ou R4 »</em> — c'est-à-dire : <strong>le rangement en fichiers ne prouve pas la portabilité.</strong> Je l'avais relue cette nuit, sans la vérifier. C'est vérifié maintenant.</p>
+<hr>
+<h3>TROIS MESURES, ET ELLES NE DISENT PAS LA MÊME CHOSE</h3>
+<h4>① Le graphe des dépendances — <strong>99 % propre</strong></h4>
+<p><em>La question : un fichier « noyau » a-t-il besoin d'un fichier qui n'est pas du noyau ?</em></p>
+<table><thead><tr><th>fichiers « noyau »</th><th><strong>74</strong></th></tr></thead><tbody><tr><td>sans <strong>aucune</strong> dépendance hors zone</td><td><strong>73 (99 %)</strong></td></tr><tr><td>avec au moins une</td><td><strong>1</strong> — <code>process-simulation-guardian</code> dépend de <code>summarize-simulation-log</code></td></tr></tbody></table>
+<p><strong>Par cette mesure, l'extraction est quasi triviale.</strong> Un seul lien à couper.</p>
+<h4>② Les ancres de ce projet — <strong>56 % en portent une</strong></h4>
+<p><em>La question : le fichier NOMME-t-il des chemins qui n'existent que dans ce dépôt-ci ?</em></p>
+<table><thead><tr><th>fichiers « noyau » citant <code>CLAUDE.md</code>, <code>docs/suivi/</code>, <code>docs/referentiel/</code>…</th><th><strong>41 (56 %)</strong></th></tr></thead><tbody><tr><td>n'en citant aucun</td><td><strong>32 (44 %)</strong></td></tr></tbody></table>
+<p><strong>Déjà moins joli.</strong> Mais ce n'est pas encore disqualifiant : un chemin peut être un simple réglage par défaut, que le prochain projet remplace sans toucher au code.</p>
+<h4>③ Ces ancres sont-elles RÉGLABLES ? — <strong>5 %</strong></h4>
+<p><em>La question qui décide : peut-on changer ces chemins de l'extérieur, ou faut-il rouvrir le code ?</em></p>
+<table><thead><tr><th>fichiers dont <strong>toutes</strong> les ancres sont réglables <em>(constante en tête, ou valeur par défaut d'un paramètre)</em></th><th><strong>2 (5 %)</strong></th></tr></thead><tbody><tr><td>avec au moins une ancre <strong>écrite en dur dans un corps de fonction</strong></td><td><strong>38 (95 %)</strong></td></tr></tbody></table>
+<p>Les plus concernés : <code>le-classificateur</code> (<strong>37</strong> occurrences en dur), <code>circle-tasks</code> (28), <code>god-of-all-process</code> (26), <code>angel-of-ia-process</code> (25), <code>le-coordinateur</code> (21) — et <strong><code>safe-export</code> lui-même (18)</strong>, ce qui ne manque pas de sel pour le Gardien de l'exportabilité.</p>
+<hr>
+<h3>CE QUE ÇA VEUT DIRE, ET CE QUE ÇA NE VEUT PAS DIRE</h3>
+<p><strong>La phrase de ta TARGET ARCHITECTURE est vérifiée sur notre propre dépôt.</strong> Selon qu'on regarde le graphe des dépendances ou les chemins écrits en dur, le même noyau paraît <strong>99 % portable</strong> ou <strong>5 % portable</strong>. <strong>Ce ne sont pas deux opinions : ce sont deux questions différentes, et notre manifeste ne répondait qu'à la première sans le dire.</strong></p>
+<p><strong>MAIS — et c'est là que je refuse de conclure à ta place</strong> : un <code>docs/suivi/</code> écrit en dur n'est pas forcément un défaut. Tout dépend d'une chose qu'on n'a jamais tranchée :</p>
+<div class="highlight"><p><strong><code>docs/suivi/</code>, <code>CLAUDE.md</code>, <code>docs/referentiel/</code> sont-ils des chemins PROPRES À CE PROJET,
+ou des CONVENTIONS DE L'AGENCE que tout projet qui l'installe adoptera ?</strong></p></div>
+<ul><li><strong>Si ce sont des conventions</strong> : les 38 fichiers sont parfaitement corrects. Le prochain projet aura son <code>docs/suivi/</code>, et le code marchera tel quel. <strong>Il n'y a rien à faire.</strong></li><li><strong>Si ce sont des chemins de ce projet</strong> : il y a 38 fichiers à rendre réglables, et le manifeste annonce une portabilité qu'il n'a pas.</li></ul>
+<p><strong>C'est une décision de conception, et elle t'appartient.</strong> Je ne la prends pas, et je ne construis pas de garde-fou avant qu'elle soit prise : un détecteur qui signalerait 38 fichiers alors qu'ils sont corrects serait une alarme qu'on cesserait de lire dès le deuxième passage (leçon L4/L6).</p>
+<p><strong>Mon avis, puisque tu le demandes toujours</strong> : ce sont des <strong>conventions</strong>, et il faudrait l'ÉCRIRE. Une Agence qui impose sa façon de ranger les documents est cohérente avec ce qu'elle est — ce qui ne va pas, c'est que cette convention ne soit <strong>déclarée nulle part</strong>, si bien qu'un repreneur ne peut pas savoir si <code>docs/suivi/</code> est une loi ou un accident.</p>
+<hr>
+<h3>CE QUE CETTE MESURE N'EST PAS</h3>
+<ul><li><strong>Ce n'est pas un parseur.</strong> J'ai compté des motifs sur des lignes de texte, hors commentaires. Une ligne peut être mal classée. Les ordres de grandeur tiennent ; le chiffre exact, non.</li><li><strong>Ce n'est pas une accusation de mauvais travail.</strong> Écrire <code>docs/suivi/</code> en dur dans un outil dont le métier EST de lire ce dossier était le geste juste au moment où il a été fait.</li><li><strong>Aucun outil existant ne couvrait cette question</strong>, vérifié : le détecteur de fuites de SAFE-EXPORT cherche <strong>les marques du JEU</strong> (Lia, Noé, la maison, Gemini) dans <strong>les blueprints</strong>. Il ne regarde jamais <strong>les chemins de l'AGENCE</strong> dans <strong>les scripts</strong>. Ce sont deux fuites différentes, et la seconde n'avait personne.</li></ul>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>Le même noyau paraît 99 % ou 5 % portable selon la mesure choisie</td><td><strong>RETENU</strong></td><td>tâche <strong>#1262</strong> — ce document, et le manifeste sera amendé quand la question ci-dessous sera tranchée, jamais avant</td></tr><tr><td>Les chemins de l'Agence dans ses propres scripts ne sont mesurés par personne</td><td><strong>RETENU</strong></td><td>tâche <strong>#1262</strong> — la mesure existe désormais, écrite ; sa transformation en garde-fou attend la décision</td></tr><tr><td><code>docs/suivi/</code> : convention de l'Agence, ou chemin de ce projet ?</td><td><strong>À TRANCHER</strong></td><td>c'est la question qui décide des 38 fichiers, et elle rejoint le <strong>LOT D</strong> des cinq lots (le cadre)</td></tr><tr><td>Construire le cinquième détecteur de SAFE-EXPORT</td><td><strong>ÉCARTÉ POUR L'INSTANT, avec sa raison</strong></td><td>il signalerait 38 fichiers qui sont peut-être tous corrects. Une alarme fausse au premier passage est une alarme qu'on cesse de lire (L4/L6). Il se construira le jour où la convention sera déclarée — et il vérifiera alors qu'on la respecte, ce qui est utile</td></tr><tr><td>Le lien <code>process-simulation-guardian</code> → <code>summarize-simulation-log</code></td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>c'est un lien entre deux outils de simulation, pas une fuite vers le jeu. Le couper n'apporterait rien : les deux partiraient ensemble</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
