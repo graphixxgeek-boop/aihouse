@@ -717,3 +717,33 @@ autant qu'un outil qui accepte toujours. Le contre-test exige désormais qu'il p
 **Les fonctions** : `tuyauterieDeLAgence()` mesure les trois couches, `formatTuyauterieLines()` les
 rend lisibles ; `controleDAccueil()` constate ce que la machine offre, `formatAccueilLines()` rend le
 verdict en trois états.
+
+## Les sautes silencieuses — une MESURE, jamais une alarme (2026-09-29, tâche #1203)
+
+**D'où ça vient** : CLONE-HUNTER signalait cinq lignes recopiées à trois endroits de
+`safe-export.mjs`. En cherchant POURQUOI les trois blocs existent — la règle qui a déjà payé trois
+fois cette nuit — ces cinq lignes se sont révélées être le préambule ordinaire de tout balayage de
+fichiers : ouvrir chacun, passer au suivant si la lecture échoue.
+
+**Le fait mesuré** : ce préambule existe **42 fois** dans l'outillage, et **38 de ces endroits
+abandonnent le fichier sans en garder la moindre trace**, sur **14 outils**. C'est le défaut que ce
+projet traque partout ailleurs — « je n'ai pas pu regarder » qui se lit exactement comme « j'ai
+regardé, il n'y a rien » (leçons L5 et L11).
+
+**Pourquoi ce n'est PAS un garde-fou, et c'est délibéré** : une alarme affichant 38 à chaque commit
+sans pouvoir descendre deviendrait du décor (leçon L6), et la correction touche 14 outils — une
+décision qui appartient à l'utilisateur, jamais à l'agent. La question est posée dans
+`docs/idees-a-trancher.md` (#1203) ; `sautesSilencieuses()` existe pour que le chiffre soit
+**remesurable** le jour où il tranche, plutôt que cité de mémoire (Article 31, faille 8).
+
+**La commande** : `node scripts/safe-export.mjs sautes`.
+
+**Le motif a été calibré, pas cueilli** : une première version en comptait 171. Un échantillon relu
+à la main a montré que la majorité des nouveaux venus étaient légitimes — un repli qui essaie le
+chemin suivant, un défaut documenté rendu à la place, un constat déjà poussé disant que le fichier
+est illisible. Un garde-fou qui accuse à tort cesse d'être lu (leçon L4).
+
+**Sa limite honnête** : une trace écrite sous un nom que le motif ne connaît pas serait comptée
+comme muette. Et elle s'applique sa propre règle — elle note les fichiers qu'elle-même n'a pas pu
+lire et annonce alors son total comme un PLANCHER, parce qu'au premier passage elle se comptait
+elle-même parmi les muets.

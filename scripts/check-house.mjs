@@ -20825,6 +20825,55 @@ async function testLibelleParDefaut() {
 }
 await testLibelleParDefaut();
 
+// ————————————————————————————————————————————————————————————————————————
+// LES SAUTES SILENCIEUSES : une MESURE remesurable, jamais une alarme
+// (2026-09-29, tâche #1203 — partie d'une grappe CLONE-HUNTER à trois endroits)
+// ————————————————————————————————————————————————————————————————————————
+async function testSautesSilencieuses() {
+  const SE = await import('../scripts/safe-export.mjs');
+  const faux = (fichiers) => ({
+    root: '/fake',
+    listDirImpl: () => Object.keys(fichiers),
+    readFileImpl: (p) => { const n = String(p).split('/').pop(); if (!(n in fichiers)) throw new Error('nope'); return fichiers[n]; },
+  });
+
+  // ── 1. LA FORME VISÉE EST RECONNUE : un balayage qui passe au fichier suivant sans rien noter.
+  const muet = SE.sautesSilencieuses(faux({ 'a.mjs': 'for (const f of l) {\n  try { t = readFileSync(f); } catch { continue; }\n}' }));
+  assert.equal(muet.muets.length, 1, 'a loop that drops a file on a read failure without a trace must be counted — "I could not look" reads exactly like "I looked and found nothing" (leçons L5 et L11)');
+
+  // ── 2. ET ELLE N'ACCUSE PAS CELUI QUI FAIT BIEN (leçon L4, et c'est ce qui la rend lisible).
+  const trace = SE.sautesSilencieuses(faux({ 'b.mjs': 'for (const f of l) {\n  try { t = readFileSync(f); } catch { nonLus.push(f); continue; }\n}' }));
+  assert.equal(trace.muets.length, 0, 'the same loop that RECORDS what it could not read must never be accused');
+  assert.equal(trace.total, 1, 'and it must still be COUNTED as a read site — a detector whose total drops when good practice is added is a detector that rewards the bad one');
+
+  // ── 3. LES FORMES VOISINES RESTENT DEHORS, parce qu'un motif trop large a déjà été essayé ce
+  // jour-là : il comptait 171 sites dont la majorité étaient légitimes.
+  const repli = SE.sautesSilencieuses(faux({ 'c.mjs': 'try { return readFileSync(p); } catch { return null; }' }));
+  assert.equal(repli.total, 0, 'a catch that returns a documented default is not a silent skip in a sweep — accusing it would make the whole measure unreadable (leçon L4)');
+
+  // ── 4. UNE MESURE IMPOSSIBLE NE REND JAMAIS UN ZÉRO (leçon L5).
+  assert.equal(SE.sautesSilencieuses({ root: '/fake', listDirImpl: () => { throw new Error('nope'); } }), null, 'when scripts/ cannot be listed the answer is "not measured", never an empty result');
+  assert.match(SE.formatSautesSilencieusesLines(null).join('\n'), /PAS MESUR/, 'and the printed line must SAY so, because a zero and an abstention look identical to a reader');
+
+  // ── 5. ELLE S'APPLIQUE SA PROPRE RÈGLE, et ce n'est pas une coquetterie : au premier passage réel
+  // elle se comptait elle-même parmi les muets. Un outil qui mesure une honnêteté sans la tenir
+  // chez lui donne exactement la raison de ne pas le croire.
+  const casse = SE.sautesSilencieuses({ root: '/fake', listDirImpl: () => ['ok.mjs', 'illisible.mjs'], readFileImpl: (p) => { if (String(p).includes('illisible')) throw new Error('nope'); return 'const x = 1;'; } });
+  assert.deepEqual(casse.nonLus, ['illisible.mjs'], 'the measure must record the files IT could not read');
+  assert.match(SE.formatSautesSilencieusesLines(casse).join('\n'), /PLANCHER/, 'and must print its own total as a FLOOR, never as a complete count');
+
+  // ── 6. LE PREMIER USAGE EST RÉEL (leçon L2) : sur CE dépôt, elle trouve quelque chose.
+  const reel = SE.sautesSilencieuses();
+  assert.ok(reel && reel.total >= 10, 'against the real repository the measure must actually find read sites — a measure verified only on invented text is an intention');
+  assert.ok(reel.muets.length >= 1, 'and it must find at least one silent skip, which is the fact the decision entry #1203 is built on');
+  const { readFileSync: lire1203 } = await import('node:fs');
+  assert.match(lire1203('docs/idees-a-trancher.md', 'utf8'), /#1203/, 'the decision it feeds must exist in the register: a measure with no question attached is a number nobody will act on (Article 28)');
+
+  console.log("Passed: les sautes silencieuses, une MESURE et jamais une alarme (2026-09-29, tache #1203). D'OU CA VIENT : CLONE-HUNTER signalait cinq lignes recopiees a trois endroits de safe-export. En cherchant POURQUOI les trois blocs existent — la regle qui a deja paye trois fois cette nuit — ces cinq lignes se sont revelees etre le preambule ordinaire de tout balayage de fichiers : ouvrir chacun, passer au suivant si la lecture echoue. IL EXISTE 40 FOIS DANS L'OUTILLAGE, ET 38 DE CES ENDROITS ABANDONNENT LE FICHIER SANS EN GARDER LA MOINDRE TRACE, sur 14 outils. C'est le defaut que ce projet traque partout ailleurs : « je n'ai pas pu regarder » qui se lit exactement comme « j'ai regarde, il n'y a rien ». POURQUOI CE N'EST PAS CABLE COMME UN GARDE-FOU, et c'est delibere : une alarme affichant 38 a chaque commit sans pouvoir descendre deviendrait du decor (lecon L6), et la correction touche 14 outils — une decision qui appartient a l'utilisateur, jamais a l'agent. La question est donc posee dans docs/idees-a-trancher.md, et cette fonction existe pour que le chiffre soit REMESURABLE le jour ou il tranche, plutot que cite de memoire (Article 31, faille 8). LE MOTIF A ETE CALIBRE, PAS CUEILLI : une premiere version comptait 171 sites, dont un echantillon relu a la main a montre que la majorite etaient legitimes — un repli qui essaie le chemin suivant, un defaut documente rendu a la place, un constat deja pousse. Un garde-fou qui accuse a tort cesse d'etre lu (lecon L4). ET ELLE S'APPLIQUE SA PROPRE REGLE : au premier passage elle se comptait elle-meme parmi les muets ; elle note desormais ce qu'elle n'a pas pu lire et annonce son total comme un PLANCHER.");
+}
+await testSautesSilencieuses();
+
+
 
 // ————————————————————————————————————————————————————————————————————————
 // L'ABSTENTION CALIBRÉE (2026-09-28, tâche #695, volet F des failles IA)

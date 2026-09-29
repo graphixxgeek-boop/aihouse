@@ -631,3 +631,59 @@ donnée aussi bonne qu'une autre pour ça.
 
 **Ma recommandation : la 2** — elle respecte le sens de « donne-moi » sans jeter ce que la seconde
 moitié de ta demande cherchait à obtenir.
+
+## #1203 — 38 balayages de fichiers sur 42 abandonnent en silence : faut-il qu'ils le disent ?
+
+| Numéro | Sujet | Décision |
+|---|---|---|
+| #1203 | Outillage — un fichier qu'un outil n'a pas pu lire doit-il apparaître dans son rapport | à trancher |
+
+**Comment la question est arrivée** : CLONE-HUNTER signalait cinq lignes recopiées à trois endroits
+de `safe-export.mjs`. En cherchant POURQUOI les trois blocs existent — la règle qui a déjà payé
+trois fois cette nuit — ces cinq lignes se sont révélées être le préambule ordinaire de toute
+fonction qui balaie une liste de fichiers : ouvrir chacun, et passer au suivant si la lecture
+échoue.
+
+**LE FAIT MESURÉ** — et il est REMESURABLE à tout moment par `node scripts/safe-export.mjs
+sautes`, jamais cité de mémoire : sur les 93 fichiers d'outils, **42 endroits** balaient une liste
+de fichiers en passant au suivant quand la lecture échoue, et **38 d'entre eux le font sans en
+garder la moindre trace**, répartis sur **14 outils**. Quatre seulement comptent ce qu'ils n'ont pas pu lire.
+
+**LE CHIFFRE A ÉTÉ CALIBRÉ, PAS CUEILLI, et ça vaut d'être dit** : une première version du motif
+comptait 171 sites. Un échantillon lu à la main a montré que la majorité des nouveaux venus étaient
+légitimes — un repli qui essaie le chemin suivant, un défaut documenté rendu à la place, un constat
+déjà poussé disant que le fichier est illisible. Un garde-fou qui accuse à tort cesse d'être lu
+(leçon L4), donc le motif a été resserré sur la forme qu'il vise vraiment. Sur les 38 restants,
+sept tirés au hasard ont été relus un par un : les sept sont bien la forme visée.
+
+**Pourquoi ça mérite une décision plutôt qu'une correction** : c'est le défaut que ce projet traque
+partout ailleurs — « je n'ai pas pu regarder » qui se lit exactement comme « j'ai regardé, il n'y a
+rien » (leçons L5 et L11). Mais ici, la lecture suit toujours un listage du disque fait une seconde
+plus tôt : un échec suppose une permission changée, un lien cassé, ou une course entre les deux.
+C'est rare au point qu'on peut légitimement décider de ne rien changer.
+
+**Ce qui penche pour ne rien faire** : 38 corrections dans 14 outils, pour un cas qui ne s'est
+peut-être jamais produit. Et un compteur qui affiche 0 à chaque passage finit par ne plus être lu
+(leçon L6).
+
+**Ce qui penche pour le faire** : le jour où ça arrivera, le rapport sera FAUX sans que rien ne le
+dise, et il n'y aura aucun moyen de s'en apercevoir après coup.
+
+**Trois issues :**
+
+1. **Ne rien changer**, et l'écrire noir sur blanc ici pour que la question ne se rouvre pas.
+2. **Un compteur partagé** : une seule fonction de lecture commune qui tient le compte des fichiers
+   sautés, et chaque rapport affiche la ligne UNIQUEMENT quand ce compte dépasse zéro — jamais un
+   0 permanent qui deviendrait du décor.
+3. **Les Gardiens sacrés seulement** : les sept outils dont le verdict fait autorité comptent leurs
+   sautes ; les autres restent comme ils sont.
+
+**Ma recommandation : la 2.** Elle règle le fond sans créer l'alarme permanente que la 3 évite en
+réduisant la portée, et elle est le seul cas où factoriser ces cinq lignes apporte autre chose
+qu'un gain de place — ce qui répond du même coup au constat de CLONE-HUNTER. Elle reste un
+chantier de 8 fichiers, donc elle attend ton feu vert.
+
+**Ce qui est fait en attendant, et pourquoi c'est tout** : la grappe de `safe-export.mjs` n'est PAS
+factorisée. Fondre trois préambules sur quatre-vingt-douze serait du rangement local sur un défaut
+général — et ça ferait disparaître du relevé la seule trace visible d'une question qui vaut d'être
+posée.

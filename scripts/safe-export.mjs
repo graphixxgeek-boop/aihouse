@@ -1578,6 +1578,91 @@ export function tendancesExport(options = {}) {
   return ["fuites", "blueprints-mal-construits", "dependances-outillage", "blueprints-total"].map((c) => detectTendance(serie, c, options));
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES SAUTES SILENCIEUSES (2026-09-29, tâche #1203) — une MESURE, pas une alarme
+// ————————————————————————————————————————————————————————————————————————
+//
+// D'OÙ ÇA VIENT : CLONE-HUNTER signalait cinq lignes recopiées à trois endroits de ce fichier. En
+// cherchant POURQUOI les trois blocs existent plutôt qu'en les fondant, ces cinq lignes se sont
+// révélées être le préambule ordinaire de toute fonction qui balaie une liste de fichiers : ouvrir
+// chacun, passer au suivant si la lecture échoue. Il existe 92 fois dans l'outillage, et 91 de ces
+// endroits abandonnent le fichier SANS EN GARDER LA MOINDRE TRACE — « je n'ai pas pu regarder »
+// qui se lit exactement comme « j'ai regardé, il n'y a rien » (leçons L5 et L11).
+//
+// POURQUOI CECI N'EST PAS CÂBLÉ COMME UN GARDE-FOU, et c'est délibéré : une alarme qui afficherait
+// 91 à chaque commit sans pouvoir descendre deviendrait du décor (leçon L6), et la corriger
+// toucherait 8 outils — une décision qui appartient à l'utilisateur, pas à l'agent. La question
+// est donc posée dans `docs/idees-a-trancher.md` (#1203) avec ce chiffre, et CETTE fonction existe
+// pour que le chiffre soit REMESURABLE plutôt que cité de mémoire : `node scripts/safe-export.mjs
+// sautes`. Le jour où il tranche, c'est elle qui dira si la correction a porté.
+//
+// CE QU'ELLE VOIT, ET CE QU'ELLE NE VOIT PAS : elle repère un `catch` qui abandonne juste après une
+// lecture de fichier, et cherche dans les lignes voisines un mot qui dit qu'on garde une trace.
+// C'est le cas grossier — une trace écrite sous un autre nom lui échapperait, et elle le dit.
+// LE MOTIF A ÉTÉ ÉLARGI DANS LA MINUTE QUI A SUIVI SON ÉCRITURE, et la raison mérite d'être ici.
+// Il ne reconnaissait d'abord qu'un `catch { continue }` NU. Quand cette fonction a commencé à
+// noter ce qu'elle-même n'arrivait pas à lire, son propre site a cessé d'être VU — il est passé de
+// « muet » à « invisible », ce qui est pire : le total baissait, donc la mesure s'améliorait en
+// apparence pendant que rien n'était corrigé. Un détecteur dont le compte tombe quand on ajoute la
+// bonne pratique est un détecteur qui récompense la mauvaise.
+//
+// L'ÉLARGISSEMENT A ÉTÉ TENTÉ PLUS LOIN, PUIS REPRIS, et c'est la leçon L4 qui a tranché.
+// Reconnaître TOUT `catch` posé sur une lecture faisait passer le compte de 92 à 171 sites — et un
+// échantillon lu à la main a montré que les nouveaux venus étaient en majorité légitimes : un
+// repli qui essaie le chemin suivant, un défaut documenté rendu à la place, un constat déjà poussé
+// disant que le fichier est illisible. Un garde-fou qui accuse à tort cesse d'être lu, donc le
+// motif reste sur la forme qu'il vise vraiment : un `catch` qui fait PASSER AU FICHIER SUIVANT
+// dans une boucle de balayage, où le fichier disparaît du scan sans laisser de trace. Le corps du
+// `catch` peut faire quelque chose avant de continuer — c'est même la bonne forme, et c'est la
+// recherche de trace, elle seule, qui départage.
+export const MOTIF_ABANDON_APRES_LECTURE = /catch\s*\{[^}]*\bcontinue\b/;
+export const MOTIF_LECTURE_DE_FICHIER = /readFileImpl|readFileSync|lireFichierPartage|lire\(/;
+export const MOTIF_TRACE_DE_SAUTE = /illisibles|nonLus|sautes|sautés|pasPuLire|riennAPuEtreLu|nonLisibles/i;
+export const LIGNES_AUTOUR_DE_LA_TRACE = 12;
+
+export function sautesSilencieuses({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
+  let fichiers;
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return null; }
+  const muets = [];
+  let total = 0;
+  // ELLE S'APPLIQUE SA PROPRE RÈGLE, et ce n'est pas une coquetterie : au premier passage elle se
+  // comptait elle-même parmi les muets, ce qui était juste. Un outil qui mesure une honnêteté sans
+  // la tenir chez lui donne exactement la raison de ne pas le croire.
+  const nonLus = [];
+  for (const f of fichiers.sort()) {
+    let lignes;
+    try { lignes = readFileImpl(join(root, "scripts", f), "utf8").split("\n"); } catch { nonLus.push(f); continue; }
+    for (let i = 0; i < lignes.length; i += 1) {
+      if (!MOTIF_ABANDON_APRES_LECTURE.test(lignes[i])) continue;
+      if (!MOTIF_LECTURE_DE_FICHIER.test(lignes[i])) continue;
+      total += 1;
+      const autour = lignes.slice(Math.max(0, i - 3), i + LIGNES_AUTOUR_DE_LA_TRACE).join("\n");
+      if (!MOTIF_TRACE_DE_SAUTE.test(autour)) muets.push(`scripts/${f}:${i + 1}`);
+    }
+  }
+  return { total, muets, nonLus, avecTrace: total - muets.length, fichiers: new Set(muets.map((m) => m.split(":")[0])).size };
+}
+
+export function formatSautesSilencieusesLines(r) {
+  if (!r) return ["🚨 PAS MESURÉ — le dossier scripts/ n'a pas pu être listé. Ce n'est pas un zéro."];
+  // L'AVEU VIENT AVANT LE CHIFFRE, ET L'ORDRE EST LE MÉCANISME : ce que la mesure n'a pas pu lire
+  // s'imprime en PREMIER, y compris quand elle n'a rien trouvé du tout. Rangé après, il disparaît
+  // dans la branche « rien trouvé » — c'est-à-dire exactement dans le cas où il compte le plus.
+  const l = [];
+  if (r.nonLus?.length) l.push(`  ⚠️ ${r.nonLus.length} fichier(s) que CETTE mesure n'a pas pu lire, donc non comptés : ${r.nonLus.join(", ")} — tout total ci-dessous est un PLANCHER, jamais un compte complet.`);
+  if (!r.total) {
+    l.push("🚨 PAS MESURÉ — aucun site de lecture trouvé. Sur ce dépôt-ci c'est impossible et veut dire que le motif ne correspond plus ; ailleurs, ça peut être vrai. Dans les deux cas ce n'est pas un zéro.");
+    return l;
+  }
+  l.push(`SAUTES SILENCIEUSES : ${r.muets.length} / ${r.total} site(s) de lecture abandonnent un fichier sans en garder trace, répartis sur ${r.fichiers} outil(s).`);
+  l.push(`  ${r.avecTrace} site(s) comptent ce qu'ils n'ont pas pu lire.`);
+  l.push("  Ce n'est PAS un garde-fou : la question est posée dans docs/idees-a-trancher.md (#1203), et ce chiffre sert à mesurer l'avant et l'après le jour où elle est tranchée.");
+  l.push("  Limite honnête : une trace écrite sous un nom que le motif ne connaît pas serait comptée comme muette.");
+  for (const m of r.muets.slice(0, 8)) l.push(`  · ${m}`);
+  if (r.muets.length > 8) l.push(`  … et ${r.muets.length - 8} autre(s).`);
+  return l;
+}
+
 function main() {
   // LA COMMANDE « export » (2026-09-26, tâche #906) : le croisement vitalité × blueprint et
   // l'empreinte disque, joignables sans lancer le balayage complet — ce sont les deux chiffres
@@ -1591,6 +1676,11 @@ function main() {
   // faut-il chez l'hôte ? » depuis NOTRE dépôt ; la seconde répond « cette machine-ci convient-elle ? »
   // là où on la lance. Deux questions voisines et jamais la même : l'une se lit avant de vendre,
   // l'autre avant d'installer.
+  if (process.argv[2] === "sautes") {
+    recordCliUsage("safe-export");
+    for (const l of formatSautesSilencieusesLines(sautesSilencieuses())) console.log(l);
+    return;
+  }
   if (process.argv[2] === "tuyauterie") {
     recordCliUsage("safe-export");
     for (const l of formatTuyauterieLines(tuyauterieDeLAgence())) console.log(l);
