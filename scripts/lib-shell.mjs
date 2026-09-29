@@ -366,6 +366,46 @@ export function walkDocsPaths(dir, root, out = new Set()) {
 // CE QU'IL NE FAIT PAS : il ne lit aucun fichier. Les appelants qui ont besoin du CONTENU le lisent
 // eux-mêmes, avec leur propre gestion de l'illisible — qui diffère d'un appelant à l'autre (ignorer
 // en silence, compter comme non conforme…) et n'avait aucune raison d'être unifiée de force.
+// LIRE TOUS LES SCRIPTS, EN DISANT CE QU'ON N'A PAS PU LIRE (2026-09-29, tâche #1246).
+//
+// LE PRÉAMBULE QUI SE RÉPÈTE, ET IL PORTE UN DÉFAUT CONNU. Deux fonctions de `doc-report.mjs`
+// commençaient par exactement les mêmes cinq lignes : lister `scripts/*.mjs`, puis lire chaque
+// fichier avec un `catch { continue; }`. CLONE-HUNTER les a signalées comme jumelles, et c'est le
+// plus intéressant : **la duplication portait le défaut DEUX fois**. Ce `continue` muet est
+// exactement ce que la tâche #1203 a mesuré — 38 balayages de fichiers sur 42 perdent un fichier
+// illisible sans le dire, si bien qu'un rapport peut annoncer « zéro écart » alors qu'il n'a pas
+// tout regardé.
+//
+// CE QUE CETTE FONCTION FAIT, ET CE QU'ELLE NE FAIT PAS. Elle rend DEUX listes : les fichiers lus,
+// et ceux qui ont échoué avec leur raison. **Elle ne change le comportement d'aucun appelant** :
+// qui veut ignorer les illisibles le peut encore, exactement comme avant. Le point est que
+// l'information EXISTE désormais — et que la décision #1203, quand il la tranchera, devient une
+// ligne à ajouter chez chaque appelant plutôt qu'un chantier de quatorze outils.
+// ET UNE LEÇON SUR LA PROSE, APPRISE DANS LA MINUTE QUI A SUIVI. J'avais d'abord recopié
+// l'explication ci-dessus dans les DEUX fonctions appelantes, pour qu'elle soit sous les yeux. Le
+// détecteur a aussitôt re-signalé la paire — **en plus gros qu'avant** : le bloc jumeau est passé
+// de 5 à 9 lignes, parce que mon commentaire identique s'y était ajouté. **Expliquer une
+// duplication dans les deux copies duplique l'explication.** La raison vit donc ICI, une seule
+// fois, et chaque appelant ne porte qu'une ligne de renvoi. C'est la leçon L37 — corriger la
+// CLASSE, jamais l'occurrence — appliquée à ce qu'on écrit et pas seulement à ce qu'on code.
+export function lireLesScriptsDuDepot({ root = ".", dossier = "scripts", suffixe = ".mjs", listDirImpl = readdirSync, readFileImpl = null } = {}) {
+  const lire = readFileImpl ?? ((chemin) => readFileSync(chemin, "utf8"));
+  let noms;
+  try { noms = listDirImpl(join(root, dossier)).filter((f) => String(f).endsWith(suffixe)); }
+  catch (e) {
+    // LE DOSSIER ILLISIBLE N'EST PAS UN DOSSIER VIDE (leçon L5) : l'appelant doit pouvoir faire la
+    // différence entre « aucun script » et « je n'ai pas pu regarder ».
+    return { mesurable: false, lus: [], illisibles: [], pourquoi: `le dossier ${dossier}/ n'a pas pu être listé : ${e?.message ?? e}` };
+  }
+  const lus = [];
+  const illisibles = [];
+  for (const nom of noms) {
+    try { lus.push({ nom, chemin: `${dossier}/${nom}`, texte: lire(join(root, dossier, nom), "utf8") }); }
+    catch (e) { illisibles.push({ nom, pourquoi: e?.message ?? String(e) }); }
+  }
+  return { mesurable: true, lus, illisibles, pourquoi: null };
+}
+
 export function listerLesFichiers(racines, { root = ".", listDirImpl = readdirSync, garder = () => true } = {}) {
   const trouves = [];
   const pile = Array.isArray(racines) ? [...racines] : [racines];

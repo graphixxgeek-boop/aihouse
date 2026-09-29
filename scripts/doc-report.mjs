@@ -29,7 +29,7 @@ import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
-import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, sh } from "./lib-shell.mjs";
+import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, lireLesScriptsDuDepot, sh } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName, primaryToolName } from "./le-coordinateur.mjs";
 import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 
@@ -1174,12 +1174,11 @@ export function toolsBoundByReportTemplate({ registries = REGISTRIES, natures = 
 // LA RÈGLE MÉCANIQUE : la ligne qui déclenche main() doit être la DERNIÈRE instruction du module.
 // Tout ce qui est déclaré après elle est inaccessible au moment où elle part.
 export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
-  let fichiers = [];
-  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return []; }
+  // Lecteur partagé — sa raison vit à UN seul endroit, chez lui (`lib-shell.mjs`).
+  const lecture = lireLesScriptsDuDepot({ root, listDirImpl, readFileImpl });
+  if (!lecture.mesurable) return [];
   const ecarts = [];
-  for (const f of fichiers) {
-    let texte;
-    try { texte = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
+  for (const { nom: f, texte } of lecture.lus) {
     const lignes = texte.split("\n");
     const iLanceur = lignes.findIndex((l) => l.includes("process.argv[1]") && l.includes("import.meta.url") && /\bmain\(\)/.test(l));
     if (iLanceur === -1) continue;
@@ -1339,19 +1338,28 @@ export function findRapportsCourtsMaisDenses({ dossier, listDirImpl = readdirSyn
 // SA LIMITE, déclarée : il repère une écriture par la forme du code (un chemin `docs/x/` passé à
 // une fonction d'écriture). Un script qui construirait son chemin autrement lui échappe. Il
 // attrape donc le cas courant, jamais tous les cas — et le dire vaut mieux que le laisser croire.
+// POURQUOI CETTE FONCTION RESTE SÉPARÉE DE `findLanceursPrematures()` (2026-09-29, tâche #1246).
+// CLONE-HUNTER les signale comme jumelles, et il a raison sur la FORME : même signature, même
+// premier geste. Mais l'outil offre deux issues — fondre, ou écrire pourquoi on ne fond pas — et
+// c'est la seconde qui vaut ici. **Ces deux garde-fous vérifient des choses opposées** : l'un
+// cherche du code déclaré APRÈS le lanceur (un défaut d'ORDRE dans le fichier), l'autre un script
+// qui nomme un registre sans jamais y écrire (un défaut de PROMESSE). Les fondre donnerait une
+// fonction à deux verdicts, qu'on ne pourrait plus appeler séparément ni faire échouer seule.
+// Ce qui pouvait être partagé l'A ÉTÉ — la lecture des scripts vit maintenant dans `lib-shell`.
+// Ce qui reste commun est leur signature, et deux fonctions qui prennent les mêmes entrées ne
+// sont pas un doublon : c'est ce à quoi ressemble une famille d'outils cohérente.
 export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
-  let fichiers = [];
-  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { return []; }
+  // Lecteur partagé — sa raison vit à UN seul endroit, chez lui (`lib-shell.mjs`).
+  const lecture = lireLesScriptsDuDepot({ root, listDirImpl, readFileImpl });
+  if (!lecture.mesurable) return [];
   const ecarts = [];
-  for (const f of fichiers) {
-    let texte;
-    try { texte = readFileImpl(join(root, "scripts", f), "utf8"); } catch { continue; }
+  for (const { nom: f, texte: brut } of lecture.lus) {
     // LES COMMENTAIRES SONT RETIRÉS AVANT DE CHERCHER (2026-09-29, tâche #1168). Ce bloc annonçait
     // depuis sa création que « citer un chemin dans un commentaire n'est pas écrire dedans » — et
     // rien ne le faisait. Un commentaire qui MONTRE la forme du code, par exemple pour l'expliquer,
     // déclenchait l'accusation. Les CHAÎNES restent : c'est dans une chaîne que vit le chemin
     // littéral que ce garde-fou doit trouver.
-    texte = sansLesCommentaires(texte);
+    const texte = sansLesCommentaires(brut);
     // Écrit-il vraiment dans un registre ? On cherche une écriture ET un chemin de registre, pas
     // l'un ou l'autre : citer `docs/argus/` dans un commentaire n'est pas écrire dedans.
     // RESSERRÉ IMMÉDIATEMENT (2026-09-23) : la première version testait « le fichier écrit quelque
