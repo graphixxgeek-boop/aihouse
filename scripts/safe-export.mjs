@@ -2069,6 +2069,17 @@ function main() {
   if (voc.ecarts.length > 12) console.log(`   … +${voc.ecarts.length - 12} autre(s).`);
   for (const g of findGuardiansHorsProcess()) console.log(`   ⚠️  ${g}`);
 
+  // LE REMÈDE À MOITIÉ CÂBLÉ (2026-09-30). Imprimé ICI plutôt que dans un rapport à part : un
+  // garde-fou qui ne s'affiche jamais est une intention, et ce fichier a déjà payé cette leçon.
+  const horizon = findVerdictsSansHorizon();
+  if (!horizon.mesurable) {
+    console.log(`\n📅 HORIZON DU COMPTEUR — PAS MESURÉ : ${horizon.pourquoi}`);
+  } else {
+    console.log(`\n📅 HORIZON DU COMPTEUR — ${horizon.ecarts.length} lecteur(s) sur ${horizon.lecteurs} rendent « jamais sollicité » sans dire ce que le journal COUVRE.`);
+    for (const e of horizon.ecarts) console.log(`   ⚠️  ${e.fichier} : ${e.defaut}`);
+    if (!horizon.ecarts.length) console.log("   ✅ Chaque lecteur du verdict d'absence imprime l'horizon à côté de son chiffre.");
+  }
+
   // X6 — LE POURQUOI À CÔTÉ DU QUOI, ENFIN BRANCHÉ (2026-09-23, tâche #585). Le détecteur existait
   // depuis sa création sans qu'aucun main() ne l'appelle, pendant que le référentiel des standards
   // déclarait X6 « vérifiée par personne ». Les deux étaient vrais séparément.
@@ -2486,6 +2497,58 @@ export function findGuardiansHorsProcess({ root = ROOT, listDirImpl = readdirSyn
     .map((f) => `scripts/${f} : porte « guardian » sans « process » — le rang n'est plus dit par le nom. Un contrôleur de process le nomme ; un Gardien sacré ne prend jamais cette orthographe.`);
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// LE REMÈDE À MOITIÉ CÂBLÉ — « JAMAIS SOLLICITÉ » SANS SON HORIZON (2026-09-30, tâche #1283)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// CE QUI A ÉTÉ MESURÉ, ET C'EST UN DÉFAUT DE CÂBLAGE, JAMAIS UNE IDÉE NEUVE. Le journal d'usage
+// (.tool-usage-history.json) est dans .gitignore : il ne voyage pas avec le clone et se reconstruit
+// de zéro à chaque conteneur. Mesuré le 2026-09-30 : son plus ancien événement avait 23 HEURES,
+// sur un dépôt de deux semaines. La conséquence est connue et elle a déjà son remède —
+// horizonDuJournal() et formatHorizonLine() (tool-usage.mjs, tâche #1244, 2026-09-29) impriment
+// « le journal ne couvre que N % : jamais sollicité veut dire jamais vu passer sur cette fenêtre ».
+//
+// LE DÉFAUT EST QUE CE REMÈDE N'EST CÂBLÉ QUE CHEZ UN SEUL LECTEUR sur les trois qui rendent le
+// verdict. tool-brain l'imprime ; CASSANDRA-RH, qui propose de RETIRER des outils, et Doc-Report,
+// qui annote les registres, ne l'impriment pas. Un remède écrit et non câblé est une intention
+// (leçon L2), et ici il laisse passer exactement le tort qu'il devait empêcher, sur le lecteur
+// dont la conclusion est la plus lourde.
+//
+// LA PORTÉE EST ÉTROITE EXPRÈS, ET C'EST LE CHOIX QUI REND CE GARDE-FOU LISIBLE (leçon L4 : un
+// garde-fou qui accuse à tort cesse d'être lu). On ne cherche pas « qui parle du compteur » — la
+// moitié du dépôt en parle en commentaire. On cherche l'IMPORT de toolsNeverUsed(), la fonction
+// canonique qui rend le verdict d'absence : une ligne d'import est un fait mécanique, jamais une
+// tournure de prose, donc aucun commentaire ne peut la simuler.
+//
+// SA LIMITE, DÉCLARÉE PLUTÔT QUE TUE : un lecteur qui recompte les événements lui-même au lieu
+// d'appeler toolsNeverUsed() lui échappe. report-template.mjs faisait exactement cela — il a été
+// câblé à la main le même jour. Le garde-fou couvre la fonction canonique ; savoir qu'un
+// COMPTAGE maison rend un verdict d'absence demande de lire ce que le code VEUT dire, ce qu'aucun
+// motif ne fait. Sous-déclarer vaut mieux que fabriquer des coupables.
+export const FONCTION_DU_VERDICT_DABSENCE = "toolsNeverUsed";
+export const FONCTIONS_DE_LHORIZON = ["formatHorizonLine", "horizonDuJournal"];
+export function findVerdictsSansHorizon({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")); } catch { return { mesurable: false, pourquoi: "dossier scripts/ illisible — aucun verdict rendu, jamais un vert", lecteurs: 0, ecarts: [] }; }
+  const lecteurs = [];
+  for (const nom of fichiers.filter((f) => f.endsWith(".mjs")).sort()) {
+    if (nom === "tool-usage.mjs" || nom === "check-house.mjs") continue;
+    let src;
+    try { src = readFileImpl(join(root, "scripts", nom), "utf8"); } catch { continue; }
+    const importe = new RegExp(`^import\\s*\\{[^}]*\\b${FONCTION_DU_VERDICT_DABSENCE}\\b[^}]*\\}\\s*from\\s*["\'][^"\']*tool-usage\\.mjs["\']`, "m").test(src);
+    if (!importe) continue;
+    const aLHorizon = FONCTIONS_DE_LHORIZON.some((nomFn) => src.includes(nomFn));
+    lecteurs.push({ fichier: `scripts/${nom}`, aLHorizon });
+  }
+  return {
+    mesurable: true,
+    lecteurs: lecteurs.length,
+    ecarts: lecteurs.filter((l) => !l.aLHorizon).map((l) => ({
+      fichier: l.fichier,
+      defaut: "rend le verdict d'absence du compteur sans jamais imprimer l'horizon du journal — sur un journal qui se reconstruit à chaque conteneur, « jamais sollicité » se lit comme « jamais utilisé par le projet » alors qu'il ne dit que « jamais vu passer depuis hier »",
+    })),
+  };
+}
 // LE LANCEUR EN DERNIER, ET C'EST UNE CONTRAINTE RÉELLE, pas une préférence de rangement : il
 // était placé au milieu du fichier, donc main() s'exécutait avant que les `const` écrits en
 // dessous n'existent (zone morte temporelle). scanVocabulaire() a planté au premier vrai

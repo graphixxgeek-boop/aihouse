@@ -160,3 +160,21 @@ faute qu'il venait de faire corriger chez onze autres. Le parcours est donc part
 (`premierChampRenseigne()`), et chaque repli reste écrit à côté de la fonction qui le porte : pour
 le libellé `String(e)`, pour la tâche `null`, parce qu'une tâche inventée dans le gabarit passerait
 pour une tâche écrite par l'outil.
+
+## `fenetreDuCompteur()` — la ligne de santé ne dit plus « jamais sollicité » toute seule (2026-09-30, tâche #1283)
+
+**Pourquoi ici et pas ailleurs** : cette ligne s'imprime en tête de **chaque** rapport du dépôt.
+C'est la phrase la plus diffusée du projet, donc celle où un verdict d'absence mal formulé fait le
+plus de dégâts.
+
+**Le cas réel qui l'a déclenchée** : le 2026-09-28, `check-spirit` a affiché « jamais sollicité
+d'après le compteur » **dans l'en-tête d'un rapport qu'il était en train de produire**. Il venait
+de tourner ; il l'annonçait dans la même page. La cause n'était pas lui : le journal d'usage est
+dans `.gitignore` et n'avait que quelques heures de mémoire.
+
+`fenetreDuCompteur(evenements)` rend la borne en clair — `« (23 h de mémoire — pas jamais utilisé
+par le projet) »` — et **`« (fenêtre inconnue) »` quand aucun horodatage n'est lisible**, jamais
+`« 0 h »`, qui se lirait comme une mesure fraîche au lieu d'une absence de mesure.
+
+**Ce qu'elle ne fait pas** : recopier le calcul de `horizonDuJournal()`. Elle dérive la même borne
+depuis les mêmes événements pour tenir en quelques mots ; la phrase longue reste chez tool-brain.

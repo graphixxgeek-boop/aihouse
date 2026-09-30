@@ -20,7 +20,7 @@ import { parseToolsTable, lireTableMaitresse, slugifyAgentName, primaryToolName,
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie, lireFichierPartage } from "./lib-shell.mjs";
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
-import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson } from "./tool-usage.mjs";
+import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson, horizonDuJournal } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 // LE SENS DE LA DÉPENDANCE EST CONTRAINT, et il est déclaré à l'autre bout : `le-classificateur`
 // écrit en tête qu'il n'importe JAMAIS ce fichier-ci. Cassandra → classificateur est donc la seule
@@ -396,6 +396,18 @@ export function invisiblesAuCompteur({ recensementImpl = null, listDirImpl = rea
 
 export function toolsToReconsider({ usageHistory, knownSlugs, staleness, objectifsRows = [], tokenHistory, docReportRows = [], horsDePortee = null }) {
   const neverUsed = new Set(toolsNeverUsed(usageHistory, knownSlugs));
+  // L'HORIZON VOYAGE AVEC LE MOTIF, JAMAIS À CÔTÉ (2026-09-30, tâche #1283). Le journal d'usage
+  // est dans .gitignore : il se reconstruit à chaque conteneur, et le 2026-09-30 son plus ancien
+  // événement avait 23 heures sur un dépôt de deux semaines. Un « jamais sollicité » sans cette
+  // réserve propose de RETIRER un outil qui tourne depuis des semaines — c'est la conclusion la
+  // plus lourde du paysage, tirée du chiffre le plus fragile. Le remède existait depuis le
+  // 2026-09-29 (horizonDuJournal) et n'était câblé que chez tool-brain : un remède non câblé est
+  // une intention (L2). Attaché au MOTIF plutôt qu'à l'en-tête du rapport, pour qu'il suive la
+  // phrase partout où elle est recopiée — un avertissement en tête de page ne suit rien.
+  const h = horizonDuJournal(usageHistory);
+  const reserveHorizon = h.mesurable
+    ? ` — ⚠️ le journal ne couvre que ${h.heuresCouvertes} h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet »`
+    : ` — ⚠️ horizon du journal NON MESURÉ (${h.pourquoi})`;
   // Si la mesure des invisibles échoue, on ne suppose PAS qu'ils sont tous visibles : on garde le
   // signal mais on le marque non fiable, plutôt que de rendre un verdict sur une base inconnue.
   const hp = horsDePortee ?? invisiblesAuCompteur();
@@ -406,7 +418,7 @@ export function toolsToReconsider({ usageHistory, knownSlugs, staleness, objecti
     if (neverUsed.has(slug) && invisible) {
       reasons.push(`⚠️ zéro d'usage NON INTERPRÉTABLE — ${invisible}. Ce n'est PAS un motif de retrait`);
     } else if (neverUsed.has(slug)) {
-      reasons.push(hp.mesurable ? "jamais sollicité (tool-usage.mjs)" : `jamais sollicité (tool-usage.mjs) — ⚠️ à lire avec réserve : ${hp.pourquoi}`);
+      reasons.push(hp.mesurable ? `jamais sollicité (tool-usage.mjs)${reserveHorizon}` : `jamais sollicité (tool-usage.mjs) — ⚠️ à lire avec réserve : ${hp.pourquoi}${reserveHorizon}`);
     }
     const scriptPath = AGENT_SCRIPT_FILES[slug];
     const staleEntry = scriptPath ? staleness?.[scriptPath] : undefined;

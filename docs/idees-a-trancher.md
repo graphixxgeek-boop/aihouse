@@ -844,3 +844,38 @@ personne ne doit faire). La 2 seule rendrait le chiffre muet sans expliquer pour
 **Ce qui est fait en attendant : rien, et c'est délibéré.** Toucher à `tool-brain` touche aussi
 CASSANDRA-RH (qui s'en sert pour juger si un outil a sa place) et le verrou d'ouverture de Ronde.
 Ça se décide avec toi, pas à 16h50 pendant que tu rentres du travail.
+
+---
+
+### MISE À JOUR DU 2026-09-30 (tâche #1283) — l'issue 1 est FAITE, l'issue 2 reste entière
+
+**CE QUI A CHANGÉ, ET POURQUOI CE N'ÉTAIT PAS UNE DÉCISION.** L'issue 1 — imprimer l'horizon à côté
+de chaque chiffre — avait déjà été CODÉE le 2026-09-29 (`horizonDuJournal()`, `formatHorizonLine()`
+dans `scripts/tool-usage.mjs`). Elle n'était **câblée que chez `tool-brain`**. CASSANDRA-RH, qui
+propose de RETIRER des outils, et Doc-Report rendaient leur verdict sans la réserve. Finir un
+câblage commencé n'ouvre aucune option et n'en ferme aucune : c'est l'Article 3 (corriger la cause)
+et la leçon L2 (un remède non câblé est une intention), pas un arbitrage à ta place.
+
+**Les quatre endroits câblés le 2026-09-30** — et le troisième est le plus étendu :
+
+| Endroit | Ce qui s'affiche maintenant |
+|---|---|
+| `cassandra-rh.mjs` | la réserve est collée AU MOTIF de retrait, pas à l'en-tête du rapport — un en-tête ne suit pas le motif quand il est recopié dans les blocs et le HTML |
+| `doc-report.mjs` | l'horizon en tête de l'index, et l'annotation par ligne renvoie à lui |
+| `report-template.mjs` | la ligne de santé imprimée en tête de **chaque** rapport du dépôt |
+| `le-coordinateur.mjs` | la phrase du catalogue qui promettait « le cumul permanent, **depuis le début du projet** » — elle était simplement fausse |
+
+**ET LE GARDE-FOU QUI EMPÊCHE LE PROCHAIN LECTEUR D'OUBLIER** : `findVerdictsSansHorizon()`
+(`scripts/safe-export.mjs`), lancé à chaque commit. Il rend aujourd'hui **0 écart sur 3 lecteurs**.
+
+**LE CAS RÉEL QUI PROUVE QUE CE N'ÉTAIT PAS THÉORIQUE** : le 2026-09-28, `check-spirit` a affiché
+« jamais sollicité d'après le compteur » **dans l'en-tête d'un rapport qu'il était en train de
+produire**, avec ses deux transcripts déposés le jour même dans `docs/check-spirit/`.
+
+**CE QUI RESTE À TRANCHER, ET RIEN N'A BOUGÉ DESSUS :**
+
+- **L'issue 2** — ne plus LEVER l'écart quand le journal est plus jeune que le dépôt. Elle protège
+  le PLAN D'ACTION, là où l'issue 1 protège le lecteur. Toujours recommandée, toujours ouverte.
+- **L'issue 3** — versionner le journal. Toujours écartée à mon sens (bruit dans chaque diff), mais
+  c'est une décision d'hygiène du dépôt, donc la tienne.
+

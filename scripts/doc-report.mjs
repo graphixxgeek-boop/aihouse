@@ -27,7 +27,7 @@ import { sansLesCommentaires } from "./abraham-les-references.mjs";
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
-import { toolsNeverUsed, recordCliUsage } from "./tool-usage.mjs";
+import { toolsNeverUsed, recordCliUsage, horizonDuJournal, formatHorizonLine } from "./tool-usage.mjs";
 import { recommendFindBooster } from "./find-booster.mjs";
 import { AGENT_CATEGORIES, TOOL_RELIABILITY, printReliabilityNotice, regimeDEcriture, balayerScriptsDesRegistres, rangDeLaCategorie, memeChose, listerLesFichiers, scriptPourSlug, lireFichierPartage, lireLesScriptsDuDepot, sh } from "./lib-shell.mjs";
 import { parseToolsTable, slugifyAgentName, primaryToolName } from "./le-coordinateur.mjs";
@@ -775,6 +775,14 @@ export function scriptRecordsItsUsage(scriptPath, readFileImpl = lireFichierPart
 export function buildDocReportIndex({ registries = REGISTRIES, usageHistory = { events: [] }, readFileImpl = lireFichierPartage } = {}) {
   const audited = auditHtmlDecisions(registries, readFileImpl);
   const neverUsed = new Set(toolsNeverUsed(usageHistory, registries.map((r) => r.slug)));
+  // L'HORIZON DU JOURNAL, ATTACHÉ AU CHIFFRE (2026-09-30, tâche #1283). Le bloc ci-dessous
+  // distingue déjà « jamais lancé » de « aucun point d'enregistrement » — deux états au lieu
+  // d'un, et c'était le bon correctif. Il lui manquait le TROISIÈME : le journal lui-même est
+  // dans .gitignore, donc il se reconstruit à chaque conteneur. Un outil peut avoir tourné
+  // vingt fois la semaine dernière et n'apparaître nulle part. Mesuré le 2026-09-30 : 23 h de
+  // mémoire pour un dépôt de deux semaines. horizonDuJournal() existait depuis la veille et
+  // n'était câblé que chez tool-brain — un remède écrit et non câblé est une intention (L2).
+  const horizon = horizonDuJournal(usageHistory);
   const rows = audited.map((r) => ({
     ...r,
     ageDays: registryAge(r),
@@ -797,7 +805,7 @@ export function buildDocReportIndex({ registries = REGISTRIES, usageHistory = { 
     byFamily.get(row.family).push(row);
   }
   const mismatches = rows.filter((r) => r.mismatch);
-  return { rows, byFamily, mismatches };
+  return { rows, byFamily, mismatches, horizon };
 }
 
 function formatDays(days) {
@@ -821,8 +829,12 @@ function main() {
   } catch {
     // absence honnête : aucun événement d'usage encore enregistré, jamais fabriqué.
   }
-  const { rows, byFamily, mismatches } = buildDocReportIndex({ usageHistory });
+  const { rows, byFamily, mismatches, horizon } = buildDocReportIndex({ usageHistory });
   console.log("=== Doc-Report — index global des rapports (gardien HTML/texte, tâche #165) ===\n");
+  // La phrase de lecture AVANT les chiffres qu'elle qualifie : mise après, elle arrive quand le
+  // lecteur a déjà conclu. Le tiret d'échelle (heures du dépôt) est volontairement absent ici —
+  // Doc-Report ne connaît pas l'âge du dépôt, et l'inventer pour faire joli serait pire que rien.
+  console.log(`${formatHorizonLine(horizon)}\n`);
   for (const [family, familyRows] of byFamily) {
     console.log(`-- ${family} --`);
     for (const r of familyRows) {
@@ -830,7 +842,7 @@ function main() {
       const wiredLabel = r.wired === false ? " [ÉCART : non câblé]" : "";
       const neverLabel = r.sansPointDEnregistrement
         ? " [aucun point d'enregistrement dans son script — le compteur ne peut rien voir, ce n'est PAS un constat de désusage]"
-        : r.neverSolicited ? " [jamais sollicité selon tool-usage.mjs]" : "";
+        : r.neverSolicited ? " [aucun passage vu sur la fenêtre du compteur — voir l'horizon imprimé en tête de cet index, ce n'est PAS « jamais utilisé par le projet »]" : "";
       console.log(`  ${r.label} — ${decisionLabel}${wiredLabel} — dernier rapport : ${formatDays(r.ageDays)}${neverLabel}`);
     }
   }

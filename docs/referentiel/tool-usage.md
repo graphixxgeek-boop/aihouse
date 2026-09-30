@@ -87,3 +87,35 @@ classe est identique à chaque fois — **un signal ADJACENT lu comme le signal 
 **LA LIMITE, DÉCLARÉE** : il vérifie qu'un outil a TOURNÉ, jamais que ce qu'on en dit est exact — un
 rapport peut citer un vrai passage et en tirer une conclusion fausse. Et il ne voit que les outils
 qu'il connaît : un nom absent du registre des slugs lui est invisible.
+
+## L'HORIZON DU JOURNAL — `horizonDuJournal()`, `formatHorizonLine()`, `cheminDuJournal()` (2026-09-29 tâche #1244, câblage achevé le 2026-09-30 tâche #1283)
+
+**Le fait qui commande tout le reste** : `.tool-usage-history.json` est dans `.gitignore`. Il ne
+voyage donc pas avec le clone et **se reconstruit de zéro à chaque conteneur**. Mesuré le
+2026-09-30 : son plus ancien événement avait **23 heures**, sur un dépôt de deux semaines.
+
+**Ce que ça change pour tout chiffre d'usage** : « jamais sollicité » veut dire « jamais vu passer
+sur la fenêtre couverte », jamais « jamais utilisé par le projet ». Les deux phrases sont
+identiques à l'écran et opposées dans leurs conséquences — la seconde propose de RETIRER un outil.
+
+| Fonction | Ce qu'elle rend |
+|---|---|
+| `horizonDuJournal(history)` | `{ mesurable, evenements, sansHorodatage, plusAncien, plusRecent, heuresCouvertes }` — et `mesurable: false` **avec sa raison** quand aucun horodatage n'est lisible, jamais un zéro rassurant (L5/L11) |
+| `formatHorizonLine(h, { heuresDuDepot })` | la phrase à imprimer à côté du chiffre ; avec l'âge du dépôt elle donne le POURCENTAGE couvert, sans lui elle s'arrête à ce qu'elle sait |
+| `cheminDuJournal(env)` | le chemin du journal, relu à CHAQUE appel — `filet-en-parts` lance quatre parts en parallèle et chacune doit écrire dans le sien |
+
+**LE CÂBLAGE EST LA MOITIÉ QUI MANQUAIT, ET C'EST ELLE QUI COÛTAIT.** Écrites le 2026-09-29, ces
+fonctions n'étaient appelées que par `tool-brain`. CASSANDRA-RH — qui propose de retirer des
+outils — et Doc-Report rendaient le verdict sans la réserve. Un remède écrit et non câblé est une
+intention (leçon L2). Les trois lecteurs l'impriment depuis le 2026-09-30, et
+`findVerdictsSansHorizon()` (`scripts/safe-export.mjs`) le vérifie mécaniquement à chaque commit —
+parce qu'une règle qu'aucun mécanisme ne porte ne survit pas au changement de session (Article 27).
+
+**LA PHRASE « cumul permanent depuis le début du projet » ÉTAIT FAUSSE** et vivait à deux endroits :
+l'en-tête de `tool-usage.mjs` et le catalogue de LE-COORDINATEUR, d'où un lecteur la recevait comme
+une promesse. Corrigée aux deux le 2026-09-30. Elle décrivait ce que le compteur ne remet pas à
+zéro (les sessions), jamais ce que l'environnement efface.
+
+**CE QUI RESTE OUVERT, ET CE N'EST PAS À L'AGENT DE LE TRANCHER** : faut-il *versionner* le journal
+pour lui rendre sa permanence, et faut-il *taire* l'écart quand le journal est plus jeune que le
+dépôt ? Les deux questions vivent dans `docs/idees-a-trancher.md` au point **#1222**.

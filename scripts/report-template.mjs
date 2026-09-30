@@ -634,6 +634,23 @@ export const GRAVITES = {
 // La santé d'un outil, LUE dans ce que les autres savent déjà — jamais un second calcul. Chaque
 // signal absent est déclaré absent, jamais remplacé par une valeur neutre qui gonflerait la note :
 // un outil qu'on ne sait pas mesurer n'est pas un outil en bonne santé, c'est un outil non mesuré.
+// LA FENÊTRE DU COMPTEUR, DITE PLUTÔT QUE SUPPOSÉE (2026-09-30, tâche #1283). Cette ligne de
+// santé s'imprime en tête de CHAQUE rapport du dépôt : c'est la plus diffusée de toutes, donc
+// celle où « jamais sollicité » fait le plus de dégâts. Or le journal d'usage est dans
+// .gitignore — il ne voyage pas avec le clone et se reconstruit à chaque conteneur. Mesuré le
+// 2026-09-30 : 23 heures de mémoire pour un dépôt de deux semaines, et check-spirit affichait
+// « jamais sollicité » dans l'en-tête d'un rapport qu'il venait lui-même de produire.
+//
+// POURQUOI UNE FONCTION ICI PLUTÔT QUE formatHorizonLine() : la ligne de santé tient en quelques
+// mots, la phrase complète de tool-usage.mjs en fait trois. On ne recopie pas son CALCUL — on
+// dérive la même borne depuis les mêmes événements, et le rapport long reste chez tool-brain.
+export function fenetreDuCompteur(evenements = []) {
+  const dates = evenements.map((e) => e?.at).filter((v) => typeof v === "number" && Number.isFinite(v));
+  if (!dates.length) return " (fenêtre inconnue)";
+  const heures = Math.round((Date.now() - Math.min(...dates)) / 36e5);
+  return ` (${heures} h de mémoire — pas « jamais utilisé par le projet »)`;
+}
+
 export function toolHealth(slug, { root = ROOT } = {}) {
   if (!slug) return { mesurable: false, raison: "aucun outil nommé" };
   const signaux = [];
@@ -649,7 +666,7 @@ export function toolHealth(slug, { root = ROOT } = {}) {
     sollicitations = evenements.filter((e) => e?.toolSlug === slug || e?.tool === slug || e?.slug === slug).length;
     signaux.push(sollicitations > 0
       ? { clef: "usage", ok: true, texte: `${sollicitations} sollicitation(s) réelle(s) enregistrée(s)` }
-      : { clef: "usage", ok: false, texte: "jamais sollicité d'après le compteur — ou jamais instrumenté pour l'être" });
+      : { clef: "usage", ok: false, texte: `aucun passage sur la fenêtre du compteur${fenetreDuCompteur(evenements)} — ou jamais instrumenté pour l'être` });
   } catch {
     signaux.push({ clef: "usage", ok: undefined, texte: "compteur d'usage illisible — non mesuré" });
   }

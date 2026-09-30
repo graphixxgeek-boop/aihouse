@@ -781,3 +781,19 @@ factorisation qui change une signature n'en est plus une.
 **Zéro aujourd'hui, et c'est un zéro EXTINGUIBLE** : un garde-fou qui ne peut jamais atteindre zéro
 devient du décor (leçon L6). C'est la différence avec la mesure des sautes silencieuses juste
 au-dessus, qui reste à 38 et n'est donc délibérément PAS un garde-fou.
+
+## Quatre fonctions publiques que la fiche ne nommait pas (rattrapage du 2026-09-30, tâche #1283)
+
+| Fonction | Ce qu'elle vérifie |
+|---|---|
+| `findVerdictsSansHorizon()` | **le remède à moitié câblé** : tout script qui importe `toolsNeverUsed()` — la fonction canonique du verdict d'absence — doit aussi imprimer l'horizon du journal. Mesuré le 2026-09-30 : 2 lecteurs sur 3 ne le faisaient pas, dont CASSANDRA-RH qui propose de RETIRER des outils |
+| `findFichiersHorsZone()` | un fichier de l'Agence rangé hors de la zone que son type impose |
+| `zoneDuFichier()` | la zone attendue d'un fichier, dérivée de son type |
+| `slugDuFichierAgence()` | le slug d'outil que porte un fichier, pour rattacher un fichier à son propriétaire sans table tenue à la main |
+
+**La portée de `findVerdictsSansHorizon()` est étroite EXPRÈS**, et c'est ce choix qui le rend
+lisible (leçon L4) : il vise la **ligne d'import**, un fait mécanique qu'aucune tournure de prose
+ne peut simuler — la moitié du dépôt parle de `toolsNeverUsed()` en commentaire. **Sa limite est
+déclarée plutôt que tue** : un lecteur qui recompte les événements lui-même lui échappe.
+`report-template.mjs` faisait exactement cela et a été câblé à la main le même jour. Sous-déclarer
+vaut mieux que fabriquer des coupables.

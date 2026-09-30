@@ -7030,6 +7030,37 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     // L'AUTRE MOITIÉ : sans elle, les documents resteraient impeccables pendant que le code
     // rouvrirait l'ambiguïté par un nom de fichier.
     assert.deepEqual(se.findGuardiansHorsProcess(), [], 'no script carries "guardian" without "process" — the rank is always stated by the name');
+
+    // LE REMÈDE À MOITIÉ CÂBLÉ (2026-09-30, tâche #1283). Le journal d'usage est dans .gitignore :
+    // il se reconstruit à chaque conteneur, et le 2026-09-30 son plus ancien événement avait 23 h
+    // sur un dépôt de deux semaines. horizonDuJournal() existait depuis la veille pour le dire,
+    // et n'était câblé que chez tool-brain — pendant que CASSANDRA-RH, qui propose de RETIRER des
+    // outils, rendait son verdict sans la réserve. Un remède écrit et non câblé est une intention.
+    const horizonReel = se.findVerdictsSansHorizon();
+    assert.ok(horizonReel.mesurable, 'the guard must measure the real repo, never return a silent green');
+    assert.ok(horizonReel.lecteurs >= 3, "MUST CATCH: fewer than 3 readers of toolsNeverUsed() means the import pattern stopped matching — a guard that finds nobody to check is green for the wrong reason");
+    assert.deepEqual(horizonReel.ecarts, [], 'every reader of the absence verdict must print the journal horizon beside its figure');
+    // LES CONTRE-TESTS GARDENT LE PIÈGE PLUTÔT QUE DE LE DÉCRIRE.
+    const faux = (src) => se.findVerdictsSansHorizon({ listDirImpl: () => ['faux.mjs'], readFileImpl: () => src });
+    assert.equal(faux('import { toolsNeverUsed } from "./tool-usage.mjs";\nconsole.log(toolsNeverUsed(h, s));').ecarts.length, 1, 'MUST CATCH: importing the canonical absence function without ever printing the horizon is exactly the defect');
+    assert.equal(faux('import { toolsNeverUsed, horizonDuJournal } from "./tool-usage.mjs";').ecarts.length, 0, 'a reader that also imports horizonDuJournal is compliant');
+    assert.equal(faux('import { toolsNeverUsed } from "./tool-usage.mjs";\nconsole.log(formatHorizonLine(h));').ecarts.length, 0, 'printing the horizon line is enough — the guard checks the remedy, not which of its two entry points is used');
+    // UN COMMENTAIRE N'EST PAS UN IMPORT, et c'est le resserrement qui rend ce garde-fou lisible :
+    // la moitié du dépôt PARLE de toolsNeverUsed() en prose. Viser la ligne d'import — un fait
+    // mécanique qu'aucune tournure ne simule — évite un mur d'accusations le jour de sa naissance.
+    assert.equal(faux('// toolsNeverUsed() rend le verdict, voir tool-usage.mjs\nconst x = 1;').ecarts.length, 0, 'MUST NOT CATCH: prose about the function is not a call site');
+    assert.equal(faux('import { recordCliUsage } from "./tool-usage.mjs";').ecarts.length, 0, 'importing something else from the same module is not consuming the verdict');
+    // UN DOSSIER ILLISIBLE NE VAUT JAMAIS UN VERT (L5/L11) : « personne n'est en écart » et
+    // « je n'ai pas pu regarder » ne doivent jamais s'écrire pareil.
+    const aveugle = se.findVerdictsSansHorizon({ listDirImpl: () => { throw new Error('boom'); } });
+    assert.equal(aveugle.mesurable, false, 'an unreadable scripts/ directory must say PAS MESURÉ, never report zero gaps');
+    assert.ok(aveugle.pourquoi, 'and it must say why — a false state without its reason is unusable');
+    // LA FENÊTRE IMPRIMÉE EN TÊTE DE CHAQUE RAPPORT : un journal vide doit dire « inconnue »,
+    // jamais « 0 h », qui se lirait comme une mesure fraîche au lieu d'une absence de mesure.
+    const rt = await import('../scripts/report-template.mjs');
+    assert.match(rt.fenetreDuCompteur([]), /inconnue/, 'an empty journal has an UNKNOWN window, never a zero-hour one (L5/L11)');
+    assert.match(rt.fenetreDuCompteur([{ at: Date.now() - 5 * 36e5 }]), /5 h/, 'a real oldest event gives the real window');
+    assert.match(rt.fenetreDuCompteur([{ at: 'pas-un-nombre' }]), /inconnue/, 'a lost timestamp is not a window either — the same defect that once made 327 events invisible');
     // LE LANCEUR PRÉMATURÉ (2026-09-23) — trouvé DEUX FOIS le même jour par un vrai lancement,
     // jamais par un test : safe-export.mjs et cassandra-rh.mjs plaçaient leur lanceur au milieu du
     // fichier, donc main() partait avant les const écrits dessous. Les tests ne l'avaient pas vu
@@ -14662,7 +14693,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     knownSlugs: ['used-tool', 'never-used-tool', 'stale-tool'],
     staleness: { 'scripts/stale-tool.mjs': { stale: true, days: 90 } },
   });
-  assert.deepEqual(reconsiderFindings.find((f) => f.slug === 'never-used-tool').reasons, ['jamais sollicité (tool-usage.mjs)'], 'a tool with zero real usage events must be flagged by name with the exact reused tool-usage.mjs reason, never a second divergent phrase');
+  // LA RÉSERVE D'HORIZON FAIT PARTIE DU MOTIF DEPUIS LE 2026-09-30 (tâche #1283), et elle y est
+  // ATTACHÉE plutôt qu'imprimée en tête de rapport : le motif est recopié dans le rapport HTML,
+  // dans les blocs et dans le plan d'action, un avertissement d'en-tête ne l'aurait suivi nulle
+  // part. L'assertion vise donc la SUBSTANCE — le nom canonique réutilisé, puis la réserve —
+  // plutôt que la chaîne exacte, qui reviendrait à figer une phrase au lieu d'une garantie.
+  const motifJamais = reconsiderFindings.find((f) => f.slug === 'never-used-tool').reasons;
+  assert.equal(motifJamais.length, 1, 'still exactly one reason — the horizon travels WITH the reason, it never becomes a second finding');
+  assert.match(motifJamais[0], /^jamais sollicité \(tool-usage\.mjs\)/, 'a tool with zero real usage events must be flagged by name with the exact reused tool-usage.mjs reason, never a second divergent phrase');
+  assert.match(motifJamais[0], /jamais « jamais utilisé par le projet »/, "MUST CATCH: without the horizon reserve, this reason proposes REMOVING a tool on a journal that only remembers the current container — the heaviest conclusion drawn from the most fragile figure");
   assert.ok(reconsiderFindings.find((f) => f.slug === 'used-tool') === undefined, 'a genuinely solicited tool with no staleness signal must never be flagged for retirement');
 
   // tokenInvestmentVerdict() (2026-09-21, "OK GO" idea #2) — a plain textual re-read of a verdict

@@ -3,6 +3,20 @@
 // (docs/suivi #230), calibré le même soir : cumul PERMANENT depuis le début du projet (jamais remis
 // à zéro par session), nourrit la future CASSANDRA-RH pour juger si un outil a toujours sa place.
 //
+// CETTE PERMANENCE EST UNE INTENTION, PAS UN FAIT, ET LA NUANCE A COÛTÉ CHER (2026-09-30, tâche
+// #1283). Le fichier est dans `.gitignore` : il ne voyage pas avec le clone et se reconstruit à
+// zéro à chaque conteneur. Mesuré le 2026-09-30 : son plus ancien événement avait 23 HEURES, sur
+// un dépôt de deux semaines. La phrase ci-dessus décrit donc ce que le compteur NE FAIT PAS
+// remettre à zéro (les sessions), jamais ce que l'environnement, lui, efface. Elle avait été
+// recopiée telle quelle dans le catalogue de LE-COORDINATEUR, où elle promettait « depuis le
+// début du projet » à qui lisait — corrigé le même jour.
+//
+// LA CONSÉQUENCE POUR TOUT LECTEUR DE CE JOURNAL, et elle n'est pas négociable : un « jamais
+// sollicité » ne vaut que sur la fenêtre couverte. `horizonDuJournal()` la rend, `findVerdicts-
+// SansHorizon()` (safe-export.mjs) vérifie mécaniquement que chaque lecteur l'imprime. Faut-il
+// versionner le journal pour lui rendre sa permanence ? C'est une décision d'hygiène du dépôt,
+// donc humaine : elle est posée, jamais tranchée ici.
+//
 // Source de la donnée, honnêteté déjà actée pour SMART-CONSO-TOKEN et réutilisée ici à l'identique :
 // un JOURNAL AUTO-DÉCLARÉ par l'agent lui-même, jamais vérifiable mécaniquement (aucune trace
 // externe indépendante ne prouve qu'un outil a réellement été sollicité) — la discipline "solliciter
