@@ -58,9 +58,34 @@ Veux-tu qu'on **rouvre les 5 écartées** maintenant, ou qu'on **reste sur la d�
 nos propres livrables**. Veux-tu qu'elle devienne la règle de clôture de chaque tâche ?
 *(a) oui, pour tout · (b) oui, mais seulement pour les outils · (c) non, trop lourd*
 
-**Q3.3 — À MOI, tâche **#1317**.** Les **contrats d'interface** n'existent nulle part : aucun outil ne déclare
-formellement ce qu'il reçoit et ce qu'il rend. C'est un chantier réel, pas une note. Je le chiffre
-avant de le proposer.
+**Q3.3 — CHIFFRÉ le 2026-09-30, tâche #1317, et le chantier est trois fois plus petit que ce
+qu'il en avait l'air.**
+
+Un contrat d'interface répond à trois questions : **qu'est-ce que j'attends · qu'est-ce que je
+rends · qu'est-ce que je promets.** Mesuré sur les 85 outils réels :
+
+| La part du contrat | Déjà disponible ? | Combien |
+|---|---|---|
+| **ce qu'un outil attend** (ses dépendances) | ✅ **déjà dérivé**, par SAFE-EXPORT | **73 / 85** outils |
+| **ce qu'un outil rend** (où il écrit) | ✅ **déjà dérivé**, par data-archangel | **68 / 94** dossiers ont leur auteur identifié |
+| **ce qu'un outil promet** (sa limite) | 🔴 **à écrire à la main** | **33 / 85** seulement en déclarent une |
+
+**CE QUE ÇA CHANGE, ET C'EST LE POINT** : les deux premiers tiers **ne sont pas à écrire, ils sont
+à RASSEMBLER** — deux outils les calculent déjà chacun de son côté, sans que personne n'ait jamais
+mis les deux sorties face à face. **Le vrai travail neuf porte sur 52 outils qui ne disent pas
+quelle est leur limite.**
+
+**Et ce troisième tiers ne se dérive pas, par nature.** « Ce que je promets » est un jugement :
+une machine qui l'inventerait produirait un contrat qui se satisfait tout seul. C'est le même
+principe que partout ici — on automatise la mesure, jamais le verdict.
+
+**L'ordre de grandeur, dit honnêtement** : rassembler les deux tiers dérivables est un travail
+d'outil, court. Écrire 52 limites à la main est un travail long, **mais fractionnable** — chaque
+outil peut recevoir la sienne le jour où on le touche, plutôt qu'en une seule passe.
+
+**Q3.5 — À TOI.** Comment on s'y prend ? *(a) rassembler d'abord les deux tiers dérivables, et
+laisser les 52 limites s'écrire au fil de l'eau · (b) tout faire d'un bloc, y compris les 52 ·
+(c) rien pour l'instant, ça attend l'objectif ultime*
 
 **Q3.4 — À MOI, tâche **#1318**.** L'organigramme est **tenu à la main** — la fiche le dit elle-même. C'est la
 dette que l'Article 24 interdit partout ailleurs. Je dois soit le faire générer, soit écrire noir

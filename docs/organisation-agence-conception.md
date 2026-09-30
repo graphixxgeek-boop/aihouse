@@ -442,8 +442,26 @@ portée par les gabarits partagés, et la définition de fini est au moins écri
 une propriété de l'organigramme, pas d'un outil. Décider que chaque membre déclare ses entrées et
 ses sorties, c'est décider comment l'équipe se parle — donc ça se tranche ici, avec le schéma.
 
-**Ce qui doit précéder toute proposition** : le CHIFFRAGE. Un chantier qui touche tous les outils
-ne s'ouvre pas sur une intuition, et il n'est pas chiffré à ce jour.
+**LE CHIFFRAGE, FAIT LE 2026-09-30** — et il rend le chantier trois fois plus petit qu'il n'en
+avait l'air. Un contrat répond à trois questions, et deux d'entre elles sont **déjà calculées** :
+
+| La part du contrat | État | Mesure |
+|---|---|---|
+| ce qu'un outil **attend** (ses dépendances) | ✅ déjà dérivé par SAFE-EXPORT | **73 / 85** outils |
+| ce qu'un outil **rend** (où il écrit) | ✅ déjà dérivé par data-archangel | **68 / 94** dossiers ont leur auteur |
+| ce qu'un outil **promet** (sa limite) | 🔴 à écrire à la main | **33 / 85** seulement en déclarent une |
+
+**Les deux premiers tiers ne sont pas à écrire, ils sont à RASSEMBLER** : deux outils les
+calculent déjà chacun de son côté, et personne n'a jamais mis les deux sorties face à face. **Le
+travail neuf porte sur les 52 outils qui ne disent pas quelle est leur limite.**
+
+**Et ce troisième tiers ne se dérive pas, par nature** : « ce que je promets » est un jugement, et
+une machine qui l'inventerait produirait un contrat qui se satisfait tout seul — exactement ce que
+l'Article 31 interdit sous le nom d'outil fabriqué pour cocher une case. On automatise la mesure,
+jamais le verdict.
+
+**Il est fractionnable, et c'est ce qui le rend faisable** : chaque outil peut recevoir sa limite
+le jour où on le touche, plutôt qu'en une seule passe de 52.
 
 ### ② L'ORGANIGRAMME EST TENU À LA MAIN — tâche #1318
 
