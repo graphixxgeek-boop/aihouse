@@ -79,9 +79,39 @@ propres leçons, au même rang · (c) on ne laisse rien entrer, on publie seulem
 propriété (fil 08) et ça montre notre méthode. *(a) d'accord, c'est de la méthode, pas du secret ·
 (b) pas avant d'avoir décidé si on vend · (c) non*
 
-**Q13.4 — À MOI, tâche **#1330**.** Mesurer ce qu'on POURRAIT publier : combien de nos 38 leçons de méthode
-tiennent debout **sans leur exemple local**. La mesure d'aujourd'hui dit qu'elles sont
-transposables en principe ; elle ne dit pas qu'elles sont lisibles par un étranger.
+**Q13.4 — MESURÉ le 2026-09-30, tâche #1330, et le résultat est meilleur que prévu : 36 leçons
+sur 38 sont publiables telles quelles.**
+
+La question était : combien de nos leçons de méthode tiennent debout **sans leur exemple local** ?
+
+| | |
+|---|---|
+| leçons numérotées | **41** |
+| liées au Jeu, donc hors sujet ici | 3 *(L16, L17, L24)* |
+| de MÉTHODE | **38** |
+| dont le **titre** est universel tel quel | **36** |
+| dont le titre cite quelque chose de local | 2 *(L36, L39)* |
+
+**LA MESURE S'EST TROMPÉE UNE FOIS AVANT D'ÊTRE JUSTE, ET LA CORRECTION EST LA TROUVAILLE.** Mon
+premier compte regardait le titre **et les deux premiers paragraphes**, et rendait *« 9 leçons à
+reformuler »*. **En ouvrant deux d'entre elles à la main, le verdict s'est inversé** : leurs
+titres sont parfaitement universels — *« Un chiffre qui BOUGE n'est pas un chiffre qui
+s'AMÉLIORE »*, *« Un test qui lit une donnée VIVANTE ne juge pas le code, il juge le disque »* —
+et c'est le paragraphe d'illustration juste en dessous qui cite un numéro de tâche.
+
+**Je mesurais donc « le bloc contient une référence locale » en croyant mesurer « le principe
+n'est pas publiable ».** Encore le même motif : un signal adjacent pris pour le signal visé. Sans
+l'ouverture à la main, j'aurais publié « 9 leçons à reformuler » au lieu de « 2 ».
+
+**CE QUE ÇA CHANGE CONCRÈTEMENT** : la structure de nos leçons est **déjà** celle d'un corpus
+publiable — **un titre qui énonce le principe, un corps qui l'illustre avec notre cas**. Publier
+ne demande donc pas de réécrire : ça demande de **séparer** ce qui est déjà séparé. Le travail
+réel se limite aux **2 titres** qui citent du local.
+
+**LA LIMITE, ET ELLE COMPTE** : un titre universel n'est pas un titre *compréhensible seul*. « Un
+chiffre qui bouge n'est pas un chiffre qui s'améliore » se comprend ; d'autres demanderont deux
+phrases de contexte que nous seuls pouvons écrire. **La mesure dit ce qui est transposable, jamais
+ce qui est lisible par un étranger** — ça, seul un étranger peut le dire (fil 11).
 
 **Q13.5 — MESURÉ le 2026-09-30, tâche #1331. La réponse est NON, et elle est plus nette que ce
 que je croyais.**

@@ -31,6 +31,34 @@ Et le manque est déjà mesuré : `COMMENT ASSURER LA COHERENCE` diagnostique qu
 | 3 | Il reste valable vingt ans | ⚠️ un modèle économique ne dure pas vingt ans |
 | 4 | Il permet d'arbitrer entre deux stratégies opposées | ❌ il EST une stratégie, donc il ne peut pas les départager |
 | 5 | Il inspire | ✅ |
+| **6** | **Il désigne CE système-là et aucun autre** *(ajouté le 2026-09-30 — voir ci-dessous)* | — |
+
+### LE SIXIÈME CRITÈRE — trouvé le 2026-09-30, et par lui, pas par le test
+
+**Le document d'origine en compte cinq. Il en manque un, et son absence a coûté une version
+entière.** Le 30 septembre, deux objectifs ultimes ont été proposés qui **passaient les cinq
+critères** — et qu'il a rejetés d'un mot : *« aériens, limite des objectifs d'entreprise, pas de
+projet »*. Il avait raison, et rien dans le test ne pouvait le dire.
+
+**LE DÉFAUT QUE LES CINQ NE VOIENT PAS.** Le critère 2 pousse à ne dépendre d'aucune stratégie.
+Poussé trop loin, il produit une formulation si générale qu'elle conviendrait à n'importe quel
+projet du même genre — **et une phrase que tout le monde pourrait adopter n'arbitre rien pour
+personne.** Les cinq critères protègent contre « trop étroit » ; aucun ne protège contre « trop
+large ».
+
+> **CRITÈRE 6 — Le test du voisin.** *Un autre projet du même genre pourrait-il adopter cette
+> phrase telle quelle ?* Si oui, elle décrit une famille de projets, pas celui-ci : elle échoue.
+
+**COMMENT LE TENIR SANS RETOMBER DANS L'AUTRE PIÈGE**, car les deux sont opposés : ce qui rend une
+formulation concrète tend à la rendre **achevable**, et un objectif qu'on peut cocher échoue au
+critère 3. **La sortie mesurée le 30/09** : être concret sur la NATURE (ce qu'on fait naître, pour
+qui, avec quel effet) sans l'être sur la QUANTITÉ (« deux produits » rend terminable).
+
+**Et la manière dont ce critère est apparu vaut d'être notée** : ce n'est pas le test qui a
+trouvé son propre trou — c'est un lecteur qui se déclare « pas qualifié pour tout ça » et qui a
+senti, sans pouvoir le nommer, qu'une phrase juste ne servait à rien.
+
+---
 
 > **Verdict : notre cible actuelle est un OBJECTIF STRATÉGIQUE, pas un objectif ultime.**
 > Ce n'est pas un problème — c'est le résultat du test, et il nous évite de bâtir sur un pivot qui

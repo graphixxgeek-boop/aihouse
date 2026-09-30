@@ -20,7 +20,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/reponses-a-ses-49-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 48671 | 2026-09-29 18:54Z |
 | `docs/grand-projet/html/questions-de-degrossissage.html` | `docs/grand-projet/02-strategie/questions-de-degrossissage.md` | 19484 | 2026-09-29 20:08Z |
 | `docs/grand-projet/html/les-cinq-impossibles.html` | `docs/grand-projet/02-strategie/les-cinq-impossibles.md` | 16275 | 2026-09-29 21:27Z |
-| `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 13995 | 2026-09-29 22:01Z |
 | `docs/grand-projet/html/propriete-et-securite-du-projet.html` | `docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md` | 17123 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/relecture-de-la-bibliotheque.html` | `docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md` | 16723 | 2026-09-29 23:30Z |
 | `docs/grand-projet/html/les-deux-agents-experience.html` | `docs/grand-projet/02-strategie/les-deux-agents-experience.md` | 17282 | 2026-09-29 23:42Z |
@@ -47,6 +46,7 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 10717 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 11213 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 12553 | 2026-09-30 21:40Z |
-| `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 15716 | 2026-09-30 21:54Z |
 | `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 18826 | 2026-09-30 22:56Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 22280 | 2026-09-30 22:56Z |
+| `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 16084 | 2026-09-30 23:03Z |
+| `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 17849 | 2026-09-30 23:04Z |
