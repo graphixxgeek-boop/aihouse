@@ -31,3 +31,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 20048 | 2026-09-30 01:06Z |
 | `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 27845 | 2026-09-30 01:25Z |
 | `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 19049 | 2026-09-30 01:44Z |
+| `docs/grand-projet/html/trois-familles-de-la-charte.html` | `docs/grand-projet/02-strategie/trois-familles-de-la-charte.md` | 18206 | 2026-09-30 02:05Z |

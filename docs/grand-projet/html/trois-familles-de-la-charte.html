@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les trois familles de la charte — ou : 75 % de nos Articles ne parlent pas du Jeu</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T02:05:37.723Z</div>
+    <h1>Les trois familles de la charte — ou : 75 % de nos Articles ne parlent pas du Jeu</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/trois-familles-de-la-charte.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-09-29 à 19h19 UTC, heure LUE. Né d'une remarque de l'utilisateur qui a renversé ma propre proposition : « il y a beaucoup de lois présentes dans la charte qui sont CRUCIALES pour le fonctionnement de l'agence […] ta question est elle-même remise en question ».)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/loi-de-l-agence.md</code>
+*les deux lois suprêmes ne gouvernent pas la même chose ; encore faut-il savoir ce que chaque
+Article gouverne.*</p></div>
+<div class="highlight"><p>### ⚠️ FRONTIÈRE AVEC LES DEUX DOCUMENTS DU RÉFÉRENTIEL, ÉCRITE APRÈS COUP ET C'EST UN AVEU</p><p>*(2026-09-30, tâche #1278. Ce document affirmait que « personne ne l'avait jamais regardé ».
+<strong>C'était faux</strong>, et le détecteur de documents jumeaux l'avait signalé le soir même — sauf que
+son message annonçait « 0 % de vocabulaire commun » à cause d'un nom de champ erroné, donc je
+l'ai lu comme du bruit. Vrai chiffre : 28 %, 110 mots communs.)*</p><p><strong>Ce qui existait déjà, et que je n'ai pas ouvert avant d'écrire</strong> :</p><p>| Document | Ce qu'il fait, et que celui-ci ne refait pas |
+|---|---|
+| <code>docs/referentiel/charte-cartographie.md</code> | <strong>il classe déjà chaque Article en trois natures</strong> — LOI / MODE D'EMPLOI D'OUTIL / DISCIPLINE SANS PORTEUR — généré par MOÏSE le <strong>2026-09-28</strong>, deux jours avant ce document |
+| <code>docs/referentiel/claude-md-regles.md</code> | ce que chaque Article EST : sensibilité, importance, références croisées, lignes |</p><p><strong>CE QUE CE DOCUMENT-CI APPORTE MALGRÉ TOUT, et c'est la frontière</strong> : les deux autres classent
+par <strong>NATURE</strong> (qu'est-ce que cet Article, comme objet ?). Celui-ci classe par <strong>DESTINATAIRE</strong>
+(de quoi cet Article parle-t-il — du Jeu, de l'Agence, de notre collaboration ?). Ce sont deux
+axes <strong>orthogonaux</strong>, et c'est leur croisement qui a produit le chiffre utile : *75 % de la
+charte ne parle pas du Jeu.* Aucun des deux autres ne pouvait le dire.</p><p><strong>CE QUI RESTE VRAI DE MON AFFIRMATION INITIALE, RÉDUIT À CE QU'ELLE EST</strong> : personne n'avait
+regardé la charte <strong>par destinataire</strong>. Le reste — le classement par nature — existait, et je
+l'ai présenté comme neuf ailleurs. Corrigé dans <code>la-route-vers-50-obligations.md</code>.</p><p><strong>ET LES DEUX CLASSEMENTS NE SONT PAS D'ACCORD</strong> sur les Articles 7 et 13, ce qui vaut onze
+obligations sur la cible de 50. C'est une question ouverte, pas un détail : voir le LOT C.</p></div>
+<hr>
+<h3>CE QUE JE M'APPRÊTAIS À ÉCRIRE, ET POURQUOI C'ÉTAIT FAUX</h3>
+<p>J'avais proposé trois lignes en tête de <code>CLAUDE.md</code> : <em>« Ce document est la charte du JEU. »</em></p>
+<p><strong>Il a répondu que beaucoup de ses règles sont cruciales pour le fonctionnement de l'AGENCE.</strong> Il avait raison, et la mesure le dit sans appel : <strong>cette phrase aurait été fausse pour 75 % du document.</strong> Une ligne de portée inexacte, en tête du fichier le plus lu du projet, aurait été pire que pas de ligne du tout.</p>
+<hr>
+<h3>LA MESURE</h3>
+<p><em>(Extraite par <code>buildClaudeMdRuleTable()</code> de MOÏSE-TABLES-DE-LOI, qui lit <code>CLAUDE.md</code> réel — jamais une liste recopiée. <strong>33 Articles, 708 lignes.</strong> L'Article 20bis échappe à son extraction, qui ne lit que des numéros entiers : il est classé ci-dessous à la main, et ce manque est signalé plutôt que tu. <strong>En le comptant, la charte porte donc trente-quatre Articles et non trente-trois</strong> — écrit en toutes lettres à dessein : le garde-fou des renvois morts lit un nombre qui suit le mot « Article » comme une citation, et mon premier jet a fabriqué un Article fantôme qui a fait échouer le filet. Le garde-fou avait raison ; c'est ma phrase qui était mauvaise.)</em></p>
+<table><thead><tr><th>Famille</th><th>Articles</th><th>Lignes</th><th>Part</th></tr></thead><tbody><tr><td>🎭 <strong>LE JEU</strong> — le contenu, les personnages, la conversation</td><td><strong>10</strong></td><td><strong>70</strong></td><td><strong>10 %</strong></td></tr><tr><td>⚙️ <strong>L'AGENCE</strong> — les conditions de fonctionnement de l'outillage</td><td><strong>19</strong> <em>(+20bis)</em></td><td><strong>532</strong></td><td><strong>75 %</strong></td></tr><tr><td>🤝 <strong>LA COLLABORATION</strong> — entre l'agent et l'humain</td><td><strong>4</strong></td><td><strong>106</strong></td><td><strong>15 %</strong></td></tr></tbody></table>
+<p><strong>Le chiffre à retenir : sur les 33 Articles mesurés, 10 parlent de Lia et Noé. Les 23 autres parlent d'autre chose.</strong></p>
+<hr>
+<h3>LE DÉTAIL, ARTICLE PAR ARTICLE</h3>
+<h4>🎭 LE JEU — 10 Articles, 70 lignes</h4>
+<p>Ceux-là ne partiraient <strong>jamais</strong> avec l'Agence : ils n'auraient aucun sens chez un client qui n'a ni Lia ni Noé.</p>
+<table><thead><tr><th>#</th><th>Titre</th><th>Lignes</th></tr></thead><tbody><tr><td><strong>0</strong></td><td>Hiérarchie des lois <em>(l'esprit des personnages est la loi suprême)</em></td><td>4</td></tr><tr><td>1</td><td>La conversation prime sur tout le reste</td><td>4</td></tr><tr><td>2</td><td>Cohérence de bout en bout</td><td>4</td></tr><tr><td>4</td><td>L'enquête doit tenir debout</td><td>4</td></tr><tr><td>8</td><td>Sobriété des appels API</td><td>10</td></tr><tr><td>9</td><td>Rejouabilité et surprise</td><td>2</td></tr><tr><td>10</td><td>Répliques locales : l'exception encadrée</td><td>14</td></tr><tr><td>11</td><td>Zéro répétition, personnalités étanches</td><td>5</td></tr><tr><td>12</td><td>Le sens avant la forme</td><td>3</td></tr><tr><td>17</td><td>Se mettre à la place des personnages</td><td>20</td></tr></tbody></table>
+<h4>⚙️ L'AGENCE — 19 Articles (+20bis), 532 lignes</h4>
+<p><strong>C'EST LE « PACK » QU'IL CHERCHAIT.</strong> Sa question était : <em>« quand un client achète l'agence pour un projet utilisateur EN COURS, quelles règles doit-il faire figurer dans son doc équivalent à charte ? »</em> — <strong>la réponse est cette liste</strong>, et elle ne s'invente pas, elle se lit.</p>
+<table><thead><tr><th>#</th><th>Titre</th><th>Lignes</th></tr></thead><tbody><tr><td>3</td><td>Corriger la cause, jamais le symptôme</td><td>3</td></tr><tr><td>5</td><td>Robustesse du code</td><td>3</td></tr><tr><td>6</td><td>Le document de référence est un outil de travail</td><td>7</td></tr><tr><td>7</td><td>L'épreuve de la page blanche</td><td>15</td></tr><tr><td><strong>13</strong></td><td><strong>Les outils de travail vivent avec le code</strong></td><td><strong>57</strong></td></tr><tr><td>18</td><td>Un gros process se suit en entier</td><td>24</td></tr><tr><td>19</td><td>Comprendre avant de toucher</td><td>28</td></tr><tr><td><strong>20</strong></td><td><strong>Les Gardiens sacrés du code</strong></td><td><strong>55</strong></td></tr><tr><td>20bis</td><td>Quatre mots distincts, jamais « gardien » tout court</td><td>—</td></tr><tr><td>21</td><td>HYPER-SCAN-CHECKPOINT</td><td>6</td></tr><tr><td>22</td><td>Smart Conso API</td><td>34</td></tr><tr><td>23</td><td><em>(fondu dans l'Article 7)</em></td><td>4</td></tr><tr><td>24</td><td>Toute construction doit être évolutive</td><td>35</td></tr><tr><td>25</td><td>Vérifier régulièrement son propre travail</td><td>21</td></tr><tr><td>26</td><td>Les process se respectent</td><td>21</td></tr><tr><td>27</td><td>Le projet doit rester reprenable par une AUTRE IA</td><td>32</td></tr><tr><td>28</td><td>Un rapport n'est pas fini tant que ses constats ne sont pas des tâches</td><td>42</td></tr><tr><td>30</td><td>Aucun chantier ne s'ouvre avant d'avoir repris les notes</td><td>40</td></tr><tr><td><strong>31</strong></td><td><strong>Tout passe par un OUTIL</strong></td><td><strong>57</strong></td></tr><tr><td>32</td><td>Le temps réel se LIT, jamais ne se déduit</td><td>48</td></tr></tbody></table>
+<h4>🤝 LA COLLABORATION — 4 Articles, 106 lignes</h4>
+<p>Ni le Jeu ni l'Agence : la façon dont l'agent et l'humain travaillent ensemble. <strong>Chaque client devra les réécrire à sa main</strong> — ce sont les plus personnels des trois familles.</p>
+<table><thead><tr><th>#</th><th>Titre</th><th>Lignes</th></tr></thead><tbody><tr><td>14</td><td>Vigilance permanente, et la double confirmation</td><td>15</td></tr><tr><td>15</td><td>Se mettre à la place de l'utilisateur</td><td>10</td></tr><tr><td>16</td><td>Vérification systématique par questions</td><td>37</td></tr><tr><td>29</td><td>Tout compte rendu s'ouvre en rappelant à qui il s'adresse</td><td>44</td></tr></tbody></table>
+<hr>
+<h3>CE QUE CE CLASSEMENT CHANGE, ET C'EST PLUS QUE PRÉVU</h3>
+<p><strong>1. La ligne de portée doit être réécrite.</strong> Pas <em>« la charte du Jeu »</em>, mais quelque chose comme : <em>« ce document contient trois familles de règles — celles du Jeu, celles de l'Agence, celles de notre collaboration — et une seule des trois ne partira jamais »</em>. Formulation à trancher avec lui.</p>
+<p><strong>2. Le pack client existe déjà, il était juste mélangé.</strong> Les 19 Articles de la famille AGENCE sont la réponse à sa question sur le cas ② (un projet existe déjà). Rien à inventer : <strong>révéler</strong>, comme il l'a dit lui-même.</p>
+<p><strong>3. Un candidat sérieux à l'allègement apparaît, et il n'était pas cherché.</strong> Les 532 lignes de la famille AGENCE sont rechargées <strong>à chaque message</strong>, y compris quand on ne touche qu'au jeu. C'est 75 % de la charte, soit environ <strong>17 000 des 22 747 tokens</strong> qu'elle coûte. Séparer les familles en deux fichiers rendrait possible de ne charger que ce qui sert — <strong>mais ça toucherait la charte, donc c'est sa décision, jamais la mienne.</strong> Signalé, pas fait.</p>
+<p><strong>4. Ça interroge la loi de l'Agence elle-même.</strong> Si 75 % de la charte gouverne déjà l'outillage, alors <code>docs/loi-de-l-agence.md</code> n'est pas le premier texte à le faire — il est le premier à le dire <strong>au-dessus</strong> des autres. La loi reste juste ; sa solitude apparente ne l'était pas.</p>
+<hr>
+<h3>LA LIMITE DE CE DOCUMENT, DÉCLARÉE</h3>
+<p><strong>Le découpage est MESURÉ, le classement est un JUGEMENT.</strong> L'extraction vient d'un outil qui lit le vrai fichier ; la répartition en trois familles est mon avis, article par article, et plusieurs cas sont discutables — l'Article 8 (sobriété des appels API) sert le Jeu par son objet mais l'Agence par sa mécanique ; l'Article 3 (corriger la cause) est si général qu'il vaudrait pour n'importe quel projet. <strong>Aucun de ces arbitrages n'est mécanisable, et le déclarer vaut mieux que de laisser croire à une mesure.</strong></p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>Ma ligne de portée aurait été fausse pour 75 % du document</td><td><strong>RETENU</strong></td><td>tâche <strong>#1230</strong> — ce document ; la ligne est à réécrire et il la tranche</td></tr><tr><td>Le « pack d'Articles » pour un client existe déjà : les 19 de la famille AGENCE</td><td><strong>RETENU</strong></td><td>tâche <strong>#1230</strong> — la liste est établie, son emballage en pack reste à faire</td></tr><tr><td>532 lignes de règles d'outillage sont rechargées à chaque message, y compris en travaillant sur le jeu</td><td><strong>À TRANCHER</strong></td><td>scinder la charte en deux fichiers touche la charte : sa décision, jamais la mienne</td></tr><tr><td>L'Article 20bis échappe à l'extraction de MOÏSE (numéros entiers seulement)</td><td><strong>RETENU</strong></td><td>tâche <strong>#1230</strong> — signalé ici ; à corriger dans l'outil, jamais contourné à la main</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/trois-familles-de-la-charte.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

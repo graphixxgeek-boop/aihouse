@@ -6,7 +6,34 @@ fonctionnement de l'agence […] ta question est elle-même remise en question �
 
 > **DÉCOULE DE :** `docs/loi-de-l-agence.md`
 > *les deux lois suprêmes ne gouvernent pas la même chose ; encore faut-il savoir ce que chaque
-> Article gouverne, et personne ne l'avait jamais regardé.*
+> Article gouverne.*
+
+> ### ⚠️ FRONTIÈRE AVEC LES DEUX DOCUMENTS DU RÉFÉRENTIEL, ÉCRITE APRÈS COUP ET C'EST UN AVEU
+>
+> *(2026-09-30, tâche #1278. Ce document affirmait que « personne ne l'avait jamais regardé ».
+> **C'était faux**, et le détecteur de documents jumeaux l'avait signalé le soir même — sauf que
+> son message annonçait « 0 % de vocabulaire commun » à cause d'un nom de champ erroné, donc je
+> l'ai lu comme du bruit. Vrai chiffre : 28 %, 110 mots communs.)*
+>
+> **Ce qui existait déjà, et que je n'ai pas ouvert avant d'écrire** :
+>
+> | Document | Ce qu'il fait, et que celui-ci ne refait pas |
+> |---|---|
+> | `docs/referentiel/charte-cartographie.md` | **il classe déjà chaque Article en trois natures** — LOI / MODE D'EMPLOI D'OUTIL / DISCIPLINE SANS PORTEUR — généré par MOÏSE le **2026-09-28**, deux jours avant ce document |
+> | `docs/referentiel/claude-md-regles.md` | ce que chaque Article EST : sensibilité, importance, références croisées, lignes |
+>
+> **CE QUE CE DOCUMENT-CI APPORTE MALGRÉ TOUT, et c'est la frontière** : les deux autres classent
+> par **NATURE** (qu'est-ce que cet Article, comme objet ?). Celui-ci classe par **DESTINATAIRE**
+> (de quoi cet Article parle-t-il — du Jeu, de l'Agence, de notre collaboration ?). Ce sont deux
+> axes **orthogonaux**, et c'est leur croisement qui a produit le chiffre utile : *75 % de la
+> charte ne parle pas du Jeu.* Aucun des deux autres ne pouvait le dire.
+>
+> **CE QUI RESTE VRAI DE MON AFFIRMATION INITIALE, RÉDUIT À CE QU'ELLE EST** : personne n'avait
+> regardé la charte **par destinataire**. Le reste — le classement par nature — existait, et je
+> l'ai présenté comme neuf ailleurs. Corrigé dans `la-route-vers-50-obligations.md`.
+>
+> **ET LES DEUX CLASSEMENTS NE SONT PAS D'ACCORD** sur les Articles 7 et 13, ce qui vaut onze
+> obligations sur la cible de 50. C'est une question ouverte, pas un détail : voir le LOT C.
 
 ---
 
