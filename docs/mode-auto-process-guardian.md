@@ -751,3 +751,29 @@ Nuit du 2026-09-28 au 29 : **plus de 16 heures sans arrêt**, 22 tâches (#1200 
 franchissement de borne (vérifiable dans `git log`), bannière des Gardiens propre pour la première
 fois. Le dispositif à deux réveils a tenu la cadence de bout en bout. **C'est ce paramétrage-là
 qu'on réapplique, pas un autre reconstitué de mémoire.**
+
+## 2026-09-30 — Le mode déclaré peut désormais se PÉRIMER, et le dire (tâche #1288)
+
+**CE MODE-CI EST LE PLUS CONCERNÉ, parce que c'est lui qui était déclaré.** `.mode-de-travail.json`
+portait `autonome` depuis le **2026-09-23 à 22h53** et n'avait jamais été retouché : **149 heures**
+au moment où le défaut a été trouvé. Pendant tout ce temps, tout outil qui demandait « l'utilisateur
+est-il là ? » recevait NON — y compris en plein après-midi.
+
+**CE QUI CHANGE POUR CE PROCESS** :
+
+- **Entrer en mode autonome se déclare, et la déclaration se PÉRIME.** Au-delà de 16 heures, elle
+  est signalée comme datée à chaque commit. Une nuit dure moins que ça ; une nuit qui dure sept
+  jours n'est pas une nuit.
+- **Sortir du mode est donc un geste, pas un oubli.** Rien ne le fait à ma place, et c'est
+  volontaire : décider que l'utilisateur est revenu n'est pas une déduction mécanique.
+- **La commande, écrite ici parce qu'elle ne l'était nulle part** :
+  `node scripts/modes-de-travail.mjs pilote` (ou `semi-autonome`, ou `autonome`).
+
+**UN GESTE DE PLUS POUR LE PARAMÉTRAGE INTERNE DE CE MODE** *(la section que l'utilisateur a
+explicitement demandé de tenir)* : **en début de mode auto, redéclarer le mode même s'il est déjà
+le bon** — l'horodatage compte autant que la valeur, et un `autonome` juste mais vieux de sept
+jours est indiscernable, pour tout lecteur, d'un `autonome` posé ce soir.
+
+**ET LA DISCIPLINE QUI EN SORT, plus large que le mode** : *une preuve de PRÉSENCE n'est pas une
+preuve de PERFORMANCE.* Elle vaut pour les 31 preuves d'étape sur 42 que
+`findPreuvesToujoursVraies()` a nommées le même jour (tâche #1292).

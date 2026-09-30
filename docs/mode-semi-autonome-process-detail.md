@@ -234,3 +234,30 @@ créerait deux textes qui finiraient par diverger, exactement la dette que l'Art
 **La règle générale que ce cas illustre** : quand god-of-all-process change, les deux documents sont
 concernés. Celui qui porte le détail l'écrit ; l'autre renvoie vers lui plutôt que de se taire — un
 silence se lit comme « rien n'a bougé de mon côté », ce qui est faux.
+
+## 2026-09-30 — L'étape « déclarer le mode » a enfin une preuve qui peut ÉCHOUER (tâche #1288)
+
+**LE DÉFAUT A DURÉ SEPT JOURS ET IL TOUCHAIT CE PROCESS EN PREMIER.** L'étape `mode-declare` avait
+pour preuve l'existence de `.mode-de-travail.json`. Le fichier existait, il est **versionné**, il
+datait du 2026-09-23 — et il déclarait `autonome`. **L'étape était donc verte en permanence, y
+compris pendant toutes les séances de jour où l'utilisateur était là et répondait en direct.**
+
+**CE QUE ÇA CASSAIT EST EXACTEMENT CE QUE CE MODE SERT À DÉCIDER** : « une fenêtre peut-elle
+bloquer maintenant ? ». Bloqué sur `autonome`, le fichier répondait NON — donc « ne pose pas la
+question » — alors que la bonne réponse pour ce mode-ci est « pose-la, elle ne bloque rien ».
+
+**CE QUI CHANGE CONCRÈTEMENT** :
+
+- `fraicheurDuMode()` (`scripts/modes-de-travail.mjs`) lit le champ `depuis`, qui était écrit
+  depuis le premier jour et que **personne ne lisait**.
+- Au-delà de **16 heures** — la plus longue nuit plausible — un mode `autonome` ou `semi-autonome`
+  est déclaré **DATÉ**. `piloté` n'expire jamais : il n'affirme rien de daté.
+- **god-of-all-process le relaie dans sa sous-commande `dette`**, donc à **chaque commit**, avec la
+  pastille 🚨 que la bannière post-commit retient.
+- **Aucun outil ne redéclare le mode tout seul** : affirmer que l'utilisateur est revenu n'est pas
+  une déduction mécanique.
+
+**LA LEÇON QUI DÉPASSE CE PROCESS, et elle a donné un contrôle à part** *(tâche #1292)* : **une
+preuve de PRÉSENCE n'est pas une preuve de PERFORMANCE.** 31 preuves d'étape sur 42, tous process
+confondus, portent sur un fichier versionné — donc présent dans tout clone neuf avant qu'aucune
+étape n'ait eu lieu. `findPreuvesToujoursVraies()` les nomme ; elles se décideront une par une.
