@@ -568,7 +568,59 @@ function fichiersDe(root, dossier, ext, recursif = true, profondeur = 0) {
   return out;
 }
 
-export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, lire } = {}) {
+// L'ÉLARGISSEMENT AUTOMATIQUE (2026-09-30, tâche #1263) — ET C'EST LA CHARTE ELLE-MÊME QUI
+// DEMANDAIT À L'AGENT DE FAIRE CE TRAVAIL DE TÊTE. L'Article 30 écrit noir sur blanc : « Un zéro
+// n'est jamais la preuve qu'il n'y a rien à savoir : c'est la preuve que CE MOT-LÀ ne ressort pas.
+// On réessaie avec le vocabulaire du sujet avant de conclure qu'on part de zéro. »
+//
+// C'est une obligation qui ne repose QUE sur la mémoire de l'agent — exactement ce que
+// l'Article 27 déclare perdu d'avance. Et elle porte sur le geste que l'Article 30 rend
+// OBLIGATOIRE avant tout chantier, donc sur la porte d'entrée de tout le travail.
+//
+// LE DÉFAUT EST MESURÉ, sur un cas réel de cette nuit : « format questions reponses » rend ZÉRO,
+// quand « questions » seul rend 209 fichiers. La recherche exige les mots ADJACENTS et DANS
+// L'ORDRE — trois mots suffisent à la faire échouer sur un sujet abondamment traité.
+//
+// LES TROIS NIVEAUX NE SE DÉCLENCHENT QUE VERS LE BAS : on n'élargit JAMAIS tant que le niveau
+// précédent a trouvé quelque chose, sinon un sujet précis se noierait dans le bruit d'un mot
+// commun. Et le niveau atteint est TOUJOURS dit : un résultat obtenu en relâchant la question
+// n'est pas le même qu'un résultat obtenu telle qu'elle était posée, et confondre les deux serait
+// exactement le « signal adjacent lu comme le signal visé » que ce dépôt paie en boucle.
+export const NIVEAUX_DE_RECHERCHE = [
+  { cle: "exact", explique: "les mots tels quels, adjacents et dans l'ordre" },
+  { cle: "tous-les-mots", explique: "tous les mots, n'importe où sur la ligne et dans n'importe quel ordre" },
+  { cle: "mot-le-plus-long", explique: "le mot le plus long du sujet, seul — le plus distinctif" },
+];
+
+export function motifsElargis(motif) {
+  const mots = String(motif).trim().split(/\s+/).filter(Boolean);
+  const out = [{ niveau: "exact", motif: String(motif).trim() }];
+  if (mots.length > 1) {
+    out.push({ niveau: "tous-les-mots", mots });
+    const plusLong = [...mots].sort((x, y) => y.length - x.length)[0];
+    if (plusLong && plusLong.length >= 4) out.push({ niveau: "mot-le-plus-long", motif: plusLong });
+  }
+  return out;
+}
+
+export function reprendreLesNotes(sujet, options = {}) {
+  const essais = motifsElargis(String(sujet ?? "").trim());
+  let dernier = null;
+  for (const e of essais) {
+    const r = chercherLesNotes(sujet, { ...options, essai: e });
+    dernier = r;
+    if (!r.mesurable || r.total > 0) return r;
+  }
+  // Tous les niveaux à zéro : LÀ, et seulement là, le zéro veut dire quelque chose de plus.
+  // MAIS UN SEUL NIVEAU N'EST PAS « TOUS LES NIVEAUX » (corrigé au premier passage du filet, qui
+  // avait raison) : un sujet d'UN SEUL MOT n'a rien à élargir, donc son zéro vaut exactement ce
+  // qu'il valait avant — « ce mot-là ne ressort pas ». Annoncer « l'élargissement a déjà été
+  // tenté » sur un essai unique serait promettre une vérification qui n'a pas eu lieu, c'est-à-dire
+  // le contraire exact de ce que cette fonction vient d'apporter.
+  return { ...dernier, niveauxEssayes: essais.map((e) => e.niveau), zeroVraimentVerifie: essais.length > 1 };
+}
+
+export function chercherLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, lire, essai = null } = {}) {
   const motif = String(sujet ?? "").trim();
   if (motif.length < 3) return { mesurable: false, pourquoi: "un sujet de moins de trois caractères ramènerait tout le dépôt : ce n'est pas une reprise de notes, c'est du bruit" };
   // UN ESPACE DANS LE SUJET VAUT N'IMPORTE QUEL SÉPARATEUR (2026-09-25, même passage que le nom de
@@ -591,11 +643,14 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
   // ligne l'est avant le test. Ce n'est toujours pas une recherche floue — chaque mot reste exigé,
   // entier, dans l'ordre ; seuls le séparateur et l'accent deviennent libres.
   const sansAccents = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const re = new RegExp(
-    sansAccents(motif).replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s_-]+"),
-    "i",
-  );
-  const teste = (texte) => re.test(sansAccents(texte));
+  const echappe = (t) => sansAccents(t).replace(/[.*+?^${}()|[\]\\]/g, (c) => "\\" + c);
+  const niveau = essai?.niveau ?? "exact";
+  // Le niveau « tous-les-mots » exige plusieurs motifs : la ligne doit porter CHACUN d'eux, dans
+  // n'importe quel ordre — un ET, jamais un OU, sinon « le » ramènerait le dépôt entier.
+  const res = niveau === "tous-les-mots"
+    ? essai.mots.map((m) => new RegExp(echappe(m), "i"))
+    : [new RegExp(echappe(essai?.motif ?? motif).replace(/\s+/g, () => "[\\s_-]+"), "i")];
+  const teste = (texte) => { const t = sansAccents(texte); return res.every((r) => r.test(t)); };
   const lecteur = lire ?? ((f) => readFileSync(join(root, f), "utf8"));
   const par = {};
   let fichiersVus = 0;
@@ -632,6 +687,9 @@ export function reprendreLesNotes(sujet, { root = ROOT, lieux = LIEUX_DE_NOTES, 
   }
   const total = Object.values(par).reduce((s, v) => s + v.length, 0);
   return { sujet: motif, par, total, fichiersVus, illisibles,
+    niveau, elargi: niveau !== "exact",
+    motifUtilise: niveau === "tous-les-mots" ? essai.mots.join(" + ") : (essai?.motif ?? motif),
+    expliqueNiveau: (NIVEAUX_DE_RECHERCHE.find((n) => n.cle === niveau) ?? {}).explique ?? "",
     // Un zéro ici ne veut jamais dire « rien à savoir » : il veut dire « ce mot-là ne ressort pas ».
     mesurable: fichiersVus > 0,
     pourquoi: fichiersVus ? null : "aucun fichier lu — la recherche n'a pas pu tourner, ce qui ne veut PAS dire qu'il n'y a pas de notes" };
@@ -782,6 +840,15 @@ export function formatDossierMarkdown(d, { maintenant } = {}) {
 export function formatReprisesLines(r, { parLieu = 6 } = {}) {
   if (!r?.mesurable) return [`⚠️ NON MESURABLE — ${r?.pourquoi ?? "raison inconnue"}`];
   const L = [`=== REPRISE DES NOTES — « ${r.sujet} » : ${r.total} fichier(s) portent déjà ce sujet ===`, ""];
+  // UN RÉSULTAT OBTENU EN RELÂCHANT LA QUESTION N'EST PAS LE MÊME QU'UN RÉSULTAT OBTENU TELLE
+  // QU'ELLE ÉTAIT POSÉE (2026-09-30, tâche #1263). Taire l'élargissement ferait lire des notes
+  // « sur le sujet » alors qu'elles ne portent qu'un de ses mots — le signal adjacent pris pour
+  // le signal visé, une fois de plus. On le dit donc AVANT la liste, jamais en note de bas de page.
+  if (r.elargi) {
+    L.push(`🔎 ÉLARGI : « ${r.sujet} » ne ressortait nulle part tel quel. Recherche relancée sur « ${r.motifUtilise} » — ${r.expliqueNiveau}.`);
+    L.push(`   Les fichiers ci-dessous portent donc CE motif-là, pas forcément le sujet entier. À lire en le sachant.`);
+    L.push("");
+  }
   for (const l of LIEUX_DE_NOTES) {
     const hits = r.par[l.cle] ?? [];
     L.push(`${l.cle.toUpperCase().padEnd(12)} ${String(hits.length).padStart(3)} — ${l.quoi}`);
@@ -793,7 +860,9 @@ export function formatReprisesLines(r, { parLieu = 6 } = {}) {
   L.push("");
   L.push(r.total
     ? `À LIRE AVANT D'OUVRIR LE CHANTIER. Ce compte dit OÙ le sujet a déjà été traité ; il ne lit pas à votre place, et un chantier ouvert sans cette lecture repart avec les seules notes que l'agent a en mémoire — c'est-à-dire, à la session suivante, aucune.`
-    : `⚠️ Aucun fichier ne porte ce mot. Ce n'est PAS la preuve qu'il n'y a rien à savoir : c'est la preuve que CE MOT-LÀ ne ressort pas. Réessayer avec le vocabulaire du sujet avant de conclure qu'on part de zéro.`);
+    : (r.zeroVraimentVerifie
+      ? `⚠️ Aucun fichier, et l'élargissement a DÉJÀ été tenté : ${(r.niveauxEssayes ?? []).join(" → ")}. Ce zéro-là a donc une valeur que le zéro d'un seul essai n'avait pas — mais il reste un zéro SUR CES MOTS. Un sujet peut vivre dans le dépôt sous un vocabulaire qu'on n'a pas deviné.`
+      : `⚠️ Aucun fichier ne porte ce mot. Ce n'est PAS la preuve qu'il n'y a rien à savoir : c'est la preuve que CE MOT-LÀ ne ressort pas. Réessayer avec le vocabulaire du sujet avant de conclure qu'on part de zéro.`));
   if (r.illisibles) L.push(`(${r.illisibles} fichier(s) illisibles, non comptés — déclaré plutôt que passé sous silence.)`);
   return L;
 }

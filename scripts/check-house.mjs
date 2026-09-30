@@ -12925,6 +12925,27 @@ await testVerrousDOuverture();
   assert.equal(reprendreLesNotes('classification', { lieux: [{ cle: 'decisions', quoi: 'x', dossier: 'dossier-qui-nexiste-pas', ext: /\.md$/ }] }).mesurable, false, 'and a search that could not read a single file declares itself unmeasurable rather than returning an empty list — this project red thread, met again');
   assert.ok(LIEUX_DE_NOTES.some((l) => l.dossier === 'scripts'), 'the head comments of the tools are one of the five places notes live, because in this project the POURQUOI is deliberately written next to the QUOI (Article 27) — leaving code out would miss a third of what is known');
   assert.ok(REGLES_ANGEL.some((r) => r.id === 'reprise-des-notes' && r.observable === false), 'the rule is carried by angel as a non-observable one, the same pattern as resume-contextualise: no mechanism can tell that a chantier just opened in a conversation, so angel ASKS rather than assuming, and refuses to be green without an answer');
+  // L'ÉLARGISSEMENT AUTOMATIQUE (2026-09-30, tâche #1263) — ET C'EST LA CHARTE QUI DEMANDAIT CE
+  // TRAVAIL À LA MÉMOIRE DE L'AGENT. L'Article 30 écrit « on réessaie avec le vocabulaire du sujet
+  // avant de conclure qu'on part de zéro » : une obligation que rien ne portait, sur le geste que
+  // ce même Article rend OBLIGATOIRE avant tout chantier (Article 27, pris en défaut).
+  // MESURÉ SUR UN CAS RÉEL : « format questions reponses » rendait ZÉRO quand « questions » seul
+  // rend 209 fichiers — la recherche exige les mots adjacents et dans l'ordre.
+  const { motifsElargis, chercherLesNotes } = await import('../scripts/data-archangel.mjs');
+  assert.deepEqual(motifsElargis('un seul').map((e) => e.niveau), ['exact', 'tous-les-mots', 'mot-le-plus-long'], 'a multi-word subject offers three levels, from strictest to loosest');
+  assert.deepEqual(motifsElargis('classification').map((e) => e.niveau), ['exact'], 'COUNTER-TEST: a single word has nothing to widen, so no level is even offered — widening what is already one word would only lose the reader');
+  const lieuJouet = [{ cle: 'plans', quoi: 'x', dossier: 'docs/plans', ext: /\.md$/ }];
+  // Un texte qui porte les deux mots SÉPARÉMENT : le niveau exact doit échouer, le suivant trouver.
+  const separes = { lieux: lieuJouet, lire: () => 'on parle de format ici, et beaucoup plus bas de reponses' };
+  assert.equal(chercherLesNotes('format reponses', { ...separes, essai: { niveau: 'exact', motif: 'format reponses' } }).total, 0, 'the exact level stays as strict as it always was: the two words must be adjacent — widening must never loosen the first level, or the precise search is lost');
+  const elargi = reprendreLesNotes('format reponses', separes);
+  assert.ok(elargi.total > 0 && elargi.elargi === true, 'THE EXACT CASE: what the strict level misses, the widened one finds — and the result says so rather than passing for an exact hit');
+  assert.equal(elargi.niveau, 'tous-les-mots', 'and it stops at the FIRST level that finds something: going straight to the single most distinctive word would drown a precise subject in the noise of a common one');
+  assert.ok(formatReprisesLines(elargi).some((l) => /ÉLARGI/.test(l)), 'the widening is announced BEFORE the list, never as a footnote: files carrying one word of a subject are not files carrying the subject, and letting them pass for it is this project own recurring defect — a signal ADJACENT read as the one aimed at');
+  const vraiZero = reprendreLesNotes('licorne pegase griffon', { lieux: lieuJouet, lire: () => 'rien ici' });
+  assert.ok(vraiZero.zeroVraimentVerifie && vraiZero.niveauxEssayes.length === 3, 'a zero that survived all three levels is marked as such: it is worth more than the zero of a single attempt, and the two must never read alike');
+  assert.ok(formatReprisesLines(vraiZero).some((l) => /DÉJÀ été tenté/.test(l)), 'and the printed sentence changes with it — while still refusing to claim there is nothing to know, because the subject may live under a vocabulary nobody guessed');
+  console.log("Passed: la reprise des notes ÉLARGIT toute seule quand le sujet ne ressort pas (tâche #1263). La charte demandait ce réessai à la MÉMOIRE de l'agent — sur le geste que l'Article 30 rend obligatoire avant tout chantier, et c'est exactement ce que l'Article 27 déclare perdu d'avance. Trois niveaux qui ne se déclenchent que vers le bas, le niveau atteint toujours dit, et un zéro qui a survécu aux trois se distingue du zéro d'un seul essai.");
   const notesReelles = reprendreLesNotes('classification');
 
   // LE NOM DU FICHIER, ET LE SÉPARATEUR (2026-09-25, Ronde — tâche #851). Deux moitiés d'un même
@@ -12940,8 +12961,22 @@ await testVerrousDOuverture();
   assert.ok((parLeNomSeul.par.plans ?? [])[0]?.nomSeulement === true, 'a name-only hit sorts FIRST despite its zero occurrences, since leaving it in last place would drop it below the display cut — the exact way this case was missed');
   const avecEspaces = reprendreLesNotes('gardiens donnees', { lieux: lieuFactice, lire: () => 'rien' });
   assert.ok((avecEspaces.par.plans ?? []).some((h) => /audit-gardiens-donnees/.test(h.fichier)), 'a SPACE typed in the subject matches any separator the repository actually uses (hyphen, underscore, space): reading filenames alone changed nothing until this, because the file is named with hyphens while a subject is typed with spaces — requiring the space asked the user to guess the naming convention of the file they are looking for, the opposite of recovering notes');
-  const pasUneRechercheFloue = reprendreLesNotes('absentes gardiens', { lieux: lieuFactice, lire: () => 'rien' });
-  assert.equal((pasUneRechercheFloue.par.plans ?? []).length, 0, 'and it stays an exact search, never a fuzzy one: each word is still required, whole and IN ORDER — only the separator became free, so reversing the words finds nothing');
+  // LA GARANTIE DE LA TÂCHE #851 TIENT TOUJOURS, ET ELLE A SEULEMENT CHANGÉ D'ÉTAGE (2026-09-30,
+  // tâche #1263). La décision d'alors était nette : séparateur libre, accents libres, mais les mots
+  // exigés ENTIERS et DANS L'ORDRE — pas de recherche floue. L'élargissement automatique n'y touche
+  // PAS : il n'entre en jeu que lorsque la recherche stricte a rendu zéro, et il DIT qu'il est
+  // entré en jeu.
+  //
+  // POURQUOI CE N'EST PAS UN AFFAIBLISSEMENT, et c'est la seule question qui compte ici : ce que
+  // #851 protégeait, c'est qu'un résultat flou ne passe jamais pour un résultat exact. Cette
+  // garantie-là est intacte — le niveau exact rend toujours zéro sur des mots inversés, et tout
+  // résultat obtenu autrement porte son étiquette. Ce qui change est qu'un zéro ne se présente
+  // plus comme une réponse quand personne n'a essayé le vocabulaire voisin, ce que l'Article 30
+  // ordonnait déjà en confiant le réessai à la mémoire de l'agent (Article 27).
+  const motsInverses = { lieux: lieuFactice, lire: () => 'rien' };
+  assert.equal((chercherLesNotes('absentes gardiens', { ...motsInverses, essai: { niveau: 'exact', motif: 'absentes gardiens' } }).par.plans ?? []).length, 0, 'THE #851 GUARANTEE, UNTOUCHED: at the exact level each word is still required whole and IN ORDER, so reversing them finds nothing — only the separator and the accent ever became free');
+  const inverseElargi = reprendreLesNotes('absentes gardiens', motsInverses);
+  assert.ok(inverseElargi.elargi === true && inverseElargi.niveau === 'tous-les-mots', 'and when the strict level finds nothing, the widened one may find the file — but never silently: the result carries the level that produced it, which is what keeps a loose hit from passing for a strict one');
   console.log(`Passed: recovering the notes before opening a chantier is now a real command (2026-09-24, task #759), and the rule that demands it came from the user after he demonstrated the hole himself rather than suspecting it. He asked how long the nomenclature code should be; the answer was computed on the FIVE classification axes I had in mind, while the repository carried THIRTEEN — and the same question had already been asked three days earlier in another form, a maturity level 0-3 rather than a class code, an idea since ERASED from the repository with no task mentioning the removal. The answer was not imprecise, it answered a different question, and nothing in the way it was produced could have revealed that. data-archangel already answered "what does the team know about X", but only across declared DATA SOURCES: run on "classification" it returned zero where the new command finds ${notesReelles.total}. What we PRODUCE and what we have DECIDED are two different questions, and merging them is what left the hole. The command sweeps the five places notes actually live, including the head comments of the tools, since this project deliberately writes the why next to the what. A zero is printed as "this word does not come up", never as "nothing to know".`);
 
 
