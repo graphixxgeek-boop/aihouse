@@ -241,6 +241,54 @@ plus.
 
 ---
 
+## 7. LE CHIFFRE QUE LA CHARTE DIT DE SURVEILLER A ÉTÉ SURVEILLÉ *(tâche #1273, nuit du 2026-09-30)*
+
+**Personne ne me l'a demandé : la charte le demande elle-même.** Elle écrit que les 86,6 % de
+tâches hors jeu sont *« un chiffre à surveiller, parce qu'un des deux projets pourrait étouffer
+l'autre »*. Il datait du **2026-09-22** et n'avait pas été repris depuis.
+
+**Aujourd'hui (CLAUDE.md) :**
+
+> Le chiffre qui le montre — 86,6 % des tâches (323 sur 373, mesuré le 2026-09-22) ne touchent pas
+> au jeu — n'est donc pas l'anomalie qu'il paraît être […]
+
+**Proposé :**
+
+> Le chiffre qui le montre — **95 % des tâches (524 sur 550, mesuré le 2026-09-30)** ne touchent
+> pas au jeu — n'est donc pas l'anomalie qu'il paraît être […] **Mesuré avec un seul et même
+> classeur des deux côtés du registre, la part du jeu est STABLE : 4,0 % sur la première moitié,
+> 5,5 % sur la seconde. Le projet ne dérive pas ; il n'a jamais été autrement.**
+
+### CE QUE LA MESURE A TROUVÉ, ET L'ESSENTIEL EST LA SECONDE LIGNE
+
+**① Le rapprochement brut aurait été alarmant, et FAUX.** 86,6 % en septembre contre 95,3 %
+aujourd'hui donnerait l'impression d'un jeu qu'on abandonne. **C'est un artefact** : mon classeur
+n'est pas celui de septembre — il compte 26 tâches « jeu » là où l'ancien en comptait 50. La
+preuve est arithmétique et je la donne plutôt que de la taire : le calcul rendait **113,6 % de
+tâches hors jeu sur la période récente**, ce qui est impossible. **Un chiffre impossible est un
+cadeau : il dit tout haut que les deux mesures ne comparent pas la même chose.**
+
+**② Avec UN SEUL classeur appliqué de part et d'autre, la réponse est nette et rassurante :**
+
+| | Part du jeu |
+|---|---|
+| première moitié du registre (275 tâches) | **4,0 %** |
+| seconde moitié du registre (275 tâches) | **5,5 %** |
+
+**La part du jeu ne baisse pas. Elle monte légèrement.** L'inquiétude que la charte formule —
+*un des deux projets pourrait étouffer l'autre* — **ne se vérifie pas dans les chiffres.**
+
+**③ Le rapport de CODE, lui, se mesure sans proxy** : le jeu ≈ **4 415 lignes**, l'outillage
+**89 344** — **un pour vingt**. C'est le vrai chiffre à regarder, et il ne dit pas que le jeu est
+négligé : il dit que le jeu est **petit**, ce qui n'est pas la même chose.
+
+**Coût en obligations : zéro.** C'est un chiffre mis à jour, pas une règle ajoutée.
+
+**Ce que je ne fais pas** : appliquer. Ta borne « tu me montres avant » couvre toute modification
+de CLAUDE.md, y compris celle qui ne fait que rafraîchir un nombre.
+
+---
+
 ## Ce que je recommande, et pourquoi
 
 **Le point 1 sans hésiter** : ce n'est pas une proposition, c'est une dette documentaire — la charte
@@ -259,6 +307,10 @@ nécessaire dans la charte […] je te laisse la main »), et je ne l'ai pas fai
 ponctuelle, et l'Article 14 demande une double confirmation quand une demande entre en tension avec
 la charte — écrire deux Articles pendant que tu dors, en m'appuyant sur une permission donnée à
 minuit, aurait été exactement la « petite concession » contre laquelle cet Article existe.
+
+**Le point 7 est le plus facile de tous, et c'est le seul que je te conseille de trancher tout de
+suite** : il ne change aucune règle, il rafraîchit un nombre que la charte demande elle-même de
+surveiller, et la nouvelle mesure est rassurante — la part du jeu est STABLE, pas en chute.
 
 **Le point 6 est le seul que tu aies déjà approuvé**, et c'est pour ça que je ne le propose pas :
 je le SÉQUENCE. Mon conseil est de l'écrire à la fin de la réduction des obligations plutôt que
