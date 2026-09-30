@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 08 — À qui est ce projet, et qui peut te le prendre</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T18:06:33.472Z</div>
+    <h1>FIL 08 — À qui est ce projet, et qui peut te le prendre</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-08-securite-et-propriete.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Transverse — indépendant des étages, mais il devient urgent dès qu'on parle de vendre (fil 07) ou d'exporter (fil 06). <strong>Saisines :</strong> réponses 2026-09-29 (deux questions nouvelles) · incident du 2026-09-30 au soir</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Tes deux questions, dans tes mots</strong> : la <strong>sécurité du projet</strong> (copie, vol, piratage) et la <strong>propriété juridique, prouvable devant un tribunal</strong>.</p>
+<p><strong>Le document existe</strong> : <code>docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md</code>, avec ses deux recherches web archivées en entier (requêtes exactes et liens) dans <code>docs/recherches-web/2026-09-29-propriete-et-securite.md</code>.</p>
+<p><strong>Je ne suis pas juriste et rien là-dedans n'est un conseil juridique</strong> — ce sont des faits publics, datés, à confronter à un professionnel avant toute décision qui engage.</p>
+<p><strong>La bonne nouvelle, et elle est inattendue.</strong> Le point faible de tout projet fait avec une IA est de <strong>prouver la contribution créative humaine</strong>. La plupart des gens ne le peuvent pas : ils ont du code, des conversations effacées, et aucune trace de qui a décidé quoi. <strong>Toi, tu as construit sans le vouloir la preuve exacte que le droit demande :</strong></p>
+<table><thead><tr><th>Ce que le droit cherche</th><th>Ce que ce projet porte déjà</th></tr></thead><tbody><tr><td>l'<strong>empreinte de ta personnalité</strong></td><td>l'Article 0 — un esprit que tu as défini, précisé sept fois, et défendu contre moi</td></tr><tr><td>une contribution à la <strong>conception</strong></td><td>la charte entière, dont la plupart des Articles citent ta demande <strong>mot pour mot, datée</strong></td></tr><tr><td>une contribution à la <strong>structure</strong></td><td>les étapes, les zones, la loi de l'Agence — toutes tranchées par toi</td></tr><tr><td>une contribution à l'<strong>édition</strong></td><td>des centaines de lignes de suivi, chacune datée, disant qui a décidé et pourquoi</td></tr><tr><td>une <strong>chronologie</strong></td><td>l'historique du code, pas à pas, avec tes instructions citées</td></tr></tbody></table>
+<p>Le rapport du <strong>CSPLA du 16 juillet 2026</strong> — le texte le plus récent — le résume ainsi : <em>l'IA est un outil, l'auteur est une personne, et l'originalité se mesure dans la création livrée.</em></p>
+<p><strong>L'incident de ce soir, et il appartient à ce fil.</strong> En déposant tes documents, un fichier contenait <strong>deux vraies clés d'API</strong> (une OpenAI, une Groq). La protection automatique a refusé l'envoi ; <strong>je ne l'ai pas contournée</strong> — j'ai retiré le fichier. <strong>Ces deux clés doivent être révoquées de ton côté</strong>, et ce n'est pas fait à ma connaissance.</p>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi ce sujet existe</h3>
+<p><strong>Transverse, et à double détente.</strong> Tant qu'on ne vend rien, c'est une assurance. Le jour où on vend ou on montre, c'est un préalable.</p>
+<p><strong>Ce que ça change concrètement pour la méthode de travail</strong> : la discipline documentaire que tu as imposée pour des raisons d'ingénierie <strong>est</strong> le dossier de preuve. Donc tout allègement de cette discipline a désormais un coût juridique, pas seulement un coût de mémoire. C'est un argument de plus, et il est nouveau, contre les raccourcis.</p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q8.1 — À TOI, et c'est urgent.</strong> As-tu <strong>révoqué les deux clés d'API</strong> (OpenAI et Groq) ? Tant que c'est non, elles sont utilisables par quiconque a vu ce fichier. <em>(a) oui, c'est fait · (b) pas encore · (c) explique-moi comment on fait</em></p>
+<p><strong>Q8.2 — À TOI.</strong> Le fichier de prompts qui les contenait est <strong>hors du projet</strong> pour cette raison. Veux-tu que j'en fasse une <strong>copie nettoyée</strong> (mêmes contenus, clés remplacées par un marqueur) pour qu'il rejoigne les sources ? <em>(a) oui · (b) non, laisse-le dehors</em></p>
+<p><strong>Q8.3 — À TOI.</strong> Veux-tu un <strong>dépôt de preuve daté</strong> (une procédure simple, chez un tiers, qui horodate l'état du projet à une date donnée) ? <em>(a) oui, dis-moi comment · (b) plus tard · (c) non</em></p>
+<p><strong>Q8.4 — À MOI.</strong> Vérifier qu'<strong>aucun autre secret</strong> ne traîne dans les documents déjà déposés. Je l'ai fait pour le fichier bloqué, pas pour l'ensemble.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-08-securite-et-propriete.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

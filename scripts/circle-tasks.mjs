@@ -804,6 +804,29 @@ export const CIRCLE_ITEMS = [
     periodicityTracked: true,
     producesReport: true,
   },
+  // LES FILS DE DISCUSSION REJOIGNENT LA RONDE (2026-09-30, soirée du grand décalage). Le
+  // garde-fou findRegistriesMissingFromCircle() a mordu dès la création de docs/fils/, et il a eu
+  // raison de mordre — mais la bonne réponse n'était PAS une exclusion motivée comme pour
+  // `reponses` et `veille`. Ces deux-là sont exclus parce qu'un passage périodique y rendrait
+  // invariablement « rien de neuf » (leçon L6). Ici c'est l'inverse exact : la seule chose que ce
+  // registre a à dire est PRÉCISÉMENT une affaire de calendrier — « la balle est chez lui depuis
+  // douze jours sur le fil 08 ». Personne ne se réveille en se demandant ça, et rien d'autre ne
+  // peut le dire : le fil lui-même porte sa date, mais un fil ne se relit pas tout seul.
+  //
+  // Ce que l'item ajoute et que personne d'autre ne porte : le verdict SUIS-JE À JOUR, en trois
+  // états jamais deux. Un contrôle qu'on n'a pas pu faire ne compte jamais comme réussi (L5/L11) —
+  // c'est la leçon que la soirée du 30/09 a payée cher, où « je suis à jour » était une impression
+  // rendue sur zéro mesure.
+  {
+    id: "fils-de-discussion",
+    theme: "Suivi des chantiers",
+    label: "LES FILS DE DISCUSSION — qui a la balle, et depuis quand",
+    cout: "gratuit (zéro appel réseau) — il lit des fichiers déjà écrits",
+    tokensEstimes: "faible : quelques centaines de tokens pour lire le verdict et la liste des fils",
+    execute: "Lancer node scripts/fils-de-discussion.mjs, LIRE le verdict (OUI / NON / PAS ENTIÈREMENT MESURÉ) et la colonne Balle. Un fil dont la balle est À MOI depuis plus de quelques jours est une dette de ma part, jamais une attente légitime ; un fil À TOI depuis longtemps se rappelle, jamais ne se décide à sa place (cf. docs/fils/index.md).",
+    periodicityTracked: true,
+    producesReport: true,
+  },
 ];
 
 // Signal de fraîcheur MÉCANIQUE, jamais inventé (2026-09-20) : la date la plus récente mentionnée

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LE CERVEAU DES FILS — par où entrer, et où en est chaque sujet</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T18:18:37.310Z</div>
+    <h1>LE CERVEAU DES FILS — par où entrer, et où en est chaque sujet</h1>
+    <p class="sub">Page générée depuis docs/fils/index.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-09-30, heure LUE — source système. Il remplace le fil unique rangé par dates, qui répondait à « qu'est-ce qui s'est dit le 29 ? » et jamais à « où en est-on sur la sécurité ? ».)</em></p>
+<p><strong>À quoi sert ce document.</strong> Il est la carte. Chaque sujet du grand chantier a son propre fil, et chaque fil a la même forme : ① l'histoire du sujet · ② où il se situe dans le plan · ③ la chaîne de questions numérotées, pour que tu puisses répondre par le numéro.</p>
+<p><strong>Ce que ce document N'EST PAS.</strong> Ce n'est pas une archive. <strong>Les originaux de nos échanges restent accessibles</strong> et ne sont jamais remplacés par un fil : tes documents sont dans <code>docs/grand-projet/00-sources/</code>, les synthèses dans <code>docs/grand-projet/01-absorption/</code>, les analyses dans <code>docs/grand-projet/02-strategie/</code>. Un fil <strong>renvoie</strong> ; il ne se substitue pas.</p>
+<hr>
+<h3>LA CARTE, EN UN COUP D'ŒIL</h3>
+<p><strong>Les fils se rangent en deux familles</strong> : ceux qui forment une <strong>cascade</strong> (il y a un ordre, et le sauter fait tout rediscuter) et ceux qui sont <strong>transverses</strong> (ils traversent tout et n'attendent personne).</p>
+<h4>La cascade — l'ordre compte</h4>
+<table><thead><tr><th>Étage</th><th>Fil</th><th>Sujet</th><th>Balle</th><th>Questions ouvertes</th></tr></thead><tbody><tr><td><strong>0</strong></td><td><a href="fil-01-objectif-ultime-philo-politique.md">01</a></td><td>L'objectif ultime, la philosophie, la politique</td><td><strong>À TOI</strong></td><td>3 (1 pour toi)</td></tr><tr><td><strong>1</strong></td><td><a href="fil-02-cible-obligations.md">02</a></td><td>La cible d'obligations (93 → 50 ?)</td><td><strong>À TOI</strong></td><td>3 (2 pour toi)</td></tr><tr><td><strong>1</strong></td><td><a href="fil-03-organisation-cible.md">03</a></td><td>L'organisation cible de l'Agence</td><td><strong>À TOI</strong></td><td>4 (2 pour toi)</td></tr><tr><td><strong>2</strong></td><td><a href="fil-06-export-versions-noyau.md">06</a></td><td>L'export, le noyau, les « plusieurs versions »</td><td><strong>À TOI</strong></td><td>4 (2 pour toi)</td></tr><tr><td><strong>3</strong></td><td><a href="fil-07-commercialisation-plaquette.md">07</a></td><td>La commercialisation et la plaquette</td><td><strong>À TOI</strong></td><td>4 (2 pour toi)</td></tr></tbody></table>
+<h4>Les transverses — ils n'attendent pas leur tour</h4>
+<table><thead><tr><th>Fil</th><th>Sujet</th><th>Balle</th><th>Questions ouvertes</th></tr></thead><tbody><tr><td><a href="fil-04-systeme-de-travail.md">04</a></td><td>Notre système de travail (questions, réponses, fils)</td><td><strong>À MOI</strong></td><td>4 (2 pour toi)</td></tr><tr><td><a href="fil-05-creation-vs-produit-fini.md">05</a></td><td>Création vs produit fini — <strong>axe ouvert le 30/09</strong></td><td><strong>À TOI</strong></td><td>4 (2 pour toi)</td></tr><tr><td><a href="fil-08-securite-et-propriete.md">08</a></td><td>Sécurité et propriété — <strong>une question urgente</strong></td><td><strong>À TOI</strong></td><td>4 (3 pour toi)</td></tr><tr><td><a href="fil-09-ce-qui-ralentit.md">09</a></td><td>Ce qui ralentit le projet</td><td><strong>À MOI</strong></td><td>4 (2 pour toi)</td></tr><tr><td><a href="fil-10-le-jeu.md">10</a></td><td>Le Jeu : Lia, Noé, la maison</td><td><strong>À MOI</strong></td><td>4 (2 pour toi)</td></tr><tr><td><a href="fil-11-testeurs-et-regard-exterieur.md">11</a></td><td>Testeurs humains et regard extérieur</td><td><strong>À TOI</strong></td><td>4 (3 pour toi)</td></tr></tbody></table>
+<p><strong>Total : 11 fils · 42 questions vives · 23 attendent ta réponse · 19 sont de mon côté.</strong></p>
+<hr>
+<h3>SI TU NE DOIS EN LIRE QUE TROIS CE SOIR</h3>
+<ul><li><strong><a href="fil-08-securite-et-propriete.md">Fil 08, question Q8.1</a></strong> — deux vraies clés d'API ont circulé dans un fichier. Elles doivent être révoquées. C'est la seule chose de cette liste qui ne peut pas attendre demain.</li><li><strong><a href="fil-01-objectif-ultime-philo-politique.md">Fil 01</a></strong> — l'objectif ultime. Tant qu'il n'est pas posé, cinq autres fils se rediscutent à chaque fois qu'on les rouvre.</li><li><strong><a href="fil-07-commercialisation-plaquette.md">Fil 07, question Q7.1</a></strong> — tu m'as dit « la plaquette n'est pas bonne » et je n'ai pas demandé pourquoi. Une phrase de ta part et je la refais juste.</li></ul>
+<hr>
+<h3>LA CHRONOLOGIE — comment on en est arrivé là</h3>
+<table><thead><tr><th>Quand</th><th>Ce qui s'est passé</th></tr></thead><tbody><tr><td><strong>2026-09-28</strong></td><td>Tu déposes tes documents préparés. Lecture intégrale, premières synthèses.</td></tr><tr><td><strong>2026-09-29</strong></td><td>49 questions posées et répondues. Les analyses de fond : la cible, le noyau, la propriété, ce qui ralentit, la plaquette.</td></tr><tr><td><strong>2026-09-29 → 30 (nuit)</strong></td><td>18 livraisons en autonomie.</td></tr><tr><td><strong>2026-09-30 (soir)</strong></td><td>Tu constates que je ne suis pas à jour. Quatre affirmations fausses de ma part, corrigées par toi une à une. Cause racine trouvée.</td></tr><tr><td><strong>2026-09-30 (nuit)</strong></td><td>Ce système-ci. Un fil par sujet, et quatre contrôles mécaniques pour que « à jour » cesse d'être une impression.</td></tr></tbody></table>
+<hr>
+<h3>COMMENT ON SAIT QU'ON EST À JOUR — et pourquoi ça ne marchait pas avant</h3>
+<p><strong>Avant, « à jour » était une impression.</strong> Je regardais mes fichiers et je concluais. Le défaut exact, et il est plus subtil qu'une négligence : <strong>je vérifiais « ce FICHIER a-t-il une synthèse ? » au lieu de « ce SUJET a-t-il été traité ? »</strong>. Les deux questions se ressemblent et n'ont pas la même réponse. C'est pour ça que j'ai pu te dire quatre choses fausses en me croyant rigoureux.</p>
+<p><strong>Maintenant, quatre contrôles y répondent mécaniquement</strong> — <code>node scripts/fils-de-discussion.mjs</code> :</p>
+<table><thead><tr><th>#</th><th>La question posée</th><th>Sans quoi</th></tr></thead><tbody><tr><td>1</td><td>Tout ce que tu m'as envoyé est-il <strong>dans le projet</strong> ?</td><td>ce qui vit seulement dans la conversation n'est mesurable par rien</td></tr><tr><td>2</td><td>Chaque chose envoyée est-elle <strong>rattachée à un sujet</strong> ?</td><td>un document déposé mais orphelin est un document perdu</td></tr><tr><td>3</td><td>Chaque sujet dit-il <strong>à qui est la balle</strong>, et depuis quand ?</td><td>sans ça, personne ne sait qui doit bouger</td></tr><tr><td>4</td><td>Chaque sujet dit-il <strong>où il se place</strong> dans la stratégie ?</td><td>un sujet sans place se traite dans le désordre</td></tr></tbody></table>
+<p><strong>Et l'outil refuse de conclure « OUI » quand un contrôle n'est pas mesurable</strong> : il rend <em>PAS ENTIÈREMENT MESURÉ</em>. C'est une leçon payée ailleurs dans ce projet — une absence de mesure ne vaut jamais un zéro, et un satisfecit rendu sur zéro donnée est pire que pas de réponse du tout.</p>
+<hr>
+<h3>CE QUI RESTE HORS DE PORTÉE DE TOUTE MÉCANIQUE — et le dire EST la protection</h3>
+<p><strong>Une demande que tu me fais à l'oral, dans la conversation, n'est récupérable par aucune commande.</strong> Si je ne la dépose pas dans le projet le jour même, elle n'existera plus demain — et aucun des quatre contrôles ne pourra signaler son absence, puisqu'ils ne mesurent que ce qui est déposé.</p>
+<p>C'est exactement ce qui s'est passé : <strong>7 400 mots de tes demandes ne vivaient que dans nos échanges.</strong> Aucun outil n'avait rien à mesurer, et tous rendaient vert. Le système ci-dessus ferme le trou à partir d'aujourd'hui ; il ne peut pas se fermer tout seul.</p>
+<hr>
+<h3>LE CATALOGUE DU DOSSIER — chaque fil et sa version HTML</h3>
+<p><em>(Chaque fil existe en deux exemplaires : le <code>.md</code> est la version de travail que les outils relisent, le <code>.html</code> est la version de lecture, celle qu'on ouvre. Le second est <strong>dérivé</strong> du premier et se régénère ; il ne se corrige jamais à la main, sinon les deux divergent.)</em></p>
+<table><thead><tr><th>Fil (version de travail)</th><th>Version à lire</th></tr></thead><tbody><tr><td><code>fil-01-objectif-ultime-philo-politique.md</code></td><td><a href="html/fil-01-objectif-ultime-philo-politique.html">fil-01-objectif-ultime-philo-politique.html</a></td></tr><tr><td><code>fil-02-cible-obligations.md</code></td><td><a href="html/fil-02-cible-obligations.html">fil-02-cible-obligations.html</a></td></tr><tr><td><code>fil-03-organisation-cible.md</code></td><td><a href="html/fil-03-organisation-cible.html">fil-03-organisation-cible.html</a></td></tr><tr><td><code>fil-04-systeme-de-travail.md</code></td><td><a href="html/fil-04-systeme-de-travail.html">fil-04-systeme-de-travail.html</a></td></tr><tr><td><code>fil-05-creation-vs-produit-fini.md</code></td><td><a href="html/fil-05-creation-vs-produit-fini.html">fil-05-creation-vs-produit-fini.html</a></td></tr><tr><td><code>fil-06-export-versions-noyau.md</code></td><td><a href="html/fil-06-export-versions-noyau.html">fil-06-export-versions-noyau.html</a></td></tr><tr><td><code>fil-07-commercialisation-plaquette.md</code></td><td><a href="html/fil-07-commercialisation-plaquette.html">fil-07-commercialisation-plaquette.html</a></td></tr><tr><td><code>fil-08-securite-et-propriete.md</code></td><td><a href="html/fil-08-securite-et-propriete.html">fil-08-securite-et-propriete.html</a></td></tr><tr><td><code>fil-09-ce-qui-ralentit.md</code></td><td><a href="html/fil-09-ce-qui-ralentit.html">fil-09-ce-qui-ralentit.html</a></td></tr><tr><td><code>fil-10-le-jeu.md</code></td><td><a href="html/fil-10-le-jeu.html">fil-10-le-jeu.html</a></td></tr><tr><td><code>fil-11-testeurs-et-regard-exterieur.md</code></td><td><a href="html/fil-11-testeurs-et-regard-exterieur.html">fil-11-testeurs-et-regard-exterieur.html</a></td></tr><tr><td><code>index.md</code> <em>(cette carte)</em></td><td><a href="html/index.html">index.html</a></td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/index.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

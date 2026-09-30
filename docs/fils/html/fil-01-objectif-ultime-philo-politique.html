@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 01 — L'objectif ultime, la philosophie et la politique</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T18:06:32.927Z</div>
+    <h1>FIL 01 — L'objectif ultime, la philosophie et la politique</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-01-objectif-ultime-philo-politique.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étage 0 de la cascade — tout le reste en dépend. Rien d'autre ne devrait être tranché avant. <strong>Saisines :</strong> COMMANDE IMPORTANTE · réponses 2026-09-29 · réponses 2026-09-30</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Ce que tu as demandé</strong> — définir l'objectif ultime du projet, puis la philosophie et la politique, en t'appuyant sur tes propres documents : <em>« on révèle plus qu'on invente »</em>.</p>
+<p><strong>Ce qui a déjà été fait, et qui existe</strong> :</p>
+<ul><li>Une <strong>synthèse annotée</strong> de ton document <code>FIXER UN OBJECTIF ULTIME</code> (2026-09-29). Elle contient les <strong>5 critères</strong> d'un vrai objectif ultime, les <strong>6 questions d'atelier</strong>, tes <strong>5 candidats</strong>, et la hiérarchie complète <code>VISION → PHILOSOPHIE → POLITIQUE → OBJECTIF ULTIME → STRATÉGIE</code>.</li><li>Une <strong>synthèse annotée</strong> de ton document <code>PHILOSOPHIE ET POLITIQUE</code>. Elle donne les définitions (<em>philosophie = ce en quoi on croit · politique = les règles qu'on se donne pour vivre selon ces croyances</em>) et le <strong>test des 5 impossibles</strong>.</li><li>Tes <strong>réponses en « jets »</strong> du 2026-09-30, que tu qualifies toi-même de tentatives.</li></ul>
+<p><strong>Trois constats déjà établis, et ils t'appartiennent déjà</strong> :</p>
+<ul><li><strong>« Commercialiser l'Agence » n'est PAS un objectif ultime</strong> — tu l'as trouvé toi-même, et le critère 2 de ton propre document le confirme : un objectif ultime ne dépend d'aucune stratégie particulière. Vendre est une stratégie parmi plusieurs (licencier, ouvrir, garder en interne).</li><li><strong>Il faut probablement DEUX objectifs ultimes, pas un</strong> : celui du Projet (le nôtre, qui inclut le Jeu) et celui de l'Agence (générique, celui que le client projettera). Ton document dit ailleurs que <em>« l'objectif ultime Projet ne doit pas être implanté tel quel dans l'Agence du client »</em> — il se contredit donc lui-même, et les deux ont raison à des niveaux différents.</li><li><strong>Nous avons déjà répondu à plusieurs de ces questions sans les avoir posées.</strong> <em>L'humain décide</em> (nos outils refusent de juger seuls), <em>la qualité avant la rapidité</em> (Article 0), <em>tout est traçable</em> (Articles 27, 28, 32). Ce n'est pas à inventer, c'est à extraire.</li></ul>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi ce sujet existe</h3>
+<p><strong>C'est l'étage 0.</strong> Tant qu'il n'est pas posé, chaque décision en dessous se rediscute : la cible d'obligations, l'organisation, les versions, la commercialisation. Tu l'as dit toi-même : <em>« c'est le cœur de la gouvernance qui va débloquer beaucoup de choses »</em>.</p>
+<p><strong>Et tu as raison de dire que tes réponses sont fragiles</strong> — mais pas pour la raison que tu crois. Elles ne sont pas fragiles parce que tu réponds mal : elles le sont parce que <strong>les questions mélangent trois niveaux</strong> (le Projet, l'Agence, le Jeu) sans jamais le dire. Répondre « l'agence doit aider les codeurs » et « le jeu est là pour le divertissement » dans la même case, c'est normal — la case était mal faite.</p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q1.1 — À TOI.</strong> Acceptes-tu qu'on sépare explicitement <strong>deux objectifs ultimes</strong> : celui du PROJET (qui nous inclut, toi et moi, et qui contient le Jeu) et celui de l'AGENCE (générique, que le client remplira avec le sien) ? <em>(a) oui · (b) non, un seul · (c) explique-moi la différence avant que je réponde</em></p>
+<p><strong>Q1.2 — À MOI.</strong> Je te dois une <strong>séance guidée</strong>, question par question, où je te dis à chaque réponse si elle répond au bon niveau — et pourquoi. Tu me l'as demandé : <em>« j'ai besoin que tu pilotes cette partie »</em>. Elle n'est pas faite.</p>
+<p><strong>Q1.3 — À MOI.</strong> Le <strong>test des 5 impossibles</strong> appliqué à nous : <em>que refusons-nous absolument ? que n'automatiserons-nous jamais ? que ne déléguerons-nous jamais ?</em> Quatre réponses existent déjà dans nos règles et n'ont jamais été rassemblées. C'est de l'extraction, pas de la création — une demi-journée.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-01-objectif-ultime-philo-politique.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

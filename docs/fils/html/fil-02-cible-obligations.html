@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 02 — La cible d'obligations : de 93 vers 50</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T18:06:33.006Z</div>
+    <h1>FIL 02 — La cible d'obligations : de 93 vers 50</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-02-cible-obligations.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étage 1 — dépend de l'objectif ultime pour savoir ce qu'on protège, mais peut avancer en parallèle. <strong>Saisines :</strong> réponses 2026-09-29 · réponses 2026-09-30 · conversation du 2026-09-30</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Ton objectif</strong> : ramener les obligations de l'Agence vers <strong>50</strong>, <em>« pour laisser de la place à l'utilisateur »</em>.</p>
+<p><strong>Les chiffres, tous reproduits par une commande le 2026-09-30</strong> :</p>
+<table><thead><tr><th>Quoi</th><th>Combien</th></tr></thead><tbody><tr><td>Règles numérotées de notre charte</td><td><strong>34</strong></td></tr><tr><td>Obligations dans ces 34 règles</td><td><strong>129</strong></td></tr><tr><td><strong>Obligations de la famille AGENCE — ta cible</strong></td><td><strong>93</strong></td></tr><tr><td>Obligations du JEU + de notre COLLABORATION</td><td><strong>36</strong></td></tr></tbody></table>
+<p><strong>Le 93 se décompose ainsi, et c'est ce qui m'avait échappé</strong> : les 19 règles de la famille AGENCE en portent <strong>91</strong>, et une vingtième — numérotée « 20bis » — en porte <strong>2</strong>. Son numéro ne se lit pas comme un nombre entier, donc elle tombait hors de tous mes comptes. <strong>91 + 2 = 93.</strong></p>
+<p><strong>Une route existe déjà</strong> : neuf règles sont des « modes d'emploi » et portent 47 des 93. Les réduire à une obligation chacune ferait atterrir à <strong>55</strong>. Mais deux de mes outils se contredisent sur l'une d'elles, ce qui fait osciller l'atterrissage entre <strong>55 et 66</strong>.</p>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi ce sujet existe</h3>
+<p><strong>Ce sujet touche directement ce que tu vends.</strong> Une Agence avec 93 obligations impose 93 règles au client ; avec 50, elle lui laisse la place d'écrire les siennes. C'est un argument commercial autant qu'une question de propreté.</p>
+<p><strong>Et tu as ajouté une dimension aujourd'hui que je n'avais pas</strong> : mes propres obligations de fonctionnement — celles que Claude m'impose — comptent aussi dans ce que l'utilisateur subit. Et si l'Agence doit tourner avec d'autres modèles d'IA, il faut savoir combien d'obligations chacun impose de son côté. <strong>Ce n'est mesuré nulle part.</strong></p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q2.1 — À TOI.</strong> Ta cible de 50 porte-t-elle sur les <strong>93 obligations des règles numérotées</strong> seules, ou sur <strong>toute la charte</strong> (qui en contient davantage hors des règles numérotées) ? <em>(a) les règles numérotées seules · (b) la charte entière · (c) autre chose, je t'explique</em></p>
+<p><strong>Q2.2 — À TOI.</strong> Deux de mes outils se contredisent sur la règle 13, qui pèse 12 obligations à elle seule. L'un dit « c'est un mode d'emploi, donc réductible », l'autre « c'est une discipline, on n'y touche pas ». <strong>L'écart vaut 11 obligations sur ton objectif.</strong> <em>(a) mode d'emploi · (b) discipline · (c) on l'ouvre ensemble avant de trancher</em></p>
+<p><strong>Q2.3 — À MOI, et c'est ton ajout d'aujourd'hui.</strong> Compter les obligations que <strong>mon propre fonctionnement</strong> impose, puis chercher combien en imposent les autres IA de code — parce que l'Agence doit pouvoir tourner ailleurs que chez moi. <strong>Jamais mesuré.</strong></p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-02-cible-obligations.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

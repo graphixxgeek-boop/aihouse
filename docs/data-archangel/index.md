@@ -57,7 +57,7 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**20 fichier(s)** dans ce dossier.
+**21 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -80,5 +80,6 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 | [systeme-des-index-2026-09-27.txt](systeme-des-index-2026-09-27.txt) | — |
 | [systeme-des-index-2026-09-28.txt](systeme-des-index-2026-09-28.txt) | — |
 | [systeme-des-index-2026-09-29.txt](systeme-des-index-2026-09-29.txt) | — |
+| [systeme-des-index-2026-09-30.txt](systeme-des-index-2026-09-30.txt) | — |
 | [verification-ronde-2026-09-26.txt](verification-ronde-2026-09-26.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 03 — L'organisation cible de l'Agence</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T18:06:33.084Z</div>
+    <h1>FIL 03 — L'organisation cible de l'Agence</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-03-organisation-cible.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étage 1 — ce qui se décide juste après l'objectif ultime (fil 01), et qui commande la cible d'obligations (fil 02). <strong>Saisines :</strong> COMMANDE IMPORTANTE · ARCHITECTURE DES NIVEAUX · ARCHITECTURE FONCTIONNELLE · Modèle de gouvernance · réponses 2026-09-30</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Ce que tu as demandé</strong> — que l'Agence cesse d'être un tas d'outils qui ont poussé les uns après les autres, et devienne une organisation qu'on peut décrire à quelqu'un d'autre en une page.</p>
+<p><strong>Ce qui existe déjà, et qui est réel :</strong></p>
+<ul><li><strong>Un organigramme écrit</strong>, <code>docs/referentiel/organisation-agence.md</code> : les quatre mots distincts (Gardien sacré du code · Contrôleur de process · Veilleur · Garde-fou mécanique), qui est qui, et pourquoi le mot « gardien » employé seul n'a plus de sens ici.</li><li><strong>Un rangement généré, donc jamais périmé</strong>, <code>docs/referentiel/classification-agence.md</code> : ce qu'un fichier EST, ce qu'il VAUT, ce qu'il DOIT. Il se recalcule au lieu d'être recopié.</li><li><strong>Trois de tes documents préparés</strong> disent la même chose par trois entrées différentes : ARCHITECTURE DES NIVEAUX (l'empilement Projet / Agence / Client), ARCHITECTURE FONCTIONNELLE (qui fait quoi), et le <strong>Modèle de gouvernance</strong> (comment on décide).</li></ul>
+<p><strong>Ce que le modèle de gouvernance a déjà donné — et c'est une correction que je te dois.</strong> Je t'ai dit hier soir qu'il n'avait « jamais été lu ». C'était faux, et tu l'as relevé. Il a été lu intégralement le 28/09, il est cité 45 fois dans ta COMMANDE IMPORTANTE, et il a été analysé en profondeur le 29/09 à la question C44 — qui en a retenu <strong>exactement trois choses</strong> :</p>
+<ul><li><strong>L'HARMONISATION</strong> — les outils doivent parler le même langage entre eux ;</li><li><strong>LES CONTRATS D'INTERFACE</strong> — chaque outil déclare ce qu'il reçoit et ce qu'il rend ;</li><li><strong>LA DÉFINITION DE FINI en 8 points</strong> — quand une chose est-elle terminée.</li></ul>
+<p>Et <strong>le reste a été explicitement écarté</strong>. Ce « le reste non » est une décision, pas un oubli.</p>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi ce sujet existe</h3>
+<p><strong>C'est l'étage 1, juste sous l'objectif ultime.</strong> Tant qu'on ne sait pas qui décide quoi dans l'Agence, chaque nouvel outil rouvre la question de sa place, de son rang et de son autorité — et c'est exactement ce qui a produit un paysage de plus de quarante outils sans carte.</p>
+<p><strong>Le lien avec le fil 02 est direct</strong> : une organisation claire réduit mécaniquement le nombre d'obligations, parce qu'une règle qui dit « qui fait quoi » remplace dix règles qui le répètent outil par outil.</p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q3.1 — À TOI.</strong> Le modèle de gouvernance : on a retenu 3 choses sur les 8 et écarté le reste. Veux-tu qu'on <strong>rouvre les 5 écartées</strong> maintenant, ou qu'on <strong>reste sur la décision du 29/09</strong> ? <em>(a) on reste · (b) on rouvre, mais après l'objectif ultime · (c) on rouvre maintenant</em></p>
+<p><strong>Q3.2 — À TOI.</strong> La <strong>DÉFINITION DE FINI en 8 points</strong> a été retenue mais <strong>jamais appliquée à nos propres livrables</strong>. Veux-tu qu'elle devienne la règle de clôture de chaque tâche ? <em>(a) oui, pour tout · (b) oui, mais seulement pour les outils · (c) non, trop lourd</em></p>
+<p><strong>Q3.3 — À MOI.</strong> Les <strong>contrats d'interface</strong> n'existent nulle part : aucun outil ne déclare formellement ce qu'il reçoit et ce qu'il rend. C'est un chantier réel, pas une note. Je le chiffre avant de le proposer.</p>
+<p><strong>Q3.4 — À MOI.</strong> L'organigramme est <strong>tenu à la main</strong> — la fiche le dit elle-même. C'est la dette que l'Article 24 interdit partout ailleurs. Je dois soit le faire générer, soit écrire noir sur blanc pourquoi il reste manuel.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-03-organisation-cible.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

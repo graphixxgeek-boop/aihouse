@@ -2012,6 +2012,14 @@ export const MOTIFS_MEMOIRE = [
   // `00-sources/` est une ENTRÉE figée, propre à ce chantier : le projet ne l'entretient pas et ne
   // l'emporte pas.
   { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "une source qu'il a déposée : une entrée figée, propre à ce chantier, que le projet n'entretient pas et n'emporte pas" },
+  // LES FILS DE DISCUSSION SONT DE LA MÉMOIRE, ET UNE RÈGLE PLUTÔT QUE ONZE EXCEPTIONS
+  // (2026-09-30, Article 24 : un nouveau venu hérite de ce que l'équipe sait déjà faire). Onze
+  // fichiers sont nés le même soir et il en naîtra d'autres à chaque sujet nouveau — les lister un
+  // par un aurait été la liste tenue à la main qui se périme au douzième. Le contenu d'un fil est
+  // l'histoire d'un échange daté sur CE projet : rien n'y est transposable. Ce qui voyage est la
+  // FORME du fil — trois parties, quatre marqueurs, questions numérotées — et elle vit dans
+  // `docs/fils-de-discussion-blueprint.md`, qui part, lui.
+  { motif: /^docs\/fils\//, pourquoi: "un fil de discussion : l'histoire d'un échange daté sur ce projet-ci. Ce qui voyage est la FORME du fil (trois parties, quatre marqueurs, questions numérotées), écrite dans son blueprint — jamais son contenu" },
   // ET CE QUE J'EN TIRE EST DE LA MÉMOIRE AUSSI — une règle DÉRIVÉE plutôt que trois exceptions
   // recopiées (2026-09-28, tâche #725, Article 24). Les trois premiers documents de stratégie du
   // grand projet avaient chacun leur ligne d'exception ; le quatrième (`couverture-de-sa-demande`)

@@ -35,3 +35,15 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/rapport-de-nuit-2026-09-30.html` | `docs/rapports-de-nuit/rapport-2026-09-30.md` | 50174 | 2026-09-30 05:26Z |
 | `docs/grand-projet/html/fil-de-discussion.html` | `docs/grand-projet/fil-de-discussion.md` | 34098 | 2026-09-30 16:20Z |
 | `docs/grand-projet/html/ou-on-en-est-vraiment.html` | `docs/grand-projet/ou-on-en-est-vraiment.md` | 21020 | 2026-09-30 17:19Z |
+| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 10811 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-02-cible-obligations.html` | `docs/fils/fil-02-cible-obligations.md` | 9885 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 10559 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-04-systeme-de-travail.html` | `docs/fils/fil-04-systeme-de-travail.md` | 11110 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-05-creation-vs-produit-fini.html` | `docs/fils/fil-05-creation-vs-produit-fini.md` | 10292 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 10617 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 10069 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 11071 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 9629 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 10397 | 2026-09-30 18:06Z |
+| `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9868 | 2026-09-30 18:06Z |
+| `docs/fils/html/index.html` | `docs/fils/index.md` | 16418 | 2026-09-30 18:18Z |
