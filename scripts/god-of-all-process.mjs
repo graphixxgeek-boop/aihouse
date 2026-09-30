@@ -57,6 +57,40 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // (findProcessesWithoutGuardian/findProcessDocsMissing ci-dessous) : une entrée qui pointe vers un
 // fichier disparu se voit, jamais une promesse tenue à la main (Article 24).
 export const PROCESSES = [
+  // FAIRE LE POINT (2026-09-30, tâche #1301). Sa demande, mot pour mot : « cette démarche de faire
+  // le point profondément et revenir avec des infos exactes est une demande que je risque de te
+  // répéter : donc enregistre ta méthode pour qu'elle soit fiable ».
+  //
+  // CE QUI L'A FAIT NAÎTRE EST UN ÉTAT DES LIEUX FAUX, LIVRÉ LE JOUR MÊME. Il annonçait « les
+  // obligations de la famille AGENCE n'ont jamais été comptées » — elles l'étaient, 93, et c'est
+  // l'utilisateur qui a dû le corriger. Un état des lieux de mémoire RESSEMBLE à un état des
+  // lieux, et c'est pire qu'une absence : on décide dessus.
+  //
+  // LA CAUSE RACINE N'ÉTAIT PAS L'INATTENTION : ses fichiers de demande n'étaient pas dans le
+  // dépôt, donc aucun outil ne pouvait confronter ce qui était produit à ce qui était demandé.
+  // D'où la première étape, qui n'est pas une formalité : DÉPOSER avant d'analyser.
+  {
+    slug: "faire-le-point",
+    nom: "Faire le point — revenir à niveau avec des informations exactes",
+    quand: "quand il demande où on en est, si tout est à jour, si toutes ses demandes ont été traitées, ou de tout reprendre",
+    motsCles: ["faire le point", "ou on en est", "à jour", "a jour", "tout reprendre", "toutes mes demandes", "es-tu à jour", "remets tout à jour", "revenir à niveau"],
+    doc: "docs/faire-le-point-process-detail.md",
+    // MÊME GARDIEN QUE SON VOISIN, ET POUR LA MÊME RAISON : l'exactitude d'un état des lieux ne se
+    // lit pas mécaniquement. Ce qu'une mécanique PEUT vérifier est câblé en preuve ci-dessous ;
+    // le reste est demandé par angel, qui refuse d'être au vert sans réponse.
+    gardien: "scripts/angel-of-ia-process.mjs",
+    etapes: [
+      { cle: "estimation", libelle: "consulter SMART-CONSO-TOKEN et annoncer la durée et la consommation estimées AVANT de commencer — un point complet est une lecture exhaustive du dépôt, c'est-à-dire exactement le schéma coûteux que l'Article 22 oblige à faire arbitrer ; puis confronter l'estimation au réel à la livraison", preuve: { fichier: "docs/agent-du-temps/estimations.md" } },
+      { cle: "deposer-la-saisine", libelle: "déposer toute saisine dans le dépôt AVANT de l'analyser — une demande qui n'est pas sur le disque n'est vérifiable par aucun outil, et c'est ainsi que trois noms d'outils qu'il avait donnés ont été perdus", preuve: { dossier: "docs/grand-projet/00-sources/01-sa-demande/", motif: /\.md$/ } },
+      { cle: "recenser-verbatim", libelle: "découper chaque saisine en points VERBATIM avec rapport-gros-prompt, avant de répondre à un seul — le découpage est une interprétation, et archiver l'interprétation sans sa source revient à archiver sa propre lecture à la place de la demande", preuve: { dossier: "docs/rapports-gros-prompt/", motif: /\.json$/ } },
+      { cle: "preuve-par-commande", libelle: "LANCER une commande pour chaque point et prendre sa MESURE, jamais chercher dans sa mémoire : un point « fait » sans chemin de fichier n'est pas fait, un point « pas fait » sans la commande qui le montre n'est pas mesuré", preuve: null },
+      { cle: "chiffre-reproduit", libelle: "reproduire tout chiffre au moment de l'écrire — un chiffre recopié d'une note ancienne se marque « non revérifié » et se range avec les PAS FAIT jusqu'à preuve du contraire", preuve: null },
+      { cle: "croiser-la-couverture", libelle: "croiser avec abraham couverture ET citer la limite que l'outil déclare lui-même : « une demande REPRISE ne prouve qu'une chose, que quelqu'un a écrit sur le même sujet — jamais qu'il l'a traitée »", preuve: null },
+      { cle: "ouvrir-deux-cas", libelle: "ouvrir DEUX cas à la main parmi ceux déclarés PAS FAIT, et les nommer dans le rapport (leçon L47) — un chiffre qui désigne du travail se vérifie avant d'être publié", preuve: null },
+      { cle: "plan-action", libelle: "mettre l'action en face de chaque constat, avec son état RETENU / ÉCARTÉ (raison écrite) / À TRANCHER, et inscrire les tâches RETENUES dans docs/suivi/ — un état des lieux EST un rapport, donc l'Article 28 s'y applique entièrement", preuve: { fichier: "docs/suivi/index.md" } },
+      { cle: "livrer-en-html", libelle: "livrer en HTML et en pièce jointe, jamais collé dans la conversation — sa règle, et le dernier geste du process", preuve: { dossier: "docs/grand-projet/html/", motif: /\.html$/ } },
+    ],
+  },
   // RÉPONDRE À UN FICHIER DE QUESTIONS (2026-09-30, tâche #1264). Sa demande : « reformalise le
   // format universel de questions/réponses […] je te fais confiance, je découvrirai ».
   //
