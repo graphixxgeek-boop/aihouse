@@ -56,6 +56,56 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // (findProcessesWithoutGuardian/findProcessDocsMissing ci-dessous) : une entrée qui pointe vers un
 // fichier disparu se voit, jamais une promesse tenue à la main (Article 24).
 export const PROCESSES = [
+  // RÉPONDRE À UN FICHIER DE QUESTIONS (2026-09-30, tâche #1264). Sa demande : « reformalise le
+  // format universel de questions/réponses […] je te fais confiance, je découvrirai ».
+  //
+  // LE TROU ÉTAIT COMPLET, et vérifié auprès de god lui-même avant d'écrire une ligne : la FORME
+  // d'une question est écrite depuis longtemps (regles-de-travail §2 et §2bis) ; la forme d'une
+  // RÉPONSE ne l'était nulle part. Chaque fichier de réponses a donc été écrit dans un format
+  // réinventé sur le moment, et le meilleur d'entre eux portait quatre colonnes qu'il avait fallu
+  // lui arracher en cours de route. Ce qu'un utilisateur a demandé une fois ne devrait pas avoir
+  // à être redemandé.
+  {
+    slug: "reponse-aux-questions",
+    nom: "Répondre à un fichier de questions de l'utilisateur",
+    quand: "quand il dépose un fichier de questions, ou répond à un fichier de questions, et qu'on lui rend les réponses",
+    motsCles: ["question", "questions", "réponse", "réponses", "repondre", "fichier de questions", "demande inavouée", "fil de conversation"],
+    doc: "docs/reponse-aux-questions-process-detail.md",
+    // SON GARDIEN EST ANGEL, ET CE N'EST PAS UN GARDIEN DE COMPLAISANCE. Ce process se joue
+    // entièrement dans un document écrit pour un humain : aucune mécanique ne peut lire « la
+    // demande inavouée est-elle nommée ? » ni « un non-développeur comprendrait-il ? ». Un
+    // contrôle qui compterait des titres rendrait un vert sur la FORME pendant que le FOND manque.
+    // Angel est précisément l'outil fait pour ce cas : il porte la règle `format-des-reponses`
+    // comme règle NON OBSERVABLE, la DEMANDE, et refuse d'être au vert sans réponse — même
+    // dispositif que pour les Articles 29 et 30. Le pointer ici SANS avoir inscrit la règle
+    // là-bas aurait fait un gardien décoratif, ce que le filet a raison d'interdire.
+    gardien: "scripts/angel-of-ia-process.mjs",
+    // AUCUN MAILLON N'EST SANS OBJET ICI, et c'est le filet qui me l'a appris. J'avais d'abord
+    // déclaré le maillon « tâches » sans objet, au motif que l'étape ④ les inscrit déjà. C'était
+    // faux : un maillon PORTÉ PAR UNE ÉTAPE n'est pas un maillon sans objet, c'est un maillon
+    // porté — et le déclarer exempté aurait dispensé ce process d'une obligation qu'il remplit.
+    // Les trois autres manquaient parce que mes étapes SOUS-DISAIENT ce qu'elles font : lire un
+    // fichier de questions EST une mesure d'entrée, et « RETENU / ÉCARTÉ / À TRANCHER » EST un
+    // plan d'action. Les libellés le disent désormais, plutôt que de le laisser deviner.
+    etapes: [
+      // L'ESTIMATION EST PORTÉE, PAS EXEMPTÉE, et le choix mérite sa raison : répondre à un fichier
+      // de questions est l'un des travaux les plus COÛTEUX EN TOKENS que produise ce dépôt — le
+      // dernier en comptait 49, et chaque réponse doit être sourcée. C'est aussi un travail dont
+      // il ATTEND le résultat, donc la durée annoncée lui sert autant que le coût me sert.
+      // Et une estimation qu'on ne confronte jamais ne s'améliore jamais (Article 32, faille 3),
+      // d'où la confrontation à la livraison plutôt qu'une promesse en l'air.
+      { cle: "estimation", libelle: "consulter SMART-CONSO-TOKEN et annoncer la durée et la consommation estimées AVANT d'écrire la première réponse — puis, à la livraison, confronter l'estimation au réel et consigner l'écart, qui est ce qui corrige l'estimation suivante", preuve: { fichier: "docs/agent-du-temps/estimations.md" } },
+      { cle: "recenser", libelle: "lire le fichier ENTIER et recenser les questions avant d'en répondre une seule — c'est la mesure d'entrée du process, et elle donne le « N questions » que l'étape de regroupement devra annoncer. Répondre au fil de la lecture fait manquer les questions qui se répondent l'une l'autre", preuve: null },
+      { cle: "reprendre-la-question", libelle: "rouvrir chaque réponse en citant SA question telle qu'il l'a posée, avec le contexte dont elle parlait — jamais le numéro seul : il répond souvent des heures plus tard et mène plusieurs sujets à la fois (Article 29, au grain de la question)", preuve: null },
+      { cle: "repondre-et-sourcer", libelle: "répondre franchement : l'analyse distingue toujours ce qui est MESURÉ (avec son chiffre) de ce qui est un AVIS (dit comme tel), parce que les deux se lisent pareil et ne valent pas pareil", preuve: null },
+      { cle: "demande-inavouee", libelle: "nommer explicitement, en une phrase, l'inquiétude que la question ne dit pas — et y répondre. S'il n'y en a pas, l'écrire aussi : inventer une arrière-pensée est pire que n'en voir aucune", preuve: null },
+      { cle: "action-en-face", libelle: "le plan d'action : mettre l'action en face de chaque constat, réponse ou groupe, avec son état RETENU / ÉCARTÉ (raison écrite) / À TRANCHER — les mêmes trois états que l'Article 28, parce qu'un fichier de réponses EST un rapport", preuve: null },
+      { cle: "inscrire-les-taches", libelle: "inscrire dans docs/suivi/ les tâches réelles issues des constats RETENUS — une tâche annoncée qui n'existe pas est pire qu'une absence, parce qu'elle ressemble à un lien (Article 28)", preuve: { fichier: "docs/suivi/index.md" } },
+      { cle: "declarer-les-groupes", libelle: "annoncer en tête « N questions, M réponses », et faire dire à chaque groupe lesquelles il couvre et pourquoi elles n'en font qu'une — sans ce compte, une question absorbée disparaît sans que personne puisse le voir", preuve: null },
+      { cle: "vocabulaire-non-dev", libelle: "écrire pour quelqu'un qui n'est pas développeur : un nom de fonction ou de fichier n'explique rien seul, ce qui compte est ce que ça CHANGE ; tout mot technique nécessaire porte sa définition simple entre parenthèses", preuve: null },
+      { cle: "livrer-en-piece-jointe", libelle: "livrer le fichier en PIÈCE JOINTE, jamais collé dans la conversation — sa règle, et c'est le dernier geste du process", preuve: null },
+    ],
+  },
   // SONDER LE QUOTA GEMINI (2026-09-28, tâche #1021). Treizième process déclaré, et il ferme le
   // dernier trou trouvé par la vérification à froid du 2026-09-27 : c'était la seule activité à
   // enjeu du dépôt que ne gouvernait AUCUN process écrit.

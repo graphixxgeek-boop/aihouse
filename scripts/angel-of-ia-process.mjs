@@ -102,6 +102,19 @@ export const REGLES_SURVEILLEES = [
   { id: "reveil-arme", cote: "agent", observable: false, regle: "En mode autonome, ARMER le réveil (send_later, 15 min) AVANT de terminer le tour, systématiquement. Un tour qui se termine sans réveil armé arrête la nuit, quoi qu'annonce le compte rendu.", source: "nuit perdue du 2026-09-25, constatée par la comparaison plan de départ ↔ rapport de nuit" },
   { id: "reprise-des-notes", cote: "agent", observable: false, regle: "Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent.", source: "docs/regles-de-travail.md §0bis" },
   { id: "resume-contextualise", cote: "agent", observable: false, regle: "Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur.", source: "CLAUDE.md Article 29" },
+  // LE FORMAT DES RÉPONSES (2026-09-30, tâche #1264). Sa demande : « reformalise le format
+  // universel de questions/réponses ». La FORME d'une question était écrite depuis longtemps
+  // (regles-de-travail §2 et §2bis) ; celle d'une RÉPONSE ne l'était nulle part, si bien que
+  // chaque fichier de réponses réinventait son format — et que les quatre colonnes du meilleur
+  // d'entre eux avaient dû lui être arrachées en cours de route.
+  //
+  // POURQUOI ICI, ET POURQUOI RIEN D'AUTRE NE PEUT LA PORTER : les deux exigences qui décident —
+  // « la demande inavouée est-elle nommée ? » et « un non-développeur comprendrait-il ? » — ne se
+  // lisent pas sur un disque. Un contrôle qui compterait des titres rendrait un vert sur la forme
+  // pendant que le fond manque, ce qui est le faux vert que ce dépôt traque partout ailleurs.
+  // Angel DEMANDE et refuse d'être au vert sans réponse : même dispositif que les Articles 29 et
+  // 30, et c'est aussi ce qui donne au process son gardien réel plutôt qu'un gardien décoratif.
+  { id: "format-des-reponses", cote: "agent", observable: false, regle: "Répondre à un fichier de questions en suivant ses sept étapes : reprendre SA question avec son contexte (jamais le numéro seul) · répondre en distinguant le MESURÉ de l'AVIS · nommer explicitement sa demande INAVOUÉE · mettre l'action en face avec son état RETENU/ÉCARTÉ/À TRANCHER · déclarer « N questions, M réponses » et ce que couvre chaque groupe · écrire pour un non-développeur · livrer en pièce jointe.", source: "docs/reponse-aux-questions-process-detail.md · tâche #1264" },
   // L'ESCALADE (2026-09-28, tâche #1146) — sa consigne la plus structurante du soir, donnée DEUX fois
   // à vingt minutes d'intervalle. Elle n'a aucun porteur possible ailleurs : aucun mécanisme ne peut
   // savoir qu'un plan de chantier est en train de se concevoir dans une conversation. Angel DEMANDE,

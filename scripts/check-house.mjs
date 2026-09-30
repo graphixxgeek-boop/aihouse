@@ -20572,12 +20572,20 @@ async function testCirculationSansDoubleCompte() {
   const texte = lignes.join('\n');
   const bloc = texte.split('autre(s) donnée(s) écrite(s) que seul leur producteur relit')[1] ?? '';
   const finBloc = bloc.split('\n\n')[0] ?? '';
+  // UN CHEMIN PARENT N'EST PAS SON ENFANT (2026-09-30, tâche #1265) — et c'est la QUATRIÈME fois
+  // de la nuit que le même défaut se présente : un motif qui attrape une chose ADJACENTE et la lit
+  // comme la chose visée. Ici `\b` placé après la barre finale de `docs/ecotoken/` se satisfait de
+  // la lettre suivante, si bien que `docs/ecotoken/ronde/` — un registre DIFFÉRENT, produit par un
+  // autre item et relu par personne — répondait au motif de `docs/ecotoken/`. Le test accusait donc
+  // un double compte qui n'existait pas, sur un rapport parfaitement correct (leçon L4).
+  // LA BORNE JUSTE EST « RIEN QUI CONTINUE LE CHEMIN » : ni lettre, ni chiffre, ni tiret.
+  const bornePath = (id) => `${id.replace(/[.*+?^${}()|[\]\\]/g, (c) => '\\' + c)}(?![\\w-])`;
   for (const c of r.parTableDeclaree ?? []) {
-    assert.ok(!finBloc.includes(`· [${c.nature ?? ''}] ${c.id} `) && !new RegExp(`·[^\\n]*\\b${c.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(finBloc),
+    assert.ok(!finBloc.includes(`· [${c.nature ?? ''}] ${c.id} `) && !new RegExp(`·[^\\n]*${bornePath(c.id)}`).test(finBloc),
       `${c.id} is announced as read via a declared table: repeating it among the producer-only sources makes the reader choose which sentence counts`);
   }
   for (const a of r.absencesAssumees ?? []) {
-    assert.ok(!new RegExp(`·[^\\n]*\\b${a.id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).test(finBloc),
+    assert.ok(!new RegExp(`·[^\\n]*${bornePath(a.id)}`).test(finBloc),
       `${a.id} carries a WRITTEN assumed absence: counting it again as an unexplained gap erases the very declaration that resolves it`);
   }
 
