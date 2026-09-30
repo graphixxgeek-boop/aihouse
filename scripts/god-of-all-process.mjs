@@ -47,6 +47,7 @@ import { normaliserNomDOutil } from "./le-coordinateur.mjs";
 // silencieusement amputé de sa moitié conduite.
 import { auditWorkingRules, angelSectionLines } from "./angel-of-ia-process.mjs";
 import { recordFunctionUsage } from "./tool-usage.mjs";
+import { fraicheurDuMode, formatFraicheurDuMode } from "./modes-de-travail.mjs";
 import { readAgentSession, SESSION_FILE, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, printReportHeader} from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -2927,6 +2928,32 @@ function main() {
     console.log(`⚠️  ${sansProcess.length} activité(s) à enjeu sans process écrit — je SIGNALE, je ne corrige jamais (Article 26) :`);
     for (const a of sansProcess) console.log(`   · ${a.chemin}\n     pourquoi ça compte : ${a.indices.join(" · ")}`);
     console.log("   Écrire un process pour chacune, ou déclarer noir sur blanc pourquoi elle n'en a pas besoin.\n");
+  }
+
+  // LE MODE DE TRAVAIL, RELAYÉ ICI PARCE QU'IL EST UNE ÉTAPE DE PROCESS (2026-09-30, tâche #1288).
+  //
+  // POURQUOI CHEZ GOD ET NULLE PART AILLEURS : « déclarer le mode sur disque plutôt que le
+  // supposer » est déjà une étape de deux process qu'il gouverne (`mode-declare`). Sa preuve était
+  // « le fichier existe » — et c'est exactement par là que le défaut est passé : le fichier
+  // existait, il avait SEPT JOURS, et il déclarait l'utilisateur absent pendant toutes ses séances
+  // de jour. Une preuve de PRÉSENCE n'est pas une preuve de VALIDITÉ.
+  //
+  // POURQUOI LE RELAI PLUTÔT QU'UN CONTRÔLE DE PLUS : la mesure vit chez modes-de-travail, qui
+  // possède le fichier ; god ne la refait pas, il la SORT. La fraîcheur était déjà calculée le
+  // 2026-09-30 et n'était visible que sur deux lignes de commande qu'il faut penser à lancer —
+  // c'est-à-dire, à la session suivante, nulle part (leçon L2, et Article 27).
+  //
+  // ET IL NE CORRIGE RIEN : redéclarer le mode à la place de quelqu'un serait affirmer que
+  // l'utilisateur est revenu, ce qu'aucune mécanique ne sait.
+  let modeDate = null;
+  try {
+    const fr = fraicheurDuMode();
+    if (!fr.mesurable || fr.date) modeDate = formatFraicheurDuMode(fr);
+  } catch { /* fichier illisible : pas de relai, jamais un faux vert */ }
+  if (modeDate) {
+    console.log("=== MODE DE TRAVAIL — la déclaration a-t-elle encore un sens ? ===\n");
+    console.log(modeDate.trim());
+    console.log("");
   }
 
   // LE PLAN D'ACTION DE GOD LUI-MÊME (2026-09-26, tâche #803) — et l'ironie était complète : le

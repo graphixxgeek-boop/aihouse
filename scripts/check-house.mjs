@@ -15605,6 +15605,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.equal(modeDate({ slug: 'autonome' }).mesurable, false, 'a mode declared WITHOUT a readable date cannot have its age computed — that is not the same as being recent');
   assert.match(formatFraicheurDuMode(modeDate({ slug: 'autonome' })), /NON MESURÉ/, 'and the printed line must say so rather than fall back to a reassuring number');
   assert.ok(HEURES_AVANT_QU_UN_MODE_DATE >= 12, 'the threshold must stay at least as long as a plausible night — tightening it below that turns every normal night into an alert');
+  // ET LA MESURE DOIT SORTIR DU SCRIPT, sans quoi elle est une intention (leçon L2, et c'est
+  // exactement le défaut que cette nuit a trouvé deux fois ailleurs). Elle ne vivait que sur deux
+  // lignes de commande qu'il faut penser à lancer — donc, à la session suivante, nulle part.
+  // god-of-all-process la relaie : il tourne au crochet post-commit, et « déclarer le mode sur
+  // disque » est déjà une de SES étapes (`mode-declare`), dont la preuve était « le fichier
+  // existe ». C'est par là que le défaut est passé : le fichier existait, il avait sept jours.
+  const sourceGod = fs.readFileSync(new URL('../scripts/god-of-all-process.mjs', import.meta.url), 'utf8');
+  assert.match(sourceGod, /import \{[^}]*fraicheurDuMode[^}]*\} from "\.\/modes-de-travail\.mjs"/, 'MUST CATCH: god must import the freshness measure — without it the alert lives only in a command nobody runs');
+  assert.match(sourceGod, /MODE DE TRAVAIL — la déclaration a-t-elle encore un sens/, 'and it must PRINT it, under a heading the post-commit banner can attribute');
+  // LE MARQUEUR COMPTE AUTANT QUE LE TEXTE : la bannière ne retient que 🚨/🔴/⚠️/📜, donc une
+  // alerte écrite sans pastille serait rangée dans le contexte et ne sortirait jamais du journal.
+  const ban2 = await import('../scripts/hooks/banniere.mjs');
+  const relaye = ban2.hierarchiser(['=== MODE DE TRAVAIL — la déclaration a-t-elle encore un sens ? ===', formatFraicheurDuMode(modeDate(vieux))].join('\n'));
+  assert.ok(JSON.stringify(relaye).includes('MODE DATÉ'), 'MUST CATCH: the stale-mode line must survive the banner filter — an alert the banner drops is an alert nobody reads');
   assert.equal(MODES.length, 3, 'three modes, declared once and read everywhere — a fourth joins MODES and nowhere else (Article 24)');
   for (const m of MODES) for (const clef of CLEFS_DE_MODE) assert.ok(m[clef] !== undefined, `every mode must answer every behaviour key (${m.slug} is missing ${clef}) — a mode that leaves one undefined makes its caller guess, which is the exact defect being fixed`);
   const semi = modeParSlug('semi-autonome');
