@@ -134,6 +134,42 @@ diagnostics aurait coûté une nuit de chantier inutile.
 
 ---
 
+## ⑥ LE JEU N'EST PAS MESURÉ — ET CE QUI LE SURVEILLE N'A TOURNÉ QU'UNE FOIS
+
+*(Ajouté à 02h55. Ce document disait plus haut que JESUS ne voit pas le JEU, et ouvrait la tâche
+#1252 pour ça. Voici la moitié de la réponse, trouvée sans coûter un seul appel API.)*
+
+**L'Article 7 — l'épreuve de la page blanche — est l'outil dédié à la qualité structurelle du
+JEU.** Ses huit zones sont toutes des zones de jeu : *Fatigue · Cycle jour/nuit · Enquête · Bonus
+roulette · Appréciation de l'observateur · Dossier retourné · Déplacements/espace · Relation
+Lia/Noé.*
+
+> **Il a tourné UNE FOIS, sur UNE zone, le 2026-09-21.** Sept zones sur huit n'ont **jamais** été
+> examinées. La charte dit « périodiquement ».
+
+### CE QUE ÇA AJOUTE À LA MESURE DU RATIO, ET C'EST UNE NUANCE QUI COMPTE
+
+J'ai mesuré cette nuit que la part du Jeu dans les tâches est **stable** (4,0 % → 5,5 %), et j'en
+ai conclu que l'inquiétude de la charte — *un des deux projets pourrait étouffer l'autre* — ne se
+vérifiait pas. **C'était vrai, et incomplet.**
+
+| Ce qu'on mesure | Le verdict |
+|---|---|
+| la part des TÂCHES qui touchent au jeu | **stable** — rien ne se dégrade |
+| le rapport de taille du CODE | **1 pour 20** — le jeu est petit, ce qui n'est pas la même chose que négligé |
+| **l'outil dédié à la qualité du jeu** | **1 passage sur 8 zones, il y a 9 jours** |
+
+**Le jeu n'est pas étouffé par manque d'attention : il est peu regardé par les outils qui
+existent pour le regarder.** Ce n'est pas la même accusation, et la différence change ce qu'on
+ferait pour y remédier.
+
+**Ce que je ne fais pas, et pourquoi.** Lancer l'analyse sur la zone recommandée
+(*Cycle jour/nuit*) produirait une proposition de refonte sur du code de jeu — que ta borne
+m'interdit de toucher, et que l'Article 7 m'interdit d'appliquer seul de toute façon. **La
+mesure est le livrable ; l'analyse attend que tu la demandes.**
+
+---
+
 ## ET DONC : FAUT-IL VRAIMENT PLUSIEURS VERSIONS ?
 
 **Ta question n'était pas « qu'est-ce qui rame ». Elle était : est-ce que ces freins justifient de
@@ -182,7 +218,8 @@ client. C'est exactement l'argument que tu as donné toi-même pour la cible de 
 |---|---|---|
 | Le contrôle de la chaîne ne voyait que 47 des 89 constats réellement rattachés | **RETENU** | tâche **#1250** — corrigé, testé, mesuré cette nuit |
 | L'analyse des freins sur trois axes, et ce qu'elle dit des versions | **RETENU** | tâche **#1251** — ce document |
-| Le JEU n'est mesuré par aucun outil de lenteur | **RETENU** | tâche **#1252** — construire la sonde, ou déclarer qu'on ne mesurera pas cet axe |
+| Le JEU n'est mesuré par aucun outil de LENTEUR | **RETENU** | tâche **#1252** — construire la sonde, ou déclarer qu'on ne mesurera pas cet axe |
+| L'épreuve de la page blanche a tourné **1 fois sur 8 zones**, toutes des zones de jeu | **À TRANCHER** | tâche **#1281** — la charte dit « périodiquement » et c'est arrivé une fois en neuf jours. Lancer l'analyse est une décision : elle coûte du raisonnement, et elle porte sur du code que je ne peux pas toucher |
 | 17 décisions en file, dont la plus ancienne depuis 7 jours | **À TRANCHER** | deux sorties proposées ci-dessus, dont l'une est de mon côté (grouper) et l'autre de la sienne (un défaut au bout de N jours) |
 | Combien de versions, et produits ou réglages | **À TRANCHER** | c'est une décision de cadre, à joindre à la séance sur l'objectif ultime |
 | 53 % des constats RETENU ne portent aucune tâche | **À TRANCHER** | rattrapage historique : par lot, par période, ou déclaré grandfathered — même question que les 242 clôtures sans déclaration de fidélité, et elle se tranche une fois pour les deux |

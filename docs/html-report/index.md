@@ -21,7 +21,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/questions-de-degrossissage.html` | `docs/grand-projet/02-strategie/questions-de-degrossissage.md` | 19484 | 2026-09-29 20:08Z |
 | `docs/grand-projet/html/les-cinq-impossibles.html` | `docs/grand-projet/02-strategie/les-cinq-impossibles.md` | 16275 | 2026-09-29 21:27Z |
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 13995 | 2026-09-29 22:01Z |
-| `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 19680 | 2026-09-29 23:14Z |
 | `docs/grand-projet/html/propriete-et-securite-du-projet.html` | `docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md` | 17123 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 15916 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/relecture-de-la-bibliotheque.html` | `docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md` | 16723 | 2026-09-29 23:30Z |
@@ -32,3 +31,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 27845 | 2026-09-30 01:25Z |
 | `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 19049 | 2026-09-30 01:44Z |
 | `docs/grand-projet/html/trois-familles-de-la-charte.html` | `docs/grand-projet/02-strategie/trois-familles-de-la-charte.md` | 18206 | 2026-09-30 02:05Z |
+| `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 22313 | 2026-09-30 02:41Z |
