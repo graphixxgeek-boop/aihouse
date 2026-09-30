@@ -15611,9 +15611,20 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // god-of-all-process la relaie : il tourne au crochet post-commit, et « déclarer le mode sur
   // disque » est déjà une de SES étapes (`mode-declare`), dont la preuve était « le fichier
   // existe ». C'est par là que le défaut est passé : le fichier existait, il avait sept jours.
+  // CE TEST A DÉJÀ RATÉ SA CIBLE UNE FOIS, ET LA CORRECTION EST DANS CE QU'IL VÉRIFIE (2026-09-30).
+  // Sa première version lisait le FICHIER de god et vérifiait qu'il contenait l'import et le titre.
+  // Les deux y étaient — et l'alerte ne sortait pas, parce que le crochet post-commit appelle
+  // `god-of-all-process dette`, une sous-commande qui rend la main bien avant le rapport complet.
+  // Un signal adjacent (le texte est dans le fichier) lu comme le signal visé (le chemin emprunté
+  // l'imprime). Le journal de la bannière l'a dit en une seconde : zéro occurrence.
+  const god = await import('../scripts/god-of-all-process.mjs');
+  assert.ok(typeof god.lignesDuModeDate === 'function', 'the relay must be a function both paths call — not two copies that can diverge');
   const sourceGod = fs.readFileSync(new URL('../scripts/god-of-all-process.mjs', import.meta.url), 'utf8');
-  assert.match(sourceGod, /import \{[^}]*fraicheurDuMode[^}]*\} from "\.\/modes-de-travail\.mjs"/, 'MUST CATCH: god must import the freshness measure — without it the alert lives only in a command nobody runs');
-  assert.match(sourceGod, /MODE DE TRAVAIL — la déclaration a-t-elle encore un sens/, 'and it must PRINT it, under a heading the post-commit banner can attribute');
+  const blocDette = sourceGod.slice(sourceGod.indexOf('process.argv[2] === "dette"'));
+  const finDette = blocDette.indexOf('\n  }');
+  assert.match(blocDette.slice(0, finDette), /lignesDuModeDate\(\)/, 'MUST CATCH: the hook calls the « dette » subcommand — an alert printed only in the full report never reaches the post-commit banner');
+  // UN MODE FRAIS NE PRODUIT RIEN : un contrôle qui parle à chaque passage devient du décor (L6).
+  assert.ok(Array.isArray(god.lignesDuModeDate()), 'it always returns a list, empty when there is nothing to say');
   // LE MARQUEUR COMPTE AUTANT QUE LE TEXTE : la bannière ne retient que 🚨/🔴/⚠️/📜, donc une
   // alerte écrite sans pastille serait rangée dans le contexte et ne sortirait jamais du journal.
   const ban2 = await import('../scripts/hooks/banniere.mjs');

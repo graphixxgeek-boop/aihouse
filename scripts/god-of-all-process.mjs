@@ -2764,6 +2764,18 @@ export function planchesDesSchemas({ processes = PROCESSES, schema = SCHEMA_DE_R
   return L.join("\n");
 }
 
+// Les lignes à imprimer quand — et SEULEMENT quand — la déclaration de mode n'a plus de sens.
+// Un mode frais ne produit rien : un contrôle qui parle à chaque passage devient du décor (L6).
+export function lignesDuModeDate() {
+  let ligne = null;
+  try {
+    const fr = fraicheurDuMode();
+    if (!fr.mesurable || fr.date) ligne = formatFraicheurDuMode(fr);
+  } catch { /* fichier illisible : pas de relai, jamais un faux vert */ }
+  if (!ligne) return [];
+  return ["=== MODE DE TRAVAIL — la déclaration a-t-elle encore un sens ? ===", "", ligne.trim(), ""];
+}
+
 function main() {
   // LA SOUS-COMMANDE DU CROCHET, traitée AVANT tout le reste (2026-09-25, tâche #436 partie 2).
   // Deux raisons, et aucune n'est cosmétique :
@@ -2786,6 +2798,20 @@ function main() {
 
   if (process.argv[2] === "dette") {
     for (const l of detteDuDernierCommitLines(detteDuDernierCommit())) console.log(l);
+    // LE MODE DATÉ SORT PAR ICI, ET C'EST LE SEUL CHEMIN QUI COMPTE (2026-09-30, tâche #1288).
+    //
+    // MON PREMIER CÂBLAGE A RATÉ SA CIBLE, et le contre-test qui l'accompagnait n'a rien vu :
+    // j'avais placé le relai dans le rapport complet, alors que le crochet post-commit appelle
+    // `god-of-all-process dette`, qui rend la main bien avant. Le contre-test vérifiait que le
+    // FICHIER contenait l'import et le titre — un signal adjacent — au lieu de vérifier que le
+    // chemin RÉELLEMENT emprunté imprime la ligne. Le journal de la bannière l'a dit en une
+    // seconde : zéro occurrence. C'est la onzième fois de la nuit que ce motif se présente, et
+    // la deuxième fois qu'il me prend sur mon propre correctif.
+    //
+    // ÉCRIT DANS LES DEUX CHEMINS plutôt que déplacé : le rapport complet le montre aussi à qui
+    // lance god à la main, et la fonction est la même — il n'y a pas deux vérités, seulement deux
+    // sorties.
+    for (const l of lignesDuModeDate()) console.log(l);
     return;
   }
   // LE CADRE PARTAGÉ PLUTÔT QUE TROIS GESTES À LA MAIN (2026-09-28, tâche #902, signalé par
@@ -2945,16 +2971,7 @@ function main() {
   //
   // ET IL NE CORRIGE RIEN : redéclarer le mode à la place de quelqu'un serait affirmer que
   // l'utilisateur est revenu, ce qu'aucune mécanique ne sait.
-  let modeDate = null;
-  try {
-    const fr = fraicheurDuMode();
-    if (!fr.mesurable || fr.date) modeDate = formatFraicheurDuMode(fr);
-  } catch { /* fichier illisible : pas de relai, jamais un faux vert */ }
-  if (modeDate) {
-    console.log("=== MODE DE TRAVAIL — la déclaration a-t-elle encore un sens ? ===\n");
-    console.log(modeDate.trim());
-    console.log("");
-  }
+  for (const l of lignesDuModeDate()) console.log(l);
 
   // LE PLAN D'ACTION DE GOD LUI-MÊME (2026-09-26, tâche #803) — et l'ironie était complète : le
   // contrôleur qui CONSTATE qu'un rapport sans plan d'action n'est pas fini (Article 28) était le
