@@ -125,6 +125,40 @@ précisément le genre de question que je n'aurais pas dû mettre dans la même 
 
 ---
 
+## LES 23 IDÉES DU REGISTRE TOMBENT DANS LES MÊMES CINQ LOTS
+
+*(Ajouté à 01h15. Après avoir rangé les 17 décisions, j'ai passé les 23 entrées « à trancher » de
+`docs/idees-a-trancher.md` au même tamis. **Elles n'ouvrent pas un sixième principe.**)*
+
+**Quarante items en attente, cinq principes.** C'est le résultat le plus utile de la nuit pour
+toi, parce qu'il change l'ordre de grandeur de ce qu'on te demande.
+
+| Lot | Les idées du registre qui y tombent |
+|---|---|
+| **A** — mesurer, ou déclarer qu'on ne mesurera pas | **#814** sources fraîches · **#823** l'origine « spontané » · **#1092** le trafic API réel · **#1203** un fichier illisible dans un rapport · **#1209** le critère « donnée fraîche sans lecteur » |
+| **B** — le rattrapage historique | **#805** 87 % de tâches légères : émiettement ou rythme sain · **#845** les 5 plus anciennes · **#1079** un commit de suite |
+| **C** — la charte, d'un bloc | **#760** l'Article sur la reprise des notes · **#767** *(déjà dans le doc de diffs)* · **#846** le process des documents de référence · **#917** la couche lourde d'ARGUS/HARMONIA · **#1067** Articles 18 ↔ 26 |
+| **D** — le cadre, avec l'objectif ultime | **#747** le code de classe dans un nom d'outil · **#800** quel axe fait monter la version majeure · **#922** la rétention des archives |
+| **E** — l'outillage, délégable en bloc | **#819** le filet lent · **#830** ARGUS sur les idées · **#842** quelles leçons ont servi · **#1175** *(réglé cette nuit — voir plus bas)* · **#1192** la couverture au tableau de bord · **#1193** le vocabulaire du projet chez le détecteur de jumeaux · **#1197** l'estimation de la Ronde autonome |
+
+**Ce que ça veut dire concrètement** : si tu réponds au **lot A** par un principe — *« on déclare
+l'absence, on ne branche pas »* par exemple — **cinq idées du registre tombent avec les quatre
+décisions déjà rangées**. Neuf items d'un coup, une phrase.
+
+### UNE IDÉE S'EST RÉGLÉE TOUTE SEULE CETTE NUIT, ET C'EST INSTRUCTIF
+
+**#1175** disait : deux motifs lisent le numéro de tâche sans s'accorder, et à #10000 l'un
+cessera de voir ce que l'autre lit. **En élargissant la chaîne des tâches ce soir, j'en ai écrit
+un troisième sans le voir.** Je ne l'ai découvert qu'en relisant cette liste à froid — ce qui est
+exactement ce que l'Article 25 existe pour provoquer.
+
+**Les trois sont désormais dérivés d'une seule constante nommée.** Ce n'était pas trancher à ta
+place : la fiche établit déjà qu'une notion écrite deux fois est un défaut, et aucune de tes
+réponses possibles ne demanderait d'en garder trois. **Ce qui reste ta décision — la valeur de la
+borne — ne coûte plus qu'un mot à changer, à un seul endroit.**
+
+---
+
 ## CE QUE CE REGROUPEMENT NE RÈGLE PAS
 
 **La seconde sortie proposée par l'analyse des freins reste entière, et elle est de ton côté** :

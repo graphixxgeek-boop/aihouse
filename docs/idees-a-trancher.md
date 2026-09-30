@@ -506,6 +506,22 @@ un numéro de tâche du même registre :
 s'accordent sur toute la population réelle. C'est exactement la forme du défaut #1171 — la même
 notion écrite deux fois, presque pareil — mais prise **avant** qu'elle ne coûte quoi que ce soit.
 
+**MISE À JOUR DU 2026-09-30 (tâche #1270) — LA DIVERGENCE EST SUPPRIMÉE ; LA VALEUR RESTE À
+TRANCHER.** Deux choses se sont passées. D'abord **j'ai aggravé le défaut sans le voir** : en
+élargissant la chaîne des tâches (#1250), j'ai écrit un **troisième** motif, `{2,5}`. Trois
+écritures d'une même notion là où ce registre en signalait déjà deux comme un défaut — vu
+seulement en relisant cette liste à froid deux heures plus tard.
+
+Ensuite j'ai unifié les trois sur **une seule constante nommée**,
+`CHIFFRES_DUN_NUMERO_DE_TACHE`. **Ce n'était pas trancher à sa place** : cette fiche établit déjà
+qu'une notion écrite deux fois est un défaut, et aucune réponse possible ne demanderait d'en
+garder trois. **Ce qui reste sa décision, et qui ne coûte plus qu'un mot à changer à UN endroit :
+la valeur de la borne.** Elle est à `2,5` aujourd'hui.
+
+*Vérifié plutôt que supposé avant d'y toucher : aucune tâche du registre ne porte un numéro à un
+seul chiffre (la plus petite est #390), donc exiger deux chiffres ne perd rien — et gagne quelque
+chose, puisque `#1` ou `#3` sont des marqueurs d'énumération, jamais des tâches.*
+
 **CE QUI CASSERA, ET OÙ** : à #10000, le second cesse de reconnaître les numéros cités dans les
 messages de commit, sans rien dire. Or c'est lui qui alimente la chaîne rapport → tâche de
 l'Article 28 (`checkActionChain`), celle qui vérifie qu'une tâche annoncée existe pour de vrai. Une

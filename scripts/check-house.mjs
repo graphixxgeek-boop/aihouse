@@ -13069,15 +13069,22 @@ await testVerrousDOuverture();
   assert.equal(GOD.comparerPlanEtRapport({ planTexte: null, rapportTexte: 'x' }).mesurable, false, 'no start plan means the comparison refuses: without it, a final report cannot be compared to anything, and its SILENCE on a task would look exactly like a finished task');
   assert.equal(GOD.comparerPlanEtRapport({ planTexte: 'x', rapportTexte: null }).mesurable, false, 'and no night report means the night rendered nothing, which is not the same thing as a night with no gap');
   assert.equal(GOD.comparerPlanEtRapport({ planTexte: 'du texte sans ligne de plan #12 cité en prose', rapportTexte: 'x' }).mesurable, false, 'THE WORST FALSE GREEN THIS TOOL COULD PRODUCE: a coverage computed over zero tasks renders 100%, so an empty plan is declared unmeasurable instead');
+  // LES NUMÉROS DE CETTE FIXTURE ONT ÉTÉ RENDUS RÉALISTES (2026-09-30, tâche #1270). Ils étaient
+  // à un seul chiffre — #1 à #9 — alors que le registre réel n'en a JAMAIS porté un seul : la plus
+  // petite tâche est #390. Quand les trois motifs de numéro ont été unifiés sur une borne à deux
+  // chiffres minimum (précisément pour ne plus confondre une tâche avec un marqueur
+  // d'énumération), cette fixture est tombée — et elle avait raison de tomber : elle décrivait une
+  // population qui n'existe pas. Une fixture qui ne ressemble pas à l'entrée réelle juge autre
+  // chose que ce qu'on croit (leçon L40). Le test, lui, vérifie exactement la même chose qu'avant.
   const cmp = GOD.comparerPlanEtRapport({
-    planTexte: '#1 | a | x\n#2 | b | x\n#3 | c | x\n#4 | d | x',
-    rapportTexte: '#1 fini [FAIT]\n#2 entamé [AVANCÉ]\n#3 pas touché [NON-TRAITÉ] faute de temps\n(rien sur #4)\n#9 trouvé en route [FAIT]',
+    planTexte: '#401 | a | x\n#402 | b | x\n#403 | c | x\n#404 | d | x',
+    rapportTexte: '#401 fini [FAIT]\n#402 entamé [AVANCÉ]\n#403 pas touché [NON-TRAITÉ] faute de temps\n(rien sur #404)\n#409 trouvé en route [FAIT]',
   });
-  assert.deepEqual(cmp.parEtat.JAMAIS_MENTIONNEE, [4], 'THE WHOLE POINT: a planned task that appears nowhere in the report is neither done, nor discarded, nor even refused — it fell off the radar, and nothing but this comparison could have seen it');
+  assert.deepEqual(cmp.parEtat.JAMAIS_MENTIONNEE, [404], 'THE WHOLE POINT: a planned task that appears nowhere in the report is neither done, nor discarded, nor even refused — it fell off the radar, and nothing but this comparison could have seen it');
   assert.equal(cmp.traitees, 2, 'only FAIT and AVANCÉ count as treated');
   assert.equal(cmp.tauxTraitement, 50, 'and the treatment rate counts them alone');
   assert.equal(cmp.couverture, 75, 'while COVERAGE counts every task the report took a position on — a task discarded WITH ITS REASON was taken into account without being treated, and merging the two figures would be this mechanism own false green');
-  assert.deepEqual(cmp.horsPlan, [9], 'a task handled outside the plan is reported rather than ignored: a night finds things, and the next plan should know');
+  assert.deepEqual(cmp.horsPlan, [409], 'a task handled outside the plan is reported rather than ignored: a night finds things, and the next plan should know');
   assert.equal(cmp.complet, false, 'and the verdict is not complete while one task is unaccounted for');
   const vicieux = GOD.comparerPlanEtRapport({ planTexte: '#744 | s | t', rapportTexte: 'il reste à faire #744 un jour' });
   assert.deepEqual(vicieux.parEtat.JAMAIS_MENTIONNEE, [744], 'THE VICIOUS CASE, closed by design: a bare number proves nothing. Writing "still to do #744" cites the number without having done anything, and a comparison counting cited numbers would render 100% coverage over an empty night. Only an explicit MARK counts.');

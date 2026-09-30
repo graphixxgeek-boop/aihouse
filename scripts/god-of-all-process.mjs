@@ -1644,7 +1644,25 @@ export const MARQUES_RAPPORT = {
   ECARTE: { motif: /\[[ÉE]CART[ÉE]E?\]/, quoi: "volontairement écartée, avec sa raison", compteCommeTraitee: false },
 };
 
-export const MOTIF_NUMERO = /#(\d{1,5})\b/g;
+// UN SEUL ENDROIT DÉCIDE CE QU'EST UN NUMÉRO DE TÂCHE (2026-09-30, tâche #1270) — et c'est
+// l'idée #1175 mise en œuvre, après que je l'ai moi-même AGGRAVÉE deux heures plus tôt.
+//
+// CE QU'ELLE DISAIT, et elle avait raison : ce fichier portait DEUX motifs qui lisent le même
+// registre sans s'accorder — `{1,5}` d'un côté, `{2,4}` de l'autre. Ils s'accordent sur toute
+// la population réelle (le registre est à quatre chiffres), donc rien ne les départage
+// aujourd'hui, et à #10000 l'un cesserait de reconnaître ce que l'autre lit, EN SILENCE.
+//
+// CE QUE J'AI FAIT SANS LE VOIR : en élargissant la chaîne des tâches (#1250), j'ai écrit un
+// TROISIÈME motif, `{2,5}`. Trois écritures d'une même notion là où le registre en signalait
+// déjà deux comme un défaut — et je ne l'ai vu qu'en relisant à froid la liste des idées en
+// attente, ce qui est exactement ce que l'Article 25 existe pour provoquer.
+//
+// CE QUI EST TRANCHÉ ICI, ET CE QUI NE L'EST PAS. Unifier n'était pas sa décision à prendre :
+// l'idée #1175 établit DÉJÀ que trois écritures d'une notion sont un défaut, et aucune de ses
+// réponses possibles ne demanderait d'en garder trois. La VALEUR de la borne, elle, reste à lui —
+// elle est donc écrite une seule fois, nommée, et se change en un endroit.
+export const CHIFFRES_DUN_NUMERO_DE_TACHE = "2,5";
+export const MOTIF_NUMERO = new RegExp(`#(\\d{${CHIFFRES_DUN_NUMERO_DE_TACHE}})\\b`, "g");
 
 // Un numéro et sa marque doivent tenir sur la MÊME LIGNE : une marque trois lignes plus haut
 // appartient à une autre tâche, et les rapprocher inventerait un traitement qui n'a pas eu lieu.
@@ -1750,7 +1768,8 @@ export function comparerPlanEtRapport({ planTexte = null, rapportTexte = null } 
 //
 // IL NE BLOQUE RIEN, il REGARDE. Un point de contrôle qui interromprait la nuit serait pire que
 // son absence — et le rythme, lui, est déjà garanti par les deux réveils.
-export const MOTIF_NUMERO_COMMIT = /#(\d{2,4})\b/g;
+// MÊME BORNE QUE SES DEUX FRÈRES, DÉRIVÉE ET JAMAIS RECOPIÉE (Article 24, tâche #1270).
+export const MOTIF_NUMERO_COMMIT = new RegExp(`#(\\d{${CHIFFRES_DUN_NUMERO_DE_TACHE}})\\b`, "g");
 
 export function numerosDesCommits(lignes = []) {
   const parNumero = new Map();
@@ -2301,7 +2320,7 @@ export const MOTIF_SECTION_PLAN = /^#{1,4}\s*Plan d['’]action/im;
 // suivi durable. Un faux positif (un « #3 » qui n'était pas une tâche) ressort donc en référence
 // morte plutôt qu'en faux vert, et c'est le bon sens de l'erreur. Le plancher à deux chiffres
 // écarte au passage les « #1 » d'énumération, qui ne sont jamais des numéros de tâche ici.
-export const MOTIF_TACHE_ANNONCEE = /(?:t[âa]che\s*\*{0,2})?#(\d{2,5})\b/gi;
+export const MOTIF_TACHE_ANNONCEE = new RegExp(`(?:t[âa]che\\s*\\*{0,2})?#(\\d{${CHIFFRES_DUN_NUMERO_DE_TACHE}})\\b`, "gi");
 
 // L'ESTIMATION AVANT DE LANCER — DANS TOUS LES PROCESS, OU EXEMPTÉE EXPRÈS (2026-09-25, tâche #843,
 // instruction de #242 : « estimation temps + tokens + API : consolider dans TOUS les process »).

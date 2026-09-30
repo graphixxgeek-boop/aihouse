@@ -27,7 +27,7 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/propriete-et-securite-du-projet.html` | `docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md` | 17123 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 15916 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/relecture-de-la-bibliotheque.html` | `docs/grand-projet/01-absorption/relecture-de-la-bibliotheque.md` | 16723 | 2026-09-29 23:30Z |
-| `docs/grand-projet/html/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 16665 | 2026-09-29 23:42Z |
 | `docs/grand-projet/html/les-deux-agents-experience.html` | `docs/grand-projet/02-strategie/les-deux-agents-experience.md` | 17282 | 2026-09-29 23:42Z |
 | `docs/grand-projet/html/le-noyau-est-il-vraiment-extractible.html` | `docs/grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible.md` | 14438 | 2026-09-29 23:51Z |
 | `docs/grand-projet/html/le-filet-mord-il-vraiment.html` | `docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md` | 19516 | 2026-09-30 00:50Z |
+| `docs/grand-projet/html/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 20048 | 2026-09-30 01:06Z |
