@@ -32,4 +32,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 19049 | 2026-09-30 01:44Z |
 | `docs/grand-projet/html/trois-familles-de-la-charte.html` | `docs/grand-projet/02-strategie/trois-familles-de-la-charte.md` | 18206 | 2026-09-30 02:05Z |
 | `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 22313 | 2026-09-30 02:41Z |
-| `docs/grand-projet/html/rapport-de-nuit-2026-09-30.html` | `docs/rapports-de-nuit/rapport-2026-09-30.md` | 48473 | 2026-09-30 04:54Z |
+| `docs/grand-projet/html/rapport-de-nuit-2026-09-30.html` | `docs/rapports-de-nuit/rapport-2026-09-30.md` | 49819 | 2026-09-30 05:09Z |
