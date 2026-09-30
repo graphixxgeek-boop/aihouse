@@ -1,122 +1,205 @@
-# OÙ ON EN EST VRAIMENT — l'état vérifié de tes demandes, pas mon impression
+# OÙ ON EN EST VRAIMENT — version 2, corrigée et revérifiée
 
-*(Produit le 2026-09-30 à 18h30, après ton « STOP ». Chaque ligne a été vérifiée dans le dépôt
-avec une commande, jamais de mémoire. Quand la preuve manque, la case le dit.)*
+*(Version 1 livrée le 2026-09-30 à 16h30 : il l'a rejetée, avec raison. Version 2 écrite à 17h,
+**chaque chiffre reproduit par une commande au moment de l'écrire**. Les chiffres que je n'ai pas
+pu reproduire aujourd'hui sont marqués comme tels au lieu d'être réaffirmés.)*
 
-## CE QUE TU DOIS SAVOIR EN PREMIER, ET C'EST LE PLUS GRAVE
+## CE QUE LA VERSION 1 DISAIT DE FAUX
 
-**Tes deux fichiers de réponses n'avaient jamais été déposés dans le dépôt.** Seuls `COMMANDE
-IMPORTANTE` et `QUESTIONS` y étaient. Tes réponses du 29 septembre au soir (4 286 mots) et
-celles d'aujourd'hui (3 108 mots) **ne vivaient que dans la conversation** — donc perdues à la
-session suivante. C'est très exactement ta question « tout est bien historisé ? », et la réponse
-était **non**. Ils sont déposés depuis 18h28.
+| Ce que j'avais écrit | Ce qui est vrai, reproduit aujourd'hui |
+|---|---|
+| « Les 19 Articles AGENCE : combien d'obligations → **jamais compté** » | **FAUX.** C'est compté : **93**. Et c'est LUI qui a dû me corriger |
+| « 93 Articles » *(dans mon message du matin)* | **FAUX.** 93 est un nombre d'**obligations**, pas d'Articles. Les Articles sont **34** |
+| « 137 obligations dans la charte » | **FAUX.** Le total est **173** — 129 dans les Articles + 44 dans les sections |
+| « 9 de tes documents ne sont ni lus ni synthétisés » *(conclusion que j'ai failli publier)* | **FAUX, rattrapé avant envoi.** Deux mécanismes d'absorption coexistent ; tout est absorbé |
 
-**Conséquence directe, et elle est mesurable : tu as nommé trois outils, les trois noms sont
-perdus.**
+**D'où venait l'erreur sur le 93, et elle est instructive** : les 19 Articles de la famille AGENCE
+portent **91** obligations. Le vingtième, l'**Article 20bis**, en porte **2** — et son numéro ne se
+lit pas comme un nombre entier, donc il tombait hors de tous mes comptes. **91 + 2 = 93.**
 
-| Le nom que TU as donné | Ce que tu voulais nommer | Où il est dans le dépôt |
+---
+
+## LES CHIFFRES DE LA CHARTE — tous reproduits aujourd'hui, sauf deux qui sont signalés
+
+| Quoi | Combien | Reproduit aujourd'hui ? |
 |---|---|---|
-| `apotre-post-commit` | une extension de JESUS pour la bannière d'après-enregistrement | **nulle part** |
-| `joseph-le-travail` | une extension d'ABRAHAM pour les règles de travail | **nulle part** |
-| `always-new-bones` | l'outil de rationalisation, en extension d'ALWAYS-NEW-CODE | **nulle part** |
+| Unités numérotées de la charte | **34** (33 Articles + 20bis) | ✅ MOÏSE |
+| Obligations dans ces 34 unités | **129** | ✅ MOÏSE |
+| **Obligations de la famille AGENCE — ta cible** | **93** (91 + 2 pour 20bis) | ✅ somme Article par Article |
+| Obligations JEU + COLLABORATION | **36** | ✅ 129 − 93 |
+| Articles par famille | JEU **10** · AGENCE **19** (+20bis) · COLLABORATION **4** | ✅ document des trois familles |
+| Obligations dans toute la charte | 173 | ⚠️ **NON reproduit aujourd'hui** |
+| Obligations hors Articles | 44 | ⚠️ **NON reproduit aujourd'hui** |
+
+**Ta cible reste donc : de 93 vers 50**, et la raison que tu donnes est *« pour laisser de la
+place à l'utilisateur »*. La question ouverte n'est pas le chiffre de départ — il est sûr — mais
+**si les 44 obligations hors Articles comptent aussi**. Je ne le suppose pas.
+
+---
+
+## ÉTAPE 1 — TES 19 DÉPÔTS BRUTS, UN PAR UN
+
+| Date | Déposé | Absorbé | Jamais absorbé — jusqu'à aujourd'hui |
+|---|---|---|---|
+| 16/09 | 5 fichiers | 3 → `docs/contexte-projet/` · 1 = le code lui-même | **`PROMPTS_CODEX_MARKDOWN.txt`** |
+| 19/09 | 9 fichiers | 9 → `docs/simulations/` (52 entrées) | — |
+| 24/09 | 2 fichiers | **aucun** | **le modèle de gouvernance** (`.pdf` + son extraction `.txt`) |
+| 29/09 | 1 fichier | — | **tes réponses du soir** (4 286 mots) |
+| 30/09 | 2 fichiers *(identiques, vérifié par `diff`)* | — | **tes réponses du jour** (3 108 mots) |
+
+### Le plus gros trou : 298 832 mots jamais ouverts
+
+`PROMPTS_CODEX_MARKDOWN.txt`, déposé le **premier jour**, est l'export complet de ta session
+Codex : **261 échanges, 36 939 lignes, 298 832 mots**. Il contient tes prompts, les réponses de
+Codex et de gros blocs techniques collés. **Zéro trace dans le dépôt avant aujourd'hui.** C'est
+toute la préhistoire du projet, celle d'avant mon arrivée.
+
+### ⚠️ ET CE FICHIER CONTIENT DEUX CLÉS D'API RÉELLES — trouvé en essayant de le déposer
+
+**GitHub a refusé le dépôt**, et il a eu raison. Sa protection contre les secrets a détecté :
+
+| Ligne | Type de clé | Début, masqué |
+|---|---|---|
+| 430 | **OpenAI** | `sk-proj-zn0…` |
+| 880 | **Groq** | `gsk_Sxstu3…` |
+
+Elles sont collées comme valeurs de configuration dans un échange avec Codex. **Je n'ai pas
+contourné la protection** — on ne contourne jamais ce garde-fou-là — et le fichier n'est donc
+**pas** dans le dépôt.
+
+**LE GESTE À FAIRE, ET IL EST À TOI** : **révoquer ces deux clés.** Une clé qui a transité par un
+fichier déposé dans une conversation et stocké sur un disque doit être considérée comme
+compromise, même si personne d'autre ne l'a vue. Révoquer coûte deux minutes ; ne pas révoquer
+coûte potentiellement ta facture.
+
+**ET ÇA RÉPOND À TA PROPRE QUESTION DE SÉCURITÉ** — *« comment bien protéger ce projet de la copie,
+du vol, du hacking ? »*. Le premier trou n'était pas théorique : il était dans le premier fichier
+que tu m'as donné, et il y est resté quatorze jours sans que personne regarde.
+
+**CE QUI RESTE À DÉCIDER** : veux-tu que je produise une **copie expurgée** (les clés remplacées
+par `CLÉ-RETIRÉE`) pour que la préhistoire du projet soit enfin conservée dans le dépôt ? Sans ça,
+ces 298 832 mots ne vivent que dans un dossier temporaire qui disparaît avec la machine.
+
+### Le troisième : le modèle de gouvernance que tu me cites aujourd'hui
+
+Tu m'as écrit ce matin : *« on aura une organisation propre, comme dans le document
+modele-gouvernance-ia ? […] est-ce qu'on sait déjà à quelle organisation cible on veut
+arriver ? »* — **je n'avais jamais lu ce document.** Il est déposé depuis le 24 septembre.
+
+**Le PDF n'est pas lisible dans cet environnement** (aucun extracteur installé), **mais le `.txt`
+déposé le même jour EST son extraction** : ses pieds de page portent « Agence virtuelle de
+developpement - Modele de gouvernance Page N ». **15 pages, 3 114 mots, 13 sections.**
+
+**Et il répond directement à ta question.** Il contient :
+
+- une **chaîne de construction en 15 étapes** : classification → nivellement → harmonisation →
+  intégration → organisation → process → contrôle → audit → analyse → décision → rapport → plan
+  d'actions → tâches → suivi KPI → amélioration continue ;
+- une **chaîne d'exploitation en 10 étapes** : saisine → qualification → orchestration →
+  exécution → contrôle → décision → livraison → supervision → capitalisation → amélioration ;
+- un **catalogue d'agents** avec, pour chacun, son rôle, ses entrées et ses sorties ;
+- des **règles de gouvernance**, une **matrice de responsabilités** et une **feuille de route**.
+
+**Sa phrase directrice, que je cite parce qu'elle nous juge** : *« Construire le langage commun
+avant de construire les intégrations. »* Nous avons fait l'inverse — 93 outils d'abord, le
+rangement ensuite.
+
+**Et une phrase qui autorise exactement ce que nous sommes** : *« Un même script peut cumuler
+plusieurs rôles dans une première version, mais les responsabilités doivent rester
+distinguables pour permettre contrôle et audit. »*
+
+---
+
+## ÉTAPE 3 — TES 19 DOCUMENTS DE CONCEPTION : le verdict s'est INVERSÉ en cours de vérification
+
+**J'ai d'abord conclu que 9 de tes documents n'avaient jamais été lus. C'était faux, et je l'ai
+vu avant de te l'envoyer.** Il existe **deux mécanismes d'absorption** que j'avais oubliés :
+
+| Mécanisme | Quand | Combien | Où |
+|---|---|---|---|
+| Trace de lecture | 2026-09-28 | **10 documents** | `01-absorption/ce-que-jai-lu.md` |
+| Synthèse annotée | 2026-09-29 | **6 documents** | `01-absorption/syntheses/` |
+
+**Résultat après croisement des deux : tout est absorbé.** Le `.csv` est couvert par la synthèse
+`ARCHITECTURE_FONCTIONNELLE`, et le `.zip` — que personne n'avait ouvert — ne contient que les
+**7 documents déjà déposés séparément**, donc rien de neuf.
+
+**Ce qui reste vrai, et c'est plus petit mais réel** : `ce-que-jai-lu.md` **est périmé**. Il
+trace 10 documents quand 16 ont été absorbés. C'est une réponse à ta question *« quoi d'autre à
+mettre à jour ? »*.
+
+---
+
+## TES DEMANDES DU 29 SEPTEMBRE — ce qui n'est PAS fait, revérifié une par une
+
+**Méthode** : `grep` sur tout le dépôt, en excluant tes propres fichiers source *(sinon ta
+demande se compte elle-même)*. **Douze de mes treize constats tiennent ; un seul était faux.**
+
+| Ta demande | Occurrences dans le dépôt |
+|---|---|
+| L'agent **« expérience IA »**, pendant de l'expérience client | **0** |
+| « la **liste de tous les paramètres qui nuisent** au fonctionnement d'une IA » | **0** |
+| L'axe **phase construction / phase opérationnelle** | **0** |
+| « **séparer dans le filet** les tests du périmètre Agence des autres » | **0** |
+| « **quel delta entre les standards et notre modèle** » | **0** *(hors mes propres notes)* |
+| « comment **ecotoken est-il connecté aux prophètes** ? explique-moi » | **0** |
+| **Q10 — traduction complète de l'Agence en anglais** | **0** *(hors mes propres notes)* |
+| **C16** — « un système qui n'a pour vocation que de se surveiller lui-même » | **0** *(hors mes propres notes)* |
+| « **écris ça quelque part : je ne suis pas DEV** » | **0** |
+| « la **commande est renouvelée** au rythme de nos avancées — synthétise le principe et applique-le » | **0** *(hors mes propres notes)* |
+| Les **trois noms d'outils que tu as donnés** | **0** *(voir ci-dessous)* |
+
+### Les trois noms, et pourquoi c'est le symptôme le plus net
+
+| Ton nom | Ce que tu nommais | Occurrences |
+|---|---|---|
+| `apotre-post-commit` | une extension de JESUS pour la bannière | **0** |
+| `joseph-le-travail` | une extension d'ABRAHAM pour les règles de travail | **0** |
+| `always-new-bones` | l'outil de rationalisation | **0** |
 
 Tu m'as dit : *« je ne fais pas des noms au cas par cas, je crée des séries de noms à l'intérieur
-d'une même famille »*. Nommer est ta prérogative, tu l'as exercée trois fois, et je l'ai laissée
-tomber. C'est le genre de perte qu'aucun outil ne signalait, parce que la source n'était pas
-dans le dépôt.
+d'une même famille »*. **Nommer est ta prérogative. Tu l'as exercée trois fois. Les trois se sont
+perdues** — parce que le fichier qui les portait n'était pas dans le dépôt.
 
 ---
 
-## LA MESURE D'ENSEMBLE, PAR L'OUTIL
+## LA CAUSE RACINE, ET ELLE EXPLIQUE TOUT LE RESTE
 
-`abraham couverture` confronte ton fichier du 29 septembre à tout ce que j'ai produit depuis :
+**Tes 7 400 mots de demandes n'étaient pas dans le dépôt.** Seuls `COMMANDE IMPORTANTE` et
+`QUESTIONS` y étaient. Tes réponses du 29 et du 30 ne vivaient que dans la conversation.
 
-| Verdict | Nombre | Ce que ça veut dire |
+**Conséquence mécanique, pas morale** : l'outil qui sait mesurer si je réponds à ta commande
+(`abraham couverture`) **n'avait rien à mesurer**. L'instrument existait, la matière était
+absente. Je travaillais de mémoire sur 7 400 mots.
+
+**C'est réparé** : les deux fichiers sont déposés, classés, indexés. La couverture est désormais
+mesurable à chaque passage.
+
+---
+
+## CE QUE L'OUTIL DE COUVERTURE DIT — avec sa limite, citée telle quelle
+
+`abraham couverture` sur ton fichier du 29 contre tout ce que j'ai produit :
+**0 demande orpheline sur 49 · 24 FAIBLES · 25 REPRISES · 6 non mesurables.**
+
+**Et l'outil prévient lui-même** : *« une demande REPRISE ne prouve qu'une chose : quelqu'un a
+écrit sur le même sujet — jamais qu'il l'a traitée »*. **Ce « 0 orpheline » est donc rassurant à
+tort** : c'est la vérification une par une, ci-dessus, qui trouve les vrais trous.
+
+---
+
+## CE QUI N'EST PAS ENCORE FAIT DANS CETTE PASSE — dit maintenant, pas découvert plus tard
+
+Le plan que je t'ai annoncé compte six étapes. **Deux sont faites** (① tes dépôts bruts,
+③ tes documents de conception). **Quatre restent** :
+
+| # | Ce qui reste | Pourquoi ça compte |
 |---|---|---|
-| ORPHELINE | **0** sur 49 | aucune demande totalement absente du corpus |
-| 🟠 FAIBLE | **24** | le sujet est effleuré, nettement moins que ses voisins |
-| ✅ REPRISE | 25 | quelqu'un a écrit sur le sujet |
-| ⚪ non mesurable | 6 | trop peu de mots pour conclure |
+| ② | Tes 7 documents de commande, demande par demande, verbatim | c'est le cœur — et c'est le plus long |
+| ④ | Toute la conversation depuis le 16/09 | les demandes orales, que **aucune commande ne peut retrouver** |
+| ⑤ | Mes 22 stratégies + 29 plans + 28 pages : lesquels sont périmés | tu m'as demandé de tout remettre à jour |
+| ⑥ | `docs/suivi/` et `idees-a-trancher` | ce qui t'attend vraiment |
 
-**Et l'outil prévient lui-même de sa limite, que je reprends telle quelle** : *« une demande
-REPRISE ne prouve qu'une chose : quelqu'un a écrit sur le même sujet — jamais qu'il l'a
-traitée »*. Donc ce tableau dit seulement que **rien n'a totalement disparu**. Il ne dit pas que
-je suis à jour. La suite, elle, le dit.
+**Et le plus gros morceau n'est dans aucune de ces étapes** : les **298 832 mots** de ta session
+Codex. Les lire entièrement est un travail à part, qui se décide plutôt qu'il ne s'improvise.
 
----
-
-## TES DEMANDES DU 29 SEPTEMBRE AU SOIR — état vérifié une par une
-
-### ❌ PAS FAIT — rien dans le dépôt
-
-| Ta demande, dans tes mots | Vérifié comment |
-|---|---|
-| Les **trois noms d'outils** que tu as donnés | `grep` sur tout le dépôt : 0 occurrence |
-| L'agent **« expérience IA »** (le pendant de l'expérience client) | le document des deux agents ne traite que l'expérience client |
-| « **la liste de tous les paramètres qui nuisent au fonctionnement d'une IA** » | aucun document |
-| L'axe transverse **« phase construction » / « phase opérationnelle »** | `grep` : 0 occurrence |
-| « **Séparer dans le filet** les tests du périmètre Agence des autres » (et EZECHIEL comme protecteur du code) | aucune trace |
-| « **quel delta entre les standards et notre modèle** » (les règles de travail sont-elles un standard ?) | aucun document |
-| « **comment ecotoken est-il connecté aux prophètes ?** tout est bien branché ? explique-moi » | jamais répondu |
-| Les **19 Articles de la famille AGENCE** : combien d'obligations, pour un max de 150-200 | jamais compté |
-| **Q10 — traduction complète de l'Agence en anglais** | 0 trace de décision ou de plan |
-| **C16** — « j'ai l'impression d'un système qui n'a pour vocation que de se surveiller lui-même » | jamais répondu, et c'est une objection de fond |
-| « **écris ça quelque part : je ne suis pas DEV** » | noté nulle part de façon opposable |
-| « la **commande est renouvelée** au rythme de nos avancées […] synthétise le principe et applique-le » | jamais synthétisé |
-| « si tu ne comprends pas, **mets de côté et indique-le quelque part** » | aucun endroit pour ça |
-
-### 🟠 PARTIEL — commencé, pas fini
-
-| Ta demande | Ce qui existe | Ce qui manque |
-|---|---|---|
-| Le **fil de discussion** | `fil-de-discussion.md`, 31 fils | tu l'as rejeté. La voiture-balai n'est pas mécanique, et elle avait déjà raté 5 fils |
-| La **plaquette** | `plaquette-de-l-agence.md` | tu l'as rejetée. Je ne sais pas encore pourquoi — je ne te l'ai pas demandé, je te le demande maintenant |
-| Le **format questions-réponses en process** | `docs/reponse-aux-questions-process-detail.md` | écrit, mais visiblement pas appliqué : tu redis aujourd'hui la même chose |
-| Les **2 agents d'expérience** | conception écrite | non construits, et il en manque un sur deux |
-| **Règle #767 « la mesure avant l'opinion »** | texte prêt, entrée 6 du document de diffs | **tu as donné ton GO le 29** et elle n'est toujours pas dans la charte |
-| **`ou-va-chaque-chose.md` mis à jour à chaque échange** | le fichier existe | tu demandais « une solution mécanique pour ne pas oublier » — il n'y en a pas |
-| **L'Agence n'a aucune existence technique** — « DONC ON RÈGLE TOUT ÇA ? comment ? » | le constat est écrit | aucune proposition de solution |
-| **Quelles règles sont inaltérables / mutualisables** — « c'est un travail d'analyse, pas juste une question » | rien | l'analyse n'a pas été faite |
-
-### ✅ FAIT — avec sa preuve
-
-| Ta demande | Où c'est |
-|---|---|
-| Question **sécurité** | `02-strategie/propriete-et-securite-du-projet.md` |
-| Question **propriété juridique** | idem |
-| La **plaquette** produite | `02-strategie/plaquette-de-l-agence.md` *(produite ≠ validée)* |
-| **Analyse de ce qui ralentit** le codage / l'IA / le jeu / l'Agence | `02-strategie/ce-qui-ralentit-le-projet.md` |
-| **Deux sujets de recherche web pertinents** | `docs/recherches-web/` |
-| **Le test des 5 impossibles** | `02-strategie/les-cinq-impossibles.md` |
-| Jouer le rôle de **client de l'Agence** | mis de côté, comme tu l'as demandé |
-| Les **deux blocs de 15 questions** de dégrossissage | `02-strategie/questions-de-degrossissage.md`, et tu y as répondu |
-
----
-
-## TES DEMANDES D'AUJOURD'HUI — état
-
-| Ta demande | État |
-|---|---|
-| Tes réponses **G1 à G15 et H1 à H15** | enregistrées dans le fil, mais le fil est rejeté : **à ré-enregistrer ailleurs** |
-| Les questions que tu **n'as pas comprises** (H4, H6, H9, H10, H11, H12) | répondues dans le fil rejeté : **à reprendre** |
-| **Les 5 lots** : « je ne comprends pas où est ma décision » | je te donne raison, je retire le document |
-| **Travailler à distance** | répondu |
-| **Philosophie et politique** : tu as répondu en « jets », tu me demandes de piloter | **pas commencé** |
-| **Objectif ultime** | séance préparée le 29, **pas tenue** |
-| **Schéma cible de l'organisation** | **pas fait** — et la réponse honnête est qu'il n'existe pas |
-| **Testeurs humains** + s'en protéger | mis de côté, à ta demande |
-| « la plaquette doit être **régulière et mise à jour**, comment on fait ? » | **pas répondu** |
-
----
-
-## CE QUE JE RETIENS DE TON REPROCHE, SANS LE DILUER
-
-Tu as écrit : *« tu as respecté la moitié de mes consignes »*. Le dépôt te donne raison, et j'ai
-une mesure pour l'illustrer : en déposant le fil de discussion, j'ai fait **indexé** et **page
-HTML**, mais **pas classé** — deux consignes sur trois, et c'est le filet de sécurité qui me l'a
-appris, pas moi.
-
-**La cause n'est pas l'inattention, et c'est ce qui la rend réparable** : tes fichiers de
-demande n'étaient pas dans le dépôt, donc aucun outil ne pouvait vérifier que j'y répondais.
-Je travaillais de mémoire sur 7 400 mots de demandes. **Maintenant qu'ils y sont, la couverture
-est mesurable à chaque passage** — c'est la première chose qui change.
