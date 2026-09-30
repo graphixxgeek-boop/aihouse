@@ -103,6 +103,32 @@ commit** qui créait #819, parce que la ligne portait `A-TRANCHER` sans être in
 mécanisme a donc attrapé son propre auteur, sur sa première occasion réelle — ce qui est la seule
 preuve qui vaille qu'il n'était pas une intention (leçon L2).
 
+**LA DONNÉE QUI MANQUAIT EST MESURÉE (2026-09-30, tâche #1274).** Ezechiel REFUSAIT de conclure
+sans les trois durées réelles — c'était son unique alerte BLOQUANTE, et il avait raison : sans
+elles, toute optimisation se ferait à l'aveugle. Les voici, mesurées cette nuit sur ce dépôt :
+
+| | |
+|---|---|
+| le filet **nu** | **107,9 s** |
+| le filet **sous instrumentation** *(couverture V8 native — aucun paquet à installer)* | **111,7 s** — surcoût **3,7 s** |
+| le **typage** (`tsc --noEmit`) | **3,0 s** |
+
+> **Sur le total de 114,7 s : les TESTS pèsent 94 %, l'enveloppe 6 %.**
+
+**CE QUE ÇA TRANCHE, ET CE QUE ÇA NE TRANCHE PAS.** L'option « **mode rapide** » supposait, sans
+le dire, que l'enveloppe coûtait cher. **Elle coûte 6 %** : un mode rapide qui retirerait
+l'instrumentation et le typage ferait gagner **sept secondes sur cent quinze**, en échange de la
+couverture et du typage. **La mesure ne choisit pas pour toi, mais elle retire une option de la
+table** — et c'est exactement pourquoi Ezechiel refusait de conclure.
+
+**Restent donc deux options réelles** : ne rien faire (108 s pour 380 vérifications, soit 0,3 s
+chacune), ou regarder les trois groupes les plus lents.
+
+*(Note sans rapport avec la décision, relevée au passage : `tsc --noEmit` sort en erreur sur une
+ligne de `vite.config.ts`. Vérifié plutôt que supposé — elle date du **tout premier commit du
+dépôt**, le 2026-09-16, et `tsc` n'est pas dans les contrôles du projet, qui construit via
+`vinext`. Ce n'est donc ni une régression, ni un contrôle qu'on aurait laissé rouge.)*
+
 
 ### Ajoutée le 2026-09-25 par le garde-fou d'écriture des origines
 
