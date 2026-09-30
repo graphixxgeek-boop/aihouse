@@ -43,8 +43,9 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9868 | 2026-09-30 18:06Z |
 | `docs/fils/html/fil-04-systeme-de-travail.html` | `docs/fils/fil-04-systeme-de-travail.md` | 12812 | 2026-09-30 18:30Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 16456 | 2026-09-30 18:45Z |
-| `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 11606 | 2026-09-30 19:54Z |
-| `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 12974 | 2026-09-30 19:55Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 17950 | 2026-09-30 20:17Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 21468 | 2026-09-30 20:39Z |
-| `docs/fils/html/index.html` | `docs/fils/index.md` | 18177 | 2026-09-30 20:39Z |
+| `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 14376 | 2026-09-30 20:49Z |
+| `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 15528 | 2026-09-30 20:50Z |
+| `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 13450 | 2026-09-30 20:51Z |
+| `docs/fils/html/index.html` | `docs/fils/index.md` | 18530 | 2026-09-30 20:51Z |

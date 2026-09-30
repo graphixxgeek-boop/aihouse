@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 13 — Se brancher sur ce que d'autres savent : base locale, base en ligne, ou les deux</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T20:51:01.204Z</div>
+    <h1>FIL 13 — Se brancher sur ce que d'autres savent : base locale, base en ligne, ou les deux</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-13-sources-exterieures.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Transverse — il touche l'Agence (ce qu'elle sait), le produit (ce qu'elle emporte) et la sécurité (ce qu'elle laisse entrer). <strong>Saisines :</strong> demande du 2026-09-30 au soir · fil 07</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Ce fil naît d'une question posée en marge de la plaquette, et c'est la plus tournée vers l'extérieur de tout le projet :</strong></p>
+<div class="highlight"><p>*« Base de données locale ou EN LIGNE ou les 2 : existe-t-il une base en ligne de bonnes
+pratiques, de leçons, trouvailles, découvertes — une base accessible aux IA pour s'aider
+mutuellement dans l'aide au codage pour les humains ? Une base gratuite, accessible, qu'on
+pourrait plugger librement à l'agence (et aussi révoquer ce plug si demain ça pose souci). »*</p></div>
+<p><strong>Le contexte qui la rend légitime, et il est mesuré</strong> : notre registre de leçons compte 47 entrées, dont <strong>38 portent sur la MÉTHODE</strong> et seulement 3 sur notre jeu. <strong>93 % de ce qu'on a appris est transposable</strong> — donc, symétriquement, une part de ce que d'AUTRES ont appris nous serait utile. La question n'est pas théorique.</p>
+<h4>CE QUE J'AI TROUVÉ, ET CE QUE JE N'AI PAS TROUVÉ</h4>
+<p><em>(Recherche web du 2026-09-30. Sources listées en bas de ce fil. <strong>Je n'ai pas essayé ces outils</strong> : je rapporte ce qui existe, pas ce qui marche.)</em></p>
+<p><strong>Ce qui N'EXISTE PAS, et c'est la réponse principale : il n'y a pas de « Wikipédia des leçons de codage pour IA ».</strong> Pas de base publique, unique, gratuite et communautaire où les agents déposeraient et reliraient ce qu'ils ont appris. Ton intuition décrivait une chose qui n'a pas encore d'équivalent.</p>
+<p><strong>Ce qui existe à la place, en trois familles</strong> :</p>
+<table><thead><tr><th>Famille</th><th>Ce que c'est</th><th>Pour nous</th></tr></thead><tbody><tr><td><strong>Mémoires partagées d'équipe</strong> <em>(Memco, Supermemory, Bhived)</em></td><td>une base que TON organisation remplit, partagée entre TES agents</td><td>ce n'est pas « ce que d'autres savent », c'est « ce que nous savons, mieux rangé »</td></tr><tr><td><strong>Catalogues de bonnes pratiques éditoriales</strong> <em>(les dépôts de « skills » publiés par les éditeurs)</em></td><td>des recettes publiées par un acteur, lues par les agents</td><td>à sens unique : on consomme, on ne contribue pas</td></tr><tr><td><strong>Le protocole de branchement lui-même</strong> <em>(MCP)</em></td><td>la norme qui permet de brancher une source extérieure sur un agent</td><td><strong>c'est la bonne nouvelle : c'est exactement ton « plugger et révoquer »</strong></td></tr></tbody></table>
+<p><strong>LA VRAIE TROUVAILLE EST ARCHITECTURALE, PAS UN SITE À VISITER.</strong> Ta condition — <em>« qu'on pourrait plugger librement et aussi révoquer ce plug si demain ça pose souci »</em> — décrit littéralement ce qu'est un branchement MCP : une source extérieure se déclare, se connecte, et se retire <strong>sans toucher au reste</strong>. Donc la question « où est la base ? » est moins urgente que la question « notre Agence sait-elle accueillir une source extérieure et la débrancher ? ». <strong>Aujourd'hui : non. Rien n'est prévu pour ça.</strong></p>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi ce sujet compte plus qu'il n'en a l'air</h3>
+<p><strong>Il touche les trois projets à la fois.</strong> Pour l'Agence : elle arriverait chez un client avec 38 leçons de méthode déjà payées, et pourrait en recevoir d'autres. Pour le produit : « se brancher sur ce que d'autres savent » est un argument de vente qu'aucun compteur ne remplace. Pour la sécurité : <strong>laisser entrer du savoir extérieur, c'est laisser entrer quelque chose qu'on n'a pas écrit</strong> — et notre règle la plus centrale est de ne jamais laisser passer pour un fait ce qui n'en est pas un.</p>
+<p><strong>Ce dernier point est le vrai sujet, et il a un nom dans la littérature</strong> : la validation des contributions. Un des projets trouvés est construit exactement autour de ça — <em>« comment partager des leçons entre agents sans faire confiance à chaque écriture »</em>. <strong>C'est notre question, posée par quelqu'un d'autre avant nous.</strong></p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q13.1 — À TOI.</strong> Dans quel sens veux-tu que ça marche, en premier ? <em>(a) on CONSOMME — l'Agence lit ce que d'autres ont publié · (b) on PUBLIE — nos 38 leçons de méthode sortent · (c) les deux, mais consommer d'abord · (d) les deux, mais publier d'abord</em></p>
+<p><strong>Q13.2 — À TOI, et c'est la question de fond.</strong> Une leçon venue de l'extérieur, on la traite comment ? <em>(a) comme une donnée à vérifier avant usage, jamais comme une règle · (b) comme nos propres leçons, au même rang · (c) on ne laisse rien entrer, on publie seulement</em></p>
+<p><strong>Q13.3 — À TOI.</strong> Publier nos leçons, ça veut dire les rendre publiques. Ça t'engage sur la propriété (fil 08) et ça montre notre méthode. <em>(a) d'accord, c'est de la méthode, pas du secret · (b) pas avant d'avoir décidé si on vend · (c) non</em></p>
+<p><strong>Q13.4 — À MOI.</strong> Mesurer ce qu'on POURRAIT publier : combien de nos 38 leçons de méthode tiennent debout <strong>sans leur exemple local</strong>. La mesure d'aujourd'hui dit qu'elles sont transposables en principe ; elle ne dit pas qu'elles sont lisibles par un étranger.</p>
+<p><strong>Q13.5 — À MOI.</strong> Vérifier si l'Agence sait accueillir et <strong>débrancher</strong> une source extérieure. Aujourd'hui je crois que non, et « je crois » n'est pas une mesure — c'est exactement ce que ce projet interdit de publier.</p>
+<hr>
+<h3>SOURCES</h3>
+<p><em>(Recherche du 2026-09-30. Rapportées telles quelles : aucune n'a été essayée.)</em></p>
+<ul><li><a href="https://dev.to/yossuf_yahya_18a700ec83d8/how-we-designed-shared-lessons-for-ai-agents-without-trusting-every-write-back-4oi6">How we designed shared lessons for AI agents without trusting every write-back — DEV</a></li><li><a href="https://www.memco.ai/">Memco — shared memory for AI agents</a></li><li><a href="https://www.memorylake.ai/en/blogs/best-shared-memory-solutions-for-multi-agent-systems">9 Best Shared Memory Solutions for Multi-Agent Systems in 2026</a></li><li><a href="https://vectorize.io/articles/best-ai-agent-memory-systems">Best AI Agent Memory Systems in 2026: 8 Frameworks Compared</a></li><li><a href="https://thenewstack.io/agentic-knowledge-base-patterns/">6 agentic knowledge base patterns emerging in the wild — The New Stack</a></li><li><a href="https://github.com/microsoft/skills">microsoft/skills — Skills, MCP servers, Custom Agents for grounding coding agents</a></li><li><a href="https://github.com/topics/ai-agents-memory">ai-agents-memory — GitHub Topics</a></li></ul></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-13-sources-exterieures.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

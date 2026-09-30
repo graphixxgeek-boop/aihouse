@@ -65,6 +65,29 @@ retenir** : personne n'avait jamais ouvert ce fichier en quatorze jours. Une cl�
 prouve pas qu'on surveille — elle prouve qu'on a eu de la chance sur la durée de vie de celle-là.
 Q8.4 reste ouverte pour cette raison.
 
+**Q8.1bis — TA QUESTION : quel est le risque d'une clé égarée si elle est GRATUITE ?** Réponse
+cherchée plutôt que devinée (recherche web du 2026-09-30, sources en bas de ce fil). **Cinq
+risques réels, et aucun ne dépend du fait que la clé soit gratuite :**
+
+| Le risque | Pourquoi « gratuit » n'y change rien |
+|---|---|
+| **Vol de quota** | ton quota est consommé par quelqu'un d'autre : ton projet s'arrête, pas le sien |
+| **Attribution** | ce qui est généré l'est **sous ton identité**. Si ça viole les conditions d'usage, c'est ton compte qui est suspendu — pas celui de l'inconnu |
+| **Escalade** | une clé gratuite reste attachée à un COMPTE. Le jour où ce compte reçoit un moyen de paiement, la clé fuitée devient une facture |
+| **Accès aux données du compte** | selon la portée de la clé : fichiers déposés, modèles affinés, historique d'usage. Ce n'est pas que de la génération de texte |
+| **Vitesse** | une clé poussée dans un dépôt public est trouvée par des robots **en quelques minutes**, pas en quelques jours |
+
+**MAIS DANS TON CAS PRÉCIS, LA RÉPONSE HONNÊTE EST : quasi nul.** Clés temporaires (24 h à une
+semaine), expirées depuis longtemps, et jamais poussées dans un dépôt public — la protection de
+GitHub a justement refusé l'envoi. **Une clé morte ne fait rien.** Tu avais raison de ne pas
+t'alarmer.
+
+**CE QUI RESTE VRAI, ET C'EST LE SEUL POINT QUI COMPTE** : le fichier avait **quatorze jours** et
+personne ne l'avait ouvert. Si ces clés avaient été permanentes, la protection de GitHub aurait
+été le SEUL filet, et elle ne joue qu'au moment de l'envoi. **Ce n'est pas la surveillance qui
+nous a protégés, c'est la durée de vie de ces clés-là** — et ça, ça ne se reproduira pas
+forcément. D'où Q8.4.
+
 **Q8.2 — À TOI.** Le fichier de prompts qui les contenait est **hors du projet** pour cette raison.
 Veux-tu que j'en fasse une **copie nettoyée** (mêmes contenus, clés remplacées par un marqueur)
 pour qu'il rejoigne les sources ? *(a) oui · (b) non, laisse-le dehors*
@@ -74,3 +97,12 @@ horodate l'état du projet à une date donnée) ? *(a) oui, dis-moi comment · (
 
 **Q8.4 — À MOI.** Vérifier qu'**aucun autre secret** ne traîne dans les documents déjà déposés. Je
 l'ai fait pour le fichier bloqué, pas pour l'ensemble.
+
+---
+
+## SOURCES
+
+- [Best Practices for API Key Safety — OpenAI](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
+- [OpenAI API Key Exposure: Risks, Recovery, and Prevention — Rafter](https://rafter.so/blog/secrets/openai-api-key-exposure)
+- [12 Questions and Answers About AI API keys leaked in public repos — Security Scientist](https://www.securityscientist.net/blog/12-questions-and-answers-about-ai-api-keys-leaked-in-public-repos/)
+- [Exposed OpenAI API Key with Active Access and Quota Exhaustion — weaviate/weaviate #8859](https://github.com/weaviate/weaviate/issues/8859)

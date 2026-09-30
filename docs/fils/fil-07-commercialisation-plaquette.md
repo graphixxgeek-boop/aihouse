@@ -54,6 +54,40 @@ cette plaquette, et c'est le seul que je n'avais pas étiqueté.
 
 **Ta décision** : mise de côté, pas urgente, une tâche ouverte pour sa refonte (**#1309**).
 
+### ET TU ME CORRIGES À MOITIÉ, LE 2026-09-30 AU SOIR — j'avais tranché trop large
+
+Ta question : *« vierge, mais le contenu local utile a de la valeur, comme les leçons, peut-être
+transmis pour être ensuite enrichi par l'utilisateur et son IA, non ? »*
+
+**Tu as raison, et ma phrase précédente était trop large.** J'ai mis dans le même sac deux choses
+qui n'ont rien à voir :
+
+| | Ce que c'est | Vaut-il quelque chose pour un acheteur ? |
+|---|---|---|
+| **1 189 tâches · 553 documents · 380 vérifications** | des **COMPTEURS** de notre usage | ❌ **rien du tout.** Il en aura zéro le premier jour |
+| **Les 47 leçons** | du **CONTENU** — ce qu'on a appris en se trompant | ✅ **oui, et c'est peut-être le meilleur du produit** |
+
+**MESURÉ, pas supposé** *(2026-09-30)* : sur les 41 leçons qui portent un numéro, **38 parlent de
+MÉTHODE** — comment travailler avec une IA sur du code, comment ne pas se faire piéger par une
+mesure, pourquoi un garde-fou qui accuse à tort cesse d'être lu. **Seules 3 parlent de notre jeu**
+(Lia, Noé, le ton). **Donc 93 % du registre est transposable tel quel.**
+
+**Une précaution, et je l'ai failli rater moi-même il y a dix minutes** : ma première mesure
+comptait « la leçon cite-t-elle un chemin de ce dépôt ? » et rendait **41 sur 41 « propres à ce
+projet »**. C'était faux — une leçon parfaitement générale est simplement *illustrée* par un
+exemple local. **Le PRINCIPE voyage, l'EXEMPLE reste.** C'est exactement la distinction que les
+blueprints appliquent déjà aux outils, et elle vaut pour les leçons.
+
+**Ce que ça change pour la plaquette** : elle ne doit pas dire *« 1 189 tâches »*. Elle peut dire
+*« l'Agence arrive avec 38 leçons de méthode déjà payées par quelqu'un d'autre, et elle apprend
+les vôtres au fur et à mesure »*. **C'est une promesse de contenu, pas un compteur** — et c'est
+vérifiable par l'acheteur dès l'ouverture.
+
+**Et tu as raison sur le fond de l'exercice** : *« la plaquette réveille de nombreux sujets,
+c'était son but. »* Elle en a réveillé trois ce soir — la cible inconnue, la distinction
+compteur/contenu, et la question de la base partagée qui a son propre fil (le 13).
+
+
 **Ce qui est déjà établi et qui pèse sur ce fil** : « commercialiser l'Agence » **n'est pas un
 objectif ultime** — tu l'as trouvé toi-même, et ton propre document le confirme (un objectif
 ultime ne dépend d'aucune stratégie particulière ; vendre est une stratégie parmi plusieurs :

@@ -45,13 +45,14 @@ personne).
 |---|---|---|---|
 | [04](fil-04-systeme-de-travail.md) | Notre système de travail (questions, réponses, fils) | **À MOI** | 4 (2 pour toi) |
 | [05](fil-05-creation-vs-produit-fini.md) | Création vs produit fini — **axe ouvert le 30/09** | **À TOI** | 4 (2 pour toi) |
-| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 4 (2 pour toi) |
+| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 5 (2 pour toi) |
 | [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | **À MOI** | 4 (2 pour toi) |
 | [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 4 (2 pour toi) |
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
 | [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 5 (1 pour toi) |
+| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 5 (3 pour toi) |
 
-**Total : 12 fils · 55 questions vives · 26 attendent ta réponse · 29 sont de mon côté.**
+**Total : 13 fils · 61 questions vives · 29 attendent ta réponse · 32 sont de mon côté.**
 
 ---
 
@@ -140,4 +141,5 @@ premier et se régénère ; il ne se corrige jamais à la main, sinon les deux d
 | `fil-10-le-jeu.md` | [fil-10-le-jeu.html](html/fil-10-le-jeu.html) |
 | `fil-11-testeurs-et-regard-exterieur.md` | [fil-11-testeurs-et-regard-exterieur.html](html/fil-11-testeurs-et-regard-exterieur.html) |
 | `fil-12-systeme-global-ou-on-en-est.md` | [fil-12-systeme-global-ou-on-en-est.html](html/fil-12-systeme-global-ou-on-en-est.html) |
+| `fil-13-sources-exterieures.md` | [fil-13-sources-exterieures.html](html/fil-13-sources-exterieures.html) |
 | `index.md` *(cette carte)* | [index.html](html/index.html) |

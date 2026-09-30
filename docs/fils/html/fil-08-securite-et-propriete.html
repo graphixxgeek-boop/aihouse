@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-30T19:54:28.445Z</div>
+    <div class="date">2026-09-30T20:49:54.943Z</div>
     <h1>FIL 08 — À qui est ce projet, et qui peut te le prendre</h1>
     <p class="sub">Page générée depuis docs/fils/fil-08-securite-et-propriete.md — jamais écrite à la main.</p>
   </header>
@@ -128,9 +128,16 @@
 <hr>
 <h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
 <p><strong>Q8.1 — CLOS le 2026-09-30.</strong> Ta réponse : <em>« c'étaient des clés temporaires, elles doivent être révoquées depuis longtemps, c'étaient des clés 24h ou une semaine »</em>. Le risque était donc déjà éteint avant qu'on le trouve. <strong>Ce qui reste vrai malgré ça, et c'est la seule chose à retenir</strong> : personne n'avait jamais ouvert ce fichier en quatorze jours. Une clé périmée ne prouve pas qu'on surveille — elle prouve qu'on a eu de la chance sur la durée de vie de celle-là. Q8.4 reste ouverte pour cette raison.</p>
+<p><strong>Q8.1bis — TA QUESTION : quel est le risque d'une clé égarée si elle est GRATUITE ?</strong> Réponse cherchée plutôt que devinée (recherche web du 2026-09-30, sources en bas de ce fil). <strong>Cinq risques réels, et aucun ne dépend du fait que la clé soit gratuite :</strong></p>
+<table><thead><tr><th>Le risque</th><th>Pourquoi « gratuit » n'y change rien</th></tr></thead><tbody><tr><td><strong>Vol de quota</strong></td><td>ton quota est consommé par quelqu'un d'autre : ton projet s'arrête, pas le sien</td></tr><tr><td><strong>Attribution</strong></td><td>ce qui est généré l'est <strong>sous ton identité</strong>. Si ça viole les conditions d'usage, c'est ton compte qui est suspendu — pas celui de l'inconnu</td></tr><tr><td><strong>Escalade</strong></td><td>une clé gratuite reste attachée à un COMPTE. Le jour où ce compte reçoit un moyen de paiement, la clé fuitée devient une facture</td></tr><tr><td><strong>Accès aux données du compte</strong></td><td>selon la portée de la clé : fichiers déposés, modèles affinés, historique d'usage. Ce n'est pas que de la génération de texte</td></tr><tr><td><strong>Vitesse</strong></td><td>une clé poussée dans un dépôt public est trouvée par des robots <strong>en quelques minutes</strong>, pas en quelques jours</td></tr></tbody></table>
+<p><strong>MAIS DANS TON CAS PRÉCIS, LA RÉPONSE HONNÊTE EST : quasi nul.</strong> Clés temporaires (24 h à une semaine), expirées depuis longtemps, et jamais poussées dans un dépôt public — la protection de GitHub a justement refusé l'envoi. <strong>Une clé morte ne fait rien.</strong> Tu avais raison de ne pas t'alarmer.</p>
+<p><strong>CE QUI RESTE VRAI, ET C'EST LE SEUL POINT QUI COMPTE</strong> : le fichier avait <strong>quatorze jours</strong> et personne ne l'avait ouvert. Si ces clés avaient été permanentes, la protection de GitHub aurait été le SEUL filet, et elle ne joue qu'au moment de l'envoi. <strong>Ce n'est pas la surveillance qui nous a protégés, c'est la durée de vie de ces clés-là</strong> — et ça, ça ne se reproduira pas forcément. D'où Q8.4.</p>
 <p><strong>Q8.2 — À TOI.</strong> Le fichier de prompts qui les contenait est <strong>hors du projet</strong> pour cette raison. Veux-tu que j'en fasse une <strong>copie nettoyée</strong> (mêmes contenus, clés remplacées par un marqueur) pour qu'il rejoigne les sources ? <em>(a) oui · (b) non, laisse-le dehors</em></p>
 <p><strong>Q8.3 — À TOI.</strong> Veux-tu un <strong>dépôt de preuve daté</strong> (une procédure simple, chez un tiers, qui horodate l'état du projet à une date donnée) ? <em>(a) oui, dis-moi comment · (b) plus tard · (c) non</em></p>
-<p><strong>Q8.4 — À MOI.</strong> Vérifier qu'<strong>aucun autre secret</strong> ne traîne dans les documents déjà déposés. Je l'ai fait pour le fichier bloqué, pas pour l'ensemble.</p></main>
+<p><strong>Q8.4 — À MOI.</strong> Vérifier qu'<strong>aucun autre secret</strong> ne traîne dans les documents déjà déposés. Je l'ai fait pour le fichier bloqué, pas pour l'ensemble.</p>
+<hr>
+<h3>SOURCES</h3>
+<ul><li><a href="https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety">Best Practices for API Key Safety — OpenAI</a></li><li><a href="https://rafter.so/blog/secrets/openai-api-key-exposure">OpenAI API Key Exposure: Risks, Recovery, and Prevention — Rafter</a></li><li><a href="https://www.securityscientist.net/blog/12-questions-and-answers-about-ai-api-keys-leaked-in-public-repos/">12 Questions and Answers About AI API keys leaked in public repos — Security Scientist</a></li><li><a href="https://github.com/weaviate/weaviate/issues/8859">Exposed OpenAI API Key with Active Access and Quota Exhaustion — weaviate/weaviate #8859</a></li></ul></main>
   <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-08-securite-et-propriete.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>
