@@ -33,7 +33,7 @@ personne).
 
 | Étage | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|---|
-| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 6 (4 pour toi) |
+| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 9 (5 pour toi) |
 | **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 3 (2 pour toi) |
 | **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (2 pour toi) |
 | **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 4 (2 pour toi) |
@@ -51,14 +51,16 @@ personne).
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
 | [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 5 (1 pour toi) |
 
-**Total : 12 fils · 52 questions vives · 25 attendent ta réponse · 27 sont de mon côté.**
+**Total : 12 fils · 55 questions vives · 26 attendent ta réponse · 29 sont de mon côté.**
 
 ---
 
 ## SI TU NE DOIS EN LIRE QUE DEUX MAINTENANT
 
-1. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — l'objectif ultime, la philosophie et
-   la politique. C'est celui sur lequel tu travailles, et cinq autres fils l'attendent.
+1. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — l'objectif ultime. **Le pilotage que
+   tu m'avais demandé y est fait** : tes réponses croisées avec les six questions de la séance,
+   une par une. Quatre sur six ont déjà de la matière ; **il n'en reste que deux à traiter**, et
+   une à reposer parce qu'elle tourne en rond.
 2. **[Fil 12](fil-12-systeme-global-ou-on-en-est.md)** — le système global. Reporté à la
    rationalisation sur ta décision, mais ta question Q12.1 y a sa réponse : *« comment tu intègres
    le fruit de notre réflexion à ta stratégie globale ? »* — aujourd'hui, je ne l'intègre pas.

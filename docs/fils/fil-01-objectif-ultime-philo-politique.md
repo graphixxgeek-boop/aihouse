@@ -119,9 +119,61 @@ c'est une bonne réponse, la question était creuse. Veux-tu que je te la repose
 risques réels du projet (perdre le code · qu'on te le copie · qu'une décision soit à refaire · que
 le jeu déçoive) ? *(a) oui, repose-la comme ça · (b) plus tard, après l'objectif ultime*
 
-**Q1.4 — À MOI.** Je te dois une **séance guidée**, question par question, où je te dis à chaque
-réponse si elle répond au bon niveau — et pourquoi. Tu me l'as demandé : *« j'ai besoin que tu
-pilotes cette partie »*. Le tri ci-dessus en est la première moitié ; la séance reste à tenir.
+**Q1.4 — LE PILOTAGE QUE TU M'AS DEMANDÉ, FAIT. Voici où tu en es, question par question.**
+
+Tu m'as dit : *« j'ai besoin que tu pilotes cette partie »* et *« dis-moi si je réponds bien »*.
+La séance est préparée depuis le 29 — six questions, dans un ordre qui compte. **Ce qui manquait
+était le croisement avec tes réponses d'aujourd'hui. Le voici, et la nouvelle est meilleure que
+tu ne le crois : quatre des six ont déjà de la matière.**
+
+| # | La question de la séance | Ce que tu as déjà donné | Mon verdict |
+|---|---|---|---|
+| **1** | *Pourquoi ce projet mérite-t-il d'exister ?* | « faire naître l'agence ET le jeu » | 🔴 **à reposer** — voir ci-dessous |
+| **2** | *Quel problème fondamental résout-il ?* | « aider les codeurs » · « le divertissement, une expérience inédite avec des IA » | 🟠 **bon, mais au niveau des deux PRODUITS** — pas du projet |
+| **3** | *S'il réussissait parfaitement, qu'est-ce que ça changerait ?* | — | ⚪ **pas abordée** |
+| **4** | *Quelle valeur produit-il réellement ?* | « une aide précieuse, inédite, qui devient incontournable dans le métier » · « une expérience insolite et bluffante de réalisme » | ✅ **répondu, et bien** |
+| **5** | *Qu'est-ce qui survit même si le modèle économique change ?* | « l'expérience client (Humain/IA) » · « le réalisme des dialogues, règle 0 » | ✅ **répondu, et c'est le plus solide** |
+| **6** | *Que voudrais-tu qu'on en dise dans dix ans ?* | — | ⚪ **pas abordée** |
+
+### POURQUOI LA Q1 EST À REPOSER, ET CE N'EST PAS UNE ERREUR DE TA PART
+
+*« Ce projet existe afin de faire naître l'agence et le jeu »* — **la phrase tourne en rond** : le
+projet existe pour produire les choses que le projet produit. On peut encore demander
+« pourquoi ? », et c'est exactement le critère n°1 d'un vrai objectif ultime : **il doit ARRÊTER
+la remontée des pourquoi.**
+
+**Ce n'est pas un défaut de réflexion : c'est le piège que ce type de question tend à tout le
+monde.** La preuve, c'est que tu es déjà tombé dessus une fois — avec « commercialiser », que tu
+as toi-même identifié comme une stratégie. **Deux fois le même piège, deux fois repéré : c'est un
+bon signe, pas un mauvais.**
+
+**La question reformulée, et tu peux y répondre en une phrase** : *si l'Agence et le Jeu
+existaient déjà tous les deux, parfaitement finis, demain matin — qu'est-ce qui aurait changé
+dans le monde, ou pour toi ?* La réponse à ça est l'objectif ultime ; « les faire naître » est le
+chemin.
+
+### CE QU'IL RESTE VRAIMENT À FAIRE : DEUX QUESTIONS, PAS SIX
+
+**Q3 et Q6 n'ont aucune réponse nulle part, et elles ne peuvent venir que de toi.** Ce sont les
+deux seules. Tout le reste est soit répondu, soit extractible du dépôt.
+
+**Q3 — si ça marchait parfaitement, qu'est-ce que ça changerait ?** Attention au même piège qu'en
+Q1 : « j'aurais une agence et un jeu » est le résultat, pas le changement. Le changement, c'est ce
+que quelqu'un peut faire après qui ne pouvait pas avant.
+
+**Q6 — qu'est-ce que tu voudrais qu'on en dise dans dix ans ?** C'est la plus facile des six et
+souvent la plus révélatrice : elle contourne le vocabulaire de gestion et attrape ce que tu veux
+vraiment.
+
+### ET LE PREMIER POINT DE LA SÉANCE T'ATTEND AUSSI
+
+Avant les six questions, une décision : **notre cible actuelle — « commercialiser l'Agence comme
+aide exécutive » — échoue à 3 des 5 critères** d'un objectif ultime (elle ne stoppe pas les
+pourquoi, elle présuppose une stratégie de vente, et elle ne peut donc pas arbitrer entre deux
+stratégies opposées). **Tu confirmes ou tu corriges ce verdict** — c'est la question Q1.7.
+
+**Q1.7 — À TOI.** Le verdict ci-dessus : *(a) je le confirme, ce n'était pas un objectif ultime ·
+(b) je ne suis pas d'accord, je t'explique · (c) montre-moi les 5 critères avant que je réponde*
 
 **Q1.5 — DÉJÀ FAIT, et je l'ignorais quand j'ai écrit ce fil il y a deux heures.** J'annonçais
 ici que les réponses aux **5 impossibles** « n'ont jamais été rassemblées ». **C'était faux** :

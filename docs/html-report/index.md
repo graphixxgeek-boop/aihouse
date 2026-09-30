@@ -45,6 +45,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 16456 | 2026-09-30 18:45Z |
 | `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 11606 | 2026-09-30 19:54Z |
 | `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 12974 | 2026-09-30 19:55Z |
-| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 17319 | 2026-09-30 20:00Z |
-| `docs/fils/html/index.html` | `docs/fils/index.md` | 18005 | 2026-09-30 20:01Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 17950 | 2026-09-30 20:17Z |
+| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 21468 | 2026-09-30 20:39Z |
+| `docs/fils/html/index.html` | `docs/fils/index.md` | 18177 | 2026-09-30 20:39Z |
