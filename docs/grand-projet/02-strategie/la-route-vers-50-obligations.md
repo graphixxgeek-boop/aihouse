@@ -84,6 +84,12 @@ famille COLLABORATION — il ne compte pas dans tes 93)*.
    55   ← et ta cible est 50
 ```
 
+**⚠️ ET UNE QUESTION NOUVELLE, née de la réconciliation ci-dessus** : ma route ramène à 55 les
+**93 obligations des Articles**. Mais la charte en porte **44 de plus dans ses sections non
+numérotées**. **Ta cible de 50 vise-t-elle les Articles seuls, ou la charte entière ?** Si c'est
+la charte entière, la cible est 137 → 50, et ce n'est plus du tout le même chantier. Je ne le
+suppose pas : c'est la première question du lot C.
+
 **Je te donne 55 et pas 50.** Les cinq qui manquent existent forcément quelque part, mais les
 prendre voudrait dire toucher aux deux autres tas — la LOI et la DISCIPLINE — qu'ABRAHAM déclare
 intouchables, et je ne vais pas arrondir un chiffre mesuré pour qu'il tombe juste sur le tien.
@@ -110,11 +116,18 @@ idée neuve : c'est le même geste, répété neuf fois.
 
 ## CE QUE JE NE TE CACHE PAS
 
-- **Deux compteurs, deux chiffres.** MOÏSE rend **129 obligations** au total pour la charte
-  (93 + 17 + 19). Un comptage antérieur en annonçait 173. Je n'ai pas réconcilié les deux, et je te
-  donne le chiffre de l'outil que j'ai lancé ce soir plutôt que celui qui traînait dans mes notes.
-  Le rapport de 93 pour la famille AGENCE, lui, est identique des deux côtés — c'est celui qui
-  porte ta décision.
+- **L'écart 129 / 173 est RÉCONCILIÉ** *(le 2026-09-30 à 01h15, en revérifiant à froid tous les
+  chiffres de cette nuit — et la réponse était dans une phrase de l'outil que je n'avais pas lue)* :
+
+  ```
+  173  obligations dans la charte
+  – 129  à l'intérieur des Articles numérotés
+  ────
+    44  dans les SECTIONS non numérotées
+  ```
+
+  **Les deux chiffres étaient justes ; ils ne comptaient simplement pas la même chose.** Le 93 de
+  la famille AGENCE porte sur les Articles, et c'est lui qui porte ta décision.
 - **Le classement en trois tas est celui d'ABRAHAM, pas le mien.** Il le dérive du texte
   (un Article qui nomme un script et renvoie à une fiche est un mode d'emploi). Il peut se tromper
   sur un cas ; il ne peut pas se tromper sur dix.
@@ -131,4 +144,5 @@ idée neuve : c'est le même geste, répété neuf fois.
 | Neuf Articles AGENCE sont « réductibles à un aiguillage » et portent 47 des 93 obligations | **RETENU** | tâche **#1248** — la proposition est posée, l'exécution attend son accord |
 | Les Articles 18 et 26 se recouvrent sans que rien ne dise lequel prime | **À TRANCHER** | c'est sa décision, pas la mienne — ABRAHAM ne tranche jamais la pertinence d'une règle |
 | Huit Articles ouvrent une question de pertinence chez ABRAHAM (16, 17, 23, 25, 29, 30, 31, 32) | **À TRANCHER** | à joindre à la revue de charte, jamais traité à la volée entre deux chantiers |
-| L'écart 129 / 173 entre deux comptages d'obligations | **ÉCARTÉ, avec sa raison** | il ne porte aucune décision : les deux comptages donnent 93 pour la famille AGENCE, qui est le seul chiffre dont dépend sa cible. À rouvrir seulement si un jour un total est en jeu |
+| L'écart 129 / 173 entre deux comptages | **RÉSOLU** | 173 = 129 dans les Articles + 44 dans les sections. L'outil le disait dans une phrase que je n'avais pas lue — écarté à 23h, réconcilié à 01h15 en revérifiant à froid |
+| **Les 44 obligations HORS Articles comptent-elles dans ta cible de 50 ?** | **À TRANCHER** | question NOUVELLE, née de la réconciliation ci-dessus. Ma route mène les 93 des Articles à 55 ; si les sections comptent aussi, la cible change d'échelle. Je ne le suppose pas |

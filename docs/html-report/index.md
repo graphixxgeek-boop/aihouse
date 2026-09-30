@@ -22,7 +22,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/les-cinq-impossibles.html` | `docs/grand-projet/02-strategie/les-cinq-impossibles.md` | 16275 | 2026-09-29 21:27Z |
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 13995 | 2026-09-29 22:01Z |
 | `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 24506 | 2026-09-29 23:14Z |
-| `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 15409 | 2026-09-29 23:14Z |
 | `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 19680 | 2026-09-29 23:14Z |
 | `docs/grand-projet/html/propriete-et-securite-du-projet.html` | `docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md` | 17123 | 2026-09-29 23:23Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 15916 | 2026-09-29 23:23Z |
@@ -31,3 +30,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/le-noyau-est-il-vraiment-extractible.html` | `docs/grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible.md` | 14438 | 2026-09-29 23:51Z |
 | `docs/grand-projet/html/le-filet-mord-il-vraiment.html` | `docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md` | 19516 | 2026-09-30 00:50Z |
 | `docs/grand-projet/html/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 20048 | 2026-09-30 01:06Z |
+| `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 16315 | 2026-09-30 01:13Z |
