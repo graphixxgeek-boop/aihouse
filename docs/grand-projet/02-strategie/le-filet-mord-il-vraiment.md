@@ -110,6 +110,62 @@ indicateur qui la mesurerait mal *(Article 27)*.
 
 ---
 
+## LA SECONDE MOITIÉ DE L47 — celle qui, ELLE, se mesure vraiment
+
+**La couverture en contre-tests ne se mesure pas.** Mais une partie de L47 se mesure très bien :
+**la frontière de mot `\b` mal posée**, qui est le défaut exact de deux bugs déjà payés par ce
+dépôt — `\bNoé\b` qui ne correspondait à rien (#514), et `docs/ecotoken/` qui attrapait
+`docs/ecotoken/ronde/` (#1265, cette nuit).
+
+**Et là encore, ma première version s'est trompée** — septième fois de la nuit, mais attrapée
+avant publication : chercher « `\b` collé à un caractère non-mot » rendait **233 endroits**, dont
+la quasi-totalité étaient le **délimiteur** du littéral (`/\bcorrige\b/` est parfaitement
+correct). Le motif regardait la ponctuation de JavaScript, pas la logique du motif.
+
+### Les deux formes qui mordent vraiment
+
+| Forme | Trouvée | Verdict |
+|---|---|---|
+| `\b` après une lettre **accentuée** — sans le drapeau `u`, le motif ne peut correspondre à **rien** | **0** | le défaut de `\bNoé\b` a été corrigé par un principe, et il n'est jamais revenu |
+| `\b${…}\b` autour d'une valeur **interpolée** | **13** | à instruire une par une |
+
+### Les treize, instruites — et le risque n'est pas la forme, c'est la POPULATION
+
+`\b${x}\b` n'attrape les « enfants » que s'il existe, **dans les valeurs possibles de x**, une
+paire où l'une est préfixe de l'autre. Ça, c'est décidable :
+
+| Population | Valeurs | Paires préfixe |
+|---|---|---|
+| slugs de process | 14 | **0** |
+| noms d'outils du catalogue | 73 | 6 — mais toutes sont *« NOM »* vs *« NOM (précision) »*, **le même outil**, et les rapprocher est voulu |
+| identifiants d'items de Ronde | 43 | **1 vraie** : `profil` est préfixe de `profil-utilisateur-guard`, **deux items différents** |
+
+**Et la seule vraie paire n'est pas exploitée** : les deux endroits qui construisent `\b${nom}\b`
+travaillent sur des **noms de fonctions JavaScript**, qui ne peuvent pas contenir de tiret. Le
+piège existe ; rien ne marche dessus aujourd'hui.
+
+**Résultat : zéro défaut vivant, un piège nommé.** Le jour où quelqu'un écrira `\b${id}\b` sur
+des identifiants d'items de Ronde, `profil` attrapera `profil-utilisateur-guard` — et c'est écrit
+ici pour qu'il le sache avant plutôt qu'après.
+
+### CE QUE TROIS ENQUÊTES DE SUITE ONT MONTRÉ, ET C'EST LE VRAI ENSEIGNEMENT
+
+| Ce que ma première mesure annonçait | Ce qu'il y avait vraiment |
+|---|---|
+| 59 blocs de test à reprendre | **0** |
+| 5 blocs sans contre-test | **0** |
+| 233 frontières de mot suspectes | **0** défaut vivant |
+
+**Mes mesures sont systématiquement PESSIMISTES au premier passage**, et toujours pour la même
+raison : elles comptent une FORME en croyant compter un DÉFAUT. Trois fausses alertes évitées en
+une nuit, chacune par trente secondes de vérification à la main.
+
+*(Une mesure qui se trompait dans l'autre sens serait bien pire : une fausse alerte se dissipe en
+regardant, un faux calme ne se dissipe jamais. Mais publier trois chantiers inexistants aurait
+coûté un temps réel, et la confiance qui va avec.)*
+
+---
+
 ## PLAN D'ACTION *(Article 28)*
 
 | Constat | État | Ce qu'il devient |
@@ -118,4 +174,7 @@ indicateur qui la mesurerait mal *(Article 27)*.
 | Ma propre mesure a commis trois fois l'erreur de la leçon qu'elle instruisait | **RETENU** | tâche **#1267** — raconté plutôt qu'effacé : c'est la démonstration la plus utile que L47 pouvait recevoir, et elle est arrivée une heure après sa rédaction |
 | Les « cinq blocs sans contre-test » | **ÉCARTÉ — le constat était FAUX** | vérifié à la main : les cinq en ont un, et trois l'écrivent en toutes lettres. Je l'avais d'abord différé « par prudence, Article 19 » ; c'est en tenant cette prudence que j'ai découvert qu'il n'y avait rien à réparer. Le différé valait mieux que le zèle |
 | Faire de ce 21 % un indicateur suivi | **ÉCARTÉ, avec sa raison** | il bougerait avec la finesse de mes motifs plutôt qu'avec la qualité du filet. C'est la leçon L28 : un chiffre qui BOUGE n'est pas un chiffre qui s'AMÉLIORE |
+| `profil` est préfixe de `profil-utilisateur-guard`, deux items de Ronde différents | **RETENU** | tâche **#1269** — piège latent, aucun code ne l'exploite aujourd'hui ; nommé ici pour qu'un futur `\b${id}\b` sur des identifiants de Ronde ne tombe pas dedans |
+| Les 6 autres paires préfixe du catalogue d'outils | **ÉCARTÉ, avec sa raison** | elles opposent « NOM » à « NOM (précision) », c'est-à-dire le même outil écrit deux fois ; les rapprocher est exactement ce qu'on veut, et `normaliserNomDOutil()` le fait déjà exprès |
+| Un garde-fou mécanique contre `\b${…}\b` | **ÉCARTÉ, avec sa raison** | la forme est légitime 13 fois sur 13 aujourd'hui : c'est la POPULATION interpolée qui décide, et elle n'est pas lisible depuis la ligne. Un contrôle sur la forme accuserait treize usages corrects (L4) |
 | Construire un garde-fou qui exigerait une assertion négative par bloc | **ÉCARTÉ, avec sa raison** | il jugerait une propriété de SENS avec un motif de FORME, c'est-à-dire qu'il commettrait L47 en permanence — et il accuserait des blocs corrects (L4) |
