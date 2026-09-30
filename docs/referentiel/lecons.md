@@ -1389,6 +1389,24 @@ d'être lu — c'est la CONSÉQUENCE. L5 dit qu'une absence de mesure n'est pas 
 c'est un CAS PARTICULIER. Celle-ci nomme la CAUSE commune, et c'est elle qui manquait : on ne
 corrige pas une conséquence, et on ne généralise pas depuis un cas particulier (L37).
 
+**SECOND COROLLAIRE, PAYÉ DEUX FOIS DANS LA MÊME HEURE ET SUR MON PROPRE TRAVAIL** *(2026-09-30,
+tâches #1288 et #1289)* : **pour vérifier un CÂBLAGE, il faut regarder la SORTIE, jamais le code
+câblé.**
+
+Une alerte venait d'être branchée pour sortir dans la bannière post-commit. Le contre-test qui
+l'accompagnait lisait le FICHIER de l'outil et vérifiait qu'il contenait l'import et le titre de
+section. Les deux y étaient — et **l'alerte ne sortait pas**, parce que le crochet appelle une
+SOUS-COMMANDE qui rend la main bien avant le bloc où l'alerte était posée.
+
+**Le test vérifiait que le texte existe dans le fichier ; ce qu'il fallait vérifier est que le
+chemin RÉELLEMENT EMPRUNTÉ l'imprime.** Signal adjacent, signal visé — la leçon elle-même, commise
+par le test écrit pour la garder. Ce qui l'a trouvé n'était pas un raisonnement mais **le journal
+réel de la bannière** : zéro occurrence, en une seconde.
+
+**La règle qui en sort, et elle vaut pour tout point d'entrée à sous-commandes** : un fichier a
+autant de chemins d'exécution que de sous-commandes, **et un seul est celui du crochet**. On teste
+celui-là, ou on ne teste rien.
+
 ## L40 — Un test qui lit une donnée VIVANTE ne juge pas le code, il juge le disque
 
 *Payée le 2026-09-29 (tâches #1172 et #1181) : cinq tests au rouge en une nuit sans qu'une ligne du code testé ait bougé, quatre faux outils dormant dans le journal de production, et une part du filet parallèle rouge puis verte sur exactement le même code.*
