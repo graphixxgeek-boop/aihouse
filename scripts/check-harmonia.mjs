@@ -122,6 +122,61 @@ export function verifierTableDesProfils({ root = ROOT, readFileImpl = readFileSy
   return { mesurable: true, verifies, frictions, horsPortee, couverture: verifies.length + frictions.length };
 }
 // ————————————————————————————————————————————————————————————————————————
+// LES FONCTIONS CITÉES PAR LE RÉFÉRENTIEL EXISTENT-ELLES ENCORE ? (2026-09-30, tâche #1294)
+// ————————————————————————————————————————————————————————————————————————
+//
+// LE COMPAGNON DE LA TABLE DES PROFILS, SUR L'AUTRE MOITIÉ DU TERRAIN. HARMONIA confronte des
+// CHIFFRES depuis toujours ; un référentiel cite aussi des NOMS, et un nom disparu est une
+// référence morte — ce qui est pire qu'une absence, parce que ça ressemble à un lien (la même
+// doctrine que `checkActionChain` applique aux tâches annoncées).
+//
+// LA PORTÉE EST ÉTROITE EXPRÈS : seuls les noms écrits `` `nom()` ``, avec les parenthèses. Un mot
+// entre accents graves peut être un chemin, une clé JSON, un mot anglais ; `nom()` ne peut être
+// qu'un appel. C'est ce qui permet de ne jamais deviner.
+//
+// ET LA RECHERCHE COUVRE TOUT LE DÉPÔT, PAS SEULEMENT `lib/`. Le premier essai ne regardait que le
+// code du jeu et a accusé `findUnnavigableSections()`, cité dans `principes.md` — la fonction
+// existe, dans `scripts/doc-report.mjs`. Un référentiel de jeu a parfaitement le droit de nommer
+// l'outil qui a signalé un défaut. Vérifié à la main avant de publier le chiffre, et la leçon L47
+// s'applique une fois de plus : ce n'est pas le nom qui manquait, c'est mon périmètre de lecture.
+export const MOTIF_FONCTION_CITEE = /`([A-Za-z_$][\w$]*)\(\)`/g;
+export const REFERENTIELS_A_VERIFIER = ["docs/referentiel/principes.md", "docs/referentiel/parametres.md"];
+export function verifierFonctionsCitees({ root = ROOT, readFileImpl = readFileSync, listDirImpl = readdirSync, documents = REFERENTIELS_A_VERIFIER } = {}) {
+  const corpus = [];
+  const dossiers = ["lib", "scripts", "components"];
+  for (const d of dossiers) {
+    let noms = [];
+    try { noms = listDirImpl(join(root, d)); } catch { continue; }
+    for (const n of noms) {
+      if (!/\.(ts|tsx|mjs|js)$/.test(n)) continue;
+      try { corpus.push(readFileImpl(join(root, d, n), "utf8")); } catch { /* un fichier illisible ne prouve rien */ }
+    }
+  }
+  // `app/` est imbriqué : on le balaie à part plutôt que d'écrire un parcours récursif qui
+  // ratisserait aussi node_modules — le corpus doit rester celui du projet.
+  for (const sous of ["app", "app/api", "app/api/lia"]) {
+    let noms = [];
+    try { noms = listDirImpl(join(root, sous)); } catch { continue; }
+    for (const n of noms) {
+      if (!/\.(ts|tsx)$/.test(n)) continue;
+      try { corpus.push(readFileImpl(join(root, sous, n), "utf8")); } catch { /* idem */ }
+    }
+  }
+  if (!corpus.length) return { mesurable: false, pourquoi: "aucun fichier source lu — un « zéro fonction manquante » voudrait alors dire l'inverse de ce qu'il a l'air de dire", citees: 0, manquantes: [] };
+  const source = corpus.join("\n");
+  const citees = new Map();
+  for (const doc of documents) {
+    let texte;
+    try { texte = readFileImpl(join(root, doc), "utf8"); } catch { continue; }
+    for (const m of texte.matchAll(MOTIF_FONCTION_CITEE)) {
+      if (!citees.has(m[1])) citees.set(m[1], doc);
+    }
+  }
+  const manquantes = [...citees].filter(([nom]) => !new RegExp(`\\b${nom}\\b`).test(source))
+    .map(([nom, doc]) => ({ nom, document: doc, pourquoi: `${doc} cite \`${nom}()\` — introuvable dans tout le dépôt. Une référence morte ressemble à un lien, ce qui est pire qu'une absence` }));
+  return { mesurable: true, fichiersLus: corpus.length, citees: citees.size, manquantes };
+}
+// ————————————————————————————————————————————————————————————————————————
 // LA CARTOGRAPHIE DES CRITÈRES TRANSVERSES (2026-09-23, chantier 9)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -286,6 +341,17 @@ async function main() {
     for (const fr of profils.frictions) console.log(`   ⚠️  ${fr.parametre} / ${fr.personnage} : ${fr.pourquoi}`);
     for (const h of profils.horsPortee) console.log(`   · hors de portée : ${h} — aucun identifiant de code nommé dans son libellé, et le deviner serait l'inventer`);
     if (!profils.frictions.length && !profils.horsPortee.length) console.log("   ✅ Chaque valeur de la table porte son identifiant, et chacune correspond au code.");
+  }
+
+  // LES NOMS, APRÈS LES CHIFFRES (2026-09-30). Même famille, autre moitié du terrain : un nom cité
+  // qui n'existe plus est une référence morte, et une référence morte ressemble à un lien.
+  const fonctions = verifierFonctionsCitees();
+  if (!fonctions.mesurable) {
+    console.log(`\n🚨 FONCTIONS CITÉES — PAS MESURÉ : ${fonctions.pourquoi}`);
+  } else {
+    console.log(`\n🔗 FONCTIONS CITÉES PAR LE RÉFÉRENTIEL — ${fonctions.manquantes.length} introuvable(s) sur ${fonctions.citees} citée(s), cherchées dans ${fonctions.fichiersLus} fichier(s) source.`);
+    for (const x of fonctions.manquantes) console.log(`   ⚠️  ${x.pourquoi}`);
+    if (!fonctions.manquantes.length) console.log("   ✅ Chaque fonction nommée par le référentiel existe encore quelque part dans le dépôt.");
   }
 
   // LE PLAN D'ACTION (2026-09-23, Article 28). HARMONIA est un Gardien sacré : il rapporte sur la

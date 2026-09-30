@@ -2778,7 +2778,34 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // HARMONIA — partie mécanique (2026-09-19, cf. docs/harmonia-blueprint.md et
   // docs/referentiel/harmonia.md). checkLinks() prend un readFile injectable : les fixtures
   // vivent en mémoire, jamais sur disque, pour un test isolé et déterministe.
-  const {checkLinks, verifierTableDesProfils, paires, TABLE_DES_PROFILS}=await import('../scripts/check-harmonia.mjs');
+  const {checkLinks, verifierTableDesProfils, paires, TABLE_DES_PROFILS, verifierFonctionsCitees, REFERENTIELS_A_VERIFIER}=await import('../scripts/check-harmonia.mjs');
+
+  // LES NOMS, APRÈS LES CHIFFRES (2026-09-30, tâche #1294). HARMONIA confronte des CHIFFRES depuis
+  // toujours ; un référentiel cite aussi des NOMS, et un nom disparu est une référence morte —
+  // pire qu'une absence, parce que ça ressemble à un lien (même doctrine que checkActionChain).
+  const fn = verifierFonctionsCitees();
+  assert.ok(fn.mesurable, 'the guard must read a real corpus, never return a silent green');
+  assert.ok(fn.fichiersLus > 50, `MUST CATCH: only ${fn.fichiersLus} source files read — the corpus collapsed and « 0 missing » would mean « I looked nowhere »`);
+  assert.ok(fn.citees >= 15, `MUST CATCH: only ${fn.citees} function names found in the reference — the citation pattern stopped matching, which reads as « nothing to check »`);
+  assert.deepEqual(fn.manquantes, [], 'every function the behaviour reference names must still exist somewhere in the repo');
+  // LA PORTÉE LARGE EST UN CORRECTIF, PAS UN CONFORT. Le premier essai ne lisait que le code du
+  // jeu et accusait findUnnavigableSections(), cité dans principes.md — la fonction existe, dans
+  // scripts/doc-report.mjs. Un référentiel de jeu a le droit de nommer l'outil qui l'a aidé.
+  assert.ok(REFERENTIELS_A_VERIFIER.length >= 2, 'both reference documents are covered, never just one');
+  const bidonFn = (docTxt, srcTxt) => verifierFonctionsCitees({
+    documents: ['d.md'],
+    listDirImpl: (p) => (String(p).endsWith('lib') ? ['a.ts'] : []),
+    readFileImpl: (p) => (String(p).endsWith('d.md') ? docTxt : srcTxt),
+  });
+  assert.equal(bidonFn('voir `partie()` pour la suite', 'export function partie(){}').manquantes.length, 0, 'a cited function that exists is no finding');
+  assert.equal(bidonFn('voir `disparue()` pour la suite', 'export function partie(){}').manquantes.length, 1, 'MUST CATCH: a cited function that exists nowhere is a dead reference');
+  // UN MOT ENTRE ACCENTS GRAVES N'EST PAS UN APPEL : sans les parenthèses on accuserait des
+  // chemins, des clés JSON et des mots anglais — le mur d'accusations que L4 interdit.
+  assert.equal(bidonFn('le fichier `lib/absent.ts` est parti', 'rien').manquantes.length, 0, 'MUST NOT CATCH: a backticked path is not a function call');
+  assert.equal(bidonFn('la clé `hungerRate` vaut 1', 'rien').manquantes.length, 0, 'MUST NOT CATCH: a backticked identifier without parentheses is not a call either');
+  // ET UN CORPUS VIDE NE VAUT JAMAIS UN VERT (L5/L11) : « aucune fonction manquante » et « je
+  // n'ai lu aucun fichier » se ressemblent trait pour trait.
+  assert.equal(verifierFonctionsCitees({ listDirImpl: () => [] }).mesurable, false, 'an empty corpus means PAS MESURÉ, never « nothing is missing »');
 
   // LA TABLE DES PROFILS, DÉRIVÉE PLUTÔT QUE RECOPIÉE (2026-09-30, tâche #1287). `LINKS` est une
   // liste tenue à la main — cinq entrées, dix motifs — soit exactement la forme que l'Article 24

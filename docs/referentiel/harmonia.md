@@ -174,3 +174,27 @@ faite par l'outil. La couverture passe de 12 à 20.
 `lib/simulation.ts` sont écrits ainsi. Prétendre lire un objet imbriqué à la regex serait se
 donner une garantie qu'on n'a pas. Une cible introuvable (section renommée, profil absent) rend
 `mesurable: false` **avec sa raison**, jamais « aucune friction » (L5/L11).
+
+## `verifierFonctionsCitees()` — les NOMS, après les chiffres (2026-09-30, tâche #1294)
+
+**Le compagnon de la table des profils, sur l'autre moitié du terrain.** HARMONIA confronte des
+**chiffres** depuis toujours ; un référentiel cite aussi des **noms**, et un nom disparu est une
+**référence morte — ce qui est pire qu'une absence, parce que ça ressemble à un lien** (la même
+doctrine que `checkActionChain()` applique aux tâches annoncées par un plan d'action).
+
+**LA PORTÉE EST ÉTROITE EXPRÈS** : seuls les noms écrits `` `nom()` ``, avec les parenthèses. Un
+mot entre accents graves peut être un chemin, une clé JSON, un mot anglais ; `nom()` ne peut être
+qu'un appel. C'est ce qui permet de ne jamais deviner — et deux contre-tests verrouillent
+l'exclusion dans les deux sens.
+
+**LA RECHERCHE COUVRE TOUT LE DÉPÔT, ET C'EST UN CORRECTIF, PAS UN CONFORT.** Le premier essai ne
+lisait que le code du jeu et accusait `findUnnavigableSections()`, cité dans `principes.md` — la
+fonction existe, dans `scripts/doc-report.mjs`. **Un référentiel de jeu a parfaitement le droit de
+nommer l'outil qui a signalé un défaut.** Vérifié à la main avant de publier le chiffre : ce
+n'était pas le nom qui manquait, c'était mon périmètre de lecture (leçon L47).
+
+**PREMIER PASSAGE RÉEL : 23 fonctions citées, 0 introuvable, sur 114 fichiers source lus.**
+
+**UN CORPUS VIDE NE VAUT JAMAIS UN VERT** (L5/L11) : « aucune fonction manquante » et « je n'ai lu
+aucun fichier » se ressemblent trait pour trait, donc le second rend `mesurable: false` avec sa
+raison.
