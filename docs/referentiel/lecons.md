@@ -1334,6 +1334,42 @@ d'un catalogue de 70 offres sont uniques), et c'est ce qui en fait une règle pl
 QUEL corpus minimum — sans ces deux précisions, « dérivé » rassure sans protéger.
 
 
+**L47 — Un signal ADJACENT lu comme le signal visé : la faute la plus fréquente de ce dépôt, et elle n'était écrite nulle part.**
+*(2026-09-30, tâches #1247 · #1250 · #1258 · #1265 — QUATRE occurrences dans une seule nuit, après
+en avoir déjà payé au moins huit les jours précédents. Mesuré avant d'écrire cette entrée : la
+phrase apparaît dans **28 fichiers** du dépôt — 7 dans le référentiel, 15 dans des commentaires de
+code — et **zéro fois dans ce registre**. Le défaut le plus fréquent du projet était décrit partout
+et déclaré nulle part, ce qui est exactement la forme que prend une leçon qu'on réapprend.)*
+
+**La forme, toujours la même** : un contrôle mesure quelque chose de VOISIN de ce qu'il prétend
+mesurer, et personne ne le voit parce que les deux se ressemblent trait pour trait.
+
+| Ce qui est mesuré | Ce qu'on croit mesurer | Ce que ça a coûté |
+|---|---|---|
+| « le mot n'est pas dans CE champ » | « l'outil n'existe pas » | 69 prestations sur 74 introuvables par leur nom, sur la porte que l'Article 31 rend obligatoire |
+| « le mot *tâche* n'est pas écrit » | « aucune tâche n'est rattachée » | 47 constats vus au lieu de 89 — le contrôle accusait la discipline la mieux tenue du projet |
+| « la date du dernier commit est ancienne » | « le contenu du fichier est ancien » | le garde-fou bloquait la seule façon correcte de le satisfaire |
+| « le chemin parent ressemble au chemin enfant » | « c'est la même source » | un double compte accusé sur un rapport correct |
+
+**Ce qui les réunit, et c'est la seule chose à retenir** : dans les quatre cas, **le contrôle était
+juste sur ce qu'il regardait et faux sur ce qu'il affirmait**. Aucun n'a planté, aucun n'a rendu
+d'erreur, et trois sur quatre rendaient un chiffre plausible.
+
+**LE GESTE QUI LES ATTRAPE, et il tient en une question** : *avant de conclure d'un zéro, d'un vert
+ou d'un compte — QU'EST-CE QUE CE CONTRÔLE A LITTÉRALEMENT REGARDÉ ?* Pas ce qu'il annonce dans son
+titre : les lignes qu'il a lues, les champs qu'il a comparés, le motif qu'il a appliqué. Les quatre
+occurrences se sont effondrées à la première fois qu'on a posé cette question.
+
+**LE CONTRE-TEST QUI LE PROUVE, et il coûte trente secondes** : fabriquer l'entrée que le contrôle
+DEVRAIT attraper, et vérifier qu'il l'attrape. Les quatre défauts auraient été trouvés le jour de
+leur écriture — « un fichier propre rend-il bien FAUX ? », « le parent attrape-t-il l'enfant ? ».
+Un contrôle qu'on n'a jamais vu MORDRE n'est pas un contrôle vérifié.
+
+**POURQUOI CETTE LEÇON EST DIFFÉRENTE DES AUTRES** : L4 dit qu'un garde-fou qui accuse à tort cesse
+d'être lu — c'est la CONSÉQUENCE. L5 dit qu'une absence de mesure n'est pas une mesure à zéro —
+c'est un CAS PARTICULIER. Celle-ci nomme la CAUSE commune, et c'est elle qui manquait : on ne
+corrige pas une conséquence, et on ne généralise pas depuis un cas particulier (L37).
+
 ## L40 — Un test qui lit une donnée VIVANTE ne juge pas le code, il juge le disque
 
 *Payée le 2026-09-29 (tâches #1172 et #1181) : cinq tests au rouge en une nuit sans qu'une ligne du code testé ait bougé, quatre faux outils dormant dans le journal de production, et une part du filet parallèle rouge puis verte sur exactement le même code.*
