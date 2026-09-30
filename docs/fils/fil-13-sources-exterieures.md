@@ -83,9 +83,39 @@ propriété (fil 08) et ça montre notre méthode. *(a) d'accord, c'est de la m�
 tiennent debout **sans leur exemple local**. La mesure d'aujourd'hui dit qu'elles sont
 transposables en principe ; elle ne dit pas qu'elles sont lisibles par un étranger.
 
-**Q13.5 — À MOI, tâche **#1331**.** Vérifier si l'Agence sait accueillir et **débrancher** une source extérieure.
-Aujourd'hui je crois que non, et « je crois » n'est pas une mesure — c'est exactement ce que ce
-projet interdit de publier.
+**Q13.5 — MESURÉ le 2026-09-30, tâche #1331. La réponse est NON, et elle est plus nette que ce
+que je croyais.**
+
+Je disais « je crois que non » — et « je crois » n'est pas une mesure. Voici la mesure.
+
+**LA BONNE NOUVELLE D'ABORD, ET ELLE EXISTAIT DÉJÀ.** Une mesure que je n'avais pas cherchée
+répond à la moitié de ta question — `node scripts/safe-export.mjs tuyauterie` : **85 scripts,
+94 % indépendants d'un fournisseur.** Seuls **cinq** sont liés à un fournisseur précis, tous
+nommés. **L'Agence n'est donc pas prisonnière de Gemini** ; elle pourrait travailler avec autre
+chose. C'est un vrai acquis, et il n'était écrit nulle part.
+
+**LA MAUVAISE, ET C'EST TA QUESTION EXACTE : il n'y a AUCUN point de branchement.**
+
+| Ce qu'il faudrait | Ce qu'il y a |
+|---|---|
+| un endroit où déclarer une source extérieure | **rien** — aucun fichier de configuration de sources n'existe |
+| un moyen de la retirer sans toucher au code | **rien** — chaque source est un tableau **écrit dans le code** (`REGISTRIES`, `PROCESSES`, `CIRCLE_ITEMS`…) |
+| une variable d'environnement, un fichier à part | **rien** |
+
+**Donc aujourd'hui, brancher une source = modifier du code. La débrancher = modifier du code une
+seconde fois.** Ta condition — *« plugger librement, et révoquer ce plug si demain ça pose
+souci »* — n'est satisfaite sur aucun des deux côtés.
+
+**CE QUE ÇA VEUT DIRE, ET CE QUE ÇA NE VEUT PAS DIRE.** Ce n'est pas une architecture ratée : le
+projet n'a jamais eu de source extérieure, donc il n'a jamais eu besoin d'un point de branchement.
+**Le manque est normal ; le découvrir maintenant est la bonne nouvelle.** Ce qui serait fautif,
+c'est de vendre « connectable » avant que ce soit vrai — et la plaquette ne le dit pas, elle a eu
+cette prudence-là.
+
+**Q13.6 — À TOI, et c'est un vrai arbitrage de conception.** Faut-il un point de branchement
+unique et déclaré ? *(a) oui, c'est le préalable à toute source extérieure · (b) pas tant qu'on
+n'a pas choisi une source précise — on verra quand le besoin sera réel · (c) jamais : chaque
+source est un cas, on assume de coder à chaque fois*
 
 ---
 

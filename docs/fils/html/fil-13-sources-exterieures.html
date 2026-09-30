@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-30T21:05:09.974Z</div>
+    <div class="date">2026-09-30T21:54:10.783Z</div>
     <h1>FIL 13 — Se brancher sur ce que d'autres savent : base locale, base en ligne, ou les deux</h1>
     <p class="sub">Page générée depuis docs/fils/fil-13-sources-exterieures.md — jamais écrite à la main.</p>
   </header>
@@ -136,7 +136,14 @@ pourrait plugger librement à l'agence (et aussi révoquer ce plug si demain ça
 <p><strong>Q13.2 — À TOI, et c'est la question de fond.</strong> Une leçon venue de l'extérieur, on la traite comment ? <em>(a) comme une donnée à vérifier avant usage, jamais comme une règle · (b) comme nos propres leçons, au même rang · (c) on ne laisse rien entrer, on publie seulement</em></p>
 <p><strong>Q13.3 — À TOI.</strong> Publier nos leçons, ça veut dire les rendre publiques. Ça t'engage sur la propriété (fil 08) et ça montre notre méthode. <em>(a) d'accord, c'est de la méthode, pas du secret · (b) pas avant d'avoir décidé si on vend · (c) non</em></p>
 <p><strong>Q13.4 — À MOI, tâche </strong>#1330<strong>.</strong> Mesurer ce qu'on POURRAIT publier : combien de nos 38 leçons de méthode tiennent debout <strong>sans leur exemple local</strong>. La mesure d'aujourd'hui dit qu'elles sont transposables en principe ; elle ne dit pas qu'elles sont lisibles par un étranger.</p>
-<p><strong>Q13.5 — À MOI, tâche </strong>#1331<strong>.</strong> Vérifier si l'Agence sait accueillir et <strong>débrancher</strong> une source extérieure. Aujourd'hui je crois que non, et « je crois » n'est pas une mesure — c'est exactement ce que ce projet interdit de publier.</p>
+<p><strong>Q13.5 — MESURÉ le 2026-09-30, tâche #1331. La réponse est NON, et elle est plus nette que ce que je croyais.</strong></p>
+<p>Je disais « je crois que non » — et « je crois » n'est pas une mesure. Voici la mesure.</p>
+<p><strong>LA BONNE NOUVELLE D'ABORD, ET ELLE EXISTAIT DÉJÀ.</strong> Une mesure que je n'avais pas cherchée répond à la moitié de ta question — <code>node scripts/safe-export.mjs tuyauterie</code> : <strong>85 scripts, 94 % indépendants d'un fournisseur.</strong> Seuls <strong>cinq</strong> sont liés à un fournisseur précis, tous nommés. <strong>L'Agence n'est donc pas prisonnière de Gemini</strong> ; elle pourrait travailler avec autre chose. C'est un vrai acquis, et il n'était écrit nulle part.</p>
+<p><strong>LA MAUVAISE, ET C'EST TA QUESTION EXACTE : il n'y a AUCUN point de branchement.</strong></p>
+<table><thead><tr><th>Ce qu'il faudrait</th><th>Ce qu'il y a</th></tr></thead><tbody><tr><td>un endroit où déclarer une source extérieure</td><td><strong>rien</strong> — aucun fichier de configuration de sources n'existe</td></tr><tr><td>un moyen de la retirer sans toucher au code</td><td><strong>rien</strong> — chaque source est un tableau <strong>écrit dans le code</strong> (<code>REGISTRIES</code>, <code>PROCESSES</code>, <code>CIRCLE_ITEMS</code>…)</td></tr><tr><td>une variable d'environnement, un fichier à part</td><td><strong>rien</strong></td></tr></tbody></table>
+<p><strong>Donc aujourd'hui, brancher une source = modifier du code. La débrancher = modifier du code une seconde fois.</strong> Ta condition — <em>« plugger librement, et révoquer ce plug si demain ça pose souci »</em> — n'est satisfaite sur aucun des deux côtés.</p>
+<p><strong>CE QUE ÇA VEUT DIRE, ET CE QUE ÇA NE VEUT PAS DIRE.</strong> Ce n'est pas une architecture ratée : le projet n'a jamais eu de source extérieure, donc il n'a jamais eu besoin d'un point de branchement. <strong>Le manque est normal ; le découvrir maintenant est la bonne nouvelle.</strong> Ce qui serait fautif, c'est de vendre « connectable » avant que ce soit vrai — et la plaquette ne le dit pas, elle a eu cette prudence-là.</p>
+<p><strong>Q13.6 — À TOI, et c'est un vrai arbitrage de conception.</strong> Faut-il un point de branchement unique et déclaré ? <em>(a) oui, c'est le préalable à toute source extérieure · (b) pas tant qu'on n'a pas choisi une source précise — on verra quand le besoin sera réel · (c) jamais : chaque source est un cas, on assume de coder à chaque fois</em></p>
 <hr>
 <h3>SOURCES</h3>
 <p><em>(Recherche du 2026-09-30. Rapportées telles quelles : aucune n'a été essayée.)</em></p>
