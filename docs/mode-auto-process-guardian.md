@@ -705,6 +705,10 @@ entier quand ils sont redécouverts. Aucun n'est déductible du code ; tous ont 
 | **Lire l'heure dans un appel SÉPARÉ, avant d'écrire une ligne de suivi** | une date tapée de mémoire, refusée par le garde-fou (Article 32) — cinq fois en une soirée |
 | **Rendre les lecteurs injectables (`readFileImpl`, `lireImpl`, `shImpl`)** | le test juge le DISQUE et pas le code ; il vire au rouge parce que le dépôt s'est AMÉLIORÉ (leçon L40, rencontrée trois fois cette nuit) |
 | **Chercher le nom au `grep` avant d'écrire un test** | un bloc de test entièrement dupliqué, écrit pour une fonction déjà couverte depuis des mois |
+| **Attendre un travail de fond par `until <test>; do sleep 20; done`** | un `sleep` seul est refusé par le harnais, et une boucle sans `sleep` brûle le tour sans rien attendre — appris cette nuit, après une boucle de 200 itérations qui n'a rien attendu du tout |
+| **Ne jamais lancer `execSync` sur des centaines de fichiers** | `ENOBUFS` : le tampon du shell déborde et le script meurt. `cat docs/suivi/sessions/*.md` suffit à le déclencher. On lit en JS, ou on passe par `python3` |
+| **Dans `String.replace`, passer une FONCTION quand le remplacement contient `$`** | `$&` est interprété comme « le texte trouvé » : un correctif d'échappement a produit cette nuit un fichier qui ne se chargeait plus |
+| **Avant de publier un chiffre qui désigne du travail : ouvrir DEUX cas à la main** | trois chantiers inexistants annoncés en une nuit — 59 blocs de test, 5 blocs, 233 frontières de mot : tous à ZÉRO après vérification (leçon L47) |
 
 ### Les contraintes de format du suivi, que rien n'annonce à l'avance
 
@@ -720,9 +724,21 @@ entier quand ils sont redécouverts. Aucun n'est déductible du code ; tous ont 
 1. **Consulter Smart Conso API avant toute action qui coûte un appel API** — y compris un simple
    diagnostic, jamais une exception (Article 22).
 2. **Article 30 avant d'ouvrir un chantier** : `node scripts/data-archangel.mjs notes <sujet>`.
-   Un zéro n'est pas une réponse, c'est un mot mal choisi — on réessaie avec le vocabulaire du
-   sujet. *La nuit du 2026-09-29 a produit la preuve par l'absurde : la règle a été enfreinte
-   UNE fois, et la tâche suivante a fabriqué un doublon.*
+   *La nuit du 2026-09-29 a produit la preuve par l'absurde : la règle a été enfreinte UNE fois,
+   et la tâche suivante a fabriqué un doublon.*
+   **DEPUIS LA NUIT DU 2026-09-30 (tâche #1263), LE RÉESSAI N'EST PLUS DE MA MÉMOIRE** : l'outil
+   élargit tout seul en trois niveaux quand le sujet ne ressort pas, et il DIT qu'il a élargi. La
+   phrase « on réessaie avec le vocabulaire du sujet » ne décrit donc plus un geste à faire mais un
+   geste fait — ce qui la rend enfin fiable (Article 27 : une obligation qui ne repose que sur la
+   mémoire d'un agent n'existe plus à la session suivante).
+   **Ce qui reste de ma responsabilité** : LIRE ce que l'élargissement rend, et ne pas confondre un
+   résultat obtenu en relâchant la question avec un résultat obtenu telle qu'elle était posée.
+
+5. **Ouvrir ce qu'on ABSOUT, pas seulement vérifier ce qu'on accuse** *(appris dans la nuit du
+   2026-09-30, et c'est la leçon la plus chère de la nuit)*. J'ai évité trois fausses alertes en
+   vérifiant mes propres accusations, pendant qu'une alerte VRAIE dormait dans une liste de cinq
+   paires que j'avais classées « préexistantes, aucune de moi » sans en ouvrir une seule. Deux
+   concernaient mon document, et l'une changeait de onze obligations un chiffre déjà livré.
 3. **Ne jamais trancher à sa place.** Quand une correction déborde sur plusieurs outils ou touche
    une décision de conception, on MESURE, on écrit le constat avec ses issues et sa
    recommandation dans `docs/idees-a-trancher.md`, et on s'arrête là.
