@@ -58,7 +58,7 @@ Chacun existe parce qu'un contrôle mécanique le lit ; aucun n'est décoratif.
 
 ---
 
-## LES QUATRE CONTRÔLES — et le troisième état qui fait tout l'outil
+## LES CINQ CONTRÔLES — et le troisième état qui fait tout l'outil
 
 | # | La question | Sans quoi |
 |---|---|---|
@@ -66,6 +66,14 @@ Chacun existe parce qu'un contrôle mécanique le lit ; aucun n'est décoratif.
 | 2 | chaque envoi est-il **rattaché** à un sujet ? | un document déposé mais orphelin est un document perdu |
 | 3 | chaque sujet dit-il **à qui est la balle**, et depuis quand ? | sans ça, personne ne sait qui doit bouger |
 | 4 | chaque sujet dit-il **où il se place** ? | un sujet sans place se traite dans le désordre |
+| 5 | chaque question qui attend l'humain lui donne-t-il **de quoi répondre simplement** ? | une question ouverte posée à un non-spécialiste se paie en aller-retours, jamais en reformulation |
+
+**Le cinquième mérite son paragraphe, parce qu'il n'est pas évident.** Une question adressée à
+l'humain doit offrir des **options concrètes repérées par une lettre** — deux au minimum, quatre
+au maximum. Ce n'est pas de la mise en forme : c'est ce qui transforme une réponse de trois
+paragraphes en une réponse de trois caractères, et ce qui est facile à répondre reçoit une
+réponse. **Sa limite est aussi nette que son intérêt** : compter des lettres n'est pas lire. Un
+vert prouve qu'on n'a pas tendu une page blanche, jamais que la question était claire.
 
 **Le verdict a TROIS états, jamais deux : OUI · NON · PAS ENTIÈREMENT MESURÉ.** Un contrôle qu'on
 n'a pas pu faire ne se compte **jamais** comme réussi. C'est l'invariant central de ce blueprint :

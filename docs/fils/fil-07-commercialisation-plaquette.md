@@ -25,8 +25,18 @@ moitié de l'exercice — **chaque promesse porte son étiquette, sans exception
 **Sans ces étiquettes, la plaquette serait un mensonge poli.** Avec elles, elle devient l'outil de
 diagnostic que tu avais en tête.
 
-**Et tu m'as dit ce soir : « la plaquette n'est pas bonne ».** Je n'ai pas encore su te dire
-*pourquoi* — je ne t'ai pas demandé ce qui clochait, j'ai supposé. C'est la question Q7.1.
+**ET VOICI CE QUE LA MESURE DE COUVERTURE A TROUVÉ CE SOIR, ET ÇA CHANGE TOUT LE FIL.** À la
+ligne 70 de tes réponses du 30 septembre, tu écris : *« Tu ne m'as pas envoyé la plaquette ?
+dommage j'aurais bien aimé la voir ! »* — **tu ne l'as jamais reçue.** Elle a été écrite dans la
+nuit du 29 au 30 et elle est restée dans le projet sans jamais t'être remise. Quand tu me dis
+ensuite « la plaquette n'est pas bonne », tu juges donc quelque chose que tu n'as pas sous les
+yeux, et j'ai passé la soirée à chercher ce qui n'allait pas dedans **au lieu de te l'envoyer.**
+
+Elle t'est jointe à ce compte rendu. Ton jugement viendra après lecture, pas avant.
+
+**Et la même ligne 70 contient deux demandes de plus, que personne n'avait relevées** :
+*« prépare-moi la plaquette commerciale mise à jour »* et *« ce doc doit être régulier et mis à
+jour, comment on fait ? »* — la seconde est une vraie question de méthode, pas une remarque.
 
 **Ce qui est déjà établi et qui pèse sur ce fil** : « commercialiser l'Agence » **n'est pas un
 objectif ultime** — tu l'as trouvé toi-même, et ton propre document le confirme (un objectif
@@ -48,9 +58,14 @@ tâche déguisée.
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
-**Q7.1 — À TOI, et c'est la plus importante de ce fil.** *« La plaquette n'est pas bonne »* :
-qu'est-ce qui ne va pas ? *(a) le ton · (b) le contenu (elle promet mal) · (c) la forme (je ne peux
-pas la montrer à quelqu'un) · (d) elle est datée, les chiffres ont bougé · (e) autre, je te dis*
+**Q7.1 — À TOI, une fois que tu l'auras lue pour de vrai.** Qu'est-ce qui ne va pas ? *(a) rien,
+elle me va · (b) le contenu — elle promet mal · (c) la forme — je ne peux pas la montrer à
+quelqu'un · (d) les chiffres ont bougé depuis*
+
+**Q7.1bis — À TOI.** *« Ce doc doit être régulier et mis à jour, comment on fait ? »* Ma
+proposition : elle se régénère à chaque Ronde, avec ses étiquettes recalculées sur les chiffres du
+jour — donc elle ne peut plus vieillir en silence. *(a) d'accord, à chaque Ronde · (b) plutôt à la
+demande, quand j'en ai besoin · (c) une fois par semaine, fixe*
 
 **Q7.2 — À TOI.** À qui vend-on, en premier ? Ça change tout le reste. *(a) des développeurs
 indépendants · (b) des agences/studios · (c) des entreprises non techniques · (d) on ne vend pas,

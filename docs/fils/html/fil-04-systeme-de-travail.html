@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-30T18:06:33.159Z</div>
+    <div class="date">2026-09-30T18:30:39.950Z</div>
     <h1>FIL 04 — Notre système de travail : questions, réponses, fils</h1>
     <p class="sub">Page générée depuis docs/fils/fil-04-systeme-de-travail.md — jamais écrite à la main.</p>
   </header>
@@ -124,11 +124,19 @@
 <p><strong>Ce fil ne fait avancer aucune partie du produit.</strong> Il fait avancer tout le reste, parce que chaque aller-retour perdu coûte une soirée — la soirée du 30/09 en est la démonstration payée.</p>
 <p><strong>Ce que le nouveau système apporte, concrètement :</strong></p>
 <table><thead><tr><th>Avant</th><th>Maintenant</th></tr></thead><tbody><tr><td>un fil par DATE</td><td>un fil par SUJET</td></tr><tr><td>« à jour » = une impression</td><td>« à jour » = 4 contrôles qui rendent OUI / NON / PAS MESURÉ</td></tr><tr><td>tes demandes vivaient dans la conversation</td><td>tes demandes sont déposées dans le projet, donc mesurables</td></tr><tr><td>je disais « c'est fait »</td><td>un outil dit qui a la balle, et depuis quand</td></tr></tbody></table>
-<p><strong>Les 4 contrôles</strong>, portés par <code>scripts/fils-de-discussion.mjs</code> :</p>
-<ul><li>tout ce que tu m'as envoyé est-il dans le projet ?</li><li>chaque chose envoyée est-elle rattachée à au moins un sujet ?</li><li>chaque sujet dit-il <strong>à qui est la balle</strong>, et <strong>depuis quand</strong> ?</li><li>chaque sujet dit-il <strong>où il se place dans la stratégie</strong> ?</li></ul>
-<p>Et il <strong>refuse de conclure OUI</strong> quand un contrôle n'est pas mesurable : il rend <em>PAS ENTIÈREMENT MESURÉ</em>. C'est la leçon L5/L11 du projet — une absence de mesure ne vaut jamais un zéro.</p>
+<p><strong>Les 4 contrôles</strong> que porte <code>scripts/fils-de-discussion.mjs</code> répondent chacun à une question simple — <em>est-ce déposé ? est-ce rattaché à un sujet ? qui a la balle ? où ça se place ?</em> — et le détail de chacun vit dans <code>docs/fils-de-discussion-blueprint.md</code>, pas ici : le répéter à trois endroits, c'est garantir que deux d'entre eux deviendront faux.</p>
+<p><strong>Ce qui compte pour toi, et c'est le seul point à retenir : l'outil refuse de conclure « OUI » quand un contrôle n'est pas mesurable.</strong> Il rend alors <em>PAS ENTIÈREMENT MESURÉ</em>. C'est une leçon payée ailleurs dans ce projet — une absence de mesure ne vaut jamais un zéro, et un satisfecit rendu sur zéro donnée est pire que pas de réponse du tout.</p>
 <hr>
 <h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>TA CONSIGNE LA PLUS IMPORTANTE SUR CE FIL, RETROUVÉE CE SOIR EN MESURANT LA COUVERTURE DE TA DEMANDE</strong> (ligne 111 de tes réponses du 30 septembre, et elle n'avait été reprise nulle part) :</p>
+<div class="highlight"><p>*« Tu dois m'aider à lire, à répondre : en l'état je me retrouve encore trop souvent à batailler
+pour essayer de comprendre ce que tu me demandes. 1/ parce que je ne suis pas dev […] 2/ parce
+que tu ne m'aides pas toujours à te fournir les réponses dont tu as besoin. Ce mécanisme doit
+marcher mieux : <strong>c'est là surtout qu'on perd du temps</strong> […] Note bien tout ça quelque part,
+pour la suite, <strong>équipe ou informe les outils si nécessaire.</strong> […] le format des questions doit
+toujours m'aider à répondre et/ou à prendre une décision de manière <strong>simple et FIABILISÉE</strong>. »*</p></div>
+<p><strong>C'est fait, et pas seulement noté.</strong> Un <strong>cinquième contrôle</strong> est né de cette phrase : <em>chaque question qui l'attend lui donne-t-elle de quoi répondre simplement ?</em> Une question qui t'est adressée doit offrir des <strong>options concrètes repérées par une lettre</strong> — deux au minimum, quatre au maximum. Aujourd'hui : <strong>23 questions sur 23</strong> en portent.</p>
+<p><strong>Ce que ce contrôle ne sait PAS faire, et il faut le dire</strong> : compter des lettres n'est pas lire. Un vert prouve qu'on ne t'a pas tendu une page blanche ; il ne prouve pas que tu as compris. Ça, toi seul peux le dire — et le dire reste utile, jamais une plainte.</p>
 <p><strong>Q4.1 — À TOI.</strong> Le nom. J'ai appelé le document maître <strong>« Le Cerveau des fils »</strong>, d'après tes mots. Tu choisis toujours les noms, et par familles. <em>(a) garde « Cerveau » · (b) propose-moi une famille de 3 noms et je choisis · (c) j'ai déjà le nom, le voici</em></p>
 <p><strong>Q4.2 — À TOI.</strong> Quand tu réponds par numéro (« Q3.1 = b »), veux-tu que je <strong>referme le point en silence</strong>, ou que je te <strong>confirme à chaque fois</strong> ce que j'ai compris ? <em>(a) silence, tu vas plus vite · (b) confirme, je préfère vérifier</em></p>
 <p><strong>Q4.3 — À MOI.</strong> Les <strong>originaux de nos échanges restent accessibles</strong> — c'est ta consigne explicite : <em>« le fil de conversation ne sert pas à archiver »</em>. Les fils renvoient donc aux sources, ils ne les remplacent jamais. C'est fait pour les fils 01 à 11 ; ça doit le rester.</p>

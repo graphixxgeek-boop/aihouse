@@ -29,15 +29,25 @@ import { recordCliUsage } from "./tool-usage.mjs";
 const ROOT = new URL("..", import.meta.url).pathname;
 
 export const DOSSIER_FILS = "docs/fils";
-export const CERVEAU = "docs/fils/cerveau.md";
+export const CERVEAU = "docs/fils/index.md";
 export const DOSSIER_SAISINES = "docs/grand-projet/00-sources/01-sa-demande";
 
-// LES QUATRE QUESTIONS QUI DÉFINISSENT « À JOUR », et il n'y en a pas de cinquième.
+// LES QUESTIONS QUI DÉFINISSENT « À JOUR ». Elles étaient quatre à la naissance de l'outil ; la
+// cinquième est arrivée le soir même, et ce n'est pas un raffinement — c'est sa consigne, à la
+// ligne 111 de ses réponses du 2026-09-30, retrouvée en mesurant la couverture de sa demande :
+// « le format des questions doit toujours m'aider à répondre et/ou à prendre une décision de
+// manière simple et FIABILISÉE [...] Note bien tout ça quelque part, pour la suite, équipe ou
+// informe les outils si nécessaire. » Une consigne notée dans un document est une intention ;
+// portée par un contrôle, elle mord. C'est exactement ce que l'Article 27 exige.
+//
+// LA RAISON QU'IL DONNE, ET ELLE EST CHIFFRABLE : « c'est là surtout qu'on perd du temps [...]
+// si je ne comprends rien, ça crée un aller-retour ». Une question mal posée ne coûte pas une
+// reformulation : elle coûte un cycle entier, et parfois un chantier refait sur un malentendu.
 //
 // Chacune est VÉRIFIABLE par une commande. C'est tout l'intérêt : « es-tu à jour ? » cesse d'être
 // une impression pour devenir quatre oui/non. Une seule réponse « non » suffit à répondre NON à la
 // question d'ensemble — un système qui répondrait « à peu près » ne servirait à rien.
-export const LES_QUATRE_CONTROLES = Object.freeze([
+export const LES_CONTROLES = Object.freeze([
   { cle: "saisines-deposees", question: "Tout ce qu'il m'a envoyé est-il dans le projet ?",
     sansQuoi: "une demande qui n'est pas dans les fichiers du projet n'est vérifiable par aucun outil — c'est ainsi que trois noms d'outils qu'il avait donnés ont été perdus" },
   { cle: "saisines-rattachees", question: "Chaque chose qu'il m'a envoyée est-elle rattachée à au moins un sujet ?",
@@ -46,7 +56,33 @@ export const LES_QUATRE_CONTROLES = Object.freeze([
     sansQuoi: "un sujet sans porteur ni date est un sujet dont personne ne sait s'il attend quelqu'un" },
   { cle: "fils-situes", question: "Chaque sujet dit-il où il se place dans la stratégie ?",
     sansQuoi: "un sujet hors du plan avance sans qu'on sache ce qu'il sert — et il se rediscute indéfiniment" },
+  { cle: "questions-repondables", question: "Chaque question qui l'attend lui donne-t-elle de quoi répondre simplement ?",
+    sansQuoi: "une question ouverte posée à quelqu'un qui n'est pas développeur se paie en aller-retours, jamais en reformulation : c'est le poste de perte de temps qu'il a lui-même désigné" },
 ]);
+
+// CE QU'UNE QUESTION DOIT PORTER POUR ÊTRE RÉPONDABLE, et le seuil est volontairement bas.
+//
+// Une question qui lui est adressée (« — À TOI ») doit offrir des OPTIONS CONCRÈTES, repérées par
+// une lettre entre parenthèses : (a) … · (b) … Deux au minimum, quatre au maximum — c'est la règle
+// de forme déjà écrite dans docs/regles-de-travail.md §2, jamais inventée ici ; ce fichier ne fait
+// que la rendre mesurable.
+//
+// CE QUI N'EST PAS MESURÉ, ET IL FAUT LE DIRE : qu'une option soit CLAIRE. Une mécanique compte
+// des lettres, elle ne lit pas. Un contrôle vert ne prouve donc pas qu'il a compris la question —
+// il prouve seulement qu'on ne lui a pas tendu une page blanche. Le reste reste son jugement à
+// lui, et lui seul peut dire « je n'ai rien compris ».
+export const MOTIF_QUESTION_A_LUI = /^\*\*Q[\d.]+(?:bis|ter)?\s*—\s*À TOI\b[^\n]*\n(?:[^\n]*\n?)*?(?=\n\*\*Q|\n##|$)/gim;
+export const MOTIF_OPTION = /\((?:a|b|c|d)\)\s*\S/g;
+
+export function questionsRepondables(texte = "") {
+  const blocs = String(texte).match(MOTIF_QUESTION_A_LUI) ?? [];
+  const nues = [];
+  for (const b of blocs) {
+    const lettres = new Set((b.match(MOTIF_OPTION) ?? []).map((o) => o[1]));
+    if (lettres.size < 2) nues.push((b.match(/^\*\*(Q[\d.]+(?:bis|ter)?)/) ?? [])[1] ?? "?");
+  }
+  return { posees: blocs.length, nues };
+}
 
 // Les marqueurs que chaque fil doit porter. Ils sont LUS dans le fichier, jamais supposés.
 export const MOTIF_BALLE = /^\*\*Balle\s*:\*\*\s*(À TOI|À MOI|CLOS|DORMANT)\b/mi;
@@ -70,6 +106,7 @@ export function lireLesFils({ root = ROOT, listDirImpl = readdirSync, readFileIm
       date: (t.match(MOTIF_DATE) ?? [])[1] ?? null,
       place: (t.match(MOTIF_PLACE) ?? [])[1] ?? null,
       saisines: ((t.match(MOTIF_SAISINES) ?? [])[1] ?? "").split("·").map((s) => s.trim()).filter(Boolean),
+      questions: questionsRepondables(t),
     });
   }
   return { mesurable: true, fils };
@@ -96,14 +133,21 @@ export function suisJeAJour({ root = ROOT, dossierEnvois = null } = {}) {
   const dep = saisinesDeposees({ root, dossierEnvois });
   const fils = lus.fils ?? [];
   const resultats = [
-    { ...LES_QUATRE_CONTROLES[0], mesurable: dep.mesurable, ok: dep.mesurable ? dep.manquantes.length === 0 : null,
+    { ...LES_CONTROLES[0], mesurable: dep.mesurable, ok: dep.mesurable ? dep.manquantes.length === 0 : null,
       detail: dep.mesurable ? `${dep.deposees} saisine(s) déposée(s), ${dep.manquantes.length} manquante(s)` : dep.pourquoi },
-    { ...LES_QUATRE_CONTROLES[1], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.saisines.length > 0) : null,
+    { ...LES_CONTROLES[1], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.saisines.length > 0) : null,
       detail: lus.mesurable ? `${fils.filter((f) => f.saisines.length).length}/${fils.length} fil(s) nomment la saisine dont ils sortent` : lus.pourquoi },
-    { ...LES_QUATRE_CONTROLES[2], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.balle && f.date) : null,
+    { ...LES_CONTROLES[2], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.balle && f.date) : null,
       detail: lus.mesurable ? `${fils.filter((f) => f.balle && f.date).length}/${fils.length} fil(s) disent à qui est la balle ET depuis quand` : lus.pourquoi },
-    { ...LES_QUATRE_CONTROLES[3], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.place) : null,
+    { ...LES_CONTROLES[3], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.place) : null,
       detail: lus.mesurable ? `${fils.filter((f) => f.place).length}/${fils.length} fil(s) disent où ils se placent` : lus.pourquoi },
+    (() => {
+      const q = fils.reduce((acc, f) => ({ posees: acc.posees + f.questions.posees, nues: acc.nues.concat(f.questions.nues.map((n) => `${f.fichier.split("/").pop()} ${n}`)) }), { posees: 0, nues: [] });
+      return { ...LES_CONTROLES[4], mesurable: lus.mesurable && q.posees > 0, ok: lus.mesurable && q.posees > 0 ? q.nues.length === 0 : null,
+        detail: !lus.mesurable ? lus.pourquoi
+          : q.posees === 0 ? "aucune question ne l'attend — rien à mesurer, et ce n'est pas un vert"
+          : `${q.posees - q.nues.length}/${q.posees} question(s) lui offrent des options concrètes${q.nues.length ? ` — nues : ${q.nues.join(", ")}` : ""}` };
+    })(),
   ];
   const nonMesures = resultats.filter((r) => r.ok === null).length;
   const rates = resultats.filter((r) => r.ok === false).length;

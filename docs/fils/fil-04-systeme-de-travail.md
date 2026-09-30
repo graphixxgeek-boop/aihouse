@@ -62,6 +62,25 @@ rendu sur zéro donnée est pire que pas de réponse du tout.
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
+**TA CONSIGNE LA PLUS IMPORTANTE SUR CE FIL, RETROUVÉE CE SOIR EN MESURANT LA COUVERTURE DE TA
+DEMANDE** (ligne 111 de tes réponses du 30 septembre, et elle n'avait été reprise nulle part) :
+
+> *« Tu dois m'aider à lire, à répondre : en l'état je me retrouve encore trop souvent à batailler
+> pour essayer de comprendre ce que tu me demandes. 1/ parce que je ne suis pas dev […] 2/ parce
+> que tu ne m'aides pas toujours à te fournir les réponses dont tu as besoin. Ce mécanisme doit
+> marcher mieux : **c'est là surtout qu'on perd du temps** […] Note bien tout ça quelque part,
+> pour la suite, **équipe ou informe les outils si nécessaire.** […] le format des questions doit
+> toujours m'aider à répondre et/ou à prendre une décision de manière **simple et FIABILISÉE**. »*
+
+**C'est fait, et pas seulement noté.** Un **cinquième contrôle** est né de cette phrase : *chaque
+question qui l'attend lui donne-t-elle de quoi répondre simplement ?* Une question qui t'est
+adressée doit offrir des **options concrètes repérées par une lettre** — deux au minimum, quatre
+au maximum. Aujourd'hui : **23 questions sur 23** en portent.
+
+**Ce que ce contrôle ne sait PAS faire, et il faut le dire** : compter des lettres n'est pas lire.
+Un vert prouve qu'on ne t'a pas tendu une page blanche ; il ne prouve pas que tu as compris. Ça,
+toi seul peux le dire — et le dire reste utile, jamais une plainte.
+
 **Q4.1 — À TOI.** Le nom. J'ai appelé le document maître **« Le Cerveau des fils »**, d'après tes
 mots. Tu choisis toujours les noms, et par familles. *(a) garde « Cerveau » · (b) propose-moi une
 famille de 3 noms et je choisis · (c) j'ai déjà le nom, le voici*

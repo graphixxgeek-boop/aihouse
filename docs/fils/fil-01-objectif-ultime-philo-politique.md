@@ -3,7 +3,7 @@
 **Balle :** À TOI
 **Dernier mouvement :** 2026-09-30
 **Place dans le plan :** Étage 0 de la cascade — tout le reste en dépend. Rien d'autre ne devrait être tranché avant.
-**Saisines :** COMMANDE IMPORTANTE · réponses 2026-09-29 · réponses 2026-09-30
+**Saisines :** COMMANDE IMPORTANTE · FIXER UN OBJECTIF ULTIME · PHILOSOPHIE ET POLITIQUE · réponses 2026-09-29 · réponses 2026-09-30
 
 ---
 
@@ -14,15 +14,65 @@ politique, en t'appuyant sur tes propres documents : *« on révèle plus qu'on 
 
 **Ce qui a déjà été fait, et qui existe** :
 
-- Une **synthèse annotée** de ton document `FIXER UN OBJECTIF ULTIME` (2026-09-29). Elle contient
-  les **5 critères** d'un vrai objectif ultime, les **6 questions d'atelier**, tes **5 candidats**,
-  et la hiérarchie complète `VISION → PHILOSOPHIE → POLITIQUE → OBJECTIF ULTIME → STRATÉGIE`.
-- Une **synthèse annotée** de ton document `PHILOSOPHIE ET POLITIQUE`. Elle donne les définitions
-  (*philosophie = ce en quoi on croit · politique = les règles qu'on se donne pour vivre selon ces
-  croyances*) et le **test des 5 impossibles**.
-- Tes **réponses en « jets »** du 2026-09-30, que tu qualifies toi-même de tentatives.
+- Une **synthèse annotée** de ton document `FIXER UN OBJECTIF ULTIME` (2026-09-29) : les
+  **5 critères** d'un vrai objectif ultime, les **6 questions d'atelier**, tes **5 candidats**, et
+  la hiérarchie `VISION → PHILOSOPHIE → POLITIQUE → OBJECTIF ULTIME → STRATÉGIE`.
+- Une **synthèse annotée** de `PHILOSOPHIE ET POLITIQUE` : les définitions (*philosophie = ce en
+  quoi on croit · politique = les règles qu'on se donne pour vivre selon ces croyances*) et le
+  **test des 5 impossibles**.
+- **Tes réponses complètes du 2026-09-30**, que tu appelles toi-même des « jets ». Elles ne sont
+  pas fragiles : elles sont exploitables, et le tri ci-dessous le montre.
 
-**Trois constats déjà établis, et ils t'appartiennent déjà** :
+### CE QUE TES « JETS » ONT DÉJÀ TRANCHÉ — et tu ne le sais pas encore
+
+**Tu dis ne pas savoir si tes réponses apportent quelque chose. Elles apportent ceci, et ce n'est
+pas rien.** Trié par niveau, parce que le désordre venait des questions, pas de toi :
+
+**Ce qui relève de la PHILOSOPHIE du Projet (nous deux)**
+
+| Question | Ta réponse, telle quelle |
+|---|---|
+| Pourquoi ce projet existe-t-il ? | *faire naître l'Agence ET le jeu* |
+| Quels comportements sont toujours refusés ? | *travailler de manière imprécise · ne pas prendre en compte l'esprit* |
+| Qu'est-ce qu'une erreur inacceptable ? | *prendre une décision qui va à l'encontre de notre cadre* |
+| Qu'est-ce qu'une erreur acceptable ? | *les erreurs de codage au quotidien, souvent vite réparées* |
+
+**Ce qui relève de l'AGENCE (le produit générique)**
+
+| Question | Ta réponse |
+|---|---|
+| Quel problème résout-elle ? | *aider les codeurs* |
+| Quelle valeur crée-t-elle ? | *une aide précieuse, inédite — un concept qui devient incontournable dans le métier* |
+| Que ne sacrifie-t-on jamais ? | *l'expérience client (Humain **et** IA)* |
+| Comment considère-t-on les agents ? | *un peu comme des employés de l'utilisateur* |
+| Quel rôle garde l'humain ? | *créer un projet **qui lui appartient*** |
+
+**Ce qui relève du JEU**
+
+| Question | Ta réponse |
+|---|---|
+| Quel problème résout-il ? | *le divertissement, et vivre une expérience inédite avec des IA* |
+| Que ne sacrifie-t-on jamais ? | *le réalisme des dialogues (**règle 0**)* |
+
+**Et ton arbitrage entre critères, qui est une vraie décision** : rapidité **non** · qualité
+**oui, important** · sécurité **oui** · innovation et simplicité **oui et non**. Ce n'est pas une
+hésitation : c'est exactement la hiérarchie que l'Article 0 applique déjà dans le code.
+
+### LES QUATRE ENDROITS OÙ TU AS RÉPONDU « JE NE SAIS PAS » — et ce que ça veut dire
+
+Tu as répondu franchement « je ne sais pas », « je n'ai pas compris », ou « revoir cette partie »
+à quatre endroits : le **niveau d'autonomie** des agents, la **tolérance au risque**, le
+**nivèlement**, et les **KPI stratégiques**. **Trois de ces quatre ne sont pas des trous de ta
+part : ce sont des questions qui n'ont pas de réponse tant que l'étage 0 n'est pas posé.** La
+quatrième, le nivèlement, est une question mal formulée dans le document d'origine — elle
+demandait en réalité « comment un outil change-t-il de rang ? », ce qui appartient au fil 03.
+
+**Ton intuition sur les catégories mérite d'être relevée** : *« les catégories se créent
+d'elles-mêmes, non ? elles se révèlent aussi, et ne s'inventent pas »*. C'est exactement le
+principe `docs/referentiel/classification-agence.md` applique déjà — un rangement **généré** plutôt
+que recopié. Tu as redécouvert ta propre règle sans le savoir.
+
+### TROIS CONSTATS ÉTABLIS, ET ILS T'APPARTIENNENT DÉJÀ
 
 1. **« Commercialiser l'Agence » n'est PAS un objectif ultime** — tu l'as trouvé toi-même, et le
    critère 2 de ton propre document le confirme : un objectif ultime ne dépend d'aucune stratégie
@@ -43,11 +93,12 @@ politique, en t'appuyant sur tes propres documents : *« on révèle plus qu'on 
 cible d'obligations, l'organisation, les versions, la commercialisation. Tu l'as dit toi-même :
 *« c'est le cœur de la gouvernance qui va débloquer beaucoup de choses »*.
 
-**Et tu as raison de dire que tes réponses sont fragiles** — mais pas pour la raison que tu
-crois. Elles ne sont pas fragiles parce que tu réponds mal : elles le sont parce que **les
-questions mélangent trois niveaux** (le Projet, l'Agence, le Jeu) sans jamais le dire. Répondre
-« l'agence doit aider les codeurs » et « le jeu est là pour le divertissement » dans la même
-case, c'est normal — la case était mal faite.
+**Et tu as raison de dire que tes réponses sont fragiles — mais pas pour la raison que tu crois.**
+Elles ne sont pas fragiles parce que tu réponds mal. Elles le sont parce que **les questions
+mélangent trois niveaux** (le Projet, l'Agence, le Jeu) sans jamais le dire. Répondre
+« l'agence doit aider les codeurs » et « le jeu est là pour le divertissement » dans la même case,
+c'est la seule réponse honnête possible : **la case était mal faite.** Le tri de la partie ① est
+la preuve — une fois séparées par niveau, tes réponses tiennent debout sans être retouchées.
 
 ---
 
@@ -58,11 +109,22 @@ PROJET (qui nous inclut, toi et moi, et qui contient le Jeu) et celui de l'AGENC
 que le client remplira avec le sien) ? *(a) oui · (b) non, un seul · (c) explique-moi la
 différence avant que je réponde*
 
-**Q1.2 — À MOI.** Je te dois une **séance guidée**, question par question, où je te dis à chaque
-réponse si elle répond au bon niveau — et pourquoi. Tu me l'as demandé : *« j'ai besoin que tu
-pilotes cette partie »*. Elle n'est pas faite.
+**Q1.2 — À TOI.** Le tri de la partie ① range tes réponses sur trois niveaux sans en changer un
+mot. Est-ce que tu t'y reconnais ? *(a) oui, c'est bien ce que je voulais dire · (b) non, il y a
+au moins une case où tu me fais dire autre chose · (c) je préfère qu'on le reprenne ensemble
+ligne par ligne*
 
-**Q1.3 — À MOI.** Le **test des 5 impossibles** appliqué à nous : *que refusons-nous
-absolument ? que n'automatiserons-nous jamais ? que ne déléguerons-nous jamais ?* Quatre réponses
-existent déjà dans nos règles et n'ont jamais été rassemblées. C'est de l'extraction, pas de la
-création — une demi-journée.
+**Q1.3 — À TOI.** Ta **tolérance au risque**, tu as répondu *« ça dépend : quels risques ? »* — et
+c'est une bonne réponse, la question était creuse. Veux-tu que je te la repose en nommant les
+risques réels du projet (perdre le code · qu'on te le copie · qu'une décision soit à refaire · que
+le jeu déçoive) ? *(a) oui, repose-la comme ça · (b) plus tard, après l'objectif ultime*
+
+**Q1.4 — À MOI.** Je te dois une **séance guidée**, question par question, où je te dis à chaque
+réponse si elle répond au bon niveau — et pourquoi. Tu me l'as demandé : *« j'ai besoin que tu
+pilotes cette partie »*. Le tri ci-dessus en est la première moitié ; la séance reste à tenir.
+
+**Q1.5 — À MOI.** Le **test des 5 impossibles** appliqué à nous : *que refusons-nous absolument ?
+que n'automatiserons-nous jamais ? que ne déléguerons-nous jamais ?* Quatre réponses existent déjà
+dans nos règles et n'ont jamais été rassemblées — et deux de plus viennent d'arriver avec tes
+jets (*travailler de manière imprécise* · *décider contre notre cadre*). C'est de l'extraction,
+pas de la création.

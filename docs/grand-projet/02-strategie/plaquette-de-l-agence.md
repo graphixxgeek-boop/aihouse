@@ -1,6 +1,9 @@
 # LA PLAQUETTE COMMERCIALE DE L'AGENCE — écrite aujourd'hui, avec l'écart écrit en face
 
 *(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche **#1255**.
+**CHIFFRES REPRODUITS LE 2026-09-30 à 18h35 UTC, tâche #1307** — il l'a demandée « mise à jour »,
+et une plaquette dont les chiffres ont vieilli est exactement le mensonge poli que ses étiquettes
+servent à empêcher. Ce qui a bougé est signalé en face de chaque chiffre.
 Sa demande, et elle est astucieuse : produire **la plaquette commerciale détaillée de l'Agence
 telle qu'elle est aujourd'hui**, comme exercice — parce qu'écrire ce qu'on vendrait révèle
 l'écart entre la fiction et la réalité mieux qu'un audit.)*
@@ -48,7 +51,7 @@ rien ne le lui dit.**
 ## CE QUE L'AGENCE MET EN PLACE
 
 ### ① Un filet de sécurité qui ne dort jamais
-✅ **VRAI** — **378 vérifications** tournent à chaque commit. Aucun changement ne passe sans
+✅ **VRAI** — **380 vérifications** tournent à chaque commit *(recomptées le 2026-09-30 sur deux passages complets et concordants du filet ; 378 la veille)*. Aucun changement ne passe sans
 elles. Elles ne testent pas que « le code marche » : elles testent que **les règles que vous avez
 posées tiennent encore**.
 
@@ -57,7 +60,7 @@ posées tiennent encore**.
 duplication, exportabilité. **Gratuits, mécaniques, à chaque commit.**
 
 ### ③ Une mémoire qui survit au changement d'IA
-✅ **VRAI** — **530 tâches**, chacune datée, portant ce qui a été décidé **et pourquoi**. Le jour
+✅ **VRAI** — **1 189 tâches** *(530 au 29/09 ; le compte inclut désormais les archives)*, chacune datée, portant ce qui a été décidé **et pourquoi**. Le jour
 où vous changez de modèle, d'éditeur ou de prestataire, **le nouveau venu lit et reprend**. Ce
 n'est pas une promesse : c'est un dossier de 553 documents dans le dépôt.
 
@@ -72,7 +75,7 @@ propres règles, et d'exiger **deux confirmations** avant de l'exécuter. *Votre
 même contre vous.*
 
 ### ⑥ Elle apprend de ses erreurs, et les erreurs sont écrites
-✅ **VRAI** — **46 leçons** enregistrées, chacune née d'une erreur réellement payée, et ressorties
+✅ **VRAI** — **47 leçons** enregistrées, chacune née d'une erreur réellement payée, et ressorties
 automatiquement au moment où le même piège se représente.
 
 ### ⑦ Tout part avec vous
@@ -154,7 +157,7 @@ Sa toute première expérience est l'installation.)*
 
 **Mesuré ce soir** : sur les 89 000 lignes d'outillage, la plaquette n'en mentionne qu'une poignée
 — le filet, les gardiens, le suivi, les leçons. **Le reste ne se vend pas, et ne s'achète pas : il
-se subit.** Dix registres à renseigner par outil, 483 lignes de bannière par commit, 93 obligations
+se subit.** Dix registres à renseigner par outil, des centaines de lignes de bannière par commit *(ramenées à 9 à l'affichage depuis, le reste relu à la demande)*, 93 obligations
 de charte : rien de tout ça n'a sa place dans une plaquette, parce que **personne n'en veut**.
 
 **C'est le même signal que la cible de 50 obligations, trouvé par un chemin complètement

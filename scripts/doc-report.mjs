@@ -145,6 +145,12 @@ export function findUndeclaredLocalJournals(gitignoreText, journals = LOCAL_JOUR
 // remise HTML actée). scriptPath : le script producteur, pour vérifier la décision "delivery_html"
 // (null quand aucun script unique ne produit ce registre, ex. les archives manuelles de simulation).
 export const REGISTRIES = [
+  // LES FILS DE DISCUSSION (2026-09-30). Décision `archived_html` et non `delivery_html`, et la
+  // nuance compte : une copie de remise se régénère au moment où on la livre, alors qu'ici il OUVRE
+  // les pages lui-même, quand il veut, sans que je sois là pour les produire. Le HTML est donc
+  // committé à côté du markdown, exception assumée — c'est l'un des rares registres dont le
+  // destinataire est l'utilisateur plutôt qu'un outil.
+  { slug: "fils", label: "Les fils de discussion", family: "(f) 👼 Les Anges de la coordination", path: "docs/fils/", decision: "archived_html", scriptPath: "scripts/fils-de-discussion.mjs" },
   { slug: "jesus-le-sauveur", label: "JESUS-LE-SAUVEUR", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/jesus-le-sauveur/", decision: "texte", scriptPath: "scripts/jesus-le-sauveur.mjs" },
   // check-spirit a produit son PREMIER passage archivé le 2026-09-28 (tâche #810) : jusque-là il
   // affichait ses réponses à l'écran sans rien déposer, donc il n'avait pas de registre — et n'en

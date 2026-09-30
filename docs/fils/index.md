@@ -24,11 +24,11 @@ personne).
 
 | Étage | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|---|
-| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 3 (1 pour toi) |
+| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 5 (3 pour toi) |
 | **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 3 (2 pour toi) |
 | **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (2 pour toi) |
 | **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 4 (2 pour toi) |
-| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 4 (2 pour toi) |
+| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 5 (3 pour toi) |
 
 ### Les transverses — ils n'attendent pas leur tour
 
@@ -41,7 +41,7 @@ personne).
 | [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 4 (2 pour toi) |
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
 
-**Total : 11 fils · 42 questions vives · 23 attendent ta réponse · 19 sont de mon côté.**
+**Total : 11 fils · 45 questions vives · 26 attendent ta réponse · 19 sont de mon côté.**
 
 ---
 
@@ -52,8 +52,9 @@ personne).
    ne peut pas attendre demain.
 2. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — l'objectif ultime. Tant qu'il n'est
    pas posé, cinq autres fils se rediscutent à chaque fois qu'on les rouvre.
-3. **[Fil 07, question Q7.1](fil-07-commercialisation-plaquette.md)** — tu m'as dit « la plaquette
-   n'est pas bonne » et je n'ai pas demandé pourquoi. Une phrase de ta part et je la refais juste.
+3. **[Fil 07](fil-07-commercialisation-plaquette.md)** — **tu n'as jamais reçu la plaquette.**
+   Tu l'écris à la ligne 70 de tes réponses du 30 : *« tu ne m'as pas envoyé la plaquette ? dommage
+   j'aurais bien aimé la voir »*. Elle t'est jointe cette fois. Ton jugement viendra après lecture.
 
 ---
 
@@ -65,7 +66,7 @@ personne).
 | **2026-09-29** | 49 questions posées et répondues. Les analyses de fond : la cible, le noyau, la propriété, ce qui ralentit, la plaquette. |
 | **2026-09-29 → 30 (nuit)** | 18 livraisons en autonomie. |
 | **2026-09-30 (soir)** | Tu constates que je ne suis pas à jour. Quatre affirmations fausses de ma part, corrigées par toi une à une. Cause racine trouvée. |
-| **2026-09-30 (nuit)** | Ce système-ci. Un fil par sujet, et quatre contrôles mécaniques pour que « à jour » cesse d'être une impression. |
+| **2026-09-30 (nuit)** | Ce système-ci. Un fil par sujet, et cinq contrôles mécaniques pour que « à jour » cesse d'être une impression. |
 
 ---
 
@@ -77,7 +78,7 @@ synthèse ? » au lieu de « ce SUJET a-t-il été traité ? »**. Les deux ques
 n'ont pas la même réponse. C'est pour ça que j'ai pu te dire quatre choses fausses en me croyant
 rigoureux.
 
-**Maintenant, quatre contrôles y répondent mécaniquement** — `node scripts/fils-de-discussion.mjs` :
+**Maintenant, cinq contrôles y répondent mécaniquement** — `node scripts/fils-de-discussion.mjs` :
 
 | # | La question posée | Sans quoi |
 |---|---|---|
@@ -85,6 +86,7 @@ rigoureux.
 | 2 | Chaque chose envoyée est-elle **rattachée à un sujet** ? | un document déposé mais orphelin est un document perdu |
 | 3 | Chaque sujet dit-il **à qui est la balle**, et depuis quand ? | sans ça, personne ne sait qui doit bouger |
 | 4 | Chaque sujet dit-il **où il se place** dans la stratégie ? | un sujet sans place se traite dans le désordre |
+| 5 | Chaque question qui t'attend te donne-t-elle **de quoi répondre simplement** ? | une question ouverte posée à quelqu'un qui n'est pas développeur se paie en aller-retours — le poste de perte de temps que tu as toi-même désigné |
 
 **Et l'outil refuse de conclure « OUI » quand un contrôle n'est pas mesurable** : il rend *PAS
 ENTIÈREMENT MESURÉ*. C'est une leçon payée ailleurs dans ce projet — une absence de mesure ne vaut
@@ -96,7 +98,7 @@ jamais un zéro, et un satisfecit rendu sur zéro donnée est pire que pas de r�
 
 **Une demande que tu me fais à l'oral, dans la conversation, n'est récupérable par aucune
 commande.** Si je ne la dépose pas dans le projet le jour même, elle n'existera plus demain — et
-aucun des quatre contrôles ne pourra signaler son absence, puisqu'ils ne mesurent que ce qui est
+aucun des cinq contrôles ne pourra signaler son absence, puisqu'ils ne mesurent que ce qui est
 déposé.
 
 C'est exactement ce qui s'est passé : **7 400 mots de tes demandes ne vivaient que dans nos
