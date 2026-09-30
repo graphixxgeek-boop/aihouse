@@ -7036,6 +7036,34 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     // sur un dépôt de deux semaines. horizonDuJournal() existait depuis la veille pour le dire,
     // et n'était câblé que chez tool-brain — pendant que CASSANDRA-RH, qui propose de RETIRER des
     // outils, rendait son verdict sans la réserve. Un remède écrit et non câblé est une intention.
+    // CE QU'UN CLONE NEUF PERD (2026-09-30, tâche #1285). Même famille que le garde-fou
+    // ci-dessous, vue par l'autre bout : là il s'agit de LIRE un chiffre, ici de savoir si la
+    // donnée qui le produit existera encore demain. Les journaux locaux sont dans .gitignore,
+    // donc ils meurent avec le conteneur — ce qui est parfait pour un cache et grave pour un
+    // historique, et rien ne distinguait les deux.
+    // `dr` est déclaré plus bas dans ce bloc : on importe ici plutôt que de réordonner un test
+    // voisin, qui n'a rien demandé (Article 19 — on ne déplace pas ce qu'on n'a pas compris).
+    const registreJournaux = (await import('../scripts/doc-report.mjs')).LOCAL_JOURNALS;
+    const clone = se.findEtatsPerdusAuClone({ journaux: registreJournaux });
+    assert.ok(clone.mesurable, 'the guard must measure the real registry, never return a silent green');
+    assert.ok(clone.etats.length >= 15, "MUST CATCH: fewer than 15 declared local journals means LOCAL_JOURNALS stopped being read — a guard with nothing to check is green for the wrong reason");
+    assert.deepEqual(clone.sansIntention.map((e) => e.chemin), [], 'every declared local journal must SAY what its loss at clone costs — an unstated choice is what let « cumul permanent depuis le début du projet » live for days on a file that had 23 hours');
+    assert.deepEqual(clone.intentionInconnue.map((e) => e.chemin), [], 'and that value must be one of the declared ones — a typo would exempt a journal instead of watching it');
+    // LE CHAMP EST UN CHAMP, JAMAIS UNE PHRASE À INTERPRÉTER. La première version cherchait
+    // l'intention dans les commentaires de .gitignore et rendait « 14 fichiers, 0 intention » —
+    // alors que quatre d'entre eux DISENT déjà en toutes lettres, dans LOCAL_JOURNALS, que leur
+    // perte est sans conséquence. J'aurais accusé quatre innocents (leçon L47), sur le garde-fou
+    // même que j'écrivais contre cette classe d'erreur.
+    const bidon = (j) => se.findEtatsPerdusAuClone({ journaux: j, statImpl: () => 42 });
+    assert.equal(bidon([{ path: '.x.json', owner: 'x' }]).sansIntention.length, 1, 'MUST CATCH: a journal declared without auClone is the defect');
+    assert.equal(bidon([{ path: '.x.json', owner: 'x', auClone: 'perte-acceptee' }]).sansIntention.length, 0, 'a declared intent satisfies it');
+    assert.equal(bidon([{ path: '.x.json', owner: 'x', auClone: 'perte-douteuse' }]).intentionInconnue.length, 1, 'MUST CATCH: an undeclared value is not an intent, it is a typo that would pass silently');
+    // TROIS ÉTATS, JAMAIS DEUX (L5/L11) : un journal jamais écrit n'a rien à perdre, et ce n'est
+    // pas la même chose qu'un journal vide.
+    assert.equal(bidon([{ path: '.absent.json', owner: 'x', auClone: 'perte-reelle' }]).etats[0].present, true, 'a journal the stat sees is present');
+    const jamaisEcrit = se.findEtatsPerdusAuClone({ journaux: [{ path: '.absent.json', owner: 'x', auClone: 'perte-reelle' }], statImpl: () => null });
+    assert.equal(jamaisEcrit.etats[0].present, false, 'a journal that was never written must read present:false, never a zero-byte measure');
+    assert.equal(se.findEtatsPerdusAuClone({}).mesurable, false, 'without the registry the guard says PAS MESURÉ, never « nothing is lost »');
     const horizonReel = se.findVerdictsSansHorizon();
     assert.ok(horizonReel.mesurable, 'the guard must measure the real repo, never return a silent green');
     assert.ok(horizonReel.lecteurs >= 3, "MUST CATCH: fewer than 3 readers of toolsNeverUsed() means the import pattern stopped matching — a guard that finds nobody to check is green for the wrong reason");

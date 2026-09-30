@@ -163,3 +163,19 @@ page.
 changé lui paraît à jour, et c'est correct. Il repère le cas courant — on a édité le document et
 oublié de régénérer la page — jamais tous les cas. Et une date de commit illisible ne compte jamais
 comme « à jour » : la page est nommée NON vérifiée, et le total s'annonce comme un PLANCHER.
+
+## `aDesModifsNonCommitees()` et le champ `auClone` de `LOCAL_JOURNALS` (2026-09-29 et 2026-09-30)
+
+**`aDesModifsNonCommitees(chemin)`** (2026-09-29) : une page qui porte des modifications non
+committées ne peut pas être périmée — elle vient d'être touchée. Sans ce troisième état, le
+contrôle de fraîcheur accusait la page qu'on était en train d'écrire.
+
+**`LOCAL_JOURNALS` porte désormais `auClone` et `pourquoiAuClone`** (2026-09-30, tâche #1285). Ce
+registre déclarait déjà QUOI est chaque journal local ; il ne disait nulle part **ce que vaut sa
+perte au clone**, alors que tous sont dans `.gitignore`. Trois valeurs, déclarées dans
+`AU_CLONE` (`scripts/safe-export.mjs`) : `perte-acceptee`, `resume-committe`, `perte-reelle`.
+`findEtatsPerdusAuClone()` LIT ce registre plutôt que de le recopier (Article 24) — un journal
+ajouté ici entre dans le contrôle sans que personne y pense.
+
+**Sur les 20 déclarés : 17 en perte acceptée, 1 résumé committé (`.smart-conso-token-history.json`,
+dont `docs/smart-conso-token/serie.json` porte la série), 2 en perte réelle.**

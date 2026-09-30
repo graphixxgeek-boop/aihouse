@@ -18,12 +18,15 @@
 // LE DÉCOR PARTAGÉ (2026-09-27) : les lectures par défaut passent par le cache commun de
 // lib-shell, invalidé par mtime+taille+inode — un fichier modifié est donc bien relu. Les
 // paramètres restent injectables : un test qui passe son propre `lire` n'est pas touché.
-import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync, cpSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync, cpSync, statSync } from "node:fs";
 import { lireFichierPartage } from "./lib-shell.mjs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, porteeDe, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
+// LE REGISTRE DES JOURNAUX LOCAUX VIT CHEZ DOC-REPORT, et il est LU ici plutôt que recopié
+// (Article 24) : un journal ajouté là-bas entre dans ce contrôle sans que personne y pense.
+import { LOCAL_JOURNALS } from "./doc-report.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
@@ -2080,6 +2083,18 @@ function main() {
     if (!horizon.ecarts.length) console.log("   ✅ Chaque lecteur du verdict d'absence imprime l'horizon à côté de son chiffre.");
   }
 
+  // CE QU'UN CLONE NEUF PERD (2026-09-30). Imprimé dans SAFE-EXPORT et nulle part ailleurs : la
+  // question « une autre IA reprend-elle sans rien perdre ? » est littéralement son domaine.
+  const perdus = findEtatsPerdusAuClone({ journaux: LOCAL_JOURNALS });
+  if (!perdus.mesurable) {
+    console.log(`\n🧳 CE QU'UN CLONE PERD — PAS MESURÉ : ${perdus.pourquoi}`);
+  } else {
+    console.log(`\n🧳 CE QU'UN CLONE PERD — ${perdus.etats.length} journal(aux) local(aux) déclaré(s), ${perdus.sansIntention.length} sans intention écrite, ${perdus.perteReelle.length} en PERTE RÉELLE.`);
+    for (const e of perdus.sansIntention) console.log(`   ⚠️  ${e.chemin} : aucun champ auClone — on ne peut pas distinguer le cache assumé de l'historique qu'on croyait permanent`);
+    for (const e of perdus.intentionInconnue) console.log(`   ⚠️  ${e.chemin} : auClone « ${e.auClone} » n'est pas une valeur déclarée (${Object.keys(AU_CLONE).join(", ")})`);
+    for (const e of perdus.perteReelle) console.log(`   🔴 ${e.chemin} — ${e.present ? `${e.octets} octets` : "absent de ce conteneur"} : ${AU_CLONE["perte-reelle"]}`);
+  }
+
   // X6 — LE POURQUOI À CÔTÉ DU QUOI, ENFIN BRANCHÉ (2026-09-23, tâche #585). Le détecteur existait
   // depuis sa création sans qu'aucun main() ne l'appelle, pendant que le référentiel des standards
   // déclarait X6 « vérifiée par personne ». Les deux étaient vrais séparément.
@@ -2547,6 +2562,67 @@ export function findVerdictsSansHorizon({ root = ROOT, listDirImpl = readdirSync
       fichier: l.fichier,
       defaut: "rend le verdict d'absence du compteur sans jamais imprimer l'horizon du journal — sur un journal qui se reconstruit à chaque conteneur, « jamais sollicité » se lit comme « jamais utilisé par le projet » alors qu'il ne dit que « jamais vu passer depuis hier »",
     })),
+  };
+}
+// ══════════════════════════════════════════════════════════════════════════
+// CE QU'UN CLONE NEUF PERD EN SILENCE (2026-09-30, tâche #1285)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LA QUESTION EST CELLE DE L'ARTICLE 27, POSÉE SUR LES DONNÉES PLUTÔT QUE SUR LE CODE : une IA
+// qui ne dispose que de ce dépôt reprend-elle le chantier sans rien perdre ? Le code part avec le
+// clone. Les journaux locaux, non : ils sont dans `.gitignore`, donc ils meurent avec le conteneur.
+//
+// CE N'EST PAS UN DÉFAUT EN SOI — un cache DOIT être ignoré. Le défaut est qu'on ne peut pas
+// distinguer le cache assumé de l'historique qu'on croyait permanent, et le cas réel est mesuré :
+// `.tool-usage-history.json` se déclarait « cumul PERMANENT depuis le début du projet » dans son
+// propre en-tête, phrase recopiée dans le catalogue de LE-COORDINATEUR. Le fichier est ignoré : il
+// avait 23 heures. La contradiction a vécu des jours parce que rien ne DEMANDAIT l'intention.
+//
+// LA PREMIÈRE VERSION DE CE GARDE-FOU CHERCHAIT L'INTENTION DANS `.gitignore`, ET ELLE AURAIT
+// ACCUSÉ QUATRE INNOCENTS. Elle rendait « 14 fichiers, 0 intention ». Or `.agent-session.json`,
+// `.banniere-post-commit.txt`, `.xp-remontees.json` et `.conso-tours.json` DISENT déjà, mot pour
+// mot, que leur perte est sans conséquence — dans `LOCAL_JOURNALS` (doc-report.mjs), le registre
+// qui les déclare. Je regardais au mauvais endroit : encore un signal adjacent lu comme le signal
+// visé (leçon L47), et cette fois sur le garde-fou même que j'écrivais pour ça.
+//
+// CE QUI EST MESURÉ À LA PLACE : chaque journal déclaré porte-t-il un champ `auClone` qui DIT ce
+// que vaut sa perte ? Un champ, jamais une phrase à interpréter — une prose qui contient « jamais
+// un état du projet » se reconnaît, une prose qui n'en parle pas ne prouve rien, et un garde-fou
+// qui devine l'intention d'un texte finit par la deviner mal.
+//
+// IL NE DIT JAMAIS S'IL FAUT VERSIONNER : c'est une décision d'hygiène du dépôt, donc humaine
+// (posée au point #1222 de `docs/idees-a-trancher.md`). Il dit ce qui n'est pas décidé.
+//
+// LE POIDS SERT À CLASSER, JAMAIS À JUGER : un gros fichier perdu n'est pas forcément grave, mais
+// c'est par lui qu'on commence à regarder. `present: false` reste distinct d'un poids nul — un
+// journal jamais écrit n'a rien à perdre, et ce n'est pas la même chose qu'un journal vide.
+export const AU_CLONE = Object.freeze({
+  "perte-acceptee": "cache, rendu régénérable ou mesure propre à une machine — le perdre ne coûte rien",
+  "resume-committe": "le journal brut meurt, mais un résumé committé porte ce qui compte",
+  "perte-reelle": "rien ne survit au clone, et personne n'a encore décidé si c'est acceptable",
+});
+export function findEtatsPerdusAuClone({ root = ROOT, journaux = null, statImpl = null } = {}) {
+  if (!Array.isArray(journaux)) return { mesurable: false, pourquoi: "registre LOCAL_JOURNALS non fourni — impossible de conclure, et surtout pas que tout est déclaré", etats: [], sansIntention: [] };
+  const taille = statImpl ?? ((p) => { try { return statSync(p).size; } catch { return null; } });
+  const etats = journaux.map((j) => {
+    const octets = taille(join(root, String(j?.path ?? "").replace(/^\//, "")));
+    const valeur = j?.auClone ?? null;
+    return {
+      chemin: j?.path ?? "?",
+      proprietaire: j?.owner ?? "?",
+      present: octets !== null,
+      octets,
+      auClone: valeur,
+      reconnu: valeur === null ? null : Object.hasOwn(AU_CLONE, valeur),
+    };
+  });
+  etats.sort((a, b) => (b.octets ?? -1) - (a.octets ?? -1));
+  return {
+    mesurable: true,
+    etats,
+    sansIntention: etats.filter((e) => e.auClone === null),
+    intentionInconnue: etats.filter((e) => e.reconnu === false),
+    perteReelle: etats.filter((e) => e.auClone === "perte-reelle"),
   };
 }
 // LE LANCEUR EN DERNIER, ET C'EST UNE CONTRAINTE RÉELLE, pas une préférence de rangement : il

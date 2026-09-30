@@ -797,3 +797,32 @@ ne peut simuler — la moitié du dépôt parle de `toolsNeverUsed()` en comment
 déclarée plutôt que tue** : un lecteur qui recompte les événements lui-même lui échappe.
 `report-template.mjs` faisait exactement cela et a été câblé à la main le même jour. Sous-déclarer
 vaut mieux que fabriquer des coupables.
+
+## `findEtatsPerdusAuClone()` — ce qu'un clone neuf perd en silence (2026-09-30, tâche #1285)
+
+**LA QUESTION EST CELLE DE L'ARTICLE 27, POSÉE SUR LES DONNÉES.** Une IA qui ne dispose que de ce
+dépôt reprend-elle le chantier sans rien perdre ? Le code part avec le clone. Les **journaux
+locaux**, non : ils sont dans `.gitignore`, donc ils meurent avec le conteneur.
+
+**CE N'EST PAS UN DÉFAUT EN SOI** — un cache DOIT être ignoré. Le défaut est qu'on ne pouvait pas
+distinguer le cache assumé de l'historique qu'on croyait permanent. Le cas réel est mesuré :
+`.tool-usage-history.json` se déclarait « cumul permanent depuis le début du projet » ; il avait
+23 heures.
+
+**LE CHAMP `auClone` DANS `LOCAL_JOURNALS`** (doc-report.mjs) porte l'intention, en trois valeurs :
+`perte-acceptee` · `resume-committe` · `perte-reelle`. Un CHAMP, jamais une phrase à interpréter —
+un garde-fou qui devine l'intention d'un texte finit par la deviner mal.
+
+**LA PREMIÈRE VERSION CHERCHAIT L'INTENTION DANS `.gitignore` ET AURAIT ACCUSÉ QUATRE INNOCENTS.**
+Elle rendait « 14 fichiers, 0 intention » alors que `.agent-session.json`,
+`.banniere-post-commit.txt`, `.xp-remontees.json` et `.conso-tours.json` disent déjà en toutes
+lettres, dans le registre, que leur perte est sans conséquence. Je regardais au mauvais endroit —
+leçon L47, sur le garde-fou même écrit contre cette classe d'erreur.
+
+**PREMIER PASSAGE RÉEL : 20 journaux déclarés, 0 sans intention, 2 en PERTE RÉELLE** —
+`.tool-usage-history.json` (257 Ko) et `.memento-history.json` (22 Ko, 310 relevés du poids réel du
+contexte, dont `docs/memento/` ne garde qu'un index).
+
+**IL NE DIT JAMAIS S'IL FAUT VERSIONNER** : c'est une décision d'hygiène du dépôt, donc humaine,
+posée au point **#1222** de `docs/idees-a-trancher.md`. Il dit ce qui n'est pas décidé. Le poids
+sert à CLASSER, jamais à juger, et `present: false` reste distinct d'un poids nul (L5/L11).
