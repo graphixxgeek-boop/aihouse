@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 14 — Comment on utilise l'Agence, et faut-il tout reprendre à zéro</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T23:53:19.765Z</div>
+    <h1>FIL 14 — Comment on utilise l'Agence, et faut-il tout reprendre à zéro</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-14-usage-et-refonte.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À MOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étage 2 bis — il suppose les objectifs (faits) et précède la cascade. C'est le fil qui décide de la FORME que prendra tout le reste du travail. <strong>Saisines :</strong> demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Ce fil naît d'un message unique qui porte huit sujets</strong>, tous déposés mot pour mot dans <code>docs/grand-projet/00-sources/01-sa-demande/reponses-2026-10-01-nuit-rationalisation.md</code>, avec sa consigne d'ouverture : <em>« n'oublie rien, tout doit être consigné, et accroche des tâches si besoin »</em>.</p>
+<p><strong>Le sujet central, dans ses mots</strong> : <em>« il faut partir sur un nouveau code totalement propre, et recommencer tout à zéro, en reprenant tout point par point : situer le cœur de l'agence, et agréger les modules autour. Franchement je serais partant pour faire ça. »</em></p>
+<h4>CE QUI EST DÉJÀ MESURÉ ET QUI PÈSE SUR CETTE DÉCISION</h4>
+<p><strong>Ces chiffres existent tous, et aucun n'a été produit pour cette question</strong> — ils viennent de mesures faites pour d'autres raisons, ce qui les rend d'autant plus utiles :</p>
+<table><thead><tr><th>Ce qui est mesuré</th><th>Le chiffre</th><th>Ce que ça dit de la refonte</th></tr></thead><tbody><tr><td>kits d'export complets</td><td><strong>84 / 84</strong></td><td>ce qui existe est déjà emportable — la refonte n'est pas un sauvetage</td></tr><tr><td>outils indépendants d'un fournisseur</td><td><strong>94 %</strong></td><td>l'architecture n'est pas prisonnière</td></tr><tr><td>chemins écrits en dur</td><td><strong>38 fichiers sur 40</strong></td><td><strong>c'est ça, le vrai désordre</strong>, et c'est ce qu'une refonte corrigerait à la source</td></tr><tr><td>point de branchement pour une source extérieure</td><td><strong>aucun</strong></td><td>la modularité qu'il veut n'existe pas</td></tr><tr><td>documents alignés sur la racine</td><td><strong>44 / 59 (75 %)</strong></td><td>la cascade documentaire tient déjà</td></tr><tr><td>tâches sachant quel objectif elles servent</td><td><strong>14 / 1 272 pour le Jeu</strong></td><td>le second bout n'est pas raccordé</td></tr><tr><td>obligations portées par tous nos documents</td><td><strong>936</strong>, dont 556 dans un seul</td><td>le poids n'est pas là où on le croyait</td></tr></tbody></table>
+<h4>L'AUDIT DE L'HISTORIQUE COMPLET, fait à sa demande le même soir</h4>
+<p>Il a demandé : <em>« reprends l'historique de conversation et regarde si tu n'as rien oublié »</em>. <strong>Fait mécaniquement, pas de mémoire</strong> : les 216 619 lignes du journal de session ont été relues en flux, <strong>468 messages réellement humains extraits, 93 201 mots</strong>, puis confrontés à tout ce que le projet a produit.</p>
+<p><strong>Résultat : une seule vraie demande orpheline sur 93 201 mots</strong> — le rapport de tableau de bord (tâche <strong>#1348</strong>). Les quatre autres « orphelines » signalées par l'outil sont du dialogue de jeu qu'il a tapé dans la partie, ou du bruit d'interface.</p>
+<p><strong>Ce que ça dit, et ce que ça ne dit pas</strong> : ça dit que rien de gros n'a été perdu. <strong>Ça ne dit pas que tout a été traité</strong> — l'outil mesure un recouvrement de vocabulaire, pas une exécution, et il le déclare lui-même. 367 demandes ressortent « faibles », c'est-à-dire abordées quelque part sans preuve qu'elles aient été traitées.</p>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi ce fil est plus haut qu'il n'en a l'air</h3>
+<p><strong>Il ne décide pas d'un chantier, il décide de la FORME de tous les chantiers suivants.</strong> Si on repart à zéro, la cascade ne se « raccorde » pas à l'existant : elle se construit d'emblée dans le bon ordre. Si on ne repart pas, la cascade devra rattraper 1 272 tâches et 936 obligations écrites avant elle.</p>
+<p><strong>Les deux voies mènent au même endroit ; elles ne coûtent pas la même chose, et elles ne risquent pas la même chose.</strong> C'est exactement le genre d'arbitrage qui se tranche sur des chiffres — et la plupart existent déjà.</p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q14.1 — À MOI, tâche #1344.</strong> Chiffrer la refonte avant d'en dire quoi que ce soit : volume réel à reprendre, ce qui se recopie vraiment sans réflexion, ce qui ne se recopie pas, et le coût de faire vivre deux versions. <strong>Un avis donné sans ces chiffres serait l'opinion sans mesure que ce projet refuse.</strong></p>
+<p><strong>Q14.2 — À MOI, tâche #1341.</strong> Les deux scénarios d'usage par ZIP, confrontés aux mesures qui existent — pas à une opinion.</p>
+<p><strong>Q14.3 — À MOI, tâche #1343.</strong> Une carte par MODULE, parce qu'il ne peut pas juger ce qu'il ne voit pas. C'est le préalable de sa décision, pas un document de confort.</p>
+<p><strong>Q14.4 — À MOI, tâche #1345.</strong> L'état d'avancement complet, produit par les outils.</p>
+<p><strong>Q14.5 — À TOI, et c'est la seule question de ce fil qui ne se mesure pas.</strong> Une refonte à zéro suspend le travail sur le produit pendant sa durée. Es-tu prêt à ça ? <em>(a) oui, ça vaut le coup · (b) seulement si on peut continuer le Jeu en parallèle · (c) montre-moi d'abord le chiffrage</em></p>
+<p><strong>Q14.6 — À TOI.</strong> Ton hypothèse <em>« pas besoin de modifier le jeu, on peut le recopier tel quel »</em> : veux-tu que je la vérifie avant de chiffrer le reste ? Elle change beaucoup le total. <em>(a) oui, vérifie-la en premier · (b) non, chiffre l'ensemble d'abord</em></p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-14-usage-et-refonte.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

@@ -51,8 +51,9 @@ personne).
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
 | [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 6 (1 pour toi) |
 | [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 6 (4 pour toi) |
+| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | **À MOI** | 6 (2 pour toi) |
 
-**Total : 13 fils · 65 questions vives · 32 attendent ta réponse · 33 sont de mon côté.**
+**Total : 14 fils · 71 questions vives · 34 attendent ta réponse · 37 sont de mon côté.**
 
 ---
 
@@ -141,4 +142,5 @@ premier et se régénère ; il ne se corrige jamais à la main, sinon les deux d
 | `fil-11-testeurs-et-regard-exterieur.md` | [fil-11-testeurs-et-regard-exterieur.html](html/fil-11-testeurs-et-regard-exterieur.html) |
 | `fil-12-systeme-global-ou-on-en-est.md` | [fil-12-systeme-global-ou-on-en-est.html](html/fil-12-systeme-global-ou-on-en-est.html) |
 | `fil-13-sources-exterieures.md` | [fil-13-sources-exterieures.html](html/fil-13-sources-exterieures.html) |
+| `fil-14-usage-et-refonte.md` | [fil-14-usage-et-refonte.html](html/fil-14-usage-et-refonte.html) |
 | `index.md` *(cette carte)* | [index.html](html/index.html) |
