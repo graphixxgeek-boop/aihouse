@@ -75,3 +75,33 @@ rapport lisible — et le contrôle a immédiatement mordu sur sa propre fiche, 
 
 **Premier passage réel** : 77 scripts comparés, 7 sans fiche, **15 en retard** — dont
 `check-tasks-details` avec 16 fonctions publiques que sa fiche ne nomme pas.
+
+## `findPreuvesToujoursVraies()` — le miroir de la sonde cassée (2026-09-30, tâche #1292)
+
+**`findBrokenProbes()` attrape la sonde qui pointe vers rien : elle ACCUSE une étape qui a bien eu
+lieu. Celle-ci attrape l'inverse, et il est plus discret : une sonde qui ne peut pas échouer
+ABSOUT une étape qui n'a jamais eu lieu.** Les deux défauts sont symétriques ; seul le premier
+avait un détecteur, parce qu'une fausse accusation se remarque et un faux acquittement non.
+
+**LE CAS RÉEL QUI L'A FAIT NAÎTRE, ET IL A COÛTÉ SEPT JOURS.** L'étape « déclarer le mode sur
+disque plutôt que le supposer » avait pour preuve l'existence de `.mode-de-travail.json`. Le
+fichier existait, il est **versionné**, il datait du 2026-09-23 — et il déclarait l'utilisateur
+absent pendant toutes ses séances de jour. L'étape était verte en permanence.
+**Une preuve de PRÉSENCE n'est pas une preuve de PERFORMANCE.**
+
+**LA DÉRIVATION EST EXACTE, ET C'EST CE QUI REND LE CONTRÔLE SÛR** : un fichier **suivi par git**
+est présent dans tout clone neuf, avant qu'aucune étape n'ait été exécutée — son existence ne peut
+donc jamais distinguer « fait » de « pas fait ». Un fichier **non suivi** n'apparaît que si quelque
+chose l'a écrit. Aucune liste à tenir : `git ls-files` répond.
+
+**PREMIER PASSAGE RÉEL : 31 preuves sur 42 ne peuvent jamais échouer**, réparties sur 12 process.
+Les 11 autres tiennent vraiment.
+
+**IL SIGNALE, IL NE CORRIGE JAMAIS (Article 26).** Ce qu'une vraie preuve serait pour « archiver la
+simulation » ou pour « câbler le mécanisme dans tel script » demande une décision par étape, pas
+une règle générale — et corriger les trente et une d'un coup fabriquerait trente et une sondes
+inventées, ce qui vaut moins que trente et une sondes honnêtement déclarées faibles.
+
+**IL SORT DANS LE RAPPORT COMPLET, PAS AU COMMIT** : trente et une lignes qui ne bougent pas d'un
+commit à l'autre deviendraient un mur, donc du décor (L4/L6). Le plan d'action en fait **un seul
+constat**, jamais trente et un, pour la même raison.

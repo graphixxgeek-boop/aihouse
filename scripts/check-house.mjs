@@ -3911,6 +3911,29 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   const cassee=etapeTrace({preuve:{dossier:'docs/dossier-qui-nexiste-pas/',motif:/./}});
   assert.ok(cassee.verifiable===false&&typeof cassee.sondeCassee==='string','a probe aimed at a folder that does not exist must be reported as a broken probe, never as a missing step — confusing the two is the exact error this whole toolset exists to prevent');
   assert.deepEqual(findBrokenProbes(),[],'no probe of the real registry may point at nothing — a broken probe is a defect of THIS tool, never a reproach to the work it watches');
+  // LE MIROIR, ET IL EST PLUS DISCRET (2026-09-30, tâche #1292). findBrokenProbes() attrape la
+  // sonde qui ACCUSE une étape faite ; celle-ci attrape la sonde qui ABSOUT une étape jamais
+  // faite. Une fausse accusation se remarque, un faux acquittement non — c'est pour ça que seul
+  // le premier avait un détecteur, et c'est par là que le mode de travail est resté vert sept
+  // jours en déclarant l'utilisateur absent.
+  const { findPreuvesToujoursVraies, formatPreuvesToujoursVraiesLines } = await import('../scripts/god-of-all-process.mjs');
+  const vraiesPreuves = findPreuvesToujoursVraies();
+  assert.ok(vraiesPreuves.mesurable, 'the guard must read the real repo, never return a silent green');
+  assert.ok(vraiesPreuves.total >= 30, `MUST CATCH: only ${vraiesPreuves.total} file-proofs found — the registry shape changed and the derivation stopped seeing them, which reads as « nothing wrong » instead of « nothing checked »`);
+  assert.ok(vraiesPreuves.peuventEchouer.length > 0, 'MUST CATCH: if NO proof can fail any more, every step is permanently green and the whole probe system has become decoration');
+  // LA DÉRIVATION EST EXACTE, ET LES DEUX CONTRE-TESTS LA VERROUILLENT DANS LES DEUX SENS.
+  const preuveFixture = (fichier, suivi) => findPreuvesToujoursVraies({
+    processes: [{ slug: 'p', etapes: [{ cle: 'e', libelle: 'l', preuve: { fichier } }] }],
+    shImpl: () => (suivi ? `${fichier}\nautre.md` : 'autre.md'),
+  });
+  assert.equal(preuveFixture('CLAUDE.md', true).toujoursVraies.length, 1, 'MUST CATCH: a versioned file is present in every fresh clone, so its existence can never tell « done » from « not done »');
+  assert.equal(preuveFixture('.un-journal.json', false).peuventEchouer.length, 1, 'an unversioned file only exists if something wrote it — that one really proves');
+  // ET UN GIT MUET NE VAUT JAMAIS UN VERT : « aucune preuve fragile » et « je n'ai pas pu
+  // regarder » ne doivent pas s'écrire pareil (L5/L11).
+  const aveugle = findPreuvesToujoursVraies({ shImpl: () => { throw new Error('boom'); } });
+  assert.equal(aveugle.mesurable, false, 'a git that does not answer means PAS MESURÉ');
+  assert.equal(findPreuvesToujoursVraies({ shImpl: () => '' }).mesurable, false, 'and an EMPTY file list is not « nothing is versioned », it is « the repo is not readable from here » — the opposite of what a zero looks like');
+  assert.match(formatPreuvesToujoursVraiesLines(aveugle)[0], /PAS MESURÉ/, 'and the printed line must say so rather than show a reassuring count');
   assert.deepEqual(findProcessesWithoutGuardian(),[],'every declared process must have a guardian that really exists on disk');
   assert.deepEqual(findProcessDocsMissing(),[],'every declared process must point at a document that really exists');
   assert.deepEqual(findTensionsOnUnknownProcess(),[],'a declared tension must never cite a process that no longer exists');

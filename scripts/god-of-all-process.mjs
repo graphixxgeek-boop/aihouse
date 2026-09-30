@@ -2021,6 +2021,61 @@ export function findBrokenProbes({ processes = PROCESSES, root = ROOT } = {}) {
     .map((x) => `${x.p.nom} / « ${x.e.libelle} » : ${x.t.sondeCassee}`));
 }
 
+// LE MIROIR DE `findBrokenProbes()` — UNE SONDE QUI NE PEUT JAMAIS ÉCHOUER (2026-09-30, tâche #1292)
+//
+// `findBrokenProbes()` attrape la sonde qui pointe vers rien : elle accuse une étape qui a bien eu
+// lieu. Celle-ci attrape l'inverse, et il est plus discret : **une sonde qui ne peut pas échouer
+// ABSOUT une étape qui n'a jamais eu lieu.** Les deux défauts sont symétriques ; seul le premier
+// avait un détecteur, parce qu'une fausse accusation se remarque et un faux acquittement non.
+//
+// LE CAS RÉEL QUI L'A FAIT NAÎTRE, ET IL A COÛTÉ SEPT JOURS. L'étape « déclarer le mode sur disque
+// plutôt que le supposer » avait pour preuve l'existence de `.mode-de-travail.json`. Le fichier
+// existait, il était **versionné**, il datait du 2026-09-23 — et il déclarait l'utilisateur absent
+// pendant toutes ses séances de jour. L'étape était verte en permanence. **Une preuve de PRÉSENCE
+// n'est pas une preuve de PERFORMANCE.**
+//
+// LA DÉRIVATION EST EXACTE, ET C'EST CE QUI REND CE CONTRÔLE SÛR : un fichier SUIVI PAR GIT est
+// présent dans tout clone neuf, avant qu'aucune étape n'ait été exécutée. Son existence ne peut
+// donc jamais distinguer « fait » de « pas fait ». Un fichier NON suivi n'apparaît que si quelque
+// chose l'a écrit : lui peut échouer, donc il prouve. Aucune liste à tenir, aucun jugement à
+// porter — `git ls-files` répond.
+//
+// CE QU'IL NE FAIT PAS, ET C'EST DÉLIBÉRÉ (Article 26 : god SIGNALE FORT, il ne bloque JAMAIS).
+// Il ne propose pas de remède : ce qu'une vraie preuve serait pour « archiver la simulation » ou
+// pour « câbler le mécanisme dans tel script » demande une décision par étape, pas une règle
+// générale. Il rend la LISTE et le compte ; les corriger d'un coup fabriquerait trente et une
+// sondes inventées, ce qui vaut moins que trente et une sondes honnêtement déclarées faibles.
+export function findPreuvesToujoursVraies({ processes = PROCESSES, root = ROOT, shImpl = sh } = {}) {
+  let suivis;
+  try {
+    suivis = new Set(String(shImpl(`git -C ${root} ls-files`)).trim().split("\n").filter(Boolean));
+  } catch {
+    return { mesurable: false, pourquoi: "git ls-files n'a pas répondu — impossible de savoir quels fichiers voyagent avec le clone, et surtout pas de conclure que toutes les preuves tiennent", toujoursVraies: [], peuventEchouer: [] };
+  }
+  if (!suivis.size) return { mesurable: false, pourquoi: "aucun fichier suivi par git — le dépôt n'est pas lisible d'ici, et un zéro ici voudrait dire l'inverse de ce qu'il a l'air de dire", toujoursVraies: [], peuventEchouer: [] };
+  const toujoursVraies = []; const peuventEchouer = [];
+  for (const p of processes) {
+    for (const e of (p.etapes ?? [])) {
+      const fichier = e?.preuve?.fichier;
+      if (!fichier) continue;
+      const cas = { process: p.slug, etape: e.cle, libelle: e.libelle, fichier };
+      if (suivis.has(fichier)) toujoursVraies.push(cas); else peuventEchouer.push(cas);
+    }
+  }
+  return { mesurable: true, toujoursVraies, peuventEchouer, total: toujoursVraies.length + peuventEchouer.length };
+}
+
+export function formatPreuvesToujoursVraiesLines(r) {
+  if (!r?.mesurable) return [`🚨 PREUVES D'ÉTAPE — PAS MESURÉ : ${r?.pourquoi ?? "lecture impossible"}`];
+  const lignes = [`⚠️  ${r.toujoursVraies.length} preuve(s) d'étape sur ${r.total} ne peuvent JAMAIS échouer : leur fichier est versionné, donc présent dans tout clone neuf avant qu'aucune étape n'ait eu lieu.`];
+  lignes.push("   Une preuve de PRÉSENCE n'est pas une preuve de PERFORMANCE — c'est par là que le mode de travail est resté vert sept jours en déclarant l'utilisateur absent.");
+  const parProcess = new Map();
+  for (const c of r.toujoursVraies) parProcess.set(c.process, [...(parProcess.get(c.process) ?? []), c.fichier]);
+  for (const [slug, fichiers] of parProcess) lignes.push(`   · ${slug} : ${[...new Set(fichiers)].join(", ")}`);
+  lignes.push(`   ${r.peuventEchouer.length} preuve(s) tiennent vraiment : leur fichier n'est pas versionné, donc il n'existe que si quelque chose l'a écrit.`);
+  lignes.push("   Je SIGNALE, je ne corrige jamais (Article 26) : ce qu'une vraie preuve serait se décide étape par étape.");
+  return lignes;
+}
 export function processProgress(slug, { processes = PROCESSES, root = ROOT } = {}) {
   const p = processes.find((x) => x.slug === slug);
   if (!p) return undefined;
@@ -2946,6 +3001,15 @@ function main() {
   // NE L'APPELAIT (leçon L2 : un mécanisme qui ne sort pas du script est une intention). Elle parle
   // du PROJET, pas d'un invariant de code : elle nomme les activités à enjeu que rien ne gouverne.
   // C'est très exactement le métier de god, et son rapport n'en disait pas un mot.
+  // LES PREUVES QUI NE PEUVENT PAS ÉCHOUER (2026-09-30, tâche #1292). DANS LE RAPPORT COMPLET ET
+  // PAS AU COMMIT, et c'est un choix : trente et une lignes qui ne bougeront pas d'un commit à
+  // l'autre deviendraient un mur, donc du décor (L4/L6). Elles appellent une décision par étape,
+  // pas une action à chaque passage.
+  const preuves = findPreuvesToujoursVraies();
+  console.log("=== PREUVES D'ÉTAPE QUI NE PEUVENT JAMAIS ÉCHOUER (tâche #1292) ===\n");
+  for (const l of formatPreuvesToujoursVraiesLines(preuves)) console.log(l);
+  console.log("");
+
   const sansProcess = findScriptsDeservingProcess();
   console.log("=== ACTIVITÉS À ENJEU SANS PROCESS ÉCRIT (tâche #919) ===\n");
   if (!sansProcess.length) {
@@ -2986,6 +3050,15 @@ function main() {
     ...sansProcess.map((a) => ({
       fichier: a.chemin, defaut: "activité à enjeu sans process écrit",
       tache: `écrire le process de « ${a.chemin} », ou déclarer noir sur blanc pourquoi elle n'en a pas besoin`, fausseUneMesure: false })),
+    // UN SEUL CONSTAT POUR LES TRENTE ET UNE, jamais trente et un : elles ont la même cause et se
+    // décident ensemble. Trente et une lignes de plan d'action pour un seul défaut de conception
+    // noieraient les autres constats, ce qui est la façon la plus sûre de n'en traiter aucun.
+    ...(preuves.mesurable && preuves.toujoursVraies.length
+      ? [{ fichier: "scripts/god-of-all-process.mjs",
+           defaut: `${preuves.toujoursVraies.length} preuve(s) d'étape sur ${preuves.total} portent sur un fichier VERSIONNÉ : présentes dans tout clone neuf, elles ne peuvent jamais distinguer « fait » de « pas fait »`,
+           tache: "décider, étape par étape, ce qu'une vraie preuve serait — ou déclarer par écrit que la présence du fichier suffit et pourquoi (tâche #1292)",
+           fausseUneMesure: true }]
+      : []),
   ];
   const planGod = planDactionDepuisEcarts(ecartsGod, { toolSlug: "god-of-all-process",
     libelle: (e) => `${e.fichier} — ${e.defaut}`, tache: (e) => e.tache });
