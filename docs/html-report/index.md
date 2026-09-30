@@ -35,7 +35,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/fil-de-discussion.html` | `docs/grand-projet/fil-de-discussion.md` | 34098 | 2026-09-30 16:20Z |
 | `docs/grand-projet/html/ou-on-en-est-vraiment.html` | `docs/grand-projet/ou-on-en-est-vraiment.md` | 21020 | 2026-09-30 17:19Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 16456 | 2026-09-30 18:45Z |
-| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 21468 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-04-systeme-de-travail.html` | `docs/fils/fil-04-systeme-de-travail.md` | 12885 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-05-creation-vs-produit-fini.html` | `docs/fils/fil-05-creation-vs-produit-fini.md` | 10352 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 15588 | 2026-09-30 21:05Z |
@@ -49,4 +48,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 11213 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 12553 | 2026-09-30 21:40Z |
 | `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 15716 | 2026-09-30 21:54Z |
-| `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 20774 | 2026-09-30 22:26Z |
+| `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 18826 | 2026-09-30 22:56Z |
+| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 22280 | 2026-09-30 22:56Z |

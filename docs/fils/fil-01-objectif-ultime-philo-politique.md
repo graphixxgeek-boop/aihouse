@@ -102,6 +102,22 @@ la preuve — une fois séparées par niveau, tes réponses tiennent debout sans
 
 ---
 
+---
+
+## ⚠️ OÙ VIVENT LES TROIS OBJECTIFS, depuis le 2026-09-30
+
+**Le travail de fond a son propre document** : `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md`
+(page lisible : `docs/grand-projet/html/les-trois-objectifs-ultimes.html`). Il porte la comparaison
+avec nos documents antérieurs, les cinq écarts trouvés, et chaque objectif passé aux cinq critères
+avec ses échecs affichés.
+
+**Ce fil reste le point d'entrée du sujet ; il ne recopie pas le document.** *(Et ce renvoi a été
+ajouté parce qu'il manquait : pendant une demi-heure, le document neuf n'était cité par aucun fil —
+exactement le défaut « atteignable seulement en ouvrant le bon dossier » mesuré deux heures plus
+tôt, commis sur mon propre travail.)*
+
+---
+
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
 **Q1.1 — À TOI.** Acceptes-tu qu'on sépare explicitement **deux objectifs ultimes** : celui du

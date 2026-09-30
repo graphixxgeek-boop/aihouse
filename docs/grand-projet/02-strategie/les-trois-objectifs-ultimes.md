@@ -69,104 +69,78 @@ puissent venir que de toi : **si ça marchait parfaitement, qu'est-ce que ça ch
 
 ---
 
-# PARTIE 2 — LES TROIS OBJECTIFS ULTIMES, REFORMULÉS
+# PARTIE 2 — LES TROIS OBJECTIFS ULTIMES
 
-**Trois précautions avant de lire.** ① Chacun est passé aux **cinq critères** de ton document, et
-le résultat est affiché, échecs compris. ② Chacun tient en **une phrase** : un objectif ultime qui
-demande un paragraphe n'arbitrera jamais rien dans l'urgence. ③ **Rien ici n'est inventé** — tout
-vient de tes mots, resserrés.
+## ⚠️ VERSION 2 — corrigée le 2026-09-30 à 22h49, et sa critique était juste
 
----
+**Sa critique, mot pour mot** : *« les 2 autres objectifs sont plus "aériens" je trouve, et sont
+limite des objectifs d'entreprise, pas de projet, ou alors je me trompe ? »* Puis : *« le curseur
+ne devrait-il pas être placé à peine plus vers le concret ? »*
 
-## ① L'OBJECTIF ULTIME DU PROJET *(toi et moi, les deux produits ensemble)*
+**Il ne se trompe pas, et la preuve est dans sa propre réaction** : le seul des trois qu'il valide
+à 100 % est **le seul qui soit concret** — celui du Jeu, qui nomme un effet sur une personne. Les
+deux autres nommaient une *thèse*. Une thèse ne tranche rien un mardi soir devant deux options.
 
-> ### **Prouver qu'on peut faire naître, avec l'IA et sans y renoncer soi-même, des produits qu'on n'aurait pas pu faire autrement.**
+**Pourquoi j'ai dérivé, et c'est une erreur de méthode identifiable** : j'ai optimisé pour le
+critère 2 — *ne dépendre d'aucune stratégie* — et sur-corrigé dans l'abstraction. En fuyant « trop
+étroit », je suis tombé dans « trop large ».
 
-**Ce qu'il retient de toi** : *« 2 nouveaux produits à haute valeur »* · *« 2 expériences
-inédites »* · *« l'un est un prétexte pour l'autre »* · et ton refus permanent, *« travailler de
-manière imprécise »*, qui dit en creux que la manière compte autant que le résultat.
+**ET SES CINQ CRITÈRES ONT UN TROU, que cette erreur révèle.** Aucun des cinq ne dit : *« il doit
+désigner CE système-là et aucun autre »*. Mes deux formulations passaient les cinq critères **et
+auraient pu être adoptées telles quelles par n'importe quel projet fait avec une IA**. C'est un
+sixième critère à ajouter à son document, et il l'a trouvé par l'instinct là où le test ne voyait
+rien.
 
-**Pourquoi « sans y renoncer soi-même »** : c'est le seul mot qui capte à la fois ton *« l'humain
-crée un projet qui lui appartient »*, ton Article 0 défendu sept fois contre moi, et ta double
-confirmation avant toute concession. **Sans lui, la phrase décrirait n'importe quel projet fait
-avec une IA.**
-
-| Critère | Verdict |
-|---|---|
-| 1. arrête la remontée des « pourquoi » | ✅ on ne peut plus demander pourquoi prouver ça |
-| 2. ne dépend d'aucune stratégie | ✅ vendre, ouvrir ou garder servent tous cette preuve |
-| 3. valable vingt ans | ✅ |
-| 4. permet d'arbitrer | ✅ **et c'est sa force** : entre « plus vite » et « plus juste », il tranche toujours pour le second |
-| 5. inspire | 🟠 **à toi de le dire** — c'est le seul critère que je ne peux pas évaluer à ta place |
-
-**Ce qu'il fait de ton point 2 (« facultatif ? »), « concrétiser la première production d'une
-nouvelle entreprise »** : il ne l'inclut pas, **et ce n'est pas un oubli**. Une entreprise est un
-véhicule — donc une stratégie, exactement comme vendre. Elle échoue au critère 2. **Ta propre
-hésitation (« facultatif ? ») avait raison.**
+**Une tension réelle, à connaître** : plus c'est concret, plus c'est achevable — et un objectif
+qu'on peut cocher échoue au critère des vingt ans. C'est pourquoi la version ① ci-dessous ne dit
+pas « **deux** produits » : le nombre l'aurait rendu terminable.
 
 ---
 
-## ② L'OBJECTIF ULTIME DE L'AGENCE *(le produit générique, celui qui part chez un client)*
+## ① L'OBJECTIF ULTIME DU PROJET
 
-> ### **Faire que travailler avec une IA sur du code produise un résultat dont on puisse répondre.**
+> ### **Faire naître des produits que je n'aurais pas pu faire seul, sans jamais cesser d'en être l'auteur.**
 
-**Ce qu'il retient de toi** : *« comble les failles classiques des IA de codage »* · *« tout ce qui
-crée de l'insatisfaction »* · *« fiabilise, optimise »* · *« jamais une lourdeur »* · et *« l'humain
-crée un projet qui lui appartient »*.
+**Ce qu'il recouvre, pour lever un doute d'interprétation.** Ce projet porte **deux produits
+distincts**, à vivre indépendamment l'un de l'autre : l'Agence **CIRCLE** et le Jeu **IBT**. Le Jeu
+est le premier à bénéficier de l'Agence — mais l'Agence n'y a **qu'une fonction de diagnostic et
+d'alertes, jamais d'intervention libre sur le code**, et le Jeu n'agit pas en retour sur elle. Les
+deux sont **réciproques dans l'intention** (chacun sert de raison à l'autre) et **à sens unique
+dans le mécanisme**. *« Sans cesser d'en être l'auteur »* porte ce qui n'est jamais négociable :
+l'humain décide, l'humain possède, et deux choses restent refusées — **travailler de manière
+imprécise**, et **décider contre notre cadre**.
 
-**« Dont on puisse répondre » fait trois choses à la fois**, et c'est pour ça que je l'ai choisi :
-on peut **répondre de** ce qu'on livre (la fiabilité), **répondre à** qui le demande (la
-traçabilité), et **en répondre** juridiquement (la propriété — ton sujet du fil 08). **C'est aussi
-exactement ce que nos vingt refus disent déjà** : *ne jamais laisser passer pour un fait ce qui
-n'en est pas un.*
+---
 
-| Critère | Verdict |
-|---|---|
-| 1. arrête la remontée | ✅ |
-| 2. ne dépend d'aucune stratégie | ✅ vrai qu'on la vende, l'ouvre ou la garde |
-| 3. valable vingt ans | ✅ le problème grandit avec l'usage de l'IA, il ne se périme pas |
-| 4. permet d'arbitrer | ✅ entre une fonction séduisante et une garantie vérifiable, il tranche |
-| 5. inspire | 🟠 à toi |
+## ② L'OBJECTIF ULTIME DE L'AGENCE
 
-**CE QUE J'AI DÉLIBÉRÉMENT LAISSÉ DEHORS, ET IL FAUT QUE TU LE SACHES.** Tu écris *« fun par son
-esthétique »*, *« incontournable dans le métier »*, *« attire l'attention des acteurs du marché »*.
-**Ce sont de vraies intentions, mais ce ne sont pas des fins** : le fun est un MOYEN de faire
-adopter, « incontournable » et « attirer le marché » sont des RÉSULTATS COMMERCIAUX. Les trois
-échouent au critère 2. **Ils ne disparaissent pas — ils appartiennent à la stratégie de l'Agence,
-l'étage juste en dessous, et ils y seront repris.**
+> ### **Faire qu'un projet mené avec une IA tienne debout quand on le vérifie.**
 
-**LA PARTICULARITÉ DE CET OBJECTIF-LÀ, ET ELLE N'EXISTE POUR AUCUN DES DEUX AUTRES** : il part chez
-quelqu'un d'autre. **Le client projettera SON objectif dedans.** Celui-ci doit donc rester
-générique — ton document le dit lui-même : *« l'objectif ultime Projet ne doit pas être implanté
-tel quel dans l'Agence du client »*.
+**Ce qu'il recouvre.** L'Agence comble les failles classiques des IA de codage — tout ce qui crée
+de l'insatisfaction chez ceux qui les utilisent. **Elle est plus qu'une béquille** : elle fiabilise
+et optimise le codage, et accompagne le codeur de bout en bout par une prestation calibrée sur son
+besoin, **fun par son esthétique, professionnelle dans son fonctionnement, jamais une lourdeur**.
+Ses agents sont comme des employés de l'agence, qui se combinent entre eux. Ce qu'elle ne sacrifie
+jamais : **l'expérience client — humaine ET IA**, sa fonctionnalité d'ensemble, et la qualité de la
+prestation globale. Et l'humain, chez elle, crée **un projet qui lui appartient**.
 
 ---
 
 ## ③ L'OBJECTIF ULTIME DU JEU
 
-> ### **Faire douter quelqu'un, une vraie fois, de ce qu'une IA peut être.**
+> ### **Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.**
 
-**Ce qu'il retient de toi** : *« Incredible But True »* — que tu désignes toi-même comme le cœur —
-· *« expérience réaliste de laboratoire d'observation »* · *« deux agents IA au caractère bien
-trempé »* · *« surprenant, captivant, jamais ennuyeux »* · *« le réalisme des dialogues, règle 0 »*
-· *« le côté dystopique, inédit, insolite »*.
+**Ce qu'il recouvre.** Le Jeu est un **laboratoire d'observation** — on regarde vivre deux agents
+IA au caractère bien trempé, et on peut leur parler. *Incredible But True* : le cœur est que ce
+soit **à la fois incroyable et réel**. Surprenant, drôle, captivant, instructif, **jamais
+ennuyeux**. Ce qu'il ne sacrifie jamais : **le réalisme des dialogues (règle 0)**, et le côté
+**dystopique, inédit, insolite**.
 
-**Pourquoi « faire douter » et pas « divertir »** : divertir est vrai de tous les jeux, donc ça
-n'arbitre rien. **Le doute est ce que ton propre nom promet** — *incroyable, mais vrai*. Et c'est
-la seule formulation qui explique pourquoi l'Article 0 est intransigeant : **un personnage
-consensuel ne fait douter personne.** Le ton n'est plus une préférence esthétique, il devient la
-condition du but.
-
-**Pourquoi « une vraie fois »** : ça pose une barre vérifiable. Pas « souvent », pas « toujours » —
-**une fois, mais réellement.** C'est atteignable, et c'est mesurable par un testeur (fil 11).
-
-| Critère | Verdict |
-|---|---|
-| 1. arrête la remontée | ✅ |
-| 2. ne dépend d'aucune stratégie | ✅ gratuit, payant, ouvert : sans effet |
-| 3. valable vingt ans | 🟠 **le seul point faible des trois, et je le dis** : ce qui étonne aujourd'hui sera banal dans dix ans. La barre monte toute seule — ce qui est peut-être une force, mais c'est à toi de trancher |
-| 4. permet d'arbitrer | ✅ **et brutalement** : toute fonctionnalité qui ne sert pas le doute passe après |
-| 5. inspire | 🟠 à toi |
+**Pourquoi cette version est moins périssable que la précédente** — sa demande n°1. La v1 disait
+*« douter de ce qu'une IA peut être »*, et **ça vieillit** : les capacités des IA banalisent
+l'étonnement. *« Qu'il n'y ait personne derrière »* ne vieillit pas, parce que **la réponse reste
+non, pour toujours**. C'est la plus vieille question qu'on puisse poser à une machine, et elle
+n'a pas de date de péremption.
 
 ---
 
