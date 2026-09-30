@@ -15515,7 +15515,34 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // est-il là ? » et « une fenêtre peut-elle bloquer ? ». Les deux allaient toujours ensemble tant
   // qu'il n'existait que le mode piloté et la nuit — le mode semi-autonome, demandé le 2026-09-23,
   // les sépare : présent ET non bloquant.
-  const { MODES, CLEFS_DE_MODE, modeParSlug, modeCourant, passerEnMode, fenetrePeutBloquer, findModesInconnusCites, formatModes } = await import('../scripts/modes-de-travail.mjs');
+  const { MODES, CLEFS_DE_MODE, modeParSlug, modeCourant, passerEnMode, fenetrePeutBloquer, findModesInconnusCites, formatModes, fraicheurDuMode, formatFraicheurDuMode, HEURES_AVANT_QU_UN_MODE_DATE, MODES_QUI_EXPIRENT } = await import('../scripts/modes-de-travail.mjs');
+
+  // LA FRAÎCHEUR DU MODE (2026-09-30, tâche #1284) — le mode « autonome » était déclaré depuis
+  // 148 HEURES, soit sept jours. Pendant toutes les séances de JOUR de cette semaine, tout
+  // lecteur du mode recevait « utilisateur absent, une fenêtre ne peut pas bloquer ». Le
+  // mécanisme censé dire QUAND on peut poser une question répondait NON pendant qu'il attendait
+  // devant son écran. Le fichier porte sa date depuis le premier jour ; personne ne la lisait.
+  const modeDate = (data, heuresEcoulees) => fraicheurDuMode({
+    existsImpl: () => data !== null,
+    readFileImpl: () => JSON.stringify(data),
+    maintenant: Date.parse('2026-09-30T00:00:00Z'),
+    root: '/peu-importe',
+  });
+  const vieux = { slug: 'autonome', depuis: '2026-09-23T00:00:00Z' };
+  assert.equal(modeDate(vieux).date, true, "MUST CATCH: an 'autonome' mode declared seven days ago is the exact defect — a night does not last a week");
+  assert.match(formatFraicheurDuMode(modeDate(vieux)), /MODE DATÉ/, 'and it must SAY so, loudly — a measured staleness that prints nothing is the same as no measure');
+  assert.equal(modeDate({ slug: 'autonome', depuis: '2026-09-29T20:00:00Z' }).date, false, 'MUST NOT CATCH: a mode declared four hours ago is a normal night — a guard that fires on every night stops being read (L4)');
+  // « piloté » n'affirme rien de daté : c'est le repli de modeCourant() et l'état normal. Le
+  // faire expirer accuserait le mode par défaut, donc presque toujours.
+  assert.equal(modeDate({ slug: 'pilote', depuis: '2026-01-01T00:00:00Z' }).date, false, 'MUST NOT CATCH: the default mode asserts nothing time-bound, so it can never go stale');
+  assert.ok(!MODES_QUI_EXPIRENT.includes('pilote'), 'and that exemption is declared in one place, never re-derived at each call site');
+  assert.equal(MODES_QUI_EXPIRENT.every((s) => modeParSlug(s)), true, 'every expiring slug must be a real mode — a typo here would silently exempt a mode instead of watching it');
+  // TROIS ÉTATS, JAMAIS DEUX (L5/L11) : « frais », « daté » et « pas mesurable » ne doivent
+  // jamais s'écrire pareil — un mode sans date lisible n'est pas un mode récent.
+  assert.equal(modeDate(null).mesurable, false, 'no declared mode at all is PAS MESURÉ, never a fresh zero');
+  assert.equal(modeDate({ slug: 'autonome' }).mesurable, false, 'a mode declared WITHOUT a readable date cannot have its age computed — that is not the same as being recent');
+  assert.match(formatFraicheurDuMode(modeDate({ slug: 'autonome' })), /NON MESURÉ/, 'and the printed line must say so rather than fall back to a reassuring number');
+  assert.ok(HEURES_AVANT_QU_UN_MODE_DATE >= 12, 'the threshold must stay at least as long as a plausible night — tightening it below that turns every normal night into an alert');
   assert.equal(MODES.length, 3, 'three modes, declared once and read everywhere — a fourth joins MODES and nowhere else (Article 24)');
   for (const m of MODES) for (const clef of CLEFS_DE_MODE) assert.ok(m[clef] !== undefined, `every mode must answer every behaviour key (${m.slug} is missing ${clef}) — a mode that leaves one undefined makes its caller guess, which is the exact defect being fixed`);
   const semi = modeParSlug('semi-autonome');

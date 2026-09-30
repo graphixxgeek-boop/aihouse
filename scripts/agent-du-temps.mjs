@@ -286,8 +286,17 @@ async function main() {
   // jamais un plantage, et cet outil est le dernier qui devrait tomber (Article 32).
   let modeCourantLu = null;
   try { modeCourantLu = (await import("./modes-de-travail.mjs")).modeCourant(); } catch { /* déclaré par la fonction */ }
+  // L'ÂGE DU MODE, LU PLUTÔT QUE SUPPOSÉ (2026-09-30, tâche #1284). Cette fonction imprimait déjà
+  // « si le mode n'a pas été changé, il décrit l'intention d'hier » — un avertissement qui
+  // prévient d'un risque sans jamais mesurer s'il s'est réalisé. Il s'était réalisé : le mode
+  // « autonome » datait de 148 heures. Le fichier porte sa date depuis toujours ; personne ne la
+  // lisait. C'est l'Article 32 appliqué au mode lui-même — une fraîcheur se calcule, jamais ne
+  // se suppose.
+  let fraicheurModeLue = null;
+  try { const m = await import("./modes-de-travail.mjs"); fraicheurModeLue = m.formatFraicheurDuMode(m.fraicheurDuMode()); } catch { /* absence déclarée par la ligne, jamais un vert */ }
   console.log("");
   for (const l of formatTempsUtilisateurLines(tempsDeLUtilisateur({ mode: modeCourantLu }))) console.log(l);
+  if (fraicheurModeLue) console.log(fraicheurModeLue);
 
   const ecarts = [];
   if (m.mesurable && m.source === "système") ecarts.push({ pourquoi: "l'heure vient de l'horloge locale : les API de temps sont refusées par la politique réseau de l'environnement, à autoriser si une heure indépendante de la machine est voulue" });

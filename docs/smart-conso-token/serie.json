@@ -54,5 +54,19 @@
     "sens": "plus haut = mieux"
    }
   }
+ },
+ {
+  "date": "2026-09-30",
+  "methode": "v1",
+  "mesures": {
+   "schemas-couteux-connus": {
+    "valeur": 6,
+    "sens": "plus haut = mieux"
+   },
+   "reduction-moyenne-pct": {
+    "valeur": 13,
+    "sens": "plus haut = mieux"
+   }
+  }
  }
 ]
