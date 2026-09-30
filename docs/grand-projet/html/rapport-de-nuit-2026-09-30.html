@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de la nuit du 29 au 30 septembre</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T03:48:45.962Z</div>
+    <h1>Rapport de la nuit du 29 au 30 septembre</h1>
+    <p class="sub">Ce qui a été fait, ce qui a été trouvé sans le chercher, et ce qui attend ta décision</p>
+  </header>
+  <div class="divider"></div>
+  <main><hr>
+<div class="highlight"><p><strong>DE QUOI ON PARLE.</strong> Tu es allé dormir après m'avoir donné trois consignes et posé trois
+questions nouvelles, en me demandant d'enchaîner sans m'arrêter.</p><p><strong>À QUELLE DEMANDE ÇA RÉPOND.</strong> *« la cible : 50 obligations pour l'agence […] la mutualisation
+des règles c'est chez ABraham ? […] prends le temps aussi de faire la synthèse/relecture des
+docs dans git […] pense bien aussi à exploiter toute la data de VALEUR »* — et, de ton fichier
+de réponses, la sécurité du projet, la propriété juridique, et la plaquette commerciale.</p><p><strong>LES TÂCHES.</strong> #1247 à #1260 — quatorze, dont deux restent ouvertes exprès.</p><p><strong>CE RAPPORT SE LIT SANS RIEN CONNAÎTRE DU CODE.</strong> Quand un mot technique est nécessaire, sa
+définition suit entre parenthèses.</p></div>
+<hr>
+<h3>SI TU NE LIS QUE CINQ LIGNES</h3>
+<ul><li><strong>Ta cible de 50 obligations est atteignable — mais pas du tout par le chemin que tu croyais.</strong> Atterrissage mesuré : <strong>entre 55 et 66</strong> — ABRAHAM et MOÏSE se contredisent sur l'Article 13, qui pèse 12 obligations à lui seul. <em>Et une question est apparue à 01h15 : elle porte sur les 93 obligations des ARTICLES, mais la charte en a <strong>44 de plus</strong> dans ses sections. Ta cible vise-t-elle les Articles seuls, ou la charte entière ? Ce n'est pas le même chantier.</em></li><li><strong>La porte d'entrée obligatoire de tout mon outillage était cassée</strong> : 69 de nos 74 « offres de service » étaient <strong>introuvables par leur propre nom</strong>. Réparé : 73 sur 74.</li><li><strong>Le premier frein du projet, c'est la file de décisions qui t'attend</strong> — et j'en suis la cause. <strong>40 items</strong> (17 décisions + les 23 idées du registre) tiennent dans <strong>5 lots</strong>, où une seule réponse en tranche plusieurs. Le lot A en règle <strong>neuf</strong> d'une phrase.</li><li><strong>Ton projet est juridiquement mieux protégé que tu ne le penses</strong>, pour une raison que tu n'as pas cherchée.</li><li><strong>La plaquette commerciale de l'Agence est vraie à 7 promesses sur 7</strong> — et <strong>toute</strong> la fiction est du côté commerce, aucune du côté produit.</li></ul>
+<div class="highlight"><p><strong>ET UNE SIXIÈME, TROUVÉE À 3 H DU MATIN, QUI TE CONCERNE DIRECTEMENT.</strong>
+Le fichier qui dit dans quel mode on travaille te déclare <strong>absent depuis sept jours</strong> — posé le
+23 septembre à 22h53 et jamais retouché. Pendant toutes tes séances de jour, tout outil qui
+demandait « l'utilisateur est-il là ? » recevait <strong>NON</strong>, donc « ne pose pas de question
+maintenant ». Le mécanisme censé protéger ton temps le faisait en te rendant injoignable.
+Corrigé, et l'alerte est <strong>laissée allumée exprès</strong> pour que tu la voies. → <strong>§⑭.3</strong></p></div>
+<hr>
+<h3>① TA CIBLE DE 50 OBLIGATIONS — la mesure a démoli l'hypothèse, puis donné la route</h3>
+<p><strong>Ton idée était : « on fusionne les règles qui se répètent ».</strong> C'est l'hypothèse naturelle, et j'ai voulu la vérifier avant de l'appliquer.</p>
+<div class="highlight"><p><strong>ABRAHAM ne trouve qu'UNE SEULE paire de règles qui se recouvrent dans toute la charte.</strong>
+Les Articles 18 et 26, à 19 % de vocabulaire commun. Une seule, sur 33 Articles.</p></div>
+<p><strong>La charte n'est pas grasse, elle est dense.</strong> Si j'avais lancé la fusion sans mesurer, j'aurais passé la nuit à chercher quelque chose qui n'existe pas — puis à forcer des rapprochements entre règles sans rapport, pour faire du chiffre.</p>
+<p><strong>Ce qu'ABRAHAM donne à la place vaut bien mieux</strong> : il range les 33 Articles par <strong>ce qu'ils SONT</strong>, et c'est un angle qu'on n'avait pas.</p>
+<table><thead><tr><th>Son classement</th><th>Articles</th><th>Obligations</th><th>Son verdict</th></tr></thead><tbody><tr><td><strong>LOI</strong></td><td>9</td><td>15</td><td>intouchable</td></tr><tr><td><strong>MODE D'EMPLOI D'OUTIL</strong></td><td>10</td><td><strong>54</strong></td><td><strong>« réductible à un aiguillage »</strong></td></tr><tr><td><strong>DISCIPLINE SANS PORTEUR</strong></td><td>14</td><td>58</td><td>intouchable (la prose EST le mécanisme)</td></tr></tbody></table>
+<p><strong>Le tas du milieu est la réponse.</strong> Ces Articles n'expriment pas une conviction : ils expliquent comment se servir d'un outil <strong>qui a déjà sa propre fiche</strong>. Leur contenu est écrit deux fois. La charte n'a besoin que de dire <strong>quand</strong> y aller.</p>
+<pre><code>   93 obligations aujourd'hui
+ – 47 portées par les neuf « modes d'emploi »
+ +  9 qu'il leur reste (une chacun : le déclencheur)
+ ────
+   55        ← ta cible est 50</code></pre>
+<p><strong>Je te donne 55 et pas 50</strong>, parce que les cinq dernières obligeraient à toucher aux deux tas qu'ABRAHAM déclare intouchables. Et <strong>il y a un précédent qui prouve que ça marche</strong> : l'Article 23 a subi exactement ce traitement le 27 septembre. Il porte aujourd'hui <strong>zéro obligation</strong> et <strong>rien n'a été perdu</strong>.</p>
+<p>📜✅ <em>Vérifié contre le garde-fou de l'Article 13 : en cas de doute sur si un retrait affaiblit une règle réelle, on ne coupe pas.</em></p>
+<hr>
+<h3>② LA PORTE OBLIGATOIRE ÉTAIT CASSÉE — et c'est la panne la plus grave de la nuit</h3>
+<p><strong>Ce qu'est tool-brain, en une phrase</strong> : le point d'entrée unique que la charte m'oblige à consulter avant d'agir — <em>« quel outil de l'équipe sait déjà faire ça ? »</em>. Je n'ai pas le droit de choisir moi-même.</p>
+<p><strong>Ce qui s'est passé</strong> : je lui ai demandé « ce qui freine le projet ». Il a répondu <strong>« aucune correspondance »</strong>. L'outil dont la description commence par <em>« Cherche tout ce qui freine le projet »</em> était juste derrière.</p>
+<p><strong>La cause, mesurée avant de toucher au code</strong> : chaque offre de service a <strong>trois champs</strong> — un nom, une description, et un « quand m'appeler ». <strong>Le rapprochement n'en lisait qu'un.</strong></p>
+<table><thead><tr><th>mots lus</th><th><strong>1 032</strong></th></tr></thead><tbody><tr><td>mots ignorés</td><td><strong>2 682</strong></td></tr><tr><td>part du catalogue réellement lue</td><td><strong>28 %</strong></td></tr><tr><td><strong>offres introuvables par leur propre nom</strong></td><td><strong>69 sur 74</strong> → <strong>1 sur 74</strong> après correction</td></tr></tbody></table>
+<p><strong>Et c'est la même faute qu'on avait déjà corrigée à moitié en septembre</strong>, sans voir l'autre moitié. Le commentaire de l'époque décrivait déjà le coût exact : <em>« aucune correspondance se lit comme aucun outil ne sait faire ça, et l'agent refait à la main ce qu'un outil savait faire »</em>.</p>
+<p><strong>Ce que j'ai évité</strong> : la correction naïve — coller les trois champs bout à bout — aurait rendu la porte bavarde au lieu de muette. Chaque champ a donc <strong>un poids</strong> : un nom vaut 2, un « quand m'appeler » vaut 1, une description vaut 0,5. Les requêtes absurdes rendent toujours zéro, vérifié.</p>
+<hr>
+<h3>③ LE PREMIER FREIN DU PROJET, C'EST MOI</h3>
+<p><strong>JESUS l'a mesuré, et il ajoute une chose que je n'aurais pas su dire.</strong></p>
+<div class="highlight"><p><strong>17 décisions t'attendent. La plus ancienne depuis 7 jours.</strong>
+Au-delà d'un certain remplissage, le temps d'attente d'une file <strong>n'augmente plus
+proportionnellement : il explose.</strong> Ce n'est pas un avis sur ton rythme — c'est une propriété
+des files. <strong>Chaque décision de plus ralentit aussi toutes les autres, y compris les faciles.</strong></p></div>
+<p><strong>Le problème n'est pas ta vitesse.</strong> Tu travailles la journée, tu rentres à 18h40, et tu as répondu à quarante-neuf questions hier soir. <strong>Le problème est que je pose plus vite qu'un humain ne peut trancher, et que rien dans mon fonctionnement ne me le fait sentir.</strong></p>
+<p><strong>Ce que j'ai fait cette nuit, sans attendre ta réponse, parce que c'était de mon côté</strong> : j'ai regroupé les dix-sept en <strong>cinq lots</strong>, chacun tranché par <strong>un seul principe</strong>.</p>
+<table><thead><tr><th>Lot</th><th>Le principe qui le tranche</th><th>Mon avis</th></tr></thead><tbody><tr><td><strong>A</strong> — mesurer ou déclarer qu'on ne mesurera pas (4 cas)</td><td>une absence non déclarée finit par se lire comme un zéro</td><td>oui pour le jeu seulement</td></tr><tr><td><strong>B</strong> — le rattrapage historique (3 cas, 346 lignes)</td><td>un plan que personne n'appliquera est pire qu'un renoncement assumé</td><td>on tire un trait à une date</td></tr><tr><td><strong>C</strong> — la charte (4 sujets)</td><td>tout d'un bloc ou rien — tu l'as déjà décidé pour l'Article 19</td><td>réduction d'abord, ajouts ensuite</td></tr><tr><td><strong>D</strong> — le cadre (4 sujets)</td><td>ce sont des MOYENS ; on ne choisit pas un moyen avant d'avoir la fin</td><td>séance objectif ultime</td></tr><tr><td><strong>E</strong> — l'outillage (4 cas)</td><td><strong>le seul lot où tu peux dire « fais au mieux »</strong></td><td>délègue-le en bloc</td></tr></tbody></table>
+<p><strong>Autre chiffre, du même outil</strong> : <strong>40 % du délai d'une tâche est de l'attente pure</strong> — et c'est un plafond, la vraie valeur est plus basse.</p>
+<hr>
+<h3>④ TES TROIS QUESTIONS NOUVELLES</h3>
+<h4>La propriété — tu es dans une position rare, et tu ne l'as pas fait exprès</h4>
+<p><strong>Le droit français protège ce qui porte l'empreinte de la personnalité d'un auteur HUMAIN.</strong> Du code généré entièrement par une IA, sans contribution créative humaine, <strong>n'est pas protégé</strong>. Donc le point faible de tout projet fait avec une IA est : <strong>prouver la contribution humaine</strong>. La plupart des gens ne peuvent pas.</p>
+<div class="highlight"><p><strong>Toi, tu as construit sans le vouloir la preuve exacte que le droit demande.</strong> La charte cite
+tes demandes <strong>mot pour mot, entre guillemets, datées</strong>. Le suivi porte 530 décisions avec leur
+raison. <strong>La discipline documentaire que tu as imposée pour des raisons d'ingénierie se trouve
+être le dossier de preuve que la loi réclame.</strong></p></div>
+<p><strong>Deux points que je dois te signaler</strong> <em>(je ne suis pas juriste, ce sont des faits publics sourcés, à confronter à un professionnel)</em> :</p>
+<ul><li><strong>L'article L. 113-9</strong> attribue à l'<strong>employeur</strong> les droits sur un logiciel créé par un salarié <em>dans l'exercice de ses fonctions</em>. Tu m'as dit que certains documents venaient du <strong>Copilot de ton travail</strong>. Le risque paraît faible — notes d'idées, projet personnel, hors fonctions — mais <strong>ça se règle en cinq minutes aujourd'hui et en six mois plus tard</strong>.</li><li><strong>Les horodatages de git sont modifiables</strong> par qui tient le dépôt. Ta chronologie est magnifique et sa force probante est faible. <strong>e-Soleau coûte 15 € par tranche de 5 ans</strong> — c'est à mon avis le meilleur rapport tranquillité/prix de tout le projet, pour la charte, la loi de l'Agence et le manifeste.</li></ul>
+<h4>La sécurité — mesurée sur ton dépôt, pas supposée</h4>
+<table><thead><tr><th>Vérifié</th><th>Résultat</th></tr></thead><tbody><tr><td>un fichier de mots de passe versionné par erreur ?</td><td><strong>aucun</strong></td></tr><tr><td>une clé d'API en clair dans tout l'historique ?</td><td><strong>aucune</strong></td></tr><tr><td>le fichier d'exclusions couvre-t-il les clés ?</td><td><strong>oui</strong></td></tr></tbody></table>
+<p><strong>C'est meilleur que la moyenne</strong>, et pas par hasard. <strong>Mais le vrai risque n°1 n'est pas le vol, c'est la PERTE</strong> : un compte suspendu, un dépôt supprimé, et trois semaines disparaissent sans qu'aucun voleur soit intervenu. C'est la tâche #700, déjà ouverte.</p>
+<h4>La plaquette — ton exercice a marché mieux que prévu</h4>
+<p><strong>Chaque promesse étiquetée VRAI / VRAI ICI / FICTION.</strong> Résultat :</p>
+<ul><li><strong>Sept promesses sur sept sont vraies.</strong> Je m'attendais à écrire « fiction » sur la moitié.</li><li><strong>Les quatre seules cases rouges sont : clients, tarifs, support, installation.</strong> Pas UNE fiction sur le produit, <strong>TOUTES sur le commerce</strong>. → <strong>L'Agence n'est pas un produit incomplet. C'est un produit complet sans entreprise autour.</strong> Deux problèmes très différents, qu'on confondait.</li><li><strong>La fiction la plus dangereuse est « installation en quinze minutes »</strong> : l'Agence n'a <strong>jamais</strong> tourné ailleurs. Pas une fois. <strong>Tout le reste en dépend</strong> — sans une installation réussie, ni le prix, ni le support, ni le temps ne sont chiffrables. <strong>C'est le premier maillon, et aucune de nos listes ne le plaçait en tête.</strong></li></ul>
+<hr>
+<h3>⑤ LA RELECTURE DE LA BIBLIOTHÈQUE — et elle juge notre travail</h3>
+<p><strong>Ton exercice a sorti quelque chose de gênant et d'utile.</strong></p>
+<div class="highlight"><p><strong>La TARGET ARCHITECTURE que tu as déposée répondait DÉJÀ à « plusieurs versions ? »</strong> — par une
+échelle <strong>R0→R6 par composant</strong> (inconnu → compris → isolé → extractible → exportable →
+industrialisé → distribué). <strong>J'ai construit ma réponse trois heures plus tôt, la même nuit,
+sans la rouvrir.</strong></p></div>
+<p>Les deux ne s'opposent pas, elles se combinent : ma découpe concerne <strong>le produit</strong>, la sienne mesure <strong>la maturité de chaque morceau</strong>. Une version « légère » = les composants R4 et plus. <strong>Ma proposition était incomplète.</strong></p>
+<p><strong>Trois autres phrases de tes documents jugent notre travail :</strong></p>
+<ul><li><em>« Un fichier séparé n'est pas automatiquement un module extractible. »</em> → nos trois zones sont mesurées <strong>par fichier</strong>. On mesure peut-être la mauvaise chose.</li><li><em>« Le plus grand danger, c'est de continuer à ajouter AVANT que les nouveautés aient une place architecturale. »</em> → cette nuit j'ai ajouté quatre choses, chacune justifiée individuellement. <strong>Même verdict que JESUS, par une source indépendante.</strong></li><li><em>« Un guardian ne doit pas devenir un orchestrateur caché. »</em> → <strong>c'est déjà arrivé</strong> : le filet de sécurité pèse <strong>4,3 fois le jeu entier</strong>.</li></ul>
+<p><strong>Et le document nomme lui-même la clé manquante</strong> : le <strong>BUILD MAP</strong>, <em>« le document qui n'existe pas encore, et celui qui permettrait de commencer »</em>. Bonne nouvelle : la plupart de ses colonnes sont déjà produites par nos outils. Ce qui manque est du <strong>jugement</strong>, pas de la mesure.</p>
+<hr>
+<h3>⑥ LES DEUX AGENTS QUE TU AS DEMANDÉS — conçus, pas construits, et je te dis pourquoi</h3>
+<p>Tu voulais un agent « expérience client » et un agent « expérience IA », et tu demandais s'il en fallait un pour les deux.</p>
+<p><strong>Ma réponse à ta question est : DEUX, et c'est mesuré, pas une préférence.</strong> L'expérience IA est mesurable <strong>aujourd'hui</strong> (la donnée existe déjà). L'expérience client <strong>n'a aucun sujet</strong> — l'Agence n'a jamais été installée ailleurs. Les fondre donnerait un agent dont <strong>une moitié rend « pas mesuré » à chaque passage</strong>, et un rapport à moitié vide cesse d'être lu.</p>
+<p><strong>Mais je ne les ai pas construits, et je te déclare la tension plutôt que de l'exécuter en silence</strong> <em>(Article 14)</em> : trois sources indépendantes mesurées le même soir disent que <strong>l'ajout est le danger actuel</strong>. J'ai donc tout conçu — ce qu'ils mesurent, leur coût, leur risque — sans écrire une ligne de code. <strong>Trois options chiffrées t'attendent ; mon avis est la deuxième.</strong></p>
+<hr>
+<h3>CE QUI A ÉTÉ CORRIGÉ EN CHEMIN — quatre défauts, tous de la même famille</h3>
+<p><strong>Et c'est la famille qui compte, pas les occurrences</strong> : <em>un signal ADJACENT lu comme le signal visé.</em></p>
+<ul><li><strong>tool-brain</strong> — « le mot n'est pas dans ce champ » lu comme « l'outil n'existe pas ».</li><li><strong>Le contrôle de la chaîne des tâches</strong> — il exigeait le mot « tâche » avant le numéro, donc il voyait <strong>47</strong> rattachements là où il y en a <strong>89</strong>. <em>Il accusait la discipline la mieux tenue du projet.</em></li><li><strong>Mon propre garde-fou de pages</strong> — il bloquait <strong>la seule façon correcte de le satisfaire</strong>. Troisième forme du même défaut, dans le même outil, dans la même nuit. La leçon est écrite pour la prochaine fois : <strong>la date d'un enregistrement ne dit rien du contenu du fichier.</strong></li><li><strong>Une liste tenue à la main</strong> s'est périmée <strong>au fichier suivant</strong> — exactement comme son propre commentaire l'avait prédit. Elle est désormais calculée.</li></ul>
+<p><strong>Et j'ai failli te transmettre deux chiffres faux</strong>, rattrapés avant écriture : JESUS annonçait « seuls 5 constats portent un numéro » (il y en a 89), et j'ai cru un instant n'avoir lu que 6 de tes 30 documents (je les ai tous lus, avec traces). <strong>Les deux sont racontés plutôt qu'effacés.</strong></p>
+<hr>
+<h3>OÙ TOUT SE TROUVE</h3>
+<p><strong>Tout est décrit, une ligne chacun, dans <code>docs/grand-projet/index.md</code></strong> — je ne recopie pas ses descriptions ici, ce serait le même texte à deux endroits. Les sept documents de la nuit :</p>
+<p><code>la-route-vers-50-obligations</code> · <code>ce-qui-ralentit-le-projet</code> · <code>propriete-et-securite-du-projet</code> · <code>plaquette-de-l-agence</code> · <code>les-cinq-lots-de-decisions</code> · <code>les-deux-agents-experience</code> · <code>relecture-de-la-bibliotheque</code></p>
+<p><strong>Les trois qui ne sont pas dans ce dossier</strong> : <strong>ton GO sur la règle #767</strong> → <code>docs/plans/charte-diffs-a-approuver-2026-09-28.md</code>, <strong>entrée 6</strong> · les recherches web enregistrées → <code>docs/recherches-web/</code> · ce qui a changé de place dans les sept étapes → <code>docs/grand-projet/03-plan-daction/ou-va-chaque-chose.md</code></p>
+<p><strong>Tout existe aussi en page HTML lisible</strong> dans <code>docs/grand-projet/html/</code>.</p>
+<hr>
+<h3>CE QUE JE N'AI PAS FAIT, ET POURQUOI</h3>
+<ul><li><strong>Rien n'a été appliqué à la charte.</strong> Ta borne <em>« tu me montres avant »</em> tient. Six entrées attendent ton accord, dont ton GO sur la #767 — que <strong>je te propose de séquencer après la réduction</strong>, parce qu'écrire « la mesure avant l'opinion » avant d'avoir mesuré serait le seul endroit du projet où on l'appliquerait à l'envers.</li><li><strong>Rien n'a touché Lia, Noé, ni ce que voit le visiteur.</strong></li><li><strong>Aucun appel à l'API Gemini.</strong> Zéro euro consommé cette nuit.</li><li><strong>La Ronde n'a pas été lancée</strong> : deux de ses douze étapes exigent ta présence.</li><li><strong>Deux tâches restent ouvertes exprès</strong> : la sonde de lenteur du jeu (#1252) et l'index par situation (#1257). Les ouvrir cette nuit, juste après avoir écrit que nous ajoutons trop vite, aurait été faire exactement ce que la relecture venait de reprocher.</li></ul>
+<p>📜✅ <em>Conforme à l'Article 0 : rien de ce qui touche à l'esprit des personnages n'a été approché.</em></p>
+<hr>
+<h2>CE QUI A SUIVI — la seconde moitié de la nuit</h2>
+<p><em>(Ce rapport a été écrit à 23h40. Le travail a continué ; plutôt que de le réécrire, voici ce qui s'est ajouté. Le détail de chaque point est dans sa tâche.)</em></p>
+<h3>⑦ TROIS DÉFAUTS DE PLUS, ET J'AI FINI PAR COMPRENDRE QUE C'ÉTAIT LE MÊME</h3>
+<p><strong>Le plus important de la nuit n'est pas un correctif, c'est ce qu'ils ont en commun.</strong></p>
+<table><thead><tr><th>Ce que le contrôle regardait</th><th>Ce qu'il prétendait dire</th><th>Le coût</th></tr></thead><tbody><tr><td>« le mot n'est pas dans CE champ »</td><td>« l'outil n'existe pas »</td><td>69 prestations sur 74</td></tr><tr><td>« le mot <em>tâche</em> n'est pas écrit »</td><td>« aucune tâche n'est rattachée »</td><td>47 constats vus au lieu de 89</td></tr><tr><td>« la date du dernier enregistrement est ancienne »</td><td>« le contenu du fichier est ancien »</td><td>le garde-fou bloquait la seule façon de le satisfaire</td></tr><tr><td>« le chemin parent ressemble au chemin enfant »</td><td>« c'est la même source »</td><td>un double compte accusé à tort</td></tr></tbody></table>
+<p><strong>Dans les quatre cas, le contrôle était juste sur ce qu'il regardait et faux sur ce qu'il affirmait.</strong> Aucun n'a planté. Trois sur quatre rendaient un chiffre plausible.</p>
+<p><strong>J'ai mesuré avant d'en tirer une règle</strong> : la phrase <em>« un signal adjacent lu comme le signal visé »</em> apparaît dans <strong>28 fichiers</strong> du dépôt — et <strong>zéro fois dans le registre des leçons</strong>. Le défaut le plus fréquent du projet était décrit partout et déclaré nulle part. <strong>C'est désormais la leçon L47</strong>, avec le geste qui l'attrape : <em>avant de conclure d'un zéro ou d'un vert, qu'est-ce que ce contrôle a LITTÉRALEMENT regardé ?</em></p>
+<h3>⑧ LA CHARTE ME DEMANDAIT QUELQUE CHOSE QUE SEULE MA MÉMOIRE PORTAIT</h3>
+<p>L'Article 30 écrit : <em>« un zéro n'est jamais la preuve qu'il n'y a rien à savoir […] on réessaie avec le vocabulaire du sujet »</em>. <strong>Une obligation que rien ne portait</strong>, sur le geste obligatoire avant tout chantier.</p>
+<p><strong>Mesuré</strong> : « format questions reponses » rendait <strong>zéro</strong>, « questions » seul en rend <strong>209</strong>.</p>
+<p>L'outil élargit maintenant tout seul, <strong>en trois niveaux qui ne se déclenchent que vers le bas</strong>, et il <strong>dit toujours</strong> quand il a élargi — un résultat obtenu en relâchant la question n'est pas un résultat obtenu telle qu'elle était posée.</p>
+<h3>⑨ LE PROCESS QUE TU M'AS DEMANDÉ EXISTE, ET IL EST ACTIF</h3>
+<p><strong>« Répondre à un fichier de questions »</strong> : huit étapes, dont les quatre que tu avais dû m'arracher en cours de route le 29. Il est <strong>déclaré</strong>, pas seulement écrit — <code>god-of-all-process</code> le trouve, et <strong>angel</strong> en porte la règle de conduite.</p>
+<p><strong>Six garde-fous l'ont refusé de suite, et les six avaient raison.</strong> Pas de gardien · trois maillons de chaîne manquants parce que mes étapes sous-disaient ce qu'elles font · un maillon déclaré « sans objet » alors qu'une étape le portait · l'estimation absente · trois fichiers nommés seulement dans le code · trois des cinq réponses du gabarit. <strong>Aucun faux positif.</strong></p>
+<p><strong>Ton idée du fil de conversation est acquise ; son logement ne l'est pas</strong> — trois options, et c'est une vraie décision. Elle rejoint le LOT D.</p>
+<h3>⑩ NOS TROIS ZONES MESURENT-ELLES LA BONNE CHOSE ?</h3>
+<p>Une phrase de <strong>tes</strong> documents accusait le manifeste que j'ai écrit il y a deux jours. <strong>Elle a raison</strong>, et c'est mesuré : selon l'angle, le même noyau paraît <strong>99 %</strong>, <strong>56 %</strong> ou <strong>5 %</strong> portable.</p>
+<p><strong>Mais je ne conclus pas à ta place</strong>, parce que tout tient à une question jamais tranchée : <code>docs/suivi/</code> est-il <strong>une convention de l'Agence</strong> ou <strong>un chemin de ce projet</strong> ? Si convention, les 38 fichiers concernés sont corrects et il n'y a rien à faire. Sinon, le manifeste annonce une portabilité qu'il n'a pas.</p>
+<hr>
+<p><strong>État à la reprise</strong> : filet <strong>vert</strong>, arbre <strong>propre</strong>, tout <strong>poussé</strong>. <strong>Tâches de la nuit</strong> : #1247 à #1266. <strong>Toujours zéro appel à l'API Gemini</strong> — zéro euro consommé.</p>
+<hr>
+<h2>⑪ ET LA LEÇON A ATTRAPÉ SON PROPRE PROFESSEUR — trois fois</h2>
+<p><em>(Ajouté à 01h00. C'est la partie de la nuit dont je suis le moins fière et qui t'apprendra le plus sur la façon dont je me trompe.)</em></p>
+<p>Après avoir écrit la leçon <strong>L47</strong> — <em>« un signal adjacent lu comme le signal visé »</em> — je l'ai mise à l'épreuve sur notre propre machinerie. <strong>Les trois mesures que j'ai écrites pour l'instruire ont commis, chacune, la faute qu'elles instruisaient.</strong></p>
+<table><thead><tr><th>Ce que ma mesure annonçait</th><th>Ce qu'elle regardait vraiment</th><th>Ce qu'il y avait</th></tr></thead><tbody><tr><td>« 59 blocs de test à reprendre »</td><td>les <strong>mots</strong> du message, pas la couverture</td><td><strong>0</strong></td></tr><tr><td>« 5 blocs sans aucun contre-test »</td><td>la <strong>forme</strong> de l'assertion, pas son sens</td><td><strong>0</strong> — les cinq en avaient un</td></tr><tr><td>« 233 frontières de mot suspectes »</td><td>la <strong>ponctuation de JavaScript</strong></td><td><strong>0</strong> défaut vivant</td></tr></tbody></table>
+<p><strong>Mes mesures sont systématiquement PESSIMISTES au premier passage</strong>, et toujours pour la même raison : <strong>il est plus facile de compter une forme qu'un sens, et une forme absente ressemble à un défaut présent.</strong></p>
+<p><strong>Ce qui a évité les trois fausses alertes est une habitude, pas une intuition</strong> : <em>avant de publier un chiffre qui désigne du travail à faire, ouvrir à la main deux des cas qu'il accuse.</em> Trente secondes. Je l'ai inscrite dans L47.</p>
+<p><strong>Ce que ça t'évite concrètement</strong> : trois chantiers inexistants — dont un que j'avais déjà écrit noir sur blanc dans un document livré, et que j'ai corrigé avant que tu ne le lises.</p>
+<p><strong>Ce que ça t'apprend sur moi, et je préfère que tu le saches</strong> : quand je te donne un chiffre alarmant sur notre propre outillage, <strong>demande-moi si j'ai ouvert deux cas à la main.</strong> Si la réponse est non, le chiffre est probablement trop noir.</p>
+<hr>
+<h2>⑫ LES QUARANTE ITEMS, ET UN ÉCART QUE J'AVAIS ÉCARTÉ</h2>
+<p><em>(Ajouté à 01h20.)</em></p>
+<p><strong>Les 23 idées en attente de ton registre tombent dans les MÊMES cinq lots que les 17 décisions.</strong> Elles n'ouvrent pas un sixième principe. <strong>Quarante items, cinq principes</strong> — et le lot A en règle <strong>neuf d'une seule phrase</strong>, si tu réponds par un principe plutôt qu'au cas par cas.</p>
+<p><strong>Une de ces idées s'est réglée en chemin, et le détour est instructif.</strong> L'idée <strong>#1175</strong> disait que deux motifs lisent le numéro de tâche sans s'accorder. <strong>En corrigeant autre chose ce soir, j'en ai écrit un troisième sans le voir</strong> — et je ne l'ai découvert qu'en relisant ta liste à froid, pour tout autre chose. Les trois dérivent maintenant d'une seule constante. <em>Ce n'était pas trancher à ta place : ta fiche établit déjà qu'une notion écrite deux fois est un défaut. La valeur de la borne reste la tienne, et ne coûte plus qu'un mot à un seul endroit.</em></p>
+<p><strong>Et j'ai remesuré, depuis zéro, les douze chiffres les plus porteurs de la nuit.</strong> Neuf exacts. Deux « écarts » qui étaient des défauts de ma revérification, pas des chiffres faux. <strong>Et le douzième a résolu un écart que j'avais honnêtement écarté à 23h</strong> : 173 et 129 sont tous les deux justes — <strong>173 = 129 dans les Articles + 44 dans les sections</strong>. La réponse était dans une phrase que l'outil imprime et que je n'avais pas lue.</p>
+<p><strong>C'est ce qui a produit la question de la ligne 1 ci-dessus</strong>, et elle est plus importante que l'écart : <em>ta cible de 50 vise-t-elle les Articles, ou la charte entière ?</em></p>
+<hr>
+<h2>⑬ LA SECONDE PARTIE DE LA NUIT : toutes les alertes du dépôt sont traitées</h2>
+<p><em>(Ajouté à 02h45. Cette partie n'a pas répondu à une demande : elle a vidé la file d'alertes que nos propres outils tenaient.)</em></p>
+<p><strong>Au début de la nuit, le dépôt portait 8 alertes, dont une BLOQUANTE. Il n'en reste aucune.</strong></p>
+<table><thead><tr><th>L'alerte</th><th>Ce qu'elle cachait</th><th>Résultat</th></tr></thead><tbody><tr><td><strong>BLOQUANTE</strong> — Ezechiel refusait de dire d'où vient le temps du filet</td><td>il avait raison de refuser : personne n'avait mesuré</td><td><strong>108 s nu, 112 s instrumenté, 3 s de typage</strong> → les tests pèsent <strong>94 %</strong>, l'enveloppe 6 %. Ça <strong>retire une option</strong> de ta décision #819 : un « mode rapide » gagnerait 7 s sur 115</td></tr><tr><td><strong>5 paires de documents jumeaux</strong></td><td>le message disait « 0 % de vocabulaire commun » — <strong>un nom de champ qui n'existait pas</strong></td><td>vraies valeurs : 26 à 28 %, jusqu'à <strong>714 mots communs</strong>. 5 → <strong>2</strong>, et les 2 restantes mesurées comme légitimes</td></tr><tr><td><strong>5 groupes de tests « tautologiques »</strong></td><td>c'étaient <strong>les fixtures d'Ezechiel lui-même</strong></td><td>5 → <strong>0</strong></td></tr></tbody></table>
+<h4>CE QUE CES TROIS ONT EN COMMUN, ET C'EST LA VRAIE LEÇON DE LA NUIT</h4>
+<p><strong>Aucune n'était un défaut du travail. Les trois étaient des défauts de l'INSTRUMENT</strong> — et les trois se présentaient comme des constats sur nous.</p>
+<ul><li>Le détecteur de jumeaux <strong>annonçait 0 %</strong>, ce qui se réfute tout seul : je l'ai lu comme du bruit et je suis passée. <strong>Deux de ces cinq paires concernaient mon propre travail</strong>, et l'une a changé de <strong>onze obligations</strong> un chiffre que je t'avais déjà donné <em>(d'où « entre 55 et 66 » en tête de ce rapport)</em>.</li><li>Le détecteur de tautologies <strong>accusait le code écrit pour le tester</strong>. Sa cause vivait dans un décapeur <strong>partagé par plusieurs outils et qui n'avait aucun test</strong> — il prenait un <code>//</code> écrit <strong>à l'intérieur d'une chaîne</strong> pour un commentaire, ce qui décalait tout le reste du fichier.</li><li>Ezechiel, lui, <strong>a bien fonctionné</strong> : il a refusé de conclure pendant des jours plutôt que de deviner. <strong>C'est le seul des trois qui s'est tu au lieu de mentir</strong>, et c'est exactement ce qu'on lui demande.</li></ul>
+<p><strong>Ce que j'en retiens, et je l'ai inscrit dans le paramétrage du mode autonome</strong> : <em>vérifier ce qu'on accuse ne suffit pas — il faut aussi <strong>ouvrir ce qu'on absout</strong>.</em> J'ai passé la première moitié de la nuit à éviter trois fausses alertes, fière de la méthode, pendant qu'une alerte vraie dormait dans une liste que j'avais parcourue sans l'ouvrir.</p>
+<hr>
+<hr>
+<h2>⑭ LA TROISIÈME PARTIE DE LA NUIT — j'ai cherché une obligation de la charte que personne ne tient, et j'en ai trouvé quatre</h2>
+<p><strong>LE FIL EST UN SEUL, ET IL VAUT MIEUX QUE CHACUNE DE SES TROUVAILLES</strong> : plutôt que de chercher un défaut de code de plus, j'ai retourné la question — <em>quelle règle de la charte est écrite, obligatoire, et tenue par personne ?</em> Les quatre réponses ci-dessous sont sorties de là, et aucune n'aurait été trouvée en relisant du code.</p>
+<h3>⑭.1 L'épreuve de la page blanche a tourné UNE fois sur HUIT zones</h3>
+<p>L'Article 7 impose « périodiquement » de se demander comment on reconstruirait une zone aujourd'hui. L'outil qui le rend concret a été lancé <strong>le 2026-09-21, sur une zone</strong>, et jamais depuis. <strong>Neuf jours, une zone sur huit.</strong></p>
+<p><strong>Le constat utile n'est pas le compte, c'est la liste.</strong> Les huit zones sont <em>Fatigue · Cycle jour/nuit · Enquête · Bonus roulette · Appréciation de l'observateur · Dossier retourné · Déplacements et espace · Relation Lia/Noé.</em> <strong>Les huit sont des zones de JEU.</strong></p>
+<p><strong>Ça nuance la mesure du ratio sans la démentir.</strong> J'ai mesuré hier soir que la part du jeu ne baisse pas (4,0 % puis 5,5 %). C'est vrai. Mais l'outil bâti pour repenser le jeu à neuf n'a regardé qu'un huitième du jeu. <strong>La formule juste est : le jeu n'est pas étouffé par manque d'attention, il est peu regardé par les outils qui existent pour le regarder.</strong></p>
+<p><strong>Ta décision</strong> : l'épreuve devient-elle un rendez-vous tenu — une zone par Ronde viderait les huit en huit Rondes — ou reste-t-elle un geste exceptionnel qu'on assume de ne faire qu'à l'occasion ? Les deux réponses se défendent. La troisième, celle d'aujourd'hui — une obligation écrite que personne ne tient — use la charte plus qu'elle ne la sert. <em>(Tâche #1281.)</em></p>
+<h3>⑭.2 Le compteur qui dit « jamais sollicité » n'a que 23 heures de mémoire</h3>
+<p><strong>Le fait</strong> : le journal d'usage est dans <code>.gitignore</code>. Il ne voyage pas avec le clone et se reconstruit à chaque conteneur. Son plus ancien événement avait <strong>23 heures</strong>, sur un dépôt de deux semaines.</p>
+<p><strong>Ce n'était pas une découverte</strong> — la cause était connue depuis la veille, et c'est l'Article 30 (reprendre les notes avant d'ouvrir un chantier) qui m'a empêchée de te la présenter comme neuve. C'est la deuxième fois de la nuit qu'il me rattrape.</p>
+<p><strong>Mais la vérification a ouvert une vraie trouvaille, et elle est plus grave.</strong> Le remède existait — une phrase qui imprime « ce journal ne couvre que N % » — et <strong>il n'était branché que sur UN lecteur des trois</strong>. tool-brain l'imprimait. <strong>CASSANDRA-RH, dont la conclusion est de RETIRER un outil de l'équipe, ne l'imprimait pas.</strong> Le remède était sur le lecteur le moins dangereux et absent du plus lourd.</p>
+<p><strong>La preuve que ce n'était pas théorique tenait dans un fichier du dépôt</strong> : le 2026-09-28, check-spirit a imprimé « jamais sollicité d'après le compteur » <strong>dans l'en-tête d'un rapport qu'il était en train de produire</strong>.</p>
+<p>Quatre endroits câblés, dont la ligne de santé qui s'imprime en tête de <strong>chaque</strong> rapport du dépôt ; et une phrase du catalogue qui promettait « le cumul permanent, depuis le début du projet » — simplement fausse — corrigée à sa source. Un garde-fou vérifie désormais le câblage à chaque commit. <em>(Tâche #1283.)</em></p>
+<h3>⑭.3 Le mode de travail te déclare absent depuis SEPT JOURS</h3>
+<p><strong>C'est la trouvaille qui te concerne le plus directement, et elle est gênante.</strong> Le fichier qui dit dans quel mode on travaille porte « autonome », posé le <strong>23 septembre à 22h53</strong> et jamais retouché. <strong>149 heures.</strong> Pendant sept jours — donc pendant toutes tes séances de jour, quand tu étais là et répondais en direct — tout outil qui demandait « l'utilisateur est-il là ? » recevait <strong>NON</strong>.</p>
+<p><strong>Ça contredit exactement la règle que ce fichier sert.</strong> Tu as écrit « pose des questions, beaucoup de questions si besoin ». Le mode existe pour savoir si une question peut être posée maintenant. Bloqué sur « autonome », il répondait <em>« une fenêtre ne peut pas bloquer, questions reportées »</em> pendant que tu attendais devant l'écran. <strong>Un mécanisme de protection retourné contre ce qu'il protège est pire qu'un mécanisme absent : il inspire confiance.</strong></p>
+<p><strong>La cause n'est pas un oubli, c'est une absence de porteur.</strong> Le fichier écrit sa date depuis le premier jour ; personne ne la lisait. L'avertissement était même écrit en toutes lettres — « si le mode n'a pas été changé, il décrit l'intention d'hier ». Une phrase qui prévient d'un risque sans jamais mesurer s'il s'est réalisé n'est pas un garde-fou, c'est une clause de style.</p>
+<p><strong>Corrigé</strong> : l'âge du mode est lu et affiché, et une alerte se lève au-delà de 16 heures — la plus longue nuit plausible. Seuls les deux modes qui affirment quelque chose de daté peuvent se périmer ; « piloté » n'affirme rien, donc ne vieillit pas. <strong>Et je n'ai pas rafraîchi le fichier cette nuit, délibérément</strong> : « autonome » est vrai à cette heure-ci, le redéclarer serait exact — et ferait disparaître l'alerte avant que tu la voies. <em>(Tâche #1284.)</em></p>
+<h3>⑭.4 Ce qu'un clone neuf perd : 20 journaux, 2 pertes réelles</h3>
+<p>La même question, généralisée (corriger la CLASSE, jamais le cas) : <strong>une IA qui ne dispose que de ce dépôt reprend-elle sans rien perdre ?</strong> Le code part avec le clone. Les 20 journaux locaux, non.</p>
+<p><strong>Ce n'est pas un défaut en soi</strong> — un cache DOIT être ignoré. Le défaut était qu'on ne pouvait pas distinguer le cache assumé de l'historique qu'on croyait permanent. Chacun porte désormais son intention, <strong>et le résultat est rassurant : 17 pertes réellement sans conséquence</strong> (un rendu qui se régénère, un état de session finie, une mesure propre à une machine), <strong>1 cas intermédiaire</strong>, et <strong>2 pertes réelles</strong> : le compteur d'usage (257 Ko) et les 310 relevés du poids du contexte envoyé à Gemini (22 Ko), dont rien ne survit.</p>
+<p><strong>Ta décision, et elle est petite</strong> : faut-il versionner ces deux-là ? Un journal committé grossit chaque diff. Je ne tranche pas. <em>(Tâche #1285, décision au point #1222.)</em></p>
+<h3>⑭.5 Et le garde-fou m'a attrapée trois fois dans cette seule partie</h3>
+<table><thead><tr><th>Ce qu'il a arrêté</th><th>Ce que ça aurait coûté</th></tr></thead><tbody><tr><td>Une ligne de suivi datée <strong>une minute dans le futur</strong> — 02h47 tapée au lieu de 02h46 lue</td><td>Le défaut fondateur de l'Article 32, dans la ligne même qui racontait un manquement de suivi</td></tr><tr><td>Un commit qui changeait un document de référence <strong>sans sa ligne de suivi</strong></td><td>La règle « dans le MÊME commit », cassée par moi, signalée par le contrôle et écrite en retard plutôt qu'antidatée</td></tr><tr><td>Mon propre garde-fou, qui <strong>aurait accusé quatre innocents</strong></td><td>Il cherchait l'intention dans le <code>.gitignore</code> ; quatre journaux la déclarent déjà, ailleurs. Dixième fois de la nuit que ce motif se présente — et cette fois sur l'outil écrit contre lui</td></tr></tbody></table>
+<hr>
+<p><strong>État final</strong> : filet <strong>vert (380)</strong>, arbre <strong>propre</strong>, tout <strong>poussé</strong> — <strong>vingt-six commits</strong>. Tâches <strong>#1247 à #1285</strong>. <strong>Zéro appel API, zéro euro.</strong> Aucune borne franchie. <strong>Zéro alerte ouverte dans le dépôt.</strong></p>
+<p><strong>Ce que je te laisse à décider, en une ligne chacun</strong> : les 5 lots (40 items) · les 7 entrées du document de diffs de la charte · l'Article 13 chez ABRAHAM ou chez MOÏSE (55 ou 66) · la portée de ta cible (Articles seuls ou charte entière) · l'épreuve de la page blanche, rendez-vous ou exception · les deux journaux en perte réelle.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/rapports-de-nuit/rapport-2026-09-30.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
