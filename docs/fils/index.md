@@ -33,9 +33,9 @@ personne).
 
 | Étage | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|---|
-| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 9 (5 pour toi) |
+| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime ✅ **validé** · reste philo et politique | **À MOI** | 9 (5 pour toi) |
 | **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 4 (3 pour toi) |
-| **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (2 pour toi) |
+| **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 5 (3 pour toi) |
 | **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 4 (2 pour toi) |
 | **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 6 (1 pour toi) |
 
@@ -49,19 +49,18 @@ personne).
 | [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | **À MOI** | 4 (2 pour toi) |
 | [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 4 (2 pour toi) |
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
-| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 5 (1 pour toi) |
-| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 5 (3 pour toi) |
+| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 6 (1 pour toi) |
+| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 6 (4 pour toi) |
 
-**Total : 13 fils · 62 questions vives · 30 attendent ta réponse · 32 sont de mon côté.**
+**Total : 13 fils · 65 questions vives · 32 attendent ta réponse · 33 sont de mon côté.**
 
 ---
 
 ## SI TU NE DOIS EN LIRE QUE DEUX MAINTENANT
 
-1. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — l'objectif ultime. **Le pilotage que
-   tu m'avais demandé y est fait** : tes réponses croisées avec les six questions de la séance,
-   une par une. Quatre sur six ont déjà de la matière ; **il n'en reste que deux à traiter**, et
-   une à reposer parce qu'elle tourne en rond.
+1. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — **les trois objectifs ultimes sont
+   VALIDÉS** (2026-09-30, 23h31). Le pivot de la cascade existe enfin. Il reste **philosophie et
+   politique** à graver, et c'est la dernière marche de l'étage 0.
 2. **[Fil 12](fil-12-systeme-global-ou-on-en-est.md)** — le système global. Reporté à la
    rationalisation sur ta décision, mais ta question Q12.1 y a sa réponse : *« comment tu intègres
    le fruit de notre réflexion à ta stratégie globale ? »* — aujourd'hui, je ne l'intègre pas.

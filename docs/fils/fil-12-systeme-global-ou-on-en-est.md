@@ -161,6 +161,42 @@ documents, pas les pièces de kit — et ne doublonne rien.
 
 sujet · (c) montre-moi d'abord les 17*
 
+**Q12.7 — PREMIÈRE MESURE DES « DEUX BOUTS », faite le 2026-09-30 à 23h42.**
+
+Tu as dit *« PAS MAINTENANT »* pour la cascade, et c'est respecté : **rien n'est produit, rien
+n'est décidé.** Mais mesurer l'écart est gratuit, et un chantier chiffré avant d'être ouvert se
+discute mieux.
+
+**LE PREMIER BOUT EXISTE DÉJÀ, ET IL SE PORTE BIEN.** Les DOCUMENTS remontent la cascade :
+**44 objets sur 59 (75 %)** atteignent la racine, aucun parent introuvable, aucune boucle. Et
+depuis ce soir, cette racine **contient les trois objectifs** — pour la première fois, la cascade
+a un sommet réel.
+
+**LE SECOND BOUT EST LE TROU, ET LE VOICI CHIFFRÉ.** Sur **1 272 tâches** :
+
+| Objectif servi | Tâches | |
+|---|---|---|
+| **AGENCE** | **750** | 59 % |
+| **JEU** | **14** | **1 %** |
+| **indéterminé** | 508 | 40 % |
+
+**DEUX PRÉCAUTIONS, ET LA PREMIÈRE EST IMPORTANTE.** ① Le « 1 % » est un **PLANCHER, pas le
+chiffre** : l'attribution se déduit du thème de la tâche, et **40 % des tâches portent un thème
+qu'aucune famille ne réclame** (« Méthode de travail », « Conception », « Nouvel outil »,
+« Infrastructure »…). Le vrai nombre de tâches servant le Jeu est plus haut — je ne sais pas de
+combien, et je ne vais pas l'inventer. ② **Ce n'est pas le même chiffre que les 86,6 % de la
+charte** (323 tâches sur 373 ne touchant pas au jeu, mesuré le 22/09) : celui-là lit le contenu
+des tâches, celui-ci leur thème. **Deux mesures différentes de la même inquiétude ; les
+rapprocher sans le dire serait malhonnête.**
+
+**CE QUE CETTE MESURE PRÉPARE, ET C'EST TOUT** : quand tu diras « on déverse », la question ne
+sera pas *« par où commencer ? »* mais *« que fait-on des 508 »*. C'est une question de décision,
+pas de mesure.
+
+**ET LA MESURE S'EST TROMPÉE AU PREMIER PASSAGE** : elle rendait **100 % indéterminé**, parce que
+je lisais un champ qui n'existe pas sous ce nom. Un « 100 % » au premier passage est un signal de
+bug, jamais une trouvaille — c'est la même discipline que le « 0 sur 0 » de tout à l'heure.
+
 **Q12.4 — À MOI, tâche **#1329**.** Le trou que ta question Q12.1 met à nu est plus large que la stratégie : **rien
 ne capte ce qui change notre compréhension sans appeler de décision.** Le journal d'expérience
 capte mes erreurs à moi, le suivi capte les tâches, les fils captent les sujets ouverts — personne
