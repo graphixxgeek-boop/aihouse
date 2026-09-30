@@ -2039,7 +2039,25 @@ async function main() {
       const jumeaux = trouverDocumentsJumeaux(chargerLesDocuments());
       for (const paire of (jumeaux.aInstruire ?? []).slice(0, 20)) {
         siennes.push({ cle: `documents jumeaux : ${paire.a} × ${paire.b}`, objet: paire.a, gravite: "a-instruire",
-          constat: `${paire.a} et ${paire.b} partagent ${Math.round((paire.recouvrement ?? 0) * 100)} % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà` });
+          // UN NOM DE CHAMP FAUX A ANNULÉ CINQ TROUVAILLES RÉELLES (2026-09-30, tâche #1277).
+          // Ce message lisait `paire.recouvrement` — un champ qui N'EXISTE PAS : la paire porte
+          // `jaccard` et `motsPartages`. Le `?? 0` faisait le reste, et les CINQ alertes du
+          // registre annonçaient « partagent 0 % de leur vocabulaire » là où la vraie valeur est
+          // 28 % pour 134 mots communs.
+          //
+          // CE QUE ÇA A COÛTÉ, ET C'EST MESURABLE : une alerte « ces deux documents sont jumeaux,
+          // ils partagent 0 % de leur vocabulaire » se réfute toute seule. Elle se lit comme du
+          // bruit, donc on passe — et c'est exactement ce que j'ai fait cette nuit en classant
+          // les cinq paires « préexistantes, aucune de moi » sans en ouvrir une. DEUX
+          // concernaient mon propre document, et l'une a changé de onze obligations un chiffre
+          // déjà livré à l'utilisateur.
+          //
+          // LA CORRECTION N'EST PAS LE NOM DU CHAMP, C'EST LE `?? 0`. Un champ absent n'est pas
+          // un recouvrement nul : c'est une mesure qui n'a pas eu lieu, et les deux ne doivent
+          // jamais s'écrire pareil (leçons L5 et L11). On le DIT quand il manque.
+          constat: Number.isFinite(paire.jaccard)
+            ? `${paire.a} et ${paire.b} partagent ${Math.round(paire.jaccard * 100)} % de leur vocabulaire (${paire.motsPartages ?? "?"} mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà`
+            : `${paire.a} et ${paire.b} sont appariés, mais leur recouvrement n'a PAS ÉTÉ MESURÉ — ce n'est pas un recouvrement nul, c'est une mesure absente` });
       }
     } catch { /* un scan impossible ne fabrique aucune alerte : mieux vaut ne rien déposer que déposer du vide */ }
     // LES COUPLES BLUEPRINT ↔ INSTANCIATION (#1033) déposent ici et pas ailleurs : c'est la seule

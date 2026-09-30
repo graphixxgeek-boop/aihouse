@@ -8884,6 +8884,25 @@ async function testDocumentsJumeaux() {
 
   // UN CORPUS D'UN SEUL DOCUMENT N'EST JAMAIS « AUCUN DOUBLON ».
   assert.equal(trouverDocumentsJumeaux([{ chemin: 'a.md', texte: 'x' }]).mesurable, false, 'one document means nothing to compare, and answering "no duplicates" on it would be a clean bill issued on nothing');
+  // LE NOM DU CHAMP QUE LE MESSAGE D'ALERTE LIT (2026-09-30, tâche #1277) — et il a annulé cinq
+  // trouvailles réelles. L'alerte déposée au registre lisait « paire.recouvrement », un champ qui
+  // n'a JAMAIS existé : une paire porte « jaccard » et « motsPartages ». Avec un « ?? 0 », les cinq
+  // alertes du dépôt annonçaient « partagent 0 % de leur vocabulaire » là où la vraie valeur est
+  // 28 % pour 134 mots communs.
+  //
+  // CE QUE CE TEST PROTÈGE N'EST PAS L'ORTHOGRAPHE D'UN CHAMP, C'EST LA LISIBILITÉ DE L'ALERTE :
+  // « ces deux documents sont jumeaux, ils partagent 0 % de leur vocabulaire » se réfute toute
+  // seule, donc se lit comme du bruit, donc ne se lit plus. Le coût a été payé la nuit même —
+  // cinq paires classées « rien à voir » sans être ouvertes, dont deux portaient un vrai défaut
+  // dans un chiffre déjà livré à l'utilisateur.
+  {
+    const paireReelle = (trouverDocumentsJumeaux(chargerLesDocuments()).aInstruire ?? [])[0];
+    if (paireReelle) {
+      assert.ok(Number.isFinite(paireReelle.jaccard), 'a real pair must carry a finite jaccard: that is the field the registry message reads, and reading any other name silently yields 0 %');
+      assert.ok(paireReelle.jaccard > 0, 'and it must be ABOVE zero — a detector that pairs two documents and then reports 0 % shared vocabulary contradicts itself, which is how five real findings came to be skimmed past');
+      assert.equal(paireReelle.recouvrement, undefined, 'THE EXACT TRAP, kept as a counter-test: the field is NOT named recouvrement. If a future reader reintroduces that name it reads undefined, and the ?? 0 beside it turns every finding into a clean bill');
+    }
+  }
 
   // LE COUPLE BLUEPRINT ↔ INSTANCIATION (2026-09-28, tâche #1033). 82 blueprints ont chacun leur
   // instanciation, et rien ne vérifiait qu'ils disent encore la même chose — « une règle affinée

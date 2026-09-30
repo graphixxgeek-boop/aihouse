@@ -15,51 +15,6 @@
   },
   "alertes": [
     {
-      "outil": "abraham-les-references",
-      "cle": "documents jumeaux : docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md × docs/grand-projet/01-absorption/syntheses/INDEX-PAR-SITUATION.md",
-      "objet": "docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md",
-      "gravite": "a-instruire",
-      "constat": "docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md et docs/grand-projet/01-absorption/syntheses/INDEX-PAR-SITUATION.md partagent 0 % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà",
-      "depuis": "2026-09-30",
-      "vueLe": "2026-09-30"
-    },
-    {
-      "outil": "abraham-les-references",
-      "cle": "documents jumeaux : docs/referentiel/charte-cartographie.md × docs/grand-projet/02-strategie/trois-familles-de-la-charte.md",
-      "objet": "docs/referentiel/charte-cartographie.md",
-      "gravite": "a-instruire",
-      "constat": "docs/referentiel/charte-cartographie.md et docs/grand-projet/02-strategie/trois-familles-de-la-charte.md partagent 0 % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà",
-      "depuis": "2026-09-30",
-      "vueLe": "2026-09-30"
-    },
-    {
-      "outil": "abraham-les-references",
-      "cle": "documents jumeaux : docs/referentiel/claude-md-regles.md × docs/grand-projet/02-strategie/trois-familles-de-la-charte.md",
-      "objet": "docs/referentiel/claude-md-regles.md",
-      "gravite": "a-instruire",
-      "constat": "docs/referentiel/claude-md-regles.md et docs/grand-projet/02-strategie/trois-familles-de-la-charte.md partagent 0 % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà",
-      "depuis": "2026-09-30",
-      "vueLe": "2026-09-30"
-    },
-    {
-      "outil": "abraham-les-references",
-      "cle": "documents jumeaux : docs/mode-auto-process-guardian.md × CLAUDE.md",
-      "objet": "docs/mode-auto-process-guardian.md",
-      "gravite": "a-instruire",
-      "constat": "docs/mode-auto-process-guardian.md et CLAUDE.md partagent 0 % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà",
-      "depuis": "2026-09-30",
-      "vueLe": "2026-09-30"
-    },
-    {
-      "outil": "abraham-les-references",
-      "cle": "documents jumeaux : docs/mode-auto-process-guardian.md × docs/referentiel/abraham-les-references.md",
-      "objet": "docs/mode-auto-process-guardian.md",
-      "gravite": "a-instruire",
-      "constat": "docs/mode-auto-process-guardian.md et docs/referentiel/abraham-les-references.md partagent 0 % de leur vocabulaire — l'un des deux dit peut-être ce que l'autre dit déjà",
-      "depuis": "2026-09-30",
-      "vueLe": "2026-09-30"
-    },
-    {
       "outil": "ezechiel-les-tests",
       "cle": "5 groupe(s) portent une assertion sur une valeur littérale",
       "objet": "scripts/check-house.mjs",
@@ -75,6 +30,51 @@
       "gravite": "à surveiller",
       "constat": "la suite elle-même n'est pas au vert : 1 anomalie(s) de fonctionnement",
       "depuis": "2026-09-28",
+      "vueLe": "2026-09-30"
+    },
+    {
+      "outil": "abraham-les-references",
+      "cle": "documents jumeaux : docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md × docs/grand-projet/01-absorption/syntheses/INDEX-PAR-SITUATION.md",
+      "objet": "docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md",
+      "gravite": "a-instruire",
+      "constat": "docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md et docs/grand-projet/01-absorption/syntheses/INDEX-PAR-SITUATION.md partagent 28 % de leur vocabulaire (134 mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà",
+      "depuis": "2026-09-30",
+      "vueLe": "2026-09-30"
+    },
+    {
+      "outil": "abraham-les-references",
+      "cle": "documents jumeaux : docs/referentiel/charte-cartographie.md × docs/grand-projet/02-strategie/trois-familles-de-la-charte.md",
+      "objet": "docs/referentiel/charte-cartographie.md",
+      "gravite": "a-instruire",
+      "constat": "docs/referentiel/charte-cartographie.md et docs/grand-projet/02-strategie/trois-familles-de-la-charte.md partagent 28 % de leur vocabulaire (110 mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà",
+      "depuis": "2026-09-30",
+      "vueLe": "2026-09-30"
+    },
+    {
+      "outil": "abraham-les-references",
+      "cle": "documents jumeaux : docs/referentiel/claude-md-regles.md × docs/grand-projet/02-strategie/trois-familles-de-la-charte.md",
+      "objet": "docs/referentiel/claude-md-regles.md",
+      "gravite": "a-instruire",
+      "constat": "docs/referentiel/claude-md-regles.md et docs/grand-projet/02-strategie/trois-familles-de-la-charte.md partagent 27 % de leur vocabulaire (96 mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà",
+      "depuis": "2026-09-30",
+      "vueLe": "2026-09-30"
+    },
+    {
+      "outil": "abraham-les-references",
+      "cle": "documents jumeaux : docs/mode-auto-process-guardian.md × CLAUDE.md",
+      "objet": "docs/mode-auto-process-guardian.md",
+      "gravite": "a-instruire",
+      "constat": "docs/mode-auto-process-guardian.md et CLAUDE.md partagent 27 % de leur vocabulaire (714 mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà",
+      "depuis": "2026-09-30",
+      "vueLe": "2026-09-30"
+    },
+    {
+      "outil": "abraham-les-references",
+      "cle": "documents jumeaux : docs/mode-auto-process-guardian.md × docs/referentiel/abraham-les-references.md",
+      "objet": "docs/mode-auto-process-guardian.md",
+      "gravite": "a-instruire",
+      "constat": "docs/mode-auto-process-guardian.md et docs/referentiel/abraham-les-references.md partagent 26 % de leur vocabulaire (489 mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà",
+      "depuis": "2026-09-30",
       "vueLe": "2026-09-30"
     }
   ]
