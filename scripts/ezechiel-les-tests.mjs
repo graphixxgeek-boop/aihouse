@@ -43,6 +43,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { loadJsonArray } from "./lib-json.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
+import { sansChainesNiCommentaires } from "./abraham-les-references.mjs";
 import { printReportHeader, imprimerPlanDaction, buildPlanDaction } from "./report-template.mjs";
 import { recordCliUsage, recordRegistryWrite } from "./tool-usage.mjs";
 
@@ -328,7 +329,21 @@ export function groupesSansMorsure(groupes = []) {
   for (const g of groupes) {
     const assertions = (g.texte.match(/\bassert\.[a-zA-Z]+\(/g) ?? []).length;
     if (assertions === 0) { muets.push({ ligne: g.ligne, titre: g.titre, pourquoi: "aucune assertion dans ce groupe : il imprime un « Passed » sans avoir rien vérifié" }); continue; }
-    const taut = (g.texte.match(new RegExp(MOTIF_TAUTOLOGIE.source, "g")) ?? []).length;
+    // UNE TAUTOLOGIE CITÉE DANS UNE CHAÎNE N'EN EST PAS UNE (2026-09-30, tâche #1280) — et le
+    // détecteur accusait exactement le code écrit pour le tester. Les CINQ groupes qu'il
+    // signalait portaient tous leurs « assert.ok(1) » À L'INTÉRIEUR D'UN LITTÉRAL DE CHAÎNE :
+    // ce sont les fixtures d'EZECHIEL lui-même, du faux code de test servant à vérifier qu'il
+    // sait compter les assertions et repérer les tautologies.
+    //
+    // LE DÉFAUT EST STRUCTUREL, JAMAIS UN CAS PARTICULIER : tout test d'un détecteur de
+    // tautologies DOIT contenir une tautologie. Sans cette distinction, l'outil est condamné à
+    // s'accuser lui-même à chaque passage — et un garde-fou qui accuse à tort cesse d'être lu
+    // (leçon L4). C'est aussi la même faute que celle corrigée ailleurs cette nuit : un motif
+    // qui regarde la PONCTUATION du langage et croit lire la LOGIQUE du programme.
+    //
+    // ON RÉUTILISE LE DÉCAPEUR D'ABRAHAM plutôt que d'en écrire un troisième (Article 31) : il
+    // retire chaînes et commentaires, et il est déjà éprouvé sur tout le dépôt.
+    const taut = (sansChainesNiCommentaires(g.texte).match(new RegExp(MOTIF_TAUTOLOGIE.source, "g")) ?? []).length;
     if (taut > 0) tautologiques.push({ ligne: g.ligne, titre: g.titre, combien: taut, pourquoi: `${taut} assertion(s) portant sur une valeur littérale : elles passeront quoi qu'il arrive au code` });
   }
   return { muets, tautologiques };

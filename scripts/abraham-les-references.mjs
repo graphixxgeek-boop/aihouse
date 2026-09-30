@@ -279,13 +279,58 @@ export function sansLesCommentaires(code = "") {
     .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ");
 }
 
+// TROIS PASSES INDÉPENDANTES PERDENT LA PARITÉ DES GUILLEMETS (2026-09-30, tâche #1280).
+//
+// LE DÉFAUT, ET IL EST GÉNÉRAL : les chaînes étaient retirées en trois balayages successifs —
+// les accents graves, puis les apostrophes, puis les guillemets droits. Chacun est juste isolément.
+// Ensemble, ils se marchent dessus : une apostrophe française à l'intérieur d'une chaîne à
+// GUILLEMETS DROITS ouvre, pour la passe des apostrophes qui vient AVANT, une chaîne fantôme qui
+// court jusqu'à l'apostrophe suivante. Tout ce qui suit est décalé, et du code se met à passer
+// pour du texte — ou l'inverse.
+//
+// COMMENT IL S'EST MONTRÉ : EZECHIEL accusait cinq groupes de tests de contenir des tautologies.
+// Les cinq étaient ses PROPRES fixtures, du faux code cité dans des chaînes. Après correction du
+// décapage, deux groupes restaient accusés — et ce reste-là n'était pas une vraie tautologie non
+// plus : c'était la parité perdue sur un bloc dense en messages français à apostrophes.
+//
+// UN SEUL BALAYAGE, DE GAUCHE À DROITE, qui respecte le guillemet réellement ouvert : c'est la
+// seule façon correcte, et c'est aussi la plus simple à relire. Les commentaires partent d'abord,
+// comme avant, sinon leurs apostrophes rouvriraient le même problème.
 export function sansChainesNiCommentaires(code = "") {
-  return String(code)
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/(^|[^:])\/\/[^\n]*/g, "$1 ")
-    .replace(/`(?:\\[\s\S]|[^\\`])*`/g, '""')
-    .replace(/'(?:\\.|[^\\'])*'/g, '""')
-    .replace(/"(?:\\.|[^\\"])*"/g, '""');
+  // UN SEUL BALAYAGE POUR LES CHAÎNES **ET** LES COMMENTAIRES (2026-09-30, tâche #1280), et les
+  // séparer était le défaut. La version précédente retirait les commentaires D'ABORD, puis les
+  // chaînes en trois passes. Deux façons d'y perdre la parité, et les deux se sont produites :
+  //
+  //   · un `//` écrit À L'INTÉRIEUR d'une chaîne était pris pour un commentaire, ce qui mangeait
+  //     le guillemet fermant et décalait tout le reste du fichier. Le cas réel, dans le filet :
+  //     `texte: '// readFileSync ici est un commentaire'` — une fixture parfaitement légitime.
+  //   · une apostrophe dans une chaîne à guillemets droits ouvrait, pour la passe des
+  //     apostrophes qui venait avant, une chaîne fantôme.
+  //
+  // CE QUE ÇA COÛTAIT : EZECHIEL accusait cinq groupes de tests de contenir des tautologies. Les
+  // cinq étaient du faux code cité dans des chaînes — ses propres fixtures. Un détecteur qui
+  // accuse le code écrit pour le tester cesse d'être lu (leçon L4).
+  //
+  // LA SEULE FAÇON CORRECTE est de décider, caractère par caractère, si l'on est DANS une chaîne
+  // ou DANS un commentaire — jamais de deviner par des expressions régulières successives.
+  const t = String(code);
+  let out = "", i = 0;
+  while (i < t.length) {
+    const c = t[i], d = t[i + 1];
+    if (c === "/" && d === "*") { const f = t.indexOf("*/", i + 2); out += " "; i = f < 0 ? t.length : f + 2; continue; }
+    if (c === "/" && d === "/") { const f = t.indexOf("\n", i); out += " "; i = f < 0 ? t.length : f; continue; }
+    if (c === "'" || c === '"' || c === "`") {
+      let j = i + 1;
+      while (j < t.length) { if (t[j] === "\\") { j += 2; continue; } if (t[j] === c) break; j += 1; }
+      out += '""';
+      // Une chaîne jamais refermée ne doit pas avaler la suite : on rend la main juste après
+      // le guillemet ouvrant plutôt que d'aller au bout du fichier.
+      i = j < t.length ? j + 1 : i + 1;
+      continue;
+    }
+    out += c; i += 1;
+  }
+  return out;
 }
 
 export function mecanismeExerce(nom, code = "", { chemin = "" } = {}) {

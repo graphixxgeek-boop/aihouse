@@ -18041,6 +18041,24 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const vraimentVide = "assert.ok(1);\nconsole.log('Passed: un');\nconst x = 2;\nconsole.log('Passed: deux');";
   assert.equal(ez.groupesSansMorsure(ez.decouperEnGroupes(vraimentVide)).muets.length, 1, 'MUST STILL CATCH: a block with a real body and no assertion is still reported — the blank-line tolerance must not become a hole, or the detector would stop detecting the very thing it exists for');
 
+  // LE DÉCAPEUR PARTAGÉ N'AVAIT AUCUN TEST, ET IL PORTAIT DEUX DÉFAUTS (2026-09-30, tâche #1280).
+  // `sansChainesNiCommentaires` est utilisé par plusieurs outils du dépôt pour distinguer le CODE
+  // du TEXTE. Il retirait les commentaires D'ABORD, puis les chaînes en trois passes — deux façons
+  // d'y perdre la parité des guillemets, et les DEUX se sont produites pour de vrai.
+  //
+  // CE QUE ÇA COÛTAIT, MESURÉ : EZECHIEL accusait CINQ groupes de tests de contenir des
+  // tautologies. Les cinq étaient du faux code cité dans des chaînes — ses propres fixtures. Après
+  // correction : ZÉRO. Un détecteur qui accuse le code écrit pour le tester cesse d'être lu (L4).
+  {
+    const { sansChainesNiCommentaires: nu } = await import('../scripts/abraham-les-references.mjs');
+    assert.ok(!/readFileSync/.test(nu("const a = { texte: '// readFileSync ici' };")), 'THE FIRST REAL CASE: a // written INSIDE a string is not a comment. Stripping comments first ate the closing quote and desynchronised every quote after it — and the fixture that revealed it lives in this very net');
+    assert.ok(/assert\.ok\(1\)/.test(nu("const a = { texte: '// x' };\nassert.ok(1);")), 'and the code AFTER such a string must survive: that is exactly what the desynchronisation destroyed');
+    assert.ok(!/apostrophe/.test(nu('const a = "l\'index et l\'autre apostrophe";')), 'THE SECOND REAL CASE: an apostrophe inside a DOUBLE-quoted string must not open a phantom string — three independent passes made the single-quote pass run first, and it did exactly that');
+    assert.ok(!/assert/.test(nu('const a = 1; // assert.ok(1) ici')), 'COUNTER-TEST 1: a genuine comment is still removed — the fix must not trade one blindness for the other');
+    assert.ok(!/x\.fr/.test(nu('const u = "https://x.fr/a";')), 'COUNTER-TEST 2: a URL inside a string stays a string. The old version needed a special guard for the // in https; a single left-to-right scan needs none, which is why it is simpler AND more correct');
+    assert.ok(/apres/.test(nu("const a = 'jamais refermée;\nconst apres = 1;")), 'COUNTER-TEST 3, the safety one: an UNCLOSED string must not swallow the rest of the file — the scan hands back just after the opening quote rather than running to the end');
+  }
+
   // DÉFAUT 2 — une ligne qui appelle une assertion n'importe rien : c'est une fixture.
   const fixture = "assert.equal(f({fichier:'./scripts/inexistant-xyz.mjs'}), 1, 'peu importe');";
   assert.deepEqual(ez.citationsMortes(fixture, { existe: () => false }).mortes, [], "MUST LET PASS: a path invented for a test fixture is not an import — eight such paths were denounced as missing files on the first real pass, and none of them was one");

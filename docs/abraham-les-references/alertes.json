@@ -6,7 +6,7 @@
     },
     "ezechiel-les-tests": {
       "quand": "2026-09-30",
-      "combien": 3
+      "combien": 1
     },
     "abraham-les-references": {
       "quand": "2026-09-30",
@@ -56,24 +56,6 @@
       "objet": "docs/mode-auto-process-guardian.md",
       "gravite": "a-instruire",
       "constat": "docs/mode-auto-process-guardian.md et docs/referentiel/abraham-les-references.md partagent 26 % de leur vocabulaire (489 mots communs) — l'un des deux dit peut-être ce que l'autre dit déjà",
-      "depuis": "2026-09-30",
-      "vueLe": "2026-09-30"
-    },
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "5 groupe(s) portent une assertion sur une valeur littérale",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "à surveiller",
-      "constat": "5 groupe(s) portent une assertion sur une valeur littérale",
-      "depuis": "2026-09-29",
-      "vueLe": "2026-09-30"
-    },
-    {
-      "outil": "ezechiel-les-tests",
-      "cle": "d'où vient le temps n'a pas été mesuré",
-      "objet": "scripts/check-house.mjs",
-      "gravite": "bloquante",
-      "constat": "d'où vient le temps n'a pas été mesuré",
       "depuis": "2026-09-30",
       "vueLe": "2026-09-30"
     },
