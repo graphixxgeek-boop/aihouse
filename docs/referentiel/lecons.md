@@ -1365,6 +1365,25 @@ DEVRAIT attraper, et vérifier qu'il l'attrape. Les quatre défauts auraient ét
 leur écriture — « un fichier propre rend-il bien FAUX ? », « le parent attrape-t-il l'enfant ? ».
 Un contrôle qu'on n'a jamais vu MORDRE n'est pas un contrôle vérifié.
 
+**ELLE S'EST VÉRIFIÉE TROIS FOIS DE PLUS DANS L'HEURE QUI A SUIVI SA RÉDACTION — SUR LES MESURES
+ÉCRITES POUR L'INSTRUIRE.** C'est la meilleure preuve qu'elle pouvait recevoir, et elle vaut plus
+que les quatre cas d'origine :
+
+| Ce que la mesure annonçait | Ce qu'elle regardait vraiment | Ce qu'il y avait |
+|---|---|---|
+| « 4 % des assertions sont des contre-tests, 59 blocs à reprendre » | **les mots du message**, pas la couverture | 21 % au moins |
+| « 5 blocs sans aucun contre-test » | la **forme** de l'assertion, pas son sens | **0** — les cinq en avaient un, trois l'écrivent en toutes lettres |
+| « 233 frontières de mot suspectes » | la **ponctuation de JavaScript** (le délimiteur du littéral) | **0** défaut vivant |
+
+**Le motif est donc plus large que « un contrôle mal écrit » : il vaut pour TOUTE mesure, y compris
+celle qu'on écrit pour démontrer cette leçon-ci.** Et il penche toujours du même côté — **une
+première mesure est pessimiste**, parce qu'il est plus facile de compter une forme qu'un sens, et
+qu'une forme absente ressemble à un défaut présent.
+
+**COROLLAIRE PRATIQUE, ET C'EST LE PLUS RENTABLE DU LOT** : *avant de publier un chiffre qui
+désigne du travail à faire, ouvrir à la main DEUX des cas qu'il accuse.* Trente secondes. Cette
+seule habitude a évité, en une nuit, trois chantiers qui n'existaient pas.
+
 **POURQUOI CETTE LEÇON EST DIFFÉRENTE DES AUTRES** : L4 dit qu'un garde-fou qui accuse à tort cesse
 d'être lu — c'est la CONSÉQUENCE. L5 dit qu'une absence de mesure n'est pas une mesure à zéro —
 c'est un CAS PARTICULIER. Celle-ci nomme la CAUSE commune, et c'est elle qui manquait : on ne
