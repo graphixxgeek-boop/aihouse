@@ -37,9 +37,23 @@ lequel des deux ralentit le moins.
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
-**Q9.1 — À MOI, tâche **#1322**.** Le JEU n'est mesuré par rien. C'est le trou le plus ancien du fil, et il est
-entièrement de mon côté. Tant qu'il tient, toute phrase du type « voilà ce qui ralentit le projet »
-est incomplète et doit le dire.
+**Q9.1 — LE TROU EST COMBLÉ À MOITIÉ, le 2026-09-30, tâche #1322.** C'était le plus ancien du
+fil et il était entièrement de mon côté. **JESUS couvre maintenant les quatre axes que tu avais
+nommés**, pas trois.
+
+**Ce que la sonde mesure, sur des données réelles** : 310 tours joués, **9 821 tokens en moyenne
+par personnage**, deux cerveaux par tour, soit **~19 600 tokens par tour de jeu**. Au-dessus du
+repère de 8 000, **c'est le premier poste de lenteur d'un tour — avant le rendu 3D**, ce qui n'est
+pas l'intuition qu'on en a.
+
+**Et le trou était plus large que JESUS** : le KPI qui s'appelle « performance » dans le tableau
+de bord ne mesure que la résilience des clés d'API. **Rien, nulle part, ne disait ce qui rend un
+tour de jeu lent** — sur le produit.
+
+**Ce qui reste hors de portée, nommé plutôt qu'omis** : la latence réelle et les images par
+seconde (il faut un serveur qui tourne), le poids envoyé au navigateur (il faut une compilation),
+et **ce que ressent un visiteur — il faut un humain, et aucun mécanisme ne le remplacera.** Une
+sonde qui tairait ces quatre-là ferait passer un tiers du sujet pour le sujet entier.
 
 **Q9.2 — À MOI, tâche **#1305** — DÉJÀ FAITE.** Historiser la soirée du 30/09 **comme une expérience à ne jamais répéter**, avec
 sa cause racine écrite (j'ai vérifié *« ce fichier a-t-il une synthèse ? »* au lieu de *« ce sujet

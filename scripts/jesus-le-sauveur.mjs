@@ -919,6 +919,63 @@ export function lignesDeLaCascade(c) {
 // LE PASSAGE COMPLET
 // ————————————————————————————————————————————————————————————————————————
 
+// ————————————————————————————————————————————————————————————————————————
+// TERRAIN ⑤ — LE JEU, le quatrième axe qu'il avait nommé et que je ne savais pas voir
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE DU 2026-09-29, MOT POUR MOT : « qu'est-ce qui ralentit le codage ET/OU l'IA ET/OU
+// le jeu ET/OU l'agence ». **Quatre axes. Cet outil en couvrait TROIS**, et son propre rapport le
+// déclarait honnêtement en tête plutôt qu'en note de bas de page — ce qui était juste, et
+// insuffisant : une absence déclarée reste une absence, et celle-ci a duré un jour et demi.
+//
+// LE TROU ÉTAIT PLUS LARGE QUE CET OUTIL, VÉRIFIÉ LE 2026-09-30 : le KPI qui s'appelle
+// « performance » dans le tableau de bord ne mesure QUE le Smart Breaker, c'est-à-dire la
+// résilience des clés d'API. **Rien, nulle part, ne disait ce qui rend un tour de jeu lent.**
+// Et c'est le produit.
+//
+// CE QUI EST MESURABLE GRATUITEMENT, ET C'EST PLUS QUE JE NE CROYAIS. Le poste de coût dominant
+// d'un tour n'est pas le rendu 3D : c'est ce qu'on ENVOIE AU MODÈLE, deux fois par tour, un
+// cerveau par personnage. Et ce poids est DÉJÀ mesuré par memory-audit, échantillon par
+// échantillon, dans un journal que personne ne relisait à cette fin.
+//
+// CE QUI NE L'EST PAS, ET LA SONDE LE DIT PLUTÔT QUE DE L'OMETTRE : la latence réelle, les images
+// par seconde, le poids du paquet envoyé au navigateur, et le RESSENTI d'un visiteur. Les trois
+// premiers demandent un serveur qui tourne ; le quatrième demande un humain, et aucun mécanisme ne
+// le remplacera jamais. Une sonde qui tairait ces quatre-là ferait passer un tiers du sujet pour
+// le sujet entier — exactement le motif L47 que ce projet paie le plus souvent.
+export const SEUIL_POIDS_PAR_TOUR = 8000;
+
+export function ceQuiRalentitUnTourDeJeu({ samples = undefined, lireFichier = null, root = ROOT } = {}) {
+  const ech = samples === undefined ? (lireJson(".memento-history.json")?.samples ?? null) : samples;
+  if (!Array.isArray(ech) || !ech.length) {
+    return pasMesure("ce qui ralentit un tour de jeu",
+      "aucun échantillon de poids de contexte : `.memento-history.json` est vide ou absent. Ce zéro dit que le jeu n'a pas tourné récemment, JAMAIS qu'un tour est léger — et il ne se remplit qu'en jouant");
+  }
+  const lire = lireFichier ?? ((c) => { try { return readFileSync(join(root, c), "utf8"); } catch { return null; } });
+  const poids = ech.map((s) => s.tokens).filter((n) => Number.isFinite(n));
+  if (!poids.length) return pasMesure("ce qui ralentit un tour de jeu", "des échantillons existent mais aucun ne porte de poids lisible");
+  const moyenne = Math.round(poids.reduce((a, b) => a + b, 0) / poids.length);
+  const maxi = Math.max(...poids);
+  // DEUX CERVEAUX PAR TOUR, ET C'EST UNE DÉCISION ASSUMÉE, jamais un gaspillage : l'Article 8 la
+  // maintient « malgré son coût » parce qu'elle sert directement l'Article 0. La sonde la COMPTE ;
+  // elle ne la conteste pas, et elle n'a pas à le faire.
+  const route = lire("app/api/lia/route.ts");
+  const cerveaux = route ? (route.match(/generateContent|callGemini|fetchGemini/g) ?? []).length : null;
+  // CE QUI NE SE MESURE PAS D'ICI — nommé un par un plutôt que résumé en « divers ».
+  const horsPortee = [
+    { quoi: "la latence réelle d'un tour", pourquoi: "il faut un serveur qui tourne et un vrai appel au modèle" },
+    { quoi: "les images par seconde du rendu 3D", pourquoi: "il faut un navigateur ouvert sur la scène" },
+    { quoi: "le poids envoyé au navigateur", pourquoi: "il faut une compilation, que cette sonde ne déclenche pas" },
+    { quoi: "ce que RESSENT un visiteur", pourquoi: "il faut un humain, et aucun mécanisme ne le remplacera" },
+  ];
+  const lourd = moyenne > SEUIL_POIDS_PAR_TOUR;
+  return {
+    mesurable: true, echantillons: poids.length, moyenne, maxi, mini: Math.min(...poids), cerveaux,
+    parTour: cerveaux ? moyenne * 2 : null, lourd, horsPortee,
+    pourquoi: `${poids.length} tour(s) mesuré(s) : ${moyenne} tokens envoyés en moyenne PAR PERSONNAGE (min ${Math.min(...poids)}, max ${maxi})${cerveaux ? `, et deux cerveaux par tour — soit ~${moyenne * 2} tokens par tour de jeu` : ""}. ${lourd ? `Au-dessus du repère de ${SEUIL_POIDS_PAR_TOUR}, c'est le premier poste de lenteur d'un tour, avant tout rendu.` : `Sous le repère de ${SEUIL_POIDS_PAR_TOUR}.`} Quatre choses restent hors de portée d'ici.`,
+  };
+}
+
 export function passage(options = {}) {
   const filet = coutDuFilet(options);
   const remedes = outilsAbandonnesApresConstruction(options);
@@ -930,8 +987,9 @@ export function passage(options = {}) {
   const fluidite = fluiditeDeLaFile(options);
   const articles = coutDesArticlesVuDuDehors(options);
   const actionnabilite = tauxDActionnabilite(options);
+  const jeu = ceQuiRalentitUnTourDeJeu(options);
   const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite });
-  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite, croisements };
+  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite, jeu, croisements };
 }
 
 export function lignesDuPassage(p) {
@@ -954,6 +1012,8 @@ export function lignesDuPassage(p) {
   dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
   dire("③ LE TAUX D'ACTIONNABILITÉ — combien de constats RETENUS sont devenus une tâche", p.actionnabilite,
     (s) => (s.orphelins ?? []).slice(0, 5).map((o) => `· ${o.tacheMorte ? `tâche #${o.tacheMorte} ANNONCÉE mais absente` : "aucune tâche annoncée"} — ${o.constat}`));
+  dire("⑤ LE JEU — ce qui ralentit un tour, et ce qui ne se mesure pas d'ici", p.jeu,
+    (s) => (s.horsPortee ?? []).map((h) => `HORS PORTÉE : ${h.quoi} — ${h.pourquoi}`));
   dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,
     (s) => (s.relances ?? []).slice(0, 6).map((r) => `· ${r.slug} : ${r.relances} relance(s) rapprochée(s) sans commit entre les deux`));
   dire("④ LA FLUIDITÉ — quelle part du délai est du travail, quelle part de l'attente", p.fluidite,

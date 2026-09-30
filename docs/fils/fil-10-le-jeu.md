@@ -54,8 +54,19 @@ chantier de gouvernance se déroule **à côté** du Jeu, jamais dedans.
 *(a) tant qu'il faut, la gouvernance d'abord · (b) je veux une reprise dès que l'objectif ultime
 est posé · (c) je veux qu'on alterne dès maintenant*
 
-**Q10.2 — À MOI, tâche **#1322**.** Aucun outil ne mesure la **lenteur du Jeu** (rendu, temps de réponse, ressenti
-visiteur). C'est le même trou que dans le fil 09, vu de l'autre bout.
+**Q10.2 — FAIT À MOITIÉ le 2026-09-30, tâche #1322.** Le Jeu a enfin une sonde, chez JESUS, qui
+déclarait lui-même ne rien savoir de cet axe depuis un jour et demi.
+
+**Le résultat est contre-intuitif et vaut d'être su** : ce qui ralentit un tour n'est pas le rendu
+de la maison, c'est **ce qu'on envoie au modèle** — 9 821 tokens par personnage, deux fois par
+tour, soit ~19 600 tokens à chaque échange entre Lia et Noé. Mesuré sur 310 tours réels.
+
+**Ce que ça ne remet PAS en cause** : les deux cerveaux séparés. C'est une décision assumée que
+l'Article 8 maintient « malgré son coût », parce qu'elle sert directement l'Article 0. **La sonde
+compte, elle ne conteste pas** — et elle n'a pas à le faire.
+
+**Ce qui manque encore** : la latence vécue, les images par seconde, et le ressenti. Les deux
+premiers demandent un serveur qui tourne ; le troisième demande un humain (fil 11).
 
 **Q10.3 — À MOI, tâche **#1327**.** `check-spirit` n'a pas tourné depuis le début du chantier. Il ne coûte rien tant
 qu'on ne touche pas aux personnalités — mais le jour où on y touche, il est obligatoire **avant et

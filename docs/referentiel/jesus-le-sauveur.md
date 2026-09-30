@@ -234,3 +234,46 @@ bloc). **Une attribution n'est pas une mesure.**
 Le premier `git log --format=%ct|%s` rendait une **chaîne vide** : le `|` passé au shell est un
 TUBE, pas un séparateur de champs. Un `git log` muet ressemble à un dépôt sans commits — et la
 sonde annonçait « 0 tâche mesurable » sur un registre qui en porte 324.
+
+---
+
+## LE CINQUIÈME TERRAIN — LE JEU (2026-09-30, tâche #1322)
+
+**Il a nommé QUATRE axes de ralentissement le 2026-09-29** : *« qu'est-ce qui ralentit le codage
+ET/OU l'IA ET/OU le jeu ET/OU l'agence »*. L'outil en couvrait **trois**, et son rapport le
+déclarait honnêtement en tête plutôt qu'en note de bas de page. **C'était juste et insuffisant :
+une absence déclarée reste une absence**, et celle-ci a duré un jour et demi.
+
+**Le trou était plus large que cet outil**, vérifié le 2026-09-30 : le KPI qui s'appelle
+« performance » dans le tableau de bord ne mesure que le **Smart Breaker**, c'est-à-dire la
+résilience des clés d'API. **Rien, nulle part, ne disait ce qui rend un tour de jeu lent** — sur
+le produit que toute l'Agence est censée servir.
+
+### CE QUE LA SONDE MESURE, ET LA SOURCE ÉTAIT DÉJÀ LÀ
+
+Le poste de coût dominant d'un tour **n'est pas le rendu 3D** : c'est ce qu'on envoie au modèle,
+deux fois par tour, un cerveau par personnage. Ce poids était **déjà** échantillonné par
+memory-audit dans `.memento-history.json` — un journal que personne ne relisait à cette fin.
+
+**Premier passage réel (2026-09-30)** : 310 tours, **9 821 tokens en moyenne par personnage**
+(min 3 408, max 11 557), deux cerveaux par tour, soit **~19 600 tokens par tour de jeu**.
+
+**Les deux cerveaux ne sont pas contestés par cette sonde, et c'est écrit dans son code** :
+l'Article 8 maintient la séparation « malgré son coût » parce qu'elle sert l'Article 0. **La sonde
+COMPTE ; elle ne tranche pas.**
+
+### CE QU'ELLE NE MESURE PAS — nommé un par un, jamais résumé en « divers »
+
+| Hors portée | Pourquoi |
+|---|---|
+| la latence réelle d'un tour | il faut un serveur qui tourne et un vrai appel au modèle |
+| les images par seconde du rendu 3D | il faut un navigateur ouvert sur la scène |
+| le poids envoyé au navigateur | il faut une compilation, que la sonde ne déclenche pas |
+| **ce que RESSENT un visiteur** | **il faut un humain, et aucun mécanisme ne le remplacera** |
+
+**Une sonde qui tairait ces quatre-là ferait passer un tiers du sujet pour le sujet entier** —
+c'est le motif L47, celui que ce projet paie le plus souvent.
+
+**Et elle refuse de conclure sans données** : un `.memento-history.json` vide rend *PAS MESURÉ*,
+jamais « un tour est léger ». Ce journal ne se remplit qu'en JOUANT — donc un zéro dit que le jeu
+n'a pas tourné récemment, ce qui est une information en soi.

@@ -39,13 +39,13 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 10619 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-04-systeme-de-travail.html` | `docs/fils/fil-04-systeme-de-travail.md` | 12885 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-05-creation-vs-produit-fini.html` | `docs/fils/fil-05-creation-vs-produit-fini.md` | 10352 | 2026-09-30 21:05Z |
-| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 10677 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 15588 | 2026-09-30 21:05Z |
-| `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 9702 | 2026-09-30 21:05Z |
-| `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 10457 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9898 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 17980 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 13510 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 16351 | 2026-09-30 21:18Z |
 | `docs/fils/html/fil-02-cible-obligations.html` | `docs/fils/fil-02-cible-obligations.md` | 12403 | 2026-09-30 21:24Z |
 | `docs/fils/html/index.html` | `docs/fils/index.md` | 18530 | 2026-09-30 21:24Z |
+| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 11140 | 2026-09-30 21:33Z |
+| `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 10717 | 2026-09-30 21:33Z |
+| `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 11213 | 2026-09-30 21:33Z |
