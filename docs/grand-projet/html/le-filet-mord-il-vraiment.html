@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LE FILET MORD-IL VRAIMENT ? — et comment ma propre mesure a commis trois fois l'erreur qu'elle cherchait</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T00:36:24.691Z</div>
+    <h1>LE FILET MORD-IL VRAIMENT ? — et comment ma propre mesure a commis trois fois l'erreur qu'elle cherchait</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Nuit du 2026-09-29 au 30, heure LUE, source système. Tâche <strong>#1267</strong>. Personne ne l'a demandé : c'est la leçon <strong>L47</strong>, écrite une heure plus tôt, transformée en mesure plutôt que laissée en maxime.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/referentiel/lecons.md</code>, leçon L47.
+*il instruit sa dernière phrase — « un contrôle qu'on n'a jamais vu MORDRE n'est pas un contrôle
+vérifié » — sur le filet de sécurité lui-même.*</p></div>
+<hr>
+<h3>LA QUESTION</h3>
+<p><strong>Le filet compte 380 vérifications.</strong> Combien d'entre elles ont déjà été vues <strong>refuser</strong> quelque chose ? Une assertion qui ne vérifie que le cas normal ne prouve rien : elle passerait aussi si le contrôle était débranché.</p>
+<h3>LA RÉPONSE, ET ELLE EST BONNE</h3>
+<p><strong>21 % des 6 126 assertions du filet ont une forme NÉGATIVE</strong> — elles vérifient que le contrôle refuse, ou qu'il laisse passer ce qu'il doit laisser passer.</p>
+<table><thead><tr><th>Forme</th><th>Nombre</th><th>Ce qu'elle prouve</th></tr></thead><tbody><tr><td><code>equal(…, false / 0 / null)</code></td><td>565</td><td>le contrôle dit non</td></tr><tr><td><code>deepEqual(…, [] / null)</code></td><td>245</td><td>rien à signaler, et c'est vérifié</td></tr><tr><td><code>ok(!…)</code></td><td>217</td><td>la négation explicite</td></tr><tr><td><code>mesurable = false</code></td><td>98</td><td><strong>il refuse de conclure</strong> — la forme la plus propre à ce dépôt</td></tr><tr><td><code>length 0</code></td><td>88</td><td></td></tr><tr><td><code>throws</code> / <code>doesNotThrow</code></td><td>60</td><td>il refuse vraiment, ou laisse passer vraiment</td></tr></tbody></table>
+<p><strong>Et surtout : 89 blocs de test sur 94 en portent au moins une.</strong> Il n'en reste <strong>cinq</strong> sans aucune, tous petits :</p>
+<p><code>testDerivationEcarteeParcequElleFlatte</code> · <code>testDetteIndirecteIgnoreLesCommentaires</code> · <code>testGardeDeModuleCheckSpirit</code> · <code>testCollisionNommeSesTaches</code> · <code>testGardienPartageNAccusePlusSesFreres</code></p>
+<p><strong>C'est une petite liste actionnable, pas un chantier.</strong></p>
+<hr>
+<h3>MAIS LE VRAI INTÉRÊT DE CETTE MESURE EST AILLEURS</h3>
+<p><strong>Ma première version annonçait 4 % et cinquante-neuf blocs à reprendre.</strong> Elle était fausse, et elle l'était <strong>exactement de la manière que la leçon L47 décrit</strong> — écrite une heure plus tôt, par moi.</p>
+<h4>Erreur ① — j'ai mesuré un VOCABULAIRE en croyant mesurer une COUVERTURE</h4>
+<p>Ma première version cherchait les mots « CONTRE-TEST », « MUST CATCH » dans le <strong>texte</strong> des messages. Or <code>assert.throws(...)</code> <strong>est</strong> un contre-test parfait, et n'emploie aucun de ces mots.</p>
+<div class="highlight"><p><strong>4 % → 19 %</strong> dès qu'on regarde la FORME de l'assertion au lieu de son texte.
+<strong>Et 59 blocs à reprendre → 6.</strong></p></div>
+<h4>Erreur ② — ma liste de formes était incomplète</h4>
+<p>Une vérification manuelle a trouvé <code>assert.equal(…, null)</code> — un cas négatif parfaitement valide que mon motif ne connaissait pas.</p>
+<div class="highlight"><p><strong>19 % → 21 %</strong>, et <strong>6 blocs → 5</strong>.</p></div>
+<h4>Erreur ③ — et c'est celle qui décide : ce chiffre restera toujours un PLANCHER</h4>
+<p><strong>« Un cas négatif » est une propriété de SENS, pas de forme.</strong> Une assertion peut vérifier un refus par n'importe quelle tournure qu'aucun motif ne prévoira. Chaque fois que j'ai regardé de plus près, le chiffre est MONTÉ — jamais descendu.</p>
+<p><strong>Donc : 21 % est un plancher, la vraie valeur est plus haute, et je ne sais pas de combien.</strong></p>
+<p><strong>Ce qu'il ne faut surtout pas faire de ce chiffre</strong> : en faire un indicateur à suivre. Il bougerait avec la finesse de mes motifs plutôt qu'avec la qualité du filet — ce qui est la définition d'un mauvais indicateur, et le piège que la leçon L28 nomme déjà (<em>un chiffre qui BOUGE n'est pas un chiffre qui s'AMÉLIORE</em>).</p>
+<hr>
+<h3>CE QUE J'EN RETIENS, ET QUI VAUT PLUS QUE LE CHIFFRE</h3>
+<p><strong>Si j'avais publié ma première mesure, elle aurait lancé un chantier de 59 blocs qui n'existait pas.</strong> Ce qui l'a arrêtée n'est pas une intuition : c'est d'avoir appliqué à ma propre mesure la question de la leçon L47 — <strong>qu'est-ce que ce contrôle a LITTÉRALEMENT regardé ?</strong> La réponse était « les mots du message », pas « la couverture ». Trente secondes.</p>
+<p><strong>La discipline du contre-test ne se mécanise pas. Elle se tient.</strong> C'est pour ça qu'elle vit dans une leçon et non dans un garde-fou — et le déclarer ainsi vaut mieux que de confier une règle à un indicateur qui la mesurerait mal <em>(Article 27)</em>.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>Le filet porte 21 % d'assertions négatives, et 89 blocs sur 94 en ont au moins une</td><td><strong>RETENU</strong></td><td>tâche <strong>#1267</strong> — ce document ; c'est meilleur que ce que je craignais, et ça se dit</td></tr><tr><td>Ma propre mesure a commis trois fois l'erreur de la leçon qu'elle instruisait</td><td><strong>RETENU</strong></td><td>tâche <strong>#1267</strong> — raconté plutôt qu'effacé : c'est la démonstration la plus utile que L47 pouvait recevoir, et elle est arrivée une heure après sa rédaction</td></tr><tr><td>Cinq blocs de test n'ont aucune assertion négative</td><td><strong>À TRANCHER</strong></td><td>petite liste, vrai travail : leur en écrire une chacun. Pas cette nuit — ce sont des tests d'outils que je n'ai pas relus, et écrire un contre-test sans comprendre le contrôle produit un test qui passe sans rien prouver (Article 19)</td></tr><tr><td>Faire de ce 21 % un indicateur suivi</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>il bougerait avec la finesse de mes motifs plutôt qu'avec la qualité du filet. C'est la leçon L28 : un chiffre qui BOUGE n'est pas un chiffre qui s'AMÉLIORE</td></tr><tr><td>Construire un garde-fou qui exigerait une assertion négative par bloc</td><td><strong>ÉCARTÉ, avec sa raison</strong></td><td>il jugerait une propriété de SENS avec un motif de FORME, c'est-à-dire qu'il commettrait L47 en permanence — et il accuserait des blocs corrects (L4)</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
