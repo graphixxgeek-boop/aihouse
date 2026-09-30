@@ -2976,6 +2976,42 @@ export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSy
 }
 
 // ══════════════════════════════════════════════════════════════════════════
+// UNE MESURE ÉCRITE PUIS RETIRÉE LE MÊME SOIR (2026-09-30, tâche #1311)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// LA RAISON RESTE ICI PLUTÔT QUE DE PARTIR AVEC LE CODE (Article 27) : sans elle, quelqu'un
+// réécrira la même chose dans six mois, avec les mêmes trois défauts.
+//
+// CE QUE J'AVAIS ÉCRIT : `piecesInatteignables()`, qui vérifiait qu'une pièce de kit COMPTÉE
+// PRÉSENTE est aussi NOMMÉE quelque part. Motivation réelle et bonne : deux blueprints venaient
+// d'être trouvés sans une seule citation dans tout le dépôt, et leurs kits passaient au vert.
+//
+// POURQUOI ELLE A ÉTÉ RETIRÉE — trois défauts, et le troisième est le plus intéressant.
+//
+// ① ELLE DOUBLONNAIT UNE MESURE EXISTANTE. `findFichesOrphelines()` (ABRAHAM, tâche #629) répond
+//    déjà à cette question. L'Article 31 dit d'ÉTENDRE plutôt que d'agir à côté ; j'ai agi à côté
+//    sans avoir cherché, ce que l'Article 30 existe précisément pour empêcher.
+//
+// ② ELLE RE-DÉRIVAIT UN VERDICT DÉJÀ REJETÉ. La mesure existante porte une règle que la mienne
+//    n'avait pas : une fiche atteignable par la CONVENTION DE NOMMAGE (`docs/referentiel/<slug>.md`
+//    en face de `scripts/<slug>.mjs`) n'est PAS orpheline — on la trouve parce qu'on connaît la
+//    règle, pas parce qu'un lien y mène. Son test le dit mot pour mot : « sans ce second critère,
+//    le contrôle dénoncerait dix-huit fiches parfaitement atteignables ». La mienne en dénonçait
+//    dix-sept. C'était la même population, et le projet avait tranché une semaine plus tôt.
+//
+// ③ ELLE CONTAMINAIT CE QU'ELLE MESURAIT, et ça n'a été visible que parce qu'un garde-fou
+//    ANTÉRIEUR est tombé. Son rapport s'écrit dans `docs/safe-export/`, qui fait partie du corpus
+//    balayé : en NOMMANT les dix-sept fiches qu'elle accusait, elle les rendait « citées ». Le
+//    compte des fiches tenues par la seule convention est passé de 17 à 5 — non parce que le dépôt
+//    s'était amélioré, mais parce que ma mesure avait parlé. **Un second passage se serait donc
+//    félicité de son propre bruit.** C'est la forme la plus retorse d'un faux vert rencontrée ici :
+//    l'outil ne se trompe pas de calcul, il déplace la réalité qu'il observe.
+//
+// CE QUI EST GARDÉ DE L'ÉPISODE : les deux blueprints réellement orphelins ont bien été réparés
+// (leurs fiches les nomment désormais), et ils avaient été trouvés par `data-archangel orphelins`,
+// qui pose une AUTRE question — tous les documents, pas les pièces de kit — et ne doublonne rien.
+
+// ══════════════════════════════════════════════════════════════════════════
 // L'INVENTAIRE NOMINATIF — « le livre des kits » (2026-09-26, sa question)
 // ══════════════════════════════════════════════════════════════════════════
 //

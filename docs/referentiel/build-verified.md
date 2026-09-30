@@ -1,5 +1,7 @@
 # build-verified — fiche d'instanciation
 
+*(Plan générique réutilisable ailleurs : `docs/build-verified-blueprint.md`. Cette fiche-ci dit ce que l'outil est devenu SUR CE PROJET ; le blueprint dit comment le remonter sur un autre.)*
+
 ## Ce qu'il sert ici
 
 `scripts/build-verified.sh` : lance la compilation du projet avec les trois protections qui

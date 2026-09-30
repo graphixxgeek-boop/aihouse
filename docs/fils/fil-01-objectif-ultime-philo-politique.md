@@ -123,8 +123,30 @@ le jeu déçoive) ? *(a) oui, repose-la comme ça · (b) plus tard, après l'obj
 réponse si elle répond au bon niveau — et pourquoi. Tu me l'as demandé : *« j'ai besoin que tu
 pilotes cette partie »*. Le tri ci-dessus en est la première moitié ; la séance reste à tenir.
 
-**Q1.5 — À MOI.** Le **test des 5 impossibles** appliqué à nous : *que refusons-nous absolument ?
-que n'automatiserons-nous jamais ? que ne déléguerons-nous jamais ?* Quatre réponses existent déjà
-dans nos règles et n'ont jamais été rassemblées — et deux de plus viennent d'arriver avec tes
-jets (*travailler de manière imprécise* · *décider contre notre cadre*). C'est de l'extraction,
-pas de la création.
+**Q1.5 — DÉJÀ FAIT, et je l'ignorais quand j'ai écrit ce fil il y a deux heures.** J'annonçais
+ici que les réponses aux **5 impossibles** « n'ont jamais été rassemblées ». **C'était faux** :
+`docs/grand-projet/02-strategie/les-cinq-impossibles.md` existe depuis le 29 septembre au soir,
+126 lignes, **vingt refus rassemblés, chacun avec son porteur réel** — l'Article, la leçon ou le
+mécanisme qui le fait tenir. Je l'ai découvert en lançant la reprise des notes avant d'écrire, ce
+qui est précisément ce que cette règle sert à empêcher : **refaire un travail déjà fait, et
+affirmer au passage qu'il ne l'était pas.**
+
+**Ce que ce document a trouvé, et qui compte pour ta réflexion en cours** — trois choses :
+
+1. **Notre philosophie tient déjà en une phrase, et elle porte sur la CONNAISSANCE, pas sur le
+   code.** Quatorze des vingt refus disent la même chose : **ne jamais laisser passer pour un fait
+   ce qui n'en est pas un.** Une date supposée, un chiffre non mesuré, un zéro qui veut dire « je
+   n'ai pas regardé ». **Aucun de nos 34 Articles ne la formule ainsi** — c'est une conviction
+   qu'on applique sans l'avoir écrite.
+2. **Les cinq impossibles n'ont pas la même force, et c'est mesurable.** Deux sont portés par du
+   code qui **refuse pour de vrai** (un rapport sans titre, une date fabriquée, un jugement rendu
+   sans donnée : la machine lève une erreur). Trois ne sont portés que par des textes.
+3. **Deux de tes jets d'aujourd'hui viennent s'y ajouter** — *travailler de manière imprécise* et
+   *décider contre notre cadre* — et ils ne contredisent rien : ils disent la même chose que le
+   reste, avec tes mots.
+
+**Q1.6 — À TOI, et c'est peut-être la vraie réponse à ta partie philosophie.** La phrase ci-dessus
+— *« ne jamais laisser passer pour un fait ce qui n'en est pas un »* — est déjà notre conviction
+centrale, appliquée partout et écrite nulle part. **Est-ce que tu la reconnais comme telle ?**
+*(a) oui, c'est nous · (b) oui mais incomplète, il manque quelque chose · (c) non, ce n'est pas
+ça le cœur*

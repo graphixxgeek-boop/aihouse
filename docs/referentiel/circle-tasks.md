@@ -1,5 +1,7 @@
 # CIRCLE-TASKS — fiche d'instanciation
 
+*(Plan générique réutilisable ailleurs : `docs/circle-tasks-blueprint.md`. Cette fiche-ci dit ce que l'outil est devenu SUR CE PROJET ; le blueprint dit comment le remonter sur un autre.)*
+
 ## Ce qu'il sert ici
 
 `scripts/circle-tasks.mjs` (2 295 lignes au 2026-09-26) : il DÉFINIT la Ronde — **38 entrées**, dont

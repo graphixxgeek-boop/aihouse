@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIL 12 — Le système global : « où on en est » et « est-ce qu'on est à jour »</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T20:17:56.409Z</div>
+    <h1>FIL 12 — Le système global : « où on en est » et « est-ce qu'on est à jour »</h1>
+    <p class="sub">Page générée depuis docs/fils/fil-12-systeme-global-ou-on-en-est.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Balle :</strong> À MOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étape de RATIONALISATION — explicitement reportée après les urgences, sur ta décision. Ce fil existe pour que le sujet ne se reperde pas d'ici là. <strong>Saisines :</strong> demande du 2026-09-30 au soir · fil 04 · fil 03</p>
+<hr>
+<h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
+<p><strong>Ce fil naît d'une phrase que tu as écrite après avoir validé le système de fils</strong>, et c'est le contraire d'une critique de ce système : tu constates qu'il marche, et tu vois immédiatement qu'il est seul de son espèce.</p>
+<div class="highlight"><p>*« OK pour le système de fils, mais il faut que ce soit cohérent et branché aussi sur le système
+de suivi. Je pense aussi au système des stratégies, au système des notes de chantier, aux DATAS
+qui fonctionnent avec ce système. Tout doit être harmonisé dans un système beaucoup plus
+rationnel. En fait, il nous faut un système global et rationnel qui permette de dire : où on en
+est, et est-ce qu'on est à jour. »*</p></div>
+<p><strong>Et ton verdict sur l'état actuel, qu'il faut garder mot pour mot parce qu'il est plus utile qu'un audit</strong> :</p>
+<div class="highlight"><p>*« en l'état l'agence est AUSSI pour certaines parties : UN VRAI BAZAR ORGANISÉ, construit sur
+le tas, sans vision globale. ET parfois on s'y perd. »*</p></div>
+<p><strong>« Bazar ORGANISÉ » est le bon mot, et les deux moitiés comptent.</strong> Chaque pièce prise seule est propre : le suivi est rigoureux, les stratégies sont datées, les fils tiennent debout, les registres se génèrent. <strong>Ce qui manque n'est dans aucune des pièces — c'est le plan de la maison.</strong> Un défaut de cette nature est invisible à tout contrôle local, parce que chaque contrôle local passe au vert.</p>
+<h4>CE QUI EXISTE AUJOURD'HUI, ET QUI NE SE PARLE PAS</h4>
+<table><thead><tr><th>Le système</th><th>Ce qu'il sait dire</th><th>Ce qu'il ignore</th></tr></thead><tbody><tr><td><strong>Le suivi</strong> (<code>docs/suivi/</code>)</td><td>ce qui a été fait, tâche par tâche, daté</td><td>ce qu'on cherche à obtenir</td></tr><tr><td><strong>Les fils</strong> (<code>docs/fils/</code>)</td><td>où en est chaque sujet, qui a la balle</td><td>ce qui a été fait dans le code</td></tr><tr><td><strong>Les stratégies</strong> (<code>docs/grand-projet/02-strategie/</code>)</td><td>des analyses de fond, datées</td><td>si elles sont encore vraies</td></tr><tr><td><strong>Les notes de chantier</strong></td><td>ce qui se passe sur un chantier précis</td><td>leur place dans l'ensemble</td></tr><tr><td><strong>Les registres d'outils</strong> (<code>docs/&lt;outil&gt;/</code>)</td><td>ce que chaque outil a mesuré</td><td>ce qu'on en a fait</td></tr></tbody></table>
+<p><strong>Cinq systèmes, cinq vérités partielles, aucun point de rencontre.</strong> C'est exactement pour ça que « suis-je à jour ? » n'avait pas de réponse avant les fils — et les fils n'en donnent qu'un cinquième.</p>
+<hr>
+<h3>② OÙ ÇA SE SITUE — et pourquoi tu as raison de le reporter</h3>
+<p><strong>Tu l'as toi-même rangé à l'étape de rationalisation</strong> — <em>« on va passer aux urgences, promis, mais on a tellement de choses à faire »</em>. C'est le bon arbitrage, et je ne vais pas le rediscuter : harmoniser cinq systèmes avant de savoir ce que le projet cherche à obtenir (fil 01) reviendrait à ranger une maison dont on n'a pas décidé du nombre de pièces.</p>
+<p><strong>Ce fil sert donc à UNE chose d'ici là : empêcher que le sujet se reperde.</strong> C'est précisément ce que le système de fils existe pour faire, et ce sujet en est le premier vrai test.</p>
+<hr>
+<h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q12.1 — TA QUESTION, et je te dois une vraie réponse plutôt qu'une esquive.</strong> <em>« Comment tu intègres le fruit de notre réflexion, de nos échanges, à ta stratégie globale ? »</em></p>
+<p><strong>La réponse honnête aujourd'hui : je ne l'intègre pas. Il n'y a pas de stratégie globale à mettre à jour.</strong> Tu l'as dit toi-même entre parenthèses — <em>« qui n'existe pas encore »</em> — et tu as raison. Ce qui existe, ce sont vingt-deux documents de stratégie qui se sont empilés par occasions, chacun juste le jour où il a été écrit, et dont aucun ne dit ce que les autres sont devenus.</p>
+<p><strong>Ton hypothèse — les questions de calibrage — est la moitié de la réponse, et tu as vu vous-même où elle s'arrête.</strong> Le calibrage attrape ce qui appelle une décision. <strong>Il laisse passer tout ce qui change notre compréhension sans rien demander à personne</strong> : une mesure qui dément une hypothèse, une leçon payée, une remarque de ta part qui déplace un cadre. Ce soir en est l'exemple : ta critique de la plaquette n'était pas une décision à prendre, et elle a pourtant changé la nature du chantier commercial. Aucune question de calibrage ne l'aurait captée.</p>
+<p><strong>Ce que je propose, et c'est à trancher plus tard, pas maintenant</strong> : un document de stratégie globale unique, qui ne raconte rien mais qui <strong>renvoie</strong> — il dit où on va, et pour chaque sujet il nomme le fil qui le porte. Il devient alors le seul document à mettre à jour, et les fils le nourrissent au lieu de vivre à côté. C'est la même règle que partout ailleurs ici : <strong>un registre se lit, il ne se recopie pas.</strong></p>
+<p><em>(a) cette direction me va, on la travaillera à la rationalisation · (b) je vois autre chose · (c) explique-moi d'abord ce que « stratégie globale » veut dire concrètement</em></p>
+<p><strong>Q12.2 — À TOI, et une seule réponse suffit pour cadrer tout le chantier.</strong> Quand tu demandes « où on en est », tu veux lire quoi en premier ? <em>(a) ce qui m'attend, moi · (b) ce qui a avancé depuis la dernière fois · (c) ce qui est en retard ou bloqué · (d) l'état de chaque grand sujet, comme dans l'index des fils</em></p>
+<p><strong>Q12.3 — PREMIÈRE MESURE FAITE le 2026-09-30, tâche #1310.</strong> Je ne voulais pas attendre la rationalisation pour savoir : c'est gratuit, et <strong>un rangement décidé sans mesure rangerait ce qu'on a en tête plutôt que ce qui est là.</strong></p>
+<p><code>node scripts/data-archangel.mjs orphelins</code> — nouvelle commande, passage réel du 30/09 à 19h57. <strong>446 documents mesurés</strong>, 114 hors portée avec leur raison (les archives, le journal des tâches et les index eux-mêmes n'ont pas vocation à être cités) :</p>
+<table><thead><tr><th>✅ <strong>cités ailleurs que dans leur index</strong></th><th><strong>407 — 91 %</strong></th></tr></thead><tbody><tr><td>🟠 <strong>seulement indexés</strong></td><td><strong>37 — 8 %</strong></td></tr><tr><td>🚨 <strong>orphelins, rien du tout</strong></td><td><strong>2</strong>, corrigés dans la foulée</td></tr></tbody></table>
+<p><strong>Et la mesure a trois états, jamais deux, parce que la version simple n'aurait rien appris.</strong> « Est-il cité quelque part ? » : l'index de son propre dossier cite tous ses fichiers, donc presque rien n'aurait été orphelin et le contrôle aurait rendu un vert permanent. <strong>L'état qui compte est celui du milieu — SEULEMENT INDEXÉ : atteignable en ouvrant le bon dossier, jamais trouvé par quelqu'un qui cherche un sujet. C'est exactement ton « parfois on s'y perd », et tous les contrôles d'indexation le rendent vert.</strong></p>
+<p><strong>Les deux orphelins vérifiés à la main, un par un</strong> : <code>build-verified-blueprint.md</code> et <code>circle-tasks-blueprint.md</code>. Zéro citation dans tout le dépôt. Ce sont deux plans d'export écrits le 26 septembre, le jour où tu as supprimé la dispense de blueprint — <strong>créés et jamais branchés.</strong> Chacun nommait sa fiche ; aucune fiche ne le nommait en retour. Le lien manquant a été posé des deux côtés, et le compte est retombé à <strong>zéro orphelin</strong>.</p>
+<p><strong>Ce que ça révèle et qui dépasse ces deux fichiers</strong> : le contrôle des kits d'export vérifie qu'un blueprint EXISTE, jamais qu'il est ATTEIGNABLE. Un plan présent que personne ne peut trouver compte comme un kit complet. C'est un trou dans un garde-fou, pas dans un document — je l'instruis en Q12.5.</p>
+<p><strong>Ce que la mesure ne dit PAS, et il faut le lire avant d'agir</strong> : peu cité n'est pas inutile. Une archive n'a pas vocation à être convoquée. Elle dit ce qui ne circule pas ; décider si ça doit circuler reste ta décision.</p>
+<p><strong>Q12.5 — ÉCRITE PUIS RETIRÉE LE MÊME SOIR, et ce qu'elle m'a appris vaut mieux que ce qu'elle mesurait.</strong> J'ai ajouté au contrôle des kits une vérification qu'une pièce présente est aussi <em>atteignable</em>. Elle a rendu « 17 pièces sur 213 introuvables ». <strong>Je l'ai retirée deux heures plus tard, pour trois raisons, et la troisième est la plus intéressante du projet depuis longtemps.</strong></p>
+<p><strong>① Elle doublonnait une mesure qui existait déjà.</strong> <code>findFichesOrphelines</code>, écrite le 28 septembre, répond exactement à cette question. Je ne l'avais pas cherchée — alors qu'une règle du projet m'oblige à chercher ce que le dépôt sait déjà avant d'ouvrir un chantier. Elle existe pour empêcher ça, et je l'ai sautée.</p>
+<p><strong>② Elle re-dérivait un verdict que le projet avait déjà rejeté.</strong> La mesure existante porte une règle que la mienne n'avait pas : <strong>une fiche est atteignable si la CONVENTION DE NOMMAGE y mène</strong> — <code>docs/referentiel/god-of-all-process.md</code> en face de <code>scripts/god-of-all-process.mjs</code>. On la trouve parce qu'on connaît la règle, pas parce qu'un lien y mène. Son test le dit mot pour mot : <em>« sans ce second critère, le contrôle dénoncerait dix-huit fiches parfaitement atteignables »</em>. <strong>La mienne en dénonçait dix-sept.</strong> Même population, décision déjà prise une semaine plus tôt.</p>
+<p><strong>③ Elle CONTAMINAIT ce qu'elle mesurait.</strong> Son rapport s'écrit dans <code>docs/</code>, qui fait partie du corpus balayé. <strong>En nommant les dix-sept fiches qu'elle accusait, elle les rendait « citées ».</strong> Le compte des fiches tenues par la seule convention est tombé de <strong>17 à 5</strong> — non parce que le dépôt s'était amélioré, mais parce que ma mesure avait parlé. Un second passage se serait donc félicité de son propre bruit.</p>
+<p><strong>Et ça n'a été visible que parce qu'un garde-fou ANTÉRIEUR est tombé.</strong> Le filet a refusé le commit en disant <em>« la convention doit vraiment porter du poids »</em> — il surveillait précisément cette valeur. <strong>Sans lui, j'aurais publié une amélioration qui n'existait pas.</strong> Après retrait : 17 à nouveau, et zéro fiche réellement orpheline.</p>
+<p><strong>Ce qui est gardé de l'épisode</strong> : les deux blueprints vraiment orphelins sont bien réparés, et ils avaient été trouvés par <code>data-archangel orphelins</code>, qui pose une autre question — tous les documents, pas les pièces de kit — et ne doublonne rien.</p>
+<p>sujet · (c) montre-moi d'abord les 17*</p>
+<p><strong>Q12.4 — À MOI.</strong> Le trou que ta question Q12.1 met à nu est plus large que la stratégie : <strong>rien ne capte ce qui change notre compréhension sans appeler de décision.</strong> Le journal d'expérience capte mes erreurs à moi, le suivi capte les tâches, les fils captent les sujets ouverts — personne ne capte « ce qu'on a compris ». C'est à instruire, pas à improviser.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-12-systeme-global-ou-on-en-est.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

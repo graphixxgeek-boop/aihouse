@@ -1839,6 +1839,94 @@ export function dependancesDuDossier(dossier, textesDesFichiers = [], { dossiers
   return [...cites].sort();
 }
 
+// LES DOCUMENTS QUE PLUS RIEN NE DÉSIGNE (2026-09-30, tâche #1310, sa question du soir).
+//
+// CE QUI L'A FAIT NAÎTRE, dans ses mots : « en l'état l'agence est AUSSI pour certaines parties :
+// UN VRAI BAZAR ORGANISÉ, construit sur le tas, sans vision globale. ET parfois on s'y perd. » Il
+// range le rangement lui-même à l'étape de rationalisation, plus tard — mais MESURER le bazar est
+// gratuit, et un rangement décidé sans mesure rangerait ce qu'on a en tête plutôt que ce qui est là.
+//
+// CHEZ data-archangel ET NULLE PART AILLEURS (Article 31) : il veille sur la CIRCULATION des
+// données, et sa règle est déjà écrite pour `index` — « un fichier qu'aucun index n'annonce est un
+// fichier qui ne circule pas, quelle que soit sa qualité ». Un document que plus AUCUN autre ne
+// cite est le même défaut, un cran plus loin : annoncé, mais jamais convoqué.
+//
+// TROIS ÉTATS, JAMAIS DEUX, ET C'EST TOUTE LA VALEUR DE LA MESURE. La version naïve — « est-il
+// cité quelque part ? » — se serait noyée : l'index de son propre dossier cite TOUS ses fichiers,
+// donc presque rien ne serait jamais orphelin, et la mesure rendrait un vert permanent qui
+// n'apprend rien (leçon L4, déjà payée sept fois ici).
+//   · CITÉ            — au moins un document ou un script le désigne AILLEURS que dans l'index de
+//                       son propre dossier : il circule vraiment.
+//   · SEULEMENT INDEXÉ — son index de dossier le nomme, et personne d'autre. Il est atteignable
+//                       par quelqu'un qui ouvre ce dossier-là, jamais trouvé par quelqu'un qui
+//                       cherche un sujet. C'est l'état le plus fréquent, et le plus trompeur :
+//                       tous les contrôles d'indexation le rendent vert.
+//   · ORPHELIN        — rien du tout, pas même son index. Celui-là est une vraie perte.
+//
+// CE QU'ELLE NE DIT PAS, ET IL FAUT LE LIRE AVANT D'AGIR : un document peu cité n'est pas un
+// document inutile. Une archive n'a pas vocation à être citée, un texte fondateur se lit sans être
+// convoqué. La mesure dit CE QUI NE CIRCULE PAS ; décider si ça doit circuler reste humain.
+export const SANS_OBJET_ORPHELINS = [
+  { motif: /^docs\/suivi\//, pourquoi: "le journal des tâches : ses fichiers se lisent par date, jamais en étant cités" },
+  { motif: /^docs\/archives?\//, pourquoi: "une archive n'a pas vocation à être convoquée : c'est sa définition" },
+  { motif: /^docs\/contexte-projet\//, pourquoi: "archives historiques déposées par l'utilisateur, consultables en cas de doute et jamais une source de vérité" },
+  { motif: /\/index\.md$/, pourquoi: "un index EST le désignateur : lui demander d'être désigné inverserait la mesure" },
+];
+
+export function documentsOrphelins({ root = ROOT, lire = null, lister = null } = {}) {
+  const lireF = lire ?? ((c) => { try { return readFileSync(join(root, c), "utf8"); } catch { return ""; } });
+  const listeur = lister ?? ((d, ext) => fichiersDe(root, d, ext));
+  const docs = listeur("docs", /\.md$/);
+  if (!docs.length) return { mesurable: false, pourquoi: "aucun document lu sous docs/ : ce zéro dit qu'on n'a rien pu mesurer, jamais qu'il n'y a rien" };
+  const scripts = listeur("scripts", /\.mjs$/);
+  // Le corpus qui CITE : tous les documents, tous les scripts, et la charte.
+  const corpus = new Map();
+  for (const c of [...docs, ...scripts, "CLAUDE.md"]) corpus.set(c, lireF(c));
+  const horsPortee = [];
+  const resultats = [];
+  for (const d of docs) {
+    const exempt = SANS_OBJET_ORPHELINS.find((e) => e.motif.test(d));
+    if (exempt) { horsPortee.push({ chemin: d, pourquoi: exempt.pourquoi }); continue; }
+    const base = d.split("/").pop();
+    const indexDuDossier = d.slice(0, d.lastIndexOf("/")) + "/index.md";
+    let ailleurs = 0, parSonIndex = false;
+    for (const [c, t] of corpus) {
+      if (c === d || !t) continue;
+      if (!t.includes(base) && !t.includes(d)) continue;
+      if (c === indexDuDossier) { parSonIndex = true; continue; }
+      ailleurs += 1;
+    }
+    resultats.push({ chemin: d, ailleurs, parSonIndex, etat: ailleurs > 0 ? "cité" : parSonIndex ? "seulement indexé" : "orphelin" });
+  }
+  const par = (e) => resultats.filter((r) => r.etat === e);
+  return { mesurable: true, total: resultats.length, horsPortee, resultats,
+    cites: par("cité"), seulementIndexes: par("seulement indexé"), orphelins: par("orphelin") };
+}
+
+export function formatOrphelinsLines(r, { combien = 12 } = {}) {
+  const l = [];
+  if (!r.mesurable) { l.push(`=== LES DOCUMENTS QUE PLUS RIEN NE DÉSIGNE — PAS MESURÉ ===`, `  ${r.pourquoi}`); return l; }
+  const pc = (n) => r.total ? Math.round((n / r.total) * 100) : 0;
+  l.push(`=== LES DOCUMENTS QUE PLUS RIEN NE DÉSIGNE — ${r.orphelins.length} orphelin(s), ${r.seulementIndexes.length} seulement indexé(s), sur ${r.total} mesuré(s) ===`);
+  l.push("");
+  l.push(`  ✅ cités ailleurs que dans leur index      ${String(r.cites.length).padStart(4)}  (${pc(r.cites.length)} %)`);
+  l.push(`  🟠 seulement indexés                       ${String(r.seulementIndexes.length).padStart(4)}  (${pc(r.seulementIndexes.length)} %)`);
+  l.push(`  🚨 orphelins — rien, pas même leur index   ${String(r.orphelins.length).padStart(4)}  (${pc(r.orphelins.length)} %)`);
+  l.push(`  ⚪ hors portée, avec leur raison           ${String(r.horsPortee.length).padStart(4)}`);
+  if (r.orphelins.length) {
+    l.push("", "  🚨 LES ORPHELINS — personne ne peut les trouver autrement qu'en tombant dessus :");
+    for (const o of r.orphelins.slice(0, combien)) l.push(`     · ${o.chemin}`);
+    if (r.orphelins.length > combien) l.push(`     … et ${r.orphelins.length - combien} autre(s)`);
+  }
+  if (r.seulementIndexes.length) {
+    l.push("", "  🟠 SEULEMENT INDEXÉS — atteignables en ouvrant leur dossier, jamais trouvés en cherchant un sujet :");
+    for (const o of r.seulementIndexes.slice(0, combien)) l.push(`     · ${o.chemin}`);
+    if (r.seulementIndexes.length > combien) l.push(`     … et ${r.seulementIndexes.length - combien} autre(s)`);
+  }
+  l.push("", "  HORS PORTÉE : peu cité n'est pas inutile. Une archive n'a pas vocation à être convoquée, un texte fondateur se lit sans qu'on le cite. Cette mesure dit ce qui NE CIRCULE PAS ; décider si ça doit circuler reste humain.");
+  return l;
+}
+
 export function carteDesDossiers({ root = ROOT, index = null, listDirImpl = null, readFileImpl = null } = {}) {
   const lister = listDirImpl ?? ((d) => { try { return readdirSync(join(root, d)); } catch { return []; } });
   const lire = readFileImpl ?? ((c) => { try { return readFileSync(join(root, c), "utf8"); } catch { return ""; } });
@@ -2240,6 +2328,14 @@ function main() {
       console.log(`\n⚠️ ${r.malFormees.length} fiche(s) NON LUE(S), donc absentes de l'index — le compte ci-dessus est un PLANCHER :`);
       for (const x of r.malFormees) console.log(`   · ${x.fichier} — ${x.pourquoi}`);
     }
+    return;
+  }
+  // `orphelins` (2026-09-30, tâche #1310) — le QUATRIÈME étage. `index` dit quels fichiers sont
+  // ANNONCÉS ; celui-ci dit lesquels sont réellement CONVOQUÉS par quelqu'un d'autre. Un document
+  // annoncé que personne ne cite passe au vert partout et ne sert à personne.
+  if (sub === "orphelins") {
+    console.log("");
+    for (const l of formatOrphelinsLines(documentsOrphelins())) console.log(l);
     return;
   }
   if (sub === "carte") {

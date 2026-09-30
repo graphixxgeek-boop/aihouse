@@ -38,12 +38,13 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 10559 | 2026-09-30 18:06Z |
 | `docs/fils/html/fil-05-creation-vs-produit-fini.html` | `docs/fils/fil-05-creation-vs-produit-fini.md` | 10292 | 2026-09-30 18:06Z |
 | `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 10617 | 2026-09-30 18:06Z |
-| `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 11071 | 2026-09-30 18:06Z |
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 9629 | 2026-09-30 18:06Z |
 | `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 10397 | 2026-09-30 18:06Z |
 | `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9868 | 2026-09-30 18:06Z |
-| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 15502 | 2026-09-30 18:29Z |
-| `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 11204 | 2026-09-30 18:30Z |
 | `docs/fils/html/fil-04-systeme-de-travail.html` | `docs/fils/fil-04-systeme-de-travail.md` | 12812 | 2026-09-30 18:30Z |
-| `docs/fils/html/index.html` | `docs/fils/index.md` | 16799 | 2026-09-30 18:31Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 16456 | 2026-09-30 18:45Z |
+| `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 11606 | 2026-09-30 19:54Z |
+| `docs/fils/html/fil-07-commercialisation-plaquette.html` | `docs/fils/fil-07-commercialisation-plaquette.md` | 12974 | 2026-09-30 19:55Z |
+| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 17319 | 2026-09-30 20:00Z |
+| `docs/fils/html/index.html` | `docs/fils/index.md` | 18005 | 2026-09-30 20:01Z |
+| `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 17950 | 2026-09-30 20:17Z |

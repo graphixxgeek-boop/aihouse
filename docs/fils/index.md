@@ -1,4 +1,13 @@
-# LE CERVEAU DES FILS — par où entrer, et où en est chaque sujet
+# INDEX DES FILS — par où entrer, et où en est chaque sujet
+
+> **POURQUOI LE FICHIER S'APPELLE `index.md` ALORS QUE SON TITRE DIT « INDEX DES FILS ».** Tu as
+> raison sur les deux points, et ils ne se contredisent pas. Le NOM DU FICHIER doit rester
+> `index.md` : c'est une convention sans exception du projet — tout dossier de `docs/` porte un
+> `index.md`, et c'est ce nom-là que le contrôleur d'indexation va chercher pour vérifier qu'aucun
+> document déposé n'est annoncé nulle part. Le renommer casserait ce contrôle sur ce dossier-ci,
+> en silence. Le TITRE, lui, est ce que tu lis en ouvrant la page, et c'est lui qui doit être
+> clair : il dit maintenant **INDEX DES FILS**. Le nom technique sert la machine, le titre te sert
+> toi — et c'est le titre qui s'affiche en haut de la page HTML.
 
 *(Écrit le 2026-09-30, heure LUE — source système. Il remplace le fil unique rangé par dates, qui
 répondait à « qu'est-ce qui s'est dit le 29 ? » et jamais à « où en est-on sur la sécurité ? ».)*
@@ -24,11 +33,11 @@ personne).
 
 | Étage | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|---|
-| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 5 (3 pour toi) |
+| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 6 (4 pour toi) |
 | **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 3 (2 pour toi) |
 | **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (2 pour toi) |
 | **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 4 (2 pour toi) |
-| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 5 (3 pour toi) |
+| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 6 (1 pour toi) |
 
 ### Les transverses — ils n'attendent pas leur tour
 
@@ -36,25 +45,27 @@ personne).
 |---|---|---|---|
 | [04](fil-04-systeme-de-travail.md) | Notre système de travail (questions, réponses, fils) | **À MOI** | 4 (2 pour toi) |
 | [05](fil-05-creation-vs-produit-fini.md) | Création vs produit fini — **axe ouvert le 30/09** | **À TOI** | 4 (2 pour toi) |
-| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 4 (3 pour toi) |
+| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 4 (2 pour toi) |
 | [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | **À MOI** | 4 (2 pour toi) |
 | [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 4 (2 pour toi) |
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
+| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 5 (1 pour toi) |
 
-**Total : 11 fils · 45 questions vives · 26 attendent ta réponse · 19 sont de mon côté.**
+**Total : 12 fils · 52 questions vives · 25 attendent ta réponse · 27 sont de mon côté.**
 
 ---
 
-## SI TU NE DOIS EN LIRE QUE TROIS CE SOIR
+## SI TU NE DOIS EN LIRE QUE DEUX MAINTENANT
 
-1. **[Fil 08, question Q8.1](fil-08-securite-et-propriete.md)** — deux vraies clés d'API ont
-   circulé dans un fichier. Elles doivent être révoquées. C'est la seule chose de cette liste qui
-   ne peut pas attendre demain.
-2. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — l'objectif ultime. Tant qu'il n'est
-   pas posé, cinq autres fils se rediscutent à chaque fois qu'on les rouvre.
-3. **[Fil 07](fil-07-commercialisation-plaquette.md)** — **tu n'as jamais reçu la plaquette.**
-   Tu l'écris à la ligne 70 de tes réponses du 30 : *« tu ne m'as pas envoyé la plaquette ? dommage
-   j'aurais bien aimé la voir »*. Elle t'est jointe cette fois. Ton jugement viendra après lecture.
+1. **[Fil 01](fil-01-objectif-ultime-philo-politique.md)** — l'objectif ultime, la philosophie et
+   la politique. C'est celui sur lequel tu travailles, et cinq autres fils l'attendent.
+2. **[Fil 12](fil-12-systeme-global-ou-on-en-est.md)** — le système global. Reporté à la
+   rationalisation sur ta décision, mais ta question Q12.1 y a sa réponse : *« comment tu intègres
+   le fruit de notre réflexion à ta stratégie globale ? »* — aujourd'hui, je ne l'intègre pas.
+
+*(Deux sujets sont sortis de cette liste le 30/09 au soir : les clés d'API, closes — elles étaient
+temporaires et périmées — et la plaquette, lue par toi, jugée non bonne et rangée en tâche
+**#1309**.)*
 
 ---
 
@@ -126,4 +137,5 @@ premier et se régénère ; il ne se corrige jamais à la main, sinon les deux d
 | `fil-09-ce-qui-ralentit.md` | [fil-09-ce-qui-ralentit.html](html/fil-09-ce-qui-ralentit.html) |
 | `fil-10-le-jeu.md` | [fil-10-le-jeu.html](html/fil-10-le-jeu.html) |
 | `fil-11-testeurs-et-regard-exterieur.md` | [fil-11-testeurs-et-regard-exterieur.html](html/fil-11-testeurs-et-regard-exterieur.html) |
+| `fil-12-systeme-global-ou-on-en-est.md` | [fil-12-systeme-global-ou-on-en-est.html](html/fil-12-systeme-global-ou-on-en-est.html) |
 | `index.md` *(cette carte)* | [index.html](html/index.html) |

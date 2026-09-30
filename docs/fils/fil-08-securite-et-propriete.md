@@ -1,6 +1,6 @@
 # FIL 08 — À qui est ce projet, et qui peut te le prendre
 
-**Balle :** À TOI
+**Balle :** À MOI
 **Dernier mouvement :** 2026-09-30
 **Place dans le plan :** Transverse — indépendant des étages, mais il devient urgent dès qu'on parle de vendre (fil 07) ou d'exporter (fil 06).
 **Saisines :** réponses 2026-09-29 (deux questions nouvelles) · incident du 2026-09-30 au soir
@@ -37,8 +37,10 @@ un outil, l'auteur est une personne, et l'originalité se mesure dans la créati
 
 **L'incident de ce soir, et il appartient à ce fil.** En déposant tes documents, un fichier
 contenait **deux vraies clés d'API** (une OpenAI, une Groq). La protection automatique a refusé
-l'envoi ; **je ne l'ai pas contournée** — j'ai retiré le fichier. **Ces deux clés doivent être
-révoquées de ton côté**, et ce n'est pas fait à ma connaissance.
+l'envoi ; **je ne l'ai pas contournée** — j'ai retiré le fichier. Tu as depuis précisé qu'il s'agissait de **clés temporaires (24h à une semaine), périmées
+depuis longtemps** — le risque était éteint avant d'être trouvé. **Ce qui reste, et qui n'est pas
+rassurant** : ce fichier avait quatorze jours et personne ne l'avait ouvert. Ce n'est pas la
+surveillance qui a protégé, c'est la durée de vie de ces clés-là.
 
 ---
 
@@ -56,9 +58,12 @@ plus, et il est nouveau, contre les raccourcis.
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
-**Q8.1 — À TOI, et c'est urgent.** As-tu **révoqué les deux clés d'API** (OpenAI et Groq) ? Tant
-que c'est non, elles sont utilisables par quiconque a vu ce fichier. *(a) oui, c'est fait · (b) pas
-encore · (c) explique-moi comment on fait*
+**Q8.1 — CLOS le 2026-09-30.** Ta réponse : *« c'étaient des clés temporaires, elles doivent
+être révoquées depuis longtemps, c'étaient des clés 24h ou une semaine »*. Le risque était donc
+déjà éteint avant qu'on le trouve. **Ce qui reste vrai malgré ça, et c'est la seule chose à
+retenir** : personne n'avait jamais ouvert ce fichier en quatorze jours. Une clé périmée ne
+prouve pas qu'on surveille — elle prouve qu'on a eu de la chance sur la durée de vie de celle-là.
+Q8.4 reste ouverte pour cette raison.
 
 **Q8.2 — À TOI.** Le fichier de prompts qui les contenait est **hors du projet** pour cette raison.
 Veux-tu que j'en fasse une **copie nettoyée** (mêmes contenus, clés remplacées par un marqueur)
