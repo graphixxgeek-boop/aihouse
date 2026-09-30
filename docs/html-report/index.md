@@ -36,7 +36,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/ou-on-en-est-vraiment.html` | `docs/grand-projet/ou-on-en-est-vraiment.md` | 21020 | 2026-09-30 17:19Z |
 | `docs/grand-projet/html/plaquette-de-l-agence.html` | `docs/grand-projet/02-strategie/plaquette-de-l-agence.md` | 16456 | 2026-09-30 18:45Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 21468 | 2026-09-30 21:05Z |
-| `docs/fils/html/fil-02-cible-obligations.html` | `docs/fils/fil-02-cible-obligations.md` | 9915 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 10619 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-04-systeme-de-travail.html` | `docs/fils/fil-04-systeme-de-travail.md` | 12885 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-05-creation-vs-produit-fini.html` | `docs/fils/fil-05-creation-vs-produit-fini.md` | 10352 | 2026-09-30 21:05Z |
@@ -47,5 +46,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9898 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 17980 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 13510 | 2026-09-30 21:05Z |
-| `docs/fils/html/index.html` | `docs/fils/index.md` | 18530 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 16351 | 2026-09-30 21:18Z |
+| `docs/fils/html/fil-02-cible-obligations.html` | `docs/fils/fil-02-cible-obligations.md` | 12403 | 2026-09-30 21:24Z |
+| `docs/fils/html/index.html` | `docs/fils/index.md` | 18530 | 2026-09-30 21:24Z |

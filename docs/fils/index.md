@@ -34,7 +34,7 @@ personne).
 | Étage | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|---|
 | **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie, la politique | **À TOI** | 9 (5 pour toi) |
-| **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 3 (2 pour toi) |
+| **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 4 (3 pour toi) |
 | **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (2 pour toi) |
 | **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 4 (2 pour toi) |
 | **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 6 (1 pour toi) |
@@ -52,7 +52,7 @@ personne).
 | [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 5 (1 pour toi) |
 | [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 5 (3 pour toi) |
 
-**Total : 13 fils · 61 questions vives · 29 attendent ta réponse · 32 sont de mon côté.**
+**Total : 13 fils · 62 questions vives · 30 attendent ta réponse · 32 sont de mon côté.**
 
 ---
 

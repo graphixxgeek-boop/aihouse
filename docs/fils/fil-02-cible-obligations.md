@@ -55,6 +55,41 @@ elle seule. L'un dit « c'est un mode d'emploi, donc réductible », l'autre « 
 on n'y touche pas ». **L'écart vaut 11 obligations sur ton objectif.** *(a) mode d'emploi ·
 (b) discipline · (c) on l'ouvre ensemble avant de trancher*
 
-**Q2.3 — À MOI, tâche **#1316**, et c'est ton ajout d'aujourd'hui.** Compter les obligations que **mon propre
-fonctionnement** impose, puis chercher combien en imposent les autres IA de code — parce que
-l'Agence doit pouvoir tourner ailleurs que chez moi. **Jamais mesuré.**
+**Q2.3 — MESURÉ le 2026-09-30, tâche #1316, et le résultat change la cible.**
+
+Tu veux ramener l'Agence de 93 à 50 obligations. **J'ai compté ce que TOUS les documents qui me
+lient imposent, pas seulement la charte** — avec le même compteur, donc la même unité :
+
+| Document | Obligations | Part |
+|---|---|---|
+| `docs/regles-de-travail.md` | **556** | **59 %** |
+| `CLAUDE.md` *(la charte)* | **173** | 18 % |
+| `docs/philosophie-et-politique.md` | 75 | 8 % |
+| `docs/systeme-de-suivi.md` | 69 | 7 % |
+| `docs/xp-ia-process-detail.md` | 58 | 6 % |
+| `docs/faire-le-point-process-detail.md` | 5 | 1 % |
+| **TOTAL** | **936** | |
+
+**CE QUE ÇA VEUT DIRE POUR TA CIBLE, ET C'EST LE POINT** : les 93 obligations que tu veux ramener
+à 50 appartiennent à la famille AGENCE **de la charte**. Les ramener à 50 retire **43 obligations
+sur 936 — moins de 5 %.** Pendant ce temps, **un document que personne n'a jamais mesuré en porte
+trois fois plus que la charte entière.**
+
+**Ce n'est pas un argument contre ta cible** : alléger la charte reste juste, puisque c'est elle
+qui est rechargée à chaque message. **C'est un argument pour ne pas s'arrêter là.**
+
+**DEUX PRÉCAUTIONS, parce qu'un chiffre non situé ne vaut rien** *(et tu me l'as reproché à juste
+titre sur la plaquette)* :
+
+1. **Le compteur mesure des PHRASES portant une marque d'obligation, pas des règles distinctes.**
+   Une règle énoncée deux fois compte deux fois, et une phrase descriptive qui contient « jamais »
+   est comptée aussi — vérifié à la main sur trois exemples réels de `regles-de-travail.md`, dont
+   un qui décrit le document au lieu de m'obliger. **Les chiffres sont donc des plafonds.**
+2. **Mais c'est le MÊME compteur sur les deux documents**, et c'est exactement celui qui a produit
+   le 173 de la charte que nous utilisons déjà. **La comparaison tient ; les valeurs absolues sont
+   à lire comme des maximums.**
+
+**Q2.4 — À TOI.** La cible de 50 porte-t-elle sur la charte seule, ou sur tout ce qui me lie ?
+*(a) la charte seule, c'est elle qui coûte à chaque message · (b) l'ensemble — donc il faut aussi
+ouvrir `regles-de-travail.md` · (c) montre-moi d'abord ce que porte regles-de-travail avant que
+je décide*
