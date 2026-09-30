@@ -2827,8 +2827,34 @@ export function rendreIndexParSituation(r) {
   L.push("lire. Au moment du travail, la question n'est jamais « que dit le document sur l'architecture ? »");
   L.push("mais « je définis la philosophie — **qu'est-ce qui existe là-dessus ?** ». Cet index répond à");
   L.push(`celle-là : il récolte la question **(c) quand j'en aurai besoin** des ${r.entrees.length} idées annotées.`, "");
+  // LA FRONTIÈRE S'ÉCRIT DANS LE GÉNÉRATEUR, JAMAIS DANS LE FICHIER (2026-09-30, tâche #1279) —
+  // le précédent est établi dans ce dépôt : une frontière écrite dans un document régénéré saute
+  // à la régénération suivante, donc elle ne vaut que posée ici.
+  //
+  // CE QU'ELLE RÉPOND : le détecteur de documents jumeaux apparie cet index à
+  // ARCHITECTURE_DES_NIVEAUX, et il a RAISON de le voir — 99 séquences de neuf mots en commun.
+  // Mais mesuré sur les six fiches, le partage est UNIFORME : de 3,1 % à 6,5 % des fenêtres de
+  // chacune. Une seule paire ressort parce que le seuil de Jaccard attrape la plus GROSSE des
+  // six, pas parce qu'elle serait traitée autrement. Artefact de seuil, jamais un doublon :
+  // un index d'extraits cite forcément ses sources, et c'est son travail.
   L.push("**Il LIT les synthèses, il ne les recopie pas** (Article 24) : une fiche corrigée demain change");
   L.push("cet index sans que personne y pense.", "");
+  L.push("> **FRONTIÈRE DÉCLARÉE avec les six fiches qu'il indexe** *(2026-09-30)*. Cet index CITE ses");
+  L.push("> sources : il partage de 3 à 7 % de leurs phrases, uniformément sur les six. Le détecteur de");
+  L.push("> documents jumeaux n'en signale qu'UNE — la plus grosse — parce que son seuil l'attrape en");
+  L.push("> premier. **C'est un artefact de seuil, pas un doublon** : un index d'extraits cite forcément");
+  L.push("> ce qu'il indexe. Ce qu'il ne doit jamais faire — se périmer — est écarté par sa régénération,");
+  L.push("> jamais par l'absence de citation.", "");
+  // LES SIX SOURCES SONT NOMMÉES PAR LEUR CHEMIN COMPLET, ET C'EST DÉLIBÉRÉ À DEUX TITRES :
+  // un lecteur voit d'un coup ce que l'index couvre, et le contrôle de frontière du détecteur de
+  // jumeaux cherche littéralement le CHEMIN de l'autre document (citeLAutre) — une frontière
+  // écrite en prose sans le chemin ne déclare donc rien du tout, ce que le premier essai a prouvé.
+  // La liste est DÉRIVÉE des fiches réellement lues (Article 24), jamais recopiée à la main :
+  // une fiche ajoutée demain entre dans la déclaration sans que personne y pense.
+  const sourcesCitees = [...new Set((r.entrees ?? []).map((e) => e.document))].sort();
+  if (sourcesCitees.length) {
+    L.push("> **Les fiches indexées** : " + sourcesCitees.map((d) => "`" + DOSSIER_SYNTHESES + "/" + d + ".md`").join(" · "), "");
+  }
   L.push(`## VUE D'ENSEMBLE — ${r.entrees.length} idées dans ${r.documents} documents`, "");
   L.push("| Verdict | Combien | Ce que ça veut dire pour nous |", "|---|---|---|");
   for (const k of ORDRE_DES_VERDICTS) if (par[k]) L.push(`| ${ICONES_DE_VERDICT[k]} **${k}** | ${par[k].length} | ${SENS_DU_VERDICT[k]} |`);

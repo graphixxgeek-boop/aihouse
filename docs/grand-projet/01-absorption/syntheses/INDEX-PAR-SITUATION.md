@@ -14,6 +14,15 @@ celle-là : il récolte la question **(c) quand j'en aurai besoin** des 29 idée
 **Il LIT les synthèses, il ne les recopie pas** (Article 24) : une fiche corrigée demain change
 cet index sans que personne y pense.
 
+> **FRONTIÈRE DÉCLARÉE avec les six fiches qu'il indexe** *(2026-09-30)*. Cet index CITE ses
+> sources : il partage de 3 à 7 % de leurs phrases, uniformément sur les six. Le détecteur de
+> documents jumeaux n'en signale qu'UNE — la plus grosse — parce que son seuil l'attrape en
+> premier. **C'est un artefact de seuil, pas un doublon** : un index d'extraits cite forcément
+> ce qu'il indexe. Ce qu'il ne doit jamais faire — se périmer — est écarté par sa régénération,
+> jamais par l'absence de citation.
+
+> **Les fiches indexées** : `docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md` · `docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_FONCTIONNELLE.md` · `docs/grand-projet/01-absorption/syntheses/COMMENT_ASSURER_LA_COHERENCE.md` · `docs/grand-projet/01-absorption/syntheses/DE_LA_STRATEGIE_A_LA_TACHE.md` · `docs/grand-projet/01-absorption/syntheses/FIXER_UN_OBJECTIF_ULTIME.md` · `docs/grand-projet/01-absorption/syntheses/PHILOSOPHIE_ET_POLITIQUE.md`
+
 ## VUE D'ENSEMBLE — 29 idées dans 6 documents
 
 | Verdict | Combien | Ce que ça veut dire pour nous |
