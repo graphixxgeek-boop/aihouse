@@ -61,8 +61,8 @@ maintenir deux versions double le coût de chaque règle nouvelle — mais c'est
 commerciale, pas ma mesure. *(a) une seule · (b) deux (légère / complète) · (c) montre-moi le coût
 chiffré des deux avant que je tranche*
 
-**Q6.3 — À MOI.** Le JEU n'est mesuré par aucun outil sur sa lenteur. C'est un trou, et il est de
+**Q6.3 — À MOI, tâche **#1322**.** Le JEU n'est mesuré par aucun outil sur sa lenteur. C'est un trou, et il est de
 mon côté.
 
-**Q6.4 — À MOI.** Rendre les chemins réglables **sans toucher au comportement** — c'est exactement
+**Q6.4 — À MOI, tâche **#1323**.** Rendre les chemins réglables **sans toucher au comportement** — c'est exactement
 ta borne (« rien de difficile à annuler »). Je dois prouver ça avant de proposer le chantier.

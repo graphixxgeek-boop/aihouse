@@ -54,10 +54,10 @@ chantier de gouvernance se déroule **à côté** du Jeu, jamais dedans.
 *(a) tant qu'il faut, la gouvernance d'abord · (b) je veux une reprise dès que l'objectif ultime
 est posé · (c) je veux qu'on alterne dès maintenant*
 
-**Q10.2 — À MOI.** Aucun outil ne mesure la **lenteur du Jeu** (rendu, temps de réponse, ressenti
+**Q10.2 — À MOI, tâche **#1322**.** Aucun outil ne mesure la **lenteur du Jeu** (rendu, temps de réponse, ressenti
 visiteur). C'est le même trou que dans le fil 09, vu de l'autre bout.
 
-**Q10.3 — À MOI.** `check-spirit` n'a pas tourné depuis le début du chantier. Il ne coûte rien tant
+**Q10.3 — À MOI, tâche **#1327**.** `check-spirit` n'a pas tourné depuis le début du chantier. Il ne coûte rien tant
 qu'on ne touche pas aux personnalités — mais le jour où on y touche, il est obligatoire **avant et
 après**.
 

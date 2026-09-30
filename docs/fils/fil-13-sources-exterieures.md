@@ -79,11 +79,11 @@ propres leçons, au même rang · (c) on ne laisse rien entrer, on publie seulem
 propriété (fil 08) et ça montre notre méthode. *(a) d'accord, c'est de la méthode, pas du secret ·
 (b) pas avant d'avoir décidé si on vend · (c) non*
 
-**Q13.4 — À MOI.** Mesurer ce qu'on POURRAIT publier : combien de nos 38 leçons de méthode
+**Q13.4 — À MOI, tâche **#1330**.** Mesurer ce qu'on POURRAIT publier : combien de nos 38 leçons de méthode
 tiennent debout **sans leur exemple local**. La mesure d'aujourd'hui dit qu'elles sont
 transposables en principe ; elle ne dit pas qu'elles sont lisibles par un étranger.
 
-**Q13.5 — À MOI.** Vérifier si l'Agence sait accueillir et **débrancher** une source extérieure.
+**Q13.5 — À MOI, tâche **#1331**.** Vérifier si l'Agence sait accueillir et **débrancher** une source extérieure.
 Aujourd'hui je crois que non, et « je crois » n'est pas une mesure — c'est exactement ce que ce
 projet interdit de publier.
 

@@ -89,9 +89,9 @@ famille de 3 noms et je choisis · (c) j'ai déjà le nom, le voici*
 en silence**, ou que je te **confirme à chaque fois** ce que j'ai compris ?
 *(a) silence, tu vas plus vite · (b) confirme, je préfère vérifier*
 
-**Q4.3 — À MOI.** Les **originaux de nos échanges restent accessibles** — c'est ta consigne
+**Q4.3 — À MOI, tâche **#1319**.** Les **originaux de nos échanges restent accessibles** — c'est ta consigne
 explicite : *« le fil de conversation ne sert pas à archiver »*. Les fils renvoient donc aux
 sources, ils ne les remplacent jamais. C'est fait pour les fils 01 à 11 ; ça doit le rester.
 
-**Q4.4 — À MOI.** La soirée du 30/09 doit être **historisée comme une expérience à ne jamais
+**Q4.4 — À MOI, tâche **#1305** — DÉJÀ FAITE.** La soirée du 30/09 doit être **historisée comme une expérience à ne jamais
 répéter**, pas comme un incident. Tu me l'as demandé explicitement.

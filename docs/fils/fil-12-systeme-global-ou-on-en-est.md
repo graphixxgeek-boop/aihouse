@@ -161,7 +161,7 @@ documents, pas les pièces de kit — et ne doublonne rien.
 
 sujet · (c) montre-moi d'abord les 17*
 
-**Q12.4 — À MOI.** Le trou que ta question Q12.1 met à nu est plus large que la stratégie : **rien
+**Q12.4 — À MOI, tâche **#1329**.** Le trou que ta question Q12.1 met à nu est plus large que la stratégie : **rien
 ne capte ce qui change notre compréhension sans appeler de décision.** Le journal d'expérience
 capte mes erreurs à moi, le suivi capte les tâches, les fils captent les sujets ouverts — personne
 ne capte « ce qu'on a compris ». C'est à instruire, pas à improviser.

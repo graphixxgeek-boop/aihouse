@@ -418,3 +418,51 @@ différentes n'en juge aucune :
 Un schéma qui redéfinit les rangs de toute l'équipe se propose et se tranche avec lui (Article 16),
 il ne s'impose pas depuis le code. **L'ordre qu'il avait fixé tient toujours : le schéma AVANT
 CASSANDRA.**
+
+---
+
+## DEUX IDÉES ARRIVÉES PAR LE FIL 03, LE 2026-09-30 — et elles ne se sont pas invitées seules
+
+*(Le garde-fou de fraîcheur des chantiers a refusé un commit ce soir : deux tâches nouvelles
+étaient classées sous ce chantier pendant que ce document, lui, n'avait pas bougé depuis cinq
+jours. **C'est exactement son travail** — une idée qui n'atterrit pas dans le document du chantier
+n'existe que dans une ligne de suivi que personne ne rouvrira.)*
+
+### ① LES CONTRATS D'INTERFACE — tâche #1317
+
+**D'où ça vient** : c'est l'une des **trois** choses retenues de son modèle de gouvernance à la
+question C44 du 2026-09-29 — avec l'HARMONISATION et la DÉFINITION DE FINI en 8 points. Le reste
+du modèle a été explicitement écarté, et cet écart est une décision, pas un oubli.
+
+**L'état réel** : **aucun outil de l'Agence ne déclare formellement ce qu'il REÇOIT ni ce qu'il
+REND.** Sur les trois retenues, c'est la seule qui n'existe nulle part — l'harmonisation est déjà
+portée par les gabarits partagés, et la définition de fini est au moins écrite.
+
+**Pourquoi c'est un sujet de CE chantier et pas un chantier à part** : un contrat d'interface est
+une propriété de l'organigramme, pas d'un outil. Décider que chaque membre déclare ses entrées et
+ses sorties, c'est décider comment l'équipe se parle — donc ça se tranche ici, avec le schéma.
+
+**Ce qui doit précéder toute proposition** : le CHIFFRAGE. Un chantier qui touche tous les outils
+ne s'ouvre pas sur une intuition, et il n'est pas chiffré à ce jour.
+
+### ② L'ORGANIGRAMME EST TENU À LA MAIN — tâche #1318
+
+**Le constat, et il est gênant** : `docs/referentiel/organisation-agence.md` est le référentiel
+CANONIQUE de l'Agence, **et sa propre fiche déclare que sa tenue à jour reste manuelle.** C'est la
+dette que l'Article 24 interdit partout ailleurs, au cœur du document qui décrit l'équipe.
+
+**Deux issues légitimes, et aucune troisième** :
+
+1. **Le DÉRIVER du réel**, comme `classification-agence.md` qui se régénère et ne peut donc pas
+   mentir. C'est la voie cohérente avec le reste du dépôt, et elle rejoint directement le geste ①
+   proposé plus haut (« porter les axes réels, mais dérivés, jamais recopiés »).
+2. **Déclarer sa nature manuelle noir sur blanc**, comme l'Article 24 l'autorise explicitement pour
+   une liste choisie à la main par décision humaine — à la condition stricte que cette nature soit
+   écrite juste à côté. Un organigramme est un jugement sur l'équipe ; on peut légitimement refuser
+   de le faire produire par une machine.
+
+**Ce qui n'est PAS une issue** : le laisser tel quel. Aujourd'hui il n'est ni dérivé ni déclaré
+manuel — c'est l'état exact que le garde-fou d'évolutivité existe pour interdire.
+
+**Les deux rejoignent l'ordre déjà fixé par lui** : le schéma AVANT CASSANDRA, et rien ne
+s'applique sans qu'il ait tranché (Article 16).

@@ -37,11 +37,11 @@ lequel des deux ralentit le moins.
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
-**Q9.1 — À MOI.** Le JEU n'est mesuré par rien. C'est le trou le plus ancien du fil, et il est
+**Q9.1 — À MOI, tâche **#1322**.** Le JEU n'est mesuré par rien. C'est le trou le plus ancien du fil, et il est
 entièrement de mon côté. Tant qu'il tient, toute phrase du type « voilà ce qui ralentit le projet »
 est incomplète et doit le dire.
 
-**Q9.2 — À MOI.** Historiser la soirée du 30/09 **comme une expérience à ne jamais répéter**, avec
+**Q9.2 — À MOI, tâche **#1305** — DÉJÀ FAITE.** Historiser la soirée du 30/09 **comme une expérience à ne jamais répéter**, avec
 sa cause racine écrite (j'ai vérifié *« ce fichier a-t-il une synthèse ? »* au lieu de *« ce sujet
 a-t-il été traité ? »*) et le mécanisme qui la rend impossible à refaire. Tu me l'as demandé
 explicitement.

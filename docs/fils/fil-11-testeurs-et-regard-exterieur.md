@@ -57,5 +57,5 @@ même petit, est le seul test qui vaille. *(a) oui, si on trouve un projet cobay
 mené par un raisonnement séparé du mien — il coûte, et il peut me contredire. C'est le point.
 *(a) oui · (b) dis-moi d'abord ce que ça coûte · (c) plus tard*
 
-**Q11.4 — À MOI.** Préparer ce qu'on montrerait : aujourd'hui, montrer le projet à quelqu'un
+**Q11.4 — À MOI, tâche **#1328**.** Préparer ce qu'on montrerait : aujourd'hui, montrer le projet à quelqu'un
 demanderait une demi-journée de mise en forme. Ça ne devrait pas.

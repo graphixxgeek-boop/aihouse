@@ -61,9 +61,9 @@ il vit · (c) tu as une autre idée*
 **format de document** qu'il remplit ? *(a) avec son IA · (b) format seul · (c) les deux, à choisir
 par lui*
 
-**Q5.3 — À MOI.** Faire dire à un outil, mécaniquement, **combien de documents n'ont pas encore
+**Q5.3 — À MOI, tâche **#1320**.** Faire dire à un outil, mécaniquement, **combien de documents n'ont pas encore
 d'étiquette de destination**. Sans ça, cet axe est une intention (leçon L2) — et tu connais mon
 historique sur les intentions.
 
-**Q5.4 — À MOI.** Vérifier que **rien de ce tri ne touche au jeu ni à ce que voit un visiteur** :
+**Q5.4 — À MOI, tâche **#1321**.** Vérifier que **rien de ce tri ne touche au jeu ni à ce que voit un visiteur** :
 c'est ta borne permanente, et elle s'applique à cet axe comme au reste.

@@ -95,7 +95,7 @@ pour qu'il rejoigne les sources ? *(a) oui · (b) non, laisse-le dehors*
 **Q8.3 — À TOI.** Veux-tu un **dépôt de preuve daté** (une procédure simple, chez un tiers, qui
 horodate l'état du projet à une date donnée) ? *(a) oui, dis-moi comment · (b) plus tard · (c) non*
 
-**Q8.4 — À MOI.** Vérifier qu'**aucun autre secret** ne traîne dans les documents déjà déposés. Je
+**Q8.4 — À MOI, tâche **#1326**.** Vérifier qu'**aucun autre secret** ne traîne dans les documents déjà déposés. Je
 l'ai fait pour le fichier bloqué, pas pour l'ensemble.
 
 ---

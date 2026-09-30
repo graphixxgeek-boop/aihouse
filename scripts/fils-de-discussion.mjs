@@ -58,6 +58,8 @@ export const LES_CONTROLES = Object.freeze([
     sansQuoi: "un sujet hors du plan avance sans qu'on sache ce qu'il sert — et il se rediscute indéfiniment" },
   { cle: "questions-repondables", question: "Chaque question qui l'attend lui donne-t-elle de quoi répondre simplement ?",
     sansQuoi: "une question ouverte posée à quelqu'un qui n'est pas développeur se paie en aller-retours, jamais en reformulation : c'est le poste de perte de temps qu'il a lui-même désigné" },
+  { cle: "engagements-en-taches", question: "Chaque chose que je me suis engagé à faire est-elle une TÂCHE qui existe vraiment ?",
+    sansQuoi: "un engagement écrit dans un fil et nulle part ailleurs est une intention : personne ne le relira, aucun outil ne le comptera, et il aura l'air d'un travail en cours jusqu'à ce qu'on l'oublie" },
 ]);
 
 // CE QU'UNE QUESTION DOIT PORTER POUR ÊTRE RÉPONDABLE, et le seuil est volontairement bas.
@@ -73,6 +75,60 @@ export const LES_CONTROLES = Object.freeze([
 // lui, et lui seul peut dire « je n'ai rien compris ».
 export const MOTIF_QUESTION_A_LUI = /^\*\*Q[\d.]+(?:bis|ter)?\s*—\s*À TOI\b[^\n]*\n(?:[^\n]*\n?)*?(?=\n\*\*Q|\n##|$)/gim;
 export const MOTIF_OPTION = /\((?:a|b|c|d)\)\s*\S/g;
+
+// LE SIXIÈME CONTRÔLE — SA QUESTION DU 2026-09-30, ET ELLE VISE JUSTE.
+//
+// SES MOTS : « tu veilles bien aux mécanismes entre suivi des tâches et suivi fil de discussion ?
+// tu veilles bien en général à ce que chaque constat suivi d'une proposition ne reste pas qu'une
+// intention, jamais réalisée ? »
+//
+// LA RÉPONSE HONNÊTE, LE JOUR OÙ IL L'A POSÉE, ÉTAIT NON. Les fils portaient VINGT engagements
+// « À MOI » et aucun n'existait comme tâche dans le suivi. Chacun avait l'air d'un travail en
+// cours parce qu'il était écrit ; aucun n'était comptable.
+//
+// C'EST EXACTEMENT LE TROU QUE L'ARTICLE 28 FERME AILLEURS — rapport → analyse → plan d'action →
+// tâches — et que les fils rouvraient sur un autre terrain, parce qu'un fil n'est pas un rapport
+// et qu'aucun contrôle ne les regardait.
+//
+// ET LA MÊME DOCTRINE QUE checkActionChain() S'APPLIQUE, LE CAS VICIEUX COMPRIS : on ne vérifie
+// pas qu'un numéro est CITÉ, on vérifie que la tâche EXISTE. Une référence morte ressemble à un
+// lien, ce qui est pire qu'une absence.
+export const MOTIF_ENGAGEMENT = /^\*\*Q[\d.]+(?:bis|ter)?\s*—\s*À MOI\b[^\n]*\n(?:[^\n]*\n?)*?(?=\n\*\*Q|\n##|$)/gim;
+export const MOTIF_TACHE_CITEE = /#(\d{3,5})\b/g;
+
+export function engagementsSansTache(texte = "", tachesExistantes = null) {
+  const blocs = String(texte).match(MOTIF_ENGAGEMENT) ?? [];
+  const nus = [];
+  for (const b of blocs) {
+    const id = (b.match(/^\*\*(Q[\d.]+(?:bis|ter)?)/) ?? [])[1] ?? "?";
+    const numeros = [...b.matchAll(MOTIF_TACHE_CITEE)].map((m) => m[1]);
+    if (!numeros.length) { nus.push({ id, pourquoi: "aucune tâche citée" }); continue; }
+    // Une tâche CITÉE mais INEXISTANTE est pire qu'aucune : elle rassure.
+    if (tachesExistantes && !numeros.some((n) => tachesExistantes.has(n))) {
+      nus.push({ id, pourquoi: `tâche(s) ${numeros.map((n) => "#" + n).join(", ")} citée(s) mais introuvable(s) dans le suivi` });
+    }
+  }
+  return { pris: blocs.length, nus };
+}
+
+// Les numéros de tâche réellement présents dans docs/suivi/ — lus, jamais supposés.
+export function tachesDuSuivi({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  const ids = new Set();
+  const balayer = (dossier) => {
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, dossier), { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const rel = `${dossier}/${e.name}`;
+      if (e.isDirectory()) { balayer(rel); continue; }
+      if (!e.name.endsWith(".md")) continue;
+      let t = "";
+      try { t = readFileImpl(join(root, rel), "utf8"); } catch { continue; }
+      for (const m of t.matchAll(/^\|\s*(\d{3,5})\s*\|/gm)) ids.add(m[1]);
+    }
+  };
+  balayer("docs/suivi");
+  return ids;
+}
 
 export function questionsRepondables(texte = "") {
   const blocs = String(texte).match(MOTIF_QUESTION_A_LUI) ?? [];
@@ -90,7 +146,7 @@ export const MOTIF_DATE = /^\*\*Dernier mouvement\s*:\*\*\s*(\d{4}-\d{2}-\d{2})/
 export const MOTIF_PLACE = /^\*\*Place dans le plan\s*:\*\*\s*(.+)$/mi;
 export const MOTIF_SAISINES = /^\*\*Saisines\s*:\*\*\s*(.+)$/mi;
 
-export function lireLesFils({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+export function lireLesFils({ root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync, ...opts } = {}) {
   let noms = [];
   try { noms = listDirImpl(join(root, DOSSIER_FILS)); } catch { return { mesurable: false, pourquoi: `${DOSSIER_FILS} n'existe pas encore — aucun fil n'a été ouvert`, fils: [] }; }
   const fils = [];
@@ -107,6 +163,7 @@ export function lireLesFils({ root = ROOT, listDirImpl = readdirSync, readFileIm
       place: (t.match(MOTIF_PLACE) ?? [])[1] ?? null,
       saisines: ((t.match(MOTIF_SAISINES) ?? [])[1] ?? "").split("·").map((s) => s.trim()).filter(Boolean),
       questions: questionsRepondables(t),
+      engagements: engagementsSansTache(t, opts.taches ?? null),
     });
   }
   return { mesurable: true, fils };
@@ -128,8 +185,8 @@ export function saisinesDeposees({ root = ROOT, dossierEnvois = null, listDirImp
   return { mesurable: true, deposees: deposees.length, envoyees: envoyees.length, manquantes };
 }
 
-export function suisJeAJour({ root = ROOT, dossierEnvois = null } = {}) {
-  const lus = lireLesFils({ root });
+export function suisJeAJour({ root = ROOT, dossierEnvois = null, taches = null } = {}) {
+  const lus = lireLesFils({ root, taches: taches ?? tachesDuSuivi({ root }) });
   const dep = saisinesDeposees({ root, dossierEnvois });
   const fils = lus.fils ?? [];
   const resultats = [
@@ -141,6 +198,13 @@ export function suisJeAJour({ root = ROOT, dossierEnvois = null } = {}) {
       detail: lus.mesurable ? `${fils.filter((f) => f.balle && f.date).length}/${fils.length} fil(s) disent à qui est la balle ET depuis quand` : lus.pourquoi },
     { ...LES_CONTROLES[3], mesurable: lus.mesurable, ok: lus.mesurable ? fils.length > 0 && fils.every((f) => f.place) : null,
       detail: lus.mesurable ? `${fils.filter((f) => f.place).length}/${fils.length} fil(s) disent où ils se placent` : lus.pourquoi },
+    (() => {
+      const e = fils.reduce((acc, f) => ({ pris: acc.pris + (f.engagements?.pris ?? 0), nus: acc.nus.concat((f.engagements?.nus ?? []).map((n) => `${f.fichier.split("/").pop()} ${n.id} (${n.pourquoi})`)) }), { pris: 0, nus: [] });
+      return { ...LES_CONTROLES[5], mesurable: lus.mesurable && e.pris > 0, ok: lus.mesurable && e.pris > 0 ? e.nus.length === 0 : null,
+        detail: !lus.mesurable ? lus.pourquoi
+          : e.pris === 0 ? "je ne me suis engagé à rien — rien à mesurer, et ce n'est pas un vert"
+          : `${e.pris - e.nus.length}/${e.pris} engagement(s) portent une tâche qui existe vraiment${e.nus.length ? ` — sans tâche : ${e.nus.join(", ")}` : ""}` };
+    })(),
     (() => {
       const q = fils.reduce((acc, f) => ({ posees: acc.posees + f.questions.posees, nues: acc.nues.concat(f.questions.nues.map((n) => `${f.fichier.split("/").pop()} ${n}`)) }), { posees: 0, nues: [] });
       return { ...LES_CONTROLES[4], mesurable: lus.mesurable && q.posees > 0, ok: lus.mesurable && q.posees > 0 ? q.nues.length === 0 : null,

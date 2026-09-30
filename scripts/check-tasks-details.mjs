@@ -2567,7 +2567,15 @@ export const FAMILLES_DE_THEMES = {
   // il appartient bien à cette famille-ci et non au jeu. Le garde-fou de cette liste l'a attrapé au
   // commit même où le thème est né, ce qui est précisément son travail : la seule liste tenue à la
   // main de cet outil ne peut pas se périmer en silence (Article 24).
-  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Badge", "Projet"],
+  // « Sécurité » a rejoint la famille le 2026-09-30 (tâche #1326), et son arrivée dit la même chose
+  // que celle de « Projet » et de « Jeu » avant elle : un thème naît le jour où le sujet devient
+  // réel, jamais avant. Il l'est devenu ce soir-là — deux clés d'API trouvées dans un fichier
+  // déposé quatorze jours plus tôt que personne n'avait ouvert. Il rejoint CETTE famille plutôt
+  // qu'une autre parce qu'il est le frère d'« Exportabilité » : les deux parlent de l'Agence comme
+  // d'un BIEN — ce qui peut partir, et ce qui peut être pris. Le diluer dans « Données » l'aurait
+  // rendu invisible le jour où il compte. Le garde-fou l'a attrapé au commit même où le thème est
+  // né, ce qui est exactement son travail (Article 24).
+  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Badge", "Projet", "Sécurité"],
   "Suivi & file": ["Suivi", "File", "XP"],
   "Nommage & vocabulaire": ["Nommage", "TOOL_PORTEE"],
   "Outillage & garde-fous": ["Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille"],

@@ -58,10 +58,10 @@ Veux-tu qu'on **rouvre les 5 écartées** maintenant, ou qu'on **reste sur la d�
 nos propres livrables**. Veux-tu qu'elle devienne la règle de clôture de chaque tâche ?
 *(a) oui, pour tout · (b) oui, mais seulement pour les outils · (c) non, trop lourd*
 
-**Q3.3 — À MOI.** Les **contrats d'interface** n'existent nulle part : aucun outil ne déclare
+**Q3.3 — À MOI, tâche **#1317**.** Les **contrats d'interface** n'existent nulle part : aucun outil ne déclare
 formellement ce qu'il reçoit et ce qu'il rend. C'est un chantier réel, pas une note. Je le chiffre
 avant de le proposer.
 
-**Q3.4 — À MOI.** L'organigramme est **tenu à la main** — la fiche le dit elle-même. C'est la
+**Q3.4 — À MOI, tâche **#1318**.** L'organigramme est **tenu à la main** — la fiche le dit elle-même. C'est la
 dette que l'Article 24 interdit partout ailleurs. Je dois soit le faire générer, soit écrire noir
 sur blanc pourquoi il reste manuel.

@@ -55,6 +55,6 @@ elle seule. L'un dit « c'est un mode d'emploi, donc réductible », l'autre « 
 on n'y touche pas ». **L'écart vaut 11 obligations sur ton objectif.** *(a) mode d'emploi ·
 (b) discipline · (c) on l'ouvre ensemble avant de trancher*
 
-**Q2.3 — À MOI, et c'est ton ajout d'aujourd'hui.** Compter les obligations que **mon propre
+**Q2.3 — À MOI, tâche **#1316**, et c'est ton ajout d'aujourd'hui.** Compter les obligations que **mon propre
 fonctionnement** impose, puis chercher combien en imposent les autres IA de code — parce que
 l'Agence doit pouvoir tourner ailleurs que chez moi. **Jamais mesuré.**

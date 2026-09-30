@@ -121,7 +121,7 @@ préalable** : les chiffres à montrer, le ton, et même ce qu'on appelle « une
 entièrement selon la réponse. *(a) des développeurs indépendants · (b) des agences/studios ·
 (c) des entreprises non techniques · (d) on ne vend pas, on ouvre*
 
-**Q7.3 — À MOI, et sa nature a changé.** Compter les 🔴 FICTION ne suffit plus : il en manquait
+**Q7.3 — À MOI, tâche **#1324**, et sa nature a changé.** Compter les 🔴 FICTION ne suffit plus : il en manquait
 un, le plus gros — *on ne sait pas à qui on parle*. La refonte partira donc de l'acheteur, pas de
 l'inventaire de ce qu'on sait faire.
 
@@ -131,6 +131,6 @@ reproduire un chiffre juste ne le rend pas pertinent. Une mesure exacte qui rép
 question reste une mauvaise réponse — c'est la même famille d'erreur que le signal adjacent pris
 pour le signal visé.
 
-**Q7.5 — À MOI.** Écrire ce qu'un acheteur reçoit RÉELLEMENT le premier jour : une Agence vide.
+**Q7.5 — À MOI, tâche **#1325**.** Écrire ce qu'un acheteur reçoit RÉELLEMENT le premier jour : une Agence vide.
 Pas nos chiffres — la liste de ce que la machine sait faire avant qu'on lui ait donné le moindre
 projet. C'est la seule base honnête d'une plaquette, et elle n'existe nulle part aujourd'hui.
