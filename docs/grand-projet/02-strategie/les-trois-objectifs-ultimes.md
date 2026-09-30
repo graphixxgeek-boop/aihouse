@@ -71,76 +71,126 @@ puissent venir que de toi : **si ça marchait parfaitement, qu'est-ce que ça ch
 
 # PARTIE 2 — LES TROIS OBJECTIFS ULTIMES
 
-## ⚠️ VERSION 2 — corrigée le 2026-09-30 à 22h49, et sa critique était juste
+## ⚠️ VERSION 3 — 2026-09-30 à 23h18
 
-**Sa critique, mot pour mot** : *« les 2 autres objectifs sont plus "aériens" je trouve, et sont
-limite des objectifs d'entreprise, pas de projet, ou alors je me trompe ? »* Puis : *« le curseur
-ne devrait-il pas être placé à peine plus vers le concret ? »*
-
-**Il ne se trompe pas, et la preuve est dans sa propre réaction** : le seul des trois qu'il valide
-à 100 % est **le seul qui soit concret** — celui du Jeu, qui nomme un effet sur une personne. Les
-deux autres nommaient une *thèse*. Une thèse ne tranche rien un mardi soir devant deux options.
-
-**Pourquoi j'ai dérivé, et c'est une erreur de méthode identifiable** : j'ai optimisé pour le
-critère 2 — *ne dépendre d'aucune stratégie* — et sur-corrigé dans l'abstraction. En fuyant « trop
-étroit », je suis tombé dans « trop large ».
-
-**ET SES CINQ CRITÈRES ONT UN TROU, que cette erreur révèle.** Aucun des cinq ne dit : *« il doit
-désigner CE système-là et aucun autre »*. Mes deux formulations passaient les cinq critères **et
-auraient pu être adoptées telles quelles par n'importe quel projet fait avec une IA**. C'est un
-sixième critère à ajouter à son document, et il l'a trouvé par l'instinct là où le test ne voyait
-rien.
-
-**Une tension réelle, à connaître** : plus c'est concret, plus c'est achevable — et un objectif
-qu'on peut cocher échoue au critère des vingt ans. C'est pourquoi la version ① ci-dessous ne dit
-pas « **deux** produits » : le nombre l'aurait rendu terminable.
+**Trois retours de sa part** : le Jeu validé à 100 % · l'Agence *« très proche, mais il manque un
+poil de concret »* · le Projet *« je ne comprends pas pourquoi le "je" »*, avec demande de tout
+reprendre depuis sa définition.
 
 ---
 
-## ① L'OBJECTIF ULTIME DU PROJET
+## 🔴 D'ABORD, SA QUESTION : L'AGENCE EST-ELLE UNE IA ? — NON, ET C'EST MESURÉ
 
-> ### **Faire naître des produits que je n'aurais pas pu faire seul, sans jamais cesser d'en être l'auteur.**
+**Il demande** : *« est-ce qu'on peut dire que l'agence est une IA ? je crois que c'est ce qu'on
+dit dans nos grands objectifs, je me trompe ou pas ? »*
 
-**Ce qu'il recouvre, pour lever un doute d'interprétation.** Ce projet porte **deux produits
-distincts**, à vivre indépendamment l'un de l'autre : l'Agence **CIRCLE** et le Jeu **IBT**. Le Jeu
-est le premier à bénéficier de l'Agence — mais l'Agence n'y a **qu'une fonction de diagnostic et
-d'alertes, jamais d'intervention libre sur le code**, et le Jeu n'agit pas en retour sur elle. Les
-deux sont **réciproques dans l'intention** (chacun sert de raison à l'autre) et **à sens unique
-dans le mécanisme**. *« Sans cesser d'en être l'auteur »* porte ce qui n'est jamais négociable :
-l'humain décide, l'humain possède, et deux choses restent refusées — **travailler de manière
-imprécise**, et **décider contre notre cadre**.
+**Réponse : non, et nos objectifs ne le disent pas — mais SA définition, si.** Il écrit *« une
+agence IA performante »* et *« assistée par IA »*.
+
+**LA MESURE, sur les 85 scripts réels** : **4 seulement parlent vraiment à un modèle** —
+`check-spirit` (il provoque les personnages pour juger le ton), `check-profile`, l'outil de quota
+Gemini, et le module qui porte les fournisseurs. **Les 81 autres sont de la mécanique
+déterministe** : ils lisent des fichiers, comptent, comparent, refusent. Aucun ne « pense ».
+
+*(Mon premier comptage annonçait 9. En ouvrant les cas, trois ne faisaient que CITER les mots dans
+un commentaire ou dans un motif de recherche. Le chiffre juste est 4 — le même réflexe que
+partout ailleurs aujourd'hui.)*
+
+**LA FORMULATION EXACTE, ET ELLE COMPTE POUR LA PLAQUETTE** :
+
+> **L'Agence n'est pas une IA. C'est l'outillage qui encadre une IA** — écrit pour être consulté
+> par une IA, et pour refuser ce qu'elle laisserait passer.
+
+**Pourquoi ce n'est pas un détail de vocabulaire** : vendre « une agence IA » serait une promesse
+que le produit ne tient pas — exactement le mensonge poli que ses propres étiquettes ✅/🟠/🔴
+existent pour empêcher. Et c'est aussi **un argument de vente, pas une faiblesse** : un outillage
+déterministe donne le même verdict deux fois de suite, ce qu'aucun modèle ne garantit.
 
 ---
 
-## ② L'OBJECTIF ULTIME DE L'AGENCE
+## ① L'OBJECTIF ULTIME DU PROJET *(repris depuis zéro)*
 
-> ### **Faire qu'un projet mené avec une IA tienne debout quand on le vérifie.**
+**Pourquoi le « je » sautait, et il avait raison de tiquer.** Deux raisons, et la seconde est la
+plus sérieuse. ① Un objectif ultime formulé à la première personne devient **un but personnel, pas
+celui du projet** — or le projet doit survivre à qui le porte. ② La phrase porte donc mal : un
+document qui doit rester lisible par n'importe qui dans six mois ne peut pas reposer sur un « je »
+dont le lecteur ignore qui il est.
+
+**Ce que sa définition contient vraiment, relue ligne à ligne** : *« 2 nouveaux produits à haute
+valeur »* · *« 2 expériences à vivre **indépendamment l'une de l'autre** »* · *« le Jeu est le
+premier à bénéficier de l'Agence »* · *« l'Agence s'appuie sur le Jeu pour prendre forme »* ·
+*« l'un est un prétexte pour l'autre »*.
+
+**Le fait distinctif, celui qu'aucun projet voisin ne partage** : ici l'outil et l'œuvre sont
+**tous les deux des produits**, et chacun est la preuve de l'autre.
+
+> ### **Faire que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout sans l'autre.**
+
+**Ce qu'il recouvre.** Ce projet porte **deux produits distincts** : l'Agence **CIRCLE** et le Jeu
+**IBT**. Le Jeu est le premier à bénéficier de l'Agence — mais l'Agence n'y a **qu'une fonction de
+diagnostic et d'alertes, jamais d'intervention libre sur le code** ; le Jeu n'agit pas en retour
+sur elle. **Réciproques dans l'intention, à sens unique dans le mécanisme.** *« Tenir debout sans
+l'autre »* porte sa phrase *« deux expériences à vivre indépendamment »* : un outil qui n'aurait
+fait ses preuves que sur son propre jeu n'aurait rien prouvé, et un jeu qui ne tiendrait que grâce
+à son outillage ne serait pas un produit. Ce qui reste refusé, quoi qu'il arrive : **travailler de
+manière imprécise**, et **décider contre notre cadre**.
+
+| Critère | Verdict |
+|---|---|
+| 1. arrête la remontée des « pourquoi » | 🟠 **le point faible, et je le dis** : on peut encore demander « pourquoi se prouver ? ». La réponse est notre conviction centrale — *ne jamais laisser passer pour un fait ce qui n'en est pas un* — mais elle n'est pas dans la phrase |
+| 2. ne dépend d'aucune stratégie | ✅ |
+| 3. valable vingt ans | ✅ **et c'est le gain de la v3** : plus de « deux produits », donc rien à cocher |
+| 4. permet d'arbitrer | ✅ tout ce qui rend un produit dépendant de l'autre perd |
+| 5. inspire | 🟠 à lui |
+| **6. désigne CE projet et aucun autre** | ✅ **c'est le critère qu'il a fait naître, et c'est celui-ci qui s'est le plus amélioré** |
+
+---
+
+## ② L'OBJECTIF ULTIME DE L'AGENCE *(un cran plus concret)*
+
+**Sa demande** : *« j'aime bien, on est très proche. Mais il manque un poil de concret. »* Ce qui
+manquait : **personne**. « Un projet tient debout » ne dit pas qui le constate ni quand.
+
+> ### **Faire qu'un codeur qui travaille avec une IA sache, à tout moment, ce qui tient et ce qui ne tient pas.**
 
 **Ce qu'il recouvre.** L'Agence comble les failles classiques des IA de codage — tout ce qui crée
 de l'insatisfaction chez ceux qui les utilisent. **Elle est plus qu'une béquille** : elle fiabilise
-et optimise le codage, et accompagne le codeur de bout en bout par une prestation calibrée sur son
-besoin, **fun par son esthétique, professionnelle dans son fonctionnement, jamais une lourdeur**.
-Ses agents sont comme des employés de l'agence, qui se combinent entre eux. Ce qu'elle ne sacrifie
-jamais : **l'expérience client — humaine ET IA**, sa fonctionnalité d'ensemble, et la qualité de la
-prestation globale. Et l'humain, chez elle, crée **un projet qui lui appartient**.
+et optimise, et accompagne le codeur de bout en bout par une prestation calibrée sur son besoin,
+**fun par son esthétique, professionnelle dans son fonctionnement, jamais une lourdeur**. Ses
+agents sont comme des employés de l'agence, qui se combinent entre eux. Elle ne sacrifie jamais
+**l'expérience client — humaine ET IA**, sa fonctionnalité d'ensemble, ni la qualité de la
+prestation globale. Et l'humain, chez elle, crée **un projet qui lui appartient**. **Elle n'est
+pas une IA** : c'est l'outillage qui encadre une IA, et 81 de ses 85 outils sont purement
+mécaniques.
+
+**Les trois mots qui portent le concret** : **un codeur** (quelqu'un, pas « un projet ») · **à
+tout moment** (pas à la fin, quand il est trop tard) · **ce qui ne tient pas** (elle nomme les
+défauts, elle ne rassure pas).
+
+| Critère | Verdict |
+|---|---|
+| 1. arrête la remontée | ✅ |
+| 2. ne dépend d'aucune stratégie | ✅ |
+| 3. valable vingt ans | ✅ le problème grandit avec l'usage de l'IA |
+| 4. permet d'arbitrer | ✅ entre une fonction séduisante et un verdict vérifiable, il tranche |
+| 5. inspire | 🟠 à lui |
+| **6. désigne CETTE agence** | ✅ |
 
 ---
 
-## ③ L'OBJECTIF ULTIME DU JEU
+## ③ L'OBJECTIF ULTIME DU JEU *(inchangé — validé à 100 %)*
 
 > ### **Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.**
 
 **Ce qu'il recouvre.** Le Jeu est un **laboratoire d'observation** — on regarde vivre deux agents
 IA au caractère bien trempé, et on peut leur parler. *Incredible But True* : le cœur est que ce
 soit **à la fois incroyable et réel**. Surprenant, drôle, captivant, instructif, **jamais
-ennuyeux**. Ce qu'il ne sacrifie jamais : **le réalisme des dialogues (règle 0)**, et le côté
+ennuyeux**. Il ne sacrifie jamais **le réalisme des dialogues (règle 0)**, ni le côté
 **dystopique, inédit, insolite**.
 
-**Pourquoi cette version est moins périssable que la précédente** — sa demande n°1. La v1 disait
-*« douter de ce qu'une IA peut être »*, et **ça vieillit** : les capacités des IA banalisent
-l'étonnement. *« Qu'il n'y ait personne derrière »* ne vieillit pas, parce que **la réponse reste
-non, pour toujours**. C'est la plus vieille question qu'on puisse poser à une machine, et elle
-n'a pas de date de péremption.
+**Pourquoi il ne périme pas** : *« qu'il n'y ait personne derrière »* ne vieillit pas, **parce que
+la réponse reste non, pour toujours**. C'est la plus vieille question qu'on puisse poser à une
+machine.
 
 ---
 
