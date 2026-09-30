@@ -48,6 +48,80 @@ export const LINKS = [
 ];
 
 // ————————————————————————————————————————————————————————————————————————
+// LA TABLE DES PROFILS, VÉRIFIÉE PAR DÉRIVATION PLUTÔT QUE LIGNE À LIGNE (2026-09-30, tâche #1287)
+// ————————————————————————————————————————————————————————————————————————
+//
+// POURQUOI ELLE N'EST PAS UNE SIXIÈME ENTRÉE DE `LINKS`. `LINKS` est une liste tenue À LA MAIN :
+// une regex de code, une regex de doc, écrites une par une. C'est exactement la forme que
+// l'Article 24 désigne — « un registre se LIT, il ne s'énumère pas » — et le même défaut avait
+// déjà été trouvé pour `THEMES` et `SENSITIVE_NODES`, dérivés de la carte HARMONIA et recopiés.
+// Ajouter douze entrées à la main aurait alourdi la liste sans corriger sa nature.
+//
+// CE QUI EST DÉRIVÉ, ET D'OÙ. La table « Besoins » de `parametres.md` nomme elle-même son fichier
+// source dans son titre, et chaque ligne porte l'identifiant réel du code entre accents graves.
+// Tout est là pour comparer sans qu'on écrive un seul motif : on lit la table, on lit les deux
+// profils du code, on confronte. Une ligne ajoutée à la table demain est vérifiée le jour même.
+//
+// CE QUI EST VOLONTAIREMENT HORS DE PORTÉE, ET LE DIRE VAUT MIEUX QUE DE LE LAISSER CROIRE : les
+// lignes SANS identifiant entre accents graves (« Faim initiale », « Stress initial ») décrivent
+// des valeurs imbriquées dans `needs:` plutôt qu'une clé du profil. Les attraper demanderait de
+// deviner la correspondance entre un libellé français et un champ anglais — c'est-à-dire
+// d'inventer. Elles sont COMPTÉES et déclarées non couvertes, jamais passées sous silence : un
+// contrôle qui tait ce qu'il ne regarde pas se lit comme un contrôle complet.
+export const TABLE_DES_PROFILS = Object.freeze({
+  doc: "docs/referentiel/parametres.md",
+  titre: "## Besoins (`lib/simulation.ts`)",
+  code: "lib/simulation.ts",
+  colonnes: ["Lia", "Noé"],
+  clesDeProfil: ["1", "2"],
+});
+
+// Les paires `identifiant: nombre` d'un profil, lues sur la ligne qui l'ouvre. On s'arrête à la
+// fin de la ligne : les profils de ce fichier sont écrits sur une seule ligne chacun, et prétendre
+// lire un objet imbriqué à la regex serait se donner une garantie qu'on n'a pas.
+export function paires(source = "", cleDeProfil = "1") {
+  const debut = source.search(new RegExp(`(^|\\n)\\s*${cleDeProfil}\\s*:\\s*\\{`));
+  if (debut < 0) return null;
+  const finDeLigne = source.indexOf("\n", debut + 1);
+  const ligne = source.slice(debut, finDeLigne < 0 ? source.length : finDeLigne);
+  const out = new Map();
+  for (const m of ligne.matchAll(/([A-Za-z_$][\w$]*)\s*:\s*(-?\d+(?:\.\d+)?)\b/g)) {
+    if (!out.has(m[1])) out.set(m[1], Number(m[2]));
+  }
+  return out;
+}
+
+export function verifierTableDesProfils({ root = ROOT, readFileImpl = readFileSync, table = TABLE_DES_PROFILS } = {}) {
+  let doc; let code;
+  try { doc = readFileImpl(join(root, table.doc), "utf8"); } catch { return { mesurable: false, pourquoi: `${table.doc} illisible — aucune conclusion, et surtout pas « tout concorde »` }; }
+  try { code = readFileImpl(join(root, table.code), "utf8"); } catch { return { mesurable: false, pourquoi: `${table.code} illisible — la table ne peut être confrontée à rien` }; }
+  const i = doc.indexOf(table.titre);
+  if (i < 0) return { mesurable: false, pourquoi: `section « ${table.titre} » introuvable dans ${table.doc} — le titre a bougé, et un contrôle qui ne trouve plus sa cible doit le DIRE` };
+  const finSection = doc.indexOf("\n## ", i + 1);
+  const section = doc.slice(i, finSection < 0 ? doc.length : finSection);
+  const profils = table.clesDeProfil.map((c) => paires(code, c));
+  if (profils.some((p) => p === null)) return { mesurable: false, pourquoi: `un profil (${table.clesDeProfil.join(", ")}) est introuvable dans ${table.code}` };
+  const verifies = []; const frictions = []; const horsPortee = [];
+  for (const ligne of section.split("\n")) {
+    if (!ligne.trim().startsWith("|") || /^\s*\|[\s:|-]+\|\s*$/.test(ligne)) continue;
+    const cells = ligne.split("|").slice(1, -1).map((c) => c.trim());
+    if (cells.length < 3) continue;
+    const [libelle, ...valeurs] = cells;
+    if (/^Paramètre$/i.test(libelle)) continue;
+    const ident = (libelle.match(/`([A-Za-z_$][\w$]*)`/) ?? [])[1];
+    if (!ident) { horsPortee.push(libelle); continue; }
+    table.colonnes.forEach((nom, k) => {
+      const attendu = Number(valeurs[k]);
+      const reel = profils[k].get(ident);
+      if (!Number.isFinite(attendu) || reel === undefined) { horsPortee.push(`${libelle} / ${nom}`); return; }
+      const cas = { parametre: ident, personnage: nom, documente: attendu, code: reel };
+      if (attendu === reel) verifies.push(cas);
+      else frictions.push({ ...cas, pourquoi: `${table.doc} annonce ${attendu} pour ${nom}, ${table.code} applique ${reel} — l'un des deux ment, et c'est l'équilibrage du jeu qui en dépend` });
+    });
+  }
+  return { mesurable: true, verifies, frictions, horsPortee, couverture: verifies.length + frictions.length };
+}
+// ————————————————————————————————————————————————————————————————————————
 // LA CARTOGRAPHIE DES CRITÈRES TRANSVERSES (2026-09-23, chantier 9)
 // ————————————————————————————————————————————————————————————————————————
 //
@@ -199,6 +273,20 @@ async function main() {
   // de branche « pas mesuré » à ajouter ici : il y avait une déclaration à écrire, et la voici.
   if (!results.length) console.log("🚨 PAS MESURÉ — la carte des liens est vide : aucun lien n'a été vérifié, ce qui n'est pas « aucune friction ».");
   console.log(`\n${frictions.length} friction(s) confirmée(s) sur ${results.length} lien(s) vérifié(s).`);
+
+  // LA TABLE DES PROFILS, DÉRIVÉE (2026-09-30). Imprimée juste après le décompte de `LINKS` pour
+  // que les deux se lisent ensemble : cinq liens écrits à la main, vingt vérifiés sans qu'on ait
+  // rien écrit. Le rapport de couverture importe autant que le verdict — un contrôle qui ne dit
+  // pas COMBIEN il regarde laisse croire qu'il regarde tout.
+  const profils = verifierTableDesProfils();
+  if (!profils.mesurable) {
+    console.log(`\n🚨 TABLE DES PROFILS — PAS MESURÉE : ${profils.pourquoi}`);
+  } else {
+    console.log(`\n📊 TABLE DES PROFILS (dérivée, aucun motif écrit à la main) — ${profils.frictions.length} friction(s) sur ${profils.couverture} valeur(s) confrontée(s), ${profils.horsPortee.length} hors de portée.`);
+    for (const fr of profils.frictions) console.log(`   ⚠️  ${fr.parametre} / ${fr.personnage} : ${fr.pourquoi}`);
+    for (const h of profils.horsPortee) console.log(`   · hors de portée : ${h} — aucun identifiant de code nommé dans son libellé, et le deviner serait l'inventer`);
+    if (!profils.frictions.length && !profils.horsPortee.length) console.log("   ✅ Chaque valeur de la table porte son identifiant, et chacune correspond au code.");
+  }
 
   // LE PLAN D'ACTION (2026-09-23, Article 28). HARMONIA est un Gardien sacré : il rapporte sur la
   // propreté du code, donc son plan est PRIORITAIRE par dérivation, jamais par décret — un écart

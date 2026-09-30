@@ -2778,7 +2778,41 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // HARMONIA — partie mécanique (2026-09-19, cf. docs/harmonia-blueprint.md et
   // docs/referentiel/harmonia.md). checkLinks() prend un readFile injectable : les fixtures
   // vivent en mémoire, jamais sur disque, pour un test isolé et déterministe.
-  const {checkLinks}=await import('../scripts/check-harmonia.mjs');
+  const {checkLinks, verifierTableDesProfils, paires, TABLE_DES_PROFILS}=await import('../scripts/check-harmonia.mjs');
+
+  // LA TABLE DES PROFILS, DÉRIVÉE PLUTÔT QUE RECOPIÉE (2026-09-30, tâche #1287). `LINKS` est une
+  // liste tenue à la main — cinq entrées, dix motifs — soit exactement la forme que l'Article 24
+  // désigne. La table « Besoins » de parametres.md nomme elle-même son fichier source et porte
+  // l'identifiant réel de chaque ligne entre accents graves : tout est là pour comparer SANS
+  // écrire un seul motif, et une ligne ajoutée demain est vérifiée le jour même.
+  const tp = verifierTableDesProfils();
+  assert.ok(tp.mesurable, 'the derived profile-table check must measure the real repo, never return a silent green');
+  assert.ok(tp.couverture >= 12, `MUST CATCH: only ${tp.couverture} values confronted — the table or the code shape moved and the derivation stopped finding them, which reads as « nothing wrong » instead of « nothing checked »`);
+  assert.deepEqual(tp.frictions, [], 'every documented profile value must still match lib/simulation.ts — a drift here falsifies the reference the whole balance is read from');
+  assert.deepEqual(tp.horsPortee, [], 'and every row must name its code identifier, so none is silently skipped');
+  // LES CONTRE-TESTS GARDENT LE PIÈGE. Un faux dépôt, entièrement injecté : la vraie table est
+  // verte, et une garantie qui ne sait que dire « vert » ne garantit rien.
+  const faussaire = (docTxt, codeTxt) => verifierTableDesProfils({
+    readFileImpl: (p) => (String(p).endsWith('.md') ? docTxt : codeTxt),
+    table: TABLE_DES_PROFILS,
+  });
+  const docFixture = (v) => `## Besoins (\`lib/simulation.ts\`)\n\n| Paramètre | Lia | Noé |\n|---|---|---|\n| Vitesse de faim (\`hungerRate\`/tour) | ${v} | 2 |\n`;
+  const codeFixture = '  1: { hungerRate: 1, fatigueRate: 2 },\n  2: { hungerRate: 2, fatigueRate: 1 }\n';
+  assert.equal(faussaire(docFixture(1), codeFixture).frictions.length, 0, 'a documented value equal to the code is no friction');
+  assert.equal(faussaire(docFixture(7), codeFixture).frictions.length, 1, 'MUST CATCH: a documented 7 against a real 1 is exactly the drift Article 13 forbids');
+  assert.match(faussaire(docFixture(7), codeFixture).frictions[0].pourquoi, /l'un des deux ment/, 'and the message must name both sides rather than assume which one is wrong — the doc may have been wrong from day one');
+  // UNE LIGNE SANS IDENTIFIANT EST DÉCLARÉE HORS DE PORTÉE, JAMAIS COMPTÉE COMME VÉRIFIÉE (L5/L11).
+  const sansIdent = `## Besoins (\`lib/simulation.ts\`)\n\n| Paramètre | Lia | Noé |\n|---|---|---|\n| Faim initiale | 20 | 30 |\n`;
+  const r2 = faussaire(sansIdent, codeFixture);
+  assert.equal(r2.couverture, 0, 'a row naming no code identifier is not confronted');
+  assert.equal(r2.horsPortee.length, 1, 'and it is DECLARED out of scope rather than silently dropped — a check that hides what it skips reads as complete');
+  // UNE CIBLE INTROUVABLE DOIT LE DIRE, jamais rendre « aucune friction ».
+  assert.equal(faussaire('# rien ici', codeFixture).mesurable, false, 'a missing section means PAS MESURÉ, never a green');
+  assert.equal(faussaire(docFixture(1), 'const rien = 1;').mesurable, false, 'a code file without the two profiles means PAS MESURÉ too');
+  // paires() lit UNE ligne, et c'est déclaré : prétendre lire un objet imbriqué à la regex serait
+  // se donner une garantie qu'on n'a pas.
+  assert.equal(paires('  1: { needs: { hunger: 20 }, hungerRate: 1 },', '1').get('hunger'), 20, 'a nested value on the same line is read');
+  assert.equal(paires('  1: { hungerRate: 1 },', '2'), null, 'an absent profile returns null, never an empty map that would read as « nothing declared »');
   const fixtures={
     '/code-ok.ts':'export const THRESHOLD=42;',
     '/doc-ok.md':'Le seuil a été fixé à 42 après calibrage.',

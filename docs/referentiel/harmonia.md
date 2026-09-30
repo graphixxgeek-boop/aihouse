@@ -145,3 +145,32 @@ d'HARMONIA décrite plus haut, qui tourne à chaque commit et ne coûte rien.*
 à HARMONIA comme à ARGUS est un **geste de l'agent**, pas une commande — elle ne figurera donc jamais
 au catalogue PRESTATIONS, parce qu'un catalogue liste des commandes. Aucun mécanisme ne la porte, et
 le déclarer EST la protection (Article 27).
+
+## `verifierTableDesProfils()` et `paires()` — la table des profils, vérifiée par DÉRIVATION (2026-09-30, tâche #1287)
+
+**POURQUOI CE N'EST PAS UNE SIXIÈME ENTRÉE DE `LINKS`.** `LINKS` est une liste tenue **à la main** :
+une regex de code, une regex de doc, écrites une par une. C'est exactement la forme que
+l'Article 24 désigne — « un registre se LIT, il ne s'énumère pas » — et le même défaut avait déjà
+été trouvé pour `THEMES` et `SENSITIVE_NODES`. Ajouter douze entrées à la main aurait alourdi la
+liste sans corriger sa nature.
+
+**CE QUI REND LA DÉRIVATION POSSIBLE, ET C'EST LE DOCUMENT LUI-MÊME QUI LE DONNE** : la table
+« Besoins » de `parametres.md` **nomme son fichier source dans son titre**, et chaque ligne porte
+**l'identifiant réel du code entre accents graves**. Tout est là pour comparer sans écrire un seul
+motif — et une ligne ajoutée à la table demain est vérifiée le jour même.
+
+**PREMIER PASSAGE RÉEL : 20 valeurs confrontées, 0 friction, 0 hors de portée.** Le décompte se
+lit à côté de celui de `LINKS` : **5 liens écrits à la main, 20 vérifiés sans qu'on ait rien
+écrit.**
+
+**QUATRE LIGNES ONT ÉTÉ RENDUES VÉRIFIABLES PLUTÔT QUE DEVINÉES.** « Faim initiale », « Fatigue
+initiale », « Stress initial » et « Incertitude initiale » ne nommaient aucun identifiant : les
+rattacher aurait demandé de deviner la correspondance entre un libellé français et un champ
+anglais, c'est-à-dire d'inventer. Leur libellé porte désormais `` `hunger` ``, `` `fatigue` ``,
+`` `stress` ``, `` `uncertainty` `` — une précision ajoutée au document, jamais une déduction
+faite par l'outil. La couverture passe de 12 à 20.
+
+**CE QUI RESTE DÉCLARÉ PLUTÔT QUE TU** : `paires()` lit **une seule ligne** — les profils de
+`lib/simulation.ts` sont écrits ainsi. Prétendre lire un objet imbriqué à la regex serait se
+donner une garantie qu'on n'a pas. Une cible introuvable (section renommée, profil absent) rend
+`mesurable: false` **avec sa raison**, jamais « aucune friction » (L5/L11).

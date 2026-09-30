@@ -9,10 +9,10 @@ ce document décrit les valeurs actuelles, il ne les fixe pas.
 
 | Paramètre | Lia | Noé |
 |---|---|---|
-| Faim initiale | 20 | 30 |
-| Fatigue initiale | 20 | 20 |
-| Stress initial | 90 | 90 |
-| Incertitude initiale | 90 | 90 |
+| Faim initiale (`hunger`) | 20 | 30 |
+| Fatigue initiale (`fatigue`) | 20 | 20 |
+| Stress initial (`stress`) | 90 | 90 |
+| Incertitude initiale (`uncertainty`) | 90 | 90 |
 | Vitesse de faim (`hungerRate`/tour) | 1 | 2 |
 | Vitesse de fatigue (`fatigueRate`/tour) | 2 | 1 |
 | Vitesse de stress (`stressRate`/tour) | 1 | 1 |
