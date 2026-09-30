@@ -13,8 +13,11 @@ règles c'est chez ABRAHAM ? ».)*
 
 ## EN UNE PHRASE, POUR NE PAS AVOIR À LIRE LE RESTE
 
-**Ta cible de 50 est atteignable, elle atterrit à 55, et le chemin ne coupe AUCUNE règle de fond :
-il transforme neuf Articles « mode d'emploi d'outil » en un panneau indicateur.**
+**Ta cible de 50 est atteignable, elle atterrit ENTRE 55 ET 66, et le chemin ne coupe AUCUNE règle
+de fond : il transforme huit ou neuf Articles « mode d'emploi d'outil » en un panneau indicateur.**
+
+*(55 ou 66 selon qu'on suit ABRAHAM ou MOÏSE sur l'Article 13 — le désaccord est détaillé plus
+bas, et c'est ta décision.)*
 
 ---
 
@@ -44,7 +47,15 @@ faire du chiffre.
 ## DEUXIÈME RÉSULTAT : ABRAHAM RANGE LA CHARTE EN TROIS TAS, ET LE CHEMIN EST DANS LE DEUXIÈME
 
 Sans qu'on le lui demande, il classe les 33 Articles par **ce qu'ils SONT**, pas par ce dont ils
-parlent — et c'est un axe que nous n'avions pas.
+parlent.
+
+> **⚠️ CORRECTION DU 2026-09-30 À 01H50 — J'AVAIS ÉCRIT ICI « ET C'EST UN AXE QUE NOUS N'AVIONS
+> PAS ». C'EST FAUX.** Ce classement existe depuis le **2026-09-28**, généré par MOÏSE, dans
+> `docs/referentiel/charte-cartographie.md` — **deux jours avant** que je le présente comme neuf.
+> C'est exactement le défaut que l'Article 30 existe pour empêcher, commis dans le document qui
+> instruit une de ses consignes. Et le détecteur de documents jumeaux avait apparié mon document
+> à celui-là **le soir même** : je l'ai rangé parmi les paires « préexistantes, aucune de moi »
+> sans l'ouvrir. **Un signal lu sans être regardé.**
 
 | Son classement | Articles | Obligations | Ce qu'il en dit |
 |---|---|---|---|
@@ -83,6 +94,29 @@ famille COLLABORATION — il ne compte pas dans tes 93)*.
  ────
    55   ← et ta cible est 50
 ```
+
+### ⚠️ ET LES DEUX OUTILS NE SONT PAS D'ACCORD — l'écart vaut ONZE obligations
+
+**Découvert à 01h50, en ouvrant enfin la cartographie de MOÏSE.** Les deux classements diffèrent
+sur **deux Articles**, et l'un est le plus gros du lot :
+
+| Article | ABRAHAM (ce soir) | MOÏSE (2026-09-28) | Poids |
+|---|---|---|---|
+| **13** — les outils de travail vivent avec le code | MODE D'EMPLOI → **réductible** | DISCIPLINE → **intouchable** | **12 obligations** |
+| **7** — l'épreuve de la page blanche | DISCIPLINE | LOI | 3 |
+
+```
+   selon ABRAHAM (13 réductible)   →  55
+   selon MOÏSE   (13 intouchable)  →  66
+```
+
+**Je ne tranche pas, et voici les deux arguments.** *Pour MOÏSE* : c'est **l'outil dédié au seul
+périmètre de la charte**, et la charte le désigne comme tel — sur ce terrain, c'est le
+spécialiste. *Pour ABRAHAM* : l'Article 13 nomme des scripts et renvoie à des fiches, ce qui est
+la définition d'un mode d'emploi.
+
+**C'est la première question du LOT C**, avec celle des 44 obligations hors Articles. **Le chiffre
+que je te donne est donc « entre 55 et 66 », jamais 55 seul.**
 
 **⚠️ ET UNE QUESTION NOUVELLE, née de la réconciliation ci-dessus** : ma route ramène à 55 les
 **93 obligations des Articles**. Mais la charte en porte **44 de plus dans ses sections non
@@ -141,7 +175,9 @@ idée neuve : c'est le même geste, répété neuf fois.
 | Constat | État | Ce qu'il devient |
 |---|---|---|
 | Il n'y a qu'UNE paire redondante dans la charte : la voie de la fusion est fermée | **RETENU** | tâche **#1248** — ce document, et la consigne ① est répondue |
-| Neuf Articles AGENCE sont « réductibles à un aiguillage » et portent 47 des 93 obligations | **RETENU** | tâche **#1248** — la proposition est posée, l'exécution attend son accord |
+| ABRAHAM et MOÏSE se contredisent sur l'Article 13 — l'écart vaut 11 obligations | **À TRANCHER** | 55 ou 66 : première question du LOT C, avec celle des 44 hors Articles |
+| J'ai présenté comme neuf un classement qui existait depuis deux jours dans le référentiel | **RETENU** | tâche **#1275** — corrigé et raconté : l'Article 30 pris en défaut dans le document qui instruit une de ses consignes |
+| Huit ou neuf Articles AGENCE sont « réductibles » et portent 35 ou 47 des 93 obligations | **RETENU** | tâche **#1248** — la proposition est posée, l'exécution attend son accord |
 | Les Articles 18 et 26 se recouvrent sans que rien ne dise lequel prime | **À TRANCHER** | c'est sa décision, pas la mienne — ABRAHAM ne tranche jamais la pertinence d'une règle |
 | Huit Articles ouvrent une question de pertinence chez ABRAHAM (16, 17, 23, 25, 29, 30, 31, 32) | **À TRANCHER** | à joindre à la revue de charte, jamais traité à la volée entre deux chantiers |
 | L'écart 129 / 173 entre deux comptages | **RÉSOLU** | 173 = 129 dans les Articles + 44 dans les sections. L'outil le disait dans une phrase que je n'avais pas lue — écarté à 23h, réconcilié à 01h15 en revérifiant à froid |
