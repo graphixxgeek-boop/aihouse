@@ -66,25 +66,65 @@ laisse la direction sans gardien. Les deux se déclarent, et le but se déclare 
   de preuve à l'Agence, **et c'est un rôle, pas une relégation** : un outil qui n'a jamais rien
   trouvé sur un vrai produit n'emporte rien d'éprouvé vers le suivant.
 
+> **CORRIGÉ LE 2026-09-30 — LE JEU N'EST PLUS UN PRÉTEXTE, C'EST UN PRODUIT.** Les citations
+> ci-dessus sont ses mots du 29 septembre et restent l'histoire exacte de ce qui se disait alors.
+> **Le 30 au soir, il a changé de position, et explicitement** : *« 2 nouveaux produits à haute
+> valeur sur le marché de l'IA »*, *« 2 expériences à vivre **indépendamment l'une de l'autre** »*.
+> Le Jeu n'est donc plus la démonstration de l'Agence : **c'est un produit qui doit tenir debout
+> seul**, et cette exigence est entrée dans l'objectif ultime du Projet. C'est aussi ce qui a fait
+> passer de deux objectifs ultimes à trois.
+>
+> **LA RELATION ENTRE LES DEUX, PRÉCISÉE LE MÊME SOIR ET NULLE PART ÉCRITE AVANT** — c'est une
+> propriété de l'Agence, pas une consigne à l'agent : *« l'Agence intervient sur le Jeu, via
+> l'utilisateur et l'IA de l'utilisateur, mais elle n'a **qu'une fonction de diagnostic et
+> d'alertes, jamais elle n'intervient librement sur le code** »*, et *« le Jeu n'intervient pas en
+> retour sur l'Agence »*. Les deux sont donc **réciproques dans l'INTENTION** (chacun sert de
+> raison à l'autre, « l'un est un prétexte pour l'autre ») et **à sens unique dans le MÉCANISME**.
+> Confondre les deux ferait perdre l'un des deux.
+>
+> **ET L'AGENCE N'EST PAS UNE IA** *(mesuré le 2026-09-30 : 4 outils sur 85 parlent à un modèle,
+> les 81 autres sont de la mécanique déterministe)*. C'est **l'outillage qui encadre une IA** —
+> écrit pour être consulté par une IA, et pour refuser ce qu'elle laisserait passer. La nuance
+> n'est pas cosmétique : promettre « une agence IA » serait une promesse que le produit ne tient
+> pas.
+
 **La conséquence qui gouverne tout l'export** : pour un acheteur, l'Agence n'est PAS un second
 projet. « Elle agit uniquement dans l'EXÉCUTION, elle ne s'inscrit pas pour l'utilisateur comme un
 2e PROJET. » Tout ce qui, dans l'outillage, traite l'Agence comme un chantier à construire n'a aucun
 sens chez lui.
 
-### 0.3 LE BUT — proposé, à valider **[Proposition, 2026-09-29]**
+### 0.3 LES TROIS OBJECTIFS ULTIMES **[Établi — validé par lui le 2026-09-30 à 23h31]**
 
-> **Rendre l'Agence Codex commercialisable comme aide exécutive autonome pour n'importe quel projet
-> de code, et le démontrer en menant « Maison IA vivante » jusqu'à un jeu fini.**
+> **PROJET** — *Faire que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout
+> sans l'autre.*
+>
+> **AGENCE** — *Faire qu'un codeur qui travaille avec une IA sache, à tout moment, ce qui tient et
+> ce qui ne tient pas.*
+>
+> **JEU** — *Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.*
 
-**« Commercialisable » et non « commercialisée »** : le but est un ÉTAT DU PRODUIT, jamais une vente
-qui ne dépend pas de nous. **« Aide exécutive »** sont ses mots. **« Pour n'importe quel projet de
-code »** donne une borne vérifiable plutôt qu'une ambition. **« Le démontrer par le jeu »** donne au
-jeu sa place dans le but, au lieu de le laisser orphelin.
+**Ses mots en les validant** : *« OK 100 % pour les 3, on les valide […] on tient maintenant nos
+3 objectifs. »* Le détail de chacun — son paragraphe de référence, le test des six critères, et
+les écarts trouvés en chemin — vit dans
+`docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md`, jamais recopié ici.
 
-**Quatre points restent à trancher, et ils ne se devinent pas** : ce que « commercialiser » recouvre
-exactement (licence, ouverture, service) · si le jeu est une preuve ou un projet à finir pour
-lui-même · si viser « n'importe quel projet » est la bonne ambition · et ce que recouvre le
-troisième objet, « Autre », que sa commande nomme sans jamais le remplir.
+**CE QUI ÉTAIT ÉCRIT AVANT, ET POURQUOI C'ÉTAIT FAUX — la raison reste, elle ne se supprime pas.**
+Cette section portait depuis le 2026-09-29 une PROPOSITION : *« rendre l'Agence Codex
+commercialisable comme aide exécutive autonome […] et le démontrer en menant Maison IA vivante
+jusqu'à un jeu fini »*. **Elle échouait au critère 2 de son propre document de référence** : un
+objectif ultime ne dépend d'aucune stratégie particulière, et **commercialiser en est une** —
+au même titre que licencier, ouvrir le code ou garder en interne. Il l'a établi lui-même, puis
+identifié le même piège une seconde fois sur une autre formulation. **Le garder aurait fait
+reposer toute la cascade sur un pivot qui n'en était pas un.**
+
+**TROIS, ET PAS UN — et ce n'est pas une entorse à la règle d'unicité.** Son document dit
+l'objectif ultime UNIQUE. C'est vrai **par niveau** : nous avons trois systèmes qui vivent leur
+vie (le Projet, l'Agence, le Jeu), donc trois fois la règle, jamais une exception à la règle.
+
+**UN SIXIÈME CRITÈRE EST NÉ DE CETTE RÉDACTION**, et c'est lui qui l'a trouvé : *un autre projet
+du même genre pourrait-il adopter cette phrase telle quelle ?* Si oui, elle décrit une famille de
+projets et n'arbitre rien. Les cinq critères d'origine protègent contre « trop étroit » ; aucun ne
+protégeait contre « trop large ». Détail dans `docs/grand-projet/02-strategie/seance-objectif-ultime.md`.
 
 ### 0.4 TOUT DÉCOULE DU BUT, ET L'ALIGNEMENT SE VÉRIFIE **[Établi + Proposition, 2026-09-29]**
 

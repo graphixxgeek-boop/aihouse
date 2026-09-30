@@ -46,7 +46,7 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 10717 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 11213 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 12553 | 2026-09-30 21:40Z |
-| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 22280 | 2026-09-30 22:56Z |
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 16084 | 2026-09-30 23:03Z |
 | `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 17849 | 2026-09-30 23:04Z |
-| `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 22254 | 2026-09-30 23:18Z |
+| `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 23234 | 2026-09-30 23:31Z |
+| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 23476 | 2026-09-30 23:32Z |

@@ -71,7 +71,23 @@ puissent venir que de toi : **si ça marchait parfaitement, qu'est-ce que ça ch
 
 # PARTIE 2 — LES TROIS OBJECTIFS ULTIMES
 
-## ⚠️ VERSION 3 — 2026-09-30 à 23h18
+## ✅ VALIDÉS PAR LUI LE 2026-09-30 À 23h31 — ILS NE SONT PLUS UNE PROPOSITION
+
+> **Ses mots** : *« OK 100 % pour les 3, on les valide […] on tient maintenant nos 3 objectifs. »*
+
+**Ce que cette validation change, et ce n'est pas symbolique.** Ces trois phrases cessent d'être
+des candidates : **elles deviennent le pivot de la cascade.** Tout ce qui se décide en dessous —
+les trois stratégies globales, puis les chantiers, puis les tâches — doit désormais pouvoir dire
+lequel des trois il sert. **Et tout ce qui ne le peut pas devient discutable**, ce qui est
+exactement le trou mesuré le 29 septembre : *aucune de nos tâches ne sait dire quel principe elle
+sert.*
+
+**Ce qui reste avant de déverser la cascade, et c'est lui qui l'a posé** : *« il nous reste encore
+Philo et Politique à graver dans le marbre et on est bon »*.
+
+---
+
+## HISTORIQUE DES VERSIONS — 2026-09-30 à 23h18
 
 **Trois retours de sa part** : le Jeu validé à 100 % · l'Agence *« très proche, mais il manque un
 poil de concret »* · le Projet *« je ne comprends pas pourquoi le "je" »*, avec demande de tout

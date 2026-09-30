@@ -1,6 +1,6 @@
 # FIL 01 — L'objectif ultime, la philosophie et la politique
 
-**Balle :** À TOI
+**Balle :** À MOI
 **Dernier mouvement :** 2026-09-30
 **Place dans le plan :** Étage 0 de la cascade — tout le reste en dépend. Rien d'autre ne devrait être tranché avant.
 **Saisines :** COMMANDE IMPORTANTE · FIXER UN OBJECTIF ULTIME · PHILOSOPHIE ET POLITIQUE · réponses 2026-09-29 · réponses 2026-09-30
@@ -101,6 +101,28 @@ c'est la seule réponse honnête possible : **la case était mal faite.** Le tri
 la preuve — une fois séparées par niveau, tes réponses tiennent debout sans être retouchées.
 
 ---
+
+---
+
+## ✅ ACQUIS LE 2026-09-30 À 23h31 — LES TROIS OBJECTIFS ULTIMES SONT VALIDÉS
+
+> **PROJET** — *Faire que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout
+> sans l'autre.*
+>
+> **AGENCE** — *Faire qu'un codeur qui travaille avec une IA sache, à tout moment, ce qui tient et
+> ce qui ne tient pas.*
+>
+> **JEU** — *Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.*
+
+**Ses mots** : *« OK 100 % pour les 3, on les valide. »* Chacun porte son paragraphe de référence
+dans le document dédié — à relire en cas de doute d'interprétation, jamais à réécrire.
+
+**Ce qu'il reste sur ce fil, et c'est la dernière marche de l'étage 0** : *« il nous reste encore
+Philo et Politique à graver dans le marbre et on est bon. »* La balle passe donc de son côté au
+mien : le socle est posé, la rédaction suit.
+
+**Trois étapes ont cessé d'être bloquées le même soir** : la correction de la boussole (#1334), la
+cascade (#1336), et les trois stratégies globales — qui n'attendent plus que philo et politique.
 
 ---
 
