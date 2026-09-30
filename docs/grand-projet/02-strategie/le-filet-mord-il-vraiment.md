@@ -30,14 +30,21 @@ refuse, ou qu'il laisse passer ce qu'il doit laisser passer.
 | `length 0` | 88 | |
 | `throws` / `doesNotThrow` | 60 | il refuse vraiment, ou laisse passer vraiment |
 
-**Et surtout : 89 blocs de test sur 94 en portent au moins une.** Il n'en reste **cinq** sans
-aucune, tous petits :
+**Et 89 blocs de test sur 94 en portent au moins une** — au sens de mes motifs.
 
-`testDerivationEcarteeParcequElleFlatte` · `testDetteIndirecteIgnoreLesCommentaires` ·
-`testGardeDeModuleCheckSpirit` · `testCollisionNommeSesTaches` ·
-`testGardienPartageNAccusePlusSesFreres`
+**J'ai ensuite ouvert les cinq restants à la main, et LES CINQ ONT UN CONTRE-TEST.** Ils écrivent
+même les plus explicites du dépôt :
 
-**C'est une petite liste actionnable, pas un chantier.**
+| Bloc | Ce qu'il porte vraiment |
+|---|---|
+| `testGardienPartageNAccusePlusSesFreres` | un **MUST CATCH** et un **MUST LET PASS**, plus le piège du premier essai raconté |
+| `testDetteIndirecteIgnoreLesCommentaires` | *« c'est exactement la paire dont un contre-test a besoin »*, écrit tel quel |
+| `testCollisionNommeSesTaches` | un **MUST LET PASS** numéroté |
+| `testGardeDeModuleCheckSpirit` | *« la garde se vérifie en ESSAYANT, jamais en relisant »* |
+| `testDerivationEcarteeParcequElleFlatte` | un `equal(…, null)` sur le cas non classifiable |
+
+**Il n'y a donc AUCUN bloc sans contre-test.** Ma liste de cinq était fausse — et elle aurait
+envoyé quelqu'un réparer cinq tests déjà corrects.
 
 ---
 
@@ -62,13 +69,26 @@ que mon motif ne connaissait pas.
 
 > **19 % → 21 %**, et **6 blocs → 5**.
 
-### Erreur ③ — et c'est celle qui décide : ce chiffre restera toujours un PLANCHER
+### Erreur ③ — les cinq derniers « trous » n'en étaient pas
+
+J'ai ouvert les cinq blocs restants à la main. **Les cinq ont un contre-test**, et trois l'écrivent
+en toutes lettres. Ils m'échappaient parce qu'un `assert.ok(dette.some(…))` est une assertion de
+forme POSITIVE qui vérifie un cas NÉGATIF.
+
+> **5 blocs à reprendre → 0.**
+
+**Si j'avais publié cette liste, elle aurait envoyé réparer cinq tests déjà corrects** — la
+leçon L4, commise par la mesure censée instruire la leçon L47.
+
+### Erreur ④ — et c'est celle qui décide : ce chiffre ne se mesure PAS par motif
 
 **« Un cas négatif » est une propriété de SENS, pas de forme.** Une assertion peut vérifier un
 refus par n'importe quelle tournure qu'aucun motif ne prévoira. Chaque fois que j'ai regardé de
 plus près, le chiffre est MONTÉ — jamais descendu.
 
 **Donc : 21 % est un plancher, la vraie valeur est plus haute, et je ne sais pas de combien.**
+Les quatre itérations donnent 4 % → 19 % → 21 % → *plus*, et 59 blocs → 6 → 5 → **0**.
+**Une suite qui ne fait que monter à chaque regard n'est pas une mesure : c'est un aveu.**
 
 **Ce qu'il ne faut surtout pas faire de ce chiffre** : en faire un indicateur à suivre. Il
 bougerait avec la finesse de mes motifs plutôt qu'avec la qualité du filet — ce qui est la
@@ -94,8 +114,8 @@ indicateur qui la mesurerait mal *(Article 27)*.
 
 | Constat | État | Ce qu'il devient |
 |---|---|---|
-| Le filet porte 21 % d'assertions négatives, et 89 blocs sur 94 en ont au moins une | **RETENU** | tâche **#1267** — ce document ; c'est meilleur que ce que je craignais, et ça se dit |
+| Le filet porte au MOINS 21 % d'assertions négatives, et **aucun bloc n'est sans contre-test** | **RETENU** | tâche **#1267** — ce document ; c'est nettement meilleur que ce que ma première mesure disait, et ça se dit |
 | Ma propre mesure a commis trois fois l'erreur de la leçon qu'elle instruisait | **RETENU** | tâche **#1267** — raconté plutôt qu'effacé : c'est la démonstration la plus utile que L47 pouvait recevoir, et elle est arrivée une heure après sa rédaction |
-| Cinq blocs de test n'ont aucune assertion négative | **À TRANCHER** | petite liste, vrai travail : leur en écrire une chacun. Pas cette nuit — ce sont des tests d'outils que je n'ai pas relus, et écrire un contre-test sans comprendre le contrôle produit un test qui passe sans rien prouver (Article 19) |
+| Les « cinq blocs sans contre-test » | **ÉCARTÉ — le constat était FAUX** | vérifié à la main : les cinq en ont un, et trois l'écrivent en toutes lettres. Je l'avais d'abord différé « par prudence, Article 19 » ; c'est en tenant cette prudence que j'ai découvert qu'il n'y avait rien à réparer. Le différé valait mieux que le zèle |
 | Faire de ce 21 % un indicateur suivi | **ÉCARTÉ, avec sa raison** | il bougerait avec la finesse de mes motifs plutôt qu'avec la qualité du filet. C'est la leçon L28 : un chiffre qui BOUGE n'est pas un chiffre qui s'AMÉLIORE |
 | Construire un garde-fou qui exigerait une assertion négative par bloc | **ÉCARTÉ, avec sa raison** | il jugerait une propriété de SENS avec un motif de FORME, c'est-à-dire qu'il commettrait L47 en permanence — et il accuserait des blocs corrects (L4) |

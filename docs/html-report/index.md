@@ -30,4 +30,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 16665 | 2026-09-29 23:42Z |
 | `docs/grand-projet/html/les-deux-agents-experience.html` | `docs/grand-projet/02-strategie/les-deux-agents-experience.md` | 17282 | 2026-09-29 23:42Z |
 | `docs/grand-projet/html/le-noyau-est-il-vraiment-extractible.html` | `docs/grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible.md` | 14438 | 2026-09-29 23:51Z |
-| `docs/grand-projet/html/le-filet-mord-il-vraiment.html` | `docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md` | 12974 | 2026-09-30 00:36Z |
+| `docs/grand-projet/html/le-filet-mord-il-vraiment.html` | `docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md` | 14608 | 2026-09-30 00:42Z |
