@@ -95,8 +95,34 @@ pour qu'il rejoigne les sources ? *(a) oui · (b) non, laisse-le dehors*
 **Q8.3 — À TOI.** Veux-tu un **dépôt de preuve daté** (une procédure simple, chez un tiers, qui
 horodate l'état du projet à une date donnée) ? *(a) oui, dis-moi comment · (b) plus tard · (c) non*
 
-**Q8.4 — À MOI, tâche **#1326**.** Vérifier qu'**aucun autre secret** ne traîne dans les documents déjà déposés. Je
-l'ai fait pour le fichier bloqué, pas pour l'ensemble.
+**Q8.4 — FAIT le 2026-09-30, tâche #1326.** J'ai balayé le dépôt pour de vrai :
+`node scripts/safe-export.mjs secrets`. **1 250 fichiers lus, 52 exemptés avec leur raison
+écrite, ZÉRO forme connue de secret trouvée.**
+
+**Trois choses ont été construites dans l'outil avant qu'il ne tourne, et chacune corrige une
+faute qu'on aurait faite** :
+
+1. **Il ne recopie JAMAIS la valeur trouvée** — ni à l'écran, ni dans un rapport, ni dans le
+   suivi. Il rend le fichier, la ligne, et le type. *Un scanner de secrets qui écrit les secrets
+   qu'il trouve les duplique : il aggrave exactement ce qu'il surveille.* Et pour la même raison,
+   **son rapport n'est pas déposé sur disque** — contrairement à tous nos autres rapports : un
+   fichier qui liste où sont les secrets est une carte au trésor.
+2. **Il s'exclut lui-même et exclut son propre registre** — la leçon apprise deux heures plus tôt
+   ce soir : une mesure dont le rapport vit dans le corpus qu'elle lit fabrique ses résultats.
+3. **Il refuse de conclure sur zéro fichier lu** — « je n'ai rien vu » n'est pas « il n'y a rien ».
+
+**ET IL A ÉTÉ PROUVÉ MORDANT AVANT D'ÊTRE CRU** *(un outil qui n'a jamais rien attrapé est une
+intention, leçon L2)* : testé sur une fausse clé de forme valide → **trouvée** ; sur un texte qui
+contient seulement le préfixe `sk-` sans clé → **aucun faux positif** ; sur zéro fichier →
+**PAS MESURÉ**, jamais un vert.
+
+**CE QU'IL NE VOIT PAS, ET C'EST ÉCRIT DANS SA PROPRE SORTIE** : il reconnaît des FORMES connues
+(préfixes d'éditeurs, en-têtes de clés privées). Un mot de passe dans une phrase, un jeton maison,
+lui sont invisibles. **Un vert veut dire « aucune forme connue », jamais « il n'y a rien ».**
+
+**Et il ne remplace pas la protection de GitHub — il comble son trou** : elle ne joue qu'AU MOMENT
+DE L'ENVOI. Les deux clés du 30 septembre ont dormi **quatorze jours** avant qu'elle ne les voie.
+
 
 ---
 

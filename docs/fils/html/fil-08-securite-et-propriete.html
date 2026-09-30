@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-30T21:05:09.509Z</div>
+    <div class="date">2026-09-30T21:18:09.847Z</div>
     <h1>FIL 08 — À qui est ce projet, et qui peut te le prendre</h1>
     <p class="sub">Page générée depuis docs/fils/fil-08-securite-et-propriete.md — jamais écrite à la main.</p>
   </header>
@@ -134,7 +134,12 @@
 <p><strong>CE QUI RESTE VRAI, ET C'EST LE SEUL POINT QUI COMPTE</strong> : le fichier avait <strong>quatorze jours</strong> et personne ne l'avait ouvert. Si ces clés avaient été permanentes, la protection de GitHub aurait été le SEUL filet, et elle ne joue qu'au moment de l'envoi. <strong>Ce n'est pas la surveillance qui nous a protégés, c'est la durée de vie de ces clés-là</strong> — et ça, ça ne se reproduira pas forcément. D'où Q8.4.</p>
 <p><strong>Q8.2 — À TOI.</strong> Le fichier de prompts qui les contenait est <strong>hors du projet</strong> pour cette raison. Veux-tu que j'en fasse une <strong>copie nettoyée</strong> (mêmes contenus, clés remplacées par un marqueur) pour qu'il rejoigne les sources ? <em>(a) oui · (b) non, laisse-le dehors</em></p>
 <p><strong>Q8.3 — À TOI.</strong> Veux-tu un <strong>dépôt de preuve daté</strong> (une procédure simple, chez un tiers, qui horodate l'état du projet à une date donnée) ? <em>(a) oui, dis-moi comment · (b) plus tard · (c) non</em></p>
-<p><strong>Q8.4 — À MOI, tâche </strong>#1326<strong>.</strong> Vérifier qu'<strong>aucun autre secret</strong> ne traîne dans les documents déjà déposés. Je l'ai fait pour le fichier bloqué, pas pour l'ensemble.</p>
+<p><strong>Q8.4 — FAIT le 2026-09-30, tâche #1326.</strong> J'ai balayé le dépôt pour de vrai : <code>node scripts/safe-export.mjs secrets</code>. <strong>1 250 fichiers lus, 52 exemptés avec leur raison écrite, ZÉRO forme connue de secret trouvée.</strong></p>
+<p><strong>Trois choses ont été construites dans l'outil avant qu'il ne tourne, et chacune corrige une faute qu'on aurait faite</strong> :</p>
+<ul><li><strong>Il ne recopie JAMAIS la valeur trouvée</strong> — ni à l'écran, ni dans un rapport, ni dans le suivi. Il rend le fichier, la ligne, et le type. <em>Un scanner de secrets qui écrit les secrets qu'il trouve les duplique : il aggrave exactement ce qu'il surveille.</em> Et pour la même raison, <strong>son rapport n'est pas déposé sur disque</strong> — contrairement à tous nos autres rapports : un fichier qui liste où sont les secrets est une carte au trésor.</li><li><strong>Il s'exclut lui-même et exclut son propre registre</strong> — la leçon apprise deux heures plus tôt ce soir : une mesure dont le rapport vit dans le corpus qu'elle lit fabrique ses résultats.</li><li><strong>Il refuse de conclure sur zéro fichier lu</strong> — « je n'ai rien vu » n'est pas « il n'y a rien ».</li></ul>
+<p><strong>ET IL A ÉTÉ PROUVÉ MORDANT AVANT D'ÊTRE CRU</strong> <em>(un outil qui n'a jamais rien attrapé est une intention, leçon L2)</em> : testé sur une fausse clé de forme valide → <strong>trouvée</strong> ; sur un texte qui contient seulement le préfixe <code>sk-</code> sans clé → <strong>aucun faux positif</strong> ; sur zéro fichier → <strong>PAS MESURÉ</strong>, jamais un vert.</p>
+<p><strong>CE QU'IL NE VOIT PAS, ET C'EST ÉCRIT DANS SA PROPRE SORTIE</strong> : il reconnaît des FORMES connues (préfixes d'éditeurs, en-têtes de clés privées). Un mot de passe dans une phrase, un jeton maison, lui sont invisibles. <strong>Un vert veut dire « aucune forme connue », jamais « il n'y a rien ».</strong></p>
+<p><strong>Et il ne remplace pas la protection de GitHub — il comble son trou</strong> : elle ne joue qu'AU MOMENT DE L'ENVOI. Les deux clés du 30 septembre ont dormi <strong>quatorze jours</strong> avant qu'elle ne les voie.</p>
 <hr>
 <h3>SOURCES</h3>
 <ul><li><a href="https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety">Best Practices for API Key Safety — OpenAI</a></li><li><a href="https://rafter.so/blog/secrets/openai-api-key-exposure">OpenAI API Key Exposure: Risks, Recovery, and Prevention — Rafter</a></li><li><a href="https://www.securityscientist.net/blog/12-questions-and-answers-about-ai-api-keys-leaked-in-public-repos/">12 Questions and Answers About AI API keys leaked in public repos — Security Scientist</a></li><li><a href="https://github.com/weaviate/weaviate/issues/8859">Exposed OpenAI API Key with Active Access and Quota Exhaustion — weaviate/weaviate #8859</a></li></ul></main>

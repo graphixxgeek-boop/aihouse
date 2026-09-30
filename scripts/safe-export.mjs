@@ -1968,6 +1968,17 @@ function main() {
       return undefined;
     });
   }
+  // `secrets` (2026-09-30, tâche #1326) — SOUS-COMMANDE À PART, et jamais fondue dans `kits`.
+  // Les kits répondent « peut-on remonter l'Agence ailleurs ? » ; celle-ci répond « qu'emporte-t-elle
+  // qu'elle ne devrait pas ? ». Deux questions opposées : l'une compte ce qui manque, l'autre ce
+  // qui est en trop. Et son rapport n'est PAS déposé sur disque, contrairement à tous les autres :
+  // un fichier qui liste où sont les secrets est lui-même une carte au trésor.
+  if (process.argv[2] === "secrets") {
+    printReliabilityNotice("safe-export");
+    recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    for (const l of formatSecretsLines(chercherLesSecrets())) console.log(l);
+    return undefined;
+  }
   if (process.argv[2] === "kits") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
@@ -3010,6 +3021,106 @@ export function mesurerLesKits({ vitalite = null, root = ROOT, exists = existsSy
 // CE QUI EST GARDÉ DE L'ÉPISODE : les deux blueprints réellement orphelins ont bien été réparés
 // (leurs fiches les nomment désormais), et ils avaient été trouvés par `data-archangel orphelins`,
 // qui pose une AUTRE question — tous les documents, pas les pièces de kit — et ne doublonne rien.
+
+// ══════════════════════════════════════════════════════════════════════════
+// LES SECRETS QUI TRAÎNENT (2026-09-30, tâche #1326)
+// ══════════════════════════════════════════════════════════════════════════
+//
+// POURQUOI ICI : SAFE-EXPORT répond à « l'Agence peut-elle partir ailleurs ? ». Un secret qui
+// dort dans un fichier est la réponse NON la plus nette qui soit — il part avec, et il part chez
+// quelqu'un d'autre. C'est aussi le seul Gardien qui regarde déjà le dépôt entier plutôt qu'un
+// dossier.
+//
+// CE QUI L'A FAIT NAÎTRE : le 2026-09-30, la protection de GitHub a refusé un envoi. Deux clés
+// d'API dormaient depuis QUATORZE JOURS dans un fichier déposé par l'utilisateur que personne
+// n'avait jamais ouvert. Elles étaient temporaires et périmées — **ce n'est donc pas la
+// surveillance qui nous a protégés, c'est leur durée de vie**, et ça ne se reproduira pas
+// forcément. La protection de GitHub, elle, ne joue qu'AU MOMENT DE L'ENVOI : elle ne dit rien
+// des quatorze jours d'avant.
+//
+// TROIS RÈGLES DE CONSTRUCTION, ET LA PREMIÈRE EST NON NÉGOCIABLE.
+//
+// ① IL NE RECOPIE JAMAIS LA VALEUR TROUVÉE. Ni dans son rapport, ni dans sa sortie écran, ni
+//    dans le suivi. Un scanner de secrets qui écrit les secrets qu'il trouve les DUPLIQUE — il
+//    aggrave exactement ce qu'il surveille. On rend le fichier, la ligne, et le TYPE. Jamais plus.
+//
+// ② IL S'EXCLUT LUI-MÊME, ET IL EXCLUT SON PROPRE RAPPORT. Leçon payée deux heures plus tôt ce
+//    soir : une mesure dont le rapport vit dans le corpus qu'elle lit fabrique ses propres
+//    résultats. Ici le défaut serait pire qu'une statistique faussée — le rapport se signalerait
+//    lui-même à chaque passage, et ce bruit permanent ferait cesser de le lire (leçon L4).
+//
+// ③ IL DÉCLARE CE QU'IL NE VOIT PAS. Il reconnaît des FORMES connues (préfixes d'éditeurs,
+//    en-têtes de clés privées). Un secret sans forme reconnaissable — un mot de passe dans une
+//    phrase, un jeton maison — lui est invisible. Un vert ne veut donc jamais dire « il n'y a
+//    rien » : il veut dire « aucune des formes connues ».
+export const FORMES_DE_SECRET = [
+  { type: "clé OpenAI", motif: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}/ },
+  { type: "clé Groq", motif: /\bgsk_[A-Za-z0-9]{20,}/ },
+  { type: "clé Anthropic", motif: /\bsk-ant-[A-Za-z0-9_-]{20,}/ },
+  { type: "clé Google/Gemini", motif: /\bAIza[A-Za-z0-9_-]{30,}/ },
+  { type: "jeton GitHub", motif: /\bgh[pousr]_[A-Za-z0-9]{30,}/ },
+  { type: "clé AWS", motif: /\bAKIA[0-9A-Z]{16}\b/ },
+  { type: "jeton Slack", motif: /\bxox[abprs]-[A-Za-z0-9-]{10,}/ },
+  { type: "clé privée", motif: /-----BEGIN (?:RSA |EC |OPENSSH |PGP )?PRIVATE KEY-----/ },
+];
+
+// Les fichiers qui ont le DROIT de contenir ces formes, chacun avec sa raison — sans quoi le
+// scanner accuserait sa propre définition à chaque passage (leçon L4, le garde-fou qui accuse la
+// conformité cesse d'être lu).
+export const SANS_OBJET_SECRETS = [
+  { motif: /^scripts\/safe-export\.mjs$/, pourquoi: "il PORTE les formes à reconnaître : les y trouver serait se citer soi-même" },
+  { motif: /^docs\/safe-export\//, pourquoi: "son propre registre — une mesure qui lit son rapport fabrique ses résultats (leçon du 2026-09-30)" },
+  { motif: /^docs\/suivi\//, pourquoi: "le suivi NOMME les incidents par type et par préfixe, jamais par valeur : c'est le compte rendu, pas la fuite" },
+  { motif: /^docs\/fils\//, pourquoi: "même raison que le suivi : les fils parlent des incidents, ils ne portent pas de valeur" },
+  { motif: /^node_modules\//, pourquoi: "code tiers, jamais le nôtre" },
+];
+
+export function chercherLesSecrets({ root = ROOT, readFileImpl = lireFichierPartage, listDirImpl = readdirSync, formes = FORMES_DE_SECRET, exemptes = SANS_OBJET_SECRETS, racines = ["docs", "scripts", "lib", "app", "components"] } = {}) {
+  const trouves = [];
+  let lus = 0, ignores = 0;
+  const balayer = (dossier, profondeur = 0) => {
+    let entrees = [];
+    try { entrees = listDirImpl(join(root, dossier), { withFileTypes: true }); } catch { return; }
+    for (const e of entrees) {
+      const rel = `${dossier}/${e.name}`;
+      if (e.isDirectory()) { if (profondeur < 5) balayer(rel, profondeur + 1); continue; }
+      if (!/\.(md|txt|mjs|js|ts|tsx|json|ya?ml|env|sh|csv)$/i.test(e.name)) continue;
+      if (exemptes.some((x) => x.motif.test(rel))) { ignores += 1; continue; }
+      let t = "";
+      try { t = readFileImpl(join(root, rel), "utf8"); } catch { continue; }
+      lus += 1;
+      const lignes = t.split("\n");
+      for (let i = 0; i < lignes.length; i += 1) {
+        for (const f of formes) {
+          // ON NE GARDE JAMAIS LA VALEUR — seulement où elle est et de quel type elle est.
+          if (f.motif.test(lignes[i])) trouves.push({ fichier: rel, ligne: i + 1, type: f.type });
+        }
+      }
+    }
+  };
+  for (const r of racines) balayer(r);
+  if (!lus) return { mesurable: false, pourquoi: "aucun fichier lu : ce zéro dit qu'on n'a rien regardé, jamais qu'il n'y a pas de secret" };
+  return { mesurable: true, lus, ignores, trouves,
+    horsPortee: "il reconnaît des FORMES connues (préfixes d'éditeurs, en-têtes de clés privées). Un mot de passe dans une phrase ou un jeton maison lui est invisible : un vert veut dire « aucune forme connue », jamais « il n'y a rien »." };
+}
+
+export function formatSecretsLines(r) {
+  const l = [];
+  if (!r.mesurable) { l.push("=== SECRETS QUI TRAÎNENT — PAS MESURÉ ===", `  ${r.pourquoi}`); return l; }
+  l.push(`=== SECRETS QUI TRAÎNENT — ${r.trouves.length} trouvé(s) sur ${r.lus} fichier(s) lus, ${r.ignores} exemptés avec leur raison ===`);
+  l.push("");
+  if (!r.trouves.length) {
+    l.push("  ✅ aucune forme connue de secret dans les fichiers du dépôt.");
+  } else {
+    l.push("  🚨 LA VALEUR N'EST JAMAIS RECOPIÉE ICI — un scanner qui écrit ce qu'il trouve le duplique :");
+    for (const t of r.trouves.slice(0, 20)) l.push(`     · ${t.fichier}:${t.ligne} — ${t.type}`);
+    if (r.trouves.length > 20) l.push(`     … et ${r.trouves.length - 20} autre(s)`);
+    l.push("", "  À FAIRE, DANS CET ORDRE : révoquer d'abord (une clé retirée d'un fichier reste valable), retirer ensuite.");
+  }
+  l.push("", `  HORS PORTÉE : ${r.horsPortee}`);
+  l.push("  ET LA PROTECTION DE GITHUB NE REMPLACE PAS CECI : elle ne joue qu'AU MOMENT DE L'ENVOI. Les deux clés du 2026-09-30 ont dormi quatorze jours avant qu'elle ne les voie.");
+  return l;
+}
 
 // ══════════════════════════════════════════════════════════════════════════
 // L'INVENTAIRE NOMINATIF — « le livre des kits » (2026-09-26, sa question)
