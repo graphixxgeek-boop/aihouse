@@ -5,7 +5,7 @@
 
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-30 03:49 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-09-30 16:20 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -428,12 +428,15 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce qui part avec l'Agence
 
 ```
-=== CE QUI PART AVEC L'AGENCE — 562 documents, couverture 100 % ===
+=== CE QUI PART AVEC L'AGENCE — 563 documents, couverture 100 % ===
 
   📦 PART — 227 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
   🏠 RESTE — 14 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
   🗄️ MEMOIRE — 321 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
-  ❓ A-INSTRUIRE — 0 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
+  ❓ A-INSTRUIRE — 1 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
+
+  LES 1 À INSTRUIRE, un par un — aucun n'est rangé par défaut :
+      ❓ docs/grand-projet/fil-de-discussion.md
 
   HORS PORTÉE : elle dit si un document PEUT partir, jamais s'il est à jour ni s'il est bon. Un document générique et périmé sort « PART » — c'est THE-EQUALIZER et la relecture périodique qui répondent à l'autre question.
 ```
@@ -441,7 +444,7 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce que chacun porte
 
 ```
-=== CE QUE CHAQUE DOCUMENT PORTE — 562 documents, couverture 100 % ===
+=== CE QUE CHAQUE DOCUMENT PORTE — 563 documents, couverture 100 % ===
 
   Second axe des documents, à côté de l'exportabilité : celui-là dit si un document PART,
   celui-ci dit ce qu'il PORTE. Les deux se croisent — une règle peut partir ou rester, une
@@ -458,7 +461,7 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
   📋 SUIVI — 8 document(s) : le journal des tâches — ce qui a été décidé, quand, et par qui
   🗄️ ARCHIVE — 3 document(s) : une mémoire figée : on la consulte, on ne la met jamais à jour
   🗺️ PLAN — 33 document(s) : la photographie d'un moment : ce qu'on comptait faire ce jour-là
-  📊 RAPPORT — 142 document(s) : le dépôt d'un passage d'outil — un constat à un instant, jamais une règle
+  📊 RAPPORT — 143 document(s) : le dépôt d'un passage d'outil — un constat à un instant, jamais une règle
   📖 REFERENCE — 105 document(s) : la règle telle qu'elle s'applique aujourd'hui — la source de vérité d'un sujet
   🎚️ MODE — 1 document(s) : un mode de travail de l'agent : comment il se conduit dans une situation donnée
   🗃️ REGISTRE — 4 document(s) : la mémoire d'un outil : ce qu'il a déjà vu, relue à son passage suivant

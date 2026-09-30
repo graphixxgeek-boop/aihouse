@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Où on en est vraiment</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T16:30:50.569Z</div>
+    <h1>Où on en est vraiment</h1>
+    <p class="sub">L'état vérifié de tes demandes — chaque ligne contrôlée dans le dépôt, jamais de mémoire</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Produit le 2026-09-30 à 18h30, après ton « STOP ». Chaque ligne a été vérifiée dans le dépôt avec une commande, jamais de mémoire. Quand la preuve manque, la case le dit.)</em></p>
+<h3>CE QUE TU DOIS SAVOIR EN PREMIER, ET C'EST LE PLUS GRAVE</h3>
+<p><strong>Tes deux fichiers de réponses n'avaient jamais été déposés dans le dépôt.</strong> Seuls <code>COMMANDE IMPORTANTE</code> et <code>QUESTIONS</code> y étaient. Tes réponses du 29 septembre au soir (4 286 mots) et celles d'aujourd'hui (3 108 mots) <strong>ne vivaient que dans la conversation</strong> — donc perdues à la session suivante. C'est très exactement ta question « tout est bien historisé ? », et la réponse était <strong>non</strong>. Ils sont déposés depuis 18h28.</p>
+<p><strong>Conséquence directe, et elle est mesurable : tu as nommé trois outils, les trois noms sont perdus.</strong></p>
+<table><thead><tr><th>Le nom que TU as donné</th><th>Ce que tu voulais nommer</th><th>Où il est dans le dépôt</th></tr></thead><tbody><tr><td><code>apotre-post-commit</code></td><td>une extension de JESUS pour la bannière d'après-enregistrement</td><td><strong>nulle part</strong></td></tr><tr><td><code>joseph-le-travail</code></td><td>une extension d'ABRAHAM pour les règles de travail</td><td><strong>nulle part</strong></td></tr><tr><td><code>always-new-bones</code></td><td>l'outil de rationalisation, en extension d'ALWAYS-NEW-CODE</td><td><strong>nulle part</strong></td></tr></tbody></table>
+<p>Tu m'as dit : <em>« je ne fais pas des noms au cas par cas, je crée des séries de noms à l'intérieur d'une même famille »</em>. Nommer est ta prérogative, tu l'as exercée trois fois, et je l'ai laissée tomber. C'est le genre de perte qu'aucun outil ne signalait, parce que la source n'était pas dans le dépôt.</p>
+<hr>
+<h3>LA MESURE D'ENSEMBLE, PAR L'OUTIL</h3>
+<p><code>abraham couverture</code> confronte ton fichier du 29 septembre à tout ce que j'ai produit depuis :</p>
+<table><thead><tr><th>Verdict</th><th>Nombre</th><th>Ce que ça veut dire</th></tr></thead><tbody><tr><td>ORPHELINE</td><td><strong>0</strong> sur 49</td><td>aucune demande totalement absente du corpus</td></tr><tr><td>🟠 FAIBLE</td><td><strong>24</strong></td><td>le sujet est effleuré, nettement moins que ses voisins</td></tr><tr><td>✅ REPRISE</td><td>25</td><td>quelqu'un a écrit sur le sujet</td></tr><tr><td>⚪ non mesurable</td><td>6</td><td>trop peu de mots pour conclure</td></tr></tbody></table>
+<p><strong>Et l'outil prévient lui-même de sa limite, que je reprends telle quelle</strong> : <em>« une demande REPRISE ne prouve qu'une chose : quelqu'un a écrit sur le même sujet — jamais qu'il l'a traitée »</em>. Donc ce tableau dit seulement que <strong>rien n'a totalement disparu</strong>. Il ne dit pas que je suis à jour. La suite, elle, le dit.</p>
+<hr>
+<h3>TES DEMANDES DU 29 SEPTEMBRE AU SOIR — état vérifié une par une</h3>
+<h4>❌ PAS FAIT — rien dans le dépôt</h4>
+<table><thead><tr><th>Ta demande, dans tes mots</th><th>Vérifié comment</th></tr></thead><tbody><tr><td>Les <strong>trois noms d'outils</strong> que tu as donnés</td><td><code>grep</code> sur tout le dépôt : 0 occurrence</td></tr><tr><td>L'agent <strong>« expérience IA »</strong> (le pendant de l'expérience client)</td><td>le document des deux agents ne traite que l'expérience client</td></tr><tr><td>« <strong>la liste de tous les paramètres qui nuisent au fonctionnement d'une IA</strong> »</td><td>aucun document</td></tr><tr><td>L'axe transverse <strong>« phase construction » / « phase opérationnelle »</strong></td><td><code>grep</code> : 0 occurrence</td></tr><tr><td>« <strong>Séparer dans le filet</strong> les tests du périmètre Agence des autres » (et EZECHIEL comme protecteur du code)</td><td>aucune trace</td></tr><tr><td>« <strong>quel delta entre les standards et notre modèle</strong> » (les règles de travail sont-elles un standard ?)</td><td>aucun document</td></tr><tr><td>« <strong>comment ecotoken est-il connecté aux prophètes ?</strong> tout est bien branché ? explique-moi »</td><td>jamais répondu</td></tr><tr><td>Les <strong>19 Articles de la famille AGENCE</strong> : combien d'obligations, pour un max de 150-200</td><td>jamais compté</td></tr><tr><td><strong>Q10 — traduction complète de l'Agence en anglais</strong></td><td>0 trace de décision ou de plan</td></tr><tr><td><strong>C16</strong> — « j'ai l'impression d'un système qui n'a pour vocation que de se surveiller lui-même »</td><td>jamais répondu, et c'est une objection de fond</td></tr><tr><td>« <strong>écris ça quelque part : je ne suis pas DEV</strong> »</td><td>noté nulle part de façon opposable</td></tr><tr><td>« la <strong>commande est renouvelée</strong> au rythme de nos avancées […] synthétise le principe et applique-le »</td><td>jamais synthétisé</td></tr><tr><td>« si tu ne comprends pas, <strong>mets de côté et indique-le quelque part</strong> »</td><td>aucun endroit pour ça</td></tr></tbody></table>
+<h4>🟠 PARTIEL — commencé, pas fini</h4>
+<table><thead><tr><th>Ta demande</th><th>Ce qui existe</th><th>Ce qui manque</th></tr></thead><tbody><tr><td>Le <strong>fil de discussion</strong></td><td><code>fil-de-discussion.md</code>, 31 fils</td><td>tu l'as rejeté. La voiture-balai n'est pas mécanique, et elle avait déjà raté 5 fils</td></tr><tr><td>La <strong>plaquette</strong></td><td><code>plaquette-de-l-agence.md</code></td><td>tu l'as rejetée. Je ne sais pas encore pourquoi — je ne te l'ai pas demandé, je te le demande maintenant</td></tr><tr><td>Le <strong>format questions-réponses en process</strong></td><td><code>docs/reponse-aux-questions-process-detail.md</code></td><td>écrit, mais visiblement pas appliqué : tu redis aujourd'hui la même chose</td></tr><tr><td>Les <strong>2 agents d'expérience</strong></td><td>conception écrite</td><td>non construits, et il en manque un sur deux</td></tr><tr><td><strong>Règle #767 « la mesure avant l'opinion »</strong></td><td>texte prêt, entrée 6 du document de diffs</td><td><strong>tu as donné ton GO le 29</strong> et elle n'est toujours pas dans la charte</td></tr><tr><td><strong><code>ou-va-chaque-chose.md</code> mis à jour à chaque échange</strong></td><td>le fichier existe</td><td>tu demandais « une solution mécanique pour ne pas oublier » — il n'y en a pas</td></tr><tr><td><strong>L'Agence n'a aucune existence technique</strong> — « DONC ON RÈGLE TOUT ÇA ? comment ? »</td><td>le constat est écrit</td><td>aucune proposition de solution</td></tr><tr><td><strong>Quelles règles sont inaltérables / mutualisables</strong> — « c'est un travail d'analyse, pas juste une question »</td><td>rien</td><td>l'analyse n'a pas été faite</td></tr></tbody></table>
+<h4>✅ FAIT — avec sa preuve</h4>
+<table><thead><tr><th>Ta demande</th><th>Où c'est</th></tr></thead><tbody><tr><td>Question <strong>sécurité</strong></td><td><code>02-strategie/propriete-et-securite-du-projet.md</code></td></tr><tr><td>Question <strong>propriété juridique</strong></td><td>idem</td></tr><tr><td>La <strong>plaquette</strong> produite</td><td><code>02-strategie/plaquette-de-l-agence.md</code> <em>(produite ≠ validée)</em></td></tr><tr><td><strong>Analyse de ce qui ralentit</strong> le codage / l'IA / le jeu / l'Agence</td><td><code>02-strategie/ce-qui-ralentit-le-projet.md</code></td></tr><tr><td><strong>Deux sujets de recherche web pertinents</strong></td><td><code>docs/recherches-web/</code></td></tr><tr><td><strong>Le test des 5 impossibles</strong></td><td><code>02-strategie/les-cinq-impossibles.md</code></td></tr><tr><td>Jouer le rôle de <strong>client de l'Agence</strong></td><td>mis de côté, comme tu l'as demandé</td></tr><tr><td>Les <strong>deux blocs de 15 questions</strong> de dégrossissage</td><td><code>02-strategie/questions-de-degrossissage.md</code>, et tu y as répondu</td></tr></tbody></table>
+<hr>
+<h3>TES DEMANDES D'AUJOURD'HUI — état</h3>
+<table><thead><tr><th>Ta demande</th><th>État</th></tr></thead><tbody><tr><td>Tes réponses <strong>G1 à G15 et H1 à H15</strong></td><td>enregistrées dans le fil, mais le fil est rejeté : <strong>à ré-enregistrer ailleurs</strong></td></tr><tr><td>Les questions que tu <strong>n'as pas comprises</strong> (H4, H6, H9, H10, H11, H12)</td><td>répondues dans le fil rejeté : <strong>à reprendre</strong></td></tr><tr><td><strong>Les 5 lots</strong> : « je ne comprends pas où est ma décision »</td><td>je te donne raison, je retire le document</td></tr><tr><td><strong>Travailler à distance</strong></td><td>répondu</td></tr><tr><td><strong>Philosophie et politique</strong> : tu as répondu en « jets », tu me demandes de piloter</td><td><strong>pas commencé</strong></td></tr><tr><td><strong>Objectif ultime</strong></td><td>séance préparée le 29, <strong>pas tenue</strong></td></tr><tr><td><strong>Schéma cible de l'organisation</strong></td><td><strong>pas fait</strong> — et la réponse honnête est qu'il n'existe pas</td></tr><tr><td><strong>Testeurs humains</strong> + s'en protéger</td><td>mis de côté, à ta demande</td></tr><tr><td>« la plaquette doit être <strong>régulière et mise à jour</strong>, comment on fait ? »</td><td><strong>pas répondu</strong></td></tr></tbody></table>
+<hr>
+<h3>CE QUE JE RETIENS DE TON REPROCHE, SANS LE DILUER</h3>
+<p>Tu as écrit : <em>« tu as respecté la moitié de mes consignes »</em>. Le dépôt te donne raison, et j'ai une mesure pour l'illustrer : en déposant le fil de discussion, j'ai fait <strong>indexé</strong> et <strong>page HTML</strong>, mais <strong>pas classé</strong> — deux consignes sur trois, et c'est le filet de sécurité qui me l'a appris, pas moi.</p>
+<p><strong>La cause n'est pas l'inattention, et c'est ce qui la rend réparable</strong> : tes fichiers de demande n'étaient pas dans le dépôt, donc aucun outil ne pouvait vérifier que j'y répondais. Je travaillais de mémoire sur 7 400 mots de demandes. <strong>Maintenant qu'ils y sont, la couverture est mesurable à chaque passage</strong> — c'est la première chose qui change.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/ou-on-en-est-vraiment.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le fil de discussion</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-09-30T16:20:20.975Z</div>
+    <h1>Le fil de discussion</h1>
+    <p class="sub">Tout ce qui est en cours entre nous, à un seul endroit — et à chaque fil, qui a la balle</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Créé le 2026-09-30 à 18h16, à sa demande. <strong>Document VIVANT</strong> : c'est toujours ce fichier-ci, jamais un nouveau à chaque séance. Les fils répondus descendent, les fils ouverts restent en haut. Sa raison d'être, dans ses mots : « ce système agrège TOUTES les questions en cours […] voiture balai, tu vérifies que tu as bien récupéré toutes les questions en cours ».)</em></p>
+<hr>
+<h3>COMMENT LIRE CE DOCUMENT — trois lignes, et c'est tout</h3>
+<ul><li><strong>Chaque sujet est un FIL</strong>, avec un numéro qui ne change jamais. Tu peux dire « F12 » et on sait tous les deux de quoi on parle.</li><li><strong>Chaque fil dit EN HAUT à qui est la balle</strong> : <code>▶ À TOI</code> ou <code>◀ À MOI</code>. Tu ne devrais jamais avoir à deviner si quelque chose t'attend.</li><li><strong>Tu lis les <code>▶ À TOI</code> et tu t'arrêtes quand tu veux.</strong> Le reste est là pour que rien ne se perde, pas pour être lu d'une traite.</li></ul>
+<table><thead><tr><th>Étiquette</th><th>Ce que ça veut dire</th></tr></thead><tbody><tr><td><code>▶ À TOI</code></td><td>j'attends quelque chose de toi, et le fil dit exactement quoi</td></tr><tr><td><code>◀ À MOI</code></td><td>c'est moi qui dois produire, mesurer ou répondre. Rien à faire de ton côté</td></tr><tr><td><code>✅ CLOS</code></td><td>tranché, avec ta réponse enregistrée et la date</td></tr><tr><td><code>💤 DORMANT</code></td><td>volontairement mis de côté, avec la raison. Se rouvre d'un mot</td></tr><tr><td><code>🔎 DÉDUITE</code></td><td><strong>tu n'as pas posé cette question</strong> : je l'ai déduite d'une de tes phrases, qui est citée. Tu peux répondre « ce n'est pas une question »</td></tr></tbody></table>
+<p><strong>Trois réglages que j'ai pris par défaut</strong> parce que tu m'as dit de réfléchir plutôt que de te les faire arbitrer — chacun se renverse d'un mot : <em>un seul document vivant</em> · <em>tout est montré, trié par urgence</em> · <em>les questions déduites sont marquées comme telles</em>.</p>
+<hr>
+<h3>▶ À TOI — ce qui m'empêche d'avancer</h3>
+<h4>F01 · Le format de ce document lui-même · ▶ À TOI</h4>
+<p><strong>De quoi on parle</strong> — Tu as validé la « fiche à cases » pour les questions, puis tu as fait remarquer qu'il manquait l'autre moitié : <strong>tu dois aussi pouvoir réagir à mes RÉPONSES.</strong> C'est ce document-ci, refait sur cette base.</p>
+<p><strong>Ce qui change par rapport à ce que je t'ai montré ce matin</strong> — l'unité n'est plus la question, c'est le <strong>fil</strong> : un sujet qui vit, qui peut faire plusieurs allers-retours, et qui affiche à chaque instant à qui est la balle.</p>
+<p><strong>Ce que j'attends de toi</strong> — le lire et me dire ce qui gêne. Pas de choix a/b/c ici : c'est un prototype, et ton premier réflexe en le lisant vaut mieux qu'une option que j'aurais devinée.</p>
+<p><strong>Une seule vraie question dedans</strong> : est-ce que la ligne <code>▶ À TOI</code> / <code>◀ À MOI</code> suffit à te dire où regarder, ou est-ce qu'il te faut en plus un <strong>compteur en tête</strong> du genre « 7 fils t'attendent, dont 2 bloquants » ?</p>
+<p><strong>Ta réponse</strong> ▸</p>
+<hr>
+<h4>F02 · L'Article 13 de la charte : deux outils se contredisent, et ça vaut 11 obligations · ▶ À TOI · ⚠️ bloquant</h4>
+<p><strong>De quoi on parle</strong> — Tu vises <strong>50 obligations</strong> dans la charte. J'ai mesuré où on atterrirait en allégeant : <strong>entre 55 et 66</strong>. L'écart vient d'un seul Article, le 13, qui pèse <strong>12 obligations à lui tout seul</strong> — et mes deux outils ne sont pas d'accord sur sa nature.</p>
+<p><strong>Pourquoi ils ne sont pas d'accord</strong> — ABRAHAM dit : « l'Article 13 nomme des scripts et renvoie à des fiches, donc c'est un MODE D'EMPLOI, donc il est allégeable ». MOÏSE dit : « c'est une DISCIPLINE sans porteur mécanique, donc on n'y touche pas ».</p>
+<p><strong>Si tu suis ABRAHAM</strong> → l'atterrissage est <strong>55</strong>, ta cible est presque atteinte. <strong>Si tu suis MOÏSE</strong> → l'atterrissage est <strong>66</strong>, et il faudra tailler ailleurs.</p>
+<p><strong>Ce qui plaide pour chacun</strong> — MOÏSE est l'outil dédié au SEUL périmètre de la charte, et la charte le désigne elle-même comme tel : sur ce terrain, c'est le spécialiste. ABRAHAM a pour lui la lettre du texte : un Article qui dit « lance tel script, va lire telle fiche » ressemble beaucoup à un mode d'emploi.</p>
+<p><strong>Je ne recommande pas</strong> — et c'est volontaire : trancher reviendrait à choisir lequel de mes deux outils a raison sur la charte, ce qui est exactement le genre de décision qui t'appartient.</p>
+<p><strong>Ta réponse</strong> ▸ (a) ABRAHAM, c'est un mode d'emploi · (b) MOÏSE, c'est une discipline · (c) on regarde l'Article ensemble avant de trancher</p>
+<hr>
+<h4>F03 · Ta cible de 50 : elle porte sur quoi, exactement ? · ▶ À TOI · ⚠️ bloquant</h4>
+<p><strong>De quoi on parle</strong> — Quand tu as dit « 50 obligations », j'ai compté les <strong>Articles</strong> de la charte : il y en a <strong>93</strong>. Mais la charte contient aussi <strong>44 obligations dans ses sections qui ne sont pas des Articles</strong> (l'inventaire des outils, les règles de travail, le référentiel…). Total réel : <strong>137</strong>.</p>
+<p><strong>Pourquoi ça change tout</strong> — viser 50 sur 93, c'est enlever 43 obligations. Viser 50 sur 137, c'est en enlever 87, soit <strong>le double de travail</strong>, et ça touche des parties que tu n'avais peut-être pas en tête.</p>
+<p><strong>Ce que je recommande</strong> — <strong>(a)</strong>, les Articles seuls. Raison : c'est ce que tu avais sous les yeux quand tu as dit 50, et les 44 autres ne sont pas de même nature — ce sont surtout des descriptions d'outils, pas des ordres.</p>
+<p><strong>Ta réponse</strong> ▸ (a) les 93 Articles seuls · (b) la charte entière, 137 · (c) autre chose, je t'explique</p>
+<hr>
+<h4>F04 · Les 7 changements de charte qui attendent ton feu vert · ▶ À TOI</h4>
+<p><strong>De quoi on parle</strong> — Ta borne est « tu me montres avant ». Sept changements de la charte sont écrits, prêts, et <strong>non appliqués</strong> en attendant que tu les voies. Ils vivent dans <code>docs/plans/charte-diffs-a-approuver-2026-09-28.md</code>.</p>
+<p><strong>Celui que je te conseille de trancher tout de suite, parce qu'il ne coûte rien</strong> — l'entrée 7 : la charte affiche « 86,6 % des tâches ne touchent pas au jeu », chiffre du 22 septembre. La vraie mesure aujourd'hui est <strong>4,0 % puis 5,5 % de tâches jeu</strong> — la part du jeu MONTE légèrement. Le vieux chiffre inquiète pour rien.</p>
+<p><strong>Ce que j'attends de toi</strong> — ouvrir le document et dire oui/non entrée par entrée. Je peux aussi te les présenter ici en 7 fiches si tu préfères ne pas changer de document.</p>
+<p><strong>Ta réponse</strong> ▸</p>
+<hr>
+<h4>F05 · L'épreuve de la page blanche : rendez-vous tenu, ou geste exceptionnel ? · ▶ À TOI</h4>
+<p><strong>De quoi on parle</strong> — L'Article 7 de la charte demande de se redemander « périodiquement » comment on reconstruirait une partie du jeu aujourd'hui. L'outil qui le fait a tourné <strong>une fois, sur une zone, le 21 septembre</strong>. Il y a <strong>huit zones</strong>, toutes des zones de jeu.</p>
+<p><strong>Ce que ça dit, et c'est nuancé</strong> — la part du jeu dans le travail ne baisse pas (mesuré). Mais l'outil bâti pour repenser le jeu n'a regardé qu'un huitième du jeu. <em>Le jeu n'est pas étouffé par manque d'attention : il est peu regardé par les outils qui existent pour le regarder.</em></p>
+<p><strong>Tes choix</strong> — (a) une zone par Ronde, les huit sont vues en huit Rondes · (b) on assume que c'est exceptionnel et on le dit dans la charte · (c) on la retire de la charte.</p>
+<p><strong>Je recommande (a)</strong>, et pas par zèle : la troisième possibilité — celle d'aujourd'hui, une obligation écrite que personne ne tient — <strong>use la charte plus qu'elle ne la sert.</strong></p>
+<p><strong>Ta réponse</strong> ▸</p>
+<hr>
+<h4>F06 · Deux journaux meurent à chaque redémarrage. On les sauve ? · ▶ À TOI</h4>
+<p><strong>De quoi on parle</strong> — Vingt journaux internes ne voyagent pas avec le projet : ils repartent à zéro quand la machine redémarre. <strong>Dix-sept, c'est sans conséquence</strong> (des copies d'affichage, des états de session finie). <strong>Deux non</strong> : le compteur qui dit quels outils ont servi, et l'historique du poids réel envoyé au modèle du jeu.</p>
+<p><strong>Ce que coûte de ne rien faire</strong> — le compteur n'a que quelques heures de mémoire, donc « cet outil n'a jamais servi » veut dire « pas vu passer depuis hier ». C'est déjà arrivé qu'il propose de retirer des outils qui tournaient tous les jours.</p>
+<p><strong>Ce que coûte de les sauver</strong> — ils grossissent un peu à chaque enregistrement.</p>
+<p><strong>Ta réponse</strong> ▸ (a) on les sauve tous les deux · (b) on n'en sauve aucun, on vit avec · (c) on ne garde qu'un résumé, pas le détail</p>
+<hr>
+<h4>F07 · 31 vérifications de process sur 42 ne peuvent jamais échouer · ▶ À TOI · 💤 pas urgent</h4>
+<p><strong>De quoi on parle</strong> — Chaque étape de process a une « preuve » qu'elle a bien eu lieu. Pour 31 d'entre elles, la preuve est « tel fichier existe » — mais le fichier fait partie du projet, donc il existe <strong>toujours</strong>, même si l'étape n'a jamais été faite.</p>
+<p><strong>Comment on l'a découvert</strong> — le mode de travail est resté bloqué sur « il dort » pendant sept jours, parce que sa preuve était l'existence d'un fichier qui était là depuis le début.</p>
+<p><strong>Ce que j'attends de toi</strong> — rien tout de suite. C'est <strong>31 petites décisions</strong> (« que serait une vraie preuve pour CETTE étape ? »), à faire ensemble quand on aura le temps. Je ne les ai volontairement pas corrigées seule : inventer 31 preuves vaut moins que 31 preuves honnêtement déclarées faibles.</p>
+<p><strong>Ta réponse</strong> ▸ (a) on y passe une séance bientôt · (b) plus tard, ça n'urge pas · (c) laisse tomber, c'est acceptable comme ça</p>
+<hr>
+<h3>◀ MES RÉPONSES À TES QUESTIONS D'AUJOURD'HUI — lis, réagis si tu veux, sinon ne fais rien</h3>
+<h4>F08 · « C'est quoi des grappes de duplication ? » (ta question sur H9) · ✅ répondu</h4>
+<p><strong>Réponse courte</strong> — Quand le même bout de code est recopié à plusieurs endroits, un outil les repère. Une <strong>grappe</strong>, c'est UN bout de code et TOUS les endroits où il a été recopié. « 8 grappes » = 8 bouts de code différents qui traînent chacun en plusieurs exemplaires.</p>
+<p><strong>Pourquoi c'est un problème</strong> — le jour où l'un d'eux est faux, il faut penser à le corriger dans tous les exemplaires. On en oublie toujours un.</p>
+<p><strong>Ce que j'attends de toi</strong> — rien. La question H9 était « on les nettoie avant ou après le grand découpage ? » ; ma recommandation reste <strong>(a) avant</strong>, parce que nettoyer d'abord évite de découper deux fois la même chose.</p>
+<hr>
+<h4>F09 · « Tu veux livrer un produit non fini ? » (ta réaction à H12) · ✅ répondu — et j'avais mal écrit</h4>
+<p><strong>Ta réaction est juste, et le défaut est dans ma formulation.</strong> J'avais écrit « une limite, quitte à livrer partiel ». Ça se lit comme « on s'arrête en cours de route », et ce n'est pas ce que je voulais dire.</p>
+<p><strong>Ce que je voulais dire</strong> — décider À L'AVANCE ce qui est dans la première livraison, et mettre le reste dans une seconde. Rien n'est livré à moitié : ce qui est dedans est fini.</p>
+<p><strong>Pourquoi je le proposais</strong> — un chantier sans fin déclarée absorbe tout le reste, et ton jeu attend depuis des semaines pendant qu'on outille.</p>
+<p><strong>Ce que j'attends de toi</strong> — rien pour l'instant. La question se reposera proprement quand on aura l'objectif ultime (F16) : on ne découpe pas une livraison avant de savoir où on va.</p>
+<hr>
+<h4>F10 · « Je n'ai pas compris H6 » — la question des branches · ✅ répondu</h4>
+<p><strong>Ce que le mot veut dire</strong> — une <strong>branche</strong>, c'est une copie parallèle du projet. On y travaille sans toucher à la version principale, et on rassemble les deux à la fin.</p>
+<p><strong>La question était donc</strong> — pendant la grande évolution, est-ce qu'on travaille directement sur la version principale comme aujourd'hui, ou à côté ?</p>
+<p><strong>Ma recommandation, en clair</strong> — <strong>directement, comme aujourd'hui</strong>. Le filet de sécurité tourne à chaque enregistrement : c'est déjà notre protection. Une longue copie parallèle accumule un risque au moment de rassembler, plus grand que celui qu'elle évite.</p>
+<p><strong>Ta réponse</strong> ▸ (a) comme aujourd'hui · (b) une copie par grande étape · (c) une copie pour toute l'évolution</p>
+<hr>
+<h4>F11 · « H4, je voyais ça comme un constat, pas une décision » · ✅ répondu — tu as à moitié raison</h4>
+<p><strong>Tu as raison sur la moitié</strong> — dresser la liste de ce qui est fragile, c'est un constat, et c'est mon travail.</p>
+<p><strong>Mais le geler, c'est une décision, et elle est à toi</strong> — dire « on ne touche pas au comportement du jeu pendant l'évolution » m'interdit des choses. Si je le décide seule et que ça te bloque, tu l'apprends trop tard.</p>
+<p><strong>La question reformulée simplement</strong> — pendant toute la grande évolution, est-ce que je m'interdis de toucher à : <strong>ce que le visiteur voit du jeu</strong> · <strong>les règles de la charte qui parlent du jeu</strong> · <strong>l'historique du suivi</strong> ?</p>
+<p><strong>Ta réponse</strong> ▸ (a) oui, ces trois-là · (b) moins que ça · (c) plus que ça, j'ajoute…</p>
+<hr>
+<h4>F12 · « L'allègement : aide-moi à y voir plus clair » (ta réaction à H11) · ✅ répondu</h4>
+<p><strong>Le bon angle est celui que tu donnes toi-même</strong> : <em>empêcher les lourdeurs et les freins</em>. Donc la vraie question n'est pas « combien de lignes », c'est <strong>« qu'est-ce qui est relu à chaque message ? »</strong></p>
+<p><strong>Ce qui est relu à chaque message, et coûte donc en permanence</strong> — la charte, la bannière d'après-enregistrement, les règles de travail. C'est peu de lignes et c'est là que tout le coût se trouve.</p>
+<p><strong>Ce qui n'est PAS relu</strong> — les 89 000 lignes de scripts. Elles ne sont lues que quand on s'en sert. <strong>Les alléger ne ferait gagner presque rien</strong> sur le frein que tu décris.</p>
+<p><strong>Ce que ça change pour la suite</strong> — l'allègement vise ce qui est rechargé en permanence, et « découper les gros fichiers » devient un AUTRE chantier, avec d'autres raisons (s'y retrouver), qu'il ne faut pas mélanger avec celui-ci.</p>
+<p><strong>Ce que j'attends de toi</strong> — rien, sauf si tu n'es pas d'accord avec ce découpage en deux chantiers.</p>
+<hr>
+<h4>F13 · « Les 5 lots de décision : je ne comprends pas où est ma décision » · ✅ répondu — tu as raison, je retire le document</h4>
+<p><strong>Tu as raison, et la critique porte.</strong> Tu as écrit : <em>« Pourquoi m'envoyer un doc de plus à lire sur un sujet qui t'appartient ? […] tu me rajoutes des choses qui m'obscurcissent plutôt que de nous faire avancer. »</em></p>
+<p><strong>Ce que j'ai fait de travers</strong> — j'ai rangé MES questions en cinq paquets et je t'ai demandé de valider le rangement. Le rangement est mon travail, pas une décision. Ce que tu attendais, ce sont les décisions elles-mêmes, une par une, lisibles.</p>
+<p><strong>Ce que j'en fais</strong> — les vraies décisions qui étaient dans ces lots deviennent des fils ici (F02 à F07 en portent déjà quatre). Le document des cinq lots ne te sera plus demandé.</p>
+<p><strong>Ce que j'attends de toi</strong> — rien. Si un lot contenait quelque chose que tu veux garder tel quel, dis-le, sinon il disparaît de ta pile de lecture.</p>
+<hr>
+<h4>F14 · « Y a-t-il un moyen de travailler avec toi à distance ? » · ✅ répondu</h4>
+<p><strong>Oui, et c'est exactement le cas de figure que tu décris</strong> — m'envoyer un fichier dans la journée pour que j'aie déjà travaillé quand tu rentres.</p>
+<p><strong>Depuis ton téléphone</strong> — l'application Claude te donne la même conversation que sur l'ordinateur, avec les mêmes fichiers joints. Tu peux y déposer un document et écrire « regarde ça, on en parle ce soir ».</p>
+<p><strong>Depuis un navigateur</strong> — <code>claude.ai/code</code> ouvre les mêmes sessions.</p>
+<p><strong>Par e-mail</strong> — non, pas vers moi directement.</p>
+<p><strong>Ta seconde question — un raccourci pour retrouver les fichiers joints</strong> : dans l'application, les fichiers que je t'envoie apparaissent comme des cartes dans la conversation, et l'application en tient la liste. <strong>Et c'est justement pour ça que tu as raté la plaquette :</strong> je ne te l'avais jamais envoyée en fichier, elle n'existait que dans le dépôt. Corrigé — elle est partie juste avant ce document.</p>
+<hr>
+<h4>F15 · « Les 5 impossibles : tu m'as dit que tu l'avais déjà fait ? » · ✅ répondu</h4>
+<p><strong>Oui, le 29 septembre</strong> — c'est le document <code>les-cinq-impossibles</code>, avec sa page lisible dans <code>docs/grand-projet/html/</code>.</p>
+<p><strong>Ce que j'attends de toi</strong> — rien, sauf si tu veux qu'on le refasse maintenant que tu as avancé sur la philosophie : les réponses ne seraient probablement plus les mêmes.</p>
+<p><strong>Ta réponse</strong> ▸ (a) on le refait plus tard, à froid · (b) je le relis d'abord · (c) laisse tomber</p>
+<hr>
+<h3>◀ À MOI — ce que je te dois. Rien à faire de ton côté</h3>
+<table><thead><tr><th>N°</th><th>Le sujet</th><th>Ce que je dois produire</th><th>Depuis</th></tr></thead><tbody><tr><td>F16</td><td><strong>Objectif ultime, philosophie, politique</strong></td><td>Tu as répondu en « jets » et tu m'as demandé de piloter. Je dois reprendre tes réponses, te dire lesquelles répondent à côté <strong>et pourquoi</strong>, et reposer les vraies questions. Tu as raison de dire que « commercialisation » était une stratégie, pas un objectif — c'est exactement le type d'écart que je dois nommer.</td><td>2026-09-30</td></tr><tr><td>F17</td><td><strong>Schéma cible de l'organisation de l'Agence</strong></td><td>Ta question : « est-ce qu'on sait déjà à quelle organisation cible on veut arriver ? » Réponse honnête : <strong>non, pas formellement.</strong> Il y a un organigramme réel, il n'y a pas de cible déclarée. Je dois te montrer l'existant et proposer la cible.</td><td>2026-09-30</td></tr><tr><td>F18</td><td><strong>La plaquette tenue à jour régulièrement</strong></td><td>Ta question : « ce doc doit être régulier et mis à jour, comment on fait ? » Je dois proposer un mécanisme (quand, déclenché par quoi, vérifié par qui) plutôt qu'une promesse.</td><td>2026-09-30</td></tr><tr><td>F19</td><td><strong>G5 — quel marché viser</strong></td><td>Tu veux ne pas te couper des professionnels qui achètent en volume. Tu demandes une recherche web sur les segments. À faire, avec ton feu vert sur le coût.</td><td>2026-09-30</td></tr><tr><td>F20</td><td><strong>G3 — l'Agence peut-elle tourner sans les crochets ?</strong></td><td>Tu dis : « est-ce que les bannières accrochées aux crochets ne sont pas une fonction cruciale ? à analyser avant de décider ». D'accord : je mesure d'abord, tu décides après.</td><td>2026-09-30</td></tr><tr><td>F21</td><td><strong>G13, H10 — mesurer avant de décider</strong></td><td>Tu as demandé qu'on mesure l'usage réel des outils avant de trancher. C'est lié à F06 : tant que le compteur perd la mémoire, la mesure est bancale. <strong>F06 est donc un préalable.</strong></td><td>2026-09-30</td></tr><tr><td>F22</td><td><strong>« On n'a rien oublié ? Tout est-il historisé ? »</strong></td><td>Deux questions de contrôle que tu poses à chaque séance. Je dois te répondre avec un CHIFFRE produit par un outil, pas par ma mémoire — et c'est précisément ce que ce fil doit rendre vérifiable.</td><td>2026-09-30</td></tr><tr><td>F23</td><td><strong>Le format de mes réponses, mesuré</strong></td><td>Tu dis que c'est là qu'on perd le plus de temps. Je dois transformer ça en quelque chose de vérifiable, pas en bonne intention : une règle écrite + un contrôle.</td><td>2026-09-30</td></tr><tr><td>F27</td><td><strong>G11 + G6 — la partie qu'on construit ENSEMBLE</strong></td><td>Tu as répondu « voir G6 : à analyser », et pour G6 « construisons cette partie ensemble pour bien comprendre ». Je dois donc préparer la matière, <strong>pas la conclusion</strong> : de quoi on parle, ce qui existe, ce qui manque — et on la construit en séance.</td><td>2026-09-30</td></tr><tr><td>F28</td><td><strong>G15 — « j'ai besoin que ce dispositif soit rentable »</strong></td><td>Tu dis que ce n'est pas sec pour toi tant que tu ne sais pas si c'est rentable. C'est une question de VALEUR, pas d'outillage : je dois la relier à F19 (quel marché) plutôt que d'y répondre côté technique.</td><td>2026-09-30</td></tr><tr><td>F29</td><td><strong>« Pourquoi on n'a pas vu ça avant ? »</strong> (ta réaction à la porte d'entrée cassée)</td><td>Vraie question, et je te dois une vraie réponse : pourquoi 69 offres sur 74 étaient introuvables par leur propre nom pendant des semaines sans que rien ne le signale — et <strong>ce qu'on équipe pour que ça ne se reproduise pas</strong>.</td><td>2026-09-30</td></tr><tr><td>F30</td><td><strong>« On peut discuter de ce réflexe de relecture des docs ? »</strong></td><td>Tu as mis le doigt sur quelque chose de juste : les documents me servent trop souvent APRÈS coup, en comparaison, au lieu d'être lus AVANT d'agir. La charte l'exige déjà (Article 19, Article 30) — donc le sujet n'est pas la règle, c'est <strong>pourquoi elle ne tient pas</strong>, et ça se discute.</td><td>2026-09-30</td></tr><tr><td>F31</td><td><strong>Les deux outils d'expérience client : comment ils sont pensés</strong></td><td>Tu les veux dès maintenant (ta réponse H8) et tu demandes comment ils sont conçus et comment les améliorer, recherches web comprises. Je dois te présenter la conception avant de construire.</td><td>2026-09-30</td></tr></tbody></table>
+<hr>
+<h3>💤 DORMANT — volontairement de côté, avec la raison</h3>
+<table><thead><tr><th>N°</th><th>Le sujet</th><th>Pourquoi il dort</th><th>Ce qui le réveille</th></tr></thead><tbody><tr><td>F24</td><td><strong>Testeurs humains</strong> (Jean, ton collègue, ta mère)</td><td>Tu as écrit « on se garde ça de côté ».</td><td>Quand le produit sera finalisé</td></tr><tr><td>F25</td><td><strong>Se protéger des testeurs</strong> (qu'on ne te vole pas l'idée)</td><td>Même raison — mais <strong>à ne pas oublier avant</strong> de montrer quoi que ce soit à ton collègue codeur.</td><td>Le jour où un testeur externe voit le produit</td></tr><tr><td>F26</td><td><strong>Profil utilisateur dans les deux sens</strong></td><td>Tu l'as dépriorisé le 28 septembre : « les garder mais elles ne sont pas prioritaires ».</td><td>Un mot de toi</td></tr></tbody></table>
+<hr>
+<h3>✅ CLOS — tes décisions d'aujourd'hui, enregistrées</h3>
+<p><em>(Ce tableau existe pour une raison précise que tu as nommée : « tout doit être enregistré pour ne rien perdre d'une session à l'autre : ne pas compter sur de la mémoire éphémère ».)</em></p>
+<table><thead><tr><th>N°</th><th>Ta décision</th><th>Ce que ça engage</th></tr></thead><tbody><tr><td>G1</td><td>(c) — renommage plus tard</td><td>Aucun renommage en masse d'ici là</td></tr><tr><td>G2</td><td>(c) — avec ce qui est interdit</td><td>La liste des interdits fait partie du cadre</td></tr><tr><td>G4</td><td>(a) comme mesure, (b) comme chantier</td><td>Les deux, selon ma recommandation</td></tr><tr><td>G6</td><td>(b) — <strong>mais on construit cette partie ensemble</strong></td><td>Je ne l'avance pas seule</td></tr><tr><td>G7</td><td>(b) — tranché par toi, avec les effets décrits explicitement</td><td>Toute option que je te présente doit porter ses conséquences</td></tr><tr><td>G8</td><td>(b)</td><td>—</td></tr><tr><td>G9</td><td>(a) — on déclare</td><td>—</td></tr><tr><td>G10</td><td>(a)</td><td>—</td></tr><tr><td>G12</td><td>(a) — <strong>à relier aux choix de commercialisation</strong></td><td>Dépend de F19</td></tr><tr><td>G14</td><td>(c) — quand le reste est maîtrisé</td><td>Dormant jusque-là</td></tr><tr><td>H1</td><td>(c) — <strong>opération sensible</strong> : MOÏSE en renfort, sauvegarde git, toutes précautions</td><td>Aucune étape sans sauvegarde préalable</td></tr><tr><td>H2</td><td>(c) — démarche pas à pas, sécurisée</td><td>Même exigence</td></tr><tr><td>H3</td><td>(c) — <strong>et l'Agence doit être livrée propre</strong> : un fichier bien organisé, les règles intégrées aux règles existantes</td><td>Ouvre un vrai sujet, voir la note ci-dessous</td></tr><tr><td>H5</td><td>(a) pendant, (c) après</td><td>Conforme à ma recommandation</td></tr><tr><td>H7</td><td>(a) et (c) — étiquette git <strong>et</strong> archive hors git</td><td>Les deux</td></tr><tr><td>H8</td><td>(c) — gel sauf ce que l'évolution exige, <strong>mais les 2 outils d'expérience client sont utiles dès maintenant</strong></td><td>Exception nommée</td></tr><tr><td>H13</td><td>(c) — rebascule côté jeu à la refonte graphique</td><td>Déclenche le dispositif « IA cliente »</td></tr><tr><td>H14</td><td>(c) — toi <strong>et</strong> un outil qui mesure</td><td>—</td></tr><tr><td>H15</td><td>(c)</td><td>—</td></tr></tbody></table>
+<p><strong>Une remarque qui dépasse la ligne H3, et je la sors du tableau parce qu'elle mérite mieux</strong> : tu as écrit <em>« je veux une copie propre, pas des docs au contenu empilé qui révèle la manière dont s'est construit ce projet : sur le tas »</em>. <strong>C'est un objectif de livraison, pas un détail de mise en forme</strong>, et il entre en tension avec une règle de la charte — l'Article 27, qui veut que le POURQUOI d'un mécanisme reste écrit à côté de lui, justement pour qu'une autre IA ne le supprime pas par ignorance. Les deux se concilient, mais ça se conçoit : c'est un fil à part entière, que j'ouvrirai avec toi plutôt que de trancher seule.</p>
+<hr>
+<h3>CE QUE CE FIL NE SAIT PAS ENCORE FAIRE — dit maintenant plutôt que découvert plus tard</h3>
+<ul><li><strong>ELLE A DÉJÀ RATÉ CINQ FILS À SON PREMIER PASSAGE, ET JE LE DIS PLUTÔT QUE DE LE CORRIGER EN SILENCE.</strong> En relisant ma propre liste avant de te l'envoyer, j'ai constaté que j'avais oublié <strong>G11, G15</strong>, ta question « pourquoi on n'a pas vu ça avant ? », ta proposition de discuter de mon réflexe de relecture, et ta demande sur les deux outils d'expérience client. Cinq sur trente-et-un, dès le premier tour, sur un fichier que je venais de lire en entier. <strong>C'est la meilleure démonstration possible que cette voiture-balai ne peut pas rester manuelle</strong> — et c'est aussi pourquoi le point 1 ci-dessous est le prochain geste, pas un confort.</li></ul>
+<ul><li><strong>La « voiture-balai » n'est pas encore mécanique.</strong> Aujourd'hui, c'est moi qui ai relu ton fichier et qui ai bâti la liste. Rien ne garantit qu'une question ne m'échappe pas. <strong>Le prochain geste est un outil</strong> qui compare ce fil à tout ce que le dépôt sait être en attente de toi, et qui nomme ce qui manque — c'est la seule façon que ça tienne quand je change de session.</li><li><strong>Les questions posées à l'oral dans la conversation ne sont pas récupérables mécaniquement.</strong> Elles vivent dans l'échange, pas sur le disque. Je les recopie ici à la main ; si j'en rate une, seul toi peux le voir. <strong>C'est une limite déclarée, pas un oubli.</strong></li><li><strong>Ce fil ne remplace pas les documents de fond</strong> — il dit ce qui est OUVERT, pas ce qui a été analysé. Les analyses restent dans leurs documents, et le fil y renvoie.</li></ul></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/fil-de-discussion.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

@@ -2186,6 +2186,20 @@ export const EXCEPTIONS_D_EXPORT = [
   { chemin: "docs/grand-projet/01-absorption/lire-les-sources.md", etat: "PART", pourquoi: "lire un corpus Word sans perdre les styles, et surtout POURQUOI un convertisseur ne devient pas un membre de l équipe : le coût d entrée ne se justifie que pour un outil qui rend un jugement" },
   { chemin: "docs/grand-projet/00-sources/01-sa-demande/README.md", etat: "PART", pourquoi: "la règle de séparation entre la parole du commanditaire et la matière préparée : sur n'importe quel corpus massif, confondre les deux est le glissement qu'on ne voit jamais se produire" },
   { chemin: "docs/grand-projet/00-sources/02-documents-prepares/README.md", etat: "PART", pourquoi: "pourquoi le volume n'est pas l'autorité, et pourquoi chaque document entre à l'inventaire AVANT d'être lu — deux règles de méthode, vraies hors de ce dépôt" },
+  // SES FICHIERS DE RÉPONSES ET LE POINT D'ÉTAT (2026-09-30) — MEMOIRE, et leur dépôt EST la
+  // correction d'un défaut : ses réponses des 29 et 30 septembre, 7 400 mots de demandes,
+  // ne vivaient que dans la conversation. Aucun outil ne pouvait donc vérifier qu'on y
+  // répondait, et trois noms d'outils qu'il avait donnés lui-même ont été perdus.
+  { chemin: "docs/grand-projet/00-sources/01-sa-demande/reponses-2026-09-29-soir.md", etat: "MEMOIRE", pourquoi: "ses réponses à lui, sur son projet : rien n'y est réutilisable ailleurs. Ce qui voyage est la règle qui les fait déposer — une demande qui n'est pas dans le dépôt n'est vérifiable par aucun outil — et elle vit dans les règles de travail" },
+  { chemin: "docs/grand-projet/00-sources/01-sa-demande/reponses-2026-09-30.md", etat: "MEMOIRE", pourquoi: "même nature que son jumeau du 29 : la matière d'un échange daté, jamais une connaissance transposable" },
+  { chemin: "docs/grand-projet/ou-on-en-est-vraiment.md", etat: "MEMOIRE", pourquoi: "l'état de CE projet à une date, demande par demande : aucune de ses lignes ne sert ailleurs. Ce qui voyage est le GESTE — confronter la commande réelle au dépôt réel plutôt que de se fier à sa mémoire — et ce geste appartient au process, pas à ce fichier" },
+  // LE FIL DE DISCUSSION (2026-09-30) — MEMOIRE, et le POURQUOI n'est pas évident, donc il
+  // s'écrit : ce fichier porte SES questions ouvertes sur SON projet, donc rien de son contenu
+  // ne sert ailleurs. Ce qui voyage, en revanche, est considérable et vit dans le blueprint :
+  // l'idée qu'un échange avec un humain se tient dans UN document vivant où chaque sujet est un
+  // fil numéroté qui affiche à qui est la balle. C'est la FORME qui est réutilisable, jamais la
+  // liste des fils.
+  { chemin: "docs/grand-projet/fil-de-discussion.md", etat: "MEMOIRE", pourquoi: "il porte les questions ouvertes de CE projet avec CET utilisateur : aucun de ses 31 fils ne sert ailleurs. Ce qui voyage est la FORME — un document vivant, un fil numéroté par sujet, une étiquette qui dit à qui est la balle, et une voiture-balai qui vérifie que rien n'a été perdu — et cette forme appartient au blueprint, jamais à ce fichier" },
   { chemin: "docs/grand-projet/point-de-retour.md", etat: "MEMOIRE", pourquoi: "l'état de CE dépôt à une date, avec ses chiffres et le nom de son étiquette : rien n'y sert ailleurs. Ce qui voyage est le GESTE — poser un point de retour NOMMÉ avant une restructuration, parce qu'un identifiant de commit n'est pas un point de retour mais une aiguille dans une botte de foin qui y ressemble — et ce geste vit dans le process, jamais ici" },
   { chemin: "docs/grand-projet/index.md", etat: "PART", pourquoi: "la porte d'entrée d'un chantier massif : sa structure — sources séparées de l'absorption, absorption séparée de l'analyse, trois traitements déclarés par document — est une méthode réutilisable, jamais un contenu propre à ce dépôt" },
   { chemin: "docs/grand-projet/notes-de-travail.md", etat: "PART", pourquoi: "les pièges anticipés AVANT de les rencontrer — trancher pendant la lecture, laisser le volume de la matière parler plus fort que le commanditaire, croire qu'on a lu, ranger par sujet trop tôt : aucun n'est propre à ce projet-ci" },

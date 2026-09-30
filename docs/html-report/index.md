@@ -33,3 +33,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/trois-familles-de-la-charte.html` | `docs/grand-projet/02-strategie/trois-familles-de-la-charte.md` | 18206 | 2026-09-30 02:05Z |
 | `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 22313 | 2026-09-30 02:41Z |
 | `docs/grand-projet/html/rapport-de-nuit-2026-09-30.html` | `docs/rapports-de-nuit/rapport-2026-09-30.md` | 50174 | 2026-09-30 05:26Z |
+| `docs/grand-projet/html/fil-de-discussion.html` | `docs/grand-projet/fil-de-discussion.md` | 34098 | 2026-09-30 16:20Z |
+| `docs/grand-projet/html/ou-on-en-est-vraiment.html` | `docs/grand-projet/ou-on-en-est-vraiment.md` | 16261 | 2026-09-30 16:30Z |
