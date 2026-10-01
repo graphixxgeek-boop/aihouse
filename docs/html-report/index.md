@@ -58,4 +58,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 17274 | 2026-10-01 02:12Z |
 | `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 13705 | 2026-10-01 02:19Z |
 | `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 14909 | 2026-10-01 02:21Z |
-| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 18767 | 2026-10-01 02:48Z |
+| `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 14205 | 2026-10-01 03:19Z |
+| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 19553 | 2026-10-01 03:20Z |

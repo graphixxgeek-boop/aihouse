@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-01. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**12 fichier(s).**
+**14 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -12,6 +12,8 @@
 | [export-et-commercialisation-strategie.md](export-et-commercialisation-strategie.md) | — |
 | [gestion-des-taches-strategie.md](gestion-des-taches-strategie.md) | — |
 | [le-jeu-et-le-site-strategie.md](le-jeu-et-le-site-strategie.md) | — |
+| [les-deux-scenarios-par-zip.html](les-deux-scenarios-par-zip.html) | — |
+| [les-deux-scenarios-par-zip.md](les-deux-scenarios-par-zip.md) | — |
 | [organisation-de-l-agence-strategie.md](organisation-de-l-agence-strategie.md) | — |
 | [outillage-et-garde-fous-strategie.md](outillage-et-garde-fous-strategie.md) | — |
 | [process-et-ronde-strategie.md](process-et-ronde-strategie.md) | — |

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les deux façons de livrer l'Agence par ZIP</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T03:19:13.505Z</div>
+    <h1>Les deux façons de livrer l'Agence par ZIP</h1>
+    <p class="sub">Le scénario ① tient. Le ② ne tient pas — et c'est celui dont tu auras besoin pour vendre.</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>Ta question, mot pour mot</strong> : *« que penses-tu de ce fonctionnement ? à toi de me dire les
+limites, en te référant aux docs sur le sujet qu'on a enregistrés »*.
+<strong>Tes deux scénarios</strong> : ① un ZIP de l'Agence seule, plus un fichier « PROMPT À LIRE EN PREMIER »
+et une doc pour l'utilisateur · ② un ZIP de l'Agence <strong>et</strong> un ZIP du code, l'IA cible faisant
+elle-même le branchement.
+<strong>Tâche #1341.</strong> Tout ce qui suit est <strong>mesuré</strong> et se rejoue à la commande — aucune opinion sur
+ce qui tient ou pas.</p></div>
+<hr>
+<h3>LA RÉPONSE EN UNE PHRASE</h3>
+<p><strong>Le scénario ① tient aujourd'hui. Le scénario ② ne tient pas — et c'est pourtant celui dont tu auras besoin pour vendre.</strong></p>
+<hr>
+<h3>CE QUI EST MESURÉ, ET CE QUE CHAQUE CHIFFRE DÉCIDE</h3>
+<table><thead><tr><th>Mesure d'aujourd'hui</th><th>Le chiffre</th><th>Ce que ça décide</th></tr></thead><tbody><tr><td>chaque outil emporte ses cinq pièces</td><td><strong>100 %</strong> (85/85)</td><td>le ZIP est <strong>complet</strong> : rien ne manque à la lecture</td></tr><tr><td>l'Agence emporte son propre kit</td><td><strong>100 %</strong> (7/7)</td><td>le destinataire reçoit aussi <strong>le plan de la machine</strong>, pas seulement les pièces</td></tr><tr><td>un outil peut recevoir d'autres cibles</td><td><strong>100 %</strong> (0 cible écrite en dur sur 88)</td><td>les outils <strong>acceptent</strong> un autre projet</td></tr><tr><td>ce qu'il faut chez l'hôte</td><td><strong>94 %</strong></td><td>5 outils seulement sont liés à un fournisseur précis, tous nommés</td></tr><tr><td>installée pour de vrai ailleurs</td><td><strong>100 %</strong> (68/68 debout)</td><td>⚠️ <strong>PÉRIMÉ</strong> — 53 fichiers ont changé depuis le 28/09</td></tr><tr><td>le matériel de reprise pour une AUTRE IA</td><td><strong>67 %</strong></td><td><strong>20 lignes de nos documents normatifs EXIGENT notre outillage</strong> (1 dans la charte, 19 dans les règles de travail)</td></tr><tr><td>un point de branchement pour une source extérieure</td><td><strong>AUCUN</strong> (#1331)</td><td>⛔ <strong>c'est ce qui bloque le scénario ②</strong></td></tr></tbody></table>
+<hr>
+<h3>SCÉNARIO ① — le ZIP de l'Agence seule : IL TIENT</h3>
+<p><strong>Pourquoi il tient</strong> : les quatre premières mesures sont à 100 %. Le destinataire reçoit un ensemble complet, avec le plan de la machine, et aucun outil ne refuse un autre projet.</p>
+<p><strong>CE QUI LUI MANQUE VRAIMENT, et ce n'est pas le code</strong> :</p>
+<ul><li><strong>Le fichier « PROMPT À LIRE EN PREMIER » n'existe pas.</strong> <code>docs/agence-installation.md</code> dit comment installer ; il ne dit pas à une IA <strong>quoi faire en arrivant</strong>. Ce sont deux documents différents, et c'est le second qui décide si la livraison sert.</li><li><strong>19 lignes des règles de travail supposent notre outillage.</strong> Un successeur qui n'a pas nos crochets git, nos fenêtres de questions ou notre gestionnaire de tâches lira des consignes qu'il ne peut pas appliquer. <strong>C'est le vrai coût du scénario ①</strong>, et il est chiffré : 20 lignes à reformuler, pas davantage.</li><li><strong>Le banc témoin est périmé.</strong> Il dit « 68 outils sur 68 tiennent debout ailleurs », mesuré le 28 septembre, et <strong>53 fichiers ont changé depuis</strong>. Ce chiffre décrit une Agence antérieure. <strong>Il faut le rejouer avant toute livraison réelle</strong> — c'est gratuit.</li></ul>
+<p><strong>Ce que ça donne, concrètement</strong> : le scénario ① est à <strong>trois gestes</strong> d'être livrable, et aucun des trois n'est un chantier.</p>
+<hr>
+<h3>SCÉNARIO ② — les deux ZIP, l'IA cible branche : IL NE TIENT PAS</h3>
+<p><strong>La mesure qui tranche, et elle est sans appel</strong> : <strong>aucun point de branchement n'existe</strong> (#1331). Il n'y a, nulle part dans l'Agence, un endroit prévu pour dire « voici le projet que tu dois surveiller ». Les outils acceptent une autre cible — c'est le 100 % de reconfigurabilité — mais <strong>rien ne les y branche</strong> : il faudrait que l'IA cible comprenne 85 scripts et déduise elle-même où pointer.</p>
+<p><strong>Pourquoi « l'IA cible le fera » n'est pas une réponse</strong> : elle le ferait <strong>différemment à chaque fois</strong>, sans que rien ne vérifie le résultat. Et le jour où ça ne marche pas, personne — ni elle, ni toi, ni nous — ne saura dire si c'est l'Agence qui est en cause ou son branchement.</p>
+<p><strong>ET C'EST LE SCÉNARIO DONT TU AURAS BESOIN</strong>, ce qui rend le constat important plutôt que théorique. Le scénario ② est exactement le <strong>cas 2</strong> de la stratégie globale (<code>docs/strategies/strategie-globale-du-projet-entier.md</code>) : chez un acheteur, <strong>il n'y a qu'UN projet</strong>, et l'Agence s'y pose comme une aide exécutive. <strong>Le scénario qui tient aujourd'hui est celui de l'usage interne ; celui qui ne tient pas est celui de la vente.</strong></p>
+<hr>
+<h3>CE QUE JE PROPOSE, ET CE QUE JE NE TRANCHE PAS</h3>
+<p><strong>Ce qui est clair et ne demande pas d'arbitrage</strong> : les trois gestes du scénario ① sont à faire dans tous les cas. Ils servent aussi au scénario ②, aucun n'est perdu.</p>
+<p><strong>Ce qui demande ta décision — et elle est structurante</strong> : un « point de branchement », ça veut dire <strong>un seul endroit</strong> qui déclare ce que l'Agence surveille (les dossiers du projet cible, son langage, son filet de tests). Tous les outils le liraient au lieu de le supposer. <strong>C'est petit à construire et ça change tout à la livraison</strong> — mais c'est une décision d'architecture, pas une réparation, et elle appartient à la refonte dont tu es en train de décider la voie.</p>
+<hr>
+<h3>Les questions</h3>
+<p><strong>QZ1 — Les trois gestes du scénario ①</strong> (écrire le PROMPT À LIRE EN PREMIER · reformuler les 20 lignes qui exigent notre outillage · rejouer le banc témoin) : <strong>on les fait maintenant</strong>, ou on attend la décision de refonte ? <em>Mon avis : maintenant — ils servent dans les deux voies et le banc témoin est gratuit.</em></p>
+<p><strong>QZ2 — Le point de branchement</strong> : il entre dans le <strong>noyau</strong> de la refonte (voie B de la proposition), ou c'est un chantier séparé à mener avant ?</p>
+<p><strong>QZ3 — Le « PROMPT À LIRE EN PREMIER », il s'adresse à qui exactement ?</strong> À une IA qui reçoit le ZIP · à l'humain qui l'achète · aux deux dans un seul fichier. <em>Ça change tout son contenu, et je ne veux pas l'écrire avant de le savoir.</em></p>
+<hr>
+<h3>Plan d'action</h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>le scénario ① tient, à trois gestes près — tous les trois chiffrés</td><td>tâche <strong>#1341</strong> ; les gestes attendent QZ1</td></tr><tr><td><strong>RETENU</strong></td><td>le banc témoin est périmé de 53 fichiers</td><td>à rejouer avant toute livraison réelle — <strong>gratuit</strong>, rattaché à <strong>#902</strong></td></tr><tr><td><strong>RETENU</strong></td><td>20 lignes de nos documents normatifs exigent notre outillage</td><td>rattaché à <strong>#1320</strong> (étiqueter ce qui part et ce qui reste)</td></tr><tr><td><strong>À TRANCHER</strong></td><td>le scénario ② est bloqué par l'absence de point de branchement</td><td><strong>ta décision</strong> (QZ2) — c'est de l'architecture, pas une réparation</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>écrire le PROMPT À LIRE EN PREMIER cette nuit</td><td><strong>raison écrite</strong> : son destinataire n'est pas tranché (QZ3), et le même fichier écrit pour une IA ou pour un acheteur n'a rien en commun. L'écrire avant de savoir, c'est l'écrire deux fois.</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/strategies/les-deux-scenarios-par-zip.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
