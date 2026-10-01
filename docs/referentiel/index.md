@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-01. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**116 fichier(s).**
+**118 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -42,6 +42,8 @@
 | [doc-report.md](doc-report.md) | — |
 | [ecotoken.md](ecotoken.md) | — |
 | [el-professor.md](el-professor.md) | — |
+| [esprit-ce-qui-le-protege.html](esprit-ce-qui-le-protege.html) | — |
+| [esprit-ce-qui-le-protege.md](esprit-ce-qui-le-protege.md) | — |
 | [execution-profile.md](execution-profile.md) | — |
 | [ezechiel-les-tests.md](ezechiel-les-tests.md) | — |
 | [feuille-de-route.md](feuille-de-route.md) | — |

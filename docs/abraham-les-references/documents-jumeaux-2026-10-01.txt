@@ -1,15 +1,15 @@
-=== DOCUMENTS QUI DISENT LA MÊME CHOSE — 5 paire(s) à instruire sur 496 documents ===
+=== DOCUMENTS QUI DISENT LA MÊME CHOSE — 5 paire(s) à instruire sur 503 documents ===
 
-  Recouvrement de vocabulaire mesuré au-dessus de 0.25 · 307 paire(s) écartées comme légitimes PAR CONSTRUCTION :
+  Recouvrement de vocabulaire mesuré au-dessus de 0.25 · 306 paire(s) écartées comme légitimes PAR CONSTRUCTION :
     · index-replique × 202 — le même nom de fichier dans deux dossiers différents — un index généré chez chaque outil, jamais deux documents concurrents
     · serie-datee × 41 — deux instantanés datés du même dossier — c'est une histoire, pas une redondance
-    · ensemble-declare × 33 — deux documents d'un ensemble que son NOMMAGE déclare (au moins trois fichiers du dossier partagent leur préfixe ou leur suffixe)
+    · ensemble-declare × 32 — deux documents d'un ensemble que son NOMMAGE déclare (au moins trois fichiers du dossier partagent leur préfixe ou leur suffixe)
     · kit-du-meme-outil × 31 — le blueprint, la fiche et le registre d'un même outil — ils couvrent le même sujet PAR DESIGN, sous trois angles
 
   🟢 45 % de vocabulaire commun (126 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/charte-cartographie.md
       · docs/referentiel/claude-md-regles.md
-  🟢 40 % de vocabulaire commun (2611 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 40 % de vocabulaire commun (2614 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/regles-de-travail.md
       · docs/contexte-projet/referentiel-affiche-en-jeu-archive.md
   🟢 35 % de vocabulaire commun (864 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
@@ -21,13 +21,16 @@
   🟢 34 % de vocabulaire commun (796 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/grand-projet/01-absorption/ce-que-jai-lu.md
       · docs/data-archangel/ancres/ancres-2026-09-28.md
-  🟢 33 % de vocabulaire commun (1537 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 33 % de vocabulaire commun (1538 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/regles-de-travail.md
       · CLAUDE.md
   🟢 33 % de vocabulaire commun (1923 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/principes.md
       · docs/contexte-projet/referentiel-affiche-en-jeu-archive.md
-  🟢 32 % de vocabulaire commun (408 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 33 % de vocabulaire commun (168 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md
+      · docs/fils/fil-14-usage-et-refonte.md
+  🟢 32 % de vocabulaire commun (407 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/classification-agence.md
       · docs/referentiel/le-classificateur.md
   🟢 32 % de vocabulaire commun (213 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
@@ -39,25 +42,25 @@
   🟢 31 % de vocabulaire commun (183 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md
       · docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md
-  🟢 31 % de vocabulaire commun (141 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
-      · docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md
-      · docs/fils/fil-14-usage-et-refonte.md
   🟢 30 % de vocabulaire commun (128 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/charte-cartographie.md
       · docs/grand-projet/02-strategie/trois-familles-de-la-charte.md
-  🟢 30 % de vocabulaire commun (994 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 30 % de vocabulaire commun (1001 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/lecons.md
       · CLAUDE.md
+  🟢 29 % de vocabulaire commun (1419 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/regles-de-travail.md
+      · docs/referentiel/lecons.md
+  🟢 29 % de vocabulaire commun (151 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md
+      · docs/fils/fil-14-usage-et-refonte.md
   🟢 29 % de vocabulaire commun (636 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/charte-blueprint.md
       · CLAUDE.md
-  🟢 29 % de vocabulaire commun (1404 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
-      · docs/regles-de-travail.md
-      · docs/referentiel/lecons.md
   🟢 29 % de vocabulaire commun (543 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/cassandra-rh-conception.md
       · docs/referentiel/organisation-agence.md
-  🟢 29 % de vocabulaire commun (802 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 29 % de vocabulaire commun (807 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/lecons.md
       · docs/referentiel/safe-export.md
   🟢 28 % de vocabulaire commun (476 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
@@ -87,7 +90,7 @@
   🟢 27 % de vocabulaire commun (586 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/referentiel/parametres.md
       · docs/referentiel/regles-du-temps.md
-  🟢 27 % de vocabulaire commun (750 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 27 % de vocabulaire commun (755 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/mode-auto-process-guardian.md
       · docs/referentiel/lecons.md
   🟠 27 % de vocabulaire commun (521 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime
@@ -114,12 +117,15 @@
   🟢 26 % de vocabulaire commun (115 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/clone-hunter/decisions-a-prendre-2026-09-28.md
       · docs/clone-hunter/index.md
-  🟢 26 % de vocabulaire commun (694 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
-      · docs/referentiel/abraham-les-references.md
-      · docs/referentiel/lecons.md
-  🟢 26 % de vocabulaire commun (201 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 26 % de vocabulaire commun (187 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/strategies/strategie-globale-du-projet-entier.md
+      · docs/fils/fil-01-objectif-ultime-philo-politique.md
+  🟢 26 % de vocabulaire commun (214 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md
       · docs/fils/fil-01-objectif-ultime-philo-politique.md
+  🟢 26 % de vocabulaire commun (697 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/abraham-les-references.md
+      · docs/referentiel/lecons.md
   🟢 26 % de vocabulaire commun (425 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/xp-ia-process-detail.md
       · docs/referentiel/abraham-les-references.md
@@ -138,7 +144,7 @@
   🟢 26 % de vocabulaire commun (287 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/outil-resilience-api.md
       · docs/referentiel/smart-breaker-historique.md
-  🟢 26 % de vocabulaire commun (1347 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+  🟢 26 % de vocabulaire commun (1349 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
       · docs/regles-de-travail.md
       · docs/referentiel/principes.md
   🟠 26 % de vocabulaire commun (494 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime

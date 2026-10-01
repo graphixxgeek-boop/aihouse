@@ -45,7 +45,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 16084 | 2026-09-30 23:03Z |
 | `docs/fils/html/fil-13-sources-exterieures.html` | `docs/fils/fil-13-sources-exterieures.md` | 17849 | 2026-09-30 23:04Z |
 | `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 23234 | 2026-09-30 23:31Z |
-| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 23476 | 2026-09-30 23:32Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 20448 | 2026-09-30 23:42Z |
 | `docs/fils/html/index.html` | `docs/fils/index.md` | 18805 | 2026-10-01 00:17Z |
 | `docs/grand-projet/html/la-portabilite-vraiment-mesuree.html` | `docs/grand-projet/02-strategie/la-portabilite-vraiment-mesuree.md` | 13655 | 2026-10-01 00:44Z |
@@ -54,4 +53,8 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.html` | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.md` | 13562 | 2026-10-01 01:17Z |
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 12322 | 2026-10-01 01:17Z |
 | `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 17357 | 2026-10-01 01:37Z |
-| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 16638 | 2026-10-01 01:39Z |
+| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18072 | 2026-10-01 01:48Z |
+| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 16828 | 2026-10-01 01:50Z |
+| `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 26197 | 2026-10-01 01:50Z |
+| `docs/referentiel/esprit-ce-qui-le-protege.html` | `docs/referentiel/esprit-ce-qui-le-protege.md` | 13152 | 2026-10-01 01:52Z |
+| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 13898 | 2026-10-01 01:54Z |

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La stratégie globale du projet entier</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T01:48:01.097Z</div>
+    <h1>La stratégie globale du projet entier</h1>
+    <p class="sub">Les deux cas de figure, la dynamique haut/bas, et quatre questions qui t'appartiennent</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>De quoi on parle</strong> : la synthèse qui chapeaute tout — l'Agence, le Jeu, et le reste — et à
+laquelle les dix stratégies de domaine de ce dossier doivent se rattacher. C'est la pièce qui
+manquait : les dix existantes couvrent chacune un SUJET, aucune ne couvre L'ENSEMBLE.
+<strong>Ta demande, mot pour mot</strong> : *« elle est la synthèse globale, la synthèse générale,
+synthétisant tout l'ensemble : Projet Agence + Projet Jeu + Autre + Vision aérienne, stratégique.
+Tout est lié, en harmonie avec politique et philosophie. »*
+<strong>Tâches concernées</strong> : <strong>#1336</strong> (alimenter la cascade) · <strong>#1116</strong> (le plan du grand changement).
+<strong>Son statut</strong> : elle est <strong>dynamique, jamais figée</strong> — ta consigne : *« elle se réadapte sur
+demande ou à chaque Ronde »*.</p></div>
+<hr>
+<h3>⚠️ D'ABORD, DEUX ÉCARTS ENTRE CE QUE JE CROYAIS ET CE QUE DISENT TES NOTES</h3>
+<p><em>(Article 30 : l'écart se dit, il ne se corrige jamais en silence.)</em></p>
+<p><strong>ÉCART ① — je partais sur TROIS stratégies globales, une par objectif ultime. Tes notes en demandent une autre découpe, et elle est plus fine.</strong> Ta COMMANDE IMPORTANTE pose une hiérarchie (Projet entier ⊃ Agence, Jeu) <strong>et surtout</strong> une séparation que je n'avais pas : <strong>deux cas de figure</strong>, détaillés plus bas, que tu demandes explicitement de ne jamais mélanger — <em>« les 2 doivent être bien séparés pour ma bonne distinction et compréhension. ET POUR TOI AUSSI »</em>. Les deux découpes sont compatibles ; c'est la tienne qui gouverne, et elle manquait à mon plan.</p>
+<p>**ÉCART ② — ta COMMANDE dit <em>« le jeu n'est qu'un prétexte pour l'instant »</em>, et ce n'est plus vrai.<strong> Les trois objectifs ultimes que tu as validés le 30 septembre à 23h31 ont renversé ça : le Jeu est un </strong>PRODUIT<strong>, pas un prétexte. </strong>La décision la plus récente l'emporte**, et la COMMANDE reste une source historique, jamais une vérité courante. Je le signale parce que la phrase est encore lisible telle quelle dans le document, et qu'un autre lecteur — ou moi dans trois jours — pourrait la reprendre de bonne foi.</p>
+<hr>
+<h3>① LE SOCLE : LES TROIS OBJECTIFS ULTIMES, QUE TU AS VALIDÉS</h3>
+<p>Tout ce qui suit en découle. Rien ici ne peut les contredire.</p>
+<table><thead><tr><th></th><th>L'objectif ultime, tel que tu l'as validé</th></tr></thead><tbody><tr><td><strong>PROJET</strong></td><td><strong>Faire que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout sans l'autre.</strong></td></tr><tr><td><strong>AGENCE</strong></td><td><strong>Faire qu'un codeur qui travaille avec une IA sache, à tout moment, ce qui tient et ce qui ne tient pas.</strong></td></tr><tr><td><strong>JEU</strong></td><td><strong>Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.</strong></td></tr></tbody></table>
+<p><strong>Ce que l'objectif PROJET impose à toute la stratégie, et c'est la contrainte la plus dure</strong> : <em>« chacun tienne debout sans l'autre »</em>. Donc <strong>aucune décision stratégique ne peut rendre l'un dépendant de l'autre</strong> — ni l'Agence inutilisable sans le Jeu, ni le Jeu infaisable sans l'Agence. Les mesures disent qu'on y est déjà presque : <strong>6 fichiers du Jeu sur 93</strong> mentionnent l'outillage.</p>
+<hr>
+<h3>② LES DEUX CAS DE FIGURE — et ils ne se mélangent jamais</h3>
+<p>C'est le point que tu as le plus insisté à séparer, et il a une conséquence directe sur l'export.</p>
+<h4>CAS 1 — CHEZ TOI : deux projets en construction simultanée</h4>
+<p><strong>La situation</strong> : l'Agence et le Jeu sont <strong>tous les deux</strong> en train d'être construits. C'est exceptionnel, et tu le dis toi-même : <em>« il est exceptionnel qu'un projet contienne 2 projets comme le présent projet que je porte moi-même. »</em></p>
+<p><strong>Ce que ça change pour la stratégie</strong> : le temps se partage entre deux chantiers, et <strong>chacun sert de banc d'essai à l'autre</strong>. Un outil de l'Agence ne vaut que s'il a trouvé quelque chose de réel sur le Jeu ; le Jeu ne tient sa qualité que parce que l'Agence la vérifie. C'est la formule que tu avais trouvée en premier : <em>« l'agence est un prétexte pour construire le site, le site est un prétexte pour construire l'agence »</em> — <strong>toujours vraie sur le MÉCANISME</strong>, même si elle ne l'est plus sur le STATUT du Jeu (écart ② ci-dessus).</p>
+<p><strong>Le risque propre à ce cas, et il est mesuré</strong> : qu'un projet étouffe l'autre. Le chiffre à surveiller est connu — <strong>86,6 % des tâches ne touchent pas au Jeu</strong> (323 sur 373, au 22/09). Ce n'est pas un reproche en soi, puisque l'Agence EST le second projet ; c'est un indicateur de déséquilibre, et il n'a de sens que surveillé dans la durée.</p>
+<h4>CAS 2 — CHEZ UN ACHETEUR DE L'AGENCE : un seul projet, et l'Agence n'en fait pas partie</h4>
+<p><strong>La situation</strong> : quelqu'un achète l'Agence et la pose sur SON projet — un site web, un jeu, autre chose. Pour lui, <strong>l'Agence n'est pas un projet à construire</strong> : c'est une <strong>aide exécutive</strong> incluse dans le sien. Tes mots : <em>« elle agit uniquement dans l'EXÉCUTION, elle ne s'inscrit pas pour l'utilisateur comme 2e PROJET. »</em></p>
+<p><strong>Ce que ça change pour la stratégie, et c'est le plus important</strong> : <strong>tout ce qui est propre au cas 1 doit pouvoir disparaître à l'export.</strong> L'équilibrage entre deux chantiers, les arbitrages de temps entre Agence et Jeu, le fait même que l'Agence soit « en construction » — rien de tout cela n'a de sens chez l'acheteur, et tout cela doit s'enlever sans casser le reste.</p>
+<p><strong>La conséquence pratique, à tenir à chaque décision d'export</strong> : une règle, un outil ou un document qui n'a de sens que dans le cas 1 doit <strong>le déclarer</strong>, pour qu'on sache le retirer. C'est la variable croisée dont tu parles : <em>« pour que tout soit bien exportable il faut prendre en compte cette variable croisée. »</em></p>
+<p><strong>Ce qui existe déjà pour ça</strong> : la mesure de portabilité de SAFE-EXPORT (0 script sur 88 avec une cible écrite en dur) et les 85 kits d'export complets. <strong>Ce qui manque</strong> : rien ne distingue aujourd'hui une règle « du cas 1 » d'une règle universelle — et c'est précisément la tâche <strong>#1320</strong>, déjà ouverte, qui demande de faire dire à un outil combien de documents n'ont pas d'étiquette « reste chez nous / part avec l'Agence ».</p>
+<hr>
+<h3>③ LA DYNAMIQUE — comment les stratégies se nourrissent, en vrai</h3>
+<p>Tu as demandé que je te réexplique ça clairement : <em>« les stratégies de tâches alimentent par escalade la stratégie globale, et vice versa […] trouve une idée de dynamique pertinente et efficace, et réexplique-moi cette partie pour que ce soit clair pour moi. »</em></p>
+<p><strong>Voici comment ça marche, en trois phrases.</strong></p>
+<ul><li><strong>Du haut vers le bas — la DIRECTION.</strong> Philosophie et politique fixent ce qui ne bouge presque jamais. La stratégie globale en descend, puis les dix stratégies de domaine, puis les tâches. Chaque niveau doit pouvoir dire <strong>lequel du niveau au-dessus il sert</strong>.</li><li><strong>Du bas vers le haut — la CORRECTION.</strong> Quand une tâche se heurte à un mur répété, ce n'est pas la tâche qui a tort : c'est le niveau au-dessus qui n'a pas vu quelque chose. L'information <strong>remonte</strong>, et la stratégie se réadapte — à la Ronde, ou sur demande.</li><li><strong>Ce qui empêche la dérive, et c'est la seule protection réelle</strong> : un niveau qui ne peut pas nommer celui qu'il sert est <strong>signalé</strong>, jamais corrigé en silence. C'est déjà mesuré, et le chiffre est mauvais : <strong>14 tâches sur 1 272</strong> savent dire quel objectif elles servent. <strong>Le raccord du bas n'existe pas encore</strong> — c'est le vrai chantier de la cascade.</li></ul>
+<p><strong>Ce que la dynamique n'est PAS, et il faut le dire</strong> : elle n'est pas automatique. Aucun mécanisme ne peut décider qu'une stratégie doit changer. Ce qui est mécanisable, c'est le <strong>signalement</strong> — une tâche orpheline, une stratégie que plus rien ne sert, un objectif que rien ne poursuit. La décision reste humaine, à chaque fois.</p>
+<hr>
+<h3>④ LES QUESTIONS QUI RESTENT, ET ELLES SONT À TOI</h3>
+<p><em>(Elles viennent de ta COMMANDE IMPORTANTE et n'ont jamais reçu de réponse écrite.)</em></p>
+<p><strong>QG1 — Qui PORTE la stratégie globale ?</strong> Tu proposes THE-KING. <strong>Mon avis, et il est nuancé</strong> : THE-KING porte déjà la philosophie et la politique, donc la couche la plus fixe. Lui confier aussi la couche la plus mobile mélangerait deux rythmes très différents dans un seul outil. <strong>Deux options</strong> : ① THE-KING porte les deux, avec deux fraîcheurs distinctes · ② un second porteur pour la stratégie, et THE-KING garde le socle fixe. <em>Je penche pour ①, parce qu'un porteur de plus est 10 registres de plus — mais c'est toi qui tranches.</em></p>
+<p><strong>QG2 — Chaque tâche doit-elle porter un signe de stratégie ?</strong> Tu le proposes, et tu ajoutes : <em>« la stratégie devient un axe transverse de toute la classification ? mon idée n'est pas claire, aide-moi. »</em> <strong>Elle est claire, et elle est juste</strong> : c'est exactement ce qui manque — 14 tâches sur 1 272 savent quel objectif elles servent. <strong>Mais c'est un 10e champ sur chaque tâche</strong>, donc une obligation de plus à chaque ligne. <em>Question : on l'ajoute à toutes les tâches, ou seulement aux nouvelles à partir d'une date, comme on l'a fait pour le champ « pour qui » ?</em></p>
+<p><strong>QG3 — La stratégie se réadapte « à chaque Ronde ». On l'inscrit au process ?</strong> Tu l'as demandé (<em>« à inscrire au process »</em>) et ce n'est pas fait. <em>Un item de Ronde de plus, ou une relecture seulement quand quelque chose a bougé ?</em></p>
+<p><strong>QG4 — « Tout tend vers UN SEUL OBJECTIF » : lequel ?</strong> Tu écris que c'est le but de la stratégie globale. Les trois objectifs ultimes en nomment trois. <em>Est-ce que l'objectif PROJET est « l'unique » dont tu parles, les deux autres en étant les deux moitiés — ou bien l'unique objectif est encore à écrire au-dessus des trois ?</em> <strong>Je ne tranche pas : c'est le sommet de toute la cascade, et le trancher à ta place serait le pire endroit où le faire.</strong></p>
+<hr>
+<h3>Plan d'action</h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>la stratégie globale du projet entier n'existait pas, alors que dix stratégies de domaine existent</td><td><strong>FAIT</strong> — ce document, rattaché à <strong>#1336</strong></td></tr><tr><td><strong>RETENU</strong></td><td>rien ne distingue une règle « du cas 1 » d'une règle universelle</td><td>tâche <strong>#1320</strong>, déjà ouverte</td></tr><tr><td><strong>RETENU</strong></td><td>14 tâches sur 1 272 savent quel objectif elles servent</td><td>le raccord du bas de la cascade — rattaché à <strong>#1336</strong></td></tr><tr><td><strong>À TRANCHER</strong></td><td>QG1 à QG4 ci-dessus</td><td><strong>tes décisions</strong> — aucune ne m'appartient</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>réécrire la COMMANDE IMPORTANTE pour corriger « le jeu n'est qu'un prétexte »</td><td><strong>raison écrite</strong> : c'est une SOURCE, le dépôt de ta parole à une date. On ne réécrit pas une source — l'écart se signale (en tête de ce document), il ne se gomme pas.</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/strategies/strategie-globale-du-projet-entier.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

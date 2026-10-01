@@ -1,9 +1,9 @@
 # FIL 01 — L'objectif ultime, la philosophie et la politique
 
-**Balle :** À MOI
-**Dernier mouvement :** 2026-09-30
+**Balle :** À TOI
+**Dernier mouvement :** 2026-10-01
 **Place dans le plan :** Étage 0 de la cascade — tout le reste en dépend. Rien d'autre ne devrait être tranché avant.
-**Saisines :** COMMANDE IMPORTANTE · FIXER UN OBJECTIF ULTIME · PHILOSOPHIE ET POLITIQUE · réponses 2026-09-29 · réponses 2026-09-30
+**Saisines :** COMMANDE IMPORTANTE · FIXER UN OBJECTIF ULTIME · PHILOSOPHIE ET POLITIQUE · réponses 2026-09-29 · réponses 2026-09-30 · stratégie globale du 2026-10-01
 
 ---
 
@@ -141,6 +141,39 @@ tôt, commis sur mon propre travail.)*
 ---
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
+
+**Q1.6 — LA STRATÉGIE GLOBALE DU PROJET ENTIER EXISTE, ET ELLE TE POSE QUATRE QUESTIONS**
+*(2026-10-01, tâche #1357 — À TOI)*. Document :
+`docs/strategies/strategie-globale-du-projet-entier.html`
+(sa source : `docs/strategies/strategie-globale-du-projet-entier.md` — **c'est elle qui fait foi**,
+ce fil n'en est que le résumé et le point d'entrée).
+
+**Ce qui manquait** : dix stratégies de domaine existaient (charte, export, tâches, Jeu…),
+**aucune ne couvrait l'ensemble** — exactement la pièce que ta COMMANDE réclame.
+
+**DEUX ÉCARTS entre ce que je croyais et ce que tes notes disent, et je te les donne avant le
+reste** : ① je partais sur trois stratégies globales, une par objectif ultime — **tes notes
+demandent une autre découpe**, avec surtout une séparation que je n'avais pas vue : **deux cas de
+figure** (chez toi : deux projets en construction · chez un acheteur : un seul projet, l'Agence
+n'étant qu'une aide exécutive), que tu demandes explicitement de ne jamais mélanger. ② ta COMMANDE
+dit *« le jeu n'est qu'un prétexte pour l'instant »* — **ce n'est plus vrai** depuis que tu as
+validé les trois objectifs le 30/09 : le Jeu est un PRODUIT. La décision la plus récente l'emporte,
+mais la phrase est encore lisible telle quelle et quelqu'un la reprendrait de bonne foi.
+
+**QUATRE QUESTIONS, toutes tirées de ta COMMANDE et jamais répondues par écrit** :
+**QG1** — qui PORTE la stratégie globale ? Tu proposes THE-KING ; il porte déjà la couche la plus
+FIXE (philo/politique), et la stratégie est la plus MOBILE. Lui donner les deux, ou un second
+porteur ? *(je penche pour les deux, parce qu'un porteur de plus coûte 10 registres)*.
+**QG2** — chaque tâche doit-elle porter son signe de stratégie ? Ton idée est juste — 14 tâches
+sur 1 272 savent quel objectif elles servent — mais c'est un champ de plus sur chaque ligne :
+toutes les tâches, ou seulement les nouvelles à partir d'une date, comme pour « pour qui » ?
+**QG3** — la stratégie se réadapte « à chaque Ronde » : on l'inscrit au process, ou on la relit
+seulement quand quelque chose a bougé ?
+**QG4 — LA PLUS IMPORTANTE** : tu écris *« tout tend vers UN SEUL OBJECTIF »*. On en a trois.
+L'objectif PROJET est-il cet unique dont tu parles, les deux autres en étant les moitiés — ou
+l'unique reste-t-il à écrire au-dessus des trois ? **Je ne tranche pas : c'est le sommet de toute
+la cascade, et le trancher à ta place serait le pire endroit où le faire.**
+
 
 **Q1.1 — À TOI.** Acceptes-tu qu'on sépare explicitement **deux objectifs ultimes** : celui du
 PROJET (qui nous inclut, toi et moi, et qui contient le Jeu) et celui de l'AGENCE (générique,

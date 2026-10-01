@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tes repères en te réveillant</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T01:54:31.510Z</div>
+    <h1>Tes repères en te réveillant</h1>
+    <p class="sub">Nuit du 30 septembre au 1er octobre — six décisions t'attendent</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>Pourquoi ce document</strong> : tu as demandé *« prévois, pour mon réveil, les repères qui disent
+exactement où on en est »*. Le voici. Il tient en une page, et il te dit surtout <strong>ce qui
+t'attend toi</strong>. *(Ce document est mis à jour pendant la nuit : la date en bas dit jusqu'où il
+est à jour.)*</p></div>
+<hr>
+<h3>EN TROIS LIGNES</h3>
+<ul><li><strong>La Ronde GOAT est faite</strong> — 24 entrées passées, 4 reportées parce qu'elles coûtent de l'argent et que personne ne pouvait arbitrer cette nuit.</li><li><strong>Le chiffrage de la refonte est fait</strong>, et il dit quelque chose d'inattendu : <strong>le vrai coût n'est pas les lignes de code, ce sont les 2 228 décisions déjà écrites dedans.</strong></li><li><strong>Six décisions t'attendent.</strong> Rien de ce qui suit ne démarre sans toi.</li></ul>
+<hr>
+<h3>CE QUI T'ATTEND — les six décisions, par ordre d'importance</h3>
+<table><thead><tr><th>#</th><th>La décision</th><th>Où elle est posée</th></tr></thead><tbody><tr><td>1</td><td><strong>Quelle voie pour la refonte</strong> : tout reprendre · <strong>le noyau seulement</strong> (ma proposition) · ou seulement alléger les obligations</td><td><code>docs/grand-projet/html/refonte-proposition-2026-10-01.html</code></td></tr><tr><td>2</td><td><strong>« Tout tend vers UN SEUL OBJECTIF » : lequel ?</strong> On en a trois. C'est le sommet de toute la cascade, et je refuse de le trancher à ta place</td><td>fil 01, question <strong>QG4</strong></td></tr><tr><td>3</td><td><strong>Qui porte la stratégie globale ?</strong> Tu proposais THE-KING ; il porte déjà la couche la plus fixe, et la stratégie est la plus mobile</td><td>fil 01, <strong>QG1</strong></td></tr><tr><td>4</td><td><strong>Chaque tâche doit-elle porter son signe de stratégie ?</strong> Ton idée, et elle est juste — mais c'est un champ de plus sur chaque ligne</td><td>fil 01, <strong>QG2</strong></td></tr><tr><td>5</td><td><strong>Les 2 228 raisons écrites dans le code</strong> : on les relit toutes, ou seulement celles des fichiers reconstruits, ou on les abandonne avec la raison écrite ?</td><td>proposition refonte, <strong>Q3</strong></td></tr><tr><td>6</td><td><strong>Les noms</strong> : 80 sur 86 n'ont jamais été validés par toi, et deux outils neufs portent un nom provisoire</td><td><code>node scripts/agent-des-noms.mjs familles</code></td></tr></tbody></table>
+<hr>
+<h3>CE QUI A ÉTÉ FAIT CETTE NUIT</h3>
+<p><strong>① La Ronde GOAT</strong> <em>(rapport : <code>docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.html</code>)</em>. Sa trouvaille majeure, et elle est grosse : <strong>341 problèmes signalés dormaient dans les rapports du dépôt, et rien ne pouvait dire combien avaient fini en vrai travail.</strong> Tout ce paysage d'outils existe pour trouver des problèmes ; si un problème trouvé ne devient pas une tâche, le temps passé à le trouver est perdu deux fois. <strong>Réparé la nuit même</strong> (#1355).</p>
+<p><strong>② Le chiffrage de la refonte</strong> <em>(#1344, #1356)</em>. Un outil, pas une estimation — parce que la veille, un chiffre donné de tête avait servi d'argument principal à cette même refonte sans être reproductible. <strong>Ce qu'il trouve</strong> : 2 228 décisions déjà prises sont écrites dans le code, et elles sont <strong>concentrées, pas réparties</strong> — un seul fichier en porte 32 %. C'est ce qui rend la voie « noyau seulement » possible.</p>
+<p><strong>③ La stratégie globale du projet entier</strong> <em>(#1357)</em>. Elle n'existait pas : dix stratégies de domaine couvraient chacune un sujet, aucune ne couvrait l'ensemble. <strong>Et la reprise de tes notes a corrigé mon plan</strong> : tu demandes une séparation que je n'avais pas vue, entre le cas « chez toi, deux projets en construction » et le cas « chez un acheteur, où l'Agence n'est qu'une aide exécutive ».</p>
+<p><strong>④ L'ESPRIT, mesuré</strong> <em>(#1358)</em>. Tu voulais le finaliser avant la refonte. <strong>La réponse honnête est qu'on ne peut pas encore</strong> : <code>check-spirit</code>, le seul outil capable de vérifier que l'esprit tient, <strong>n'a jamais été lancé</strong> — il coûte de vrais appels API et attend ta validation. Ce qui a été mesuré gratuitement à la place : sur les cinq Articles qui définissent l'esprit, <strong>trois n'ont aucun porteur mécanique</strong> — dont l'Article 17, <strong>cité 110 fois dans le dépôt et porté par rien</strong>. Et ça compte avant une refonte : ce qui a un porteur survit à une réécriture, le reste ne survit que si quelqu'un y pense.</p>
+<hr>
+<h3>CE QUE JE TE DOIS EN TOUTE HONNÊTETÉ</h3>
+<p><strong>Ton intuition sur le « bazar organisé » est juste sur l'ORGANISATION, et fausse sur le CODE.</strong></p>
+<p>Les mesures : le code est déjà portable (0 script sur 88 avec une cible écrite en dur), déjà emballé (85 kits d'export sur 85), déjà découplé du Jeu (6 fichiers sur 93 mentionnent l'outillage). <strong>Ce qui est vraiment construit « sur le tas », c'est la couche d'obligations</strong> — 936 d'entre elles, et <strong>10 registres à remplir pour faire entrer un seul outil dans l'équipe</strong>.</p>
+<p><strong>Et la preuve est tombée sur moi cette nuit</strong> : les deux outils que j'ai construits ces deux derniers jours étaient à <strong>1 registre sur 10</strong> et <strong>0 sur 10</strong>. L'un affichait un avertissement de fiabilité qui <strong>n'imprimait rien</strong>, faute d'être déclaré nulle part. Le code allait bien. C'est l'entrée dans l'équipe qui coûte trop cher.</p>
+<hr>
+<h3>CE QUE JE N'AI PAS TOUCHÉ, ET POURQUOI</h3>
+<ul><li><strong>CLAUDE.md</strong> — deux lignes d'inventaire y manquent pour les outils neufs. Ta règle est claire : je ne touche à la charte que si je te montre avant. <strong>Les voici, telles quelles, à coller dans le tableau « Inventaire documentaire des outils » si tu les valides</strong> :</li></ul>
+<p>```</p>
+<table><thead><tr><th>fils-de-discussion</th><th>la réponse mécanique à « es-tu à jour ? », un sujet par fil : six contrôles, trois verdicts</th><th><code>docs/fils-de-discussion-blueprint.md</code></th><th><code>docs/referentiel/fils-de-discussion.md</code></th><th><code>scripts/fils-de-discussion.mjs</code></th></tr></thead><tbody><tr><td>cout-de-la-refonte <em>(nom provisoire)</em></td><td>chiffre ce que coûterait de tout reprendre à zéro — et le vrai coût n'est pas les lignes, ce sont les raisons déjà écrites</td><td><code>docs/cout-de-la-refonte-blueprint.md</code></td><td><code>docs/referentiel/cout-de-la-refonte.md</code></td><td><code>scripts/cout-de-la-refonte.mjs</code></td></tr></tbody></table>
+<p>```</p>
+<p><em>(Le second porte un nom PROVISOIRE : les noms se choisissent par toi, par séries — il est dans la liste en attente de baptême.)</em></p>
+<ul><li><strong>Le Jeu, et tout ce que voit un visiteur</strong> — ta consigne permanente.</li><li><strong>Les quatre entrées coûteuses de la Ronde</strong> (THE-FINAL-JUDGE, THE-DEEP-READER, le test à l'aveugle, les captures d'écran) — elles consomment de l'argent réel, et la règle du projet exige ta validation explicite. Elles t'attendent.</li><li><strong>Le guide de 50 pages pour l'IA</strong> — ta consigne : <em>« seulement si le plan d'action est validé »</em>. L'écrire avant serait l'écrire pour une architecture qui n'est pas choisie.</li></ul>
+<hr>
+<p><em>Dernière mise à jour : 2026-10-01 à 01h50 UTC. Heure LUE, pas estimée — source : horloge système (les deux API de temps sont refusées depuis ce conteneur, et le dire vaut mieux que de laisser croire à une heure réseau).</em></p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/rapports-de-nuit/reperes-2026-10-01.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-01. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**10 fichier(s).**
+**12 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -16,3 +16,5 @@
 | [outillage-et-garde-fous-strategie.md](outillage-et-garde-fous-strategie.md) | — |
 | [process-et-ronde-strategie.md](process-et-ronde-strategie.md) | — |
 | [renommage-en-masse-strategie.md](renommage-en-masse-strategie.md) | — |
+| [strategie-globale-du-projet-entier.html](strategie-globale-du-projet-entier.html) | — |
+| [strategie-globale-du-projet-entier.md](strategie-globale-du-projet-entier.md) | — |

@@ -68,7 +68,9 @@ chiffres — et la plupart existent déjà.
 
 **Q14.7 — LE CHIFFRAGE EST FAIT, ET LA PROPOSITION DE PLAN EST PRÊTE** *(2026-10-01, tâches #1344
 et #1356 — À TOI maintenant)*. Le document complet, lisible sans contexte :
-`docs/grand-projet/html/refonte-proposition-2026-10-01.html`.
+`docs/grand-projet/html/refonte-proposition-2026-10-01.html`
+(sa source : `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` — **c'est elle qui fait
+foi**, ce fil n'en est que le résumé et le point d'entrée).
 
 **Le chiffre que personne n'avait** : **2 228 décisions déjà prises** sont écrites dans le code de
 l'outillage — les commentaires qui disent pourquoi un garde-fou existe, quel bug il a attrapé.
