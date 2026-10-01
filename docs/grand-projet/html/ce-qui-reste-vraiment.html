@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CE QUI RESTE VRAIMENT À FAIRE — sa question, mesurée sur les 114 tâches ouvertes</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T00:17:19.619Z</div>
+    <h1>CE QUI RESTE VRAIMENT À FAIRE — sa question, mesurée sur les 114 tâches ouvertes</h1>
+    <p class="sub">Page générée depuis docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(2026-10-01, heure LUE, source système. Sa question : <strong>« qu'est-ce qu'il manque en vrai ? »</strong> — posée après avoir répondu (a) à Q14.5 : la refonte vaut le coup.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/fils/fil-14-usage-et-refonte.md</code>
+<em>il instruit Q14.5 et Q14.6 ; il ne tranche rien à sa place.</em></p></div>
+<hr>
+<h3>SA QUESTION, ET ELLE EST MIEUX POSÉE QU'IL NE LE CROIT</h3>
+<div class="highlight"><p>*« regarde ce qu'il reste à faire POTENTIELLEMENT en admettant que la phase GRANDE ÉVOLUTION
+[...] et dis-moi ce qu'il reste à faire en dehors de ça et en dehors du jeu ? pas grand-chose je
+pense [...] on n'est pas si loin d'avoir une agence complète, et même, en regardant les choses
+de haut, tu ne trouves pas ? »*</p></div>
+<p><strong>Son intuition est juste à 63 %, et le chiffre exact a un intérêt.</strong></p>
+<hr>
+<h3>LE PARTAGE DES 114 TÂCHES OUVERTES</h3>
+<p><em>(Classement fait À LA MAIN après lecture des 114 titres un par un — <strong>déclaré manuel, jamais dérivé</strong>, parce qu'aucun signal mécanique ne dit si une tâche appartient à la Grande Évolution.)</em></p>
+<table><thead><tr><th>Famille</th><th>Tâches</th><th>Part</th></tr></thead><tbody><tr><td><strong>GRANDE ÉVOLUTION</strong> <em>(rationalisation, modularisation, stratégies, renommage, allègement de la charte)</em></td><td><strong>57</strong></td><td><strong>50 %</strong></td></tr><tr><td><strong>LE RESTE</strong> <em>(hygiène de l'outillage)</em></td><td><strong>43</strong></td><td><strong>38 %</strong></td></tr><tr><td><strong>EXPORT &amp; COMMERCIALISATION</strong></td><td><strong>11</strong></td><td><strong>10 %</strong></td></tr><tr><td><strong>LE JEU</strong></td><td><strong>3</strong></td><td><strong>3 %</strong></td></tr></tbody></table>
+<p><strong>La moitié de la file est déjà dans la Grande Évolution.</strong> Et le Jeu, qui est l'un des deux produits, pèse <strong>trois tâches ouvertes sur cent quatorze</strong>.</p>
+<h4>CE QUE SON INTUITION ATTRAPE, ET QU'IL FAUT CONFIRMER</h4>
+<p><strong>Une grande partie du « reste » disparaîtra par construction si on repart à zéro.</strong> Ce n'est pas une supposition : c'est écrit dans une tâche ouverte depuis le 28 septembre, <strong>#1114</strong> — <em>« rien ne relie une tâche à un chantier — et le plan du grand changement va en rendre beaucoup caduques »</em>. Les 43 tâches d'hygiène sont très majoritairement des <strong>réparations de l'existant</strong> : un doublon à factoriser, un motif qui ne s'accorde pas avec lui-même, un fichier de 12 052 lignes à découper. <strong>Un code réécrit proprement ne les hérite pas.</strong></p>
+<h4>CE QUE SON INTUITION NE VOIT PAS, ET C'EST LE CŒUR DE LA RÉPONSE</h4>
+<div class="highlight"><p><strong>Personne n'a jamais défini ce que « terminée » veut dire.</strong></p></div>
+<p>La tâche <strong>#1132</strong> est ouverte depuis le 28 septembre, classée <strong>PRIORITAIRE-OBLIGATOIRE</strong>, et c'est <strong>sa propre commande</strong> : <em>« quand pourra-t-on statuer que l'agence est terminée ? Quel est le signal ? OBJECTIF : fixer une borne. »</em></p>
+<p><strong>Elle n'a jamais été faite.</strong> Donc quand il demande « on n'est pas si loin d'une agence complète ? », <strong>il me demande de juger une distance par rapport à un point qui n'existe pas.</strong> Toute réponse chiffrée que je donnerais à « combien reste-t-il ? » serait inventée.</p>
+<p><strong>Ce n'est pas une esquive : c'est la trouvaille.</strong> Et elle est plus utile que le compte des tâches, parce qu'elle explique pourquoi la question revient : <strong>tant que la borne n'est pas posée, « est-ce fini ? » ne peut recevoir qu'une impression.</strong></p>
+<hr>
+<h3>CE QUI MANQUE VRAIMENT — quatre choses, et aucune n'est une tâche d'hygiène</h3>
+<h4>① LA BORNE elle-même — <em>« qu'est-ce qui dirait que c'est fini ? »</em></h4>
+<p>Tâche #1132, sa commande, jamais exécutée. <strong>C'est le préalable de tout le reste de ce document.</strong></p>
+<h4>② LE SEUL TROU D'ARCHITECTURE NOMMÉ — tâche #1120</h4>
+<p>L'audit l'appelle <em>« le Transaction Engine — le seul vrai trou de l'architecture »</em>. Il est ouvert, il est nommé, et il n'est pas d'hygiène : c'est une pièce manquante.</p>
+<h4>③ LA PORTABILITÉ — mesurée, et c'est le désordre réel</h4>
+<p><strong>38 fichiers sur 40 portent des chemins écrits en dur</strong>, et <strong>aucun point de branchement n'existe</strong> pour accueillir ou retirer une source extérieure. L'Agence est à <strong>94 %</strong> indépendante d'un fournisseur, et pourtant <strong>elle ne sait pas déménager</strong>. <strong>C'est exactement ce qu'une refonte corrigerait à la source</strong> plutôt qu'en 38 réparations.</p>
+<h4>④ LA PREUVE EXTÉRIEURE — et c'est la plus gênante</h4>
+<p><strong>L'Agence n'a jamais été installée ailleurs. Pas une fois. Personne d'autre que nous deux ne l'a jamais utilisée.</strong> Ce n'est pas une tâche qu'on coche : c'est la seule chose qui puisse transformer un <em>« ça marche chez nous »</em> en <em>« ça marche »</em>.</p>
+<hr>
+<h3>SUR CASSANDRA — son intuition est bonne, la vérification reste à faire</h3>
+<p>Il écrit : <em>« je pense qu'elle est déjà finalisée en vrai, à peu de choses près »</em>. <strong>Son rapport complet a été lu — il met plus de deux minutes à tourner — et il lui donne raison.</strong></p>
+<table><thead><tr><th>Ce que CASSANDRA mesure</th><th>Résultat</th></tr></thead><tbody><tr><td>membres certifiés</td><td><strong>55 / 55</strong></td></tr><tr><td>tâches ouvertes la concernant</td><td><strong>0 sur 114</strong></td></tr><tr><td>tendance « membres certifiés »</td><td>en amélioration</td></tr></tbody></table>
+<p><strong>Elle est donc finie en tant qu'OUTIL.</strong> Mais son rapport, lui, signale deux tendances <strong>en dégradation</strong> — et ce n'est pas elle qui va mal, c'est ce qu'elle regarde :</p>
+<ul><li><strong>les outils à reconsidérer</strong> : <code>check-spirit</code> n'a pas été sollicité. <em>(Et l'outil déclare sa propre limite : son journal ne couvre que 45 heures, donc « jamais vu sur cette fenêtre » n'est pas « jamais utilisé ».)</em></li><li><strong>les trous de couverture de test</strong> : <code>check-spirit</code> à <strong>0 %</strong>, <code>doc-report</code> <strong>jamais scanné</strong>.</li></ul>
+<p><strong>La distinction compte pour sa question</strong> : CASSANDRA est terminée ; <strong>ce qu'elle surveille ne l'est pas</strong>. Un outil fini qui annonce des dégradations fait exactement son travail — et son verdict renforce la réponse ① plus haut : sans borne, « terminé » reste une impression.</p>
+<p><strong>Un chiffre de son rapport mérite d'être relevé au passage</strong> : la robustesse du code est à <strong>81,24 %, en baisse de 18,6 points</strong>. Je ne l'instruis pas ici — ce n'est pas le sujet de ce document — mais le signaler vaut mieux que de le laisser passer dans une sortie que personne ne relit.</p>
+<hr>
+<h3>Q14.6 — L'HYPOTHÈSE DU JEU, VÉRIFIÉE</h3>
+<p><strong>Sa question, reformulée simplement</strong> : <em>« peut-on recopier le jeu tel quel dans une version neuve, sans le retoucher ? »</em> Je ne la lui reposais pas pour arbitrer : je demandais seulement s'il fallait la vérifier <strong>avant</strong> de chiffrer le reste, parce qu'elle change beaucoup le total. Il a répondu « avance de manière fiable ». Voici la mesure.</p>
+<table><thead><tr><th>fichiers du Jeu <em>(<code>app/</code>, <code>lib/</code>, <code>components/</code>)</em></th><th><strong>93</strong></th></tr></thead><tbody><tr><td>lignes</td><td><strong>12 531</strong></td></tr><tr><td>fichiers du Jeu qui citent l'outillage (<code>scripts/</code>)</td><td><strong>6</strong></td></tr></tbody></table>
+<p><strong>Son hypothèse tient, et largement.</strong> 87 fichiers sur 93 ne mentionnent même pas l'outillage : ils se recopient sans réflexion. <strong>Six seulement portent un lien à vérifier</strong> — et « citer » n'est pas « dépendre », donc six est un plafond, pas un coût.</p>
+<p><strong>Ce que ça veut dire pour la refonte</strong> : le Jeu n'est pas le gros morceau. <strong>12 531 lignes copiables</strong> d'un côté, et de l'autre un outillage de 85 scripts dont un seul fichier pèse <strong>12 052 lignes</strong> à lui tout seul (#793). <strong>Le travail de refonte est presque entièrement du côté de l'Agence</strong>, ce qui est cohérent avec sa proposition — c'est bien l'Agence qu'il veut rationaliser.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Ce qu'il devient</th></tr></thead><tbody><tr><td>50 % des tâches ouvertes sont déjà dans la Grande Évolution ; le Jeu en pèse 3 %</td><td><strong>RETENU</strong></td><td>ce document, tâche <strong>#1351</strong></td></tr><tr><td>Personne n'a défini ce que « terminée » veut dire — sa propre commande, jamais exécutée</td><td><strong>RETENU</strong></td><td>tâche <strong>#1132</strong>, déjà ouverte et PRIORITAIRE-OBLIGATOIRE : elle devient le préalable</td></tr><tr><td>Son hypothèse sur le Jeu tient : 87 fichiers sur 93 sans aucun lien à l'outillage</td><td><strong>RETENU</strong></td><td>entre dans le chiffrage de la refonte, tâche <strong>#1344</strong></td></tr><tr><td>CASSANDRA est bien finie — 55/55 certifiés, 0 tâche ouverte — mais ce qu'elle SURVEILLE se dégrade</td><td><strong>RETENU</strong></td><td>tâche <strong>#1352</strong> : <code>check-spirit</code> à 0 % de couverture et <code>doc-report</code> jamais scanné</td></tr><tr><td>La robustesse du code annoncée à 81,24 %, <strong>en baisse de 18,6 points</strong></td><td><strong>À TRANCHER</strong></td><td>relevé au passage, hors sujet de ce document — à instruire, jamais à laisser passer</td></tr><tr><td>Le chiffrage complet de la refonte</td><td><strong>RETENU</strong></td><td>tâche <strong>#1344</strong>, en cours — ce document en est la première moitié</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

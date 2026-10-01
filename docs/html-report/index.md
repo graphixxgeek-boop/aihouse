@@ -49,5 +49,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 23234 | 2026-09-30 23:31Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 23476 | 2026-09-30 23:32Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 20448 | 2026-09-30 23:42Z |
-| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 12115 | 2026-09-30 23:53Z |
-| `docs/fils/html/index.html` | `docs/fils/index.md` | 18805 | 2026-09-30 23:53Z |
+| `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 16391 | 2026-10-01 00:17Z |
+| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 13940 | 2026-10-01 00:17Z |
+| `docs/fils/html/index.html` | `docs/fils/index.md` | 18805 | 2026-10-01 00:17Z |

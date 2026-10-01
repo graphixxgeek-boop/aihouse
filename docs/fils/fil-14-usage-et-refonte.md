@@ -79,10 +79,35 @@ voit pas. C'est le préalable de sa décision, pas un document de confort.
 
 **Q14.4 — À MOI, tâche #1345.** L'état d'avancement complet, produit par les outils.
 
-**Q14.5 — À TOI, et c'est la seule question de ce fil qui ne se mesure pas.** Une refonte à zéro
-suspend le travail sur le produit pendant sa durée. Es-tu prêt à ça ? *(a) oui, ça vaut le coup ·
-(b) seulement si on peut continuer le Jeu en parallèle · (c) montre-moi d'abord le chiffrage*
+**Q14.5 — RÉPONDU : (a) ça vaut le coup.** Et il a retourné la question — *« qu'est-ce qu'il
+manque en vrai ? on n'est pas si loin d'une agence complète, tu ne trouves pas ? »*
 
-**Q14.6 — À TOI.** Ton hypothèse *« pas besoin de modifier le jeu, on peut le recopier tel
-quel »* : veux-tu que je la vérifie avant de chiffrer le reste ? Elle change beaucoup le total.
-*(a) oui, vérifie-la en premier · (b) non, chiffre l'ensemble d'abord*
+**Son intuition est juste à 63 %, mesuré sur les 114 tâches ouvertes** : 50 % sont déjà dans la
+Grande Évolution, 38 % sont de l'hygiène qui disparaîtra en grande partie par construction si on
+réécrit, 10 % relèvent de l'export, et **le Jeu pèse 3 tâches sur 114**.
+
+**Mais la vraie réponse n'est pas un compte, et c'est la trouvaille** : *personne n'a jamais
+défini ce que « terminée » veut dire.* La tâche **#1132** est sa propre commande — *« quand
+pourra-t-on statuer que l'agence est terminée ? »* — ouverte depuis le 28 septembre, classée
+PRIORITAIRE-OBLIGATOIRE, **jamais exécutée**. Il me demande donc de juger une distance par rapport
+à un point qui n'existe pas. **Tant que la borne n'est pas posée, « est-ce fini ? » ne peut
+recevoir qu'une impression.**
+
+**Quatre choses manquent vraiment, et aucune n'est de l'hygiène** : la borne elle-même · le
+Transaction Engine, seul trou d'architecture nommé (#1120) · la portabilité (38 fichiers à chemins
+écrits en dur, aucun point de branchement) · **et la preuve extérieure — l'Agence n'a jamais été
+installée ailleurs, pas une fois.**
+
+Détail complet : `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md`, tâche **#1351**.
+
+**Q14.6 — VÉRIFIÉ, et son hypothèse tient largement.** *(Ma question était mal posée : je ne lui
+demandais pas d'arbitrer, seulement s'il fallait vérifier AVANT de chiffrer le reste. Il a dit
+« avance de manière fiable » — c'est fait.)*
+
+**93 fichiers, 12 531 lignes, et seulement 6 qui citent l'outillage.** 87 sur 93 se recopient sans
+réflexion. Et « citer » n'est pas « dépendre » : six est un **plafond**, pas un coût.
+
+**Ce que ça change pour le chiffrage** : le Jeu n'est pas le gros morceau. 12 531 lignes copiables
+d'un côté ; de l'autre, un outillage dont **un seul fichier pèse 12 052 lignes** (#793). **Le
+travail de refonte est presque entièrement du côté de l'Agence** — ce qui est cohérent avec sa
+proposition, puisque c'est l'Agence qu'il veut rationaliser.

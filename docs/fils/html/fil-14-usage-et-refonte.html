@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-30T23:53:19.765Z</div>
+    <div class="date">2026-10-01T00:17:40.463Z</div>
     <h1>FIL 14 — Comment on utilise l'Agence, et faut-il tout reprendre à zéro</h1>
     <p class="sub">Page générée depuis docs/fils/fil-14-usage-et-refonte.md — jamais écrite à la main.</p>
   </header>
@@ -133,8 +133,14 @@
 <p><strong>Q14.2 — À MOI, tâche #1341.</strong> Les deux scénarios d'usage par ZIP, confrontés aux mesures qui existent — pas à une opinion.</p>
 <p><strong>Q14.3 — À MOI, tâche #1343.</strong> Une carte par MODULE, parce qu'il ne peut pas juger ce qu'il ne voit pas. C'est le préalable de sa décision, pas un document de confort.</p>
 <p><strong>Q14.4 — À MOI, tâche #1345.</strong> L'état d'avancement complet, produit par les outils.</p>
-<p><strong>Q14.5 — À TOI, et c'est la seule question de ce fil qui ne se mesure pas.</strong> Une refonte à zéro suspend le travail sur le produit pendant sa durée. Es-tu prêt à ça ? <em>(a) oui, ça vaut le coup · (b) seulement si on peut continuer le Jeu en parallèle · (c) montre-moi d'abord le chiffrage</em></p>
-<p><strong>Q14.6 — À TOI.</strong> Ton hypothèse <em>« pas besoin de modifier le jeu, on peut le recopier tel quel »</em> : veux-tu que je la vérifie avant de chiffrer le reste ? Elle change beaucoup le total. <em>(a) oui, vérifie-la en premier · (b) non, chiffre l'ensemble d'abord</em></p></main>
+<p><strong>Q14.5 — RÉPONDU : (a) ça vaut le coup.</strong> Et il a retourné la question — <em>« qu'est-ce qu'il manque en vrai ? on n'est pas si loin d'une agence complète, tu ne trouves pas ? »</em></p>
+<p><strong>Son intuition est juste à 63 %, mesuré sur les 114 tâches ouvertes</strong> : 50 % sont déjà dans la Grande Évolution, 38 % sont de l'hygiène qui disparaîtra en grande partie par construction si on réécrit, 10 % relèvent de l'export, et <strong>le Jeu pèse 3 tâches sur 114</strong>.</p>
+<p><strong>Mais la vraie réponse n'est pas un compte, et c'est la trouvaille</strong> : <em>personne n'a jamais défini ce que « terminée » veut dire.</em> La tâche <strong>#1132</strong> est sa propre commande — <em>« quand pourra-t-on statuer que l'agence est terminée ? »</em> — ouverte depuis le 28 septembre, classée PRIORITAIRE-OBLIGATOIRE, <strong>jamais exécutée</strong>. Il me demande donc de juger une distance par rapport à un point qui n'existe pas. <strong>Tant que la borne n'est pas posée, « est-ce fini ? » ne peut recevoir qu'une impression.</strong></p>
+<p><strong>Quatre choses manquent vraiment, et aucune n'est de l'hygiène</strong> : la borne elle-même · le Transaction Engine, seul trou d'architecture nommé (#1120) · la portabilité (38 fichiers à chemins écrits en dur, aucun point de branchement) · <strong>et la preuve extérieure — l'Agence n'a jamais été installée ailleurs, pas une fois.</strong></p>
+<p>Détail complet : <code>docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md</code>, tâche <strong>#1351</strong>.</p>
+<p><strong>Q14.6 — VÉRIFIÉ, et son hypothèse tient largement.</strong> <em>(Ma question était mal posée : je ne lui demandais pas d'arbitrer, seulement s'il fallait vérifier AVANT de chiffrer le reste. Il a dit « avance de manière fiable » — c'est fait.)</em></p>
+<p><strong>93 fichiers, 12 531 lignes, et seulement 6 qui citent l'outillage.</strong> 87 sur 93 se recopient sans réflexion. Et « citer » n'est pas « dépendre » : six est un <strong>plafond</strong>, pas un coût.</p>
+<p><strong>Ce que ça change pour le chiffrage</strong> : le Jeu n'est pas le gros morceau. 12 531 lignes copiables d'un côté ; de l'autre, un outillage dont <strong>un seul fichier pèse 12 052 lignes</strong> (#793). <strong>Le travail de refonte est presque entièrement du côté de l'Agence</strong> — ce qui est cohérent avec sa proposition, puisque c'est l'Agence qu'il veut rationaliser.</p></main>
   <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-14-usage-et-refonte.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>

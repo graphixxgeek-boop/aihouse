@@ -509,3 +509,53 @@ ont désormais leur test direct.
 **La règle de lecture, pour la prochaine fois** : quand cette tendance se dégrade, ne pas chercher
 un défaut dans l'indicateur — chercher ce qui a été **ajouté** depuis le dernier point, et vérifier
 d'abord les fonctions qui portent un contrat pour d'autres. Ce sont celles qui ne cassent pas seules.
+
+---
+
+## CE QUE SON RAPPORT COMPLET A DIT LE 2026-10-01 — elle est finie, ce qu'elle surveille ne l'est pas
+
+*(Le garde-fou de fraîcheur des chantiers a refusé un commit : une tâche neuve était classée sous
+ce chantier pendant que ce document n'avait pas bougé depuis deux jours. **C'est son travail** —
+une trouvaille qui n'atterrit pas dans le document du chantier n'existe que dans une ligne de
+suivi que personne ne rouvrira.)*
+
+### L'OCCASION : il la croyait finie, et il avait raison
+
+Sa phrase du 2026-10-01 : *« à mon avis finaliser cassandra, et je pense qu'elle est déjà
+finalisée en vrai, à peu de choses près »*. **Vérifié en lançant son rapport complet** — qui met
+plus de deux minutes à tourner, ce qui explique qu'on ne le lance pas souvent :
+
+| Ce que CASSANDRA mesure sur elle-même | Résultat |
+|---|---|
+| membres certifiés | **55 / 55** |
+| tâches ouvertes la concernant, sur les 114 du projet | **0** |
+| tendance « membres certifiés » | en amélioration |
+
+**Elle est donc finie EN TANT QU'OUTIL.** La distinction compte, parce que son rapport annonce
+dans le même souffle **deux tendances en dégradation** — et ce n'est pas elle qui va mal, c'est
+ce qu'elle regarde.
+
+### LES DEUX TROUS DE COUVERTURE — tâche #1352
+
+- **`check-spirit` : 0 % de couverture.** C'est le cas le plus gênant des deux. C'est le **seul
+  outil qui touche la sortie réelle du modèle**, donc le porteur de l'Article 0, **et rien ne
+  teste qu'il fonctionne**. Un gardien de la loi suprême que personne ne vérifie.
+- **`doc-report` : jamais scanné.** L'autre bout du même défaut : l'outil qui surveille les
+  registres n'est surveillé par personne.
+
+**Et l'outil déclare sa propre limite, qu'il faut reprendre plutôt que taire** : son journal
+d'usage ne couvre que **45 heures**, donc « jamais vu passer sur cette fenêtre » ne veut pas dire
+« jamais utilisé par le projet ». Un outil qui refuse de surinterpréter son propre silence.
+
+### UN CHIFFRE RELEVÉ SANS ÊTRE INSTRUIT
+
+**La robustesse du code est annoncée à 81,24 %, en baisse de 18,6 points.** Ce n'est pas le sujet
+de ce chantier et il n'est pas instruit ici — mais le signaler vaut mieux que de le laisser passer
+dans une sortie que personne ne relit, ce qui est précisément le défaut que CASSANDRA existe pour
+empêcher.
+
+### CE QUE ÇA DIT DU CHANTIER LUI-MÊME
+
+**Un outil fini qui annonce des dégradations fait exactement son travail.** CASSANDRA n'a plus
+besoin d'être construite ; elle a besoin d'être LUE — et son rapport de deux minutes n'avait pas
+tourné depuis assez longtemps pour que ces deux trous soient connus.

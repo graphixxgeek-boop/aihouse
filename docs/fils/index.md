@@ -51,9 +51,9 @@ personne).
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
 | [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 6 (1 pour toi) |
 | [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 6 (4 pour toi) |
-| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | **À MOI** | 6 (2 pour toi) |
+| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | **À MOI** | 6 (0 pour toi) |
 
-**Total : 14 fils · 71 questions vives · 34 attendent ta réponse · 37 sont de mon côté.**
+**Total : 14 fils · 71 questions vives · 32 attendent ta réponse · 39 sont de mon côté.**
 
 ---
 
