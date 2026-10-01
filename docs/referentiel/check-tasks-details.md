@@ -596,3 +596,58 @@ pas cesse d'être lu** (leçon L4).
 C'est la même famille que presque tout ce que ce dépôt a corrigé : **un signal ADJACENT — les mots du
 manque — lu comme le signal lui-même, le manque.** `nomRaccourci()` sert le même souci de lisibilité
 sur les noms longs.
+
+## Ce qui attend une décision n'est pas une « prochaine tâche » *(2026-10-01, tâche #1373)*
+
+### Le biais est structurel, pas un accident de données
+
+`recommendNextTasks()` note la **stagnation**. Or une tâche bloquée sur l'utilisateur **stagne
+nécessairement** : personne d'autre ne peut la faire avancer. Son score monte à chaque rapport et
+elle finit **mécaniquement en tête** — le critère remonte tout seul ce qu'il ne faut pas proposer.
+
+**Trouvé en le payant** : une nuit autonome, trois des quatre tâches recommandées étaient bloquées
+sur l'utilisateur (#390, #603, #492), instruites une par une avant qu'on s'en aperçoive.
+
+### Deux défauts, et réparer le second seul n'aurait rien donné
+
+1. `attendUneDecision()` lisait la criticité et « pour qui », **jamais le statut** — le seul champ
+   dont c'est le métier. Elle voyait **20** tâches sur les **45** qui le déclaraient.
+2. `recommendNextTasks()` ne l'appelait pas du tout.
+
+### Ce qui a changé
+
+Un **troisième signal** dans la fonction existante, dérivé de `STATUTS_RECONNUS`
+(`check-suivi-fidelity`), qui porte déjà le SENS de chaque statut. **20 → 56 sur 117** (48 % de la
+file) ; 35 des 36 nouvelles détections viennent du registre, une seule d'une liste manuelle.
+Élargir la fonction sert sa raison d'être écrite : elle existe parce qu'une tâche en attente
+« ARRÊTE une rafale par construction », et une tâche gelée l'arrête pareil.
+
+Les tâches concernées **sortent du classement sans être cachées** : section propre, comptées, avec
+la raison et le champ qui l'a dite. `inclureCeQuiAttend: true` rend l'ancien comportement.
+
+### La limite, et le contrôle refusé
+
+Ce contrôle lit des **champs déclarés**. Une ligne qui se contredit — #624, statut « EN COURS »
+contre un détail disant « EN ATTENTE DE SON ACCORD » — lui échappe. Un détecteur sur la prose a été
+**mesuré puis écarté** : il ne rattrapait qu'une ligne sur 61. La correction est dans la DONNÉE,
+et elle revient à l'utilisateur.
+
+*(Discipline appliquée ici, expliquée ailleurs : Article 24 pour le registre lu plutôt que recopié,
+leçon L4 pour le refus d'un garde qui accuse large, leçon L43 pour la limite nommée avec son
+instrument.)*
+
+### Où cet outil s'arrête, et qui prend le relais
+
+Trois fiches voisines partagent son vocabulaire sans partager son objet, et la frontière vaut d'être
+écrite une fois plutôt que redevinée à chaque lecture :
+
+- `docs/referentiel/safe-export.md` — lui mesure si un outil **peut partir** ailleurs ; celui-ci
+  mesure **où en est le travail**. Les deux parlent de registres lus et de limites nommées parce
+  que c'est la discipline commune du dépôt, jamais parce qu'ils mesurent la même chose.
+- `docs/referentiel/abraham-les-references.md` — lui est le maître des documents à **règles
+  numérotées** ; celui-ci ne lit que le **registre des tâches**. Une règle de charte n'est pas une
+  tâche, et aucun des deux ne doit se mettre à juger la matière de l'autre.
+- `docs/referentiel/check-suivi-fidelity.md` — lui garde la **forme** d'une ligne de suivi (statut
+  reconnu, horodatage, clôture déclarée) ; celui-ci lit ces lignes pour en tirer un **état des
+  lieux**. C'est pour cette raison que le vocabulaire des statuts se LIT chez lui et ne se recopie
+  pas ici.

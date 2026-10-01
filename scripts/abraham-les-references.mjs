@@ -1554,6 +1554,23 @@ export const HORS_PORTEE_DOCUMENTS = [
   // construction le vocabulaire de tout le projet, donc il ressemble à tout. L'y inclure noyait la
   // mesure sous des paires qui ne mènent nulle part.
   { motif: /^docs\/suivi\//, pourquoi: "journal de tâches : il cite tout le projet par construction, donc il ressemble à tout" },
+  // LE RAPPORT DE NUIT, EXACTEMENT LE MÊME MOTIF QUE LE SUIVI (2026-10-01, tâche #1374), et il a
+  // fallu se faire mordre trois fois dans la même nuit pour le voir. Un rapport de nuit RÉSUME le
+  // travail fait : il reprend, par construction, le vocabulaire de chaque document qu'il raconte.
+  // Le recouvrement est donc sa RAISON D'ÊTRE, jamais un défaut.
+  //
+  // LE CRITÈRE DE CE DÉTECTEUR LE DIT DÉJÀ, et c'est lui qui tranche plutôt qu'une préférence :
+  // il cherche « deux documents que nous maintenons tous les deux, dont l'un pourrait donc être
+  // fondu dans l'autre ». Personne ne fondra jamais un rapport daté du 30 septembre dans la fiche
+  // de SAFE-EXPORT. L'alerte ne pouvait donc mener à aucune action — et une alerte qu'on ne peut
+  // pas éteindre finit par ne plus être lue (leçon L6).
+  //
+  // MESURÉ AVANT D'ÊTRE DÉCIDÉ : 6 paires à instruire, 3 après. Les TROIS perdues sont toutes
+  // « fiche d'outil ↔ rapport de nuit » ; les trois qui restent sont de vraies questions entre
+  // documents normatifs. Le détecteur ne devient donc pas plus aveugle, il cesse de compter ce
+  // qui n'aurait jamais dû l'être — la même correction, au même endroit, que pour les blocs
+  // d'index générés.
+  { motif: /^docs\/rapports-de-nuit\//, pourquoi: "rapport de nuit : il RÉSUME le travail fait, donc il reprend par construction le vocabulaire de tout ce qu'il raconte — et nul ne fondra jamais un rapport daté dans une fiche d'outil" },
   // Les simulations sont des ARCHIVES de conversations. Deux transcripts se ressemblent parce que
   // c'est le même jeu, et c'est doc-report qui les compare, sur leur substance exacte.
   { motif: /^docs\/simulations\//, pourquoi: "archives de conversations : leur ressemblance est normale, et doc-report les compare déjà" },

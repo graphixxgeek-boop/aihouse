@@ -39,6 +39,9 @@ import { PRESTATIONS, suggestPrestationsForTask, significantWords, badgeSignalsA
 // L'étiquette criticité/urgence/mot-clé — lue chez son propriétaire, jamais recalculée ici.
 import { etiquetteDeLaTache, findMotsClesEnCollision, findChampsManquants, FORMAT_TACHE, findRituelManquant, formatRituelLines, QUESTIONS_DE_CLOTURE, CONSIGNE_D_OUVERTURE, PREMIERE_TACHE_AVEC_RITUEL } from "./criticite.mjs";
 import { findMotsClesManquants } from "./check-suivi-fidelity.mjs";
+// LE REGISTRE DES STATUTS EST LU, JAMAIS RECOPIÉ (Article 24) : un statut ajouté là-bas avec une
+// formulation d'attente entre dans ce contrôle sans qu'une ligne bouge ici.
+import { STATUTS_RECONNUS, normaliserStatut } from "./check-suivi-fidelity.mjs";
 import { daysSince, printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
 import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
 import { recordRegistryWrite } from "./tool-usage.mjs";
@@ -555,9 +558,57 @@ const SENSITIVITY_SCORE = { critique: 3, important: 2, normal: 1, autre: 0 };
 const ABSOLUTE_PRIORITY_PATTERN = /\bpriorit[ée]\s+absolue\b/i;
 const EXPLICIT_PRIORITY_PATTERN = /\ben\s+priorit[ée]\b|\bpriorit[ée]\s+explicite\b/i;
 
-export function recommendNextTasks(rows, { stagnant = [], findings = [], limit = 4, now = Date.now() } = {}) {
+// CE QUI ATTEND UNE DÉCISION N'EST PAS UNE « PROCHAINE TÂCHE » (2026-10-01)
+//
+// LE DÉFAUT EST STRUCTUREL, ET C'EST CE QUI LE REND GRAVE. Ce classement note la stagnation. Or
+// une tâche bloquée sur l'utilisateur **stagne nécessairement** : personne d'autre ne peut la
+// faire avancer. Elle accumule donc du score à chaque rapport, sans plafond réel, et finit
+// mécaniquement en TÊTE. Ce n'est pas un accident de données — c'est le critère lui-même qui
+// remonte systématiquement ce qu'il ne faut surtout pas proposer.
+//
+// TROUVÉ EN LE PAYANT, et c'est la seule raison pour laquelle on le sait : une nuit de travail
+// autonome, trois des quatre tâches recommandées étaient bloquées sur lui (#390 « en attente de
+// décision », #603 « nécessite sa présence », #492 dont la cause est un geste à prendre). Elles
+// ont été instruites une par une avant qu'on s'en aperçoive — exactement le temps que cette
+// section existe pour faire gagner.
+//
+// ON LES SORT DU CLASSEMENT SANS JAMAIS LES CACHER. Les retirer en silence ferait disparaître ce
+// que l'utilisateur doit décider, ce qui serait pire que le défaut d'origine : une décision qu'on
+// ne voit plus n'est jamais prise. Elles vont dans une section à elles, comptées et motivées.
+export function tachesEnAttenteDeLui(rows = [], options = {}) {
+  return (rows ?? [])
+    .filter((r) => OPEN_KEYS.has(r.statusKey))
+    .map((r) => ({ r, a: pourquoiAttendUneDecision(r, options) }))
+    .filter((x) => x.a)
+    .map((x) => ({ numero: x.r.numero, sousSujet: x.r.sousSujet, criticite: x.r.criticite, pourquoi: x.a.pourquoi, source: x.a.source }));
+}
+
+export function formatTachesEnAttenteLines(enAttente = [], { total = null, detail = 6 } = {}) {
+  if (!enAttente.length) return ["✅ Aucune tâche ouverte n'attend une décision de l'utilisateur."];
+  const part = total ? ` sur ${total} ouverte(s), soit ${Math.round((enAttente.length / total) * 100)} %` : "";
+  const L = [`⏸️ ${enAttente.length} tâche(s)${part} attendent une décision de l'utilisateur — SORTIES de l'ordre recommandé, jamais cachées.`];
+  L.push("   Elles stagnent forcément, puisque personne d'autre ne peut les faire avancer : les laisser dans le classement les y faisait remonter en tête.");
+  const parSource = enAttente.reduce((o, t) => { o[t.source] = (o[t.source] ?? 0) + 1; return o; }, {});
+  L.push(`   D'où on le sait : ${Object.entries(parSource).map(([k, v]) => `${v} par ${k}`).join(" · ")}`);
+  for (const t of enAttente.slice(0, detail)) L.push(`   · #${t.numero ?? "sans numéro"} « ${String(t.sousSujet ?? "").slice(0, 70)} » — ${t.pourquoi}`);
+  if (enAttente.length > detail) L.push(`   · … et ${enAttente.length - detail} de plus`);
+  // LA LIMITE EST NOMMÉE AVEC SON INSTRUMENT, jamais tue (leçon L43 : « impossible » tout court dit
+  // au prochain agent de passer son chemin ; « impossible PAR LECTURE DU STATUT » lui dit où
+  // chercher autrement). Ce contrôle lit des CHAMPS DÉCLARÉS — statut, criticité, pour qui. Une
+  // ligne dont le statut dit « EN COURS » pendant que son détail la déclare garée lui échappe, et
+  // le cas est réel (#624, parquée jusqu'à la prochaine grosse revue de la charte).
+  // POURQUOI ON NE CHASSE PAS DANS LA PROSE : mesuré le jour même, quatre formules explicites
+  // (« EN ATTENTE DE SON ACCORD », « attend sa décision », …) ne trouvent qu'UNE ligne sur les 61
+  // restantes. Un mécanisme qui trouve un cas sur soixante coûte plus en faux positifs qu'il ne
+  // rapporte (leçon L4). La vraie correction est dans la DONNÉE : ces lignes-là ont un statut qui
+  // ment, et c'est à l'utilisateur de le dire, pas à un motif de texte de le deviner.
+  L.push("   Limite à connaître : ce contrôle lit les CHAMPS DÉCLARÉS (statut, criticité, pour qui). Une ligne dont le statut dit « en cours » alors que son détail la déclare garée lui échappe — cas réel : #624. Mesuré : chercher dans la prose ne rattraperait qu'1 ligne sur 61, pour un vrai risque de fausse alerte.");
+  return L;
+}
+
+export function recommendNextTasks(rows, { stagnant = [], findings = [], limit = 4, now = Date.now(), inclureCeQuiAttend = false } = {}) {
   const stagnantStreakByN = new Map(stagnant.map((s) => [s.numero, s.streak ?? 3]));
-  const openRows = rows.filter((r) => OPEN_KEYS.has(r.statusKey));
+  const openRows = rows.filter((r) => OPEN_KEYS.has(r.statusKey) && (inclureCeQuiAttend || !attendUneDecision(r)));
   const scored = openRows.map((row) => {
     const reasons = [];
     let score = 0;
@@ -1767,9 +1818,59 @@ export const TAILLE_MAX_RAFALE = 10;      // au-delà, le bloc redevient une fil
 export const CRITICITE_QUI_ATTEND = "A-TRANCHER";
 export const POUR_QUI_DETTE = "DETTE-ENVERS-L-UTILISATEUR";
 
-export function attendUneDecision(row = {}) {
-  return String(row.criticite ?? "").trim().toUpperCase() === CRITICITE_QUI_ATTEND
-    || String(row.pourQui ?? "").trim().toUpperCase() === POUR_QUI_DETTE;
+// LE TROISIÈME SIGNAL — LE STATUT (2026-10-01, trouvé en direct pendant une nuit autonome)
+//
+// LES DEUX SIGNAUX CI-DESSUS NE LISAIENT JAMAIS LE CHAMP DONT C'EST LE MÉTIER. La criticité dit à
+// quel point ça compte, « pour qui » dit à qui ça profite ; c'est le STATUT qui dit où la tâche en
+// est. Mesuré le jour où le trou est trouvé : sur 117 tâches ouvertes, 45 disent dans leur statut
+// qu'elles attendent (29 « à trancher », 15 « en attente », 1 « nécessite sa présence »), et la
+// fonction n'en voyait que **20**. Les **36 manquées** sont pour l'essentiel des « En attente —
+// après le GRAND CHANTIER », reportées par une décision explicite et portant des criticités comme
+// PRIORITAIRE-OBLIGATOIRE — c'est-à-dire que leur score MONTAIT pendant qu'elles étaient gelées.
+//
+// LE CRITÈRE SE DÉRIVE DU REGISTRE, IL NE SE RECOPIE PAS (Article 24). `STATUTS_RECONNUS`
+// (check-suivi-fidelity) porte déjà, pour chaque statut, ce qu'il VEUT DIRE : « elle attend une
+// décision de l'utilisateur », « elle attend quelque chose ou quelqu'un ». C'est cette phrase-là
+// qu'on lit. Un statut ajouté là-bas avec une formulation d'attente entre dans ce contrôle sans
+// qu'une ligne bouge ici — un nouveau venu hérite de ce que l'équipe sait déjà faire.
+//
+// ÉLARGIR CETTE FONCTION SERT SA RAISON D'ÊTRE, ça ne la détourne pas : elle existe parce qu'« une
+// tâche qui attend une décision de l'utilisateur ARRÊTE une rafale par construction » (voir juste
+// au-dessus). Une tâche gelée jusqu'au GRAND CHANTIER l'arrête exactement de la même façon.
+export const MOTIF_STATUT_EN_ATTENTE = /décision de l'utilisateur|quelque chose ou quelqu'un/i;
+
+// LISTE VOLONTAIREMENT TENUE À LA MAIN, et l'Article 24 exige que cette nature soit écrite juste à
+// côté. Elle couvre la seule moitié que le registre ne peut pas porter : un statut en TEXTE LIBRE
+// accolé à un préfixe reconnu — « à faire — nécessite sa présence » commence par « à faire », donc
+// le registre le déclare simplement ouverte, à juste titre. Aucun registre ne décrit ce suffixe :
+// il n'y a donc rien avec quoi cette liste pourrait diverger en silence.
+export const MARQUEURS_DATTENTE_EN_TEXTE_LIBRE = Object.freeze([
+  "nécessite sa présence", "attente de décision", "attente de sa ", "en attente de lui",
+]);
+
+// Rend la RAISON, jamais un simple vrai : « bloquée » sans dire par quoi oblige à rouvrir la ligne
+// pour comprendre, et une alerte qu'il faut instruire à la main n'en est pas une (leçon L4).
+export function pourquoiAttendUneDecision(row = {}, { registre = STATUTS_RECONNUS, motif = MOTIF_STATUT_EN_ATTENTE, marqueurs = MARQUEURS_DATTENTE_EN_TEXTE_LIBRE } = {}) {
+  if (String(row.criticite ?? "").trim().toUpperCase() === CRITICITE_QUI_ATTEND) {
+    return { pourquoi: `criticité « ${CRITICITE_QUI_ATTEND} » : la décision lui revient`, source: "criticité" };
+  }
+  if (String(row.pourQui ?? "").trim().toUpperCase() === POUR_QUI_DETTE) {
+    return { pourquoi: "« pour qui » vaut DETTE-ENVERS-L-UTILISATEUR : je lui dois une réponse", source: "pour qui" };
+  }
+  const brut = String(row.statut ?? "").trim();
+  if (!brut) return null;
+  const entree = (registre ?? []).find((e) => e?.motif?.test?.(normaliserStatut(brut)));
+  if (entree && motif.test(String(entree.quoi ?? ""))) {
+    return { pourquoi: `statut « ${brut} » — ${entree.quoi}`, source: "statut (registre)" };
+  }
+  const bas = brut.toLowerCase();
+  const trouve = (marqueurs ?? []).find((m) => bas.includes(m));
+  if (trouve) return { pourquoi: `statut « ${brut} » : il dit en toutes lettres qu'il attend l'utilisateur`, source: "statut (texte libre)" };
+  return null;
+}
+
+export function attendUneDecision(row = {}, options = {}) {
+  return pourquoiAttendUneDecision(row, options) !== null;
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -2141,6 +2242,11 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   blocks.push({ type: "heading", text: "Format et mot-clé des tâches ouvertes (garde-fou du process)" });
   blocks.push({ type: "list", items: formatAuditFormatLines(auditFormat) });
 
+  const enAttenteDeLui = tachesEnAttenteDeLui(rows);
+  const ouvertesTotal = rows.filter((r) => OPEN_KEYS.has(r.statusKey)).length;
+  blocks.push({ type: "heading", text: "Ce qui attend une décision de l'utilisateur (hors de l'ordre recommandé)" });
+  blocks.push({ type: "list", items: formatTachesEnAttenteLines(enAttenteDeLui, { total: ouvertesTotal }) });
+
   const recommended = recommendNextTasks(rows, { stagnant });
   if (recommended.length) {
     blocks.push({ type: "heading", text: "Ordre recommandé des prochaines tâches (signal, jamais une décision)" });
@@ -2151,7 +2257,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
     title: `État des tâches — ${ZOOM_LABELS[zoom]}`,
     subtitle: `Forme : ${FORMAT_LABELS[format]} · ${scoped.length} tâche(s) affichée(s) sur ${rows.length} au total`,
     blocks: blocks.filter((b) => b.type !== "noop"),
-    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, chantierFreshnessGaps, auditFormat },
+    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, enAttenteDeLui, chantierFreshnessGaps, auditFormat },
   };
 }
 

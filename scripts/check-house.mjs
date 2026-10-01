@@ -5844,6 +5844,58 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   const normalFresh = { numero: 2, sousSujet: 'Tâche normale récente', criticite: 'normal', detail: '', statusKey: 'ouverte', horodatage: '2026-09-20-1100' };
   const closedRow = { numero: 3, sousSujet: 'Tâche déjà fermée', criticite: 'critique', detail: '', statusKey: 'terminee', horodatage: '2026-09-01-1200' };
   const noSignalRow = { numero: 4, sousSujet: 'Tâche sans aucun signal', criticite: 'autre', detail: '', statusKey: 'ouverte', horodatage: undefined };
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  // CE QUI ATTEND UNE DÉCISION N'EST PAS UNE « PROCHAINE TÂCHE » (2026-10-01)
+  //
+  // LE BIAIS EST STRUCTUREL, et c'est ce qui rend ces tests nécessaires plutôt que confortables :
+  // le classement note la STAGNATION, et une tâche bloquée sur l'utilisateur stagne forcément,
+  // puisque personne d'autre ne peut la faire avancer. Son score monte donc à chaque rapport et
+  // elle finit mécaniquement en tête — le critère remonte tout seul ce qu'il ne faut surtout pas
+  // proposer. Trouvé en le payant : une nuit autonome, trois des quatre tâches recommandées
+  // étaient bloquées sur lui, instruites une par une avant qu'on s'en aperçoive.
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  const geleeMaisAncienne = { numero: 7, sousSujet: 'Tâche gelée depuis longtemps', criticite: 'critique', detail: '', statusKey: 'ouverte', statut: 'En attente — après le GRAND CHANTIER (#1100)', horodatage: '2026-08-01-1200' };
+  const libre = { numero: 8, sousSujet: 'Tâche libre', criticite: 'critique', detail: '', statusKey: 'ouverte', statut: 'Ouverte', horodatage: '2026-09-01-1200' };
+  const avecAttente = recommendNextTasks([geleeMaisAncienne, libre], { now, stagnant: [{ numero: 7, streak: 30 }] });
+  assert.ok(!avecAttente.some((r) => r.numero === 7), 'a task whose STATUS says it is waiting must never be recommended — and note the fixture: it is older AND flagged stagnant for 30 reports, so on score alone it would come first. That is exactly the bias');
+  assert.ok(avecAttente.some((r) => r.numero === 8), 'while the genuinely free task must still be proposed — excluding the blocked ones must not empty the list');
+  assert.equal(recommendNextTasks([geleeMaisAncienne, libre], { now, inclureCeQuiAttend: true }).length, 2, 'and the old behaviour stays reachable by an explicit option, so no existing caller silently loses rows');
+
+  // ── LE TROISIÈME SIGNAL, et pourquoi il manquait : la criticité dit à quel point ça compte,
+  // « pour qui » dit à qui ça profite — c'est le STATUT qui dit où la tâche en est, et il n'était
+  // jamais lu. Mesuré sur le vrai suivi : 20 tâches vues sur les 45 qui le déclarent.
+  assert.equal(ctd.attendUneDecision({ criticite: 'A-TRANCHER' }), true, 'the first signal, unchanged: the sensitivity says the decision is his');
+  assert.equal(ctd.attendUneDecision({ pourQui: 'DETTE-ENVERS-L-UTILISATEUR' }), true, 'the second signal, unchanged: I owe him an answer');
+  assert.equal(ctd.attendUneDecision({ statut: 'À TRANCHER' }), true, 'the third signal: the STATUS alone is enough, with neither of the other two fields set');
+  assert.equal(ctd.attendUneDecision({ statut: 'En attente — après le GRAND CHANTIER (#1100)' }), true, 'a task frozen until a later chantier stops a burst exactly as a pending decision does — which is the stated reason this function exists');
+  assert.equal(ctd.attendUneDecision({ statut: 'Ouverte', criticite: 'RECOMMANDE' }), false, 'and an ordinary open task is never swept up: a guard that accuses everyone accuses nobody (lesson L4)');
+  assert.equal(ctd.attendUneDecision({ statut: 'à faire — nécessite sa présence' }), true, 'free text appended to a recognised prefix is caught by the hand-kept marker list, whose deliberately manual nature is written beside it (Article 24)');
+
+  // ── LE CRITÈRE SE DÉRIVE DU REGISTRE, IL NE SE RECOPIE PAS (Article 24) : un statut ajouté dans
+  // STATUTS_RECONNUS avec une formulation d'attente doit entrer ici SANS qu'une ligne bouge.
+  const registreFictif = [{ motif: /^gelee/, etat: 'ouverte', quoi: 'elle attend quelque chose ou quelqu\'un' }];
+  assert.equal(ctd.attendUneDecision({ statut: 'gelée pour l\'instant' }, { registre: registreFictif }), true, 'a NEW status declared in the registry with a waiting meaning is honoured without touching this file — that is what "a newcomer inherits what the team already knows" means');
+  assert.equal(ctd.attendUneDecision({ statut: 'gelée pour l\'instant' }, { registre: [{ motif: /^gelee/, etat: 'ouverte', quoi: 'elle attend d\'être faite' }] }), false, 'and a status whose declared meaning is NOT a wait stays out — the registry text is really read, not merely consulted for show');
+
+  // ── LA RAISON EST TOUJOURS RENDUE : « bloquée » sans dire par quoi oblige à rouvrir la ligne.
+  assert.match(ctd.pourquoiAttendUneDecision({ statut: 'À TRANCHER' }).pourquoi, /attend/i, 'the reason must be stated, never just a boolean');
+  assert.equal(ctd.pourquoiAttendUneDecision({ statut: 'Ouverte' }), null, 'and nothing is invented for a task that waits for no one');
+
+  // ── ELLES SONT SORTIES DU CLASSEMENT, JAMAIS CACHÉES : une décision qu'on ne voit plus n'est
+  // jamais prise, ce qui serait pire que le défaut d'origine.
+  const liste = ctd.tachesEnAttenteDeLui([geleeMaisAncienne, libre]);
+  assert.equal(liste.length, 1, 'the excluded task must resurface in its own list');
+  assert.match(ctd.formatTachesEnAttenteLines(liste, { total: 2 }).join('\n'), /50 %/, 'with its share of the open queue, so the scale is visible at a glance');
+  assert.match(ctd.formatTachesEnAttenteLines([], { total: 2 })[0], /Aucune tâche/, 'and an empty list says so plainly rather than printing nothing');
+
+  // ── EN DIRECT SUR LE VRAI SUIVI (Article 25).
+  const reelCtd = ctd.loadAllTaskRows();
+  const ouvertesReelles = reelCtd.filter((r) => ctd.OPEN_KEYS.has(r.statusKey));
+  const attenteReelle = ctd.tachesEnAttenteDeLui(reelCtd);
+  assert.ok(ouvertesReelles.length > 50, 'the real suivi must really be read, not an empty stub');
+  assert.ok(attenteReelle.length >= 40, `and the real queue must still show the blocked tasks it declares: 56 of 117 the day this was built (currently ${attenteReelle.length} of ${ouvertesReelles.length})`);
+  assert.ok(attenteReelle.every((t) => t.pourquoi && t.source), 'each one must carry why it is blocked and which field said so');
+
   const basic = recommendNextTasks([critiqueOld, normalFresh, closedRow, noSignalRow], { now });
   assert.ok(!basic.some((r) => r.numero === 3), 'recommendNextTasks() must never propose an already-closed task, whatever its sensitivity or age — only genuinely open tasks are real candidates');
   assert.ok(!basic.some((r) => r.numero === 4), 'a task with zero real signal on any of the 5 criteria must be excluded entirely, never padded into the list with an empty or fabricated reason');
@@ -9132,6 +9184,17 @@ async function testDocumentsJumeaux() {
     assert.ok(['meme-terrain-non-declare', 'voisinage-declare'].includes(p.nature), `every live pair must carry a declared nature, never an unnamed one (${p.a} ↔ ${p.b})`);
     assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test(p.a) || h.motif.test(p.b)), `an excluded document must never reappear in a pair — the exclusion would be decorative (${p.a} ↔ ${p.b})`);
   }
+  // ── LE RAPPORT DE NUIT EST HORS CORPUS (2026-10-01, tâche #1374) — même motif que le suivi.
+  // Un rapport de nuit RÉSUME le travail fait : il reprend par construction le vocabulaire de
+  // chaque document qu'il raconte. Le recouvrement est sa raison d'être. Et le critère de ce
+  // détecteur le dit déjà — il cherche deux documents dont l'un pourrait être FONDU dans l'autre,
+  // or nul ne fondra un rapport daté dans une fiche d'outil. Mesuré : 6 paires avant, 3 après, et
+  // les trois perdues étaient toutes « fiche ↔ rapport de nuit ».
+  assert.ok(ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/rapports-de-nuit/rapport-2026-09-30.md')), 'a night report must be out of the twin-document corpus');
+  assert.ok(!ab.HORS_PORTEE_DOCUMENTS.some((h) => h.motif.test('docs/referentiel/safe-export.md')), 'while a tool fiche stays in it — the exclusion must stay narrow, or the detector measures nothing');
+  assert.equal(ab.chargerLesDocuments().some((d) => d.chemin.startsWith('docs/rapports-de-nuit/')), false, 'and the exclusion must really take effect on the loaded corpus, never be a decorative declaration (lesson L2)');
+  assert.ok(ab.HORS_PORTEE_DOCUMENTS.every((h) => typeof h.pourquoi === 'string' && h.pourquoi.length > 30), 'every exclusion carries its written reason: an exclusion nobody can see is an exclusion nobody can challenge');
+
   assert.ok(reel.aInstruire.length <= 6, `the live corpus must not drown in pairs: beyond a handful the measure is unreadable and the families stopped absorbing the structural noise (currently ${reel.aInstruire.length}: ${reel.aInstruire.map((p) => `${p.a} ↔ ${p.b}`).join(' · ')})`);
   assert.ok(reel.paires.length > 0, 'while the declared neighbours stay visible — hiding them would hide the border that makes them legitimate, and a border nobody can see is one nobody maintains');
 
