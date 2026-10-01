@@ -55,7 +55,9 @@ question que cette borne te pose.**
 > celui-ci, par quelqu'un qui n'est pas nous, et où elle y a trouvé quelque chose de réel.**
 
 **Où on en est aujourd'hui : exportabilité globale à 88 %**, sur 8 dimensions toutes réellement
-mesurées. Trois sont à 100 %. Les deux qui traînent :
+mesurées. **Cinq sont à 100 %** *(re-mesuré le 2026-10-01 à 16h10 UTC : ce document disait TROIS,
+écrit le 30 septembre. Deux dimensions sont passées à 100 % depuis, et il reste une sixième à 94 %.
+La borne est donc plus proche qu'écrit, pas plus loin.)* Les deux qui traînent :
 - **45 %** — 46 outils sur 85 mentionnent encore ce projet-ci, même en exemple ;
 - **67 %** — 20 lignes de nos documents normatifs **exigent un outillage** que le successeur n'aura
   peut-être pas.

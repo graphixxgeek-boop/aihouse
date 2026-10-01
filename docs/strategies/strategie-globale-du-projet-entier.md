@@ -118,6 +118,15 @@ efficace, et réexplique-moi cette partie pour que ce soit clair pour moi. »*
    chiffre est mauvais : **14 tâches sur 1 272** savent dire quel objectif elles servent. **Le
    raccord du bas n'existe pas encore** — c'est le vrai chantier de la cascade.
 
+   > **Re-vérifié le 2026-10-01 à 16h15 UTC, et la vérification s'arrête à mi-chemin — ce qui est
+   > une information en soi.** Le DÉNOMINATEUR a bougé : le registre porte **1 338 lignes**, pas
+   > 1 272, donc le rapport ne peut qu'avoir empiré. **Le NUMÉRATEUR, lui, n'est pas reproductible :
+   > ce document ne dit pas quelle commande a produit le 14**, et aucun champ de la ligne ne porte
+   > l'objectif servi. Le remplacer par un chiffre obtenu autrement serait pire que de le laisser —
+   > on changerait l'unité sans le dire. **Le vrai manque est donc là, et il est plus grave que le
+   > chiffre** : une mesure qui ne nomme pas son instrument ne se re-vérifie plus (Article 31), et
+   > c'est précisément ce qu'il faudra fixer en ouvrant le chantier de la cascade.
+
 **Ce que la dynamique n'est PAS, et il faut le dire** : elle n'est pas automatique. Aucun mécanisme
 ne peut décider qu'une stratégie doit changer. Ce qui est mécanisable, c'est le **signalement** —
 une tâche orpheline, une stratégie que plus rien ne sert, un objectif que rien ne poursuit.

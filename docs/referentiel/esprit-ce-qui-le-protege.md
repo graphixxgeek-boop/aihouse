@@ -77,6 +77,15 @@ l'**Article 17**, cité **110 fois** dans le dépôt : il est partout dans les i
 part dans les mécanismes**. Un Article très cité et non porté est le pire des deux mondes — tout le
 monde croit qu'il est protégé *parce qu'on en parle tout le temps*.
 
+> **Ces quatre comptes se lisent les uns CONTRE les autres, jamais isolément** *(note ajoutée le
+> 2026-10-01 à 16h10 UTC)*. Ils viennent tous du même comptage, et c'est ce qui autorise à dire que
+> 17 est le plus exposé des cinq. **Un autre instrument du dépôt en donne d'autres valeurs** — le
+> compteur de citations d'Abraham rend 216 citations dans 62 fichiers pour ce même Article 17, parce
+> qu'il compte autrement. Les deux sont justes dans leur propre unité ; **remplacer 110 par 216
+> casserait la comparaison avec 35 et 10** et ferait croire à une aggravation là où il n'y a qu'un
+> changement de règle à mesurer. Le classement, lui, ne bouge pas : vérifié le 2026-10-01, l'Article
+> 17 reste le plus cité des cinq Articles de l'esprit.
+
 **Pourquoi ça compte précisément AVANT une refonte** : ce qui a un porteur survit à une réécriture,
 parce que le mécanisme part avec le code. Ce qui n'en a pas survit seulement si quelqu'un y pense.
 **Une refonte emporterait donc d'abord ce qui est déjà le moins protégé.**
