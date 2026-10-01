@@ -247,3 +247,20 @@ du corps de l'outil — or la sous-commande par défaut rend la main avant d'y a
 n'est jamais sorti une seule fois**, sur le volet même qui existe pour qu'on n'oublie rien. Il est
 désormais imprimé après le corps, quelle que soit la sous-commande, et le filet vérifie qu'il sort
 ET qu'il survit au filtre du crochet.
+
+## La famille d'un Article, et la couverture qui la garde *(`familleDeLArticle()`, `findArticlesSansFamille()`)*
+
+Le classement d'un Article dans une famille est **tenu à la main**, et cette nature volontaire est
+déclarée comme l'Article 24 l'exige : regrouper des règles par parenté est un jugement, pas une
+dérivation.
+
+**Ce qui est mécanisé, c'est la COUVERTURE.** `findArticlesSansFamille()` refuse qu'un Article réel
+de la charte manque au classement, **et** qu'un Article classé n'existe plus. Les deux sens de
+l'écart, jamais un seul : le second arrive à un renommage, le premier à chaque ajout — **et c'est
+le plus probable des deux**. Sans ce garde-fou, le prochain Article écrit resterait invisible : la
+copie qui se périme en silence.
+
+**Un détail d'écriture qui a coûté un faux positif** : le numéro du prochain Article n'est jamais
+cité dans ce code. Un nombre qui suit le mot « Article » est lu comme une CITATION par le détecteur
+de renvois morts, et un premier jet en a fabriqué un fantôme.
+

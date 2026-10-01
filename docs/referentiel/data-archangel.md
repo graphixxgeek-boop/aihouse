@@ -349,3 +349,51 @@ vraiment : **une carte qui invente une dépendance vaut moins qu'une carte qui e
 est de trop : ces jugements demandent de savoir ce que le projet VEUT, et ce savoir n'est pas dans
 le dépôt. Elle est entièrement dérivée, donc elle ne peut pas se périmer — ce qu'il exigeait.
 
+## L'élargissement automatique de la recherche de notes *(#1263)*
+
+**C'est la charte elle-même qui demandait ce travail de tête.** L'Article 30 écrit : « Un zéro
+n'est jamais la preuve qu'il n'y a rien à savoir : c'est la preuve que CE MOT-LÀ ne ressort pas. On
+réessaie avec le vocabulaire du sujet avant de conclure qu'on part de zéro. » Une obligation qui ne
+reposait que sur la mémoire de l'agent — donc perdue d'avance (Article 27).
+
+`motifsElargis()` relâche la question en trois niveaux, et **jamais vers le bas tant que le niveau
+précédent a trouvé quelque chose** : un sujet précis se noierait dans le bruit d'un mot commun. **Le
+niveau atteint est TOUJOURS dit** — un résultat obtenu en relâchant la question n'est pas le même
+qu'un résultat obtenu telle qu'elle était posée, et confondre les deux serait le « signal adjacent
+lu comme le signal visé » que ce dépôt paie en boucle. `chercherLesNotes()` est la recherche
+elle-même, sur les cinq lieux où vivent les notes.
+
+### Sa limite, mesurée sur moi le 2026-10-01 *(tâche #1383)*
+
+**L'élargissement relâche la question que j'ai écrite ; il ne peut pas deviner un vocabulaire que
+je n'ai jamais employé.** Ce jour-là j'ai cherché « fusion outils effectif » puis « outils qui se
+chevauchent ». L'outil a bien élargi, et il a bien rendu ce qu'il pouvait. Le dépôt rangeait le
+sujet sous **« outils à retirer ou refondre »** — trois mots que je n'avais pas donnés. Résultat :
+j'ai reconstruit un mécanisme qui existait depuis quatre jours.
+
+**Le geste qui manque, et aucune mécanique ne le fera** : quand une TÂCHE nomme où chercher — ici
+« trace probable dans CASSANDRA-RH » — y aller **avant** d'élargir au hasard.
+
+## Les documents qui ne circulent pas
+
+`documentsOrphelins()` sépare ce qui est cité de ce qui ne l'est pas, et réserve le mot ORPHELIN au
+cas réellement perdu — rien du tout, pas même son index. `formatOrphelinsLines()` le rend lisible.
+
+**Ce qu'elle ne dit pas, et il faut le lire avant d'agir** : un document peu cité n'est pas un
+document inutile. Une archive n'a pas vocation à être citée, un texte fondateur se lit sans être
+convoqué. **La mesure dit ce qui NE CIRCULE PAS ; décider si ça doit circuler reste humain.**
+
+## L'index par situation, et les quatre verdicts
+
+`buildIndexParSituation()` et `rendreIndexParSituation()` construisent l'index des situations
+rencontrées ; `lireUneSynthese()` lit une fiche, `normaliserLeVerdict()` ramène son verdict à l'un
+de **quatre** libellés.
+
+**Pourquoi quatre et pas quatorze** : le premier passage a trouvé 14 libellés distincts — « ACCORD »,
+« ACCORD TOTAL », « ACCORD FORT », « ACCORD sur la structure », « ACCORD partiel »… **C'est la
+rédaction qui variait, pas le sens**, et un index à quatorze colonnes ne se lit plus.
+
+**Il a audité sa propre écriture dès le premier passage** : deux fiches sur six portaient un défaut
+de forme — une idée sans sa question, un en-tête que le lecteur ne savait pas lire. *Un format
+qu'aucune machine ne relit dérive en silence.*
+

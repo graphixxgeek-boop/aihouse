@@ -31,3 +31,30 @@ catégorie.
 Il est **vital** au sens de l'Agence (tout le monde l'importe) et c'est précisément ce qui rend son
 mélange générique/spécifique coûteux : il est le premier fichier qu'un export doit emporter, et le
 premier à devoir être nettoyé.
+
+## Lire les scripts du dépôt, une seule fois *(`lireLesScriptsDuDepot()`)*
+
+Deux fonctions appelantes lisaient les mêmes scripts par le même chemin. **La correction raconte
+quelque chose qui vaut au-delà de ce cas** : la première tentative a consisté à écrire l'explication
+dans les DEUX copies, pour qu'elle soit sous les yeux. Le détecteur de duplication a aussitôt
+re-signalé la paire — **en plus gros qu'avant**, le bloc jumeau passant de 5 à 9 lignes, parce que
+le commentaire identique s'y était ajouté.
+
+**Expliquer une duplication dans les deux copies duplique l'explication.** La raison vit donc dans
+la fonction partagée, une seule fois, et chaque appelant ne porte qu'une ligne de renvoi. C'est la
+leçon **L37** — corriger la CLASSE, jamais l'occurrence — appliquée à ce qu'on écrit, pas seulement
+à ce qu'on code.
+
+## Les lectures aveugles aux fusions *(`findLecturesAveuglesAuxFusions()`)*
+
+Elle relève les lignes qui lisent les fichiers d'un commit **sans dire quoi faire d'une fusion** —
+un commit de fusion n'a pas un parent mais deux, et une lecture qui l'ignore rend un résultat
+plausible et faux.
+
+**Deux choix de conception, et chacun porte sa raison** : `sources` est une liste de
+`{ fichier, texte }` — **le lecteur reste à l'appelant**, pour qu'un test n'ait jamais besoin du
+disque (leçon L40 : un test qui lit une donnée vivante juge le dépôt, pas le code). Et la liste des
+fichiers dont les commandes git sont du **décor** est tenue à la main, cette nature volontaire
+étant écrite à côté comme l'Article 24 l'exige : le filet de sécurité contient par construction de
+fausses commandes qu'il donne à manger à ses doublures.
+
