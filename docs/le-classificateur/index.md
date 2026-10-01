@@ -15,13 +15,15 @@ la tâche #612 cherche à réduire le nombre de fichiers produits sans lecteur.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**5 fichier(s)** dans ce dossier.
+**7 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [classification-agence.html](classification-agence.html) | — |
 | [etat-des-classifications-2026-09-26.html](etat-des-classifications-2026-09-26.html) | — |
 | [etat-des-classifications-2026-09-26.txt](etat-des-classifications-2026-09-26.txt) | — |
+| [etat-des-classifications-2026-10-01.html](etat-des-classifications-2026-10-01.html) | — |
+| [etat-des-classifications-2026-10-01.txt](etat-des-classifications-2026-10-01.txt) | — |
 | [etat-du-schema.html](etat-du-schema.html) | — |
 | [etat-du-schema.txt](etat-du-schema.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

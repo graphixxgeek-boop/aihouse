@@ -5620,8 +5620,57 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     { toolSlug: 'argus', origin: 'automatique_post_commit', at: 1 },
     { toolSlug: 'argus', origin: 'demande', at: 2, foundSomething: true },
   ] };
-  const usageReport = buildToolBrainUsageReport(fakeHistory, [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }]);
-  assert.deepEqual(usageReport.neverUsed, ['find-brain'], 'a tool with zero real events must show up as never-used, exactly what toolsNeverUsed() already computes — never recalculated a second way here');
+  // LE DISQUE EST INJECTÉ (tâche #1379) : depuis que `neverUsed` croise le compteur avec le
+  // REGISTRE sur disque, un test qui ne contrôlerait pas le système de fichiers jugerait le
+  // contenu réel de docs/ au lieu du code (leçon L40). Ici find-brain a un registre VIDE, donc
+  // il est bien un candidat ; le cas « pas de registre du tout » est éprouvé plus bas.
+  const disqueFictif = (dir) => {
+    const rel = String(dir).replace(/^.*\/docs\//, '');
+    if (rel !== 'find-brain') { const e = new Error('ENOENT'); e.code = 'ENOENT'; throw e; }
+    return [{ name: 'index.md', isDirectory: () => false }];
+  };
+  const usageReport = buildToolBrainUsageReport(fakeHistory, [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }], { root: '/r/', listDirImpl: disqueFictif });
+  assert.deepEqual(usageReport.neverUsed, ['find-brain'], 'a tool with zero real events AND an empty registry is a real candidate — the counter says nothing happened and the disk agrees');
+
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  // LE CINQUIÈME ÉTAT — LE REGISTRE SUR DISQUE EST UNE PREUVE (2026-10-01, tâche #1379)
+  //
+  // LE COMPTEUR N'ENREGISTRE QUE LES PASSAGES QUI PASSENT PAR LUI. Un outil lancé à la main hors
+  // de ce chemin reste à zéro — et le rapport le rangeait parmi les « jamais sollicités », avec
+  // en plan d'action « les lancer une fois pour de vrai, ou décider de les retirer ». Pour un
+  // outil qui a déjà tourné et déposé ses rapports, LES DEUX MOITIÉS de la phrase sont fausses.
+  //
+  // MESURÉ LE JOUR OÙ C'EST TROUVÉ : sur 20 outils annoncés jamais sollicités, 6 avaient laissé
+  // de vrais fichiers dans leur registre — the-screener (8), ines-official (6), check-spirit (3),
+  // x-port-blindtest (2), objectifs-vs-resultats (2), kpi-report (1). Et la question posée ce
+  // jour-là était « lesquels peut-on retirer pour réduire l'effectif ? ».
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  const faussesEntrees = (map) => (dir, _o) => {
+    const rel = String(dir).replace(/^.*\/docs\//, '');
+    if (!(rel in map)) { const e = new Error('ENOENT'); e.code = 'ENOENT'; throw e; }
+    return map[rel].map((n) => ({ name: n, isDirectory: () => false }));
+  };
+  const aTourne = tb.tracesSurDisque('alpha', { root: '/r/', listDirImpl: faussesEntrees({ alpha: ['index.md', 'rapport-1.txt', 'rapport-2.txt'] }) });
+  assert.equal(aTourne.etat, 'a-laisse-des-traces', 'files in its own registry PROVE a tool ran, whatever the counter says');
+  assert.equal(aTourne.fichiers, 2, 'and index.md is NOT counted: data-archangel writes it, not the tool — counting it would make every indexed folder look active');
+
+  const vide = tb.tracesSurDisque('beta', { root: '/r/', listDirImpl: faussesEntrees({ beta: ['index.md'] }) });
+  assert.equal(vide.etat, 'registre-vide', 'a registry holding only its generated index is no trace at all');
+
+  const inconnu = tb.tracesSurDisque('gamma', { root: '/r/', listDirImpl: faussesEntrees({}) });
+  assert.equal(inconnu.etat, 'pas-de-registre', 'and no registry at all means UNDECIDABLE, never "inactive" — a tool is allowed to write nothing');
+  assert.ok(inconnu.pourquoi.includes('ne prouve rien'), 'the third state must say so in words, or a reader will take it for the second (lessons L5 and L11)');
+
+  const tri = tb.separerCeuxQuiOntLaisseDesTraces(['alpha', 'beta', 'gamma'], { root: '/r/', listDirImpl: faussesEntrees({ alpha: ['r.txt'], beta: ['index.md'] }) });
+  assert.deepEqual(tri.ontTourne.map((t) => t.slug), ['alpha'], 'the three populations must come out separated');
+  assert.deepEqual(tri.sansTrace, ['beta'], 'only the empty registry is a real candidate');
+  assert.deepEqual(tri.indecidables, ['gamma'], 'and the undecidable one is NEVER folded into the candidates — that is the whole point');
+
+  // ── SUR LE VRAI DÉPÔT (Article 25) : le cas n'est pas théorique.
+  const tbReel = tb.buildToolBrainUsageReport(tb.loadToolUsageHistory ? tb.loadToolUsageHistory() : { events: [] });
+  assert.ok(Array.isArray(tbReel.ontTourneSansPasserParLeCompteur), 'the real report must carry the new population');
+  assert.ok(tbReel.neverUsed.every((s) => !tbReel.ontTourneSansPasserParLeCompteur.some((t) => t.slug === s)), 'a tool PROVEN to have run must never also be listed as never used — two opposite readings in one report is worse than either');
+  assert.ok(tbReel.neverUsed.every((s) => !(tbReel.traceIndecidable ?? []).includes(s)), 'and an undecidable one must never be counted among the candidates for removal');
 
   // LE QUATRIÈME ÉTAT DU SILENCE (2026-09-25, tâche #763 — « tu retrouves la vérité »).
   // CE QUI A ÉTÉ MESURÉ, et c'est le fil rouge du projet appliqué au compteur lui-même : les

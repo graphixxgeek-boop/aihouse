@@ -36,6 +36,9 @@ import { auditLecons, leconsPourTache, enregistrerRemontee } from "./tool-learni
 
 export const TOOL_BRAIN_SLUG = "tool-brain";
 const USAGE_HISTORY_URL = new URL("../.tool-usage-history.json", import.meta.url);
+// La racine du dépôt, pour lire les registres `docs/<slug>/` (tâche #1379). Injectable partout où
+// elle sert, pour qu'un test puisse pointer un faux dossier sans toucher au vrai.
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 
 // LE LECTEUR A DÉMÉNAGÉ CHEZ LE PROPRIÉTAIRE DU MAGASIN (2026-09-27, tâche #715) : il est défini
 // dans tool-usage.mjs, le fichier qui ÉCRIT ces événements. Il restait ici pour des raisons
@@ -327,7 +330,77 @@ export function rapportDesMuets({ readFileImpl = lireFichierPartage, history = n
   return buildToolBrainUsageReport(history ?? loadToolUsageHistory(), PRESTATIONS, { sourceCrochet, lireSource, offert });
 }
 
-export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "" } = {}) {
+// ─────────────────────────────────────────────────────────────────────────────
+// LE REGISTRE SUR DISQUE EST UNE PREUVE, LE COMPTEUR N'EST QU'UN TÉMOIGNAGE
+// (2026-10-01, tâche #1379)
+//
+// LE DÉFAUT, ET IL FAISAIT DIRE AU RAPPORT LE CONTRAIRE DE LA VÉRITÉ. Le compteur
+// n'enregistre que les passages qui passent PAR LUI. Un outil lancé à la main en dehors de ce
+// chemin reste à zéro, et le rapport le rangeait parmi les « jamais sollicités » avec, en plan
+// d'action, « les lancer une fois pour de vrai, ou décider de les retirer ». Pour un outil qui a
+// déjà tourné et déposé ses rapports, les deux moitiés de la phrase sont fausses.
+//
+// MESURÉ LE JOUR OÙ C'EST TROUVÉ : sur les **20** outils annoncés jamais sollicités, **7 avaient
+// laissé de vrais fichiers dans leur propre registre** — the-screener (8), ines-official (6),
+// check-spirit (3), x-port-blindtest (2), the-final-judge (2), objectifs-vs-resultats (2),
+// kpi-report (1). Soit **35 % de la liste**, présentés comme inactifs alors qu'ils travaillaient.
+//
+// POURQUOI ÇA COMPTAIT CE JOUR-LÀ : la question posée était « quels outils peut-on fusionner ou
+// retirer pour réduire l'effectif ? ». Décider une suppression sur un compteur qui rate un tiers
+// de l'usage réel, c'est supprimer des outils qui servent.
+//
+// ET J'AVAIS DÉJÀ FAIT L'ERREUR MOI-MÊME quelques heures plus tôt, en écrivant que `check-spirit`
+// n'avait jamais tourné — démenti par son registre, qui portait deux passages. La règle en est
+// sortie : **quand un outil a un registre sur disque, c'est LUI qui dit s'il a tourné.** Elle
+// vivait dans une note de session ; elle est mécanique à partir d'ici.
+//
+// TROIS ÉTATS, JAMAIS DEUX, et le troisième est le plus important (leçons L5 et L11) :
+//   • A LAISSÉ DES TRACES — des fichiers dans `docs/<slug>/` : il a tourné, point.
+//   • REGISTRE VIDE — le dossier existe et ne contient rien : aucune trace, vrai candidat.
+//   • PAS DE REGISTRE — on ne peut pas savoir, et c'est légitime : tout outil n'écrit pas
+//     forcément quelque chose (une pièce du kit peut être SANS OBJET). Rendre « aucune trace »
+//     pour ce cas-là confondrait « je n'ai rien trouvé » avec « je n'ai pas pu regarder ».
+//
+// `index.md` EST EXCLU, et c'est indispensable : il est écrit par data-archangel, pas par l'outil.
+// Le compter ferait passer chaque dossier indexé pour un outil actif — le faux vert symétrique.
+export const FICHIERS_NON_PROBANTS = Object.freeze(["index.md"]);
+
+export function tracesSurDisque(slug, { root = ROOT, listDirImpl = readdirSync, nonProbants = FICHIERS_NON_PROBANTS } = {}) {
+  const dossier = join(root, "docs", slug);
+  let entrees;
+  try { entrees = listDirImpl(dossier, { withFileTypes: true }); }
+  catch { return { etat: "pas-de-registre", fichiers: 0, pourquoi: `aucun dossier docs/${slug}/ — cet outil n'écrit peut-être rien, donc son silence ne prouve rien dans un sens ni dans l'autre` }; }
+  let n = 0;
+  const pile = [{ dir: dossier, entrees }];
+  while (pile.length) {
+    const { dir, entrees: es } = pile.pop();
+    for (const e of es) {
+      if (e.isDirectory()) {
+        try { pile.push({ dir: join(dir, e.name), entrees: listDirImpl(join(dir, e.name), { withFileTypes: true }) }); } catch { /* illisible : il ne prouve rien */ }
+      } else if (!nonProbants.includes(e.name)) n++;
+    }
+  }
+  return n > 0
+    ? { etat: "a-laisse-des-traces", fichiers: n, pourquoi: `${n} fichier(s) déposés dans docs/${slug}/ : il a tourné, quoi qu'en dise le compteur` }
+    : { etat: "registre-vide", fichiers: 0, pourquoi: `docs/${slug}/ existe et ne contient aucun rapport : aucune trace d'un passage` };
+}
+
+export function separerCeuxQuiOntLaisseDesTraces(slugs = [], options = {}) {
+  const ontTourne = [], sansTrace = [], indecidables = [];
+  for (const slug of slugs ?? []) {
+    const t = tracesSurDisque(slug, options);
+    if (t.etat === "a-laisse-des-traces") ontTourne.push({ slug, ...t });
+    else if (t.etat === "registre-vide") sansTrace.push(slug);
+    else indecidables.push(slug);
+  }
+  ontTourne.sort((a, b) => b.fichiers - a.fichiers);
+  return { ontTourne, sansTrace, indecidables };
+}
+
+// `root` et `listDirImpl` sont injectables depuis la tâche #1379 : sans ça, un test qui vérifie le
+// classement des silences dépendrait du contenu réel de `docs/`, c'est-à-dire du disque du jour
+// (leçon L40 : un test qui lit une donnée VIVANTE ne juge pas le code, il juge le disque).
+export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "", root = ROOT, listDirImpl = readdirSync } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
     .map((slug) => ({ slug, ...toolUsageStats(history, slug) }))
@@ -342,9 +415,18 @@ export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { 
   const silences = classerLesSilencieux(restants, { lireSource, offert });
   const sansCli = new Set(silences.mesurable ? silences.sansCli : []);
   const muets = new Set(silences.mesurable ? silences.muets : []);
+  const candidats = restants.filter((s) => !sansCli.has(s) && !muets.has(s));
+  // LA PREUVE MATÉRIELLE PASSE AVANT LE TÉMOIGNAGE DU COMPTEUR (voir le commentaire ci-dessus).
+  const traces = separerCeuxQuiOntLaisseDesTraces(candidats, { root, listDirImpl });
   return {
     perTool,
-    neverUsed: restants.filter((s) => !sansCli.has(s) && !muets.has(s)),
+    // `neverUsed` ne retient QUE les sans-trace. Y laisser les indécidables affirmerait ce qu'on
+    // ne sait pas — et le plan d'action proposerait de RETIRER un outil dont rien ne dit s'il
+    // travaille. Ils sont listés à part, et vus, mais jamais comptés comme inactifs.
+    neverUsed: traces.sansTrace,
+    ontTourneSansPasserParLeCompteur: traces.ontTourne,
+    sansTraceSurDisque: traces.sansTrace,
+    traceIndecidable: traces.indecidables,
     couvertsParLeCrochet: [...couverts],
     sansLigneDeCommande: [...sansCli],
     muetsAuCompteur: [...muets],
@@ -396,8 +478,8 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
   // `checkLastCommitSource` sert deux fois : à l'auto-diagnostic (est-ce que tool-brain est câblé ?)
   // et désormais à distinguer « jamais sollicité » de « couvert par le crochet ». Un seul fichier
   // lu, deux questions répondues — jamais une seconde lecture pour la même source.
-  const { perTool, neverUsed, couvertsParLeCrochet, sansLigneDeCommande, muetsAuCompteur, silenceMesurable, pourquoiSilenceNonMesure } =
-    buildToolBrainUsageReport(history, prestations, { sourceCrochet: checkLastCommitSource ?? "", lireSource, offert });
+  const usage = buildToolBrainUsageReport(history, prestations, { sourceCrochet: checkLastCommitSource ?? "", lireSource, offert });
+  const { perTool, neverUsed, couvertsParLeCrochet, sansLigneDeCommande, muetsAuCompteur, silenceMesurable, pourquoiSilenceNonMesure } = usage;
   // LE SEUL SIGNAL POSITIF DU RAPPORT (2026-09-25, constat DEEP-READER 6, sa demande mot pour mot :
   // « les utilisations spontanées des outils (de ta part ET hors process mecaniques) sont à flagger
   // comme "signe trés positif" de cette mesure »). Tout le reste de ce rapport compte ce qui manque ;
@@ -422,7 +504,7 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     // qui voit le chiffre d'abord ne revient pas sur la réserve.
     formatHorizonLine(horizonDuJournal(history), { heuresDuDepot: heuresDuDepot ?? null }),
     "",
-    neverUsed.length ? `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}.` : "Tous les outils connus du catalogue ont déjà été sollicités au moins une fois.",
+    neverUsed.length ? `${neverUsed.length} outil(s) jamais sollicité(s) ET sans aucune trace sur disque : ${neverUsed.join(", ")}.` : "Aucun outil n'est à la fois à zéro au compteur et sans trace sur disque.",
     couvertsParLeCrochet.length ? `${couvertsParLeCrochet.length} outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : ${couvertsParLeCrochet.join(", ")} — leur silence n'est pas une inaction.` : "",
     !silenceMesurable ? `⚠️ SILENCE NON CLASSÉ — ${pourquoiSilenceNonMesure}` : "",
     muetsAuCompteur?.length ? `🔴 ${muetsAuCompteur.length} outil(s) ONT une ligne de commande et n'enregistrent PAS leur passage : ${muetsAuCompteur.join(", ")}. Leur zéro ne mesure pas leur inactivité, il mesure leur silence — c'est un défaut du compteur, à corriger, jamais un constat sur eux.` : "",
@@ -443,6 +525,12 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     "",
     "Outils les moins sollicités (total cumulé, jamais remis à zéro) :",
     ...perTool.slice(0, 10).map((t) => `- ${t.slug} : ${t.total} sollicitation(s)${t.foundSomethingRate != null ? `, ${t.foundSomethingRate}% de trouvailles confirmées` : ""}`),
+    // LA PREUVE MATÉRIELLE PASSE DEVANT LE TÉMOIGNAGE (2026-10-01, tâche #1379). Ces outils-là
+    // SONT sortis de « jamais sollicité » : les y laisser faisait dire au plan d'action « lancez-les
+    // une fois pour de vrai, ou retirez-les » à propos d'outils qui avaient déjà déposé leurs
+    // rapports. 7 sur 20 le jour où c'est trouvé.
+    usage.ontTourneSansPasserParLeCompteur?.length ? `🟢 ${usage.ontTourneSansPasserParLeCompteur.length} outil(s) à zéro au compteur ONT POURTANT TOURNÉ — leur registre sur disque le prouve : ${usage.ontTourneSansPasserParLeCompteur.map((t) => `${t.slug} (${t.fichiers} fichier(s))`).join(", ")}. Ce n'est pas eux qu'il faut relancer, c'est le compteur qui ne les voit pas : ils sont lancés hors du chemin qui enregistre.` : "",
+    usage.traceIndecidable?.length ? `❓ ${usage.traceIndecidable.length} outil(s) sans registre sur disque, donc INDÉCIDABLES : ${usage.traceIndecidable.join(", ")}. Un outil n'écrit pas forcément quelque chose — leur silence ne prouve rien dans un sens ni dans l'autre, et les compter comme inactifs serait confondre « je n'ai rien trouvé » avec « je n'ai pas pu regarder ».` : "",
     "",
     "Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :",
     self.findings.length ? self.findings.map((f) => `- ${f}`).join("\n") : "- Aucun signal d'anomalie sur le périmètre propre de tool-brain.",
@@ -461,8 +549,19 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
   // remonter produirait un plan qui réclame de corriger ce qui va bien.
   const ecarts = [];
   if (neverUsed.length) ecarts.push({
-    quoi: `${neverUsed.length} outil(s) du catalogue jamais sollicité(s) : ${neverUsed.join(", ")}`,
+    quoi: `${neverUsed.length} outil(s) jamais sollicité(s) ET sans aucune trace sur disque : ${neverUsed.join(", ")}`,
     quoiFaire: "les lancer une fois pour de vrai, ou décider de les retirer — un outil construit et jamais appelé n'a jamais protégé personne (leçon L2), et le défaut est du côté de l'agent, jamais de l'outil",
+  });
+  // DEUX ÉCARTS SÉPARÉS, ET LA SÉPARATION EST LE FOND (2026-10-01, tâche #1379) : « aucune trace »
+  // appelle une décision, « pas de registre » appelle une mesure. Les fondre faisait proposer de
+  // RETIRER des outils dont rien ne disait s'ils travaillaient.
+  if (usage.ontTourneSansPasserParLeCompteur?.length) ecarts.push({
+    quoi: `${usage.ontTourneSansPasserParLeCompteur.length} outil(s) à zéro au compteur ONT POURTANT TOURNÉ, leur registre le prouve : ${usage.ontTourneSansPasserParLeCompteur.map((t) => t.slug).join(", ")}`,
+    quoiFaire: "ne rien leur reprocher : c'est le COMPTEUR qui ne les voit pas, parce qu'ils sont lancés hors du chemin qui enregistre. Le geste est de brancher l'enregistrement sur ce chemin-là, jamais de relancer un outil qui travaille déjà",
+  });
+  if (usage.traceIndecidable?.length) ecarts.push({
+    quoi: `${usage.traceIndecidable.length} outil(s) sans registre sur disque : on ne peut PAS savoir s'ils ont tourné (${usage.traceIndecidable.join(", ")})`,
+    quoiFaire: "les instruire un par un : un outil qui n'écrit rien est légitime (une pièce du kit peut être SANS OBJET), mais alors son usage ne se mesurera jamais par là. Décider, pour chacun, s'il doit enregistrer son passage ou s'il reste hors mesure avec sa raison écrite",
   });
   if (muetsAuCompteur?.length) ecarts.push({
     quoi: `${muetsAuCompteur.length} outil(s) ont une ligne de commande et n'enregistrent PAS leur passage : ${muetsAuCompteur.join(", ")}`,
