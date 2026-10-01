@@ -819,3 +819,60 @@ jours est indiscernable, pour tout lecteur, d'un `autonome` posé ce soir.
 **ET LA DISCIPLINE QUI EN SORT, plus large que le mode** : *une preuve de PRÉSENCE n'est pas une
 preuve de PERFORMANCE.* Elle vaut pour les 31 preuves d'étape sur 42 que
 `findPreuvesToujoursVraies()` a nommées le même jour (tâche #1292).
+
+---
+
+## LA CONFIGURATION QUI A TENU 20 HEURES — le meilleur exemple à ce jour (2026-10-01)
+
+*(Demande explicite de l'utilisateur à son retour : « Enregistre tout de suite les paramètres qui
+t'ont permis de travailler jusqu'à maintenant sans t'arrêter : comment as-tu pu tenir aussi
+longtemps ? regarde et analyse ce qu'il s'est passé, retiens les paramètres, enregistre-les dans le
+mode auto pour la prochaine fois : un autre exemple où c'est PARFAIT, le meilleur exemple de
+configuration jusqu'à aujourd'hui je pense. »)*
+
+**CE QUE CETTE SECTION AJOUTE AUX DEUX AUTRES, ET POURQUOI ELLES NE SE CONFONDENT PAS.** « Les
+réglages de réveil qui ont fait leurs preuves » décrit une CADENCE. « Le paramétrage interne de
+l'agent » décrit des GESTES, appris en les ratant. Celle-ci décrit l'**ENDURANCE** : ce qui fait
+qu'une session ne s'arrête pas d'elle-même sur vingt heures, et qui n'est **aucun des deux**.
+
+**LE RÉSULTAT MESURÉ, pour que la configuration soit jugée sur autre chose que mon impression** :
+82 tâches ouvertes sur la fenêtre, 69 closes, 62 commits tous poussés, filet de sécurité vert à
+chaque commit (390 vérifications), zéro appel API, zéro fichier du Jeu touché.
+
+### Les douze paramètres, dans l'ordre de leur importance
+
+| # | Le paramètre | Ce qui arrive sans lui |
+|---|---|---|
+| **1** | **DEUX minuteurs indépendants, jamais un seul** : un cron HORAIRE *plus* une chaîne one-shot réarmée à chaque tour | un seul minuteur qui échoue arrête la nuit en silence. C'est le paramètre le plus structurant des douze, et le seul qui soit une REDONDANCE |
+| **2** | **Le prompt du réveil RÉÉCRIT ENTIÈREMENT à chaque réarmement**, jamais recopié : commit courant, tâches closes, pièges du moment | le réveil repart sur un état périmé. Un prompt stocké est une COPIE, et l'Article 24 dit qu'une copie non surveillée se périme en silence — **c'est arrivé pour de vrai au cron horaire, qui n'est jamais réarmé donc jamais réécrit** (#1411) |
+| **3** | **Une condition d'EXTINCTION en TÊTE de chaque prompt**, avant tout le reste | le filet continue de dire « reprends la nuit » après le retour de l'utilisateur. Un filet qui ment est pire qu'un filet absent (leçon #1299) |
+| **4** | **Une BORNE DE FIN déclarée, calée sur la fenêtre qu'il a autorisée** | un déclencheur sans date de fin survit à la raison qui l'a créé. **Ce paramètre MANQUAIT et a été ajouté à 17h50** : rien ne m'aurait arrêté à 20h30, et continuer au-delà de ce qu'il autorise n'est pas du zèle, c'est agir sans mandat |
+| **5** | **Une liste « DÉJÀ FAIT — NE PAS REFAIRE » dans chaque prompt** | le maillon suivant refait un travail terminé, et ça ne se voit pas puisque le résultat est le même |
+| **6** | **Les pièges de la session PORTÉS dans le prompt** (les fausses alertes du jour, la règle d'horodatage, le compte de colonnes) | chaque réveil réapprend les mêmes fautes. Un agent ne garde rien d'un tour à l'autre : ce qui n'est pas dans le prompt n'existe plus |
+| **7** | **Commit ET push après CHAQUE tâche, jamais groupés** | ce qui n'est pas poussé n'existe pas si la session tombe. Sur vingt heures, la probabilité n'est pas négligeable |
+| **8** | **La ligne de suivi dans le MÊME commit que le travail** | la mémoire durable vit sur le disque, pas dans la conversation — et c'est la seule qui survit à une reprise par une autre IA (Article 27) |
+| **9** | **Le filet de sécurité lancé en ARRIÈRE-PLAN, attendu par une boucle de sondage** (≈6 min) | en avant-plan il consomme le tour entier et le harnais le tue. Avec `for i in $(seq 1 38); do pgrep -f check-house \|\| break; sleep 15; done` |
+| **10** | **« Rien à faire » se VÉRIFIE, il ne s'affirme pas** : relancer les contrôleurs et LIRE leur sortie | on invente du travail pour avoir l'air occupé. **Sept maillons ouverts en croyant n'avoir rien à faire ont rendu sept vrais résultats** — dont un contrôleur aveugle depuis deux jours |
+| **11** | **Le mode de travail déclaré, et RE-déclaré quand son affirmation vieillit** | « autonome » affirme une absence que plus rien ne vérifie. Et re-déclarer sans élément neuf est une circularité : rafraîchir l'horodatage sans rafraîchir la connaissance (#1410) |
+| **12** | **Refuser de fabriquer du travail : c'est la MESURE qui décide s'il faut bâtir** | la couche d'obligations grossit à chaque outil ajouté, et c'est elle le vrai poids du projet. **Six refus sur la fenêtre**, chacun avec sa mesure écrite |
+
+### Les trois choses qui ont RATÉ, et qu'il faut corriger à la prochaine nuit
+
+1. **Le cron horaire n'est jamais réarmé, donc jamais réécrit — c'est le plus exposé des deux
+   minuteurs, par sa permanence même.** Son prompt est devenu faux sur deux points et l'est resté
+   jusqu'à ce que je le lise par hasard. **Correctif pour la prochaine fois : relire le prompt du
+   cron à chaque changement d'état qui le concerne** (mode de travail, bornes, liste de tâches),
+   pas seulement à sa création.
+2. **Aucune borne de fin n'était posée au départ.** Elle a été ajoutée après coup, dix-sept heures
+   plus tard. **Correctif : la poser AU MOMENT DE L'ARMEMENT**, dérivée de la fenêtre que
+   l'utilisateur annonce.
+3. **Treize fausses alertes, toutes nées de mes propres commandes d'inspection** (un `head` qui
+   tronque, un script jetable qui court-circuite le formateur d'un outil, un mauvais nom de champ).
+   **Correctif : avant de rapporter qu'une chose MANQUE, la re-constater sans troncature et par le
+   formateur de l'outil.** Le défaut est presque toujours dans l'instrument, pas dans la donnée.
+
+### Le principe qui résume les douze
+
+**Tout ce qui doit survivre à un réveil doit être ÉCRIT dans le prompt du réveil ou sur le disque —
+jamais dans la conversation.** Un outil garde son registre d'une session à l'autre ; un agent ne
+garde rien. Les douze paramètres ci-dessus ne sont que douze façons d'appliquer cette seule phrase.
