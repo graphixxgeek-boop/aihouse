@@ -23268,3 +23268,51 @@ async function testChiffrageDeLaRefonte() {
   console.log("Passed: le chiffrage de la refonte (2026-10-01, tâche #1356). Sa proposition centrale est « tout reprendre à zéro », et la réponse honnête n'est ni oui ni non : c'est un chiffre — d'autant plus qu'un chiffre donné de tête, le « 38 fichiers sur 40 », avait servi la veille d'argument principal à cette même refonte sans être reproductible. LA THÈSE MESURÉE N'EST PAS CELLE QU'ON ATTEND : le coût ne se compte pas en lignes, puisque du code mécanique se réécrit vite. Ce qui ne se recopie pas, ce sont les RAISONS — 2 228 blocs dans l'outillage, chacun une décision déjà payée, et une refonte qui les perd réintroduit un bug déjà résolu (Article 19 pris à l'envers). ET LA RÉPARTITION COMPTE PLUS QUE LE TOTAL : 25,3 par fichier en moyenne, 8 en MÉDIANE, et check-house.mjs en porte 718 à lui seul — 32 %. La première version ne rendait que la moyenne et dessinait un dépôt uniformément dense qui n'existe pas ; le coût est concentré, et une concentration se traite là où une moyenne ne se traite pas. TROIS GARDE-FOUS TENUS : un commentaire ordinaire n'est jamais compté comme une décision · un corpus vide refuse de conclure plutôt que de rendre « 0 ligne à reprendre », qui se lirait comme « rien à faire » · et le CONTREPOIDS est obligatoire, parce qu'un outil qui ne mesure que le coût d'une option la fait perdre d'office — ce qui est arrivé pour de vrai pendant sa construction, par un champ mal lu qui rendait « aucun acquis » au lieu de trois, et un zéro par mauvais champ ressemble trait pour trait à un zéro mesuré.");
 }
 await testChiffrageDeLaRefonte();
+
+// ────────────────────────────────────────────────────────────────────────────
+// LE FAUX CHIFFRE QUI RÉPONDAIT À « OÙ ON EN EST » (2026-10-01, tâche #1363)
+// ────────────────────────────────────────────────────────────────────────────
+// `ou-on-en-est` lisait le statut d'une tâche à la NEUVIÈME case, en dur. Le registre a gagné un
+// champ le 2026-09-25 (`pourQui`, #825) : depuis, la neuvième case n'est plus le statut mais la
+// case « OUI » de la déclaration de fidélité. L'outil annonçait **569 tâches ouvertes là où il y
+// en a 117**, et 468 de ses « ouvertes » portaient le statut littéral « OUI ».
+//
+// C'EST LE PIRE FAUX CHIFFRE POSSIBLE, et pas à cause de son ampleur : à cause de SA QUESTION. Il
+// répond à « où on en est ». Un chiffre faux de ce genre ne lève aucune erreur, s'affiche sans
+// broncher, et répond précisément à ce qu'on ne revérifie jamais — puisqu'on vient de le demander
+// à un outil. Article 24 dans sa forme la plus coûteuse : une position RECOPIÉE au lieu d'être
+// DÉRIVÉE, alors que le dépôt avait déjà la bonne réponse juste à côté (check-suivi-fidelity
+// dérive sa fourchette de colonnes de FORMAT_TACHE depuis le jour même où le champ est arrivé).
+async function testOuOnEnEstLitLeBonStatut() {
+  const assert = (await import('node:assert/strict')).default;
+  const O = await import('../scripts/ou-on-en-est.mjs');
+
+  // ── 1. LE FORMAT D'AUJOURD'HUI (9 champs + les deux cases de fidélité) est lu correctement.
+  const neuf = '| 1 | 2026-10-01T00:00Z | mot | Sujet / titre | origine | NORMAL-UTILE | PROJET | OUI | OUI | le détail | Terminée |';
+  const [t9] = O.parseTaches(neuf);
+  assert.equal(t9.statut, 'Terminée', 'the status is the LAST cell, whatever the number of fields before it');
+  assert.equal(t9.description, 'le détail', 'and the detail is the one before it, read the same way');
+  assert.ok(O.estTerminee(t9), 'so a finished task is finally counted as finished');
+
+  // ── 2. L'ANCIEN FORMAT (8 champs) continue de se lire — on ne répare pas en cassant l'histoire.
+  const huit = '| 2 | 2026-09-01T00:00Z | mot | Sujet / titre | origine | NORMAL-UTILE | le détail | Terminé |';
+  const [t8] = O.parseTaches(huit);
+  assert.equal(t8.statut, 'Terminé', 'the older 8-field rows must keep working: 522 of the 640 rows are in that shape');
+  assert.ok(O.estTerminee(t8), 'and still count as finished');
+
+  // ── 3. LE BUG EXACT, EN CONTRE-ÉPREUVE : la case « OUI » ne doit JAMAIS être prise pour un statut.
+  assert.notEqual(t9.statut, 'OUI', 'the fidelity cell is not a status — reading it as one turned 117 open tasks into 569');
+
+  // ── 4. SUR LE VRAI REGISTRE, ET CORROBORÉ PAR UN SECOND OUTIL INDÉPENDANT. C'est la seule
+  // preuve qui vaille ici : un chiffre qu'un seul outil produit ne se vérifie pas lui-même.
+  const C = await import('../scripts/check-tasks-details.mjs');
+  const taches = O.chargerTaches().taches;
+  const ouvertesIci = taches.filter((t) => !O.estTerminee(t)).length;
+  const ouvertesLaBas = C.loadAllTaskRows().filter((r) => C.OPEN_KEYS.has(r.statusKey)).length;
+  assert.ok(taches.length > 500, `the real registry must actually be read (currently ${taches.length} rows)`);
+  assert.ok(Math.abs(ouvertesIci - ouvertesLaBas) <= 5,
+    `the two independent readers must agree on how many tasks are open (ou-on-en-est: ${ouvertesIci}, check-tasks-details: ${ouvertesLaBas}) — they disagreed by 452 before this fix, and nothing said so`);
+
+  console.log("Passed: le faux chiffre qui répondait à « où on en est » (2026-10-01, tâche #1363). `ou-on-en-est` lisait le statut d'une tâche à la NEUVIÈME case, en dur ; le registre a gagné un champ le 2026-09-25 et cette case est devenue celle de la déclaration de fidélité. L'outil annonçait donc 569 tâches ouvertes là où il y en a 117 — 468 de ses « ouvertes » portant le statut littéral « OUI ». C'EST LE PIRE FAUX CHIFFRE POSSIBLE, et pas par son ampleur : par SA QUESTION. Il répond à « où on en est », c'est-à-dire exactement ce qu'on ne revérifie jamais, puisqu'on vient de le demander à un outil ; il ne lève aucune erreur et reste parfaitement plausible. Article 24 dans sa forme la plus chère — une position RECOPIÉE au lieu d'être DÉRIVÉE — alors que la bonne réponse existait à côté depuis le jour même où le champ est arrivé (check-suivi-fidelity dérive sa fourchette de colonnes de FORMAT_TACHE). CORRIGÉ EN LISANT PAR LA FIN plutôt qu'en dérivant la position : le statut est la dernière cellule et l'est resté à travers les trois formats successifs, donc un dixième champ ajouté demain au milieu ne cassera rien — et ce petit outil ne dépend du format complet de personne. LA PREUVE EST LA CORROBORATION, jamais le chiffre seul : les deux lecteurs indépendants s'accordent désormais à une ligne près (118 contre 117) là où ils divergeaient de 452 sans que rien ne le dise.");
+}
+await testOuOnEnEstLitLeBonStatut();

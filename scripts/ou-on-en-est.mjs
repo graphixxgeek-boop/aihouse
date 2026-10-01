@@ -35,14 +35,39 @@ export const SESSIONS_DIR = "docs/suivi/sessions";
 // position et non devinées — un tableau qui changerait de forme doit faire échouer la lecture
 // plutôt que produire des lignes à moitié fausses (leçon L12 : un analyseur qui devine saute en
 // silence, il doit refuser à la place).
+// LE STATUT SE LIT PAR LA FIN, JAMAIS PAR SA POSITION (corrigé le 2026-10-01, tâche #1363).
+//
+// CE QUI S'EST PASSÉ, ET C'EST LE PIRE FAUX CHIFFRE DU DÉPÔT PARCE QU'IL RÉPOND À LA QUESTION
+// « OÙ ON EN EST ». Cette fonction lisait le statut à la NEUVIÈME case, en dur. Le registre a
+// gagné un champ le 2026-09-25 (`pourQui`, tâche #825), puis les cases de fidélité : la neuvième
+// case n'est plus le statut, c'est la case « OUI » de la déclaration de fidélité. Résultat, mesuré
+// ce soir : **l'outil annonçait 569 tâches ouvertes là où il y en a 117**, et 468 de ses
+// « ouvertes » portaient le statut littéral « OUI ».
+//
+// ET PERSONNE NE POUVAIT LE VOIR. Un chiffre faux de ce genre ne lève aucune erreur : il s'affiche,
+// il est plausible, et il répond précisément à la question qu'on ne vérifie jamais parce qu'on
+// vient de la poser à un outil. C'est exactement l'Article 24 dans sa forme la plus coûteuse — une
+// position RECOPIÉE au lieu d'être DÉRIVÉE — et le dépôt avait déjà la bonne réponse à côté :
+// `check-suivi-fidelity` DÉRIVE sa fourchette de colonnes de `FORMAT_TACHE` depuis le 2026-09-25.
+//
+// POURQUOI PAR LA FIN PLUTÔT QU'EN DÉRIVANT LA POSITION : le statut est la DERNIÈRE cellule de la
+// ligne, et il l'est resté à travers les trois formats successifs. Un dixième champ ajouté demain
+// au milieu ne cassera rien. Dériver la position aurait marché aussi, mais aurait fait dépendre ce
+// petit outil du format complet d'un autre — alors que « la dernière case » est un invariant qui
+// n'a besoin de personne.
 export function parseTaches(texte = "") {
   const taches = [];
   for (const ligne of String(texte).split("\n")) {
     if (!ligne.startsWith("|")) continue;
     const c = ligne.split("|").map((x) => x.trim());
     if (c.length < 9) continue;
-    const [, numero, horodatage, motCle, sujet, sousSujet, sensibilite, description, statut] = c;
+    const [, numero, horodatage, motCle, sujet, sousSujet, sensibilite] = c;
     if (!/^\d+$/.test(numero)) continue;
+    // La ligne se termine par « | », donc la dernière case est vide : le statut est l'avant-dernière.
+    const utiles = c[c.length - 1] === "" ? c.slice(0, -1) : c;
+    const statut = utiles[utiles.length - 1] ?? "";
+    // La description est ce qui précède le statut — elle aussi se lit par la fin, pour la même raison.
+    const description = utiles[utiles.length - 2] ?? "";
     taches.push({ numero: Number(numero), horodatage, motCle, sujet, sousSujet, sensibilite, description, statut });
   }
   return taches;
