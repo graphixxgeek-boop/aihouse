@@ -221,6 +221,11 @@ export const AGENT_CATEGORIES = {
   "angel-of-ia-process": "Membre premium — (f) 👼 Les Anges de la coordination",
   "data-archangel": "Membre premium — (f) 👼 Les Anges de la coordination",
   "pure-gold-unity": "Membre premium — (f) 👼 Les Anges de la coordination",
+  // Les deux arrivants des 30/09 et 01/10. `fils-de-discussion` était resté à 1 registre sur 10
+  // depuis sa construction — son `printReliabilityNotice()` existait et n'imprimait RIEN, faute
+  // d'être déclaré ici : un avertissement muet se lit comme un outil sans réserve (2026-10-01).
+  "fils-de-discussion": "Membre premium — (f) 👼 Les Anges de la coordination",
+  "cout-de-la-refonte": "Membre premium — (f) 👑 La Gouvernance Royale",
   "god-of-all-process": "Membre premium — (f) 👼 Les Anges de la coordination",
   "tool-brain": "Membre premium — (f) 👼 Les Anges de la coordination",
   "find-deep-booster": "Membre premium — (f) 🚀 Les Boosters de Navigation",
@@ -695,6 +700,8 @@ export const TOOL_RELIABILITY = {
   "process-simulation-guardian": { nature: "heuristique", pourquoi: "son contrôle préalable juge un plan que l'agent lui décrit, jamais le script réel — un plan mal décrit passera le contrôle" },
   "data-archangel": { nature: "heuristique", pourquoi: "il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement" },
   "angel-of-ia-process": { nature: "heuristique", pourquoi: "il croise des horodatages : une consultation faite dans une session sans commit lui reste invisible, et un commit groupant plusieurs heures élargit la fenêtre — un signal daté, jamais une preuve" },
+  "fils-de-discussion": { nature: "heuristique", pourquoi: "il reconnaît un fil, une balle et un engagement à des motifs de TEXTE dans des documents écrits à la main — une section mise en forme autrement lui échappe, et son premier contrôle est aveugle par construction (le dossier des envois n'est pas accessible d'ici)" },
+  "cout-de-la-refonte": { nature: "heuristique", pourquoi: "il compte des blocs de commentaire portant un marqueur de décision, jamais le SENS d'une raison : une raison périmée compte comme une raison vivante, et il mesure un VOLUME, jamais une DIFFICULTÉ" },
   "pure-gold-unity": { nature: "heuristique", pourquoi: "il reconnaît une conversion au gabarit à la présence d'un appel dans le code, jamais en lisant le rapport produit — un outil qui appellerait le cadre sans s'en servir passerait pour conforme" },
   "god-of-all-process": { nature: "heuristique", pourquoi: "il associe une tâche à un process par mots-clés, et ne voit d'une étape que la trace qu'elle laisse sur le disque — une étape faite sans trace lui reste invisible" },
   "the-king": { nature: "heuristique", pourquoi: "lit des titres et du vocabulaire, jamais le sens réel de deux principes ; ses dates dérivées sont des déductions git" },

@@ -150,7 +150,11 @@ export const REGISTRIES = [
   // les pages lui-même, quand il veut, sans que je sois là pour les produire. Le HTML est donc
   // committé à côté du markdown, exception assumée — c'est l'un des rares registres dont le
   // destinataire est l'utilisateur plutôt qu'un outil.
-  { slug: "fils", label: "Les fils de discussion", family: "(f) 👼 Les Anges de la coordination", path: "docs/fils/", decision: "archived_html", scriptPath: "scripts/fils-de-discussion.mjs" },
+  // SLUG ALIGNÉ SUR LE NOM DE L'OUTIL le 2026-10-01 : il valait « fils », et integration-outil
+  // cherche le slug de l'OUTIL — l'entrée existait donc, parfaitement correcte, et le parcours
+  // d'intégration la déclarait manquante. Un registre renseigné compté comme absent est un faux
+  // rouge, et un faux rouge fait refaire un travail déjà fait (leçon L4).
+  { slug: "fils-de-discussion", label: "Les fils de discussion", family: "(f) 👼 Les Anges de la coordination", path: "docs/fils/", decision: "archived_html", scriptPath: "scripts/fils-de-discussion.mjs" },
   { slug: "jesus-le-sauveur", label: "JESUS-LE-SAUVEUR", family: "(f) 📜 Les Prophètes - Dette & Structure du code", path: "docs/jesus-le-sauveur/", decision: "texte", scriptPath: "scripts/jesus-le-sauveur.mjs" },
   // check-spirit a produit son PREMIER passage archivé le 2026-09-28 (tâche #810) : jusque-là il
   // affichait ses réponses à l'écran sans rien déposer, donc il n'avait pas de registre — et n'en
@@ -224,6 +228,7 @@ export const REGISTRIES = [
   // findFamillesDivergentesParOutil() a refusé le commit — l'organigramme le range chez les
   // Anges. C'est exactement le service que ce garde-fou rend : une famille se LIT chez celui
   // qui la déclare, elle ne se déduit pas de ce que fait l'outil (Article 24).
+  { slug: "cout-de-la-refonte", label: "cout-de-la-refonte", family: "(f) 👑 La Gouvernance Royale", path: "docs/cout-de-la-refonte/", decision: "texte", scriptPath: "scripts/cout-de-la-refonte.mjs" },
   { slug: "pure-gold-unity", label: "pure-gold-unity", family: "(f) 👼 Les Anges de la coordination", path: "docs/pure-gold-unity/", decision: "texte", scriptPath: "scripts/pure-gold-unity.mjs" },
   { slug: "tableau-de-bord", label: "Tableau de bord interne (KPI)", family: "(f) 👑 La Gouvernance Royale", path: "docs/tableau-de-bord/", decision: "texte", scriptPath: "scripts/kpi-report.mjs" },
   { slug: "sauvegardes", label: "Sauvegardes du projet", family: "(f) 👑 La Gouvernance Royale", path: "docs/sauvegardes/", decision: "texte", scriptPath: "scripts/sauvegarde-projet.mjs" },

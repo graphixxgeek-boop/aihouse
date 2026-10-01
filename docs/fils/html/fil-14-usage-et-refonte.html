@@ -106,12 +106,12 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T00:45:16.284Z</div>
+    <div class="date">2026-10-01T01:39:24.162Z</div>
     <h1>FIL 14 — Comment on utilise l'Agence, et faut-il tout reprendre à zéro</h1>
     <p class="sub">Page générée depuis docs/fils/fil-14-usage-et-refonte.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><p><strong>Balle :</strong> À MOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étage 2 bis — il suppose les objectifs (faits) et précède la cascade. C'est le fil qui décide de la FORME que prendra tout le reste du travail. <strong>Saisines :</strong> demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet</p>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-10-01 <strong>Place dans le plan :</strong> Étage 2 bis — il suppose les objectifs (faits) et précède la cascade. C'est le fil qui décide de la FORME que prendra tout le reste du travail. <strong>Saisines :</strong> demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet · chiffrage et proposition du 2026-10-01</p>
 <hr>
 <h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
 <p><strong>Ce fil naît d'un message unique qui porte huit sujets</strong>, tous déposés mot pour mot dans <code>docs/grand-projet/00-sources/01-sa-demande/reponses-2026-10-01-nuit-rationalisation.md</code>, avec sa consigne d'ouverture : <em>« n'oublie rien, tout doit être consigné, et accroche des tâches si besoin »</em>.</p>
@@ -129,6 +129,12 @@
 <p><strong>Les deux voies mènent au même endroit ; elles ne coûtent pas la même chose, et elles ne risquent pas la même chose.</strong> C'est exactement le genre d'arbitrage qui se tranche sur des chiffres — et la plupart existent déjà.</p>
 <hr>
 <h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
+<p><strong>Q14.7 — LE CHIFFRAGE EST FAIT, ET LA PROPOSITION DE PLAN EST PRÊTE</strong> <em>(2026-10-01, tâches #1344 et #1356 — À TOI maintenant)</em>. Le document complet, lisible sans contexte : <code>docs/grand-projet/html/refonte-proposition-2026-10-01.html</code>.</p>
+<p><strong>Le chiffre que personne n'avait</strong> : <strong>2 228 décisions déjà prises</strong> sont écrites dans le code de l'outillage — les commentaires qui disent pourquoi un garde-fou existe, quel bug il a attrapé. <strong>C'est ÇA, le coût d'une refonte, pas les lignes</strong> : du code mécanique se réécrit vite, une raison perdue se repaie en bug six semaines plus tard.</p>
+<p><strong>Et sa répartition change tout</strong> : médiane <strong>8</strong> par fichier, mais <strong>un seul fichier en porte 718, soit 32 % du total</strong>. <strong>Le coût n'est pas réparti, il est CONCENTRÉ</strong> — donc on peut reconstruire les fichiers légers et laisser les denses tranquilles, ce qu'une refonte totale s'interdit.</p>
+<p><strong>Ce que je te dis en toute honnêteté, et ça ne te fera pas forcément plaisir</strong> : ton intuition est <strong>juste sur l'organisation</strong> (936 obligations, 10 registres pour faire entrer un outil, aucune définition de « terminé ») et <strong>fausse sur le code</strong> — qui est déjà portable (0 script sur 88 avec une cible écrite en dur), déjà emballé (85 kits sur 85), déjà découplé du Jeu (6 fichiers sur 93). <strong>La preuve est tombée cette nuit, sur moi</strong> : les deux outils que j'ai construits ces deux derniers jours étaient à 1 registre sur 10 et 0 sur 10. Le code allait bien. C'est l'entrée dans l'équipe qui coûte trop cher.</p>
+<p><strong>MA PROPOSITION : la voie B — reconstruire le NOYAU seulement</strong>, les outils existants devenant des modules qu'on y branche. C'est littéralement ta phrase (« situer le cœur, agréger les modules autour »), et le cœur, tu l'as déjà nommé : le suivi des tâches, puis les fils. <strong>Son seul vrai argument</strong> : à aucun moment le projet n'est cassé, et chaque étape vaut même si on s'arrête là.</p>
+<p><strong>CINQ QUESTIONS, et rien ne démarre avant tes réponses</strong> : ① quelle voie (A tout / <strong>B le noyau</strong> / C les obligations seules) ② qu'est-ce qui est exactement dans le noyau ③ que fait-on des 2 228 raisons (toutes relues / seulement celles des fichiers reconstruits / abandonnées avec la raison écrite) ④ définit-on « terminé » d'abord (ton ordre #1132, ouvert depuis le 28/09) ⑤ le Jeu reste bien hors périmètre ?</p>
 <p><strong>Q14.1 — À MOI, tâche #1344.</strong> Chiffrer la refonte avant d'en dire quoi que ce soit : volume réel à reprendre, ce qui se recopie vraiment sans réflexion, ce qui ne se recopie pas, et le coût de faire vivre deux versions. <strong>Un avis donné sans ces chiffres serait l'opinion sans mesure que ce projet refuse.</strong></p>
 <p><strong>Q14.2 — À MOI, tâche #1341.</strong> Les deux scénarios d'usage par ZIP, confrontés aux mesures qui existent — pas à une opinion.</p>
 <p><strong>Q14.3 — À MOI, tâche #1343.</strong> Une carte par MODULE, parce qu'il ne peut pas juger ce qu'il ne voit pas. C'est le préalable de sa décision, pas un document de confort.</p>

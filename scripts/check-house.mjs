@@ -23204,3 +23204,67 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   console.log("Passed: le chaînon manquant de l'Article 28, construit (2026-10-01, Ronde GOAT, tâche #1355). JESUS avait nommé l'impossibilité ET son remède — « que le plan d'action inscrive le numéro de la tâche qu'il a fait naître » — et le remède n'avait jamais été construit, ce qui est précisément le constat RETENU devenu intention que l'Article 28 traque. Le gabarit partagé porte désormais `numeroTache`, imprimé à une position FIXE juste après le niveau : optionnel, donc aucun des 49 outils ne voit sa sortie bouger, mais relisible sur le disque, donc la traçabilité ARRIÈRE existe enfin — checkActionChain() ne jugeait qu'au moment de la production. Les trois pièges sont tenus : un « #902 » qui traîne dans le libellé n'est JAMAIS compté (L47, la leçon qui avait coûté le faux « 0 % sur 323 ») ; zéro numéro déclaré reste « PAS MESURÉ » et jamais « 0 % », sans quoi le dispositif refabriquerait le chiffre accusateur qu'il remplace (L5/L11) ; et la sonde n'inclut pas son propre registre, une mesure qui lit ses propres rapports fabriquant sa propre amélioration (XP #34 — 341 constats sont retombés à 335 le jour de l'exclusion, preuve que la contamination était réelle). Deux chiffres sortent, jamais fondus : la COUVERTURE dit si le lien est écrit, le TAUX dit si la tâche annoncée existe vraiment — 100 % sur une couverture de 2 % voudrait dire « les rares qui déclarent sont bons », jamais « la chaîne tient ».");
 }
 await testLeNumeroDeLaTacheDansLePlan();
+
+// ────────────────────────────────────────────────────────────────────────────
+// LE CHIFFRAGE DE LA REFONTE (2026-10-01, tâche #1356)
+// ────────────────────────────────────────────────────────────────────────────
+// Sa proposition centrale est « tout reprendre à zéro ». La réponse honnête à ça n'est ni oui ni
+// non : c'est un chiffre. Et la veille, un chiffre donné de tête — « 38 fichiers sur 40 » — avait
+// servi d'argument principal à cette même refonte sans être reproductible (#1354). D'où un outil.
+async function testChiffrageDeLaRefonte() {
+  const assert = (await import('node:assert/strict')).default;
+  const C = await import('../scripts/cout-de-la-refonte.mjs');
+
+  // ── 1. CE QU'IL COMPTE EST UNE DÉCISION, JAMAIS UN COMMENTAIRE. C'est toute la mesure : la
+  // densité de commentaires ne dit rien, la densité de décisions déjà prises dit le coût réel.
+  assert.deepEqual(C.blocsDeRaison('// boucle sur les fichiers\nconst a=1;\n\n// incrémente\nconst b=2;\n'), { blocs: 0, lignesDeRaison: 0 }, 'an ordinary comment is not a decision to re-take, and counting it would turn a style measure into a cost measure');
+  assert.equal(C.blocsDeRaison('// POURQUOI CECI EXISTE : un bug déjà attrapé\n// suite du bandeau\nconst a=1;\n').blocs, 1, 'a reason block counts once');
+
+  // ── 2. UN BLOC, JAMAIS SES LIGNES. Un bandeau de trente lignes qui explique UNE décision est une
+  // décision, pas trente — compter les lignes gonflerait le chiffre d'un facteur dix et le rendrait
+  // inutilisable pour décider, ce qui est la seule chose qu'on lui demande.
+  const longBandeau = ['// POURQUOI : une seule décision', ...Array.from({ length: 29 }, (_, i) => `// ligne ${i}`), 'const x=1;'].join('\n');
+  assert.equal(C.blocsDeRaison(longBandeau).blocs, 1, 'thirty lines explaining one decision are ONE decision');
+
+  // ── 3. DEUX BLOCS SÉPARÉS PAR DU CODE SONT DEUX DÉCISIONS.
+  assert.equal(C.blocsDeRaison('// POURQUOI a\nconst a=1;\n// Article 28 impose b\nconst b=2;\n').blocs, 2, 'two blocks separated by code are two decisions');
+
+  // ── 4. LA MOYENNE SEULE MENT, ET ELLE A MENTI AU PREMIER PASSAGE. 25,3 par fichier dessinait un
+  // dépôt uniformément dense ; la médiane était à 8 et UN fichier portait 32 % du total. Les deux
+  // chiffres sont vrais, un seul est utilisable — on rend donc les deux ET la concentration.
+  const c = C.concentration([{ chemin: 'gros.mjs', blocs: 700 }, { chemin: 'a.mjs', blocs: 8 }, { chemin: 'b.mjs', blocs: 8 }]);
+  assert.equal(c.tete.chemin, 'gros.mjs', 'the head of the ranking is named, because a concentration can be acted on and an average cannot');
+  assert.equal(c.mediane, 8, 'the median is reported beside the mean');
+  assert.ok(c.partDeTete > 90, 'and the head\'s SHARE, which is what turns "dense repository" into "one dense file"');
+  assert.equal(C.concentration([]), null, 'no corpus, no concentration — never a fabricated zero');
+
+  // ── 5. LES FAMILLES SE DÉCLARENT, et le Jeu est hors périmètre par SA consigne permanente.
+  assert.equal(C.familleDe('scripts/x.mjs'), 'outillage', 'the tooling is the perimeter his proposal targets');
+  assert.equal(C.familleDe('lib/lia.ts'), 'jeu', 'and the game engine is out of scope: "rien qui change ce que Lia et Noé disent ou font"');
+  assert.equal(C.familleDe('CLAUDE.md'), 'normatif', 'the charter is read, never rewritten');
+
+  // ── 6. UN CORPUS VIDE REFUSE DE CONCLURE (leçons L5/L11). « 0 ligne à reprendre » se lirait comme
+  // « rien à faire » au lieu de « je n'ai rien lu » — et sur une décision de cette taille, la
+  // différence entre les deux est la décision elle-même.
+  const vide = C.mesurerLeCout({ arbre: [], lire: () => '' });
+  assert.equal(vide.mesurable, false, 'an empty corpus must refuse to conclude');
+  assert.match(vide.pourquoi, /se lirait comme un volume faible/, 'and say exactly why the zero would mislead');
+
+  // ── 7. LE CONTREPOIDS EST OBLIGATOIRE, ET SON ABSENCE SE DÉCLARE. Un outil qui ne mesure que le
+  // COÛT d'une option la fait perdre d'office ; c'est arrivé pour de vrai pendant sa construction,
+  // par un champ mal lu (`pct` au lieu de `valeur`) qui rendait « aucun acquis » au lieu de trois.
+  const muet = await C.acquisRemisEnJeu({ importer: async () => ({ mesuresDeLExport: async () => ({}), rapportExportCentral: () => ({ mesurees: 0 }) }) });
+  assert.equal(muet.mesurable, false, 'no counterweight must be declared, never silently omitted');
+  assert.match(muet.pourquoi, /inventer serait pire/, 'and inventing one would be worse than saying nothing');
+  const plein = await C.acquisRemisEnJeu({ importer: async () => ({ mesuresDeLExport: async () => ({}), rapportExportCentral: () => ({ mesurees: 8, total: 8, global: 88, sait: [{ quoi: 'A', valeur: 100 }, { quoi: 'B', valeur: 99 }] }) }) });
+  assert.deepEqual(plein.acquis.map((a) => a.quoi), ['A'], 'only what is REALLY at 100 % counts as an acquis the refonte would reset — 99 is not 100, and the display that rounds it is not the measure');
+
+  // ── 8. IL A TOURNÉ POUR DE VRAI CONTRE LE DÉPÔT (Article 25) : un outil qui n'a jamais tourné
+  // contre le vrai dépôt n'est pas un outil, c'est une intention (L2).
+  const reel = C.mesurerLeCout();
+  assert.ok(reel.mesurable && reel.fichiersLus > 500, `the costing must actually read the repository (currently ${reel.fichiersLus} files)`);
+  assert.ok(reel.par.outillage.blocsDeRaison > 1000, `and find the real mass of written reasons (currently ${reel.par.outillage.blocsDeRaison})`);
+
+  console.log("Passed: le chiffrage de la refonte (2026-10-01, tâche #1356). Sa proposition centrale est « tout reprendre à zéro », et la réponse honnête n'est ni oui ni non : c'est un chiffre — d'autant plus qu'un chiffre donné de tête, le « 38 fichiers sur 40 », avait servi la veille d'argument principal à cette même refonte sans être reproductible. LA THÈSE MESURÉE N'EST PAS CELLE QU'ON ATTEND : le coût ne se compte pas en lignes, puisque du code mécanique se réécrit vite. Ce qui ne se recopie pas, ce sont les RAISONS — 2 228 blocs dans l'outillage, chacun une décision déjà payée, et une refonte qui les perd réintroduit un bug déjà résolu (Article 19 pris à l'envers). ET LA RÉPARTITION COMPTE PLUS QUE LE TOTAL : 25,3 par fichier en moyenne, 8 en MÉDIANE, et check-house.mjs en porte 718 à lui seul — 32 %. La première version ne rendait que la moyenne et dessinait un dépôt uniformément dense qui n'existe pas ; le coût est concentré, et une concentration se traite là où une moyenne ne se traite pas. TROIS GARDE-FOUS TENUS : un commentaire ordinaire n'est jamais compté comme une décision · un corpus vide refuse de conclure plutôt que de rendre « 0 ligne à reprendre », qui se lirait comme « rien à faire » · et le CONTREPOIDS est obligatoire, parce qu'un outil qui ne mesure que le coût d'une option la fait perdre d'office — ce qui est arrivé pour de vrai pendant sa construction, par un champ mal lu qui rendait « aucun acquis » au lieu de trois, et un zéro par mauvais champ ressemble trait pour trait à un zéro mesuré.");
+}
+await testChiffrageDeLaRefonte();

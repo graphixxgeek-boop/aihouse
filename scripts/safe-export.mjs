@@ -1215,6 +1215,36 @@ export function tachesOuvertesExport({ lignes = [], estOuverte = null, motif = M
   return { mesurable: true, sur: ouvertes.length, retenues: retenues.map((r) => ({ numero: r.numero, criticite: String(r.criticite ?? "").trim(), sujet: String(r.sujet ?? "").replace(/\*\*/g, "").slice(0, 95) })) };
 }
 
+// mesuresDeLExport() (2026-10-01, extrait de la commande `rapport` sans une ligne de changement).
+// POURQUOI L'EXTRAIRE : l'assemblage des dix mesures vivait DANS la commande, donc un second outil
+// qui voulait lire les acquis de l'export n'avait d'autre choix que de le recopier — c'est-à-dire
+// de créer la deuxième copie qui finit toujours par diverger (Article 24). Le premier à en avoir
+// eu besoin est le chiffrage de refonte, qui doit dire ce qu'une refonte REMETTRAIT EN JEU.
+// La commande `rapport` l'appelle désormais : un seul assemblage, un seul endroit où il vieillit.
+export async function mesuresDeLExport() {
+  const [lc, ctd] = await Promise.all([import("./le-classificateur.mjs"), import("./check-tasks-details.mjs")]);
+  const vitalite = lc.vitaliteDuParc();
+  const kits = mesurerLesKits({ vitalite });
+  const agence = mesurerLeKitDeLAgence();
+  let lignes = []; try { lignes = ctd.loadAllTaskRows(); } catch { lignes = []; }
+  return {
+    exportabilite: mesurerLExportabilite({ vitalite }),
+    portabilite: mesurerLaPortabilite(),
+    reconfigurable: (() => {
+      const sc = fichiersSourcesDuProjet().filter((f) => String(f).startsWith("scripts/"));
+      if (!sc.length) return { mesurable: false };
+      const np = findScriptsNonPortables(sc);
+      return { mesurable: true, examines: sc.length, nonPortables: np.length, portables: sc.length - np.length, taux: ((sc.length - np.length) / sc.length) * 100 };
+    })(),
+    kits, agence,
+    relais: relaisDeModele(),
+    tuyauterie: tuyauterieDeLAgence(),
+    temoin: dernierPassageDuBanc(),
+    tendances: tendancesExport(),
+    taches: tachesOuvertesExport({ lignes, estOuverte: (r) => ctd.OPEN_KEYS.has(r.statusKey) }),
+  };
+}
+
 export function rapportExportCentral(mesures = {}, { barre = BARRE_DE_DIMENSION, dimensions = DIMENSIONS_DE_L_EXPORT } = {}) {
   const sait = [], saitPas = [], nonMesure = [];
   for (const d of dimensions) {
@@ -1917,27 +1947,7 @@ function main() {
   if (process.argv[2] === "rapport") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
-    return Promise.all([import("./le-classificateur.mjs"), import("./check-tasks-details.mjs"), import("./check-suivi-fidelity.mjs")]).then(async ([lc, ctd]) => {
-      const vitalite = lc.vitaliteDuParc();
-      const kits = mesurerLesKits({ vitalite });
-      const agence = mesurerLeKitDeLAgence();
-      let lignes = []; try { lignes = ctd.loadAllTaskRows(); } catch { lignes = []; }
-      const mesures = {
-        exportabilite: mesurerLExportabilite({ vitalite }),
-        portabilite: mesurerLaPortabilite(),
-        reconfigurable: (() => {
-          const sc = fichiersSourcesDuProjet().filter((f) => String(f).startsWith("scripts/"));
-          if (!sc.length) return { mesurable: false };
-          const np = findScriptsNonPortables(sc);
-          return { mesurable: true, examines: sc.length, nonPortables: np.length, portables: sc.length - np.length, taux: ((sc.length - np.length) / sc.length) * 100 };
-        })(),
-        kits, agence,
-        relais: relaisDeModele(),
-        tuyauterie: tuyauterieDeLAgence(),
-        temoin: dernierPassageDuBanc(),
-        tendances: tendancesExport(),
-        taches: tachesOuvertesExport({ lignes, estOuverte: (r) => ctd.OPEN_KEYS.has(r.statusKey) }),
-      };
+    return mesuresDeLExport().then(async (mesures) => {
       const r = rapportExportCentral(mesures);
       const lignesTxt = formatRapportExportLines(r);
       for (const l of lignesTxt) console.log(l);

@@ -349,6 +349,8 @@ export function collectCoverage(covDir, options = {}) {
 // à retrouver. Nommage non uniforme constaté (ARGUS → check-argus.mjs, THE-SCREENER →
 // the-screener-capture.mjs) : une correspondance explicite, jamais déduite d'un slug.
 export const SLUGS_COUVERTS_PAR_AXA = [
+  "fils-de-discussion",
+  "cout-de-la-refonte",
   "jesus-le-sauveur",
   "le-classificateur",
   "check-spirit",

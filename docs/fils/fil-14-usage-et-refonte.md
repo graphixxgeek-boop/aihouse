@@ -1,9 +1,9 @@
 # FIL 14 — Comment on utilise l'Agence, et faut-il tout reprendre à zéro
 
-**Balle :** À MOI
-**Dernier mouvement :** 2026-09-30
+**Balle :** À TOI
+**Dernier mouvement :** 2026-10-01
 **Place dans le plan :** Étage 2 bis — il suppose les objectifs (faits) et précède la cascade. C'est le fil qui décide de la FORME que prendra tout le reste du travail.
-**Saisines :** demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet
+**Saisines :** demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet · chiffrage et proposition du 2026-10-01
 
 ---
 
@@ -65,6 +65,38 @@ chiffres — et la plupart existent déjà.
 ---
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
+
+**Q14.7 — LE CHIFFRAGE EST FAIT, ET LA PROPOSITION DE PLAN EST PRÊTE** *(2026-10-01, tâches #1344
+et #1356 — À TOI maintenant)*. Le document complet, lisible sans contexte :
+`docs/grand-projet/html/refonte-proposition-2026-10-01.html`.
+
+**Le chiffre que personne n'avait** : **2 228 décisions déjà prises** sont écrites dans le code de
+l'outillage — les commentaires qui disent pourquoi un garde-fou existe, quel bug il a attrapé.
+**C'est ÇA, le coût d'une refonte, pas les lignes** : du code mécanique se réécrit vite, une raison
+perdue se repaie en bug six semaines plus tard.
+
+**Et sa répartition change tout** : médiane **8** par fichier, mais **un seul fichier en porte 718,
+soit 32 % du total**. **Le coût n'est pas réparti, il est CONCENTRÉ** — donc on peut reconstruire
+les fichiers légers et laisser les denses tranquilles, ce qu'une refonte totale s'interdit.
+
+**Ce que je te dis en toute honnêteté, et ça ne te fera pas forcément plaisir** : ton intuition est
+**juste sur l'organisation** (936 obligations, 10 registres pour faire entrer un outil, aucune
+définition de « terminé ») et **fausse sur le code** — qui est déjà portable (0 script sur 88 avec
+une cible écrite en dur), déjà emballé (85 kits sur 85), déjà découplé du Jeu (6 fichiers sur 93).
+**La preuve est tombée cette nuit, sur moi** : les deux outils que j'ai construits ces deux
+derniers jours étaient à 1 registre sur 10 et 0 sur 10. Le code allait bien. C'est l'entrée dans
+l'équipe qui coûte trop cher.
+
+**MA PROPOSITION : la voie B — reconstruire le NOYAU seulement**, les outils existants devenant
+des modules qu'on y branche. C'est littéralement ta phrase (« situer le cœur, agréger les modules
+autour »), et le cœur, tu l'as déjà nommé : le suivi des tâches, puis les fils. **Son seul vrai
+argument** : à aucun moment le projet n'est cassé, et chaque étape vaut même si on s'arrête là.
+
+**CINQ QUESTIONS, et rien ne démarre avant tes réponses** : ① quelle voie (A tout / **B le noyau** /
+C les obligations seules) ② qu'est-ce qui est exactement dans le noyau ③ que fait-on des 2 228
+raisons (toutes relues / seulement celles des fichiers reconstruits / abandonnées avec la raison
+écrite) ④ définit-on « terminé » d'abord (ton ordre #1132, ouvert depuis le 28/09) ⑤ le Jeu reste
+bien hors périmètre ?
 
 **Q14.1 — À MOI, tâche #1344.** Chiffrer la refonte avant d'en dire quoi que ce soit : volume réel
 à reprendre, ce qui se recopie vraiment sans réflexion, ce qui ne se recopie pas, et le coût de

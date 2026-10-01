@@ -936,6 +936,14 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // haut pour la même raison — leur objet n'est pas le dépôt mais une PARTIE en cours, et un item de
   // Ronde n'aurait aucune donnée à regarder. Le troisième est de la plomberie appelée par
   // l'outillage d'installation, jamais convoquée.
+  // COUT-DE-LA-REFONTE (2026-10-01) — EXCLUSION, et c'est la vraie réponse plutôt qu'un item.
+  // Il répond à une QUESTION POSÉE (« faut-il tout reprendre à zéro ? »), jamais à un calendrier.
+  // Un item de Ronde le relancerait chaque fois sans que rien ait bougé : le volume de code et
+  // le nombre de raisons écrites ne changent pas d'une Ronde à l'autre, et son propre objectif
+  // chiffré est volontairement BAS (2 passages par mois) pour cette raison exacte. Le relancer
+  // périodiquement ferait du bruit, pas de la mesure — et ce bruit apprendrait à ne plus lire
+  // ses chiffres le jour où ils compteraient vraiment.
+  "cout-de-la-refonte": "COUVERT PAR ÉVÉNEMENT : il répond à la question « faut-il tout reprendre à zéro ? », jamais à un calendrier. Son volume ne bouge pas d'une Ronde à l'autre, et son objectif chiffré (2 passages/mois) dit exactement cela. Il se convoque quand la question se pose, et c'est tout.",
   "memento": "Nom de FICHIER de memory-audit (surnom conservé, tâche #172) : même exclusion que lui — il cible la mémoire narrative de Lia/Noé EN JEU, vérifiable seulement sur des instantanés réels de partie, jamais par un balayage périodique du dépôt",
   "memento-weight": "Son verdict est déjà relayé par le rapport KPI (reportMementoWeight), lu à chaque Ronde via l'item `kpi` — un item séparé ferait deux verdicts sur la même donnée. Et comme memory-audit, il mesure une PARTIE en cours, pas le dépôt",
   "pnpm-install": "Plomberie appelée par l'outillage d'installation, jamais convoquée par un humain (cf. sa fiche et le désaccord de classement qu'elle porte). Elle n'a aucun passage périodique à rapporter",

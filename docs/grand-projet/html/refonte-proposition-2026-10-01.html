@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faut-il tout reprendre à zéro ?</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T01:37:52.956Z</div>
+    <h1>Faut-il tout reprendre à zéro ?</h1>
+    <p class="sub">La proposition de plan d'action — chiffrée, en trois voies, et cinq questions pour toi</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>De quoi on parle</strong> : tu as proposé le 30 septembre au soir de repartir sur un code
+entièrement propre, en situant le cœur de l'Agence et en agrégeant les modules autour.
+<strong>Ta demande, mot pour mot</strong> : *« il faut partir sur un nouveau code totalement propre, et
+recommencer tout à zéro, en reprenant tout point par point : situer le cœur de l'agence, et
+agréger les modules autour. Franchement je serais partant pour faire ça. »* Puis, dans ton plan
+de nuit : *« travaille la refonte complète en amont, prépare le plan étape par étape, et fais-moi
+une proposition de plan d'action. »*
+<strong>Tâches concernées</strong> : <strong>#1344</strong> (chiffrer la refonte) · <strong>#1356</strong> (l'outil de chiffrage) ·
+<strong>#1343</strong> (la carte par module) · <strong>#1132</strong> (les trois bornes du « terminé »).
+<strong>Rien n'est décidé ici.</strong> C'est une proposition : tu tranches.</p></div>
+<hr>
+<h3>1. Ce que les chiffres disent — et ils ne disent pas ce que j'attendais</h3>
+<p>Tout ce qui suit est <strong>mesuré</strong>, pas estimé, et chaque chiffre se rejoue à la commande.</p>
+<table><thead><tr><th>Ce qu'on a mesuré</th><th>Le chiffre</th><th>Ce que ça veut dire, en clair</th></tr></thead><tbody><tr><td>Volume de l'outillage</td><td><strong>88 fichiers, 92 167 lignes</strong></td><td>c'est le périmètre que ta proposition vise</td></tr><tr><td><strong>Décisions déjà prises, écrites dans le code</strong></td><td><strong>2 228</strong></td><td><strong>le vrai coût d'une refonte, et personne ne le comptait</strong></td></tr><tr><td>Leur répartition</td><td>médiane <strong>8</strong> par fichier · <strong>un seul</strong> fichier en porte <strong>718</strong> (32 %)</td><td><strong>le coût n'est pas réparti, il est concentré</strong></td></tr><tr><td>Le Jeu</td><td>93 fichiers, et <strong>6 seulement</strong> mentionnent l'outillage</td><td>il est <strong>déjà</strong> indépendant : une refonte de l'Agence ne le toucherait pas</td></tr><tr><td>Kits d'export</td><td><strong>85 / 85 complets</strong></td><td>ce qui existe est <strong>déjà</strong> emportable ailleurs</td></tr><tr><td>Scripts avec une cible écrite en dur</td><td><strong>0 sur 88</strong></td><td>l'architecture n'est <strong>pas</strong> prisonnière de ce projet</td></tr><tr><td>Exportabilité globale</td><td><strong>88 %</strong>, dont <strong>3 dimensions à 100 %</strong></td><td>ce sont des acquis qu'une refonte <strong>repartirait à zéro</strong></td></tr><tr><td>Obligations portées par nos documents</td><td><strong>936</strong>, dont <strong>556 dans un seul</strong></td><td><strong>c'est là qu'est le poids</strong></td></tr><tr><td>Registres à remplir pour UN outil qui arrive</td><td><strong>10</strong></td><td>le prix d'entrée d'un nouvel outil</td></tr></tbody></table>
+<h4>La chose la plus importante de ce tableau</h4>
+<p><strong>Ton intuition est juste sur l'organisation, et fausse sur le code.</strong> Tu as écrit : <em>« en l'état l'agence est AUSSI, pour certaines parties : un vrai bazar organisé, construit sur le tas, sans vision globale. »</em> Les mesures disent que c'est vrai de <strong>l'organisation</strong> — 936 obligations, 10 registres par outil, aucune définition de « terminé » — et <strong>faux du code lui-même</strong>, qui est déjà portable, déjà emballé, déjà découplé du Jeu.</p>
+<p><strong>Et la preuve est tombée cette nuit, sur moi.</strong> Les deux outils que j'ai construits ces deux derniers jours étaient à <strong>1 registre sur 10</strong> et <strong>0 sur 10</strong>. L'un d'eux affichait un avertissement de fiabilité qui <strong>n'imprimait rien</strong>, parce que personne ne l'avait déclaré. Le code allait bien. C'est l'entrée dans l'équipe qui est trop chère.</p>
+<hr>
+<h3>2. Les trois voies — et il y en a bien trois, pas deux</h3>
+<h4>Voie A — La refonte totale, comme tu l'as proposée</h4>
+<p><strong>Ce qu'on ferait</strong> : repartir d'un dépôt vide, reconstruire l'Agence module par module.</p>
+<p><strong>Ce que ça coûte, chiffré</strong> : les <strong>2 228 décisions déjà prises</strong> doivent être soit relues une par une, soit <strong>regagnées</strong> — c'est-à-dire repayées en bugs. Plus les <strong>3 dimensions à 100 %</strong> qui repartent à zéro, dont « l'Agence a-t-elle été installée POUR DE VRAI ailleurs », qui a coûté un banc d'essai entier.</p>
+<p><strong>Ce que ça rapporte</strong> : une architecture cohérente dès le premier jour, sans dette d'empilement.</p>
+<p><strong>Le risque réel, et il est précis</strong> : une raison perdue <strong>ne se voit pas</strong>. Elle se paie six semaines plus tard, sous la forme d'un bug déjà corrigé une fois. C'est l'Article 19 pris à l'envers, et c'est le seul risque de cette voie qu'aucun test ne rattrape.</p>
+<h4>Voie B — La refonte du NOYAU seulement <em>(celle que je te propose)</em></h4>
+<p><strong>Ce qu'on ferait</strong> : exactement ce que <strong>ta propre phrase</strong> décrit — <em>« situer le cœur de l'agence, et agréger les modules autour »</em> — mais en ne <strong>reconstruisant</strong> que le cœur, les outils existants devenant des modules qu'on y branche.</p>
+<p><strong>Et tu as déjà nommé ce cœur</strong>, dans ton plan de nuit : <em>« le cœur de l'agence est le suivi des tâches, puis le fil de discussion par sujet en cohérence avec lui — c'est l'environnement dont on a besoin dès le départ, c'est la preuve que c'est le cœur. »</em></p>
+<p><strong>Pourquoi c'est faisable, et c'est le chiffre qui le dit</strong> : les 2 228 décisions sont <strong>concentrées</strong>, pas réparties. La médiane est à 8 par fichier, et un seul fichier en porte un tiers. <strong>On peut donc reconstruire les fichiers légers et laisser les fichiers denses tranquilles</strong> — ce qu'une refonte totale, par définition, s'interdit.</p>
+<p><strong>Ce que ça coûte</strong> : une fraction de la voie A, et le chiffre exact dépend du périmètre du noyau, qui est précisément la question que je te pose plus bas.</p>
+<h4>Voie C — Pas de refonte, on attaque les obligations</h4>
+<p><strong>Ce qu'on ferait</strong> : laisser le code tel quel et s'attaquer aux <strong>936 obligations</strong> et au <strong>prix d'entrée de 10 registres</strong>.</p>
+<p><strong>Pourquoi je ne la propose pas seule</strong> : elle soigne le symptôme le plus douloureux, mais elle ne répond pas à ta vraie demande — <em>« je ne comprends pas comment l'agence fonctionne par module »</em>. Réduire les obligations ne rend pas l'Agence lisible.</p>
+<p><strong>Mais elle n'est pas à jeter</strong> : c'est l'étape 1 de la voie B, et elle sert dans tous les cas.</p>
+<hr>
+<h3>3. Le plan proposé — voie B, en six étapes</h3>
+<p><strong>Étape 0 — Définir « terminé », avant tout le reste.</strong> C'est <strong>ton propre ordre</strong>, tâche <strong>#1132</strong>, ouverte depuis le 28 septembre et jamais exécutée : <em>« les trois bornes qui diront : l'agence est terminée »</em>. <strong>Tant qu'elles n'existent pas, juger l'Agence revient à mesurer une distance vers un point qui n'est pas posé</strong> — et une refonte sans définition d'arrivée est une refonte qui ne finit pas. <em>Décision : toi.</em></p>
+<p><strong>Étape 1 — La carte par module</strong> (tâche <strong>#1343</strong>). Tu ne peux pas arbitrer ce que tu ne vois pas. Un document qui dit, module par module : ce qu'il fait, ce dont il dépend, et ce qui casse si on l'enlève. <em>Je la produis, avec un outil.</em></p>
+<p><strong>Étape 2 — Réduire le prix d'entrée</strong> (la voie C, en étape). Faire tomber les 10 registres à remplir. <strong>C'est utile même si tu renonces à la refonte</strong> — et c'est ce qui rendra le noyau neuf tenable au lieu de le faire naître déjà lourd.</p>
+<p><strong>Étape 3 — Écrire le noyau neuf</strong>, propre : le suivi des tâches et les fils de discussion, sans une ligne héritée. C'est petit, c'est ce que tu veux, et c'est ce qui sert dès le premier jour.</p>
+<p><strong>Étape 4 — Rebrancher les modules un par un sur le noyau</strong>, du plus utilisé au moins utilisé. <strong>Un par un, jamais en bloc</strong> : chaque branchement est réversible tant que l'ancien tient encore.</p>
+<p><strong>Étape 5 — Ne jeter l'ancien que quand le neuf a fait ses preuves</strong>, module par module. Aucun code n'est supprimé avant que son remplaçant ait tourné pour de vrai.</p>
+<p><strong>Ce que ce plan protège, et c'est son seul vrai argument</strong> : à <strong>aucun moment</strong> le projet n'est cassé. Si on s'arrête à l'étape 2, on a quand même gagné. Si on s'arrête à l'étape 3, on a le cœur que tu voulais. La voie A, elle, n'a pas de point d'arrêt utile avant la fin.</p>
+<hr>
+<h3>4. Ce que je ne décide pas, et qui t'appartient</h3>
+<p><strong>Q1 — Quelle voie ?</strong> A (tout), <strong>B (le noyau, ma proposition)</strong>, ou C (les obligations seules) ?</p>
+<p><strong>Q2 — Qu'est-ce qui est dans le noyau, exactement ?</strong> Tu as nommé le suivi des tâches et les fils. Est-ce que le <strong>compteur d'usage des outils</strong> et <strong>l'heure fiable</strong> en font partie — ils sont utilisés par presque tout — ou restent-ils des modules ?</p>
+<p><strong>Q3 — Les 2 228 raisons : qu'est-ce qu'on en fait ?</strong> Trois réponses possibles, et il faut en choisir une : on les relit toutes (long, sûr) · on relit seulement celles des fichiers qu'on reconstruit (ma préférence) · on les abandonne en écrivant pourquoi (rapide, et on repaiera).</p>
+<p><strong>Q4 — L'étape 0 d'abord, oui ou non ?</strong> Je pense que oui, et c'est ton propre ordre. Mais si tu préfères commencer par la carte (étape 1) pour voir avant de définir, c'est défendable aussi.</p>
+<p><strong>Q5 — Le Jeu reste-t-il hors périmètre ?</strong> Les mesures disent qu'il est déjà indépendant — 6 fichiers sur 93 mentionnent l'outillage. Je pars du principe que oui, par ta consigne permanente. Confirme ou corrige.</p>
+<hr>
+<h3>Plan d'action</h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>le chiffrage existe et il est rejouable</td><td><strong>FAIT</strong> — tâche <strong>#1356</strong>, outil <code>cout-de-la-refonte</code></td></tr><tr><td><strong>À TRANCHER</strong></td><td>Q1 à Q5 ci-dessus</td><td><strong>ta décision</strong> — rien ne démarre avant</td></tr><tr><td><strong>RETENU</strong></td><td>la carte par module est le préalable de ta décision</td><td>tâche <strong>#1343</strong>, déjà ouverte</td></tr><tr><td><strong>RETENU</strong></td><td>« terminé » n'est défini nulle part</td><td>tâche <strong>#1132</strong>, ton propre ordre, ouverte depuis le 28/09</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>écrire le guide de 50 pages pour l'IA maintenant</td><td><strong>raison écrite</strong> : ta consigne est explicite — <em>« seulement si le plan d'action est validé »</em>. L'écrire avant serait écrire pour une architecture qui n'est pas choisie.</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
