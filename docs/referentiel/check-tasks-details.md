@@ -625,12 +625,21 @@ file) ; 35 des 36 nouvelles détections viennent du registre, une seule d'une li
 Les tâches concernées **sortent du classement sans être cachées** : section propre, comptées, avec
 la raison et le champ qui l'a dite. `inclureCeQuiAttend: true` rend l'ancien comportement.
 
-### La limite, et le contrôle refusé
+### La limite — et la conclusion que j'y avais tirée trop vite *(corrigée le jour même, tâche #1375)*
 
 Ce contrôle lit des **champs déclarés**. Une ligne qui se contredit — #624, statut « EN COURS »
-contre un détail disant « EN ATTENTE DE SON ACCORD » — lui échappe. Un détecteur sur la prose a été
-**mesuré puis écarté** : il ne rattrapait qu'une ligne sur 61. La correction est dans la DONNÉE,
-et elle revient à l'utilisateur.
+contre un détail disant « EN ATTENTE DE SON ACCORD » — lui échappe.
+
+**J'avais écarté un détecteur de prose sur une mesure, et la mesure était juste — c'est la
+généralisation qui ne l'était pas.** Quatre formules de la famille « attend sa décision » ne
+rattrapaient qu'une ligne sur 61 ; j'en ai conclu que le phénomène était négligeable. La famille
+qui compte est celle de l'**interdiction** : « on ne touche rien », « à trancher avec lui », « pas
+maintenant ». Remesuré : **6 lignes sur 61** — et j'en avais heurté trois dans l'heure (#612, #624,
+#1336) en cherchant du travail libre.
+
+`lignesQuiSeContredisent()` les relève depuis, **comme une question et jamais comme un
+reclassement** : les champs déclarés restent seuls à décider. La réparation est dans la DONNÉE —
+ces lignes ont un statut qui ment, et le corriger revient à l'utilisateur.
 
 *(Discipline appliquée ici, expliquée ailleurs : Article 24 pour le registre lu plutôt que recopié,
 leçon L4 pour le refus d'un garde qui accuse large, leçon L43 pour la limite nommée avec son

@@ -597,12 +597,80 @@ export function formatTachesEnAttenteLines(enAttente = [], { total = null, detai
   // chercher autrement). Ce contrôle lit des CHAMPS DÉCLARÉS — statut, criticité, pour qui. Une
   // ligne dont le statut dit « EN COURS » pendant que son détail la déclare garée lui échappe, et
   // le cas est réel (#624, parquée jusqu'à la prochaine grosse revue de la charte).
-  // POURQUOI ON NE CHASSE PAS DANS LA PROSE : mesuré le jour même, quatre formules explicites
-  // (« EN ATTENTE DE SON ACCORD », « attend sa décision », …) ne trouvent qu'UNE ligne sur les 61
-  // restantes. Un mécanisme qui trouve un cas sur soixante coûte plus en faux positifs qu'il ne
-  // rapporte (leçon L4). La vraie correction est dans la DONNÉE : ces lignes-là ont un statut qui
-  // ment, et c'est à l'utilisateur de le dire, pas à un motif de texte de le deviner.
-  L.push("   Limite à connaître : ce contrôle lit les CHAMPS DÉCLARÉS (statut, criticité, pour qui). Une ligne dont le statut dit « en cours » alors que son détail la déclare garée lui échappe — cas réel : #624. Mesuré : chercher dans la prose ne rattraperait qu'1 ligne sur 61, pour un vrai risque de fausse alerte.");
+  // CE QUI A ÉTÉ CONCLU TROP VITE ICI, ET CORRIGÉ UNE HEURE PLUS TARD (tâche #1375). J'avais
+  // mesuré que quatre formules explicites de la famille « attend sa décision » ne rattrapaient
+  // qu'UNE ligne sur les 61 restantes, et j'en avais conclu que chercher dans la prose ne servait
+  // à rien. Le chiffre était juste ; la généralisation ne l'était pas. La famille qui compte est
+  // celle de l'INTERDICTION (« on ne touche rien », « à trancher avec lui », « pas maintenant ») :
+  // remesuré, **6 lignes sur 61**. `lignesQuiSeContredisent()` les relève désormais — comme une
+  // QUESTION, jamais comme un reclassement, parce que la vraie réparation est dans la DONNÉE :
+  // ces lignes ont un statut qui ment, et le corriger revient à l'utilisateur.
+  L.push("   Limite à connaître : ce contrôle lit les CHAMPS DÉCLARÉS (statut, criticité, pour qui). Une ligne dont le statut dit « en cours » alors que son détail la déclare garée lui échappe — cas réel : #624. Ces contradictions-là sont relevées à part, comme une question : voir la section « Lignes qui se contredisent ».");
+  return L;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA LIGNE QUI SE CONTREDIT ELLE-MÊME (2026-10-01, tâche #1375)
+//
+// CETTE SECTION EXISTE PARCE QUE J'AVAIS CONCLU TROP VITE QU'ELLE NE SERVIRAIT À RIEN, et la
+// correction vaut autant que le contrôle. Une heure plus tôt (#1373), j'avais mesuré qu'un
+// détecteur de prose ne rattraperait qu'UNE ligne sur 61, et je l'avais écarté sur ce chiffre.
+// Le chiffre était juste **pour les motifs que j'avais testés** — tous de la famille « attend sa
+// décision ». La famille qui compte ici est celle de l'INTERDICTION : « on ne touche rien »,
+// « rien n'est touché », « à trancher avec lui », « pas maintenant ». Remesuré : **6 lignes sur
+// 61**, soit 10 % de ce que je prenais pour du travail libre — et j'en avais déjà heurté TROIS
+// dans la même heure (#612, #624, #1336). Généraliser depuis l'échantillon testé vers « le
+// phénomène est négligeable » était l'erreur, pas la mesure.
+//
+// CE QU'ELLE NE FAIT PAS, ET C'EST LA MOITIÉ DU DISPOSITIF. Elle ne reclasse RIEN. `attendUneDecision()`
+// décide sur des CHAMPS DÉCLARÉS (statut, criticité, pour qui) et reste seule à décider ; cette
+// sonde-ci ne fait que poser une QUESTION quand les deux couches d'une même ligne se contredisent
+// — le statut dit « ouverte », le texte dit « on ne touche rien ». Les fondre reviendrait à
+// promouvoir une devinette de texte au rang de classification, c'est-à-dire à refaire par la
+// fenêtre l'erreur qu'on vient de corriger par la porte. La vraie réparation est dans la DONNÉE :
+// ces lignes ont un statut qui ment, et le corriger est une décision de l'utilisateur.
+//
+// LE FAUX POSITIF QUI A ÉTÉ RETIRÉ, écrit ici parce qu'il reviendra tenter le prochain agent :
+// « à deux » semblait un bon marqueur de « à faire à deux ». Il attrapait #705 sur la phrase
+// « répond à deux questions ». Un marqueur qui dépend du mot suivant n'est pas un marqueur, et un
+// garde qui accuse à tort cesse d'être lu (leçon L4). Les marqueurs retenus portent tous un
+// PRONOM qui désigne l'utilisateur, ou une négation explicite.
+//
+// LISTE VOLONTAIREMENT TENUE À LA MAIN (Article 24, exemption déclarée) : elle ne reflète aucun
+// autre système — c'est de la langue écrite par nous, dans nos lignes de suivi. Rien ne peut donc
+// diverger en silence derrière elle. Chaque entrée nomme le cas réel qui l'a fait entrer.
+export const MARQUEURS_DE_BLOCAGE_EN_PROSE = Object.freeze([
+  { motif: /on ne touche rien/i, pourquoi: "interdiction explicite", cas: "« On ne touche rien pour l'instant dans Circle » (#612)" },
+  { motif: /rien n'est touché/i, pourquoi: "interdiction explicite", cas: "« rien n'est touché pour l'instant » (#612)" },
+  { motif: /en attente de son accord/i, pourquoi: "attente explicite", cas: "« EN ATTENTE DE SON ACCORD », sur une ligne dite EN COURS (#624)" },
+  { motif: /\bpas maintenant\b/i, pourquoi: "report explicite demandé par lui", cas: "« prépare-toi […] pas maintenant mais bientôt » (#1336)" },
+  { motif: /(trancher|faire|décider|voir)\s+avec\s+lui/i, pourquoi: "travail à faire à deux", cas: "« à trancher avec lui », « à faire avec lui » (#677, #790, #793)" },
+  { motif: /nécessite sa présence/i, pourquoi: "sa présence est requise", cas: "« à faire — nécessite sa présence » (#603)" },
+]);
+
+export function lignesQuiSeContredisent(rows = [], { marqueurs = MARQUEURS_DE_BLOCAGE_EN_PROSE, ...options } = {}) {
+  const trouvees = [];
+  for (const r of rows ?? []) {
+    if (!OPEN_KEYS.has(r.statusKey)) continue;
+    // Une ligne dont les CHAMPS DÉCLARÉS disent déjà l'attente n'est pas contradictoire : elle est
+    // simplement en attente, et elle est déjà traitée là où il faut. Rien à signaler deux fois.
+    if (attendUneDecision(r, options)) continue;
+    const texte = `${r.detail ?? ""} ${r.sousSujet ?? ""}`;
+    const m = marqueurs.find((x) => x.motif.test(texte));
+    if (!m) continue;
+    trouvees.push({ numero: r.numero, sousSujet: r.sousSujet, statut: String(r.statut ?? "").trim(), pourquoi: m.pourquoi, cas: m.cas });
+  }
+  return trouvees;
+}
+
+export function formatLignesQuiSeContredisentLines(trouvees = [], { libres = null, detail = 8 } = {}) {
+  if (!trouvees.length) return ["✅ Aucune ligne ne se contredit : partout où le texte annonce un blocage, le statut le dit aussi."];
+  const part = libres ? ` sur ${libres} tâche(s) tenues pour libres` : "";
+  const L = [`❓ ${trouvees.length} ligne(s)${part} SE CONTREDISENT : leur statut les dit actionnables, leur texte dit le contraire.`];
+  L.push("   Ce n'est PAS un reclassement — le statut fait toujours foi. C'est une question posée : laquelle des deux couches a raison ?");
+  L.push("   La réparation est dans la DONNÉE, pas dans l'outil : ces lignes ont un statut qui ment, et le corriger revient à l'utilisateur.");
+  for (const t of trouvees.slice(0, detail)) L.push(`   · #${t.numero ?? "sans numéro"} — statut « ${t.statut} », mais le texte dit : ${t.pourquoi} · ${t.cas}`);
+  if (trouvees.length > detail) L.push(`   · … et ${trouvees.length - detail} de plus`);
   return L;
 }
 
@@ -2247,6 +2315,10 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
   blocks.push({ type: "heading", text: "Ce qui attend une décision de l'utilisateur (hors de l'ordre recommandé)" });
   blocks.push({ type: "list", items: formatTachesEnAttenteLines(enAttenteDeLui, { total: ouvertesTotal }) });
 
+  const seContredisent = lignesQuiSeContredisent(rows);
+  blocks.push({ type: "heading", text: "Lignes qui se contredisent (question, jamais un reclassement)" });
+  blocks.push({ type: "list", items: formatLignesQuiSeContredisentLines(seContredisent, { libres: rows.filter((r) => OPEN_KEYS.has(r.statusKey) && !attendUneDecision(r)).length }) });
+
   const recommended = recommendNextTasks(rows, { stagnant });
   if (recommended.length) {
     blocks.push({ type: "heading", text: "Ordre recommandé des prochaines tâches (signal, jamais une décision)" });
@@ -2257,7 +2329,7 @@ export function buildReport({ zoom = "en_cours", format = "liste", allRows, hist
     title: `État des tâches — ${ZOOM_LABELS[zoom]}`,
     subtitle: `Forme : ${FORMAT_LABELS[format]} · ${scoped.length} tâche(s) affichée(s) sur ${rows.length} au total`,
     blocks: blocks.filter((b) => b.type !== "noop"),
-    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, enAttenteDeLui, chantierFreshnessGaps, auditFormat },
+    meta: { zoom, format, count: scoped.length, total: rows.length, regressions, stagnant, recommended, enAttenteDeLui, seContredisent, chantierFreshnessGaps, auditFormat },
   };
 }
 

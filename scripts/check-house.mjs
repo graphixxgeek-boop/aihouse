@@ -5888,6 +5888,43 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.match(ctd.formatTachesEnAttenteLines(liste, { total: 2 }).join('\n'), /50 %/, 'with its share of the open queue, so the scale is visible at a glance');
   assert.match(ctd.formatTachesEnAttenteLines([], { total: 2 })[0], /Aucune tâche/, 'and an empty list says so plainly rather than printing nothing');
 
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  // LA LIGNE QUI SE CONTREDIT ELLE-MÊME (2026-10-01, tâche #1375)
+  //
+  // CES TESTS EXISTENT PARCE QUE J'AVAIS CONCLU TROP VITE QUE CE CONTRÔLE NE SERVIRAIT À RIEN.
+  // Une heure plus tôt (#1373), j'avais mesuré qu'un détecteur de prose ne rattraperait qu'UNE
+  // ligne sur 61 et je l'avais écarté sur ce chiffre. Le chiffre était juste POUR LES MOTIFS
+  // TESTÉS — tous de la famille « attend sa décision ». La famille qui compte est celle de
+  // l'INTERDICTION (« on ne touche rien », « à trancher avec lui », « pas maintenant ») :
+  // remesuré, **6 sur 61**, et j'en avais heurté TROIS dans l'heure. L'erreur n'était pas la
+  // mesure, c'était de généraliser depuis l'échantillon testé.
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  const contredit = { numero: 10, sousSujet: 'x', detail: 'On ne touche rien pour l\'instant dans Circle', statusKey: 'ouverte', statut: 'À FAIRE' };
+  const franche = { numero: 11, sousSujet: 'x', detail: 'rien de particulier', statusKey: 'ouverte', statut: 'Ouverte' };
+  const dejaDite = { numero: 12, sousSujet: 'x', detail: 'à trancher avec lui', statusKey: 'ouverte', statut: 'À TRANCHER' };
+  const vues = ctd.lignesQuiSeContredisent([contredit, franche, dejaDite]);
+  assert.deepEqual(vues.map((v) => v.numero), [10], 'only the row whose STATUS says actionable while its text forbids touching it is flagged');
+  assert.ok(!vues.some((v) => v.numero === 12), 'a row whose declared fields ALREADY say it waits is not a contradiction — it is simply waiting, and flagging it twice would be noise');
+  assert.ok(vues[0].cas && vues[0].pourquoi, 'each flag names the kind of blocking and the real case that put the marker in the list');
+
+  // ── LE FAUX POSITIF RETIRÉ, gardé comme test pour qu'il ne revienne pas : « à deux » semblait
+  // un bon marqueur de « à faire à deux », et il attrapait « répond À DEUX questions » (#705).
+  // Un marqueur qui dépend du mot suivant n'est pas un marqueur (leçon L4).
+  assert.equal(ctd.lignesQuiSeContredisent([{ numero: 13, sousSujet: 'x', detail: 'il répond à deux questions qu\'on ne se pose jamais en même temps', statusKey: 'ouverte', statut: 'Ouverte' }]).length, 0, 'the retired "à deux" marker must never come back: it accused a row that said "answers TWO questions"');
+  assert.ok(ctd.MARQUEURS_DE_BLOCAGE_EN_PROSE.every((m) => m.cas && m.pourquoi), 'every marker carries the real case that justified it — a marker nobody can trace is a marker nobody can challenge');
+
+  // ── ELLE NE RECLASSE RIEN, et c'est la moitié du dispositif : les champs déclarés décident
+  // seuls, la prose ne fait que poser une question. Les fondre promouvrait une devinette de
+  // texte au rang de classification.
+  assert.equal(ctd.attendUneDecision(contredit), false, 'the prose marker must NOT make the row count as waiting — attendUneDecision stays on declared fields only');
+  assert.match(ctd.formatLignesQuiSeContredisentLines(vues).join('\n'), /PAS un reclassement/, 'and the report says so out loud, so nobody reads the section as a verdict');
+  assert.match(ctd.formatLignesQuiSeContredisentLines([])[0], /Aucune ligne/, 'an empty result says so plainly rather than printing nothing');
+
+  // ── EN DIRECT SUR LE VRAI SUIVI (Article 25).
+  const seContreditReel = ctd.lignesQuiSeContredisent(ctd.loadAllTaskRows());
+  assert.ok(seContreditReel.length >= 4, `the real suivi really carries these self-contradicting rows: 6 the day this was built (currently ${seContreditReel.length})`);
+  assert.ok(seContreditReel.length <= 20, 'while staying a short list: beyond a score of rows the markers would be catching ordinary prose, and a guard that accuses widely stops being read');
+
   // ── EN DIRECT SUR LE VRAI SUIVI (Article 25).
   const reelCtd = ctd.loadAllTaskRows();
   const ouvertesReelles = reelCtd.filter((r) => ctd.OPEN_KEYS.has(r.statusKey));
