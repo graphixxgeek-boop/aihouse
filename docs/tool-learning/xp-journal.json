@@ -311,5 +311,12 @@
     "pourquoi": "C'est la leçon L47 dans sa forme la plus pure, mais avec une aggravation qui vaut d'être notée : ici l'outil AVAIT déclaré sa borne. Le défaut n'est donc pas une sonde trompeuse, c'est une réserve écrite et sautée. Le geste qui en découle : un chiffre d'usage ne se cite JAMAIS sans sa fenêtre, et quand un outil a un REGISTRE sur disque, c'est le registre qui dit s'il a tourné, jamais le compteur. Et la découverte vaut mieux que l'erreur : en allant vérifier, j'ai trouvé que le constat réel de check-spirit — le tic de Lia — dormait depuis trois jours sans tâche.",
     "tache": 1359,
     "date": "2026-10-01T02:06:24.412Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Un script jetable qui réaffiche les données d’un outil perd TOUS les gardes de présentation que l’outil porte",
+    "quoi": "Deux fois dans la même nuit, j’ai failli rapporter comme défaut quelque chose que le projet avait déjà corrigé — et les deux fois, la faute venait de MON script d’inspection, pas de l’outil. ① J’ai lu « 51 outils hors de portée » à côté d’une liste vide : `invisibles` est une Map que je lisais comme un objet. ② J’ai vu « #undefined » dans les écarts sans suite : mon script écrivait \"#\"+e.numero au lieu d’appeler `numeroTache()`, le formateur écrit le 2026-09-23 EXACTEMENT pour rendre « sans numéro » à la place — défaut relevé à l’époque par l’utilisateur lui-même. LA FORME GÉNÉRALE : quand j’ouvre les entrailles d’un outil avec un `node -e` pour mesurer plus finement, je court-circuite ses formateurs, ses gardes et ses refus de conclure — c’est-à-dire précisément la couche où ce projet range son honnêteté. Je peux alors RE-DÉCOUVRIR des défauts déjà corrigés, et les rapporter comme neufs. CE QUI A SAUVÉ LES DEUX FOIS, et c’est la seule protection possible : vérifier la sortie RÉELLE de l’outil avant de rapporter quoi que ce soit. La vraie sortie contenait 0 occurrence de « #undefined ». AUCUNE MÉCANIQUE NE PEUT INTERCEPTER CECI : un script jetable n’est pas un commit, rien ne le relit. Le déclarer EST la protection (Article 27). LE GESTE : un script d’inspection sert à MESURER, jamais à CONCLURE — toute conclusion se relit sur la sortie de l’outil.",
+    "date": "2026-10-01T11:16:00.469Z"
   }
 ]

@@ -21266,6 +21266,95 @@ async function testUnCompteDeZeroNestPasUnManque() {
 await testUnCompteDeZeroNestPasUnManque();
 
 // =============================================================================================
+// #699 — UN NUMÉRO DE TÂCHE N'EST PAS UN DÉCOMPTE
+// =============================================================================================
+// MÊME FAMILLE EXACTE que le compte de zéro juste au-dessus, trouvée en relançant la chaîne
+// « mesure → suite » le 2026-10-01 : un signal ADJACENT — un nombre — lu comme le signal lui-même.
+// Ce projet écrit ses renvois sous la forme « #1383 », et `\b` tient entre le croisillon et le
+// chiffre : « #1383 (le constat porte sur une FAUSSE alerte […] rien à corriger » se lisait donc
+// comme « 1383 constats à corriger ».
+//
+// TROIS SUR 92, MESURÉS AVANT DE CORRIGER — #852, #1384, #509 — et le pourcentage ne dit pas le
+// coût : la fausse accusation tombait sur la ligne même où l'agent venait de RANGER ses constats,
+// c'est-à-dire la lecture la plus décourageante que ce garde-fou pouvait produire. Un garde qui
+// accuse à tort cesse d'être lu (leçon L4).
+//
+// LE CONTRE-TEST EST LA MOITIÉ QUI COMPTE (BP4) : un garde qui ne mord que dans un sens achète du
+// silence. « 1383 outils muets » doit RESTER un constat, « #1383 outils muets » ne doit plus en
+// être un — la seule différence entre les deux est le croisillon.
+async function testUnNumeroCiteNestPasUnDecompte() {
+  const C = await import('../scripts/check-tasks-details.mjs');
+
+  assert.equal(C.estUnNumeroCite('#12', 1), true);
+  assert.equal(C.estUnNumeroCite('a 12', 2), false, 'a plain number must stay a number');
+  assert.equal(C.estUnNumeroCite('12', 0), false, 'index 0 has no preceding character — it must not read past the start of the string');
+
+  // LES DEUX SENS, SUR LE DÉTECTEUR ENTIER : seul le croisillon sépare les deux phrases.
+  assert.equal(C.estUnConstat({ detail: 'mesure du jour : 1383 outils muets, à corriger avant la refonte.' }).constat, true,
+    'MUST STILL BITE on a real count — otherwise the guard bought silence rather than accuracy');
+  assert.equal(C.estUnConstat({ detail: 'voir #1383 outils muets, à corriger — déjà traité ailleurs.' }).constat, false,
+    'a cited task reference is not a quantity: counting it accuses a line that reports nothing');
+
+  // LE DÉPÔT RÉEL : le garde ne peut que RETIRER des accusations, jamais en ajouter — c'est ce qui
+  // en fait un changement à risque faible sur un fichier classé TUYAUTERIE score 9.
+  const rows = C.loadAllTaskRows();
+  const r = C.findConstatsSansSuite(rows);
+  assert.ok(r.mesurable);
+  for (const e of r.ecarts) {
+    const row = rows.find((x) => x.numero === e.numero);
+    const d = String(row?.detail ?? '');
+    const prem = (String(e.extrait ?? '').match(/^(\d{1,4})/) ?? [])[1];
+    if (!prem) continue;
+    assert.ok(!new RegExp(`#${prem}\\b`).test(d) || new RegExp(`(?<!#)\\b${prem}\\b`).test(d),
+      `checked live: accusation ${C.numeroTache(e.numero)} still rests on a number that only ever appears as a task reference`);
+  }
+
+  console.log(`Passed: un numéro de tâche n'est pas un décompte (2026-10-01, tâche #699). La chaîne « mesure → suite » repère un écart à la proximité d'un compte de choses et d'un mot de manque — et ce projet écrit ses renvois « #1383 », avec un \\b qui tient entre le croisillon et le chiffre. « #1383 (le constat porte sur une FAUSSE alerte […] rien à corriger » se lisait donc comme « 1383 constats à corriger ». C'EST LA FAMILLE EXACTE du compte de zéro traité juste au-dessus, et celle du « #902 qui traîne ailleurs dans la ligne » écarté le 2026-09-28 (leçon L47) : un signal ADJACENT lu comme le signal lui-même, pour la troisième fois sur le même détecteur. TROIS FAUX SUR 92, MESURÉS AVANT DE CORRIGER — #852, #1384, #509 — et le pourcentage ne dit pas le coût : l'accusation tombait sur la ligne où l'agent venait de RANGER ses constats, la lecture la plus décourageante que ce garde-fou pouvait produire, et un garde qui accuse à tort cesse d'être lu (L4). LE CONTRE-TEST EST LA MOITIÉ QUI COMPTE (BP4) : seul le croisillon sépare « 1383 outils muets », qui reste un constat, de « #1383 outils muets », qui n'en est plus un. ET LE GARDE NE PEUT QUE RETIRER DES ACCUSATIONS, jamais en ajouter — c'est ce qui autorisait de l'appliquer directement à un fichier classé TUYAUTERIE score 9 plutôt que de le proposer. Mesure : ${r.constats} constats, ${(r.ecarts ?? []).length} sans suite (92 avant le garde).`);
+}
+await testUnNumeroCiteNestPasUnDecompte();
+
+// =============================================================================================
+// #699 — « SANS SUITE » CONTIENT « SUITE »
+// =============================================================================================
+// TROUVÉ EN ALLANT ÉCRIRE UN « SANS SUITE », PAS EN RELISANT LE CODE (2026-10-01) : la raison
+// qu'on s'apprêtait à écrire commençait par un chiffre — « SANS SUITE : 3 fiches étaient en
+// retard… » — et le détecteur l'aurait lue comme « suite ouverte, tâche #3 ».
+//
+// C'EST L'INVERSE DU FAUX POSITIF TRAITÉ JUSTE AU-DESSUS, ET C'EST LE PLUS GRAVE DES DEUX : une
+// fausse ACCUSATION se conteste en la lisant ; une fausse RÉASSURANCE ne se lit jamais, puisque
+// tout a l'air en ordre. Le détecteur le dit lui-même du cas « référence morte » — un lien qui
+// n'en est pas rassure, donc il est pire qu'une absence de lien.
+//
+// LE DÉFAUT ÉTAIT LATENT, ET C'EST ÉCRIT ICI PLUTÔT QUE TU : aucune ligne du registre ne le
+// déclenchait au moment de la correction, donc les chiffres n'ont pas bougé. Un défaut qui
+// n'a encore rien cassé reste un défaut — et celui-ci se serait déclenché à la ligne suivante,
+// parce que « 3 outils », « 40 fiches » est exactement la forme des raisons de ce projet.
+async function testSansSuiteNestPasUneSuite() {
+  const C = await import('../scripts/check-tasks-details.mjs');
+  const connus = new Set([40, 790, 1385]);
+
+  assert.equal(C.suiteDuConstat({ detail: 'SANS SUITE : 40 fiches étaient en retard, toutes écrites depuis.' }, { numerosConnus: connus }).etat, 'raison',
+    'a written-off finding whose reason STARTS WITH A DIGIT must stay written off — reading it as a link to task #40 invents a chain that was never opened');
+  assert.equal(C.suiteDuConstat({ detail: 'SANS SUITE : les fiches étaient en retard, toutes écrites depuis.' }, { numerosConnus: connus }).etat, 'raison',
+    'the ordinary case must be unaffected by the guard');
+
+  // LES DEUX SENS (BP4) : le garde ne doit pas avaler une VRAIE suite.
+  const vraie = C.suiteDuConstat({ detail: 'SUITE : #790' }, { numerosConnus: connus });
+  assert.equal(vraie.etat, 'tache');
+  assert.equal(vraie.cible, 790, 'a real follow-up must still resolve to its task number');
+  assert.equal(C.suiteDuConstat({ detail: 'bla bla. SUITE : #1385 et la raison.' }, { numerosConnus: connus }).cible, 1385,
+    'a follow-up declared mid-line must still be read — the guard targets the word SANS, never the position');
+
+  // LE DÉPÔT RÉEL : aucune ligne ne porte les deux marques en se contredisant.
+  const r = C.findConstatsSansSuite(C.loadAllTaskRows());
+  assert.ok(r.mesurable);
+  assert.equal(r.parEtat['reference-morte'], 0, 'checked live: no accusation rests on a dead reference');
+
+  console.log(`Passed: « SANS SUITE » contient « SUITE » (2026-10-01, tâche #699). Le motif de la suite acceptait n'importe quel caractère non-lettre avant le mot, et l'espace de « SANS SUITE » en est un : « SANS SUITE : 40 fiches étaient en retard… » rendait donc « suite ouverte, tâche #40 », un écart ASSUMÉ avec sa raison écrite requalifié en chaîne fermée vers une tâche sans rapport — et #40 existe vraiment dans le registre. C'EST L'INVERSE DU FAUX POSITIF corrigé juste au-dessus, et le plus grave des deux : une fausse ACCUSATION se conteste en la lisant, une fausse RÉASSURANCE ne se lit jamais puisque tout a l'air en ordre — c'est ce que le détecteur dit lui-même du cas « référence morte ». IL NE SE DÉCLENCHAIT QUE SI LA RAISON COMMENÇAIT PAR UN CHIFFRE, ce qui est précisément la forme des raisons de ce projet (« 3 outils », « 40 fiches ») : rare en apparence, fréquent en pratique, et totalement silencieux. TROUVÉ EN ALLANT ÉCRIRE UN « SANS SUITE », jamais en relisant le code — la raison qu'on s'apprêtait à poser l'aurait déclenché. LE DÉFAUT ÉTAIT LATENT et les chiffres n'ont pas bougé : aucune ligne ne le déclenchait encore, ce qui ne le rend pas moins réel. Mesure : ${r.parEtat.tache} suite(s) ouverte(s), ${r.parEtat.raison} écart(s) assumé(s), ${r.parEtat['reference-morte']} référence(s) morte(s).`);
+}
+await testSansSuiteNestPasUneSuite();
+
+// =============================================================================================
 // #1039 — LES DEUX LIGNES QUE LE FILET NE SURVEILLAIT PAS
 // =============================================================================================
 // EZECHIEL LES A TROUVÉES EN LES CASSANT (2026-09-27) : il a remplacé une égalité stricte par une

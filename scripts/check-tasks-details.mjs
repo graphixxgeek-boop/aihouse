@@ -4331,11 +4331,28 @@ export function compteEstZero(extrait = "") {
   return /^0(?!\d)/.test(String(extrait).trim());
 }
 
+// UN NUMÉRO DE TÂCHE N'EST PAS UN DÉCOMPTE (2026-10-01, tâche #699). Exactement la même famille
+// que compteEstZero() juste au-dessus, et que le « #902 qui traîne ailleurs dans la ligne » déjà
+// écarté le 2026-09-28 (leçon L47) : un signal ADJACENT — un nombre — lu comme le signal lui-même.
+// Ce projet écrit ses renvois « #1383 », et `\b` tient entre le croisillon et le chiffre, si bien
+// que « #1383 (le constat porte sur une FAUSSE alerte […] rien à corriger » se lisait comme
+// « 1383 constats à corriger ». TROIS ÉCARTS SUR 92 étaient de fausses accusations de cette forme
+// (#852, #1384, #509), mesurés avant de corriger plutôt que supposés.
+// POURQUOI ÇA COMPTE PLUS QUE SES 3 % : un garde-fou qui accuse à tort cesse d'être lu (leçon L4),
+// et celui-ci accusait la ligne même où l'agent venait de RANGER ses constats — la lecture la plus
+// décourageante possible. Un faux positif coûte toujours plus cher que son pourcentage.
+// LE GARDE NE PEUT QUE RETIRER DES ACCUSATIONS, JAMAIS EN AJOUTER : c'est ce qui en fait un
+// changement à risque faible sur un fichier classé TUYAUTERIE score 9.
+export function estUnNumeroCite(detail = "", index = 0) {
+  return index > 0 && String(detail)[index - 1] === "#";
+}
+
 export function estUnConstat(row) {
   const d = String(row?.detail ?? "");
   for (const m of d.matchAll(COMPTE_DE_CHOSES)) {
     const apres = d.slice(m.index, m.index + m[0].length + FENETRE_APRES);
     if (compteEstZero(m[0])) continue;
+    if (estUnNumeroCite(d, m.index)) continue;
     if (MOT_DE_MANQUE.test(apres)) {
       return { constat: true, extrait: apres.trim(),
         pourquoi: "un compte de choses du paysage, suivi d'un mot de manque : c'est un écart chiffré, pas le récit d'un travail fait" };
@@ -4349,7 +4366,17 @@ export function estUnConstat(row) {
 // troisième, « écarté » deviendrait la case fourre-tout qu'on coche pour faire taire le contrôle.
 export function suiteDuConstat(row, { numerosConnus = null } = {}) {
   const d = String(row?.detail ?? "");
-  const mSuite = d.match(new RegExp(`(?:^|[^A-Za-zÀ-ÿ])${MARQUE_SUITE}\\s*:\\s*#?(\\d{1,4})\\b`, "i"));
+  // « SANS SUITE » CONTIENT « SUITE », ET ÇA SE PAYAIT CHER (2026-10-01, tâche #699). Sans le
+  // garde ci-dessous, « SANS SUITE : 40 fiches étaient en retard… » rendait « suite ouverte,
+  // tâche #40 » — un écart ASSUMÉ, avec sa raison écrite, requalifié en chaîne fermée vers une
+  // tâche qui n'a rien à voir, et #40 existe vraiment dans le registre. C'est l'inverse exact du
+  // faux positif corrigé juste au-dessus, et c'est le plus grave des deux : une FAUSSE
+  // RÉASSURANCE. Le détecteur le dit lui-même du cas « référence morte » — un lien qui n'en est
+  // pas rassure, donc il est pire qu'une absence de lien.
+  // IL NE SE DÉCLENCHAIT QUE SI LA RAISON COMMENÇAIT PAR UN CHIFFRE, ce qui est précisément la
+  // forme d'une raison de ce projet (« 40 fiches », « 3 outils ») : rare en apparence, fréquent
+  // en pratique, et totalement silencieux.
+  const mSuite = d.match(new RegExp(`(?:^|[^A-Za-zÀ-ÿ])(?<!SANS )${MARQUE_SUITE}\\s*:\\s*#?(\\d{1,4})\\b`, "i"));
   if (mSuite) {
     const cible = Number(mSuite[1]);
     if (numerosConnus && !numerosConnus.has(cible)) {

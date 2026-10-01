@@ -597,6 +597,43 @@ C'est la même famille que presque tout ce que ce dépôt a corrigé : **un sign
 manque — lu comme le signal lui-même, le manque.** `nomRaccourci()` sert le même souci de lisibilité
 sur les noms longs.
 
+## `estUnNumeroCite()` — un numéro de tâche n'est pas un décompte *(2026-10-01, tâche #699)*
+
+**Troisième et quatrième occurrence de la même famille sur ce seul détecteur**, après le compte de
+zéro ci-dessus : un signal ADJACENT — un nombre — lu comme le signal lui-même.
+
+**① Le faux positif.** Ce projet écrit ses renvois « #1383 », et la frontière de mot tient entre le
+croisillon et le chiffre : « #1383 (le constat porte sur une FAUSSE alerte … rien à corriger » se
+lisait donc **« 1383 constats à corriger »**. Trois écarts sur 92 étaient de fausses accusations de
+cette forme (#852, #1384, #509), **mesurés avant correction plutôt que supposés**. Le pourcentage ne
+dit pas le coût : l'accusation tombait sur la ligne même où l'agent venait de RANGER ses constats —
+la lecture la plus décourageante que ce garde-fou pouvait produire, et **un garde qui accuse à tort
+cesse d'être lu** (leçon L4).
+
+**② Le faux négatif, plus grave, et dans `suiteDuConstat()`** : « SANS SUITE » contient « SUITE ».
+Le motif acceptait n'importe quel caractère non-lettre avant le mot, et l'espace en est un, si bien
+que « SANS SUITE : 40 fiches étaient en retard… » rendait **« suite ouverte, tâche #40 »** — un écart
+assumé, avec sa raison écrite, requalifié en chaîne fermée vers une tâche sans rapport qui existe
+vraiment dans le registre.
+
+**Une fausse ACCUSATION se conteste en la lisant ; une fausse RÉASSURANCE ne se lit jamais**, puisque
+tout a l'air en ordre. C'est exactement ce que ce détecteur dit lui-même du cas « référence morte » :
+un lien qui n'en est pas rassure, donc il est pire qu'une absence de lien.
+
+**Il ne se déclenchait que si la raison commençait par un chiffre** — c'est-à-dire la forme exacte
+des raisons de ce projet (« 3 outils », « 40 fiches ») : rare en apparence, fréquent en pratique, et
+totalement silencieux. **Défaut LATENT au moment de la correction** : aucune ligne ne le déclenchait,
+les chiffres n'ont pas bougé, et un défaut qui n'a encore rien cassé reste un défaut.
+
+**Trouvé en allant ÉCRIRE une déclaration, jamais en relisant le code** : la raison qu'on s'apprêtait
+à poser l'aurait déclenché à la ligne suivante.
+
+**Pourquoi les deux gardes ont pu être APPLIQUÉS** sur un fichier que tool-brain classe TUYAUTERIE
+score 9 — où « au-delà du risque faible, ça se propose » : aucun des deux ne peut inventer une
+accusation. L'un n'en retire que de fausses, l'autre rend un écart à son état assumé. Les deux sont
+éprouvés **dans les deux sens** (BP4) : seul le croisillon sépare « 1383 outils muets », qui reste un
+constat, de « #1383 outils muets », qui n'en est plus un.
+
 ## Ce qui attend une décision n'est pas une « prochaine tâche » *(2026-10-01, tâche #1373)*
 
 ### Le biais est structurel, pas un accident de données

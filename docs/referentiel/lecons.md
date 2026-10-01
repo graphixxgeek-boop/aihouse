@@ -1350,10 +1350,24 @@ mesurer, et personne ne le voit parce que les deux se ressemblent trait pour tra
 | « le mot *tâche* n'est pas écrit » | « aucune tâche n'est rattachée » | 47 constats vus au lieu de 89 — le contrôle accusait la discipline la mieux tenue du projet |
 | « la date du dernier commit est ancienne » | « le contenu du fichier est ancien » | le garde-fou bloquait la seule façon correcte de le satisfaire |
 | « le chemin parent ressemble au chemin enfant » | « c'est la même source » | un double compte accusé sur un rapport correct |
+| « un nombre précède un nom dénombrable » | « c'est un décompte » | le renvoi `#1383` lu comme « 1383 constats à corriger » — 3 fausses accusations sur 92, dont une sur la ligne où l'agent venait de ranger ses constats *(2026-10-01, #699)* |
+| « le mot SUITE est là, précédé d'un non-lettre » | « une suite a été ouverte » | `SANS SUITE : 40 fiches…` lu comme « suite ouverte vers la tâche #40 » — un écart ASSUMÉ requalifié en chaîne fermée *(2026-10-01, #699)* |
 
-**Ce qui les réunit, et c'est la seule chose à retenir** : dans les quatre cas, **le contrôle était
+**Ce qui les réunit, et c'est la seule chose à retenir** : dans les six cas, **le contrôle était
 juste sur ce qu'il regardait et faux sur ce qu'il affirmait**. Aucun n'a planté, aucun n'a rendu
-d'erreur, et trois sur quatre rendaient un chiffre plausible.
+d'erreur, et la plupart rendaient un chiffre plausible.
+
+**LES DEUX DERNIÈRES AJOUTENT UNE DISTINCTION QUE LES QUATRE PREMIÈRES NE MONTRAIENT PAS**, et elle
+change la priorité : un signal adjacent peut se tromper dans les DEUX SENS. Les quatre premières
+étaient des fausses ACCUSATIONS — gênantes, mais contestables dès qu'on les lit. La sixième est une
+fausse RÉASSURANCE : la chaîne de l'Article 28 avait l'air fermée là où rien n'était ouvert. **Une
+fausse accusation se conteste en la lisant ; une fausse réassurance ne se lit jamais**, puisque tout
+a l'air en ordre. À défaut typique égal, c'est elle qu'il faut chercher en premier.
+
+**ET LA SIXIÈME N'A PAS ÉTÉ TROUVÉE EN RELISANT LE CODE, mais en allant l'UTILISER** : la raison
+qu'on s'apprêtait à écrire commençait par un chiffre, et c'est ce geste-là qui a révélé le défaut.
+Elle était **latente** — aucune ligne du registre ne la déclenchait encore, donc aucun chiffre
+n'aurait bougé, donc aucune relecture ne pouvait la voir.
 
 **LE GESTE QUI LES ATTRAPE, et il tient en une question** : *avant de conclure d'un zéro, d'un vert
 ou d'un compte — QU'EST-CE QUE CE CONTRÔLE A LITTÉRALEMENT REGARDÉ ?* Pas ce qu'il annonce dans son
