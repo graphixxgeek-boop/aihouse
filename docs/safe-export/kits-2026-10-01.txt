@@ -20,7 +20,7 @@
 
   HORS PORTÉE : cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.
 
-=== LES SOLUTIONS À CONSIGNER — 30 candidat(s) sur 1296 clôture(s) lue(s) ===
+=== LES SOLUTIONS À CONSIGNER — 31 candidat(s) sur 1331 clôture(s) lue(s) ===
 
   Des clôtures qui racontent une CAUSE et un REMÈDE, et dont le vocabulaire ne se retrouve pas
   dans docs/referentiel/solutions.md. Ce sont des PROPOSITIONS : généraliser un cas particulier
@@ -30,12 +30,12 @@
   · #362 — Outillage de travail / Gardiens sacrés (20 % de vocabulaire déjà couvert)
   · #1004 — Agence / **le détecteur de documents jumeaux accusait 25 paires à tort — et la c (22 % de vocabulaire déjà couvert)
   · #991 — Produit / **le référentiel affiché en jeu (panneau Admin) retiré du produit, arc (25 % de vocabulaire déjà couvert)
+  · #1382 — Agence / **le second axe de la fusion d'outils, mesuré : une fois les scanners é (25 % de vocabulaire déjà couvert)
   · #558 — Cérémonie / mesure qui oscille (25 % de vocabulaire déjà couvert)
   · #473 — Process / Ronde (26 % de vocabulaire déjà couvert)
   · #540 — Organisation des tâches / process (26 % de vocabulaire déjà couvert)
   · #139 — Correctif de code / Charte (27 % de vocabulaire déjà couvert)
-  · #535 — Process XP-IA / compteur (27 % de vocabulaire déjà couvert)
-  … et 22 autre(s), les moins « neuves » d'abord écartées de l'affichage
+  … et 23 autre(s), les moins « neuves » d'abord écartées de l'affichage
 
   HORS PORTÉE : « ressembler à une solution » se lit sur des marqueurs de TEXTE : une solution rédigée autrement échappe, et une ligne qui emploie ces mots sans rien résoudre sort à tort. Ce sont des QUESTIONS, jamais un verdict — et personne d'autre que l'agent ne peut généraliser un cas particulier.
 
@@ -48,10 +48,10 @@
 
   ordre de réparation   à jour     dispensés   taux moyen
   --------------------  ---------  ----------  ----------
-  🔴 1. vital             41/41   100 %        7      100 %
-  🟠 2. essentiel          3/3    100 %        0      100 %
-  🟡 3. utile             29/29   100 %        0      100 %
-  ⚪ 4. optionnel         12/12   100 %        3      100 %
+  🔴 1. vital             46/46   100 %        7      100 %
+  🟠 2. essentiel          2/2    100 %        0      100 %
+  🟡 3. utile             27/27   100 %        0      100 %
+  ⚪ 4. optionnel         10/10   100 %        3      100 %
 
   PIÈCES DUES, les mêmes pour tous : blueprint + source + fiche + registre + dependances
   · le registre est SANS OBJET pour un fichier qui n'écrit rien — jamais « manquant » : lui
@@ -82,6 +82,7 @@
   scripts/always-new-code.mjs                         🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/angel-of-ia-process.mjs                     🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/axa-check.mjs                               🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/cassandra-rh.mjs                            🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/check-house.mjs                             🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/check-level-target.mjs                      🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/check-suivi-fidelity.mjs                    🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
@@ -97,6 +98,7 @@
   scripts/ezechiel-les-tests.mjs                      🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/find-booster.mjs                            🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/find-brain.mjs                              🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/gemini-key-health.mjs                       🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/god-of-all-process.mjs                      🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/hooks/banniere.mjs                          🔴 vital     dispensé  aucune pièce due, par décision écrite
   scripts/hooks/check-last-commit.mjs                 🔴 vital     dispensé  aucune pièce due, par décision écrite
@@ -106,13 +108,16 @@
   scripts/html-report.mjs                             🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/hyper-scan-checkpoint.mjs                   🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/install-pnpm.sh                             🔴 vital     dispensé  aucune pièce due, par décision écrite
+  scripts/kpi-report.mjs                              🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/le-classificateur.mjs                       🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/le-coordinateur.mjs                         🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/lib-json.mjs                                🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/lib-markdown-table.mjs                      🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/lib-shell.mjs                               🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
+  scripts/memento-weight.mjs                          🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/modes-de-travail.mjs                        🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/moise-tables-de-loi.mjs                     🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
+  scripts/objectifs-vs-resultats.mjs                  🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/priorites.mjs                               🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/report-template.mjs                         🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/route-booster.mjs                           🔴 vital     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
@@ -126,7 +131,6 @@
   scripts/tool-brain.mjs                              🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/tool-learning.mjs                           🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
   scripts/tool-usage.mjs                              🔴 vital     ✔️     blueprint+source+fiche+registre+dependances
-  scripts/cassandra-rh.mjs                            🟠 essentiel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/el-professor.mjs                            🟠 essentiel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/process-simulation-guardian.mjs             🟠 essentiel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/agent-des-noms.mjs                          🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
@@ -145,10 +149,8 @@
   scripts/ines-official.mjs                           🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
   scripts/integration-outil.mjs                       🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/jesus-le-sauveur.mjs                        🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
-  scripts/kpi-report.mjs                              🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
   scripts/le-regisseur.mjs                            🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
   scripts/messages-courts.mjs                         🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
-  scripts/objectifs-vs-resultats.mjs                  🟡 utile     ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/ou-on-en-est.mjs                            🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
   scripts/rapport-gros-prompt.mjs                     🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
   scripts/run-simulation.mjs                          🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
@@ -160,11 +162,9 @@
   scripts/x-port-blindtest.mjs                        🟡 utile     ✔️     blueprint+source+fiche+registre+dependances
   scripts/api-providers.mjs                           ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
   scripts/build-verified.sh                           ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
-  scripts/gemini-key-health.mjs                       ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/install-ci.mjs                              ⚪ optionnel  dispensé  aucune pièce due, par décision écrite
   scripts/install-ci.sh                               ⚪ optionnel  dispensé  aucune pièce due, par décision écrite
   scripts/judge-persona-shared.mjs                    ⚪ optionnel  ✔️     blueprint+source+fiche+dependances  (registre sans objet)
-  scripts/memento-weight.mjs                          ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/memento.mjs                                 ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
   scripts/pnpm-install.mjs                            ⚪ optionnel  dispensé  aucune pièce due, par décision écrite
   scripts/pure-gold-unity.mjs                         ⚪ optionnel  ✔️     blueprint+source+fiche+registre+dependances
