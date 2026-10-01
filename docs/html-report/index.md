@@ -63,5 +63,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/referentiel/esprit-ce-qui-le-protege.html` | `docs/referentiel/esprit-ce-qui-le-protege.md` | 17388 | 2026-10-01 16:08Z |
 | `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 48606 | 2026-10-01 18:30Z |
 | `docs/rapports-de-nuit/avant-apres-2026-10-01.html` | `docs/rapports-de-nuit/avant-apres-2026-10-01.md` | 14450 | 2026-10-01 20:34Z |
-| `docs/grand-projet/03-plan-daction/philo-politique-30-questions.html` | `docs/grand-projet/03-plan-daction/philo-politique-30-questions.md` | 39838 | 2026-10-01 20:58Z |
 | `docs/philosophie-et-politique-v2.html` | `docs/philosophie-et-politique-v2.md` | 42287 | 2026-10-01 22:21Z |
+| `docs/grand-projet/03-plan-daction/philo-politique-30-questions.html` | `docs/grand-projet/03-plan-daction/philo-politique-30-questions.md` | 21683 | 2026-10-01 23:04Z |
