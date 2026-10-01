@@ -1352,8 +1352,9 @@ mesurer, et personne ne le voit parce que les deux se ressemblent trait pour tra
 | « le chemin parent ressemble au chemin enfant » | « c'est la même source » | un double compte accusé sur un rapport correct |
 | « un nombre précède un nom dénombrable » | « c'est un décompte » | le renvoi `#1383` lu comme « 1383 constats à corriger » — 3 fausses accusations sur 92, dont une sur la ligne où l'agent venait de ranger ses constats *(2026-10-01, #699)* |
 | « le mot SUITE est là, précédé d'un non-lettre » | « une suite a été ouverte » | `SANS SUITE : 40 fiches…` lu comme « suite ouverte vers la tâche #40 » — un écart ASSUMÉ requalifié en chaîne fermée *(2026-10-01, #699)* |
+| « aucune Ronde depuis N commits » | « aucune vérification n'a tourné » | l'alerte affirmait que personne n'avait rien vérifié pendant que **37 outils** avaient tourné — deuxième correction du MÊME palier en trois jours *(2026-10-01, #1395)* |
 
-**Ce qui les réunit, et c'est la seule chose à retenir** : dans les six cas, **le contrôle était
+**Ce qui les réunit, et c'est la seule chose à retenir** : dans les sept cas, **le contrôle était
 juste sur ce qu'il regardait et faux sur ce qu'il affirmait**. Aucun n'a planté, aucun n'a rendu
 d'erreur, et la plupart rendaient un chiffre plausible.
 

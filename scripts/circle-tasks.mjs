@@ -1616,12 +1616,48 @@ export function depuisQuand(heures) {
   return `depuis ${Math.round(heures / 24)} jour(s)`;
 }
 
-export function relanceMessage(relance) {
+// CE QUE LE PALIER LE PLUS GRAVE AFFIRMAIT, ET QUI ÉTAIT FAUX (2026-10-01, tâche #1395).
+//
+// Son texte disait : « une trentaine de vérifications gratuites n'ont rien vu passer de ces N
+// commits, et personne ne sait ce qu'elles auraient trouvé entre-temps. » Le jour où il s'est
+// déclenché pour de vrai — 32 commits d'une nuit autonome — **37 outils avaient tourné
+// individuellement depuis la dernière Ronde**, dont les huit Gardiens relancés à froid. La phrase
+// était donc démentie par le journal d'usage au moment même où elle s'affichait.
+//
+// C'EST EXACTEMENT CE QUE LE COMMENTAIRE JUSTE AU-DESSUS INTERDIT : « un garde-fou dont le palier
+// le plus grave affirme une chose fausse le jour où il se déclenche apprend à être ignoré les
+// autres jours » (L4). Et c'est la famille L47 : un signal ADJACENT — « aucune Ronde » — lu comme
+// le signal visé — « aucune vérification ».
+//
+// LE PALIER N'EST PAS ADOUCI, IL EST RECENTRÉ (leçon L5 : distinguer « je n'ai rien trouvé » de
+// « je n'ai pas pu regarder »). Ce qui manque n'est pas l'EXÉCUTION des outils, c'est le TRI de
+// leurs constats — l'étape que le process de Ronde nomme « trier les constats des rapports,
+// jamais un récapitulatif, un tri », et qui n'a aucun autre porteur. L'alerte reste donc une
+// alerte, et elle désigne enfin la bonne chose.
+//
+// L'HISTORIQUE S'INJECTE plutôt que de se lire ici (leçon L40) : un test qui lirait le journal
+// vivant jugerait le disque du jour, pas le code.
+export function outilsAyantTourneDepuis(history, depuis) {
+  if (!Number.isFinite(depuis) || depuis <= 0) return { mesurable: false, combien: 0 };
+  const events = Array.isArray(history?.events) ? history.events : [];
+  if (!events.length) return { mesurable: false, combien: 0 };
+  const slugs = new Set(events.filter((e) => Number(e?.at ?? 0) >= depuis).map((e) => e?.toolSlug).filter(Boolean));
+  return { mesurable: true, combien: slugs.size };
+}
+
+export function relanceMessage(relance, { outilsDepuis = null } = {}) {
   if (!relance.mesurable) return `🔄 Ronde : ${relance.raison}`;
   if (!relance.palier) return null;
   if (relance.palier === "rappel") return `🔄 ${relance.commits} commits sans Ronde périodique (CIRCLE-TASKS) — envisage de la relancer.`;
   if (relance.palier === "proposition") return `🔄 ${relance.commits} commits sans Ronde — au-delà de ${relance.seuil}, ce n'est plus un rappel : je te PROPOSE de la lancer maintenant (node scripts/circle-tasks.mjs). Le rappel discret n'a rien changé pendant ${relance.commits - RELANCE_PALIERS[0].seuil} commits.`;
-  return `🚨 ${relance.commits} commits sans Ronde, ${depuisQuand(relance.heuresDepuis)}. À ce stade ce n'est plus un retard, c'est un constat : une trentaine de vérifications gratuites n'ont rien vu passer de ces ${relance.commits} commits, et personne ne sait ce qu'elles auraient trouvé entre-temps.`;
+  const tete = `🚨 ${relance.commits} commits sans Ronde, ${depuisQuand(relance.heuresDepuis)}. À ce stade ce n'est plus un retard, c'est un constat`;
+  // Quand le journal d'usage est mesurable, il DÉMENT ou CONFIRME, et on dit lequel ; quand il ne
+  // l'est pas, on se tait là-dessus plutôt que d'affirmer l'un ou l'autre (même discipline que
+  // depuisQuand() ci-dessus).
+  if (outilsDepuis?.mesurable && outilsDepuis.combien > 0) {
+    return `${tete} : ${outilsDepuis.combien} outil(s) ont bien tourné individuellement depuis, donc ce ne sont PAS les vérifications qui dorment — c'est leur TRI. Personne n'a croisé leurs constats ni décidé lesquels deviennent des tâches, et c'est la seule étape de la Ronde que rien d'autre ne porte.`;
+  }
+  return `${tete} : une trentaine de vérifications gratuites n'ont rien vu passer de ces ${relance.commits} commits, et personne ne sait ce qu'elles auraient trouvé entre-temps.`;
 }
 
 // À appeler explicitement par l'agent une fois une vraie ronde effectuée (au moins un item traité),

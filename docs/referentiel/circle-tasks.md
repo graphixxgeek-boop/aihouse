@@ -100,3 +100,34 @@ que ce qui est mesuré**.
 `formatAlignementLines()` rend la série lisible : les fautes de forme s'il y en a, les écarts graves
 un par un (question, prédiction, réponse réelle), et le refus explicite quand rien n'a encore été
 répondu.
+
+## `outilsAyantTourneDepuis()` — l'alerte affirmait que rien n'avait tourné, et 37 outils avaient tourné *(2026-10-01, tâche #1395)*
+
+**Deux jours après lui avoir retiré « depuis des semaines », le MÊME palier le plus grave affirmait
+encore autre chose.** Déclenché pour de vrai sur 32 commits d'une nuit autonome, il disait : *« une
+trentaine de vérifications gratuites n'ont rien vu passer de ces 32 commits, et personne ne sait ce
+qu'elles auraient trouvé entre-temps. »* **Le journal d'usage le démentait au moment même : 37
+outils avaient tourné depuis la dernière Ronde**, dont les huit Gardiens relancés à froid.
+
+**Même fichier, même palier, même famille** (leçon L47) : un signal ADJACENT — « aucune Ronde » —
+lu comme le signal visé — « aucune vérification ». La correction du 2026-09-28 traitait le TEMPS ;
+celle-ci traite ce que l'alerte prétend savoir de l'**ACTIVITÉ**.
+
+**Et le commentaire posé juste au-dessus de la fonction l'interdisait déjà** : « un garde-fou dont
+le palier le plus grave affirme une chose fausse le jour où il se déclenche apprend à être ignoré
+les autres jours » (L4). La règle était écrite ; le code ne la tenait pas.
+
+**Il n'est pas adouci, il est RECENTRÉ** (leçon L5 : distinguer « je n'ai rien trouvé » de « je n'ai
+pas pu regarder »). Le seuil, le palier et la gravité ne bougent pas. Ce qui manque est enfin nommé
+correctement : **pas l'exécution des outils, qui a eu lieu, mais le TRI de leurs constats** —
+l'étape que le process appelle « trier les constats des rapports, jamais un récapitulatif, un tri »,
+et que rien d'autre ne porte.
+
+**Les deux sens sont tenus** (BP4) : sans journal exploitable, ou sur un zéro **mesuré**, l'ancienne
+phrase survit intacte — le garde ajoute un cas, il n'en retire aucun. Un journal vide rend
+`mesurable: false`, jamais un zéro (leçons L5/L11).
+
+**Branché dans le crochet, pas seulement écrit** (leçon L2) : `scripts/hooks/check-last-commit.mjs`
+charge le journal et le passe à `relanceMessage()`. Sans ce branchement, la correction n'aurait été
+qu'une intention. L'historique s'**injecte** dans les tests plutôt que de se lire sur le disque
+(leçon L40).

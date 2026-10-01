@@ -22855,6 +22855,66 @@ async function testAlerteQuiAffirmaitSansMesurer() {
 await testAlerteQuiAffirmaitSansMesurer();
 
 // ————————————————————————————————————————————————————————————————————————
+// LE MÊME PALIER, DEUX JOURS PLUS TARD, AFFIRMAIT ENCORE AUTRE CHOSE (2026-10-01, tâche #1395)
+// ————————————————————————————————————————————————————————————————————————
+// Le 2026-09-28 on lui avait retiré « depuis des semaines ». Le 2026-10-01 il s'est déclenché pour
+// de vrai — 32 commits d'une nuit autonome — et il affirmait : « une trentaine de vérifications
+// gratuites n'ont rien vu passer de ces 32 commits, et personne ne sait ce qu'elles auraient
+// trouvé entre-temps. » **37 outils avaient tourné depuis la dernière Ronde**, dont les huit
+// Gardiens relancés à froid. Le journal d'usage le démentait au moment même où il s'affichait.
+//
+// MÊME FICHIER, MÊME PALIER, MÊME FAMILLE (L47) : un signal ADJACENT — « aucune Ronde » — lu comme
+// le signal visé — « aucune vérification ». La correction du 28 avait traité le TEMPS ; celle-ci
+// traite ce que l'alerte prétend savoir de l'ACTIVITÉ.
+//
+// IL N'EST PAS ADOUCI, IL EST RECENTRÉ (L5 : distinguer « je n'ai rien trouvé » de « je n'ai pas
+// pu regarder »). Ce qui manque n'est pas l'exécution des outils — elle a eu lieu — c'est le TRI
+// de leurs constats, l'étape que le process nomme « trier les constats, jamais un récapitulatif »
+// et que rien d'autre ne porte. Le seuil, le palier et la gravité ne bougent pas.
+async function testLAlerteNaffirmePlusQueRienNaTourne() {
+  const C = await import('../scripts/circle-tasks.mjs');
+  const now = Date.parse('2026-10-01T11:45:00Z');
+  const depuis = Date.parse('2026-10-01T01:14:00Z');
+  const r = C.relanceCircleTasks(32, { lastRunAt: depuis, now });
+  assert.equal(r.palier, 'alerte', 'the tier itself must not move: only what it says changes');
+
+  // L'HISTORIQUE EST INJECTÉ, jamais lu sur le disque (leçon L40) — sinon ce test jugerait le
+  // journal du jour et non le code.
+  const journal = { events: [
+    { toolSlug: 'argus', origin: 'cli_direct', at: depuis + 1000 },
+    { toolSlug: 'harmonia', origin: 'cli_direct', at: depuis + 2000 },
+    { toolSlug: 'argus', origin: 'cli_direct', at: depuis + 3000 },
+    { toolSlug: 'clone-hunter', origin: 'cli_direct', at: depuis - 9000 },
+  ] };
+  const o = C.outilsAyantTourneDepuis(journal, depuis);
+  assert.equal(o.mesurable, true);
+  assert.equal(o.combien, 2, 'distinct tools only, and only those that ran AFTER the last Ronde — a run from before it proves nothing about these commits');
+
+  const avec = C.relanceMessage(r, { outilsDepuis: o });
+  assert.match(avec, /2 outil\(s\) ont bien tourné/, 'the alert must report what the journal actually shows');
+  assert.match(avec, /c'est leur TRI/, 'and must point at the step that really is missing');
+  assert.ok(!/personne ne sait ce qu'elles auraient trouvé/.test(avec),
+    'it must no longer assert ignorance that the usage journal contradicts');
+  assert.match(avec, /🚨/, 'and it stays an ALARM: recentred, never softened');
+
+  // ── LES DEUX SENS (BP4). Sans journal exploitable, l'ancienne phrase reste — se taire sur ce
+  // qu'on ne mesure pas, jamais affirmer le contraire.
+  assert.equal(C.outilsAyantTourneDepuis({ events: [] }, depuis).mesurable, false, 'an empty journal is a NON-measure, never a measured zero (L5/L11)');
+  assert.equal(C.outilsAyantTourneDepuis(journal, null).mesurable, false, 'and with no stored Ronde hour there is nothing to count from');
+  assert.match(C.relanceMessage(r), /personne ne sait ce qu'elles auraient trouvé/,
+    'with no journal passed, the original wording must survive untouched — the guard adds a case, it never removes the old one');
+  assert.match(C.relanceMessage(r, { outilsDepuis: { mesurable: true, combien: 0 } }), /personne ne sait ce qu'elles auraient trouvé/,
+    'and a measured ZERO means nothing ran, which is exactly what the original sentence says');
+
+  // ── LES PALIERS BAS RESTENT INTACTS : le nouveau cas ne touche que le plus grave.
+  assert.match(C.relanceMessage(C.relanceCircleTasks(10, { lastRunAt: depuis, now }), { outilsDepuis: o }), /envisage de la relancer/);
+  assert.match(C.relanceMessage(C.relanceCircleTasks(20, { lastRunAt: depuis, now }), { outilsDepuis: o }), /je te PROPOSE de la lancer/);
+
+  console.log("Passed: l'alerte affirmait que rien n'avait tourné, et 37 outils avaient tourné (2026-10-01, tâche #1395). Deux jours après lui avoir retiré « depuis des semaines », le MÊME palier le plus grave s'est déclenché pour de vrai — 32 commits d'une nuit autonome — en affirmant « une trentaine de vérifications gratuites n'ont rien vu passer de ces 32 commits, et personne ne sait ce qu'elles auraient trouvé entre-temps ». Le journal d'usage le démentait AU MOMENT MÊME : 37 outils avaient tourné depuis la dernière Ronde, dont les huit Gardiens relancés à froid cette nuit-là. MÊME FICHIER, MÊME PALIER, MÊME FAMILLE (L47) — un signal ADJACENT, « aucune Ronde », lu comme le signal visé, « aucune vérification » : la correction du 28 traitait le TEMPS, celle-ci traite ce que l'alerte prétend savoir de l'ACTIVITÉ. ET LE COMMENTAIRE JUSTE AU-DESSUS DE LA FONCTION L'INTERDISAIT DÉJÀ : « un garde-fou dont le palier le plus grave affirme une chose fausse le jour où il se déclenche apprend à être ignoré les autres jours » (L4) — la règle était écrite, le code ne la tenait pas. IL N'EST PAS ADOUCI, IL EST RECENTRÉ (L5) : le seuil, le palier et la gravité ne bougent pas, et ce qui manque est nommé enfin correctement — pas l'exécution des outils, qui a eu lieu, mais le TRI de leurs constats, l'étape que le process appelle « trier les constats, jamais un récapitulatif » et que rien d'autre ne porte. LES DEUX SENS SONT TENUS (BP4) : sans journal exploitable, ou sur un zéro MESURÉ, l'ancienne phrase survit intacte — le garde ajoute un cas, il n'en retire aucun. Et l'historique est INJECTÉ (L40), sans quoi ce test jugerait le journal du jour au lieu du code.");
+}
+await testLAlerteNaffirmePlusQueRienNaTourne();
+
+// ————————————————————————————————————————————————————————————————————————
 // LE MÊME ÉVÉNEMENT FACTURÉ DEUX FOIS (2026-09-28, tâche #1098)
 // ————————————————————————————————————————————————————————————————————————
 // Le voyant de santé d'Ezechiel annonçait, sur une suite entièrement verte, « 1 avertissement

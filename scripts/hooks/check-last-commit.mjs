@@ -23,7 +23,8 @@ import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremoni
 import { formatToolBrainReminder } from "../tool-brain.mjs";
 import { summarizeHistory, computeInvestmentRatio, diagnoseAdviceAccuracy } from "../smart-conso-token.mjs";
 import { sh, AGENT_CATEGORIES, gardienShouldRun, lastCommitFiles, realCodeFilesChanged } from "../lib-shell.mjs";
-import { loadLastRun, relanceCircleTasks, relanceMessage, shouldRemindCircleTasks } from "../circle-tasks.mjs";
+import { loadLastRun, outilsAyantTourneDepuis, relanceCircleTasks, relanceMessage, shouldRemindCircleTasks } from "../circle-tasks.mjs";
+import { loadToolUsageHistory } from "../tool-usage.mjs";
 import { buildRealOnboardingContext } from "../check-tasks-details.mjs";
 
 const [last] = recentCommits(1);
@@ -490,7 +491,12 @@ try {
   // suite. Un message qu'on peut lire sans rien faire n'est pas un mécanisme.
   // `lastRunAt` est passé depuis 2026-09-28 (tâche #1097) : l'heure de la dernière Ronde était
   // stockée et jamais lue, si bien que l'alerte affirmait « depuis des semaines » sans le savoir.
-  const msg = relanceMessage(relanceCircleTasks(commitsSinceLastRun, { lastRunAt: lastRun.lastRunAt ?? null }));
+  // LE JOURNAL D'USAGE DÉMENT OU CONFIRME LE PALIER LE PLUS GRAVE (2026-10-01, tâche #1395), et
+  // sans ce branchement la correction n'aurait été qu'une intention (leçon L2). Le jour du
+  // premier déclenchement réel, 37 outils avaient tourné depuis la dernière Ronde pendant que
+  // l'alerte affirmait que personne n'avait rien vérifié.
+  const outilsDepuis = outilsAyantTourneDepuis(loadToolUsageHistory(), lastRun.lastRunAt ?? null);
+  const msg = relanceMessage(relanceCircleTasks(commitsSinceLastRun, { lastRunAt: lastRun.lastRunAt ?? null }), { outilsDepuis });
   if (msg) console.log(`${msg}\n`);
 } catch { /* best-effort, jamais bloquant */ }
 
