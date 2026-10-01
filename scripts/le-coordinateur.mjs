@@ -44,6 +44,10 @@
 import { existsSync, mkdtempSync, rmSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
+// La racine du dépôt, pour relever les sources que chaque outil lit (tâche #1382). Injectable
+// partout où elle sert, pour qu'un test puisse pointer un faux dossier sans toucher au vrai.
+const ROOT_COORD = fileURLToPath(new URL("..", import.meta.url));
 import { sh, assertNotAPersonnage, assertNomPropreDAgent, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles, REGISTRIES as REGISTRIES_DOC_REPORT } from "./doc-report.mjs";
@@ -977,6 +981,156 @@ export function findOffresConcurrentes(prestations = PRESTATIONS, { seuil = SEUI
     paires: paires.sort((x, y) => y.partages.length - x.partages.length),
     horsPortee: "elle compare les DEMANDES déclarées au catalogue, jamais ce que les outils font vraiment. Deux outils qui font la même chose sous deux libellés sans mot commun lui échappent — c'est CLONE-HUNTER qui répond à cette question-là, sur le code.",
   };
+}
+
+// DEUX OUTILS QUI LISENT LES MÊMES SOURCES (2026-10-01, tâche #1382)
+//
+// IL REMPLACE UN SIGNAL QUI VENAIT DE PERDRE SA PUISSANCE. `findOffresConcurrentes()`, juste
+// au-dessus, compare les DEMANDES déclarées au catalogue ; sa limite est écrite depuis sa
+// création — « jamais ce que les outils font vraiment » — et le 2026-10-01 son seuil est passé
+// au-dessus de sa propre distribution (#1377). La question posée par l'utilisateur le 2026-09-28,
+// « Oui, cherche les fusions possibles », n'avait donc plus aucun instrument.
+//
+// LE SIGNAL, ET POURQUOI IL EST STRUCTUREL PLUTÔT QUE TEXTUEL. Deux outils qui lisent les mêmes
+// FICHIERS travaillent sur la même matière. Ce n'est pas une ressemblance de mots — c'est une
+// intersection d'ensembles, et elle ne dépend d'aucun vocabulaire. C'est précisément ce que la
+// leçon L44 recommande après trois élargissements ratés d'un détecteur de prose.
+//
+// UNE SOURCE LUE PAR TOUT LE MONDE NE DISCRIMINE RIEN, et c'est la moitié du dispositif :
+// `scripts/` est lu par 45 outils, `docs/referentiel/` par 19, `CLAUDE.md` par 18. Les compter
+// rapprocherait le paysage entier de lui-même. Seules les sources RARES comptent.
+//
+// LES DEUX SEUILS SE LISENT DANS LEUR DISTRIBUTION, ils ne se choisissent pas — et les deux
+// distributions sont imprimées avec le résultat, pour qu'un lecteur vérifie que le trou existe
+// encore (BP5, et sa troisième question ajoutée le même jour) :
+//   · POPULARITÉ d'une source : 158 sources lues par 1 outil, 41 par 2, 18 par 3, 10 par 4, 8 par
+//     5, 7 par 6, 3 par 7, **rien par 8**, puis 9, 12, 18, 19… Le trou est à 8, le seuil est 7.
+//   · NOMBRE de sources rares communes à une paire : 70 paires à 1, 23 à 2, puis 6, 8, 3, 1, 3,
+//     1, 1 jusqu'à 9 — **rien à 10 ni 11** — puis 12, 16, 30, 32. Le trou est franc, le seuil
+//     est 10.
+//
+// CE QU'IL A TROUVÉ AU PREMIER PASSAGE, et c'est ce qui valide le signal plutôt qu'une opinion :
+// la paire de tête est `circle-tasks ↔ doc-report`, à 32 sources communes quand la suivante est à
+// 16. **Ces deux-là ont un historique documenté de duplication réelle** — un `checkHtmlWiring()`
+// dupliqué entre eux, corrigé le 2026-09-26. Le signal retrouve donc un cas connu qu'aucun humain
+// ne lui avait indiqué.
+//
+// CE QU'IL NE DIT PAS, ET IL FAUT LE LIRE EN LE SACHANT : lire les mêmes fichiers n'est pas faire
+// la même chose. Un auditeur et un rapporteur peuvent légitimement lire tout le dépôt. Ce sont des
+// CANDIDATES à instruire, jamais un verdict de fusion — et la fusion elle-même reste une décision
+// de l'utilisateur.
+// LE SCANNER TROUVE LE SCANNER, ET CE N'EST PAS UNE FUSION (ajouté le jour même, après mesure).
+// Au premier passage, 4 des 5 paires impliquaient `check-house` ou `doc-report` — deux outils qui
+// lisent le dépôt ENTIER par métier. Leur recouvrement est attendu, jamais un défaut.
+//
+// DEUX NORMALISATIONS ESSAYÉES ET ÉCARTÉES, avec leur mesure, parce qu'un écart sans raison n'est
+// pas une décision (Article 28) :
+//   · diviser par le plus petit ensemble donne 1,00 à un outil qui lit 3 sources toutes incluses
+//     dans un scanner. C'est de l'INCLUSION, pas du recouvrement, et la distribution obtenue est
+//     une pente continue (0,2×3 · 0,3×4 · 0,5×7 · 0,8×8 · 1,0×7) : aucun seuil ne s'y lit.
+//   · le Jaccard pénalise les grands ensembles et enterre justement la paire la plus intéressante.
+//
+// CE QUI MARCHE : séparer les deux populations. La taille des ensembles de sources rares se lit
+// 141 · 74 · 40 · 21 · 18 · 12 · 11 · 10 · 9 · 7 … — le trou est franc entre 40 et 21, donc un
+// scanner est un outil qui lit 40 sources rares ou plus. HORS scanners, le maximum tombe à 4 et
+// la distribution redevient une pente (1×56 · 2×9 · 3×2 · 4×2) : **aucune paire ne se détache**.
+//
+// LA CONCLUSION QUE ÇA DONNE À LA QUESTION « quels outils fusionner ? » : sur cet axe non plus,
+// il n'y a pas de candidat. Ce n'est pas un échec de la mesure — c'est la mesure.
+export const SEUIL_SCANNER = 40;
+export const SEUIL_SOURCE_PARTAGEE = 7;
+export const SEUIL_SOURCES_COMMUNES = 10;
+export const MOTIF_SOURCE_LUE = /["'`]((?:docs|scripts|lib|app|components)\/[A-Za-z0-9._/-]*|CLAUDE\.md)["'`]/g;
+
+export function sourcesParOutil({ dossier = "scripts", listDirImpl = readdirSync, readFileImpl = readFileSync, root = ROOT_COORD } = {}) {
+  let fichiers;
+  try { fichiers = listDirImpl(join(root, dossier)).filter((f) => String(f).endsWith(".mjs")); }
+  catch { return { mesurable: false, pourquoi: `${dossier}/ est illisible : aucune source ne peut être relevée, et un « aucun chevauchement » rendu ici serait un satisfecit sur du vide` }; }
+  const parOutil = {};
+  for (const f of fichiers) {
+    let src;
+    try { src = readFileImpl(join(root, dossier, f), "utf8"); } catch { continue; }
+    // Les commentaires racontent l'histoire du projet sans que le CODE en dépende : on ne juge que
+    // le code (même raison, et même geste, que findScriptsNonPortables dans safe-export).
+    const code = src.split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l)).join("\n");
+    const slug = f.replace(/\.mjs$/, "");
+    const set = new Set([...code.matchAll(MOTIF_SOURCE_LUE)].map((m) => m[1].replace(/\/[^/]*\.[a-z]+$/, "/")));
+    // Son PROPRE registre n'est pas une source partagée : il lui appartient.
+    set.delete(`docs/${slug}/`);
+    if (set.size) parOutil[slug] = set;
+  }
+  return { mesurable: true, parOutil };
+}
+
+export function findOutilsQuiLisentLesMemesSources({ seuilPopularite = SEUIL_SOURCE_PARTAGEE, seuilCommunes = SEUIL_SOURCES_COMMUNES, seuilScanner = SEUIL_SCANNER, ...options } = {}) {
+  const rel = sourcesParOutil(options);
+  if (!rel.mesurable) return { mesurable: false, pourquoi: rel.pourquoi, paires: [] };
+  const { parOutil } = rel;
+  const noms = Object.keys(parOutil);
+  if (noms.length < 2) return { mesurable: false, pourquoi: "moins de deux outils lisent une source : il n'y a rien à comparer", paires: [] };
+  const popularite = {};
+  for (const n of noms) for (const s of parOutil[n]) popularite[s] = (popularite[s] ?? 0) + 1;
+  const distributionPopularite = {};
+  for (const c of Object.values(popularite)) distributionPopularite[c] = (distributionPopularite[c] ?? 0) + 1;
+  const rares = new Set(Object.entries(popularite).filter(([, c]) => c <= seuilPopularite).map(([s]) => s));
+  // LES SCANNERS SE DÉRIVENT DE LA TAILLE DE LEUR LECTURE, ils ne se recopient pas (Article 24) :
+  // un outil ajouté demain qui lit tout le dépôt sera reconnu sans qu'une ligne bouge.
+  const tailleRare = {};
+  for (const n of noms) tailleRare[n] = [...parOutil[n]].filter((x) => rares.has(x)).length;
+  const scanners = new Set(noms.filter((n) => tailleRare[n] >= seuilScanner));
+  const distributionCommunes = {};
+  const paires = [];
+  for (let i = 0; i < noms.length; i++) {
+    for (let j = i + 1; j < noms.length; j++) {
+      const a = [...parOutil[noms[i]]].filter((x) => rares.has(x));
+      const b = new Set([...parOutil[noms[j]]].filter((x) => rares.has(x)));
+      const communes = a.filter((x) => b.has(x));
+      if (!communes.length) continue;
+      distributionCommunes[communes.length] = (distributionCommunes[communes.length] ?? 0) + 1;
+      if (communes.length >= seuilCommunes) paires.push({ a: noms[i], b: noms[j], communes: communes.sort(), entreScanners: scanners.has(noms[i]) || scanners.has(noms[j]) });
+    }
+  }
+  // LE GARDE-FOU DE #1377 EST CÂBLÉ DÈS LE PREMIER JOUR (Article 24 : une capacité nouvelle
+  // s'applique à tous le jour où elle est écrite, y compris à l'outil qu'on est en train d'écrire).
+  const observes = Object.keys(distributionCommunes).map(Number);
+  const maxObserve = observes.length ? Math.max(...observes) : 0;
+  return {
+    mesurable: true, examines: noms.length, seuilPopularite, seuilCommunes, seuilScanner,
+    scanners: [...scanners].sort((x, y) => tailleRare[y] - tailleRare[x]).map((n) => ({ outil: n, sourcesRares: tailleRare[n] })),
+    distributionPopularite, distributionCommunes, maxObserve,
+    seuilAuDessusDeLaDistribution: maxObserve < seuilCommunes,
+    paires: paires.sort((x, y) => y.communes.length - x.communes.length),
+    horsPortee: "lire les mêmes fichiers n'est pas faire la même chose : un auditeur et un rapporteur peuvent légitimement lire tout le dépôt. Ce sont des CANDIDATES à instruire, jamais un verdict de fusion.",
+  };
+}
+
+export function formatOutilsMemesSourcesLines(r, { detail = 6 } = {}) {
+  if (!r?.mesurable) return [`=== OUTILS QUI LISENT LES MÊMES SOURCES : PAS MESURÉ — ${r?.pourquoi} ===`, "", "Ce n'est PAS « aucun chevauchement »."];
+  const L = [`=== OUTILS QUI LISENT LES MÊMES SOURCES — ${r.paires.length} paire(s) sur ${r.examines} outils ===`, ""];
+  const d = (o) => Object.entries(o).sort((a, b) => Number(a[0]) - Number(b[0])).map(([k, v]) => `${k}×${v}`).join(" · ");
+  L.push(`  Popularité d'une source (combien d'outils la lisent) : ${d(r.distributionPopularite)}`);
+  L.push(`  Seuil de rareté : ${r.seuilPopularite}. Au-delà, une source est lue par trop d'outils pour discriminer quoi que ce soit.`);
+  L.push(`  Sources rares communes par paire : ${d(r.distributionCommunes)}`);
+  L.push(`  Seuil : ${r.seuilCommunes}, POSÉ DANS LE TROU de cette distribution — si le trou se referme, il est à remesurer, jamais à défendre.`);
+  L.push("");
+  if (r.seuilAuDessusDeLaDistribution) {
+    L.push(`  🚨 CE ZÉRO N'EST PAS UNE MESURE — le seuil (${r.seuilCommunes}) est au-dessus de tout ce qu'on observe (maximum : ${r.maxObserve}).`);
+    L.push("     Aucune paire ne PEUT l'atteindre : « aucun chevauchement » et « je ne peux pas en voir » rendent ici le même texte (leçons L5 et L11).");
+  } else if (!r.paires.length) {
+    L.push("  Aucune paire au-dessus du seuil : aucun couple d'outils ne travaille sur la même matière rare.");
+  }
+  const horsScanners = r.paires.filter((p) => !p.entreScanners);
+  L.push(`  SCANNERS (≥ ${r.seuilScanner} sources rares, ils lisent le dépôt par métier) : ${(r.scanners ?? []).map((s) => `${s.outil} (${s.sourcesRares})`).join(", ") || "aucun"}.`);
+  L.push(`  ${r.paires.length - horsScanners.length} paire(s) impliquent un scanner — attendu, jamais un défaut. ${horsScanners.length} paire(s) HORS scanners, et ce sont les seules qui posent une question de fusion.`);
+  L.push("");
+  for (const p of r.paires) {
+    L.push(`  ${p.entreScanners ? "⚪" : "🟠"} ${p.communes.length} sources rares communes — ${p.a} ↔ ${p.b}${p.entreScanners ? "  (un scanner est en cause : attendu)" : ""}`);
+    L.push(`      ${p.communes.slice(0, detail).join(", ")}${p.communes.length > detail ? `, … (+${p.communes.length - detail})` : ""}`);
+    L.push("      → À INSTRUIRE : travaillent-ils la même matière pour la même raison ? La fusion, elle, reste une décision de l'utilisateur.");
+  }
+  L.push("");
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
 }
 
 export function formatOffresConcurrentesLines(r) {
@@ -2473,13 +2627,20 @@ function main() {
   // sortie en croyant en avoir demandé une autre. Même forme que la leçon L21 — un nom qui existe
   // dans le monde d'un lecteur et pas dans celui d'un autre.
   const sousCommande = process.argv[2];
-  const SOUS_COMMANDES = ["catalogue"];
+  const SOUS_COMMANDES = ["catalogue", "memes-sources"];
   if (sousCommande && !SOUS_COMMANDES.includes(sousCommande)) {
     console.log(`❌ « ${sousCommande} » n'est pas une sous-commande de cet outil.`);
     console.log(`   Sous-commandes réelles : ${SOUS_COMMANDES.join(", ")}`);
     console.log(`   Sans argument : la synthèse gratuite du réseau — c'est elle que le catalogue appelle « Pack Panorama ».`);
     console.log(`   Un nom de PACK n'est pas une commande : un pack nomme une COMBINAISON d'outils, il ne s'exécute pas d'un seul mot.`);
     process.exitCode = 1;
+    return;
+  }
+  // `memes-sources` (2026-10-01, tâche #1382) — l'axe « ce que les outils FONT », que le détecteur
+  // d'offres concurrentes déclarait hors de sa portée depuis sa création.
+  if (sousCommande === "memes-sources") {
+    const r = findOutilsQuiLisentLesMemesSources();
+    console.log(formatOutilsMemesSourcesLines(r).join("\n"));
     return;
   }
   if (sousCommande === "catalogue") {

@@ -9406,6 +9406,71 @@ async function testOffresConcurrentes() {
   assert.equal(reel.maxObserve, Math.max(...Object.keys(reel.distribution).map(Number)), 'the reported maximum must be the real maximum of the distribution, never a stored guess');
   assert.equal(reel.seuilAuDessusDeLaDistribution, reel.maxObserve < reel.seuil, 'and the flag must be derived from the two numbers, so it cannot drift away from them');
 
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  // DEUX OUTILS QUI LISENT LES MÊMES SOURCES (2026-10-01, tâche #1382)
+  //
+  // IL REMPLACE UN SIGNAL QUI VENAIT DE PERDRE SA PUISSANCE : le détecteur d'offres concurrentes
+  // compare les DEMANDES du catalogue, sa limite est écrite depuis sa création — « jamais ce que
+  // les outils font vraiment » — et son seuil est passé au-dessus de sa distribution (#1377). La
+  // question « quels outils fusionner ? » n'avait donc plus d'instrument.
+  //
+  // LE SIGNAL EST STRUCTUREL, pas textuel : une intersection d'ensembles de FICHIERS LUS, qui ne
+  // dépend d'aucun vocabulaire. C'est ce que la leçon L44 recommande après trois élargissements
+  // ratés d'un détecteur de prose.
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  const faussePile = (map) => ({
+    root: '/r/',
+    listDirImpl: () => Object.keys(map),
+    readFileImpl: (chemin) => map[String(chemin).split('/').pop()] ?? '',
+  });
+  const memes = lc.findOutilsQuiLisentLesMemesSources({
+    seuilPopularite: 5, seuilCommunes: 2, seuilScanner: 50,
+    ...faussePile({
+      'a.mjs': 'lire("docs/alpha/x.md"); lire("docs/beta/y.md");',
+      'b.mjs': 'lire("docs/alpha/z.md"); lire("docs/beta/w.md");',
+      'c.mjs': 'lire("docs/gamma/q.md");',
+    }),
+  });
+  assert.equal(memes.mesurable, true, 'the probe must run on an injected tree, never only on the real repository (lesson L40)');
+  assert.equal(memes.paires.length, 1, 'two tools reading the same two rare folders are a pair; the third, reading elsewhere, is not');
+  assert.deepEqual(memes.paires[0].communes, ['docs/alpha/', 'docs/beta/'], 'and the shared sources are NAMED, otherwise the finding is not instructable');
+
+  // ── UNE SOURCE LUE PAR TOUT LE MONDE NE DISCRIMINE RIEN : c'est la moitié du dispositif.
+  const partout = lc.findOutilsQuiLisentLesMemesSources({
+    seuilPopularite: 1, seuilCommunes: 1, seuilScanner: 50,
+    ...faussePile({ 'a.mjs': 'lire("docs/alpha/x.md");', 'b.mjs': 'lire("docs/alpha/y.md");' }),
+  });
+  assert.equal(partout.paires.length, 0, 'a folder read by 2 tools with a rarity threshold of 1 is NOT rare: counting it would bring the whole landscape together with itself');
+
+  // ── LE SCANNER TROUVE LE SCANNER, ET CE N'EST PAS UNE FUSION. Mesuré le jour même : 4 des
+  // 5 paires réelles impliquaient check-house (141 sources) ou doc-report (74). Hors scanners,
+  // le maximum tombe à 4 et la distribution redevient une pente — AUCUNE paire ne se détache.
+  const avecScanner = lc.findOutilsQuiLisentLesMemesSources({
+    seuilPopularite: 5, seuilCommunes: 2, seuilScanner: 3,
+    ...faussePile({
+      'gros.mjs': 'lire("docs/a/1.md");lire("docs/b/1.md");lire("docs/c/1.md");lire("docs/d/1.md");',
+      'petit.mjs': 'lire("docs/a/2.md");lire("docs/b/2.md");',
+    }),
+  });
+  assert.equal(avecScanner.paires[0].entreScanners, true, 'a pair involving a tool that reads the whole repository is MARKED as such — expected, never a defect');
+  assert.ok(avecScanner.scanners.some((s) => s.outil === 'gros'), 'and the scanners are named with their read-set size, so the reader can judge');
+  assert.ok(!avecScanner.scanners.some((s) => s.outil === 'petit'), 'while a narrow tool is never promoted to scanner — the exemption must stay derived, not guessed');
+
+  // ── LE GARDE-FOU DE #1377 EST CÂBLÉ DÈS LE PREMIER JOUR (Article 24).
+  const aveugle2 = lc.findOutilsQuiLisentLesMemesSources({
+    seuilPopularite: 5, seuilCommunes: 99, seuilScanner: 50,
+    ...faussePile({ 'a.mjs': 'lire("docs/alpha/x.md");', 'b.mjs': 'lire("docs/alpha/y.md");' }),
+  });
+  assert.equal(aveugle2.seuilAuDessusDeLaDistribution, true, 'a new detector must be born with the blindness guard, never gain it after being caught');
+  assert.match(lc.formatOutilsMemesSourcesLines(aveugle2).join('\n'), /CE ZÉRO N'EST PAS UNE MESURE/, 'and say it in the printed report');
+
+  assert.equal(lc.findOutilsQuiLisentLesMemesSources({ root: '/r/', listDirImpl: () => { throw new Error('ENOENT'); } }).mesurable, false, 'an unreadable scripts/ renders PAS MESURÉ, never "no overlap" (lessons L5 and L11)');
+
+  // ── EN DIRECT SUR LE VRAI DÉPÔT (Article 25) : la conclusion de #745 repose dessus.
+  const memesReel = lc.findOutilsQuiLisentLesMemesSources();
+  assert.equal(memesReel.mesurable, true, 'the probe must really run against the real repository');
+  assert.equal(memesReel.paires.filter((p) => !p.entreScanners).length, 0, `the answer to "which tools can be merged?" on this axis is ZERO once scanners are set aside — if a pair appears here, it is a genuine finding to instruct (currently ${memesReel.paires.filter((p) => !p.entreScanners).map((p) => `${p.a} ↔ ${p.b}`).join(', ')})`);
+
   // LA CORRECTION N'A CASSÉ NI L'UN NI L'AUTRE DES DEUX APPARIEMENTS — contre-test dans les deux sens.
   const surClones = suggestPrestationsForTask("trouver un bloc de logique recopié au lieu d'être factorisé");
   assert.equal(surClones[0]?.nom, 'Pack Chasse aux clones', 'a clone question still reaches CLONE-HUNTER first');

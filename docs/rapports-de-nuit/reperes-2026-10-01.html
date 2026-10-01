@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T06:28:46.672Z</div>
+    <div class="date">2026-10-01T07:38:30.023Z</div>
     <h1>Tes repères en te réveillant</h1>
     <p class="sub">Nuit du 30 septembre au 1er octobre 2026</p>
   </header>
@@ -167,6 +167,13 @@ est à jour.)*</p></div>
 <p><strong>La conclusion, et elle est nette</strong> : un compteur d'appels <strong>ne peut pas</strong> dire quel outil retirer. Ce n'est pas un défaut à corriger, c'est sa nature — il compte des appels, et l'utilité ne se lit pas là-dedans. <strong>Chercher les fusions devra se faire sur ce que les outils FONT</strong>, ce qui est exactement le trou que les deux détecteurs déclarent eux-mêmes. C'est le prochain pas, et il demande un vrai chantier.</p>
 <p><strong>Ce que ça t'évite</strong> : si j'avais suivi le plan d'action tel qu'il était écrit, je t'aurais proposé de supprimer le compteur d'usage et le filet de secours anti-panne.</p>
 <p><strong>Et un constat sur moi, pas sur un outil</strong> : <code>the-ghost</code> sert à orchestrer le mode nocturne autonome. Je ne l'ai pas utilisé de la nuit.</p>
+<p><strong>⑱ Second axe de la fusion : là non plus, il n'y a pas de candidat — et cette fois c'est mesuré, pas supposé</strong> <em>(#1382)</em>.</p>
+<p>Le premier axe était « quel outil ne sert jamais ? ». Réponse : la question ne veut rien dire (⑰). Le second est le bon : <strong>quels outils travaillent sur la même matière ?</strong> Personne ne savait y répondre — le détecteur existant compare ce que les outils <em>disent</em> faire, et sa limite est écrite depuis le premier jour.</p>
+<p><strong>Ce que j'ai mesuré</strong> : quels fichiers chaque outil va lire. Deux outils qui lisent les mêmes fichiers travaillent sur la même matière — et c'est une <strong>intersection d'ensembles</strong>, pas une ressemblance de mots.</p>
+<p><strong>Le signal s'est validé tout seul</strong> : la paire qui ressort en tête est <code>circle-tasks</code> ↔ <code>doc-report</code>, et <strong>ces deux-là avaient un vrai doublon de code</strong>, corrigé le 26 septembre. L'outil a retrouvé un cas connu sans que personne le lui indique.</p>
+<p><strong>Mais le résultat brut était trompeur, et c'est le plus instructif.</strong> Quatre des cinq paires impliquaient les deux outils qui <strong>lisent le dépôt entier par métier</strong> — le filet de sécurité et l'auditeur de documentation. Ils se « ressemblent » parce qu'ils regardent tout. J'ai essayé deux façons de corriger ça par le calcul : <strong>les deux échouent</strong>, et je l'ai mesuré avant de le dire.</p>
+<p><strong>Ce qui marche, c'est de séparer les deux populations.</strong> Un « scanner » se reconnaît à la taille de sa lecture (141 fichiers, 74, 40… puis 21, 18, 12 — la coupure est nette). <strong>Une fois les scanners mis de côté : zéro paire.</strong></p>
+<p><strong>La réponse</strong> : sur cet axe non plus, il n'y a pas de fusion à proposer. Ce n'est pas un échec de la mesure, <strong>c'est la mesure</strong> — et elle se rejoue par une commande. <strong>Deux axes sur trois sont répondus.</strong> Le troisième — du code réellement dupliqué entre deux outils — a déjà son outil, il reste à le lancer.</p>
 <hr>
 <h3>CE QUE JE TE DOIS EN TOUTE HONNÊTETÉ</h3>
 <p><strong>Ton intuition sur le « bazar organisé » est juste sur l'ORGANISATION, et fausse sur le CODE.</strong></p>
