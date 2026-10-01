@@ -385,6 +385,57 @@ export function tracesSurDisque(slug, { root = ROOT, listDirImpl = readdirSync, 
     : { etat: "registre-vide", fichiers: 0, pourquoi: `docs/${slug}/ existe et ne contient aucun rapport : aucune trace d'un passage` };
 }
 
+// UNE LIBRAIRIE N'EST PAS UN OUTIL QU'ON « SOLLICITE » (2026-10-01, tâche #1380)
+//
+// INSTRUIT UN PAR UN, et c'est l'instruction qui a renversé la conclusion. Après le croisement
+// avec les registres (#1379), il restait 8 « candidats au retrait ». Les lire un par un en a
+// laissé ZÉRO :
+//   • `tool-usage` est importé par **64 scripts** — c'est le compteur lui-même. Il tourne à chaque
+//     appel de tout le paysage ; son zéro mesure qu'on ne le lance pas EN TANT QUE commande, ce
+//     qui n'a aucun rapport avec son utilité. `check-level-target` est dans le même cas, à 4.
+//   • `smart-breaker` ne sert qu'en PANNE de quota, `sauvegarde-projet` que le jour où il perd
+//     l'accès, `run-simulation` / `le-regisseur` / `process-simulation-guardian` que pendant une
+//     simulation. Pour tous ceux-là, **zéro est la valeur attendue et souhaitable** : un outil
+//     d'urgence qui n'a jamais servi est une bonne nouvelle.
+//   • `the-ghost` orchestre le mode nocturne — et il n'a pas été utilisé pendant une nuit
+//     autonome. Celui-là est un vrai constat, mais sur MA pratique, jamais sur l'outil.
+//
+// CE QUI EST MÉCANISABLE ICI, ET CE QUI NE L'EST PAS. « Est-ce une librairie ? » se LIT : un
+// fichier importé par un autre script est appelé, point. « Est-ce un outil de circonstance ? » ne
+// se lit pas — il faudrait savoir si la circonstance s'est produite. On mécanise donc le premier
+// et on DÉCLARE le second (Article 27 : quand un mécanisme est impossible, l'écrire EST la
+// protection).
+//
+// LA CONCLUSION QUI COMPTE POUR LA QUESTION POSÉE : le compteur d'usage **ne peut pas** produire
+// une liste de candidats au retrait. Ce n'est pas un défaut à corriger, c'est sa nature — il
+// mesure des APPELS, et l'utilité d'un outil ne se lit pas dans son nombre d'appels.
+export function estUneLibrairie(slug, { root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  const dossier = join(root, "scripts");
+  let fichiers;
+  try { fichiers = listDirImpl(dossier).filter((f) => String(f).endsWith(".mjs")); }
+  catch { return { mesurable: false, pourquoi: "scripts/ illisible : on ne peut pas savoir qui importe quoi, et un « non » rendu ici serait une supposition" }; }
+  const cible = `./${slug}.mjs`;
+  const importeePar = [];
+  for (const f of fichiers) {
+    if (f === `${slug}.mjs`) continue;
+    let src;
+    try { src = readFileImpl(join(dossier, f), "utf8"); } catch { continue; }
+    if (src.includes(`"${cible}"`) || src.includes(`'${cible}'`)) importeePar.push(f);
+  }
+  return { mesurable: true, estLibrairie: importeePar.length > 0, importeePar };
+}
+
+export function separerLesLibrairies(slugs = [], options = {}) {
+  const librairies = [], autres = [];
+  for (const slug of slugs ?? []) {
+    const r = estUneLibrairie(slug, options);
+    if (r.mesurable && r.estLibrairie) librairies.push({ slug, importeePar: r.importeePar.length });
+    else autres.push(slug);
+  }
+  librairies.sort((a, b) => b.importeePar - a.importeePar);
+  return { librairies, autres };
+}
+
 export function separerCeuxQuiOntLaisseDesTraces(slugs = [], options = {}) {
   const ontTourne = [], sansTrace = [], indecidables = [];
   for (const slug of slugs ?? []) {
@@ -418,12 +469,15 @@ export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { 
   const candidats = restants.filter((s) => !sansCli.has(s) && !muets.has(s));
   // LA PREUVE MATÉRIELLE PASSE AVANT LE TÉMOIGNAGE DU COMPTEUR (voir le commentaire ci-dessus).
   const traces = separerCeuxQuiOntLaisseDesTraces(candidats, { root, listDirImpl });
+  // UNE LIBRAIRIE SORT AUSSI DE LA LISTE : elle est appelée en permanence, jamais « sollicitée ».
+  const lib = separerLesLibrairies(traces.sansTrace, { root, listDirImpl });
   return {
     perTool,
     // `neverUsed` ne retient QUE les sans-trace. Y laisser les indécidables affirmerait ce qu'on
     // ne sait pas — et le plan d'action proposerait de RETIRER un outil dont rien ne dit s'il
     // travaille. Ils sont listés à part, et vus, mais jamais comptés comme inactifs.
-    neverUsed: traces.sansTrace,
+    neverUsed: lib.autres,
+    librairiesImportees: lib.librairies,
     ontTourneSansPasserParLeCompteur: traces.ontTourne,
     sansTraceSurDisque: traces.sansTrace,
     traceIndecidable: traces.indecidables,
@@ -531,6 +585,10 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     // rapports. 7 sur 20 le jour où c'est trouvé.
     usage.ontTourneSansPasserParLeCompteur?.length ? `🟢 ${usage.ontTourneSansPasserParLeCompteur.length} outil(s) à zéro au compteur ONT POURTANT TOURNÉ — leur registre sur disque le prouve : ${usage.ontTourneSansPasserParLeCompteur.map((t) => `${t.slug} (${t.fichiers} fichier(s))`).join(", ")}. Ce n'est pas eux qu'il faut relancer, c'est le compteur qui ne les voit pas : ils sont lancés hors du chemin qui enregistre.` : "",
     usage.traceIndecidable?.length ? `❓ ${usage.traceIndecidable.length} outil(s) sans registre sur disque, donc INDÉCIDABLES : ${usage.traceIndecidable.join(", ")}. Un outil n'écrit pas forcément quelque chose — leur silence ne prouve rien dans un sens ni dans l'autre, et les compter comme inactifs serait confondre « je n'ai rien trouvé » avec « je n'ai pas pu regarder ».` : "",
+    // UNE LIBRAIRIE EST APPELÉE EN PERMANENCE, JAMAIS « SOLLICITÉE » (2026-10-01, tâche #1380).
+    usage.librairiesImportees?.length ? `📘 ${usage.librairiesImportees.length} de ces outil(s) sont en fait des LIBRAIRIES, importées par d'autres scripts : ${usage.librairiesImportees.map((l) => `${l.slug} (par ${l.importeePar} script(s))`).join(", ")}. Elles tournent à chaque appel du paysage ; leur zéro mesure qu'on ne les lance pas EN TANT QUE commande, ce qui ne dit rien de leur utilité.` : "",
+    // CE QU'AUCUN COMPTEUR NE SAURA JAMAIS DIRE, et le déclarer EST la protection (Article 27).
+    "\u2139\uFE0F CE QUE CE COMPTEUR NE PEUT PAS FAIRE, et ce n'est pas un défaut à corriger : produire une liste de candidats AU RETRAIT. Il mesure des APPELS. Un outil de CIRCONSTANCE — smart-breaker en panne de quota, sauvegarde-projet le jour d'une perte d'accès, run-simulation pendant une simulation — reste à zéro tant que la circonstance ne se produit pas, et ce zéro est alors la BONNE nouvelle. Instruits un par un le 2026-10-01, les six derniers candidats n'en contenaient aucun de réel.",
     "",
     "Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :",
     self.findings.length ? self.findings.map((f) => `- ${f}`).join("\n") : "- Aucun signal d'anomalie sur le périmètre propre de tool-brain.",

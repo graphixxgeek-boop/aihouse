@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T05:54:50.775Z</div>
+    <div class="date">2026-10-01T06:28:46.672Z</div>
     <h1>Tes repères en te réveillant</h1>
     <p class="sub">Nuit du 30 septembre au 1er octobre 2026</p>
   </header>
@@ -160,6 +160,13 @@ est à jour.)*</p></div>
 <p><strong>La seconde disait « 20 outils n'ont jamais servi, lancez-les ou retirez-les ». Six d'entre eux avaient déposé leurs rapports sur le disque</strong> — the-screener en a écrit 8, ines-official 6, check-spirit 3. Ils tournent ; c'est le compteur qui ne les voit pas, parce qu'on les lance à la main, hors du chemin qui enregistre. <strong>Décider une suppression là-dessus, c'était supprimer des outils qui servent.</strong></p>
 <p>Trois états désormais, au lieu de deux : <em>a laissé des traces</em> · <em>registre vide</em> · <strong>pas de registre du tout, donc on ne peut pas savoir</strong> — un outil a parfaitement le droit de n'écrire nulle part. La liste des vrais candidats passe de <strong>20 à 8</strong>.</p>
 <p><strong>Ce que ça change pour ta question</strong> : le chantier peut commencer, mais pas sur ces 8 noms tels quels. <strong>Plusieurs sont des outils de SECOURS</strong> — celui qui débloque un quota d'API ne sert qu'en panne. Un outil d'urgence qui n'a jamais servi est une bonne nouvelle, pas un candidat au retrait. Je les instruirai un par un, et la proposition restera la tienne.</p>
+<p><strong>⑰ La réponse à ton « cherche les fusions possibles » : sur cet axe-là, il n'y a rien à retirer — et c'est un résultat, pas un échec</strong> <em>(#745, #1380)</em>.</p>
+<p><strong>Le chiffre a fondu à chaque vérification.</strong> 20 outils annoncés « jamais utilisés, à retirer ». 14 après avoir retiré ceux que le contrôle automatique lance à chaque commit. 8 après avoir regardé les rapports déposés sur le disque. <strong>Zéro après les avoir lus un par un.</strong></p>
+<p><strong>Ce que la lecture a trouvé, et rien n'était devinable :</strong></p>
+<ul><li><strong>Le compteur se dénonçait lui-même.</strong> <code>tool-usage</code> — le compteur d'usage — est <strong>importé par 65 scripts</strong>. Il tourne à chaque appel de tout le paysage, et il figurait dans sa propre liste des outils à retirer.</li><li><strong>Les autres sont des outils de secours.</strong> Celui qui débloque un quota d'API ne sert qu'en panne. Celui qui fait la sauvegarde ne sert que le jour où tu perds l'accès. Trois autres ne servent que pendant une simulation. <strong>Pour eux, zéro est la valeur attendue et souhaitable.</strong></li></ul>
+<p><strong>La conclusion, et elle est nette</strong> : un compteur d'appels <strong>ne peut pas</strong> dire quel outil retirer. Ce n'est pas un défaut à corriger, c'est sa nature — il compte des appels, et l'utilité ne se lit pas là-dedans. <strong>Chercher les fusions devra se faire sur ce que les outils FONT</strong>, ce qui est exactement le trou que les deux détecteurs déclarent eux-mêmes. C'est le prochain pas, et il demande un vrai chantier.</p>
+<p><strong>Ce que ça t'évite</strong> : si j'avais suivi le plan d'action tel qu'il était écrit, je t'aurais proposé de supprimer le compteur d'usage et le filet de secours anti-panne.</p>
+<p><strong>Et un constat sur moi, pas sur un outil</strong> : <code>the-ghost</code> sert à orchestrer le mode nocturne autonome. Je ne l'ai pas utilisé de la nuit.</p>
 <hr>
 <h3>CE QUE JE TE DOIS EN TOUTE HONNÊTETÉ</h3>
 <p><strong>Ton intuition sur le « bazar organisé » est juste sur l'ORGANISATION, et fausse sur le CODE.</strong></p>

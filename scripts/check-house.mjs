@@ -5672,6 +5672,44 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.ok(tbReel.neverUsed.every((s) => !tbReel.ontTourneSansPasserParLeCompteur.some((t) => t.slug === s)), 'a tool PROVEN to have run must never also be listed as never used — two opposite readings in one report is worse than either');
   assert.ok(tbReel.neverUsed.every((s) => !(tbReel.traceIndecidable ?? []).includes(s)), 'and an undecidable one must never be counted among the candidates for removal');
 
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  // UNE LIBRAIRIE N'EST PAS UN OUTIL QU'ON SOLLICITE (2026-10-01, tâche #1380)
+  //
+  // INSTRUIT UN PAR UN, et l'instruction a renversé la conclusion. Après le croisement avec les
+  // registres (#1379) il restait 8 « candidats au retrait ». Les lire un par un en a laissé ZÉRO :
+  // `tool-usage` est importé par 65 scripts (c'est le compteur lui-même), `check-level-target`
+  // par 4 ; `smart-breaker` ne sert qu'en panne de quota, `sauvegarde-projet` que le jour d'une
+  // perte d'accès, `run-simulation`/`le-regisseur`/`process-simulation-guardian` que pendant une
+  // simulation — pour ceux-là zéro est la valeur ATTENDUE. Ce qui est mécanisable ici est la
+  // première moitié : « est-ce une librairie ? » se LIT. La seconde se DÉCLARE (Article 27).
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  const faussesSources = (map) => ({
+    listDirImpl: () => Object.keys(map),
+    readFileImpl: (chemin) => map[String(chemin).split('/').pop()] ?? '',
+  });
+  const lib = tb.estUneLibrairie('socle', { root: '/r/', ...faussesSources({
+    'socle.mjs': 'export const x = 1;',
+    'a.mjs': 'import { x } from "./socle.mjs";',
+    'b.mjs': "import { x } from './socle.mjs';",
+    'c.mjs': 'rien du tout',
+  }) });
+  assert.equal(lib.estLibrairie, true, 'a file imported by other scripts IS called, whatever the call counter says');
+  assert.equal(lib.importeePar.length, 2, 'both quote styles must be seen, and the file itself never counts as its own importer');
+
+  const pasLib = tb.estUneLibrairie('solo', { root: '/r/', ...faussesSources({ 'solo.mjs': 'x', 'a.mjs': 'rien' }) });
+  assert.equal(pasLib.estLibrairie, false, 'and a tool nobody imports is not promoted to library — the exemption must stay narrow (lesson L4)');
+
+  assert.equal(tb.estUneLibrairie('x', { root: '/r/', listDirImpl: () => { throw new Error('ENOENT'); } }).mesurable, false, 'an unreadable scripts/ renders PAS MESURÉ, never a "no" — a no here would be a guess (lessons L5 and L11)');
+
+  const triLib = tb.separerLesLibrairies(['socle', 'solo'], { root: '/r/', ...faussesSources({
+    'socle.mjs': 'x', 'solo.mjs': 'x', 'a.mjs': 'import "./socle.mjs";',
+  }) });
+  assert.deepEqual(triLib.librairies.map((l) => l.slug), ['socle'], 'the split must separate them');
+  assert.deepEqual(triLib.autres, ['solo'], 'and leave the rest untouched');
+
+  // ── SUR LE VRAI DÉPÔT (Article 25) : le compteur lui-même est la preuve du cas.
+  assert.equal(tb.estUneLibrairie('tool-usage').estLibrairie, true, 'tool-usage is imported by most of the landscape — listing it as "never solicited, consider removing it" was the clearest possible proof that call counts do not measure usefulness');
+
   // LE QUATRIÈME ÉTAT DU SILENCE (2026-09-25, tâche #763 — « tu retrouves la vérité »).
   // CE QUI A ÉTÉ MESURÉ, et c'est le fil rouge du projet appliqué au compteur lui-même : les
   // 5 outils annoncés « jamais sollicités » étaient, trait pour trait, les 5 seuls du catalogue qui
