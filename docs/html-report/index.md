@@ -61,4 +61,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 19614 | 2026-10-01 15:44Z |
 | `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 15530 | 2026-10-01 16:06Z |
 | `docs/referentiel/esprit-ce-qui-le-protege.html` | `docs/referentiel/esprit-ce-qui-le-protege.md` | 17388 | 2026-10-01 16:08Z |
-| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 48157 | 2026-10-01 16:41Z |
+| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 48606 | 2026-10-01 18:30Z |
