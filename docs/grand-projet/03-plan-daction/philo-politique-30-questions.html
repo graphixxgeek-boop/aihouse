@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHILO &amp; POLITIQUE — les 30 questions</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T20:58:50.193Z</div>
+    <h1>PHILO &amp; POLITIQUE — les 30 questions</h1>
+    <p class="sub">8 groupes indépendants · 2 trous béants trouvés · le test des 5 impossibles en tête</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-10-01 à 20h53 UTC. Ta demande, dans tes mots : « reprends toutes les datas dispo partout sur le sujet, reprends les fils, les docs git, etc. Analyse l'ensemble vs ou on en est et reviens vers moi avec 30 questions en mode fenetre de question, c'est ce qu'on fait en tout premier. »)</em></p>
+<hr>
+<h3>CE QUE J'AI TROUVÉ AVANT D'ÉCRIRE UNE SEULE QUESTION</h3>
+<p>J'ai cherché ce que le dépôt sait déjà sur le sujet — <strong>73 fichiers</strong> le mentionnent. Trois sources portent l'essentiel :</p>
+<table><thead><tr><th>Source</th><th>Ce qu'elle contient</th></tr></thead><tbody><tr><td><code>docs/philosophie-et-politique.md</code> (495 lignes)</td><td>ce qui est <strong>DÉJÀ TRANCHÉ</strong> : 10 principes de philosophie, 9 de politique, 7 refus explicites, et tes 3 objectifs ultimes validés le 2026-09-30 à 23h31</td></tr><tr><td><code>docs/grand-projet/00-sources/.../PHILOSOPHIE_ET_POLITIQUE.md</code></td><td><strong>ton cadre à toi</strong> : 5 familles de questions pour la philosophie, 9 pour la politique, et le test des « 5 impossibles »</td></tr><tr><td><code>docs/grand-projet/01-absorption/syntheses/PHILOSOPHIE_ET_POLITIQUE.md</code></td><td>ma lecture annotée de ton cadre, écrite le 2026-09-29</td></tr></tbody></table>
+<p><strong>L'ÉCART ENTRE CE QUE JE CROYAIS ET CE QUE LES NOTES DISENT — et il change le travail.</strong></p>
+<p>Je croyais partir d'une page blanche. <strong>C'est faux : les trois quarts de ta philosophie sont déjà écrits</strong>, ils ne sont simplement pas rangés selon TON cadre. En passant le document existant au crible de tes 14 familles de questions, j'ai trouvé exactement <strong>deux trous béants</strong> et <strong>un exercice jamais fait</strong> :</p>
+<ul><li><strong>TROU 1 — « Vision des acteurs ».</strong> Rien, nulle part. Comment on considère l'utilisateur, comment on considère l'agent, quelle autonomie, quel rôle garde l'humain : quatre questions de ton cadre, zéro réponse écrite. C'est pourtant ce qui gouverne chaque mode de travail.</li><li><strong>TROU 2 — « Gestion du risque ».</strong> Rien non plus. Tolérance au risque, erreur acceptable, erreur inacceptable. Et c'est d'autant plus criant que la nuit du 2026-10-01 a produit <strong>13 fausses alertes</strong> venues de mes propres instruments : on n'a aucune règle qui dise si c'est grave.</li><li><strong>L'EXERCICE JAMAIS FAIT — le test des « 5 impossibles ».</strong> Ma propre synthèse du 2026-09-29 le qualifiait de « bloc le plus immédiatement rentable des six documents » et de « première tâche du chantier ». <strong>Il n'a jamais été fait.</strong> Il est donc en tête de ce document.</li></ul>
+<p><strong>Les questions ci-dessous ne te demandent JAMAIS de re-trancher ce qui est déjà tranché.</strong> Chaque question dit d'abord ce que le dépôt répond déjà, puis ce qui manque.</p>
+<hr>
+<h3>COMMENT RÉPONDRE</h3>
+<p>Chaque question a <strong>2 à 4 options</strong>, et tu peux toujours répondre autre chose. Tu peux :</p>
+<ul><li>répondre dans un Word comme la dernière fois (le plus simple pour toi) ;</li><li>ou me dire « ouvre les fenêtres » et je te les passe par groupes de quatre.</li></ul>
+<p>Les huit groupes sont <strong>indépendants</strong> : tu peux répondre au groupe 1 seul et on démarre.</p>
+<hr>
+<h2>GROUPE 1 — LES 5 IMPOSSIBLES</h2>
+<p><em>(Ton cadre : « les réponses définissent souvent mieux la philosophie que les valeurs elles-mêmes ». C'est le groupe le plus rentable, et celui par lequel on commence.)</em></p>
+<h3>Q1 — Parmi nos refus, lequel est LE refus fondateur ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — la partie 3 de la boussole liste sept refus. Aucun n'est déclaré supérieur aux autres.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>L'esprit des personnages</strong> (Article 0)</td><td>les six autres refus deviennent des moyens de protéger celui-là ; en cas de conflit, c'est lui qui tranche</td></tr><tr><td><strong>B</strong></td><td><strong>La preuve avant l'affirmation</strong></td><td>ne jamais dire « c'est fait » sans pouvoir le montrer devient le socle, y compris au-dessus de l'esprit</td></tr><tr><td><strong>C</strong></td><td><strong>La cause avant le symptôme</strong></td><td>ne jamais masquer un problème devient le socle</td></tr><tr><td><strong>D</strong></td><td><strong>Les trois sont au même rang</strong></td><td>on assume qu'il n'y a pas de pyramide, et on tranche au cas par cas</td></tr></tbody></table>
+<h3>Q2 — « Jamais autorisé » : interdit par écrit, ou rendu impossible par le code ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — les deux coexistent sans règle. Certaines interdictions sont mécaniques (un outil refuse de conclure sans ta validation), d'autres ne sont qu'écrites.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Mécanique dès que c'est possible</strong>, écrit sinon</td><td>plus de travail à chaque règle nouvelle, mais une règle qui ne dépend plus de la mémoire d'une IA</td></tr><tr><td><strong>B</strong></td><td><strong>Écrit suffit</strong></td><td>plus léger, mais une règle écrite disparaît à la session suivante si personne ne la relit</td></tr><tr><td><strong>C</strong></td><td><strong>Mécanique sur ce qui touche l'esprit ou les chiffres</strong>, écrit ailleurs</td><td>l'effort se concentre là où une erreur coûte cher</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q3 — Que n'automatiserons-nous JAMAIS ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — trois automatisations sont explicitement interdites : l'épreuve de la page blanche ne s'applique jamais seule, la vérification exceptionnelle ne se lance jamais sans toi, et c'est toi seul qui dis si une leçon a été appliquée. <strong>Mais aucun principe ne dit pourquoi ces trois-là.</strong></p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Tout ce qui JUGE reste humain</strong> (une note, une qualité, une priorité) ; tout ce qui MESURE peut être automatique</td><td>frontière nette et facile à appliquer à un outil nouveau</td></tr><tr><td><strong>B</strong></td><td><strong>Tout ce qui touche au Jeu reste humain</strong> (ce que Lia et Noé disent) ; l'outillage peut s'automatiser</td><td>protège le produit, laisse l'Agence libre</td></tr><tr><td><strong>C</strong></td><td><strong>Les deux à la fois</strong></td><td>la frontière la plus stricte des trois</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q4 — Que ne déléguerons-nous JAMAIS — et déléguer à QUI ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien d'écrit sur la délégation. En pratique, tu gardes les noms, l'esprit, et la validation de fin (« c'est moi à la fin qui te dis si c'est propre »).</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Les noms, l'esprit, la validation de fin</strong></td><td>on grave la pratique actuelle, rien de plus</td></tr><tr><td><strong>B</strong></td><td><strong>Ça + la stratégie</strong> (quoi faire, dans quel ordre)</td><td>je ne décide plus jamais seul de l'ordre des chantiers</td></tr><tr><td><strong>C</strong></td><td><strong>Ça + toute suppression</strong></td><td>rien ne disparaît du dépôt sans ton accord</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q5 — Si demain il faut choisir entre livrer et bien faire, qu'est-ce qui tombe EN DERNIER ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — « ne jamais sacrifier l'authenticité créative pour réduire un coût ou accélérer une livraison ». Une seule chose nommée, pas de classement.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>La traçabilité</strong> (pouvoir prouver ce qu'on avance)</td><td>on peut livrer un produit imparfait, jamais un chiffre invérifiable</td></tr><tr><td><strong>B</strong></td><td><strong>L'esprit des personnages</strong></td><td>on peut livrer sans preuves, jamais un Lia ou un Noé adoucis</td></tr><tr><td><strong>C</strong></td><td><strong>L'exportabilité</strong> (que l'Agence puisse partir ailleurs)</td><td>le second projet prime sur le confort du premier</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 2 — LE CADRE : COMBIEN D'ÉTAGES ?</h2>
+<p><em>(Ton document propose six étages : VISION → PHILOSOPHIE → POLITIQUES → PROCESSUS → PROCÉDURES → ACTIONS. Nous en avons quatre. Ma synthèse du 2026-09-29 a marqué ce point « À TRANCHER » et il l'est resté.)</em></p>
+<h3>Q6 — On adopte six étages, ou on garde les quatre actuels ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — notre escalade va de la philosophie aux tâches sans jamais nommer la VISION, et sans distinguer POLITIQUE (comment on décide) de PROCESSUS (comment on agit).</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Les six</strong></td><td>deux étages à remplir, mais chaque règle nouvelle aura une place évidente</td></tr><tr><td><strong>B</strong></td><td><strong>Les quatre actuels</strong></td><td>rien à faire, mais on continuera d'hésiter sur où ranger une règle</td></tr><tr><td><strong>C</strong></td><td><strong>Cinq</strong> : on ajoute VISION, on ne sépare pas PROCÉDURES des PROCESSUS</td><td>le gain principal sans le coût du dernier étage</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q7 — Où vit la VISION ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — tes trois objectifs ultimes, validés le 2026-09-30. Ils occupent exactement la place qu'une vision occuperait, sans porter ce nom.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Les trois objectifs ultimes SONT la vision</strong></td><td>rien à écrire, on renomme un étage déjà rempli</td></tr><tr><td><strong>B</strong></td><td><strong>Il faut une phrase au-dessus des trois</strong></td><td>un nouvel exercice, du même genre que celui du 2026-09-30</td></tr><tr><td><strong>C</strong></td><td><strong>La vision ne vaut que pour l'Agence</strong>, pas pour le Jeu</td><td>on assume que le Jeu n'a pas besoin de cet étage</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q8 — Sépare-t-on « comment on décide » de « comment on agit » ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — les deux sont mélangés dans la partie 2 de la boussole.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>On sépare</strong></td><td>un document de plus, mais on saura enfin si une règle est un arbitrage ou une étape</td></tr><tr><td><strong>B</strong></td><td><strong>On garde fondu</strong></td><td>un document de moins à tenir à jour</td></tr><tr><td><strong>C</strong></td><td><strong>On sépare pour la gouvernance seulement</strong></td><td>la séparation là où elle rapporte, nulle part ailleurs</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 3 — LA VISION DES ACTEURS <em>(trou n°1 — rien d'écrit à ce jour)</em></h2>
+<h3>Q9 — Comment considérons-nous l'UTILISATEUR, c'est-à-dire toi ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien de formulé. En pratique la charte te traite comme le décideur final et le seul juge de « c'est propre ».</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Le commanditaire</strong> : tu dis quoi, l'agent dit comment</td><td>je ne te propose plus de méthode, seulement des résultats</td></tr><tr><td><strong>B</strong></td><td><strong>Le co-auteur</strong> : tu décides ET tu produis de la matière</td><td>je continue de te demander ta matière (tes Word, tes idées) comme aujourd'hui</td></tr><tr><td><strong>C</strong></td><td><strong>Le garde-fou de dernier ressort</strong> : tu n'interviens que là où aucun outil ne peut juger</td><td>je te sollicite beaucoup moins, mais tu vois beaucoup moins</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q10 — Comment considérons-nous l'AGENT, c'est-à-dire moi ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien. Les règles décrivent ce que je dois faire, jamais ce que je suis censé être.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Un exécutant discipliné</strong> : il suit les process, il ne décide pas</td><td>je cesse de proposer des chantiers de ma propre initiative</td></tr><tr><td><strong>B</strong></td><td><strong>Un collaborateur</strong> : il propose et il alerte, il ne tranche jamais seul</td><td>la pratique actuelle, gravée</td></tr><tr><td><strong>C</strong></td><td><strong>Un responsable de zone</strong> : sur certains sujets il tranche et rend des comptes après</td><td>tu gagnes du temps, tu perds en contrôle</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q11 — Quel est le niveau d'autonomie PAR DÉFAUT ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — un mode de travail existe et se déclare (autonome / semi-autonome), mais <strong>aucune règle ne dit lequel est le défaut</strong>. La nuit du 2026-10-01 a montré le coût de ce flou : le mode est resté « autonome » pendant des heures alors que tu étais revenu.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Par défaut je demande</strong> ; l'autonomie est l'exception, déclarée et bornée dans le temps</td><td>le plus sûr, le plus lent</td></tr><tr><td><strong>B</strong></td><td><strong>Par défaut j'agis et je rends compte</strong> ; la question est l'exception</td><td>le plus rapide, et c'est ce qui a produit les 20 heures de la nuit</td></tr><tr><td><strong>C</strong></td><td><strong>Ça dépend du périmètre</strong> : autonome sur l'outillage, jamais sur le Jeu</td><td>la frontière suit déjà ta consigne actuelle</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q12 — Qu'est-ce que l'humain garde, par principe et pour toujours ?</h3>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Les noms, l'esprit, la validation de fin</strong></td><td>la pratique actuelle</td></tr><tr><td><strong>B</strong></td><td><strong>Ça + l'ordre des chantiers</strong></td><td>je ne choisis plus par quoi commencer</td></tr><tr><td><strong>C</strong></td><td><strong>Ça + toute suppression</strong></td><td>rien ne s'efface sans toi, même un fichier mort</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q13 — Et les FUTURS utilisateurs de l'Agence, ceux qui ne sont pas toi ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — l'Agence est conçue pour partir ailleurs (c'est le second projet). Mais rien ne dit ce qu'on doit à celui qui la reprendra.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>La même chose qu'à toi</strong> : tout est explicable sans nous</td><td>chaque outil doit être compréhensible par un inconnu, pas seulement exportable</td></tr><tr><td><strong>B</strong></td><td><strong>Moins</strong> : l'Agence part avec ses documents, à eux de s'adapter</td><td>moins de travail, un produit plus brut</td></tr><tr><td><strong>C</strong></td><td><strong>Question prématurée</strong> — à rouvrir quand un premier utilisateur existe</td><td>on ferme le sujet proprement au lieu de le laisser traîner</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 4 — LA GESTION DU RISQUE <em>(trou n°2 — rien d'écrit à ce jour)</em></h2>
+<h3>Q14 — Quelle est notre tolérance au risque, en une phrase ?</h3>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Très basse</strong> : mieux vaut ne rien livrer que livrer du faux</td><td>je te livrerai moins souvent, et plus sûr</td></tr><tr><td><strong>B</strong></td><td><strong>Moyenne</strong> : on livre en disant clairement ce qui n'est pas vérifié</td><td>ce que je fais aujourd'hui, sans l'avoir décidé</td></tr><tr><td><strong>C</strong></td><td><strong>Variable</strong> : nulle sur l'esprit et les chiffres, tolérante sur l'outillage</td><td>l'effort se concentre, le reste avance vite</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q15 — Qu'est-ce qu'une erreur ACCEPTABLE ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien. Et la mesure fait mal : la nuit du 2026-10-01 a produit <strong>13 fausses alertes</strong>, toutes venues de mes propres outils. Sans règle, impossible de dire si c'est un bon ou un mauvais chiffre.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Une erreur trouvée et corrigée avant que tu la voies</strong></td><td>les 13 fausses alertes de la nuit sont acceptables : je les ai toutes fermées moi-même</td></tr><tr><td><strong>B</strong></td><td><strong>Ça + une erreur que tu vois mais qui n'a rien cassé</strong></td><td>plus tolérant, moins de temps passé à me relire</td></tr><tr><td><strong>C</strong></td><td><strong>Toute erreur est acceptable si elle est ÉCRITE</strong> — la cacher est la seule faute</td><td>le curseur se déplace entièrement sur l'honnêteté</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q16 — Qu'est-ce qu'une erreur INACCEPTABLE ?</h3>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Un chiffre faux livré comme vrai</strong></td><td>c'est arrivé : trois chiffres de la nuit n'ont pas survécu à leur vérification</td></tr><tr><td><strong>B</strong></td><td><strong>Un travail présenté comme terminé sans preuve</strong></td><td>déjà interdit par la boussole, jamais classé comme faute grave</td></tr><tr><td><strong>C</strong></td><td><strong>Une dérive de l'esprit des personnages passée inaperçue</strong></td><td>cohérent avec l'Article 0</td></tr><tr><td><strong>D</strong></td><td><strong>Les trois au même rang</strong></td><td></td></tr></tbody></table>
+<h3>Q17 — Que fait-on quand une erreur inacceptable se produit ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien d'écrit. En pratique je corrige et je le dis.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Correction + leçon enregistrée + garde-fou mécanique si possible</strong>, systématiquement</td><td>chaque faute grave laisse une trace qui empêche la suivante</td></tr><tr><td><strong>B</strong></td><td><strong>Ça + arrêt du chantier</strong> tant que ce n'est pas fermé</td><td>le plus strict, et le plus coûteux en temps</td></tr><tr><td><strong>C</strong></td><td><strong>Correction et mention</strong>, sans obligation de garde-fou</td><td>le plus léger, et le plus oubliable</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 5 — LES PRINCIPES DE DÉCISION</h2>
+<h3>Q18 — Classe ces cinq valeurs, de la plus prioritaire à la moins : rapidité, qualité, sécurité, innovation, simplicité.</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — une seule relation est tranchée : <strong>qualité avant rapidité</strong> (Article 0). Les quatre autres rangs n'existent pas.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td>qualité &gt; <strong>simplicité</strong> &gt; sécurité &gt; innovation &gt; rapidité</td><td>la simplicité monte : ça pousse vers la refonte et la rationalisation</td></tr><tr><td><strong>B</strong></td><td>qualité &gt; <strong>sécurité</strong> &gt; simplicité &gt; innovation &gt; rapidité</td><td>la prudence monte : ça pousse vers plus de garde-fous</td></tr><tr><td><strong>C</strong></td><td>qualité &gt; <strong>innovation</strong> &gt; simplicité &gt; sécurité &gt; rapidité</td><td>la création monte : ça pousse vers de nouveaux outils</td></tr><tr><td><strong>D</strong></td><td>Un autre ordre, que tu donnes</td><td></td></tr></tbody></table>
+<h3>Q19 — Deux règles se contredisent, et aucune hiérarchie ne tranche. On fait quoi ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — l'Article 0 règle les conflits qui touchent l'esprit. <strong>Pour tous les autres, rien.</strong></p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Je tranche et je le signale</strong> dans mon compte rendu</td><td>je ne te bloque jamais, tu découvres après</td></tr><tr><td><strong>B</strong></td><td><strong>Je m'arrête et je demande</strong> — jamais de tranchage silencieux</td><td>tu décides tout, je t'interromps plus souvent</td></tr><tr><td><strong>C</strong></td><td><strong>J'applique la règle la plus récente</strong> et je le signale</td><td>mécanique, prévisible, parfois absurde</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q20 — Simplicité contre complétude : qu'est-ce qui gagne ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien de tranché, et c'est exactement la question de fond derrière ta réflexion sur la refonte et sur les outils jamais utilisés.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>La simplicité</strong> : un outil de moins vaut mieux qu'un outil peu utilisé</td><td>ouvre la porte à des retraits ; le paysage se resserre</td></tr><tr><td><strong>B</strong></td><td><strong>La complétude</strong> : un outil peu utilisé coûte peu et servira un jour</td><td>le paysage continue de grossir</td></tr><tr><td><strong>C</strong></td><td><strong>Ni l'un ni l'autre par principe</strong> — ça se mesure cas par cas, avec un critère écrit</td><td>il faut alors écrire ce critère, et c'est un chantier</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 6 — LA GOUVERNANCE</h2>
+<h3>Q21 — Qui POSSÈDE les données du projet ? <em>(le suivi, les mesures, les registres)</em></h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien. En pratique elles vivent dans le dépôt et personne n'est désigné.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Toi seul</strong> — l'agent les alimente, ne les possède pas</td><td>toute suppression de donnée passe par toi</td></tr><tr><td><strong>B</strong></td><td><strong>Le dépôt fait foi</strong>, personne ne possède</td><td>ce qui est écrit gagne, même contre un souvenir</td></tr><tr><td><strong>C</strong></td><td><strong>Partagé</strong> : toi pour les décisions, l'agent pour les mesures</td><td>je peux refaire une mesure sans te demander, jamais réécrire une décision</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q22 — Qui a le droit de CRÉER une catégorie ? <em>(un rang, une famille, un type d'outil)</em></h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — tu nommes, toujours, et par séries. Mais <strong>créer une catégorie n'est pas la même chose que la nommer</strong>, et ce point n'est écrit nulle part.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Toi seul, toujours</strong></td><td>le rangement n'évolue qu'avec toi</td></tr><tr><td><strong>B</strong></td><td><strong>L'agent propose, tu valides</strong></td><td>la pratique actuelle, gravée</td></tr><tr><td><strong>C</strong></td><td><strong>L'agent peut créer une catégorie technique</strong>, jamais une catégorie qui porte un jugement</td><td>je peux ranger, je ne peux pas noter</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q23 — Qui peut DÉSACTIVER ou SUPPRIMER un outil ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien. Et la question est vive : tu m'as demandé cette nuit quelle était l'utilité d'un outil jamais sollicité.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Toi seul</strong></td><td>aucun retrait sans ton accord, même évident</td></tr><tr><td><strong>B</strong></td><td><strong>L'agent peut, si la mesure le justifie et qu'il l'écrit</strong></td><td>le paysage se nettoie tout seul, tu découvres après</td></tr><tr><td><strong>C</strong></td><td><strong>L'agent peut désactiver, jamais supprimer</strong></td><td>réversible toujours, rien ne se perd</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 7 — CONTRÔLE, AUDIT, PREUVE</h2>
+<h3>Q24 — Que devons-nous pouvoir DÉMONTRER, à tout moment ?</h3>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Que chaque chiffre livré est reproductible</strong> par un outil nommé</td><td>déjà presque vrai ; deux chiffres ont été retirés cette nuit faute d'instrument</td></tr><tr><td><strong>B</strong></td><td><strong>Ça + que chaque décision a une raison écrite</strong></td><td>déjà la règle, jamais classée comme preuve à produire</td></tr><tr><td><strong>C</strong></td><td><strong>Ça + que chaque règle a un porteur</strong> (quelqu'un ou quelque chose qui la vérifie)</td><td>le plus exigeant : trois Articles sur l'esprit n'en ont aucun aujourd'hui</td></tr><tr><td><strong>D</strong></td><td><strong>Les trois</strong></td><td></td></tr></tbody></table>
+<h3>Q25 — Combien de temps gardons-nous les preuves ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — rien. En pratique : tout, pour toujours.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Tout, pour toujours</strong></td><td>le dépôt grossit, rien ne se perd</td></tr><tr><td><strong>B</strong></td><td><strong>Décisions pour toujours, mesures brutes six mois</strong></td><td>plus léger, mais une vieille mesure ne sera plus rejouable</td></tr><tr><td><strong>C</strong></td><td><strong>Une règle par type</strong>, écrite dans la politique</td><td>précis, et c'est un petit chantier</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q26 — Quels contrôles sont OBLIGATOIRES avant de dire qu'un travail est fini ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — deux : le filet de sécurité au vert, et la ligne de suivi dans le même commit.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Ces deux-là suffisent</strong></td><td>la pratique actuelle</td></tr><tr><td><strong>B</strong></td><td><strong>+ un outil de jugement du domaine touché</strong></td><td>plus lent, plus sûr</td></tr><tr><td><strong>C</strong></td><td><strong>+ relecture du diff + ton accord</strong></td><td>rien ne se termine sans toi</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q27 — Un seuil d'alerte, ça se fixe comment ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — une bonne pratique dit qu'un seuil se <strong>dérive</strong> d'une mesure. Mais la nuit du 2026-10-01 a trouvé un détecteur dont le seuil était passé <strong>au-dessus de tout ce qu'il observe</strong> : il annonçait « aucun problème » parce qu'il ne pouvait plus rien voir.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Toujours dérivé</strong> d'une mesure, jamais choisi</td><td>aucun seuil ne peut plus passer au-dessus de son terrain</td></tr><tr><td><strong>B</strong></td><td><strong>Dérivé par défaut</strong>, choisi à la main si la raison est écrite juste à côté</td><td>souple, et la raison empêche l'oubli</td></tr><tr><td><strong>C</strong></td><td><strong>Choisi à la main</strong> — c'est plus lisible</td><td>simple à lire, et le défaut de cette nuit se reproduira</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h2>GROUPE 8 — ANALYSE, REPORTING, AMÉLIORATION</h2>
+<h3>Q28 — Sépare-t-on les indicateurs STRATÉGIQUES des OPÉRATIONNELS ?</h3>
+<p><em>(Stratégique = il parle de la direction du projet. Opérationnel = il parle de la journée.)</em></p>
+<p><strong>Ce que le dépôt dit déjà</strong> — le tableau de bord les mélange, sans distinction.</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>Deux tableaux séparés</strong></td><td>tu peux regarder la direction sans traverser le quotidien</td></tr><tr><td><strong>B</strong></td><td><strong>Un seul tableau, avec une colonne qui dit lequel est lequel</strong></td><td>moins de travail, lecture moins nette</td></tr><tr><td><strong>C</strong></td><td><strong>On ne garde que les stratégiques</strong></td><td>tu vois moins, et tu vois l'essentiel</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<h3>Q29 — Quand te rapporte-t-on, et sous quelle forme ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — un compte rendu s'ouvre toujours par un rappel du contexte (Article 29), les livrables te sont envoyés en fichier joint, et en HTML quand tu dois réagir. <strong>Mais rien ne dit à quelle FRÉQUENCE.</strong></p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>C'est bon tel quel</strong></td><td>rien à faire</td></tr><tr><td><strong>B</strong></td><td><strong>Il manque un rapport PÉRIODIQUE</strong> (hebdomadaire) en plus des comptes rendus de tâche</td><td>tu vois la tendance, pas seulement les coups</td></tr><tr><td><strong>C</strong></td><td><strong>Il manque un rapport d'ALERTE</strong> : quelque chose qui te remonte tout de suite sans attendre</td><td>cohérent avec ta demande de signaler immédiatement une tension avec la stratégie</td></tr><tr><td><strong>D</strong></td><td><strong>B et C</strong></td><td></td></tr></tbody></table>
+<h3>Q30 — Qui peut proposer une amélioration, et comment entre-t-elle ?</h3>
+<p><strong>Ce que le dépôt dit déjà</strong> — les leçons existent, et <strong>c'est toi seul qui dis si une leçon a été appliquée</strong> (un outil refuse mécaniquement ce jugement sans ta validation).</p>
+<table><thead><tr><th></th><th>Option</th><th>Ce que ça change concrètement</th></tr></thead><tbody><tr><td><strong>A</strong></td><td><strong>L'agent propose, tu tranches, ça devient une tâche</strong></td><td>la pratique actuelle</td></tr><tr><td><strong>B</strong></td><td><strong>Ça + un outil peut proposer tout seul</strong>, et sa proposition entre dans la même file</td><td>les outils remontent déjà des constats ; ils seraient enfin suivis</td></tr><tr><td><strong>C</strong></td><td><strong>Ça + un plafond</strong> : pas plus de N propositions ouvertes à la fois</td><td>ça force à fermer avant d'ouvrir ; <strong>93 constats sans suite</strong> attendent aujourd'hui</td></tr><tr><td><strong>D</strong></td><td>Autre</td><td></td></tr></tbody></table>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>Constat</th><th>État</th><th>Suite</th></tr></thead><tbody><tr><td>Deux familles de ton cadre n'ont AUCUNE réponse écrite (vision des acteurs, gestion du risque)</td><td><strong>RETENU</strong></td><td>tâche #1417 — ce document ; la rédaction suivra tes réponses</td></tr><tr><td>Le test des « 5 impossibles », annoncé « première tâche du chantier » le 2026-09-29, n'a jamais été fait</td><td><strong>RETENU</strong></td><td>groupe 1 de ce document</td></tr><tr><td>Six étages contre quatre : décision de cadre en attente depuis le 2026-09-29</td><td><strong>À TRANCHER</strong></td><td>Q6 à Q8 — ce n'est pas à moi de le décider</td></tr><tr><td>Les 10 principes de philosophie et 9 de politique déjà écrits ne sont pas rangés selon ton cadre</td><td><strong>ÉCARTÉ pour l'instant</strong></td><td>les ranger avant tes réponses figerait un rangement que tes réponses peuvent invalider</td></tr><tr><td>La carte de l'organisation par modules, que tu veux « ensuite »</td><td><strong>RETENU</strong></td><td>déjà amorcée (tâche #1360), reprise après ce chantier selon ton ordre</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/grand-projet/03-plan-daction/philo-politique-30-questions.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
