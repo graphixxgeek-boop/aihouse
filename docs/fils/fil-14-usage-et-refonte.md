@@ -27,7 +27,7 @@ mesures faites pour d'autres raisons, ce qui les rend d'autant plus utiles :
 |---|---|---|
 | kits d'export complets | **84 / 84** | ce qui existe est déjà emportable — la refonte n'est pas un sauvetage |
 | outils indépendants d'un fournisseur | **94 %** | l'architecture n'est pas prisonnière |
-| chemins écrits en dur | **38 fichiers sur 40** | **c'est ça, le vrai désordre**, et c'est ce qu'une refonte corrigerait à la source |
+| chemins écrits en dur | 🔴 **chiffre RETIRÉ le 01/10** | il n'était pas reproductible ; le vrai couplage est **rare et concentré**, pas général — et c'est un argument en MOINS pour la refonte |
 | point de branchement pour une source extérieure | **aucun** | la modularité qu'il veut n'existe pas |
 | documents alignés sur la racine | **44 / 59 (75 %)** | la cascade documentaire tient déjà |
 | tâches sachant quel objectif elles servent | **14 / 1 272 pour le Jeu** | le second bout n'est pas raccordé |
@@ -94,8 +94,9 @@ PRIORITAIRE-OBLIGATOIRE, **jamais exécutée**. Il me demande donc de juger une 
 recevoir qu'une impression.**
 
 **Quatre choses manquent vraiment, et aucune n'est de l'hygiène** : la borne elle-même · le
-Transaction Engine, seul trou d'architecture nommé (#1120) · la portabilité (38 fichiers à chemins
-écrits en dur, aucun point de branchement) · **et la preuve extérieure — l'Agence n'a jamais été
+Transaction Engine, seul trou d'architecture nommé (#1120) · la portabilité (aucun point de
+branchement — le chiffre des chemins en dur, lui, a été retiré le 01/10 faute d'être
+reproductible) · **et la preuve extérieure — l'Agence n'a jamais été
 installée ailleurs, pas une fois.**
 
 Détail complet : `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md`, tâche **#1351**.

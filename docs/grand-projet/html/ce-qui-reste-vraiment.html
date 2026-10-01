@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T00:17:19.619Z</div>
+    <div class="date">2026-10-01T00:45:16.349Z</div>
     <h1>CE QUI RESTE VRAIMENT À FAIRE — sa question, mesurée sur les 114 tâches ouvertes</h1>
     <p class="sub">Page générée depuis docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md — jamais écrite à la main.</p>
   </header>
@@ -140,7 +140,13 @@ de haut, tu ne trouves pas ? »*</p></div>
 <h4>② LE SEUL TROU D'ARCHITECTURE NOMMÉ — tâche #1120</h4>
 <p>L'audit l'appelle <em>« le Transaction Engine — le seul vrai trou de l'architecture »</em>. Il est ouvert, il est nommé, et il n'est pas d'hygiène : c'est une pièce manquante.</p>
 <h4>③ LA PORTABILITÉ — mesurée, et c'est le désordre réel</h4>
-<p><strong>38 fichiers sur 40 portent des chemins écrits en dur</strong>, et <strong>aucun point de branchement n'existe</strong> pour accueillir ou retirer une source extérieure. L'Agence est à <strong>94 %</strong> indépendante d'un fournisseur, et pourtant <strong>elle ne sait pas déménager</strong>. <strong>C'est exactement ce qu'une refonte corrigerait à la source</strong> plutôt qu'en 38 réparations.</p>
+<p><strong>Aucun point de branchement n'existe</strong> pour accueillir ou retirer une source extérieure. L'Agence est à <strong>94 %</strong> indépendante d'un fournisseur, et pourtant <strong>elle ne sait pas déménager</strong>.</p>
+<div class="highlight"><p><strong>CORRECTION DU 2026-10-01</strong> : ce paragraphe disait aussi *« 38 fichiers sur 40 portent des
+chemins écrits en dur »* et en faisait le désordre principal. <strong>Le chiffre a été retiré : il
+n'est pas reproductible</strong>, il venait d'une commande disparue, et le garde-fou de portabilité du
+projet rend au contraire 0 script non portable sur 88. <strong>Le vrai couplage est rare et
+concentré</strong> — c'est un argument en MOINS pour la refonte, et il faut le dire dans ce sens-là.
+Détail : <code>la-portabilite-vraiment-mesuree.md</code>.</p></div>
 <h4>④ LA PREUVE EXTÉRIEURE — et c'est la plus gênante</h4>
 <p><strong>L'Agence n'a jamais été installée ailleurs. Pas une fois. Personne d'autre que nous deux ne l'a jamais utilisée.</strong> Ce n'est pas une tâche qu'on coche : c'est la seule chose qui puisse transformer un <em>« ça marche chez nous »</em> en <em>« ça marche »</em>.</p>
 <hr>

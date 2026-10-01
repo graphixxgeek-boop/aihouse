@@ -40,7 +40,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9898 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 16351 | 2026-09-30 21:18Z |
 | `docs/fils/html/fil-02-cible-obligations.html` | `docs/fils/fil-02-cible-obligations.md` | 12403 | 2026-09-30 21:24Z |
-| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 11140 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 10717 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 11213 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 12553 | 2026-09-30 21:40Z |
@@ -49,6 +48,8 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/les-trois-objectifs-ultimes.html` | `docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md` | 23234 | 2026-09-30 23:31Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 23476 | 2026-09-30 23:32Z |
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 20448 | 2026-09-30 23:42Z |
-| `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 16391 | 2026-10-01 00:17Z |
-| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 13940 | 2026-10-01 00:17Z |
 | `docs/fils/html/index.html` | `docs/fils/index.md` | 18805 | 2026-10-01 00:17Z |
+| `docs/grand-projet/html/la-portabilite-vraiment-mesuree.html` | `docs/grand-projet/02-strategie/la-portabilite-vraiment-mesuree.md` | 13655 | 2026-10-01 00:44Z |
+| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 12318 | 2026-10-01 00:45Z |
+| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 14050 | 2026-10-01 00:45Z |
+| `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 16806 | 2026-10-01 00:45Z |

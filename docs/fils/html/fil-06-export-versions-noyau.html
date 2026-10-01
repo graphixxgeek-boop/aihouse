@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-09-30T21:33:42.046Z</div>
+    <div class="date">2026-10-01T00:45:16.217Z</div>
     <h1>FIL 06 — L'export de l'Agence, son noyau, et la question des « plusieurs versions »</h1>
     <p class="sub">Page générée depuis docs/fils/fil-06-export-versions-noyau.md — jamais écrite à la main.</p>
   </header>
@@ -116,9 +116,16 @@
 <h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
 <p><strong>Ce que tu as demandé</strong> — savoir si l'Agence peut réellement partir ailleurs, et décider si on proposera <strong>plusieurs versions</strong> (une légère, une complète) ou une seule.</p>
 <p><strong>La mesure est faite, et elle est dérangeante.</strong> Elle répond à une phrase de ta propre TARGET ARCHITECTURE : <em>« un fichier séparé n'est pas automatiquement un module extractible »</em>. Trois mesures, trois réponses qui ne se contredisent pas — elles répondent à trois questions différentes :</p>
-<table><thead><tr><th>La question posée</th><th>La réponse mesurée</th></tr></thead><tbody><tr><td>un fichier « noyau » a-t-il besoin d'un fichier hors noyau ?</td><td><strong>99 % propre</strong> — 73 fichiers sur 74, un seul lien à couper</td></tr><tr><td>le fichier nomme-t-il des chemins qui n'existent que chez nous ?</td><td><strong>56 % en portent</strong> — 41 fichiers sur 74</td></tr><tr><td>ces chemins sont-ils <strong>réglables de l'extérieur</strong> ?</td><td><strong>5 %</strong> — 2 fichiers sur 40 ; les 38 autres les ont écrits en dur</td></tr></tbody></table>
+<table><thead><tr><th>La question posée</th><th>La réponse mesurée</th></tr></thead><tbody><tr><td>un fichier « noyau » a-t-il besoin d'un fichier hors noyau ?</td><td><strong>99 % propre</strong> — 73 fichiers sur 74, un seul lien à couper</td></tr><tr><td>le fichier nomme-t-il des chemins qui n'existent que chez nous ?</td><td><strong>56 % en portent</strong> — 41 fichiers sur 74</td></tr><tr><td>ces chemins sont-ils <strong>réglables de l'extérieur</strong> ?</td><td>🔴 <strong>CE CHIFFRE EST RETIRÉ le 2026-10-01 — il n'est pas reproductible</strong> (voir ci-dessous)</td></tr></tbody></table>
 <p><strong>Donc : selon la question, le même noyau paraît 99 % portable ou 5 % portable.</strong> Ce n'est pas une contradiction, c'est la différence entre « les pièces tiennent ensemble » et « les pièces savent vivre ailleurs ».</p>
-<p><strong>Le détail qui ne manque pas de sel</strong> : <code>safe-export</code>, le Gardien même de l'exportabilité, porte <strong>18 chemins écrits en dur</strong>. Les plus lourds sont <code>le-classificateur</code> (37), <code>circle-tasks</code> (28), <code>god-of-all-process</code> (26).</p>
+<div class="highlight"><p>### ⚠️ CORRECTION DU 2026-10-01 — le « 5 % » et le « 38 sur 40 » sont retirés</p><p><strong>Le chiffre venait d'une commande qui n'existe plus</strong> : le document du 29/09 qui le porte ne
+cite aucun script, donc rien ne le rejoue (leçon L2). <strong>Quatre tentatives de le reproduire ont
+donné quatre réponses différentes en vingt minutes.</strong></p><p><strong>Et le garde-fou de portabilité du projet dit l'inverse</strong> : <code>findScriptsNonPortables()</code> rend
+<strong>0 script non portable sur 88</strong>. Chaque cas ouvert à la main était une <strong>déclaration</strong>
+(<code>export const …</code>, <code>path: &quot;…&quot;</code>), jamais un chemin enfoui — y compris les 599 occurrences de
+<code>check-house</code>, qui sont des <strong>faux chemins de test</strong> dans des assertions.</p><p><strong>Ce qui reste vrai</strong> : le vrai couplage existe, mais il est <strong>rare et concentré</strong>, pas général.
+Détail complet et correction : <code>docs/grand-projet/02-strategie/la-portabilite-vraiment-mesuree.md</code>.</p></div>
+<p><strong>Les chiffres par fichier qui suivaient ici</strong> — <code>le-classificateur</code> 37, <code>circle-tasks</code> 28, <code>god-of-all-process</code> 26, <code>safe-export</code> 18 — <strong>sortaient de la même commande disparue et sont retirés pour la même raison.</strong> Vérifiés à la main, ces trois derniers ne portent que des déclarations.</p>
 <p><strong>Sur les « plusieurs versions »</strong> : l'analyse de ce qui ralentit le projet (outil JESUS-LE-SAUVEUR, passage du 29/09 à 23h06) couvre <strong>trois</strong> de tes quatre axes — le codage, l'IA, l'Agence. Elle ne sait <strong>rien dire du JEU</strong>. C'est écrit en tête de ce document plutôt qu'en note de bas de page.</p>
 <hr>
 <h3>② OÙ ÇA SE SITUE — et pourquoi ce sujet existe</h3>

@@ -71,10 +71,15 @@ L'audit l'appelle *« le Transaction Engine — le seul vrai trou de l'architect
 ouvert, il est nommé, et il n'est pas d'hygiène : c'est une pièce manquante.
 
 ### ③ LA PORTABILITÉ — mesurée, et c'est le désordre réel
-**38 fichiers sur 40 portent des chemins écrits en dur**, et **aucun point de branchement
-n'existe** pour accueillir ou retirer une source extérieure. L'Agence est à **94 %** indépendante
-d'un fournisseur, et pourtant **elle ne sait pas déménager**. **C'est exactement ce qu'une
-refonte corrigerait à la source** plutôt qu'en 38 réparations.
+**Aucun point de branchement n'existe** pour accueillir ou retirer une source extérieure.
+L'Agence est à **94 %** indépendante d'un fournisseur, et pourtant **elle ne sait pas déménager**.
+
+> **CORRECTION DU 2026-10-01** : ce paragraphe disait aussi *« 38 fichiers sur 40 portent des
+> chemins écrits en dur »* et en faisait le désordre principal. **Le chiffre a été retiré : il
+> n'est pas reproductible**, il venait d'une commande disparue, et le garde-fou de portabilité du
+> projet rend au contraire 0 script non portable sur 88. **Le vrai couplage est rare et
+> concentré** — c'est un argument en MOINS pour la refonte, et il faut le dire dans ce sens-là.
+> Détail : `la-portabilite-vraiment-mesuree.md`.
 
 ### ④ LA PREUVE EXTÉRIEURE — et c'est la plus gênante
 **L'Agence n'a jamais été installée ailleurs. Pas une fois. Personne d'autre que nous deux ne

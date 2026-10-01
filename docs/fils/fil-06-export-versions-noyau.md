@@ -21,15 +21,30 @@ différentes :
 |---|---|
 | un fichier « noyau » a-t-il besoin d'un fichier hors noyau ? | **99 % propre** — 73 fichiers sur 74, un seul lien à couper |
 | le fichier nomme-t-il des chemins qui n'existent que chez nous ? | **56 % en portent** — 41 fichiers sur 74 |
-| ces chemins sont-ils **réglables de l'extérieur** ? | **5 %** — 2 fichiers sur 40 ; les 38 autres les ont écrits en dur |
+| ces chemins sont-ils **réglables de l'extérieur** ? | 🔴 **CE CHIFFRE EST RETIRÉ le 2026-10-01 — il n'est pas reproductible** (voir ci-dessous) |
 
 **Donc : selon la question, le même noyau paraît 99 % portable ou 5 % portable.** Ce n'est pas une
 contradiction, c'est la différence entre « les pièces tiennent ensemble » et « les pièces savent
 vivre ailleurs ».
 
-**Le détail qui ne manque pas de sel** : `safe-export`, le Gardien même de l'exportabilité, porte
-**18 chemins écrits en dur**. Les plus lourds sont `le-classificateur` (37), `circle-tasks` (28),
-`god-of-all-process` (26).
+> ### ⚠️ CORRECTION DU 2026-10-01 — le « 5 % » et le « 38 sur 40 » sont retirés
+>
+> **Le chiffre venait d'une commande qui n'existe plus** : le document du 29/09 qui le porte ne
+> cite aucun script, donc rien ne le rejoue (leçon L2). **Quatre tentatives de le reproduire ont
+> donné quatre réponses différentes en vingt minutes.**
+>
+> **Et le garde-fou de portabilité du projet dit l'inverse** : `findScriptsNonPortables()` rend
+> **0 script non portable sur 88**. Chaque cas ouvert à la main était une **déclaration**
+> (`export const …`, `path: "…"`), jamais un chemin enfoui — y compris les 599 occurrences de
+> `check-house`, qui sont des **faux chemins de test** dans des assertions.
+>
+> **Ce qui reste vrai** : le vrai couplage existe, mais il est **rare et concentré**, pas général.
+> Détail complet et correction : `docs/grand-projet/02-strategie/la-portabilite-vraiment-mesuree.md`.
+
+**Les chiffres par fichier qui suivaient ici** — `le-classificateur` 37, `circle-tasks` 28,
+`god-of-all-process` 26, `safe-export` 18 — **sortaient de la même commande disparue et sont
+retirés pour la même raison.** Vérifiés à la main, ces trois derniers ne portent que des
+déclarations.
 
 **Sur les « plusieurs versions »** : l'analyse de ce qui ralentit le projet (outil JESUS-LE-SAUVEUR,
 passage du 29/09 à 23h06) couvre **trois** de tes quatre axes — le codage, l'IA, l'Agence. Elle ne
