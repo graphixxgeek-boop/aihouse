@@ -106,12 +106,12 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T00:45:16.217Z</div>
+    <div class="date">2026-10-01T02:19:37.132Z</div>
     <h1>FIL 06 — L'export de l'Agence, son noyau, et la question des « plusieurs versions »</h1>
     <p class="sub">Page générée depuis docs/fils/fil-06-export-versions-noyau.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-09-30 <strong>Place dans le plan :</strong> Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07). <strong>Saisines :</strong> COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30</p>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-10-01 <strong>Place dans le plan :</strong> Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07). <strong>Saisines :</strong> COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité »)</p>
 <hr>
 <h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
 <p><strong>Ce que tu as demandé</strong> — savoir si l'Agence peut réellement partir ailleurs, et décider si on proposera <strong>plusieurs versions</strong> (une légère, une complète) ou une seule.</p>
@@ -133,7 +133,10 @@ Détail complet et correction : <code>docs/grand-projet/02-strategie/la-portabil
 <p><strong>Le lien avec le fil 05 est direct et nouveau</strong> : cette mesure porte sur les <strong>fichiers d'outils</strong>. L'axe création/produit fini (fil 05) porte sur les <strong>documents</strong>. Les deux moitiés de la même question, et une seule était mesurée.</p>
 <hr>
 <h3>③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro</h3>
-<p><strong>Q6.1 — À TOI.</strong> Les 38 fichiers à chemins écrits en dur : c'est un chantier réel. On le fait <strong>maintenant</strong> (avant de vendre quoi que ce soit), <strong>plus tard</strong> (au premier vrai export), ou <strong>jamais</strong> (on assume que chaque export demandera une adaptation à la main) ? <em>(a) maintenant · (b) au premier export · (c) jamais, on assume</em></p>
+<p><strong>Q6.1 — LA QUESTION TOMBE, ET JE TE DOIS LA RAISON</strong> <em>(corrigée le 2026-10-01, tâche #1354)</em>. Elle demandait quand traiter « les 38 fichiers à chemins écrits en dur ». <strong>Ce chiffre n'est pas reproductible, et il a été retiré</strong> : il venait d'un document du 29/09 qui ne cite aucun script, et le garde-fou de portabilité du projet dit l'inverse — <strong>0 script non portable sur 88</strong>. Chaque cas ouvert à la main était une DÉCLARATION en tête de fichier (la forme portable), jamais un chemin enfoui.</p>
+<p><strong>Tu avais déjà répondu (a) maintenant</strong>, le 01/10 à 00h40 : <em>« complète la portabilité des fichiers »</em>. <strong>J'ai donc traité la demande plutôt que la question</strong> : il n'y a pas de chantier de 38 fichiers à mener. Ce qui reste de vrai couplage est <strong>rare et concentré</strong> — deux ou trois outils qui ouvrent un chemin en dur au lieu de le déclarer — et c'est la tâche <strong>#1323</strong>, déjà ouverte, qui le porte.</p>
+<p><strong>Et le sens de la correction compte autant que la correction</strong> : c'est un argument <strong>en moins</strong> pour la refonte, pas en plus. Sur ce point précis, la structure de l'Agence est déjà proche de la forme portable.</p>
+<p><strong>CE QUI RESTE VRAIMENT À DÉCIDER ICI, et ce n'est pas la même question</strong> : rien ne distingue aujourd'hui une règle « qui reste chez nous » d'une règle « qui part avec l'Agence » — c'est la séparation des deux cas de figure de la stratégie globale (<code>docs/strategies/strategie-globale-du-projet-entier.md</code>), et la tâche <strong>#1320</strong> la porte. <em>Question : on étiquette TOUS les documents, ou seulement ceux qui partent ?</em></p>
 <p><strong>Q6.2 — À TOI.</strong> Plusieurs versions ou une seule ? L'analyse penche vers <strong>une seule</strong>, parce que maintenir deux versions double le coût de chaque règle nouvelle — mais c'est ta décision commerciale, pas ma mesure. <em>(a) une seule · (b) deux (légère / complète) · (c) montre-moi le coût chiffré des deux avant que je tranche</em></p>
 <p><strong>Q6.3 — PARTIELLEMENT FAIT le 2026-09-30, tâche #1322.</strong> Le JEU a désormais sa sonde, et JESUS couvre enfin les <strong>quatre</strong> axes que tu avais nommés. Ce qu'elle mesure : <strong>9 821 tokens envoyés en moyenne par personnage et par tour</strong> sur 310 tours réels, et <strong>deux cerveaux par tour</strong> — soit <strong>~19 600 tokens par tour de jeu</strong>. C'est le premier poste de lenteur, avant tout rendu 3D. Ce qu'elle NE mesure pas est nommé un par un dans sa sortie : la latence réelle, les images par seconde, le poids envoyé au navigateur, et le ressenti d'un visiteur.</p>
 <p><strong>Q6.4 — À MOI, tâche </strong>#1323<strong>.</strong> Rendre les chemins réglables <strong>sans toucher au comportement</strong> — c'est exactement ta borne (« rien de difficile à annuler »). Je dois prouver ça avant de proposer le chantier.</p></main>

@@ -1,9 +1,9 @@
 # FIL 06 — L'export de l'Agence, son noyau, et la question des « plusieurs versions »
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-09-30
+**Dernier mouvement :** 2026-10-01
 **Place dans le plan :** Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07).
-**Saisines :** COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30
+**Saisines :** COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité »)
 
 ---
 
@@ -66,10 +66,28 @@ question, et une seule était mesurée.
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
 
-**Q6.1 — À TOI.** Les 38 fichiers à chemins écrits en dur : c'est un chantier réel. On le fait
-**maintenant** (avant de vendre quoi que ce soit), **plus tard** (au premier vrai export), ou
-**jamais** (on assume que chaque export demandera une adaptation à la main) ?
-*(a) maintenant · (b) au premier export · (c) jamais, on assume*
+**Q6.1 — LA QUESTION TOMBE, ET JE TE DOIS LA RAISON** *(corrigée le 2026-10-01, tâche #1354)*.
+Elle demandait quand traiter « les 38 fichiers à chemins écrits en dur ». **Ce chiffre n'est pas
+reproductible, et il a été retiré** : il venait d'un document du 29/09 qui ne cite aucun script,
+et le garde-fou de portabilité du projet dit l'inverse — **0 script non portable sur 88**. Chaque
+cas ouvert à la main était une DÉCLARATION en tête de fichier (la forme portable), jamais un
+chemin enfoui.
+
+**Tu avais déjà répondu (a) maintenant**, le 01/10 à 00h40 : *« complète la portabilité des
+fichiers »*. **J'ai donc traité la demande plutôt que la question** : il n'y a pas de chantier de
+38 fichiers à mener. Ce qui reste de vrai couplage est **rare et concentré** — deux ou trois
+outils qui ouvrent un chemin en dur au lieu de le déclarer — et c'est la tâche **#1323**, déjà
+ouverte, qui le porte.
+
+**Et le sens de la correction compte autant que la correction** : c'est un argument **en moins**
+pour la refonte, pas en plus. Sur ce point précis, la structure de l'Agence est déjà proche de la
+forme portable.
+
+**CE QUI RESTE VRAIMENT À DÉCIDER ICI, et ce n'est pas la même question** : rien ne distingue
+aujourd'hui une règle « qui reste chez nous » d'une règle « qui part avec l'Agence » — c'est la
+séparation des deux cas de figure de la stratégie globale
+(`docs/strategies/strategie-globale-du-projet-entier.md`), et la tâche **#1320** la porte.
+*Question : on étiquette TOUS les documents, ou seulement ceux qui partent ?*
 
 **Q6.2 — À TOI.** Plusieurs versions ou une seule ? L'analyse penche vers **une seule**, parce que
 maintenir deux versions double le coût de chaque règle nouvelle — mais c'est ta décision

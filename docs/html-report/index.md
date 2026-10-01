@@ -48,7 +48,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-12-systeme-global-ou-on-en-est.html` | `docs/fils/fil-12-systeme-global-ou-on-en-est.md` | 20448 | 2026-09-30 23:42Z |
 | `docs/fils/html/index.html` | `docs/fils/index.md` | 18805 | 2026-10-01 00:17Z |
 | `docs/grand-projet/html/la-portabilite-vraiment-mesuree.html` | `docs/grand-projet/02-strategie/la-portabilite-vraiment-mesuree.md` | 13655 | 2026-10-01 00:44Z |
-| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 12318 | 2026-10-01 00:45Z |
 | `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 16806 | 2026-10-01 00:45Z |
 | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.html` | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.md` | 13562 | 2026-10-01 01:17Z |
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 12322 | 2026-10-01 01:17Z |
@@ -57,4 +56,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 18137 | 2026-10-01 02:12Z |
 | `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18258 | 2026-10-01 02:12Z |
 | `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 17274 | 2026-10-01 02:12Z |
-| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 15967 | 2026-10-01 02:14Z |
+| `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 13705 | 2026-10-01 02:19Z |
+| `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 14909 | 2026-10-01 02:21Z |
+| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 16943 | 2026-10-01 02:22Z |
