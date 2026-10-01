@@ -225,3 +225,4 @@ main. Première ligne réelle : vérification de fonctionnement lors de la const
 | 2026-10-01T04:32:30.146Z | en_cours | liste | 117 | 1305 | 0 | 94 | /home/user/aihouse/docs/check-tasks-details/1790829150140-en_cours-liste.html |
 | 2026-10-01T04:36:16.348Z | en_cours | liste | 117 | 1305 | 0 | 115 | /home/user/aihouse/docs/check-tasks-details/1790829376345-en_cours-liste.html |
 | 2026-10-01T04:36:22.238Z | en_cours | liste | 117 | 1305 | 0 | 115 | /home/user/aihouse/docs/check-tasks-details/1790829382235-en_cours-liste.html |
+| 2026-10-01T10:37:12.341Z | en_cours | liste | 116 | 1324 | 0 | 114 | /home/user/aihouse/docs/check-tasks-details/1790851032334-en_cours-liste.html |
