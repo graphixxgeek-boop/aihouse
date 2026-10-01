@@ -1,5 +1,8 @@
 # LA STRATÉGIE GLOBALE DU PROJET ENTIER
 
+> **DÉCOULE DE :** `docs/philosophie-et-politique.md`
+> *elle est la première marche SOUS la boussole : la philosophie dit pourquoi, celle-ci dit comment on s'y prend à l'échelle de tout le projet. Les dix stratégies de CHANTIER passent par elle.*
+
 > **De quoi on parle** : la synthèse qui chapeaute tout — l'Agence, le Jeu, et le reste — et à
 > laquelle les dix stratégies de domaine de ce dossier doivent se rattacher. C'est la pièce qui
 > manquait : les dix existantes couvrent chacune un SUJET, aucune ne couvre L'ENSEMBLE.

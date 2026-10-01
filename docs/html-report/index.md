@@ -53,12 +53,12 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 12322 | 2026-10-01 01:17Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 26197 | 2026-10-01 01:50Z |
 | `docs/referentiel/esprit-ce-qui-le-protege.html` | `docs/referentiel/esprit-ce-qui-le-protege.md` | 16582 | 2026-10-01 02:06Z |
-| `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 18137 | 2026-10-01 02:12Z |
-| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18258 | 2026-10-01 02:12Z |
 | `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 17274 | 2026-10-01 02:12Z |
 | `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 13705 | 2026-10-01 02:19Z |
-| `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 14909 | 2026-10-01 02:21Z |
-| `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 14205 | 2026-10-01 03:19Z |
 | `docs/recherches-web/2026-10-01-standard-de-livraison-dun-code.html` | `docs/recherches-web/2026-10-01-standard-de-livraison-dun-code.md` | 12719 | 2026-10-01 03:39Z |
 | `docs/recherches-web/2026-10-01-marche-des-produits-injectables.html` | `docs/recherches-web/2026-10-01-marche-des-produits-injectables.md` | 13705 | 2026-10-01 03:39Z |
-| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 21061 | 2026-10-01 03:40Z |
+| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18569 | 2026-10-01 03:50Z |
+| `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 14583 | 2026-10-01 03:50Z |
+| `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 15285 | 2026-10-01 03:50Z |
+| `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 18449 | 2026-10-01 03:50Z |
+| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 21868 | 2026-10-01 03:53Z |

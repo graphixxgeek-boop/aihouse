@@ -1,5 +1,8 @@
 # Faut-il tout reprendre à zéro ? — la proposition de plan d'action
 
+> **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
+> *un plan d'action ne se juge que contre la stratégie qu'il sert — et la voie proposée (reconstruire le NOYAU) découle directement de la séparation des deux cas de figure.*
+
 > **De quoi on parle** : tu as proposé le 30 septembre au soir de repartir sur un code
 > entièrement propre, en situant le cœur de l'Agence et en agrégeant les modules autour.
 > **Ta demande, mot pour mot** : *« il faut partir sur un nouveau code totalement propre, et

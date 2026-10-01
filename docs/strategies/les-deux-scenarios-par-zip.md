@@ -1,5 +1,8 @@
 # Les deux façons de livrer l'Agence par ZIP — laquelle tient aujourd'hui
 
+> **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
+> *elle instruit la SÉPARATION DES DEUX CAS posée par la stratégie globale — chez nous deux projets, chez un acheteur un seul — appliquée à la question concrète de la livraison.*
+
 > **Ta question, mot pour mot** : *« que penses-tu de ce fonctionnement ? à toi de me dire les
 > limites, en te référant aux docs sur le sujet qu'on a enregistrés »*.
 > **Tes deux scénarios** : ① un ZIP de l'Agence seule, plus un fichier « PROMPT À LIRE EN PREMIER »

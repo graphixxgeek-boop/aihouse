@@ -1,5 +1,8 @@
 # Quand pourra-t-on dire « l'Agence est terminée » ? — trois bornes, à choisir
 
+> **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
+> *« terminé » ne se définit qu'une fois su ce qu'on cherche à obtenir : les trois bornes se mesurent contre les trois objectifs ultimes que la stratégie globale porte.*
+
 > **Ta commande, mot pour mot** : *« quand pourra-t-on statuer que l'agence est terminée ? Quel est
 > le signal ? OBJECTIF : fixer une borne. ATTENDU : analyse, réflexion, proposition de 3 bornes
 > différentes, enregistrement de l'objectif dans la stratégie. »*
