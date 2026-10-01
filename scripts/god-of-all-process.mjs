@@ -3119,8 +3119,18 @@ function main() {
            // LE NUMÉRO SORT DE LA PROSE ET ENTRE DANS SON EMPLACEMENT (2026-10-01, tâche #1355).
            // Il était écrit « (tâche #1292) » à la fin de la phrase : lisible par un humain,
            // invisible à toute relecture mécanique — c'est exactement le chaînon manquant que
-           // JESUS avait nommé. Même numéro, même tâche réelle ; seule sa POSITION change.
-           numeroTache: 1292,
+           // JESUS avait nommé.
+           //
+           // ET LE NUMÉRO ÉTAIT DÉJÀ MORT QUAND JE L'AI DÉPLACÉ (2026-10-01, tâche #1409). #1292 a
+           // CONSTRUIT ce détecteur et s'est close là-dessus, à juste titre : bâtir la sonde et
+           // DÉCIDER ce qu'une vraie preuve serait sont deux travaux, et le second est une décision
+           // de conception qui revient à l'utilisateur. Le constat, lui, se répète à chaque
+           // passage — il pointait donc vers une tâche close, ce qui est pire qu'un renvoi absent :
+           // un lien mort RASSURE, et le détecteur le dit lui-même du cas « référence morte ».
+           // EN LE RENDANT LISIBLE PAR UNE MACHINE, #1355 A AGGRAVÉ LA CHOSE sans le voir : une
+           // prose vague n'engage personne, un champ structuré a l'air vérifié. #1409 est la tâche
+           // réelle, ouverte et marquée À TRANCHER parce que la décision n'est pas celle de l'agent.
+           numeroTache: 1409,
            fausseUneMesure: true }]
       : []),
   ];

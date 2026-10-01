@@ -37,6 +37,7 @@ dès qu'elle est posée à l'utilisateur, avec sa décision réelle une fois obt
 
 | Tâche | Date | Idée | Décision | Fichier |
 |---|---|---|---|---|
+| #1409 | 2026-10-01 | 33 preuves d'étape sur 45 portent sur un fichier VERSIONNÉ et ne peuvent donc JAMAIS échouer : faut-il définir une vraie preuve étape par étape, ou déclarer par écrit que la présence du fichier suffit et pourquoi ? | à trancher | — (les deux issues sont détaillées plus bas dans ce document, section #1409) |
 
 ## Note méthodologique
 
@@ -879,3 +880,37 @@ produire**, avec ses deux transcripts déposés le jour même dans `docs/check-s
 - **L'issue 3** — versionner le journal. Toujours écartée à mon sens (bruit dans chaque diff), mais
   c'est une décision d'hygiène du dépôt, donc la tienne.
 
+
+---
+
+## #1409 — 33 preuves d'étape sur 45 ne peuvent jamais échouer : que doit être une VRAIE preuve ?
+
+*(2026-10-01, trouvé en vérifiant qu'un constat du contrôleur appartenait bien à une tâche vivante.)*
+
+**LE FAIT, ET IL EST MESURÉ** : sur les 45 preuves d'étape de `god-of-all-process`, **33 portent sur
+un fichier VERSIONNÉ**. Un fichier suivi par git est présent dans tout clone neuf — la preuve ne
+peut donc jamais distinguer « l'étape a eu lieu » de « l'étape n'a jamais eu lieu ».
+
+**Pourquoi c'est le défaut le plus discret du dispositif** : une sonde qui ne peut pas échouer
+**ABSOUT**. Une fausse accusation se remarque immédiatement ; un faux acquittement, jamais.
+
+**CE QUI A ÉTÉ RÉPARÉ DE MON CÔTÉ, ET CE QUI NE PEUT PAS L'ÊTRE** : le constat annonçait la tâche
+**#1292**, qui est CLOSE — elle a *construit* le détecteur, ce qui est un travail terminé. Décider
+ce qu'une vraie preuve serait en est un autre, et il n'est pas le mien. Le renvoi pointe désormais
+vers #1409. **La tâche #1355, cette nuit, avait déplacé ce numéro de la prose vers un champ
+structuré sans vérifier que sa cible était encore ouverte** — ce qui a transformé une imprécision en
+fausse garantie, un champ structuré ayant l'air vérifié là où une prose vague n'engage personne.
+
+**LES DEUX ISSUES, ET LES DEUX SE DÉFENDENT :**
+
+- **Issue 1 — définir une vraie preuve, étape par étape.** Un artefact daté, un registre horodaté,
+  une trace que SEUL le passage produit. C'est la seule façon d'avoir un contrôleur qui mord. Coût :
+  45 décisions, une par étape, et certaines n'ont peut-être pas de preuve possible.
+- **Issue 2 — déclarer par écrit que la présence du fichier suffit, et pourquoi.** Parfaitement
+  légitime si le risque réel est faible : le dépôt accepte ailleurs qu'une impossibilité DÉCLARÉE
+  vaille mieux qu'un mécanisme qui ment (Article 27). Coût : le contrôleur reste indicatif sur ces
+  étapes, et il faut l'assumer plutôt que de l'ignorer.
+
+**MON AVIS, ET IL VAUT CE QU'IL VAUT** : un mélange des deux, étape par étape — mais c'est
+exactement le genre d'arbitrage que l'Article 16 réserve à l'utilisateur, et **je ne tranche pas 45
+étapes à sa place**. Le faire en bloc serait pire que ne rien faire.
