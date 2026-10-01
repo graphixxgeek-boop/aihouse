@@ -16,11 +16,11 @@ passage, ajoutée une fois la checklist qualitative traitée, pas seulement la p
 | Fichier | Sous-dossier |
 |---|---|
 | [circle-signal-2026-09-23T21-49-13-899Z.txt](circle-signal-2026-09-23T21-49-13-899Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
 | [scan-2026-09-19-21-09.txt](scan-2026-09-19-21-09.txt) | — |
 | [scan-2026-09-21-22-13.txt](scan-2026-09-21-22-13.txt) | — |
 | [scan-2026-09-22-04-15.txt](scan-2026-09-22-04-15.txt) | — |
 | [scan-2026-09-22-11-36.txt](scan-2026-09-22-11-36.txt) | — |
 | [scan-2026-09-22-19-08.txt](scan-2026-09-22-19-08.txt) | — |
 | [scan-2026-09-23-21-19.txt](scan-2026-09-23-21-19.txt) | — |
+| [scan-2026-10-01-00-58.txt](scan-2026-10-01-00-58.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

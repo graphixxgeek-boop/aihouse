@@ -1,0 +1,128 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : il associe une tâche à un process par mots-clés, et ne voit d'une étape que la trace qu'elle laisse sur le disque — une étape faite sans trace lui reste invisible. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 00h58 (UTC)
+État du code : 3d4033b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : god-of-all-process — inchangé depuis le mercredi 30 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== god-of-all-process — le référent de la discipline d'exécution ===
+
+--- ÉTAT DU DISPOSITIF ---
+
+✅ Process maître : god-of-all-process se surveille bien lui-même, et le dispositif est cohérent. 
+
+✅ Identité de session déposée : claude-opus-5 (le 2026-10-01). 
+
+⚠️ Connexion process ↔ gardien — 8 process avec des écarts sur 15 :
+  · ronde : 8 mécanisme(s) écrit(s) dans docs/circle-process-detail.txt que scripts/circle-process-guardian.mjs ne fait PAS respecter (estimerRonde, comparerEstimationEtReel, validerAlignement, mesurerEcartsDAlignement…) ; 10 câblé(s) chez le gardien et jamais écrit(s) (loadLastRun, recordSnapshotIfChanged, findEtapesDeQuestionsManquantes, loadQuestionsSansReponse…).
+  · simulation : 0 mécanisme(s) écrit(s) dans docs/regles-de-travail.md que scripts/process-simulation-guardian.mjs ne fait PAS respecter ; 1 câblé(s) chez le gardien et jamais écrit(s) (detectJournalShape).
+  · semi-autonome : 1 mécanisme(s) écrit(s) dans docs/mode-semi-autonome-process-detail.md que scripts/god-of-all-process.mjs ne fait PAS respecter (PROCESS_HOTE) ; 4 câblé(s) chez le gardien et jamais écrit(s) (auditWorkingRules, reporterPointsAuProchainPassage, angelSectionLines, formatFraicheurDuMode).
+  · nuit : 0 mécanisme(s) écrit(s) dans docs/mode-auto-process-guardian.md que scripts/god-of-all-process.mjs ne fait PAS respecter ; 3 câblé(s) chez le gardien et jamais écrit(s) (dernierPlanDeDepart, ressemblance, formatFraicheurDuMode).
+  · meta : 0 mécanisme(s) écrit(s) dans docs/mode-auto-process-guardian.md que scripts/god-of-all-process.mjs ne fait PAS respecter ; 3 câblé(s) chez le gardien et jamais écrit(s) (dernierPlanDeDepart, ressemblance, formatFraicheurDuMode).
+  · integration-outil : 1 mécanisme(s) écrit(s) dans docs/referentiel/integration-outil.md que scripts/integration-outil.mjs ne fait PAS respecter (findMecanismesAbsentsDuProcess) ; 5 câblé(s) chez le gardien et jamais écrit(s) (AGENT_CATEGORIES, sansAccents, scriptPourSlug, GARDIEN_DOMAINS…).
+  · integration-ronde : 0 mécanisme(s) écrit(s) dans docs/integration-ronde-process-detail.md que scripts/circle-process-guardian.mjs ne fait PAS respecter ; 10 câblé(s) chez le gardien et jamais écrit(s) (loadLastRun, recordSnapshotIfChanged, findEtapesDeQuestionsManquantes, loadQuestionsSansReponse…).
+  · etat-des-taches : 1 mécanisme(s) écrit(s) dans docs/etat-des-taches-process-detail.md que scripts/check-tasks-details.mjs ne fait PAS respecter (normaliserStatut) ; 26 câblé(s) chez le gardien et jamais écrit(s) (splitTableRow, findClaimedFilesMissing, estUneLigneDeTache, categorizeAllSessions…).
+  · faire-le-point : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · reponse-aux-questions : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · sonde-quota : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · documents-de-reference : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · analyse-charte : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · pre-chantier : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder.
+  · xp-ia : PAS MESURÉ — pas mesuré — aucun fichier-source commun trouvé entre le document et le gardien. Ce silence ne dit rien sur la connexion, il dit qu'on n'a pas pu la regarder. 
+
+Process suivis (15) :
+· Faire le point — revenir à niveau avec des informations exactes — 5/5 étape(s) vérifiable(s) tracée(s) — 4 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Répondre à un fichier de questions de l'utilisateur — 2/2 étape(s) vérifiable(s) tracée(s) — 8 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Sonder le quota Gemini (Smart Breaker) — 2/2 étape(s) vérifiable(s) tracée(s) — 4 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Ronde périodique (CIRCLE-TASKS) — 10/11 étape(s) vérifiable(s) tracée(s) — manque : poser les 10 questions d'alignement — 5 de fond avec ma réponse PRÉVUE écrite avant la sienne, 5 de détail sur les frontières obscures ; un écart sur le fond est un problème GRAVE, jamais une correction à noter — 1 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Modifier CLAUDE.md ou un document de référence — 4/4 étape(s) vérifiable(s) tracée(s) — 6 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Analyse et plan d'action de la charte (MOÏSE-TABLES-DE-LOI) — 5/5 étape(s) vérifiable(s) tracée(s) — 7 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Simulation intégrale (Article 18) — 9/15 étape(s) vérifiable(s) tracée(s) — manque : lancer contre un serveur à jour ; livrer le transcript en fichier joint + le diagnostic du profil de l'utilisateur ; contrôler la mémoire narrative persistée après la partie (memory-audit) ; lire les rapports individuels des agents AVANT d'écrire l'analyse, jamais après ; poser le sondage en 3 questions juste après la livraison, avant toute analyse détaillée ; poser les questions de calibrage avant toute correction
+· mode semi-autonome — travailler seul pendant que l'utilisateur est là — 2/2 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· PRÉ-CHANTIER — de l'idée validée à la construction effective — 4/4 étape(s) vérifiable(s) tracée(s) — 6 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· mode-auto-process-guardian — travail autonome (mode nocturne) — 10/10 étape(s) vérifiable(s) tracée(s) — 4 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Tenue du dispositif de process lui-même (process maître) — 4/4 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Intégration d'un nouvel outil dans l'Agence — 3/3 étape(s) vérifiable(s) tracée(s) — 3 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· Intégration d'un item à la Ronde périodique — 4/4 étape(s) vérifiable(s) tracée(s) — 1 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· XP-IA-bonnes-pratiques-et-lecons — 4/4 étape(s) vérifiable(s) tracée(s) — 4 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre
+· État des lieux des tâches (faites / en cours / à faire) — 1/1 étape(s) vérifiable(s) tracée(s) — 7 étape(s) sans trace vérifiable, jamais comptée(s) ni dans un sens ni dans l'autre 
+
+— Discipline d'exécution (angel-of-ia-process) —
+0 manquement(s), 25 règle(s) non vérifiable(s) sans réponse.
+  ? [agent] Faire évaluer le travail fait ENTRE deux Rondes — une nuit autonome, une vague de correctifs, une simulation — et jamais seulement ce qu'une Ronde a couvert. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Documenter chaque tâche substantielle dans docs/suivi/ DANS LE MÊME commit que le travail décrit. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Pousser au fil de l'eau : ce qui n'est pas poussé n'existe pas si la session s'interrompt. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser au moins trois questions de vérification AVANT ou PENDANT l'exécution, jamais après coup — et plus si le sujet contient plus de décisions réelles. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Traiter point par point une demande qui en contient plusieurs, sans jamais noyer les points dans une synthèse. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Poser les questions dans une vraie fenêtre à choix, avec leur contexte rappelé, jamais en texte libre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [les deux] Après la livraison d'un transcript : l'utilisateur le lit pendant que l'agent travaille, en parallèle et non l'un après l'autre. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Le signal « voici mes commentaires » ouvre un second passage sur le même transcript, que l'agent doit attendre et reconnaître. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Pour chaque demande, passer par un OUTIL plutôt que de faire à la main — et tout rapport livré est LE FICHIER produit par un outil, nommé avec l'horodatage de son passage, suivi de l'analyse et du plan d'action. Faire à la main est la quatrième issue, et elle exige une raison écrite dans docs/suivi/. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ne jamais taper une date, une heure ou une durée de mémoire : les LIRE (agent-du-temps) et déclarer leur SOURCE. Toute fraîcheur se calcule sur une heure lue, et le temps de l'utilisateur — présent ou endormi — compte autant que celui de la machine. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Quand une obligation de CLAUDE.md apparaît, disparaît ou change, répercuter LE JOUR MÊME dans les documents du référentiel qui la portent — ou écrire pourquoi il n'y avait rien à répercuter. Une règle changée d'un seul côté s'applique en silence pendant des semaines. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Dès qu'une saisine porte plusieurs demandes distinctes, la passer au compteur (`node scripts/rapport-gros-prompt.mjs seuil <message.txt>`) et PROPOSER le process gros prompt quand il se déclenche — jamais l'imposer, jamais le sauter parce que le message avait l'air simple. Et le rapport produit archive la SAISINE INTÉGRALE, sans quoi il n'archive que mon découpage de sa demande (tâche #723). — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] En mode autonome, ARMER le réveil (send_later, 15 min) AVANT de terminer le tour, systématiquement. Un tour qui se termine sans réveil armé arrête la nuit, quoi qu'annonce le compte rendu. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Avant d'ouvrir un chantier, avoir lancé `node scripts/data-archangel.mjs notes <sujet>` et lu ce que le dépôt sait déjà — puis DIRE explicitement l'écart entre ce qu'on croyait savoir et ce que les notes disent. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ouvrir chaque compte rendu final par les quatre rappels : le contexte, la demande de l'utilisateur résumée dans ses termes, l'étiquette de la tâche (numéro + intitulé), et un vocabulaire compréhensible par un non-développeur. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Répondre à un fichier de questions en suivant ses sept étapes : reprendre SA question avec son contexte (jamais le numéro seul) · répondre en distinguant le MESURÉ de l'AVIS · nommer explicitement sa demande INAVOUÉE · mettre l'action en face avec son état RETENU/ÉCARTÉ/À TRANCHER · déclarer « N questions, M réponses » et ce que couvre chaque groupe · écrire pour un non-développeur · livrer en pièce jointe. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Concevoir tout chantier dans l'ordre : ① calibrage fin sur TOUS les points → ② la CIBLE → ③ les grandes étapes → ④ les sous-étapes → ⑤ les blocs de tâches → ⑥ les tâches individuelles. Chaque niveau interdit au suivant de commencer : aucune tâche n'est créée avant que le cadre soit fixé, et une question de niveau ⑤ posée avant un accord de niveau ② ne produit pas une réponse mais une supposition déguisée en décision. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Au moment de CRÉER un document de stratégie ou de plan, y écrire tout de suite la ligne « **DÉCOULE DE :** <chemin du parent> » — jamais dans une passe de rattrapage plus tard. THE-KING mesure la couverture, mais un orphelin n'est pas compté comme une faute : rien ne rappellera l'oubli. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Au départ de chaque période autonome, RELIRE le prompt de tous les réveils déjà armés et le corriger s'il annonce comme « à faire » quelque chose de déjà fait. Un réveil se répète à chaque heure : une consigne périmée s'y répète aussi. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [utilisateur] Trancher les questions laissées en attente : une décision jamais prise bloque le travail qui en dépend. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Aux QUATRE moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation · un outil rend un résultat VERT qui ne correspond pas à ce que je sais du terrain), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] À la clôture de chaque tâche, répondre à FIABILISER : est-ce que ça marche vraiment — le filet passe-t-il, le cas limite est-il couvert, ai-je VU le test échouer quand il le devait ? Un « oui » qui ne s'appuie sur aucun passage réel n'est pas une réponse. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] À la clôture de chaque tâche, répondre à OPTIMISER : peut-on faire mieux, et est-ce COMPLET — reste-t-il une moitié du besoin non traitée, un chemin plus court, une mesure qu'on aurait pu rendre au lieu d'une impression ? — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] À la clôture de chaque tâche, répondre à HARMONISER : est-ce raccordé au reste — même format que ses voisins, registre à jour, documenté au même endroit que les autres, et rien qui dise deux fois la même chose de deux façons ? — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer
+  ? [agent] Ne jamais s'arrêter sur un message court : seule une demande explicite interrompt le travail en cours. Tenir le compte de la série en cours, et sortir le rappel léger dès le 2e message court, l'alerte plus forte dès le 5e — les seuils sont ceux que l'utilisateur a demandés, pas les miens. — à confirmer — angel ne devine jamais ce qu'il ne peut pas observer 
+
+✅ Modifications indirectes : chaque changement du code d'un process a bien mis à jour son document dans le même commit. 
+
+✅ Gabarit de process : chaque document déclaré répond aux cinq questions du modèle (ce qu'il empêche, son déclencheur, ses étapes et leurs preuves, son contrôleur nommé, ses limites). Présence vérifiée, jamais la qualité de la réponse. 
+
+✅ Process sans gardien : aucun. 
+
+✅ Process dont le document déclaré n'existe pas : aucun. 
+
+✅ Tensions déclarées sur un process disparu : aucun. 
+
+✅ Sondes cassées (défaut de CET outil, jamais du travail surveillé) : aucun. 
+
+Tensions connues entre process (3), déclarées à la main et résolues :
+· nuit ↔ simulation — Le mode nocturne autorise à consommer de l'API sans validation ; le protocole de simulation exige une consultation préalable de Smart Conso API.
+  → Les deux tiennent ensemble : l'autorisation nocturne porte sur le fait de consommer, jamais sur le fait de sauter la consultation. Tranché par l'utilisateur le 2026-09-22 (« tu es quand meme autorisé à consommer des api, tout en respectant les conseils de smart conso api »).
+· nuit ↔ ronde — La Ronde exige une vraie fenêtre à cocher posée à l'utilisateur ; le mode nocturne se déroule en son absence.
+  → Une Ronde lancée en nuit autonome est explicitement dispensée de cette fenêtre — exemption déjà codée dans le gardien de la Ronde, jamais une entorse improvisée.
+· nuit ↔ ronde — La Ronde doit poser à l'utilisateur une fenêtre de réponses sur les points problématiques de son évaluation ; le mode nocturne se déroule en son absence.
+  → L'exemption nocturne est CONDITIONNELLE : les points problématiques sont reportés au prochain passage en sa présence (reporterPointsAuProchainPassage), jamais simplement sautés. Le gardien de la Ronde refuse une Ronde nocturne qui aurait des points à poser et n'aurait rien reporté. 
+
+=== PREUVES D'ÉTAPE QUI NE PEUVENT JAMAIS ÉCHOUER (tâche #1292) ===
+
+⚠️  33 preuve(s) d'étape sur 44 ne peuvent JAMAIS échouer : leur fichier est versionné, donc présent dans tout clone neuf avant qu'aucune étape n'ait eu lieu.
+   Une preuve de PRÉSENCE n'est pas une preuve de PERFORMANCE — c'est par là que le mode de travail est resté vert sept jours en déclarant l'utilisateur absent.
+   · faire-le-point : docs/agent-du-temps/estimations.md, docs/suivi/index.md
+   · reponse-aux-questions : docs/agent-du-temps/estimations.md, docs/suivi/index.md
+   · sonde-quota : docs/smart-conso-api/index.md, docs/agent-du-temps/estimations.md
+   · ronde : docs/circle-tasks/estimations.md, docs/angel-of-ia-process/reponses-evaluation.md
+   · documents-de-reference : CLAUDE.md, docs/referentiel/charte-operations.md, docs/referentiel/principes.md
+   · analyse-charte : docs/referentiel/charte-operations.md, docs/referentiel/charte-cartographie.md, docs/referentiel/claude-md-regles.md
+   · simulation : docs/simulations/index.md
+   · semi-autonome : .mode-de-travail.json
+   · meta : scripts/god-of-all-process.mjs
+   · integration-outil : scripts/integration-outil.mjs, scripts/check-house.mjs
+   · integration-ronde : scripts/circle-process-guardian.mjs, scripts/check-house.mjs
+   · xp-ia : docs/tool-learning/xp-journal.json, docs/referentiel/lecons.md, scripts/tool-learning.mjs
+   · etat-des-taches : scripts/check-tasks-details.mjs
+   11 preuve(s) tiennent vraiment : leur fichier n'est pas versionné, donc il n'existe que si quelque chose l'a écrit.
+   Je SIGNALE, je ne corrige jamais (Article 26) : ce qu'une vraie preuve serait se décide étape par étape.
+
+=== ACTIVITÉS À ENJEU SANS PROCESS ÉCRIT (tâche #919) ===
+
+✅ Chaque activité à enjeu déclarée a son process écrit.
+
+
+=== Plan d'action ===
+  → RETENU · scripts/god-of-all-process.mjs — 33 preuve(s) d'étape sur 44 portent sur un fichier VERSIONNÉ : présentes dans tout clone neuf, elles ne peuvent jamais distinguer « fait » de « pas fait » — tâche [RECOMMANDEE] : décider, étape par étape, ce qu'une vraie preuve serait — ou déclarer par écrit que la présence du fichier suffit et pourquoi (tâche #1292)

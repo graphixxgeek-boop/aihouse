@@ -414,6 +414,41 @@ export function etatDeCorroboration(constat, toolSlug) {
   return { exigee: true, tenue: true };
 }
 
+// LE NUMÉRO DE LA TÂCHE DANS LE PLAN D'ACTION (2026-10-01, Ronde GOAT, tâche #1355)
+// ————————————————————————————————————————————————————————————————————————
+// LE TROU QUE ÇA FERME EST CELUI QUE JESUS-LE-SAUVEUR A NOMMÉ SANS POUVOIR LE BOUCHER :
+// « 341 constats RETENUS dorment dans les rapports du dépôt, et le taux d'actionnabilité N'EST PAS
+// CALCULABLE — pas par manque de données, par manque de LIEN. » Un plan d'action écrivait sa tâche
+// en PROSE (« tâche [RECOMMANDEE] : relancer avec les trois durées ») et ne citait jamais son
+// numéro. `checkActionChain()` vérifie bien la chaîne, mais sur UN plan, AU MOMENT où il est
+// produit, parce que l'agent lui passe le numéro qu'il vient d'écrire. Une fois le rapport sur le
+// disque, plus rien ne relie ses constats aux tâches réelles.
+//
+// CE QUE ÇA CHANGE, ET CE QUE ÇA NE CHANGE PAS. Ça ajoute un EMPLACEMENT, jamais une obligation
+// nouvelle : `numeroTache` est optionnel, et un plan qui ne le renseigne pas s'imprime exactement
+// comme avant — aucun des 49 outils tenus par le gabarit ne voit sa sortie bouger aujourd'hui.
+// Ce que ça rend possible, c'est de RELIRE un rapport ancien et de savoir, mécaniquement, si son
+// constat est devenu du travail.
+//
+// POURQUOI UN EMPLACEMENT PLUTÔT QU'UN « #nnnn » N'IMPORTE OÙ DANS LA LIGNE. Les 5 constats qui
+// portaient déjà un numéro le portaient PAR HASARD, dans le libellé du constat — « #902 est encore
+// ouverte » parle d'une tâche CITÉE, jamais de la tâche que ce constat fait naître. Compter les
+// deux ensemble serait exactement le défaut que ce projet traque : un signal ADJACENT lu comme le
+// signal visé (leçon L47). D'où une position déclarée, juste après « tâche [NIVEAU] », qu'aucune
+// mention de passage ne peut imiter.
+export const MOTIF_TACHE_DU_PLAN = /—\s*tâche(?:\s*\[[^\]]*\])?\s*#(\d{2,5})\s*:/;
+
+// numeroDeLaTache() — le numéro se NORMALISE, il ne se recopie pas. Un outil peut le passer en
+// nombre (1355), en chaîne ("1355") ou préfixé ("#1355") ; les trois donnent la même ligne. Tout
+// le reste — un texte libre, un zéro, un objet — rend `null` plutôt qu'une référence bancale : une
+// référence morte ressemble à un lien, ce qui est pire qu'une absence (Article 28).
+export function numeroDeLaTache(c) {
+  const brut = c?.numeroTache;
+  if (brut === undefined || brut === null) return null;
+  const m = String(brut).trim().match(/^#?(\d{2,5})$/);
+  return m ? m[1] : null;
+}
+
 export function buildPlanDaction(constats = [], { toolSlug } = {}) {
   const inconnus = constats.filter((c) => !ETATS_CONSTAT.includes(c.etat));
   if (inconnus.length) throw new Error(`buildPlanDaction(): état inconnu "${inconnus[0].etat}" — attendu ${ETATS_CONSTAT.join(", ")}. Un constat sans état déclaré est un constat dont personne ne répond.`);
@@ -446,7 +481,12 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
         continue;
       }
       const sceau = corro.exigee ? ` [confirmé par ${c.corrobore.outil}]` : "";
-      lignes.push(`  → RETENU${sceau} · ${c.constat}${c.tache ? ` — tâche${etiquette} : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
+      // LE NUMÉRO DE LA TÂCHE, dans un emplacement STABLE (2026-10-01, Ronde GOAT). Voir
+      // MOTIF_TACHE_DU_PLAN ci-dessous pour la raison complète : sans emplacement déclaré, la
+      // chaîne de l'Article 28 n'est pas relisible une fois le rapport sur le disque. `numeroTache`
+      // est optionnel et absent par défaut : aucun appelant existant ne voit sa sortie bouger.
+      const numero = numeroDeLaTache(c);
+      lignes.push(`  → RETENU${sceau} · ${c.constat}${c.tache ? ` — tâche${etiquette}${numero ? ` #${numero}` : ""} : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
     }
     else if (c.etat === "ecarte") lignes.push(`  ✗ ÉCARTÉ · ${c.constat} — ${c.pourquoi ?? "⚠️ écarté sans raison écrite, ce qui n'est pas une décision"}`);
     else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
@@ -527,12 +567,15 @@ export function tacheParDefaut(e, { champs = CHAMPS_DE_LA_TACHE } = {}) {
   return premierChampRenseigne(e, champs);
 }
 
-export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut } = {}) {
+export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, numeroTache = null, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut } = {}) {
   const resoudre = (v, e) => (typeof v === "function" ? v(e) : v);
   const constats = (ecarts ?? []).map((e) => ({
     constat: libelle(e),
     etat: "retenu",
     tache: typeof tache === "function" ? tache(e) : (tache ?? tacheParDefaut(e) ?? "à qualifier par l'agent à la lecture du rapport"),
+    // `numeroTache` se résout par écart comme `critique` et `corrobore` : dans une même liste, un
+    // écart peut déjà avoir sa tâche et le suivant non. Null partout = comportement d'avant.
+    numeroTache: resoudre(numeroTache, e) ?? e?.numeroTache ?? null,
     toucheLeJeu,
     fausseUneMesure,
     critique: Boolean(resoudre(critique, e)),

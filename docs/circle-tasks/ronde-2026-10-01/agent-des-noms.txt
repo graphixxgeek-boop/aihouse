@@ -1,0 +1,75 @@
+⚠️  Attention, mes résultats peuvent être inexacts : la NATURE d'une occurrence est déduite de son emplacement et de la forme de sa ligne — un motif, jamais un parseur : une prose vivante rangée dans un dossier d'archives sera classée historique, et c'est le sens sûr de l'erreur, celui qui laisse une mention périmée plutôt que de réécrire une archive. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 00h56 (UTC)
+État du code : 3d4033b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : agent-des-noms — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== L'AGENT DES NOMS — l'utilisateur baptise, le mécanisme se souvient ===
+
+Noms provisoires oubliés (plus de 7 jours) : 3
+   🟠 scripts/agent-des-noms.mjs — provisoire depuis 2026-09-24 (7 j)
+   🟠 scripts/le-coordinateur.mjs — provisoire depuis 2026-09-24 (7 j)
+   🟠 docs/carnet-de-bord.md — provisoire depuis 2026-09-24 (7 j)
+⚠️ 2 marque(s) sans date lisible — l'ancienneté n'est pas mesurable, donc AUCUNE alerte n'est rendue plutôt qu'une alerte inventée :
+   · scripts/check-house.mjs
+   · docs/regles-de-travail.md
+
+Noms en service jamais validés par l'utilisateur : 79
+   · abraham-les-references
+   · agent-du-temps
+   · always-new-code
+   · api-providers
+   · axa-check
+   · cassandra-rh
+   · check-argus
+   · check-gemini-quota
+   · check-harmonia
+   · check-house
+   · check-level-target
+   · check-profil-utilisateur
+   · check-profile
+   · check-spirit
+   · check-suivi-fidelity
+   · check-tasks-details
+   · circle-process-guardian
+   · circle-tasks
+   · clean-dirty-old
+   · clone-hunter
+   · corpus-mesure
+   · criticite
+   · doc-report
+   · ecotoken
+   · el-professor
+   · execution-profile
+   · ezechiel-les-tests
+   · filet-en-parts
+   · fils-de-discussion
+   · find-booster
+   · find-brain
+   · gemini-key-health
+   · god-of-all-process
+   · html-report
+   · hyper-scan-checkpoint
+   · ines-official
+   · install-ci
+   · integration-outil
+   · jesus-le-sauveur
+   · judge-persona-shared
+   · … et 39 autre(s)
+
+🕊️  REGISTRE DES BAPTÊMES — 7 baptême(s) DOCUMENTÉ(S) dans le dépôt, 1 pas encore au registre.
+      · jesus-le-sauveur — date non lue — scripts/jesus-le-sauveur.mjs:4
+   → `node scripts/agent-des-noms.mjs --semer` les inscrit, en citant la ligne qui le prouve.
+   CE QUI N'EST JAMAIS SEMÉ : un nom sans trace écrite. Ceux-là restent la dette, et c'est à lui de les trancher.
+
+HORS PORTÉE : aucun mécanisme ne peut empêcher un nom d'être choisi — il peut seulement rendre impossible de l'OUBLIER. Et la dette ci-dessus se purge APRÈS la classification, jamais avant : renommer un outil dont on ignore encore le groupe produit un nom qui ne voudra plus rien dire.
+
+=== Plan d'action ===
+  → RETENU · 79 nom(s) en service sur 85 jamais validés au registre des baptêmes — ex. abraham-les-references, agent-du-temps, always-new-code (+76) — tâche [RECOMMANDEE] : préparer la liste pour une session de validation — l'agent ne valide jamais un nom lui-même
+HORS PORTÉE de ce plan : aucune de ces tâches ne propose un NOM. Les noms se choisissent par l'utilisateur — ce plan prépare sa décision, il ne la prend jamais.
+
+AUTRES COMMANDES : renommage <ancien> <nouveau> (le plan, avant) · verifier <ancien> (le reste, après) · homonymes (un nom, deux définitions) · familles (les noms en attente, groupés pour une décision par série)

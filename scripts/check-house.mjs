@@ -23121,8 +23121,15 @@ async function testRetenuOublieEtSixiemeFauxChiffre() {
   const r = J.tauxDActionnabilite({ lireDir: (d) => faux[d] ?? [], lireFic: (f) => textes[f] ?? '', suivi: '| 1 | x |' });
   assert.equal(r.mesurable, false, 'MUST NOT FABRICATE: le taux est déclaré NON CALCULABLE plutôt que rendu à 0 % — un pourcentage que le format ne permet pas de produire est une invention, même quand il accuse');
   assert.equal(r.retenus, 12, 'mais le VOLUME est rendu, parce que lui est un fait');
-  assert.ok(/ne cite jamais son NUMÉRO/.test(r.pourquoi), 'et la raison nomme la cause exacte : le plan écrit sa tâche en prose');
-  assert.ok(/CE QUI LE RENDRAIT CALCULABLE/.test(r.pourquoi), 'ET CE QUI MANQUERAIT POUR LE RENDRE CALCULABLE — une impossibilité déclarée sans son remède est une impasse, avec son remède c\'est une tâche (Article 27)');
+  assert.ok(/par manque de LIEN/.test(r.pourquoi), 'et la raison nomme la cause exacte : ce n\'est pas la donnée qui manque, c\'est le lien');
+  // LE REMÈDE A ÉTÉ CONSTRUIT LE 2026-10-01 (tâche #1355), donc la phrase a changé — et c\'est la
+  // SEULE chose qui a changé ici. L\'impossibilité tient tant qu\'aucun rapport sur le disque n\'a
+  // renseigné l\'emplacement : on ne réécrit pas les rapports anciens, donc le verdict reste « pas
+  // calculable » et le refus de fabriquer un 0 % reste entier. Ce que la phrase ne dit plus, c\'est
+  // que le remède manque — le dire encore serait un constat RETENU devenu faux sans que rien ne
+  // le signale, exactement le défaut que ce test archive.
+  assert.ok(/CE QUI LE RENDRA CALCULABLE/.test(r.pourquoi), 'ET CE QUI LE RENDRA CALCULABLE — une impossibilité déclarée sans son remède est une impasse, avec son remède c\'est une tâche (Article 27)');
+  assert.ok(/L'EMPLACEMENT existe/.test(r.pourquoi), 'et le remède est désormais nommé comme CONSTRUIT, jamais comme manquant : un outil qui réclame encore ce qu\'on lui a donné apprend à ne plus être lu (L4)');
 
   // SOUS LE CORPUS MINIMUM, il refuse aussi — mais pour une autre raison, et il la distingue.
   const maigre = J.tauxDActionnabilite({ lireDir: (d) => (d === 'docs' ? [{ name: 'r.md', isDirectory: () => false }] : []), lireFic: () => '  → RETENU · un seul — tâche [RECOMMANDEE] : x', suivi: '| 1 |' });
@@ -23132,3 +23139,68 @@ async function testRetenuOublieEtSixiemeFauxChiffre() {
   console.log("Passed: le RETENU oublié, et le sixième faux chiffre (2026-09-28, tâche #1103). Il a demandé « qu'est-ce qu'on a oublié ? » et LA RÉPONSE ÉTAIT ÉCRITE DEPUIS LE MATIN : le plan d'action de la fiche de recherche portait QUATRE constats RETENUS, trois ont été codés le jour même, le quatrième — « le taux d'actionnabilité des alertes » — jamais, et rien ne le disait. C'est exactement ce que l'Article 28 existe pour empêcher, commis sur le rapport qui a servi à construire l'outil qui traque ce genre de chose, et d'autant mieux caché que les trois autres étaient faits : le rapport avait l'air traité. PUIS LE PREMIER PASSAGE A RENDU « 0 % SUR 323 CONSTATS », et ce chiffre N'A PAS ÉTÉ LIVRÉ — sixième faux chiffre écarté dans la construction de cet outil, et le plus spectaculaire. Un « 0 % » ACCUSE, donc il aurait été regardé ; mais il aurait envoyé chercher un problème inexistant pendant que le vrai restait invisible. LA CAUSE EST UNE VRAIE TROUVAILLE SUR L'ARTICLE 28 : un plan d'action écrit sa tâche EN PROSE — « tâche [RECOMMANDEE] : … » — et ne cite JAMAIS son numéro ; je cherchais donc dans le texte ce que le format ne contient pas, et les 5 qui portaient un « #nnnn » le portaient par hasard. CE QUE ÇA RÉVÈLE VAUT MIEUX QUE LE TAUX : la chaîne de l'Article 28 n'est pas vérifiable mécaniquement À L'ÉCHELLE. checkActionChain() la vérifie sur UN plan, au moment où il est produit, parce que l'agent lui passe le numéro qu'il vient d'écrire ; une fois le rapport sur le disque, plus rien ne relie ses constats retenus aux tâches réelles — 323 constats sans traçabilité arrière. LA SONDE DÉCLARE DONC L'IMPOSSIBILITÉ, rend le VOLUME qui est un fait, et NOMME CE QUI MANQUERAIT pour la lever : que le plan inscrive le numéro de la tâche qu'il a fait naître. Une impossibilité déclarée sans son remède est une impasse ; avec son remède, c'est une tâche.");
 }
 await testRetenuOublieEtSixiemeFauxChiffre();
+
+// ────────────────────────────────────────────────────────────────────────────
+// LE CHAÎNON MANQUANT DE L'ARTICLE 28, CONSTRUIT (2026-10-01, Ronde GOAT, tâche #1355)
+// ────────────────────────────────────────────────────────────────────────────
+// Le test juste au-dessus archivait une IMPOSSIBILITÉ déclarée avec son remède : « que le plan
+// inscrive le numéro de la tâche qu'il a fait naître ». Celui-ci vérifie que le remède existe
+// pour de vrai, et qu'il ne ment dans aucun des trois sens où il pourrait mentir.
+async function testLeNumeroDeLaTacheDansLePlan() {
+  const assert = (await import('node:assert/strict')).default;
+  const RT = await import('../scripts/report-template.mjs');
+  const J = await import('../scripts/jesus-le-sauveur.mjs');
+  const F = await import('../scripts/fils-de-discussion.mjs');
+
+  // ── 1. L'EMPLACEMENT EXISTE, et il est OPTIONNEL : aucun des 49 outils tenus par le gabarit ne
+  // voit sa sortie bouger tant qu'il ne le renseigne pas. C'est la condition pour que ce soit une
+  // réparation et non une refonte imposée.
+  const sans = RT.buildPlanDaction([{ constat: 'X', etat: 'retenu', tache: 't' }], { toolSlug: 'argus' });
+  assert.ok(sans.lignes.some((l) => /→ RETENU · X — tâche \[[A-ZÉ]+\] : t$/.test(l)), 'a plan that declares no number renders exactly as it did yesterday');
+  const avec = RT.buildPlanDaction([{ constat: 'X', etat: 'retenu', tache: 't', numeroTache: 1355 }], { toolSlug: 'argus' });
+  assert.ok(avec.lignes.some((l) => /— tâche \[[A-ZÉ]+\] #1355 : t$/.test(l)), 'and a declared number lands in a fixed slot, right after the level');
+
+  // ── 2. LE NUMÉRO SE NORMALISE, IL NE SE RECOPIE PAS (Article 24) : trois écritures, une seule
+  // ligne. Et tout ce qui n'est pas un numéro rend null plutôt qu'une référence bancale — une
+  // référence morte ressemble à un lien, ce qui est pire qu'une absence.
+  for (const forme of [1355, '1355', '#1355', ' #1355 ']) assert.equal(RT.numeroDeLaTache({ numeroTache: forme }), '1355', `"${forme}" must normalise to the same number`);
+  for (const faux of [null, undefined, '', 'bientôt', 0, '#abc', {}]) assert.equal(RT.numeroDeLaTache({ numeroTache: faux }), null, `"${String(faux)}" is not a task number and must never be printed as one`);
+
+  // ── 3. LE SIGNAL VISÉ N'EST PAS LE SIGNAL ADJACENT (leçon L47, la leçon qui a coûté le faux
+  // « 0 % sur 323 »). Un « #902 » qui traîne dans le LIBELLÉ parle d'une tâche CITÉE — jamais de
+  // la tâche que ce constat fait naître. Les compter ensemble refabriquerait exactement le chiffre
+  // qui a été écarté le 2026-09-28.
+  const mixte = RT.buildPlanDaction([{ constat: 'B (voir #902)', etat: 'retenu', tache: 'faire Y' }], { toolSlug: 'argus' });
+  assert.equal(mixte.lignes.find((l) => l.includes('RETENU')).match(J.MOTIF_TACHE_DECLAREE), null, 'a number mentioned anywhere else in the line must NOT be read as the task this finding creates');
+
+  // ── 4. LA CHAÎNE COMPLÈTE, DE BOUT EN BOUT : un contrôle qui échoue → le plan écrit le numéro →
+  // la sonde le relit sur le disque et vérifie que la tâche EXISTE. C'est la traçabilité arrière
+  // qui manquait : checkActionChain() ne jugeait qu'au moment de la production.
+  const echec = { resultats: [{ cle: 'engagements-en-taches', question: 'Q', detail: 'd', ok: false, sansQuoi: 'brancher' }] };
+  const plan = F.planDactionDesFils(echec);
+  assert.match(plan.lignes[0], /#1332/, 'a real tool must declare a real number: a mechanism with no caller is an intention, never a tool (L2)');
+  const lignes = [plan.lignes[0], '  → RETENU · autre (voir #902) — tâche [RECOMMANDEE] : faire X', '  → RETENU · morte — tâche [RECOMMANDEE] #9999 : faire Y'].join('\n');
+  const r = J.tauxDActionnabilite({ racineRapports: 'docs', minimum: 1, lireDir: (d) => (d === 'docs' ? [{ name: 'f.txt', isDirectory: () => false }] : []), lireFic: () => lignes, suivi: '| 1332 | x |' });
+  assert.ok(r.mesurable, 'once numbers are declared, the rate becomes computable — that was the whole point');
+  assert.deepEqual([r.retenus, r.declares, r.avecNumero, r.tacheReelle], [3, 2, 1, 1], 'three findings, two declaring a number, one merely citing one elsewhere, and only one of the two declared numbers points at a task that really exists');
+  assert.equal(r.couverture, 67, 'coverage answers "is the LINK written"');
+  assert.equal(r.taux, 50, 'and the rate answers "does the announced task EXIST" — two numbers, never merged: 100 % on a 2 % coverage would say "the few who declare are good", never "the chain holds"');
+
+  // ── 5. ZÉRO DÉCLARÉ RESTE « PAS MESURÉ », JAMAIS « 0 % » (leçons L5/L11). C'est le garde-fou qui
+  // empêche ce dispositif de refabriquer le faux chiffre qu'il a été construit pour remplacer.
+  const vierge = J.tauxDActionnabilite({ racineRapports: 'docs', minimum: 1, lireDir: (d) => (d === 'docs' ? [{ name: 'f.txt', isDirectory: () => false }] : []), lireFic: () => '  → RETENU · rien — tâche [RECOMMANDEE] : faire X', suivi: '| 1332 | x |' });
+  assert.equal(vierge.mesurable, false, 'with no declared number there is nothing to divide, and "0 % actionable" would accuse of a failure that was never measured');
+  assert.match(vierge.pourquoi, /EMPLACEMENT existe/, 'and the refusal must now name the remedy as BUILT, not as missing');
+
+  // ── 6. UNE MESURE NE LIT PAS SES PROPRES RAPPORTS (XP #34, payée le 2026-09-30). Le registre de
+  // JESUS porte des lignes « RETENU · » comme tous les autres ; sans cette exclusion il ferait
+  // monter sa propre couverture sans que rien n'ait bougé ailleurs.
+  assert.ok(J.DOSSIERS_HORS_MESURE_ACTIONNABILITE['jesus-le-sauveur'], "the probe's own registry must be excluded, with the reason written beside it");
+
+  // ── 7. ET LE DERNIER OUTIL SANS PLAN D'ACTION EN A UN (le constat de pure-gold-unity ce soir).
+  const { readFileSync: lireF } = await import('node:fs');
+  assert.match(lireF('scripts/fils-de-discussion.mjs', 'utf8'), /buildPlanDaction\(/, 'fils-de-discussion was the last of the 49 tools held by the shared frame never to conclude — Article 28 forbids exactly that');
+
+  console.log("Passed: le chaînon manquant de l'Article 28, construit (2026-10-01, Ronde GOAT, tâche #1355). JESUS avait nommé l'impossibilité ET son remède — « que le plan d'action inscrive le numéro de la tâche qu'il a fait naître » — et le remède n'avait jamais été construit, ce qui est précisément le constat RETENU devenu intention que l'Article 28 traque. Le gabarit partagé porte désormais `numeroTache`, imprimé à une position FIXE juste après le niveau : optionnel, donc aucun des 49 outils ne voit sa sortie bouger, mais relisible sur le disque, donc la traçabilité ARRIÈRE existe enfin — checkActionChain() ne jugeait qu'au moment de la production. Les trois pièges sont tenus : un « #902 » qui traîne dans le libellé n'est JAMAIS compté (L47, la leçon qui avait coûté le faux « 0 % sur 323 ») ; zéro numéro déclaré reste « PAS MESURÉ » et jamais « 0 % », sans quoi le dispositif refabriquerait le chiffre accusateur qu'il remplace (L5/L11) ; et la sonde n'inclut pas son propre registre, une mesure qui lit ses propres rapports fabriquant sa propre amélioration (XP #34 — 341 constats sont retombés à 335 le jour de l'exclusion, preuve que la contamination était réelle). Deux chiffres sortent, jamais fondus : la COUVERTURE dit si le lien est écrit, le TAUX dit si la tâche annoncée existe vraiment — 100 % sur une couverture de 2 % voudrait dire « les rares qui déclarent sont bons », jamais « la chaîne tient ».");
+}
+await testLeNumeroDeLaTacheDansLePlan();

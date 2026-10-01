@@ -74,3 +74,27 @@ jamais leur fond.
 ce qui n'a jamais été déposé — c'est l'origine même du décalage du 30/09, où 7 400 mots de demandes
 ne vivaient que dans la conversation, et où tous les outils rendaient vert parce qu'ils n'avaient
 rien à mesurer.
+
+## Son plan d'action (2026-10-01, tâche #1355)
+
+`pure-gold-unity` l'a trouvé pendant la Ronde GOAT : il était **le dernier des 49 outils** tenus par
+le gabarit partagé à ne jamais conclure. Il rendait ses six verdicts et s'arrêtait là — précisément
+ce que l'Article 28 interdit.
+
+**Deux états, jamais un seul**, et la distinction est le cœur du mécanisme :
+
+- un contrôle qui **ÉCHOUE** est mon écart, à réparer → **RETENU** ;
+- un contrôle qui **n'a pas pu être fait** n'est pas mon écart : c'est une décision qui ne
+  m'appartient pas (lui donner accès au dossier de ses envois, ou accepter de rester aveugle sur ce
+  point) → **À TRANCHER**.
+
+Les fondre en un seul état transformerait sa décision en mon manquement, et l'inverse serait pire
+encore.
+
+**`TACHE_PAR_CONTROLE` est choisie à la main, exprès** (Article 24, deuxième exemption, et cette
+phrase est ce qui l'autorise) : elle ne reflète l'état d'aucun autre système, elle dit seulement
+quelle tâche **déjà ouverte** porte la réparation de quel contrôle. Un contrôle absent de la table
+sort sans numéro — jamais avec un numéro inventé, qui serait une référence morte.
+
+**Aucun constat n'est fabriqué pour remplir la section** : quand les six contrôles passent, le plan
+dit « rien à faire », ce que `buildPlanDaction()` écrit déjà seul.

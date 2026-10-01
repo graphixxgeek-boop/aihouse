@@ -18,7 +18,7 @@ tables, qui ne se lisent nulle part ailleurs.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**104 fichier(s)** dans ce dossier.
+**130 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -126,4 +126,30 @@ tables, qui ne se lisent nulle part ailleurs.
 | [the-king.txt](ronde-2026-09-29/the-king.txt) | ronde-2026-09-29 |
 | [tool-brain_rapport.txt](ronde-2026-09-29/tool-brain_rapport.txt) | ronde-2026-09-29 |
 | [tool-learning.txt](ronde-2026-09-29/tool-learning.txt) | ronde-2026-09-29 |
+| [00-rapport-de-ronde.html](ronde-2026-10-01/00-rapport-de-ronde.html) | ronde-2026-10-01 |
+| [00-rapport-de-ronde.md](ronde-2026-10-01/00-rapport-de-ronde.md) | ronde-2026-10-01 |
+| [abraham-les-references-documents-jumeaux.txt](ronde-2026-10-01/abraham-les-references-documents-jumeaux.txt) | ronde-2026-10-01 |
+| [agent-des-noms.txt](ronde-2026-10-01/agent-des-noms.txt) | ronde-2026-10-01 |
+| [cassandra-rh-rapport.txt](ronde-2026-10-01/cassandra-rh-rapport.txt) | ronde-2026-10-01 |
+| [check-profil-utilisateur.txt](ronde-2026-10-01/check-profil-utilisateur.txt) | ronde-2026-10-01 |
+| [check-tasks-details.txt](ronde-2026-10-01/check-tasks-details.txt) | ronde-2026-10-01 |
+| [clean-dirty-old.txt](ronde-2026-10-01/clean-dirty-old.txt) | ronde-2026-10-01 |
+| [data-archangel-angel-of-index-generer.txt](ronde-2026-10-01/data-archangel-angel-of-index-generer.txt) | ronde-2026-10-01 |
+| [data-archangel-classification.txt](ronde-2026-10-01/data-archangel-classification.txt) | ronde-2026-10-01 |
+| [ecotoken.txt](ronde-2026-10-01/ecotoken.txt) | ronde-2026-10-01 |
+| [fils-de-discussion.txt](ronde-2026-10-01/fils-de-discussion.txt) | ronde-2026-10-01 |
+| [god-of-all-process.txt](ronde-2026-10-01/god-of-all-process.txt) | ronde-2026-10-01 |
+| [hyper-scan-checkpoint.txt](ronde-2026-10-01/hyper-scan-checkpoint.txt) | ronde-2026-10-01 |
+| [jesus-le-sauveur.txt](ronde-2026-10-01/jesus-le-sauveur.txt) | ronde-2026-10-01 |
+| [kpi-report.txt](ronde-2026-10-01/kpi-report.txt) | ronde-2026-10-01 |
+| [le-coordinateur.txt](ronde-2026-10-01/le-coordinateur.txt) | ronde-2026-10-01 |
+| [moise-tables-de-loi.txt](ronde-2026-10-01/moise-tables-de-loi.txt) | ronde-2026-10-01 |
+| [pure-gold-unity.txt](ronde-2026-10-01/pure-gold-unity.txt) | ronde-2026-10-01 |
+| [safe-export-kits.txt](ronde-2026-10-01/safe-export-kits.txt) | ronde-2026-10-01 |
+| [safe-export-rapport.txt](ronde-2026-10-01/safe-export-rapport.txt) | ronde-2026-10-01 |
+| [smart-conso-api-scan.txt](ronde-2026-10-01/smart-conso-api-scan.txt) | ronde-2026-10-01 |
+| [the-equalizer.txt](ronde-2026-10-01/the-equalizer.txt) | ronde-2026-10-01 |
+| [the-king.txt](ronde-2026-10-01/the-king.txt) | ronde-2026-10-01 |
+| [tool-brain-rapport.txt](ronde-2026-10-01/tool-brain-rapport.txt) | ronde-2026-10-01 |
+| [tool-learning.txt](ronde-2026-10-01/tool-learning.txt) | ronde-2026-10-01 |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

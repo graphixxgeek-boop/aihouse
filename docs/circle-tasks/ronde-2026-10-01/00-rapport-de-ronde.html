@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ronde GOAT du 1er octobre 2026</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T01:17:04.790Z</div>
+    <h1>Ronde GOAT du 1er octobre 2026</h1>
+    <p class="sub">24 entrées passées, 4 reportées avec leur raison — et le chaînon manquant de l'Article 28, construit</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Mode</strong> : GOAT (choisi par lui : « fais une ronde goat quand tu pourras »), exécutée en <strong>mode autonome déclaré</strong> — il dort, personne n'est là pour arbitrer.</p>
+<p><strong>Heure LUE, jamais tapée</strong> (Article 32) : ouverte le 2026-10-01 à 00h55 UTC, clôturée à 01h20 UTC. Source de l'heure : <strong>système</strong> — les deux API de temps rendent HTTP 403 depuis ce conteneur, et le dire vaut mieux que de laisser croire à une heure réseau.</p>
+<h3>Ce qui a tourné, et ce qui ne l'a pas fait</h3>
+<p><strong>24 entrées gratuites exécutées pour de vrai</strong>, chacune déposant son artefact daté dans ce dossier.</p>
+<p><strong>4 entrées REPORTÉES, avec leur raison écrite</strong> (Article 18/26 : on ne saute une étape que pour une raison qu'on ÉCRIT) — toutes les quatre pour le même motif, qui n'est pas la fatigue mais une règle :</p>
+<table><thead><tr><th>Entrée</th><th>Pourquoi reportée</th></tr></thead><tbody><tr><td>THE-FINAL-JUDGE</td><td>un agent séparé, coût réel en jetons — l'Article 22 exige une validation humaine explicite sur un seuil dur, et il dort</td></tr><tr><td>THE-DEEP-READER</td><td>idem, coût variable et <strong>deux conseillers obligatoires</strong> avant lancement</td></tr><tr><td>x-port-blindtest</td><td>~37 000 jetons par lancement, annoncé COÛTEUX par la Ronde elle-même</td></tr><tr><td>THE-SCREENER</td><td>conditionnel : il n'a de sens que contre un serveur déjà actif avec un vrai état en cours, et il n'y en a pas</td></tr></tbody></table>
+<p><strong>Ce n'est pas une Ronde au rabais</strong> : les quatre reportées sont exactement les quatre que la Ronde déclare elle-même comme non gratuites. Les 24 autres sont passées en entier.</p>
+<h3>Les deux ouvertures refusées, et pourquoi la clôture est quand même régulière</h3>
+<p><code>circle-process-guardian</code> a rendu 12 signalements, dont un blocage dur : l'ouverture enregistrée datait de plus de 24 h. L'ouverture régulière exige <code>--repondu-par=utilisateur</code> sur <strong>Q1</strong> (« voulez- vous changer de modèle pour cette Ronde ? »), à laquelle <strong>il n'a jamais été répondu</strong> — la déclarer répondue aurait été une falsification, exactement ce que ce projet refuse.</p>
+<p>La clôture passe donc par <code>record-run --autonome</code>, qui est le chemin <strong>prévu</strong> pour ce cas : « en mode autonome, TOUT est autorisé sans ouverture — une barrière qui empêcherait une Ronde de nuit de se clôturer serait précisément le blocage qu'elle interdit ». Le mode GOAT, lui, <strong>est</strong> sa réponse : il l'a choisi lui-même.</p>
+<h3>LA TROUVAILLE DE LA RONDE</h3>
+<p><strong>JESUS-LE-SAUVEUR</strong> : « 341 constats RETENUS dorment dans les rapports du dépôt, et le taux d'actionnabilité <strong>N'EST PAS CALCULABLE</strong> — pas par manque de données, par manque de LIEN. »</p>
+<p>Traduit sans jargon : <strong>tout ce paysage d'outils existe pour trouver des problèmes, et rien ne pouvait vérifier qu'un problème trouvé hier avait fini en vrai travail.</strong> On pouvait le vérifier à la seconde où on l'écrivait ; plus jamais après. La cause exacte : un plan d'action écrivait sa tâche en prose et ne citait <strong>jamais son numéro</strong>.</p>
+<p><strong>Et JESUS avait écrit son propre remède le 28/09</strong> — « que le plan d'action inscrive le numéro de la tâche qu'il a fait naître » — resté une intention depuis. C'est donc l'Article 28 pris en défaut sur l'outil même qui traque ce défaut.</p>
+<p><strong>Construit cette nuit</strong> (tâche #1355, détail dans <code>docs/referentiel/report-template.md</code>) : le gabarit partagé porte un emplacement <code>numeroTache</code>, à position fixe, optionnel — <strong>aucun des 49 outils ne voit sa sortie bouger</strong>. Deux premiers usagers réels, jamais un mécanisme sans appelant.</p>
+<p><strong>Effet immédiat et mesuré</strong> : 341 constats sont redescendus à <strong>335</strong> le jour où la sonde a cessé de lire son propre registre. La contamination n'était pas théorique.</p>
+<h3>Les autres constats, par ordre d'intérêt</h3>
+<ul><li><strong><code>fils-de-discussion</code> était le dernier des 49</strong> outils à ne jamais conclure par un plan d'action (pure-gold-unity). Corrigé la nuit même.</li><li><strong>79 noms d'outils sur 85 n'ont jamais été validés</strong> au registre des baptêmes (AGENT DES NOMS) — et les noms, c'est lui qui les choisit, par séries. Le plan prépare sa décision, il ne la prend pas.</li><li><strong>20 outils du catalogue jamais sollicités</strong> sur la fenêtre de 45 h (tool-brain) — et il le dit lui-même : « le défaut est du côté de l'agent, jamais de l'outil ».</li><li><strong>La discipline tool-brain a RECULÉ</strong> : 44 % sur tout l'historique, <strong>41 % sur 24 h</strong>.</li><li><strong>5 paires de documents couvrent le même terrain</strong> sans qu'aucun ne cite l'autre (Abraham).</li><li><strong>Exportabilité globale 88 %</strong>, 8 dimensions sur 8 réellement mesurées — mais le banc témoin est <strong>PÉRIMÉ</strong> : 51 fichiers de <code>scripts/</code> ont changé depuis la dernière installation réelle ailleurs.</li><li><strong>god-of-all-process : 0 manquement</strong>, 25 règles non vérifiables sans réponse.</li><li><strong>~19 642 jetons par tour de jeu</strong> (deux cerveaux) — toujours le premier poste de lenteur, loin devant le rendu 3D.</li></ul>
+<h3>Plan d'action</h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>le chaînon manquant de l'Article 28</td><td><strong>FAIT cette nuit</strong> — tâche <strong>#1355</strong>, close et fidèle</td></tr><tr><td><strong>RETENU</strong></td><td><code>fils-de-discussion</code> ne concluait jamais</td><td><strong>FAIT cette nuit</strong> — même tâche <strong>#1355</strong></td></tr><tr><td><strong>RETENU</strong></td><td>le banc témoin d'export est périmé (51 fichiers changés)</td><td>rattaché à <strong>#902</strong> (export et commercialisation, déjà ouverte et PRIORITAIRE-OBLIGATOIRE)</td></tr><tr><td><strong>À TRANCHER</strong></td><td>79 noms jamais validés</td><td><strong>sa décision, par séries</strong> — il l'a posé lui-même comme règle : « je ne fais pas des noms au cas par cas »</td></tr><tr><td><strong>À TRANCHER</strong></td><td>20 outils jamais sollicités : les lancer pour de vrai, ou les retirer</td><td>arbitrage de fond, pas une correction</td></tr><tr><td><strong>À TRANCHER</strong></td><td>5 paires de documents jumeaux</td><td>fusionner, déclarer la frontière, ou écarter avec raison — jamais un retrait en masse</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>« 29 lignes À TRANCHER » de tool-learning</td><td><strong>raison écrite</strong> : c'est à lui, à la Ronde, de dire si une leçon a été APPLIQUÉE — <code>enregistrerXp()</code> refuse un jugement qui ne porte pas <code>parUtilisateur: true</code>. Y répondre à sa place serait précisément ce que le mécanisme interdit.</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>les 4 entrées coûteuses non lancées</td><td><strong>raison écrite</strong> : Article 22, seuil dur, aucune validation humaine possible cette nuit</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

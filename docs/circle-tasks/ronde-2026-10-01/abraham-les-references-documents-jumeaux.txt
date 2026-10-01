@@ -1,0 +1,193 @@
+⚠️  Attention, mes résultats peuvent être inexacts : la forme de numérotation d'un document est DÉRIVÉE par essais successifs, le poids en tokens est estimé, et une règle dont le mécanisme est décrit en prose sans être nommé compte comme sans porteur — il sous-déclare plutôt qu'il n'invente, et refuse de découper un document dont aucune forme ne ressort. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 00h56 (UTC)
+État du code : 3d4033b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : abraham-les-references — inchangé depuis le mercredi 30 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== ABRAHAM-LES-REFERENCES — deux documents qui disent la même chose ===
+
+⚠️  Attention, mes résultats peuvent être inexacts : la forme de numérotation d'un document est DÉRIVÉE par essais successifs, le poids en tokens est estimé, et une règle dont le mécanisme est décrit en prose sans être nommé compte comme sans porteur — il sous-déclare plutôt qu'il n'invente, et refuse de découper un document dont aucune forme ne ressort. À vérifier avant d'agir, jamais un verdict acquis.
+=== DOCUMENTS QUI DISENT LA MÊME CHOSE — 5 paire(s) à instruire sur 496 documents ===
+
+  Recouvrement de vocabulaire mesuré au-dessus de 0.25 · 307 paire(s) écartées comme légitimes PAR CONSTRUCTION :
+    · index-replique × 202 — le même nom de fichier dans deux dossiers différents — un index généré chez chaque outil, jamais deux documents concurrents
+    · serie-datee × 41 — deux instantanés datés du même dossier — c'est une histoire, pas une redondance
+    · ensemble-declare × 33 — deux documents d'un ensemble que son NOMMAGE déclare (au moins trois fichiers du dossier partagent leur préfixe ou leur suffixe)
+    · kit-du-meme-outil × 31 — le blueprint, la fiche et le registre d'un même outil — ils couvrent le même sujet PAR DESIGN, sous trois angles
+
+  🟢 45 % de vocabulaire commun (126 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/charte-cartographie.md
+      · docs/referentiel/claude-md-regles.md
+  🟢 40 % de vocabulaire commun (2611 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/regles-de-travail.md
+      · docs/contexte-projet/referentiel-affiche-en-jeu-archive.md
+  🟢 35 % de vocabulaire commun (864 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/01-absorption/ce-que-jai-lu.md
+      · docs/data-archangel/ancres/ancres-2026-09-29.md
+  🟢 34 % de vocabulaire commun (1100 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/parametres.md
+      · docs/referentiel/principes.md
+  🟢 34 % de vocabulaire commun (796 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/01-absorption/ce-que-jai-lu.md
+      · docs/data-archangel/ancres/ancres-2026-09-28.md
+  🟢 33 % de vocabulaire commun (1537 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/regles-de-travail.md
+      · CLAUDE.md
+  🟢 33 % de vocabulaire commun (1923 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/principes.md
+      · docs/contexte-projet/referentiel-affiche-en-jeu-archive.md
+  🟢 32 % de vocabulaire commun (408 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/classification-agence.md
+      · docs/referentiel/le-classificateur.md
+  🟢 32 % de vocabulaire commun (213 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md
+      · docs/grand-projet/02-strategie/couverture-de-sa-demande.md
+  🟢 32 % de vocabulaire commun (405 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/xp-ia-process-detail.md
+      · docs/referentiel/tool-learning.md
+  🟢 31 % de vocabulaire commun (183 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md
+      · docs/grand-projet/02-strategie/notes-des-echanges-de-depart.md
+  🟢 31 % de vocabulaire commun (141 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md
+      · docs/fils/fil-14-usage-et-refonte.md
+  🟢 30 % de vocabulaire commun (128 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/charte-cartographie.md
+      · docs/grand-projet/02-strategie/trois-familles-de-la-charte.md
+  🟢 30 % de vocabulaire commun (994 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/lecons.md
+      · CLAUDE.md
+  🟢 29 % de vocabulaire commun (636 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/charte-blueprint.md
+      · CLAUDE.md
+  🟢 29 % de vocabulaire commun (1404 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/regles-de-travail.md
+      · docs/referentiel/lecons.md
+  🟢 29 % de vocabulaire commun (543 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/cassandra-rh-conception.md
+      · docs/referentiel/organisation-agence.md
+  🟢 29 % de vocabulaire commun (802 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/lecons.md
+      · docs/referentiel/safe-export.md
+  🟢 28 % de vocabulaire commun (476 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/etat-des-taches-process-detail.md
+      · docs/referentiel/check-tasks-details.md
+  🟢 28 % de vocabulaire commun (730 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/organisation-agence.md
+      · CLAUDE.md
+  🟢 27 % de vocabulaire commun (314 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/tool-learning-blueprint.md
+      · docs/xp-ia-process-detail.md
+  🟢 27 % de vocabulaire commun (431 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/classification-agence.md
+      · docs/referentiel/organisation-agence.md
+  🟢 27 % de vocabulaire commun (1006 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/principes.md
+      · CLAUDE.md
+  🟢 27 % de vocabulaire commun (137 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/01-absorption/syntheses/ARCHITECTURE_DES_NIVEAUX.md
+      · docs/grand-projet/01-absorption/syntheses/INDEX-PAR-SITUATION.md
+  🟢 27 % de vocabulaire commun (135 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/recherches-web/2026-09-29-propriete-et-securite.md
+      · docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md
+  🟢 27 % de vocabulaire commun (456 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/le-classificateur.md
+      · docs/referentiel/organisation-agence.md
+  🟢 27 % de vocabulaire commun (586 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/parametres.md
+      · docs/referentiel/regles-du-temps.md
+  🟢 27 % de vocabulaire commun (750 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/mode-auto-process-guardian.md
+      · docs/referentiel/lecons.md
+  🟠 27 % de vocabulaire commun (521 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime
+      · docs/mode-auto-process-guardian.md
+      · docs/rapports-de-nuit/rapport-2026-09-30.md
+  🟢 27 % de vocabulaire commun (529 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/abraham-les-references.md
+      · docs/referentiel/safe-export.md
+  🟠 27 % de vocabulaire commun (724 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime
+      · docs/mode-auto-process-guardian.md
+      · CLAUDE.md
+  🟢 27 % de vocabulaire commun (1539 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/contexte-projet/referentiel-affiche-en-jeu-archive.md
+      · CLAUDE.md
+  🟢 27 % de vocabulaire commun (106 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/claude-md-regles.md
+      · docs/grand-projet/02-strategie/trois-familles-de-la-charte.md
+  🟢 27 % de vocabulaire commun (157 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/02-strategie/propriete-et-securite-du-projet.md
+      · docs/fils/fil-08-securite-et-propriete.md
+  🟢 26 % de vocabulaire commun (296 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/peur-de-l-export.md
+      · docs/strategies/export-et-commercialisation-strategie.md
+  🟢 26 % de vocabulaire commun (115 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/clone-hunter/decisions-a-prendre-2026-09-28.md
+      · docs/clone-hunter/index.md
+  🟢 26 % de vocabulaire commun (694 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/abraham-les-references.md
+      · docs/referentiel/lecons.md
+  🟢 26 % de vocabulaire commun (201 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md
+      · docs/fils/fil-01-objectif-ultime-philo-politique.md
+  🟢 26 % de vocabulaire commun (425 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/xp-ia-process-detail.md
+      · docs/referentiel/abraham-les-references.md
+  🟢 26 % de vocabulaire commun (129 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/02-strategie/seance-objectif-ultime.md
+      · docs/grand-projet/01-absorption/syntheses/FIXER_UN_OBJECTIF_ULTIME.md
+  🟢 26 % de vocabulaire commun (457 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/systeme-de-suivi.md
+      · docs/referentiel/check-tasks-details.md
+  🟢 26 % de vocabulaire commun (476 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/cassandra-rh.md
+      · docs/referentiel/organisation-agence.md
+  🟢 26 % de vocabulaire commun (539 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/organisation-agence.md
+      · docs/referentiel/safe-export.md
+  🟢 26 % de vocabulaire commun (287 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/outil-resilience-api.md
+      · docs/referentiel/smart-breaker-historique.md
+  🟢 26 % de vocabulaire commun (1347 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/regles-de-travail.md
+      · docs/referentiel/principes.md
+  🟠 26 % de vocabulaire commun (494 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime
+      · docs/mode-auto-process-guardian.md
+      · docs/referentiel/abraham-les-references.md
+  🟢 25 % de vocabulaire commun (670 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/cassandra-rh-conception.md
+      · CLAUDE.md
+  🟢 25 % de vocabulaire commun (456 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/mode-auto-process-guardian.md
+      · docs/xp-ia-process-detail.md
+  🟢 25 % de vocabulaire commun (236 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md
+      · docs/grand-projet/02-strategie/vue-globale-2026-09-28.md
+  🟠 25 % de vocabulaire commun (540 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime
+      · docs/mode-auto-process-guardian.md
+      · docs/referentiel/safe-export.md
+  🟠 25 % de vocabulaire commun (453 mots) — aucun des deux ne cite l'autre : ils gouvernent le même terrain sans que rien ne dise lequel prime
+      · docs/referentiel/abraham-les-references.md
+      · docs/rapports-de-nuit/rapport-2026-09-30.md
+  🟢 25 % de vocabulaire commun (704 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/safe-export.md
+      · CLAUDE.md
+  🟢 25 % de vocabulaire commun (674 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/smart-conso-token.md
+      · CLAUDE.md
+  🟢 25 % de vocabulaire commun (641 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/philosophie-et-politique.md
+      · CLAUDE.md
+  🟢 25 % de vocabulaire commun (471 mots) — l'un cite le chemin de l'autre : le recouvrement est assumé, jamais ignoré
+      · docs/referentiel/abraham-les-references.md
+      · docs/referentiel/organisation-agence.md
+
+  HORS PORTÉE : elle mesure un RECOUVREMENT DE VOCABULAIRE, jamais un sens. Deux documents qui disent la même chose sans partager leurs mots lui échappent, et deux documents du même domaine partagent du vocabulaire sans rien se répéter — d'où des QUESTIONS et jamais un verdict.
+
+=== Plan d'action ===
+  → RETENU · 5 paire(s) de documents couvrent le même terrain sans qu'aucun ne cite l'autre — tâche [RECOMMANDEE] : instruire chaque paire une par une — fusionner, déclarer la frontière dans l'un des deux, ou écarter avec la raison écrite ; jamais un retrait en masse
+
+Rapport déposé : docs/abraham-les-references/documents-jumeaux-2026-10-01.txt

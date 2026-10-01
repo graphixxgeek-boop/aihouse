@@ -23,7 +23,7 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader } from "./report-template.mjs";
+import { printReportHeader, buildPlanDaction } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -241,17 +241,66 @@ export function formatVerdictLines(v) {
   return l;
 }
 
+// planDactionDesFils() (2026-10-01, tâche #1355) — LE TROU QUE pure-gold-unity A TROUVÉ.
+// Cet outil était le DERNIER des 49 tenus par le gabarit à ne jamais conclure : il rendait six
+// verdicts et s'arrêtait là. C'est précisément ce que l'Article 28 interdit — « un rapport n'est
+// pas fini quand il est écrit, il l'est quand ses constats sont devenus des tâches ».
+//
+// LES DEUX ÉTATS, ET POURQUOI PAS UN SEUL. Un contrôle qui ÉCHOUE est un écart que je dois
+// réparer : RETENU. Un contrôle qui n'a PAS PU ÊTRE FAIT n'est pas mon écart — c'est une décision
+// qui ne m'appartient pas (lui donner accès au dossier de ses envois, ou accepter de rester
+// aveugle sur ce point) : À TRANCHER. Les fondre en un seul état transformerait sa décision en
+// mon manquement, et l'inverse serait pire encore.
+//
+// CE QU'IL N'INVENTE PAS : aucun constat n'est fabriqué pour remplir la section. Quand les six
+// contrôles passent, le plan dit « rien à faire » — ce que buildPlanDaction() écrit déjà seul.
+// LA TABLE EST CHOISIE À LA MAIN, EXPRÈS, et cette phrase est ce qui l'autorise (Article 24,
+// deuxième exemption). Elle ne reflète l'état d'aucun autre système : elle dit quelle tâche DÉJÀ
+// OUVERTE porte la réparation de quel contrôle. Un contrôle absent d'ici n'a simplement pas encore
+// de tâche dédiée, et son constat sortira sans numéro — jamais avec un numéro inventé.
+// Vérifié ligne par ligne contre docs/suivi/ le 2026-10-01, jamais déduit d'un nom.
+export const TACHE_PAR_CONTROLE = Object.freeze({
+  "engagements-en-taches": "1332",   // Suivi / « 20 engagements de ma part, 0 tâche » — la tâche qui a créé ce contrôle
+  "questions-repondables": "1332",   // même tâche : les deux contrôles sont nés du même constat
+});
+
+export function planDactionDesFils(v, { numeros = TACHE_PAR_CONTROLE } = {}) {
+  const constats = [];
+  for (const r of v.resultats ?? []) {
+    if (r.ok === false) {
+      constats.push({
+        constat: `${r.question} — ${r.detail}`,
+        etat: "retenu",
+        tache: r.sansQuoi ?? "réparer l'écart avant de répondre « à jour » à quoi que ce soit",
+        // Le numéro n'est renseigné que si une tâche existe POUR DE VRAI (passée par l'appelant) :
+        // un numéro inventé ici serait une référence morte, qui ressemble à un lien.
+        numeroTache: numeros[r.cle] ?? null,
+      });
+    } else if (r.ok === null) {
+      constats.push({
+        constat: `${r.question} — ${r.detail}`,
+        etat: "a-trancher",
+        pourquoi: "ce contrôle est aveugle par construction, et le rendre voyant est TA décision, jamais la mienne — un système aveugle qui répond « à jour » ment au moment où il est le plus dangereux",
+      });
+    }
+  }
+  return buildPlanDaction(constats, { toolSlug: "fils-de-discussion" });
+}
+
 function main() {
   printReportHeader({ tool: "fils-de-discussion", title: "LES FILS DE DISCUSSION — un sujet, un fil", scriptPath: "scripts/fils-de-discussion.mjs" });
   printReliabilityNotice("fils-de-discussion");
   recordCliUsage("fils-de-discussion");
   const envois = process.argv[3] && process.argv[2] === "--envois" ? process.argv[3] : null;
-  for (const ligne of formatVerdictLines(suisJeAJour({ dossierEnvois: envois }))) console.log(ligne);
+  const v = suisJeAJour({ dossierEnvois: envois });
+  for (const ligne of formatVerdictLines(v)) console.log(ligne);
   const lus = lireLesFils();
   if (lus.mesurable && lus.fils.length) {
     console.log("\n--- LES FILS, PAR NUMÉRO ---");
     for (const f of lus.fils) console.log(`  #${String(f.numero).padStart(2, "0")} [${f.balle ?? "sans balle"}] ${f.titre} — ${f.place ?? "sans place déclarée"}`);
   }
+  console.log("\n=== Plan d'action ===");
+  for (const ligne of planDactionDesFils(v).lignes) console.log(ligne);
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

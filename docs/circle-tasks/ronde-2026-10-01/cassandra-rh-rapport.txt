@@ -1,0 +1,189 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : relaie et recoupe ce que les autres outils estiment — elle hérite de leurs approximations. À vérifier avant d'agir, jamais un verdict acquis.
+CASSANDRA-RH est une directrice des ressources humaines exigeante mais juste. Elle ne flatte jamais un outil pour lui faire plaisir, et ne descend jamais un outil sans donner le chiffre exact qui le justifie. Elle parle avec l'assurance calme de quelqu'un qui connaît chaque dossier de l'équipe par cœur — jamais de sur-jugement moral, jamais de mise en scène, juste le constat, net, et la conséquence concrète qu'il implique. Un outil qui mérite un badge l'obtient sans effusion ; un outil à retirer se voit nommé sans détour, jamais euphémisé.
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CASSANDRA-RH — rapport d'équipe</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-01T00:58:55.392Z</div>
+    <h1>CASSANDRA-RH — rapport d'équipe</h1>
+    <p class="sub">CASSANDRA-RH est une directrice des ressources humaines exigeante mais juste. Elle ne flatte jamais un outil pour lui faire plaisir, et ne descend jamais un outil sans donner le chiffre exact qui le justifie. Elle parle avec l'assurance calme de quelqu'un qui connaît chaque dossier de l'équipe par cœur — jamais de sur-jugement moral, jamais de mise en scène, juste le constat, net, et la conséquence concrète qu'il implique. Un outil qui mérite un badge l'obtient sans effusion ; un outil à retirer se voit nommé sans détour, jamais euphémisé.</p>
+  </header>
+  <div class="divider"></div>
+  <main><h2>Recensement des fonctionnalités</h2>
+<p class="note">Recensement des fonctionnalités — 40 script(s) mesuré(s), 1093 fonctions au total, 27 en moyenne.
+
+| Script | Fonctions | Partagées | Invocables | Poids (tokens) |
+|---|---|---|---|---|
+| check-tasks-details | 109 | 146 | 13 | 74964 |
+| safe-export | 94 | 169 | 9 | 67135 |
+| data-archangel | 84 | 118 | 12 | 51744 |
+| abraham-les-references | 83 | 118 | 1 | 44082 |
+| cassandra-rh | 60 | 82 | 1 | 82263 |
+| tool-learning | 59 | 74 | 1 | 30973 |
+| ecotoken | 57 | 71 | 8 | 35670 |
+| smart-conso-token | 50 | 62 | 2 | 26076 |
+| check-suivi-fidelity | 46 | 59 | 1 | 27008 |
+| le-classificateur | 46 | 86 | 4 | 57087 |
+| angel-of-ia-process | 37 | 55 | 1 | 23077 |
+| moise-tables-de-loi | 37 | 69 | 1 | 26436 |
+| agent-des-noms | 26 | 35 | 1 | 12911 |
+| axa-check | 24 | 31 | 1 | 12088 |
+| circle-process-guardian | 22 | 33 | 1 | 28756 |
+| integration-outil | 20 | 27 | 1 | 17536 |
+| jesus-le-sauveur | 20 | 35 | 1 | 19208 |
+| clone-hunter | 19 | 29 | 1 | 14625 |
+| the-king | 16 | 20 | 1 | 7563 |
+| el-professor | 15 | 23 | 1 | 7609 |
+| find-booster | 15 | 13 | 1 | 5130 |
+| process-simulation-guardian | 13 | 17 | 2 | 7197 |
+| smart-conso-api | 13 | 12 | 1 | 5428 |
+| agent-du-temps | 12 | 17 | 1 | 5974 |
+| always-new-code | 12 | 13 | 1 | 5061 |
+| objectifs-vs-resultats | 12 | 10 | 1 | 4769 |
+| the-equalizer | 12 | 19 | 1 | 7138 |
+| harmonia | 11 | 16 | 1 | 7968 |
+| ines-official | 10 | 11 | 2 | 3442 |
+| check-level-target | 9 | 11 | 1 | 5124 |
+| filet-en-parts | 9 | 11 | 1 | 5162 |
+| memory-audit | 9 | 10 | 1 | 5174 |
+| hyper-scan-checkpoint | 8 | 7 | 1 | 5960 |
+| argus | 6 | 6 | 1 | 4167 |
+| clean-dirty-old | 6 | 6 | 1 | 3356 |
+| the-screener | 4 | 5 | 1 | 2970 |
+| the-deep-reader | 3 | 3 | 0 | 1424 |
+| smart-breaker | 2 | 0 | 1 | 2921 |
+| the-final-judge | 2 | 2 | 0 | 1100 |
+| check-spirit | 1 | 0 | 1 | 6172 |
+
+Lecture : « Fonctions » = charge technique du membre · « Partagées » = ce qu'un autre outil peut réutiliser · « Invocables » = ce que l'agent peut lancer lui-même.
+
+Ce que j'en tire (2 constat(s)) :
+  · the-deep-reader n'expose aucune commande que je puisse lancer moi-même — et le compteur ne lui connaît aucune sollicitation, ce qui n'a rien d'un hasard
+  · the-final-judge n'expose aucune commande que je puisse lancer moi-même — et le compteur ne lui connaît aucune sollicitation, ce qui n'a rien d'un hasard</p>
+<h2>Effectif de l'équipe</h2>
+<p>55 membre(s) actif(s) — 33 Membre premium, 14 Membre classique, 7 Gardien sacré du code, 1 Agent Cadre.</p>
+<h2>Badges</h2>
+<p>55/55 certifiés.</p>
+<h2>Tendance KPI (lue depuis kpi-historique.csv, jamais recalculée)</h2>
+<ul><li>smart_breaker_performance_pct : 100% (+8.4 pt)</li><li>smart_breaker_amelioration_pct : 87.5% (+0 pt)</li><li>robustesse_code_pct : 81.24% (+0 pt)</li><li>qualite_pct : 100% (+0.5 pt)</li><li>coherence_pct : 100% (+0.5 pt)</li><li>rejouabilite_pct : 22.22% (+0 pt)</li><li>couverture_tdb_pct : 100% (+0 pt)</li><li>smart_conso_pct : 71% (+0 pt)</li></ul>
+<h2>Outils à retirer ou refondre</h2>
+<ul><li>check-spirit — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet » ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>kpi-report — ⚠️ zéro d'usage NON INTERPRÉTABLE — 3 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li><li>tool-usage — ⚠️ zéro d'usage NON INTERPRÉTABLE — c'est le compteur lui-même : il ne peut structurellement pas se compter. Ce n'est PAS un motif de retrait</li><li>find-brain — ⚠️ zéro d'usage NON INTERPRÉTABLE — 1 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li><li>le-regisseur — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet » ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>route-booster — ⚠️ zéro d'usage NON INTERPRÉTABLE — 1 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li><li>criticite — ⚠️ zéro d'usage NON INTERPRÉTABLE — 2 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li><li>messages-courts — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet »</li><li>the-ghost — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet » ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>check-level-target — ⚠️ zéro d'usage NON INTERPRÉTABLE — 4 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li><li>hyper-scan-checkpoint — ⚠️ zéro d'usage NON INTERPRÉTABLE — 1 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li><li>the-screener — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet »</li><li>the-final-judge — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet »</li><li>the-deep-reader — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet »</li><li>smart-breaker — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet »</li><li>ines-official — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet » ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>process-simulation-guardian — jamais sollicité (tool-usage.mjs) — ⚠️ le journal ne couvre que 45 h : « jamais vu passer sur cette fenêtre », jamais « jamais utilisé par le projet » ; objectif chiffré en dessous ET jamais sollicité — signal renforcé (objectifs-vs-resultats)</li><li>objectifs-vs-resultats — ⚠️ zéro d'usage NON INTERPRÉTABLE — 1 autre(s) script(s) l'importent hors suite de tests : il s'exécute par le code, et le compteur n'enregistre que les lancements en ligne de commande. Ce n'est PAS un motif de retrait</li></ul>
+<h2>Trous d'équipe — couverture de test fragile (AXA-CHECK, jamais recalculée)</h2>
+<ul><li>check-spirit — jamais scanné</li><li>check-suivi-fidelity — 60% de couverture</li><li>circle-process-guardian — 18% de couverture</li><li>doc-report — jamais scanné</li><li>kpi-report — jamais scanné</li><li>tool-usage — jamais scanné</li><li>find-brain — jamais scanné</li><li>le-regisseur — jamais scanné</li><li>route-booster — jamais scanné</li><li>criticite — jamais scanné</li><li>messages-courts — jamais scanné</li><li>modes-de-travail — jamais scanné</li><li>ou-on-en-est — jamais scanné</li><li>rapport-gros-prompt — jamais scanné</li><li>check-profil-utilisateur — jamais scanné</li><li>the-ghost — jamais scanné</li><li>ARGUS — 67% de couverture</li><li>HARMONIA — 50% de couverture</li><li>Smart Conso API — 38% de couverture</li><li>CHECK-LEVEL-TARGET — 89% de couverture</li><li>HYPER-SCAN-CHECKPOINT — 63% de couverture</li><li>ALWAYS-NEW-CODE — 83% de couverture</li><li>AXA-CHECK — 50% de couverture</li><li>CLEAN-DIRTY-OLD — 33% de couverture</li><li>EL-PROFESSOR — jamais scanné</li><li>THE-SCREENER — 25% de couverture</li><li>THE-FINAL-JUDGE — jamais scanné</li><li>THE-DEEP-READER — jamais scanné</li><li>LE-COORDINATEUR — jamais scanné</li><li>Smart Breaker (check-gemini-quota.mjs + gemini-key-health.mjs + api-providers.mjs + lib/gemini-keys.ts) — jamais scanné</li><li>SMART-CONSO-TOKEN — 22% de couverture</li><li>CIRCLE-TASKS (« Ronde périodique ») — jamais scanné</li><li>check-tasks-details — 39% de couverture</li><li>THE-KING — 41% de couverture</li><li>INES-official — jamais scanné</li><li>memory-audit (anciennement &quot;MEMENTO&quot;, nom d'ensemble retiré le 2026-09-21) — jamais scanné</li><li>find-deep-booster (scripts/route-booster.mjs, nom de fichier technique inchangé) — jamais scanné</li><li>god-of-all-process (scripts/god-of-all-process.mjs) — jamais scanné</li><li>process.simulation.guardian (scripts/process-simulation-guardian.mjs) — 71% de couverture</li><li>angel-of-ia-process (scripts/angel-of-ia-process.mjs) — 64% de couverture</li><li>data-archangel (scripts/data-archangel.mjs) — 29% de couverture</li><li>tool-brain (scripts/tool-brain.mjs) — jamais scanné</li><li>find-booster (scripts/find-booster.mjs, anciennement &quot;route-find-booster&quot;) — 73% de couverture</li><li>CLONE-HUNTER (scripts/clone-hunter.mjs) — 28% de couverture</li><li>objectifs-vs-resultats (surnom « R/O-Guardian », 2026-09-21 — nom technique gardé comme nom PRINCIPAL de la cellule à dessein : slugifyAgentName() dérive le slug du premier mot avant toute parenthèse, cf. note ci-dessous ; scripts/objectifs-vs-resultats.mjs inchangé) — 0% de couverture</li><li>CASSANDRA-RH (scripts/cassandra-rh.mjs) — 9% de couverture</li><li>ecotoken (scripts/ecotoken.mjs) — 95% de couverture</li><li>SAFE-EXPORT (scripts/safe-export.mjs) — 45% de couverture</li><li>TOOL-LEARNING (scripts/tool-learning.mjs) — 48% de couverture</li><li>MOÏSE-TABLES-DE-LOI (scripts/moise-tables-de-loi.mjs) — 15% de couverture</li><li>Abraham-les-references (scripts/abraham-les-references.mjs) — 42% de couverture</li><li>AGENT DES NOMS (scripts/agent-des-noms.mjs) — jamais scanné</li><li>AGENT-DU-TEMPS (scripts/agent-du-temps.mjs) — jamais scanné</li><li>THE-EQUALIZER (scripts/the-equalizer.mjs) — 21% de couverture</li><li>jesus-le-sauveur — jamais scanné</li></ul></main>
+  
+</div>
+</body>
+</html>
+
+
+=== TENDANCES RH (mécanisme partagé) ===
+  membres-certifies : en amélioration
+  effectif : en hausse (non jugée)
+  outils-a-reconsiderer : en dégradation
+  trous-de-couverture : en dégradation

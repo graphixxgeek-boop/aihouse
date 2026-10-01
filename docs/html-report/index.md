@@ -40,7 +40,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-11-testeurs-et-regard-exterieur.html` | `docs/fils/fil-11-testeurs-et-regard-exterieur.md` | 9898 | 2026-09-30 21:05Z |
 | `docs/fils/html/fil-08-securite-et-propriete.html` | `docs/fils/fil-08-securite-et-propriete.md` | 16351 | 2026-09-30 21:18Z |
 | `docs/fils/html/fil-02-cible-obligations.html` | `docs/fils/fil-02-cible-obligations.md` | 12403 | 2026-09-30 21:24Z |
-| `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 10717 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-10-le-jeu.html` | `docs/fils/fil-10-le-jeu.md` | 11213 | 2026-09-30 21:33Z |
 | `docs/fils/html/fil-03-organisation-cible.html` | `docs/fils/fil-03-organisation-cible.md` | 12553 | 2026-09-30 21:40Z |
 | `docs/grand-projet/html/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 16084 | 2026-09-30 23:03Z |
@@ -53,3 +52,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 12318 | 2026-10-01 00:45Z |
 | `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 14050 | 2026-10-01 00:45Z |
 | `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 16806 | 2026-10-01 00:45Z |
+| `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.html` | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.md` | 13562 | 2026-10-01 01:17Z |
+| `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 12322 | 2026-10-01 01:17Z |

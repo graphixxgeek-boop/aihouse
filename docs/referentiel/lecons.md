@@ -1475,6 +1475,38 @@ contre-tests qui vérifient les deux sens. Le réflexe général — quand j'exp
 prose, me demander si la mécanique pourrait lire cette explication — se déclare ici.
 
 
+## L42 — Une impossibilité déclarée AVEC son remède se lit comme une conclusion, pas comme une tâche
+
+*Payée le 2026-10-01 (tâche #1355, Ronde GOAT). Le remède était écrit noir sur blanc depuis le 2026-09-28 et personne ne l'a construit pendant trois jours — y compris moi, qui relisais le rapport.*
+
+**Le fait.** `tauxDActionnabilite()` (JESUS-LE-SAUVEUR) refusait de rendre un pourcentage et
+expliquait pourquoi, parfaitement : le volume réel (341 constats), la cause exacte (« un plan
+d'action écrit sa tâche en PROSE et ne cite jamais son NUMÉRO »), et **le remède, nommé en toutes
+lettres** : « CE QUI LE RENDRAIT CALCULABLE : que le plan d'action inscrive le numéro de la tâche
+qu'il a fait naître ». Trois jours plus tard, le remède n'existait toujours pas, et aucun contrôle
+ne pouvait le dire : la sonde rendait exactement le même texte, qui ressemblait à un verdict rendu.
+
+**Pourquoi c'est pire qu'un rapport paresseux**, et c'est tout l'intérêt de la leçon : un
+« PAS MESURÉ » bâclé donne envie de le rouvrir ; un **PAS MESURÉ bien argumenté a l'air d'avoir
+fait son travail**. La qualité de la déclaration devient son propre alibi. C'est la même mécanique
+que les trois constats RETENUS faits sur quatre qui font passer le quatrième inaperçu (le défaut
+fondateur de JESUS lui-même), mais en plus discret encore : ici il n'y a même pas de constat à
+côté pour servir de contraste.
+
+**Le geste.** Une impossibilité qui NOMME son remède devient une tâche **le jour où elle est
+écrite**, exactement comme un constat RETENU. Les deux états sont distincts dans l'Article 28 et
+doivent le rester — mais « je ne peux pas mesurer **parce que X manque** » n'est pas une
+abstention : c'est un constat retenu habillé en abstention.
+
+**Terrain** : quand un rapport refuse de conclure et explique ce qui lui manquerait · mots : PAS MESURÉ, pas calculable, ce qui le rendrait, impossibilité, hors portée · fichiers : scripts/*.mjs, docs/**/*.md
+
+**Porté par** : **aucun mécanisme, et cette impossibilité est déclarée ici plutôt que tue** (Article 27). Aucun programme ne
+sait distinguer « je ne peux pas mesurer, point » de « je ne peux pas mesurer **tant que** X
+manque » — la seconde est une tâche, la première non, et la différence tient dans le sens d'une
+phrase. Ce qui existe désormais, en revanche, c'est le remède lui-même : `numeroTache` dans le
+gabarit partagé, et une sonde qui dit maintenant « l'EMPLACEMENT existe » au lieu de « il
+manquerait » — un outil qui réclame encore ce qu'on lui a donné apprend à ne plus être lu (L4).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

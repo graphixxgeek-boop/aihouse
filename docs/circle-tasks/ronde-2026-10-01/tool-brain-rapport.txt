@@ -1,0 +1,61 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais une découpe garantie juste. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : associe une tâche à des outils par mots-clés — il peut passer à côté de l'outil réellement utile. À vérifier avant d'agir, jamais un verdict acquis.
+=== tool-brain — rapport de Ronde ===
+Date : 2026-10-01T00:56:46.813Z
+
+📅 Le journal couvre 45 h (2116 événement(s)), depuis le 2026-09-29 03:38 UTC.
+
+20 outil(s) du catalogue jamais sollicité(s) : check-spirit, messages-courts, kpi-report, sauvegarde-projet, x-port-blindtest, check-spirit-mjs, the-screener, smart-breaker, ines-official, find-brain, process-simulation-guardian, check-level-target, criticite, le-regisseur, route-booster, run-simulation, summarize-simulation-log, the-ghost, tool-usage, objectifs-vs-resultats.
+2 outil(s) n'apparaissent pas au compteur mais tournent à CHAQUE commit via le crochet : hyper-scan-checkpoint, check-house-mjs — leur silence n'est pas une inaction.
+
+
+📗 2 outil(s) qu'AUCUN compteur d'appels ne peut voir : the-final-judge, the-deep-reader. Deux causes possibles, et elles appellent deux gestes différents : soit le travail passe par un agent séparé et le script ne fait que mettre en forme son rapport (rien à corriger — ce qui dit s'il a tourné est son registre `docs/<outil>/`), soit sa commande n'est écrite NULLE PART dans les documents, et c'est un vrai manque (constat déjà remonté séparément par l'iceberg de CASSANDRA). Dans les deux cas ce n'est pas zéro, c'est PAS MESURABLE.
+
+✨ SIGNE TRÈS POSITIF — 979 appel(s) de ma propre initiative, sur 27 outil(s) différent(s).
+   (ni item de Ronde, ni lancé par un crochet : 11 outil(s) dictés par un process et 7 automatiques sont retirés du compte)
+   Les plus sollicités : find-deep-booster (395) · data-archangel (265) · html-report (146) · safe-export (25) · filet-en-parts (22) · abraham-les-references (17) · check-suivi-fidelity (16) · axa-check (12)
+   HORS PORTÉE : Un appel spontané prouve une INITIATIVE, jamais qu'elle était la bonne : lancer dix fois le mauvais outil compte pareil. Et l'origine « spontane » du vocabulaire reste inutilisée — ce signal est DÉRIVÉ de « cli_direct », il ne la remplace pas.
+
+🔴 2 origine(s) d'usage sur 6 qu'aucun chemin automatique ne produit et que le journal n'a JAMAIS portée : spontane, automatique_post_commit.
+   Une catégorie inécrite se lit « zéro » exactement comme une catégorie réellement inutilisée —
+   et tout outil qui la lit rend un verdict sur du vide. À câbler ou à retirer, jamais à laisser en l'état.
+   (2 origine(s) ont un chemin mais aucun événement à ce jour : demande, verification — un chemin non emprunté n'est pas un chemin absent.)
+   HORS PORTÉE : Le journal prouve qu'une origine EST produisible ; son silence ne prouve jamais qu'aucun chemin n'existe — recordToolUsage() est exportée, un appel délibéré peut toujours écrire n'importe laquelle. Ce qui est signalé, c'est une origine qu'aucun chemin AUTOMATIQUE ne produit et que rien n'a jamais écrite : lue par un outil, elle rendra toujours zéro.
+
+COMBINAISONS du catalogue — réalisées en FAIT, jamais déclarées :
+- Pack Rénovation (2 outils) : JAMAIS réalisé
+- Pack Sentinelle (3 outils) : JAMAIS réalisé
+- Pack Panorama (8 outils) : JAMAIS réalisé
+- Pack Éclaireur (3 outils) : 14 fois
+- Pack Décollage : PAS une combinaison — une de ses entrées est un document, pas un outil
+
+Outils les moins sollicités (total cumulé, jamais remis à zéro) :
+- check-spirit : 0 sollicitation(s)
+- messages-courts : 0 sollicitation(s)
+- kpi-report : 0 sollicitation(s)
+- sauvegarde-projet : 0 sollicitation(s)
+- x-port-blindtest : 0 sollicitation(s)
+- check-spirit-mjs : 0 sollicitation(s)
+- the-screener : 0 sollicitation(s)
+- hyper-scan-checkpoint : 0 sollicitation(s)
+- the-final-judge : 0 sollicitation(s)
+- the-deep-reader : 0 sollicitation(s)
+
+Auto-diagnostic (périmètre tool-brain uniquement, jamais un audit du paysage entier) :
+- tool-brain a été sollicité 97 fois, mais jamais de ma propre initiative (toujours un item de Ronde ou un crochet) — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique.
+
+=== Plan d'action ===
+  → RETENU · 20 outil(s) du catalogue jamais sollicité(s) : check-spirit, messages-courts, kpi-report, sauvegarde-projet, x-port-blindtest, check-spirit-mjs, the-screener, smart-breaker, ines-official, find-brain, process-simulation-guardian, check-level-target, criticite, le-regisseur, route-booster, run-simulation, summarize-simulation-log, the-ghost, tool-usage, objectifs-vs-resultats — tâche [RECOMMANDEE] : les lancer une fois pour de vrai, ou décider de les retirer — un outil construit et jamais appelé n'a jamais protégé personne (leçon L2), et le défaut est du côté de l'agent, jamais de l'outil
+  → RETENU · auto-diagnostic : tool-brain a été sollicité 97 fois, mais jamais de ma propre initiative (toujours un item de Ronde ou un crochet) — signe que le réflexe n'est pas encore acquis, seulement le rappel mécanique. — tâche [RECOMMANDEE] : traiter dans le périmètre de tool-brain lui-même, jamais en élargissant le diagnostic au reste du paysage
+
+=== ARTICLE 31, FAILLE 8 — un outil CITÉ a-t-il vraiment TOURNÉ ? ===
+  ✅ aucun, sur les 12 rapport(s) les plus récents : chaque outil nommé a un passage enregistré dans les 24 h précédant son rapport.
+  HORS PORTÉE : il vérifie qu'un outil a TOURNÉ, jamais que ce qu'on en dit est exact — un rapport peut citer un vrai passage et en tirer une conclusion fausse.
+
+=== TOOL-BRAIN EST-IL LE POINT D'ENTRÉE ? — mesuré, jamais déclaré ===
+  97 passage(s) de tool-brain enregistrés au compteur.
+  724/1636 appels SPONTANÉS ont été précédés d'une consultation dans les 10 minutes — 44 % sur tout l'historique.
+  Sur les 24 dernières heures : 266/652 — 41 %, donc la discipline a RECULÉ.
+  LES DEUX CHIFFRES COMPTENT : le cumul dit l'habitude installée, les 24 h disent celle d'aujourd'hui — et c'est la seconde qui se corrige.
+  (Un outil lancé par le crochet ou dicté par un process est EXCLU : il n'avait pas à passer par ici, et le compter accuserait d'un manquement qui n'existe pas.)
+  HORS PORTÉE : une PRÉCÉDENCE, jamais un USAGE : le compteur sait qu'un outil a tourné et quand, il ne saura jamais si la consultation a servi. Et la fenêtre est un CHOIX — la changer change le chiffre.

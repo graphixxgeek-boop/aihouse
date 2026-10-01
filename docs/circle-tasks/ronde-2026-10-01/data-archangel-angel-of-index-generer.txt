@@ -1,0 +1,26 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 00h57 (UTC)
+État du code : 3d4033b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — inchangé depuis le mercredi 30 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== data-archangel — circulation des données dans l'Agence Codex ===
+Ce que l'équipe produit, qui le relit, et ce que l'agent lui-même n'exploite pas encore.
+
+
+=== 8 index GÉNÉRÉ(S) — uniquement là où il n'en existait aucun ===
+
+  ✅ docs/contexte-projet/index.md — 4 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/plans/index.md — 28 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/rapports-de-nuit/index.md — 23 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/rapports-gros-prompt/index.md — 13 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/rapports-verification-froid/index.md — 3 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/referentiel/index.md — 115 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/strategies/index.md — 10 fichier(s) listés (catalogue généré remis à jour)
+  ✅ docs/templates/index.md — 4 fichier(s) listés (catalogue généré remis à jour)
+
+  elle écrit là où aucun index n'existe, et RÉÉCRIT un catalogue qu'elle a elle-même signé et qui a pris du retard (sa promesse est la liste complète : en retard, il ment). Un index écrit à la main n'est jamais remplacé par une liste — la prose qui explique un dossier vaut mieux qu'un catalogue, et l'écraser la ferait disparaître.

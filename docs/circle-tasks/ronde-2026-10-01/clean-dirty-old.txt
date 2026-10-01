@@ -1,0 +1,22 @@
+⚠️  Attention, mes résultats peuvent être inexacts : l'ancienneté d'un fichier ne dit pas s'il est périmé — seulement qu'on n'y a pas regardé depuis longtemps. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 01h03 (UTC)
+État du code : 3d4033b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : clean-dirty-old — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== CLEAN-DIRTY-OLD — code ancien et peu retouché (repérage seul, jamais un jugement) ===
+
+CLEAN-DIRTY-OLD — 22 fichier(s) réellement analysé(s) — c'est le dénominateur de tout ce qui suit.
+TENDANCES de clean-dirty-old (7 point(s) dans la série) :
+   zones-anciennes              stable
+   fichiers-suivis              stable
+
+Aucune zone signalée cette fois — rien n'est nettement plus ancien que le reste du projet en ce moment.
+
+=== Plan d'action ===
+⏫ PLAN PRIORITAIRE — Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils.
+Aucun constat retenu : ce passage n'a rien trouvé qui appelle une action.

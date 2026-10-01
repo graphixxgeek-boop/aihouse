@@ -1,0 +1,115 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il compte des faits (durées, passages, âges) mais ses seuils — la part du jour un, le délai d'opportunité, l'âge d'une alerte devenue décor — sont DÉCLARÉS et non encore dérivés d'un creux de la distribution : un croisement peut donc ressortir un peu tôt ou un peu tard. À vérifier avant d'agir, jamais un verdict acquis.
+⚠️  Attention, mes résultats peuvent être inexacts : il compte des faits (durées, passages, âges) mais ses seuils — la part du jour un, le délai d'opportunité, l'âge d'une alerte devenue décor — sont DÉCLARÉS et non encore dérivés d'un creux de la distribution : un croisement peut donc ressortir un peu tôt ou un peu tard. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 00h56 (UTC)
+État du code : 3d4033b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : cli_direct
+Outil : jesus-le-sauveur — inchangé depuis le mercredi 30 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== JESUS-LE-SAUVEUR — ce qui freine le projet, causes indirectes comprises ===
+Il signale et propose. Il ne corrige jamais seul, et ne touche jamais à la charte.
+
+--- ① LE TEMPS MACHINE — le filet
+  94 s au relevé d'il y a 48 h · le filet a bougé de 6 % en taille (55 commit(s)), soit moins que l'écart entre deux exécutions du MÊME filet — la mesure tient encore
+
+--- ① LE TEMPS MACHINE — les outils qui n'ont servi qu'à se construire
+  aucun des 0 outils jugeables ne concentre son usage sur son seul premier jour · 32 écarté(s) faute d'avoir eu 3 jours pour resservir, 14 faute d'assez de passages — non jugeables, jamais « sains »
+
+--- ② LES OBLIGATIONS — ce que coûte un outil de plus
+  10 registre(s) à renseigner pour chaque outil qui arrive. Pris un par un ils sont tous justifiés ; c'est leur SOMME que personne ne discute — et elle se paie à chaque nouvel outil, pour toujours
+
+--- ② LES OBLIGATIONS — les Articles que rien n'applique et que rien ne cite
+  les 33 Articles sont cités au moins une fois dans le code ou dans le suivi
+
+--- ③ LES ALERTES QUE PERSONNE N'ÉTEINT
+  1 alerte(s) sur 7 tiennent depuis plus de 3 jours : à ce stade la question n'est plus « que dit-elle » mais « pourquoi personne ne peut l'éteindre »
+    · 3 j — ezechiel-les-tests : la suite elle-même n'est pas au vert : 1 anomalie(s) de fonctionnement
+
+--- ③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT
+  366 ligne(s) réparties sur 9 section(s) sont écrites à CHAQUE commit dans le fichier de reste, « relu à la demande » — c'est-à-dire par quelqu'un qui doit y penser. La part réellement lue n'est pas mesurable d'ici, et l'inventer serait précisément le défaut que cet outil traque
+
+--- ③ LE TAUX D'ACTIONNABILITÉ — combien de constats RETENUS sont devenus une tâche
+  PAS MESURÉ — 341 constat(s) RETENU(S) dorment dans les rapports du dépôt, et le taux d'actionnabilité N'EST PAS CALCULABLE — pas par manque de données, par manque de LIEN : un plan d'action écrit sa tâche en PROSE (« tâche [RECOMMANDEE] : … ») et ne cite jamais son NUMÉRO. Seuls 5 portent un « #nnnn », et par hasard, dans le libellé du constat. checkActionChain() vérifie la chaîne sur UN plan au moment où il est produit ; une fois le rapport sur le disque, plus rien ne relie ses constats aux tâches réelles. CE QUI LE RENDRAIT CALCULABLE : que le plan d'action inscrive le numéro de la tâche qu'il a fait naître
+
+--- ⑤ LE JEU — ce qui ralentit un tour, et ce qui ne se mesure pas d'ici
+  310 tour(s) mesuré(s) : 9821 tokens envoyés en moyenne PAR PERSONNAGE (min 3408, max 11557), et deux cerveaux par tour — soit ~19642 tokens par tour de jeu. Au-dessus du repère de 8000, c'est le premier poste de lenteur d'un tour, avant tout rendu. Quatre choses restent hors de portée d'ici.
+    HORS PORTÉE : la latence réelle d'un tour — il faut un serveur qui tourne et un vrai appel au modèle
+    HORS PORTÉE : les images par seconde du rendu 3D — il faut un navigateur ouvert sur la scène
+    HORS PORTÉE : le poids envoyé au navigateur — il faut une compilation, que cette sonde ne déclenche pas
+    HORS PORTÉE : ce que RESSENT un visiteur — il faut un humain, et aucun mécanisme ne le remplacera
+
+--- ④ LES FRICTIONS — mes propres allers-retours
+  484 relance(s) rapprochée(s) sans commit entre les deux, sur 1578 passages retenus (31 %) — 157 passage(s) écarté(s) comme rafale du crochet, qui n'est jamais une friction. C'est le coût qui ne s'impute à aucune tâche, parce qu'il se paie ENTRE elles
+    · find-deep-booster : 136 relance(s) rapprochée(s) sans commit entre les deux
+    · data-archangel : 104 relance(s) rapprochée(s) sans commit entre les deux
+    · html-report : 80 relance(s) rapprochée(s) sans commit entre les deux
+    · agent-du-temps : 33 relance(s) rapprochée(s) sans commit entre les deux
+    · tool-brain : 14 relance(s) rapprochée(s) sans commit entre les deux
+    · safe-export : 13 relance(s) rapprochée(s) sans commit entre les deux
+
+--- ④ LA FLUIDITÉ — quelle part du délai est du travail, quelle part de l'attente
+  fluidité médiane 50 % sur les 48 tâche(s) ayant passé au moins une nuit — donc 50 % du délai est de l'attente. 338 tâche(s) faites d'un trait sont ÉCARTÉES : leur fluidité vaut 1 par construction, jamais par mérite. Et c'est un PLAFOND : un jour portant un seul commit compte pour un jour travaillé entier, donc la vraie fluidité est plus basse
+    · #493 17 % — 1 j travaillé(s) sur 6 j écoulés — Ronde / plan d'action R4
+    · #574 20 % — 1 j travaillé(s) sur 5 j écoulés — Ronde / paramètre de lancement
+    · #575 20 % — 1 j travaillé(s) sur 5 j écoulés — Outillage / audit d'usage
+    · #776 20 % — 1 j travaillé(s) sur 5 j écoulés — tool-brain / il ne trouvait pas l'AGENT DES NOMS pour un ren
+    · #604 25 % — 1 j travaillé(s) sur 4 j écoulés — Documentation / Article 18
+
+--- ④ LES FRICTIONS DE L'ÉCHANGE — depuis quand une décision attend
+  17 décision(s) attendent une réponse, la plus ancienne depuis 9 jour(s)
+    · 9 j — #390 Outillage / badge
+    · 6 j — #767 Charte / quelles autres règles à fort levier manquent ?
+    · 6 j — #814 Données / les registres restants : brancher un lecteur, ou déclarer l'
+    · 6 j — #819 Filet / trois options chiffrées : ne rien faire, regarder les 3 plus l
+    · 6 j — #823 Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et 
+    · 6 j — #830 Idées / « un outil qui vérifie la logique et les trous PARTOUT » — la 
+    · 5 j — #842 Ronde / « rentabiliser les trouvailles » : l'outil qui mesure ça exist
+    · 5 j — #845 File / les 5 plus anciennes tâches encore ouvertes, présentées pour ar
+
+=== LA VUE 360 — les causes INDIRECTES, celles qu'aucune sonde ne voit seule ===
+  🔗 17 décisions attendent en même temps
+     au-delà d'un certain remplissage, le temps d'attente d'une file n'augmente plus proportionnellement, il explose — donc chaque décision de plus ralentit AUSSI toutes les autres, y compris les faciles. Ce n'est pas une opinion sur le rythme de réponse : c'est une propriété des files
+
+  🔗 366 lignes sont écartées de l'affichage à chaque commit, et 484 relances rapprochées ont lieu hors rafale du crochet
+     produire beaucoup n'est pas une faute, relancer non plus — mais ensemble elles décrivent un cercle : ce qui n'est pas vu passer se redemande. C'est le coût du changement de contexte, celui qui ne s'impute à aucune tâche parce qu'il se paie ENTRE elles
+
+  🔗 une alerte tient depuis 3 jours sans être traitée
+     passé quelques jours, la question n'est plus ce qu'elle dit mais pourquoi personne ne peut l'éteindre. Une alerte qu'aucune action légitime ne fait taire devient du décor, et elle emporte avec elle celles qu'on devrait lire (leçon L6, et 35 à 91 % de non-actionnables mesurés ailleurs)
+
+
+=== LA CASCADE DES PROPHÈTES DU TEMPS ===
+  Deux axes qui ne se recouvrent jamais : la LARGEUR (qui regarde) et la PROFONDEUR (jusqu'où). Niveau demandé : « standard ».
+  Du plus large au plus étroit. Chacun regarde ce qu'il est SEUL à savoir voir, puis passe la main.
+
+  1. JESUS-LE-SAUVEUR — à convoquer
+     périmètre : tout ce qui est HORS documents : le rythme, les obligations, l'attention, l'attente
+     lui seul voit : le coût d'une règle en temps réel, et le fait qu'un outil censé la porter ne sert plus
+     node scripts/jesus-le-sauveur.mjs
+
+  2. ABRAHAM-LES-REFERENCES — à convoquer
+     périmètre : TOUS les documents — analyse profonde de ceux qui portent des règles, hygiène pour les autres — et le chapeau des DOCUMENTS
+     lui seul voit : un renvoi mort, une règle sans porteur réel, deux documents qui se recouvrent, et un document que RIEN ne cite
+     node scripts/abraham-les-references.mjs
+
+  3. MOÏSE-TABLES-DE-LOI — à convoquer
+     périmètre : la charte seule
+     lui seul voit : un Article disparu, renuméroté, inséré au milieu, ou vidé de ses obligations
+     node scripts/moise-tables-de-loi.mjs
+
+  ⏸ 4. EZECHIEL-LES-TESTS — DIFFÉRÉ : demande le niveau « approfondi », non atteint ici
+     ce qu'on ne saura donc pas : un bloc sauté, un test vert et vide, une assertion qui ne peut pas échouer, d'où vient le temps
+
+  ↳ PUIS LE RASSEMBLEUR — ABRAHAM-LES-REFERENCES
+     ramasse les alertes déposées par les maillons dans le registre partagé, dit leur ÂGE, et signale celles qui traînent — ce que personne ne voit en lançant les outils un par un
+     node scripts/abraham-les-references.mjs assainissement
+
+  3 maillon(s) au niveau « standard », du plus large au plus étroit. Aucun n'est sauté parce que le précédent s'est tu : le silence de l'un ne dit rien de ce que le suivant verra.
+
+=== Plan d'action ===
+  → RETENU · 17 décisions attendent en même temps — tâche [RECOMMANDEE] : traiter la cause, jamais le symptôme (Article 3) : au-delà d'un certain remplissage, le temps d'attente d'une file n'augmente plus proportionnellement, il explose — donc chaque décision de plus ralentit AUSSI to
+  → RETENU · 366 lignes sont écartées de l'affichage à chaque commit, et 484 relances rapprochées ont lieu hors rafale du crochet — tâche [RECOMMANDEE] : traiter la cause, jamais le symptôme (Article 3) : produire beaucoup n'est pas une faute, relancer non plus — mais ensemble elles décrivent un cercle : ce qui n'est pas vu passer se redemande. C'est le coût du c
+  → RETENU · une alerte tient depuis 3 jours sans être traitée — tâche [RECOMMANDEE] : traiter la cause, jamais le symptôme (Article 3) : passé quelques jours, la question n'est plus ce qu'elle dit mais pourquoi personne ne peut l'éteindre. Une alerte qu'aucune action légitime ne fait taire devien
+  ? À TRANCHER · 17 décision(s) en attente de l'utilisateur — JESUS mesure l'attente, il ne la reproche à personne — les lui présenter par lots est le seul geste qui reste de mon côté

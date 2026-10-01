@@ -178,3 +178,40 @@ par le projet) »` — et **`« (fenêtre inconnue) »` quand aucun horodatage n
 
 **Ce qu'elle ne fait pas** : recopier le calcul de `horizonDuJournal()`. Elle dérive la même borne
 depuis les mêmes événements pour tenir en quelques mots ; la phrase longue reste chez tool-brain.
+
+## Le numéro de la tâche dans le plan d'action (2026-10-01, tâche #1355)
+
+**Le trou que ça ferme**, nommé par JESUS-LE-SAUVEUR pendant la Ronde GOAT du 1er octobre :
+« 341 constats RETENUS dorment dans les rapports du dépôt, et le taux d'actionnabilité N'EST PAS
+CALCULABLE — pas par manque de données, par manque de LIEN. » Un plan d'action écrivait sa tâche
+en **prose** (« tâche [RECOMMANDEE] : relancer avec les trois durées ») et ne citait jamais son
+numéro. `checkActionChain()` vérifie bien la chaîne, mais **sur un seul plan, au moment où il est
+produit**, parce que l'agent lui passe le numéro qu'il vient d'écrire. Une fois le rapport sur le
+disque, plus rien ne reliait ses constats aux tâches réelles.
+
+**Ce qui existe maintenant** : un champ `numeroTache`, optionnel, sur chaque constat. Quand il est
+renseigné, le numéro s'imprime à une **position fixe**, juste après le niveau :
+
+```
+  → RETENU · <constat> — tâche [RECOMMANDEE] #1292 : <ce qu'il faut faire>
+```
+
+`MOTIF_TACHE_DU_PLAN` relit cette position, et `numeroDeLaTache()` normalise les trois écritures
+acceptées (`1355`, `"1355"`, `"#1355"`). Tout le reste — un texte libre, un zéro, un objet — rend
+`null` plutôt qu'une référence bancale : une référence morte ressemble à un lien, ce qui est pire
+qu'une absence.
+
+**Ce que ça ne change pour personne, et c'est la condition** : le champ est absent par défaut, donc
+**aucun des 49 outils tenus par ce gabarit ne voit sa sortie bouger** tant qu'il ne le renseigne
+pas. C'est une réparation, jamais une refonte imposée (BP4).
+
+**Pourquoi une POSITION et pas un « #nnnn » n'importe où dans la ligne** : les 5 constats qui
+portaient déjà un numéro le portaient **par hasard**, dans le libellé — « #902 est encore ouverte »
+parle d'une tâche CITÉE, jamais de la tâche que ce constat fait naître. Les additionner serait lire
+un signal ADJACENT comme le signal visé (leçon L47), et refabriquerait exactement le faux
+« 0 % sur 323 » écarté le 2026-09-28.
+
+**Ses deux premiers usagers réels** (jamais un mécanisme sans appelant, leçon L2) :
+`god-of-all-process`, qui écrivait déjà son numéro en prose en fin de phrase — lisible par un
+humain, invisible à toute relecture mécanique — et `fils-de-discussion`, via sa table
+`TACHE_PAR_CONTROLE`.

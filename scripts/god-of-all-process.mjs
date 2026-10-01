@@ -3090,7 +3090,12 @@ function main() {
     ...(preuves.mesurable && preuves.toujoursVraies.length
       ? [{ fichier: "scripts/god-of-all-process.mjs",
            defaut: `${preuves.toujoursVraies.length} preuve(s) d'étape sur ${preuves.total} portent sur un fichier VERSIONNÉ : présentes dans tout clone neuf, elles ne peuvent jamais distinguer « fait » de « pas fait »`,
-           tache: "décider, étape par étape, ce qu'une vraie preuve serait — ou déclarer par écrit que la présence du fichier suffit et pourquoi (tâche #1292)",
+           tache: "décider, étape par étape, ce qu'une vraie preuve serait — ou déclarer par écrit que la présence du fichier suffit et pourquoi",
+           // LE NUMÉRO SORT DE LA PROSE ET ENTRE DANS SON EMPLACEMENT (2026-10-01, tâche #1355).
+           // Il était écrit « (tâche #1292) » à la fin de la phrase : lisible par un humain,
+           // invisible à toute relecture mécanique — c'est exactement le chaînon manquant que
+           // JESUS avait nommé. Même numéro, même tâche réelle ; seule sa POSITION change.
+           numeroTache: 1292,
            fausseUneMesure: true }]
       : []),
   ];

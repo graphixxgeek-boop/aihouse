@@ -727,6 +727,35 @@ export function coutDesArticlesVuDuDehors({ charte = lire("CLAUDE.md"), racines 
 export const MOTIF_RETENU = /^\s*→?\s*RETENU\s*·\s*(.+?)\s*—\s*tâche\s*\[/gim;
 export const MOTIF_TACHE_CITEE = /#(\d{2,5})\b/;
 
+// ————————————————————————————————————————————————————————————————————————
+// CE QUI MANQUAIT A ÉTÉ CONSTRUIT LE 2026-10-01 (Ronde GOAT, tâche #1355)
+// ————————————————————————————————————————————————————————————————————————
+// La sonde ci-dessous disait exactement ce qu'il fallait pour la rendre calculable : « que le plan
+// d'action inscrive le numéro de la tâche qu'il a fait naître ». Le gabarit partagé
+// (`report-template.mjs`) porte depuis cet emplacement — `numeroTache`, imprimé juste après
+// « tâche [NIVEAU] », donc à une position qu'aucune mention de passage ne peut imiter.
+//
+// LA SONDE NE DEVIENT PAS VERTE POUR AUTANT, ET C'EST LE POINT. Les rapports déjà sur le disque
+// n'ont pas de numéro et n'en auront jamais : on ne réécrit pas l'histoire. Ce qui est désormais
+// mesurable, c'est la COUVERTURE DU LIEN — quelle part des constats retenus porte un numéro
+// DÉCLARÉ — et, sur cette part seulement, si la tâche annoncée existe vraiment. Deux chiffres
+// distincts, jamais fondus : une couverture faible avec un taux parfait voudrait dire « les rares
+// qui déclarent sont bons », jamais « la chaîne tient ».
+//
+// POURQUOI ON N'ANNONCE TOUJOURS PAS UN « TAUX D'ACTIONNABILITÉ » GLOBAL : un constat sans numéro
+// n'est pas un constat sans suite — il est un constat SANS TRACE. Le compter comme un échec
+// rendrait un pourcentage accusateur et faux, exactement le « 0 % sur 323 » écarté le 2026-09-28.
+export const MOTIF_TACHE_DECLAREE = /—\s*tâche(?:\s*\[[^\]]*\])?\s*#(\d{2,5})\s*:/;
+
+// L'EXCLUSION DE SON PROPRE REGISTRE, et elle n'est pas un confort (leçon XP #34, payée le
+// 2026-09-30) : une mesure dont le rapport vit DANS le corpus qu'elle mesure fabrique sa propre
+// amélioration. Le rapport de JESUS porte des lignes « RETENU · » comme tous les autres ; le jour
+// où il déclarera ses numéros, il ferait monter sa propre couverture sans que rien n'ait bougé
+// ailleurs. Déclaré ici plutôt que deviné d'un nom de dossier.
+export const DOSSIERS_HORS_MESURE_ACTIONNABILITE = Object.freeze({
+  "jesus-le-sauveur": "le registre de CETTE sonde : une mesure qui lit ses propres rapports fabrique son propre résultat",
+});
+
 export function tauxDActionnabilite({ racineRapports = "docs", lireDir = readdirSync, lireFic = readFileSync, suivi = null, minimum = 10 } = {}) {
   const suiviTexte = suivi ?? (() => {
     let t = "";
@@ -748,35 +777,61 @@ export function tauxDActionnabilite({ racineRapports = "docs", lireDir = readdir
     let entrees; try { entrees = lireDir(courant, { withFileTypes: true }); } catch { continue; }
     for (const e of entrees) {
       const chemin = `${courant}/${e.name}`;
-      if (e.isDirectory()) { if (!/^(suivi|contexte-projet|archives)$/.test(e.name)) pile.push(chemin); continue; }
+      if (e.isDirectory()) { if (!/^(suivi|contexte-projet|archives)$/.test(e.name) && !DOSSIERS_HORS_MESURE_ACTIONNABILITE[e.name]) pile.push(chemin); continue; }
       if (e.name.endsWith(".md") || e.name.endsWith(".txt")) fichiers.push(chemin);
     }
   }
-  let retenus = 0, avecTache = 0, tacheReelle = 0;
-  const orphelins = [];
+  let retenus = 0, avecTache = 0, declares = 0, tacheReelle = 0;
+  const orphelins = [], mortes = [];
   for (const f of fichiers) {
     let texte; try { texte = lireFic(f, "utf8"); } catch { continue; }
     if (!texte.includes("RETENU ·")) continue;
     for (const ligne of texte.split("\n")) {
       if (!/RETENU\s*·/.test(ligne)) continue;
       retenus += 1;
-      const m = ligne.match(MOTIF_TACHE_CITEE);
-      if (!m) { orphelins.push({ fichier: f, constat: ligne.replace(/^\s*[→\-\s]*/, "").slice(0, 90) }); continue; }
-      avecTache += 1;
-      // LA RÉFÉRENCE MORTE EST PIRE QU'UNE ABSENCE : elle ressemble à un lien. Même vérification
-      // que checkActionChain(), et pour la même raison.
-      if (new RegExp(`\\|\\s*${m[1]}\\s*\\|`).test(suiviTexte)) tacheReelle += 1;
-      else orphelins.push({ fichier: f, constat: ligne.slice(0, 90), tacheMorte: m[1] });
+      // DEUX LECTURES QUI NE SE CONFONDENT PLUS. `MOTIF_TACHE_DECLAREE` lit l'EMPLACEMENT du plan
+      // — le numéro de la tâche que ce constat a fait naître. `MOTIF_TACHE_CITEE` ne lit qu'une
+      // mention quelque part dans la ligne, qui parle le plus souvent d'une AUTRE tâche
+      // (« #902 est encore ouverte »). Les additionner serait lire un signal adjacent comme le
+      // signal visé, ce qui a déjà coûté un faux chiffre à cet outil (leçon L47).
+      const d = ligne.match(MOTIF_TACHE_DECLAREE);
+      if (d) {
+        declares += 1;
+        // LA RÉFÉRENCE MORTE EST PIRE QU'UNE ABSENCE : elle ressemble à un lien. Même vérification
+        // que checkActionChain(), et pour la même raison.
+        if (new RegExp(`\\|\\s*${d[1]}\\s*\\|`).test(suiviTexte)) tacheReelle += 1;
+        else mortes.push({ fichier: f, constat: ligne.slice(0, 90), tacheMorte: d[1] });
+        continue;
+      }
+      if (ligne.match(MOTIF_TACHE_CITEE)) { avecTache += 1; continue; }
+      orphelins.push({ fichier: f, constat: ligne.replace(/^\s*[→\-\s]*/, "").slice(0, 90) });
     }
   }
   if (retenus < minimum) {
     return { mesurable: false, quoi: "le taux d'actionnabilité",
       pourquoi: `${retenus} constat(s) RETENU(S) trouvé(s) dans les rapports, il en faut ${minimum} : un taux sur si peu ressemble à une statistique sans en être une (BP5)` };
   }
-  // LE TAUX N'EST PAS CALCULABLE, ET C'EST LA TROUVAILLE. On rend le volume — un fait — et on dit
-  // précisément ce qui manque, plutôt qu'un pourcentage que le format ne permet pas de produire.
-  return { mesurable: false, quoi: "le taux d'actionnabilité", retenus, avecNumero: avecTache, volumeMesure: true,
-    pourquoi: `${retenus} constat(s) RETENU(S) dorment dans les rapports du dépôt, et le taux d'actionnabilité N'EST PAS CALCULABLE — pas par manque de données, par manque de LIEN : un plan d'action écrit sa tâche en PROSE (« tâche [RECOMMANDEE] : … ») et ne cite jamais son NUMÉRO. Seuls ${avecTache} portent un « #nnnn », et par hasard, dans le libellé du constat. checkActionChain() vérifie la chaîne sur UN plan au moment où il est produit ; une fois le rapport sur le disque, plus rien ne relie ses constats aux tâches réelles. CE QUI LE RENDRAIT CALCULABLE : que le plan d'action inscrive le numéro de la tâche qu'il a fait naître` };
+  const couverture = Math.round((declares / retenus) * 100);
+  // LA COUVERTURE EST NULLE : on retombe exactement sur l'ancien verdict, et c'est voulu. Tant
+  // qu'aucun plan n'a déclaré son numéro, il n'y a rien à diviser — et rendre « 0 % d'actionnabilité »
+  // accuserait d'un manquement qui n'a jamais été mesuré (leçons L5/L11).
+  if (!declares) {
+    return { mesurable: false, quoi: "le taux d'actionnabilité", retenus, avecNumero: avecTache, declares: 0, couverture: 0, volumeMesure: true,
+      pourquoi: `${retenus} constat(s) RETENU(S) dorment dans les rapports du dépôt, et le taux d'actionnabilité N'EST PAS CALCULABLE — par manque de LIEN, jamais de données. L'EMPLACEMENT existe depuis le 2026-10-01 (\`numeroTache\`, gabarit partagé), mais aucun rapport sur le disque ne l'a encore renseigné : les anciens ne l'avaient pas, et on ne réécrit pas l'histoire. ${avecTache} ligne(s) portent bien un « #nnnn », mais AILLEURS dans la ligne — une tâche CITÉE, jamais la tâche que le constat fait naître, et les compter serait le faux chiffre écarté le 2026-09-28. CE QUI LE RENDRA CALCULABLE : que les outils renseignent \`numeroTache\` quand la tâche existe` };
+  }
+  const taux = Math.round((tacheReelle / declares) * 100);
+  return {
+    mesurable: true, quoi: "le taux d'actionnabilité", retenus, avecNumero: avecTache, declares, couverture, taux,
+    tacheReelle, mortes: mortes.slice(0, 5),
+    // `orphelins` garde son nom et son contenu : les références MORTES d'abord (elles accusent),
+    // les constats sans aucune trace ensuite. L'affichage qui le lit n'a pas à changer.
+    orphelins: [...mortes, ...orphelins].slice(0, 5),
+    // DEUX CHIFFRES, JAMAIS FONDUS EN UN SEUL. Le second ne se lit qu'à la lumière du premier :
+    // un taux de 100 % sur une couverture de 2 % dit « les rares qui déclarent sont bons », il ne
+    // dira jamais « la chaîne tient ».
+    pourquoi: `${couverture} % des ${retenus} constat(s) RETENU(S) déclarent le numéro de la tâche qu'ils font naître (${declares}) ; sur ceux-là, ${taux} % pointent une tâche qui existe VRAIMENT dans le suivi (${tacheReelle}/${declares})${mortes.length ? `, et ${mortes.length} référence(s) sont MORTES — une référence morte ressemble à un lien, ce qui est pire qu'une absence` : ""}. Les ${retenus - declares} autres ne sont pas des échecs : ce sont des constats SANS TRACE, écrits avant que l'emplacement existe ou par un outil qui ne le renseigne pas encore`,
+    horsPortee: "la couverture dit si le LIEN est écrit, jamais si la tâche a été FAITE — et le registre de JESUS lui-même est exclu du balayage, une mesure qui lit ses propres rapports fabriquant son propre résultat (XP #34)",
+  };
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -1011,7 +1066,10 @@ export function lignesDuPassage(p) {
     (s) => (s.vieilles ?? []).map((v) => `· ${v.jours} j — ${v.outil ?? v.source ?? "origine non nommée"} : ${String(v.quoi ?? v.constat ?? "").slice(0, 90)}`));
   dire("③ LES ALERTES ÉCARTÉES DE L'AFFICHAGE À CHAQUE COMMIT", p.bruit);
   dire("③ LE TAUX D'ACTIONNABILITÉ — combien de constats RETENUS sont devenus une tâche", p.actionnabilite,
-    (s) => (s.orphelins ?? []).slice(0, 5).map((o) => `· ${o.tacheMorte ? `tâche #${o.tacheMorte} ANNONCÉE mais absente` : "aucune tâche annoncée"} — ${o.constat}`));
+    (s) => [
+      ...(s.orphelins ?? []).slice(0, 5).map((o) => `· ${o.tacheMorte ? `tâche #${o.tacheMorte} ANNONCÉE mais absente` : "aucune tâche annoncée"} — ${o.constat}`),
+      ...(s.horsPortee ? [`HORS PORTÉE : ${s.horsPortee}`] : []),
+    ]);
   dire("⑤ LE JEU — ce qui ralentit un tour, et ce qui ne se mesure pas d'ici", p.jeu,
     (s) => (s.horsPortee ?? []).map((h) => `HORS PORTÉE : ${h.quoi} — ${h.pourquoi}`));
   dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,

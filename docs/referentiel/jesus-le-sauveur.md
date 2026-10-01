@@ -277,3 +277,32 @@ c'est le motif L47, celui que ce projet paie le plus souvent.
 **Et elle refuse de conclure sans données** : un `.memento-history.json` vide rend *PAS MESURÉ*,
 jamais « un tour est léger ». Ce journal ne se remplit qu'en JOUANT — donc un zéro dit que le jeu
 n'a pas tourné récemment, ce qui est une information en soi.
+
+## Le taux d'actionnabilité est devenu calculable — en principe (2026-10-01, tâche #1355)
+
+La sonde déclarait une impossibilité **et son remède** : « que le plan d'action inscrive le numéro
+de la tâche qu'il a fait naître ». Le remède a été construit le 1er octobre dans le gabarit partagé
+(`numeroTache`, voir `docs/referentiel/report-template.md`). La sonde lit désormais ce champ.
+
+**Elle ne passe pas au vert pour autant, et c'est le point.** Les rapports déjà sur le disque n'ont
+pas de numéro et n'en auront jamais : on ne réécrit pas l'histoire. Tant qu'aucun rapport n'a
+renseigné l'emplacement, elle rend toujours **PAS MESURÉ** — jamais « 0 % », qui accuserait d'un
+manquement jamais mesuré (leçons L5/L11).
+
+**Deux chiffres sortent, jamais fondus en un seul** :
+
+- la **COUVERTURE** — quelle part des constats RETENUS déclare le numéro de la tâche qu'elle fait
+  naître. Elle dit si le LIEN est écrit.
+- le **TAUX** — sur ces seuls constats, quelle part pointe une tâche qui **existe vraiment** dans
+  `docs/suivi/`. Il dit si la tâche annoncée est réelle.
+
+Un taux de 100 % sur une couverture de 2 % voudrait dire « les rares qui déclarent sont bons » ; il
+ne dira jamais « la chaîne tient ». Et les constats sans numéro **ne sont pas comptés comme des
+échecs** : ce sont des constats SANS TRACE, écrits avant que l'emplacement existe.
+
+**Son propre registre est hors du balayage** (`DOSSIERS_HORS_MESURE_ACTIONNABILITE`), et la raison
+est une leçon payée la veille (XP #34) : une mesure dont le rapport vit dans le corpus qu'elle
+mesure fabrique sa propre amélioration. La preuve est tombée le jour même — **341 constats sont
+redescendus à 335** une fois l'exclusion posée.
+
+**Hors portée** : la couverture dit si le lien est ÉCRIT, jamais si la tâche a été FAITE.

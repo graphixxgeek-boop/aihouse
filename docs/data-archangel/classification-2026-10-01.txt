@@ -1,0 +1,56 @@
+=== LA CLASSIFICATION COMPLÈTE — RAPPORTS ET DATAS ===
+
+  CE QUI EST RANGÉ, PAR NATURE — et « rapport » n'est qu'une des quatre :
+    RAPPORTS              383  — les fichiers produits passage après passage par un outil, archivés dans son registre
+    REGISTRES              59  — l'index d'un outil — la mémoire de ce qu'il a déjà vu, relue au passage suivant
+    JOURNAUX locaux        20  — un journal tenu par un outil pour lui-même, jamais un rapport livré
+    SÉRIES CHIFFRÉES        1  — les indicateurs suivis dans le temps — la seule donnée dont la valeur est de se comparer à elle-même
+
+=== CLASSIFICATION DES RAPPORTS — 46 dossier(s), 383 fichier(s) ===
+
+  AXE 1 — LE SUJET TRAITÉ
+    donnees                  7 dossier(s) ·   84 fichier(s)
+    travail                 14 dossier(s) ·   77 fichier(s)
+    code                     5 dossier(s) ·   73 fichier(s)
+    documents                4 dossier(s) ·   62 fichier(s)
+    outillage                8 dossier(s) ·   49 fichier(s)
+    consommation             4 dossier(s) ·   18 fichier(s)
+    verifications            2 dossier(s) ·   15 fichier(s)
+    (non déterminé)          1 dossier(s) ·    3 fichier(s)
+    jeu                      1 dossier(s) ·    2 fichier(s)
+
+  AXE 2 — L'ÉQUIPE PROPRIÉTAIRE (lue dans les registres déclarés, jamais recopiée)
+    (f) 👼 Les Anges de la coordination                   20 dossier(s) ·  121 fichier(s)
+    (f) 👑 La Gouvernance Royale                          10 dossier(s) ·   92 fichier(s)
+    (f) 🛡️ Les Gardiens Sacrés du Code                    3 dossier(s) ·   78 fichier(s)
+    (f) 🎬 La Suite Tarantino - Simulation & qualité narrative   2 dossier(s) ·   45 fichier(s)
+    (non déterminé)                                        5 dossier(s) ·   24 fichier(s)
+    (f) 📜 Les Prophètes - Dette & Structure du code       6 dossier(s) ·   23 fichier(s)
+
+  AXE 3 — LA FONCTION (a-t-il besoin d'être lu ? par qui ? qu'alimente-t-il ?)
+    livré à l'utilisateur          7 dossier(s) ·   90 fichier(s)  — écrit pour être lu par lui — c'est sa décision HTML déclarée qui le dit
+    matière d'un autre outil      39 dossier(s) ·  293 fichier(s)  — au moins un script le relit : il alimente une analyse en aval
+    trace consultable              0 dossier(s) ·    0 fichier(s)  — un index.md le liste — retrouvable à la main, jamais relu automatiquement
+    écrit et jamais rouvert        0 dossier(s) ·    0 fichier(s)  — ni livraison, ni lecteur, ni index : produit pour personne
+
+  LES DEUX AXES CROISÉS (sujet × équipe) — les 12 premières cases
+    travail × (f) 👼 Les Anges de la coordination                    74 fichier(s)
+    code × (f) 🛡️ Les Gardiens Sacrés du Code                       60 fichier(s)
+    documents × (f) 👑 La Gouvernance Royale                         54 fichier(s)
+    donnees × (f) 🎬 La Suite Tarantino - Simulation & qualité narrative   43 fichier(s)
+    donnees × (équipe non déclarée)                                  19 fichier(s)
+    outillage × (f) 🛡️ Les Gardiens Sacrés du Code                  18 fichier(s)
+    outillage × (f) 📜 Les Prophètes - Dette & Structure du code     18 fichier(s)
+    consommation × (f) 👑 La Gouvernance Royale                      18 fichier(s)
+    donnees × (f) 👼 Les Anges de la coordination                    17 fichier(s)
+    verifications × (f) 👼 Les Anges de la coordination              15 fichier(s)
+    outillage × (f) 👑 La Gouvernance Royale                          8 fichier(s)
+    code × (f) 👑 La Gouvernance Royale                               7 fichier(s)
+  ✔️  docs/rapports-de-nuit n'a pas d'équipe, et c'est ASSUMÉ : les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas.
+  ✔️  docs/rapports-gros-prompt n'a pas d'équipe, et c'est ASSUMÉ : les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs.
+  ✔️  docs/contexte-projet n'a pas d'équipe, et c'est ASSUMÉ : les archives historiques transmises par l'utilisateur lui-même (référentiel d'origine v34, extrait de session, diagnostic initial). Rien ici n'est produit par l'Agence, et rien ne doit l'être : ce sont des pièces d'entrée, jamais des sorties.
+  ✔️  docs/plans n'a pas d'équipe, et c'est ASSUMÉ : les plans de chantier — écrits à la main pour un chantier donné, jamais produits passage après passage par un outil. Un plan n'a pas de producteur périodique, donc pas d'équipe propriétaire.
+  ✔️  docs/rapports-verification-froid n'a pas d'équipe, et c'est ASSUMÉ : les vérifications à froid (Article 25) — un dossier par vérification, déclenché par une demande ou une vague de travail, jamais à date fixe et jamais produit par un outil unique : il RASSEMBLE les passages de plusieurs outils et l'analyse qui les lit. Les outils qu'il convoque ont chacun leur propre registre ; celui-ci n'appartient donc à aucune équipe, et le dire vaut mieux que de lui en inventer une (2026-09-27, tâches #436/#773).
+
+  HORS PÉRIMÈTRE, déclaré plutôt que tu : les données du JEU (base D1, état d'une partie) ne sont
+  pas rangées ici. Le périmètre est l'Agence — ce que l'outillage produit et relit.

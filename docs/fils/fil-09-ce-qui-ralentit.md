@@ -1,9 +1,9 @@
 # FIL 09 — Ce qui ralentit le projet
 
 **Balle :** À MOI
-**Dernier mouvement :** 2026-09-30
+**Dernier mouvement :** 2026-10-01
 **Place dans le plan :** Transverse — il ne produit rien, il explique pourquoi le reste avance ou pas. Il alimente directement le fil 02 (cible d'obligations) et le fil 06 (versions).
-**Saisines :** réponses 2026-09-29 · soirée du 2026-09-30
+**Saisines :** réponses 2026-09-29 · soirée du 2026-09-30 · Ronde GOAT du 2026-10-01
 
 ---
 
@@ -36,6 +36,27 @@ lequel des deux ralentit le moins.
 ---
 
 ## ③ LA CHAÎNE VIVE — numérotée, pour que tu puisses répondre par le numéro
+
+**Q9.5 — LE PLUS GROS GASPILLAGE DU PAYSAGE, MESURÉ ET À MOITIÉ RÉPARÉ** *(2026-10-01, Ronde GOAT, tâche #1355 — À MOI, FAITE)*.
+JESUS a trouvé cette nuit quelque chose qui appartient pleinement à ce fil, parce que c'est du
+travail payé qui ne rapportait rien : **341 problèmes signalés dormaient dans les rapports du dépôt,
+et rien ne pouvait dire combien avaient fini en vrai travail.**
+
+**Pourquoi c'est un ralentisseur et pas un détail d'intendance** : tout ce paysage d'outils existe
+pour trouver des problèmes. Si un problème trouvé ne devient pas une tâche, le temps passé à le
+trouver est perdu **deux fois** — une fois en le cherchant, une fois en le retrouvant plus tard.
+
+**La cause exacte, et elle est bête** : un plan d'action écrivait sa tâche en toutes lettres
+(« tâche : relancer avec les trois durées ») sans jamais citer **son numéro**. On pouvait vérifier
+le lien à la seconde où on l'écrivait, plus jamais après.
+
+**Ce qui est construit** : un emplacement fixe pour le numéro, dans le gabarit que 49 outils
+partagent. Optionnel — aucun outil ne change de sortie aujourd'hui — mais relisible, donc le lien
+existe enfin dans les deux sens.
+
+**Ce que ça ne répare PAS, et je préfère le dire** : les rapports déjà écrits n'ont pas de numéro et
+n'en auront jamais. Le chiffre restera « pas calculable » jusqu'à ce que les outils s'en servent, et
+il montera tout seul ensuite. **Rien à décider de ton côté.**
 
 **Q9.1 — LE TROU EST COMBLÉ À MOITIÉ, le 2026-09-30, tâche #1322.** C'était le plus ancien du
 fil et il était entièrement de mon côté. **JESUS couvre maintenant les quatre axes que tu avais

@@ -57,7 +57,7 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**21 fichier(s)** dans ce dossier.
+**23 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -71,6 +71,8 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 | [circle-signal-2026-09-27T00-12-15-610Z.txt](circle-signal-2026-09-27T00-12-15-610Z.txt) | — |
 | [classification-2026-09-26.html](classification-2026-09-26.html) | — |
 | [classification-2026-09-26.txt](classification-2026-09-26.txt) | — |
+| [classification-2026-10-01.html](classification-2026-10-01.html) | — |
+| [classification-2026-10-01.txt](classification-2026-10-01.txt) | — |
 | [classification-des-data-2026-09-26.md](classification-des-data-2026-09-26.md) | — |
 | [dossier-cible-2026-09-25.md](dossier-cible-2026-09-25.md) | — |
 | [dossier-classification-2026-09-25.md](dossier-classification-2026-09-25.md) | — |
