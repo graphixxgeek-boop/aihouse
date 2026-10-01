@@ -9252,7 +9252,7 @@ await testDocumentsJumeaux();
 
 async function testOffresConcurrentes() {
   const lc = await import('../scripts/le-coordinateur.mjs');
-  const { findOffresConcurrentes, PRESTATIONS, suggestPrestationsForTask } = lc;
+  const { findOffresConcurrentes, formatOffresConcurrentesLines, PRESTATIONS, suggestPrestationsForTask } = lc;
 
   // LE SIGNAL EST CELUI DU MATCHEUR LUI-MÊME. Deux outils ne se chevauchent pas dans l'absolu : ils
   // se chevauchent quand ils répondent à LA MÊME DEMANDE, puisque c'est là que l'agent doit choisir
@@ -9285,6 +9285,39 @@ async function testOffresConcurrentes() {
   // LE SEUIL EST POSÉ DANS UN TROU DE LA DISTRIBUTION, et ce test protège le trou plutôt que le
   // chiffre : si des paires apparaissent à 4 ou 5 mots, le seuil est à remesurer, pas à défendre.
   assert.equal(Object.keys(reel.distribution).filter((n) => Number(n) >= reel.seuil).length, 0, `the gap the threshold sits in must still exist (distribution: ${JSON.stringify(reel.distribution)})`);
+
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  // LE SEUIL PASSÉ AU-DESSUS DE SA PROPRE DISTRIBUTION (2026-10-01, tâche #1377)
+  //
+  // LE TEST JUSTE AU-DESSUS PROTÈGE LE TROU PAR LE HAUT — il tombe si des paires apparaissent À
+  // ou AU-DESSUS du seuil. Il ne dit rien du cas inverse, qui est arrivé : la distribution a
+  // GLISSÉ SOUS le seuil. Calibré le 2026-09-26 sur 58 prestations (une paire à 7 mots, la
+  // suivante à 3 : trou franc), le détecteur en voit 76 aujourd'hui et plafonne à 3. Aucune paire
+  // ne PEUT plus atteindre 4 — et le rapport annonçait « Aucune paire d'offres concurrentes » du
+  // même ton que lorsqu'il mesurait vraiment. C'est le faux vert exact des leçons L5 et L11 :
+  // une absence de CAPACITÉ À VOIR rendue avec les mots d'une absence de PROBLÈME.
+  // ═══════════════════════════════════════════════════════════════════════════════════════
+  const aveugle = findOffresConcurrentes([
+    { nom: 'A', demande: 'dette technique empilée', outils: ['a'] },
+    { nom: 'B', demande: 'rapports de ronde archivés', outils: ['b'] },
+  ], { seuil: 9 });
+  assert.equal(aveugle.seuilAuDessusDeLaDistribution, true, 'when no pair can possibly reach the threshold, the probe must SAY it rather than render a comforting zero');
+  assert.match(formatOffresConcurrentesLines(aveugle).join('\n'), /CE ZÉRO N'EST PAS UNE MESURE/, 'and the printed report must carry it, not only the object — nobody reads the object');
+  assert.ok(!formatOffresConcurrentesLines(aveugle).some((l) => l.includes('Aucune paire d’offres concurrentes') || l.includes("Aucune paire d'offres concurrentes")), 'the reassuring sentence must NOT appear at the same time: two opposite readings in one report is worse than either');
+
+  // CONTRE-TEST, et mon premier fixture l'avait raté : deux demandes SANS mot commun ont un
+  // maximum de 0, donc elles déclenchent l'alarme à juste titre. Pour prouver qu'elle reste
+  // étroite, il faut une paire qui atteigne VRAIMENT le seuil.
+  const voyant = findOffresConcurrentes([
+    { nom: 'A', demande: 'dette technique code empilé plutôt que pensé', outils: ['a'] },
+    { nom: 'B', demande: 'dette technique du code empilé dans le projet', outils: ['b'] },
+  ], { seuil: 2 });
+  assert.ok(voyant.maxObserve >= voyant.seuil, 'the fixture must really reach the threshold, otherwise the counter-test proves nothing');
+  assert.equal(voyant.seuilAuDessusDeLaDistribution, false, 'and a threshold the data CAN reach is never flagged — the alarm must stay narrow or it stops being read (lesson L4)');
+
+  // ── SUR LE VRAI CATALOGUE (Article 25) : le cas n'est pas théorique, il est arrivé ce jour-là.
+  assert.equal(reel.maxObserve, Math.max(...Object.keys(reel.distribution).map(Number)), 'the reported maximum must be the real maximum of the distribution, never a stored guess');
+  assert.equal(reel.seuilAuDessusDeLaDistribution, reel.maxObserve < reel.seuil, 'and the flag must be derived from the two numbers, so it cannot drift away from them');
 
   // LA CORRECTION N'A CASSÉ NI L'UN NI L'AUTRE DES DEUX APPARIEMENTS — contre-test dans les deux sens.
   const surClones = suggestPrestationsForTask("trouver un bloc de logique recopié au lieu d'être factorisé");

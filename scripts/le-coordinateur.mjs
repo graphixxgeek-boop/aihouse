@@ -949,8 +949,28 @@ export function findOffresConcurrentes(prestations = PRESTATIONS, { seuil = SEUI
       paires.push({ a: prepare[i].nom, b: prepare[j].nom, outilsA: prepare[i].outils, outilsB: prepare[j].outils, partages });
     }
   }
+  // LE SEUIL PEUT PASSER AU-DESSUS DE TOUT CE QU'ON OBSERVE, ET ALORS « 0 » NE VEUT PLUS RIEN DIRE
+  // (2026-10-01, tâche #1377). Ce détecteur a été calibré le 2026-09-26 sur 58 prestations, où une
+  // paire partageait SEPT mots quand la suivante en partageait trois : le trou était franc, et le
+  // seuil a été posé dedans. Le catalogue en compte 76 aujourd'hui et la distribution PLAFONNE À
+  // TROIS. Aucune paire ne peut donc plus atteindre 4, et le rapport annonçait pourtant « Aucune
+  // paire d'offres concurrentes » du même ton que lorsqu'il mesurait vraiment.
+  //
+  // C'EST LE FAUX VERT QUE CE PROJET TRAQUE PARTOUT AILLEURS (leçons L5 et L11) : une absence de
+  // CAPACITÉ À VOIR rendue avec les mots d'une absence de PROBLÈME. Le commentaire du seuil le
+  // prévoyait déjà — « si le trou se referme, le seuil est à remesurer plutôt qu'à défendre » —
+  // mais rien ne le vérifiait, donc personne ne pouvait savoir que le cas était arrivé.
+  //
+  // ON NE RETOUCHE PAS LE SEUIL EN SILENCE, et c'est volontaire. La distribution d'aujourd'hui
+  // (2281 · 470 · 88 · 11) décroît régulièrement : il n'y a PLUS DE TROU où poser un seuil. Le
+  // signal a perdu sa puissance, ce n'est pas le réglage qui a glissé — et choisir un nouveau
+  // seuil dans une pente continue reviendrait à inventer la frontière qu'on prétend lire.
+  const observes = Object.keys(distribution).map(Number).filter((n) => distribution[n] > 0);
+  const maxObserve = observes.length ? Math.max(...observes) : 0;
+  const seuilAuDessusDeLaDistribution = maxObserve < seuil;
   return {
     mesurable: true, seuil, examinees: prepare.length, distribution,
+    maxObserve, seuilAuDessusDeLaDistribution,
     paires: paires.sort((x, y) => y.partages.length - x.partages.length),
     horsPortee: "elle compare les DEMANDES déclarées au catalogue, jamais ce que les outils font vraiment. Deux outils qui font la même chose sous deux libellés sans mot commun lui échappent — c'est CLONE-HUNTER qui répond à cette question-là, sur le code.",
   };
@@ -962,7 +982,13 @@ export function formatOffresConcurrentesLines(r) {
   l.push(`  Distribution des mots partagés entre paires d'offres : ${Object.entries(r.distribution).sort((a, b) => Number(a[0]) - Number(b[0])).map(([n, c]) => `${n} mot(s) × ${c}`).join(" · ")}`);
   l.push(`  Seuil : ${r.seuil} mots. Il est POSÉ DANS LE TROU de cette distribution, jamais choisi — si le trou se referme, le seuil est à remesurer plutôt qu'à défendre.`);
   l.push("");
-  if (!r.paires.length) l.push("  Aucune paire d'offres concurrentes : chaque demande du catalogue mène à un outil, et tool-brain peut trancher seul.");
+  if (r.seuilAuDessusDeLaDistribution) {
+    l.push(`  🚨 CE ZÉRO N'EST PAS UNE MESURE — le seuil (${r.seuil}) est AU-DESSUS de tout ce qu'on observe (maximum réel : ${r.maxObserve} mot(s) partagés).`);
+    l.push("     Aucune paire ne PEUT l'atteindre, donc « aucun chevauchement » et « je ne peux pas en voir » rendent ici le même texte (leçons L5 et L11).");
+    l.push("     Le seuil avait été posé dans un TROU franc de la distribution (3 puis 7, sur 58 prestations). Le catalogue en compte plus aujourd'hui et la pente est devenue continue :");
+    l.push("     il n'y a PLUS de trou où poser un seuil. Choisir un nouveau chiffre dans une pente régulière reviendrait à inventer la frontière qu'on prétend lire — donc rien n'est retouché ici,");
+    l.push("     et le constat remonte en décision : soit ce signal a fait son travail et s'arrête, soit il faut mesurer le chevauchement sur autre chose que les mots de la demande.");
+  } else if (!r.paires.length) l.push("  Aucune paire d'offres concurrentes : chaque demande du catalogue mène à un outil, et tool-brain peut trancher seul.");
   for (const p of r.paires) {
     l.push(`  🟠 ${p.partages.length} mots communs — « ${p.a} » (${p.outilsA.join(", ")}) et « ${p.b} » (${p.outilsB.join(", ")})`);
     l.push(`      mots : ${p.partages.join(", ")}`);
