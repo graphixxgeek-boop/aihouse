@@ -22,18 +22,18 @@ Tout ce qui suit est **mesuré**, pas estimé, et chaque chiffre se rejoue à la
 | Volume de l'outillage | **88 fichiers, 92 167 lignes** | c'est le périmètre que ta proposition vise |
 | **Décisions déjà prises, écrites dans le code** | **2 228** | **le vrai coût d'une refonte, et personne ne le comptait** |
 | Leur répartition | médiane **8** par fichier · **un seul** fichier en porte **718** (32 %) | **le coût n'est pas réparti, il est concentré** |
-| Le Jeu | 93 fichiers, et **6 seulement** mentionnent l'outillage | il est **déjà** indépendant : une refonte de l'Agence ne le toucherait pas |
+| Le Jeu | 93 fichiers, et **moins d'une douzaine** mentionnent l'outillage (6 ou 10 selon le critère — les deux sont donnés exprès) | il est **déjà** indépendant : une refonte de l'Agence ne le toucherait pas |
 | Kits d'export | **85 / 85 complets** | ce qui existe est **déjà** emportable ailleurs |
 | Scripts avec une cible écrite en dur | **0 sur 88** | l'architecture n'est **pas** prisonnière de ce projet |
 | Exportabilité globale | **88 %**, dont **3 dimensions à 100 %** | ce sont des acquis qu'une refonte **repartirait à zéro** |
-| Obligations portées par nos documents | **936**, dont **556 dans un seul** | **c'est là qu'est le poids** |
+| Obligations portées par nos documents | plus de **700**, et la très grande majorité dans UN SEUL document — les règles de travail en portent **3 à 4 fois plus que la charte**. *(Deux outils donnent deux comptes, 528 et 556 pour ce document, 129 et 173 pour la charte : ils ne comptent pas une obligation de la même façon. Je donne la fourchette plutôt que de choisir le chiffre qui m'arrange — c'est le troisième chiffre de cette nuit qui ne survit pas à sa vérification.)* | **c'est là qu'est le poids** |
 | Registres à remplir pour UN outil qui arrive | **10** | le prix d'entrée d'un nouvel outil |
 
 ### La chose la plus importante de ce tableau
 
 **Ton intuition est juste sur l'organisation, et fausse sur le code.** Tu as écrit :
 *« en l'état l'agence est AUSSI, pour certaines parties : un vrai bazar organisé, construit sur le
-tas, sans vision globale. »* Les mesures disent que c'est vrai de **l'organisation** — 936
+tas, sans vision globale. »* Les mesures disent que c'est vrai de **l'organisation** — plus de 700
 obligations, 10 registres par outil, aucune définition de « terminé » — et **faux du code
 lui-même**, qui est déjà portable, déjà emballé, déjà découplé du Jeu.
 
@@ -81,8 +81,8 @@ qui est précisément la question que je te pose plus bas.
 
 ### Voie C — Pas de refonte, on attaque les obligations
 
-**Ce qu'on ferait** : laisser le code tel quel et s'attaquer aux **936 obligations** et au **prix
-d'entrée de 10 registres**.
+**Ce qu'on ferait** : laisser le code tel quel et s'attaquer aux **plus de 700 obligations** et au
+**prix d'entrée de 10 registres**.
 
 **Pourquoi je ne la propose pas seule** : elle soigne le symptôme le plus douloureux, mais elle ne
 répond pas à ta vraie demande — *« je ne comprends pas comment l'agence fonctionne par module »*.
@@ -138,9 +138,8 @@ reconstruit (ma préférence) · on les abandonne en écrivant pourquoi (rapide,
 **Q4 — L'étape 0 d'abord, oui ou non ?** Je pense que oui, et c'est ton propre ordre. Mais si tu
 préfères commencer par la carte (étape 1) pour voir avant de définir, c'est défendable aussi.
 
-**Q5 — Le Jeu reste-t-il hors périmètre ?** Les mesures disent qu'il est déjà indépendant — 6
-fichiers sur 93 mentionnent l'outillage. Je pars du principe que oui, par ta consigne permanente.
-Confirme ou corrige.
+**Q5 — Le Jeu reste-t-il hors périmètre ?** Les mesures disent qu'il est déjà indépendant :
+moins d'une douzaine de ses 93 fichiers mentionnent l'outillage — **6 ou 10 selon ce qu'on appelle « mentionner »**, et je donne les deux plutôt qu'un seul : deux critères, deux chiffres, et la conclusion tient sous les deux. Je pars du principe que oui, par ta consigne permanente. Confirme ou corrige.
 
 ---
 

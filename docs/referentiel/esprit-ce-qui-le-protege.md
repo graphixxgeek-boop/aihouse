@@ -10,15 +10,44 @@
 
 ---
 
-## LA RÉPONSE COURTE, ET ELLE N'EST PAS CONFORTABLE
+## LA RÉPONSE COURTE, ET ELLE EST PIRE QUE CE QUE JE CROYAIS
 
-**On ne peut pas « finaliser » l'ESPRIT cette nuit, et la raison est précise** : le seul outil
-capable de vérifier que l'esprit tient encore — `check-spirit` — **n'a jamais été lancé**. Il
-envoie de vraies provocations au vrai modèle et coûte de vrais appels API, donc il exige ta
-validation (Article 22). **La loi suprême du projet est la chose la moins vérifiée qu'il contient.**
+**La première version de ce document disait « `check-spirit` n'a jamais été lancé ». C'était
+FAUX, et je l'ai écrit de ma propre main quelques minutes plus tôt.** Je l'avais déduit d'un
+compteur d'usage qui dit « jamais vu passer sur une fenêtre de 45 h » — ce qui n'est pas du tout
+la même chose, et le compteur le déclare lui-même en toutes lettres. **C'est exactement la leçon
+L47 que ce projet paie le plus souvent : un signal ADJACENT lu comme le signal visé.** La
+correction est gardée ici plutôt que gommée (Article 27).
 
-Ce n'est pas une excuse : c'est le constat qui doit précéder toute « finalisation ». On ne finalise
-pas ce qu'on n'a jamais mesuré.
+**La vérité est plus intéressante, et plus gênante.** `check-spirit` **a tourné deux fois le
+2026-09-28**, contre le vrai modèle. Il a trouvé quelque chose de réel :
+
+> **Lia dit « désolée » dans 5 de ses 10 répliques. Noé ne s'excuse jamais, pas une fois.**
+
+*(La lecture complète, avec les cinq répliques citées et les trois pistes :
+`docs/check-spirit/lecture-2026-09-28.md`. Le transcript brut :
+`docs/check-spirit/passage-2026-09-28.txt`. **Ce document-ci ne les remplace pas** — il dit ce que
+leur résultat implique pour la protection de l'esprit, eux disent ce qui a été dit.)*
+
+**Deux règles touchées, et la seconde est la plus grave.** L'Article 11 (un même mot de chute une
+réplique sur deux est un tic) et surtout **l'Article 0** : « désolée » est un marqueur de
+politesse, et la charte dit noir sur blanc qu'« une neutralité polie n'est jamais un indice de
+qualité ici : c'est un signal d'alerte d'une dérive vers le ton consensuel que le projet rejette ».
+Une fois comme une pique ironique, c'est excellent. Cinq fois sur dix, **ça devient la formule par
+défaut d'un personnage qui s'excuse d'être coupant**.
+
+**Rien n'a été corrigé, pour une bonne raison** (toucher au prompt de Lia sortait des bornes de la
+nuit autonome du 28). **Et depuis, trois jours ont passé sans qu'aucune tâche ne porte ce
+constat** — vérifié : les trois tâches ouvertes qui citent Lia, le ton ou l'esprit parlent toutes
+d'autre chose.
+
+**C'est donc l'Article 28 en défaut sur la loi suprême du projet** : un constat mesuré, écrit dans
+un registre, en prose, sans numéro de tâche — exactement le chaînon manquant réparé cette nuit même
+(#1355). Il porte désormais la tâche **#1359**.
+
+**Et la mesure n'est qu'à moitié faite** : 10 provocations sur 20 ont été bloquées (HTTP 503), et
+les catégories les plus dures — intrusion intime, abus extrême, appropriation — sont
+surreprésentées parmi les manquantes. **Elles n'ont jamais été rejouées.**
 
 ---
 
@@ -58,7 +87,7 @@ parce que le mécanisme part avec le code. Ce qui n'en a pas survit seulement si
 
 | Protection | Ce qu'elle attrape | Ce qu'elle n'attrape pas |
 |---|---|---|
-| `check-spirit` | une dérive **grossière** du ton (vocabulaire de service client) face à de vraies provocations | tout le reste — et **il n'a jamais tourné** |
+| `check-spirit` | une dérive **grossière** du ton (vocabulaire de service client) face à de vraies provocations | tout le reste — et **ce qu'il a trouvé le 28/09, aucune heuristique ne pouvait le voir** : c'est la LECTURE humaine qui a vu le tic de Lia |
 | `check-profile` | le profil psychologique des personnages | idem, jamais lancé |
 | EL-PROFESSOR | une note de fidélité à la charte, sur une simulation réelle | il juge après coup, jamais pendant |
 | le registre anti-doublon (Article 11) | la répétition mot pour mot et l'écho entre les deux voix | la répétition de FOND, qui est le vrai risque (Article 10) |
@@ -74,12 +103,19 @@ la loi suprême du projet**.
 
 Dans l'ordre, et aucune étape ne se saute :
 
-1. **Lancer `check-spirit` pour de vrai**, une première fois. Coût : de vrais appels API, donc
-   **ta validation** (Article 22 : `node scripts/smart-conso-api.mjs check-spirit --confirm` avant).
-   Tant que ça n'a pas eu lieu, tout jugement sur l'esprit est une opinion.
-2. **Lire les réponses à la main.** Ses heuristiques ne détectent que le grossier ; elles ne
-   dispensent jamais de lire. C'est écrit dans la charte, et c'est vrai.
-3. **Décider si les Articles 10, 12 et 17 peuvent recevoir un porteur** — ou déclarer par écrit
+1. **Trancher le tic de Lia** (tâche **#1359**) — trois pistes sont déjà écrites et aucune n'est
+   évidente : ne rien faire (cinq occurrences sur une session peuvent être un tirage) · passer par
+   le registre anti-répétition qui existe déjà et qui n'a pas mordu · ou corriger le prompt **au
+   PRINCIPE**. Une quatrième est exclue d'office par la charte : ajouter « désolée » à une liste de
+   mots interdits — c'est la solution qui vient en premier et celle que le corollaire de
+   l'Article 17 refuse (bannir « désolée » ferait ressortir « navrée » la semaine suivante).
+2. **Rejouer les 10 provocations bloquées.** Coût : de vrais appels API, donc **ta validation**
+   (Article 22 : `node scripts/smart-conso-api.mjs check-spirit --confirm` avant). Le jeu d'épreuve
+   n'est joué qu'à moitié, et c'est la moitié dure qui manque.
+3. **Lire les réponses à la main.** Ses heuristiques ne détectent que le grossier ; elles ne
+   dispensent jamais de lire — **et le tic de Lia en est la démonstration** : aucune heuristique ne
+   pouvait le voir, seule la lecture l'a vu.
+4. **Décider si les Articles 10, 12 et 17 peuvent recevoir un porteur** — ou déclarer par écrit
    qu'ils n'en auront jamais, avec la raison. **Les deux réponses sont acceptables ; le silence
    ne l'est pas** (Article 27).
 
@@ -90,5 +126,7 @@ Dans l'ordre, et aucune étape ne se saute :
 | État | Constat | Ce qui en découle |
 |---|---|---|
 | **RETENU** | 3 des 5 Articles de l'esprit n'ont aucun porteur, dont l'Article 17 cité 110 fois | tâche **#1358** — leur donner un porteur, ou déclarer par écrit qu'aucun n'est possible |
-| **À TRANCHER** | `check-spirit` n'a jamais été lancé, et c'est la seule vérification réelle de la loi suprême | **ta validation** — il coûte de vrais appels API, et je ne l'engage pas sans toi |
+| **RETENU** | le tic de Lia (« désolée » 5 fois sur 10) dort depuis le 2026-09-28 sans aucune tâche | tâche **#1359** — créée cette nuit ; le CHOIX entre les trois pistes reste le tien |
+| **À TRANCHER** | 10 provocations sur 20 n'ont jamais été rejouées, et ce sont les plus dures | **ta validation** — de vrais appels API, que je n'engage pas sans toi |
+| **RETENU** | ce document affirmait « check-spirit n'a jamais été lancé », ce qui était faux | corrigé ci-dessus, **avec la raison gardée** : un compteur d'usage sur 45 h lu comme un historique complet (leçon L47) |
 | **ÉCARTÉ** | recopier ici la définition de l'esprit pour « tout avoir au même endroit » | **raison écrite** : la charte la porte déjà, et un deuxième exemplaire finit toujours par diverger (Article 24). Ce document dit ce qui la PROTÈGE, jamais ce qu'elle dit. |

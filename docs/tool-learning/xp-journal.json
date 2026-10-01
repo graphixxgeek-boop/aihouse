@@ -302,5 +302,14 @@
     "pourquoi": "C'est l'Article 28 pris en défaut sur l'outil même qui traque ce défaut, et la variante la plus coûteuse : un rapport qui dit honnêtement ce qui manque a l'air d'avoir fait son travail. Le geste qui en découle : une impossibilité qui NOMME son remède doit devenir une tâche le jour où elle est écrite, exactement comme un constat RETENU — sinon la qualité de la déclaration devient son propre alibi.",
     "tache": 1355,
     "date": "2026-10-01T01:15:03.981Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Un compteur borné dans le TEMPS lu comme un historique complet — et il le déclarait lui-même",
+    "quoi": "J'ai écrit noir sur blanc, dans un document sur la LOI SUPRÊME du projet, que check-spirit n'avait jamais été lancé. Je l'avais déduit du rapport tool-brain : « 20 outils du catalogue jamais sollicités ». Or ce rapport dit lui-même, deux lignes plus haut : « le journal couvre 45 h » — et CASSANDRA ajoute, pour chaque outil concerné, « jamais vu passer sur cette fenêtre, jamais jamais utilisé par le projet ». La réserve était écrite, à côté du chiffre, et je ne l'ai pas lue. La vérité : check-spirit a tourné deux fois le 2026-09-28, avec registre, transcript et lecture humaine.",
+    "pourquoi": "C'est la leçon L47 dans sa forme la plus pure, mais avec une aggravation qui vaut d'être notée : ici l'outil AVAIT déclaré sa borne. Le défaut n'est donc pas une sonde trompeuse, c'est une réserve écrite et sautée. Le geste qui en découle : un chiffre d'usage ne se cite JAMAIS sans sa fenêtre, et quand un outil a un REGISTRE sur disque, c'est le registre qui dit s'il a tourné, jamais le compteur. Et la découverte vaut mieux que l'erreur : en allant vérifier, j'ai trouvé que le constat réel de check-spirit — le tic de Lia — dormait depuis trois jours sans tâche.",
+    "tache": 1359,
+    "date": "2026-10-01T02:06:24.412Z"
   }
 ]

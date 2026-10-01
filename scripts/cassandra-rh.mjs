@@ -19,7 +19,7 @@ import { join } from "node:path";
 import { parseToolsTable, lireTableMaitresse, slugifyAgentName, primaryToolName, toolIdentitySlug, checkAgentOnboarding, loadBadgeCeremonyHistory, findScriptsAbsentsDeLaTable, formatScriptsAbsentsLines, CERTIFIABLE_STATUTS, CLASSIQUE_STATUT, PRESTATIONS } from "./le-coordinateur.mjs";
 import { buildRealOnboardingContext } from "./check-tasks-details.mjs";
 import { AGENT_CATEGORIES, GARDIEN_DOMAINS, TOOL_PORTEE, TOOL_RELIABILITY, porteeDe, assertNotAPersonnage, sh, printReliabilityNotice, pairesParJaccard, familleDeLaCategorie, rangDeLaCategorie, lireFichierPartage } from "./lib-shell.mjs";
-import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
+import { renderTextReport, imprimerPlanDaction, planDactionDepuisEcarts } from "./report-template.mjs";
 import { toolsNeverUsed, toolUsageStats, loadJson as loadUsageJson, horizonDuJournal } from "./tool-usage.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 // LE SENS DE LA DÉPENDANCE EST CONTRAINT, et il est déclaré à l'autre bout : `le-classificateur`
@@ -768,6 +768,123 @@ export function countFunctionalities(source) {
   // moi-même. C'est un vrai constat RH, pas un trou de mesure — d'où le signal "injoignable".
   const invocables = aUneGarde || sExecuteALImport ? Math.max(1, sousCommandes.size) : 0;
   return { fonctions, partagees, invocables, poidsTokens: estimateTokens(source) };
+}
+
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// LA CARTE PAR MODULE (2026-10-01, tâche #1343)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// SA PHRASE EST LE CAHIER DES CHARGES : « je ne comprends pas comment l'agence fonctionne par
+// module, et ça m'empêche de juger ». Il ne peut pas arbitrer une refonte s'il ne voit pas ce
+// qu'il arbitre — et il n'est pas développeur : une liste de 85 scripts ne lui apprendrait rien.
+//
+// LE BON GRAIN EST LA FAMILLE, jamais le script. Sept familles existent déjà dans l'organigramme ;
+// c'est à cette échelle qu'une question comme « et si on enlevait ça ? » a une réponse lisible.
+//
+// TROIS CHOSES PAR FAMILLE, et chacune répond à une question qu'il pose vraiment :
+//   · ce qu'elle fait — une phrase sans jargon, DÉCLARÉE à la main (voir ci-dessous) ;
+//   · combien elle pèse — le nombre de ses membres, LU dans l'organigramme ;
+//   · ce qu'on perd si elle disparaît — DÉRIVÉ des imports réels de tout le dossier scripts/.
+//
+// LA TROISIÈME EST LA SEULE QUI COMPTE VRAIMENT POUR DÉCIDER, et c'est la seule qu'une main ne
+// saurait pas tenir à jour : elle change à chaque import ajouté.
+export const CE_QUE_FAIT_CHAQUE_FAMILLE = Object.freeze({
+  // TABLE CHOISIE À LA MAIN, EXPRÈS, et cette phrase est ce qui l'autorise (Article 24, deuxième
+  // exemption) : une phrase en français simple ne se dérive d'aucun registre. Les MEMBRES, eux, se
+  // LISENT — un outil qui arrive demain apparaît ici sans qu'on touche à cette table, et une
+  // famille qui arriverait sans phrase est SIGNALÉE plutôt que tue.
+  "Les Anges de la coordination": "ils font tenir le travail ensemble : le suivi des tâches, la Ronde périodique, les fils de discussion, le choix de l'outil à lancer. C'est là que tu as dit que se trouve le COEUR de l'Agence.",
+  "La Gouvernance Royale": "ils surveillent l'Agence elle-même : qui compose l'équipe, ce que chaque outil vaut, ce que tout ça coûte en appels et en jetons, et si les objectifs chiffres sont tenus.",
+  "Les Prophètes - Dette & Structure du code": "ils cherchent ce qui FREINE : ce qui s'empile, ce qui ralentit, les règles qui coûtent plus qu'elles ne rapportent, les documents qui se contredisent.",
+  "Les Gardiens Sacrés du Code": "ils tournent à CHAQUE commit, gratuitement : trous logiques, liens devenus faux, zones sans test, code qui stagne, copies de code, exportabilité. Ce sont eux qui empêchent une erreur de passer.",
+  "La Suite Tarantino - Simulation & qualité narrative": "ils jugent le JEU : le ton des personnages, la qualité d'une partie, les captures d'écran, la mémoire narrative. C'est la seule famille qui regarde le produit plutôt que l'outillage.",
+  "Les Boosters de Navigation": "ils servent à retrouver quelque chose vite dans un gros fichier, sans tout relire.",
+  "Les Agents Externes - Audit indépendant": "ils donnent un avis EXTÉRIEUR, par une IA séparée qui ne connaît pas nos habitudes. Ils coûtent de l'argent, donc ils se lancent sur décision.",
+});
+
+export function carteParFamille({ root = ROOT, lireDir = readdirSync, lire = lireFichierPartage, categories = AGENT_CATEGORIES, phrases = CE_QUE_FAIT_CHAQUE_FAMILLE } = {}) {
+  const familles = {};
+  for (const [slug, cat] of Object.entries(categories)) {
+    const brute = familleDeLaCategorie(cat);
+    if (!brute) continue;
+    // Le nom affiché se dérive du nom de famille de l'organigramme : on retire le préfixe « (f) »
+    // et l'émoji de tête, qui sont de la mise en forme, jamais de l'identité.
+    const nom = String(brute).replace(/^\(f\)\s*/, "").replace(/^[^\p{L}]+/u, "").trim();
+    if (!nom) continue;
+    (familles[nom] = familles[nom] ?? { nom, membres: [] }).membres.push(slug);
+  }
+  if (!Object.keys(familles).length) {
+    return { mesurable: false, pourquoi: "aucune famille lisible dans l'organigramme — et une carte rendue sur zéro famille se lirait comme « l'Agence n'a pas de modules », qui est l'inverse exact d'une absence de mesure" };
+  }
+  // CE QU'ON PERD SI ELLE DISPARAÎT — dérivé des imports RÉELS de tout scripts/, jamais déclaré.
+  const sources = {};
+  let noms = [];
+  try { noms = lireDir(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { noms = []; }
+  for (const n of noms) {
+    try { sources[`scripts/${n}`] = lire(join(root, "scripts", n), "utf8"); } catch { /* illisible */ }
+  }
+  if (!Object.keys(sources).length) {
+    return { mesurable: false, pourquoi: "aucun script lisible : la colonne « ce qu'on perd » rendrait zéro partout, ce qui se lirait comme « aucune famille ne sert à personne » au lieu de « je n'ai rien lu »" };
+  }
+  for (const f of Object.values(familles)) {
+    f.phrase = phrases[f.nom] ?? null;
+    const dependants = new Set();
+    // PAR MEMBRE AUSSI, et c'est ce qui empêche le chiffre de mentir. Mesuré au premier passage :
+    // « La Gouvernance Royale : 66 scripts en dépendent » — impressionnant, et FAUX comme signal
+    // d'importance. 65 de ces 66 viennent d'UN SEUL membre, `tool-usage`, le compteur d'usage que
+    // tout outil appelle par politesse. C'est de la PLOMBERIE, jamais le cœur de quoi que ce soit.
+    // Sans la tête de liste nommée à côté, le total se lit comme « cette famille porte tout »
+    // alors qu'il dit « un de ses fichiers est appelé partout » — deux choses très différentes,
+    // et c'est exactement le signal ADJACENT lu comme le signal visé (leçon L47).
+    const parMembre = {};
+    for (const [chemin, texte] of Object.entries(sources)) {
+      for (const membre of f.membres) {
+        if (chemin === `scripts/${membre}.mjs`) continue;
+        if (texte.includes(`./${membre}.mjs`)) {
+          dependants.add(chemin);
+          parMembre[membre] = (parMembre[membre] ?? 0) + 1;
+        }
+      }
+    }
+    f.dependants = dependants.size;
+    const tri = Object.entries(parMembre).sort((a, b) => b[1] - a[1]);
+    f.tete = tri.length ? { membre: tri[0][0], n: tri[0][1] } : null;
+  }
+  const sansPhrase = Object.values(familles).filter((f) => !f.phrase).map((f) => f.nom);
+  return {
+    mesurable: true,
+    familles: Object.values(familles).sort((a, b) => b.membres.length - a.membres.length),
+    sansPhrase,
+    sourcesLues: Object.keys(sources).length,
+  };
+}
+
+export function formatCarteLines(c) {
+  if (!c?.mesurable) return ["=== LA CARTE PAR MODULE : PAS MESURÉ ===", `  ${c?.pourquoi}`];
+  const total = c.familles.reduce((n, f) => n + f.membres.length, 0);
+  const L = ["=== LA CARTE DE L'AGENCE, PAR MODULE ===", "",
+    `${c.familles.length} familles, ${total} outils rangés dedans — lus dans l'organigramme, jamais recopiés.`,
+    `La colonne « si elle disparaissait » est dérivée des imports réels de ${c.sourcesLues} scripts.`, ""];
+  for (const f of c.familles) {
+    L.push(`▸ ${f.nom} — ${f.membres.length} outil(s)`);
+    L.push(`    CE QU'ELLE FAIT : ${f.phrase ?? "⚠️ aucune phrase déclarée — cette famille est arrivée après la carte, et une case vide se lit comme « ça ne fait rien »"}`);
+    L.push(`    SI ELLE DISPARAISSAIT : ${f.dependants} autre(s) script(s) l'importent et cesseraient de fonctionner.`);
+    if (f.tete) {
+      const part = f.dependants ? Math.round((f.tete.n / f.dependants) * 100) : 0;
+      L.push(`      dont ${f.tete.n} par le seul « ${f.tete.membre} » (${part} %)${part >= 80 ? " — ⚠️ le total vient donc d'UN fichier appelé partout, pas de la famille entière" : ""}`);
+    }
+    L.push(`    MEMBRES : ${f.membres.join(", ")}`);
+    L.push("");
+  }
+  L.push("HORS PORTÉE, et il faut le lire avant d'utiliser ce tableau : « ce qui casse » compte les IMPORTS de code,");
+  L.push("jamais les dépendances d'usage. Un outil qui en recommande un autre sans l'importer n'apparaît pas ici —");
+  L.push("la carte SOUS-DÉCLARE, elle n'invente jamais. Et elle ne dit rien de ce que chaque famille VAUT : elle dit");
+  L.push("ce qu'elle fait et ce qu'elle tient, jamais si elle le fait bien.");
+  L.push("");
+  L.push("ET LISEZ TOUJOURS LA TÊTE DE LISTE AVANT LE TOTAL : un gros chiffre porté à 80 % par un seul fichier dit");
+  L.push("« ce fichier-là est appelé partout », jamais « cette famille porte tout ». Les deux se ressemblent et ne");
+  L.push("mènent pas à la même décision.");
+  return L;
 }
 
 export function functionalityCensus({ root = ROOT, readFileImpl = lireFichierPartage, scripts = AGENT_SCRIPT_FILES } = {}) {
@@ -3912,6 +4029,14 @@ async function main() {
   try { ({ REGISTRIES: registresDeclares } = await import("./doc-report.mjs")); } catch { /* repli sur la convention, déclaré dans derniereTrouvailleDuRegistre() */ }
   assertNotAPersonnage("CASSANDRA-RH", "cassandra-rh.mjs::main()");
   const [, , sub] = process.argv;
+  if (sub === "carte") {
+    const c = carteParFamille();
+    for (const l of formatCarteLines(c)) console.log(l);
+    const ecarts = (c.sansPhrase ?? []).map((n) => ({ message: `la famille « ${n} » n'a aucune phrase déclarée dans la carte`, quoiFaire: "écrire la phrase qui dit ce qu'elle fait, en français simple — une case vide se lit comme « ça ne fait rien »" }));
+    console.log("");
+    imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "cassandra-rh" }));
+    return;
+  }
   if (sub === "rapport") {
     const data = collectRealCassandraData({ withCoverage: true });
     console.log(CASSANDRA_PERSONA);

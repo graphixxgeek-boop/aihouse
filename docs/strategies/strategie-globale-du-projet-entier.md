@@ -45,7 +45,7 @@ Tout ce qui suit en découle. Rien ici ne peut les contredire.
 **Ce que l'objectif PROJET impose à toute la stratégie, et c'est la contrainte la plus dure** :
 *« chacun tienne debout sans l'autre »*. Donc **aucune décision stratégique ne peut rendre l'un
 dépendant de l'autre** — ni l'Agence inutilisable sans le Jeu, ni le Jeu infaisable sans l'Agence.
-Les mesures disent qu'on y est déjà presque : **6 fichiers du Jeu sur 93** mentionnent l'outillage.
+Les mesures disent qu'on y est déjà presque : moins d'une douzaine de ses 93 fichiers mentionnent l'outillage — **6 ou 10 selon ce qu'on appelle « mentionner »**, et je donne les deux plutôt qu'un seul : deux critères, deux chiffres, et la conclusion tient sous les deux.
 
 ---
 

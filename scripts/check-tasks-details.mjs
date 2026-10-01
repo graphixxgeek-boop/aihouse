@@ -2585,7 +2585,15 @@ export const FAMILLES_DE_THEMES = {
   // thèmes, tous deux périphériques : l'apparence et le ton. Aucune tâche ouverte ne portait le
   // thème « Jeu » lui-même. Le garde-fou l'a attrapé au commit même où le thème est né, ce qui
   // est exactement son travail (Article 24).
-  "Le jeu et le site": ["Refonte graphique", "check-spirit", "Jeu"],
+  // « Article 0 » a rejoint la famille le 2026-10-01 (tâche #1359), et son arrivée est la plus
+  // significative de toutes : c'est le thème de la LOI SUPRÊME du projet, et il n'avait jamais
+  // existé. Trois ans de thèmes, et jamais une tâche portant explicitement « Article 0 » — alors
+  // que l'esprit de Lia et Noé est la règle au-dessus de toutes les autres. Il rejoint CETTE
+  // famille parce que l'esprit EST le produit : il ne se juge que dans ce que les personnages
+  // disent, jamais dans l'outillage qui les entoure. Le ranger ailleurs l'aurait éloigné de la
+  // seule chose qui peut le contredire — une vraie réplique. Le garde-fou l'a attrapé au commit
+  // même où le thème est né, ce qui est exactement son travail (Article 24).
+  "Le jeu et le site": ["Refonte graphique", "check-spirit", "Jeu", "Article 0"],
 };
 
 export function familleDuTheme(theme, familles = FAMILLES_DE_THEMES) {

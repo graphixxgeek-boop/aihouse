@@ -31,7 +31,7 @@ mesures faites pour d'autres raisons, ce qui les rend d'autant plus utiles :
 | point de branchement pour une source extérieure | **aucun** | la modularité qu'il veut n'existe pas |
 | documents alignés sur la racine | **44 / 59 (75 %)** | la cascade documentaire tient déjà |
 | tâches sachant quel objectif elles servent | **14 / 1 272 pour le Jeu** | le second bout n'est pas raccordé |
-| obligations portées par tous nos documents | **936**, dont 556 dans un seul | le poids n'est pas là où on le croyait |
+| obligations portées par tous nos documents | **plus de 700**, et la grande majorité dans UN seul (les règles de travail, 3 à 4× la charte) — deux outils donnent deux comptes, la fourchette est donnée exprès | le poids n'est pas là où on le croyait |
 
 ### L'AUDIT DE L'HISTORIQUE COMPLET, fait à sa demande le même soir
 
@@ -55,7 +55,7 @@ part sans preuve qu'elles aient été traitées.
 
 **Il ne décide pas d'un chantier, il décide de la FORME de tous les chantiers suivants.** Si on
 repart à zéro, la cascade ne se « raccorde » pas à l'existant : elle se construit d'emblée dans
-le bon ordre. Si on ne repart pas, la cascade devra rattraper 1 272 tâches et 936 obligations
+le bon ordre. Si on ne repart pas, la cascade devra rattraper 1 272 tâches et toutes les obligations
 écrites avant elle.
 
 **Les deux voies mènent au même endroit ; elles ne coûtent pas la même chose, et elles ne
@@ -82,9 +82,10 @@ soit 32 % du total**. **Le coût n'est pas réparti, il est CONCENTRÉ** — don
 les fichiers légers et laisser les denses tranquilles, ce qu'une refonte totale s'interdit.
 
 **Ce que je te dis en toute honnêteté, et ça ne te fera pas forcément plaisir** : ton intuition est
-**juste sur l'organisation** (936 obligations, 10 registres pour faire entrer un outil, aucune
+**juste sur l'organisation** (plus de 700 obligations, 10 registres pour faire entrer un outil, aucune
 définition de « terminé ») et **fausse sur le code** — qui est déjà portable (0 script sur 88 avec
-une cible écrite en dur), déjà emballé (85 kits sur 85), déjà découplé du Jeu (6 fichiers sur 93).
+une cible écrite en dur), déjà emballé (85 kits sur 85), déjà découplé du Jeu (moins d'une douzaine
+de ses 93 fichiers citent l'outillage — 6 ou 10 selon le critère, les deux donnés exprès).
 **La preuve est tombée cette nuit, sur moi** : les deux outils que j'ai construits ces deux
 derniers jours étaient à 1 registre sur 10 et 0 sur 10. Le code allait bien. C'est l'entrée dans
 l'équipe qui coûte trop cher.
@@ -139,7 +140,9 @@ Détail complet : `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md`, tâ
 demandais pas d'arbitrer, seulement s'il fallait vérifier AVANT de chiffrer le reste. Il a dit
 « avance de manière fiable » — c'est fait.)*
 
-**93 fichiers, 12 531 lignes, et seulement 6 qui citent l'outillage.** 87 sur 93 se recopient sans
+**93 fichiers, 12 531 lignes, et moins d'une douzaine qui citent l'outillage** — 6 ou 10 selon ce
+qu'on appelle « citer », et **je te donne les deux plutôt que celui qui m'arrange** : c'est la même
+prudence qui a fait retirer le « 38 sur 40 » hier soir. La très grande majorité se recopie sans
 réflexion. Et « citer » n'est pas « dépendre » : six est un **plafond**, pas un coût.
 
 **Ce que ça change pour le chiffrage** : le Jeu n'est pas le gros morceau. 12 531 lignes copiables

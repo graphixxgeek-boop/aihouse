@@ -52,9 +52,9 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 16806 | 2026-10-01 00:45Z |
 | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.html` | `docs/circle-tasks/ronde-2026-10-01/00-rapport-de-ronde.md` | 13562 | 2026-10-01 01:17Z |
 | `docs/fils/html/fil-09-ce-qui-ralentit.html` | `docs/fils/fil-09-ce-qui-ralentit.md` | 12322 | 2026-10-01 01:17Z |
-| `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 17357 | 2026-10-01 01:37Z |
-| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18072 | 2026-10-01 01:48Z |
-| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 16828 | 2026-10-01 01:50Z |
 | `docs/fils/html/fil-01-objectif-ultime-philo-politique.html` | `docs/fils/fil-01-objectif-ultime-philo-politique.md` | 26197 | 2026-10-01 01:50Z |
-| `docs/referentiel/esprit-ce-qui-le-protege.html` | `docs/referentiel/esprit-ce-qui-le-protege.md` | 13152 | 2026-10-01 01:52Z |
-| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 13898 | 2026-10-01 01:54Z |
+| `docs/referentiel/esprit-ce-qui-le-protege.html` | `docs/referentiel/esprit-ce-qui-le-protege.md` | 16582 | 2026-10-01 02:06Z |
+| `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 18137 | 2026-10-01 02:12Z |
+| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18258 | 2026-10-01 02:12Z |
+| `docs/fils/html/fil-14-usage-et-refonte.html` | `docs/fils/fil-14-usage-et-refonte.md` | 17274 | 2026-10-01 02:12Z |
+| `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 15967 | 2026-10-01 02:14Z |

@@ -453,3 +453,37 @@ bouger pendant que sa déclaration reste** — et c'est exactement ce désaccord
 **ELLE NE TOUCHE JAMAIS UN FICHIER QUI DÉCLARE DÉJÀ**, et surtout pas pour « corriger » un
 désaccord : un désaccord est précisément ce qu'on veut voir, et l'écraser en silence reviendrait à
 supprimer la mesure au lieu de la lire (Article 3 — on corrige la cause, jamais le symptôme).
+
+
+## La carte par module — `node scripts/cassandra-rh.mjs carte` (2026-10-01, tâche #1360)
+
+**Pourquoi elle existe** : sa phrase, *« je ne comprends pas comment l'agence fonctionne par
+module, et ça m'empêche de juger »*. Il n'est pas développeur — une liste de 85 scripts ne lui
+apprendrait rien. **Le bon grain est la FAMILLE**, l'échelle à laquelle « et si on enlevait ça ? »
+a une réponse lisible.
+
+**Trois colonnes par famille, et une seule est écrite à la main** : ce qu'elle FAIT (une phrase,
+`CE_QUE_FAIT_CHAQUE_FAMILLE` — manuelle exprès, et déclarée telle juste à côté) · combien elle
+PÈSE (lu dans l'organigramme) · ce qu'on PERD si elle disparaît (dérivé des imports réels).
+Une famille sans phrase est signalée, jamais tue.
+
+**Elle imprime toujours la TÊTE DE LISTE à côté du total**, avec un ⚠️ au-dessus de 80 %. Sans
+ça, « 66 scripts dépendent de cette famille » se lirait comme son importance alors que 65 de ces
+66 venaient d'un seul fichier de plomberie. Le récit de cette correction vit dans la ligne de
+suivi #1360, pas ici.
+
+**Hors portée** : « ce qui casse » compte les IMPORTS, jamais les dépendances d'usage — la carte
+sous-déclare. Et elle ne dit rien de ce que chaque famille VAUT.
+
+**Les frontières avec ses deux voisins les plus proches, déclarées plutôt que devinées.** Les trois
+parlent de familles, de registres et de porteurs **avec les mêmes mots**, et c'est exactement pour
+ça qu'il faut écrire ce qui les sépare — sinon personne ne sait lequel prime, et la réponse est :
+aucun, parce qu'ils ne jugent pas le même objet.
+
+- `ABRAHAM-LES-REFERENCES` (`docs/referentiel/abraham-les-references.md`) range des **RÈGLES** à
+  l'intérieur d'un document : porteur réel, citations, redondances. **CASSANDRA regarde qui fait le
+  travail ; Abraham regarde ce que le texte ordonne.**
+- `SAFE-EXPORT` (`docs/referentiel/safe-export.md`) dit si un outil **peut PARTIR** : son kit
+  complet, ses chemins reconfigurables, sa dépendance à ce projet-ci. **CASSANDRA dit qui est dans
+  l'équipe ; SAFE-EXPORT dit si cette équipe peut déménager.** La carte par module emprunte à l'un
+  et à l'autre — les familles viennent de l'organigramme, jamais de l'export.
