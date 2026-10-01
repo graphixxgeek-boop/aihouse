@@ -1127,11 +1127,36 @@ export function planDactionConduite({ audit, nonEvalue, toolSlug = "angel-of-ia-
       tache: "traiter chaque manquement comme un bug (Article 26 : un manquement nommé se corrige, il ne s'enregistre pas)",
     });
   }
-  if (nonFournis.length) {
+  // UNE RÈGLE SANS RÉPONSE N'EST PAS FORCÉMENT MA RÉPONSE À DONNER (2026-10-01, tâche #1402).
+  //
+  // Le plan rangeait TOUTES les règles non répondues sous un seul constat RETENU, avec pour tâche
+  // « répondre … puis déclarer » — adressée à l'agent. Or `REGLES_SURVEILLEES` porte un `cote`, et
+  // certaines règles sont du côté de l'UTILISATEUR : « trancher les questions laissées en attente »
+  // ne se déclare pas à sa place. Le premier passage réel l'a montré nu : une seule règle restait
+  // sans réponse, `decisions-en-attente`, et le plan me demandait d'y répondre.
+  //
+  // C'EST LA FAMILLE L47 : « cette règle n'a pas de réponse » lu comme « l'agent doit une réponse ».
+  // Et c'est le pire endroit où la commettre — obéir au plan aurait voulu dire déclarer à sa place,
+  // exactement ce que `enregistrerXp()` refuse déjà par construction (`parUtilisateur: true`).
+  //
+  // LA DISTINCTION N'EST PAS CONSTRUITE ICI, elle est RÉUTILISÉE : `reglesAPoserALUtilisateur()`
+  // existe depuis l'origine et filtre déjà sur `cote !== "agent"` — le plan ne s'en servait pas.
+  // Les deux constats ne se fondent jamais : l'un est un manquement à corriger, l'autre une
+  // question à poser, et l'Article 28 leur donne deux états distincts pour cette raison exacte.
+  const sansReponseAMoi = nonFournis.filter((r) => r.cote === "agent");
+  const sansReponseALui = nonFournis.filter((r) => r.cote !== "agent");
+  if (sansReponseAMoi.length) {
     constats.push({
       etat: "retenu",
-      constat: `${nonFournis.length} règle(s) de conduite sur ${total} SANS RÉPONSE — angel a demandé, rien n'a été déclaré : ni tenues ni manquées, seulement non dites — ex. ${ex(nonFournis)}`,
+      constat: `${sansReponseAMoi.length} règle(s) de conduite sur ${total} SANS RÉPONSE DE MA PART — angel a demandé, rien n'a été déclaré : ni tenues ni manquées, seulement non dites — ex. ${ex(sansReponseAMoi)}`,
       tache: "répondre aux règles de conduite en attente (node scripts/angel-of-ia-process.mjs, puis déclarer) — un vert obtenu en laissant la moitié des règles sans réponse serait un faux vert",
+    });
+  }
+  if (sansReponseALui.length) {
+    constats.push({
+      etat: "a-trancher",
+      constat: `${sansReponseALui.length} règle(s) de conduite sur ${total} attendent une réponse DE L'UTILISATEUR, jamais de l'agent — ex. ${ex(sansReponseALui)}`,
+      pourquoi: "ces règles portent sur SON côté du travail : les déclarer à sa place rendrait un vert que personne n'a donné, et c'est le refus que ce dépôt applique déjà au jugement d'une leçon (`parUtilisateur: true`). Elles se POSENT, elles ne se comblent pas",
     });
   }
   if (nonMesurables.length) {

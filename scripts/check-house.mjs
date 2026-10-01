@@ -4000,6 +4000,43 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   const auditPlein=auditWorkingRules({faits:Object.fromEntries(REGLES_SURVEILLEES.map(r=>[r.id,true])),ordre:{mesurable:true,commitsExamines:3,constats:[]}});
   assert.ok(auditPlein.ok,'a run where every rule is answered and the timestamp crossing is clean must be able to reach green — a tool that can never be satisfied stops being read');
   assert.ok(auditWorkingRules({faits:{'point-par-point':false},ordre:{mesurable:true,commitsExamines:1,constats:[]}}).manquements.some(m=>m.id==='point-par-point'),'a rule answered NO must be a real manquement, never folded into the unanswered pile');
+
+  // UNE RÈGLE SANS RÉPONSE N'EST PAS FORCÉMENT MA RÉPONSE À DONNER (2026-10-01, tâche #1402).
+  // Le plan rangeait TOUTES les non-répondues sous un constat RETENU dont la tâche — « répondre…
+  // puis déclarer » — s'adresse à l'agent. Or certaines règles portent `cote: "utilisateur"` :
+  // « trancher les questions laissées en attente » ne se déclare pas à sa place. Le premier
+  // passage réel l'a montré nu — une seule règle restait, `decisions-en-attente`, et le plan me
+  // demandait d'y répondre. C'est la famille L47 (« pas de réponse » lu comme « je dois répondre »)
+  // commise au pire endroit : obéir aurait voulu dire rendre un vert que lui seul peut donner.
+  //
+  // L'AUDIT EST CONSTRUIT ICI, jamais lu sur le disque (leçon L40) : la déclaration vivante change
+  // d'un jour à l'autre, et un test qui s'appuierait dessus jugerait le disque, pas le découpage.
+  const { planDactionConduite } = await import('../scripts/angel-of-ia-process.mjs');
+  const auditFixe = (nonFournis) => ({ resultats: new Array(26).fill({ etat: 'respecté' }), manquements: [], nonFournis });
+  const planMixte = planDactionConduite({
+    audit: auditFixe([{ id: 'temps-reel-lu', cote: 'agent' }, { id: 'decisions-en-attente', cote: 'utilisateur' }]),
+    nonEvalue: { mesurable: false },
+  });
+  const txt = planMixte.lignes.join('\n');
+  assert.match(txt, /SANS RÉPONSE DE MA PART/, 'an agent-side rule left unanswered must still be a retained finding with a task: that one really is mine');
+  assert.match(txt, /À TRANCHER · 1 règle\(s\) de conduite sur 26 attendent une réponse DE L'UTILISATEUR/, "a user-side rule must become A-TRANCHER, never a task assigned to me — answering it myself would hand back a green only he can give");
+  assert.ok(txt.indexOf("DE L'UTILISATEUR") !== -1 && !/DE L'UTILISATEUR[^\n]*répondre aux règles de conduite en attente/.test(txt), 'the user-side finding must never carry the agent-side instruction');
+  assert.match(txt, /Elles se POSENT, elles ne se comblent pas/, 'and it states WHY rather than scheduling work: a question to put to him is not a task');
+
+  // LES DEUX SENS (BP4) : chaque constat n'apparaît que quand son côté a vraiment une règle muette.
+  const planSeulAgent = planDactionConduite({ audit: auditFixe([{ id: 'temps-reel-lu', cote: 'agent' }]), nonEvalue: { mesurable: false } });
+  assert.ok(!/DE L'UTILISATEUR/.test(planSeulAgent.lignes.join('\n')), 'with nothing owed by the user, no A-TRANCHER finding may be invented');
+  const planSeulLui = planDactionConduite({ audit: auditFixe([{ id: 'decisions-en-attente', cote: 'utilisateur' }]), nonEvalue: { mesurable: false } });
+  assert.ok(!/SANS RÉPONSE DE MA PART/.test(planSeulLui.lignes.join('\n')), 'and with nothing owed by me, no task may be scheduled against me');
+  const planRien = planDactionConduite({ audit: auditFixe([]), nonEvalue: { mesurable: false } });
+  assert.ok(!/SANS RÉPONSE DE MA PART|DE L'UTILISATEUR/.test(planRien.lignes.join('\n')), 'and with every rule answered, neither finding survives — a guard that always speaks says nothing');
+
+  // SUR LE DÉPÔT RÉEL : toute règle encore muette déclare de quel côté elle est, sans quoi le
+  // découpage ci-dessus retomberait silencieusement dans un seul des deux paniers.
+  const { loadDeclarationsAgent } = await import('../scripts/angel-of-ia-process.mjs');
+  for (const r of auditWorkingRules({ faits: loadDeclarationsAgent().faits ?? {} }).nonFournis) {
+    assert.ok(['agent', 'utilisateur', 'les deux'].includes(r.cote), `checked live: every unanswered rule declares a side — ${r.id} does not`);
+  }
   // LE CROISEMENT DES HORODATAGES, l'apport propre d'angel — et le faux positif qu'il a produit à son
   // tout premier lancement : un lancement de VÉRIFICATION ressemblait à une consultation tardive.
   const t=Date.parse('2026-09-22T10:00:00Z');
