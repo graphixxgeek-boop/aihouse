@@ -1365,6 +1365,13 @@ fausse RÉASSURANCE : la chaîne de l'Article 28 avait l'air fermée là où rie
 fausse accusation se conteste en la lisant ; une fausse réassurance ne se lit jamais**, puisque tout
 a l'air en ordre. À défaut typique égal, c'est elle qu'il faut chercher en premier.
 
+**REMESURÉ LE 2026-10-01, ET LA RÉPARTITION EST LE VRAI ENSEIGNEMENT** : la phrase apparaît
+désormais dans **39 fichiers** (contre 28 le 2026-09-30) — **20 dans `docs/`, 19 dans `scripts/`,
+et ZÉRO dans `lib/`, `app/` ou `components/`**. Les sept occurrences du tableau sont donc toutes
+dans l'OUTILLAGE, aucune dans le Jeu. Ce n'est pas un défaut du produit : **c'est le défaut
+caractéristique de ce qui MESURE.** Un garde-fou regarde forcément une trace de la chose plutôt
+que la chose, et c'est précisément là que le voisin se fait passer pour la cible.
+
 **ET LA SIXIÈME N'A PAS ÉTÉ TROUVÉE EN RELISANT LE CODE, mais en allant l'UTILISER** : la raison
 qu'on s'apprêtait à écrire commençait par un chiffre, et c'est ce geste-là qui a révélé le défaut.
 Elle était **latente** — aucune ligne du registre ne la déclenchait encore, donc aucun chiffre
