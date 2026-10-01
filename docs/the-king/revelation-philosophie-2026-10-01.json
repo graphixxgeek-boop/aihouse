@@ -1,0 +1,22 @@
+{
+  "mesurable": true,
+  "fichiers": 334,
+  "convictions": 5860,
+  "principesBoussole": 23,
+  "seuil": 3,
+  "casesVides": [
+    "jamais-sacrifie"
+  ],
+  "parNiveau": {
+    "indetermine": 3140,
+    "agence": 2210,
+    "jeu": 340,
+    "projet": 170
+  },
+  "tensions": 0,
+  "couverture": {
+    "retenues": 87,
+    "couvertes": 1,
+    "part": 0.011
+  }
+}

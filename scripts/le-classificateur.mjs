@@ -2084,7 +2084,12 @@ export const MOTIFS_PART = [
   // de l'avoir pris pour le plan de l'Agence. Le préfixe ne dit donc pas le sujet. Liste tenue à la
   // main, et sa nature manuelle est écrite ici comme l'Article 24 l'exige.
   { motif: /^docs\/agence-(blueprint|installation|plan-de-la-machine)\.md$/, pourquoi: "les trois pièces qui expliquent comment remonter l'Agence ailleurs" },
-  { motif: /^docs\/philosophie-et-politique\.md$/, pourquoi: "déclaré formulé pour rester utilisable sur un futur projet" },
+  // LE SUFFIXE « -v2 » EST PRIS EN COMPTE (2026-10-01, tâche #1419) : l'édition révélée vit à côté
+  // de la boussole actuelle le temps de sa validation, et elle a exactement la même nature. Sans
+  // ce motif elle ressortait « À INSTRUIRE », c'est-à-dire confondue avec un fichier oublié.
+  // Elle n'entre PAS pour autant dans la liste des documents normatifs plus bas : tant qu'il ne
+  // l'a pas validée, elle est un candidat, et un candidat ne fait pas loi.
+  { motif: /^docs\/philosophie-et-politique(-v\d+)?\.md$/, pourquoi: "déclaré formulé pour rester utilisable sur un futur projet" },
   { motif: /^docs\/referentiel\/(standards|lecons|organisation-agence|classification-agence|le-classificateur)\.md$/, pourquoi: "pièce du kit de l'Agence" },
   { motif: /^docs\/(regles-de-travail|systeme-de-suivi|xp-ia-process-detail)\.md$/, pourquoi: "méthode de travail : elle vaut pour n'importe quel projet piloté par IA" },
   { motif: /^docs\/[a-z0-9-]+-conception\.md$/, pourquoi: "document de conception d'un outil, jamais du jeu" },
@@ -2339,6 +2344,22 @@ export const NATURES_DE_DOCUMENT = [
     motif: /^docs\/(referentiel\/|gestes-de-l-interface\.md$)/ },
   { cle: "mode", icone: "🎚️", quoi: "un mode de travail de l'agent : comment il se conduit dans une situation donnée",
     motif: /^docs\/mode-[a-z0-9-]+\.md$/ },
+  // LE CANDIDAT (2026-10-01, tâche #1419) — une nature que ce parc n'avait pas, et le filet l'a
+  // réclamée lui-même : « un document neuf d'une nature inconnue en produira un, et c'est alors
+  // un motif à ajouter, jamais un défaut du document ».
+  //
+  // CE QU'ELLE DÉSIGNE, ET POURQUOI AUCUNE AUTRE NE CONVENAIT : un document écrit pour REMPLACER
+  // un document qui fait loi, et qui attend l'arbitrage de l'utilisateur. Ce n'est pas encore une
+  // loi — le ranger ainsi lui donnerait une autorité que personne ne lui a donnée, et deux lois
+  // contradictoires sur le même sujet est exactement ce que l'Article 6 interdit. Ce n'est pas non
+  // plus une proposition de cadre (`cadre-cible`), qui décrit une cible sans prétendre remplacer
+  // quoi que ce soit. Il vit à côté de son aîné, le temps d'être validé ou abandonné.
+  //
+  // ELLE EST UTILE À N'IMPORTE QUEL PROJET, pas seulement ici : partout où un texte fondateur se
+  // réécrit, la version proposée existe avant d'être adoptée, et la ranger « indéterminée » la
+  // confondrait avec un fichier oublié.
+  { cle: "candidat", icone: "🗳️", quoi: "un document proposé pour en remplacer un qui fait loi, et qui attend l'arbitrage de l'utilisateur",
+    motif: /^docs\/[a-z0-9-]+-v\d+\.md$/ },
   // LES DEUX DERNIERS MOTIFS SONT VOLONTAIREMENT LARGES, ET ILS SONT EN DERNIER POUR ÇA. Tout ce
   // qui vit dans `docs/<slug>/` appartient au registre d'un outil — et la règle du dépôt est sans
   // exception (CLAUDE.md : « docs/<nom-de-l-outil-en-minuscules>/ avec son index.md »). Les placer

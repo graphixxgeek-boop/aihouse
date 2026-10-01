@@ -17,7 +17,7 @@ import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
-import { readFileSync, readdirSync as fsReaddir, existsSync as fsExists } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync as fsReaddir, existsSync as fsExists } from "node:fs";
 import { join } from "node:path";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPlanDaction, PLAN_ACTION_TITRE } from "./report-template.mjs";
@@ -371,10 +371,546 @@ export function formatAlignementLines(a, { limite = 12 } = {}) {
   return L;
 }
 
+
+// ============================================================================
+// LA RÉVÉLATION DE LA PHILOSOPHIE (tâche #1418, 2026-10-01)
+//
+// POURQUOI ÇA VIT DANS THE-KING ET PAS DANS UN OUTIL DE PLUS : son métier déclaré depuis le
+// 2026-09-21 est de veiller sur le texte fondateur et d'en tenir l'histoire. Révéler ce que ce
+// texte NE DIT PAS ENCORE est le même métier pris par l'autre bout — pas un métier nouveau
+// (Article 31 : on étend avant de construire).
+//
+// LA DEMANDE QUI L'A FAIT NAÎTRE, dans ses mots : « essaie de reunir les 2 bouts : partir d'une
+// feuille blanche et rediger la philo à partir des methodes decrites dans les docs git, et partir
+// AUSSI de TOUT l'existant [...] pour REVELER la PHILOSOPHIE INAVOUEE de ce projet ». Et, juste
+// avant, le refus qui l'a provoquée : « la philo est a REVELER de l'ensemble de notre travail, pas
+// de reponses isolées qui sont des jets ».
+//
+// LES DEUX BOUTS, ET POURQUOI AUCUN NE SUFFIT SEUL :
+//   · le bout FEUILLE BLANCHE est son cadre à lui (5 familles pour la philosophie, 9 pour la
+//     politique, le test des 5 impossibles). Seul, il produit un questionnaire — donc des jets.
+//   · le bout EXISTANT est le corpus réel. Seul, il produit une liste sans forme, impossible à
+//     fusionner avec la philosophie d'un autre projet.
+//   LA FUSION est couvertureDuCadre() : chaque case du cadre standard est remplie par ce que le
+//   corpus PROUVE déjà, et une case vide devient une vraie question — jamais une case remplie au
+//   jugé.
+// ============================================================================
+
+// LES TROIS NIVEAUX — ils ne sont pas inventés ici : ce sont EXACTEMENT ceux de ses trois objectifs
+// ultimes, validés le 2026-09-30 à 23h31 (PROJET · AGENCE · JEU). Sa demande du 2026-10-01 est que
+// la philosophie hérite enfin du découpage que l'étage du dessus porte déjà, sans quoi le document
+// n'est ni exportable ni fusionnable avec la philosophie d'un autre projet.
+//
+// POURQUOI UN NIVEAU « INDÉTERMINÉ » EXISTE, ET POURQUOI IL NE SE REPLIE PAS SUR PROJET : une
+// conviction qui ne porte aucun marqueur n'est pas « générale », elle est NON CLASSÉE. Les
+// confondre transformerait une absence de mesure en mesure — exactement la faute que ce projet
+// corrige partout ailleurs (leçons L5 et L11).
+export const MARQUEURS_DE_NIVEAU = {
+  jeu: ["lia", "noé", "noe", "visiteur", "observateur", "personnage", "personnages", "réplique", "répliques",
+        "dialogue", "dialogues", "maison", "enquête", "jauge", "jauges", "pensée", "rêve", "joueur", "narratif",
+        "gemini", "ton"],
+  agence: ["outil", "outils", "script", "scripts", "rapport", "rapports", "registre", "registres", "blueprint",
+           "export", "exportable", "gardien", "gardiens", "commit", "suivi", "kpi", "dépôt", "tâche", "tâches",
+           "agence", "outillage", "test", "tests", "fonction", "code"],
+};
+
+export function classerParNiveau(texte, { marqueurs = MARQUEURS_DE_NIVEAU } = {}) {
+  const bas = String(texte ?? "").toLowerCase();
+  const mots = new Set(significantWords(String(texte ?? "")));
+  const touche = (liste) => liste.filter((m) => mots.has(m) || bas.includes(m));
+  const indicesJeu = touche(marqueurs.jeu);
+  const indicesAgence = touche(marqueurs.agence);
+  if (indicesJeu.length && indicesAgence.length) return { niveau: "projet", indicesJeu, indicesAgence };
+  if (indicesJeu.length) return { niveau: "jeu", indicesJeu, indicesAgence };
+  if (indicesAgence.length) return { niveau: "agence", indicesJeu, indicesAgence };
+  return { niveau: "indetermine", indicesJeu, indicesAgence };
+}
+
+// LE CADRE STANDARD — 19 familles, et c'est une LISTE MANUELLE ASSUMÉE au sens de l'Article 24 :
+// elle recopie la structure d'un document SOURCE qu'il a écrit et que nous ne modifions jamais.
+// C'est pourquoi elle ne va JAMAIS sans son garde-fou, findFamillesDivergingFromSource() — sans
+// lui, elle se périmerait en silence le jour où il réécrit son cadre, et personne ne le saurait.
+export const CADRE_SOURCE = "docs/grand-projet/00-sources/02-documents-prepares/texte/PHILOSOPHIE_ET_POLITIQUE.md";
+
+export const CADRE_FAMILLES = [
+  { cle: "raison-d-etre",      bloc: "philosophie", titre: "Raison d'être",         ancre: "Raison d'être",         mots: ["exister", "existe", "raison", "problème", "résoudre", "valeur", "but", "objectif", "pourquoi"] },
+  { cle: "valeurs",            bloc: "philosophie", titre: "Valeurs",               ancre: "Valeurs",               mots: ["valeur", "valeurs", "sacrifier", "encouragé", "refusé", "comportement", "esprit"] },
+  { cle: "principes-decision", bloc: "philosophie", titre: "Principes de décision", ancre: "Principes de décision", mots: ["choisir", "arbitrer", "arbitrage", "prime", "priorité", "conflit", "rapidité", "qualité", "sécurité", "innovation", "simplicité", "trancher"] },
+  { cle: "vision-acteurs",     bloc: "philosophie", titre: "Vision des acteurs",    ancre: "Vision des acteurs",    mots: ["utilisateur", "agent", "autonomie", "humain", "décision", "acteur"] },
+  { cle: "gestion-risque",     bloc: "philosophie", titre: "Gestion du risque",     ancre: "Gestion du risque",     mots: ["risque", "erreur", "erreurs", "faute", "tolérance", "échec", "acceptable", "inacceptable"] },
+  { cle: "gouvernance",        bloc: "politique",   titre: "Gouvernance",           ancre: "Gouvernance",           mots: ["décide", "valide", "validation", "possède", "autorité", "gouvernance"] },
+  { cle: "classification",     bloc: "politique",   titre: "Classification",        ancre: "Classification",        mots: ["classer", "classification", "catégorie", "catégories", "rang", "famille", "type", "ranger"] },
+  { cle: "nivellement",        bloc: "politique",   titre: "Nivellement",           ancre: "Nivèlement",            mots: ["niveau", "niveaux", "palier", "paliers", "maturité"] },
+  { cle: "harmonisation",      bloc: "politique",   titre: "Harmonisation",         ancre: "Harmonisation",         mots: ["doublon", "doublons", "conflit", "source", "cohérence", "cohérent", "harmonisation", "divergence"] },
+  { cle: "controle",           bloc: "politique",   titre: "Contrôle",              ancre: "Contrôle",              mots: ["contrôle", "contrôles", "vérifier", "vérification", "obligatoire", "fréquence", "seuil", "alerte"] },
+  { cle: "audit",              bloc: "politique",   titre: "Audit",                 ancre: "Audit",                 mots: ["démontrer", "preuve", "preuves", "prouver", "trace", "traçable", "traçabilité", "conserver", "archive"] },
+  { cle: "analyse",            bloc: "politique",   titre: "Analyse",               ancre: "Analyse",               mots: ["kpi", "indicateur", "indicateurs", "mesure", "mesurer", "mesuré", "chiffre", "chiffres"] },
+  { cle: "reporting",          bloc: "politique",   titre: "Reporting",             ancre: "Reporting",             mots: ["rapport", "rapporte", "rendu", "livrer", "livrable", "signaler"] },
+  { cle: "amelioration",       bloc: "politique",   titre: "Amélioration continue", ancre: "Amélioration continue", mots: ["amélioration", "améliorer", "progrès", "leçon", "leçons", "proposer", "apprendre", "apprend"] },
+  { cle: "refus-absolu",       bloc: "impossibles", titre: "Ce que nous refusons absolument",   ancre: "refusons absolument",   mots: ["refuser", "refuse", "refus", "refusons", "refusé"] },
+  { cle: "jamais-autorise",    bloc: "impossibles", titre: "Ce que nous n'autoriserons jamais", ancre: "autoriserons jamais",   mots: ["autoriser", "autorisé", "interdit", "interdire", "interdiction"] },
+  { cle: "jamais-automatise",  bloc: "impossibles", titre: "Ce que nous n'automatiserons jamais", ancre: "automatiserons jamais", mots: ["automatiser", "automatique", "automatiquement", "manuel", "main"] },
+  { cle: "jamais-delegue",     bloc: "impossibles", titre: "Ce que nous ne déléguerons jamais", ancre: "déléguerons jamais",    mots: ["déléguer", "délégation", "déléguée", "seul", "soi-même"] },
+  { cle: "jamais-sacrifie",    bloc: "impossibles", titre: "Ce que nous ne sacrifierons jamais", ancre: "sacrifierons jamais",  mots: ["sacrifier", "sacrifie", "compromis", "prix"] },
+];
+
+// GARDE-FOU DE L'ARTICLE 24 — la liste ci-dessus reflète un document qu'elle ne lit pas. Si une
+// famille disparaît de la source ou s'il la renomme, la liste devient une copie périmée en
+// silence. Ce contrôle refuse ce silence. Il vérifie l'ANCRE et jamais le titre : un titre peut
+// être reformulé ici pour la lisibilité, l'ancre est la chaîne telle qu'elle apparaît chez lui.
+export function findFamillesDivergingFromSource({ root = ROOT, source = CADRE_SOURCE, familles = CADRE_FAMILLES, lireImpl = null } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  let texte = "";
+  try { texte = lire(source); } catch {
+    return { mesurable: false, ecarts: [], pourquoi: `source du cadre illisible (${source}) : ce zéro dit qu'on n'a rien pu lire, jamais que rien ne diverge` };
+  }
+  const bas = texte.toLowerCase();
+  const ecarts = familles.filter((f) => !bas.includes(String(f.ancre).toLowerCase())).map((f) => ({ cle: f.cle, ancre: f.ancre }));
+  return { mesurable: true, ecarts, total: familles.length };
+}
+
+// LE CORPUS SCANNÉ — des RACINES, jamais une liste de fichiers (Article 24 : un document normatif
+// nouveau est pris en compte le jour où il est écrit, sans toucher à cette logique).
+export const RACINES_DU_CORPUS = [
+  { chemin: "CLAUDE.md", quoi: "la charte", zone: "charte" },
+  { chemin: "docs/regles-de-travail.md", quoi: "les règles de travail", zone: "methode" },
+  { chemin: "docs/xp-ia-process-detail.md", quoi: "le process d'expérience", zone: "methode" },
+  { chemin: "docs/referentiel/lecons.md", quoi: "les leçons payées", zone: "lecons" },
+  { dossier: "docs/referentiel", quoi: "le référentiel", zone: "referentiel" },
+  // LES PROCESS — sa précision du 2026-10-01 : « les regles de travail, la charte, les process :
+  // tout cet ensemble doit compris dans l'analyse ». Les documents de process vivent à la RACINE
+  // de docs/, et la lecture n'est pas récursive : on prend donc ce niveau-là, et lui seul.
+  { dossier: "docs", quoi: "les process et les architectures d'outils", zone: "process" },
+  // LES DONNÉES DÉRIVÉES — sa seconde précision : « il y a beaucoup de données derivées : certaines
+  // sont peut etre exploitables ». Celles-ci le sont, et pour une raison précise : elles portent les
+  // décisions RÉELLEMENT prises, jamais les règles déclarées. Une philosophie se lit mieux dans ce
+  // qu'on a tranché que dans ce qu'on a promis.
+  //
+  // POURQUOI CHACUNE EST UNE ZONE À PART ENTIÈRE, et c'est ce qui les rend inoffensives : le suivi
+  // pèse à lui seul plus de lignes que tout le reste du corpus. Compté en FICHIERS il écraserait
+  // tout ; compté en ZONE il ne vaut qu'un sur six. C'est exactement ce que la maille « zone »
+  // existe pour empêcher.
+  { dossier: "docs/suivi/sessions", quoi: "les décisions réellement prises", zone: "decisions" },
+  { dossier: "docs/strategies", quoi: "les stratégies de domaine", zone: "strategie" },
+  { dossier: "scripts", quoi: "le POURQUOI écrit à côté du code", zone: "outils", ext: ".mjs", enTeteSeulement: true },
+];
+
+// LE DISCRIMINANT QUI A TOUT CHANGÉ — et il a fallu une troisième mesure pour le trouver.
+//
+// Les deux premières mécaniques échouaient pour la même raison de fond : elles comptaient des
+// FICHIERS, et le référentiel tient un fichier par outil. Une tournure technique répétée dans
+// quatre fiches d'outils ressortait donc au même rang qu'une conviction du projet.
+//
+// LA ZONE EST LA BONNE MAILLE. Une idée qui apparaît dans la charte, DANS une leçon payée ET dans
+// le raisonnement écrit à côté d'un outil a traversé trois contextes d'écriture indépendants, à
+// des semaines d'intervalle, sous trois plumes de circonstance différentes. Ce n'est plus une
+// tournure : c'est une croyance. Quatre fiches d'outils, elles, ne font qu'une seule zone.
+export function zoneDuFichier(chemin, { racines = RACINES_DU_CORPUS } = {}) {
+  const c = String(chemin ?? "");
+  const exact = racines.find((r) => r.chemin === c);
+  if (exact) return exact.zone;
+  const dossier = racines.filter((r) => r.dossier).sort((a, b) => b.dossier.length - a.dossier.length)
+    .find((r) => c.startsWith(r.dossier + "/"));
+  return dossier ? dossier.zone : "autre";
+}
+
+// LE COMMENTAIRE DE TÊTE D'UN OUTIL — ce projet y écrit le POURQUOI à côté du QUOI (Article 27),
+// donc c'est là que vit la part la plus sincère de sa philosophie : celle qu'on écrit pour se
+// justifier soi-même, jamais pour une vitrine. On ne lit QUE l'en-tête : le corps d'un script
+// contient des chaînes de caractères qui imitent des convictions sans en être.
+export function enTeteDUnOutil(texte) {
+  const lignes = String(texte ?? "").split("\n");
+  const out = [];
+  for (const l of lignes) {
+    if (l.startsWith("//")) { out.push(l.replace(/^\/\/\s?/, "")); continue; }
+    if (!l.trim()) { if (out.length) out.push(""); continue; }
+    break;
+  }
+  return out.join("\n");
+}
+
+// UNE CONVICTION, ET COMMENT ON LA RECONNAÎT MÉCANIQUEMENT.
+//
+// Ce projet écrit ses convictions sous une forme remarquablement stable : « X, jamais Y » et
+// « toujours X ». Les deux marqueurs existaient déjà dans lib-shell (MARQUEUR_NEGATION,
+// MARQUEUR_ABSOLU) où ils servaient à détecter une POLARITÉ ; ils servent ici à détecter une
+// AFFIRMATION DE VALEUR. Rien de neuf n'a été inventé pour ça, et c'est voulu : un marqueur de
+// plus aurait été un marqueur à tenir à jour en double.
+//
+// LES BORNES DE LONGUEUR SONT DÉRIVÉES, PAS CHOISIES (BP5) : en dessous de 40 caractères on
+// ramasse des fragments de titre (« jamais recopiée »), au-dessus de 400 un paragraphe entier qui
+// porte trois idées à la fois. Les deux valeurs sont réimprimées à chaque passage avec la
+// distribution réelle, pour qu'un corpus qui change les fasse bouger au lieu de les laisser mentir.
+export const BORNE_CONVICTION_MIN = 40;
+export const BORNE_CONVICTION_MAX = 400;
+
+export function extraireConvictions(texte, { chemin = "", min = BORNE_CONVICTION_MIN, max = BORNE_CONVICTION_MAX } = {}) {
+  const sansCode = String(texte ?? "").replace(/```[\s\S]*?```/g, " ");
+  const phrases = sansCode.split(/(?<=[.!?:])\s+|\n{2,}|\n(?=[-*|#])/);
+  const out = [];
+  for (const brute of phrases) {
+    const p = String(brute).replace(/\s+/g, " ").replace(/^[-*#>|\s]+/, "").trim();
+    if (p.length < min || p.length > max) continue;
+    if (p.endsWith("?")) continue;
+    const neg = MARQUEUR_NEGATION.test(p);
+    const abs = MARQUEUR_ABSOLU.test(p);
+    if (!neg && !abs) continue;
+    out.push({ phrase: p, chemin, polarite: neg ? "jamais" : "toujours" });
+  }
+  return out;
+}
+
+// DÉJÀ DANS LA BOUSSOLE ? — et pourquoi ce n'est VOLONTAIREMENT PAS du Jaccard, alors que tout le
+// reste de cet outil en fait.
+//
+// Jaccard compare deux ensembles par intersection/union. Il a été choisi ailleurs dans ce projet
+// pour ne pas favoriser les textes longs. Ici il ferait exactement l'inverse de ce qu'on veut :
+// une phrase de 15 mots entièrement contenue dans un principe de 200 mots rend un Jaccard de
+// 0,07 — donc « non couverte », alors qu'elle l'est intégralement. La question posée n'est pas
+// « ces deux textes se ressemblent-ils ? » mais « cette idée est-elle DÉJÀ DEDANS ? », et la
+// mesure juste est le TAUX DE CONTENANCE : quelle part des mots de la phrase se retrouve dans le
+// principe. Écrit ici pour que personne ne « corrige » cette fonction en Jaccard par souci
+// d'homogénéité (Article 19 pris par l'autre bout : la raison vit à côté du code).
+export const SEUIL_CONTENANCE = 0.7;
+
+export function tauxDeContenance(phrase, cible) {
+  const mots = significantWords(String(phrase ?? ""));
+  if (!mots.length) return 0;
+  const dedans = new Set(significantWords(String(cible ?? "")));
+  return mots.filter((m) => dedans.has(m)).length / mots.length;
+}
+
+export function dejaDansLaBoussole(phrase, unites, { seuil = SEUIL_CONTENANCE } = {}) {
+  let meilleur = 0; let ou = null;
+  for (const u of unites) {
+    const t = tauxDeContenance(phrase, typeof u === "string" ? u : (u.texte ?? ""));
+    if (t > meilleur) { meilleur = t; ou = (typeof u === "string" ? null : (u.titre ?? null)); }
+  }
+  return { couverte: meilleur >= seuil, taux: Number(meilleur.toFixed(2)), ou };
+}
+
+
+// ============================================================================
+// CE QUI DISTINGUE UNE PHILOSOPHIE D'UNE RÈGLE — et c'est la mesure qui l'a imposé.
+//
+// PREMIÈRE MÉCANIQUE, ET SON ÉCHEC, GARDÉ ÉCRIT (Article 27). J'ai d'abord compté comme
+// « inavouée » toute conviction du corpus non contenue dans la boussole. Résultat mesuré sur le
+// vrai dépôt : 2 786 convictions, dont 2 762 « inavouées » — soit 99 %. Un détecteur qui accuse
+// tout le monde n'accuse personne (leçon L4), et son seuil de contenance (0,70) était passé
+// AU-DESSUS de toute la distribution qu'il observe (q90 = 0,44) : la faute exacte qu'un autre
+// détecteur de ce dépôt avait commise le 2026-10-01. Garder ce chiffre ici évite qu'on refasse
+// la même mécanique en croyant l'inventer.
+//
+// CE QUI RÉVÈLE VRAIMENT UNE PHILOSOPHIE : LA RÉCURRENCE À TRAVERS DES FICHIERS INDÉPENDANTS.
+// Une règle énoncée une fois dans un fichier est une règle. Une conviction redite dans quinze
+// fichiers différents, par des outils différents, avec des mots différents, est une CROYANCE du
+// projet — et personne ne l'a jamais décidée, c'est ça qui la rend inavouée. L'étendue (le nombre
+// de fichiers DISTINCTS qu'un groupe traverse) est donc la mesure, jamais le nombre d'occurrences
+// (vingt occurrences dans un seul fichier ne sont qu'un fichier bavard).
+// ============================================================================
+
+export const SEUIL_GROUPE = 0.34; // similarité de Jaccard entre deux convictions d'un même groupe
+
+// grouperConvictions() — regroupement glouton par similarité de Jaccard.
+//
+// JACCARD EST LE BON OUTIL ICI, là où il était le mauvais pour dejaDansLaBoussole() : on compare
+// deux phrases de longueur comparable, pas une phrase à un paragraphe. Les deux fonctions voisines
+// utilisent donc deux mesures différentes, et c'est délibéré — l'uniformiser casserait l'une des
+// deux.
+export function grouperConvictions(convictions, { seuil = SEUIL_GROUPE } = {}) {
+  const prepa = convictions.map((c) => ({ ...c, mots: new Set(significantWords(c.phrase)) }))
+    .filter((c) => c.mots.size >= 4)
+    .sort((a, b) => b.mots.size - a.mots.size);
+  const groupes = [];
+  for (const c of prepa) {
+    let place = null;
+    for (const g of groupes) {
+      const inter = [...c.mots].filter((m) => g.noyau.has(m)).length;
+      const union = new Set([...c.mots, ...g.noyau]).size;
+      if (union && inter / union >= seuil) { place = g; break; }
+    }
+    if (place) { place.membres.push(c); for (const m of c.mots) place.noyau.add(m); }
+    else groupes.push({ noyau: new Set(c.mots), membres: [c], representant: c.phrase });
+  }
+  return groupes.map((g) => ({
+    representant: g.representant,
+    occurrences: g.membres.length,
+    fichiers: [...new Set(g.membres.map((m) => m.chemin))],
+    etendue: new Set(g.membres.map((m) => m.chemin)).size,
+    exemples: g.membres.slice(0, 3).map((m) => ({ phrase: m.phrase, chemin: m.chemin })),
+  })).sort((a, b) => b.etendue - a.etendue || b.occurrences - a.occurrences);
+}
+
+// L'ÉTENDUE MINIMALE SE DÉRIVE DE LA DISTRIBUTION, ELLE NE SE CHOISIT PAS (BP5).
+// On prend le 90e centile des étendues observées : par construction il reste toujours DANS le
+// nuage, donc il ne peut jamais passer au-dessus de tout ce qu'il observe — la faute corrigée
+// plus haut devient structurellement impossible. Un plancher de 3 empêche seulement qu'un corpus
+// minuscule rende « 1 fichier suffit ».
+export function etendueMinimale(groupes, { centile = 0.9, plancher = 3 } = {}) {
+  const e = groupes.map((g) => g.etendue).sort((a, b) => a - b);
+  if (!e.length) return { mesurable: false, valeur: null, pourquoi: "aucun groupe : rien à dériver" };
+  const v = e[Math.min(e.length - 1, Math.floor(e.length * centile))];
+  return { mesurable: true, valeur: Math.max(plancher, v), brute: v, centile, observees: e.length, max: e[e.length - 1] };
+}
+
+export function familleDUneConviction(phrase, { familles = CADRE_FAMILLES } = {}) {
+  const mots = new Set(significantWords(phrase));
+  const bas = String(phrase).toLowerCase();
+  return familles.filter((f) => f.mots.some((m) => mots.has(m) || bas.includes(m))).map((f) => f.cle);
+}
+
+// LE VOCABULAIRE DES CONVICTIONS — trois filtres, tous DÉRIVÉS du dépôt, aucun écrit à la main.
+//
+// DEUXIÈME MÉCANIQUE ÉCARTÉE, ET SA MESURE (Article 27 : on garde ce qui n'a pas marché).
+// J'ai essayé de révéler les thèmes par collocations de mots. Sans filtre, les 25 premières paires
+// étaient des mots outils du français (« deux + même », 27 fichiers). Avec un filtre de fréquence
+// documentaire, elles sont devenues des NOMS D'OUTILS (« clean + dirty », « argus + harmonia ») —
+// mécaniquement, puisque le référentiel tient un fichier par outil. Un nom propre n'est pas une
+// conviction. D'où le troisième filtre, et surtout : d'où le fait que la couverture du cadre ne
+// repose PAS sur ces paires, mais sur l'étendue en fichiers, qui s'est révélée bien plus robuste.
+//
+// LES NOMS D'OUTILS SE DÉRIVENT DE scripts/, JAMAIS D'UNE LISTE (Article 24) : un outil nouveau
+// est écarté du vocabulaire le jour où son fichier existe, sans toucher à cette fonction.
+export function motsOutils({ root = ROOT, listerImpl = null } = {}) {
+  const lister = listerImpl ?? (() => (fsExists(join(root, "scripts")) ? fsReaddir(join(root, "scripts")) : []));
+  const out = new Set();
+  let fichiers = []; try { fichiers = lister(); } catch { return out; }
+  for (const f of fichiers) {
+    if (!String(f).endsWith(".mjs")) continue;
+    for (const tok of String(f).replace(/\.mjs$/, "").split(/[-_.]/)) if (tok.length > 2) out.add(tok.toLowerCase());
+  }
+  return out;
+}
+
+export function vocabulaireDuCorpus(textes, { root = ROOT, plafondRatio = 0.4, plancher = 3, outils = null } = {}) {
+  const noms = outils ?? motsOutils({ root });
+  const N = textes.size ?? textes.length ?? 0;
+  const df = new Map();
+  for (const [, t] of textes) for (const w of new Set(significantWords(t))) df.set(w, (df.get(w) ?? 0) + 1);
+  const plafond = Math.max(plancher + 1, Math.floor(N * plafondRatio));
+  const retenu = new Set();
+  for (const [w, n] of df) {
+    if (w.length <= 3 || /^\d/.test(w) || noms.has(w)) continue;
+    if (n >= plancher && n <= plafond) retenu.add(w);
+  }
+  return { mots: retenu, df, N, plafond, plancher, ecartesCommeOutils: [...df.keys()].filter((w) => noms.has(w)).length };
+}
+
+// couvertureDuCadre() — LA FUSION DES DEUX BOUTS, et le cœur de l'outil.
+//
+// Chaque case du cadre standard (le bout « feuille blanche », son cadre à lui) est remplie par ce
+// que le corpus PROUVE (le bout « existant »). Une case vide n'est JAMAIS remplie au jugé : elle
+// ressort comme une vraie question, et c'est le seul endroit où une question est légitime — tout
+// le reste est déjà répondu par le travail, il suffisait de le lire.
+//
+// LA MESURE RETENUE EST L'ÉTENDUE EN FICHIERS, PAS LE NOMBRE D'OCCURRENCES. Vingt occurrences dans
+// un seul fichier ne sont qu'un fichier bavard ; la même idée redite dans douze fichiers écrits à
+// des semaines d'intervalle est une croyance du projet. C'est ce qui distingue une PHILOSOPHIE
+// (ce qu'on croit partout) d'une RÈGLE (ce qu'on a écrit une fois).
+//
+// LA REPRÉSENTATIVITÉ D'UNE PHRASE se mesure de la même façon : combien de FICHIERS DISTINCTS
+// contiennent une conviction qui partage au moins `recouvrement` mots avec elle. Une phrase très
+// représentative est celle que le projet redit ailleurs sans le savoir — exactement l'inavoué.
+export const RECOUVREMENT_MINIMAL = 3;
+
+export function representativite(phrase, convictions, { recouvrement = RECOUVREMENT_MINIMAL, vocab = null } = {}) {
+  const mots = new Set(significantWords(phrase).filter((w) => !vocab || vocab.has(w)));
+  if (mots.size < recouvrement) return { fichiers: 0, zones: 0, listeZones: [], mots: mots.size };
+  const vus = new Set(); const zones = new Set();
+  for (const c of convictions) {
+    let n = 0;
+    for (const w of c.motsUtiles ?? []) if (mots.has(w) && ++n >= recouvrement) break;
+    if (n >= recouvrement) { vus.add(c.chemin); zones.add(c.zone ?? "autre"); }
+  }
+  return { fichiers: vus.size, zones: zones.size, listeZones: [...zones], mots: mots.size };
+}
+
+export function couvertureDuCadre({ convictions = [], unites = [], familles = CADRE_FAMILLES, vocab = null, seuilEtendue = 3, topN = 6 } = {}) {
+  if (!convictions.length) {
+    return { mesurable: false, cases: [], vides: [], pourquoi: "aucune conviction extraite : ce zéro dit qu'on n'a rien pu lire, jamais que le corpus est muet" };
+  }
+  const cases = familles.map((f) => {
+    const miennes = convictions.filter((c) => c.familles.includes(f.cle));
+    const fichiers = new Set(miennes.map((c) => c.chemin));
+    const notees = miennes.map((c) => ({ ...c, rep: representativite(c.phrase, miennes, { vocab }) }))
+      .filter((c) => c.rep.fichiers >= seuilEtendue)
+      // LES ZONES D'ABORD, LES FICHIERS ENSUITE : traverser trois contextes d'écriture vaut plus
+      // que revenir quatre fois dans le même (voir zoneDuFichier ci-dessus).
+      .sort((a, b) => b.rep.zones - a.rep.zones || b.rep.fichiers - a.rep.fichiers || a.phrase.length - b.phrase.length);
+    // DÉDOUBLONNAGE — on garde la première phrase de chaque idée, jamais six formulations d'une
+    // seule. Jaccard est le bon outil ICI (deux phrases de longueur comparable), là où il serait
+    // le mauvais dans dejaDansLaBoussole() ; les deux voisines utilisent donc deux mesures
+    // différentes, et uniformiser casserait l'une des deux.
+    const gardees = [];
+    for (const c of notees) {
+      const a = new Set(significantWords(c.phrase));
+      const double = gardees.some((g) => {
+        const b = new Set(significantWords(g.phrase));
+        const inter = [...a].filter((w) => b.has(w)).length;
+        return inter / new Set([...a, ...b]).size >= SEUIL_GROUPE;
+      });
+      if (!double) gardees.push(c);
+      if (gardees.length >= topN) break;
+    }
+    const avecBoussole = gardees.map((c) => ({ ...c, boussole: dejaDansLaBoussole(c.phrase, unites) }));
+    const parNiveau = { projet: 0, jeu: 0, agence: 0, indetermine: 0 };
+    for (const c of notees) parNiveau[c.niveau] = (parNiveau[c.niveau] ?? 0) + 1;
+    return {
+      cle: f.cle, bloc: f.bloc, titre: f.titre,
+      convictions: miennes.length, fichiers: fichiers.size, retenues: notees.length,
+      parNiveau, top: avecBoussole,
+      inavoues: avecBoussole.filter((c) => !c.boussole.couverte).length,
+      vide: notees.length === 0,
+    };
+  });
+  return { mesurable: true, cases, vides: cases.filter((c) => c.vide).map((c) => c.cle) };
+}
+
+// LES DÉFAUTS DE LA MATIÈRE BRUTE (2026-10-01, sa précision : « la revelation te donne la matiere
+// BRUT de la philosophie, avec ses incoherences, ses defauts »).
+//
+// LA RÉVÉLATION N'EST PAS LA PHILOSOPHIE, C'EST LE MINERAI. Un corpus écrit sur des semaines par
+// plusieurs mains de circonstance se contredit forcément quelque part, et une extraction qui rend
+// une liste parfaitement lisse ment sur ce qu'elle a lu.
+//
+// AUCUN DÉTECTEUR NEUF N'A ÉTÉ ÉCRIT POUR ÇA, et c'est voulu : mesureDesTensions() existe depuis
+// le 2026-09-21 et fait exactement ce travail — vocabulaire partagé ET polarité opposée. Elle
+// l'appliquait aux principes de la boussole ; on la pointe ici sur les convictions révélées.
+// Un second détecteur aurait été un second détecteur à tenir à jour (Article 24).
+export function tensionsDuCorpus(convictionsRetenues, { max = 400 } = {}) {
+  // DEUX FILTRES AVANT DE COMPARER, et chacun ferme un faux positif constaté en direct.
+  //
+  // ① LES DOUBLONS. Une conviction peut appartenir à plusieurs familles du cadre, donc figurer
+  //    plusieurs fois dans la liste retenue. Comparée à elle-même elle rend un Jaccard de 1 et
+  //    passe pour la tension la plus grave du corpus. Trois des seize premières l'étaient.
+  // ② LES PHRASES QUI PORTENT LES DEUX MARQUEURS. Le choc de polarité n'a de sens qu'entre une
+  //    phrase en « jamais » et une phrase en « toujours ». Une phrase qui dit « toujours X, jamais
+  //    Y » entre en conflit avec tout le monde et avec personne. C'est la limite de l'heuristique
+  //    partagée, et on la ferme ICI plutôt que dans mesureDesTensions() : sur la boussole, dont les
+  //    unités sont des paragraphes entiers, la même coupe retirerait presque tous les principes.
+  const vues = new Set();
+  const propres = convictionsRetenues.filter((c) => {
+    const k = c.phrase.trim();
+    if (vues.has(k)) return false;
+    vues.add(k);
+    return !(MARQUEUR_NEGATION.test(k) && MARQUEUR_ABSOLU.test(k));
+  });
+  const unites = propres.slice(0, max).map((c, i) => ({ partie: 0, numero: i + 1, titre: c.phrase.slice(0, 70), texte: c.phrase }));
+  if (unites.length < 2) return { mesurable: false, pourquoi: "moins de deux convictions retenues : aucune paire à comparer — PAS MESURÉ, jamais « aucune contradiction »" };
+  const brut = mesureDesTensions(unites);
+  if (!brut.mesurable) return brut;
+  // mesureDesTensions() étiquette une paire « partie.numéro » — c'est ce qu'il faut pour la
+  // boussole, dont les principes sont numérotés. Ici les unités sont des phrases : on remet donc
+  // le texte en face de l'étiquette plutôt que de modifier la fonction partagée, qui sert ailleurs.
+  const parEtiquette = new Map(unites.map((u) => [`${u.partie}.${u.numero}`, u.texte]));
+  return { ...brut, tensions: brut.tensions.map((t) => ({ ...t, texteA: parEtiquette.get(t.a) ?? t.a, texteB: parEtiquette.get(t.b) ?? t.b })) };
+}
+
+export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS, chemin = PHILOSOPHY_PATH, lireImpl = null, listerImpl = null, seuilEtendue = null } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const lister = listerImpl ?? ((d, ext = ".md") => (fsExists(join(root, d))
+    ? fsReaddir(join(root, d)).filter((f) => f.endsWith(ext)).map((f) => `${d}/${f}`) : []));
+  const fichiers = [];
+  for (const r of racines) {
+    if (r.chemin) { fichiers.push({ chemin: r.chemin, source: r }); continue; }
+    try { for (const f of lister(r.dossier, r.ext ?? ".md")) fichiers.push({ chemin: f, source: r }); }
+    catch { /* dossier absent = corpus plus petit, jamais une erreur */ }
+  }
+  const textes = new Map(); const vus = new Set();
+  for (const { chemin: f, source } of fichiers) {
+    if (vus.has(f)) continue; vus.add(f);
+    try { textes.set(f, source.enTeteSeulement ? enTeteDUnOutil(lire(f)) : lire(f)); }
+    catch { /* illisible : compté plus bas */ }
+  }
+  if (!textes.size) return { mesurable: false, pourquoi: "aucun fichier du corpus n'a pu être lu : ce zéro dit qu'on n'a rien lu, jamais que le projet n'a pas de convictions" };
+
+  const vocabulaire = vocabulaireDuCorpus(textes, { root });
+  const convictions = [];
+  for (const [f, t] of textes) {
+    for (const c of extraireConvictions(t, { chemin: f })) {
+      convictions.push({
+        ...c,
+        zone: zoneDuFichier(f, { racines }),
+        motsUtiles: [...new Set(significantWords(c.phrase))].filter((w) => vocabulaire.mots.has(w)),
+        familles: familleDUneConviction(c.phrase),
+        niveau: classerParNiveau(c.phrase).niveau,
+      });
+    }
+  }
+  let unites = [];
+  try { unites = extractPrincipleUnits(lire(chemin)); } catch { /* boussole absente : tout sera « inavoué », et le rapport le dit */ }
+
+  // LE SEUIL SE DÉRIVE DE LA DISTRIBUTION RÉELLE, il ne se choisit pas (BP5). Le 75e centile des
+  // représentativités observées reste par construction DANS le nuage : il ne peut donc jamais
+  // passer au-dessus de tout ce qu'il observe, la faute corrigée deux fois plus haut.
+  const reps = convictions.map((c) => representativite(c.phrase, convictions, { vocab: vocabulaire.mots }).fichiers).sort((a, b) => a - b);
+  const derive = reps.length ? reps[Math.floor(reps.length * 0.75)] : 0;
+  const seuil = { valeur: seuilEtendue ?? Math.max(3, derive), derive, centile: 0.75, observees: reps.length, max: reps[reps.length - 1] ?? 0 };
+
+  const cadre = couvertureDuCadre({ convictions, unites, vocab: vocabulaire.mots, seuilEtendue: seuil.valeur });
+  const parNiveau = {};
+  for (const c of convictions) parNiveau[c.niveau] = (parNiveau[c.niveau] ?? 0) + 1;
+  const retenues = cadre.cases.flatMap((c) => c.top);
+  const tensions = tensionsDuCorpus(retenues);
+  return {
+    mesurable: true, tensions,
+    fichiersLus: textes.size, fichiersDeclares: fichiers.length,
+    convictions: convictions.length, vocabulaire: { retenu: vocabulaire.mots.size, plafond: vocabulaire.plafond, ecartesCommeOutils: vocabulaire.ecartesCommeOutils },
+    seuil, cadre, parNiveau,
+    inavoues: retenues.filter((c) => !c.boussole.couverte).length,
+    boussole: { chemin, principes: unites.length },
+  };
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
+  // SOUS-COMMANDE « reveler » (tâche #1418) — la révélation est une opération lourde et ciblée,
+  // jamais quelque chose qu'on inflige à chaque passage de veille ordinaire.
+  if (process.argv[2] === "reveler") {
+    const r = revelerLaPhilosophie({ chemin });
+    const lignes = formatRevelationLines(r);
+    for (const l of lignes) console.log(l);
+    const dossier = join(ROOT, "docs/the-king");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    const sortie = join(dossier, `revelation-philosophie-${jour}.txt`);
+    writeFileSync(sortie, lignes.join("\n") + "\n", "utf8");
+    // L'ÉTAT MACHINE, à côté du rapport lisible — c'est lui qui rend la SECONDE révélation
+    // comparable à celle-ci. Déposé à chaque passage, jamais sur demande : un état qu'on pense à
+    // enregistrer est un état qu'on oubliera le jour qui compte.
+    const etat = etatDeLaRevelation(r);
+    writeFileSync(join(dossier, `revelation-philosophie-${jour}.json`), JSON.stringify(etat, null, 2) + "\n", "utf8");
+    console.log(`\nRapport déposé : docs/the-king/revelation-philosophie-${jour}.txt`);
+    console.log(`État comparable déposé : docs/the-king/revelation-philosophie-${jour}.json — couverture actuelle ${etat.couverture.couvertes}/${etat.couverture.retenues} (${Math.round((etat.couverture.part ?? 0) * 100)} %)`);
+    // ET LA COMPARAISON SE FAIT TOUTE SEULE s'il existe un passage précédent : personne n'aura à
+    // se souvenir de la lancer le jour où elle compte.
+    const anciens = fsReaddir(dossier).filter((f) => /^revelation-philosophie-\d{4}-\d{2}-\d{2}\.json$/.test(f) && !f.includes(jour)).sort();
+    if (anciens.length) {
+      const precedent = JSON.parse(readFileSync(join(dossier, anciens[anciens.length - 1]), "utf8"));
+      const comp = comparerRevelations(precedent, etat);
+      console.log(`\n=== COMPARAISON avec ${anciens[anciens.length - 1]} ===`);
+      if (!comp.mesurable) console.log(`🚨 PAS MESURÉ — ${comp.pourquoi}`);
+      else {
+        console.log(`  couverture : ${Math.round(comp.couverture.avant * 100)} % → ${Math.round(comp.couverture.apres * 100)} %  (${comp.couverture.delta >= 0 ? "+" : ""}${Math.round(comp.couverture.delta * 100)} pts)`);
+        console.log(`  principes de la boussole : ${comp.principes.avant} → ${comp.principes.apres}`);
+        if (comp.casesComblees.length) console.log(`  cases comblées : ${comp.casesComblees.join(", ")}`);
+        if (comp.casesNouvelles.length) console.log(`  ⚠️  cases devenues vides : ${comp.casesNouvelles.join(", ")}`);
+        console.log(`  VERDICT : ${comp.verdict}`);
+      }
+    } else {
+      console.log(`\n(Premier passage enregistré : aucune comparaison possible — et c'est une absence, jamais un « rien n'a changé ».)`);
+    }
+    const constats = [
+      ...(r.mesurable ? r.cadre.vides.map((v) => ({ constat: `case « ${v} » du cadre standard : aucune conviction du corpus ne la porte`, etat: "retenu",
+        tache: "trancher avec l'utilisateur ce que le projet met dans cette case — le corpus ne peut pas y répondre à sa place" })) : []),
+      ...(r.mesurable && r.inavoues ? [{ constat: `${r.inavoues} conviction(s) récurrentes du corpus n'existent dans aucun principe de la boussole`, etat: "retenu",
+        tache: "les porter dans docs/philosophie-et-politique.md, rangées par niveau PROJET/JEU/AGENCE" }] : []),
+    ];
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (requestText) {
     const reminder = reminderFor(requestText);
     console.log(reminder ?? "👑 THE-KING : aucune des 6 catégories de déclenchement détectée dans ce texte — consultation non signalée comme nécessaire (jamais une certitude, le jugement humain/agent reste final).");
@@ -440,6 +976,116 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   const planRoi = buildPlanDaction(constatsRoi, { toolSlug: "the-king" });
   imprimerPlanDaction(planRoi);
 
+}
+
+// LA SECONDE RÉVÉLATION (2026-10-01, sa demande : « on devra aussi faire cet exercice de REVELER à
+// nouveau, quand on aura fini, pour voir si la revelation fait bien remonter la philo et la
+// politique. DOnc bonne idee d'avoir equipe The-King, assure toi qu'il sera pret »).
+//
+// CE QUE « PRÊT » VEUT DIRE ICI, ET CE N'EST PAS « SAVOIR RELANCER ». Relancer, il sait déjà
+// faire. Ce qui manque, c'est de pouvoir répondre à SA question : la révélation fait-elle REMONTER
+// ce que nous aurons écrit ? Cette question est une COMPARAISON entre deux passages, et une
+// comparaison faite de mémoire ne vaut rien.
+//
+// D'OÙ L'ÉTAT MACHINE, DÉPOSÉ À CHAQUE PASSAGE À CÔTÉ DU RAPPORT LISIBLE. Le `.txt` est pour
+// l'humain, le `.json` est pour le prochain passage. Sans lui, « comparer » exigerait de reparser
+// de la prose — c'est-à-dire d'écrire un second parseur qui divergerait du premier (Article 24).
+export function etatDeLaRevelation(r) {
+  if (!r?.mesurable) return { mesurable: false, pourquoi: r?.pourquoi ?? "révélation non mesurable" };
+  return {
+    mesurable: true,
+    fichiers: r.fichiersLus,
+    convictions: r.convictions,
+    principesBoussole: r.boussole.principes,
+    seuil: r.seuil.valeur,
+    casesVides: r.cadre.vides.slice().sort(),
+    parNiveau: r.parNiveau,
+    tensions: r.tensions?.mesurable ? r.tensions.tensions.length : null,
+    // L'INDICATEUR QUI RÉPOND À SA QUESTION : la part des convictions retenues que la boussole
+    // porte DÉJÀ. Aujourd'hui 1 sur 87. Si la boussole a bien absorbé ce que le corpus croit,
+    // cette part doit MONTER au passage suivant — et si elle ne monte pas, l'écriture n'a pas
+    // servi, quoi qu'en dise l'impression de l'avoir bien faite.
+    couverture: (() => {
+      const tops = [...new Map(r.cadre.cases.flatMap((c) => c.top).map((t) => [t.phrase, t])).values()];
+      const couvertes = tops.filter((t) => t.boussole.couverte).length;
+      return { retenues: tops.length, couvertes, part: tops.length ? Number((couvertes / tops.length).toFixed(3)) : null };
+    })(),
+  };
+}
+
+// comparerRevelations() — deux états, et un verdict qui sait dire « je ne peux pas conclure ».
+export function comparerRevelations(avant, apres) {
+  if (!avant?.mesurable || !apres?.mesurable) {
+    return { mesurable: false, pourquoi: "il faut DEUX passages mesurables pour comparer — un seul ne dit rien sur une évolution, et un zéro de comparaison n'est jamais un « rien n'a changé »" };
+  }
+  const d = (a, b) => Number((b - a).toFixed(3));
+  const casesComblees = avant.casesVides.filter((c) => !apres.casesVides.includes(c));
+  const casesNouvelles = apres.casesVides.filter((c) => !avant.casesVides.includes(c));
+  const partAvant = avant.couverture.part ?? 0;
+  const partApres = apres.couverture.part ?? 0;
+  return {
+    mesurable: true,
+    couverture: { avant: partAvant, apres: partApres, delta: d(partAvant, partApres) },
+    convictions: { avant: avant.convictions, apres: apres.convictions, delta: apres.convictions - avant.convictions },
+    principes: { avant: avant.principesBoussole, apres: apres.principesBoussole, delta: apres.principesBoussole - avant.principesBoussole },
+    casesComblees, casesNouvelles,
+    // LE VERDICT EST VOLONTAIREMENT SÉVÈRE : écrire des principes fait monter le compte de
+    // principes sans rien prouver. La seule preuve que l'écriture a SERVI est que le corpus se
+    // reconnaisse davantage dedans — donc que la couverture monte. Un compte de principes qui
+    // grimpe à couverture stable veut dire qu'on a écrit à côté de ce que le projet croit.
+    verdict: partApres > partAvant ? "LA PHILOSOPHIE REMONTE — le corpus se reconnaît davantage dans la boussole qu'au passage précédent"
+      : partApres === partAvant ? "STABLE — la boussole ne capte pas plus du corpus qu'avant, même si elle a grossi"
+      : "EN RECUL — le corpus s'est éloigné de la boussole : soit le corpus a bougé, soit la boussole a été écrite à côté",
+  };
+}
+
+// LE RAPPORT DE RÉVÉLATION — un FICHIER, jamais seulement un affichage (Article 31 : le livrable
+// est le fichier produit par l'outil ; mon texte le commente, il ne le remplace pas).
+export function formatRevelationLines(r) {
+  const L = [];
+  if (!r.mesurable) { L.push(`🚨 PAS MESURÉ — ${r.pourquoi}`); return L; }
+  L.push(`=== RÉVÉLATION DE LA PHILOSOPHIE — ce que le corpus croit déjà ===`);
+  L.push("");
+  L.push(`Corpus : ${r.fichiersLus}/${r.fichiersDeclares} fichier(s) lus · ${r.convictions} convictions extraites`);
+  L.push(`Vocabulaire retenu : ${r.vocabulaire.retenu} mots (plafond de fréquence ${r.vocabulaire.plafond} fichiers ; ${r.vocabulaire.ecartesCommeOutils} mots écartés comme noms d'outils)`);
+  L.push(`Seuil d'étendue DÉRIVÉ : ${r.seuil.valeur} fichier(s) (75e centile observé = ${r.seuil.derive}, maximum observé = ${r.seuil.max})`);
+  L.push(`Boussole actuelle : ${r.boussole.principes} principes dans ${r.boussole.chemin}`);
+  L.push(`Niveaux : ` + Object.entries(r.parNiveau).map(([k, v]) => `${k} ${v}`).join(" · "));
+  L.push("");
+  const vides = r.cadre.vides;
+  if (r.tensions?.mesurable) {
+    L.push(r.tensions.tensions.length
+      ? `⚠️  MATIÈRE BRUTE — ${r.tensions.tensions.length} tension(s) possible(s) entre convictions révélées (${r.tensions.pairesPossibles} paires comparées) : le corpus n'est pas lisse, et une extraction qui le prétendrait mentirait`
+      : `✅ MATIÈRE BRUTE — aucune tension détectée entre les convictions révélées (${r.tensions.pairesPossibles} paires comparées, la plus proche à ${r.tensions.plusProche?.jaccard ?? "?"})`);
+    for (const t of (r.tensions.tensions ?? []).slice(0, 10)) {
+      L.push(`     · vocabulaire partagé ${t.jaccard} :`);
+      L.push(`         A — ${t.texteA}`);
+      L.push(`         B — ${t.texteB}`);
+    }
+  } else {
+    L.push(`🚨 MATIÈRE BRUTE — tensions PAS MESURÉES : ${r.tensions?.pourquoi ?? "raison non fournie"}`);
+  }
+  L.push("");
+  L.push(vides.length
+    ? `⚠️  ${vides.length} case(s) du cadre standard VIDES — le corpus ne les porte pas : ${vides.join(", ")}`
+    : `✅ les ${r.cadre.cases.length} cases du cadre standard sont portées par le corpus`);
+  L.push("");
+  for (const bloc of ["philosophie", "politique", "impossibles"]) {
+    L.push(`───────────── ${bloc.toUpperCase()} ─────────────`);
+    for (const c of r.cadre.cases.filter((x) => x.bloc === bloc)) {
+      L.push("");
+      L.push(`▸ ${c.titre}  [${c.cle}]`);
+      L.push(`  ${c.convictions} conviction(s) dans ${c.fichiers} fichier(s) · ${c.retenues} au-dessus du seuil · niveaux : projet ${c.parNiveau.projet} / jeu ${c.parNiveau.jeu} / agence ${c.parNiveau.agence} / indéterminé ${c.parNiveau.indetermine}`);
+      if (c.vide) { L.push(`  🚨 AUCUNE conviction du corpus ne tient ce rôle — c'est un vrai trou, pas un défaut de mesure (${c.convictions} candidates, toutes sous le seuil d'étendue).`); continue; }
+      for (const t of c.top) {
+        L.push(`  · [${t.rep.zones} zones · ${t.rep.fichiers} fichiers · ${t.niveau}${t.boussole.couverte ? " · DÉJÀ dans la boussole" : " · INAVOUÉ"}] ${t.phrase}`);
+        L.push(`      zones : ${t.rep.listeZones.join(", ")}`);
+        L.push(`      ↳ ${t.chemin}`);
+      }
+    }
+    L.push("");
+  }
+  return L;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) main();

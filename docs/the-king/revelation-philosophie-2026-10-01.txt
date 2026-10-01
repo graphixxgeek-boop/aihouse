@@ -1,0 +1,385 @@
+=== RÉVÉLATION DE LA PHILOSOPHIE — ce que le corpus croit déjà ===
+
+Corpus : 334/337 fichier(s) lus · 5860 convictions extraites
+Vocabulaire retenu : 6899 mots (plafond de fréquence 133 fichiers ; 137 mots écartés comme noms d'outils)
+Seuil d'étendue DÉRIVÉ : 3 fichier(s) (75e centile observé = 3, maximum observé = 24)
+Boussole actuelle : 23 principes dans docs/philosophie-et-politique.md
+Niveaux : indetermine 3140 · agence 2210 · jeu 340 · projet 170
+
+✅ MATIÈRE BRUTE — aucune tension détectée entre les convictions révélées (2775 paires comparées, la plus proche à 0.941)
+
+⚠️  1 case(s) du cadre standard VIDES — le corpus ne les porte pas : jamais-sacrifie
+
+───────────── PHILOSOPHIE ─────────────
+
+▸ Raison d'être  [raison-d-etre]
+  602 conviction(s) dans 157 fichier(s) · 76 au-dessus du seuil · niveaux : projet 4 / jeu 3 / agence 44 / indéterminé 25
+  · [5 zones · 8 fichiers · indetermine · INAVOUÉ] SMART-CONSO-TOKEN | Agent | 🎖️ | rythme de consommation de TOKENS de l'agent (Agent séparé, lecture exhaustive, poids d'un document toujours chargé) ; peut aussi scanner et proposer des réductions | gratuit à consulter | avant tout appel à un agent séparé ou tout raisonnement coûteux — obligation écrite dans la charte, jamais un garde-fou vérifiable après coup |
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/regles-de-travail.md
+  · [4 zones · 8 fichiers · agence · INAVOUÉ] Ce critère exclut structurellement le LIVRABLE qui exige un vrai raisonnement payant (le vrai zoom profond « page blanche » d'ALWAYS-NEW- CODE lui-même, ou THE-FINAL-JUDGE dans son ensemble — celui-ci sans aucune couche gratuite), jamais l'outil entier par contrecoup quand une couche légère existe séparément.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/argus.md
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] Seuil "dur" = contraignant, l'obligation d'ouvrir une fenêtre de question retire la discrétion de l'agent à ce palier précis — écrit noir sur blanc dans la charte (nouvelle section sous l'Article 22), jamais un garde-fou mécanique vérifiable après coup (aucune preuve externe n'existe pour un appel d'agent séparé EN GÉNÉRAL).
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/smart-conso-token.md
+  · [4 zones · 4 fichiers · indetermine · INAVOUÉ] La partie "raisonnement" (combinaison de mécanismes jamais envisagée, conséquence logique oubliée, lien discret) n'est PAS automatisée — elle se fait à la demande, avec une vraie réflexion, sur un sujet précis.
+      zones : referentiel, process, decisions, outils
+      ↳ docs/referentiel/argus.md
+  · [4 zones · 4 fichiers · agence · INAVOUÉ] — | 2026-09-19T16:20Z | | Smart Breaker | Conception d'ARGUS (détecteur de trous logiques) | RECOMMANDE-NECESSAIRE | Nom choisi, principe hybride (mécanique gratuit + raisonnement IA à la demande) confirmé, toujours déployé, balayage complet de l'existant, registre en dossier+index, blueprint séparé | terminée — fidèle |
+      zones : methode, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-1.md
+  · [3 zones · 8 fichiers · agence · INAVOUÉ] Chaque raison est nommée explicitement dans le résultat (jamais un score opaque) et le niveau de confiance reste toujours nuancé (confirmé / probable / à surveiller, même vocabulaire que les autres outils de raisonnement de ce paysage) — jamais une certitude absolue sur un jugement qui reste, au fond, un signal statistique.
+      zones : referentiel, process, outils
+      ↳ docs/axa-check-blueprint.md
+
+▸ Valeurs  [valeurs]
+  157 conviction(s) dans 65 fichier(s) · 37 au-dessus du seuil · niveaux : projet 2 / jeu 4 / agence 10 / indéterminé 21
+  · [4 zones · 11 fichiers · indetermine · INAVOUÉ] « jamais comme source de vérité sur le comportement actuel »**.
+      zones : charte, referentiel, process, decisions
+      ↳ docs/referentiel/ecotoken.md
+  · [4 zones · 11 fichiers · indetermine · INAVOUÉ] `docs/contexte-projet/` contient les archives historiques transmises par l'utilisateur, à consulter en cas de doute sur une décision de conception, **jamais comme source de vérité sur le comportement actuel** :
+      zones : charte, referentiel, process, decisions
+      ↳ CLAUDE.md
+  · [4 zones · 11 fichiers · indetermine · INAVOUÉ] Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*
+      zones : charte, referentiel, process, decisions
+      ↳ docs/referentiel/feuille-de-route.md
+  · [4 zones · 11 fichiers · agence · INAVOUÉ] « une archive est à consulter en cas de doute, jamais une source de vérité sur le comportement actuel » — **7 zones du dépôt sur 7, 14 fichiers**, c'est-à-dire TOUS les contextes d'écriture sans exception, et zéro mention dans la boussole.
+      zones : charte, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [4 zones · 11 fichiers · agence · INAVOUÉ] les quatre sont rapatriés verbatim dans docs/rapports-de-nuit/rescapes-2026-09-19-20/, avec un README qui dit d'où ils viennent, ce que chacun est, et leur statut — archive historique, jamais une source de vérité sur le comportement actuel, exactement comme docs/contexte-projet.
+      zones : charte, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [4 zones · 5 fichiers · projet · INAVOUÉ] Le verdict sur l'esprit des personnages n'y entrera jamais — la charte le réserve à une LECTURE, et le faire trancher par un compteur de mots serait la pire dérive possible dans l'outil qui garde justement l'Article 0.
+      zones : methode, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+
+▸ Principes de décision  [principes-decision]
+  246 conviction(s) dans 86 fichier(s) · 49 au-dessus du seuil · niveaux : projet 1 / jeu 6 / agence 12 / indéterminé 30
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] J2 — Une formulation polie et distante est un signal d'alerte, jamais un indice de qualité
+      zones : charte, referentiel, process, decisions
+      ↳ docs/philosophie-et-politique-v2.md
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] note indicative de qualité visuelle (jamais un verdict qui prime sur l'appréciation de l'utilisateur), 2 captures d'écran maximum via Playwright, fondée sur `regles-des-graphismes.md`.
+      zones : methode, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-1.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] deux captures maximum par simulation, économie de tokens en priorité, note strictement indicative (jamais un verdict qui prime sur l'appréciation de l'utilisateur), séparé d'un éventuel futur outil de gestion de la refonte graphique elle-même.)*
+      zones : methode, referentiel, process, decisions
+      ↳ docs/referentiel/the-screener.md
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] Pas un remplacement du jugement esthétique humain.** Une note ici n'est jamais un verdict de qualité au sens fort, contrairement à EL-PROFESSOR dont la note guide directement la correction — ici, l'appréciation finale reste toujours celle de la personne qui pilote le projet.
+      zones : referentiel, process, decisions, outils
+      ↳ docs/the-screener-blueprint.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] Il ne restait vraiment que deux choses qu'il apportait, et elles sont fondues DANS le test existant plutôt qu'à côté — l'échec sans raison attachée, qui doit quand même dire qu'il a échoué, et la réserve « cette note ne prime jamais sur l'appréciation de l'utilisateur », qui doit figurer sur chaque page.
+      zones : methode, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] En cas de doute réel sur si un retrait affaiblirait une règle, la réponse par défaut est de NE PAS couper, jamais de trancher par excès de prudence inverse (tout garder par peur de mal faire serait tout aussi contraire à l'esprit de cette procédure — la bonne réponse est un jugement explicite au cas par cas, jamais un réflexe dans un sens ou dans l'autre).
+      zones : charte, referentiel, process, decisions
+      ↳ docs/referentiel/smart-conso-token.md
+
+▸ Vision des acteurs  [vision-acteurs]
+  815 conviction(s) dans 174 fichier(s) · 205 au-dessus du seuil · niveaux : projet 17 / jeu 16 / agence 75 / indéterminé 97
+  · [6 zones · 8 fichiers · projet · INAVOUÉ] consultation systématique avant toute action coûteuse.** Avant tout appel réel à l'API Gemini déclenché par l'agent lui-même pendant une session de travail — jamais le jeu réel, sous la seule autorité de l'Article 8 — l'agent consulte Smart Conso API (`scripts/smart-conso-api.mjs::assess()`), jamais après coup.
+      zones : charte, methode, referentiel, process, decisions, outils
+      ↳ docs/referentiel/smart-conso-api.md
+  · [5 zones · 12 fichiers · projet · INAVOUÉ] Un Stagiaire n'est donc JAMAIS un appel à l'outil `Agent` (aucun coût fixe ~37k tokens, aucun personnage fixe séparé, aucune consultation Smart Conso API/SMART-CONSO-TOKEN nécessaire) — c'est une fonction/script MÉCANIQUE, exactement la même nature que le reste des Membres de l'agence (ARGUS, tool-usage.mjs, etc.) :
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/cassandra-rh-conception.md
+  · [5 zones · 10 fichiers · jeu · INAVOUÉ] Comme tout audit narré par un agent qui pilote sans second appel de raisonnement, un texte de personnage FIXE (jamais reformulé à chaque appel) protège contre une dérive vers un ton neutre — même discipline que les autres personnages fixes de ce paysage.
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/cassandra-rh-blueprint.md
+  · [5 zones · 9 fichiers · indetermine · INAVOUÉ] Seuil "dur" = contraignant, l'obligation d'ouvrir une fenêtre de question retire la discrétion de l'agent à ce palier précis — écrit noir sur blanc dans la charte (nouvelle section sous l'Article 22), jamais un garde-fou mécanique vérifiable après coup (aucune preuve externe n'existe pour un appel d'agent séparé EN GÉNÉRAL).
+      zones : charte, methode, referentiel, process, outils
+      ↳ docs/referentiel/smart-conso-token.md
+  · [5 zones · 9 fichiers · projet · INAVOUÉ] Le personnage fixe vit dans un bloc de citation markdown ("> ...") sous le titre "Personnage" du document d'instanciation de l'outil appelant — extrait ligne par ligne, jamais recopié à la main ailleurs (garantit que le texte utilisé à chaque appel provient TOUJOURS du même texte de référence, exigence non négociable de l'utilisateur).
+      zones : methode, referentiel, process, decisions, outils
+      ↳ scripts/judge-persona-shared.mjs
+  · [5 zones · 8 fichiers · jeu · INAVOUÉ] `extractPersonaBlock(texte)` — extrait le personnage FIXE directement de ce document (le bloc de citation ci-dessus), pour garantir que le texte donné à l'agent séparé à chaque appel provient toujours de cette seule source, jamais retapé ou reformulé à la main.
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/referentiel/the-final-judge.md
+
+▸ Gestion du risque  [gestion-risque]
+  128 conviction(s) dans 65 fichier(s) · 16 au-dessus du seuil · niveaux : projet 0 / jeu 0 / agence 3 / indéterminé 13
+  · [5 zones · 7 fichiers · indetermine · INAVOUÉ] 3 zones, 4 fichiers — « le succès ne se mesure jamais à "a-t-il tourné sans erreur" mais au nombre de passages ayant réellement trouvé un écart »)*
+      zones : charte, referentiel, process, decisions, outils
+      ↳ docs/philosophie-et-politique-v2.md
+  · [5 zones · 6 fichiers · indetermine · INAVOUÉ] 5 zones, 5 fichiers — « seules les modifications à RISQUE FAIBLE peuvent y être appliquées directement ; au-delà, ça se propose, jamais ça ne s'applique »)*
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/philosophie-et-politique-v2.md
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] Son seul vrai critère de succès n'est jamais « a-t-elle tourné sans erreur » mais
+      zones : charte, referentiel, process, outils
+      ↳ docs/charte-blueprint.md
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] Jamais comme preuve que tout va bien.** Son seul critère de succès est le nombre de bugs réellement inconnus qu'il a fait remonter — jamais « il a tourné sans erreur ».
+      zones : charte, referentiel, process, outils
+      ↳ docs/referentiel/hyper-scan-checkpoint.md
+  · [4 zones · 4 fichiers · agence · INAVOUÉ] ET J'AVAIS DÉJÀ FAIT L'ERREUR MOI-MÊME CETTE NUIT**, en écrivant que check-spirit n'avait jamais tourné — démenti par son registre, qui portait deux passages.
+      zones : referentiel, process, decisions, outils
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [3 zones · 3 fichiers · indetermine · INAVOUÉ] « Risque faible » ne veut donc jamais dire « ce fichier est peu risqué » — il veut dire « ici, seules les modifications les moins risquées passent sans repasser par l'utilisateur ».
+      zones : methode, process, decisions
+      ↳ docs/regles-de-travail.md
+
+───────────── POLITIQUE ─────────────
+
+▸ Gouvernance  [gouvernance]
+  139 conviction(s) dans 70 fichier(s) · 27 au-dessus du seuil · niveaux : projet 2 / jeu 3 / agence 9 / indéterminé 13
+  · [3 zones · 8 fichiers · indetermine · INAVOUÉ] cette condition stricte reste dans `smart-breaker-historique.md`, et la validation qualité intégrale (`check-spirit.mjs`/`check-profile.mjs` avec ce modèle) n'a jamais été faite — cf.
+      zones : referentiel, process, outils
+      ↳ docs/referentiel/smart-breaker.md
+  · [3 zones · 8 fichiers · jeu · INAVOUÉ] `GEMINI_FALLBACK_MODELS` n'a pas encore reçu la validation qualité intégrale (lecture humaine de tous les scénarios `check-spirit.mjs` et `check-profile.mjs` avec ce modèle comme `GEMINI_MODEL` effectif) — reste donc réservé au dev/simulation, jamais activé en production (cf.
+      zones : referentiel, process, outils
+      ↳ docs/referentiel/points-fragiles.md
+  · [3 zones · 7 fichiers · indetermine · INAVOUÉ] Jamais de bascule de fournisseur/modèle en production sans validation qualité intégrale** préalable, refaite à chaque évolution substantielle du prompt/contrat de sortie :
+      zones : referentiel, process, outils
+      ↳ docs/outil-resilience-api.md
+  · [3 zones · 7 fichiers · agence · INAVOUÉ] strictement pour le diagnostic outillage, jamais câblé comme vrai repli de production (resterait soumis à la même validation qualité intégrale que tout changement de modèle, Article 0).
+      zones : referentiel, process, outils
+      ↳ docs/referentiel/smart-breaker-historique.md
+  · [3 zones · 6 fichiers · indetermine · INAVOUÉ] Validation qualité **intégrale**, jamais un échantillonnage :
+      zones : referentiel, process, outils
+      ↳ docs/referentiel/smart-breaker-historique.md
+  · [3 zones · 6 fichiers · indetermine · INAVOUÉ] elle ne remplace jamais un vrai repli de production tant qu'aucun câblage dédié n'existe (Article 0, validation qualité intégrale avant toute activation).
+      zones : referentiel, process, outils
+      ↳ scripts/check-gemini-quota.mjs
+
+▸ Classification  [classification]
+  235 conviction(s) dans 77 fichier(s) · 58 au-dessus du seuil · niveaux : projet 4 / jeu 2 / agence 25 / indéterminé 27
+  · [4 zones · 7 fichiers · agence · INAVOUÉ] Le KPI de couverture lui-même compte combien des 6 familles (Smart Conso ajoutée le 2026-09-20, écart réel comblé) ont produit une vraie mesure cette fois (jamais une estimation) ET si ce test dédié est vert — les deux ensemble disent si ce tableau de bord est digne de confiance MAINTENANT, pas seulement s'il existe.
+      zones : referentiel, process, decisions, outils
+      ↳ scripts/kpi-report.mjs
+  · [4 zones · 6 fichiers · projet · INAVOUÉ] Un Membre de l'équipe (Outillage de travail), structurellement identique à `check-argus.mjs`, catégorie "audit de simulation" aux côtés d'EL-PROFESSOR — la seule particularité de memory-audit est que son SUJET est un personnage narratif (Lia/Noé, qui n'ont eux-mêmes AUCUNE existence dans l'équipe — jamais une case de l'organigramme, cf.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/memory-audit.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] hors de l'équipe, jamais une catégorie de l'organigramme - Moteur du jeu vs Outillage de travail :
+      zones : methode, referentiel, process, outils
+      ↳ docs/regles-de-travail.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] deux Gardiens sacrés (`clone-hunter`, `safe-export`) sont des bibliothèques et restent Gardiens sacrés, parce que **le rang mérité l'emporte toujours sur le type**.
+      zones : lecons, referentiel, process, decisions
+      ↳ docs/referentiel/classification-agence.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] Qui sont les membres aujourd'hui se lit** dans `docs/referentiel/classification-agence.md`, qui est généré et donc jamais périmé, et dans `docs/referentiel/organisation-agence.md` pour l'organigramme.
+      zones : charte, referentiel, process, decisions
+      ↳ CLAUDE.md
+  · [4 zones · 4 fichiers · agence · INAVOUÉ] Le rangement complet — types, rangs, familles, classes, indice — vit dans `docs/referentiel/classification-agence.md`, généré et donc jamais périmé.
+      zones : charte, referentiel, process, decisions
+      ↳ CLAUDE.md
+
+▸ Nivellement  [nivellement]
+  120 conviction(s) dans 50 fichier(s) · 25 au-dessus du seuil · niveaux : projet 0 / jeu 1 / agence 10 / indéterminé 14
+  · [6 zones · 10 fichiers · indetermine · INAVOUÉ] jamais un résultat "exact à 100 %" — une proposition de restructuration est un jugement architectural, toujours rendu avec un palier de confiance (confirmé / probable / à surveiller), jamais une certitude absolue (confirmé explicitement avec l'utilisateur le 2026-09-19).
+      zones : charte, methode, referentiel, process, decisions, outils
+      ↳ scripts/always-new-code.mjs
+  · [5 zones · 12 fichiers · agence · INAVOUÉ] Chaque raison est nommée explicitement dans le résultat (jamais un score opaque) et le niveau de confiance reste toujours nuancé (confirmé / probable / à surveiller, même vocabulaire que les autres outils de raisonnement de ce paysage) — jamais une certitude absolue sur un jugement qui reste, au fond, un signal statistique.
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/axa-check-blueprint.md
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] Les trouvailles sont donc toujours rendues avec un palier de confiance (confirmé / probable / à surveiller, même vocabulaire qu'ARGUS), jamais une certitude absolue.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/always-new-code.md
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] quand une zone de dette d'organisation reste au palier de confiance "probable" (jamais "confirmé"), un second avis réellement indépendant sur la MÊME zone aide à trancher avant de proposer une restructuration à l'utilisateur.
+      zones : methode, referentiel, process, outils
+      ↳ docs/regles-de-travail.md
+  · [4 zones · 4 fichiers · agence · INAVOUÉ] le niveau exact rend toujours zéro sur des mots inversés, testé explicitement, et tout résultat obtenu autrement porte son étiquette.
+      zones : referentiel, process, decisions, outils
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [4 zones · 4 fichiers · indetermine · INAVOUÉ] un palier de confiance, jamais un résultat exact à 100%, l'agent qui pilote interroge toujours l'utilisateur avant tout changement réel).
+      zones : charte, referentiel, process, outils
+      ↳ docs/le-grand-architecte-conception.md
+
+▸ Harmonisation  [harmonisation]
+  234 conviction(s) dans 94 fichier(s) · 60 au-dessus du seuil · niveaux : projet 1 / jeu 0 / agence 19 / indéterminé 40
+  · [7 zones · 14 fichiers · indetermine · INAVOUÉ] ecotoken s'est mis à proposer une fausse adresse.** Le score d'affinité a vu le mot « referentiel » dans le nom de l'archive et dans le titre de la section « Référentiel technique » de la charte, et a proposé d'y déménager la table qui dit quel document lire quand — vers un dossier que la charte déclare « jamais une source de vérité ».
+      zones : charte, methode, lecons, referentiel, process, decisions, outils
+      ↳ docs/referentiel/lecons.md
+  · [6 zones · 14 fichiers · agence · INAVOUÉ] « une archive est à consulter en cas de doute, jamais une source de vérité sur le comportement actuel » — **7 zones du dépôt sur 7, 14 fichiers**, c'est-à-dire TOUS les contextes d'écriture sans exception, et zéro mention dans la boussole.
+      zones : charte, methode, lecons, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [6 zones · 14 fichiers · agence · INAVOUÉ] les quatre sont rapatriés verbatim dans docs/rapports-de-nuit/rescapes-2026-09-19-20/, avec un README qui dit d'où ils viennent, ce que chacun est, et leur statut — archive historique, jamais une source de vérité sur le comportement actuel, exactement comme docs/contexte-projet.
+      zones : charte, lecons, referentiel, process, decisions, strategie
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [6 zones · 13 fichiers · indetermine · INAVOUÉ] Le dossier `docs/contexte-projet/` contient les archives historiques transmises par l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de vérité sur le comportement actuel.
+      zones : charte, methode, lecons, referentiel, process, decisions
+      ↳ docs/referentiel/claude-md-asides-historique.md
+  · [5 zones · 13 fichiers · indetermine · INAVOUÉ] Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ docs/referentiel/feuille-de-route.md
+  · [5 zones · 12 fichiers · indetermine · INAVOUÉ] une archive de contexte, **jamais une source de vérité sur le comportement actuel**.
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ CLAUDE.md
+
+▸ Contrôle  [controle]
+  424 conviction(s) dans 111 fichier(s) · 82 au-dessus du seuil · niveaux : projet 3 / jeu 6 / agence 33 / indéterminé 40
+  · [5 zones · 8 fichiers · indetermine · INAVOUÉ] toute construction qui reflète l'état d'un autre système ou d'un autre document (une carte de dépendances, une table maîtresse, un inventaire de fichiers réels) doit soit le LIRE DYNAMIQUEMENT au moment de l'exécution, soit être accompagnée d'un GARDE-FOU MÉCANIQUE qui détecte tout écart — jamais une copie tenue à la main sans aucune vérification que rien ne diverge silencieusement.
+      zones : charte, methode, referentiel, process, decisions
+      ↳ CLAUDE.md
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] Un seuil se DÉRIVE, il ne se recopie pas.** Le seuil de « rendement faible » (beaucoup de texte pour peu de citations) se calcule depuis le document analysé lui-même — la médiane des rendements divisée par trois — jamais écrit en dur.
+      zones : charte, lecons, referentiel, process
+      ↳ docs/abraham-les-references-blueprint.md
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] `findRedundantRulePairs()` signale deux Articles au vocabulaire significatif très proche (indice de Jaccard ≥ 0.22, seuil strict — peu de faux positifs plutôt que beaucoup de bruit, calibrage explicite) — un signal à vérifier, jamais une certitude de doublon.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/smart-conso-token.md
+  · [4 zones · 6 fichiers · agence · INAVOUÉ] toute nouvelle construction se conçoit pour accueillir un membre de plus sans modification de sa propre logique — un registre se LIT, il ne s'énumère pas ; un seuil se DÉRIVE, il ne se recopie pas ; une fonctionnalité nouvelle s'applique à TOUS les outils existants le jour où elle est écrite, jamais seulement à ceux auxquels on a pensé sur le moment.
+      zones : charte, referentiel, process, decisions
+      ↳ docs/referentiel/claude-md-asides-historique.md
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] 3 zones, 5 fichiers — « un signal à vérifier, jamais une certitude »)*
+      zones : methode, referentiel, process, outils
+      ↳ docs/philosophie-et-politique-v2.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] » — un signal de « correspondance possible », toujours à vérifier par une vraie lecture, jamais une certitude (même honnêteté de conception qu'ARGUS/ ALWAYS-NEW-CODE :
+      zones : methode, referentiel, process, outils
+      ↳ docs/regles-de-travail.md
+
+▸ Audit  [audit]
+  237 conviction(s) dans 86 fichier(s) · 65 au-dessus du seuil · niveaux : projet 3 / jeu 2 / agence 32 / indéterminé 28
+  · [5 zones · 14 fichiers · indetermine · INAVOUÉ] ecotoken s'est mis à proposer une fausse adresse.** Le score d'affinité a vu le mot « referentiel » dans le nom de l'archive et dans le titre de la section « Référentiel technique » de la charte, et a proposé d'y déménager la table qui dit quel document lire quand — vers un dossier que la charte déclare « jamais une source de vérité ».
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ docs/referentiel/lecons.md
+  · [5 zones · 12 fichiers · indetermine · INAVOUÉ] Le dossier `docs/contexte-projet/` contient les archives historiques transmises par l'utilisateur, à consulter en cas de doute sur une décision de conception, jamais comme source de vérité sur le comportement actuel.
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ docs/referentiel/claude-md-asides-historique.md
+  · [5 zones · 12 fichiers · agence · INAVOUÉ] les quatre sont rapatriés verbatim dans docs/rapports-de-nuit/rescapes-2026-09-19-20/, avec un README qui dit d'où ils viennent, ce que chacun est, et leur statut — archive historique, jamais une source de vérité sur le comportement actuel, exactement comme docs/contexte-projet.
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [5 zones · 11 fichiers · indetermine · INAVOUÉ] une archive de contexte, **jamais une source de vérité sur le comportement actuel**.
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ CLAUDE.md
+  · [5 zones · 11 fichiers · indetermine · INAVOUÉ] Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ docs/referentiel/feuille-de-route.md
+  · [5 zones · 11 fichiers · agence · INAVOUÉ] « une archive est à consulter en cas de doute, jamais une source de vérité sur le comportement actuel » — **7 zones du dépôt sur 7, 14 fichiers**, c'est-à-dire TOUS les contextes d'écriture sans exception, et zéro mention dans la boussole.
+      zones : charte, lecons, referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+
+▸ Analyse  [analyse]
+  596 conviction(s) dans 138 fichier(s) · 107 au-dessus du seuil · niveaux : projet 3 / jeu 2 / agence 65 / indéterminé 37
+  · [5 zones · 8 fichiers · agence · INAVOUÉ] Il n'existe AUCUN équivalent pour les tokens de la conversation elle-même — cet outil ne peut donc jamais mesurer un vrai total, juste reconnaître des SCHÉMAS CONNUS coûteux (recherche du 2026-09-20, sources dans docs/referentiel/smart-conso-token.md) combinés à des VALEURS MESURABLES (taille réelle de fichiers, nombre d'actions déjà faites cette session) — jamais présenté comme un chiffre exact.
+      zones : methode, referentiel, process, decisions, outils
+      ↳ scripts/smart-conso-token.mjs
+  · [5 zones · 7 fichiers · indetermine · INAVOUÉ] Confronter les deux, c'est vérifier une affirmation contre une mesure — jamais recalculer une donnée déjà calculée (leçon L29, qui interdit le second calcul divergent).
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/referentiel/ezechiel-les-tests.md
+  · [5 zones · 6 fichiers · agence · INAVOUÉ] les DEUX index de jugement du protocole — `docs/simulations/index.md` (colonne "Notes", root-cause, liens vers d'autres tours) et `docs/referentiel/kpi-index.md` (« mis à jour par l'agent après chaque rapport, jamais généré automatiquement par le script :
+      zones : charte, methode, referentiel, decisions, outils
+      ↳ scripts/le-regisseur.mjs
+  · [4 zones · 6 fichiers · agence · INAVOUÉ] chaque Stagiaire réutilise des fonctions déjà exportées ailleurs, jamais un second calcul divergent des mêmes chiffres.
+      zones : methode, referentiel, process, outils
+      ↳ docs/cassandra-rh-conception.md
+  · [4 zones · 5 fichiers · indetermine · INAVOUÉ] note globale + détail par critère + justification concrète (décrire ce que montre chaque capture, jamais un chiffre nu) + une synthèse en langage clair, livrée en fichier, jamais collée en clair dans une conversation de travail.
+      zones : methode, referentiel, process, decisions
+      ↳ docs/the-screener-blueprint.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] En plus du CSV (les chiffres bruts), le texte complet de chaque exécution est archivé tel quel dans `docs/referentiel/kpi-rapports/<run>.txt`, et `docs/referentiel/kpi-index.md` tient à jour, une ligne par run, le lien vers ce fichier archivé et un jugement écrit à la main (par l'agent, jamais généré automatiquement) sur ce qui a évolué depuis le run précédent.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/tableau-de-bord.md
+
+▸ Reporting  [reporting]
+  386 conviction(s) dans 116 fichier(s) · 48 au-dessus du seuil · niveaux : projet 0 / jeu 0 / agence 40 / indéterminé 8
+  · [5 zones · 6 fichiers · agence · INAVOUÉ] « tool-brain doit m'aider systématiquement, c'est lui qui est plugué directement à moi ».)* `scripts/tool-brain.mjs` généralise find-brain à TOUT le catalogue PRESTATIONS, centralise le rappel post-commit en une bannière unique, et délivre un KPI d'usage réel (outils jamais sollicités) à chaque Ronde et à la demande (`node scripts/tool-brain.mjs rapport`).
+      zones : charte, methode, referentiel, process, decisions
+      ↳ CLAUDE.md
+  · [4 zones · 8 fichiers · agence · INAVOUÉ] En plus du CSV (les chiffres bruts), le texte complet de chaque exécution est archivé tel quel dans `docs/referentiel/kpi-rapports/<run>.txt`, et `docs/referentiel/kpi-index.md` tient à jour, une ligne par run, le lien vers ce fichier archivé et un jugement écrit à la main (par l'agent, jamais généré automatiquement) sur ce qui a évolué depuis le run précédent.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/tableau-de-bord.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] Ce bloc ouvre toujours le rapport complet (`node scripts/cassandra-rh.mjs rapport`), jamais le signal léger — c'est la CONVERSATION qui doit voir défiler ce message (demande explicite de l'utilisateur), pas seulement le terminal du crochet post-commit.
+      zones : charte, methode, referentiel, process
+      ↳ docs/cassandra-rh-conception.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] Un outil de ce type peut consulter le catalogue de prestations disponibles du réseau d'outils du projet (si un tel catalogue existe) pour signaler, tâche par tâche, quelle prestation existante pourrait aider à la faire avancer — un simple rapprochement mécanique (mots-clés), jamais une intelligence qui devine une intention.
+      zones : charte, referentiel, process, outils
+      ↳ docs/check-tasks-details-blueprint.md
+  · [4 zones · 4 fichiers · agence · INAVOUÉ] les DEUX index de jugement du protocole — `docs/simulations/index.md` (colonne "Notes", root-cause, liens vers d'autres tours) et `docs/referentiel/kpi-index.md` (« mis à jour par l'agent après chaque rapport, jamais généré automatiquement par le script :
+      zones : charte, methode, referentiel, outils
+      ↳ scripts/le-regisseur.mjs
+  · [4 zones · 4 fichiers · agence · INAVOUÉ] 20 cérémonies en attente, toutes sur le MÊME motif — une information répétée vingt fois, pas vingt informations** | Découle de la lecture du rappel post-commit après #852, comme l'Article 26 l'exige (lire le rapport quand il tombe, jamais l'enregistrer puis passer à autre chose).
+      zones : charte, methode, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+
+▸ Amélioration continue  [amelioration]
+  189 conviction(s) dans 57 fichier(s) · 46 au-dessus du seuil · niveaux : projet 0 / jeu 0 / agence 19 / indéterminé 27
+  · [4 zones · 6 fichiers · indetermine · INAVOUÉ] L'agent peut le proposer après avoir remarqué une grosse vague de changements, jamais le lancer de sa propre initiative sans confirmation.
+      zones : charte, methode, referentiel, process
+      ↳ docs/referentiel/hyper-scan-checkpoint.md
+  · [4 zones · 4 fichiers · indetermine · INAVOUÉ] un champ antérieur à son seuil vaut `null` et jamais chaîne vide (sinon 146 lignes historiques seraient accusées d'un manquement impossible — leçon L4) ; une forme inconnue est déclarée ILLISIBLE plutôt que devinée (L5/L11).
+      zones : methode, lecons, referentiel, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [3 zones · 8 fichiers · agence · INAVOUÉ] (c) `install-ci` et `pnpm-install` décrivent la machine d'ici et n'ont jamais eu à partir ; le registre des dispenses les décrivait **mot pour mot** sans les contenir — leçon L37, on avait corrigé l'occurrence `install-pnpm.sh` et pas la classe.
+      zones : referentiel, process, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [3 zones · 5 fichiers · indetermine · INAVOUÉ] UNE BONNE INTENTION N'A JAMAIS EMPÊCHÉ QUOI QUE CE SOIT (leçon L2).
+      zones : methode, referentiel, decisions
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-2.md
+  · [3 zones · 5 fichiers · indetermine · DÉJÀ dans la boussole] UN MOT NE FAIT PAS UN ALIGNEMENT.** Tant que rien ne peut CONSTATER une incohérence, « aligné » reste une intention — et une intention n'a jamais empêché quoi que ce soit (leçon L2).
+      zones : methode, referentiel, decisions
+      ↳ docs/referentiel/the-king.md
+  · [3 zones · 5 fichiers · agence · INAVOUÉ] Et c'est exactement là que le piège se refermait.** Un registre de leçons que rien ne relit est un cas de **L2** (« un mécanisme qui ne sort pas du script est une intention ») et de **L7** (« une intention écrite n'a jamais empêché quoi que ce soit ») — deux leçons qu'il contient lui-même.
+      zones : methode, referentiel, decisions
+      ↳ docs/referentiel/tool-learning.md
+
+───────────── IMPOSSIBLES ─────────────
+
+▸ Ce que nous refusons absolument  [refus-absolu]
+  66 conviction(s) dans 27 fichier(s) · 3 au-dessus du seuil · niveaux : projet 0 / jeu 0 / agence 1 / indéterminé 2
+  · [3 zones · 4 fichiers · agence · INAVOUÉ] Les 6 règles qui ne se jouent que dans la conversation sont DEMANDÉES, jamais devinées, et le verdict refuse d'être vert tant qu'elles restent sans réponse | gratuit | à la demande (`node scripts/angel-of-ia-process.mjs`), et relayé par god-of-all-process à chaque Ronde |
+      zones : methode, referentiel, process
+      ↳ docs/regles-de-travail.md
+  · [3 zones · 3 fichiers · indetermine · INAVOUÉ] 4 | Toute question passe par une **fenêtre dédiée**, jamais une phrase en texte libre | *idem — c'est angel-of-ia-process qui le DEMANDE et refuse d'être au vert sans réponse* |
+      zones : methode, referentiel, process
+      ↳ docs/mode-semi-autonome-process-detail.md
+  · [3 zones · 3 fichiers · indetermine · INAVOUÉ] `resume-contextualise` figure dans `REGLES_SURVEILLEES` avec une clé de réponse obligatoire ; sans réponse, angel refuse d'être au vert — il ne suppose jamais la conformité, il déclare « pas mesuré ».
+      zones : methode, referentiel, process
+      ↳ docs/referentiel/angel-of-ia-process.md
+
+▸ Ce que nous n'autoriserons jamais  [jamais-autorise]
+  36 conviction(s) dans 22 fichier(s) · 4 au-dessus du seuil · niveaux : projet 2 / jeu 1 / agence 1 / indéterminé 0
+  · [3 zones · 4 fichiers · projet · INAVOUÉ] nouveau compteur persisté `life.themeFrequency` (même patron que `wordFrequency`, seuil 4, exporté `matchedThemes()`/`THEME_MOTIFS` comme unique source de vérité partagée entre `lib/dialogue.ts` et `app/api/lia/route.ts`) pour la cause 1 ; nouveau principe auto-appliqué dans `lib/lia.ts` (jamais une liste de formulations interdites, corollaire Article 17) pour la cause 2.
+      zones : referentiel, decisions, outils
+      ↳ docs/suivi/sessions/session_0151JrVYzJ2bdCShaXhFAjLo-partie-1.md
+  · [3 zones · 3 fichiers · jeu · INAVOUÉ] Jamais une liste de formulations interdites (corollaire Article 17) — un signal sur l'ABSENCE de ce que le personnage exige de lui-même, jamais un jugement de contenu.
+      zones : referentiel, decisions, outils
+      ↳ docs/referentiel/the-final-judge.md
+  · [3 zones · 3 fichiers · projet · INAVOUÉ] jamais une liste de formulations interdites (corollaire Article 17), mais un signal structurel — un rapport de ce format qui ne cite AUCUN élément concret du dépôt n'a manifestement pas fait le travail que son personnage exige (« Cite toujours des exemples précis »).
+      zones : referentiel, decisions, outils
+      ↳ scripts/the-final-judge.mjs
+  · [3 zones · 3 fichiers · agence · INAVOUÉ] Corollaire — jamais de liste de mots figée pour la variété du registre.** *(Même demande.)* Quand un mot, une expression ou une image est identifié comme daté, trop soutenu ou surutilisé, la correction ne consiste jamais à l'ajouter à une liste de termes interdits ou autorisés dans le prompt :
+      zones : charte, referentiel, process
+      ↳ CLAUDE.md
+
+▸ Ce que nous n'automatiserons jamais  [jamais-automatise]
+  409 conviction(s) dans 135 fichier(s) · 107 au-dessus du seuil · niveaux : projet 6 / jeu 11 / agence 51 / indéterminé 39
+  · [5 zones · 8 fichiers · indetermine · INAVOUÉ] Sommaire de la section** *(généré depuis les vrais titres le 2026-09-22, jamais recopié à la main — cette section fait 522 lignes d'un bloc, c'est la plus longue du document et la seule qu'on ne pouvait pas parcourir sans la lire en entier.
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/referentiel/principes.md
+  · [5 zones · 7 fichiers · indetermine · INAVOUÉ] un tableau écrit À LA MAIN (jamais généré par une sonde) des leçons empiriques déjà comprises en creusant de vrais blocages — nature exacte du quota, pièges de lecture des erreurs de l'API, comportements de fournisseur contre-intuitifs constatés.
+      zones : methode, lecons, referentiel, process, decisions
+      ↳ docs/outil-resilience-api.md
+  · [4 zones · 10 fichiers · projet · INAVOUÉ] Le personnage fixe vit dans un bloc de citation markdown ("> ...") sous le titre "Personnage" du document d'instanciation de l'outil appelant — extrait ligne par ligne, jamais recopié à la main ailleurs (garantit que le texte utilisé à chaque appel provient TOUJOURS du même texte de référence, exigence non négociable de l'utilisateur).
+      zones : methode, referentiel, process, outils
+      ↳ scripts/judge-persona-shared.mjs
+  · [4 zones · 9 fichiers · jeu · INAVOUÉ] `extractPersonaBlock(texte)` — extrait le personnage FIXE directement de ce document (le bloc de citation ci-dessus), pour garantir que le texte donné à l'agent séparé à chaque appel provient toujours de cette seule source, jamais retapé ou reformulé à la main.
+      zones : methode, referentiel, process, outils
+      ↳ docs/referentiel/the-final-judge.md
+  · [4 zones · 7 fichiers · indetermine · INAVOUÉ] 5 zones, 9 à 12 fichiers — « extrait ligne par ligne, jamais recopié à la main ailleurs », « jamais recopié à la main », « généré depuis les vrais titres, jamais recopié »)*
+      zones : methode, referentiel, process, outils
+      ↳ docs/philosophie-et-politique-v2.md
+  · [4 zones · 7 fichiers · agence · INAVOUÉ] HYPER-SCAN-CHECKPOINT ne peut pas être Gardien sacré** — le critère de l'Article 20 est DOUBLE (vrai scan de qualité **et** gratuit à chaque commit), et l'Article 21 dit qu'il « ne se déclenche jamais automatiquement, jamais en continu ».
+      zones : charte, methode, referentiel, process
+      ↳ docs/referentiel/le-classificateur.md
+
+▸ Ce que nous ne déléguerons jamais  [jamais-delegue]
+  678 conviction(s) dans 147 fichier(s) · 93 au-dessus du seuil · niveaux : projet 8 / jeu 5 / agence 44 / indéterminé 36
+  · [5 zones · 6 fichiers · agence · INAVOUÉ] Une conclusion réelle tirée de la lecture d'un de ces rapports (un écart trouvé, un correctif à revalider, un signal qui mérite un suivi) doit, de la même façon, se traduire en une vraie action dans `docs/suivi/` (ou dans le carnet dédié `docs/simulations/correctifs-a-revalider.md` quand la nature du correctif l'appelle), jamais seulement mentionnée dans l'analyse puis oubliée.
+      zones : methode, referentiel, process, decisions, outils
+      ↳ docs/regles-de-travail.md
+  · [4 zones · 6 fichiers · projet · INAVOUÉ] `lib/gemini-keys.ts::episodes` (mémoire process en tableau capé, jamais écrite en base — Cloudflare Workers n'a pas de disque persistant —, exposée en lecture seule via l'API admin déjà protégée, persistée après coup par `scripts/kpi-report.mjs`) est le patron exact réutilisé pour observer le poids réel du contexte envoyé à Gemini, sans jamais inventer un second mécanisme de capture.
+      zones : referentiel, process, decisions, outils
+      ↳ docs/referentiel/memento-weight.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] Le fichier gardé DANS le projet (docs/..., relu par les scripts) reste la version de travail en texte/markdown — ce gabarit ne produit JAMAIS le fichier de référence, seulement une copie de présentation générée au moment de la remise.
+      zones : methode, referentiel, process, outils
+      ↳ scripts/html-report.mjs
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] le contexte** en une phrase qui tient seule · **à quelle demande ça répond**, dans les termes de l'humain · **les étiquettes de tâches** concernées, toutes, avec leur numéro · **un vocabulaire compréhensible** — un nom de fonction ou de fichier n'explique jamais rien, ce qui compte est ce que ça change.
+      zones : charte, methode, process, decisions
+      ↳ docs/charte-blueprint.md
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] Le KPI de couverture lui-même compte combien des 6 familles (Smart Conso ajoutée le 2026-09-20, écart réel comblé) ont produit une vraie mesure cette fois (jamais une estimation) ET si ce test dédié est vert — les deux ensemble disent si ce tableau de bord est digne de confiance MAINTENANT, pas seulement s'il existe.
+      zones : methode, referentiel, process, outils
+      ↳ scripts/kpi-report.mjs
+  · [4 zones · 5 fichiers · agence · INAVOUÉ] le fichier ARCHIVÉ dans docs/<slug>/ reste TOUJOURS texte/markdown (relu par les scripts, zéro risque de casser un parseur existant) — "décision HTML" signifie seulement qu'une COPIE DE REMISE doit être rendue via html-report.mjs au moment de la livraison à l'utilisateur, jamais que le registre lui-même doive être en .html.
+      zones : methode, referentiel, process, outils
+      ↳ scripts/doc-report.mjs
+
+▸ Ce que nous ne sacrifierons jamais  [jamais-sacrifie]
+  11 conviction(s) dans 9 fichier(s) · 0 au-dessus du seuil · niveaux : projet 0 / jeu 0 / agence 0 / indéterminé 0
+  🚨 AUCUNE conviction du corpus ne tient ce rôle — c'est un vrai trou, pas un défaut de mesure (11 candidates, toutes sous le seuil d'étendue).
+

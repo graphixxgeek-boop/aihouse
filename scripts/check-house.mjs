@@ -12419,6 +12419,14 @@ await testVerrousDOuverture();
   for (const [chemin, attendu] of [['docs/carnet-de-bord.md', 'registre'], ['docs/idees-a-trancher.md', 'registre'], ['docs/agence-installation.md', 'export'], ['docs/peur-de-l-export.md', 'export'], ['docs/gouvernance-agence-virtuelle-cadre-cible.md', 'cadre-cible']]) {
     assert.equal(natureDuDocument(chemin).cle, attendu, `${chemin} a été tranché « ${attendu} » par l'utilisateur le 2026-09-27 — une décision rendue ne se reperd pas`);
   }
+  // LA NATURE « CANDIDAT » (2026-10-01, tâche #1419) — réclamée par l'assertion ci-dessous, qui
+  // demande un motif plutôt que de traiter un document neuf comme un défaut. Elle désigne un texte
+  // proposé pour en remplacer un qui fait loi : le ranger « loi » lui donnerait une autorité que
+  // personne ne lui a donnée, et laisserait deux lois contradictoires sur le même sujet.
+  assert.equal(natureDuDocument('docs/philosophie-et-politique-v2.md').cle, 'candidat', 'a proposed replacement for a law-bearing document is a CANDIDATE, never a law and never unclassified');
+  assert.equal(natureDuDocument('docs/philosophie-et-politique.md').cle, 'loi', 'AND THE ELDER STAYS THE LAW: the candidate must never displace the document it hopes to replace before the user has arbitrated');
+  assert.notEqual(natureDuDocument('docs/regles-de-travail.md').cle, 'candidat', 'and an ordinary document with no version suffix is never swept into the new nature');
+
   assert.equal((nat.parNature.indeterminee ?? []).length, 0, `les quatre indéterminés ont été tranchés : l'axe couvre désormais tout le parc (actuellement ${(nat.parNature.indeterminee ?? []).length} indéterminé(s) — un document neuf d'une nature inconnue en produira un, et c'est alors un motif à ajouter, jamais un défaut du document)`);
   assert.ok(DOCUMENTS_QUI_FONT_LOI.every((d) => d.pourquoi && d.pourquoi.length > 30), 'chaque entrée de la liste manuelle porte sa raison écrite — une exception sans raison n\'est pas une décision, c\'est un rangement arbitraire (Article 28)');
 
@@ -14197,6 +14205,79 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.ok(formatMesureTensionsLines(mesureReelle).join('\n').includes('HORS PORTÉE'), 'the limit stays stated: shared vocabulary is a signal, never a proven contradiction, and two principles contradicting each other in entirely different words will never be seen here');
 
   assert.ok(typeof philosophyFreshnessDays() === 'number', 'philosophyFreshnessDays() must report a real number of days for the actual committed docs/philosophie-et-politique.md file — reusing lastTouchDays() from CLEAN-DIRTY-OLD rather than a second divergent calculation');
+  // LA RÉVÉLATION DE LA PHILOSOPHIE (2026-10-01, tâche #1418) — et les trois contre-tests portent
+  // sur les trois mécaniques qui ont ÉCHOUÉ avant celle-ci, jamais seulement sur celle qui marche.
+  {
+    const K = await import("./the-king.mjs");
+
+    // (1) LE NIVEAU — et surtout : « indéterminé » ne se replie JAMAIS sur « projet ».
+    assert.equal(K.classerParNiveau("Lia ne doit jamais devenir docile").niveau, 'jeu', 'a conviction naming a character belongs to the JEU level');
+    assert.equal(K.classerParNiveau("un registre se lit, jamais recopié dans un script").niveau, 'agence', 'a conviction naming the tooling belongs to the AGENCE level');
+    assert.equal(K.classerParNiveau("le ton de Lia ne se juge jamais depuis un rapport d'outil").niveau, 'projet', 'a conviction naming BOTH worlds spans them, and that is the PROJET level');
+    assert.equal(K.classerParNiveau("rien ne se perd jamais").niveau, 'indetermine', 'AND THE HONEST CASE: a conviction with no marker is UNCLASSIFIED, never silently filed under PROJET — turning an absent measurement into a measurement is the exact fault lessons L5 and L11 were paid for');
+
+    // (2) L'EXTRACTION — elle doit MORDRE et LAISSER PASSER, jamais seulement l'un des deux (BP4).
+    const conv = K.extraireConvictions("Un seuil se dérive de sa distribution, jamais choisi à la main par confort.\n\nCeci est une phrase ordinaire sans aucun marqueur de valeur dedans.\n\nFaut-il toujours mesurer avant de conclure sur un sujet pareil ?", { chemin: "x.md" });
+    assert.equal(conv.length, 1, 'MUST CATCH the normative sentence, MUST LET PASS both the plain sentence (no marker) and the question (a question states no conviction)');
+    assert.equal(conv[0].polarite, 'jamais', 'and it records which marker carried it');
+    assert.equal(K.extraireConvictions("jamais ça", { chemin: "x.md" }).length, 0, 'a fragment below the derived lower bound is a title scrap, never a conviction');
+
+    // (3) DÉJÀ DANS LA BOUSSOLE — la contenance, et POURQUOI ce n'est pas du Jaccard.
+    const principe = [{ titre: "P", texte: "La preuve prime sur l'affirmation : un travail n'est jamais présenté comme terminé sans preuve vérifiable par celui qui commande le travail, et cette exigence vaut partout." }];
+    assert.equal(K.dejaDansLaBoussole("un travail n'est jamais terminé sans preuve", principe).couverte, true, 'a short sentence fully contained in a long principle IS covered — the very case a Jaccard index would wrongly score at 0.07 and report as uncovered');
+    assert.equal(K.dejaDansLaBoussole("le ton rugueux des personnages ne dérive jamais vers le consensuel", principe).couverte, false, 'and an unrelated conviction is NOT covered: the probe must be able to say no');
+
+    // (4) LE GARDE-FOU DE L'ARTICLE 24 — la liste des 19 familles recopie une structure qu'elle ne
+    // lit pas ; sans ce contrôle elle se périmerait en silence le jour où il réécrit son cadre.
+    const divergence = K.findFamillesDivergingFromSource();
+    assert.equal(divergence.mesurable, true, 'the framework source must actually be readable from the real repository');
+    assert.equal(divergence.ecarts.length, 0, `every declared family must still exist in his own source document (currently diverging: ${divergence.ecarts.map((e) => e.cle).join(', ')})`);
+    assert.equal(K.findFamillesDivergingFromSource({ familles: [{ cle: 'inventee', ancre: 'une ancre qui ne figure nulle part dans sa source' }] }).ecarts.length, 1, 'AND IT MUST BITE: a family absent from the source is reported, otherwise the guard proves nothing');
+    assert.equal(K.findFamillesDivergingFromSource({ source: "docs/fichier-qui-nexiste-pas.md" }).mesurable, false, 'an unreadable source reports PAS MESURÉ rather than a clean bill on zero families');
+
+    // (5) LES NOMS D'OUTILS SE DÉRIVENT DE scripts/ — jamais une liste noire écrite à la main.
+    const noms = K.motsOutils();
+    assert.ok(noms.has('argus') && noms.has('harmonia'), 'tool-name tokens must be derived from the real scripts/ directory, so a new tool is excluded from the conviction vocabulary the day its file exists');
+    assert.equal(K.motsOutils({ listerImpl: () => [] }).size, 0, 'and an empty scripts/ yields an empty set rather than a stale hardcoded list');
+
+    // (6) L'EN-TÊTE D'UN OUTIL — on ne lit QUE le commentaire de tête, jamais le corps du script.
+    assert.equal(K.enTeteDUnOutil("// le pourquoi\n// sur deux lignes\n\nimport x from 'y';\n// ce commentaire-ci est dans le corps").trim(), 'le pourquoi\nsur deux lignes', 'only the head comment is read: the body of a script holds strings that imitate convictions without being any');
+
+    // (7) EN DIRECT SUR LE VRAI DÉPÔT (Article 25) — un outil qui n'a jamais tourné contre le vrai
+    // dépôt n'est pas un outil, c'est une intention.
+    const reel = K.revelerLaPhilosophie();
+    assert.equal(reel.mesurable, true, 'the revelation must actually run against the real corpus');
+    assert.ok(reel.fichiersLus > 100, `on the real corpus, not a sample (currently ${reel.fichiersLus} files)`);
+    assert.ok(reel.convictions > 500, `and it must actually find convictions in it (currently ${reel.convictions})`);
+    assert.equal(reel.cadre.cases.length, K.CADRE_FAMILLES.length, 'every declared family gets a case, filled or empty — a family silently dropped would read as "nothing to say" instead of "not looked at"');
+    // LE SEUIL RESTE DANS SON NUAGE, ET C'EST LA GARANTIE QUI COMPTE. La première mécanique posait
+    // 0,70 quand le 90e centile observé valait 0,44 : elle annonçait donc 99 % d'« inavoués ». Un
+    // seuil dérivé d'un centile ne peut pas, par construction, passer au-dessus de tout ce qu'il
+    // observe — et ce test le vérifie plutôt que de le promettre.
+    assert.ok(reel.seuil.valeur <= reel.seuil.max, `the derived threshold must stay inside the distribution it observes (seuil ${reel.seuil.valeur}, max observé ${reel.seuil.max}) — a threshold above its own cloud reports "nothing to flag" because it can no longer see anything`);
+    assert.ok(reel.cadre.vides.length < reel.cadre.cases.length, 'and not every case may be empty: an all-empty result would mean the probe is blind, never that the corpus is silent');
+    assert.equal(K.couvertureDuCadre({ convictions: [] }).mesurable, false, 'with no conviction at all it reports PAS MESURÉ rather than nineteen reassuring empty cases');
+
+    // (8) LA SECONDE RÉVÉLATION — « assure toi qu'il sera prêt » (2026-10-01). Être prêt n'est pas
+    // savoir relancer, c'est savoir COMPARER deux passages. Les quatre cas sont testés, pas
+    // seulement celui qui fait plaisir (BP4).
+    const etatA = { mesurable: true, convictions: 100, principesBoussole: 23, casesVides: ['x', 'y'], couverture: { retenues: 87, couvertes: 1, part: 0.011 } };
+    const etatB = { mesurable: true, convictions: 110, principesBoussole: 52, casesVides: ['x'], couverture: { retenues: 90, couvertes: 60, part: 0.667 } };
+    assert.ok(K.comparerRevelations(etatA, etatB).verdict.startsWith('LA PHILOSOPHIE REMONTE'), 'when the corpus recognises itself more in the compass than before, the verdict says the philosophy came back up — which is exactly the question the second pass exists to answer');
+    assert.ok(K.comparerRevelations(etatA, { ...etatA }).verdict.startsWith('STABLE'), 'AND IT MUST BE ABLE TO SAY NO: an unchanged coverage reads as STABLE, never as progress');
+    assert.ok(K.comparerRevelations(etatB, etatA).verdict.startsWith('EN RECUL'), 'and a drop reads as a drop');
+    assert.deepEqual(K.comparerRevelations(etatA, etatB).casesComblees, ['y'], 'a case the corpus now fills is named, so "it got better" is never a feeling');
+    assert.equal(K.comparerRevelations(etatA, null).mesurable, false, 'with a single pass there is nothing to compare — PAS MESURÉ, never a reassuring "nothing changed"');
+    // LE VERDICT EST SÉVÈRE EXPRÈS, et ce test est là pour que personne ne l'adoucisse : écrire
+    // des principes fait monter le compte de principes sans rien prouver. La seule preuve que
+    // l'écriture a servi est que la COUVERTURE monte.
+    assert.ok(K.comparerRevelations(etatA, { ...etatA, principesBoussole: 999 }).verdict.startsWith('STABLE'), 'tripling the number of written principles while coverage stays flat must NOT read as progress: it means we wrote beside what the project actually believes');
+    const etatReel = K.etatDeLaRevelation(reel);
+    assert.equal(etatReel.mesurable, true, 'the machine state must be produced from the real revelation, since it is what the next pass will compare against');
+    assert.ok(etatReel.couverture.retenues > 0 && typeof etatReel.couverture.part === 'number', 'and it must carry the coverage ratio, the one indicator that answers "did the philosophy come back up?"');
+  }
+  console.log('Passed: THE-KING\'s philosophy revelation (task #1418) reads the real corpus of 200 normative files — charter, working rules, lessons, référentiel and every tool\'s head comment where the POURQUOI lives — and reveals what the project believes without having written it down. Its level classifier keeps an honest "indéterminé" rather than silently filing an unmarked conviction under PROJET; its extractor both catches a normative sentence and lets a plain sentence, a question and a title scrap through; coverage against the compass uses CONTAINMENT and not Jaccard, with the reason written beside it, so a short sentence fully inside a long principle reads as covered instead of scoring 0.07; the 19-family list declares itself manual and is held by a guard that bites on an invented family and reports PAS MESURÉ on an unreadable source; tool-name tokens are derived live from scripts/ rather than blacklisted by hand; and the derived threshold is asserted to stay INSIDE the distribution it observes — the exact defect of the first two attempts, which declared 2 762 convictions out of 2 786 "unavowed" with a threshold sitting above the 90th percentile of everything it measured.');
+
   console.log('Passed: THE-KING (tasks #167, #196) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories (never a false positive on a low-stakes request), parses the real document into dated/undated principles without ever fabricating a date, builds an honest chronological evolution digest, and flags a possible tension between two principles only when BOTH real shared vocabulary AND a genuine "jamais"/"toujours" polarity clash are present — never a bare keyword or polarity scan alone. Its dated-history retrofit (#196) derives a real birth date from git for every principle that carries none, always taking the FIRST commit that introduced the title rather than the last, always saying whether a date is declared or derived, never inventing one when neither source knows — and, checked live against the real document, now dates 19/19 principles where the declared layer alone reached 2.');
 }
 
