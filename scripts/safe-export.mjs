@@ -22,12 +22,13 @@ import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync, cpSync
 import { lireFichierPartage } from "./lib-shell.mjs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
+import { createRequire } from "node:module";
 import { printReliabilityNotice, porteeDe, sh } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 // LE REGISTRE DES JOURNAUX LOCAUX VIT CHEZ DOC-REPORT, et il est LU ici plutôt que recopié
 // (Article 24) : un journal ajouté là-bas entre dans ce contrôle sans que personne y pense.
 import { LOCAL_JOURNALS } from "./doc-report.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, buildPlanDaction, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./serie-temporelle.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
 
@@ -649,6 +650,188 @@ export function findScriptsNonPortables(scripts = [], { readFileImpl = lireFichi
     });
   }
   return trouves;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHEMIN DÉCLARÉ CONTRE CHEMIN ENFOUI — la mesure que la nuit du 2026-10-01 avait
+// déclarée impossible, et la raison exacte pour laquelle elle devient possible ici.
+//
+// POURQUOI ELLE MANQUAIT, ET CE N'EST PAS UNE NÉGLIGENCE. La tâche #1323 reposait sur
+// « 38 fichiers sur 40 portent une ancre écrite en dur », chiffre RETIRÉ le 2026-10-01
+// (tâche #1354) : quatre critères successifs avaient rendu quatre réponses en vingt minutes
+// (42/48, puis 41, puis 25, puis 313). La conclusion écrite ce jour-là était que « séparer un
+// chemin déclaré d'un chemin enfoui demande de comprendre la STRUCTURE du code, pas d'en
+// reconnaître la forme » — donc qu'un cinquième motif de texte aurait produit un cinquième
+// chiffre, jamais une vérité. Cette sonde-ci n'est pas ce cinquième motif : elle ne lit plus
+// des lignes, elle lit un ARBRE.
+//
+// CE QUI REND LA DIFFÉRENCE OBJECTIVE. Le compilateur TypeScript est déjà une dépendance de ce
+// dépôt (`package.json`, lancé par le crochet pré-commit) et sait analyser un `.mjs`. La
+// question « ce chemin est-il pointable ailleurs ? » cesse alors d'être une ressemblance de
+// texte pour devenir une POSITION dans la structure du fichier :
+//   • DÉCLARÉ   — le littéral vit au niveau du module (constante, registre) ou comme VALEUR PAR
+//                 DÉFAUT d'un paramètre : `{ root = ROOT, charte = "CLAUDE.md" } = {}`. Arriver
+//                 ailleurs demande de lui donner une autre cible, pas de le réécrire. C'est la
+//                 forme portable, et c'est déjà celle de la très grande majorité du paysage.
+//   • ENFOUI    — le littéral vit DANS un corps de fonction, à l'endroit de l'appel :
+//                 `lire(join(root, "CLAUDE.md"))`. Rien ne permet de le pointer ailleurs sans
+//                 éditer le code. C'est le seul vrai coût de portabilité.
+//
+// CE QUE findScriptsNonPortables() NE PEUT PAS VOIR, ET POURQUOI LES DEUX COEXISTENT. Celui-là
+// juge un FICHIER : il le déclare portable dès qu'il expose UNE cible en option. Un chemin
+// enfoui au fond d'un fichier par ailleurs exemplaire lui échappe donc par construction — ce
+// n'est pas un défaut du détecteur, c'est sa maille. Cette sonde-ci juge CHAQUE LITTÉRAL.
+//
+// LES TROIS NATURES QUI NE SONT PAS DES DÉFAUTS, et chacune répond à un cas réel observé au
+// calibrage plutôt qu'à une précaution de principe :
+//   • MOTIF DE NOM — le littéral est l'argument d'une opération de chaîne (`startsWith("scripts/")`,
+//     `.replace("scripts/", "")`). Ce n'est pas une cible qu'on ouvre, c'est une convention de
+//     nommage qu'on teste. 24 cas au calibrage.
+//   • POINT D'ENTRÉE — le littéral vit dans `main()`. Nommer les vraies cibles EST le métier du
+//     point d'entrée : c'est lui qui les fournit aux fonctions pures, qui les reçoivent en
+//     paramètre. L'y reprocher reviendrait à exiger qu'aucun fichier ne sache jamais où il est.
+//     113 cas au calibrage — de loin le plus gros contingent, et le plus trompeur.
+//   • REGISTRE PROPRE — `docs/<son-propre-slug>/`. Un outil qui écrit dans SON registre n'est pas
+//     couplé à ce projet-ci : le registre part avec lui. 36 cas au calibrage.
+//
+// SI LE PARSEUR MANQUE, ON NE CONCLUT PAS. Le compilateur est une dépendance de CE dépôt, jamais
+// une garantie du dépôt d'arrivée. Absent, la sonde rend `mesurable: false` et le DIT — jamais
+// zéro, qui se lirait « rien à signaler » alors que rien n'a été regardé (leçons L5 et L11).
+export const MOTIF_LITTERAL_DE_CHEMIN = /^(?:CLAUDE\.md|(?:docs|scripts|lib|app|components)\/[A-Za-z0-9._/-]*)$/;
+
+// Les opérations qui prennent un chemin comme MOTIF DE NOM et non comme cible à ouvrir.
+export const OPERATIONS_SUR_LE_NOM = Object.freeze(["startsWith", "endsWith", "includes", "replace", "replaceAll", "split", "match", "indexOf", "lastIndexOf", "localeCompare", "test"]);
+
+// LISTE VOLONTAIREMENT TENUE À LA MAIN, et l'Article 24 exige que cette nature soit écrite juste
+// à côté : elle ne reflète aucun autre système, donc rien ne peut diverger en silence derrière
+// elle. Un fichier n'y entre que par une décision, avec sa raison.
+export const FICHIERS_HORS_MESURE_DES_CHEMINS = Object.freeze({
+  "check-house.mjs": "le banc d'essai du dépôt : ses 382 littéraux de chemin sont des DÉCORS de test (`'docs/x/'`, `'scripts/autre.mjs'`, `'lib/house.ts'` dans des assertions), jamais des cibles ouvertes — les compter reviendrait à mesurer le couplage d'un décor de théâtre, et noierait les 93 vrais cas sous un faux rouge six fois plus gros (leçon L4 : un garde qui accuse tout le monde n'accuse plus personne)",
+});
+
+export function chargerLeParseur({ requireImpl = null } = {}) {
+  try { return (requireImpl ?? createRequire(import.meta.url))("typescript"); }
+  catch { return null; }
+}
+
+const NOEUDS_FONCTION = ["FunctionDeclaration", "FunctionExpression", "ArrowFunction", "MethodDeclaration", "Constructor", "GetAccessor", "SetAccessor"];
+
+export function cheminsDuFichier(source = "", { slug = "", ts = null, charger = chargerLeParseur, motif = MOTIF_LITTERAL_DE_CHEMIN, operations = OPERATIONS_SUR_LE_NOM, nomDuFichier = "fichier.mjs" } = {}) {
+  // Le chargeur est INJECTABLE pour une seule raison, et elle vaut d'être écrite : sans lui, la
+  // branche « pas de parseur » ne serait pas testable, et un refus de conclure qu'on ne peut pas
+  // éprouver est un refus qu'on découvre le jour où il se trompe.
+  const parseur = ts ?? charger();
+  if (!parseur) return { mesurable: false, pourquoi: "le compilateur TypeScript est absent de ce dépôt : impossible de lire la structure, donc aucune conclusion — surtout pas zéro" };
+  const sf = parseur.createSourceFile(nomDuFichier, source, parseur.ScriptTarget.Latest, true, parseur.ScriptKind.JS);
+  const fonctions = new Set(NOEUDS_FONCTION.map((k) => parseur.SyntaxKind[k]).filter((k) => k !== undefined));
+  const ops = new Set(operations);
+  const r = { mesurable: true, declares: 0, motifsDeNom: 0, pointDEntree: 0, registrePropre: 0, enfouis: [] };
+  const nomDe = (f) => f.name?.text
+    ?? (f.parent && parseur.isVariableDeclaration(f.parent) ? f.parent.name?.getText?.() : null)
+    ?? (f.parent && parseur.isPropertyAssignment(f.parent) ? f.parent.name?.getText?.() : null)
+    ?? "(anonyme)";
+  const visiter = (n) => {
+    if ((parseur.isStringLiteral(n) || parseur.isNoSubstitutionTemplateLiteral(n)) && motif.test(n.text)) {
+      const p = n.parent;
+      const estMotifDeNom = p && parseur.isCallExpression(p) && parseur.isPropertyAccessExpression(p.expression)
+        && ops.has(p.expression.name.text) && p.arguments.includes(n);
+      if (estMotifDeNom) r.motifsDeNom++;
+      else {
+        // On remonte jusqu'au module. Entrer dans un noeud de fonction AUTREMENT que par son
+        // corps, c'est être une valeur par défaut de paramètre — donc une cible déjà pointable.
+        let courant = n, pile = [], parDefaut = false;
+        while (courant.parent) {
+          const q = courant.parent;
+          if (fonctions.has(q.kind)) { if (q.body !== courant) { parDefaut = true; break; } pile.push(q); }
+          courant = q;
+        }
+        if (parDefaut || !pile.length) r.declares++;
+        else if (slug && (n.text === `docs/${slug}` || n.text.startsWith(`docs/${slug}/`))) r.registrePropre++;
+        else if (nomDe(pile[pile.length - 1]) === "main") r.pointDEntree++;
+        else r.enfouis.push({ ligne: sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1, chemin: n.text, fonction: nomDe(pile[0]) });
+      }
+    }
+    parseur.forEachChild(n, visiter);
+  };
+  visiter(sf);
+  return r;
+}
+
+export function findCheminsEnfouis(scripts = [], { readFileImpl = lireFichierPartage, root = ROOT, ts = null, charger = chargerLeParseur, horsMesure = FICHIERS_HORS_MESURE_DES_CHEMINS } = {}) {
+  const parseur = ts ?? charger();
+  if (!parseur) return { mesurable: false, pourquoi: "le compilateur TypeScript est absent de ce dépôt : impossible de lire la structure, donc aucune conclusion — surtout pas zéro", fichiers: [] };
+  const total = { declares: 0, motifsDeNom: 0, pointDEntree: 0, registrePropre: 0, enfouis: 0 };
+  const fichiers = [], ecartes = [];
+  for (const f of scripts) {
+    const base = f.split("/").pop();
+    if (base in horsMesure) { ecartes.push({ fichier: f, pourquoi: horsMesure[base] }); continue; }
+    let source;
+    try { source = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    const r = cheminsDuFichier(source, { slug: base.replace(/\.mjs$/, ""), ts: parseur, nomDuFichier: base });
+    if (!r.mesurable) continue;
+    total.declares += r.declares; total.motifsDeNom += r.motifsDeNom;
+    total.pointDEntree += r.pointDEntree; total.registrePropre += r.registrePropre;
+    total.enfouis += r.enfouis.length;
+    if (r.enfouis.length) fichiers.push({ fichier: f, enfouis: r.enfouis });
+  }
+  fichiers.sort((a, b) => b.enfouis.length - a.enfouis.length || a.fichier.localeCompare(b.fichier));
+  return { mesurable: true, examines: scripts.length - ecartes.length, total, fichiers, ecartes };
+}
+
+export function formatCheminsEnfouisLines(v = {}, { detail = 6 } = {}) {
+  const l = ["=== CHEMINS ENFOUIS — ce qu'il faudrait rendre pointable pour partir ailleurs ==="];
+  if (!v.mesurable) { l.push("", `🚨 PAS MESURÉ — ${v.pourquoi}`); return l; }
+  const t = v.total ?? {};
+  const juges = (t.declares ?? 0) + (t.enfouis ?? 0);
+  const part = juges ? Math.round(((t.declares ?? 0) / juges) * 100) : null;
+  l.push("", `${v.examines} script(s) lus EN STRUCTURE (arbre TypeScript), pas en motifs de texte.`, "");
+  l.push(`  ${t.declares} chemin(s) DÉCLARÉ(S) — constante, registre, ou valeur par défaut de paramètre : déjà pointables ailleurs`);
+  l.push(`  ${t.enfouis} chemin(s) ENFOUI(S) dans ${(v.fichiers ?? []).length} fichier(s) — à passer en option, avec la même valeur par défaut`);
+  if (part !== null) l.push(`  → ${part} % des ${juges} chemins qui comptent sont déjà sous la forme portable`);
+  l.push("", "  Non comptés, et chacun pour une raison, jamais par confort :");
+  l.push(`    ${t.motifsDeNom} motif(s) de nom (argument de startsWith/replace/… : une convention testée, pas une cible ouverte)`);
+  l.push(`    ${t.pointDEntree} au POINT D'ENTRÉE (dans main() : nommer les vraies cibles est son métier)`);
+  l.push(`    ${t.registrePropre} vers son PROPRE registre (docs/<son-slug>/ : il part avec l'outil)`);
+  for (const e of v.ecartes ?? []) l.push(`    hors mesure — ${e.fichier} : ${e.pourquoi}`);
+  if ((v.fichiers ?? []).length) {
+    l.push("", "LE TRAVAIL, FICHIER PAR FICHIER — chaque ligne est un passage en paramètre, à défaut identique :");
+    for (const f of v.fichiers) {
+      l.push("", `  ${String(f.enfouis.length).padStart(3)}  ${f.fichier}`);
+      for (const e of f.enfouis.slice(0, detail)) l.push(`         L${e.ligne} · ${e.chemin} — dans ${e.fonction}()`);
+      if (f.enfouis.length > detail) l.push(`         … et ${f.enfouis.length - detail} de plus`);
+    }
+  }
+  return l;
+}
+
+// LE PLAN D'ACTION DE CETTE SONDE (Article 28). Deux états seulement, et le second compte autant
+// que le premier : un constat ÉCARTÉ sans raison écrite n'est pas une décision, c'est un abandon
+// déguisé. Le numéro de tâche est DÉCLARÉ, jamais deviné — c'est le créneau que #1371 a ouvert.
+export const TACHE_DES_CHEMINS_ENFOUIS = "1323";
+
+export function planDactionDesCheminsEnfouis(v = {}, { numeroTache = TACHE_DES_CHEMINS_ENFOUIS } = {}) {
+  if (!v.mesurable) {
+    return buildPlanDaction([{ constat: `la portabilité des chemins n'a PAS été mesurée — ${v.pourquoi}`, etat: "a-trancher", tache: "rétablir le parseur, ou acter que cette dimension restera non mesurée ici" }], { toolSlug: "safe-export" });
+  }
+  const constats = [];
+  const n = v.total?.enfouis ?? 0;
+  if (n) {
+    constats.push({
+      constat: `${n} chemin(s) de CE projet sont enfouis dans un corps de fonction, dans ${(v.fichiers ?? []).length} fichier(s) — rien ne permet de les pointer ailleurs sans éditer le code`,
+      etat: "retenu", numeroTache,
+      tache: "passer chacun en paramètre avec la MÊME valeur par défaut — forme déjà majoritaire dans le paysage, donc comportement inchangé par construction",
+    });
+  } else {
+    constats.push({ constat: "aucun chemin enfoui : toutes les cibles sont déjà pointables ailleurs", etat: "ecarte", pourquoi: "rien à faire — et ce zéro-ci est mesuré, pas un défaut de regard" });
+  }
+  if (v.total?.pointDEntree) {
+    constats.push({
+      constat: `${v.total.pointDEntree} chemin(s) vivent dans main()`,
+      etat: "ecarte",
+      pourquoi: "nommer les vraies cibles EST le métier du point d'entrée : il les fournit aux fonctions pures, qui les reçoivent en paramètre. L'y reprocher exigerait qu'aucun fichier ne sache jamais où il est",
+    });
+  }
+  return buildPlanDaction(constats, { toolSlug: "safe-export" });
 }
 
 // LE MANIFESTE D'EXPORT — la seconde moitié du muscle, et la plus utile le jour où ça sert
@@ -1938,6 +2121,19 @@ function main() {
       console.log("   docs/agence-installation.md (dans quel ordre la poser), qui restent volontairement sans un");
       console.log("   seul nom de fichier pour pouvoir voyager. Celui-ci donne les vrais noms, et il se RÉGÉNÈRE.");
     });
+  }
+
+  // `chemins` (2026-10-01, tâche #1323) — la moitié de la portabilité que la maille du FICHIER
+  // ne pouvait pas voir. Sa sortie est le livrable ; mon texte la commente, il ne la remplace
+  // jamais (Article 31, faille 3).
+  if (process.argv[2] === "chemins") {
+    printReportHeader({ tool: "safe-export", title: "SAFE-EXPORT — chemins déclarés contre chemins enfouis", scriptPath: "scripts/safe-export.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    const sc = fichiersSourcesDuProjet().filter((f) => String(f).startsWith("scripts/") && String(f).endsWith(".mjs"));
+    const v = findCheminsEnfouis(sc);
+    console.log(formatCheminsEnfouisLines(v).join("\n"));
+    imprimerPlanDaction(planDactionDesCheminsEnfouis(v));
+    recordCliUsage("safe-export", "chemins");
+    return;
   }
 
   // `rapport` (2026-09-28, tâche #1060) — LE rapport central de l'export. Il ne recalcule RIEN :

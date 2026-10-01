@@ -1,0 +1,166 @@
+⚠️  Attention, mes résultats peuvent être inexacts : une absence d'explication n'est pas une absence de raison, et un terme sans fiche n'est pas forcément mal défini — ses détecteurs sont des indices, jamais des preuves. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : jeudi 1er octobre 2026 à 04h23 (UTC)
+État du code : 5095404 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : cli_direct
+Outil : safe-export — inchangé depuis le jeudi 1er octobre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SAFE-EXPORT — chemins déclarés contre chemins enfouis ===
+
+=== CHEMINS ENFOUIS — ce qu'il faudrait rendre pointable pour partir ailleurs ===
+
+88 script(s) lus EN STRUCTURE (arbre TypeScript), pas en motifs de texte.
+
+  677 chemin(s) DÉCLARÉ(S) — constante, registre, ou valeur par défaut de paramètre : déjà pointables ailleurs
+  93 chemin(s) ENFOUI(S) dans 24 fichier(s) — à passer en option, avec la même valeur par défaut
+  → 88 % des 770 chemins qui comptent sont déjà sous la forme portable
+
+  Non comptés, et chacun pour une raison, jamais par confort :
+    25 motif(s) de nom (argument de startsWith/replace/… : une convention testée, pas une cible ouverte)
+    114 au POINT D'ENTRÉE (dans main() : nommer les vraies cibles est son métier)
+    36 vers son PROPRE registre (docs/<son-slug>/ : il part avec l'outil)
+    hors mesure — scripts/check-house.mjs : le banc d'essai du dépôt : ses 382 littéraux de chemin sont des DÉCORS de test (`'docs/x/'`, `'scripts/autre.mjs'`, `'lib/house.ts'` dans des assertions), jamais des cibles ouvertes — les compter reviendrait à mesurer le couplage d'un décor de théâtre, et noierait les 93 vrais cas sous un faux rouge six fois plus gros (leçon L4 : un garde qui accuse tout le monde n'accuse plus personne)
+
+LE TRAVAIL, FICHIER PAR FICHIER — chaque ligne est un passage en paramètre, à défaut identique :
+
+   12  scripts/cassandra-rh.mjs
+         L384 · scripts/hooks — dans invisiblesAuCompteur()
+         L385 · scripts/hooks — dans invisiblesAuCompteur()
+         L667 · docs/objectifs-vs-resultats/registre.md — dans objectivesCoverage()
+         L683 · docs/regles-de-travail.md — dans (anonyme)()
+         L4047 · CLAUDE.md — dans contexteIceberg()
+         L4047 · docs/regles-de-travail.md — dans contexteIceberg()
+         … et 6 de plus
+
+    9  scripts/le-classificateur.mjs
+         L194 · scripts/check-house.mjs — dans typeDeScript()
+         L270 · scripts/hooks — dans recenserLesScripts()
+         L282 · CLAUDE.md — dans recenserLesScripts()
+         L294 · CLAUDE.md — dans recenserLesScripts()
+         L323 · CLAUDE.md — dans recenserLesScripts()
+         L1157 · CLAUDE.md — dans (anonyme)()
+         … et 3 de plus
+
+    7  scripts/check-tasks-details.mjs
+         L2249 · docs/suivi/sessions — dans buildRealOnboardingContext()
+         L2255 · docs/regles-de-travail.md — dans buildRealOnboardingContext()
+         L2255 · docs/regles-de-travail.md — dans buildRealOnboardingContext()
+         L2256 · CLAUDE.md — dans buildRealOnboardingContext()
+         L2256 · CLAUDE.md — dans buildRealOnboardingContext()
+         L2269 · docs/suivi/relectures-lourdes/ — dans buildRealOnboardingContext()
+         … et 1 de plus
+
+    6  scripts/god-of-all-process.mjs
+         L750 · docs/plans — dans latestNightPlan()
+         L752 · docs/suivi/sessions — dans latestNightPlan()
+         L753 · docs/suivi/sessions — dans (anonyme)()
+         L1419 · scripts/check-house.mjs — dans findChangementsIndirectsSansMiseAJour()
+         L2226 · scripts/god-of-all-process.mjs — dans selfCheck()
+         L2234 · scripts/god-of-all-process.mjs — dans (anonyme)()
+
+    6  scripts/kpi-report.mjs
+         L387 · lib/lia.ts — dans buildKpiFullReportHtml()
+         L388 · lib/dialogue.ts — dans buildKpiFullReportHtml()
+         L510 · docs/referentiel/points-fragiles.md — dans countFragilePoints()
+         L835 · docs/el-professor/index.md — dans collecterLesNotes()
+         L858 · docs/axa-check/index.md — dans collecterLesNotes()
+         L912 · scripts/hooks/post-commit — dans (anonyme)()
+
+    6  scripts/le-coordinateur.mjs
+         L2376 · docs/the-final-judge/index.md — dans runNetworkCheck()
+         L2381 · docs/suivi/relectures-lourdes/index.md — dans runNetworkCheck()
+         L2392 · docs/hyper-scan-checkpoint/index.md — dans runNetworkCheck()
+         L2401 · docs/regles-de-travail.md — dans runNetworkCheck()
+         L2420 · CLAUDE.md — dans runNetworkCheck()
+         L2512 · CLAUDE.md — dans lireLaCharte()
+
+    5  scripts/check-suivi-fidelity.mjs
+         L998 · docs/referentiel — dans findCheminsMortsDansReferentiel()
+         L999 · CLAUDE.md — dans findCheminsMortsDansReferentiel()
+         L999 · docs/regles-de-travail.md — dans findCheminsMortsDansReferentiel()
+         L999 · docs/systeme-de-suivi.md — dans findCheminsMortsDansReferentiel()
+         L999 · docs/philosophie-et-politique.md — dans findCheminsMortsDansReferentiel()
+
+    4  scripts/cout-de-la-refonte.mjs
+         L44 · CLAUDE.md — dans test()
+         L44 · docs/regles-de-travail.md — dans test()
+         L44 · docs/philosophie-et-politique.md — dans test()
+         L131 · CLAUDE.md — dans mesurerLeCout()
+
+    4  scripts/ecotoken.mjs
+         L480 · docs/referentiel/claude-md-asides-historique.md — dans planAsides()
+         L667 · docs/regles-de-travail.md — dans (anonyme)()
+         L1585 · docs/regles-de-travail.md — dans (anonyme)()
+         L1720 · CLAUDE.md — dans buildEcotokenReport()
+
+    4  scripts/jesus-le-sauveur.mjs
+         L671 · docs/suivi — dans coutDesArticlesVuDuDehors()
+         L763 · docs/suivi/sessions — dans (anonyme)()
+         L764 · docs/suivi/sessions — dans (anonyme)()
+         L1029 · app/api/lia/route.ts — dans ceQuiRalentitUnTourDeJeu()
+
+    4  scripts/moise-tables-de-loi.mjs
+         L948 · docs/referentiel — dans reel()
+         L1246 · scripts/moise-tables-de-loi.mjs — dans corpsPrincipal()
+         L1258 · CLAUDE.md — dans corpsPrincipal()
+         L1273 · CLAUDE.md — dans (anonyme)()
+
+    4  scripts/safe-export.mjs
+         L1098 · docs/agence-blueprint.md — dans mesurerLExportabilite()
+         L2716 · CLAUDE.md — dans scanVocabulaire()
+         L2718 · docs/referentiel — dans scanVocabulaire()
+         L3526 · docs/referentiel/solutions.md — dans findSolutionsNonConsignees()
+
+    3  scripts/abraham-les-references.mjs
+         L360 · scripts/check-house.mjs — dans niveauGarantie()
+         L360 · scripts/hooks/pre-commit — dans niveauGarantie()
+         L360 · scripts/hooks/post-commit — dans niveauGarantie()
+
+    3  scripts/circle-tasks.mjs
+         L1235 · CLAUDE.md — dans (anonyme)()
+         L1259 · CLAUDE.md — dans (anonyme)()
+         L2125 · docs/circle-process-detail.txt — dans findEtapesDivergentesDuDocument()
+
+    3  scripts/data-archangel.mjs
+         L484 · docs/referentiel — dans inventaireDesRapports()
+         L485 · docs/suivi/sessions — dans inventaireDesRapports()
+         L1884 · CLAUDE.md — dans documentsOrphelins()
+
+    2  scripts/check-harmonia.mjs
+         L157 · app/api — dans verifierFonctionsCitees()
+         L157 · app/api/lia — dans verifierFonctionsCitees()
+
+    2  scripts/memento.mjs
+         L143 · scripts/memento.mjs — dans buildMemoryAuditReport()
+         L241 · scripts/memento.mjs — dans formatSuiviMemoire()
+
+    2  scripts/process-simulation-guardian.mjs
+         L301 · docs/simulations/index.md — dans postflight()
+         L302 · docs/referentiel/kpi-index.md — dans postflight()
+
+    2  scripts/pure-gold-unity.mjs
+         L316 · scripts/hooks — dans findDetecteursMuets()
+         L325 · scripts/check-house.mjs — dans findDetecteursMuets()
+
+    1  scripts/angel-of-ia-process.mjs
+         L1078 · docs/cassandra-rh/evaluations — dans mainHistorique()
+
+    1  scripts/axa-check.mjs
+         L529 · docs/simulations — dans loadArchivedSimulationActions()
+
+    1  scripts/fils-de-discussion.mjs
+         L129 · docs/suivi — dans tachesDuSuivi()
+
+    1  scripts/report-template.mjs
+         L717 · docs/objectifs-vs-resultats/registre.md — dans toolHealth()
+
+    1  scripts/tool-learning.mjs
+         L1201 · docs/suivi/sessions — dans suiviSources()
+
+=== Plan d'action ===
+⏫ PLAN PRIORITAIRE — Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils.
+  → RETENU · 93 chemin(s) de CE projet sont enfouis dans un corps de fonction, dans 24 fichier(s) — rien ne permet de les pointer ailleurs sans éditer le code — tâche [RECOMMANDEE] #1323 : passer chacun en paramètre avec la MÊME valeur par défaut — forme déjà majoritaire dans le paysage, donc comportement inchangé par construction
+  ✗ ÉCARTÉ · 114 chemin(s) vivent dans main() — nommer les vraies cibles EST le métier du point d'entrée : il les fournit aux fonctions pures, qui les reçoivent en paramètre. L'y reprocher exigerait qu'aucun fichier ne sache jamais où il est

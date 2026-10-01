@@ -10095,6 +10095,83 @@ async function testFormesDeCibleRemplacable() {
 await testFormesDeCibleRemplacable();
 
 // ═══════════════════════════════════════════════════════════════════════════════════════════
+// CHEMIN DÉCLARÉ CONTRE CHEMIN ENFOUI (2026-10-01, tâche #1323) — la mesure que le 2026-10-01
+// avait déclarée IMPOSSIBLE, et qui le redevient si ces tests tombent.
+//
+// POURQUOI ILS SONT ÉCRITS SI SERRÉS. Le chiffre fondateur de #1323 (« 38 fichiers sur 40 »)
+// a été RETIRÉ (#1354) parce que quatre critères de TEXTE avaient rendu quatre réponses en
+// vingt minutes. Ce qui remplace ce texte est une lecture de STRUCTURE — et une lecture de
+// structure ne vaut que si l'on prouve qu'elle distingue vraiment les cas que le texte
+// confondait. Chaque test ci-dessous EST l'un de ces cas, pris sur le calibrage réel.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+async function testCheminsDeclaresContreEnfouis() {
+  const SE = await import('./safe-export.mjs');
+
+  // ── LES DEUX FORMES PORTABLES, celles qu'il ne faut JAMAIS accuser.
+  const auModule = SE.cheminsDuFichier('const CHARTE = "CLAUDE.md";\nexport function f() { return lire(CHARTE); }');
+  assert.equal(auModule.declares, 1, 'a path living in a module-level constant is DECLARED: pointing it elsewhere means changing one constant, not editing the code');
+  assert.equal(auModule.enfouis.length, 0, 'and it must never be counted as buried');
+
+  const parDefaut = SE.cheminsDuFichier('export function f({ charte = "CLAUDE.md" } = {}) { return lire(charte); }');
+  assert.equal(parDefaut.declares, 1, 'a path used as a PARAMETER DEFAULT is the very form this whole landscape uses: the caller simply gives another target. Counting it as buried would denounce the portable form itself');
+  assert.equal(parDefaut.enfouis.length, 0, 'a parameter default is reached without entering the function BODY — that is exactly what the structural walk distinguishes, and what no text pattern can');
+
+  // ── LE VRAI DÉFAUT, et le seul.
+  const enfoui = SE.cheminsDuFichier('export function lireLaCharte() { return lire(join(root, "CLAUDE.md")); }');
+  assert.equal(enfoui.enfouis.length, 1, 'a path literal sitting at the call site INSIDE a function body cannot be pointed elsewhere without editing the code — that, and only that, is the portability cost');
+  assert.equal(enfoui.enfouis[0].fonction, 'lireLaCharte', 'the report must name the function, otherwise the finding is not actionable: 93 line numbers without names is a list, not a worklist');
+  assert.equal(enfoui.declares, 0, 'and it must not be credited as declared at the same time');
+
+  // ── LES TROIS NATURES QUI NE SONT PAS DES DÉFAUTS. Chacune vient d'un cas réel du calibrage ;
+  // sans elles le rapport accusait 648 points au lieu de 93, et un garde qui accuse tout le
+  // monde n'accuse plus personne (leçon L4).
+  const motif = SE.cheminsDuFichier('export function f(x) { return x.startsWith("scripts/") ? x : "scripts/" + x; }');
+  assert.equal(motif.motifsDeNom, 1, 'a literal handed to startsWith/replace/split is a NAMING CONVENTION being tested, never a target being opened — concatenation, by contrast, still counts');
+  assert.ok(motif.enfouis.length <= 1, 'only the concatenated half may count');
+
+  const entree = SE.cheminsDuFichier('function main() { const t = lire("docs/regles-de-travail.md"); return t; }');
+  assert.equal(entree.pointDEntree, 1, 'naming the real targets IS the job of the entry point: it supplies them to the pure functions, which receive them as parameters. 114 of the repository’s paths are here, and blaming them would demand that no file ever know where it is');
+  assert.equal(entree.enfouis.length, 0, 'so main() never appears in the worklist');
+
+  const propre = SE.cheminsDuFichier('export function ecrire() { return save("docs/mon-outil/index.md"); }', { slug: 'mon-outil' });
+  assert.equal(propre.registrePropre, 1, 'a tool writing into ITS OWN registry is not coupled to this project: the registry leaves with the tool');
+  const pasLeSien = SE.cheminsDuFichier('export function ecrire() { return save("docs/un-autre/index.md"); }', { slug: 'mon-outil' });
+  assert.equal(pasLeSien.enfouis.length, 1, 'but reaching into ANOTHER tool’s registry is a real coupling, and the slug is what tells the two apart');
+
+  // ── LE REFUS DE CONCLURE SANS PARSEUR (leçons L5 et L11). Une absence de mesure rendue comme
+  // un zéro se lit « rien à signaler » — c'est le faux vert le plus cher de ce projet.
+  const sansParseur = SE.cheminsDuFichier('const x = "CLAUDE.md";', { charger: () => null });
+  assert.equal(sansParseur.mesurable, false, 'with no parser the probe REFUSES to conclude');
+  assert.equal(sansParseur.declares, undefined, 'and above all it renders no zero: a zero reads as "nothing to report" where nothing was looked at at all (lessons L5 and L11)');
+  assert.ok(sansParseur.pourquoi.includes('surtout pas z'), 'the refusal says why, in the report itself');
+  const groupeSansParseur = SE.findCheminsEnfouis(['scripts/x.mjs'], { charger: () => null, readFileImpl: () => 'const x = 1;' });
+  assert.equal(groupeSansParseur.mesurable, false, 'the same refusal must hold for the whole-repository pass, not only for one file');
+  assert.deepEqual(groupeSansParseur.fichiers, [], 'and an empty list there means UNMEASURED, which is why mesurable is false beside it');
+  assert.equal(SE.findCheminsEnfouis(['scripts/x.mjs'], { readFileImpl: () => 'const x = 1;' }).mesurable, true, 'with TypeScript present in this repo the probe really does measure — checked, never assumed');
+  assert.equal(SE.chargerLeParseur({ requireImpl: () => { throw new Error('absent'); } }), null, 'when the compiler cannot be loaded the probe returns null rather than a half-working parser');
+
+  const faux = { 'scripts/a.mjs': 'export function f() { return lire("CLAUDE.md"); }', 'scripts/check-house.mjs': 'export function f() { return lire("docs/x/"); }' };
+  const v = SE.findCheminsEnfouis(Object.keys(faux), { readFileImpl: (p) => faux[Object.keys(faux).find((k) => p.endsWith(k))] });
+  assert.equal(v.fichiers.length, 1, 'the safety net is OUT of this measure: its 382 path literals are test SCENERY in assertions, never targets, and counting them would bury the 93 real cases under a false red six times larger');
+  assert.equal(v.ecartes.length, 1, 'and an excluded file is NAMED with its reason — an exclusion nobody can see is an exclusion nobody can challenge');
+  assert.ok(v.ecartes[0].pourquoi.length > 40, 'that reason must be written, not implied (Article 28: an ECARTE without a written reason is not a decision)');
+
+  // ── LE PLAN D'ACTION PORTE LE NUMÉRO (Article 28, créneau ouvert par #1371).
+  const plan = SE.planDactionDesCheminsEnfouis(v);
+  assert.ok(plan.lignes.some((l) => l.includes('#1323')), 'the plan must carry the task number in the declared slot, otherwise the chain report -> analysis -> plan -> task cannot be re-read once the report is on disk');
+
+  // ── EN DIRECT SUR LE VRAI DÉPÔT (Article 25) : un outil qui n'a jamais tourné contre le vrai
+  // dépôt n'est pas un outil, c'est une intention (leçon L2).
+  const reel = SE.findCheminsEnfouis(SE.fichiersSourcesDuProjet().filter((f) => f.startsWith('scripts/') && f.endsWith('.mjs')));
+  assert.equal(reel.mesurable, true, 'the probe must really run against the real repository, not only against fixtures');
+  assert.ok(reel.total.declares > reel.total.enfouis, `the landscape must stay majority-portable: measured 677 declared against 93 buried (currently ${reel.total.declares} / ${reel.total.enfouis})`);
+
+  console.log("Passed: chemin DÉCLARÉ contre chemin ENFOUI (2026-10-01, tâche #1323) — la portabilité enfin mesurée à la maille du LITTÉRAL, et non plus du fichier. Le 2026-10-01 au matin, le chiffre fondateur de cette tâche (« 38 fichiers sur 40 ») avait été RETIRÉ (#1354) : quatre critères de TEXTE successifs avaient rendu quatre réponses en vingt minutes, et la conclusion écrite était que séparer un chemin déclaré d'un chemin enfoui « demande de comprendre la STRUCTURE du code, pas d'en reconnaître la forme ». Ce qui a changé n'est pas un cinquième raffinement : le compilateur TypeScript est déjà une dépendance de ce dépôt et sait lire un .mjs en ARBRE. La question « ce chemin est-il pointable ailleurs ? » devient alors une POSITION — au module ou en valeur par défaut de paramètre (portable), ou dans un corps de fonction (pas portable) — et non plus une ressemblance. Trois natures sont écartées pour une raison nommée, chacune tirée d'un cas réel du calibrage : le motif de nom (startsWith/replace : une convention testée, pas une cible), le point d'entrée (nommer les cibles EST le métier de main(), 114 cas), et le registre propre (docs/<son-slug>/ : il part avec l'outil, 36 cas). Sans elles, le rapport accusait 648 points au lieu de 93. Résultat réel : 677 chemins déjà portables contre 93 enfouis dans 24 fichiers, soit 88 % du paysage déjà sous la forme portable — ce qui CONFIRME le « rare et concentré » de #1354 en lui donnant enfin un critère rejouable, et borne le chantier à 93 gestes précis au lieu d'une refonte.");
+}
+await testCheminsDeclaresContreEnfouis();
+
+
+// ═══════════════════════════════════════════════════════════════════════════════════════════
 // L'ARTICLE 31, FAILLE 8 — « je cite un outil sans l'avoir lancé » (2026-09-28, tâche #765)
 // ═══════════════════════════════════════════════════════════════════════════════════════════
 //

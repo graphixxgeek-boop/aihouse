@@ -1507,6 +1507,42 @@ phrase. Ce qui existe désormais, en revanche, c'est le remède lui-même : `num
 gabarit partagé, et une sonde qui dit maintenant « l'EMPLACEMENT existe » au lieu de « il
 manquerait » — un outil qui réclame encore ce qu'on lui a donné apprend à ne plus être lu (L4).
 
+## L43 — « Impossible à mesurer » veut presque toujours dire « impossible avec l'instrument que j'avais en tête »
+
+*Payée le 2026-10-01 (tâches #1354 puis #1323). Six heures séparent la déclaration d'impossibilité de sa réfutation, par moi, sur le même sujet et dans la même nuit.*
+
+**Le fait.** Au matin, je retire le chiffre qui justifiait la tâche #1323 (« 38 fichiers sur 40
+portent un chemin écrit en dur ») : quatre critères successifs avaient rendu quatre réponses en
+vingt minutes (42/48, 41, 25, 313). La raison que j'écris alors est juste, et elle reste juste
+aujourd'hui : « séparer un chemin déclaré d'un chemin enfoui demande de comprendre la STRUCTURE du
+code, pas d'en reconnaître la forme. Un motif de texte approxime toujours. » **La conclusion que
+j'en tire, elle, est fausse** : j'arrête de compter, et je classe la mesure comme hors d'atteinte.
+Six heures plus tard, la même mesure sort propre et rejouable — 677 chemins portables contre 93
+enfouis — parce que le dépôt embarque déjà un compilateur capable de lire un `.mjs` en ARBRE.
+
+**Où exactement le raisonnement glisse**, et c'est la seule partie qui se transporte ailleurs :
+le diagnostic portait sur l'INSTRUMENT (« un motif de texte ne peut pas »), la conclusion a porté
+sur la QUESTION (« on ne peut pas savoir »). Ces deux phrases se ressemblent au point de passer
+l'une pour l'autre, et la première est d'autant plus crédible qu'elle est exacte — c'est elle qui
+fait passer la seconde. **Quatre échecs d'affilée avec le même instrument rendent ce glissement
+presque irrésistible** : on croit avoir épuisé le sujet alors qu'on a épuisé un outil.
+
+**Le geste.** Avant d'écrire qu'une mesure est impossible, nommer l'INSTRUMENT qui a échoué, puis
+poser une question de plus : *qu'est-ce qui, dans ce dépôt, lit déjà cette matière autrement ?*
+Ici la réponse traînait dans `package.json` et tournait à chaque commit. Et quand l'impossibilité
+tient quand même, l'écrire sous la forme « impossible **par motif de texte** », jamais
+« impossible » — la première invite le prochain agent à chercher l'autre instrument, la seconde
+lui dit de passer son chemin. C'est le prolongement exact de L42 : là-bas l'impossibilité nommait
+son remède et personne ne le construisait ; ici elle ne nommait même pas l'instrument fautif.
+
+**Terrain** : quand un chiffre a changé plusieurs fois et qu'on renonce à le stabiliser · mots : impossible, on ne peut pas savoir, approxime toujours, cinquième raffinement, pas reproductible · fichiers : scripts/*.mjs, docs/**/*.md
+
+**Porté par** : **aucun mécanisme, et cette impossibilité-là est déclarée plutôt que tue** (Article 27). Aucun programme ne sait
+qu'un autre instrument existait : il faudrait connaître la question pour savoir ce qui y répond.
+Ce qui existe en revanche, c'est la trace du contre-exemple — `node scripts/safe-export.mjs chemins`
+tourne et rend une mesure là où un document du dépôt dit encore qu'elle est hors d'atteinte. Un
+contre-exemple qui tourne vaut mieux qu'une consigne de vigilance (leçon L2).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

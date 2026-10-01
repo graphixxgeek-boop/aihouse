@@ -341,6 +341,57 @@ désormais couvert pour de vrai.
 Kit de l'Agence **100 %** (après écriture des deux pièces manquantes). Fichiers :
 **🟠 EXPORT DÉGRADÉ** — 4 kits incomplets sur des VITAUX/ESSENTIELS, 27 ailleurs.
 
+## La portabilité à la maille du LITTÉRAL — `chemins` *(2026-10-01, tâche #1323)*
+
+**Ce que `findScriptsNonPortables()` ne peut pas voir, et ce n'est pas son défaut mais sa maille.**
+Il juge un FICHIER, et le déclare portable dès qu'il expose UNE cible en option. Un chemin écrit en
+dur au fond d'un fichier par ailleurs exemplaire lui échappe donc par construction. D'où ses **0 non
+portables sur 88**, parfaitement exacts, à côté de **93 points réels** que la sonde ci-dessous
+trouve. Les deux mesures coexistent et ne se contredisent pas : elles ne répondent pas à la même
+question.
+
+**Pourquoi cette mesure a été déclarée IMPOSSIBLE six heures plus tôt.** La tâche #1354 avait retiré
+le chiffre qui justifiait #1323 (« 38 fichiers sur 40 ») parce que quatre critères de TEXTE avaient
+rendu quatre réponses en vingt minutes, et concluait : séparer un chemin déclaré d'un chemin enfoui
+« demande de comprendre la STRUCTURE du code, pas d'en reconnaître la forme ». Ce diagnostic est
+juste, et il l'est encore. Ce qui était faux, c'est d'en conclure que la question était hors
+d'atteinte : le dépôt embarque déjà le compilateur TypeScript, qui lit un `.mjs` en ARBRE. **C'est la
+leçon L43**, écrite ce jour-là.
+
+**Le critère, qui est une POSITION et non une ressemblance :**
+
+| | Où vit le littéral | Verdict |
+|---|---|---|
+| **DÉCLARÉ** | au niveau du module (constante, registre), ou en **valeur par défaut de paramètre** `{ charte = "CLAUDE.md" } = {}` | portable — on lui donne une autre cible, on ne le réécrit pas |
+| **ENFOUI** | dans un **corps de fonction**, à l'endroit de l'appel : `lire(join(root, "CLAUDE.md"))` | pas portable — rien ne permet de le pointer ailleurs sans éditer le code |
+
+**Les quatre natures écartées, chacune tirée d'un cas réel du calibrage.** Sans elles, le rapport
+accusait **648** points au lieu de 93 — et un garde qui accuse tout le monde n'accuse plus personne
+(leçon L4).
+
+- **MOTIF DE NOM** — argument de `startsWith`/`replace`/`split`… : une convention de nommage qu'on
+  teste, jamais une cible qu'on ouvre. *(25)*
+- **POINT D'ENTRÉE** — dans `main()` : nommer les vraies cibles EST son métier, il les fournit aux
+  fonctions pures qui les reçoivent en paramètre. *(114 — le plus gros contingent, et le plus
+  trompeur.)*
+- **REGISTRE PROPRE** — `docs/<son-slug>/` : il part avec l'outil. *(36)*
+- **`check-house.mjs`, hors mesure avec sa raison écrite** — ses 382 littéraux sont des DÉCORS de
+  test dans des assertions. `FICHIERS_HORS_MESURE_DES_CHEMINS` est **volontairement tenu à la main**
+  et le déclare (Article 24) : il ne reflète aucun autre système, donc rien ne peut y diverger en
+  silence.
+
+**Si le compilateur manque, la sonde REFUSE de conclure** (`mesurable: false`) plutôt que de rendre
+zéro, qui se lirait « rien à signaler » là où rien n'a été regardé (leçons L5/L11). Le chargeur est
+injectable pour que cette branche soit réellement éprouvée par le filet, et pas seulement promise.
+
+**Mesure réelle au jour de sa création** : **677 chemins déjà sous la forme portable contre 93
+enfouis, dans 24 fichiers** sur 88 scripts lus. Ce qui **confirme** le « rare et concentré » de
+#1354 en lui donnant un critère rejouable, et **borne** #1323 à 93 gestes identiques au lieu d'une
+refonte. Les 93 gestes eux-mêmes restent à faire : une refonte totale se prépare, et réécrire 93
+points d'appel dans du code qui va être restructuré serait du travail jeté.
+
+**Commande** : `node scripts/safe-export.mjs chemins` — rapport déposé dans `docs/safe-export/`.
+
 ## RÈGLE — on ne parle JAMAIS d'exportabilité sans donner la portabilité dans la même phrase
 
 *(Posée par l'utilisateur le 2026-09-27 : « noter quelque part que lorsqu'on parle d'exportabilité,

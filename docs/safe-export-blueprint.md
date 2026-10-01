@@ -100,3 +100,54 @@ dur fonctionne ailleurs. La seule preuve est un **projet témoin** : un dépôt 
 l'arborescence volontairement différente, contre lequel tout l'outillage est lancé. Trois verdicts
 et non deux — **portable**, **honnête** (l'outil dit « pas mesurable » avec sa raison, ce qui est un
 bon résultat), **non portable**.
+
+## Mesurer la portabilité à la maille du LITTÉRAL, et non du fichier
+
+*(Section générique : elle vaut pour n'importe quel projet, et c'est la seule partie de ce
+blueprint qui exige un parseur.)*
+
+**Le piège que cette section ferme.** Un détecteur de portabilité qui juge un FICHIER le déclare
+portable dès qu'il expose une cible en option. C'est une maille utile — elle évite d'accuser tout
+outil qui scanne le projet — mais elle laisse passer le cas le plus courant : un chemin écrit en dur
+au fond d'un fichier par ailleurs exemplaire. Les deux mailles ne se remplacent pas.
+
+**Pourquoi un motif de texte échouera toujours ici**, et le constater coûte moins cher que de le
+découvrir : la différence entre un chemin rangé et un chemin coincé n'est pas une différence de
+FORME, c'est une différence de POSITION dans la structure du code. Un raffinement de motif donne un
+chiffre de plus, jamais le bon. Sur le projet d'origine, quatre critères successifs ont rendu quatre
+réponses en vingt minutes avant qu'on renonce.
+
+**Le critère, transposable tel quel** :
+
+- **DÉCLARÉ** — le littéral vit au niveau du module, ou comme **valeur par défaut de paramètre**.
+  Arriver ailleurs demande de lui donner une autre cible.
+- **ENFOUI** — le littéral vit dans un **corps de fonction**, à l'endroit de l'appel. Rien ne permet
+  de le pointer ailleurs sans éditer le code.
+
+En pratique : on remonte des parents du littéral jusqu'au module. Entrer dans un noeud de fonction
+**autrement que par son corps**, c'est être une valeur par défaut — donc déjà pointable.
+
+**Les natures à écarter, sous peine d'un garde inutilisable.** Sur le projet d'origine, les ignorer
+faisait passer le rapport de 93 points à 648, et un garde qui accuse tout le monde n'accuse plus
+personne.
+
+1. **Motif de nom** — littéral passé à `startsWith`/`replace`/`split`… : une convention testée, pas
+   une cible ouverte.
+2. **Point d'entrée** — littéral dans la fonction d'entrée : nommer les vraies cibles EST son
+   métier, puisqu'elle les fournit aux fonctions pures.
+3. **Registre propre** — un outil qui écrit dans SON dossier n'est pas couplé au projet d'accueil :
+   le dossier part avec lui.
+4. **Le banc d'essai** — un fichier de tests est plein de chemins FICTIFS. Il s'écarte avec sa raison
+   écrite, jamais en silence.
+
+**Deux exigences non négociables.** D'abord, **pas de parseur, pas de conclusion** : la sonde rend
+« non mesuré » et le dit, jamais zéro — un zéro se lit « rien à signaler » là où rien n'a été
+regardé. Ensuite, **le chargeur du parseur est injectable**, sans quoi cette branche de refus n'est
+pas testable, et un refus qu'on ne peut pas éprouver est un refus qu'on découvre le jour où il se
+trompe.
+
+**Ce que la mesure change, et c'est souvent l'inverse de ce qu'on attend** : sur le projet d'origine
+elle a montré que le paysage était DÉJÀ portable à près de 9 chemins sur 10. Elle a donc retiré un
+argument à la refonte au lieu d'en ajouter un, et transformé un chantier flou en une liste de gestes
+identiques et comptés.
+
