@@ -826,3 +826,40 @@ contexte, dont `docs/memento/` ne garde qu'un index).
 **IL NE DIT JAMAIS S'IL FAUT VERSIONNER** : c'est une décision d'hygiène du dépôt, donc humaine,
 posée au point **#1222** de `docs/idees-a-trancher.md`. Il dit ce qui n'est pas décidé. Le poids
 sert à CLASSER, jamais à juger, et `present: false` reste distinct d'un poids nul (L5/L11).
+
+## La septième pièce du kit : les SOLUTIONS (2026-10-01, tâche #1342)
+
+**Sa demande** : *« je voudrais que tu stockes tes solutions […] la future IA cliente profitera à
+la fois des outils présents mais aussi de notre expérience consignée et qui part avec l'agence »*.
+
+**Pourquoi `lecons.md` ne suffisait pas**, alors qu'il était déjà dans le kit : une leçon est un
+**PRINCIPE** — « ne fais pas X parce que Y ». Elle dit quoi éviter, jamais comment s'en sortir.
+Le destinataire qui rencontre le problème pour de vrai a besoin de l'autre moitié. **Et c'est la
+moitié la plus chère à refaire** : un principe se redécouvre en lisant, une solution se redécouvre
+en se trompant.
+
+`docs/referentiel/solutions.md` est donc la **septième pièce** de `PIECES_DU_KIT_AGENCE` — ce qui
+veut dire que son absence serait mesurée comme un trou d'export, au même titre que le plan ou les
+standards.
+
+### `findSolutionsNonConsignees()` — une protection faible, et déclarée telle
+
+Le registre **s'écrit à la main** : une entrée y naît quand quelqu'un se dit « ça resservira »,
+c'est-à-dire pas toujours. Pendant ce temps le suivi accumule des solutions concrètes en prose qui
+ne remontent jamais. La sonde relit le suivi et **PROPOSE** les clôtures qui racontent une CAUSE et
+un REMÈDE et dont le vocabulaire ne se retrouve pas dans le registre.
+
+**Elle n'écrit jamais d'entrée**, et c'est le cœur du dispositif : généraliser un cas particulier
+est un **jugement**, et une entrée produite par une machine serait un cas particulier déguisé en
+principe — exactement ce que ce registre existe pour éviter. Même partage que
+check-tasks-details / god-of-all-process sur l'Article 28 : les fusionner donnerait un outil qui se
+satisfait tout seul.
+
+**Le seuil de DEUX marqueurs est mesuré, jamais choisi** : à un seul, la sonde rendait
+**219 candidats** avec un journal de Ronde en tête de liste — un détecteur dont la tête de liste
+est un faux positif cesse d'être lu (leçon L4). À trois, elle n'en rendait plus qu'**un**. À deux,
+elle en rend **30**, et sa tête de liste est une vraie solution à généraliser.
+
+**Hors portée** : « ressembler à une solution » se lit sur des marqueurs de TEXTE. Une solution
+rédigée autrement lui échappe, et une ligne qui emploie ces mots sans rien résoudre sort à tort.
+Ce sont des **questions**, jamais un verdict.

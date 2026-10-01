@@ -1,0 +1,24 @@
+Tableau de bord — rapport KPI complet (cf. docs/referentiel/tableau-de-bord.md pour les règles).
+**🔧 Performance globale du Smart Breaker : N/A (serveur non joignable)**
+**📈 Améliorations réalisées sur l’outil : 88%** (7/8 capacités prévues, implémentées et testées)
+      robustesse     99/100               couverture de test par fonction  ← AXA-CHECK  — relevé du 2026-09-19
+== KPI global — Robustesse du code ==
+100% (moyenne : propreté tsc 100%, suite de tests 100%, couverture réelle par fonction (AXA-CHECK) 99%). Points fragiles et taille de code restent affichés en compteurs bruts ci-dessus (pas de plafond naturel pour un %).
+== KPI — Mémoire des personnages (memento weight) ==
+Aucun tour ÉLIGIBLE au filet anti-écho cette session (un tour ne l’est que s’il porte une offre avec sa réplique) — rien à mesurer, ce qui n’est jamais 100 %.
+== KPI global — Performance runtime ==
+N/A cette fois.
+Conformité API (salves confirmées avant d'agir) : 100% (7/7 salve(s))
+Adoption SMART-CONSO-TOKEN : 1 proposition(s) réellement appliquée(s), réduction moyenne mesurée 13%.
+== KPI global — Smart Conso ==
+71% (moyenne des composantes réellement mesurées cette fois — jamais un chiffre fabriqué pour une composante absente).
+== KPI général — Couverture du tableau de bord lui-même (à surveiller en priorité) ==
+100% des familles ATTEIGNABLES dans ce contexte ont produit une vraie mesure (2/2).
+Tout est vert : 100% robustesse du code, 14 point(s) fragile(s) ouvert(s) déjà identifié(s) et suivis.
+| Famille | KPI global |
+| 🔧 Smart Breaker — performance | N/A |
+| 📈 Smart Breaker — améliorations | 88% |
+| Robustesse du code | 100% |
+| Qualité de sortie | N/A |
+| Cohérence logique | N/A |
+| Rejouabilité (partiel) | N/A |

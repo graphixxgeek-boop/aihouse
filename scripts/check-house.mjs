@@ -23316,3 +23316,65 @@ async function testOuOnEnEstLitLeBonStatut() {
   console.log("Passed: le faux chiffre qui répondait à « où on en est » (2026-10-01, tâche #1363). `ou-on-en-est` lisait le statut d'une tâche à la NEUVIÈME case, en dur ; le registre a gagné un champ le 2026-09-25 et cette case est devenue celle de la déclaration de fidélité. L'outil annonçait donc 569 tâches ouvertes là où il y en a 117 — 468 de ses « ouvertes » portant le statut littéral « OUI ». C'EST LE PIRE FAUX CHIFFRE POSSIBLE, et pas par son ampleur : par SA QUESTION. Il répond à « où on en est », c'est-à-dire exactement ce qu'on ne revérifie jamais, puisqu'on vient de le demander à un outil ; il ne lève aucune erreur et reste parfaitement plausible. Article 24 dans sa forme la plus chère — une position RECOPIÉE au lieu d'être DÉRIVÉE — alors que la bonne réponse existait à côté depuis le jour même où le champ est arrivé (check-suivi-fidelity dérive sa fourchette de colonnes de FORMAT_TACHE). CORRIGÉ EN LISANT PAR LA FIN plutôt qu'en dérivant la position : le statut est la dernière cellule et l'est resté à travers les trois formats successifs, donc un dixième champ ajouté demain au milieu ne cassera rien — et ce petit outil ne dépend du format complet de personne. LA PREUVE EST LA CORROBORATION, jamais le chiffre seul : les deux lecteurs indépendants s'accordent désormais à une ligne près (118 contre 117) là où ils divergeaient de 452 sans que rien ne le dise.");
 }
 await testOuOnEnEstLitLeBonStatut();
+
+// ────────────────────────────────────────────────────────────────────────────
+// NOS SOLUTIONS DOIVENT PARTIR AVEC L'AGENCE (2026-10-01, tâche #1342)
+// ────────────────────────────────────────────────────────────────────────────
+// Sa demande : « je voudrais que tu stockes tes solutions […] la future IA cliente profitera à la
+// fois des outils présents mais aussi de notre expérience consignée et qui part avec l'agence ».
+// Le kit de l'Agence portait déjà `lecons.md`, mais une leçon est un PRINCIPE — « ne fais pas X
+// parce que Y » — et elle dit quoi éviter, jamais comment s'en sortir. C'est la moitié la plus
+// chère à refaire : un principe se redécouvre en lisant, une solution se redécouvre en se trompant.
+async function testLesSolutionsPartentAvecLAgence() {
+  const assert = (await import('node:assert/strict')).default;
+  const S = await import('../scripts/safe-export.mjs');
+  const C = await import('../scripts/check-tasks-details.mjs');
+
+  // ── 1. LA SEPTIÈME PIÈCE EXISTE, ET ELLE EST DANS LE KIT — donc son absence serait mesurée
+  // comme un trou d'export, au même titre que le plan ou les standards.
+  const piece = S.PIECES_DU_KIT_AGENCE.find((p) => p.cle === 'solutions');
+  assert.ok(piece, "the solutions register must be a declared piece of the Agency's own kit, not a document on the side");
+  assert.equal(piece.chemin, 'docs/referentiel/solutions.md', 'at its canonical path');
+  const agence = S.mesurerLeKitDeLAgence();
+  assert.equal(agence.manquantes.length, 0, `and the kit must be complete (missing: ${agence.manquantes.map((m) => m.chemin).join(', ')})`);
+
+  // ── 2. LA SONDE REFUSE DE CONCLURE PLUTÔT QUE DE RENDRE ZÉRO (leçons L5/L11). Un « 0 candidat »
+  // rendu sur zéro ligne lue se lirait comme « le registre est complet », qui est l'inverse exact.
+  const sansLignes = S.findSolutionsNonConsignees({ lignesSuivi: [], registre: '# vide' });
+  assert.equal(sansLignes.mesurable, false, 'no rows read means NOT MEASURED, never "nothing to record"');
+  const sansRegistre = S.findSolutionsNonConsignees({ lignesSuivi: [{ numero: 1, detail: 'x' }], registre: null, readFileImpl: () => { throw new Error('ENOENT'); } });
+  assert.equal(sansRegistre.mesurable, false, 'and with no register there is nothing to compare against — proposing the whole backlog would be worse than silence');
+
+  // ── 3. DEUX MARQUEURS, JAMAIS UN — et le seuil est MESURÉ. À un marqueur la sonde rendait 219
+  // candidats et sa tête de liste était un journal de Ronde qui ne résout rien ; un détecteur dont
+  // la tête de liste est un faux positif cesse d'être lu (L4).
+  assert.equal(S.MARQUEURS_MINIMUM_SOLUTION, 2, 'the threshold is two markers: a real solution write-up carries both the CAUSE and the REMEDY');
+  const detail = (txt) => [{ numero: 42, sujet: 's', detail: txt + ' '.repeat(0) + 'zzzz '.repeat(90) }];
+  const unSeul = S.findSolutionsNonConsignees({ lignesSuivi: detail('LA CAUSE était ailleurs. '), registre: '# rien' });
+  assert.equal(unSeul.total, 0, 'one marker alone is not a solution: it is most often a line talking about something else');
+  const deux = S.findSolutionsNonConsignees({ lignesSuivi: detail('LA CAUSE était ailleurs, et CORRIGÉ EN dérivant la borne. '), registre: '# rien' });
+  assert.equal(deux.total, 1, 'a cause AND a remedy is a solution worth proposing');
+
+  // ── 4. UN CANDIDAT QU'ON NE PEUT PAS RETROUVER NE SERT À RIEN.
+  const sansNumero = S.findSolutionsNonConsignees({ lignesSuivi: [{ numero: undefined, sujet: 's', detail: 'LA CAUSE … CORRIGÉ EN … ' + 'zzzz '.repeat(90) }], registre: '# rien' });
+  assert.equal(sansNumero.total, 0, 'a candidate with no readable number cannot be looked up, so it is not proposed');
+
+  // ── 5. ELLE PROPOSE, ELLE N'ÉCRIT JAMAIS. C'est le cœur du dispositif, pas un détail :
+  // généraliser un cas particulier est un JUGEMENT, et une entrée produite par une machine serait
+  // un cas particulier déguisé en principe — exactement ce que ce registre existe pour éviter.
+  const { readFileSync: lireF } = await import('node:fs');
+  const src = lireF('scripts/safe-export.mjs', 'utf8');
+  const corps = src.slice(src.indexOf('export function findSolutionsNonConsignees'), src.indexOf('export function formatSolutionsNonConsigneesLines'));
+  assert.ok(!/writeFileSync|appendFileSync/.test(corps), 'the probe must never write into the register: it proposes, a human generalises');
+
+  // ── 6. SUR LE VRAI DÉPÔT (Article 25), et le registre doit porter de VRAIES entrées — un
+  // registre vide serait une intention, jamais une pièce d'export (L2).
+  const reel = S.findSolutionsNonConsignees({ lignesSuivi: C.loadAllTaskRows() });
+  assert.ok(reel.mesurable && reel.lues > 500, `the probe must actually read the real registry (currently ${reel.lues} rows)`);
+  const registre = lireF('docs/referentiel/solutions.md', 'utf8');
+  assert.ok((registre.match(/^## S\d+ — /gm) ?? []).length >= 5, 'and the register must carry real entries from the start: an empty seventh piece would ship as an empty promise');
+  assert.ok(/findSolutionsNonConsignees/.test(registre), 'the register names the mechanism that keeps it growing — a protection declared is a protection (Article 27)');
+
+  console.log("Passed: nos solutions partent avec l'Agence (2026-10-01, tâche #1342). Sa demande : « je voudrais que tu stockes tes solutions […] la future IA cliente profitera à la fois des outils présents mais aussi de notre expérience consignée ». Le kit de l'Agence portait déjà lecons.md — mais une leçon est un PRINCIPE, « ne fais pas X parce que Y » : elle dit quoi éviter, jamais comment s'en sortir, et c'est la moitié la plus chère à refaire, puisqu'un principe se redécouvre en LISANT quand une solution se redécouvre en SE TROMPANT. D'où une SEPTIÈME pièce, `docs/referentiel/solutions.md`, qui part avec l'Agence et dont l'absence serait mesurée comme un trou d'export. ELLE S'ÉCRIT À LA MAIN, ET C'EST SA FRAGILITÉ : une entrée naît quand quelqu'un se dit « ça resservira », c'est-à-dire pas toujours, pendant que le suivi accumule des dizaines de solutions en prose qui ne remontent jamais. La protection est une sonde qui PROPOSE les clôtures racontant une cause et un remède absentes du registre — et qui n'écrit JAMAIS, parce que généraliser un cas particulier est un jugement et qu'une entrée produite par une machine serait un cas particulier déguisé en principe. Même partage que check-tasks-details/god-of-all-process sur l'Article 28 : les fusionner donnerait un outil qui se satisfait tout seul. LE SEUIL DE DEUX MARQUEURS EST MESURÉ, jamais choisi : à un seul la sonde rendait 219 candidats avec un journal de Ronde en tête de liste, à trois elle n'en rendait plus qu'un ; à deux elle en rend 30 et sa tête de liste est une vraie solution à généraliser.");
+}
+await testLesSolutionsPartentAvecLAgence();

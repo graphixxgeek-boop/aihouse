@@ -1992,12 +1992,24 @@ function main() {
   if (process.argv[2] === "kits") {
     printReliabilityNotice("safe-export");
     recordCliUsage("safe-export", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
-    return import("./le-classificateur.mjs").then((lc) => {
+    return import("./le-classificateur.mjs").then(async (lc) => {
       const k = mesurerLesKits({ vitalite: lc.vitaliteDuParc() });
       const a = mesurerLeKitDeLAgence();
       const inv = inventaireDesKits(k);
-      const sortie = [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 999 }), "", ...formatInventaireLines(inv), "", ...alerteExportLines(k, a)];
-      for (const l of [...formatKitAgenceLines(a), "", ...formatKitsLines(k, { combien: 40 }), "", ...alerteExportLines(k, a)]) console.log(l);
+      // LES SOLUTIONS À CONSIGNER (2026-10-01, #1342) — ici et pas ailleurs : c'est la septième
+      // pièce du kit de l'Agence, donc sa complétude se regarde au même endroit que les six autres.
+      // Les lignes de suivi sont lues chez check-tasks-details, jamais relues ici (anti-doublon).
+      let sol = { mesurable: false, pourquoi: "les lignes de suivi n'ont pas pu être lues — le registre des solutions ne peut donc pas être confronté au suivi, et c'est une absence de mesure, jamais un « rien à consigner »" };
+      try {
+        // Import DYNAMIQUE et non statique, pour la même raison que partout ailleurs ici : le
+        // crochet post-commit importe des fonctions de ce fichier, et un import de tête ferait
+        // entrer check-tasks-details dans cette chaîne — la « tuyauterie par ricochet » que le
+        // filet a déjà refusée sur HARMONIA.
+        const ctdKits = await import("./check-tasks-details.mjs");
+        sol = findSolutionsNonConsignees({ lignesSuivi: ctdKits.loadAllTaskRows() });
+      } catch (e) { sol = { mesurable: false, pourquoi: `les lignes de suivi n'ont pas pu être lues (${e.message})` }; }
+      const sortie = [...formatKitAgenceLines(a), "", ...formatSolutionsNonConsigneesLines(sol), "", ...formatKitsLines(k, { combien: 999 }), "", ...formatInventaireLines(inv), "", ...alerteExportLines(k, a)];
+      for (const l of [...formatKitAgenceLines(a), "", ...formatSolutionsNonConsigneesLines(sol), "", ...formatKitsLines(k, { combien: 40 }), "", ...alerteExportLines(k, a)]) console.log(l);
       try { mkdirSync(join(ROOT, "docs/safe-export"), { recursive: true }); } catch { /* déjà là */ }
       const cible = join(ROOT, "docs/safe-export", `kits-${new Date().toISOString().slice(0, 10)}.txt`);
       writeFileSync(cible, sortie.join("\n") + "\n", "utf8");
@@ -3258,7 +3270,94 @@ export const PIECES_DU_KIT_AGENCE = [
     question: "à quoi reconnaît-on qu'un outil est à niveau ?" },
   { cle: "lecons", quoi: "ce que le projet a appris en se trompant", chemin: "docs/referentiel/lecons.md",
     question: "quelles erreurs n'ai-je pas besoin de refaire ?" },
+  // LA SEPTIÈME PIÈCE (2026-10-01, tâche #1342), et sa raison est une distinction que les six
+  // premières ne faisaient pas. Sa demande : « je voudrais que tu stockes tes solutions […] la
+  // future IA cliente profitera à la fois des outils présents mais aussi de notre expérience
+  // consignée et qui part avec l'agence ».
+  //
+  // POURQUOI `lecons.md` NE SUFFISAIT PAS, alors qu'il était déjà dans le kit : une leçon est un
+  // PRINCIPE — « ne fais pas X parce que Y ». Elle dit quoi éviter, jamais comment s'en sortir.
+  // Le destinataire qui rencontre le problème pour de vrai a besoin de l'autre moitié : voici le
+  // problème concret, voici ce qu'on a essayé qui n'a pas marché, voici ce qui a marché.
+  //
+  // ET C'EST LA MOITIÉ LA PLUS CHÈRE À REFAIRE : un principe se redécouvre en lisant ; une
+  // solution se redécouvre en se trompant.
+  { cle: "solutions", quoi: "comment on a résolu, pas seulement ce qu'il ne faut pas faire", chemin: "docs/referentiel/solutions.md",
+    question: "j'ai CE problème précis — qu'est-ce qui a déjà marché ?" },
 ];
+
+// findSolutionsNonConsignees() (2026-10-01, tâche #1342) — LA PROTECTION DU REGISTRE DES SOLUTIONS,
+// et elle est faible par construction : je l'écris en le disant plutôt qu'en le taisant.
+//
+// LE PROBLÈME QU'ELLE ADRESSE : `docs/referentiel/solutions.md` s'écrit à la MAIN. Une entrée y
+// naît quand quelqu'un se dit « tiens, ça resservira » — c'est-à-dire pas toujours. Pendant ce
+// temps, le registre des tâches accumule des dizaines de solutions concrètes rédigées en prose,
+// qui ne remontent jamais. Un registre qui dépend d'un réflexe cesse de grossir en silence.
+//
+// CE QU'ELLE FAIT, ET SURTOUT CE QU'ELLE NE FAIT PAS. Elle PROPOSE des clôtures qui ressemblent à
+// une solution concrète et dont le vocabulaire ne se retrouve pas dans le registre. **Elle n'écrit
+// jamais d'entrée** : généraliser un cas particulier est un JUGEMENT, et une entrée produite par
+// une machine serait un cas particulier déguisé en principe — exactement ce que le registre existe
+// pour éviter. Même partage que check-tasks-details / god-of-all-process sur l'Article 28 : l'un
+// propose une forme, l'autre constate un manque, et les fusionner donnerait un outil qui se
+// satisfait tout seul.
+//
+// SA LIMITE, DÉCLARÉE : « ressembler à une solution » se lit sur des MARQUEURS DE TEXTE. Une
+// solution rédigée autrement lui échappe, et une ligne qui emploie ces mots sans rien résoudre
+// sortira à tort. Elle sous-déclare volontairement — un détecteur qui accuse à tort cesse d'être
+// lu (leçon L4) — et elle rend des QUESTIONS, jamais un verdict.
+export const MARQUEURS_DE_SOLUTION = Object.freeze([
+  /\bCORRIGÉ (?:EN|PAR|LE)\b/i, /\bLA CAUSE\b/i, /\bCAUSE RACINE\b/i,
+  /\bCE QUI A ÉTÉ CONSTRUIT\b/i, /\bCE QUI MARCHE\b/i, /\bCE QUI NE MARCHE PAS\b/i,
+  /\bLA SOLUTION\b/i, /\bRÉPARÉ\b/i,
+]);
+
+// Un extrait trop court ne porte aucune solution ; un extrait énorme est un récit de chantier.
+export const TAILLE_MINIMALE_SOLUTION = 400;
+
+// DEUX MARQUEURS, JAMAIS UN — et le chiffre est MESURÉ, pas choisi. À un seul marqueur la sonde
+// rend 219 candidats et sa tête de liste est un journal de Ronde qui ne résout rien ; à deux elle
+// en rend 31 et sa tête de liste est « le détecteur de documents jumeaux accusait 25 paires »,
+// c'est-à-dire exactement une solution à généraliser ; à trois elle n'en rend plus qu'UN et cesse
+// de servir. Deux, parce qu'un vrai récit de solution porte presque toujours la CAUSE et le
+// REMÈDE, là qu'une ligne qui emploie un seul de ces mots parle le plus souvent d'autre chose.
+// Un détecteur dont la tête de liste est un faux positif cesse d'être lu (leçon L4).
+export const MARQUEURS_MINIMUM_SOLUTION = 2;
+
+export function findSolutionsNonConsignees({ lignesSuivi = null, registre = null, root = ROOT, readFileImpl = lireFichierPartage, maximum = 8 } = {}) {
+  let texteRegistre = registre;
+  if (texteRegistre == null) {
+    try { texteRegistre = readFileImpl(join(root, "docs/referentiel/solutions.md"), "utf8"); }
+    catch { return { mesurable: false, pourquoi: "le registre des solutions est introuvable : sans lui on ne peut pas dire ce qui y manque, et proposer des candidats sur un registre absent reviendrait à proposer TOUT le suivi" }; }
+  }
+  if (!lignesSuivi) return { mesurable: false, pourquoi: "les lignes de suivi n'ont pas été fournies : l'appelant les lit chez check-tasks-details, jamais ce fichier (anti-doublon §7ter)" };
+  if (!lignesSuivi.length) return { mesurable: false, pourquoi: "aucune ligne de suivi lue — « rien à consigner » et « rien à lire » s'écriraient tous les deux zéro (L5)" };
+
+  // Les mots déjà couverts par le registre, pour ne pas reproposer ce qui y est.
+  const motsDuRegistre = new Set(String(texteRegistre).toLowerCase().match(/[a-zà-ÿ]{6,}/g) ?? []);
+  const candidats = [];
+  for (const l of lignesSuivi) {
+    const detail = String(l.detail ?? l.description ?? "");
+    // Un candidat qu'on ne peut pas retrouver ne sert à rien : une ligne sans numéro lisible sort.
+    if (!Number.isFinite(Number(l.numero))) continue;
+    if (detail.length < TAILLE_MINIMALE_SOLUTION) continue;
+    if (MARQUEURS_DE_SOLUTION.filter((m) => m.test(detail)).length < MARQUEURS_MINIMUM_SOLUTION) continue;
+    const mots = new Set(detail.toLowerCase().match(/[a-zà-ÿ]{6,}/g) ?? []);
+    if (!mots.size) continue;
+    let communs = 0;
+    for (const m of mots) if (motsDuRegistre.has(m)) communs += 1;
+    const recouvrement = communs / mots.size;
+    // Un recouvrement élevé veut dire « le registre parle déjà de ça » — borne HAUTE, jamais une
+    // preuve que la solution y figure : deux textes du même projet partagent du vocabulaire.
+    if (recouvrement >= 0.6) continue;
+    candidats.push({ numero: l.numero, sujet: String(l.sujet ?? "").slice(0, 80), recouvrement: Math.round(recouvrement * 100) });
+  }
+  candidats.sort((a, b) => a.recouvrement - b.recouvrement);
+  return {
+    mesurable: true, lues: lignesSuivi.length, candidats: candidats.slice(0, maximum), total: candidats.length,
+    horsPortee: "« ressembler à une solution » se lit sur des marqueurs de TEXTE : une solution rédigée autrement échappe, et une ligne qui emploie ces mots sans rien résoudre sort à tort. Ce sont des QUESTIONS, jamais un verdict — et personne d'autre que l'agent ne peut généraliser un cas particulier.",
+  };
+}
 
 // LA PIÈCE LA PLUS FACILE À FALSIFIER, et donc celle qu'on vérifie autrement : un fichier PRÉSENT
 // n'est pas un fichier qui PARLE DU BON SUJET. Le plan de l'Agence a été « présent » pendant des
@@ -3303,6 +3402,23 @@ export function formatKitAgenceLines(a) {
   }
   l.push("");
   l.push(`  HORS PORTÉE : ${a.horsPortee}`);
+  return l;
+}
+
+export function formatSolutionsNonConsigneesLines(r) {
+  if (!r?.mesurable) return ["=== SOLUTIONS NON CONSIGNÉES : PAS MESURÉ ===", `  ${r?.pourquoi}`];
+  if (!r.total) return [`=== LES SOLUTIONS À CONSIGNER — aucune sur ${r.lues} clôture(s) lue(s) ===`, "",
+    "  Rien ne ressemble à une solution concrète absente du registre. C'est une QUESTION sans candidat,",
+    "  jamais la preuve que le registre est complet : la sonde ne reconnaît que des marqueurs de texte."];
+  const l = [`=== LES SOLUTIONS À CONSIGNER — ${r.total} candidat(s) sur ${r.lues} clôture(s) lue(s) ===`, "",
+    "  Des clôtures qui racontent une CAUSE et un REMÈDE, et dont le vocabulaire ne se retrouve pas",
+    "  dans docs/referentiel/solutions.md. Ce sont des PROPOSITIONS : généraliser un cas particulier",
+    "  est un jugement, et une entrée écrite par une machine serait un cas particulier déguisé en",
+    "  principe — exactement ce que ce registre existe pour éviter.", ""];
+  for (const c of r.candidats) l.push(`  · #${c.numero} — ${c.sujet} (${c.recouvrement} % de vocabulaire déjà couvert)`);
+  if (r.total > r.candidats.length) l.push(`  … et ${r.total - r.candidats.length} autre(s), les moins « neuves » d'abord écartées de l'affichage`);
+  l.push("");
+  l.push(`  HORS PORTÉE : ${r.horsPortee}`);
   return l;
 }
 

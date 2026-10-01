@@ -1,4 +1,4 @@
-=== LE KIT DE L'AGENCE ELLE-MÊME — 100 % (6/6) ===
+=== LE KIT DE L'AGENCE ELLE-MÊME — 100 % (7/7) ===
 
   Quatre-vingts kits d'outils complets ne font pas une Agence exportable : le destinataire
   recevrait autant de plans de pièces détachées, et aucun plan de la machine.
@@ -15,8 +15,29 @@
       docs/referentiel/standards.md — à quoi reconnaît-on qu'un outil est à niveau ?
   ✔️  présente    ce que le projet a appris en se trompant
       docs/referentiel/lecons.md — quelles erreurs n'ai-je pas besoin de refaire ?
+  ✔️  présente    comment on a résolu, pas seulement ce qu'il ne faut pas faire
+      docs/referentiel/solutions.md — j'ai CE problème précis — qu'est-ce qui a déjà marché ?
 
   HORS PORTÉE : cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.
+
+=== LES SOLUTIONS À CONSIGNER — 30 candidat(s) sur 1296 clôture(s) lue(s) ===
+
+  Des clôtures qui racontent une CAUSE et un REMÈDE, et dont le vocabulaire ne se retrouve pas
+  dans docs/referentiel/solutions.md. Ce sont des PROPOSITIONS : généraliser un cas particulier
+  est un jugement, et une entrée écrite par une machine serait un cas particulier déguisé en
+  principe — exactement ce que ce registre existe pour éviter.
+
+  · #362 — Outillage de travail / Gardiens sacrés (20 % de vocabulaire déjà couvert)
+  · #1004 — Agence / **le détecteur de documents jumeaux accusait 25 paires à tort — et la c (22 % de vocabulaire déjà couvert)
+  · #991 — Produit / **le référentiel affiché en jeu (panneau Admin) retiré du produit, arc (25 % de vocabulaire déjà couvert)
+  · #558 — Cérémonie / mesure qui oscille (25 % de vocabulaire déjà couvert)
+  · #473 — Process / Ronde (26 % de vocabulaire déjà couvert)
+  · #540 — Organisation des tâches / process (26 % de vocabulaire déjà couvert)
+  · #139 — Correctif de code / Charte (27 % de vocabulaire déjà couvert)
+  · #535 — Process XP-IA / compteur (27 % de vocabulaire déjà couvert)
+  … et 22 autre(s), les moins « neuves » d'abord écartées de l'affichage
+
+  HORS PORTÉE : « ressembler à une solution » se lit sur des marqueurs de TEXTE : une solution rédigée autrement échappe, et une ligne qui emploie ces mots sans rien résoudre sort à tort. Ce sont des QUESTIONS, jamais un verdict — et personne d'autre que l'agent ne peut généraliser un cas particulier.
 
 === LES KITS D'EXPORT — 85/85 kit(s) complet(s), 10 dispensé(s) avec raison ===
 

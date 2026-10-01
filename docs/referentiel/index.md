@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-01. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**118 fichier(s).**
+**120 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -69,6 +69,7 @@
 | [manuel-2026-09-21T02-30.txt](kpi-rapports/manuel-2026-09-21T02-30.txt) | kpi-rapports |
 | [manuel-2026-09-21T18-52.txt](kpi-rapports/manuel-2026-09-21T18-52.txt) | kpi-rapports |
 | [manuel-2026-09-22-ronde.txt](kpi-rapports/manuel-2026-09-22-ronde.txt) | kpi-rapports |
+| [manuel-2026-10-01-nuit.txt](kpi-rapports/manuel-2026-10-01-nuit.txt) | kpi-rapports |
 | [le-classificateur.md](le-classificateur.md) | — |
 | [le-coordinateur.md](le-coordinateur.md) | — |
 | [le-regisseur.md](le-regisseur.md) | — |
@@ -110,6 +111,7 @@
 | [smart-breaker.md](smart-breaker.md) | — |
 | [smart-conso-api.md](smart-conso-api.md) | — |
 | [smart-conso-token.md](smart-conso-token.md) | — |
+| [solutions.md](solutions.md) | — |
 | [standards.md](standards.md) | — |
 | [summarize-simulation-log.md](summarize-simulation-log.md) | — |
 | [tableau-de-bord.md](tableau-de-bord.md) | — |
