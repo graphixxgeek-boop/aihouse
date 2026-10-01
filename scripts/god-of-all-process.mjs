@@ -485,6 +485,27 @@ export const PROCESSES = [
       // ce n'est pas un oubli de l'utilisateur — c'est une question que l'agent n'a jamais posée.
       { cle: "gros-prompt-dabord", libelle: "PREMIÈRE question posée à l'utilisateur, avant toute organisation : « avez-vous un gros prompt ? » — si oui, le process GROS PROMPT tourne D'ABORD et le plan de nuit se construit autour de lui", preuve: { dossier: "docs/rapports-gros-prompt/", motif: /\.(txt|md|html)$/ } },
       { cle: "identite", libelle: "déposer l'identité de session (version de Claude)", preuve: { fichier: SESSION_FILE } },
+      // L'OUTIL DU MODE NOCTURNE N'ÉTAIT BRANCHÉ SUR RIEN (2026-10-01, tâche #1381).
+      //
+      // `the-ghost` a été commandé par l'utilisateur pour ce mode précis — « créé un petit agent
+      // script "the-ghost" qui gere le mode autonome [...] quand je vais dormir ou quand je te
+      // laisse travailler seul » (2026-09-21). Il tient le rituel d'entrée et de sortie, et le
+      // rythme de la session en cours : depuis quand elle dure, combien de tâches enchaînées,
+      // depuis quand aucune Ronde n'a tourné.
+      //
+      // **IL N'APPARAISSAIT NULLE PART DANS CE PROCESS.** Zéro occurrence dans le document, zéro
+      // étape ici. Résultat mesuré le 2026-10-01, en pleine nuit autonome : `the-ghost pacing`
+      // répondait « aucune session de mode nocturne active » après six heures de travail.
+      //
+      // C'EST EXACTEMENT LE DÉFAUT QUI A FAIT NAÎTRE L'ARTICLE 31 : « un passage par tool-brain a
+      // révélé que l'outil qui les produit existait depuis la veille et n'était branché nulle
+      // part. Un outil qu'on n'utilise pas ne signale jamais qu'il est mal branché. » Le même
+      // motif, sur l'outil même du mode où il se produit.
+      //
+      // LA PREUVE EST UN FICHIER, jamais une déclaration : `.the-ghost-session.json` n'existe que
+      // si le rituel d'entrée a eu lieu. Une étape qu'on ne peut que s'auto-attribuer est une
+      // étape qu'on saute sans le savoir.
+      { cle: "ghost-start", libelle: "ouvrir la session nocturne (`node scripts/the-ghost.mjs start`) — c'est l'outil commandé pour ce mode, et sans son rituel d'entrée le rythme de la nuit n'est mesuré par personne", preuve: { fichier: ".the-ghost-session.json" } },
       // LE PLAN DE DÉPART SE FIGE AVANT DE COMMENCER (2026-09-26, sa demande du même soir :
       // « verifie aussi que tu vas utiliser la confrontation des listes des taches avant/apres
       // comme prevu par les process »). Le mécanisme existait — `check-tasks-details bilan` sait
@@ -540,6 +561,10 @@ export const PROCESSES = [
       // une soustraction, jamais par un récit. Le récit dira toujours que la nuit a été bonne.
       { cle: "confrontation", libelle: "confronter la liste figée au départ à l'état réel du matin (`node scripts/check-tasks-details.mjs bilan`) — ce qui a été fermé, ce qui s'est ouvert, ce qui n'a pas bougé", preuve: { dossier: "docs/check-tasks-details/", motif: /^bilan-taches-.*\.txt$/ } },
       { cle: "verification-finale", libelle: "dernière Ronde + relecture de son propre travail de la nuit — AUCUNE action au-delà de ce seuil", preuve: { fichier: ".circle-tasks-run-summary-latest.txt" } },
+      // LE RITUEL DE SORTIE, pendant du précédent : il clôt la session et rend son bilan de
+      // rythme. Sans lui, `.the-ghost-session.json` reste ouvert et la nuit suivante repart sur
+      // une session fantôme — une donnée qui survit à ce qu'elle décrit est pire qu'une absence.
+      { cle: "ghost-end", libelle: "clore la session nocturne (`node scripts/the-ghost.mjs end`) — sinon la session reste ouverte et la nuit suivante repart sur un état fantôme" },
       { cle: "rapport", libelle: "livrer le rapport de nuit en fichier texte, normé et archivé", preuve: { dossier: "docs/rapports-de-nuit/", motif: /\.txt$/ } },
     ],
   },

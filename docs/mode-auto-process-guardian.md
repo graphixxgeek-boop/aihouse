@@ -84,6 +84,48 @@ suivie d'une tâche serait perdue (Article 28). Le nombre qui monte n'est donc p
 la chaîne qui tient. La confrontation sépare ces deux mouvements au lieu de les confondre dans un
 solde net.
 
+## LE RITUEL D'ENTRÉE ET DE SORTIE — `the-ghost` *(inscrit le 2026-10-01, tâche #1381)*
+
+### L'outil du mode nocturne n'était branché sur rien, et c'est ce document qui l'ignorait
+
+`the-ghost` a été commandé par l'utilisateur pour ce mode précis — *« créé un petit agent script
+"the-ghost" qui gere le mode autonome […] quand je vais dormir ou quand je te laisse travailler
+seul »* (2026-09-21). Il tient trois choses qu'aucun autre outil ne calcule : **depuis quand la
+session dure**, **combien de tâches ont été enchaînées**, et **depuis quand aucune Ronde n'a
+tourné**.
+
+**Il n'apparaissait nulle part ici.** Zéro occurrence dans ce document, zéro étape chez son
+contrôleur. Constaté en pleine nuit autonome le 2026-10-01 : `the-ghost pacing` répondait
+« aucune session de mode nocturne active » après six heures de travail.
+
+**C'est exactement le défaut qui a fait naître l'Article 31** : *« un passage par tool-brain a
+révélé que l'outil qui les produit existait depuis la veille et n'était branché nulle part. Un
+outil qu'on n'utilise pas ne signale jamais qu'il est mal branché. »* Le même motif, sur l'outil
+même du mode où il se produit.
+
+### Les deux gestes
+
+| Quand | Commande | Ce que ça change |
+|---|---|---|
+| **En entrant** dans le mode, avant de commencer | `node scripts/the-ghost.mjs start` | ouvre la session ; sans elle, le rythme de la nuit n'est mesuré par personne |
+| **En sortant**, avant le rapport de nuit | `node scripts/the-ghost.mjs end` | clôt la session et rend son bilan |
+
+Et pendant la nuit, `node scripts/the-ghost.mjs pacing` répond « où en est cette session ? ».
+
+### Pourquoi la preuve est un FICHIER
+
+`.the-ghost-session.json` n'existe que si le rituel d'entrée a eu lieu. Le contrôleur lit ce
+fichier plutôt que de demander confirmation : **une étape qu'on ne peut que s'auto-attribuer est
+une étape qu'on saute sans le savoir**. La sortie, elle, n'a pas de preuve propre — c'est déclaré
+ici plutôt que tu (Article 27).
+
+### Ce qui n'a PAS été fait le jour où la règle est née, et pourquoi
+
+La nuit du 2026-10-01 reste marquée **✗** sur cette étape. Démarrer la session à 6 h du matin pour
+verdir le contrôle aurait enregistré une heure de début fausse de six heures — et toute durée
+calculée dessus aurait été fausse avec elle (Article 32). **Un ✗ exact vaut mieux qu'un ✔ faux**,
+et il prouve au passage que la nouvelle étape mord.
+
 ## Ce que l'utilisateur donne au départ
 
 Un plan numéroté, dans son ordre à lui. Le plan **se suit dans cet ordre**, sans en sauter une
