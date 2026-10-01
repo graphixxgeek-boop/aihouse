@@ -1,0 +1,122 @@
+PLAN DE DÉPART — nuit du 2026-10-01
+Figé à 00h29 UTC (heure LUE, source système), AVANT toute action.
+Sans ce point de départ, la confrontation du matin est impossible : on ne saurait pas
+distinguer ce qui a été fermé cette nuit de ce qui l était déjà.
+
+TÂCHES OUVERTES AU DÉPART : 115
+
+# 390  Outillage / badge
+# 492  Ronde / plan d'action R3
+# 603  Process / conduite
+# 612  Outillage / CIRCLE-TASKS
+# 624  Charte / CLAUDE.md (chantier #208)
+# 636  Organisation / vocabulaire (chantier #208)
+# 677  Coordination / Deux packs du catalogue formulés en mêmes mots — tool-brain remonte les deux pour une seule que
+# 679  XP / Leçon L23 sans porteur — forcer la lecture du DOCUMENT de process avant d'agir, jamais sa déclaration dan
+# 681  XP / Une erreur répétée la même nuit, et ce qu'elle dit d'une décision déjà prise
+# 696  Organisation / Harmoniser le modèle de gouvernance de l'utilisateur avec l'existant — 20 questions avant toute
+# 699  Suivi / chaîne mesure → suite
+# 700  Sauvegarde / coffre et notice
+# 703  Conduite / mots d'ordre permanents
+# 704  Conso / tokens
+# 705  Outillage / découpe
+# 708  Suivi / fiche de tâche
+# 710  Organisation / document total
+# 717  Profil utilisateur / les deux sens
+# 721  Ronde / suites
+# 733  Nommage / les séries d'hommages
+# 740  Nommage / booster l'agent des noms : TOUS les impacts d'un renommage en série
+# 745  Agence / fusionner des agents pour réduire l'effectif — retrouver le sujet mis de côté
+# 747  Nommage / la nomenclature : un code de classe dans le nom
+# 767  Charte / quelles autres règles à fort levier manquent ?
+# 768  Nommage / l'outil de renommage PUISSANT, avec recherches web
+# 775  Nommage / les deux collisions réelles à trancher avec lui (`PALIERS`, `recordOutcome`)
+# 790  Charte / les treize Articles muets : déclarer l'impossibilité, ou nommer le porteur qui existe déjà
+# 793  Agence / check-house pèse un quart de tout l'outillage — 12 052 lignes
+# 814  Données / les registres restants : brancher un lecteur, ou déclarer l'absence assumée ?
+# 819  Filet / trois options chiffrées : ne rien faire, regarder les 3 plus lents, ou un mode rapide
+# 823  Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et le garde-fou est tombé deux fois dans ce
+# 830  Idées / « un outil qui vérifie la logique et les trous PARTOUT » — la question posée il y a quatre jours, rest
+# 842  Ronde / « rentabiliser les trouvailles » : l'outil qui mesure ça existe, et son verdict est net — le registre 
+# 845  File / les 5 plus anciennes tâches encore ouvertes, présentées pour arbitrage
+# 861  Refonte graphique / son idée SQUID GAME vivait au suivi et nulle part dans le document de son chantier
+# 902  Agence / EXPORT ET COMMERCIALISATION — le chantier existait sans tâche, donc sans existence dans la file
+# 929  Nommage / un seul script, DEUX identités : `check-spirit` et `check-spirit-mjs` — et c'est un renommage, donc 
+# 988  Nommage / le registre des baptêmes : trois décisions prises, application REPORTÉE à sa demande
+# 993  Agence / les constats de CLONE-HUNTER : trois factorisations, chacune prouvée équivalente
+# 994  Agence / élargir le périmètre d'AXA-CHECK de 38 à 68 scripts, AVEC un troisième état « non exercé »
+# 997  Agence / les 18 constats CLONE-HUNTER restants, à descendre jusqu'à zéro
+#1005  Agence / deux fonctions `chargerLesDocuments()` dans deux fichiers, qui ne rendent pas la même chose
+#1019  Process / recalibrer le seuil en CARACTÈRES du process gros prompt, une fois trois vraies saisines archivées
+#1020  Process / présenter les 75 noms en service que l'utilisateur n'a jamais validés
+#1053  Données / compacter les récits des 254 tâches fermées récentes
+#1067  Charte / Articles 18 et 26 se recouvrent à 19 % sans que rien ne dise lequel prime
+#1079  Suivi / un commit de SUITE compte-t-il comme « sans mise à jour du suivi » ? — et le commit accusé est le mien
+#1092  Conso / personne n'enregistre le trafic API réel — le registre que Smart Conso lit ne voit que des sondages
+#1100  Projet / ACCUEILLIR L'ENORME PROMPT — demande d'évolution profonde, événement capital dans la conception de l'
+#1101  Projet / s'assurer EN AMONT que tout est prêt à accueillir une évolution profonde du code et du projet
+#1102  Conduite / enregistrer le réglage de nuit qui a fonctionné : AUCUNE interruption sur une très longue période
+#1104  Agence / le trou de couverture documentaire : 82 % des documents n'appartenaient au périmètre de personne
+#1105  Agence / le RETENU oublié de ma propre fiche de recherche — et le sixième faux chiffre
+#1110  Projet / l'arborescence du GRAND PROJET, posée AVANT l'arrivée du prompt massif
+#1114  Projet / rien ne relie une tâche à un chantier — et le plan du grand changement va en rendre beaucoup caduques
+#1117  Projet / le dixième axe de classement : la COUCHE architecturale, dérivée comme les neuf autres
+#1118  Projet / le BUILD MAP — le document que le dernier audit annonce et ne livre pas
+#1119  Projet / ramener le coût d'entrée d'un outil de DIX registres à UN
+#1120  Projet / le Transaction Engine — le seul vrai trou de l'architecture
+#1121  Projet / le positionnement commercial : « runtime d'agences » ou « agence pour codebases existantes » ?
+#1125  Projet / la COUVERTURE de sa demande — la preuve que rien n'est oublié, mesurée et non promise
+#1126  Projet / le BUDGET D'OBLIGATIONS — aucune obligation nouvelle sans une obligation retirée
+#1127  Projet / le DOCUMENT MAÎTRE de stratégie globale, et qui le porte
+#1128  Projet / l'axe STRATÉGIE sur les tâches et sur la classification
+#1129  Projet / les DEUX règles de travail qu'il a posées et que rien ne porte
+#1130  Projet / la DYNAMIQUE D'ESCALADE tâches ↔ stratégie ↔ philosophie, et sa FIABILISATION
+#1131  Projet / l'outil qui RÉAGIT quand quelque chose est fait à l'envers de la stratégie
+#1132  Projet / les TROIS BORNES qui diront « l'agence est terminée »
+#1133  Projet / la PASSE GÉNÉRALE : objectifs, KPI et RH alignés sur les stratégies
+#1134  Projet / adapter la CHARTE, les RÈGLES DE TRAVAIL, le RÉFÉRENTIEL et les PROCESS
+#1135  Projet / réorganiser les fichiers de STRATÉGIES et de NOTES
+#1136  Projet / le PACK DÉCOUVERTE, dérivé — et le SYSTÈME qui le livre
+#1137  Projet / la STRATÉGIE DU JEU — la troisième partie de sa commande, jamais écrite
+#1138  Projet / les DEUX stratégies globales séparées — avec les deux projets, et comme s'il n'y en avait qu'un
+#1139  Projet / le CHANTIER FINALISATION — sauvegarder la version complète, migrer vers une version light
+#1140  Projet / la version de l'Agence AVEC ou SANS les parties analyse-simulation
+#1141  Projet / l'ORDRE remis d'aplomb : calibrage → stratégie → plan → tâches — et le garde-fou qui l'avait inversé
+#1143  Projet / la CHAÎNE DE DÉCISION du chantier : but ultime → philo et politique → les trois stratégies
+#1144  Projet / le BUT ULTIME porté par Philo et Politique : défini ? bien défini ? conforme à notre direction ?
+#1149  Projet / LE CHEMIN : sept étapes ordonnées par dépendance, à la place de sept fils parallèles
+#1150  Suivi / 109 tâches ouvertes sur 97 thèmes : une file aussi fragmentée ne se priorise pas
+#1151  Projet / les 50 questions de calibrage, groupées par étage de l'escalade
+#1154  Agence / le CONTRAT DE RÉCEPTACLE : comment l'acheteur ajoute ses propres outils sans casser les nôtres
+#1156  Charte / deux Articles proposés — L'ESCALADE et L'ALIGNEMENT — écrits en entier, et NON appliqués
+#1163  Projet / les décisions qui l'attendent, présentées par lots — et une dont la réponse a changé
+#1165  Process / un réveil qui ment, pendant six heures — et la leçon qui devait l'empêcher existait déjà
+#1169  Documentation / cinq frontières de documents jumeaux en une nuit : mes fiches sont trop longues
+#1170  Suivi / le garde-fou des statuts ne lit pas les archives — et il dit vrai sur un périmètre plus étroit qu'on n
+#1175  Outillage / deux motifs de numéro de tâche dans le MÊME fichier, qui ne s'accordent ni en bas ni en haut de l'
+#1192  Données / faut-il SUIVRE dans le temps la couverture des outils, maintenant qu'elle se mesure ?
+#1193  Outillage / le détecteur de documents jumeaux rapproche ce que J'ÉCRIS, pas ce que les documents DISENT — et c
+#1197  Process / l'estimation de la Ronde s'applique-t-elle à une Ronde AUTONOME, que personne n'attend ?
+#1252  Jeu / le quatrième axe qu'il a nommé n'est mesuré par personne : construire la sonde, ou déclarer qu'on ne mes
+#1257  Données / le savoir est LU mais pas RÉCUPÉRABLE : l'index par situation couvre 6 documents sur 16
+#1309  Agence / refaire la plaquette du point de vue d'un acheteur, pas du nôtre — OUVERTE, non urgente sur sa décisi
+#1318  Organisation / l'organigramme de l'Agence est tenu à la main — soit on le génère, soit on écrit pourquoi il re
+#1319  Suivi / veiller en permanence à ce que les fils RENVOIENT aux originaux sans jamais les remplacer
+#1320  Exportabilité / faire dire à un outil combien de documents n'ont pas d'étiquette « reste chez nous / part avec
+#1321  Jeu / vérifier que le tri création/produit fini ne change rien à ce que disent Lia et Noé, ni à ce que voit un
+#1323  Exportabilité / rendre réglables les chemins écrits en dur, sans toucher au comportement
+#1324  Agence / compter les 🔴 FICTION de la plaquette et en faire des tâches réelles
+#1325  Agence / écrire ce qu'un acheteur reçoit RÉELLEMENT le premier jour : une Agence vide
+#1327  check-spirit / relancer check-spirit avant ET après tout ajustement de personnalité
+#1328  Projet / préparer ce qu'on montrerait à quelqu'un d'extérieur : aujourd'hui ça demanderait une demi-journée de
+#1329  Suivi / rien ne capte ce qui change notre compréhension sans appeler de décision
+#1336  Projet / préparer l'alimentation de la cascade : trois stratégies globales, puis faire se rejoindre les deux b
+#1341  Exportabilité / les deux scénarios d'usage par ZIP qu'il propose, confrontés à ce qui est mesuré
+#1342  Exportabilité / nos SOLUTIONS doivent partir avec l'Agence, pas seulement nos outils
+#1343  Organisation / il ne sait pas comment l'Agence fonctionne par module, et ça l'empêche de juger ce qui est util
+#1344  Projet / sa proposition centrale : tout reprendre à zéro, au propre, module par module — à MESURER avant d'en 
+#1345  Suivi / l'état d'avancement complet : le plan, les grandes étapes, où on en est, ce qui vient
+#1346  Agence / quel est le standard de livraison d'un code, pour que l'Agence le respecte à la livraison finale
+#1347  Agence / d'autres produits injectables en ZIP ? un nouveau marché ? faut-il s'imposer vite ?
+#1348  Données / le tableau de bord KPI n'a pas produit de rapport archivé depuis le 2026-09-22 — et il avait posé la
+#1352  Outillage / CASSANDRA signale deux trous de couverture en dégradation : check-spirit à 0 %, doc-report jamais 
