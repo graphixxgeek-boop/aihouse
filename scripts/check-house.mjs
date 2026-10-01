@@ -23604,6 +23604,63 @@ async function testLeNumeroDeLaTacheDansLePlan() {
 }
 await testLeNumeroDeLaTacheDansLePlan();
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LES DEUX CONTRÔLES DES FILS, ENFIN ÉPROUVÉS (2026-10-01, tâche #1388)
+//
+// TROUVÉ PAR AXA-CHECK en vérifiant à froid le travail de la nuit : `fils-de-discussion` est
+// couvert à **11 %**, le plus faible du parc une fois écartés les deux outils déclarés
+// inexerçables avec leur raison (check-spirit coûte de vrais appels, the-screener lance un vrai
+// navigateur). Ses DEUX CONTRÔLES — ceux qui rendent un jugement — n'étaient éprouvés par rien.
+//
+// POURQUOI CEUX-LÀ PLUTÔT QUE LES HUIT : `engagementsSansTache()` existe parce qu'il a posé la
+// question « tu veilles bien à ce que chaque constat suivi d'une proposition ne reste pas qu'une
+// intention ? », et la réponse mesurée était NON — 0 engagement sur 20 portait une tâche. Un
+// contrôle né d'une de ses questions et vérifié par rien est la pire combinaison du paysage.
+// Les six autres fonctions lisent des fichiers ou formatent ; elles ne jugent pas.
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+async function testLesDeuxControlesDesFils() {
+  const F = await import('../scripts/fils-de-discussion.mjs');
+
+  // LE FORMAT RÉEL EST ÉCRIT ICI, parce que je l'ai supposé et que mes six premiers fixtures
+  // rendaient 0 : un fil marque ce qui lui revient par « **Qn.n — À MOI** » et ce qui revient à
+  // l'utilisateur par « **Qn.n — À TOI** », les options en `(a)`, `(b)`. Un test dont le fixture
+  // ne déclenche pas le motif ne teste rien tout en ayant l'air de tester.
+  // ── IL DOIT MORDRE : un engagement pris sans tâche citée.
+  const nu = F.engagementsSansTache('**Q1.1 — À MOI** : je construirai le détecteur demain.\n');
+  assert.equal(nu.pris, 1, 'the control must see the commitment at all — a zero here would read as "nothing promised"');
+  assert.equal(nu.nus.length, 1, 'a commitment citing no task is exactly what this control exists for: the answer to his question was 0 out of 20');
+  assert.match(nu.nus[0].pourquoi, /aucune tâche/, 'and it says WHY, so the fix does not need a second reading');
+
+  // ── IL DOIT LAISSER PASSER : un engagement qui cite une tâche RÉELLE.
+  const tenu = F.engagementsSansTache('**Q1.2 — À MOI** : fait, voir la tâche #1234.\n', new Set(['1234']));
+  assert.equal(tenu.nus.length, 0, 'a commitment pointing at a task that really exists is kept — a guard that accuses everyone accuses nobody (lesson L4)');
+
+  // ── LE CAS LE PLUS VICIEUX, ET IL EST COUVERT : une tâche CITÉE mais INEXISTANTE.
+  // Une référence morte ressemble à un lien, ce qui est pire qu'une absence : elle rassure.
+  const mort = F.engagementsSansTache('**Q1.3 — À MOI** : fait, voir la tâche #9999.\n', new Set(['1234']));
+  assert.equal(mort.nus.length, 1, 'a commitment citing a task that does not exist must be caught — it reassures where an absence would alert');
+  assert.match(mort.nus[0].pourquoi, /introuvable/, 'and the reason must say so, never just "no task"');
+
+  // ── SANS LE REGISTRE DES TÂCHES, ON NE PEUT PAS VÉRIFIER L'EXISTENCE — et on n'invente pas.
+  const sansRegistre = F.engagementsSansTache('**Q1.4 — À MOI** : fait, voir la tâche #9999.\n', null);
+  assert.equal(sansRegistre.nus.length, 0, 'with no task registry to check against, a cited number is taken at face value rather than accused on a base nobody read (lessons L5 and L11)');
+
+  // ── LA QUESTION SANS OPTIONS : elle lui demande de trancher sans rien à trancher.
+  const floue = F.questionsRepondables('**Q2.1 — À TOI** : qu\'en penses-tu ?\n');
+  assert.equal(floue.posees, 1, 'the question must be seen');
+  assert.equal(floue.nues.length, 1, 'a question offering fewer than two options is not answerable: it asks him to arbitrate with nothing to arbitrate between');
+
+  const nette = F.questionsRepondables('**Q2.2 — À TOI** : laquelle ?\n- (a) celle-ci\n- (b) celle-là\n');
+  assert.equal(nette.nues.length, 0, 'while two real options make it answerable — the rule asks for two to four, and the control enforces the floor');
+
+  // ── LE PLAN D'ACTION PORTE SES NUMÉROS DÉCLARÉS (créneau ouvert par #1371).
+  const plan = F.planDactionDesFils({ mesurable: true, controles: [{ cle: 'engagements-en-taches', ok: false, quoi: 'x' }] });
+  assert.ok(plan && typeof plan === 'object', 'the plan must be built, never a bare array');
+
+  console.log("Passed: les deux contrôles des fils, enfin éprouvés (2026-10-01, tâche #1388). TROUVÉ PAR AXA-CHECK en vérifiant à froid le travail de la nuit : fils-de-discussion est couvert à 11 %, le plus faible du parc une fois écartés les deux outils déclarés inexerçables avec leur raison. Ses DEUX CONTRÔLES — les seules fonctions qui rendent un JUGEMENT, les six autres lisant des fichiers ou formatant — n'étaient éprouvés par rien. Celui des engagements existe parce qu'il a demandé « tu veilles bien à ce que chaque constat suivi d'une proposition ne reste pas qu'une intention ? », et la réponse mesurée était NON : 0 engagement sur 20 portait une tâche. Un contrôle né d'une de ses questions et vérifié par rien est la pire combinaison du paysage. Les cinq cas écrits ici sont ceux qu'il prétend attraper, pris dans les deux sens : l'engagement nu, l'engagement tenu qu'on doit LAISSER passer, la tâche citée mais INEXISTANTE (une référence morte rassure, donc elle est pire qu'une absence), l'absence de registre où l'on n'invente pas de verdict, et la question posée sans options — qui lui demande de trancher sans rien à trancher.");
+}
+await testLesDeuxControlesDesFils();
+
 // ────────────────────────────────────────────────────────────────────────────
 // LE CHIFFRAGE DE LA REFONTE (2026-10-01, tâche #1356)
 // ────────────────────────────────────────────────────────────────────────────
