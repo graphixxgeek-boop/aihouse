@@ -1543,6 +1543,45 @@ Ce qui existe en revanche, c'est la trace du contre-exemple — `node scripts/sa
 tourne et rend une mesure là où un document du dépôt dit encore qu'elle est hors d'atteinte. Un
 contre-exemple qui tourne vaut mieux qu'une consigne de vigilance (leçon L2).
 
+## L44 — Les mêmes mots enregistrent une décision EN ATTENTE et une décision DÉJÀ RENDUE : seul un champ déclaré les sépare
+
+*Payée le 2026-10-01 (tâches #1373 et #1375), en élargissant TROIS fois de suite le même détecteur, chaque fois à partir des cas que je venais de heurter.*
+
+**Le fait, et c'est la courbe qui instruit, pas le chiffre final.** Je cherchais les lignes de suivi
+dont le statut dit « ouverte » pendant que leur texte dit « n'y touche pas ». Premier motif testé :
+**1 cas sur 61** — j'ai écarté le contrôle. Une heure plus tard, après en avoir heurté trois en
+cherchant du travail libre, je remesure sur la famille de l'INTERDICTION : **6**. Une heure encore,
+en instruisant deux tâches, j'en trouve deux de plus que les six marqueurs ne voyaient pas :
+**10**. Trois mesures, trois chiffres, et chacun honnête au moment où il a été pris.
+
+**Pourquoi le chiffre bougeait, et ce n'est pas un défaut de rigueur.** À chaque tour, mes marqueurs
+venaient des cas que je venais de rencontrer — c'est la définition d'un échantillon biaisé. Un
+quatrième élargissement trouverait encore quelque chose. Tant qu'on cherche dans la prose, la
+mesure ne converge pas : elle suit les exemples qu'on a sous la main.
+
+**LE VRAI MUR, ET IL EST STRUCTUREL.** Deux faux positifs l'ont montré, et le second est décisif.
+« à deux » attrapait « répond à deux questions » — un accident de vocabulaire, corrigeable.
+« ARBITRAGE DE L'UTILISATEUR », lui, semblait le marqueur le plus sûr de tous : il attrapait une
+ligne dont le texte dit « ARBITRAGE DE L'UTILISATEUR : "Oui, cherche les fusions possibles" »,
+c'est-à-dire **une autorisation de travailler**. Les mêmes mots enregistrent la décision qu'on
+attend et celle qu'on a reçue. **La différence n'est pas dans le vocabulaire, elle est dans le
+temps** — et aucun motif de texte ne lit le temps.
+
+**Le geste.** Quand une mesure par motifs de texte grandit à chaque élargissement, arrêter
+d'élargir : ce n'est pas le motif qui manque, c'est le PORTEUR. Chercher le champ déclaré qui
+devrait porter l'information — ici le suivi en a déjà deux, la criticité `A-TRANCHER` et
+`pour qui` — et traiter les lignes qui ne le remplissent pas comme une dette de DONNÉE, jamais
+comme un trou de détection. Le détecteur de prose garde alors un rôle utile et un seul : **poser la
+question**, jamais classer.
+
+**Terrain** : quand on compte quelque chose en cherchant des formules dans du texte écrit à la main · mots : marqueur, motif, formule, élargir, remesuré, faux positif, prose · fichiers : scripts/*.mjs, docs/suivi/**
+
+**Porté par** : **à moitié par un mécanisme, et la moitié déclarée est la plus importante**. `MARQUEUR_ECARTE_ARBITRAGE`
+(`scripts/check-tasks-details.mjs`) garde le faux positif écrit, avec sa raison, pour qu'il ne
+revienne pas tenter le prochain agent — un test du filet le vérifie. Mais rien ne peut empêcher un
+agent d'élargir une liste de motifs une fois de plus ; c'est pourquoi la limite est écrite dans le
+code juste au-dessus de la liste, à l'endroit exact où la tentation se présente (Article 27).
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

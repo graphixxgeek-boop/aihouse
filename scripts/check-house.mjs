@@ -5913,6 +5913,16 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.equal(ctd.lignesQuiSeContredisent([{ numero: 13, sousSujet: 'x', detail: 'il répond à deux questions qu\'on ne se pose jamais en même temps', statusKey: 'ouverte', statut: 'Ouverte' }]).length, 0, 'the retired "à deux" marker must never come back: it accused a row that said "answers TWO questions"');
   assert.ok(ctd.MARQUEURS_DE_BLOCAGE_EN_PROSE.every((m) => m.cas && m.pourquoi), 'every marker carries the real case that justified it — a marker nobody can trace is a marker nobody can challenge');
 
+  // ── LE SECOND FAUX POSITIF, ET IL PORTE LA LEÇON L44. « ARBITRAGE DE L'UTILISATEUR » semblait
+  // le marqueur le plus sûr de tous : il attrapait #745, dont le texte dit « ARBITRAGE DE
+  // L'UTILISATEUR : "Oui, cherche les fusions possibles" » — une décision DÉJÀ RENDUE, donc une
+  // autorisation de travailler. Les mêmes mots enregistrent l'attente et le règlement : la
+  // différence est dans le TEMPS, et aucun motif de texte ne lit le temps.
+  assert.ok(ctd.MARQUEUR_ECARTE_ARBITRAGE.motif.test("ARBITRAGE DE L'UTILISATEUR, 2026-09-28"), 'the retired marker is kept with its pattern so the trap stays legible');
+  assert.ok(!ctd.MARQUEURS_DE_BLOCAGE_EN_PROSE.some((m) => m.motif.source === ctd.MARQUEUR_ECARTE_ARBITRAGE.motif.source), 'and it must never be in the ACTIVE list — kept as a warning, never as a rule');
+  assert.equal(ctd.lignesQuiSeContredisent([{ numero: 14, sousSujet: 'x', detail: "ARBITRAGE DE L'UTILISATEUR, 2026-09-28 : « Oui, cherche les fusions possibles »", statusKey: 'ouverte', statut: 'Ouverte' }]).length, 0, 'a row recording a decision ALREADY GIVEN must never be read as a row waiting for one — that is the whole point of lesson L44');
+  assert.ok(ctd.MARQUEUR_ECARTE_ARBITRAGE.pourquoi.length > 60, 'the reason for retiring it is written, so the next agent does not re-add it in good faith');
+
   // ── ELLE NE RECLASSE RIEN, et c'est la moitié du dispositif : les champs déclarés décident
   // seuls, la prose ne fait que poser une question. Les fondre promouvrait une devinette de
   // texte au rang de classification.
@@ -5922,7 +5932,7 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
 
   // ── EN DIRECT SUR LE VRAI SUIVI (Article 25).
   const seContreditReel = ctd.lignesQuiSeContredisent(ctd.loadAllTaskRows());
-  assert.ok(seContreditReel.length >= 4, `the real suivi really carries these self-contradicting rows: 6 the day this was built (currently ${seContreditReel.length})`);
+  assert.ok(seContreditReel.length >= 8, `the real suivi really carries these self-contradicting rows: 10 the day this was built, after three widenings of the marker list — 1, then 6, then 10 (currently ${seContreditReel.length})`);
   assert.ok(seContreditReel.length <= 20, 'while staying a short list: beyond a score of rows the markers would be catching ordinary prose, and a guard that accuses widely stops being read');
 
   // ── EN DIRECT SUR LE VRAI SUIVI (Article 25).

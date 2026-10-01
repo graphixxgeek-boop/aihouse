@@ -646,7 +646,35 @@ export const MARQUEURS_DE_BLOCAGE_EN_PROSE = Object.freeze([
   { motif: /\bpas maintenant\b/i, pourquoi: "report explicite demandé par lui", cas: "« prépare-toi […] pas maintenant mais bientôt » (#1336)" },
   { motif: /(trancher|faire|décider|voir)\s+avec\s+lui/i, pourquoi: "travail à faire à deux", cas: "« à trancher avec lui », « à faire avec lui » (#677, #790, #793)" },
   { motif: /nécessite sa présence/i, pourquoi: "sa présence est requise", cas: "« à faire — nécessite sa présence » (#603)" },
+  // TROISIÈME ÉLARGISSEMENT, ET LE DERNIER — la famille « LA DÉCISION LUI APPARTIENT » (2026-10-01).
+  // Trouvée en instruisant #679 et #681, que les six marqueurs ci-dessus laissaient passer alors
+  // que leur texte dit explicitement « il revient à l'utilisateur » et « jamais rouvert de ma
+  // propre initiative ». Tous portent un pronom qui le désigne, comme les six premiers.
+  { motif: /revient à l'utilisateur/i, pourquoi: "la décision lui appartient", cas: "« le choix change le coût, il revient à l'utilisateur » (#679)" },
+  { motif: /c'est sa décision/i, pourquoi: "la décision lui appartient", cas: "« c'est sa décision, jamais une factorisation » (#994, #1252)" },
+  { motif: /de ma propre initiative/i, pourquoi: "rouvrir ne m'appartient pas", cas: "« noté, jamais rouvert de ma propre initiative » (#681)" },
+  { motif: /reste le tien à trancher|le choix est le sien/i, pourquoi: "le choix lui revient", cas: "« mon avis, et il reste le tien à trancher » (#679)" },
 ]);
+
+// LE SECOND FAUX POSITIF, RETIRÉ ET ÉCRIT ICI PARCE QU'IL PORTE LA LEÇON (2026-10-01).
+// « ARBITRAGE DE L'UTILISATEUR » semblait le marqueur le plus sûr de tous. Il attrapait #745, dont
+// le texte dit : « ARBITRAGE DE L'UTILISATEUR, 2026-09-28 : "Oui, cherche les fusions possibles" »
+// — c'est-à-dire une décision DÉJÀ RENDUE, et une autorisation de travailler.
+//
+// CE QUE ÇA APPREND, ET C'EST STRUCTUREL : dans ce suivi, les MÊMES MOTS enregistrent une décision
+// EN ATTENTE et une décision RENDUE. Aucun motif de texte ne peut les séparer, parce que la
+// différence n'est pas dans le vocabulaire — elle est dans le temps. Seul un CHAMP DÉCLARÉ peut
+// porter cette différence, et le suivi en a déjà deux (criticité `A-TRANCHER`, `pour qui`).
+//
+// C'EST POURQUOI CETTE LISTE S'ARRÊTE ICI. Elle a été élargie trois fois (1 cas trouvé, puis 6,
+// puis 8), chaque fois à partir des cas que je venais de heurter — ce qui est la définition d'un
+// échantillon biaisé. Un quatrième élargissement trouverait encore quelque chose, et resterait
+// aussi incapable de distinguer l'attente du règlement. La vraie réparation est en amont : que
+// ces lignes REMPLISSENT le champ prévu. Voir la leçon L44.
+export const MARQUEUR_ECARTE_ARBITRAGE = Object.freeze({
+  motif: /arbitrage de l'utilisateur/i,
+  pourquoi: "écarté : les mêmes mots enregistrent une décision EN ATTENTE et une décision DÉJÀ RENDUE — #745 porte « ARBITRAGE DE L'UTILISATEUR : \"Oui, cherche les fusions possibles\" », qui est une autorisation de travailler",
+});
 
 export function lignesQuiSeContredisent(rows = [], { marqueurs = MARQUEURS_DE_BLOCAGE_EN_PROSE, ...options } = {}) {
   const trouvees = [];
