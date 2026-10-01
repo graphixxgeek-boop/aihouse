@@ -1000,6 +1000,8 @@ function main() {
 // problème (c'est le manuel des procédures, ses procédures lui appartiennent) : le problème était
 // qu'on ne pouvait rien y trouver sans tout lire. Une section devient introuvable bien avant de
 // devenir trop lourde, et rien ne le signalait.
+// NATURE DÉCLARÉE (2026-10-01, tâche #1378) : dérivé d'UN cas réel (§7ter), pas d'une
+// distribution — un seul point ne peut pas dériver, il peut seulement se révéler mal choisi.
 export const SEUIL_SECTION_INTROUVABLE = { lignes: 300, sousTitres: 5 };
 
 export function findUnnavigableSections(markdown, seuils = SEUIL_SECTION_INTROUVABLE) {
@@ -1312,6 +1314,9 @@ export const SEUIL_RAPPORT_MAIGRE = 12;
 //     ≈ 0,75 chiffre par ligne ;
 //   · le rapport accusé à tort ce jour-là : 42 chiffres pour 11 lignes ≈ 3,8 par ligne.
 // Le seuil est posé entre les deux. Un rapport plus dense que ça porte sa donnée.
+// NATURE DÉCLARÉE (2026-10-01, tâche #1378) : dérivé de DEUX points, et le commentaire ci-dessus
+// le dit déjà — « deux points ne font pas une distribution ». Honnête à l'écriture, et donc hors
+// du cas #1377, qui ne concerne que les seuils posés dans un TROU observé.
 export const SEUIL_DENSITE_RAPPORT = 2;
 
 // Séparé de la recherche d'écarts pour pouvoir être testé seul, et pour que la règle se lise.
@@ -1463,6 +1468,8 @@ export function findEcrivainsDeRegistreSansContribution({ root = ROOT, listDirIm
 //   · MÊME ÉCHEC ARCHIVÉ DEUX FOIS — deux exécutions différentes butent sur le même mur et
 //     archivent le même constat d'échec. Informatif, jamais fautif. (Les dossiers de full_sim18 et
 //     full_sim19 : « aucun dossier retourné », 44 octets, le même défaut trois fois de suite.)
+// NATURE DÉCLARÉE (2026-10-01, tâche #1378) : seuil de PRINCIPE sur un simple décompte de
+// répétitions, jamais lu dans une distribution — hors du cas #1377.
 export const SEUIL_PASSE_PARTOUT = 3;
 export const MOTIF_LIGNE_VOLATILE = /^\s*(?:Produit le|État du code|Version de Claude|Écrit\s*:|Contexte de production|Outil\s*:|Santé de l'outil|Gravité de ce rapport|⚠️)/;
 

@@ -1682,6 +1682,42 @@ couverte en amont par l'Article 24 (un registre se LIT, il ne se recopie pas).
 *Observée le 2026-09-27 sur les tâches #723/#724 : les deux seuils du même déclencheur, l'un dérivé
 et l'autre pas, dans la même fonction et à trois lignes d'écart.*
 
+### La TROISIÈME question, que cette bonne pratique ne posait pas *(ajoutée le 2026-10-01, tâches #1377 et #1378)*
+
+Ci-dessus, tout se joue **au moment où l'on écrit le seuil** : est-il dérivé, ou inventé ? La
+question qui manquait porte sur **ce qui lui arrive ensuite**, et elle est mécanisable là où la
+première ne l'est pas :
+
+> **Un seuil correctement dérivé peut sortir de sa propre distribution après coup.**
+
+Le cas réel : un détecteur de chevauchement posait son seuil à 4 dans un trou franc (une paire à
+sept mots partagés, la suivante à trois, sur 58 prestations). Le catalogue en compte 76
+aujourd'hui, la distribution **plafonne à trois**, et plus aucune paire ne peut atteindre le
+seuil. Le rapport annonçait « aucun chevauchement » du même ton que lorsqu'il mesurait vraiment —
+le faux vert exact des leçons L5 et L11.
+
+**Ce qui est mécanisable, et c'est la nouveauté** : comparer le seuil au MAXIMUM réellement
+observé. Au-dessus, le détecteur ne peut structurellement rien trouver, et il doit le DIRE au lieu
+de rendre zéro. Rien à deviner là-dedans : deux nombres suffisent.
+
+**Ce qui ne l'est pas, et il ne faut pas le confondre** : décider quoi faire ensuite. Quand la
+pente est devenue continue, **il n'y a plus de trou où poser un nouveau seuil** — le signal a
+perdu sa puissance, ce n'est pas le réglage qui a glissé. Choisir un chiffre dans une pente
+régulière reviendrait à inventer la frontière qu'on prétend lire.
+
+**Et un troisième cas, plus discret que les deux autres** : la JUSTIFICATION vieillit sans que le
+seuil bouge. `SEUIL_DOCUMENTS_JUMEAUX` est calibré « une trentaine de paires sur 382 documents » ;
+le corpus en compte 498 et la mesure en rend 60 — mais seulement **3 à instruire**, les familles
+déclarées absorbant le reste. **Rien n'est cassé ; c'est la phrase qui ment.** Une justification
+qui cite une taille de corpus se périme toute seule.
+
+**Le tri qui évite d'en faire une chasse** *(32 seuils déclarés, 16 fichiers, triés le 2026-10-01)* :
+seuls les seuils **posés dans un trou d'une distribution observée** sont concernés. Il y en avait
+**un seul**, celui qui a été trouvé. Les autres sont des seuils de PRINCIPE (un mot commun
+rapproche n'importe quoi), dérivés d'UN ou DEUX cas réels, ou déclarés provisoires — aucun ne peut
+sortir d'une distribution qu'il n'a jamais eue. **Le défaut était isolé, pas systémique**, et
+l'écrire évite au prochain agent de construire un auditeur transverse qui ne protégerait rien.
+
 ## BP6 — Avant de remplir un registre à la main, chercher si la preuve est DÉJÀ écrite dans le dépôt
 
 Devant un registre vide et quatre-vingts lignes à y mettre, le réflexe est de les taper. Dans un

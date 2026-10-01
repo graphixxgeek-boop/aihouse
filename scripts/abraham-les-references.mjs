@@ -1607,9 +1607,24 @@ export const HORS_PORTEE_DOCUMENTS = [
 ];
 
 export const TAILLE_MINIMALE_DOCUMENT = 800;
-// Seuil MESURÉ, jamais choisi : à 0,25 la mesure rend une trentaine de paires sur 382 documents,
+// Seuil MESURÉ, jamais choisi : à 0,25 la mesure rendait une trentaine de paires sur 382 documents,
 // c'est-à-dire une liste lisible. Plus bas, elle noie ; plus haut, elle ne rend que les séries
 // déjà écartées comme légitimes.
+//
+// SA JUSTIFICATION A VIEILLI, ET LE SEUIL NON (2026-10-01, tâche #1378, en triant les 32 seuils du
+// paysage après le cas #1377). Le corpus est passé de 382 à **498 documents**, et la mesure rend
+// désormais **60 paires** au lieu d'une trentaine. La phrase ci-dessus, lue seule, laisse donc
+// croire à une dérive — et c'est précisément pour ça qu'elle est corrigée ici plutôt que laissée.
+//
+// MAIS RIEN N'EST CASSÉ, et le chiffre qui le dit n'est pas celui-là : sur ces 60 paires, **302
+// rapprochements sont absorbés par une famille déclarée** et il n'en reste que **3 à instruire**.
+// Le seuil continue donc de rendre exactement ce pour quoi il a été posé — une liste lisible. Ce
+// qui a vieilli est le PROXY cité dans la justification (le nombre de paires brutes), pas le
+// réglage. Les familles ont grandi avec le corpus, ce qui est leur métier.
+//
+// CE QUE ÇA APPREND, ET C'EST LA MOITIÉ UTILE : une justification de seuil qui cite une TAILLE DE
+// CORPUS se périme toute seule, sans que le seuil bouge ni que rien ne casse. Relire la phrase
+// vaut mieux que relire le chiffre.
 export const SEUIL_DOCUMENTS_JUMEAUX = 0.25;
 
 export const FAMILLES_LEGITIMES = {

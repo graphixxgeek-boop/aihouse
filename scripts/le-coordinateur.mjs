@@ -818,6 +818,9 @@ export function inventaireDesFonctions({ root = ROOT, lireDossier = readdirSync,
 // seul mot commun rapproche n'importe quoi de n'importe quoi, et un point d'entrée qui rend du
 // bruit cesse d'être consulté (leçon L4). Un mot du NOM pèse double : un nom de fonction est choisi,
 // là où un en-tête raconte.
+// NATURE DÉCLARÉE (2026-10-01, tâche #1378) : seuil de PRINCIPE — un mot commun rapproche
+// n'importe quoi, deux font un signal. Il ne vient d'aucune distribution, donc il ne peut pas
+// passer au-dessus d'elle comme #1377 : rien à re-vérifier quand le corpus grandit.
 export const SEUIL_CANDIDATE = 2;
 
 // LE POIDS D'UN MOT SE DÉRIVE DU CORPUS, il ne se décrète pas (2026-09-26, tâche #746, et la mesure
