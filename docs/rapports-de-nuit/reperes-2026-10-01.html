@@ -106,7 +106,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T07:38:30.023Z</div>
+    <div class="date">2026-10-01T07:54:27.450Z</div>
     <h1>Tes repères en te réveillant</h1>
     <p class="sub">Nuit du 30 septembre au 1er octobre 2026</p>
   </header>
@@ -174,6 +174,12 @@ est à jour.)*</p></div>
 <p><strong>Mais le résultat brut était trompeur, et c'est le plus instructif.</strong> Quatre des cinq paires impliquaient les deux outils qui <strong>lisent le dépôt entier par métier</strong> — le filet de sécurité et l'auditeur de documentation. Ils se « ressemblent » parce qu'ils regardent tout. J'ai essayé deux façons de corriger ça par le calcul : <strong>les deux échouent</strong>, et je l'ai mesuré avant de le dire.</p>
 <p><strong>Ce qui marche, c'est de séparer les deux populations.</strong> Un « scanner » se reconnaît à la taille de sa lecture (141 fichiers, 74, 40… puis 21, 18, 12 — la coupure est nette). <strong>Une fois les scanners mis de côté : zéro paire.</strong></p>
 <p><strong>La réponse</strong> : sur cet axe non plus, il n'y a pas de fusion à proposer. Ce n'est pas un échec de la mesure, <strong>c'est la mesure</strong> — et elle se rejoue par une commande. <strong>Deux axes sur trois sont répondus.</strong> Le troisième — du code réellement dupliqué entre deux outils — a déjà son outil, il reste à le lancer.</p>
+<p><strong>⑲ Ta question du 28 septembre est répondue, sur trois axes : il n'y a rien à fusionner</strong> <em>(#745, close)</em>.</p>
+<table><thead><tr><th>L'axe</th><th>Ce qu'il mesure</th><th>Candidats</th></tr></thead><tbody><tr><td>Le compteur d'usage</td><td>quel outil n'est jamais lancé</td><td><strong>0</strong></td></tr><tr><td>Les fichiers lus</td><td>qui travaille sur la même matière</td><td><strong>0</strong></td></tr><tr><td>Le code dupliqué</td><td>qui a recopié la logique d'un autre</td><td><strong>0</strong></td></tr></tbody></table>
+<p>Le troisième axe trouve bien 8 duplications, mais <strong>une seule traverse deux outils différents</strong> — et ce sont 5 lignes du gabarit de rapport que tous partagent, c'est-à-dire la forme attendue d'un gabarit commun. Les sept autres sont à l'intérieur d'un même fichier : de la propreté, jamais une fusion.</p>
+<p><strong>Ce que je ne te propose pas, et pourquoi.</strong> Aucune suppression. Les trois axes disent qu'il n'y a rien à proposer, et proposer quand même serait fabriquer du travail. <strong>Rouvrir le sujet reste ta décision</strong> — un quatrième angle peut exister, mais il faudrait le nommer avant de le chercher.</p>
+<p><strong>Ce que le chantier a produit en chemin, et qui vaut plus que la réponse</strong> : <strong>trois instruments de mesure étaient faux</strong> et ont été corrigés avant de pouvoir servir de base à une suppression. <strong>Sans ce détour, une proposition de suppression aurait visé le compteur d'usage et le filet de secours anti-panne.</strong></p>
+<p><strong>Et le troisième instrument faux, c'était le mien.</strong> En cherchant les doublons, j'en ai écrit un : le détecteur que j'avais construit deux heures plus tôt refaisait, en moins bien, une fonction du 27 septembre. Supprimé. <strong>La cause est instructive</strong> : la tâche disait <em>où</em> chercher — « trace probable dans CASSANDRA-RH » — et je ne l'avais pas suivie.</p>
 <hr>
 <h3>CE QUE JE TE DOIS EN TOUTE HONNÊTETÉ</h3>
 <p><strong>Ton intuition sur le « bazar organisé » est juste sur l'ORGANISATION, et fausse sur le CODE.</strong></p>

@@ -51,6 +51,10 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 // Rien dans la relecture ne le montre : la ligne a l'air parfaitement correcte. On importe ET on
 // réexporte.
 import { loadToolUsageHistory } from "./tool-usage.mjs";
+// LA PORTÉE DU COMPTEUR SE DEMANDE À CASSANDRA-RH, jamais recalculée ici (tâche #1383) : elle
+// exclut la suite de tests, les crochets git et le compteur lui-même, et chacune de ces trois
+// exclusions a coûté un faux verdict avant d'être écrite.
+import { invisiblesAuCompteur } from "./cassandra-rh.mjs";
 export { loadToolUsageHistory };
 
 // --- 1. Consultation à la demande (inchangé depuis la première version) ---
@@ -409,32 +413,35 @@ export function tracesSurDisque(slug, { root = ROOT, listDirImpl = readdirSync, 
 // LA CONCLUSION QUI COMPTE POUR LA QUESTION POSÉE : le compteur d'usage **ne peut pas** produire
 // une liste de candidats au retrait. Ce n'est pas un défaut à corriger, c'est sa nature — il
 // mesure des APPELS, et l'utilité d'un outil ne se lit pas dans son nombre d'appels.
-export function estUneLibrairie(slug, { root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
-  const dossier = join(root, "scripts");
-  let fichiers;
-  try { fichiers = listDirImpl(dossier).filter((f) => String(f).endsWith(".mjs")); }
-  catch { return { mesurable: false, pourquoi: "scripts/ illisible : on ne peut pas savoir qui importe quoi, et un « non » rendu ici serait une supposition" }; }
-  const cible = `./${slug}.mjs`;
-  const importeePar = [];
-  for (const f of fichiers) {
-    if (f === `${slug}.mjs`) continue;
-    let src;
-    try { src = readFileImpl(join(dossier, f), "utf8"); } catch { continue; }
-    if (src.includes(`"${cible}"`) || src.includes(`'${cible}'`)) importeePar.push(f);
-  }
-  return { mesurable: true, estLibrairie: importeePar.length > 0, importeePar };
-}
-
-export function separerLesLibrairies(slugs = [], options = {}) {
+// CE QUI SUIT ÉTAIT UN DOUBLON PLUS FAIBLE D'UN MÉCANISME QUI EXISTAIT DÉJÀ (2026-10-01, #1383).
+//
+// J'avais écrit ici un `estUneLibrairie()` qui comptait les importeurs d'un script. Il marchait.
+// Mais `invisiblesAuCompteur()` (CASSANDRA-RH, tâche #1007, 2026-09-27) répondait DÉJÀ à la même
+// question, et mieux : il exclut la SUITE DE TESTS — « tester un outil n'est pas l'exécuter », et
+// `check-house.mjs` importe 81 % du parc, donc la compter promouvait presque tout en bibliothèque
+// — il couvre aussi les crochets git et le compteur lui-même. Les deux rendaient les deux mêmes
+// outils aujourd'hui ; le mien tombait dans le piège dès qu'un script serait importé par la seule
+// suite de tests. **Un défaut latent est un défaut.**
+//
+// POURQUOI JE NE L'AVAIS PAS VU : ma reprise des notes (Article 30) a cherché « fusion outils
+// effectif » puis « outils qui se chevauchent ». Le dépôt range ce sujet sous **« outils à retirer
+// ou refondre »**, et c'est la tâche elle-même qui le disait — « trace probable dans CASSANDRA-RH ».
+// L'Article 30 prévoit exactement ce cas : un zéro n'est pas la preuve qu'il n'y a rien à savoir,
+// c'est la preuve que CE MOT-LÀ ne ressort pas.
+export function separerLesLibrairies(slugs = [], { horsDePortee = null, ...options } = {}) {
+  const r = horsDePortee ?? invisiblesAuCompteur(options);
+  // Si la mesure échoue, on ne suppose PAS que personne n'est une bibliothèque : on laisse tout
+  // dans « autres » ET on le dit, plutôt que de rendre un verdict sur une base inconnue (L5/L11).
+  if (!r?.mesurable) return { mesurable: false, pourquoi: r?.pourquoi ?? "la portée du compteur n'a pas pu être mesurée", librairies: [], autres: [...(slugs ?? [])] };
   const librairies = [], autres = [];
   for (const slug of slugs ?? []) {
-    const r = estUneLibrairie(slug, options);
-    if (r.mesurable && r.estLibrairie) librairies.push({ slug, importeePar: r.importeePar.length });
+    const raison = r.invisibles.get(slug);
+    if (raison) librairies.push({ slug, raison });
     else autres.push(slug);
   }
-  librairies.sort((a, b) => b.importeePar - a.importeePar);
-  return { librairies, autres };
+  return { mesurable: true, librairies, autres };
 }
+
 
 export function separerCeuxQuiOntLaisseDesTraces(slugs = [], options = {}) {
   const ontTourne = [], sansTrace = [], indecidables = [];
@@ -451,7 +458,7 @@ export function separerCeuxQuiOntLaisseDesTraces(slugs = [], options = {}) {
 // `root` et `listDirImpl` sont injectables depuis la tâche #1379 : sans ça, un test qui vérifie le
 // classement des silences dépendrait du contenu réel de `docs/`, c'est-à-dire du disque du jour
 // (leçon L40 : un test qui lit une donnée VIVANTE ne juge pas le code, il juge le disque).
-export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "", root = ROOT, listDirImpl = readdirSync } = {}) {
+export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { sourceCrochet = "", lireSource, offert = "", root = ROOT, listDirImpl = readdirSync, horsDePortee = null } = {}) {
   const slugs = knownToolSlugsFromPrestations(prestations);
   const perTool = slugs
     .map((slug) => ({ slug, ...toolUsageStats(history, slug) }))
@@ -470,7 +477,7 @@ export function buildToolBrainUsageReport(history, prestations = PRESTATIONS, { 
   // LA PREUVE MATÉRIELLE PASSE AVANT LE TÉMOIGNAGE DU COMPTEUR (voir le commentaire ci-dessus).
   const traces = separerCeuxQuiOntLaisseDesTraces(candidats, { root, listDirImpl });
   // UNE LIBRAIRIE SORT AUSSI DE LA LISTE : elle est appelée en permanence, jamais « sollicitée ».
-  const lib = separerLesLibrairies(traces.sansTrace, { root, listDirImpl });
+  const lib = separerLesLibrairies(traces.sansTrace, { horsDePortee, root, listDirImpl });
   return {
     perTool,
     // `neverUsed` ne retient QUE les sans-trace. Y laisser les indécidables affirmerait ce qu'on
@@ -586,7 +593,7 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
     usage.ontTourneSansPasserParLeCompteur?.length ? `🟢 ${usage.ontTourneSansPasserParLeCompteur.length} outil(s) à zéro au compteur ONT POURTANT TOURNÉ — leur registre sur disque le prouve : ${usage.ontTourneSansPasserParLeCompteur.map((t) => `${t.slug} (${t.fichiers} fichier(s))`).join(", ")}. Ce n'est pas eux qu'il faut relancer, c'est le compteur qui ne les voit pas : ils sont lancés hors du chemin qui enregistre.` : "",
     usage.traceIndecidable?.length ? `❓ ${usage.traceIndecidable.length} outil(s) sans registre sur disque, donc INDÉCIDABLES : ${usage.traceIndecidable.join(", ")}. Un outil n'écrit pas forcément quelque chose — leur silence ne prouve rien dans un sens ni dans l'autre, et les compter comme inactifs serait confondre « je n'ai rien trouvé » avec « je n'ai pas pu regarder ».` : "",
     // UNE LIBRAIRIE EST APPELÉE EN PERMANENCE, JAMAIS « SOLLICITÉE » (2026-10-01, tâche #1380).
-    usage.librairiesImportees?.length ? `📘 ${usage.librairiesImportees.length} de ces outil(s) sont en fait des LIBRAIRIES, importées par d'autres scripts : ${usage.librairiesImportees.map((l) => `${l.slug} (par ${l.importeePar} script(s))`).join(", ")}. Elles tournent à chaque appel du paysage ; leur zéro mesure qu'on ne les lance pas EN TANT QUE commande, ce qui ne dit rien de leur utilité.` : "",
+    usage.librairiesImportees?.length ? `📘 ${usage.librairiesImportees.length} de ces outil(s) sont en fait des LIBRAIRIES, hors de portée du compteur (importées par d'autres scripts, lancées par un crochet, ou le compteur lui-même) : ${usage.librairiesImportees.map((l) => `${l.slug}`).join(", ")}. Elles tournent à chaque appel du paysage ; leur zéro mesure qu'on ne les lance pas EN TANT QUE commande, ce qui ne dit rien de leur utilité.` : "",
     // CE QU'AUCUN COMPTEUR NE SAURA JAMAIS DIRE, et le déclarer EST la protection (Article 27).
     "\u2139\uFE0F CE QUE CE COMPTEUR NE PEUT PAS FAIRE, et ce n'est pas un défaut à corriger : produire une liste de candidats AU RETRAIT. Il mesure des APPELS. Un outil de CIRCONSTANCE — smart-breaker en panne de quota, sauvegarde-projet le jour d'une perte d'accès, run-simulation pendant une simulation — reste à zéro tant que la circonstance ne se produit pas, et ce zéro est alors la BONNE nouvelle. Instruits un par un le 2026-10-01, les six derniers candidats n'en contenaient aucun de réel.",
     "",

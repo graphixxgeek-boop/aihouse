@@ -5629,7 +5629,10 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     if (rel !== 'find-brain') { const e = new Error('ENOENT'); e.code = 'ENOENT'; throw e; }
     return [{ name: 'index.md', isDirectory: () => false }];
   };
-  const usageReport = buildToolBrainUsageReport(fakeHistory, [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }], { root: '/r/', listDirImpl: disqueFictif });
+  // La PORTÉE DU COMPTEUR est injectée elle aussi (tâche #1383) : depuis que tool-brain la demande
+  // à CASSANDRA-RH, un test qui ne l'injecterait pas jugerait le graphe d'imports réel du dépôt,
+  // et non le code (leçon L40). Ici personne n'est hors de portée, donc find-brain reste candidat.
+  const usageReport = buildToolBrainUsageReport(fakeHistory, [{ outils: ['ARGUS'] }, { outils: ['find-brain'] }], { root: '/r/', listDirImpl: disqueFictif, horsDePortee: { mesurable: true, invisibles: new Map() } });
   assert.deepEqual(usageReport.neverUsed, ['find-brain'], 'a tool with zero real events AND an empty registry is a real candidate — the counter says nothing happened and the disk agrees');
 
   // ═══════════════════════════════════════════════════════════════════════════════════════
@@ -5683,32 +5686,28 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   // simulation — pour ceux-là zéro est la valeur ATTENDUE. Ce qui est mécanisable ici est la
   // première moitié : « est-ce une librairie ? » se LIT. La seconde se DÉCLARE (Article 27).
   // ═══════════════════════════════════════════════════════════════════════════════════════
-  const faussesSources = (map) => ({
-    listDirImpl: () => Object.keys(map),
-    readFileImpl: (chemin) => map[String(chemin).split('/').pop()] ?? '',
-  });
-  const lib = tb.estUneLibrairie('socle', { root: '/r/', ...faussesSources({
-    'socle.mjs': 'export const x = 1;',
-    'a.mjs': 'import { x } from "./socle.mjs";',
-    'b.mjs': "import { x } from './socle.mjs';",
-    'c.mjs': 'rien du tout',
-  }) });
-  assert.equal(lib.estLibrairie, true, 'a file imported by other scripts IS called, whatever the call counter says');
-  assert.equal(lib.importeePar.length, 2, 'both quote styles must be seen, and the file itself never counts as its own importer');
+  // ── LA PORTÉE DU COMPTEUR EST DEMANDÉE À CASSANDRA-RH, JAMAIS RECALCULÉE (2026-10-01, #1383).
+  // J'avais écrit ici un détecteur de bibliothèque qui comptait les importeurs. Il marchait, et il
+  // était un DOUBLON PLUS FAIBLE de `invisiblesAuCompteur()` (#1007, 2026-09-27), qui exclut en
+  // plus la SUITE DE TESTS — « tester un outil n'est pas l'exécuter », et check-house importe 81 %
+  // du parc, donc la compter promouvait presque tout en bibliothèque — ainsi que les crochets git
+  // et le compteur lui-même. Les deux rendaient les deux mêmes outils ce jour-là ; le mien serait
+  // tombé dans le piège dès qu'un script serait importé par la seule suite de tests.
+  const horsPorteeFictive = { mesurable: true, invisibles: new Map([['socle', 'importé par 3 scripts hors suite de tests']]) };
+  const triLib = tb.separerLesLibrairies(['socle', 'solo'], { horsDePortee: horsPorteeFictive });
+  assert.deepEqual(triLib.librairies.map((l) => l.slug), ['socle'], 'a tool the counter cannot see is separated out — it is called constantly, never "solicited"');
+  assert.deepEqual(triLib.autres, ['solo'], 'and a tool genuinely within the counter reach stays a candidate');
+  assert.ok(triLib.librairies[0].raison, 'the REASON travels with it: "library" without saying why forces the reader to reopen the file');
 
-  const pasLib = tb.estUneLibrairie('solo', { root: '/r/', ...faussesSources({ 'solo.mjs': 'x', 'a.mjs': 'rien' }) });
-  assert.equal(pasLib.estLibrairie, false, 'and a tool nobody imports is not promoted to library — the exemption must stay narrow (lesson L4)');
-
-  assert.equal(tb.estUneLibrairie('x', { root: '/r/', listDirImpl: () => { throw new Error('ENOENT'); } }).mesurable, false, 'an unreadable scripts/ renders PAS MESURÉ, never a "no" — a no here would be a guess (lessons L5 and L11)');
-
-  const triLib = tb.separerLesLibrairies(['socle', 'solo'], { root: '/r/', ...faussesSources({
-    'socle.mjs': 'x', 'solo.mjs': 'x', 'a.mjs': 'import "./socle.mjs";',
-  }) });
-  assert.deepEqual(triLib.librairies.map((l) => l.slug), ['socle'], 'the split must separate them');
-  assert.deepEqual(triLib.autres, ['solo'], 'and leave the rest untouched');
+  // UNE MESURE QUI ÉCHOUE NE REND JAMAIS « personne n'est une bibliothèque » (leçons L5/L11).
+  const triKo = tb.separerLesLibrairies(['a', 'b'], { horsDePortee: { mesurable: false, pourquoi: 'recensement illisible' } });
+  assert.equal(triKo.mesurable, false, 'an unmeasurable scope must say so rather than render a verdict on an unknown base');
+  assert.deepEqual(triKo.autres, ['a', 'b'], 'and nothing is quietly promoted in the meantime');
 
   // ── SUR LE VRAI DÉPÔT (Article 25) : le compteur lui-même est la preuve du cas.
-  assert.equal(tb.estUneLibrairie('tool-usage').estLibrairie, true, 'tool-usage is imported by most of the landscape — listing it as "never solicited, consider removing it" was the clearest possible proof that call counts do not measure usefulness');
+  const triReel = tb.separerLesLibrairies(['tool-usage', 'the-ghost']);
+  assert.ok(triReel.librairies.some((l) => l.slug === 'tool-usage'), 'tool-usage is the counter: listing it as "never solicited, consider removing it" was the clearest possible proof that call counts do not measure usefulness');
+  assert.deepEqual(triReel.autres, ['the-ghost'], 'while a tool genuinely launched by hand stays in the list, where it belongs');
 
   // LE QUATRIÈME ÉTAT DU SILENCE (2026-09-25, tâche #763 — « tu retrouves la vérité »).
   // CE QUI A ÉTÉ MESURÉ, et c'est le fil rouge du projet appliqué au compteur lui-même : les
