@@ -217,3 +217,37 @@ Rien ne planterait, rien ne serait rouge — le rapport se féliciterait simplem
 Comportement vérifié identique avant/après sur les deux fonctions, et un contre-test COMPTE les
 écritures à la main : si une cinquième réapparaît, le filet le dit au lieu de laisser la divergence
 s'installer.
+
+## Deux outils qui lisent les mêmes sources — `memes-sources` *(2026-10-01, tâche #1382)*
+
+**Ce qu'il répond, et pourquoi personne ne le pouvait avant.** `findOffresConcurrentes()` compare
+les DEMANDES déclarées au catalogue ; sa limite est écrite depuis sa création — « jamais ce que les
+outils font vraiment » — et son seuil est passé au-dessus de sa distribution le 2026-10-01 (#1377).
+La question « quels outils fusionner ? » n'avait donc plus d'instrument.
+
+**Le signal est structurel, pas textuel** : deux outils qui lisent les mêmes FICHIERS travaillent
+sur la même matière. C'est une intersection d'ensembles, qui ne dépend d'aucun vocabulaire.
+
+**Les deux seuils se LISENT dans leur distribution**, et les deux distributions sont imprimées avec
+le résultat : rareté d'une source à **7** (rien n'est lu par exactement 8 outils), sources rares
+communes à **10** (rien à 10 ni 11, puis 11, 13, 16, 32, 33).
+
+**Le scanner trouve le scanner, et ce n'est pas une fusion.** Un scanner se DÉRIVE de la taille de
+sa lecture (≥ 40 sources rares — le trou est franc entre 40 et 21), il ne se recopie pas. Deux
+normalisations ont été essayées et écartées avec leur mesure : diviser par le plus petit ensemble
+confond inclusion et recouvrement ; le Jaccard enterre la paire la plus intéressante.
+
+**Mesure réelle au jour de sa création** : 5 paires au-dessus du seuil, **toutes impliquant un
+scanner** — donc **0 candidat à la fusion**. La paire de tête, `circle-tasks ↔ doc-report`, a un
+historique documenté de duplication réelle : le signal retrouve un cas connu sans qu'on le lui
+souffle.
+
+**Commande** : `node scripts/le-coordinateur.mjs memes-sources`.
+
+**Les fonctions** : `sourcesParOutil()` relève ce que chaque script lit · `findOutilsQuiLisentLesMemesSources()` croise les ensembles, dérive les scanners et pose les deux seuils · `formatOutilsMemesSourcesLines()` rend le tout avec ses deux distributions, pour qu'un lecteur vérifie que les trous existent encore.
+
+*(`motsGeneriquesDesNoms()` appartient au volet NOMMAGE de cet outil, pas à celui-ci : il relève les mots trop passe-partout dans un nom proposé.)*
+
+*(Le garde-fou de #1377 est câblé dès le premier jour : il refuse de rendre un zéro quand son seuil
+dépasse ce qu'il observe. Sa limite déclarée : lire les mêmes fichiers n'est pas faire la même
+chose — ce sont des candidates à instruire, jamais un verdict de fusion.)*

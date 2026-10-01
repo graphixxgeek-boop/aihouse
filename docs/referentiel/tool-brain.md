@@ -153,3 +153,33 @@ seulement l'ÉCLAIRER ? Par défaut elle éclaire — c'est le choix réversible
 `cassandra-rh` sont DYNAMIQUES. tool-brain est appelé par le crochet post-commit ; les tirer en tête
 ferait qu'une erreur chez l'un casserait le crochet de tout le monde — le même refus a déjà été
 opposé à HARMONIA le 2026-09-25.
+
+## Le registre sur disque bat le compteur *(2026-10-01, tâches #1379 et #1383)*
+
+**Le défaut** : le compteur n'enregistre que les passages qui passent PAR LUI. Un outil lancé à la
+main hors de ce chemin reste à zéro, et le rapport le rangeait parmi les « jamais sollicités » avec,
+en plan d'action, « les lancer une fois pour de vrai, ou décider de les retirer ». Pour un outil qui
+a déjà tourné et déposé ses rapports, **les deux moitiés de la phrase sont fausses**.
+
+**Mesuré** : sur 20 outils annoncés jamais sollicités, **6 avaient laissé de vrais fichiers dans
+leur registre** — the-screener (8), ines-official (6), check-spirit (3), x-port-blindtest (2),
+objectifs-vs-resultats (2), kpi-report (1).
+
+**Trois états, jamais deux**, et le troisième est le plus important : *a laissé des traces* (il a
+tourné) · *registre vide* (aucune trace, vrai candidat) · *pas de registre du tout* (**on ne peut
+pas savoir**, et c'est légitime — un outil n'écrit pas forcément quelque chose). `index.md` est
+exclu du compte : il est écrit par data-archangel, pas par l'outil.
+
+**La portée du compteur est DEMANDÉE à CASSANDRA-RH**, jamais recalculée ici. `invisiblesAuCompteur()`
+(tâche #1007) exclut la suite de tests — « tester un outil n'est pas l'exécuter », et `check-house`
+importe 81 % du parc — ainsi que les crochets git et le compteur lui-même. **Un détecteur local
+avait été écrit puis supprimé** le jour même : c'était un doublon plus faible, dans la tâche même
+qui traquait les doublons (#1383).
+
+**Les fonctions** : `tracesSurDisque()` rend l'un des trois états pour un outil donné · `separerCeuxQuiOntLaisseDesTraces()` répartit une liste entre les trois · `separerLesLibrairies()` délègue à `invisiblesAuCompteur()` et sépare ce que le compteur ne peut structurellement pas voir.
+
+**Ce que le compteur ne peut pas faire, et ce n'est pas un défaut à corriger** : produire une liste
+de candidats au retrait. Il mesure des APPELS. Un outil de CIRCONSTANCE — smart-breaker en panne de
+quota, sauvegarde-projet le jour d'une perte d'accès — reste à zéro tant que la circonstance ne se
+produit pas, et ce zéro est alors la BONNE nouvelle. Instruits un par un, les derniers candidats
+n'en contenaient aucun de réel.
