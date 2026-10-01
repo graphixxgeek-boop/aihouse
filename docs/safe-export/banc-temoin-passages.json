@@ -43,5 +43,20 @@
       "attend-un-argument": 5,
       "dependance-non-installee": 3
     }
+  },
+  {
+    "date": "2026-10-01T08:30:25.044Z",
+    "temoin": "/tmp/claude-0/-home-user-aihouse/b96a7cb6-ab2b-5738-adad-b787dab23b16/scratchpad/temoin",
+    "commit": "ff0a150",
+    "taux": 100,
+    "debout": 71,
+    "examines": 71,
+    "verdicts": {
+      "portable": 40,
+      "honnete": 24,
+      "attend-une-configuration": 1,
+      "attend-un-argument": 6,
+      "dependance-non-installee": 3
+    }
   }
 ]

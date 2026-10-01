@@ -106,18 +106,18 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T07:54:27.450Z</div>
+    <div class="date">2026-10-01T08:35:45.950Z</div>
     <h1>Tes repères en te réveillant</h1>
     <p class="sub">Nuit du 30 septembre au 1er octobre 2026</p>
   </header>
   <div class="divider"></div>
   <main><div class="highlight"><p><strong>Pourquoi ce document</strong> : tu as demandé *« prévois, pour mon réveil, les repères qui disent
-exactement où on en est »*. Le voici. Il tient en une page, et il te dit surtout <strong>ce qui
-t'attend toi</strong>. *(Ce document est mis à jour pendant la nuit : la date en bas dit jusqu'où il
-est à jour.)*</p></div>
+exactement où on en est »*. Le voici.</p><p><strong>Comment le lire sans tout lire</strong> : le tableau des <strong>neuf décisions</strong>, juste en dessous, est la
+seule partie qui demande quelque chose de toi. Tout le reste est du détail, à ouvrir seulement
+si une ligne t'intrigue. <em>(Mis à jour pendant la nuit ; la date en bas dit jusqu'où.)</em></p></div>
 <hr>
-<h3>EN TROIS LIGNES</h3>
-<ul><li><strong>La Ronde GOAT est faite</strong> — 24 entrées passées, 4 reportées parce qu'elles coûtent de l'argent et que personne ne pouvait arbitrer cette nuit.</li><li><strong>Le chiffrage de la refonte est fait</strong>, et il dit quelque chose d'inattendu : <strong>le vrai coût n'est pas les lignes de code, ce sont les 2 228 décisions déjà écrites dedans.</strong></li><li><strong>Neuf décisions t'attendent.</strong> Rien de ce qui suit ne démarre sans toi.</li></ul>
+<h3>EN QUATRE LIGNES</h3>
+<ul><li><strong>Neuf décisions t'attendent</strong>, et rien de ce qui suit ne démarre sans toi. <em>(Pour mémoire : la file entière compte <strong>66 tâches sur 116 qui t’attendent</strong> — les neuf ci-dessous sont celles qui engagent le projet, pas la liste complète.)</em></li><li><strong>Le chiffrage de la refonte est fait</strong>, et il dit quelque chose d'inattendu : <strong>le vrai coût n'est pas les lignes de code, ce sont les 2 228 décisions déjà écrites dedans.</strong></li><li><strong>La Ronde GOAT est faite</strong> — 24 entrées passées, 4 reportées parce qu'elles coûtent de l'argent et que personne ne pouvait arbitrer cette nuit.</li><li><strong>Le fil rouge de la nuit, et il n'était pas prévu</strong> : en voulant répondre à tes questions, ce sont surtout les <strong>instruments de mesure</strong> qui se sont révélés faux — six fois. Un détecteur devenu aveugle sans le dire, un classement qui te proposait des tâches que personne ne peut faire, un indicateur qui voulait supprimer des outils qui travaillent. <strong>Tous corrigés avant d'avoir servi à décider quoi que ce soit.</strong></li></ul>
 <hr>
 <h3>CE QUI T'ATTEND — les neuf décisions, par ordre d'importance</h3>
 <p><em>(L'ordre n'est pas le mien : c'est celui de la charte. L'Article 0 — l'esprit de Lia et Noé — est la loi suprême du projet, donc une dérive avérée du ton passe avant une décision d'architecture, même grosse.)</em></p>
@@ -180,6 +180,11 @@ est à jour.)*</p></div>
 <p><strong>Ce que je ne te propose pas, et pourquoi.</strong> Aucune suppression. Les trois axes disent qu'il n'y a rien à proposer, et proposer quand même serait fabriquer du travail. <strong>Rouvrir le sujet reste ta décision</strong> — un quatrième angle peut exister, mais il faudrait le nommer avant de le chercher.</p>
 <p><strong>Ce que le chantier a produit en chemin, et qui vaut plus que la réponse</strong> : <strong>trois instruments de mesure étaient faux</strong> et ont été corrigés avant de pouvoir servir de base à une suppression. <strong>Sans ce détour, une proposition de suppression aurait visé le compteur d'usage et le filet de secours anti-panne.</strong></p>
 <p><strong>Et le troisième instrument faux, c'était le mien.</strong> En cherchant les doublons, j'en ai écrit un : le détecteur que j'avais construit deux heures plus tôt refaisait, en moins bien, une fonction du 27 septembre. Supprimé. <strong>La cause est instructive</strong> : la tâche disait <em>où</em> chercher — « trace probable dans CASSANDRA-RH » — et je ne l'avais pas suivie.</p>
+<p><strong>⑳ Le banc d'essai annonçait 100 % sur un code vieux de trois jours — relancé, il tient toujours</strong> <em>(#1385)</em>.</p>
+<p>Le « banc témoin » installe une copie de l'Agence dans un dossier étranger et lance chaque outil pour voir lesquels tiennent debout <strong>sans tes clés</strong>. Sa dernière mesure datait du 28 septembre, et <strong>53 fichiers avaient changé depuis</strong> — il l'annonçait lui-même, ce qui est tout à son honneur : un outil qui déclare sa propre péremption est un outil qu'on peut croire.</p>
+<p><strong>Relancé sur le code d'aujourd'hui : 71 outils sur 71 tiennent debout.</strong> Et le dénominateur a bougé — 68 → 71 — ce qui veut dire que <strong>trois outils de plus existent et tiennent debout</strong>, pas que le score s'est amélioré : il était déjà à 100.</p>
+<p><strong>Zéro appel API, et ce n'est pas une promesse.</strong> Le banc lance <em>tous</em> les outils, dont certains savent appeler l'IA. J'ai consulté le garde-fou de consommation d'abord, puis lancé le banc <strong>avec les clés vidées</strong> — garantir le zéro vaut mieux que se fier à un commentaire.</p>
+<p><strong>Un second défaut trouvé en vérifiant le premier, et il tombait mal.</strong> Le nouvel enregistrement notait le score sans son numérateur ni son dénominateur, là où l'ancien avait bien « 68/68 ». Le registre les gardait pourtant — seule la sortie les perdait. <strong>Et c'est l'outil qui met en garde contre ça</strong> : son propre résumé explique qu'« une part de l'écart vient de qui est compté, pas de qui tient debout ». Corrigé.</p>
 <hr>
 <h3>CE QUE JE TE DOIS EN TOUTE HONNÊTETÉ</h3>
 <p><strong>Ton intuition sur le « bazar organisé » est juste sur l'ORGANISATION, et fausse sur le CODE.</strong></p>

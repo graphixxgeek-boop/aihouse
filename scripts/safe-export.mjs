@@ -3956,7 +3956,15 @@ export function dernierPassageDuBanc({ root = ROOT, readFileImpl = readFileSync,
   } else if (actuel && actuel === dernier.commit) bouge = 0;
   const perime = bouge !== null && bouge > 0;
   return {
-    mesurable: true, taux: Math.round(dernier.taux), date: dernier.date, temoin: dernier.temoin, commit: dernier.commit,
+    // LE NUMÉRATEUR ET LE DÉNOMINATEUR VOYAGENT AVEC LE TAUX (2026-10-01, tâche #1385). Ils
+    // étaient rendus pour le passage PRÉCÉDENT et pas pour le courant : un appelant qui compare
+    // `t.debout` à `t.precedent.debout` comparait `undefined` à un nombre. Le registre les
+    // stockait pourtant, et le résumé les cite — seule la sortie structurée les perdait.
+    // Et ce manque est particulièrement mal placé ICI : le résumé de cet outil explique lui-même
+    // qu'« une part de l'écart vient de qui est COMPTÉ, pas de qui tient debout ». Un taux sans
+    // son dénominateur est précisément ce que cette phrase met en garde de lire.
+    mesurable: true, taux: Math.round(dernier.taux), debout: dernier.debout, examines: dernier.examines,
+    date: dernier.date, temoin: dernier.temoin, commit: dernier.commit,
     perime, fichiersChangesDepuis: bouge,
     precedent: precedent ? { taux: Math.round(precedent.taux), debout: precedent.debout, examines: precedent.examines, date: precedent.date } : null,
     // LE PASSAGE PRÉCÉDENT EST DIT, ET SON DÉNOMINATEUR AVEC (2026-09-28). Sans ça, un taux qui monte

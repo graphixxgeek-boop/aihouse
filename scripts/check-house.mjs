@@ -20942,6 +20942,19 @@ async function testLeBancTemoinEstLuParLeRapport() {
   assert.equal(SE.enregistrerPassageDuBanc({ date: '2026-09-28T00:00:00Z', commit: 'bbb', taux: 89, debout: 65, examines: 73, temoin: '/tmp/t' }, io), 2,
     'a second passage is APPENDED, never overwritten: the slope of a measurement is half its information');
 
+  // LE NUMÉRATEUR ET LE DÉNOMINATEUR VOYAGENT AVEC LE TAUX (2026-10-01, tâche #1385).
+  // Ils étaient rendus pour le passage PRÉCÉDENT et pas pour le courant : un appelant comparant
+  // `t.debout` à `t.precedent.debout` comparait undefined à un nombre. Le registre les stockait,
+  // le résumé les citait — seule la sortie structurée les perdait. Et le manque était mal placé
+  // ici entre tous : le résumé de cet outil explique qu'« une part de l'écart vient de qui est
+  // COMPTÉ, pas de qui tient debout ».
+  const bancReel = SE.dernierPassageDuBanc();
+  if (bancReel.mesurable) {
+    assert.equal(typeof bancReel.debout, 'number', 'the current passage must expose its numerator, exactly as the previous one does');
+    assert.equal(typeof bancReel.examines, 'number', 'and its denominator: a rate without its denominator is what this very tool warns against reading');
+    assert.equal(bancReel.taux, Math.round((bancReel.debout / bancReel.examines) * 100), 'and the three must agree — a rate that does not match its own fraction is worse than no rate');
+  }
+
   // RIEN ÉCRIT N'EST PAS ZÉRO POUR CENT (leçons L5/L11) — et c'est la distinction que tout ce
   // rapport existe pour tenir.
   const vide = SE.dernierPassageDuBanc({ root: '/vide/', readFileImpl: () => { throw new Error('ENOENT'); }, commitActuel: 'bbb' });
