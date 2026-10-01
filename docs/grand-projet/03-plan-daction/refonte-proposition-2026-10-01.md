@@ -20,15 +20,29 @@
 
 Tout ce qui suit est **mesuré**, pas estimé, et chaque chiffre se rejoue à la commande.
 
+> **Re-mesuré le 2026-10-01 à 15h30 UTC**, douze heures après la première écriture, en relançant
+> `node scripts/cout-de-la-refonte.mjs` plutôt qu'en me relisant. **Quatre chiffres avaient bougé**,
+> tous à cause du travail fait entre-temps : le volume de l'outillage (92 167 → **94 317** lignes),
+> les décisions écrites dans le code (2 228 → **2 314**), la concentration du fichier le plus chargé
+> (718 → **756**, soit 32 → **33 %**), et les dimensions d'exportabilité déjà à 100 % (3 → **5**).
+>
+> **La dernière va dans le sens de l'argument, et il faut le dire plutôt que de l'empocher en
+> silence** : il y a maintenant CINQ acquis qu'une refonte totale repartirait à zéro, pas trois. Le
+> contrepoids de la voie A est donc plus lourd qu'écrit le 30 septembre, pas moins.
+>
+> Les autres tiennent au chiffre près : 88 fichiers d'outillage · 93 fichiers de Jeu · 85 kits
+> d'export sur 85 · 0 script avec une cible écrite en dur · 88 % d'exportabilité globale · médiane
+> de 8 raisons par fichier · plus de 700 obligations.
+
 | Ce qu'on a mesuré | Le chiffre | Ce que ça veut dire, en clair |
 |---|---|---|
-| Volume de l'outillage | **88 fichiers, 92 167 lignes** | c'est le périmètre que ta proposition vise |
-| **Décisions déjà prises, écrites dans le code** | **2 228** | **le vrai coût d'une refonte, et personne ne le comptait** |
-| Leur répartition | médiane **8** par fichier · **un seul** fichier en porte **718** (32 %) | **le coût n'est pas réparti, il est concentré** |
+| Volume de l'outillage | **88 fichiers, 94 317 lignes** | c'est le périmètre que ta proposition vise |
+| **Décisions déjà prises, écrites dans le code** | **2 314** | **le vrai coût d'une refonte, et personne ne le comptait** |
+| Leur répartition | médiane **8** par fichier · **un seul** fichier en porte **756** (33 %) | **le coût n'est pas réparti, il est concentré** |
 | Le Jeu | 93 fichiers, et **moins d'une douzaine** mentionnent l'outillage (6 ou 10 selon le critère — les deux sont donnés exprès) | il est **déjà** indépendant : une refonte de l'Agence ne le toucherait pas |
 | Kits d'export | **85 / 85 complets** | ce qui existe est **déjà** emportable ailleurs |
 | Scripts avec une cible écrite en dur | **0 sur 88** | l'architecture n'est **pas** prisonnière de ce projet |
-| Exportabilité globale | **88 %**, dont **3 dimensions à 100 %** | ce sont des acquis qu'une refonte **repartirait à zéro** |
+| Exportabilité globale | **88 %**, dont **5 dimensions à 100 %** | ce sont des acquis qu'une refonte **repartirait à zéro** |
 | Obligations portées par nos documents | plus de **700**, et la très grande majorité dans UN SEUL document — les règles de travail en portent **3 à 4 fois plus que la charte**. *(Deux outils donnent deux comptes, 528 et 556 pour ce document, 129 et 173 pour la charte : ils ne comptent pas une obligation de la même façon. Je donne la fourchette plutôt que de choisir le chiffre qui m'arrange — c'est le troisième chiffre de cette nuit qui ne survit pas à sa vérification.)* | **c'est là qu'est le poids** |
 | Registres à remplir pour UN outil qui arrive | **10** | le prix d'entrée d'un nouvel outil |
 
@@ -53,8 +67,8 @@ Le code allait bien. C'est l'entrée dans l'équipe qui est trop chère.
 
 **Ce qu'on ferait** : repartir d'un dépôt vide, reconstruire l'Agence module par module.
 
-**Ce que ça coûte, chiffré** : les **2 228 décisions déjà prises** doivent être soit relues une par
-une, soit **regagnées** — c'est-à-dire repayées en bugs. Plus les **3 dimensions à 100 %** qui
+**Ce que ça coûte, chiffré** : les **2 314 décisions déjà prises** doivent être soit relues une par
+une, soit **regagnées** — c'est-à-dire repayées en bugs. Plus les **5 dimensions à 100 %** qui
 repartent à zéro, dont « l'Agence a-t-elle été installée POUR DE VRAI ailleurs », qui a coûté un
 banc d'essai entier.
 
@@ -74,7 +88,7 @@ existants devenant des modules qu'on y branche.
 tâches, puis le fil de discussion par sujet en cohérence avec lui — c'est l'environnement dont on
 a besoin dès le départ, c'est la preuve que c'est le cœur. »*
 
-**Pourquoi c'est faisable, et c'est le chiffre qui le dit** : les 2 228 décisions sont
+**Pourquoi c'est faisable, et c'est le chiffre qui le dit** : les 2 314 décisions sont
 **concentrées**, pas réparties. La médiane est à 8 par fichier, et un seul fichier en porte un
 tiers. **On peut donc reconstruire les fichiers légers et laisser les fichiers denses tranquilles**
 — ce qu'une refonte totale, par définition, s'interdit.
@@ -134,7 +148,7 @@ cœur que tu voulais. La voie A, elle, n'a pas de point d'arrêt utile avant la 
 Est-ce que le **compteur d'usage des outils** et **l'heure fiable** en font partie — ils sont
 utilisés par presque tout — ou restent-ils des modules ?
 
-**Q3 — Les 2 228 raisons : qu'est-ce qu'on en fait ?** Trois réponses possibles, et il faut en
+**Q3 — Les 2 314 raisons : qu'est-ce qu'on en fait ?** Trois réponses possibles, et il faut en
 choisir une : on les relit toutes (long, sûr) · on relit seulement celles des fichiers qu'on
 reconstruit (ma préférence) · on les abandonne en écrivant pourquoi (rapide, et on repaiera).
 

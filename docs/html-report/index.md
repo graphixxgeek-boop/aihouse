@@ -60,5 +60,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18569 | 2026-10-01 03:50Z |
 | `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 14583 | 2026-10-01 03:50Z |
 | `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 15285 | 2026-10-01 03:50Z |
-| `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 18449 | 2026-10-01 03:50Z |
 | `docs/rapports-de-nuit/reperes-2026-10-01.html` | `docs/rapports-de-nuit/reperes-2026-10-01.md` | 45522 | 2026-10-01 15:09Z |
+| `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 19614 | 2026-10-01 15:44Z |

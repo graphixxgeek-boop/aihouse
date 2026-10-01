@@ -20,7 +20,7 @@
 
   HORS PORTÉE : cette mesure vérifie qu'une pièce EXISTE, et pour le plan seulement qu'il se déclare comme tel. Elle ne lit pas son contenu et ne garantit pas qu'il suffise à remonter l'Agence ailleurs.
 
-=== LES SOLUTIONS À CONSIGNER — 31 candidat(s) sur 1331 clôture(s) lue(s) ===
+=== LES SOLUTIONS À CONSIGNER — 31 candidat(s) sur 1337 clôture(s) lue(s) ===
 
   Des clôtures qui racontent une CAUSE et un REMÈDE, et dont le vocabulaire ne se retrouve pas
   dans docs/referentiel/solutions.md. Ce sont des PROPOSITIONS : généraliser un cas particulier
