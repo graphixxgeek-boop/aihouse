@@ -811,7 +811,19 @@ export function tauxDActionnabilite({ racineRapports = "docs", lireDir = readdir
     return { mesurable: false, quoi: "le taux d'actionnabilité",
       pourquoi: `${retenus} constat(s) RETENU(S) trouvé(s) dans les rapports, il en faut ${minimum} : un taux sur si peu ressemble à une statistique sans en être une (BP5)` };
   }
-  const couverture = Math.round((declares / retenus) * 100);
+  // LE POURCENTAGE QUI ARRONDIT À ZÉRO EST LE MÊME MENSONGE QUE LE ZÉRO (2026-10-01, trouvé en
+  // relisant mon propre travail de la nuit — Article 25). Quelques heures après avoir construit
+  // ce dispositif précisément pour ne JAMAIS afficher « 0 % », il affichait « 0 % des 367
+  // constats déclarent le numéro (1) » : un seul déclarant sur 367 arrondit à zéro, et le garde-fou
+  // ne regardait que le cas où il n'y en a AUCUN. Un « 0 % » suivi d'un « (1) » entre parenthèses
+  // est pire qu'un chiffre faux — il se contredit dans la même phrase, et c'est le genre de
+  // détail qu'un lecteur pressé lit comme un zéro.
+  //
+  // LA RÈGLE : sous le seuil où le pourcentage perd son sens, on rend la FRACTION BRUTE. « 1 sur
+  // 367 » est exact, se lit tout de suite, et ne peut pas être confondu avec une absence.
+  const couvertureExacte = (declares / retenus) * 100;
+  const couverture = Math.round(couvertureExacte);
+  const couvertureLisible = couverture === 0 ? `${declares} sur ${retenus} (moins de 1 %)` : `${couverture} % des ${retenus}`;
   // LA COUVERTURE EST NULLE : on retombe exactement sur l'ancien verdict, et c'est voulu. Tant
   // qu'aucun plan n'a déclaré son numéro, il n'y a rien à diviser — et rendre « 0 % d'actionnabilité »
   // accuserait d'un manquement qui n'a jamais été mesuré (leçons L5/L11).
@@ -821,7 +833,7 @@ export function tauxDActionnabilite({ racineRapports = "docs", lireDir = readdir
   }
   const taux = Math.round((tacheReelle / declares) * 100);
   return {
-    mesurable: true, quoi: "le taux d'actionnabilité", retenus, avecNumero: avecTache, declares, couverture, taux,
+    mesurable: true, quoi: "le taux d'actionnabilité", retenus, avecNumero: avecTache, declares, couverture, couvertureLisible, taux,
     tacheReelle, mortes: mortes.slice(0, 5),
     // `orphelins` garde son nom et son contenu : les références MORTES d'abord (elles accusent),
     // les constats sans aucune trace ensuite. L'affichage qui le lit n'a pas à changer.
@@ -829,7 +841,7 @@ export function tauxDActionnabilite({ racineRapports = "docs", lireDir = readdir
     // DEUX CHIFFRES, JAMAIS FONDUS EN UN SEUL. Le second ne se lit qu'à la lumière du premier :
     // un taux de 100 % sur une couverture de 2 % dit « les rares qui déclarent sont bons », il ne
     // dira jamais « la chaîne tient ».
-    pourquoi: `${couverture} % des ${retenus} constat(s) RETENU(S) déclarent le numéro de la tâche qu'ils font naître (${declares}) ; sur ceux-là, ${taux} % pointent une tâche qui existe VRAIMENT dans le suivi (${tacheReelle}/${declares})${mortes.length ? `, et ${mortes.length} référence(s) sont MORTES — une référence morte ressemble à un lien, ce qui est pire qu'une absence` : ""}. Les ${retenus - declares} autres ne sont pas des échecs : ce sont des constats SANS TRACE, écrits avant que l'emplacement existe ou par un outil qui ne le renseigne pas encore`,
+    pourquoi: `${couvertureLisible} constat(s) RETENU(S) déclarent le numéro de la tâche qu'ils font naître ; sur ceux-là, ${taux} % pointent une tâche qui existe VRAIMENT dans le suivi (${tacheReelle}/${declares})${mortes.length ? `, et ${mortes.length} référence(s) sont MORTES — une référence morte ressemble à un lien, ce qui est pire qu'une absence` : ""}. Les ${retenus - declares} autres ne sont pas des échecs : ce sont des constats SANS TRACE, écrits avant que l'emplacement existe ou par un outil qui ne le renseigne pas encore`,
     horsPortee: "la couverture dit si le LIEN est écrit, jamais si la tâche a été FAITE — et le registre de JESUS lui-même est exclu du balayage, une mesure qui lit ses propres rapports fabriquant son propre résultat (XP #34)",
   };
 }

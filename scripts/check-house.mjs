@@ -23184,6 +23184,21 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   assert.ok(r.mesurable, 'once numbers are declared, the rate becomes computable — that was the whole point');
   assert.deepEqual([r.retenus, r.declares, r.avecNumero, r.tacheReelle], [3, 2, 1, 1], 'three findings, two declaring a number, one merely citing one elsewhere, and only one of the two declared numbers points at a task that really exists');
   assert.equal(r.couverture, 67, 'coverage answers "is the LINK written"');
+  // ── 4bis. LE POURCENTAGE QUI ARRONDIT À ZÉRO EST LE MÊME MENSONGE QUE LE ZÉRO (2026-10-01,
+  // trouvé en relisant mon propre travail de la nuit — Article 25). Quelques heures après la
+  // construction de ce dispositif, fait précisément pour ne JAMAIS afficher « 0 % », il affichait
+  // « 0 % des 367 constats déclarent le numéro (1) » : un seul déclarant sur 367 arrondit à zéro,
+  // et le garde-fou ne regardait que le cas où il n'y en a AUCUN. Une phrase qui se contredit
+  // elle-même entre son pourcentage et sa parenthèse est pire qu'un chiffre faux.
+  const presqueRien = J.tauxDActionnabilite({
+    racineRapports: 'docs', minimum: 1,
+    lireDir: (d) => (d === 'docs' ? [{ name: 'f.txt', isDirectory: () => false }] : []),
+    lireFic: () => ['  → RETENU · a — tâche [R] #1332 : x', ...Array.from({ length: 300 }, (_, i) => `  → RETENU · b${i} — tâche [R] : y`)].join('\n'),
+    suivi: '| 1332 | x |',
+  });
+  assert.equal(presqueRien.couverture, 0, 'one declaration out of 301 does round to 0 %');
+  assert.match(presqueRien.pourquoi, /1 sur 301 \(moins de 1 %\)/, 'so the sentence must give the RAW FRACTION instead: "1 sur 301" is exact, reads instantly, and cannot be mistaken for an absence');
+  assert.ok(!/^0 %/.test(presqueRien.pourquoi), 'and must never open on "0 %", which is the accusatory figure this whole mechanism exists to avoid');
   assert.equal(r.taux, 50, 'and the rate answers "does the announced task EXIST" — two numbers, never merged: 100 % on a 2 % coverage would say "the few who declare are good", never "the chain holds"');
 
   // ── 5. ZÉRO DÉCLARÉ RESTE « PAS MESURÉ », JAMAIS « 0 % » (leçons L5/L11). C'est le garde-fou qui
