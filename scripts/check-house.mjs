@@ -23378,3 +23378,41 @@ async function testLesSolutionsPartentAvecLAgence() {
   console.log("Passed: nos solutions partent avec l'Agence (2026-10-01, tâche #1342). Sa demande : « je voudrais que tu stockes tes solutions […] la future IA cliente profitera à la fois des outils présents mais aussi de notre expérience consignée ». Le kit de l'Agence portait déjà lecons.md — mais une leçon est un PRINCIPE, « ne fais pas X parce que Y » : elle dit quoi éviter, jamais comment s'en sortir, et c'est la moitié la plus chère à refaire, puisqu'un principe se redécouvre en LISANT quand une solution se redécouvre en SE TROMPANT. D'où une SEPTIÈME pièce, `docs/referentiel/solutions.md`, qui part avec l'Agence et dont l'absence serait mesurée comme un trou d'export. ELLE S'ÉCRIT À LA MAIN, ET C'EST SA FRAGILITÉ : une entrée naît quand quelqu'un se dit « ça resservira », c'est-à-dire pas toujours, pendant que le suivi accumule des dizaines de solutions en prose qui ne remontent jamais. La protection est une sonde qui PROPOSE les clôtures racontant une cause et un remède absentes du registre — et qui n'écrit JAMAIS, parce que généraliser un cas particulier est un jugement et qu'une entrée produite par une machine serait un cas particulier déguisé en principe. Même partage que check-tasks-details/god-of-all-process sur l'Article 28 : les fusionner donnerait un outil qui se satisfait tout seul. LE SEUIL DE DEUX MARQUEURS EST MESURÉ, jamais choisi : à un seul la sonde rendait 219 candidats avec un journal de Ronde en tête de liste, à trois elle n'en rendait plus qu'un ; à deux elle en rend 30 et sa tête de liste est une vraie solution à généraliser.");
 }
 await testLesSolutionsPartentAvecLAgence();
+
+// ────────────────────────────────────────────────────────────────────────────
+// L'EXEMPTION DÉCLARÉE N'ÉTAIT LUE QUE PAR LA SUITE DE TESTS (2026-10-01, tâche #1352)
+// ────────────────────────────────────────────────────────────────────────────
+// CASSANDRA annonçait « check-spirit : 0 % de couverture, EN DÉGRADATION » comme un trou d'équipe.
+// Or AXA-CHECK le déclare dans JAMAIS_EXERCABLES depuis le 2026-09-28, avec sa raison : chacun de
+// ses passages envoie de vraies provocations au vrai modèle, donc l'exercer à chaque commit
+// coûterait de vrais appels API. Le registre existait, portait sa raison, et le seul à le lire
+// était la suite de tests — l'outil qui ACCUSE ne le lisait pas. Article 24 par son mauvais bout,
+// et leçon L4 : un garde-fou qui accuse un cas légitimement exempté finit par ne plus être lu.
+async function testLExemptionDeclareeEstLue() {
+  const assert = (await import('node:assert/strict')).default;
+  const C = await import('../scripts/cassandra-rh.mjs');
+  const A = await import('../scripts/axa-check.mjs');
+
+  const roster = [{ tool: 'check-spirit', slug: 'check-spirit' }, { tool: 'doc-report', slug: 'doc-report' }];
+  const g = C.computeCoverageGaps(roster, {});
+
+  // ── 1. L'EXEMPTÉ SORT DES TROUS…
+  assert.ok(!g.some((x) => x.slug === 'check-spirit'), 'a slug declared in JAMAIS_EXERCABLES must not be counted as a team gap');
+  // ── 2. …MAIS IL NE DISPARAÎT PAS, ET C'EST LA MOITIÉ IMPORTANTE. Le faire disparaître serait
+  // l'erreur symétrique de l'accuser : une exemption dit « personne ne peut mesurer ça d'ici »,
+  // jamais « tout va bien ».
+  assert.ok(g.exemptes.some((x) => x.slug === 'check-spirit'), 'it must appear in the declared-exempt list instead — hiding it is the symmetrical error of accusing it');
+  assert.match(g.exemptes.find((x) => x.slug === 'check-spirit').pourquoi, /vrais appels API|vrai modèle/, 'and carry its written reason, because an exemption without a reason is not a decision');
+
+  // ── 3. CE QUI N'EST PAS DÉCLARÉ RESTE UN TROU. L'exemption ne doit jamais devenir une amnistie
+  // générale : doc-report n'a aucune raison écrite, donc il reste accusé.
+  assert.ok(g.some((x) => x.slug === 'doc-report'), 'a slug with no declared exemption stays a real gap: the fix must not become a blanket amnesty');
+
+  // ── 4. LE REGISTRE EST LU CHEZ SON PROPRIÉTAIRE, jamais recopié ici (anti-doublon §7ter).
+  assert.ok(A.JAMAIS_EXERCABLES.some((e) => e.slug === 'check-spirit' && e.pourquoi), 'the registry lives at AXA-CHECK and carries the reasons');
+  const { readFileSync: lireF } = await import('node:fs');
+  assert.match(lireF('scripts/cassandra-rh.mjs', 'utf8'), /JAMAIS_EXERCABLES/, 'and CASSANDRA imports it rather than keeping a second copy that would drift');
+
+  console.log("Passed: l'exemption déclarée n'était lue que par la suite de tests (2026-10-01, tâche #1352). CASSANDRA annonçait « check-spirit : 0 % de couverture, EN DÉGRADATION » comme un trou d'équipe, alors qu'AXA-CHECK le déclare dans JAMAIS_EXERCABLES depuis le 2026-09-28 avec sa raison écrite : chacun de ses passages envoie de vraies provocations au vrai modèle, donc l'exercer à chaque commit coûterait de vrais appels API (Articles 8 et 22). LE REGISTRE EXISTAIT, PORTAIT SA RAISON, ET LE SEUL À LE LIRE ÉTAIT LA SUITE DE TESTS — l'outil qui ACCUSE ne le lisait pas. C'est l'Article 24 pris par son mauvais bout (un registre lu d'un seul côté) et la leçon L4 dans sa forme la plus coûteuse : un garde-fou qui accuse un cas légitimement exempté finit par ne plus être lu du tout, et ce jour-là il ne protège plus personne. LA CORRECTION TIENT EN DEUX MOITIÉS, ET LA SECONDE COMPTE AUTANT : l'exempté sort des trous, MAIS il ne disparaît pas — il entre dans une liste à part, avec sa raison. Les faire disparaître serait l'erreur symétrique de les accuser, parce qu'une exemption dit « personne ne peut mesurer ça d'ici » et jamais « tout va bien ». C'est exactement la distinction entre « non conforme » et « PAS MESURÉ » que ce projet applique partout ailleurs. Et ce qui n'est pas déclaré reste accusé : doc-report, sans raison écrite, demeure un vrai trou — la correction n'est pas une amnistie générale.");
+}
+await testLExemptionDeclareeEstLue();

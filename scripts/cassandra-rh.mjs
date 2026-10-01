@@ -29,7 +29,7 @@ import { buildPoint, recordPoint, loadSerie, detectTendance, SENS } from "./seri
 // recensement ne pèse sur aucun commit.
 import { recenserLesScripts as recenserLesScriptsPourCompteur, findSuitesDeTest as findSuitesDeTestPourCompteur, AXES_EXEMPLES_MAX } from "./le-classificateur.mjs";
 import { relativeStaleness, lastTouchDays } from "./clean-dirty-old.mjs";
-import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore } from "./axa-check.mjs";
+import { AGENT_SCRIPT_FILES, collectScriptCoverage, scriptRobustnessScore, JAMAIS_EXERCABLES } from "./axa-check.mjs";
 import { KPI_HISTORY_COLUMNS, KPI_HISTORY_PATH, parseKpiHistoryCsv } from "./kpi-report.mjs";
 import { loadObjectifsRegistry, buildObjectifsReport, loadKpiHistoryRows } from "./objectifs-vs-resultats.mjs";
 import { buildDocReportIndex, REGISTRIES as DOC_REPORT_REGISTRIES, FILE_WRITER_NATURES } from "./doc-report.mjs";
@@ -569,10 +569,34 @@ export function runAxaCheckCoverage({ shImpl = sh, collectImpl = collectScriptCo
 // Pure, testable sans toucher au disque — reçoit `perSlugCoverage` déjà produit ailleurs (jamais un
 // second calcul). Un membre jamais scanné (`pct === undefined`) est un trou tout aussi réel qu'un
 // membre mal couvert, jamais confondu avec une couverture de 0% mesurée.
-export function computeCoverageGaps(roster, perSlugCoverage, threshold = 100) {
-  return roster
+//
+// ━━━ L'EXEMPTION DÉCLARÉE EST LUE, ET ELLE NE L'ÉTAIT PAS (2026-10-01, tâche #1352) ━━━
+//
+// CE QUI S'EST PASSÉ, et c'est le patron que ce projet connaît le mieux. CASSANDRA annonçait
+// « check-spirit : 0 % de couverture, EN DÉGRADATION » comme un trou d'équipe. Or AXA-CHECK
+// déclare check-spirit dans `JAMAIS_EXERCABLES` **depuis le 2026-09-28**, avec sa raison écrite :
+// chacun de ses passages envoie de vraies provocations au vrai modèle, donc l'exercer à chaque
+// commit coûterait de vrais appels API (Articles 8 et 22).
+//
+// LE REGISTRE EXISTAIT, PORTAIT SA RAISON, ET LE SEUL À LE LIRE ÉTAIT LA SUITE DE TESTS. L'outil
+// qui ACCUSE ne le lisait pas. C'est Article 24 pris par son mauvais bout — un registre qui n'est
+// lu que d'un côté — et c'est la leçon L4 : un garde-fou qui accuse un cas légitimement exempté
+// finit par ne plus être lu du tout, et ce jour-là il ne protège plus personne.
+//
+// CE QUE ÇA NE FAIT PAS, ET C'EST LA MOITIÉ IMPORTANTE : le trou ne DISPARAÎT pas. Une exemption
+// dit « personne ne peut mesurer ça d'ici », jamais « tout va bien ». Les exemptés sortent donc
+// des TROUS et entrent dans une liste à part, avec leur raison — exactement la distinction entre
+// « non conforme » et « PAS MESURÉ » que ce projet applique partout ailleurs. Les afficher comme
+// un échec et les faire disparaître sont deux erreurs symétriques ; la troisième voie est de les
+// nommer pour ce qu'ils sont.
+export function computeCoverageGaps(roster, perSlugCoverage, threshold = 100, { exemptes = JAMAIS_EXERCABLES } = {}) {
+  const parSlug = new Map((exemptes ?? []).map((e) => [e.slug, e.pourquoi]));
+  const tous = roster
     .map((member) => ({ tool: member.tool, slug: member.slug, pct: scriptRobustnessScore(member.slug, perSlugCoverage) }))
     .filter((entry) => entry.pct === undefined || entry.pct < threshold);
+  const gaps = tous.filter((e) => !parSlug.has(e.slug));
+  gaps.exemptes = tous.filter((e) => parSlug.has(e.slug)).map((e) => ({ ...e, pourquoi: parSlug.get(e.slug) }));
+  return gaps;
 }
 
 // --- Nouveaux visages : Phase 1 (2026-09-21, demande explicite de l'utilisateur : « c'est
@@ -1177,6 +1201,16 @@ export function buildCassandraReportBlocks({ teamSize, badgeSummary, kpiTrend, r
     blocks.push(coverageGaps.length
       ? { type: "list", items: coverageGaps.map((g) => `${g.tool} — ${g.pct === undefined ? "jamais scanné" : `${Math.round(g.pct)}% de couverture`}`) }
       : { type: "paragraph", text: "Aucun poste fragile détecté — tous les membres scannés sont à 100% de couverture." });
+    // LES EXEMPTÉS SONT AFFICHÉS À PART, JAMAIS TUS (2026-10-01, #1352). Les faire disparaître
+    // serait l'erreur symétrique de les accuser : une exemption dit « personne ne peut mesurer ça
+    // d'ici », jamais « tout va bien ». Le trou reste réel — c'est précisément ce que la raison
+    // écrite de chacun explique, et c'est pour ça qu'elle s'affiche avec lui.
+    const exemptes = coverageGaps.exemptes ?? [];
+    if (exemptes.length) {
+      blocks.push({ type: "heading", text: "Hors de portée de la mesure — exemptions DÉCLARÉES, jamais des trous" });
+      blocks.push({ type: "list", items: exemptes.map((g) => `${g.tool} — ${g.pourquoi}`) });
+      blocks.push({ type: "note", text: "Ces membres ne sont pas mal couverts : ils sont IMPOSSIBLES à exercer gratuitement, et la raison de chacun est déclarée dans JAMAIS_EXERCABLES (axa-check.mjs). Le trou qu'elle laisse est réel — le déclarer EST la protection (Article 27). Les compter comme des trous ferait sonner une alarme qu'aucun geste ne peut éteindre, et un garde-fou inextinguible cesse d'être lu (leçon L4)." });
+    }
   }
 
   if (recruitmentCandidates.length) {
