@@ -676,6 +676,10 @@ export const MARQUEUR_ECARTE_ARBITRAGE = Object.freeze({
   pourquoi: "écarté : les mêmes mots enregistrent une décision EN ATTENTE et une décision DÉJÀ RENDUE — #745 porte « ARBITRAGE DE L'UTILISATEUR : \"Oui, cherche les fusions possibles\" », qui est une autorisation de travailler",
 });
 
+// ⚠️ NE PAS CONFONDRE AVEC `findStatutsContredits()`, plus haut dans ce même fichier : celle-là
+// compare DEUX lignes (une tâche ouverte qu'une autre ligne déclare close) ; celle-ci compare les
+// deux couches d'UNE SEULE ligne (son statut contre son texte). Vérifié le 2026-10-01 avant de
+// conclure au doublon — les noms se ressemblent, les objets non.
 export function lignesQuiSeContredisent(rows = [], { marqueurs = MARQUEURS_DE_BLOCAGE_EN_PROSE, ...options } = {}) {
   const trouvees = [];
   for (const r of rows ?? []) {
@@ -1077,6 +1081,14 @@ export function checkChantierFileFreshness(allRows, { lastTouch = lastTouchDays,
 // automatique d'un registre que l'utilisateur relit.
 export const MOTIF_CLOTURE = /CL[ÔO]TURE\s+(?:DE\s+|du\s+constat[^#]{0,40})#(\d+)/gi;
 
+// ⚠️ NE PAS CONFONDRE AVEC `lignesQuiSeContredisent()` (2026-10-01, tâche #1391, et la confusion
+// a failli être prise pour un doublon). Les deux noms se ressemblent, les deux objets non :
+//   · ICI — une ligne OUVERTE dont une **AUTRE** ligne annonce la clôture. Contradiction ENTRE
+//     DEUX lignes : quelqu'un a clos la tâche ailleurs sans revenir mettre son statut à jour.
+//   · LÀ-BAS — une ligne dont **SON PROPRE** statut dit « actionnable » pendant que **SON PROPRE**
+//     texte dit « n'y touche pas ». Contradiction INTERNE à une seule ligne.
+// La frontière est écrite des deux côtés plutôt que laissée à deviner (Article 20bis : un mot qui
+// désigne deux choses se qualifie, il ne se laisse jamais seul).
 export function findStatutsContredits(rows = []) {
   if (!rows.length) return { mesurable: false, pourquoi: "aucune ligne de suivi lue : rien à confronter, ce qui n'est pas la même chose qu'aucune contradiction" };
   const texte = rows.map((r) => r.detail ?? "").join("\n");
