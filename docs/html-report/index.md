@@ -7,7 +7,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | Page produite | Source Markdown | Octets | Généré le |
 |---|---|---|---|
 | `docs/grand-projet/html/plan-daction.html` | `docs/grand-projet/03-plan-daction/plan-daction-2026-09-28.md` | 27734 | 2026-09-29 06:13Z |
-| `docs/grand-projet/html/questions-en-cours-de-route.html` | `docs/grand-projet/02-strategie/questions-en-cours-de-route.md` | 16595 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/vue-globale.html` | `docs/grand-projet/02-strategie/vue-globale-2026-09-28.md` | 26027 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/le-chemin.html` | `docs/grand-projet/02-strategie/le-chemin-2026-09-29.md` | 19584 | 2026-09-29 06:13Z |
 | `docs/grand-projet/html/questions-de-calibrage.html` | `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.md` | 18657 | 2026-09-29 06:13Z |
@@ -70,3 +69,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.html` | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` | 13499 | 2026-10-02 03:59Z |
 | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.html` | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.md` | 16366 | 2026-10-02 03:59Z |
 | `docs/referentiel/document-de-gouvernance.html` | `docs/referentiel/document-de-gouvernance.md` | 18092 | 2026-10-02 03:59Z |
+| `docs/grand-projet/html/questions-en-cours-de-route.html` | `docs/grand-projet/02-strategie/questions-en-cours-de-route.md` | 16739 | 2026-10-02 06:28Z |

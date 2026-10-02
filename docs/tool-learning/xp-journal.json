@@ -353,5 +353,11 @@
     "titre": "Vérifier le CONTENU d’un document et vérifier sa PORTÉE sont deux gestes différents — j’ai fait le premier quatre fois sans voir le second",
     "quoi": "Le 2026-10-01 j’ai re-mesuré QUATRE FOIS les chiffres du livrable destiné à l’utilisateur, en relançant chaque outil qui les avait produits. Je n’ai jamais remarqué que le document s’arrêtait à 2 h du matin alors que le travail continuait jusqu’à 16 h 40 : seize tâches closes n’y figuraient pas, dont celles qui corrigeaient ses propres documents de décision. LA DISTINCTION : le CONTENU répond à « ce qui est écrit est-il encore vrai ? », la PORTÉE à « ce qui s’est passé est-il encore couvert ? ». Un document peut être exact à 100 pour cent sur chaque phrase ET gravement incomplet. Et vérifier les chiffres DONNE L’IMPRESSION d’avoir vérifié le document — c’est ce qui rend l’angle mort stable. LA CONFIRMATION EST VENUE VITE : le contrôle de portée, appliqué deux heures plus tard, a trouvé qu’une DIXIÈME décision attendait l’utilisateur pendant que le tableau en annonçait neuf — et ce tableau est, de son propre aveu, la seule partie du document qui attend une décision de lui. LE GESTE : à chaque relecture d’un livrable, poser DEUX questions au lieu d’une. Et quand un COMPTE change (neuf → dix), le poursuivre partout où il est écrit : titre, renvoi d’en-tête, résumé — sinon le document se contredit lui-même, ce qui est arrivé deux fois dans la même journée.",
     "date": "2026-10-01T18:53:47.099Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou",
+    "quoi": "UNE HEURE SE SUBSTITUE PAR LE SHELL, ELLE NE SE RECOPIE PAS. Lire l heure puis la retaper a produit CINQ horodatages faux en deux jours, malgre la regle explicite qui impose de la LIRE. Le defaut n est pas l attention : entre la lecture et l ecriture il y a une RECOPIE, et c est la recopie qui derive. Le geste correct rend la recopie impossible : TS=$(node scripts/agent-du-temps.mjs | grep -oE \"2026-..-..T..:..Z\" | head -1) puis $TS dans le texte. Le garde-fou des horodatages futurs les attrapait bien, mais APRES coup, au prix d un commit perdu a chaque fois — il corrige un resultat la ou la substitution ferme le geste.",
+    "date": "2026-10-02T06:18:39.702Z"
   }
 ]
