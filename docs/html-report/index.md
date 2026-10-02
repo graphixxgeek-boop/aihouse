@@ -73,3 +73,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 28428 | 2026-10-02 07:37Z |
 | `docs/livrables/les-11-destinations-dune-note.html` | `docs/livrables/les-11-destinations-dune-note.md` | 11113 | 2026-10-02 08:05Z |
 | `docs/livrables/reponse-au-prompt-word-du-1er-octobre.html` | `docs/livrables/reponse-au-prompt-word-du-1er-octobre.md` | 17380 | 2026-10-02 12:35Z |
+| `docs/rapports-de-nuit/nuit-2026-10-02.html` | `docs/rapports-de-nuit/nuit-2026-10-02.md` | 12840 | 2026-10-02 14:01Z |

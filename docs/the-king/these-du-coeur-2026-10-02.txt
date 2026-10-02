@@ -4,28 +4,28 @@ Lue sur 86 fichier(s) de l'outillage. Aucun chiffre ci-dessous ne vient d'un nom
 chacun lit ce que le code FAIT, parce qu'une convention de nommage ne dit rien de ce qu'un fichier gouverne.
 
 CE QUI GOUVERNE
-    182 × ce qui REFUSE — dans 30 fichier(s)
+    184 × ce qui REFUSE — dans 30 fichier(s)
           une fonction qui lève une erreur arrête quelque chose : c'est la forme la plus forte qu'un principe puisse prendre ici, parce qu'elle ne dépend d'aucune mémoire
-    945 × ce qui rend un VERDICT — dans 47 fichier(s)
+    983 × ce qui rend un VERDICT — dans 47 fichier(s)
           un retour qui porte « mesurable » distingue un résultat d'une absence de résultat — c'est un jugement rendu, jamais un simple affichage
-    405 × ce qui sait DIRE QU'IL N'A PAS PU — dans 45 fichier(s)
+    435 × ce qui sait DIRE QU'IL N'A PAS PU — dans 45 fichier(s)
           refuser de conclure sur zéro donnée est un acte de gouvernance à part entière, et c'est celui que ce projet a payé le plus cher pour apprendre
 
 CE QUI PRODUIT
-    240 × ce qui MET EN FORME — dans 51 fichier(s)
+    248 × ce qui MET EN FORME — dans 51 fichier(s)
           une fonction qui assemble des lignes ou du HTML produit un livrable : c'est la moitié visible du travail, et la thèse dit qu'elle n'est pas le cœur
-   1899 × ce qui IMPRIME — dans 68 fichier(s)
+   1930 × ce qui IMPRIME — dans 68 fichier(s)
           l'impression est le geste de production le plus élémentaire du paysage, et le plus fréquent
 
 DEUX LECTURES, ET ELLES NE DISENT PAS LA MÊME CHOSE — les deux sont rendues plutôt qu'une seule choisie,
 parce que choisir le critère reviendrait à trancher la thèse par le choix du critère.
 
-  LECTURE LARGE — tout compris, l'impression incluse : 1532 contre 2139, soit 0.72 pour 1 → thèse SOUTENUE EN PARTIE.
+  LECTURE LARGE — tout compris, l'impression incluse : 1602 contre 2178, soit 0.74 pour 1 → thèse SOUTENUE EN PARTIE.
      Elle répond à : « de quoi le code est-il fait, geste par geste ? » Son défaut est connu et déclaré :
      dans un outil de gouvernance, imprimer est la façon dont un VERDICT est rendu, pas un produit fabriqué.
      La livraison de ce qu'on mesure d'un côté gonfle donc le dénominateur de l'autre (leçon L10).
 
-  LECTURE STRUCTURELLE — l'impression écartée : 1532 contre 240, soit 6.38 pour 1 → thèse SOUTENUE.
+  LECTURE STRUCTURELLE — l'impression écartée : 1602 contre 248, soit 6.46 pour 1 → thèse SOUTENUE.
      Elle répond à : « à quoi les STRUCTURES du code sont-elles consacrées ? » C'est la question de la thèse,
      et c'est la lecture qui la soutient le plus franchement — raison de plus pour ne pas la donner seule.
 

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La nuit du 2 octobre</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T14:01:35.776Z</div>
+    <h1>La nuit du 2 octobre</h1>
+    <p class="sub">Page générée depuis docs/rapports-de-nuit/nuit-2026-10-02.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-10-02T14:01Z — heure LUE, source système. Fenêtre : de 05h28 à maintenant.)</em></p>
+<hr>
+<h3>À LIRE EN PREMIER, SI TU NE LIS QUE ÇA</h3>
+<p><strong>Trois choses t'attendent, et deux sont des décisions :</strong></p>
+<ul><li><strong>La licence du projet n'existe pas.</strong> Ni fichier, ni déclaration. C'est le premier critère du standard le plus répandu, c'est gratuit à corriger, et <strong>ça bloque une vente plus sûrement que n'importe quel défaut de code</strong>. Détail dans <code>docs/livrables/reponse-au-prompt-word-du-1er-octobre.html</code>.</li><li><strong>La Ronde est à 80 commits de retard, et je ne peux pas la lancer seul.</strong> Son contrôleur exige des faits que toi seul peux fournir. Une demi-Ronde enregistrée comme faite serait pire que pas de Ronde.</li><li><strong>Quatre arbitrages t'attendent</strong> dans <code>docs/idees-a-trancher.md</code>, tous mesurés, aucun urgent.</li></ul>
+<p><strong>Et un chiffre qui change ta stratégie de refonte</strong> : le coût d'une reprise à zéro <strong>n'est pas réparti, il est concentré</strong>. 8 raisons écrites par fichier en médiane contre 27,5 en moyenne, et <strong>un seul fichier en porte un tiers</strong>. Une reprise module par module est donc bien moins chère que la moyenne ne le laisse croire pour 87 fichiers sur 88.</p>
+<hr>
+<h3>LES QUATORZE TÂCHES AVANCÉES</h3>
+<table><thead><tr><th>Tâche</th><th>Ce qui a été fait</th><th>Ce que ça t'apporte</th></tr></thead><tbody><tr><td><strong>#1434</strong></td><td>les deux moitiés : dérivation ET révélation des stratégies globales</td><td>les dix stratégies de chantier passent enfin vraiment par la globale, qui l'affirmait sans que ce soit vrai</td></tr><tr><td><strong>#1420</strong></td><td>la carte CIBLE des modules, en PROPOSITION, + <code>cassandra-rh carte-cible</code></td><td>« voilà où on est, voilà où on va », et l'écart se mesure</td></tr><tr><td><strong>#1444</strong></td><td>ta thèse « le cœur de l'Agence est sa gouvernance », ÉPROUVÉE</td><td>elle tient, mais pas également selon la question qu'on pose — deux lectures rendues</td></tr><tr><td><strong>#1445</strong></td><td>l'organisation des lois, + <code>abraham lois</code></td><td>six textes font loi, deux numérotent, et citer n'est plus ambigu</td></tr><tr><td><strong>#1435</strong></td><td>l'alerte de tension, <code>the-king tension &quot;&lt;ton idée&gt;&quot;</code></td><td><strong>oui, je peux désormais te prévenir</strong> — c'était ta question</td></tr><tr><td><strong>#1447</strong></td><td>le composeur de ligne de suivi</td><td>la forme ne peut plus être fausse à la saisie</td></tr><tr><td><strong>#1421</strong></td><td>le marqueur de stratégie par tâche</td><td>le « raccord du bas » a enfin son instrument</td></tr><tr><td><strong>#1438</strong></td><td>les deux moitiés : extraction élargie ET dérivation</td><td>les cinq impossibles sont retrouvés avec leurs porteurs</td></tr><tr><td><strong>#1428</strong></td><td><code>the-king fonder</code></td><td>l'Agence sait proposer les textes fondateurs d'un projet d'accueil — et ne propose RIEN à un projet qui a les siens</td></tr><tr><td><strong>#1441</strong></td><td>la table des 11 destinations + son garde-fou</td><td>tu voulais la voir : <code>docs/livrables/les-11-destinations-dune-note.html</code></td></tr><tr><td><strong>#1449</strong></td><td>les 11 destinations sont-elles alimentées ?</td><td><strong>8 sur 8 mesurables le sont</strong>, 3 déclarées non mesurables</td></tr><tr><td><strong>#1422</strong></td><td>les 7 écarts RE-MESURÉS</td><td><strong>un sur sept était un défaut de mesure, pas un défaut du corpus</strong></td></tr><tr><td><strong>#1440</strong></td><td>la réponse à ton prompt Word</td><td>prête, six points, dont la licence</td></tr><tr><td><strong>#1448 · #1450</strong></td><td>deux défauts attrapés par les garde-fous eux-mêmes</td><td>—</td></tr></tbody></table>
+<hr>
+<h3>LES TROIS CHOSES QUE LA NUIT A APPRISES, ET QUI VALENT PLUS QUE LES OUTILS</h3>
+<p><strong>① UN CHIFFRE SUR SEPT ÉTAIT UN ARTEFACT DE L'INSTRUMENT.</strong> En corrigeant l'extracteur, l'écart « trois convictions sur dix citent un nom de fonction » est tombé de <strong>30 % à 8 %</strong>. Le projet n'est pas devenu moins technique en vingt-quatre heures : l'ancien extracteur, qui n'acceptait que de la prose longue, favorisait mécaniquement les commentaires de code. <strong>Tu aurais arbitré sur un chiffre faux.</strong></p>
+<p><strong>② CE QUI NE BOUGE PAS COMPTE AUTANT.</strong> Deux autres écarts se sont déplacés de moins d'un point sur un corpus deux fois et demie plus grand. <strong>Un écart qui résiste à un changement d'instrument n'est plus une mesure, c'est un fait.</strong></p>
+<p><strong>③ UNE MESURE QUI LIT UN CHAMP INEXISTANT NE REND PAS D'ERREUR, ELLE REND UN PETIT NOMBRE.</strong> Je m'en suis fait prendre en direct : un champ mal nommé a rendu 8 citations là où le texte en porte</p>
+<ul><li><strong>Un petit nombre là où l'on en attend un petit ne réveille personne</strong> — c'est la forme la plus</li></ul>
+<p>discrète d'une mesure fausse, et elle est désormais écrite dans la fiche concernée.</p>
+<hr>
+<h3>CE QUI RESTE BLOQUÉ SUR TOI, ET CE N'EST PAS DU RETARD</h3>
+<table><thead><tr><th>Ce qui attend</th><th>Où c'est écrit</th></tr></thead><tbody><tr><td>les 4 amendements au document de gouvernance (son article de révision exige ton accord préalable)</td><td><code>docs/idees-a-trancher.md</code>, #1437</td></tr><tr><td>les 7 fourchettes et 2 verdicts de détachabilité de la carte cible</td><td>même document, #1420</td></tr><tr><td>le rang des trois textes qui énoncent chacun une suprématie</td><td>même document, #1445</td></tr><tr><td>la redescente des règles sur É1, É2 et É6 — É6 n'appartient qu'à toi</td><td><code>docs/strategies/strategie-cascade-philo-politique.md</code></td></tr><tr><td>qui PORTE une stratégie : c'est un rôle, et un rôle ne se décrète pas depuis le code</td><td>#1421</td></tr><tr><td>la licence</td><td>#1368</td></tr></tbody></table>
+<hr>
+<h3>L'ÉTAT DU DÉPÔT</h3>
+<p><strong>Filet de sécurité : 405 blocs au vert, EXIT=0</strong>, re-passé après chacune des quinze livraisons. <strong>Branche poussée à chaque tâche</strong>, jamais accumulée. <strong>Cascade : 67/67.</strong> Les six Gardiens sacrés au vert à chaque commit.</p>
+<p><strong>Relecture à froid faite</strong> (Article 25) : les huit outils construits cette nuit ont été relancés contre l'état réel en fin de fenêtre, et rendent tous le même verdict qu'à leur construction.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/rapports-de-nuit/nuit-2026-10-02.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
