@@ -188,3 +188,41 @@ en **À TRANCHER** plutôt qu'en conclusion. La contrainte permanente est de **2
 **HORS PORTÉE, et c'est la limite qui compte** : ces chiffres disent COMBIEN de code est consacré à
 gouverner, jamais si ce qu'il gouverne en vaut la peine. Un paysage pourrait être gouvernance à 90 %
 et ne rien protéger d'utile.
+
+## LA RÉVÉLATION DE LA STRATÉGIE — même machine, autre corpus (2026-10-02, tâche #1434)
+
+**Sous-commande** : `node scripts/the-king.mjs reveler-strategie`. Dépose
+`docs/the-king/revelation-strategie-<date>.txt`.
+
+**POURQUOI CE N'EST PAS UN SECOND OUTIL.** Une philosophie et une stratégie se révèlent de la même
+façon : on lit un corpus, on extrait les phrases qui engagent, on les note par le nombre de
+contextes qu'elles traversent, on dérive le seuil de leur propre distribution, et on confronte le
+tout à un document de référence. Construire une seconde mécanique aurait créé deux moteurs à
+maintenir pour une seule idée, et le second aurait divergé du premier en silence. **Seules trois
+choses changent, et toutes trois sont des paramètres** : le CORPUS, le CADRE, le DOCUMENT DE
+RÉFÉRENCE.
+
+**LE CADRE STRATÉGIQUE, six cases, et ce ne sont pas celles d'une philosophie** : où l'on va · par
+quelles étapes · ce qu'on ne fera pas · ce qui bloque · comment on saura · de quoi ça dépend. Une
+philosophie énonce des convictions, vraies ou fausses ; une stratégie énonce une direction et des
+jalons, atteints ou non.
+
+**UN DÉFAUT RÉEL TROUVÉ AU PREMIER PASSAGE, CORRIGÉ À LA RACINE** : la famille « renoncements »
+ramassait **1 740 phrases sur 1 880**, soit 93 % du corpus, à cause du seul mot **« jamais »** —
+présent dans 92 % des phrases de ce dépôt, qui écrit ses règles en interdictions. Un mot aussi
+répandu ne sépare pas le corpus, il le recouvre. **Le filtre qui l'écarte est DÉRIVÉ, jamais une
+liste de mots interdits** (corollaire de l'Article 17) : on mesure ce que chaque mot attrape à lui
+seul, et l'écart est **rendu avec sa part** — un cadre amputé en silence produirait des cases vides
+sans qu'on puisse distinguer un corpus muet d'un mot perdu.
+
+**LES DEUX LIMITES LOURDES DU PASSAGE, DÉCLARÉES PLUTÔT QUE TUES :**
+
+1. **Le document de référence n'est pas lisible par l'extracteur.** La stratégie globale est
+   structurée en sections ①②③④, pas en Articles, et l'extracteur ne connaît que les formes à
+   Articles. Tout ressort donc « inavoué » **par construction**, et ce chiffre ne dit rien sur la
+   stratégie globale — il dit qu'on ne l'a pas lue. C'est la tâche **#1438**, ouverte.
+2. **Ce n'est pas la dérivation qui décide du seuil, c'est le PLANCHER de trois fichiers** hérité
+   de la révélation philosophique, alors que le centile observé vaut 1. **C'est normal** : une
+   direction s'énonce une fois, une conviction revient partout. Exiger la répétition importe au
+   corpus stratégique une attente qui n'est pas la sienne — **et c'est un arbitrage**, inscrit
+   comme tel plutôt que tranché seul.

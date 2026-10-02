@@ -884,6 +884,34 @@ export function representativite(phrase, convictions, { recouvrement = RECOUVREM
   return { fichiers: vus.size, zones: zones.size, listeZones: [...zones], mots: mots.size };
 }
 
+// UN MOT DE CADRE QUI MATCHE PRESQUE TOUT NE CLASSE RIEN, et il faut le retirer en le DISANT
+// (2026-10-02, tâche #1434). Premier passage de la révélation de la stratégie : la famille
+// « renoncements » ramassait 1 740 convictions sur 1 880, soit 93 % du corpus. La cause tient en
+// un mot — « jamais », présent dans 99 % des fichiers de ce dépôt, qui écrit ses règles en
+// interdictions. Un mot aussi répandu ne sépare pas le corpus, il le recouvre.
+// LE FILTRE EST DÉRIVÉ, JAMAIS UNE LISTE DE MOTS INTERDITS (Article 24, et le corollaire de
+// l'Article 17 qui refuse justement les listes figées) : on mesure la part de convictions que
+// CHAQUE mot attrape à lui seul, et on écarte ceux qui dépassent le plafond. Un mot qui devient
+// envahissant demain sera écarté demain, sans qu'on touche à ce fichier.
+// ET L'ÉCART SE DIT : les mots retirés sont rendus avec leur part, parce qu'un cadre amputé en
+// silence rendrait des cases vides sans qu'on sache si le corpus est muet ou si le mot a sauté.
+export const PART_D_UN_MOT_TROP_LARGE = 0.5;
+
+export function cadreSansLesMotsTropLarges(familles = [], convictions = [], { plafond = PART_D_UN_MOT_TROP_LARGE } = {}) {
+  if (!convictions.length) return { familles, ecartes: [], mesurable: false, pourquoi: "aucune conviction : rien à mesurer, le cadre passe tel quel" };
+  const phrases = convictions.map((c) => String(c.phrase ?? c).toLowerCase());
+  const ecartes = [];
+  const gardees = familles.map((f) => {
+    const mots = f.mots.filter((m) => {
+      const part = phrases.filter((ph) => ph.includes(m)).length / phrases.length;
+      if (part > plafond) { ecartes.push({ famille: f.cle, mot: m, part }); return false; }
+      return true;
+    });
+    return { ...f, mots };
+  });
+  return { familles: gardees, ecartes, mesurable: true };
+}
+
 export function couvertureDuCadre({ convictions = [], unites = [], familles = CADRE_FAMILLES, vocab = null, seuilEtendue = 3, topN = 6 } = {}) {
   if (!convictions.length) {
     return { mesurable: false, cases: [], vides: [], pourquoi: "aucune conviction extraite : ce zéro dit qu'on n'a rien pu lire, jamais que le corpus est muet" };
@@ -965,7 +993,14 @@ export function tensionsDuCorpus(convictionsRetenues, { max = 400 } = {}) {
   return { ...brut, tensions: brut.tensions.map((t) => ({ ...t, texteA: parEtiquette.get(t.a) ?? t.a, texteB: parEtiquette.get(t.b) ?? t.b })) };
 }
 
-export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS, chemin = PHILOSOPHY_PATH, lireImpl = null, listerImpl = null, seuilEtendue = null } = {}) {
+// LE CADRE EST INJECTABLE DEPUIS LE 2026-10-02 (tâche #1434), et c'est ce qui permet à la MÊME
+// machine de révéler autre chose qu'une philosophie. Elle ne savait faire qu'une seule révélation
+// parce que son cadre était câblé, pas parce que sa mécanique était spécifique : extraire des
+// convictions, les noter par représentativité, dériver un seuil de leur propre distribution et les
+// confronter à un document de référence vaut pour n'importe quel corpus. Ce qui change d'une
+// révélation à l'autre, ce sont TROIS choses — le corpus lu, le cadre qui dit quelles cases doivent
+// être remplies, et le document auquel on compare — et toutes trois sont désormais des paramètres.
+export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS, chemin = PHILOSOPHY_PATH, familles = CADRE_FAMILLES, lireImpl = null, listerImpl = null, seuilEtendue = null } = {}) {
   const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
   const lister = listerImpl ?? ((d, ext = ".md") => (fsExists(join(root, d))
     ? fsReaddir(join(root, d)).filter((f) => f.endsWith(ext)).map((f) => `${d}/${f}`) : []));
@@ -984,6 +1019,13 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
   if (!textes.size) return { mesurable: false, pourquoi: "aucun fichier du corpus n'a pu être lu : ce zéro dit qu'on n'a rien lu, jamais que le projet n'a pas de convictions" };
 
   const vocabulaire = vocabulaireDuCorpus(textes, { root });
+  // DEUX PASSES, ET LA PREMIÈRE NE SERT QU'À MESURER LE CADRE. On ne peut pas savoir qu'un mot de
+  // cadre recouvre le corpus avant d'avoir le corpus : la première passe extrait les phrases, la
+  // seconde les classe avec un cadre déjà nettoyé de ses mots trop larges.
+  const brutes = [];
+  for (const [f, t] of textes) for (const c of extraireConvictions(t, { chemin: f })) brutes.push(c);
+  const cadreNettoye = cadreSansLesMotsTropLarges(familles, brutes);
+  familles = cadreNettoye.familles;
   const convictions = [];
   for (const [f, t] of textes) {
     for (const c of extraireConvictions(t, { chemin: f })) {
@@ -991,7 +1033,7 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
         ...c,
         zone: zoneDuFichier(f, { racines }),
         motsUtiles: [...new Set(significantWords(c.phrase))].filter((w) => vocabulaire.mots.has(w)),
-        familles: familleDUneConviction(c.phrase),
+        familles: familleDUneConviction(c.phrase, { familles }),
         niveau: classerParNiveau(c.phrase).niveau,
       });
     }
@@ -1006,7 +1048,7 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
   const derive = reps.length ? reps[Math.floor(reps.length * 0.75)] : 0;
   const seuil = { valeur: seuilEtendue ?? Math.max(3, derive), derive, centile: 0.75, observees: reps.length, max: reps[reps.length - 1] ?? 0 };
 
-  const cadre = couvertureDuCadre({ convictions, unites, vocab: vocabulaire.mots, seuilEtendue: seuil.valeur });
+  const cadre = couvertureDuCadre({ convictions, unites, familles, vocab: vocabulaire.mots, seuilEtendue: seuil.valeur });
   const parNiveau = {};
   for (const c of convictions) parNiveau[c.niveau] = (parNiveau[c.niveau] ?? 0) + 1;
   const retenues = cadre.cases.flatMap((c) => c.top);
@@ -1015,7 +1057,7 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
     mesurable: true, tensions,
     fichiersLus: textes.size, fichiersDeclares: fichiers.length,
     convictions: convictions.length, vocabulaire: { retenu: vocabulaire.mots.size, plafond: vocabulaire.plafond, ecartesCommeOutils: vocabulaire.ecartesCommeOutils },
-    seuil, cadre, parNiveau,
+    seuil, cadre, parNiveau, motsDeCadreEcartes: cadreNettoye.ecartes,
     inavoues: retenues.filter((c) => !c.boussole.couverte).length,
     boussole: { chemin, principes: unites.length },
   };
@@ -1049,6 +1091,105 @@ export const INDICES_DE_PRODUCTION = [
   { cle: "affichage", titre: "ce qui IMPRIME", motif: /console\.log\(/g,
     quoi: "l'impression est le geste de production le plus élémentaire du paysage, et le plus fréquent" },
 ];
+
+// ============================================================================
+// LA RÉVÉLATION DE LA STRATÉGIE — même machine, autre corpus, autre cadre (tâche #1434)
+// ============================================================================
+// POURQUOI ÇA N'EST PAS UN SECOND OUTIL, et c'est le point qui compte : une philosophie et une
+// stratégie se révèlent de la même façon — on lit un corpus, on en extrait des phrases qui
+// engagent, on les note par le nombre de contextes qu'elles traversent, on dérive le seuil de leur
+// propre distribution, et on confronte le tout à un document de référence pour voir ce qu'il ne
+// dit pas. Construire une seconde mécanique aurait créé deux moteurs à maintenir pour une seule
+// idée, et le second aurait divergé du premier en silence.
+//
+// CE QUI CHANGE VRAIMENT, ET IL N'Y A QUE TROIS CHOSES. Le CORPUS : une philosophie se lit dans les
+// règles et les leçons, une stratégie se lit dans les plans, les chantiers et les décisions. Le
+// CADRE : une philosophie doit dire ce en quoi on croit, une stratégie doit dire où l'on va, par
+// quelles étapes, ce qu'on ne fera pas, ce qui bloque, et comment on saura qu'on y est. Le
+// DOCUMENT DE RÉFÉRENCE : la boussole d'un côté, la stratégie globale de l'autre.
+export const RACINES_DE_LA_STRATEGIE = [
+  { dossier: "docs/strategies", zone: "chantiers", pourquoi: "les dix stratégies de CHANTIER : c'est là que la direction est écrite au plus près du travail réel" },
+  { dossier: "docs/grand-projet/02-strategie", zone: "cible", pourquoi: "la cible du projet entier et les grands axes de départ — ce qu'on cherche à obtenir" },
+  { dossier: "docs/plans", zone: "plans", pourquoi: "les plans de chantier : la direction telle qu'elle a été réellement découpée en étapes" },
+  { dossier: "docs/suivi/sessions", zone: "decisions", pourquoi: "les décisions prises : une stratégie se lit mieux dans ce qu'on a fait que dans ce qu'on a annoncé" },
+  { dossier: "docs/fils", zone: "questions", pourquoi: "les questions ouvertes par sujet : une direction se devine aussi à ce qui reste indécis" },
+];
+
+// LES SIX CASES D'UNE STRATÉGIE, et elles ne sont pas celles d'une philosophie. Une philosophie
+// énonce des convictions, qui sont vraies ou fausses ; une stratégie énonce une DIRECTION et des
+// JALONS, qui sont atteints ou non. Les cases ci-dessous sont les six questions auxquelles un
+// document de stratégie doit répondre pour en être un — une case vide est un vrai trou, jamais un
+// défaut de mesure, et le rapport le dit case par case.
+export const CADRE_STRATEGIQUE = [
+  { cle: "destination",  bloc: "direction", titre: "Où l'on va",            ancre: "Destination", mots: ["cible", "objectif", "but", "viser", "visé", "direction", "ambition", "finalité", "aboutir"] },
+  { cle: "etapes",       bloc: "direction", titre: "Par quelles étapes",    ancre: "Étapes",      mots: ["étape", "étapes", "chantier", "chantiers", "phase", "phases", "ordre", "d'abord", "ensuite", "séquence"] },
+  { cle: "renoncements", bloc: "direction", titre: "Ce qu'on ne fera pas",  ancre: "Renoncements", mots: ["renoncer", "écarté", "écartée", "jamais", "refuse", "refusé", "hors", "exclu", "pas la peine"] },
+  { cle: "obstacles",    bloc: "conditions", titre: "Ce qui bloque",        ancre: "Obstacles",   mots: ["bloque", "blocage", "freine", "dette", "risque", "fragile", "empêche", "coûte", "manque"] },
+  { cle: "preuves",      bloc: "conditions", titre: "Comment on saura",     ancre: "Preuves",     mots: ["mesure", "mesuré", "jalon", "indicateur", "preuve", "vérifier", "atteint", "chiffre", "seuil"] },
+  { cle: "dependances",  bloc: "conditions", titre: "De quoi ça dépend",    ancre: "Dépendances", mots: ["dépend", "dépendance", "avant", "prérequis", "nécessite", "condition", "suppose", "attend"] },
+];
+
+export const STRATEGIE_GLOBALE_PATH = "docs/strategies/strategie-globale-du-projet-entier.md";
+
+export function revelerLaStrategie({ root = ROOT, racines = RACINES_DE_LA_STRATEGIE, chemin = STRATEGIE_GLOBALE_PATH, familles = CADRE_STRATEGIQUE, ...reste } = {}) {
+  return revelerLaPhilosophie({ root, racines, chemin, familles, ...reste });
+}
+
+// LE RAPPORT DE LA RÉVÉLATION STRATÉGIQUE EST DISTINCT DE CELUI DE LA PHILOSOPHIE, et pour une
+// raison de fond plutôt que de présentation : sur ce corpus-ci, ce n'est pas la dérivation qui
+// décide du seuil, c'est le PLANCHER de trois fichiers hérité de la révélation philosophique. Le
+// 75e centile observé vaut 1 — autrement dit, la plupart des phrases de stratégie n'apparaissent
+// que dans un seul fichier, ce qui est NORMAL pour une stratégie : une direction s'énonce une
+// fois, là où une conviction revient partout. Exiger qu'elle revienne dans trois fichiers importe
+// au corpus stratégique une attente qui n'est pas la sienne.
+// LES DEUX LECTURES SONT DONC RENDUES, jamais une seule : ce que le plancher retient, et ce que la
+// dérivation seule aurait retenu. Choisir pour le lecteur reviendrait à trancher par le choix du
+// seuil une question qui porte sur le contenu.
+export function formatRevelationStrategieLines(r) {
+  if (!r?.mesurable) return ["=== LA RÉVÉLATION DE LA STRATÉGIE : PAS MESURÉ ===", `  ${r?.pourquoi}`];
+  const L = ["=== LA STRATÉGIE, RÉVÉLÉE — ce que le corpus dit, et que la stratégie globale ne dit pas ===", "",
+    `${r.fichiersLus} fichier(s) lus sur ${r.fichiersDeclares} déclarés · ${r.convictions} phrase(s) qui engagent extraites.`,
+    `Confrontées à « ${r.boussole.chemin} » (${r.boussole.principes} unité(s) reconnue(s)).`, ""];
+  if (!r.boussole.principes) {
+    L.push("⚠️  PAS MESURÉ, et c'est la limite la plus lourde de ce passage : AUCUNE unité n'a été reconnue dans le");
+    L.push("    document de référence. Il est structuré en sections numérotées ①②③④, pas en Articles, et l'extracteur");
+    L.push("    ne sait lire que les formes à Articles (c'est la tâche #1438, ouverte). Tout ressort donc « INAVOUÉ »");
+    L.push("    PAR CONSTRUCTION — ce chiffre ne dit rien sur la stratégie globale, il dit qu'on ne l'a pas lue.");
+    L.push("");
+  }
+  if (r.motsDeCadreEcartes?.length) {
+    L.push("MOTS DE CADRE ÉCARTÉS PARCE QU'ILS RECOUVRAIENT LE CORPUS AU LIEU DE LE SÉPARER :");
+    for (const e of r.motsDeCadreEcartes) L.push(`  · « ${e.mot} » (famille ${e.famille}) — présent dans ${Math.round(e.part * 100)} % des phrases`);
+    L.push("  Le filtre est DÉRIVÉ, jamais une liste de mots interdits : un mot envahissant demain sera écarté demain.");
+    L.push("");
+  }
+  L.push(`SEUIL : ${r.seuil.valeur} fichier(s). Dérivé du ${Math.round(r.seuil.centile * 100)}e centile : ${r.seuil.derive}. Maximum observé : ${r.seuil.max}.`);
+  if (r.seuil.valeur > r.seuil.derive) {
+    L.push(`  ⚠️  CE N'EST DONC PAS LA DÉRIVATION QUI DÉCIDE ICI, c'est le PLANCHER de ${r.seuil.valeur}, hérité de la révélation`);
+    L.push("     philosophique. Le centile observé vaut " + r.seuil.derive + " : la plupart des phrases de stratégie n'apparaissent que dans");
+    L.push("     un seul fichier, ce qui est NORMAL — une direction s'énonce une fois, une conviction revient partout.");
+    L.push("     Exiger la répétition importe au corpus stratégique une attente qui n'est pas la sienne.");
+  }
+  L.push("");
+  for (const bloc of ["direction", "conditions"]) {
+    L.push(`───────────── ${bloc.toUpperCase()} ─────────────`);
+    for (const c of r.cadre.cases.filter((x) => x.bloc === bloc)) {
+      L.push("");
+      L.push(`▸ ${c.titre}  [${c.cle}]`);
+      L.push(`  ${c.convictions} phrase(s) candidate(s) · ${c.retenues} au-dessus du seuil`);
+      if (c.vide) { L.push("  🚨 AUCUNE au-dessus du seuil — à lire avec le plancher ci-dessus : sur ce corpus, c'est souvent lui qui coupe, pas le silence du corpus."); continue; }
+      for (const x of c.top.slice(0, 4)) {
+        L.push(`  · [${x.rep.zones} zone(s) · ${x.rep.fichiers} fichier(s)${x.boussole.couverte ? " · DÉJÀ dans la stratégie globale" : " · ABSENT de la stratégie globale"}] ${x.phrase}`);
+        L.push(`      ↳ ${x.chemin}`);
+      }
+    }
+    L.push("");
+  }
+  L.push("HORS PORTÉE : une phrase qui engage n'est pas forcément une STRATÉGIE — le corpus mélange la direction");
+  L.push("voulue et les décisions déjà prises, et seule une lecture humaine les sépare. Ce rapport dit OÙ regarder,");
+  L.push("jamais ce qu'il faut écrire.");
+  return L;
+}
 
 export function mesurerLaThese({ root = ROOT, dossier = "scripts", lireDir = fsReaddir, lireF = readFileSync,
   crochet = "scripts/hooks/check-last-commit.mjs" } = {}) {
@@ -1146,6 +1287,23 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // SOUS-COMMANDE « reveler » (tâche #1418) — la révélation est une opération lourde et ciblée,
   // jamais quelque chose qu'on inflige à chaque passage de veille ordinaire.
   // SOUS-COMMANDE « these » (tâche #1444) — éprouver une thèse énoncée sur ce que l'Agence EST.
+  // SOUS-COMMANDE « reveler-strategie » (tâche #1434) — même machine, autre corpus, autre cadre.
+  if (process.argv[2] === "reveler-strategie") {
+    const r = revelerLaStrategie();
+    const lignes = formatRevelationStrategieLines(r);
+    for (const l of lignes) console.log(l);
+    const dossier = join(ROOT, "docs/the-king");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    writeFileSync(join(dossier, `revelation-strategie-${jour}.txt`), lignes.join("\n") + "\n", "utf8");
+    console.log(`\nRapport déposé : docs/the-king/revelation-strategie-${jour}.txt`);
+    const constats = [];
+    if (r.mesurable && !r.boussole.principes) constats.push({ constat: `aucune unité reconnue dans « ${r.boussole.chemin} » : l'extracteur ne lit que les formes à Articles, donc tout ressort « inavoué » PAR CONSTRUCTION`, etat: "retenu", tache: "tâche #1438 — rendre l'extracteur capable de lire les titres et les cellules de tableau" });
+    if (r.mesurable && r.seuil.valeur > r.seuil.derive) constats.push({ constat: `le seuil retenu (${r.seuil.valeur}) est le PLANCHER hérité de la révélation philosophique, pas la dérivation (${r.seuil.derive}) : il importe au corpus stratégique une attente de répétition qui n'est pas la sienne`, etat: "a-trancher", tache: "dire si une stratégie doit être REPÉTÉE pour compter, ou si une direction énoncée une fois suffit" });
+    for (const e of r.motsDeCadreEcartes ?? []) constats.push({ constat: `« ${e.mot} » recouvrait ${Math.round(e.part * 100)} % des phrases et a été écarté du cadre`, etat: "ecarte", pourquoi: "un mot aussi répandu ne sépare pas le corpus, il le recouvre — et le filtre est dérivé, donc il s'ajustera seul" });
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (process.argv[2] === "these") {
     const m = mesurerLaThese();
     const lignes = formatTheseLines(m);

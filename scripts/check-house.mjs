@@ -24572,3 +24572,54 @@ async function testLeSubstitutNonDeclare() {
   console.log("Passed: un substitut gratuit manquant ne peut plus s'afficher « undefined » dans une alerte adressée à l'utilisateur (2026-10-02, leçon L37). Le contrôleur de Ronde a signalé `missing-substitute` TROIS fois en six jours, sur trois items différents — x-port-blindtest, jesus-le-sauveur, puis fils-de-discussion. À chaque fois la correction a porté sur l'OCCURRENCE, on ajoutait l'entrée manquante, et à chaque fois le défaut est revenu avec l'item suivant. LA CAUSE N'EST PAS L'OUBLI : c'est qu'un oubli produisait un mot anglais au milieu d'une phrase française, là où il aurait dû AVOUER le trou. Un item entrera encore dans la Ronde sans qu'on pense à son substitut — c'est le « coût d'entrée » que JESUS mesure lui-même, dix registres à remplir par outil qui arrive — donc la bonne question n'était pas « comment ne plus oublier » mais « que doit-il se passer quand on oublie ». La classe est fermée : l'absence devient une phrase qui NOMME le manque, et qui le distingue explicitement d'une absence de besoin — les deux se lisent pareil et mènent à des décisions opposées. Le contrôleur continue de signaler, comme il doit ; mais le jour où un quatrième item passe entre les mailles, l'alerte reste lisible.");
 }
 await testLeSubstitutNonDeclare();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA RÉVÉLATION DE LA STRATÉGIE — même machine, autre corpus (2026-10-02, tâche #1434)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLaRevelationDeLaStrategie() {
+  const K = await import('./the-king.mjs');
+
+  // ── 1. LES TROIS SEULES CHOSES QUI CHANGENT SONT DES PARAMÈTRES. Construire un second moteur
+  // aurait créé deux mécaniques à maintenir pour une seule idée, et la seconde aurait divergé.
+  assert.ok(K.RACINES_DE_LA_STRATEGIE.length >= 4, 'the strategy corpus declares several roots');
+  assert.ok(K.RACINES_DE_LA_STRATEGIE.every((r) => r.zone && r.pourquoi && r.pourquoi.length > 20), 'each root names its zone and why it belongs to a strategy corpus (Article 28)');
+  assert.ok(K.CADRE_STRATEGIQUE.length === 6, 'the strategic frame has its six cases');
+  assert.ok(K.CADRE_STRATEGIQUE.every((f) => f.cle && f.titre && f.mots.length), 'each case is a real question with its own vocabulary');
+  // Le cadre stratégique n'est PAS le cadre philosophique : les confondre viderait l'extension.
+  assert.ok(!K.CADRE_STRATEGIQUE.some((f) => K.CADRE_FAMILLES.some((g) => g.cle === f.cle)), 'and none of its cases is a philosophy case under another name');
+
+  // ── 2. UN MOT DE CADRE QUI RECOUVRE LE CORPUS EST ÉCARTÉ, ET DIT. Premier passage réel : la
+  // famille « renoncements » ramassait 93 % du corpus à cause du seul mot « jamais », que ce dépôt
+  // emploie partout parce qu'il écrit ses règles en interdictions.
+  const brutes = [{ phrase: 'on ne fait jamais ça' }, { phrase: 'jamais de la vie' }, { phrase: 'une mesure chiffrée' }];
+  const net = K.cadreSansLesMotsTropLarges([{ cle: 'x', mots: ['jamais', 'mesure'] }], brutes);
+  assert.ok(net.ecartes.some((e) => e.mot === 'jamais'), 'a word carried by more than half the sentences is dropped');
+  assert.ok(!net.ecartes.some((e) => e.mot === 'mesure'), 'while a discriminating word is kept — the filter separates, it does not empty');
+  assert.ok(net.familles[0].mots.includes('mesure') && !net.familles[0].mots.includes('jamais'), 'and the cleaned frame really carries one and not the other');
+  assert.ok(net.ecartes[0].part > 0.5, 'the dropped word is reported WITH its share, because a frame silently amputated would produce empty cases with no way to tell a mute corpus from a lost word');
+  // Le filtre est DÉRIVÉ, jamais une liste de mots interdits (corollaire de l'Article 17).
+  const sansCorpus = K.cadreSansLesMotsTropLarges([{ cle: 'x', mots: ['jamais'] }], []);
+  assert.strictEqual(sansCorpus.mesurable, false, 'with no corpus there is nothing to measure, and the frame passes through untouched rather than being emptied on a guess');
+
+  // ── 3. EN DIRECT SUR LE VRAI CORPUS (Article 25).
+  const r = K.revelerLaStrategie();
+  assert.strictEqual(r.mesurable, true, 'the strategy revelation runs against the real repository');
+  assert.ok(r.fichiersLus > 50, `on a real corpus (currently ${r.fichiersLus} files)`);
+  assert.ok(r.convictions > 500, `with real material (currently ${r.convictions} engaging sentences)`);
+  assert.strictEqual(r.cadre.cases.length, 6, 'and fills the six strategic cases rather than the philosophy ones');
+
+  // ── 4. LES DEUX LIMITES LOURDES SONT DÉCLARÉES DANS LE RAPPORT, jamais tues. Sans elles, les
+  // cases vides se liraient comme « le corpus est muet », qui est l'inverse de ce qui se passe.
+  const texte = K.formatRevelationStrategieLines(r).join('\n');
+  if (!r.boussole.principes) assert.match(texte, /PAR CONSTRUCTION/, 'an unreadable reference document makes everything "unavowed" by construction, and the report says so rather than claiming a finding');
+  if (r.seuil.valeur > r.seuil.derive) assert.match(texte, /PLANCHER/, 'and when the inherited floor decides instead of the derivation, the report names it — a direction is stated once, a conviction recurs');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its own limit');
+
+  // ── 5. UN CORPUS ILLISIBLE N'EST PAS UNE STRATÉGIE ABSENTE (leçon L5).
+  const vide = K.revelerLaStrategie({ racines: [{ dossier: 'docs/nexistepas', zone: 'x', pourquoi: 'fabriquée pour vérifier qu\'un corpus vide ne passe pas pour une absence de stratégie' }] });
+  assert.strictEqual(vide.mesurable, false, 'an unreadable corpus is PAS MESURÉ, never a mute strategy');
+  assert.match(K.formatRevelationStrategieLines(vide).join('\n'), /PAS MESURÉ/, 'and the report says so in its own title');
+
+  console.log("Passed: la stratégie se révèle avec la MÊME machine que la philosophie, et seules trois choses changent (2026-10-02, tâche #1434). Construire un second moteur aurait créé deux mécaniques à maintenir pour une seule idée — on lit un corpus, on extrait les phrases qui engagent, on les note par le nombre de contextes qu'elles traversent, on dérive le seuil de leur propre distribution, on confronte à un document de référence — et la seconde aurait divergé de la première en silence. Les trois paramètres sont le CORPUS (une philosophie se lit dans les règles et les leçons, une stratégie dans les plans, les chantiers et les décisions), le CADRE (six cases : où l'on va, par quelles étapes, ce qu'on ne fera pas, ce qui bloque, comment on saura, de quoi ça dépend) et le DOCUMENT DE RÉFÉRENCE. UN DÉFAUT RÉEL A ÉTÉ TROUVÉ AU PREMIER PASSAGE ET CORRIGÉ À LA RACINE : la famille « renoncements » ramassait 1 740 phrases sur 1 880, soit 93 % du corpus, à cause du seul mot « jamais » — présent dans 92 % des phrases de ce dépôt, qui écrit ses règles en interdictions. Un mot aussi répandu ne sépare pas le corpus, il le recouvre. Le filtre qui l'écarte est DÉRIVÉ et non une liste de mots interdits (corollaire de l'Article 17) : on mesure ce que chaque mot attrape à lui seul, un mot envahissant demain sera écarté demain, et l'écart est RENDU avec sa part — un cadre amputé en silence produirait des cases vides sans qu'on puisse distinguer un corpus muet d'un mot perdu. ET LES DEUX LIMITES LOURDES DU PASSAGE SONT DÉCLARÉES PLUTÔT QUE TUES : le document de référence n'est pas lisible par l'extracteur, qui ne connaît que les formes à Articles, donc tout ressort « inavoué » PAR CONSTRUCTION et le chiffre ne dit rien sur la stratégie globale (tâche #1438) ; et ce n'est pas la dérivation qui décide du seuil mais le PLANCHER de trois fichiers hérité de la révélation philosophique, alors que le centile observé vaut 1 — ce qui est normal, une direction s'énonce une fois là où une conviction revient partout, et exiger la répétition importe au corpus stratégique une attente qui n'est pas la sienne.");
+}
+await testLaRevelationDeLaStrategie();

@@ -1,0 +1,58 @@
+=== LA STRATÉGIE, RÉVÉLÉE — ce que le corpus dit, et que la stratégie globale ne dit pas ===
+
+83 fichier(s) lus sur 83 déclarés · 1880 phrase(s) qui engagent extraites.
+Confrontées à « docs/strategies/strategie-globale-du-projet-entier.md » (0 unité(s) reconnue(s)).
+
+⚠️  PAS MESURÉ, et c'est la limite la plus lourde de ce passage : AUCUNE unité n'a été reconnue dans le
+    document de référence. Il est structuré en sections numérotées ①②③④, pas en Articles, et l'extracteur
+    ne sait lire que les formes à Articles (c'est la tâche #1438, ouverte). Tout ressort donc « INAVOUÉ »
+    PAR CONSTRUCTION — ce chiffre ne dit rien sur la stratégie globale, il dit qu'on ne l'a pas lue.
+
+MOTS DE CADRE ÉCARTÉS PARCE QU'ILS RECOUVRAIENT LE CORPUS AU LIEU DE LE SÉPARER :
+  · « jamais » (famille renoncements) — présent dans 92 % des phrases
+  Le filtre est DÉRIVÉ, jamais une liste de mots interdits : un mot envahissant demain sera écarté demain.
+
+SEUIL : 3 fichier(s). Dérivé du 75e centile : 1. Maximum observé : 10.
+  ⚠️  CE N'EST DONC PAS LA DÉRIVATION QUI DÉCIDE ICI, c'est le PLANCHER de 3, hérité de la révélation
+     philosophique. Le centile observé vaut 1 : la plupart des phrases de stratégie n'apparaissent que dans
+     un seul fichier, ce qui est NORMAL — une direction s'énonce une fois, une conviction revient partout.
+     Exiger la répétition importe au corpus stratégique une attente qui n'est pas la sienne.
+
+───────────── DIRECTION ─────────────
+
+▸ Où l'on va  [destination]
+  51 phrase(s) candidate(s) · 0 au-dessus du seuil
+  🚨 AUCUNE au-dessus du seuil — à lire avec le plancher ci-dessus : sur ce corpus, c'est souvent lui qui coupe, pas le silence du corpus.
+
+▸ Par quelles étapes  [etapes]
+  114 phrase(s) candidate(s) · 9 au-dessus du seuil
+  · [1 zone(s) · 5 fichier(s) · ABSENT de la stratégie globale] l'intention n'a jamais été dite par l'utilisateur pour cette famille — elle a été DÉRIVÉE de la file le 2026-09-26, jamais énoncée comme un chantier.
+      ↳ docs/strategies/charte-et-referentiel-strategie.md
+  · [1 zone(s) · 4 fichier(s) · ABSENT de la stratégie globale] DÉCOULE DE :** `docs/plans/plan-action-global-2026-09-22.md` > *le plan d'une nuit découpe le plan d'action global en ce qui tient dans une fenêtre ; il n'ouvre jamais un chantier que le plan global ignore.*
+      ↳ docs/plans/nuit-2026-09-23-plan.md
+
+▸ Ce qu'on ne fera pas  [renoncements]
+  59 phrase(s) candidate(s) · 0 au-dessus du seuil
+  🚨 AUCUNE au-dessus du seuil — à lire avec le plancher ci-dessus : sur ce corpus, c'est souvent lui qui coupe, pas le silence du corpus.
+
+───────────── CONDITIONS ─────────────
+
+▸ Ce qui bloque  [obstacles]
+  105 phrase(s) candidate(s) · 0 au-dessus du seuil
+  🚨 AUCUNE au-dessus du seuil — à lire avec le plancher ci-dessus : sur ce corpus, c'est souvent lui qui coupe, pas le silence du corpus.
+
+▸ Comment on saura  [preuves]
+  315 phrase(s) candidate(s) · 8 au-dessus du seuil
+  · [3 zone(s) · 3 fichier(s) · ABSENT de la stratégie globale] ne jamais laisser passer pour un fait ce qui n'en est pas un.** Une date supposée, un chiffre non mesuré, un zéro qui veut dire « je n'ai pas regardé ».
+      ↳ docs/fils/fil-01-objectif-ultime-philo-politique.md
+  · [1 zone(s) · 5 fichier(s) · ABSENT de la stratégie globale] mesuré sur le dépôt, jamais supposé — c'est ce qui évite de reconstruire ce qui est là*
+      ↳ docs/strategies/classification-et-nivellement-strategie.md
+
+▸ De quoi ça dépend  [dependances]
+  131 phrase(s) candidate(s) · 5 au-dessus du seuil
+  · [1 zone(s) · 5 fichier(s) · ABSENT de la stratégie globale] mesuré sur le dépôt, jamais supposé — c'est ce qui évite de reconstruire ce qui est là*
+      ↳ docs/strategies/classification-et-nivellement-strategie.md
+
+HORS PORTÉE : une phrase qui engage n'est pas forcément une STRATÉGIE — le corpus mélange la direction
+voulue et les décisions déjà prises, et seule une lecture humaine les sépare. Ce rapport dit OÙ regarder,
+jamais ce qu'il faut écrire.
