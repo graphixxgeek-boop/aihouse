@@ -24544,3 +24544,31 @@ async function testLaBorneHauteDesRenvoisMorts() {
   console.log("Passed: le renvoi mort a désormais une borne haute, et c'est la CLASSE qui a été corrigée plutôt que l'occurrence (2026-10-02, leçon L37). Le contrôle qui vérifie qu'un allègement de la charte ne laisse pas de renvoi mort lisait TOUT « Article N » du dépôt comme un renvoi à la charte. Depuis que le document de gouvernance porte sa propre numérotation, il fallait exclure à la main chaque fichier qui mentionne un de SES articles — la liste a reçu deux entrées en deux jours, et la troisième est arrivée par un simple COMMENTAIRE DE CODE illustrant un motif (« ## Article 64 — … »), que rien ne distingue d'un renvoi. UNE LISTE QUI GRANDIT À CHAQUE MENTION N'EST PLUS UNE EXCEPTION, C'EST UNE DETTE. Ce qui ferme la classe est une propriété de la charte elle-même : elle ne renumérote JAMAIS, elle n'ajoute qu'à la suite. Un numéro au-dessus du plus haut qu'elle ait jamais porté n'a donc jamais été un de ses articles, et ne peut pas être un article DISPARU — le chercher revenait à accuser une autre loi d'un trou chez celle-ci. LA BORNE EST LUE SUR LA CHARTE RÉELLE, jamais fixée en dur : un article ajouté demain relève le plafond le jour même (Article 24), ce que le test vérifie en citant le numéro juste au-dessus du maximum réel. ET LE CONTRÔLE MORD TOUJOURS SUR CE QUI COMPTE (BP4) : un article réellement retiré de la charte et cité ailleurs reste refusé, y compris le tout dernier — sans ce second sens, la borne aurait pu éteindre le contrôle entier sans que personne ne le voie.");
 }
 await testLaBorneHauteDesRenvoisMorts();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UN SUBSTITUT MANQUANT NE S'AFFICHE PLUS « undefined » (2026-10-02, leçon L37)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLeSubstitutNonDeclare() {
+  const CT = await import('./circle-tasks.mjs');
+
+  // ── 1. L'ENTRÉE QUI MANQUAIT EXISTE, et elle dit ce qu'elle ne remplace pas.
+  assert.ok(CT.COSTLY_SUBSTITUTES['fils-de-discussion'], 'the item flagged by the Ronde guardian now carries its substitute');
+  assert.match(CT.COSTLY_SUBSTITUTES['fils-de-discussion'], /jamais un remplacement/, 'and says honestly what it does NOT replace, like the others');
+
+  // ── 2. MAIS L'ENTRÉE N'EST PAS LA CORRECTION, et c'est le point. Le contrôleur a signalé ce
+  // même défaut TROIS fois en six jours sur trois items différents ; corriger l'occurrence l'a
+  // ramené à chaque fois. La cause n'est pas l'oubli, c'est qu'un oubli produisait un mot anglais
+  // dans une phrase française adressée à l'utilisateur, au lieu de se dire.
+  assert.ok(CT.SUBSTITUT_NON_DECLARE, 'a declared fallback exists for an item with no substitute');
+  assert.match(CT.SUBSTITUT_NON_DECLARE, /MANQUE du registre/, 'and it names the gap as a gap, never as an absence of need — the two read identically to a reader and lead to opposite decisions');
+  assert.ok(!/undefined/i.test(CT.SUBSTITUT_NON_DECLARE), 'and it is a sentence, never the word that caused the defect');
+
+  // ── 3. TOUT ITEM COÛTEUX DÉCLARÉ A UN SUBSTITUT, ou retombe sur la phrase — jamais sur rien.
+  // Vérifié sur le vrai registre, jamais sur une éprouvette (Article 25).
+  for (const [id, texte] of Object.entries(CT.COSTLY_SUBSTITUTES)) {
+    assert.ok(texte && texte.length > 30, `the substitute declared for "${id}" is a real sentence, not a bare tool name`);
+  }
+
+  console.log("Passed: un substitut gratuit manquant ne peut plus s'afficher « undefined » dans une alerte adressée à l'utilisateur (2026-10-02, leçon L37). Le contrôleur de Ronde a signalé `missing-substitute` TROIS fois en six jours, sur trois items différents — x-port-blindtest, jesus-le-sauveur, puis fils-de-discussion. À chaque fois la correction a porté sur l'OCCURRENCE, on ajoutait l'entrée manquante, et à chaque fois le défaut est revenu avec l'item suivant. LA CAUSE N'EST PAS L'OUBLI : c'est qu'un oubli produisait un mot anglais au milieu d'une phrase française, là où il aurait dû AVOUER le trou. Un item entrera encore dans la Ronde sans qu'on pense à son substitut — c'est le « coût d'entrée » que JESUS mesure lui-même, dix registres à remplir par outil qui arrive — donc la bonne question n'était pas « comment ne plus oublier » mais « que doit-il se passer quand on oublie ». La classe est fermée : l'absence devient une phrase qui NOMME le manque, et qui le distingue explicitement d'une absence de besoin — les deux se lisent pareil et mènent à des décisions opposées. Le contrôleur continue de signaler, comme il doit ; mais le jour où un quatrième item passe entre les mailles, l'alerte reste lisible.");
+}
+await testLeSubstitutNonDeclare();

@@ -1527,6 +1527,8 @@ export function costlyItemDueStatus(lastRunDate, now = Date.now(), thresholdDays
 // gratuite docs/systeme-de-suivi.md ») ; THE-FINAL-JUDGE n'a pas d'équivalent direct, la synthèse
 // gratuite la plus proche reste runNetworkCheck() (LE-COORDINATEUR), déjà dans CIRCLE_ITEMS
 // (`network-check-run`).
+export const SUBSTITUT_NON_DECLARE = "aucun substitut gratuit n'a été déclaré pour cet item — c'est un MANQUE du registre, jamais la preuve qu'il n'en existe pas : se passer du scan coûteux revient donc, pour l'instant, à ne rien lancer du tout";
+
 export const COSTLY_SUBSTITUTES = {
   "the-final-judge": "network-check-run (synthèse gratuite déjà dans cette Ronde, LE-COORDINATEUR) — jamais un remplacement complet, juste la meilleure alternative gratuite disponible",
   "the-deep-reader": "check-tasks-details / docs/systeme-de-suivi.md (version légère déjà documentée dans organisation-agence.md) — jamais un remplacement complet",
@@ -1537,6 +1539,13 @@ export const COSTLY_SUBSTITUTES = {
   // safe-export-kits compte les pièces présentes et déclare lui-même ne jamais lire leur contenu —
   // c'est exactement ce que le test à l'aveugle est le seul à savoir faire. Le proposer à la place
   // répond "les pièces sont là", jamais "elles valent quelque chose".
+  // fils-de-discussion (ajouté le 2026-10-02, TROISIÈME signalement de `missing-substitute` en six
+  // jours). Le substitut est honnêtement PARTIEL : fils-de-discussion répond « es-tu à jour sur ce
+  // sujet ? » en croisant six contrôles par fil, là où check-tasks-details rend l'état des TÂCHES.
+  // Un sujet peut être parfaitement à jour côté tâches et complètement périmé côté fil — ce sont
+  // deux questions, et proposer l'un pour l'autre répond à la seconde en laissant croire qu'on a
+  // répondu à la première.
+  "fils-de-discussion": "check-tasks-details (gratuit, déjà dans cette Ronde — l'état des tâches par thème) — jamais un remplacement : il dit où en sont les TÂCHES, jamais si un SUJET a pris du retard, qui est précisément l'objet des fils",
   "x-port-blindtest": "safe-export-kits (gratuit, déjà dans cette Ronde — SAFE-EXPORT compte les pièces du kit) — jamais un remplacement : il dit que les pièces sont là, jamais ce qu'elles valent, qui est précisément l'objet du test à l'aveugle",
   // jesus-le-sauveur (ajouté le 2026-09-29, DEUXIÈME fois que circle-process-guardian signale
   // `missing-substitute` sur cet oubli-là — la première avait donné x-port-blindtest trois jours
@@ -1568,7 +1577,17 @@ export function recommendCircleSelectionWithPeriodicity(report, { lastRunDates =
     if (!r.costly && !r.periodicityTracked) return r;
     const status = costlyItemDueStatus(lastRunDates[r.id], now, thresholdDays);
     if (!status.due) return r;
-    return { ...r, recommande: true, raisonExclusion: undefined, periodiciteDue: true, periodiciteRaison: status.reason, substitutGratuit: COSTLY_SUBSTITUTES[r.id] };
+    // UN SUBSTITUT MANQUANT NE S'AFFICHE PLUS « undefined » (2026-10-02, leçon L37). Le contrôleur
+    // de Ronde a signalé `missing-substitute` TROIS fois en six jours, sur trois items différents :
+    // x-port-blindtest, jesus-le-sauveur, puis fils-de-discussion. À chaque fois la correction a
+    // porté sur l'OCCURRENCE — on ajoutait l'entrée manquante — et à chaque fois le défaut est
+    // revenu avec l'item suivant, parce que la cause n'est pas l'oubli : c'est qu'un oubli produit
+    // un mot anglais dans une phrase française adressée à l'utilisateur, au lieu de se dire.
+    // LA CLASSE EST FERMÉE ICI : l'absence devient une phrase qui NOMME le manque. Le contrôleur
+    // continue de signaler, comme il doit ; mais le jour où un quatrième item passe entre les
+    // mailles, l'alerte reste lisible et avoue son trou au lieu d'afficher « undefined ».
+    return { ...r, recommande: true, raisonExclusion: undefined, periodiciteDue: true, periodiciteRaison: status.reason,
+      substitutGratuit: COSTLY_SUBSTITUTES[r.id] ?? SUBSTITUT_NON_DECLARE };
   });
 }
 
