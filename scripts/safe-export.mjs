@@ -19,7 +19,7 @@
 // lib-shell, invalidé par mtime+taille+inode — un fichier modifié est donc bien relu. Les
 // paramètres restent injectables : un test qui passe son propre `lire` n'est pas touché.
 import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync, cpSync, statSync } from "node:fs";
-import { lireFichierPartage } from "./lib-shell.mjs";
+import { lireFichierPartage, lireChacun, lireLesScriptsDuDepot } from "./lib-shell.mjs";
 import { mesurerCorpus, ligneCorpus, findGardiensSansMesureDeCorpus, formatGardiensSansMesureLines, GARDIENS_SACRES } from "./corpus-mesure.mjs";
 import { join } from "node:path";
 import { createRequire } from "node:module";
@@ -116,9 +116,8 @@ export function declarationDuFichier(texte = "") {
 export const MARQUES_DE_CE_PROJET = /(?<!\p{L})(?:Lia|Noé)(?!\p{L})|la maison|l'enquête|Gemini|aihouse/u;
 export function findFuitesDeSpecificite(fichiers = [], { readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   const fuites = [];
-  for (const f of fichiers) {
-    let texte;
-    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    // Lecture tolérante partagée — sa raison vit à UN seul endroit, chez elle (`lib-shell.mjs`).
+  for (const { nom: f, texte } of lireChacun(fichiers, { root, readFileImpl })) {
     if (declarationDuFichier(texte) !== "générique") continue;
     const lignes = texte.split("\n");
     const touchees = lignes
@@ -416,9 +415,8 @@ export function findDependancesOutillage(fichiers = [], { readFileImpl = lireFic
 
 export function findMentionsSansConsigne(fichiers = [], { readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   const out = [];
-  for (const f of fichiers) {
-    let texte;
-    try { texte = readFileImpl(join(root, f), "utf8"); } catch { continue; }
+    // Lecture tolérante partagée — sa raison vit à UN seul endroit, chez elle (`lib-shell.mjs`).
+  for (const { nom: f, texte } of lireChacun(fichiers, { root, readFileImpl })) {
     const ecartees = texte.split("\n").filter((l) => DEPENDANCES_OUTILLAGE.test(l) && estMentionSansConsigne(l));
     if (ecartees.length) out.push({ fichier: f, mentions: ecartees.length, exemple: ecartees[0].trim().slice(0, 100) });
   }
@@ -915,9 +913,8 @@ export const SECTIONS_ATTENDUES = [
 
 export function findBlueprintsMalConstruits(blueprints = [], { readFileImpl = lireFichierPartage, root = ROOT } = {}) {
   const defauts = [];
-  for (const b of blueprints) {
-    let texte;
-    try { texte = readFileImpl(join(root, b), "utf8"); } catch { continue; }
+    // Lecture tolérante partagée — sa raison vit à UN seul endroit, chez elle (`lib-shell.mjs`).
+  for (const { nom: b, texte } of lireChacun(blueprints, { root, readFileImpl })) {
     const manquantes = SECTIONS_ATTENDUES.filter((s) => !s.motif.test(texte));
     const declaration = declarationDuFichier(texte);
     // Un blueprint qui oublie de se DÉCLARER générique est un écart à part entière : c'est ce qui
@@ -1742,6 +1739,44 @@ export const PALIERS_RELANCE = [
   { passages: 1, action: "rappel", ton: "🟡 déjà signalé" },
   { passages: 0, action: "nouveau", ton: "· nouvel écart" },
 ];
+
+// findMemoiresDeclareesSansFichier() — UN REGISTRE CITÉ MAIS ABSENT (2026-10-02, tâche #1452)
+//
+// LE TROU ÉTAIT RÉEL ET IL A TENU SIX JOURS. `loadMemoire()` est le mécanisme partagé des décisions
+// déjà tranchées : ARGUS l'a reçu le 2026-09-23, CLONE-HUNTER le 2026-09-26. Mais CLONE-HUNTER
+// n'a jamais eu son FICHIER — `docs/clone-hunter/memoire.json` était cité dans son code, imprimé
+// à l'utilisateur dans son rapport (« écartés de ce plan (docs/clone-hunter/memoire.json) »), et
+// n'existait pas sur le disque. `loadMemoire()` tolère l'absence et rend un tableau vide, donc
+// RIEN NE SIGNALAIT RIEN : le relais avait l'air branché, et il l'était à moitié. C'est la leçon
+// L2 — un outil qu'on n'a pas branché pour de vrai est une intention — appliquée au registre
+// plutôt qu'à l'outil.
+//
+// CE QU'IL VÉRIFIE, ET POURQUOI C'EST UNE CLASSE ET NON UNE OCCURRENCE (L37) : chaque appel à
+// `loadMemoire({ fichier: … })` dans l'outillage doit avoir son fichier sur le disque. Créer celui
+// de CLONE-HUNTER aurait refermé le cas sans protéger le QUATRIÈME consommateur, qui aurait reçu
+// le même silence. Un registre se LIT, il ne se suppose pas (Article 24).
+export const MOTIF_MEMOIRE_DECLAREE = /loadMemoire\(\s*\{\s*fichier\s*:\s*["'`]([^"'`]+)["'`]/g;
+
+export function findMemoiresDeclareesSansFichier({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, existsImpl = existsSync } = {}) {
+  const lecture = lireLesScriptsDuDepot({ root, listDirImpl, readFileImpl });
+  if (!lecture.mesurable) return { mesurable: false, manquants: [], scriptsLus: 0, pourquoi: lecture.pourquoi };
+  const manquants = [];
+  // UN MÊME REGISTRE CITÉ DEUX FOIS DANS UN FICHIER EST UN SEUL MANQUE : un outil peut nommer son
+  // registre dans son code ET dans un commentaire ou une sonde, et le compter deux fois ferait
+  // croire à deux trous là où il n'y en a qu'un (le dénominateur d'un rapport se respecte).
+  const vus = new Set();
+  for (const { nom, texte } of lecture.lus) {
+    for (const m of String(texte).matchAll(MOTIF_MEMOIRE_DECLAREE)) {
+      const chemin = m[1];
+      if (existsImpl(join(root, chemin))) continue;
+      if (vus.has(`${nom}::${chemin}`)) continue;
+      vus.add(`${nom}::${chemin}`);
+      manquants.push({ script: `scripts/${nom}`, chemin,
+        pourquoi: `scripts/${nom} lit « ${chemin} » comme registre de décisions déjà tranchées, et ce fichier n'existe pas : loadMemoire() rend alors un tableau vide, donc l'outil se comporte comme si rien n'avait jamais été tranché — sans que personne ne le sache` });
+    }
+  }
+  return { mesurable: true, manquants, scriptsLus: lecture.lus.length, pourquoi: null };
+}
 
 export function filtrerDejaTranches(ecarts = [], memoire = []) {
   const cle = (e) => `${e.fichier ?? e.outil}::${e.defaut ?? e.pourquoi ?? ""}`;

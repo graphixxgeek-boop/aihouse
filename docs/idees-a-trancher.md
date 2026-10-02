@@ -997,3 +997,45 @@ est précisément ce qui rend la question valable **maintenant** plutôt qu'alor
 **MON AVIS** : l'issue 2 correspond mieux à la doctrine du dépôt (déclarer une impossibilité vaut
 mieux qu'un mécanisme qui ment, Article 27), et elle ne ferme pas la porte à l'issue 1. Mais c'est
 un arbitrage sur la hiérarchie des lois : il ne m'appartient à aucun titre.
+
+---
+
+## « Zéro constat » de CLONE-HUNTER : les 4 derniers ne peuvent pas partir sans toi (2026-10-02, tâche #1451)
+
+**TON ARBITRAGE, MOT POUR MOT** : aller jusqu'à ZÉRO constat, « en instruisant les 16 entrées
+asymétriques une par une ». J'ai suivi, et le compte est descendu de **9 problèmes distincts à 4**.
+
+**CE QUI BLOQUE LE DERNIER PAS, ET C'EST LE GARDE-FOU QUI FAIT BIEN SON TRAVAIL.** Les 4 restants
+portent tous leur raison écrite dans le code — c'est la seconde issue que CLONE-HUNTER lui-même
+propose. Mais un problème ne quitte définitivement son plan que par une entrée dans
+`docs/clone-hunter/memoire.json` **portant `accordUtilisateur`**. C'est volontaire, et c'est écrit
+dans son propre commentaire : « un écartement sans accord revient toujours, et son rappel grossit —
+l'agent ne peut pas se faire taire tout seul ». **Donc « zéro » au sens littéral m'est inaccessible
+seul, par construction.** Ce n'est pas un blocage technique : c'est la protection qui empêche un
+agent de classer ses propres dettes.
+
+**CE QUE J'AI FAIT EN ATTENDANT, pour que l'attente ne coûte rien** : ces 4 ne sont plus comptés
+comme du travail à faire. Ils passent en état « à trancher » (Article 28), avec le chemin et la
+ligne de leur raison déjà écrite. **Il reste donc ZÉRO constat en état « retenu »** — zéro travail
+en attente —, et 4 décisions qui t'attendent.
+
+**LES 4, AVEC LEUR RAISON, POUR QUE TU PUISSES TRANCHER SANS OUVRIR LE CODE :**
+
+| Où | Pourquoi ils restent séparés (déjà écrit) |
+|---|---|
+| `api-providers.mjs:71` / `:117` | chaque fournisseur d'API garde sa propre queue de sonde, parce que tout ce qui la précède lui est propre (adresse, en-têtes, façon d'annoncer un quota épuisé) — #1207 |
+| `doc-report.mjs:1227` / `:1405` | deux garde-fous qui vérifient des choses **opposées** (un défaut d'ORDRE / un défaut de PROMESSE) ; les fondre donnerait une fonction à deux verdicts qu'on ne pourrait plus faire échouer séparément — #1246 |
+| `summarize-simulation-log.mjs:100` / `:149` | deux lecteurs de deux FORMATS de journal différents ; les fondre exigerait de faire semblant que le journal à plat porte ce qu'il ne porte pas — #1207 |
+| `integration-outil.mjs:859` / `:882` | ce qui se répète **EST** la convention partagée (`PLAN_QUOI_QUOIFAIRE`), pas une recopie — et les deux branches traitent l'une une liste, l'autre une cible nommée — #993 |
+
+**LA QUESTION, EN UNE LIGNE** : est-ce que tu confirmes ces 4 raisons, pour que je les inscrive à
+`docs/clone-hunter/memoire.json` avec ton accord et que l'outil cesse de les représenter ? Tu peux
+aussi en refuser une ou plusieurs : dans ce cas elle redevient du travail, et je fonds.
+
+**MON AVIS** : les 4 raisons me paraissent justes, et trois d'entre elles ont été écrites avant
+cette nuit par un agent qui avait le code sous les yeux. Mais ta confirmation est exactement ce que
+le mécanisme existe pour exiger, et te la demander coûte une ligne là où la contourner coûterait la
+protection.
+
+**CE QUE ÇA NE DEMANDE PAS** : une décision urgente. Tant que tu n'as pas tranché, les 4 restent
+visibles en « à trancher » — ce qui est leur état exact, et n'empêche rien d'avancer.

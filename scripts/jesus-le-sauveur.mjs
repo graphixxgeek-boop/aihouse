@@ -58,7 +58,16 @@ import { printReportHeader, buildPlanDaction, imprimerPlanDaction } from "./repo
 // qu'une barre de plus au milieu ne les déplace pas — c'est mesuré, pas supposé. Mais le
 // prochain lecteur ajouté ici, s'il lit par POSITION, hériterait d'un découpeur qui ne connaît
 // pas l'échappement, et se tromperait sans rien faire rougir.
-import { estStatutTermine, estStatutEcarte, splitTableRow } from "./check-suivi-fidelity.mjs";
+// LE BALAYAGE DU REGISTRE EST RELAYÉ, JAMAIS RECOPIÉ (2026-10-02, tâche #993). CLONE-HUNTER
+// signalait `lireLesTachesOuvertes()` et `fluiditeDeLaFile()` comme jumelles, et il avait raison : les six
+// premières lignes de chacune — ouvrir le dossier, garder les .md, parcourir les lignes, retenir
+// celles qui portent un numéro — sont le même geste écrit deux fois. Ce geste a déjà un porteur
+// unique chez `check-suivi-fidelity`, dont JESUS importait déjà trois définitions.
+// L'ÉQUIVALENCE DES DEUX FILTRES A ÉTÉ MESURÉE avant la fusion, jamais supposée : le filtre local
+// (`startsWith("| ")` puis un premier champ numérique) et `MOTIF_LIGNE_DE_TACHE` rendent les MÊMES
+// 727 lignes sur ce dépôt, zéro écart dans un sens comme dans l'autre. Sans cette mesure, la
+// fusion aurait pu déplacer en silence le dénominateur de deux indicateurs (leçon L10).
+import { estStatutTermine, estStatutEcarte, splitTableRow, balayerLesLignesDeTaches } from "./check-suivi-fidelity.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 export const REGISTRE = "docs/jesus-le-sauveur";
@@ -294,16 +303,9 @@ export function decisionsEnAttente({ lignes = null, maintenant = Date.now() } = 
 // coûté trois commits le 2026-09-28 (tâche #1099).
 export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir = readdirSync, lireFic = readFileSync } = {}) {
   const abs = join(ROOT, dossier);
-  let fichiers;
-  try { fichiers = lireDir(abs).filter((f) => f.endsWith(".md")); }
-  catch { return pasMesure("la file", `${dossier} est introuvable — sur un autre dépôt, ce registre n'existe pas, et c'est un résultat`); }
-  const taches = [];
-  for (const f of fichiers) {
-    let texte; try { texte = lireFic(join(abs, f), "utf8"); } catch { continue; }
-    for (const ligne of texte.split("\n")) {
-      if (!ligne.startsWith("| ")) continue;
-      const cells = splitTableRow(ligne);
-      if (!cells.length || !/^\d+$/.test(cells[0])) continue;
+  // Le balayage vient de check-suivi-fidelity (voir l'en-tête d'import) : on ne garde ici que le
+  // VERDICT, qui est la seule part propre à cet outil.
+  const balayage = balayerLesLignesDeTaches((cells) => {
       const statut = (cells[cells.length - 1] ?? "").toLowerCase();
       // JESUS AVAIT SA PROPRE DÉFINITION DE « CLOSE », ET ELLE COMPTAIT 14 TÂCHES DE TROP
       // (2026-09-29, tâche #1199). `/^(termin|ecart|écart)/` lit le DÉBUT du statut : une ligne
@@ -312,21 +314,24 @@ export function lireLesTachesOuvertes({ dossier = "docs/suivi/sessions", lireDir
       // dans ce cas. C'est le défaut de #1171, quatrième lecteur du même registre, dans l'outil
       // dont le métier est justement de dire si la file est fluide — il annonçait une file plus
       // longue qu'elle n'est, c'est-à-dire un ralentissement qui n'existait pas.
-      if (estStatutTermine(statut) || estStatutEcarte(statut)) continue;
-      if (/grand chantier/.test(statut)) continue;      // reportées par lui : hors de la file active
+      if (estStatutTermine(statut) || estStatutEcarte(statut)) return null;
+      if (/grand chantier/.test(statut)) return null;   // reportées par lui : hors de la file active
       const criticite = cells[5] ?? "";
-      taches.push({
+      return {
         numero: Number(cells[0]),
         sujet: (cells[3] ?? "").replace(/\*\*/g, "").slice(0, 70),
         ouverteLe: Date.parse(cells[1] ?? "") || null,
         // « en attente de lui » se LIT sur deux marqueurs réels du registre, jamais deviné : la
         // criticité A-TRANCHER, ou un statut qui dit explicitement l'attente.
         enAttenteDeLui: /a-?\s?trancher/i.test(criticite) || /^(a-?\s?trancher|en attente)/i.test(statut),
-      });
-    }
-  }
+      };
+    }, abs, lireDir, (p) => lireFic(p, "utf8"));
+  // La non-mesure garde SA formulation : celle du balayeur parle du dossier de sessions en
+  // général, celle-ci dit ce que JESUS ne peut plus faire, et c'est l'information utile ici.
+  if (!balayage.mesurable) return pasMesure("la file", `${dossier} est introuvable — sur un autre dépôt, ce registre n'existe pas, et c'est un résultat`);
+  const taches = balayage.ecarts;
   return { mesurable: true, taches,
-    pourquoi: `${taches.length} tâche(s) actives lues dans ${fichiers.length} fichier(s)` };
+    pourquoi: `${taches.length} tâche(s) actives sur ${balayage.lignesLues} ligne(s) de tâche lues` };
 }
 
 // ————————————————————————————————————————————————————————————————————————
@@ -562,23 +567,17 @@ export const CORPUS_MINIMUM_FLUIDITE = 10;
 
 export function fluiditeDeLaFile({ dossier = "docs/suivi/sessions", lireDir = readdirSync, lireFic = readFileSync, shImpl = sh, minimum = CORPUS_MINIMUM_FLUIDITE } = {}) {
   const abs = join(ROOT, dossier);
-  let fichiers;
-  try { fichiers = lireDir(abs).filter((f) => f.endsWith(".md")); }
-  catch { return pasMesure("la fluidité de la file", `${dossier} est introuvable — sur un autre dépôt ce registre n'existe pas, et c'est un résultat`); }
-  const fermees = [];
-  for (const f of fichiers) {
-    let texte; try { texte = lireFic(join(abs, f), "utf8"); } catch { continue; }
-    for (const ligne of texte.split("\n")) {
-      if (!ligne.startsWith("| ")) continue;
-      const cells = splitTableRow(ligne);
-      if (!cells.length || !/^\d+$/.test(cells[0])) continue;
+  // Même balayage relayé qu'à `lireLesTachesOuvertes()` (voir l'en-tête d'import) : seul le
+  // verdict diffère, et c'est précisément pour ça que les deux têtes n'avaient pas à exister.
+  const balayage = balayerLesLignesDeTaches((cells) => {
       // Même définition partagée qu'au-dessus : « Ouverte → Terminée » EST une clôture (#1199).
-      if (!estStatutTermine(cells[cells.length - 1] ?? "")) continue;
+      if (!estStatutTermine(cells[cells.length - 1] ?? "")) return null;
       const ouverte = Date.parse(cells[1] ?? "");
-      if (!Number.isFinite(ouverte)) continue;
-      fermees.push({ numero: Number(cells[0]), ouverte, sujet: (cells[3] ?? "").replace(/\*\*/g, "").slice(0, 60) });
-    }
-  }
+      if (!Number.isFinite(ouverte)) return null;
+      return { numero: Number(cells[0]), ouverte, sujet: (cells[3] ?? "").replace(/\*\*/g, "").slice(0, 60) };
+    }, abs, lireDir, (p) => lireFic(p, "utf8"));
+  if (!balayage.mesurable) return pasMesure("la fluidité de la file", `${dossier} est introuvable — sur un autre dépôt ce registre n'existe pas, et c'est un résultat`);
+  const fermees = balayage.ecarts;
   if (!fermees.length) return pasMesure("la fluidité de la file", "aucune tâche terminée et datée : il n'y a rien à mesurer, ce qui n'est jamais « tout va bien »");
   // UN SEUL APPEL À GIT, JAMAIS UN PAR TÂCHE — et c'est une leçon payée en mesurant.
   // La première version lançait `git log --grep` pour CHAQUE tâche fermée : 324 sous-processus,

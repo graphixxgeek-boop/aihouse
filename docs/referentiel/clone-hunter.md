@@ -368,3 +368,87 @@ correctif qui ne corrigeait rien, et un chiffre alarmant dans un rapport.**
 Une **RESSEMBLANCE d'écriture, jamais une identité d'intention**. Il ne lit pas ce qu'un motif veut
 dire ; il voit que deux personnes ont écrit presque la même chose. La question « est-ce la même
 notion ? » reste entière, et c'est pour ça qu'elle est posée plutôt que tranchée.
+
+---
+
+## La raison écrite, qu'il prescrivait sans savoir la lire (2026-10-02, tâche #1451)
+
+### Le défaut était dans sa propre prescription
+
+Chaque ligne de son plan dit : « fondre les N blocs, **OU** écrire pourquoi ils restent séparés ».
+Deux issues annoncées — **une seule honorée**. La sortie du plan passait uniquement par
+`docs/clone-hunter/memoire.json`, qui exige un accord daté de l'utilisateur. Une raison écrite dans
+le code, c'est-à-dire exactement ce que la phrase demande, ne changeait **rien**.
+
+**Le dégât, mesuré** : la paire de `api-providers.mjs` portait sa raison depuis le 2026-09-29
+(#1207). Elle est revenue au plan à chaque passage pendant trois jours, avec le même ordre de
+travail, son compteur de relance grossissant comme si personne n'avait jamais regardé. C'est la
+**leçon L4** en acte — un garde-fou qui accuse le geste correct finit par ne plus être lu — et il
+l'appliquait à la moitié de sa propre prescription.
+
+### Ce qu'il ne fait surtout pas : se taire
+
+Un outil qui s'acquitterait tout seul sur la foi d'un commentaire serait la **faille 2 de
+l'Article 31**, un habillage. Donc le cluster :
+
+- **reste dans le rapport** et **reste compté** dans les problèmes distincts ;
+- **reste au plan d'action** ;
+- ne quitte le plan **que** par l'accord explicite de l'utilisateur, comme avant.
+
+Ce qui change est son **ÉTAT** : « à trancher » au lieu de « retenu », avec le chemin et la ligne de
+la raison déjà écrite. L'Article 28 a trois états exactement pour ça — ce qui demande une décision
+qui n'est pas celle de l'agent.
+
+### Les deux conditions sont cumulatives, et la seconde évite le faux positif qui compte
+
+| Marqueur | Ce qu'il vérifie |
+|---|---|
+| `MARQUEUR_DU_SUJET` | on parle bien de duplication (`clone-hunter`, `doublon`, `dupliqu`, `recopi`) |
+| `MARQUEUR_DE_DECISION` | ça **reste** séparé — jamais seulement que ça l'a été |
+
+`api-providers.mjs` porte **deux** commentaires voisins sur la duplication : le premier dit pourquoi
+la queue reste recopiée, le second raconte une factorisation **déjà faite**. Reconnaître une raison
+à la seule mention d'un doublon aurait pris le second pour le premier — autrement dit, un
+commentaire qui célèbre une fusion passée aurait dispensé de la fusion suivante.
+
+### Le second idiome est MESURÉ dans le dépôt, jamais imaginé
+
+Article 17, corollaire : on cherche un **PRINCIPE**, pas un mot de plus dans une énumération. Ce
+projet écrit le refus de fondre de deux façons, relevées sur des sites réels :
+
+- « **RESTE SÉPARÉE** » ;
+- « **Les fondre** + ce que ça coûterait » (`check-house:6650`, `doc-report:1400`,
+  `summarize-simulation-log:145`, `the-king:1938`).
+
+**Le piège voisin est exclu exprès** : « **CONFONDRE** les deux ferait… » parle de mélanger deux
+NOTIONS, jamais de fusionner deux blocs, et cinq sites du dépôt l'emploient. D'où le `\bles\s+fondre`
+— « confondre » ne porte jamais « les » devant lui.
+
+### Deux corrections payées dans l'heure, toutes deux trouvées en vérifiant dans les DEUX SENS (BP4)
+
+1. **La fenêtre glissante imposait un ordre que la prose n'a pas.** La première version lisait le
+   sujet sur UNE ligne puis cherchait la décision dans les six suivantes. Elle a donc manqué la
+   raison de `summarize-simulation-log.mjs`, dont la décision est à la ligne 140 et le sujet à la
+   141 — l'ordre inverse. Le raisonnement se fait désormais par **bloc de commentaire entier**.
+2. **L'extrait cité était la première ligne du bloc**, soit un filet de tirets chez `doc-report.mjs`
+   — un message qui n'apprenait rien. Il cite maintenant la ligne qui porte la décision.
+
+**Et deux fois mon attente était fausse, pas l'outil** : je croyais `api-providers` seule instruite.
+`doc-report.mjs:1395` (#1246) et `summarize-simulation-log.mjs:140` (#1207) portaient déjà la leur.
+L'outil a rendu un résultat que je ne connaissais pas d'avance — le critère exact de la faille 2 de
+l'Article 31.
+
+### Sa limite, déclarée
+
+La reconnaissance est **heuristique** : elle lit deux familles de formulations observées dans ce
+dépôt. Une raison écrite dans une troisième tournure lui échappera, et le rapport dira simplement
+« rien trouvé » — un faux négatif silencieux, qui ramène la paire en « retenu » alors qu'elle est
+instruite. Le dire vaut mieux que le laisser croire : si une paire revient au plan alors que sa
+raison est écrite, c'est la **lecture** qui est en cause, pas le commentaire.
+
+### Ce que ça a donné cette nuit-là
+
+**9 problèmes distincts au début, 4 à la fin, et ZÉRO en état « retenu ».** Les 4 restants portent
+tous leur raison et attendent son accord — « zéro constat » au sens littéral est hors de portée de
+l'agent seul, **par construction du garde-fou, et c'est voulu**. La question lui est portée dans
+`docs/idees-a-trancher.md`.

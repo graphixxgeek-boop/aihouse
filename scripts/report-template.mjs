@@ -579,11 +579,25 @@ export function tacheParDefaut(e, { champs = CHAMPS_DE_LA_TACHE } = {}) {
 // explicitement se voit à la lecture et reste refusable au cas par cas (Article 19).
 export const PLAN_QUOI_QUOIFAIRE = Object.freeze({ libelle: (e) => e.quoi, tache: (e) => e.quoiFaire });
 
-export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, numeroTache = null, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut } = {}) {
+// LES TROIS ÉTATS SONT ARRIVÉS ICI LE 2026-10-02 (tâche #993), ET LEUR ABSENCE AVAIT UN COÛT RÉEL.
+// `buildPlanDaction()` connaît les trois états de l'Article 28 depuis sa naissance, mais ce
+// raccourci — celui que les outils utilisent réellement — forçait "retenu" pour tout le monde. Un
+// outil qui avait de quoi distinguer « à faire » de « ça demande une décision qui n'est pas la
+// mienne » n'avait aucun moyen de le dire, et devait donc prescrire du travail déjà fait.
+// LE DÉGÂT MESURÉ QUI L'A DÉCLENCHÉE : CLONE-HUNTER prescrit « fondre, ou écrire pourquoi les blocs
+// restent séparés ». La paire de `api-providers.mjs` porte cette raison écrite depuis le
+// 2026-09-29 (#1207) — et revenait au plan à chaque passage avec le même ordre de travail, son
+// rappel grossissant comme si personne n'avait jamais regardé. C'est la leçon L4 en vrai : un
+// garde-fou qui accuse le geste correct finit par ne plus être lu.
+// POURQUOI RÉSOLU PAR ÉCART comme `critique` et `corrobore` : dans une même liste, un écart peut
+// être tranchable et le suivant non. La valeur par défaut reste "retenu", donc aucun des onze
+// appelants existants ne change de comportement (Article 19).
+export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, numeroTache = null, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut, etat = "retenu", pourquoi = null } = {}) {
   const resoudre = (v, e) => (typeof v === "function" ? v(e) : v);
   const constats = (ecarts ?? []).map((e) => ({
     constat: libelle(e),
-    etat: "retenu",
+    etat: resoudre(etat, e) ?? "retenu",
+    pourquoi: resoudre(pourquoi, e) ?? null,
     tache: typeof tache === "function" ? tache(e) : (tache ?? tacheParDefaut(e) ?? "à qualifier par l'agent à la lecture du rapport"),
     // `numeroTache` se résout par écart comme `critique` et `corrobore` : dans une même liste, un
     // écart peut déjà avoir sa tâche et le suivant non. Null partout = comportement d'avant.

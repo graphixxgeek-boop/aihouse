@@ -306,3 +306,31 @@ mesure fabrique sa propre amélioration. La preuve est tombée le jour même —
 redescendus à 335** une fois l'exclusion posée.
 
 **Hors portée** : la couverture dit si le lien est ÉCRIT, jamais si la tâche a été FAITE.
+
+---
+
+## Le balayage du registre est relayé, jamais recopié (2026-10-02, tâche #1451)
+
+**Le constat venait de CLONE-HUNTER** : `lireLesTachesOuvertes()` et `fluiditeDeLaFile()` portaient
+chacune les six mêmes premières lignes — ouvrir `docs/suivi/sessions`, garder les `.md`, parcourir
+les lignes, retenir celles qui portent un numéro. Le même geste écrit deux fois, alors qu'il a déjà
+un porteur unique chez `check-suivi-fidelity` (`balayerLesLignesDeTaches()`), dont JESUS importait
+**déjà** trois définitions.
+
+**L'ÉQUIVALENCE DES DEUX FILTRES A ÉTÉ MESURÉE AVANT LA FUSION, jamais supposée.** Le filtre local
+(`startsWith("| ")` puis un premier champ numérique) et `MOTIF_LIGNE_DE_TACHE` rendent les **mêmes
+727 lignes** sur ce dépôt, **zéro écart dans un sens comme dans l'autre**. Sans cette mesure, la
+fusion aurait pu déplacer en silence le dénominateur de deux indicateurs — exactement la **leçon
+L10** (une mesure qui partage son filtre avec ce qu'elle mesure ne mesure rien).
+
+**Vérifié avant/après sur la sortie complète de l'outil** : 115 tâches actives avant, 115 après ; la
+fluidité médiane et toutes les lignes du rapport identiques. Les seules différences sont l'horloge
+et le compteur d'usage, que le fait même de lancer l'outil incrémente.
+
+**Un détail de formulation a changé, et il est plus honnête** : le `pourquoi` disait « 115 tâches
+actives lues dans **3 fichiers** » ; il dit maintenant « sur **727 lignes de tâche lues** ». Le
+nombre de fichiers n'était pas le dénominateur de la mesure — le nombre de lignes l'est.
+
+**La non-mesure garde SA formulation.** Celle du balayeur parle du dossier de sessions en général ;
+celle de JESUS dit ce que JESUS ne peut plus faire, et c'est l'information utile à l'endroit où elle
+s'affiche.

@@ -861,6 +861,18 @@ async function main() {
       recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
       return;
     }
+    // POURQUOI CES DEUX APPELS DE PLAN RESTENT SÉPARÉS (2026-10-02, tâche #993). CLONE-HUNTER les
+    // signale comme un doublon, et les cinq lignes se ressemblent en effet — dont la ligne
+    // `{ toolSlug, ...PLAN_QUOI_QUOIFAIRE }`. Mais ce qui se répète ici EST la convention partagée,
+    // pas une recopie : `PLAN_QUOI_QUOIFAIRE` a précisément été nommée le même jour pour que ses
+    // onze sites cessent de réécrire la même paire de fonctions. Deux endroits qui CONSOMMENT une
+    // convention nommée ne sont pas deux endroits qui la dupliquent — c'est à ça que ressemble une
+    // convention tenue (Article 24).
+    // ET LES DEUX BRANCHES NE PEUVENT PAS FUSIONNER, c'est là le fond : celle du dessus traite la
+    // liste `aTrancher` (plusieurs outils d'un coup, chacun avec son désaccord), celle-ci traite UNE
+    // cible nommée et doit distinguer trois cas dont « absent du classement ». Les fondre
+    // donnerait une fonction à deux modes dont l'appelant devrait porter le choix — la lourdeur que
+    // la convention venait justement d'enlever.
     const dossier = dossierDuPortier(cible, { lignesIceberg: lignes });
     for (const x of formatPortierLines(dossier)) console.log(x);
     imprimerPlanDaction(planDactionDepuisEcarts(

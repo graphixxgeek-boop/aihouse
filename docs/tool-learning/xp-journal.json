@@ -382,5 +382,67 @@
       "ecotoken"
     ],
     "date": "2026-10-02T09:39:43.685Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "avant de factoriser, capturer la SORTIE — pas relire le code",
+    "quoi": "En raccordant deux boucles jumelles à un balayage partagé, j'ai introduit un faux vert : les arguments étalés suivis d'un objet d'options plaçaient cet objet en position du premier paramètre quand l'appel n'en portait aucun. La fonction lisait un dossier inexistant, rendait ZÉRO ligne lue, et son message disait tranquillement « aucune ligne au format complet : ce zéro ne certifie rien ». 578 lignes réellement lues avant, 0 après, AUCUNE ERREUR LEVÉE, et un vert parfaitement crédible — sur le contrôle même qui existe pour empêcher qu'une absence de mesure passe pour une mesure. CE QUI L'A ATTRAPÉ : j'avais capturé le résultat JSON des deux fonctions AVANT de toucher au code, et je l'ai comparé après. Rien d'autre ne l'aurait vu : le filet passait, les tests passaient, le code se relisait bien.",
+    "pourquoi": "Une factorisation est le seul type de changement dont on attend qu'il ne change RIEN. C'est donc le seul où la comparaison avant/après est à la fois triviale à faire et absolument décisive — et le seul où la relecture de code échoue par construction, puisqu'on relit un code qu'on vient d'écrire en croyant savoir ce qu'il fait. La capture coûte une commande ; sans elle, un faux vert part en commit.",
+    "porteurs": [
+      "check-suivi-fidelity",
+      "clone-hunter",
+      "check-house"
+    ],
+    "date": "2026-10-02T15:41:07.475Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Un outil qui prescrit un geste sans savoir le LIRE accuse éternellement celui qui l'a fait",
+    "lecon": "CLONE-HUNTER prescrit depuis toujours « fondre les N blocs, OU écrire pourquoi ils restent séparés ». La seconde issue n'était honorée nulle part : sa seule sortie de plan passait par une mémoire exigeant l'accord de l'utilisateur. Trois paires du dépôt portaient leur raison écrite depuis des jours — exactement ce que la phrase demande — et revenaient au plan à chaque passage avec le même ordre de travail, leur compteur de relance grossissant. LA CLASSE DU DÉFAUT : quand un outil offre deux issues, vérifier qu'il sait RECONNAÎTRE les deux. Une prescription dont une moitié n'est pas lisible par l'outil qui la pose transforme le geste correct en dette apparente — c'est la leçon L4 appliquée à l'outil contre lui-même, et aucun test ne peut la trouver puisque rien n'échoue.",
+    "verifie": "mesuré sur ce dépôt le 2026-10-02 : 4 des 5 problèmes restants portaient déjà leur raison, dont 2 que je croyais non instruites (doc-report.mjs:1395 #1246, summarize-simulation-log.mjs:140 #1207) — l'outil a rendu un résultat que je ne connaissais pas d'avance",
+    "outils": [
+      "clone-hunter",
+      "report-template"
+    ],
+    "tache": 1451,
+    "date": "2026-10-02T15:54:51.279Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Chercher un marqueur dans une FENÊTRE GLISSANTE impose un ordre que la prose n'a pas",
+    "lecon": "Le détecteur de raison écrite cherchait le SUJET sur une ligne, puis la DÉCISION dans les six suivantes. Il a donc manqué la seule raison dont les deux moitiés sont dans l'ordre inverse (décision ligne 140, sujet ligne 141) — un commentaire n'a aucun ordre imposé entre ses phrases. LA CLASSE : dès qu'on cherche DEUX marqueurs dans de la prose, l'unité de lecture est le BLOC entier, jamais une fenêtre orientée. Exiger un ordre, c'est manquer la moitié des cas, et le faux négatif est silencieux : l'outil dit simplement « rien trouvé ».",
+    "verifie": "trouvé en vérifiant le détecteur dans les DEUX SENS (BP4) sur cinq paires réelles, pas sur une fixture : mon attente « doit être null » était fausse deux fois, et c'est la vérification inverse qui l'a révélé",
+    "outils": [
+      "clone-hunter"
+    ],
+    "tache": 1451,
+    "date": "2026-10-02T15:54:51.284Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "titre": "Un garde-fou ne lit pas que le code : il lit aussi l'ÉPROUVETTE qui parle de lui",
+    "lecon": "Quatrième occurrence du même piège en une nuit, et la première sous cette forme-ci. Les trois premières venaient de PROSE : écrire « Article 999 » dans un commentaire crée une citation morte. Celle-ci vient d'une FIXTURE DE TEST : le bloc qui vérifie findMemoiresDeclareesSansFichier() contenait la chaîne loadMemoire({fichier:\"docs/x/memoire.json\"}) comme donnée d'entrée, et le garde-fou — qui balaie les 86 scripts du dépôt, suite de tests comprise — l'a lue comme un site d'appel réel citant un registre inexistant. Il avait raison. LA CLASSE : dès qu'un garde-fou cherche un MOTIF DE CODE dans le dépôt, sa propre éprouvette devient un site candidat. Le réflexe n'est donc pas « ne pas écrire le motif » mais « couper le littéral en deux » (loadMemo + ire), ce qui dit aussi au prochain lecteur POURQUOI c'est coupé. À vérifier systématiquement en écrivant le test, jamais en lisant l'échec.",
+    "verifie": "le filet a refusé le commit avec un deepStrictEqual nommant docs/x/memoire.json comme manquant sur le dépôt réel — après coupure du littéral, 0 manquant sur 86 scripts lus",
+    "outils": [
+      "safe-export",
+      "check-house"
+    ],
+    "tache": 1452,
+    "date": "2026-10-02T16:17:05.289Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Un filet lancé sans capturer son code de sortie ne rend pas un vert, il rend une impression",
+    "lecon": "J'ai lancé le filet en arrière-plan sans capturer EXIT. Son journal s'arrête sur une ligne de test, affichait 407 Passed et ZÉRO échec, sans aucune trace d'erreur : tout ce qu'un vert donne à voir. J'ai failli commiter là-dessus. Relancé en écrivant EXIT dans un fichier témoin, il a rendu EXIT=1 et un vrai défaut (un registre cité mais absent). LA CLASSE : le nombre de tests passés n'est PAS le verdict — le verdict est le code de sortie, et lui seul. Un journal tronqué, un plantage après le dernier Passed, un processus tué : les trois se lisent exactement comme un succès si on ne lit que les lignes. Corollaire de méthode : ne jamais sonder l'achèvement avec pgrep sur un motif que la commande de sondage contient elle-même — mon premier guetteur s'est attendu lui-même pendant dix minutes.",
+    "verifie": "mesuré deux fois le 2026-10-02 : net33 « 407 Passed / 0 échec » sans EXIT capturé, puis net34 EXIT=1 sur le même état du dépôt",
+    "outils": [
+      "check-house"
+    ],
+    "tache": 1452,
+    "date": "2026-10-02T16:17:05.293Z"
   }
 ]

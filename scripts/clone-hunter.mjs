@@ -647,6 +647,102 @@ export function clustersNonTranches(clusters = [], memoire = [], filtrer) {
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+// LA RAISON ÉCRITE, QUE CET OUTIL PRESCRIVAIT SANS JAMAIS SAVOIR LA LIRE (2026-10-02, tâche #993)
+// ═══════════════════════════════════════════════════════════════════════════════════════════
+//
+// LE DÉFAUT EST DANS LA PRESCRIPTION ELLE-MÊME, et c'est ce qui le rendait invisible. Chaque ligne
+// du plan dit : « fondre les N blocs, OU écrire pourquoi ils restent séparés ». Deux issues
+// annoncées — mais une seule que l'outil honorait. La sortie du plan passait uniquement par
+// `docs/clone-hunter/memoire.json`, qui exige un accord daté de l'utilisateur. Une raison écrite
+// dans le code, c'est-à-dire exactement ce que la phrase demande, ne changeait RIEN.
+//
+// LE DÉGÂT, MESURÉ : la paire de `api-providers.mjs` porte sa raison écrite depuis le 2026-09-29
+// (tâche #1207) — dix lignes qui expliquent que chaque fournisseur garde sa propre queue de sonde
+// parce que tout ce qui la précède lui est propre. Elle est revenue au plan à chaque passage
+// depuis, avec le même ordre de travail, son compteur de relance grossissant comme si personne
+// n'avait jamais regardé. C'est la leçon L4 en vrai : un garde-fou qui accuse le geste correct
+// finit par ne plus être lu — et celui-ci accusait la moitié de sa propre prescription.
+//
+// CE QU'IL NE FAIT SURTOUT PAS : se taire. Un outil qui s'acquitterait tout seul sur la foi d'un
+// commentaire serait précisément la faille 2 de l'Article 31 — un habillage. Le cluster RESTE dans
+// le rapport, RESTE compté dans les problèmes distincts, et ne quitte le plan que par l'accord
+// explicite de l'utilisateur, comme avant. Ce qui change est son ÉTAT : « à trancher » au lieu de
+// « retenu », avec le chemin et la ligne de la raison déjà écrite. L'Article 28 a trois états
+// exprès pour ça : ce qui demande une décision qui n'est pas celle de l'agent.
+//
+// LES DEUX CONDITIONS SONT CUMULATIVES, et la seconde est celle qui évite le faux positif qui
+// compte. Le fichier `api-providers.mjs` porte DEUX commentaires voisins sur la duplication : le
+// premier dit pourquoi la queue RESTE recopiée, le second raconte une factorisation DÉJÀ FAITE.
+// Reconnaître une « raison écrite » à la seule mention d'un doublon aurait pris le second pour le
+// premier — un commentaire qui célèbre une fusion passée aurait dispensé de la fusion suivante.
+// Il faut donc le sujet (on parle bien de duplication) ET la décision (ça reste séparé).
+export const MARQUEUR_DU_SUJET = /clone-?hunter|doublon|dupliqu|recopi/i;
+// LE SECOND IDIOME EST MESURÉ DANS LE DÉPÔT, JAMAIS IMAGINÉ (Article 17, corollaire : on cherche un
+// PRINCIPE, pas un mot de plus dans une énumération). Ce projet écrit le refus de fondre de deux
+// façons : « RESTE SÉPARÉE », et « Les fondre + ce que ça coûterait » — relevé sur quatre sites
+// réels (check-house:6650, doc-report:1400, summarize-simulation-log:145, the-king:1938).
+// LE PIÈGE EXACT, ET IL FAUT L'EXCLURE : « CONFONDRE les deux ferait… » est une tournure voisine
+// qui parle de tout autre chose — mélanger deux NOTIONS, jamais fusionner deux blocs. Cinq sites du
+// dépôt l'emploient. D'où le \bles\s+fondre : « confondre » ne porte jamais « les » devant lui.
+export const MARQUEUR_DE_DECISION = /\b(rest(e|ent)\s+(s[ée]par|recopi|distinct|jumel)|jamais\s+fondu|pas\s+fondu|ne\s+(se\s+)?fond(ent|re)?\s+pas|volontairement\s+(s[ée]par|distinct|recopi)|(elles?|ils?)\s+le\s+restent|\bles\s+fondre\s+(exigerait|donnerait|obligerait|co[uû]terait|serait|ferait)|impossible\s+(de|à)\s+fondre)/i;
+
+// La fenêtre se DÉRIVE du corpus plutôt que de se choisir (Article 24) : une raison écrite se range
+// au contact de ce qu'elle explique, jamais à l'autre bout du fichier. Mesuré sur ce dépôt le
+// 2026-10-02 : la raison de `api-providers.mjs` est à 6 lignes de la première occurrence et 40 de
+// la seconde ; aucune autre paire du dépôt ne porte de raison écrite. Une fenêtre large aurait
+// attrapé des commentaires sans rapport, une fenêtre étroite aurait manqué la seule qui existe.
+export const FENETRE_DE_RAISON = 60;
+
+// Rend la raison écrite d'un cluster, ou null. On lit le fichier de CHAQUE occurrence : une paire
+// peut être à cheval sur deux fichiers, et la raison peut n'être écrite que chez l'un des deux.
+export function raisonEcriteDuCluster(cluster, { lire } = {}) {
+  const vues = new Set();
+  for (const o of cluster?.occurrences ?? []) {
+    if (vues.has(o.file)) continue;
+    vues.add(o.file);
+    let texte;
+    try { texte = lire(o.file); } catch { continue; }
+    if (texte == null) continue;
+    const lignes = String(texte).split("\n");
+    // Les bornes de la fenêtre couvrent TOUTES les occurrences de ce fichier, pas la première
+    // trouvée : la raison peut être écrite entre deux blocs jumeaux, ce qui est le cas réel ici.
+    const ancres = (cluster.occurrences ?? []).filter((x) => x.file === o.file).map((x) => x.start ?? 0);
+    const bas = Math.max(0, Math.min(...ancres) - FENETRE_DE_RAISON);
+    const haut = Math.min(lignes.length, Math.max(...ancres) + FENETRE_DE_RAISON);
+    // ON RAISONNE PAR BLOC DE COMMENTAIRE, JAMAIS PAR FENÊTRE GLISSANTE, et c'est une correction
+    // payée le jour même : la première version lisait le sujet sur UNE ligne puis cherchait la
+    // décision dans les six suivantes. Elle a donc manqué la raison de
+    // summarize-simulation-log.mjs, dont la décision (« ET RESTE SÉPARÉE ») est à la ligne 140 et
+    // le sujet (« CLONE-HUNTER signale… un doublon ») à la 141 — l'ordre inverse. Un commentaire
+    // n'a pas d'ordre imposé entre ses phrases ; exiger un ordre, c'est manquer la moitié des cas.
+    for (let i = bas; i < haut; i += 1) {
+      if (!/^\s*(\/\/|\*|\/\*)/.test(lignes[i])) continue;   // une raison vit dans un commentaire
+      let fin = i;
+      while (fin + 1 < haut && /^\s*(\/\/|\*|\/\*)/.test(lignes[fin + 1])) fin += 1;
+      const bloc = lignes.slice(i, fin + 1).join(" ");
+      if (MARQUEUR_DU_SUJET.test(bloc) && MARQUEUR_DE_DECISION.test(bloc)) {
+        // L'EXTRAIT CITÉ EST LA LIGNE QUI PORTE LA DÉCISION, jamais la première du bloc : les
+        // commentaires de ce dépôt s'ouvrent souvent sur un filet de tirets, et citer ce filet
+        // rendait un message qui n'apprenait rien au lecteur — la raison restait à aller chercher.
+        const porteuses = lignes.slice(i, fin + 1).map((l, k) => ({ l, k })).filter(({ l }) => MARQUEUR_DE_DECISION.test(l) || MARQUEUR_DU_SUJET.test(l));
+        const { l: brut, k } = porteuses[0] ?? { l: lignes[i], k: 0 };
+        return { chemin: o.file, ligne: i + k + 1, extrait: brut.replace(/^\s*\/\/\s?/, "").trim().slice(0, 110) };
+      }
+      i = fin;   // un bloc déjà jugé ne se relit pas ligne à ligne
+    }
+  }
+  return null;
+}
+
+// Enrichit chaque cluster de sa raison écrite éventuelle. On ENRICHIT, on ne filtre pas : rendre
+// une liste plus courte ici referait le filtre silencieux que le filtre des ponts de réexport a
+// appris à ne pas être (son commentaire, 2026-09-26).
+export function clustersAvecRaisonEcrite(clusters = [], { lire } = {}) {
+  const enrichis = (clusters ?? []).map((c) => ({ ...c, raisonEcrite: raisonEcriteDuCluster(c, { lire }) }));
+  return { clusters: enrichis, instruits: enrichis.filter((c) => c.raisonEcrite).length };
+}
+
 export function formatClusterSummary(cluster) {
   const where = cluster.occurrences.map((o) => `${o.file}:${o.start + 1}`).join(", ");
   return `${cluster.lines} ligne(s) dupliquée(s) × ${cluster.occurrences.length} endroit(s) — ${where} — aperçu: "${cluster.preview[0] ?? ""}"`;
@@ -734,9 +830,19 @@ function main() {
   // LE MOTIF ET LA TÂCHE SONT DÉRIVÉS de chaque problème, jamais une phrase unique répétée : la
   // précédente était vraie et n'aidait personne, puisqu'elle renvoyait au lecteur la décision que
   // l'outil avait déjà de quoi éclairer.
-  const plan = planDactionDepuisEcarts(problemes, { toolSlug: "clone-hunter",
+  // LA RAISON ÉCRITE EST LUE AVANT DE PRESCRIRE (2026-10-02, #993) : prescrire « écris pourquoi »
+  // à une paire qui porte déjà son pourquoi est la leçon L4 en acte. Le cluster reste compté et
+  // reste au plan ; seul son état passe à « à trancher », parce que le retirer pour de bon demande
+  // l'accord explicite de l'utilisateur et que cet accord n'est pas à moi de donner.
+  const { clusters: avecRaison, instruits } = clustersAvecRaisonEcrite(problemes, { lire: (p) => readFileSync(join(ROOT, p), "utf8") });
+  if (instruits) {
+    console.log(`\n${instruits} problème(s) portent DÉJÀ une raison écrite dans le code — l'autre moitié de ma propre prescription. Ils restent comptés et restent au plan, en « à trancher » : les en sortir pour de bon passe par ton accord explicite (docs/clone-hunter/memoire.json), jamais par ma seule lecture du commentaire.`);
+  }
+  const plan = planDactionDepuisEcarts(avecRaison, { toolSlug: "clone-hunter",
     libelle: (c) => `[${c.detecteurs.join("+")}] ${formatClusterSummary(c)} — ${motifDuCluster(c).motif}`,
-    tache: (c) => motifDuCluster(c).tache });
+    tache: (c) => motifDuCluster(c).tache,
+    etat: (c) => (c.raisonEcrite ? "a-trancher" : "retenu"),
+    pourquoi: (c) => (c.raisonEcrite ? `raison déjà écrite à ${c.raisonEcrite.chemin}:${c.raisonEcrite.ligne} (« ${c.raisonEcrite.extrait} ») — à confirmer ou à refuser par toi, puis inscrite à docs/clone-hunter/memoire.json avec ton accord` : null) });
   imprimerPlanDaction(plan);
 }
 

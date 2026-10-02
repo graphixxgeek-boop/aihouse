@@ -411,6 +411,30 @@ export function lireLesScriptsDuDepot({ root = ".", dossier = "scripts", suffixe
   return { mesurable: true, lus, illisibles, pourquoi: null };
 }
 
+// LIRE UNE LISTE DE FICHIERS DÉJÀ CONNUE, TOLÉRAMMENT (2026-10-02, tâche #993).
+// CE QU'ELLE N'EST PAS : un doublon de `lireLesScriptsDuDepot()` juste au-dessus. Celle-là
+// DÉCOUVRE les fichiers (elle liste un dossier) et doit distinguer « dossier illisible » de
+// « dossier vide » ; celle-ci reçoit une liste que l'appelant a déjà constituée et n'a donc aucun
+// dossier à lister. Les fondre donnerait une fonction à deux modes dont l'appelant porterait le
+// choix, pour ne partager que trois lignes.
+// POURQUOI ELLE EXISTE : CLONE-HUNTER signalait trois fonctions de `safe-export.mjs` dont les
+// cinq premières lignes étaient identiques — même signature, puis le même « ouvrir, et passer au
+// suivant si c'est illisible ». La décision de SAUTER un fichier illisible en silence est un
+// arbitrage, pas un détail de syntaxe : recopiée trois fois, elle pouvait diverger trois fois.
+// LE SILENCE EST VOLONTAIRE ET C'EST L'ARBITRAGE REPRIS TEL QUEL : un fichier qu'on ne peut pas
+// ouvrir est ignoré, jamais compté comme conforme. Les appelants traitent des listes qu'ils
+// viennent de construire, où un illisible est l'exception rare — et le comportement d'avant est
+// gardé à l'identique, parce qu'une fusion n'est pas l'endroit où changer une décision
+// (Article 19).
+export function* lireChacun(fichiers = [], { root = ".", readFileImpl = null } = {}) {
+  const lire = readFileImpl ?? ((chemin) => readFileSync(chemin, "utf8"));
+  for (const nom of fichiers ?? []) {
+    let texte;
+    try { texte = lire(join(root, nom), "utf8"); } catch { continue; }
+    yield { nom, texte };
+  }
+}
+
 export function listerLesFichiers(racines, { root = ".", listDirImpl = readdirSync, garder = () => true } = {}) {
   const trouves = [];
   const pile = Array.isArray(racines) ? [...racines] : [racines];

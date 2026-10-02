@@ -58,3 +58,27 @@ fichiers dont les commandes git sont du **décor** est tenue à la main, cette n
 étant écrite à côté comme l'Article 24 l'exige : le filet de sécurité contient par construction de
 fausses commandes qu'il donne à manger à ses doublures.
 
+
+---
+
+## `lireChacun()` — lire une liste de fichiers déjà connue, toléramment (2026-10-02, tâche #1451)
+
+**Ce qu'elle n'est PAS : un doublon de `lireLesScriptsDuDepot()`.** Celle-là **découvre** les
+fichiers (elle liste un dossier) et doit distinguer « dossier illisible » de « dossier vide » ;
+celle-ci reçoit une liste que l'appelant a déjà constituée et n'a donc aucun dossier à lister. Les
+fondre donnerait une fonction à deux modes dont l'appelant porterait le choix, pour ne partager que
+trois lignes.
+
+**Pourquoi elle existe** : CLONE-HUNTER signalait **trois** fonctions de `safe-export.mjs`
+(`findFuitesDeSpecificite`, `findMentionsSansConsigne`, `findBlueprintsMalConstruits`) dont les cinq
+premières lignes étaient identiques — même signature, puis le même « ouvrir, et passer au suivant si
+c'est illisible ». **La décision de SAUTER un fichier illisible en silence est un arbitrage, pas un
+détail de syntaxe** : recopiée trois fois, elle pouvait diverger trois fois.
+
+**Le comportement est repris à l'identique**, y compris le silence : une fusion n'est pas l'endroit
+où changer une décision (Article 19). Sortie de `safe-export.mjs` comparée ligne à ligne avant et
+après — seule la taille du fichier de compteur d'usage bouge.
+
+**La raison vit ICI, une seule fois**, et chaque appelant ne porte qu'une ligne de renvoi. C'est la
+leçon déjà écrite en tête de `lireLesScriptsDuDepot()` : *expliquer une duplication dans les deux
+copies duplique l'explication* — la recopier ferait grossir le bloc jumeau au lieu de le réduire.

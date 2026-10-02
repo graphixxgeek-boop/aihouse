@@ -215,3 +215,32 @@ un signal ADJACENT comme le signal visé (leçon L47), et refabriquerait exactem
 `god-of-all-process`, qui écrivait déjà son numéro en prose en fin de phrase — lisible par un
 humain, invisible à toute relecture mécanique — et `fils-de-discussion`, via sa table
 `TACHE_PAR_CONTROLE`.
+
+---
+
+## Les trois états sont enfin atteignables depuis le raccourci (2026-10-02, tâche #1451)
+
+**Le trou, et il avait un coût réel.** `buildPlanDaction()` connaît les trois états de l'Article 28
+— RETENU, ÉCARTÉ, À TRANCHER — depuis sa naissance. Mais `planDactionDepuisEcarts()`, le raccourci
+que les **onze** outils utilisent réellement, forçait `etat: "retenu"` pour tout le monde. Un outil
+qui avait de quoi distinguer « à faire » de « ça demande une décision qui n'est pas la mienne »
+n'avait **aucun moyen de le dire**, et devait donc prescrire du travail déjà fait.
+
+**Le dégât qui l'a déclenchée** : CLONE-HUNTER prescrit « fondre, ou écrire pourquoi les blocs
+restent séparés ». Quatre paires du dépôt portaient cette raison écrite, l'une depuis trois jours —
+et revenaient au plan à chaque passage avec le même ordre de travail. Leçon **L4** : un garde-fou
+qui accuse le geste correct finit par ne plus être lu.
+
+**Ce qui est ajouté** : deux options, `etat` et `pourquoi`, **résolues par écart** comme `critique`
+et `corrobore` — dans une même liste, un écart peut être tranchable et le suivant non.
+
+```js
+planDactionDepuisEcarts(problemes, { toolSlug: "…",
+  etat: (c) => (c.raisonEcrite ? "a-trancher" : "retenu"),
+  pourquoi: (c) => (c.raisonEcrite ? `raison déjà écrite à ${c.raisonEcrite.chemin}:…` : null) });
+```
+
+**Aucun appelant existant ne change de comportement** : le défaut reste `"retenu"` (Article 19). Et
+conformément à l'Article 24 — *une fonctionnalité nouvelle s'applique à TOUS les outils existants le
+jour où elle est écrite* — la capacité est disponible pour les onze sites sans une ligne de plus
+chez eux.

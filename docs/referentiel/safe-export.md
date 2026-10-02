@@ -929,3 +929,35 @@ elle en rend **30**, et sa tête de liste est une vraie solution à généralise
 **Hors portée** : « ressembler à une solution » se lit sur des marqueurs de TEXTE. Une solution
 rédigée autrement lui échappe, et une ligne qui emploie ces mots sans rien résoudre sort à tort.
 Ce sont des **questions**, jamais un verdict.
+
+---
+
+## `findMemoiresDeclareesSansFichier()` — un registre de décisions cité mais absent (2026-10-02, tâche #1452)
+
+**Le trou a tenu six jours sans que rien ne le dise.** `loadMemoire()` est le mécanisme partagé des
+décisions déjà tranchées : ARGUS l'a reçu le 2026-09-23, CLONE-HUNTER le 2026-09-26, et le
+commentaire de ce dernier explique que le mécanisme est « relayé, jamais recopié ». Mais
+CLONE-HUNTER **n'a jamais eu son fichier** : `docs/clone-hunter/memoire.json` était cité dans son
+code, **imprimé à l'utilisateur dans son propre rapport**, et absent du disque.
+
+**Pourquoi personne ne l'a vu** : `loadMemoire()` tolère l'absence et rend un tableau vide. L'outil
+se comportait donc exactement comme si rien n'avait jamais été tranché — un relais qui avait l'air
+branché et ne l'était qu'à moitié. C'est la **leçon L2** appliquée au registre plutôt qu'à l'outil.
+
+**Ce qui l'a trouvé, et c'est le vrai enseignement** : le garde-fou des chemins morts, uniquement
+parce qu'une fiche venait de citer ce chemin en documentant un autre travail. Sans cette citation
+fortuite, le trou tenait encore. **Un hasard n'est pas un mécanisme.**
+
+**Corrigé en classe, jamais en occurrence (L37)** : créer le fichier manquant aurait refermé le cas
+sans protéger le **quatrième** consommateur, qui aurait reçu le même silence. Le garde-fou vérifie
+donc que **chaque** `loadMemoire({ fichier })` de l'outillage a son fichier sur le disque.
+
+| Vérification | Attendu |
+|---|---|
+| dépôt réel | 0 manquant sur 86 scripts lus |
+| `existsImpl: () => false` | les 3 sites réels sont accusés (sens 2, BP4) |
+| même registre cité 2 fois dans un fichier | **1** manque, pas 2 — un dénominateur de rapport se respecte |
+| parc illisible | `mesurable: false`, jamais un zéro (**L5**) |
+
+Son message dit **pourquoi** un registre absent est dangereux — le tableau vide silencieux — et pas
+seulement qu'il est absent.

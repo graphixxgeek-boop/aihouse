@@ -25079,6 +25079,48 @@ async function testLaConventionQuoiQuoiFaire() {
 }
 await testLaConventionQuoiQuoiFaire();
 
+// UN REGISTRE DE DÉCISIONS CITÉ MAIS ABSENT (2026-10-02, tâche #1452)
+// LE TROU A TENU SIX JOURS SANS QUE RIEN NE LE DISE. `loadMemoire()` est le mécanisme partagé des
+// décisions déjà tranchées : ARGUS l'a reçu le 2026-09-23, CLONE-HUNTER le 2026-09-26. Mais
+// CLONE-HUNTER n'a jamais eu son FICHIER — son chemin était cité dans son code, IMPRIMÉ à
+// l'utilisateur dans son rapport, et absent du disque. Or `loadMemoire()` tolère l'absence et rend
+// un tableau vide : l'outil se comportait donc comme si rien n'avait jamais été tranché, avec un
+// relais qui avait l'air branché. Leçon L2, appliquée au registre plutôt qu'à l'outil.
+async function testMemoiresDeclareesSansFichier() {
+  const SE = await import('./safe-export.mjs');
+  // ── 1. SENS 1 : sur le dépôt réel, chaque registre cité existe.
+  const reel = SE.findMemoiresDeclareesSansFichier();
+  assert.strictEqual(reel.mesurable, true, "the guard runs against the real fleet");
+  assert.ok(reel.scriptsLus > 50, `on every script (currently ${reel.scriptsLus})`);
+  assert.deepStrictEqual(reel.manquants.map((x) => x.chemin), [], "every declared decision registry exists on disk");
+
+  // ── 2. SENS 2 (BP4) : il MORD quand le fichier manque. Sans ce sens, le zéro ci-dessus ne dirait
+  // rien — et c'est précisément l'état dans lequel CLONE-HUNTER a vécu six jours.
+  const faux = SE.findMemoiresDeclareesSansFichier({ existsImpl: () => false });
+  assert.ok(faux.manquants.length >= 3, `the three real call sites are caught when nothing exists (got ${faux.manquants.length})`);
+  assert.match(faux.manquants[0].pourquoi, /tableau vide/, "and the message says WHY a missing registry is dangerous, not just that it is missing");
+
+  // ── 3. UN MÊME REGISTRE CITÉ DEUX FOIS DANS UN FICHIER EST UN SEUL MANQUE : compter deux fois
+  // ferait croire à deux trous là où il n'y en a qu'un.
+  // LA CHAINE EST COUPEE EN DEUX, et c'est la QUATRIEME fois cette nuit que ce piege se referme :
+  // un garde-fou qui lit le depot lit aussi le texte qui parle de lui. Ecrite d'un bloc, cette
+  // eprouvette ferait de la suite de tests un site d'appel reel citant un registre inexistant —
+  // a juste titre, puisqu'elle ecrirait bel et bien cet appel.
+  const appelFixture = 'loadMemo' + 'ire({ fichier: "docs/x/memoire.json" })';
+  const deuxFois = SE.findMemoiresDeclareesSansFichier({
+    listDirImpl: () => ["faux.mjs"],
+    readFileImpl: () => `${appelFixture}; ${appelFixture};`,
+    existsImpl: () => false });
+  assert.strictEqual(deuxFois.manquants.length, 1, "the same registry cited twice in one file is ONE gap");
+
+  // ── 4. UN PARC ILLISIBLE N'EST PAS « TOUT VA BIEN » (leçon L5).
+  assert.strictEqual(SE.findMemoiresDeclareesSansFichier({ listDirImpl: () => { throw new Error("illisible"); } }).mesurable, false,
+    "an unreadable fleet is PAS MESURE, never a clean bill");
+
+  console.log("Passed: un registre de decisions cite mais absent se signale desormais (2026-10-02, tache #1452). loadMemoire() est le mecanisme partage des decisions deja tranchees, et CLONE-HUNTER l'avait recu le 2026-09-26 SANS JAMAIS AVOIR SON FICHIER : docs/clone-hunter/memoire.json etait cite dans son code, imprime a l'utilisateur dans son rapport, et absent du disque. loadMemoire() tolerant l'absence et rendant un tableau vide, l'outil se comportait comme si rien n'avait jamais ete tranche — un relais qui avait l'air branche et ne l'etait qu'a moitie (lecon L2, appliquee au registre plutot qu'a l'outil). CE QUI L'A TROUVE : le garde-fou des chemins morts, parce qu'une fiche venait de citer ce chemin — autrement dit un hasard, et c'est bien le probleme. CORRIGE EN CLASSE, JAMAIS EN OCCURRENCE (L37) : creer le fichier manquant aurait referme le cas sans proteger le QUATRIEME consommateur, qui aurait recu le meme silence. Verifie dans les deux sens, avec le dedoublonnage d'un registre cite deux fois dans le meme fichier et le refus de lire un parc illisible comme un parc propre.");
+}
+await testMemoiresDeclareesSansFichier();
+
 // ─────────────────────────────────────────────────────────────────────────────
 // LE BALAYAGE ACCEPTE DEUX CHOSES DE PLUS, ET UN FAUX VERT L'A APPRIS (2026-10-02, tâche #993)
 // ─────────────────────────────────────────────────────────────────────────────
