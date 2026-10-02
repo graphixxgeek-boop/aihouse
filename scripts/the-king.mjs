@@ -1095,11 +1095,23 @@ export function tensionsDuCorpus(convictionsRetenues, { max = 400 } = {}) {
 // convictions, les noter par représentativité, dériver un seuil de leur propre distribution et les
 // confronter à un document de référence vaut pour n'importe quel corpus. Ce qui change d'une
 // révélation à l'autre, ce sont TROIS choses — le corpus lu, le cadre qui dit quelles cases doivent
+// LES DEUX LECTEURS D'UN CORPUS, ÉCRITS UNE SEULE FOIS (2026-10-02). CLONE-HUNTER a signalé ce
+// bloc en double le soir même où la dérivation est née : la révélation et la dérivation lisent le
+// même corpus de la même façon, et chacune en portait sa copie. Cinq lignes, donc une gêne de
+// lecture plutôt qu'un risque — mais c'est exactement la forme de dette qui se recopie une fois
+// de plus à chaque fonction qui rejoint le fichier, et un commentaire promettant de ne pas la
+// recopier n'a jamais suffi à l'arrêter.
+export function lecteursDuCorpus({ root = ROOT, lireImpl = null, listerImpl = null } = {}) {
+  return {
+    lire: lireImpl ?? ((c) => readFileSync(join(root, c), "utf8")),
+    lister: listerImpl ?? ((d, ext = ".md") => (fsExists(join(root, d))
+      ? fsReaddir(join(root, d)).filter((f) => f.endsWith(ext)).map((f) => `${d}/${f}`) : [])),
+  };
+}
+
 // être remplies, et le document auquel on compare — et toutes trois sont désormais des paramètres.
 export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS, chemin = PHILOSOPHY_PATH, familles = CADRE_FAMILLES, lireImpl = null, listerImpl = null, seuilEtendue = null } = {}) {
-  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
-  const lister = listerImpl ?? ((d, ext = ".md") => (fsExists(join(root, d))
-    ? fsReaddir(join(root, d)).filter((f) => f.endsWith(ext)).map((f) => `${d}/${f}`) : []));
+  const { lire, lister } = lecteursDuCorpus({ root, lireImpl, listerImpl });
   const fichiers = [];
   for (const r of racines) {
     if (r.chemin) { fichiers.push({ chemin: r.chemin, source: r }); continue; }
@@ -1705,9 +1717,7 @@ export function sectionsAvecTitre(texte = "", { chemin = "" } = {}) {
 
 export function deriverLesReponses({ root = ROOT, familles = CADRE_FAMILLES, racines = RACINES_DU_CORPUS,
   seuil = SEUIL_DE_DERIVATION, lireImpl = null, listerImpl = null } = {}) {
-  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
-  const lister = listerImpl ?? ((d, ext = ".md") => (fsExists(join(root, d))
-    ? fsReaddir(join(root, d)).filter((f) => f.endsWith(ext)).map((f) => `${d}/${f}`) : []));
+  const { lire, lister } = lecteursDuCorpus({ root, lireImpl, listerImpl });
   const sections = [];
   for (const r of racines) {
     const fichiers = r.chemin ? [r.chemin] : lister(r.dossier, r.ext ?? ".md");
