@@ -17,7 +17,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { motCleValide, findMotsClesEnCollision, FORMAT_TACHE, CASE_COCHEE, PREMIERE_TACHE_AVEC_RITUEL, QUESTIONS_DE_CLOTURE, lireLigneDeTache } from "./criticite.mjs";
 import { sh, printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent, listerLeDossierGouvernant } from "./lib-shell.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -1668,8 +1668,7 @@ function main() {
 
   const plan = planDactionDepuisEcarts(ecarts, {
     toolSlug: "check-suivi-fidelity",
-    libelle: (e) => e.quoi,
-    tache: (e) => e.quoiFaire,
+    ...PLAN_QUOI_QUOIFAIRE,
     fausseUneMesure: true,
   });
   imprimerPlanDaction(plan);

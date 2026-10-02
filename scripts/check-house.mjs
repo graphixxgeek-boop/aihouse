@@ -22121,11 +22121,22 @@ async function testLibelleParDefaut() {
   assert.equal(RT.planDactionDepuisEcarts(['une chaîne toute simple'], { toolSlug: 'x' }).illisibles.length, 0, 'a plain string finding is perfectly readable and must never be accused either');
   assert.equal(RT.planDactionDepuisEcarts([], { toolSlug: 'x' }).illisibles, undefined, 'an empty plan returns early and carries no illisibles list — nothing to accuse');
 
-  // ── 5. LE PREMIER USAGE EST RÉEL (leçon L2) : les copies existent bien dans le dépôt.
+  // ── 5. LES COPIES ONT DISPARU LE 2026-10-02, ET C'ÉTAIT LE BUT — mais l'assertion d'origine
+  // demandait l'inverse, et elle avait raison de le faire : tant que la correction n'était pas
+  // finie, un test qui n'aurait plus trouvé les copies n'aurait plus rien mesuré.
+  // CE QUI A CHANGÉ : la tâche #1200 avait dérivé le champ par DÉFAUT dans le gabarit, mais
+  // laissé en place les onze surcharges explicites qui le forçaient quand même — le défaut était
+  // juste, et personne ne s'en servait. La tâche #993 les a toutes retirées au profit d'une
+  // constante unique, ce qui est l'aboutissement de ce que #1200 avait trouvé sans le terminer.
+  // L'ASSERTION EST DONC RETOURNÉE PLUTÔT QUE SUPPRIMÉE : ce qu'elle protégeait — que ce test ne
+  // devienne pas vide — est désormais protégé par findConventionRecopiee(), qui mord sur un
+  // douzième outil qui recopierait. Supprimer l'assertion aurait perdu la question ; la retourner
+  // la garde en la posant à l'endroit où elle a encore un sens.
   const { readFileSync: lire1200 } = await import('node:fs');
   const regisseur = lire1200('scripts/le-regisseur.mjs', 'utf8');
   const profil = lire1200('scripts/check-profil-utilisateur.mjs', 'utf8');
-  assert.ok(/libelle: \(e\) => e\.quoi/.test(regisseur) && /libelle: \(e\) => e\.quoi/.test(profil), 'the two blocks CLONE-HUNTER flagged must still be the real pair this task started from — if they vanish, this test is measuring nothing');
+  assert.ok(/\.\.\.PLAN_QUOI_QUOIFAIRE/.test(regisseur) && /\.\.\.PLAN_QUOI_QUOIFAIRE/.test(profil), 'the pair CLONE-HUNTER flagged now SPREADS the single convention instead of rewriting it — that was the point of #1200, finished by #993');
+  assert.ok(!/libelle: \(e\) => e\.quoi/.test(regisseur) && !/libelle: \(e\) => e\.quoi/.test(profil), 'and the copies are really gone, not merely joined by a constant nobody uses');
 
   console.log("Passed: le nom de champ se DERIVE, et l'alarme pour le douzieme (2026-09-29, tache #1200). D'OU CA VIENT, ET C'EST LA LECON : CLONE-HUNTER a signale deux blocs quasi identiques dans check-profil-utilisateur et le-regisseur. Les fondre parce qu'ils se ressemblent n'aurait rien regle — la vraie question etait POURQUOI ils existent, et la reponse est que le gabarit ne savait pas lire le champ quoi, si bien que ONZE outils reecrivaient l'acces au libelle et SEPT reecrivaient l'acces a la tache. Un nom de champ recopie onze fois est exactement ce que l'Article 24 interdit : un nouveau venu doit HERITER de ce que l'equipe sait deja faire. CE QUI NE CHANGE POUR PERSONNE, et c'est mesure : message et pourquoi restent en tete de chaine, un libelle declare l'emporte toujours, et les sept outils rejoues avant/apres impriment des plans d'action strictement identiques. CE QUE CA FERME POUR DEMAIN : le douzieme outil qui nommera son champ autrement imprimait « [object Object] » dans son plan d'action SANS QUE RIEN NE LE DISE — reportHasPlanDaction() voyait une section, sansTache ne voyait rien d'anormal, et le rapport restait vert. Un signal ADJACENT (« la section existe ») lu comme le signal vise (« le constat se lit ») : la classe d'erreur dominante de toute cette nuit. L'alarme est desormais imprimee, elle NOMME les champs connus pour que la correction se lise sans ouvrir le gabarit, et elle ne peut pas accuser a tort puisque seule la stringification d'un objet produit cette chaine exacte (lecon L4).");
 }
@@ -25012,3 +25023,48 @@ async function testLaDerivationDesReponses() {
   console.log("Passed: la DÉRIVATION reprend une réponse déjà écrite au lieu de la reconstruire plus faiblement (2026-10-02, tâche #1438, seconde moitié). CE QUE LA RÉVÉLATION FAIT ET POURQUOI ÇA NE SUFFIT PAS : elle extrait des phrases qui engagent et garde les plus répandues, ce qui est la bonne méthode quand PERSONNE n'a jamais répondu. Mais quand un document répond explicitement — « CE QUE NOUS NE SACRIFIERONS JAMAIS », suivi d'un tableau de quatre réponses avec leurs porteurs — la reconstruire statistiquement rend une version PLUS FAIBLE d'une réponse qui existait déjà, mieux écrite, et validée par un humain. LE CAS D'ÉCOLE EST TENU : les cinq impossibles sont retrouvés à leur source et leurs réponses reprises TELLES QUELLES, colonne de porteurs comprise. DEUX CORRECTIONS ONT ÉTÉ IMPOSÉES PAR LE PREMIER PASSAGE, et la première était un faux positif massif : 14 cases sur 19 ressortaient « répondues », toutes par des sections qui ne répondaient à rien — la case « Raison d'être » matchait un titre de leçon parlant d'« oublier sa raison », parce qu'un titre d'un seul mot significatif se retrouve dans des centaines de titres. D'où une correspondance BIDIRECTIONNELLE et un minimum de DEUX racines partagées, et une case trop courte pour être appariée est DÉCLARÉE non dérivable plutôt que faussement appariée : baisser le seuil aurait augmenté le nombre de réponses et diminué leur valeur, exactement l'inverse de ce que la dérivation sert à faire. LA SECONDE CORRECTION EST PLUS SUBTILE : « Ce que nous ne sacrifierons jamais » rendait UNE SEULE racine, parce que le filtre de mots-outils partagé écarte « jamais » — à juste titre dans une phrase de prose où il est partout, alors que dans un titre de case c'est le mot qui porte tout le sens. Un titre est court et choisi ; aucun de ses mots n'y est par hasard. Le jeu élargi reste donc LOCAL aux titres.");
 }
 await testLaDerivationDesReponses();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA CONVENTION « quoi / quoiFaire » NE SE RECOPIE PLUS (2026-10-02, tâche #993)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLaConventionQuoiQuoiFaire() {
+  const RT = await import('./report-template.mjs');
+  const SE = await import('./safe-export.mjs');
+
+  // ── 1. LA CONVENTION EXISTE, UNE SEULE FOIS, ET ELLE EST GELÉE : un appelant qui la mute
+  // changerait le comportement de dix outils d'un coup sans que personne ne le voie.
+  assert.ok(RT.PLAN_QUOI_QUOIFAIRE, 'the convention is declared at the plan owner');
+  assert.strictEqual(RT.PLAN_QUOI_QUOIFAIRE.libelle({ quoi: 'x' }), 'x', 'and reads the quoi field');
+  assert.strictEqual(RT.PLAN_QUOI_QUOIFAIRE.tache({ quoiFaire: 'y' }), 'y', 'and the quoiFaire field');
+  assert.ok(Object.isFrozen(RT.PLAN_QUOI_QUOIFAIRE), 'frozen, because a caller mutating it would change ten tools at once in silence');
+
+  // ── 2. PLUS AUCUN OUTIL NE LA RECOPIE. CLONE-HUNTER n'en voyait que DEUX sites — ceux dont les
+  // cinq lignes alentour se ressemblaient assez — alors que le dépôt en portait ONZE sur dix
+  // outils. Corriger les deux signalés aurait laissé les neuf autres (leçon L37).
+  const reel = SE.findConventionRecopiee();
+  assert.strictEqual(reel.mesurable, true, 'the guard runs against the real fleet');
+  assert.ok(reel.fichiersLus > 50, `on every script (currently ${reel.fichiersLus})`);
+  assert.deepStrictEqual(reel.coupables.map((c) => `${c.fichier}:${c.ligne}`), [], 'and nobody copies the convention any more');
+
+  // ── 3. SENS 2 (BP4) : sur un fichier fabriqué qui la recopie, il mord. Sans ce sens, le zéro
+  // ci-dessus ne dirait rien — et la constante ne serait qu'un rangement, pas une protection.
+  // LA CHAÎNE EST COUPÉE EN DEUX, et c'est la TROISIÈME fois cette nuit que le même piège se
+  // referme : un outil qui lit du texte lit aussi le texte qui parle de lui. Écrite d'un bloc,
+  // cette éprouvette ferait de la suite de tests le douzième coupable — à juste titre, puisqu'elle
+  // écrirait bel et bien la convention à la main.
+  const copieALaMain = 'libelle: (e) => e.qu' + 'oi, tache: (e) => e.quoiFaire';
+  const faux = SE.findConventionRecopiee({ listDirImpl: () => ['faux.mjs'], readFileImpl: () => `const x = { ${copieALaMain} };` });
+  assert.strictEqual(faux.coupables.length, 1, 'a twelfth tool writing the two lines by hand is caught');
+  assert.match(faux.coupables[0].quoiFaire, /PLAN_QUOI_QUOIFAIRE/, 'and told what to spread instead');
+
+  // ── 4. IL NE S'ACCUSE PAS LUI-MÊME : report-template est l'endroit où la convention est
+  // DÉFINIE, et un garde-fou qui accuse sa propre source est le faux positif le plus bête.
+  const source = SE.findConventionRecopiee({ listDirImpl: () => ['report-template.mjs'], readFileImpl: () => `export const PLAN_QUOI_QUOIFAIRE = Object.freeze({ ${copieALaMain} });` });
+  assert.deepStrictEqual(source.coupables, [], 'MUST LET PASS: the file that defines the convention is not copying it');
+
+  // ── 5. UN PARC VIDE N'EST PAS « PERSONNE NE RECOPIE » (leçon L5).
+  assert.strictEqual(SE.findConventionRecopiee({ listDirImpl: () => [] }).mesurable, false, 'an unreadable fleet is PAS MESURÉ, never a clean bill');
+
+  console.log("Passed: la convention « quoi / quoiFaire » ne se recopie plus, et un douzième outil en héritera (2026-10-02, tâche #993). CLONE-HUNTER signalait DEUX sites jumeaux — ceux dont les cinq lignes alentour se ressemblaient assez pour qu'il les voie — alors que le dépôt en portait ONZE, répartis sur DIX outils. C'est très exactement ce que l'outil appelle « la forme de dette qui se recopie une fois de plus à chaque outil qui rejoint l'équipe », et corriger les deux sites signalés aurait laissé les neuf autres (leçon L37 : on corrige la CLASSE, jamais l'occurrence). LA CONVENTION EST DÉSORMAIS ÉCRITE UNE SEULE FOIS chez le propriétaire du plan d'action, et les onze sites l'étalent au lieu de la réécrire. POURQUOI UNE CONSTANTE PLUTÔT QU'UN DÉFAUT DANS LA FONCTION : tous les écarts du dépôt ne portent pas ces deux champs, et en faire le comportement par défaut casserait silencieusement les appelants qui nomment les leurs autrement — une constante qu'on étale explicitement se voit à la lecture et reste refusable au cas par cas (Article 19). ELLE EST GELÉE, parce qu'un appelant qui la muterait changerait le comportement de dix outils d'un coup sans que personne ne le voie. ET UN GARDE-FOU LA REND DURABLE (Article 24) : sans lui, la constante ne serait qu'un rangement, et le prochain outil écrirait les deux lignes à la main comme les onze précédents — personne ne le verrait avant que CLONE-HUNTER n'en trouve deux assez proches, ce qui a pris des mois. Vérifié dans les deux sens, et il ne s'accuse pas lui-même : le fichier qui DÉFINIT la convention n'est pas celui qui la recopie.");
+}
+await testLaConventionQuoiQuoiFaire();

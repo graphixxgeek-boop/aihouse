@@ -567,6 +567,18 @@ export function tacheParDefaut(e, { champs = CHAMPS_DE_LA_TACHE } = {}) {
   return premierChampRenseigne(e, champs);
 }
 
+// LA CONVENTION « quoi / quoiFaire », ÉCRITE UNE SEULE FOIS (2026-10-02, tâche #993).
+// CLONE-HUNTER ne voyait que DEUX de ses sites — ceux dont les cinq lignes alentour se
+// ressemblaient assez — alors que le dépôt en portait ONZE, répartis sur dix outils. C'est très
+// exactement ce que l'outil appelle « la forme de dette qui se recopie une fois de plus à chaque
+// outil qui rejoint l'équipe », et un commentaire promettant de ne pas la recopier ne l'a jamais
+// arrêtée. La corriger sur les deux sites signalés aurait laissé les neuf autres (leçon L37).
+// POURQUOI UNE CONSTANTE PLUTÔT QU'UN DÉFAUT DANS LA FONCTION : tous les écarts du dépôt ne
+// portent pas les champs quoi et quoiFaire. En faire le comportement par défaut casserait
+// silencieusement les appelants qui nomment les leurs autrement ; une constante que l'on étale
+// explicitement se voit à la lecture et reste refusable au cas par cas (Article 19).
+export const PLAN_QUOI_QUOIFAIRE = Object.freeze({ libelle: (e) => e.quoi, tache: (e) => e.quoiFaire });
+
 export function planDactionDepuisEcarts(ecarts = [], { toolSlug, tache, numeroTache = null, toucheLeJeu = false, fausseUneMesure = false, critique = false, corrobore = null, libelle = libelleParDefaut } = {}) {
   const resoudre = (v, e) => (typeof v === "function" ? v(e) : v);
   const constats = (ecarts ?? []).map((e) => ({

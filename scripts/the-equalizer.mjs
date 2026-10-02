@@ -30,7 +30,7 @@ import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction, PLAN_ACTION_TITRE, dateEnToutesLettres } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction, PLAN_ACTION_TITRE, dateEnToutesLettres, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -402,7 +402,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         quoi: `${id} — règle du cadre extérieur sans aucune exigence déclarée qui lui ressemble`,
         quoiFaire: "lire la règle et trancher : soit elle est déjà PRATIQUÉE ici sans être déclarée (et il faut l'inscrire dans docs/referentiel/standards.md avec son vérificateur), soit elle ne l'est pas (et c'est une décision, jamais un oubli à combler en silence)",
       })),
-      { toolSlug: "the-equalizer", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire },
+      { toolSlug: "the-equalizer", ...PLAN_QUOI_QUOIFAIRE },
     ));
     process.exit(0);
   }

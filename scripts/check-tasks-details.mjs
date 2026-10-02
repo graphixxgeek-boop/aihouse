@@ -43,7 +43,7 @@ import { findMotsClesManquants } from "./check-suivi-fidelity.mjs";
 // formulation d'attente entre dans ce contrôle sans qu'une ligne bouge ici.
 import { STATUTS_RECONNUS, normaliserStatut } from "./check-suivi-fidelity.mjs";
 import { daysSince, printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
-import { renderTextReport, imprimerPlanDaction } from "./report-template.mjs";
+import { renderTextReport, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { recordRegistryWrite } from "./tool-usage.mjs";
 import { walkDocsPaths } from "./lib-shell.mjs";
 import { lastTouchDays } from "./clean-dirty-old.mjs";
@@ -4852,7 +4852,7 @@ function triCli(argv) {
     quoiFaire: `remettre « OUI »/vide dans les cases Ouverture et Clôture (docs/systeme-de-suivi.md, FORMAT_TACHE) — la date de clôture n'a pas de case, elle vit dans le Détail`,
   });
   imprimerPlanDaction(planDactionDepuisEcarts(ecarts, {
-    toolSlug: "check-tasks-details", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire,
+    toolSlug: "check-tasks-details", ...PLAN_QUOI_QUOIFAIRE
   }));
   console.log(`\nHORS PORTÉE : ce tri dit ce que le REGISTRE laisse voir. Il ne sait pas si une tâche est réellement faite, ni si elle bloque réellement — les deux se tranchent en les lisant.`);
 }

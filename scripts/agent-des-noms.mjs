@@ -30,7 +30,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, printReportHeader } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, printReportHeader, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 export const OUTIL = "agent-des-noms";
@@ -423,7 +423,7 @@ function mainGouvernance(root) {
       ? "préparer la liste pour une session de validation — l'agent ne valide jamais un nom lui-même"
       : "créer le registre des baptêmes, ou décider qu'il n'en faut pas : tant qu'il n'existe pas, ce chiffre mesure son absence et non une dette de nommage",
   });
-  const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "agent-des-noms", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire });
+  const plan = planDactionDepuisEcarts(ecarts, { toolSlug: "agent-des-noms", ...PLAN_QUOI_QUOIFAIRE });
   imprimerPlanDaction(plan);
   console.log("HORS PORTÉE de ce plan : aucune de ces tâches ne propose un NOM. Les noms se choisissent par l'utilisateur — ce plan prépare sa décision, il ne la prend jamais.");
 }

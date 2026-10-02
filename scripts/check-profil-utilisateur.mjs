@@ -11,7 +11,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { mesurerCorpus, ligneCorpus } from "./corpus-mesure.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -107,8 +107,7 @@ function main({ chemin = INDEX_PATH, dossier = OBSERVATIONS_DIR } = {}) {
   ];
   const plan = planDactionDepuisEcarts(ecarts, {
     toolSlug: "check-profil-utilisateur",
-    libelle: (e) => e.quoi,
-    tache: (e) => e.quoiFaire,
+    ...PLAN_QUOI_QUOIFAIRE,
   });
   imprimerPlanDaction(plan);
 }

@@ -21,7 +21,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync, readd
 import { join } from "node:path";
 import { sh, printReliabilityNotice } from "./lib-shell.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -233,8 +233,7 @@ export function postSimulationChecklist() {
 function imprimerPlan(ecarts) {
   const plan = planDactionDepuisEcarts(ecarts.filter(Boolean), {
     toolSlug: "le-regisseur",
-    libelle: (e) => e.quoi,
-    tache: (e) => e.quoiFaire,
+    ...PLAN_QUOI_QUOIFAIRE,
   });
   imprimerPlanDaction(plan);
 }

@@ -56,7 +56,7 @@ import fs from 'node:fs';
 import ts from 'typescript';
 import { DatabaseSync } from 'node:sqlite';
 import { printReliabilityNotice } from "./lib-shell.mjs";
-import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 
 // L'avertissement de fiabilité, réclamé nommément par le garde-fou le 2026-09-26 : une nature
@@ -258,8 +258,7 @@ if (reponduesCount === 0) {
 }
 const planSpirit = planDactionDepuisEcarts(ecartsTechniques, {
   toolSlug: "check-spirit",
-  libelle: (e) => e.quoi,
-  tache: (e) => e.quoiFaire,
+  ...PLAN_QUOI_QUOIFAIRE,
   fausseUneMesure: true,
 });
 imprimerPlanDaction(planSpirit);

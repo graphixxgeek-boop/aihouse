@@ -30,7 +30,7 @@ import { PROCESSES } from "./god-of-all-process.mjs";
 import { join } from "node:path";
 import { printReliabilityNotice, sansAccents, AGENT_CATEGORIES } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
-import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction } from "./report-template.mjs";
+import { printReportHeader, planDactionDepuisEcarts, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { EXIGENCES_PAR_CLASSE, classesDuScript, typeDeScript, classerIceberg, lanceParLaMachine } from "./cassandra-rh.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
@@ -856,7 +856,7 @@ async function main() {
           quoiFaire: l.desaccord
             ? `instruire le désaccord : la mesure dit « ${l.groupe} », le fichier déclare « ${l.declare} ». L'un des deux a cessé d'être vrai, et c'est ce que la seconde source existe pour montrer`
             : `porter la question à l'utilisateur, un par un (#737) : le PRÉSENTER pour qu'il devienne membre, ou le DÉCLARER plomberie en tête de fichier` })),
-        { toolSlug: "integration-outil", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire },
+        { toolSlug: "integration-outil", ...PLAN_QUOI_QUOIFAIRE },
       ));
       recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
       return;
@@ -867,7 +867,7 @@ async function main() {
       dossier.mesurable && dossier.decisionDue
         ? [{ quoi: `« ${cible} » attend une décision (${dossier.desaccord ? "désaccord déclaration/mesure" : "groupe OUBLIÉ"})`, quoiFaire: dossier.suite?.suite ?? "porter la question à l'utilisateur" }]
         : !dossier.mesurable ? [{ quoi: `« ${cible} » est absent du classement`, quoiFaire: dossier.pourquoi }] : [],
-      { toolSlug: "integration-outil", libelle: (e) => e.quoi, tache: (e) => e.quoiFaire },
+      { toolSlug: "integration-outil", ...PLAN_QUOI_QUOIFAIRE },
     ));
     recordCliUsage("integration-outil", { origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
     return;

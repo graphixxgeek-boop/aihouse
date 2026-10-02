@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { PRESTATIONS, suggestPrestationsForTask, formatMenu, slugifyAgentName, primaryToolName, inventaireDesFonctions, chercherUneFonctionExistante, formatFonctionExistanteLines } from "./le-coordinateur.mjs";
 import { recommendFindBrain, flagFindDeepBoosterCandidates, FIND_DEEP_BOOSTER_NICKNAME } from "./find-brain.mjs";
 import { flagFindBoosterCandidates } from "./doc-report.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 import { toolUsageStats, toolsNeverUsed, recordCliUsage, usagesSpontanes, formatUsagesSpontanesLines, findOriginesJamaisEcrites, formatOriginesJamaisEcritesLines, findOutilsCitesSansPassage, horizonDuJournal, formatHorizonLine } from "./tool-usage.mjs";
 import { assessCriticality } from "./ecotoken.mjs";
 import { printReliabilityNotice, lireFichierPartage } from "./lib-shell.mjs";
@@ -645,8 +645,7 @@ export function formatToolBrainReport({ history, prestations = PRESTATIONS, chec
   }
   const plan = planDactionDepuisEcarts(ecarts, {
     toolSlug: "tool-brain",
-    libelle: (e) => e.quoi,
-    tache: (e) => e.quoiFaire,
+    ...PLAN_QUOI_QUOIFAIRE,
   });
   lines.push("", `=== ${PLAN_ACTION_TITRE} ===`, ...plan.lignes);
   return lines.join("\n");

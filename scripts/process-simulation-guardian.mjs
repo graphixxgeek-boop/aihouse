@@ -35,7 +35,7 @@ import { join } from "node:path";
 import { printReliabilityNotice } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { checkPhase2Autonomy, formatPhase2Autonomy, checkObserverIdentified, formatObserverIdentified, detectJournalShape } from "./summarize-simulation-log.mjs";
-import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
+import { planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction, PLAN_QUOI_QUOIFAIRE } from "./report-template.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -364,8 +364,7 @@ export function planDactionPostflight(v, { toolSlug = "process-simulation-guardi
   }
   return planDactionDepuisEcarts(familles, {
     toolSlug,
-    libelle: (e) => e.quoi,
-    tache: (e) => e.quoiFaire,
+    ...PLAN_QUOI_QUOIFAIRE,
   });
 }
 

@@ -2705,6 +2705,35 @@ export function renderPlanDeLaMachine(plan, { entrees = [], horodatage = "", com
   return l.join("\n") + "\n";
 }
 
+// UN DOUZIÈME OUTIL DOIT HÉRITER DE LA CONVENTION, JAMAIS LA RECOPIER (Article 24).
+// Sans ce garde-fou, la constante ci-dessus n'est qu'un rangement : le prochain outil écrira les
+// deux lignes à la main comme les onze précédents, et personne ne le verra avant que
+// CLONE-HUNTER n'en voie deux assez proches pour les signaler — ce qui a pris des mois.
+// IL NE REGARDE PAS report-template.mjs LUI-MÊME : c'est là que la convention est DÉFINIE, et
+// s'accuser soi-même est le faux positif le plus bête qu'un garde-fou puisse produire.
+export function findConventionRecopiee({ root = ROOT, listDirImpl = readdirSync, readFileImpl = null } = {}) {
+  const lire = readFileImpl ?? ((p) => readFileSync(p, "utf8"));
+  const coupables = [];
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((f) => f.endsWith(".mjs")); } catch { fichiers = []; }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun script lisible : rendre « personne ne recopie » sur zéro fichier se lirait comme un satisfecit, l'inverse exact d'une absence de mesure" };
+  }
+  for (const f of fichiers) {
+    if (f === "report-template.mjs") continue;
+    let s = "";
+    try { s = lire(join(root, "scripts", f)); } catch { continue; }
+    s.split("\n").forEach((L, i) => {
+      if (/libelle:\s*\(e\)\s*=>\s*e\.quoi\b/.test(L)) {
+        coupables.push({ fichier: `scripts/${f}`, ligne: i + 1,
+          quoi: `scripts/${f}:${i + 1} recopie la convention « quoi / quoiFaire » au lieu d'étaler PLAN_QUOI_QUOIFAIRE`,
+          quoiFaire: "remplacer les deux lignes par « ...PLAN_QUOI_QUOIFAIRE » — la convention est définie une seule fois, chez report-template" });
+      }
+    });
+  }
+  return { mesurable: true, coupables, fichiersLus: fichiers.length };
+}
+
 export function findGardienAmbigu(texte, options = {}) {
   return findVocabulaireAmbigu(texte, VOCABULAIRE_RESERVE.find((v) => v.terme === "gardien"), options);
 }
