@@ -40,7 +40,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 // utilisé ailleurs (check-house.mjs) pour cette fonction, même après son déplacement vers lib-shell.mjs
 // le 2026-09-21 (cf. commentaire au-dessus de sa définition dans lib-shell.mjs).
 export { daysSince };
-import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays } from "./the-king.mjs";
+import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays, dateDEdition } from "./the-king.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
 
@@ -1277,7 +1277,7 @@ export function buildCircleReport({ profilIndexText, kpiIndexText, smartConsoApi
     if (item.id === "the-king-signal") {
       if (!philosophyText) return { ...item, staleness: "pas de signal disponible (philosophie-et-politique.md non fourni)" };
       const principles = extractPrincipleUnits(philosophyText);
-      const digest = buildEvolutionDigest(principles);
+      const digest = buildEvolutionDigest(principles, { dateDEdition: dateDEdition(philosophyText) });
       const tensions = findPossibleTensions(principles);
       const freshnessLabel = philosophyFreshnessDaysValue == null ? "fraîcheur inconnue" : `dernière modification il y a ${Math.round(philosophyFreshnessDaysValue)} j`;
       const digestLabel = digest.length ? `dernière évolution datée : ${digest[digest.length - 1]}` : "aucune évolution datée trouvée";

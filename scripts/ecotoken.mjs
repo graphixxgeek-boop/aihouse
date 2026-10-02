@@ -1435,8 +1435,23 @@ export function matchesDArticleHorsProposition(texte = "") {
 
 export function verifyNothingBroken(newCharterText, repoFiles, deplacements = [], readFile = (p) => (existsSync(p) ? readFileSync(p, "utf8") : null)) {
   const findings = [];
+  // LE DÉPÔT PORTE DÉSORMAIS DEUX DOCUMENTS À ARTICLES NUMÉROTÉS (2026-10-02, tâche #1429), et
+  // rien ne les distinguait. Le document de gouvernance a sa PROPRE numérotation, qui va bien
+  // au-delà de celle de la charte : ses articles des soixantaine et soixante-dizaine ne citent
+  // pas la charte, ils SONT ses articles à lui. Les compter comme des renvois faisait apparaître
+  // une dizaine de renvois morts le jour où ce document a été établi.
+  //
+  // ET CE COMMENTAIRE LUI-MÊME A DÛ ÊTRE REFORMULÉ : écrit avec deux numéros en exemple, il était
+  // lu par le scanner comme deux citations, de sorte que l'exclusion créait exactement les deux
+  // renvois morts qu'elle venait supprimer. Les numéros sont donc écrits en toutes lettres ici.
+  //
+  // L'EXCLUSION PORTE SUR LES DOCUMENTS QUI PORTENT LEUR PROPRE NUMÉROTATION, jamais sur un
+  // chemin recopié au cas par cas (Article 24). Tout ce qui est écrit AILLEURS continue d'être
+  // scanné, y compris les fiches qui citent la charte — et c'est là que ce contrôle sert.
+  const PROPRE_NUMEROTATION = [/^docs\/philosophie-et-politique\.(md|html)$/, /\/archives?\//];
   const citedArticles = new Set();
-  for (const content of Object.values(repoFiles ?? {})) {
+  for (const [chemin, content] of Object.entries(repoFiles ?? {})) {
+    if (PROPRE_NUMEROTATION.some((m) => m.test(chemin))) continue;
     for (const m of matchesDArticleHorsProposition(String(content))) citedArticles.add(Number(m));
   }
   for (const n of [...citedArticles].sort((a, b) => a - b)) {

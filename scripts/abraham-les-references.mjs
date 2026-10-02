@@ -1574,6 +1574,18 @@ export const HORS_PORTEE_DOCUMENTS = [
   // Les simulations sont des ARCHIVES de conversations. Deux transcripts se ressemblent parce que
   // c'est le même jeu, et c'est doc-report qui les compare, sur leur substance exacte.
   { motif: /^docs\/simulations\//, pourquoi: "archives de conversations : leur ressemblance est normale, et doc-report les compare déjà" },
+  // TOUT DOSSIER D'ARCHIVES, ET LA RÈGLE EST GÉNÉRALE (2026-10-02, tâche #1426). Une archive est
+  // une COPIE VERBATIM de ce qu'elle archive — c'est sa définition, pas un défaut. La signaler
+  // comme un document jumeau de son original revient à reprocher à une archive d'archiver, et
+  // l'alerte est inextinguible : la « corriger » voudrait dire résumer l'archive, c'est-à-dire
+  // détruire exactement ce qu'elle existe pour préserver (principe G3 : le passé se garde
+  // ENTIÈREMENT, et ne fait jamais autorité).
+  //
+  // LE MOTIF PORTE SUR LE NOM DU DOSSIER, JAMAIS SUR UNE LISTE DE CHEMINS (Article 24) : le
+  // prochain outil qui ouvrira son propre dossier d'archives est couvert le jour où il le crée,
+  // sans que personne ait à y penser. Constaté en vrai le jour même, avec l'archivage de la
+  // boussole remplacée dans le registre de THE-KING.
+  { motif: /(^|\/)archives?\//, pourquoi: "dossier d'archives : une archive est une copie verbatim par définition, et la signaler reviendrait à demander de la résumer — c'est-à-dire de détruire ce qu'elle préserve" },
   // CE QU'IL DÉPOSE N'EST PAS CE QUE NOUS ENTRETENONS (2026-09-28, tâche #1111). Ce dossier porte
   // les sources du grand chantier telles qu'il nous les a données : ses deux commandes, et sept
   // lots d'audits produits ailleurs. Ce détecteur cherche la redondance que le PROJET entretient —

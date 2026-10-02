@@ -14178,9 +14178,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   assert.deepEqual(principleDate(fakePrinciples[0], { shImpl: () => '' }), { date: undefined, provenance: undefined }, 'when neither source knows, both the date and its provenance must stay undefined — never a provenance claimed for a date that does not exist');
 
   assert.deepEqual(buildEvolutionDigest(fakePrinciples, { shImpl: () => '2026-09-01\n' }), ['2026-09-01 — 1.1 Principe fondateur', '2026-09-01 — 2.1 Toujours prudence budgétaire ambiante', '2026-09-10 — 1.2 Un principe récent', '2026-09-11 — 2.2 Jamais de prudence budgétaire ambiante'], 'with the git layer on, the digest must tell the story of ALL the principles (4/4 here, 19/19 on the real document) instead of only the 2 that happen to carry a declared date — the exact blind spot task #196 was opened to close');
-  const realPrinciples = extractPrincipleUnits(fs.readFileSync('docs/philosophie-et-politique.md', 'utf8'));
-  const realDigest = buildEvolutionDigest(realPrinciples);
-  assert.equal(realDigest.length, realPrinciples.length, 'checked live against the real document: every single one of its principles must now be dated (declared or git-derived), never a digest that silently drops the undated ones — the guarantee that breaks the day a principle is added in a way git cannot date');
+  const realText = fs.readFileSync('docs/philosophie-et-politique.md', 'utf8');
+  const realPrinciples = extractPrincipleUnits(realText);
+  // LA TROISIÈME SOURCE DE DATE (2026-10-02, tâche #1429). Un document de gouvernance établi d'un
+  // bloc n'a ni dates déclarées article par article, ni historique git — ses articles naissent
+  // dans le commit en cours. Les deux sources existantes rendaient donc « non daté » sur la
+  // TOTALITÉ du document : le dispositif conçu pour raconter son histoire devenait muet le jour
+  // où ce texte était écrit. Un document officiel DÉCLARE sa date d'édition en tête ; la lire est
+  // une lecture, jamais une déduction, et sa provenance reste nommée à part.
+  const { dateDEdition } = await import('../scripts/the-king.mjs');
+  assert.equal(dateDEdition(realText), '2026-10-02', 'the edition date must be READ from the document itself, never assumed');
+  assert.equal(dateDEdition('# Un document sans mention d\'édition'), undefined, 'AND IT MUST BE ABLE TO FIND NOTHING: a document that declares no edition yields no date, rather than a fabricated one');
+  assert.equal(principleDate({ titre: 'inconnu de git', tag: '' }, { shImpl: () => '', dateDEdition: '2026-10-02' }).provenance, 'édition', 'an article with no declared date and no git trace falls back to the edition date, with its provenance named');
+  assert.equal(principleDate({ titre: 'inconnu de git', tag: '' }, { shImpl: () => '' }).date, undefined, 'and without an edition date it stays honestly undated rather than inventing one');
+  const realDigest = buildEvolutionDigest(realPrinciples, { dateDEdition: dateDEdition(realText) });
+  assert.equal(realDigest.length, realPrinciples.length, 'checked live against the real document: every single one of its principles must now be dated (declared, git-derived, or carried by the document\'s own declared edition), never a digest that silently drops the undated ones');
+  assert.ok(realPrinciples.length > 50, `and the parser must read the WHOLE governance document, prose articles and policy tables alike (currently ${realPrinciples.length}) — reading only the prose would silently amputate its entire policy title`);
 
   const tensions = findPossibleTensions(fakePrinciples);
   assert.deepEqual(tensions.map((t) => `${t.a}-${t.b}`), ['2.1-2.2'], 'a real "always" vs "never" divergence over genuinely shared vocabulary must be flagged as a possible tension — but 1.1 vs 1.2 (no shared vocabulary, no polarity clash) must never be flagged, proving this is not a bare keyword scan');
@@ -14275,6 +14288,89 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     const etatReel = K.etatDeLaRevelation(reel);
     assert.equal(etatReel.mesurable, true, 'the machine state must be produced from the real revelation, since it is what the next pass will compare against');
     assert.ok(etatReel.couverture.retenues > 0 && typeof etatReel.couverture.part === 'number', 'and it must carry the coverage ratio, the one indicator that answers "did the philosophy come back up?"');
+
+    // (9) THE-KING SUR UN CODE ÉTRANGER (2026-10-02) — sa question était « il sait verifier ca ?
+    // il faut l'équiper », et la réponse honnête était NON : il savait lire UNE boussole dont on
+    // lui donne le chemin, jamais CHERCHER s'il en existe une. Les quatre états sont testés, et
+    // chacun ferme un faux positif ou un faux négatif rencontré en vrai pendant la construction.
+    const projet = (fichiers, texte) => K.diagnostiquerUnProjet({ listerImpl: () => fichiers, lireImpl: () => texte });
+    assert.deepEqual(projet(['README.md'], '# Mon projet\n' + 'Un outil de build. '.repeat(40)).cases.map((c) => c.etat), ['ABSENT', 'ABSENT', 'ABSENT'],
+      'a project whose README says nothing about purpose, beliefs or governance has all three founding texts ABSENT — a filename that merely resembles the subject is another file, never an empty shell');
+    assert.equal(projet(['PHILOSOPHIE.md'], '# Philosophie\n\n' + 'A ecrire plus tard. '.repeat(30)).cases.find((c) => c.cle === 'philosophie').etat, 'COQUILLE',
+      'a file that ANNOUNCES the subject in its title but carries none of it is a shell, never a find — the title must not count as its own proof of substance, which is the exact false positive this test closes');
+    assert.equal(projet(['PHILOSOPHIE.md'], '# Philosophie\n\nNous croyons que la qualite prime. ' + 'Nos valeurs guident chaque choix. '.repeat(20)).cases.find((c) => c.cle === 'philosophie').etat, 'TROUVÉ',
+      'AND IT MUST BE ABLE TO SAY YES: a real philosophy, declared in its title and carried in its body, is found');
+    assert.equal(K.diagnostiquerUnProjet({ listerImpl: () => [] }).mesurable, false,
+      'a project with no readable document at all reports PAS MESURÉ — that zero says we read nothing, never that the project has no philosophy');
+    // LA TRONCATURE SILENCIEUSE ÉTAIT LE PIRE DES DÉFAUTS, parce qu'elle rendait un verdict NET et
+    // FAUX : avec un plafond trop bas, des sous-arbres entiers n'étaient pas visités et un
+    // document d'à-côté était désigné « le » document d'objectifs du projet.
+    const tronque = K.diagnostiquerUnProjet({ maxFichiers: 5 });
+    assert.equal(tronque.tronque, true, 'a scan that hit its file ceiling must SAY so');
+    assert.ok(tronque.verdict.startsWith('BALAYAGE TRONQUÉ'), 'and its verdict must lead with that, because an "ABSENT" found under a truncated scan may only be a folder never visited');
+    const vrai = K.diagnostiquerUnProjet();
+    assert.equal(vrai.tronque, false, `the real repository must be scanned whole, not truncated (currently ${vrai.fichiersExamines} files examined)`);
+    assert.equal(vrai.cases.find((c) => c.cle === 'philosophie').ou, 'docs/philosophie-et-politique.md',
+      'and on THIS repository it must point at the real compass, not at a document that merely discusses it — the address is what the generation step would build on, so a right verdict at a wrong address is still wrong');
+    // UNE ARCHIVE N'EST JAMAIS LE TEXTE EN VIGUEUR, et ce test vient d'un défaut réel : le
+    // diagnostic désignait l'édition ARCHIVÉE de la boussole comme la philosophie du projet,
+    // appliquant ainsi l'inverse exact de l'article 11 qu'il est censé garder.
+    assert.ok(!vrai.cases.some((c) => /\/archives?\//.test(c.ou ?? '')),
+      'no founding text may ever be located inside an archive folder: "le passé se garde entièrement, et ne fait jamais autorité" — a tool that points at an archive as the current source of truth contradicts the very rule it guards');
+    assert.equal(K.diagnostiquerUnProjet({ listerImpl: () => ['docs/archives/philosophie.md'], lireImpl: () => '# Philosophie\n\nNous croyons que ' + 'la qualite prime. '.repeat(30) }).cases.find((c) => c.cle === 'philosophie').etat, 'ABSENT',
+      'AND IT MUST BITE: a perfectly valid philosophy sitting in an archive folder counts as ABSENT, because an archive is never in force');
+
+    // (10) LA CLAUSE NON RETIRABLE — « cette partie agence ne pourra pas etre retirée pour
+    // garantir une coherence globale » (2026-10-02).
+    assert.ok(K.objectifAvecClause('Faire le meilleur éditeur de texte').objectif.endsWith(K.CLAUSE_AGENCE),
+      "a generated ultimate objective always carries the Agency's executive role: a project objective that forgot the tooling serving it would reproduce the very incoherence this project spent weeks fixing — two projects run in parallel, only one declared");
+    assert.equal(K.objectifAvecClause(`Un but déjà ${K.CLAUSE_AGENCE}`).clauseDejaPresente, true, 'and it is never appended twice');
+    assert.equal(K.objectifAvecClause('   ').mesurable, false, 'the clause completes an objective, it never stands in for one');
+
+    // (11) LE RANG DES PRINCIPES — « trouve une solution intelligente stp » (2026-10-02).
+    // LA PORTANCE, PAS L'ÉTENDUE : combien d'AUTRES principes reposent sur celui-ci, jamais
+    // combien de fois le projet le redit. Un fondement discret doit pouvoir sortir devant une
+    // évidence répétée.
+    const princ = [
+      { cle: 'socle', texte: 'toute mesure doit pouvoir échouer visiblement sinon elle ne mesure rien du tout' },
+      { cle: 'a', texte: 'une mesure qui ne peut pas échouer visiblement ne vaut rien ici' },
+      { cle: 'b', texte: 'chaque mesure doit échouer visiblement pour être une mesure' },
+      { cle: 'isole', texte: 'les personnages gardent un ton rugueux et sarcastique en permanence' },
+    ];
+    const portance = K.portanceDesPrincipes(princ);
+    assert.equal(portance.mesurable, true, 'portance must be measurable on a real set of principles');
+    assert.equal(portance.rangs[0].cle, 'socle', 'the principle two others lean on ranks first — that is FOUNDATION, which is what a rank should mean');
+    assert.equal(portance.rangs[portance.rangs.length - 1].cle, 'isole', 'and a principle nothing else depends on ranks last, however important it may be elsewhere');
+    assert.equal(portance.discriminant, true, 'a ranking where everybody ties is not a ranking, and the tool must be able to say so');
+    assert.equal(K.portanceDesPrincipes([{ cle: 'seul', texte: 'un seul' }]).mesurable, false,
+      'with a single principle there is nothing to lean on it — PAS MESURÉ, never a default rank of one');
+
+    // (12) L'INTANGIBILITÉ DU DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1429).
+    // CE QU'AUCUN CODE NE PEUT VÉRIFIER : qu'un accord ait été donné. Ce qu'il peut vérifier, et
+    // qui est testé ici : que l'ossature n'a pas bougé sans que personne ne s'en aperçoive.
+    const nfs = await import('node:fs');
+    const docOfficiel = nfs.readFileSync(K.DOCUMENT_OFFICIEL, 'utf8');
+    const oss = K.verifierLOssature(docOfficiel);
+    assert.equal(oss.mesurable, true, 'the governance document must actually be readable and carry numbered articles');
+    assert.equal(oss.conforme, true, `its article numbering must be continuous and free of duplicates (trous: ${oss.trous.join(', ')} · doublons: ${oss.doublons.join(', ')})`);
+    assert.ok(oss.nbArticles > 50, `and it must carry the whole body of articles, not a fragment (currently ${oss.nbArticles})`);
+    // ET LA SONDE DOIT MORDRE : sans contre-test, un « conforme » permanent serait indiscernable
+    // d'une sonde aveugle (BP4).
+    assert.equal(K.verifierLOssature('## Article 1 — a\n## Article 3 — b').conforme, false, 'a hole in the numbering must be caught — an article removed from the middle is exactly what article 70 forbids passing unnoticed');
+    assert.equal(K.verifierLOssature('## Article 1 — a\n## Article 1 — b').conforme, false, 'and a duplicated number too, which is what an insertion looks like');
+    assert.equal(K.verifierLOssature('du texte sans aucun article').mesurable, false, 'a document with no article at all reports PAS MESURÉ — that zero says the reading failed, never that the document is empty');
+    // L'EMPREINTE, ET SA COMPARAISON DANS LES DEUX SENS.
+    const emp = K.lireLEmpreinte();
+    assert.equal(emp.trouvee, true, 'an empreinte must be on file: its absence is never a conformity, and the guard says so');
+    assert.equal(K.comparerALEmpreinte(docOfficiel, emp).inchange, true, 'the live document must match the empreinte on file — if it does not, the change has to be assumed rather than discovered later');
+    const modifie = docOfficiel.replace('# TITRE IV — CLAUSES INTANGIBLES', '# TITRE IV — AUTRE CHOSE');
+    assert.equal(K.comparerALEmpreinte(modifie, emp).inchange, false, 'AND IT MUST BITE: renaming a title is an ossature change and must be reported');
+    assert.ok(K.comparerALEmpreinte(modifie, emp).verdict.includes('article 71'), 'and the report must name the rule that was crossed, never just flag a difference');
+    assert.equal(K.comparerALEmpreinte(docOfficiel, { trouvee: false }).mesurable, false, 'with no empreinte there is nothing to compare — PAS MESURÉ, never a reassuring "unchanged"');
+    // LA NEUTRALITÉ DU SUPPORT N'EST PAS VÉRIFIÉE MÉCANIQUEMENT, et c'est déclaré plutôt que tu :
+    // un contrôle cherchant des marques de première personne manquerait la moitié des cas tout en
+    // accusant des tournures légitimes. La règle est portée par la fiche du référentiel.
+    assert.ok(nfs.existsSync('docs/referentiel/document-de-gouvernance.md'), 'the fiche carrying what no mechanism can hold must exist: declaring an impossibility IS the protection (art. 32)');
   }
   console.log('Passed: THE-KING\'s philosophy revelation (task #1418) reads the real corpus of 200 normative files — charter, working rules, lessons, référentiel and every tool\'s head comment where the POURQUOI lives — and reveals what the project believes without having written it down. Its level classifier keeps an honest "indéterminé" rather than silently filing an unmarked conviction under PROJET; its extractor both catches a normative sentence and lets a plain sentence, a question and a title scrap through; coverage against the compass uses CONTAINMENT and not Jaccard, with the reason written beside it, so a short sentence fully inside a long principle reads as covered instead of scoring 0.07; the 19-family list declares itself manual and is held by a guard that bites on an invented family and reports PAS MESURÉ on an unreadable source; tool-name tokens are derived live from scripts/ rather than blacklisted by hand; and the derived threshold is asserted to stay INSIDE the distribution it observes — the exact defect of the first two attempts, which declared 2 762 convictions out of 2 786 "unavowed" with a threshold sitting above the 90th percentile of everything it measured.');
 

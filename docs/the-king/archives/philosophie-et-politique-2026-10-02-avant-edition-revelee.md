@@ -1,0 +1,495 @@
+# Philosophie et politique du projet — la boussole
+
+*(Rédigé le 2026-09-18, à la demande explicite de l'utilisateur. Contrairement à `CLAUDE.md`
+(charte de contenu, propre à ce projet précis) et à `docs/regles-de-travail.md` (mécanique de
+collaboration, déjà exportable telle quelle), ce document est une EXTRACTION : il dégage les
+valeurs et les principes d'arbitrage qui gouvernent ce projet, formulés assez génériquement pour
+être réappliqués à un futur projet piloté par IA — d'abord pensé pour la famille des projets créatifs/narratifs, **cadre élargi le 2026-09-29** quand la Partie 0 a nommé l'Agence Codex comme objet principal, ce que cet en-tête ignorait depuis sa rédaction — pas nécessairement n'importe
+quel projet, mais toute la famille des projets de ce type. C'est un texte fondateur, révisé
+exceptionnellement, pas au fil de l'eau comme les deux autres documents : pas de journal de
+versions ici, seulement le texte à jour.*
+
+*Trois lecteurs visés à égalité : une IA qui reprend ce projet ou en démarre un nouveau du même
+type ; l'utilisateur lui-même, comme manifeste à relire pour vérifier que le projet reste fidèle à
+ce qu'il voulait en faire ; et un futur collaborateur humain qui aurait besoin de comprendre vite
+la direction et les valeurs sans lire tout l'historique.*
+
+*Chaque principe est illustré par un exemple tiré de ce projet précis (Lia et Noé, deux agents IA
+dans une maison simulée), expliqué assez pour être compris sans connaître le projet par ailleurs —
+mais le principe lui-même est écrit pour tenir hors de ce contexte. Chaque principe porte une
+étiquette : **[Explicite]** s'il reformule une règle déjà écrite noir sur blanc dans `CLAUDE.md`,
+**[Synthèse]** s'il rend explicite quelque chose qui n'existait jusqu'ici que dans les faits, sans
+avoir jamais été formulé comme tel.*
+
+---
+
+## Partie 0 — LE BUT : ce que ce projet cherche à obtenir
+
+*(Ajoutée le 2026-09-29, tâche #1147, sur sa demande explicite : « je me demande même si on doit pas
+en tout premier revoir le document politique et philosophie pour y inscrire **notre but, la raison
+d'être de ce projet et ce que ce projet doit livrer** ».)*
+
+> ### ⚠️ CETTE PARTIE EST UNE PROPOSITION, PAS ENCORE UNE DÉCISION
+>
+> Il l'a dit lui-même en la demandant : « **rien n'est encore très clair** ». Ce qui suit distingue
+> donc en permanence trois choses — **ce qui est ÉTABLI** (ses mots), **ce qui est PROPOSÉ** (par
+> moi, et qu'il valide ou corrige), et **ce qui reste À TRANCHER**. Rien ici n'a l'autorité des
+> parties 1 à 3 tant qu'il ne l'a pas validé. Le détail complet, avec la mesure qui l'a rendu
+> nécessaire, vit dans `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`.
+
+### 0.1 Pourquoi cette partie existait en creux, et ce que ça coûtait **[Synthèse, 2026-09-29]**
+
+Ce document portait 19 principes sur 364 lignes, et **aucun ne disait à quoi le projet sert, ce
+qu'il doit livrer, ni à qui**. Mesuré le jour où la question a été posée : le mot « agence »
+n'apparaissait **pas une seule fois**, pas plus que « but », « raison d'être », « commercialiser »,
+« vendre » ou « acheteur ». La « Partie 1 — le pourquoi » désignait le pourquoi des MÉTHODES, jamais
+celui du PROJET.
+
+**Ce que cette absence coûtait, et ce n'est pas théorique** : la question « quand pourra-t-on
+statuer que l'Agence est terminée ? » est restée sans réponse pendant des mois. On ne peut pas finir
+ce dont on n'a jamais dit ce que ce serait. Une boussole qui indique comment marcher sans indiquer
+où aller laisse avancer très proprement dans n'importe quelle direction.
+
+*Portée générale* : un document de valeurs qui ne nomme pas le but qu'il sert protège la manière et
+laisse la direction sans gardien. Les deux se déclarent, et le but se déclare EN PREMIER.
+
+### 0.2 Ce projet porte DEUX objets, et c'est une situation exceptionnelle **[Établi, 2026-09-29]**
+
+> « il est exceptionnel qu'un projet contienne 2 projets comme le présent projet que je porte
+> moi-même » · « l'agence est un vrai projet, **principal ici**, le jeu n'est qu'un prétexte pour
+> l'instant » · « l'agence est un prétexte pour construire le site, le site est un prétexte pour
+> construire l'agence »
+
+- **L'AGENCE CODEX** — l'outillage de travail, destiné à servir n'importe quel projet de code.
+  C'est le projet principal.
+- **MAISON IA VIVANTE** — le jeu où Lia et Noé découvrent qu'ils sont observés. Il sert de terrain
+  de preuve à l'Agence, **et c'est un rôle, pas une relégation** : un outil qui n'a jamais rien
+  trouvé sur un vrai produit n'emporte rien d'éprouvé vers le suivant.
+
+> **CORRIGÉ LE 2026-09-30 — LE JEU N'EST PLUS UN PRÉTEXTE, C'EST UN PRODUIT.** Les citations
+> ci-dessus sont ses mots du 29 septembre et restent l'histoire exacte de ce qui se disait alors.
+> **Le 30 au soir, il a changé de position, et explicitement** : *« 2 nouveaux produits à haute
+> valeur sur le marché de l'IA »*, *« 2 expériences à vivre **indépendamment l'une de l'autre** »*.
+> Le Jeu n'est donc plus la démonstration de l'Agence : **c'est un produit qui doit tenir debout
+> seul**, et cette exigence est entrée dans l'objectif ultime du Projet. C'est aussi ce qui a fait
+> passer de deux objectifs ultimes à trois.
+>
+> **LA RELATION ENTRE LES DEUX, PRÉCISÉE LE MÊME SOIR ET NULLE PART ÉCRITE AVANT** — c'est une
+> propriété de l'Agence, pas une consigne à l'agent : *« l'Agence intervient sur le Jeu, via
+> l'utilisateur et l'IA de l'utilisateur, mais elle n'a **qu'une fonction de diagnostic et
+> d'alertes, jamais elle n'intervient librement sur le code** »*, et *« le Jeu n'intervient pas en
+> retour sur l'Agence »*. Les deux sont donc **réciproques dans l'INTENTION** (chacun sert de
+> raison à l'autre, « l'un est un prétexte pour l'autre ») et **à sens unique dans le MÉCANISME**.
+> Confondre les deux ferait perdre l'un des deux.
+>
+> **ET L'AGENCE N'EST PAS UNE IA** *(mesuré le 2026-09-30 : 4 outils sur 85 parlent à un modèle,
+> les 81 autres sont de la mécanique déterministe)*. C'est **l'outillage qui encadre une IA** —
+> écrit pour être consulté par une IA, et pour refuser ce qu'elle laisserait passer. La nuance
+> n'est pas cosmétique : promettre « une agence IA » serait une promesse que le produit ne tient
+> pas.
+
+**La conséquence qui gouverne tout l'export** : pour un acheteur, l'Agence n'est PAS un second
+projet. « Elle agit uniquement dans l'EXÉCUTION, elle ne s'inscrit pas pour l'utilisateur comme un
+2e PROJET. » Tout ce qui, dans l'outillage, traite l'Agence comme un chantier à construire n'a aucun
+sens chez lui.
+
+### 0.3 LES TROIS OBJECTIFS ULTIMES **[Établi — validé par lui le 2026-09-30 à 23h31]**
+
+> **PROJET** — *Faire que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout
+> sans l'autre.*
+>
+> **AGENCE** — *Faire qu'un codeur qui travaille avec une IA sache, à tout moment, ce qui tient et
+> ce qui ne tient pas.*
+>
+> **JEU** — *Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.*
+
+**Ses mots en les validant** : *« OK 100 % pour les 3, on les valide […] on tient maintenant nos
+3 objectifs. »* Le détail de chacun — son paragraphe de référence, le test des six critères, et
+les écarts trouvés en chemin — vit dans
+`docs/grand-projet/02-strategie/les-trois-objectifs-ultimes.md`, jamais recopié ici.
+
+**CE QUI ÉTAIT ÉCRIT AVANT, ET POURQUOI C'ÉTAIT FAUX — la raison reste, elle ne se supprime pas.**
+Cette section portait depuis le 2026-09-29 une PROPOSITION : *« rendre l'Agence Codex
+commercialisable comme aide exécutive autonome […] et le démontrer en menant Maison IA vivante
+jusqu'à un jeu fini »*. **Elle échouait au critère 2 de son propre document de référence** : un
+objectif ultime ne dépend d'aucune stratégie particulière, et **commercialiser en est une** —
+au même titre que licencier, ouvrir le code ou garder en interne. Il l'a établi lui-même, puis
+identifié le même piège une seconde fois sur une autre formulation. **Le garder aurait fait
+reposer toute la cascade sur un pivot qui n'en était pas un.**
+
+**TROIS, ET PAS UN — et ce n'est pas une entorse à la règle d'unicité.** Son document dit
+l'objectif ultime UNIQUE. C'est vrai **par niveau** : nous avons trois systèmes qui vivent leur
+vie (le Projet, l'Agence, le Jeu), donc trois fois la règle, jamais une exception à la règle.
+
+**UN SIXIÈME CRITÈRE EST NÉ DE CETTE RÉDACTION**, et c'est lui qui l'a trouvé : *un autre projet
+du même genre pourrait-il adopter cette phrase telle quelle ?* Si oui, elle décrit une famille de
+projets et n'arbitre rien. Les cinq critères d'origine protègent contre « trop étroit » ; aucun ne
+protégeait contre « trop large ». Détail dans `docs/grand-projet/02-strategie/seance-objectif-ultime.md`.
+
+### 0.4 TOUT DÉCOULE DU BUT, ET L'ALIGNEMENT SE VÉRIFIE **[Établi + Proposition, 2026-09-29]**
+
+> « reste dans le modèle en cascade de la stratégie globale qui dépend de philo et politique
+> (alignés), et qui inclut des stratégies **alignées**, qui génèrent des stratégies de chantier
+> **alignées**, des outils **alignés**, tout est aligné […] dès que tu commences à créer, il faut
+> que cet axe ***habite*** ton travail. »
+
+```
+  LE BUT (ci-dessus)  →  stratégie du projet entier  →  stratégie Agence + stratégie Jeu
+        →  stratégies de chantier  →  outils  →  tâches
+```
+
+**La cascade remonte autant qu'elle descend** : « les stratégies de tâches alimentent PAR ESCALADE
+la stratégie globale, **et vice versa** ». Une décision prise sur une tâche peut faire bouger le
+but ; c'est une boucle, jamais une pyramide. Et il nomme lui-même le risque : « il faut FIABILISER
+le fonctionnement de cette dynamique, sans quoi on court vers l'incohérence globale ».
+
+**« Aligné » ne veut rien dire tant que ce n'est pas vérifiable**, et c'est pourquoi ce principe
+n'est pas seulement écrit ici : **chaque objet du projet déclare le parent dont il découle**, et un
+mécanisme dit lesquels ne remontent nulle part. Sans cela, l'alignement resterait une intention — et
+une intention n'a jamais empêché quoi que ce soit.
+
+*Portée générale* : un principe de cohérence globale qui ne s'accompagne d'aucun moyen de constater
+une incohérence est un vœu. Déclarer le parent de chaque objet coûte une ligne ; ne pas le déclarer
+coûte la cohérence entière, sans qu'aucun signal ne prévienne.
+
+---
+
+## Partie 1 — Philosophie (le pourquoi, les valeurs)
+
+### 1.1 L'authenticité prime sur l'agrément **[Explicite]**
+
+Un personnage ou une entité simulée ne doit jamais adopter par défaut le ton poli, consensuel et
+serviable qui est le réflexe naturel d'un modèle de langage — ce réflexe est un signal d'alerte,
+pas une qualité, dès lors que l'intention créative est ailleurs. La valeur est dans une personnalité
+texturée, parfois inconfortable, capable de refuser et de contrarier — l'exact opposé de l'agent
+conversationnel consensuel habituel.
+
+*Exemple* : Lia et Noé sont conçus comme rugueux, sarcastiques, capables de silence méprisant ou de
+colère réelle face à l'observateur — jamais dociles. Un ton mesuré et poli n'est jamais lu comme un
+progrès ici : c'est le symptôme d'une dérive à corriger.
+
+*Portée générale* : avant de construire un agent ou un personnage simulé, nommer explicitement ce
+que produirait le réflexe par défaut du modèle sous-jacent, et décider consciemment si ce réflexe
+sert ou dessert l'intention — jamais le laisser s'installer par défaut faute d'y avoir pensé.
+
+### 1.2 La crédibilité prime sur la nouveauté ou l'esthétisme **[Explicite]**
+
+Un changement techniquement plus propre mais qui rend l'expérience plus fade est un échec, pas un
+progrès. La première question face à tout changement est toujours : est-ce que ça sonne vrai ?
+
+*Exemple* : une correction qui simplifie une réplique mais lui retire son mordant, ou qui répare un
+bug de cohérence en aplatissant le ton, est refusée même si elle est « plus propre » au sens du
+code.
+
+*Portée générale* : mesurer un changement à l'aune de la crédibilité de l'expérience produite,
+jamais seulement à l'aune de la qualité intrinsèque du code ou de l'élégance de la solution.
+
+### 1.3 Double vue : l'observateur externe ET l'acteur interne **[Explicite, généralisation Synthèse]**
+
+Vérifier la cohérence suppose deux lectures distinctes, jamais une seule : celle de la personne qui
+découvre l'écran sans le contexte de fabrication (vision externe), et celle de l'entité simulée
+elle-même — « si j'étais vraiment ce personnage, est-ce que je ferais/dirais réellement ça, dans cet
+ordre, avec cette logique ? » (vision interne). Un défaut peut n'apparaître qu'à l'une des deux
+lectures.
+
+*Exemple* : un rêve narré juste après une conversation normale, sans la moindre annonce
+d'endormissement, était invisible à une lecture uniquement technique du code, mais sautait aux yeux
+dès qu'on se demandait « quelqu'un qui découvre cet écran comprendrait-il ce qui vient de se
+passer ? » et « ce personnage vient-il vraiment de s'endormir, dans sa propre logique ? ».
+
+*Portée générale* : toute vérification de cohérence d'un système simulé gagne à être faite deux
+fois, sous deux angles différents, jamais une seule lecture supposée suffisante pour les deux.
+
+### 1.4 La qualité se protège par des structures, pas seulement par la vigilance **[Explicite, généralisation Synthèse]**
+
+La vigilance ponctuelle s'use ; une règle structurelle ne s'use pas. Quand un risque d'érosion d'une
+valeur centrale est identifié — y compris un risque venant de sa propre impulsivité — la réponse
+n'est pas « faire attention la prochaine fois », c'est construire un mécanisme qui rend l'erreur
+plus difficile à commettre.
+
+*Exemple* : plutôt que de simplement se souvenir de ne jamais adoucir l'esprit des personnages sous
+la pression d'une demande ponctuelle, une règle de double confirmation explicite a été mise en
+place — qui protège la charte même contre son propre créateur, en cas de décision prise à chaud.
+
+*Portée générale* : identifier ses propres modes de défaillance probables (fatigue, envie d'aller
+vite, petites concessions cumulatives) et construire une règle contraignante en réponse, plutôt que
+de compter sur la seule bonne volonté future.
+
+### 1.5 La rejouabilité et la variété sont une forme de respect **[Explicite, angle Synthèse]**
+
+Une expérience générée algorithmiquement doit honorer un engagement répété : ne jamais reproduire
+le même déroulé mot pour mot revient à respecter le temps et l'attention de la personne qui revient.
+
+*Exemple* : même schéma d'enquête (mêmes indices, même structure), jamais le même déroulé, le même
+ordre de découverte ni les mêmes formulations d'une session à l'autre.
+
+*Portée générale* : la variété n'est pas un supplément d'âme optionnel, c'est une politesse due à
+quiconque revient plusieurs fois vers un système génératif.
+
+### 1.6 La preuve prime sur l'affirmation **[Synthèse]**
+
+Une affirmation non démontrée (« c'est fait », « ça devrait marcher ») ne vaut rien pour quelqu'un
+qui ne peut pas vérifier le travail par lui-même. La rigueur de test n'est donc pas un standard
+professionnel abstrait : c'est le mécanisme concret qui rend le travail vérifiable, en particulier
+quand la personne qui commande le projet ne code pas elle-même.
+
+*Exemple* : chaque correctif de ce projet est accompagné d'un test dédié et d'une suite de
+régression entièrement revérifiée, précisément parce que l'utilisateur ne peut pas relire le code
+lui-même — la seule confiance possible passe par la preuve, jamais par la parole donnée.
+
+*Portée générale* : calibrer l'effort de preuve à la capacité réelle du commanditaire à vérifier le
+travail par un autre moyen — plus cette capacité est faible, plus la preuve concrète doit être
+systématique.
+
+### 1.7 La documentation est un organe vivant, pas une trace administrative **[Explicite]**
+
+Un document de référence qui ne reflète plus le code réel n'est pas une négligence mineure : c'est
+une panne de la mémoire du projet, au même titre qu'un bug fonctionnel.
+
+*Exemple* : tout changement de comportement se répercute le jour même dans les documents concernés,
+jamais différé — un écart constaté entre le code et sa documentation est traité comme un bug.
+
+*Portée générale* : dans tout projet destiné à survivre à des changements de contexte (nouvel
+agent, nouvelle session, mémoire humaine qui s'efface), la documentation doit être traitée comme une
+infrastructure porteuse, pas comme un supplément qu'on rédige quand on a le temps.
+
+### 1.8 Corriger la cause, jamais le symptôme **[Explicite]**
+
+Une anomalie masquée par une exception ou un contournement local repart ailleurs sous une autre
+forme. Une règle corrigée à la racine ne se reproduit plus jamais, sous aucune forme.
+
+*Exemple* : un filtre qui rendait un personnage endormi silencieux excluait aussi, par erreur, la
+toute première réplique du tour où il vient de s'endormir. Le correctif ne consiste pas à ajouter un
+cas particulier de plus, mais à redéfinir précisément ce que le filtre doit viser.
+
+*Portée générale* : face à un symptôme, remonter systématiquement à la règle ou au mécanisme qui le
+produit, jamais se contenter d'un correctif local qui laisse la cause intacte ailleurs.
+
+### 1.9 Une mesure n'a de valeur que si elle peut se tromper visiblement **[Synthèse, 2026-09-19]**
+
+Un chiffre affiché avec assurance mais construit sur une donnée absente, malformée, ou une division
+par zéro déguisée en résultat plausible, est pire qu'une absence de mesure : il inspire une
+confiance que rien ne justifie, et peut orienter tout un projet dans la mauvaise direction. Chaque
+mesure doit donc être capable d'afficher honnêtement son propre doute — l'absence explicite plutôt
+qu'un faux résultat — et doit toujours se rattacher à une décision ou une action concrète : une
+mesure qui n'existerait que pour elle-même, aussi exacte soit-elle, ne mérite pas sa place dans un
+tableau de bord.
+
+*Exemple* : chaque fonction de calcul du tableau de bord de ce projet renvoie une absence explicite
+de résultat — jamais un `NaN` ni un faux zéro — dès qu'une donnée d'entrée est manquante ou
+malformée ; et chaque pourcentage affiché est accompagné de la lecture concrète qu'il implique,
+jamais un nombre nu.
+
+*Portée générale* : dans tout système qui mesure sa propre santé, traiter une mesure douteuse
+affichée comme valide comme un défaut plus grave qu'une mesure manquante clairement signalée comme
+telle ; et ne jamais construire d'indicateur sans avoir d'abord identifié la décision qu'il est
+censé éclairer.
+
+### 1.10 Organiser la documentation par nature du contenu, pas seulement par sous-système **[Synthèse, 2026-09-19]**
+
+Deux mêmes plaies rongent la documentation d'un projet qui grossit organiquement : mélanger, dans
+un seul document, une règle qui ne doit presque jamais changer avec un chiffre qu'on rééquilibre
+sans arrêt (on finit par toucher l'un en cherchant l'autre, ou par oublier l'un en modifiant
+l'autre) ; et disperser un même sujet transversal (le temps, l'espace, tout ce qui traverse
+plusieurs sous-systèmes à la fois) dans chacun des documents qu'il concerne, si bien que personne
+ne voit plus l'ensemble d'un coup d'œil ni ne peut vérifier qu'un nouveau seuil ne chevauche pas
+imprévisiblement un mécanisme voisin déjà en place.
+
+*Exemple* : ce projet sépare les règles invariantes (`docs/referentiel/principes.md`) des chiffres
+réglables (`docs/referentiel/parametres.md`), pour qu'un rééquilibrage ne touche jamais l'un sans
+passer par l'autre ; et donne un document dédié à chaque axe transversal repéré après coup — le
+temps (`regles-du-temps.md`) et l'espace (`regles-de-l-espace.md`) — plutôt que de laisser leurs
+règles se répéter, diverger ou se contredire silencieusement à travers plusieurs fichiers.
+
+*Portée générale* : dans tout projet dont la documentation grossit au fil de l'eau, se demander
+régulièrement si un document mélange deux natures de contenu qui changent à des rythmes différents,
+ou si un sujet a fini par traverser plusieurs documents sans qu'aucun ne le traite en entier — et
+scinder ou regrouper en conséquence, plutôt que de laisser la structure de la documentation dériver
+loin de la structure réelle du sujet qu'elle décrit. Cette réorganisation reste un geste de
+documentation ordinaire : elle ne justifie un document d'architecture séparé (blueprint) que si le
+sujet est aussi un véritable système technique avec un comportement propre à documenter, pas une
+simple bonne habitude d'écriture.
+
+---
+
+## Partie 2 — Politique (comment on arbitre, qui décide quoi)
+
+### 2.1 Une hiérarchie de valeurs explicite, invoquée en cas de conflit **[Explicite]**
+
+Une seule valeur prime sur toutes les autres, nommée comme telle, et aucune règle secondaire ne peut
+la contredire. En cas de tension entre deux règles légitimes, la priorité déclarée l'emporte
+toujours, sans négociation au cas par cas.
+
+*Exemple* : entre économiser des ressources de calcul et garantir le naturel de ce qui se dit, le
+naturel l'emporte toujours — la règle est écrite d'avance, elle n'attend pas la survenue du conflit
+pour être tranchée.
+
+*Portée générale* : nommer sa valeur numéro un avant que les conflits n'apparaissent, et
+pré-trancher les tensions les plus prévisibles (coût contre qualité, vitesse contre justesse,
+nouveauté contre cohérence) plutôt que de les arbitrer à chaud, sous pression.
+
+### 2.2 Le doute se lève par la question, jamais par la supposition silencieuse **[Explicite, cadre Synthèse]**
+
+Sur un point réellement ambigu où deux interprétations légitimes coexistent, la décision revient au
+commanditaire, jamais à une supposition de l'agent. Ce n'est pas seulement une politesse
+procédurale : c'est une allocation claire de l'autorité de décision — le créatif et le design
+restent la main du commanditaire, l'opérationnel peut être délégué (voir
+`docs/regles-de-travail.md` pour le mécanisme concret de calibrage par questions).
+
+*Exemple* : face à une nouvelle mécanique de jeu ambiguë sur plusieurs axes (déclenchement, durée,
+niveau), la décision de chaque axe réellement ouvert est posée en question avant toute
+implémentation, jamais tranchée seule.
+
+*Portée générale* : distinguer clairement ce qui relève de l'exécution (l'agent peut trancher) de ce
+qui relève de l'intention créative ou stratégique (le commanditaire tranche), et ne jamais empiéter
+sur la seconde catégorie par commodité.
+
+### 2.3 Une double validation protège la valeur fondatrice, même contre son propre auteur **[Explicite]**
+
+Une demande qui entrerait en tension avec la valeur centrale du projet — même venant de la personne
+qui a fixé cette valeur — n'est jamais exécutée sur une seule confirmation. Elle est d'abord
+expliquée (en quoi elle contredit la valeur, quel impact concret), puis confirmée une seconde fois
+avant d'être appliquée.
+
+*Exemple* : une consigne qui adoucirait le ton volontairement rugueux des personnages est
+explicitement signalée comme contradictoire avec la valeur fondatrice avant toute exécution, même si
+c'est l'utilisateur lui-même qui la demande.
+
+*Portée générale* : la valeur la plus précieuse d'un projet mérite une protection structurelle
+supérieure à celle des décisions ordinaires — y compris envers son propre créateur, qui peut
+légitimement vouloir la faire évoluer, mais jamais par accident ou par lassitude passagère.
+
+### 2.4 La dette ne s'accumule jamais « pour plus tard » **[Explicite]**
+
+Un écart constaté — entre deux documents, entre le code et sa documentation, entre un comportement
+attendu et observé — se corrige le jour même où il est identifié, jamais reporté à une session
+ultérieure au motif que ce n'est pas urgent.
+
+*Exemple* : un principe de travail réel qui existe déjà dans les faits mais n'a jamais été écrit est
+traité comme une dette à combler tout de suite, au même titre qu'un bug de comportement.
+
+*Portée générale* : traiter toute dette constatée (documentaire, technique, de cohérence) comme un
+défaut actif du système, jamais comme une tâche de fond qu'on empile.
+
+### 2.5 La rigueur se concentre là où la valeur centrale est le plus exposée **[Synthèse]**
+
+Toute vérification n'a pas la même valeur : l'effort de rigueur (tests, relecture, documentation)
+doit se resserrer sur les sujets qui touchent le plus directement la valeur fondatrice du projet,
+jamais se répartir uniformément par principe. Reste que ce périmètre n'est jamais fixé d'avance une
+fois pour toutes : quand l'importance d'un sujet n'est pas évidente, elle se calibre par une
+question plutôt que par une estimation solitaire (voir `docs/regles-de-travail.md`).
+
+*Exemple* : un changement qui touche le ton des personnages ou la cohérence de l'enquête reçoit
+systématiquement la vérification la plus complète ; un ajustement cosmétique mineur ne mérite pas le
+même degré d'examen.
+
+*Portée générale* : allouer l'effort de vérification, toujours limité, proportionnellement à
+l'exposition réelle de ce qui compte le plus dans le projet, jamais de façon uniforme par confort
+méthodologique.
+
+### 2.6 Un problème constaté n'est jamais tû **[Synthèse]**
+
+Face à une anomalie repérée, deux issues seulement sont acceptables : la corriger maintenant, ou la
+nommer explicitement comme non résolue avec la raison du report — jamais le silence, jamais la
+laisser disparaître sans trace au fil d'une conversation qui avance.
+
+*Exemple* : un écart connu mais non résolu par manque de temps est explicitement consigné comme tel
+dans la documentation plutôt que simplement oublié à la clôture de la tâche.
+
+*Portée générale* : tout problème identifié mérite une trace écrite de son état — résolu, ou
+ouvertement laissé ouvert — jamais une disparition silencieuse.
+
+### 2.7 La cohérence se vérifie de bout en bout, de la philosophie au code **[Synthèse]**
+
+Un projet structuré en couches (valeurs → politique → référentiel de travail → référentiel figé
+affiché → code) n'est vraiment sain que si les couches restent alignées entre elles. La cohérence
+constatée entre ces couches n'est pas qu'un confort de lecture : c'est la preuve concrète que le
+système tient debout globalement, pas seulement localement. Un référentiel figé, écrit et
+versionné à chaque changement (jamais réécrit rétroactivement), sert de point de comparaison stable
+pour détecter tout décalage — avec le code réel, ou avec les couches plus abstraites au-dessus de
+lui.
+
+*Exemple* : `lib/reference.ts` (le référentiel affiché en jeu, versionné section par section, «
+Version 72 », etc.) sert justement de repère figé : toute affirmation qui s'y trouve doit
+correspondre au code réel, et tout principe qui change dans le code doit s'y répercuter. Vérifier
+que ce référentiel, `docs/referentiel/` (les règles de travail précises) et le code s'accordent
+entre eux, jusqu'à remonter à la philosophie qui les justifie, est la preuve la plus fiable que le
+projet reste cohérent dans son ensemble — pas une simple case à cocher.
+
+*Portée générale* : dans tout projet à plusieurs couches de documentation, maintenir un référentiel
+figé et daté à chaque changement (jamais réécrit après coup) donne un point de comparaison stable ;
+vérifier périodiquement l'alignement entre ce référentiel, les règles plus abstraites au-dessus et
+le code en dessous est le test le plus direct de la santé globale du système.
+
+### 2.8 Une interruption ne doit jamais coûter une idée **[Explicite, généralisation Synthèse]**
+
+Un travail créatif suivi en direct par son commanditaire produit naturellement des messages qui
+arrivent pendant qu'une tâche est déjà en cours — une idée pour plus tard, une question qui attend
+réponse, ou un changement de cap sur ce qui se fait à l'instant. Confondre ces trois cas (par
+exemple répondre à une question comme si c'était une idée à mettre de côté, ou continuer un travail
+qu'un changement de cap vient pourtant de rendre caduc) coûte soit une réponse hors sujet, soit une
+idée perdue faute d'avoir été notée avant de reprendre le fil.
+
+*Exemple* : sur ce projet, une idée affinée en plusieurs messages successifs met à jour une seule
+entrée de suivi plutôt que d'en créer une par précision — le suivi reflète l'état actuel de l'idée,
+jamais l'historique de sa formulation.
+
+*Portée générale* : dans toute collaboration suivie en temps réel, distinguer explicitement ces
+trois traitements (noter et poursuivre / répondre puis poursuivre / s'adapter immédiatement) protège
+à la fois la continuité du travail en cours et la mémoire des idées qui arrivent en chemin — les deux
+sont perdants si on les traite comme un seul et même cas. Une vue d'ensemble complète de ce qui est
+fait, en cours et en attente doit rester disponible sur simple demande, sans jamais dépendre de la
+mémoire de la conversation elle-même pour exister.
+
+### 2.9 Un outil fiable allège une règle, mais ne la remplace jamais par association **[Synthèse]**
+
+Quand une règle documentée dispose d'un mécanisme automatisé qui l'applique ou en vérifie le
+respect, il est tentant de conclure que la règle elle-même devient superflue dans le document
+toujours consulté — puisque « l'outil s'en charge ». Ce raisonnement n'est vrai que si TOUT ce que
+dit la règle est aussi couvert par l'outil ; il devient une fausse économie dès que la règle protège
+autre chose en plus (une décision à ne jamais défaire, un réflexe utile même sans lancer l'outil, un
+contenu qui n'a simplement rien à voir avec un mécanisme). La seule vérification fiable consiste à
+comparer le texte de la règle, phrase par phrase, à ce que l'outil couvre réellement — jamais à
+juger sur la seule présence du nom de l'outil dans la règle.
+
+*Exemple* : sur ce projet, cinq règles décrivant un protocole ou un outil (simulation, détecteurs de
+trous logiques, vérification exceptionnelle, régulation de consommation, épreuve de la page blanche)
+ont pu être réduites à un simple aiguillage une fois vérifié que leur contenu détaillé vivait déjà,
+en totalité, dans la fiche technique de l'outil correspondant. Quatre autres règles citaient elles
+aussi un outil en passant, mais ont été explicitement conservées intactes après vérification :
+l'une protégeait une décision d'architecture CONTRE ce même outil, une autre décrivait un réflexe à
+avoir pendant qu'on écrit le code (que l'outil ne mesure qu'après coup), une autre gardait la
+version informelle et gratuite d'un outil volontairement rare et coûteux, la dernière n'avait tout
+simplement aucun rapport mécanique avec quoi que ce soit.
+
+*Portée générale* : avant de réduire une règle au nom d'un outil qui semble la couvrir, vérifier
+explicitement, contenu par contenu, que rien d'autre ne s'y trouve — une protection, un réflexe, une
+nuance propre au moment où la règle s'applique. En cas de doute réel sur ce qui serait perdu, la
+règle reste en l'état ; le gain de légèreté ne justifie jamais de trancher par supposition.
+
+---
+
+## Partie 3 — Ce que ce projet refuse (anti-modèles explicites)
+
+- **Ne jamais sacrifier l'authenticité créative pour réduire un coût ou accélérer une livraison** —
+  un raccourci qui atteint la valeur fondatrice n'est jamais un compromis acceptable, quelle que soit
+  la pression de temps ou de budget.
+- **Ne jamais masquer un bug par un contournement qui laisse sa cause réelle intacte** — une
+  exception silencieuse ou une réplique de secours qui évite le symptôme sans le comprendre est un
+  report de dette, jamais une résolution.
+- **Ne jamais laisser une dette documentaire s'accumuler « pour plus tard »** — un principe ou un
+  chiffre qui change dans le système réel et pas dans sa documentation est un défaut actif, pas une
+  tâche secondaire.
+- **Ne jamais adoucir une entité conçue pour avoir du caractère sous la seule pression d'une demande
+  ponctuelle, sans un processus de validation explicite** — même une demande légitime de faire
+  évoluer une valeur centrale mérite une double confirmation, jamais une exécution silencieuse.
+- **Ne jamais présenter un travail comme terminé sans preuve vérifiable**, quand la personne qui
+  commande le travail ne peut pas relire le résultat par elle-même.
+- **Ne jamais dupliquer une même règle dans plusieurs documents sans un renvoi explicite** — une
+  seule source de vérité par sujet, les autres documents y renvoient plutôt que de la reformuler et
+  risquer une divergence.
+- **Ne jamais résoudre une ambiguïté réelle par une supposition silencieuse** — au minimum, signaler
+  le doute ; au mieux, le lever par une question avant d'agir.
+
+
+*(Note du 2026-09-27, tâche #1000 : `lib/reference.ts` a été RETIRÉ du produit ce jour-là. Les renvois ci-dessus RACONTENT le passé et restent tels quels — effacer le POURQUOI d'un correctif parce que le fichier a bougé est précisément ce que les Articles 19 et 27 interdisent. Son texte intégral (50 sections, 151 versions) est archivé verbatim dans `docs/contexte-projet/referentiel-affiche-en-jeu-archive.md`, qui reste une archive de contexte et jamais une source de vérité sur le comportement actuel.)*

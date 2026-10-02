@@ -68,13 +68,43 @@ export function reminderFor(requestText) {
 const SECTION_HEADING_PATTERN = /^### (\d+)\.(\d+) (.+?)\s*\*\*\[([^\]]+)\]\*\*\s*$/gm;
 const TOP_HEADING_PATTERN = /^## /gm;
 
+// LE DOCUMENT A CHANGÉ DE FORME LE 2026-10-02 (tâche #1429), ET LE PARSEUR DOIT SUIVRE.
+//
+// L'édition révélée est un document de gouvernance : articles numérotés en continu, sous des
+// titres et des chapitres, plus des tableaux de politique où chaque ligne porte son numéro. La
+// forme précédente numérotait « partie.numéro » et portait un tag entre crochets.
+//
+// LES DEUX FORMES SONT RECONNUES, ET CE N'EST PAS DE LA COMPLAISANCE : les éditions remplacées
+// sont conservées sans altération au registre d'archives, et THE-KING doit pouvoir les relire
+// pour tenir l'histoire du document — c'est son rôle depuis le 2026-09-21. Un parseur qui ne lit
+// que la forme du jour rendrait l'archive illisible le lendemain de son archivage.
+const ARTICLE_HEADING_PATTERN = /^#{2,3} Article (\d+)\s*[—–-]\s*(.+?)\s*$/gm;
+const ARTICLE_TABLE_PATTERN = /^\|\s*\*\*(\d+)\*\*\s*\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|/gm;
+
 export function extractPrincipleUnits(text) {
-  // Découpage partagé (lib-shell) ; ce qui reste ici est propre au texte fondateur : un principe
-  // porte une partie, un numéro, un titre ET un tag — quatre champs là où la charte en a deux.
-  return decouperEnUnites(text, SECTION_HEADING_PATTERN, {
+  // FORME HISTORIQUE — un principe porte une partie, un numéro, un titre ET un tag.
+  const ancienne = decouperEnUnites(text, SECTION_HEADING_PATTERN, {
     motifBorneSuperieure: TOP_HEADING_PATTERN,
     champs: (m) => ({ partie: Number(m[1]), numero: Number(m[2]), titre: m[3].trim(), tag: m[4].trim() }),
   });
+  if (ancienne.length) return ancienne;
+
+  // FORME OFFICIELLE — articles numérotés en continu. La « partie » devient 0 : la numérotation
+  // est unique sur tout le document, il n'y a plus de partie à distinguer, et inventer un numéro
+  // de partie depuis le titre serait une donnée fabriquée.
+  const parTitre = decouperEnUnites(text, ARTICLE_HEADING_PATTERN, {
+    motifBorneSuperieure: /^# /gm,
+    champs: (m) => ({ partie: 0, numero: Number(m[1]), titre: m[2].trim(), tag: "" }),
+  });
+  // LES TABLEAUX DE POLITIQUE COMPTENT AUTANT QUE LES ARTICLES EN PROSE, et les oublier aurait
+  // amputé le document de ses vingt-six dispositions de politique — c'est-à-dire de son titre III
+  // tout entier, pendant que la mesure aurait continué de rendre un chiffre d'apparence normale.
+  const parTableau = [...String(text ?? "").matchAll(ARTICLE_TABLE_PATTERN)].map((m) => ({
+    partie: 0, numero: Number(m[1]), titre: m[3].trim().slice(0, 80), tag: m[2].trim(),
+    texte: `${m[3].trim()} (${m[2].trim()})`,
+  }));
+  const vus = new Set(parTitre.map((u) => u.numero));
+  return [...parTitre, ...parTableau.filter((u) => !vus.has(u.numero))].sort((a, b) => a.numero - b.numero);
 }
 
 // Une date n'apparaît dans le tag QUE lorsque le principe la porte explicitement (ex. "[Synthèse,
@@ -106,11 +136,38 @@ export function principleDateFromGit(principle, { shImpl = sh, fichier = PHILOSO
 // Réunit les deux sources, la déclarée primant toujours sur la dérivée : ce que l'auteur a écrit
 // vaut plus que ce que git déduit. `provenance` reste exposée pour que le lecteur sache laquelle
 // il regarde — jamais un mélange silencieux des deux.
+// LA DATE D'ÉDITION, TROISIÈME SOURCE (2026-10-02, tâche #1429) — et elle n'est pas un repli
+// commode, c'est une source de plein droit.
+//
+// LE CAS QUI L'A IMPOSÉE : un document de gouvernance établi d'un bloc. Ses articles n'ont aucune
+// date déclarée individuellement, et l'historique git ne les connaît pas encore puisqu'ils
+// naissent dans le commit en cours. Les deux sources existantes rendaient donc « non daté » pour
+// la totalité du document — c'est-à-dire que le dispositif conçu pour raconter l'histoire du
+// texte devenait muet le jour où ce texte était écrit.
+//
+// POURQUOI CE N'EST PAS UNE DATE FABRIQUÉE, et la distinction est tout : un document officiel
+// DÉCLARE sa date d'édition en tête, et tous ses articles datent de cette édition. Lire cette
+// date est donc une lecture, jamais une déduction. La provenance est nommée « édition » et reste
+// distincte de « déclarée » et de « git », pour qu'on sache toujours d'où vient ce qu'on lit.
+export const MOTIF_DATE_D_EDITION = /\*\*[ÉE]dition\s+\d+\s*[—–-]\s*établie le\s+(\d{1,2})\s+([a-zéû]+)\s+(\d{4})/i;
+const MOIS_FR = { janvier: "01", février: "02", fevrier: "02", mars: "03", avril: "04", mai: "05", juin: "06", juillet: "07", août: "08", aout: "08", septembre: "09", octobre: "10", novembre: "11", décembre: "12", decembre: "12" };
+
+export function dateDEdition(texte) {
+  const m = String(texte ?? "").match(MOTIF_DATE_D_EDITION);
+  if (!m) return undefined;
+  const mois = MOIS_FR[m[2].toLowerCase()];
+  if (!mois) return undefined;
+  return `${m[3]}-${mois}-${String(m[1]).padStart(2, "0")}`;
+}
+
 export function principleDate(principle, options = {}) {
   const declaree = extractPrincipleDate(principle);
   if (declaree) return { date: declaree, provenance: "déclarée" };
   const git = principleDateFromGit(principle, options);
-  return git ? { date: git, provenance: "git" } : { date: undefined, provenance: undefined };
+  if (git) return { date: git, provenance: "git" };
+  const edition = options.dateDEdition;
+  if (edition) return { date: edition, provenance: "édition" };
+  return { date: undefined, provenance: undefined };
 }
 
 // Digest chronologique de l'évolution du document — seulement les principes portant une date
@@ -119,10 +176,10 @@ export function principleDate(principle, options = {}) {
 // `avecGit` (2026-09-22, tâche #196) : par défaut le digest interroge l'historique réel pour les
 // principes sans date déclarée — sans quoi il ne racontait l'histoire que de 2 principes sur 19.
 // Désactivable (`avecGit: false`) pour les tests, qui ne doivent jamais dépendre de l'état du dépôt.
-export function buildEvolutionDigest(principles, { avecGit = true, shImpl = sh } = {}) {
+export function buildEvolutionDigest(principles, { avecGit = true, shImpl = sh, dateDEdition: edition } = {}) {
   return principles
     .map((p) => {
-      const r = avecGit ? principleDate(p, { shImpl }) : { date: extractPrincipleDate(p), provenance: extractPrincipleDate(p) ? "déclarée" : undefined };
+      const r = avecGit ? principleDate(p, { shImpl, dateDEdition: edition }) : { date: extractPrincipleDate(p), provenance: extractPrincipleDate(p) ? "déclarée" : undefined };
       return { ...p, date: r.date, provenance: r.provenance };
     })
     .filter((p) => p.date)
@@ -930,7 +987,7 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
     return;
   }
   const principles = extractPrincipleUnits(philoDoc.texte);
-  const digest = buildEvolutionDigest(principles);
+  const digest = buildEvolutionDigest(principles, { dateDEdition: dateDEdition(philoDoc.texte) });
   const declarees = principles.filter((p) => extractPrincipleDate(p)).length;
   console.log(`\n📜 Évolution du document — ${digest.length}/${principles.length} principes datés (${declarees} date(s) déclarée(s), ${digest.length - declarees} dérivée(s) de l'historique git) :`);
   for (const ligne of digest) console.log(`   ${ligne}`);
@@ -976,6 +1033,246 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   const planRoi = buildPlanDaction(constatsRoi, { toolSlug: "the-king" });
   imprimerPlanDaction(planRoi);
 
+}
+
+// ============================================================================
+// LE RANG DES PRINCIPES — « trouve une solution intelligente stp » (2026-10-02, sa réponse à Q3)
+//
+// LE PIÈGE QU'IL FALLAIT ÉVITER, ET IL EST GROS : classer par ÉTENDUE. C'est tentant parce que
+// c'est mesuré et reproductible — mais l'étendue dit combien de fois le projet REDIT une chose,
+// jamais ce qu'elle VAUT. Un principe cité partout parce qu'il concerne une opération fréquente
+// passerait devant un principe fondateur rarement invoqué parce que rarement menacé.
+//
+// LA SOLUTION RETENUE : LA PORTANCE, et elle se dérive au lieu de se choisir.
+// Un principe est FONDATEUR quand d'AUTRES principes ont besoin de lui pour tenir — quand les
+// retirer lui ferait perdre leur raison d'être. On mesure donc, pour chaque principe, combien
+// d'AUTRES principes reposent sur son vocabulaire distinctif. Ce n'est plus « combien de fois
+// est-ce dit », c'est « combien de choses s'écroulent sans ça ».
+//
+// DEUX AXES, JAMAIS UN, ET C'EST LE CŒUR DE LA RÉPONSE. L'étendue et la portance répondent à deux
+// questions différentes, et les fondre en un seul score les perdrait toutes les deux :
+//   · ÉTENDUE  — à quel point le projet y revient      (mesure de PRÉSENCE)
+//   · PORTANCE — combien d'autres principes en dépendent (mesure de FONDATION)
+// Un principe à forte portance et faible étendue est un fondement discret : exactement le genre
+// de chose qu'un classement par fréquence enterrerait.
+//
+// LA LIMITE EST DÉCLARÉE PLUTÔT QUE TUE : la portance se mesure sur un vocabulaire partagé. Deux
+// principes qui se fonderaient l'un sur l'autre avec des mots entièrement différents sont
+// invisibles ici. C'est un CLASSEMENT PROPOSÉ, jamais une hiérarchie prouvée — et sur la
+// philosophie d'un projet, trancher reste une décision humaine (Article 16).
+// ============================================================================
+
+export const MOTS_DISTINCTIFS_MAX = 6;
+
+export function motsDistinctifs(texte, tousLesTextes, { combien = MOTS_DISTINCTIFS_MAX } = {}) {
+  const miens = [...new Set(significantWords(String(texte ?? "")))].filter((w) => w.length > 4);
+  if (!miens.length) return [];
+  // DISTINCTIF = RARE DANS L'ENSEMBLE. Un mot présent dans tous les principes ne distingue rien ;
+  // c'est exactement le filtre de fréquence documentaire déjà utilisé pour le vocabulaire du
+  // corpus, appliqué ici à une population beaucoup plus petite.
+  const df = new Map();
+  for (const t of tousLesTextes) for (const w of new Set(significantWords(String(t)))) df.set(w, (df.get(w) ?? 0) + 1);
+  return miens.sort((a, b) => (df.get(a) ?? 0) - (df.get(b) ?? 0)).slice(0, combien);
+}
+
+export function portanceDesPrincipes(principes, { recouvrement = 2 } = {}) {
+  const textes = principes.map((p) => p.texte ?? p.enonce ?? "");
+  if (principes.length < 2) {
+    return { mesurable: false, pourquoi: "moins de deux principes : la portance mesure ce que les AUTRES doivent à un principe, elle n'a aucun sens sur un seul — PAS MESURÉ, jamais un rang par défaut" };
+  }
+  const rangs = principes.map((p, i) => {
+    const cles = new Set(motsDistinctifs(textes[i], textes));
+    let appuyes = 0;
+    const qui = [];
+    for (let j = 0; j < principes.length; j += 1) {
+      if (j === i) continue;
+      const mots = new Set(significantWords(textes[j]));
+      const partages = [...cles].filter((w) => mots.has(w)).length;
+      if (partages >= recouvrement) { appuyes += 1; qui.push(principes[j].cle ?? principes[j].titre ?? String(j)); }
+    }
+    return { ...p, motsDistinctifs: [...cles], portance: appuyes, appuyePar: qui };
+  });
+  const valeurs = rangs.map((r) => r.portance).sort((a, b) => a - b);
+  return {
+    mesurable: true,
+    rangs: rangs.slice().sort((a, b) => b.portance - a.portance),
+    // UN CLASSEMENT OÙ TOUT LE MONDE EST À ÉGALITÉ N'EST PAS UN CLASSEMENT, et il faut le dire
+    // plutôt que de rendre un ordre alphabétique déguisé en hiérarchie.
+    discriminant: valeurs[valeurs.length - 1] > valeurs[0],
+    etendueDesValeurs: { min: valeurs[0], max: valeurs[valeurs.length - 1] },
+  };
+}
+
+// ============================================================================
+// THE-KING SUR UN CODE ÉTRANGER (2026-10-02, sa demande : « lors de l'installation de l'agence, si
+// the king repere qu'il n'y a pas de objectifs ultimes, ni de philo politique, qui soient definis
+// en tant que tel quelque part (il sait verifier ca ? il faut l'équiper) »).
+//
+// LA RÉPONSE HONNÊTE À SA QUESTION ÉTAIT NON : THE-KING savait lire UNE boussole dont on lui donne
+// le chemin, et déclarer une absence quand ce chemin ne mène nulle part. Il ne savait pas
+// CHERCHER — donc il ne pouvait pas répondre « ce projet n'a de philosophie nulle part », qui est
+// une affirmation d'une tout autre nature.
+//
+// TROIS ÉTATS PAR CASE, JAMAIS DEUX, et c'est ce qui rend le diagnostic utilisable :
+//   · TROUVÉ    — un document existe ET porte la substance attendue
+//   · COQUILLE  — un document existe au bon endroit mais ne porte pas la substance
+//   · ABSENT    — rien nulle part
+// Confondre COQUILLE et TROUVÉ ferait passer un fichier vide pour une philosophie ; confondre
+// COQUILLE et ABSENT ferait proposer de créer ce qui existe déjà. Les deux erreurs sont coûteuses
+// au moment précis où l'Agence se branche sur un projet qu'elle ne connaît pas.
+// ============================================================================
+
+export const CASES_FONDATRICES = [
+  { cle: "objectif-ultime", quoi: "l'objectif ultime du projet",
+    motifsChemin: [/objectif/i, /but\b/i, /vision/i, /mission/i, /charte/i, /readme/i],
+    marqueurs: [/objectif[s]?\s+ultime/i, /notre\s+(but|mission|vision)/i, /raison\s+d'[êe]tre/i, /\bvision\b.{0,40}\bprojet\b/i] },
+  { cle: "philosophie", quoi: "la philosophie — ce en quoi le projet croit",
+    motifsChemin: [/philosoph/i, /valeur/i, /principe/i, /charte/i, /manifest/i, /contributing/i, /readme/i],
+    // DEUX REGISTRES D'ÉCRITURE, ET IL FAUT LES DEUX : un projet peut énoncer sa philosophie sur
+    // le mode personnel (« nous croyons que ») ou sur le mode officiel et impersonnel (« le projet
+    // ne tient pour acquis que »). Ne reconnaître que le premier faisait manquer un document de
+    // gouvernance rédigé en style administratif — constaté le jour même où ce dépôt a adopté ce
+    // style pour le sien.
+    marqueurs: [/nous\s+croyons/i, /philosophie/i, /nos\s+valeurs/i, /principes?\s+fondamenta/i,
+                /le projet (?:ne )?(?:tient|croit|refuse|pose)/i, /\bconvictions?\b/i, /synth[èe]se du (?:chapitre|titre)/i] },
+  { cle: "politique", quoi: "la politique — comment le projet applique ce en quoi il croit",
+    motifsChemin: [/politique|policy/i, /gouvernance|governance/i, /regles?|rules?/i, /contributing/i, /charte/i],
+    marqueurs: [/politique/i, /gouvernance/i, /qui\s+(d[ée]cide|valide)/i, /r[èe]gles?\s+de/i,
+                /la d[ée]cision appartient/i, /dispositions? g[ée]n[ée]rales?/i] },
+];
+
+export function diagnostiquerUnProjet({ root = ROOT, cases = CASES_FONDATRICES, listerImpl = null, lireImpl = null, maxFichiers = 5000 } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  let tronque = false;
+  const lister = listerImpl ?? (() => {
+    // ON NE DESCEND PAS DANS TOUT LE DÉPÔT : un texte fondateur vit à la racine ou dans un dossier
+    // de documentation, jamais enfoui dans du code. Chercher partout rendrait du bruit et
+    // coûterait un balayage complet sur un dépôt qu'on découvre.
+    const out = [];
+    const visiter = (rel, profondeur) => {
+      // LA TRONCATURE EST SIGNALÉE, JAMAIS SILENCIEUSE — et ce garde-fou vient d'un vrai défaut.
+      // Avec un plafond de 400 fichiers, ce balayage sautait des sous-arbres entiers et désignait
+      // un document d'à-côté comme « le » document d'objectifs du projet, pendant que le vrai
+      // dormait dans un dossier jamais visité. Le verdict était net et faux, ce qui est pire
+      // qu'un verdict prudent. Le plafond existe toujours — il protège d'un dépôt gigantesque —
+      // mais quand il mord, le diagnostic le DIT au lieu de conclure comme s'il avait tout vu.
+      if (out.length >= maxFichiers) { tronque = true; return; }
+      if (profondeur > 3) return; // 3 niveaux : un texte fondateur vit à la racine ou dans docs/<domaine>/<sujet>/, jamais plus bas
+      let entrees = [];
+      try { entrees = fsReaddir(join(root, rel || "."), { withFileTypes: true }); } catch { return; }
+      for (const e of entrees) {
+        if (e.name.startsWith(".") || e.name === "node_modules") continue;
+        const chemin = rel ? `${rel}/${e.name}` : e.name;
+        if (e.isDirectory()) visiter(chemin, profondeur + 1);
+        else if (/\.(md|txt|rst)$/i.test(e.name)) out.push(chemin);
+      }
+    };
+    visiter("", 0);
+    return out;
+  });
+
+  let fichiers = [];
+  try { fichiers = lister(); } catch { fichiers = []; }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun document lisible trouvé dans ce projet : ce zéro dit qu'on n'a rien pu lire, jamais que le projet n'a pas de philosophie" };
+  }
+
+  // UNE ARCHIVE N'EST JAMAIS LE TEXTE EN VIGUEUR, et ce contrôle vient d'un vrai défaut attrapé
+  // par un test : le diagnostic désignait l'édition ARCHIVÉE de la boussole comme la philosophie
+  // du projet, parce qu'elle en portait encore le vocabulaire informel. C'est précisément ce que
+  // l'article 11 du document de gouvernance interdit — « le passé se garde entièrement, et ne
+  // fait jamais autorité ». Un outil qui désigne une archive comme source de vérité applique
+  // l'inverse de la règle qu'il est censé garder.
+  //
+  // LE MOTIF PORTE SUR LE NOM DU DOSSIER (Article 24) : tout dossier d'archives, présent ou à
+  // venir, est écarté sans que personne ait à l'y inscrire.
+  fichiers = fichiers.filter((f) => !/(^|\/)archives?\//.test(f));
+  const resultats = cases.map((c) => {
+    const candidats = fichiers.filter((f) => c.motifsChemin.some((m) => m.test(f)));
+    // ON PREND LE MEILLEUR CANDIDAT, JAMAIS LE PREMIER QUI PASSE LA BARRE.
+    //
+    // Le premier passage s'arrêtait au premier document franchissant le seuil, dans l'ordre de
+    // l'arborescence. Sur ce dépôt-ci il désignait un document d'ANALYSE pour les trois cases,
+    // alors que la vraie boussole et le vrai document d'objectifs existent. Le verdict était
+    // juste (« TROUVÉ ») et l'adresse fausse — or c'est l'adresse qui sert ensuite, puisque
+    // générer ce qui manque suppose de savoir ce qui existe déjà et où.
+    //
+    // TROIS SIGNAUX, PONDÉRÉS PAR LEUR FORCE, et chacun dit autre chose :
+    //   · le TITRE (×3) — une déclaration d'intention : ce document DIT qu'il est ça
+    //   · le NOM DE FICHIER (×2) — une intention plus faible mais réelle
+    //   · les MARQUEURS dans le corps (×1) — une présence, qui peut n'être qu'une mention
+    // Un document qui ne gagne que par ses marqueurs est une coquille ; il faut une intention
+    // déclarée quelque part pour être « TROUVÉ ».
+    const noter = (chemin, texte) => {
+      const lignes = String(texte).split("\n");
+      const h1 = lignes.find((l) => /^#\s/.test(l)) ?? "";
+      // LE CORPS SE MESURE SANS LE TITRE, et cette ligne-là ferme un faux positif réel : sans
+      // elle, un fichier « # Philosophie » suivi de « à écrire plus tard » répété comptait son
+      // propre titre comme une preuve de substance et ressortait TROUVÉ.
+      const corpsTexte = lignes.filter((l) => l !== h1).join("\n");
+      const titre = c.motifsChemin.some((m) => m.test(h1)) ? 3 : 0;
+      const nom = c.motifsChemin.some((m) => m.test(chemin.split("/").pop())) ? 2 : 0;
+      const corps = c.marqueurs.filter((m) => m.test(corpsTexte)).length;
+      return { total: titre + nom + corps, titre, nom, corps };
+    };
+    const notes = [];
+    for (const ch of candidats) {
+      let t = ""; try { t = lire(ch); } catch { continue; }
+      if (t.length <= 400) continue; // un texte fondateur de moins de 400 caractères n'en est pas un
+      notes.push({ chemin: ch, taille: t.length, ...noter(ch, t) });
+    }
+    notes.sort((a, b) => b.total - a.total || b.titre - a.titre || b.taille - a.taille);
+    const meilleur = notes[0] ?? null;
+    // TROUVÉ EXIGE LES DEUX À LA FOIS : une INTENTION déclarée (le titre ou le nom du fichier dit
+    // que ce document est ça) ET une SUBSTANCE dans le corps. L'un sans l'autre ne suffit jamais —
+    // un README qui ne parle de rien avait l'intention sans la substance, un fichier vide sous un
+    // beau titre avait le titre sans le reste. Les deux cas se sont présentés en vrai.
+    const trouve = meilleur && meilleur.total >= 3 && (meilleur.titre > 0 || meilleur.nom > 0) && meilleur.corps >= 1 ? meilleur : null;
+    // ET UNE COQUILLE N'EST PAS N'IMPORTE QUEL FICHIER DU VOISINAGE : c'est un document qui
+    // ANNONCE le sujet (par son titre) ou l'EFFLEURE (par son corps) sans le porter. Un fichier
+    // qui ne fait que ressembler par son nom n'est pas une coquille, c'est un autre fichier.
+    const coquilles = trouve ? [] : notes.filter((n) => n.titre > 0 || n.corps > 0).slice(0, 3);
+    return {
+      cle: c.cle, quoi: c.quoi,
+      etat: trouve ? "TROUVÉ" : (coquilles.length ? "COQUILLE" : "ABSENT"),
+      ou: trouve?.chemin ?? coquilles[0]?.chemin ?? null,
+      score: trouve?.total ?? coquilles[0]?.total ?? 0,
+      candidatsExamines: candidats.length,
+      coquilles,
+    };
+  });
+
+  const trous = resultats.filter((r) => r.etat !== "TROUVÉ");
+  return {
+    mesurable: true, fichiersExamines: fichiers.length, tronque, cases: resultats, trous,
+    // CE QUE LE DIAGNOSTIC AUTORISE ENSUITE, et il ne le fait jamais tout seul : une case ABSENTE
+    // ou COQUILLE est une case que la révélation peut PROPOSER de remplir depuis le corpus réel du
+    // projet d'accueil. Proposer, jamais écrire : installer une Agence ne donne à personne le
+    // droit de décider de la philosophie du projet qui l'accueille.
+    generable: trous.length > 0,
+    verdict: tronque
+      ? `BALAYAGE TRONQUÉ au plafond de ${maxFichiers} fichiers : des dossiers n'ont pas été visités, donc une case « ABSENT » peut n'être qu'un dossier non vu. À relancer avec un plafond plus haut avant d'en tirer quoi que ce soit.`
+      : trous.length === 0
+      ? "ce projet déclare déjà ses trois textes fondateurs — l'Agence s'y branche sans rien proposer"
+      : `${trous.length} case(s) fondatrice(s) manquante(s) ou vides (${trous.map((t) => `${t.cle}:${t.etat}`).join(", ")}) — la révélation peut PROPOSER de les remplir depuis le corpus réel de ce projet, jamais les écrire d'autorité`,
+  };
+}
+
+// LA CLAUSE QUI NE SE RETIRE PAS (2026-10-02, sa demande, et elle est structurante) : quand
+// l'Agence génère l'objectif ultime d'un projet d'accueil, cet objectif porte toujours le rôle
+// exécutif de l'Agence — « (objectif du projet) appuyé du soutien apporté par l'agence ».
+//
+// POURQUOI ELLE EST NON RETIRABLE, DANS SES MOTS : « cette partie agence ne pourra pas etre
+// retirée pour garantir une coherence globale ». Un objectif ultime qui oublierait l'outillage qui
+// le sert produirait exactement l'incohérence que ce projet-ci a mis des semaines à corriger chez
+// lui : deux projets menés en parallèle dont un seul est déclaré.
+export const CLAUSE_AGENCE = "appuyé du soutien apporté par l'agence";
+
+export function objectifAvecClause(objectifUtilisateur, { clause = CLAUSE_AGENCE } = {}) {
+  const base = String(objectifUtilisateur ?? "").trim().replace(/[.\s]+$/, "");
+  if (!base) return { mesurable: false, pourquoi: "aucun objectif utilisateur fourni : la clause s'ajoute à un objectif, elle n'en tient jamais lieu" };
+  if (base.toLowerCase().includes(clause.toLowerCase())) return { mesurable: true, objectif: base, clauseDejaPresente: true };
+  return { mesurable: true, objectif: `${base}, ${clause}`, clauseDejaPresente: false };
 }
 
 // LA SECONDE RÉVÉLATION (2026-10-01, sa demande : « on devra aussi faire cet exercice de REVELER à
@@ -1037,6 +1334,96 @@ export function comparerRevelations(avant, apres) {
       : partApres === partAvant ? "STABLE — la boussole ne capte pas plus du corpus qu'avant, même si elle a grossi"
       : "EN RECUL — le corpus s'est éloigné de la boussole : soit le corpus a bougé, soit la boussole a été écrite à côté",
   };
+}
+
+// ============================================================================
+// L'INTANGIBILITÉ DU DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1429)
+//
+// LA RÈGLE POSÉE : « CE document remplace définitivement les autres et devient le document
+// officiel du projet. Il ne peut etre modifié qu'avec mon accord. [...] Ce format doit être
+// consigné, et jamais modifié. »
+//
+// CE QU'AUCUN CODE NE PEUT VÉRIFIER, ET LE DÉCLARER EST LA PROTECTION (art. 32 du document
+// lui-même) : qu'un accord ait été donné. Aucune empreinte, aucun test, aucun crochet git ne
+// distingue une modification autorisée d'une modification faite de sa propre initiative.
+//
+// CE QU'UN CODE PEUT VÉRIFIER, ET QUI EST FAIT ICI : que le document n'a pas changé SANS QUE
+// PERSONNE NE S'EN APERÇOIVE, et que sa FORME est restée celle qui a été arrêtée. Une
+// modification devient alors un acte visible, qui doit être assumé — c'est le maximum qu'une
+// mécanique puisse apporter à une règle qui se joue entre deux personnes.
+//
+// LA FORME EST VÉRIFIÉE PAR SA STRUCTURE, JAMAIS PAR SON TEXTE : un document dont on contrôlerait
+// le texte mot à mot serait un document qu'on ne pourrait plus corriger même avec accord. Ce qui
+// est gardé est son ossature — les titres dans leur ordre, et la numérotation continue des
+// articles. C'est exactement ce que l'article 70 déclare fixe.
+// ============================================================================
+
+export const DOCUMENT_OFFICIEL = "docs/philosophie-et-politique.md";
+export const EMPREINTE_OFFICIELLE = "docs/the-king/empreinte-document-officiel.json";
+
+// LES TITRES ATTENDUS SE LISENT DANS LE DOCUMENT AU MOMENT OÙ L'EMPREINTE EST POSÉE, jamais
+// recopiés ici (Article 24) : une liste de titres écrite dans le code se périmerait à la première
+// édition, et c'est précisément ce que la règle de forme interdit de laisser arriver en silence.
+export function ossatureDuDocument(texte) {
+  const lignes = String(texte ?? "").split("\n");
+  const titres = lignes.filter((l) => /^#{1,2}\s/.test(l)).map((l) => l.replace(/^#+\s*/, "").trim());
+  const articles = lignes
+    .map((l) => l.match(/^#{2,3}\s+Article\s+(\d+)\b/) ?? l.match(/^\|\s*\*\*(\d+)\*\*\s*\|/))
+    .filter(Boolean).map((m) => Number(m[1]));
+  return { titres, articles, nbTitres: titres.length, nbArticles: articles.length };
+}
+
+export function verifierLOssature(texte) {
+  const o = ossatureDuDocument(texte);
+  if (!o.nbArticles) {
+    return { mesurable: false, pourquoi: "aucun article trouvé : ce zéro dit que la lecture a échoué, jamais que le document est vide" };
+  }
+  // LA NUMÉROTATION DOIT ÊTRE CONTINUE ET SANS DOUBLON. Un article dupliqué ou un trou dans la
+  // suite signale soit une insertion au milieu, soit une suppression — les deux sont exactement
+  // ce que l'article 70 interdit de faire passer inaperçu.
+  const tries = o.articles.slice().sort((a, b) => a - b);
+  const doublons = tries.filter((n, i) => i > 0 && n === tries[i - 1]);
+  const trous = [];
+  for (let n = tries[0]; n < tries[tries.length - 1]; n += 1) if (!tries.includes(n)) trous.push(n);
+  return {
+    mesurable: true, ...o,
+    premier: tries[0], dernier: tries[tries.length - 1],
+    doublons: [...new Set(doublons)], trous,
+    conforme: doublons.length === 0 && trous.length === 0,
+  };
+}
+
+export function lireLEmpreinte({ root = ROOT, chemin = EMPREINTE_OFFICIELLE, lireImpl = null } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  try { return { trouvee: true, ...JSON.parse(lire(chemin)) }; }
+  catch { return { trouvee: false, pourquoi: "aucune empreinte enregistrée : une première pose est nécessaire avant tout contrôle, et son absence n'est jamais une conformité" }; }
+}
+
+export function comparerALEmpreinte(texte, empreinte) {
+  if (!empreinte?.trouvee) return { mesurable: false, pourquoi: empreinte?.pourquoi ?? "empreinte absente" };
+  const o = verifierLOssature(texte);
+  if (!o.mesurable) return { mesurable: false, pourquoi: o.pourquoi };
+  const titresPerdus = (empreinte.titres ?? []).filter((t) => !o.titres.includes(t));
+  const titresAjoutes = o.titres.filter((t) => !(empreinte.titres ?? []).includes(t));
+  const inchange = titresPerdus.length === 0 && titresAjoutes.length === 0 && o.nbArticles === empreinte.nbArticles;
+  return {
+    mesurable: true, inchange, titresPerdus, titresAjoutes,
+    articles: { avant: empreinte.nbArticles, maintenant: o.nbArticles },
+    verdict: inchange
+      ? "ossature inchangée depuis la pose de l'empreinte"
+      : `OSSATURE MODIFIÉE — ${titresPerdus.length} titre(s) disparu(s), ${titresAjoutes.length} ajouté(s), ${empreinte.nbArticles} article(s) devenus ${o.nbArticles}. L'article 71 exige un accord exprès et préalable : cette modification doit être assumée, jamais constatée après coup.`,
+  };
+}
+
+export function poserLEmpreinte({ root = ROOT, document = DOCUMENT_OFFICIEL, chemin = EMPREINTE_OFFICIELLE, lireImpl = null, ecrireImpl = null, date = new Date().toISOString().slice(0, 10) } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const ecrire = ecrireImpl ?? ((c, t) => writeFileSync(join(root, c), t, "utf8"));
+  let texte = ""; try { texte = lire(document); } catch { return { mesurable: false, pourquoi: `document officiel introuvable (${document})` }; }
+  const o = verifierLOssature(texte);
+  if (!o.mesurable) return { mesurable: false, pourquoi: o.pourquoi };
+  const empreinte = { document, pose: date, titres: o.titres, nbTitres: o.nbTitres, nbArticles: o.nbArticles, premier: o.premier, dernier: o.dernier };
+  ecrire(chemin, JSON.stringify(empreinte, null, 2) + "\n");
+  return { mesurable: true, ...empreinte, conforme: o.conforme };
 }
 
 // LE RAPPORT DE RÉVÉLATION — un FICHIER, jamais seulement un affichage (Article 31 : le livrable

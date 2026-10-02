@@ -1,8 +1,8 @@
 # referentiel — table des matières
 
-*(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-01. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
+*(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-02. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**120 fichier(s).**
+**121 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -40,6 +40,7 @@
 | [criticite.md](criticite.md) | — |
 | [data-archangel.md](data-archangel.md) | — |
 | [doc-report.md](doc-report.md) | — |
+| [document-de-gouvernance.md](document-de-gouvernance.md) | — |
 | [ecotoken.md](ecotoken.md) | — |
 | [el-professor.md](el-professor.md) | — |
 | [esprit-ce-qui-le-protege.html](esprit-ce-qui-le-protege.html) | — |

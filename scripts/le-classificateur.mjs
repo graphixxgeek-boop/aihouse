@@ -2090,7 +2090,7 @@ export const MOTIFS_PART = [
   // Elle n'entre PAS pour autant dans la liste des documents normatifs plus bas : tant qu'il ne
   // l'a pas validée, elle est un candidat, et un candidat ne fait pas loi.
   { motif: /^docs\/philosophie-et-politique(-v\d+)?\.md$/, pourquoi: "déclaré formulé pour rester utilisable sur un futur projet" },
-  { motif: /^docs\/referentiel\/(standards|lecons|organisation-agence|classification-agence|le-classificateur)\.md$/, pourquoi: "pièce du kit de l'Agence" },
+  { motif: /^docs\/referentiel\/(standards|lecons|organisation-agence|classification-agence|le-classificateur|document-de-gouvernance)\.md$/, pourquoi: "pièce du kit de l'Agence" },
   { motif: /^docs\/(regles-de-travail|systeme-de-suivi|xp-ia-process-detail)\.md$/, pourquoi: "méthode de travail : elle vaut pour n'importe quel projet piloté par IA" },
   { motif: /^docs\/[a-z0-9-]+-conception\.md$/, pourquoi: "document de conception d'un outil, jamais du jeu" },
   // LES GABARITS SONT LA PIÈCE LA PLUS EXPORTABLE DE TOUTES, et le premier passage les a pourtant

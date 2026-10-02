@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHILOSOPHIE ET POLITIQUE DU PROJET</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T00:41:08.360Z</div>
+    <h1>PHILOSOPHIE ET POLITIQUE DU PROJET</h1>
+    <p class="sub">Document de gouvernance — Édition 1 — 2 octobre 2026</p>
+  </header>
+  <div class="divider"></div>
+  <main><h4>Document de gouvernance — Édition 1</h4>
+<hr>
+<div class="highlight"><p><strong>RÉGIME DU PRÉSENT DOCUMENT</strong></p><p><strong>Statut.</strong> Document de gouvernance de rang supérieur. Il énonce les convictions du projet
+(philosophie) et les règles par lesquelles celles-ci s'appliquent (politique). Il s'impose à
+l'ensemble des documents, processus, procédures et actions du projet.</p><p><strong>Portée.</strong> Il couvre les trois niveaux du projet : le niveau général, le niveau du Jeu et le
+niveau de l'Agence. La section relative à l'Agence est seule destinée à être exportée vers un
+autre projet.</p><p><strong>Abrogation.</strong> Le présent document remplace définitivement toute édition antérieure de la
+philosophie et de la politique du projet. Les éditions remplacées sont conservées intégralement
+et sans altération au registre d'archives prévu à cet effet ; elles demeurent consultables et
+cessent de produire effet.</p><p><strong>INTANGIBILITÉ.</strong> Le présent document ne peut être modifié, complété, réorganisé ni abrogé, en
+tout ou en partie, qu'après accord exprès et préalable du responsable du projet. Sa structure,
+sa numérotation et sa forme de présentation sont fixes et ne peuvent varier d'une édition à
+l'autre.</p><p><strong>NEUTRALITÉ DU SUPPORT.</strong> Aucun commentaire, aucune observation, aucune réserve et aucun
+élément d'échange ne peut être inscrit dans le présent document. Toute remarque, toute
+proposition de modification et toute demande de précision sont formulées hors du document.
+Le contenu ci-après est un texte de référence, jamais un support de discussion.</p><p><strong>Édition 1 — établie le 2 octobre 2026.</strong></p></div>
+<hr>
+<h3>PRÉAMBULE</h3>
+<p>Le présent document a été établi par extraction, et non par déclaration. Son contenu procède de l'analyse de 5 843 énoncés normatifs relevés dans 334 documents du projet, répartis en sept zones d'écriture distinctes : la charte, la méthode de travail, les leçons acquises, le référentiel technique, les processus, les décisions effectivement prises et les justifications consignées au sein de l'outillage.</p>
+<p>Un énoncé n'a été retenu comme principe qu'à la condition d'être attesté dans plusieurs zones d'écriture indépendantes. Cette exigence distingue une conviction du projet, reformulée à des semaines d'intervalle dans des contextes sans rapport entre eux, d'une simple tournure de rédaction. Aucun principe du présent document n'a été ajouté sans attestation.</p>
+<hr>
+<h2>TITRE PRÉLIMINAIRE — ÉNONCÉ FONDAMENTAL</h2>
+<h3>Article liminaire</h3>
+<div class="highlight"><p><strong>Ce que vit la personne en face prime sur ce qui arrange le projet.</strong></p><p><strong>Rien n'est tenu pour vrai tant qu'il ne peut être montré.</strong></p></div>
+<p>Ces deux énoncés constituent la synthèse de l'ensemble des principes figurant au présent document. Le premier fixe la finalité, le second la méthode. En cas de conflit entre deux dispositions du présent document, l'interprétation retenue est celle qui sert le mieux ces deux énoncés.</p>
+<h3>Article 2 — Les trois objectifs ultimes</h3>
+<p>Le projet poursuit trois objectifs ultimes, un par niveau. Ils constituent l'étage supérieur de la cascade normative et ne se déduisent d'aucune disposition du présent document : ils le précèdent.</p>
+<div class="highlight"><p><strong>NIVEAU GÉNÉRAL (PROJET)</strong>
+*Faire que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout sans
+l'autre.*</p><p><strong>NIVEAU JEU</strong>
+<em>Faire qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière.</em></p><p><strong>NIVEAU AGENCE</strong>
+*Faire qu'un codeur qui travaille avec une intelligence artificielle sache, à tout moment, ce
+qui tient et ce qui ne tient pas.*</p></div>
+<h3>Article 3 — Concordance de l'énoncé fondamental et des objectifs ultimes</h3>
+<table><thead><tr><th>Objectif ultime</th><th>Disposition correspondante de l'article liminaire</th></tr></thead><tbody><tr><td><strong>JEU</strong></td><td>la personne en face est le visiteur ; son expérience prime</td></tr><tr><td><strong>AGENCE</strong></td><td>la personne en face est le codeur ; « savoir ce qui tient » est l'exigence de démonstration</td></tr><tr><td><strong>PROJET</strong></td><td>l'exigence de preuve est inscrite dans l'objectif lui-même</td></tr></tbody></table>
+<p>Les objectifs ultimes et l'énoncé fondamental ont été établis par deux voies indépendantes et à deux dates distinctes. Leur concordance n'a pas été construite ; elle est constatée.</p>
+<hr>
+<h2>TITRE I — DISPOSITIONS GÉNÉRALES</h2>
+<h3>Article 4 — Architecture normative</h3>
+<p>La cascade normative du projet comporte six étages :</p>
+<pre><code>VISION  →  PHILOSOPHIE  →  POLITIQUE  →  PROCESSUS  →  PROCÉDURES  →  ACTIONS</code></pre>
+<p>L'étage VISION est constitué des trois objectifs ultimes énoncés à l'article 2. Les étages PHILOSOPHIE et POLITIQUE sont constitués par le présent document. Les étages inférieurs relèvent de documents distincts.</p>
+<h3>Article 5 — Les trois niveaux</h3>
+<p>Chaque étage de la cascade se décline en trois niveaux :</p>
+<table><thead><tr><th>Niveau</th><th>Objet</th><th>Régime d'exportation</th></tr></thead><tbody><tr><td><strong>GÉNÉRAL</strong></td><td>le projet dans son ensemble</td><td>non exportable</td></tr><tr><td><strong>JEU</strong></td><td>l'œuvre</td><td>non exportable</td></tr><tr><td><strong>AGENCE</strong></td><td>l'outillage</td><td><strong>exportable</strong></td></tr></tbody></table>
+<h3>Article 6 — Correspondance des niveaux</h3>
+<p>La politique d'un niveau répond de la philosophie du même niveau, et d'elle seule. Aucune disposition de politique ne peut procéder d'une philosophie d'un autre niveau.</p>
+<h3>Article 7 — Régime d'exportation</h3>
+<p>Seule la section relative à l'Agence est destinée à être transférée vers un autre projet et fusionnée avec la philosophie et la politique de celui-ci.</p>
+<p>En conséquence, chaque principe de la section Agence est rédigé de manière à se suffire à lui-même. Aucun n'opère de renvoi à un principe d'un autre niveau pour être compris. Cette exigence de rédaction est permanente.</p>
+<h3>Article 8 — Rang des principes</h3>
+<p>Le rang des principes s'établit par leur <strong>portance</strong>, définie comme le nombre de principes dont la validité dépend du principe considéré. La portance se distingue de l'étendue, définie comme le nombre de zones d'écriture où un principe est attesté.</p>
+<p>Ces deux mesures répondent à deux questions distinctes et ne peuvent être réunies en une mesure unique. L'étendue mesure la présence d'un principe dans le corpus ; la portance mesure la dépendance des autres principes à son égard. Le rang procède de la seconde.</p>
+<p>La portance est calculée sur un vocabulaire partagé. Deux principes dont la dépendance s'exprime en termes entièrement distincts ne sont pas détectés. Le classement obtenu constitue une proposition, et non une hiérarchie établie.</p>
+<hr>
+<h2>TITRE II — PHILOSOPHIE</h2>
+<h3>CHAPITRE PREMIER — PHILOSOPHIE GÉNÉRALE</h3>
+<div class="highlight"><p><strong>SYNTHÈSE DU CHAPITRE</strong>
+<em>Le projet ne tient pour acquis que ce qui peut se tromper devant témoin.</em> Les dix principes du
+présent chapitre énoncent cette exigence sous dix angles : une mesure doit pouvoir échouer, une
+absence de mesure n'est pas un résultat favorable, une intention ne constitue pas une
+protection, et la décision finale demeure humaine.</p><p><strong>Filiation.</strong> Cette position correspond, appliquée à un outillage plutôt qu'à une théorie
+scientifique, au faillibilisme de Karl Popper : une proposition n'a de valeur que si elle peut
+être réfutée. L'article 9 en constitue la transposition directe.</p></div>
+<h4>Article 9 — Une mesure qui ne peut pas échouer ne mesure rien</h4>
+<p>Un contrôle dont le verdict est invariablement favorable n'est pas un contrôle rassurant : il est muet. Un dispositif se juge à ce qu'il a établi, non à son exécution sans incident. <em>Attestation : 3 zones, 4 documents.</em></p>
+<h4>Article 10 — Une absence de mesure ne constitue jamais un résultat favorable</h4>
+<p>L'absence de constat et l'absence de recherche se formulent distinctement. Lorsqu'une mesure n'a pu être conduite, cette impossibilité est déclarée. <em>Attestation : établie, et déjà portée par l'édition antérieure.</em></p>
+<h4>Article 11 — Le passé est conservé intégralement et ne fait jamais autorité</h4>
+<p>Rien n'est supprimé : une archive est conservée sans altération et jamais résumée. Aucun élément archivé ne détermine l'état actuel du projet. Les deux dispositions sont indissociables : la conservation intégrale est ce qui autorise le refus de toute autorité du document archivé. <em>Attestation : 7 zones sur 7, 14 documents — énoncé le plus largement attesté du corpus.</em></p>
+<h4>Article 12 — Une intention n'a jamais produit d'effet</h4>
+<p>Une règle dépourvue de porteur cesse d'exister dès la session suivante. Une mention annonçant une mise en cohérence future ne constitue pas une protection. <em>Attestation : 2 zones, 4 documents.</em></p>
+<h4>Article 13 — Un contrôle consulté après l'action n'est pas un contrôle</h4>
+<p>Un dispositif de prévention se consulte avant l'action qu'il protège. Consulté après, il ne protège plus : il commente. <em>Attestation : 4 zones, 5 documents.</em></p>
+<h4>Article 14 — Le jugement ne s'automatise pas</h4>
+<p>Ce qui relève de la mesure peut être automatisé. Ce qui relève du jugement — une qualité, une priorité, la constatation qu'une leçon a été appliquée — demeure établi par une personne. <em>Attestation : 4 zones, 5 documents.</em></p>
+<h4>Article 15 — Une méthode approchée rend un palier de confiance, jamais une certitude</h4>
+<p>Tout dispositif procédant par estimation déclare qu'il estime. Trois paliers sont employés : confirmé, probable, à surveiller. <em>Attestation : 6 zones, 10 documents.</em></p>
+<h4>Article 16 — Une décision rendue ne se contourne pas sous une autre forme</h4>
+<p>Une décision prise n'est pas rejouée sous une formulation différente. Elle est soit rouverte explicitement, soit respectée. <em>Attestation : 4 zones, 5 documents.</em></p>
+<h4>Article 17 — Toute structure est reconstructible ; aucun comportement observable ne se perd</h4>
+<p>L'organisation interne demeure révisable en permanence. Ce qui s'affiche, se vit ou se constate de l'extérieur ne l'est pas. <em>Attestation : 3 zones, 3 documents.</em></p>
+<h4>Article 18 — Ce qui n'existe que dans une mémoire est déjà perdu</h4>
+<p>Le projet est conçu pour être repris par une autre personne ou une autre intelligence artificielle à tout moment. La justification d'un mécanisme est consignée auprès de ce mécanisme. Lorsqu'aucun dispositif ne peut porter une règle, la déclaration écrite de cette impossibilité constitue la protection. <em>Attestation : 6 documents.</em></p>
+<h3>CHAPITRE II — PHILOSOPHIE DU JEU</h3>
+<div class="highlight"><p><strong>SYNTHÈSE DU CHAPITRE</strong>
+<em>Un personnage désagréable et vrai prime sur un personnage aimable et faux.</em> Les six principes
+du présent chapitre refusent le même compromis : celui qui rendrait l'œuvre plus lisse et moins
+vivante.</p><p><strong>Filiation.</strong> Cette position correspond à l'exigence d'authenticité de la philosophie
+existentialiste : un personnage docile tient le rôle attendu de lui au lieu d'exister. La
+filiation est établie par l'article 20, qui inverse un critère de qualité ordinairement admis.</p></div>
+<h4>Article 19 — L'aspérité constitue la valeur ; l'agrément constitue le risque</h4>
+<p>Le caractère rugueux, sarcastique et cynique des personnages est la valeur centrale de l'œuvre. Toute dérive vers un ton consensuel, servile ou doucereux constitue une perte.</p>
+<h4>Article 20 — Une formulation polie et distante constitue un signal d'alerte</h4>
+<p>Une expression mesurée, soignée et neutre n'est pas un indice de qualité dans le cadre de l'œuvre : elle signale une dérive vers le registre que l'œuvre rejette.</p>
+<h4>Article 21 — Une correction qui rend le dialogue plus net et moins vivant constitue un échec</h4>
+<p>Le naturel prévaut sur la correction formelle.</p>
+<h4>Article 22 — La variété procède d'un principe, jamais d'une liste de termes</h4>
+<p>Une liste de termes prohibés s'étend indéfiniment sans couvrir le cas suivant. La correction recherche une règle que le modèle peut s'appliquer à toute production future.</p>
+<h4>Article 23 — Aucun changement d'état n'est silencieux</h4>
+<p>L'expiration d'un état, une transition vers le sommeil, un changement de régime : chacun est perçu et commenté au tour suivant. <em>Attestation : 3 zones, 4 documents.</em></p>
+<h4>Article 24 — Une validation de qualité est intégrale, jamais par échantillon</h4>
+<p>Aucune modification affectant la production de la parole des personnages n'est validée sur la base d'un examen partiel. <em>Attestation : 2 zones, 4 documents.</em></p>
+<h3>CHAPITRE III — PHILOSOPHIE DE L'AGENCE <em>(section exportable)</em></h3>
+<div class="highlight"><p><strong>SYNTHÈSE DU CHAPITRE</strong>
+<em>Une règle n'existe que si un dispositif la fait respecter, et toute exception est écrite.</em> Les
+treize principes du présent chapitre procèdent d'une exigence unique : rien ne survit à la
+mémoire de son auteur — ni une règle, ni une justification, ni une exemption.</p><p><strong>Filiation.</strong> Cette position correspond au constitutionnalisme appliqué à un outillage : nulle
+règle sans organe qui la porte, nulle dérogation sans motif publié, et un texte conçu pour être
+appliqué par d'autres que ses auteurs. L'article 32 pousse le raisonnement à son terme en
+imposant la publication de l'impossibilité elle-même.</p></div>
+<h4>Article 25 — Un outil qui ne fonctionne que sur son dépôt d'origine est inachevé</h4>
+<p>Tout outil se conçoit pour être transféré : une architecture réutilisable d'une part, son instanciation locale d'autre part, sans confusion entre les deux.</p>
+<h4>Article 26 — Un registre se lit ; il ne se recopie pas</h4>
+<p>Toute construction reflétant l'état d'un autre système le lit à l'exécution, ou reçoit un dispositif détectant tout écart. Une copie tenue manuellement se périme sans signal.</p>
+<h4>Article 27 — Un seuil se dérive de ce qu'il observe</h4>
+<p>Un seuil fixé arbitrairement finit par excéder la distribution qu'il surveille et déclare alors l'absence d'anomalie faute de pouvoir en observer. Un seuil dérivé d'un centile demeure par construction à l'intérieur de la distribution.</p>
+<h4>Article 28 — Un dispositif qui signale la totalité de son corpus ne signale rien</h4>
+<p>Un détecteur dont le taux d'alerte est généralisé cesse d'être consulté, puis d'être lu. Le jour où son signalement est fondé, il n'est plus lu.</p>
+<h4>Article 29 — La justification est consignée auprès du mécanisme</h4>
+<p>Un mécanisme paraissant redondant ou excessivement prudent est supprimé par l'intervenant suivant s'il ne porte pas la raison de son existence.</p>
+<h4>Article 30 — Un rapport est achevé lorsque ses constats sont devenus des tâches</h4>
+<p>La chaîne est : rapport, analyse, plan d'action, tâches. Un constat connaît trois états et jamais deux : retenu, écarté avec motif écrit, ou soumis à arbitrage.</p>
+<h4>Article 31 — Un outil qui n'a jamais été exécuté sur des données réelles est une intention</h4>
+<p>Tout outil est exécuté sur le dépôt réel avant d'être tenu pour achevé.</p>
+<h4>Article 32 — Ce qu'aucun dispositif ne peut porter est déclaré, et la déclaration constitue la protection</h4>
+<p>Certaines obligations ne peuvent être interceptées par aucun mécanisme. Leur absence de couverture est consignée explicitement. Une impossibilité déclarée prévaut sur une protection supposée.</p>
+<h4>Article 33 — Un outil rend un signal, jamais un verdict</h4>
+<p>Un rapprochement de vocabulaire, une stagnation, une similarité constituent des indications soumises à vérification par lecture. Aucun outil ne conclut à la place de celui qui lit. <em>Attestation : 3 zones, 5 documents.</em></p>
+<h4>Article 34 — Un résultat énonce ses motifs ; il ne rend jamais un score opaque</h4>
+<p>Tout verdict énumère les éléments qui l'ont formé, de manière à ce qu'ils puissent être contestés individuellement. <em>Attestation : 5 zones, 12 documents.</em></p>
+<h4>Article 35 — Aucun élément ne se recopie manuellement : ni registre, ni seuil, ni texte de référence</h4>
+<p>Un texte de référence employé en plusieurs points est extrait de sa source unique à chaque usage. Une copie, même exacte à sa création, constitue un écart futur. <em>Attestation : 5 zones, 9 à 12 documents.</em></p>
+<h4>Article 36 — Au-delà d'un risque faible, un dispositif propose et n'applique pas</h4>
+<p>Le seuil d'autonomie d'un outil procède du risque attaché à ce qu'il modifie, et non du degré de certitude de son analyse. <em>Attestation : 5 zones, 5 documents.</em></p>
+<h4>Article 37 — Une exemption est une déclaration, jamais une dispense</h4>
+<p>Un cas légitimement hors de portée sort de la liste des anomalies et entre dans une liste distincte, avec son motif. Sa suppression pure et simple constituerait l'erreur symétrique de son signalement. <em>Attestation : 3 zones, 4 documents.</em></p>
+<hr>
+<h2>TITRE III — POLITIQUE</h2>
+<div class="highlight"><p><strong>SYNTHÈSE DU TITRE</strong>
+<em>Celui qui mesure n'est pas celui qui juge, et celui qui juge rend compte à celui qui décide.</em>
+Les dispositions du présent titre répartissent trois attributions qui ne se confondent jamais :
+<strong>mesurer</strong>, qui revient aux outils, mécaniquement ; <strong>juger</strong>, qui revient à l'agent, par
+écrit ; <strong>décider</strong>, qui revient au responsable du projet, et à lui seul.</p><p><strong>Filiation.</strong> Cette répartition correspond au principe de séparation des pouvoirs. La filiation
+n'est pas analogique : le projet refuse mécaniquement qu'un outil valide son propre jugement, et
+a délibérément scindé en deux outils distincts celui qui propose une tâche et celui qui constate
+son absence, au motif qu'un outil unique inventerait la tâche qu'il réclame.</p></div>
+<h3>CHAPITRE PREMIER — POLITIQUE GÉNÉRALE</h3>
+<table><thead><tr><th>Art.</th><th>Famille</th><th>Disposition</th><th>Procède de</th></tr></thead><tbody><tr><td><strong>38</strong></td><td>Gouvernance</td><td>La décision appartient au responsable du projet. L'agent propose, mesure et alerte. Aucun outil ne constate seul qu'une leçon a été appliquée.</td><td>art. 14</td></tr><tr><td><strong>39</strong></td><td>Gouvernance</td><td>Toute demande entrant en tension avec la loi suprême du projet exige deux confirmations expresses, et non une.</td><td>art. 16</td></tr><tr><td><strong>40</strong></td><td>Harmonisation</td><td>Une seule source de vérité par sujet. Les autres documents y renvoient sans la reformuler.</td><td>art. 11</td></tr><tr><td><strong>41</strong></td><td>Harmonisation</td><td>Un dossier d'archives se consulte, ne se corrige pas et ne fait pas autorité.</td><td>art. 11</td></tr><tr><td><strong>42</strong></td><td>Contrôle</td><td>Tout contrôle coûteux est consulté avant l'action, jamais après.</td><td>art. 13</td></tr><tr><td><strong>43</strong></td><td>Audit</td><td>Tout chiffre communiqué désigne l'instrument qui l'a produit et la date de son exécution.</td><td>art. 9, 10</td></tr><tr><td><strong>44</strong></td><td>Analyse</td><td>Deux chiffres ne se comparent que s'ils procèdent du même instrument.</td><td>art. 9</td></tr><tr><td><strong>45</strong></td><td>Analyse</td><td>Une affirmation se confronte à une mesure ; une donnée déjà calculée ne se recalcule pas.</td><td>art. 9</td></tr><tr><td><strong>46</strong></td><td>Contrôle</td><td>Le seuil d'autonomie procède du risque attaché à la zone modifiée, non du degré de certitude.</td><td>art. 14</td></tr><tr><td><strong>47</strong></td><td>Reporting</td><td>Tout écart entre une estimation antérieure et un constat est énoncé explicitement, jamais corrigé en silence.</td><td>art. 18</td></tr><tr><td><strong>48</strong></td><td>Amélioration</td><td>Tout constat suit la chaîne rapport, analyse, plan, tâche.</td><td>art. 12</td></tr></tbody></table>
+<h3>CHAPITRE II — POLITIQUE DU JEU</h3>
+<table><thead><tr><th>Art.</th><th>Famille</th><th>Disposition</th><th>Procède de</th></tr></thead><tbody><tr><td><strong>49</strong></td><td>Gouvernance</td><td>Aucune modification de modèle, de personnalité ou d'invite n'intervient sans lecture humaine intégrale des scénarios de fidélité du registre.</td><td>art. 24</td></tr><tr><td><strong>50</strong></td><td>Contrôle</td><td>Le dispositif de fidélité du registre refuse de conclure lorsque ses sollicitations ont toutes été bloquées : il déclare l'absence de mesure.</td><td>art. 19, 10</td></tr><tr><td><strong>51</strong></td><td>Classification</td><td>Les personnages n'ont aucune existence dans l'organisation de l'outillage : ils en sont l'objet, jamais un composant.</td><td>—</td></tr><tr><td><strong>52</strong></td><td>Harmonisation</td><td>Tout écart entre l'historique, l'affichage, les indicateurs internes et la simulation constitue le symptôme d'une anomalie plus profonde.</td><td>art. 21</td></tr><tr><td><strong>53</strong></td><td>Contrôle</td><td>Toute réplique produite localement existe en plusieurs variantes différant sur le fond, et non sur la seule formulation.</td><td>art. 22</td></tr><tr><td><strong>54</strong></td><td>Reporting</td><td>Tout changement d'état perceptible est annoncé au tour suivant.</td><td>art. 23</td></tr></tbody></table>
+<h3>CHAPITRE III — POLITIQUE DE L'AGENCE <em>(section exportable)</em></h3>
+<table><thead><tr><th>Art.</th><th>Famille</th><th>Disposition</th><th>Procède de</th></tr></thead><tbody><tr><td><strong>55</strong></td><td>Gouvernance</td><td>Un outil signale et ne bloque pas, sauf lorsque le blocage est déclaré par avance et motivé.</td><td>art. 33</td></tr><tr><td><strong>56</strong></td><td>Classification</td><td>Un rang se définit par son critère, jamais par l'énumération de ses membres.</td><td>art. 26</td></tr><tr><td><strong>57</strong></td><td>Classification</td><td>Le document de classification est généré, et par conséquent jamais périmé.</td><td>art. 26</td></tr><tr><td><strong>58</strong></td><td>Nivellement</td><td>Tout jugement rendu par un outil est assorti d'un palier de confiance explicite.</td><td>art. 33</td></tr><tr><td><strong>59</strong></td><td>Harmonisation</td><td>Toute liste tenue manuellement porte, en regard, la mention écrite de sa nature manuelle.</td><td>art. 26</td></tr><tr><td><strong>60</strong></td><td>Contrôle</td><td>Le filet de sécurité est vert avant qu'un travail soit tenu pour achevé.</td><td>art. 31</td></tr><tr><td><strong>61</strong></td><td>Audit</td><td>Toute règle désigne son porteur : un test, un dispositif, ou la déclaration écrite qu'aucun des deux n'est possible.</td><td>art. 32</td></tr><tr><td><strong>62</strong></td><td>Analyse</td><td>Un outil jamais sollicité fait l'objet d'un examen individuel avant tout retrait. Le non-usage constitue une question, non un verdict.</td><td>art. 28</td></tr><tr><td><strong>63</strong></td><td>Amélioration</td><td>Une vérification approfondie exceptionnelle ne se déclenche pas d'elle-même : elle est proposée, et confirmée par le responsable du projet.</td><td>art. 25, 33</td></tr></tbody></table>
+<hr>
+<h2>TITRE IV — CLAUSES INTANGIBLES</h2>
+<div class="highlight"><p><strong>SYNTHÈSE DU TITRE</strong>
+*Cinq dispositions ne peuvent être renégociées par aucune urgence, aucune contrainte budgétaire
+et aucun motif d'opportunité.* Le présent titre est le plus bref du document et le plus
+contraignant : l'ensemble des autres dispositions est discutable, celles-ci ne le sont pas.</p><p><strong>Filiation.</strong> Ces dispositions correspondent aux clauses d'éternité du droit constitutionnel —
+dispositions qu'une procédure de révision ne peut atteindre. La filiation fournit le critère
+d'admission au présent titre : une disposition y a sa place si, et seulement si, une révision
+régulière du document ne pourrait légitimement la supprimer.</p></div>
+<h3>Article 64 — Ce qui n'est jamais sacrifié</h3>
+<div class="highlight"><p><strong>L'EXPÉRIENCE DE L'UTILISATEUR.</strong></p></div>
+<table><thead><tr><th>Niveau</th><th>Objet</th></tr></thead><tbody><tr><td><strong>GÉNÉRAL</strong></td><td>ce que vit la personne en face, et non ce qui arrange le projet</td></tr><tr><td><strong>JEU</strong></td><td>ce que vit le visiteur : son doute, sa gêne, son adhésion</td></tr><tr><td><strong>AGENCE</strong></td><td>ce que vit le codeur : savoir à tout moment ce qui tient et ce qui ne tient pas</td></tr></tbody></table>
+<p>Cette disposition rend sans objet tout arbitrage entre le registre des personnages et l'exigence de preuve : l'un et l'autre sont des moyens. Le registre sert l'expérience du visiteur, la preuve sert celle du codeur. Ce qui n'est pas sacrifié est leur finalité commune.</p>
+<h3>Article 65 — Ce qui n'est jamais automatisé</h3>
+<table><thead><tr><th>Niveau</th><th>Objet</th></tr></thead><tbody><tr><td><strong>GÉNÉRAL</strong></td><td>le jugement : une appréciation, une qualité, une priorité, la constatation qu'une leçon a été appliquée</td></tr><tr><td><strong>JEU</strong></td><td>la validation que le registre des personnages n'a pas dérivé, qui est lue intégralement par une personne</td></tr><tr><td><strong>AGENCE</strong></td><td>l'index de jugement d'un rapport, l'épreuve de reconstruction, le déclenchement d'une vérification exceptionnelle</td></tr></tbody></table>
+<h3>Article 66 — Ce qui n'est jamais délégué</h3>
+<table><thead><tr><th>Niveau</th><th>Objet</th></tr></thead><tbody><tr><td><strong>GÉNÉRAL</strong></td><td>la décision finale. Un outil informe ; il ne tranche pas</td></tr><tr><td><strong>JEU</strong></td><td>la dénomination, et l'arbitrage sur le registre des personnages</td></tr><tr><td><strong>AGENCE</strong></td><td>la conclusion périodique sur la méthode de travail elle-même</td></tr></tbody></table>
+<h3>Article 67 — Ce qui est absolument refusé</h3>
+<table><thead><tr><th>Niveau</th><th>Objet</th></tr></thead><tbody><tr><td><strong>GÉNÉRAL</strong></td><td>qu'un travail soit présenté comme achevé sans preuve vérifiable par celui qui l'a commandé</td></tr><tr><td><strong>JEU</strong></td><td>qu'une correction rende le dialogue plus net et moins vivant</td></tr><tr><td><strong>AGENCE</strong></td><td>qu'un constat produit par un outil demeure sans suite</td></tr></tbody></table>
+<h3>Article 68 — Ce qui n'est jamais autorisé</h3>
+<table><thead><tr><th>Niveau</th><th>Objet</th></tr></thead><tbody><tr><td><strong>GÉNÉRAL</strong></td><td>qu'une ambiguïté réelle soit levée par une supposition tacite</td></tr><tr><td><strong>JEU</strong></td><td>qu'une modification affectant la parole des personnages intervienne sans lecture humaine intégrale</td></tr><tr><td><strong>AGENCE</strong></td><td>qu'une liste recopiée manuellement subsiste sans dispositif détectant sa divergence</td></tr></tbody></table>
+<hr>
+<h2>TITRE V — ÉTABLISSEMENT, FORME ET RÉVISION</h2>
+<h3>Article 69 — Méthode d'établissement</h3>
+<p>Le présent document procède de deux opérations successives et distinctes.</p>
+<p><strong>Première opération — relevé.</strong> Extraction des énoncés normatifs du corpus, sans sélection ni reformulation. Le relevé constitue une matière brute, dont les caractéristiques mesurées sont les suivantes :</p>
+<table><thead><tr><th>Caractéristique</th><th>Mesure</th></tr></thead><tbody><tr><td>Énoncés ne désignant pas le niveau auquel ils s'appliquent</td><td>53,6 %</td></tr><tr><td>Répartition entre niveaux</td><td>37,7 % Agence, 5,8 % Jeu</td></tr><tr><td>Énoncés retenus comportant une référence technique nominative</td><td>30 %</td></tr><tr><td>Énoncés retenus absents de l'édition antérieure</td><td>86 sur 87</td></tr><tr><td>Contradictions détectées entre énoncés retenus</td><td>aucune, sur 2 775 comparaisons</td></tr></tbody></table>
+<p>L'absence de contradiction détectée s'entend dans les limites de la méthode employée, laquelle compare un vocabulaire partagé et une polarité opposée. Deux énoncés se contredisant en termes entièrement distincts ne sont pas détectés.</p>
+<p><strong>Seconde opération — mise en forme.</strong> Cinq corrections ont été appliquées au relevé :</p>
+<table><thead><tr><th>#</th><th>Correction</th></tr></thead><tbody><tr><td><strong>C1</strong></td><td>Attribution d'un niveau à chaque principe, y compris à ceux que le relevé laissait indéterminés</td></tr><tr><td><strong>C2</strong></td><td>Répartition entre niveaux établie indépendamment de la répartition observée dans le relevé</td></tr><tr><td><strong>C3</strong></td><td>Reformulation au niveau du principe des énoncés comportant une référence technique nominative</td></tr><tr><td><strong>C4</strong></td><td>Classement selon les dix-neuf familles et les six étages du cadre de référence</td></tr><tr><td><strong>C5</strong></td><td>Attribution à chaque niveau de l'objectif ultime correspondant, sans reformulation</td></tr></tbody></table>
+<p>Aucune correction n'a ajouté de principe non attesté dans le corpus.</p>
+<h3>Article 70 — Forme du document</h3>
+<p>La forme du présent document est fixe. Elle comprend, dans l'ordre : le régime du document, le préambule, le titre préliminaire portant l'énoncé fondamental et les trois objectifs ultimes, les dispositions générales, la philosophie en trois chapitres, la politique en trois chapitres, les clauses intangibles, et les dispositions d'établissement et de révision.</p>
+<p>Chaque chapitre de philosophie et le titre de politique s'ouvrent par une synthèse de deux à trois lignes et, lorsqu'elle est fondée, par la mention de la filiation philosophique ou politique correspondante.</p>
+<p>Cette forme ne peut varier d'une édition à l'autre.</p>
+<h3>Article 71 — Régime de révision</h3>
+<p>Toute modification du présent document requiert l'accord exprès et préalable du responsable du projet. Aucune modification n'intervient à l'initiative de l'agent.</p>
+<p>Toute édition remplacée est archivée intégralement et sans altération, conformément à l'article 11.</p>
+<h3>Article 72 — Contrôle périodique de fidélité</h3>
+<p>Le relevé décrit à l'article 69 est reconduit périodiquement. L'indicateur de contrôle est la part des énoncés retenus du corpus que le présent document couvre. Cette part s'établit à 1 sur 87 à la date de l'édition 1.</p>
+<p>Le nombre de principes énoncés ne constitue pas un indicateur de fidélité : il peut croître sans que le corpus se reconnaisse davantage dans le document.</p>
+<hr>
+<h2>ANNEXE A — CORRESPONDANCE DES EXIGENCES COURANTES</h2>
+<p>Les quatre exigences formulées de manière récurrente dans la conduite du projet correspondent aux dispositions suivantes.</p>
+<table><thead><tr><th>Exigence</th><th>Dispositions correspondantes</th><th>Portée exacte</th></tr></thead><tbody><tr><td><strong>Fiabiliser</strong></td><td>art. 9 et 31</td><td>rendre une chose capable d'échouer visiblement, et l'éprouver sur des données réelles</td></tr><tr><td><strong>Optimiser</strong></td><td>art. 27 et 45</td><td>retirer ce qui ne peut être vérifié, et ne jamais recalculer une donnée existante</td></tr><tr><td><strong>Rendre évolutif</strong></td><td>art. 26 et 35</td><td>faire qu'un élément nouveau hérite de l'existant sans modification de la logique</td></tr><tr><td><strong>Rendre exportable</strong></td><td>art. 25 et 32</td><td>rendre compréhensible par une personne qui n'a pas participé à la conception</td></tr></tbody></table>
+<h2>ANNEXE B — DISPOSITIONS SOUMISES À ARBITRAGE</h2>
+<p>Les points suivants ne sont pas arrêtés à la date de l'édition 1 et ne figurent pas au dispositif.</p>
+<ul><li>Le maintien des six étages de la cascade, ou leur réduction à cinq ou quatre.</li><li>La reprise, au sein du présent document, des principes de l'édition antérieure qui n'y figurent pas.</li><li>Le seuil de l'indicateur de l'article 72 à partir duquel le contrôle périodique est tenu pour concluant.</li></ul></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/philosophie-et-politique.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
