@@ -3029,13 +3029,48 @@ function strategieCli(argv) {
 //
 // LE TRI EST PAR ÂGE, DU PLUS VIEUX AU PLUS RÉCENT, et ce n'est pas cosmétique : une décision qui
 // attend depuis quatre jours bloque plus de travail en aval qu'une née ce matin.
+// GARÉE PAR UNE DÉCISION, OU EN ATTENTE D'UNE DÉCISION ? (2026-10-02, tâche #1504)
+//
+// LE DÉFAUT EST SUBTIL ET IL GONFLE LE CHIFFRE QUI COMPTE LE PLUS. `attendUneDecision()` lit le
+// statut et conclut « elle attend ». Mais « En attente — après le GRAND CHANTIER » et « À
+// TRANCHER » ne disent PAS la même chose :
+//   · « à trancher », « en attente de décision », « nécessite sa présence » → il DOIT répondre ;
+//   · « en attente — après X » → il A DÉJÀ RÉPONDU : il a décidé de la garer jusqu'à X.
+//
+// Les compter ensemble lui présente comme une dette ce qui est en réalité l'application de sa
+// propre décision. Mesuré le 2026-10-02 : 10 des 76 étaient dans ce cas, soit 13 % du chiffre.
+//
+// LE CRITÈRE SE DÉRIVE DU TEXTE, IL NE SE RECOPIE PAS (Article 24) : un statut qui nomme une
+// CONDITION DE REPRISE (« après … ») déclare que la mise en attente est elle-même une décision
+// prise. Un statut ajouté demain avec la même forme entre ici sans qu'une ligne bouge.
+//
+// CE QUE ÇA NE FAIT PAS, et c'est délibéré : les tâches garées ne DISPARAISSENT pas. Elles sont
+// comptées à part et nommées — leur condition de reprise peut cesser d'être vraie, et une tâche
+// garée pour un chantier terminé est une tâche oubliée, jamais une tâche réglée.
+export const MOTIF_CONDITION_DE_REPRISE = /\bapr[èe]s\b/i;
+
+export function estGareeParUneDecision(row = {}) {
+  const statut = String(row?.statut ?? "");
+  // « à trancher » l'emporte toujours : un statut qui réclame explicitement sa décision n'est
+  // jamais une mise en attente, même s'il nomme une suite par ailleurs.
+  if (/trancher|décision|decision|présence|presence/i.test(statut)) return false;
+  return /attente/i.test(statut) && MOTIF_CONDITION_DE_REPRISE.test(statut);
+}
+
 export function decisionsQuiAttendent(rows = [], { maintenant = null } = {}) {
   const ouvertes = rows.filter((r) => !/termin|ferm/i.test(String(r.statut ?? "")));
   if (!ouvertes.length) {
     return { mesurable: false, pourquoi: "aucune tâche ouverte lue : un zéro qui dit qu'on n'a rien pu lire, jamais que rien n'attend" };
   }
-  const lignes = ouvertes
-    .filter((r) => attendUneDecision(r))
+  const attendTout = ouvertes.filter((r) => attendUneDecision(r));
+  const garees = attendTout.filter((r) => estGareeParUneDecision(r)).map((r) => ({
+    numero: r.numero,
+    sujet: String(r.sujet ?? "").replace(/\*\*/g, ""),
+    quand: String(r.horodatage ?? "").slice(0, 10),
+    statut: String(r.statut ?? "").trim(),
+  }));
+  const lignes = attendTout
+    .filter((r) => !estGareeParUneDecision(r))
     .map((r) => ({
       numero: r.numero,
       sujet: String(r.sujet ?? "").replace(/\*\*/g, ""),
@@ -3050,13 +3085,16 @@ export function decisionsQuiAttendent(rows = [], { maintenant = null } = {}) {
   const jours = maintenant && lignes.length
     ? Math.round((Date.parse(maintenant) - Date.parse(lignes[0].quand)) / 86400000)
     : null;
-  return { mesurable: true, lignes, ouvertes: ouvertes.length, parSignal, plusVieille: lignes[0]?.quand ?? null, joursDAttente: jours };
+  return { mesurable: true, lignes, garees, ouvertes: ouvertes.length, parSignal, plusVieille: lignes[0]?.quand ?? null, joursDAttente: jours };
 }
 
 function decisionsCli() {
   const r = decisionsQuiAttendent(loadAllTaskRows(), { maintenant: new Date().toISOString() });
   if (!r.mesurable) { console.log(`PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; return; }
   console.log(`=== ${r.lignes.length} DÉCISION(S) T'ATTENDENT, sur ${r.ouvertes} tâche(s) ouverte(s) ===\n`);
+  if (r.garees?.length) {
+    console.log(`  (+ ${r.garees.length} tâche(s) GARÉES par une décision que tu as DÉJÀ prise — elles nomment leur condition de reprise, donc elles ne te doivent rien. Comptées à part, jamais effacées : une tâche garée pour un chantier terminé est une tâche oubliée.)\n`);
+  }
   console.log(`  Par signal : ${Object.entries(r.parSignal).map(([k, v]) => `${k} (${v})`).join(" · ")}`);
   if (r.plusVieille) console.log(`  La plus ancienne attend depuis le ${r.plusVieille}${r.joursDAttente != null ? ` — ${r.joursDAttente} jour(s)` : ""}.\n`);
   for (const l of r.lignes) console.log(`  #${String(l.numero).padEnd(5)} ${l.quand}  ${l.sujet.slice(0, 92)}`);

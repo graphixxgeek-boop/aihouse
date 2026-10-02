@@ -24296,6 +24296,34 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   // d'AUTRES sujets — un futur agent les aurait résolus silencieusement vers la mauvaise chose.
   const GP = await import('../scripts/god-of-all-process.mjs');
   assert.ok(GP.estUnNumeroDeSession('la refonte graphique (S92)'), 'a session number is recognised by its letter prefix');
+
+  // GARÉE PAR UNE DÉCISION, OU EN ATTENTE D'UNE DÉCISION ? (2026-10-02, tâche #1504). Le détecteur
+  // comptait les deux ensemble et présentait comme une dette ce qui était l'application de sa
+  // propre décision : 10 des 76 étaient dans ce cas, soit 13 % du chiffre qui compte le plus.
+  const CTD4 = await import('../scripts/check-tasks-details.mjs');
+  assert.ok(CTD4.estGareeParUneDecision({ statut: 'En attente — après le GRAND CHANTIER (#1100)' }),
+    'a status naming a RESUMPTION CONDITION says the parking was itself a decision already taken');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'À TRANCHER' }), 'while "à trancher" is the opposite: he must still answer');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'en attente de décision' }), 'and so is an explicit wait FOR a decision');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'à faire — nécessite sa présence' }), 'needing him present is owed, never parked');
+  // « À TRANCHER » L'EMPORTE TOUJOURS, même quand le statut nomme une suite par ailleurs : sans
+  // cette priorité, une décision réellement due disparaîtrait du compte, ce qui est le pire des
+  // deux sens d'erreur.
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'À trancher — après la Ronde' }), 'an explicit "à trancher" is never reclassified as parked, whatever else the status names');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'Ouverte' }), 'an ordinary open task is neither');
+
+  // ET LES DEUX POPULATIONS SE RENDENT SÉPARÉMENT, jamais fondues : une tâche garée pour un
+  // chantier TERMINÉ est une tâche oubliée, pas une tâche réglée — l'effacer la perdrait.
+  const decs = CTD4.decisionsQuiAttendent([
+    { numero: 1, statut: 'À TRANCHER', sujet: 'a', horodatage: '2026-09-01T00:00Z' },
+    { numero: 2, statut: 'En attente — après le GRAND CHANTIER (#1100)', sujet: 'b', horodatage: '2026-09-02T00:00Z' },
+    { numero: 3, statut: 'Terminée', sujet: 'c', horodatage: '2026-09-03T00:00Z' },
+  ]);
+  assert.deepEqual(decs.lignes.map((l) => l.numero), [1], 'only the genuinely owed decision is counted as owed');
+  assert.deepEqual(decs.garees.map((g) => g.numero), [2], 'the parked one is reported apart, never dropped');
+  assert.equal(decs.ouvertes, 2, 'and the closed one is out of both, as it should be');
+  assert.equal(CTD4.decisionsQuiAttendent([]).mesurable, false, 'no open task read means NOT MEASURED, never "nothing is waiting"');
+
   assert.ok(!GP.estUnNumeroDeSession('la tâche #92'), 'and the hash form is never mistaken for one');
   assert.deepEqual([...'tâche #1234 et S92'.matchAll(GP.MOTIF_NUMERO)].map((m) => m[1]), ['1234'],
     'the durable-number pattern must not see S92 at all: that is the whole point of the prefix, obtained without touching the pattern');
