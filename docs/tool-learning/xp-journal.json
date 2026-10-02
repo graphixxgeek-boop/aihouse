@@ -506,5 +506,19 @@
     ],
     "tache": 1469,
     "date": "2026-10-02T19:08:28.552Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "titre": "Trois fois le même réflexe faux : écrire join(ROOT, …) dans un fichier qui n'a pas de ROOT",
+    "lecon": "Trois fois dans la même journée, dans trois fichiers différents (check-house.mjs deux fois, sauvegarde-projet.mjs une fois), j'ai écrit un chemin avec une racine qui n'existait pas dans le fichier. Chaque fois le code a jeté, et chaque fois l'erreur a été AVALÉE par un try/catch de lecture — donc elle ne s'est pas présentée comme une erreur de chemin mais comme un résultat vide ou une non-mesure. LA CLASSE : chaque fichier de ce dépôt a SA convention de chemin. Certains dérivent une racine depuis l'URL du module, d'autres importent une racine partagée, et sauvegarde-projet.mjs travaille en chemins RELATIFS depuis le dossier courant. Il n'y a pas de convention unique, et supposer celle du dernier fichier touché est le réflexe exact qui échoue. LE GESTE : avant d'écrire le premier chemin dans un fichier, LIRE comment ce fichier résout déjà les siens — une recherche, trois secondes. C'est l'Article 19 à son échelle la plus minuscule. ET LA TROISIÈME OCCURRENCE EST LA PLUS INSTRUCTIVE : j'avais déjà écrit la leçon deux fois le même jour sans que ça change mon geste au fichier suivant. Une leçon enregistrée ne protège de rien tant qu'elle n'est pas attachée au MOMENT où le geste se fait.",
+    "verifie": "trois échecs réels le 2026-10-02 : deux dans check-house.mjs (ROOT absent, puis readFileSync nommé là où le fichier importe fs en défaut) et un dans sauvegarde-projet.mjs (ROOT absent, convention relative)",
+    "outils": [
+      "check-house",
+      "sauvegarde-projet"
+    ],
+    "tache": 1471,
+    "date": "2026-10-02T19:31:41.582Z",
+    "aussi": "QUATRIÈME OCCURRENCE LE MÊME JOUR, d'une autre famille mais de la même racine : en enregistrant CETTE leçon, j'ai utilisé node -e avec du texte français contenant des backticks, que le shell a interprétés comme des substitutions de commande — et l'entrée s'est écrite mutilée. La règle d'échappement de ce projet dit d'écrire les scripts d'édition dans un fichier .mjs plutôt qu'en ligne. Je l'ai enfreinte en écrivant la leçon qui dit de respecter les conventions."
   }
 ]

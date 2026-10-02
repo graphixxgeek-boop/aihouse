@@ -36,7 +36,28 @@ export const OUTIL = "sauvegarde-projet";
 export const SCRIPT_PATH = "scripts/sauvegarde-projet.mjs";
 export const DOSSIER = "docs/sauvegardes";
 export const REGISTRE = join(DOSSIER, "index.md");
-export const COPIES_GARDEES = 3;
+// UNE SEULE COPIE GARDÉE DEPUIS LE 2026-10-02, SUR SA DÉCISION EXPLICITE (tâche #1471).
+// Sa demande : « on garde uniquement la dernière sauvegarde, et non 3, ça va alléger, c'est le
+// but ». Et son raisonnement, qui est le bon : « MOI je garde ces sauvegardes sur mon DISQUE :
+// elles n'ont pas à figurer dans git qui est DÉJÀ une sauvegarde. Je ne vois pas l'intérêt de
+// garder une sauvegarde dans une sauvegarde ? »
+//
+// TROIS FAITS VÉRIFIÉS CE JOUR-LÀ, qui ont confirmé sa lecture et corrigé la mienne :
+//   · RIEN dans l'outillage ne LIT ces fichiers. Les trois scripts qui citent `docs/sauvegardes/`
+//     ne font que le DÉCLARER comme registre, pour que les garde-fous d'index ne réclament rien.
+//     Ils existent uniquement pour lui être remis — son « aucune autre utilité ? » est exact.
+//   · ils ne sont PAS dans git, et ne l'ont jamais été (`.gitignore` les exclut depuis sa ligne 77,
+//     et zéro commit n'en contient un). Son souci était donc déjà réglé avant qu'il le soulève, et
+//     mon document du jour lui proposait à tort de « les sortir du dépôt ».
+//   · rien n'est irrécupérable : `git archive` à un commit donné régénère l'équivalent d'une
+//     sauvegarde passée (mesuré : 9,4 Mo contre 9,6 Mo pour celle du 2026-09-28). Élaguer ne
+//     détruit donc aucune capacité, seulement des octets.
+//
+// CE QUE CE CHIFFRE NE PROTÈGE PAS, ET C'EST LE VRAI RISQUE DÉCOUVERT CE JOUR-LÀ : comme ces
+// fichiers ne sont pas versionnés, ils vivent UNIQUEMENT dans le conteneur de travail, qui est
+// éphémère. Une sauvegarde produite et non TÉLÉCHARGÉE disparaît donc avec le conteneur. C'est
+// exactement ce qu'il a demandé de signaler, et c'est `findSauvegardesNonLivrees()` qui le porte.
+export const COPIES_GARDEES = 1;
 // ~150 000 mots, le calibrage qu'il a choisi : assez pour tout comprendre, assez peu pour qu'une IA
 // puisse encore travailler après l'avoir lu. Compté en caractères parce que c'est ce qu'on mesure
 // sans ambiguïté ; le rapport de mots au caractère est stable en français comme en code.
@@ -158,6 +179,60 @@ export function construireNotice({ choix, lireFichier, date, commit, nbFichiersC
 
 // Garder les N derniers, jamais tous : le coffre le plus récent contient déjà ce que les anciens
 // contenaient. Les deux précédents ne servent qu'au cas où le plus récent serait lui-même abîmé.
+// findSauvegardesNonLivrees() — UNE SAUVEGARDE NON REMISE EST UNE SAUVEGARDE PERDUE (2026-10-02,
+// tâche #1471). Sa demande, mot pour mot : « si l'utilisateur ne TÉLÉCHARGE PAS le zip, l'agence
+// doit lui signaler ».
+//
+// SA LIMITE EST DÉCLARÉE D'EMBLÉE, PARCE QU'ELLE EST IRRÉDUCTIBLE : aucun code de ce dépôt ne peut
+// observer un TÉLÉCHARGEMENT. Ce qui se passe entre son navigateur et lui ne laisse aucune trace
+// ici. Ce que l'Agence peut savoir, en revanche, c'est si l'agent a REMIS le fichier — parce que
+// c'est l'agent qui le remet, et qu'il peut en laisser la marque. Le garde-fou mesure donc la
+// REMISE, jamais le téléchargement, et il le dit dans son message plutôt que de laisser croire
+// l'un pour l'autre (leçons L5/L11 : une mesure voisine présentée comme la mesure visée est le
+// défaut le plus coûteux de ce dépôt).
+//
+// POURQUOI ÇA VAUT QUAND MÊME LA PEINE : le cas qu'il craint — un zip qui dort sans qu'il le sache
+// — commence TOUJOURS par une non-remise. Une sauvegarde remise et non téléchargée reste son
+// choix ; une sauvegarde jamais remise est une faute de l'agent, et c'est celle-là qui est
+// attrapable. Mieux vaut couvrir la moitié attrapable en le disant que les deux en le taisant.
+export const MARQUEUR_DE_REMISE = "remises.json";
+
+// CE FICHIER TRAVAILLE EN CHEMINS RELATIFS, sans racine — c'est sa convention depuis l'origine
+// (`REGISTRE = join(DOSSIER, "index.md")`). Je m'y aligne au lieu d'imposer un `root` que le reste
+// du fichier ne connaît pas : c'est l'Article 19, et c'est la TROISIÈME fois aujourd'hui que je me
+// fais prendre à écrire `join(ROOT, …)` dans un fichier où ROOT n'existe pas.
+export function findSauvegardesNonLivrees({ dossier = DOSSIER, listerImpl = readdirSync, lireImpl = readFileSync, existsImpl = existsSync } = {}) {
+  const abs = dossier;
+  if (!existsImpl(abs)) return { mesurable: false, nonLivrees: [], pourquoi: `${dossier} n'existe pas : aucune sauvegarde à confronter, ce qui n'est jamais « toutes ont été remises »` };
+  let fichiers;
+  try { fichiers = listerImpl(abs).filter((f) => f.endsWith(".zip")); }
+  catch (e) { return { mesurable: false, nonLivrees: [], pourquoi: `${dossier} n'a pas pu être lu : ${e?.message ?? e}` }; }
+  let remises = [];
+  try { remises = JSON.parse(lireImpl(join(abs, MARQUEUR_DE_REMISE), "utf8")); }
+  catch { remises = []; }   // pas de registre = rien n'a encore été marqué remis, et c'est un RÉSULTAT
+  const marquees = new Set((Array.isArray(remises) ? remises : []).map((r) => r?.fichier));
+  const nonLivrees = fichiers.filter((f) => !marquees.has(f));
+  return { mesurable: true, nonLivrees, examinees: fichiers.length,
+    pourquoi: nonLivrees.length
+      ? `${nonLivrees.length} sauvegarde(s) sur ${fichiers.length} n'ont AUCUNE marque de remise : elles ne sont pas versionnées, donc elles disparaîtront avec le conteneur de travail sans jamais lui être parvenues. À remettre, ou à élaguer sciemment. (Mesure de la REMISE par l'agent, jamais du téléchargement : ce dépôt ne peut pas l'observer.)`
+      : `les ${fichiers.length} sauvegarde(s) présentes portent leur marque de remise — ce qui dit qu'elles lui ont été ENVOYÉES, jamais qu'il les a téléchargées` };
+}
+
+export function marquerRemise(fichier, { dossier = DOSSIER, lireImpl = readFileSync, ecrireImpl = writeFileSync, quand = null } = {}) {
+  const chemin = join(dossier, MARQUEUR_DE_REMISE);
+  let deja = [];
+  try { deja = JSON.parse(lireImpl(chemin, "utf8")); } catch { deja = []; }
+  if (!Array.isArray(deja)) deja = [];
+  if (deja.some((r) => r?.fichier === fichier)) return { deja: true, total: deja.length };
+  // L'HEURE EST REÇUE, JAMAIS DEVINÉE (Article 32) : l'appelant la LIT chez AGENT-DU-TEMPS et la
+  // passe. Un horodatage fabriqué ici rendrait ce registre aussi faux que les cinq commits refusés
+  // le 2026-09-24 pour la même raison.
+  if (!quand) throw new Error("marquerRemise() exige l'heure LUE (Article 32) — jamais une heure fabriquée par le registre lui-même");
+  deja.push({ fichier, remisLe: quand });
+  ecrireImpl(chemin, JSON.stringify(deja, null, 1) + "\n", "utf8");
+  return { deja: false, total: deja.length };
+}
+
 export function aSupprimer(fichiers, { garder = COPIES_GARDEES } = {}) {
   return [...fichiers].sort().reverse().slice(garder);
 }
