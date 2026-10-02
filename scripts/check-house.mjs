@@ -24730,3 +24730,58 @@ async function testLAlimentationDesDestinations() {
   console.log("Passed: les onze destinations d'une note sont réellement alimentées, et c'est MESURÉ (2026-10-02, sa demande : « vérifie que tu as bien récolté toutes les données pour alimenter les datas : les 11 classes de notes »). UNE TABLE DE DESTINATIONS EST UNE INTENTION tant que personne ne vérifie que quelque chose y arrive — et une destination jamais alimentée est le signe soit qu'elle ne sert à rien, soit qu'on range ailleurs ce qui lui revenait. Les deux méritent d'être sus, et aucun des deux ne se voit en relisant la table. RÉSULTAT : les 8 destinations qui nomment un chemin fixe ont toutes reçu quelque chose dans les quatorze derniers jours. LES TROIS AUTRES NE SE MESURENT PAS, ET C'EST DÉCLARÉ PLUTÔT QUE TRANCHÉ : la mémoire « de l'outil concerné », « le présent document » et « le registre de l'outil qui l'a produit » ne nomment aucun chemin fixe, puisqu'il dépend de l'outil en cause. Les compter vides accuserait à tort, les compter pleines mentirait ; la troisième voie est de le dire (Article 27). LA TABLE EST LUE DANS LES RÈGLES DE TRAVAIL, jamais recopiée (Article 24) : une douzième destination ajoutée demain sera mesurée le jour même. ET LA LIMITE EST ÉCRITE DANS LE RAPPORT LUI-MÊME : la fraîcheur d'un CHEMIN ne prouve pas qu'une NOTE y est arrivée — un fichier du suivi bouge à chaque commit sans qu'une note y ait été rangée. Ce contrôle dit où PLUS RIEN n'arrive, ce qui est un vrai signal ; il ne dit jamais que tout ce qui devait arriver est arrivé.");
 }
 await testLAlimentationDesDestinations();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// L'ALERTE DE TENSION AVEC LE DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1435)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLAlerteDeTension() {
+  const K = await import('./the-king.mjs');
+
+  // ── 1. LE CAS QU'IL VEUT VOIR ATTRAPÉ, et c'est celui qui a dicté toute la mécanique.
+  const t1 = K.tensionAvecLaGouvernance('on peut desactiver un test qui echoue pour obtenir un filet vert plus vite');
+  assert.strictEqual(t1.mesurable, true, 'the alert runs against the real governance document');
+  assert.ok(t1.articles > 60, `on its articles in force (currently ${t1.articles})`);
+  assert.strictEqual(t1.verdict, 'EN TENSION', 'a proposal to skip a test is caught');
+  assert.ok(t1.tensions.some((x) => x.numero === 60), `and it names the article that actually governs it (${t1.tensions.map((x) => x.numero).join(', ')})`);
+
+  // ── 2. UN CAS RÉEL QUI ÉCHOUAIT PAR UNE SEULE LETTRE. « recopier » ne touchait pas l'article
+  // qui dit « ne se recopie manuellement » : la comparaison portait sur des mots entiers.
+  const t2 = K.tensionAvecLaGouvernance('il suffit de recopier la liste des outils a la main dans le document');
+  assert.strictEqual(t2.verdict, 'EN TENSION', 'MUST CATCH: a conjugation away from an article is still the same subject');
+  assert.ok(t2.tensions.some((x) => x.numero === 35), `and the article it contradicts is named (${t2.tensions.map((x) => x.numero).join(', ')})`);
+  assert.ok(K.contenanceParRacines('recopier la liste', 'aucun élément ne se recopie') > 0, 'because the comparison is made on stems');
+  assert.strictEqual(K.tauxDeContenance('recopier', 'recopie'), 0, 'where whole-word comparison returned nothing — which is exactly why the stemming is local and declared');
+
+  // ── 3. L'AUTRE SENS, ET C'EST CELUI QUI REND L'ALERTE UTILISABLE (BP4 + leçon L4). Une alerte
+  // qui sonne sur une demande ordinaire cesse d'être lue, et elle est alors pire qu'absente.
+  for (const benin of ['je voudrais ajouter une nouvelle couleur au decor de la cuisine',
+    'on peut peindre le salon en bleu ciel ce week-end']) {
+    const r = K.tensionAvecLaGouvernance(benin);
+    assert.strictEqual(r.verdict, 'NEUVE', `an ordinary request must not ring: "${benin}"`);
+    assert.deepStrictEqual(r.tensions, [], 'and name no article at all');
+  }
+  // Le second cas porte un marqueur de permission ET reste muet : les DEUX conditions sont
+  // réellement exigées, pas seulement l'une d'elles.
+  assert.ok(K.MARQUEUR_DE_PERMISSION.test('on peut peindre le salon'), 'even though it carries a permission marker — the two conditions really are both required');
+
+  // ── 4. LE TROISIÈME VERDICT, celui qu'on oublie toujours : une idée peut n'être ni neuve ni en
+  // tension, mais DÉJÀ ÉCRITE. Le dire épargne un chantier.
+  const t4 = K.tensionAvecLaGouvernance("tout jugement rendu par un outil est assorti d un palier de confiance explicite");
+  assert.strictEqual(t4.verdict, 'DÉJÀ COUVERTE', 'a restatement of an existing article is named as such');
+  assert.ok(t4.couvertes.some((x) => x.numero === 58), 'with the article that already holds it');
+
+  // ── 5. UNE IDÉE TROP COURTE OU UN DOCUMENT ILLISIBLE N'EST PAS UNE ABSENCE DE TENSION (L5).
+  assert.strictEqual(K.tensionAvecLaGouvernance('non').mesurable, false, 'a three-letter idea is PAS MESURÉ, never cleared');
+  const absent = K.tensionAvecLaGouvernance('une idée parfaitement ordinaire et assez longue', { chemin: 'docs/pas-la.md' });
+  assert.strictEqual(absent.mesurable, false, 'and so is an unreadable governance document');
+  assert.match(K.formatTensionLines(absent).join('\n'), /PAS MESURÉ/, 'which the report says in its own title');
+
+  // ── 6. LA LIMITE EST DANS LE RAPPORT, et elle est lourde.
+  const texte = K.formatTensionLines(t1).join('\n');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its own limit');
+  assert.match(texte, /mots entièrement différents/, 'namely that two ideas can contradict each other with entirely different words, which this will never see');
+  assert.match(texte, /Article 14/, 'and that it does not replace the vigilance the charter requires');
+
+  console.log("Passed: l'alerte de tension avec le document de gouvernance (2026-10-02, tâche #1435). Sa question : « est-ce que, une fois que le doc philo et politique sera en vigueur, tu seras capable de me prévenir si j'ai une idée ou une consigne en tension avec ce document ? » La réponse honnête était « pas de façon vérifiable » : je pouvais le remarquer ou ne pas le remarquer, et rien ne distinguait les deux cas — une capacité qui dépend de ma vigilance du moment n'existe plus à la session suivante (Article 27). TROIS VERDICTS, ET LE TROISIÈME EST CELUI QU'ON OUBLIE : en tension, DÉJÀ COUVERTE — ce n'est alors pas une idée neuve mais une redite, et le dire épargne un chantier — ou neuve. DEUX CORRECTIONS ONT ÉTÉ IMPOSÉES PAR DES CAS RÉELS, pas par une revue théorique. ① Le seuil ne pouvait pas être du Jaccard : une idée de dix mots comparée à un article de soixante rend au mieux 0,15 même en recouvrement total, donc le premier passage rendait « NEUVE » sur une idée qui contredisait frontalement un article — un seuil hors de portée par construction, la faute même que BP5 corrige ailleurs. La mesure juste est la CONTENANCE, aux deux bouts de la même échelle. ② La comparaison portait sur des mots entiers : « il suffit de RECOPIER la liste à la main » ne touchait PAS l'article qui dit « aucun élément ne se RECOPIE manuellement ». Une lettre d'écart, et la tension la plus nette qu'on puisse écrire contre cet article passait inaperçue. La comparaison se fait donc sur des racines tronquées, localement et avec sa raison. ET LA POLARITÉ DE L'ARTICLE NE DÉCIDE PAS : « on peut désactiver un test » contredit un article qui est une OBLIGATION et ne porte donc aucun « jamais ». Ce qui fait la tension n'est pas la forme grammaticale de l'article, c'est qu'une idée propose de se DISPENSER de quelque chose qui est gouverné. CE QUI EMPÊCHE L'ALERTE DE SONNER PARTOUT (leçon L4) : deux conditions réunies, un marqueur de permission explicite ET une contenance au-dessus du seuil avec un article précis. Vérifié dans les deux sens — « on peut peindre le salon en bleu ciel » porte le marqueur, touche zéro article, et reste muet.");
+}
+await testLAlerteDeTension();

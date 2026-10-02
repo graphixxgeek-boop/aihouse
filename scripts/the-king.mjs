@@ -1376,6 +1376,161 @@ export function formatTheseLines(m) {
   return L;
 }
 
+// ============================================================================
+// L'ALERTE DE TENSION — prévenir AVANT, pas constater après (tâche #1435)
+// ============================================================================
+// SA QUESTION, mot pour mot : « est-ce que, une fois que le doc philo et politique sera en
+// vigueur, tu seras capable de me prévenir si j'ai une idée ou une consigne en tension avec ce
+// document ? » La réponse honnête était « pas de façon vérifiable » : je pouvais le remarquer, ou
+// ne pas le remarquer, et rien ne distinguait les deux cas. Une capacité qui dépend de ma
+// vigilance du moment n'existe pas à la session suivante (Article 27).
+//
+// TROIS VERDICTS, ET LE TROISIÈME EST CELUI QU'ON OUBLIE TOUJOURS. Une idée peut être EN TENSION
+// avec un article (vocabulaire partagé, polarité opposée), elle peut être DÉJÀ COUVERTE par un
+// article (ce n'est alors pas une idée neuve, c'est une redite — et le dire épargne un chantier),
+// ou elle peut être NEUVE, ce qui est le cas le plus fréquent et le plus banal.
+//
+// LA LIMITE EST LA MÊME QUE PARTOUT AILLEURS DANS CET OUTIL, et elle est lourde : le vocabulaire
+// partagé est un SIGNAL, jamais une contradiction prouvée. Deux idées peuvent se contredire avec
+// des mots entièrement différents, et cette mesure ne les verra jamais. Elle ne remplace donc PAS
+// la vigilance de l'Article 14 ; elle attrape ce qu'une relecture distraite laisse passer, et elle
+// le fait de la même façon à chaque fois, ce qu'une relecture ne garantit jamais.
+// LE SEUIL NE PEUT PAS ÊTRE DU JACCARD, ET LA RAISON EST DÉJÀ ÉCRITE QUELQUES CENTAINES DE LIGNES
+// PLUS HAUT, chez tauxDeContenance() : la question posée n'est pas « ces deux textes se
+// ressemblent-ils ? » mais « cette idée touche-t-elle cet article ? ». Une idée de dix mots
+// comparée à un article de soixante rend au mieux 0,15 de Jaccard même en recouvrement total — le
+// premier passage rendait donc « NEUVE » sur une idée qui contredisait frontalement un article,
+// parce que le seuil était hors de portée par construction. C'est la même faute que BP5 corrige
+// ailleurs : un seuil doit rester dans le nuage de ce qu'il observe.
+// LA MESURE JUSTE EST LA CONTENANCE, aux deux bouts de la même échelle : 0,20 pour dire qu'une
+// idée TOUCHE un article, 0,70 pour dire qu'il la CONTIENT déjà. Sur quatre idées d'essai la
+// séparation est franche — une idée hors sujet rend 0,00 partout, une redite exacte rend 1,00.
+export const SEUIL_D_ALERTE = 0.2;
+
+// UN ARTICLE QUI INTERDIT EST CONTREDIT PAR UNE PROPOSITION QUI PERMET, même quand la proposition
+// ne porte aucun « jamais » ni « toujours ». C'est le cas que le premier passage manquait, et
+// c'est précisément celui qui l'intéresse : « on peut désactiver un test pour aller plus vite »
+// ne contient aucun marqueur de polarité, et contredit pourtant de plein fouet l'article qui
+// exige un filet vert. Le jeu reste LOCAL à cette fonction et volontairement étroit : élargi, il
+// ferait sonner l'alerte sur toute idée qui touche un article prohibitif, c'est-à-dire presque
+// toutes (leçon L4 — un garde-fou qui accuse le geste normal cesse d'être lu).
+// LA COMPARAISON SE FAIT SUR DES RACINES, PAS SUR DES MOTS ENTIERS, et c'est un cas réel qui
+// l'a imposé : « il suffit de RECOPIER la liste des outils à la main » ne touchait PAS l'article
+// qui dit « aucun élément ne se RECOPIE manuellement ». Une lettre d'écart, et la mesure ne voyait
+// rien — alors que c'est la tension la plus nette qu'on puisse écrire contre cet article.
+// LA TRONCATURE EST VOLONTAIREMENT GROSSIÈRE : six caractères, sur les mots d'au moins cinq. Elle
+// ne prétend pas être une lemmatisation ; elle rapproche les conjugaisons et les pluriels, ce qui
+// est exactement ce qui manquait. Elle reste LOCALE à cette fonction : l'appliquer à
+// significantWords() changerait le comportement de tout l'outil, y compris de mesures déjà
+// calibrées sur des mots entiers (Article 19 — on ne touche pas à ce qu'on n'a pas besoin de
+// toucher). Le risque assumé est de rapprocher deux mots qui ne sont pas de la même famille ; il
+// est borné par le fait que le résultat reste un SIGNAL à vérifier, jamais un verdict.
+export const LONGUEUR_DE_RACINE = 6;
+export const racinesDe = (texte) => new Set(significantWords(String(texte ?? ""))
+  .filter((w) => w.length > 4).map((w) => w.slice(0, LONGUEUR_DE_RACINE)));
+
+export function contenanceParRacines(phrase, cible) {
+  const a = racinesDe(phrase);
+  if (!a.size) return 0;
+  const b = racinesDe(cible);
+  let dedans = 0;
+  for (const r of a) if (b.has(r)) dedans++;
+  return dedans / a.size;
+}
+
+export const MARQUEUR_DE_PERMISSION = /\b(on peut|il suffit|suffirait|autoris[ée]|dispens[ée]|sans avoir|pas besoin|inutile de|on pourrait se passer)\b/i;
+
+export function tensionAvecLaGouvernance(idee, { root = ROOT, chemin = DOCUMENT_OFFICIEL, lireImpl = null,
+  seuil = SEUIL_D_ALERTE, seuilCouverture = SEUIL_CONTENANCE } = {}) {
+  const texteIdee = String(idee ?? "").trim();
+  if (texteIdee.length < 15) {
+    return { mesurable: false, pourquoi: "l'idée fait moins de quinze caractères : trop courte pour partager un vocabulaire avec quoi que ce soit, et rendre « aucune tension » là-dessus serait un acquittement rendu sans regarder" };
+  }
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  let unites = [];
+  try { unites = extractPrincipleUnits(lire(chemin)); } catch {
+    return { mesurable: false, pourquoi: `« ${chemin} » est illisible : sans les articles en vigueur, il n'y a pas d'absence de tension, il y a une absence de mesure` };
+  }
+  if (!unites.length) return { mesurable: false, pourquoi: `aucun article reconnu dans « ${chemin} » — comparer à rien rendrait « aucune tension » sur zéro donnée` };
+
+  const motsIdee = new Set(significantWords(texteIdee).filter((w) => w.length > 4));
+  if (!motsIdee.size) return { mesurable: false, pourquoi: "l'idée ne porte aucun mot significatif de plus de quatre lettres : rien à comparer" };
+  const negIdee = MARQUEUR_NEGATION.test(texteIdee);
+  const absIdee = MARQUEUR_ABSOLU.test(texteIdee);
+
+  const touches = [];
+  for (const u of unites) {
+    const texteArticle = u.texte ?? `${u.titre}`;
+    const motsArt = new Set(significantWords(texteArticle).filter((w) => w.length > 4));
+    if (!motsArt.size) continue;
+    const contenance = contenanceParRacines(texteIdee, texteArticle);
+    if (contenance < seuil) continue;
+    // LE CHOC DE POLARITÉ n'a de sens qu'entre une interdiction et une obligation. Une phrase qui
+    // porte les DEUX marqueurs entre en conflit avec tout le monde et avec personne : on l'écarte
+    // ici pour la même raison qu'ailleurs dans ce fichier.
+    const negArt = MARQUEUR_NEGATION.test(texteArticle);
+    const absArt = MARQUEUR_ABSOLU.test(texteArticle);
+    const deuxMarqueurs = (negIdee && absIdee) || (negArt && absArt);
+    const chocDePolarite = !deuxMarqueurs && ((negIdee && absArt) || (absIdee && negArt));
+    // DEUXIÈME FORME DE CHOC : l'idée propose une DISPENSE sur un sujet gouverné. Elle ne se voit
+    // pas dans les marqueurs de polarité, et c'est pourtant la forme la plus fréquente d'une
+    // consigne en tension — une consigne se formule rarement en « jamais », presque toujours en
+    // « on peut » ou « il suffit de ».
+    // LA POLARITÉ DE L'ARTICLE NE DÉCIDE PAS, et le premier passage l'a montré : « on peut
+    // désactiver un test pour aller plus vite » touche l'article qui exige un filet vert avant
+    // qu'un travail soit tenu pour achevé — lequel est une OBLIGATION et ne porte donc aucun
+    // « jamais ». Exiger une interdiction du côté de l'article laissait passer exactement le cas
+    // à attraper. Ce qui fait la tension n'est pas la forme grammaticale de l'article, c'est
+    // qu'une idée propose de se dispenser de quelque chose qui est gouverné.
+    // CE QUI EMPÊCHE L'ALERTE DE SONNER PARTOUT (leçon L4) : DEUX conditions réunies — un marqueur
+    // de permission explicite dans l'idée, ET une contenance au-dessus du seuil avec un article
+    // précis. Une idée sans marqueur ne sonne jamais ; une idée qui ne touche aucun article non
+    // plus, et c'est le cas de l'immense majorité des demandes ordinaires. Une redite exacte de
+    // l'article est exclue aussi : elle le répète, elle ne s'en dispense pas.
+    const chocDePermission = MARQUEUR_DE_PERMISSION.test(texteIdee) && !absIdee && contenance < seuilCouverture;
+    const choc = chocDePolarite || chocDePermission;
+    touches.push({ numero: u.numero, titre: u.titre, contenance: Math.round(contenance * 100) / 100,
+      choc, forme: chocDePolarite ? "polarité opposée" : chocDePermission ? "l'idée propose une dispense sur un sujet gouverné par cet article" : null,
+      couverture: Math.round(contenance * 100) / 100, dejaCouverte: contenance >= seuilCouverture });
+  }
+  touches.sort((a, b) => b.contenance - a.contenance);
+  const tensions = touches.filter((t) => t.choc);
+  const couvertes = touches.filter((t) => t.dejaCouverte);
+  const verdict = tensions.length ? "EN TENSION" : couvertes.length ? "DÉJÀ COUVERTE" : "NEUVE";
+  return { mesurable: true, idee: texteIdee, chemin, articles: unites.length, seuil,
+    touches, tensions, couvertes, verdict };
+}
+
+export function formatTensionLines(r) {
+  if (!r?.mesurable) return ["=== ALERTE DE TENSION : PAS MESURÉ ===", `  ${r?.pourquoi}`];
+  const L = ["=== CETTE IDÉE EST-ELLE EN TENSION AVEC LE DOCUMENT DE GOUVERNANCE ? ===", "",
+    `Idée examinée : « ${r.idee.slice(0, 160)}${r.idee.length > 160 ? "…" : ""} »`,
+    `Confrontée aux ${r.articles} articles en vigueur de « ${r.chemin} », seuil de contenance ${r.seuil}.`, ""];
+  L.push(`VERDICT : ${r.verdict}.`);
+  L.push("");
+  if (r.tensions.length) {
+    L.push(`🚨 ${r.tensions.length} article(s) en OPPOSITION DE POLARITÉ sur un vocabulaire partagé :`);
+    for (const t of r.tensions) L.push(`     article ${t.numero} — ${t.titre} (contenance ${t.contenance} · ${t.forme})`);
+    L.push("     À VÉRIFIER À LA MAIN : c'est un SIGNAL, jamais un verdict — mais c'est exactement ce qu'une relecture distraite laisse passer.");
+  }
+  if (r.couvertes.length) {
+    L.push(`📎 ${r.couvertes.length} article(s) la contiennent DÉJÀ (taux de contenance ≥ ${SEUIL_CONTENANCE}) :`);
+    for (const t of r.couvertes) L.push(`     article ${t.numero} — ${t.titre} (contenance ${t.couverture})`);
+    L.push("     Ce n'est donc pas une idée neuve mais une redite — et le dire épargne un chantier.");
+  }
+  if (!r.tensions.length && !r.couvertes.length) {
+    L.push(`✅ Aucune opposition détectée. ${r.touches.length} article(s) partagent du vocabulaire avec elle, sans choc de polarité :`);
+    for (const t of r.touches.slice(0, 5)) L.push(`     article ${t.numero} — ${t.titre} (contenance ${t.contenance})`);
+    if (!r.touches.length) L.push("     (aucun : l'idée ne croise le vocabulaire d'aucun article — elle parle d'autre chose)");
+  }
+  L.push("");
+  L.push("HORS PORTÉE, ET ELLE EST LOURDE : le vocabulaire partagé est un SIGNAL, jamais une contradiction prouvée.");
+  L.push("Deux idées peuvent se contredire avec des mots entièrement différents, et cette mesure ne les verra JAMAIS.");
+  L.push("Elle ne remplace donc pas la vigilance de l'Article 14 — elle attrape ce qu'une relecture distraite laisse");
+  L.push("passer, et elle le fait de la même façon à chaque fois, ce qu'une relecture ne garantit jamais.");
+  return L;
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
@@ -1397,6 +1552,20 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
     if (r.mesurable && !r.boussole.principes) constats.push({ constat: `aucune unité reconnue dans « ${r.boussole.chemin} » : l'extracteur ne lit que les formes à Articles, donc tout ressort « inavoué » PAR CONSTRUCTION`, etat: "retenu", tache: "tâche #1438 — rendre l'extracteur capable de lire les titres et les cellules de tableau" });
     if (r.mesurable && r.seuil.valeur > r.seuil.derive) constats.push({ constat: `le seuil retenu (${r.seuil.valeur}) est le PLANCHER hérité de la révélation philosophique, pas la dérivation (${r.seuil.derive}) : il importe au corpus stratégique une attente de répétition qui n'est pas la sienne`, etat: "a-trancher", tache: "dire si une stratégie doit être REPÉTÉE pour compter, ou si une direction énoncée une fois suffit" });
     for (const e of r.motsDeCadreEcartes ?? []) constats.push({ constat: `« ${e.mot} » recouvrait ${Math.round(e.part * 100)} % des phrases et a été écarté du cadre`, etat: "ecarte", pourquoi: "un mot aussi répandu ne sépare pas le corpus, il le recouvre — et le filtre est dérivé, donc il s'ajustera seul" });
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
+  // SOUS-COMMANDE « tension » (tâche #1435) — sa question : « seras-tu capable de me prévenir si
+  // j'ai une idée ou une consigne en tension avec ce document ? »
+  if (process.argv[2] === "tension") {
+    const idee = process.argv.slice(3).join(" ");
+    const r = tensionAvecLaGouvernance(idee);
+    for (const l of formatTensionLines(r)) console.log(l);
+    const constats = [];
+    for (const t of r.tensions ?? []) constats.push({ constat: `l'idée entre en opposition de polarité avec l'article ${t.numero} (${t.titre})`, etat: "a-trancher", tache: "vérifier à la main si c'est une vraie contradiction : le vocabulaire partagé est un signal, jamais une preuve" });
+    for (const t of r.couvertes ?? []) constats.push({ constat: `l'idée est déjà contenue dans l'article ${t.numero} (${t.titre})`, etat: "ecarte", pourquoi: "ce n'est pas une idée neuve mais une redite — et le dire épargne un chantier" });
+    if (!r.mesurable) constats.push({ constat: `pas de mesure possible : ${r.pourquoi}`, etat: "retenu", tache: "rétablir la lecture du document de gouvernance avant de conclure quoi que ce soit" });
+    console.log("");
     imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
     return;
   }

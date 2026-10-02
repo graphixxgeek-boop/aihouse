@@ -226,3 +226,45 @@ sans qu'on puisse distinguer un corpus muet d'un mot perdu.
    direction s'énonce une fois, une conviction revient partout. Exiger la répétition importe au
    corpus stratégique une attente qui n'est pas la sienne — **et c'est un arbitrage**, inscrit
    comme tel plutôt que tranché seul.
+
+## L'ALERTE DE TENSION — prévenir avant, pas constater après (2026-10-02, tâche #1435)
+
+**Sous-commande** : `node scripts/the-king.mjs tension "<l'idée ou la consigne>"`.
+
+**SA QUESTION, mot pour mot** : *« est-ce que, une fois que le doc philo et politique sera en
+vigueur, tu seras capable de me prévenir si j'ai une idée ou une consigne en tension avec ce
+document ? »* **La réponse honnête était « pas de façon vérifiable »** : je pouvais le remarquer ou
+ne pas le remarquer, et rien ne distinguait les deux cas. Une capacité qui dépend de la vigilance
+du moment n'existe plus à la session suivante (Article 27).
+
+**TROIS VERDICTS, ET LE TROISIÈME EST CELUI QU'ON OUBLIE** : **EN TENSION** · **DÉJÀ COUVERTE** —
+ce n'est alors pas une idée neuve mais une redite, et le dire épargne un chantier — · **NEUVE**.
+
+**DEUX CORRECTIONS IMPOSÉES PAR DES CAS RÉELS, pas par une revue théorique :**
+
+1. **Le seuil ne pouvait pas être du Jaccard.** Une idée de dix mots comparée à un article de
+   soixante rend au mieux 0,15 même en recouvrement total : le premier passage rendait « NEUVE »
+   sur une idée qui contredisait frontalement un article. **Un seuil hors de portée par
+   construction** — la faute même que BP5 corrige ailleurs. La mesure juste est la **contenance**,
+   aux deux bouts de la même échelle : 0,20 pour toucher, 0,70 pour contenir.
+2. **La comparaison portait sur des mots entiers.** *« Il suffit de RECOPIER la liste à la main »*
+   ne touchait pas l'article qui dit *« aucun élément ne se RECOPIE manuellement »*. **Une lettre
+   d'écart, et la tension la plus nette qu'on puisse écrire contre cet article passait
+   inaperçue.** La comparaison se fait donc sur des **racines tronquées à six caractères**,
+   localement et avec sa raison écrite — l'appliquer partout changerait des mesures déjà calibrées.
+
+**LA POLARITÉ DE L'ARTICLE NE DÉCIDE PAS.** *« On peut désactiver un test »* contredit un article
+qui est une OBLIGATION et ne porte donc aucun « jamais ». Ce qui fait la tension n'est pas la forme
+grammaticale de l'article, c'est qu'une idée propose de **se dispenser** de quelque chose qui est
+gouverné.
+
+**CE QUI EMPÊCHE L'ALERTE DE SONNER PARTOUT** (leçon L4) : **deux conditions réunies**, un marqueur
+de permission explicite dans l'idée ET une contenance au-dessus du seuil avec un article précis.
+Vérifié dans les deux sens — *« on peut peindre le salon en bleu ciel »* porte le marqueur, touche
+zéro article, et reste muet.
+
+**HORS PORTÉE, ET ELLE EST LOURDE** : le vocabulaire partagé est un **signal**, jamais une
+contradiction prouvée. Deux idées peuvent se contredire avec des mots entièrement différents, et
+cette mesure ne les verra jamais. **Elle ne remplace pas la vigilance de l'Article 14** — elle
+attrape ce qu'une relecture distraite laisse passer, et elle le fait de la même façon à chaque
+fois, ce qu'une relecture ne garantit jamais.
