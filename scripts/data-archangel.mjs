@@ -2287,6 +2287,84 @@ export function formatHistoireLines(v) {
   return L;
 }
 
+// ============================================================================
+// LES VUES DÉRIVÉES D'UNE SOURCE — et ce qui les empêche de mentir (tâche #1441)
+// ============================================================================
+// POURQUOI CE CONTRÔLE EXISTE, et il est né d'un cas réel plutôt que d'une précaution : il a
+// demandé à VOIR la table des onze destinations d'une note, qui vit dans une section de
+// `docs/regles-de-travail.md`. En extraire une page lisible est le service rendu ; en faire une
+// COPIE sans rien qui détecte l'écart est exactement ce que l'Article 24 interdit, et une vue qui
+// diverge de sa source est PIRE qu'une absence de vue — elle a l'air d'être à jour.
+// CE QU'IL COMPARE : les lignes de tableau, qui sont le contenu utile d'une vue de ce type. Il ne
+// compare pas la prose autour, et c'est déclaré : une vue porte légitimement une en-tête que sa
+// source n'a pas (« ceci est une vue, elle se modifie là-bas »).
+export const VUES_DERIVEES = [
+  { vue: "docs/livrables/les-11-destinations-dune-note.md",
+    source: "docs/regles-de-travail.md",
+    section: "3pentes",
+    pourquoi: "il a demandé à voir la table des onze destinations ; elle se modifie dans les règles de travail, jamais ici" },
+];
+
+// NOM DISTINCT DE SA VOISINE, ET C'EST LE COMPILATEUR QUI L'A IMPOSÉ : `lignesDeTableau()` existe
+// déjà plus haut et rend un NOMBRE de passages, celle-ci rend le TEXTE des lignes. Deux sémantiques
+// sous un même nom auraient été lues l'une pour l'autre au premier appel distrait (leçon L29).
+export function lignesDeTableauTexte(texte = "") {
+  const out = [];
+  for (const L of texte.split("\n")) {
+    const l = L.trim();
+    if (!l.startsWith("|") || !l.endsWith("|")) continue;
+    if (/^\|[\s|:-]+\|$/.test(l)) continue; // la ligne de séparation n'est pas une donnée
+    out.push(l);
+  }
+  return out;
+}
+
+export function sectionDUnDocument(texte = "", titre = "") {
+  const lignes = texte.split("\n");
+  const d = lignes.findIndex((L) => L.startsWith("## ") && L.includes(titre));
+  if (d < 0) return null;
+  let f = lignes.length;
+  for (let i = d + 1; i < lignes.length; i++) { if (lignes[i].startsWith("## ")) { f = i; break; } }
+  return lignes.slice(d, f).join("\n");
+}
+
+export function findVuesDivergentesDeLeurSource({ root = ROOT, vues = VUES_DERIVEES, lire = lireFichierPartage } = {}) {
+  const ecarts = [];
+  const nonMesurables = [];
+  for (const v of vues) {
+    let tv; let ts;
+    try { tv = lire(join(root, v.vue), "utf8"); } catch { nonMesurables.push({ ...v, raison: `la vue « ${v.vue} » est introuvable` }); continue; }
+    try { ts = lire(join(root, v.source), "utf8"); } catch { nonMesurables.push({ ...v, raison: `la source « ${v.source} » est introuvable` }); continue; }
+    const sect = sectionDUnDocument(ts, v.section);
+    if (sect === null) { nonMesurables.push({ ...v, raison: `la section « ${v.section} » n'existe plus dans « ${v.source} » — ce qui est un écart en soi, mais un écart que ce contrôle ne sait pas chiffrer` }); continue; }
+    const a = lignesDeTableauTexte(sect);
+    const b = lignesDeTableauTexte(tv);
+    const manquantes = a.filter((x) => !b.includes(x));
+    const enTrop = b.filter((x) => !a.includes(x));
+    if (manquantes.length || enTrop.length) ecarts.push({ ...v, manquantes, enTrop });
+  }
+  // PAS MESURÉ n'est jamais « aucun écart » : une vue introuvable et une vue fidèle rendraient le
+  // même zéro, et c'est la confusion que ce paysage corrige partout (leçon L5).
+  return { mesurable: true, ecarts, nonMesurables, examinees: vues.length };
+}
+
+export function formatVuesLines(r) {
+  const L = ["=== LES VUES DÉRIVÉES SONT-ELLES ENCORE FIDÈLES À LEUR SOURCE ? ===", "",
+    `${r.examinees} vue(s) déclarée(s). Une vue n'est pas une source : elle se régénère, elle ne se corrige pas sur place.`, ""];
+  if (!r.ecarts.length && !r.nonMesurables.length) L.push("✅ Aucune divergence : chaque ligne de tableau d'une vue existe mot pour mot dans sa section d'origine.");
+  for (const e of r.ecarts) {
+    L.push(`🚨 ${e.vue} ↔ ${e.source} §${e.section}`);
+    for (const m of e.manquantes) L.push(`     MANQUE dans la vue : ${m.slice(0, 110)}`);
+    for (const t of e.enTrop) L.push(`     EN TROP dans la vue : ${t.slice(0, 110)}`);
+    L.push(`     → régénérer la vue depuis sa source, jamais l'inverse : ${e.pourquoi}`);
+  }
+  for (const n of r.nonMesurables) L.push(`⚠️  PAS MESURÉ — ${n.raison}`);
+  L.push("");
+  L.push("HORS PORTÉE : seules les LIGNES DE TABLEAU sont comparées. La prose autour peut légitimement différer —");
+  L.push("une vue porte une en-tête que sa source n'a pas. Une divergence de prose ne sera donc jamais vue d'ici.");
+  return L;
+}
+
 function main() {
   const sub = process.argv[2];
   printReportHeader({
@@ -2333,6 +2411,11 @@ function main() {
   // `orphelins` (2026-09-30, tâche #1310) — le QUATRIÈME étage. `index` dit quels fichiers sont
   // ANNONCÉS ; celui-ci dit lesquels sont réellement CONVOQUÉS par quelqu'un d'autre. Un document
   // annoncé que personne ne cite passe au vert partout et ne sert à personne.
+  if (sub === "vues") {
+    console.log("");
+    for (const l of formatVuesLines(findVuesDivergentesDeLeurSource())) console.log(l);
+    return;
+  }
   if (sub === "orphelins") {
     console.log("");
     for (const l of formatOrphelinsLines(documentsOrphelins())) console.log(l);

@@ -915,3 +915,48 @@ fausse garantie, un champ structuré ayant l'air vérifié là où une prose vag
 **MON AVIS, ET IL VAUT CE QU'IL VAUT** : un mélange des deux, étape par étape — mais c'est
 exactement le genre d'arbitrage que l'Article 16 réserve à l'utilisateur, et **je ne tranche pas 45
 étapes à sa place**. Le faire en bloc serait pire que ne rien faire.
+
+---
+
+## #1420 — LES SEPT FOURCHETTES ET LES DEUX VERDICTS DE DÉTACHABILITÉ DE LA CARTE CIBLE
+
+*(Posée le 2026-10-02T07:34Z. Document concerné : `docs/referentiel/carte-cible-des-modules.md`.
+Mesure : `node scripts/cassandra-rh.mjs carte-cible`.)*
+
+**CE QUI EST FAIT ET N'ATTEND RIEN** : le mécanisme. La cible est lue dans un document, l'écart
+avec la carte générée est mesuré, et trois divergences sont refusées — une famille visée qui
+n'existe pas, une famille réelle que personne ne vise, une détachabilité revendiquée et perdue.
+Le détecteur est vérifié dans les deux sens.
+
+**CE QUI N'EST PAS TRANCHÉ, ET QUI NE M'APPARTIENT PAS** : le CONTENU de la cible. Une cible est un
+choix, et celui-ci est le sien.
+
+| Famille | Effectif réel | Fourchette PROPOSÉE | Ce que la proposition suppose |
+|---|---|---|---|
+| Les Anges de la coordination | 19 | 14-17 | que la plus grosse famille doit maigrir de deux ou trois outils |
+| La Gouvernance Royale | 15 | 12-14 | que la plomberie appelée par tout le monde n'est pas de la gouvernance |
+| Les Prophètes - Dette & Structure | 8 | 8-10 | qu'elle peut encore accueillir, mais pas doubler |
+| Les Gardiens Sacrés du Code | 7 | 7-8 | que le rang est quasi fermé, son critère étant très sélectif |
+| La Suite Tarantino | 7 | 7-9 **· détachable OUI** | que le Jeu doit pouvoir partir seul — objectif ultime du niveau PROJET |
+| Les Boosters de Navigation | 4 | 4-5 | qu'une famille de service n'a pas vocation à grossir |
+| Les Agents Externes | 2 | 2-3 **· détachable OUI** | que ce qui coûte de l'argent reste rare et sur décision |
+
+**LA QUESTION DE FOND, ET ELLE PASSE AVANT LES SEPT CHIFFRES.** Le premier passage rend **5 / 7
+familles déjà dans leur fourchette**. Ce bon résultat est une information désagréable : il dit que
+**la taille n'est pas le problème**. La Gouvernance Royale est au bon effectif ET mal composée —
+98 % de ses dépendances viennent d'un seul fichier de plomberie — et aucune fourchette ne verra
+jamais ça.
+
+**DEUX ISSUES, ET LA SECONDE EST PLUS AMBITIEUSE :**
+
+- **Issue 1 — arrêter les sept fourchettes telles quelles**, et s'en servir comme garde-fou contre
+  une famille qui enflerait sans qu'on le voie. Coût : honnête mais modeste ; la cible restera une
+  alarme de taille, jamais une direction.
+- **Issue 2 — déplacer la cible de la TAILLE vers la COMPOSITION** : pour chaque famille, ce qu'elle
+  doit porter et ce qu'elle ne doit pas porter, chaque outil mal placé étant alors nommable. Coût :
+  c'est un jugement par outil, donc 62 décisions, et aucune mécanique ne les rendra.
+
+**MON AVIS** : l'issue 2 est la vraie réponse à sa formule *« voilà où on est, voilà où on va »*,
+mais elle ne se fait pas en une nuit et elle lui appartient entièrement. L'issue 1 est déjà en
+place et ne coûte rien à garder en attendant. **Les deux ne s'excluent pas** : la fourchette reste
+utile comme alarme même le jour où la composition devient la vraie cible.

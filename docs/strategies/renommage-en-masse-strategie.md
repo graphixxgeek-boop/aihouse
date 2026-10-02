@@ -2,8 +2,14 @@
 
 *(Créée le 2026-09-26 05:44Z, liée à la tâche **#775**.)*
 
-> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
-> *stratégie de CHANTIER : elle sert la cible du projet entier, et c'est à cette cible qu'elle doit rester alignée.*
+> **DÉCOULE DE :** `docs/strategies/strategie-globale-du-projet-entier.md`
+> *stratégie de CHANTIER : elle passe par la stratégie globale, qui porte la direction d'ensemble
+> et se règle elle-même sur la cible du projet entier
+> (`docs/grand-projet/02-strategie/la-cible-2026-09-29.md`). L'alignement sur la cible n'est donc pas
+> perdu : il est HÉRITÉ, au lieu d'être déclaré en sautant le niveau qui le porte.*
+> *Rattachement corrigé le 2026-10-02 (tâche **#1434**) : jusque-là ces dix fiches déclaraient la cible
+> directement, pendant que la stratégie globale affirmait de son côté que « les dix stratégies de
+> CHANTIER passent par elle ». Les deux ne pouvaient pas être vrais en même temps.*
 
 
 > **CE DOCUMENT NE RÉSUME JAMAIS.** Il AGRÈGE et il ORDONNE. Chaque idée y entre

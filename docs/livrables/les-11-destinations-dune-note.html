@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Où va une note — les 11 destinations</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T08:05:45.968Z</div>
+    <h1>Où va une note — les 11 destinations</h1>
+    <p class="sub">Page générée depuis docs/livrables/les-11-destinations-dune-note.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>CE DOCUMENT EST UNE VUE, PAS UNE SOURCE.</strong> Son contenu est extrait de <code>docs/regles-de-travail.md</code> §3pentes,
+qui reste le seul endroit où il se modifie. Il est rendu ici en page lisible parce que tu as demandé à le VOIR
+(tâche <strong>#1441</strong>, ta phrase : « OUI JE VEUX VOIR CA STP montre moi la table et les 11 destinations »).
+Une vue qui diverge de sa source est pire qu'une absence de vue : si tu veux changer une ligne, elle se change
+là-bas, et cette page se régénère.</p></div>
+<p><em>(Rendue le 2026-10-02T07:34Z — heure LUE, source système.)</em></p>
+<hr>
+<p><em>(2026-10-02, sa question : « quand je te dis &quot;prends note&quot; ou &quot;note&quot; ou une expression equivalente : que fais-tu ? ou notes-tu ? ». La réponse honnête était <strong>ça dépend</strong>, ce qui est un défaut : une note mal rangée est une note perdue, et elle est perdue sans que personne ne s'en aperçoive.)</em></p>
+<p><strong>LE PRINCIPE QUI GOUVERNE TOUTE LA TABLE : une note se range selon CE QU'ELLE ENGAGE, jamais selon le moment où elle est prise.</strong> Deux phrases dites dans la même minute peuvent appartenir à deux endroits différents — l'une parce qu'elle constate un travail fait, l'autre parce qu'elle ouvre une question qui attend une réponse.</p>
+<table><thead><tr><th>Ce que la note EST</th><th>Où elle va</th><th>Pourquoi là et pas ailleurs</th></tr></thead><tbody><tr><td><strong>une décision prise, un travail fait</strong></td><td><code>docs/suivi/</code> — ligne horodatée, <strong>dans le même commit</strong></td><td>c'est le journal : il répond à « qu'a-t-on fait, et pourquoi », jamais à « que faut-il faire »</td></tr><tr><td><strong>une pensée durable, un plan, un arbitrage de fond</strong></td><td><code>docs/strategies/</code></td><td>une réflexion qui vaut au-delà de la session ne survit pas dans un journal qu'on ne relit pas pour se décider</td></tr><tr><td><strong>une leçon réutilisable ailleurs</strong></td><td>la mémoire sauvegardée de l'outil concerné, <code>docs/&lt;outil&gt;/</code></td><td>elle doit partir AVEC l'outil : c'est son expérience, pas celle du projet</td></tr><tr><td><strong>une question qui attend sa réponse</strong></td><td><code>docs/fils/</code> — le fil du sujet</td><td>un fil porte sa propre date et dit de quel côté est la balle ; une question rangée ailleurs n'est réclamée par personne</td></tr><tr><td><strong>une consigne de travail, une méthode</strong></td><td>le présent document</td><td>c'est ici que vit le COMMENT on travaille ensemble</td></tr><tr><td><strong>une règle de contenu du jeu ou une obligation permanente</strong></td><td><code>CLAUDE.md</code>, <strong>et seulement après son accord</strong></td><td>la charte ne se touche jamais sans accord préalable</td></tr><tr><td><strong>une décision qui lui revient et qu'il n'a pas encore prise</strong></td><td><code>docs/idees-a-trancher.md</code></td><td>une décision en attente qui n'y figure pas est une décision invisible</td></tr><tr><td><strong>une zone qu'on sait fragile</strong></td><td><code>docs/referentiel/points-fragiles.md</code></td><td>pour que le prochain intervenant le sache avant d'y toucher, pas après</td></tr><tr><td><strong>un chiffre, une mesure</strong></td><td>le registre de l'outil qui l'a produit</td><td>un chiffre séparé de son instrument n'est plus vérifiable (art. 43 et 44 du document de gouvernance)</td></tr><tr><td><strong>un document qu'il dépose</strong></td><td><code>docs/grand-projet/00-sources/</code></td><td>ce sont des entrées figées, que le projet n'entretient pas et ne réécrit jamais</td></tr><tr><td><strong>une règle de gouvernance ou une conviction</strong></td><td><code>docs/philosophie-et-politique.md</code>, <strong>et seulement après son accord</strong></td><td>document intangible : toute modification suit son article de révision</td></tr></tbody></table>
+<p><strong>CE QUI N'EST JAMAIS UN ENDROIT : la conversation seule.</strong> Une note qui n'existe que dans un message disparaît à la session suivante, et rien ne signalera son absence — c'est la forme la plus coûteuse de perte, parce qu'elle est silencieuse.</p>
+<p><strong>UNE NOTE PEUT ALLER À DEUX ENDROITS, ET C'EST NORMAL.</strong> Une décision qui ouvre aussi une question va dans le suivi ET dans un fil. Ce qui n'est jamais acceptable est qu'elle n'aille nulle part parce qu'elle appartenait à deux catégories.</p>
+<p><strong>EN CAS DE DOUTE, LA QUESTION À SE POSER EST : « qui viendra chercher ça, et quand ? »</strong> Le lieu se déduit du lecteur, jamais du contenu. Une leçon que seul un outil relira va chez l'outil ; une question que lui seul peut fermer va dans un fil ; un constat que personne ne relira ne vaut pas d'être écrit.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/les-11-destinations-dune-note.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

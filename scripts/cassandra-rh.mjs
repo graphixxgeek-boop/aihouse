@@ -911,6 +911,109 @@ export function formatCarteLines(c) {
   return L;
 }
 
+// ============================================================================
+// LA CARTE CIBLE — « voilà où on est, voilà où on va » (tâche #1420)
+// ============================================================================
+// POURQUOI CE CODE NE GÉNÈRE PAS LA CIBLE, et c'est la décision qui commande tout le reste :
+// une cible est un CHOIX. Rien dans le dépôt ne peut la dériver, et un générateur rendrait l'état
+// actuel rebaptisé « cible » — donc un écart NUL PAR CONSTRUCTION. Un écart qui ne peut pas être
+// non nul ne mesure rien. La cible est donc LUE dans un document tenu à la main, déclaré comme tel
+// au titre de l'Article 24, et ce qui la protège de se périmer en silence n'est pas un générateur
+// mais la mesure d'écart ci-dessous, qui refuse une famille nommée dans la cible et absente du
+// dépôt — ou l'inverse.
+export const CARTE_CIBLE_SOURCE = "docs/referentiel/carte-cible-des-modules.md";
+
+export function lireLaCarteCible({ root = ROOT, chemin = CARTE_CIBLE_SOURCE, lire = lireFichierPartage } = {}) {
+  let texte;
+  try { texte = lire(join(root, chemin), "utf8"); } catch {
+    // PAS MESURÉ, jamais « aucun écart » : une cible absente et une cible atteinte rendraient le
+    // même zéro, et c'est exactement la confusion que ce paysage corrige partout ailleurs (L5).
+    return { mesurable: false, pourquoi: `la carte cible est introuvable à « ${chemin} » — sans elle il n'y a pas d'écart NUL, il n'y a pas d'écart MESURABLE, et les deux ne se ressemblent que de loin` };
+  }
+  const familles = [];
+  for (const L of texte.split("\n")) {
+    // La fourchette d'effectif sert de clé de reconnaissance : elle écarte d'elle-même la ligne de
+    // séparation du tableau, l'en-tête, et les autres tableaux du document (plan d'action compris),
+    // sans avoir à compter les lignes — un comptage se serait périmé au premier paragraphe ajouté.
+    const m = /^\|\s*([^|]+?)\s*\|\s*(\d+)\s*[-–]\s*(\d+)\s*\|\s*([^|]*?)\s*\|/.exec(L);
+    if (!m) continue;
+    const min = Number(m[2]); const max = Number(m[3]);
+    if (!(max >= min)) continue;
+    familles.push({ nom: m[1].trim(), min, max, detachable: /\boui\b/i.test(m[4]) });
+  }
+  if (!familles.length) {
+    return { mesurable: false, pourquoi: `« ${chemin} » existe mais ne porte aucune ligne de cible lisible (une famille, une fourchette « min-max », un verdict de détachabilité) — un document présent mais muet n'est pas une cible` };
+  }
+  return { mesurable: true, chemin, familles };
+}
+
+export function ecartCarteCible({ cible, actuelle } = {}) {
+  if (!cible?.mesurable) return { mesurable: false, pourquoi: cible?.pourquoi ?? "aucune carte cible fournie" };
+  if (!actuelle?.mesurable) return { mesurable: false, pourquoi: `la carte ACTUELLE n'est pas mesurable, donc l'écart ne l'est pas non plus : ${actuelle?.pourquoi ?? "raison non déclarée"}` };
+  const parNom = new Map(actuelle.familles.map((f) => [f.nom, f]));
+  const vues = new Set();
+  const lignes = [];
+  for (const c of cible.familles) {
+    const a = parNom.get(c.nom);
+    if (!a) { lignes.push({ nom: c.nom, etat: "CIBLE-SANS-FAMILLE" }); continue; }
+    vues.add(c.nom);
+    const n = a.membres.length;
+    const position = n > c.max ? "au-dessus" : n < c.min ? "en-dessous" : "dans la fourchette";
+    const ecart = n > c.max ? n - c.max : n < c.min ? n - c.min : 0;
+    // Détachable se MESURE : zéro import entrant. C'est la seule colonne de la cible qu'une
+    // mécanique peut trancher, et c'est aussi celle qui porte l'objectif ultime du niveau PROJET.
+    const detachableReel = a.dependants === 0;
+    lignes.push({ nom: c.nom, effectif: n, min: c.min, max: c.max, position, ecart,
+      detachableVise: c.detachable, detachableReel,
+      detachabiliteTenue: c.detachable === detachableReel });
+  }
+  const sansCible = actuelle.familles.filter((f) => !vues.has(f.nom)).map((f) => f.nom);
+  const dansLaFourchette = lignes.filter((l) => l.position === "dans la fourchette").length;
+  const detachabiliteRompue = lignes.filter((l) => l.detachableVise && l.detachableReel === false).map((l) => l.nom);
+  return { mesurable: true, chemin: cible.chemin, lignes, sansCible, dansLaFourchette,
+    cibleSansFamille: lignes.filter((l) => l.etat === "CIBLE-SANS-FAMILLE").map((l) => l.nom),
+    detachabiliteRompue };
+}
+
+export function formatCarteCibleLines(e) {
+  if (!e?.mesurable) return ["=== LA CARTE CIBLE : PAS MESURÉ ===", `  ${e?.pourquoi}`];
+  const notees = e.lignes.filter((l) => l.etat !== "CIBLE-SANS-FAMILLE");
+  const L = ["=== VOILÀ OÙ ON EST, VOILÀ OÙ ON VA — écart avec la carte cible ===", "",
+    `Cible LUE dans « ${e.chemin} », tenue à la main et déclarée comme telle. Elle n'est PAS générée :`,
+    `un générateur rendrait l'état actuel rebaptisé « cible », donc un écart nul par construction.`,
+    `${e.dansLaFourchette} / ${notees.length} famille(s) dans leur fourchette visée.`, ""];
+  for (const l of notees) {
+    const fleche = l.position === "dans la fourchette" ? "✅" : l.position === "au-dessus" ? "🔻" : "🔺";
+    L.push(`${fleche} ${l.nom}`);
+    L.push(`     effectif ${l.effectif} — visé ${l.min}-${l.max} (${l.position}${l.ecart ? `, ${l.ecart > 0 ? "+" : ""}${l.ecart}` : ""})`);
+    L.push(`     détachable : visé ${l.detachableVise ? "OUI" : "non"} · réel ${l.detachableReel ? "OUI" : "non"} — ${l.detachabiliteTenue ? "tenu" : "⚠️ NON TENU"}`);
+  }
+  if (e.cibleSansFamille.length) {
+    L.push("");
+    L.push(`🚨 ${e.cibleSansFamille.length} famille(s) nommée(s) dans la cible et ABSENTE(S) du dépôt : ${e.cibleSansFamille.join(", ")}`);
+    L.push("   C'est le défaut que ce contrôle existe pour attraper : une cible tenue à la main se périme en silence (Article 24).");
+  }
+  if (e.sansCible.length) {
+    L.push("");
+    L.push(`🚨 ${e.sansCible.length} famille(s) du dépôt sans aucune ligne dans la cible : ${e.sansCible.join(", ")}`);
+    L.push("   Une famille sans cible n'est pas une famille au bon effectif : c'est une famille que personne ne vise.");
+  }
+  if (e.detachabiliteRompue.length) {
+    L.push("");
+    L.push(`🚨 DÉTACHABILITÉ PERDUE : ${e.detachabiliteRompue.join(", ")}`);
+    L.push("   Un acquis sans garde-fou se défait au premier import ajouté par commodité, et c'est l'objectif ultime du niveau PROJET qui tombe avec lui.");
+  }
+  L.push("");
+  L.push("HORS PORTÉE, à lire avant d'utiliser ce tableau : seules la FOURCHETTE et la DÉTACHABILITÉ se mesurent.");
+  L.push("Les deux colonnes de prose de la cible — ce qu'une famille doit porter, ce qu'elle ne doit pas porter —");
+  L.push("sont des jugements qu'aucune mécanique ne tranche. Un effectif dans sa fourchette ne dit donc jamais que");
+  L.push("la famille porte les bonnes choses : il dit qu'elle en porte le bon NOMBRE, ce qui est très différent.");
+  L.push("");
+  L.push("ET UN ÉCART CONTRE UNE PROPOSITION N'EST PAS UN RETARD SUR UN OBJECTIF : tant que la cible n'est pas");
+  L.push("arrêtée par le responsable de projet, ces chiffres mesurent une distance à une idée, jamais une dette.");
+  return L;
+}
+
 export function functionalityCensus({ root = ROOT, readFileImpl = lireFichierPartage, scripts = AGENT_SCRIPT_FILES } = {}) {
   const lignes = [];
   const nonMesurables = [];
@@ -4067,6 +4170,18 @@ async function main() {
     const c = carteParFamille();
     for (const l of formatCarteLines(c)) console.log(l);
     const ecarts = (c.sansPhrase ?? []).map((n) => ({ message: `la famille « ${n} » n'a aucune phrase déclarée dans la carte`, quoiFaire: "écrire la phrase qui dit ce qu'elle fait, en français simple — une case vide se lit comme « ça ne fait rien »" }));
+    console.log("");
+    imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "cassandra-rh" }));
+    return;
+  }
+  if (sub === "carte-cible") {
+    const e = ecartCarteCible({ cible: lireLaCarteCible(), actuelle: carteParFamille() });
+    for (const l of formatCarteCibleLines(e)) console.log(l);
+    const ecarts = [];
+    for (const n of e.cibleSansFamille ?? []) ecarts.push({ message: `la carte cible nomme « ${n} », qui n'existe pas dans l'organigramme`, quoiFaire: "corriger la cible ou recréer la famille — une cible qui vise une famille disparue ne mesure plus rien" });
+    for (const n of e.sansCible ?? []) ecarts.push({ message: `la famille « ${n} » existe sans aucune ligne dans la carte cible`, quoiFaire: "lui écrire une fourchette et un verdict de détachabilité — une famille que personne ne vise n'est pas une famille au bon effectif" });
+    for (const n of e.detachabiliteRompue ?? []) ecarts.push({ message: `« ${n} » devait rester détachable et ne l'est plus`, quoiFaire: "retrouver l'import entrant ajouté par commodité et le retirer — c'est l'objectif ultime du niveau PROJET qui tombe avec lui" });
+    if (!e.mesurable) ecarts.push({ message: `la carte cible n'est PAS MESURÉE : ${e.pourquoi}`, quoiFaire: "rétablir ou compléter la carte cible — une absence de mesure ne se lit jamais comme un écart nul" });
     console.log("");
     imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "cassandra-rh" }));
     return;

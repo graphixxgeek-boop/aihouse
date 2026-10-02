@@ -359,5 +359,17 @@
     "declencheur": "garde-fou",
     "quoi": "UNE HEURE SE SUBSTITUE PAR LE SHELL, ELLE NE SE RECOPIE PAS. Lire l heure puis la retaper a produit CINQ horodatages faux en deux jours, malgre la regle explicite qui impose de la LIRE. Le defaut n est pas l attention : entre la lecture et l ecriture il y a une RECOPIE, et c est la recopie qui derive. Le geste correct rend la recopie impossible : TS=$(node scripts/agent-du-temps.mjs | grep -oE \"2026-..-..T..:..Z\" | head -1) puis $TS dans le texte. Le garde-fou des horodatages futurs les attrapait bien, mais APRES coup, au prix d un commit perdu a chaque fois — il corrige un resultat la ou la substitution ferme le geste.",
     "date": "2026-10-02T06:18:39.702Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "créer un dossier dans docs/ n'est jamais un geste d'une ligne",
+    "quoi": "La création de docs/livrables/ a fait tomber TROIS garde-fous distincts, l'un après l'autre, chacun sur un passage complet du filet (six minutes chacun) : la classification des documents (aucune règle pour ce dossier, donc A-INSTRUIRE), la couverture des registres de la Ronde (un index.md ressemble au registre d'un outil, donc une exclusion documentée était due), et le trou de couverture documentaire (un fichier que rien ne cite). CE QU'IL FAUT EN RETENIR POUR LA PROCHAINE FOIS : un nouveau dossier sous docs/ se déclare AUX TROIS ENDROITS AVANT le premier passage du filet, pas après trois échecs. Le coût payé ici est de dix-huit minutes de filet pour un travail de trois minutes.",
+    "pourquoi": "Le défaut n'est pas l'inattention : rien dans le dépôt ne dit, au moment où on crée un dossier, quels contrats il vient de contracter. Les trois garde-fous sont corrects et font exactement leur travail ; c'est l'ORDRE qui coûte, parce qu'ils ne se découvrent qu'en échouant, un par passage.",
+    "porteurs": [
+      "le-classificateur",
+      "circle-tasks",
+      "check-house"
+    ],
+    "date": "2026-10-02T08:10:42.603Z"
   }
 ]

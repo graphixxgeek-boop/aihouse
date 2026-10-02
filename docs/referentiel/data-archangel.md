@@ -397,3 +397,27 @@ rédaction qui variait, pas le sens**, et un index à quatorze colonnes ne se li
 de forme — une idée sans sa question, un en-tête que le lecteur ne savait pas lire. *Un format
 qu'aucune machine ne relit dérive en silence.*
 
+
+## LES VUES DÉRIVÉES — une copie lisible qui ne peut pas mentir (2026-10-02, tâche #1441)
+
+**Sous-commande** : `node scripts/data-archangel.mjs vues`.
+
+**LE CAS RÉEL QUI L'A FAIT NAÎTRE.** Il a demandé à VOIR la table des onze destinations d'une note,
+qui vit dans une section de `docs/regles-de-travail.md`. En extraire une page lisible est le service
+rendu ; en faire une COPIE sans rien qui détecte l'écart est exactement ce que l'Article 24
+interdit. **Une vue qui diverge de sa source est pire qu'une absence de vue : elle a l'air d'être à
+jour**, et c'est ce qui la rend dangereuse.
+
+**CE QU'IL COMPARE** : les lignes de tableau, ligne par ligne, entre la vue et la section nommée de
+sa source. Le registre `VUES_DERIVEES` porte, par entrée, la vue, sa source, sa section et la raison
+de son existence.
+
+**TROIS VERDICTS, JAMAIS DEUX.** Fidèle · divergente, avec les lignes perdues et les lignes
+inventées nommées **séparément** (perdre une ligne et en inventer une sont deux fautes
+différentes) · **PAS MESURÉ** quand la vue est introuvable ou que la section a disparu de la source.
+Ce dernier cas est le plus probable dans la durée : la source se réorganise, la vue survit, et plus
+rien ne les relie.
+
+**HORS PORTÉE, déclaré dans le rapport lui-même** : seules les lignes de tableau sont comparées. Une
+vue porte légitimement une en-tête que sa source n'a pas, donc une divergence de prose ne sera
+jamais vue d'ici.

@@ -3,6 +3,13 @@
 > **DÉCOULE DE :** `docs/philosophie-et-politique.md`
 > *elle est la première marche SOUS la boussole : la philosophie dit pourquoi, celle-ci dit comment on s'y prend à l'échelle de tout le projet. Les dix stratégies de CHANTIER passent par elle.*
 
+> **SE RÈGLE SUR :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *la cible dit CE QU'ON CHERCHE À OBTENIR, ce document dit COMMENT on s'y prend. Les deux sont à la
+> même marche sous la boussole, et aucun ne découle de l'autre — mais une direction qui ne se règle sur
+> aucune cible n'est pas une stratégie. **Ce lien est déclaré ici le 2026-10-02 (tâche #1434) parce que
+> les dix stratégies de CHANTIER passent désormais par ce document** : sans lui, leur alignement sur la
+> cible, qu'elles déclaraient jusque-là en direct, aurait disparu de la chaîne sans que rien ne le dise.*
+
 > **De quoi on parle** : la synthèse qui chapeaute tout — l'Agence, le Jeu, et le reste — et à
 > laquelle les dix stratégies de domaine de ce dossier doivent se rattacher. C'est la pièce qui
 > manquait : les dix existantes couvrent chacune un SUJET, aucune ne couvre L'ENSEMBLE.
@@ -49,6 +56,78 @@ Tout ce qui suit en découle. Rien ici ne peut les contredire.
 *« chacun tienne debout sans l'autre »*. Donc **aucune décision stratégique ne peut rendre l'un
 dépendant de l'autre** — ni l'Agence inutilisable sans le Jeu, ni le Jeu infaisable sans l'Agence.
 Les mesures disent qu'on y est déjà presque : moins d'une douzaine de ses 93 fichiers mentionnent l'outillage — **6 ou 10 selon ce qu'on appelle « mentionner »**, et je donne les deux plutôt qu'un seul : deux critères, deux chiffres, et la conclusion tient sous les deux.
+
+---
+
+## ①bis LA DÉCLINAISON PAR NIVEAU — où l'on va, et comment on saura qu'on y est
+
+*(Ajoutée le 2026-10-02, tâche **#1434**. **Pourquoi elle manquait, et c'est mesuré** : la section ①
+posait bien les trois objectifs par niveau, puis tout le reste du document repartait en un seul bloc
+— sous la section ①, le mot AGENCE ou le mot JEU n'apparaissait plus qu'UNE fois, dans un titre.
+Un socle à trois niveaux suivi d'une stratégie à un seul niveau n'est pas une stratégie incomplète :
+c'est une stratégie qui ne sert pas le socle qu'elle affiche. Le document de gouvernance est
+articulé en trois niveaux depuis le 2 octobre ; la marche juste en dessous ne pouvait pas rester
+plate.)*
+
+**LA FORME, ET ELLE EST VOULUE — hybride, jamais l'un ou l'autre.** Une philosophie énonce des
+convictions, qui sont vraies ou fausses ; une stratégie énonce une **DIRECTION** et des **JALONS**,
+qui sont atteints ou non. Les deux registres ne se remplacent pas : la prose dit **où l'on va**,
+le tableau dit **comment on saura qu'on y est**. L'hybride n'est pas un compromis entre deux formes,
+c'est la seule forme qui porte les deux.
+
+**UN JALON QU'AUCUN OUTIL NE SAIT MESURER N'EST PAS UN JALON, c'est un vœu.** Chaque ligne ci-dessous
+nomme donc son instrument et porte son relevé du 2026-10-02 — pas pour décorer, mais parce qu'une
+cible sans point de départ ne permet jamais de dire si on avance (Article 31, faille 8 : un outil
+cité sans passage enregistré est un outil qui n'a pas tourné).
+
+### Niveau PROJET — *que l'outil et l'œuvre se prouvent l'un l'autre, et que chacun tienne debout sans l'autre*
+
+**La direction.** On ne cherche pas à rendre les deux indépendants par séparation — ce serait facile
+et sans valeur. On cherche l'inverse : qu'ils se servent mutuellement **tout en restant détachables**.
+L'Agence se valide en servant un vrai produit ; le Jeu se valide en tenant sans l'outillage qui l'a
+construit. La contrainte dure, et elle commande tout : **aucune décision stratégique ne peut rendre
+l'un nécessaire à l'autre.**
+
+| Jalon | Son instrument | Relevé 2026-10-02 |
+|---|---|---|
+| Le Jeu tourne sans un seul script de l'Agence | le filet de sécurité, et le fait qu'aucun fichier de `app/` `lib/` `components/` n'importe `scripts/` | tenu — moins d'une douzaine de ses fichiers *mentionnent* l'outillage, aucun n'en dépend |
+| L'Agence part entière, sans le Jeu | SAFE-EXPORT, kit complet par fichier | 7 Gardiens sacrés déclarent leur corpus ; les pièces manquantes sont nommées une par une |
+| L'Agence a trouvé sur CE projet ce qu'elle emportera | le compteur d'usage réel, et les trouvailles effectivement devenues des tâches (Article 28) | mesuré en continu ; c'est le seul juge d'un outil qui n'a jamais rien trouvé |
+
+### Niveau AGENCE — *qu'un codeur travaillant avec une IA sache, à tout moment, ce qui tient et ce qui ne tient pas*
+
+**La direction.** Le produit de l'Agence n'est pas une collection d'outils : c'est une **réponse
+fiable à une question de confiance**. Tout ce qui fait qu'un verdict est rejouable — l'instrument
+nommé, l'heure lue, la chaîne qui remonte, le palier de confiance — vaut plus qu'un outil de plus.
+La direction va donc vers **moins d'outils mieux reliés**, jamais vers un catalogue qui grossit.
+
+| Jalon | Son instrument | Relevé 2026-10-02 |
+|---|---|---|
+| Tout objet de gouvernance remonte jusqu'au document officiel | `the-king cascade` | **67 / 67**, zéro parent introuvable, zéro cycle |
+| Aucun garde-fou n'est exporté sans la raison qui l'a fait naître | SAFE-EXPORT, sonde X6 | **132** sans explication sur **119** fichiers source — c'est le chantier ouvert du niveau |
+| Chaque outil sait dire qui l'a sollicité et quand | le compteur d'usage, KPI de tool-brain à chaque Ronde | actif ; un outil jamais sollicité part en examen individuel, jamais en retrait automatique |
+| L'outillage reste reprenable par une autre IA | le kit complet (blueprint + instanciation + registre), vérifié à chaque Ronde | aucune dispense hors des trois cas écrits |
+| L'organisation par modules va quelque part, et l'écart se mesure | la carte cible (`docs/referentiel/carte-cible-des-modules.md`) confrontée à la carte générée, par `cassandra-rh carte-cible` | **5 / 7** familles dans leur fourchette — et ce bon chiffre dit surtout que le problème n'est pas la TAILLE des familles |
+
+### Niveau JEU — *qu'un visiteur doute, une vraie fois, qu'il n'y ait personne derrière*
+
+**La direction.** Le doute ne se décrète pas et ne s'obtient pas par la fluidité : il s'obtient par
+**l'aspérité**. Un dialogue lisse rassure, donc il échoue. Toute la stratégie du niveau tient donc
+dans une seule garde : l'esprit rugueux, sarcastique, jamais consensuel, est la valeur centrale —
+et c'est la seule chose de ce projet qu'aucun gain de coût, de propreté ou de simplicité n'achète.
+
+| Jalon | Son instrument | Relevé 2026-10-02 |
+|---|---|---|
+| Le ton ne dérive pas vers le consensuel | `check-spirit` — le seul outil qui touche la sortie RÉELLE | à relancer à la main après tout ajustement de personnalité (coût API, Article 22) |
+| Une absence de mesure ne passe jamais pour un bon résultat | `check-spirit`, verdict `🚨 PAS MESURÉ` | en place depuis le 2026-09-25 |
+| Deux cerveaux séparés, malgré le coût | Article 8, et l'interdiction faite à Smart Conso API de rouvrir cet arbitrage | arbitré, non négociable |
+
+**CE QUE CETTE DÉCLINAISON NE FAIT PAS, et il faut le dire** : elle ne hiérarchise pas les trois
+niveaux entre eux. Le rang se lit par **PORTANCE** — ce qui porte le plus d'autres règles passe
+devant — jamais par étendue, et cette règle vit dans le document de gouvernance, pas ici. Le niveau
+JEU est aujourd'hui en pause par décision explicite : *« tout ce qui a trait au jeu est laissé de
+côté pour l'instant »*. **Une pause n'est pas une dépriorisation** : ses jalons restent écrits, et
+ils restent les mêmes au réveil.
 
 ---
 
@@ -173,3 +252,15 @@ cascade, et le trancher à ta place serait le pire endroit où le faire.**
 | **RETENU** | 14 tâches sur 1 272 savent quel objectif elles servent | le raccord du bas de la cascade — rattaché à **#1336** |
 | **À TRANCHER** | QG1 à QG4 ci-dessus | **tes décisions** — aucune ne m'appartient |
 | **ÉCARTÉ** | réécrire la COMMANDE IMPORTANTE pour corriger « le jeu n'est qu'un prétexte » | **raison écrite** : c'est une SOURCE, le dépôt de ta parole à une date. On ne réécrit pas une source — l'écart se signale (en tête de ce document), il ne se gomme pas. |
+
+---
+
+## Plan d'action — passage du 2026-10-02 *(activation de la cascade, tâche #1434)*
+
+| État | Constat | Ce qui en découle |
+|---|---|---|
+| **RETENU** | ce document affirmait que « les dix stratégies de CHANTIER passent par elle », pendant que les dix déclaraient toutes la cible en parent direct. Les deux ne pouvaient pas être vrais | **FAIT** le 2026-10-02 — les dix re-rattachées à ce document, qui déclare à son tour la cible sur laquelle il se règle, pour que l'alignement soit HÉRITÉ et non perdu |
+| **RETENU** | la section ① posait trois niveaux, puis tout le reste repartait en un seul bloc — sous ①, AGENCE et JEU n'apparaissaient plus qu'une fois, dans un titre | **FAIT** le 2026-10-02 — section ①bis, forme hybride (prose pour la direction, tableau pour les jalons), chaque jalon nommant son instrument |
+| **RETENU** | 132 garde-fous exportés sans une ligne d'explication, sur 119 fichiers source (SAFE-EXPORT, sonde X6) | c'est le chantier ouvert du niveau AGENCE, inscrit comme jalon plutôt que comme remarque |
+| **ÉCARTÉ** | renuméroter ②③④ pour intercaler la déclinaison en ② | **raison écrite** : une renumérotation casse les renvois existants, exactement la dette que l'Article 13 interdit. Le suffixe `bis` coûte un caractère et ne casse rien |
+| **ÉCARTÉ** | insérer la cible comme parent de ce document plutôt que comme règle | **raison écrite** : la cible dit CE QU'ON CHERCHE, ce document dit COMMENT. Aucun des deux ne découle de l'autre — les empiler aurait rendu fausse la phrase « première marche SOUS la boussole », pour corriger une incohérence par une autre |

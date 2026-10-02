@@ -55,7 +55,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/fils/html/fil-06-export-versions-noyau.html` | `docs/fils/fil-06-export-versions-noyau.md` | 13705 | 2026-10-01 02:19Z |
 | `docs/recherches-web/2026-10-01-standard-de-livraison-dun-code.html` | `docs/recherches-web/2026-10-01-standard-de-livraison-dun-code.md` | 12719 | 2026-10-01 03:39Z |
 | `docs/recherches-web/2026-10-01-marche-des-produits-injectables.html` | `docs/recherches-web/2026-10-01-marche-des-produits-injectables.md` | 13705 | 2026-10-01 03:39Z |
-| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 18569 | 2026-10-01 03:50Z |
 | `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 14583 | 2026-10-01 03:50Z |
 | `docs/grand-projet/html/refonte-proposition-2026-10-01.html` | `docs/grand-projet/03-plan-daction/refonte-proposition-2026-10-01.md` | 19614 | 2026-10-01 15:44Z |
 | `docs/grand-projet/html/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 15530 | 2026-10-01 16:06Z |
@@ -71,3 +70,5 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/referentiel/document-de-gouvernance.html` | `docs/referentiel/document-de-gouvernance.md` | 18092 | 2026-10-02 03:59Z |
 | `docs/grand-projet/html/questions-en-cours-de-route.html` | `docs/grand-projet/02-strategie/questions-en-cours-de-route.md` | 16739 | 2026-10-02 06:28Z |
 | `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 17880 | 2026-10-02 07:14Z |
+| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 28428 | 2026-10-02 07:37Z |
+| `docs/livrables/les-11-destinations-dune-note.html` | `docs/livrables/les-11-destinations-dune-note.md` | 11113 | 2026-10-02 08:05Z |

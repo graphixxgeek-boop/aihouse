@@ -2011,6 +2011,14 @@ export const MOTIFS_MEMOIRE = [
   // une aurait été une liste tenue à la main, périmée au prochain dépôt (Article 24). Un document de
   // `00-sources/` est une ENTRÉE figée, propre à ce chantier : le projet ne l'entretient pas et ne
   // l'emporte pas.
+  // UNE VUE RENDUE POUR LUI EST DE LA MÉMOIRE, ET C'EST UNE RÈGLE PLUTÔT QU'UNE EXCEPTION PAR PAGE
+  // (2026-10-02, tâche #1441). `docs/livrables/` ne contient jamais de source : chaque page y est une
+  // VUE extraite d'un document qui vit ailleurs, rendue lisible parce qu'il a demandé à la voir. Elle
+  // se régénère, elle ne se corrige pas sur place, et elle n'a aucun sens hors de ce dépôt — la ranger
+  // comme mémoire est donc exact, pas un défaut de rangement. Deux fichiers de suite ont été classés
+  // « à instruire » cette nuit faute de règle : corriger l'occurrence aurait appelé une troisième
+  // exception au fichier suivant (leçon L37, corriger la CLASSE et non l'occurrence).
+  { motif: /^docs\/livrables\//, pourquoi: "une vue rendue lisible à sa demande : elle se régénère depuis sa source, n'est jamais modifiée sur place, et n'a aucun sens hors de ce dépôt" },
   { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "une source qu'il a déposée : une entrée figée, propre à ce chantier, que le projet n'entretient pas et n'emporte pas" },
   // LES FILS DE DISCUSSION SONT DE LA MÉMOIRE, ET UNE RÈGLE PLUTÔT QUE ONZE EXCEPTIONS
   // (2026-09-30, Article 24 : un nouveau venu hérite de ce que l'équipe sait déjà faire). Onze
@@ -2174,6 +2182,14 @@ export const EXCEPTIONS_D_EXPORT = [
   { chemin: "docs/loi-de-l-agence.md", etat: "PART", pourquoi: "le texte suprême de l'outillage : il part AVEC l'Agence, sans quoi elle arriverait chez son client sans la loi qui la gouverne. S'il nomme Lia et Noé, c'est uniquement pour déclarer qu'ils ne la concernent pas" },
   { chemin: "docs/manifeste-de-l-agence.md", etat: "PART", pourquoi: "ce que l'Agence EST, déclaré positivement : ses trois zones, dérivées des registres de SAFE-EXPORT, et ce qu'il est interdit d'y mettre. Un produit qui arrive sans la définition de ses propres bords n'est pas installable" },
   { chemin: "docs/peur-de-l-export.md", etat: "PART", pourquoi: "il raisonne sur ce qui empêche une Agence de partir — c'est le sujet même du second projet, et il vaut pour n'importe quel outillage" },
+  // AJOUTÉE LE 2026-10-02 (tâche #1420). LE MÉCANISME PART, LES VALEURS RESTENT, et la carte
+  // cible est le cas le plus net de cette frontière : `cassandra-rh carte-cible` sait mesurer l'écart
+  // sur n'importe quelle Agence, mais les fourchettes qu'il lit sont les NÔTRES — « Les Anges de la
+  // coordination : 14-17 » n'a aucun sens chez quelqu'un qui n'a pas cette famille. Le détecteur ne
+  // pouvait pas le trancher : il reconnaît une fiche d'outil par l'existence de son outil, et aucun
+  // exécutable ne s'appelle « carte-cible-des-modules ». Ce n'est pas un trou du détecteur, c'est un
+  // document dont la nature se lit dans son contenu et jamais dans son nom.
+  { chemin: "docs/referentiel/carte-cible-des-modules.md", etat: "RESTE", pourquoi: "les effectifs visés et les verdicts de détachabilité des sept familles de CETTE Agence : un choix propre à ce dépôt, que le mécanisme de mesure emporte sans emporter ses chiffres. Une Agence installée ailleurs écrit la sienne" },
   { chemin: "docs/referentiel/organisation-globale-projet.md", etat: "RESTE", pourquoi: "le document mère de CE projet : il décrit comment le jeu et l'Agence s'articulent ICI" },
   { chemin: "docs/referentiel/process-calibres.md", etat: "PART", pourquoi: "les process tels qu'un humain les a calibrés : la forme est réutilisable, et c'est la partie la plus chère à retrouver" },
   { chemin: "docs/referentiel/classification-des-rapports-et-datas.md", etat: "PART", pourquoi: "la règle de rangement des rapports et des données — le cœur même de ce qui doit voyager" },

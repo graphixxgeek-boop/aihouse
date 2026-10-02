@@ -487,3 +487,30 @@ aucun, parce qu'ils ne jugent pas le même objet.
   complet, ses chemins reconfigurables, sa dépendance à ce projet-ci. **CASSANDRA dit qui est dans
   l'équipe ; SAFE-EXPORT dit si cette équipe peut déménager.** La carte par module emprunte à l'un
   et à l'autre — les familles viennent de l'organigramme, jamais de l'export.
+
+## LA CARTE CIBLE — « voilà où on est, voilà où on va » (2026-10-02, tâche #1420)
+
+**Sous-commande** : `node scripts/cassandra-rh.mjs carte-cible`.
+
+**CE QU'ELLE MESURE** : l'écart entre la carte GÉNÉRÉE (`carte`, dérivée de l'organigramme et des
+imports réels) et une carte CIBLE lue dans `docs/referentiel/carte-cible-des-modules.md`. Trois
+divergences sont refusées : une famille nommée dans la cible et absente du dépôt, une famille du
+dépôt que la cible ignore, une détachabilité revendiquée et perdue.
+
+**POURQUOI LA CIBLE N'EST PAS GÉNÉRÉE, et c'est la décision qui commande tout le reste.** Une cible
+est un CHOIX. Un générateur rendrait l'état actuel rebaptisé « cible », donc **un écart nul par
+construction** — et un écart qui ne peut pas être non nul ne mesure rien. La cible est donc tenue à
+la main, **déclarée manuelle au titre de l'Article 24**, et ce qui la protège de se périmer en
+silence n'est pas un générateur mais cette mesure d'écart.
+
+**CE QUI SE MESURE, ET CE QUI NE SE MESURE PAS.** La fourchette d'effectif et la détachabilité se
+tranchent mécaniquement — la seconde par le nombre d'imports entrants, qui doit être zéro. Les deux
+colonnes de prose de la cible — ce qu'une famille doit porter, ce qu'elle ne doit pas porter — sont
+des jugements qu'aucune mécanique ne rend, et le rapport le déclare lui-même plutôt que de le taire.
+
+**LE PREMIER PASSAGE A DIT QUELQUE CHOSE DE GÊNANT, et il est écrit plutôt que retouché** : 5
+familles sur 7 étaient déjà dans leur fourchette. La tentation évidente était de resserrer les
+fourchettes jusqu'à faire apparaître un écart, c'est-à-dire de fabriquer le résultat qu'on voulait
+lire (Article 31, faille 2). **La lecture honnête est que le problème n'est pas la TAILLE des
+familles mais ce qu'elles PORTENT** — la Gouvernance Royale est au bon effectif et doit 98 % de ses
+dépendances à un seul fichier de plomberie, ce qu'aucune fourchette ne verra jamais.

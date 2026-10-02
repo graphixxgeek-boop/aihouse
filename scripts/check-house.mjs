@@ -24264,3 +24264,112 @@ async function testLExemptionDeclareeEstLue() {
   console.log("Passed: l'exemption déclarée n'était lue que par la suite de tests (2026-10-01, tâche #1352). CASSANDRA annonçait « check-spirit : 0 % de couverture, EN DÉGRADATION » comme un trou d'équipe, alors qu'AXA-CHECK le déclare dans JAMAIS_EXERCABLES depuis le 2026-09-28 avec sa raison écrite : chacun de ses passages envoie de vraies provocations au vrai modèle, donc l'exercer à chaque commit coûterait de vrais appels API (Articles 8 et 22). LE REGISTRE EXISTAIT, PORTAIT SA RAISON, ET LE SEUL À LE LIRE ÉTAIT LA SUITE DE TESTS — l'outil qui ACCUSE ne le lisait pas. C'est l'Article 24 pris par son mauvais bout (un registre lu d'un seul côté) et la leçon L4 dans sa forme la plus coûteuse : un garde-fou qui accuse un cas légitimement exempté finit par ne plus être lu du tout, et ce jour-là il ne protège plus personne. LA CORRECTION TIENT EN DEUX MOITIÉS, ET LA SECONDE COMPTE AUTANT : l'exempté sort des trous, MAIS il ne disparaît pas — il entre dans une liste à part, avec sa raison. Les faire disparaître serait l'erreur symétrique de les accuser, parce qu'une exemption dit « personne ne peut mesurer ça d'ici » et jamais « tout va bien ». C'est exactement la distinction entre « non conforme » et « PAS MESURÉ » que ce projet applique partout ailleurs. Et ce qui n'est pas déclaré reste accusé : doc-report, sans raison écrite, demeure un vrai trou — la correction n'est pas une amnistie générale.");
 }
 await testLExemptionDeclareeEstLue();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA CARTE CIBLE DES MODULES — « voilà où on est, voilà où on va » (2026-10-02, tâche #1420)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLaCarteCibleDesModules() {
+  const C = await import('./cassandra-rh.mjs');
+  const actuelle = C.carteParFamille();
+  assert.ok(actuelle.mesurable, 'the generated map must be measurable, otherwise the gap cannot be either');
+
+  // ── 1. LA CIBLE EST LUE, JAMAIS DÉRIVÉE. C'est la décision qui commande tout le reste : un
+  // générateur rendrait l'état actuel rebaptisé « cible », donc un écart NUL PAR CONSTRUCTION.
+  const cible = C.lireLaCarteCible();
+  assert.ok(cible.mesurable, 'the target map must be readable from its declared document');
+  assert.ok(cible.familles.length >= 7, 'and carry one line per family');
+  assert.ok(cible.familles.every((f) => Number.isInteger(f.min) && f.max >= f.min), 'each line carries a real band, never a single number: an exact figure turns a heading into a head-count');
+
+  // ── 2. LA LECTURE NE RAMASSE QUE LE TABLEAU DE CIBLE, pas les autres tableaux du document.
+  // Le plan d'action en est un, et le confondre avec une famille aurait produit des familles
+  // fantômes à chaque passage.
+  assert.ok(!cible.familles.some((f) => /RETENU|ÉCARTÉ|À TRANCHER/.test(f.nom)), 'the plan d\'action table must never be mistaken for target lines');
+
+  // ── 3. SENS 1 — une cible tenue rend « tenu », sans inventer d'alerte (BP4, première moitié).
+  const vrai = C.ecartCarteCible({ cible, actuelle });
+  assert.ok(vrai.mesurable, 'the real gap is measurable');
+  assert.deepStrictEqual(vrai.cibleSansFamille, [], 'the real target names no family that is absent from the repo');
+  assert.deepStrictEqual(vrai.sansCible, [], 'and no family of the repo is left without a target line');
+  assert.deepStrictEqual(vrai.detachabiliteRompue, [], 'the two detachable families are still detachable, measured by zero incoming import');
+
+  // ── 4. SENS 2 — ET C'EST LA MOITIÉ QUI PROUVE QUELQUE CHOSE (BP4). Un détecteur qui ne dit que
+  // « tout va bien » n'a jamais été vérifié : on lui donne une cible qui DIVERGE, et il doit
+  // attraper les trois formes de divergence d'un coup.
+  const faux = { mesurable: true, chemin: '(fabriqué pour le test)', familles: [
+    { nom: 'Les Gardiens Sacrés du Code', min: 1, max: 2, detachable: true },
+    { nom: 'La Famille Qui N Existe Pas', min: 3, max: 4, detachable: false },
+  ] };
+  const e = C.ecartCarteCible({ cible: faux, actuelle });
+  assert.deepStrictEqual(e.cibleSansFamille, ['La Famille Qui N Existe Pas'], 'a target naming a family the repo does not have is caught — that is the silent staleness Article 24 forbids');
+  assert.ok(e.sansCible.length >= 5, 'and every family left out of the target is named, because a family nobody aims at is not a family at the right size');
+  assert.deepStrictEqual(e.detachabiliteRompue, ['Les Gardiens Sacrés du Code'], 'a detachability claimed and not held is caught: it is the PROJET-level ultimate objective that falls with it');
+  const g = e.lignes.find((l) => l.nom === 'Les Gardiens Sacrés du Code');
+  assert.strictEqual(g.position, 'au-dessus', 'and the band verdict is the real one');
+  assert.strictEqual(g.ecart, 5, 'with the real distance, never a bare boolean');
+
+  // ── 5. UNE CIBLE ABSENTE N'EST PAS UNE CIBLE ATTEINTE. Les deux rendraient le même zéro, et
+  // c'est la confusion que ce paysage corrige partout (leçon L5).
+  const abs = C.ecartCarteCible({ cible: C.lireLaCarteCible({ chemin: 'docs/referentiel/cette-carte-n-existe-pas.md' }), actuelle });
+  assert.strictEqual(abs.mesurable, false, 'a missing target map is PAS MESURÉ, never a zero gap');
+  assert.match(abs.pourquoi, /introuvable/, 'and it says what was missing rather than returning an empty result');
+  assert.match(C.formatCarteCibleLines(abs).join('\n'), /PAS MESURÉ/, 'and the printed report says so in its own title, where a reader cannot miss it');
+
+  // ── 6. CE QUI RESTE HORS DE PORTÉE EST ÉCRIT DANS LE RAPPORT LUI-MÊME, jamais seulement dans
+  // une fiche à côté : seuls la fourchette et la détachabilité se mesurent.
+  const texte = C.formatCarteCibleLines(vrai).join('\n');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its own limit');
+  assert.match(texte, /bon NOMBRE/, 'namely that a family at the right size may still carry the wrong things');
+  assert.match(texte, /jamais une dette/, 'and that a gap against a proposal is not a delay on an objective, as long as the target is not arrested');
+
+  console.log("Passed: la carte CIBLE de l'organisation par modules (2026-10-02, tâche #1420). Sa demande datait du Word — « j'aimerais qu'elle coure vers une CARTE CIBLE : voilà où on est, voilà où on va » — et n'avait laissé AUCUNE trace dans le suivi : la carte actuelle avait été livrée, la cible jamais accrochée, et un sujet traité à moitié ressemble à un sujet traité. LA DIFFICULTÉ EST DITE PLUTÔT QUE CONTOURNÉE, et elle est structurelle : la carte actuelle ne peut pas se périmer parce qu'elle est GÉNÉRÉE, une cible ne le peut pas parce qu'elle est un CHOIX. Un générateur de cible rendrait l'état actuel rebaptisé « cible », donc un écart nul par construction — et un écart qui ne peut pas être non nul ne mesure rien. La cible est donc LUE dans un document tenu à la main, déclaré manuel au titre de l'Article 24, et ce qui la protège de se périmer en silence n'est pas un générateur mais cette mesure d'écart, qui refuse une famille nommée dans la cible et absente du dépôt, une famille du dépôt que la cible ignore, et une détachabilité revendiquée mais perdue. LE DÉTECTEUR EST VÉRIFIÉ DANS LES DEUX SENS (BP4) : sur la vraie cible il rend « tenu » sans inventer d'alerte, sur une cible fabriquée qui diverge il attrape les trois formes de divergence d'un coup. ET LE PREMIER PASSAGE A DIT QUELQUE CHOSE DE GÊNANT, écrit plutôt que retouché : 5 familles sur 7 sont DÉJÀ dans leur fourchette. La tentation évidente était de resserrer les fourchettes jusqu'à faire apparaître un écart — c'est-à-dire de fabriquer le résultat qu'on voulait lire, exactement l'outil fabriqué pour cocher une case de l'Article 31. La lecture honnête est ailleurs et elle est plus utile : si presque tout est au bon NOMBRE, le problème de l'organisation par modules n'est pas un problème de taille, il est dans ce que chaque famille PORTE — et c'est précisément la colonne que la mesure déclare hors de sa portée.");
+}
+await testLaCarteCibleDesModules();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UNE VUE DÉRIVÉE NE PEUT PAS DIVERGER EN SILENCE (2026-10-02, tâche #1441)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLesVuesDeriveesNeDivergentPas() {
+  const D = await import('./data-archangel.mjs');
+
+  // ── 1. LE REGISTRE DES VUES PORTE SA RAISON, jamais un chemin nu.
+  assert.ok(D.VUES_DERIVEES.length > 0, 'at least one derived view is declared, otherwise this guard watches nothing');
+  assert.ok(D.VUES_DERIVEES.every((v) => v.vue && v.source && v.section && v.pourquoi && v.pourquoi.length > 20), 'every declared view names its source, its section, and why it exists (Article 28)');
+
+  // ── 2. SENS 1 — la vraie vue est fidèle, et le dire n'est pas gratuit : elle a été extraite de
+  // sa source, donc un écart ici voudrait dire qu'on a corrigé la copie au lieu de l'original.
+  const reel = D.findVuesDivergentesDeLeurSource();
+  assert.strictEqual(reel.mesurable, true, 'the check runs against the real repository (Article 25)');
+  assert.deepStrictEqual(reel.ecarts, [], `every declared view still matches its source table row for row: ${JSON.stringify(reel.ecarts)}`);
+  assert.deepStrictEqual(reel.nonMesurables, [], 'and none of them is unreadable, which would be a gap this check cannot size');
+
+  // ── 3. SENS 2, ET C'EST LA MOITIÉ QUI PROUVE QUELQUE CHOSE (BP4). Un garde-fou qui n'a jamais
+  // rien refusé n'a pas été vérifié : on lui donne une vue qui a perdu une ligne et en a gagné
+  // une autre, et il doit nommer les deux séparément.
+  const faux = D.findVuesDivergentesDeLeurSource({
+    vues: [{ vue: 'V', source: 'S', section: 'bidon', pourquoi: 'une vue fabriquée pour le test, qui diverge exprès' }],
+    lire: (chemin) => String(chemin).endsWith('V')
+      ? '| **une décision prise** | `docs/suivi/` | parce que |\n| **une ligne inventée** | nulle part | parce que |'
+      : '## bidon. titre\n\n| **une décision prise** | `docs/suivi/` | parce que |\n| **une ligne de la source** | ailleurs | parce que |\n\n## suivante',
+  });
+  assert.strictEqual(faux.ecarts.length, 1, 'a diverging view is caught');
+  assert.strictEqual(faux.ecarts[0].manquantes.length, 1, 'the row the view lost is named');
+  assert.match(faux.ecarts[0].manquantes[0], /une ligne de la source/, 'by its real content, never by a bare count');
+  assert.strictEqual(faux.ecarts[0].enTrop.length, 1, 'and the row the view invented is named separately');
+  assert.match(faux.ecarts[0].enTrop[0], /une ligne inventée/, 'because losing a row and inventing one are two different faults');
+
+  // ── 4. UNE VUE INTROUVABLE N'EST PAS UNE VUE FIDÈLE. Les deux rendraient zéro écart, et c'est
+  // la confusion que ce paysage corrige partout (leçon L5).
+  const absent = D.findVuesDivergentesDeLeurSource({ vues: [{ vue: 'docs/pas-la.md', source: 'docs/regles-de-travail.md', section: '3pentes', pourquoi: 'fabriquée pour vérifier que l\'absence ne passe pas pour la fidélité' }] });
+  assert.deepStrictEqual(absent.ecarts, [], 'an unreadable view produces no fake gap');
+  assert.strictEqual(absent.nonMesurables.length, 1, 'but it is declared PAS MESURÉ instead of counting as faithful');
+  assert.match(D.formatVuesLines(absent).join('\n'), /PAS MESURÉ/, 'and the printed report says so where a reader cannot miss it');
+
+  // ── 5. UNE SECTION DISPARUE EST ATTRAPÉE AUSSI, et c'est le cas le plus probable dans la durée :
+  // la source se réorganise, la vue survit, et plus rien ne les relie.
+  const perdue = D.findVuesDivergentesDeLeurSource({ vues: [{ vue: 'docs/livrables/les-11-destinations-dune-note.md', source: 'docs/regles-de-travail.md', section: 'section-qui-n-existe-pas', pourquoi: 'fabriquée pour vérifier qu\'une section disparue ne passe pas inaperçue' }] });
+  assert.strictEqual(perdue.nonMesurables.length, 1, 'a vanished source section is reported');
+  assert.match(perdue.nonMesurables[0].raison, /n'existe plus/, 'and says exactly what vanished');
+
+  console.log("Passed: une vue dérivée ne peut plus diverger en silence de sa source (2026-10-02, tâche #1441). Il a demandé à VOIR la table des onze destinations d'une note — « OUI JE VEUX VOIR CA STP montre moi la table et les 11 destinations » — qui vit dans une section de docs/regles-de-travail.md. EN EXTRAIRE UNE PAGE LISIBLE EST LE SERVICE RENDU ; EN FAIRE UNE COPIE SANS RIEN QUI DÉTECTE L'ÉCART EST EXACTEMENT CE QUE L'ARTICLE 24 INTERDIT, et une vue qui diverge de sa source est PIRE qu'une absence de vue : elle a l'air d'être à jour, et c'est précisément ce qui la rend dangereuse. Le registre des vues porte donc, par entrée, sa source, sa section et sa raison, et la comparaison se fait ligne de tableau par ligne de tableau. LE GARDE-FOU EST VÉRIFIÉ DANS LES DEUX SENS (BP4) : sur la vraie vue il ne trouve rien, sur une vue fabriquée qui a perdu une ligne et en a gagné une autre il nomme les deux SÉPARÉMENT, parce que perdre une ligne et en inventer une sont deux fautes différentes. ET LES DEUX FORMES D'ABSENCE SONT DISTINGUÉES DE LA FIDÉLITÉ : une vue introuvable et une section disparue rendent PAS MESURÉ, jamais zéro écart — les trois produiraient le même chiffre, et c'est la confusion que ce paysage corrige partout (leçon L5). LA SECTION DISPARUE EST LE CAS LE PLUS PROBABLE DANS LA DURÉE : la source se réorganise, la vue survit, et plus rien ne les relie.");
+}
+await testLesVuesDeriveesNeDivergentPas();

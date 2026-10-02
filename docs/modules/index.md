@@ -17,6 +17,12 @@ fait, rarement par ce qu'il laisse derrière lui, or c'est ce qu'il laisse qui s
 |---|---|---|
 | [`module-gestion-des-taches.md`](module-gestion-des-taches.md) · [page lisible](module-gestion-des-taches.html) | 2026-10-02 | **aucun script n'écrit dans le suivi** : une seule porte d'entrée manuelle pour trente-quatre sorties — ce qui explique que tous ses défauts soient des défauts de saisie, jamais de traitement |
 
+**ET UNE TROISIÈME PIÈCE, DEPUIS LE 2026-10-02 : LA CARTE CIBLE** (`docs/referentiel/carte-cible-des-modules.md`,
+mesurée par `node scripts/cassandra-rh.mjs carte-cible`). La carte actuelle dit OÙ ON EST, la carte cible
+dit OÙ ON VA, et l'écart entre les deux se mesure. Sa particularité, déclarée plutôt que cachée : elle est
+tenue à la MAIN, parce qu'une cible est un choix — un générateur rendrait l'état actuel rebaptisé « cible »,
+donc un écart nul par construction.
+
 **À NE PAS CONFONDRE AVEC LA CARTE PAR MODULE** (`node scripts/cassandra-rh.mjs carte`), qui range
 les 62 outils en 7 familles et mesure ce qui casse si l'une disparaît. La carte donne la VUE
 D'ENSEMBLE, dérivée et donc jamais périmée ; ces documents-ci donnent le DÉTAIL d'un seul module,

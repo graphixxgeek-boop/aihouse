@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-02. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**122 fichier(s).**
+**123 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -16,6 +16,7 @@
 | [argus.md](argus.md) | — |
 | [axa-check.md](axa-check.md) | — |
 | [build-verified.md](build-verified.md) | — |
+| [carte-cible-des-modules.md](carte-cible-des-modules.md) | — |
 | [cassandra-rh.md](cassandra-rh.md) | — |
 | [charte-cartographie.md](charte-cartographie.md) | — |
 | [charte-operations.md](charte-operations.md) | — |

@@ -912,6 +912,7 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // et un rendez-vous périodique rendrait invariablement « rien de neuf » entre deux refontes.
   // La vue d'ensemble, elle, est déjà couverte : la carte par module de CASSANDRA-RH est dérivée
   // des imports réels, donc jamais périmée, et c'est elle qu'une Ronde doit regarder.
+  "livrables": "des VUES rendues lisibles à sa demande, jamais un registre : chaque page y est extraite d'un document qui vit ailleurs, et elle se régénère depuis sa source au lieu de s'accumuler. Ce qui doit être vérifié périodiquement n'est pas leur contenu mais leur FIDÉLITÉ, et c'est déjà fait mécaniquement par `data-archangel vues` — une ligne de Ronde en plus ne mesurerait rien de neuf",
   "modules": "descriptions de modules écrites à la main : elles ne consignent rien et ne cessent d'être vraies que si le module change — la vue d'ensemble périodique est déjà tenue par la carte dérivée de CASSANDRA-RH",
   // (2026-09-28) Le registre de doc-HTML : il se RÉÉCRIT SEUL à chaque génération de page, et une
   // page régénérée remplace sa ligne au lieu de s'empiler. Il ne peut donc pas prendre de retard —
