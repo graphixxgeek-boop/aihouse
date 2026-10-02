@@ -24785,3 +24785,52 @@ async function testLAlerteDeTension() {
   console.log("Passed: l'alerte de tension avec le document de gouvernance (2026-10-02, tâche #1435). Sa question : « est-ce que, une fois que le doc philo et politique sera en vigueur, tu seras capable de me prévenir si j'ai une idée ou une consigne en tension avec ce document ? » La réponse honnête était « pas de façon vérifiable » : je pouvais le remarquer ou ne pas le remarquer, et rien ne distinguait les deux cas — une capacité qui dépend de ma vigilance du moment n'existe plus à la session suivante (Article 27). TROIS VERDICTS, ET LE TROISIÈME EST CELUI QU'ON OUBLIE : en tension, DÉJÀ COUVERTE — ce n'est alors pas une idée neuve mais une redite, et le dire épargne un chantier — ou neuve. DEUX CORRECTIONS ONT ÉTÉ IMPOSÉES PAR DES CAS RÉELS, pas par une revue théorique. ① Le seuil ne pouvait pas être du Jaccard : une idée de dix mots comparée à un article de soixante rend au mieux 0,15 même en recouvrement total, donc le premier passage rendait « NEUVE » sur une idée qui contredisait frontalement un article — un seuil hors de portée par construction, la faute même que BP5 corrige ailleurs. La mesure juste est la CONTENANCE, aux deux bouts de la même échelle. ② La comparaison portait sur des mots entiers : « il suffit de RECOPIER la liste à la main » ne touchait PAS l'article qui dit « aucun élément ne se RECOPIE manuellement ». Une lettre d'écart, et la tension la plus nette qu'on puisse écrire contre cet article passait inaperçue. La comparaison se fait donc sur des racines tronquées, localement et avec sa raison. ET LA POLARITÉ DE L'ARTICLE NE DÉCIDE PAS : « on peut désactiver un test » contredit un article qui est une OBLIGATION et ne porte donc aucun « jamais ». Ce qui fait la tension n'est pas la forme grammaticale de l'article, c'est qu'une idée propose de se DISPENSER de quelque chose qui est gouverné. CE QUI EMPÊCHE L'ALERTE DE SONNER PARTOUT (leçon L4) : deux conditions réunies, un marqueur de permission explicite ET une contenance au-dessus du seuil avec un article précis. Vérifié dans les deux sens — « on peut peindre le salon en bleu ciel » porte le marqueur, touche zéro article, et reste muet.");
 }
 await testLAlerteDeTension();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE COMPOSEUR DE LIGNE DE SUIVI — l'autre bout (2026-10-02, tâche #1447)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLeComposeurDeLigneDeSuivi() {
+  const C = await import('./check-suivi-fidelity.mjs');
+  const bon = { numero: '9999', motCle: 'essai', sujet: 'Outillage / un essai', sousSujet: 'pour vérifier',
+    sensibilite: 'NORMAL-UTILE', pourQui: 'PROJET', ouverture: 'OUI', cloture: 'OUI',
+    description: 'Une description assez longue pour porter un vrai jugement sur ce qui a été fait et pourquoi.', statut: 'terminée' };
+  const heure = '2026-10-02T11:45Z';
+
+  // ── 1. LE CAS NOMINAL REND UNE LIGNE AU BON NOMBRE DE CELLULES.
+  const r = C.composerLigneDeSuivi(bon, { horodatageLu: heure });
+  assert.strictEqual(r.mesurable, true, 'a complete set of fields composes a line');
+  assert.strictEqual(r.cellules, C.CELLULES_ATTENDUES, `with the right cell count (${r.cellules})`);
+  assert.ok(r.ligne.includes(heure), 'carrying the READ time, substituted rather than typed');
+
+  // ── 2. L'HEURE EST SUBSTITUÉE, JAMAIS RECOPIÉE, et le composeur REFUSE sans elle. C'est la
+  // seule protection qui a marché : cinq horodatages faux en deux jours malgré une règle qui
+  // disait déjà de la LIRE. On ne corrige pas une recopie, on la rend impossible.
+  assert.strictEqual(C.composerLigneDeSuivi(bon).refus, 'heure-non-lue', 'without a read time it refuses rather than accepting one of unknown origin');
+  assert.strictEqual(C.composerLigneDeSuivi(bon, { horodatageLu: 'hier matin' }).refus, 'heure-mal-formee', 'and a malformed time is refused too — it would pass the date guards without being readable by the tools');
+
+  // ── 3. LE SÉPARATEUR DANS UNE CELLULE, LE CAS RÉEL QUI A CASSÉ UNE LIGNE. Les accents graves ne
+  // protègent RIEN : « L'esprit de Lia et Noé | Article 0 » a rendu quatorze cellules au lieu de
+  // treize, et la ligne est devenue illisible pour les trente-quatre lecteurs d'un coup.
+  const pipe = C.composerLigneDeSuivi({ ...bon, sujet: "L'esprit de Lia et Noé | Article 0" }, { horodatageLu: heure });
+  assert.strictEqual(pipe.mesurable, true, 'a separator inside a cell does not break the composition');
+  assert.strictEqual(pipe.cellules, C.CELLULES_ATTENDUES, 'the line still has the right cell count');
+  assert.deepStrictEqual(pipe.separateursRemplaces, ['sujet'], 'and the field it came from is NAMED rather than silently fixed');
+  assert.ok(pipe.avertissements[0].includes('ne protègent RIEN'), 'with the reason, so the next writer knows backticks are no protection');
+
+  // ── 4. LE VOCABULAIRE DES STATUTS EST VÉRIFIÉ À L'ÉCRITURE, pas seulement au commit suivant.
+  assert.strictEqual(C.composerLigneDeSuivi({ ...bon, statut: 'fermée' }, { horodatageLu: heure }).refus, 'statut-inconnu', 'MUST CATCH: a status the queue tools cannot read is refused at composition time');
+
+  // ── 5. ET IL REFUSE QUAND LE FOND MANQUE — c'est la moitié qui en fait autre chose qu'un
+  // remplisseur de cases. Une ligne de suivi porte un JUGEMENT, et un jugement ne se génère pas.
+  assert.strictEqual(C.composerLigneDeSuivi({ ...bon, description: 'fait' }, { horodatageLu: heure }).refus, 'fond-absent', 'a description too short to carry a judgement is refused');
+  assert.strictEqual(C.composerLigneDeSuivi({ ...bon, motCle: '' }, { horodatageLu: heure }).refus, 'champs-manquants', 'and so is an incomplete set — an incomplete line is worse than a missing one, because it looks written');
+
+  // ── 6. LE REFUS SE LIT, et il dit pourquoi il est le service rendu.
+  const texte = C.formatCompositionLines(C.composerLigneDeSuivi({ ...bon, description: 'fait' }, { horodatageLu: heure })).join('\n');
+  assert.match(texte, /COMPOSITION REFUSÉE/, 'the refusal is announced in the title');
+  assert.match(texte, /LE REFUS EST LE SERVICE RENDU/, 'and explains that a malformed line would pass the sixteen read-side checks in appearance, then propagate to all thirty-four readers');
+  assert.match(C.formatCompositionLines(r).join('\n'), /n'a pas écrit un mot de la description/, 'while a success declares what it did NOT do');
+
+  console.log("Passed: le composeur de ligne de suivi, l'autre bout du module (2026-10-02, tâche #1447). LE DIAGNOSTIC EST UN RAPPORT DE UN À TRENTE-QUATRE, trouvé en décrivant le module : le suivi a UNE SEULE porte d'entrée — la main de l'agent — et trente-quatre scripts qui le lisent, donc tout ce qui est faux à l'entrée se propage trente-quatre fois. Seize contrôles veillent déjà et TOUS EN LECTURE : ils refusent le commit après coup, ils disent déjà tout ce qui peut être dit après, et un dix-septième ne dirait rien de neuf. CE QUI MANQUAIT EST À L'AUTRE BOUT : composer la ligne plutôt que la corriger — exactement le raisonnement payé sur l'heure, cinq horodatages faux en deux jours malgré une règle explicite, parce que la règle disait LIRE et que le défaut était dans la RECOPIE. On ne corrige pas une recopie, on la rend impossible. IL VIT CHEZ LE GARDIEN DU SUIVI PLUTÔT QUE DANS UN OUTIL NEUF, et c'est assumé : un outil neuf demanderait un NOM, que seul l'utilisateur donne, et dix registres à remplir. Le composeur a le même sujet et la direction inverse ; le loger ici lui fait hériter du kit, de l'item de Ronde et de la fiche, ce que l'Article 24 demande d'un nouveau venu. CINQ REFUS, CHACUN NÉ D'UNE FAUTE RÉELLE DE CETTE NUIT : heure non lue, heure mal formée, statut hors vocabulaire — « fermée » au lieu de « terminée », refusé par le filet quelques heures plus tôt —, champs manquants, et fond absent. LE SÉPARATEUR DANS UNE CELLULE EST LE SEUL QUI SE CORRIGE AU LIEU DE REFUSER, parce qu'il a une correction évidente : il est remplacé, et le champ d'où il venait est NOMMÉ plutôt que silencieusement réparé. Les accents graves ne protègent rien, et c'est écrit dans l'avertissement. ET IL NE COMPOSE JAMAIS LE FOND : une ligne de suivi porte un jugement — pourquoi ce travail, ce qu'il a coûté, ce qu'on en retient — et un assistant qui le génèrerait serait exactement l'outil fabriqué pour cocher une case de l'Article 31. Il compose la FORME, et il REFUSE quand le FOND manque.");
+}
+await testLeComposeurDeLigneDeSuivi();

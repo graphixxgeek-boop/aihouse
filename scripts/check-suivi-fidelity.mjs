@@ -1250,7 +1250,119 @@ export function formatLignesFantomesLines(r) {
   return L;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// LE COMPOSEUR DE LIGNE — l'autre bout du suivi (2026-10-02, tâche #1447)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// LE DIAGNOSTIC EST UN RAPPORT DE UN À TRENTE-QUATRE, et il vient de la description du module
+// (tâche #1443) : le suivi a UNE SEULE porte d'entrée — la main de l'agent — et trente-quatre
+// scripts qui le lisent. Tout ce qui est faux à l'entrée se propage trente-quatre fois. Seize
+// contrôles veillent déjà, et TOUS EN LECTURE : ils refusent le commit après coup, et ils disent
+// déjà tout ce qui peut être dit après. Un dix-septième ne dirait rien de neuf.
+//
+// CE QUI MANQUE EST À L'AUTRE BOUT : composer la ligne plutôt que la corriger. C'est exactement
+// le raisonnement payé sur l'heure — cinq horodatages faux en deux jours malgré une règle
+// explicite, parce que la règle disait LIRE et que le défaut était dans la RECOPIE. On ne corrige
+// pas une recopie, on la rend impossible.
+//
+// POURQUOI ICI PLUTÔT QUE DANS UN OUTIL NEUF, et c'est une décision assumée : un outil neuf
+// demanderait un nom — que seul l'utilisateur donne — et dix registres à remplir. Le composeur a
+// le MÊME sujet que le garde-fou mécanique du suivi et la direction inverse ; le loger chez lui lui fait
+// hériter de son kit, de son item de Ronde et de sa fiche, ce qui est précisément ce que
+// l'Article 24 demande d'un nouveau venu. Si l'utilisateur préfère un outil séparé, il le
+// baptisera et le déménagement sera mécanique.
+//
+// CE QU'IL NE FAIT SURTOUT PAS : écrire la description à ma place. Une ligne de suivi porte un
+// JUGEMENT — pourquoi ce travail, ce qu'il a coûté, ce qu'on en retient. Un assistant qui le
+// génèrerait produirait exactement ce que l'Article 31 appelle un outil fabriqué pour cocher une
+// case. Il compose la FORME, jamais le FOND, et il REFUSE quand le fond manque.
+export const COLONNES_DU_SUIVI = ["numero", "horodatage", "motCle", "sujet", "sousSujet",
+  "sensibilite", "pourQui", "ouverture", "cloture", "description", "statut"];
+export const CELLULES_ATTENDUES = COLONNES_DU_SUIVI.length + 2; // les deux vides des bords
+
+// UNE CELLULE NE PEUT PAS CONTENIR DE SÉPARATEUR, et les accents graves ne protègent RIEN — c'est
+// un cas réel : « L'esprit de Lia et Noé | Article 0 » a produit quatorze cellules au lieu de
+// treize, et la ligne est devenue illisible pour les trente-quatre lecteurs d'un coup.
+export const SEPARATEUR_INTERDIT = /\|/;
+
+export function composerLigneDeSuivi(champs = {}, { horodatageLu = null, statutsReconnus = STATUTS_RECONNUS } = {}) {
+  const manquants = COLONNES_DU_SUIVI.filter((c) => c !== "horodatage" && !String(champs[c] ?? "").trim());
+  if (manquants.length) {
+    return { mesurable: false, refus: "champs-manquants", pourquoi: `il manque ${manquants.length} champ(s) obligatoire(s) : ${manquants.join(", ")} — une ligne incomplète est pire qu'une ligne absente, parce qu'elle a l'air écrite` };
+  }
+  // L'HEURE EST SUBSTITUÉE, JAMAIS RECOPIÉE. C'est la seule protection qui a marché : cinq
+  // horodatages faux en deux jours malgré une règle qui disait déjà de la LIRE (Article 32).
+  if (!horodatageLu) {
+    return { mesurable: false, refus: "heure-non-lue", pourquoi: "aucune heure LUE n'a été fournie : elle se substitue, elle ne se tape pas (Article 32). Le composeur refuse plutôt que d'accepter une heure dont il ne sait pas d'où elle vient" };
+  }
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/.test(String(horodatageLu))) {
+    return { mesurable: false, refus: "heure-mal-formee", pourquoi: `« ${horodatageLu} » n'a pas la forme AAAA-MM-JJTHH:MMZ — une heure mal formée passerait les contrôles de date sans être lisible par les outils` };
+  }
+  const etat = statutsReconnus.find((s) => s.motif.test(normaliserStatut(String(champs.statut))));
+  if (!etat) {
+    return { mesurable: false, refus: "statut-inconnu", pourquoi: `« ${champs.statut} » n'est pas un statut reconnu : les outils de la file ne sauraient pas si la tâche attend encore quelque chose, et par défaut ils la compteraient ouverte. Vocabulaire admis : ${statutsReconnus.map((s) => s.etat).join(", ")}` };
+  }
+  // LE FOND N'EST PAS COMPOSÉ, IL EST EXIGÉ. Une description qui ne dit pas POURQUOI n'est pas une
+  // description, c'est une étiquette — et c'est la seule chose qu'aucun assistant ne peut fournir.
+  const desc = String(champs.description).trim();
+  if (desc.length < 80) {
+    return { mesurable: false, refus: "fond-absent", pourquoi: `la description fait ${desc.length} caractères : une ligne de suivi porte un JUGEMENT — pourquoi ce travail, ce qu'il a coûté, ce qu'on en retient — et c'est exactement la part qu'un assistant ne doit jamais écrire à la place de l'agent` };
+  }
+  const avecSeparateur = COLONNES_DU_SUIVI.filter((c) => SEPARATEUR_INTERDIT.test(String(champs[c] ?? "")));
+  const nettoyes = {};
+  for (const c of COLONNES_DU_SUIVI) nettoyes[c] = String(champs[c] ?? "").replace(/\|/g, "∣").replace(/\s+/g, " ").trim();
+  nettoyes.horodatage = String(horodatageLu);
+  const ligne = "| " + COLONNES_DU_SUIVI.map((c) => nettoyes[c]).join(" | ") + " |";
+  const cellules = ligne.split("|").length;
+  if (cellules !== CELLULES_ATTENDUES) {
+    return { mesurable: false, refus: "cellules", pourquoi: `la ligne composée rend ${cellules} cellules au lieu de ${CELLULES_ATTENDUES} — le composeur se refuse lui-même plutôt que d'écrire une ligne que les trente-quatre lecteurs du suivi ne sauront pas découper` };
+  }
+  return { mesurable: true, ligne, cellules, etat: etat.etat,
+    separateursRemplaces: avecSeparateur,
+    avertissements: avecSeparateur.length
+      ? [`${avecSeparateur.length} champ(s) contenaient un séparateur de tableau, remplacé par une barre typographique : ${avecSeparateur.join(", ")}. Les accents graves ne protègent RIEN — c'est un cas réel qui a rendu une ligne illisible pour tous ses lecteurs d'un coup.`]
+      : [] };
+}
+
+export function formatCompositionLines(r) {
+  if (!r?.mesurable) return ["=== COMPOSITION REFUSÉE ===", `  motif : ${r?.refus}`, `  ${r?.pourquoi}`,
+    "", "  LE REFUS EST LE SERVICE RENDU : une ligne mal formée passerait les seize contrôles de lecture",
+    "  en apparence, puis se propagerait aux trente-quatre scripts qui lisent le suivi."];
+  const L = ["=== LIGNE COMPOSÉE ===", "", r.ligne, "",
+    `${r.cellules} cellules (attendu ${CELLULES_ATTENDUES}) · statut reconnu : ${r.etat}`];
+  for (const a of r.avertissements) L.push(`⚠️  ${a}`);
+  L.push("");
+  L.push("HORS PORTÉE, et c'est délibéré : le composeur n'a pas écrit un mot de la description. Il compose la");
+  L.push("FORME — l'heure substituée, les colonnes comptées, les séparateurs échappés, le statut vérifié — et il");
+  L.push("REFUSE quand le FOND manque. Une ligne de suivi porte un jugement, et un jugement ne se génère pas.");
+  return L;
+}
+
 function main() {
+  // SOUS-COMMANDE « composer » (tâche #1447) : l'autre bout du suivi. Elle lit un objet JSON sur
+  // l'entrée standard, ou un fichier passé en argument, et rend la ligne — ou le refus motivé.
+  if (process.argv[2] === "composer") {
+    printReliabilityNotice("check-suivi-fidelity");
+    recordCliUsage("check-suivi-fidelity");
+    const chemin = process.argv[3];
+    let champs = {};
+    try { champs = JSON.parse(readFileSync(chemin, "utf8")); }
+    catch {
+      console.log("Usage : node scripts/check-suivi-fidelity.mjs composer <champs.json>");
+      console.log("  Le fichier porte les dix champs de fond ; l'horodatage est LU par l'outil, jamais fourni.");
+      console.log(`  Champs attendus : ${COLONNES_DU_SUIVI.filter((c) => c !== "horodatage").join(", ")}`);
+      process.exitCode = 2;
+      return;
+    }
+    // L'HEURE EST LUE ICI, par l'outil lui-même : la faire fournir par l'appelant rouvrirait
+    // exactement la porte que cette sous-commande existe pour fermer.
+    let lue = null;
+    try { lue = (sh("node scripts/agent-du-temps.mjs").match(/2026-\d{2}-\d{2}T\d{2}:\d{2}Z/) ?? [])[0] ?? null; } catch { lue = null; }
+    const r = composerLigneDeSuivi(champs, { horodatageLu: lue });
+    for (const l of formatCompositionLines(r)) console.log(l);
+    if (!r.mesurable) process.exitCode = 1;
+    return;
+  }
   // L'AVERTISSEMENT DE MARGE, DIT ET PAS SEULEMENT DÉCLARÉ (2026-09-25, tâche #653 → #808) :
   // sa nature heuristique était écrite dans TOOL_RELIABILITY et aucun chemin de ce script ne la
   // prononçait — une protection écrite qui ne sort jamais, le fil rouge de ce projet.

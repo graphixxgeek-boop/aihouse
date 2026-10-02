@@ -246,3 +246,38 @@ qu'on repose. Il occupe la place d'une alerte sans jamais permettre d'agir.
 **Le champ se lit désormais sous ses deux noms**, et le point d'interrogation reste possible
 délibérément : une tâche dont le numéro est vraiment illisible se dit telle quelle plutôt que d'être
 écartée en silence.
+
+## LE COMPOSEUR DE LIGNE — l'autre bout du suivi (2026-10-02, tâche #1447)
+
+**Sous-commande** : `node scripts/check-suivi-fidelity.mjs composer <champs.json>`.
+
+**LE DIAGNOSTIC EST UN RAPPORT DE UN À TRENTE-QUATRE** (trouvé en décrivant le module, tâche
+#1443) : le suivi a **une seule porte d'entrée** — la main de l'agent — et **trente-quatre
+scripts qui le lisent**. Tout ce qui est faux à l'entrée se propage trente-quatre fois. Seize
+contrôles veillent déjà, et **tous en lecture** : ils refusent le commit après coup. Un
+dix-septième ne dirait rien de neuf.
+
+**CE QUI MANQUAIT EST À L'AUTRE BOUT** : composer la ligne plutôt que la corriger. C'est le
+raisonnement payé sur l'heure — cinq horodatages faux en deux jours malgré une règle explicite,
+parce que la règle disait LIRE et que le défaut était dans la RECOPIE. **On ne corrige pas une
+recopie, on la rend impossible.**
+
+**POURQUOI IL VIT ICI PLUTÔT QUE DANS UN OUTIL NEUF, et c'est une décision assumée** : un outil
+neuf demanderait un **nom**, que seul l'utilisateur donne, et dix registres à remplir. Le composeur
+a le même sujet que le garde-fou mécanique du suivi et la **direction inverse** ; le loger chez lui lui fait
+hériter de son kit, de son item de Ronde et de sa fiche — ce que l'Article 24 demande d'un nouveau
+venu. **Si l'utilisateur préfère un outil séparé, il le baptisera et le déménagement sera
+mécanique.**
+
+**CINQ REFUS, CHACUN NÉ D'UNE FAUTE RÉELLE** : heure non lue · heure mal formée · statut hors
+vocabulaire (« fermée » au lieu de « terminée », refusé par le filet quelques heures plus tôt) ·
+champs manquants · **fond absent**.
+
+**UN SEUL CAS SE CORRIGE AU LIEU DE REFUSER** : le séparateur dans une cellule, parce qu'il a une
+correction évidente. Il est remplacé, **et le champ d'où il venait est NOMMÉ** plutôt que
+silencieusement réparé. Les accents graves ne protègent rien, et c'est écrit dans l'avertissement.
+
+**CE QU'IL NE FAIT JAMAIS** : écrire la description. Une ligne de suivi porte un **jugement** —
+pourquoi ce travail, ce qu'il a coûté, ce qu'on en retient — et un assistant qui le génèrerait
+serait exactement l'outil fabriqué pour cocher une case de l'Article 31. **Il compose la FORME, et
+il REFUSE quand le FOND manque.**
