@@ -14396,7 +14396,7 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.equal(K.comparerALEmpreinte(modifie, emp).inchange, false, 'AND IT MUST BITE: renaming a title is an ossature change and must be reported');
     assert.ok(K.comparerALEmpreinte(modifie, emp).verdict.includes('article 71'), 'and the report must name the rule that was crossed, never just flag a difference');
     assert.equal(K.comparerALEmpreinte(docOfficiel, { trouvee: false }).mesurable, false, 'with no empreinte there is nothing to compare — PAS MESURÉ, never a reassuring "unchanged"');
-    // LA NEUTRALITÉ DU SUPPORT N'EST PAS VÉRIFIÉE MÉCANIQUEMENT, et c'est déclaré plutôt que tu :
+    // LA NEUTRALITÉ DU SUPPORT N'EST PAS VÉRIFIÉE MÉCANIQUEMENT, et c'est déclaré plutôt que taise :
     // un contrôle cherchant des marques de première personne manquerait la moitié des cas tout en
     // accusant des tournures légitimes. La règle est portée par la fiche du référentiel.
     assert.ok(nfs.existsSync('docs/referentiel/document-de-gouvernance.md'), 'the fiche carrying what no mechanism can hold must exist: declaring an impossibility IS the protection (art. 32)');
@@ -24434,3 +24434,113 @@ async function testLaTheseDuCoeur() {
   console.log("Passed: la thèse « le cœur de l'Agence est sa gouvernance » est ÉPROUVÉE plutôt qu'illustrée (2026-10-02, tâche #1444). Il l'a écrite dans son Word, et une thèse énoncée par le responsable de projet n'est pas une consigne à illustrer : c'est une affirmation à mettre à l'épreuve. LA MESURE DOIT DONC POUVOIR RENDRE « NON SOUTENUE », sans quoi elle confirme tout et ne mesure rien — exactement l'outil fabriqué pour cocher une case que l'Article 31 refuse par sa faille 2. Les deux sens sont vérifiés (BP4) : sur un parc fabriqué qui ne fait que produire elle REFUSE la thèse, sur un parc qui ne fait que refuser et juger elle la soutient. LES TROIS INDICES LISENT DES COMPORTEMENTS, JAMAIS DES NOMS : compter les fonctions nommées « find » aurait mesuré une convention de nommage, car un fichier peut gouverner sans qu'un seul de ses noms le dise. ET UN DÉFAUT RÉEL DE LA PREMIÈRE LECTURE A IMPOSÉ LA SECONDE : `console.log` écrase tout par son volume et il est ambigu — dans un outil de gouvernance, imprimer est la façon dont un VERDICT est rendu, pas un produit fabriqué, donc le compter en production gonfle le dénominateur avec la livraison de ce qu'on mesure en face (leçon L10, une mesure qui partage son filtre avec ce qu'elle mesure). Choisir une seule des deux lectures aurait tranché la thèse par le choix du critère : les deux sont rendues, avec la question à laquelle chacune répond. Sur le vrai parc elles ne s'accordent pas — 0,72 pour 1 en lecture large, 6,38 pour 1 en lecture structurelle — et ce désaccord part en « à trancher » plutôt qu'en conclusion.");
 }
 await testLaTheseDuCoeur();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// L'ORGANISATION DES LOIS — numéroter n'est pas citer (2026-10-02, tâche #1445)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLOrganisationDesLois() {
+  const A = await import('./abraham-les-references.mjs');
+  const C = await import('./le-classificateur.mjs');
+
+  // ── 1. LE REGISTRE EST LU CHEZ SON PROPRIÉTAIRE, jamais recopié (Article 24).
+  const o = A.organisationDesLois({ lois: C.DOCUMENTS_QUI_FONT_LOI });
+  assert.strictEqual(o.mesurable, true, 'the law registry is read from le-classificateur and measured live');
+  assert.ok(o.fiches.length >= 6, `every law-making text is examined (currently ${o.fiches.length})`);
+
+  // ── 2. EXACTEMENT DEUX LOIS NUMÉROTENT, et c'est tout le problème : avant le 2 octobre il n'y
+  // en avait qu'une, donc « Article 19 » n'était ambigu pour personne.
+  assert.strictEqual(o.numerotantes, 2, 'exactly two laws carry their own numbering — the charter and the governance document');
+  const charte = o.fiches.find((f) => f.chemin === 'CLAUDE.md');
+  const gouv = o.fiches.find((f) => f.chemin === 'docs/philosophie-et-politique.md');
+  assert.ok(charte?.numerote && gouv?.numerote, 'and they are those two, named rather than counted');
+  assert.ok(o.ambigus.length > 20, `their ranges genuinely overlap (currently ${o.ambigus.length} shared numbers)`);
+
+  // ── 3. NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ. Le faux positif réel du
+  // premier passage : les règles de travail ressortaient « numérote 5 articles » alors que ces
+  // cinq-là sont des CITATIONS de la charte, écrites en gras exactement comme elle écrit les
+  // siennes. Aucun motif de texte ne les distingue ; seule une propriété de l'ensemble le fait.
+  const regles = o.fiches.find((f) => f.chemin === 'docs/regles-de-travail.md');
+  assert.strictEqual(regles.numerote, false, 'MUST CATCH: a document that merely cites the charter in bold must not be read as numbering its own articles');
+  assert.ok(regles.combien >= 3, 'it does carry enough bold numbers to fool a count-only test, which is exactly why the count alone was not enough');
+  assert.ok(regles.densite < A.DENSITE_D_UNE_NUMEROTATION, `and what separates it is its sparseness (${regles.densite.toFixed(2)} against a ${A.DENSITE_D_UNE_NUMEROTATION} floor)`);
+  assert.ok(charte.densite >= 0.95 && gouv.densite >= 0.95, 'while a real numbering is dense and contiguous — the gap between the two is wide, which is what makes the threshold safe rather than tuned to today');
+
+  // ── 4. IL NE REFUSE QUE CE QUI EST FAUX SANS JUGEMENT POSSIBLE (BP4, sens 1) : un Article
+  // qu'aucune loi ne porte. Sur le vrai dépôt il ne doit plus rien trouver, la seule occurrence
+  // réelle ayant été corrigée.
+  const { listerLesFichiers } = await import('./lib-shell.mjs');
+  const nfs = await import('node:fs');
+  const fichiers = new Map();
+  for (const c of listerLesFichiers(['docs', 'scripts'], { root: '.', garder: (n) => n.endsWith('.md') || n.endsWith('.mjs') })) {
+    try { fichiers.set(c, nfs.readFileSync(c, 'utf8')); } catch { /* illisible */ }
+  }
+  const vrai = A.findCitationsSansLoi({ organisation: o, fichiers });
+  assert.strictEqual(vrai.mesurable, true, 'the citation check runs against the real repository (Article 25)');
+  assert.ok(vrai.fichiersLus > 500, `on the whole corpus (currently ${vrai.fichiersLus} files)`);
+  assert.deepStrictEqual(vrai.mortes.map((m) => `${m.chemin}:${m.ligne}`), [], 'and finds no dead citation left');
+
+  // ── 5. SENS 2, ET C'EST LA MOITIÉ QUI PROUVE QUELQUE CHOSE : sur une citation fabriquée d'un
+  // Article que personne ne porte, il doit mordre. Sans ce sens, le zéro ci-dessus ne dirait rien.
+  const faux = A.findCitationsSansLoi({ organisation: o, fichiers: new Map([['docs/fabrique.md', 'un texte qui renvoie à Arti' + 'cle 999 sans que personne ne le porte']]) });
+  assert.strictEqual(faux.mortes.length, 1, 'a citation of an Article no law carries is caught');
+  assert.strictEqual(faux.mortes[0].numero, 999, 'by its real number');
+
+  // ── 6. UN EXEMPLE ENTRE GUILLEMETS N'EST PAS UNE CITATION. C'est le faux positif le plus cher
+  // de ce fichier, déjà payé une fois par detecterForme() sur la suite de tests.
+  const cite = A.findCitationsSansLoi({ organisation: o, fichiers: new Map([['docs/fabrique.md', 'on écrirait « Arti' + 'cle 999 » dans ce cas']]) });
+  assert.deepStrictEqual(cite.mortes, [], 'a quoted example is never counted as a live citation');
+
+  // ── 7. UNE LISTE VIDE N'EST JAMAIS « AUCUNE AMBIGUÏTÉ » (leçon L5).
+  const vide = A.organisationDesLois({ lois: [] });
+  assert.strictEqual(vide.mesurable, false, 'no law supplied is PAS MESURÉ, never a clean bill');
+  assert.match(A.formatLoisLines(vide).join('\n'), /PAS MESURÉ/, 'and the report says so in its own title');
+
+  // ── 8. LA CONVENTION ET SA LIMITE SONT DANS LE RAPPORT LUI-MÊME.
+  const texte = A.formatLoisLines(o, vrai).join('\n');
+  assert.match(texte, /AUCUN renommage/, 'the convention states that it requires no mass rename — the existing citations all predate the second law and all mean the charter');
+  assert.match(texte, /HORS PORTÉE/, 'and the report declares what it cannot check');
+
+  console.log("Passed: l'organisation des lois, et pourquoi elle n'était pas nécessaire il y a trois jours (2026-10-02, tâche #1445). Un seul texte de ce dépôt portait des Articles numérotés — la charte — donc « Article 19 » n'était ambigu pour personne. Depuis que le document de gouvernance porte sa propre numérotation, DEUX lois numérotent et leurs plages se chevauchent sur 31 numéros ; la même citation désigne deux dispositions différentes selon le texte qu'on avait en tête, ce qui s'est produit pour de vrai trois fois en une nuit. NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ : le premier passage faisait ressortir `docs/regles-de-travail.md` comme « numérote 5 articles de 0 à 18 », alors que ces cinq-là sont des CITATIONS de la charte écrites en gras exactement comme la charte écrit les siennes. Aucun motif de texte ne les distingue — les deux s'écrivent `**Article 18 — Titre.**` — et seule une propriété de l'ENSEMBLE le fait : une vraie numérotation est dense et continue (1,00), une poignée de citations est clairsemée (0,26). La frontière est large, et c'est ce qui la rend sûre plutôt qu'ajustée au cas du jour. LE CONTRÔLE NE REFUSE QUE CE QUI EST FAUX SANS JUGEMENT POSSIBLE : une citation d'un Article qu'AUCUNE loi ne porte. Il en a trouvé exactement UNE sur 709 fichiers — un renvoi aux numéros 122 et 123, qui voulait dire « tâche #122 » et « 123/123 tests » — corrigée le jour même. IL N'ACCUSE PAS les 5 068 citations de la plage commune, toutes antérieures au second texte et voulant toutes dire la charte : les accuser rendrait le signal illisible le jour de sa naissance (leçon L4), et c'est aussi pourquoi la convention ne demande AUCUN renommage. Ce qui reste hors de portée est déclaré plutôt que taise : savoir si une citation dans la plage commune visait la bonne loi est un jugement, jamais une mesure.");
+}
+await testLOrganisationDesLois();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE RENVOI MORT A UNE BORNE HAUTE, et c'est la CLASSE qui est corrigée (2026-10-02, leçon L37)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLaBorneHauteDesRenvoisMorts() {
+  const E = await import('./ecotoken.mjs');
+  const nfs = await import('node:fs');
+  const charte = nfs.readFileSync('CLAUDE.md', 'utf8');
+
+  // ── 1. UN COMMENTAIRE DE CODE QUI ILLUSTRE UN MOTIF N'EST PAS UN RENVOI MORT. C'est le cas réel
+  // qui a fait naître la borne : « // le document de gouvernance : ## Article 64 — … » accusait la
+  // charte d'avoir perdu un Article 64 qu'elle n'a jamais eu.
+  const avecCommentaire = E.verifyNothingBroken(charte, { 'scripts/abraham-les-references.mjs': nfs.readFileSync('scripts/abraham-les-references.mjs', 'utf8') });
+  assert.deepStrictEqual(avecCommentaire.filter((f) => f.check === 'article-disparu'), [], 'MUST CATCH: a number above the charter\'s own highest article was never one of its articles, so it can never be a disappeared one');
+
+  // ── 2. ET LE CONTRÔLE MORD TOUJOURS SUR CE QUI COMPTE (BP4) : un article réellement retiré de la
+  // charte, cité ailleurs, reste refusé. Sans ce second sens, la borne aurait pu tout éteindre.
+  const ampute = charte.replace(/\*\*Article 19 /, '**Articl_e 19 ');
+  const r = E.verifyNothingBroken(ampute, { 'x.md': 'cf. Article 19 pour la raison' });
+  assert.ok(r.some((f) => f.check === 'article-disparu' && /Article 19\b/.test(f.message)), 'a genuinely removed article, cited elsewhere, is still refused');
+
+  // ── 3. LA BORNE EST LUE, JAMAIS FIXÉE EN DUR (Article 24) : un article ajouté demain relève le
+  // plafond le jour même. On le vérifie en citant un numéro juste au-dessus du maximum réel.
+  const maxReel = Math.max(...[...charte.matchAll(/\*\*Article (\d+)\s/g)].map((m) => Number(m[1])));
+  const auDessus = E.verifyNothingBroken(charte, { 'y.md': `cf. Article ${maxReel + 1} quelque part` });
+  assert.deepStrictEqual(auDessus.filter((f) => f.check === 'article-disparu'), [], `a citation just above the real maximum (${maxReel}) is not a dead charter reference`);
+  const dedans = E.verifyNothingBroken(charte.replace(new RegExp(`\\*\\*Article ${maxReel} `), '**Articl_e '), { 'y.md': `cf. Article ${maxReel} quelque part` });
+  assert.ok(dedans.some((f) => f.check === 'article-disparu'), 'while the maximum itself, once removed, is caught — so the bound really sits where the charter ends');
+
+  // ── 4. ET LE PLAFOND NE SE PREND JAMAIS SUR LE TEXTE ALLÉGÉ QU'ON VÉRIFIE. Le faire aurait
+  // retourné le contrôle contre lui-même : retirer le dernier Article abaisserait le plafond, et
+  // la disparition qu'on cherche sortirait du périmètre au moment exact où elle se produit. La
+  // suite de tests l'a refusé tout de suite, sur une charte-éprouvette réduite à son Article 0.
+  // QUAND LE PLAFOND EST INCONNU, ON N'EXCLUT RIEN : une exclusion fondée sur une ignorance est
+  // un acquittement rendu sans regarder.
+  const sansDisque = E.verifyNothingBroken('**Article 0 — Hiérarchie.**', { 'x.mjs': 'cf. Article 0 et Article 7' }, [], () => null);
+  assert.ok(sansDisque.some((f) => f.check === 'article-disparu' && /Article 7/.test(f.message)), 'MUST CATCH: with no real charter readable, the bound is unknown and the check keeps its full perimeter rather than acquitting without looking');
+
+  console.log("Passed: le renvoi mort a désormais une borne haute, et c'est la CLASSE qui a été corrigée plutôt que l'occurrence (2026-10-02, leçon L37). Le contrôle qui vérifie qu'un allègement de la charte ne laisse pas de renvoi mort lisait TOUT « Article N » du dépôt comme un renvoi à la charte. Depuis que le document de gouvernance porte sa propre numérotation, il fallait exclure à la main chaque fichier qui mentionne un de SES articles — la liste a reçu deux entrées en deux jours, et la troisième est arrivée par un simple COMMENTAIRE DE CODE illustrant un motif (« ## Article 64 — … »), que rien ne distingue d'un renvoi. UNE LISTE QUI GRANDIT À CHAQUE MENTION N'EST PLUS UNE EXCEPTION, C'EST UNE DETTE. Ce qui ferme la classe est une propriété de la charte elle-même : elle ne renumérote JAMAIS, elle n'ajoute qu'à la suite. Un numéro au-dessus du plus haut qu'elle ait jamais porté n'a donc jamais été un de ses articles, et ne peut pas être un article DISPARU — le chercher revenait à accuser une autre loi d'un trou chez celle-ci. LA BORNE EST LUE SUR LA CHARTE RÉELLE, jamais fixée en dur : un article ajouté demain relève le plafond le jour même (Article 24), ce que le test vérifie en citant le numéro juste au-dessus du maximum réel. ET LE CONTRÔLE MORD TOUJOURS SUR CE QUI COMPTE (BP4) : un article réellement retiré de la charte et cité ailleurs reste refusé, y compris le tout dernier — sans ce second sens, la borne aurait pu éteindre le contrôle entier sans que personne ne le voie.");
+}
+await testLaBorneHauteDesRenvoisMorts();

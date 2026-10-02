@@ -371,5 +371,16 @@
       "check-house"
     ],
     "date": "2026-10-02T08:10:42.603Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "un outil qui lit du texte lit aussi le texte qui parle de lui",
+    "quoi": "Le contrôle des citations mortes (abraham lois) a accusé, le jour de sa naissance, les TROIS endroits où j'expliquais la citation qu'il venait de trouver : le document de référence, la ligne de suivi, et le test qui la couvre. Chacun citait le renvoi fautif pour le raconter. Le même piège s'était déjà refermé la veille sur le scanner de la charte, avec un commentaire de code illustrant un motif. LA PARADE, et elle est la même aux deux endroits : écrire les numéros sans le mot qui les précède dans la prose, et couper la chaîne en deux dans les éprouvettes de test.",
+    "pourquoi": "Ce n'est pas un défaut du détecteur : il fait exactement son travail. C'est une propriété de tout outil qui lit du texte dans un dépôt où la documentation vit AVEC le code — le rapport, la note et le test font partie du corpus scanné. À prévoir dès la conception, jamais à découvrir au premier passage du filet.",
+    "porteurs": [
+      "abraham-les-references",
+      "ecotoken"
+    ],
+    "date": "2026-10-02T09:39:43.685Z"
   }
 ]

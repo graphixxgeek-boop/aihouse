@@ -10,7 +10,7 @@ strictement une analyse.)*
 
 ## 1. La question posée, reformulée précisément
 
-CLAUDE.md est un document TOUJOURS CHARGÉ (cf. Article 122/123, `docs/referentiel/smart-conso-token.md`)
+CLAUDE.md est un document TOUJOURS CHARGÉ (cf. `docs/referentiel/smart-conso-token.md`)
 — chaque token qu'il contient a un coût réel à CHAQUE tour de conversation. Les 6 Gardiens sacrés du
 code (ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD/CLONE-HUNTER/ALWAYS-NEW-CODE léger) tournent
 AUTOMATIQUEMENT à chaque commit via le crochet post-commit, indépendamment de ce que CLAUDE.md dit

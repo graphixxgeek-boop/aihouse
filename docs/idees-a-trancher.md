@@ -960,3 +960,40 @@ jamais ça.
 mais elle ne se fait pas en une nuit et elle lui appartient entièrement. L'issue 1 est déjà en
 place et ne coûte rien à garder en attendant. **Les deux ne s'excluent pas** : la fourchette reste
 utile comme alarme même le jour où la composition devient la vraie cible.
+
+---
+
+## #1445 — TROIS TEXTES ÉNONCENT CHACUN UNE SUPRÉMATIE, ET RIEN NE DIT LEQUEL L'EMPORTE
+
+*(Posée le 2026-10-02T08:37Z. Document : `docs/referentiel/organisation-des-lois.md`.
+Mesure : `node scripts/abraham-les-references.mjs lois`.)*
+
+**CE QUI EST FAIT ET N'ATTEND RIEN** : qui fait loi (six textes, lus dans le registre), qui numérote
+(deux, sur 31 numéros communs), la convention de citation — qui ne demande **aucun renommage** — et
+le contrôle mécanique des citations mortes, qui en a trouvé une au premier passage.
+
+**CE QUI RESTE, ET CE N'EST PAS UNE OMISSION** : trois textes énoncent chacun une suprématie, sur
+trois domaines présentés comme distincts.
+
+| Le texte | Ce qu'il déclare | Sur quel domaine |
+|---|---|---|
+| `CLAUDE.md`, Article 0 | « la loi suprême » | l'esprit de Lia et Noé — **le Jeu** |
+| `docs/loi-de-l-agence.md` | « le texte suprême de l'outillage » | **l'Agence**, et il est le seul à partir à l'export |
+| `docs/philosophie-et-politique.md` | « le document officiel du projet », avec clauses intangibles | **les valeurs**, tous niveaux confondus |
+
+**TANT QUE LES DOMAINES NE SE TOUCHENT PAS, L'ORDRE N'A PAS BESOIN D'ÊTRE ÉCRIT.** Le jour où ils se
+toucheront, rien dans le dépôt ne dira lequel l'emporte — et ce jour n'est pas prévisible, ce qui
+est précisément ce qui rend la question valable **maintenant** plutôt qu'alors.
+
+**DEUX ISSUES :**
+
+- **Issue 1 — écrire l'ordre maintenant**, une fois, dans le document de gouvernance. Coût : une
+  décision à prendre à froid, sur un conflit qui n'a encore jamais eu lieu, donc sans l'éclairage
+  d'un cas réel.
+- **Issue 2 — déclarer par écrit que les trois domaines sont disjoints**, et que tout conflit entre
+  eux sera traité comme un bug de frontière plutôt que par une hiérarchie. Coût : le jour venu, la
+  décision se prendra dans l'urgence — mais avec un cas concret sous les yeux.
+
+**MON AVIS** : l'issue 2 correspond mieux à la doctrine du dépôt (déclarer une impossibilité vaut
+mieux qu'un mécanisme qui ment, Article 27), et elle ne ferme pas la porte à l'issue 1. Mais c'est
+un arbitrage sur la hiérarchie des lois : il ne m'appartient à aucun titre.

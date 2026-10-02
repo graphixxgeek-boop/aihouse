@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-02. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**123 fichier(s).**
+**124 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -87,6 +87,7 @@
 | [moise-tables-de-loi.md](moise-tables-de-loi.md) | — |
 | [objectifs-vs-resultats.md](objectifs-vs-resultats.md) | — |
 | [organisation-agence.md](organisation-agence.md) | — |
+| [organisation-des-lois.md](organisation-des-lois.md) | — |
 | [organisation-globale-projet.md](organisation-globale-projet.md) | — |
 | [ou-on-en-est.md](ou-on-en-est.md) | — |
 | [parametres.md](parametres.md) | — |

@@ -2098,6 +2098,136 @@ export function formatAlertesLines(s) {
   return L;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// L'ORGANISATION DES LOIS — citer une disposition sans ambiguïté sur le texte dont elle vient
+// (2026-10-02, tâche #1445)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// CE QUI A CHANGÉ LE 2 OCTOBRE, ET C'EST TOUT LE PROBLÈME. Jusque-là, un seul texte de ce dépôt
+// portait des Articles numérotés : la charte. « Article 19 » n'était donc ambigu pour personne, et
+// aucune convention n'était nécessaire. Depuis que le document de gouvernance porte sa propre
+// numérotation, DEUX lois numérotent, et leurs plages se CHEVAUCHENT. La même citation désigne
+// désormais deux dispositions différentes selon le texte qu'on avait en tête.
+//
+// POURQUOI CE CONTRÔLE N'ACCUSE PAS LES CITATIONS DÉJÀ ÉCRITES, et c'est délibéré : il y en a plus
+// de cinq mille dans la plage commune, toutes antérieures au second texte, et toutes voulant dire
+// la charte. Les accuser rendrait le signal illisible le jour de sa naissance — c'est exactement
+// la leçon L4, et c'est aussi la raison pour laquelle il n'y a RIEN à renommer en masse ici.
+// La convention vaut donc pour ce qui s'écrit ENSUITE, et le contrôle ne refuse que ce qui est
+// faux sans jugement possible : une citation qui désigne un Article qu'AUCUNE loi ne porte.
+export const DOC_DE_LA_CHARTE = "CLAUDE.md";
+export const MOTIFS_D_ARTICLE_DECLARE = [
+  /\*\*Article (\d+)\b/g,          // la charte : **Article 19 — …**
+  /^#{2,3}\s*Article (\d+)\b/gm,   // le document de gouvernance : ## Article 64 — …
+  /^\|\s*\*\*(\d+)\*\*\s*\|/gm,    // ses tableaux de politique : | **43** | famille | disposition |
+];
+export const MOTIF_ARTICLE_CITE = /\bArticle\s+(\d+)/g;
+// Trois numéros au moins, et une densité d'au moins 0,6 : en dessous, ce sont des citations
+// éparses, jamais un plan numéroté. Les deux vraies lois numérotées du dépôt rendent 1,00 toutes
+// les deux, et le document le plus proche en dessous rend 0,26 — la frontière est large, et c'est
+// ce qui la rend sûre plutôt qu'ajustée au cas du jour.
+export const MINIMUM_POUR_NUMEROTER = 3;
+export const DENSITE_D_UNE_NUMEROTATION = 0.6;
+
+export function numerosDeclares(texte = "", { motifs = MOTIFS_D_ARTICLE_DECLARE } = {}) {
+  const nums = new Set();
+  for (const m of motifs) for (const x of String(texte).matchAll(new RegExp(m.source, m.flags))) nums.add(Number(x[1]));
+  return [...nums].sort((a, b) => a - b);
+}
+
+export function organisationDesLois({ lois = [], lireF = lireFichierPartage } = {}) {
+  if (!lois.length) {
+    return { mesurable: false, pourquoi: "aucun texte de loi fourni — rendre « zéro ambiguïté » sur une liste vide se lirait comme « tout est clair », qui est l'inverse exact d'une absence de mesure" };
+  }
+  const textes = [];
+  const illisibles = [];
+  for (const l of lois) {
+    try { textes.push({ ...l, texte: lireF(l.chemin, "utf8") }); } catch { illisibles.push(l.chemin); }
+  }
+  if (!textes.length) return { mesurable: false, pourquoi: `aucun des ${lois.length} textes de loi déclarés n'est lisible` };
+  // QUI NUMÉROTE, ET QUI NE FAIT QUE CITER. La distinction n'est pas cosmétique : un texte qui ne
+  // numérote pas ne peut créer aucune ambiguïté, et l'y chercher ferait du bruit pour rien.
+  const fiches = textes.map((t) => {
+    const nums = numerosDeclares(t.texte);
+    // NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ, jamais la forme du gras.
+    // Premier passage, et le faux positif était net : `docs/regles-de-travail.md` ressortait comme
+    // « numérote : 5 articles de 0 à 18 » alors que ces cinq-là sont des CITATIONS de la charte,
+    // écrites en gras exactement comme la charte écrit les siens. Aucun motif de texte ne les
+    // distingue — les deux s'écrivent `**Article 18 — Titre.**`. Ce qui les distingue est une
+    // propriété de l'ENSEMBLE : une vraie numérotation est dense et continue (33 numéros sur une
+    // étendue de 33, soit 1,00), une poignée de citations est clairsemée (5 sur 19, soit 0,26).
+    const etendue = nums.length ? nums[nums.length - 1] - nums[0] + 1 : 0;
+    const densite = etendue ? nums.length / etendue : 0;
+    return { chemin: t.chemin, pourquoi: t.pourquoi,
+      numerote: nums.length >= MINIMUM_POUR_NUMEROTER && densite >= DENSITE_D_UNE_NUMEROTATION,
+      numeros: nums, min: nums[0] ?? null, max: nums[nums.length - 1] ?? null, combien: nums.length,
+      etendue, densite };
+  });
+  const numerotantes = fiches.filter((f) => f.numerote);
+  // LA PLAGE COMMUNE : les numéros qu'au moins DEUX lois portent chacune de son côté.
+  const compte = new Map();
+  for (const f of numerotantes) for (const n of f.numeros) compte.set(n, (compte.get(n) ?? 0) + 1);
+  const ambigus = [...compte.entries()].filter(([, c]) => c >= 2).map(([n]) => n).sort((a, b) => a - b);
+  const union = new Set([...compte.keys()]);
+  return { mesurable: true, fiches, numerotantes: numerotantes.length, ambigus, union, illisibles };
+}
+
+export function findCitationsSansLoi({ organisation, fichiers = new Map() } = {}) {
+  if (!organisation?.mesurable) return { mesurable: false, pourquoi: organisation?.pourquoi ?? "organisation des lois non mesurée" };
+  const mortes = [];
+  for (const [chemin, texte] of fichiers) {
+    // Un texte qui déclare ses propres Articles les cite légitimement sans se nommer lui-même.
+    const estUneLoi = organisation.fiches.some((f) => f.chemin === chemin && f.numerote);
+    String(texte).split("\n").forEach((L, i) => {
+      for (const m of L.matchAll(new RegExp(MOTIF_ARTICLE_CITE.source, MOTIF_ARTICLE_CITE.flags))) {
+        const n = Number(m[1]);
+        if (organisation.union.has(n)) continue;
+        if (estUneLoi) continue;
+        // UN EXEMPLE ENTRE GUILLEMETS N'EST PAS UNE CITATION : c'est le faux positif le plus cher
+        // de ce fichier, déjà payé une fois sur la suite de tests (cf. detecterForme).
+        const avant = L.slice(0, m.index);
+        const guillemets = (avant.match(/["'`«]/g) ?? []).length;
+        if (guillemets % 2 === 1) continue;
+        mortes.push({ chemin, ligne: i + 1, numero: n, extrait: L.trim().slice(0, 110) });
+      }
+    });
+  }
+  return { mesurable: true, mortes, fichiersLus: fichiers.size };
+}
+
+export function formatLoisLines(o, c) {
+  if (!o?.mesurable) return ["=== L'ORGANISATION DES LOIS : PAS MESURÉ ===", `  ${o?.pourquoi}`];
+  const L = ["=== L'ORGANISATION DES LOIS — qui numérote, et comment citer sans ambiguïté ===", "",
+    `${o.fiches.length} texte(s) font loi, lus dans le registre du classificateur — jamais recopiés ici (Article 24).`, ""];
+  for (const f of o.fiches) {
+    L.push(`▸ ${f.chemin}`);
+    L.push(`    ${f.numerote ? `NUMÉROTE : ${f.combien} article(s), de ${f.min} à ${f.max} — densité ${f.densite.toFixed(2)}` : f.combien ? `ne numérote pas : ${f.combien} numéro(s) sur une étendue de ${f.etendue} (densité ${f.densite.toFixed(2)}) — ce sont des CITATIONS d'une autre loi, pas un plan numéroté` : "ne numérote pas — il ne peut créer aucune ambiguïté de citation"}`);
+    L.push(`    ${f.pourquoi}`);
+  }
+  L.push("");
+  if (o.ambigus.length) {
+    L.push(`⚠️  PLAGE COMMUNE : ${o.ambigus.length} numéro(s) portés par ${o.numerotantes} lois à la fois — de ${o.ambigus[0]} à ${o.ambigus[o.ambigus.length - 1]}.`);
+    L.push(`    Dans cette plage, « Article N » tout court désigne deux dispositions différentes selon le texte qu'on avait en tête.`);
+    L.push(`    LA CONVENTION, et elle ne demande AUCUN renommage : « Article N » sans autre mention reste la CHARTE, parce que`);
+    L.push(`    c'était la seule loi numérotée pendant toute la vie du dépôt. Le second texte se cite « article N du document de`);
+    L.push(`    gouvernance », en toutes lettres. Renommer les citations déjà écrites coûterait tout et ne clarifierait rien.`);
+  } else L.push("✅ Aucune plage commune : chaque numéro n'appartient qu'à une loi.");
+  L.push("");
+  if (!c?.mesurable) L.push(`⚠️  PAS MESURÉ — citations : ${c?.pourquoi}`);
+  else if (!c.mortes.length) L.push(`✅ Aucune citation morte sur ${c.fichiersLus} fichier(s) : tout « Article N » rencontré désigne un article qui existe vraiment.`);
+  else {
+    L.push(`🚨 ${c.mortes.length} citation(s) d'un Article qu'AUCUNE loi ne porte, sur ${c.fichiersLus} fichier(s) lus :`);
+    for (const m of c.mortes.slice(0, 15)) L.push(`     ${m.chemin}:${m.ligne} → « Article ${m.numero} » · ${m.extrait}`);
+    if (c.mortes.length > 15) L.push(`     … et ${c.mortes.length - 15} autre(s)`);
+    L.push(`    UNE RÉFÉRENCE MORTE RESSEMBLE À UN LIEN, ce qui est pire qu'une absence : le lecteur croit pouvoir aller vérifier.`);
+  }
+  L.push("");
+  L.push("HORS PORTÉE, et c'est la limite qui compte : savoir si une citation DANS la plage commune visait la bonne loi");
+  L.push("est un jugement, jamais une mesure — les deux dispositions existent, et seul le sens de la phrase les sépare.");
+  L.push("Ce contrôle ne refuse donc que ce qui est faux sans jugement possible : un Article que personne ne porte.");
+  return L;
+}
+
 async function main() {
   const [, , arg1, arg2] = process.argv;
   // `couverture <demande.md> <couvrant.md> [...]` — la commande née de sa phrase du 2026-09-28
@@ -2105,6 +2235,27 @@ async function main() {
   // documents censés y répondre, et rend les demandes que personne n'a écrites. Elle est à lancer
   // à la main, sur demande : confronter deux corpus n'a de sens qu'au moment où l'on prétend que
   // le second répond au premier, jamais à chaque commit.
+  // `lois` — l'organisation des textes qui font loi (tâche #1445). À la main : la question ne se
+  // pose qu'au moment où l'on cite, jamais à chaque commit.
+  if (arg1 === "lois") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — l'organisation des lois", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const { DOCUMENTS_QUI_FONT_LOI } = await import("./le-classificateur.mjs");
+    const { listerLesFichiers } = await import("./lib-shell.mjs");
+    const o = organisationDesLois({ lois: DOCUMENTS_QUI_FONT_LOI });
+    const fichiers = new Map();
+    for (const c of listerLesFichiers(["docs", "scripts"], { root: ".", garder: (n) => n.endsWith(".md") || n.endsWith(".mjs") })) {
+      try { fichiers.set(c, readFileSync(c, "utf8")); } catch { /* illisible : il ne compte ni d'un côté ni de l'autre */ }
+    }
+    try { fichiers.set("CLAUDE.md", readFileSync("CLAUDE.md", "utf8")); } catch { /* absent */ }
+    const c = findCitationsSansLoi({ organisation: o, fichiers });
+    for (const l of formatLoisLines(o, c)) console.log(l);
+    const ecarts = (c.mortes ?? []).map((m) => ({ message: `${m.chemin}:${m.ligne} cite « Article ${m.numero} », qu'aucune loi ne porte`, quoiFaire: "corriger la citation vers ce qu'elle visait vraiment — une référence morte ressemble à un lien, ce qui est pire qu'une absence" }));
+    console.log("");
+    imprimerPlanDaction(planDactionDepuisEcarts(ecarts, { toolSlug: "abraham-les-references" }));
+    return;
+  }
   if (arg1 === "couverture") {
     const [demandeChemin, ...couvrantsChemins] = process.argv.slice(3);
     printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — ce que sa commande demande, et que personne n'a écrit", scriptPath: "scripts/abraham-les-references.mjs" });

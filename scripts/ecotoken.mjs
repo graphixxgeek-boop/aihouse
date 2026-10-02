@@ -1464,7 +1464,30 @@ export function verifyNothingBroken(newCharterText, repoFiles, deplacements = []
     if (PROPRE_NUMEROTATION.some((m) => m.test(chemin))) continue;
     for (const m of matchesDArticleHorsProposition(String(content))) citedArticles.add(Number(m));
   }
+  // LA BORNE HAUTE, ET ELLE CORRIGE LA CLASSE PLUTÔT QUE L'OCCURRENCE (2026-10-02, leçon L37).
+  // La liste de chemins ci-dessus devait grandir d'une entrée à CHAQUE fichier qui mentionne un
+  // article du document de gouvernance — elle en a reçu deux en deux jours, et la troisième est
+  // arrivée par un simple COMMENTAIRE DE CODE illustrant un motif (« ## Article 64 — … »), que
+  // rien ne distingue d'un renvoi. Une liste qui grandit à chaque mention n'est plus une
+  // exception, c'est une dette.
+  // CE QUI FERME LA CLASSE : la charte ne renumérote jamais, elle n'ajoute qu'à la suite. Un
+  // numéro AU-DESSUS du plus haut qu'elle ait jamais porté n'a donc jamais été un de ses articles,
+  // et ne peut pas être un article DISPARU. Le chercher revenait à accuser d'autres lois d'un trou
+  // chez celle-ci. La borne est LUE sur la charte réelle du disque, jamais fixée en dur : un
+  // article ajouté demain relève le plafond le jour même (Article 24).
+  // LE PLAFOND SE LIT SUR LA CHARTE RÉELLE, ET SUR ELLE SEULE. Le prendre sur le texte ALLÉGÉ
+  // qu'on est en train de vérifier retournerait le contrôle contre lui-même : retirer le dernier
+  // Article abaisserait le plafond, et la disparition qu'on cherche à attraper sortirait du
+  // périmètre au moment exact où elle se produit. La suite de tests l'a refusé tout de suite, sur
+  // une charte-éprouvette réduite à son Article 0 où un renvoi mort à l'Article 7 passait soudain.
+  // QUAND LE PLAFOND EST INCONNU, ON N'EXCLUT RIEN : une exclusion fondée sur une ignorance serait
+  // un acquittement rendu sans regarder, c'est-à-dire exactement le faux vert que ce dépôt refuse
+  // partout ailleurs. Sans charte réelle lisible, le contrôle reprend donc son périmètre entier.
+  const surLeDisque = readFile(join(ROOT, "CLAUDE.md"));
+  const numerosReels = surLeDisque ? [...String(surLeDisque).matchAll(/\*\*Article (\d+)\s/g)].map((m) => Number(m[1])) : [];
+  const borneHaute = numerosReels.length ? Math.max(...numerosReels) : Infinity;
   for (const n of [...citedArticles].sort((a, b) => a - b)) {
+    if (n > borneHaute) continue;
     if (!new RegExp(`\\*\\*Article ${n}\\s`).test(newCharterText)) {
       findings.push({ check: "article-disparu", message: `L'Article ${n} est cité ailleurs dans le dépôt mais n'existe plus dans la charte allégée — un renvoi mort.` });
     }

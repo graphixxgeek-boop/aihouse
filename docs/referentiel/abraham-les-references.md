@@ -588,3 +588,40 @@ piège que la tâche #997, même leçon L40). Il vérifie désormais ce qui ne d
 paire porte une nature déclarée, aucune ne concerne un document exclu, et le corpus ne se noie pas.
 **Les paires restent signalées à chaque passage d'ABRAHAM** — c'est là qu'elles se lisent, et le
 pouvoir de détection reste prouvé sur une fixture.
+
+## L'ORGANISATION DES LOIS — citer sans ambiguïté sur le texte dont ça vient (2026-10-02, tâche #1445)
+
+**Sous-commande** : `node scripts/abraham-les-references.mjs lois`. À la main : la question ne se
+pose qu'au moment où l'on cite, jamais à chaque commit.
+
+**CE QU'ELLE RÉSOUT** : jusqu'au 2 octobre, un seul texte numérotait ses Articles, donc « Article
+19 » n'était ambigu pour personne. Depuis que le document de gouvernance porte sa propre
+numérotation, **deux lois numérotent et leurs plages se chevauchent sur 31 numéros**.
+
+**NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ.** Premier passage, faux positif net :
+`docs/regles-de-travail.md` ressortait comme « numérote : 5 articles de 0 à 18 », alors que ces
+cinq-là sont des CITATIONS de la charte, écrites en gras exactement comme la charte écrit les
+siens. **Aucun motif de texte ne les distingue** — les deux s'écrivent `**Article 18 — Titre.**`.
+Ce qui les sépare est une propriété de l'ENSEMBLE : une vraie numérotation est dense et continue
+(33 sur une étendue de 33, soit 1,00), une poignée de citations est clairsemée (5 sur 19, soit
+0,26). Le seuil est à 0,60 : la frontière est large, et c'est ce qui la rend sûre plutôt qu'ajustée
+au cas du jour.
+
+**IL NE REFUSE QUE CE QUI EST FAUX SANS JUGEMENT POSSIBLE** : une citation d'un Article qu'AUCUNE
+loi ne porte. Il en a trouvé **exactement une** au premier passage sur 709 fichiers —
+un renvoi aux numéros 122 et 123, qui voulait dire « tâche #122 » et « 123/123 tests » — corrigée le jour même.
+**Il n'accuse PAS les 5 068 citations de la plage commune** : toutes sont antérieures au second
+texte et veulent toutes dire la charte. Les accuser rendrait le signal illisible le jour de sa
+naissance (leçon L4), et un exemple entre guillemets n'est jamais une citation (même faux positif
+que `detecterForme()` avait déjà payé sur la suite de tests).
+
+**HORS PORTÉE, déclaré dans le rapport** : savoir si une citation DANS la plage commune visait la
+bonne loi est un jugement, jamais une mesure.
+
+**UN PIÈGE PROPRE À CE CONTRÔLE, ET IL S'EST REFERMÉ SUR LUI DÈS LE PREMIER JOUR** : écrire AU SUJET
+d'une citation morte en recrée une. Le rapport de correction, la ligne de suivi qui la raconte et
+le test qui la couvre citaient tous les trois le renvoi fautif pour l'expliquer — et le contrôle les
+a tous les trois accusés, à juste titre. **La parade est d'écrire les numéros sans le mot qui les
+précède** (« un renvoi aux numéros 122 et 123 »), et de couper la chaîne en deux dans les
+éprouvettes de test. C'est le même geste que le dépôt a déjà dû apprendre sur le scanner de la
+charte : un outil qui lit du texte lit aussi le texte qui parle de lui.

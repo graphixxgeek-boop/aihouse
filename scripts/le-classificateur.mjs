@@ -2189,6 +2189,15 @@ export const EXCEPTIONS_D_EXPORT = [
   // pouvait pas le trancher : il reconnaît une fiche d'outil par l'existence de son outil, et aucun
   // exécutable ne s'appelle « carte-cible-des-modules ». Ce n'est pas un trou du détecteur, c'est un
   // document dont la nature se lit dans son contenu et jamais dans son nom.
+  // AJOUTÉE LE 2026-10-02 (tâche #1445), ET LA MÊME FRONTIÈRE QUE LA PRÉCÉDENTE : le mécanisme part,
+  // les valeurs restent. `abraham lois` sait mesurer l'organisation des lois de n'importe quel dépôt ;
+  // ce document-ci dit QUELLES sont NOS six lois, laquelle garde la forme de citation nue et pourquoi.
+  // POURQUOI CE N'EST PAS ENCORE UNE RÈGLE DE CLASSE malgré deux cas en une nuit : les documents de
+  // `docs/referentiel/` qui ne sont ni une fiche d'outil ni un document du jeu ne vont pas tous du même
+  // côté — `standards.md` et `concordance-evolutivite-conception.md` PARTENT. Leur donner un défaut
+  // commun rangerait les uns ou les autres à tort, et un défaut silencieux est précisément la façon
+  // dont une classification devient fausse. Deux exceptions écrites valent mieux qu'une règle fausse.
+  { chemin: "docs/referentiel/organisation-des-lois.md", etat: "RESTE", pourquoi: "quels textes font loi DANS CE DÉPÔT, laquelle des deux numérotations garde la forme de citation nue, et le rang laissé à son arbitrage : des choix propres à ce projet, que le mécanisme de mesure emporte sans emporter leurs réponses" },
   { chemin: "docs/referentiel/carte-cible-des-modules.md", etat: "RESTE", pourquoi: "les effectifs visés et les verdicts de détachabilité des sept familles de CETTE Agence : un choix propre à ce dépôt, que le mécanisme de mesure emporte sans emporter ses chiffres. Une Agence installée ailleurs écrit la sienne" },
   { chemin: "docs/referentiel/organisation-globale-projet.md", etat: "RESTE", pourquoi: "le document mère de CE projet : il décrit comment le jeu et l'Agence s'articulent ICI" },
   { chemin: "docs/referentiel/process-calibres.md", etat: "PART", pourquoi: "les process tels qu'un humain les a calibrés : la forme est réutilisable, et c'est la partie la plus chère à retrouver" },
