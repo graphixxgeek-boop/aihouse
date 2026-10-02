@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-02. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**15 fichier(s).**
+**19 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -19,5 +19,9 @@
 | [process-et-ronde-strategie.md](process-et-ronde-strategie.md) | — |
 | [renommage-en-masse-strategie.md](renommage-en-masse-strategie.md) | — |
 | [strategie-cascade-philo-politique.md](strategie-cascade-philo-politique.md) | — |
+| [strategie-globale-de-l-agence.html](strategie-globale-de-l-agence.html) | — |
+| [strategie-globale-de-l-agence.md](strategie-globale-de-l-agence.md) | — |
+| [strategie-globale-du-jeu.html](strategie-globale-du-jeu.html) | — |
+| [strategie-globale-du-jeu.md](strategie-globale-du-jeu.md) | — |
 | [strategie-globale-du-projet-entier.html](strategie-globale-du-projet-entier.html) | — |
 | [strategie-globale-du-projet-entier.md](strategie-globale-du-projet-entier.md) | — |

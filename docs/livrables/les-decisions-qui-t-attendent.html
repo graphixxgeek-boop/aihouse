@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Les décisions qui t'attendent</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T22:17:17.324Z</div>
+    <h1>Les décisions qui t'attendent</h1>
+    <p class="sub">76 décisions · la plus ancienne depuis 11 jours · liste régénérable</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>Pourquoi ce document existe, et pourquoi il remplace les deux précédents.</strong> Tu en as déjà reçu
+deux aujourd'hui, du 29 et du 30 septembre. <strong>Les deux étaient périmés avant que tu les lises</strong> :
+quatorze décisions nouvelles sont nées depuis, dont sept aujourd'hui.
+<strong>Un document de décisions se périme par construction, à chaque tâche ouverte.</strong>
+Celui-ci se <strong>régénère</strong> : <code>node scripts/check-tasks-details.mjs decisions</code>. <strong>Tâche :</strong> #1500.</p></div>
+<hr>
+<h3>LE CHIFFRE, ET IL EST PLUS LOURD QUE PRÉVU</h3>
+<p><strong>76 décisions t'attendent, sur 162 tâches ouvertes.</strong> <strong>La plus ancienne attend depuis le 22 septembre — onze jours.</strong></p>
+<p>Ce n'est pas la même chose que « 76 tâches en retard ». Ce sont 76 points où <strong>le travail s'arrête tant que tu n'as pas répondu</strong>, et aucun ne se débloquera tout seul.</p>
+<h4>Comment elles sont repérées, parce que le critère compte</h4>
+<p>Je n'ai inventé aucun critère pour ce document. Il lit <strong>trois signaux déjà déclarés</strong> dans le suivi :</p>
+<table><thead><tr><th>Signal</th><th>Combien</th><th>Ce qu'il veut dire</th></tr></thead><tbody><tr><td>le <strong>statut</strong> dit qu'elle attend</td><td>43</td><td>« à trancher », « en attente », « nécessite sa présence »</td></tr><tr><td>le champ <strong>pour qui</strong> vaut « dette envers l'utilisateur »</td><td>17</td><td>je te dois une réponse</td></tr><tr><td>la <strong>criticité</strong> vaut « à trancher »</td><td>16</td><td>la décision te revient explicitement</td></tr></tbody></table>
+<p><strong>Sa limite, dite d'emblée</strong> : il lit ce qu'une ligne <strong>déclare</strong>. Une tâche qui attend ta décision sans le dire dans l'un des trois signaux lui reste invisible. <strong>J'en ai corrigé sept aujourd'hui</strong> — elles annonçaient « À TRANCHER » dans leur plan d'action et portaient le statut « Ouverte », donc le détecteur ne les voyait pas. C'est exactement l'écart qu'une référence morte produit.</p>
+<hr>
+<h3>CE QUE LA RÉPARTITION DANS LE TEMPS RACONTE</h3>
+<table><thead><tr><th>Quand</th><th>Combien</th></tr></thead><tbody><tr><td><strong>28 septembre</strong></td><td><strong>23</strong> — le jour de ta COMMANDE IMPORTANTE</td></tr><tr><td>2 octobre <em>(aujourd'hui)</em></td><td>14</td></tr><tr><td>29 septembre</td><td>13</td></tr><tr><td>25 septembre</td><td>10</td></tr><tr><td>1er octobre</td><td>7</td></tr><tr><td>les six autres jours</td><td>9</td></tr></tbody></table>
+<p><strong>19 décisions sont antérieures au grand changement, 57 lui sont postérieures.</strong> Autrement dit : les trois quarts de ce qui t'attend est né en cinq jours, et c'est cohérent — un grand chantier produit des arbitrages plus vite qu'il ne produit du code.</p>
+<p><strong>Les 19 plus anciennes sont le vrai sujet d'inquiétude.</strong> Elles ne concernent pas le grand changement, elles attendent depuis une à deux semaines, et plusieurs portent sur le renommage — que tu as explicitement mis en pause. Ce sont peut-être des décisions <strong>à écarter</strong>, pas à prendre.</p>
+<hr>
+<h3>PAR THÈME, POUR QUE TU CHOISISSES PAR OÙ COMMENCER</h3>
+<table><thead><tr><th>Combien</th><th>Thème</th><th>Ce que ça débloque</th></tr></thead><tbody><tr><td><strong>28</strong></td><td>Projet</td><td>le grand changement — c'est le goulot</td></tr><tr><td>8</td><td>Outillage</td><td>des outils qui attendent un arbitrage</td></tr><tr><td><strong>7</strong></td><td>Nommage</td><td><strong>en pause sur ta décision</strong> — probablement à écarter en bloc</td></tr><tr><td>6</td><td>Process</td><td>la Ronde, le mode auto</td></tr><tr><td>4</td><td>Charte</td><td>dont le quatrième mot d'ordre</td></tr><tr><td>3 + 3 + 3</td><td>Organisation, Suivi, Agence</td><td></td></tr><tr><td>2 + 2</td><td>Données, Export</td><td></td></tr></tbody></table>
+<p><strong>Mon conseil, et c'est un conseil, pas une mesure :</strong></p>
+<p><strong>① Commence par écarter les 7 du Nommage.</strong> Tu as dit « le renommage est une étape sensible que je ne veux pas infliger au code pendant un chantier complexe ». Si cette décision tient, les sept peuvent être écartées d'un mot — et ÉCARTER est une décision pleine et entière, pas un abandon.</p>
+<p><strong>② Puis les 4 décisions de l'étage 2</strong> identifiées dans l'état des lieux : #1127, #1137, #1138, #1141. Elles débloquent quinze des vingt-huit du thème « Projet ».</p>
+<p><strong>③ Le reste peut attendre.</strong> Aucune des autres n'a d'effet de cascade.</p>
+<hr>
+<h3>LA LISTE COMPLÈTE, DE LA PLUS ANCIENNE À LA PLUS RÉCENTE</h3>
+<p><em>(Triée par âge, et ce n'est pas cosmétique : une décision qui attend depuis onze jours bloque plus de travail en aval qu'une née ce matin.)</em></p>
+<table><thead><tr><th>#</th><th>Depuis</th><th>Ce qui attend ta réponse</th></tr></thead><tbody><tr><td><strong>#390</strong></td><td>09-22</td><td>Outillage / badge</td></tr><tr><td><strong>#603</strong></td><td>09-23</td><td>Process / conduite</td></tr><tr><td><strong>#636</strong></td><td>09-23</td><td>Organisation / vocabulaire (chantier #208)</td></tr><tr><td><strong>#733</strong></td><td>09-24</td><td>Nommage / les séries d'hommages</td></tr><tr><td><strong>#740</strong></td><td>09-24</td><td>Nommage / booster l'agent des noms : TOUS les impacts d'un renommage en série</td></tr><tr><td><strong>#747</strong></td><td>09-24</td><td>Nommage / la nomenclature : un code de classe dans le nom</td></tr><tr><td><strong>#767</strong></td><td>09-25</td><td>Charte / quelles autres règles à fort levier manquent ?</td></tr><tr><td><strong>#768</strong></td><td>09-25</td><td>Nommage / l'outil de renommage PUISSANT, avec recherches web</td></tr><tr><td><strong>#775</strong></td><td>09-25</td><td>Nommage / les deux collisions réelles à trancher avec lui (<code>PALIERS</code>, <code>recordOutcome</code>)</td></tr><tr><td><strong>#814</strong></td><td>09-25</td><td>Données / les registres restants : brancher un lecteur, ou déclarer l'absence assumée ?</td></tr><tr><td><strong>#819</strong></td><td>09-25</td><td>Filet / trois options chiffrées : ne rien faire, regarder les 3 plus lents, ou un mode rapide</td></tr><tr><td><strong>#823</strong></td><td>09-25</td><td>Compteur d'usage / la cause racine prise par son bout d'ÉCRITURE — et le garde-fou est tombé deux fois dans ce qu'il tra</td></tr><tr><td><strong>#830</strong></td><td>09-25</td><td>Idées / « un outil qui vérifie la logique et les trous PARTOUT » — la question posée il y a quatre jours, restée sans ré</td></tr><tr><td><strong>#842</strong></td><td>09-25</td><td>Ronde / « rentabiliser les trouvailles » : l'outil qui mesure ça existe, et son verdict est net — le registre grossit sa</td></tr><tr><td><strong>#845</strong></td><td>09-25</td><td>File / les 5 plus anciennes tâches encore ouvertes, présentées pour arbitrage</td></tr><tr><td><strong>#861</strong></td><td>09-25</td><td>Refonte graphique / son idée SQUID GAME vivait au suivi et nulle part dans le document de son chantier</td></tr><tr><td><strong>#929</strong></td><td>09-26</td><td>Nommage / un seul script, DEUX identités : <code>check-spirit</code> et <code>check-spirit-mjs</code> — et c'est un renommage, donc SA décisio</td></tr><tr><td><strong>#988</strong></td><td>09-27</td><td>Nommage / le registre des baptêmes : trois décisions prises, application REPORTÉE à sa demande</td></tr><tr><td><strong>#1020</strong></td><td>09-27</td><td>Process / présenter les 75 noms en service que l'utilisateur n'a jamais validés</td></tr><tr><td><strong>#1067</strong></td><td>09-28</td><td>Charte / Articles 18 et 26 se recouvrent à 19 % sans que rien ne dise lequel prime</td></tr><tr><td><strong>#1079</strong></td><td>09-28</td><td>Suivi / un commit de SUITE compte-t-il comme « sans mise à jour du suivi » ? — et le commit accusé est le mien</td></tr><tr><td><strong>#1092</strong></td><td>09-28</td><td>Conso / personne n'enregistre le trafic API réel — le registre que Smart Conso lit ne voit que des sondages</td></tr><tr><td><strong>#1104</strong></td><td>09-28</td><td>Agence / le trou de couverture documentaire : 82 % des documents n'appartenaient au périmètre de personne</td></tr><tr><td><strong>#1105</strong></td><td>09-28</td><td>Agence / le RETENU oublié de ma propre fiche de recherche — et le sixième faux chiffre</td></tr><tr><td><strong>#1125</strong></td><td>09-28</td><td>Projet / la COUVERTURE de sa demande — la preuve que rien n'est oublié, mesurée et non promise</td></tr><tr><td><strong>#1126</strong></td><td>09-28</td><td>Projet / le BUDGET D'OBLIGATIONS — aucune obligation nouvelle sans une obligation retirée</td></tr><tr><td><strong>#1127</strong></td><td>09-28</td><td>Projet / le DOCUMENT MAÎTRE de stratégie globale, et qui le porte</td></tr><tr><td><strong>#1128</strong></td><td>09-28</td><td>Projet / l'axe STRATÉGIE sur les tâches et sur la classification</td></tr><tr><td><strong>#1129</strong></td><td>09-28</td><td>Projet / les DEUX règles de travail qu'il a posées et que rien ne porte</td></tr><tr><td><strong>#1130</strong></td><td>09-28</td><td>Projet / la DYNAMIQUE D'ESCALADE tâches ↔ stratégie ↔ philosophie, et sa FIABILISATION</td></tr><tr><td><strong>#1131</strong></td><td>09-28</td><td>Projet / l'outil qui RÉAGIT quand quelque chose est fait à l'envers de la stratégie</td></tr><tr><td><strong>#1132</strong></td><td>09-28</td><td>Projet / les TROIS BORNES qui diront « l'agence est terminée »</td></tr><tr><td><strong>#1133</strong></td><td>09-28</td><td>Projet / la PASSE GÉNÉRALE : objectifs, KPI et RH alignés sur les stratégies</td></tr><tr><td><strong>#1134</strong></td><td>09-28</td><td>Projet / adapter la CHARTE, les RÈGLES DE TRAVAIL, le RÉFÉRENTIEL et les PROCESS</td></tr><tr><td><strong>#1135</strong></td><td>09-28</td><td>Projet / réorganiser les fichiers de STRATÉGIES et de NOTES</td></tr><tr><td><strong>#1136</strong></td><td>09-28</td><td>Projet / le PACK DÉCOUVERTE, dérivé — et le SYSTÈME qui le livre</td></tr><tr><td><strong>#1137</strong></td><td>09-28</td><td>Projet / la STRATÉGIE DU JEU — la troisième partie de sa commande, jamais écrite</td></tr><tr><td><strong>#1138</strong></td><td>09-28</td><td>Projet / les DEUX stratégies globales séparées — avec les deux projets, et comme s'il n'y en avait qu'un</td></tr><tr><td><strong>#1139</strong></td><td>09-28</td><td>Projet / le CHANTIER FINALISATION — sauvegarder la version complète, migrer vers une version light</td></tr><tr><td><strong>#1140</strong></td><td>09-28</td><td>Projet / la version de l'Agence AVEC ou SANS les parties analyse-simulation</td></tr><tr><td><strong>#1141</strong></td><td>09-28</td><td>Projet / l'ORDRE remis d'aplomb : calibrage → stratégie → plan → tâches — et le garde-fou qui l'avait inversé</td></tr><tr><td><strong>#1144</strong></td><td>09-28</td><td>Projet / le BUT ULTIME porté par Philo et Politique : défini ? bien défini ? conforme à notre direction ?</td></tr><tr><td><strong>#1149</strong></td><td>09-29</td><td>Projet / LE CHEMIN : sept étapes ordonnées par dépendance, à la place de sept fils parallèles</td></tr><tr><td><strong>#1150</strong></td><td>09-29</td><td>Suivi / 109 tâches ouvertes sur 97 thèmes : une file aussi fragmentée ne se priorise pas</td></tr><tr><td><strong>#1151</strong></td><td>09-29</td><td>Projet / les 50 questions de calibrage, groupées par étage de l'escalade</td></tr><tr><td><strong>#1154</strong></td><td>09-29</td><td>Agence / le CONTRAT DE RÉCEPTACLE : comment l'acheteur ajoute ses propres outils sans casser les nôtres</td></tr><tr><td><strong>#1156</strong></td><td>09-29</td><td>Charte / deux Articles proposés — L'ESCALADE et L'ALIGNEMENT — écrits en entier, et NON appliqués</td></tr><tr><td><strong>#1163</strong></td><td>09-29</td><td>Projet / les décisions qui l'attendent, présentées par lots — et une dont la réponse a changé</td></tr><tr><td><strong>#1165</strong></td><td>09-29</td><td>Process / un réveil qui ment, pendant six heures — et la leçon qui devait l'empêcher existait déjà</td></tr><tr><td><strong>#1169</strong></td><td>09-29</td><td>Documentation / cinq frontières de documents jumeaux en une nuit : mes fiches sont trop longues</td></tr><tr><td><strong>#1170</strong></td><td>09-29</td><td>Suivi / le garde-fou des statuts ne lit pas les archives — et il dit vrai sur un périmètre plus étroit qu'on ne le lit</td></tr><tr><td><strong>#1175</strong></td><td>09-29</td><td>Outillage / deux motifs de numéro de tâche dans le MÊME fichier, qui ne s'accordent ni en bas ni en haut de l'échelle</td></tr><tr><td><strong>#1192</strong></td><td>09-29</td><td>Données / faut-il SUIVRE dans le temps la couverture des outils, maintenant qu'elle se mesure ?</td></tr><tr><td><strong>#1193</strong></td><td>09-29</td><td>Outillage / le détecteur de documents jumeaux rapproche ce que J'ÉCRIS, pas ce que les documents DISENT — et chaque expl</td></tr><tr><td><strong>#1197</strong></td><td>09-29</td><td>Process / l'estimation de la Ronde s'applique-t-elle à une Ronde AUTONOME, que personne n'attend ?</td></tr><tr><td><strong>#1362</strong></td><td>10-01</td><td>Projet / les TROIS BORNES de « l'agence est terminée » enfin proposées — sa commande #1132, ouverte depuis le 28 septemb</td></tr><tr><td><strong>#1409</strong></td><td>10-01</td><td>Outillage / 33 preuves d'étape sur 45 ne peuvent JAMAIS échouer — et le constat pointait vers une tâche CLOSE depuis cet</td></tr><tr><td><strong>#1417</strong></td><td>10-01</td><td>Projet / les 30 questions de cadrage philo &amp; politique — et les deux familles de son cadre auxquelles le dépôt n'a JAMAI</td></tr><tr><td><strong>#1419</strong></td><td>10-01</td><td>Projet / la philosophie du projet RÉVÉLÉE : 29 principes extraits de 5 843 convictions, trois niveaux, et une seule case</td></tr><tr><td><strong>#1420</strong></td><td>10-01</td><td>Organisation / la CARTE CIBLE de l'organisation par modules — sa demande n'était consignée NULLE PART, et c'est lui qui</td></tr><tr><td><strong>#1421</strong></td><td>10-01</td><td>Organisation / qui PORTE chaque stratégie, et le marqueur de stratégie sur chaque tâche — seconde demande du Word jamais</td></tr><tr><td><strong>#1425</strong></td><td>10-01</td><td>Projet / les 30 questions réécrites : plus un questionnaire philosophique, seulement les arbitrages qui ferment le docum</td></tr><tr><td><strong>#1440</strong></td><td>10-02</td><td>Projet / lui répondre sur son prompt Word : les cartes par module, et toutes les questions restées sans réponse</td></tr><tr><td><strong>#1478</strong></td><td>10-02</td><td>Projet / l'arborescence des tâches du GRAND PROJET n'existe pas, et l'état des lieux en dépend</td></tr><tr><td><strong>#1482</strong></td><td>10-02</td><td>Stratégie / les trois stratégies globales, en HTML, hybrides, chacune portant son plan d'action</td></tr><tr><td><strong>#1483</strong></td><td>10-02</td><td>Process / le système de fils : il ne se remplit plus, et l'outil qui le surveille dit que tout va bien</td></tr><tr><td><strong>#1487</strong></td><td>10-02</td><td>Charte / le quatrième mot d'ordre INTELLIGENT manque à la boussole, et je ne peux pas l'y mettre seul</td></tr><tr><td><strong>#1488</strong></td><td>10-02</td><td>Outillage / détecter l'ORDRE des événements : à moitié en place, pour un seul cas</td></tr><tr><td><strong>#1489</strong></td><td>10-02</td><td>Outillage / <code>the-king tension</code> ne lit qu'un seul document, alors que deux textes font loi</td></tr><tr><td><strong>#1492</strong></td><td>10-02</td><td>Export / « verrouiller le code » : trois sens très différents, et il faut en choisir un</td></tr><tr><td><strong>#1493</strong></td><td>10-02</td><td>Export / trois règles de conduite n'ont pour source qu'une conversation — leur écrire un domicile, ou les laisser mourir</td></tr><tr><td><strong>#1495</strong></td><td>10-02</td><td>Projet / le jeu pèse 3 % de la file ouverte — décision assumée, ou dérive à corriger ?</td></tr><tr><td><strong>#1496</strong></td><td>10-02</td><td>Outillage / six bibliothèques et quatre outils d environnement portent un kit d outil — 40 fichiers pour rien ?</td></tr><tr><td><strong>#1497</strong></td><td>10-02</td><td>Outillage / quinze outils pourraient devenir une extension — à instruire un par un, jamais en bloc</td></tr><tr><td><strong>#1498</strong></td><td>10-02</td><td>Circulation / 26 documents écrits pour lui et jamais livrés — comment les lui rendre ?</td></tr><tr><td><strong>#1499</strong></td><td>10-02</td><td>Process / les 5 Routines sont attachées à cette session : aucune ne peut le joindre, et la veille tombera dans le vide</td></tr></tbody></table>
+<hr>
+<h2>PLAN D'ACTION</h2>
+<table><thead><tr><th>État</th><th>Constat</th><th>Suite</th></tr></thead><tbody><tr><td>✅ FAIT</td><td>la liste est devenue une COMMANDE, donc elle ne se périmera plus</td><td>#1500</td></tr><tr><td>✅ CORRIGÉ</td><td>7 tâches annonçaient « À TRANCHER » sans porter le signal : le détecteur ne les voyait pas</td><td>#1500</td></tr><tr><td>? À TRANCHER</td><td><strong>les 7 décisions de Nommage : les écarter en bloc ?</strong> (une seule réponse)</td><td>#1500</td></tr><tr><td>? À TRANCHER</td><td>les 4 décisions de l'étage 2, qui en débloquent 15</td><td>#1127, #1137, #1138, #1141</td></tr><tr><td>⏳ À INSTRUIRE</td><td>les 19 décisions antérieures au 28 septembre : encore d'actualité, ou périmées ?</td><td>#1500</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/les-decisions-qui-t-attendent.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

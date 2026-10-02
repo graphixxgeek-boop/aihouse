@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-02. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**18 fichier(s).**
+**24 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -16,11 +16,17 @@
 | [comprendre-le-poids-du-depot.md](comprendre-le-poids-du-depot.md) | — |
 | [l-agence-ailleurs.html](l-agence-ailleurs.html) | — |
 | [l-agence-ailleurs.md](l-agence-ailleurs.md) | — |
+| [le-pack-decouverte-point.html](le-pack-decouverte-point.html) | — |
+| [le-pack-decouverte-point.md](le-pack-decouverte-point.md) | — |
 | [les-11-destinations-dune-note.html](les-11-destinations-dune-note.html) | — |
 | [les-11-destinations-dune-note.md](les-11-destinations-dune-note.md) | — |
+| [les-decisions-qui-t-attendent.html](les-decisions-qui-t-attendent.html) | — |
+| [les-decisions-qui-t-attendent.md](les-decisions-qui-t-attendent.md) | — |
 | [ou-en-est-le-grand-changement.html](ou-en-est-le-grand-changement.html) | — |
 | [ou-en-est-le-grand-changement.md](ou-en-est-le-grand-changement.md) | — |
 | [outils-reductibles-en-extension.html](outils-reductibles-en-extension.html) | — |
 | [outils-reductibles-en-extension.md](outils-reductibles-en-extension.md) | — |
 | [reponse-au-prompt-word-du-1er-octobre.html](reponse-au-prompt-word-du-1er-octobre.html) | — |
 | [reponse-au-prompt-word-du-1er-octobre.md](reponse-au-prompt-word-du-1er-octobre.md) | — |
+| [travailler-a-distance.html](travailler-a-distance.html) | — |
+| [travailler-a-distance.md](travailler-a-distance.md) | — |

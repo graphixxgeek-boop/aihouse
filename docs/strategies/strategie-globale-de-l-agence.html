@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA STRATÉGIE GLOBALE DE L'AGENCE — comme si elle était seule</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T22:11:33.589Z</div>
+    <h1>LA STRATÉGIE GLOBALE DE L'AGENCE — comme si elle était seule</h1>
+    <p class="sub">Hybride — base écrite à la main, bloc dérivé régénéré automatiquement</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Créée le 2026-10-02, tâche <strong>#1482</strong>, à sa demande : « Je veux 3 belles stratégies globales, livrées en HTML, parfaitement coherente dans la cascade de PHILO à taches ».)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
+<em>la philosophie dit POURQUOI, celle-ci dit COMMENT on s'y prend — à l'échelle de l'Agence seule.</em></p></div>
+<div class="highlight"><p><strong>SŒUR DE :</strong> <code>docs/strategies/strategie-globale-du-jeu.md</code>
+*les deux couvrent chacune un projet comme s'il était seul. Leur synthèse est
+<code>strategie-globale-du-projet-entier.md</code>, qui les chapeaute — et qui existait avant elles.*</p></div>
+<div class="highlight"><p><strong>POURQUOI TROIS ET NON UNE.</strong> Sa demande #1138 : « les DEUX stratégies globales séparées — avec
+les deux projets, et comme s'il n'y en avait qu'un ». La raison est opératoire, pas
+documentaire : <strong>le jour où l'Agence part ailleurs, elle part SANS le Jeu.</strong> Une stratégie qui
+mélange les deux ne peut pas se transporter — il faudrait la découper au moment où l'on a le
+moins le temps de le faire.</p></div>
+<div class="highlight"><p><strong>CE DOCUMENT EST HYBRIDE.</strong> Tout ce que tu lis est écrit à la main et ne bouge pas. Le bloc en
+bas, encadré, se <strong>recalcule</strong> : <code>node scripts/data-archangel.mjs strategies --ranger</code>. Les
+chiffres d'une stratégie périment plus vite que son raisonnement, et les recopier à la main
+serait la dette que l'Article 24 interdit.</p></div>
+<h3>1. POURQUOI CE CHANTIER</h3>
+<p><strong>L'Agence est le second projet, et c'est elle qui se vend.</strong> La formule fondatrice le dit : « l'agence est un prétexte pour construire le site, le site est un prétexte pour construire l'agence. Quand le site sera fini, l'agence sera aussi potentiellement finie : il suffira de l'exporter. »</p>
+<p><strong>Cette phrase contient une hypothèse qu'il faut regarder en face</strong> : « il suffira de l'exporter ». Les mesures du 2 octobre disent que ce n'est pas vrai aujourd'hui.</p>
+<ul><li><code>the-king fonder</code>, l'outil dont le seul rôle est de doter un projet d'accueil de ses textes fondateurs, <strong>n'avait jamais tourné contre un projet d'accueil</strong>. Lancé contre un vrai, il rendait <strong>0 case sur 19</strong> et <strong>accusait l'hôte</strong> d'un défaut qui venait de l'instrument.</li><li><strong>3 règles de conduite sur 28</strong> n'ont pour source qu'une conversation : elles ne partiront pas, et personne ne remarquera leur absence.</li><li><strong>99 % du filet de sécurité teste l'Agence</strong>, et <strong>4 % seulement</strong> le produit. Donc le projet d'accueil n'hérite d'aucune protection pour SON code.</li></ul>
+<p><strong>La stratégie de l'Agence est donc d'abord une stratégie d'EXPORT ÉPROUVÉ</strong>, pas une stratégie de construction. Ce qui est construit est déjà considérable ; ce qui n'est pas prouvé, c'est qu'il survive au déménagement.</p>
+<h3>2. CE QUI EXISTE DÉJÀ</h3>
+<table><thead><tr><th>Ce qui est en place</th><th>Mesure</th></tr></thead><tbody><tr><td>Outils</td><td>86, dont 79 portant blueprint + fiche</td></tr><tr><td>Fichiers de kit tenus à jour</td><td>395 pour l'outillage seul</td></tr><tr><td>Filet de sécurité</td><td>409 tests, EXIT=0, ~9 minutes</td></tr><tr><td>Gardiens sacrés tournant à chaque commit</td><td>7</td></tr><tr><td>Stratégies de chantier</td><td>10, dont 4 complètes au format en 7 sections</td></tr><tr><td>Règles de conduite surveillées</td><td>28, dont 25 avec un domicile dans le dépôt</td></tr></tbody></table>
+<p><strong>Et une mesure qui compte plus que les autres</strong> : les 34 outils de moins de 300 lignes pèsent <strong>5 % du code</strong>. Le paysage n'est donc pas encombré de petits outils — il est tenu par quelques gros, dont le filet (25 447 lignes à lui seul, un quart du total).</p>
+<h3>3. LES IDÉES RETENUES</h3>
+<p><strong>① L'export se prouve, il ne se déclare pas.</strong> Un outil qui n'a jamais tourné contre le cas pour lequel il existe n'est pas un outil, c'est une intention. La preuve est un passage réel contre un dépôt d'accueil, jamais un pourcentage de conformité.</p>
+<p><strong>② Ce qui n'a pas de domicile dans le dépôt n'existera pas ailleurs.</strong> Toute règle, toute convention, toute raison qui ne vit que dans une conversation est perdue d'avance. C'est l'Article 27, et c'est la seule chose qui distingue une Agence transportable d'un dossier de scripts.</p>
+<p><strong>③ L'unité de coût n'est pas la ligne, c'est l'OBLIGATION.</strong> Fusionner des outils n'allège pas le code (5 %). Ce qui sature, c'est le nombre de fichiers à tenir à jour — 395 — et c'est ce chiffre qu'une rationalisation doit faire baisser.</p>
+<p><strong>④ L'Agence ne doit pas rendre le projet d'accueil bavard.</strong> La plupart des garde-fous partent de leurs propres registres et ignorent un fichier étranger — c'est mesuré et c'est bien. Mais ceux qui lisent tout l'arbre poseront des questions sur chaque dossier de l'utilisateur. Un outil bruyant cesse d'être lu, et une Agence qui transforme le travail de son hôte en bruit a échoué.</p>
+<p><strong>⑤ Le filet part avec l'Agence, mais il ne protège pas l'hôte.</strong> Les deux moitiés de cette phrase comptent. Il doit partir, sinon l'Agence arrive non testée. Et il ne teste pas le code de l'utilisateur, donc il ne faut pas le lui vendre comme une protection.</p>
+<h3>4. LES RECHERCHES ET TROUVAILLES</h3>
+<p><strong>Le test du dépôt d'accueil, mené pour la première fois le 2026-10-02.</strong> Un vrai petit projet — un carnet de jardin partagé, un README et deux documents de décisions pleins de convictions claires. Résultat : zéro proposition, et un message accusant l'hôte dix-neuf fois.</p>
+<p><strong>La cause était un seuil hors de son nuage</strong> : la dérivation au 75ᵉ centile est correcte, mais un plancher en dur de 3 passait au-dessus du maximum observé (0). Sur ce dépôt-ci le plancher ne mord jamais — maximum 26 — donc le défaut était invisible sans le test.</p>
+<p><strong>La leçon qui dépasse ce cas</strong> : tout mécanisme de cette Agence est calibré sur un corpus de 7 191 convictions. Un projet d'accueil en aura trois cents. <strong>Chaque seuil dérivé d'un gros corpus est suspect jusqu'à preuve du contraire sur un petit.</strong></p>
+<h3>5. LES DÉCISIONS DÉJÀ PRISES</h3>
+<ul><li><strong>Les blueprints génériques sont obligatoires</strong>, sans exception depuis le 2026-09-26 : « les optionnels de l'agence ne pourront pas être réinstallés correctement si on les a intégrés à l'agence ».</li><li><strong>Zéro sauvegarde conservée</strong> (2026-10-02) : git est la sauvegarde, la remise efface le fichier.</li><li><strong>La séparation des deux cerveaux du Jeu n'est jamais remise en cause au nom du coût</strong> — elle appartient au Jeu, mais la règle qui l'protège appartient à l'Agence.</li><li><strong>Un registre se LIT, il ne se recopie pas</strong> (Article 24) : toute liste reflétant un autre système porte un garde-fou mécanique ou se lit dynamiquement.</li></ul>
+<h3>6. CE QUI RESTE À TRANCHER</h3>
+<table><thead><tr><th>#</th><th>La question</th></tr></thead><tbody><tr><td>#1492</td><td>« verrouiller le code » : convention de dossiers, lecture seule, ou paquet installé ?</td></tr><tr><td>#1493</td><td>les 3 règles sans domicile : leur écrire un document, ou les laisser mourir ?</td></tr><tr><td>#1496</td><td>les 6 bibliothèques et 4 outils d'environnement : les dispenser du kit ?</td></tr><tr><td>#1490</td><td>l'Agence doit-elle livrer un filet VIDE pour le projet de l'utilisateur ?</td></tr><tr><td>#1368</td><td>la licence : à qui l'Agence doit-elle pouvoir servir ?</td></tr></tbody></table>
+<h3>7. LE PLAN D'EXÉCUTION</h3>
+<p><strong>L'ordre n'est pas négociable, et il suit une seule règle : prouver avant d'élaguer.</strong></p>
+<ul><li><strong>Prouver l'export</strong> — faire tourner l'Agence entière contre un dépôt d'accueil, pas seulement <code>fonder</code>. C'est la seule mesure qui dise si « il suffira de l'exporter » est vrai <em>(#1481 est le premier pas, fait)</em>.</li><li><strong>Loger ce qui n'a pas de domicile</strong> — les 3 règles, puis chercher ce que la mesure ne voit pas <em>(#1484, #1493)</em>.</li><li><strong>Trancher la licence</strong> — elle bloque les testeurs, donc elle bloque toute validation extérieure <em>(#1368)</em>.</li><li><strong>Alléger les obligations, pas le code</strong> — les 10 fichiers du groupe facile d'abord <em>(#1496)</em>.</li><li><strong>Puis seulement</strong> : le renommage en masse, qu'il a explicitement refusé d'infliger au code pendant un chantier complexe.</li></ul>
+<h4>⟳ CE QUE LA FILE DIT AUJOURD'HUI — L'AGENCE SEULE</h4>
+<table><thead><tr><th>Mesure</th><th>Valeur</th></tr></thead><tbody><tr><td>Tâches ouvertes sur ce périmètre</td><td><strong>152</strong></td></tr><tr><td>Dont critiques</td><td>10</td></tr><tr><td>Thèmes couverts</td><td>27</td></tr><tr><td>La plus ancienne encore ouverte</td><td>2026-09-22T11:50Z</td></tr><tr><td>Stratégies de chantier qui en descendent</td><td>0</td></tr><tr><td></td><td><em>(aucune ne déclare découler de celle-ci — elle est neuve)</em></td></tr></tbody></table>
+<p><em>(Bloc DÉRIVÉ, régénéré par <code>node scripts/data-archangel.mjs strategies --ranger</code> — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)</em></p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/strategies/strategie-globale-de-l-agence.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

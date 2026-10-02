@@ -264,3 +264,19 @@ cascade, et le trancher à ta place serait le pire endroit où le faire.**
 | **RETENU** | 132 garde-fous exportés sans une ligne d'explication, sur 119 fichiers source (SAFE-EXPORT, sonde X6) | c'est le chantier ouvert du niveau AGENCE, inscrit comme jalon plutôt que comme remarque |
 | **ÉCARTÉ** | renuméroter ②③④ pour intercaler la déclinaison en ② | **raison écrite** : une renumérotation casse les renvois existants, exactement la dette que l'Article 13 interdit. Le suffixe `bis` coûte un caractère et ne casse rien |
 | **ÉCARTÉ** | insérer la cible comme parent de ce document plutôt que comme règle | **raison écrite** : la cible dit CE QU'ON CHERCHE, ce document dit COMMENT. Aucun des deux ne découle de l'autre — les empiler aurait rendu fausse la phrase « première marche SOUS la boussole », pour corriger une incohérence par une autre |
+
+<!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
+
+### ⟳ CE QUE LA FILE DIT AUJOURD'HUI — LES DEUX ENSEMBLE
+
+| Mesure | Valeur |
+|---|---|
+| Tâches ouvertes sur ce périmètre | **157** |
+| Dont critiques | 10 |
+| Thèmes couverts | 31 |
+| La plus ancienne encore ouverte | 2026-09-22T11:50Z |
+| Stratégies de chantier qui en descendent | 10 |
+
+*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
+
+<!-- FIN DU SOMMAIRE GÉNÉRÉ -->

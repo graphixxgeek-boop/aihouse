@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le PACK DÉCOUVERTE — le point</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T22:19:09.344Z</div>
+    <h1>Le PACK DÉCOUVERTE — le point</h1>
+    <p class="sub">80 % du contenu existe déjà · trois questions bloquent depuis quatre jours</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>Ta demande :</strong> *« faisons le point (créé une tache) sur le PACK DECOUVERTE, rappelle moi il
+appartient à quel contexte. »* <strong>Tâche :</strong> #1476 <em>(créée)</em>, qui complète #1136 *(ouverte depuis
+le 28 septembre, jamais démarrée)*.</p></div>
+<hr>
+<h3>① À QUEL CONTEXTE IL APPARTIENT</h3>
+<p><strong>Il vient de ta COMMANDE IMPORTANTE du 28 septembre</strong>, retrouvé mécaniquement et non de mémoire. C'est une commande <strong>complémentaire</strong> à celle sur les stratégies globales, et tu l'avais marquée comme telle : <em>« A NOTER : LIEN EXISTANT ENTRE LA COMMANDE CI-DESSUS ET CI-DESSOUS »</em>.</p>
+<p><strong>Ce que tu as demandé, dans tes mots :</strong></p>
+<div class="highlight"><p>« 1 DOC VERSION ADMIN (une page HTML) + 1 DOC VERSION COMMERCIALISABLE de présentation de LA
+LISTE DES DOCUMENTS DE DECOUVERTE + 1 DOC (6-8 PAGES HTML) DE PRESENTATION DE L'AGENCE dans les
+deux versions + POSSIBILITE D'OBTENIR UN DES DOCS DE LA LISTE SUR DEMANDE. »</p></div>
+<p><strong>À quoi il sert, dans tes mots</strong> : <em>« permet de découvrir l'agence, de la faire découvrir à un utilisateur, ou à une IA, ou à moi, en tant que &quot;projet&quot; et non &quot;produit fini&quot; »</em>.</p>
+<p><strong>Et pourquoi tu le voulais, ce qui est le plus important</strong> :</p>
+<div class="highlight"><p>« ETRE CAPABLE DE PRESENTER L'AGENCE : cet exercice nous contraint par ailleurs à devoir savoir
+ce que nous présentons, et nous range donc en ordre de bataille. C'est une demande &quot;levier&quot; en
+même temps qu'une demande légitime. »</p></div>
+<p><strong>C'est le cœur du sujet, et ça change l'ordre de priorité</strong> : le pack n'est pas un livrable commercial de plus. <strong>C'est un test de clarté.</strong> Si on ne sait pas le produire, c'est qu'on ne sait pas ce qu'on a construit.</p>
+<hr>
+<h3>② OÙ ÇA EN EST : RIEN N'A ÉTÉ PRODUIT</h3>
+<p>Une seule tâche le porte, <strong>#1136</strong>, ouverte le 28 septembre. <strong>Aucun des quatre documents n'existe.</strong></p>
+<p><strong>Mais tes neuf questions ont toutes une réponse</strong>, écrite le 29 septembre dans <code>reponses-a-ses-49-questions</code> — le document que je t'ai envoyé aujourd'hui et que tu n'avais jamais reçu. Les voici rassemblées :</p>
+<table><thead><tr><th>Ta question</th><th>La réponse, déjà écrite</th></tr></thead><tbody><tr><td>Qui le porte — Cassandra ou Inès ?</td><td><strong>Inès</strong>, parce qu'elle aplatit déjà le dépôt en une édition consolidée : c'est la matière même du pack. Cassandra tient les RH, ce n'est pas le sujet</td></tr><tr><td>Quel outil garantit sa production à chaque Ronde ?</td><td><code>circle-tasks</code>, comme tu l'as demandé</td></tr><tr><td>Le nom du doc explicatif</td><td><strong>à toi</strong> — tu nommes par séries, je ne propose pas un nom isolé</td></tr><tr><td>Le doc de présentation existe-t-il ?</td><td><strong>Non. Aucun.</strong> <code>docs/grand-projet/index.md</code> est une porte d'entrée de chantier, pas une présentation du produit</td></tr><tr><td>Un « PACK DÉCOUVERTE PROJET ENTIER »</td><td>oui, c'est la marche d'après : Agence + projet utilisateur</td></tr><tr><td>VERSION ADMIN / COMMERCIALISABLE, rétroactives</td><td>traité en C23, C24, C27, C32, C33, C34</td></tr><tr><td>« PACK AGENCE 360 » contre « SUITE TARANTINO »</td><td>traité en C28 — une valeur de plus sur l'axe des versions, <strong>et les deux noms sont les tiens</strong></td></tr><tr><td>L'Agence qui tourne depuis le Cloud</td><td>C29 : techniquement possible (94 % des scripts ne demandent que Node, git et un shell), mais <strong>le vrai obstacle est de lui donner accès au code de l'acheteur</strong> — une question de confiance, pas d'infrastructure</td></tr><tr><td>« Un gros chantier… ou pas ? »</td><td>C40</td></tr></tbody></table>
+<hr>
+<h3>③ LA RÉPONSE À TA DERNIÈRE QUESTION, QUI EST LA PLUS INTÉRESSANTE</h3>
+<div class="highlight"><p>« Je me demande ce que ca represente comme taille de chantier et si finalement avec l'existant
+on a pas déjà tout, que tout n'est pas dejà là sous nos yeux mais qu'il nous manquait de leur
+formaliser et de l'instituer. Qu'en penses-tu ? »</p></div>
+<p><strong>Tu as raison à 80 %, et voici le compte.</strong></p>
+<p><strong>Ce qui existe déjà et pourrait entrer dans le pack sans être réécrit :</strong></p>
+<table><thead><tr><th>Document</th><th>Lignes</th><th>Ce qu'il apporte</th></tr></thead><tbody><tr><td><code>organisation-agence.md</code></td><td>702</td><td>l'organigramme complet, qui fait quoi</td></tr><tr><td><code>philosophie-et-politique.md</code></td><td>587</td><td>ce en quoi le projet croit</td></tr><tr><td><code>classification-agence.md</code></td><td>472</td><td>le rangement, généré donc jamais périmé</td></tr><tr><td><code>standards.md</code></td><td>112</td><td>ce que « à niveau » veut dire, et qui le vérifie</td></tr><tr><td>les 3 stratégies globales</td><td>—</td><td>livrées aujourd'hui</td></tr><tr><td>les fiches des 79 outils</td><td>—</td><td>une par outil, déjà écrites</td></tr></tbody></table>
+<p><strong>Ce qui manque vraiment, et c'est peu :</strong></p>
+<ul><li><strong>Une page d'entrée</strong> — celle qui dit en une page ce qu'est l'Agence et comment lire le reste. C'est la pièce centrale, et elle n'existe sous aucune forme.</li><li><strong>Un exemple d'usage réel</strong> — « voilà une journée de travail avec l'Agence ». Rien de tel n'existe, et c'est ce qui convainc un lecteur extérieur mieux que n'importe quel organigramme.</li><li><strong>La version COMMERCIALISABLE</strong> — tout ce qui existe est écrit en version ADMIN, pour nous.</li></ul>
+<p><strong>Donc : ce n'est pas un gros chantier, c'est un chantier d'ASSEMBLAGE</strong> — à une exception près, la page d'entrée, qui demande de décider ce qu'est l'Agence en une page. Et c'est précisément l'exercice « levier » que tu décrivais.</p>
+<hr>
+<h3>④ CE QUI BLOQUE, ET CE N'EST PAS CE QU'ON CROIT</h3>
+<p><strong>Deux paramètres de ta propre commande n'ont jamais été tranchés, et personne ne te les a reposés depuis quatre jours :</strong></p>
+<p><strong>Q1 — Qui le porte ?</strong> La réponse écrite dit <strong>Inès</strong>, avec son argument. Mais c'est une proposition, et tu avais posé la question. <em>(a) Inès, comme proposé · (b) Cassandra · (c) les deux, Inès produit et Cassandra valide · (d) un nouveau venu</em></p>
+<p><strong>Q2 — Combien de pages pour la présentation de l'Agence ?</strong> Tu écrivais « 6-8, nombre de pages à confirmer ». <em>(a) 6, lisible d'une traite · (b) 8 · (c) dis-moi combien après avoir fait l'inventaire de ce qu'il y a à dire</em></p>
+<p><strong>Une commande dont deux paramètres ne sont pas tranchés ne peut pas démarrer.</strong> C'est la vraie raison des quatre jours d'immobilité — pas un oubli de ma part sur le travail, mais un oubli de te reposer tes propres questions.</p>
+<p><strong>Et une troisième, qui n'était pas dans ta commande mais qui compte maintenant :</strong></p>
+<p><strong>Q3 — Le pack sort-il AVANT ou APRÈS la licence ?</strong> Sans licence, personne n'a légalement le droit d'utiliser ce que le pack présente. Montrer un produit qu'on ne peut pas céder est au mieux inutile, au pire gênant. <em>(a) la licence d'abord — mon conseil · (b) le pack d'abord, la licence suivra · (c) en parallèle</em></p>
+<hr>
+<h2>PLAN D'ACTION</h2>
+<table><thead><tr><th>État</th><th>Constat</th><th>Suite</th></tr></thead><tbody><tr><td>✅ FAIT</td><td>le contexte retrouvé : ta COMMANDE IMPORTANTE du 28 septembre, demande « levier »</td><td>#1476</td></tr><tr><td>✅ MESURÉ</td><td>tes 9 questions ont toutes une réponse écrite depuis le 29 septembre, jamais livrée</td><td>#1476</td></tr><tr><td>✅ MESURÉ</td><td>80 % du contenu existe déjà : c'est un chantier d'ASSEMBLAGE, pas de création</td><td>#1476</td></tr><tr><td>? À TRANCHER</td><td><strong>Q1 — qui le porte ?</strong> (Inès proposée, avec son argument)</td><td>#1136</td></tr><tr><td>? À TRANCHER</td><td><strong>Q2 — combien de pages ?</strong> (6-8, à confirmer depuis le 28 septembre)</td><td>#1136</td></tr><tr><td>? À TRANCHER</td><td><strong>Q3 — avant ou après la licence ?</strong> (mon conseil : après)</td><td>#1136</td></tr><tr><td>→ RETENU</td><td>les 3 pièces manquantes : la page d'entrée, un exemple d'usage réel, la version commercialisable</td><td>#1136</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/le-pack-decouverte-point.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

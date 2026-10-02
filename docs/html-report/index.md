@@ -63,7 +63,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/referentiel/document-de-gouvernance.html` | `docs/referentiel/document-de-gouvernance.md` | 18092 | 2026-10-02 03:59Z |
 | `docs/grand-projet/html/questions-en-cours-de-route.html` | `docs/grand-projet/02-strategie/questions-en-cours-de-route.md` | 16739 | 2026-10-02 06:28Z |
 | `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 17880 | 2026-10-02 07:14Z |
-| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 28428 | 2026-10-02 07:37Z |
 | `docs/livrables/les-11-destinations-dune-note.html` | `docs/livrables/les-11-destinations-dune-note.md` | 11113 | 2026-10-02 08:05Z |
 | `docs/livrables/reponse-au-prompt-word-du-1er-octobre.html` | `docs/livrables/reponse-au-prompt-word-du-1er-octobre.md` | 17380 | 2026-10-02 12:35Z |
 | `docs/rapports-de-nuit/nuit-2026-10-02.html` | `docs/rapports-de-nuit/nuit-2026-10-02.md` | 12840 | 2026-10-02 14:01Z |
@@ -95,3 +94,9 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.html` | `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.md` | 18587 | 2026-10-02 21:25Z |
 | `docs/grand-projet/02-strategie/questions-de-degrossissage.html` | `docs/grand-projet/02-strategie/questions-de-degrossissage.md` | 19467 | 2026-10-02 21:25Z |
 | `docs/livrables/ce-que-tu-nas-jamais-recu.html` | `docs/livrables/ce-que-tu-nas-jamais-recu.md` | 16072 | 2026-10-02 21:30Z |
+| `docs/strategies/strategie-globale-de-l-agence.html` | `docs/strategies/strategie-globale-de-l-agence.md` | 15863 | 2026-10-02 22:11Z |
+| `docs/strategies/strategie-globale-du-jeu.html` | `docs/strategies/strategie-globale-du-jeu.md` | 14930 | 2026-10-02 22:11Z |
+| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 29461 | 2026-10-02 22:11Z |
+| `docs/livrables/travailler-a-distance.html` | `docs/livrables/travailler-a-distance.md` | 13406 | 2026-10-02 22:13Z |
+| `docs/livrables/les-decisions-qui-t-attendent.html` | `docs/livrables/les-decisions-qui-t-attendent.md` | 23755 | 2026-10-02 22:17Z |
+| `docs/livrables/le-pack-decouverte-point.html` | `docs/livrables/le-pack-decouverte-point.md` | 14684 | 2026-10-02 22:19Z |

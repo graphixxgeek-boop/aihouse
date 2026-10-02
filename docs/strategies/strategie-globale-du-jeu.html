@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA STRATÉGIE GLOBALE DU JEU — comme s'il était seul</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T22:11:33.666Z</div>
+    <h1>LA STRATÉGIE GLOBALE DU JEU — comme s'il était seul</h1>
+    <p class="sub">Hybride — base écrite à la main, bloc dérivé régénéré automatiquement</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Créée le 2026-10-02, tâche <strong>#1482</strong>. C'est la troisième partie de sa commande du 2026-09-28, restée <strong>jamais écrite</strong> jusqu'ici — la tâche #1137 le disait, et elle avait raison.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
+*et, avant toute autre chose, de l'<strong>Article 0</strong> de <code>CLAUDE.md</code> : l'esprit des personnages est la
+loi suprême du projet, au-dessus de toute règle de méthode.*</p></div>
+<div class="highlight"><p><strong>SŒUR DE :</strong> <code>docs/strategies/strategie-globale-de-l-agence.md</code>
+<em>leur synthèse est <code>strategie-globale-du-projet-entier.md</code>.</em></p></div>
+<div class="highlight"><p><strong>CE DOCUMENT EST HYBRIDE</strong> : la base est écrite à la main, le bloc en bas se recalcule
+(<code>node scripts/data-archangel.mjs strategies --ranger</code>).</p></div>
+<h3>1. POURQUOI CE CHANTIER</h3>
+<p><strong>Le Jeu est le produit. Tout le reste existe pour le servir.</strong></p>
+<p><strong>Et c'est le seul chantier du projet dont la stratégie n'a jamais été écrite.</strong> Pas par négligence : parce qu'elle est <strong>dispersée dans la charte</strong>, où elle vit depuis le premier jour sans jamais avoir été rassemblée.</p>
+<p><strong>La mesure le dit sans appel</strong> <em>(2026-09-30)</em> : sur les 33 Articles de la charte, <strong>10 parlent de Lia et Noé</strong> — 70 lignes, <strong>10 % du texte</strong>. Les 23 autres parlent de l'outillage (75 %) ou de notre collaboration (15 %).</p>
+<p><strong>Ces dix Articles ne partiraient jamais avec l'Agence</strong> : ils n'auraient aucun sens chez quelqu'un qui n'a ni Lia ni Noé. C'est exactement ce qui fait du Jeu un projet SÉPARÉ, et ce qui justifie cette stratégie-ci plutôt qu'un paragraphe dans celle de l'Agence.</p>
+<h3>2. CE QUI EXISTE DÉJÀ</h3>
+<p><strong>Le Jeu est, de loin, la partie la mieux spécifiée du projet</strong> — et c'est contre-intuitif, parce qu'il ne pèse que 3 % de la file de tâches ouvertes.</p>
+<table><thead><tr><th>Ce qui est écrit</th><th>Où</th></tr></thead><tbody><tr><td>L'esprit fondateur — rugueux, sarcastique, jamais consensuel</td><td>Article 0, loi suprême</td></tr><tr><td>Les limites concrètes de cet esprit, précisées 7 fois</td><td>précisions du 16 et du 18 septembre</td></tr><tr><td>La texture par personnage — Lia froide et coupante, Noé chaud et réactif</td><td>Article 0</td></tr><tr><td>Le silence comme arme, propre à Lia</td><td>Article 0</td></tr><tr><td>La colère débridée : rare, jamais un mode stable</td><td>précision du 18 septembre</td></tr><tr><td>Zéro répétition, personnalités étanches</td><td>Article 11</td></tr><tr><td>L'enquête qui tient debout</td><td>Article 4</td></tr><tr><td>Rejouabilité et surprise</td><td>Article 9</td></tr><tr><td>Le sens avant la forme</td><td>Article 12</td></tr><tr><td>Se mettre à la place du personnage</td><td>Article 17</td></tr><tr><td>La séparation des deux cerveaux, maintenue malgré son coût</td><td>Article 8</td></tr></tbody></table>
+<p><strong>L'outil qui mesure tout ça</strong> : <code>check-spirit</code>, qui envoie de vraies provocations au vrai modèle et refuse de conclure quand il n'a rien pu mesurer. C'est le seul outil du paysage qui touche la sortie RÉELLE du produit.</p>
+<h3>3. LES IDÉES RETENUES</h3>
+<p><strong>① L'esprit prime sur tout, y compris sur une demande de son auteur.</strong> C'est écrit, et c'est la seule règle du projet qui prévoie une double confirmation contre son propre créateur (Article 14). Aucune stratégie ne peut l'assouplir.</p>
+<p><strong>② Un ton mesuré est un SIGNAL D'ALERTE, jamais un indice de qualité.</strong> C'est la formulation la plus utile de la charte pour qui reprend le projet : elle dit comment RECONNAÎTRE la dérive, pas seulement comment l'éviter.</p>
+<p><strong>③ Le naturel l'emporte sur l'économie d'appels.</strong> Article 0 contre Article 8 : la tension est déclarée et tranchée d'avance. Deux cerveaux séparés coûtent deux appels, et on les paie.</p>
+<p><strong>④ Corriger la CLASSE, jamais l'occurrence.</strong> Quand un mot sonne faux, on ne l'ajoute pas à une liste d'interdits — on cherche le principe que le modèle peut s'appliquer lui-même. La liste figée ne couvre jamais le cas suivant <em>(corollaire de l'Article 17)</em>.</p>
+<p><strong>⑤ Le visiteur doit comprendre sans le contexte de l'agent qui a codé.</strong> Article 15, et son pendant interne, l'Article 17 : se mettre à la place du lecteur ET du personnage.</p>
+<h3>4. LES RECHERCHES ET TROUVAILLES</h3>
+<p><strong>Le chiffre le plus inconfortable, et il est à surveiller plutôt qu'à reprocher</strong> : le Jeu pèse <strong>5 tâches ouvertes sur 152</strong>, soit <strong>3 %</strong> de la file. C'est une décision assumée — « tout ce qui a trait au jeu est laissé de côté pour l'instant » — et la charte prévoit explicitement ce cas : le temps passé sur l'outillage n'est pas une digression, c'est le second projet.</p>
+<p><strong>Mais la charte ajoute, dans la même section, qu'il reste « un chiffre à surveiller, parce qu'un des deux projets pourrait étouffer l'autre ».</strong> Personne ne l'avait regardé depuis le 2026-09-22 <em>(devenu #1495)</em>.</p>
+<p><strong>Et une observation qui ne se mesure pas</strong> : le Jeu est la partie la MIEUX spécifiée et la MOINS travaillée. Ce n'est pas contradictoire — c'est le signe qu'il attend, pas qu'il dérive.</p>
+<h3>5. LES DÉCISIONS DÉJÀ PRISES</h3>
+<ul><li><strong>Les deux cerveaux restent séparés</strong>, malgré leur coût — arbitré sous l'Article 8, non réouvrable au nom de l'économie.</li><li><strong>La refonte graphique est reportée</strong>, avec les captures d'écran qui vont avec <em>(2026-10-02)</em>.</li><li><strong><code>lib/reference.ts</code> a été retiré</strong> le 2026-09-27 : le référentiel affiché en jeu faisait doublon avec la charte et <code>docs/referentiel/</code>. Son texte intégral est archivé verbatim.</li><li><strong>Tout ce qui touche au jeu est en pause</strong>, sur sa décision explicite du 2026-10-02.</li></ul>
+<h3>6. CE QUI RESTE À TRANCHER</h3>
+<table><thead><tr><th>#</th><th>La question</th></tr></thead><tbody><tr><td>#1495</td><td>le Jeu à 3 % de la file : décision assumée, ou dérive à corriger ? <strong>Et jusqu'à quand ?</strong></td></tr><tr><td>#1252</td><td><em>(ouverte)</em> le thème « Jeu » lui-même, apparu seulement le 2026-09-30</td></tr><tr><td>#1359</td><td><em>(ouverte)</em> l'Article 0 n'avait jamais eu de thème de tâche avant le 2026-10-01</td></tr><tr><td>—</td><td><strong>quand le Jeu reprend-il ?</strong> Aucune date, aucun déclencheur écrit. C'est le vrai trou.</td></tr></tbody></table>
+<p><strong>Ce dernier point est le seul vraiment stratégique de cette fiche.</strong> Une pause sans condition de sortie n'est pas une pause, c'est un arrêt qui s'ignore. La charte demande de surveiller le chiffre ; elle ne dit nulle part ce qui doit le faire remonter.</p>
+<h3>7. LE PLAN D'EXÉCUTION</h3>
+<p><strong>Il tient en une phrase, et c'est volontaire : rien ne commence avant qu'il le dise.</strong></p>
+<ul><li><strong>Poser la condition de reprise</strong> — une date, un jalon de l'Agence, ou un simple « quand je le dirai ». N'importe laquelle vaut mieux que rien <em>(#1495)</em>.</li><li><strong>À la reprise, relancer <code>check-spirit</code> AVANT de toucher quoi que ce soit</strong> — c'est la seule mesure de l'état réel du ton, et elle coûte de vrais appels, donc elle passe par Smart Conso API.</li><li><strong>Rassembler ici ce que la charte dit du Jeu, sans le déplacer</strong> — les 10 Articles restent la loi ; cette fiche les ORDONNE, elle ne les remplace jamais.</li><li><strong>Puis la refonte graphique</strong>, qui attend avec ses captures d'écran.</li></ul>
+<h4>⟳ CE QUE LA FILE DIT AUJOURD'HUI — LE JEU ET LE SITE SEULS</h4>
+<table><thead><tr><th>Mesure</th><th>Valeur</th></tr></thead><tbody><tr><td>Tâches ouvertes sur ce périmètre</td><td><strong>5</strong></td></tr><tr><td>Dont critiques</td><td>0</td></tr><tr><td>Thèmes couverts</td><td>4</td></tr><tr><td>La plus ancienne encore ouverte</td><td>2026-09-25T15:41Z</td></tr><tr><td>Stratégies de chantier qui en descendent</td><td>0</td></tr><tr><td></td><td><em>(aucune ne déclare découler de celle-ci — elle est neuve)</em></td></tr></tbody></table>
+<p><em>(Bloc DÉRIVÉ, régénéré par <code>node scripts/data-archangel.mjs strategies --ranger</code> — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)</em></p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/strategies/strategie-globale-du-jeu.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

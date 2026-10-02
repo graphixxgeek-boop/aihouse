@@ -3015,6 +3015,56 @@ function strategieCli(argv) {
   return null;
 }
 
+// LA LISTE DES DÉCISIONS QUI L'ATTENDENT (2026-10-02, tâche #1500).
+//
+// POURQUOI UNE COMMANDE PLUTÔT QU'UN DOCUMENT ÉCRIT UNE FOIS : il en existait déjà deux, du
+// 2026-09-29 et du 2026-09-30, et les deux étaient périmés avant qu'il ne les lise — quatorze
+// décisions nouvelles sont nées depuis. Un document de décisions se périme par construction, à
+// chaque tâche ouverte. Celui-ci se REGÉNÈRE.
+//
+// IL NE DÉFINIT AUCUN CRITÈRE NOUVEAU, et c'est ce qui le rend fiable : il appelle
+// `attendUneDecision()`, qui lit les TROIS signaux déjà déclarés — la criticité « A-TRANCHER »,
+// le champ « pour qui » valant DETTE-ENVERS-L-UTILISATEUR, et le statut quand le registre dit
+// qu'il exprime une attente. Un quatrième signal ajouté là-bas entre ici sans qu'une ligne bouge.
+//
+// LE TRI EST PAR ÂGE, DU PLUS VIEUX AU PLUS RÉCENT, et ce n'est pas cosmétique : une décision qui
+// attend depuis quatre jours bloque plus de travail en aval qu'une née ce matin.
+export function decisionsQuiAttendent(rows = [], { maintenant = null } = {}) {
+  const ouvertes = rows.filter((r) => !/termin|ferm/i.test(String(r.statut ?? "")));
+  if (!ouvertes.length) {
+    return { mesurable: false, pourquoi: "aucune tâche ouverte lue : un zéro qui dit qu'on n'a rien pu lire, jamais que rien n'attend" };
+  }
+  const lignes = ouvertes
+    .filter((r) => attendUneDecision(r))
+    .map((r) => ({
+      numero: r.numero,
+      sujet: String(r.sujet ?? "").replace(/\*\*/g, ""),
+      quand: String(r.horodatage ?? "").slice(0, 10),
+      criticite: r.criticite ?? "",
+      pourquoi: pourquoiAttendUneDecision(r).pourquoi,
+      signal: pourquoiAttendUneDecision(r).source,
+    }))
+    .sort((a, b) => (a.quand < b.quand ? -1 : a.quand > b.quand ? 1 : Number(a.numero) - Number(b.numero)));
+  const parSignal = {};
+  for (const l of lignes) parSignal[l.signal] = (parSignal[l.signal] ?? 0) + 1;
+  const jours = maintenant && lignes.length
+    ? Math.round((Date.parse(maintenant) - Date.parse(lignes[0].quand)) / 86400000)
+    : null;
+  return { mesurable: true, lignes, ouvertes: ouvertes.length, parSignal, plusVieille: lignes[0]?.quand ?? null, joursDAttente: jours };
+}
+
+function decisionsCli() {
+  const r = decisionsQuiAttendent(loadAllTaskRows(), { maintenant: new Date().toISOString() });
+  if (!r.mesurable) { console.log(`PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; return; }
+  console.log(`=== ${r.lignes.length} DÉCISION(S) T'ATTENDENT, sur ${r.ouvertes} tâche(s) ouverte(s) ===\n`);
+  console.log(`  Par signal : ${Object.entries(r.parSignal).map(([k, v]) => `${k} (${v})`).join(" · ")}`);
+  if (r.plusVieille) console.log(`  La plus ancienne attend depuis le ${r.plusVieille}${r.joursDAttente != null ? ` — ${r.joursDAttente} jour(s)` : ""}.\n`);
+  for (const l of r.lignes) console.log(`  #${String(l.numero).padEnd(5)} ${l.quand}  ${l.sujet.slice(0, 92)}`);
+  console.log("\n  HORS PORTÉE : il lit ce qu'une ligne DÉCLARE. Une tâche qui attend sa décision sans le dire dans");
+  console.log("  l'un des trois signaux lui reste invisible — et c'est pour ça que les signaux se déclarent, jamais se devinent.");
+  return r;
+}
+
 function themesCli() {
   const rows = loadAllTaskRows();
   const vue = themesDesTachesOuvertes(rows);
@@ -3363,6 +3413,7 @@ function main() {
     return undefined;
   }
   if (process.argv[2] === "themes") return themesCli();
+  if (process.argv[2] === "decisions") return decisionsCli();
   if (process.argv[2] === "strategie") return strategieCli(process.argv);
   // LES TROIS COURBES, joignables en une commande — un mécanisme que personne ne peut lancer
   // n'existe pas (Article 31). Le nombre de jours se passe en argument plutôt que d'être figé :

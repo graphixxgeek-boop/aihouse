@@ -717,6 +717,134 @@ export function formatLivraisonsLines(r, nonDeclares = []) {
   return l;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES STRATÉGIES GLOBALES, HYBRIDES (2026-10-02, tâche #1482)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA DEMANDE : « donc ce sont des docs generes, ecrits en prose ou hybrides ? l'ideal serait
+// hybrides : une base fixe de strategie, et ensuite les elements qui se mettent à jour
+// automatiquement. »
+//
+// CE QUE « HYBRIDE » VEUT DIRE ICI, ET C'EST LA SEULE DÉFINITION QUI TIENNE : la BASE FIXE porte
+// le raisonnement, les arbitrages et ce qui ne bouge pas — elle s'écrit à la main et ne se
+// régénère jamais. Le BLOC DÉRIVÉ porte les chiffres : combien de tâches ouvertes sur ce
+// périmètre, combien attendent une décision, quelles stratégies de chantier en descendent. Lui se
+// recalcule, et le recopier à la main serait exactement la dette que l'Article 24 interdit.
+//
+// POURQUOI ICI PLUTÔT QUE DANS UN OUTIL DE PLUS : data-archangel écrit déjà des blocs générés
+// (c'est `index --ranger`), et il tient déjà la convention DEBUT_BLOC_GENERE / FIN_BLOC_GENERE. Le
+// construire à côté donnerait deux mécaniques pour écrire la même chose, et deux mécaniques
+// divergent (Article 31 : on étend, on ne crée pas à côté).
+//
+// LA LISTE DES PÉRIMÈTRES EST MANUELLE, ET DÉCLARÉE COMME TELLE (Article 24) : rattacher le thème
+// « Projet » à l'Agence plutôt qu'au Jeu est un JUGEMENT, pas une mesure — aucun signal mécanique
+// ne les sépare. Le garde-fou qui empêche cette liste de se périmer est le même que celui des
+// familles de thèmes : un thème qui n'entre dans aucun périmètre est NOMMÉ.
+export const PERIMETRES_DE_STRATEGIE = [
+  {
+    fichier: "docs/strategies/strategie-globale-de-l-agence.md",
+    titre: "L'AGENCE SEULE",
+    themes: ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Export", "Badge", "Projet", "Sécurité", "Propriété", "Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille", "Rationalisation", "Nommage", "TOOL_PORTEE", "Process", "Ronde", "Conduite", "Suivi", "File", "XP", "Charte", "Documentation", "Standards", "Idées", "Données", "Conso", "Sauvegarde", "Profil utilisateur", "Circulation", "Stratégie"],
+  },
+  {
+    fichier: "docs/strategies/strategie-globale-du-jeu.md",
+    titre: "LE JEU ET LE SITE SEULS",
+    // « check-spirit » et « Refonte graphique » ont rejoint le périmètre le 2026-10-02, trouvés
+    // par findThemesHorsPerimetre() à son TOUT PREMIER passage. Ils appartiennent au Jeu sans
+    // ambiguïté — l'un mesure le TON des personnages, l'autre l'apparence du site — et sans ce
+    // rattachement ils disparaissaient des trois blocs, ce qui aurait fait lire « 3 tâches » là
+    // où il y en a 5. Un garde-fou qui trouve quelque chose à son premier passage n'est pas une
+    // intention (leçon L2).
+    themes: ["Jeu", "Apparence", "Ton", "Article 0", "check-spirit", "Refonte graphique"],
+  },
+  {
+    fichier: "docs/strategies/strategie-globale-du-projet-entier.md",
+    titre: "LES DEUX ENSEMBLE",
+    themes: null,   // null = TOUS les thèmes : c'est la vue d'ensemble, par définition
+  },
+];
+
+export function mesurerUnPerimetre(perimetre, vue) {
+  if (!vue?.themes) return { mesurable: false, pourquoi: "la file des tâches n'a pas pu être lue : zéro tâche ne veut pas dire file vide" };
+  const retenus = perimetre.themes
+    ? vue.themes.filter((t) => perimetre.themes.includes(t.theme))
+    : vue.themes;
+  const ouvertes = retenus.reduce((a, t) => a + t.combien, 0);
+  const critiques = retenus.reduce((a, t) => a + (t.critiques ?? 0), 0);
+  const numeros = retenus.flatMap((t) => t.numeros ?? []);
+  const dates = retenus.map((t) => t.plusAncienne).filter(Boolean).sort();
+  return { mesurable: true, themes: retenus.length, ouvertes, critiques, numeros, plusAncienne: dates[0] ?? null };
+}
+
+// LES THÈMES QUI N'ENTRENT DANS AUCUN PÉRIMÈTRE — même patron que le garde-fou des familles
+// (Article 24). Un thème neuf qui n'est rattaché nulle part disparaîtrait des trois blocs sans que
+// rien ne le dise, et une case absente se lit comme « rien à signaler ici ».
+export function findThemesHorsPerimetre(vue, { perimetres = PERIMETRES_DE_STRATEGIE } = {}) {
+  if (!vue?.themes) return [];
+  const couverts = new Set(perimetres.filter((p) => p.themes).flatMap((p) => p.themes));
+  return vue.themes.filter((t) => !couverts.has(t.theme)).map((t) => ({ theme: t.theme, combien: t.combien }));
+}
+
+export function blocDeriveDUneStrategie(perimetre, mesure, { chantiers = [], quand = null } = {}) {
+  const L = [DEBUT_BLOC_GENERE, ""];
+  L.push(`### ⟳ CE QUE LA FILE DIT AUJOURD'HUI — ${perimetre.titre}`);
+  L.push("");
+  if (!mesure?.mesurable) {
+    L.push(`**PAS MESURÉ** — ${mesure?.pourquoi ?? "raison non fournie"}. Un bloc vide ne veut jamais dire « rien à faire ».`);
+  } else {
+    L.push("| Mesure | Valeur |");
+    L.push("|---|---|");
+    L.push(`| Tâches ouvertes sur ce périmètre | **${mesure.ouvertes}** |`);
+    L.push(`| Dont critiques | ${mesure.critiques} |`);
+    L.push(`| Thèmes couverts | ${mesure.themes} |`);
+    L.push(`| La plus ancienne encore ouverte | ${mesure.plusAncienne ?? "—"} |`);
+    // LE COMPTE DES ENFANTS SE DÉRIVE DE CE QUE CHAQUE FICHE DÉCLARE, jamais du nombre total de
+    // fiches. Premier jet corrigé le jour même : il affichait « 10 » pour les trois périmètres,
+    // ce qui était faux pour deux d'entre eux — un chiffre identique partout n'est pas une mesure,
+    // c'est un total mal placé, et dans un bloc GÉNÉRÉ il a l'autorité d'une mesure.
+    L.push(`| Stratégies de chantier qui en descendent | ${chantiers.length} |`);
+    if (!chantiers.length) L.push("| | *(aucune ne déclare découler de celle-ci — elle est neuve)* |");
+  }
+  L.push("");
+  L.push(`*(Bloc DÉRIVÉ, régénéré par \`node scripts/data-archangel.mjs strategies --ranger\`${quand ? ` — dernier passage ${quand}` : ""}. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*`);
+  L.push("");
+  L.push(FIN_BLOC_GENERE);
+  return L.join("\n");
+}
+
+export function rangerLesStrategies({ root = ROOT, perimetres = PERIMETRES_DE_STRATEGIE, vue = null, chantiers = null, readFileImpl = lireFichierPartage, ecrireImpl = writeFileSync, listerImpl = readdirSync, quand = null } = {}) {
+  if (!vue) return { mesurable: false, ecrits: [], pourquoi: "la vue des tâches ouvertes n'a pas été fournie : sans elle le bloc dérivé n'aurait rien à dire, et l'écrire vide serait pire que ne pas l'écrire" };
+  let toutes = chantiers;
+  if (!toutes) {
+    try { toutes = listerImpl(join(root, "docs/strategies")).filter((f) => f.endsWith("-strategie.md")); }
+    catch { toutes = []; }
+  }
+  // QUI DÉCOULE DE QUI, LU DANS LES FICHES ELLES-MÊMES. Chaque stratégie de chantier porte une
+  // ligne « DÉCOULE DE : <chemin> » ; on la lit plutôt que de supposer. Une fiche qui n'en porte
+  // aucune n'est comptée nulle part — et c'est juste : elle ne découle de rien de déclaré.
+  const parents = new Map();
+  for (const f of toutes) {
+    let t;
+    try { t = readFileImpl(join(root, "docs/strategies", f), "utf8"); } catch { continue; }
+    const m = String(t).match(/\*\*DÉCOULE DE\s*:\*\*\s*`?([^`\n]+)`?/);
+    if (m) parents.set(f, m[1].trim());
+  }
+  const ecrits = [];
+  const absents = [];
+  for (const p of perimetres) {
+    let texte;
+    try { texte = readFileImpl(join(root, p.fichier), "utf8"); }
+    catch { absents.push(p.fichier); continue; }
+    const mesure = mesurerUnPerimetre(p, vue);
+    const miennes = [...parents.entries()].filter(([, par]) => par === p.fichier).map(([f]) => f);
+    const bloc = blocDeriveDUneStrategie(p, mesure, { chantiers: miennes, quand });
+    const sans = sansLeBlocGenere(texte).replace(/\n{3,}$/, "\n");
+    ecrireImpl(join(root, p.fichier), sans.replace(/\s*$/, "\n\n") + bloc + "\n", "utf8");
+    ecrits.push({ fichier: p.fichier, ouvertes: mesure.ouvertes ?? null });
+  }
+  return { mesurable: true, ecrits, absents, horsPerimetre: findThemesHorsPerimetre(vue, { perimetres }) };
+}
+
 export const LIEUX_DE_NOTES = [
   { cle: "decisions", quoi: "les tâches du suivi — ce qui a été décidé, et par qui", dossier: "docs/suivi", ext: /\.md$/ },
   { cle: "plans", quoi: "les plans et états des lieux d'un chantier", dossier: "docs/plans", ext: /\.(md|txt)$/ },
@@ -2617,6 +2745,36 @@ export function formatDestinationsLines(r) {
   return L;
 }
 
+function mainStrategies(CTD) {
+    const vue = CTD.themesDesTachesOuvertes(CTD.loadAllTaskRows());
+    if (process.argv[3] !== "--ranger") {
+      const hors = findThemesHorsPerimetre(vue);
+      console.log(`=== LES ${PERIMETRES_DE_STRATEGIE.length} STRATÉGIES GLOBALES ===\n`);
+      for (const p of PERIMETRES_DE_STRATEGIE) {
+        const m = mesurerUnPerimetre(p, vue);
+        console.log(`  ${p.titre.padEnd(26)} ${m.mesurable ? `${String(m.ouvertes).padStart(4)} tâche(s) ouverte(s) sur ${m.themes} thème(s)` : `PAS MESURÉ — ${m.pourquoi}`}`);
+        console.log(`  ${" ".repeat(26)} ${p.fichier}`);
+      }
+      if (hors.length) {
+        console.log(`\n  ? ${hors.length} thème(s) n'entrent dans AUCUN périmètre et disparaîtraient des trois blocs : ${hors.map((h) => `${h.theme} (${h.combien})`).join(" · ")}`);
+        console.log("    Rattacher un thème est un JUGEMENT, jamais une mesure — c'est pour ça que ce garde-fou NOMME au lieu de ranger.");
+      } else {
+        console.log("\n  ✅ tous les thèmes de la file entrent dans un périmètre");
+      }
+      console.log("\n  --ranger pour régénérer les blocs dérivés.");
+      recordCliUsage("data-archangel", { origine: "demande" });
+      return;
+    }
+    const iQuand = process.argv.indexOf("--quand");
+    const r = rangerLesStrategies({ vue, quand: iQuand > -1 ? process.argv[iQuand + 1] : null });
+    if (!r.mesurable) { console.log(`REFUSÉ : ${r.pourquoi}`); process.exitCode = 1; return; }
+    for (const e of r.ecrits) console.log(`  ✅ ${e.fichier} — bloc dérivé régénéré (${e.ouvertes} tâche(s) ouverte(s))`);
+    for (const a of r.absents) console.log(`  🔴 ${a} — fichier absent : son bloc n'a pas pu être écrit`);
+    for (const h of r.horsPerimetre) console.log(`  ? thème hors périmètre : ${h.theme} (${h.combien}) — il n'apparaît dans aucun des trois blocs`);
+    recordCliUsage("data-archangel", { origine: "demande" });
+    return;
+  }
+
 function main() {
   const sub = process.argv[2];
   printReportHeader({
@@ -2792,6 +2950,18 @@ function main() {
   // de la Ronde, où elle donne la liste exacte sur laquelle lui poser la question.
   //   node scripts/data-archangel.mjs livraisons
   //   node scripts/data-archangel.mjs livraisons --remis <chemin> --quand <horodatage LU>
+  // `strategies --ranger` (#1482) — régénère le bloc DÉRIVÉ des trois stratégies globales.
+  // Sa demande : « l'ideal serait hybrides : une base fixe de strategie, et ensuite les elements
+  // qui se mettent à jour automatiquement ». Seul le bloc encadré est réécrit ; tout ce qui est
+  // autour est écrit à la main et n'est jamais touché.
+  // L'IMPORT EST DYNAMIQUE ET LA SUITE VIT DANS UN `.then()`, pour deux raisons qui comptent :
+  // `main()` est synchrone (le rendre asynchrone changerait le comportement de toutes ses autres
+  // branches), et check-tasks-details importe déjà data-archangel dynamiquement — un import
+  // statique dans l'autre sens créerait un cycle au chargement.
+  if (sub === "strategies") {
+    import("./check-tasks-details.mjs").then((CTD) => mainStrategies(CTD));
+    return;
+  }
   if (sub === "livraisons") {
     const iRemis = process.argv.indexOf("--remis");
     if (iRemis > -1 && process.argv[iRemis + 1]) {
