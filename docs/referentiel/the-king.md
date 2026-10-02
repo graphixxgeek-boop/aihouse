@@ -268,3 +268,35 @@ contradiction prouvée. Deux idées peuvent se contredire avec des mots entière
 cette mesure ne les verra jamais. **Elle ne remplace pas la vigilance de l'Article 14** — elle
 attrape ce qu'une relecture distraite laisse passer, et elle le fait de la même façon à chaque
 fois, ce qu'une relecture ne garantit jamais.
+
+## FONDER UN PROJET D'ACCUEIL — proposer, jamais imposer (2026-10-02, tâche #1428)
+
+**Sous-commande** : `node scripts/the-king.mjs fonder "<l'objectif ultime, si on l'a>"`.
+
+**SA DEMANDE** : *« il génère tout […] car aucun projet ne peut vivre sans objectif profond et
+philo »*. Le diagnostic (#1427) savait déjà dire *« ce projet n'a pas de philosophie »* — c'est
+utile, et **ça ne rend aucun service**. Ce qui en fait un service est de savoir en **proposer**
+une, **extraite du corpus du projet lui-même**, jamais importée du nôtre.
+
+**LE PREMIER COMPORTEMENT EST LE PLUS IMPORTANT** : sur un projet qui a DÉJÀ ses trois textes,
+l'outil ne propose **rien**. Proposer les nôtres par-dessus serait l'écrit d'autorité qu'il existe
+pour refuser — *l'Agence sert la finalité de celui qui l'emploie, jamais la sienne*.
+
+**LE RAPPORT EST LE MODE D'EMPLOI qu'il demandait**, en trois temps : ① ce que le projet a déjà et
+ce qui lui manque · ② ce qui se propose, **chaque phrase portant la source d'où elle sort et son
+étendue** · ③ l'objectif ultime avec sa clause non retirable.
+
+**POURQUOI CHAQUE PHRASE PORTE SA SOURCE** : c'est ce qui en fait une proposition **contestable sur
+pièces** plutôt qu'une invention qu'on ne peut que croire.
+
+**UNE CASE VIDE RESTE VIDE, ET DIT POURQUOI.** La remplir au jugé empêcherait de distinguer ce que
+le corpus dit de ce que l'outil a supposé — **pire qu'une case vide**.
+
+**L'OBJECTIF ULTIME EST LE SEUL DES TROIS QUE LE CORPUS NE PEUT JAMAIS RENDRE.** Fourni, il reçoit
+la clause ; absent, il est déclaré PAS MESURÉ et **jamais deviné**.
+
+**UN CORPUS ILLISIBLE N'EST PAS UNE PHILOSOPHIE ABSENTE** : le dire protège de la pire issue —
+importer la nôtre faute de matière.
+
+**CE QUI RESTE UN TROU ASSUMÉ**, et il l'a dit lui-même : l'étape « précisions apportées par le
+responsable du projet d'accueil ». L'outil propose ; il ne conclut pas.

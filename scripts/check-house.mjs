@@ -24896,3 +24896,64 @@ async function testLeMarqueurDeStrategie() {
   console.log("Passed: le raccord du bas de la cascade a enfin son instrument (2026-10-02, tâche #1421). LA STRATÉGIE GLOBALE L'APPELLE ELLE-MÊME « le vrai chantier de la cascade » : la direction descend de la philosophie jusqu'aux stratégies de chantier et s'arrête là, parce qu'une tâche ne sait pas dire quelle stratégie elle sert. LE CHIFFRE QUI CIRCULAIT ÉTAIT « 14 SUR 1 272 » ET LE DOCUMENT AVOUAIT SON PROPRE DÉFAUT : « ce document ne dit pas quelle commande a produit le 14 ». Une mesure qui ne nomme pas son instrument ne se re-vérifie plus. LE PREMIER PASSAGE CORRIGE D'ABORD LE DÉNOMINATEUR, et il y en a DEUX : le lecteur canonique lit 1 381 lignes, archives comprises — « une tâche archivée reste une tâche du projet », c'est écrit chez lui — dont 1 331 portent un numéro. Les deux sont rendus parce qu'un taux change selon celui qu'on prend, et que choisir en silence est exactement ce qui a fait circuler un chiffre que personne ne pouvait refaire. UNE ERREUR DE MA PART A MONTRÉ LE PIRE CAS DE FIGURE EN DIRECT : j'ai lu un champ `description` qui n'existe pas — il s'appelle `detail`. La mesure n'a PAS rendu d'erreur : elle a rendu 8 citations là où le texte en porte 26. Un petit nombre sur un sujet où l'on s'attend à un petit nombre ne réveille personne, et c'est la forme la plus discrète d'une mesure fausse. TROIS CRITÈRES NOMMÉS plutôt qu'un seul, parce que CITER une stratégie n'est pas la SERVIR — une tâche peut la nommer pour dire qu'elle s'en écarte. ET LA BOUCLE EST FERMÉE : ce que le composeur ÉCRIT, le compteur le RELIT, dans la seule forme lisible sans interprétation. Le marqueur n'est PAS obligatoire, délibérément : l'imposer aujourd'hui refuserait la quasi-totalité des lignes, et un garde-fou qui refuse le geste normal cesse d'être lu (leçon L4). C'est un progrès à faire monter, jamais une dette à solder.");
 }
 await testLeMarqueurDeStrategie();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES TEXTES FONDATEURS D'UN PROJET D'ACCUEIL (2026-10-02, tâche #1428)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLesTextesFondateursDUnProjetDAccueil() {
+  const K = await import('./the-king.mjs');
+
+  // ── 1. SUR CE DÉPÔT-CI, IL NE PROPOSE RIEN, et c'est le bon comportement. Un projet qui a déjà
+  // ses trois textes n'a pas besoin des nôtres, et les lui proposer quand même serait très
+  // exactement l'écrit d'autorité que cette fonction existe pour refuser.
+  const ici = K.genererLesTextesFondateurs();
+  assert.strictEqual(ici.mesurable, true, 'the generator runs against the real repository');
+  assert.strictEqual(ici.verdict, 'RIEN À GÉNÉRER', 'and proposes nothing to a project that already has its three founding texts');
+  assert.deepStrictEqual(ici.propositions, [], 'not even as a suggestion');
+
+  // ── 2. SENS 2, ET C'EST CELUI QUI PROUVE QUE L'OUTIL SERT (BP4) : un projet d'accueil SANS ses
+  // textes reçoit une vraie proposition, tirée de SON corpus et non du nôtre.
+  const sansTextes = () => ({ mesurable: true, fichiersExamines: 40, tronque: false, cases: [
+    { cle: 'objectif-ultime', quoi: "l'objectif ultime du projet", etat: 'ABSENT', ou: null },
+    { cle: 'philosophie', quoi: 'la philosophie', etat: 'ABSENT', ou: null },
+    { cle: 'politique', quoi: 'la politique', etat: 'COQUILLE', ou: 'docs/politique.md' },
+  ] });
+  const g = K.genererLesTextesFondateurs({ diagnostiquerImpl: sansTextes, objectifUtilisateur: 'livrer un produit fiable' });
+  assert.strictEqual(g.verdict, 'PROPOSITION', 'a host project missing its texts gets a real proposal');
+  assert.deepStrictEqual(g.aGenerer, ['objectif-ultime', 'philosophie', 'politique'], 'naming exactly what it is missing');
+  assert.ok(g.remplies >= 5, `with cases genuinely filled from its own corpus (currently ${g.remplies}/${g.total})`);
+
+  // ── 3. CHAQUE PHRASE PORTE SA SOURCE, et c'est ce qui en fait une proposition CONTESTABLE
+  // plutôt qu'une invention qu'on ne peut que croire.
+  const remplie = g.propositions.find((p) => !p.vide);
+  assert.ok(remplie.phrases.every((x) => x.phrase && x.source), 'every proposed sentence carries the file it came from');
+  assert.ok(remplie.phrases.every((x) => x.zones >= 1 && x.fichiers >= 1), 'and how widely it recurs, so its weight can be judged');
+
+  // ── 4. UNE CASE VIDE RESTE VIDE. La remplir au jugé empêcherait de distinguer ce que le corpus
+  // dit de ce que l'outil a supposé — et c'est pire qu'une case vide.
+  const vides = g.propositions.filter((p) => p.vide);
+  assert.ok(vides.length > 0, 'some cases genuinely find nothing, and that is normal');
+  assert.ok(vides.every((p) => p.phrases.length === 0 && p.pourquoiVide), 'each empty case stays empty AND says why');
+  assert.match(vides[0].pourquoiVide, /écrire à la place/, 'naming the reason: filling it here would be writing in the host owner\'s place');
+
+  // ── 5. L'OBJECTIF ULTIME PORTE LA CLAUSE NON RETIRABLE, et il est le seul des trois que le
+  // corpus ne peut jamais rendre.
+  assert.ok(g.objectif.objectif.includes(K.CLAUSE_AGENCE), 'the supplied objective carries the non-removable Agence clause');
+  const sansObjectif = K.genererLesTextesFondateurs({ diagnostiquerImpl: sansTextes });
+  assert.strictEqual(sansObjectif.objectif, null, 'and with no objective supplied it is not invented');
+  assert.match(K.formatGenerationLines(sansObjectif).join('\n'), /PAS MESURÉ/, 'the report says PAS MESURÉ rather than guessing one');
+
+  // ── 6. UN CORPUS ILLISIBLE N'EST PAS UNE PHILOSOPHIE ABSENTE (leçon L5), et le dire protège de
+  // la pire issue : importer la nôtre faute de matière.
+  const mort = K.genererLesTextesFondateurs({ diagnostiquerImpl: sansTextes, racines: [{ dossier: 'docs/nexistepas', zone: 'x', pourquoi: 'fabriquée pour le test' }] });
+  assert.strictEqual(mort.mesurable, false, 'an unreadable host corpus is PAS MESURÉ');
+  assert.match(mort.pourquoi, /la nôtre/, 'and says what the danger is: with no matter, a proposed philosophy would be ours in disguise');
+
+  // ── 7. LA LIMITE EST DANS LE RAPPORT.
+  const texte = K.formatGenerationLines(g).join('\n');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its limit');
+  assert.match(texte, /PROPOSITION/, 'namely that installing an Agency gives nobody the right to decide the host project\'s philosophy');
+
+  console.log("Passed: l'Agence sait désormais PROPOSER les textes fondateurs d'un projet qui n'en a pas (2026-10-02, tâche #1428). Sa demande : « il génère tout […] car aucun projet ne peut vivre sans objectif profond et philo ». LE DIAGNOSTIC SAVAIT DÉJÀ DIRE « ce projet n'a pas de philosophie » — c'est utile, et ça ne rend aucun service. Ce qui en fait un service est de savoir en proposer une, EXTRAITE DU CORPUS DU PROJET LUI-MÊME, jamais importée du nôtre. LES DEUX SENS SONT VÉRIFIÉS (BP4), et le premier est le plus important : sur CE dépôt, qui a déjà ses trois textes, l'outil ne propose RIEN — proposer les nôtres par-dessus serait exactement l'écrit d'autorité qu'il existe pour refuser, et « l'Agence sert la finalité de celui qui l'emploie, jamais la sienne ». Sur un projet d'accueil qui en manque, il remplit 14 cases sur 19 à partir de son corpus à lui. CHAQUE PHRASE PORTE SA SOURCE ET SON ÉTENDUE, et c'est ce qui en fait une proposition CONTESTABLE SUR PIÈCES plutôt qu'une invention qu'on ne peut que croire. UNE CASE VIDE RESTE VIDE ET DIT POURQUOI : la remplir au jugé empêcherait de distinguer ce que le corpus dit de ce que l'outil a supposé, ce qui est pire qu'une case vide. L'OBJECTIF ULTIME EST LE SEUL DES TROIS QUE LE CORPUS NE PEUT JAMAIS RENDRE : fourni, il reçoit la clause non retirable de l'Agence ; absent, il est déclaré PAS MESURÉ et jamais deviné. ET UN CORPUS ILLISIBLE N'EST PAS UNE PHILOSOPHIE ABSENTE : le dire protège de la pire issue, qui serait d'importer la nôtre faute de matière.");
+}
+await testLesTextesFondateursDUnProjetDAccueil();

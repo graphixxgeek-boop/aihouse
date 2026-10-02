@@ -1531,6 +1531,108 @@ export function formatTensionLines(r) {
   return L;
 }
 
+// ============================================================================
+// GÉNÉRER LES TEXTES FONDATEURS D'UN PROJET D'ACCUEIL (tâche #1428)
+// ============================================================================
+// SA DEMANDE : « il génère tout, et se sert de l'ensemble pour définir les objectifs manquants :
+// on emporte tout ! car aucun projet ne peut vivre sans objectif profond et philo ».
+//
+// LE DIAGNOSTIC SAVAIT DÉJÀ DIRE « ce projet n'a pas de philosophie » ; c'est utile, et ça ne rend
+// aucun service. CE QUI EN FAIT UN SERVICE est de savoir en PROPOSER une, extraite du corpus du
+// projet lui-même — pas inventée, pas importée de chez nous.
+//
+// CE QU'ELLE NE FAIT JAMAIS, ET C'EST LA LIMITE QUI COMMANDE TOUT LE RESTE : écrire d'autorité.
+// Installer une Agence ne donne à personne le droit de décider de la philosophie du projet qui
+// l'accueille. Elle PROPOSE, et chaque proposition porte la phrase du corpus d'où elle sort, pour
+// que le responsable du projet d'accueil puisse la contester sur pièces. L'étape « précisions
+// apportées par l'utilisateur » reste un trou ASSUMÉ, et il l'a dit lui-même.
+//
+// ET POUR UNE CASE VIDE, ON LE DIT. Une philosophie proposée avec une case remplie au jugé serait
+// pire qu'une case vide : le lecteur ne pourrait plus distinguer ce que son corpus dit de ce que
+// l'outil a supposé.
+export const RACINES_D_UN_PROJET_D_ACCUEIL = [
+  { dossier: "docs", zone: "documents", pourquoi: "la documentation du projet d'accueil, quelle qu'en soit l'organisation" },
+  { dossier: "README.md", chemin: "README.md", zone: "racine", pourquoi: "ce qu'un projet dit de lui-même en premier" },
+];
+
+export function genererLesTextesFondateurs({ root = ROOT, cases = CASES_FONDATRICES,
+  racines = RACINES_D_UN_PROJET_D_ACCUEIL, familles = CADRE_FAMILLES, clause = CLAUSE_AGENCE,
+  objectifUtilisateur = null, diagnostiquerImpl = null, revelerImpl = null } = {}) {
+  const diag = (diagnostiquerImpl ?? diagnostiquerUnProjet)({ root, cases });
+  if (!diag.mesurable) return { mesurable: false, pourquoi: `le projet d'accueil n'a pas pu être lu : ${diag.pourquoi ?? "raison non déclarée"} — et sans corpus, proposer une philosophie reviendrait à importer la nôtre` };
+
+  const aGenerer = diag.cases.filter((c) => c.etat !== "TROUVÉ");
+  // RIEN À GÉNÉRER EST UN RÉSULTAT, pas un échec : un projet qui a déjà ses trois textes n'a pas
+  // besoin qu'on lui en propose d'autres, et le lui proposer quand même serait exactement l'écrit
+  // d'autorité que cette fonction refuse.
+  if (!aGenerer.length) {
+    return { mesurable: true, aGenerer: [], diag, propositions: [], objectif: null,
+      verdict: "RIEN À GÉNÉRER", pourquoi: "les trois textes fondateurs existent déjà dans ce projet — proposer les nôtres par-dessus serait écrire d'autorité" };
+  }
+
+  const rev = (revelerImpl ?? revelerLaPhilosophie)({ root, racines, familles, chemin: diag.cases.find((c) => c.cle === "philosophie")?.ou ?? "" });
+  if (!rev.mesurable) {
+    return { mesurable: false, pourquoi: `la révélation n'a rien pu lire du corpus d'accueil : ${rev.pourquoi}. Il manque donc la matière, et une philosophie sans matière serait la nôtre déguisée` };
+  }
+
+  const propositions = rev.cadre.cases.map((c) => ({
+    cle: c.cle, titre: c.titre,
+    vide: c.vide,
+    // UNE CASE VIDE NE SE REMPLIT PAS : elle se déclare. C'est la différence entre une proposition
+    // qu'on peut contester sur pièces et une invention qu'on ne peut que croire.
+    phrases: c.vide ? [] : c.top.slice(0, 3).map((t) => ({ phrase: t.phrase, source: t.chemin, zones: t.rep.zones, fichiers: t.rep.fichiers })),
+    pourquoiVide: c.vide ? `aucune phrase du corpus de ce projet ne tient ce rôle (${c.convictions} candidate(s), toutes sous le seuil) — c'est un vrai trou, et le combler ici serait écrire à la place de son responsable` : null,
+  }));
+
+  // L'OBJECTIF ULTIME PORTE LA CLAUSE NON RETIRABLE, et seulement s'il y a un objectif à porter.
+  const objectif = objectifUtilisateur ? objectifAvecClause(objectifUtilisateur, { clause }) : null;
+
+  const remplies = propositions.filter((p) => !p.vide).length;
+  return { mesurable: true, diag, aGenerer: aGenerer.map((c) => c.cle), rev, propositions, objectif,
+    remplies, total: propositions.length,
+    verdict: remplies ? "PROPOSITION" : "CORPUS MUET",
+    pourquoi: remplies ? null : "le corpus existe mais aucune de ses phrases n'atteint le seuil : il y a de la matière, elle ne se répète pas assez pour qu'on en tire une conviction" };
+}
+
+export function formatGenerationLines(g) {
+  if (!g?.mesurable) return ["=== GÉNÉRATION DES TEXTES FONDATEURS : PAS MESURÉ ===", `  ${g?.pourquoi}`];
+  const L = ["=== LES TEXTES FONDATEURS D'UN PROJET D'ACCUEIL — proposés, jamais imposés ===", ""];
+  L.push("① CE QUE LE PROJET A DÉJÀ, ET CE QUI LUI MANQUE");
+  for (const c of g.diag.cases) L.push(`   ${c.etat === "TROUVÉ" ? "✅" : c.etat === "COQUILLE" ? "🟠" : "🔴"} ${c.quoi} — ${c.etat}${c.ou ? ` (${c.ou})` : ""}`);
+  L.push("");
+  if (g.verdict === "RIEN À GÉNÉRER") {
+    L.push(`✅ ${g.pourquoi}`);
+    L.push("   L'Agence s'installe sans rien proposer : elle sert la finalité de celui qui l'emploie, jamais la sienne.");
+    return L;
+  }
+  L.push(`② CE QUI SE PROPOSE, EXTRAIT DE SON PROPRE CORPUS — ${g.remplies} case(s) sur ${g.total}`);
+  L.push(`   Lu sur ${g.rev.fichiersLus} fichier(s), ${g.rev.convictions} phrase(s) qui engagent, seuil ${g.rev.seuil.valeur}.`);
+  L.push("");
+  for (const p of g.propositions) {
+    L.push(`▸ ${p.titre}`);
+    if (p.vide) { L.push(`   🚨 ${p.pourquoiVide}`); continue; }
+    for (const x of p.phrases) {
+      L.push(`   · ${x.phrase}`);
+      L.push(`       ↳ ${x.source} (${x.zones} zone(s), ${x.fichiers} fichier(s))`);
+    }
+  }
+  L.push("");
+  if (g.objectif) {
+    L.push("③ L'OBJECTIF ULTIME, AVEC SA CLAUSE NON RETIRABLE");
+    L.push(`   ${g.objectif}`);
+  } else {
+    L.push("③ L'OBJECTIF ULTIME — PAS MESURÉ : aucun objectif n'a été fourni par le responsable du projet d'accueil.");
+    L.push("   Il ne se devine pas : c'est le seul des trois textes dont le corpus ne peut jamais rendre la réponse.");
+  }
+  L.push("");
+  L.push("HORS PORTÉE, ET C'EST LA LIMITE QUI COMMANDE TOUT LE RESTE : ceci est une PROPOSITION. Installer une");
+  L.push("Agence ne donne à personne le droit de décider de la philosophie du projet qui l'accueille. Chaque");
+  L.push("phrase porte la source d'où elle sort, pour qu'elle puisse être contestée sur pièces — et une case");
+  L.push("vide reste VIDE, parce qu'une case remplie au jugé empêcherait de distinguer ce que le corpus dit");
+  L.push("de ce que l'outil a supposé. L'étape « précisions apportées par le responsable » reste à faire.");
+  return L;
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
@@ -1557,6 +1659,18 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   }
   // SOUS-COMMANDE « tension » (tâche #1435) — sa question : « seras-tu capable de me prévenir si
   // j'ai une idée ou une consigne en tension avec ce document ? »
+  // SOUS-COMMANDE « fonder » (tâche #1428) — proposer les textes fondateurs d'un projet d'accueil.
+  if (process.argv[2] === "fonder") {
+    const objectif = process.argv.slice(3).join(" ") || null;
+    const g = genererLesTextesFondateurs({ objectifUtilisateur: objectif });
+    for (const l of formatGenerationLines(g)) console.log(l);
+    const constats = [];
+    for (const p of g.propositions ?? []) if (p.vide) constats.push({ constat: `la case « ${p.titre} » reste vide`, etat: "a-trancher", tache: "c'est au responsable du projet d'accueil de la remplir : la combler ici serait écrire d'autorité" });
+    if (g.mesurable && !g.objectif) constats.push({ constat: "aucun objectif ultime fourni", etat: "a-trancher", tache: "le demander : c'est le seul des trois textes dont le corpus ne peut jamais rendre la réponse" });
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (process.argv[2] === "tension") {
     const idee = process.argv.slice(3).join(" ");
     const r = tensionAvecLaGouvernance(idee);
