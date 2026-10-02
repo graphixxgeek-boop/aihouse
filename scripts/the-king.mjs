@@ -1021,12 +1021,152 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
   };
 }
 
+// ============================================================================
+// LA THÈSE DU CŒUR — « le cœur de l'Agence est sa gouvernance » (tâche #1444)
+// ============================================================================
+// CE QUI REND CETTE MESURE LÉGITIME PLUTÔT QUE COMPLAISANTE, et c'est la seule chose qui compte
+// ici : une thèse énoncée par le responsable de projet n'est pas une consigne à illustrer, c'est
+// une affirmation à ÉPROUVER. La mesure doit donc pouvoir rendre « NON SOUTENUE ». Si elle ne le
+// peut pas, elle ne mesure rien et confirme tout — exactement l'outil fabriqué pour cocher une
+// case que l'Article 31 refuse par sa faille 2.
+//
+// LES TROIS INDICES SONT DES COMPORTEMENTS, JAMAIS DES NOMS. Compter les fonctions dont le nom
+// commence par « find » mesurerait une CONVENTION DE NOMMAGE et rien d'autre : un fichier peut
+// gouverner sans qu'un seul de ses noms le dise, et se nommer ainsi sans rien refuser. Les trois
+// indices ci-dessous lisent donc ce que le code FAIT : il lève une erreur, il rend un verdict qui
+// peut dire « je n'ai pas pu regarder », ou il tourne sans qu'on le lui demande.
+export const INDICES_DE_GOUVERNANCE = [
+  { cle: "refus", titre: "ce qui REFUSE", motif: /throw new Error/g,
+    quoi: "une fonction qui lève une erreur arrête quelque chose : c'est la forme la plus forte qu'un principe puisse prendre ici, parce qu'elle ne dépend d'aucune mémoire" },
+  { cle: "verdict", titre: "ce qui rend un VERDICT", motif: /\bmesurable:/g,
+    quoi: "un retour qui porte « mesurable » distingue un résultat d'une absence de résultat — c'est un jugement rendu, jamais un simple affichage" },
+  { cle: "abstention", titre: "ce qui sait DIRE QU'IL N'A PAS PU", motif: /PAS MESUR[ÉE]/g,
+    quoi: "refuser de conclure sur zéro donnée est un acte de gouvernance à part entière, et c'est celui que ce projet a payé le plus cher pour apprendre" },
+];
+export const INDICES_DE_PRODUCTION = [
+  { cle: "rendu", titre: "ce qui MET EN FORME", motif: /^export function (?:format|build|rendre)[A-Za-z]*/gm,
+    quoi: "une fonction qui assemble des lignes ou du HTML produit un livrable : c'est la moitié visible du travail, et la thèse dit qu'elle n'est pas le cœur" },
+  { cle: "affichage", titre: "ce qui IMPRIME", motif: /console\.log\(/g,
+    quoi: "l'impression est le geste de production le plus élémentaire du paysage, et le plus fréquent" },
+];
+
+export function mesurerLaThese({ root = ROOT, dossier = "scripts", lireDir = fsReaddir, lireF = readFileSync,
+  crochet = "scripts/hooks/check-last-commit.mjs" } = {}) {
+  let noms = [];
+  try { noms = lireDir(join(root, dossier)).filter((f) => f.endsWith(".mjs")); } catch { noms = []; }
+  if (!noms.length) {
+    return { mesurable: false, pourquoi: `aucun fichier lisible dans « ${dossier} » — une thèse sur ce que l'Agence EST ne se tranche pas sur un parc vide, et rendre zéro se lirait comme « rien ne gouverne »` };
+  }
+  const textes = [];
+  for (const n of noms) { try { textes.push({ nom: n, texte: lireF(join(root, dossier, n), "utf8") }); } catch { /* illisible : il ne compte ni d'un côté ni de l'autre */ } }
+  const compter = (indices) => indices.map((i) => {
+    let total = 0; let fichiers = 0;
+    for (const t of textes) {
+      const n = (t.texte.match(i.motif) ?? []).length;
+      if (n) { total += n; fichiers++; }
+    }
+    return { ...i, total, fichiers };
+  });
+  const gouvernance = compter(INDICES_DE_GOUVERNANCE);
+  const production = compter(INDICES_DE_PRODUCTION);
+  // LA CONTRAINTE PERMANENTE SE LIT DANS LE VRAI CROCHET, jamais dans une liste recopiée
+  // (Article 24) : un outil ajouté au crochet demain compte le jour même.
+  let auCrochet = { mesurable: false, pourquoi: `le crochet « ${crochet} » est illisible` };
+  try {
+    const h = lireF(join(root, crochet), "utf8");
+    const cites = [...new Set((h.match(/[a-z0-9-]+\.mjs/g) ?? []))].filter((f) => f !== "check-last-commit.mjs" && f !== "install.mjs" && f !== "banniere.mjs" && f !== "lib-shell.mjs");
+    auCrochet = { mesurable: true, outils: cites.length, parc: noms.length, part: cites.length / noms.length, listes: cites.sort() };
+  } catch { /* la raison est déjà écrite dans l'objet par défaut */ }
+  const sommeG = gouvernance.reduce((n, i) => n + i.total, 0);
+  const sommeP = production.reduce((n, i) => n + i.total, 0);
+  // DEUX LECTURES, JAMAIS UNE, ET C'EST UN DÉFAUT DE LA PREMIÈRE QUI L'IMPOSE. `console.log` écrase
+  // tout le reste par son volume, et il est AMBIGU : dans un outil de gouvernance, imprimer est la
+  // façon dont un verdict est RENDU, pas un produit fabriqué. Le compter du côté production gonfle
+  // donc le dénominateur avec la livraison de ce qu'on mesure de l'autre côté — exactement la
+  // leçon L10 : une mesure qui partage son filtre avec ce qu'elle mesure ne mesure plus rien.
+  // Choisir une seule des deux lectures serait trancher la thèse par le choix du critère ; les deux
+  // sont donc rendues, et le rapport dit à quelle question chacune répond.
+  const sommePStructurelle = production.filter((i) => i.cle !== "affichage").reduce((n, i) => n + i.total, 0);
+  const rapportStructurel = sommePStructurelle ? sommeG / sommePStructurelle : null;
+  const rapport = sommeP ? sommeG / sommeP : null;
+  // LE VERDICT PEUT DIRE NON, ET C'EST LA SEULE CHOSE QUI REND CETTE MESURE HONNÊTE.
+  const verdict = rapport === null ? "PAS MESURÉ"
+    : rapport >= 1 ? "SOUTENUE"
+    : rapport >= 0.5 ? "SOUTENUE EN PARTIE"
+    : "NON SOUTENUE";
+  const verdictStructurel = rapportStructurel === null ? "PAS MESURÉ"
+    : rapportStructurel >= 1 ? "SOUTENUE" : rapportStructurel >= 0.5 ? "SOUTENUE EN PARTIE" : "NON SOUTENUE";
+  return { mesurable: true, fichiers: textes.length, gouvernance, production, sommeG, sommeP, rapport, verdict,
+    sommePStructurelle, rapportStructurel, verdictStructurel, auCrochet };
+}
+
+export function formatTheseLines(m) {
+  if (!m?.mesurable) return ["=== LA THÈSE DU CŒUR : PAS MESURÉ ===", `  ${m?.pourquoi}`];
+  const L = ["=== « LE CŒUR DE L'AGENCE EST SA GOUVERNANCE » — la thèse, éprouvée ===", "",
+    `Lue sur ${m.fichiers} fichier(s) de l'outillage. Aucun chiffre ci-dessous ne vient d'un nom de fonction :`,
+    `chacun lit ce que le code FAIT, parce qu'une convention de nommage ne dit rien de ce qu'un fichier gouverne.`, ""];
+  L.push("CE QUI GOUVERNE");
+  for (const i of m.gouvernance) { L.push(`  ${String(i.total).padStart(5)} × ${i.titre} — dans ${i.fichiers} fichier(s)`); L.push(`          ${i.quoi}`); }
+  L.push("");
+  L.push("CE QUI PRODUIT");
+  for (const i of m.production) { L.push(`  ${String(i.total).padStart(5)} × ${i.titre} — dans ${i.fichiers} fichier(s)`); L.push(`          ${i.quoi}`); }
+  L.push("");
+  L.push("DEUX LECTURES, ET ELLES NE DISENT PAS LA MÊME CHOSE — les deux sont rendues plutôt qu'une seule choisie,");
+  L.push("parce que choisir le critère reviendrait à trancher la thèse par le choix du critère.");
+  L.push("");
+  L.push(`  LECTURE LARGE — tout compris, l'impression incluse : ${m.sommeG} contre ${m.sommeP}, soit ${m.rapport === null ? "non calculable" : m.rapport.toFixed(2)} pour 1 → thèse ${m.verdict}.`);
+  L.push("     Elle répond à : « de quoi le code est-il fait, geste par geste ? » Son défaut est connu et déclaré :");
+  L.push("     dans un outil de gouvernance, imprimer est la façon dont un VERDICT est rendu, pas un produit fabriqué.");
+  L.push("     La livraison de ce qu'on mesure d'un côté gonfle donc le dénominateur de l'autre (leçon L10).");
+  L.push("");
+  L.push(`  LECTURE STRUCTURELLE — l'impression écartée : ${m.sommeG} contre ${m.sommePStructurelle}, soit ${m.rapportStructurel === null ? "non calculable" : m.rapportStructurel.toFixed(2)} pour 1 → thèse ${m.verdictStructurel}.`);
+  L.push("     Elle répond à : « à quoi les STRUCTURES du code sont-elles consacrées ? » C'est la question de la thèse,");
+  L.push("     et c'est la lecture qui la soutient le plus franchement — raison de plus pour ne pas la donner seule.");
+  L.push("");
+  if (m.auCrochet.mesurable) {
+    L.push(`LA CONTRAINTE PERMANENTE : ${m.auCrochet.outils} outil(s) tournent à CHAQUE commit sans qu'on le demande, sur un parc de ${m.auCrochet.parc} — ${Math.round(m.auCrochet.part * 100)} %.`);
+    L.push(`  Lus dans le vrai crochet, jamais dans une liste recopiée : un outil ajouté demain compte le jour même.`);
+    L.push(`  ${m.auCrochet.listes.join(", ")}`);
+  } else L.push(`⚠️  PAS MESURÉ — ${m.auCrochet.pourquoi}`);
+  L.push("");
+  L.push("HORS PORTÉE, et c'est la limite qui compte le plus : ces chiffres disent COMBIEN de code est consacré");
+  L.push("à gouverner, jamais si ce qu'il gouverne en vaut la peine. Un paysage pourrait être gouvernance à 90 %");
+  L.push("et ne rien protéger d'utile. La mesure soutient la thèse ; elle ne la démontre pas, et une thèse sur ce");
+  L.push("qu'une chose EST ne se démontre jamais par un comptage seul.");
+  L.push("");
+  L.push("ET LE VERDICT PEUT DIRE NON : en dessous d'un geste de gouvernance pour deux de production, cette mesure");
+  L.push("rend « NON SOUTENUE ». Une mesure qui ne peut pas contredire celui qui la demande ne mesure rien.");
+  return L;
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
   const requestText = process.argv.slice(2).join(" ");
   // SOUS-COMMANDE « reveler » (tâche #1418) — la révélation est une opération lourde et ciblée,
   // jamais quelque chose qu'on inflige à chaque passage de veille ordinaire.
+  // SOUS-COMMANDE « these » (tâche #1444) — éprouver une thèse énoncée sur ce que l'Agence EST.
+  if (process.argv[2] === "these") {
+    const m = mesurerLaThese();
+    const lignes = formatTheseLines(m);
+    for (const l of lignes) console.log(l);
+    // LE LIVRABLE EST LE FICHIER, jamais le texte que je réécrirais à côté (Article 31, faille 3).
+    const dossier = join(ROOT, "docs/the-king");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    const sortie = join(dossier, `these-du-coeur-${jour}.txt`);
+    writeFileSync(sortie, lignes.join("\n") + "\n", "utf8");
+    console.log(`\nRapport déposé : docs/the-king/these-du-coeur-${jour}.txt`);
+    const constats = [];
+    if (!m.mesurable) constats.push({ constat: `la thèse n'est PAS MESURÉE : ${m.pourquoi}`, etat: "retenu", tache: "rétablir la lecture du parc avant de conclure quoi que ce soit sur ce que l'Agence est" });
+    else {
+      if (m.verdict !== m.verdictStructurel) constats.push({ constat: `les deux lectures ne rendent pas le même verdict (large « ${m.verdict} » contre structurelle « ${m.verdictStructurel} ») — l'écart vient de l'impression, qui est ambiguë par nature`, etat: "a-trancher", tache: "dire laquelle des deux questions est celle de la thèse : « de quoi le code est fait » ou « à quoi ses structures sont consacrées »" });
+      if (m.auCrochet.mesurable && m.auCrochet.part < 0.2) constats.push({ constat: `seuls ${Math.round(m.auCrochet.part * 100)} % du parc tournent à chaque commit : la gouvernance est surtout DISPONIBLE, rarement CONTRAIGNANTE`, etat: "retenu", tache: "examiner outil par outil ce qui pourrait rejoindre le crochet sans le ralentir" });
+      if (m.verdictStructurel === "NON SOUTENUE") constats.push({ constat: "la mesure CONTREDIT la thèse énoncée, et c'est le résultat le plus utile qu'elle puisse rendre", etat: "a-trancher", tache: "porter la contradiction au responsable de projet plutôt que de la lisser" });
+    }
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (process.argv[2] === "reveler") {
     const r = revelerLaPhilosophie({ chemin });
     const lignes = formatRevelationLines(r);

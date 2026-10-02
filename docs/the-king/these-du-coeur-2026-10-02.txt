@@ -1,0 +1,42 @@
+=== « LE CŒUR DE L'AGENCE EST SA GOUVERNANCE » — la thèse, éprouvée ===
+
+Lue sur 86 fichier(s) de l'outillage. Aucun chiffre ci-dessous ne vient d'un nom de fonction :
+chacun lit ce que le code FAIT, parce qu'une convention de nommage ne dit rien de ce qu'un fichier gouverne.
+
+CE QUI GOUVERNE
+    182 × ce qui REFUSE — dans 30 fichier(s)
+          une fonction qui lève une erreur arrête quelque chose : c'est la forme la plus forte qu'un principe puisse prendre ici, parce qu'elle ne dépend d'aucune mémoire
+    945 × ce qui rend un VERDICT — dans 47 fichier(s)
+          un retour qui porte « mesurable » distingue un résultat d'une absence de résultat — c'est un jugement rendu, jamais un simple affichage
+    405 × ce qui sait DIRE QU'IL N'A PAS PU — dans 45 fichier(s)
+          refuser de conclure sur zéro donnée est un acte de gouvernance à part entière, et c'est celui que ce projet a payé le plus cher pour apprendre
+
+CE QUI PRODUIT
+    240 × ce qui MET EN FORME — dans 51 fichier(s)
+          une fonction qui assemble des lignes ou du HTML produit un livrable : c'est la moitié visible du travail, et la thèse dit qu'elle n'est pas le cœur
+   1899 × ce qui IMPRIME — dans 68 fichier(s)
+          l'impression est le geste de production le plus élémentaire du paysage, et le plus fréquent
+
+DEUX LECTURES, ET ELLES NE DISENT PAS LA MÊME CHOSE — les deux sont rendues plutôt qu'une seule choisie,
+parce que choisir le critère reviendrait à trancher la thèse par le choix du critère.
+
+  LECTURE LARGE — tout compris, l'impression incluse : 1532 contre 2139, soit 0.72 pour 1 → thèse SOUTENUE EN PARTIE.
+     Elle répond à : « de quoi le code est-il fait, geste par geste ? » Son défaut est connu et déclaré :
+     dans un outil de gouvernance, imprimer est la façon dont un VERDICT est rendu, pas un produit fabriqué.
+     La livraison de ce qu'on mesure d'un côté gonfle donc le dénominateur de l'autre (leçon L10).
+
+  LECTURE STRUCTURELLE — l'impression écartée : 1532 contre 240, soit 6.38 pour 1 → thèse SOUTENUE.
+     Elle répond à : « à quoi les STRUCTURES du code sont-elles consacrées ? » C'est la question de la thèse,
+     et c'est la lecture qui la soutient le plus franchement — raison de plus pour ne pas la donner seule.
+
+LA CONTRAINTE PERMANENTE : 20 outil(s) tournent à CHAQUE commit sans qu'on le demande, sur un parc de 86 — 23 %.
+  Lus dans le vrai crochet, jamais dans une liste recopiée : un outil ajouté demain compte le jour même.
+  always-new-code.mjs, axa-check.mjs, cassandra-rh.mjs, check-argus.mjs, check-harmonia.mjs, check-house.mjs, check-suivi-fidelity.mjs, check-tasks-details.mjs, circle-tasks.mjs, clean-dirty-old.mjs, clone-hunter.mjs, el-professor.mjs, hyper-scan-checkpoint.mjs, le-coordinateur.mjs, moise-tables-de-loi.mjs, safe-export.mjs, smart-conso-token.mjs, tool-brain.mjs, tool-learning.mjs, tool-usage.mjs
+
+HORS PORTÉE, et c'est la limite qui compte le plus : ces chiffres disent COMBIEN de code est consacré
+à gouverner, jamais si ce qu'il gouverne en vaut la peine. Un paysage pourrait être gouvernance à 90 %
+et ne rien protéger d'utile. La mesure soutient la thèse ; elle ne la démontre pas, et une thèse sur ce
+qu'une chose EST ne se démontre jamais par un comptage seul.
+
+ET LE VERDICT PEUT DIRE NON : en dessous d'un geste de gouvernance pour deux de production, cette mesure
+rend « NON SOUTENUE ». Une mesure qui ne peut pas contredire celui qui la demande ne mesure rien.

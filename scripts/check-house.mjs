@@ -24373,3 +24373,64 @@ async function testLesVuesDeriveesNeDivergentPas() {
   console.log("Passed: une vue dérivée ne peut plus diverger en silence de sa source (2026-10-02, tâche #1441). Il a demandé à VOIR la table des onze destinations d'une note — « OUI JE VEUX VOIR CA STP montre moi la table et les 11 destinations » — qui vit dans une section de docs/regles-de-travail.md. EN EXTRAIRE UNE PAGE LISIBLE EST LE SERVICE RENDU ; EN FAIRE UNE COPIE SANS RIEN QUI DÉTECTE L'ÉCART EST EXACTEMENT CE QUE L'ARTICLE 24 INTERDIT, et une vue qui diverge de sa source est PIRE qu'une absence de vue : elle a l'air d'être à jour, et c'est précisément ce qui la rend dangereuse. Le registre des vues porte donc, par entrée, sa source, sa section et sa raison, et la comparaison se fait ligne de tableau par ligne de tableau. LE GARDE-FOU EST VÉRIFIÉ DANS LES DEUX SENS (BP4) : sur la vraie vue il ne trouve rien, sur une vue fabriquée qui a perdu une ligne et en a gagné une autre il nomme les deux SÉPARÉMENT, parce que perdre une ligne et en inventer une sont deux fautes différentes. ET LES DEUX FORMES D'ABSENCE SONT DISTINGUÉES DE LA FIDÉLITÉ : une vue introuvable et une section disparue rendent PAS MESURÉ, jamais zéro écart — les trois produiraient le même chiffre, et c'est la confusion que ce paysage corrige partout (leçon L5). LA SECTION DISPARUE EST LE CAS LE PLUS PROBABLE DANS LA DURÉE : la source se réorganise, la vue survit, et plus rien ne les relie.");
 }
 await testLesVuesDeriveesNeDivergentPas();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA THÈSE DU CŒUR, ÉPROUVÉE PLUTÔT QU'ILLUSTRÉE (2026-10-02, tâche #1444)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLaTheseDuCoeur() {
+  const K = await import('./the-king.mjs');
+
+  // ── 1. LES INDICES LISENT UN COMPORTEMENT, JAMAIS UN NOM. Compter les fonctions dont le nom
+  // commence par « find » mesurerait une convention de nommage : un fichier peut gouverner sans
+  // qu'un seul de ses noms le dise, et se nommer ainsi sans rien refuser.
+  assert.ok(K.INDICES_DE_GOUVERNANCE.length >= 3 && K.INDICES_DE_PRODUCTION.length >= 2, 'both sides carry several independent indices, never a single one that could be gamed');
+  assert.ok([...K.INDICES_DE_GOUVERNANCE, ...K.INDICES_DE_PRODUCTION].every((i) => i.quoi && i.quoi.length > 30), 'each index says what it reads and why it counts (Article 28)');
+
+  // ── 2. EN DIRECT SUR LE VRAI PARC (Article 25).
+  const m = K.mesurerLaThese();
+  assert.strictEqual(m.mesurable, true, 'the thesis is measured against the real tooling, never a fixture');
+  assert.ok(m.fichiers > 50, `on the whole fleet (currently ${m.fichiers} files)`);
+  assert.ok(m.sommeG > 0 && m.sommeP > 0, 'both sides are genuinely populated — a measure that found nothing on one side would compare nothing');
+
+  // ── 3. DEUX LECTURES, ET C'EST UN DÉFAUT RÉEL QUI LES IMPOSE (leçon L10). `console.log` est
+  // ambigu : dans un outil de gouvernance, imprimer est la façon dont un VERDICT est rendu. Le
+  // compter en production gonfle le dénominateur avec la livraison de ce qu'on mesure en face.
+  assert.ok(m.sommePStructurelle < m.sommeP, 'the structural reading genuinely excludes printing rather than renaming the same figure');
+  assert.ok(m.rapportStructurel > m.rapport, 'and the two readings really do disagree, which is why neither is given alone');
+  assert.ok(m.verdict && m.verdictStructurel, 'each reading carries its own verdict');
+
+  // ── 4. LE VERDICT PEUT DIRE NON, ET C'EST LA SEULE CHOSE QUI REND CETTE MESURE HONNÊTE (BP4).
+  // Une thèse énoncée par le responsable de projet n'est pas une consigne à illustrer. On lui
+  // donne un parc fabriqué où la production écrase la gouvernance : il doit contredire.
+  const contre = K.mesurerLaThese({
+    dossier: 'faux', lireDir: () => ['a.mjs'],
+    lireF: (chemin) => String(chemin).endsWith('a.mjs')
+      ? 'export function formatX(){}\n' + 'console.log(1);\n'.repeat(50)
+      : (() => { throw new Error('pas de crochet'); })(),
+  });
+  assert.strictEqual(contre.mesurable, true, 'the counter-case is measurable');
+  assert.strictEqual(contre.verdict, 'NON SOUTENUE', 'and on a fleet that only produces, the thesis is refused — a measure that cannot contradict the person who asked for it measures nothing');
+  assert.strictEqual(contre.auCrochet.mesurable, false, 'an unreadable hook is declared PAS MESURÉ rather than counted as zero permanent constraint');
+
+  // ── 5. ET IL PEUT DIRE OUI POUR DE VRAI, sur un parc qui ne fait que refuser : sans ce second
+  // sens, le « non » ci-dessus pourrait n'être qu'une mécanique qui refuse toujours.
+  const pour = K.mesurerLaThese({
+    dossier: 'faux', lireDir: () => ['b.mjs'],
+    lireF: () => 'throw new Error("x");\n'.repeat(20) + 'mesurable: true\n'.repeat(20) + 'export function formatY(){}\nconsole.log(1);',
+  });
+  assert.strictEqual(pour.verdict, 'SOUTENUE', 'on a fleet that only refuses and judges, the thesis holds');
+
+  // ── 6. UN PARC VIDE N'EST JAMAIS « RIEN NE GOUVERNE ».
+  const vide = K.mesurerLaThese({ dossier: 'faux', lireDir: () => [] });
+  assert.strictEqual(vide.mesurable, false, 'an empty fleet is PAS MESURÉ, never a thesis refuted');
+  assert.match(K.formatTheseLines(vide).join('\n'), /PAS MESURÉ/, 'and the report says so in its own title');
+
+  // ── 7. LA LIMITE EST ÉCRITE DANS LE RAPPORT LUI-MÊME, jamais seulement dans une fiche à côté.
+  const texte = K.formatTheseLines(m).join('\n');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its own limit');
+  assert.match(texte, /ne la démontre pas/, 'namely that counting code supports a thesis about what a thing IS, and never proves it');
+  assert.match(texte, /jamais dans une liste recopiée/, 'and that the permanent-constraint figure is read from the real hook (Article 24)');
+
+  console.log("Passed: la thèse « le cœur de l'Agence est sa gouvernance » est ÉPROUVÉE plutôt qu'illustrée (2026-10-02, tâche #1444). Il l'a écrite dans son Word, et une thèse énoncée par le responsable de projet n'est pas une consigne à illustrer : c'est une affirmation à mettre à l'épreuve. LA MESURE DOIT DONC POUVOIR RENDRE « NON SOUTENUE », sans quoi elle confirme tout et ne mesure rien — exactement l'outil fabriqué pour cocher une case que l'Article 31 refuse par sa faille 2. Les deux sens sont vérifiés (BP4) : sur un parc fabriqué qui ne fait que produire elle REFUSE la thèse, sur un parc qui ne fait que refuser et juger elle la soutient. LES TROIS INDICES LISENT DES COMPORTEMENTS, JAMAIS DES NOMS : compter les fonctions nommées « find » aurait mesuré une convention de nommage, car un fichier peut gouverner sans qu'un seul de ses noms le dise. ET UN DÉFAUT RÉEL DE LA PREMIÈRE LECTURE A IMPOSÉ LA SECONDE : `console.log` écrase tout par son volume et il est ambigu — dans un outil de gouvernance, imprimer est la façon dont un VERDICT est rendu, pas un produit fabriqué, donc le compter en production gonfle le dénominateur avec la livraison de ce qu'on mesure en face (leçon L10, une mesure qui partage son filtre avec ce qu'elle mesure). Choisir une seule des deux lectures aurait tranché la thèse par le choix du critère : les deux sont rendues, avec la question à laquelle chacune répond. Sur le vrai parc elles ne s'accordent pas — 0,72 pour 1 en lecture large, 6,38 pour 1 en lecture structurelle — et ce désaccord part en « à trancher » plutôt qu'en conclusion.");
+}
+await testLaTheseDuCoeur();

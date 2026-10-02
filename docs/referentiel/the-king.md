@@ -154,3 +154,37 @@ couverture est un progrès à faire monter, jamais une dette à solder.**
 
 **Premier passage réel** : 40 %, 17 objets sur 42, 0 écart — la cascade est amorcée sur la cible,
 les 9 stratégies de chantier et les documents du grand projet, jamais sur zéro.
+
+## LA THÈSE DU CŒUR — éprouver une affirmation plutôt que l'illustrer (2026-10-02, tâche #1444)
+
+**Sous-commande** : `node scripts/the-king.mjs these`. Dépose
+`docs/the-king/these-du-coeur-<date>.txt`.
+
+**CE QU'ELLE ÉPROUVE** : sa phrase du Word, *« le cœur de l'agence est sa gouvernance »*. Une thèse
+énoncée par le responsable de projet **n'est pas une consigne à illustrer** : c'est une affirmation
+à mettre à l'épreuve. La mesure doit donc pouvoir rendre **NON SOUTENUE**, sans quoi elle confirme
+tout et ne mesure rien (Article 31, faille 2).
+
+**LES INDICES LISENT DES COMPORTEMENTS, JAMAIS DES NOMS.** Compter les fonctions dont le nom
+commence par `find` aurait mesuré une convention de nommage : un fichier peut gouverner sans qu'un
+seul de ses noms le dise, et se nommer ainsi sans rien refuser. Côté gouvernance : ce qui **refuse**
+(`throw`), ce qui rend un **verdict** (`mesurable:`), ce qui sait **dire qu'il n'a pas pu**
+(`PAS MESURÉ`). Côté production : ce qui **met en forme**, ce qui **imprime**. Et, à part, la
+**contrainte permanente** — les outils du vrai crochet de commit, lus dans le crochet et jamais
+dans une liste recopiée (Article 24).
+
+**DEUX LECTURES, ET UN DÉFAUT RÉEL LES IMPOSE.** `console.log` écrase tout par son volume et il est
+**ambigu** : dans un outil de gouvernance, imprimer est la façon dont un verdict est RENDU, pas un
+produit fabriqué. Le compter en production gonfle donc le dénominateur avec la livraison de ce qu'on
+mesure en face — c'est la leçon L10, une mesure qui partage son filtre avec ce qu'elle mesure.
+**Choisir une seule des deux lectures reviendrait à trancher la thèse par le choix du critère**,
+donc les deux sont rendues, chacune avec la question à laquelle elle répond.
+
+**RELEVÉ DU 2026-10-02, sur 86 fichiers** : lecture large **0,72 pour 1** → SOUTENUE EN PARTIE ;
+lecture structurelle **6,38 pour 1** → SOUTENUE. Les deux ne s'accordent pas, et ce désaccord part
+en **À TRANCHER** plutôt qu'en conclusion. La contrainte permanente est de **20 outils sur 86**
+(23 %) : la gouvernance de ce dépôt est surtout **disponible**, plus rarement **contraignante**.
+
+**HORS PORTÉE, et c'est la limite qui compte** : ces chiffres disent COMBIEN de code est consacré à
+gouverner, jamais si ce qu'il gouverne en vaut la peine. Un paysage pourrait être gouvernance à 90 %
+et ne rien protéger d'utile.
