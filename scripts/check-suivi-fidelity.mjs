@@ -1308,6 +1308,19 @@ export function composerLigneDeSuivi(champs = {}, { horodatageLu = null, statuts
   if (desc.length < 80) {
     return { mesurable: false, refus: "fond-absent", pourquoi: `la description fait ${desc.length} caractères : une ligne de suivi porte un JUGEMENT — pourquoi ce travail, ce qu'il a coûté, ce qu'on en retient — et c'est exactement la part qu'un assistant ne doit jamais écrire à la place de l'agent` };
   }
+  // LE MARQUEUR DE STRATÉGIE, S'IL EST FOURNI, EST POSÉ SOUS SA FORME LISIBLE (tâche #1421).
+  // Il n'est pas obligatoire — l'imposer aujourd'hui refuserait la quasi-totalité des lignes, et
+  // un garde-fou qui refuse le geste normal cesse d'être lu (leçon L4). Mais quand il est donné,
+  // il est écrit dans la SEULE forme qu'une mécanique sache relire sans interprétation, plutôt que
+  // noyé dans une phrase. C'est le raccord du bas de la cascade, et il commence ici : à l'entrée,
+  // là où la ligne se compose, jamais dans un contrôle qui le réclamerait après coup.
+  if (String(champs.sert ?? "").trim()) {
+    const cible = String(champs.sert).trim();
+    if (!/^docs\/strategies\/[a-z0-9-]+\.md$/.test(cible)) {
+      return { mesurable: false, refus: "marqueur-mal-forme", pourquoi: `« ${cible} » n'est pas un chemin de stratégie : le marqueur s'écrit « docs/strategies/x.md » et rien d'autre. Un marqueur mal formé ressemble à un raccord, ce qui est pire qu'une absence` };
+    }
+    champs = { ...champs, description: `${String(champs.description).trim()} SERT : ${cible}` };
+  }
   const avecSeparateur = COLONNES_DU_SUIVI.filter((c) => SEPARATEUR_INTERDIT.test(String(champs[c] ?? "")));
   const nettoyes = {};
   for (const c of COLONNES_DU_SUIVI) nettoyes[c] = String(champs[c] ?? "").replace(/\|/g, "∣").replace(/\s+/g, " ").trim();

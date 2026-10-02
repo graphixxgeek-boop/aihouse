@@ -3205,6 +3205,101 @@ function bilanCli() {
   return chemin;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════
+// LE MARQUEUR DE STRATÉGIE — le raccord du bas de la cascade (2026-10-02, tâche #1421)
+// ════════════════════════════════════════════════════════════════════════════════════════════
+//
+// LA STRATÉGIE GLOBALE L'APPELLE ELLE-MÊME « le vrai chantier de la cascade » : la direction
+// descend bien de la philosophie jusqu'aux stratégies de chantier, et elle s'arrête là. Une tâche
+// ne sait pas dire quelle stratégie elle sert, donc rien ne remonte du bas vers le haut.
+//
+// LE CHIFFRE QUI CIRCULAIT ÉTAIT « 14 SUR 1 272 », ET LE DOCUMENT AVOUAIT LUI-MÊME SON DÉFAUT :
+// « ce document ne dit pas quelle commande a produit le 14 ». Une mesure qui ne nomme pas son
+// instrument ne se re-vérifie plus (Article 31). CETTE FONCTION EST L'INSTRUMENT MANQUANT, et son
+// premier passage corrige d'abord le DÉNOMINATEUR : le registre porte 726 LIGNES DE TÂCHE réelles,
+// pas 1 272 ni 1 338 — les chiffres précédents comptaient des lignes de fichier, en-têtes et prose
+// compris. Le rapport était donc faux des deux côtés de la fraction.
+//
+// TROIS CRITÈRES NOMMÉS PLUTÔT QU'UN SEUL, parce qu'ils ne mesurent pas la même chose et que
+// choisir pour le lecteur reviendrait à trancher la question par le choix du critère.
+export const MOTIF_MARQUEUR_DECLARE = /\bSERT\s*:\s*`?(docs\/strategies\/[a-z0-9-]+\.md)`?/i;
+export const CRITERES_DE_MARQUEUR = [
+  { cle: "declare", titre: "porte un marqueur DÉCLARÉ", test: (t) => MOTIF_MARQUEUR_DECLARE.test(t),
+    quoi: "la forme « SERT : docs/strategies/x.md » — la seule qui soit lisible par une mécanique sans interprétation" },
+  { cle: "cite", titre: "CITE une stratégie", test: (t) => /docs\/strategies\/|stratégie globale/i.test(t),
+    quoi: "elle nomme une stratégie quelque part dans sa description — un indice, jamais une déclaration" },
+  { cle: "objectif", titre: "cite un OBJECTIF ULTIME", test: (t) => /objectif ultime/i.test(t),
+    quoi: "elle remonte directement au socle, en sautant la stratégie — légitime, mais ce n'est pas le même raccord" },
+];
+
+export function marqueursDeStrategie({ rows = null, sessionsDir = null, strategiesConnues = null } = {}) {
+  const lignes = rows ?? loadAllTaskRows(sessionsDir ?? join(ROOT, "docs/suivi/sessions"), readdirSync, readFileSync, existsSync);
+  if (!lignes.length) {
+    return { mesurable: false, pourquoi: "aucune ligne de tâche lue : rendre « 0 % de marqueurs » sur un registre vide se lirait comme « aucune tâche ne sait ce qu'elle sert », l'inverse exact d'une absence de mesure" };
+  }
+  // LES STRATÉGIES EXISTANTES SONT LUES SUR LE DISQUE, jamais énumérées (Article 24) : une
+  // onzième stratégie écrite demain devient une cible valide le jour même.
+  let connues = strategiesConnues;
+  if (!connues) {
+    try { connues = new Set(readdirSync(join(ROOT, "docs/strategies")).filter((f) => f.endsWith(".md")).map((f) => `docs/strategies/${f}`)); }
+    catch { connues = new Set(); }
+  }
+  const parCritere = Object.fromEntries(CRITERES_DE_MARQUEUR.map((c) => [c.cle, 0]));
+  const declarees = [];
+  const cibleIntrouvable = [];
+  for (const r of lignes) {
+    // LE CHAMP S'APPELLE `detail`, PAS `description`, et s'être trompé l'a montré de la pire
+    // façon : la mesure a tourné, rendu des chiffres d'apparence normale, et lu le vide. Elle
+    // comptait 8 citations là où le texte brut en porte 28. UNE MESURE QUI LIT UN CHAMP INEXISTANT
+    // NE REND PAS D'ERREUR, elle rend un petit nombre — et un petit nombre sur un sujet où l'on
+    // s'attend à un petit nombre ne réveille personne.
+    const texte = `${r.detail ?? ""} ${r.sujet ?? ""} ${r.sousSujet ?? ""}`;
+    for (const c of CRITERES_DE_MARQUEUR) if (c.test(texte)) parCritere[c.cle]++;
+    const m = MOTIF_MARQUEUR_DECLARE.exec(texte);
+    if (!m) continue;
+    declarees.push({ numero: r.numero, cible: m[1] });
+    // UNE CIBLE MORTE RESSEMBLE À UN MARQUEUR, ce qui est pire qu'une absence : la tâche a l'air
+    // raccordée. Même doctrine que la chaîne d'action de l'Article 28.
+    if (connues.size && !connues.has(m[1])) cibleIntrouvable.push({ numero: r.numero, cible: m[1] });
+  }
+  // DEUX DÉNOMINATEURS, ET LES CONFONDRE A DÉJÀ PRODUIT TROIS CHIFFRES DIFFÉRENTS POUR LA MÊME
+  // QUESTION. Le lecteur canonique lit les sessions ET les archives — « une tâche archivée reste
+  // une tâche du projet », c'est écrit chez lui. Mais une partie des lignes anciennes n'a pas de
+  // NUMÉRO : elles datent d'avant que la colonne existe. Les deux comptes sont donc rendus, parce
+  // qu'un taux change du simple au double selon celui qu'on prend, et que choisir en silence est
+  // exactement ce qui a fait circuler « 14 sur 1 272 » sans que personne puisse le refaire.
+  const numerotees = lignes.filter((r) => r.numero).length;
+  return { mesurable: true, taches: lignes.length, numerotees, parCritere, declarees, cibleIntrouvable,
+    strategiesConnues: connues.size };
+}
+
+export function formatMarqueursLines(m) {
+  if (!m?.mesurable) return ["=== LE MARQUEUR DE STRATÉGIE : PAS MESURÉ ===", `  ${m?.pourquoi}`];
+  const L = ["=== LE RACCORD DU BAS — combien de tâches savent quelle stratégie elles servent ? ===", "",
+    `Dénominateur : ${m.taches} lignes de tâche lues par le lecteur canonique (sessions ET archives, comme il le fait pour tous les autres outils).`,
+    `Dont ${m.numerotees} portent un NUMÉRO ; les autres datent d'avant que la colonne existe. Les deux comptes sont donnés parce qu'un taux change du simple au double selon celui qu'on prend.`,
+    `${m.strategiesConnues} stratégie(s) existent sur le disque et peuvent servir de cible, lues au moment du passage.`, ""];
+  L.push("TROIS CRITÈRES, ET ILS NE MESURENT PAS LA MÊME CHOSE :");
+  for (const c of CRITERES_DE_MARQUEUR) {
+    const n = m.parCritere[c.cle];
+    L.push(`  ${String(n).padStart(4)} / ${m.taches}  (${(n / m.taches * 100).toFixed(1)} %)  ${c.titre}`);
+    L.push(`         ${c.quoi}`);
+  }
+  L.push("");
+  if (m.cibleIntrouvable.length) {
+    L.push(`🚨 ${m.cibleIntrouvable.length} marqueur(s) pointent vers une stratégie qui n'existe pas :`);
+    for (const x of m.cibleIntrouvable.slice(0, 10)) L.push(`     tâche #${x.numero} → ${x.cible}`);
+    L.push("     UNE CIBLE MORTE RESSEMBLE À UN MARQUEUR, ce qui est pire qu'une absence : la tâche a l'air raccordée.");
+  } else if (m.declarees.length) {
+    L.push(`✅ Les ${m.declarees.length} marqueur(s) déclaré(s) pointent tous vers une stratégie qui existe.`);
+  }
+  L.push("");
+  L.push("HORS PORTÉE, et c'est la limite qui compte : CITER une stratégie n'est pas la SERVIR. Le second critère");
+  L.push("compte des mentions — une tâche peut nommer une stratégie pour dire qu'elle s'en écarte. Seul le premier");
+  L.push("critère, la forme déclarée, est lisible sans interprétation ; les deux autres sont des indices.");
+  return L;
+}
+
 function main() {
   printReliabilityNotice("check-tasks-details");
   recordCliUsage("check-tasks-details");
@@ -3213,6 +3308,12 @@ function main() {
   // archivée et relue par les outils, le HTML la version de présentation, décision explicite de
   // l'utilisateur). Sous-commande dédiée plutôt qu'un 3e argument positionnel : ce rapport ne prend
   // ni zoom ni forme, il les contient tous les trois.
+  // Sous-commande `strategie` (2026-10-02, tâche #1421) : le raccord du bas de la cascade.
+  if (process.argv[2] === "strategie") {
+    const m = marqueursDeStrategie();
+    for (const l of formatMarqueursLines(m)) console.log(l);
+    return;
+  }
   if (process.argv[2] === "ronde") return rondeCli();
   // Sous-commande `poids` (2026-09-24, chantier 5 du plan de nuit) : le poids des tâches, les
   // vignettes, les lignes longues sans résumé de tête et la répartition des origines. Sous-commande

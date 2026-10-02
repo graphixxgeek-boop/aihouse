@@ -697,3 +697,39 @@ Trois fiches voisines partagent son vocabulaire sans partager son objet, et la f
   reconnu, horodatage, clôture déclarée) ; celui-ci lit ces lignes pour en tirer un **état des
   lieux**. C'est pour cette raison que le vocabulaire des statuts se LIT chez lui et ne se recopie
   pas ici.
+
+## LE RACCORD DU BAS DE LA CASCADE — le marqueur de stratégie (2026-10-02, tâche #1421)
+
+**Sous-commande** : `node scripts/check-tasks-details.mjs strategie`.
+
+**CE QU'IL MESURE** : combien de tâches savent dire quelle stratégie elles servent. La stratégie
+globale appelle elle-même ce raccord *« le vrai chantier de la cascade »* : la direction descend de
+la philosophie jusqu'aux stratégies de chantier, et elle s'arrête là.
+
+**LE CHIFFRE QUI CIRCULAIT ÉTAIT « 14 SUR 1 272 », ET LE DOCUMENT AVOUAIT SON DÉFAUT** : *« ce
+document ne dit pas quelle commande a produit le 14 »*. Une mesure qui ne nomme pas son instrument
+ne se re-vérifie plus (Article 31, faille 8). **Cette sous-commande est l'instrument manquant.**
+
+**DEUX DÉNOMINATEURS, ET LES CONFONDRE A PRODUIT TROIS CHIFFRES POUR UNE SEULE QUESTION.** Le
+lecteur canonique lit **1 381** lignes, archives comprises — *« une tâche archivée reste une tâche
+du projet »*, c'est écrit chez lui — dont **1 331** portent un numéro. Les deux sont rendus, parce
+qu'un taux change selon celui qu'on prend.
+
+**TROIS CRITÈRES NOMMÉS, parce qu'ils ne mesurent pas la même chose** : porte un marqueur
+**déclaré** (`SERT : docs/strategies/x.md`, la seule forme lisible sans interprétation) · **cite**
+une stratégie (un indice — une tâche peut la nommer pour dire qu'elle s'en écarte) · cite un
+**objectif ultime** (elle remonte au socle en sautant la stratégie).
+
+**LA BOUCLE EST FERMÉE** : ce que `check-suivi-fidelity composer` ÉCRIT, cette sous-commande le
+RELIT. Un marqueur que rien n'écrit resterait une intention, et un marqueur que rien ne relit
+aussi. Le marqueur va **dans la description**, jamais dans une douzième colonne — ajouter une
+colonne serait une migration de tout le registre.
+
+**IL N'EST PAS OBLIGATOIRE, ET C'EST DÉLIBÉRÉ** : l'imposer aujourd'hui refuserait la
+quasi-totalité des lignes, et un garde-fou qui refuse le geste normal cesse d'être lu (leçon L4).
+**C'est un progrès à faire monter, jamais une dette à solder.**
+
+**UNE ERREUR DE CONSTRUCTION VAUT D'ÊTRE GARDÉE ICI** : le premier passage lisait un champ
+`description` qui n'existe pas — il s'appelle `detail`. **La mesure n'a pas rendu d'erreur : elle a
+rendu 8 citations là où le texte en porte 26.** Un petit nombre sur un sujet où l'on s'attend à un
+petit nombre ne réveille personne, et c'est la forme la plus discrète d'une mesure fausse.

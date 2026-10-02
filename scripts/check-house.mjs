@@ -24834,3 +24834,65 @@ async function testLeComposeurDeLigneDeSuivi() {
   console.log("Passed: le composeur de ligne de suivi, l'autre bout du module (2026-10-02, tâche #1447). LE DIAGNOSTIC EST UN RAPPORT DE UN À TRENTE-QUATRE, trouvé en décrivant le module : le suivi a UNE SEULE porte d'entrée — la main de l'agent — et trente-quatre scripts qui le lisent, donc tout ce qui est faux à l'entrée se propage trente-quatre fois. Seize contrôles veillent déjà et TOUS EN LECTURE : ils refusent le commit après coup, ils disent déjà tout ce qui peut être dit après, et un dix-septième ne dirait rien de neuf. CE QUI MANQUAIT EST À L'AUTRE BOUT : composer la ligne plutôt que la corriger — exactement le raisonnement payé sur l'heure, cinq horodatages faux en deux jours malgré une règle explicite, parce que la règle disait LIRE et que le défaut était dans la RECOPIE. On ne corrige pas une recopie, on la rend impossible. IL VIT CHEZ LE GARDIEN DU SUIVI PLUTÔT QUE DANS UN OUTIL NEUF, et c'est assumé : un outil neuf demanderait un NOM, que seul l'utilisateur donne, et dix registres à remplir. Le composeur a le même sujet et la direction inverse ; le loger ici lui fait hériter du kit, de l'item de Ronde et de la fiche, ce que l'Article 24 demande d'un nouveau venu. CINQ REFUS, CHACUN NÉ D'UNE FAUTE RÉELLE DE CETTE NUIT : heure non lue, heure mal formée, statut hors vocabulaire — « fermée » au lieu de « terminée », refusé par le filet quelques heures plus tôt —, champs manquants, et fond absent. LE SÉPARATEUR DANS UNE CELLULE EST LE SEUL QUI SE CORRIGE AU LIEU DE REFUSER, parce qu'il a une correction évidente : il est remplacé, et le champ d'où il venait est NOMMÉ plutôt que silencieusement réparé. Les accents graves ne protègent rien, et c'est écrit dans l'avertissement. ET IL NE COMPOSE JAMAIS LE FOND : une ligne de suivi porte un jugement — pourquoi ce travail, ce qu'il a coûté, ce qu'on en retient — et un assistant qui le génèrerait serait exactement l'outil fabriqué pour cocher une case de l'Article 31. Il compose la FORME, et il REFUSE quand le FOND manque.");
 }
 await testLeComposeurDeLigneDeSuivi();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE RACCORD DU BAS DE LA CASCADE — le marqueur de stratégie (2026-10-02, tâche #1421)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLeMarqueurDeStrategie() {
+  const T = await import('./check-tasks-details.mjs');
+  const C = await import('./check-suivi-fidelity.mjs');
+
+  // ── 1. L'INSTRUMENT EXISTE ET IL EST NOMMÉ. Le chiffre qui circulait — « 14 tâches sur 1 272 »
+  // — était invérifiable, et la stratégie globale l'avouait elle-même : « ce document ne dit pas
+  // quelle commande a produit le 14 ». Une mesure qui ne nomme pas son instrument ne se
+  // re-vérifie plus (Article 31, faille 8).
+  const m = T.marqueursDeStrategie();
+  assert.strictEqual(m.mesurable, true, 'the bottom-of-cascade measure runs against the real registry');
+  assert.ok(m.taches > 1000, `on the canonical reader's own population, archives included (currently ${m.taches})`);
+  assert.ok(m.numerotees > 0 && m.numerotees <= m.taches, `with the numbered subset given alongside (${m.numerotees}), because a rate changes by half depending which one you take`);
+  assert.strictEqual(T.CRITERES_DE_MARQUEUR.length, 3, 'three named criteria, never a single figure');
+  assert.ok(T.CRITERES_DE_MARQUEUR.every((c) => c.quoi && c.quoi.length > 30), 'each saying what it counts and what it does not');
+
+  // ── 2. LE CHAMP LU EST LE BON, et s'être trompé l'a montré de la pire façon : la mesure a
+  // tourné, rendu des chiffres d'apparence normale, et lu le vide. Elle comptait 8 citations là
+  // où le texte brut en porte 26. UNE MESURE QUI LIT UN CHAMP INEXISTANT NE REND PAS D'ERREUR,
+  // elle rend un petit nombre — et un petit nombre là où l'on en attend un petit ne réveille rien.
+  assert.ok(m.parCritere.cite >= 20, `the citation criterion reads the real description field (currently ${m.parCritere.cite}, not the 8 a wrong field name produced)`);
+
+  // ── 3. SENS 2 (BP4) : un marqueur déclaré est COMPTÉ, et une cible morte est ATTRAPÉE. Une
+  // cible morte ressemble à un marqueur, ce qui est pire qu'une absence : la tâche a l'air
+  // raccordée.
+  const faux = T.marqueursDeStrategie({ rows: [
+    { numero: '1', detail: 'un travail quelconque SERT : docs/strategies/gestion-des-taches-strategie.md et voilà' },
+    { numero: '2', detail: 'un autre travail SERT : docs/strategies/celle-qui-nexiste-pas.md' },
+    { numero: '3', detail: 'un travail sans aucun marqueur' },
+  ] });
+  assert.strictEqual(faux.parCritere.declare, 2, 'both declared markers are counted');
+  assert.deepStrictEqual(faux.cibleIntrouvable.map((x) => x.numero), ['2'], 'and only the one pointing at a strategy that does not exist is flagged');
+
+  // ── 4. UN REGISTRE VIDE N'EST PAS « AUCUNE TÂCHE NE SAIT CE QU'ELLE SERT » (leçon L5).
+  const vide = T.marqueursDeStrategie({ rows: [] });
+  assert.strictEqual(vide.mesurable, false, 'an empty registry is PAS MESURÉ');
+  assert.match(T.formatMarqueursLines(vide).join('\n'), /PAS MESURÉ/, 'and says so in its own title');
+
+  // ── 5. LA BOUCLE EST FERMÉE : ce que le composeur ÉCRIT, le compteur le RELIT. Un marqueur que
+  // rien n'écrit resterait une intention (leçon L2), et un marqueur que rien ne relit aussi.
+  const champs = { numero: '9999', motCle: 'essai', sujet: 'Outillage / essai', sousSujet: 'vérification',
+    sensibilite: 'NORMAL-UTILE', pourQui: 'PROJET', ouverture: 'OUI', cloture: 'OUI',
+    description: 'Une description assez longue pour porter un vrai jugement sur ce qui a été fait et pourquoi.', statut: 'terminée' };
+  const avec = C.composerLigneDeSuivi({ ...champs, sert: 'docs/strategies/gestion-des-taches-strategie.md' }, { horodatageLu: '2026-10-02T12:30Z' });
+  assert.strictEqual(avec.mesurable, true, 'the composer accepts the marker');
+  assert.strictEqual(avec.cellules, C.CELLULES_ATTENDUES, 'without breaking the cell count — it goes INTO the description, never into a twelfth column');
+  assert.ok(T.MOTIF_MARQUEUR_DECLARE.test(avec.ligne), 'and what it wrote is exactly what the counter reads back');
+
+  // ── 6. UN MARQUEUR MAL FORMÉ EST REFUSÉ À L'ENTRÉE : il ressemble à un raccord, ce qui est pire
+  // qu'une absence.
+  assert.strictEqual(C.composerLigneDeSuivi({ ...champs, sert: 'une stratégie quelconque' }, { horodatageLu: '2026-10-02T12:30Z' }).refus, 'marqueur-mal-forme', 'a free-text marker is refused rather than written as if it were a link');
+
+  // ── 7. ET IL N'EST PAS OBLIGATOIRE, délibérément : l'imposer aujourd'hui refuserait la
+  // quasi-totalité des lignes, et un garde-fou qui refuse le geste normal cesse d'être lu (L4).
+  assert.strictEqual(C.composerLigneDeSuivi(champs, { horodatageLu: '2026-10-02T12:30Z' }).mesurable, true, 'a line without a marker still composes — the marker is a progress to raise, never a debt to settle');
+
+  console.log("Passed: le raccord du bas de la cascade a enfin son instrument (2026-10-02, tâche #1421). LA STRATÉGIE GLOBALE L'APPELLE ELLE-MÊME « le vrai chantier de la cascade » : la direction descend de la philosophie jusqu'aux stratégies de chantier et s'arrête là, parce qu'une tâche ne sait pas dire quelle stratégie elle sert. LE CHIFFRE QUI CIRCULAIT ÉTAIT « 14 SUR 1 272 » ET LE DOCUMENT AVOUAIT SON PROPRE DÉFAUT : « ce document ne dit pas quelle commande a produit le 14 ». Une mesure qui ne nomme pas son instrument ne se re-vérifie plus. LE PREMIER PASSAGE CORRIGE D'ABORD LE DÉNOMINATEUR, et il y en a DEUX : le lecteur canonique lit 1 381 lignes, archives comprises — « une tâche archivée reste une tâche du projet », c'est écrit chez lui — dont 1 331 portent un numéro. Les deux sont rendus parce qu'un taux change selon celui qu'on prend, et que choisir en silence est exactement ce qui a fait circuler un chiffre que personne ne pouvait refaire. UNE ERREUR DE MA PART A MONTRÉ LE PIRE CAS DE FIGURE EN DIRECT : j'ai lu un champ `description` qui n'existe pas — il s'appelle `detail`. La mesure n'a PAS rendu d'erreur : elle a rendu 8 citations là où le texte en porte 26. Un petit nombre sur un sujet où l'on s'attend à un petit nombre ne réveille personne, et c'est la forme la plus discrète d'une mesure fausse. TROIS CRITÈRES NOMMÉS plutôt qu'un seul, parce que CITER une stratégie n'est pas la SERVIR — une tâche peut la nommer pour dire qu'elle s'en écarte. ET LA BOUCLE EST FERMÉE : ce que le composeur ÉCRIT, le compteur le RELIT, dans la seule forme lisible sans interprétation. Le marqueur n'est PAS obligatoire, délibérément : l'imposer aujourd'hui refuserait la quasi-totalité des lignes, et un garde-fou qui refuse le geste normal cesse d'être lu (leçon L4). C'est un progrès à faire monter, jamais une dette à solder.");
+}
+await testLeMarqueurDeStrategie();
