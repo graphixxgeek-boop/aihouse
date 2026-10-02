@@ -300,3 +300,37 @@ importer la nôtre faute de matière.
 
 **CE QUI RESTE UN TROU ASSUMÉ**, et il l'a dit lui-même : l'étape « précisions apportées par le
 responsable du projet d'accueil ». L'outil propose ; il ne conclut pas.
+
+## LA DÉRIVATION — reprendre une réponse écrite (2026-10-02, tâche #1438, seconde moitié)
+
+**Sous-commande** : `node scripts/the-king.mjs deriver`.
+
+**CE QUE LA RÉVÉLATION FAIT, ET POURQUOI ÇA NE SUFFIT PAS.** Elle extrait des phrases qui
+engagent et garde les plus répandues — la bonne méthode quand **personne n'a jamais répondu**.
+Mais quand un document répond explicitement — `## CE QUE NOUS NE SACRIFIERONS JAMAIS`, suivi d'un
+tableau de quatre réponses avec leurs porteurs — **la reconstruire statistiquement rend une
+version plus faible d'une réponse qui existait déjà**, mieux écrite, et validée par un humain.
+
+**LE SIGNAL EST LE TITRE**, et c'est le seul honnête : un document qui répond à une question du
+cadre le dit dans son titre de section.
+
+**RÉSULTAT** : les **cinq impossibles** sont retrouvés à leur source, réponses reprises telles
+quelles, **colonne de porteurs comprise**.
+
+**DEUX CORRECTIONS IMPOSÉES PAR LE PREMIER PASSAGE :**
+
+1. **Un faux positif massif.** 14 cases sur 19 ressortaient « répondues », toutes par des sections
+   qui ne répondaient à rien : la case « Raison d'être » matchait un titre de leçon parlant
+   d'« oublier sa raison ». **Un titre d'un seul mot significatif se retrouve dans des centaines
+   de titres.** D'où une correspondance **bidirectionnelle** et un minimum de **deux racines
+   partagées** — et une case trop courte est **déclarée non dérivable** plutôt que faussement
+   appariée. Baisser le seuil aurait augmenté le nombre de réponses et **diminué leur valeur**.
+2. **Les racines d'un titre ne se calculent pas comme celles d'une phrase.** « Ce que nous ne
+   sacrifierons jamais » rendait **une seule** racine : le filtre de mots-outils partagé écarte
+   « jamais » — à juste titre dans une phrase de prose, où il est partout, **alors que dans un
+   titre de case c'est le mot qui porte tout le sens**. Un titre est court et choisi ; aucun de
+   ses mots n'y est par hasard. Le jeu élargi reste **local aux titres**.
+
+**HORS PORTÉE** : un titre qui RESSEMBLE à la question d'une case ne garantit pas que la section y
+réponde. Le nombre d'autres candidats est donné par case, pour que le choix du premier puisse être
+relu.

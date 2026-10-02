@@ -1633,6 +1633,141 @@ export function formatGenerationLines(g) {
   return L;
 }
 
+// ============================================================================
+// LA DÉRIVATION — reprendre une réponse écrite au lieu de la reconstruire (tâche #1438, ②)
+// ============================================================================
+// CE QUE LA RÉVÉLATION FAIT, ET POURQUOI ÇA NE SUFFIT PAS. Elle extrait des phrases qui engagent,
+// les note par le nombre de contextes qu'elles traversent, et garde les plus répandues. C'est la
+// bonne méthode quand personne n'a jamais répondu à la question. Mais quand un document RÉPOND
+// explicitement — « ## CE QUE NOUS NE SACRIFIERONS JAMAIS », suivi d'un tableau de quatre
+// réponses avec leurs porteurs — la reconstruire statistiquement rend une version PLUS FAIBLE
+// d'une réponse qui existait déjà, mieux écrite, et validée par un humain.
+//
+// LE SIGNAL EST LE TITRE, et c'est le seul qui soit honnête : un document qui répond à une
+// question du cadre le dit dans son titre de section. Chercher la réponse ailleurs qu'au titre
+// reviendrait à deviner qu'un paragraphe répond à une question qu'il ne pose pas.
+//
+// LA COMPARAISON SE FAIT PAR RACINES, pour la même raison que l'alerte de tension : « sacrifions »
+// et « sacrifierons » sont le même mot pour un lecteur, et deux mots différents pour un ordinateur.
+export const SEUIL_DE_DERIVATION = 0.6;
+
+// DEUX CONDITIONS, ET LA SECONDE EST NÉE D'UN FAUX POSITIF MASSIF AU PREMIER PASSAGE.
+// La contenance seule rendait 1,00 entre la case « Raison d'être » et un titre de leçon parlant
+// d'« oublier sa raison » — parce que le titre de la case ne porte qu'UN mot significatif, et
+// qu'un mot unique se retrouve dans des centaines de titres. 14 cases sur 19 ressortaient
+// « répondues », toutes par des sections qui ne répondaient à rien.
+// ① LA CORRESPONDANCE EST BIDIRECTIONNELLE : il ne suffit pas que les mots de la case soient dans
+//    le titre trouvé, il faut aussi que le titre trouvé ne parle pas massivement d'autre chose.
+// ② DEUX RACINES PARTAGÉES AU MINIMUM : une case dont le titre ne porte qu'un mot significatif
+//    n'est pas dérivable par titre, et c'est DÉCLARÉ plutôt que compensé par un seuil plus bas.
+//    Baisser le seuil aurait augmenté le nombre de réponses et diminué leur valeur — exactement
+//    l'inverse de ce que la dérivation sert à faire.
+export const RACINES_PARTAGEES_MINIMUM = 2;
+
+// LES RACINES D'UN TITRE NE SE CALCULENT PAS COMME CELLES D'UNE PHRASE, et le cas qui l'a montré
+// est le plus parlant du lot : « Ce que nous ne sacrifierons jamais » rendait UNE SEULE racine.
+// Le filtre de mots-outils partagé écarte « jamais » — à juste titre dans une phrase de prose, où
+// il est partout — alors que dans un titre de CASE c'est le mot qui porte tout le sens. Un titre
+// est court et choisi ; aucun de ses mots n'y est par hasard.
+// On garde donc, pour les titres seulement, tout mot d'au moins quatre lettres, y compris ceux que
+// le filtre de prose écarte. Le jeu reste LOCAL, et l'élargir ailleurs ferait entrer en prose
+// exactement le bruit que le filtre partagé existe pour retirer.
+export const racinesDUnTitre = (texte) => new Set(String(texte ?? "").toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .split(/[^a-z0-9]+/).filter((w) => w.length >= 4).map((w) => w.slice(0, LONGUEUR_DE_RACINE)));
+
+export function contenanceDeTitre(a, b) {
+  const x = racinesDUnTitre(a);
+  if (!x.size) return 0;
+  const y = racinesDUnTitre(b);
+  let dedans = 0;
+  for (const r of x) if (y.has(r)) dedans++;
+  return dedans / x.size;
+}
+
+export function sectionsAvecTitre(texte = "", { chemin = "" } = {}) {
+  const lignes = String(texte).split("\n");
+  const out = [];
+  for (let i = 0; i < lignes.length; i++) {
+    const m = /^(#{2,4})\s+(.+?)\s*$/.exec(lignes[i]);
+    if (!m) continue;
+    const niveau = m[1].length;
+    let fin = lignes.length;
+    for (let j = i + 1; j < lignes.length; j++) {
+      const n = /^(#{1,4})\s/.exec(lignes[j]);
+      if (n && n[1].length <= niveau) { fin = j; break; }
+    }
+    out.push({ chemin, titre: m[2].replace(/[*`]/g, "").replace(/^[①②③④⑤⑥⑦⑧⑨⑩\d.\s·—-]+/, "").trim(),
+      corps: lignes.slice(i + 1, fin).join("\n") });
+  }
+  return out;
+}
+
+export function deriverLesReponses({ root = ROOT, familles = CADRE_FAMILLES, racines = RACINES_DU_CORPUS,
+  seuil = SEUIL_DE_DERIVATION, lireImpl = null, listerImpl = null } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const lister = listerImpl ?? ((d, ext = ".md") => (fsExists(join(root, d))
+    ? fsReaddir(join(root, d)).filter((f) => f.endsWith(ext)).map((f) => `${d}/${f}`) : []));
+  const sections = [];
+  for (const r of racines) {
+    const fichiers = r.chemin ? [r.chemin] : lister(r.dossier, r.ext ?? ".md");
+    for (const f of fichiers) {
+      if (r.enTeteSeulement) continue; // un commentaire de code ne répond pas à une question du cadre
+      try { sections.push(...sectionsAvecTitre(lire(f), { chemin: f })); } catch { /* illisible */ }
+    }
+  }
+  if (!sections.length) {
+    return { mesurable: false, pourquoi: "aucune section lisible dans le corpus : rendre « aucune réponse écrite » là-dessus se lirait comme « personne n'a jamais répondu », l'inverse exact d'une absence de mesure" };
+  }
+  const derivees = [];
+  for (const f of familles) {
+    const racinesCase = racinesDUnTitre(f.titre);
+    if (racinesCase.size < RACINES_PARTAGEES_MINIMUM) {
+      derivees.push({ cle: f.cle, titre: f.titre, trouvee: false,
+        nonDerivable: `le titre de cette case ne porte que ${racinesCase.size} mot significatif : un mot unique se retrouve dans des centaines de titres, et toute correspondance serait un hasard` });
+      continue;
+    }
+    const candidats = sections
+      .map((s) => ({ ...s, score: Math.min(contenanceDeTitre(f.titre, s.titre), contenanceDeTitre(s.titre, f.titre)),
+        communes: [...racinesCase].filter((r) => racinesDUnTitre(s.titre).has(r)).length }))
+      .filter((s) => s.score >= seuil && s.communes >= RACINES_PARTAGEES_MINIMUM)
+      .sort((a, b) => b.score - a.score || b.communes - a.communes);
+    if (!candidats.length) { derivees.push({ cle: f.cle, titre: f.titre, trouvee: false }); continue; }
+    const meilleur = candidats[0];
+    // LA RÉPONSE EST REPRISE TELLE QUELLE : les lignes du tableau si la section en porte un,
+    // sinon ses premières phrases qui engagent. On ne reformule pas — tout l'intérêt de la
+    // dérivation est que la réponse soit celle qui a été écrite, pas une paraphrase.
+    const duTableau = extraireDesTableaux(meilleur.corps, { chemin: meilleur.chemin });
+    const reponses = duTableau.length ? duTableau : extraireConvictions(meilleur.corps, { chemin: meilleur.chemin }).slice(0, 4);
+    derivees.push({ cle: f.cle, titre: f.titre, trouvee: true, source: meilleur.chemin,
+      titreTrouve: meilleur.titre, score: Math.round(meilleur.score * 100) / 100,
+      reponses: reponses.map((r) => r.phrase), autresCandidats: candidats.length - 1 });
+  }
+  const n = derivees.filter((d) => d.trouvee).length;
+  return { mesurable: true, sections: sections.length, familles: familles.length, derivees,
+    trouvees: n, seuil };
+}
+
+export function formatDerivationLines(d) {
+  if (!d?.mesurable) return ["=== LA DÉRIVATION : PAS MESURÉ ===", `  ${d?.pourquoi}`];
+  const L = ["=== LES RÉPONSES DÉJÀ ÉCRITES — reprises telles quelles, jamais reconstruites ===", "",
+    `${d.sections} section(s) titrées lues · ${d.trouvees} case(s) du cadre sur ${d.familles} trouvent une réponse écrite (seuil de titre ${d.seuil}).`,
+    "", "POURQUOI CECI PASSE AVANT LA RÉVÉLATION : quand un document RÉPOND explicitement à une question du",
+    "cadre, la reconstruire statistiquement rend une version PLUS FAIBLE d'une réponse qui existait déjà,",
+    "mieux écrite, et validée par un humain. La révélation reste la méthode quand personne n'a répondu.", ""];
+  for (const x of d.derivees) {
+    if (!x.trouvee) { L.push(`·  ${x.titre} — ${x.nonDerivable ? `NON DÉRIVABLE PAR TITRE : ${x.nonDerivable}` : "aucune réponse écrite trouvée : c'est à la RÉVÉLATION de la reconstruire"}`); continue; }
+    L.push(`✅ ${x.titre}`);
+    L.push(`     répondue dans « ${x.source} » sous le titre « ${x.titreTrouvé ?? x.titreTrouve} » (correspondance ${x.score})${x.autresCandidats ? ` · ${x.autresCandidats} autre(s) candidat(s)` : ""}`);
+    for (const r of x.reponses.slice(0, 4)) L.push(`     · ${r.slice(0, 150)}`);
+  }
+  L.push("");
+  L.push("HORS PORTÉE : un titre qui RESSEMBLE à la question d'une case ne garantit pas que la section y réponde.");
+  L.push("La correspondance se mesure sur les mots du titre, et un titre peut annoncer autre chose que ce qu'il tient.");
+  L.push("Le nombre d'autres candidats est donné pour chaque case : quand il est élevé, le choix du premier mérite d'être relu.");
+  return L;
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
@@ -1660,6 +1795,16 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // SOUS-COMMANDE « tension » (tâche #1435) — sa question : « seras-tu capable de me prévenir si
   // j'ai une idée ou une consigne en tension avec ce document ? »
   // SOUS-COMMANDE « fonder » (tâche #1428) — proposer les textes fondateurs d'un projet d'accueil.
+  // SOUS-COMMANDE « deriver » (tâche #1438, seconde moitié) — reprendre une réponse écrite.
+  if (process.argv[2] === "deriver") {
+    const r = deriverLesReponses();
+    for (const l of formatDerivationLines(r)) console.log(l);
+    const constats = [];
+    for (const x of r.derivees ?? []) if (!x.trouvee) constats.push({ constat: `la case « ${x.titre} » n'a aucune réponse écrite dans le corpus`, etat: "retenu", tache: "c'est à la révélation de la reconstruire — ou à quelqu'un de l'écrire" });
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
   if (process.argv[2] === "fonder") {
     const objectif = process.argv.slice(3).join(" ") || null;
     const g = genererLesTextesFondateurs({ objectifUtilisateur: objectif });

@@ -24957,3 +24957,58 @@ async function testLesTextesFondateursDUnProjetDAccueil() {
   console.log("Passed: l'Agence sait désormais PROPOSER les textes fondateurs d'un projet qui n'en a pas (2026-10-02, tâche #1428). Sa demande : « il génère tout […] car aucun projet ne peut vivre sans objectif profond et philo ». LE DIAGNOSTIC SAVAIT DÉJÀ DIRE « ce projet n'a pas de philosophie » — c'est utile, et ça ne rend aucun service. Ce qui en fait un service est de savoir en proposer une, EXTRAITE DU CORPUS DU PROJET LUI-MÊME, jamais importée du nôtre. LES DEUX SENS SONT VÉRIFIÉS (BP4), et le premier est le plus important : sur CE dépôt, qui a déjà ses trois textes, l'outil ne propose RIEN — proposer les nôtres par-dessus serait exactement l'écrit d'autorité qu'il existe pour refuser, et « l'Agence sert la finalité de celui qui l'emploie, jamais la sienne ». Sur un projet d'accueil qui en manque, il remplit 14 cases sur 19 à partir de son corpus à lui. CHAQUE PHRASE PORTE SA SOURCE ET SON ÉTENDUE, et c'est ce qui en fait une proposition CONTESTABLE SUR PIÈCES plutôt qu'une invention qu'on ne peut que croire. UNE CASE VIDE RESTE VIDE ET DIT POURQUOI : la remplir au jugé empêcherait de distinguer ce que le corpus dit de ce que l'outil a supposé, ce qui est pire qu'une case vide. L'OBJECTIF ULTIME EST LE SEUL DES TROIS QUE LE CORPUS NE PEUT JAMAIS RENDRE : fourni, il reçoit la clause non retirable de l'Agence ; absent, il est déclaré PAS MESURÉ et jamais deviné. ET UN CORPUS ILLISIBLE N'EST PAS UNE PHILOSOPHIE ABSENTE : le dire protège de la pire issue, qui serait d'importer la nôtre faute de matière.");
 }
 await testLesTextesFondateursDUnProjetDAccueil();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LA DÉRIVATION — reprendre une réponse écrite (2026-10-02, tâche #1438, seconde moitié)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLaDerivationDesReponses() {
+  const K = await import('./the-king.mjs');
+  const d = K.deriverLesReponses();
+  assert.strictEqual(d.mesurable, true, 'the derivation runs against the real corpus');
+  assert.ok(d.sections > 1000, `reading every titled section of it (currently ${d.sections})`);
+
+  // ── 1. LE CAS D'ÉCOLE EST TENU : les cinq impossibles sont RETROUVÉS à leur source, et leurs
+  // réponses reprises TELLES QUELLES — avec la colonne de porteurs, qui est tout l'intérêt.
+  const impossibles = d.derivees.filter((x) => /jamais|absolument/i.test(x.titre));
+  assert.strictEqual(impossibles.length, 5, 'the five impossibles are among the frame cases');
+  assert.ok(impossibles.every((x) => x.trouvee), `and all five find their written answer: ${impossibles.filter((x) => !x.trouvee).map((x) => x.titre).join(', ') || 'none missing'}`);
+  assert.ok(impossibles.every((x) => /les-cinq-impossibles/.test(x.source)), 'in the document that actually answers them');
+  const sacrifie = impossibles.find((x) => /sacrifierons/.test(x.titre));
+  assert.ok(sacrifie.reponses.some((r) => /Article 0/.test(r)), 'and each answer keeps its PORTEUR — a conviction without its proof is what this project refuses everywhere else');
+
+  // ── 2. SENS 2, ET IL A COÛTÉ DEUX CORRECTIONS (BP4). Au premier passage, 14 cases sur 19
+  // ressortaient « répondues », toutes par des sections qui ne répondaient à rien : la case
+  // « Raison d'être » matchait un titre de leçon parlant d'« oublier sa raison », parce qu'un
+  // titre d'un seul mot significatif se retrouve dans des centaines de titres.
+  const bidon = K.deriverLesReponses({ familles: [{ cle: 'x', bloc: 'y', titre: 'Une case dont le titre ne ressemble à rien de ce dépôt zzzz' }] });
+  assert.strictEqual(bidon.trouvees, 0, 'a case nothing answers finds nothing — the matcher does not fish');
+
+  // ── 3. UNE CASE AU TITRE D'UN SEUL MOT EST DÉCLARÉE NON DÉRIVABLE, jamais faussement
+  // appariée. Baisser le seuil aurait augmenté le nombre de réponses et diminué leur valeur —
+  // exactement l'inverse de ce que la dérivation sert à faire.
+  const court = K.deriverLesReponses({ familles: [{ cle: 'x', bloc: 'y', titre: 'Audit' }] });
+  assert.strictEqual(court.derivees[0].trouvee, false, 'a one-word case title is not matched');
+  assert.match(court.derivees[0].nonDerivable, /un mot unique/, 'and says why rather than returning a lucky hit');
+
+  // ── 4. LES RACINES D'UN TITRE NE SE CALCULENT PAS COMME CELLES D'UNE PHRASE, et le cas qui l'a
+  // montré est le plus parlant : « Ce que nous ne sacrifierons jamais » rendait UNE racine, parce
+  // que le filtre de prose écarte « jamais » — à juste titre dans une phrase, où il est partout,
+  // alors que dans un titre de case c'est le mot qui porte tout le sens.
+  assert.strictEqual(K.racinesDe('Ce que nous ne sacrifierons jamais').size, 1, 'the shared prose filter keeps only one stem here');
+  assert.ok(K.racinesDUnTitre('Ce que nous ne sacrifierons jamais').size >= 2, 'while the title-specific one keeps the word that carries the whole meaning');
+  assert.ok(K.racinesDe('une phrase de prose ordinaire avec des mots courants').size < K.racinesDUnTitre('une phrase de prose ordinaire avec des mots courants').size, 'and the two really differ, which is why the wider one stays LOCAL to titles');
+
+  // ── 5. UN CORPUS ILLISIBLE N'EST PAS « PERSONNE N'A JAMAIS RÉPONDU » (leçon L5).
+  const vide = K.deriverLesReponses({ racines: [{ dossier: 'docs/nexistepas', zone: 'x', pourquoi: 'fabriquée pour le test' }] });
+  assert.strictEqual(vide.mesurable, false, 'an unreadable corpus is PAS MESURÉ');
+  assert.match(K.formatDerivationLines(vide).join('\n'), /PAS MESURÉ/, 'and says so in its own title');
+
+  // ── 6. LA LIMITE EST DANS LE RAPPORT, et le nombre d'autres candidats est donné pour que le
+  // choix du premier puisse être relu.
+  const texte = K.formatDerivationLines(d).join('\n');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its limit');
+  assert.match(texte, /ne garantit pas que la section y réponde/, 'namely that a title resembling a question does not guarantee the section answers it');
+
+  console.log("Passed: la DÉRIVATION reprend une réponse déjà écrite au lieu de la reconstruire plus faiblement (2026-10-02, tâche #1438, seconde moitié). CE QUE LA RÉVÉLATION FAIT ET POURQUOI ÇA NE SUFFIT PAS : elle extrait des phrases qui engagent et garde les plus répandues, ce qui est la bonne méthode quand PERSONNE n'a jamais répondu. Mais quand un document répond explicitement — « CE QUE NOUS NE SACRIFIERONS JAMAIS », suivi d'un tableau de quatre réponses avec leurs porteurs — la reconstruire statistiquement rend une version PLUS FAIBLE d'une réponse qui existait déjà, mieux écrite, et validée par un humain. LE CAS D'ÉCOLE EST TENU : les cinq impossibles sont retrouvés à leur source et leurs réponses reprises TELLES QUELLES, colonne de porteurs comprise. DEUX CORRECTIONS ONT ÉTÉ IMPOSÉES PAR LE PREMIER PASSAGE, et la première était un faux positif massif : 14 cases sur 19 ressortaient « répondues », toutes par des sections qui ne répondaient à rien — la case « Raison d'être » matchait un titre de leçon parlant d'« oublier sa raison », parce qu'un titre d'un seul mot significatif se retrouve dans des centaines de titres. D'où une correspondance BIDIRECTIONNELLE et un minimum de DEUX racines partagées, et une case trop courte pour être appariée est DÉCLARÉE non dérivable plutôt que faussement appariée : baisser le seuil aurait augmenté le nombre de réponses et diminué leur valeur, exactement l'inverse de ce que la dérivation sert à faire. LA SECONDE CORRECTION EST PLUS SUBTILE : « Ce que nous ne sacrifierons jamais » rendait UNE SEULE racine, parce que le filtre de mots-outils partagé écarte « jamais » — à juste titre dans une phrase de prose où il est partout, alors que dans un titre de case c'est le mot qui porte tout le sens. Un titre est court et choisi ; aucun de ses mots n'y est par hasard. Le jeu élargi reste donc LOCAL aux titres.");
+}
+await testLaDerivationDesReponses();
