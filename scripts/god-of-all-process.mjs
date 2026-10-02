@@ -1829,6 +1829,17 @@ export function comparerPlanEtRapport({ planTexte = null, rapportTexte = null } 
 // IL NE BLOQUE RIEN, il REGARDE. Un point de contrôle qui interromprait la nuit serait pire que
 // son absence — et le rythme, lui, est déjà garanti par les deux réveils.
 // MÊME BORNE QUE SES DEUX FRÈRES, DÉRIVÉE ET JAMAIS RECOPIÉE (Article 24, tâche #1270).
+// DEUX OBJETS, UNE SEULE DÉFINITION — ET C'EST VOLONTAIRE (vérifié le 2026-10-02, tâche #1175).
+// La tâche #1175 signalait deux motifs divergents dans ce fichier : l'un acceptait 1 à 5 chiffres,
+// l'autre 2 à 4. Cette divergence N'EXISTE PLUS : les deux dérivent `CHIFFRES_DUN_NUMERO_DE_TACHE`
+// (ligne 1724), donc elles ne PEUVENT plus s'écarter — le défaut a été fermé à la racine, et
+// l'élargir à #10000 se fait désormais en changeant un seul chiffre à un seul endroit.
+// POURQUOI ON NE GARDE PAS UN SEUL OBJET, et c'est le piège qu'une « unification » ferait naître :
+// une expression régulière avec le drapeau `g` est STATEFUL — elle porte son propre `lastIndex`
+// entre deux appels. Partager le même objet entre deux lecteurs qui balaient des textes différents
+// ferait reprendre l'un là où l'autre s'est arrêté, et produirait des numéros manqués de façon
+// intermittente : le pire type de défaut, puisqu'il dépend de l'ordre d'exécution. Deux objets
+// construits depuis une définition unique est donc la forme JUSTE, jamais une duplication.
 export const MOTIF_NUMERO_COMMIT = new RegExp(`#(\\d{${CHIFFRES_DUN_NUMERO_DE_TACHE}})\\b`, "g");
 
 export function numerosDesCommits(lignes = []) {

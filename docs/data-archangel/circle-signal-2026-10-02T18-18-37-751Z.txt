@@ -1,0 +1,86 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h50 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — inchangé depuis le vendredi 2 octobre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== data-archangel — circulation des données dans l'Agence Codex ===
+Ce que l'équipe produit, qui le relit, et ce que l'agent lui-même n'exploite pas encore.
+
+Sources de données inventoriées : 81 — 55 atteintes par un autre outil (68 %), dont 43 par un lecteur DIRECT (53 %).
+  Les deux chiffres répondent à deux questions, et aucun ne remplace l'autre : le second demande « quelqu'un ouvre-t-il ce fichier en le NOMMANT ? », le premier accepte aussi un lecteur de table déclaré et corroboré — qui est ce que l'Article 24 exige, et que les compter comme non lues punirait.
+
+🚨 5 donnée(s) FRAÎCHE(S) qu'AUCUN OUTIL AUTRE QUE SON PRODUCTEUR ne lit — écrite il y a peu, donc elle a quelque chose à dire, et personne d'autre ne l'écoute :
+  · docs/the-screener/ (THE-SCREENER, 0 j) — registre (f) 🎬 La Suite Tarantino - Simulation & qualité narrative — ⚠️ atteinte par table (PROCESSES, REGISTRIES, SIMULATION_ITEMS) chez 13 outil(s) : abraham-les-references.mjs, cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/le-classificateur/ (LE-CLASSIFICATEUR, 0 j) — registre (f) 👑 La Gouvernance Royale — ⚠️ atteinte par table (REGISTRIES) chez 8 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/fils/ (Les fils de discussion, 1 j) — registre (f) 👼 Les Anges de la coordination — ⚠️ atteinte par table (REGISTRIES, CIRCLE_ITEMS, RACINES_DU_CORPUS, RACINES_DE_LA_STRATEGIE) chez 10 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/referentiel/kpi-rapports/ (Tableau de bord / KPI, 1 j) — registre (f) 🎬 La Suite Tarantino - Simulation & qualité narrative — ⚠️ atteinte par table (REGISTRIES, SIMULATION_ITEMS, HARD_THRESHOLDS) chez 10 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+  · docs/cout-de-la-refonte/ (cout-de-la-refonte, 1 j) — registre (f) 👑 La Gouvernance Royale — ⚠️ atteinte par table (REGISTRIES) chez 8 outil(s) : cassandra-rh.mjs, circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs…. Passer par le chemin n'est PAS exploiter le contenu : ils sont candidats à devenir de vrais lecteurs, ils n'en sont pas.
+
+📄 3 donnée(s) SANS LECTEUR, ET C'EST ASSUMÉ — la seconde issue de #490, écrite plutôt que sous-entendue :
+  · .banniere-post-commit.txt (depuis le 2026-09-28) — Son lecteur est l'AGENT, pas un outil : c'est la bannière complète du dernier commit, écrasée à chaque passage, que le crochet réduit à ce qui exige une action et qui se relit à la demande quand on veut le contexte entier. Un outil qui la relirait relirait la sortie d'outils qu'il peut appeler lui-même — il n'apprendrait rien qu'il ne sache déjà.
+  · .cassandra-rh-known-members.json (depuis le 2026-09-28) — C'est une mémoire anti-doublon, faite pour son seul producteur : elle retient les slugs déjà vus afin de n'accueillir un nouveau membre qu'une fois. Son contenu n'a de sens que pour la décision « ai-je déjà salué celui-là ? », que personne d'autre ne prend. Un second lecteur n'aurait littéralement rien à en tirer.
+  · .circle-tasks-last-run.json (depuis le 2026-09-29) — C'est une mémoire anti-doublon, exactement au même titre que `.cassandra-rh-known-members.json` déclaré juste au-dessus : elle retient le commit de la dernière Ronde pour que le compteur « N commits sans Ronde » reparte de zéro, et elle n'a de sens que pour le processus qui l'écrit. Lui inventer un lecteur-outil reviendrait à demander à un tiers de relire un marque-page. Ce qui se LIT de la Ronde — ce qu'elle a trouvé — vit dans `docs/circle-tasks/index.md`, qui est un registre et non un état.
+
+✅ 10 donnée(s) fraîche(s) sans lecteur direct, mais lue(s) par un lecteur de table DÉCLARÉ et corroboré — jamais un trou :
+  · docs/check-tasks-details/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/safe-export/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/tool-learning/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/data-archangel/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs
+  · docs/x-port-blindtest/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/sauvegardes/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/ecotoken/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/ou-on-en-est/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/angel-of-ia-process/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  · docs/agent-du-temps/ — lue via CIRCLE_REPORT_FOLDERS par circle-process-guardian.mjs, circle-tasks.mjs, data-archangel.mjs
+  (Un chemin DÉRIVÉ d'un registre plutôt que recopié est ce que l'Article 24 exige : le compter comme non lu punirait la bonne conception. La déclaration n'est pas crue sur parole — le fichier qui la porte doit vraiment lire le disque.)
+
+21 autre(s) donnée(s) écrite(s) que seul leur producteur relit — et celles-ci seulement : les 10 lues par une table déclarée et les 3 absences assumées sont retirées de ce compte, parce qu'elles sont déjà rendues compte plus haut :
+  · [registre] docs/jesus-le-sauveur/ — JESUS-LE-SAUVEUR : registre (f) 📜 Les Prophètes - Dette & Structure du code
+  · [registre] docs/le-coordinateur-catalogue/ — Catalogue LE-COORDINATEUR : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/god-of-all-process/ — god-of-all-process : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/le-coordinateur/ — LE-COORDINATEUR : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/doc-report/ — Doc-Report : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/reponses/ — Réponses aux gros prompts : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/pure-gold-unity/ — pure-gold-unity : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/tableau-de-bord/ — Tableau de bord interne (KPI) : registre (f) 👑 La Gouvernance Royale
+  · [registre] docs/the-equalizer/ — THE-EQUALIZER : registre (f) 📜 Les Prophètes - Dette & Structure du code
+  · [registre] docs/agent-des-noms/ — AGENT DES NOMS : registre (f) 📜 Les Prophètes - Dette & Structure du code (citée uniquement par la suite de tests)
+  · [registre] docs/moise-tables-de-loi/ — MOÏSE-TABLES-DE-LOI : registre (f) 📜 Les Prophètes - Dette & Structure du code (citée uniquement par la suite de tests)
+  · [registre] docs/integration-outil/ — integration-outil : registre (f) 📜 Les Prophètes - Dette & Structure du code
+  · [registre] docs/html-wiring-check/ — html-wiring-check (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/ecotoken/ronde/ — Scan ecotoken produit pendant une Ronde (item ecotoken-scan) : registre (f) 👼 Les Anges de la coordination (citée uniquement par la suite de tests)
+  · [registre] docs/suivi-open-tasks/ — Tâche ouverte la plus ancienne (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/chantier-preliminaire/ — Fraîcheur fichiers préliminaires (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/idee-a-trancher/ — Idées en attente de décision (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/tool-brain/ — tool-brain (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/network-check/ — network-check-run (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/relecture-referentiel/ — Relecture référentiel (Ronde) : registre (f) 👼 Les Anges de la coordination
+  · [registre] docs/relecture-correctifs/ — Relecture correctifs (Ronde) : registre (f) 👼 Les Anges de la coordination
+
+Branchements suggérés (6 outil(s)) — une suggestion, jamais un manquement :
+  · scripts/circle-tasks.mjs pourrait gagner à lire docs/argus/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/circle-tasks.mjs pourrait gagner à lire docs/harmonia/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/circle-tasks.mjs pourrait gagner à lire docs/axa-check/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/hyper-scan-checkpoint.mjs pourrait gagner à lire docs/suivi/relectures-lourdes/ — 3 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/check-tasks-details.mjs pourrait gagner à lire docs/hyper-scan-checkpoint/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/check-tasks-details.mjs pourrait gagner à lire docs/ines-official/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/check-tasks-details.mjs pourrait gagner à lire docs/smart-conso-api/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/le-coordinateur.mjs pourrait gagner à lire docs/clean-dirty-old/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/le-coordinateur.mjs pourrait gagner à lire docs/ines-official/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/le-coordinateur.mjs pourrait gagner à lire docs/smart-conso-api/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/harmonia/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/clean-dirty-old.mjs pourrait gagner à lire docs/axa-check/ — 2 outil(s) travaillant sur le même terrain le font déjà
+  · scripts/smart-conso-api.mjs pourrait gagner à lire .smart-conso-token-history.json — 2 outil(s) travaillant sur le même terrain le font déjà
+
+Comment lire ce qui précède : un registre destiné à l'œil humain n'a pas besoin d'un lecteur-outil. Ce qu'aucun humain ne fera jamais, c'est comparer trente passages pour en tirer une tendance — c'est cette exploitation-là qui manque, jamais forcément une lecture.
+Méthode : « lire » se mesure à la citation du chemin dans le code, commentaires et déclarations retirés — une mention, jamais une preuve de lecture effective. Un catalogue qui DÉCLARE une source (doc-report) n'en est pas un lecteur, et la suite de tests qui la VÉRIFIE non plus.
+
+=== Plan d'action ===
+  → RETENU · 5 donnée(s) FRAÎCHE(S) sur 81 inventoriées qu'aucun outil AUTRE QUE LEUR PRODUCTEUR ne relit — ex. docs/the-screener/, docs/le-classificateur/, docs/fils/ (+2) — tâche [RECOMMANDEE] : pour chacune : lui donner un lecteur-outil, ou déclarer l'absence assumée avec sa raison
+  → RETENU · 21 donnée(s) écrite(s) sur 81 que seul leur producteur relit — ex. docs/jesus-le-sauveur/, docs/le-coordinateur-catalogue/, docs/god-of-all-process/ (+18) — tâche [RECOMMANDEE] : décider comment traiter cette population — la vraie question n'est pas « personne ne lit ? » mais « personne n'exploite la SÉRIE ? »
+  ? À TRANCHER · 13 branchement(s) suggéré(s) pour 6 outil(s) — ex. scripts/circle-tasks.mjs, scripts/hyper-scan-checkpoint.mjs, scripts/check-tasks-details.mjs (+3) — une suggestion, jamais un manquement : brancher un outil sur une source de plus est un choix de conception, et une machine qui le déciderait fabriquerait du travail que personne n'a voulu (Article 16)

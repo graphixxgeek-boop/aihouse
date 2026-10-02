@@ -6,3 +6,4 @@
 | 2026-09-24T21:48:39.546Z | circle-signal-2026-09-24T21-48-39-546Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
 | 2026-09-25T14:14:12.507Z | circle-signal-2026-09-25T14-14-12-507Z.txt | THE-EQUALIZER — Ronde du 2026-09-25. Référentiel lu : docs/referentiel/standards.md, 29 exigences. |
 | 2026-09-27T00:12:15.493Z | circle-signal-2026-09-27T00-12-15-493Z.txt | Ronde du 2026-09-27. Agence 15/15, documents 7/7, code 5/7, jeu hors périmètre assumé. 54/54 membres certifiables sans aucun écart d'intégration. Les deux « par |
+| 2026-10-02T18:18:37.878Z | circle-signal-2026-10-02T18-18-37-878Z.txt | Version de Claude : claude-opus-5 |

@@ -1,0 +1,87 @@
+⚠️  Attention, mes résultats peuvent être inexacts : le poids en tokens est estimé et le rangement d'un bloc se devine — un bloc qui cite un fichier n'y appartient pas forcément. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h47 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : ecotoken — inchangé depuis le vendredi 2 octobre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== ecotoken — poids réel des documents rechargés ===
+
+=== ecotoken — réduire le coût permanent de la charte ===
+Date : 2026-10-02 16:47
+
+CLAUDE.md pèse 23248 tokens sur 1136 lignes, et c'est le SEUL document rechargé
+à chaque message — son poids se paie en boucle, jamais une seule fois.
+
+--- CRITICITÉ DE LA CIBLE ----------------------------------------------------------
+Niveau : MAITRE (score 12) — VIGILANCE MAXIMALE — aucune proposition appliquée sans relecture humaine, sans contrôle de perte de références ET sans verifyProtectiveSubstance() avant/après ; le doute tranche toujours pour NE PAS couper
+  · rechargé à chaque message : toute règle retirée cesse d'être vue à CHAQUE tour, pas seulement quand on ouvre le fichier
+  · cité par 327 fichiers : un renvoi cassé se propage
+  · 228 formulations normatives : document de règles : ce qui en disparaît cesse de s'appliquer
+  · lu par un test ou un crochet : un changement peut casser le filet de sécurité lui-même
+  · FICHIER MAÎTRE du dépôt (détection certaine) : déclaré rechargé à chaque message dans les profils de documents ; confirmé par les faits : 234 formulations normatives, cité par 327 fichiers — tout ce qui en disparaît cesse de gouverner le travail, immédiatement et partout
+  → seules les propositions à risque « faible » sont applicables ici ; les plus risquées restent visibles mais se proposent · validation humaine OBLIGATOIRE · contrôle de perte de références OBLIGATOIRE après application
+  Sûreté : ecotoken n'écrit JAMAIS dans le document analysé (assertSafeWriteTarget) —
+  ses seules écritures vont dans docs/ecotoken/. Tout allègement est appliqué à la main.
+
+--- DÉCLENCHEURS : ATTENDUS vs RÉELLEMENT CÂBLÉS -----------------------------------
+  ✅ post-commit — à chaque commit touchant un document budgété (jamais les autres — réveil conditionnel)
+  ✅ ronde-circle — à chaque Ronde CIRCLE-TASKS (périodique), même si aucun commit n'a touché la charte
+  ✅ network-check — à chaque passage réseau de LE-COORDINATEUR (état de santé instantané du poids)
+  ✅ sur-demande — quand l'agent ou l'utilisateur veut un plan chiffré avant d'alléger un document
+  4/4 vérifiés en lisant les fichiers, jamais sur promesse.
+  Portées disponibles : global / partiel / zoome / focus (vocabulaire partagé avec THE-FINAL-JUDGE et SMART-CONSO-TOKEN).
+  ⚠️  docs/referentiel/parametres.md — document profilé (donc réellement relu) mais sans budget — il peut grossir sans qu'aucun avertissement ne se déclenche
+  Contrôle avant/après du fichier maître : possible, fichier inchangé depuis le dernier scan
+
+--- RÉPARTITION PAR NATURE ---------------------------------------------------------
+Une RÈGLE gouverne le comportement et reste quoi qu'elle pèse. Une NARRATION raconte
+quand et pourquoi — précieuse, mais lue à la demande. Un INVENTAIRE énumère ce qui
+existe ailleurs — un tableau suffit.
+  regle         8 section(s)  ~ 20939 tokens
+  inventaire    3 section(s)  ~  2092 tokens
+  narration     2 section(s)  ~   216 tokens
+
+--- RENDEMENT DES ARTICLES (citations réelles ÷ lignes occupées) --------------------
+Un rendement bas n'est JAMAIS un ordre de couper — seulement un article à regarder.
+    1.4 | Art.29   44 l. | 62 citation(s) | Tout compte rendu s'ouvre en rappelant à qui i
+    2.4 | Art.20   72 l. | 173 citation(s) | ARGUS : aucun travail ne se termine sans passe
+    2.9 | Art.32   48 l. | 137 citation(s) | Le temps réel se LIT, jamais ne se déduit
+    3.1 | Art.30   40 l. | 122 citation(s) | Aucun chantier ne s'ouvre avant d'avoir repris
+    3.8 | Art.31   57 l. | 219 citation(s) | Tout passe par un OUTIL, et un rapport est TOU
+      5 | Art.26   21 l. | 105 citation(s) | Les process se respectent, et god-of-all-proce
+  … les 27 autres articles ont un meilleur rendement.
+
+--- CE QUE L'OUTIL A RETENU DES PASSAGES PRÉCÉDENTS --------------------------------
+  47 passage(s) enregistré(s), 1 proposition(s) réellement acceptée(s).
+  Efficacité RÉELLE : la charte a REGROSSI de 501 tokens depuis le dernier passage — c'est exactement ce que le budget est censé attraper.
+  Déjà refusé, ne sera plus proposé en tête : 5 passages « déjà mécanisé ».
+
+--- PLAN DE RÉDUCTION — toutes stratégies, la plus rentable et la moins risquée d'abord ---
+  Gain cumulé si tout était appliqué : ~2077 tokens, payés à CHAQUE message.
+
+  [faible] Apartés narratifs datés → fichier d'historique
+            cible : 9 aparté(s) narratif(s) daté(s)
+            ~236 tk → ~0 tk   GAIN ~236 tk
+  [moyen ] Section longue lue à la demande → déplacée, un renvoi reste
+            cible : Référentiel technique — la référence à jour
+            ~1661 tk → ~74 tk   GAIN ~1587 tk
+            ⚠️ 1 sans document d'accueil : Référentiel technique — la référence à jour
+  [moyen ] Procédure déjà appliquée par un crochet → un fait court remplace la consigne
+            cible : 3 passage(s) décrivant une procédure déjà automatisée
+            ~423 tk → ~169 tk   GAIN ~254 tk
+
+--- BUDGET ANTI-REGROSSISSEMENT ----------------------------------------------------
+  ✅ 23248 tokens sous le budget de 30000 (marge 23 %).
+     la plus lourde : Charte de qualité — à appliquer à chaque itération (~14529 tk)
+     la plus lourde : Inventaire documentaire des outils (~3188 tk)
+     la plus lourde : Référentiel technique — la référence à jour (~1661 tk)
+
+--- APARTÉS NARRATIFS DATÉS restants : 9 (~236 tokens) ---
+  (le filon mécanique est épuisé — la suite du tri est manuelle, Article 19.)
+
+Rapport archivé : /home/user/aihouse/docs/ecotoken/scan-2026-10-02T16-47-47.txt
+Passage enregistré : /home/user/aihouse/docs/ecotoken/index.md — la colonne « Décision » est à remplir à la main une fois tranché.

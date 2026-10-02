@@ -47,13 +47,13 @@ l'équipe, et c'est un Gardien sacré), ARGUS 60 %, HYPER-SCAN-CHECKPOINT 63 %, 
 |---|---|
 | [carte-des-axes-2026-09-25-19-45.html](carte-des-axes-2026-09-25-19-45.html) | — |
 | [carte-des-axes-2026-09-25-21-04.html](carte-des-axes-2026-09-25-21-04.html) | — |
-| [carte-des-axes-2026-09-27-05-08.html](carte-des-axes-2026-09-27-05-08.html) | premier passage réussi de la commande `axes` depuis la scission — elle plantait au démarrage (tâche #1011) |
+| [carte-des-axes-2026-09-27-05-08.html](carte-des-axes-2026-09-27-05-08.html) | — |
 | [circle-signal-2026-09-22T17-20-06-065Z.txt](circle-signal-2026-09-22T17-20-06-065Z.txt) | — |
 | [circle-signal-2026-09-22T17-42-10-135Z.txt](circle-signal-2026-09-22T17-42-10-135Z.txt) | — |
 | [circle-signal-2026-09-23T21-49-13-828Z.txt](circle-signal-2026-09-23T21-49-13-828Z.txt) | — |
 | [circle-signal-2026-09-24T21-48-39-565Z.txt](circle-signal-2026-09-24T21-48-39-565Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-659Z.txt](circle-signal-2026-09-25T14-14-12-659Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
+| [circle-signal-2026-10-02T18-18-37-742Z.txt](circle-signal-2026-10-02T18-18-37-742Z.txt) | — |
 | [convocations.md](convocations.md) | — |
 | [couches-des-gardiens-2026-09-26.md](couches-des-gardiens-2026-09-26.md) | — |
 | [2026-09-23-EVAL-DEV.html](evaluations/2026-09-23-EVAL-DEV.html) | evaluations |
@@ -69,7 +69,6 @@ l'équipe, et c'est un Gardien sacré), ARGUS 60 %, HYPER-SCAN-CHECKPOINT 63 %, 
 | [circle-signal-2026-09-23T21-49-13-832Z.txt](organigramme/circle-signal-2026-09-23T21-49-13-832Z.txt) | organigramme |
 | [circle-signal-2026-09-25T14-14-12-639Z.txt](organigramme/circle-signal-2026-09-25T14-14-12-639Z.txt) | organigramme |
 | [circle-signal-2026-09-27T00-12-15-625Z.txt](organigramme/circle-signal-2026-09-27T00-12-15-625Z.txt) | organigramme |
-| [circle-signals-index.md](organigramme/circle-signals-index.md) | organigramme |
 | [serie.json](serie.json) | — |
 | [versions-outils-2026-09-24.txt](versions-outils-2026-09-24.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

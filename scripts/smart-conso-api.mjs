@@ -314,12 +314,71 @@ function reportUnconfirmedBursts(healthData, sessionLog) {
   console.log("\n→ Limite honnête : ce garde-fou ne sait pas si c'était une simulation ou un diagnostic — seulement qu'aucune consultation n'a précédé cette activité.");
 }
 
-function main() {
+async function main() {
   recordCliUsage("smart-conso-api");
   const actionType = process.argv[2];
   const now = Date.now();
   const healthData = loadJson(HEALTH_PATH, { keys: {} });
   const sessionLog = loadJson(SESSION_PATH, { actions: [] });
+
+  // ── `trafic-reel` — LE RACCORD QUI MANQUAIT, ET AUCUN OUTIL NOUVEAU N'ÉTAIT NÉCESSAIRE
+  // (2026-10-02, tâche #1092). Sa question, mot pour mot : « possible d'étendre smart conso plutôt
+  // que nouvel outil ? » — et elle était meilleure que ma formulation du problème.
+  //
+  // CE QUE DISAIT LA TÂCHE, ET CE QUI ÉTAIT FAUX DEDANS : `lib/gemini-keys.ts` garde les épisodes
+  // d'appel EN MÉMOIRE et son commentaire compte sur « un outil EXTÉRIEUR, tournant côté Node avec
+  // un vrai accès disque, pour les persister ». J'en avais conclu que cet outil n'existait pas.
+  // En réalité DEUX des trois pièces existaient déjà :
+  //   · le Worker EXPOSE les épisodes — `app/api/admin/route.ts` rend `geminiKeyEpisodes` ;
+  //   · la persistance EXISTE — `recordOutcomeByLabel()` de `gemini-key-health.mjs`, écrite le
+  //     2026-09-20 pour la tâche #88, dont l'intitulé était littéralement « persister le vrai
+  //     trafic Gemini dans l'historique partagé », et qui prend l'EMPREINTE reçue via l'API admin
+  //     précisément pour que la clé en clair ne circule jamais sur le réseau.
+  // Il ne manquait que ces quinze lignes de raccord. Deux pièces sur trois attendaient depuis
+  // douze jours de se rencontrer, et personne ne l'avait vu parce que chacune, prise seule, était
+  // parfaitement en ordre.
+  //
+  // POURQUOI ICI PLUTÔT QUE CHEZ `gemini-key-health` : c'est Smart Conso qui REND l'avis que
+  // l'Article 22 oblige à consulter. Un avis fondé sur un registre mort est un faux vert sur la
+  // consommation ; l'outil qui porte l'avis est donc celui qui doit pouvoir aller chercher la
+  // matière de cet avis. La persistance, elle, reste chez son propriétaire — on relaie, on ne
+  // recopie pas (Article 24).
+  //
+  // ET IL REFUSE DE CONCLURE PLUTÔT QUE DE RENDRE UN ZÉRO : si le serveur de jeu ne tourne pas,
+  // il n'y a AUCUN épisode à lire — ce qui n'est jamais « aucun trafic » (leçons L5/L11).
+  if (actionType === "trafic-reel") {
+    printReportHeader({ tool: "smart-conso-api", title: "SMART CONSO API — persistance du trafic API réel", scriptPath: "scripts/smart-conso-api.mjs" });
+    const base = process.env.ADMIN_BASE_URL || "http://127.0.0.1:5173";
+    const motDePasse = process.env.ADMIN_PASSWORD || "";
+    let charge;
+    try {
+      const r = await fetch(`${base}/api/admin`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: motDePasse }) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      charge = await r.json();
+    } catch (e) {
+      console.log(`🚨 PAS MESURÉ — le panneau admin n'a pas répondu sur ${base} (${e?.message ?? e}).`);
+      console.log("   Ce n'est PAS « aucun trafic API » : c'est « je n'ai pas pu regarder ». Les épisodes vivent en mémoire");
+      console.log("   dans le serveur de jeu ; sans serveur qui tourne, il n'y a rien à aller chercher, et un zéro rendu ici");
+      console.log("   ferait croire à un quota intact (leçons L5/L11).");
+      return;
+    }
+    const episodes = Array.isArray(charge?.geminiKeyEpisodes) ? charge.geminiKeyEpisodes : null;
+    if (!episodes) {
+      console.log("🚨 PAS MESURÉ — le panneau admin a répondu, mais sans champ `geminiKeyEpisodes`. Le contrat a changé, ou le mot de passe a été refusé.");
+      return;
+    }
+    const { recordOutcomeByLabel } = await import("./gemini-key-health.mjs");
+    let persistes = 0;
+    for (const ep of episodes) {
+      if (!ep?.fingerprint || !ep?.model || !ep?.outcome) continue;
+      recordOutcomeByLabel(ep.fingerprint, ep.model, ep.outcome, true, ep.at ?? Date.now());
+      persistes += 1;
+    }
+    console.log(`✅ ${persistes} épisode(s) de trafic RÉEL persisté(s) dans l'historique partagé, sur ${episodes.length} lu(s) depuis le panneau admin.`);
+    if (persistes < episodes.length) console.log(`   ${episodes.length - persistes} épisode(s) écarté(s) faute d'empreinte, de modèle ou de verdict — jamais comptés comme persistés.`);
+    console.log("   L'empreinte circule, jamais la clé en clair : c'est la raison d'être de `recordOutcomeByLabel()` (tâche #88, 2026-09-20).");
+    return;
+  }
 
   if (actionType === "scan") {
     printReportHeader({ tool: "smart-conso-api", title: "SMART CONSO API — scan des schémas de consommation réels", scriptPath: "scripts/smart-conso-api.mjs" });

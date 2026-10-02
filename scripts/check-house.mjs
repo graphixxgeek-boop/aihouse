@@ -4114,7 +4114,21 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   const {buildPlanDaction,reportHasPlanDaction,ETATS_CONSTAT,buildReportFrame:brf}=await import('../scripts/report-template.mjs');
   const {suggestTaskTypesForPlan,NATURES_DE_TACHE}=await import('../scripts/check-tasks-details.mjs');
   {
-    assert.deepEqual(ETATS_CONSTAT,['retenu','ecarte','a-trancher'],'exactly three states, never two: a finding with no declared state is a finding nobody answers for, and "retained vs dismissed" alone would force a decision that is sometimes the user\'s to make');
+    // L'ASSERTION A ÉTÉ RETOURNÉE LE 2026-10-02 (tâche #1466), SUR DOUBLE CONFIRMATION DE
+    // L'UTILISATEUR, ET SON INTENTION EST GARDÉE INTACTE. Elle figeait la liste à trois états, et
+    // sa raison était juste : un constat sans état déclaré est un constat dont personne ne répond,
+    // et « retenu contre écarté » seul forcerait une décision qui n'est parfois pas celle de
+    // l'agent. Rien de tout cela ne change. Ce qui change est qu'un QUATRIÈME état a été ajouté à
+    // l'Article 28 après que le texte exact lui a été montré et qu'il a confirmé deux fois : « à
+    // instruire », pour un constat issu d'une mesure MÉCANIQUE et non d'un passage réel.
+    // CE QUI EST VÉRIFIÉ MAINTENANT, ET C'EST PLUS QUE LE COMPTE : les trois états d'origine sont
+    // toujours là, dans le même ordre ; le quatrième est présent ; et surtout la CLAUSE qui le
+    // rend acceptable est testée en dessous — il n'est jamais final, et un « à instruire » qui ne
+    // dit pas quelle vérification manque se fait reprendre. Compter quatre au lieu de trois serait
+    // un test qui n'aurait rien appris de la décision.
+    assert.deepEqual(ETATS_CONSTAT.slice(0,3),['retenu','ecarte','a-trancher'],'the three original states are untouched, in order: a finding with no declared state is a finding nobody answers for, and "retained vs dismissed" alone would force a decision that is sometimes not the agent\'s');
+    assert.ok(ETATS_CONSTAT.includes('a-instruire'),'and the fourth state exists, for a finding produced by a MECHANICAL measure rather than a real pass (2026-10-02, double user confirmation on the exact text)');
+    assert.strictEqual(ETATS_CONSTAT.length,4,'four states, never a fifth added without the same procedure');
     assert.throws(()=>buildPlanDaction([{constat:'x',etat:'inconnu'}]),/état inconnu/,'an unrecognised state must fail loudly rather than silently sliding into a default that would misrepresent what was decided');
     assert.ok(buildPlanDaction([]).vide&&buildPlanDaction([]).lignes[0].includes('rien trouvé'),'a report that found nothing still HAS an action plan — saying "nothing to do" in words distinguishes "I looked and there is nothing" from "I did not conclude", which an absent section would confuse');
     const p=buildPlanDaction([{constat:'a',etat:'retenu'},{constat:'b',etat:'retenu',tache:'#1'},{constat:'c',etat:'ecarte'}]);
@@ -7739,7 +7753,31 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.equal(chaineReelle.complete, true, `the real XP chain must stay complete end to end; broken: ${chaineReelle.casses.join(', ') || 'none'} / unmeasured: ${chaineReelle.nonMesures.join(', ') || 'none'}`);
 
     // LE JOURNAL — trois natures qui ne se mélangent pas, et la seule que l'agent ne peut pas écrire.
-    assert.deepEqual(tl.NATURES_XP, ['captation', 'conclusion', 'jugement'], 'three natures, never merged: they have neither the same author nor the same authority');
+    // L'ASSERTION A ÉTÉ RETOURNÉE LE 2026-10-02 (tâche #1470), ET SON INTENTION EST GARDÉE INTACTE.
+    // Elle figeait la liste à trois natures, et sa raison était la bonne : elles n'ont NI le même
+    // auteur NI la même autorité, donc les confondre ferait lire un jugement comme une captation.
+    // Rien de cela ne change. Ce qui change est qu'une QUATRIÈME nature a été ajoutée sur sa
+    // demande, après que la tension avec la charte lui ait été signalée (Article 14) et qu'il ait
+    // choisi un compromis : `jugement-agent`, « je juge, tu peux contester ».
+    // CE QUI EST VÉRIFIÉ MAINTENANT EST PLUS FORT QUE LE COMPTE, et c'est le cœur du compromis :
+    // les trois natures d'origine sont intactes dans leur ordre, la quatrième existe, et surtout
+    // les TROIS REFUS qui l'encadrent sont testés en dessous — un jugement sans la marque de
+    // l'utilisateur est refusé, un jugement-agent qui se réclamerait de lui est refusé aussi
+    // (sans quoi changer d'étiquette suffisait à contourner le premier), et un jugement-agent non
+    // contestable est refusé, parce que tout le compromis tient à ce qu'il reste démentable.
+    assert.deepEqual(tl.NATURES_XP.slice(0,3),['captation','conclusion','jugement'],'the three original natures are intact and in order: they have neither the same author nor the same authority, and merging them would read a judgement as a mere capture');
+    assert.ok(tl.NATURES_XP.includes('jugement-agent'),'and a fourth exists since 2026-10-02 (task #842): the agent MAY judge whether a lesson served, because this registry exists for the agent');
+    assert.strictEqual(tl.NATURES_XP.length,4,'four natures, never a fifth added without the same procedure');
+    // LES TROIS REFUS QUI RENDENT LE COMPROMIS ACCEPTABLE, et sans lesquels il ne serait qu'une
+    // protection retirée. Le deuxième est celui que j'ai cherché avant d'écrire le code : sans
+    // lui, il suffisait d'écrire `nature:'jugement-agent', parUtilisateur:true` pour obtenir
+    // exactement ce que le premier refus interdit.
+    assert.throws(() => tl.enregistrerXp({ nature:'jugement-agent', parUtilisateur:true, contestable:true, titre:'x', lecon:'y' }, { writeFileImpl: () => {} }),
+      /parUtilisateur/, 'an agent judgement can NEVER claim to be the user\'s word — otherwise relabelling would bypass the original refusal');
+    assert.throws(() => tl.enregistrerXp({ nature:'jugement-agent', titre:'x', lecon:'y' }, { writeFileImpl: () => {} }),
+      /contestable/, 'and it must declare itself contestable: the whole compromise rests on staying deniable at the Ronde');
+    assert.doesNotThrow(() => tl.enregistrerXp({ nature:'jugement-agent', contestable:true, titre:'x', lecon:'y' }, { writeFileImpl: () => {} }),
+      'while a well-formed agent judgement IS accepted — the point was to add a voice that says its name, never to remove one');
     assert.throws(() => tl.enregistrerXp({ nature: 'jugement', verdict: 'appliquée' }, { writeFileImpl: () => {} }), /utilisateur/, 'a verdict on whether a lesson was APPLIED is refused unless it comes from the user: no mechanism can prove it does, but it can refuse to invent it — the agent declaring itself compliant on its own work is the exact defect this whole process exists to fight');
     assert.throws(() => tl.enregistrerXp({ nature: 'inventee' }, { writeFileImpl: () => {} }), /nature XP inconnue/, 'an unknown nature is refused rather than silently stored under a fourth category nobody reads');
 

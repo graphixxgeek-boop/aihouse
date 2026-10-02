@@ -8,3 +8,4 @@
 | 2026-09-24T21:48:39.553Z | circle-signal-2026-09-24T21-48-39-553Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
 | 2026-09-25T14:14:12.559Z | circle-signal-2026-09-25T14-14-12-559Z.txt | data-archangel — Ronde du 2026-09-25. |
 | 2026-09-27T00:12:15.610Z | circle-signal-2026-09-27T00-12-15-610Z.txt | Ronde du 2026-09-27. Rapport produit. Extension angel-of-index lancée trois fois (--generer --completer --rattraper), 0 index à générer, la réparation d'un cata |
+| 2026-10-02T18:18:37.751Z | circle-signal-2026-10-02T18-18-37-751Z.txt | ⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée  |

@@ -372,6 +372,10 @@ registre, une règle de non-répétition portant sur le fond et sur toute la ses
 sur les deux derniers tours) — jamais un exemple de plus dans une énumération.
 
 **Article 18 — Un gros process se suit en entier, jamais raccourci de sa propre initiative.**
+**À ne pas confondre avec l'Article 26** : celui-ci dit qu'un process se suit EN ENTIER, dans son
+ordre, sans être raccourci ; l'Article 26 dit QUI en est le référent et ce qu'on fait de son
+rapport. Quand les deux s'appliquent, **l'Article 18 commande le geste** (suivre les étapes) et
+l'Article 26 commande le contrôle (lire le verdict et en tenir compte).
 Quand l'utilisateur déclenche une activité qui a son process écrit — lancer une simulation, une
 Ronde, une nuit autonome, l'intégration d'un outil, une modification de document de référence, ou
 n'importe laquelle des autres — l'agent en suit **toutes les étapes, dans leur ordre, sans en
@@ -582,6 +586,9 @@ volontairement manuelle soit **écrite noir sur blanc juste à côté** ; sans c
 redevient une copie qui se périmera en silence.
 
 **Article 26 — Les process se respectent, et god-of-all-process en est le référent.**
+**À ne pas confondre avec l'Article 18**, qui porte sur le DÉROULÉ d'un process — ne pas sauter
+d'étape. Celui-ci porte sur son RÉFÉRENT et sur l'obligation de lire son rapport. En cas de
+tension, l'Article 18 l'emporte sur le geste, celui-ci sur le contrôle.
 *(2026-09-22, demande explicite de l'utilisateur : « une regle qui t'oblige à respecter les process,
 à tenir compte des recommandations de god of process, à lire son rapport ».)* Un process écrit
 n'est pas une intention : c'est une suite d'étapes qui engage. L'agent les suit, il ne les
@@ -673,12 +680,24 @@ séparé. Un plan qui voyage avec le rapport qui l'a motivé ne peut pas se perd
 repère mécaniquement (`reportHasPlanDaction()`). Un troisième endroit à tenir à jour se serait
 périmé comme tous les autres.
 
-**Les trois états d'un constat, jamais deux** — c'est ce qui empêche le plan de devenir une
+**Les QUATRE états d'un constat, jamais moins** — c'est ce qui empêche le plan de devenir une
 formalité qu'on remplit pour faire taire le contrôleur :
 - **RETENU** — ça devient une tâche, et cette tâche doit exister pour de vrai dans `docs/suivi/` ;
 - **ÉCARTÉ** — on a regardé et on ne fait rien, **avec la raison écrite** (un écart sans raison
   n'est pas une décision, c'est un abandon déguisé) ;
-- **À TRANCHER** — ça demande une décision qui n'est pas celle de l'agent (Article 16).
+- **À TRANCHER** — ça demande une décision qui n'est pas celle de l'agent (Article 16) ;
+- **À INSTRUIRE** — le constat vient d'une mesure mécanique et non d'un passage réel, donc on ne
+  sait pas encore s'il est fondé. Il n'est ni retenu (on ne sait pas s'il y a du travail), ni
+  écarté (on n'a pas regardé), ni à trancher (ce n'est pas une décision, c'est une vérification
+  qui manque). **Cet état se consomme** : il doit devenir l'un des trois autres dès qu'un passage
+  réel a eu lieu, et **il ne peut jamais être l'état final d'un constat**.
+
+*(Le quatrième état a été ajouté le 2026-10-02, sur sa décision explicite confirmée DEUX fois en
+fenêtre dédiée après lecture du texte exact — Article 14. La formule d'origine disait « trois
+états, jamais deux » : un registre employait déjà, avec une bonne raison, un « à instruire, pas
+encore acté » que les trois états ne savaient pas nommer. La clause « il se consomme » est la
+condition qui empêche ce quatrième état de devenir le tiroir où les constats s'accumulent — sans
+elle, il serait exactement la case floue que les trois premiers existent pour supprimer.)*
 
 **Les deux moitiés du dispositif, volontairement séparées** — et cette séparation est le cœur du
 mécanisme, pas un détail d'implémentation :
@@ -942,6 +961,20 @@ sur sa propre façon de travailler s'écrit à la main (aucune mécanique ne peu
 **c'est l'utilisateur, à la Ronde, qui dit si une entrée a été réellement APPLIQUÉE** — cohérent
 avec « c'est moi à la fin qui te dis si elle est propre ». `enregistrerXp()` refuse un jugement qui
 ne porte pas `parUtilisateur: true`.
+
+**UNE QUATRIÈME NATURE EXISTE DEPUIS LE 2026-10-02, ET ELLE N'ENLÈVE RIEN À CE QUI PRÉCÈDE**
+*(tâche #842)*. Sa demande : « c'est TOI qui SAIS si une leçon a servi, ce système est fait pour toi
+en priorité, donc gère ça tout seul ». Son argument est juste — ce registre existe pour l'agent, et
+l'utilisateur n'est pas le mieux placé pour dire si une leçon a changé un geste d'agent. La tension
+avec la règle ci-dessus lui a été signalée (Article 14) plutôt qu'exécutée en silence, et il a
+choisi un **compromis : « je juge, tu peux contester »**. D'où `jugement-agent`, une nature
+DISTINCTE qui **ne peut structurellement pas se faire passer pour sa parole** : deux refus
+symétriques l'encadrent — un `jugement` sans sa marque est refusé (inchangé), et un
+`jugement-agent` qui porterait `parUtilisateur: true` est refusé aussi, sans quoi il aurait suffi
+de changer d'étiquette pour contourner le premier. Il doit en outre porter `contestable: true`,
+parce que **tout le compromis tient à ce qu'il reste démentable à la Ronde**. La garantie d'origine
+est donc entière — l'agent ne peut jamais revendiquer l'accord de l'utilisateur ; seule une voix de
+plus existe, et elle dit son nom.
 
 ## Philosophie et politique — la boussole du projet
 

@@ -7,3 +7,4 @@
 | 2026-09-23T21:49:13.828Z | circle-signal-2026-09-23T21-49-13-828Z.txt | Ronde GOAT MAX du 2026-09-23 — 36 membres actifs, tous certifies, tendance KPI +8,4 pt. |
 | 2026-09-24T21:48:39.565Z | circle-signal-2026-09-24T21-48-39-565Z.txt | RATTRAPAGE du 2026-09-24 — cet item a REELLEMENT tourne ce soir, mais hors du process de la Ronde (aucune trace datee posee au moment de son execution). Enregis |
 | 2026-09-25T14:14:12.659Z | circle-signal-2026-09-25T14-14-12-659Z.txt | CASSANDRA-RH — Ronde du 2026-09-25 (rapport complet livré en HTML par l'outil). |
+| 2026-10-02T18:18:37.742Z | circle-signal-2026-10-02T18-18-37-742Z.txt | ⚠️  Attention, mes résultats peuvent être inexacts : il PROPOSE des points de coupe dans un gros fichier, par motifs de texte — jamais un parseur, donc jamais u |

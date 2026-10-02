@@ -1105,3 +1105,26 @@ l'indécidable par écrit ?** Question de notation, donc la tienne.
 - **Le nouveau détecteur de raison écrite est aujourd'hui sans effet observable**, puisque tes 4
   accords évacuent les clusters en amont. Ce n'est pas un défaut : il reste le filet pour les futurs
   doublons, et son coût est déjà payé. À revoir seulement si un an passe sans qu'il serve.
+
+---
+
+## TRANCHÉ le 2026-10-02, en fenêtre dédiée — les quatre questions de la Ronde GOAT
+
+| Question | Sa décision | Suite |
+|---|---|---|
+| 393 constats illisibles à la chaîne | **La chaîne apprend à lire une table de registre** — un seul endroit à changer, et les 99 registres existants deviennent visibles sans que personne ne les retouche | tâche #1464 |
+| Personne ne lit un code de sortie | **Étendre le banc témoin aux sous-commandes** — le mécanisme existe déjà et lit les codes de sortie, il lui manque de passer les ~40 sous-commandes | tâche #1465 |
+| Le quatrième état de constat | **L'adopter officiellement, avec sa définition** — ⚠️ MODIFIE L'ARTICLE 28 : première confirmation donnée, le texte doit lui être MONTRÉ et une seconde confirmation obtenue (Article 14) avant toute écriture dans la charte | tâche #1466, **rien n'est écrit dans CLAUDE.md à ce stade** |
+| Les numéros #92 | **Une notation distincte** pour un numéro durable et un numéro de session | tâche #1467 |
+
+**Ses trois réponses de la série « la suite », qui gouvernent la suite du travail :**
+
+- **L'instant** — « envoie toutes les questions, on fait une grosse série de questions en fenêtre,
+  pour épuiser la file des questions bloquantes ou en attente ».
+- **L'axe** — « on est dans le grand projet, tu as les nuits pour travailler le reste en parallèle ».
+- **Le projet** — « **Non — trop de décisions m'attendent** ». La fluidité de la file est à 50 % et
+  19 décisions attendaient en même temps : il confirme que c'est le frein réel.
+
+**Sa mise en cause de lui-même, et je la consigne telle quelle parce qu'elle est juste** : « trois
+demandes en même temps ». Rapport avant/après + Ronde GOAT + « continue ce que tu fais », en un
+message, pendant un chantier en cours — j'ai dû arbitrer l'ordre seul.

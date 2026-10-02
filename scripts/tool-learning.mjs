@@ -1244,7 +1244,22 @@ function scriptSources(root, readFileImpl) {
 //                    Ronde : « c'est moi à la fin qui te dis si elle est propre ». Me déclarer
 //                    conforme sur mon propre travail serait le défaut que ce dispositif combat.
 export const XP_JOURNAL_PATH = "docs/tool-learning/xp-journal.json";
-export const NATURES_XP = ["captation", "conclusion", "jugement"];
+// LA QUATRIÈME NATURE EST ARRIVÉE LE 2026-10-02, ET ELLE N'ENLÈVE AUCUNE PROTECTION (tâche #842).
+// SA DEMANDE, mot pour mot : « c'est TOI qui SAIS si une leçon a servi, ce système est fait pour toi
+// en priorité, donc gère ça tout seul ». Son argument est juste — ce registre existe pour l'agent,
+// et l'utilisateur n'est pas le mieux placé pour dire si une leçon a changé un geste d'agent.
+// MAIS LA CHARTE DIT L'INVERSE, explicitement : « c'est l'utilisateur, à la Ronde, qui dit si une
+// entrée a été réellement APPLIQUÉE », et le refus ci-dessous existe pour que l'agent ne corrige
+// jamais sa propre copie. Je lui ai donc signalé la tension (Article 14) plutôt que d'exécuter en
+// silence, et il a choisi un COMPROMIS : « je juge, tu peux contester ».
+// POURQUOI CE COMPROMIS NE DEMANDE PAS DE DOUBLE CONFIRMATION, et c'est le point qui compte : il
+// n'enlève RIEN. Le refus porte sur un jugement qui se réclamerait de l'utilisateur — il reste
+// intact, mot pour mot. Ce qui s'ajoute est une nature DISTINCTE, qui ne peut structurellement pas
+// se faire passer pour sa parole : un `jugement-agent` est marqué comme tel partout où il
+// s'affiche, et il reste contestable à la Ronde. La garantie de la charte (l'agent ne peut jamais
+// revendiquer l'accord de l'utilisateur) est donc entière ; seule une voix de plus existe, et elle
+// dit son nom.
+export const NATURES_XP = ["captation", "conclusion", "jugement", "jugement-agent"];
 
 // Les moments où la question « y a-t-il quelque chose à retenir ? » se pose. Retenus explicitement
 // par l'utilisateur le 2026-09-23 ; celui qu'il n'a PAS retenu est déclaré plus bas plutôt que tu.
@@ -1294,6 +1309,12 @@ export function enregistrerXp(entree, { root = ROOT, readFileImpl = readFileSync
   if (!NATURES_XP.includes(entree?.nature)) throw new Error(`nature XP inconnue : ${entree?.nature} — les trois natures ne se mélangent pas`);
   // Un jugement ne peut venir que de l'utilisateur, et le déclarer est la seule chose qui distingue
   // son verdict du mien. Une mécanique ne peut pas le prouver ; elle peut refuser de l'inventer.
+  // UN `jugement-agent` NE PEUT JAMAIS SE RÉCLAMER DE L'UTILISATEUR, et c'est le symétrique exact
+  // du refus ci-dessous : l'un empêche l'agent de parler au nom de l'utilisateur, l'autre empêche
+  // un jugement d'agent de se déguiser en jugement d'utilisateur. Sans ce second refus, il aurait
+  // suffi d'écrire `nature: "jugement-agent", parUtilisateur: true` pour contourner le premier.
+  if (entree.nature === "jugement-agent" && entree.parUtilisateur === true) throw new Error("un jugement-agent ne peut pas porter parUtilisateur:true — c'est un jugement DE L'AGENT, contestable à la Ronde, jamais la parole de l'utilisateur (tâche #842)");
+  if (entree.nature === "jugement-agent" && !entree.contestable) throw new Error("un jugement-agent doit porter contestable:true — son compromis tient entièrement à ce qu'il reste démentable à la Ronde (tâche #842)");
   if (entree.nature === "jugement" && entree.parUtilisateur !== true) throw new Error("un jugement d'application n'est valable que s'il vient de l'utilisateur — jamais l'agent sur son propre travail");
   const journal = loadJournalXp({ root, readFileImpl });
   journal.push({ ...entree, date });

@@ -22,5 +22,5 @@ rassurent à tort) et les **niveaux orphelins** (une section du référentiel co
 | [circle-signal-2026-09-24T21-48-39-546Z.txt](circle-signal-2026-09-24T21-48-39-546Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-507Z.txt](circle-signal-2026-09-25T14-14-12-507Z.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-493Z.txt](circle-signal-2026-09-27T00-12-15-493Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
+| [circle-signal-2026-10-02T18-18-37-878Z.txt](circle-signal-2026-10-02T18-18-37-878Z.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

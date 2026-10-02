@@ -57,7 +57,7 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**25 fichier(s)** dans ce dossier.
+**27 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -69,6 +69,7 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 | [circle-signal-2026-09-24T21-48-39-553Z.txt](circle-signal-2026-09-24T21-48-39-553Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-559Z.txt](circle-signal-2026-09-25T14-14-12-559Z.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-610Z.txt](circle-signal-2026-09-27T00-12-15-610Z.txt) | — |
+| [circle-signal-2026-10-02T18-18-37-751Z.txt](circle-signal-2026-10-02T18-18-37-751Z.txt) | — |
 | [classification-2026-09-26.html](classification-2026-09-26.html) | — |
 | [classification-2026-09-26.txt](classification-2026-09-26.txt) | — |
 | [classification-2026-10-01.html](classification-2026-10-01.html) | — |
@@ -78,6 +79,7 @@ périmètre) : `docs/referentiel/classification-des-rapports-et-datas.md`.
 | [dossier-classification-2026-09-25.md](dossier-classification-2026-09-25.md) | — |
 | [inventaire-rapports-2026-09-26.txt](inventaire-rapports-2026-09-26.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-375Z.txt](ronde/circle-signal-2026-09-27T00-12-15-375Z.txt) | ronde |
+| [circle-signal-2026-10-02T18-18-37-870Z.txt](ronde/circle-signal-2026-10-02T18-18-37-870Z.txt) | ronde |
 | [systeme-des-index-2026-09-26.txt](systeme-des-index-2026-09-26.txt) | — |
 | [systeme-des-index-2026-09-27.txt](systeme-des-index-2026-09-27.txt) | — |
 | [systeme-des-index-2026-09-28.txt](systeme-des-index-2026-09-28.txt) | — |

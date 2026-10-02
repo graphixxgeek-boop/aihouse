@@ -1,0 +1,42 @@
+⚠️  Attention, mes résultats peuvent être inexacts : il mesure une lecture à la citation d'un chemin dans le code — une mention, jamais la preuve que la donnée est réellement exploitée, et un chemin construit dynamiquement lui échappe complètement. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h47 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : data-archangel — inchangé depuis le vendredi 2 octobre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== data-archangel — circulation des données dans l'Agence Codex ===
+Ce que l'équipe produit, qui le relit, et ce que l'agent lui-même n'exploite pas encore.
+
+=== LE SYSTÈME DES INDEX — 98 dossiers, 1171 fichiers déposés ===
+
+  TROIS CONTRATS, JAMAIS UN SEUL SEUIL POUR TOUT LE MONDE — le même chiffre veut dire l'inverse selon la nature de l'index :
+    📇 catalogue — il NOMME les fichiers de son dossier — un fichier absent de la liste est un vrai trou
+    📔 journal — une LIGNE par passage, datée — il ne nomme pas les fichiers et n'a pas à le faire ; ce qui se mesure est le nombre de lignes contre le nombre de dépôts
+    📄 prose — AUCUN — il explique le dossier sans rien dire de son contenu, donc il ne peut ni être à jour ni être en retard
+    🚫 absent — aucun index du tout : les fichiers du dossier ne sont annoncés nulle part
+
+  à jour : 65 dossier(s)
+  sans objet : 29 dossier(s)
+  incomplet : 3 dossier(s)
+  en retard : 1 dossier(s)
+
+  LES 4 À TRAITER, du plus gros écart au plus petit :
+      · docs/x-port-blindtest — journal : 3 dépôt(s) n'apparaissent ni par leur nom ni par leur date dans les 6 ligne(s) du journal
+      · docs/livrables — catalogue : 4/6 fichiers nommés, 2 absent(s) de la liste qu'il promet de tenir
+      · docs/the-king — catalogue : 17/19 fichiers nommés, 2 absent(s) de la liste qu'il promet de tenir
+      · docs/safe-export — catalogue : 25/26 fichiers nommés, 1 absent(s) de la liste qu'il promet de tenir
+
+  1 index délègue(nt) leur catalogue, et c'est DÉCLARÉ chez eux, jamais deviné :
+      · docs/grand-projet → docs/grand-projet/01-absorption/inventaire.md
+
+  HORS PORTÉE : elle mesure si un fichier est ANNONCÉ par son index, jamais si ce que l'index en dit est juste. Un index qui nomme tous ses fichiers en les décrivant de travers sort « à jour » — ça, c'est une lecture.
+
+=== Plan d'action ===
+  → RETENU · 3 catalogue(s) ne nomment pas tous leurs fichiers — tâche [RECOMMANDEE] : traiter dossier par dossier — compléter un catalogue, rattraper un journal, ou CHOISIR une nature pour un index qui n'en a pas ; jamais un remplacement en masse, la prose qui explique un dossier valant mieux qu'une liste
+  → RETENU · 1 journal(aux) comptent moins de lignes que de dépôts — tâche [RECOMMANDEE] : traiter dossier par dossier — compléter un catalogue, rattraper un journal, ou CHOISIR une nature pour un index qui n'en a pas ; jamais un remplacement en masse, la prose qui explique un dossier valant mieux qu'une liste
+
+Rapport déposé : docs/data-archangel/systeme-des-index-2026-10-02.txt

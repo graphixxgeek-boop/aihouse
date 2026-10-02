@@ -494,5 +494,17 @@
     ],
     "tache": 1453,
     "date": "2026-10-02T18:07:24.764Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Mes questions manquaient de contexte, et il me l'a dit DEUX fois dans la même fenêtre",
+    "lecon": "Sur #819 : « désolé je ne comprends pas la question c'est compliqué et pas de contexte ». Sur #814 et #922 : « j'ai encore besoin de plus de contexte et plus d'explications claire et simple », « donne moi des exemples concrets, le contexte, les enjeux, detaille tout ca ». Trois fois le même reproche, sur trois questions différentes, dans la même session. LA CLASSE : une fenêtre de questions avec 2-4 options n'est PAS le bon format pour une décision dont il ne maîtrise pas le sujet. Le format impose la brièveté, et la brièveté fabrique une question de développeur — un chiffre, un nom de fichier, une option. Le bon geste est alors un DOCUMENT qui explique (de quoi on parle, où est vraiment le problème, ce que ça coûte, ce que ça n'est PAS un problème, les options avec leurs conséquences réelles, mon avis et pourquoi), livré en fichier, PUIS la question. Et cette leçon est l'Article 29 point 4 pris par l'autre bout : il ne dit pas seulement d'employer des mots simples dans un compte rendu, il implique qu'une DÉCISION demandée sans son dossier est une décision qu'on ne peut pas prendre. Le test concret : si la réponse honnête à ma question est « je ne maîtrise pas le sujet », ce n'est pas lui qui manque de contexte, c'est moi qui ne l'ai pas donné.",
+    "verifie": "trois refus explicites de répondre le 2026-10-02, sur #819, #814 et #922 — et dans les deux cas où j'ai reposé la question en clair ou produit le dossier, il a tranché immédiatement",
+    "outils": [
+      "angel-of-ia-process"
+    ],
+    "tache": 1469,
+    "date": "2026-10-02T19:08:28.552Z"
   }
 ]

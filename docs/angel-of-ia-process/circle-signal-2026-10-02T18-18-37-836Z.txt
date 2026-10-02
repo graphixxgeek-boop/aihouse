@@ -1,0 +1,13 @@
+
+=== L'HISTORIQUE DES ÉVALUATIONS ===
+
+Inscrites : 1 — 2026-09-22
+Archivées sur disque : 2026-09-22, 2026-09-23
+
+🔴 1 évaluation(s) archivée(s) et ABSENTE(S) de l'historique : 2026-09-23.
+   Conséquence directe : toute comparaison de trajectoire saute ces dates sans le dire,
+   et un domaine mesuré trois fois se fait annoncer « première mesure ».
+   LE TROU NE SE COMBLE PAS EN INVENTANT : un rapport HTML qui ne porte qu'une note
+   d'ensemble en lettres (« C+ », « A ») ne contient pas les indices par domaine que
+   cet historique compare. Les fabriquer produirait une série qui a l'air complète et
+   qui est fausse — pire que le trou. Ces dates restent donc déclarées manquantes.

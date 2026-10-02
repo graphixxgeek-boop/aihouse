@@ -323,7 +323,18 @@ export function findLodgedManuals(texte, { root = ROOT, seuilTokens = 400 } = {}
 // L'ESPACE EST SOUPLE, et ce n'est pas un détail : la charte est enveloppée à 100 colonnes, donc
 // une formule de renvoi se retrouve coupée par un retour à la ligne au milieu. Un motif qui exige
 // des espaces simples rate le seul cas réel qu'il devait reconnaître — vérifié sur pièce.
-export const MOTIF_RENVOI_DECLARE = /→\s*Article\s+\d+|cf\.\s*Article\s+\d+|pris\s+ici\s+par\s+l['’]autre\s+bout|renvoie\s+à\s+l['’]Article|cité\s+ici\s+comme|par\s+renvoi/i;
+// UNE SIXIÈME FORME AJOUTÉE LE 2026-10-02 (tâche #1067), ET C'EST BIEN UN PRINCIPE, PAS UN GRACIÉ.
+// « À NE PAS CONFONDRE AVEC L'ARTICLE X » est la tournure même d'une FRONTIÈRE : elle dit
+// explicitement « je parle d'autre chose que lui », donc elle dit aussi « je ne lui appartiens
+// pas ». Elle a été ajoutée le jour où la frontière entre les Articles 18 et 26 a été écrite, sur
+// double confirmation de l'utilisateur — et le détecteur a aussitôt pris cette frontière pour un
+// bloc mal rangé, ce qui est le comportement correct d'un détecteur qui ne connaît pas la forme.
+// POURQUOI CE N'EST PAS LA « LISTE DE BLOCS GRACIÉS » QUE LE COMMENTAIRE CI-DESSOUS INTERDIT :
+// on n'excuse aucun bloc nommé. On reconnaît une FORMULATION, qui s'appliquera d'elle-même à
+// n'importe quelle frontière écrite demain entre deux autres Articles — et qui laisse intacte la
+// question quand un bloc cite un Article sans rien déclarer, c'est-à-dire le cas réel que ce
+// détecteur existe pour trouver.
+export const MOTIF_RENVOI_DECLARE = /→\s*Article\s+\d+|cf\.\s*Article\s+\d+|pris\s+ici\s+par\s+l['’]autre\s+bout|renvoie\s+à\s+l['’]Article|cité\s+ici\s+comme|par\s+renvoi|à\s+ne\s+pas\s+confondre\s+avec\s+l['’]Article/i;
 
 export const EXTRACTIONS_TRANCHEES = {
   "Référentiel technique — la référence à jour": "TRANCHÉ le 2026-09-27 par l'utilisateur : elle RESTE. C'est la table qui dit QUEL document lire QUAND ; la déménager obligerait à ouvrir un fichier de plus pour savoir quel fichier ouvrir — on paierait l'indirection deux fois pour économiser une seule lecture.",

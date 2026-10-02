@@ -58,11 +58,12 @@ est la seule chose qui rende un détecteur croyable sur la durée.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**3 fichier(s)** dans ce dossier.
+**4 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [circle-signal-2026-09-25T14-14-12-517Z.txt](circle-signal-2026-09-25T14-14-12-517Z.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-508Z.txt](circle-signal-2026-09-27T00-12-15-508Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
+| [circle-signal-2026-10-02T18-18-37-722Z.txt](circle-signal-2026-10-02T18-18-37-722Z.txt) | — |
+| [registre.md](registre.md) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

@@ -1,0 +1,13 @@
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h44 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : sauvegarde-projet — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 0/2 signal(aux) au vert — aucun passage sur la fenêtre du compteur (85 h de mémoire — pas « jamais utilisé par le projet ») — ou jamais instrumenté pour l'être ; aucun objectif chiffré — rien à quoi comparer son résultat
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== SAUVEGARDE DU PROJET — coffre daté des fichiers suivis ===
+
+Coffre : docs/sauvegardes/projet-2026-10-02-16-44.zip
+Notice : docs/sauvegardes/notice-2026-10-02-16-44.txt (55 fichiers, 999 864 car.)
+la cible de 1 000 000 caractères a été atteinte : la notice s'arrête avant « components/ui/chart.tsx ». Tout le reste est dans le coffre.

@@ -1,0 +1,151 @@
+⚠️  Attention, mes résultats peuvent être inexacts : cherche des bugs inconnus — n'en trouver aucun ne prouve jamais qu'il n'y en a pas. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h52 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : hyper-scan-checkpoint — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== HYPER-SCAN-CHECKPOINT — version légère (zéro appel réseau) ===
+
+Dernier passage couvrait jusqu'à : (aucun — premier passage)
+HEAD actuel : f42294a5609a50b7e8e8c8c676ee67dc772556a7
+
+--- Commits depuis le dernier passage ---
+premier passage — aucune référence antérieure, portée = tout l'historique récent visible.
+
+--- ARGUS ---
+6 candidat(s) de trou signalé(s), 0 marqueur(s) TODO/FIXME.
+
+--- HARMONIA ---
+0 friction(s) confirmée(s) sur 5 lien(s) vérifié(s).
+
+--- ALWAYS-NEW-CODE (préparation) ---
+⚠️  Attention, mes résultats peuvent être inexacts : l'empilement se devine par des indices, et un choix assumé peut y ressembler de loin. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h52 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : always-new-code — inchangé depuis le lundi 28 septembre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== ALWAYS-NEW-CODE — préparation (zéro coût, la couche raisonnement suit) ===
+
+ALWAYS-NEW-CODE — 8 zone(s) réellement analysé(s) — c'est le dénominateur de tout ce qui suit.
+ALWAYS-NEW-CODE — 1 passage(s) réellement analysé(s) — c'est le dénominateur de tout ce qui suit.
+Zone recommandée : Cycle jour/nuit (rotation, jamais examinée)
+
+Indice git (lib/daynight.ts) : 1 commit(s), +101/-0 — signal : aucun.
+
+--- Ce qui reste du ressort du raisonnement (jamais mécanisable) ---
+1. Décrire les GRANDS AXES d'une structure idéale pour cette zone, en repartant de zéro avec toute la connaissance actuelle du projet.
+2. Comparer point par point cette structure imaginée à la structure réelle de la zone.
+3. Vérifier, pour chaque écart trouvé, qu'il ne s'agit pas déjà d'une décision assumée et documentée (Article 19 — leçon trottoirGranted, 2026-09-19).
+4. Vérifier qu'aucune fonctionnalité déjà couverte par check-house.mjs ne serait perdue par le changement proposé.
+5. Classer chaque trouvaille par palier de confiance (confirmé / probable / à surveiller) — jamais une certitude absolue.
+6. Proposer, jamais appliquer seul : préciser la portée exacte et le temps estimé, puis demander confirmation avant tout changement réel.
+
+=== Plan d'action ===
+⏫ PLAN PRIORITAIRE — Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils.
+  ? À TRANCHER · zone « Cycle jour/nuit » désignée par la rotation (rotation, jamais examinée) — une zone recommandée n'est pas une dette constatée : le vrai zoom « page blanche » coûte de vrais tokens (Article 22/SMART-CONSO-TOKEN) et ne se lance jamais tout seul (Article 23)
+
+--- Performance de l'outil (KPI) ---
+1 passage(s) · 2 trouvaille(s) confirmée(s) · 2.0 en moyenne par passage.
+
+--- AXA-CHECK (robustesse/fragilité par fonction) ---
+⚠️  Attention, mes résultats peuvent être inexacts : la couverture mesurée est exacte, mais en conclure « robuste » ne l'est jamais. À vérifier avant d'agir, jamais un verdict acquis.
+
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h53 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : axa-check — inchangé depuis le jeudi 1er octobre 2026
+Santé de l'outil : 2/2 signal(aux) au vert
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== AXA-CHECK — robustesse et fragilité par fonction (zéro coût additionnel) ===
+
+⚠️ AXA-CHECK — corpus INCOMPLET — la couverture produite par l'exécution de check-house : 21 fichier(s) analysé(s) sur 22 attendu(s) — le verdict ci-dessous ne couvre PAS les 1 manquant(s).
+app/api/lia/route.ts : 100% (27 fonction(s))
+lib/stock.ts : 100% (2 fonction(s))
+   [confiance-maximale] stockSurprise (ligne 1) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] stockThought (ligne 8) — Confiance maximale — vérifié en profondeur et testé
+lib/visual-events.ts : N/A (0 fonction(s))
+lib/house.ts : 100% (6 fonction(s))
+   [confiance-maximale] gardenAccess (ligne 4) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] blocked (ligne 26) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] pathBetween (ligne 30) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] key (ligne 31) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] destinationAnchor (ligne 60) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] residentDestination (ligne 69) — Confiance maximale — vérifié en profondeur et testé
+lib/perception.ts : 100% (5 fonction(s))
+   [confiance-maximale] appearanceFor (ligne 14) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] visibleScene (ligne 15) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] normaliseNickname (ligne 18) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] restingPose (ligne 20) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] appearanceReply (ligne 22) — Confiance maximale — vérifié en profondeur et testé
+lib/drama.ts : 92% (12 fonction(s))
+   [à-risque] moveReasonMismatchesDestination (ligne 63) — À risque — jamais vérifié (ni test ni contrôle), et sujet à une accumulation de code (à surveiller)
+   [détail] moveReasonMismatchesDestination : jamais exécutée par un test, historique d'accumulation (à surveiller)
+lib/life.ts : 100% (13 fonction(s))
+lib/turn.ts : 100% (6 fonction(s))
+lib/story.ts : 100% (20 fonction(s))
+lib/relationship.ts : 100% (8 fonction(s))
+lib/dialogue.ts : 100% (26 fonction(s))
+lib/simulation.ts : 100% (10 fonction(s))
+lib/lia.ts : 100% (4 fonction(s))
+lib/gemini-keys.ts : 88% (8 fonction(s))
+   [à-surveiller] __cooldownRemainingForTests (ligne 151) — À surveiller — jamais vérifié par un test ni un contrôle
+   [détail] __cooldownRemainingForTests : jamais exécutée par un test
+lib/quality-metrics.ts : 100% (6 fonction(s))
+lib/world.ts : 100% (2 fonction(s))
+lib/daynight.ts : 100% (6 fonction(s))
+   [confiance-maximale] cyclePosition (ligne 36) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] dayIndex (ligne 38) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] isNight (ligne 39) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] isMidnight (ligne 45) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] phaseOf (ligne 55) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] fatigueRateMultiplier (ligne 97) — Confiance maximale — vérifié en profondeur et testé
+lib/evidence.ts : 100% (2 fonction(s))
+   [confiance-maximale] evidenceLedger (ligne 16) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] investigationCounts (ligne 19) — Confiance maximale — vérifié en profondeur et testé
+lib/presentation.ts : 100% (2 fonction(s))
+   [confiance-maximale] departurePresentation (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] uniqueObservations (ligne 3) — Confiance maximale — vérifié en profondeur et testé
+lib/playback.ts : 100% (2 fonction(s))
+   [confiance-maximale] waitForPlayback (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+   [confiance-maximale] wait (ligne 2) — Confiance maximale — vérifié en profondeur et testé
+lib/update-audit.ts : N/A (0 fonction(s))
+
+Robustesse globale (fonctions couvertes) : 99% sur 167 fonction(s) analysée(s).
+
+=== Plan d'action ===
+⏫ PLAN PRIORITAIRE — Gardien sacré : ce plan porte sur la propreté du code, il passe avant les plans des autres outils.
+  → RETENU · lib/drama.ts — moveReasonMismatchesDestination() : jamais exécutée par un test, historique d'accumulation (à surveiller) — tâche [OBLIGATOIRE] : écrire un test réel pour moveReasonMismatchesDestination() dans lib/drama.ts, ou déclarer sa vérification via record-check si elle a été faite à la main
+  → RETENU · lib/gemini-keys.ts — __cooldownRemainingForTests() : jamais exécutée par un test — tâche [OBLIGATOIRE] : écrire un test réel pour __cooldownRemainingForTests() dans lib/gemini-keys.ts, ou déclarer sa vérification via record-check si elle a été faite à la main
+
+--- Couverture des OUTILS : 29 mesuré(s) · 2 jamais exerçable(s) · 11 NON MESURÉ(s), sur 42 ---
+  Les trois ne se confondent jamais : « 0 % mesuré » dit que le code est exercé et mal couvert ; « jamais exerçable » dit qu'on ne pourra JAMAIS rien mesurer ; « NON MESURÉ » dit qu'on n'a rien mesuré cette fois, et c'est le seul des trois qui est un trou à combler.
+  ⬜ check-spirit — chacun de ses passages envoie de vraies provocations au vrai modèle : l'exercer à chaque commit coûterait de vrais appels API (Articles 8 et 22). Et c'est précisément pour ça qu'il est resté CASSÉ du 2026-09-21 au 2026-09-27 sans que rien ne le dise — l'exemption est légitime, le trou qu'elle laisse est réel, et le déclarer EST la protection (Article 27).
+  ⬜ smart-breaker — check-gemini-quota.mjs n'exporte AUCUNE fonction (script à corps de premier niveau) et son corps sonde les clés pour de vrai : il n'y a rien à importer, et l'exercer coûterait des appels API à chaque commit. Le trou est réel — c'est l'outil du jour de la panne — et il est atténué par sa logique de fond, qui vit dans gemini-key-health.mjs et api-providers.mjs, mesurés eux
+  29 outil(s) réellement mesuré(s). Les plus faiblement couverts d'abord — c'est la seule partie actionnable :
+      0 %  objectifs-vs-resultats
+     10 %  cassandra-rh
+     11 %  the-king
+     15 %  moise-tables-de-loi
+     20 %  circle-process-guardian
+     22 %  smart-conso-token
+     25 %  the-equalizer
+     25 %  the-screener — ⬜ part déclarée inexerçable : sa moitié utile, captureOnce(), lance un vrai navigateur contre un serveur de développement qui tourne : aucun test gratuit ne fait ça, et l'exercer à chaque commit demanderait de démarrer le produit. Sa moitié pure — la page qui accompagne la capture, et l'arbitrage sur la fenêtre qu'on s'autorise à fermer — est exercée, elle
+     26 %  clone-hunter
+     27 %  data-archangel
+    … et 19 autre(s), mieux couvert(s).
+  ❓ NON MESURÉ : fils-de-discussion, cout-de-la-refonte, jesus-le-sauveur, agent-des-noms, agent-du-temps, filet-en-parts, el-professor, the-final-judge, the-deep-reader, ines-official, memory-audit
+
+Pour enregistrer un audit approfondi réellement effectué : node scripts/axa-check.mjs record-check <fichier> <leger|standard|approfondi|exceptionnel> [fonctions...]
+
+--- CLEAN-DIRTY-OLD (code ancien et peu retouché, repérage seul) ---

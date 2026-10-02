@@ -11,11 +11,12 @@ passage, ajoutée une fois la checklist qualitative traitée, pas seulement la p
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**8 fichier(s)** dans ce dossier.
+**9 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [circle-signal-2026-09-23T21-49-13-899Z.txt](circle-signal-2026-09-23T21-49-13-899Z.txt) | — |
+| [circle-signal-2026-10-02T18-18-37-786Z.txt](circle-signal-2026-10-02T18-18-37-786Z.txt) | — |
 | [scan-2026-09-19-21-09.txt](scan-2026-09-19-21-09.txt) | — |
 | [scan-2026-09-21-22-13.txt](scan-2026-09-21-22-13.txt) | — |
 | [scan-2026-09-22-04-15.txt](scan-2026-09-22-04-15.txt) | — |

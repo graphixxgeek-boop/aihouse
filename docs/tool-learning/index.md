@@ -17,7 +17,7 @@
 | [circle-signal-2026-09-24T21-48-39-559Z.txt](circle-signal-2026-09-24T21-48-39-559Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-500Z.txt](circle-signal-2026-09-25T14-14-12-500Z.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-474Z.txt](circle-signal-2026-09-27T00-12-15-474Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
+| [circle-signal-2026-10-02T18-18-37-906Z.txt](circle-signal-2026-10-02T18-18-37-906Z.txt) | — |
 | [serie.json](serie.json) | — |
 | [verdicts.json](verdicts.json) | — |
 | [xp-journal.json](xp-journal.json) | — |

@@ -1,0 +1,23 @@
+Version de Claude : claude-opus-5
+Produit le : vendredi 2 octobre 2026 à 16h48 (UTC)
+État du code : f42294a sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Contexte de production : non précisé
+Outil : ines-official — inchangé depuis le dimanche 27 septembre 2026
+Santé de l'outil : 1/2 signal(aux) au vert — aucun passage sur la fenêtre du compteur (85 h de mémoire — pas « jamais utilisé par le projet ») — ou jamais instrumenté pour l'être
+Gravité de ce rapport : non renseignée par l'outil — à lire pour le savoir
+
+=== INES-official — édition consolidée du dépôt ===
+
+Édition v2 (2026-10-02, code) : 182 fichier(s), 9515599 octets.
+Corps écrit dans .ines-official-latest-code.txt (local, jamais committé).
+
+Contenu de l'édition :
+  .mjs     89 fichier(s)
+  .tsx     65 fichier(s)
+  .ts      28 fichier(s)
+  jamais committé(s) : 0
+  le plus ancien : app/api/world/route.ts (16 j)
+  ancienneté moyenne : 9 jour(s)
+
+Ligne d'index à ajouter à docs/ines-official/index.md :
+| v2 | 2026-10-02 | code seul | 182 | 9.5 Mo |

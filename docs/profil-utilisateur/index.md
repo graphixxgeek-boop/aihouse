@@ -87,7 +87,7 @@ observations qui n'ont pas été enregistrées avec cette rigueur à l'époque (
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**25 fichier(s)** dans ce dossier.
+**26 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -101,7 +101,7 @@ observations qui n'ont pas été enregistrées avec cette rigueur à l'époque (
 | [circle-signal-2026-09-25T14-14-12-568Z.txt](circle-signal-2026-09-25T14-14-12-568Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-690Z.txt](circle-signal-2026-09-25T14-14-12-690Z.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-640Z.txt](circle-signal-2026-09-27T00-12-15-640Z.txt) | — |
-| [circle-signals-index.md](circle-signals-index.md) | — |
+| [circle-signal-2026-10-02T18-18-37-820Z.txt](circle-signal-2026-10-02T18-18-37-820Z.txt) | — |
 | [incomprehensions.json](incomprehensions.json) | — |
 | [2026-09-19-2019.md](observations/2026-09-19-2019.md) | observations |
 | [2026-09-19-2137.md](observations/2026-09-19-2137.md) | observations |
@@ -115,5 +115,6 @@ observations qui n'ont pas été enregistrées avec cette rigueur à l'époque (
 | [2026-09-22-0115.md](observations/2026-09-22-0115.md) | observations |
 | [2026-09-22-0245.md](observations/2026-09-22-0245.md) | observations |
 | [2026-09-25-1414.md](observations/2026-09-25-1414.md) | observations |
+| [2026-09-28-1305.md](observations/2026-09-28-1305.md) | observations |
 | [profil-actuel.txt](profil-actuel.txt) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

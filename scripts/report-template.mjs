@@ -237,7 +237,16 @@ export function buildReportFrame({ tool, title, subtitle, dateLabel, blocks = []
 //   · À TRANCHER — ça demande une décision qui n'est pas la mienne.
 // Un constat sans l'un de ces trois états est un constat dont personne ne répond.
 
-export const ETATS_CONSTAT = ["retenu", "ecarte", "a-trancher"];
+// LE QUATRIÈME ÉTAT EST ARRIVÉ LE 2026-10-02, SUR DOUBLE CONFIRMATION DE L'UTILISATEUR (Article
+// 14) APRÈS LECTURE DU TEXTE EXACT. L'Article 28 disait « trois états, jamais deux » — et un
+// registre employait déjà, avec une bonne raison, un « à instruire, pas encore acté » que les
+// trois états ne savaient pas nommer : un constat issu d'une mesure MÉCANIQUE et non d'un passage
+// réel, dont on ne sait pas encore s'il est fondé.
+// CE QUI L'EMPÊCHE DE DEVENIR UN TIROIR, et c'est la condition sans laquelle il ne valait pas la
+// peine : il SE CONSOMME. Il doit devenir l'un des trois autres dès qu'un passage réel a eu lieu,
+// et il ne peut jamais être l'état final d'un constat. Sans cette clause il serait exactement la
+// case floue que les trois premiers existent pour supprimer.
+export const ETATS_CONSTAT = ["retenu", "ecarte", "a-trancher", "a-instruire"];
 export const PLAN_ACTION_TITRE = "Plan d'action";
 
 // L'IMPRESSION DU PLAN, ÉCRITE UNE SEULE FOIS (2026-09-27, tâche #993).
@@ -489,6 +498,12 @@ export function buildPlanDaction(constats = [], { toolSlug } = {}) {
       lignes.push(`  → RETENU${sceau} · ${c.constat}${c.tache ? ` — tâche${etiquette}${numero ? ` #${numero}` : ""} : ${c.tache}` : " — ⚠️ aucune tâche associée"}`);
     }
     else if (c.etat === "ecarte") lignes.push(`  ✗ ÉCARTÉ · ${c.constat} — ${c.pourquoi ?? "⚠️ écarté sans raison écrite, ce qui n'est pas une décision"}`);
+    else if (c.etat === "a-instruire") {
+      // IL DIT CE QUI MANQUE, JAMAIS SEULEMENT QU'IL MANQUE QUELQUE CHOSE : un « à instruire » sans
+      // dire quelle vérification est due serait la case floue que sa clause de consommation
+      // interdit. Et il rappelle qu'il n'est pas un état final, parce que c'est tout son intérêt.
+      lignes.push(`  ⏳ À INSTRUIRE · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : " — ⚠️ sans dire quelle vérification manque, ce qui vide l'état de son sens"} (état NON FINAL : il doit devenir retenu, écarté ou à trancher dès qu'un passage réel a eu lieu)`);
+    }
     else lignes.push(`  ? À TRANCHER · ${c.constat}${c.pourquoi ? ` — ${c.pourquoi}` : ""}`);
   }
   // L'ALARME QUI MORD DANS L'AUTRE SENS (2026-09-29, tâche #1200). Le défaut de libellé couvre les

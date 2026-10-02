@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le poids du dépôt, expliqué</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T19:05:47.594Z</div>
+    <h1>Le poids du dépôt, expliqué</h1>
+    <p class="sub">Pourquoi ta prémisse était fausse, où est vraiment le poids, et pourquoi on n'efface rien aujourd'hui</p>
+  </header>
+  <div class="divider"></div>
+  <main><p>Tu m'as dit : « on n'efface pas 20 Mo comme ça sur un coup de tête », et « donne-moi des exemples concrets, le contexte, les enjeux ». Tu as raison sur les deux points. Voici le dossier complet.</p>
+<hr>
+<h3>1. De quoi on parle, en une phrase</h3>
+<p>Le dossier <code>docs/</code> du projet pèse <strong>65 Mo</strong>. La tâche #922 annonçait <strong>3,7 Mo</strong>. Elle n'est pas fausse par négligence : elle a été mesurée le 2026-09-26, et <strong>le dépôt a grossi de 17 fois depuis</strong>. C'est le premier enseignement, et il ne concerne pas le ménage : <strong>un chiffre de taille se périme très vite, donc une décision de rangement prise sur un chiffre d'il y a six jours est une décision prise à l'aveugle.</strong></p>
+<hr>
+<h3>2. Où est vraiment le poids — mesuré aujourd'hui, pas supposé</h3>
+<table><thead><tr><th>Dossier</th><th>Poids</th><th>Ce que c'est</th></tr></thead><tbody><tr><td><code>docs/sauvegardes</code></td><td><strong>33 Mo</strong></td><td>les archives <code>.zip</code> du projet entier que je te livre</td></tr><tr><td><code>docs/check-tasks-details</code></td><td><strong>9,2 Mo</strong></td><td>l'historique de l'outil qui compte les tâches</td></tr><tr><td><code>docs/suivi</code></td><td>4,4 Mo</td><td>le carnet de tâches lui-même (1 342 lignes)</td></tr><tr><td><code>docs/grand-projet</code></td><td>3,6 Mo</td><td>les documents du GRAND PROJET</td></tr><tr><td><code>docs/the-screener</code></td><td><strong>1,1 Mo</strong></td><td><strong>les captures d'écran</strong></td></tr></tbody></table>
+<p><strong>Ta prémisse était « c'est dû aux screenshots ».</strong> Ils pèsent 1,1 Mo sur 65, soit <strong>1,7 %</strong>. Ce n'est pas eux. Je te le dis franchement parce que reporter la question à la refonte graphique l'aurait reportée pour une raison qui n'existe pas — et elle serait revenue intacte dans six mois, en plus grosse.</p>
+<hr>
+<h3>3. Les sauvegardes : ce qu'elles sont, et pourquoi elles grossissent</h3>
+<p><strong>Ce que c'est, concrètement.</strong> À chaque Ronde, je produis deux fichiers pour toi : un <code>.zip</code> de <strong>tous les fichiers suivis du projet</strong> (le « coffre »), et une « notice » en texte brut, calibrée pour qu'une IA puisse l'avaler entière si tu perds l'accès à git et à moi. C'est ta demande du 2026-09-24 : « si demain il y a un gros bug, ou que je n'ai plus accès à toi ou à git, je veux une copie qui me permette de continuer comme si rien ne s'était passé ».</p>
+<p><strong>Les trois qui existent, et leur courbe :</strong></p>
+<table><thead><tr><th>Date</th><th>Poids</th><th>Croissance</th></tr></thead><tbody><tr><td>2026-09-25</td><td>6,8 Mo</td><td>—</td></tr><tr><td>2026-09-28</td><td>9,8 Mo</td><td>+44 % en 3 jours</td></tr><tr><td>2026-10-02</td><td><strong>14,1 Mo</strong></td><td>+44 % en 4 jours</td></tr></tbody></table>
+<p><strong>J'AI VÉRIFIÉ UNE CHOSE IMPORTANTE, parce que ça aurait tout changé</strong> : chaque <code>.zip</code> contient-il les <code>.zip</code> précédents ? <strong>Non.</strong> S'il les contenait, la croissance serait exponentielle et le problème serait urgent. Elle ne l'est pas : chaque archive est une photo du projet, et elle grossit simplement parce que <strong>le projet grossit</strong>.</p>
+<p><strong>Et ta règle est DÉJÀ respectée.</strong> Tu avais fixé « les 3 derniers de chaque » le 2026-09-24. Il y a exactement 3 archives. Je m'étais trompé en te disant qu'elle n'était appliquée par personne — correction faite.</p>
+<hr>
+<h3>4. L'enjeu réel, et il n'est pas le disque</h3>
+<p><strong>Le disque ne coûte rien.</strong> 65 Mo, c'est le poids de quelques photos de téléphone. Si c'était le seul enjeu, la bonne réponse serait « ne rien faire », et je te le dirais.</p>
+<p><strong>Le vrai enjeu est ailleurs, et il est en trois morceaux :</strong></p>
+<p><strong>(a) Ce que la croissance RACONTE.</strong> Le plus gros fichier du projet est <code>scripts/check-house.mjs</code> — le filet de sécurité — à <strong>3,2 Mo</strong>. Un seul fichier de code de 3,2 Mo, c'est énorme : c'est lui qui met 44 secondes à chaque enregistrement (la question #819 que tu viens de trancher). Le second est le carnet de tâches à 1,95 Mo, le troisième l'historique d'un outil à 1,6 Mo. <strong>Le poids n'est pas un problème de rangement : c'est le symptôme de trois fichiers qui deviennent très gros.</strong></p>
+<p><strong>(b) Ce qu'une sauvegarde de 14 Mo te coûte À TOI.</strong> Elle t'est livrée dans la conversation. Plus elle grossit, plus elle devient lourde à télécharger et à garder. Et surtout : la « notice » texte est calibrée à 1 million de caractères pour qu'une IA puisse la lire en entier — <strong>elle a déjà atteint ce plafond et s'arrête avant la fin</strong>. Donc la moitié de la sauvegarde qui sert à repartir avec une IA est déjà tronquée, et ça empirera à chaque fois.</p>
+<p><strong>(c) Ce qui n'est PAS un enjeu, et je le dis pour que tu ne t'en inquiètes pas</strong> : rien n'est en danger. Rien ne ralentit à cause de ces 65 Mo, rien ne casse, et aucune donnée n'est menacée.</p>
+<hr>
+<h3>5. Les options, avec leurs conséquences réelles</h3>
+<p><strong>Option A — ne rien faire.</strong> Coût zéro, risque zéro. La question reviendra quand la notice sera trop tronquée pour servir, c'est-à-dire bientôt. <strong>C'est un choix défendable aujourd'hui.</strong></p>
+<p><strong>Option B — garder 2 sauvegardes au lieu de 3.</strong> Gagne 6,8 Mo. Tu gardes la plus récente (qui contient tout) et l'avant-dernière (le filet de sécurité du filet). <strong>Perte réelle : la capacité de comparer à une semaine de distance.</strong> Faible, mais pas nulle.</p>
+<p><strong>Option C — sortir les <code>.zip</code> du dépôt git.</strong> Je te les livre, ils ne sont plus versionnés. Gagne 33 Mo d'un coup. <strong>Mais</strong> : une sauvegarde dans le dépôt qu'elle sauvegarde est de toute façon une curiosité — si tu perds le dépôt, tu perds aussi les sauvegardes qu'il contient. <strong>C'est l'option la plus logique sur le fond</strong>, et la seule qui demande quelque chose de toi : les garder de ton côté.</p>
+<p><strong>Option D — s'occuper de la vraie cause.</strong> Les trois gros fichiers (le filet à 3,2 Mo, le carnet à 1,95 Mo, un historique à 1,6 Mo) sont ce qui fait grossir tout le reste, sauvegardes comprises. Découper ou compacter ces trois-là ferait maigrir les sauvegardes <strong>et</strong> accélérerait le filet. C'est le plus de travail, et le seul qui règle le problème au lieu de le déplacer.</p>
+<hr>
+<h3>6. Mon avis, et pourquoi</h3>
+<p><strong>C'est l'option C pour les sauvegardes, et l'option D pour la suite</strong> — mais pas aujourd'hui, et pas dans la même semaine que le GRAND PROJET.</p>
+<p><strong>Pourquoi C</strong> : une sauvegarde qui vit dans ce qu'elle sauvegarde ne te protège pas du scénario qu'elle est censée couvrir. C'est le seul argument de fond du lot, et il ne parle pas de mégaoctets.</p>
+<p><strong>Pourquoi D plus tard</strong> : découper le filet de sécurité est une intervention sur le garde-fou qui bloque tous les enregistrements. On ne fait pas ça entre deux autres chantiers, et sûrement pas la semaine où tu ouvres le GRAND PROJET.</p>
+<p><strong>Pourquoi pas tout de suite</strong> : tu as dit « on est dans le grand projet, tu as les nuits pour travailler le reste en parallèle ». Ceci est exactement du travail de nuit.</p>
+<hr>
+<h3>7. Plan d'action</h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Suite</th></tr></thead><tbody><tr><td><strong>À TRANCHER</strong></td><td>les <code>.zip</code> restent-ils dans le dépôt ?</td><td>ta décision, et c'est la seule du lot qui a un vrai argument de fond</td></tr><tr><td><strong>RETENU</strong></td><td>la notice texte a atteint son plafond de 1 M caractères et se tronque</td><td>tâche à ouvrir : la moitié « repartir avec une IA » de la sauvegarde est déjà dégradée</td></tr><tr><td><strong>RETENU</strong></td><td>trois fichiers portent l'essentiel du poids (filet 3,2 Mo · carnet 1,95 Mo · historique 1,6 Mo)</td><td>tâche à ouvrir, travail de nuit, jamais pendant le GRAND PROJET</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>« c'est dû aux screenshots »</td><td>mesuré : 1,1 Mo sur 65, soit 1,7 %. La prémisse ne tient pas</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>effacer des sauvegardes aujourd'hui</td><td>ta règle des 3 derniers est déjà respectée, et rien ne presse. On ne gagne que du disque qui ne coûte rien</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/comprendre-le-poids-du-depot.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
