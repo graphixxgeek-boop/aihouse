@@ -11,7 +11,7 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**14 fichier(s)** dans ce dossier.
+**15 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -23,6 +23,7 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 | [circle-signal-2026-09-23T21-49-13-786Z.txt](circle-signal-2026-09-23T21-49-13-786Z.txt) | — |
 | [circle-signal-2026-09-25T14-14-12-466Z.txt](circle-signal-2026-09-25T14-14-12-466Z.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-411Z.txt](circle-signal-2026-09-27T00-12-15-411Z.txt) | — |
+| [ecart-revelation-2026-10-02.md](ecart-revelation-2026-10-02.md) | — |
 | [empreinte-document-officiel.json](empreinte-document-officiel.json) | — |
 | [lecons-de-la-revelation.md](lecons-de-la-revelation.md) | — |
 | [revelation-philosophie-2026-10-01.json](revelation-philosophie-2026-10-01.json) | — |

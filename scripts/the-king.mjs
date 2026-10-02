@@ -549,6 +549,17 @@ export const RACINES_DU_CORPUS = [
   // existe pour empêcher.
   { dossier: "docs/suivi/sessions", quoi: "les décisions réellement prises", zone: "decisions" },
   { dossier: "docs/strategies", quoi: "les stratégies de domaine", zone: "strategie" },
+  // LA STRATÉGIE DU GRAND CHANTIER (2026-10-02, tâche #1437) — ajoutée après un écart réel et
+  // coûteux. Ce dossier portait depuis le 2026-09-29 un document répondant aux CINQ IMPOSSIBLES,
+  // chacun avec son porteur mécanique ; la révélation du 2026-10-01 ne le lisait pas, et a donc
+  // déclaré « vide » une case que le projet avait déjà remplie avec plus de rigueur que ce que
+  // j'allais y écrire.
+  //
+  // CE QUE L'ÉCART ENSEIGNE, ET IL VAUT AU-DELÀ DE CE DOSSIER : un corpus de révélation se définit
+  // par ce que les documents FONT, jamais par l'endroit où ils sont rangés. Un document de
+  // stratégie rangé sous un chantier reste un document de stratégie.
+  { dossier: "docs/grand-projet/02-strategie", quoi: "la stratégie du grand chantier", zone: "strategie" },
+  { dossier: "docs/fils", quoi: "les fils de discussion — ce qui a été tranché, sujet par sujet", zone: "decisions" },
   { dossier: "scripts", quoi: "le POURQUOI écrit à côté du code", zone: "outils", ext: ".mjs", enTeteSeulement: true },
 ];
 
