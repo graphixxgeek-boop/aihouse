@@ -76,3 +76,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/rapports-de-nuit/nuit-2026-10-02.html` | `docs/rapports-de-nuit/nuit-2026-10-02.md` | 12840 | 2026-10-02 14:01Z |
 | `docs/livrables/avant-apres-nuit-2026-10-02.html` | `docs/livrables/avant-apres-nuit-2026-10-02.md` | 14882 | 2026-10-02 16:32Z |
 | `docs/rondes/ronde-2026-10-02-goat.html` | `docs/rondes/ronde-2026-10-02-goat.md` | 19797 | 2026-10-02 17:02Z |
+| `docs/rondes/audits-independants-2026-10-02.html` | `docs/rondes/audits-independants-2026-10-02.md` | 17170 | 2026-10-02 18:06Z |

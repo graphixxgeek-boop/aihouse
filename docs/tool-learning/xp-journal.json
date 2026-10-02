@@ -444,5 +444,55 @@
     ],
     "tache": 1452,
     "date": "2026-10-02T16:17:05.293Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "J'ai écrit un POURQUOI vraisemblable au lieu de lire git log — et je l'ai committé",
+    "lecon": "En corrigeant un rapport cassé, j'ai écrit à côté du correctif que « la version du 2026-09-28 » était fautive et que le fichier n'avait « JAMAIS été produit depuis quatre jours ». Les deux affirmations étaient fausses. Un audit indépendant l'a démontré en trente secondes avec trois mesures que je n'avais pas faites : une archive datée du 2026-10-01 00h56 existait, le commit qui casse est du 2026-10-01 01h43, et la panne a duré 39 h. LA CLASSE : quand on répare quelque chose dont on ne connaît pas l'histoire, la tentation est de déduire l'histoire du code qu'on a sous les yeux — et cette déduction est un RÉCIT, pas une mesure. Elle est d'autant plus dangereuse qu'elle est plausible et qu'elle s'installe à côté du QUOI, là où le prochain agent la lira comme un fait (Articles 19/27). LE GESTE : avant d'écrire la cause d'une panne dans un commentaire, lancer `git log -S<symbole>` sur le symbole fautif et regarder le dossier d'archives. Deux commandes. Elles auraient évité une fausse histoire gravée dans le dépôt.",
+    "verifie": "démontré par trois mesures reproductibles le 2026-10-02 : l'existence de rapport-export-central-2026-10-01-00-56.txt, git log -S sur mesuresDeLExport rendant 917cc3b du 01h43, et la portée des variables avant/après ce commit",
+    "outils": [
+      "safe-export"
+    ],
+    "tache": 1454,
+    "date": "2026-10-02T18:03:54.770Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "titre": "Un troisième état « pas mesuré » s'est vérifié sur son propre auteur, dans l'heure",
+    "lecon": "J'ai ajouté à un détecteur l'état « je n'ai pas pu lire, donc je ne sais pas » — jusque-là il concluait « aucune raison écrite », ce qui re-prescrivait du travail déjà fait. L'éprouvette écrite pour couvrir ce correctif utilisait un lecteur cassé (join et ROOT n'existent pas dans ce fichier). Le ReferenceError a été avalé par le try/catch de lecture, et le détecteur a rendu PAS MESURÉ au lieu de conclure. Autrement dit le filet n'a pas dit « pas de raison », il a dit « ma lecture est en cause » — et c'est ce qui m'a mené droit au vrai défaut. LA CLASSE, et c'est un argument à ressortir quand un troisième état paraît du zèle : il ne sert pas seulement à ne pas mentir au lecteur, il sert à DIAGNOSTIQUER. Un null et un « pas mesuré » coûtent la même ligne de code et ne rendent pas le même service. COROLLAIRE PAYÉ DANS LA MÊME MINUTE : un état rendu sous forme d'objet ({mesurable:false}) est truthy, donc un filter naïf le compte comme un succès — ajouter le troisième état sans séparer explicitement les trois cas recrée la confusion qu'il venait supprimer.",
+    "verifie": "l'assertion « the real written reason of api-providers is found » a échoué avec actual:false au lieu d'un ReferenceError, et c'est l'état PAS MESURÉ qui a désigné le lecteur fautif",
+    "outils": [
+      "clone-hunter",
+      "check-house"
+    ],
+    "tache": 1463,
+    "date": "2026-10-02T18:03:54.773Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "resultat-vert-qui-detonne",
+    "titre": "Un contrôle que personne n'alimente est vert par construction, et son voisin savait déjà le refuser",
+    "lecon": "Le seul contrôle en direct de la chaîne rapport→plan→tâches rendait « tous les plans sont chaînés » sur une LISTE VIDE, et son unique appelant ne lui passait jamais rien. Vert depuis dix jours sans avoir mesuré quoi que ce soit. Le détail qui rend ça structurel plutôt qu'accidentel : trente lignes plus bas DANS LE MÊME FICHIER, une fonction voisine refuse explicitement ce piège depuis trois jours plus tôt, avec sa raison écrite. LA CLASSE : deux doctrines opposées sur le même sujet peuvent cohabiter dans un même fichier sans que rien ne le signale, et c'est toujours la plus ANCIENNE qui n'a pas été reprise. Quand on écrit un refus de conclure sur zéro donnée, le geste n'est pas terminé : il faut chercher dans le même fichier les autres fonctions qui répondent à la même question, parce qu'elles sont justement celles que personne ne pensera à aller voir. Une leçon appliquée à un seul endroit du fichier où on l'a apprise est une leçon à moitié écrite (L37).",
+    "verifie": "recherche sur le nom du paramètre : deux occurrences dans tout le dépôt, toutes deux dans la définition — personne ne l'alimente ; et actionChainLines([]) rendait bien un ✅",
+    "outils": [
+      "god-of-all-process"
+    ],
+    "tache": 1462,
+    "date": "2026-10-02T18:03:54.775Z"
+  },
+  {
+    "nature": "captation",
+    "declencheur": "garde-fou-bloque",
+    "titre": "Écrire un document pendant que le filet tourne le fait échouer, et j'y suis tombé trois fois dans la journée",
+    "lecon": "La charte dit de lancer le rangeur d'index AVANT chaque commit. Insuffisant : le filet vérifie qu'aucun dossier de docs/ n'est sans index, et j'écris des documents PENDANT que le filet tourne — donc il échoue sur un fichier né après son démarrage. Trois fois le même échec le 2026-10-02 (dossier docs/rondes/ créé, puis le rapport de Ronde, puis le rapport d'audits), chaque fois ~9 minutes perdues. LA CLASSE : le rangeur doit tourner après la DERNIÈRE écriture de document, pas avant le commit — et donc jamais en parallèle d'un filet. Le geste juste est : écrire tous les documents, PUIS ranger, PUIS lancer le filet, et ne plus rien écrire dans docs/ jusqu'à son verdict. Corollaire mesuré le même jour : créer un seul dossier neuf dans docs/ a demandé QUATRE déclarations à quatre registres différents (index, exclusion de Ronde, documents jumeaux, classification des rapports) — chacune légitime et portant sur autre chose, mais c'est un coût d'entrée qu'un nouveau venu devrait hériter (Article 24).",
+    "verifie": "trois échecs du filet le 2026-10-02 sur testSystemeDesIndex, chaque fois avec actual>0 et expected=0, et chaque fois résolus par un seul passage du rangeur",
+    "outils": [
+      "data-archangel",
+      "check-house"
+    ],
+    "tache": 1453,
+    "date": "2026-10-02T18:07:24.764Z"
   }
 ]

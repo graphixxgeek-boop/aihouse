@@ -105,3 +105,55 @@ inventées, ce qui vaut moins que trente et une sondes honnêtement déclarées 
 **IL SORT DANS LE RAPPORT COMPLET, PAS AU COMMIT** : trente et une lignes qui ne bougent pas d'un
 commit à l'autre deviendraient un mur, donc du décor (L4/L6). Le plan d'action en fait **un seul
 constat**, jamais trente et un, pour la même raison.
+
+---
+
+## Deux défauts de la chaîne de l'Article 28, trouvés par un audit indépendant (2026-10-02)
+
+### Le seul contrôle « en direct » était au vert par construction (tâche #1462)
+
+`actionChainLines()` imprimait « ✅ chaque constat retenu porte sa tâche » **sur une liste vide**. Et
+son unique appelant ne lui passe jamais rien : le paramètre vaut `[]` par défaut et **aucune ligne
+du dépôt ne l'alimente** (deux occurrences du nom, toutes deux dans la définition).
+
+Donc le seul contrôle en direct de la chaîne qui existe pour qu'un constat ne se perde pas était
+vert **depuis dix jours, sans avoir jamais confronté un seul rapport à un seul carnet**.
+
+**Le détail qui rend le défaut indiscutable** : trente lignes plus bas, **dans le même fichier**,
+`auditPlansDeDocuments()` refuse explicitement le même piège depuis le 2026-09-25. Deux doctrines
+opposées sur la même chaîne, dans le même fichier, à trois jours d'écart — ce n'est pas une décision
+assumée, c'est la plus ancienne qui n'a pas été reprise.
+
+**Corrigé** : trois états. Rien reçu → **PAS MESURÉ**. Une chaîne reçue et close → le ✅ **avec son
+dénominateur**. Des maillons rompus → la liste. **Ce qui reste ouvert** : personne n'alimente ce
+contrôle, et le brancher demande de décider qui lui passe les plans et quand.
+
+### Le lecteur du carnet ignorait 45 % du carnet (tâche #1461)
+
+`god-of-all-process plans` vérifie que chaque tâche annoncée par un plan existe dans le suivi. Sa
+lecture ne regardait que `docs/suivi/sessions/` — or une tâche **archivée reste une tâche du
+projet**.
+
+| | Avant | Après |
+|---|---|---|
+| Documents accusés | **10** (≈119 références « mortes ») | **4** |
+| Références réellement mortes | — | **4, toutes `#92`** |
+
+`#92` est un numéro de gestionnaire de session, pas un numéro durable, et l'outil **déclare
+lui-même** ne pas savoir les distinguer. Autrement dit : **correctement nourri, ce contrôle ne
+trouve plus un seul défaut tranchable**, et sa sortie précédente était du bruit à 96 %.
+
+**Vérifié avant correction, parce qu'un rapport d'agent n'est pas une preuve** : 737 lignes dans
+`sessions/`, **605 dans `archives/`** ; et sur douze numéros tirés parmi les « introuvables »,
+**douze** existaient dans `archives/`.
+
+**Le même défaut avait déjà été trouvé et corrigé ailleurs** : `categorizeAllSessions()` porte
+« ARCHIVE COMPRISE : une tâche archivée reste une tâche du projet » depuis le 2026-09-29, après y
+avoir laissé 56 % du registre hors de vue. Le lecteur canonique existait **trois jours avant** la
+dernière retouche du lecteur fautif — l'Article 24 mot pour mot, et le nouveau venu n'avait rien
+hérité. La correction **relaie** `listerLesFichiersDeTaches()` au lieu de recopier son chemin.
+
+**Pourquoi personne ne l'avait vu** : `god plans` n'est invoqué par rien — aucun item de Ronde,
+aucun crochet, aucun document de process. Il faut le taper à la main, et rien ne dit de le taper
+(**L2**). Lui donner un item de Ronde n'a de sens qu'**après** cette correction, sinon on branche
+119 fausses alarmes dans la Ronde (**L4**).

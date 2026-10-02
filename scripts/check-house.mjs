@@ -4357,7 +4357,17 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
   assert.deepEqual(checkActionChain({planDaction:planOk,suiviText:'| 428 | x |'}).manquements,[],'a retained finding whose announced task really exists in the tracker closes the chain');
   assert.match(checkActionChain({planDaction:planOk,suiviText:'| 999 | x |'}).manquements[0].detail,/référence morte/,'the nastiest case must be covered: a finding announcing a task that does NOT exist — a dead reference looks like a link, which is worse than no link at all');
   assert.equal(checkActionChain({planDaction:planOk}).mesurable,false,'without the tracker text the tool can see that a finding announces no task, never verify that an announced task is real — two different questions, and it must only answer the one it can actually settle');
-  assert.ok(actionChainLines([]).some(l=>l.includes('✅')),'a fully closed chain must say so explicitly rather than rendering an empty section that reads as "not run"');
+  // CETTE ASSERTION A ÉTÉ RETOURNÉE LE 2026-10-02 (tâche #1462), ET SON INTENTION EST GARDÉE.
+  // Elle demandait qu'une chaîne entièrement close le DISE au lieu de rendre une section vide qui
+  // se lit « pas lancé » — intention juste, et toujours vérifiée ci-dessous. Mais elle le
+  // demandait sur une liste VIDE, c'est-à-dire sur zéro donnée : elle exigeait donc littéralement
+  // le faux vert que la chaîne existe pour empêcher, et c'est elle qui a maintenu dix jours un
+  // contrôle au vert par construction que personne n'alimentait. Les deux moitiés sont désormais
+  // séparées : rien reçu = PAS MESURÉ, une chaîne reçue et close = le ✅ explicite avec son compte.
+  assert.ok(actionChainLines([]).some(l=>l.includes('PAS MESURÉ')),'nothing received is PAS MESURE, never a green: an empty list is zero data, and the sibling auditPlansDeDocuments has refused that same trap since 2026-09-25');
+  const chaineClose=actionChainLines([{source:'x',manquements:[]}]);
+  assert.ok(chaineClose.some(l=>l.includes('✅')),'a fully closed chain STILL says so explicitly rather than rendering an empty section that reads as "not run" — the original intent, now asked on real data');
+  assert.ok(chaineClose.some(l=>l.includes('1')),'and it carries the number of chains actually confronted, so a green can never again be read without its denominator');
   assert.ok(selfCheck().ok,'the real dispositif must be self-consistent: god-of-all-process watching itself, every process with a real guardian and a real document, no broken probe, no orphan tension');
   assert.ok(PROCESSES.some(p=>p.slug==='meta'&&p.gardien==='scripts/god-of-all-process.mjs'),'god-of-all-process must declare a master process watched by itself — a supervisor no rule supervises drifts without anything saying so, the exact pattern this whole toolset fights, applied at its top');
   const sansMeta=selfCheck({processes:PROCESSES.filter(p=>p.slug!=='meta')});
@@ -25097,7 +25107,11 @@ async function testMemoiresDeclareesSansFichier() {
   // ── 2. SENS 2 (BP4) : il MORD quand le fichier manque. Sans ce sens, le zéro ci-dessus ne dirait
   // rien — et c'est précisément l'état dans lequel CLONE-HUNTER a vécu six jours.
   const faux = SE.findMemoiresDeclareesSansFichier({ existsImpl: () => false });
-  assert.ok(faux.manquants.length >= 3, `the three real call sites are caught when nothing exists (got ${faux.manquants.length})`);
+  // QUATRE SITES RÉELS, PAS TROIS : scripts/hooks/check-last-commit.mjs:84 appelle loadMemoire et
+  // était invisible jusqu'au 2026-10-02 — précisément le fichier câblé à CHAQUE commit.
+  assert.ok(faux.manquants.length >= 4, `every real call site is caught when nothing exists, hooks/ included (got ${faux.manquants.length})`);
+  assert.ok(faux.manquants.some((x) => x.script.includes("hooks/")), 'and scripts/hooks/ is really in the swept corpus — the blind spot was the most often executed folder of the repo');
+  assert.ok(reel.scriptsLus >= 89, `the corpus now covers the subfolder too (currently ${reel.scriptsLus})`);
   assert.match(faux.manquants[0].pourquoi, /tableau vide/, "and the message says WHY a missing registry is dangerous, not just that it is missing");
 
   // ── 3. UN MÊME REGISTRE CITÉ DEUX FOIS DANS UN FICHIER EST UN SEUL MANQUE : compter deux fois
@@ -25107,8 +25121,15 @@ async function testMemoiresDeclareesSansFichier() {
   // eprouvette ferait de la suite de tests un site d'appel reel citant un registre inexistant —
   // a juste titre, puisqu'elle ecrirait bel et bien cet appel.
   const appelFixture = 'loadMemo' + 'ire({ fichier: "docs/x/memoire.json" })';
+  // L'ÉPROUVETTE EST CONSCIENTE DU DOSSIER DEPUIS LE 2026-10-02 (tâche #1461), et c'est le
+  // correctif qui l'a imposé : la fonction lit maintenant `scripts/` ET `scripts/hooks/`, donc un
+  // faux lecteur qui rend la même liste quel que soit le dossier demandé rend le même fichier
+  // DEUX fois — et l'éprouvette du dédoublonnage échouait sur un artefact de son propre montage,
+  // pas sur un défaut du code. Une injection doit répondre comme répondrait le disque : un
+  // fichier par dossier où il se trouve vraiment.
+  const listerParDossier = (d) => (String(d).endsWith("hooks") ? [] : ["faux.mjs"]);
   const deuxFois = SE.findMemoiresDeclareesSansFichier({
-    listDirImpl: () => ["faux.mjs"],
+    listDirImpl: listerParDossier,
     readFileImpl: () => `${appelFixture}; ${appelFixture};`,
     existsImpl: () => false });
   assert.strictEqual(deuxFois.manquants.length, 1, "the same registry cited twice in one file is ONE gap");
@@ -25120,6 +25141,65 @@ async function testMemoiresDeclareesSansFichier() {
   console.log("Passed: un registre de decisions cite mais absent se signale desormais (2026-10-02, tache #1452). loadMemoire() est le mecanisme partage des decisions deja tranchees, et CLONE-HUNTER l'avait recu le 2026-09-26 SANS JAMAIS AVOIR SON FICHIER : docs/clone-hunter/memoire.json etait cite dans son code, imprime a l'utilisateur dans son rapport, et absent du disque. loadMemoire() tolerant l'absence et rendant un tableau vide, l'outil se comportait comme si rien n'avait jamais ete tranche — un relais qui avait l'air branche et ne l'etait qu'a moitie (lecon L2, appliquee au registre plutot qu'a l'outil). CE QUI L'A TROUVE : le garde-fou des chemins morts, parce qu'une fiche venait de citer ce chemin — autrement dit un hasard, et c'est bien le probleme. CORRIGE EN CLASSE, JAMAIS EN OCCURRENCE (L37) : creer le fichier manquant aurait referme le cas sans proteger le QUATRIEME consommateur, qui aurait recu le meme silence. Verifie dans les deux sens, avec le dedoublonnage d'un registre cite deux fois dans le meme fichier et le refus de lire un parc illisible comme un parc propre.");
 }
 await testMemoiresDeclareesSansFichier();
+
+// LE DÉTECTEUR DE RAISON ÉCRITE, ET SES QUATRE PIÈGES (2026-10-02, tâche #1463)
+// POURQUOI CES ÉPROUVETTES EXISTENT : un audit indépendant a trouvé QUATRE défauts dans ce
+// détecteur le jour de sa naissance, et il les a tous trouvés avec des cas synthétiques de trois
+// lignes. Deux éprouvettes — « lecteur absent » et « il se lit lui-meme » — les auraient prises
+// avant le commit. Le constat qui fait le plus mal : la rigueur avait ete appliquee a la trouvaille
+// LATERALE du meme commit (quatre assertions, les deux sens, le parc illisible) et pas a la
+// fonctionnalite phare. On ne mesure donc pas ici une fonction, on ferme une habitude.
+async function testRaisonEcriteDuCluster() {
+  const CH = await import('./clone-hunter.mjs');
+  const paire = (f) => ({ occurrences: [{ file: f, start: 10 }, { file: f, start: 40 }] });
+
+  // ── 1. NE PAS AVOIR PU LIRE N'EST PAS « PAS DE RAISON » (lecon L5). C'est le defaut le plus
+  // grave des quatre : un fichier illisible produisait la CONCLUSION « aucune raison ecrite »,
+  // donc une re-prescription de « ecris pourquoi » sur une paire qui porte deja son pourquoi.
+  assert.strictEqual(CH.raisonEcriteDuCluster(paire('x.mjs')).mesurable, false, 'no reader at all is PAS MESURE, never "no reason"');
+  const quiJette = CH.raisonEcriteDuCluster(paire('x.mjs'), { lire: () => { throw new Error('EACCES'); } });
+  assert.strictEqual(quiJette.mesurable, false, 'an unreadable file is PAS MESURE too');
+  assert.match(quiJette.pourquoi, /jamais/, 'and it says WHY that is not the same thing');
+
+  // ── 2. LE TROISIEME ETAT NE DOIT PAS SE COMPTER COMME UNE RAISON. Le piege etait immediat :
+  // { mesurable: false } est un OBJET, donc truthy — un filter naif l'aurait compte comme instruit.
+  const nm = CH.clustersAvecRaisonEcrite([paire('x.mjs')], { lire: () => { throw new Error('x'); } });
+  assert.strictEqual(nm.instruits, 0, 'a non-measure is NEVER counted as a written reason');
+  assert.strictEqual(nm.nonMesures, 1, 'it is counted separately, and said out loud');
+
+  // ── 3. SENS 1 SUR LE DEPOT REEL : il trouve la raison qui existe, et cite la ligne de DECISION.
+  // LE LECTEUR DÉRIVE SA RACINE, et ma première version ne le faisait pas : elle écrivait
+  // `join(ROOT, f)` alors que NI `join` NI `ROOT` n'existent dans ce fichier. L'erreur n'a pas
+  // explosé — elle a été avalée par le `try/catch` de lecture du détecteur, qui a donc rendu son
+  // tout nouvel état « PAS MESURÉ ». Autrement dit : le correctif du jour s'est vérifié sur son
+  // propre auteur, en refusant de conclure « aucune raison écrite » là où c'était MA lecture qui
+  // était cassée. C'est exactement le service que ce troisième état rend.
+  // DEUX FOIS LE MÊME PIÈGE, ET LE DÉTECTEUR L'A SIGNALÉ LES DEUX FOIS. Première version :
+  // `join(ROOT, …)`, deux identifiants absents de ce fichier. Deuxième : `readFileSync` nommé,
+  // alors que ce fichier importe `fs` en défaut (`import fs from 'node:fs'`). Les deux erreurs ont
+  // été avalées par le `try/catch` de lecture du détecteur — qui a rendu « PAS MESURÉ » au lieu de
+  // conclure « aucune raison écrite », et m'a donc désigné le fautif deux fois de suite. Sans ce
+  // troisième état, cette éprouvette aurait échoué en disant « la raison n'existe pas », et
+  // j'aurais cherché le défaut dans `api-providers.mjs`.
+  const racineDuDepot = path.dirname(path.dirname(new URL(import.meta.url).pathname));
+  const lire = (f) => fs.readFileSync(path.join(racineDuDepot, f), 'utf8');
+  const vrai = CH.raisonEcriteDuCluster({ occurrences: [{ file: 'scripts/api-providers.mjs', start: 70 }, { file: 'scripts/api-providers.mjs', start: 116 }] }, { lire });
+  assert.ok(vrai && vrai.chemin === 'scripts/api-providers.mjs', 'the real written reason of api-providers is found');
+  assert.ok(CH.MARQUEUR_DE_DECISION.test(vrai.extrait), 'and the quoted line carries the DECISION, not merely the subject — the first version quoted the subject because the filter accepted either and took the first');
+
+  // ── 4. IL NE S'EXONERE PAS LUI-MEME (faille 2 de l'Article 31) : sa propre prose parle de
+  // duplication et de blocs qui restent separes, sans designer aucun cluster.
+  assert.strictEqual(CH.raisonEcriteDuCluster({ occurrences: [{ file: 'scripts/clone-hunter.mjs', start: 700 }] }, { lire }), null,
+    'the detector never accepts its OWN header comment as a reason');
+
+  // ── 5. UN COMMENTAIRE QUI CELEBRE UNE FUSION PASSEE n'est pas une raison de rester separe.
+  const fusionPassee = '// Les deux sorties etaient recopiees dans chacun, signale par CLONE-HUNTER.\n// Nommees une fois, elles deviennent le contrat que tout nouveau fournisseur herite.\nconst a = 1;';
+  assert.strictEqual(CH.raisonEcriteDuCluster({ occurrences: [{ file: 'y.mjs', start: 2 }] }, { lire: () => fusionPassee }), null,
+    'a comment celebrating a PAST merge must never excuse the next one');
+
+  console.log("Passed: le detecteur de raison ecrite a enfin ses eprouvettes, et elles ferment les quatre defauts qu'un audit independant a trouves le jour de sa naissance (2026-10-02, tache #1463). LE PLUS GRAVE ETAIT LE TROISIEME ETAT ABSENT : un fichier illisible produisait la CONCLUSION « aucune raison ecrite », donc une re-prescription de « ecris pourquoi » sur une paire qui porte deja son pourquoi — le defaut meme que ce detecteur existe pour corriger, revenu par la porte de derriere. Et sa correction a ouvert un piege immediat : { mesurable: false } est un objet, donc truthy, et un filter naif aurait compte la non-mesure comme une raison trouvee. LES TROIS AUTRES : l'extrait cite etait le SUJET et non la DECISION, parce que le filtre acceptait l'un ou l'autre puis prenait le premier — ca tombait juste sur les quatre paires reelles par chance, leurs blocs s'ouvrant sur un titre en majuscules ; le detecteur acceptait SON PROPRE commentaire d'en-tete comme raison, alors que le piege « un garde-fou qui cherche un motif lit aussi le texte qui parle de lui » etait nomme deux fois dans le commit qui l'a introduit ; et un commentaire qui celebre une fusion passee ne doit jamais dispenser de la suivante. CE QUE CE BLOC MESURE VRAIMENT : la rigueur avait ete appliquee a la trouvaille LATERALE du meme commit et pas a la fonctionnalite phare, et quatre defauts ont tenu dans deux eprouvettes de trois lignes.");
+}
+await testRaisonEcriteDuCluster();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LE BALAYAGE ACCEPTE DEUX CHOSES DE PLUS, ET UN FAUX VERT L'A APPRIS (2026-10-02, tâche #993)

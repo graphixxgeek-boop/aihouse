@@ -1039,3 +1039,69 @@ protection.
 
 **CE QUE ÇA NE DEMANDE PAS** : une décision urgente. Tant que tu n'as pas tranché, les 4 restent
 visibles en « à trancher » — ce qui est leur état exact, et n'empêche rien d'avancer.
+
+---
+
+## Quatre questions sorties des deux audits de la Ronde GOAT (2026-10-02)
+
+Les deux agents indépendants ont trouvé plus que ce que j'ai corrigé. Voici ce qui reste, et qui
+demande une décision qui n'est pas la mienne.
+
+### 1. Le format d'un constat de registre — 393 constats invisibles à la chaîne
+
+**Le chiffre** : **99** fichiers `docs/<outil>/index.md`, **393** lignes de constat datées, et
+**aucune** ne porte le marqueur que la chaîne de l'Article 28 sait lire. Au moins 9 déclarent
+explicitement leur non-clôture en prose (« pas encore », « reste à »).
+
+**La collision, et c'est une tension entre deux règles du projet, jamais une négligence** : la
+charte impose à chaque outil un registre `docs/<outil>/` avec son index — c'est-à-dire qu'elle
+envoie la mémoire durable de chaque outil **exactement** dans le format que la chaîne ne lit pas.
+C'est très précisément comme ça que le constat de `x-port-blindtest` du 26 septembre s'est perdu :
+il n'a pas été oublié, il était **structurellement illisible**.
+
+**Trois issues** : (a) les registres adoptent le marqueur de la chaîne ; (b) la chaîne apprend à
+lire une table de registre ; (c) on déclare par écrit qu'un registre n'est pas un rapport et
+échappe volontairement à la chaîne. **Le pire est l'état actuel** : un registre que la charte
+prescrit, dont le contenu a l'air suivi, et que rien ne regarde.
+
+### 2. Qui lit le code de sortie d'une commande d'outil ?
+
+**Personne, aujourd'hui.** Les crochets terminent chaque ligne par `|| true` — choix défendable et
+cohérent avec « god signale fort, ne bloque jamais », mais il implique que le code de sortie n'est
+jamais lu. Et le banc témoin, seul mécanisme qui lance les outils et lit leur code de sortie,
+**ne passe aucune sous-commande** : **39 scripts** portent une branche de sous-commande et au moins
+**40 littéraux** existent (`rapport`, `plans`, `kits`, `checkpoint`, `budget`…). Toute cette surface
+est hors de portée du seul contrôle d'exécution réel.
+
+**C'est la cause structurelle du défaut n°1 de cette Ronde** : `safe-export.mjs rapport` est un item
+de Ronde, son instruction **affirme** que le fichier daté est déjà écrit, et cette affirmation est
+devenue fausse pendant 39 h sans que rien ne puisse le dire.
+
+**Étendre le banc aux sous-commandes ? Un passage « à blanc » séparé ? Accepter le trou par écrit ?**
+C'est un arbitrage de coût, donc le tien.
+
+### 3. Le quatrième état d'un constat
+
+`docs/x-port-blindtest/index.md` emploie **« À instruire, pas encore acté »**, et sa raison est
+bonne. Mais l'Article 28 dit « **trois états, jamais deux** », et un quatrième état non déclaré est
+exactement la case où un constat dort sans que personne n'en réponde. Soit cet état rejoint
+officiellement la liste avec sa définition, soit il est interdit et requalifié. **Trancher est une
+modification de l'Article 28 : double confirmation (Article 14).**
+
+### 4. Les numéros de session dans les plans — le cas `#92`
+
+Après la correction du lecteur aveugle aux archives, les **4** seules références réellement mortes
+sont toutes `#92`, et l'outil déclare lui-même ne pas savoir distinguer un numéro durable d'un
+numéro de gestionnaire de session. **Faut-il une notation distincte pour les deux, ou accepter
+l'indécidable par écrit ?** Question de notation, donc la tienne.
+
+### Et deux constats que j'ai regardés et ÉCARTÉS, avec leur raison
+
+- **Le plan d'action n'atteint le fichier du rapport que chez 1 outil sur 48.** Constat réel et
+  important (il rend sans objet la traçabilité arrière construite le 2026-10-01), mais le corriger
+  veut dire changer le comportement du gabarit pour **48 outils d'un coup**, et ce n'est pas un
+  geste à faire en fin de Ronde sans ton accord. **Ouvert comme tâche, pas écarté sur le fond** —
+  c'est le calendrier que j'écarte, pas le constat.
+- **Le nouveau détecteur de raison écrite est aujourd'hui sans effet observable**, puisque tes 4
+  accords évacuent les clusters en amont. Ce n'est pas un défaut : il reste le filet pour les futurs
+  doublons, et son coût est déjà payé. À revoir seulement si un an passe sans qu'il serve.

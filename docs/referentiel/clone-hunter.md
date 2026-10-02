@@ -452,3 +452,62 @@ raison est écrite, c'est la **lecture** qui est en cause, pas le commentaire.
 tous leur raison et attendent son accord — « zéro constat » au sens littéral est hors de portée de
 l'agent seul, **par construction du garde-fou, et c'est voulu**. La question lui est portée dans
 `docs/idees-a-trancher.md`.
+
+---
+
+## Quatre défauts du détecteur, trouvés le jour de sa naissance (2026-10-02, tâche #1463)
+
+**Le constat qui fait le plus mal n'est aucun des quatre** : la rigueur avait été appliquée à la
+trouvaille **latérale** du même commit (quatre assertions, les deux sens, le refus d'un parc
+illisible) et **pas** à la fonctionnalité phare, partie sans un seul test. Un audit indépendant a
+trouvé ses quatre défauts avec des cas synthétiques de trois lignes.
+
+### 1. Aucun troisième état — le plus grave
+
+Un fichier illisible ou un lecteur absent rendait `null`, c'est-à-dire la **conclusion** « ce
+doublon ne porte aucune raison écrite » — donc une re-prescription de « écris pourquoi » sur une
+paire qui porte déjà son pourquoi. **Le défaut même que ce détecteur existe pour corriger, revenu
+par la porte de derrière** (leçon **L5**, non tenue à l'endroit le plus récent du dépôt).
+
+**Et sa correction a ouvert un piège immédiat** : `{ mesurable: false }` est un **objet**, donc
+« truthy ». Un `filter` naïf aurait compté la non-mesure comme une raison trouvée — exactement la
+confusion que le troisième état venait d'ajouter pour l'empêcher. Les trois états sont donc séparés
+explicitement (`raisonEcrite` / `raisonNonMesurable`), et le rapport dit le nombre de non-mesures.
+
+**Le mécanisme s'est vérifié sur son propre auteur** : l'éprouvette écrite pour le couvrir utilisait
+`join(ROOT, f)` alors que ni `join` ni `ROOT` n'existent dans `check-house.mjs`. L'erreur a été
+avalée par le `try/catch` de lecture — et le détecteur a rendu « PAS MESURÉ » au lieu de conclure
+« aucune raison écrite ». C'est très exactement le service que ce troisième état rend.
+
+### 2. L'extrait cité était le SUJET, pas la DÉCISION
+
+Le filtre acceptait « décision **ou** sujet » puis prenait le premier — or dans l'ordre naturel d'un
+commentaire, le sujet vient d'abord. Ça tombait juste sur les quatre paires réelles **par chance**,
+leurs blocs s'ouvrant sur un titre en majuscules qui porte déjà la décision. Et le commentaire d'à
+côté affirmait une règle que le code n'appliquait pas, ce qui est pire qu'un extrait médiocre
+(Articles 6/13). La décision passe maintenant d'abord, le sujet n'est qu'un repli.
+
+### 3. Il s'exonérait lui-même
+
+Un doublon placé dans `clone-hunter.mjs` était déclaré « instruit » par le **commentaire d'en-tête
+du détecteur**, qui parle de duplication et de blocs séparés sans désigner aucun cluster — faille 2
+de l'Article 31. Le piège « un garde-fou qui cherche un motif lit aussi le texte qui parle de lui »
+était nommé **deux fois** dans le commit qui l'a introduit, et pas appliqué ici. Le fichier de
+l'outil est désormais exclu de son propre balayage.
+
+### 4. Un commentaire qui célèbre une fusion passée
+
+Déjà couvert à la naissance, et maintenant **testé** : `api-providers.mjs` porte deux commentaires
+voisins, l'un disant pourquoi la queue reste recopiée, l'autre racontant une factorisation déjà
+faite. Reconnaître une raison à la seule mention d'un doublon aurait pris le second pour le premier.
+
+### Ce qui reste ouvert, déclaré
+
+- **`FENETRE_DE_RAISON` est un littéral**, pas une valeur dérivée à l'exécution. L'Article 24
+  l'autorise comme liste choisie à la main pourvu que ce soit écrit — c'est le **mot « dérive »** du
+  commentaire d'origine qui disait l'inverse de ce que fait le code. Conséquence réelle : une raison
+  écrite à plus de 60 lignes du doublon est manquée.
+- **La conjonction se teste sur le bloc entier**, donc deux phrases sans rapport dans un même
+  commentaire peuvent suffire. Mesuré : **13 blocs sur 6 280** valident aujourd'hui les deux
+  marqueurs. Le mécanisme tient par la rareté, pas par sa logique. Resserrer à la phrase (ou à deux
+  phrases adjacentes) fermerait ça sans allonger aucune énumération.

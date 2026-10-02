@@ -696,14 +696,32 @@ export const FENETRE_DE_RAISON = 60;
 
 // Rend la raison écrite d'un cluster, ou null. On lit le fichier de CHAQUE occurrence : une paire
 // peut être à cheval sur deux fichiers, et la raison peut n'être écrite que chez l'un des deux.
+// NE PAS AVOIR PU LIRE N'EST PAS « PAS DE RAISON » (corrigé le 2026-10-02 par un audit
+// indépendant, leçon L5). La première version rattrapait l'erreur de lecture avec un `continue`
+// et finissait par `return null` — c'est-à-dire par la CONCLUSION « ce cluster ne porte aucune
+// raison écrite », donc par une re-prescription de « écris pourquoi » sur une paire qui porte
+// déjà son pourquoi : le défaut même que ce détecteur existe pour corriger, revenu par la porte
+// de derrière et sans un mot. Le troisième état est donc rendu explicitement, comme
+// `riennAPuEtreLu()` le fait partout ailleurs dans ce dépôt.
 export function raisonEcriteDuCluster(cluster, { lire } = {}) {
+  // IL NE S'EXONÈRE PAS LUI-MÊME (faille 2 de l'Article 31, corrigée le 2026-10-02). Un audit
+  // indépendant a montré qu'un doublon placé dans ce fichier-ci était déclaré « instruit » par le
+  // commentaire d'en-tête du détecteur, qui parle de duplication et de blocs séparés sans
+  // désigner aucun cluster. Le piège « un garde-fou qui cherche un motif lit aussi le texte qui
+  // parle de lui » était nommé deux fois dans le commit qui l'a introduit, et pas appliqué ici.
+  const MOI = "clone-hunter.mjs";
   const vues = new Set();
+  let illisibles = 0;
+  let lus = 0;
+  if (typeof lire !== "function") return { mesurable: false, pourquoi: "aucun lecteur de fichier fourni : impossible de chercher une raison écrite, ce qui n'est jamais « il n'y en a pas »" };
   for (const o of cluster?.occurrences ?? []) {
     if (vues.has(o.file)) continue;
     vues.add(o.file);
+    if (String(o.file).endsWith(MOI)) continue;   // sa propre prose n'est pas une raison
     let texte;
-    try { texte = lire(o.file); } catch { continue; }
-    if (texte == null) continue;
+    try { texte = lire(o.file); } catch { illisibles += 1; continue; }
+    if (texte == null) { illisibles += 1; continue; }
+    lus += 1;
     const lignes = String(texte).split("\n");
     // Les bornes de la fenêtre couvrent TOUTES les occurrences de ce fichier, pas la première
     // trouvée : la raison peut être écrite entre deux blocs jumeaux, ce qui est le cas réel ici.
@@ -725,22 +743,44 @@ export function raisonEcriteDuCluster(cluster, { lire } = {}) {
         // L'EXTRAIT CITÉ EST LA LIGNE QUI PORTE LA DÉCISION, jamais la première du bloc : les
         // commentaires de ce dépôt s'ouvrent souvent sur un filet de tirets, et citer ce filet
         // rendait un message qui n'apprenait rien au lecteur — la raison restait à aller chercher.
-        const porteuses = lignes.slice(i, fin + 1).map((l, k) => ({ l, k })).filter(({ l }) => MARQUEUR_DE_DECISION.test(l) || MARQUEUR_DU_SUJET.test(l));
-        const { l: brut, k } = porteuses[0] ?? { l: lignes[i], k: 0 };
+        // LA DÉCISION PASSE AVANT LE SUJET, ET LA PREMIÈRE VERSION FAISAIT L'INVERSE (corrigé le
+        // 2026-10-02 par un audit indépendant). Le filtre acceptait « décision OU sujet » puis
+        // prenait le premier — or dans l'ordre naturel d'un commentaire le sujet vient d'abord,
+        // donc l'extrait citait la ligne qui ÉNONCE le problème au lieu de celle qui le tranche.
+        // Ça tombait juste sur les quatre paires réelles PAR CHANCE, leurs blocs s'ouvrant sur un
+        // titre en majuscules qui porte déjà la décision — et le commentaire d'à côté affirmait
+        // une règle que le code n'appliquait pas, ce qui est pire qu'un extrait médiocre.
+        const toutes = lignes.slice(i, fin + 1).map((l, k) => ({ l, k }));
+        const porteuses = toutes.filter(({ l }) => MARQUEUR_DE_DECISION.test(l));
+        const { l: brut, k } = porteuses[0] ?? toutes.filter(({ l }) => MARQUEUR_DU_SUJET.test(l))[0] ?? { l: lignes[i], k: 0 };
         return { chemin: o.file, ligne: i + k + 1, extrait: brut.replace(/^\s*\/\/\s?/, "").trim().slice(0, 110) };
       }
       i = fin;   // un bloc déjà jugé ne se relit pas ligne à ligne
     }
   }
+  if (!lus && illisibles) return { mesurable: false, pourquoi: `aucun des ${illisibles} fichier(s) de ce doublon n'a pu être lu : on ne sait pas s'il porte une raison écrite, ce qui n'est jamais « il n'en porte pas »` };
   return null;
 }
 
 // Enrichit chaque cluster de sa raison écrite éventuelle. On ENRICHIT, on ne filtre pas : rendre
 // une liste plus courte ici referait le filtre silencieux que le filtre des ponts de réexport a
 // appris à ne pas être (son commentaire, 2026-09-26).
+// LES TROIS ÉTATS SONT SÉPARÉS ICI, ET LE PIÈGE ÉTAIT IMMÉDIAT : `raisonEcriteDuCluster()` rend
+// désormais soit une raison, soit `null`, soit `{ mesurable: false }`. Ce dernier est un OBJET,
+// donc « truthy » — un simple `filter((c) => c.raisonEcrite)` aurait compté une NON-MESURE comme
+// une raison trouvée, c'est-à-dire exactement la confusion que le troisième état venait d'ajouter
+// pour l'empêcher. Vu en écrivant le correctif, pas à la relecture.
 export function clustersAvecRaisonEcrite(clusters = [], { lire } = {}) {
-  const enrichis = (clusters ?? []).map((c) => ({ ...c, raisonEcrite: raisonEcriteDuCluster(c, { lire }) }));
-  return { clusters: enrichis, instruits: enrichis.filter((c) => c.raisonEcrite).length };
+  const enrichis = (clusters ?? []).map((c) => {
+    const r = raisonEcriteDuCluster(c, { lire });
+    const nonMesure = r && r.mesurable === false;
+    return { ...c, raisonEcrite: nonMesure ? null : r, raisonNonMesurable: nonMesure ? r.pourquoi : null };
+  });
+  return {
+    clusters: enrichis,
+    instruits: enrichis.filter((c) => c.raisonEcrite).length,
+    nonMesures: enrichis.filter((c) => c.raisonNonMesurable).length,
+  };
 }
 
 export function formatClusterSummary(cluster) {
@@ -834,7 +874,11 @@ function main() {
   // à une paire qui porte déjà son pourquoi est la leçon L4 en acte. Le cluster reste compté et
   // reste au plan ; seul son état passe à « à trancher », parce que le retirer pour de bon demande
   // l'accord explicite de l'utilisateur et que cet accord n'est pas à moi de donner.
-  const { clusters: avecRaison, instruits } = clustersAvecRaisonEcrite(problemes, { lire: (p) => readFileSync(join(ROOT, p), "utf8") });
+  const { clusters: avecRaison, instruits, nonMesures } = clustersAvecRaisonEcrite(problemes, { lire: (p) => readFileSync(join(ROOT, p), "utf8") });
+  // UNE NON-MESURE SE DIT, elle ne se range jamais du côté « pas de raison » (L5).
+  if (nonMesures) {
+    console.log(`\n🚨 ${nonMesures} problème(s) dont les fichiers n'ont PAS pu être lus : je ne sais pas s'ils portent une raison écrite, ce qui n'est jamais « ils n'en portent pas ». Ils restent au plan, et c'est ma lecture qui est en cause, pas forcément le code.`);
+  }
   if (instruits) {
     console.log(`\n${instruits} problème(s) portent DÉJÀ une raison écrite dans le code — l'autre moitié de ma propre prescription. Ils restent comptés et restent au plan, en « à trancher » : les en sortir pour de bon passe par ton accord explicite (docs/clone-hunter/memoire.json), jamais par ma seule lecture du commentaire.`);
   }

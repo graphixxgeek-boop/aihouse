@@ -1757,15 +1757,29 @@ export const PALIERS_RELANCE = [
 // le même silence. Un registre se LIT, il ne se suppose pas (Article 24).
 export const MOTIF_MEMOIRE_DECLAREE = /loadMemoire\(\s*\{\s*fichier\s*:\s*["'`]([^"'`]+)["'`]/g;
 
-export function findMemoiresDeclareesSansFichier({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, existsImpl = existsSync } = {}) {
+// IL DISAIT « CHAQUE SITE D'APPEL » ET N'EN VOYAIT QUE 86 SUR 89 (corrigé le 2026-10-02 par un
+// audit indépendant). `lireLesScriptsDuDepot()` ne descend pas d'un niveau : `scripts/hooks/`
+// était donc invisible — précisément le dossier câblé à CHAQUE commit, et où
+// `check-last-commit.mjs:84` appelle `loadMemoire({ fichier: "docs/argus/memoire.json" })`. Un
+// garde-fou qui annonce couvrir tout le parc et en laisse dehors le morceau le plus souvent
+// exécuté promet plus qu'il ne tient, ce qui est pire qu'un garde-fou absent.
+// LE SOUS-DOSSIER EST LU EN PLUS, PAS À LA PLACE : rendre `lireLesScriptsDuDepot()` récursif
+// aurait changé d'un coup le dénominateur de ses quatre appelants, dont aucun ne l'a demandé —
+// c'est un chantier à part, qui reste ouvert comme tâche plutôt que fait en passant.
+export function findMemoiresDeclareesSansFichier({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, existsImpl = existsSync, sousDossiers = ["scripts/hooks"] } = {}) {
   const lecture = lireLesScriptsDuDepot({ root, listDirImpl, readFileImpl });
   if (!lecture.mesurable) return { mesurable: false, manquants: [], scriptsLus: 0, pourquoi: lecture.pourquoi };
+  const lus = [...lecture.lus];
+  for (const dossier of sousDossiers) {
+    const extra = lireLesScriptsDuDepot({ root, dossier, listDirImpl, readFileImpl });
+    if (extra.mesurable) for (const f of extra.lus) lus.push({ ...f, nom: `${dossier.replace(/^scripts\//, "")}/${f.nom}` });
+  }
   const manquants = [];
   // UN MÊME REGISTRE CITÉ DEUX FOIS DANS UN FICHIER EST UN SEUL MANQUE : un outil peut nommer son
   // registre dans son code ET dans un commentaire ou une sonde, et le compter deux fois ferait
   // croire à deux trous là où il n'y en a qu'un (le dénominateur d'un rapport se respecte).
   const vus = new Set();
-  for (const { nom, texte } of lecture.lus) {
+  for (const { nom, texte } of lus) {
     for (const m of String(texte).matchAll(MOTIF_MEMOIRE_DECLAREE)) {
       const chemin = m[1];
       if (existsImpl(join(root, chemin))) continue;
@@ -1775,7 +1789,7 @@ export function findMemoiresDeclareesSansFichier({ root = ROOT, listDirImpl = re
         pourquoi: `scripts/${nom} lit « ${chemin} » comme registre de décisions déjà tranchées, et ce fichier n'existe pas : loadMemoire() rend alors un tableau vide, donc l'outil se comporte comme si rien n'avait jamais été tranché — sans que personne ne le sache` });
     }
   }
-  return { mesurable: true, manquants, scriptsLus: lecture.lus.length, pourquoi: null };
+  return { mesurable: true, manquants, scriptsLus: lus.length, pourquoi: null };
 }
 
 export function filtrerDejaTranches(ecarts = [], memoire = []) {
@@ -2183,15 +2197,30 @@ function main() {
       const lignesTxt = formatRapportExportLines(r);
       for (const l of lignesTxt) console.log(l);
       // LES DEUX MESURES SE PRENNENT DANS `mesures`, JAMAIS DANS LE VIDE (2026-10-02, tâche #1454).
-      // La version du 2026-09-28 écrivait `alerteExport(kits, agence)` avec deux variables qui
-      // n'existent pas dans cette portée : elles sont des CHAMPS de l'objet que
-      // `mesuresDeLExport()` rend (ligne 1419), pas des locales. Le rapport plantait donc sur un
-      // ReferenceError juste après avoir imprimé ses lignes, et avant d'écrire son archive — si
-      // bien qu'il n'a JAMAIS produit le fichier qu'il promet depuis quatre jours.
-      // POURQUOI PERSONNE NE L'AVAIT VU : la sortie imprimée avant le plantage est complète et
-      // parfaitement crédible ; seul le code de sortie disait la vérité, et une Ronde l'a lancé
-      // pour la première fois aujourd'hui. Un rapport qu'on ne lance jamais ne signale jamais
-      // qu'il est cassé (leçon L2).
+      // `kits` et `agence` sont des CHAMPS de l'objet que `mesuresDeLExport()` rend (ligne 1419),
+      // pas des locales. Les lire comme des locales plantait sur un ReferenceError juste après
+      // l'impression de toutes les lignes et juste AVANT l'écriture de l'archive.
+      //
+      // LA CAUSE ET LA DATE ONT ÉTÉ CORRIGÉES LE JOUR MÊME, ET C'EST LA CORRECTION QUI COMPTE LE
+      // PLUS ICI. Ma première version de ce commentaire accusait « la version du 2026-09-28 » et
+      // parlait d'un rapport « JAMAIS produit depuis quatre jours ». C'était FAUX, et un audit
+      // indépendant l'a démontré le 2026-10-02 par trois mesures que je n'avais pas faites :
+      //   · `docs/safe-export/rapport-export-central-2026-10-01-00-56.txt` EXISTE — le rapport
+      //     fonctionnait donc encore à 00h56 le 2026-10-01 ;
+      //   · le commit qui sort `kits`/`agence` de la portée, en extrayant `mesuresDeLExport()`,
+      //     est `917cc3b` du 2026-10-01 à 01h43 (tâche #1356) — soit 47 minutes plus tard ;
+      //   · la panne a donc duré ~39 h (01h43 le 10-01 → 16h54 le 10-02), jamais quatre jours,
+      //     et sa cause est une FACTORISATION, pas la version d'origine.
+      // POURQUOI CETTE ERREUR VAUT D'ÊTRE ÉCRITE PLUTÔT QUE SILENCIEUSEMENT REMPLACÉE : l'Article
+      // 19 et l'Article 27 veulent que le POURQUOI vive à côté du QUOI précisément pour que le
+      // prochain agent s'y fie. Une cause mal attribuée l'envoie chercher le défaut au mauvais
+      // endroit, et un récit plausible à la place d'une mesure est exactement ce que ce dépôt
+      // traque partout ailleurs. J'avais reconstitué une histoire vraisemblable au lieu de lire
+      // `git log` et le dossier d'archives.
+      //
+      // CE QUI RESTE VRAI, et c'est le vrai enseignement : la sortie imprimée avant le plantage
+      // est complète et parfaitement crédible ; seul le code de sortie disait la vérité. Un
+      // rapport qu'on ne lance jamais ne signale jamais qu'il est cassé (leçon L2).
       const alerte = alerteExport(mesures.kits, mesures.agence);
       console.log("");
       console.log(`VERDICT DU KIT : ${alerte.verdict ?? alerte.pourquoi}`);

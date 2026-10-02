@@ -961,3 +961,48 @@ donc que **chaque** `loadMemoire({ fichier })` de l'outillage a son fichier sur 
 
 Son message dit **pourquoi** un registre absent est dangereux — le tableau vide silencieux — et pas
 seulement qu'il est absent.
+
+---
+
+## Deux corrections du 2026-10-02, dont une sur une raison écrite fausse
+
+### `findMemoiresDeclareesSansFichier()` disait « chaque site d'appel » et en voyait 86 sur 89 (#1461)
+
+`lireLesScriptsDuDepot()` ne descend pas d'un niveau : **`scripts/hooks/` était invisible** —
+précisément le dossier câblé à **chaque commit**, et où `check-last-commit.mjs:84` appelle
+`loadMemoire({ fichier: "docs/argus/memoire.json" })`. Un garde-fou qui annonce couvrir tout le parc
+et en laisse dehors le morceau le plus souvent exécuté promet plus qu'il ne tient, ce qui est pire
+qu'un garde-fou absent.
+
+**Corrigé** : le sous-dossier est lu **en plus**, pas à la place. Rendre `lireLesScriptsDuDepot()`
+récursif aurait changé d'un coup le dénominateur de ses **quatre** appelants, dont aucun ne l'a
+demandé — c'est un chantier à part, qui reste ouvert plutôt que fait en passant.
+
+| Vérification | Avant | Après |
+|---|---|---|
+| Scripts balayés | 86 | **89** |
+| Sites accusés quand rien n'existe | 3 | **5**, dont `scripts/hooks/` |
+
+**Et l'éprouvette a dû devenir consciente du dossier** : un faux lecteur qui rend la même liste quel
+que soit le dossier demandé rend le même fichier **deux fois**, et l'éprouvette du dédoublonnage
+échouait alors sur un artefact de son propre montage. Une injection doit répondre comme répondrait
+le disque.
+
+### La raison écrite du correctif `alerteExport` était FAUSSE, et c'est le plus instructif (#1454)
+
+Ma première version du commentaire accusait « la version du 2026-09-28 » et parlait d'un rapport
+« jamais produit depuis quatre jours ». **C'était faux**, et un audit indépendant l'a démontré par
+trois mesures que je n'avais pas faites :
+
+- `docs/safe-export/rapport-export-central-2026-10-01-00-56.txt` **existe** — le rapport
+  fonctionnait donc encore à 00h56 le 2026-10-01 ;
+- le commit qui sort `kits`/`agence` de la portée, en extrayant `mesuresDeLExport()`, est
+  **`917cc3b` du 2026-10-01 à 01h43** (tâche #1356) — 47 minutes plus tard ;
+- la panne a duré **~39 h**, jamais quatre jours, et sa cause est une **factorisation**, pas la
+  version d'origine.
+
+**Pourquoi cette erreur est écrite plutôt que silencieusement remplacée** : les Articles 19 et 27
+veulent que le POURQUOI vive à côté du QUOI précisément pour que le prochain agent s'y fie. Une
+cause mal attribuée l'envoie chercher le défaut au mauvais endroit, et **un récit plausible à la
+place d'une mesure** est exactement ce que ce dépôt traque partout ailleurs. J'avais reconstitué une
+histoire vraisemblable au lieu de lire `git log` et le dossier d'archives.

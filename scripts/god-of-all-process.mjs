@@ -32,7 +32,7 @@ import { join } from "node:path";
 import { printReliabilityNotice, sh, lireFichierPartage } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { dernierPlanDeDepart } from "./check-tasks-details.mjs";
-import { recentCommits, findCommitsMissingSuiviUpdate } from "./check-suivi-fidelity.mjs";
+import { recentCommits, findCommitsMissingSuiviUpdate, listerLesFichiersDeTaches } from "./check-suivi-fidelity.mjs";
 import { adviseToolBrain } from "./tool-brain.mjs";
 import { normaliserNomDOutil } from "./le-coordinateur.mjs";
 // LE RELAIS D'ANGEL, RENDU RÉEL (2026-09-23). Il existait depuis le 2026-09-22 comme un PARAMÈTRE
@@ -2386,8 +2386,20 @@ export function actionChainLines(resultats = []) {
   const tous = resultats.flatMap((r) => (r.manquements ?? []).map((m) => ({ ...m, source: r.source })));
   const nonMesurables = resultats.filter((r) => r.mesurable === false);
   const l = ["— Chaîne rapport → plan d'action → tâches (god-of-all-process) —"];
+  // UN VERT SUR ZÉRO DONNÉE N'EST PAS UN VERT (corrigé le 2026-10-02, tâche #1462, leçon L5).
+  // Cette fonction rendait « ✅ chaque constat retenu porte sa tâche » sur une liste VIDE — et son
+  // unique appelant ne lui passe jamais rien (`chainesAction = []` par défaut, jamais alimenté
+  // nulle part dans le dépôt). Autrement dit : le seul contrôle en direct de la chaîne de
+  // l'Article 28 était au vert par construction, depuis dix jours, sans avoir jamais mesuré quoi
+  // que ce soit. Et son voisin `auditPlansDeDocuments()`, trente lignes plus bas dans le MÊME
+  // fichier, refuse explicitement ce piège depuis le 2026-09-25 : deux doctrines opposées sur la
+  // même chaîne, et c'est la plus ancienne qui n'avait pas été reprise.
+  if (!tous.length && !nonMesurables.length && !resultats.length) {
+    l.push("🚨 PAS MESURÉ — aucune chaîne ne m'a été transmise, donc je n'ai rien pu confronter. Ce n'est PAS « tous les plans sont chaînés » : c'est « personne ne m'a donné de quoi regarder ».");
+    return l;
+  }
   if (!tous.length && !nonMesurables.length) {
-    l.push("✅ Chaque rapport produit porte son plan d'action, et chaque constat retenu porte sa tâche.");
+    l.push(`✅ Chaque rapport produit porte son plan d'action, et chaque constat retenu porte sa tâche (${resultats.length} chaîne(s) réellement confrontée(s)).`);
     return l;
   }
   if (tous.length) {
@@ -3026,10 +3038,26 @@ function main() {
           .map((f) => ({ chemin: `${dir}/${f}`, texte: readFileSync(join(ROOT, dir, f), "utf8") }));
       } catch { return []; }
     };
+    // LE SUIVI DURABLE INCLUT LES ARCHIVES, ET L'IGNORER PRODUISAIT 96 % DE FAUSSES ACCUSATIONS
+    // (2026-10-02, tâche #1461). Cette lecture ne regardait que `docs/suivi/sessions/`. Or une
+    // tâche ARCHIVÉE reste une tâche du projet — c'est écrit noir sur blanc chez le lecteur
+    // canonique (`categorizeAllSessions()`, check-suivi-fidelity : « ARCHIVE COMPRISE »), qui
+    // porte déjà cette raison depuis le 2026-09-29 (#1024/#1204) après que le MÊME défaut y ait
+    // été trouvé et corrigé.
+    // MESURÉ AVANT CORRECTION : 605 lignes de tâches dans `archives/` contre 737 dans
+    // `sessions/`, soit 45 % du carnet durable invisible. Sur douze numéros tirés parmi les
+    // « introuvables » (#206, #754, #742, #756, #741, #214, #215, #152, #199, #223, #730, #658),
+    // DOUZE existaient dans `archives/`. L'audit réclamait donc du travail sur des tâches faites
+    // — et un garde-fou qui accuse le geste correct cesse d'être lu (leçon L4).
+    // LE LECTEUR N'EST PAS RECOPIÉ, IL EST RELAYÉ : `listerLesFichiersDeTaches()` sait déjà quels
+    // dossiers portent des tâches et exclut les `index.md`, dont les lignes de sommaire avaient
+    // déjà été comptées comme quatre fausses tâches une fois. Dupliquer sa logique ici aurait
+    // garanti qu'elle rediverge au prochain dossier d'archive (Article 24).
     let suivi = null;
     try {
-      suivi = readdirSync(join(ROOT, "docs/suivi/sessions")).filter((f) => f.endsWith(".md"))
-        .map((f) => readFileSync(join(ROOT, "docs/suivi/sessions", f), "utf8")).join("\n");
+      const fichiers = listerLesFichiersDeTaches();
+      suivi = fichiers.map(({ dossier, fichier }) => readFileSync(join(dossier, fichier), "utf8")).join("\n");
+      if (!fichiers.length) suivi = null;   // rien lu n'est jamais « rien à trouver » (L5)
     } catch { /* absent : l'audit dira PAS MESURÉ plutôt que d'accuser */ }
     for (const l of plansDeDocumentsLines(auditPlansDeDocuments(lireDossier("docs/plans"), suivi))) console.log(l);
     return;
