@@ -271,12 +271,12 @@ cascade, et le trancher à ta place serait le pire endroit où le faire.**
 
 | Mesure | Valeur |
 |---|---|
-| Tâches ouvertes sur ce périmètre | **157** |
+| Tâches ouvertes sur ce périmètre | **158** |
 | Dont critiques | 10 |
 | Thèmes couverts | 31 |
 | La plus ancienne encore ouverte | 2026-09-22T11:50Z |
 | Stratégies de chantier qui en descendent | 10 |
 
-*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
+*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:31Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
 
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

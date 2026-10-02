@@ -21,9 +21,18 @@ restée **jamais écrite** jusqu'ici — la tâche #1137 le disait, et elle avai
 négligence : parce qu'elle est **dispersée dans la charte**, où elle vit depuis le premier jour
 sans jamais avoir été rassemblée.
 
-**La mesure le dit sans appel** *(2026-09-30)* : sur les 33 Articles de la charte, **10 parlent de
-Lia et Noé** — 70 lignes, **10 % du texte**. Les 23 autres parlent de l'outillage (75 %) ou de
-notre collaboration (15 %).
+**La mesure le dit sans appel**, re-faite le 2026-10-02 et non reprise d'un document plus ancien :
+sur les 33 Articles de la charte, **10 parlent de Lia et Noé** — 70 lignes, **9 % du texte**. Les
+autres parlent de l'outillage (19 Articles, 568 lignes, 76 %) ou de notre collaboration (4
+Articles, 106 lignes, 14 %). Aucun Article n'échappe au classement, dans un sens ni dans l'autre.
+
+> **ET LA PART DU JEU A BAISSÉ LE JOUR MÊME, ce qui mérite d'être dit.** Le document d'origine du
+> 2026-09-30 mesurait **10 %**. Aujourd'hui : **9 %**. Les 70 lignes du Jeu n'ont pas bougé d'une
+> ligne — c'est la famille AGENCE qui est passée de 532 à 568 lignes, avec le quatrième état de
+> l'Article 28 et la frontière entre les Articles 18 et 26, tous deux écrits ce 2 octobre.
+>
+> **Le Jeu rétrécit sans qu'on y touche.** C'est mécanique, c'est sans gravité à cette échelle, et
+> c'est exactement le chiffre que la charte demande de surveiller.
 
 **Ces dix Articles ne partiraient jamais avec l'Agence** : ils n'auraient aucun sens chez quelqu'un
 qui n'a ni Lia ni Noé. C'est exactement ce qui fait du Jeu un projet SÉPARÉ, et ce qui justifie
@@ -133,6 +142,6 @@ chiffre ; elle ne dit nulle part ce qui doit le faire remonter.
 | Stratégies de chantier qui en descendent | 0 |
 | | *(aucune ne déclare découler de celle-ci — elle est neuve)* |
 
-*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
+*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:31Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
 
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

@@ -138,13 +138,13 @@ suspect jusqu'à preuve du contraire sur un petit.**
 
 | Mesure | Valeur |
 |---|---|
-| Tâches ouvertes sur ce périmètre | **152** |
+| Tâches ouvertes sur ce périmètre | **153** |
 | Dont critiques | 10 |
 | Thèmes couverts | 27 |
 | La plus ancienne encore ouverte | 2026-09-22T11:50Z |
 | Stratégies de chantier qui en descendent | 0 |
 | | *(aucune ne déclare découler de celle-ci — elle est neuve)* |
 
-*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:11Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
+*(Bloc DÉRIVÉ, régénéré par `node scripts/data-archangel.mjs strategies --ranger` — dernier passage 2026-10-02T22:31Z. Tout ce qui est au-dessus et au-dessous s'écrit à la main et n'est jamais touché.)*
 
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

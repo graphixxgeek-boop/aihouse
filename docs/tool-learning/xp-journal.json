@@ -552,5 +552,22 @@
     "pourquoi": "Le geste manquant est d'une simplicité gênante : AVANT de produire un document, chercher s'il existe déjà, y compris sous un autre chemin. Je l'ai fait pour les CONSTATS toute la journée (data-archangel notes, Article 30) et pas une fois pour les LIVRABLES. L'Article 30 dit « aucun chantier ne s'ouvre avant d'avoir repris les notes » — il ne dit nulle part « aucun fichier ne se produit avant d'avoir cherché son jumeau », et c'est le même défaut. Signe qui aurait dû alerter : le détecteur de documents non remis comptait déjà ces 33 pages comme « antérieures au registre » dès son premier passage. L'outil avait raison avant moi, et je n'ai pas lu sa sortie en entier.",
     "declencheur": "un garde-fou a refusé le commit — moment déclencheur du process XP",
     "date": "2026-10-02T22:55Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "Un chiffre EMPRUNTÉ à un document récent est une mesure périmée qui a l'air fraîche",
+    "quoi": "J'ai écrit « 10 Articles sur 33, 10 % du texte » dans la stratégie du Jeu, repris d'un document du 2026-09-30. Re-mesuré trois jours plus tard : les 10 Articles et les 70 lignes tiennent, mais la part est à 9 %. La famille AGENCE est passée de 532 à 568 lignes — à cause de deux règles que j'avais écrites moi-même le jour même.",
+    "pourquoi": "Un chiffre RELATIF (un pourcentage, une part, un ratio) peut dériver alors que son numérateur n'a pas bougé d'une unité. Les chiffres ABSOLUS empruntés sont bien plus sûrs que les relatifs. La règle qui en sort : citer un pourcentage d'un document antérieur sans le recalculer est une faute, même si le document a trois jours — surtout si le dénominateur est quelque chose qu'on est en train de modifier.",
+    "declencheur": "passe de vérification à froid (Article 25), après une grosse journée de production",
+    "date": "2026-10-02T22:45Z"
+  },
+  {
+    "nature": "jugement-agent",
+    "contestable": true,
+    "titre": "Les quatre erreurs de la journée ont TOUTES été trouvées en lançant un outil, aucune en relisant",
+    "quoi": "Sept doublons HTML (trouvés par le garde-fou d'index) · sept statuts mal inscrits (trouvés en lançant la commande decisions) · un « 10 chantiers » identique pour trois périmètres (trouvé en lisant la sortie du générateur) · un pourcentage dérivé (trouvé en re-mesurant). Zéro trouvée par relecture.",
+    "pourquoi": "C'est une confirmation de l'Article 31, pas une découverte — mais la confirmer sur quatre cas d'affilée dans la même journée lui donne un poids que l'argument théorique n'avait pas. Le corollaire pratique : quand je produis beaucoup, la relecture ne sert à rien et la passe d'outils sert à tout. Le temps de vérification va aux outils, jamais aux yeux.",
+    "declencheur": "fin de compte rendu de travail",
+    "date": "2026-10-02T22:45Z"
   }
 ]
