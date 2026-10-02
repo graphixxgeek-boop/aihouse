@@ -35,16 +35,15 @@
 
 ## PRÉAMBULE
 
-Le présent document a été établi par extraction, et non par déclaration. Son contenu procède de
-l'analyse de 5 843 énoncés normatifs relevés dans 334 documents du projet, répartis en sept zones
-d'écriture distinctes : la charte, la méthode de travail, les leçons acquises, le référentiel
-technique, les processus, les décisions effectivement prises et les justifications consignées au
-sein de l'outillage.
+Le présent document a été établi suivant les standards du métier, en fonction des objectifs
+fondamentaux du projet et des déclarations du responsable de projet, avec le concours de l'Agence
+— partie Révélation de la Philosophie par extraction des Convictions, assurée par l'outil
+THE-KING, ou par l'outil qui lui succéderait sous une autre dénomination.
 
-Un énoncé n'a été retenu comme principe qu'à la condition d'être attesté dans plusieurs zones
-d'écriture indépendantes. Cette exigence distingue une conviction du projet, reformulée à des
-semaines d'intervalle dans des contextes sans rapport entre eux, d'une simple tournure de
-rédaction. Aucun principe du présent document n'a été ajouté sans attestation.
+Un énoncé n'a été retenu comme principe qu'à la condition d'être attesté en plusieurs points
+indépendants du projet. Cette exigence distingue une conviction, reformulée à des intervalles
+éloignés dans des contextes sans rapport entre eux, d'une simple tournure de rédaction. Aucun
+principe du présent document n'a été ajouté sans attestation.
 
 ---
 
@@ -438,11 +437,27 @@ sert celle du codeur. Ce qui n'est pas sacrifié est leur finalité commune.
 
 ## Article 69 — Méthode d'établissement
 
-Le présent document procède de deux opérations successives et distinctes.
+Le présent document procède de deux opérations successives et distinctes, conduites dans cet
+ordre et jamais confondues.
 
-**Première opération — relevé.** Extraction des énoncés normatifs du corpus, sans sélection ni
-reformulation. Le relevé constitue une matière brute, dont les caractéristiques mesurées sont les
-suivantes :
+**Première opération — la RÉVÉLATION.** Les convictions effectivement portées par le projet sont
+extraites de l'ensemble de ses écrits normatifs et de ses décisions, sans sélection préalable ni
+reformulation. Cette opération ne produit pas une philosophie : elle produit une matière, dont les
+irrégularités sont relevées et consignées. Elle est conduite par l'Agence, au moyen de
+l'instrument prévu à cet effet, et son résultat est reproductible.
+
+**Seconde opération — la MISE EN FORME.** La matière relevée est classée, rapportée aux objectifs
+fondamentaux, et ordonnée selon le cadre de référence du métier. Cette opération corrige ce que la
+première ne pouvait corriger : l'attribution d'un niveau à chaque principe, l'élévation au rang de
+principe de ce qui n'était exprimé qu'en termes d'application, et la répartition d'ensemble. Elle
+n'ajoute jamais un principe que la première opération n'a pas attesté.
+
+**Garantie.** La séparation de ces deux opérations est ce qui permet d'affirmer que le présent
+document reflète le projet tel qu'il est, et non tel qu'il se décrirait. La seconde opération est
+tenue à la matière que la première lui remet ; elle ne peut ni l'enrichir, ni la contredire.
+
+**Caractéristiques relevées lors de la première opération**, consignées pour permettre la
+comparaison prévue à l'article 72 :
 
 | Caractéristique | Mesure |
 |---|---|
@@ -452,21 +467,8 @@ suivantes :
 | Énoncés retenus absents de l'édition antérieure | 86 sur 87 |
 | Contradictions détectées entre énoncés retenus | aucune, sur 2 775 comparaisons |
 
-L'absence de contradiction détectée s'entend dans les limites de la méthode employée, laquelle
-compare un vocabulaire partagé et une polarité opposée. Deux énoncés se contredisant en termes
-entièrement distincts ne sont pas détectés.
-
-**Seconde opération — mise en forme.** Cinq corrections ont été appliquées au relevé :
-
-| # | Correction |
-|---|---|
-| **C1** | Attribution d'un niveau à chaque principe, y compris à ceux que le relevé laissait indéterminés |
-| **C2** | Répartition entre niveaux établie indépendamment de la répartition observée dans le relevé |
-| **C3** | Reformulation au niveau du principe des énoncés comportant une référence technique nominative |
-| **C4** | Classement selon les dix-neuf familles et les six étages du cadre de référence |
-| **C5** | Attribution à chaque niveau de l'objectif ultime correspondant, sans reformulation |
-
-Aucune correction n'a ajouté de principe non attesté dans le corpus.
+L'absence de contradiction détectée s'entend dans les limites de la méthode employée. Deux énoncés
+se contredisant en termes entièrement distincts ne sont pas détectés.
 
 ## Article 70 — Forme du document
 
@@ -499,17 +501,39 @@ que le corpus se reconnaisse davantage dans le document.
 
 ---
 
-# ANNEXE A — CORRESPONDANCE DES EXIGENCES COURANTES
+# ANNEXE A — LES TROIS QUESTIONS DE CLÔTURE, ET LES DEUX EXIGENCES PERMANENTES
 
-Les quatre exigences formulées de manière récurrente dans la conduite du projet correspondent aux
-dispositions suivantes.
+## A.1 — Les trois questions de clôture
 
-| Exigence | Dispositions correspondantes | Portée exacte |
+Trois questions sont posées à la clôture de chaque tâche. Elles restent séparées : réunies en une
+seule interrogation sur l'achèvement du travail, elles appelleraient une réponse globale qui ne
+prouverait rien. Séparées, chacune oblige à regarder un endroit différent.
+
+| Question | Ce qu'elle demande | Où elle fait regarder | Dispositions correspondantes |
+|---|---|---|---|
+| **FIABILISER** | est-ce que ça marche, les tests passent-ils ? | le filet de sécurité | art. 9, 31, 60 |
+| **OPTIMISER** | peut-on faire mieux, est-ce complet ? | le périmètre de la tâche | art. 27, 45 |
+| **HARMONISER** | est-ce raccordé au reste, au bon format ? | le reste du projet | art. 40, 59 |
+
+**Trois, et jamais quatre.** Le seul quatrième candidat sérieux — *un mécanisme le porte-t-il ?* —
+est déjà tenu par l'article 61 et par le dispositif d'exportabilité. Une question rituelle à
+quatre devient une case que l'on coche sans y penser, ce qui est exactement le faux résultat
+favorable que l'article 9 proscrit.
+
+## A.2 — Les deux exigences permanentes
+
+Deux autres exigences sont formulées de manière récurrente. Elles ne sont pas des questions de
+clôture : elles sont des propriétés que toute construction doit posséder dès sa conception.
+
+| Exigence | Portée exacte | Dispositions correspondantes |
 |---|---|---|
-| **Fiabiliser** | art. 9 et 31 | rendre une chose capable d'échouer visiblement, et l'éprouver sur des données réelles |
-| **Optimiser** | art. 27 et 45 | retirer ce qui ne peut être vérifié, et ne jamais recalculer une donnée existante |
-| **Rendre évolutif** | art. 26 et 35 | faire qu'un élément nouveau hérite de l'existant sans modification de la logique |
-| **Rendre exportable** | art. 25 et 32 | rendre compréhensible par une personne qui n'a pas participé à la conception |
+| **ÉVOLUTIF** | un élément nouveau hérite de l'existant sans modification de la logique | art. 26, 35 |
+| **EXPORTABLE** | compréhensible et utilisable par une personne qui n'a pas participé à la conception ; emporte la portabilité avec elle | art. 25, 32 |
+
+**Pourquoi elles ne rejoignent pas les trois questions de clôture.** Une question de clôture se
+pose une fois, à la fin, sur ce qui vient d'être fait. Une exigence permanente gouverne la
+conception elle-même : un élément conçu sans elle ne devient pas évolutif ni exportable parce
+qu'on se le demande à la fin.
 
 # ANNEXE B — DISPOSITIONS SOUMISES À ARBITRAGE
 

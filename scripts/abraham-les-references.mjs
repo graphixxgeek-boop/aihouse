@@ -1586,6 +1586,17 @@ export const HORS_PORTEE_DOCUMENTS = [
   // sans que personne ait à y penser. Constaté en vrai le jour même, avec l'archivage de la
   // boussole remplacée dans le registre de THE-KING.
   { motif: /(^|\/)archives?\//, pourquoi: "dossier d'archives : une archive est une copie verbatim par définition, et la signaler reviendrait à demander de la résumer — c'est-à-dire de détruire ce qu'elle préserve" },
+  // LES VARIANTES DÉCLARÉES D'UN MÊME DOCUMENT (2026-10-02, tâche #1431). Un document de
+  // gouvernance existe sous plusieurs CAS DE FIGURE — selon que l'outillage est conduit comme un
+  // projet de conception, ou livré comme un produit fini à un utilisateur. Ces variantes
+  // partagent forcément l'essentiel de leur vocabulaire : c'est le même document, vu depuis
+  // l'autre bout.
+  //
+  // LES SIGNALER REVIENDRAIT À PROPOSER DE LES FONDRE, c'est-à-dire à détruire exactement la
+  // distinction qu'elles existent pour montrer — la même erreur, de même forme, que signaler une
+  // archive comme le jumeau de son original. Le motif porte sur le nom du dossier : un cas de
+  // figure supplémentaire est couvert le jour où son dossier est créé.
+  { motif: /(^|\/)versions-cas-\d+\//, pourquoi: "variante déclarée d'un document pour un autre cas de figure : la ressemblance est le sujet même, et les fondre détruirait la distinction qu'elles montrent" },
   // CE QU'IL DÉPOSE N'EST PAS CE QUE NOUS ENTRETENONS (2026-09-28, tâche #1111). Ce dossier porte
   // les sources du grand chantier telles qu'il nous les a données : ses deux commandes, et sept
   // lots d'audits produits ailleurs. Ce détecteur cherche la redondance que le PROJET entretient —

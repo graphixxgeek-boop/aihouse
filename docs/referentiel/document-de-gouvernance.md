@@ -80,6 +80,30 @@ déclaration, et par elle seule** : toute remarque se formule hors du document.
 
 ---
 
+## LES DEUX GABARITS, ET LES DEUX CAS DE FIGURE
+
+Le document existe sous deux formes, selon ce qu'est l'outillage pour celui qui lit.
+
+| Cas | L'outillage est… | Gabarit | Exemplaire |
+|---|---|---|---|
+| **1** | un projet de conception, mené en parallèle de l'œuvre | `docs/gabarits/philosophie-et-politique-gabarit.md` | le document en vigueur |
+| **2** | un produit fini livré à un utilisateur — une aide exécutive | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` | `docs/the-king/versions-cas-2/` |
+
+**UN GABARIT EST VIERGE ET NEUTRE**, sans aucun élément propre à ce projet-ci : c'est la condition
+pour qu'il serve ailleurs, et donc pour qu'il parte avec l'Agence.
+
+**POURQUOI LE CAS 2 A AUSSI UN EXEMPLAIRE REMPLI, et ce n'est pas un doublon du gabarit** : le
+patron dit ce qui doit figurer à chaque partie ; il ne montre pas le **changement de registre**.
+Entre « nous croyons que » et « l'outillage s'engage à », la différence ne se décrit pas, elle se
+lit. L'exemplaire est conservé comme historique de version du cas 2 et ne fait jamais loi.
+
+**CE QUI CHANGE AU CAS 2, EN UNE LIGNE** : deux niveaux au lieu de trois, l'œuvre disparaît, la
+philosophie énonce des **engagements** plutôt que des convictions, les clauses intangibles
+deviennent des **garanties envers l'utilisateur**, et l'objectif du niveau supérieur porte la
+clause de concours non retirable.
+
+---
+
 ## RÉVISION
 
 Une édition nouvelle suit cet ordre, sans exception :

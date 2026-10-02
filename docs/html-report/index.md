@@ -65,4 +65,7 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/rapports-de-nuit/avant-apres-2026-10-01.html` | `docs/rapports-de-nuit/avant-apres-2026-10-01.md` | 14450 | 2026-10-01 20:34Z |
 | `docs/grand-projet/03-plan-daction/philo-politique-30-questions.html` | `docs/grand-projet/03-plan-daction/philo-politique-30-questions.md` | 21683 | 2026-10-01 23:04Z |
 | `docs/philosophie-et-politique-v2.html` | `docs/philosophie-et-politique-v2.md` | 53519 | 2026-10-02 00:24Z |
-| `docs/philosophie-et-politique.html` | `docs/philosophie-et-politique.md` | 38300 | 2026-10-02 00:41Z |
+| `docs/philosophie-et-politique.html` | `docs/philosophie-et-politique.md` | 39900 | 2026-10-02 02:54Z |
+| `docs/gabarits/philosophie-et-politique-gabarit.html` | `docs/gabarits/philosophie-et-politique-gabarit.md` | 17636 | 2026-10-02 02:54Z |
+| `docs/gabarits/philosophie-et-politique-gabarit-cas-2.html` | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` | 12876 | 2026-10-02 02:54Z |
+| `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.html` | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.md` | 16118 | 2026-10-02 02:54Z |

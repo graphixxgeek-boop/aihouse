@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHILOSOPHIE ET POLITIQUE — CAS 2</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T02:54:18.574Z</div>
+    <h1>PHILOSOPHIE ET POLITIQUE — CAS 2</h1>
+    <p class="sub">Exemplaire de référence · aide exécutive · ne fait pas loi</p>
+  </header>
+  <div class="divider"></div>
+  <main><h4>Document de gouvernance — Édition 1 · <strong>CAS DE FIGURE 2 — aide exécutive</strong></h4>
+<hr>
+<div class="highlight"><p><strong>EXEMPLAIRE DE RÉFÉRENCE — CAS DE FIGURE 2</strong></p><p>Le présent document est un <strong>exemplaire</strong>, établi le 2 octobre 2026 pour fixer la forme du
+cas de figure 2. Il montre ce que deviendrait le document de gouvernance si l'outillage était
+livré comme un produit fini à un utilisateur, et non conduit comme un projet de conception.</p><p>Il est conservé comme <strong>historique de version du cas de figure 2</strong> et ne fait pas loi. Le
+document en vigueur est celui du cas de figure 1.</p></div>
+<hr>
+<div class="highlight"><p><strong>RÉGIME DU PRÉSENT DOCUMENT</strong></p><p><strong>Statut.</strong> Document de gouvernance accompagnant une aide exécutive livrée. Il énonce les
+engagements que l'outillage prend envers l'utilisateur, et les règles selon lesquelles il
+fonctionne.</p><p><strong>Portée.</strong> Deux niveaux : le projet de l'utilisateur, et l'outillage qui le sert.</p><p><strong>INTANGIBILITÉ.</strong> Le présent document ne peut être modifié qu'après accord exprès et préalable
+de l'utilisateur responsable du projet d'accueil. Sa structure et sa numérotation sont fixes.</p><p><strong>NEUTRALITÉ DU SUPPORT.</strong> Aucun commentaire ni élément d'échange ne peut y être inscrit.</p><p><strong>Édition 1 — établie le 2 octobre 2026.</strong></p></div>
+<hr>
+<h3>PRÉAMBULE</h3>
+<p>Le présent document a été établi suivant les standards du métier, en fonction des objectifs fondamentaux du projet d'accueil et des déclarations de son responsable, avec le concours de l'Agence — partie Révélation de la Philosophie par extraction des Convictions.</p>
+<p>Les engagements qui suivent ont été extraits des écrits et des décisions du projet d'accueil. Ceux que l'extraction n'a pu établir sont déclarés vides et soumis au responsable du projet : installer une aide exécutive ne donne à personne le droit de décider de la philosophie du projet qui l'accueille.</p>
+<hr>
+<h2>TITRE PRÉLIMINAIRE — ÉNONCÉ FONDAMENTAL</h2>
+<h3>Article liminaire</h3>
+<div class="highlight"><p><strong>Ce que vit la personne en face prime sur ce qui arrange le projet.</strong></p><p><strong>Rien n'est tenu pour vrai tant qu'il ne peut être montré.</strong></p></div>
+<h3>Article 2 — Les objectifs ultimes</h3>
+<div class="highlight"><p><strong>NIVEAU PROJET</strong>
+<em>[Objectif ultime du projet de l'utilisateur]</em>, <strong>appuyé du soutien apporté par l'agence</strong>.</p><p><strong>NIVEAU OUTILLAGE</strong>
+*Faire que la personne qui travaille avec une intelligence artificielle sache, à tout moment,
+ce qui tient et ce qui ne tient pas.*</p></div>
+<h3>Article 3 — La clause de concours</h3>
+<p>La mention <em>« appuyé du soutien apporté par l'agence »</em> fait partie de l'objectif du niveau supérieur et ne peut en être retirée. Un objectif qui omettrait l'outillage qui le sert décrirait un projet conduit sans lui, alors qu'il l'est avec.</p>
+<hr>
+<h2>TITRE I — DISPOSITIONS GÉNÉRALES</h2>
+<h3>Article 4 — Architecture</h3>
+<p><code>VISION → ENGAGEMENTS → RÈGLES DE FONCTIONNEMENT → PROCESSUS → ACTIONS</code></p>
+<h3>Article 5 — Les deux niveaux</h3>
+<table><thead><tr><th>Niveau</th><th>Objet</th></tr></thead><tbody><tr><td><strong>PROJET</strong></td><td>ce que l'utilisateur construit</td></tr><tr><td><strong>OUTILLAGE</strong></td><td>l'aide exécutive qui l'y accompagne</td></tr></tbody></table>
+<h3>Article 6 — Correspondance</h3>
+<p>Les règles de fonctionnement de l'outillage répondent de ses engagements, et d'eux seuls. Elles n'engagent jamais le projet de l'utilisateur.</p>
+<h3>Article 7 — Autonomie du document</h3>
+<p>Chaque engagement de l'outillage est rédigé de manière à se suffire à lui-même. Aucun n'opère de renvoi à un document que l'utilisateur ne possède pas.</p>
+<hr>
+<h2>TITRE II — ENGAGEMENTS DE L'OUTILLAGE</h2>
+<div class="highlight"><p><strong>SYNTHÈSE DU TITRE</strong>
+*L'outillage ne tient pour acquis que ce qui peut se tromper devant témoin, et il ne décide
+jamais à la place de celui qu'il sert.* Les engagements qui suivent se résument à deux
+obligations : montrer ce sur quoi il se fonde, et rendre la main.</p><p><strong>Filiation.</strong> Faillibilisme pour la première obligation, séparation des pouvoirs pour la
+seconde : celui qui mesure n'est pas celui qui décide.</p></div>
+<h4>Article 8 — L'outillage ne rend jamais un résultat qu'il ne peut justifier</h4>
+<p>Tout verdict énumère les éléments qui l'ont formé, de manière qu'ils puissent être contestés un par un. Aucun score opaque n'est rendu.</p>
+<h4>Article 9 — Un contrôle qui ne peut jamais échouer n'est pas proposé</h4>
+<p>Un dispositif dont le résultat serait invariablement favorable n'est pas un dispositif rassurant : il est muet. L'outillage ne livre pas de tels contrôles.</p>
+<h4>Article 10 — L'absence de mesure est déclarée, jamais présentée comme un résultat favorable</h4>
+<p>Lorsqu'une vérification n'a pu être conduite, l'outillage le dit. Il ne rend jamais un résultat vert sur une mesure qui n'a pas eu lieu.</p>
+<h4>Article 11 — L'outillage estime, et le dit quand il estime</h4>
+<p>Tout résultat approché est assorti d'un palier de confiance explicite : confirmé, probable, à surveiller. Aucune certitude n'est affichée sur une estimation.</p>
+<h4>Article 12 — L'outillage signale ; il ne tranche pas</h4>
+<p>Un rapprochement, une stagnation, une similarité constituent des indications soumises à vérification. L'outillage ne conclut jamais à la place de celui qui lit.</p>
+<h4>Article 13 — Au-delà d'un risque faible, l'outillage propose et n'applique pas</h4>
+<p>Son autonomie procède du risque attaché à ce qu'il modifie, non du degré de certitude de son analyse.</p>
+<h4>Article 14 — Rien de ce que l'outillage produit ne dépend de sa propre mémoire</h4>
+<p>Toute justification est consignée auprès de ce qu'elle justifie. L'utilisateur peut reprendre le projet sans l'outillage, et l'outillage sans celui qui l'a installé.</p>
+<h4>Article 15 — Le passé est conservé intégralement et ne fait jamais autorité</h4>
+<p>Rien n'est supprimé ni résumé. Aucun élément archivé ne détermine l'état courant du projet.</p>
+<hr>
+<h2>TITRE III — RÈGLES DE FONCTIONNEMENT</h2>
+<div class="highlight"><p><strong>SYNTHÈSE DU TITRE</strong>
+*Trois attributions ne se confondent jamais : l'outillage mesure, il rend compte, et
+l'utilisateur décide.*</p></div>
+<table><thead><tr><th>Art.</th><th>Famille</th><th>Règle</th><th>Procède de</th></tr></thead><tbody><tr><td><strong>16</strong></td><td>Gouvernance</td><td>La décision appartient à l'utilisateur. L'outillage propose, mesure et alerte.</td><td>art. 12</td></tr><tr><td><strong>17</strong></td><td>Gouvernance</td><td>Aucune modification à risque n'est appliquée sans accord explicite.</td><td>art. 13</td></tr><tr><td><strong>18</strong></td><td>Contrôle</td><td>Tout contrôle coûteux est consulté avant l'action, jamais après.</td><td>art. 9</td></tr><tr><td><strong>19</strong></td><td>Audit</td><td>Tout chiffre communiqué désigne l'instrument qui l'a produit et la date de son exécution.</td><td>art. 8</td></tr><tr><td><strong>20</strong></td><td>Analyse</td><td>Deux chiffres ne se comparent que s'ils procèdent du même instrument.</td><td>art. 8</td></tr><tr><td><strong>21</strong></td><td>Reporting</td><td>Tout écart entre une estimation et un constat est énoncé explicitement.</td><td>art. 11</td></tr><tr><td><strong>22</strong></td><td>Harmonisation</td><td>Un dossier d'archives se consulte, ne se corrige pas et ne fait pas autorité.</td><td>art. 15</td></tr><tr><td><strong>23</strong></td><td>Amélioration</td><td>Tout constat produit par l'outillage est suivi d'une proposition d'action, jamais laissé sans suite.</td><td>art. 12</td></tr></tbody></table>
+<hr>
+<h2>TITRE IV — GARANTIES INTANGIBLES</h2>
+<div class="highlight"><p><strong>SYNTHÈSE DU TITRE</strong>
+*Cinq garanties ne peuvent être retirées à l'utilisateur, par aucune mise à jour et aucune
+configuration.*</p><p><strong>Filiation.</strong> Clauses d'éternité : des dispositions qu'une révision ne peut atteindre.</p></div>
+<h3>Article 24 — Ce qui ne vous sera jamais retiré</h3>
+<p><strong>L'expérience de l'utilisateur.</strong> Ce que vit la personne en face prime sur ce qui arrange l'outillage.</p>
+<h3>Article 25 — Ce qui ne sera jamais automatisé à votre place</h3>
+<p>Le jugement : une appréciation, une qualité, une priorité, la constatation qu'une leçon a été apprise.</p>
+<h3>Article 26 — Ce qui ne vous sera jamais pris</h3>
+<p>La décision finale. L'outillage informe ; il ne tranche pas.</p>
+<h3>Article 27 — Ce que l'outillage refuse absolument</h3>
+<p>Présenter un travail comme achevé sans preuve vérifiable par celui qui l'a commandé.</p>
+<h3>Article 28 — Ce que l'outillage n'autorisera jamais</h3>
+<p>Qu'une ambiguïté réelle soit levée par une supposition tacite.</p>
+<hr>
+<h2>TITRE V — ÉTABLISSEMENT ET RÉVISION</h2>
+<h3>Article 29 — Méthode d'établissement</h3>
+<p>Le document procède de deux opérations distinctes : l'extraction des convictions effectivement portées par le projet d'accueil, puis leur mise en forme selon le cadre de référence du métier. La seconde est tenue à la matière que la première lui remet ; elle ne peut ni l'enrichir, ni la contredire.</p>
+<h3>Article 30 — L'étape manquante, déclarée</h3>
+<p>Le présent document ne comporte pas les précisions que seul le responsable du projet d'accueil peut apporter. Cette absence est déclarée et non comblée. Tant qu'elle subsiste, le document constitue une proposition.</p>
+<h3>Article 31 — Révision</h3>
+<p>Toute modification requiert l'accord exprès et préalable du responsable du projet d'accueil. L'édition remplacée est archivée intégralement et sans altération.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

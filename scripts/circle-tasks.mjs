@@ -872,6 +872,13 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // recherche ne se périme pas de la même façon qu'une mesure, et son plan d'action est déjà porté
   // par les tâches qu'elle a ouvertes.
   "recherches": "bibliothèque de collectes extérieures (état de l'art), pas le registre d'un outil : rien à relancer, et chaque fiche porte déjà son plan d'action",
+  // (2026-10-02) Le dossier des GABARITS : ce sont des patrons VIERGES, écrits sans aucun élément
+  // propre à ce projet-ci, et c'est précisément ce qui les rend utilisables ailleurs. Un gabarit
+  // ne consigne rien, ne mesure rien et n'enregistre aucun passage — il n'y a donc rien qu'une
+  // Ronde pourrait y rattraper. Il ne se périme pas non plus tout seul : il ne change que si la
+  // FORME du document qu'il décrit change, auquel cas c'est la révision de ce document qui
+  // l'entraîne, jamais un rendez-vous de calendrier.
+  "gabarits": "patrons vierges de documents de gouvernance, pas le registre d'un outil : rien n'y est consigné, et ils ne changent qu'avec la forme du document qu'ils décrivent — c'est sa révision qui les entraîne, jamais une Ronde",
   // (2026-09-28) Le registre de doc-HTML : il se RÉÉCRIT SEUL à chaque génération de page, et une
   // page régénérée remplace sa ligne au lieu de s'empiler. Il ne peut donc pas prendre de retard —
   // ce qui est exactement ce qu'un item de Ronde va vérifier. Lui en donner un ferait relire à
