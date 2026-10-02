@@ -197,6 +197,17 @@ export const REGLES_SURVEILLEES = [
   { id: "fiabiliser", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à FIABILISER : est-ce que ça marche vraiment — le filet passe-t-il, le cas limite est-il couvert, ai-je VU le test échouer quand il le devait ? Un « oui » qui ne s'appuie sur aucun passage réel n'est pas une réponse.", source: "CLAUDE.md, mots d'ordre permanents · docs/regles-de-travail.md « OPTIMISER et FIABILISER » · tâche #703" },
   { id: "optimiser", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à OPTIMISER : peut-on faire mieux, et est-ce COMPLET — reste-t-il une moitié du besoin non traitée, un chemin plus court, une mesure qu'on aurait pu rendre au lieu d'une impression ?", source: "CLAUDE.md, mots d'ordre permanents · docs/regles-de-travail.md « OPTIMISER et FIABILISER » · tâche #703" },
   { id: "harmoniser", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à HARMONISER : est-ce raccordé au reste — même format que ses voisins, registre à jour, documenté au même endroit que les autres, et rien qui dise deux fois la même chose de deux façons ?", source: "CLAUDE.md, mots d'ordre permanents (ajout du 2026-09-24, « on ajoute harmonise ») · tâche #703" },
+  // LE QUATRIÈME MOT D'ORDRE (2026-10-02, tâche #1436) — et il fallait écarter une objection avant
+  // de l'ajouter, puisque la décision du 2026-09-24 disait « trois, jamais quatre ».
+  //
+  // CETTE RAISON NE S'APPLIQUE PAS ICI, et c'est ce qui autorise le quatrième. Elle visait un
+  // candidat précis — « un mécanisme le porte-t-il ? » — déjà tenu par l'Article 27 et par
+  // SAFE-EXPORT ; l'ajouter aurait fait poser deux fois la même question. Celui-ci est d'une autre
+  // nature : les trois premiers CONSTATENT un résultat (ça marche, c'est complet, c'est raccordé),
+  // celui-ci interroge le CHEMIN. Un travail peut satisfaire les trois et rester mal conçu —
+  // correct, complet, raccordé, et néanmoins tortueux ou fondé sur un raisonnement qui ne tient
+  // pas. Aucun des trois ne peut relever ce défaut, parce qu'aucun ne regarde là.
+  { id: "intelligent", cote: "agent", observable: false, regle: "À la clôture de chaque tâche, répondre à INTELLIGENT : est-ce bien pensé, pertinent, performant, logique, cohérent — le chemin pris tient-il debout, ou est-ce correct par accident ?", source: "CLAUDE.md, mots d'ordre permanents (ajout du 2026-10-02, sa demande) · tâche #1436" },
   { id: "messages-courts", cote: "agent", observable: false, regle: "Ne jamais s'arrêter sur un message court : seule une demande explicite interrompt le travail en cours. Tenir le compte de la série en cours, et sortir le rappel léger dès le 2e message court, l'alerte plus forte dès le 5e — les seuils sont ceux que l'utilisateur a demandés, pas les miens.", source: "docs/mode-semi-autonome-process-detail.md + scripts/messages-courts.mjs" },
 ];
 

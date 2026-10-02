@@ -59,6 +59,12 @@ parties ne serait pas une révision : ce serait un autre document.
 > **NEUTRALITÉ DU SUPPORT.** *[Interdiction d'inscrire dans le document tout commentaire,
 > observation, réserve ou élément d'échange. Indiquer où ces éléments se formulent.]*
 >
+> **PROCESSUS ASSOCIÉ.** *[Mention, OBLIGATOIRE, que le document ne peut être modifié sans lecture
+> préalable et respect intégral du processus qui lui est associé, et que ce processus fixe sa
+> forme arrêtée, ses gabarits, ses cas de figure et sa procédure de révision. Préciser qu'une
+> modification conduite hors de ce processus est irrégulière quelle que soit la qualité de son
+> contenu.]*
+>
 > **Édition [N] — établie le [jour mois année].**
 
 *La date d'édition est écrite en toutes lettres et sous cette forme exacte : elle constitue la
@@ -208,16 +214,61 @@ supposition.*
 
 # 9 · ANNEXES
 
-*Facultatives. Usages éprouvés :*
+*Facultatives dans leur principe, mais deux d'entre elles se sont révélées indispensables dès le
+premier usage.*
 
-- **Correspondance des exigences courantes** — les formules employées au quotidien dans la
-  conduite du projet, rapportées aux articles qui les portent, de sorte qu'une consigne cesse
-  d'appeler une interprétation.
-- **Dispositions soumises à arbitrage** — ce qui n'est pas arrêté à la date de l'édition et ne
-  figure donc pas au dispositif. Une question ouverte inscrite en annexe vaut mieux qu'une
-  disposition écrite au jugé.
+## Annexe A — les questions de clôture, les exigences permanentes, les conditions transversales
 
----
+*Cette annexe rapporte aux articles du document les formules employées au quotidien dans la
+conduite du projet, de sorte qu'une consigne cesse d'appeler une interprétation. Elle se compose
+de trois sections, et cette division est ce qui lui donne sa valeur.*
+
+**A.1 — Les questions de clôture.** *Elles se posent une fois, à la fin, sur ce qui vient d'être
+fait. Elles restent SÉPARÉES : réunies en une interrogation unique sur l'achèvement du travail,
+elles appelleraient une réponse globale qui ne prouverait rien. Chaque question doit faire
+regarder un endroit différent — et une question qui ne fait regarder nulle part ailleurs que les
+autres n'a pas sa place ici.*
+
+*Quatre questions sont éprouvées :*
+
+| Question | Ce qu'elle demande | Où elle fait regarder |
+|---|---|---|
+| **FIABILISER** | est-ce que ça marche, les tests passent-ils ? | le dispositif de vérification |
+| **OPTIMISER** | peut-on faire mieux, est-ce complet ? | le périmètre de la tâche |
+| **HARMONISER** | est-ce raccordé au reste, au bon format ? | le reste du projet |
+| **INTELLIGENT** | est-ce bien pensé, pertinent, performant, logique, cohérent ? | la conception elle-même |
+
+*Les trois premières CONSTATENT un résultat ; la quatrième interroge le CHEMIN. Un travail peut
+satisfaire les trois premières et rester mal conçu : correct, complet, raccordé, et néanmoins
+tortueux ou fondé sur un raisonnement qui ne tient pas. Aucune des trois ne peut relever ce
+défaut.*
+
+**A.2 — Les exigences permanentes.** *Elles ne se posent pas à la fin : elles gouvernent la
+conception. Une construction qui en est dépourvue ne les acquiert pas parce qu'on se les demande
+après coup. Cinq sont éprouvées : **ÉVOLUTIF** (un élément nouveau hérite de l'existant sans
+modification de la logique), **EXPORTABLE** (compréhensible par qui n'a pas participé à la
+conception ; emporte la portabilité), **RATIONNEL** (chaque choix procède d'une raison établie et
+consignée), **ROBUSTE** (tient hors du chemin éprouvé), **PROPRE** (rien d'inutile, de dupliqué ni
+d'inachevé laissé en place).*
+
+**A.3 — Les conditions transversales.** *Deux conditions encadrent l'application de tout ce qui
+précède.*
+
+*Première — **le concours des outils, lorsqu'il est pertinent**. Un résultat obtenu de mémoire là
+où un instrument existe n'est ni reproductible, ni opposable. L'obligation n'est pas d'employer un
+instrument partout, mais de n'en écarter aucun par omission.*
+
+*Seconde — **le respect intégral de la cascade** : processus, stratégies, politique, philosophie,
+objectifs ultimes. L'ordre de cette énumération n'est pas indifférent : en cas de conflit, le
+niveau le plus haut l'emporte.*
+
+## Annexe B — dispositions arbitrées et points clos
+
+*Consigner les points soumis à l'autorité compétente et tranchés, avec leur portée. Une décision
+rendue et non écrite se repose d'elle-même à la session suivante.*
+
+*Lorsqu'aucune disposition n'est en attente, l'écrire explicitement : une annexe muette ne se
+distingue pas d'une annexe oubliée.*
 
 ## CE QUE CE GABARIT NE PRESCRIT PAS
 

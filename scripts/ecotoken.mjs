@@ -1448,7 +1448,17 @@ export function verifyNothingBroken(newCharterText, repoFiles, deplacements = []
   // L'EXCLUSION PORTE SUR LES DOCUMENTS QUI PORTENT LEUR PROPRE NUMÉROTATION, jamais sur un
   // chemin recopié au cas par cas (Article 24). Tout ce qui est écrit AILLEURS continue d'être
   // scanné, y compris les fiches qui citent la charte — et c'est là que ce contrôle sert.
-  const PROPRE_NUMEROTATION = [/^docs\/philosophie-et-politique\.(md|html)$/, /\/archives?\//];
+  // LA LISTE COUVRE LE DOCUMENT ET CE QUI PARLE DE LUI. Sa fiche de processus, ses gabarits et son
+  // exemplaire de cas de figure citent nécessairement SES articles — c'est leur objet. Les compter
+  // comme des renvois à la charte ferait apparaître un renvoi mort à chaque fois que l'un d'eux
+  // mentionne une disposition, c'est-à-dire en permanence.
+  const PROPRE_NUMEROTATION = [
+    /^docs\/philosophie-et-politique\.(md|html)$/,
+    /^docs\/referentiel\/document-de-gouvernance\.(md|html)$/,
+    /^docs\/gabarits\//,
+    /\/versions-cas-\d+\//,
+    /\/archives?\//,
+  ];
   const citedArticles = new Set();
   for (const [chemin, content] of Object.entries(repoFiles ?? {})) {
     if (PROPRE_NUMEROTATION.some((m) => m.test(chemin))) continue;

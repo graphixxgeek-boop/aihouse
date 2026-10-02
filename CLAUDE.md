@@ -471,6 +471,23 @@ avant/pendant l'exécution, sur les points où une demande était réellement am
 rendu à l'utilisateur doit dire explicitement
 ce qui a été vérifié, préservé, amélioré et corrigé.
 
+**Les QUATRE mots d'ordre permanents, à la clôture de CHAQUE tâche.** **FIABILISER** : est-ce que
+ça marche vraiment — le filet passe-t-il, le cas limite est-il couvert, ai-je VU le test échouer
+quand il le devait ? **OPTIMISER** : peut-on faire mieux, et est-ce COMPLET — reste-t-il une
+moitié du besoin, un chemin plus court, une mesure qu'on aurait pu rendre au lieu d'une
+impression ? **HARMONISER** : est-ce raccordé au reste — même format que ses voisins, registre à
+jour, documenté au même endroit, et rien qui dise deux fois la même chose de deux façons ?
+**INTELLIGENT** : est-ce bien pensé, pertinent, performant, logique, cohérent — le chemin pris
+tient-il debout, ou est-ce correct par accident ? *(Quatrième mot d'ordre ajouté le 2026-10-02 à
+sa demande. La proposition de 2026-09-28 disait « trois, jamais quatre » — mais sa raison visait
+un AUTRE quatrième candidat, « un mécanisme le porte-t-il ? », déjà tenu par l'Article 27. Elle ne
+s'applique donc pas à celui-ci : les trois premières constatent un RÉSULTAT, celle-ci interroge le
+CHEMIN, et aucune des trois ne peut relever qu'un travail correct, complet et raccordé reste mal
+conçu.)* Elles sont portées par `angel-of-ia-process`, qui les DEMANDE et refuse d'être au vert
+sans réponse. Les cinq exigences permanentes qui les accompagnent — évolutif, exportable,
+rationnel, robuste, propre — et les deux conditions transversales vivent à l'annexe A de
+`docs/philosophie-et-politique.md`, jamais répétées ici.
+
 **Article 20bis — Quatre mots distincts, jamais « gardien » tout court.** Le même mot désignait
 quatre rôles qui n'ont ni le même objet, ni la même autorité, ni le même rythme : **Gardien sacré du
 code**, **Contrôleur de process**, **Veilleur**, **Garde-fou mécanique**. Une IA lisant « le gardien

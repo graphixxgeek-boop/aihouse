@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROCESSUS DU DOCUMENT DE GOUVERNANCE</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T03:59:48.096Z</div>
+    <h1>PROCESSUS DU DOCUMENT DE GOUVERNANCE</h1>
+    <p class="sub">Forme arrêtée · révision en 7 étapes · inventaire complet</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>À LIRE</strong> : avant toute intervention touchant <code>docs/philosophie-et-politique.md</code>, et avant toute production d'une édition nouvelle.</p>
+<hr>
+<h3>CE QUE CETTE FICHE PORTE, ET POURQUOI ELLE EXISTE À PART</h3>
+<p>Le document de gouvernance porte lui-même son régime, en tête. Cette fiche-ci porte ce qui n'a pas sa place dedans : <strong>comment ce régime est tenu</strong>, par quel mécanisme, et ce qu'aucun mécanisme ne peut tenir. La distinction est celle que le document applique partout ailleurs — un texte énonce la règle, une fiche dit qui la porte (art. 61).</p>
+<p><strong>La règle d'origine, posée le 2026-10-02</strong> : le document devient le document officiel du projet, il remplace définitivement les éditions antérieures, et il ne peut être modifié qu'avec l'accord du responsable du projet. Sa forme est arrêtée et ne varie plus d'une édition à l'autre.</p>
+<hr>
+<h3>LA FORME ARRÊTÉE</h3>
+<p>L'ordre des parties est fixe :</p>
+<table><thead><tr><th>Rang</th><th>Partie</th></tr></thead><tbody><tr><td>1</td><td>Le régime du document — statut, portée, abrogation, intangibilité, neutralité du support</td></tr><tr><td>2</td><td>Le préambule — méthode d'établissement, en deux paragraphes</td></tr><tr><td>3</td><td><strong>Titre préliminaire</strong> — l'énoncé fondamental, puis <strong>les trois objectifs ultimes</strong>, puis leur concordance</td></tr><tr><td>4</td><td><strong>Titre I</strong> — dispositions générales : architecture, niveaux, exportation, rang</td></tr><tr><td>5</td><td><strong>Titre II</strong> — philosophie, en trois chapitres (général, Jeu, Agence)</td></tr><tr><td>6</td><td><strong>Titre III</strong> — politique, en trois chapitres (mêmes niveaux, même ordre)</td></tr><tr><td>7</td><td><strong>Titre IV</strong> — clauses intangibles</td></tr><tr><td>8</td><td><strong>Titre V</strong> — établissement, forme et révision</td></tr><tr><td>9</td><td>Annexes</td></tr></tbody></table>
+<p><strong>Trois exigences de forme, qui ne se négocient pas :</strong></p>
+<ul><li><strong>Les trois objectifs ultimes figurent au titre préliminaire</strong>, immédiatement sous l'énoncé fondamental. Ils ne sont jamais reformulés : ils sont repris tels qu'arrêtés.</li><li><strong>Chaque chapitre de philosophie et le titre de politique s'ouvrent par une synthèse</strong> de deux à trois lignes, suivie — lorsqu'elle est fondée — de la filiation philosophique ou politique correspondante. Une filiation n'est mentionnée que si elle éclaire le contenu ; jamais pour l'ornement.</li><li><strong>La numérotation des articles est continue</strong>, sans trou ni doublon, sur l'ensemble du document.</li></ul>
+<hr>
+<h3>CE QUI EST TENU PAR UN MÉCANISME</h3>
+<p><strong>L'empreinte d'ossature</strong> (<code>docs/the-king/empreinte-document-officiel.json</code>) enregistre les titres du document et le nombre de ses articles. <code>comparerALEmpreinte()</code> détecte une modification de l'ossature ; <code>verifierLOssature()</code> refuse une numérotation trouée ou dupliquée.</p>
+<p><strong>La forme est vérifiée par sa STRUCTURE, jamais par son TEXTE</strong>, et c'est délibéré : un document dont on contrôlerait le texte mot à mot deviendrait un document qu'on ne pourrait plus corriger, même avec accord. Ce qui est gardé est l'ossature — les titres dans leur ordre, et la continuité de la numérotation. C'est exactement l'étendue de ce que l'article 70 déclare fixe.</p>
+<p><strong>Poser une empreinte nouvelle</strong> — <code>poserLEmpreinte()</code> — est un acte qui suit une édition autorisée, jamais qui la précède. Reposer l'empreinte pour faire taire une alerte reviendrait à supprimer le contrôle.</p>
+<hr>
+<h3>CE QU'AUCUN MÉCANISME NE PEUT TENIR, ET LE DÉCLARER EST LA PROTECTION</h3>
+<p><strong>Qu'un accord ait été donné ne se vérifie pas.</strong> Aucune empreinte, aucun test et aucun crochet git ne distingue une modification autorisée d'une modification faite de sa propre initiative. Le mécanisme ci-dessus garantit seulement qu'une modification ne passe pas <strong>inaperçue</strong> : il la rend visible, donc assumable. C'est le maximum qu'une mécanique puisse apporter à une règle qui se joue entre deux personnes, et c'est l'article 32 du document appliqué à lui-même.</p>
+<p><strong>La neutralité du support ne se vérifie pas davantage.</strong> Qu'aucun commentaire, aucune observation et aucun élément de conversation ne figure dans le document relève de la rédaction, pas de la structure. Un contrôle automatique chercherait des marqueurs de première personne et manquerait la moitié des cas tout en accusant des tournures légitimes. <strong>La règle est donc portée par cette déclaration, et par elle seule</strong> : toute remarque se formule hors du document.</p>
+<hr>
+<h3>LES DEUX GABARITS, ET LES DEUX CAS DE FIGURE</h3>
+<p>Le document existe sous deux formes, selon ce qu'est l'outillage pour celui qui lit.</p>
+<table><thead><tr><th>Cas</th><th>L'outillage est…</th><th>Gabarit</th><th>Exemplaire</th></tr></thead><tbody><tr><td><strong>1</strong></td><td>un projet de conception, mené en parallèle de l'œuvre</td><td><code>docs/gabarits/philosophie-et-politique-gabarit.md</code></td><td>le document en vigueur</td></tr><tr><td><strong>2</strong></td><td>un produit fini livré à un utilisateur — une aide exécutive</td><td><code>docs/gabarits/philosophie-et-politique-gabarit-cas-2.md</code></td><td><code>docs/the-king/versions-cas-2/</code></td></tr></tbody></table>
+<p><strong>UN GABARIT EST VIERGE ET NEUTRE</strong>, sans aucun élément propre à ce projet-ci : c'est la condition pour qu'il serve ailleurs, et donc pour qu'il parte avec l'Agence.</p>
+<p><strong>POURQUOI LE CAS 2 A AUSSI UN EXEMPLAIRE REMPLI, et ce n'est pas un doublon du gabarit</strong> : le patron dit ce qui doit figurer à chaque partie ; il ne montre pas le <strong>changement de registre</strong>. Entre « nous croyons que » et « l'outillage s'engage à », la différence ne se décrit pas, elle se lit. L'exemplaire est conservé comme historique de version du cas 2 et ne fait jamais loi.</p>
+<p><strong>CE QUI CHANGE AU CAS 2, EN UNE LIGNE</strong> : deux niveaux au lieu de trois, l'œuvre disparaît, la philosophie énonce des <strong>engagements</strong> plutôt que des convictions, les clauses intangibles deviennent des <strong>garanties envers l'utilisateur</strong>, et l'objectif du niveau supérieur porte la clause de concours non retirable.</p>
+<hr>
+<h3>RÉVISION — la procédure complète, en sept étapes</h3>
+<p><strong>LE DOCUMENT RENVOIE À CETTE PROCÉDURE, ET CE RENVOI EST INSCRIT DANS SON RÉGIME</strong> : il ne peut être modifié sans lecture préalable et respect intégral de ce qui suit. Une modification conduite hors de cette procédure est irrégulière, quelle que soit la qualité de son contenu — et cette irrégularité n'est pas théorique : elle produit une édition dont l'ossature ne correspond plus à son empreinte, donc une alerte que personne ne saura interpréter.</p>
+<table><thead><tr><th>#</th><th>Étape</th><th>Qui</th></tr></thead><tbody><tr><td><strong>1</strong></td><td>Accord exprès et préalable sur le PRINCIPE de la modification</td><td>le responsable de projet</td></tr><tr><td><strong>2</strong></td><td>Vérification du cas de figure applicable — 1 ou 2 — et lecture du gabarit correspondant</td><td>l'agent</td></tr><tr><td><strong>3</strong></td><td>Archivage intégral et sans altération de l'édition remplacée, dans <code>docs/the-king/archives/</code></td><td>l'agent</td></tr><tr><td><strong>4</strong></td><td>Rédaction de l'édition nouvelle, dans la forme arrêtée, sans en réorganiser les parties</td><td>l'agent</td></tr><tr><td><strong>5</strong></td><td>Validation du contenu, article par article si nécessaire</td><td>le responsable de projet</td></tr><tr><td><strong>6</strong></td><td>Pose d'une empreinte nouvelle, APRÈS validation et jamais avant</td><td>l'agent</td></tr><tr><td><strong>7</strong></td><td>Mention de l'édition et de sa date dans le régime du document</td><td>l'agent</td></tr></tbody></table>
+<p><strong>L'ÉTAPE 6 NE SE DÉPLACE JAMAIS.</strong> Poser l'empreinte avant la validation reviendrait à enregistrer comme référence un état que personne n'a approuvé, et à éteindre l'alerte qui aurait signalé l'écart. Reposer une empreinte pour faire taire un signalement est la seule manière de supprimer ce contrôle sans le retirer.</p>
+<hr>
+<h3>INVENTAIRE COMPLET DU PROCESSUS</h3>
+<p><em>Tout ce qui compose le processus associé au document, en un seul endroit. Un processus dont les pièces sont dispersées est un processus qu'on applique de mémoire, donc partiellement.</em></p>
+<table><thead><tr><th>Pièce</th><th>Chemin</th><th>Rôle</th></tr></thead><tbody><tr><td><strong>Le document en vigueur</strong></td><td><code>docs/philosophie-et-politique.md</code></td><td>le texte qui fait loi</td></tr><tr><td><strong>Sa page lisible</strong></td><td><code>docs/philosophie-et-politique.html</code></td><td>dérivée du texte, jamais écrite à part</td></tr><tr><td><strong>La présente fiche</strong></td><td><code>docs/referentiel/document-de-gouvernance.md</code></td><td>la forme arrêtée, la procédure, et ce qu'aucun mécanisme ne tient</td></tr><tr><td><strong>Gabarit du cas 1</strong></td><td><code>docs/gabarits/philosophie-et-politique-gabarit.md</code></td><td>patron vierge — l'outillage est un projet de conception</td></tr><tr><td><strong>Gabarit du cas 2</strong></td><td><code>docs/gabarits/philosophie-et-politique-gabarit-cas-2.md</code></td><td>patron vierge — l'outillage est une aide exécutive livrée</td></tr><tr><td><strong>Exemplaire du cas 2</strong></td><td><code>docs/the-king/versions-cas-2/</code></td><td>montre le changement de registre, que le patron ne peut pas montrer</td></tr><tr><td><strong>Archives des éditions remplacées</strong></td><td><code>docs/the-king/archives/</code></td><td>conservation verbatim, jamais résumée</td></tr><tr><td><strong>Empreinte d'ossature</strong></td><td><code>docs/the-king/empreinte-document-officiel.json</code></td><td>l'état de référence auquel toute modification est comparée</td></tr><tr><td><strong>L'instrument d'extraction</strong></td><td>THE-KING</td><td>conduit la révélation et le contrôle périodique</td></tr><tr><td><strong>Les leçons de l'extraction</strong></td><td><code>docs/the-king/lecons-de-la-revelation.md</code></td><td>mémoire sauvegardée de l'instrument, qui part avec lui</td></tr></tbody></table>
+<hr>
+<h3>ÉVOLUTIONS DU PROCESSUS</h3>
+<p><em>Un processus qui change sans trace est un processus dont personne ne sait quelle version il applique.</em></p>
+<table><thead><tr><th>Date</th><th>Évolution</th></tr></thead><tbody><tr><td><strong>2026-10-02</strong></td><td>Établissement du document de gouvernance en forme officielle : 71 articles, trois niveaux, les objectifs ultimes au titre préliminaire. Empreinte d'ossature posée.</td></tr><tr><td><strong>2026-10-02</strong></td><td>Création des deux gabarits et de l'exemplaire du cas de figure 2.</td></tr><tr><td><strong>2026-10-02</strong></td><td>Inscription du renvoi au processus dans le régime du document, et dans les deux gabarits.</td></tr><tr><td><strong>2026-10-02</strong></td><td>Annexe A portée à quatre questions de clôture (ajout d'INTELLIGENT), cinq exigences permanentes (ajout de RATIONNEL, ROBUSTE, PROPRE) et deux conditions transversales.</td></tr><tr><td><strong>2026-10-02</strong></td><td>Article 69 : la place du responsable de projet rétablie dans la méthode d'établissement.</td></tr><tr><td><strong>2026-10-02</strong></td><td>Article 72 : le contrôle périodique de fidélité rattaché à la revue périodique du projet.</td></tr><tr><td><strong>2026-10-02</strong></td><td>Annexe B refermée : les trois points en attente ont été arbitrés.</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/referentiel/document-de-gouvernance.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

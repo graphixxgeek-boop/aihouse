@@ -1597,6 +1597,11 @@ export const HORS_PORTEE_DOCUMENTS = [
   // archive comme le jumeau de son original. Le motif porte sur le nom du dossier : un cas de
   // figure supplémentaire est couvert le jour où son dossier est créé.
   { motif: /(^|\/)versions-cas-\d+\//, pourquoi: "variante déclarée d'un document pour un autre cas de figure : la ressemblance est le sujet même, et les fondre détruirait la distinction qu'elles montrent" },
+  // LES GABARITS (2026-10-02, tâche #1436). Un patron décrit la FORME du document qu'il sert : il
+  // en reprend donc nécessairement les intitulés, les familles et le vocabulaire. C'est sa
+  // fonction, pas une redondance — et proposer de le fondre dans le document reviendrait à
+  // supprimer la seule pièce utilisable sur un AUTRE projet, c'est-à-dire la seule qui parte.
+  { motif: /(^|\/)gabarits\//, pourquoi: "patron vierge : il décrit la forme du document qu'il sert et en reprend forcément le vocabulaire — c'est sa fonction, et c'est la seule pièce réutilisable ailleurs" },
   // CE QU'IL DÉPOSE N'EST PAS CE QUE NOUS ENTRETENONS (2026-09-28, tâche #1111). Ce dossier porte
   // les sources du grand chantier telles qu'il nous les a données : ses deux commandes, et sept
   // lots d'audits produits ailleurs. Ce détecteur cherche la redondance que le PROJET entretient —

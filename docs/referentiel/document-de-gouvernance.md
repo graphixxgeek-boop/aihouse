@@ -104,12 +104,62 @@ clause de concours non retirable.
 
 ---
 
-## RÉVISION
+## RÉVISION — la procédure complète, en sept étapes
 
-Une édition nouvelle suit cet ordre, sans exception :
+**LE DOCUMENT RENVOIE À CETTE PROCÉDURE, ET CE RENVOI EST INSCRIT DANS SON RÉGIME** : il ne peut
+être modifié sans lecture préalable et respect intégral de ce qui suit. Une modification conduite
+hors de cette procédure est irrégulière, quelle que soit la qualité de son contenu — et cette
+irrégularité n'est pas théorique : elle produit une édition dont l'ossature ne correspond plus à
+son empreinte, donc une alerte que personne ne saura interpréter.
 
-1. Accord exprès et préalable du responsable du projet sur le principe de la modification.
-2. Archivage intégral et sans altération de l'édition remplacée (`docs/the-king/archives/`).
-3. Rédaction de l'édition nouvelle, dans la forme arrêtée ci-dessus.
-4. Pose d'une empreinte nouvelle.
-5. Mention de l'édition et de sa date dans le régime du document.
+| # | Étape | Qui |
+|---|---|---|
+| **1** | Accord exprès et préalable sur le PRINCIPE de la modification | le responsable de projet |
+| **2** | Vérification du cas de figure applicable — 1 ou 2 — et lecture du gabarit correspondant | l'agent |
+| **3** | Archivage intégral et sans altération de l'édition remplacée, dans `docs/the-king/archives/` | l'agent |
+| **4** | Rédaction de l'édition nouvelle, dans la forme arrêtée, sans en réorganiser les parties | l'agent |
+| **5** | Validation du contenu, article par article si nécessaire | le responsable de projet |
+| **6** | Pose d'une empreinte nouvelle, APRÈS validation et jamais avant | l'agent |
+| **7** | Mention de l'édition et de sa date dans le régime du document | l'agent |
+
+**L'ÉTAPE 6 NE SE DÉPLACE JAMAIS.** Poser l'empreinte avant la validation reviendrait à enregistrer
+comme référence un état que personne n'a approuvé, et à éteindre l'alerte qui aurait signalé
+l'écart. Reposer une empreinte pour faire taire un signalement est la seule manière de supprimer
+ce contrôle sans le retirer.
+
+---
+
+## INVENTAIRE COMPLET DU PROCESSUS
+
+*Tout ce qui compose le processus associé au document, en un seul endroit. Un processus dont les
+pièces sont dispersées est un processus qu'on applique de mémoire, donc partiellement.*
+
+| Pièce | Chemin | Rôle |
+|---|---|---|
+| **Le document en vigueur** | `docs/philosophie-et-politique.md` | le texte qui fait loi |
+| **Sa page lisible** | `docs/philosophie-et-politique.html` | dérivée du texte, jamais écrite à part |
+| **La présente fiche** | `docs/referentiel/document-de-gouvernance.md` | la forme arrêtée, la procédure, et ce qu'aucun mécanisme ne tient |
+| **Gabarit du cas 1** | `docs/gabarits/philosophie-et-politique-gabarit.md` | patron vierge — l'outillage est un projet de conception |
+| **Gabarit du cas 2** | `docs/gabarits/philosophie-et-politique-gabarit-cas-2.md` | patron vierge — l'outillage est une aide exécutive livrée |
+| **Exemplaire du cas 2** | `docs/the-king/versions-cas-2/` | montre le changement de registre, que le patron ne peut pas montrer |
+| **Archives des éditions remplacées** | `docs/the-king/archives/` | conservation verbatim, jamais résumée |
+| **Empreinte d'ossature** | `docs/the-king/empreinte-document-officiel.json` | l'état de référence auquel toute modification est comparée |
+| **L'instrument d'extraction** | THE-KING | conduit la révélation et le contrôle périodique |
+| **Les leçons de l'extraction** | `docs/the-king/lecons-de-la-revelation.md` | mémoire sauvegardée de l'instrument, qui part avec lui |
+
+---
+
+## ÉVOLUTIONS DU PROCESSUS
+
+*Un processus qui change sans trace est un processus dont personne ne sait quelle version il
+applique.*
+
+| Date | Évolution |
+|---|---|
+| **2026-10-02** | Établissement du document de gouvernance en forme officielle : 71 articles, trois niveaux, les objectifs ultimes au titre préliminaire. Empreinte d'ossature posée. |
+| **2026-10-02** | Création des deux gabarits et de l'exemplaire du cas de figure 2. |
+| **2026-10-02** | Inscription du renvoi au processus dans le régime du document, et dans les deux gabarits. |
+| **2026-10-02** | Annexe A portée à quatre questions de clôture (ajout d'INTELLIGENT), cinq exigences permanentes (ajout de RATIONNEL, ROBUSTE, PROPRE) et deux conditions transversales. |
+| **2026-10-02** | Article 69 : la place du responsable de projet rétablie dans la méthode d'établissement. |
+| **2026-10-02** | Article 72 : le contrôle périodique de fidélité rattaché à la revue périodique du projet. |
+| **2026-10-02** | Annexe B refermée : les trois points en attente ont été arbitrés. |

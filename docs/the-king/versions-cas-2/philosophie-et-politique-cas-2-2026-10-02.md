@@ -28,6 +28,10 @@
 >
 > **NEUTRALITÉ DU SUPPORT.** Aucun commentaire ni élément d'échange ne peut y être inscrit.
 >
+> **PROCESSUS ASSOCIÉ.** Le présent document ne peut être modifié sans lecture préalable et
+> respect intégral du processus qui l'accompagne, lequel est livré avec lui et fixe sa forme, ses
+> cas de figure et sa procédure de révision.
+>
 > **Édition 1 — établie le 2 octobre 2026.**
 
 ---

@@ -29,6 +29,11 @@
 > proposition de modification et toute demande de précision sont formulées hors du document.
 > Le contenu ci-après est un texte de référence, jamais un support de discussion.
 >
+> **PROCESSUS ASSOCIÉ.** Le présent document ne peut être modifié sans lecture préalable et
+> respect intégral du processus qui lui est associé, lequel fixe sa forme arrêtée, ses gabarits,
+> ses cas de figure et sa procédure de révision. Une modification conduite hors de ce processus
+> est irrégulière, quelle que soit la qualité de son contenu.
+>
 > **Édition 1 — établie le 2 octobre 2026.**
 
 ---
@@ -452,9 +457,18 @@ première ne pouvait corriger : l'attribution d'un niveau à chaque principe, l'
 principe de ce qui n'était exprimé qu'en termes d'application, et la répartition d'ensemble. Elle
 n'ajoute jamais un principe que la première opération n'a pas attesté.
 
-**Garantie.** La séparation de ces deux opérations est ce qui permet d'affirmer que le présent
+**Intervention du responsable de projet.** Les deux opérations ci-dessus sont conduites sous son
+autorité et ne se suffisent pas à elles-mêmes. Il fixe le cadre et la méthode avant leur
+engagement ; il apporte, en cours d'établissement, les éléments que l'extraction ne peut produire
+— au premier rang desquels les clauses intangibles du titre IV, qu'aucune mesure ne saurait
+déterminer ; il arrête la forme du document ; et il dispose du mot final sur chacune de ses
+dispositions. Aucun article du présent document n'y figure sans son accord.
+
+**Garantie.** La séparation des deux opérations est ce qui permet d'affirmer que le présent
 document reflète le projet tel qu'il est, et non tel qu'il se décrirait. La seconde opération est
-tenue à la matière que la première lui remet ; elle ne peut ni l'enrichir, ni la contredire.
+tenue à la matière que la première lui remet ; elle ne peut ni l'enrichir, ni la contredire. Les
+décisions du responsable de projet s'exercent, elles, sans cette limite : elles sont la source, et
+non le produit, de ce qui est écrit.
 
 **Caractéristiques relevées lors de la première opération**, consignées pour permettre la
 comparaison prévue à l'article 72 :
@@ -499,13 +513,18 @@ date de l'édition 1.
 Le nombre de principes énoncés ne constitue pas un indicateur de fidélité : il peut croître sans
 que le corpus se reconnaisse davantage dans le document.
 
+**Rendez-vous.** Ce contrôle est inscrit à la revue périodique du projet. Il y figure comme un
+point à déclencher, et non comme une opération automatique : un contrôle de fidélité reconduit
+sans raison n'apprend rien, et le relancer avant que les dispositions du présent document aient
+été répercutées mesurerait un état intermédiaire.
+
 ---
 
-# ANNEXE A — LES TROIS QUESTIONS DE CLÔTURE, ET LES DEUX EXIGENCES PERMANENTES
+# ANNEXE A — LES QUESTIONS DE CLÔTURE ET LES EXIGENCES PERMANENTES
 
-## A.1 — Les trois questions de clôture
+## A.1 — Les quatre questions de clôture
 
-Trois questions sont posées à la clôture de chaque tâche. Elles restent séparées : réunies en une
+Quatre questions sont posées à la clôture de chaque tâche. Elles restent séparées : réunies en une
 seule interrogation sur l'achèvement du travail, elles appelleraient une réponse globale qui ne
 prouverait rien. Séparées, chacune oblige à regarder un endroit différent.
 
@@ -514,33 +533,55 @@ prouverait rien. Séparées, chacune oblige à regarder un endroit différent.
 | **FIABILISER** | est-ce que ça marche, les tests passent-ils ? | le filet de sécurité | art. 9, 31, 60 |
 | **OPTIMISER** | peut-on faire mieux, est-ce complet ? | le périmètre de la tâche | art. 27, 45 |
 | **HARMONISER** | est-ce raccordé au reste, au bon format ? | le reste du projet | art. 40, 59 |
+| **INTELLIGENT** | est-ce bien pensé, pertinent, performant, logique, cohérent ? | la conception elle-même | art. 15, 33, 34 |
 
-**Trois, et jamais quatre.** Le seul quatrième candidat sérieux — *un mécanisme le porte-t-il ?* —
-est déjà tenu par l'article 61 et par le dispositif d'exportabilité. Une question rituelle à
-quatre devient une case que l'on coche sans y penser, ce qui est exactement le faux résultat
-favorable que l'article 9 proscrit.
+**La quatrième question ne se confond avec aucune des trois autres, et c'est ce qui justifie sa
+place.** Les trois premières constatent : le dispositif fonctionne, le besoin est couvert,
+l'ensemble est raccordé. Un travail peut satisfaire les trois et rester mal conçu — correct,
+complet, raccordé, et néanmoins tortueux, inutilement coûteux ou fondé sur un raisonnement qui ne
+tient pas. **Aucune des trois premières ne peut relever ce défaut**, puisqu'elles portent toutes
+sur le résultat et non sur le chemin.
 
-## A.2 — Les deux exigences permanentes
+## A.2 — Les exigences permanentes
 
-Deux autres exigences sont formulées de manière récurrente. Elles ne sont pas des questions de
-clôture : elles sont des propriétés que toute construction doit posséder dès sa conception.
+Les exigences ci-dessous ne sont pas des questions de clôture : elles sont des propriétés que
+toute construction doit posséder dès sa conception. Une construction qui en est dépourvue ne les
+acquiert pas parce qu'on se les demande à la fin.
 
 | Exigence | Portée exacte | Dispositions correspondantes |
 |---|---|---|
 | **ÉVOLUTIF** | un élément nouveau hérite de l'existant sans modification de la logique | art. 26, 35 |
 | **EXPORTABLE** | compréhensible et utilisable par une personne qui n'a pas participé à la conception ; emporte la portabilité avec elle | art. 25, 32 |
+| **RATIONNEL** | chaque choix procède d'une raison établie, et cette raison est consignée | art. 29, 34 |
+| **ROBUSTE** | tient dans les combinaisons d'état non prévues, et non seulement sur le chemin éprouvé | art. 9, 31 |
+| **PROPRE** | rien d'inutile, rien de dupliqué, rien d'inachevé laissé en place | art. 26, 35, 40 |
 
-**Pourquoi elles ne rejoignent pas les trois questions de clôture.** Une question de clôture se
-pose une fois, à la fin, sur ce qui vient d'être fait. Une exigence permanente gouverne la
-conception elle-même : un élément conçu sans elle ne devient pas évolutif ni exportable parce
-qu'on se le demande à la fin.
+## A.3 — Les deux conditions transversales
 
-# ANNEXE B — DISPOSITIONS SOUMISES À ARBITRAGE
+Les quatre questions et les cinq exigences s'appliquent dans les conditions suivantes, lesquelles
+valent pour tout travail sans exception.
 
-Les points suivants ne sont pas arrêtés à la date de l'édition 1 et ne figurent pas au dispositif.
+**Première condition — le concours des outils, lorsqu'il est pertinent.** Tout travail sollicite
+les instruments disponibles chaque fois qu'un instrument sait faire mieux, plus vite ou de
+manière plus vérifiable. Un résultat obtenu de mémoire là où un instrument existe n'est ni
+reproductible, ni opposable. La pertinence s'apprécie au cas par cas : l'obligation n'est pas d'en
+employer un partout, mais de ne jamais en écarter un par omission.
 
-1. Le maintien des six étages de la cascade, ou leur réduction à cinq ou quatre.
-2. La reprise, au sein du présent document, des principes de l'édition antérieure qui n'y figurent
-   pas.
-3. Le seuil de l'indicateur de l'article 72 à partir duquel le contrôle périodique est tenu pour
-   concluant.
+**Seconde condition — le respect de la cascade, intégralement.** Tout travail s'exerce dans le
+respect des processus, des stratégies, de la politique, de la philosophie et des objectifs
+ultimes. **L'ordre de cette énumération n'est pas indifférent** : en cas de conflit, c'est le
+niveau le plus haut qui l'emporte, et un processus ne prévaut jamais sur une stratégie, ni une
+stratégie sur une disposition du présent document.
+
+# ANNEXE B — DISPOSITIONS ARBITRÉES ET POINTS CLOS
+
+Les points suivants ont été soumis au responsable de projet et arrêtés. Ils sont consignés ici
+pour mémoire : une décision rendue et non écrite se repose d'elle-même à la session suivante.
+
+| Point | Décision | Portée |
+|---|---|---|
+| Nombre d'étages de la cascade | **six, maintenus** | sans conséquence sur le travail courant : les trois étages inférieurs sont déjà portés par d'autres documents. L'enjeu est futur — c'est ce qui dira où ranger une règle nouvelle |
+| Reprise des principes de l'édition antérieure non repris ici | **sans objet** | l'édition antérieure est archivée intégralement ; ce qu'elle portait et qui vaut encore a été retrouvé par l'extraction |
+| Seuil de l'indicateur de l'article 72 | **non fixé, volontairement** | seule la direction est suivie : un seuil fixé d'avance deviendrait une cible, et une cible se sert plutôt qu'elle ne se mesure |
+
+**Aucune disposition du présent document n'est en attente d'arbitrage à la date de l'édition 1.**

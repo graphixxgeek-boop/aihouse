@@ -49,6 +49,18 @@ fois — un objectif qui la porte déjà n'en reçoit pas une seconde.
 
 ---
 
+## LA MENTION DU PROCESSUS ASSOCIÉ — obligatoire, comme au cas 1
+
+Le régime du document porte, au cas 2 comme au cas 1, la mention selon laquelle **le document ne
+peut être modifié sans lecture préalable et respect intégral du processus qui lui est associé**.
+
+**Au cas 2, cette mention engage une autre personne**, et c'est la seule différence : le processus
+accompagne le produit livré, et c'est l'utilisateur qui en est le gardien chez lui. Le livrer sans
+son processus reviendrait à livrer un document que son destinataire ne saurait pas faire évoluer
+sans le dégrader.
+
+---
+
 ## STRUCTURE — huit parties
 
 *Identique au cas 1, à l'exception du titre II et du titre III, qui perdent le chapitre de

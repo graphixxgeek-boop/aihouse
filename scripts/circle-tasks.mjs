@@ -131,6 +131,30 @@ export const CIRCLE_ITEMS = [
     execute: "Lancer node scripts/the-king.mjs (ou appeler philosophyFreshnessDays()/buildEvolutionDigest()/findPossibleTensions() directement) et reporter honnêtement la fraîcheur de docs/philosophie-et-politique.md et toute tension possible trouvée — jamais corriger le document soi-même, seulement signaler. Écrire le résultat via recordCircleItemReport('the-king-signal', ...) (dossier docs/the-king/, jamais son index.md principal — cf. CIRCLE_REPORT_FOLDERS). Appeler ensuite recordSnapshotIfChanged('the-king-signal', contenu actuel de docs/philosophie-et-politique.md, ...) — une NOUVELLE snapshot datée s'ajoute à l'historique local du dossier seulement si le contenu a réellement changé depuis la dernière (jamais une cadence fixe en nombre de Rondes, jamais un fichier unique écrasé — corrigé le 2026-09-22, la version du 2026-09-21 écrasait à tort un seul fichier).",
     producesReport: true,
   },
+  // controle-fidelite-gouvernance (2026-10-02, tâche #1436) — l'article 72 du document de
+  // gouvernance prévoit un contrôle périodique de fidélité, et sa question était « fait partie de
+  // la ronde GOAT par exemple ? ». Il n'en faisait partie d'aucune : l'article le prévoyait, rien
+  // ne le convoquait.
+  //
+  // POURQUOI IL EST DISTINCT DE the-king-signal, qui le précède immédiatement : celui-là mesure
+  // la FRAÎCHEUR du document et les tensions entre ses propres articles — il regarde le document.
+  // Celui-ci relance la RÉVÉLATION sur tout le corpus et mesure la part des convictions du projet
+  // que le document couvre — il regarde l'écart entre le document et le projet. Les fondre
+  // reviendrait à croire qu'un document à jour est un document fidèle, ce qui est exactement la
+  // confusion que l'article 72 écarte.
+  //
+  // IL EST À DÉCLENCHER, JAMAIS AUTOMATIQUE, et la raison est écrite dans l'article lui-même : un
+  // contrôle de fidélité reconduit sans raison n'apprend rien, et le relancer avant que les
+  // dispositions aient été répercutées mesurerait un état intermédiaire.
+  {
+    id: "controle-fidelite-gouvernance",
+    theme: "KPI & scans",
+    label: "Contrôle de fidélité du document de gouvernance (article 72) — la philosophie remonte-t-elle ?",
+    cout: "gratuit — relance la révélation sur le corpus local, zéro appel API",
+    tokensEstimes: "modéré — le rapport nomme les cases vides et les convictions non couvertes",
+    execute: "Lancer node scripts/the-king.mjs reveler. L'outil dépose son rapport, son état machine, et compare AUTOMATIQUEMENT au passage précédent s'il en existe un. LE SEUL CHIFFRE QUI COMPTE est la part des convictions retenues que le document couvre : elle valait 1 sur 87 au premier passage. Le nombre d'articles écrits n'est PAS un indicateur de fidélité — il peut croître sans que le corpus se reconnaisse davantage dans le document, et le verdict de comparaison refuse délibérément cette confusion. NE PAS déclencher tant que les dispositions du document n'ont pas été répercutées dans le dépôt : le chiffre serait juste et la conclusion fausse.",
+    producesReport: true,
+  },
   {
     id: "kpi",
     theme: "KPI & scans",
