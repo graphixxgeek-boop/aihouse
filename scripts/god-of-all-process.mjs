@@ -1762,6 +1762,36 @@ export const MARQUES_RAPPORT = {
 export const CHIFFRES_DUN_NUMERO_DE_TACHE = "2,5";
 export const MOTIF_NUMERO = new RegExp(`#(\\d{${CHIFFRES_DUN_NUMERO_DE_TACHE}})\\b`, "g");
 
+// LA NOTATION DU NUMÉRO DE SESSION (2026-10-02, tâche #1467 — son arbitrage).
+//
+// LE DÉFAUT QU'ELLE FERME, et il était INDÉCIDABLE jusqu'ici : `#92` peut désigner une tâche du
+// suivi DURABLE ou une tâche du gestionnaire de SESSION, qui est éphémère. Les deux s'écrivent
+// pareil. `checkActionChain()` déclare lui-même, dans son `horsPortee`, ne pas savoir les
+// distinguer — donc ses quatre dernières alertes n'étaient ni vraies ni fausses.
+//
+// ET LE CAS VRAIMENT DANGEREUX N'EST PAS CELUI QU'IL SIGNALAIT. Un `#92` introuvable se voit.
+// Mais `#236` et `#237`, cités dans deux plans comme des tâches de REFONTE GRAPHIQUE, existent
+// pour de vrai dans le suivi durable — où ils désignent « THE-DEEP-READER : factorisation » et
+// « CIRCLE-TASKS : sélection recommandée ». **Un futur agent les résoudrait silencieusement vers
+// la mauvaise chose**, et aucun contrôle ne pouvait le dire : la chaîne vérifie qu'un numéro
+// EXISTE, jamais qu'il désigne ce que la phrase prétend.
+//
+// SA DÉCISION : une notation distincte. `S92` plutôt que `#92`. Un préfixe de lettre sort
+// naturellement du champ de MOTIF_NUMERO, qui cherche un `#` — l'effet voulu, obtenu sans toucher
+// au motif existant ni risquer de casser ce qu'il attrape déjà.
+//
+// CE QUI N'EST PAS FAIT, ET C'EST SA CONSIGNE : l'histoire n'est pas réécrite. Les plans anciens
+// gardent ce qu'ils disaient ; seuls les quatre cas nommés par l'outil ont été traités à la main,
+// en retrouvant ce que le numéro désignait vraiment.
+export const MOTIF_NUMERO_DE_SESSION = /\bS(\d{2,5})\b/g;
+
+// Un numéro de session dans un plan n'est JAMAIS un écart : il est éphémère par nature, donc
+// l'absence d'une tâche durable correspondante est normale et non un trou. Le reconnaître sert à
+// ne PAS l'accuser — l'inverse exact de ce que faisait le silence.
+export function estUnNumeroDeSession(texte = "") {
+  return new RegExp(MOTIF_NUMERO_DE_SESSION.source).test(String(texte));
+}
+
 // Un numéro et sa marque doivent tenir sur la MÊME LIGNE : une marque trois lignes plus haut
 // appartient à une autre tâche, et les rapprocher inventerait un traitement qui n'a pas eu lieu.
 export function marquesParNumero(texte = "") {

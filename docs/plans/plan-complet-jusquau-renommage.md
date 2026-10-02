@@ -144,7 +144,7 @@ intacte.
 
 ## CE QUI N'EST PAS DANS CE PLAN, ET POURQUOI
 
-- **La refonte graphique** (#92, #237, #236) — ta limite explicite, elle t'appartient.
+- **La refonte graphique** (S92, S237, S236) — ta limite explicite, elle t'appartient.
 - **Le jeu lui-même** — aucune de ces étapes ne le touche. C'est voulu : le site reste le juge de
   dernier ressort, et ce chantier sert l'Agence.
 - **Les 8 constats DEEP-READER** (#227 à #234) — un est fermé ce soir (#227), sept restent. Ils ne
@@ -161,3 +161,7 @@ intacte.
 - **RETENU** — Étape 6, la nomenclature puis le renommage → **#747**, **#740**
 - **À TRANCHER** — Quel système de familles survit → **#754**
 - **À TRANCHER** — Le désaccord `pnpm-install` → **#739**
+
+---
+
+*(Notation corrigée le 2026-10-02, tâche #1467 : `S92` est un numéro du GESTIONNAIRE DE SESSION, éphémère — il ne se résout pas dans `docs/suivi/`. Au suivi durable, la refonte graphique porte **#734** (thème SQUID GAME) et **#861** (son idée recopiée au bon endroit).)*

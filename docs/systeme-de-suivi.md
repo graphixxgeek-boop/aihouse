@@ -65,6 +65,40 @@ cette demande (`TaskCreate`/`TaskUpdate` en étaient à #116). `nextTaskNumber()
 prochain numéro à utiliser (le plus grand numéro réel déjà présent, plus un, à travers TOUS les
 fichiers de session) — jamais un compteur mental à tenir à jour à la main.
 
+## `#92` ou `S92` — deux numérotations, deux notations (2026-10-02, tâche #1467)
+
+**Le défaut était INDÉCIDABLE, pas seulement gênant.** `#92` peut désigner une tâche du suivi
+**durable** (`docs/suivi/`, qui survit à tout) ou une tâche du **gestionnaire de session**, qui est
+éphémère et disparaît avec la conversation. **Les deux s'écrivaient pareil.**
+
+`checkActionChain()` déclarait lui-même, dans son hors-portée, ne pas savoir les distinguer — donc
+ses quatre dernières alertes n'étaient **ni vraies ni fausses**.
+
+### Et le cas vraiment dangereux n'est pas celui que l'outil signalait
+
+Un `#92` introuvable **se voit**. Mais `#236` et `#237`, cités dans deux plans comme des tâches de
+**refonte graphique**, existent pour de vrai dans le suivi durable — où ils désignent
+« THE-DEEP-READER : factorisation » et « CIRCLE-TASKS : sélection recommandée ».
+
+**Un futur agent les résoudrait silencieusement vers la mauvaise chose.** Aucun contrôle ne pouvait
+le dire : la chaîne vérifie qu'un numéro **existe**, jamais qu'il désigne ce que la phrase prétend.
+
+### La notation
+
+| Écriture | Ce que c'est | Où ça se résout |
+|---|---|---|
+| **`#1234`** | une tâche du suivi **durable** | `docs/suivi/` — et ça doit s'y trouver |
+| **`S92`** | une tâche du **gestionnaire de session**, éphémère | nulle part de durable, **et c'est normal** |
+
+**Pourquoi un préfixe de lettre plutôt qu'autre chose** : `MOTIF_NUMERO` cherche un `#` suivi de
+2 à 5 chiffres. `S92` en sort **naturellement** — l'effet voulu, obtenu sans toucher au motif
+existant ni risquer de casser ce qu'il attrape déjà.
+
+**L'histoire n'est pas réécrite**, et c'est sa consigne : les plans anciens gardent ce qu'ils
+disaient. Seuls les **quatre cas nommés par l'outil** ont été traités à la main, en retrouvant ce
+que le numéro désignait vraiment — la refonte graphique, qui porte au suivi durable **#734** et
+**#861**.
+
 ## Le champ « pour qui » (2026-09-25, tâche #825)
 
 *(Décision prise avec l'utilisateur le 2026-09-22 et écrite dans `docs/plans/nuit-2026-09-23-plan.md`,

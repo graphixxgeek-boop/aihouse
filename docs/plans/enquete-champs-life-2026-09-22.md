@@ -15,7 +15,7 @@
 | `exitSearched` | ✅ **Faux positif** | Lu en `lib/turn.ts:74` (`!life.exitSearched`) : conditionne toute la scène d'inspection du couloir. |
 | `proposalHistoryChecked` | ✅ **Faux positif** | Lu en `route.ts:723` (`!life.proposalHistoryChecked`), écrit deux lignes plus bas en 725. |
 | `personalBoosted` | ✅ **Faux positif** | Lu en `route.ts:1219` (`!life.personalBoosted`) : empêche de rejouer deux fois le même élan personnel. |
-| `trottoirGranted` | ⚠️ **Réellement jamais lu — mais c'est une décision assumée** | Une seule écriture (`route.ts:202`), aucune lecture. Et c'est écrit noir sur blanc dans `docs/referentiel/parametres.md:306` : le trottoir est « un accès narré (un point de déplacement, pas encore une zone 3D pathable complète comme le jardin — *on verra après* selon l'utilisateur) ». Le flag n'a structurellement rien à relire : la scène est entièrement résolue au moment du tirage. Rattaché à la **tâche #92 (refonte graphique)**, qui est la borne que vous avez posée. |
+| `trottoirGranted` | ⚠️ **Réellement jamais lu — mais c'est une décision assumée** | Une seule écriture (`route.ts:202`), aucune lecture. Et c'est écrit noir sur blanc dans `docs/referentiel/parametres.md:306` : le trottoir est « un accès narré (un point de déplacement, pas encore une zone 3D pathable complète comme le jardin — *on verra après* selon l'utilisateur) ». Le flag n'a structurellement rien à relire : la scène est entièrement résolue au moment du tirage. Rattaché à la **tâche S92 (refonte graphique, numéro de session — au suivi durable : #734, #861)**, qui est la borne que vous avez posée. |
 
 **Cinq faux positifs sur six.** L'heuristique d'ARGUS compte des occurrences brutes : un champ lu
 UNE fois comme condition, à l'endroit même où il est écrit, passe sous son seuil de 4 occurrences.
@@ -61,3 +61,7 @@ l'a pas.
 | **ÉCARTÉ, avec raison** | Retirer les 5 champs faux positifs | Ils sont réellement lus. Les retirer casserait le jeu. |
 | **ÉCARTÉ, avec raison** | Retirer `trottoirGranted` | Décision assumée et documentée (`parametres.md:306`), rattachée à la refonte graphique — la borne que vous avez posée. |
 | **À TRANCHER** | Le seuil brut de 4 occurrences d'ARGUS | Avec une mémoire, ce seuil devient moins critique : un faux positif ne coûte plus qu'une fois. Sans elle, le baisser produirait plus de bruit. |
+
+---
+
+*(Notation corrigée le 2026-10-02, tâche #1467 : `S92` est un numéro du GESTIONNAIRE DE SESSION, éphémère — il ne se résout pas dans `docs/suivi/`. Au suivi durable, la refonte graphique porte **#734** (thème SQUID GAME) et **#861** (son idée recopiée au bon endroit).)*

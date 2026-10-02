@@ -24287,6 +24287,19 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   const echec = { resultats: [{ cle: 'engagements-en-taches', question: 'Q', detail: 'd', ok: false, sansQuoi: 'brancher' }] };
   const plan = F.planDactionDesFils(echec);
   assert.match(plan.lignes[0], /#1332/, 'a real tool must declare a real number: a mechanism with no caller is an intention, never a tool (L2)');
+
+  // LA NOTATION DU NUMÉRO DE SESSION (2026-10-02, tâche #1467 — son arbitrage). `#92` pouvait
+  // désigner une tâche durable OU une tâche du gestionnaire de session, éphémère : les deux
+  // s'écrivaient pareil, et checkActionChain() déclarait lui-même ne pas savoir les distinguer.
+  // Le cas DANGEREUX n'était pas le #92 introuvable, qui se voit : c'étaient #236 et #237, cités
+  // comme des tâches de refonte graphique et existant pour de vrai dans le suivi durable sous
+  // d'AUTRES sujets — un futur agent les aurait résolus silencieusement vers la mauvaise chose.
+  const GP = await import('../scripts/god-of-all-process.mjs');
+  assert.ok(GP.estUnNumeroDeSession('la refonte graphique (S92)'), 'a session number is recognised by its letter prefix');
+  assert.ok(!GP.estUnNumeroDeSession('la tâche #92'), 'and the hash form is never mistaken for one');
+  assert.deepEqual([...'tâche #1234 et S92'.matchAll(GP.MOTIF_NUMERO)].map((m) => m[1]), ['1234'],
+    'the durable-number pattern must not see S92 at all: that is the whole point of the prefix, obtained without touching the pattern');
+
   const lignes = [plan.lignes[0], '  → RETENU · autre (voir #902) — tâche [RECOMMANDEE] : faire X', '  → RETENU · morte — tâche [RECOMMANDEE] #9999 : faire Y'].join('\n');
   const r = J.tauxDActionnabilite({ racineRapports: 'docs', minimum: 1, lireDir: (d) => (d === 'docs' ? [{ name: 'f.txt', isDirectory: () => false }] : []), lireFic: () => lignes, suivi: '| 1332 | x |' });
   assert.ok(r.mesurable, 'once numbers are declared, the rate becomes computable — that was the whole point');

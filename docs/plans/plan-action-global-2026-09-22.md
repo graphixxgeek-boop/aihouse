@@ -82,6 +82,10 @@ qu'ils trouvent. La forme était unifiée avant que le fond ne le soit.
 
 ## 4. Ce que je NE fais pas sans votre accord
 
-- **Rien sur la refonte graphique** (tâche #92) — borne posée par vous, jamais franchie.
+- **Rien sur la refonte graphique** (tâche S92) — borne posée par vous, jamais franchie.
 - **Aucun retrait dans `lib/life.ts`** — ça touche le jeu, donc ça passe par vous.
 - **Aucune factorisation CLONE-HUNTER** avant d'avoir tranché si les 28 sont réels.
+
+---
+
+*(Notation corrigée le 2026-10-02, tâche #1467 : `S92` est un numéro du GESTIONNAIRE DE SESSION, éphémère — il ne se résout pas dans `docs/suivi/`. Au suivi durable, la refonte graphique porte **#734** (thème SQUID GAME) et **#861** (son idée recopiée au bon endroit).)*
