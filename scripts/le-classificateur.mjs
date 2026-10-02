@@ -2084,6 +2084,11 @@ export const MOTIFS_PART = [
   // de l'avoir pris pour le plan de l'Agence. Le préfixe ne dit donc pas le sujet. Liste tenue à la
   // main, et sa nature manuelle est écrite ici comme l'Article 24 l'exige.
   { motif: /^docs\/agence-(blueprint|installation|plan-de-la-machine)\.md$/, pourquoi: "les trois pièces qui expliquent comment remonter l'Agence ailleurs" },
+  // LES DESCRIPTIONS DE MODULES (2026-10-02, tâche #1446) : elles décrivent comment une partie de
+  // l'Agence fonctionne — ses fonctionnalités, ce qu'elle produit, ce qui ne va pas. Une Agence
+  // installée ailleurs emporte ses modules ; les décrire est donc une pièce du départ, au même
+  // titre que les documents qui expliquent comment la remonter.
+  { motif: /^docs\/modules\//, pourquoi: "description d'un module de l'Agence : une pièce de ce qui part avec elle" },
   // LE SUFFIXE « -v2 » EST PRIS EN COMPTE (2026-10-01, tâche #1419) : l'édition révélée vit à côté
   // de la boussole actuelle le temps de sa validation, et elle a exactement la même nature. Sans
   // ce motif elle ressortait « À INSTRUIRE », c'est-à-dire confondue avec un fichier oublié.

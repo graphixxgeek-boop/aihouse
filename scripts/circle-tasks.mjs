@@ -903,6 +903,16 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // FORME du document qu'il décrit change, auquel cas c'est la révision de ce document qui
   // l'entraîne, jamais un rendez-vous de calendrier.
   "gabarits": "patrons vierges de documents de gouvernance, pas le registre d'un outil : rien n'y est consigné, et ils ne changent qu'avec la forme du document qu'ils décrivent — c'est sa révision qui les entraîne, jamais une Ronde",
+  // (2026-10-02) Les DESCRIPTIONS DE MODULES : ce ne sont pas des registres, ce sont des
+  // descriptions écrites à la main parce qu'elles demandent un jugement — « comment ce module
+  // marche-t-il, et qu'est-ce qui ne va pas ». Rien n'y est consigné au fil des passages.
+  //
+  // ET ELLES NE SE PÉRIMENT PAS SUR UN CALENDRIER : une description de module cesse d'être vraie
+  // quand le MODULE change, pas quand le temps passe. C'est le changement qui doit l'entraîner,
+  // et un rendez-vous périodique rendrait invariablement « rien de neuf » entre deux refontes.
+  // La vue d'ensemble, elle, est déjà couverte : la carte par module de CASSANDRA-RH est dérivée
+  // des imports réels, donc jamais périmée, et c'est elle qu'une Ronde doit regarder.
+  "modules": "descriptions de modules écrites à la main : elles ne consignent rien et ne cessent d'être vraies que si le module change — la vue d'ensemble périodique est déjà tenue par la carte dérivée de CASSANDRA-RH",
   // (2026-09-28) Le registre de doc-HTML : il se RÉÉCRIT SEUL à chaque génération de page, et une
   // page régénérée remplace sa ligne au lieu de s'empiler. Il ne peut donc pas prendre de retard —
   // ce qui est exactement ce qu'un item de Ronde va vérifier. Lui en donner un ferait relire à

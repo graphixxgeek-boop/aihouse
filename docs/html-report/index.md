@@ -70,3 +70,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.html` | `docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.md` | 16366 | 2026-10-02 03:59Z |
 | `docs/referentiel/document-de-gouvernance.html` | `docs/referentiel/document-de-gouvernance.md` | 18092 | 2026-10-02 03:59Z |
 | `docs/grand-projet/html/questions-en-cours-de-route.html` | `docs/grand-projet/02-strategie/questions-en-cours-de-route.md` | 16739 | 2026-10-02 06:28Z |
+| `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 17880 | 2026-10-02 07:14Z |
