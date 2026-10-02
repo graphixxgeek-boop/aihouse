@@ -58,6 +58,43 @@ pas maintenant — il attend que la philosophie soit validée.)*
 | **É6** | Une case du cadre standard reste vide | *ce que nous ne sacrifierions jamais* — 3 candidates seulement | nulle part : **seul lui peut la remplir** |
 | **É7** | Deux cases paraissaient vides sur les seuls documents normatifs | *refus absolu* et *jamais autorisé*, remplies dès qu'on lit les DÉCISIONS | leçon de méthode, pas un écart à corriger : une philosophie se lit dans ce qu'on a tranché |
 
+### RE-MESURE DU 2026-10-02T10:34Z — l'instrument a changé, donc les chiffres aussi
+
+**POURQUOI CETTE RE-MESURE EXISTE, et c'est l'Article 25 dans sa forme la plus utile** : les sept
+écarts ci-dessus ont été mesurés le 2026-10-01 avec un extracteur qui ne voyait que la PROSE. Depuis
+la tâche **#1438**, il lit aussi les titres de section et les lignes de tableau — là où ce projet
+écrit ses décisions les plus fermes. **Le corpus examiné passe de 2 786 à 7 029 phrases.** Garder
+les anciens chiffres aurait fait arbitrer sur des mesures que l'instrument ne produit plus.
+
+| # | Mesure du 2026-10-01 | Mesure du 2026-10-02 | Ce que le mouvement dit |
+|---|---|---|---|
+| **É1** | 102 convictions récurrentes hors boussole | **104** — sur 106 retenues | stable, et le RATIO est pire qu'il n'y paraissait : 104 sur 106 |
+| **É2** | 7 zones / 14 fichiers | **15 convictions retenues** parlent d'archives | la conviction tient, et elle est désormais portée par quinze phrases plutôt qu'une |
+| **É3** | 53,6 % sans marqueur de niveau | **54,0 %** | stable à 0,4 point près sur un corpus 2,5 fois plus grand : **l'écart est structurel, pas un artefact de mesure** |
+| **É4** | 37,7 % Agence / 5,8 % Jeu | **38,0 % / 5,3 %** | stable, très légèrement aggravé |
+| **É5** | 30 % des retenues citent un nom de fonction | **8 %** | ⚠️ **DIVISÉ PAR QUATRE, et c'est le résultat le plus important de cette re-mesure** |
+| **É6** | une case vide | **toujours la même, et elle seule** | inchangé — *ce que nous ne sacrifierions jamais* reste la seule case que lui seul peut remplir |
+| **É7** | leçon de méthode | **confirmée** | les cases se remplissent dès qu'on lit les décisions, pas seulement les règles |
+
+**CE QUE LA CHUTE DE É5 APPREND, ET ELLE NE DIT PAS CE QU'ON CROIRAIT.** Le projet n'est pas devenu
+moins technique en vingt-quatre heures. **L'ancien 30 % était un artefact de l'instrument** : un
+extracteur qui n'acceptait que de la prose longue favorisait mécaniquement les phrases de
+commentaire de code, qui sont longues et citent des noms de fonction. En ouvrant aux titres et aux
+tableaux — c'est-à-dire aux décisions écrites en clair — la part technique retombe à sa valeur
+réelle. **Un écart sur sept était donc un défaut de mesure, pas un défaut du corpus**, et personne
+ne l'aurait su sans relancer l'outil contre l'état réel.
+
+**CE QUI NE CHANGE PAS MALGRÉ LE CHANGEMENT D'INSTRUMENT COMPTE AUTANT** : É3 et É4 bougent de moins
+d'un point sur un corpus 2,5 fois plus grand. Un écart qui résiste à un changement d'instrument
+n'est plus une mesure, c'est un fait.
+
+**ET TOUJOURS ZÉRO CONTRADICTION** : 0 tension sur **3 240** paires comparées (contre 2 775 la
+veille), au même seuil. La paire la plus proche atteint 0,94 de vocabulaire partagé sans opposition
+de polarité — **ce n'est pas une tension, c'est une REDONDANCE**, et elle relève d'un autre outil
+(`abraham-les-references`, `findPairesRedondantes`) ; la signaler ici plutôt que la taire.
+
+---
+
 **ET UNE ABSENCE D'ÉCART, qui compte autant** : **zéro contradiction** détectée entre les
 convictions retenues, sur 2 775 paires comparées. La matière brute est désordonnée, pas
 incohérente. *(Limite déclarée : la sonde compare un vocabulaire partagé et une polarité opposée ;
