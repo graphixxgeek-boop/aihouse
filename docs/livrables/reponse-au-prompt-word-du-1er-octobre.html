@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réponse à ton prompt Word du 1er octobre</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T12:35:29.684Z</div>
+    <h1>Réponse à ton prompt Word du 1er octobre</h1>
+    <p class="sub">Page générée depuis docs/livrables/reponse-au-prompt-word-du-1er-octobre.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Préparé le 2026-10-02T12:35Z — heure LUE, source système. Tâche <strong>#1440</strong>.)</em></p>
+<hr>
+<h3>CE QUE TU AVAIS DEMANDÉ, ET POURQUOI CE DOCUMENT EXISTE</h3>
+<p>Ta phrase avant d'aller dormir : <em>« Notes toi comme tache de me repondre demain sur le prompte word »</em>. Six points de ce Word étaient inscrits comme non traités.</p>
+<p><strong>LA PREMIÈRE CHOSE À TE DIRE EST QUE CETTE INSCRIPTION ÉTAIT À MOITIÉ FAUSSE, et l'écart est instructif.</strong> En cherchant chaque point mécaniquement plutôt que de mémoire, <strong>quatre des six avaient déjà une réponse écrite</strong> — parfois une réponse complète, mesurée, avec une tâche associée. Ce qui manquait n'était pas le travail : <strong>c'était la livraison.</strong> Un sujet traité dans un document que tu n'as pas lu est, de ton point de vue, un sujet non traité — et c'est très exactement le défaut que ce document corrige.</p>
+<p><strong>Deux points, en revanche, n'existent nulle part ailleurs que dans la tâche qui les note.</strong> Ils sont signalés comme tels.</p>
+<hr>
+<h3>① LA LICENCE — réponse complète, et le constat est rouge</h3>
+<p><strong>Traité</strong> dans <code>docs/recherches-web/2026-10-01-standard-de-livraison-dun-code.md</code>, jamais porté jusqu'à toi. Tâche associée : <strong>#1368</strong>.</p>
+<p><strong>LE CONSTAT, ET IL EST LE PLUS GRAVE DE TOUT CE DOSSIER</strong> : le projet n'a <strong>aucune licence</strong>. Ni fichier <code>LICENSE</code>, ni déclaration dans <code>package.json</code>.</p>
+<p><strong>CE QUE ÇA VEUT DIRE CONCRÈTEMENT</strong> : sans licence, personne ne sait ce qu'il a le droit de faire de l'Agence — <strong>ni un acheteur, ni une IA qui la reçoit</strong>. C'est le tout premier critère du standard le plus répandu, c'est <strong>gratuit à corriger</strong>, et ça bloque une vente plus sûrement que n'importe quel défaut de code.</p>
+<p><strong>LE PROFIL D'ENSEMBLE EST TRÈS INHABITUEL, et il faut le savoir avant de livrer quoi que ce soit</strong> : 85 kits d'export complets, c'est <strong>plus</strong> que ce que le standard demande à son niveau le plus haut. Pas de licence ni de changelog, c'est <strong>moins</strong> que son niveau le plus bas. Le projet est simultanément très au-dessus et très en dessous.</p>
+<p><strong>CE QUI T'APPARTIENT</strong> : quelle licence. C'est une décision juridique et commerciale, pas technique, et elle détermine ce qu'un acheteur pourra faire. Je ne la choisis pas à ta place.</p>
+<hr>
+<h3>② OPENSSF GOLD — réponse complète, et la réponse est NON, avec sa raison</h3>
+<p><strong>Traité au même endroit.</strong> Verdict déjà écrit : <strong>ÉCARTÉ</strong>.</p>
+<p><strong>POURQUOI, ET CE N'EST PAS UN RENONCEMENT</strong> : l'un des critères du niveau Gold exige que <strong>50 % des changements soient relus par quelqu'un d'autre que leur auteur</strong>. Il n'y a qu'un humain sur ce projet. <strong>Ce critère nous est structurellement fermé</strong> — viser Gold reviendrait à viser un échec garanti, et à dépenser pour l'atteindre un effort qui ne pourra jamais aboutir.</p>
+<p><strong>CE QUI EST ATTEIGNABLE</strong> : le niveau <em>Passing</em> (67 critères), dont nous tenons déjà la partie difficile — tests, documentation, kits — et dont il nous manque surtout l'administratif : licence, changelog, version. <strong>Les trois se traitent ensemble</strong>, et c'est la tâche #1368.</p>
+<p><strong>UN POINT À TRANCHER QUE TU NE CONNAISSAIS PAS</strong> : le <strong>SBOM</strong> (l'inventaire machine-lisible de tout ce que le logiciel embarque) est devenu <strong>réglementaire en 2026</strong>. Il s'applique le jour où tu vends, pas avant — mais le savoir change le calendrier.</p>
+<hr>
+<h3>③ LA RATIONALISATION ET LA REFONTE À ZÉRO — ta proposition centrale, et elle est MESURÉE</h3>
+<p>Ta phrase : <em>« il faut partir sur un nouveau code totalement propre, et recommencer tout à zéro […] Mesure stp tous les avantages qu'on pourrait tirer de cette méthode. »</em></p>
+<p><strong>L'OUTIL QUI CHIFFRE ÇA EXISTE</strong> (<code>node scripts/cout-de-la-refonte.mjs</code>), et voici ce qu'il rend, passage du 2026-10-02T12:35Z :</p>
+<table><thead><tr><th>Ce qu'on reprendrait</th><th>Volume</th><th>Ce que ça coûte vraiment</th></tr></thead><tbody><tr><td><strong>l'outillage de l'Agence</strong></td><td>88 fichiers, 97 730 lignes</td><td><strong>c'est le périmètre que ta proposition vise</strong></td></tr><tr><td>le moteur du Jeu</td><td>93 fichiers, 12 624 lignes</td><td><strong>hors périmètre</strong> par ta consigne permanente — et oui, <strong>il se recopie tel quel</strong></td></tr><tr><td>les documents qui font loi</td><td>117 fichiers, 28 137 lignes</td><td><strong>ne se réécrit pas</strong> : se relit, et chaque règle retirée est une décision humaine</td></tr><tr><td>les registres et rapports</td><td>504 fichiers, 70 638 lignes</td><td><strong>se régénère ou s'archive</strong>, jamais à réécrire à la main</td></tr></tbody></table>
+<p><strong>LE VRAI COÛT N'EST PAS LES LIGNES, CE SONT LES RAISONS DÉJÀ ÉCRITES.</strong> L'outillage porte <strong>2 421 blocs de commentaire qui portent un POURQUOI</strong> : une leçon payée, un bug déjà attrapé, une décision datée de toi. Du code mécanique se réécrit vite ; <strong>une raison se relit ou se REGAGNE</strong>, et une refonte qui la perd réintroduit un bug déjà résolu une fois.</p>
+<p><strong>ET VOICI LE CHIFFRE QUI CHANGE TA STRATÉGIE, parce qu'il n'était pas prévisible</strong> :</p>
+<div class="highlight"><p><strong>Le coût n'est pas réparti, il est CONCENTRÉ.</strong> 27,5 raisons par fichier en moyenne, mais
+seulement <strong>8 en médiane</strong> — et <strong>un seul fichier, <code>check-house.mjs</code>, en porte 798 à lui seul,
+soit 33 % du total</strong>. Hors lui : 18,7 par fichier.</p></div>
+<p><strong>CE QUE ÇA VEUT DIRE POUR TON PLAN</strong> : une reprise module par module est <strong>beaucoup moins chère que la moyenne ne le laisse croire</strong> pour 87 fichiers sur 88. Le gros morceau est identifié, isolé, et c'est le filet de sécurité — précisément le fichier qu'on ne réécrit pas mais qu'on transporte. <strong>Une concentration se traite ; une moyenne ne se traite pas.</strong></p>
+<p><strong>LE CONTREPOIDS, et il est honnête</strong> : l'exportabilité est aujourd'hui à <strong>88 % sur 8 dimensions mesurées, dont 5 à 100 %</strong>. Une refonte les <strong>repart à zéro</strong>. Ce n'est pas un argument contre, c'est une colonne à mettre en face des avantages.</p>
+<p><strong>CE QUE L'OUTIL NE DIT PAS, et il le déclare lui-même</strong> : il mesure un <strong>volume</strong>, jamais une <strong>difficulté</strong>. Mille lignes mécaniques coûtent moins que cent lignes subtiles, et aucun programme ne fait la différence. <strong>Il ne recommande rien</strong> — la décision est à toi.</p>
+<hr>
+<h3>④ CE QUI N'EST PAS RATIONALISABLE — la liste existe en partie</h3>
+<p><strong>Traces réelles</strong> dans <code>docs/clone-hunter/decisions-a-prendre-2026-09-28.md</code>, <code>docs/regles-de-travail.md</code> et <code>docs/strategies/organisation-de-l-agence-strategie.md</code>.</p>
+<p><strong>CE QUI EST DÉJÀ ÉTABLI</strong> : la fusion des doublons, que tu supposais être la voie, est <strong>une voie fermée</strong> — la mesure l'a montré en cherchant la route vers 50 obligations. <strong>Ce n'est pas la rationalisation qui est impossible, c'est cette méthode-là.</strong></p>
+<p><strong>CE QUI MANQUE, ET C'EST UNE VRAIE LACUNE</strong> : la liste consolidée de ce qui <strong>ne se recopie jamais</strong>, pour ta stratégie de copier-coller. Les éléments en sont dispersés — les raisons écrites, les listes volontairement manuelles, les jugements qui ne se mécanisent pas — mais <strong>personne ne les a rassemblés en une liste opposable</strong>. Je propose d'en faire une tâche plutôt que de l'improviser ici.</p>
+<hr>
+<h3>⑤ LE FIL SUR LE TRAVAIL À DISTANCE — réellement non traité</h3>
+<p><strong>Vérifié mécaniquement : ce sujet n'apparaît nulle part dans le dépôt</strong>, sauf dans la tâche qui note qu'il faut y répondre. <strong>Il n'y a donc rien à te restituer</strong> — ni réponse, ni ébauche, ni trace de réflexion.</p>
+<p><strong>Je ne l'invente pas ce soir</strong> : répondre de mémoire sur un sujet dont le dépôt ne garde rien produirait exactement ce que ce projet refuse — une réponse que rien ne permet de vérifier. <strong>Il me faut d'abord ce que tu avais en tête</strong>, et le point de départ te revient.</p>
+<hr>
+<h3>⑥ « CORRECTION = RÉVÉLATION ? » — réellement non traité, et c'est la plus intéressante</h3>
+<p><strong>Même vérification, même résultat</strong> : la question n'existe nulle part ailleurs que dans la tâche qui la note. <strong>Mais contrairement au point ⑤, j'ai de quoi commencer à y répondre</strong>, parce que la nuit vient d'en produire un cas réel.</p>
+<p><strong>CE QUE LA NUIT A MONTRÉ</strong> : en corrigeant l'extracteur pour qu'il voie les titres et les lignes de tableau, j'ai re-mesuré les sept écarts de la révélation. <strong>L'un d'eux s'est effondré</strong> — « trois convictions sur dix citent un nom de fonction » est passé de <strong>30 % à 8 %</strong>. Le projet n'est pas devenu moins technique en vingt-quatre heures : <strong>l'ancien chiffre était un artefact de l'instrument</strong>.</p>
+<p><strong>DONC OUI, DANS UN SENS PRÉCIS</strong> : corriger un instrument <strong>révèle</strong> que ce qu'il mesurait n'était pas ce qu'on croyait. La correction n'a pas changé le projet, elle a changé <strong>ce qu'on en voit</strong> — et c'est une révélation au sens exact du mot.</p>
+<p><strong>MAIS L'INVERSE N'EST PAS VRAI, et c'est ce qui empêche d'en faire une équivalence</strong> : une révélation ne corrige rien par elle-même. Les 104 convictions récurrentes absentes de la boussole sont révélées depuis hier et <strong>toujours absentes</strong>. <strong>Révéler est gratuit ; corriger se paie.</strong></p>
+<p><strong>MA PROPOSITION DE FORMULATION, à trancher par toi</strong> : <em>toute correction d'un instrument est une révélation sur ce qu'on croyait mesurer — et toute révélation est une dette tant qu'elle n'est pas devenue une tâche.</em> La seconde moitié est déjà une règle du projet ; la première ne l'est pas encore.</p>
+<hr>
+<h3>CE QUE CE DOCUMENT T'APPREND AU-DELÀ DES SIX POINTS</h3>
+<p><strong>Quatre réponses sur six existaient déjà</strong>, écrites, mesurées, parfois avec leur tâche. <strong>Elles ne t'avaient jamais été remises.</strong> Ce n'est pas un oubli isolé : c'est le même défaut que la vérification d'hier soir avait attrapé deux fois, avec « carte cible » et « porteur de stratégie ».</p>
+<p><strong>Un sujet traité dans un document que tu n'as pas lu est, de ton point de vue, un sujet non traité.</strong> Le dépôt sait désormais mesurer où une note arrive ; il ne sait toujours pas mesurer ce qui t'a été effectivement REMIS. <strong>C'est, à mon avis, le prochain vrai manque</strong> — et il t'appartient de dire s'il mérite un mécanisme.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/reponse-au-prompt-word-du-1er-octobre.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
