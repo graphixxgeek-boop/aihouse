@@ -339,10 +339,66 @@ export function planDactionDesFils(v, { numeros = TACHE_PAR_CONTROLE } = {}) {
   return buildPlanDaction(constats, { toolSlug: "fils-de-discussion" });
 }
 
+// LIVRER LES FILS, ET C'EST LA SECONDE MOITIÉ DE SON FLUX (2026-10-02, tâche #1483)
+//
+// SA DEMANDE, MOT POUR MOT : « lorsque je t'envoie des prompts avec des questions à l'interieur :
+// 1/ tu extrais les questions, tu les rattaches au fil concerné ou tu créé un nouveau 2/ pour me
+// repondre, tu me livres les fils concernés ou créés : normalement, ca me permet d'acceder à ta
+// reponse en bas ou haut de page suivant l'ordre, mais aussi de reprendre les derniers echanges
+// sur le sujet. »
+//
+// CE QUI SE MÉCANISE ET CE QUI NE SE MÉCANISE PAS, et la frontière est nette. Le point ① —
+// extraire les questions d'un prompt et décider à quel fil chacune appartient — est un JUGEMENT :
+// une même question peut toucher trois sujets, et choisir est tout le travail. Aucune mécanique
+// ne le fera à ma place, et prétendre le contraire produirait un rattachement au petit bonheur.
+// Le point ② — mettre en page les fils concernés et les préparer à l'envoi — est purement
+// mécanique, et c'était pourtant la partie que je faisais À LA MAIN, donc la partie que
+// j'oublierais (leçon L2).
+//
+// CE QU'ELLE REND : les chemins HTML, prêts à envoyer, index compris. L'ENVOI reste un geste de
+// l'agent — rien ici ne peut remettre un fichier à quelqu'un — et la REMISE s'enregistre après,
+// jamais avant (même discipline que les sauvegardes et les documents).
+export function filsALivrer(numeros = [], { root = ROOT, listDirImpl = readdirSync, readFileImpl = readFileSync } = {}) {
+  const lus = lireLesFils({ root, listDirImpl, readFileImpl });
+  if (!lus.mesurable) return { mesurable: false, pourquoi: lus.pourquoi ?? "les fils n'ont pas pu être lus : aucune livraison ne peut être préparée sur zéro donnée" };
+  const voulus = numeros.map((n) => String(n).replace(/^#/, "").padStart(2, "0"));
+  const choisis = voulus.length
+    ? lus.fils.filter((f) => voulus.includes(String(f.numero).padStart(2, "0")))
+    : lus.fils;
+  const introuvables = voulus.filter((n) => !lus.fils.some((f) => String(f.numero).padStart(2, "0") === n));
+  const sources = choisis.map((f) => ({
+    numero: f.numero, titre: f.titre, balle: f.balle, date: f.date,
+    markdown: f.fichier,
+    html: f.fichier.replace(/^docs\/fils\//, "docs/fils/html/").replace(/\.md$/, ".html"),
+  }));
+  return { mesurable: true, sources, introuvables, index: { markdown: CERVEAU, html: "docs/fils/html/index.html" } };
+}
+
+export function formatLivraisonDesFilsLines(r) {
+  if (!r?.mesurable) return [`=== LIVRER LES FILS : PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"} ===`];
+  const L = [`=== ${r.sources.length} FIL(S) À LUI LIVRER ===`, ""];
+  L.push("  Commencer par l'index — il dit où est la balle sur chaque sujet :");
+  L.push(`     ${r.index.html}`);
+  L.push("");
+  for (const f of r.sources) L.push(`  #${String(f.numero).padStart(2, "0")} [${f.balle ?? "sans balle"}] ${String(f.titre).slice(0, 62)}\n     ${f.html}`);
+  for (const n of r.introuvables) L.push(`  🔴 fil #${n} demandé mais introuvable — un numéro qui ne désigne rien ressemble à un fil qu'on aurait livré`);
+  L.push("");
+  L.push("  ⚠️  LES PAGES HTML NE SONT PAS RÉGÉNÉRÉES ICI : cette commande PRÉPARE une livraison, elle ne");
+  L.push("     met pas à jour les pages. Un fil modifié depuis sa dernière mise en page partirait périmé.");
+  L.push("     Régénérer d'abord, puis livrer, puis enregistrer la remise — jamais dans un autre ordre.");
+  return L;
+}
+
 function main() {
   printReportHeader({ tool: "fils-de-discussion", title: "LES FILS DE DISCUSSION — un sujet, un fil", scriptPath: "scripts/fils-de-discussion.mjs" });
   printReliabilityNotice("fils-de-discussion");
   recordCliUsage("fils-de-discussion");
+  if (process.argv[2] === "livrer") {
+    const r = filsALivrer(process.argv.slice(3));
+    for (const l of formatLivraisonDesFilsLines(r)) console.log(l);
+    if (!r.mesurable || r.introuvables.length) process.exitCode = 1;
+    return;
+  }
   const envois = process.argv[3] && process.argv[2] === "--envois" ? process.argv[3] : null;
   const v = suisJeAJour({ dossierEnvois: envois });
   for (const ligne of formatVerdictLines(v)) console.log(ligne);

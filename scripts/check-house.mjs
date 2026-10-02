@@ -24160,6 +24160,40 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   const DA24 = await import('../scripts/data-archangel.mjs');
   assert.equal(F.REGISTRE_DES_REMISES, DA24.REGISTRE_DES_LIVRAISONS, 'the delivery register path is copied in two files: they must never drift apart in silence (Article 24)');
 
+  // ── LIVRER LES FILS (2026-10-02, tâche #1483) — la seconde moitié de son flux, celle qui se
+  // mécanise. Le point ① de sa demande (extraire les questions d'un prompt et décider à quel fil
+  // chacune appartient) est un JUGEMENT et le reste ; le point ② (mettre en page les fils
+  // concernés et les préparer à l'envoi) est mécanique, et c'était pourtant celui que je faisais
+  // à la main — donc celui que j'oublierais (leçon L2).
+  const filsFixture = {
+    listDirImpl: () => ['fil-01-alpha.md', 'fil-02-beta.md'],
+    readFileImpl: (chemin) => String(chemin).includes('fil-01')
+      ? '# FIL 01 — Alpha\n\n**Balle :** À TOI\n**Dernier mouvement :** 2026-10-02\n**Place dans le plan :** étage 0\n**Saisines :** x\n'
+      : '# FIL 02 — Beta\n\n**Balle :** À MOI\n**Dernier mouvement :** 2026-10-01\n**Place dans le plan :** transverse\n**Saisines :** y\n',
+  };
+  const aLivrer = F.filsALivrer(['01'], filsFixture);
+  assert.equal(aLivrer.sources.length, 1, 'only the named threads are prepared');
+  assert.equal(aLivrer.sources[0].html, 'docs/fils/html/fil-01-alpha.html', 'and the HTML path is derived from the markdown one, never guessed');
+  assert.ok(aLivrer.index.html.endsWith('index.html'), 'the index always travels with them: without it he cannot see where the ball is');
+
+  // UN NUMÉRO QUI NE DÉSIGNE RIEN EST NOMMÉ, jamais ignoré : un fil silencieusement absent de la
+  // livraison ressemble à un fil qu'on aurait livré (Article 28, la référence morte).
+  const avecFaux = F.filsALivrer(['01', '99'], filsFixture);
+  assert.deepEqual(avecFaux.introuvables, ['99'], 'a requested thread that does not exist is named');
+  assert.equal(avecFaux.sources.length, 1, 'and the real one is still prepared — one bad number does not cancel the delivery');
+
+  // SANS NUMÉRO : tous les fils. C'est le cas « livre-moi tout ce que je n'ai pas lu » qu'il a
+  // demandé, et il ne doit pas exiger de taper quatorze numéros.
+  assert.equal(F.filsALivrer([], filsFixture).sources.length, 2, 'with no number given, every thread is prepared');
+
+  // ZÉRO FIL LU N'EST PAS ZÉRO FIL À LIVRER (leçons L5/L11).
+  assert.equal(F.filsALivrer(['01'], { listDirImpl: () => { throw new Error('nope'); } }).mesurable, false, 'an unreadable folder refuses to prepare a delivery rather than returning an empty one');
+  assert.ok(/PAS MESURÉ/.test(F.formatLivraisonDesFilsLines({ mesurable: false, pourquoi: 'x' })[0]), 'and says so');
+
+  // LA LIMITE VOYAGE DANS LA SORTIE, jamais seulement dans un commentaire : cette commande PRÉPARE
+  // une livraison, elle ne régénère pas les pages — un fil modifié depuis partirait périmé.
+  assert.ok(F.formatLivraisonDesFilsLines(aLivrer).some((l) => /NE SONT PAS RÉGÉNÉRÉES/.test(l)), 'the output warns that it does not regenerate the pages');
+
   // ── 1. L'EMPLACEMENT EXISTE, et il est OPTIONNEL : aucun des 49 outils tenus par le gabarit ne
   // voit sa sortie bouger tant qu'il ne le renseigne pas. C'est la condition pour que ce soit une
   // réparation et non une refonte imposée.

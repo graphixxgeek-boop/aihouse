@@ -140,3 +140,46 @@ d'une valeur recopiée plutôt qu'un commentaire promettant de les garder align�
 Son tout premier lancement a nommé cinq documents envoyés sans qu'aucun fil ne bouge, et fait
 basculer le verdict d'ensemble à **NON**. Le contrôle est repassé au vert une fois les fils
 nourris — pas en se taisant, parce que le travail a été fait.
+
+## LIVRER LES FILS — la seconde moitié de son flux (2026-10-02, tâche #1483)
+
+**Sa demande, mot pour mot** : « lorsque je t'envoie des prompts avec des questions à l'interieur :
+1/ tu extrais les questions, tu les rattaches au fil concerné ou tu créé un nouveau 2/ pour me
+repondre, tu me livres les fils concernés ou créés ».
+
+### La frontière entre ce qui se mécanise et ce qui ne se mécanise pas
+
+| Son point | Nature | Qui le fait |
+|---|---|---|
+| ① extraire les questions, décider à quel fil chacune appartient | **jugement** | l'agent, et ça ne changera pas |
+| ② mettre en page les fils concernés et les préparer à l'envoi | **mécanique** | `fils-de-discussion livrer` |
+
+**Pourquoi ① ne se mécanise pas, et pourquoi le dire vaut mieux que le promettre** : une même
+question peut toucher trois sujets, et choisir EST le travail. Une mécanique qui rattacherait au
+plus proche voisin produirait un rangement au petit bonheur, et personne ne verrait l'erreur —
+un fil mal rattaché ressemble à un fil bien rattaché.
+
+**Pourquoi ② devait l'être** : c'était la partie que je faisais à la main. Donc la partie que
+j'oublierais (leçon L2). C'est exactement ce qui s'est produit pendant deux jours.
+
+### Ce que la commande rend
+
+```
+node scripts/fils-de-discussion.mjs livrer 04 08 14     # trois fils nommés
+node scripts/fils-de-discussion.mjs livrer              # tous — le cas « livre-moi ce que je n'ai pas lu »
+```
+
+Les chemins HTML prêts à envoyer, **index compris** : sans lui il ne voit pas où est la balle.
+
+**Un numéro qui ne désigne rien est NOMMÉ**, et la commande sort en échec. Un fil silencieusement
+absent d'une livraison ressemble à un fil qu'on aurait livré — c'est la référence morte de
+l'Article 28, appliquée à une remise.
+
+### Ce qu'elle ne fait PAS, et la limite voyage dans sa sortie
+
+**Elle ne régénère pas les pages.** Un fil modifié depuis sa dernière mise en page partirait
+périmé. L'ordre est donc : **régénérer → livrer → enregistrer la remise**, jamais un autre.
+
+**Et l'envoi lui-même reste un geste de l'agent** : rien dans ce dépôt ne peut remettre un fichier
+à quelqu'un. La remise s'enregistre APRÈS que l'envoi ait réussi — même discipline que les
+sauvegardes et les documents.
