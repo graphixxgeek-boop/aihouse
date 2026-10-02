@@ -1,9 +1,9 @@
 # FIL 08 — À qui est ce projet, et qui peut te le prendre
 
-**Balle :** À MOI
-**Dernier mouvement :** 2026-09-30
+**Balle :** À TOI
+**Dernier mouvement :** 2026-10-02
 **Place dans le plan :** Transverse — indépendant des étages, mais il devient urgent dès qu'on parle de vendre (fil 07) ou d'exporter (fil 06).
-**Saisines :** réponses 2026-09-29 (deux questions nouvelles) · incident du 2026-09-30 au soir
+**Saisines :** réponses 2026-09-29 (deux questions nouvelles) · incident du 2026-09-30 au soir · gros prompt du 2026-10-02 (la licence)
 
 ---
 
@@ -132,3 +132,40 @@ DE L'ENVOI. Les deux clés du 30 septembre ont dormi **quatorze jours** avant qu
 - [OpenAI API Key Exposure: Risks, Recovery, and Prevention — Rafter](https://rafter.so/blog/secrets/openai-api-key-exposure)
 - [12 Questions and Answers About AI API keys leaked in public repos — Security Scientist](https://www.securityscientist.net/blog/12-questions-and-answers-about-ai-api-keys-leaked-in-public-repos/)
 - [Exposed OpenAI API Key with Active Access and Quota Exhaustion — weaviate/weaviate #8859](https://github.com/weaviate/weaviate/issues/8859)
+
+---
+
+## 2 OCTOBRE — LA LICENCE, ET POURQUOI « PAS DE LICENCE » EST LE PIRE DES CHOIX
+
+**Ta décision :** « Le projet n'a aucune licence : OK reglons ca » · « donc je t'ecoute, continue
+sur le sujet, guide moi et accompagne moi pour qu'on ait une license ».
+
+**L'état, vérifié à l'instant et non supposé : il n'y a AUCUNE licence.** Pas de fichier
+`LICENSE`, pas de déclaration nulle part dans le dépôt.
+
+**Ce que ça veut dire en droit, et c'est contre-intuitif :** l'absence de licence ne veut PAS dire
+« libre ». Par défaut, elle veut dire **« tous droits réservés »** — personne, ni acheteur, ni
+collaborateur, ni testeur, n'a le droit d'utiliser, de copier ou de modifier le projet. **Pour un
+projet que tu veux vendre, c'est le pire des deux mondes** : ça n'attire personne, et ça ne te
+protège pas mieux qu'une licence propriétaire explicite, qui dirait au moins ce que tu autorises.
+
+**Ce lien avec le fil 11 (testeurs), que personne n'avait fait :** sans licence, tu ne peux pas
+légalement faire tester l'Agence par un tiers. La question de la licence bloque donc un autre fil
+sans que ça apparaisse nulle part.
+
+**Ce que je ne fais pas : la choisir.** C'est une décision juridique et commerciale, et elle
+détermine ce qu'un acheteur pourra faire. Elle est à toi, et je ne la prends pas à ta place.
+
+**Ce que je fais, et c'est la seule façon de te permettre de décider :** un dossier qui explique
+les **trois familles** de choix, avec pour chacune ce qu'elle t'autorise, ce qu'elle t'interdit, ce
+qu'un acheteur peut en faire, un exemple de projet connu sous cette licence, et ce que ça change
+pour ta vente. Sans jargon.
+
+**Q8.6 — À MOI, tâche #1368 — C'EST LE PREMIER DOCUMENT À PRODUIRE.** Le dossier des trois
+familles de licence. Tu ne peux pas trancher sans lui, donc il passe avant la question.
+
+**Q8.7 — À TOI, APRÈS le dossier.** Une seule chose que je peux te demander dès maintenant, parce
+qu'elle oriente tout le reste : **à qui veux-tu que l'Agence puisse servir ?**
+*(a) à toi seul, et à un acheteur qui l'achèterait en entier · (b) à toi, plus quelques personnes
+choisies (testeurs, collaborateurs) · (c) à qui veut, gratuitement, avec ton nom dessus · (d) je
+ne sais pas encore, le dossier m'aidera*

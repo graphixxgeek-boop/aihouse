@@ -218,7 +218,7 @@ export function findSauvegardesNonLivrees({ dossier = DOSSIER, listerImpl = read
       : `les ${fichiers.length} sauvegarde(s) présentes portent leur marque de remise — ce qui dit qu'elles lui ont été ENVOYÉES, jamais qu'il les a téléchargées` };
 }
 
-export function marquerRemise(fichier, { dossier = DOSSIER, lireImpl = readFileSync, ecrireImpl = writeFileSync, quand = null } = {}) {
+export function marquerRemise(fichier, { dossier = DOSSIER, lireImpl = readFileSync, ecrireImpl = writeFileSync, effacerImpl = unlinkSync, quand = null } = {}) {
   const chemin = join(dossier, MARQUEUR_DE_REMISE);
   let deja = [];
   try { deja = JSON.parse(lireImpl(chemin, "utf8")); } catch { deja = []; }
@@ -230,7 +230,32 @@ export function marquerRemise(fichier, { dossier = DOSSIER, lireImpl = readFileS
   if (!quand) throw new Error("marquerRemise() exige l'heure LUE (Article 32) — jamais une heure fabriquée par le registre lui-même");
   deja.push({ fichier, remisLe: quand });
   ecrireImpl(chemin, JSON.stringify(deja, null, 1) + "\n", "utf8");
-  return { deja: false, total: deja.length };
+
+  // LA REMISE EFFACE LE FICHIER, ET C'EST TOUT LE DISPOSITIF (2026-10-02, tâche #1472).
+  // Sa décision, après avoir lu le dossier du poids : « NON on ne garde rien, si j'ai oublié de
+  // télécharger la dernière version, il vaut mieux que tu en génères une nouvelle : l'autre est
+  // déjà périmée. En plus c'est pas trop long à générer. »
+  //
+  // POURQUOI SON RAISONNEMENT EST MEILLEUR QUE LE MIEN, et c'est le genre de renversement qui vaut
+  // d'être écrit : je proposais de garder UNE copie « au cas où ». Mais une sauvegarde qu'il n'a
+  // pas téléchargée est, par construction, une sauvegarde d'un état déjà dépassé — la garder ne le
+  // protège donc de rien, elle lui donne seulement l'impression d'un filet. En régénérer une coûte
+  // une trentaine de secondes, et elle est à jour.
+  //
+  // POURQUOI L'EFFACEMENT VIT ICI PLUTÔT QUE DANS UNE COMMANDE À PART : une commande de nettoyage
+  // est un geste qu'il faut penser à faire, donc un geste qui sera oublié (leçon L2). En
+  // l'attachant à la REMISE, « livré » et « effacé » deviennent le même événement, et il devient
+  // impossible d'avoir un coffre qui traîne après avoir été remis.
+  // CE QUI SURVIT, et c'est le seul morceau qui compte : la LIGNE du registre. Elle est versionnée,
+  // donc on saura toujours ce qui a été remis et quand, même quand plus aucun coffre n'existe.
+  // DISCIPLINE D'APPEL, à respecter sans exception : on ne marque la remise qu'APRÈS que l'envoi
+  // ait réussi. Marquer avant, c'est effacer un fichier qui n'est jamais parti.
+  if (effacerImpl) {
+    for (const f of [fichier, fichier.replace(/^projet-/, "notice-").replace(/\.zip$/, ".txt")]) {
+      try { effacerImpl(join(dossier, f)); } catch { /* déjà absent : ce n'est pas une erreur */ }
+    }
+  }
+  return { deja: false, total: deja.length, efface: Boolean(effacerImpl) };
 }
 
 export function aSupprimer(fichiers, { garder = COPIES_GARDEES } = {}) {

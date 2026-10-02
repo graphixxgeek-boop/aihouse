@@ -445,3 +445,71 @@ tort, les compter pleines mentirait : **la troisième voie est de le dire** (Art
 arrivée — un fichier du suivi bouge à chaque commit sans qu'une note y ait été rangée. Ce contrôle
 dit **où plus rien n'arrive**, ce qui est un vrai signal ; jamais que tout ce qui devait arriver
 est arrivé.
+
+## CE QUI A ÉTÉ ÉCRIT POUR LUI, ET QUI NE LUI EST JAMAIS PARVENU (2026-10-02, tâche #1475)
+
+**Son reproche, mot pour mot, et c'est le plus grave de la journée :** « quelque chose ne va pas :
+tu avances sur des sujets mais tu ne me fais pas profiter des resultats. […] ca me donne
+l'impression que tu travailles DE TON COTE et que le projet M'ECHAPPE : trouve une solution pour
+corriger ca stp. » Il a nommé quatre documents produits et jamais montrés, dont la carte des
+modules qu'il attendait « avec impatience ».
+
+**Pourquoi ça vit chez data-archangel plutôt que dans un outil de plus.** Il veille sur la
+CIRCULATION des données — qui produit, qui lit, qui n'est lu par personne. Un document écrit POUR
+LUI et jamais remis est une circulation interrompue au dernier mètre. C'est le mécanisme de
+`findSauvegardesNonLivrees()` (tâche #1471) étendu de la SAUVEGARDE au DOCUMENT : un nouveau venu
+hérite de ce que l'équipe sait déjà faire (Article 24).
+
+### Ce que ça donne, concrètement
+
+| Commande | Ce qu'elle rend |
+|---|---|
+| `node scripts/data-archangel.mjs livraisons` | les documents écrits pour lui qui n'ont **aucune marque de remise** |
+| `node scripts/data-archangel.mjs livraisons --remis <chemin> --quand <horodatage LU>` | enregistre une remise — **après** que l'envoi ait réussi, jamais avant |
+
+Registre : `docs/livraisons.json`, versionné (la mémoire survit au conteneur, qui est éphémère).
+
+### Le registre porte sa DATE DE NAISSANCE, et sans elle il mentirait dès son premier passage
+
+Au premier lancement, il a accusé **64 documents sur 64** — dont ceux que l'utilisateur avait lus
+et commentés le matin même. « Aucune marque » ne veut pas dire « jamais remis » : pour tout ce qui
+précède la création du registre, ça veut dire **NON MESURÉ**, et confondre les deux est exactement
+la faute que ce projet a déjà payée trois fois (leçons L5/L11). Un document plus ancien que le
+registre est donc **compté à part, en toutes lettres**, au lieu d'être accusé.
+
+### Pourquoi la liste des dossiers est MANUELLE — l'échec de dérivation, consigné
+
+L'Article 24 exige qu'une liste manuelle déclare sa nature noir sur blanc. Celle-ci le fait, et
+l'échec de dérivation se consigne pour que personne ne le retente à l'aveugle :
+
+- **« un dossier qu'aucun script n'écrit »** ne sépare rien : les treize dossiers porteurs de HTML
+  sont tous nommés par au moins un script (de 1 à 45 chacun) ;
+- **« peu de fichiers »** demanderait un seuil planté au milieu d'un nuage continu (105, 33, 15, 6,
+  5, 4, 4, 4, 3, 3, 2…), donc un seuil arbitraire qui se tromperait au premier dossier nouveau (BP5) ;
+- **une marque posée dans le fichier au moment de l'écrire** ne survivrait pas à un agent qui
+  oublie de la poser (leçon L2).
+
+Le garde-fou `findDossiersDeLivraisonNonDeclares()` surveille que cette liste ne se périme pas : un
+dossier non déclaré portant des `.html` **sans date dans leur nom** ressemble à un dossier de
+livraison oublié (un générateur date ses fichiers, une main ne le fait pas). Rendu comme une
+**question**, jamais comme un écart constaté — l'appeler un verdict serait le faux positif à 96 %
+de bruit que cette journée a déjà corrigé une fois.
+
+### La limite, déclarée d'emblée parce qu'elle est irréductible
+
+**Aucun code de ce dépôt ne peut observer un TÉLÉCHARGEMENT.** Ce registre mesure la REMISE par
+l'agent, jamais la lecture par lui — et il le DIT à chaque passage. C'est la moitié attrapable, et
+c'est précisément celle qui a manqué les quatre fois qu'il a citées : les documents existaient sur
+disque, personne ne les avait envoyés. L'autre moitié est posée à chaque Ronde, à l'étape
+`confirmation-livraisons` (tâche #1473).
+
+### Où il est branché, parce qu'un outil non branché est une intention (leçon L2)
+
+1. **`angel-of-ia-process`**, règle de conduite `livraisons-partagees` : à la fin de chaque compte
+   rendu de travail, lancer la commande et, pour chaque document sans marque, soit l'envoyer puis
+   enregistrer la remise, soit dire pourquoi il ne lui est pas destiné.
+2. **La Ronde**, étape `confirmation-livraisons` : la liste à lui soumettre vient de cette commande,
+   jamais de ma mémoire (Article 31).
+3. **Le filet de sécurité**, qui vérifie les deux sens : un document neuf sans marque est nommé, un
+   document déjà remis ne l'est plus, un document antérieur au registre n'est jamais accusé, une
+   heure fabriquée est refusée, et un dossier non déclaré est posé comme une question.

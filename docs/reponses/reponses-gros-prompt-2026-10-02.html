@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Réponses à ton gros prompt du 2 octobre</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T20:39:39.019Z</div>
+    <h1>Réponses à ton gros prompt du 2 octobre</h1>
+    <p class="sub">43 questions · 30 réponses · 3 chantiers ouverts</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>De quoi on parle.</strong> Tu m'as envoyé en copier-coller un prompt qui contient tes réponses à tous
+les documents que je t'avais livrés, plus de nouvelles remarques et de nouvelles questions.
+<strong>Ta demande :</strong> y répondre point par point, les réponses rapides d'abord et les chantiers
+ensuite — c'est l'ordre que tu as choisi en fenêtre.
+<strong>Tâches concernées :</strong> #1472 (zéro sauvegarde conservée) · #1473 (la Ronde te demande ce que tu
+as reçu) · #1475 (le détecteur de documents jamais envoyés) · #1476 à #1479 (ouvertes par ce
+document) · et les chantiers #1480 à #1482.</p></div>
+<hr>
+<h3>CE QUE CE DOCUMENT COUVRE, ET CE QU'IL NE COUVRE PAS</h3>
+<p><strong>43 questions comptées dans ton prompt · 30 blocs de réponse · 4 regroupements déclarés · 4 questions qui te reviennent.</strong></p>
+<p>Le compte se décompose pour que tu puisses le vérifier : 1 sur ton reproche final · 7 sur tes nouvelles remarques · 4 sur le document des 11 destinations · 18 sur la suite de tes réponses · 13 absorbées par les trois chantiers. Les <strong>quatre regroupements</strong> sont la licence (2 questions qui n'en font qu'une), les documents que tu dis ne pas avoir vus (5), le chantier des fils (6) et le chantier du filet (4) — chacun dit lesquelles il couvre, à l'endroit où il répond.</p>
+<p>Pourquoi ce compte est là plutôt qu'une promesse d'exhaustivité : sans lui, une question absorbée disparaît sans que personne puisse le voir, et c'est exactement ce que tu redoutes quand tu demandes du point par point. <strong>Si tu en comptes une de plus que moi, dis-le — c'est qu'elle a été absorbée en silence.</strong></p>
+<p><strong>Les trois chantiers que tu as mis après</strong> — le système de fils, la séparation agence/utilisateur, et le filet transporté — ne sont pas traités ici : ils demandent chacun un vrai dossier, et les bâcler en trois paragraphes serait pire que les reporter. Ils sont ouverts comme tâches, et je commence par le premier dès ce document livré.</p>
+<hr>
+<h2>① D'ABORD : TON REPROCHE DE LA FIN, PARCE QU'IL COMMANDE TOUT LE RESTE</h2>
+<div class="highlight"><p>« quelque chose ne va pas : tu avances sur des sujets mais tu ne me fais pas profiter des
+resultats. […] ca me donne l'impression que tu travailles DE TON COTE et que le projet
+M'ECHAPPE : trouve une solution pour corriger ca stp. »</p></div>
+<p><strong>Tu as raison, et le défaut est pire que ce que tu décris.</strong> Tu as cité quatre documents. J'en ai cherché la trace mécaniquement, et voici ce que ça donne :</p>
+<table><thead><tr><th>Ce que tu réclames</th><th>Ce que le dépôt contient vraiment</th></tr></thead><tbody><tr><td>La carte des modules actuelle vs cible</td><td><code>docs/referentiel/carte-cible-des-modules.html</code> <strong>existe</strong>, écrite hier soir — jamais envoyée</td></tr><tr><td>L'organisation des lois</td><td><code>docs/referentiel/organisation-des-lois.html</code> <strong>existe</strong> — jamais envoyée</td></tr><tr><td>La thèse « le cœur, c'est la gouvernance »</td><td><code>docs/the-king/these-du-coeur-2026-10-02.txt</code> <strong>existe</strong>, en texte brut — jamais envoyée, jamais mise en page</td></tr><tr><td>#1110, l'arborescence du GRAND PROJET</td><td>le dossier <code>docs/grand-projet/04-arborescence-des-taches/</code> est <strong>VIDE</strong>. Rien n'a été produit. J'ai écrit « en cours, reprise juste après ce rapport » et je ne l'ai jamais reprise</td></tr><tr><td>La liste de ce qui n'est pas rationalisable</td><td><strong>le mot n'apparaît dans aucun document du dépôt.</strong> J'ai écrit « la liste existe en partie » et c'était faux</td></tr></tbody></table>
+<p><strong>Donc deux fautes distinctes, pas une :</strong> trois documents écrits et gardés sur disque, et deux sujets que j'ai présentés comme avancés alors que l'un est vide et l'autre n'existe pas. La seconde est la plus grave : un document non envoyé se rattrape en une minute, une fausse déclaration d'avancement te fait attendre quelque chose qui ne vient pas.</p>
+<h3>Ce que j'ai construit, plutôt que de te promettre de mieux faire</h3>
+<p><strong>Un registre des remises, et un détecteur de ce qui n'y figure pas.</strong> C'est le mécanisme que j'avais écrit avant-hier pour les sauvegardes, étendu du fichier <code>.zip</code> au DOCUMENT — dans ce projet, un nouveau venu hérite de ce que l'équipe sait déjà faire.</p>
+<table><thead><tr><th>Commande</th><th>Ce qu'elle fait</th></tr></thead><tbody><tr><td><code>node scripts/data-archangel.mjs livraisons</code></td><td>liste les documents écrits pour toi qui n'ont <strong>aucune marque d'envoi</strong></td></tr><tr><td><code>… livraisons --remis &lt;fichier&gt; --quand &lt;heure lue&gt;</code></td><td>enregistre un envoi, <strong>après</strong> qu'il ait réussi</td></tr></tbody></table>
+<p><strong>Il est branché à trois endroits</strong>, parce qu'un outil qu'on doit penser à lancer est un outil qu'on oubliera :</p>
+<ul><li><strong>À la fin de chaque compte rendu de travail</strong> — une règle de conduite surveillée (<code>angel</code>) demande : pour chaque document sans marque, l'as-tu reçu, ou dis pourquoi il ne t'est pas destiné. « Je n'ai pas regardé » n'est pas une réponse acceptée.</li><li><strong>À la Ronde</strong>, dans une nouvelle étape de questions qui te demande ce que tu as réellement reçu.</li><li><strong>Dans le filet de sécurité</strong>, qui vérifie que le détecteur attrape bien un document neuf et n'accuse pas un document déjà envoyé.</li></ul>
+<p><strong>Un défaut trouvé en le lançant pour de vrai, et il vaut d'être dit</strong> : à son premier passage il a accusé <strong>64 documents sur 64</strong> — y compris ceux que tu avais lus et commentés le matin même. « Aucune marque » ne veut pas dire « jamais envoyé » ; avant la naissance du registre, ça veut dire <strong>on ne sait pas</strong>. Le registre porte donc sa date de naissance, et tout ce qui la précède est compté à part, en toutes lettres, au lieu d'être accusé à tort.</p>
+<p><strong>Sa limite, dite d'emblée :</strong> aucun code de ce dépôt ne peut voir que tu as TÉLÉCHARGÉ quelque chose. Il mesure l'ENVOI par moi, jamais la lecture par toi. C'est la moitié attrapable — et c'est exactement celle qui a manqué les quatre fois que tu cites : les documents étaient là, personne ne les avait envoyés. L'autre moitié, c'est la question posée à chaque Ronde.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche #1475, faite. Les cinq documents ci-dessus partent avec ce dossier.</p></div>
+<hr>
+<h2>② LES RÉPONSES RAPIDES</h2>
+<h3>Les sauvegardes ZIP — ta décision est appliquée <em>(couvre ta question 1)</em></h3>
+<div class="highlight"><p>« NON on ne garde rien, si j'ai oublié de telecharger la derniere version, il vaut mieux que tu
+en generes une nouvelle : l'autre est déjà périmée. En plus c'est pas trop long à generer.
+QU'en pense-tu ? »</p></div>
+<p><strong>Ce que j'en pense : ton raisonnement est meilleur que le mien, et pour une raison précise.</strong> Je proposais d'en garder une « au cas où ». Mais une sauvegarde que tu n'as pas téléchargée est, par construction, la photo d'un état déjà dépassé — la garder ne te protège de rien, elle te donne l'impression d'un filet. En régénérer une coûte une trentaine de secondes et elle est à jour.</p>
+<p><strong>Appliqué, et pas par une commande de ménage</strong> : l'envoi EFFACE désormais l'archive. Une commande de nettoyage serait un geste qu'il faut penser à faire, donc un geste oublié. En l'attachant à l'envoi, « livré » et « effacé » deviennent le même événement.</p>
+<p><strong>État réel maintenant : <code>docs/sauvegardes</code> pèse 0,0 Mo</strong> (contre 32 Mo avant-hier). Ce qui survit est la LIGNE du registre, versionnée : on saura toujours ce qui t'a été remis et quand, même quand plus aucun coffre n'existe.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche #1472, faite.</p></div>
+<h3>Détecter l'ORDRE des événements <em>(ta question 2 : facile ? utile ? déjà en place ?)</em></h3>
+<p><strong>Déjà en place : à moitié, et pour un seul cas.</strong> Un garde-fou refuse mécaniquement une ligne de suivi datée dans le futur. C'est bien une règle d'ordre, mais une seule : « cet événement ne peut pas être après maintenant ».</p>
+<p><strong>Ce qui n'existe pas</strong> : rien ne vérifie l'ordre d'une SÉQUENCE. Trois exemples réels de ce projet où l'ordre est la règle et où rien ne la garde :</p>
+<ul><li>l'envoi doit précéder l'effacement de la sauvegarde (sinon on détruit un fichier jamais parti) ;</li><li>les dix questions d'alignement doivent précéder l'enregistrement de la Ronde (sinon elles sont reportées à la suivante, indéfiniment) ;</li><li>la prédiction doit précéder la réponse (sinon on relit sa réponse en se disant « c'est bien ce que je pensais », et l'écart disparaît).</li></ul>
+<p>Dans les trois cas, l'ordre est aujourd'hui garanti par du code écrit exprès pour chacun, jamais par un mécanisme commun.</p>
+<p><strong>Facile à faire ?</strong> Oui pour tout ce qui est horodaté (comparer deux dates est trivial). Non pour le reste : savoir que « la prédiction a été écrite avant la réponse » suppose que les deux soient enregistrées séparément et datées, ce qui est un changement de forme dans chaque registre concerné.</p>
+<p><strong>Utile ?</strong> Mon avis, et ce n'est qu'un avis : <strong>moyennement, et pas tout de suite.</strong> Les trois cas ci-dessus sont déjà couverts individuellement. Un mécanisme général n'apporterait qu'au quatrième cas, qui n'existe pas encore. Je le noterais comme une idée à ressortir quand un quatrième cas apparaîtra — pas comme un chantier à ouvrir maintenant.</p>
+<div class="highlight"><p><strong>ACTION — À TRANCHER.</strong> Tu veux que je l'ouvre maintenant, ou que je le range comme idée en
+attente d'un quatrième cas ? Mon conseil : la seconde.</p></div>
+<h3>Le PACK DÉCOUVERTE — à quel contexte il appartient <em>(ta question 3)</em></h3>
+<p><strong>Il vient de ta COMMANDE IMPORTANTE du 28 septembre</strong>, le gros document que tu as déposé pour lancer le grand projet. Tes mots :</p>
+<div class="highlight"><p>« LE &quot;PACK DECOUVERTE AGENCE&quot; c'est : 1 DOC VERSION &quot;ADMIN&quot; (une page HTML) + 1 DOC VERSION
+&quot;COMMERCIALISABLE&quot; […] + 1 DOC (6-8 PAGES HTML) DE PRESENTATION DE L'AGENCE […] + POSSIBILITE
+D'OBTENIR UN DES DOCS DE LA LISTE SUR DEMANDE. »</p></div>
+<p><strong>À quoi il sert, dans tes mots</strong> : « permet de découvrir l'agence, de la faire découvrir à un utilisateur, ou à une IA, ou à moi, en tant que &quot;projet&quot; et non &quot;produit fini&quot; ». Il répond à : qu'est-ce que l'Agence, à quoi elle sert, comment elle fonctionne, quels outils.</p>
+<p><strong>Où ça en est</strong> : une seule tâche le porte, <strong>#1136</strong> (28 septembre), et elle est <strong>ouverte</strong>. Rien n'a été produit. Tu avais aussi laissé deux questions en suspens dedans, qui attendent toujours : le nombre de pages (6-8 à confirmer) et <strong>qui le porte — Cassandra ou Inès plutôt que The-King</strong>.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1476</strong> : faire le point complet sur le PACK DÉCOUVERTE (ce que ta
+commande demande exactement, ce qui existe déjà et pourrait y entrer, ce qui manque), et te
+reposer les deux questions laissées ouvertes.</p></div>
+<h3>La rationalisation par « PACK » <em>(ta question 4 — une idée, pas une question)</em></h3>
+<p><strong>Idée notée, et elle est bonne pour une raison que tu n'as peut-être pas en tête</strong> : le dépôt compte aujourd'hui <strong>126 fichiers dans le référentiel seul</strong>. Regrouper par « pack » ne sert pas qu'à comprendre — ça donne un critère d'élagage qui n'existe pas aujourd'hui : <em>un document qui n'entre dans aucun pack n'a probablement plus de raison d'être.</em> C'est un test, là où « est-ce encore utile ? » n'en est pas un.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Inscrite au chantier rationalisation (tâche <strong>#1477</strong>), pas traitée
+maintenant.</p></div>
+<h3>L'état des lieux du GRAND CHANGEMENT, avec un tableau <em>(ta question 5)</em></h3>
+<p><strong>Je ne te le donne pas dans ce document, et je te dis franchement pourquoi</strong> : tu demandes un tableau de ce qui est fait / en cours / à faire, en t'appuyant sur « le doc arborescence ». Or c'est précisément ce document-là qui est <strong>VIDE</strong> (<code>docs/grand-projet/04-arborescence-des-taches/</code>). Fabriquer le tableau de mémoire serait exactement la faute que tu viens de me reprocher.</p>
+<p><strong>Ce que je fais à la place</strong> : l'arborescence des tâches du grand projet est à produire pour de vrai (c'est #1110, rouverte), et l'état des lieux en sort mécaniquement — pas l'inverse.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1478</strong> : produire l'arborescence #1110 pour de vrai, puis l'état
+des lieux avec son tableau. Livré en HTML.</p></div>
+<h3>Des outils réduits en EXTENSION d'un autre <em>(ta question 6)</em></h3>
+<p><strong>Oui, c'est possible, et c'est même ce qui vient d'être fait deux fois aujourd'hui</strong> :</p>
+<ul><li>le détecteur de documents non envoyés n'est PAS un outil : c'est une extension de data-archangel (qui veille déjà sur la circulation des données) ;</li><li>l'étape de confirmation à la Ronde n'est pas un outil non plus : c'est une ligne de plus dans l'inventaire de questions existant.</li></ul>
+<p><strong>C'est d'ailleurs la règle écrite</strong> : avant d'agir, on demande à tool-brain qui sait déjà faire ça ; si un outil couvre à moitié, <strong>on l'étend</strong> ; on ne construit que si personne ne sait faire.</p>
+<p><strong>Ce que je ne fais pas sans toi</strong> : passer le paysage en revue pour désigner les candidats. Tu l'as demandé explicitement — « toujours me demander avant d'agir, mais check stp ». Le check demande de relire chaque outil, donc c'est un vrai passage, pas une réponse de tête.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1479</strong> : passer les outils en revue et te rendre une liste de
+candidats « réductible en extension de X », avec pour chacun ce qu'on gagne et ce qu'on perd.
+<strong>Aucun regroupement ne sera fait sans ton accord.</strong></p></div>
+<h3>Un marqueur « lu par moi » quand un doc est TÉLÉCHARGÉ <em>(ta question 8)</em></h3>
+<p><strong>Non, c'est techniquement impossible de ce côté-ci, et il faut que ce soit clair.</strong> Rien dans ce dépôt ni dans ce conteneur ne peut observer un téléchargement : le fichier part, et ce qui se passe ensuite est dans ton navigateur, pas dans le projet.</p>
+<p><strong>Ce que j'ai fait à la place, en deux moitiés</strong> :</p>
+<ul><li>la moitié mécanique : le registre des envois ci-dessus — il sait dire « ce document ne t'a jamais été ENVOYÉ », ce qui est le cas qui a réellement foiré quatre fois ;</li><li>la moitié humaine : <strong>une question à chaque Ronde</strong>, exactement comme tu l'as demandé — « LE MIEUX EST DE ME POSER UNE FENETRE DE QUESTION A LA FIN POUR ETRE SUR ». Elle est maintenant une étape déclarée du process, donc l'oublier est détecté comme n'importe quelle étape sautée.</li></ul>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche #1473, faite.</p></div>
+<hr>
+<h2>③ TES RÉPONSES AU DOCUMENT « LES 11 DESTINATIONS D'UNE NOTE »</h2>
+<h3>« le présent document ? » — qu'est-ce que je voulais dire <em>(ta question 16)</em></h3>
+<div class="highlight"><p>« une consigne de travail, une méthode → <strong>le présent document</strong> → c'est ici que vit le COMMENT
+on travaille ensemble. » / Tu réponds : « qu'est-ce que tu veux dire ? je pensais plutôt à regles
+de travail ou un doc du genre ? »</p></div>
+<p><strong>Tu as raison et c'était une maladresse d'écriture de ma part.</strong> « Le présent document » voulait dire <code>docs/regles-de-travail.md</code> — c'est bien celui-là. Je l'ai écrit comme ça parce que je rédigeais à l'intérieur d'un tableau qui, à ce moment-là, était destiné à vivre dans ce fichier-là ; sorti de son contexte, « le présent document » ne désigne plus rien. <strong>La ligne doit dire <code>docs/regles-de-travail.md</code>, en toutes lettres.</strong></p>
+<div class="highlight"><p><strong>ACTION — RETENU, corrigé dans la foulée.</strong> C'est exactement le type de dette que la charte
+appelle « un nom propre sans définition atteignable ».</p></div>
+<h3>Les « zones fragiles » — précise-moi ça <em>(ta question 17)</em></h3>
+<div class="highlight"><p>« une zone qu'on sait fragile → <code>docs/referentiel/points-fragiles.md</code> → pour que le prochain
+intervenant le sache avant d'y toucher, pas après. Precise moi ça stp je ne comprends pas tres
+bien »</p></div>
+<p><strong>En clair, avec un exemple vrai.</strong> Une « zone fragile », c'est un endroit du code dont on SAIT, par expérience, qu'il casse facilement ou qu'il cache un piège — mais que rien dans le code lui-même ne signale.</p>
+<p><strong>Exemple réel de ce projet, et il m'est arrivé trois fois aujourd'hui</strong> : certains fichiers calculent les chemins depuis une racine, d'autres travaillent en chemins relatifs. Si on écrit le mauvais des deux, <strong>le code ne plante pas</strong> : il renvoie une liste vide, et une liste vide ressemble à « tout va bien ». Je me suis fait avoir trois fois dans la même journée, sur trois fichiers différents.</p>
+<p><strong>Ce que le registre des points fragiles sert à faire</strong> : qu'un agent — moi demain, ou une autre IA — lise « attention, ce fichier travaille en chemins relatifs » AVANT d'y toucher, pas après avoir passé vingt minutes à comprendre pourquoi son résultat est vide.</p>
+<p><strong>Ce que ce n'est pas</strong> : ce n'est ni une liste de bugs (un bug se corrige, une fragilité se signale), ni une liste de code moche. C'est une liste de <strong>pièges connus</strong>.</p>
+<div class="highlight"><p><strong>ACTION — ÉCARTÉ (rien à faire).</strong> Ta question était une demande d'explication, pas un
+changement. Si après ça tu veux qu'on change la forme du registre, dis-le et on le fait.</p></div>
+<h3>« Une note peut aller à deux endroits » — un système équivalent existe ? <em>(ta question 15)</em></h3>
+<p><strong>Oui, et tu l'as repéré à juste titre.</strong> Le suivi des tâches a déjà exactement ce mécanisme : une ligne porte à la fois la DÉCISION (ce qui a été tranché) et son STATUT (ouverte / terminée). Une décision qui ouvre une question est donc déjà naturellement à deux endroits : la décision dans sa ligne, la question dans son statut « ouverte ».</p>
+<p><strong>La différence avec les fils, et elle est réelle</strong> : le suivi range par TÂCHE, le fil range par SUJET. Une même question peut traverser six tâches ; dans le suivi elle apparaît six fois en morceaux, dans un fil elle se lit d'un trait. Ce n'est pas une redondance, ce sont deux axes de lecture du même fait.</p>
+<p><strong>Mais ta question cache la vraie</strong> : est-ce que ces deux systèmes se tiennent à jour l'un l'autre ? <strong>Non</strong>, et c'est le chantier des fils ci-dessous.</p>
+<h3>Git, et sa place par rapport à « sources » <em>(ta question 18)</em></h3>
+<p><strong>Les deux ne jouent pas du tout le même rôle, et les confondre coûterait cher.</strong></p>
+<table><thead><tr><th></th><th><strong>git</strong></th><th><strong><code>docs/grand-projet/00-sources/</code></strong></th></tr></thead><tbody><tr><td>Ce que c'est</td><td>l'historique de TOUT le projet, chaque version de chaque fichier</td><td>un dossier ordinaire, DANS git, où vivent <strong>les documents que TU as écrits</strong></td></tr><tr><td>À quoi ça sert</td><td>revenir en arrière, savoir qui a changé quoi et quand, et c'est <strong>la vraie sauvegarde</strong></td><td>garder tes textes séparés de mes analyses, pour qu'on ne les confonde jamais</td></tr><tr><td>Qui écrit dedans</td><td>moi, à chaque enregistrement</td><td>toi (tes dépôts), moi quand je range un de tes envois</td></tr></tbody></table>
+<p><strong>L'harmonie entre les deux, en une phrase</strong> : <code>00-sources</code> est un dossier <strong>comme un autre</strong> du point de vue de git — git le sauvegarde comme tout le reste. Ce qui le rend spécial n'est pas technique, c'est une RÈGLE : ce qui est dedans vient de toi et <strong>prime sur tout</strong> ; ce qui est ailleurs est de la matière que j'ai produite, et qui ne peut jamais corriger ta demande.</p>
+<p><strong>Pourquoi je n'en ai pas parlé dans le document des 11 destinations</strong> : ce document répondait à « où RANGER une note », et git n'est pas un endroit où ranger — c'est ce qui garde tous les endroits. C'était une omission légitime, mais tu as eu raison de la relever, parce qu'un lecteur qui découvre le dépôt peut croire que « sources » est un système de sauvegarde parallèle. Ça ne l'est pas.</p>
+<hr>
+<h2>④ LA SUITE DE TES RÉPONSES</h2>
+<h3>CORRECTION = RÉVÉLATION <em>(ta question 26)</em></h3>
+<p>Tu écris : « c'est une question qui n'a pas vraiment d'enjeu », et tu as raison, donc je fais court. <strong>Ce que tu voulais dire</strong> : le passage de la révélation pointait des corrections à réaliser. <strong>Ce que j'avais compris</strong> : tu me demandais si corriger et révéler étaient le même geste. Malentendu levé, pas de suite.</p>
+<div class="highlight"><p><strong>ACTION — ÉCARTÉ</strong>, par ton propre arbitrage.</p></div>
+<h3>Le mot « intelligent » dans PHILO <em>(ta question 27)</em></h3>
+<div class="highlight"><p>« OK pour l'ajout du mot &quot;intelligent&quot;, mais aussi : dans doc PHILO il fallait ajouter ces
+notions (coherence globale). Déjà fait ? »</p></div>
+<p><strong>Non. Mesuré, pas supposé :</strong> le document de philosophie et politique porte en annexe A un tableau des mots d'ordre, et il en contient <strong>TROIS</strong> — FIABILISER, OPTIMISER, HARMONISER. Le quatrième, <strong>INTELLIGENT</strong>, ajouté à la charte le 2 octobre sur ta demande, <strong>n'y est pas</strong>. Le mot « cohérence » n'apparaît pas non plus dans ce tableau.</p>
+<p><strong>C'est une dette au sens strict de la charte</strong> : un changement de règle doit se refléter le jour même dans tous les documents concernés, et celui-ci ne l'a pas été.</p>
+<p><strong>Pourquoi je ne l'ai pas corrigé en le trouvant</strong> : ce document est le texte de gouvernance, et il ne se modifie pas sans ton accord exprès préalable — son propre article de révision l'interdit. Voici donc le texte exact que je propose d'ajouter, pour que tu puisses dire oui ou non sans avoir à l'écrire :</p>
+<div class="highlight"><p>| <strong>INTELLIGENT</strong> | est-ce bien pensé, pertinent, logique, cohérent — le chemin tient-il debout ? | la conception elle-même | <em>(article à fixer)</em> |</p><p>*Les trois premiers constatent un RÉSULTAT ; celui-ci interroge le CHEMIN. Aucun des trois ne
+peut relever qu'un travail correct, complet et raccordé reste mal conçu.*</p></div>
+<div class="highlight"><p><strong>ACTION — À TRANCHER.</strong> J'attends ton oui pour l'écrire. Tant qu'il n'est pas là, la charte et
+PHILO disent deux choses différentes, et c'est écrit ici pour que ça ne se perde pas.</p></div>
+<h3>Les trois états de l'Article 28 — le contexte <em>(ta question 28)</em></h3>
+<div class="highlight"><p>« OK mais redonne moi le contexte parce que je n'ai pas bien compris »</p></div>
+<p><strong>En clair, sans vocabulaire.</strong> Tous les outils du projet produisent des rapports. Un rapport finit par une liste de constats (« j'ai trouvé ceci »). La question que l'Article 28 pose est : <strong>qu'est-ce qu'on FAIT de chaque constat ?</strong> — parce qu'un rapport lu puis oublié ressemble, dans le dépôt, à un problème traité.</p>
+<p>D'où l'obligation que chaque constat porte <strong>son état</strong>, et il n'y en a que quatre possibles :</p>
+<table><thead><tr><th>État</th><th>Ce que ça veut dire</th><th>Ce que ça oblige</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>on va le faire</td><td>une vraie tâche doit exister dans le suivi — vérifié mécaniquement</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>on a regardé, on ne fait rien</td><td><strong>la raison doit être écrite</strong> (sans raison, c'est un abandon déguisé)</td></tr><tr><td><strong>À TRANCHER</strong></td><td>ce n'est pas à moi de décider</td><td>la question te revient</td></tr><tr><td><strong>À INSTRUIRE</strong></td><td>la machine l'a vu, personne n'a encore vérifié si c'est fondé</td><td><strong>cet état se consomme</strong> : il doit devenir l'un des trois autres</td></tr></tbody></table>
+<p><strong>Ce qui a changé le 2 octobre, et c'est le « contexte » que tu demandes</strong> : il n'y avait que les TROIS premiers états. Un registre employait déjà, avec une bonne raison, un « à instruire, pas encore acté » que les trois ne savaient pas nommer — il ne rentrait dans aucune case, donc il sortait du dispositif. Tu as validé le quatrième en fenêtre dédiée, par deux fois, après avoir lu le texte exact.</p>
+<p><strong>Et la clause « il se consomme » est ce qui empêche le quatrième d'être un tiroir</strong> : sans elle, tout constat gênant finirait classé « à instruire » et le dispositif entier deviendrait décoratif.</p>
+<p><strong>Ce que ça a donné concrètement</strong> : les onze outils qui produisent un plan d'action savent maintenant écrire les quatre états. Avant, ils n'en savaient écrire qu'un seul — « retenu » — ce qui veut dire que <em>tout constat devenait une tâche obligatoire</em>, y compris ceux qui méritaient d'être écartés. C'est ça, le changement.</p>
+<h3>Les 4 clusters CLONE-HUNTER <em>(ta question 31)</em></h3>
+<div class="highlight"><p>« je ne comprends pas bien de quoi tu parles, si tu peux m'eclaircir »</p></div>
+<p><strong>Le problème, en clair.</strong> CLONE-HUNTER est l'outil qui repère les <strong>blocs de code recopiés</strong> : le même morceau écrit deux fois à deux endroits. C'est une dette, parce qu'une correction apportée à l'un sera oubliée dans l'autre.</p>
+<p><strong>Mais tous les doublons ne sont pas des erreurs.</strong> Parfois deux morceaux se ressemblent et doivent <strong>rester séparés</strong> — parce que les fondre créerait une dépendance entre deux choses qui n'ont rien à voir, ou parce qu'on l'a déjà essayé et que ça a cassé quelque chose.</p>
+<p><strong>Le défaut qu'on a corrigé</strong> : CLONE-HUNTER signalait neuf doublons à chaque passage, dont la plupart étaient des <strong>décisions assumées</strong>. Un outil qui t'accuse neuf fois d'un geste normal cesse d'être lu — c'est une leçon payée ici, L4.</p>
+<p><strong>La correction</strong> : l'outil cherche maintenant, dans les commentaires autour du code, une <strong>raison écrite</strong> du type « ces deux-là restent séparés parce que… ». Quand il la trouve, il se tait. Les « 4 clusters portant leur raison écrite » dont je parlais, ce sont les quatre doublons pour lesquels tu as validé qu'ils restent en double, et dont la raison est maintenant écrite dans le code.</p>
+<p><strong>Résultat mesuré aujourd'hui : CLONE-HUNTER signale ZÉRO constat.</strong> Il est passé de 9 à 0 — pas en se taisant, mais parce que chacun a reçu soit une fusion, soit une raison écrite.</p>
+<p><strong>Et l'impact pour doc-report et les autres, que tu m'avais demandé de te rappeler</strong> : aucun. La raison écrite ne change rien au fonctionnement d'un outil — elle n'ajoute qu'un commentaire que CLONE-HUNTER sait lire. Rien d'autre dans le paysage ne la regarde.</p>
+<h3>Les 104 convictions absentes de la boussole — contexte et enjeux <em>(ta question 25)</em></h3>
+<p><strong>Ce que c'est, en clair.</strong> The-King lit tout le corpus du projet (la charte, les règles de travail, le référentiel, les process, les leçons) et en extrait les <strong>convictions récurrentes</strong> : les affirmations qui reviennent assez souvent pour être des principes de fait, même si personne ne les a jamais écrites comme tels. « La boussole », c'est le document de philosophie et politique.</p>
+<p><strong>Le constat</strong> : <strong>104 convictions récurrentes sur 106 retenues</strong> ne figurent dans aucun principe écrit de la boussole. Autrement dit : le projet fonctionne presque entièrement sur des principes qu'il applique sans les avoir déclarés.</p>
+<p><strong>L'enjeu, et il est double</strong> :</p>
+<ul><li><strong>pour la reprise par une autre IA</strong> — un principe non écrit n'existe pas pour celui qui arrive. C'est le risque que la charte appelle explicitement « dette de reprise ».</li><li><strong>pour l'export de l'Agence</strong> — c'est le même risque que ta peur sur l'agence installée ailleurs : tu l'utilises et tu ne la reconnais pas, parce que ce qui la faisait fonctionner n'était écrit nulle part.</li></ul>
+<p><strong>Pourquoi c'est toujours là après deux jours, et c'est la vraie réponse à ta question</strong> : corriger veut dire écrire ces principes DANS la boussole. Or la boussole ne se modifie pas sans ton accord exprès. Ce n'est donc pas un retard : c'est bloqué sur une décision qui t'appartient, et elle fait partie du lot des décisions en attente.</p>
+<p><strong>Et c'est aussi l'illustration exacte de ton « correction = révélation »</strong> : révéler est gratuit — l'outil l'a fait en une seconde. Corriger se paie, et le paiement t'appartient.</p>
+<div class="highlight"><p><strong>ACTION — À TRANCHER</strong> (tâche #1422, déjà ouverte).</p></div>
+<h3>Lancer une Ronde pendant le mode auto <em>(ta question 29)</em></h3>
+<div class="highlight"><p>« je voudrais que tu puisses lancer une ou plusieurs rondes pendant le mode auto. […] Pourquoi
+as-tu bloqué le lancement ? »</p></div>
+<p><strong>Pourquoi j'ai bloqué, et c'était une règle écrite, pas une hésitation</strong> : le process de la Ronde dit qu'en mode autonome, <strong>aucune question ne se pose</strong> — tes mots d'origine : « aucune fenêtre y compris GOAT/AUTO ne doit être bloquante pour le mode autonome ». Or une Ronde ordinaire comporte <strong>29 à 46 questions</strong>. Une Ronde sans questions, c'est la moitié de la Ronde.</p>
+<p>Le process prévoit bien ce cas (combinaison D : zéro question, les points reportés au prochain passage en présence), donc <strong>j'aurais pu la lancer</strong>. Ce qui m'a arrêté est que je ne savais pas quel PROGRAMME lancer : une Ronde se calibre avec toi (quels items, quel palier, quels items payants), et ce calibrage n'existait pas pour la nuit.</p>
+<p><strong>Ce que tu proposes et qui règle exactement ça</strong> : « des le lancement du mode auto on calibre ensemble la ronde principale à mener pendant la nuit, et aussi que tu disposes d'une formule &quot;ronde auto&quot; qui te permet de lancer des rondes selon ton propre calibrage, à tout moment ».</p>
+<p><strong>Mon avis : les deux, et ils ne font pas doublon.</strong> La première règle le cas prévu (une grosse Ronde, calibrée avec toi au coucher). La seconde règle le cas imprévu (il est 3h du matin, j'ai fini mon programme, une Ronde légère serait utile) — et elle doit rester LÉGÈRE et GRATUITE par défaut, sinon je dépenserais ton budget d'appels pendant que tu dors.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1480</strong> : écrire la « formule ronde auto » dans le process, avec son
+calibrage au lancement du mode auto. <strong>Trois choses à trancher avec toi avant d'écrire</strong>, et je
+te les poserai en fenêtre : combien de Rondes auto au maximum par nuit · ont-elles le droit de
+dépenser des appels API, et jusqu'à quel plafond · les questions sautées sont-elles reportées au
+matin en un seul bloc, ou réparties.</p></div>
+<h3>The-King « tension » — est-ce que ça scanne, et quoi <em>(ta question 34)</em></h3>
+<p><strong>Réponse directe : non, ça ne scanne qu'UN document, et un seul.</strong> <code>the-king tension &quot;&lt;ton idée&gt;&quot;</code> lit <code>docs/philosophie-et-politique.md</code>, rien d'autre. Pas le suivi, pas les fils, pas les 11 destinations, pas la charte.</p>
+<p><strong>Ce qu'il fait</strong> : il compare ton idée aux articles de la boussole et dit si elle les CONTREDIT (opposition de sens sur du vocabulaire partagé) ou si elle est DÉJÀ COUVERTE (une redite — et le dire t'épargne un chantier).</p>
+<p><strong>Ne pas le confondre avec <code>the-king revelation</code></strong>, qui lui scanne tout : la charte, les règles de travail, le process d'expérience, les leçons, tout le référentiel, les process à la racine de <code>docs/</code>, et les données dérivées (dont le suivi). Ce sont deux outils différents sous le même nom.</p>
+<p><strong>Ta vraie question, et elle est juste</strong> : <em>faudrait-il que <code>tension</code> scanne plus de couches ?</em> <strong>Mon avis : oui pour la charte, non pour le reste.</strong> La charte fait loi au même titre que la boussole — une idée qui la contredit devrait être signalée pareil. Le suivi et les fils, non : ce sont des traces de travail, pas des lois, et y chercher des contradictions produirait du bruit.</p>
+<div class="highlight"><p><strong>ACTION — À TRANCHER.</strong> Veux-tu que <code>tension</code> lise aussi la charte ? C'est un petit changement
+(une ligne de corpus) et ça double sa couverture sur ce qui fait loi.</p></div>
+<h3>The-King « fonder » — testé sur un dépôt extérieur ? <em>(ta question 35)</em></h3>
+<p><strong>Non. Jamais.</strong> Et c'est une réponse qui compte, parce que l'Agence a une règle sur ce point précis : un outil qui n'a jamais tourné contre le vrai terrain n'est pas un outil vérifié, c'est une intention.</p>
+<p><code>fonder</code> a tourné <strong>sur ce dépôt-ci</strong>, où il se comporte correctement : il ne propose rien, parce que ce projet a déjà ses textes fondateurs. Mais c'est le cas facile. <strong>Le cas pour lequel il existe — un projet d'accueil qui n'a RIEN — n'a jamais été essayé.</strong></p>
+<p><strong>Ce que ça veut dire concrètement</strong> : je ne peux pas te garantir aujourd'hui qu'installer l'Agence ailleurs produirait des textes fondateurs utilisables. C'est exactement ta peur du point suivant, et elle est fondée.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1481</strong> : faire tourner <code>fonder</code> contre un dépôt vierge pour de vrai
+(un dossier de test, pas un vrai projet) et rendre ce qu'il produit. C'est une mesure, pas une
+opinion, et elle manque.</p></div>
+<h3>La licence <em>(tes questions 33 et 42 — regroupées, c'est la même)</em></h3>
+<p><strong>L'état est ROUGE, et c'est mesuré : ce projet n'a AUCUNE licence.</strong> Pas de fichier <code>LICENSE</code>, pas de déclaration nulle part. Vérifié à l'instant.</p>
+<p><strong>Ce que ça veut dire en droit, et c'est contre-intuitif</strong> : l'absence de licence ne veut PAS dire « libre ». Elle veut dire <strong>« tous droits réservés par défaut »</strong> : personne — ni un acheteur, ni un collaborateur, ni un testeur — n'a le droit de l'utiliser, de le copier ou de le modifier. Pour un projet que tu veux vendre, c'est le pire des deux mondes : ça n'attire personne ET ça ne te protège pas mieux qu'une licence propriétaire explicite.</p>
+<p><strong>Ce que je ne fais pas</strong> : la choisir. C'est une décision juridique et commerciale, et elle détermine ce qu'un acheteur pourra faire. Elle est à toi.</p>
+<p><strong>Ce que je peux faire, et ce que je propose</strong> : te rendre un dossier qui explique <strong>les trois familles</strong> de choix possibles, avec pour chacune ce qu'elle t'autorise, ce qu'elle t'interdit, ce qu'un acheteur peut en faire, et un exemple de projet connu sous cette licence. Pas de jargon. Ensuite tu tranches, et j'écris le fichier.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1368</strong> (déjà ouverte) : produire le dossier des trois familles de
+licence, en HTML, pour que tu puisses choisir. <strong>C'est le document qui doit venir en premier</strong>,
+parce que tu ne peux pas trancher sans lui.</p></div>
+<h3>Les trois stratégies globales en HTML <em>(ta question 36)</em></h3>
+<div class="highlight"><p>« donc ce sont des docs generes, ecrits en prose ou hybrides ? l'ideal serait hybrides […] Livre
+moi les 2 stratégies globales, auxquelles doivent etre intégrés les 3 plans d'action respectifs
+[…] Je veux 3 belles stratégies globales, livrées en HTML »</p></div>
+<p><strong>Sur la nature : aujourd'hui elles sont en PROSE, pas hybrides.</strong> Tu as raison de vouloir l'hybride, et c'est faisable : une base fixe écrite à la main (le raisonnement, les arbitrages, ce qui ne bouge pas) et des encarts dérivés qui se recalculent (les chiffres, l'état d'avancement, les tâches rattachées). C'est exactement ce que fait déjà le document de classification, qui est généré et donc jamais périmé.</p>
+<p><strong>Sur le plan d'action : je suis d'accord avec toi, et c'est déjà la règle du projet.</strong> Tu écris « le document plan d'action ne doit selon moi pas vivre en dehors du doc de strategie globale » — c'est mot pour mot ce que l'Article 28 impose : le plan d'action vit DANS le rapport qui l'a motivé, jamais dans un document séparé, parce qu'un plan qui voyage avec son rapport ne peut pas se perdre. Rien à discuter, on est alignés.</p>
+<p><strong>Sur le format standard : non, je dois le vérifier avant d'écrire.</strong> Tu demandes « tu as bien pensé à prendre en compte le format standard de strategie globale, à la lumière des docs du git ? » — je ne peux pas répondre oui de mémoire. Le dossier <code>docs/strategies/</code> contient quinze fichiers ; il faut que je lise ce que leur forme a en commun avant d'écrire trois documents de plus.</p>
+<p><strong>Pourquoi « 3 » et pas « 2 »</strong> : tu écris les deux dans la même phrase. Je pars sur <strong>trois</strong>, c'est ta formulation finale (« Je veux 3 belles stratégies globales »). Si c'est deux, dis-le.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1482</strong> : les trois stratégies globales, en HTML, hybrides, chacune
+avec son plan d'action intégré, et après vérification du format commun. <strong>C'est le plus gros
+morceau de cette liste</strong> — je le fais après les chantiers, sauf si tu le veux avant.</p></div>
+<h3>Les documents que tu dis ne pas avoir vus <em>(tes questions 32, 37, 38, 39, 40)</em></h3>
+<p>Regroupés parce que c'est la même réponse : <strong>ils partent avec ce dossier</strong>, sauf un.</p>
+<table><thead><tr><th>Ce que tu demandes</th><th>État</th></tr></thead><tbody><tr><td>#1110, l'arborescence</td><td><strong>n'existe pas</strong> — dossier vide. Tâche #1478 ouverte pour la produire</td></tr><tr><td>La thèse « le cœur, c'est la gouvernance »</td><td>existe en texte brut, mise en page et <strong>jointe</strong></td></tr><tr><td>L'organisation des lois</td><td>existe, <strong>jointe</strong></td></tr><tr><td>La carte cible des modules</td><td>existe, <strong>jointe</strong></td></tr><tr><td>La classification des règles</td><td><strong>faite</strong> — c'est le document « organisation des lois » : six textes font loi, deux numérotent leurs règles, et citer « l'Article 13 » n'est plus ambigu</td></tr><tr><td>Le deep dive gestion des tâches</td><td>existe dans <code>docs/modules/</code>, <strong>joint</strong></td></tr></tbody></table>
+<h3>Le rapport de nuit <em>(ta question 41)</em></h3>
+<div class="highlight"><p>« ne doit etre livré que lorsque tu as TOUT terminé, ou alors si je reviens avant »</p></div>
+<p><strong>Noté, et c'est une règle de travail, pas une préférence.</strong> Je l'inscris telle quelle. Elle change quelque chose de concret : je ne t'enverrai plus de rapport d'étape au milieu d'une nuit — soit c'est fini, soit tu es revenu.</p>
+<h3>« Quoi d'autre dois-je voir ? » <em>(ta question 44)</em></h3>
+<div class="highlight"><p>« J'en profite aussi pour te demander la version à jour de philo et politique et… quoi d'autre ?
+[…] reprends l'historique de conversation et les sessions compactées, fais un check stp »</p></div>
+<p><strong>Le check est fait mécaniquement, pas de mémoire</strong> — c'est précisément à ça que sert le nouveau registre des envois. Il compte <strong>64 documents</strong> dans les dossiers qui te sont destinés. Je ne peux pas tous te les envoyer d'un coup : ce serait le même problème par l'autre bout.</p>
+<p><strong>Ce que je te propose</strong> : ce dossier part avec les cinq documents que tu réclames nommément. Et à partir de maintenant, chaque compte rendu finit par la liste de ce qui a été produit pour toi et pas encore envoyé — c'est la règle de conduite qui vient d'être câblée. Tu n'auras plus à demander.</p>
+<p><strong>La version à jour de philo et politique part avec ce dossier</strong>, avec la réserve écrite plus haut : il lui manque le quatrième mot d'ordre, et je ne l'ajoute pas sans ton accord.</p>
+<hr>
+<h2>⑤ LES TROIS CHANTIERS — ouverts, pas bâclés</h2>
+<p>Tu as choisi « les réponses rapides d'abord, les chantiers ensuite ». Les voici, nommés, avec ce que chacun va contenir — pour que tu saches ce qui vient et dans quel ordre.</p>
+<h3>Chantier A — le système de fils de discussion <em>(couvre tes questions 9 à 14)</em></h3>
+<p><strong>Une mesure d'abord, parce qu'elle répond déjà à ta question la plus directe.</strong> Tu demandes : « tu dois verifier si les fils ont bien été alimentés et que des fichiers ephemeres ne leur ont pas &quot;oté le pain de la bouche&quot; ».</p>
+<p><strong>Vérifié. Ton intuition est juste, et c'est pire que « ils végètent » :</strong></p>
+<table><thead><tr><th>Mesure</th><th>Chiffre</th></tr></thead><tbody><tr><td>Documents créés ou modifiés depuis le dernier vrai mouvement d'un fil</td><td><strong>180</strong></td></tr><tr><td>Dont des documents qui te sont destinés (livrables, stratégies, rapports)</td><td><strong>41</strong></td></tr><tr><td>Enregistrements ayant touché un fil sur la même période</td><td><strong>1</strong> (et c'était une question morte qu'on fermait)</td></tr><tr><td>Date du dernier vrai mouvement d'un fil</td><td><strong>1er octobre, 02h24</strong></td></tr></tbody></table>
+<p><strong>Et le plus intéressant : l'outil qui surveille les fils dit que tout va bien.</strong> Il répond « 14/14 fils à jour » sur six contrôles. <strong>Parce qu'il mesure la FORME d'un fil — a-t-il une date, dit-il à qui est la balle, ses engagements existent-ils en tâches — jamais s'il a été ALIMENTÉ.</strong> C'est exactement le type de faux vert que ce projet passe son temps à traquer, et il était sur le mécanisme censé garantir qu'on est à jour.</p>
+<p><strong>Ce que le chantier va contenir</strong> : t'expliquer le process actuel en clair · câbler le mécanisme que tu décris (j'extrais les questions de ton prompt, je les rattache à leur fil ou j'en crée un, et je te livre les fils concernés plutôt qu'un document neuf) · ajouter la mesure d'alimentation qui manque · et répondre à ta question sur les questions de calibrage (oui, elles bloquent des fils, et je te les poserai en série en fenêtre comme tu le proposes).</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1483</strong>. <strong>Je commence par celui-là.</strong></p></div>
+<h3>Chantier B — la séparation agence / utilisateur <em>(ta question 7)</em></h3>
+<div class="highlight"><p>« moi j'utilise l'agence et je t'utilise toi. Quelles sont les regles que tu as toi et que
+l'agence n'a pas ? […] Ma peur : j'installe l'agence dans un nouveau projet, je l'utilise mais je
+ne la reconnais pas et certaines choses ne fonctionnent plus du tout. »</p></div>
+<p><strong>Ta peur est fondée, et j'ai déjà un élément mesuré qui le prouve</strong> : la réponse à ta question 35 ci-dessus. L'outil censé fonder un projet d'accueil n'a jamais tourné contre un projet d'accueil. C'est précisément « ça ne fonctionne plus du tout et personne ne le sait ».</p>
+<p><strong>Ce que le chantier va contenir</strong> : la liste des règles qui vivent dans ma tête ou dans mes instructions et PAS dans les fichiers de l'Agence (ce sont celles qui disparaîtront à l'export) · pour chacune, si c'est normal ou si c'est un trou · et l'équipement des outils là où c'en est un.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1484.</strong></p></div>
+<h3>Chantier C — le filet transporté <em>(tes questions 19 à 22)</em></h3>
+<p>Tes quatre questions : l'utilisateur hérite-t-il du filet · peut-il casser l'agence en codant son projet · peut-on « verrouiller le code » · le filet consomme-t-il des tokens.</p>
+<p><strong>Une réponse courte tout de suite sur la dernière, parce qu'elle est simple et qu'elle te soulagera : NON.</strong> Le filet est un programme qui tourne sur ta machine. Il ne fait AUCUN appel à une IA, donc il ne consomme <strong>zéro token</strong>, quelle que soit sa longueur. Ce qu'il coûte, c'est du temps d'attente — environ 9 minutes aujourd'hui — et rien d'autre.</p>
+<p>Les trois autres demandent un vrai dossier.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1485.</strong></p></div>
+<h3>Et la question « pas rationalisable » + tes idées de copier-coller <em>(ta question 23)</em></h3>
+<p><strong>Je dois d'abord réparer une fausse déclaration</strong> : j'ai écrit que « la liste existe en partie ». <strong>C'est faux.</strong> Le mot « rationalisable » n'apparaît dans aucun document de ce dépôt. La liste n'existe pas du tout.</p>
+<p>Elle est liée au chantier C (le filet est justement le plus gros morceau « non rationalisable ») et sera produite avec lui.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Rattachée à la tâche #1485.</p></div>
+<h3>Le fil « travail à distance » <em>(ta question 24)</em></h3>
+<div class="highlight"><p>« Tu dois retrouver : je t'ai posé une question recemment, dans les derniers jours : comment on
+peut travailler ensemble à distance, depuis mon tel ou mail. »</p></div>
+<p><strong>Cherché mécaniquement dans tout le dépôt : le sujet n'existe NULLE PART</strong>, sauf dans une tâche qui dit « à traiter ». Je ne retrouve donc pas ta question d'origine, et je ne vais pas l'inventer : répondre de mémoire sur un sujet dont le dépôt ne garde rien produirait une réponse invérifiable.</p>
+<p><strong>Ce que je peux faire sans ta question d'origine</strong> : te dire ce qui est techniquement possible aujourd'hui pour travailler depuis ton téléphone ou par mail, et ce qui ne l'est pas. C'est un sujet court, et il mérite une vraie réponse plutôt qu'une ligne dans ce document.</p>
+<div class="highlight"><p><strong>ACTION — RETENU.</strong> Tâche <strong>#1486</strong>, à traiter avec le chantier B (c'est la même famille : ce que
+l'Agence sait faire hors de cette fenêtre de conversation).</p></div>
+<hr>
+<h2>PLAN D'ACTION</h2>
+<p><em>(Article 28 : un rapport n'est pas fini quand il est écrit, il l'est quand ses constats sont devenus des tâches. Les tâches ci-dessous existent pour de vrai dans le suivi.)</em></p>
+<table><thead><tr><th>État</th><th>Constat</th><th>Tâche</th></tr></thead><tbody><tr><td>✅ FAIT</td><td>les sauvegardes ne sont plus conservées, et l'envoi efface</td><td>#1472</td></tr><tr><td>✅ FAIT</td><td>la Ronde te demande désormais ce que tu as reçu</td><td>#1473</td></tr><tr><td>✅ FAIT</td><td>un document écrit pour toi et jamais envoyé est détecté</td><td>#1475</td></tr><tr><td>→ RETENU</td><td>faire le point sur le PACK DÉCOUVERTE, reposer ses deux questions ouvertes</td><td>#1476</td></tr><tr><td>→ RETENU</td><td>inscrire l'idée des « packs » au chantier rationalisation</td><td>#1477</td></tr><tr><td>→ RETENU</td><td>produire l'arborescence #1110 pour de vrai, puis l'état des lieux avec tableau</td><td>#1478</td></tr><tr><td>→ RETENU</td><td>passer les outils en revue : lesquels peuvent devenir extension d'un autre</td><td>#1479</td></tr><tr><td>→ RETENU</td><td>écrire la formule « ronde auto » dans le process du mode auto</td><td>#1480</td></tr><tr><td>→ RETENU</td><td>faire tourner <code>the-king fonder</code> contre un dépôt vierge, pour de vrai</td><td>#1481</td></tr><tr><td>→ RETENU</td><td>les trois stratégies globales en HTML, hybrides, plans d'action intégrés</td><td>#1482</td></tr><tr><td>→ RETENU</td><td><strong>chantier A</strong> : le système de fils — commencé en premier</td><td>#1483</td></tr><tr><td>→ RETENU</td><td><strong>chantier B</strong> : la séparation agence / utilisateur</td><td>#1484</td></tr><tr><td>→ RETENU</td><td><strong>chantier C</strong> : le filet transporté + la liste « pas rationalisable »</td><td>#1485</td></tr><tr><td>→ RETENU</td><td>le travail à distance : ce qui est possible depuis ton téléphone ou par mail</td><td>#1486</td></tr><tr><td>→ RETENU</td><td>le dossier des trois familles de licence, pour que tu puisses choisir</td><td>#1368</td></tr><tr><td>? À TRANCHER</td><td>ajouter le quatrième mot d'ordre INTELLIGENT à la boussole (texte proposé plus haut)</td><td>#1487</td></tr><tr><td>? À TRANCHER</td><td>un mécanisme général d'ordre des événements : maintenant, ou en attente d'un 4ᵉ cas ?</td><td>#1488</td></tr><tr><td>? À TRANCHER</td><td><code>the-king tension</code> doit-il aussi lire la charte ?</td><td>#1489</td></tr><tr><td>? À TRANCHER</td><td>les 104 convictions hors boussole : ta décision est nécessaire pour les faire redescendre</td><td>#1422</td></tr><tr><td>ÉCARTÉ</td><td>« correction = révélation » — malentendu levé, par ton propre arbitrage</td><td>—</td></tr><tr><td>ÉCARTÉ</td><td>les zones fragiles — ta question était une demande d'explication, pas un changement</td><td>—</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/reponses/reponses-gros-prompt-2026-10-02.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

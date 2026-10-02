@@ -1,9 +1,9 @@
 # FIL 09 — Ce qui ralentit le projet
 
-**Balle :** À MOI
-**Dernier mouvement :** 2026-10-01
+**Balle :** À TOI
+**Dernier mouvement :** 2026-10-02
 **Place dans le plan :** Transverse — il ne produit rien, il explique pourquoi le reste avance ou pas. Il alimente directement le fil 02 (cible d'obligations) et le fil 06 (versions).
-**Saisines :** réponses 2026-09-29 · soirée du 2026-09-30 · Ronde GOAT du 2026-10-01
+**Saisines :** réponses 2026-09-29 · soirée du 2026-09-30 · Ronde GOAT du 2026-10-01 · gros prompt du 2026-10-02 (les packs)
 
 ---
 
@@ -88,3 +88,49 @@ d'attente entre deux livraisons · (c) devoir répéter des consignes · (d) ne 
 **Q9.4 — À TOI.** *« Je ne veux pas avoir à valider des choses sans importance »* : où mets-tu la
 barre ? *(a) préviens-moi seulement de ce qui est difficile à annuler · (b) préviens-moi de tout ce
 qui touche la charte · (c) préviens-moi une fois par session, en bloc*
+
+---
+
+## 2 OCTOBRE — LA RATIONALISATION PAR « PACKS », ET CE QUI N'EST PAS RATIONALISABLE
+
+**Ton idée :**
+
+> « pour la rationnalisation des documents, on pourra surement fonctionner par regroupement des
+> docs en "PACK" pour nous aider à comprendre le but de certains packs et peut etre elminier les
+> docs qui en sortent. »
+
+**Elle vaut plus que ce que ta formulation en dit, et voici pourquoi.** Le dépôt porte 126
+fichiers dans le seul référentiel. La question « ce document est-il encore utile ? » **n'est pas
+un critère** — tout document paraît utile pris isolément, c'est pour ça que rien n'est jamais
+élagué. « Ce document entre-t-il dans un pack ? » **EN EST un** : un document qui n'appartient à
+aucun regroupement cohérent a probablement perdu sa raison d'être, et ça se constate au lieu de se
+discuter.
+
+### Une correction que je te dois
+
+**J'ai écrit dans un rapport que « la liste de ce qui n'est pas rationalisable existe en partie ».
+C'est FAUX.** Vérifié mécaniquement : le mot n'apparaît dans **aucun** document de ce dépôt. La
+liste n'existe pas du tout. Tu avais raison de me dire « tu ne me la montres pas » — il n'y avait
+rien à montrer.
+
+### Ta stratégie de « copier-coller », et ce que j'en pense
+
+> « je voyais une premiere rationnalisation, poussée jusqu'à la limite, et voir ensuite comment on
+> peut tricher sur les elements qui ralentissent le codage et qu'on doit exporter aussi. »
+
+**L'ordre que tu proposes est le bon**, et pour une raison que tu n'énonces pas : rationaliser
+d'abord puis « tricher » ensuite garantit que la triche porte sur un périmètre **connu et
+minimal**. Tricher d'abord fige la dette dans le produit exporté.
+
+**Ce que je ne peux pas te dire aujourd'hui** : ce qui est réellement possible. Ça demande de
+savoir ce qui résiste à la rationalisation, donc la liste qui n'existe pas encore.
+
+**Q9.5 — À MOI, tâche #1485.** Produire la liste de ce qui n'est PAS rationalisable, avec le filet
+comme premier cas, et te répondre point par point sur tes idées de copier-coller.
+
+**Q9.6 — À MOI, tâche #1477.** Le regroupement par packs, inscrit au chantier rationalisation.
+
+**Q9.7 — À TOI.** La rationalisation « poussée jusqu'à la limite » : jusqu'où ?
+*(a) jusqu'à ce que plus rien ne puisse fusionner sans perdre une fonctionnalité · (b) jusqu'à un
+nombre cible de fichiers qu'on fixe maintenant · (c) module par module, en s'arrêtant quand chacun
+est propre, sans cible globale*

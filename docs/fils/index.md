@@ -33,27 +33,30 @@ personne).
 
 | Étage | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|---|
-| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime ✅ **validé** · reste philo et politique | **À MOI** | 9 (5 pour toi) |
-| **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 4 (3 pour toi) |
-| **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 5 (3 pour toi) |
-| **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 4 (2 pour toi) |
-| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 6 (1 pour toi) |
+| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime ✅ **validé** · reste philo et politique | **À TOI** | 5 (5 pour toi) |
+| **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 3 (3 pour toi) |
+| **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (3 pour toi) |
+| **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 6 (2 pour toi) · **bougé le 02/10** |
+| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 3 (1 pour toi) |
 
 ### Les transverses — ils n'attendent pas leur tour
 
 | Fil | Sujet | Balle | Questions ouvertes |
 |---|---|---|---|
-| [04](fil-04-systeme-de-travail.md) | Notre système de travail (questions, réponses, fils) | **À MOI** | 4 (2 pour toi) |
+| [04](fil-04-systeme-de-travail.md) | Notre système de travail (questions, réponses, fils) | **À TOI** | 8 (5 pour toi) · **bougé le 02/10** |
 | [05](fil-05-creation-vs-produit-fini.md) | Création vs produit fini — **axe ouvert le 30/09** | **À TOI** | 4 (2 pour toi) |
-| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 5 (2 pour toi) |
-| [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | **À MOI** | 4 (2 pour toi) |
-| [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 4 (2 pour toi) |
+| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 4 (3 pour toi) · **bougé le 02/10** |
+| [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | **À TOI** | 6 (3 pour toi) · **bougé le 02/10** |
+| [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 3 (2 pour toi) |
 | [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
-| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À MOI** | 6 (1 pour toi) |
-| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 6 (4 pour toi) |
-| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | **À MOI** | 6 (0 pour toi) |
+| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À TOI** | 4 (2 pour toi) · **bougé le 02/10** |
+| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 4 (4 pour toi) |
+| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | **À TOI** | 8 (2 pour toi) · **bougé le 02/10** |
 
-**Total : 14 fils · 71 questions vives · 32 attendent ta réponse · 39 sont de mon côté.**
+**Total : 14 fils · 66 questions vives · 40 attendent ta réponse · 26 sont de mon côté.**
+
+*(Chiffres LUS par `node scripts/fils-de-discussion.mjs` le 2026-10-02, jamais recopiés de la version
+précédente. Six fils — 04, 06, 08, 09, 12, 14 — ont reçu ton gros prompt du 2 octobre.)*
 
 ---
 
@@ -81,6 +84,7 @@ temporaires et périmées — et la plaquette, lue par toi, jugée non bonne et 
 | **2026-09-29 → 30 (nuit)** | 18 livraisons en autonomie. |
 | **2026-09-30 (soir)** | Tu constates que je ne suis pas à jour. Quatre affirmations fausses de ma part, corrigées par toi une à une. Cause racine trouvée. |
 | **2026-09-30 (nuit)** | Ce système-ci. Un fil par sujet, et cinq contrôles mécaniques pour que « à jour » cesse d'être une impression. |
+| **2026-10-02** | Ton gros prompt. Mesuré : 180 documents produits depuis le dernier mouvement d'un fil, dont 41 pour toi, contre UN seul enregistrement touchant un fil. Un **septième contrôle** naît de ce constat. Six fils alimentés. |
 
 ---
 
@@ -92,7 +96,7 @@ synthèse ? » au lieu de « ce SUJET a-t-il été traité ? »**. Les deux ques
 n'ont pas la même réponse. C'est pour ça que j'ai pu te dire quatre choses fausses en me croyant
 rigoureux.
 
-**Maintenant, cinq contrôles y répondent mécaniquement** — `node scripts/fils-de-discussion.mjs` :
+**Maintenant, SEPT contrôles y répondent mécaniquement** — `node scripts/fils-de-discussion.mjs` :
 
 | # | La question posée | Sans quoi |
 |---|---|---|
@@ -101,6 +105,8 @@ rigoureux.
 | 3 | Chaque sujet dit-il **à qui est la balle**, et depuis quand ? | sans ça, personne ne sait qui doit bouger |
 | 4 | Chaque sujet dit-il **où il se place** dans la stratégie ? | un sujet sans place se traite dans le désordre |
 | 5 | Chaque question qui t'attend te donne-t-elle **de quoi répondre simplement** ? | une question ouverte posée à quelqu'un qui n'est pas développeur se paie en aller-retours — le poste de perte de temps que tu as toi-même désigné |
+| 6 | Chaque chose que je me suis **engagé à faire** est-elle une tâche qui existe vraiment ? | un engagement écrit dans un fil et nulle part ailleurs est une intention : personne ne le relira |
+| 7 | Chaque document qui t'a été **remis** a-t-il laissé une trace dans un fil ? | **ajouté le 2026-10-02, et il est né d'un faux vert** : les six autres mesurent la FORME d'un fil, pas son ALIMENTATION — un fil parfaitement formé et mort depuis deux jours les passait tous les six |
 
 **Et l'outil refuse de conclure « OUI » quand un contrôle n'est pas mesurable** : il rend *PAS
 ENTIÈREMENT MESURÉ*. C'est une leçon payée ailleurs dans ce projet — une absence de mesure ne vaut
@@ -112,7 +118,7 @@ jamais un zéro, et un satisfecit rendu sur zéro donnée est pire que pas de r�
 
 **Une demande que tu me fais à l'oral, dans la conversation, n'est récupérable par aucune
 commande.** Si je ne la dépose pas dans le projet le jour même, elle n'existera plus demain — et
-aucun des cinq contrôles ne pourra signaler son absence, puisqu'ils ne mesurent que ce qui est
+aucun des sept contrôles ne pourra signaler son absence, puisqu'ils ne mesurent que ce qui est
 déposé.
 
 C'est exactement ce qui s'est passé : **7 400 mots de tes demandes ne vivaient que dans nos

@@ -1,9 +1,9 @@
 # FIL 06 — L'export de l'Agence, son noyau, et la question des « plusieurs versions »
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-10-01
+**Dernier mouvement :** 2026-10-02
 **Place dans le plan :** Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07).
-**Saisines :** COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité »)
+**Saisines :** COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité ») · gros prompt du 2026-10-02 (le filet transporté)
 
 ---
 
@@ -103,3 +103,53 @@ images par seconde, le poids envoyé au navigateur, et le ressenti d'un visiteur
 
 **Q6.4 — À MOI, tâche **#1323**.** Rendre les chemins réglables **sans toucher au comportement** — c'est exactement
 ta borne (« rien de difficile à annuler »). Je dois prouver ça avant de proposer le chantier.
+
+---
+
+## 2 OCTOBRE — LE FILET TRANSPORTÉ, ET LA SÉPARATION AGENCE / UTILISATEUR
+
+**Tes quatre questions sur le filet, posées d'un bloc :**
+
+> « on en aura plus besoin une fois le code fini ? je veux dire l'utilisateur n'hérite pas de ce
+> filet ? […] est ce que par la suite l'utilisateur peut "casser l'agence" en codant son projet ?
+> comment isoler/proteger l'agence, "verrouiller le code" je ne connais pas ? […] Est-ce que le
+> filet consomme des tokens, plus il est long ? »
+
+**UNE RÉPONSE EST DÉFINITIVE ET JE TE LA DONNE TOUT DE SUITE : NON, le filet ne consomme AUCUN
+token.** C'est un programme qui tourne en local ; il ne fait aucun appel à un modèle d'IA, quelle
+que soit sa longueur. Ce qu'il coûte est du **temps d'attente** — environ 9 minutes aujourd'hui —
+et rien d'autre. Si ta crainte était budgétaire, elle est levée.
+
+**Les trois autres demandent un vrai dossier, et elles cachent une tension réelle** que ta
+formulation a bien identifiée : *« raisonnablement l'agence ne peut pas débarquer avec un filet de
+plus de 30 sec, le filet doit être dispo pour le vrai projet de l'utilisateur »*. Le problème est
+que le filet est écrit **POUR ce dépôt-ci** : transporté tel quel, il testerait du code qui
+n'existe plus chez l'utilisateur. Ce n'est pas un problème de taille, c'est un problème de nature.
+
+### Un fait mesuré qui rend ta peur fondée
+
+Tu écris, dans un autre point du même prompt : *« Ma peur : j'installe l'agence dans un nouveau
+projet, je l'utilise mais je ne la reconnais pas et certaines choses ne fonctionnent plus du
+tout. »*
+
+**Vérifié le jour même** : `the-king fonder`, l'outil dont le seul rôle est de doter un projet
+d'accueil de ses textes fondateurs, **n'a jamais tourné contre un projet d'accueil**. Il a tourné
+ici, où il se comporte correctement en ne proposant rien (ce projet a déjà ses textes) — mais
+c'est le cas facile, et c'est l'inverse de sa raison d'être. **Le seul cas pour lequel il existe
+n'a jamais été exercé une fois.** C'est littéralement « ça ne fonctionne plus du tout et personne
+ne le sait ».
+
+**Q6.5 — À TOI.** Le filet transporté : quelle forme veux-tu qu'il prenne chez l'utilisateur ?
+*(a) il part tel quel, et l'utilisateur en hérite avec ses 9 minutes · (b) il part découpé en deux
+— une part qui teste l'Agence elle-même, une part vide à remplir par l'utilisateur · (c) il ne
+part pas, et l'Agence est livrée « figée » avec une preuve qu'elle était verte au départ · (d) je
+ne sais pas, explique-moi d'abord ce que chaque option coûte*
+
+**Q6.6 — À MOI, tâche #1485.** Le dossier complet : hériter, casser, verrouiller — avec la liste
+de ce qui n'est PAS rationalisable, dont le filet est le plus gros morceau.
+
+**Q6.7 — À MOI, tâche #1481.** Faire tourner `fonder` contre un dépôt vierge pour de vrai, et
+rendre ce qu'il produit. Une mesure, pas une opinion.
+
+**Q6.8 — À MOI, tâche #1484.** La liste des règles qui vivent dans mes instructions et PAS dans
+les fichiers de l'Agence — celles qui disparaîtront à l'export sans que personne le voie.

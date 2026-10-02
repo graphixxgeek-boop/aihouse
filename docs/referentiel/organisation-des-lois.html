@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'ORGANISATION DES LOIS — qui fait loi, dans quel rapport, et comment citer sans ambiguïté</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T19:53:55.066Z</div>
+    <h1>L'ORGANISATION DES LOIS — qui fait loi, dans quel rapport, et comment citer sans ambiguïté</h1>
+    <p class="sub">Page générée depuis docs/referentiel/organisation-des-lois.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/philosophie-et-politique.md</code>
+*l'organisation des textes qui font loi relève du document qui se déclare lui-même officiel :
+c'est son propre rapport aux autres qui est en jeu.*</p></div>
+<p><em>(Établi le 2026-10-02T08:37Z — heure LUE, source système. Tâche <strong>#1445</strong>. Mesure : <code>node scripts/abraham-les-references.mjs lois</code>.)</em></p>
+<hr>
+<h3>POURQUOI CE DOCUMENT EXISTE MAINTENANT, ET PAS AVANT</h3>
+<p><strong>Il n'était pas nécessaire il y a trois jours.</strong> Un seul texte de ce dépôt portait des Articles numérotés : la charte. « Article 19 » n'était donc ambigu pour personne, et une convention de citation aurait été une solution sans problème.</p>
+<p><strong>Ce qui a changé le 2 octobre</strong> : le document de gouvernance porte désormais sa propre numérotation. <strong>Deux lois numérotent, et leurs plages se chevauchent sur 31 numéros.</strong> La même citation désigne deux dispositions différentes selon le texte qu'on avait en tête — ce qui s'est produit pour de vrai, trois fois en une nuit, avant que ce document n'existe.</p>
+<hr>
+<h3>LES SIX TEXTES QUI FONT LOI</h3>
+<p><strong>La liste ne se recopie pas ici</strong> (Article 24) : elle vit dans <code>DOCUMENTS_QUI_FONT_LOI</code> (<code>scripts/le-classificateur.mjs</code>), chaque entrée portant sa raison, et la mesure la LIT. Le tableau ci-dessous donne ce que la mesure en dit, pas une seconde liste.</p>
+<table><thead><tr><th>Texte</th><th>Numérote ?</th><th>Son domaine</th></tr></thead><tbody><tr><td><code>CLAUDE.md</code></td><td><strong>oui</strong> — 33 articles, 0 à 32, densité 1,00</td><td>la charte : le Jeu, et la méthode d'intervention sur le code</td></tr><tr><td><code>docs/philosophie-et-politique.md</code></td><td><strong>oui</strong> — 71 articles, 2 à 72, densité 1,00</td><td>les valeurs, la politique, et la façon de trancher un conflit de valeurs</td></tr><tr><td><code>docs/regles-de-travail.md</code></td><td>non — 5 numéros épars (densité 0,26) : ce sont des CITATIONS de la charte</td><td>la méthode de collaboration</td></tr><tr><td><code>docs/systeme-de-suivi.md</code></td><td>non</td><td>la structure du suivi durable</td></tr><tr><td><code>docs/loi-de-l-agence.md</code></td><td>non</td><td>le texte suprême de l'outillage</td></tr><tr><td><code>docs/manifeste-de-l-agence.md</code></td><td>non</td><td>ce que l'Agence EST, et ce qu'il est interdit d'y mettre</td></tr></tbody></table>
+<p><strong>NUMÉROTER N'EST PAS CITER, ET LE SÉPARATEUR EST LA DENSITÉ.</strong> Aucun motif de texte ne distingue une déclaration d'une citation : les deux s'écrivent <code><strong>Article 18 — Titre.</strong></code>. Ce qui les sépare est une propriété de l'ENSEMBLE — une vraie numérotation est dense et continue, une poignée de citations est clairsemée. Les deux vraies lois numérotées rendent 1,00 ; le document le plus proche en dessous rend 0,26. <strong>La frontière est large, et c'est ce qui la rend sûre plutôt qu'ajustée au cas du jour.</strong></p>
+<hr>
+<h3>LA CONVENTION DE CITATION, ET ELLE NE DEMANDE AUCUN RENOMMAGE</h3>
+<table><thead><tr><th>Ce qu'on cite</th><th>Comment on l'écrit</th></tr></thead><tbody><tr><td>la charte</td><td><strong>« Article N »</strong>, tout court — la forme historique, conservée</td></tr><tr><td>le document de gouvernance</td><td><strong>« article N du document de gouvernance »</strong>, en toutes lettres</td></tr><tr><td>les quatre autres</td><td>par leur nom, puisqu'ils ne numérotent pas</td></tr></tbody></table>
+<p><strong>POURQUOI LA CHARTE GARDE LA FORME NUE, et ce n'est pas un privilège arbitraire</strong> : elle a été la seule loi numérotée pendant toute la vie du dépôt, et <strong>5 068 citations de la plage commune sont déjà écrites</strong> dans cette forme, toutes antérieures au second texte, toutes voulant dire la charte. Les renommer coûterait un chantier entier et ne clarifierait rien — c'est exactement le renommage en masse que le responsable de projet a refusé d'infliger au code. <strong>La convention vaut donc pour ce qui s'écrit ENSUITE, et l'existant est acquis.</strong></p>
+<hr>
+<h3>CE QUI SE VÉRIFIE MÉCANIQUEMENT, ET CE QUI NE LE PEUT PAS</h3>
+<p><strong>Ce qui se vérifie</strong> : <code>node scripts/abraham-les-references.mjs lois</code> refuse une citation d'un Article <strong>qu'aucune loi ne porte</strong>. C'est faux sans jugement possible, donc c'est mécanisable sans aucun risque de fausse accusation. <strong>Au premier passage, il en a trouvé exactement une</strong> — un renvoi aux numéros 122 et 123 dans un document de conception, qui voulait dire « tâche #122 » et « 123/123 tests ». Une référence morte ressemble à un lien, ce qui est pire qu'une absence : le lecteur croit pouvoir aller vérifier. Elle a été corrigée le jour même.</p>
+<p><strong>Ce qui ne se vérifie pas, et le déclarer EST la protection (Article 27)</strong> : savoir si une citation DANS la plage commune visait la bonne loi est un <strong>jugement</strong>, jamais une mesure. Les deux dispositions existent ; seul le sens de la phrase les sépare. <strong>Aucun mécanisme ne tranchera ça</strong>, et un garde-fou qui prétendrait le faire accuserait 5 068 lignes légitimes — la leçon L4 dans sa forme la plus coûteuse.</p>
+<hr>
+<h3>LE RANG DES LOIS ENTRE ELLES — CE QUI EST ÉTABLI, ET CE QUI NE L'EST PAS</h3>
+<p><strong>Ce qui est établi, parce que les textes le disent eux-mêmes :</strong></p>
+<ul><li><strong>L'Article 0 de la charte</strong> est la loi suprême <strong>du Jeu</strong> — l'esprit de Lia et Noé, et rien d'autre.</li><li><strong><code>docs/loi-de-l-agence.md</code></strong> est le texte suprême <strong>de l'outillage</strong>, et il est le seul à partir avec l'Agence le jour de l'export. Les confondre rendrait l'Agence inexportable sans que personne ne s'en aperçoive.</li><li><strong>Le document de gouvernance</strong> porte des <strong>clauses intangibles</strong> et son propre régime de révision.</li></ul>
+<p><strong>CE QUI N'EST PAS ÉTABLI, et c'est une vraie question, pas une omission</strong> : trois textes énoncent chacun une suprématie, sur trois domaines présentés comme distincts (le Jeu, l'outillage, les valeurs). Tant que les domaines ne se touchent pas, l'ordre n'a pas besoin d'être écrit. <strong>Le jour où ils se toucheront, rien dans le dépôt ne dira lequel l'emporte</strong> — et ce jour-là n'est pas prévisible, ce qui est précisément ce qui rend la question valable maintenant plutôt qu'alors.</p>
+<p><strong>Cette question est portée à l'arbitrage du responsable de projet</strong> (<code>docs/idees-a-trancher.md</code>), jamais tranchée ici : décider lequel de trois textes suprêmes l'emporte est exactement ce que la charte réserve à l'utilisateur.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>son travail sur l'organisation des lois n'avait laissé aucune trace, alors que les trois autres sujets du même bloc en avaient laissé neuf</td><td><strong>FAIT</strong> — ce document, tâche <strong>#1445</strong></td></tr><tr><td><strong>RETENU</strong></td><td>deux lois numérotent sur 31 numéros communs, sans convention écrite</td><td><strong>FAIT</strong> — la convention ci-dessus, qui ne demande aucun renommage</td></tr><tr><td><strong>RETENU</strong></td><td>une citation d'un Article que personne ne porte (le renvoi aux numéros 122 et 123)</td><td><strong>FAIT</strong> — corrigée le jour même, et le contrôle qui l'a trouvée reste en place</td></tr><tr><td><strong>À TRANCHER</strong></td><td>trois textes énoncent chacun une suprématie, et rien ne dit lequel l'emporte si leurs domaines se touchent</td><td><strong>sa décision</strong> — inscrite dans <code>docs/idees-a-trancher.md</code></td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>requalifier les 5 068 citations déjà écrites de la plage commune</td><td><strong>raison écrite</strong> : elles sont toutes antérieures au second texte et veulent toutes dire la charte. Les renommer coûterait un chantier entier sans lever la moindre ambiguïté réelle, et c'est le renommage en masse explicitement refusé</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>un garde-fou sur les citations de la plage commune</td><td><strong>raison écrite</strong> : savoir laquelle des deux lois une phrase visait est un jugement. Un détecteur accuserait 5 068 lignes légitimes et cesserait d'être lu (leçon L4)</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/referentiel/organisation-des-lois.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

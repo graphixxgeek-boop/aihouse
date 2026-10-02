@@ -60,7 +60,52 @@ export const LES_CONTROLES = Object.freeze([
     sansQuoi: "une question ouverte posée à quelqu'un qui n'est pas développeur se paie en aller-retours, jamais en reformulation : c'est le poste de perte de temps qu'il a lui-même désigné" },
   { cle: "engagements-en-taches", question: "Chaque chose que je me suis engagé à faire est-elle une TÂCHE qui existe vraiment ?",
     sansQuoi: "un engagement écrit dans un fil et nulle part ailleurs est une intention : personne ne le relira, aucun outil ne le comptera, et il aura l'air d'un travail en cours jusqu'à ce qu'on l'oublie" },
+  // LE SEPTIÈME CONTRÔLE (2026-10-02, tâche #1483) — ET IL EXISTE PARCE QUE LES SIX AUTRES ONT
+  // RENDU UN FAUX VERT SUR LA SEULE QUESTION QUI COMPTE.
+  //
+  // Son constat : « J'ai l'impression que les fils de discussion vegetent avec tes reponses […] tu
+  // dois verifier si les fils ont bien été alimentés et que des fichiers ephemeres ne leur ont pas
+  // ôté le pain de la bouche. » Mesuré le jour même : 180 documents créés ou modifiés dans docs/
+  // depuis le dernier vrai mouvement d'un fil, dont 41 dans les dossiers qui lui sont destinés,
+  // contre UN SEUL enregistrement touchant un fil — la fermeture d'une question morte.
+  //
+  // ET PENDANT CE TEMPS CET OUTIL RÉPONDAIT « 14/14 fils à jour ». Les six contrôles mesurent la
+  // FORME d'un fil — a-t-il une date, dit-il à qui est la balle, ses engagements existent-ils en
+  // tâches — et PAS UN SEUL ne demande s'il a reçu quelque chose. Un fil parfaitement formé et
+  // mort depuis deux jours passait les six. C'est le faux vert posé exactement sur le mécanisme
+  // dont la raison d'être est de répondre à « es-tu à jour ? ».
+  //
+  // CE QUE CELUI-CI MESURE, SANS AUCUN SEUIL ARBITRAIRE (BP5 : un seuil planté dans un nuage
+  // continu se trompe au premier cas nouveau). Il compare deux dates que le dépôt porte déjà :
+  // la plus récente des dates de mouvement des fils, et les dates du registre des remises. Un
+  // document REMIS après le dernier mouvement d'un fil est un document livré sans qu'aucun fil
+  // n'ait bougé — exactement le flux de travail qu'il décrit (« pour me repondre, tu me livres
+  // les fils concernés ») pris en défaut. Zéro tolérance sur cette population-là, et c'est
+  // justifié : chaque document qui lui est remis répond à quelque chose, donc appartient à un fil.
+  { cle: "fils-alimentes", question: "Chaque document qui lui a été remis a-t-il laissé une trace dans un fil ?",
+    sansQuoi: "un fil parfaitement formé et mort depuis deux jours passe les six autres contrôles : sans celui-ci, « à jour » ne mesure que la FORME des fils, jamais leur ALIMENTATION — et c'est précisément le faux vert qu'il a ressenti avant qu'aucun outil ne le voie" },
 ]);
+
+// LE REGISTRE DES REMISES, LU D'ICI. Son chemin est le même que celui déclaré par data-archangel
+// (REGISTRE_DES_LIVRAISONS) — recopié plutôt qu'importé, parce qu'importer data-archangel entier
+// pour une constante alourdirait un outil qu'on lance souvent. Le filet vérifie que les deux
+// chaînes restent identiques, ce que l'Article 24 exige d'une valeur recopiée.
+export const REGISTRE_DES_REMISES = "docs/livraisons.json";
+
+export function filsAlimentes({ root = ROOT, fils = [], readFileImpl = readFileSync } = {}) {
+  let registre;
+  try { registre = JSON.parse(readFileImpl(join(root, REGISTRE_DES_REMISES), "utf8")); }
+  catch { return { mesurable: false, pourquoi: `${REGISTRE_DES_REMISES} n'a pas pu être lu : on ne sait pas ce qui lui a été remis, donc on ne peut pas dire si les fils ont suivi` }; }
+  const remises = Array.isArray(registre?.remises) ? registre.remises : Array.isArray(registre) ? registre : [];
+  if (!remises.length) return { mesurable: false, pourquoi: "aucune remise enregistrée : rien à confronter aux fils, ce qui n'est jamais « les fils ont suivi »" };
+  const datesFils = fils.map((f) => f.date).filter(Boolean).sort();
+  if (!datesFils.length) return { mesurable: false, pourquoi: "aucun fil ne porte de date de mouvement : la comparaison est impossible" };
+  const dernierFil = datesFils[datesFils.length - 1];
+  // On compare sur la DATE seule (10 caractères) : une remise et un mouvement de fil le même jour
+  // ne sont pas un écart — le fil a pu être nourri dans la même session.
+  const orphelines = remises.filter((r) => String(r?.remisLe ?? "").slice(0, 10) > dernierFil);
+  return { mesurable: true, orphelines, remises: remises.length, dernierFil };
+}
 
 // CE QU'UNE QUESTION DOIT PORTER POUR ÊTRE RÉPONDABLE, et le seuil est volontairement bas.
 //
@@ -211,6 +256,13 @@ export function suisJeAJour({ root = ROOT, dossierEnvois = null, taches = null }
         detail: !lus.mesurable ? lus.pourquoi
           : q.posees === 0 ? "aucune question ne l'attend — rien à mesurer, et ce n'est pas un vert"
           : `${q.posees - q.nues.length}/${q.posees} question(s) lui offrent des options concrètes${q.nues.length ? ` — nues : ${q.nues.join(", ")}` : ""}` };
+    })(),
+    (() => {
+      const al = filsAlimentes({ root, fils });
+      return { ...LES_CONTROLES[6], mesurable: al.mesurable, ok: al.mesurable ? al.orphelines.length === 0 : null,
+        detail: !al.mesurable ? al.pourquoi
+          : al.orphelines.length === 0 ? `les ${al.remises} remise(s) enregistrée(s) sont toutes antérieures ou contemporaines du dernier mouvement de fil (${al.dernierFil})`
+          : `${al.orphelines.length} document(s) remis APRÈS le dernier mouvement d'un fil (${al.dernierFil}) sans qu'aucun fil ne bouge : ${al.orphelines.slice(0, 5).map((o) => o.fichier.split("/").pop()).join(", ")}${al.orphelines.length > 5 ? ` (+${al.orphelines.length - 5})` : ""}` };
     })(),
   ];
   const nonMesures = resultats.filter((r) => r.ok === null).length;

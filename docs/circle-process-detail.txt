@@ -1027,16 +1027,29 @@ LE COMPTE COMPLET, PAR MOMENT
   ÉTAPE F2 — calibrage des correctifs                   5-10        proportionnel aux correctifs
   ÉTAPE F3 — celles qui mettent l'utilisateur en cause   5-8        proportionnel aux points durs
   ÉTAPE F4 — la suite : instant / axe / projet             3        non, toujours les trois
+  ÉTAPE F5 — ce qu'il a RÉELLEMENT reçu et téléchargé    1-2        non, toujours posée
   ÉTAPE G — dernier rappel de modèle                     0-1        OUI, seulement si Q1 = oui
   ──────────────────────────────────────────────────  ──────────
-  TOTAL (hors offres de passer, cf. plus bas)          28 à 44
+  TOTAL (hors offres de passer, cf. plus bas)          29 à 46
 
   (Corrigé le 2026-09-23 : ce total annonçait « 28 à 43 » alors que son propre tableau, additionné
   ligne à ligne, donne 44 au maximum — une erreur d'addition d'une unité, restée invisible tant
   qu'aucun mécanisme ne confrontait le chiffre annoncé à la somme réelle. C'est désormais
   findEtapesDivergentesDuDocument() (circle-tasks.mjs) qui le vérifie, et c'est lui qui l'a trouvée.)
 
-CONTRAINTE DE FORME : quatre questions par fenêtre au maximum. 28 à 43 questions = 7 à 11 fenêtres
+  ÉTAPE F5 AJOUTÉE LE 2026-10-02 (tâche #1473), à sa demande : « LE MIEUX EST DE ME POSER UNE
+  FENETRE DE QUESTION A LA FIN POUR ETRE SUR ». Elle demande ce qu'il a RÉELLEMENT reçu — l'Agence
+  écrit des fichiers à son intention et n'a aucun moyen d'observer un téléchargement. Elle se place
+  avant l'étape G, qui doit rester la toute dernière question posée.
+
+  ET LES QUATRE COMBINAISONS CI-DESSOUS ONT ÉTÉ RECALCULÉES LE MÊME JOUR, parce qu'elles portaient
+  encore les chiffres D'AVANT la correction du 2026-09-23 : A annonçait « 27 à 41 » là où son propre
+  tableau donne 28 à 42, B « 29 à 43 » pour 30 à 44, C « 29 à 42 » pour 29 à 43. La correction d'une
+  unité n'avait été propagée qu'au TOTAL, le seul chiffre qu'un mécanisme relisait — démonstration
+  exacte de la leçon L37 : on corrige la CLASSE, pas l'occurrence trouvée. Les totaux par
+  combinaison ne sont toujours relus par personne ; ils se dérivent à la main du tableau ci-dessus.)
+
+CONTRAINTE DE FORME : quatre questions par fenêtre au maximum. 29 à 46 questions = 8 à 12 fenêtres
 successives. Ce n'est pas une limite du process, c'est une limite de l'outil de questions — elle se
 note ici parce qu'elle change la façon de grouper, jamais le nombre de questions à poser.
 
@@ -1050,16 +1063,16 @@ LES COMBINAISONS POSSIBLES
 ---------------------------------------------------------------------
 
   A. RONDE ORDINAIRE, sans changement de modèle (le cas le plus fréquent)
-     Q1 = non → pas de Q2, pas d'étape G. Total : 27 à 41.
+     Q1 = non → pas de Q2, pas d'étape G. Total : 29 à 44.
 
   B. RONDE AVEC CHANGEMENT DE MODÈLE, retour APRÈS les rapports
      Q1 = oui, Q2 = après → l'agent écrit tout sans attendre, et le DERNIER RAPPEL est la toute
-     dernière question de la Ronde (étape G). Total : 29 à 43.
+     dernière question de la Ronde (étape G). Total : 31 à 46.
 
   C. RONDE AVEC CHANGEMENT DE MODÈLE, retour AVANT les rapports
      Q1 = oui, Q2 = avant → UNE SEULE pause, après TOUS les scans et avant la rédaction (jamais
      plusieurs pauses par lot). Q3 y est posée ; l'agent attend sans limite de temps ni relance
-     automatique. Pas d'étape G ensuite : le retour a déjà eu lieu. Total : 29 à 42.
+     automatique. Pas d'étape G ensuite : le retour a déjà eu lieu. Total : 30 à 45.
 
   D. RONDE NOCTURNE / AUTONOME, personne en face
      AUCUNE question, sans exception — « aucune fenêtre y compris GOAT/AUTO ne doit être bloquante

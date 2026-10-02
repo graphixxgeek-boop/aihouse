@@ -2779,7 +2779,12 @@ export const SEPARATEUR_THEME = " / ";
 // de la vue par famille, et une case vide se lirait comme « rien à faire là ».
 export const FAMILLES_DE_THEMES = {
   "Process & Ronde": ["Process", "Ronde", "Conduite"],
-  "Charte & référentiel": ["Charte", "Documentation", "Standards", "Idées"],
+  // « Stratégie » a rejoint la famille le 2026-10-02 (tâche #1482). Elle est ici et non dans
+  // « Organisation de l'Agence » parce qu'une stratégie globale est un TEXTE qui fait autorité sur
+  // le reste, au même rang que la charte et le référentiel — c'est tout l'objet de sa demande
+  // « parfaitement coherente dans la cascade de PHILO à taches ». La ranger avec l'organisation
+  // l'aurait traitée comme une description de l'existant alors qu'elle commande ce qui vient.
+  "Charte & référentiel": ["Charte", "Documentation", "Standards", "Idées", "Stratégie"],
   // « Projet » a rejoint la famille le 2026-09-28 (tâches #1100/#1101) : l'ENORME CHANTIER annoncé
   // par l'utilisateur est une demande d'évolution profonde « dans la conception de l'agence », donc
   // il appartient bien à cette famille-ci et non au jeu. Le garde-fou de cette liste l'a attrapé au
@@ -2793,11 +2798,24 @@ export const FAMILLES_DE_THEMES = {
   // d'un BIEN — ce qui peut partir, et ce qui peut être pris. Le diluer dans « Données » l'aurait
   // rendu invisible le jour où il compte. Le garde-fou l'a attrapé au commit même où le thème est
   // né, ce qui est exactement son travail (Article 24).
-  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Badge", "Projet", "Sécurité"],
+  // « Export » a rejoint la famille le 2026-10-02 (tâches #1481, #1484, #1485), et son arrivée
+  // mérite un mot parce qu'elle ressemble à un doublon sans en être un. « Exportabilité » y était
+  // déjà, et nomme la PROPRIÉTÉ — l'Agence est-elle transportable ? « Export » nomme l'ACTE : la
+  // sortir pour de vrai, contre un dépôt vierge, avec ce qui casse à ce moment-là. Les trois
+  // tâches qui l'ont fait naître sont toutes de cette nature : faire tourner `fonder` contre un
+  // projet d'accueil, lister les règles qui ne partiront pas, décider du sort du filet. Les fondre
+  // sous « Exportabilité » aurait rangé l'épreuve sous la théorie. Le garde-fou l'a attrapé au
+  // commit même où le thème est né, ce qui est exactement son travail (Article 24).
+  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Export", "Badge", "Projet", "Sécurité"],
   "Suivi & file": ["Suivi", "File", "XP"],
   "Nommage & vocabulaire": ["Nommage", "TOOL_PORTEE"],
-  "Outillage & garde-fous": ["Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille"],
-  "Données & mesure": ["Données", "Conso", "Sauvegarde", "Profil utilisateur"],
+  // « Rationalisation » a rejoint la famille le 2026-10-02 (tâche #1477). Elle appartient à
+  // l'outillage et non à l'organisation parce que son objet est de RÉDUIRE le paysage d'outils et
+  // de documents, jamais de décrire qui fait quoi — c'est le pendant destructeur de « Outillage ».
+  "Outillage & garde-fous": ["Outillage", "tool-brain", "Coordination", "Filet", "Crochet post-commit", "Compteur d'usage", "Veille", "Rationalisation"],
+  // « Circulation » a rejoint la famille le 2026-10-02 (tâche #1475) : un document écrit et jamais
+  // remis est une donnée produite qui n'arrive pas, donc une question de mesure, pas d'outillage.
+  "Données & mesure": ["Données", "Conso", "Sauvegarde", "Profil utilisateur", "Circulation"],
   // « Jeu » a rejoint la famille le 2026-09-30 (tâche #1252) — et son arrivée dit quelque chose.
   // La famille du JEU, qui est pourtant la raison d'être du projet, n'avait jusque-là que deux
   // thèmes, tous deux périphériques : l'apparence et le ton. Aucune tâche ouverte ne portait le

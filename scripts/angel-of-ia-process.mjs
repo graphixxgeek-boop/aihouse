@@ -146,6 +146,22 @@ export const REGLES_SURVEILLEES = [
   // « RIEN À RETENIR » EST UNE RÉPONSE PLEINE ET ENTIÈRE, et ce n'est pas une politesse : exiger une
   // trouvaille à chaque passage ferait écrire pour se taire, ce qui remplirait le registre de bruit
   // et le rendrait illisible — donc détruirait exactement ce qu'on essaie de construire.
+  // LIVRAISONS-PARTAGÉES (2026-10-02, tâche #1475). SON REPROCHE EST À L'ORIGINE DE CETTE RÈGLE, et
+  // il visait le défaut le plus coûteux de notre façon de travailler : « tu avances sur des sujets
+  // mais tu ne me fais pas profiter des resultats […] ca me donne l'impression que tu travailles DE
+  // TON COTE et que le projet M'ECHAPPE ». Quatre documents produits et jamais montrés, dont celui
+  // qu'il attendait « avec impatience ».
+  //
+  // CE QUI EST OBSERVABLE, ET CE QUI NE L'EST PAS, parce que la frontière compte : la LISTE des
+  // documents sans marque de remise est parfaitement mécanique (`data-archangel livraisons`). Ce
+  // qui ne l'est pas, c'est qu'un compte rendu soit en train d'être écrit — aucun code ne peut le
+  // savoir. Angel DEMANDE donc, et refuse d'être au vert sans réponse : le même dispositif que les
+  // Articles 29 et 30, pour la même raison (Article 27).
+  //
+  // « RIEN À PARTAGER » EST UNE RÉPONSE VALABLE, exactement comme « rien à retenir » juste en
+  // dessous : un tour qui ne produit aucun document n'a rien à livrer, et exiger une livraison à
+  // chaque passage ferait fabriquer des documents pour satisfaire le contrôleur.
+  { id: "livraisons-partagees", cote: "agent", observable: false, regle: "À la fin de chaque compte rendu de travail, lancer `node scripts/data-archangel.mjs livraisons` et, pour chaque document sans marque de remise : soit le LUI ENVOYER puis enregistrer la remise, soit dire explicitement pourquoi il ne lui est pas destiné. Jamais le laisser sur disque en silence — « rien à partager » est une réponse valable, « je n'ai pas regardé » ne l'est pas.", source: "CLAUDE.md Article 29 + docs/referentiel/data-archangel.md" },
   { id: "xp-lecons", cote: "agent", observable: false, regle: "Aux QUATRE moments déclencheurs (un garde-fou bloque un commit ou un test échoue de façon imprévue · la fin d'un compte rendu de travail · chaque Ronde et chaque évaluation · un outil rend un résultat VERT qui ne correspond pas à ce que je sais du terrain), répondre à la question « y avait-il quelque chose à retenir ? » et inscrire la réponse au journal XP — « rien à retenir » compris, qui est une réponse valable et ne compte contre personne.", source: "docs/xp-ia-process-detail.md" },
   // LE QUATRIÈME MOMENT A ÉTÉ AJOUTÉ LE 2026-09-28 (tâche #749), et c'est le seul des quatre qu'AUCUN
   // signal ne précède : les trois premiers supposent que quelque chose se produise — un blocage, une

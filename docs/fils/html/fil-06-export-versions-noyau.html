@@ -106,12 +106,12 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-01T02:19:37.132Z</div>
+    <div class="date">2026-10-02T20:35:23.651Z</div>
     <h1>FIL 06 — L'export de l'Agence, son noyau, et la question des « plusieurs versions »</h1>
-    <p class="sub">Page générée depuis docs/fils/fil-06-export-versions-noyau.md — jamais écrite à la main.</p>
+    <p class="sub">Mis à jour le 2 octobre 2026 — ton gros prompt</p>
   </header>
   <div class="divider"></div>
-  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-10-01 <strong>Place dans le plan :</strong> Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07). <strong>Saisines :</strong> COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité »)</p>
+  <main><p><strong>Balle :</strong> À TOI <strong>Dernier mouvement :</strong> 2026-10-02 <strong>Place dans le plan :</strong> Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07). <strong>Saisines :</strong> COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité ») · gros prompt du 2026-10-02 (le filet transporté)</p>
 <hr>
 <h3>① L'HISTOIRE — ce qui s'est déjà dit sur ce sujet, résumé</h3>
 <p><strong>Ce que tu as demandé</strong> — savoir si l'Agence peut réellement partir ailleurs, et décider si on proposera <strong>plusieurs versions</strong> (une légère, une complète) ou une seule.</p>
@@ -139,7 +139,23 @@ Détail complet et correction : <code>docs/grand-projet/02-strategie/la-portabil
 <p><strong>CE QUI RESTE VRAIMENT À DÉCIDER ICI, et ce n'est pas la même question</strong> : rien ne distingue aujourd'hui une règle « qui reste chez nous » d'une règle « qui part avec l'Agence » — c'est la séparation des deux cas de figure de la stratégie globale (<code>docs/strategies/strategie-globale-du-projet-entier.md</code>), et la tâche <strong>#1320</strong> la porte. <em>Question : on étiquette TOUS les documents, ou seulement ceux qui partent ?</em></p>
 <p><strong>Q6.2 — À TOI.</strong> Plusieurs versions ou une seule ? L'analyse penche vers <strong>une seule</strong>, parce que maintenir deux versions double le coût de chaque règle nouvelle — mais c'est ta décision commerciale, pas ma mesure. <em>(a) une seule · (b) deux (légère / complète) · (c) montre-moi le coût chiffré des deux avant que je tranche</em></p>
 <p><strong>Q6.3 — PARTIELLEMENT FAIT le 2026-09-30, tâche #1322.</strong> Le JEU a désormais sa sonde, et JESUS couvre enfin les <strong>quatre</strong> axes que tu avais nommés. Ce qu'elle mesure : <strong>9 821 tokens envoyés en moyenne par personnage et par tour</strong> sur 310 tours réels, et <strong>deux cerveaux par tour</strong> — soit <strong>~19 600 tokens par tour de jeu</strong>. C'est le premier poste de lenteur, avant tout rendu 3D. Ce qu'elle NE mesure pas est nommé un par un dans sa sortie : la latence réelle, les images par seconde, le poids envoyé au navigateur, et le ressenti d'un visiteur.</p>
-<p><strong>Q6.4 — À MOI, tâche </strong>#1323<strong>.</strong> Rendre les chemins réglables <strong>sans toucher au comportement</strong> — c'est exactement ta borne (« rien de difficile à annuler »). Je dois prouver ça avant de proposer le chantier.</p></main>
+<p><strong>Q6.4 — À MOI, tâche </strong>#1323<strong>.</strong> Rendre les chemins réglables <strong>sans toucher au comportement</strong> — c'est exactement ta borne (« rien de difficile à annuler »). Je dois prouver ça avant de proposer le chantier.</p>
+<hr>
+<h3>2 OCTOBRE — LE FILET TRANSPORTÉ, ET LA SÉPARATION AGENCE / UTILISATEUR</h3>
+<p><strong>Tes quatre questions sur le filet, posées d'un bloc :</strong></p>
+<div class="highlight"><p>« on en aura plus besoin une fois le code fini ? je veux dire l'utilisateur n'hérite pas de ce
+filet ? […] est ce que par la suite l'utilisateur peut &quot;casser l'agence&quot; en codant son projet ?
+comment isoler/proteger l'agence, &quot;verrouiller le code&quot; je ne connais pas ? […] Est-ce que le
+filet consomme des tokens, plus il est long ? »</p></div>
+<p><strong>UNE RÉPONSE EST DÉFINITIVE ET JE TE LA DONNE TOUT DE SUITE : NON, le filet ne consomme AUCUN token.</strong> C'est un programme qui tourne en local ; il ne fait aucun appel à un modèle d'IA, quelle que soit sa longueur. Ce qu'il coûte est du <strong>temps d'attente</strong> — environ 9 minutes aujourd'hui — et rien d'autre. Si ta crainte était budgétaire, elle est levée.</p>
+<p><strong>Les trois autres demandent un vrai dossier, et elles cachent une tension réelle</strong> que ta formulation a bien identifiée : <em>« raisonnablement l'agence ne peut pas débarquer avec un filet de plus de 30 sec, le filet doit être dispo pour le vrai projet de l'utilisateur »</em>. Le problème est que le filet est écrit <strong>POUR ce dépôt-ci</strong> : transporté tel quel, il testerait du code qui n'existe plus chez l'utilisateur. Ce n'est pas un problème de taille, c'est un problème de nature.</p>
+<h4>Un fait mesuré qui rend ta peur fondée</h4>
+<p>Tu écris, dans un autre point du même prompt : <em>« Ma peur : j'installe l'agence dans un nouveau projet, je l'utilise mais je ne la reconnais pas et certaines choses ne fonctionnent plus du tout. »</em></p>
+<p><strong>Vérifié le jour même</strong> : <code>the-king fonder</code>, l'outil dont le seul rôle est de doter un projet d'accueil de ses textes fondateurs, <strong>n'a jamais tourné contre un projet d'accueil</strong>. Il a tourné ici, où il se comporte correctement en ne proposant rien (ce projet a déjà ses textes) — mais c'est le cas facile, et c'est l'inverse de sa raison d'être. <strong>Le seul cas pour lequel il existe n'a jamais été exercé une fois.</strong> C'est littéralement « ça ne fonctionne plus du tout et personne ne le sait ».</p>
+<p><strong>Q6.5 — À TOI.</strong> Le filet transporté : quelle forme veux-tu qu'il prenne chez l'utilisateur ? <em>(a) il part tel quel, et l'utilisateur en hérite avec ses 9 minutes · (b) il part découpé en deux — une part qui teste l'Agence elle-même, une part vide à remplir par l'utilisateur · (c) il ne part pas, et l'Agence est livrée « figée » avec une preuve qu'elle était verte au départ · (d) je ne sais pas, explique-moi d'abord ce que chaque option coûte</em></p>
+<p><strong>Q6.6 — À MOI, tâche #1485.</strong> Le dossier complet : hériter, casser, verrouiller — avec la liste de ce qui n'est PAS rationalisable, dont le filet est le plus gros morceau.</p>
+<p><strong>Q6.7 — À MOI, tâche #1481.</strong> Faire tourner <code>fonder</code> contre un dépôt vierge pour de vrai, et rendre ce qu'il produit. Une mesure, pas une opinion.</p>
+<p><strong>Q6.8 — À MOI, tâche #1484.</strong> La liste des règles qui vivent dans mes instructions et PAS dans les fichiers de l'Agence — celles qui disparaîtront à l'export sans que personne le voie.</p></main>
   <div class="divider"></div><footer><p>Dérivé de docs/fils/fil-06-export-versions-noyau.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>

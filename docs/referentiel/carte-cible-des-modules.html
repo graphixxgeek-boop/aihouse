@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LA CARTE CIBLE DE L'ORGANISATION PAR MODULES</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T19:53:54.959Z</div>
+    <h1>LA CARTE CIBLE DE L'ORGANISATION PAR MODULES</h1>
+    <p class="sub">Page générée depuis docs/referentiel/carte-cible-des-modules.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/strategies/strategie-globale-du-projet-entier.md</code>
+*la carte cible est une DIRECTION, pas une conviction : elle appartient donc à la stratégie, et
+hérite par elle de la cible du projet entier et du document de gouvernance.*</p></div>
+<p><em>(Établie le 2026-10-02T07:34Z — heure LUE, source système. Tâche <strong>#1420</strong>.)</em></p>
+<hr>
+<h3>⚠️ STATUT : PROPOSITION NON VALIDÉE</h3>
+<p><strong>Aucune ligne de ce document n'est acquise.</strong> Il est écrit pour être <strong>contesté ligne par ligne</strong>, et chacune porte la mesure qui l'a suggérée pour qu'on puisse la contester sur pièces plutôt que d'opinion à opinion. Tant que le responsable de projet ne l'a pas arrêté, l'écart mesuré contre cette cible dit <em>« écart avec une proposition »</em>, jamais <em>« retard sur un objectif »</em>.</p>
+<p><strong>LISTE VOLONTAIREMENT TENUE À LA MAIN, et c'est déclaré ici au titre de l'Article 24.</strong> Une cible est un CHOIX ; rien dans le dépôt ne peut la dériver, et un mécanisme qui la générerait rendrait simplement l'état actuel en le rebaptisant « cible ». <strong>C'est la difficulté du chantier, et elle est dite plutôt que contournée</strong> : la carte ACTUELLE ne peut pas se périmer parce qu'elle est générée ; celle-ci le peut, et c'est le prix de son existence. Ce qui la protège n'est pas un générateur, c'est la mesure d'écart (<code>node scripts/cassandra-rh.mjs carte-cible</code>), qui signale toute famille nommée ici et disparue du dépôt — ou l'inverse.</p>
+<hr>
+<h3>CE QUE CETTE CARTE FIXE, ET CE QU'ELLE NE FIXE PAS</h3>
+<p><strong>Elle fixe trois choses par famille</strong>, et seulement trois, parce que ce sont les seules qui se vérifient : un <strong>effectif visé</strong> (une fourchette, jamais un nombre exact — un nombre exact transforme un cap en comptage), un verdict de <strong>détachabilité</strong>, et ce que la famille <strong>doit porter</strong> ou <strong>ne doit pas porter</strong>.</p>
+<p><strong>Elle ne fixe ni les noms, ni le rangement individuel de chaque outil.</strong> Un nom est choisi par le responsable de projet, jamais par l'agent, et le rangement d'un outil dans une famille est un jugement que l'organigramme porte déjà. <strong>Déplacer un outil n'est pas l'objet de ce document</strong> : il dit où doivent aller les FAMILLES, pas où doit aller chacun.</p>
+<hr>
+<h3>LA CIBLE, FAMILLE PAR FAMILLE</h3>
+<table><thead><tr><th>Famille</th><th>Effectif visé</th><th>Détachable</th><th>Ce qu'elle doit porter</th><th>Ce qu'elle ne doit PAS porter</th></tr></thead><tbody><tr><td>Les Anges de la coordination</td><td>14-17</td><td>non</td><td>ce qui fait tenir le travail ensemble : le suivi, la Ronde, les fils, le choix de l'outil</td><td>de la mesure brute qui ne sert aucune décision de coordination</td></tr><tr><td>La Gouvernance Royale</td><td>12-14</td><td>non</td><td>qui compose l'équipe, ce que chaque outil vaut, ce que tout coûte, et si les objectifs sont tenus</td><td>la PLOMBERIE appelée par tout le monde, qui n'est pas de la gouvernance mais de l'infrastructure</td></tr><tr><td>Les Prophètes - Dette &amp; Structure du code</td><td>8-10</td><td>non</td><td>ce qui FREINE : l'empilement, la lenteur, les règles qui coûtent plus qu'elles ne rapportent</td><td>un contrôle qui tourne à chaque commit, qui relève des Gardiens sacrés</td></tr><tr><td>Les Gardiens Sacrés du Code</td><td>7-8</td><td>non</td><td>un vrai scan de qualité du code, gratuit et mécanique, à CHAQUE commit</td><td>tout ce qui exige un raisonnement payant, exclu par le critère même du rang</td></tr><tr><td>La Suite Tarantino - Simulation &amp; qualité narrative</td><td>7-9</td><td><strong>OUI</strong></td><td>le jugement du JEU : le ton, la qualité d'une partie, les captures, la mémoire narrative</td><td>quoi que ce soit dont l'outillage dépende en retour</td></tr><tr><td>Les Boosters de Navigation</td><td>4-5</td><td>non</td><td>retrouver vite dans un gros fichier, sans tout relire</td><td>un jugement sur ce qui est trouvé</td></tr><tr><td>Les Agents Externes - Audit indépendant</td><td>2-3</td><td><strong>OUI</strong></td><td>un avis EXTÉRIEUR, par une IA séparée, lancé sur décision</td><td>tout ce qui doit tourner sans décision humaine, puisque ces outils coûtent</td></tr></tbody></table>
+<p><strong>POURQUOI « DÉTACHABLE » EST LA SEULE COLONNE QUI PÈSE VRAIMENT.</strong> L'objectif ultime du niveau PROJET exige que l'outil et l'œuvre <em>« tiennent debout l'un sans l'autre »</em>. Deux familles doivent donc pouvoir partir sans rien casser : celle qui juge le Jeu, et celle qui coûte de l'argent. <strong>Les deux le sont déjà</strong> — zéro script ne les importe, mesuré le 2026-10-02 — et la cible est ici de <strong>ne pas le perdre</strong>, ce qui est une cible à part entière : un acquis sans garde-fou se défait au premier import ajouté par commodité.</p>
+<hr>
+<h3>LES TROIS ÉCARTS QUE CETTE CIBLE DÉSIGNE, ET ILS SONT MESURÉS</h3>
+<p><strong>1. La Gouvernance Royale porte de la plomberie, et ça fausse sa lecture.</strong> Relevé du 2026-10-02 : 66 scripts cesseraient de fonctionner sans elle — dont <strong>65 par le seul <code>tool-usage</code>, soit 98 %</strong>. Le compteur d'usage est appelé par politesse par presque tout le monde ; ce n'est pas de la gouvernance, c'est de l'infrastructure. <strong>Le chiffre ne dit pas « cette famille porte tout », il dit « un de ses fichiers est appelé partout »</strong> — et les deux ne mènent pas à la même décision. Cible : 15 → 12-14, en sortant ce qui relève de l'infrastructure.</p>
+<p><strong>2. Les Anges de la coordination sont la plus grosse famille, et la plus hétérogène.</strong> 19 outils, 28 scripts dépendants, dont 9 par le seul <code>check-tasks-details</code> (32 %) — une concentration bien plus saine que la précédente, donc ce n'est pas la dépendance qui pose problème ici, c'est le PÉRIMÈTRE. Cible : 19 → 14-17.</p>
+<p><strong>3. Les deux familles détachables le sont, et rien ne le garde.</strong> Zéro import entrant, pour l'une comme pour l'autre. <strong>C'est le seul endroit de cette carte où la cible est déjà atteinte</strong> — et donc le seul où le travail n'est pas d'avancer mais d'empêcher de reculer.</p>
+<hr>
+<h3>LE PREMIER PASSAGE DE LA MESURE, ET IL DIT QUELQUE CHOSE D'INATTENDU</h3>
+<p><em>(<code>node scripts/cassandra-rh.mjs carte-cible</code>, passage du 2026-10-02T07:34Z.)</em></p>
+<p><strong>5 familles sur 7 sont DÉJÀ dans leur fourchette visée.</strong> Seules deux dépassent, et de peu : les Anges de la coordination à +2, la Gouvernance Royale à +1. Les deux verdicts de détachabilité sont tenus.</p>
+<p><strong>CE RÉSULTAT EST GÊNANT, ET C'EST POUR ÇA QU'IL EST ÉCRIT PLUTÔT QUE RETOUCHÉ.</strong> Une cible qui s'avère atteinte à 5/7 dès son premier passage ressemble beaucoup trop à l'état actuel rebaptisé — exactement ce que l'Article 31, faille 2, appelle un outil fabriqué pour cocher une case. <strong>La tentation évidente serait de resserrer les fourchettes jusqu'à faire apparaître un écart.</strong> Ce serait fabriquer le résultat qu'on voulait lire, et ça rendrait la mesure définitivement inutile.</p>
+<p><strong>LA LECTURE HONNÊTE EST AILLEURS, et elle est plus utile</strong> : si presque tout est au bon NOMBRE, alors le problème de l'organisation par modules n'est pas un problème de taille. <strong>Il est dans ce que chaque famille PORTE</strong>, et c'est précisément la colonne que la mesure déclare hors de sa portée. Les 98 % de dépendances de la Gouvernance Royale venant d'un seul fichier de plomberie en sont l'illustration : cette famille est au bon effectif ET mal composée, et aucune fourchette ne verra jamais ça.</p>
+<p><strong>CE QUE ÇA CHANGE POUR LA SUITE DU CHANTIER</strong> : la question à trancher n'est pas « combien d'outils par famille », elle est <strong>« qu'est-ce qui n'est pas à sa place »</strong>. La fourchette reste utile comme garde-fou contre une famille qui enflerait sans qu'on le voie ; elle ne sera jamais le cœur de la cible.</p>
+<hr>
+<h3>PLAN D'ACTION <em>(Article 28)</em></h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Ce qui en découle</th></tr></thead><tbody><tr><td><strong>RETENU</strong></td><td>la carte cible qu'il avait demandée n'existait nulle part, alors que la carte actuelle est livrée depuis le 2026-10-01</td><td><strong>FAIT</strong> — ce document, en PROPOSITION, tâche <strong>#1420</strong></td></tr><tr><td><strong>RETENU</strong></td><td>une cible écrite à la main se périme en silence, exactement ce que l'Article 24 interdit</td><td><strong>FAIT</strong> — <code>node scripts/cassandra-rh.mjs carte-cible</code> mesure l'écart et signale toute famille nommée ici et absente du dépôt, ou l'inverse</td></tr><tr><td><strong>À TRANCHER</strong></td><td>les sept effectifs visés et les deux verdicts de détachabilité</td><td><strong>sa décision, aucune ne m'appartient</strong> — inscrit dans <code>docs/idees-a-trancher.md</code></td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>générer la cible à partir de l'état réel</td><td><strong>raison écrite</strong> : un générateur rendrait l'état actuel rebaptisé « cible », donc un écart nul par construction. Un écart qui ne peut pas être non nul ne mesure rien</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>fixer un effectif exact par famille plutôt qu'une fourchette</td><td><strong>raison écrite</strong> : un nombre exact transforme un cap en comptage, et pousse à déplacer un outil pour faire tomber un chiffre juste</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/referentiel/carte-cible-des-modules.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

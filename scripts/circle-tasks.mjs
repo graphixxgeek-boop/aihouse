@@ -2199,6 +2199,27 @@ export const INVENTAIRE_QUESTIONS = [
   { etape: "calibrage-correctifs", min: 5, max: 10, quoi: "le calibrage des correctifs à appliquer", requisSi: null },
   { etape: "mise-en-cause", min: 5, max: 8, quoi: "celles qui mettent l'utilisateur en cause", requisSi: null },
   { etape: "la-suite", min: 3, max: 3, quoi: "l'instant, l'axe, le projet — toujours les trois", requisSi: null },
+  // CONFIRMATION DES LIVRAISONS (2026-10-02, tâche #1473) — sa demande, mot pour mot : « NOTE DANS
+  // LE PROCESS DE LA RONDE QU'ON DOIT REGLER CETTE QUESTION / LE MIEUX EST DE ME POSER UNE FENETRE
+  // DE QUESTION A LA FIN POUR ETRE SUR ».
+  //
+  // CE QU'ELLE FERME, et c'est un trou que rien d'autre ne couvrait : l'Agence produit des fichiers
+  // à son intention (rapports, sauvegardes, documents HTML) et n'a AUCUN moyen de savoir s'ils lui
+  // sont parvenus. Un fichier écrit sur disque ressemble trait pour trait à un fichier reçu — même
+  // confusion que « question fermée » contre « question jamais posée », juste au-dessus. Depuis que
+  // la remise EFFACE la sauvegarde (#1472), s'en remettre à une impression serait pire qu'un flou :
+  // ce serait effacer sur une supposition.
+  //
+  // POURQUOI UNE QUESTION ET PAS UNE MÉCANIQUE : rien dans ce conteneur ne peut observer un
+  // téléchargement. Le déclarer EST la protection (Article 27) — une mesure inventée serait pire.
+  //
+  // LA LISTE SUR LAQUELLE LA POSER NE SE FAIT PAS DE MÉMOIRE (Article 31) :
+  // `node scripts/data-archangel.mjs livraisons` rend les documents écrits pour lui qui n'ont
+  // aucune marque de remise. Poser la question sans cette liste reviendrait à lui demander de se
+  // souvenir à ma place — exactement l'inverse du service rendu.
+  { etape: "confirmation-livraisons", min: 1, max: 2, quoi: "ce qu'il a RÉELLEMENT reçu et téléchargé pendant la Ronde — liste donnée par `data-archangel livraisons`, jamais de mémoire", requisSi: null },
+  // Elle vient AVANT le rappel de modèle, qui doit rester la toute dernière question posée (c'est
+  // le geste qui clôt la Ronde, combinaison B) : celle-ci est la dernière fenêtre DE FOND.
   { etape: "rappel-modele", min: 1, max: 1, quoi: "dernier rappel de retour au modèle précédent", requisSi: (c) => c.changementModeleReponse === "oui" },
 ];
 

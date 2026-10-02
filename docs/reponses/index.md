@@ -13,10 +13,12 @@ deuxième vérité qui se périmerait — Article 24.)*
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**2 fichier(s)** dans ce dossier.
+**4 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
 | [reponses-gros-prompt-2026-09-23.txt](reponses-gros-prompt-2026-09-23.txt) | — |
 | [reponses-gros-prompt-2026-09-26.html](reponses-gros-prompt-2026-09-26.html) | — |
+| [reponses-gros-prompt-2026-10-02.html](reponses-gros-prompt-2026-10-02.html) | — |
+| [reponses-gros-prompt-2026-10-02.md](reponses-gros-prompt-2026-10-02.md) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

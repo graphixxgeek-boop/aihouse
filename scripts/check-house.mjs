@@ -12913,6 +12913,56 @@ await testVerrousDOuverture();
     assert.equal(invReel.mesurable, true, 'checked live against the real repository, never only a fixture');
     assert.deepEqual(invReel.parEtat['écrit et jamais rouvert'], [], 'zero folder left out of reach — docs/doc-report and docs/reponses each got an index the night they were found');
 
+    // CE QUI A ÉTÉ ÉCRIT POUR LUI ET NE LUI EST JAMAIS PARVENU (2026-10-02, tâche #1475).
+    // Son reproche : « tu avances sur des sujets mais tu ne me fais pas profiter des resultats […]
+    // le projet M'ECHAPPE ». Quatre documents produits, jamais montrés. Le mécanisme est celui des
+    // sauvegardes (#1471) étendu au document — un nouveau venu hérite de ce que l'équipe sait déjà
+    // faire (Article 24).
+    const dossiersLiv = [{ dossier: 'docs/faux-livrables', quoi: 'fixture' }];
+    const listerLiv = (chemin) => {
+      if (String(chemin).endsWith('docs/faux-livrables')) return ['montre.html', 'cache.html', 'note.md'];
+      throw new Error('hors fixture');
+    };
+    const registreLiv = JSON.stringify({ depuis: '2026-10-01T00:00Z', remises: [{ fichier: 'docs/faux-livrables/montre.html', remisLe: '2026-10-02T10:00Z' }] });
+    const statRecent = () => ({ mtimeMs: Date.parse('2026-10-02T12:00Z') });
+    const nr = DA.findDocumentsNonRemis({ dossiers: dossiersLiv, listerImpl: listerLiv, readFileImpl: () => registreLiv, statImpl: statRecent });
+    assert.deepEqual(nr.nonRemis.map((x) => x.fichier), ['docs/faux-livrables/cache.html'], 'a document written for him with no delivery mark is named — and the one already delivered is not');
+    assert.equal(nr.examines, 2, 'only .html is examined: a .md alongside is working material, never a deliverable');
+
+    // UN DOCUMENT PLUS VIEUX QUE LE REGISTRE EST « NON MESURÉ », JAMAIS « NON REMIS ». C'est le
+    // défaut trouvé en LANÇANT la fonction pour de bon : au premier passage elle accusait 64
+    // documents sur 64, dont ceux qu'il avait lus et commentés le matin même (leçons L5/L11).
+    const statAncien = () => ({ mtimeMs: Date.parse('2026-09-15T12:00Z') });
+    const vieux = DA.findDocumentsNonRemis({ dossiers: dossiersLiv, listerImpl: listerLiv, readFileImpl: () => registreLiv, statImpl: statAncien });
+    assert.deepEqual(vieux.nonRemis, [], 'a document older than the register is never accused');
+    assert.equal(vieux.anterieurs.length, 1, 'it is counted apart, in plain words, as NOT MEASURED');
+
+    // SANS REGISTRE DU TOUT, rien n'est « remis » et rien n'est excusé — mais le format le DIT.
+    const sansRegistre = DA.findDocumentsNonRemis({ dossiers: dossiersLiv, listerImpl: listerLiv, readFileImpl: () => { throw new Error('absent'); }, statImpl: statRecent });
+    assert.equal(sansRegistre.nonRemis.length, 2, 'with no register at all, nothing carries a mark');
+    assert.ok(DA.formatLivraisonsLines(sansRegistre).some((l) => l.includes('ABSENCE DE MESURE')), 'and the output says it is an absence of measurement, never a verdict');
+
+    // AUCUN DOSSIER LISIBLE = PAS MESURÉ, jamais « tout a été remis » (leçon L5, encore).
+    assert.equal(DA.findDocumentsNonRemis({ dossiers: dossiersLiv, listerImpl: () => { throw new Error('nope'); } }).mesurable, false, 'an unreadable delivery folder refuses to conclude');
+
+    // L'HEURE EST REÇUE, JAMAIS FABRIQUÉE (Article 32) — même refus que marquerRemise().
+    assert.throws(() => DA.marquerLivraison('docs/x.html', { readFileImpl: () => registreLiv, ecrireImpl: () => {} }), /heure LUE/, 'marking a delivery without a READ timestamp is refused');
+
+    // LE GARDE-FOU DE LA LISTE MANUELLE (Article 24) : un dossier non déclaré portant des .html
+    // sans date est un INDICE, posé comme une question. Il ne juge jamais.
+    const suspects = DA.findDossiersDeLivraisonNonDeclares({
+      dossiers: [{ dossier: 'docs/declare', quoi: 'fixture' }],
+      listerImpl: (chemin) => {
+        const c = String(chemin);
+        if (c.endsWith('/docs')) return [{ name: 'declare', isFile: () => false, isDirectory: () => true }, { name: 'oublie', isFile: () => false, isDirectory: () => true }];
+        if (c.endsWith('/docs/declare')) return [{ name: 'a.html', isFile: () => true, isDirectory: () => false }];
+        if (c.endsWith('/docs/oublie')) return [{ name: 'carte.html', isFile: () => true, isDirectory: () => false }, { name: 'rapport-2026-10-01.html', isFile: () => true, isDirectory: () => false }];
+        return [];
+      },
+    });
+    assert.deepEqual(suspects.map((x) => x.dossier), ['docs/oublie'], 'an undeclared folder holding an undated .html is flagged, the declared one never is');
+    assert.equal(suspects[0].combien, 1, 'and a dated file does not count: a generator dates its output, a hand does not');
+
     // LES COUCHES DES GARDIENS SACRÉS (2026-09-26, tâche #916 — point 23 de son gros prompt).
     // Le défaut trouvé en LANÇANT la fonction pour de bon, jamais en la relisant : un compteur
     // d'usage vide faisait accuser les quatre couches lourdes d'avoir « JAMAIS été lancées », alors
@@ -15793,11 +15843,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   // étape sous-servie — deux avaient été entièrement sautées sans que rien ne le voie.
   const trop = verifyRondeProcess({
     autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
-    questionsParEtape: { ouverture: 3, 'evaluation-agent': 8, 'constats-analyse': 10, 'calibrage-correctifs': 10, 'mise-en-cause': 8, 'la-suite': 3 },
+    questionsParEtape: { ouverture: 3, 'evaluation-agent': 8, 'constats-analyse': 10, 'calibrage-correctifs': 10, 'mise-en-cause': 8, 'la-suite': 3, 'confirmation-livraisons': 2 },
     findOrphanReportFilesImpl: () => [], findRegistriesMissingFromCircleImpl: () => [], existingPaths: [],
     shImpl: () => '100', loadLastRunImpl: () => ({ lastRunCommitCount: 100 }),
   });
-  assert.ok(!trop.findings.some((f) => f.check === 'questions-par-etape'), 'posing the full 42 questions the process actually demands must never be reported as an excess — the old 5-10 band would have flagged it, which is precisely why it was removed');
+  // Le haut de la fourchette est passé de 42 à 44 le 2026-10-02 (tâche #1473), quand l'étape
+  // « confirmation-livraisons » a rejoint l'inventaire. Ce chiffre se DÉRIVE du tableau de la
+  // Partie 11 ; le recopier ici est volontaire et assumé — c'est une valeur de test, pas un seuil
+  // de production, et findEtapesDivergentesDuDocument() garde le vrai couple code/document.
+  assert.ok(!trop.findings.some((f) => f.check === 'questions-par-etape'), 'posing the full 44 questions the process actually demands must never be reported as an excess — the old 5-10 band would have flagged it, which is precisely why it was removed');
 
   const zeroPointsNoQuestions = verifyRondeProcess({
     autoPrimeGoatAsked: true, checkedItemIds: [], executedItemIds: [],
@@ -15873,7 +15927,11 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     // a RESSENTI un écart de questions (14 posées, 28 à 44 dues) avant qu'aucun mécanisme ne le
     // voie — parce que le contrôle comparait un total nu à une fourchette de 5 à 10 écrite la
     // veille, qui aurait signalé un écart si l'agent avait posé les questions dues.
-    questionsParEtape: { ouverture: 3, 'evaluation-agent': 6, 'constats-analyse': 9, 'calibrage-correctifs': 6, 'mise-en-cause': 6, 'la-suite': 3 },
+    // HUITIÈME fois le 2026-10-02 (tâche #1473), et pour la même bonne raison : l'étape
+    // « confirmation-livraisons » demande ce qu'il a RÉELLEMENT reçu et téléchargé. Une Ronde
+    // réputée propre qui ne la poserait pas ne serait justement plus propre — c'est le test qui
+    // doit suivre l'inventaire, jamais l'inverse.
+    questionsParEtape: { ouverture: 3, 'evaluation-agent': 6, 'constats-analyse': 9, 'calibrage-correctifs': 6, 'mise-en-cause': 6, 'la-suite': 3, 'confirmation-livraisons': 1 },
     // Sixième fois que ce test échoue à l'ajout d'une étape, et encore une fois c'est voulu. Les
     // sept Gardiens sacrés tournent à chaque commit, donc la Ronde ne les relance pas — mais leurs
     // verdicts n'arrivaient jamais à l'utilisateur, qui a dû remarquer lui-même leur absence.
@@ -15966,7 +16024,15 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.deepEqual(cpg.findGardiensNonLivres({ gardiensLivres: ['argus', 'harmonia', 'axa-check', 'clean-dirty-old', 'clone-hunter'] }).map((g) => g.gardien), ['always-new-code', 'safe-export'], 'a partial delivery names exactly who is missing');
     assert.deepEqual(cpg.findGardiensNonLivres({ gardiensLivres: Object.keys(cpg.GARDIENS_SACRES_REGISTRES) }), [], 'and a complete one reports nothing');
     // LA RONDE DU 2026-09-23, REJOUÉE : cinq étapes sous-servies, dont deux entièrement sautées.
-    const reel = ct.findEtapesDeQuestionsManquantes({ ouverture: 3, 'constats-analyse': 4, 'mise-en-cause': 2, 'la-suite': 2 }, { changementModeleReponse: 'non' });
+    //
+    // ELLE SE REJOUE CONTRE L'INVENTAIRE DE SON ÉPOQUE, et c'est une correction du 2026-10-02
+    // (tâche #1473) qui vaut d'être expliquée. En ajoutant l'étape « confirmation-livraisons »,
+    // ce test est passé de 5 à 6 étapes manquantes — en accusant cette Ronde-là de ne pas avoir
+    // posé une question qui n'existait pas encore ce jour-là. Un rejeu historique qui change de
+    // verdict quand le présent change ne rejoue plus rien : il mesure l'inventaire d'aujourd'hui
+    // sur des données d'hier. Le filtre ci-dessous n'excuse donc pas un manque, il DATE le rejeu.
+    const inventaireDu23 = ct.INVENTAIRE_QUESTIONS.filter((e) => e.etape !== 'confirmation-livraisons');
+    const reel = ct.findEtapesDeQuestionsManquantes({ ouverture: 3, 'constats-analyse': 4, 'mise-en-cause': 2, 'la-suite': 2 }, { changementModeleReponse: 'non' }, { inventaire: inventaireDu23 });
     assert.equal(reel.length, 5, 'replaying the real Ronde must name the five under-served steps');
     assert.equal(reel.filter((e) => e.posees === 0).length, 2, 'two steps were skipped entirely — the ones that EVALUATE THE AGENT and the calibration of fixes');
     // LES ÉTAPES CONDITIONNELLES ne sont jamais comptées comme manquantes quand leur condition ne
@@ -23996,6 +24062,38 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   const RT = await import('../scripts/report-template.mjs');
   const J = await import('../scripts/jesus-le-sauveur.mjs');
   const F = await import('../scripts/fils-de-discussion.mjs');
+
+  // ── 0. LE SEPTIÈME CONTRÔLE DES FILS (2026-10-02, tâche #1483) — né d'un FAUX VERT, et c'est
+  // ce qui le rend indispensable. Les six contrôles existants mesurent la FORME d'un fil : a-t-il
+  // une date, dit-il à qui est la balle, ses engagements existent-ils en tâches. Aucun ne demande
+  // s'il a reçu quelque chose. Pendant que l'outil répondait « 14/14 fils à jour », 180 documents
+  // avaient été produits dans docs/ depuis le dernier mouvement d'un fil, dont 41 destinés à
+  // l'utilisateur, contre UN seul enregistrement touchant un fil. Il l'avait ressenti avant
+  // qu'aucun outil ne le voie — exactement ce que ce dépôt cherche à rendre impossible.
+  const regOrph = JSON.stringify({ depuis: '2026-10-01T00:00Z', remises: [
+    { fichier: 'docs/livrables/a.html', remisLe: '2026-10-02T20:00Z' },
+    { fichier: 'docs/livrables/b.html', remisLe: '2026-09-30T10:00Z' },
+  ] });
+  const filsVieux = [{ date: '2026-10-01' }, { date: '2026-09-28' }];
+  const alim = F.filsAlimentes({ fils: filsVieux, readFileImpl: () => regOrph });
+  assert.deepEqual(alim.orphelines.map((o) => o.fichier), ['docs/livrables/a.html'], 'a document delivered AFTER the last thread movement is named — the one delivered before is not');
+  assert.equal(alim.dernierFil, '2026-10-01', 'the comparison uses the MOST RECENT thread movement, never the oldest');
+
+  // UNE REMISE LE MÊME JOUR N'EST PAS UN ÉCART : le fil a pu être nourri dans la même session, et
+  // accuser le cas normal apprendrait à ignorer ce contrôle (leçon L4).
+  const memeJour = F.filsAlimentes({ fils: [{ date: '2026-10-02' }], readFileImpl: () => regOrph });
+  assert.deepEqual(memeJour.orphelines, [], 'a delivery on the same day as a thread movement is never a gap');
+
+  // SANS REGISTRE, OU SANS AUCUNE REMISE, LE CONTRÔLE REFUSE DE CONCLURE : « zéro orphelin »
+  // ressemblerait trait pour trait à « les fils ont suivi » (leçons L5/L11).
+  assert.equal(F.filsAlimentes({ fils: filsVieux, readFileImpl: () => { throw new Error('absent'); } }).mesurable, false, 'no register means NOT MEASURED, never "the threads kept up"');
+  assert.equal(F.filsAlimentes({ fils: filsVieux, readFileImpl: () => JSON.stringify({ depuis: 'x', remises: [] }) }).mesurable, false, 'and no delivery at all is nothing to compare, never a pass');
+  assert.equal(F.filsAlimentes({ fils: [], readFileImpl: () => regOrph }).mesurable, false, 'nor is a set of threads carrying no date');
+
+  // LE CHEMIN DU REGISTRE EST RECOPIÉ DANS DEUX FICHIERS, donc l'Article 24 exige un garde-fou
+  // mécanique plutôt qu'un commentaire promettant de les garder alignés. Le voici.
+  const DA24 = await import('../scripts/data-archangel.mjs');
+  assert.equal(F.REGISTRE_DES_REMISES, DA24.REGISTRE_DES_LIVRAISONS, 'the delivery register path is copied in two files: they must never drift apart in silence (Article 24)');
 
   // ── 1. L'EMPLACEMENT EXISTE, et il est OPTIONNEL : aucun des 49 outils tenus par le gabarit ne
   // voit sa sortie bouger tant qu'il ne le renseigne pas. C'est la condition pour que ce soit une

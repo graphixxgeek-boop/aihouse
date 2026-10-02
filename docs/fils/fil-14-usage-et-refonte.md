@@ -1,9 +1,9 @@
 # FIL 14 — Comment on utilise l'Agence, et faut-il tout reprendre à zéro
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-10-01
+**Dernier mouvement :** 2026-10-02
 **Place dans le plan :** Étage 2 bis — il suppose les objectifs (faits) et précède la cascade. C'est le fil qui décide de la FORME que prendra tout le reste du travail.
-**Saisines :** demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet · chiffrage et proposition du 2026-10-01
+**Saisines :** demande du 2026-10-01 dans la nuit (huit sujets) · audit de l'historique complet · chiffrage et proposition du 2026-10-01 · gros prompt du 2026-10-02 (PACK DÉCOUVERTE, travail à distance)
 
 ---
 
@@ -149,3 +149,59 @@ réflexion. Et « citer » n'est pas « dépendre » : six est un **plafond**, p
 d'un côté ; de l'autre, un outillage dont **un seul fichier pèse 12 052 lignes** (#793). **Le
 travail de refonte est presque entièrement du côté de l'Agence** — ce qui est cohérent avec sa
 proposition, puisque c'est l'Agence qu'il veut rationaliser.
+
+---
+
+## 2 OCTOBRE — LE PACK DÉCOUVERTE, ET LE TRAVAIL À DISTANCE
+
+### Le PACK DÉCOUVERTE : deux de tes propres questions attendent depuis quatre jours
+
+**Ta demande :** « faisons le point (créé une tache) sur le PACK DECOUVERTE, rappelle moi il
+appartient à quel contexte. »
+
+**Il vient de ta COMMANDE IMPORTANTE du 28 septembre**, retrouvé mécaniquement et non de mémoire.
+Tes mots : *« 1 DOC VERSION ADMIN (une page HTML) + 1 DOC VERSION COMMERCIALISABLE de présentation
+de LA LISTE DES DOCUMENTS DE DECOUVERTE + 1 DOC (6-8 PAGES HTML) DE PRESENTATION DE L'AGENCE dans
+les deux versions + POSSIBILITE D'OBTENIR UN DES DOCS DE LA LISTE SUR DEMANDE. »*
+
+**À quoi il sert, dans tes mots** : *« permet de découvrir l'agence, de la faire découvrir à un
+utilisateur, ou à une IA, ou à moi, en tant que "projet" et non "produit fini" »*.
+
+**Où ça en est : rien n'a été produit.** Une seule tâche le porte, #1136, ouverte depuis le
+28 septembre.
+
+**Et le vrai trou n'est pas le retard — c'est que ta commande contenait deux questions laissées
+sans réponse, et que personne ne te les a reposées** : le nombre de pages (*« 6-8 PAGES HTML,
+nombre de pages à confirmer »*) et surtout **qui le porte** — tu écrivais toi-même *« qui le
+porte : Cassandra ? Ines (plutôt que The-King) ? »*. Une commande dont deux paramètres ne sont pas
+tranchés ne peut pas démarrer, et c'est resté invisible quatre jours.
+
+**Q14.7 — À TOI.** Qui porte le PACK DÉCOUVERTE ? *(a) CASSANDRA-RH, qui tient déjà l'organisation
+de l'Agence · (b) INÈS-official, qui sait déjà aplatir le dépôt en une édition consolidée · (c)
+THE-KING, qui tient les textes fondateurs · (d) personne en propre, c'est un assemblage de ce que
+les trois produisent déjà*
+
+**Q14.8 — À TOI.** Combien de pages pour la présentation de l'Agence ? *(a) 6, court et lisible
+d'une traite · (b) 8, comme tu l'envisageais au maximum · (c) autant qu'il en faut, et je te dis
+combien après avoir fait l'inventaire de ce qu'il y a à dire*
+
+**Q14.9 — À MOI, tâche #1476.** Le point complet : ce que ta commande demande, ce qui existe déjà
+et pourrait y entrer sans être réécrit, ce qui manque vraiment.
+
+### Le travail à distance : un sujet dont le dépôt ne garde RIEN
+
+> « Tu dois retrouver : je t'ai posé une question recemment, dans les derniers jours : comment on
+> peut travailler ensemble à distance, depuis mon tel ou mail. »
+
+**Cherché mécaniquement dans tout le dépôt : le sujet n'existe nulle part**, sauf dans une tâche
+qui se contente de dire « à traiter ». **Je ne retrouve pas ta question d'origine, et je ne vais
+pas l'inventer** : sur un sujet dont le dépôt ne garde rien, une réponse reconstituée serait
+invérifiable, et tu n'aurais aucun moyen de distinguer ce que j'ai retrouvé de ce que j'ai fabriqué.
+
+**Cette perte est elle-même une donnée** : qu'une question posée il y a quelques jours ne laisse
+aucune trace est exactement ce que le fil 04 existe pour empêcher — et la démonstration qu'il n'y
+arrivait pas encore.
+
+**Q14.10 — À MOI, tâche #1486.** Te dire ce qui est techniquement possible aujourd'hui pour
+travailler depuis ton téléphone ou par mail, et ce qui ne l'est pas — sans ta question d'origine,
+mais le sujet mérite sa réponse.

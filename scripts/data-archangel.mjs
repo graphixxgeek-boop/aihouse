@@ -547,6 +547,170 @@ export function formatInventaireRapportsLines(inv, { combien = 12 } = {}) {
   return l;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// CE QUI A ÉTÉ PRODUIT POUR LUI, ET QUI NE LUI EST JAMAIS PARVENU (2026-10-02, tâche #1475)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SON REPROCHE, MOT POUR MOT, ET C'EST LE PLUS GRAVE DE LA JOURNÉE : « quelque chose ne va pas :
+// tu avances sur des sujets mais tu ne me fais pas profiter des resultats. […] ca me donne
+// l'impression que tu travailles DE TON COTE et que le projet M'ECHAPPE : trouve une solution
+// pour corriger ca stp, quand tu produis une mise à jour e doc, ou un doc attendu, par exemple,
+// partage avec moi. » Il a nommé quatre documents produits et jamais montrés, dont la carte des
+// modules qu'il attendait « avec impatience ».
+//
+// POURQUOI ÇA VIT ICI PLUTÔT QUE DANS UN OUTIL DE PLUS : data-archangel veille sur la CIRCULATION
+// des données — qui produit, qui lit, qui n'est lu par personne. Un document écrit POUR LUI et
+// jamais remis est une circulation interrompue au dernier mètre, donc exactement son domaine.
+// C'est le même mécanisme que findSauvegardesNonLivrees() (tâche #1471), étendu de la SAUVEGARDE
+// au DOCUMENT : un nouveau venu hérite de ce que l'équipe sait déjà faire (Article 24).
+//
+// LA LIMITE EST LA MÊME ET ELLE EST IRRÉDUCTIBLE : aucun code de ce dépôt ne peut observer un
+// TÉLÉCHARGEMENT. Ce registre mesure la REMISE par l'agent, jamais la lecture par lui — et il le
+// DIT à chaque passage plutôt que de laisser croire l'un pour l'autre (leçons L5/L11). C'est la
+// moitié attrapable, et c'est précisément celle qui a manqué les quatre fois qu'il a citées :
+// les documents existaient sur disque, personne ne les avait envoyés.
+//
+// POURQUOI LA LISTE DES DOSSIERS EST MANUELLE, ÉCRIT NOIR SUR BLANC COMME L'ARTICLE 24 L'EXIGE :
+// j'ai cherché à la DÉRIVER et j'ai échoué, et l'échec se consigne pour que personne ne le
+// retente à l'aveugle. Le critère « un dossier qu'aucun script n'écrit » ne sépare rien — les
+// treize dossiers porteurs de HTML sont tous nommés par au moins un script (de 1 à 45 chacun).
+// Le critère « peu de fichiers » demanderait un seuil planté au milieu d'un nuage continu
+// (105, 33, 15, 6, 5, 4, 4, 4, 3, 3, 2…), donc un seuil arbitraire qui se tromperait au premier
+// dossier nouveau (BP5). Et une marque posée dans le fichier au moment de l'écrire ne survivrait
+// pas à un agent qui oublie de la poser (leçon L2). Cette liste est donc un CHOIX assumé, et le
+// garde-fou findDossiersDeLivraisonNonDeclares() ci-dessous surveille qu'elle ne se périme pas.
+export const DOSSIERS_DE_LIVRAISON = [
+  { dossier: "docs/livrables", quoi: "les documents écrits pour lui, par nature" },
+  { dossier: "docs/strategies", quoi: "les stratégies globales, qu'il relit et amende" },
+  { dossier: "docs/rondes", quoi: "les rapports de Ronde et les audits qu'il doit lire" },
+  { dossier: "docs/fils/html", quoi: "les fils de discussion mis en page pour lui" },
+  { dossier: "docs/referentiel", quoi: "les cartes et propositions mises en page (jamais les .md du référentiel)" },
+  { dossier: "docs/rapports-de-nuit", quoi: "ce qu'une nuit autonome a produit" },
+  { dossier: "docs/grand-projet/html", quoi: "les synthèses du grand projet" },
+  // LES QUATRE SUIVANTS ONT ÉTÉ TROUVÉS PAR LE GARDE-FOU LUI-MÊME, à son tout premier passage
+  // (2026-10-02) : il a signalé treize dossiers non déclarés portant des .html sans date, et
+  // quatre étaient de vrais dossiers de livraison que j'avais oubliés — dont `docs/modules`, qui
+  // porte le deep dive de la gestion des tâches qu'il réclamait justement. Les neuf autres sont
+  // des registres d'outils, laissés dehors à bon droit. Un garde-fou qui trouve quelque chose à
+  // son premier passage n'est pas une intention (leçon L2).
+  { dossier: "docs/the-king", quoi: "les mesures de fond rendues par THE-KING (la thèse, la révélation)" },
+  { dossier: "docs/reponses", quoi: "les dossiers de réponses à ses gros prompts" },
+  { dossier: "docs/modules", quoi: "les études de fond d'un module du projet" },
+  { dossier: "docs/plans", quoi: "les plans de chantier et les états des lieux" },
+  { dossier: "docs/ou-on-en-est", quoi: "les points d'avancement" },
+  { dossier: "docs/grand-projet/03-plan-daction", quoi: "le plan d'action du grand projet" },
+];
+
+export const REGISTRE_DES_LIVRAISONS = "docs/livraisons.json";
+
+// LE SEUIL DE SOUPÇON, ET IL NE JUGE JAMAIS : un dossier NON déclaré ci-dessus qui porte des .html
+// dont le nom ne contient PAS de date ressemble à un dossier de livraison oublié — un générateur
+// date ses fichiers, une main ne le fait pas. Rendu comme une QUESTION, jamais comme un écart
+// constaté : c'est un indice, et l'appeler un verdict serait exactement le faux positif à 96 % de
+// bruit que cette journée a déjà corrigé une fois.
+export const MOTIF_FICHIER_DATE = /\d{4}-\d{2}-\d{2}/;
+
+// LE REGISTRE PORTE SA DATE DE NAISSANCE, ET SANS ELLE IL MENTIRAIT DÈS SON PREMIER PASSAGE.
+// Au premier lancement il a accusé 64 documents sur 64 — dont ceux qu'il a lus et commentés le
+// matin même. « Aucune marque » ne veut pas dire « jamais remis » : pour tout ce qui précède la
+// création du registre, ça veut dire NON MESURÉ, et confondre les deux est exactement la faute
+// que ce projet a déjà payée trois fois (leçons L5/L11). Un document plus ancien que le registre
+// est donc compté à part, en toutes lettres, au lieu d'être accusé.
+export function loadLivraisons({ root = ROOT, readFileImpl = lireFichierPartage } = {}) {
+  try {
+    const v = JSON.parse(readFileImpl(join(root, REGISTRE_DES_LIVRAISONS), "utf8"));
+    if (Array.isArray(v)) return { depuis: null, remises: v };   // ancienne forme, tolérée
+    return { depuis: v?.depuis ?? null, remises: Array.isArray(v?.remises) ? v.remises : [] };
+  } catch { return { depuis: null, remises: [] }; }   // pas de registre : un RÉSULTAT, jamais une erreur
+}
+
+export function findDocumentsNonRemis({ root = ROOT, dossiers = DOSSIERS_DE_LIVRAISON, listerImpl = readdirSync, readFileImpl = lireFichierPartage, statImpl = statSync } = {}) {
+  const registre = loadLivraisons({ root, readFileImpl });
+  const remis = new Set(registre.remises.map((r) => r?.fichier));
+  const naissance = registre.depuis ? Date.parse(registre.depuis) : null;
+  const nonRemis = [];
+  const anterieurs = [];
+  let examines = 0;
+  let aucunDossierLu = true;
+  for (const d of dossiers) {
+    let fichiers;
+    try { fichiers = listerImpl(join(root, d.dossier)).filter((f) => String(f).endsWith(".html")); }
+    catch { continue; }     // dossier absent : il n'a rien produit, ce n'est pas un écart
+    aucunDossierLu = false;
+    for (const f of fichiers) {
+      examines += 1;
+      const chemin = d.dossier + "/" + f;
+      if (remis.has(chemin)) continue;
+      // Plus vieux que le registre : NON MESURÉ, jamais « non remis ».
+      let ne = null;
+      try { ne = statImpl(join(root, chemin)).mtimeMs; } catch { ne = null; }
+      if (naissance && ne !== null && ne < naissance) anterieurs.push({ fichier: chemin, quoi: d.quoi });
+      else nonRemis.push({ fichier: chemin, quoi: d.quoi });
+    }
+  }
+  if (aucunDossierLu) {
+    return { mesurable: false, nonRemis: [], anterieurs: [], examines: 0,
+      pourquoi: "aucun des dossiers de livraison n'a pu être lu : zéro document non remis ne veut PAS dire que tout a été remis" };
+  }
+  return { mesurable: true, nonRemis, anterieurs, examines, depuis: registre.depuis,
+    pourquoi: nonRemis.length
+      ? nonRemis.length + " document(s) sur " + examines + " n'ont AUCUNE marque de remise — ils ont été écrits pour lui et rien ne dit qu'ils lui sont parvenus. (Mesure de la REMISE par l'agent, jamais du téléchargement : ce dépôt ne peut pas l'observer.)"
+      : "les " + (examines - anterieurs.length) + " document(s) couverts par le registre portent leur marque — ce qui dit qu'ils lui ont été ENVOYÉS, jamais qu'il les a lus" };
+}
+
+// GARDE-FOU D'ÉVOLUTIVITÉ (Article 24) de la liste manuelle ci-dessus : un dossier non déclaré qui
+// porte des .html SANS date dans leur nom est probablement un dossier de livraison qu'on a oublié
+// d'y inscrire. Rendu comme une question à instruire, jamais comme un écart constaté.
+export function findDossiersDeLivraisonNonDeclares({ root = ROOT, dossiers = DOSSIERS_DE_LIVRAISON, listerImpl = readdirSync } = {}) {
+  const declares = new Set(dossiers.map((d) => d.dossier));
+  const suspects = [];
+  const explorer = (rel, profondeur) => {
+    let entrees;
+    try { entrees = listerImpl(join(root, rel), { withFileTypes: true }); } catch { return; }
+    const html = entrees.filter((e) => e.isFile() && e.name.endsWith(".html"));
+    const sansDate = html.filter((e) => !MOTIF_FICHIER_DATE.test(e.name));
+    if (!declares.has(rel) && sansDate.length) suspects.push({ dossier: rel, combien: sansDate.length, total: html.length });
+    if (profondeur > 0) for (const e of entrees.filter((x) => x.isDirectory())) explorer(rel + "/" + e.name, profondeur - 1);
+  };
+  explorer("docs", 2);
+  return suspects.sort((a, b) => b.combien - a.combien);
+}
+
+// MARQUER UNE REMISE — même discipline, mot pour mot, que marquerRemise() des sauvegardes :
+// l'heure est REÇUE et jamais fabriquée (Article 32), et on ne marque qu'APRÈS que l'envoi ait
+// réussi. UNE SEULE DIFFÉRENCE, et elle est volontaire : ici le fichier n'est PAS effacé. Une
+// sauvegarde remise est périmée le lendemain ; un document reste relisible et cité longtemps
+// après, donc l'effacer détruirait une référence au lieu de libérer du disque inutile.
+export function marquerLivraison(fichier, { root = ROOT, readFileImpl = lireFichierPartage, ecrireImpl = writeFileSync, quand = null } = {}) {
+  if (!quand) throw new Error("marquerLivraison() exige l'heure LUE (Article 32) — jamais une heure fabriquée par le registre lui-même");
+  const registre = loadLivraisons({ root, readFileImpl });
+  if (registre.remises.some((r) => r?.fichier === fichier)) return { deja: true, total: registre.remises.length };
+  registre.remises.push({ fichier, remisLe: quand });
+  // Un registre qui naît au moment de sa première remise date correctement tout ce qui suivra.
+  if (!registre.depuis) registre.depuis = quand;
+  ecrireImpl(join(root, REGISTRE_DES_LIVRAISONS), JSON.stringify(registre, null, 1) + "\n", "utf8");
+  return { deja: false, total: registre.remises.length };
+}
+
+export function formatLivraisonsLines(r, nonDeclares = []) {
+  if (!r?.mesurable) return ["=== CE QUI NE LUI EST JAMAIS PARVENU : PAS MESURÉ — " + (r?.pourquoi ?? "raison non fournie") + " ==="];
+  const l = ["=== CE QUI A ÉTÉ ÉCRIT POUR LUI — " + r.examines + " document(s), " + r.nonRemis.length + " sans marque de remise ==="];
+  l.push("");
+  for (const x of r.nonRemis.slice(0, 20)) l.push("  ⚠️  " + x.fichier);
+  if (r.nonRemis.length > 20) l.push("  … et " + (r.nonRemis.length - 20) + " autre(s)");
+  if (!r.nonRemis.length) l.push("  ✅ aucun document en attente de remise");
+  l.push("");
+  if (r.anterieurs?.length) {
+    l.push("  ⚪ " + r.anterieurs.length + " document(s) sont ANTÉRIEURS au registre (né le " + (r.depuis ?? "?") + ") : NON MESURÉ, et ce n'est jamais « remis ». Ils sortent du compte plutôt que d'être accusés à tort.");
+  }
+  if (!r.depuis) l.push("  ⚪ le registre n'a pas de date de naissance : tout est compté comme non remis, ce qui est une ABSENCE DE MESURE et non un verdict.");
+  l.push("  " + r.pourquoi);
+  for (const d of nonDeclares) {
+    l.push("  ? dossier NON déclaré portant " + d.combien + " fichier(s) .html sans date : " + d.dossier + " — est-ce un dossier de livraison oublié ? (indice, jamais un écart constaté)");
+  }
+  return l;
+}
+
 export const LIEUX_DE_NOTES = [
   { cle: "decisions", quoi: "les tâches du suivi — ce qui a été décidé, et par qui", dossier: "docs/suivi", ext: /\.md$/ },
   { cle: "plans", quoi: "les plans et états des lieux d'un chantier", dossier: "docs/plans", ext: /\.(md|txt)$/ },
@@ -2614,6 +2778,32 @@ function main() {
   }
   if (sub === "notes") {
     for (const l of formatReprisesLines(reprendreLesNotes(process.argv[3]))) console.log(l);
+    return;
+  }
+  // `livraisons` (#1475) — ce qui a été écrit POUR LUI et ne lui est jamais parvenu, et la commande
+  // qui enregistre une remise. Elle est faite pour deux moments précis : avant de clore un compte
+  // rendu de travail (ai-je gardé quelque chose pour moi ?) et à l'étape « confirmation-livraisons »
+  // de la Ronde, où elle donne la liste exacte sur laquelle lui poser la question.
+  //   node scripts/data-archangel.mjs livraisons
+  //   node scripts/data-archangel.mjs livraisons --remis <chemin> --quand <horodatage LU>
+  if (sub === "livraisons") {
+    const iRemis = process.argv.indexOf("--remis");
+    if (iRemis > -1 && process.argv[iRemis + 1]) {
+      const iQuand = process.argv.indexOf("--quand");
+      const quand = iQuand > -1 ? process.argv[iQuand + 1] : null;
+      if (!quand) {
+        console.log("REFUSÉ : --quand <horodatage> est obligatoire, et il se LIT (node scripts/agent-du-temps.mjs), jamais ne se tape de mémoire (Article 32).");
+        process.exitCode = 1;
+        return;
+      }
+      const r = marquerLivraison(process.argv[iRemis + 1], { quand });
+      console.log(r.deja ? `déjà enregistré — ${r.total} remise(s) au registre` : `remise enregistrée — ${r.total} au registre`);
+      console.log("RAPPEL DE DISCIPLINE : on ne marque la remise qu'APRÈS que l'envoi ait réussi.");
+      recordCliUsage("data-archangel", { origine: "demande" });
+      return;
+    }
+    for (const l of formatLivraisonsLines(findDocumentsNonRemis(), findDossiersDeLivraisonNonDeclares())) console.log(l);
+    recordCliUsage("data-archangel", { origine: "demande" });
     return;
   }
   // `rapports` (#921) — l'inventaire des rapports archivés : combien, qui peut les lire, et surtout

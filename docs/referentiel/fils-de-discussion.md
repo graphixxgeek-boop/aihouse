@@ -98,3 +98,45 @@ sort sans numéro — jamais avec un numéro inventé, qui serait une référenc
 
 **Aucun constat n'est fabriqué pour remplir la section** : quand les six contrôles passent, le plan
 dit « rien à faire », ce que `buildPlanDaction()` écrit déjà seul.
+
+## LE SEPTIÈME CONTRÔLE — né d'un faux vert sur la seule question qui compte (2026-10-02, tâche #1483)
+
+**FRONTIÈRE DÉCLARÉE AVEC LE FIL 04.** Le récit de ce constat — ce que l'utilisateur a écrit, les
+chiffres de l'écart, et ce que ça lui coûtait — vit dans `docs/fils/fil-04-systeme-de-travail.md`,
+qui est le document qu'il lit. **Cette fiche-ci ne le raconte pas : elle décrit le MÉCANISME.**
+Les deux se sont recouverts le jour de leur écriture, et le détecteur de documents jumeaux l'a
+attrapé le soir même — c'est pour ça que la frontière est écrite ici plutôt que sous-entendue.
+
+**Le fait, en une ligne, parce qu'il justifie le mécanisme** : les six contrôles existants
+mesuraient la FORME d'un fil, jamais son ALIMENTATION, et répondaient « à jour » sur des fils
+morts depuis deux jours.
+
+### Ce que le septième mesure, et pourquoi il n'a aucun seuil
+
+`filsAlimentes()` compare **deux dates que le dépôt porte déjà** : la plus récente des dates de
+mouvement des fils, et les dates du registre des remises (`docs/livraisons.json`, tâche #1475).
+**Un document remis après le dernier mouvement d'un fil, sans qu'aucun fil ne bouge, est nommé.**
+
+**Zéro seuil arbitraire, et c'est délibéré** (BP5 : un seuil planté dans un nuage continu se
+trompe au premier cas nouveau). Zéro tolérance sur cette population-là, parce que tout document
+remis à l'utilisateur répond à quelque chose, donc appartient à un fil — c'est exactement le flux
+de travail qu'il décrit : « pour me repondre, tu me livres les fils concernés ».
+
+**Une remise le MÊME JOUR qu'un mouvement de fil n'est jamais un écart** : le fil a pu être nourri
+dans la même session, et accuser le cas normal apprendrait à ignorer ce contrôle (leçon L4).
+
+**Trois refus de conclure, jamais un vert sur zéro donnée** (leçons L5/L11) : pas de registre
+lisible · aucune remise enregistrée · aucun fil portant de date. Dans les trois cas, PAS MESURÉ.
+
+### Le chemin du registre est recopié, donc gardé mécaniquement
+
+`REGISTRE_DES_REMISES` ici et `REGISTRE_DES_LIVRAISONS` chez data-archangel désignent le même
+fichier. Importer data-archangel entier pour une constante alourdirait un outil qu'on lance
+souvent ; le filet vérifie donc que les deux chaînes restent identiques, ce que l'Article 24 exige
+d'une valeur recopiée plutôt qu'un commentaire promettant de les garder alignées.
+
+### Il a mordu à son premier passage
+
+Son tout premier lancement a nommé cinq documents envoyés sans qu'aucun fil ne bouge, et fait
+basculer le verdict d'ensemble à **NON**. Le contrôle est repassé au vert une fois les fils
+nourris — pas en se taisant, parce que le travail a été fait.
