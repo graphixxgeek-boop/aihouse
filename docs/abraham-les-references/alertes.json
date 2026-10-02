@@ -1,11 +1,11 @@
 {
   "passages": {
     "moise-tables-de-loi": {
-      "quand": "2026-10-01",
+      "quand": "2026-10-02",
       "combien": 0
     },
     "ezechiel-les-tests": {
-      "quand": "2026-10-01",
+      "quand": "2026-10-02",
       "combien": 2
     },
     "abraham-les-references": {
@@ -66,7 +66,7 @@
       "gravite": "bloquante",
       "constat": "d'où vient le temps n'a pas été mesuré",
       "depuis": "2026-09-30",
-      "vueLe": "2026-10-01"
+      "vueLe": "2026-10-02"
     },
     {
       "outil": "ezechiel-les-tests",
@@ -75,7 +75,7 @@
       "gravite": "à surveiller",
       "constat": "la suite elle-même n'est pas au vert : 1 anomalie(s) de fonctionnement",
       "depuis": "2026-09-28",
-      "vueLe": "2026-10-01"
+      "vueLe": "2026-10-02"
     }
   ]
 }
