@@ -12,11 +12,11 @@ import { walk, findDeadLifeFields, findTodoMarkers } from "../check-argus.mjs";
 // ligne-ci que l'agent lit à chaque commit, jamais le rapport complet. Un filtrage qui n'arriverait
 // pas jusqu'ici laisserait « ⚠️6 » s'afficher pour toujours — le mécanisme existerait dans l'outil
 // sans rien changer là où ça compte, très exactement la faute qu'on vient de corriger ailleurs.
-import { loadMemoire } from "../safe-export.mjs";
+import { loadMemoire, filtrerDejaTranches } from "../safe-export.mjs";
 import { checkLinks, LINKS } from "../check-harmonia.mjs";
 import { collectCoverage, robustnessScore, collectScriptCoverage, scriptRobustnessScore, etatDeCouverture, LIB_MAP, AGENT_SCRIPT_FILES, SLUGS_COUVERTS_PAR_AXA } from "../axa-check.mjs";
 import { lastTouchDays, relativeStaleness } from "../clean-dirty-old.mjs";
-import { buildDuplicateReport, buildNearDuplicateReport, fusionnerClusters } from "../clone-hunter.mjs";
+import { buildDuplicateReport, buildNearDuplicateReport, fusionnerClusters, ecarterLesPontsDeReexport, clustersNonTranches, collectFileLines, DEFAULT_ROOTS } from "../clone-hunter.mjs";
 import { THEMES, THEME_PRIMARY_FILE, parseCoverage, recommendZone, countDatedAddenda, addendaSignal, parseNumstat, churnSignal, outillageZones } from "../always-new-code.mjs";
 import { findMissingNotes, findOrphanNotes } from "../el-professor.mjs";
 import { parseToolsTable, slugifyAgentName, checkAllAgentBadges, pendingCeremonies, formatPendingCeremonies, saveBadgeSignals, loadBadgeSignals, mergeBadgeSignals, badgeSignalsAsContext } from "../le-coordinateur.mjs";
@@ -209,11 +209,33 @@ if (reveille("clone-hunter")) try {
   // devait atteindre CETTE ligne, qui est celle qu'on lit à chaque commit : la même correction que
   // pour ARGUS le même jour, et pour la même raison — un mécanisme qui s'arrête avant le bandeau
   // n'a rien changé là où ça compte.
-  const problemes = fusionnerClusters([
+  const bruts = fusionnerClusters([
     ...literalClusters.map((c) => ({ ...c, detecteur: "identique" })),
     ...nearClusters.map((c) => ({ ...c, detecteur: "renommage" })),
   ]);
+  // LA BANNIÈRE DOIT COMPTER CE QUI APPELLE UNE ACTION, JAMAIS CE QUI A DÉJÀ ÉTÉ TRANCHÉ
+  // (2026-10-02, tâche #1502). Elle affichait « CLONE-HUNTER ⚠️4 » à CHAQUE commit pendant que
+  // l'outil lancé à la main annonçait « aucun constat retenu » — et les deux disaient vrai : le
+  // bandeau comptait les clusters BRUTS, le plan appliquait deux filtres que le bandeau ignorait.
+  //
+  // LES DEUX FILTRES, ET LEUR ORDRE EST CELUI DU CLI, jamais réinventé ici : d'abord les PONTS DE
+  // RÉEXPORT (une liste de symboles import/export n'est pas du code dupliqué, c'est la syntaxe —
+  // un non-problème), ensuite la MÉMOIRE (les clusters que l'utilisateur a explicitement décidé de
+  // garder séparés, datés dans docs/clone-hunter/memoire.json).
+  //
+  // POURQUOI C'ÉTAIT GRAVE PLUTÔT QUE COSMÉTIQUE : un Gardien marqué ⚠️4 à chaque commit pour
+  // quatre décisions que l'utilisateur a lui-même prises apprend à ignorer le badge. C'est la
+  // leçon L4 — « un garde-fou qui accuse le geste normal cesse d'être lu » — dans le seul endroit
+  // que je lis vraiment à chaque commit.
+  const { gardes: apresPonts, ecartes: pontsEcartes } = ecarterLesPontsDeReexport(bruts, collectFileLines(DEFAULT_ROOTS));
+  const { gardes: problemes, ecartes: dejaTranches } = clustersNonTranches(
+    apresPonts, loadMemoire({ fichier: "docs/clone-hunter/memoire.json" }), filtrerDejaTranches);
   cloneHunterFindingsCount = problemes.length;
+  // CE QUI EST ÉCARTÉ SE DIT, même quand il ne reste rien : un silence après un écartement ne
+  // distingue pas « rien trouvé » de « tout écarté », et ce sont deux états très différents.
+  if (dejaTranches || pontsEcartes.length) {
+    console.error(`\n🔎 CLONE-HUNTER : ${dejaTranches} cluster(s) écarté(s) par ta décision explicite${pontsEcartes.length ? ` et ${pontsEcartes.length} pont(s) de réexport (non-problèmes)` : ""} — ils ne comptent plus dans le badge, et c'est pour ça qu'il peut rester vert.`);
+  }
   if (problemes.length) {
     const brutes = literalClusters.length + nearClusters.length;
     console.error(

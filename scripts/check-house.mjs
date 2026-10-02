@@ -7375,6 +7375,24 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
 
     // ZÉRO RÈGLE LUE N'EST PAS ZÉRO RÈGLE SANS DOMICILE (leçons L5/L11) — le refus de conclure.
     assert.equal(se.findReglesSansDomicile({ regles: [] }).mesurable, false, 'no rule read means NOT MEASURED, never "they all have a home"');
+
+    // LA BANNIÈRE DU CROCHET COMPTAIT CE QUI AVAIT DÉJÀ ÉTÉ TRANCHÉ (2026-10-02, tâche #1502).
+    // Elle affichait « CLONE-HUNTER ⚠️4 » à CHAQUE commit pendant que l'outil lancé à la main
+    // annonçait « aucun constat retenu ». Les deux disaient vrai : le bandeau comptait les
+    // clusters BRUTS, le plan appliquait deux filtres — les ponts de réexport (des non-problèmes)
+    // et la mémoire des écartements validés par l'utilisateur. Un Gardien marqué ⚠️4 à chaque
+    // commit pour quatre décisions qu'il a lui-même prises apprend à ignorer le badge (leçon L4),
+    // et c'est le seul endroit que je lis vraiment à chaque commit.
+    const CH2 = await import('../scripts/clone-hunter.mjs');
+    const SE2 = await import('../scripts/safe-export.mjs');
+    for (const nom of ['ecarterLesPontsDeReexport', 'clustersNonTranches', 'collectFileLines', 'DEFAULT_ROOTS']) {
+      assert.ok(nom in CH2, `le crochet importe ${nom} de clone-hunter : il doit rester exporté, sinon la bannière reviendrait à compter les clusters bruts`);
+    }
+    assert.ok('filtrerDejaTranches' in SE2, 'et filtrerDejaTranches vient de safe-export, jamais de clone-hunter qui ne fait que le relayer');
+    const hookSrc = fs.readFileSync(new URL('../scripts/hooks/check-last-commit.mjs', import.meta.url), 'utf8');
+    assert.ok(/clustersNonTranches\(/.test(hookSrc), 'the post-commit banner must apply the user-accepted exclusions, exactly like the CLI plan does');
+    assert.ok(/ecarterLesPontsDeReexport\(/.test(hookSrc), 'and the re-export bridges, which are not duplications at all');
+    assert.ok(/écarté\(s\) par ta décision explicite/.test(hookSrc), 'what was excluded is SAID even when nothing remains: silence cannot distinguish "nothing found" from "everything excluded"');
     assert.ok(/PAS MESURÉ/.test(se.formatReglesSansDomicileLines({ mesurable: false, pourquoi: 'x' })[0]), 'and the output says so rather than printing a reassuring empty list');
 
     // EN DIRECT SUR LE VRAI DÉPÔT (Article 25) : il a trouvé 3 règles sur 28 à son premier
