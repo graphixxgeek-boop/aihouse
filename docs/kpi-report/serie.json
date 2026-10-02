@@ -130,5 +130,27 @@
     "sens": "plus haut = mieux"
    }
   }
+ },
+ {
+  "date": "2026-10-02",
+  "methode": "v1",
+  "mesures": {
+   "points-fragiles": {
+    "valeur": 14,
+    "sens": "plus bas = mieux"
+   },
+   "sante-du-code": {
+    "valeur": 70.97186700767264,
+    "sens": "plus haut = mieux"
+   },
+   "note-du-jeu": {
+    "valeur": 38,
+    "sens": "plus haut = mieux"
+   },
+   "note-de-l-agence": {
+    "valeur": 86.8,
+    "sens": "plus haut = mieux"
+   }
+  }
  }
 ]

@@ -1,1 +1,10 @@
-[]
+[
+ {
+  "chemin": "scripts/find-booster.mjs",
+  "date": "2026-10-02T16:43:53.849Z",
+  "rappel": 92,
+  "bruit": 7,
+  "verdict": "perfectible",
+  "systemique": 1
+ }
+]

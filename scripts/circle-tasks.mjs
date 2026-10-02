@@ -912,6 +912,15 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // et un rendez-vous périodique rendrait invariablement « rien de neuf » entre deux refontes.
   // La vue d'ensemble, elle, est déjà couverte : la carte par module de CASSANDRA-RH est dérivée
   // des imports réels, donc jamais périmée, et c'est elle qu'une Ronde doit regarder.
+  // (2026-10-02) Le dossier des RONDES, créé par la Ronde GOAT du jour. Il porte le rapport d'une
+  // Ronde et les sorties brutes de ses items — c'est-à-dire la TRACE d'un passage de Ronde, jamais
+  // une donnée que la Ronde suivante aurait à relire. Lui donner un item ferait relire à chaque
+  // Ronde le compte rendu de la précédente, ce qui n'apprend rien sur l'état du projet : les
+  // constats de ce rapport ont déjà été triés et transformés en tâches de `docs/suivi/`, qui est
+  // l'endroit où la Ronde suivante les retrouvera (Article 28). Et il ne peut pas prendre de
+  // retard, puisqu'une Ronde qui n'a pas eu lieu n'y écrit rien — un dossier vide n'est pas un
+  // registre en souffrance. Exclusion DÉCLARÉE plutôt que silencieuse, comme l'exige l'Article 24.
+  "rondes": "la trace d'un passage de Ronde, jamais une donnée à relire : ses constats sont déjà triés et ouverts comme tâches dans docs/suivi/, et un dossier qui ne grossit qu'au moment d'une Ronde ne peut pas prendre de retard entre deux",
   "livrables": "des VUES rendues lisibles à sa demande, jamais un registre : chaque page y est extraite d'un document qui vit ailleurs, et elle se régénère depuis sa source au lieu de s'accumuler. Ce qui doit être vérifié périodiquement n'est pas leur contenu mais leur FIDÉLITÉ, et c'est déjà fait mécaniquement par `data-archangel vues` — une ligne de Ronde en plus ne mesurerait rien de neuf",
   "modules": "descriptions de modules écrites à la main : elles ne consignent rien et ne cessent d'être vraies que si le module change — la vue d'ensemble périodique est déjà tenue par la carte dérivée de CASSANDRA-RH",
   // (2026-09-28) Le registre de doc-HTML : il se RÉÉCRIT SEUL à chaque génération de page, et une

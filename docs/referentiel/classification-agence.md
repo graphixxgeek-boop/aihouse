@@ -5,7 +5,7 @@
 
 # Classification générale de l'Agence Codex — le document officiel
 
-GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-10-01 20:55 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
+GÉNÉRÉ par `node scripts/le-classificateur.mjs classification`, dernier passage 2026-10-02 17:33 UTC. **Ne jamais le modifier à la main** : la prochaine génération écraserait la correction. Ce qui doit changer se change dans le code qui le produit, et le document suit tout seul — l'Article 24 appliqué au document qui décrit la classification.
 
 ## 0. Classification ou organisation ? Les deux existent
 
@@ -158,7 +158,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `circle-process-guardian.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dv` | ⌨️ 🥇 👼 🔎📄🌱⚠️🎯🪞🧭 |
 | `circle-tasks.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.c7` | ⌨️ 🥇 👼 🔎📄🗃️🌱⚠️🪞🧭 |
 | `cout-de-la-refonte.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dd` | ⌨️ 🥇 👑 🔎⚠️🎯🪞🧭 |
-| `data-archangel.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.cn` | ⌨️ 🥇 👼 🔎📄🗃️🎯🪞🧭 |
+| `data-archangel.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.d3` | ⌨️ 🥇 👼 🔎📄🗃️🌱🎯🪞🧭 |
 | `ecotoken.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dh` | ⌨️ 🥇 👑 🔎🗃️⚠️🎯🪞🧭 |
 | `el-professor.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.dz` | ⌨️ 🥇 🎬 🔎📄🗃️🌱⚠️🎯🪞🧭 |
 | `filet-en-parts.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.ck` | ⌨️ 🥇 📜 🗃️🎯🪞🧭 |
@@ -180,7 +180,7 @@ Un rang n'est pas une étiquette figée : c'est une position sur une échelle, a
 | `the-deep-reader.mjs` | (f) 🕵️ Les Agents Externes - Audit indépendant | `5.4.4.2` | 📕 🥇 🕵️ 📄 |
 | `the-equalizer.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dd` | ⌨️ 🥇 📜 🔎⚠️🎯🪞🧭 |
 | `the-final-judge.mjs` | (f) 🕵️ Les Agents Externes - Audit indépendant | `5.4.4.2` | 📕 🥇 🕵️ 📄 |
-| `the-king.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dd` | ⌨️ 🥇 👑 🔎⚠️🎯🪞🧭 |
+| `the-king.mjs` | (f) 👑 La Gouvernance Royale | `2.4.1.dx` | ⌨️ 🥇 👑 🔎🗃️🌱⚠️🎯🪞🧭 |
 | `the-screener-capture.mjs` | (f) 🎬 La Suite Tarantino - Simulation & qualité narrative | `2.4.0.4m` | ⌨️ 🥇 🎬 📄🗃️⚠️🪞 |
 | `tool-brain.mjs` | (f) 👼 Les Anges de la coordination | `2.4.2.dd` | ⌨️ 🥇 👼 🔎⚠️🎯🪞🧭 |
 | `tool-learning.mjs` | (f) 📜 Les Prophètes - Dette & Structure du code | `2.4.3.dh` | ⌨️ 🥇 📜 🔎🗃️⚠️🎯🪞🧭 |
@@ -372,11 +372,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `abraham-les-references.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `html-report.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `ou-on-en-est.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `the-deep-reader.mjs` · `the-final-judge.mjs` · `the-screener-capture.mjs`
 
-### (ct) 🗃️ Les enregistreurs - tient un registre — 47
+### (ct) 🗃️ Les enregistreurs - tient un registre — 48
 
 > écrit une mémoire durable sur le disque — ce qui lui permet de se souvenir d'un passage à l'autre
 
-`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `ezechiel-les-tests.mjs` · `filet-en-parts.mjs` · `gemini-key-health.mjs` · `god-of-all-process.mjs` · `hooks/banniere.mjs` · `html-report.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento-weight.mjs` · `memento.mjs` · `modes-de-travail.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `pnpm-install.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `run-simulation.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `serie-temporelle.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `the-ghost.mjs` · `the-screener-capture.mjs` · `tool-learning.mjs` · `tool-usage.mjs` · `x-port-blindtest.mjs`
+`abraham-les-references.mjs` · `agent-des-noms.mjs` · `agent-du-temps.mjs` · `angel-of-ia-process.mjs` · `axa-check.mjs` · `cassandra-rh.mjs` · `check-argus.mjs` · `check-house.mjs` · `check-spirit.mjs` · `check-tasks-details.mjs` · `circle-tasks.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `ecotoken.mjs` · `el-professor.mjs` · `ezechiel-les-tests.mjs` · `filet-en-parts.mjs` · `gemini-key-health.mjs` · `god-of-all-process.mjs` · `hooks/banniere.mjs` · `html-report.mjs` · `hyper-scan-checkpoint.mjs` · `ines-official.mjs` · `kpi-report.mjs` · `le-classificateur.mjs` · `le-coordinateur.mjs` · `le-regisseur.mjs` · `memento-weight.mjs` · `memento.mjs` · `modes-de-travail.mjs` · `moise-tables-de-loi.mjs` · `ou-on-en-est.mjs` · `pnpm-install.mjs` · `pure-gold-unity.mjs` · `rapport-gros-prompt.mjs` · `report-template.mjs` · `run-simulation.mjs` · `safe-export.mjs` · `sauvegarde-projet.mjs` · `serie-temporelle.mjs` · `smart-conso-api.mjs` · `smart-conso-token.mjs` · `the-ghost.mjs` · `the-king.mjs` · `the-screener-capture.mjs` · `tool-learning.mjs` · `tool-usage.mjs` · `x-port-blindtest.mjs`
 
 ### (ct) 💳 Les consommateurs d'API - coûte de vrais appels API — 4
 
@@ -384,11 +384,11 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 
 `api-providers.mjs` · `check-gemini-quota.mjs` · `check-profile.mjs` · `check-spirit.mjs`
 
-### (ct) 🌱 Les évolutifs - porte un garde-fou d'évolutivité — 17
+### (ct) 🌱 Les évolutifs - porte un garde-fou d'évolutivité — 19
 
 > contient une fonction qui refuse une liste recopiée à la main : elle compare une copie à sa source et crie quand les deux divergent (Article 24). C'est ce qui permet à un registre de grossir sans qu'une copie oubliée se périme en silence.
 
-`abraham-les-references.mjs` · `always-new-code.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `criticite.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `le-coordinateur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `process-simulation-guardian.mjs`
+`abraham-les-references.mjs` · `always-new-code.mjs` · `cassandra-rh.mjs` · `check-house.mjs` · `check-level-target.mjs` · `check-suivi-fidelity.mjs` · `check-tasks-details.mjs` · `circle-process-guardian.mjs` · `circle-tasks.mjs` · `criticite.mjs` · `data-archangel.mjs` · `doc-report.mjs` · `el-professor.mjs` · `god-of-all-process.mjs` · `le-coordinateur.mjs` · `lib-shell.mjs` · `moise-tables-de-loi.mjs` · `process-simulation-guardian.mjs` · `the-king.mjs`
 
 ### (ct) ⚠️ Les heuristiques - déclare sa marge d'erreur — 52
 
@@ -430,12 +430,15 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce qui part avec l'Agence
 
 ```
-=== CE QUI PART AVEC L'AGENCE — 603 documents, couverture 100 % ===
+=== CE QUI PART AVEC L'AGENCE — 626 documents, couverture 100 % ===
 
-  📦 PART — 238 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
-  🏠 RESTE — 14 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
-  🗄️ MEMOIRE — 351 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
-  ❓ A-INSTRUIRE — 0 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
+  📦 PART — 242 document(s) : générique, réutilisable tel quel sur un autre projet — entre dans le carton
+  🏠 RESTE — 16 document(s) : propre au jeu Lia/Noé — ne sert à rien ailleurs, et l'emporter polluerait le projet suivant
+  🗄️ MEMOIRE — 367 document(s) : archive de CE projet (passage daté, registre, suivi, plan) — ne part jamais, ne se supprime pas non plus
+  ❓ A-INSTRUIRE — 1 document(s) : aucun signal ne tranche — dit plutôt que rangé par défaut, un défaut silencieux étant la façon dont un classement devient faux
+
+  LES 1 À INSTRUIRE, un par un — aucun n'est rangé par défaut :
+      ❓ docs/strategies/strategie-cascade-philo-politique.md
 
   HORS PORTÉE : elle dit si un document PEUT partir, jamais s'il est à jour ni s'il est bon. Un document générique et périmé sort « PART » — c'est THE-EQUALIZER et la relecture périodique qui répondent à l'autre question.
 ```
@@ -443,25 +446,25 @@ Une classe dit **ce qu'un fichier sait faire**. Elle se cumule librement et trav
 ## Les documents — ce que chacun porte
 
 ```
-=== CE QUE CHAQUE DOCUMENT PORTE — 603 documents, couverture 100 % ===
+=== CE QUE CHAQUE DOCUMENT PORTE — 626 documents, couverture 100 % ===
 
   Second axe des documents, à côté de l'exportabilité : celui-là dit si un document PART,
   celui-ci dit ce qu'il PORTE. Les deux se croisent — une règle peut partir ou rester, une
   archive reste toujours, un gabarit part toujours.
 
   ⚖️ LOI — 6 document(s) : un texte qui OBLIGE — il ne décrit pas, il impose
-  🗂️ INDEX — 140 document(s) : un catalogue : il dit ce que contient un dossier, il n'affirme rien lui-même
+  🗂️ INDEX — 146 document(s) : un catalogue : il dit ce que contient un dossier, il n'affirme rien lui-même
   🧩 GABARIT — 4 document(s) : un moule dont sortent d'autres documents — le plus exportable de tous
   📐 BLUEPRINT — 88 document(s) : l'architecture d'un outil, écrite pour être remontée ailleurs
   ✏️ CONCEPTION — 9 document(s) : un raisonnement de conception encore ouvert — des idées, pas une règle
   🎯 CADRE-CIBLE — 2 document(s) : il dit à quoi un filet de sécurité DEVRAIT ressembler, pour qu'on le construise ainsi plutôt que de le redresser après coup
   🔁 PROCESS — 9 document(s) : le déroulé détaillé d'une activité à étapes
-  🧭 STRATEGIE — 12 document(s) : le raisonnement de fond d'un chantier, agrégé et jamais résumé
+  🧭 STRATEGIE — 13 document(s) : le raisonnement de fond d'un chantier, agrégé et jamais résumé
   📋 SUIVI — 8 document(s) : le journal des tâches — ce qui a été décidé, quand, et par qui
   🗄️ ARCHIVE — 3 document(s) : une mémoire figée : on la consulte, on ne la met jamais à jour
-  🗺️ PLAN — 35 document(s) : la photographie d'un moment : ce qu'on comptait faire ce jour-là
-  📊 RAPPORT — 170 document(s) : le dépôt d'un passage d'outil — un constat à un instant, jamais une règle
-  📖 REFERENCE — 109 document(s) : la règle telle qu'elle s'applique aujourd'hui — la source de vérité d'un sujet
+  🗺️ PLAN — 36 document(s) : la photographie d'un moment : ce qu'on comptait faire ce jour-là
+  📊 RAPPORT — 182 document(s) : le dépôt d'un passage d'outil — un constat à un instant, jamais une règle
+  📖 REFERENCE — 112 document(s) : la règle telle qu'elle s'applique aujourd'hui — la source de vérité d'un sujet
   🎚️ MODE — 1 document(s) : un mode de travail de l'agent : comment il se conduit dans une situation donnée
   🗃️ REGISTRE — 4 document(s) : la mémoire d'un outil : ce qu'il a déjà vu, relue à son passage suivant
 

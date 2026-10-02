@@ -1,1 +1,30 @@
-[]
+[
+  {
+    "fichier": "scripts/api-providers.mjs",
+    "defaut": "return statutHttpInattendu(r.status, ms, message);",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-10-02 — accord explicite de l'utilisateur en fenêtre dédiée pendant la Ronde GOAT : « Oui les 4 » (il a demandé qu'on lui rappelle à l'occasion l'impact pour doc-report et les autres)",
+    "pourquoi": "scripts/api-providers.mjs:77 — chaque fournisseur d'API garde sa propre queue de sonde : tout ce qui la précède lui est propre (adresse, en-têtes, corps de requête, façon d'annoncer un quota épuisé). Ce qui méritait d'être partagé l'a déjà été le 2026-09-28 (#997) : les deux sorties d'échec. Envelopper d'un cran de plus obligerait le prochain fournisseur, différent par nature, à respecter une forme commune — et c'est précisément pour permettre un fournisseur totalement différent que ce registre existe. (#1207)"
+  },
+  {
+    "fichier": "scripts/integration-outil.mjs",
+    "defaut": "{ toolSlug: \"integration-outil\", ...PLAN_QUOI_QUOIFAIRE },",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-10-02 — accord explicite de l'utilisateur en fenêtre dédiée pendant la Ronde GOAT : « Oui les 4 » (il a demandé qu'on lui rappelle à l'occasion l'impact pour doc-report et les autres)",
+    "pourquoi": "scripts/integration-outil.mjs:864 — ce qui se répète EST la convention partagée (PLAN_QUOI_QUOIFAIRE), pas une recopie : elle a été nommée le 2026-10-02 pour que ses onze sites cessent de réécrire la même paire. Et les deux branches ne peuvent pas fusionner : l'une traite une LISTE d'outils, l'autre UNE cible nommée avec trois cas dont « absent du classement ». (#993)"
+  },
+  {
+    "fichier": "scripts/summarize-simulation-log.mjs",
+    "defaut": "pousserLesDeplacements(events, round, d, prevRoom);",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-10-02 — accord explicite de l'utilisateur en fenêtre dédiée pendant la Ronde GOAT : « Oui les 4 » (il a demandé qu'on lui rappelle à l'occasion l'impact pour doc-report et les autres)",
+    "pourquoi": "scripts/summarize-simulation-log.mjs:140 — deux lecteurs de deux FORMATS de journal différents, aux capacités différentes (l'un déduit la révélation du premier tour chat au lieu de lire le drapeau, et ne sait rien du jardin ni du lot tiré). Les fondre exigerait de faire semblant que le journal à plat porte ce qu'il ne porte pas. Ce qui pouvait être partagé l'est déjà : pousserLesDeplacements(), appelée par les deux. (#1207)"
+  },
+  {
+    "fichier": "scripts/doc-report.mjs",
+    "defaut": "export function findLanceursPrematures({ root = ROOT, listDirImpl = readdirSync,",
+    "etat": "écarté sciemment",
+    "accordUtilisateur": "2026-10-02 — accord explicite de l'utilisateur en fenêtre dédiée pendant la Ronde GOAT : « Oui les 4 » (il a demandé qu'on lui rappelle à l'occasion l'impact pour doc-report et les autres)",
+    "pourquoi": "scripts/doc-report.mjs:1395 — les deux garde-fous vérifient des choses OPPOSÉES : l'un cherche du code déclaré APRÈS le lanceur (un défaut d'ORDRE dans le fichier), l'autre un script qui nomme un registre sans jamais y écrire (un défaut de PROMESSE). Les fondre donnerait une fonction à DEUX verdicts, qu'on ne pourrait plus appeler séparément ni faire échouer seule. Ce qui pouvait être partagé l'a été : la lecture des scripts vit dans lib-shell. Ce qui reste commun est leur signature, et deux fonctions qui prennent les mêmes entrées ne sont pas un doublon. (#1246)"
+  }
+]

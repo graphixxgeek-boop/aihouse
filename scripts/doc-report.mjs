@@ -55,6 +55,17 @@ const ROOT = new URL("..", import.meta.url).pathname;
 // de personne (Article 27).
 export const DOSSIERS_QUI_NE_SONT_PAS_DES_REGISTRES = [
   { path: "docs/plans/", pourquoi: "les plans de chantier — écrits à la main pour un chantier donné, jamais produits passage après passage par un outil. Un plan n'a pas de producteur périodique, donc pas d'équipe propriétaire." },
+  // (2026-10-02, Ronde GOAT) LE DOSSIER DES RONDES, exactement la même nature que les rapports de
+  // nuit juste en dessous : un rapport par Ronde, RÉDIGÉ par l'agent après le tri de ses constats,
+  // jamais produit passage après passage par un outil. Les sorties brutes des items qui
+  // l'accompagnent sont la matière du rapport, pas un registre que quelqu'un relirait ensuite —
+  // les constats, eux, sont déjà ouverts comme tâches dans `docs/suivi/` (Article 28).
+  // CE QU'IL A FALLU DÉCLARER POUR CE SEUL DOSSIER, et c'est un constat en soi : quatre registres
+  // différents l'ont réclamé l'un après l'autre (index, exclusion de Ronde, documents jumeaux,
+  // et celui-ci). Chaque demande était légitime et portait sur autre chose, mais créer un dossier
+  // de docs coûte aujourd'hui quatre déclarations à quatre endroits — à regarder, au titre de
+  // l'Article 24 : un nouveau venu devrait hériter de ce que l'équipe sait déjà faire.
+  { path: "docs/rondes/", pourquoi: "les rapports de Ronde périodique — un par Ronde, rédigé par l'agent après le tri de ses constats, jamais produit mécaniquement par un outil. Les sorties brutes des items qu'il archive sont la matière de ce rapport, pas un registre à relire : les constats sont déjà ouverts comme tâches dans docs/suivi/" },
   { path: "docs/rapports-de-nuit/", pourquoi: "les rapports de nuit autonome — un par nuit travaillée, rédigés par l'agent et non par un outil. Ils se complètent pendant la nuit, ils ne se régénèrent pas." },
   { path: "docs/rapports-gros-prompt/", pourquoi: "les rapports de grosse saisine — même nature : un par saisine, rédigé, jamais produit mécaniquement. Le dossier docs/reponses/, lui, EST un registre : il porte les réponses livrées, produites par scripts/rapport-gros-prompt.mjs." },
   { path: "docs/rapports-verification-froid/", pourquoi: "les vérifications à froid (Article 25) — un dossier par vérification, déclenché par une demande ou une vague de travail, jamais à date fixe et jamais produit par un outil unique : il RASSEMBLE les passages de plusieurs outils et l'analyse qui les lit. Les outils qu'il convoque ont chacun leur propre registre ; celui-ci n'appartient donc à aucune équipe, et le dire vaut mieux que de lui en inventer une (2026-09-27, tâches #436/#773)." },

@@ -1,0 +1,18 @@
+=== X-Port BLINDTEST — scripts/find-booster.mjs — 🟡 KIT PERFECTIBLE ===
+
+  RAPPEL  92 %  — 12/13 des fonctions réelles étaient annonçables depuis les documents seuls
+  BRUIT   7 %  — 1/14 des annonces ne correspondent à rien dans le code
+  Les deux ne s'additionnent jamais : l'un se répare en complétant, l'autre en corrigeant une affirmation fausse.
+
+  🟠 JAMAIS ANNONCÉ (1) : HARMONIA_THEME_KEYWORDS
+  🔴 ANNONCÉ À TORT (1) : DESCRIPTION_PREVIEW_LENGTH
+
+  PORTÉE : AUCUNE des 12 rubriques du gabarit ne demande de lister ce que l'outil expose. Aucun kit ne le fera jamais : les 1 manque(s) sont SYSTÉMIQUES, les autres kits portent le même trou, et corriger celui-ci seul le laisserait partout ailleurs.
+  ⚠️  la question posée au gabarit est binaire et porte sur le vocabulaire de ses TITRES. Un gabarit qui demanderait l'inventaire au milieu d'un paragraphe, sans titre, serait compté comme ne le demandant pas.
+
+  HORS PORTÉE : la correspondance se fait sur les NOMS (orthographe exacte, ou deux mots significatifs partagés). Une documentation qui décrit parfaitement une fonction sans jamais la nommer sera comptée comme un manque — c'est une sévérité assumée, pas une mesure de la clarté du texte.
+
+  → RETENU · La documentation de scripts/find-booster.mjs laisse croire à 1 chose(s) que le code ne fait pas : DESCRIPTION_PREVIEW_LENGTH — ⚠️ aucune tâche associée
+  → RETENU · 1 manque(s) ne relèvent d'AUCUNE rubrique du gabarit (HARMONIA_THEME_KEYWORDS) — les autres kits portent probablement le même trou — ⚠️ aucune tâche associée
+
+⚠️ 2 constat(s) retenu(s) sans tâche associée — un constat retenu qui ne devient pas une tâche est un constat oublié.

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ronde GOAT MAX PAYANTE — 2026-10-02</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T17:02:19.077Z</div>
+    <h1>Ronde GOAT MAX PAYANTE — 2026-10-02</h1>
+    <p class="sub">45 items, 3 payants sur 4 cochés — deux défauts réels que rien d'autre n'aurait trouvés</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><strong>Ouverte dans les règles</strong> à 16:38 UTC : Q1 (changement de modèle) posée et répondue — <em>non, Opus 5</em> ; fenêtre AUTO/PRIME/GOAT posée et répondue par l'utilisateur — <em>GOAT MAX PAYANTE, 45 items</em> ; ouverture enregistrée (<code>docs/circle-tasks/ouverture.json</code>), ce qui autorise la clôture.</p>
+<p><strong>Séquence de l'Étape 5, déclarée</strong> : les 26 rapports individuels ont été <strong>livrés</strong> (archive + bilan d'exécution + les deux rapports détachés) <strong>AVANT</strong> la construction de cette analyse. Écrire un fichier sur le disque n'est pas le livrer ; les deux gestes sont distincts et l'ordre est imposé.</p>
+<p><strong>Items payants</strong> : 3 des 4 cochés par l'utilisateur. <strong>THE-DEEP-READER n'a PAS été lancé</strong> — il ne l'a pas coché, et un item non coché ne se lance pas.</p>
+<hr>
+<h3>Estimation contre réel — c'est elle qui corrige la suivante, jamais une nouvelle intuition</h3>
+<table><thead><tr><th></th><th>Annoncé avant</th><th>Réel</th><th>Écart</th></tr></thead><tbody><tr><td>Durée</td><td>2 h à 2 h 30</td><td><strong>~45 min</strong> jusqu'à cette analyse</td><td><strong>nettement plus rapide</strong></td></tr><tr><td>Jetons d'agent</td><td>~150 000</td><td>~100 000 (1 agent aveugle à 99 692 + 1 audit en cours)</td><td>conforme, voire en dessous</td></tr><tr><td>Items exécutés</td><td>45</td><td><strong>26 par commande directe</strong> + 3 payants + 16 items de procédure</td><td>voir la réserve ci-dessous</td></tr></tbody></table>
+<p><strong>La réserve, et elle est sérieuse</strong> : sur les 45 items, <strong>26 seulement portaient une commande que j'ai pu extraire automatiquement</strong> de leur champ <code>execute</code>. Les 16 autres décrivent une procédure de lecture ou de jugement, sans ligne de commande unique. Je les ai donc traités par la lecture des rapports des 26 autres, ce qui <strong>n'est pas la même chose</strong> que de les exécuter un par un. Un item de procédure traité « au passage » peut passer pour fait sans l'être — c'est à inscrire comme une faiblesse du dispositif de Ronde, pas comme un détail d'exécution.</p>
+<p><strong>Pourquoi la durée a été deux à trois fois plus courte qu'annoncé</strong> : j'ai lancé les 26 items en lot vers des fichiers plutôt qu'un par un dans la conversation. Honnête, mais ça veut dire que mon estimation d'origine chiffrait une autre méthode que celle employée.</p>
+<hr>
+<h3>Les constats, triés — jamais un récapitulatif</h3>
+<h4>RETENU — corrigé dans cette Ronde</h4>
+<p><strong>1. Le rapport central de l'export n'avait JAMAIS produit son fichier depuis sa création.</strong> <code>safe-export.mjs rapport</code> plantait sur <code>ReferenceError: kits is not defined</code> : les deux mesures étaient lues comme des variables locales alors qu'elles sont des <strong>champs</strong> de l'objet rendu par <code>mesuresDeLExport()</code>. Le plantage arrivait <strong>après</strong> l'impression de ses lignes et <strong>avant</strong> l'écriture de son archive — donc la sortie à l'écran était complète et parfaitement crédible, et seul le code de sortie disait la vérité. Il promettait un fichier archivé depuis le 2026-09-28 et n'en avait jamais écrit un seul. <strong>Pourquoi personne ne l'avait vu : une Ronde l'a lancé pour la première fois aujourd'hui</strong> — un rapport qu'on ne lance jamais ne signale jamais qu'il est cassé (leçon L2). Corrigé, relancé, archivé, verdict « ✅ EXPORT PRÊT ». → <strong>tâche #1454</strong></p>
+<p><strong>2. Le test à l'aveugle tirait dans une population incluant les fichiers dispensés de kit.</strong> Le tirage est tombé sur <code>scripts/hooks/pre-commit</code> et l'outil a crié qu'il « n'a AUCUN document lisible ». Vrai, et <strong>faux rouge</strong> : un crochet git est l'un des trois fichiers dont la charte déclare, avec sa raison, qu'il ne quittera jamais ce dépôt. Réclamer un kit d'export à un crochet git, c'est demander un travail que la charte interdit — et un garde-fou qui crée du travail inutile cesse d'être lu (<strong>leçon L4</strong>). <strong>Le plus instructif : la classe était DÉJÀ corrigée ailleurs</strong> — <code>findScriptsNonPortables()</code> honore <code>estExemptDuKit()</code> depuis le 2026-09-26, et cet outil importait même déjà <code>exemptionDuKit</code> pour un autre usage deux cents lignes plus bas. La correction n'avait pas été <strong>héritée</strong> : c'est l'Article 24 pris en défaut. → <strong>tâche #1453</strong></p>
+<p><strong>3. Trois dossiers sans index et un journal en retard — causés par la Ronde elle-même.</strong> Les fichiers que la Ronde venait d'écrire (sauvegarde, test aveugle) ont créé des dossiers que <code>testSystemeDesIndex</code> a aussitôt refusés. <strong>Ce n'est pas une contradiction avec le filet vert d'il y a une heure</strong> : l'état du dépôt avait changé entre les deux. Indexes générés, journal du test aveugle rattrapé avec ce que le test a réellement trouvé. → inclus dans <strong>#1453</strong></p>
+<h4>RETENU — à traiter, tâches ouvertes</h4>
+<p><strong>4. Le kit d'export de <code>find-booster</code> : 🟡 PERFECTIBLE — 92 % de rappel, 7 % de bruit.</strong> 12 des 13 fonctions réelles étaient annonçables depuis les documents seuls. Mais la fiche nomme <code>DESCRIPTION_PREVIEW_LENGTH</code>, que le code n'expose pas — <strong>une documentation qui fait croire à quelque chose qui n'existe pas</strong>, ce qui est pire qu'un manque. → <strong>tâche à ouvrir</strong></p>
+<p><strong>5. Et le constat qui vaut bien plus que le précédent : le manque est SYSTÉMIQUE.</strong> <code>HARMONIA_THEME_KEYWORDS</code> n'était annonçable par personne, parce qu'<strong>aucune des 12 rubriques du gabarit ne demande de lister ce que l'outil EXPOSE</strong>. Tous les kits du dépôt portent donc le même trou, et aucun ne le comblera jamais tant que le gabarit ne le demande pas. → <strong>tâche à ouvrir</strong></p>
+<p><strong>6. Huit zones d'ombre qu'aucune mesure mécanique ne voit</strong>, relevées par l'évaluateur aveugle : incohérence de langue des noms (anglais partout sauf une section en français), comptage contradictoire des motifs d'extraction (cinq décrits, « quatre » annoncés trois fois), aucun contrat de données, dépendances d'export non qualifiées (lues à l'exécution ou copiées en dur ? décisif pour un kit remonté ailleurs), et <strong><code>lib/reference.ts</code> — retiré du produit le 2026-09-27 — toujours donné comme exemple central d'un motif</strong>. → <strong>tâche à ouvrir</strong></p>
+<p><strong>7. Six paires de documents couvrent le même terrain sans qu'aucun ne cite l'autre.</strong> À instruire une par une : fusionner, ou déclarer la séparation avec sa raison. → <strong>tâche à ouvrir</strong></p>
+<h4>À TRANCHER — ces décisions ne sont pas les miennes</h4>
+<p><strong>8. Un seuil est passé AU-DESSUS de tout ce qu'on observe, et son zéro ne mesure plus rien.</strong> Le détecteur de chevauchement entre offres du catalogue utilise un seuil de <strong>4 mots partagés</strong>, posé en 2026 dans un trou franc de la distribution. Le catalogue a grossi : le maximum réel est aujourd'hui de <strong>3</strong>. Aucune paire ne <strong>peut</strong> donc atteindre le seuil, et « aucun chevauchement » rend exactement le même texte que « je ne peux pas en voir » (leçons L5 et L11). <strong>L'outil refuse lui-même de choisir un nouveau chiffre</strong> : la pente est devenue continue, il n'y a plus de trou, et inventer une frontière qu'on prétend lire serait pire. Deux issues : <strong>soit ce signal a fait son travail et s'arrête, soit le chevauchement se mesure sur autre chose que les mots de la demande.</strong></p>
+<p><strong>9. Les 4 clusters de CLONE-HUNTER</strong> portant leur raison écrite (détail dans <code>docs/idees-a-trancher.md</code>) — zéro constat en « retenu », 4 décisions qui t'attendent.</p>
+<p><strong>10. Dix-neuf décisions attendent en même temps</strong>, et la fluidité médiane de la file est de 50 % : la moitié du délai d'une tâche est de l'attente pure. Au-delà d'un certain remplissage, le temps d'attente d'une file n'augmente plus proportionnellement, il explose — donc chaque décision de plus ralentit <strong>aussi</strong> les faciles. Ce n'est pas un reproche sur ton rythme : c'est une propriété des files, et la seule sortie est de trancher par lots.</p>
+<p><strong>11. Trois outils « flash dans la poêle »</strong> : <code>filet-en-parts</code> a servi 22 fois sur 22 dans les 24 h de son premier passage, puis plus rien depuis 3 jours ; <code>el-professor</code> 6 sur 7, puis rien ; <code>simulations</code> 5 sur 6, puis rien. Un outil qui n'a servi qu'à se construire lui-même a coûté son prix d'entrée sans jamais rendre son service. Le compte cumulé le cache complètement.</p>
+<h4>ÉCARTÉ — avec la raison écrite</h4>
+<p><strong>12. THE-SCREENER a échoué (<code>EXIT=1</code>) — mais c'est MA commande qui était fausse</strong>, pas l'outil : mon extraction automatique a pris le mot « contre », qui appartient à la prose du champ <code>execute</code>, pour une URL à visiter. L'item est de plus <strong>conditionnel</strong> : il n'a de sens qu'avec un serveur de jeu qui tourne, et il n'y en a pas. Écarté pour cette Ronde, sans dette.</p>
+<p><strong>13. La passe profonde d'ALWAYS-NEW-CODE n'a pas été lancée</strong>, bien que tu aies coché HYPER-SCAN-CHECKPOINT complet. Sa couche légère a tourné (ARGUS 6 candidats, HARMONIA 0 friction), et elle recommande la zone <strong>« cycle jour/nuit »</strong> — c'est-à-dire <code>lib/daynight.ts</code>, donc <strong>le jeu</strong>, que tu as explicitement mis de côté. Brûler une passe de raisonnement payante sur une zone hors périmètre aurait été dépenser pour rien. <strong>Si tu veux la passe, dis-moi sur quelle zone de l'outillage la pointer</strong> : le choix de zone est précisément ce que l'Article 7 interdit de prendre seul sans te demander.</p>
+<p><strong>14. La note « esprit » est à 38/100</strong> au tableau de bord — mais elle porte sur la fidélité à la charte de la dernière simulation <strong>de jeu</strong> notée, et elle repose sur une seule composante. Hors périmètre tant que le jeu est de côté ; signalé parce que c'est l'Article 0 et qu'un chiffre bas sur la loi suprême ne se tait pas.</p>
+<hr>
+<h3>Ce que cette Ronde dit d'elle-même</h3>
+<p><strong>Le dispositif a trouvé deux défauts réels que rien d'autre n'aurait trouvés</strong>, et les deux ont la même forme : <strong>un outil qu'on ne lance jamais ne signale jamais qu'il est cassé.</strong> Le rapport central de l'export promettait un fichier depuis quatre jours sans jamais en écrire un ; le test à l'aveugle accusait un fichier que la charte dispense. Aucun des deux n'aurait été vu sans une Ronde.</p>
+<p><strong>Et elle dit aussi sa propre faiblesse</strong> : 16 de ses 45 items sont des procédures sans commande, donc impossibles à exécuter mécaniquement et faciles à faire passer pour faits. C'est le constat le plus inconfortable de la journée, et il est à ouvrir comme tâche.</p>
+<hr>
+<h3>Plan d'action</h3>
+<table><thead><tr><th>État</th><th>Constat</th><th>Tâche</th></tr></thead><tbody><tr><td><strong>RETENU — fait</strong></td><td>le rapport central de l'export plantait avant d'écrire son archive</td><td><strong>#1454</strong>, corrigé et vérifié (<code>EXIT=0</code>, fichier archivé)</td></tr><tr><td><strong>RETENU — fait</strong></td><td>le tirage aveugle incluait les dispensés de kit ; 3 index + 1 journal en retard</td><td><strong>#1453</strong>, corrigé et vérifié</td></tr><tr><td><strong>RETENU</strong></td><td>la fiche de <code>find-booster</code> annonce une constante que le code n'expose pas</td><td><strong>#1455</strong></td></tr><tr><td><strong>RETENU</strong></td><td>aucune rubrique du gabarit ne demande ce que l'outil EXPOSE — tous les kits portent le trou</td><td><strong>#1456</strong></td></tr><tr><td><strong>RETENU</strong></td><td>8 zones d'ombre du kit, dont une référence à un fichier retiré du produit</td><td><strong>#1457</strong></td></tr><tr><td><strong>RETENU</strong></td><td>6 paires de documents couvrent le même terrain sans se citer</td><td><strong>#1458</strong></td></tr><tr><td><strong>RETENU</strong></td><td>16 des 45 items de Ronde n'ont pas de commande exécutable</td><td><strong>#1459</strong></td></tr><tr><td><strong>À TRANCHER</strong></td><td>le seuil de chevauchement (4) est au-dessus du maximum réel (3) : arrêter le signal, ou le mesurer autrement</td><td>ta décision</td></tr><tr><td><strong>À TRANCHER</strong></td><td>les 4 clusters CLONE-HUNTER portant leur raison écrite</td><td>ta décision</td></tr><tr><td><strong>À TRANCHER</strong></td><td>19 décisions en attente, fluidité de la file à 50 %</td><td>ta décision, par lots</td></tr><tr><td><strong>À TRANCHER</strong></td><td>3 outils « flash dans la poêle » : les relancer, ou acter qu'ils ont fait leur temps</td><td>ta décision</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>THE-SCREENER <code>EXIT=1</code></td><td>ma commande extraite était fausse, et l'item est conditionnel à un serveur de jeu absent</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>passe profonde d'ALWAYS-NEW-CODE</td><td>la zone recommandée est le jeu, que tu as mis de côté ; le choix d'une autre zone t'appartient (Article 7)</td></tr><tr><td><strong>ÉCARTÉ</strong></td><td>note « esprit » 38/100</td><td>porte sur une simulation de jeu, une seule composante, hors périmètre actuel</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/rondes/ronde-2026-10-02-goat.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

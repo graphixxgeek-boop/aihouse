@@ -12,7 +12,7 @@ process reconnu dans `docs/referentiel/points-fragiles.md`, fermé le 2026-09-22
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**8 fichier(s)** dans ce dossier.
+**9 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -24,4 +24,5 @@ process reconnu dans `docs/referentiel/points-fragiles.md`, fermé le 2026-09-22
 | [test-capture-1790055182891.html](test-capture-1790055182891.html) | — |
 | [test-capture-1790199357589.png](test-capture-1790199357589.png) | — |
 | [test-capture-1790199368680.html](test-capture-1790199368680.html) | — |
+| [test-capture-1790959721569.html](test-capture-1790959721569.html) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->

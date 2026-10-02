@@ -20,3 +20,4 @@
 | [circle-signals-index.md](circle-signals-index.md) | — |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
 | 2026-09-28 13:35 | 6ee82d1 | 1327 fichiers, 9.4 Mo | 55 fichiers, 1.0 Mo |
+| 2026-10-02 16:45 | f42294a | 1663 fichiers, 13.5 Mo | 55 fichiers, 1.0 Mo |

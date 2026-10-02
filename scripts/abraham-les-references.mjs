@@ -1571,6 +1571,20 @@ export const HORS_PORTEE_DOCUMENTS = [
   // qui n'aurait jamais dû l'être — la même correction, au même endroit, que pour les blocs
   // d'index générés.
   { motif: /^docs\/rapports-de-nuit\//, pourquoi: "rapport de nuit : il RÉSUME le travail fait, donc il reprend par construction le vocabulaire de tout ce qu'il raconte — et nul ne fondra jamais un rapport daté dans une fiche d'outil" },
+  // LE RAPPORT DE RONDE, ET C'EST LA MÊME DÉCISION QUE CELLE DU 2026-10-01 APPLIQUÉE AU BON
+  // ENDROIT (2026-10-02, Ronde GOAT). Un rapport de Ronde est un rapport de nuit par un autre nom :
+  // il raconte le passage de 45 outils et reprend donc, par construction, le vocabulaire de chacun
+  // des registres qu'il résume. Mesuré le jour même : la seule paire NOUVELLE que le détecteur ait
+  // signalée était `docs/x-port-blindtest/index.md ↔ docs/rondes/ronde-2026-10-02-goat.md` — le
+  // journal d'un outil et le rapport qui raconte ce que cet outil vient de trouver. Personne ne
+  // fondra jamais l'un dans l'autre : le journal garde la trace, le rapport raconte le passage.
+  //
+  // POURQUOI CE N'EST PAS UN CONTOURNEMENT DU SEUIL : le seuil venait d'être dépassé (7 pour 6
+  // admis) et il aurait été tentant de le relever. Le relever aurait rendu le détecteur plus
+  // aveugle sur les VRAIES paires ; écarter une famille de documents dont le recouvrement est la
+  // raison d'être le laisse exactement aussi sévère sur les documents normatifs. Les 6 paires qui
+  // restent sont toutes des questions réelles entre documents qu'on maintient vraiment.
+  { motif: /^docs\/rondes\//, pourquoi: "rapport de Ronde : comme un rapport de nuit, il RÉSUME le passage de dizaines d'outils et reprend par construction le vocabulaire de chaque registre qu'il raconte — le recouvrement est sa raison d'être, et nul ne fondra un rapport daté dans le journal d'un outil" },
   // Les simulations sont des ARCHIVES de conversations. Deux transcripts se ressemblent parce que
   // c'est le même jeu, et c'est doc-report qui les compare, sur leur substance exacte.
   { motif: /^docs\/simulations\//, pourquoi: "archives de conversations : leur ressemblance est normale, et doc-report les compare déjà" },

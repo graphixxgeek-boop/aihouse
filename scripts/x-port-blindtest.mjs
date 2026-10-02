@@ -115,8 +115,26 @@ export function dossierAveugle(chemin, { root = ROOT, exists = existsSync, readF
 // peut sortir trois fois pendant que dix autres n'ont jamais été vus.
 export const POIDS_PAR_VITALITE = { vital: 8, essentiel: 6, utile: 3, optionnel: 1 };
 
-export function choisirLeMembre({ lignes = [], passages = [], hasard = Math.random, poids = POIDS_PAR_VITALITE } = {}) {
+// LES DISPENSÉS DE KIT SORTENT DE LA POPULATION (2026-10-02, tâche #1453). Le tirage de la Ronde
+// GOAT est tombé sur `scripts/hooks/pre-commit`, et l'outil a refusé de tester en annonçant qu'il
+// « n'a AUCUN document lisible ». C'était vrai, et c'était un faux rouge : un crochet git est l'un
+// des trois fichiers dont la charte déclare noir sur blanc, AVEC SA RAISON, qu'il ne quittera
+// jamais ce dépôt. Lui reprocher de n'avoir pas de kit d'export, c'est réclamer un travail que la
+// charte interdit — le faux rouge le plus coûteux de tous, puisqu'un garde-fou qui crée du travail
+// inutile cesse d'être lu (leçon L4).
+// LE PLUS INSTRUCTIF : CETTE CLASSE ÉTAIT DÉJÀ CORRIGÉE AILLEURS. `findScriptsNonPortables()` de
+// safe-export honore `estExemptDuKit()` depuis le 2026-09-26, et son commentaire décrit exactement
+// ce défaut. La correction n'avait pas été HÉRITÉE par cet outil-ci, alors qu'il importait déjà
+// `exemptionDuKit` pour un autre usage, deux cents lignes plus bas. C'est l'Article 24 pris en
+// défaut : une correction qui ne s'applique pas à tous les outils existants le jour où elle est
+// écrite attend son prochain cas, et celui-ci a mis six jours à sortir du chapeau.
+// LE NOMBRE EST RENDU, JAMAIS TU : un filtre silencieux est un filtre que personne ne peut
+// contester, et ce dépôt applique la même règle à l'écartement des ponts de réexport.
+export function choisirLeMembre({ lignes = [], passages = [], hasard = Math.random, poids = POIDS_PAR_VITALITE, dispense = exemptionDuKit } = {}) {
   if (!lignes.length) return { mesurable: false, pourquoi: "aucun membre à tirer : le parc n'a pas été fourni, et tirer dans le vide rendrait un sujet inventé" };
+  const dispenses = lignes.filter((l) => dispense(l.chemin));
+  lignes = lignes.filter((l) => !dispense(l.chemin));
+  if (!lignes.length) return { mesurable: false, pourquoi: `les ${dispenses.length} membre(s) du parc sont tous dispensés de kit par décision écrite : il n'y a rien à tester à l'aveugle, et ce n'est pas un échec` };
   const vus = new Map(passages.map((p) => [p.chemin, p.date]));
   const jamais = lignes.filter((l) => !vus.has(l.chemin));
   const bassin = jamais.length ? jamais : [...lignes].sort((a, b) => String(vus.get(a.chemin) ?? "").localeCompare(String(vus.get(b.chemin) ?? "")));
@@ -126,7 +144,7 @@ export function choisirLeMembre({ lignes = [], passages = [], hasard = Math.rand
     let tir = hasard() * total;
     for (const l of bassin) {
       tir -= poids[l.vitalite] ?? 1;
-      if (tir <= 0) return { mesurable: true, ...l, motif: `jamais testé — tirage pondéré par la vitalité (${l.vitalite})`, phase: "couverture", restants: jamais.length };
+      if (tir <= 0) return { mesurable: true, ...l, motif: `jamais testé — tirage pondéré par la vitalité (${l.vitalite})`, phase: "couverture", restants: jamais.length, dispenses: dispenses.length };
     }
     const dernier = bassin[bassin.length - 1];
     return { mesurable: true, ...dernier, motif: `jamais testé — tirage pondéré par la vitalité (${dernier.vitalite})`, phase: "couverture", restants: jamais.length };

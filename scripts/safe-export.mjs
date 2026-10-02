@@ -2182,7 +2182,17 @@ function main() {
       const r = rapportExportCentral(mesures);
       const lignesTxt = formatRapportExportLines(r);
       for (const l of lignesTxt) console.log(l);
-      const alerte = alerteExport(kits, agence);
+      // LES DEUX MESURES SE PRENNENT DANS `mesures`, JAMAIS DANS LE VIDE (2026-10-02, tâche #1454).
+      // La version du 2026-09-28 écrivait `alerteExport(kits, agence)` avec deux variables qui
+      // n'existent pas dans cette portée : elles sont des CHAMPS de l'objet que
+      // `mesuresDeLExport()` rend (ligne 1419), pas des locales. Le rapport plantait donc sur un
+      // ReferenceError juste après avoir imprimé ses lignes, et avant d'écrire son archive — si
+      // bien qu'il n'a JAMAIS produit le fichier qu'il promet depuis quatre jours.
+      // POURQUOI PERSONNE NE L'AVAIT VU : la sortie imprimée avant le plantage est complète et
+      // parfaitement crédible ; seul le code de sortie disait la vérité, et une Ronde l'a lancé
+      // pour la première fois aujourd'hui. Un rapport qu'on ne lance jamais ne signale jamais
+      // qu'il est cassé (leçon L2).
+      const alerte = alerteExport(mesures.kits, mesures.agence);
       console.log("");
       console.log(`VERDICT DU KIT : ${alerte.verdict ?? alerte.pourquoi}`);
       // Le rapport s'ARCHIVE, sinon il n'a pas de pente : un rapport qu'on ne retrouve pas est un
