@@ -703,6 +703,93 @@ export function enTeteDUnOutil(texte) {
 export const BORNE_CONVICTION_MIN = 40;
 export const BORNE_CONVICTION_MAX = 400;
 
+// LES DÉCISIONS LES PLUS FERMES SONT LES PLUS BRIÈVEMENT ÉCRITES (2026-10-02, tâche #1438).
+//
+// LE DÉFAUT EST STRUCTUREL, ET SON SENS EST INVERSÉ. L'extraction en prose n'accepte qu'une phrase
+// d'au moins quarante caractères portant un marqueur de polarité. Or les décisions les plus
+// arrêtées de ce projet sont écrites en TITRES DE SECTION et en LIGNES DE TABLEAU : courtes, donc
+// sous la borne basse ; affirmatives, donc souvent sans marqueur. **Plus c'est décidé, moins c'est
+// vu** — exactement l'inverse de ce qu'on attend d'une révélation.
+//
+// CE QUI SÉPARE UN TABLEAU DE CONVICTIONS D'UN TABLEAU DE DONNÉES, et c'est MESURÉ plutôt que
+// deviné : la première colonne. Un tableau de convictions l'emplit de PHRASES ; un tableau de
+// données y met des valeurs courtes — un nom d'outil, un chiffre, une date. On prend donc la
+// médiane de longueur de la première cellule SUR CHAQUE TABLEAU, et un tableau dont la médiane
+// reste sous le plancher est laissé intact. Le contre-test en est la moitié qui prouve quelque
+// chose : sans lui, une sonde qui avale tous les tableaux rendrait du bruit à la place d'un signal.
+export const PLANCHER_PREMIERE_CELLULE = 25;
+export const BORNE_TITRE_MIN = 18;
+
+// UN TITRE DIT SA POLARITÉ AVEC D'AUTRES MOTS QUE LA PROSE, et c'est mesuré plutôt que supposé :
+// sur les cinq impossibles, quatre titres portent « jamais » et le cinquième dit « REFUSONS
+// ABSOLUMENT ». Les marqueurs partagés du dépôt ne connaissent que « jamais » et « toujours ».
+// POURQUOI NE PAS LES ÉLARGIR LÀ-BAS : ils sont lus par plusieurs outils et servent à filtrer de
+// la PROSE, où « absolument » et « obligatoire » sont des mots courants qui ne décident de rien.
+// Sur un TITRE la densité est inverse — un titre est court, choisi, et n'emploie pas ces mots par
+// hasard. Le jeu élargi reste donc LOCAL aux titres, et la raison est écrite plutôt que devinée
+// par le prochain qui voudra « harmoniser » les deux (Article 19 pris par l'autre bout).
+export const MARQUEUR_DE_TITRE = /\b(jamais|toujours|absolument|interdit|interdite|obligatoire|refusons|refuse|sacrifier|sacrifierons|déléguerons|automatiserons|autoriserons)\b/i;
+
+export function tableauxDUnTexte(texte = "") {
+  const lignes = String(texte).split("\n");
+  const tableaux = []; let courant = [];
+  for (const L of lignes) {
+    const l = L.trim();
+    if (l.startsWith("|") && l.endsWith("|") && l.length > 2) { courant.push(l); continue; }
+    if (courant.length) { tableaux.push(courant); courant = []; }
+  }
+  if (courant.length) tableaux.push(courant);
+  return tableaux;
+}
+
+export function estUnTableauDeConvictions(lignes = [], { plancher = PLANCHER_PREMIERE_CELLULE } = {}) {
+  const corps = lignes.filter((l) => !/^\|[\s|:-]+\|$/.test(l)).slice(1); // on saute l'en-tête
+  if (corps.length < 2) return { oui: false, pourquoi: "moins de deux lignes de corps : trop peu pour mesurer quoi que ce soit", medianePremiere: 0, lignes: corps.length };
+  const premieres = corps.map((l) => l.split("|").slice(1, -1)[0]?.replace(/[*`]/g, "").trim() ?? "").map((c) => c.length).sort((a, b) => a - b);
+  const mediane = premieres[Math.floor(premieres.length / 2)];
+  return { oui: mediane >= plancher, pourquoi: mediane >= plancher
+    ? `première colonne faite de phrases (médiane ${mediane} caractères)`
+    : `première colonne faite de valeurs courtes (médiane ${mediane} caractères, plancher ${plancher}) — c'est un tableau de DONNÉES, laissé intact`,
+    medianePremiere: mediane, lignes: corps.length };
+}
+
+export function extraireDesTableaux(texte = "", { chemin = "", max = BORNE_CONVICTION_MAX, plancher = PLANCHER_PREMIERE_CELLULE } = {}) {
+  const out = [];
+  for (const lignes of tableauxDUnTexte(texte)) {
+    const verdict = estUnTableauDeConvictions(lignes, { plancher });
+    if (!verdict.oui) continue;
+    const corps = lignes.filter((l) => !/^\|[\s|:-]+\|$/.test(l)).slice(1);
+    for (const l of corps) {
+      const cells = l.split("|").slice(1, -1).map((c) => c.replace(/\*\*/g, "").replace(/\s+/g, " ").trim());
+      const enonce = (cells[0] ?? "").replace(/^[*`\s]+|[*`\s]+$/g, "");
+      if (enonce.length < plancher || enonce.length > max) continue;
+      // LA LIGNE ENTIÈRE EST LA CONVICTION, pas sa seule première cellule : dans ce dépôt, la
+      // colonne de droite porte le PORTEUR — l'Article, la leçon ou le mécanisme qui la fait
+      // tenir — et c'est précisément ce que la révélation doit retrouver. Les séparer rendrait
+      // une conviction sans sa preuve, ce que ce projet refuse partout ailleurs.
+      const reste = cells.slice(1).filter(Boolean).join(" · ");
+      const phrase = reste ? `${enonce} — ${reste}` : enonce;
+      out.push({ phrase: phrase.slice(0, max), chemin, polarite: MARQUEUR_NEGATION.test(phrase) ? "jamais" : "toujours", source: "tableau" });
+    }
+  }
+  return out;
+}
+
+export function extraireDesTitres(texte = "", { chemin = "", min = BORNE_TITRE_MIN, max = BORNE_CONVICTION_MAX } = {}) {
+  const out = [];
+  for (const m of String(texte).matchAll(/^#{2,4}\s+(.+?)\s*$/gm)) {
+    const titre = m[1].replace(/[*`]/g, "").replace(/^[①②③④⑤⑥⑦⑧⑨⑩\d.\s·—-]+/, "").trim();
+    if (titre.length < min || titre.length > max) continue;
+    // UN TITRE NE COMPTE QUE S'IL ÉNONCE, jamais s'il nomme. « Ce que nous ne sacrifierons jamais »
+    // est une décision ; « Inventaire des outils » est une étiquette. Le marqueur de polarité est
+    // le seul signal fiable de la différence, et c'est pour ça qu'il reste exigé ICI alors qu'il
+    // ne l'est pas sur une ligne de tableau — la ligne, elle, est déjà filtrée par son tableau.
+    if (!MARQUEUR_DE_TITRE.test(titre)) continue;
+    out.push({ phrase: titre, chemin, polarite: MARQUEUR_NEGATION.test(titre) ? "jamais" : "toujours", source: "titre" });
+  }
+  return out;
+}
+
 export function extraireConvictions(texte, { chemin = "", min = BORNE_CONVICTION_MIN, max = BORNE_CONVICTION_MAX } = {}) {
   const sansCode = String(texte ?? "").replace(/```[\s\S]*?```/g, " ");
   const phrases = sansCode.split(/(?<=[.!?:])\s+|\n{2,}|\n(?=[-*|#])/);
@@ -714,7 +801,16 @@ export function extraireConvictions(texte, { chemin = "", min = BORNE_CONVICTION
     const neg = MARQUEUR_NEGATION.test(p);
     const abs = MARQUEUR_ABSOLU.test(p);
     if (!neg && !abs) continue;
-    out.push({ phrase: p, chemin, polarite: neg ? "jamais" : "toujours" });
+    out.push({ phrase: p, chemin, polarite: neg ? "jamais" : "toujours", source: "prose" });
+  }
+  // LES TROIS SOURCES SE COMPLÈTENT ET NE SE RECOUVRENT PAS : la prose, les lignes de tableau, les
+  // titres. Le dédoublonnage se fait sur la phrase exacte, parce qu'une même décision peut
+  // légitimement figurer en titre ET dans la ligne qui la détaille — et la garder deux fois
+  // gonflerait sa représentativité sans qu'elle traverse un contexte de plus.
+  const vues = new Set(out.map((c) => c.phrase));
+  for (const c of [...extraireDesTableaux(texte, { chemin, max }), ...extraireDesTitres(texte, { chemin, max })]) {
+    if (vues.has(c.phrase)) continue;
+    vues.add(c.phrase); out.push(c);
   }
   return out;
 }

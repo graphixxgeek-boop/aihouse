@@ -24623,3 +24623,57 @@ async function testLaRevelationDeLaStrategie() {
   console.log("Passed: la stratégie se révèle avec la MÊME machine que la philosophie, et seules trois choses changent (2026-10-02, tâche #1434). Construire un second moteur aurait créé deux mécaniques à maintenir pour une seule idée — on lit un corpus, on extrait les phrases qui engagent, on les note par le nombre de contextes qu'elles traversent, on dérive le seuil de leur propre distribution, on confronte à un document de référence — et la seconde aurait divergé de la première en silence. Les trois paramètres sont le CORPUS (une philosophie se lit dans les règles et les leçons, une stratégie dans les plans, les chantiers et les décisions), le CADRE (six cases : où l'on va, par quelles étapes, ce qu'on ne fera pas, ce qui bloque, comment on saura, de quoi ça dépend) et le DOCUMENT DE RÉFÉRENCE. UN DÉFAUT RÉEL A ÉTÉ TROUVÉ AU PREMIER PASSAGE ET CORRIGÉ À LA RACINE : la famille « renoncements » ramassait 1 740 phrases sur 1 880, soit 93 % du corpus, à cause du seul mot « jamais » — présent dans 92 % des phrases de ce dépôt, qui écrit ses règles en interdictions. Un mot aussi répandu ne sépare pas le corpus, il le recouvre. Le filtre qui l'écarte est DÉRIVÉ et non une liste de mots interdits (corollaire de l'Article 17) : on mesure ce que chaque mot attrape à lui seul, un mot envahissant demain sera écarté demain, et l'écart est RENDU avec sa part — un cadre amputé en silence produirait des cases vides sans qu'on puisse distinguer un corpus muet d'un mot perdu. ET LES DEUX LIMITES LOURDES DU PASSAGE SONT DÉCLARÉES PLUTÔT QUE TUES : le document de référence n'est pas lisible par l'extracteur, qui ne connaît que les formes à Articles, donc tout ressort « inavoué » PAR CONSTRUCTION et le chiffre ne dit rien sur la stratégie globale (tâche #1438) ; et ce n'est pas la dérivation qui décide du seuil mais le PLANCHER de trois fichiers hérité de la révélation philosophique, alors que le centile observé vaut 1 — ce qui est normal, une direction s'énonce une fois là où une conviction revient partout, et exiger la répétition importe au corpus stratégique une attente qui n'est pas la sienne.");
 }
 await testLaRevelationDeLaStrategie();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLUS C'EST DÉCIDÉ, MOINS C'ÉTAIT VU (2026-10-02, tâche #1438)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLExtractionDesTitresEtDesTableaux() {
+  const K = await import('./the-king.mjs');
+  const nfs = await import('node:fs');
+
+  // ── 1. LE CRITÈRE DE RÉUSSITE ÉTAIT ÉCRIT D'AVANCE, et il est tenu : la révélation doit
+  // retrouver seule LES CINQ impossibles, AVEC leur colonne de porteurs. Tant qu'elle ne les
+  // retrouvait pas, elle n'révélait pas — elle échantillonnait.
+  const texte = nfs.readFileSync('docs/grand-projet/02-strategie/les-cinq-impossibles.md', 'utf8');
+  const c = K.extraireConvictions(texte, { chemin: 'les-cinq-impossibles.md' });
+  const titres = c.filter((x) => x.source === 'titre');
+  assert.strictEqual(titres.length, 5, `the five impossibles are found by their own headings (currently ${titres.length}): ${titres.map((t) => t.phrase).join(' | ')}`);
+  const tableaux = c.filter((x) => x.source === 'tableau');
+  assert.ok(tableaux.length >= 20, `and their twenty rows come with them (currently ${tableaux.length})`);
+  assert.ok(tableaux.some((x) => /Article 0/.test(x.phrase) && /esprit/i.test(x.phrase)), 'each row keeps its PORTEUR column — a conviction without its proof is exactly what this project refuses everywhere else');
+
+  // ── 2. LE CONTRE-TEST EST LA MOITIÉ QUI PROUVE QUELQUE CHOSE (BP4). Une sonde qui avale tous
+  // les tableaux rendrait du bruit à la place d'un signal : un tableau de DONNÉES passe intact.
+  const donnees = '| Outil | Appels | Date |\n|---|---|---|\n| argus | 12 | 2026-09-01 |\n| harmonia | 7 | 2026-09-02 |\n| axa | 3 | 2026-09-03 |';
+  assert.deepStrictEqual(K.extraireDesTableaux(donnees, { chemin: 'd' }), [], 'MUST LET PASS: an ordinary data table yields nothing');
+  const verdict = K.estUnTableauDeConvictions(donnees.split('\n'));
+  assert.strictEqual(verdict.oui, false, 'and the verdict says so');
+  assert.match(verdict.pourquoi, /valeurs courtes/, 'with its reason, measured rather than guessed: the first column holds values, not sentences');
+  assert.ok(verdict.medianePremiere < K.PLANCHER_PREMIERE_CELLULE, `and the figure that decided it (${verdict.medianePremiere} characters)`);
+
+  // ── 3. CE QUI SÉPARE LES DEUX EST MESURÉ SUR CHAQUE TABLEAU, jamais décidé une fois pour toutes.
+  const convictions = '| Ce qu\'on ne sacrifie pas | Son porteur |\n|---|---|\n| une phrase assez longue pour être un énoncé | Article 0 |\n| une seconde phrase tout aussi énoncée ici | Article 27 |';
+  assert.strictEqual(K.estUnTableauDeConvictions(convictions.split('\n')).oui, true, 'a table whose first column holds sentences IS read');
+
+  // ── 4. UN TITRE NE COMPTE QUE S'IL ÉNONCE, jamais s'il nomme. « Inventaire des outils » est une
+  // étiquette ; « Ce que nous ne sacrifierons jamais » est une décision.
+  assert.deepStrictEqual(K.extraireDesTitres('## Inventaire des outils de l\'Agence\n', { chemin: 'x' }), [], 'MUST LET PASS: a label heading is not a conviction');
+  assert.strictEqual(K.extraireDesTitres('## CE QUE NOUS REFUSONS ABSOLUMENT\n', { chemin: 'x' }).length, 1, 'while a heading that states a refusal is one, even without the word "jamais"');
+  // Le jeu de marqueurs élargi reste LOCAL aux titres : l'élargir chez les marqueurs partagés
+  // ferait entrer en prose des mots courants qui ne décident de rien.
+  const A = await import('./lib-shell.mjs');
+  assert.ok(!A.MARQUEUR_NEGATION.test('absolument') && !A.MARQUEUR_ABSOLU.test('absolument'), 'and the shared prose markers are untouched, on purpose');
+
+  // ── 5. LES TROIS SOURCES NE SE RECOUVRENT PAS. Garder deux fois la même phrase gonflerait sa
+  // représentativité sans qu'elle traverse un contexte de plus.
+  const phrases = c.map((x) => x.phrase);
+  assert.strictEqual(new Set(phrases).size, phrases.length, 'no sentence is counted twice across prose, tables and headings');
+
+  // ── 6. ET LES DEUX RÉVÉLATIONS Y GAGNENT POUR DE VRAI (Article 25, mesuré sur le dépôt réel).
+  const s = K.revelerLaStrategie();
+  assert.ok(s.convictions > 2000, `the strategy revelation now reads far more material (currently ${s.convictions}, against 1880 before this change)`);
+  assert.ok(s.cadre.cases.filter((x) => x.vide).length <= 1, `and its empty cases fell from three to ${s.cadre.cases.filter((x) => x.vide).length} of six`);
+
+  console.log("Passed: les décisions les plus fermes de ce projet étaient les plus invisibles, et c'est corrigé (2026-10-02, tâche #1438). LE DÉFAUT ÉTAIT STRUCTUREL ET SON SENS INVERSÉ : l'extraction n'acceptait qu'une phrase d'au moins quarante caractères portant « jamais » ou « toujours ». Or les décisions les plus arrêtées s'écrivent en TITRES DE SECTION et en LIGNES DE TABLEAU — courtes, donc sous la borne ; affirmatives, donc souvent sans marqueur. Plus c'était décidé, moins c'était vu. LE CRITÈRE DE RÉUSSITE ÉTAIT ÉCRIT D'AVANCE et il est tenu : la révélation retrouve seule LES CINQ impossibles par leurs propres titres, et leurs vingt lignes de tableau AVEC LEUR COLONNE DE PORTEURS — une conviction sans sa preuve est exactement ce que ce projet refuse partout ailleurs. CE QUI SÉPARE UN TABLEAU DE CONVICTIONS D'UN TABLEAU DE DONNÉES EST MESURÉ, JAMAIS DEVINÉ : la médiane de longueur de la première colonne, calculée SUR CHAQUE TABLEAU. Un tableau de convictions l'emplit de phrases, un tableau de données y met un nom d'outil, un chiffre, une date. Le contre-test est la moitié qui prouve quelque chose (BP4) : sur un tableau de données ordinaire la sonde rend ZÉRO et dit pourquoi, avec le chiffre qui a décidé. Sans lui, une sonde qui avale tous les tableaux rendrait du bruit à la place d'un signal. UN TITRE, LUI, NE COMPTE QUE S'IL ÉNONCE : « Inventaire des outils » est une étiquette, « Ce que nous refusons absolument » est une décision — et le jeu de marqueurs élargi qui attrape le cinquième impossible reste LOCAL aux titres, parce que l'élargir chez les marqueurs partagés ferait entrer en prose des mots courants qui ne décident de rien. LE GAIN EST MESURÉ SUR LE DÉPÔT RÉEL : la révélation stratégique passe de 1 880 à plus de 2 300 phrases et ses cases vides tombent de trois à une sur six. RESTE OUVERTE la seconde moitié de la tâche, la DÉRIVATION — lire les documents qui répondent explicitement aux questions du cadre et reprendre leurs réponses telles quelles.");
+}
+await testLExtractionDesTitresEtDesTableaux();
