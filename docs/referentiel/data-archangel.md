@@ -421,3 +421,27 @@ rien ne les relie.
 **HORS PORTÉE, déclaré dans le rapport lui-même** : seules les lignes de tableau sont comparées. Une
 vue porte légitimement une en-tête que sa source n'a pas, donc une divergence de prose ne sera
 jamais vue d'ici.
+
+## LES ONZE DESTINATIONS D'UNE NOTE SONT-ELLES ALIMENTÉES ? (2026-10-02)
+
+**Sous-commande** : `node scripts/data-archangel.mjs destinations`.
+
+**SA DEMANDE, mot pour mot** : *« vérifie que tu as bien récolté toutes les données pour alimenter
+les datas : les 11 classes de notes »*. **Une table de destinations est une INTENTION tant que
+personne ne vérifie que quelque chose y arrive** — et une destination jamais alimentée est le signe
+soit qu'elle ne sert à rien, soit qu'on range ailleurs ce qui lui revenait. Les deux méritent d'être
+sus, et aucun des deux ne se voit en relisant la table.
+
+**LA TABLE EST LUE, JAMAIS RECOPIÉE** (Article 24) : elle vit dans `docs/regles-de-travail.md`
+§3pentes, et une douzième destination ajoutée demain sera mesurée le jour même.
+
+**RELEVÉ DU 2026-10-02** : les **8** destinations qui nomment un chemin fixe ont toutes reçu
+quelque chose dans les quatorze derniers jours. **Les 3 autres ne se mesurent pas** — la mémoire
+« de l'outil concerné », « le présent document », « le registre de l'outil qui l'a produit » ne
+nomment aucun chemin fixe, puisqu'il dépend de l'outil en cause. Les compter vides accuserait à
+tort, les compter pleines mentirait : **la troisième voie est de le dire** (Article 27).
+
+**HORS PORTÉE, déclaré dans le rapport** : la fraîcheur d'un CHEMIN ne prouve pas qu'une NOTE y est
+arrivée — un fichier du suivi bouge à chaque commit sans qu'une note y ait été rangée. Ce contrôle
+dit **où plus rien n'arrive**, ce qui est un vrai signal ; jamais que tout ce qui devait arriver
+est arrivé.

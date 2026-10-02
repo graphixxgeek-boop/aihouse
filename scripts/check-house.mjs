@@ -24677,3 +24677,56 @@ async function testLExtractionDesTitresEtDesTableaux() {
   console.log("Passed: les décisions les plus fermes de ce projet étaient les plus invisibles, et c'est corrigé (2026-10-02, tâche #1438). LE DÉFAUT ÉTAIT STRUCTUREL ET SON SENS INVERSÉ : l'extraction n'acceptait qu'une phrase d'au moins quarante caractères portant « jamais » ou « toujours ». Or les décisions les plus arrêtées s'écrivent en TITRES DE SECTION et en LIGNES DE TABLEAU — courtes, donc sous la borne ; affirmatives, donc souvent sans marqueur. Plus c'était décidé, moins c'était vu. LE CRITÈRE DE RÉUSSITE ÉTAIT ÉCRIT D'AVANCE et il est tenu : la révélation retrouve seule LES CINQ impossibles par leurs propres titres, et leurs vingt lignes de tableau AVEC LEUR COLONNE DE PORTEURS — une conviction sans sa preuve est exactement ce que ce projet refuse partout ailleurs. CE QUI SÉPARE UN TABLEAU DE CONVICTIONS D'UN TABLEAU DE DONNÉES EST MESURÉ, JAMAIS DEVINÉ : la médiane de longueur de la première colonne, calculée SUR CHAQUE TABLEAU. Un tableau de convictions l'emplit de phrases, un tableau de données y met un nom d'outil, un chiffre, une date. Le contre-test est la moitié qui prouve quelque chose (BP4) : sur un tableau de données ordinaire la sonde rend ZÉRO et dit pourquoi, avec le chiffre qui a décidé. Sans lui, une sonde qui avale tous les tableaux rendrait du bruit à la place d'un signal. UN TITRE, LUI, NE COMPTE QUE S'IL ÉNONCE : « Inventaire des outils » est une étiquette, « Ce que nous refusons absolument » est une décision — et le jeu de marqueurs élargi qui attrape le cinquième impossible reste LOCAL aux titres, parce que l'élargir chez les marqueurs partagés ferait entrer en prose des mots courants qui ne décident de rien. LE GAIN EST MESURÉ SUR LE DÉPÔT RÉEL : la révélation stratégique passe de 1 880 à plus de 2 300 phrases et ses cases vides tombent de trois à une sur six. RESTE OUVERTE la seconde moitié de la tâche, la DÉRIVATION — lire les documents qui répondent explicitement aux questions du cadre et reprendre leurs réponses telles quelles.");
 }
 await testLExtractionDesTitresEtDesTableaux();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LES ONZE DESTINATIONS D'UNE NOTE SONT-ELLES ALIMENTÉES ? (2026-10-02, sa demande directe)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLAlimentationDesDestinations() {
+  const D = await import('./data-archangel.mjs');
+
+  // ── 1. LA TABLE EST LUE, JAMAIS RECOPIÉE (Article 24) : une douzième destination ajoutée
+  // demain est mesurée le jour même, sans qu'on touche à ce fichier ni au contrôle.
+  const d = D.destinationsDUneNote();
+  assert.strictEqual(d.mesurable, true, 'the destination table is read from the working rules');
+  assert.strictEqual(d.destinations.length, 11, `and holds its eleven destinations (currently ${d.destinations.length})`);
+  assert.ok(d.destinations.every((x) => x.nature && x.ou), 'each one names what the note IS and where it goes');
+
+  // ── 2. EN DIRECT SUR LE DÉPÔT (Article 25) : sa question était « est-ce que les onze classes
+  // sont réellement alimentées », et seule une mesure y répond.
+  const r = D.alimentationDesDestinations();
+  assert.strictEqual(r.mesurable, true, 'the feed check runs against the real git history');
+  assert.ok(r.mesurees >= 8, `most destinations name a fixed path and are therefore measurable (currently ${r.mesurees})`);
+  assert.strictEqual(r.alimentees, r.mesurees, `and every measurable destination has received something recently (${r.alimentees}/${r.mesurees})`);
+
+  // ── 3. TROIS DESTINATIONS NE SE MESURENT PAS, ET C'EST DÉCLARÉ PLUTÔT QUE TRANCHÉ. Les compter
+  // vides accuserait à tort, les compter pleines mentirait : la troisième voie est de le DIRE.
+  assert.strictEqual(r.nonMesurables, 3, `three destinations name no fixed path (currently ${r.nonMesurables})`);
+  assert.ok(r.lignes.filter((l) => !l.mesurable).every((l) => l.pourquoi && l.pourquoi.length > 30), 'and each says why rather than counting as a zero');
+
+  // ── 4. SENS 2, ET C'EST LA MOITIÉ QUI PROUVE QUELQUE CHOSE (BP4). Un contrôle qui ne dit que
+  // « tout va bien » n'a jamais été vérifié : sur une destination qui pointe nulle part, il mord.
+  const faux = { mesurable: true, source: '(fabriqué pour le test)', destinations: [
+    { nature: 'une destination vivante', ou: 'x', chemins: ['docs/suivi/'] },
+    { nature: 'une destination morte', ou: 'y', chemins: ['docs/ce-dossier-nexiste-pas/'] },
+  ] };
+  const f = D.alimentationDesDestinations({ destinations: faux });
+  assert.strictEqual(f.lignes[0].mesurable, true, 'a live destination is measured');
+  assert.strictEqual(f.lignes[1].mesurable, false, 'while a destination nothing ever reached is caught');
+  assert.match(f.lignes[1].pourquoi, /chemin est peut-être faux/, 'and says it cannot tell a wrong path from a dead destination, rather than picking one');
+  const severe = D.alimentationDesDestinations({ destinations: faux, fraicheur: -1 });
+  assert.strictEqual(severe.lignes[0].fraiche, false, 'and freshness really depends on the window, so the green is not hard-coded');
+
+  // ── 5. UNE TABLE INTROUVABLE N'EST PAS « AUCUNE NOTE N'A D'ENDROIT » (leçon L5).
+  assert.strictEqual(D.destinationsDUneNote({ source: 'docs/pas-la.md' }).mesurable, false, 'an unreadable source is PAS MESURÉ');
+  const sect = D.destinationsDUneNote({ section: 'section-inexistante' });
+  assert.strictEqual(sect.mesurable, false, 'and so is a vanished section — the most likely failure over time');
+  assert.match(sect.pourquoi, /n'existe plus/, 'which it names');
+
+  // ── 6. LA LIMITE EST DANS LE RAPPORT, pas seulement dans une fiche à côté.
+  const texte = D.formatDestinationsLines(r).join('\n');
+  assert.match(texte, /HORS PORTÉE/, 'the report declares its own limit');
+  assert.match(texte, /ne prouve pas qu'une NOTE y est/, 'namely that a fresh PATH does not prove a NOTE arrived — it says where nothing arrives any more, never that everything due has arrived');
+
+  console.log("Passed: les onze destinations d'une note sont réellement alimentées, et c'est MESURÉ (2026-10-02, sa demande : « vérifie que tu as bien récolté toutes les données pour alimenter les datas : les 11 classes de notes »). UNE TABLE DE DESTINATIONS EST UNE INTENTION tant que personne ne vérifie que quelque chose y arrive — et une destination jamais alimentée est le signe soit qu'elle ne sert à rien, soit qu'on range ailleurs ce qui lui revenait. Les deux méritent d'être sus, et aucun des deux ne se voit en relisant la table. RÉSULTAT : les 8 destinations qui nomment un chemin fixe ont toutes reçu quelque chose dans les quatorze derniers jours. LES TROIS AUTRES NE SE MESURENT PAS, ET C'EST DÉCLARÉ PLUTÔT QUE TRANCHÉ : la mémoire « de l'outil concerné », « le présent document » et « le registre de l'outil qui l'a produit » ne nomment aucun chemin fixe, puisqu'il dépend de l'outil en cause. Les compter vides accuserait à tort, les compter pleines mentirait ; la troisième voie est de le dire (Article 27). LA TABLE EST LUE DANS LES RÈGLES DE TRAVAIL, jamais recopiée (Article 24) : une douzième destination ajoutée demain sera mesurée le jour même. ET LA LIMITE EST ÉCRITE DANS LE RAPPORT LUI-MÊME : la fraîcheur d'un CHEMIN ne prouve pas qu'une NOTE y est arrivée — un fichier du suivi bouge à chaque commit sans qu'une note y ait été rangée. Ce contrôle dit où PLUS RIEN n'arrive, ce qui est un vrai signal ; il ne dit jamais que tout ce qui devait arriver est arrivé.");
+}
+await testLAlimentationDesDestinations();

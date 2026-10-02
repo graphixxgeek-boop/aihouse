@@ -25,6 +25,7 @@
 // ligne ne bouge ici.
 
 import { readFileSync, readdirSync, existsSync, statSync, writeFileSync, mkdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { listerLesFichiers, DEBUT_BLOC_GENERE, FIN_BLOC_GENERE, sansLeBlocGenere, lireFichierPartage } from "./lib-shell.mjs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -2365,6 +2366,87 @@ export function formatVuesLines(r) {
   return L;
 }
 
+// ============================================================================
+// LES ONZE DESTINATIONS D'UNE NOTE SONT-ELLES RÉELLEMENT ALIMENTÉES ? (tâche #1441 bis)
+// ============================================================================
+// SA DEMANDE, mot pour mot : « Vérifie que tu as bien récolté toutes les données pour alimenter
+// les datas : les 11 classes de notes. » Une table de destinations est une INTENTION tant que
+// personne ne vérifie que quelque chose y arrive — et une destination jamais alimentée est le
+// signe soit qu'elle ne sert à rien, soit qu'on range ailleurs ce qui lui revenait. Les deux
+// méritent d'être su ; aucun des deux ne se voit en relisant la table.
+//
+// LA TABLE EST LUE, JAMAIS RECOPIÉE (Article 24) : elle vit dans `docs/regles-de-travail.md`
+// §3pentes, et une douzième destination ajoutée demain sera mesurée le jour même.
+export const SECTION_DES_DESTINATIONS = "3pentes";
+export const FRAICHEUR_D_UNE_DESTINATION = 14; // jours
+
+export function destinationsDUneNote({ root = ROOT, source = "docs/regles-de-travail.md", section = SECTION_DES_DESTINATIONS, lire = lireFichierPartage } = {}) {
+  let texte;
+  try { texte = lire(join(root, source), "utf8"); } catch {
+    return { mesurable: false, pourquoi: `« ${source} » est illisible : rendre zéro destination se lirait comme « aucune note n'a d'endroit », l'inverse exact d'une absence de mesure` };
+  }
+  const sect = sectionDUnDocument(texte, section);
+  if (sect === null) return { mesurable: false, pourquoi: `la section « ${section} » n'existe plus dans « ${source} » — la table des destinations a été déplacée ou renommée` };
+  const out = [];
+  for (const L of sect.split("\n")) {
+    const l = L.trim();
+    if (!l.startsWith("|") || /^\|[\s|:-]+\|$/.test(l)) continue;
+    const cells = l.split("|").slice(1, -1).map((c) => c.trim());
+    if (cells.length < 2 || /^Ce que la note/i.test(cells[0])) continue;
+    const chemins = [...cells[1].matchAll(/`([^`]+)`/g)].map((m) => m[1]).filter((c) => !c.includes("<"));
+    out.push({ nature: cells[0].replace(/\*\*/g, ""), ou: cells[1].replace(/\*\*/g, ""), chemins });
+  }
+  return { mesurable: true, destinations: out, source, section };
+}
+
+export function alimentationDesDestinations({ root = ROOT, destinations = null, fraicheur = FRAICHEUR_D_UNE_DESTINATION, shImpl = null } = {}) {
+  const d = destinations ?? destinationsDUneNote({ root });
+  if (!d.mesurable) return d;
+  const courir = shImpl ?? ((args) => {
+    try { return execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); } catch { return ""; }
+  });
+  const lignes = [];
+  for (const dest of d.destinations) {
+    if (!dest.chemins.length) {
+      // PAS MESURÉ, jamais « non alimentée » : trois destinations ne nomment pas un chemin — le
+      // présent document, le registre « de l'outil qui l'a produit », le dossier d'un outil
+      // quelconque. Les compter comme vides accuserait à tort ; les compter comme pleines
+      // mentirait. La troisième voie est de le DIRE (Article 27).
+      lignes.push({ ...dest, mesurable: false, pourquoi: "cette destination ne nomme aucun chemin fixe : elle dépend de l'outil ou du document concerné, et aucune mécanique ne peut deviner lequel" });
+      continue;
+    }
+    let dernier = null;
+    for (const c of dest.chemins) {
+      const iso = String(courir(["log", "-1", "--format=%cI", "--", c])).trim();
+      if (iso && (!dernier || iso > dernier)) dernier = iso;
+    }
+    if (!dernier) { lignes.push({ ...dest, mesurable: false, pourquoi: `aucun commit touchant « ${dest.chemins.join(", ")} » : le chemin est peut-être faux, et un zéro ne distingue pas un chemin faux d'une destination morte` }); continue; }
+    const jours = Math.floor((Date.now() - Date.parse(dernier)) / 86400000);
+    lignes.push({ ...dest, mesurable: true, dernier, jours, fraiche: jours <= fraicheur });
+  }
+  const mesurees = lignes.filter((l) => l.mesurable);
+  return { mesurable: true, lignes, fraicheur, source: d.source,
+    alimentees: mesurees.filter((l) => l.fraiche).length, mesurees: mesurees.length,
+    nonMesurables: lignes.filter((l) => !l.mesurable).length };
+}
+
+export function formatDestinationsLines(r) {
+  if (!r?.mesurable) return ["=== LES DESTINATIONS D'UNE NOTE : PAS MESURÉ ===", `  ${r?.pourquoi}`];
+  const L = ["=== LES ONZE DESTINATIONS D'UNE NOTE SONT-ELLES RÉELLEMENT ALIMENTÉES ? ===", "",
+    `Table LUE dans « ${r.source} » §3pentes, jamais recopiée : une douzième destination ajoutée demain sera mesurée le jour même.`,
+    `${r.alimentees} / ${r.mesurees} destination(s) mesurable(s) ont reçu quelque chose dans les ${r.fraicheur} derniers jours · ${r.nonMesurables} non mesurable(s).`, ""];
+  for (const l of r.lignes) {
+    if (!l.mesurable) { L.push(`⚠️  PAS MESURÉ · ${l.nature}`); L.push(`        ${l.pourquoi}`); continue; }
+    L.push(`${l.fraiche ? "✅" : "🕸️ "} ${l.nature}`);
+    L.push(`        ${l.chemins.join(", ")} — dernier dépôt il y a ${l.jours} jour(s)`);
+  }
+  L.push("");
+  L.push("HORS PORTÉE, et c'est la limite qui compte : la fraîcheur d'un CHEMIN ne prouve pas qu'une NOTE y est");
+  L.push("arrivée. Un fichier du suivi bouge à chaque commit sans qu'une note y ait été rangée. Ce contrôle dit");
+  L.push("donc où PLUS RIEN n'arrive — ce qui est un vrai signal — jamais que tout ce qui devait arriver est arrivé.");
+  return L;
+}
+
 function main() {
   const sub = process.argv[2];
   printReportHeader({
@@ -2411,6 +2493,11 @@ function main() {
   // `orphelins` (2026-09-30, tâche #1310) — le QUATRIÈME étage. `index` dit quels fichiers sont
   // ANNONCÉS ; celui-ci dit lesquels sont réellement CONVOQUÉS par quelqu'un d'autre. Un document
   // annoncé que personne ne cite passe au vert partout et ne sert à personne.
+  if (sub === "destinations") {
+    console.log("");
+    for (const l of formatDestinationsLines(alimentationDesDestinations())) console.log(l);
+    return;
+  }
   if (sub === "vues") {
     console.log("");
     for (const l of formatVuesLines(findVuesDivergentesDeLeurSource())) console.log(l);
