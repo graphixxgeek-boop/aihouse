@@ -100,3 +100,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/les-decisions-qui-t-attendent.html` | `docs/livrables/les-decisions-qui-t-attendent.md` | 23755 | 2026-10-02 22:17Z |
 | `docs/livrables/le-pack-decouverte-point.html` | `docs/livrables/le-pack-decouverte-point.md` | 14684 | 2026-10-02 22:19Z |
 | `docs/strategies/strategie-globale-du-jeu.html` | `docs/strategies/strategie-globale-du-jeu.md` | 15718 | 2026-10-02 22:31Z |
+| `docs/livrables/les-six-registres-le-dossier.html` | `docs/livrables/les-six-registres-le-dossier.md` | 15183 | 2026-10-02 23:41Z |
