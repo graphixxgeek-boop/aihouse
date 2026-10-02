@@ -24212,6 +24212,54 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   // une livraison, elle ne régénère pas les pages — un fil modifié depuis partirait périmé.
   assert.ok(F.formatLivraisonDesFilsLines(aLivrer).some((l) => /NE SONT PAS RÉGÉNÉRÉES/.test(l)), 'the output warns that it does not regenerate the pages');
 
+  // ── LES QUATRE FONCTIONS QUE LE CROCHET A SIGNALÉES NON COUVERTES (2026-10-02, tâche #1503).
+  // Sa bannière post-commit a dit « FIN DE CHANTIER sur fils-de-discussion.mjs — couverture PAR
+  // FONCTION : 58 % (7/12), 5 jamais exécutées ». Le fichier venait de recevoir un septième
+  // contrôle et une commande de livraison : y laisser quatre fonctions jamais exercées revenait à
+  // étendre un outil sans étendre sa garantie. (`main` reste hors de portée : c'est l'entrée CLI.)
+
+  // tachesDuSuivi() — elle lit les numéros de tâches du suivi, et c'est elle qui décide si un
+  // engagement d'un fil porte une tâche qui EXISTE. Une lecture ratée rendrait un ensemble vide,
+  // donc accuserait TOUS les engagements d'être nus : le faux rouge le plus coûteux de ce fichier.
+  const entree = (name, dossier = false) => ({ name, isDirectory: () => dossier });
+  const tachesFx = {
+    listDirImpl: (chemin) => (String(chemin).endsWith('sessions')
+      ? [entree('s1.md')]
+      : [entree('sessions', true)]),
+    readFileImpl: () => '| 1234 | x | y |\n| 5678 | a | b |\n',
+  };
+  const taches = F.tachesDuSuivi(tachesFx);
+  assert.ok(taches.has('1234') && taches.has('5678'), 'the task numbers are read from the real suivi rows');
+  assert.equal(F.tachesDuSuivi({ listDirImpl: () => { throw new Error('nope'); } }).size, 0, 'and an unreadable suivi yields an empty set rather than throwing — the caller decides what to do with it');
+
+  // engagementsSansTache() EN AVAL : avec la liste réelle, un engagement citant une tâche connue
+  // passe et un engagement citant un numéro inconnu est nommé. C'est la paire qui compte, jamais
+  // la fonction seule.
+  const texteEngagements = '**Q1.1 — À MOI, tâche #1234.** fait\n\n**Q1.2 — À MOI, tâche #9999.** pas fait\n';
+  const nus = F.engagementsSansTache(texteEngagements, taches);
+  assert.deepEqual(nus.nus.map((n) => n.id), ['Q1.2'], 'an engagement citing a task that does not exist is named; one citing a real task is not');
+
+  // saisinesDeposees() — le contrôle AVEUGLE par construction : le dossier des envois n'est pas
+  // accessible depuis le conteneur. Son refus de conclure est sa fonction principale, et c'est
+  // exactement ce qu'il faut tester (leçons L5/L11).
+  const saisinesAveugle = F.saisinesDeposees({});
+  assert.equal(saisinesAveugle.mesurable, false, 'with no envois folder given, it refuses to conclude rather than reporting zero missing');
+  assert.ok(/accessible/.test(saisinesAveugle.pourquoi ?? ''), 'and says why: a blind check that answered "up to date" would lie exactly when it is most dangerous');
+
+  // suisJeAJour() — l'assemblage des sept contrôles. Le verdict à TROIS états est le cœur du
+  // fichier : « je ne sais pas » n'est JAMAIS « oui ».
+  const verdict = F.suisJeAJour({ root: '/nulle-part', taches: new Set(), ...filsFixture });
+  assert.equal(verdict.resultats.length, F.LES_CONTROLES.length, 'every declared control produces a result, filled or not — a silently dropped one would read as "nothing to say"');
+  assert.ok(['OUI', 'NON', 'PAS ENTIÈREMENT MESURÉ'].includes(verdict.verdict), 'the verdict is one of exactly three states');
+  assert.notEqual(verdict.verdict, 'OUI', 'and a set of threads with no questions, no engagements and no delivery register can never reach OUI — unmeasured is not passed');
+
+  // formatVerdictLines() — ce que je LIS. Un contrôle non mesuré doit se distinguer d'un contrôle
+  // réussi à l'œil, sinon les trois états du calcul se perdent à l'affichage.
+  const lignesVerdict = F.formatVerdictLines(verdict);
+  assert.ok(lignesVerdict[0].includes('SUIS-JE À JOUR'), 'the output leads with the question it answers');
+  assert.ok(lignesVerdict.some((l) => l.startsWith('⚪')), 'an unmeasured control is visually distinct from a passed one — otherwise the three states die at the display');
+  assert.ok(lignesVerdict.some((l) => /jamais un oui/.test(l)), 'and the legend says so in words, not only in a symbol');
+
   // ── 1. L'EMPLACEMENT EXISTE, et il est OPTIONNEL : aucun des 49 outils tenus par le gabarit ne
   // voit sa sortie bouger tant qu'il ne le renseigne pas. C'est la condition pour que ce soit une
   // réparation et non une refonte imposée.
