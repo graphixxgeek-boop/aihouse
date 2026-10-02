@@ -14345,6 +14345,35 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.equal(K.portanceDesPrincipes([{ cle: 'seul', texte: 'un seul' }]).mesurable, false,
       'with a single principle there is nothing to lean on it — PAS MESURÉ, never a default rank of one');
 
+    // (13) LA CASCADE A PLUSIEURS RACINES (2026-10-02, tâche #1439) — et l'avoir crue unique
+    // faisait compter comme « interrompues » sept chaînes parfaitement saines.
+    assert.equal(K.estUneRacine('docs/loi-de-l-agence.md').racine, true, 'a second law-bearing text is a ROOT, never a branch: demanding that two laws derive from one another would invent a hierarchy nobody decided');
+    assert.equal(K.estUneRacine('docs/grand-projet/00-sources/01-sa-demande/quoi-que-ce-soit.md').racine, true, 'a source the user deposits PRECEDES the cascade: declaring it a parent would claim his request derives from our philosophy, when the reverse is what happened');
+    assert.equal(K.estUneRacine('docs/referentiel/lecons.md').racine, true, 'the lessons register is an entry too: a lesson is learned by erring, it is not deduced from a philosophy — it feeds one');
+    assert.equal(K.estUneRacine('docs/referentiel/argus.md').racine, false, 'AND THE EXCEPTION STAYS NARROW: a tool fiche in the same folder DOES derive from what governs it, and exempting the whole folder would switch the measure off exactly where it serves most');
+    assert.equal(K.estUneRacine('docs/plans/un-plan-quelconque.md').racine, false, 'an ordinary document is never a root, and a chain ending on one remains a real hole');
+    const racines = K.findRacinesIntrouvables();
+    assert.equal(racines.manquants.length, 0, `every declared root that names a precise file must exist (missing: ${racines.manquants.join(', ')}) — a renamed law would make the list silently wrong and the measure would start calling healthy chains interrupted again`);
+    assert.ok(racines.verifies >= 5, `and the guard must actually check the law-bearing files, not an empty set (currently ${racines.verifies})`);
+
+    // (14) LA PRÉCISION APRÈS LE CHEMIN — trois formes acceptées, et la troisième manquait.
+    const bt = String.fromCharCode(96);
+    assert.equal(K.parentDeclare(`> **DÉCOULE DE :** ${bt}a/b.md${bt}, leçon L47.`), 'a/b.md', 'a clause after the closing backtick is tolerated: it is the most natural form in French, and refusing it marked a carefully declared document as ORPHAN — the worst of the two possible false verdicts, since it accuses of negligence where there was care');
+    assert.equal(K.parentDeclare(`> **DÉCOULE DE :** ${bt}a/b.md${bt}`), 'a/b.md', 'the bare form still works');
+    assert.equal(K.parentDeclare(`> **DÉCOULE DE :** ${bt}a/b.md §3${bt}`), 'a/b.md', 'and a precision INSIDE the backticks is still stripped');
+    // LE CONTRE-TEST QUI COMPTE LE PLUS : le premier essai acceptait n'importe quelle ponctuation
+    // comme début de précision, et le point de « .md » en était une — la capture paresseuse
+    // s'arrêtait à « a/b » et les 67 chaînes du dépôt sont devenues PARENT_INTROUVABLE d'un coup.
+    assert.notEqual(K.parentDeclare(`> **DÉCOULE DE :** ${bt}a/b.md${bt}`), 'a/b', 'the path must never be truncated at the dot of its own extension — that single character turned every chain in the repository into a dead reference');
+    assert.equal(K.parentDeclare('aucune déclaration ici'), null, 'and no declaration yields null, never a guessed parent');
+
+    // (15) EN DIRECT : la cascade entière, et c'est l'état que la mesure doit tenir.
+    const casc = K.mesurerLAlignement();
+    assert.equal(casc.mesurable, true, 'the cascade must actually be measurable against the real repository');
+    assert.equal(casc.ecarts.length, 0, `no object may declare a parent that does not exist (currently: ${casc.ecarts.map((e) => e.chemin).join(', ')})`);
+    assert.ok(casc.objets.length > 50, `on the real population, not a sample (currently ${casc.objets.length})`);
+    assert.equal(casc.objets.filter((o) => o.etat !== 'ALIGNE').length, 0, `every object must reach a declared root: ${casc.objets.filter((o) => o.etat !== 'ALIGNE').map((o) => `${o.chemin} (${o.etat})`).join(' · ')}`);
+
     // (12) L'INTANGIBILITÉ DU DOCUMENT DE GOUVERNANCE (2026-10-02, tâche #1429).
     // CE QU'AUCUN CODE NE PEUT VÉRIFIER : qu'un accord ait été donné. Ce qu'il peut vérifier, et
     // qui est testé ici : que l'ossature n'a pas bougé sans que personne ne s'en aperçoive.

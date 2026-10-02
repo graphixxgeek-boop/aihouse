@@ -1,5 +1,8 @@
 # Ses questions posées en cours de route — et ce qu'elles ont changé
 
+> **DÉCOULE DE :** `docs/grand-projet/02-strategie/la-cible-2026-09-29.md`
+> *les questions qui surgissent en chemin se rapportent à la cible qu'on vise : sans elle, une question de route n'a pas d'objet.*
+
 *(Sa consigne du 2026-09-28 : « enregistre bien ma question et ta réponse dans les notes du GRAND
 PROJET pour la prochaine mise à jour de la stratégie de ce chantier ». Puis, quelques minutes plus
 tard : « je te perturbe avec une question isolée, c'est pas bon : intègre ta réponse aux fichiers

@@ -319,8 +319,86 @@ export function philosophyFreshnessDays({ chemin = PHILOSOPHY_PATH } = {}) {
 // LA DÉCLARATION EST VISIBLE, jamais un commentaire HTML caché. Ces documents sont lus par un humain
 // qui n'est pas développeur : une ligne qu'il voit est une ligne qu'il peut corriger. La forme en
 // commentaire reste acceptée pour les fichiers de code, où une ligne visible n'existe pas.
-export const MOTIF_DECOULE_DE = /(?:^|\n)[ \t]*(?:[>*\-|#]|\/\/)*[ \t]*(?:\*\*)?D[ÉE]COULE DE\s*:?(?:\*\*)?\s*[:\s]\s*`?([^`\n<|]+?)`?\s*(?:\||$)/im;
+// LA PRÉCISION QUI SUIT LE CHEMIN EST TOLÉRÉE (2026-10-02, tâche #1439) — « `…/lecons.md`, leçon
+// L47 » est la forme la plus naturelle en français, et le motif la refusait. Un document
+// parfaitement déclaré ressortait ORPHELIN, c'est-à-dire accusé de n'avoir rien déclaré du tout :
+// le pire des deux faux verdicts possibles, puisqu'il désigne une négligence là où il y a eu du
+// soin. La précision est acceptée APRÈS le backtick fermant, jamais à l'intérieur du chemin.
+//
+// ET ELLE EXIGE UNE VIRGULE SUIVIE D'UN ESPACE, jamais une ponctuation quelconque — le premier
+// essai acceptait n'importe quel séparateur, et le point de « .md » en était un : la capture
+// paresseuse s'arrêtait à « a/b » et les soixante-sept chaînes du dépôt sont devenues
+// « PARENT_INTROUVABLE » d'un coup. Une correction qui casse tout vaut mieux qu'une correction
+// qui casse un cas sur dix, parce qu'elle se voit ; celle-ci se voyait, et la contrainte
+// « virgule PUIS espace » la referme sans rien rouvrir.
+export const MOTIF_DECOULE_DE = /(?:^|\n)[ \t]*(?:[>*\-|#]|\/\/)*[ \t]*(?:\*\*)?D[ÉE]COULE DE\s*:?(?:\*\*)?\s*[:\s]\s*`?([^`\n<|]+?)`?\s*(?:[,;]\s[^\n|]*)?\s*(?:\||$)/im;
 export const RACINE_DE_LA_CASCADE = PHILOSOPHY_PATH;
+
+// LA CASCADE N'A PAS UNE RACINE, ELLE EN A PLUSIEURS (2026-10-02, tâche #1439) — et l'avoir cru
+// faisait compter comme « interrompues » sept chaînes parfaitement saines.
+//
+// CE QUE LA MESURE EXIGEAIT AVANT : que tout objet remonte jusqu'au document de gouvernance. Sept
+// chaînes s'arrêtaient ailleurs, et la correction évidente — leur donner un parent — aurait été
+// une FALSIFICATION dans la plupart des cas :
+//
+//   · UNE SOURCE QU'IL DÉPOSE ne découle de rien. Elle PRÉCÈDE la cascade, elle en est l'entrée.
+//     Lui déclarer un parent reviendrait à prétendre que sa demande découle de notre philosophie,
+//     quand c'est l'inverse exact qui s'est produit.
+//   · UNE SYNTHÈSE DE SOURCE est une lecture annotée de cette entrée : même nature, même rang.
+//   · UN SECOND TEXTE QUI FAIT LOI est une racine, pas une branche. Le projet en compte six ;
+//     exiger qu'ils découlent les uns des autres inventerait une hiérarchie que personne n'a
+//     décidée — et sur ce sujet précis, inventer une hiérarchie entre deux lois serait grave.
+//   · UN FIL DE DISCUSSION porte un sujet qu'il a ouvert ; il est un point d'entrée au même titre
+//     qu'une source.
+//
+// CE QUI RESTE UNE VRAIE ANOMALIE, et c'est ce que la mesure doit continuer de dire : une chaîne
+// qui s'arrête sur un document ORDINAIRE — ni racine, ni entrée — n'atteint effectivement aucune
+// racine, et c'est un trou.
+//
+// LA LISTE EST MANUELLE ET ASSUMÉE (Article 24) : aucun signal mécanique ne distingue une entrée
+// d'un document ordinaire, et la deviner serait pire que la déclarer. Son garde-fou est
+// `findRacinesIntrouvables()` ci-dessous, qui refuse une racine déclarée qui n'existe pas.
+export const RACINES_DE_LA_CASCADE = [
+  { motif: /^docs\/philosophie-et-politique\.md$/, pourquoi: "le document de gouvernance : la racine principale" },
+  { motif: /^CLAUDE\.md$/, pourquoi: "la charte : loi suprême du Jeu, racine et jamais branche" },
+  { motif: /^docs\/loi-de-l-agence\.md$/, pourquoi: "la loi de l'Agence : second texte suprême, distinct de celui du Jeu et tranché comme tel" },
+  { motif: /^docs\/manifeste-de-l-agence\.md$/, pourquoi: "troisième texte déclaré comme faisant loi" },
+  { motif: /^docs\/regles-de-travail\.md$/, pourquoi: "la méthode de collaboration : elle se lit EN PLUS de la charte, jamais en dessous" },
+  { motif: /^docs\/systeme-de-suivi\.md$/, pourquoi: "la structure du suivi : une obligation, pas une convention" },
+  { motif: /^docs\/grand-projet\/00-sources\//, pourquoi: "ce qu'il dépose : une entrée de la cascade, jamais un produit — elle la précède" },
+  { motif: /^docs\/grand-projet\/01-absorption\//, pourquoi: "lecture annotée d'une entrée : même rang que l'entrée qu'elle lit" },
+  { motif: /^docs\/fils\//, pourquoi: "un fil porte un sujet qu'il a ouvert : point d'entrée au même titre qu'une source" },
+  // LE REGISTRE DES LEÇONS EST UNE ENTRÉE, PAS UN PRODUIT, et la distinction n'est pas subtile :
+  // une leçon s'apprend en se trompant. Elle ne se DÉDUIT d'aucune philosophie — c'est au
+  // contraire elle qui en nourrit une, puisqu'elle fait partie du corpus que la révélation lit.
+  // Lui déclarer un parent inverserait le sens réel de la dépendance.
+  //
+  // L'EXCEPTION PORTE SUR CE SEUL FICHIER, jamais sur `docs/referentiel/` entier : les fiches
+  // d'outils qui vivent dans le même dossier, elles, découlent bel et bien de ce qui les
+  // gouverne, et les dispenser toutes reviendrait à éteindre la mesure là où elle sert le plus.
+  { motif: /^docs\/referentiel\/lecons\.md$/, pourquoi: "le registre de ce que le projet a appris en se trompant : une leçon nourrit la philosophie, elle n'en découle pas" },
+];
+
+export function estUneRacine(chemin, { racines = RACINES_DE_LA_CASCADE, racine = RACINE_DE_LA_CASCADE } = {}) {
+  if (chemin === racine) return { racine: true, pourquoi: "la racine principale" };
+  const t = racines.find((r) => r.motif.test(String(chemin ?? "")));
+  return t ? { racine: true, pourquoi: t.pourquoi } : { racine: false };
+}
+
+// GARDE-FOU DE L'ARTICLE 24 — la liste ci-dessus nomme des chemins qu'elle ne lit pas. Un document
+// qui fait loi et qui serait renommé ou retiré la rendrait fausse en silence, et la mesure
+// recommencerait à compter des chaînes saines comme interrompues sans que rien ne le dise.
+export function findRacinesIntrouvables({ root = ROOT, racines = RACINES_DE_LA_CASCADE, existeImpl = null } = {}) {
+  const existe = existeImpl ?? ((c) => fsExists(join(root, c)));
+  // Seuls les motifs qui désignent UN fichier précis sont vérifiables ; un motif de dossier
+  // couvre un ensemble qui peut légitimement être vide.
+  const precis = racines.filter((r) => /^\^[^(\[]*\$$/.test(r.motif.source));
+  const manquants = precis
+    .map((r) => ({ r, chemin: r.motif.source.replace(/^\^/, "").replace(/\$$/, "").replace(/\\\//g, "/").replace(/\\\./g, ".") }))
+    .filter((x) => !existe(x.chemin));
+  return { mesurable: true, verifies: precis.length, manquants: manquants.map((x) => x.chemin) };
+}
+
 
 export function parentDeclare(texte = "") {
   const m = MOTIF_DECOULE_DE.exec(String(texte));
@@ -328,7 +406,13 @@ export function parentDeclare(texte = "") {
   // LA CIBLE PEUT PORTER UNE PRÉCISION APRÈS LE CHEMIN (« …/la-cible.md §3 ») : on garde le chemin,
   // on jette le reste. Exiger un chemin nu ferait refuser la forme la plus utile — celle qui dit de
   // QUEL passage du parent l'objet découle.
-  const brut = m[1].trim().replace(/\s*[§#].*$/, "").replace(/\s*\(.*$/, "").trim();
+  // LA PRÉCISION PEUT SUIVRE LE CHEMIN SOUS TROIS FORMES, et la troisième manquait (2026-10-02,
+  // tâche #1439) : « …/la-cible.md §3 », « …/la-cible.md (son point 4) » étaient tolérées, mais
+  // « …/lecons.md, leçon L47 » ne l'était pas — et c'est la forme la plus naturelle en français.
+  // Un document parfaitement déclaré ressortait donc ORPHELIN, c'est-à-dire accusé de n'avoir
+  // rien déclaré du tout. Le pire des deux faux verdicts possibles, puisqu'il désigne une
+  // négligence là où il y a eu du soin.
+  const brut = m[1].trim().replace(/\s*[§#].*$/, "").replace(/\s*\(.*$/, "").replace(/\s*,.*$/, "").trim();
   return brut || null;
 }
 
@@ -345,6 +429,13 @@ export function remonterLaCascade(chemin, parents, { racine = RACINE_DE_LA_CASCA
     if (vus.includes(courant)) return { etat: "CYCLE", remontee: [...vus, courant], pourquoi: `la remontée boucle sur ${courant} : une cascade circulaire ne mène à aucune racine, et elle boucle sans fin pour qui la lit` };
     vus.push(courant);
     if (courant === racine) return { etat: "ALIGNE", remontee: vus, pourquoi: `remonte jusqu'à ${racine} en ${vus.length - 1} saut(s)` };
+    // UNE AUTRE RACINE DÉCLARÉE TERMINE AUSSI LA CHAÎNE, et ne la termine qu'à partir du second
+    // maillon : un objet qui EST une racine n'a pas à remonter, mais un objet ORPHELIN qui se
+    // trouverait dans un dossier d'entrées ne doit pas passer pour aligné sans rien déclarer.
+    if (vus.length > 1) {
+      const r = estUneRacine(courant, { racine });
+      if (r.racine) return { etat: "ALIGNE", remontee: vus, pourquoi: `remonte jusqu'à ${courant} en ${vus.length - 1} saut(s) — ${r.pourquoi}` };
+    }
     const suivant = parents.get(courant) ?? null;
     if (suivant === null) {
       return vus.length === 1

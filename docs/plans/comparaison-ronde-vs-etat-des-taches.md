@@ -1,5 +1,8 @@
 # Ronde ↔ État des tâches — comparaison côte à côte
 
+> **DÉCOULE DE :** `docs/systeme-de-suivi.md`
+> *comparer deux vues de la même file de tâches est une question de SUIVI : c'est la structure du suivi qui dit ce qu'une vue doit montrer, et donc ce qu'un écart entre deux vues signifie.*
+
 *(Livrable du 2026-09-23, chantier 4 du plan de nuit. Demandé explicitement : « redonne-moi le
 process en vigueur pour le rapport des tâches uniquement, dans circle : je veux voir s'il correspond
 ou si on doit harmoniser. On ne touche pas au process établi dans circle pour l'instant. »*

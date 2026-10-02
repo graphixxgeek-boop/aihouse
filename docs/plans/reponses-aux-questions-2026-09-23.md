@@ -1,5 +1,8 @@
 # Mes réponses à tes questions — nuit du 2026-09-23
 
+> **DÉCOULE DE :** `docs/regles-de-travail.md`
+> *répondre point par point à une série de questions est un geste de MÉTHODE, pas de contenu : c'est la règle de travail sur les demandes numérotées qui en fixe la forme.*
+
 *(Chantier 10 du plan de nuit. Tu m'as posé huit questions dans le gros prompt ; voici les réponses,
 préparées pendant la nuit pour que tu les aies au réveil. Écrit sans jargon : quand un nom technique
 est inévitable, il est traduit juste à côté.)*

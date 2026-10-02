@@ -1,5 +1,8 @@
 # Modifier un document de référence : le process qui manque (proposition)
 
+> **DÉCOULE DE :** `docs/philosophie-et-politique.md`
+> *une proposition de process pour les documents de référence découle de la politique d'harmonisation : une seule source de vérité par sujet, les autres y renvoient.*
+
 > **Les règles de travail s'appliquent AUSSI ici.** Ce document décrit des ÉTAPES — quoi faire et
 > dans quel ordre. Il ne remplace jamais `docs/regles-de-travail.md`, qui décrit la CONDUITE : la
 > façon de poser une question, de livrer, de commiter, de rendre compte, et elle vaut pendant ce

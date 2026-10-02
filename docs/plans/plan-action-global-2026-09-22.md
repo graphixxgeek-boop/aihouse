@@ -1,5 +1,8 @@
 # Plan d'action global — mardi 22 septembre 2026
 
+> **DÉCOULE DE :** `docs/philosophie-et-politique.md`
+> *un plan d'action global applique la politique du projet : il descend de la gouvernance vers les tâches, et c'est le premier maillon de cette descente.*
+
 Produit après la question : *« et les plans d'action écrits dans ces rapports et dans le rapport de
 hyperscan : tu les as lu ? des plans d'action avec des tâches en sortie ? »*
 

@@ -1,5 +1,9 @@
 # PHILO & POLITIQUE — les 30 questions de FINALISATION
 
+> **DÉCOULE DE :** `docs/philosophie-et-politique.md`
+> *ces questions ne portent que sur la finalisation de ce document : elles en découlent
+> directement, et elles disparaissent avec lui une fois répondues.*
+
 *(Réécrit le 2026-10-01 à 23h03 UTC, tâche #1425. **La version précédente de ce fichier était un
 questionnaire philosophique — elle est obsolète et remplacée.** Sa raison, dans ses mots : « la
 philo est a REVELER de l'ensemble de notre travail, pas de reponses isolées qui sont des jets ».
