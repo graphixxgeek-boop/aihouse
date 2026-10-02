@@ -680,27 +680,26 @@ export function riennAPuEtreLu() {
 export const MOTIF_DATE_DANS_UNE_CASE = /^\s*\d{4}-\d{2}-\d{2}T/;
 export const VALEURS_DE_CASE_ADMISES = ["OUI", ""];
 
+// LES QUATRE PARAMÈTRES SONT NOMMÉS ICI, JAMAIS ÉTALÉS — et ne pas l'avoir fait a produit un vrai
+// faux vert en direct : avec `...args` suivi de l'objet d'options, un appel SANS argument plaçait
+// l'objet en position `sessionsDir`. La fonction lisait donc un dossier qui n'existe pas, rendait
+// 0 ligne lue, et son message disait tranquillement « aucune ligne au format complet » — une
+// absence de mesure présentée comme une mesure, sur le contrôle même qui existe pour l'empêcher.
+// Les quatre paramètres portent les mêmes défauts qu'avant : rien ne change pour les appelants.
 export function findCasesDeRituelMalRemplies(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return riennAPuEtreLu();
-  const ecarts = [];
-  let lignesLues = 0;
-  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
-    {
-      const cells = splitTableRow(ligne);
-      // Les deux cases vivent APRÈS « Pour qui » et AVANT « Détail » : on les lit par leur position
-      // de tête, jamais par un index fixe compté depuis la fin — un `|` non échappé dans le Détail
-      // découpe la ligne en dix, douze, quinze cellules, et un index depuis la fin tombe alors au
-      // milieu d'une phrase. C'est la même prudence qui a déjà évité trois accusations fausses.
-      if (cells.length < 11) continue;   // ligne restée à un format antérieur : rien à reprocher
-      lignesLues += 1;
-      for (const [i, champ] of [[7, "ouverture"], [8, "cloture"]]) {
-        const v = String(cells[i] ?? "").trim();
-        if (!MOTIF_DATE_DANS_UNE_CASE.test(v)) continue;
-        ecarts.push({ numero: Number(cells[0]), file, champ, valeur: v,
-          pourquoi: `la case « ${champ} » porte une date (${v}) alors qu'elle n'accepte que « OUI » ou rien — toute lecture de cette case est aveugle sur cette ligne` });
-      }
-    }
-  }
+  // Les deux cases vivent APRÈS « Pour qui » et AVANT « Détail » : on les lit par leur position
+  // de tête, jamais par un index fixe compté depuis la fin — un `|` non échappé dans le Détail
+  // découpe la ligne en dix, douze, quinze cellules, et un index depuis la fin tombe alors au
+  // milieu d'une phrase. C'est la même prudence qui a déjà évité trois accusations fausses.
+  const r = balayerLesLignesDeTaches((cells, file) => [[7, "ouverture"], [8, "cloture"]]
+    .map(([i, champ]) => {
+      const v = String(cells[i] ?? "").trim();
+      if (!MOTIF_DATE_DANS_UNE_CASE.test(v)) return null;
+      return { numero: Number(cells[0]), file, champ, valeur: v,
+        pourquoi: `la case « ${champ} » porte une date (${v}) alors qu'elle n'accepte que « OUI » ou rien — toute lecture de cette case est aveugle sur cette ligne` };
+    }), sessionsDir, readDir, readFile, exists, { compteSi: (cells) => cells.length >= 11 });
+  if (!r.mesurable) return r;
+  const { ecarts, lignesLues } = r;
   return { mesurable: true, ecarts, lignesLues,
     pourquoi: lignesLues === 0
       ? "aucune ligne au format complet (11 colonnes) : les deux cases n'existent pas encore sur ce registre, et ce zéro ne certifie rien"
@@ -770,14 +769,32 @@ export function frontiereDuDetail(cells = []) {
 // la forme de dette qui se recopie une fois de plus à chaque détecteur qui rejoint le fichier.
 // Le dénominateur compte autant que les écarts : un détecteur qui rend zéro sans dire combien il a
 // lu est indiscernable d'un détecteur qui n'a rien lu (leçons L5/L11), d'où `lignesLues` porté ici.
-export function balayerLesLignesDeTaches(verdict, sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
+// LE BALAYAGE ACCEPTE DEUX CHOSES DE PLUS DEPUIS LE 2026-10-02 (tâche #993), et les deux viennent
+// de fonctions qui ne pouvaient pas s'en servir et réécrivaient donc sa boucle à la main.
+// ① UN VERDICT PEUT RENDRE PLUSIEURS ÉCARTS. `findCasesDeRituelMalRemplies` en produit jusqu'à
+//    DEUX par ligne — une case « ouverture » et une case « clôture » peuvent être fautives
+//    ensemble — et le balayage n'en acceptait qu'un, ce qui l'excluait d'office.
+// ② UNE LIGNE PEUT NE PAS COMPTER COMME LUE. La même fonction ignore les lignes restées à un
+//    format antérieur : les compter aurait gonflé son dénominateur de lignes sur lesquelles elle
+//    n'a rien regardé, donc rendu un taux faux dans le bon sens — le pire genre.
+// POURQUOI ÉTENDRE PLUTÔT QUE LAISSER DEUX COPIES : CLONE-HUNTER signalait ces deux boucles comme
+// jumelles, et elles l'étaient. Les laisser avec une raison écrite aurait été légitime ; les
+// réconcilier vaut mieux, parce que la PROCHAINE fonction qui aurait eu besoin de l'un de ces deux
+// comportements aurait écrit une troisième copie (Article 24 : un nouveau venu hérite).
+// LES DÉFAUTS NE CHANGENT RIEN POUR LES APPELANTS EXISTANTS : un verdict qui rend un objet se
+// comporte comme avant, et sans `compteSi` toute ligne compte comme lue, comme avant.
+export function balayerLesLignesDeTaches(verdict, sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync, { compteSi = null } = {}) {
   if (!exists(sessionsDir)) return riennAPuEtreLu();
   const ecarts = [];
   let lignesLues = 0;
   for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
+    const cells = splitTableRow(ligne);
+    if (compteSi && !compteSi(cells)) continue;
     lignesLues += 1;
-    const ecart = verdict(splitTableRow(ligne), file);
-    if (ecart) ecarts.push(ecart);
+    const rendu = verdict(cells, file);
+    if (!rendu) continue;
+    if (Array.isArray(rendu)) { for (const e of rendu) if (e) ecarts.push(e); continue; }
+    ecarts.push(rendu);
   }
   return { mesurable: true, ecarts, lignesLues };
 }
@@ -853,23 +870,18 @@ export function findLignesSansCriticiteReconnue(...args) {
   }), ...args);
 }
 
-export function findLignesMalFormees(sessionsDir = SESSIONS_DIR, readDir = readdirSync, readFile = (f) => readFileSync(f, "utf8"), exists = existsSync) {
-  if (!exists(sessionsDir)) return riennAPuEtreLu();
-  const ecarts = [];
-  let lignesLues = 0;
-  for (const { file, ligne } of lignesDeTaches(sessionsDir, readDir, readFile)) {
-    {
-      lignesLues += 1;
-      const cells = splitTableRow(ligne);
-      const debutDetail = frontiereDuDetail(cells);
-      if (debutDetail === null) continue;
-      // Bien formée : exactement une cellule de Détail, puis le statut.
-      const surplus = cells.length - (debutDetail + 2);
-      if (surplus <= 0) continue;
-      ecarts.push({ numero: Number(cells[0]), file, cellules: cells.length, surplus,
-        pourquoi: `${surplus} cellule(s) de trop : le Détail est découpé en ${surplus + 1} morceaux, donc \`loadAllTaskRows\` déclare cette ligne illisible et rend null pour ses champs de tête tardifs — le lecteur canonique du registre est aveugle sur elle` });
-    }
-  }
+export function findLignesMalFormees(...args) {
+  const r = balayerLesLignesDeTaches((cells, file) => {
+    const debutDetail = frontiereDuDetail(cells);
+    if (debutDetail === null) return null;
+    // Bien formée : exactement une cellule de Détail, puis le statut.
+    const surplus = cells.length - (debutDetail + 2);
+    if (surplus <= 0) return null;
+    return { numero: Number(cells[0]), file, cellules: cells.length, surplus,
+      pourquoi: `${surplus} cellule(s) de trop : le Détail est découpé en ${surplus + 1} morceaux, donc \`loadAllTaskRows\` déclare cette ligne illisible et rend null pour ses champs de tête tardifs — le lecteur canonique du registre est aveugle sur elle` };
+  }, ...args);
+  if (!r.mesurable) return r;
+  const { ecarts, lignesLues } = r;
   return { mesurable: true, ecarts, lignesLues,
     pourquoi: lignesLues === 0
       ? "aucune ligne de tâche lue : ce zéro dit qu'il n'y a rien à mesurer, jamais que le registre est propre"

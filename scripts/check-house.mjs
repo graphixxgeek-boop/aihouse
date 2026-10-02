@@ -17158,7 +17158,17 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const v2 = ch.buildNearDuplicateReport().map((c) => ({ ...c, detecteur: 'renommage' }));
   const reels = ch.fusionnerClusters([...v1, ...v2]);
   assert.ok(reels.length > 0, 'real clusters must survive the regrouping — merging must never empty the report');
-  assert.ok(reels.length < v1.length + v2.length, 'and against this actual repository it must genuinely reduce the count, which is the whole point');
+  // L'ASSERTION D'ORIGINE EXIGEAIT UNE RÉDUCTION STRICTE SUR CE DÉPÔT, et elle a cessé d'être
+  // vraie le 2026-10-02 — PARCE QUE LE TRAVAIL A MARCHÉ. Les clusters que les DEUX détecteurs
+  // voyaient ont été fondus un par un (tâche #993) ; ceux qui restent ne sont vus que par un seul,
+  // donc il n'y a plus rien à regrouper, et le rapport le dit lui-même : « 6 alertes brutes = 6
+  // problèmes distincts ».
+  // CE QU'ELLE PROTÉGEAIT RESTE PROTÉGÉ, ET MIEUX : que le regroupement fonctionne est prouvé
+  // juste au-dessus sur des cas fabriqués, où `fusionnes` vaut 2 — une preuve qui ne dépend pas
+  // de l'état du jour. Ici on vérifie ce qui doit rester vrai quoi qu'il arrive : il ne GONFLE
+  // jamais le compte. Exiger une réduction stricte reviendrait désormais à exiger qu'il reste des
+  // doublons à trouver, c'est-à-dire à refuser le succès de la tâche qui les enlève.
+  assert.ok(reels.length <= v1.length + v2.length, 'merging may reduce the count but must never inflate it — demanding a strict reduction would now amount to demanding that duplicates remain, which is refusing the success of the task that removes them');
   for (const c of reels) assert.ok(ch.motifDuCluster(c).tache.length > 20, 'every real problem must come out with a task of its own, derived from its own facts');
 
   // LE PONT DE RÉEXPORT N'EST PAS UN CLONE (2026-09-26, tâche #931). Trouvé à la vérification
@@ -25068,3 +25078,47 @@ async function testLaConventionQuoiQuoiFaire() {
   console.log("Passed: la convention « quoi / quoiFaire » ne se recopie plus, et un douzième outil en héritera (2026-10-02, tâche #993). CLONE-HUNTER signalait DEUX sites jumeaux — ceux dont les cinq lignes alentour se ressemblaient assez pour qu'il les voie — alors que le dépôt en portait ONZE, répartis sur DIX outils. C'est très exactement ce que l'outil appelle « la forme de dette qui se recopie une fois de plus à chaque outil qui rejoint l'équipe », et corriger les deux sites signalés aurait laissé les neuf autres (leçon L37 : on corrige la CLASSE, jamais l'occurrence). LA CONVENTION EST DÉSORMAIS ÉCRITE UNE SEULE FOIS chez le propriétaire du plan d'action, et les onze sites l'étalent au lieu de la réécrire. POURQUOI UNE CONSTANTE PLUTÔT QU'UN DÉFAUT DANS LA FONCTION : tous les écarts du dépôt ne portent pas ces deux champs, et en faire le comportement par défaut casserait silencieusement les appelants qui nomment les leurs autrement — une constante qu'on étale explicitement se voit à la lecture et reste refusable au cas par cas (Article 19). ELLE EST GELÉE, parce qu'un appelant qui la muterait changerait le comportement de dix outils d'un coup sans que personne ne le voie. ET UN GARDE-FOU LA REND DURABLE (Article 24) : sans lui, la constante ne serait qu'un rangement, et le prochain outil écrirait les deux lignes à la main comme les onze précédents — personne ne le verrait avant que CLONE-HUNTER n'en trouve deux assez proches, ce qui a pris des mois. Vérifié dans les deux sens, et il ne s'accuse pas lui-même : le fichier qui DÉFINIT la convention n'est pas celui qui la recopie.");
 }
 await testLaConventionQuoiQuoiFaire();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LE BALAYAGE ACCEPTE DEUX CHOSES DE PLUS, ET UN FAUX VERT L'A APPRIS (2026-10-02, tâche #993)
+// ─────────────────────────────────────────────────────────────────────────────
+async function testLeBalayageEtendu() {
+  const C = await import('./check-suivi-fidelity.mjs');
+  const dossier = 'd';
+  const unFichier = () => ['f.md'];
+  const vrai = () => true;
+
+  // ── 1. UN VERDICT PEUT RENDRE PLUSIEURS ÉCARTS. C'est ce qui excluait d'office la fonction des
+  // cases du rituel : elle en produit jusqu'à DEUX par ligne, une case « ouverture » et une case
+  // « clôture » pouvant être fautives ensemble.
+  const multiple = C.balayerLesLignesDeTaches(() => [{ x: 1 }, { x: 2 }], dossier, unFichier, () => '| 1 | a | b | c | d | e | f | g | h | i | j |', vrai);
+  assert.strictEqual(multiple.ecarts.length, 2, 'a verdict returning an array yields all of its findings');
+  const nuls = C.balayerLesLignesDeTaches(() => [null, { x: 1 }, undefined], dossier, unFichier, () => '| 1 | a |', vrai);
+  assert.strictEqual(nuls.ecarts.length, 1, 'and the empty slots of that array are dropped rather than pushed as findings');
+
+  // ── 2. UNE LIGNE PEUT NE PAS COMPTER COMME LUE. Les compter aurait gonflé le dénominateur de
+  // lignes sur lesquelles la fonction n'a rien regardé — un taux faux dans le bon sens, le pire.
+  const ignoree = C.balayerLesLignesDeTaches(() => null, dossier, unFichier, () => '| 1 | a |', vrai, { compteSi: (cells) => cells.length >= 11 });
+  assert.strictEqual(ignoree.lignesLues, 0, 'a line the predicate rejects is not counted as read');
+  const comptee = C.balayerLesLignesDeTaches(() => null, dossier, unFichier, () => '| 1 | a | b | c | d | e | f | g | h | i | j |', vrai, { compteSi: (cells) => cells.length >= 11 });
+  assert.strictEqual(comptee.lignesLues, 1, 'and one it accepts is');
+
+  // ── 3. RIEN NE CHANGE SANS CES DEUX OPTIONS : un verdict qui rend un objet se comporte comme
+  // avant, et sans prédicat toute ligne compte.
+  const simple = C.balayerLesLignesDeTaches(() => ({ x: 1 }), dossier, unFichier, () => '| 1 | a |', vrai);
+  assert.deepStrictEqual(simple, { mesurable: true, ecarts: [{ x: 1 }], lignesLues: 1 }, 'the previous behaviour is untouched');
+
+  // ── 4. ET LE VRAI PIÈGE, PAYÉ EN DIRECT : passer `...args` suivi de l'objet d'options place
+  // cet objet en position `sessionsDir` quand l'appel ne porte aucun argument. La fonction lisait
+  // alors un dossier qui n'existe pas, rendait 0 ligne lue, et son message disait tranquillement
+  // « aucune ligne au format complet » — une ABSENCE DE MESURE PRÉSENTÉE COMME UNE MESURE, sur le
+  // contrôle même qui existe pour l'empêcher. Les quatre paramètres sont donc nommés.
+  const rituel = C.findCasesDeRituelMalRemplies();
+  assert.strictEqual(rituel.mesurable, true, 'the ritual-cases check still measures the real registry');
+  assert.ok(rituel.lignesLues > 400, `on its real population (currently ${rituel.lignesLues}) — a zero here would have read as "no complete-format line exists", which is exactly the false green this signature fixed`);
+  const malformees = C.findLignesMalFormees();
+  assert.ok(malformees.lignesLues > rituel.lignesLues, 'and the two populations genuinely differ: one skips the older-format lines, the other counts them — which is why they needed two behaviours, not one');
+
+  console.log("Passed: le balayage des lignes de tâches accepte deux choses de plus, et un faux vert les a validées (2026-10-02, tâche #993). CLONE-HUNTER signalait deux boucles jumelles dans le même fichier, et elles l'étaient : un balayage partagé existait déjà, deux fonctions s'en servaient, et deux autres réécrivaient sa boucle à la main. POURQUOI ELLES NE POUVAIENT PAS S'EN SERVIR, et c'est la vraie question que « fondre deux blocs qui se ressemblent » ne pose jamais : l'une produit jusqu'à DEUX écarts par ligne — une case « ouverture » et une case « clôture » peuvent être fautives ensemble — et l'autre ignore les lignes restées à un format antérieur, que compter aurait gonflé son dénominateur de lignes sur lesquelles elle n'a rien regardé. Les laisser séparées avec une raison écrite aurait été légitime ; les réconcilier vaut mieux, parce que la PROCHAINE fonction qui aurait eu besoin de l'un de ces deux comportements aurait écrit une troisième copie (Article 24). ET LE PIÈGE A ÉTÉ PAYÉ EN DIRECT : passer les arguments étalés puis l'objet d'options place cet objet en position « dossier des sessions » quand l'appel ne porte aucun argument. La fonction lisait donc un dossier inexistant, rendait ZÉRO ligne lue, et son message disait tranquillement « aucune ligne au format complet : ce zéro ne certifie rien » — une absence de mesure présentée comme une mesure, sur le contrôle même qui existe pour l'empêcher, et un vert parfaitement crédible. Attrapé en comparant la sortie AVANT et APRÈS plutôt qu'en relisant le code : les deux fonctions rendent désormais un résultat identique au caractère près à celui d'avant la fusion.");
+}
+await testLeBalayageEtendu();
