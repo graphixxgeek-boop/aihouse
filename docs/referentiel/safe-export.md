@@ -1006,3 +1006,56 @@ veulent que le POURQUOI vive à côté du QUOI précisément pour que le prochai
 cause mal attribuée l'envoie chercher le défaut au mauvais endroit, et **un récit plausible à la
 place d'une mesure** est exactement ce que ce dépôt traque partout ailleurs. J'avais reconstitué une
 histoire vraisemblable au lieu de lire `git log` et le dossier d'archives.
+
+## LES RÈGLES QUI NE PARTIRONT PAS AVEC L'AGENCE (2026-10-02, tâche #1484)
+
+**Sa question :** « moi j'utilise l'agence et je t'utilise toi. Quelles sont les regles que tu as
+toi et que l'agence n'a pas ? » — et sa peur, qui est la vraie question : « j'installe l'agence
+dans un nouveau projet, je l'utilise mais je ne la reconnais pas et certaines choses ne
+fonctionnent plus du tout. »
+
+### La distinction qui tranche
+
+Une règle de conduite est tenue par `angel-of-ia-process`, qui en déclare la **source**.
+
+- source = **un fichier du dépôt** → la règle voyage, le prochain lecteur peut l'atteindre ;
+- source = **une conversation** → elle ne survit qu'à la mémoire de l'agent en cours, donc elle
+  n'existera pas dans le projet d'accueil, **et personne ne remarquera son absence**.
+
+### Pourquoi chez SAFE-EXPORT et nulle part ailleurs
+
+Sa question est « l'Agence est-elle exportable, le code reprenable par une autre IA ? ». Une règle
+sans domicile est une **dette de reprise** au sens exact de l'Article 27 — donc son domaine, jamais
+celui d'un Gardien sacré du code, qui juge la qualité et non la transmissibilité.
+
+### Ce qu'il mesure, et ce qu'il ne mesure pas
+
+`findReglesSansDomicile()` sépare **deux populations**, parce qu'elles n'ont pas la même gravité :
+
+| Cas | Ce que c'est |
+|---|---|
+| **sans domicile** | la source ne contient aucun chemin du dépôt — ou il n'y a pas de source |
+| **inatteignable** | une source est déclarée et pointe un fichier **absent** — pire, parce qu'elle *ressemble* à un domicile |
+
+**Il NOMME, il ne juge pas.** Une règle née d'un incident peut légitimement n'avoir jamais eu de
+document, et lui en inventer un d'autorité serait écrire à la place de son auteur. La décision
+reste humaine (tâche #1493).
+
+**Zéro règle lue n'est jamais zéro règle sans domicile** : la lecture impossible rend PAS MESURÉ,
+avec sa raison (leçons L5/L11).
+
+### Le premier passage, et ce qu'il a trouvé
+
+**3 règles sur 28** n'ont pour source qu'une conversation ; **aucune** source déclarée n'est
+cassée. La plus traître des trois cite des **numéros de tâches** — ce qui ressemble à une source
+atteignable, alors que les tâches de ce projet ne partiront pas avec l'Agence.
+
+**Mesuré deux fois indépendamment** le jour de son écriture — par import du module et par lecture
+textuelle de sa source — avec le même résultat.
+
+### Sa limite, déclarée plutôt que tue
+
+La mesure porte sur les règles **déclarées**. Ce qui gouverne le comportement de l'agent sans avoir
+jamais été inscrit nulle part — consignes de session, outillage de l'éditeur, habitudes de travail
+jamais écrites — est par définition incomptable. Le seul remède est d'écrire les règles au lieu de
+les tenir de mémoire ; la garantie s'arrête là, et la promettre plus loin serait mentir.

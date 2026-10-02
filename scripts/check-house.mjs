@@ -7348,6 +7348,42 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     // sa place chez SAFE-EXPORT plutôt que chez un Gardien sacré du code.
     assert.equal(se.findGardienAmbigu('Le gardien a validé la Ronde.').length, 1, 'a bare "gardien" used as a title is an ambiguity');
     assert.equal(se.findGardienAmbigu('Le Gardien sacré ARGUS a validé.').length, 0, 'the sacred rank keeps the word, and is never flagged');
+
+    // LES RÈGLES SANS DOMICILE (2026-10-02, tâche #1484) — sa peur rendue mesurable : « j'installe
+    // l'agence dans un nouveau projet, je l'utilise mais je ne la reconnais pas et certaines
+    // choses ne fonctionnent plus du tout. » Une règle de conduite dont la SOURCE est une
+    // conversation ne survit qu'à la mémoire de l'agent en cours : elle n'existera pas dans le
+    // projet d'accueil, et personne n'y remarquera son absence.
+    const domicile = se.findReglesSansDomicile({
+      regles: [
+        { id: 'logee', source: 'docs/regles-de-travail.md §2' },
+        { id: 'logee-charte', source: 'CLAUDE.md Article 29' },
+        { id: 'sans-domicile', source: 'sa demande orale du 23 septembre' },
+        { id: 'muette', source: '' },
+        { id: 'fichier-absent', source: 'docs/ce-fichier-nexiste-pas.md' },
+      ],
+      existsImpl: (chemin) => !String(chemin).includes('nexiste-pas'),
+    });
+    assert.deepEqual(domicile.sansDomicile.map((x) => x.id), ['sans-domicile', 'muette'], 'a rule whose only source is a conversation — or none at all — is named: it will not travel with the Agency');
+    assert.deepEqual(domicile.inatteignables.map((x) => x.id), ['fichier-absent'], 'and a declared source pointing at a missing file is a separate, worse case: it LOOKS like a home');
+    assert.equal(domicile.examinees, 5, 'the denominator travels with the count, always');
+
+    // TOUT LOGÉ EST UN VRAI VERT, jamais un silence (BP4 — on vérifie dans les deux sens).
+    const toutLoge = se.findReglesSansDomicile({ regles: [{ id: 'a', source: 'CLAUDE.md' }], existsImpl: () => true });
+    assert.deepEqual([toutLoge.sansDomicile, toutLoge.inatteignables], [[], []], 'rules that all have a reachable home report nothing');
+    assert.ok(/voyageront avec l'Agence/.test(toutLoge.pourquoi), 'and say so in terms of what the question was actually about');
+
+    // ZÉRO RÈGLE LUE N'EST PAS ZÉRO RÈGLE SANS DOMICILE (leçons L5/L11) — le refus de conclure.
+    assert.equal(se.findReglesSansDomicile({ regles: [] }).mesurable, false, 'no rule read means NOT MEASURED, never "they all have a home"');
+    assert.ok(/PAS MESURÉ/.test(se.formatReglesSansDomicileLines({ mesurable: false, pourquoi: 'x' })[0]), 'and the output says so rather than printing a reassuring empty list');
+
+    // EN DIRECT SUR LE VRAI DÉPÔT (Article 25) : il a trouvé 3 règles sur 28 à son premier
+    // passage, et la lecture textuelle rend exactement ce que rend l'import du module — vérifié
+    // dans les deux sens le jour de son écriture.
+    const domicileReel = se.findReglesSansDomicile();
+    assert.equal(domicileReel.mesurable, true, 'the guard must actually run against the real conduct rules, never only a fixture');
+    assert.ok(domicileReel.examinees > 20, `and read them all (currently ${domicileReel.examinees})`);
+    assert.deepEqual(domicileReel.inatteignables, [], 'no conduct rule may declare a source file that does not exist: that is a broken link dressed as a home');
     assert.equal(se.findGardienAmbigu('Le contrôleur de process a vu un gardien manquant.').length, 0, 'a qualified rank in the same sentence resolves the word');
     // « guardian » compte pareil (précision de l'utilisateur), MAIS un nom de script qui porte
     // déjà `process` dit son rang — l'exempter évite un garde-fou qui crierait sur ce qu'il y a de
@@ -14368,6 +14404,35 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
     assert.ok(reel.seuil.valeur <= reel.seuil.max, `the derived threshold must stay inside the distribution it observes (seuil ${reel.seuil.valeur}, max observé ${reel.seuil.max}) — a threshold above its own cloud reports "nothing to flag" because it can no longer see anything`);
     assert.ok(reel.cadre.vides.length < reel.cadre.cases.length, 'and not every case may be empty: an all-empty result would mean the probe is blind, never that the corpus is silent');
     assert.equal(K.couvertureDuCadre({ convictions: [] }).mesurable, false, 'with no conviction at all it reports PAS MESURÉ rather than nineteen reassuring empty cases');
+
+    // (7bis) LE SEUIL SUR UN PETIT CORPUS — le défaut qu'il a fallu EXÉCUTER pour voir
+    // (2026-10-02, tâche #1481). Sa peur : « j'installe l'agence dans un nouveau projet, je
+    // l'utilise mais je ne la reconnais pas et certaines choses ne fonctionnent plus du tout. »
+    // `the-king fonder` n'avait jamais tourné contre un projet d'accueil : lancé contre un vrai
+    // dépôt de trois documents, il rendait 0 case sur 19 — non pas parce que le corpus était muet,
+    // mais parce que le plancher en dur de 3 passait AU-DESSUS du maximum observé (0). Le
+    // commentaire du code promettait pourtant que le seuil « ne peut jamais passer au-dessus de
+    // tout ce qu'il observe » : la dérivation tenait la promesse, le plancher la défaisait (BP5).
+    //
+    // ET LE PIRE N'ÉTAIT PAS LE ZÉRO, C'ÉTAIT SA FORMULATION : l'outil annonçait « aucune phrase du
+    // corpus de ce projet ne tient ce rôle — c'est un vrai trou ». Il ACCUSAIT le projet d'accueil
+    // d'un défaut appartenant à l'instrument, et c'est la première chose qu'un nouveau venu aurait
+    // vue de cette Agence (leçons L5/L11).
+    const petitCorpus = {
+      lireImpl: (chemin) => String(chemin).endsWith('a.md')
+        ? 'La simplicité prime toujours sur la complétude pour ce petit projet de quartier.'
+        : 'Nous ne vendons jamais la moindre donnée, et ce choix ne se renégocie jamais.',
+      listerImpl: () => ['a.md', 'b.md'],
+    };
+    const petit = K.revelerLaPhilosophie({ root: '/nulle-part', racines: K.RACINES_D_UN_PROJET_D_ACCUEIL, ...petitCorpus });
+    assert.equal(petit.mesurable, false, 'on a corpus where recurrence cannot discriminate, the revelation REFUSES to conclude');
+    assert.ok(/récurrence ne discrimine rien/.test(petit.pourquoi), 'and it says the instrument could not measure — never that the host corpus is empty, which would blame the host for a calibration fault');
+    assert.ok(/MATIÈRE/.test(petit.pourquoi), 'naming what is actually missing: material, not a philosophy');
+
+    // ET LE PLANCHER NE SORT PLUS DU NUAGE, vérifié sur le vrai dépôt où il ne mordait jamais :
+    // la correction ne devait RIEN changer ici, et c'est la moitié du test (BP4).
+    assert.equal(reel.seuil.plancherRabaisse, false, 'on this repository the hard floor never bit — the fix must leave it untouched');
+    assert.ok(reel.seuil.valeur === Math.max(3, reel.seuil.derive), 'and the threshold it applies here is exactly the one it applied before the fix');
 
     // (8) LA SECONDE RÉVÉLATION — « assure toi qu'il sera prêt » (2026-10-01). Être prêt n'est pas
     // savoir relancer, c'est savoir COMPARER deux passages. Les quatre cas sont testés, pas

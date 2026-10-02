@@ -334,3 +334,41 @@ quelles, **colonne de porteurs comprise**.
 **HORS PORTÉE** : un titre qui RESSEMBLE à la question d'une case ne garantit pas que la section y
 réponde. Le nombre d'autres candidats est donné par case, pour que le choix du premier puisse être
 relu.
+
+## LE SEUIL SORTAIT DE SON NUAGE SUR UN PETIT CORPUS (2026-10-02, tâche #1481)
+
+**Le défaut ne pouvait se voir qu'en EXÉCUTANT.** `the-king fonder` existe pour doter un projet
+d'accueil de ses textes fondateurs, et il n'avait jamais tourné contre un projet d'accueil — il
+tournait sur ce dépôt-ci, où il se comporte correctement en ne proposant rien. C'est le cas facile,
+et c'est l'inverse de sa raison d'être.
+
+**Lancé contre un vrai dépôt d'accueil** (un carnet de jardin partagé : un README et deux documents
+de décisions, pleins de convictions claires), il rendait **0 case sur 19**.
+
+### Trois causes empilées
+
+1. **Le plancher sortait du nuage.** La dérivation au 75e centile est juste, mais un
+   `Math.max(3, derive)` était appliqué par-dessus. Ici : dérivé 3, maximum observé 26 — le
+   plancher ne mord jamais. Sur l'accueil : dérivé 0, maximum observé **0**, seuil appliqué **3**,
+   donc au-dessus de tout ce que l'outil peut voir. **Zéro par construction** (BP5). Le commentaire
+   du code promettait pourtant deux lignes plus haut que ça ne pouvait pas arriver : la promesse
+   était tenue par le calcul, le plancher la défaisait.
+2. **Un petit corpus ne peut pas « revenir plusieurs fois ».** Le mécanisme est calibré sur les
+   7 191 convictions de ce dépôt ; l'accueil en rendait 3.
+3. **Et l'outil ACCUSAIT le projet d'accueil** — dix-neuf fois : « aucune phrase du corpus de ce
+   projet ne tient ce rôle, c'est un vrai trou ». Il reprochait à l'équipe d'accueil un défaut
+   appartenant à l'instrument, et c'était la première chose qu'un nouveau venu aurait vue de cette
+   Agence (leçons L5/L11).
+
+### La correction
+
+- `seuil.valeur = Math.min(Math.max(3, derive), maxObserve)` — le seuil ne peut plus dépasser ce
+  qu'il observe, et `seuil.plancherRabaisse` dit quand le plancher a dû céder.
+- Quand `seuil.max` vaut zéro, la révélation **refuse de conclure** : aucun seuil positif ne
+  pourrait laisser passer quoi que ce soit, donc rendre des cases vides reviendrait à accuser
+  l'hôte. Le message nomme ce qui manque réellement : **de la MATIÈRE, pas une philosophie**.
+
+**Vérifié dans les deux sens (BP4)** : avec cinq documents au lieu de trois, le même outil remplit
+une case avec une vraie conviction du corpus d'accueil ; et sur ce projet-ci rien ne change —
+seuil 3, plancher jamais rabaissé — ce que le filet vérifie explicitement plutôt que de le
+supposer.

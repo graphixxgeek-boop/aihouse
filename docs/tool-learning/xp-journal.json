@@ -544,5 +544,13 @@
     "pourquoi": "« Aucune marque » dans un registre qui vient de naître ne veut pas dire « jamais fait » : ça veut dire NON MESURÉ. Tout registre neuf qui mesure une absence doit porter sa date de création et sortir du compte ce qui la précède. Sans ça, son premier rapport est intégralement faux, et un outil faux à son premier passage est un outil qu'on cesse de lire (L4).",
     "declencheur": "l'outil lancé pour de vrai contre le dépôt réel, comme l'Article 25 l'exige",
     "date": "2026-10-02T20:55Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "« Le document n'existe pas » et « le document n'a pas été envoyé » sont deux constats, et j'ai confondu les deux",
+    "quoi": "J'ai écrit « 26 documents, et aucun n'a de version lisible », puis créé sept pages HTML. Un garde-fou d'index a refusé le commit quelques minutes plus tard, et c'est en cherchant pourquoi que j'ai vu le dossier `docs/grand-projet/html/` — 33 pages déjà régénérées automatiquement. J'avais fabriqué sept doublons.",
+    "pourquoi": "Le geste manquant est d'une simplicité gênante : AVANT de produire un document, chercher s'il existe déjà, y compris sous un autre chemin. Je l'ai fait pour les CONSTATS toute la journée (data-archangel notes, Article 30) et pas une fois pour les LIVRABLES. L'Article 30 dit « aucun chantier ne s'ouvre avant d'avoir repris les notes » — il ne dit nulle part « aucun fichier ne se produit avant d'avoir cherché son jumeau », et c'est le même défaut. Signe qui aurait dû alerter : le détecteur de documents non remis comptait déjà ces 33 pages comme « antérieures au registre » dès son premier passage. L'outil avait raison avant moi, et je n'ai pas lu sa sortie en entier.",
+    "declencheur": "un garde-fou a refusé le commit — moment déclencheur du process XP",
+    "date": "2026-10-02T22:55Z"
   }
 ]

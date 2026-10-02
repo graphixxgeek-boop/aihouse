@@ -529,6 +529,27 @@ export const PROCESSES = [
       // dessus — et l'audit du jour a justement trouvé quatre tâches faites mais jamais closes.
       { cle: "etat-taches", libelle: "analyser l'état des tâches (check-tasks-details) pour repérer ce qui peut être traité cette nuit", preuve: { dossier: "docs/check-tasks-details/", motif: /\.html$|\.txt$/ } },
       { cle: "plan", libelle: "reprendre le plan donné, sans en sauter une étape", preuve: null },
+      // LA RONDE DE LA NUIT, CALIBRÉE AU DÉPART (2026-10-02, tâche #1480).
+      //
+      // SA DEMANDE, MOT POUR MOT : « je voudrais que tu puisses lancer une ou plusieurs rondes
+      // pendant le mode auto. Ca fait partie du process je pense, du process mode auto. Pourquoi
+      // as-tu bloqué le lancement ? Il faudrait qu'on fluidifie cette partie, que : des le
+      // lancement du mode auto on calibre ensemble la ronde principale à mener pendant la nuit,
+      // et aussi que tu disposes d'une formule "ronde auto" qui te permet de lancer des rondes
+      // selon ton propre calibrage, à tout moment pendant la nuit : quand tu penses que c'est
+      // pertinent. »
+      //
+      // POURQUOI LE LANCEMENT AVAIT ÉTÉ BLOQUÉ, ET CE N'ÉTAIT PAS CE QU'IL CROYAIT. Ce n'était
+      // pas la règle « aucune fenêtre bloquante la nuit » : le process prévoit déjà la
+      // combinaison D (zéro question, les points reportés au prochain passage en présence).
+      // C'était qu'aucun PROGRAMME n'existait — une Ronde se calibre avec lui (quels items, quel
+      // palier, quels items payants), et ce calibrage n'avait jamais été demandé au coucher.
+      // Un process qui n'a pas d'entrée ne se lance pas, même quand rien ne l'interdit.
+      //
+      // LES DEUX MOITIÉS NE FONT PAS DOUBLON, ET C'EST POURQUOI IL Y A DEUX ÉTAPES. Celle-ci
+      // règle le cas PRÉVU : une Ronde décidée ensemble avant qu'il s'endorme. La suivante règle
+      // le cas IMPRÉVU : il est 3 h, le programme est fini, une Ronde légère serait utile.
+      { cle: "ronde-calibree-au-depart", libelle: "calibrer AVEC LUI, au lancement du mode auto, la Ronde principale de la nuit — quels items, quel palier, quels items payants et leur plafond. Sans ce calibrage la Ronde ne se lance pas : ce n'est pas la règle des fenêtres qui l'interdit, c'est l'absence de programme", preuve: { dossier: "docs/rapports-de-nuit/", motif: /^plan-depart-.*\.txt$/ } },
       // LE RÉVEIL À JOUR (2026-09-29, tâche #1165). Le défaut s'est produit pour de vrai la nuit même :
       // un filet horaire de la veille annonçait comme « ce qui vient maintenant » quatre livrables
       // déjà faits, et il l'a répété À CHAQUE HEURE. Un réveil se répète ; une consigne périmée s'y
@@ -538,6 +559,23 @@ export const PROCESSES = [
       // AUCUNE PREUVE SUR LE DISQUE, ET C'EST EXACT : un prompt de réveil vit chez le planificateur,
       // pas dans le dépôt. L'étape est donc déclarée non vérifiable plutôt que comptée faite.
       { cle: "reveil-a-jour", libelle: "relire le prompt des réveils DÉJÀ armés et corriger ce qui y est périmé — un réveil se répète, une consigne fausse aussi", preuve: null },
+      // LA FORMULE « RONDE AUTO » (2026-10-02, tâche #1480) — la seconde moitié de sa demande,
+      // celle qui couvre le cas imprévu.
+      //
+      // TROIS BORNES PAR DÉFAUT, ET ELLES SONT DES PROPOSITIONS, PAS DES DÉCISIONS. Il ne les a
+      // pas fixées ; les inventer en silence serait trancher à sa place, les laisser vides
+      // rendrait l'étape inapplicable. Elles sont donc écrites ICI, visibles, et il peut les
+      // changer d'un mot :
+      //   · DEUX Rondes auto au maximum par nuit, en plus de la Ronde calibrée. Au-delà, le temps
+      //     passe en contrôle plutôt qu'en travail, et la nuit sert à produire.
+      //   · ZÉRO appel API par défaut. Dépenser son budget pendant qu'il dort demande son accord
+      //     préalable, au calibrage du départ — jamais une décision prise à 3 h du matin.
+      //   · Les questions sautées sont reportées EN UN SEUL BLOC au matin, jamais réparties : il
+      //     doit pouvoir y répondre d'une traite plutôt que de les retrouver éparpillées.
+      //
+      // ELLE EST FACULTATIVE, ET C'EST VOULU : une nuit sans Ronde auto est une nuit normale. La
+      // compter comme un manquement reprocherait l'absence d'un geste qui n'était pas dû.
+      { cle: "ronde-auto-si-pertinent", libelle: "FACULTATIF — lancer une « ronde auto » quand c'est pertinent (programme terminé, doute sur un chantier) : légère, GRATUITE par défaut, DEUX au maximum par nuit, questions reportées en un bloc au matin. Trois bornes proposées, modifiables par l'utilisateur", preuve: null, facultatif: true },
       // LES DEUX GRANDES ACTIVITÉS DE LA NUIT, ajoutées à la demande de l'utilisateur. Chacune
       // produit son PLAN D'ACTION, donc des tâches à traiter dans la MÊME nuit (Article 28) : c'est
       // ce qui transforme un scan nocturne en travail, plutôt qu'en un rapport de plus.

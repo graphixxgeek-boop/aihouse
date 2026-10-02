@@ -1154,8 +1154,30 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
   // passer au-dessus de tout ce qu'il observe, la faute corrigée deux fois plus haut.
   const reps = convictions.map((c) => representativite(c.phrase, convictions, { vocab: vocabulaire.mots }).fichiers).sort((a, b) => a - b);
   const derive = reps.length ? reps[Math.floor(reps.length * 0.75)] : 0;
-  const seuil = { valeur: seuilEtendue ?? Math.max(3, derive), derive, centile: 0.75, observees: reps.length, max: reps[reps.length - 1] ?? 0 };
+  const maxObserve = reps[reps.length - 1] ?? 0;
+  // LE PLANCHER DE 3 SORTAIT DU NUAGE SUR UN PETIT CORPUS, ET IL A FALLU LANCER L'OUTIL CONTRE UN
+  // VRAI PROJET D'ACCUEIL POUR LE VOIR (2026-10-02, tâche #1481).
+  //
+  // Le commentaire ci-dessus promet que le seuil « ne peut jamais passer au-dessus de tout ce
+  // qu'il observe ». La dérivation tient cette promesse ; le `Math.max(3, …)` la défaisait. Sur ce
+  // dépôt-ci la question ne se pose pas — dérivé 3, maximum observé 26, le plancher ne mord
+  // jamais. Sur un projet d'accueil de trois documents : dérivé 0, maximum observé 0, seuil
+  // appliqué 3. Au-dessus de TOUT ce qu'il observe, donc zéro case sur dix-neuf par construction.
+  // C'est exactement la faute que BP5 nomme, et elle ne pouvait se voir qu'en exécutant.
+  const plancher = Math.max(3, derive);
+  const seuil = { valeur: seuilEtendue ?? Math.min(plancher, maxObserve), derive, centile: 0.75,
+    observees: reps.length, max: maxObserve, plancherRabaisse: seuilEtendue == null && plancher > maxObserve };
 
+  // LA RÉCURRENCE NE DISCRIMINE PAS SUR TOUT CORPUS, ET LE TAIRE SERAIT PIRE QUE DE NE RIEN RENDRE.
+  // Quand le maximum observé est zéro, AUCUN seuil positif ne peut laisser passer quoi que ce soit :
+  // la mesure n'est pas « il n'y a rien dans ce corpus », elle est « la récurrence ne mesure rien
+  // ici ». Rendre des cases vides dans ce cas revient à ACCUSER le projet d'accueil d'un trou qui
+  // appartient à l'instrument — la faute la plus chère du répertoire (leçons L5/L11), et la première
+  // chose qu'un nouveau venu verrait de cette Agence.
+  if (!seuil.max) {
+    return { mesurable: false, seuil,
+      pourquoi: `la récurrence ne discrimine rien sur ce corpus : ${convictions.length} conviction(s) extraite(s), et AUCUNE ne partage assez de vocabulaire avec une autre (représentativité maximale observée : 0). Un corpus trop petit ou trop varié pour que « revenir plusieurs fois » veuille dire quelque chose n'est pas un corpus muet — et le dire est la seule réponse honnête. Ce qui manque est de la MATIÈRE, pas une philosophie.` };
+  }
   const cadre = couvertureDuCadre({ convictions, unites, familles, vocab: vocabulaire.mots, seuilEtendue: seuil.valeur });
   const parNiveau = {};
   for (const c of convictions) parNiveau[c.niveau] = (parNiveau[c.niveau] ?? 0) + 1;

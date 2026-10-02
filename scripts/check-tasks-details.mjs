@@ -2806,7 +2806,12 @@ export const FAMILLES_DE_THEMES = {
   // projet d'accueil, lister les règles qui ne partiront pas, décider du sort du filet. Les fondre
   // sous « Exportabilité » aurait rangé l'épreuve sous la théorie. Le garde-fou l'a attrapé au
   // commit même où le thème est né, ce qui est exactement son travail (Article 24).
-  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Export", "Badge", "Projet", "Sécurité"],
+  // « Propriété » a rejoint la famille le 2026-10-02 (tâche #1494). Elle est la sœur de
+  // « Sécurité », qui y était déjà pour la même raison écrite alors : les deux parlent de
+  // l'Agence comme d'un BIEN — l'une de ce qui peut être pris, l'autre de ce qu'on a le droit
+  // d'en faire. La ranger ailleurs l'aurait séparée de sa jumelle. Le garde-fou l'a attrapée au
+  // commit même où le thème est né, ce qui est exactement son travail (Article 24).
+  "Organisation de l'Agence": ["Organisation", "Agence", "Classification", "CASSANDRA-RH", "Exportabilité", "Export", "Badge", "Projet", "Sécurité", "Propriété"],
   "Suivi & file": ["Suivi", "File", "XP"],
   "Nommage & vocabulaire": ["Nommage", "TOOL_PORTEE"],
   // « Rationalisation » a rejoint la famille le 2026-10-02 (tâche #1477). Elle appartient à

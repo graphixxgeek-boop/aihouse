@@ -2398,6 +2398,11 @@ function main() {
     for (const e of perdus.perteReelle) console.log(`   🔴 ${e.chemin} — ${e.present ? `${e.octets} octets` : "absent de ce conteneur"} : ${AU_CLONE["perte-reelle"]}`);
   }
 
+  // LES RÈGLES SANS DOMICILE (2026-10-02, tâche #1484) — sa peur rendue mesurable : une règle dont
+  // la source est une conversation ne partira pas avec l'Agence, et son absence ne se verra pas.
+  console.log("");
+  for (const l of formatReglesSansDomicileLines(findReglesSansDomicile())) console.log(l);
+
   // X6 — LE POURQUOI À CÔTÉ DU QUOI, ENFIN BRANCHÉ (2026-09-23, tâche #585). Le détecteur existait
   // depuis sa création sans qu'aucun main() ne l'appelle, pendant que le référentiel des standards
   // déclarait X6 « vérifiée par personne ». Les deux étaient vrais séparément.
@@ -2806,6 +2811,77 @@ export function findConventionRecopiee({ root = ROOT, listDirImpl = readdirSync,
     });
   }
   return { mesurable: true, coupables, fichiersLus: fichiers.length };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LES RÈGLES QUI NE PARTIRONT PAS — le trou qu'il a nommé (2026-10-02, tâche #1484)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION, MOT POUR MOT : « moi j'utilise l'agence et je t'utilise toi. Quelles sont les
+// regles que tu as toi et que l'agence n'a pas ? […] Ma peur : j'installe l'agence dans un nouveau
+// projet, je l'utilise mais je ne la reconnais pas et certaines choses ne fonctionnent plus du
+// tout. »
+//
+// CE QUI REND SA PEUR FONDÉE, ET MESURABLE. Une règle de conduite est tenue par
+// angel-of-ia-process, qui en déclare la SOURCE. Quand cette source est un FICHIER du dépôt, la
+// règle voyage : le prochain lecteur, humain ou IA, peut l'atteindre. Quand c'est une conversation
+// (« sa demande du 23 septembre », « la nuit perdue du 25 »), la règle ne survit qu'à la mémoire
+// de l'agent en cours — donc elle n'existera plus dans le projet d'accueil, et personne ne
+// remarquera son absence. C'est exactement « je ne la reconnais pas et certaines choses ne
+// fonctionnent plus du tout », rendu visible avant l'installation plutôt qu'après.
+//
+// POURQUOI ICI : SAFE-EXPORT est le septième Gardien sacré, et sa question est « l'Agence est-elle
+// exportable, le code reprenable par une autre IA ? ». Une règle sans domicile est une dette de
+// REPRISE au sens exact de l'Article 27, donc son domaine — jamais celui d'un Gardien du code.
+//
+// CE QU'IL NE FAIT PAS, ET C'EST DÉLIBÉRÉ : il ne juge pas qu'une règle DOIVE avoir un domicile.
+// Certaines sont nées d'un incident et n'ont jamais eu de document — les loger d'autorité serait
+// écrire à la place de leur auteur. Il les NOMME, et la décision reste humaine.
+export const MOTIF_CHEMIN_DU_DEPOT = /(CLAUDE\.md|docs\/[A-Za-z0-9._/-]+|scripts\/[A-Za-z0-9._/-]+)/g;
+
+export function findReglesSansDomicile({ regles = null, root = ROOT, existsImpl = existsSync } = {}) {
+  let liste = regles;
+  if (!liste) {
+    try {
+      const req = createRequire(import.meta.url);
+      // Lecture par import dynamique impossible en synchrone : on relit la source et on en extrait
+      // les `source:` déclarées, ce qui suffit — la question porte sur la SOURCE, jamais sur le
+      // comportement de la règle.
+      const txt = readFileSync(join(root, "scripts/angel-of-ia-process.mjs"), "utf8");
+      liste = [...txt.matchAll(/\{\s*id:\s*"([^"]+)"[\s\S]{0,4000}?source:\s*"([^"]*)"/g)]
+        .map((m) => ({ id: m[1], source: m[2] }));
+      void req;
+    } catch (e) {
+      return { mesurable: false, sansDomicile: [], inatteignables: [], examinees: 0,
+        pourquoi: `les règles de conduite n'ont pas pu être lues (${e?.message ?? e}) : zéro règle sans domicile ne veut PAS dire que toutes en ont une` };
+    }
+  }
+  if (!liste.length) {
+    return { mesurable: false, sansDomicile: [], inatteignables: [], examinees: 0,
+      pourquoi: "aucune règle de conduite trouvée : un zéro qui dit qu'on n'a rien lu, jamais que tout va bien" };
+  }
+  const sansDomicile = [];
+  const inatteignables = [];
+  for (const r of liste) {
+    const src = String(r.source ?? "");
+    const chemins = src.match(MOTIF_CHEMIN_DU_DEPOT) ?? [];
+    if (!chemins.length) { sansDomicile.push({ id: r.id, source: src || "(aucune source déclarée)" }); continue; }
+    for (const c of chemins) if (!existsImpl(join(root, c))) inatteignables.push({ id: r.id, chemin: c });
+  }
+  return { mesurable: true, sansDomicile, inatteignables, examinees: liste.length,
+    pourquoi: sansDomicile.length || inatteignables.length
+      ? `${sansDomicile.length} règle(s) de conduite sur ${liste.length} n'ont pour source qu'une CONVERSATION, et ${inatteignables.length} pointent un fichier absent : elles ne partiront pas avec l'Agence, et leur absence ne se verra pas.`
+      : `les ${liste.length} règles de conduite ont toutes un domicile atteignable dans le dépôt — elles voyageront avec l'Agence` };
+}
+
+export function formatReglesSansDomicileLines(r) {
+  if (!r?.mesurable) return [`🏠 RÈGLES SANS DOMICILE : PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`];
+  const L = [`🏠 CE QUI NE PARTIRA PAS AVEC L'AGENCE — ${r.sansDomicile.length} règle(s) de conduite sur ${r.examinees} n'ont pour source qu'une conversation.`];
+  for (const x of r.sansDomicile) L.push(`   • ${x.id} — ${String(x.source).slice(0, 90)}`);
+  for (const x of r.inatteignables) L.push(`   🔴 ${x.id} — source déclarée introuvable : ${x.chemin}`);
+  if (!r.sansDomicile.length && !r.inatteignables.length) L.push("   ✅ toutes ont un domicile atteignable dans le dépôt.");
+  L.push("   Ce chiffre NOMME, il ne juge pas : une règle née d'un incident peut légitimement n'avoir jamais eu de document, et la loger d'autorité serait écrire à la place de son auteur.");
+  return L;
 }
 
 export function findGardienAmbigu(texte, options = {}) {

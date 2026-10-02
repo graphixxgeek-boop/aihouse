@@ -593,6 +593,12 @@ export const DOSSIERS_DE_LIVRAISON = [
   // porte le deep dive de la gestion des tâches qu'il réclamait justement. Les neuf autres sont
   // des registres d'outils, laissés dehors à bon droit. Un garde-fou qui trouve quelque chose à
   // son premier passage n'est pas une intention (leçon L2).
+  // TROUVÉ LE 2026-10-02 EN CHERCHANT AUTRE CHOSE, et c'est le cas le plus coûteux de la série :
+  // `reponses-a-ses-49-questions.md` répond depuis le 2026-09-29 à quarante-neuf de ses questions,
+  // dont les neuf du PACK DÉCOUVERTE et celle sur l'Agence dans le Cloud — et il vivait dans un
+  // dossier que rien ne surveillait. Son reproche « tu ne me fais pas profiter des résultats »
+  // visait exactement ça, sans que ni lui ni moi sachions que ce document existait encore.
+  { dossier: "docs/grand-projet/02-strategie", quoi: "les analyses de fond du grand projet, dont ses réponses" },
   { dossier: "docs/the-king", quoi: "les mesures de fond rendues par THE-KING (la thèse, la révélation)" },
   { dossier: "docs/reponses", quoi: "les dossiers de réponses à ses gros prompts" },
   { dossier: "docs/modules", quoi: "les études de fond d'un module du projet" },

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ce que tu n'as jamais reçu</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T21:30:07.950Z</div>
+    <h1>Ce que tu n'as jamais reçu</h1>
+    <p class="sub">26 documents · 4 980 lignes · avec une correction de ma part écrite dedans</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>Ton reproche :</strong> *« tu avances sur des sujets mais tu ne me fais pas profiter des resultats
+[…] ca me donne l'impression que tu travailles DE TON COTE et que le projet M'ECHAPPE. »*
+<strong>Ce document est la mesure de son étendue réelle.</strong> Tu avais cité quatre documents. Il y en a
+beaucoup plus. <strong>Tâches :</strong> #1475 (le détecteur) · #1476 (le PACK DÉCOUVERTE).</p></div>
+<hr>
+<h3>LE CHIFFRE</h3>
+<p><strong>26 documents d'analyse, 4 980 lignes, écrits pour toi entre le 29 septembre et aujourd'hui, et aucun ne t'a jamais été envoyé.</strong></p>
+<div class="highlight"><p>### ⚠️ UNE CORRECTION, ÉCRITE PLUTÔT QUE MASQUÉE</p><p><strong>La première version de ce document disait « aucun n'a de version lisible ». C'était FAUX</strong>, et
+je l'ai découvert en butant sur un garde-fou d'index quelques minutes plus tard. Les versions
+HTML <strong>existaient déjà</strong>, dans <code>docs/grand-projet/html/</code> — 33 pages, régénérées automatiquement
+depuis le texte.</p><p><strong>J'en avais créé sept doublons avant de m'en apercevoir.</strong> Ils ont été supprimés.</p><p><strong>Ce qui reste vrai, et c'est l'essentiel</strong> : elles existaient et <strong>ne t'ont jamais été
+envoyées</strong>. Le défaut n'était pas la mise en page, c'était la livraison — ce qui rend ton
+reproche encore plus exact que ma première formulation, puisque le travail était fini à 100 %
+et attendait sur un disque.</p><p><strong>Pourquoi je te le dis au lieu de corriger en silence</strong> : une mesure fausse qui s'auto-corrige
+sans trace est exactement ce que ce projet passe ses journées à traquer chez ses outils. Je ne
+vais pas m'en dispenser.</p></div>
+<p>Ils vivent dans <code>docs/grand-projet/02-strategie/</code> (le texte) et <code>docs/grand-projet/html/</code> (les pages lisibles). Ils répondent à tes questions, portent des mesures, et plusieurs d'entre eux attendaient explicitement ta décision.</p>
+<p><strong>Je ne te les envoie pas en bloc</strong> — ce serait le même problème par l'autre bout. Voici l'index, avec ce que chacun répond, pour que tu choisisses.</p>
+<hr>
+<h3>① CELUI QUI AURAIT DÛ PARTIR EN PREMIER <em>(déjà envoyé avec ce dossier)</em></h3>
+<p><strong><code>RÉPONSES À SES 49 QUESTIONS</code> — 641 lignes, écrit le 29 septembre.</strong></p>
+<p>Il répond à <strong>quarante-neuf</strong> de tes questions, chacune avec sa demande inavouée et l'action en face. <strong>Je l'ai trouvé aujourd'hui en cherchant autre chose.</strong> Il contient entre autres :</p>
+<table><thead><tr><th>Ta question</th><th>Où elle est répondue</th></tr></thead><tbody><tr><td>le PACK DÉCOUVERTE, ses neuf points</td><td>C35 à C39</td></tr><tr><td>« une Agence qui tourne à distance depuis le Cloud ? »</td><td>C29</td></tr><tr><td>« PACK AGENCE 360 » contre « SUITE TARANTINO »</td><td>C28</td></tr><tr><td>les étiquettes VERSION ADMIN / COMMERCIALISABLE, rétroactives</td><td>C23, C24, C27, C32, C33, C34</td></tr><tr><td>« un gros chantier… ou pas ? »</td><td>C40</td></tr><tr><td>les prix de la concurrence et le chiffre d'affaires imaginable</td><td>Q9</td></tr><tr><td>« est-ce que l'agence m'aide ou est-ce que je m'y perds ? »</td><td>Q7</td></tr></tbody></table>
+<p><strong>C'est le document qui rendait ton reproche le plus fondé</strong> : tu as reposé plusieurs de ces questions dans ton prompt d'aujourd'hui, alors qu'elles avaient une réponse écrite depuis quatre jours.</p>
+<hr>
+<h3>② LES DÉCISIONS QUI T'ATTENDAIENT, ET QUE TU N'AS JAMAIS VUES</h3>
+<table><thead><tr><th>Document</th><th>Lignes</th><th>Ce qu'il te demande</th></tr></thead><tbody><tr><td><code>LES DÉCISIONS QUI T'ATTENDENT, EN CINQ LOTS</code></td><td>182</td><td>dix-sept questions regroupées en cinq lots, pour que tu répondes par lot plutôt qu'une par une</td></tr><tr><td><code>LES DÉCISIONS QUI T'ATTENDENT — par lots</code></td><td>184</td><td>la première version, du 29</td></tr><tr><td><code>LA SÉANCE SUR L'OBJECTIF ULTIME</code></td><td>147</td><td><em>« tout est prêt, il ne manque que toi »</em> — c'est le titre</td></tr><tr><td><code>Quand pourra-t-on dire « l'Agence est terminée » ?</code></td><td>132</td><td>trois bornes, à choisir</td></tr><tr><td><code>LES QUESTIONS DE CALIBRAGE</code></td><td>218</td><td>le niveau ① de l'escalade</td></tr><tr><td><code>DEUX BLOCS DE 15 QUESTIONS POUR DÉGROSSIR</code></td><td>201</td><td>trente questions préparées</td></tr></tbody></table>
+<p><strong>Six documents dont le seul objet est de te faire décider quelque chose.</strong> C'est l'explication la plus directe des 19 tâches bloquées sur ton accord : les questions étaient prêtes, elles ne te sont jamais parvenues.</p>
+<hr>
+<h3>③ LES MESURES, CELLES QUI DISENT OÙ ON EN EST</h3>
+<table><thead><tr><th>Document</th><th>Lignes</th><th>Ce qu'il mesure</th></tr></thead><tbody><tr><td><code>CE QUI RALENTIT LE PROJET</code></td><td>227</td><td>tes quatre axes, mesurés</td></tr><tr><td><code>LA ROUTE VERS 50 OBLIGATIONS</code></td><td>185</td><td><em>« mesurée, pas estimée »</em></td></tr><tr><td><code>LE FILET MORD-IL VRAIMENT ?</code></td><td>181</td><td>et comment ma propre mesure s'est trompée trois fois</td></tr><tr><td><code>CE QUI RESTE VRAIMENT À FAIRE</code></td><td>156</td><td>ta question, sur les 114 tâches ouvertes de l'époque</td></tr><tr><td><code>LA PORTABILITÉ, VRAIMENT MESURÉE</code></td><td>107</td><td>avec la correction d'un chiffre que j'avais répété</td></tr><tr><td><code>NOS TROIS ZONES MESURENT-ELLES LA BONNE CHOSE ?</code></td><td>117</td><td>trois mesures, trois réponses</td></tr><tr><td><code>LE NOYAU EST-IL VRAIMENT EXTRACTIBLE ?</code></td><td>116</td><td>la question de l'export, mesurée</td></tr></tbody></table>
+<hr>
+<h3>④ LES ANALYSES DE FOND</h3>
+<table><thead><tr><th>Document</th><th>Lignes</th><th>Sujet</th></tr></thead><tbody><tr><td><code>LA VUE GLOBALE</code></td><td>294</td><td>ce que j'ai compris, ce que j'en pense, ce que je recommande</td></tr><tr><td><code>LES TROIS OBJECTIFS ULTIMES</code></td><td>242</td><td>reformulés à partir de tes jets du 30 septembre</td></tr><tr><td><code>LES ÉCHANGES DE DÉPART</code></td><td>199</td><td>notes brutes du grand changement</td></tr><tr><td><code>LES GRANDS AXES DE DÉPART</code></td><td>190</td><td>la carte initiale</td></tr><tr><td><code>LE CHEMIN</code></td><td>187</td><td>les grandes étapes et leurs sous-étapes</td></tr><tr><td><code>LA PLAQUETTE COMMERCIALE</code></td><td>178</td><td>avec l'écart écrit — c'est celle que tu as jugée non bonne</td></tr><tr><td><code>Les trois familles de la charte</code></td><td>176</td><td>75 % des Articles ne parlent pas du jeu</td></tr><tr><td><code>LA CIBLE</code></td><td>166</td><td>ce que ce projet cherche à obtenir</td></tr><tr><td><code>LES DEUX AGENTS QU'IL A DEMANDÉS</code></td><td>149</td><td>la conception, et pourquoi je ne les ai pas construits</td></tr><tr><td><code>À QUI EST CE PROJET</code></td><td>138</td><td>la propriété et la sécurité</td></tr><tr><td><code>Ses questions posées en cours de route</code></td><td>131</td><td>et ce qu'elles ont changé</td></tr><tr><td><code>LES CINQ IMPOSSIBLES</code></td><td>127</td><td>notre philosophie, révélée plutôt qu'inventée</td></tr><tr><td><code>Couverture de sa demande</code></td><td>125</td><td>chaque chose que tu as écrite, et où le plan y répond</td></tr></tbody></table>
+<hr>
+<h3>CE QUE JE PROPOSE</h3>
+<p><strong>Tu n'as pas à lire 4 980 lignes.</strong> Trois façons de procéder, et je ferai celle que tu choisis :</p>
+<p><strong>(a) Par urgence</strong> — je te livre d'abord le groupe ② (les six documents qui attendent une décision), parce qu'ils débloquent les 19 tâches à l'arrêt. C'est ce que je recommande.</p>
+<p><strong>(b) Par sujet</strong> — tu me dis quel sujet t'intéresse maintenant, je te livre ce qui le concerne.</p>
+<p><strong>(c) Tout, en HTML, d'un coup</strong> — faisable, mais tu te retrouveras avec vingt-six pièces jointes.</p>
+<hr>
+<h3>ET CE QUI EMPÊCHE QUE ÇA RECOMMENCE</h3>
+<p>Ce n'est pas une promesse de vigilance. Depuis aujourd'hui :</p>
+<ul><li><strong>un registre</strong> note ce qui t'est envoyé, et un détecteur nomme ce qui ne l'a pas été ;</li><li><strong>ce dossier-ci</strong> (<code>02-strategie</code>) a été ajouté aux dossiers surveillés <strong>le jour où j'y ai trouvé les 26 documents</strong> — il n'y était pas, et c'est pour ça qu'ils ont pu s'y accumuler. Le dossier <code>html/</code>, lui, y était déjà : au tout premier passage du détecteur, il a bien compté ses 33 pages comme « antérieures au registre, NON MESURÉ ». <strong>Le détecteur avait raison avant moi</strong> ;</li><li><strong>une règle de conduite</strong> me demande, à la fin de chaque compte rendu, de dire pour chaque document sans marque : soit je te l'envoie, soit je dis pourquoi il ne t'est pas destiné ;</li><li><strong>la Ronde</strong> te demande ce que tu as réellement reçu.</li></ul>
+<p><strong>Sa limite, que je redis</strong> : tout ça mesure l'ENVOI, jamais que tu l'as lu. Mais le cas qui a échoué vingt-six fois commence toujours par un non-envoi.</p>
+<hr>
+<h2>PLAN D'ACTION</h2>
+<table><thead><tr><th>État</th><th>Constat</th><th>Suite</th></tr></thead><tbody><tr><td>✅ MESURÉ</td><td>26 documents, 4 980 lignes, écrits pour toi et jamais livrés</td><td>#1475</td></tr><tr><td>✅ FAIT</td><td>le dossier qui les contenait est désormais surveillé</td><td>#1475</td></tr><tr><td>✅ FAIT</td><td>les 49 réponses mises en page et livrées</td><td>#1476</td></tr><tr><td>? À TRANCHER</td><td><strong>(a) par urgence, (b) par sujet, ou (c) tout d'un coup ?</strong></td><td>#1498</td></tr><tr><td>→ RETENU</td><td>le PACK DÉCOUVERTE : ses neuf questions ont leurs réponses dans le document des 49</td><td>#1476</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/ce-que-tu-nas-jamais-recu.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

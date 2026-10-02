@@ -83,3 +83,15 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/referentiel/fils-de-discussion.html` | `docs/referentiel/fils-de-discussion.md` | 15548 | 2026-10-02 20:38Z |
 | `docs/fils/html/index.html` | `docs/fils/index.md` | 19980 | 2026-10-02 20:39Z |
 | `docs/reponses/reponses-gros-prompt-2026-10-02.html` | `docs/reponses/reponses-gros-prompt-2026-10-02.md` | 55864 | 2026-10-02 20:39Z |
+| `docs/livrables/l-agence-ailleurs.html` | `docs/livrables/l-agence-ailleurs.md` | 19557 | 2026-10-02 21:07Z |
+| `docs/livrables/choisir-une-licence.html` | `docs/livrables/choisir-une-licence.md` | 18254 | 2026-10-02 21:11Z |
+| `docs/livrables/ou-en-est-le-grand-changement.html` | `docs/livrables/ou-en-est-le-grand-changement.md` | 13857 | 2026-10-02 21:14Z |
+| `docs/livrables/outils-reductibles-en-extension.html` | `docs/livrables/outils-reductibles-en-extension.md` | 16117 | 2026-10-02 21:18Z |
+| `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 48606 | 2026-10-02 21:23Z |
+| `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.html` | `docs/grand-projet/02-strategie/les-cinq-lots-de-decisions.md` | 19953 | 2026-10-02 21:25Z |
+| `docs/grand-projet/02-strategie/decisions-qui-attendent.html` | `docs/grand-projet/02-strategie/decisions-qui-attendent.md` | 17659 | 2026-10-02 21:25Z |
+| `docs/grand-projet/02-strategie/seance-objectif-ultime.html` | `docs/grand-projet/02-strategie/seance-objectif-ultime.md` | 16019 | 2026-10-02 21:25Z |
+| `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.html` | `docs/grand-projet/02-strategie/les-trois-bornes-de-la-fin.md` | 15445 | 2026-10-02 21:25Z |
+| `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.html` | `docs/grand-projet/02-strategie/questions-de-calibrage-2026-09-29.md` | 18587 | 2026-10-02 21:25Z |
+| `docs/grand-projet/02-strategie/questions-de-degrossissage.html` | `docs/grand-projet/02-strategie/questions-de-degrossissage.md` | 19467 | 2026-10-02 21:25Z |
+| `docs/livrables/ce-que-tu-nas-jamais-recu.html` | `docs/livrables/ce-que-tu-nas-jamais-recu.md` | 16072 | 2026-10-02 21:30Z |

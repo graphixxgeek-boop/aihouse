@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Agence ailleurs</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-02T21:07:56.778Z</div>
+    <h1>L'Agence ailleurs</h1>
+    <p class="sub">Ce qui part, ce qui reste, ce qui casse — trois mesures faites pour la première fois</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p><strong>De quoi on parle.</strong> Tu m'as posé deux séries de questions qui n'en font qu'une : *« quelles
+sont les règles que tu as toi et que l'agence n'a pas ? »* et *« l'utilisateur n'hérite pas de ce
+filet ? […] est-ce qu'il peut casser l'agence en codant son projet ? »*
+<strong>Ta peur, dans tes mots :</strong> « j'installe l'agence dans un nouveau projet, je l'utilise mais je
+ne la reconnais pas et certaines choses ne fonctionnent plus du tout. »
+<strong>Tâches :</strong> #1481 (le test contre un dépôt vierge) · #1484 (chantier B) · #1485 (chantier C).</p></div>
+<hr>
+<h3>CE QUE CE DOCUMENT APPORTE, ET POURQUOI IL N'EST PAS UN AVIS</h3>
+<p><strong>Trois mesures ont été faites, aucune n'était disponible avant aujourd'hui.</strong> Je ne te réponds pas « je pense que » : j'ai installé un vrai dépôt d'accueil et je lui ai fait subir l'Agence.</p>
+<p><strong>Ta peur était fondée, et la première mesure l'a démontrée en dix minutes.</strong></p>
+<hr>
+<h2>① LE TEST QUE PERSONNE N'AVAIT JAMAIS FAIT</h2>
+<p>L'Agence possède un outil, <code>the-king fonder</code>, dont le <strong>seul</strong> rôle est de doter un projet d'accueil de ses textes fondateurs quand il n'en a pas. Il n'avait <strong>jamais</strong> tourné contre un projet d'accueil. Jamais une fois.</p>
+<p>J'ai donc fabriqué un vrai petit projet — un carnet de jardin partagé, un README et deux documents de décisions, écrits comme une vraie équipe les écrit. Puis j'ai lancé l'outil dessus.</p>
+<h3>Le résultat brut</h3>
+<p><strong>0 case remplie sur 19.</strong> L'outil n'a rien proposé.</p>
+<p>Et pourtant le corpus était plein de convictions parfaitement claires : <em>« Nous préférons un outil que tout le monde comprend à un outil complet que personne n'ose toucher »</em> · <em>« une donnée fausse est pire qu'une donnée absente »</em> · <em>« Les données appartiennent aux jardiniers »</em> · <em>« Pas de classement entre jardiniers »</em>.</p>
+<h3>Trois causes empilées, et la troisième est la pire</h3>
+<p><strong>① Le seuil sortait de son propre nuage.</strong> L'outil ne retient une conviction que si elle <strong>revient</strong> plusieurs fois dans le corpus. Le seuil se calcule à partir de ce qu'il observe — c'est la bonne méthode — mais un <strong>plancher en dur de 3</strong> était appliqué par-dessus. Sur ce projet-ci, le maximum observé est 26 : le plancher ne mord jamais. Sur le projet d'accueil, le maximum observé est <strong>0</strong> : le seuil appliqué était donc <strong>au-dessus de tout ce que l'outil pouvait voir</strong>. Zéro résultat garanti, par construction.</p>
+<p>Le commentaire du code promettait pourtant, deux lignes plus haut, que ça ne pouvait pas arriver. La promesse était tenue par le calcul ; le plancher la défaisait.</p>
+<p><strong>② Un petit corpus ne peut pas « répéter ».</strong> Trois documents ne permettent pas à une idée de revenir trois fois. Tout le mécanisme est calibré sur ce dépôt-ci et ses <strong>7 191 convictions</strong> ; le projet d'accueil en rendait <strong>3</strong>.</p>
+<p><strong>③ ET L'OUTIL ACCUSAIT LE PROJET D'ACCUEIL.</strong> C'est le vrai scandale. Il n'écrivait pas « je n'ai pas pu mesurer ». Il écrivait, dix-neuf fois :</p>
+<div class="highlight"><p>🚨 <em>aucune phrase du corpus de ce projet ne tient ce rôle — c'est un vrai trou</em></p></div>
+<p><strong>Il reprochait à l'équipe d'accueil un défaut qui appartenait à l'instrument.</strong> Et c'est la première chose qu'un nouveau venu aurait vue de cette Agence.</p>
+<h3>Ce qui est corrigé</h3>
+<p>Le plancher ne peut plus dépasser le maximum observé. Et quand la récurrence ne discrimine réellement rien, l'outil <strong>refuse de conclure</strong> au lieu d'accuser :</p>
+<div class="highlight"><p>*la récurrence ne discrimine rien sur ce corpus : 3 convictions extraites, et aucune ne partage
+assez de vocabulaire avec une autre. Un corpus trop petit ou trop varié pour que « revenir
+plusieurs fois » veuille dire quelque chose n'est pas un corpus muet. Ce qui manque est de la
+MATIÈRE, pas une philosophie.*</p></div>
+<p><strong>Vérifié dans les deux sens</strong> : avec cinq documents au lieu de trois, le même outil remplit une case avec une vraie conviction du jardin — et sur ce projet-ci, rien n'a bougé (seuil 3, exactement comme avant la correction).</p>
+<hr>
+<h2>② CE QUI NE PARTIRA PAS AVEC L'AGENCE <em>(chantier B)</em></h2>
+<p>Ta question : <em>« quelles sont les regles que tu as toi et que l'agence n'a pas ? »</em></p>
+<h3>La distinction qui tranche, et elle est simple</h3>
+<p>Une règle qui gouverne mon comportement a une <strong>source</strong>. Si cette source est un <strong>fichier du dépôt</strong>, elle part avec l'Agence : le prochain lecteur, humain ou IA, peut l'atteindre. Si la source est une <strong>conversation</strong>, elle ne survit qu'à ma mémoire — donc elle n'existera pas dans ton nouveau projet, et <strong>personne ne remarquera son absence</strong>.</p>
+<p>C'est exactement ton « certaines choses ne fonctionnent plus du tout ».</p>
+<h3>La mesure</h3>
+<p><strong>3 règles de conduite sur 28 n'ont pour source qu'une conversation.</strong> Les 25 autres pointent un fichier qui existe vraiment — aucune source cassée.</p>
+<table><thead><tr><th>Règle</th><th>Sa seule source aujourd'hui</th></tr></thead><tbody><tr><td><code>eval-hors-ronde</code></td><td>ta demande orale du 23 septembre, marquée « GROS WARNING »</td></tr><tr><td><code>reveil-arme</code></td><td>la nuit perdue du 25 septembre</td></tr><tr><td><code>reveil-a-jour</code></td><td>deux numéros de tâches</td></tr></tbody></table>
+<p><strong>Ces trois-là disparaîtront</strong> à l'installation ailleurs. Et la dernière est la plus traître : elle cite des tâches, ce qui ressemble à une source — mais les tâches de CE projet ne partiront pas avec l'Agence.</p>
+<h3>Ce qui est désormais mécanique</h3>
+<p>SAFE-EXPORT, le Gardien qui pose la question « cette Agence est-elle transportable ? », mesure ça à chaque passage et nomme les règles concernées. <strong>Il NOMME, il ne juge pas</strong> : une règle née d'un incident peut légitimement n'avoir jamais eu de document, et lui en inventer un d'autorité serait écrire à ta place. Ce qui change, c'est qu'on ne peut plus l'ignorer sans le savoir.</p>
+<h3>Ce que ça ne couvre pas, et je préfère le dire</h3>
+<p>Cette mesure porte sur les règles <strong>déclarées</strong> à <code>angel</code>. Elle ne voit pas ce qui gouverne mon comportement sans avoir jamais été déclaré nulle part — les consignes de ma session, l'outillage de l'éditeur, nos habitudes de travail jamais écrites. <strong>Par définition, aucune mécanique ne peut compter ce que personne n'a inscrit.</strong> Le seul remède est de continuer à écrire les règles au lieu de les tenir de mémoire, ce que cette Agence fait déjà — mais la garantie s'arrête là, et la promettre plus loin serait mentir.</p>
+<hr>
+<h2>③ LE FILET <em>(chantier C)</em></h2>
+<p>Tes quatre questions, dans l'ordre.</p>
+<h3>« Est-ce que le filet consomme des tokens, plus il est long ? »</h3>
+<p><strong>NON. Zéro, quelle que soit sa longueur.</strong> C'est un programme qui tourne en local ; il ne fait aucun appel à une IA. Ce qu'il coûte est du <strong>temps d'attente</strong> — environ 9 minutes — et rien d'autre. Si ta crainte était budgétaire, elle est levée sans réserve.</p>
+<h3>« L'utilisateur n'hérite pas de ce filet ? »</h3>
+<p><strong>Ta question part d'une prémisse que la mesure renverse.</strong> Tu imagines que le filet teste le produit, et qu'il arriverait chez l'utilisateur comme un poids pour SON projet. Voici le compte réel des fichiers que le filet va chercher :</p>
+<table><thead><tr><th>Ce que le filet teste</th><th>Occurrences</th><th>Fichiers distincts</th></tr></thead><tbody><tr><td><strong>L'outillage de l'Agence</strong> (<code>scripts/</code>)</td><td>534</td><td><strong>82</strong></td></tr><tr><td>Le produit (<code>lib/</code>, <code>app/</code>)</td><td>4</td><td>3</td></tr></tbody></table>
+<p><strong>99 % du filet teste l'Agence elle-même.</strong> Ce n'est pas un filet pour ton projet qu'on transporterait par erreur : c'est <strong>la suite de tests de l'Agence</strong>, sans laquelle ses 82 outils ne sont plus testés du tout.</p>
+<p><strong>Ce que ça change pour ta décision, et c'est l'inverse de ce que tu supposais :</strong></p>
+<ul><li>le filet <strong>doit</strong> partir avec l'Agence, sinon l'Agence arrive non testée chez toi ;</li><li>ton projet, lui, <strong>n'hérite d'aucune protection</strong> : l'Agence ne teste pas ton code, et ne l'a jamais fait. Les 9 minutes ne protègent pas ton travail, elles protègent ses outils ;</li><li>donc il te faudra ton <strong>propre</strong> filet pour ton projet. L'Agence ne te le fournit pas aujourd'hui, et c'est un manque réel que cette mesure met au jour.</li></ul>
+<h3>« L'utilisateur peut-il casser l'agence en codant son projet ? »</h3>
+<p><strong>En grande partie non, et c'est une bonne nouvelle mesurée.</strong> La plupart des garde-fous partent de <strong>leurs propres registres</strong> : un fichier que tu écrirais et qui n'y figure pas leur est tout simplement invisible. Testé : un hypothétique <code>scripts/mon-import-clients.mjs</code> n'est accusé ni de non-portabilité, ni d'absence de kit — l'outil refuse même de se prononcer, parce qu'il ne sait pas ce qu'est ce fichier.</p>
+<p><strong>Mais certains garde-fous lisent TOUT l'arbre, et ceux-là te verraient.</strong> Celui que j'ai écrit aujourd'hui, par exemple, signale déjà <strong>10 dossiers</strong> qu'il ne reconnaît pas — un dossier que tu créerais y tomberait aussi. Ce ne sont pas des erreurs bloquantes : ce sont des questions posées. Mais multipliées par ton activité, elles deviendraient du bruit, et un outil bruyant cesse d'être lu.</p>
+<p><strong>Donc la réponse honnête : tu ne casseras pas l'Agence, mais tu la rendras bavarde.</strong> Et c'est un vrai sujet de conception, pas un détail.</p>
+<h3>« Comment isoler / protéger l'agence, &quot;verrouiller le code&quot; ? »</h3>
+<p>Tu dis ne pas connaître le terme, donc je l'explique sans jargon. « Verrouiller » peut vouloir dire trois choses très différentes, et elles ne coûtent pas la même chose :</p>
+<table><thead><tr><th>Ce que ça veut dire</th><th>Ce que ça empêche</th><th>Ce que ça coûte</th></tr></thead><tbody><tr><td><strong>Séparer les dossiers</strong> — l'Agence dans son coin, ton projet dans le sien</td><td>que tes fichiers et les siens se mélangent</td><td>presque rien, c'est une convention</td></tr><tr><td><strong>Rendre les fichiers non modifiables</strong> — en lecture seule</td><td>que tu modifies l'Agence par accident</td><td>tu ne peux plus la corriger non plus, et tu devras</td></tr><tr><td><strong>La livrer comme un paquet installé</strong> — comme une bibliothèque qu'on met à jour</td><td>que tu la modifies du tout, et ça te donne des mises à jour propres</td><td>c'est du vrai travail, et tu perds la possibilité de l'adapter</td></tr></tbody></table>
+<p><strong>Mon avis, et ce n'est qu'un avis</strong> : la première suffit aujourd'hui, et la troisième est la bonne cible à terme — mais elle n'a de sens qu'une fois l'Agence stabilisée, parce qu'un paquet qu'on doit corriger toutes les semaines est pire qu'un dossier.</p>
+<h3>Et la liste « ce qui n'est pas rationalisable »</h3>
+<p><strong>Je dois d'abord réparer une fausse déclaration</strong> : j'ai écrit qu'elle « existait en partie ». C'est faux, vérifié — le mot n'apparaît dans aucun document du dépôt.</p>
+<p><strong>Voici son premier élément, et c'est le plus gros du dépôt</strong> : le filet lui-même, un seul fichier de <strong>25 447 lignes et 3,2 Mo</strong>. Il n'est pas rationalisable au sens ordinaire, et pour une raison qui n'est pas sa taille : <strong>chacun de ses tests porte la raison d'un bug déjà payé</strong>. Le raccourcir voudrait dire jeter des raisons, donc rouvrir la porte à des bugs déjà corrigés une fois.</p>
+<p>Le reste de la liste se construit avec le chantier rationalisation.</p>
+<hr>
+<h2>PLAN D'ACTION</h2>
+<table><thead><tr><th>État</th><th>Constat</th><th>Suite</th></tr></thead><tbody><tr><td>✅ FAIT</td><td><code>fonder</code> testé contre un vrai dépôt d'accueil — il rendait 0/19 et accusait l'hôte</td><td>#1481</td></tr><tr><td>✅ FAIT</td><td>le seuil ne sort plus de son nuage, et l'outil refuse de conclure au lieu d'accuser</td><td>#1481</td></tr><tr><td>✅ FAIT</td><td>3 règles de conduite sur 28 ne partiront pas — mesuré et surveillé à chaque passage</td><td>#1484</td></tr><tr><td>✅ FAIT</td><td>le filet mesuré : 99 % de lui teste l'Agence, pas le produit</td><td>#1485</td></tr><tr><td>→ RETENU</td><td>ton projet n'hérite d'AUCUNE protection : l'Agence ne teste pas ton code</td><td>#1490</td></tr><tr><td>→ RETENU</td><td>les garde-fous qui lisent tout l'arbre deviendront bavards chez toi</td><td>#1491</td></tr><tr><td>? À TRANCHER</td><td>« verrouiller » : convention de dossiers, lecture seule, ou paquet installé ?</td><td>#1492</td></tr><tr><td>? À TRANCHER</td><td>les 3 règles sans domicile : leur écrire un document, ou les laisser mourir ?</td><td>#1493</td></tr><tr><td>→ RETENU</td><td>la liste « pas rationalisable », commencée ici par le filet</td><td>#1485</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/l-agence-ailleurs.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

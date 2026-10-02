@@ -226,6 +226,53 @@ oubli.
 Ce qui reste interdit dans tous les cas : appliquer la correction sur la branche de travail, même
 « juste pour voir », même en prévoyant de l'annuler.
 
+## LA RONDE PENDANT LA NUIT — les deux moitiés *(2026-10-02, tâche #1480)*
+
+**Sa demande, mot pour mot** : « je voudrais que tu puisses lancer une ou plusieurs rondes pendant
+le mode auto. Ca fait partie du process je pense, du process mode auto. Pourquoi as-tu bloqué le
+lancement ? Il faudrait qu'on fluidifie cette partie, que : des le lancement du mode auto on
+calibre ensemble la ronde principale à mener pendant la nuit, et aussi que tu disposes d'une
+formule "ronde auto" qui te permet de lancer des rondes selon ton propre calibrage, à tout moment
+pendant la nuit : quand tu penses que c'est pertinent. »
+
+### Pourquoi le lancement avait été bloqué, et ce n'était pas la raison qu'on croit
+
+**Ce n'était PAS la règle « aucune fenêtre bloquante la nuit ».** Ce document prévoit déjà
+l'exemption, et le process de la Ronde prévoit la combinaison D : zéro question, les points
+reportés au prochain passage en présence. La Ronde nocturne était permise.
+
+**C'était qu'aucun PROGRAMME n'existait.** Une Ronde se calibre avec lui — quels items, quel
+palier, quels items payants — et ce calibrage n'avait jamais été demandé au coucher. **Un process
+qui n'a pas d'entrée ne se lance pas, même quand rien ne l'interdit.** C'est un trou de process,
+pas une interdiction mal lue.
+
+### Moitié 1 — la Ronde CALIBRÉE, décidée avant qu'il s'endorme
+
+Étape `ronde-calibree-au-depart`, qui vient avec le plan de départ. Elle se demande **en même temps
+que le reste du calibrage de la nuit**, jamais après : quels items, quel palier, quels items
+payants et leur plafond.
+
+**Sans ce calibrage, la Ronde ne se lance pas.** Ce n'est pas une précaution : c'est que personne
+ne saurait quoi lancer.
+
+### Moitié 2 — la formule « RONDE AUTO », pour le cas imprévu
+
+Étape `ronde-auto-si-pertinent`, **facultative**. Elle couvre le cas qu'aucun calibrage ne peut
+prévoir : il est 3 h, le programme est terminé, une Ronde légère serait utile.
+
+**Trois bornes, et ce sont des PROPOSITIONS que l'utilisateur peut changer d'un mot.** Il ne les a
+pas fixées ; les inventer en silence serait trancher à sa place, les laisser vides rendrait
+l'étape inapplicable. Elles sont donc écrites ici, visibles :
+
+| Borne | Valeur proposée | Pourquoi |
+|---|---|---|
+| Combien par nuit | **2 au maximum**, en plus de la Ronde calibrée | au-delà, le temps passe en contrôle plutôt qu'en travail — et la nuit sert à produire |
+| Appels API | **zéro par défaut** | dépenser son budget pendant qu'il dort demande son accord au calibrage du départ, jamais une décision prise à 3 h |
+| Les questions sautées | **reportées EN UN BLOC au matin** | il doit pouvoir y répondre d'une traite, pas les retrouver éparpillées |
+
+**Elle est facultative, et c'est voulu** : une nuit sans Ronde auto est une nuit normale. La
+compter comme un manquement reprocherait l'absence d'un geste qui n'était pas dû.
+
 ## Si le plan est terminé avant la fin de la nuit
 
 On pioche dans les tâches ouvertes **non sensibles**, et on le dit clairement dans le rapport. Le
