@@ -98,3 +98,48 @@ de bon.
 **Le palier déclaré a été corrigé aussi** : laisser la promesse fausse dans `RELANCE_PALIERS`
 pendant qu'on la retire du message aurait déplacé le problème d'un cran, là où l'agent le lit tout
 autant. Le filet vérifie les deux.
+
+---
+
+## « Chaque item manuel doit laisser une trace » (2026-10-03, tâche #1519)
+
+**Son arbitrage du 2026-10-02**, sur ce que la Ronde avait trouvé de plus inconfortable sur
+elle-même : un item de procédure « traité au passage » est **indiscernable d'un item réellement
+exécuté** — ni l'agent ni le contrôleur ne peuvent faire la différence après coup. Sa décision :
+un item de procédure déclare qu'il est manuel **et ce qui prouve son passage** (une ligne de journal
+datée, un fichier écrit) ; **sans trace, il compte comme NON FAIT**.
+
+### La mesure a changé la façon de l'appliquer
+
+Le constat annonçait « 16 items sans rien ». Mesuré item par item sur les 45 :
+
+| | Combien | Ce que ça veut dire |
+|---|---|---|
+| portent une **commande lançable** | 27 | leur passage se prouve en la relançant |
+| nomment **déjà une trace** dans leur prose | 16 | son arbitrage était satisfait sur le fond |
+| ne déclaraient **ni l'un ni l'autre** | **2** | `dream-team-photo` et `the-final-judge` |
+
+**Le vrai trou n'était donc pas l'absence de traces : c'était qu'aucun contrôle ne pouvait dire si
+elles existaient.** Elles vivaient en prose, sous une forme qu'aucun mécanisme ne lit.
+
+### La preuve se LIT, elle ne se recopie pas
+
+Plutôt que d'ajouter un champ à 45 items — 45 transcriptions à la main, donc 45 occasions de
+diverger du texte qu'elles résument — `preuveDeLItem()` **reconnaît** la trace dans ce que l'item
+déclare déjà (Article 24). Un item ajouté demain est couvert le jour même, sans que personne y
+pense, et un item qui ne déclarerait rien ressort en rouge dès son premier passage.
+
+**Les deux manquants ont été réparés le jour même** : `dream-team-photo` déclare que son fichier
+livré s'inscrit au registre des remises, et `the-final-judge` que son verdict s'inscrit dans
+`docs/the-final-judge/index.md` — avec une précision qui lui est propre : **un item coûteux non
+lancé se déclare explicitement écarté, avec sa raison**, parce que ne rien écrire rendrait « pas
+lancé faute de besoin » indiscernable de « oublié ».
+
+**Où ça s'affiche** : dans le menu de la Ronde, **avant** de cocher — un item dont le passage ne se
+prouve pas doit être connu au moment où on choisit de le lancer, jamais au moment de le compter
+fait.
+
+**Hors portée, écrit dans le rapport** : il vérifie qu'une preuve est **déclarée**, jamais qu'elle
+a été **produite**. Un item qui nomme son journal et ne l'écrit pas passe ici pour conforme — c'est
+la moitié que seule une relecture peut couvrir, et la déclarer vaut mieux que de la laisser croire
+mesurée.

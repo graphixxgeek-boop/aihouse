@@ -574,7 +574,7 @@ export const CIRCLE_ITEMS = [
     label: "Régénérer la « photo » de la dream team (récap des outils nommés)",
     cout: "gratuit — lecture de la liste des outils déjà nommés dans CLAUDE.md/docs/regles-de-travail.md, mise en forme, zéro appel API",
     tokensEstimes: "modéré — rédaction d'un document HTML complet à partir d'une liste déjà connue",
-    execute: "Régénérer le document récapitulatif (nom, rôle, commentaire sur le nom choisi) de tous les outils/agents nommés du projet et le livrer en fichier HTML à l'utilisateur (cf. scripts/html-report.mjs) — pour le plaisir, jamais un livrable technique.",
+    execute: "Régénérer le document récapitulatif (nom, rôle, commentaire sur le nom choisi) de tous les outils/agents nommés du projet et le livrer en fichier HTML à l'utilisateur (cf. scripts/html-report.mjs) — pour le plaisir, jamais un livrable technique. PREUVE DE PASSAGE (2026-10-03, son arbitrage « chaque item manuel doit laisser une trace ») : le fichier livré est inscrit au registre des remises, docs/livraisons.json — sans cette inscription, l'item compte comme NON FAIT.",
     producesReport: true,
   },
   // THE-SCREENER (2026-09-20, demande explicite de l'utilisateur : « il y a aussi la possibilité de
@@ -767,7 +767,7 @@ export const CIRCLE_ITEMS = [
     label: "THE-FINAL-JUDGE — audit indépendant",
     cout: `${ALERT_ICON} COÛTEUX — ~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes (agent séparé), quel que soit le palier choisi`,
     tokensEstimes: `~${FINAL_JUDGE_TOKEN_COST.toLocaleString("fr-FR")} tokens fixes — le seul chiffre de ce paysage issu d'une vraie recherche documentée plutôt que d'une estimation à l'ordre de grandeur`,
-    execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (Article 22) — jamais un réflexe de routine, seulement si un vrai besoin de regard indépendant justifie la dépense.",
+    execute: "Consulter Smart Conso API ET SMART-CONSO-TOKEN avant de lancer quoi que ce soit (Article 22) — jamais un réflexe de routine, seulement si un vrai besoin de regard indépendant justifie la dépense. PREUVE DE PASSAGE (2026-10-03, son arbitrage « chaque item manuel doit laisser une trace ») : le verdict de l'audit est inscrit dans docs/the-final-judge/index.md ; un item COÛTEUX non lancé se déclare explicitement comme écarté, avec sa raison — ne rien écrire du tout rendrait « pas lancé faute de besoin » indiscernable de « oublié ».",
     costly: true,
     producesReport: true,
   },
@@ -1872,6 +1872,63 @@ export function findFoldersWithoutItem(items = CIRCLE_ITEMS, folders = CIRCLE_RE
 // la main, qui casserait son format existant (Article 19). cassandra-rh-signal (rapport complet,
 // HTML) et le récapitulatif de fin de Ronde suivent chacun leur propre mécanisme déjà établi,
 // jamais celui-ci — cf. leur `execute` respectif.
+// ————————————————————————————————————————————————————————————————————————
+// « CHAQUE ITEM MANUEL DOIT LAISSER UNE TRACE » (2026-10-03, tâche #1519)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SON ARBITRAGE DU 2026-10-02, en fenêtre dédiée, sur le constat le plus inconfortable de la Ronde
+// du jour : un item de procédure « traité au passage » est **indiscernable d'un item réellement
+// exécuté** — ni l'agent ni le contrôleur ne peuvent faire la différence après coup. Sa décision :
+// un item de procédure déclare qu'il est manuel ET ce qui prouve son passage (une ligne de journal
+// datée, un fichier écrit) ; sans trace, il compte comme NON FAIT.
+//
+// CE QUE LA MESURE A CHANGÉ DANS LA FAÇON DE L'APPLIQUER, et c'est le cœur de ce bloc : le constat
+// annonçait « 16 items sans rien ». Mesuré item par item, **27 portent une commande lançable, 16
+// nomment déjà une trace dans leur prose, et DEUX seulement ne déclarent ni l'un ni l'autre**. Son
+// arbitrage était donc déjà satisfait sur le fond — mais EN PROSE, c'est-à-dire sous une forme
+// qu'aucun mécanisme ne peut vérifier. Le vrai trou n'était pas l'absence de traces : c'était
+// qu'aucun contrôle ne pouvait dire si elles existaient.
+//
+// LA PREUVE SE LIT, ELLE NE SE RECOPIE PAS (Article 24) : plutôt que d'ajouter un champ à 45 items
+// — 45 transcriptions à la main, donc 45 occasions de diverger du texte qu'elles résument — on
+// RECONNAÎT la trace dans ce que l'item déclare déjà. Un item ajouté demain est couvert le jour
+// même, sans que personne y pense.
+export const MOTIF_COMMANDE_LANCABLE = /node\s+scripts\/[\w.-]+\.mjs/;
+export const MOTIF_TRACE_DECLAREE = /recordCircleItemReport|docs\/[\w./-]+\.(?:md|json|txt|html)|docs\/livraisons\.json/i;
+
+export function preuveDeLItem(item = {}) {
+  const ex = String(item?.execute ?? "");
+  if (MOTIF_COMMANDE_LANCABLE.test(ex)) {
+    return { type: "commande", detail: (ex.match(MOTIF_COMMANDE_LANCABLE) ?? [""])[0], pourquoi: "une commande lançable : son passage se prouve en la relançant" };
+  }
+  const trace = ex.match(MOTIF_TRACE_DECLAREE);
+  if (trace) {
+    return { type: "trace", detail: trace[0], pourquoi: "aucune commande, mais l'item nomme ce qui prouve son passage — c'est exactement ce que son arbitrage demande d'un item manuel" };
+  }
+  return { type: "aucune", detail: null, pourquoi: "ni commande lançable ni trace nommée : « traité au passage » y est indiscernable de « réellement fait », et il a tranché que sans trace un item compte comme NON FAIT" };
+}
+
+export function findItemsSansPreuve(items = CIRCLE_ITEMS) {
+  if (!Array.isArray(items) || !items.length) {
+    return { mesurable: false, pourquoi: "aucun item de Ronde lu : rendre « tous les items sont prouvables » sur zéro item serait le faux vert que ce contrôle existe pour empêcher (L5)" };
+  }
+  const parType = { commande: [], trace: [], aucune: [] };
+  for (const it of items) parType[preuveDeLItem(it).type].push(it.id);
+  return {
+    mesurable: true, total: items.length, parType, sansPreuve: parType.aucune,
+    horsPortee: "il vérifie qu'une preuve est DÉCLARÉE, jamais qu'elle a été produite. Un item qui nomme son journal et ne l'écrit pas passe ici pour conforme — c'est la moitié que seule une relecture peut couvrir, et la déclarer vaut mieux que de la laisser croire mesurée.",
+  };
+}
+
+export function itemsSansPreuveLines(r) {
+  if (!r?.mesurable) return [`— Preuve de passage par item — PAS MESURÉ : ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Preuve de passage par item (${r.total} items) : ${r.parType.commande.length} portent une commande lançable · ${r.parType.trace.length} nomment une trace · ${r.parType.aucune.length} ne déclarent rien —`];
+  for (const id of r.sansPreuve) L.push(`  🔴 ${id} — ni commande ni trace : « traité au passage » y est indiscernable de « fait », donc il compte comme NON FAIT (son arbitrage du 2026-10-02)`);
+  if (!r.sansPreuve.length) L.push("  ✅ chaque item déclare soit une commande lançable, soit ce qui prouve son passage.");
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export function recordCircleItemReport(itemId, contentText, { folders = CIRCLE_REPORT_FOLDERS, now = Date.now(), writeFileImpl = writeFileSync, readFileImpl = readFileSync, existsImpl = existsSync, mkdirImpl = mkdirSync, recordContributionImpl = recordToolContribution } = {}) {
   const folder = folders[itemId];
   if (!folder) throw new Error(`recordCircleItemReport: aucun dossier connu pour l'item "${itemId}" (cf. CIRCLE_REPORT_FOLDERS)`);
@@ -2116,6 +2173,11 @@ async function main() {
   console.log(formatCircleMenu(report));
   console.log("\nJamais exécuté seul : l'agent qui pilote ouvre une fenêtre à cocher (protocole AUTO/PRIME/GOAT, docs/regles-de-travail.md) pour choisir précisément quoi lancer.");
   console.log(red(`${ALERT_ICON} THE-FINAL-JUDGE reste visible ci-dessus mais n'est JAMAIS coché par défaut — vérifie Smart Conso API ET SMART-CONSO-TOKEN avant de le sélectionner.`));
+  // « CHAQUE ITEM MANUEL DOIT LAISSER UNE TRACE » (2026-10-03, tâche #1519, son arbitrage du
+  // 2026-10-02). Imprimé AVANT de cocher, et pas après : un item dont le passage ne se prouve pas
+  // doit être connu au moment où on choisit de le lancer, jamais au moment de le compter fait.
+  console.log("");
+  for (const l of itemsSansPreuveLines(findItemsSansPreuve())) console.log(l);
   console.log("Rappel : les autres items coûteux du paysage (check-spirit.mjs, HYPER-SCAN-CHECKPOINT complet) restent hors de cette ronde pour l'instant, jamais des cases à cocher ici.");
 
   // Périodicité des items costly (2026-09-21) — lu depuis les vrais registres, jamais une date
