@@ -1388,6 +1388,11 @@ export function formatRobustesseLines(v) {
 // secondes gagnées contre une cassure qui passe désormais inaperçue n'est pas un gain, c'est une
 // dette qu'on découvrira le jour où elle coûtera cher.
 export const FICHIER_HISTORIQUE = "docs/ezechiel-les-tests/historique.json";
+// L'EMPREINTE DU DERNIER PASSAGE VERT — la liste des SUJETS vérifiés, pas leur nombre
+// (2026-10-03, tâche #1580). Elle vit dans son propre fichier, et le choix se justifie : la
+// garder dans l'historique y mettrait vingt listes de 436 sujets, soit un demi-méga pour dix-neuf
+// listes que personne ne relira jamais. Seule la DERNIÈRE sert de référence.
+export const FICHIER_EMPREINTE = "docs/ezechiel-les-tests/empreinte-sequentielle.json";
 export const FICHIER_ROBUSTESSE = "docs/ezechiel-les-tests/robustesse.json";
 
 // LE CHARGEUR EST CELUI DE L'AGENCE, PLUS UNE COPIE LOCALE (2026-09-29, tâche #1205).
@@ -2082,6 +2087,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // L'HISTORIQUE EST CE QUI PERMET DE PARLER DE GAIN. Un relevé seul décrit un état ; c'est la
     // SUITE des relevés qui dit si un changement a servi à quelque chose. On garde les vingt
     // derniers : au-delà, un historique de chronométrage ne se relit plus, il s'accumule.
+    // L'EMPREINTE NE S'ÉCRIT QUE SUR UN PASSAGE VERT, pour la même raison qu'un passage rouge ne
+    // fait jamais référence : il s'est arrêté en route, donc sa liste de sujets est amputée, et
+    // elle servirait de barre trop basse — un garde-fou calé sur un échec valide tous les échecs
+    // suivants.
+    if (code === 0) {
+      const succes = lignes.map((l) => l.texte).filter((t) => /^Passed\s*:/.test(t));
+      writeFileSync(join(ROOT, FICHIER_EMPREINTE), JSON.stringify({
+        quand: new Date().toISOString(),
+        pourquoi: "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
+        sujets: [...new Set(succes.map((t) => t.slice(0, 60)))].sort(),
+      }, null, 2));
+      recordRegistryWrite(FICHIER_EMPREINTE, { par: "ezechiel-les-tests" });
+    }
     const histo = lireHistorique();
     histo.push({ quand: new Date().toISOString(), totalMs, code, groupes: groupes.length, succes: recolle.lignesPassed, anomalies: sante.anomalies.length, vert: sante.vert });
     writeFileSync(join(ROOT, FICHIER_HISTORIQUE), JSON.stringify(histo.slice(-20), null, 2));

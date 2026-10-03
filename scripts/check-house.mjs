@@ -27688,3 +27688,72 @@ async function testLeRegistreDesPartsSaitCeQuIlNaPasLu() {
   console.log('Passed: une ligne de registre écrite puis jamais lue se croit prise en compte (2026-10-03, tâche #1579). TROUVÉ EN ÉCRIVANT DEUX LIGNES PARFAITEMENT ORDINAIRES : le registre des passages en parts se remplit à la main — son en-tête le dit — et le lecteur n\'acceptait que des entiers nus. « 167,0 s » et « **82,2 s** », une décimale et un gras, n\'ont pas été lus. LE DÉFAUT N\'EST PAS LE REFUS, C\'EST LE SILENCE : la confrontation a rendu « 1 ligne confrontée sur 1, confirmée » sur un registre qui en portait TROIS, et cette phrase-là se lit comme un registre entièrement vérifié. C\'est la leçon L5 à l\'endroit exact où elle fait le plus de dégâts — une absence qui se lit comme une absence de problème — et c\'est aussi la leçon L4 par l\'autre bout : un garde-fou qui reproche à une main d\'écrire « 82,2 » plutôt que « 82 » cesse d\'être lu, exactement comme celui qui lui reprochait d\'arrondir avait dû être corrigé en septembre. DEUX CORRECTIONS, ET LA SECONDE EST LA SEULE QUI PROTÈGE VRAIMENT : le motif accepte désormais la décimale, la virgule française et l\'emphase ; et surtout, une ligne qui COMMENCE comme un passage — barre, date — sans pouvoir être lue est NOMMÉE en tête du rapport, avant même le verdict. Élargir un motif ne ferme jamais la classe : il y aura toujours une forme d\'écriture non prévue, et la seule protection durable est que le lecteur avoue ce qu\'il n\'a pas su lire. Vérifié sur le vrai registre : 3 lignes sur 3 lues, 0 illisible, les trois chiffres annoncés confirmés contre les passages séquentiels chronométrés le jour dit.');
 }
 await testLeRegistreDesPartsSaitCeQuIlNaPasLu();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1580 — UN COMPTE NE VOIT PAS « UN TEST PERDU, UN TEST AJOUTÉ »
+async function testLEmpreinteDesSucces() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LE TROU EST DANS LE GARDE-FOU ÉCRIT LE MATIN MÊME (#1576). Il compare un NOMBRE de succès à
+  // un nombre de référence, et une soustraction qui rend zéro se lit comme « rien n'a bougé ».
+  const memeCompte = F.comparerLesEmpreintes({ obtenue: ['Passed: a', 'Passed: b'], reference: ['Passed: a', 'Passed: c'] });
+  assert.strictEqual(memeCompte.perdus.length, 1, 'MUST CATCH: two lists of the same LENGTH can still have lost a verification — the count says nothing, the subjects do');
+  assert.deepStrictEqual(memeCompte.perdus, ['Passed: c'], 'and the missing subject is NAMED, so it can be fixed rather than hunted');
+  assert.deepStrictEqual(memeCompte.ajoutes, ['Passed: b'], 'the added one is named too, but it never accuses: a living repository adds tests');
+
+  // ── UN SUJET EN PLUS N'EST PAS UNE ANOMALIE, UN SUJET EN MOINS L'EST TOUJOURS.
+  const enPlus = F.comparerLesEmpreintes({ obtenue: ['Passed: a', 'Passed: b'], reference: ['Passed: a'] });
+  assert.strictEqual(enPlus.perdus.length, 0, 'more subjects than the reference is the normal case');
+  assert.match(F.formatEmpreinteLines(enPlus).join('\n'), /toutes là/, 'and it reads as a pass');
+  assert.match(F.formatEmpreinteLines(memeCompte).join('\n'), /ONT DISPARU/, 'while a loss reads as an alarm, with the subject printed');
+
+  // ── SANS RÉFÉRENCE, « PAS MESURÉ » — jamais un succès par défaut (leçons L5/L11). Sur un dépôt
+  // qui n'a jamais lancé le filet en séquentiel, ce fichier n'existe pas, et c'est un résultat.
+  const sansRef = F.comparerLesEmpreintes({ obtenue: ['x'], reference: [] });
+  assert.strictEqual(sansRef.mesurable, false, 'no reference fingerprint is not a pass');
+  assert.match(F.formatEmpreinteLines(sansRef).join('\n'), /PAS MESURÉ/, 'and it says so');
+  assert.strictEqual(F.empreinteDeReference({ lire: () => 'pas du json' }).mesurable, false, 'a damaged fingerprint file reads as an absence of reference, never as an absence of regression');
+  assert.strictEqual(F.empreinteDeReference({ lire: () => JSON.stringify({ sujets: [] }) }).mesurable, false, 'and an empty one too');
+  assert.strictEqual(F.empreinteDeReference({ lire: () => JSON.stringify({ sujets: ['Passed: a'] }) }).mesurable, true, 'a real one reads');
+
+  // ── L'EMPREINTE EST UN PRÉFIXE, ET C'EST TOUT L'INTÉRÊT : le début d'une ligne « Passed » est
+  // l'identité du test, sa FIN porte les chiffres vivants qui changent d'un passage à l'autre.
+  // C'est exactement la distinction qu'il a fallu faire à la main ce soir pour vérifier que les
+  // 436 succès étaient bien les mêmes des deux côtés.
+  const vivant = 'Passed: le compteur d\'usage réel des outils, mesuré sur le vrai dépôt : ';
+  assert.deepStrictEqual(
+    F.empreinteDesSucces([`${vivant}41 outils`, `${vivant}42 outils`]),
+    [vivant.slice(0, F.LONGUEUR_DE_L_EMPREINTE)],
+    'the same test printing a different live figure is ONE subject, not two — which is why the count drifts and the subjects do not');
+  assert.deepStrictEqual(F.empreinteDesSucces(['Passed: b', 'Passed: a', 'Passed: a']), ['Passed: a', 'Passed: b'], 'the fingerprint is deduplicated and sorted, so two runs compare directly');
+
+  console.log('Passed: un compte ne voit pas « un test perdu, un test ajouté » (2026-10-03, tâche #1580). LE TROU EST DANS LE GARDE-FOU ÉCRIT LE MATIN MÊME : `verdictDeCompletude` compare un NOMBRE de succès à un nombre de référence, et une soustraction qui rend zéro se lit comme « rien n\'a bougé ». ET CE N\'EST PAS UNE CRAINTE THÉORIQUE, LA SOIRÉE L\'A MONTRÉ : le même code a rendu 436 succès « distincts » en mode normal et 441 avec `--appels-partout`. La cause est bénigne — l\'épine rejouée dans quatre parts, et quelques tests impriment un chiffre vivant qui diffère d\'une part à l\'autre, donc leurs lignes ne se dédoublonnent pas — mais la conséquence ne l\'est pas : CES DOUBLONS PEUVENT COMPENSER UNE PERTE. Cinq lignes gonflées masqueraient cinq tests disparus, et le verdict resterait vert. CE QUI SE COMPARE DÉSORMAIS EST LA LISTE DES SUJETS : le PRÉFIXE d\'une ligne « Passed » est l\'identité du test, stable d\'un passage à l\'autre, là où sa FIN porte les chiffres vivants. C\'est très exactement la distinction qu\'il a fallu faire à la main ce soir pour vérifier que les 436 étaient bien les mêmes des deux côtés — la mécaniser évite de refaire ce travail, et surtout évite de l\'OUBLIER. LE SUJET MANQUANT EST NOMMÉ, JAMAIS SEULEMENT COMPTÉ : « il manque 3 vérifications » laisse chercher, « il manque celle-ci, celle-là et celle-là » laisse corriger. UN SUJET EN PLUS N\'ACCUSE JAMAIS : un dépôt vivant ajoute des tests, et un garde-fou qui le reprocherait cesserait d\'être lu (leçon L4). L\'empreinte ne s\'écrit que sur un passage VERT, pour la même raison qu\'un passage rouge ne fait jamais référence : il s\'est arrêté en route, donc sa liste est amputée et servirait de barre trop basse.');
+}
+await testLEmpreinteDesSucces();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1581 — LE BROUILLON D'UNE PART QUI SURVIT À UNE PART TOMBÉE EMPOISONNE TOUS LES PASSAGES SUIVANTS
+async function testLeBrouillonDUnePart() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LA LISTE EST UNE, et c'est ce qui ferme la classe. Elle était énumérée à deux endroits —
+  // le nettoyage d'avant et celui d'après — et elle y a divergé : les deux connaissaient le
+  // dossier de la part et sa copie du filet, aucun ne connaissait son journal d'usage (leçon L29,
+  // deux porteurs des mêmes données divergent toujours). Qui ajoute un brouillon l'ajoute ICI.
+  const b2 = F.brouillonsDUnePart(2);
+  const chemins = b2.map((x) => x.chemin);
+  assert.ok(chemins.includes('.sites-runtime/filet-part-2.mjs'), 'the derived copy of the net is scratch');
+  assert.ok(chemins.includes('.sites-runtime/p2'), 'the part runtime folder is scratch');
+  assert.ok(chemins.includes('.sites-runtime/p2-tool-usage-history.json'), 'MUST CATCH: the per-part usage journal is scratch too — forgetting it is what let a crashed run poison every later one');
+  assert.strictEqual(b2.find((x) => x.chemin.endsWith('p2')).dossier, true, 'and the folder is marked as one, so the removal is recursive');
+  assert.strictEqual(b2.find((x) => x.chemin.endsWith('.json')).dossier, false, 'while a file is not');
+
+  // ── CHAQUE PART A SON PROPRE BROUILLON, SANS RECOUVREMENT. Deux parts qui partageraient un seul
+  // chemin, c'est exactement la collision que ce runner existe pour éviter.
+  const tous = [1, 2, 3, 4, 8].flatMap((n) => F.brouillonsDUnePart(n).map((x) => x.chemin));
+  assert.strictEqual(new Set(tous).size, tous.length, 'no two parts ever share a scratch path');
+  assert.ok(F.brouillonsDUnePart(1).every((x) => x.chemin.startsWith('.sites-runtime/')), 'and everything lives under .sites-runtime/, which git ignores and no tool inspects');
+
+  console.log('Passed: le brouillon d\'une part qui survit à une part tombée empoisonne tous les passages suivants (2026-10-03, tâche #1581). TROUVÉ EN POUSSANT LE RUNNER À HUIT PARTS, et le défaut était DÉTERMINISTE : la part 2 échouait au même endroit, deux fois de suite, en lisant HUIT événements d\'usage là où elle venait d\'en écrire DEUX. LA CAUSE N\'EST PAS CELLE QU\'ON SOUPÇONNE, ET C\'EST CE QUI REND CE DÉFAUT VICIEUX : il ressemble trait pour trait à une collision entre parts — deux processus qui écriraient le même fichier — et c\'est la première chose qu\'on va vérifier sur un runner parallèle. Les journaux étaient pourtant parfaitement séparés, un par part, depuis la tâche #1181. **Le coupable était le TEMPS, pas le parallélisme** : le runner nettoyait la copie du filet et le dossier de la part, jamais son journal d\'usage. Un journal qui survit à une part TOMBÉE garde les événements écrits avant la chute — et le test qui les relit SAUVEGARDE PUIS RESTAURE le fichier, donc il reconduit la pollution à chaque passage au lieu de la nettoyer. Six événements fantômes attendaient là depuis un passage interrompu. ET IL DORMAIT : à quatre parts le bloc concerné tombait dans une autre part, dont le journal était propre — le piège n\'attendait que le jour où la répartition changerait. LA CORRECTION PORTE SUR LA CLASSE (leçon L37, et Article 24) : la liste des brouillons d\'une part est désormais UNE, exportée et contre-testée, là où elle était énumérée dans les deux nettoyages qui ont justement divergé de la même façon. Et le nettoyage se fait AVANT autant qu\'APRÈS : après, c\'est de l\'hygiène ; avant, c\'est la seule chose qui protège du passage précédent qui s\'est mal terminé — c\'est-à-dire précisément du cas où personne n\'a nettoyé. VÉRIFIÉ EN VRAI : 8 parts vertes après correction, 439 succès distincts et les 438 sujets de la référence tous présents. Au passage, un résultat négatif mesuré : à huit parts sur quatre cœurs le filet met 107,9 s contre 96,2 s à quatre — la sur-réservation coûte, et le plafond du runner par défaut au nombre de cœurs est le bon.');
+}
+await testLeBrouillonDUnePart();

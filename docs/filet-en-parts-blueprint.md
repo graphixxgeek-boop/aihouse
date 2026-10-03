@@ -21,9 +21,12 @@ s'exécutent : il peut révéler des pannes qui n'existaient pas. On ne l'ouvre 
 ## Le principe, en une phrase
 
 **Lire la suite de tests, en écrire N copies dérivées où chaque copie ne garde qu'une partie des
-blocs, les lancer en même temps, puis remettre la sortie dans l'ordre d'origine.**
+UNITÉS, les lancer en même temps, puis remettre la sortie dans l'ordre d'origine.**
 
-## Les cinq règles de conception, et aucune n'est cosmétique
+*(« Unité » et non « bloc » : il y en a au moins deux espèces, et ne chercher que la première est
+l'erreur la plus coûteuse de ce patron — voir la règle 6.)*
+
+## Les six règles de conception, et aucune n’est cosmétique
 
 1. **NE JAMAIS MODIFIER LE FICHIER DE TESTS.** Le runner lit, il n'écrit que des copies. Le mode
    séquentiel reste donc disponible à tout instant — et c'est la seule façon de savoir, le jour où
@@ -44,18 +47,73 @@ blocs, les lancer en même temps, puis remettre la sortie dans l'ordre d'origine
    chaque lancement. On les range avant d'afficher : rien ne change pour le lecteur humain, ni pour
    les outils qui relisent cette sortie. Les doublons du socle sont comptés, jamais jetés en silence.
 
+## La règle 6, la plus rentable de toutes : CHERCHER LA SECONDE ESPÈCE D'UNITÉ
+
+**Elle a été ajoutée après coup, et le retard a coûté le double du gain.** Le premier jet ne
+connaissait qu'une seule forme d'unité déplaçable — le bloc `{` … `}` écrit en colonne zéro — et
+tout ce qui ne lui ressemblait pas tombait dans le socle **par défaut, jamais par mesure**. Sur le
+dépôt témoin, ce « par défaut » pesait 49 % de la suite, et on l'a pris pour un plafond pendant
+quatre jours.
+
+**En le découpant plutôt qu'en le contemplant : 95 % de ce prétendu plafond vivait dans des corps
+de `function testX() { … }`, chacune appelée exactement une fois.** Une fonction est pourtant
+l'unité la plus sûre qui soit — son corps est étanche par construction du langage, rien de ce
+qu'elle déclare ne fuit, là où un bloc de niveau zéro partage le fichier avec tout le monde.
+
+**Et ce n'est pas la fonction qui se déplace, c'est son APPEL.** La déclaration reste dans toutes
+les copies : définir une fonction ne coûte rien et garantit qu'aucune référence ne peut se casser.
+Seule la ligne `testX();` disparaît des copies qui ne la portent pas. C'est plus sûr que de
+déplacer un bloc, qui supprime pour de bon ce qu'il déclarait.
+
+**Les quatre conditions, et aucune ne se négocie** (c'est une suite de tests : un faux positif
+rend un vert sur du code que personne n'exécute) :
+
+1. la fonction est déclarée au niveau zéro du fichier, hors de tout bloc ;
+2. son nom n'apparaît que **deux fois** dans tout le fichier — sa déclaration et son appel. Trois
+   occurrences, et on ne sait plus qui l'appelle : on refuse ;
+3. l'appel est seul sur sa ligne, en colonne zéro, sans affectation de résultat ;
+4. son corps ne touche pas l'état commun **et n'ÉCRIT dans aucun nom de niveau fichier**.
+
+**La quatrième est celle qui protège, et elle se trompe du bon côté** : une locale homonyme fait
+rester l'appel dans le socle, c'est-à-dire qu'il tourne partout comme avant. On perd un peu de
+gain, jamais une vérification.
+
+**LE PIÈGE DE LA QUATRIÈME CONDITION, ET IL A FAILLI COÛTER UN TIERS DU GAIN.** « Un nom de niveau
+fichier » ne veut pas dire « un nom déclaré sur une ligne de niveau fichier ». Une fonction fléchée
+écrite sur une seule ligne à plat — `globalThis.fetch = async (...a) => { const r = await f(a); }` —
+déclare `r` DANS son corps, pas au niveau du fichier. Le premier jet les confondait et renvoyait
+59 fonctions au socle pour des « r », « c », « p ». **La correction est la profondeur d'accolades**,
+suivie sur tout le fichier, chaînes et commentaires écartés : seule une déclaration à la
+profondeur zéro est de niveau fichier.
+
+**Et c'est la bonne leçon à emporter, parce qu'elle dit où s'arrêter.** Le même dépôt a essayé le
+même jour deux détecteurs plus ambitieux — « quel bloc emploie un nom né ailleurs ? » — et les deux
+ont échoué, l'un trop étroit, l'autre rendant « a », « n » et « t ». La différence n'est pas une
+question de réglage : **savoir d'où vient un nom EMPLOYÉ demande une analyse de portées ; savoir si
+une DÉCLARATION est imbriquée se COMPTE.** Quand un détecteur a besoin du premier, il faut un vrai
+analyseur de syntaxe ou rien.
+
 ## Ce qu'il faut mesurer AVANT de l'écrire, sous peine de promettre faux
 
 Le socle est rejoué N fois, donc il fixe le plancher. La formule est simple et il faut la poser
 avant de coder :
 
 ```
-durée attendue ≈ socle + (somme des blocs déplaçables ÷ nombre de parts)
+durée attendue ≈ socle + (somme des unités déplaçables ÷ nombre de parts)
 ```
 
 Un socle qui pèse un tiers de la suite interdit structurellement la division par quatre. Annoncer
 un gain « ×4 » sans avoir mesuré le socle est la promesse la plus facile à faire et la plus sûre à
 ne pas tenir.
+
+**ET CE PLANCHER DÉCIDE DE LA FORME DU PROBLÈME, PAS SEULEMENT DE SA TAILLE** — c'est pour ça qu'il
+se recalcule après chaque élargissement du découpage, jamais une fois pour toutes. Sur le dépôt
+témoin il valait 121 s : à ce niveau, passer de quatre à soixante-quatre parts faisait gagner 30
+secondes en tout, donc aucun matériel ne pouvait sauver la suite. La règle 6 l'a ramené à 6 s, et
+la même formule dit désormais que dix cœurs suffisent à passer sous la demi-minute. **Un objectif
+de durée est à juger contre le PLANCHER, jamais contre la durée du jour** : tant que le plancher
+est au-dessus de la cible, acheter des cœurs ne sert à rien, et c'est exactement ce qu'un chiffre
+non recalculé laisse croire.
 
 ## Les obstacles à chercher AVANT de paralléliser, jamais après
 

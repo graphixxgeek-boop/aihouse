@@ -78,7 +78,36 @@ refusés.
 **Le plancher change la forme du problème, pas seulement sa taille.** Tant qu'il valait 121 s,
 passer à huit parts n'avait aucun intérêt — la projection donnait 137 s, c'est-à-dire pire qu'à
 quatre. À 6,4 s, la même projection donne 36,6 s. Ce qui limite désormais le filet n'est plus sa
-structure, c'est le nombre de cœurs de la machine.
+structure, c'est le nombre de cœurs de la machine (quatre ici).
+
+### Ce que ça répond à sa contrainte des 30 secondes (tâche #1485)
+
+Sa phrase du 2026-10-02 : « raisonnablement l'agence ne peut pas débarquer avec un filet de plus de
+30 sec ». **Avec l'ancien plancher, cette cible était mathématiquement hors d'atteinte** — et pas
+« difficile » : hors d'atteinte. La formule `plancher + divisible ÷ parts` donnait 152,9 s à quatre
+parts, 137,1 s à huit, 129,2 s à seize et **123,3 s à soixante-quatre**. Aucun matériel ne pouvait
+sauver le filet, parce que ce n'était pas une question de matériel.
+
+| Parts | Avec l'ancien plancher (121,3 s) | Avec le plancher actuel (6,4 s) |
+|---|---|---|
+| 4 | 152,9 s | 66,8 s |
+| 8 | 137,1 s | 36,6 s |
+| **10** | — | **30,5 s** |
+| 12 | — | 26,5 s |
+| 16 | 129,2 s | 21,5 s |
+| 64 | 123,3 s | — |
+
+**MESURÉ, ET LA PROJECTION NE SE VÉRIFIE PAS TELLE QUELLE SUR UNE MACHINE SATURÉE** : poussé à
+huit parts sur ces quatre cœurs, le filet met **107,9 s, c'est-à-dire PLUS que les 96,2 s à quatre
+parts**. La projection suppose un cœur disponible par part ; au-delà, la sur-réservation ajoute de
+la contention au lieu d'en retirer. Le runner plafonne donc par défaut au nombre de cœurs, et ce
+passage est ce qui permet de le dire au lieu de le supposer. Les lignes à 10, 12 et 16 parts du
+tableau décrivent une machine qui aurait ce nombre de cœurs — jamais celle-ci.
+
+**Dix cœurs passent sous la demi-minute.** La cible est donc devenue une question d'achat de
+machine, ce qu'elle n'était pas ce matin. Ce sont des projections, pas des mesures : le seul
+chiffre mesuré sur cette machine à quatre cœurs est 82,2 s, et l'écart avec les 66,8 s théoriques
+est le coût de démarrage des processus plus l'épine résiduelle rejouée quatre fois.
 
 **Et la vérification qui compte n'est pas la durée** : la liste des tests exécutés est IDENTIQUE à
 celle du séquentiel, sujet par sujet — 436 des deux côtés, les quatre lignes qui diffèrent étant des

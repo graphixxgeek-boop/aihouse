@@ -417,6 +417,19 @@ export function repartir(blocs = [], combien = PARTS_PAR_DEFAUT) {
 // `ReferenceError` immédiat, jamais un vert silencieux. Et le garde-fou qui compte vraiment est le
 // NOMBRE DE SUCCÈS DISTINCTS : s'il tombe sous celui du séquentiel, une vérification a disparu, et
 // c'est exactement la faute que ce gain ne doit jamais coûter.
+// LE BROUILLON D'UNE PART — tout ce qu'un passage laisse derrière lui, en un seul endroit
+// (2026-10-03, tâche #1581). Une liste énumérée à deux endroits en diverge toujours (leçon L29),
+// et c'est précisément ce qui est arrivé : le nettoyage connaissait le dossier de la part et sa
+// copie du filet, jamais son journal d'usage. Qui veut ajouter un brouillon l'ajoute ICI, et les
+// deux nettoyages — celui d'avant et celui d'après — en héritent sans qu'on y pense (Article 24).
+export function brouillonsDUnePart(numero = 1) {
+  return [
+    { chemin: `.sites-runtime/filet-part-${numero}.mjs`, dossier: false },
+    { chemin: `.sites-runtime/p${numero}`, dossier: true },
+    { chemin: `.sites-runtime/p${numero}-tool-usage-history.json`, dossier: false },
+  ];
+}
+
 // `appelsRetires` — LES LIGNES D'APPEL QUI NE SONT PAS DE CETTE PART (2026-10-03, tâche #1578).
 // Seule la LIGNE D'APPEL disparaît ; la DÉCLARATION de la fonction reste dans toutes les parts.
 // C'est ce qui rend ce déplacement plus sûr que celui d'un bloc : définir une fonction ne coûte
@@ -539,6 +552,21 @@ export function findImportsIrresolus(texteDeLaPart = "", { existe = null, root =
 // pas de référence, on le DIT : « je n'ai rien à quoi comparer » et « rien n'a été perdu » ne
 // s'écrivent jamais pareil (leçons L5/L11).
 export const HISTORIQUE_EZECHIEL = "docs/ezechiel-les-tests/historique.json";
+export const EMPREINTE_EZECHIEL = "docs/ezechiel-les-tests/empreinte-sequentielle.json";
+
+// L'EMPREINTE DE RÉFÉRENCE, et son absence est un RÉSULTAT, jamais un succès par défaut : sur un
+// dépôt qui n'a jamais lancé le filet en séquentiel, ce fichier n'existe pas, et le dire vaut
+// mieux que de comparer à rien en silence (leçons L5/L11).
+export function empreinteDeReference({ lire = null, root = "" } = {}) {
+  try {
+    const brut = lire ? lire(EMPREINTE_EZECHIEL) : readFileSync(new URL(`../${EMPREINTE_EZECHIEL}`, import.meta.url), "utf8");
+    const o = JSON.parse(brut);
+    if (!Array.isArray(o?.sujets) || !o.sujets.length) return { mesurable: false, pourquoi: `${EMPREINTE_EZECHIEL} ne porte aucun sujet` };
+    return { mesurable: true, sujets: o.sujets, quand: o.quand ?? null };
+  } catch {
+    return { mesurable: false, pourquoi: `${EMPREINTE_EZECHIEL} est illisible ou absent — un passage séquentiel vert (\`node scripts/ezechiel-les-tests.mjs sante\`) l'écrit` };
+  }
+}
 
 export function referenceSequentielle({ lire = null, root = "" } = {}) {
   let brut;
@@ -583,6 +611,59 @@ export function verdictDeCompletude({ distincts = 0, reference = {} } = {}) {
 // découpage par plages de lignes rend 121 s, et le lancement RÉEL à quatre parts (147 à 169 s par
 // part) en implique 124 par l'équation du plancher. Un seul des deux n'aurait rien prouvé, parce
 // que le recollage chronomètre↔groupes se déclare lui-même INCOMPLET.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// L'EMPREINTE DES SUCCÈS — comparer des SUJETS, jamais un nombre (2026-10-03, tâche #1580)
+//
+// LE TROU QUE CECI FERME EST DANS LE GARDE-FOU ÉCRIT CE MATIN MÊME. `verdictDeCompletude` compare
+// un NOMBRE de succès à un nombre de référence. Un nombre ne peut pas voir « un test perdu, un
+// test ajouté » : la soustraction rend zéro, et le runner annonce « COMPLET ».
+//
+// CE N'EST PAS UNE CRAINTE THÉORIQUE, LA SOIRÉE L'A MONTRÉ DEUX FOIS. Un même passage a rendu 436
+// succès « distincts » en mode normal et 441 avec `--appels-partout` — cinq de plus, sur
+// exactement le même code. La cause est bénigne (l'épine rejouée dans quatre parts, et quelques
+// tests impriment un chiffre vivant qui diffère d'une part à l'autre, donc leurs lignes ne se
+// dédoublonnent pas), mais la conséquence ne l'est pas : CES DOUBLONS PEUVENT COMPENSER UNE PERTE.
+// Cinq lignes gonflées masqueraient cinq tests disparus, et le verdict resterait vert.
+//
+// CE QUI SE COMPARE DÉSORMAIS EST LA LISTE DES SUJETS. Le préfixe d'une ligne « Passed » est son
+// identité — stable d'un passage à l'autre — là où sa fin porte les chiffres vivants qui changent.
+// C'est exactement la distinction qu'on a dû faire à la main ce soir pour vérifier que les 436
+// étaient bien les mêmes des deux côtés : la mécaniser évite de refaire ce travail, et surtout
+// évite de l'OUBLIER.
+//
+// ET LE SUJET MANQUANT EST NOMMÉ, jamais seulement compté : « il manque 3 vérifications » laisse
+// chercher, « il manque celle-ci, celle-là et celle-là » laisse corriger.
+export const LONGUEUR_DE_L_EMPREINTE = 60;
+
+export function empreinteDesSucces(lignes = []) {
+  return [...new Set(lignes.map((l) => String(l).slice(0, LONGUEUR_DE_L_EMPREINTE)))].sort();
+}
+
+// Ce que la comparaison de deux empreintes rend, et le PERDU est le seul qui accuse : un sujet
+// AJOUTÉ est le cas normal d'un dépôt vivant, jamais une anomalie.
+export function comparerLesEmpreintes({ obtenue = [], reference = [] } = {}) {
+  if (!reference.length) {
+    return { mesurable: false, pourquoi: "aucune empreinte de référence : la comparaison par SUJET n'est pas possible, seul le compte l'est — et un compte ne voit pas « un test perdu, un test ajouté »" };
+  }
+  const ref = new Set(reference);
+  const obt = new Set(obtenue);
+  const perdus = reference.filter((x) => !obt.has(x));
+  const ajoutes = obtenue.filter((x) => !ref.has(x));
+  return { mesurable: true, perdus, ajoutes, intacts: reference.length - perdus.length };
+}
+
+export function formatEmpreinteLines(c = {}) {
+  if (!c.mesurable) return [`SUJETS — PAS MESURÉ : ${c.pourquoi}`];
+  if (!c.perdus.length) {
+    return [`✅ SUJETS — les ${c.intacts} vérifications de la référence sont toutes là${c.ajoutes.length ? `, et ${c.ajoutes.length} de plus` : ""}. Un compte seul n'aurait pas pu le dire : il ne voit pas « un test perdu, un test ajouté ».`];
+  }
+  return [
+    `🚨 SUJETS — ${c.perdus.length} vérification(s) de la référence ONT DISPARU. Le compte pouvait l'ignorer ; la liste ne le peut pas :`,
+    ...c.perdus.slice(0, 10).map((x) => `     · ${x}…`),
+    ...(c.perdus.length > 10 ? [`     · … et ${c.perdus.length - 10} autre(s).`] : []),
+  ];
+}
+
 export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 4, 6, 8] } = {}) {
   if (!src) return { mesurable: false, pourquoi: "aucun filet fourni : un plancher calculé sur rien se lirait comme un plancher nul" };
   if (!mesures.length) return { mesurable: false, pourquoi: "aucun chronométrage : le plancher est un partage de TEMPS, pas de lignes — sans durées il n'y a rien à partager (leçons L5/L11)" };
@@ -859,6 +940,10 @@ async function main() {
   // convient donc exactement, et il est déjà ignoré par git et par les outils.
   const dossier = new URL("../.sites-runtime/", import.meta.url);
   mkdirSync(dossier, { recursive: true });
+  // CHAQUE PART REPART DE RIEN, et c'est le passage PRÉCÉDENT qu'on efface ici — celui qui s'est
+  // peut-être arrêté en plein milieu sans rien nettoyer (cf. le commentaire du nettoyage de fin).
+  const balayer = (n) => { for (const b of brouillonsDUnePart(n)) { try { rmSync(new URL(`../${b.chemin}`, import.meta.url), { recursive: b.dossier, force: true }); } catch { /* rien à nettoyer */ } } };
+  for (let i = 0; i < combien; i++) balayer(i + 1);
   const chemins = parts.map((p, i) => {
     const chemin = new URL(`../.sites-runtime/filet-part-${i + 1}.mjs`, import.meta.url);
     // L'ÉPINE NE TOURNE QUE DANS LA PREMIÈRE PART quand l'option est demandée. Elle reste PARTOUT
@@ -887,8 +972,25 @@ async function main() {
   } })));
   const total = Date.now() - t0;
 
-  for (const c of chemins) { try { rmSync(c); } catch { /* déjà parti */ } }
-  for (let i = 0; i < parts.length; i++) { try { rmSync(new URL(`../.sites-runtime/p${i + 1}`, import.meta.url), { recursive: true, force: true }); } catch { /* rien à nettoyer */ } }
+
+  // LE JOURNAL D'USAGE D'UNE PART EST DU BROUILLON, ET IL DOIT PARTIR AVEC LE RESTE (2026-10-03,
+  // tâche #1581). Il ne l'était pas, et le piège qu'il tendait est le plus vicieux rencontré sur
+  // ce runner : un journal qui survit à une part TOMBÉE garde les événements qu'elle a écrits
+  // avant de mourir, et le test qui les relit SAUVEGARDE PUIS RESTAURE le fichier — donc il
+  // reconduit la pollution à chaque passage au lieu de la nettoyer. Trouvé à huit parts, où le
+  // bloc concerné lisait HUIT événements là où il venait d'en écrire deux, deux fois de suite,
+  // exactement au même endroit.
+  //
+  // CE QUI REND CE DÉFAUT DANGEREUX N'EST PAS QU'IL CASSE, C'EST QU'IL MENT SUR SA CAUSE : il
+  // ressemble trait pour trait à une collision entre parts — deux processus qui écriraient le
+  // même fichier — et c'est la première chose qu'on soupçonne sur un runner parallèle. Les
+  // journaux étaient pourtant parfaitement séparés ; le coupable était le TEMPS, pas le
+  // parallélisme. Et il dormait : à quatre parts le bloc tombait ailleurs, sur un journal propre.
+  //
+  // LE NETTOYAGE SE FAIT AVANT ET APRÈS. Après, c'est l'hygiène ; AVANT, c'est la seule chose qui
+  // protège du passage précédent qui s'est mal terminé — et c'est précisément le cas où personne
+  // n'a nettoyé.
+  for (let i = 0; i < parts.length; i++) balayer(i + 1);
 
   const recolle = recollerLesSorties(resultats.map((r) => r.out), src);
   for (const l of recolle.lignes) console.log(l);
@@ -901,6 +1003,14 @@ async function main() {
   const completude = verdictDeCompletude({ distincts: recolle.lignes.length, reference: referenceSequentielle() });
   console.log(completude.message);
   if (completude.suffisant === false) process.exitCode = 1;
+
+  // LA COMPARAISON PAR SUJET VIENT APRÈS LE COMPTE, ET ELLE EST PLUS FORTE QUE LUI (#1580) : un
+  // compte ne voit pas « un test perdu, un test ajouté », et la soirée a montré que les doublons
+  // de l'épine peuvent gonfler ce compte de cinq lignes sur exactement le même code.
+  const ref = empreinteDeReference();
+  const sujets = comparerLesEmpreintes({ obtenue: empreinteDesSucces(recolle.lignes), reference: ref.mesurable ? ref.sujets : [] });
+  for (const l of formatEmpreinteLines(sujets)) console.log(l);
+  if (sujets.mesurable && sujets.perdus.length) process.exitCode = 1;
 
   const rate = resultats.filter((r) => r.code !== 0);
   if (rate.length) {

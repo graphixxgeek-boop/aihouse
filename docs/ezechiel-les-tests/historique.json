@@ -88,5 +88,14 @@
     "succes": 430,
     "anomalies": 1,
     "vert": false
+  },
+  {
+    "quand": "2026-10-03T20:06:13.101Z",
+    "totalMs": 256119,
+    "code": 0,
+    "groupes": 420,
+    "succes": 439,
+    "anomalies": 1,
+    "vert": false
   }
 ]
