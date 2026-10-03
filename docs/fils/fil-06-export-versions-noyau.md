@@ -1,9 +1,9 @@
 # FIL 06 — L'export de l'Agence, son noyau, et la question des « plusieurs versions »
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-10-02
+**Dernier mouvement :** 2026-10-03
 **Place dans le plan :** Étage 2 — ça ne se décide qu'une fois l'organisation cible posée (fil 03), et ça commande la commercialisation (fil 07).
-**Saisines :** COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité ») · gros prompt du 2026-10-02 (le filet transporté)
+**Saisines :** COMMANDE IMPORTANTE · TARGET ARCHITECTURE · réponses 2026-09-29 · réponses 2026-09-30 · sa consigne du 2026-10-01 (« complète la portabilité ») · gros prompt du 2026-10-02 (le filet transporté) · réponses 2026-10-03 (le module, le cœur)
 
 ---
 
@@ -153,3 +153,29 @@ rendre ce qu'il produit. Une mesure, pas une opinion.
 
 **Q6.8 — À MOI, tâche #1484.** La liste des règles qui vivent dans mes instructions et PAS dans
 les fichiers de l'Agence — celles qui disparaîtront à l'export sans que personne le voie.
+
+---
+
+## CE QUI A BOUGÉ LE 2026-10-03 — le cœur est défini, et il est mesuré
+
+**Ta question (P28, P30, P31, P46, P85) :** *« Un module est un ensemble d'agents qui œuvrent dans
+un sens commun pour produire UNE PRESTATION. La partie indétachable est ce que toute prestation
+réclame quoi qu'il arrive, le cœur est le cœur de la partie indétachable. […] encore faut-il
+définir le cœur. Ai-je bien compris ta vision ? Est-ce réaliste ? »*
+
+**Ma réponse, et elle est mesurée, pas raisonnée** *(rapport :
+`docs/livrables/le-module-la-partie-indetachable-le-coeur-2026-10-03.md`, tâche #1538)* :
+
+- **Prise au mot, ta définition de la partie indétachable rend UN SEUL fichier** sur 88 points
+  d'entrée. Ce n'est pas une mesure ratée : il suffit d'un outil autonome pour vider une
+  intersection. **Ce que ça dit répond à ton « est-ce réaliste ? » : l'Agence est DÉJÀ presque
+  entièrement modulaire.** Ce qui manque n'est pas la modularité — c'est le cœur.
+- **Le cœur fait QUATRE fichiers** : `lib-json` (atteint par 100 % des points d'entrée),
+  `tool-usage` (99 %), `lib-shell` (97 %), `report-template` (94 %). Le suivant tombe à 51 %, donc
+  la coupe n'est pas un choix : elle est lue dans la distribution.
+- **Ta définition du module décrit une CIBLE, pas l'état actuel** : 71 prestations sur 76 ne sont
+  portées que par UN outil, alors que tu écris « un ensemble d'agents ».
+
+**Q6.9 — À TOI.** Ta définition du module décrit la cible. *(a) on la garde telle quelle, et on
+mesure l'écart à la cible · (b) on la reformule pour qu'elle décrive aussi l'état actuel · (c) on
+en écrit deux, une « cible » et une « constatée » · (d) explique-moi d'abord ce que ça change*

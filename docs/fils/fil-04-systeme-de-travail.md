@@ -1,9 +1,9 @@
 # FIL 04 — Notre système de travail : questions, réponses, fils
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-10-02
+**Dernier mouvement :** 2026-10-03
 **Place dans le plan :** Transverse — ce fil ne produit rien du projet, il conditionne la vitesse de tous les autres.
-**Saisines :** COMMANDE IMPORTANTE · QUESTIONS · réponses 2026-09-29 · réponses 2026-09-30 · demande orale du 30/09 au soir · gros prompt du 2026-10-02
+**Saisines :** COMMANDE IMPORTANTE · QUESTIONS · réponses 2026-09-29 · réponses 2026-09-30 · demande orale du 30/09 au soir · gros prompt du 2026-10-02 · réponses 2026-10-03 (les fils alimentés par tout canal)
 
 ---
 
@@ -178,3 +178,37 @@ renvoyer au document plutôt que de le recopier*
 
 **Q4.8 — À MOI, tâche #1483.** Câbler pour de vrai le flux que tu décris, au lieu de l'appliquer
 à la main : extraire les questions d'un prompt, les rattacher, livrer les fils concernés.
+
+---
+
+## CE QUI A BOUGÉ LE 2026-10-03 — les canaux déclarés, et un faux vert trouvé
+
+**Ta demande (P10, P55, P57, P58, P60, P61, P62, P81) :** une réponse que je t'envoie, ou que tu me
+donnes, doit alimenter automatiquement le fil concerné — **quel que soit le canal**.
+
+**Ma réponse, en trois parties** *(tâche #1542)* :
+
+1. **Les six canaux sont déclarés un par un, avec ceux qui NE SONT PAS mesurables et pourquoi.**
+   Trois le sont (un document que tu déposes, un document que je te remets, une ligne de suivi) et
+   **trois ne le sont pas** : la conversation, la fenêtre de calibrage, le document éphémère —
+   aucun outil de ce dépôt ne peut les lire. Le déclarer est la seule protection possible ; le
+   taire laisserait croire que le canal est couvert.
+
+2. **UN FAUX VERT A ÉTÉ TROUVÉ, et il portait sur ton plus gros message.** Le contrôle « chaque
+   saisine est-elle rattachée à un sujet ? » ne vérifiait qu'UN SENS : que chaque FIL nomme sa
+   saisine. L'autre sens — chaque saisine déposée est-elle nommée par un fil ? — n'était vérifié
+   par personne. Il était ✅ VERT pendant que **`reponses-2026-10-03.md`, tes 96 points, n'était
+   cité par AUCUN fil**. Un huitième contrôle le mesure maintenant, et c'est ce que tu lis ici qui
+   le referme.
+
+3. **Ta règle « jamais supprimé » a son garde-fou** : un fil cité au catalogue dont le fichier
+   n'existe plus, ni dans les fils ni dans les archives, est refusé.
+
+**FRONTIÈRE AVEC LE CATALOGUE.** Ce fil porte les DÉCISIONS sur notre système de travail — ce
+qu'on change, et pourquoi. `docs/fils/index.md` porte l'ÉTAT des fils à cet instant — qui a la
+balle, combien de questions attendent. Le second est désormais généré par l'outil ; celui-ci
+restera toujours écrit à la main, parce qu'une décision ne se calcule pas.
+
+**Q4.9 — À TOI.** Les trois canaux non mesurables. *(a) on s'oblige à toujours déposer la réponse
+avant de passer à autre chose · (b) je te redemande systématiquement « je dépose ? » · (c) on
+accepte la perte et on ne compte que l'écrit*

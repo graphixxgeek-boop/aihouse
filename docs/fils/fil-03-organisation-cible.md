@@ -1,9 +1,9 @@
 # FIL 03 — L'organisation cible de l'Agence
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-09-30
+**Dernier mouvement :** 2026-10-03
 **Place dans le plan :** Étage 1 — ce qui se décide juste après l'objectif ultime (fil 01), et qui commande la cible d'obligations (fil 02).
-**Saisines :** COMMANDE IMPORTANTE · ARCHITECTURE DES NIVEAUX · ARCHITECTURE FONCTIONNELLE · Modèle de gouvernance · réponses 2026-09-30
+**Saisines :** COMMANDE IMPORTANTE · ARCHITECTURE DES NIVEAUX · ARCHITECTURE FONCTIONNELLE · Modèle de gouvernance · réponses 2026-09-30 · réponses 2026-10-03 (classification des lois et des règles)
 
 ---
 
@@ -90,3 +90,32 @@ laisser les 52 limites s'écrire au fil de l'eau · (b) tout faire d'un bloc, y 
 **Q3.4 — À MOI, tâche **#1318**.** L'organigramme est **tenu à la main** — la fiche le dit elle-même. C'est la
 dette que l'Article 24 interdit partout ailleurs. Je dois soit le faire générer, soit écrire noir
 sur blanc pourquoi il reste manuel.
+
+---
+
+## CE QUI A BOUGÉ LE 2026-10-03 — la classification des lois et des règles existe
+
+**Ta question (P32, P33, P34, P37, P40) :** *« la classification des RÈGLES a-t-elle été faite, et
+où vit-elle ? »* Et ton idée : *« les six niveaux de protection sont déjà un axe de classement, à
+réutiliser plutôt qu'à réinventer. »*
+
+**Ma réponse** *(document : `docs/referentiel/classification-des-lois-et-des-regles.md`,
+tâche #1539)* :
+
+- **Tu avais raison sur les deux points.** Le référentiel portait neuf documents de règles et aucun
+  n'était celui-là ; et les six niveaux existaient déjà, ils sont repris tels quels.
+- **Ce qui manquait était l'étage au-dessus** : on savait noter une RÈGLE, jamais un DOCUMENT. Le
+  niveau d'un texte est désormais la MÉDIANE de ses règles.
+- **Et le premier passage a trouvé le trou qui compte** : le document de gouvernance — le second
+  texte suprême du projet — titre ses articles autrement que la charte, et **aucun détecteur ne le
+  reconnaissait**. Ses 45 articles étaient hors de toute mesure de protection.
+- **La mesure qui en sort est dure** : 44 de ses 45 articles n'ont AUCUN porteur, et **26 numéros
+  manquent entre 38 et 63** sans qu'une ligne le déclare.
+
+**Q3.5 — À TOI.** Les 26 numéros manquants du document de gouvernance. *(a) plage réservée, et on
+l'écrit noir sur blanc dans le document · (b) des articles ont été perdus, il faut les retrouver ·
+(c) on renumérote proprement de 2 à 46*
+
+**Q3.6 — À TOI.** 44 articles de gouvernance sur 45 n'ont aucun mécanisme qui les porte. *(a) c'est
+normal pour un texte de valeurs, on n'y touche pas · (b) il faut en porter une partie · (c) dis-moi
+d'abord lesquels pourraient l'être*

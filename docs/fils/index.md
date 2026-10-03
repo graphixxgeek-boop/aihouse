@@ -29,34 +29,41 @@ analyses dans `docs/grand-projet/02-strategie/`. Un fil **renvoie** ; il ne se s
 sauter fait tout rediscuter) et ceux qui sont **transverses** (ils traversent tout et n'attendent
 personne).
 
-### La cascade — l'ordre compte
+<!-- TABLEAU DES FILS — bloc généré par `node scripts/fils-de-discussion.mjs cerveau --inserer`, ne pas éditer à la main -->
 
-| Étage | Fil | Sujet | Balle | Questions ouvertes |
-|---|---|---|---|---|
-| **0** | [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime ✅ **validé** · reste philo et politique | **À TOI** | 5 (5 pour toi) |
-| **1** | [02](fil-02-cible-obligations.md) | La cible d'obligations (93 → 50 ?) | **À TOI** | 3 (3 pour toi) |
-| **1** | [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | **À TOI** | 4 (3 pour toi) |
-| **2** | [06](fil-06-export-versions-noyau.md) | L'export, le noyau, les « plusieurs versions » | **À TOI** | 6 (2 pour toi) · **bougé le 02/10** |
-| **3** | [07](fil-07-commercialisation-plaquette.md) | La commercialisation et la plaquette | **À TOI** | 3 (1 pour toi) |
+**Les fils, leur balle et leurs questions** — compté sur les fils réels à chaque passage, jamais recopié :
 
-### Les transverses — ils n'attendent pas leur tour
+| Fil | Sujet | Famille | Balle | Dernier mouvement | Questions |
+|---|---|---|---|---|---|
+| [01](fil-01-objectif-ultime-philo-politique.md) | L'objectif ultime, la philosophie et la politique | cascade 0 | **À TOI** | 2026-10-01 | 10 (5 pour toi) |
+| [02](fil-02-cible-obligations.md) | La cible d'obligations : de 93 vers 50 | cascade 1 | **À TOI** | 2026-09-30 | 4 (3 pour toi) |
+| [03](fil-03-organisation-cible.md) | L'organisation cible de l'Agence | cascade 1 | **À TOI** | 2026-10-03 | 7 (5 pour toi) |
+| [04](fil-04-systeme-de-travail.md) | Notre système de travail : questions, réponses, fils | transverse | **À TOI** | 2026-10-03 | 9 (6 pour toi) |
+| [05](fil-05-creation-vs-produit-fini.md) | Ce qui appartient à la création, et ce qui appartient au produit vendu | transverse | **À TOI** | 2026-10-03 | 6 (4 pour toi) |
+| [06](fil-06-export-versions-noyau.md) | L'export de l'Agence, son noyau, et la question des « plusieurs versions » | cascade 2 | **À TOI** | 2026-10-03 | 9 (3 pour toi) |
+| [07](fil-07-commercialisation-plaquette.md) | La commercialisation, la plaquette, et ce qu'on peut honnêtement promettre | cascade 3 | **À TOI** | 2026-10-03 | 8 (3 pour toi) |
+| [08](fil-08-securite-et-propriete.md) | À qui est ce projet, et qui peut te le prendre | transverse | **À TOI** | 2026-10-02 | 7 (3 pour toi) |
+| [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | transverse | **À TOI** | 2026-10-02 | 8 (3 pour toi) |
+| [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, et la maison | transverse | **À MOI** | 2026-09-30 | 4 (2 pour toi) |
+| [11](fil-11-testeurs-et-regard-exterieur.md) | Les testeurs humains et le regard extérieur | transverse | **À TOI** | 2026-09-30 | 4 (3 pour toi) |
+| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : « où on en est » et « est-ce qu'on est à jour » | transverse | **À TOI** | 2026-10-02 | 8 (2 pour toi) |
+| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, base en ligne, ou les deux | transverse | **À TOI** | 2026-09-30 | 6 (4 pour toi) |
+| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | transverse | **À TOI** | 2026-10-02 | 11 (2 pour toi) |
 
-| Fil | Sujet | Balle | Questions ouvertes |
-|---|---|---|---|
-| [04](fil-04-systeme-de-travail.md) | Notre système de travail (questions, réponses, fils) | **À TOI** | 8 (5 pour toi) · **bougé le 02/10** |
-| [05](fil-05-creation-vs-produit-fini.md) | Création vs produit fini — **axe ouvert le 30/09** | **À TOI** | 4 (2 pour toi) |
-| [08](fil-08-securite-et-propriete.md) | Sécurité et propriété — **une question urgente** | **À TOI** | 4 (3 pour toi) · **bougé le 02/10** |
-| [09](fil-09-ce-qui-ralentit.md) | Ce qui ralentit le projet | **À TOI** | 6 (3 pour toi) · **bougé le 02/10** |
-| [10](fil-10-le-jeu.md) | Le Jeu : Lia, Noé, la maison | **À MOI** | 3 (2 pour toi) |
-| [11](fil-11-testeurs-et-regard-exterieur.md) | Testeurs humains et regard extérieur | **À TOI** | 4 (3 pour toi) |
-| [12](fil-12-systeme-global-ou-on-en-est.md) | Le système global : où on en est, est-ce qu'on est à jour — **reporté à la rationalisation** | **À TOI** | 4 (2 pour toi) · **bougé le 02/10** |
-| [13](fil-13-sources-exterieures.md) | Se brancher sur ce que d'autres savent : base locale, en ligne, ou les deux | **À TOI** | 4 (4 pour toi) |
-| [14](fil-14-usage-et-refonte.md) | Comment on utilise l'Agence, et faut-il tout reprendre à zéro | **À TOI** | 8 (2 pour toi) · **bougé le 02/10** |
+**Total : 14 fils · 101 questions · 48 attendent ta réponse · 53 sont de mon côté.**
 
-**Total : 14 fils · 66 questions vives · 40 attendent ta réponse · 26 sont de mon côté.**
+<!-- /TABLEAU DES FILS -->
 
-*(Chiffres LUS par `node scripts/fils-de-discussion.mjs` le 2026-10-02, jamais recopiés de la version
-précédente. Six fils — 04, 06, 08, 09, 12, 14 — ont reçu ton gros prompt du 2 octobre.)*
+*(Le tableau ci-dessus est **produit par l'outil**, plus jamais recopié : `node
+scripts/fils-de-discussion.mjs cerveau --inserer` le réécrit entre ses deux marqueurs, et ne touche
+à rien d'autre de cette page.)*
+
+> **POURQUOI IL EST DEVENU GÉNÉRÉ LE 2026-10-03, et c'est une leçon payée ici même.** La version
+> précédente de ce tableau portait la mention « chiffres LUS, jamais recopiés » — et elle était
+> fausse : les chiffres étaient bien recopiés, et ils avaient dérivé sur presque chaque ligne. Il
+> annonçait **66 questions dont 40 pour toi** ; il y en avait **101 dont 48**. Le fil 01 était
+> donné pour 5 questions quand il en porte 10. Une promesse écrite que rien ne fait respecter n'a
+> jamais rien empêché, et un catalogue faux est pire qu'un catalogue absent : il a l'air à jour.
 
 ---
 

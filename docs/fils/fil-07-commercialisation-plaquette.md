@@ -1,9 +1,9 @@
 # FIL 07 — La commercialisation, la plaquette, et ce qu'on peut honnêtement promettre
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-09-30
+**Dernier mouvement :** 2026-10-03
 **Place dans le plan :** Étage 3 — dernière marche. Elle dépend de l'export (fil 06) et ne peut pas être tranchée avant l'objectif ultime (fil 01).
-**Saisines :** COMMANDE IMPORTANTE · réponses 2026-09-29 · réponses 2026-09-30
+**Saisines :** COMMANDE IMPORTANTE · réponses 2026-09-29 · réponses 2026-09-30 · réponses 2026-10-03 (PACK DÉCOUVERTE, la liste)
 
 ---
 
@@ -134,3 +134,30 @@ pour le signal visé.
 **Q7.5 — À MOI, tâche **#1325**.** Écrire ce qu'un acheteur reçoit RÉELLEMENT le premier jour : une Agence vide.
 Pas nos chiffres — la liste de ce que la machine sait faire avant qu'on lui ait donné le moindre
 projet. C'est la seule base honnête d'une plaquette, et elle n'existe nulle part aujourd'hui.
+
+---
+
+## CE QUI A BOUGÉ LE 2026-10-03 — la liste du PACK DÉCOUVERTE existe
+
+**Ta question (P39, P86) :** *« tu me mets des pointilles quand je demande la liste : je veux la
+liste exhaustive de ce que contient le PACK decouverte stp. »* Et : *« Inès porte le PACK
+DÉCOUVERTE. »*
+
+**Ma réponse** *(rapport : `docs/livrables/pack-decouverte-liste-2026-10-03.md`, tâche #1533)* :
+
+- **La liste est produite par un outil, pas recopiée** : tes onze sujets sont LUS dans ta COMMANDE
+  IMPORTANTE à chaque passage, et les documents cherchés dans le dépôt réel.
+- **Onze sujets, pas dix** — et c'est l'argument même de la méthode : je croyais qu'il y en avait
+  dix.
+- **Sur tes onze sujets, UN SEUL est à zéro document dans tout le dépôt** : « particularités de
+  l'Agence ». Les dix autres ont entre 3 et 80 documents. Ta question « qu'est-ce qui manque et
+  qui n'existe pas ? » a donc une réponse courte.
+
+**Ce qui reste à trancher, et qui bloque le pack depuis le 28 septembre :**
+
+**Q7.4 — À TOI.** Combien de pages pour le document de présentation de l'Agence ? Tu écrivais
+« 6-8, à confirmer ». *(a) 6, lisible d'une traite · (b) 8 · (c) dis-moi combien après inventaire*
+
+**Q7.5 — À TOI.** Le pack sort-il avant ou après la licence ? *(a) la licence d'abord — mon
+conseil, montrer un produit qu'on ne peut pas céder est au mieux inutile · (b) le pack d'abord ·
+(c) en parallèle*

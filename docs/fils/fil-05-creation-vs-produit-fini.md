@@ -1,9 +1,9 @@
 # FIL 05 — Ce qui appartient à la création, et ce qui appartient au produit vendu
 
 **Balle :** À TOI
-**Dernier mouvement :** 2026-09-30
+**Dernier mouvement :** 2026-10-03
 **Place dans le plan :** Axe transverse NOUVEAU (ouvert le 30/09 au soir) — il traverse tous les autres fils et ne se range sous aucun.
-**Saisines :** demande du 2026-09-30 au soir
+**Saisines :** demande du 2026-09-30 au soir · réponses 2026-10-03 (version admin, aide exécutive)
 
 ---
 
@@ -67,3 +67,32 @@ historique sur les intentions.
 
 **Q5.4 — À MOI, tâche **#1321**.** Vérifier que **rien de ce tri ne touche au jeu ni à ce que voit un visiteur** :
 c'est ta borne permanente, et elle s'applique à cet axe comme au reste.
+
+---
+
+## CE QUI A BOUGÉ LE 2026-10-03 — la séparation projet / aide exécutive, mesurée
+
+**Ta question (P05, P39) :** *« supprime ici l'idee d'une version "admin" […] Ou est-ce que nous
+avons fait une separation ? QU'est-ce qui s'est passé dans le code à ce sujet ? Quand est-il
+vraiment utile de faire une separation ? »*
+
+**Ma réponse, tirée du code et non de ma mémoire** *(rapport :
+`docs/livrables/les-deux-cas-de-figure-2026-10-03.md`, tâche #1553)* :
+
+- **Oui, la séparation existe, et elle est grosse** : 45 articles au cas 1 (l'Agence = projet),
+  22 au cas 2 (l'Agence = aide exécutive). Sur les 45, **2 seulement sont repris à l'identique**,
+  12 reformulés, 31 laissés de côté ; et 8 articles n'existent qu'au cas 2. Ce n'est donc pas une
+  variante de mise en forme.
+- **Seize numéros désignent deux articles différents selon la version** : « article 24 du document
+  de gouvernance » ne veut pas dire la même chose selon celle qu'on a en tête.
+- **Et la réponse à « qu'est-ce qui s'est passé dans le code ? » est : RIEN.** Dix scripts lisent
+  le cas 1 ; le cas 2 n'est lu par aucun. Il a été écrit une fois à la main le 2 octobre, et rien
+  ne le tient en phase avec l'autre.
+
+**Q5.5 — À TOI.** Les seize numéros en collision. *(a) on renumérote le cas 2 pour qu'aucun numéro
+ne se répète · (b) on garde les numéros et on impose de toujours citer la version · (c) on laisse
+en l'état, la confusion est théorique*
+
+**Q5.6 — À TOI.** Rien ne détecte que le cas 2 a pris du retard sur le cas 1. *(a) un garde-fou
+qui compare les deux à chaque Ronde · (b) une régénération du cas 2 depuis le cas 1 · (c) rien, le
+cas 2 est un exemplaire figé et c'est voulu*

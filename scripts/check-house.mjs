@@ -27120,3 +27120,67 @@ async function testLeCoeurDeLAgence() {
   console.log('Passed: le module, la partie indétachable et le cœur — ses trois définitions mises à l\'épreuve du graphe réel (2026-10-03, tâche #1538). SA PHRASE COMMANDAIT TOUT : « encore faut-il définir le cœur ». UN CŒUR DÉCLARÉ À LA MAIN AURAIT ÉTÉ LA LISTE DES FICHIERS QUE JE TROUVE IMPORTANTS ; sa définition à lui — « ce que TOUTE prestation réclame » — est une propriété VÉRIFIABLE, donc elle se calcule. PRISE AU MOT, elle rend UN SEUL fichier sur 88 points d\'entrée, et ce n\'est pas une mesure ratée : c\'est la réponse exacte à la question exacte, puisqu\'un seul outil autonome vide une intersection. Ce qu\'elle dit vraiment répond à son « est-ce réaliste ? » : l\'Agence est DÉJÀ presque entièrement modulaire, ses outils ne partagent presque rien, et ce qui manque n\'est pas la modularité mais le cœur. LE CŒUR EST DONC DÉRIVÉ AUTREMENT, sur la part des points d\'entrée qui atteint chaque fichier, et LE SEUIL SE LIT DANS LA DISTRIBUTION au lieu de se choisir : on coupe au plus grand saut, parce qu\'un seuil rond aurait pu tomber au milieu d\'un palier sans que personne puisse dire pourquoi là. Le saut est franc — 38 points d\'entrée — et le cœur fait quatre fichiers. ET LE VRAI PIÈGE A ÉTÉ PAYÉ UNE SECONDE FOIS DANS LA MÊME JOURNÉE : le catalogue écrit « MOÏSE-TABLES-DE-LOI », le disque écrit des minuscules sans accent, et comparer les noms bruts déclarait 51 outils sur 89 introuvables — une intersection calculée sur la moitié du parc, pendant que le résolveur partagé existait. SA DÉFINITION DU MODULE, enfin, n\'est pas flattée : 71 prestations sur 76 ne sont portées que par UN outil, donc « un ensemble d\'agents » décrit une CIBLE et non l\'état actuel. Et la mesure déclare l\'autre moitié du sujet qu\'elle ne voit pas : elle lit les imports, donc ce qu\'un outil CHARGE, jamais ce qu\'il SUPPOSE.');
 }
 await testLeCoeurDeLAgence();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1542 — LES FILS ALIMENTÉS PAR TOUT CANAL, ET LE FAUX VERT SUR SON PLUS GROS MESSAGE
+async function testLesFilsAlimentesParToutCanal() {
+  const F = await import('../scripts/fils-de-discussion.mjs');
+
+  // ── 1. LES CANAUX SONT DÉCLARÉS UN PAR UN, et un canal NON mesurable doit porter sa raison
+  // écrite : déclarer l'impossibilité EST la protection, la taire ne l'est pas (Article 27).
+  assert.deepStrictEqual(F.findCanauxMalDeclares(), [], 'the real channel registry is fully declared');
+  assert.ok(F.CANAUX_DUNE_REPONSE.some((c) => !c.mesurable), 'and at least one channel admits it cannot be measured — no tool here can read the conversation');
+  assert.match(F.findCanauxMalDeclares({ canaux: [{ cle: 'x', quoi: 'y', mesurable: false }] })[0], /raison écrite/, 'a non-measurable channel with no reason is refused');
+  assert.match(F.findCanauxMalDeclares({ canaux: [{ cle: 'x', quoi: 'y', mesurable: true }] })[0], /PAR QUOI/, 'and one that claims to be measurable without naming its instrument too (Article 31, faille 8)');
+  assert.match(F.findCanauxMalDeclares({ canaux: [{ cle: 'x', quoi: 'y' }] })[0], /ne dit pas s'il est mesurable/, 'a silent channel reads as a covered one, so it is refused');
+
+  // ── 2. LE CONTRÔLE QUI MANQUAIT, ET IL RENDAIT UN VERT SUR SON PLUS GROS MESSAGE. Le contrôle
+  // existant vérifie que chaque FIL nomme sa saisine ; l'autre sens — chaque saisine déposée
+  // est-elle nommée par un fil ? — n'était vérifié par personne (BP4).
+  const fils = [{ fichier: 'docs/fils/fil-01-x.md', numero: 1, titre: 'FIL 01 — X', balle: 'À TOI', date: '2026-10-02', saisines: ['réponses 2026-09-30'], questions: { posees: 0, nues: [] }, engagements: { pris: 0, nus: [] } }];
+  const o = F.saisinesOrphelines({ fils, listDirImpl: () => ['reponses-2026-09-30.md', 'reponses-2026-10-03.md', 'README.md'] });
+  assert.deepStrictEqual(o.orphelines, ['reponses-2026-10-03.md'], 'a deposited saisine no fil names is reported by name');
+  assert.strictEqual(o.rapprochables, 2, 'and README is not counted as a saisine');
+  const sansDate = F.saisinesOrphelines({ fils, listDirImpl: () => ['COMMANDE IMPORTANTE.md'] });
+  assert.deepStrictEqual(sansDate.sansDate, ['COMMANDE IMPORTANTE.md'], 'a saisine with no date in its name is counted APART rather than accused — not being able to match it is not the same as not finding it (leçon L5)');
+  assert.deepStrictEqual(sansDate.orphelines, [], 'so it never produces a finding');
+  assert.strictEqual(F.saisinesOrphelines({ fils: [] }).mesurable, false, 'and no fil read is not "nothing is orphaned"');
+
+  // ── 3. LA DIGESTION FIL PAR FIL : le contrôle global compare les remises à la date du fil LE
+  // PLUS RÉCENT de tous, donc un seul fil vivant couvrait treize fils morts.
+  const d = F.filsNonDigeres({ fils, listDirImpl: () => ['reponses-2026-09-30.md'] });
+  assert.strictEqual(d.retards.length, 0, 'a saisine older than the fil that cites it is digested');
+  const tard = F.filsNonDigeres({ fils: [{ ...fils[0], date: '2026-09-29', saisines: ['réponses 2026-09-30'] }], listDirImpl: () => ['reponses-2026-09-30.md'] });
+  assert.strictEqual(tard.retards.length, 1, 'but one deposited AFTER the fil last moved is matter that fil has not digested');
+
+  // ── 4. SA RÈGLE « JAMAIS SUPPRIMÉ » A SON GARDE-FOU. Aucun mécanisme ne peut savoir si une
+  // clôture était définitive ; il peut refuser la DISPARITION, le seul geste qu'elle interdit.
+  const dis = F.findFilsDisparus({ readFileImpl: () => '[01](fil-01-x.md) et [02](fil-02-y.md)', existsImpl: (c) => c.includes('fil-01-x') });
+  assert.deepStrictEqual(dis.disparus, ['fil-02-y.md'], 'a fil named in the catalogue whose file is in neither the fils nor the archives is refused');
+  assert.strictEqual(F.findFilsDisparus({ readFileImpl: () => 'aucun lien' }).mesurable, false, 'and a catalogue linking to nothing is PAS MESURÉ, never "nothing disappeared"');
+
+  // ── 5. LE TABLEAU DU CERVEAU EST GÉNÉRÉ, et le constat qui l'impose est mesuré : le catalogue
+  // annonçait 66 questions dont 40 pour lui ; les fils en portent 101 dont 48. Presque chaque
+  // ligne avait dérivé — inévitable d'une table recopiée (Article 24), et grave ici puisque c'est
+  // la PREMIÈRE chose qu'il lit. Et il portait la mention « chiffres LUS, jamais recopiés » (L1).
+  const q = F.compterLesQuestions('**Q1.1 — À TOI.** a\n**Q1.2 — À MOI.** b\n**Q1.3 — À TOI.** c\n');
+  assert.deepStrictEqual(q, { toutes: 3, pourLui: 2 }, 'questions are counted, and the ones awaiting him told apart');
+  const avant = '# Index\n\nde la prose écrite à la main\n';
+  const r1 = F.insererLeTableauDesFils(avant, ['| a |']);
+  assert.ok(r1.change && r1.texte.includes('de la prose écrite à la main'), 'the first insertion never touches the hand-written prose around it');
+  const r2 = F.insererLeTableauDesFils(r1.texte, ['| a |']);
+  assert.strictEqual(r2.change, false, 'and a second pass with the same content changes nothing — the block is replaced, never stacked');
+  const casse = F.insererLeTableauDesFils(`x\n${F.MARQUEUR_FILS_DEBUT}\npas de fin`, ['| a |']);
+  assert.strictEqual(casse.change, false, 'an opening marker with no closing one is REFUSED rather than guessed: overwriting to the end of the file would carry off hand-written prose');
+
+  // ── 6. LE PASSAGE RÉEL (Article 25), et les deux garde-fous de registre dans les deux sens.
+  const lus = F.lireLesFils({ root: '.' });
+  assert.strictEqual(lus.mesurable, true, 'the real fils are read');
+  assert.deepStrictEqual(F.findFamillesDeFilsDivergentes({ fils: lus.fils }), [], 'the hand-declared cascade/transverse families name no vanished fil');
+  assert.deepStrictEqual(F.saisinesOrphelines({ fils: lus.fils, root: '.' }).orphelines, [], 'and against the real repository nothing is orphaned any more — his 96-point message of 2026-10-03 now feeds the five fils it concerns');
+  const vrai = F.findFilsDisparus({ root: '.' });
+  assert.ok(vrai.mesurable && vrai.disparus.length === 0, 'no fil named in the catalogue has disappeared');
+
+  console.log('Passed: les fils alimentés par tout canal, et le faux vert posé sur son plus gros message (2026-10-03, tâche #1542). HUIT DE SES POINTS PORTAIENT SUR LA MÊME MÉCANIQUE : une réponse qu\'il me donne, ou que je lui envoie, doit alimenter le fil concerné QUEL QUE SOIT LE CANAL. LES SIX CANAUX SONT DONC DÉCLARÉS UN PAR UN, et TROIS admettent ne pas être mesurables — la conversation, la fenêtre de calibrage, le document éphémère : aucun outil de ce dépôt ne peut les lire, et le déclarer est la seule protection possible (Article 27), là où le taire laisserait croire que le canal est couvert. LE FAUX VERT, ENSUITE, ET IL EST EXEMPLAIRE : le contrôle « chaque saisine est-elle rattachée à un sujet ? » ne vérifiait qu\'UN SENS, que chaque FIL nomme sa saisine. L\'autre sens n\'était vérifié par personne, et c\'était celui qui porte sa demande. Résultat : ✅ VERT pendant que `reponses-2026-10-03.md`, ses 96 points, n\'était cité par AUCUN fil. Un huitième contrôle le mesure, et le constat a été REFERMÉ le jour même en alimentant les cinq fils concernés. LE CATALOGUE EST DEVENU GÉNÉRÉ POUR LA MÊME RAISON : il annonçait 66 questions dont 40 pour lui, les fils en portent 101 dont 48, et le fil 01 était donné pour 5 quand il en porte 10. Il portait pourtant la mention « chiffres LUS, jamais recopiés » — une promesse écrite que rien ne faisait respecter (leçon L1), sur la première chose qu\'il lit pour savoir où il en est. Le bloc généré ne touche jamais la prose autour, refuse un marqueur d\'ouverture sans fermeture plutôt que de deviner, et ne s\'empile pas. ENFIN SA RÈGLE « JAMAIS SUPPRIMÉ » A SON GARDE-FOU : aucun mécanisme ne peut savoir si une clôture était définitive, mais il peut refuser la DISPARITION, qui est le seul geste qu\'elle interdit absolument.');
+}
+await testLesFilsAlimentesParToutCanal();
