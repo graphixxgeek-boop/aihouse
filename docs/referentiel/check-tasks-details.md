@@ -18,6 +18,23 @@ question dédiée (Article 16) :
    tableau) / `arborescence` (groupée par thème > sous-thème, tel que déjà écrit dans la colonne
    Sujet de chaque ligne du suivi — jamais une nouvelle taxonomie).
 
+## FRONTIÈRES AVEC LES DOCUMENTS QU'IL RECOUVRE — déclarées le 2026-10-03
+
+**Le constat est mesuré, pas ressenti** : le détecteur de documents jumeaux signalait depuis
+quatre jours que cette fiche partage une large part de son vocabulaire avec deux autres. Le
+recouvrement est réel et légitime — les trois parlent de priorité, de stagnation et de
+criticité — mais aucune ligne ne disait où s'arrête lequel.
+
+| L'autre document | Ce qu'il juge | Ce que celui-ci juge |
+|---|---|---|
+| `docs/referentiel/cassandra-rh.md` | **l'ÉQUIPE** : les outils, leur vitalité, qui stagne, qui n'a jamais servi | **les TÂCHES** : ce qu'il reste à faire, dans quel ordre, et ce qui a dérivé |
+| `docs/referentiel/lecons.md` | **ce que le projet a appris en se trompant** — une leçon n'est pas une tâche, elle n'a ni échéance ni clôture | **ce qui attend d'être fait** — une tâche se ferme, une leçon jamais |
+
+**Le piège que ces deux frontières évitent, et il s'est déjà produit ailleurs** : stagnation d'un
+OUTIL et stagnation d'une TÂCHE se mesurent de la même façon et appellent des gestes opposés — on
+retire un outil qui ne sert plus, on relance une tâche qui traîne. Les confondre produirait un
+rapport qui recommande exactement l'inverse de ce qu'il faut faire.
+
 ## Ce qu'il lit, ce qu'il ne fait jamais
 
 Lit `docs/suivi/sessions/*.md` via `categorizeAllSessions()` (déjà exporté par

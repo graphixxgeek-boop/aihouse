@@ -312,6 +312,28 @@ au cas par cas dans l'urgence :
 - **avec la Ronde** : une Ronde lancée en nuit autonome est dispensée de la fenêtre à cocher, faute
   d'interlocuteur — exemption déjà codée dans son gardien, jamais une entorse improvisée.
 
+## FRONTIÈRES AVEC LES DOCUMENTS QU'IL RECOUVRE — déclarées le 2026-10-03
+
+**Pourquoi cette section existe, et le constat est mesuré.** Le détecteur de documents jumeaux
+signalait depuis quatre jours que ce document partage une large part de son vocabulaire avec
+quatre autres, sans qu'aucune ligne ne dise où s'arrête lequel. **Le recouvrement est ici
+STRUCTUREL et légitime** : ce document est le cadre DANS lequel les autres process s'exécutent
+quand personne ne regarde, donc il parle forcément de ce dont ils parlent. Mais « légitime » et
+« déclaré » sont deux choses différentes — une alerte qui brûle quatre jours sans que personne
+puisse l'éteindre finit par n'être plus lue, et c'est elle qui masquera la prochaine qui compte.
+
+| L'autre document | Ce qu'il dit, et que celui-ci ne dit pas | Ce que celui-ci dit, et que l'autre ne dit pas |
+|---|---|---|
+| `CLAUDE.md` | la LOI du projet : ce qui est vrai en permanence, de jour comme de nuit | ce qui change quand PERSONNE N'EST LÀ — le périmètre sensible, le seuil d'arrêt, les réglages de réveil |
+| `docs/referentiel/check-tasks-details.md` | comment les tâches sont ordonnées et notées, à tout moment | dans quel ORDRE on les prend quand on travaille seul, et à quel moment on s'arrête |
+| `docs/referentiel/safe-export.md` | ce qui doit partir avec l'Agence le jour de l'export | pourquoi ce process-ci, lui, ne part PAS tel quel : il décrit une collaboration avec UN utilisateur précis, ses horaires et ses tolérances |
+| `docs/referentiel/abraham-les-references.md` | comment on découpe et on note les règles d'un document | rien sur les règles en général — il en APPLIQUE, il n'en juge aucune |
+
+**La règle qui en découle, et elle vaut pour le prochain document qui recouvrira celui-ci** : une
+frontière se déclare en NOMMANT le chemin de l'autre document, jamais en décrivant vaguement une
+différence. C'est ce nom qui éteint l'alerte, et c'est surtout lui qui permet à quelqu'un
+d'aller vérifier que la frontière dit vrai.
+
 ## Ce que ce process ne sait pas encore faire
 
 Honnêtement : trois de ses cinq étapes ne laissent aucune trace vérifiable sur le disque (suivre le

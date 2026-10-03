@@ -22,7 +22,7 @@ ce qui en a été fait. Un passage sans suite se voit ici, jamais dans la sortie
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**10 fichier(s)** dans ce dossier.
+**11 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -34,6 +34,7 @@ ce qui en a été fait. Un passage sans suite se voit ici, jamais dans la sortie
 | [documents-jumeaux-2026-09-27.txt](documents-jumeaux-2026-09-27.txt) | — |
 | [documents-jumeaux-2026-10-01.txt](documents-jumeaux-2026-10-01.txt) | — |
 | [documents-jumeaux-2026-10-02.txt](documents-jumeaux-2026-10-02.txt) | — |
+| [documents-jumeaux-2026-10-03.txt](documents-jumeaux-2026-10-03.txt) | — |
 | [circle-signal-2026-09-27T00-12-15-393Z.txt](ronde/circle-signal-2026-09-27T00-12-15-393Z.txt) | ronde |
 | [circle-signal-2026-10-02T18-18-37-761Z.txt](ronde/circle-signal-2026-10-02T18-18-37-761Z.txt) | ronde |
 <!-- FIN DU SOMMAIRE GÉNÉRÉ -->
