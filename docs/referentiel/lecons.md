@@ -1604,6 +1604,51 @@ revienne pas tenter le prochain agent — un test du filet le vérifie. Mais rie
 agent d'élargir une liste de motifs une fois de plus ; c'est pourquoi la limite est écrite dans le
 code juste au-dessus de la liste, à l'endroit exact où la tentation se présente (Article 27).
 
+## L45 — Ce qui tombe dans une catégorie PAR DÉFAUT finit par passer pour une fatalité
+
+**L'erreur** : un outil range dans une catégorie fourre-tout tout ce qu'il ne sait pas reconnaître.
+Cette catégorie grossit, on finit par la mesurer, et le chiffre qui en sort est pris pour une
+propriété du problème alors qu'il n'est qu'une propriété du DÉCOUPAGE.
+
+**Elle s'est vérifiée deux fois dans la même soirée, sur le même outil, et aucune des deux ne
+ressemblait à un défaut** :
+
+- Le runner parallèle du filet ne connaissait qu'une seule forme d'unité déplaçable, le bloc
+  `{` … `}` en colonne zéro. Tout le reste tombait dans « l'épine », c'est-à-dire l'incompressible.
+  L'épine pesait 49 % de la suite, on en avait fait un PLAFOND, et on calculait sérieusement qu'au
+  delà de quatre parts il n'y avait plus rien à gagner. **95 % de cette épine était en réalité du
+  travail parfaitement déplaçable** : des corps de fonction appelés exactement une fois.
+- Le chronomètre du même filet appariait les tests par leur RANG et déclarait honnêtement son
+  résultat « incomplet ». Ce mot-là est resté affiché des semaines, et personne — moi compris — n'a
+  demandé POURQUOI. **349 groupes sur 421 recevaient la durée d'un autre.**
+
+**Le signe qui aurait dû alerter, et il est le même dans les deux cas** : un chiffre dont personne
+ne sait dire comment il a été OBTENU, seulement ce qu'il vaut. « L'épine pèse 120 s » ne décrivait
+pas le filet, ça décrivait ce que le découpeur ne savait pas voir.
+
+**Le corollaire, qui est la partie désagréable** : *un outil qui déclare honnêtement une limite
+finit par faire passer cette limite pour une fatalité.* L'honnêteté du « incomplet » était
+exemplaire — c'est elle qui a évité de servir des durées fausses pendant des semaines. Mais une
+limite déclarée et jamais rouverte devient un décor. **Une limite déclarée est une TÂCHE, pas une
+conclusion** (c'est L42 prise par l'autre bout : là-bas une impossibilité avec son remède se lit à
+tort comme une tâche ; ici une limite sans remède se lit à tort comme une conclusion).
+
+**Le geste** : devant un chiffre qui plafonne, ne pas demander « comment le réduire » mais
+**« qu'est-ce qui est tombé là-dedans, et par quelle règle ? »**. Puis DÉCOUPER la catégorie
+fourre-tout au lieu de la contempler. Les deux fois, la réponse a tenu en une mesure de dix minutes
+contre quatre jours de résignation.
+
+**Terrain** : devant un plafond, un « reste », un « divers », une limite déclarée depuis longtemps · mots : plafond, incompressible, épine, socle, reste, incomplet, par défaut, structurel · fichiers : scripts/filet-en-parts.mjs, scripts/ezechiel-les-tests.mjs
+
+**Porté par** : `plancherDuParallelisme()` (`scripts/filet-en-parts.mjs`) recalcule le plancher à chaque élargissement du découpage au lieu de le figer, et `recollerLeChronoParContenu()` (`scripts/ezechiel-les-tests.mjs`) imprime son TAUX d'appariement au lieu d'un « complet / incomplet » binaire — un pourcentage se discute, un mot binaire se subit.
+Ce que ces deux-là ne portent pas, et qui ne peut pas l'être : aucune mécanique ne sait distinguer
+une catégorie fourre-tout d'une catégorie légitime. Cette part-là se déclare ici (Article 27).
+
+*Observée le 2026-10-03 sur les tâches #1578 et #1582. La première a fait tomber le plancher du
+filet de 121 s à 6,4 s, la seconde a réparé 83 % des durées. Les deux défauts avaient exactement le
+même âge que l'outil, et les deux étaient visibles depuis le début pour qui aurait demandé par
+quelle règle la catégorie se remplissait.*
+
 # Bonnes pratiques
 
 *(Section ouverte le 2026-09-23. Même document que les leçons, jamais la même liste : une bonne

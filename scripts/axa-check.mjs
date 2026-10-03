@@ -323,10 +323,30 @@ export function collecterDepuisV8(covDir, resoudre, { readDir = readdirSync, rea
       const cible = resoudre(entry);
       if (!cible) continue;
       const { cle, fichier } = cible;
-      if (out[cle]) continue; // déjà vu dans un autre relevé de process
       let source;
       try { source = readFileSync(join(ROOT, fichier), "utf8"); } catch { continue; }
-      out[cle] = functionCoverageFromV8(entry, source);
+      const vu = functionCoverageFromV8(entry, source);
+      // L'UNION PLUTÔT QUE LE PREMIER ARRIVÉ (2026-10-03, tâche #1583). La version d'avant gardait
+      // le PREMIER relevé de processus qui touchait un fichier et jetait les autres — « déjà vu
+      // dans un autre relevé de process ». C'est faux dès que deux processus exercent des
+      // fonctions DIFFÉRENTES du même fichier : on rendait alors la couverture d'un seul, en la
+      // présentant comme celle du fichier.
+      //
+      // MESURÉ, ET C'EST CE QUI A RÉVÉLÉ LE DÉFAUT : le filet lancé en quatre parts fait voir 41
+      // outils au lieu de 30 — chaque part en exerce d'autres — mais la moyenne par outil tombait
+      // de 42 % à 37 %, parce que chacun n'était crédité que de la tranche vue par UNE part. Plus
+      // d'outils mesurés et chacun moins bien mesuré : les deux moitiés d'un même défaut.
+      //
+      // UNE FONCTION EST COUVERTE SI UN SEUL PROCESSUS L'A EXERCÉE, c'est la définition même de la
+      // couverture. L'union ne peut donc que faire MONTER un chiffre, jamais le baisser, et sur un
+      // relevé à processus unique elle rend exactement ce que rendait l'ancienne version.
+      if (!out[cle]) { out[cle] = vu; continue; }
+      const parNom = new Map(out[cle].map((f) => [`${f.name}@${f.line}`, f]));
+      for (const f of vu) {
+        const k = `${f.name}@${f.line}`;
+        const deja = parNom.get(k);
+        if (!deja) { parNom.set(k, f); out[cle].push(f); } else if (f.covered) deja.covered = true;
+      }
     }
   }
   return out;

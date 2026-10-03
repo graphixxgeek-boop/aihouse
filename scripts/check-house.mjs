@@ -27827,3 +27827,49 @@ async function testLeRecollageParContenu() {
   console.log('Passed: l\'exécution suit les appels, pas l\'ordre du texte (2026-10-03, tâche #1582). LE PLUS GROS DÉFAUT DE MESURE TROUVÉ SUR CET OUTIL, ET IL ÉTAIT MASSIF : sur 421 groupes, 349 recevaient la durée d\'un AUTRE groupe. Le recollage appariait la liste des groupes lus dans le TEXTE avec la liste des lignes « Passed » vues à l\'EXÉCUTION, par leur RANG — premier avec premier. Ça ne tient que si les deux listes sont dans le même ordre, ET ELLES NE LE SONT PAS : ce filet déclare des fonctions puis les appelle, `async function testX()` ligne 1735 et `await testX();` ligne 20000. Une seule fonction déclarée loin de son appel décale TOUT ce qui suit, et il y en a 147. L\'OUTIL LE DISAIT DEPUIS TOUJOURS, ET C\'EST CE QUI SAUVE LA SITUATION : il déclarait le recollage « INCOMPLET » et refusait de servir le détail par groupe (#1547). Il avait raison de refuser ; il ne savait pas encore POURQUOI. Le TOTAL, lui, est resté juste — c\'est une somme, elle ne dépend pas de l\'ordre. TROIS DÉFAUTS EMPILÉS, CORRIGÉS DANS CET ORDRE, et chacun a fait bondir le taux d\'appariement : ① le titre d\'un groupe s\'arrêtait au premier guillemet, or ce filet écrit ses messages entre apostrophes, donc toute apostrophe du texte y est échappée — SIX titres réduits à « l », « axa-check », « le banc d », dont deux devenus homonymes (323/440) ; ② un groupe qui imprime trois lignes a TROIS clefs, pas une : son titre est leur concaténation, qui n\'apparaît dans aucune ligne imprimée (418/440) ; ③ la contre-oblique doublée du source est simple à l\'impression (439/440). ET LE DERNIER ORPHELIN NE SE CORRIGE PAS, IL SE DÉRIVE : son message est construit par concaténation, `console.log(\'Passed: \' + checked + \' routes…\')`, donc le source n\'en porte aucun texte littéral. Le compter comme structurellement inappariable, plutôt que de le subir, est ce qui permet au verdict de virer au vert — sans ça il resterait éternellement « incomplet » à 99,8 %, et un voyant qui ne peut pas virer au vert cesse d\'être lu (leçon L6). LE REPLI RESTE EN PLACE ET SE DIT : si l\'appariement par contenu ne se déclare pas complet, l\'ancien appariement par rang reprend la main, et la sortie NOMME celui qui a servi — une mesure dont on ignore la méthode ne se re-vérifie pas.');
 }
 await testLeRecollageParContenu();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1583 — LA COUVERTURE S'UNIT ENTRE PROCESSUS, ELLE NE SE PREND PAS AU PREMIER ARRIVÉ
+async function testLUnionDeLaCouverture() {
+  const A = await import('../scripts/axa-check.mjs');
+
+  // ── L'ÉPROUVETTE EST UN VRAI FICHIER DU DÉPÔT, et c'est délibéré : le lecteur relit la source
+  // pour convertir un décalage d'octets en numéro de ligne, donc une source inventée ne
+  // prouverait rien. On fabrique DEUX relevés de processus qui couvrent des fonctions
+  // DIFFÉRENTES du même fichier — exactement ce que produisent deux parts du filet.
+  const cible = 'scripts/lib-shell.mjs';
+  const source = fs.readFileSync(cible, 'utf8');
+  const offsetDe = (nom) => source.indexOf(`export function ${nom}`);
+  const fonction = (nom, count) => ({ functionName: nom, ranges: [{ startOffset: offsetDe(nom), endOffset: offsetDe(nom) + 40, count }] });
+  const relevé = (couvertes) => JSON.stringify({ result: [{
+    url: `file:///quelque/part/${cible}`,
+    functions: [fonction('porteeDe', couvertes.includes('porteeDe') ? 1 : 0), fonction('rangDeLaCategorie', couvertes.includes('rangDeLaCategorie') ? 1 : 0)],
+  }] });
+  const deuxProcessus = {
+    readDir: () => ['p1.json', 'p2.json'],
+    readFile: (f) => (String(f).endsWith('p1.json') ? relevé(['porteeDe']) : relevé(['rangDeLaCategorie'])),
+  };
+  const resoudre = (entry) => (entry.url.endsWith(cible) ? { cle: 'cible', fichier: cible } : null);
+
+  // Le dossier passé doit EXISTER — le lecteur vérifie sa présence avant de lire, ce qui est
+  // exactement ce qu'on veut de lui. On lui donne donc un dossier réel, et on injecte la lecture.
+  const uni = A.collecterDepuisV8('scripts', resoudre, deuxProcessus);
+  assert.strictEqual(uni.cible.length, 2, 'both functions are known');
+  assert.strictEqual(A.robustnessScore(uni.cible), 100, 'MUST CATCH: a function exercised by EITHER process is covered — the old reader kept the first report and would have said 50 %');
+
+  // ── SUR UN RELEVÉ À PROCESSUS UNIQUE, L'UNION REND EXACTEMENT CE QUE RENDAIT L'ANCIENNE
+  // VERSION. C'est la moitié de la mesure qui prouve qu'elle n'invente rien.
+  const seul = A.collecterDepuisV8('scripts', resoudre, { readDir: () => ['p1.json'], readFile: () => relevé(['porteeDe']) });
+  assert.strictEqual(A.robustnessScore(seul.cible), 50, 'one process alone still reports exactly what it saw, no more');
+
+  // ── ET DEUX PROCESSUS QUI ONT VU LA MÊME CHOSE NE LA COMPTENT PAS DEUX FOIS.
+  const memeChose = A.collecterDepuisV8('scripts', resoudre, { readDir: () => ['p1.json', 'p2.json'], readFile: () => relevé(['porteeDe']) });
+  assert.strictEqual(memeChose.cible.length, 2, 'the same two functions, never four');
+  assert.strictEqual(A.robustnessScore(memeChose.cible), 50, 'and the score does not drift upward just because a report was read twice');
+
+  // ── UN RÉSOLVEUR QUI NE RECONNAÎT RIEN NE REND RIEN, jamais un résultat à moitié rempli.
+  assert.deepStrictEqual(A.collecterDepuisV8('scripts', () => null, deuxProcessus), {}, 'nothing recognised, nothing returned');
+
+  console.log('Passed: la couverture s\'unit entre processus, elle ne se prend pas au premier arrivé (2026-10-03, tâche #1583). LE LECTEUR DE COUVERTURE D\'AXA-CHECK GARDAIT LE PREMIER RELEVÉ DE PROCESSUS qui touchait un fichier et jetait les autres — « déjà vu dans un autre relevé de process ». C\'est faux dès que deux processus exercent des fonctions DIFFÉRENTES du même fichier : on rendait alors la couverture d\'UN SEUL, en la présentant comme celle du fichier. TROUVÉ EN MESURANT, PAS EN RELISANT, et c\'est le filet lancé en quatre parts qui l\'a révélé : il fait voir 41 outils au lieu de 30 — chaque part en exerce d\'autres — mais la moyenne par outil tombait de 42 % à 37 %, parce que chacun n\'était crédité que de la tranche vue par UNE part. Plus d\'outils mesurés et chacun moins bien mesuré : les deux moitiés d\'un même défaut, et la seconde seule aurait pu passer pour un coût acceptable du parallélisme. UNE FONCTION EST COUVERTE SI UN SEUL PROCESSUS L\'A EXERCÉE : c\'est la définition même de la couverture, donc l\'union ne peut que faire MONTER un chiffre, jamais le baisser. APRÈS CORRECTION, ET LES DEUX MOITIÉS DE LA MESURE COMPTENT : sur un relevé à processus unique elle rend EXACTEMENT ce que rendait l\'ancienne version — 99 % sur 21 fichiers de lib, 30 outils à 42 % de moyenne, inchangés au point près, ce qui prouve qu\'elle n\'invente rien ; et sur le relevé parallèle elle passe de 37 % à 81 % sur 41 outils, c\'est-à-dire une mesure STRICTEMENT MEILLEURE que celle du séquentiel sur les deux axes. CE QUI RESTE INEXPLIQUÉ EST DIT PLUTÔT QUE TU : le relevé parallèle porte 77 scripts distincts contre 59 au séquentiel, et je ne sais pas encore pourquoi un lancement en parts fait apparaître dix-huit fichiers que le lancement entier ne montre pas. Le constat est solide, sa cause ne l\'est pas, et les mélanger ferait passer une hypothèse pour une mesure.');
+}
+await testLUnionDeLaCouverture();

@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**53 fichier(s).**
+**55 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -28,6 +28,8 @@
 | [le-document-maitre-2026-10-03.md](le-document-maitre-2026-10-03.md) | — |
 | [le-filet-de-securite-2026-10-03.html](le-filet-de-securite-2026-10-03.html) | — |
 | [le-filet-de-securite-2026-10-03.md](le-filet-de-securite-2026-10-03.md) | — |
+| [le-filet-session-2026-10-03.html](le-filet-session-2026-10-03.html) | — |
+| [le-filet-session-2026-10-03.md](le-filet-session-2026-10-03.md) | — |
 | [le-module-la-partie-indetachable-le-coeur-2026-10-03.html](le-module-la-partie-indetachable-le-coeur-2026-10-03.html) | — |
 | [le-module-la-partie-indetachable-le-coeur-2026-10-03.md](le-module-la-partie-indetachable-le-coeur-2026-10-03.md) | — |
 | [le-pack-decouverte-point.html](le-pack-decouverte-point.html) | — |
