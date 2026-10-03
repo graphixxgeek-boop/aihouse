@@ -1057,7 +1057,12 @@ export function mesuresEnregistrees({ root = ROOT, lire = null } = {}) {
   if (brut == null) return { presentes: false, pourquoi: `aucune mesure enregistrée (${FICHIER_DE_MESURE}) — lancer \`node scripts/ezechiel-les-tests.mjs mesurer\`` };
   try {
     const j = JSON.parse(brut);
-    return { presentes: true, quand: j.quand ?? null, source: j.source ?? null, sante: j.sante ?? null, totalMs: j.totalMs ?? null, mesures: Array.isArray(j.mesures) ? j.mesures : [] };
+    // `complet` EST REMONTÉ, et son absence coûtait cher : le fichier le porte depuis toujours,
+    // mais ce lecteur ne le rendait pas — donc aucun consommateur ne pouvait savoir que le
+    // recollage chronomètre↔groupes s'était décalé, et chacun présentait un détail par groupe
+    // faux en le croyant juste. Une donnée écrite que son propre lecteur laisse tomber est la
+    // forme la plus discrète d'une mesure perdue.
+    return { presentes: true, quand: j.quand ?? null, source: j.source ?? null, sante: j.sante ?? null, totalMs: j.totalMs ?? null, complet: j.complet ?? null, mesures: Array.isArray(j.mesures) ? j.mesures : [] };
   } catch {
     return { presentes: false, pourquoi: `${FICHIER_DE_MESURE} illisible — un fichier de mesure abîmé se lirait comme une absence de problème` };
   }
@@ -1701,6 +1706,220 @@ export function planDeLEnquete(e) {
   return ecarts;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LE RAPPORT COMPLET SUR LE FILET (tâche #1547, sa décision P66 option d)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SON OBJECTIF, DANS SES MOTS : « maîtriser le sujet, sa manipulation, et sa rationalisation ».
+// Le filet est à la fois la pièce la mieux protégée du dépôt et celle qui pèse le plus sur le
+// rythme de travail — c'est ce qui en fait un sujet, et pas seulement un fichier.
+//
+// POURQUOI UN RAPPORT ET PAS UN OUTIL DE PLUS : tout ce qu'il faut mesurer existe déjà, réparti
+// dans Ezechiel (découpage, encombrement, morsure, fraîcheur, santé, chronométrage, croisement
+// coût/protection). Ce qui manquait est un endroit où ces mesures se lisent ENSEMBLE, avec les
+// trois questions auxquelles il veut une réponse : qu'y a-t-il dedans, comment on le manipule, et
+// qu'est-ce qu'on peut alléger sans perdre une protection (Article 31 : on étend, on n'ajoute pas).
+//
+// LA TROISIÈME QUESTION EST LA PLUS DANGEREUSE, et le rapport le dit plutôt que de la trancher :
+// un groupe lent n'est pas un groupe inutile, et proposer de retirer ce qui coûte reviendrait à
+// retirer ce qui protège le plus. Il rend donc un COÛT et une MORSURE côte à côte, jamais un
+// classement de ce qu'il faudrait couper.
+
+// LE SEUIL AU-DELÀ DUQUEL UN RELEVÉ NE DÉCRIT PLUS LE FILET D'AUJOURD'HUI. 10 % d'écart sur le
+// nombre de groupes : en dessous, le relevé reste une approximation utile ; au-dessus, il décrit
+// un autre filet. Volontairement généreux — refuser un relevé à la moindre différence rendrait la
+// mesure inutilisable, et un garde-fou qui refuse le cas normal cesse d'être lu (leçon L4).
+export const SEUIL_DE_PEREMPTION = 0.1;
+
+// LE TITRE D'UN GROUPE EST EXTRAIT DU CODE SOURCE, donc il porte encore ses échappements JS : un
+// `\'` au milieu d'une phrase française coupait l'affichage à « l\ » et rendait la colonne
+// illisible. On les retire au RENDU, jamais dans les données — la donnée doit rester ce que le
+// code dit, et c'est l'affichage qui s'adapte.
+export function titreLisible(titre = "", longueur = 90) {
+  const net = String(titre).replace(/\\(['"`])/g, "$1").replace(/\s+/g, " ").trim();
+  const coupe = net.slice(0, longueur);
+  return (net.length > longueur ? `${coupe}…` : coupe).replace(/\|/g, "·");
+}
+
+export function rapportDuFilet({ root = ROOT, lire = null, mesures = null } = {}) {
+  const lireF = lire ?? ((c) => readFileSync(join(root, c), "utf8"));
+  let src = "";
+  try { src = lireF(filetResolu({ root })); } catch {
+    return { mesurable: false, pourquoi: `le filet est illisible : sans son texte il n'y a rien à décrire, et un rapport vide se lirait comme un filet vide` };
+  }
+  const groupes = decouperEnGroupes(src);
+  if (!groupes.length) return { mesurable: false, pourquoi: "aucun groupe découpé dans le filet : le découpage a échoué, ce qui n'est jamais la même chose qu'un filet sans test" };
+  const enc = encombrement(groupes, { top: 10 });
+  const morsure = groupesSansMorsure(groupes);
+  const sansRaison = groupesSansRaison(groupes);
+  const mes = mesures ?? mesuresEnregistrees({ root, lire });
+  // UN CHRONOMÈTRE PÉRIMÉ EST PIRE QU'UN CHRONOMÈTRE ABSENT, et le premier passage l'a montré :
+  // le relevé disponible datait du 2026-09-29, 356 groupes pour 94 s, alors que le filet en porte
+  // 411 et tourne en une dizaine de minutes. Présenté tel quel il aurait annoncé un coût SIX FOIS
+  // trop bas — un chiffre faux, daté, et parfaitement crédible. L'écart se mesure sur le nombre de
+  // groupes, qui est la seule grandeur comparable entre un relevé et le filet d'aujourd'hui.
+  const groupesMesures = Array.isArray(mes?.mesures) ? mes.mesures.length : 0;
+  const ecartDeGroupes = groupesMesures ? Math.abs(groupes.length - groupesMesures) / groupes.length : 1;
+  const perime = groupesMesures > 0 && ecartDeGroupes > SEUIL_DE_PEREMPTION;
+  const croise = mes?.presentes && groupesMesures && !perime
+    ? croiserCoutEtProtection(groupes, mes.mesures)
+    : {
+      mesurable: false,
+      pourquoi: !mes?.presentes || !groupesMesures
+        ? "aucun chronométrage enregistré : le coût par groupe n'est pas mesuré, et l'absence de mesure n'est pas un coût nul (leçons L5/L11)"
+        : `le chronométrage disponible est PÉRIMÉ : il porte sur ${groupesMesures} groupes quand le filet en compte ${groupes.length} (${Math.round(ecartDeGroupes * 100)} % d'écart). Le présenter tel quel annoncerait un coût faux et crédible`,
+    };
+  return {
+    mesurable: true, chemin: filetResolu({ root }),
+    groupes: groupes.length, lignes: src.split("\n").length,
+    assertions: (src.match(/\bassert\.[a-zA-Z]+\(/g) ?? []).length,
+    encombrement: enc, morsure, sansRaison, mesures: mes, croise,
+    chaine: chaineDuFilet({ root, lire }),
+  };
+}
+
+export function lignesDuRapportDuFilet(r = {}, { date = "" } = {}) {
+  const L = [];
+  L.push("<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->");
+  L.push("# Le filet de sécurité — ce qu'il contient, comment on le manipule, ce qu'on peut alléger");
+  L.push("");
+  L.push(`> Produit par \`node scripts/ezechiel-les-tests.mjs rapport\` le ${date}, sur le filet réel.`);
+  L.push("> Ta demande (P66, option d) : « maîtriser le sujet, sa manipulation, et sa rationalisation ».");
+  L.push("");
+  if (!r.mesurable) { L.push(`**PAS MESURÉ** — ${r.pourquoi}`); L.push("<!-- /DOCUMENT GÉNÉRÉ -->"); return L; }
+  L.push("## ① CE QU'IL CONTIENT");
+  L.push("");
+  L.push("| | |");
+  L.push("|---|---|");
+  L.push(`| Le fichier | \`${r.chemin}\` |`);
+  L.push(`| Lignes de code | ${r.lignes.toLocaleString("fr-FR")} |`);
+  L.push(`| Groupes de vérification | ${r.groupes} |`);
+  L.push(`| Assertions (les vérifications élémentaires) | ${r.assertions.toLocaleString("fr-FR")} |`);
+  L.push(`| Assertions par groupe, en moyenne | ${(r.assertions / r.groupes).toFixed(1)} |`);
+  L.push("");
+  L.push("**Un GROUPE est une fonction de test qui se termine par une ligne `Passed:`** — c'est l'unité que");
+  L.push("tu vois défiler quand le filet tourne. Une ASSERTION est une vérification élémentaire à");
+  L.push("l'intérieur d'un groupe. Les deux comptent : un groupe dit CE QUI est protégé, une assertion dit");
+  L.push("À QUEL POINT.");
+  L.push("");
+  if (r.encombrement?.mesurable) {
+    L.push("### Où le volume se concentre");
+    L.push("");
+    L.push(`Les **10 plus gros groupes** représentent **${Math.round(r.encombrement.partDuTopPct)} %** des ${r.encombrement.totalLignes.toLocaleString("fr-FR")} lignes de test.`);
+    L.push("");
+    L.push("| Lignes | Groupe |");
+    L.push("|---|---|");
+    for (const g of r.encombrement.lesPlusGros) L.push(`| ${g.lignes} | ${titreLisible(g.titre, 110)} |`);
+    L.push("");
+    if (r.encombrement.titresEnDouble.length) {
+      L.push(`**${r.encombrement.titresEnDouble.length} titre(s) en double** — deux groupes au même titre testent probablement la même chose deux fois, ou l'un a été copié puis modifié à moitié.`);
+      L.push("");
+    }
+  }
+  L.push("## ② COMMENT ON LE MANIPULE");
+  L.push("");
+  L.push("| Je veux… | La commande |");
+  L.push("|---|---|");
+  L.push("| le lancer en entier | `node --max-old-space-size=3072 scripts/check-house.mjs` |");
+  L.push("| savoir combien de temps chaque groupe coûte | `node scripts/ezechiel-les-tests.mjs mesurer` |");
+  L.push("| le lancer en plusieurs parts simultanées | `node scripts/filet-en-parts.mjs` |");
+  L.push("| savoir si un test MORD vraiment | `node scripts/ezechiel-les-tests.mjs robustesse` |");
+  L.push("| relire ce rapport à jour | `node scripts/ezechiel-les-tests.mjs rapport` |");
+  L.push("");
+  L.push("**Le verdict du filet est son CODE DE SORTIE, jamais le nombre de lignes `Passed`** : une suite");
+  L.push("qui s'arrête au milieu affiche des `Passed` jusqu'au point d'arrêt, et ces lignes-là ne prouvent");
+  L.push("rien sur ce qui n'a pas tourné.");
+  L.push("");
+  if (r.chaine?.mesurable !== false && r.chaine) {
+    L.push("### Quand il se déclenche tout seul");
+    L.push("");
+    const c = r.chaine;
+    if (Array.isArray(c.crochets)) for (const x of c.crochets) L.push(`- \`${x.chemin ?? x}\`${x.lance ? ` — lance ${Array.isArray(x.lance) ? x.lance.join(", ") : x.lance}` : ""}`);
+    else L.push(`- ${JSON.stringify(c).slice(0, 300)}`);
+    L.push("");
+  }
+  L.push("## ③ CE QU'ON PEUT ALLÉGER — et ce qu'il ne faut surtout pas toucher");
+  L.push("");
+  L.push("**Le piège de cette question, et il est le seul vrai danger du sujet** : un groupe LENT n'est pas");
+  L.push("un groupe INUTILE. Proposer de couper ce qui coûte reviendrait à couper ce qui protège le plus,");
+  L.push("puisque les contrôles les plus chers sont ceux qui lisent le vrai dépôt. Ce rapport rend donc le");
+  L.push("COÛT et la MORSURE côte à côte, et ne propose jamais de liste à supprimer.");
+  L.push("");
+  L.push("### Ce qui ne mord pas — la seule population légitimement retirable");
+  L.push("");
+  const muets = r.morsure?.muets ?? [];
+  const tauto = r.morsure?.tautologiques ?? [];
+  if (!muets.length && !tauto.length) {
+    L.push("**Aucun groupe muet, aucune tautologie.** Chaque groupe du filet porte au moins une assertion qui");
+    L.push("peut réellement échouer. C'est le résultat qu'on espère, et il veut dire qu'il n'y a rien à retirer");
+    L.push("de ce côté-là : l'allègement devra venir de la VITESSE, jamais du nombre de contrôles.");
+  } else {
+    if (muets.length) { L.push(`**${muets.length} groupe(s) muet(s)** — aucune assertion qui puisse échouer :`); L.push(""); for (const g of muets.slice(0, 10)) L.push(`- ligne ${g.ligne} — ${String(g.titre).slice(0, 100)}`); L.push(""); }
+    if (tauto.length) { L.push(`**${tauto.length} tautologie(s)** — une assertion qui ne peut pas échouer :`); L.push(""); for (const g of tauto.slice(0, 10)) L.push(`- ligne ${g.ligne} — ${String(g.titre).slice(0, 100)}`); L.push(""); }
+  }
+  L.push("");
+  L.push("### Où part le temps");
+  L.push("");
+  if (!r.croise?.mesurable) {
+    L.push(`**PAS MESURÉ** — ${r.croise?.pourquoi}`);
+    L.push("");
+    L.push("Lance `node scripts/ezechiel-les-tests.mjs mesurer` pour l'obtenir : c'est une exécution complète");
+    L.push("du filet, donc elle coûte son temps, et c'est la seule façon honnête de répondre.");
+  } else {
+    L.push(`Chronométrage de référence : **${(r.croise.totalMs / 1000).toFixed(0)} s** sur ${r.croise.groupes} groupe(s)`);
+    if (r.mesures?.quand) L.push(`*(relevé du ${String(r.mesures.quand).slice(0, 10)})*`);
+    L.push("");
+    // LE RECOLLAGE PEUT ÊTRE INCOMPLET, ET ALORS LE DÉTAIL PAR GROUPE EST FAUX. Le chronomètre
+    // apparie les lignes « Passed » vues à l'exécution avec les groupes découpés dans le texte ;
+    // quand une fonction en émet plusieurs, les deux listes se décalent et chaque coût se retrouve
+    // attribué au mauvais groupe. Le TOTAL, lui, reste juste — c'est une seule soustraction de
+    // deux horodatages. Rendre le détail quand même aurait produit exactement ce que ce rapport
+    // vient de refuser à un relevé périmé : un chiffre faux, précis et parfaitement crédible.
+    if (r.mesures?.complet === false) {
+      L.push("> **LE DÉTAIL PAR GROUPE N'EST PAS RENDU, ET C'EST VOLONTAIRE.** Le chronomètre apparie les");
+      L.push("> lignes « Passed » vues à l'exécution avec les groupes découpés dans le texte. Ce recollage");
+      L.push("> s'est déclaré **INCOMPLET** : certaines fonctions émettent plusieurs lignes `Passed`, donc");
+      L.push("> les deux listes se décalent et chaque coût se retrouverait attribué au mauvais groupe.");
+      L.push("> **Le TOTAL reste juste** — c'est une soustraction de deux horodatages. Le détail, non.");
+      L.push("");
+      L.push("C'est une limite de l'outil et non du filet, et elle se corrige : il faut que le découpage");
+      L.push("compte les lignes `Passed` plutôt que les fonctions. Tant que ce n'est pas fait, aucune");
+      L.push("décision d'allègement ne peut s'appuyer sur un coût PAR GROUPE.");
+    } else {
+      L.push("| Coût | Assertions | Groupe |");
+      L.push("|---|---|---|");
+      for (const l of (r.croise.aRegarder ?? []).slice(0, 10)) L.push(`| ${(l.ms / 1000).toFixed(1)} s | ${l.assertions} | ${titreLisible(l.titre, 90)} |`);
+      L.push("");
+      L.push("**Lire ce tableau sans se tromper** : il classe par millisecondes PAR ASSERTION, pas par durée");
+      L.push("brute. Un groupe cher par assertion est un groupe qui fait beaucoup de travail pour peu de");
+      L.push("vérifications — ce qui peut être parfaitement légitime (lire 700 documents pour en vérifier un");
+      L.push("seul point), et c'est exactement ce qu'un humain doit regarder plutôt qu'une machine.");
+    }
+  }
+  L.push("");
+  L.push("## ④ CE QUE CE RAPPORT NE DIT PAS");
+  L.push("");
+  L.push("Il décrit le filet, jamais la QUALITÉ de ce qu'il protège. Un filet de 411 groupes tous verts peut");
+  L.push("parfaitement laisser passer un défaut qu'aucun d'eux ne cherche — c'est ce que mesure la");
+  L.push("robustesse (`robustesse`), en cassant exprès le code pour voir si un test s'en aperçoit, et c'est");
+  L.push("une autre question.");
+  L.push("");
+  L.push("# PLAN D'ACTION");
+  L.push("");
+  L.push("| État | Constat | Suite |");
+  L.push("|---|---|---|");
+  L.push(`| ✅ MESURÉ | le filet porte ${r.groupes} groupes et ${r.assertions.toLocaleString("fr-FR")} assertions sur ${r.lignes.toLocaleString("fr-FR")} lignes | #1547 |`);
+  if (!muets.length && !tauto.length) L.push("| ✅ MESURÉ | aucun groupe muet ni tautologique : l'allègement devra venir de la VITESSE, jamais du nombre de contrôles | #1547 |");
+  else L.push(`| → RETENU | ${muets.length + tauto.length} groupe(s) sans morsure réelle : la seule population légitimement retirable | #1547 |`);
+  if (!r.croise?.mesurable) L.push("| ? À INSTRUIRE | le chronométrage de référence est absent ou périmé : relancer `mesurer` avant toute décision d'allègement | #1547 |");
+  else if (r.mesures?.complet === false) L.push("| → RETENU | le recollage chronomètre↔groupes est INCOMPLET : le total est juste, le détail par groupe serait faux. Le découpage doit compter les lignes `Passed`, pas les fonctions | #1547 |");
+  if (r.encombrement?.titresEnDouble?.length) L.push(`| ? À INSTRUIRE | ${r.encombrement.titresEnDouble.length} titre(s) de groupe en double : même chose testée deux fois, ou copie modifiée à moitié ? | #1547 |`);
+  L.push("| ? À TRANCHER | le filet bloque au crochet *pre-commit* : faut-il le garder bloquant, ou le passer en partie après coup ? | #1485 |");
+  L.push("");
+  L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   recordCliUsage("ezechiel-les-tests");
   const sousCommande = (process.argv[2] || "").replace(/^--/, "");
@@ -1764,6 +1983,23 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 
   // ---- `robustesse` : la passe qui casse le code exprès (passe SÉPARÉE, jamais dans l'enquête) -
+  // ---- `rapport` : le rapport complet sur le filet (tâche #1547, sa décision P66 option d) ----
+  if (sousCommande === "rapport") {
+    printReportHeader({ tool: "ezechiel-les-tests", title: "EZECHIEL — le rapport complet sur le filet", scriptPath: "scripts/ezechiel-les-tests.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
+    const { writeFileSync } = await import("node:fs");
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(process.argv[3] ?? "") ? process.argv[3] : new Date().toISOString().slice(0, 10);
+    const r = rapportDuFilet({ root: ROOT });
+    if (!r.mesurable) { console.log(`🚨 PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; }
+    else {
+      console.log(`${r.groupes} groupe(s) · ${r.assertions} assertion(s) · ${r.lignes} ligne(s)`);
+      console.log(`Sans morsure : ${(r.morsure?.muets ?? []).length} muet(s), ${(r.morsure?.tautologiques ?? []).length} tautologie(s)`);
+      console.log(r.croise?.mesurable ? `Chronométrage : ${(r.croise.totalMs / 1000).toFixed(0)} s` : `Chronométrage : PAS MESURÉ — ${r.croise?.pourquoi}`);
+      const sortie = join(ROOT, `docs/livrables/le-filet-de-securite-${date}.md`);
+      writeFileSync(sortie, `${lignesDuRapportDuFilet(r, { date }).join("\n")}\n`, "utf8");
+      console.log(`\nÉcrit dans ${sortie.replace(`${ROOT}/`, "")}`);
+    }
+    process.exit(process.exitCode ?? 0);
+  }
   if (sousCommande === "robustesse") {
     printReportHeader({ tool: "ezechiel-les-tests", title: "EZECHIEL — passe de robustesse : le filet mord-il vraiment ?", scriptPath: "scripts/ezechiel-les-tests.mjs", origin: process.env.TOOL_USAGE_ORIGIN || "cli_direct" });
     printReliabilityNotice("ezechiel-les-tests");

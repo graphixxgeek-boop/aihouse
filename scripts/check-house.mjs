@@ -27242,3 +27242,54 @@ async function testTotalRecall() {
   console.log('Passed: TOTAL RECALL, ce que « complet » coûte vraiment (2026-10-03, tâche #1545). SA CONSIGNE DE CADRAGE : comparer l\'opération au système existant, et noter que c\'est « un rafraîchissement complet de la mémoire de l\'IA, forcé mécaniquement », trop lourd pour le seul périmètre « où on en est ». CE QUE CE PASSAGE AJOUTE EST LE CHIFFRE, parce que la décision qu\'il annonce se prend sur un coût et que personne ne pouvait le donner : un rafraîchissement complet représente ~1,68 MILLION de tokens sur 209 documents. Son intuition est donc confirmée durement — les deux opérations diffèrent d\'un ORDRE DE GRANDEUR, elles méritent deux mécanismes et non un curseur. LA FRAÎCHEUR SE LIT DANS LE TEXTE ET JAMAIS SUR LA DATE DU FICHIER, et la raison est exactement le cas d\'usage visé : un `git clone` réécrit toutes les dates de modification, donc un dépôt fraîchement transporté paraîtrait tout neuf. LA COUCHE LÉGÈRE PREND LE DOCUMENT RÉELLEMENT LE PLUS RÉCENT, jamais une moyenne — la première version moyennait, et la moyenne du suivi est faussée par onze fichiers dont un pèse presque tout : elle annonçait un coût qu\'aucune relecture réelle n\'aurait payé. ET LE PASSAGE RÉEL A SORTI LE CONSTAT QU\'ON NE CHERCHAIT PAS : UN SEUL FICHIER décide du résultat. Le fichier de session du suivi pèse à lui seul 94 % de la couche légère et 37 % de toute la mémoire du projet ; sans lui elle tomberait de 39 % à 2 % du complet. Le suivi se découpe par SESSION, et une session qui dure devient un fichier sans fin : son unité de découpage n\'est pas une unité de lecture. Ce n\'est pas un problème de TOTAL RECALL, c\'est un problème que TOTAL RECALL révèle — et le rapport le sort À PART plutôt que noyé dans un total, parce que noyé il disparaît.');
 }
 await testTotalRecall();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1547 — LE RAPPORT COMPLET SUR LE FILET, ET LES DEUX CHIFFRES FAUX QU'IL A REFUSÉ DE RENDRE
+async function testLeRapportDuFilet() {
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // ── 1. UN TITRE EXTRAIT DU CODE PORTE SES ÉCHAPPEMENTS, et un `\'` coupait la colonne à « l\ ».
+  // On les retire au RENDU, jamais dans les données : la donnée reste ce que le code dit.
+  assert.strictEqual(E.titreLisible("l\\'index des outils", 50), "l'index des outils", 'a JS escape never reaches the rendered column');
+  assert.strictEqual(E.titreLisible('a|b', 50), 'a·b', 'and a pipe never breaks the table it sits in');
+  assert.ok(E.titreLisible('x'.repeat(200), 40).endsWith('…'), 'a long title is cut with an ellipsis, so one can see it was cut');
+
+  // ── 2. UN CHRONOMÈTRE PÉRIMÉ EST PIRE QU'UN CHRONOMÈTRE ABSENT, et le premier passage l'a
+  // montré : le relevé disponible portait sur 338 groupes quand le filet en comptait 411, et
+  // annonçait 94 s pour un filet qui en met 248. Un chiffre faux, daté, et crédible.
+  const perime = E.rapportDuFilet({
+    root: '.',
+    mesures: { presentes: true, quand: '2026-09-29T00:00:00Z', complet: true, mesures: new Array(50).fill({ ms: 1 }) },
+  });
+  assert.strictEqual(perime.croise.mesurable, false, 'a stale timing is refused rather than presented');
+  assert.match(perime.croise.pourquoi, /PÉRIMÉ/, 'and it says so by name, with the gap that decided');
+  assert.ok(E.SEUIL_DE_PEREMPTION > 0 && E.SEUIL_DE_PEREMPTION < 1, 'the staleness threshold is deliberately generous: a guard that refuses the normal case stops being read (leçon L4)');
+
+  // ── 3. LE RECOLLAGE PEUT ÊTRE INCOMPLET, ET ALORS LE DÉTAIL PAR GROUPE EST FAUX. Le total,
+  // lui, reste juste : c'est une soustraction de deux horodatages. Rendre le détail quand même
+  // aurait produit exactement ce que ce rapport refuse à un relevé périmé.
+  const r = E.rapportDuFilet({ root: '.' });
+  assert.strictEqual(r.mesurable, true, 'the real net is read and described');
+  const rendu = E.lignesDuRapportDuFilet(r, { date: '2026-10-03' }).join('\n');
+  if (r.mesures?.complet === false) {
+    assert.match(rendu, /LE DÉTAIL PAR GROUPE N'EST PAS RENDU/, 'with an incomplete pairing the per-group detail is withheld and the reason given');
+    assert.match(rendu, /Le TOTAL reste juste/, 'while the total, which is a subtraction of two timestamps, is kept');
+  }
+  // ET LA DONNÉE QUI LE DIT ÉTAIT PERDUE PAR SON PROPRE LECTEUR : le fichier de mesure porte
+  // `complet` depuis toujours, et `mesuresEnregistrees()` ne le remontait pas — donc aucun
+  // consommateur ne pouvait savoir que le recollage s'était décalé.
+  assert.ok('complet' in E.mesuresEnregistrees({ root: '.' }), 'the reader now carries the flag its own file has always written');
+
+  // ── 4. CE QU'IL DÉCRIT DU FILET RÉEL (Article 25), et le résultat qui décide de l'allègement.
+  assert.ok(r.groupes > 300, `the net carries ${r.groupes} groups`);
+  assert.ok(r.assertions > 5000, `and ${r.assertions} assertions`);
+  assert.strictEqual((r.morsure?.muets ?? []).length, 0, 'no group is mute');
+  assert.strictEqual((r.morsure?.tautologiques ?? []).length, 0, 'and none is a tautology — so the only legitimately removable population is EMPTY, which means any lightening must come from SPEED and never from the number of controls');
+
+  // ── 5. UN FILET ILLISIBLE N'EST PAS UN FILET VIDE (leçons L5/L11).
+  const absent = E.rapportDuFilet({ lire: () => { throw new Error('absent'); } });
+  assert.strictEqual(absent.mesurable, false, 'an unreadable net is PAS MESURÉ, never an empty one');
+
+  console.log('Passed: le rapport complet sur le filet, et les deux chiffres faux qu\'il a refusé de rendre (2026-10-03, tâche #1547, sa décision P66 option d). SON OBJECTIF : « maîtriser le sujet, sa manipulation, et sa rationalisation ». LE RAPPORT N\'EST PAS UN OUTIL DE PLUS : tout ce qu\'il faut mesurer existait déjà chez Ezechiel, réparti sur huit fonctions ; ce qui manquait est un endroit où ces mesures se lisent ENSEMBLE, avec ses trois questions (Article 31 : on étend, on n\'ajoute pas). LE RÉSULTAT QUI DÉCIDE DE LA TROISIÈME QUESTION : ZÉRO groupe muet, ZÉRO tautologie sur 411 groupes et 8 075 assertions — la seule population légitimement retirable est VIDE, donc tout allègement devra venir de la VITESSE et jamais du nombre de contrôles. Et le rapport refuse de proposer une liste à couper, parce qu\'un groupe LENT n\'est pas un groupe INUTILE : les contrôles les plus chers sont ceux qui lisent le vrai dépôt. DEUX CHIFFRES FAUX ONT ÉTÉ REFUSÉS EN CHEMIN, et les refuser est le vrai travail. ① Le relevé disponible portait sur 338 groupes quand le filet en comptait 411, et annonçait 94 s pour un filet qui en met 248 : périmé, donc refusé plutôt que présenté — un chiffre faux, daté et parfaitement crédible. ② Le recollage chronomètre↔groupes s\'est déclaré INCOMPLET, parce que certaines fonctions émettent plusieurs lignes « Passed » et que les deux listes se décalent : le détail par groupe aurait attribué chaque coût au mauvais groupe. Le TOTAL est rendu, le détail est retenu, et la raison est écrite. ET LA DONNÉE QUI PERMET DE LE SAVOIR ÉTAIT PERDUE PAR SON PROPRE LECTEUR : le fichier de mesure écrit `complet` depuis toujours et `mesuresEnregistrees()` ne le remontait pas — une donnée écrite que son lecteur laisse tomber est la forme la plus discrète d\'une mesure perdue.');
+}
+await testLeRapportDuFilet();

@@ -70,5 +70,23 @@
     "succes": 356,
     "anomalies": 1,
     "vert": false
+  },
+  {
+    "quand": "2026-10-03T14:26:00.697Z",
+    "totalMs": 63888,
+    "code": 1,
+    "groupes": 411,
+    "succes": 165,
+    "anomalies": 2,
+    "vert": false
+  },
+  {
+    "quand": "2026-10-03T14:40:59.990Z",
+    "totalMs": 248033,
+    "code": 0,
+    "groupes": 411,
+    "succes": 430,
+    "anomalies": 1,
+    "vert": false
   }
 ]
