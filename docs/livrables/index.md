@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**47 fichier(s).**
+**49 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -24,6 +24,8 @@
 | [consignes-de-session-2026-10-03.md](consignes-de-session-2026-10-03.md) | — |
 | [la-nuit-du-2-au-3-octobre.html](la-nuit-du-2-au-3-octobre.html) | — |
 | [la-nuit-du-2-au-3-octobre.md](la-nuit-du-2-au-3-octobre.md) | — |
+| [le-module-la-partie-indetachable-le-coeur-2026-10-03.html](le-module-la-partie-indetachable-le-coeur-2026-10-03.html) | — |
+| [le-module-la-partie-indetachable-le-coeur-2026-10-03.md](le-module-la-partie-indetachable-le-coeur-2026-10-03.md) | — |
 | [le-pack-decouverte-point.html](le-pack-decouverte-point.html) | — |
 | [le-pack-decouverte-point.md](le-pack-decouverte-point.md) | — |
 | [les-11-destinations-dune-note.html](les-11-destinations-dune-note.html) | — |

@@ -27062,3 +27062,61 @@ async function testLesDeuxCasDeFigure() {
   console.log('Passed: l\'Agence projet contre l\'Agence aide exécutive, mesurée plutôt que racontée (2026-10-03, tâche #1553). SES SIX QUESTIONS (P39) portaient sur l\'écart entre ce qu\'on a DIT et ce qu\'on a FAIT, et il a exigé que le code réponde plutôt que ma mémoire — ce qui est le bon réflexe, parce qu\'une réponse de mémoire reprendrait le dit. LA SÉPARATION EXISTE BIEN, et sa taille est maintenant un chiffre : 45 articles au cas 1, 22 au cas 2, dont 2 repris à l\'identique, 12 reformulés, 31 laissés de côté et 8 qui n\'existent qu\'au cas 2. L\'APPARIEMENT SE FAIT PAR TITRE, JAMAIS PAR NUMÉRO, et le premier passage a montré pourquoi : SEIZE numéros désignent deux articles différents selon la version, si bien que comparer par numéro aurait produit des correspondances fausses qui ressemblent trait pour trait à des justes — et c\'est au passage la même ambiguïté de citation que la charte et la gouvernance avaient entre elles, revenue À L\'INTÉRIEUR d\'un seul des deux textes. ET LA RÉPONSE À « QU\'EST-CE QUI S\'EST PASSÉ DANS LE CODE ? » EST LA PLUS NETTE : dix scripts lisent le cas 1 ; le cas 2 n\'est lu par AUCUN, sauf l\'outil écrit aujourd\'hui pour le mesurer. Le rapport refuse de compter ce lecteur-là, parce qu\'annoncer « lu par 1 script » serait vrai à la lettre et faux au fond — une couverture fabriquée par la mesure qui la constate. Il déclare aussi ce qu\'il ne mesure pas : il compare des TITRES, jamais le contenu, donc il établit l\'ampleur de la séparation et jamais sa justesse.');
 }
 await testLesDeuxCasDeFigure();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1538 — LE MODULE, LA PARTIE INDÉTACHABLE, LE CŒUR : SES TROIS DÉFINITIONS MISES À L'ÉPREUVE
+async function testLeCoeurDeLAgence() {
+  const C = await import('../scripts/le-coordinateur.mjs');
+
+  // ── 1. LE GRAPHE SE LIT SUR LE DISQUE, et l'atteinte supporte les CYCLES — ce dépôt en porte,
+  // et une descente naïve y tournerait sans fin.
+  const arcs = new Map([['a', ['b']], ['b', ['c', 'a']], ['c', []], ['z', []]]);
+  assert.deepStrictEqual([...C.atteintDepuis('a', arcs)].sort(), ['a', 'b', 'c'], 'reachability follows the chain and survives the a→b→a cycle');
+  assert.deepStrictEqual([...C.atteintDepuis('z', arcs)], [], 'a leaf reaches nothing');
+
+  // ── 2. LA PARTIE INDÉTACHABLE EST UNE INTERSECTION, prise au mot de sa définition : « ce que
+  // TOUTE prestation réclame ». Un seul outil autonome la vide, et c'est la réponse exacte à la
+  // question exacte — jamais une mesure ratée.
+  const g = new Map([
+    ['scripts/un.mjs', ['scripts/commun.mjs', 'scripts/propre.mjs']],
+    ['scripts/deux.mjs', ['scripts/commun.mjs']],
+    ['scripts/commun.mjs', []], ['scripts/propre.mjs', []],
+  ]);
+  const r = C.partieIndetachable({ arcs: g, prestations: [{ nom: 'A', outils: ['un'] }, { nom: 'B', outils: ['deux'] }] });
+  assert.strictEqual(r.mesurable, true, 'two entry points are enough to intersect');
+  assert.deepStrictEqual(r.indetachables.map((x) => x.chemin), ['scripts/commun.mjs'], 'only what BOTH reach is indétachable — what one of them reaches alone is not');
+  assert.strictEqual(r.centreDeGravite.find((x) => x.chemin === 'scripts/propre.mjs').part, 0.5, 'and the share of entry points reaching each file is kept beside it, because the strict intersection shows no centre of gravity');
+
+  // ── 3. UN GRAPHE VIDE N'EST PAS « TOUT EST INDÉTACHABLE » (leçons L5/L11).
+  assert.strictEqual(C.partieIndetachable({ arcs: new Map() }).mesurable, false, 'no script read is not a measurement');
+  assert.strictEqual(C.partieIndetachable({ arcs: g, prestations: [{ nom: 'X', outils: ['nexiste-pas'] }] }).mesurable, false, 'and no resolvable entry point either');
+
+  // ── 4. LE SEUIL DU CŒUR SE LIT DANS LA DISTRIBUTION, IL NE SE CHOISIT PAS. Un seuil rond — « au
+  // -dessus de 90 % » — aurait pu tomber au milieu d'un palier sans qu'on puisse dire pourquoi là.
+  const c = C.coeurDeLAgence([{ chemin: 'a', atteintPar: 10, part: 1 }, { chemin: 'b', atteintPar: 9, part: 0.9 }, { chemin: 'c', atteintPar: 2, part: 0.2 }]);
+  assert.deepStrictEqual(c.coeur.map((x) => x.chemin), ['a', 'b'], 'the cut falls at the biggest jump, 9 → 2, never at a round threshold');
+  assert.strictEqual(c.saut, 7, 'and the jump is reported, so one can check it still holds');
+  assert.strictEqual(C.coeurDeLAgence([{ chemin: 'a', atteintPar: 5 }, { chemin: 'b', atteintPar: 5 }]).mesurable, false, 'a flat distribution has no cut, and inventing one would be a ranking dressed up as a measurement');
+  assert.strictEqual(C.coeurDeLAgence([{ chemin: 'a', atteintPar: 1 }]).mesurable, false, 'and one file cannot have a jump');
+
+  // ── 5. LE PASSAGE RÉEL, parce que sa question porte sur CETTE Agence (Article 25). Et le vrai
+  // piège a été payé en direct, pour la SECONDE fois dans la même journée : le catalogue écrit
+  // « MOÏSE-TABLES-DE-LOI » et « X-Port BLINDTEST », le disque écrit des minuscules sans accent.
+  // Comparer les noms bruts déclarait 51 outils sur 89 introuvables, donc une intersection
+  // calculée sur la moitié du parc — et le résolveur partagé existait déjà.
+  const reel = C.partieIndetachable({ root: '.' });
+  assert.strictEqual(reel.mesurable, true, 'the real graph is read');
+  assert.ok(reel.pointsDentree > 80, `the catalogue’s tools resolve to real scripts (${reel.pointsDentree} entry points) — the raw-name comparison found barely half of them`);
+  assert.ok(reel.sansScript.length <= 2, `and almost nothing is left unresolved (${reel.sansScript.length})`);
+  const creel = C.coeurDeLAgence(reel.centreDeGravite);
+  assert.strictEqual(creel.mesurable, true, 'the real distribution has a readable cut');
+  assert.ok(creel.coeur.length >= 2 && creel.coeur.length <= 10, `and it yields a core of a handful of files (currently ${creel.coeur.length}), never the whole fleet nor a single file`);
+
+  // ── 6. SA DÉFINITION DU MODULE CONFRONTÉE AU CATALOGUE, et le chiffre ne la flatte pas.
+  const d = C.prestationsParNombreDOutils();
+  const seuls = (d.find((x) => x.outils === 1) ?? {}).prestations ?? 0;
+  assert.ok(seuls > 50, `his definition says "a SET of agents" and ${seuls} prestations are borne by exactly one tool — the definition describes a target, not today’s catalogue, and saying so is more useful than pretending they coincide`);
+
+  console.log('Passed: le module, la partie indétachable et le cœur — ses trois définitions mises à l\'épreuve du graphe réel (2026-10-03, tâche #1538). SA PHRASE COMMANDAIT TOUT : « encore faut-il définir le cœur ». UN CŒUR DÉCLARÉ À LA MAIN AURAIT ÉTÉ LA LISTE DES FICHIERS QUE JE TROUVE IMPORTANTS ; sa définition à lui — « ce que TOUTE prestation réclame » — est une propriété VÉRIFIABLE, donc elle se calcule. PRISE AU MOT, elle rend UN SEUL fichier sur 88 points d\'entrée, et ce n\'est pas une mesure ratée : c\'est la réponse exacte à la question exacte, puisqu\'un seul outil autonome vide une intersection. Ce qu\'elle dit vraiment répond à son « est-ce réaliste ? » : l\'Agence est DÉJÀ presque entièrement modulaire, ses outils ne partagent presque rien, et ce qui manque n\'est pas la modularité mais le cœur. LE CŒUR EST DONC DÉRIVÉ AUTREMENT, sur la part des points d\'entrée qui atteint chaque fichier, et LE SEUIL SE LIT DANS LA DISTRIBUTION au lieu de se choisir : on coupe au plus grand saut, parce qu\'un seuil rond aurait pu tomber au milieu d\'un palier sans que personne puisse dire pourquoi là. Le saut est franc — 38 points d\'entrée — et le cœur fait quatre fichiers. ET LE VRAI PIÈGE A ÉTÉ PAYÉ UNE SECONDE FOIS DANS LA MÊME JOURNÉE : le catalogue écrit « MOÏSE-TABLES-DE-LOI », le disque écrit des minuscules sans accent, et comparer les noms bruts déclarait 51 outils sur 89 introuvables — une intersection calculée sur la moitié du parc, pendant que le résolveur partagé existait. SA DÉFINITION DU MODULE, enfin, n\'est pas flattée : 71 prestations sur 76 ne sont portées que par UN outil, donc « un ensemble d\'agents » décrit une CIBLE et non l\'état actuel. Et la mesure déclare l\'autre moitié du sujet qu\'elle ne voit pas : elle lit les imports, donc ce qu\'un outil CHARGE, jamais ce qu\'il SUPPOSE.');
+}
+await testLeCoeurDeLAgence();

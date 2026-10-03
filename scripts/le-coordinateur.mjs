@@ -48,7 +48,7 @@ import { fileURLToPath } from "node:url";
 // La racine du dépôt, pour relever les sources que chaque outil lit (tâche #1382). Injectable
 // partout où elle sert, pour qu'un test puisse pointer un faux dossier sans toucher au vrai.
 const ROOT_COORD = fileURLToPath(new URL("..", import.meta.url));
-import { sh, assertNotAPersonnage, assertNomPropreDAgent, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, familleDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent } from "./lib-shell.mjs";
+import { sh, assertNotAPersonnage, assertNomPropreDAgent, AGENT_CATEGORIES, sansAccents, rangDeLaCategorie, familleDeLaCategorie, lireLeDocumentGouvernant, ligneDocumentAbsent, scriptPourSlug } from "./lib-shell.mjs";
 import { collectCoverage, robustnessScore, LIB_MAP, AGENT_SCRIPT_FILES } from "./axa-check.mjs";
 import { findOrphanReportFiles, REGISTRIES as REGISTRIES_DOC_REPORT } from "./doc-report.mjs";
 import { summarizeArgusOutput, summarizeHarmoniaOutput } from "./hyper-scan-checkpoint.mjs";
@@ -2741,6 +2741,226 @@ export function runNetworkCheck({ shImpl = sh } = {}) {
 // organigramme ». Faux : PRESTATIONS nomme les outils par leur nom d'affichage
 // (`ABRAHAM-LES-REFERENCES`), `AGENT_CATEGORIES` par leur slug (`abraham-les-references`). Le
 // résolveur existait depuis le 2026-09-25 et je ne l'avais pas appelé. 66 des 75 se résolvent.
+// ————————————————————————————————————————————————————————————————————————
+// LA PARTIE INDÉTACHABLE ET LE CŒUR, DÉRIVÉS DU GRAPHE RÉEL (tâche #1538)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SES TROIS DÉFINITIONS, dans ses mots : un MODULE est « un ensemble d'agents qui œuvrent dans un
+// sens commun pour produire UNE PRESTATION » · la PARTIE INDÉTACHABLE est « ce que toute
+// prestation réclame quoi qu'il arrive » · le CŒUR est « le cœur de la partie indétachable ». Et
+// sa phrase qui commande tout le reste : « encore faut-il définir le cœur ».
+//
+// POURQUOI ON LE DÉRIVE PLUTÔT QUE DE LE DÉCLARER, et c'est le seul point qui compte : un cœur
+// déclaré à la main serait la liste des fichiers que je trouve importants. Sa définition à lui est
+// une PROPRIÉTÉ VÉRIFIABLE — « ce que TOUTE prestation réclame » — donc elle se calcule sur le
+// graphe réel des imports. Si le calcul rend autre chose que ce qu'on imaginait, c'est le calcul
+// qui a raison, et ça vaut mieux qu'un accord de façade.
+//
+// CE QUE LE CALCUL NE PEUT PAS DIRE, et le taire serait le pire service : il lit les imports, donc
+// il voit ce qu'un outil CHARGE, jamais ce qu'il SUPPOSE. Un outil qui lit `docs/suivi/` sans
+// importer personne ne montrera aucune dépendance ici et sera pourtant inséparable de ce dépôt.
+// C'est précisément ce que mesure l'autre moitié du sujet (les ancres réglables, mesurées le
+// 2026-09-30 : 5 % seulement) — les deux se lisent ensemble, jamais l'une à la place de l'autre.
+
+export function grapheDesImports({ root = ".", dossier = "scripts", listDirImpl = readdirSync, readFileImpl = readFileSync, extraire = null } = {}) {
+  let noms = [];
+  try { noms = listDirImpl(join(root, dossier)).filter((n) => n.endsWith(".mjs")); } catch { noms = []; }
+  const arcs = new Map();
+  for (const n of noms) {
+    let code = "";
+    try { code = readFileImpl(join(root, dossier, n), "utf8"); } catch { continue; }
+    const cibles = extraire ? extraire(code) : [...new Set([...code.matchAll(/from\s+["']\.\/([a-z0-9._/-]+)["']/gi)].map((m) => `${dossier}/${m[1]}`))];
+    arcs.set(`${dossier}/${n}`, cibles.filter((c) => c !== `${dossier}/${n}`).sort());
+  }
+  return arcs;
+}
+
+// L'ATTEINT DEPUIS UN POINT D'ENTRÉE, cycles compris — ce dépôt en porte (deux outils qui
+// s'importent mutuellement), et une descente naïve y tournerait sans fin.
+export function atteintDepuis(depart, arcs = new Map()) {
+  const vus = new Set();
+  const pile = [depart];
+  while (pile.length) {
+    const courant = pile.pop();
+    for (const suivant of arcs.get(courant) ?? []) {
+      if (vus.has(suivant)) continue;
+      vus.add(suivant);
+      pile.push(suivant);
+    }
+  }
+  return vus;
+}
+
+export function partieIndetachable({ root = ".", prestations = PRESTATIONS, arcs = null, existsImpl = existsSync } = {}) {
+  const g = arcs ?? grapheDesImports({ root });
+  if (!g.size) return { mesurable: false, pourquoi: "aucun script lu : un graphe vide rendrait « tout est indétachable », qui est l'inverse exact d'une mesure" };
+  // LE POINT D'ENTRÉE D'UNE PRESTATION EST LE SCRIPT DE SON OUTIL. On le DÉRIVE du nom déclaré
+  // plutôt que de tenir une seconde table (Article 24), et un outil dont le script est introuvable
+  // est COMPTÉ À PART : l'ignorer en silence rétrécirait le dénominateur et gonflerait le cœur.
+  const entrees = [];
+  const sansScript = [];
+  // LE RÉSOLVEUR PARTAGÉ, JAMAIS UNE CORRESPONDANCE RÉINVENTÉE ICI. La première version comparait
+  // `scripts/<nom>.mjs` à la main et déclarait 51 outils sur 89 « sans script » — donc un
+  // dénominateur amputé de moitié et une intersection calculée sur ce qui restait. Le résolveur
+  // existait, avec ses exceptions documentées (argus → check-argus.mjs, memory-audit →
+  // memento.mjs) : c'est exactement l'erreur déjà payée le 2026-10-03 sur la carte des modules,
+  // commise une seconde fois dans la même journée.
+  for (const p of prestations) {
+    for (const nom of p.outils ?? []) {
+      // LE NOM EST NORMALISÉ AVANT D'ÊTRE RÉSOLU : le catalogue écrit « MOÏSE-TABLES-DE-LOI » et
+      // « X-Port BLINDTEST », le disque écrit des minuscules sans accent. Sauter cette étape
+      // cherchait `scripts/MOÏSE-TABLES-DE-LOI.mjs` et déclarait l'outil introuvable.
+      const chemin = scriptPourSlug(normaliserNomDOutil(nom));
+      if (g.has(chemin)) { entrees.push({ prestation: p.nom, outil: nom, chemin }); continue; }
+      sansScript.push({ prestation: p.nom, outil: nom, cherche: chemin });
+    }
+  }
+  if (!entrees.length) return { mesurable: false, pourquoi: "aucune prestation n'a de script atteignable : le calcul porterait sur zéro point d'entrée" };
+  let commun = null;
+  const parEntree = [];
+  // COMBIEN DE POINTS D'ENTRÉE ATTEIGNENT CHAQUE FICHIER. L'intersection stricte — « ce que TOUTE
+  // prestation réclame », sa définition au mot près — est un critère DUR : il suffit d'un outil
+  // autonome pour vider le résultat, et le premier passage l'a montré en rendant UN SEUL fichier.
+  // Ce n'est pas une erreur de mesure, c'est la réponse exacte à la question exacte ; mais elle ne
+  // montre pas le centre de gravité. La part d'atteinte, elle, le montre, et les deux se lisent
+  // ensemble — rendre la seconde seule aurait adouci sa définition sans le dire.
+  const atteintPar = new Map();
+  for (const e of entrees) {
+    const atteint = atteintDepuis(e.chemin, g);
+    parEntree.push({ ...e, atteint: atteint.size });
+    for (const f of atteint) atteintPar.set(f, (atteintPar.get(f) ?? 0) + 1);
+    commun = commun === null ? new Set(atteint) : new Set([...commun].filter((x) => atteint.has(x)));
+  }
+  const centreDeGravite = [...atteintPar.entries()]
+    .map(([chemin, n]) => ({ chemin, atteintPar: n, part: n / entrees.length }))
+    .sort((a, b) => b.atteintPar - a.atteintPar || a.chemin.localeCompare(b.chemin));
+  // LE DEGRÉ ENTRANT CLASSE LE CŒUR : parmi ce que tout le monde réclame, le cœur est ce que le
+  // plus de monde CHARGE DIRECTEMENT. Un fichier atteint par tous mais importé par deux autres
+  // seulement est indétachable sans être central, et les confondre effacerait la distinction
+  // qu'il demande précisément d'établir.
+  const degre = new Map();
+  for (const [, cibles] of g) for (const c of cibles) degre.set(c, (degre.get(c) ?? 0) + 1);
+  const indetachables = [...commun].sort((a, b) => (degre.get(b) ?? 0) - (degre.get(a) ?? 0) || a.localeCompare(b))
+    .map((chemin) => ({ chemin, importePar: degre.get(chemin) ?? 0 }));
+  return {
+    mesurable: true, scripts: g.size, prestations: prestations.length,
+    pointsDentree: entrees.length, sansScript, parEntree,
+    indetachables, total: indetachables.length, centreDeGravite,
+  };
+}
+
+// LE CŒUR EST LE HAUT DE LA PARTIE INDÉTACHABLE, et le seuil se LIT dans la distribution plutôt
+// que de se choisir : on coupe au plus grand saut de degré entrant. Un seuil rond — « les cinq
+// premiers » — aurait coupé au milieu d'un palier, et personne n'aurait pu dire pourquoi.
+export function coeurDeLAgence(centreDeGravite = []) {
+  if (centreDeGravite.length < 2) return { mesurable: false, pourquoi: `il faut au moins deux fichiers pour qu'un saut existe (actuellement ${centreDeGravite.length}) — sur moins, « le cœur » serait un choix et non une mesure` };
+  // LE SEUIL SE LIT DANS LA DISTRIBUTION, IL NE SE CHOISIT PAS. On coupe au plus grand saut de
+  // part d'atteinte. Un seuil rond — « au-dessus de 90 % » — aurait pu tomber au milieu d'un
+  // palier, et personne n'aurait su dire pourquoi là plutôt qu'un cran plus bas. Le saut, lui,
+  // est un fait du dépôt : s'il se déplace, la coupe se déplace avec lui (Article 24).
+  let meilleurSaut = 0;
+  let coupe = centreDeGravite.length;
+  for (let i = 1; i < centreDeGravite.length; i += 1) {
+    const saut = centreDeGravite[i - 1].atteintPar - centreDeGravite[i].atteintPar;
+    if (saut > meilleurSaut) { meilleurSaut = saut; coupe = i; }
+  }
+  if (!meilleurSaut) return { mesurable: false, pourquoi: "tous les fichiers sont atteints par le même nombre de points d'entrée : aucune coupe ne ressort, et en inventer une serait un classement déguisé en mesure" };
+  return { mesurable: true, coeur: centreDeGravite.slice(0, coupe), saut: meilleurSaut, reste: centreDeGravite.length - coupe };
+}
+
+// SA DÉFINITION D'UN MODULE CONFRONTÉE AU CATALOGUE RÉEL. Elle dit « un ENSEMBLE d'agents » ; le
+// catalogue dit autre chose, et le lui montrer vaut mieux que de le lisser.
+export function prestationsParNombreDOutils({ prestations = PRESTATIONS } = {}) {
+  const parNombre = new Map();
+  for (const p of prestations) {
+    const n = (p.outils ?? []).length;
+    parNombre.set(n, (parNombre.get(n) ?? 0) + 1);
+  }
+  return [...parNombre.entries()].sort((a, b) => a[0] - b[0]).map(([outils, prestationsCount]) => ({ outils, prestations: prestationsCount }));
+}
+
+export function lignesDuCoeurEtDuModule({ r, c, distribution = [], date = "" } = {}) {
+  const L = [];
+  L.push("<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->");
+  L.push("# Le module, la partie indétachable, le cœur — tes trois définitions mises à l'épreuve");
+  L.push("");
+  L.push(`> Produit par \`node scripts/le-coordinateur.mjs coeur\` le ${date}, sur le graphe réel des imports.`);
+  L.push("> Tu demandais : « ai-je bien compris ta vision ? » — voici la réponse que le dépôt donne, pas celle que j'ai en tête.");
+  L.push("");
+  if (!r?.mesurable) { L.push(`**PAS MESURÉ** — ${r?.pourquoi ?? "mesure indisponible"}`); L.push("<!-- /DOCUMENT GÉNÉRÉ -->"); return L; }
+  L.push("## ① Ta définition d'un MODULE, confrontée au catalogue réel");
+  L.push("");
+  L.push("> « Un module est **un ensemble d'agents** qui œuvrent dans un sens commun pour produire UNE PRESTATION. »");
+  L.push("");
+  L.push("| Nombre d'outils derrière une prestation | Combien de prestations |");
+  L.push("|---|---|");
+  for (const d of distribution) L.push(`| ${d.outils} | ${d.prestations} |`);
+  L.push("");
+  const seul = (distribution.find((d) => d.outils === 1) ?? {}).prestations ?? 0;
+  const total = distribution.reduce((n, d) => n + d.prestations, 0);
+  L.push(`**${seul} prestations sur ${total} ne sont portées que par UN SEUL outil.** Ta définition dit « un ensemble » ;`);
+  L.push("le catalogue d'aujourd'hui dit « un outil ». Ce n'est pas que ta définition soit fausse — c'est qu'elle décrit");
+  L.push("une CIBLE et non l'état actuel. Et le dire est plus utile que de faire comme si les deux coïncidaient.");
+  L.push("");
+  L.push("## ② Ta définition de la PARTIE INDÉTACHABLE, prise au mot");
+  L.push("");
+  L.push("> « La partie indétachable est **ce que toute prestation réclame quoi qu'il arrive**. »");
+  L.push("");
+  L.push(`Prise à la lettre — ce que les **${r.pointsDentree} points d'entrée** atteignent TOUS — elle rend **${r.total} fichier(s)** :`);
+  L.push("");
+  for (const i of r.indetachables) L.push(`- \`${i.chemin}\` — importé directement par ${i.importePar} fichier(s)`);
+  L.push("");
+  L.push("**Ce n'est pas une erreur de mesure, c'est la réponse exacte à la question exacte** : il suffit d'un outil");
+  L.push("autonome pour vider une intersection. Ce que ça dit vraiment, et c'est important pour ta question");
+  L.push("« est-ce réaliste ? » : **l'Agence est déjà presque entièrement modulaire.** Ses outils ne partagent presque rien.");
+  L.push("Ce qui manque n'est pas la modularité — c'est le cœur.");
+  L.push("");
+  L.push("## ③ Le CŒUR, dérivé et non décrété");
+  L.push("");
+  L.push("> « Le cœur est **le cœur de la partie indétachable** », et : « encore faut-il définir le cœur ».");
+  L.push("");
+  L.push("Au lieu d'une intersection tout-ou-rien, on mesure **quelle part des points d'entrée atteint chaque fichier**,");
+  L.push("et on coupe **au plus grand saut de la distribution** — jamais à un seuil rond, qui pourrait tomber au milieu");
+  L.push("d'un palier sans que personne puisse dire pourquoi là.");
+  L.push("");
+  if (!c?.mesurable) { L.push(`**PAS MESURÉ** — ${c?.pourquoi}`); }
+  else {
+    L.push(`**Le saut est de ${c.saut} points d'entrée**, et il est franc. Le cœur est donc de **${c.coeur.length} fichiers** :`);
+    L.push("");
+    L.push("| Fichier | Atteint par |");
+    L.push("|---|---|");
+    for (const x of c.coeur) L.push(`| \`${x.chemin}\` | ${x.atteintPar} / ${r.pointsDentree} (${Math.round(x.part * 100)} %) |`);
+    L.push("");
+    L.push(`Les ${c.reste} fichiers suivants retombent sous la barre, le premier d'entre eux à ${Math.round((r.centreDeGravite[c.coeur.length]?.part ?? 0) * 100)} %.`);
+    L.push("");
+  }
+  L.push("## ④ Les dix fichiers les plus partagés, pour voir la pente");
+  L.push("");
+  L.push("| Part des points d'entrée | Fichier |");
+  L.push("|---|---|");
+  for (const x of r.centreDeGravite.slice(0, 10)) L.push(`| ${Math.round(x.part * 100)} % | \`${x.chemin}\` |`);
+  L.push("");
+  L.push("## ⑤ Ce que cette mesure NE dit pas, et c'est la moitié du sujet");
+  L.push("");
+  L.push("Elle lit les **imports**, donc elle voit ce qu'un outil CHARGE — jamais ce qu'il SUPPOSE. Un outil qui lit");
+  L.push("`docs/suivi/` sans importer personne n'apparaît lié à rien ici, et reste pourtant inséparable de ce dépôt.");
+  L.push("C'est l'autre moitié du sujet, déjà mesurée le 30 septembre : **5 % seulement** des fichiers du noyau ont");
+  L.push("toutes leurs ancres réglables de l'extérieur. Les deux se lisent ensemble, jamais l'une à la place de l'autre.");
+  L.push("");
+  L.push("# PLAN D'ACTION");
+  L.push("");
+  L.push("| État | Constat | Suite |");
+  L.push("|---|---|---|");
+  L.push(`| ✅ MESURÉ | ta définition du module décrit une CIBLE : ${seul} prestations sur ${total} n'ont qu'un seul outil aujourd'hui | #1538 |`);
+  L.push(`| ✅ MESURÉ | prise au mot, la partie indétachable est de ${r.total} fichier(s) — l'Agence est déjà presque entièrement modulaire | #1538 |`);
+  if (c?.mesurable) L.push(`| ✅ MESURÉ | le cœur, dérivé du plus grand saut de la distribution : ${c.coeur.length} fichiers, de ${Math.round(c.coeur[c.coeur.length - 1].part * 100)} % à 100 % | #1538 |`);
+  L.push("| ? À TRANCHER | ta définition du module décrit la cible : faut-il la garder telle quelle, ou la reformuler pour décrire aussi l'état actuel ? | #1538 |");
+  if (r.sansScript.length) L.push(`| ? À INSTRUIRE | ${r.sansScript.length} entrée(s) du catalogue nomment un « outil » dont aucun script n'existe : ${r.sansScript.map((x) => x.outil).join(", ")} | #1538 |`);
+  L.push("");
+  L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
+}
+
 export function carteDesModules({ prestations = PRESTATIONS, categories = AGENT_CATEGORIES, familleDe = familleDeLaCategorie } = {}) {
   if (!prestations?.length) {
     return { mesurable: false, pourquoi: "catalogue de prestations vide : une carte dessinée sur zéro prestation ressemblerait à une Agence sans modules, ce qui est faux (leçons L5/L11)" };
@@ -2983,7 +3203,7 @@ function main() {
   // sortie en croyant en avoir demandé une autre. Même forme que la leçon L21 — un nom qui existe
   // dans le monde d'un lecteur et pas dans celui d'un autre.
   const sousCommande = process.argv[2];
-  const SOUS_COMMANDES = ["catalogue", "memes-sources", "carte"];
+  const SOUS_COMMANDES = ["catalogue", "memes-sources", "carte", "coeur"];
   if (sousCommande && !SOUS_COMMANDES.includes(sousCommande)) {
     console.log(`❌ « ${sousCommande} » n'est pas une sous-commande de cet outil.`);
     console.log(`   Sous-commandes réelles : ${SOUS_COMMANDES.join(", ")}`);
@@ -3009,6 +3229,24 @@ function main() {
   // `carte` (2026-10-03, tâche #1536) — sa demande d'un SCHÉMA et non d'un texte. Le livrable est
   // le FICHIER (Article 31, faille 3), et il porte les DEUX cartes : l'actuelle, qui se dérive, et
   // la cible, qui est une proposition et le dit.
+  // `coeur` (tâche #1538) — ses trois définitions mises à l'épreuve du graphe réel. À la main :
+  // la question se pose au moment où l'on décide d'une refonte, jamais à chaque commit.
+  if (sousCommande === "coeur") {
+    const r = partieIndetachable({ root: ROOT });
+    if (!r.mesurable) { console.log(`🚨 PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; return; }
+    const c = coeurDeLAgence(r.centreDeGravite);
+    const distribution = prestationsParNombreDOutils();
+    console.log(`${r.scripts} script(s) · ${r.pointsDentree} point(s) d'entrée · ${r.total} fichier(s) strictement indétachable(s)`);
+    console.log(c.mesurable ? `Cœur dérivé (saut de ${c.saut} points d'entrée) : ${c.coeur.map((x) => `${x.chemin} ${Math.round(x.part * 100)} %`).join(" · ")}` : `Cœur PAS MESURÉ — ${c.pourquoi}`);
+    for (const d of distribution) console.log(`  ${d.prestations} prestation(s) portée(s) par ${d.outils} outil(s)`);
+    const dossier = join(ROOT, "docs/livrables");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    const sortie = join(dossier, `le-module-la-partie-indetachable-le-coeur-${jour}.md`);
+    writeFileSync(sortie, `${lignesDuCoeurEtDuModule({ r, c, distribution, date: jour }).join("\n")}\n`, "utf8");
+    console.log(`\nRapport déposé : ${sortie.replace(`${ROOT}/`, "")}`);
+    return;
+  }
   if (sousCommande === "carte") {
     const actuelle = carteDesModules();
     const partition = findPrestationsHorsModule();
