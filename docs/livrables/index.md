@@ -2,10 +2,12 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**40 fichier(s).**
+**45 fichier(s).**
 
 | Fichier | |
 |---|---|
+| [LIVRAISON-14H-2026-10-03.html](LIVRAISON-14H-2026-10-03.html) | — |
+| [LIVRAISON-14H-2026-10-03.md](LIVRAISON-14H-2026-10-03.md) | — |
 | [article-33-honnetete-texte-propose.html](article-33-honnetete-texte-propose.html) | — |
 | [article-33-honnetete-texte-propose.md](article-33-honnetete-texte-propose.md) | — |
 | [avant-apres-nuit-2026-10-02.html](avant-apres-nuit-2026-10-02.html) | — |
@@ -38,11 +40,14 @@
 | [les-quatre-decisions-anciennes.md](les-quatre-decisions-anciennes.md) | — |
 | [les-six-registres-le-dossier.html](les-six-registres-le-dossier.html) | — |
 | [les-six-registres-le-dossier.md](les-six-registres-le-dossier.md) | — |
+| [loi-de-l-agence.html](loi-de-l-agence.html) | — |
+| [manifeste-de-l-agence.html](manifeste-de-l-agence.html) | — |
 | [ou-en-est-le-grand-changement.html](ou-en-est-le-grand-changement.html) | — |
 | [ou-en-est-le-grand-changement.md](ou-en-est-le-grand-changement.md) | — |
 | [outils-reductibles-en-extension.html](outils-reductibles-en-extension.html) | — |
 | [outils-reductibles-en-extension.md](outils-reductibles-en-extension.md) | — |
 | [reponse-au-prompt-word-du-1er-octobre.html](reponse-au-prompt-word-du-1er-octobre.html) | — |
 | [reponse-au-prompt-word-du-1er-octobre.md](reponse-au-prompt-word-du-1er-octobre.md) | — |
+| [systeme-de-suivi.html](systeme-de-suivi.html) | — |
 | [travailler-a-distance.html](travailler-a-distance.html) | — |
 | [travailler-a-distance.md](travailler-a-distance.md) | — |

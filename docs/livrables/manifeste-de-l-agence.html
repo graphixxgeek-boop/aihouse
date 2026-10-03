@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le manifeste de l'Agence — ce qu'elle EST, déclaré positivement</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T09:47:13.818Z</div>
+    <h1>Le manifeste de l'Agence — ce qu'elle EST, déclaré positivement</h1>
+    <p class="sub">Page générée depuis docs/manifeste-de-l-agence.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-09-29 à 20h20 UTC, heure LUE. Né d'une mesure de la soirée : l'Agence n'avait <strong>aucune existence technique</strong>. Sa décision, en fenêtre dédiée : lui en donner une.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/loi-de-l-agence.md</code>
+*on ne peut pas faire servir « la finalité de celui qui l'emploie » à quelque chose dont personne
+ne sait où ça commence et où ça s'arrête.*</p></div>
+<hr>
+<h3>LE TROU QUE CE DOCUMENT FERME, ET IL EST PLUS GRAND QU'IL N'EN A L'AIR</h3>
+<p><strong>Mesuré le 2026-09-29</strong> : l'Agence n'avait pas de dossier à elle (elle vit dans <code>scripts/</code>, mêlée au reste), pas de manifeste, pas de point d'entrée. Le mot « Agence » apparaissait dans <strong>17 fichiers sur 87</strong>, uniquement en prose de commentaire, et la seule constante portant son nom était un chemin vers une page HTML.</p>
+<p><strong>Et surtout : elle n'était définie QUE PAR SOUSTRACTION.</strong> <code>SAFE-EXPORT</code> savait dire ce qui <em>ne part pas</em> (<code>NE_PART_PAS_ET_C_EST_NORMAL</code>, <code>EXEMPTES_DU_KIT</code>) ; <strong>rien ne disait ce qu'elle EST</strong>.</p>
+<div class="highlight"><p><strong>La conséquence concrète, et c'est elle qui compte : déposer un fichier dans <code>scripts/</code>
+l'enrôlait dans l'Agence sans que personne ne le décide.</strong></p></div>
+<p>On ne peut ni ranger, ni alléger, ni exporter ce qui n'a pas de bord.</p>
+<hr>
+<h3>LES TROIS ZONES, DÉRIVÉES ET NON INVENTÉES</h3>
+<p><strong>Elles existaient déjà sans être nommées.</strong> Ce manifeste ne crée pas un découpage : il LIT celui que <code>SAFE-EXPORT</code> applique depuis des semaines, et lui donne enfin un nom.</p>
+<p><em>(Mesuré le 2026-09-29 : <strong>93 fichiers</strong> dans <code>scripts/</code>.)</em></p>
+<h4>⚙️ ZONE 1 — LE NOYAU DE L'AGENCE — <strong>74 fichiers</strong></h4>
+<p><strong>Ce que c'est</strong> : l'outillage proprement dit. Il ne parle pas du jeu, il ne dépend pas de ce dépôt-ci, et il part <strong>en entier</strong> le jour de l'export.</p>
+<p><strong>La règle qui y range un fichier</strong> : tout ce qui n'appartient ni à la zone 2 ni à la zone 3. C'est un reste, et c'est voulu — un fichier neuf est <strong>dans l'Agence par défaut</strong>, et doit se justifier pour en sortir. L'inverse laisserait des orphelins invisibles.</p>
+<h4>🎭 ZONE 2 — LES OUTILS DU PRODUIT — <strong>9 fichiers</strong></h4>
+<p><strong>Ce que c'est</strong> : des outils dont <strong>le SUJET est le jeu</strong>. Ils ne partent jamais : chez un client, ils n'auraient rien à regarder.</p>
+<p><code>check-house</code> · <code>check-profile</code> · <code>check-spirit</code> · <code>run-simulation</code> · <code>simulation-visiteur</code> · <code>sites-env</code> <em>(×2)</em> · <code>summarize-simulation-log</code> · <code>the-ghost</code></p>
+<p><strong>La règle</strong> : <code>NE_PART_PAS_ET_C_EST_NORMAL</code> dans <code>safe-export.mjs</code>, <strong>avec la raison écrite pour chacun</strong>. Liste volontairement manuelle : « le sujet de cet outil est-il le jeu ? » est un jugement, aucun signal mécanique ne le rend. Sa nature manuelle est déclarée, comme l'Article 24 l'exige.</p>
+<h4>🔌 ZONE 3 — LE CÂBLAGE À CE DÉPÔT-CI — <strong>10 fichiers</strong></h4>
+<p><strong>Ce que c'est</strong> : ce qui attache l'Agence à <em>cette machine</em> et à <em>ce dépôt</em>. Ça ne part pas non plus, mais pour une raison différente : ça se <strong>réinstalle</strong> ailleurs plutôt que de voyager.</p>
+<p>Les crochets git <em>(5)</em> · les installeurs d'environnement <em>(4)</em> · le lanceur du produit <em>(1)</em></p>
+<p><strong>La règle</strong> : <code>EXEMPTES_DU_KIT</code> dans <code>safe-export.mjs</code>, avec sa raison.</p>
+<hr>
+<h3>CE QU'IL EST INTERDIT DE METTRE DANS L'AGENCE</h3>
+<p><em>(Sans cette section, le manifeste serait une photo. Avec elle, il devient une règle.)</em></p>
+<p><strong>1. Rien qui ne soit vrai que pour la Maison IA vivante.</strong> C'est le test direct de la loi de l'Agence. Un outil qui nomme Lia, Noé, une pièce de la maison ou une jauge du jeu appartient à la zone 2 — <strong>et s'il prétend être du noyau, c'est le noyau qui est en faute, pas lui</strong>.</p>
+<p><strong>2. Rien qui ne puisse être retiré.</strong> Il faudra plusieurs versions de l'Agence selon la taille du projet client. Une pièce qu'on ne peut pas enlever est une pièce qui empêchera la version allégée d'exister — donc chaque ajout au noyau se conçoit <strong>détachable</strong>.</p>
+<p><strong>3. Rien qui impose une finalité au client.</strong> Un modèle de charte, un objectif, une valeur par défaut : l'Agence propose des STRUCTURES vides, jamais des CONTENUS de valeurs. La frontière est fine et elle est la plus facile à franchir sans le vouloir.</p>
+<p><strong>4. Rien d'auto-déclaré sans le dire.</strong> Quand un mécanisme est impossible, l'écrire noir sur blanc EST la protection (Article 27). Un outil qui prétend mesurer ce qu'il ne peut qu'affirmer n'a pas sa place ici.</p>
+<hr>
+<h3>CE QUE CE MANIFESTE N'EST PAS, ET NE SERA PAS CE SOIR</h3>
+<p><strong>Ce n'est pas un rangement.</strong> Aucun fichier n'est déplacé, aucun dossier créé. Le découpage de <code>scripts/</code> en zones physiques est placé à <strong>l'étape ④</strong> du plan, et pour une raison qu'il a lui-même donnée : <em>« pas la peine de perdre du temps à faire puis défaire »</em>. <strong>Ranger avant d'avoir rationalisé, c'est ranger des choses qui vont disparaître.</strong></p>
+<p><strong>Ce n'est pas non plus un point d'entrée technique.</strong> Un <code>index.mjs</code> qui exposerait l'Agence comme un module unique est une bonne idée — et elle attend de savoir ce que le noyau contiendra après la rationalisation.</p>
+<p><strong>Ce qui est fait ce soir est la DÉCLARATION</strong>, parce qu'une déclaration ne se défait pas : elle se cite, et elle survivra au bouleversement.</p>
+<hr>
+<h3>SON GARDE-FOU</h3>
+<p><code>findFichiersHorsZone()</code> (<code>scripts/safe-export.mjs</code>) vérifie que <strong>chaque fichier réel de <code>scripts/</code> tombe dans exactement une zone</strong>, et que chaque fichier nommé par une zone existe encore. Les deux sens, jamais un seul.</p>
+<p><strong>Pourquoi il est nécessaire malgré la règle du « reste »</strong> : la zone 1 attrape tout, donc rien ne peut jamais être « hors zone » par accident. Ce que le garde-fou attrape est <strong>l'autre sens</strong> — une zone qui réclame un fichier disparu, ce qui arrive à chaque renommage. Et il rend le découpage <strong>visible</strong> : le jour où la zone 2 passe de 9 à 15 outils, quelqu'un le saura.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/manifeste-de-l-agence.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

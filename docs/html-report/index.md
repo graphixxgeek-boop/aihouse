@@ -70,9 +70,6 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/the-king/tableau-des-convictions-2026-10-03.html` | `docs/the-king/tableau-des-convictions-2026-10-03.md` | 54025 | 2026-10-03 07:04Z |
 | `docs/le-coordinateur-catalogue/carte-des-modules-2026-10-03.html` | `docs/le-coordinateur-catalogue/carte-des-modules-2026-10-03.md` | 13698 | 2026-10-03 07:23Z |
 | `docs/strategies/les-deux-scenarios-par-zip.html` | `docs/strategies/les-deux-scenarios-par-zip.md` | 15899 | 2026-10-03 07:50Z |
-| `docs/strategies/strategie-globale-de-l-agence.html` | `docs/strategies/strategie-globale-de-l-agence.md` | 17146 | 2026-10-03 07:50Z |
-| `docs/strategies/strategie-globale-du-jeu.html` | `docs/strategies/strategie-globale-du-jeu.md` | 16991 | 2026-10-03 07:50Z |
-| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 31434 | 2026-10-03 07:50Z |
 | `docs/grand-projet/03-plan-daction/philo-politique-30-questions.html` | `docs/grand-projet/03-plan-daction/philo-politique-30-questions.md` | 23271 | 2026-10-03 07:50Z |
 | `docs/livrables/arborescence-de-la-cascade-2026-10-03.html` | `docs/livrables/arborescence-de-la-cascade-2026-10-03.md` | 11808 | 2026-10-03 07:50Z |
 | `docs/grand-projet/html/ce-qui-ralentit-le-projet.html` | `docs/grand-projet/02-strategie/ce-qui-ralentit-le-projet.md` | 23790 | 2026-10-03 08:11Z |
@@ -109,3 +106,12 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/modules/module-gestion-des-taches.html` | `docs/modules/module-gestion-des-taches.md` | 29050 | 2026-10-03 08:58Z |
 | `docs/modules/GABARIT-fiche-de-module.html` | `docs/modules/GABARIT-fiche-de-module.md` | 12414 | 2026-10-03 08:58Z |
 | `docs/livrables/les-cinq-systemes-de-memoire.html` | `docs/livrables/les-cinq-systemes-de-memoire.md` | 14971 | 2026-10-03 09:38Z |
+| `docs/strategies/strategie-globale-de-l-agence.html` | `docs/strategies/strategie-globale-de-l-agence.md` | 17146 | 2026-10-03 09:47Z |
+| `docs/strategies/strategie-globale-du-jeu.html` | `docs/strategies/strategie-globale-du-jeu.md` | 16991 | 2026-10-03 09:47Z |
+| `docs/strategies/strategie-globale-du-projet-entier.html` | `docs/strategies/strategie-globale-du-projet-entier.md` | 31434 | 2026-10-03 09:47Z |
+| `docs/livrables/les-quatre-decisions-anciennes.html` | `docs/livrables/les-quatre-decisions-anciennes.md` | 16853 | 2026-10-03 09:47Z |
+| `docs/livrables/les-33-controles-qui-ne-peuvent-pas-echouer.html` | `docs/livrables/les-33-controles-qui-ne-peuvent-pas-echouer.md` | 14545 | 2026-10-03 09:47Z |
+| `docs/livrables/loi-de-l-agence.html` | `docs/loi-de-l-agence.md` | 15922 | 2026-10-03 09:47Z |
+| `docs/livrables/manifeste-de-l-agence.html` | `docs/manifeste-de-l-agence.md` | 13965 | 2026-10-03 09:47Z |
+| `docs/livrables/systeme-de-suivi.html` | `docs/systeme-de-suivi.md` | 45710 | 2026-10-03 09:47Z |
+| `docs/livrables/LIVRAISON-14H-2026-10-03.html` | `docs/livrables/LIVRAISON-14H-2026-10-03.md` | 17694 | 2026-10-03 09:48Z |

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La loi de l'Agence — son texte suprême, distinct de celui du Jeu</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T09:47:13.737Z</div>
+    <h1>La loi de l'Agence — son texte suprême, distinct de celui du Jeu</h1>
+    <p class="sub">Page générée depuis docs/loi-de-l-agence.md — jamais écrite à la main.</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Écrit le 2026-09-29 à 18h06 UTC, heure LUE. Tranché par l'utilisateur en fenêtre dédiée le soir même, sur sa propre formulation du problème : « l'article 0 concerne SON projet, et non l'Agence, qui est un MOYEN de réaliser son projet à lui, et non une fin ».)</em></p>
+<hr>
+<h3>LA LOI</h3>
+<div class="highlight"><p>## L'Agence sert la finalité de celui qui l'emploie, jamais la sienne.</p><p>*Et elle est tournée vers lui de bout en bout : <strong>son expérience à lui passe toujours en
+premier</strong>, avant le confort, l'élégance ou la cohérence interne de l'Agence.*</p></div>
+<p>Une seule phrase fait loi ; la seconde en est la première conséquence, ajoutée le soir même à sa demande — <em>« l'agence prend toujours en compte en premier l'expérience de l'utilisateur, elle est profondément tournée vers l'utilisateur »</em>. Tout le reste de ce document explique ce que la loi interdit et pourquoi elle existe — il ne l'amende jamais.</p>
+<p><strong>Pourquoi la seconde phrase n'est pas un ornement, et c'est vérifiable sur nous.</strong> Sans elle, la loi se lit encore comme une contrainte de neutralité : ne pas imposer sa finalité. Avec elle, elle devient une exigence active : <strong>un outil juste mais pénible viole la loi.</strong> Ce projet en a déjà payé le prix — une bannière de commit trop longue pour être lue a été ignorée sept fois de suite, au prix de deux corrections en cascade. Elle était correcte ; elle n'était pas tournée vers son lecteur.</p>
+<hr>
+<h3>POURQUOI ELLE EXISTE, ET CE N'EST PAS UNE SYMÉTRIE DÉCORATIVE</h3>
+<p><strong>Le projet a deux lois suprêmes, et elles ne gouvernent pas la même chose.</strong></p>
+<p>L'<strong>Article 0</strong> de <code>CLAUDE.md</code> protège l'esprit de Lia et Noé. Il a toujours parlé d'eux — relire sa première phrase suffit à le vérifier : « l'esprit rugueux, sarcastique, cynique… <strong>des deux personnages</strong> est la valeur centrale du projet ». <strong>Il n'a jamais gouverné l'outillage</strong>, et l'écrire ici ne change donc aucune règle : ça rend explicite une portée qui était implicite.</p>
+<p><strong>Mais libérer l'Agence de l'Article 0 crée une obligation, pas seulement une liberté.</strong> Sans loi propre, l'Agence n'en a aucune — et une Agence dont la seule loi serait celle du Jeu est <strong>inexportable par construction</strong> : le client suivant n'a ni Lia ni Noé. C'est exactement ce que <code>SAFE-EXPORT</code>, septième Gardien sacré, mesure depuis sa création sans avoir eu de texte à citer.</p>
+<p><strong>Les deux lois sont donc dans deux registres, jamais en concurrence</strong> : l'Article 0 dit CE QUI doit être protégé — une voix. Celle-ci dit que l'Agence protège <strong>celle de qui l'emploie</strong>, jamais la sienne.</p>
+<hr>
+<h3>CE QU'ELLE INTERDIT, ET LA PREMIÈRE INTERDICTION EST LA PLUS COUPANTE</h3>
+<p><strong>1. L'Agence n'aura JAMAIS son propre Article 0.</strong></p>
+<p>Une Agence dotée d'une « valeur centrale » à elle l'imposerait au client suivant. C'est le piège que le document <code>ARCHITECTURE DES NIVEAUX DU PROJET</code> nomme exactement — <em>« l'agence ne doit pas imposer sa philosophie, elle doit permettre au client de projeter la sienne »</em> — et sur ce point précis, ce document et la décision de l'utilisateur disent la même chose. <strong>Cette interdiction est le test de la loi</strong> : une règle ajoutée à l'outillage qui ne serait vraie que pour la Maison IA vivante la viole.</p>
+<p><strong>2. L'Agence n'est jamais une fin.</strong> Elle est, dans les mots de l'utilisateur, un « MOYEN de réaliser son projet à lui ». Le temps qu'on lui consacre n'est pas une digression — <code>CLAUDE.md</code> le dit déjà — mais il n'est jamais non plus une justification en soi.</p>
+<p><strong>3. Aucune configuration d'un client ne peut neutraliser ce qui protège l'intégrité du système.</strong> La contrepartie de la première interdiction : l'Agence n'impose pas de finalité, mais elle garde ses protections. Sans cette clause, « elle sert la finalité de celui qui l'emploie » deviendrait « elle fait tout ce qu'on lui demande », ce qui n'est pas la même phrase.</p>
+<hr>
+<h3>LA PLACE DU JEU, TRANCHÉE LE MÊME SOIR</h3>
+<p><strong>La Maison IA vivante est le PREMIER CLIENT de l'Agence</strong> — pas son laboratoire.</p>
+<p>La différence n'est pas un mot : <strong>un laboratoire ne teste que ce qu'on a pensé à tester ; un vrai client, qui a sa propre finalité (l'Article 0), révèle aussi le reste, en se servant de l'outil pour de bon.</strong> C'est une meilleure preuve, et c'est pour ça que le Jeu fait accessoirement un excellent banc d'essai — dans cet ordre, jamais l'inverse.</p>
+<p><strong>Ce que ça donne comme définition mesurable d'« exportable »</strong> : l'Agence a aujourd'hui exactement UN client. Exportable veut dire qu'un DEUXIÈME serait possible.</p>
+<hr>
+<h3>PLUSIEURS VERSIONS SELON LA TAILLE DU PROJET UTILISATEUR</h3>
+<p><em>(Exigence posée par l'utilisateur le 2026-09-29, et à prendre en compte DÈS MAINTENANT dans la rationalisation et la modularisation — jamais après coup.)</em></p>
+<p><strong>Sa demande, dans ses mots</strong> : « il faudra créer plusieurs versions de l'agence suivant la taille du PROJET UTILISATEUR ».</p>
+<p><strong>Ce n'est pas une préférence, c'est une contrainte de coût avec une conséquence nommée</strong>, et elle était déjà écrite dans <code>COMMANDE IMPORTANTE.md</code> : il est contraint de passer au modèle Fable pour que Claude Code suive le rythme, ne peut pas continuer ainsi indéfiniment, doit revenir à Claude Opus <strong>ou moins</strong>, et « EN CONSEQUENCE : je dois réduire la taille de l'agence telle qu'elle existe aujourd'hui ».</p>
+<p><strong>Le séquencement qu'il a fixé</strong> : finaliser l'Agence → la <strong>sauvegarder</strong> dans son état le plus avancé (la version complète et commercialisable) → <strong>redimensionner</strong> la version de travail proportionnellement au projet de jeu. Il qualifie lui-même cette étape de « clairement DANGEREUSE et RISQUEE » et attend une stratégie de sauvegarde ET une stratégie de migration, sauvegardées <strong>dès maintenant</strong>.</p>
+<p><strong>La conséquence de conception, immédiate</strong> : tout ce qui se construit à partir d'aujourd'hui se conçoit en sachant qu'il faudra pouvoir <strong>en retirer des morceaux sans casser le reste</strong>. Une pièce qu'on ne peut pas enlever est une pièce qui empêchera la version allégée d'exister.</p>
+<hr>
+<h3>L'ÉTAT MESURÉ, POUR QUE LA SUITE PARTE D'UN FAIT</h3>
+<p><em>(Mesuré le 2026-09-29 à 17h50 UTC. À remesurer, jamais à recopier.)</em></p>
+<table><thead><tr><th></th><th>Lignes</th></tr></thead><tbody><tr><td><strong>Le Jeu</strong> — notre code réel (<code>lib/</code> 2 599 · <code>app/</code> 2 403 · <code>components/</code> hors bibliothèque reprise 299)</td><td><strong>5 301</strong></td></tr><tr><td><strong>L'Agence</strong> — <code>scripts/</code>, 87 fichiers</td><td><strong>89 111</strong></td></tr><tr><td><strong>Rapport</strong></td><td><strong>16,8 pour 1</strong></td></tr><tr><td>Dont le seul filet de sécurité (<code>check-house.mjs</code>)</td><td>22 636, soit <strong>4,3 fois le Jeu entier</strong></td></tr></tbody></table>
+<p><strong>Où la masse se trouve, ce qui dit où porterait un allègement</strong> : 11 fichiers dépassent 2 000 lignes et portent l'essentiel du volume ; 55 des 87 font moins de 500 lignes. La moyenne, 1 024 lignes, ne décrit donc aucun fichier réel.</p>
+<p><strong>UNE CORRECTION QUI CHANGE LA CIBLE, et il faut la lire avant de couper quoi que ce soit.</strong> Le nombre de lignes de <code>scripts/</code> n'est PAS ce qui coûte cher : ces fichiers s'exécutent, ils n'entrent pas dans le contexte de l'agent. <strong>Ce qui coûte, c'est ce qui est rechargé à chaque message ou à chaque commit</strong> — et c'est mesuré séparément : <code>CLAUDE.md</code> 22 747 tokens à chaque message, la bannière post-commit environ 11 600 tokens à chaque commit, <code>docs/regles-de-travail.md</code> 74 893 tokens quand il est lu. <strong>Alléger 89 000 lignes de scripts sans toucher à ces trois-là ne ferait presque rien au coût réel.</strong> Les deux chantiers sont légitimes, mais ils ne visent pas la même chose et ne doivent jamais être confondus.</p>
+<hr>
+<h3>CE QUE CE DOCUMENT N'EST PAS</h3>
+<p>Ce n'est ni la philosophie du projet (<code>docs/philosophie-et-politique.md</code>), ni la charte du Jeu (<code>CLAUDE.md</code>), ni une stratégie (<code>docs/grand-projet/02-strategie/</code>). C'est le <strong>texte suprême de l'outillage</strong>, et il part avec lui le jour où l'Agence s'exporte.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/loi-de-l-agence.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

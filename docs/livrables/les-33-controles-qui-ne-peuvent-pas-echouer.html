@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Les 33 contrôles qui ne peuvent pas échouer</title>
+<title>docs/livrables/les-33-controles-qui-ne-peuvent-pas-echouer.md</title>
 <style>
   :root {
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,34 +118,37 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-03</div>
-    <h1>Les 33 contrôles qui ne peuvent pas échouer</h1>
-    <p class="sub">Trois familles, deux réponses évidentes et une seule vraie question — tâche #1409</p>
+    <div class="date">2026-10-03T09:47:07.283Z</div>
+    <h1>docs/livrables/les-33-controles-qui-ne-peuvent-pas-echouer.md</h1>
+    <p class="sub">Page générée depuis docs/livrables/les-33-controles-qui-ne-peuvent-pas-echouer.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><div class="highlight"><p>Le contrôleur des process vérifie que chaque étape a bien eu lieu. Pour 33 étapes sur 45, sa vérification est « ce fichier existe-t-il ? » — et le fichier en question est suivi par git, donc il existe TOUJOURS, même dans une copie neuve où rien n'a jamais été fait. Ces 33 contrôles ne peuvent pas échouer. Un contrôle qui ne peut pas échouer ACQUITTE, et un faux acquittement ne se remarque jamais.</p></div>
-<p>**Tâche** : #1409 — « 33 preuves d'étape sur 45 ne peuvent jamais échouer ». Elle attend ta décision depuis le 1er octobre. **Ce document ne la prend pas** : il la réduit de 33 cas à une seule vraie question.</p>
-<p class="note">Ce n'est pas théorique : c'est par exactement ce trou que la déclaration de mode de travail est restée au vert pendant sept jours en affirmant que tu étais absent.</p>
-<h2>Les 33 se rangent en trois familles, et deux d'entre elles ont une réponse évidente</h2>
-<table><thead><tr><th>Famille</th><th>Combien</th><th>Ce que la preuve vérifie aujourd'hui</th><th>Ce qu'elle devrait vérifier</th></tr></thead><tbody><tr><td>**A — un registre daté**</td><td>12</td><td>le registre existe</td><td>une entrée datée APRÈS le début de l'activité</td></tr><tr><td>**B — un document de référence**</td><td>8</td><td>le document existe</td><td>— rien de mécanique n'est possible, voir plus bas</td></tr><tr><td>**C — un script d'outil**</td><td>13</td><td>le script existe</td><td>le compteur d'usage a enregistré un vrai lancement</td></tr></tbody></table>
+  <main><p>=== Les 33 contrôles qui ne peuvent pas échouer === Trois familles, deux réponses évidentes et une seule vraie question — tâche #1409 Date : 2026-10-03</p>
+<p>Le contrôleur des process vérifie que chaque étape a bien eu lieu. Pour 33 étapes sur 45, sa vérification est « ce fichier existe-t-il ? » — et le fichier en question est suivi par git, donc il existe TOUJOURS, même dans une copie neuve où rien n'a jamais été fait. Ces 33 contrôles ne peuvent pas échouer. Un contrôle qui ne peut pas échouer ACQUITTE, et un faux acquittement ne se remarque jamais.</p>
+<p><strong>Tâche</strong> : #1409 — « 33 preuves d'étape sur 45 ne peuvent jamais échouer ». Elle attend ta décision depuis le 1er octobre. <strong>Ce document ne la prend pas</strong> : il la réduit de 33 cas à une seule vraie question.</p>
+<p>Ce n'est pas théorique : c'est par exactement ce trou que la déclaration de mode de travail est restée au vert pendant sept jours en affirmant que tu étais absent.</p>
+<p>Les 33 se rangent en trois familles, et deux d'entre elles ont une réponse évidente</p>
+<p>Famille                           Combien  Ce que la preuve vérifie aujourd'hui  Ce qu'elle devrait vérifier --------------------------------  -------  ------------------------------------  -------------------------------------------------- <strong>A — un registre daté</strong>          12       le registre existe                    une entrée datée APRÈS le début de l'activité <strong>B — un document de référence</strong>  8        le document existe                    — rien de mécanique n'est possible, voir plus bas <strong>C — un script d'outil</strong>         13       le script existe                      le compteur d'usage a enregistré un vrai lancement</p>
 <p>12 + 8 + 13 = 33. La classification est mécanique, pas à l'œil : chaque preuve a été rangée par le chemin de son fichier.</p>
-<h2>Famille A — 12 preuves : le registre existe toujours, l'entrée non</h2>
-<ul><li>faire-le-point / estimation · reponse-aux-questions / estimation · sonde-quota / consigner → `docs/agent-du-temps/estimations.md`</li><li>faire-le-point / plan-action · reponse-aux-questions / inscrire-les-taches → `docs/suivi/index.md`</li><li>sonde-quota / smart-conso-avant → `docs/smart-conso-api/index.md`</li><li>ronde / estimation · ronde / comparaison → `docs/circle-tasks/estimations.md`</li><li>ronde / voix-utilisateur → `docs/angel-of-ia-process/reponses-evaluation.md`</li><li>simulation / index → `docs/simulations/index.md`</li><li>semi-autonome / mode-declare → `.mode-de-travail.json`</li><li>xp-ia / enregistrement → `docs/tool-learning/xp-journal.json`</li></ul>
-<p>**Pourquoi je dis que c'est évident** : ces douze fichiers sont tous des registres où chaque ligne porte une date. « Le registre existe » ne dit rien ; « le registre a reçu une entrée depuis que l'activité a commencé » dit exactement ce que l'étape prétend. Le remplacement est strictement plus fort : il ne peut pas produire un vert là où l'ancien en produisait un à juste titre. **Aucune décision de conception là-dedans — juste un contrôle qu'on n'a pas écrit.**</p>
-<h2>Famille C — 13 preuves : la vraie preuve existe déjà et personne ne l'a branchée</h2>
-<ul><li>meta (3 étapes) → `scripts/god-of-all-process.mjs`</li><li>integration-outil (3) → `scripts/integration-outil.mjs`, `scripts/check-house.mjs`</li><li>integration-ronde (4) → `scripts/circle-process-guardian.mjs`, `scripts/check-house.mjs`</li><li>xp-ia (2) → `scripts/tool-learning.mjs`</li><li>etat-des-taches (1) → `scripts/check-tasks-details.mjs`</li></ul>
-<p>**Ces treize étapes disent toutes « l'outil a été lancé ».** Le fichier du script prouve seulement qu'il est installé. Or le projet tient DÉJÀ un compteur d'usage (`.tool-usage-history.json`) qui enregistre chaque lancement réel — et ce fichier-là **n'est pas suivi par git**, donc il n'existe que si quelque chose l'a écrit : c'est exactement le critère que le contrôleur applique aux 12 preuves qui, elles, tiennent.</p>
-<p class="note">C'est la leçon L2 une fois de plus : le mécanisme existe, il fonctionne, et personne ne l'a relié à l'endroit qui en avait besoin. Le trouver a demandé de lancer l'outil et de lire sa sortie, pas de relire le code.</p>
-<h2>Famille B — 8 preuves : LA seule vraie question, et elle est pour toi</h2>
-<ul><li>documents-de-reference / article-preserve → `CLAUDE.md`</li><li>documents-de-reference / memoire-des-operations · analyse-charte / memoire · analyse-charte / enregistrement → `docs/referentiel/charte-operations.md`</li><li>documents-de-reference / repercussion → `docs/referentiel/principes.md`</li><li>analyse-charte / cartographie → `docs/referentiel/charte-cartographie.md`</li><li>analyse-charte / table-regles → `docs/referentiel/claude-md-regles.md`</li><li>xp-ia / scan-du-registre → `docs/referentiel/lecons.md`</li></ul>
-<p>**Ces huit étapes disent « j'ai consulté, ou répercuté dans, un document de référence ».** Et là, il n'y a pas de bonne réponse mécanique :</p>
-<ul><li>**le fichier existe** — ne prouve rien (c'est le défaut actuel) ;</li><li>**le fichier a été modifié récemment** — prouve une écriture, jamais une LECTURE, et la plupart de ces étapes sont des lectures ;</li><li>**le fichier a été modifié dans le même commit** — pousserait à toucher un document pour faire passer un contrôle, ce qui est pire que l'absence de contrôle.</li></ul>
-<p>**Ce que je recommande, et c'est une position du projet, pas un renoncement** : déclarer l'impossibilité au lieu d'inventer un substitut. L'Article 27 le dit en toutes lettres — quand aucun mécanisme n'est possible, l'écrire noir sur blanc EST la protection. Ces huit étapes passeraient alors d'un faux vert à un « non mesurable, et voici pourquoi », ce qui est exactement ce que `check-spirit` fait déjà avec son `🚨 PAS MESURÉ`.</p>
-<h2>Ce que j'attends de toi, en trois réponses</h2>
-<ul><li>**Famille A (12)** — je branche « une entrée datée depuis le début de l'activité » ? *(ma recommandation : oui, aucune décision de conception là-dedans)*</li><li>**Famille C (13)** — je branche le compteur d'usage à la place du fichier de script ? *(ma recommandation : oui, le mécanisme existe déjà)*</li><li>**Famille B (8)** — on déclare l'impossibilité plutôt que d'inventer un substitut ? *(ma recommandation : oui — un faux vert sur « ai-je lu la charte » est le plus coûteux de tous)*</li></ul>
-<p>Trois oui feraient tomber les 33 faux verts à **zéro faux vert et 8 non-mesurables déclarés**. Je n'ai rien implémenté : #1409 dit explicitement que décider ce qu'une vraie preuve doit être n'est pas à moi.</p>
-<p class="note">Tout ceci est de l'outillage : rien ne touche ce que Lia et Noé disent ou font, rien que le visiteur voit, rien de difficile à annuler.</p></main>
-  <div class="divider"></div><footer><p>god-of-all-process · findPreuvesToujoursVraies() — classification mécanique par chemin de fichier, lancée contre le dépôt réel le 2026-10-03.</p></footer>
+<p>Famille A — 12 preuves : le registre existe toujours, l'entrée non</p>
+<p>· faire-le-point / estimation · reponse-aux-questions / estimation · sonde-quota / consigner → <code>docs/agent-du-temps/estimations.md</code> · faire-le-point / plan-action · reponse-aux-questions / inscrire-les-taches → <code>docs/suivi/index.md</code> · sonde-quota / smart-conso-avant → <code>docs/smart-conso-api/index.md</code> · ronde / estimation · ronde / comparaison → <code>docs/circle-tasks/estimations.md</code> · ronde / voix-utilisateur → <code>docs/angel-of-ia-process/reponses-evaluation.md</code> · simulation / index → <code>docs/simulations/index.md</code> · semi-autonome / mode-declare → <code>.mode-de-travail.json</code> · xp-ia / enregistrement → <code>docs/tool-learning/xp-journal.json</code></p>
+<p><strong>Pourquoi je dis que c'est évident</strong> : ces douze fichiers sont tous des registres où chaque ligne porte une date. « Le registre existe » ne dit rien ; « le registre a reçu une entrée depuis que l'activité a commencé » dit exactement ce que l'étape prétend. Le remplacement est strictement plus fort : il ne peut pas produire un vert là où l'ancien en produisait un à juste titre. <strong>Aucune décision de conception là-dedans — juste un contrôle qu'on n'a pas écrit.</strong></p>
+<p>Famille C — 13 preuves : la vraie preuve existe déjà et personne ne l'a branchée</p>
+<p>· meta (3 étapes) → <code>scripts/god-of-all-process.mjs</code> · integration-outil (3) → <code>scripts/integration-outil.mjs</code>, <code>scripts/check-house.mjs</code> · integration-ronde (4) → <code>scripts/circle-process-guardian.mjs</code>, <code>scripts/check-house.mjs</code> · xp-ia (2) → <code>scripts/tool-learning.mjs</code> · etat-des-taches (1) → <code>scripts/check-tasks-details.mjs</code></p>
+<p><strong>Ces treize étapes disent toutes « l'outil a été lancé ».</strong> Le fichier du script prouve seulement qu'il est installé. Or le projet tient DÉJÀ un compteur d'usage (<code>.tool-usage-history.json</code>) qui enregistre chaque lancement réel — et ce fichier-là <strong>n'est pas suivi par git</strong>, donc il n'existe que si quelque chose l'a écrit : c'est exactement le critère que le contrôleur applique aux 12 preuves qui, elles, tiennent.</p>
+<p>C'est la leçon L2 une fois de plus : le mécanisme existe, il fonctionne, et personne ne l'a relié à l'endroit qui en avait besoin. Le trouver a demandé de lancer l'outil et de lire sa sortie, pas de relire le code.</p>
+<p>Famille B — 8 preuves : LA seule vraie question, et elle est pour toi</p>
+<p>· documents-de-reference / article-preserve → <code>CLAUDE.md</code> · documents-de-reference / memoire-des-operations · analyse-charte / memoire · analyse-charte / enregistrement → <code>docs/referentiel/charte-operations.md</code> · documents-de-reference / repercussion → <code>docs/referentiel/principes.md</code> · analyse-charte / cartographie → <code>docs/referentiel/charte-cartographie.md</code> · analyse-charte / table-regles → <code>docs/referentiel/claude-md-regles.md</code> · xp-ia / scan-du-registre → <code>docs/referentiel/lecons.md</code></p>
+<p><strong>Ces huit étapes disent « j'ai consulté, ou répercuté dans, un document de référence ».</strong> Et là, il n'y a pas de bonne réponse mécanique :</p>
+<p>· <strong>le fichier existe</strong> — ne prouve rien (c'est le défaut actuel) ; · <strong>le fichier a été modifié récemment</strong> — prouve une écriture, jamais une LECTURE, et la plupart de ces étapes sont des lectures ; · <strong>le fichier a été modifié dans le même commit</strong> — pousserait à toucher un document pour faire passer un contrôle, ce qui est pire que l'absence de contrôle.</p>
+<p><strong>Ce que je recommande, et c'est une position du projet, pas un renoncement</strong> : déclarer l'impossibilité au lieu d'inventer un substitut. L'Article 27 le dit en toutes lettres — quand aucun mécanisme n'est possible, l'écrire noir sur blanc EST la protection. Ces huit étapes passeraient alors d'un faux vert à un « non mesurable, et voici pourquoi », ce qui est exactement ce que <code>check-spirit</code> fait déjà avec son <code>🚨 PAS MESURÉ</code>.</p>
+<p>Ce que j'attends de toi, en trois réponses</p>
+<p>· <strong>Famille A (12)</strong> — je branche « une entrée datée depuis le début de l'activité » ? <em>(ma recommandation : oui, aucune décision de conception là-dedans)</em> · <strong>Famille C (13)</strong> — je branche le compteur d'usage à la place du fichier de script ? <em>(ma recommandation : oui, le mécanisme existe déjà)</em> · <strong>Famille B (8)</strong> — on déclare l'impossibilité plutôt que d'inventer un substitut ? <em>(ma recommandation : oui — un faux vert sur « ai-je lu la charte » est le plus coûteux de tous)</em></p>
+<p>Trois oui feraient tomber les 33 faux verts à <strong>zéro faux vert et 8 non-mesurables déclarés</strong>. Je n'ai rien implémenté : #1409 dit explicitement que décider ce qu'une vraie preuve doit être n'est pas à moi.</p>
+<p>Tout ceci est de l'outillage : rien ne touche ce que Lia et Noé disent ou font, rien que le visiteur voit, rien de difficile à annuler.</p>
+<hr>
+<p>god-of-all-process · findPreuvesToujoursVraies() — classification mécanique par chemin de fichier, lancée contre le dépôt réel le 2026-10-03.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/les-33-controles-qui-ne-peuvent-pas-echouer.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>
 </html>

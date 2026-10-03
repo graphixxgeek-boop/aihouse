@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Les quatre décisions anciennes qui t'attendent vraiment</title>
+<title>docs/livrables/les-quatre-decisions-anciennes.md</title>
 <style>
   :root {
     --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
@@ -19,6 +19,18 @@
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
@@ -106,46 +118,49 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-03</div>
-    <h1>Les quatre décisions anciennes qui t'attendent vraiment</h1>
-    <p class="sub">Six vieilles décisions reprises une par une — deux te revenaient à tort, quatre te reviennent</p>
+    <div class="date">2026-10-03T09:47:07.180Z</div>
+    <h1>docs/livrables/les-quatre-decisions-anciennes.md</h1>
+    <p class="sub">Page générée depuis docs/livrables/les-quatre-decisions-anciennes.md — jamais écrite à la main.</p>
   </header>
   <div class="divider"></div>
-  <main><div class="highlight"><p>Six vieilles décisions traînaient dans ta file depuis le 22 et le 25 septembre. En les reprenant une par une, deux d'entre elles se sont révélées DÉJÀ TRANCHÉES PAR TOI — elles t'étaient réclamées à tort. Il en reste quatre, et les voici avec leurs options.</p></div>
-<p>**Tâches concernées** : #390, #603, #767, #823 (les quatre réelles) · #830 et #842 (les deux rendues) · #1507 (le défaut de l'outil qui les confondait) · #1506 et #1508 (deux trouvailles de passage).</p>
-<h2>D'abord : deux décisions que tu avais déjà prises</h2>
+  <main><p>=== Les quatre décisions anciennes qui t'attendent vraiment === Six vieilles décisions reprises une par une — deux te revenaient à tort, quatre te reviennent Date : 2026-10-03</p>
+<p>Six vieilles décisions traînaient dans ta file depuis le 22 et le 25 septembre. En les reprenant une par une, deux d'entre elles se sont révélées DÉJÀ TRANCHÉES PAR TOI — elles t'étaient réclamées à tort. Il en reste quatre, et les voici avec leurs options.</p>
+<p><strong>Tâches concernées</strong> : #390, #603, #767, #823 (les quatre réelles) · #830 et #842 (les deux rendues) · #1507 (le défaut de l'outil qui les confondait) · #1506 et #1508 (deux trouvailles de passage).</p>
+<p>D'abord : deux décisions que tu avais déjà prises</p>
 <p>L'outil qui compte « ce que tu dois trancher » ne lisait que la COLONNE STATUT d'une tâche. Deux tâches portaient un statut nu — « En attente » — et ta décision écrite dans leur description :</p>
-<table><thead><tr><th>Tâche</th><th>Ce que tu avais dit</th><th>Quand</th></tr></thead><tbody><tr><td>#830 — un outil qui vérifie la logique partout</td><td>« les 2 possibilités » : une commande sur un texte que tu fournis ET un passage sur un sujet du dépôt</td><td>2026-09-28</td></tr><tr><td>#842 — rentabiliser les leçons</td><td>« plus tard, il faudra revoir tout le système des leçons, mais pas maintenant »</td><td>2026-09-28</td></tr></tbody></table>
-<p>Les deux t'étaient donc réclamées alors que tu avais répondu. C'est pire qu'un oubli : ça te fait porter un travail que tu as fait, et ça cache que ces deux chantiers sont les MIENS, pas les tiens. **Le compte passe de 66 à 64 décisions dues**, et le détecteur sait maintenant lire une décision datée écrite dans la description, pas seulement dans le statut (#1507).</p>
-<p class="note">Le motif a été mesuré avant d'être écrit : « plus tard » apparaît dans 46 lignes du registre et en aurait mal classé quatre. L'attribution datée (« TRANCHÉ PAR LUI LE 2026-09-28 ») apparaît cinq fois, dont exactement les deux vraies. Le verbe compte : « ROUVERTE PAR LUI LE… » existe aussi, et veut dire l'inverse.</p>
-<h2>Les quatre qui t'attendent vraiment</h2>
-<h2>#390 — le badge d'un outil affiche le rouge du dépôt entier</h2>
-<p>**Le fait** : quand un outil est parfaitement propre, son badge affiche quand même « partiel (KO ARGUS, KO CLONE-HUNTER) » — parce que ces deux-là mesurent le DÉPÔT, pas l'outil. Un outil irréprochable porte donc le rouge de ce qui se passe ailleurs.</p>
-<p>**Pourquoi ce n'est pas corrigeable d'un seul geste** : CLONE-HUNTER et CLEAN-DIRTY-OLD savent dire quel fichier est en cause, donc on peut leur demander « et pour CET outil ? ». ARGUS, non : sa couche gratuite ne regarde que le moteur du jeu et des marqueurs TODO, rien qui soit attribuable à un outil.</p>
-<ul><li>**(A)** le badge garde le sens « le réseau est au vert » — rien à faire, et on l'écrit noir sur blanc pour que personne ne le reprenne pour un défaut.</li><li>**(B)** le badge passe au sens « CET outil est au vert » — alors ARGUS et CLONE-HUNTER sortent du calcul du badge quand on ne sait pas attribuer, et le badge dit combien de signaux il a dû écarter.</li><li>**(C)** deux badges, un par sens — le plus honnête et le plus encombrant.</li></ul>
-<p>**Ce que je ferais** : (B). Un badge porté par un outil doit parler de cet outil, sinon il ne sert à rien d'en avoir un par outil. Mais le libellé actuel a été calibré avec toi (#226), donc je n'y touche pas sans toi.</p>
-<h2>#603 — consolider le process des modes auto / semi-auto</h2>
-<p>**C'est ta demande, et tu as demandé qu'on la fasse à deux** : « revoir process mode auto/semi-auto : à consolider ensemble ». C'est pour ça qu'elle attend : je ne l'ai pas tranchée seul.</p>
-<p>**Ce qui existe déjà et marche** : trois modes, lus et conservés entre deux sessions ; un mode inconnu est refusé bruyamment ; un fichier abîmé retombe sur le mode le plus prudent.</p>
-<p>**Ce qui manque, et c'est probablement l'objet de ta demande** : le mode semi-autonome se définit par une COMBINAISON — tu es présent ET aucune question bloquante n'est en attente — alors qu'il est aujourd'hui stocké comme une simple étiquette. Résultat : rien ne vérifie que l'étiquette dit encore la vérité au moment où on la lit.</p>
-<ul><li>**(A)** le mode reste une étiquette, et on ajoute un contrôle qui prévient quand elle ne correspond plus à la réalité.</li><li>**(B)** le mode se DÉDUIT à chaque lecture (présence + questions en attente), et l'étiquette disparaît.</li><li>**(C)** on s'assoit dessus une fois ensemble et on réécrit le process en entier — ce que ta phrase demandait littéralement.</li></ul>
-<p>**Ce que je ferais** : (C) d'abord, parce que tu l'as demandé ainsi, et (B) en sortira probablement tout seul.</p>
-<h2>#767 — deux règles à fort levier qui manquent à la charte</h2>
-<p>**Ta question du 25 septembre** : « est-ce que tu vois d'autres types de règles qui manquent de ce type ? des règles qui impactent beaucoup de choses en conséquences. » Deux candidates sont identifiées depuis, aucune écrite.</p>
-<table><thead><tr><th>Candidate</th><th>Ce qu'elle dirait</th><th>Où elle en est</th></tr></thead><tbody><tr><td>(A) la MESURE avant l'OPINION</td><td>ne jamais avancer un chiffre qu'on n'a pas mesuré, et dire « je n'ai pas mesuré » plutôt que d'estimer</td><td>c'est le fil rouge de tout le projet, et aucun Article ne le porte de front</td></tr><tr><td>(B) le LIVRABLE est un FICHIER</td><td>tout ce que tu dois garder existe sur disque, parce qu'un message se perd dans le défilement et ne survit pas à une session</td><td>c'est exactement ta critique du 2 octobre, et elle n'a toujours pas d'Article</td></tr></tbody></table>
+<p>Tâche                                           Ce que tu avais dit                                                                                    Quand ----------------------------------------------  -----------------------------------------------------------------------------------------------------  ---------- #830 — un outil qui vérifie la logique partout  « les 2 possibilités » : une commande sur un texte que tu fournis ET un passage sur un sujet du dépôt  2026-09-28 #842 — rentabiliser les leçons                  « plus tard, il faudra revoir tout le système des leçons, mais pas maintenant »                        2026-09-28</p>
+<p>Les deux t'étaient donc réclamées alors que tu avais répondu. C'est pire qu'un oubli : ça te fait porter un travail que tu as fait, et ça cache que ces deux chantiers sont les MIENS, pas les tiens. <strong>Le compte passe de 66 à 64 décisions dues</strong>, et le détecteur sait maintenant lire une décision datée écrite dans la description, pas seulement dans le statut (#1507).</p>
+<p>Le motif a été mesuré avant d'être écrit : « plus tard » apparaît dans 46 lignes du registre et en aurait mal classé quatre. L'attribution datée (« TRANCHÉ PAR LUI LE 2026-09-28 ») apparaît cinq fois, dont exactement les deux vraies. Le verbe compte : « ROUVERTE PAR LUI LE… » existe aussi, et veut dire l'inverse.</p>
+<p>Les quatre qui t'attendent vraiment</p>
+<p>#390 — le badge d'un outil affiche le rouge du dépôt entier</p>
+<p><strong>Le fait</strong> : quand un outil est parfaitement propre, son badge affiche quand même « partiel (KO ARGUS, KO CLONE-HUNTER) » — parce que ces deux-là mesurent le DÉPÔT, pas l'outil. Un outil irréprochable porte donc le rouge de ce qui se passe ailleurs.</p>
+<p><strong>Pourquoi ce n'est pas corrigeable d'un seul geste</strong> : CLONE-HUNTER et CLEAN-DIRTY-OLD savent dire quel fichier est en cause, donc on peut leur demander « et pour CET outil ? ». ARGUS, non : sa couche gratuite ne regarde que le moteur du jeu et des marqueurs TODO, rien qui soit attribuable à un outil.</p>
+<p>· <strong>(A)</strong> le badge garde le sens « le réseau est au vert » — rien à faire, et on l'écrit noir sur blanc pour que personne ne le reprenne pour un défaut. · <strong>(B)</strong> le badge passe au sens « CET outil est au vert » — alors ARGUS et CLONE-HUNTER sortent du calcul du badge quand on ne sait pas attribuer, et le badge dit combien de signaux il a dû écarter. · <strong>(C)</strong> deux badges, un par sens — le plus honnête et le plus encombrant.</p>
+<p><strong>Ce que je ferais</strong> : (B). Un badge porté par un outil doit parler de cet outil, sinon il ne sert à rien d'en avoir un par outil. Mais le libellé actuel a été calibré avec toi (#226), donc je n'y touche pas sans toi.</p>
+<p>#603 — consolider le process des modes auto / semi-auto</p>
+<p><strong>C'est ta demande, et tu as demandé qu'on la fasse à deux</strong> : « revoir process mode auto/semi-auto : à consolider ensemble ». C'est pour ça qu'elle attend : je ne l'ai pas tranchée seul.</p>
+<p><strong>Ce qui existe déjà et marche</strong> : trois modes, lus et conservés entre deux sessions ; un mode inconnu est refusé bruyamment ; un fichier abîmé retombe sur le mode le plus prudent.</p>
+<p><strong>Ce qui manque, et c'est probablement l'objet de ta demande</strong> : le mode semi-autonome se définit par une COMBINAISON — tu es présent ET aucune question bloquante n'est en attente — alors qu'il est aujourd'hui stocké comme une simple étiquette. Résultat : rien ne vérifie que l'étiquette dit encore la vérité au moment où on la lit.</p>
+<p>· <strong>(A)</strong> le mode reste une étiquette, et on ajoute un contrôle qui prévient quand elle ne correspond plus à la réalité. · <strong>(B)</strong> le mode se DÉDUIT à chaque lecture (présence + questions en attente), et l'étiquette disparaît. · <strong>(C)</strong> on s'assoit dessus une fois ensemble et on réécrit le process en entier — ce que ta phrase demandait littéralement.</p>
+<p><strong>Ce que je ferais</strong> : (C) d'abord, parce que tu l'as demandé ainsi, et (B) en sortira probablement tout seul.</p>
+<p>#767 — deux règles à fort levier qui manquent à la charte</p>
+<p><strong>Ta question du 25 septembre</strong> : « est-ce que tu vois d'autres types de règles qui manquent de ce type ? des règles qui impactent beaucoup de choses en conséquences. » Deux candidates sont identifiées depuis, aucune écrite.</p>
+<p>Candidate                       Ce qu'elle dirait                                                                                                            Où elle en est ------------------------------  ---------------------------------------------------------------------------------------------------------------------------  ----------------------------------------------------------------------------- (A) la MESURE avant l'OPINION   ne jamais avancer un chiffre qu'on n'a pas mesuré, et dire « je n'ai pas mesuré » plutôt que d'estimer                       c'est le fil rouge de tout le projet, et aucun Article ne le porte de front (B) le LIVRABLE est un FICHIER  tout ce que tu dois garder existe sur disque, parce qu'un message se perd dans le défilement et ne survit pas à une session  c'est exactement ta critique du 2 octobre, et elle n'a toujours pas d'Article</p>
 <p>Deux autres ont été écartées volontairement : « rien ne se termine sans son verdict » (le process XP le porte déjà) et « l'ordre des chantiers ne se réordonne jamais seul » (c'est l'Article 26).</p>
-<p>**Ce que je ferais** : écrire (B) en premier. C'est la seule des deux dont tu as payé l'absence par une phrase explicite. Mais écrire un Article touche la charte, donc double confirmation obligatoire, et je te montre le texte exact avant.</p>
-<h2>#823 — une « origine » déclarée que rien n'écrit jamais</h2>
-<p>**Le fait, mesuré sur 78 fichiers et 2 197 événements** : le compteur d'usage des outils reconnaît six origines possibles. Cinq sont produites par un vrai chemin de code. Une seule ne l'est jamais : « spontane ».</p>
-<ul><li>**(A)** la câbler — mais elle demanderait de savoir si j'ai consulté un outil « de moi-même », ce qu'aucune mécanique ne peut vérifier. Une origine invérifiable qui s'écrit est pire qu'une origine absente.</li><li>**(B)** la RETIRER du vocabulaire — un signal dérivé la remplace déjà, et un vocabulaire qui contient un mot que personne n'emploie finit par être cru.</li></ul>
-<p>**Ce que je ferais** : (B), sans hésiter. Mais c'est un retrait de vocabulaire, donc ta décision.</p>
-<h2>Deux trouvailles faites en chemin</h2>
-<p>**#1506 — une quatrième catégorie du journal d'expérience était écrite et personne ne la lisait.** Le matin même, on avait ajouté la possibilité que je porte mon propre jugement sur une leçon (contestable par toi à la Ronde). Elle a été branchée à l'écriture et oubliée à la lecture : le journal en portait une, le rapport n'en disait pas un mot. C'est, mot pour mot, le travers que ma propre conclusion du 23 septembre décrit — « je construis le mécanisme et je m'arrête avant de le brancher » — reproduit sur l'outil qui archive cette conclusion. Branché, et toujours sur une ligne à part : fondu dans le compte de tes jugements, mon avis aurait pu passer pour le tien.</p>
-<p>**#1508 — les chiffres de #842 ont changé, dans les deux sens.** Le chantier que tu as reporté annonçait 7 leçons jamais ressorties (du poids mort) et 11 qui ressortent sans jamais avoir été jugées utiles. Re-mesuré sur 975 occasions : **plus aucune leçon n'est muette**, et **28** ressortent sans effet connu, contre 11. La première moitié du chantier n'a plus d'objet ; la seconde a presque triplé. Tu le sauras avant de le rouvrir, au lieu de le découvrir en l'ouvrant.</p>
-<h2>Ce que j'attends de toi, si tu n'as que deux minutes</h2>
-<ul><li>**#390** : (A), (B) ou (C) ? — ma recommandation : (B).</li><li>**#603** : on s'y met ensemble quand ? — ma recommandation : (C), c'est ta formulation.</li><li>**#767** : j'écris la règle « un livrable est un fichier » ? — je te montre le texte avant, double confirmation.</li><li>**#823** : je retire le mot « spontane » du vocabulaire ? — ma recommandation : oui.</li></ul>
-<p class="note">Tout ce qui précède est de l'OUTILLAGE : rien ne touche ce que Lia et Noé disent ou font, rien que le visiteur du site voit, rien de difficile à annuler.</p></main>
-  <div class="divider"></div><footer><p>check-tasks-details + tool-learning — lecture seule de docs/suivi/ ; docs/suivi/ reste l'unique source de vérité.</p></footer>
+<p><strong>Ce que je ferais</strong> : écrire (B) en premier. C'est la seule des deux dont tu as payé l'absence par une phrase explicite. Mais écrire un Article touche la charte, donc double confirmation obligatoire, et je te montre le texte exact avant.</p>
+<p>#823 — une « origine » déclarée que rien n'écrit jamais</p>
+<p><strong>Le fait, mesuré sur 78 fichiers et 2 197 événements</strong> : le compteur d'usage des outils reconnaît six origines possibles. Cinq sont produites par un vrai chemin de code. Une seule ne l'est jamais : « spontane ».</p>
+<p>· <strong>(A)</strong> la câbler — mais elle demanderait de savoir si j'ai consulté un outil « de moi-même », ce qu'aucune mécanique ne peut vérifier. Une origine invérifiable qui s'écrit est pire qu'une origine absente. · <strong>(B)</strong> la RETIRER du vocabulaire — un signal dérivé la remplace déjà, et un vocabulaire qui contient un mot que personne n'emploie finit par être cru.</p>
+<p><strong>Ce que je ferais</strong> : (B), sans hésiter. Mais c'est un retrait de vocabulaire, donc ta décision.</p>
+<p>Deux trouvailles faites en chemin</p>
+<p><strong>#1506 — une quatrième catégorie du journal d'expérience était écrite et personne ne la lisait.</strong> Le matin même, on avait ajouté la possibilité que je porte mon propre jugement sur une leçon (contestable par toi à la Ronde). Elle a été branchée à l'écriture et oubliée à la lecture : le journal en portait une, le rapport n'en disait pas un mot. C'est, mot pour mot, le travers que ma propre conclusion du 23 septembre décrit — « je construis le mécanisme et je m'arrête avant de le brancher » — reproduit sur l'outil qui archive cette conclusion. Branché, et toujours sur une ligne à part : fondu dans le compte de tes jugements, mon avis aurait pu passer pour le tien.</p>
+<p><strong>#1508 — les chiffres de #842 ont changé, dans les deux sens.</strong> Le chantier que tu as reporté annonçait 7 leçons jamais ressorties (du poids mort) et 11 qui ressortent sans jamais avoir été jugées utiles. Re-mesuré sur 975 occasions : <strong>plus aucune leçon n'est muette</strong>, et <strong>28</strong> ressortent sans effet connu, contre 11. La première moitié du chantier n'a plus d'objet ; la seconde a presque triplé. Tu le sauras avant de le rouvrir, au lieu de le découvrir en l'ouvrant.</p>
+<p>Ce que j'attends de toi, si tu n'as que deux minutes</p>
+<p>· <strong>#390</strong> : (A), (B) ou (C) ? — ma recommandation : (B). · <strong>#603</strong> : on s'y met ensemble quand ? — ma recommandation : (C), c'est ta formulation. · <strong>#767</strong> : j'écris la règle « un livrable est un fichier » ? — je te montre le texte avant, double confirmation. · <strong>#823</strong> : je retire le mot « spontane » du vocabulaire ? — ma recommandation : oui.</p>
+<p>Tout ce qui précède est de l'OUTILLAGE : rien ne touche ce que Lia et Noé disent ou font, rien que le visiteur du site voit, rien de difficile à annuler.</p>
+<hr>
+<p>check-tasks-details + tool-learning — lecture seule de docs/suivi/ ; docs/suivi/ reste l'unique source de vérité.</p></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/les-quatre-decisions-anciennes.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
 </div>
 </body>
 </html>

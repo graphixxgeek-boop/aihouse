@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ta livraison du 3 octobre</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T09:48:13.520Z</div>
+    <h1>Ta livraison du 3 octobre</h1>
+    <p class="sub">28 documents en 3 lots, triés — et 5 choses qui te reviennent</p>
+  </header>
+  <div class="divider"></div>
+  <main><p><em>(Tâche <strong>#1522</strong>, celle que tu m'as demandé de rendre urgente à 14h. Préparée le 2026-10-03 pendant que tu dormais, livrée quand tu es là.)</em></p>
+<div class="highlight"><p><strong>DÉCOULE DE :</strong> <code>docs/strategies/strategie-globale-du-projet-entier.md</code>
+<em>une livraison est une étape d'exécution, pas une conviction.</em></p></div>
+<hr>
+<h3>POURQUOI CE DOCUMENT EXISTE</h3>
+<p>Tu me l'as demandé en deux temps, et le second corrigeait le premier. D'abord : « crée une tâche qui consiste à me livrer ces docs à partir du moment où je me réveille ». Puis, une heure plus tard : <strong>« tu dois me les livrer À PARTIR DE 14H HEURE FRANÇAISE »</strong> — parce que livrés pendant que tu dors, ils remonteraient dans la conversation au rythme de mon activité de la nuit et seraient <em>« bientôt noyés dans la masse »</em>.</p>
+<p>Tu avais raison, et c'est pour ça que cette page existe : <strong>un point d'entrée unique</strong>, pour que 28 fichiers ne soient pas 28 messages à retrouver.</p>
+<hr>
+<h3>LE TRI QUE TU AS DEMANDÉ, ET CE QU'IL A TROUVÉ</h3>
+<p>Ta consigne : <em>« fais le tri : juste pas de doublons ou de versions obsolètes »</em>.</p>
+<table><thead><tr><th>Ce qui a été vérifié</th><th>Résultat</th></tr></thead><tbody><tr><td><strong>Doublons de format</strong> (le même texte en <code>.md</code> et en <code>.html</code>)</td><td>tous écartés automatiquement — tu reçois la page lisible, jamais sa source</td></tr><tr><td><strong>Versions obsolètes</strong> (une page plus vieille que son texte)</td><td><strong>8 trouvées et régénérées</strong> avant livraison : elles t'auraient montré un état périmé</td></tr><tr><td><strong>Séries datées</strong> (deux documents du même nom à deux dates)</td><td><strong>nommées, jamais écartées</strong> — voir ci-dessous</td></tr><tr><td><strong>Documents qui se ressemblent</strong></td><td>8 paires signalées, aucune supprimée — voir ci-dessous</td></tr></tbody></table>
+<p><strong>POURQUOI RIEN N'A ÉTÉ SUPPRIMÉ, et c'est une décision :</strong> l'outil n'écarte que ce dont il peut dire pourquoi sans se tromper. Deux rapports de nuit datés du 29 et du 30 septembre peuvent être deux versions d'un même texte (la plus vieille serait à jeter) <strong>ou</strong> deux nuits différentes (les deux comptent). <strong>Aucun nom ne permet de trancher ça mécaniquement</strong>, et ta phrase « tous les docs m'intéressent » tranche le doute dans le sens de la livraison. Ils sont donc tous là, et les cas douteux sont nommés pour que tu décides à la lecture.</p>
+<hr>
+<h3>LOT 1 — LES 18 DOCUMENTS DE TA LISTE</h3>
+<p><em>Ceux que tu m'as explicitement demandé de te relivrer, dans ton ordre.</em></p>
+<table><thead><tr><th>#</th><th>Document</th><th>Ce que c'est</th></tr></thead><tbody><tr><td>1</td><td><a href="../grand-projet/html/reponses-a-ses-49-questions.html"><code>reponses-a-ses-49-questions.html</code></a></td><td>tes 49 questions du grand prompt, répondues une par une</td></tr><tr><td>2</td><td><a href="ce-que-tu-nas-jamais-recu.html"><code>ce-que-tu-nas-jamais-recu.html</code></a></td><td>les documents produits et jamais livrés — 26, pas 4</td></tr><tr><td>3</td><td><a href="../grand-projet/html/les-cinq-lots-de-decisions.html"><code>les-cinq-lots-de-decisions.html</code></a></td><td>les décisions regroupées par nature</td></tr><tr><td>4</td><td><a href="../grand-projet/html/seance-objectif-ultime.html"><code>seance-objectif-ultime.html</code></a></td><td>la séance sur le but ultime du projet</td></tr><tr><td>5</td><td><a href="../grand-projet/html/les-trois-bornes-de-la-fin.html"><code>les-trois-bornes-de-la-fin.html</code></a></td><td>à quoi on reconnaîtra que c'est fini</td></tr><tr><td>6</td><td><a href="../grand-projet/html/questions-de-calibrage.html"><code>questions-de-calibrage.html</code></a></td><td>les curseurs qui attendent ton arbitrage</td></tr><tr><td>7</td><td><a href="../grand-projet/html/questions-de-degrossissage.html"><code>questions-de-degrossissage.html</code></a></td><td>les questions à trancher avant d'entrer dans le détail</td></tr><tr><td>8</td><td><a href="../grand-projet/html/decisions-qui-attendent.html"><code>decisions-qui-attendent.html</code></a></td><td>l'état vivant de ce qui attend une décision</td></tr><tr><td>9</td><td><a href="../strategies/strategie-globale-de-l-agence.html"><code>strategie-globale-de-l-agence.html</code></a></td><td>la stratégie de l'outillage</td></tr><tr><td>10</td><td><a href="../strategies/strategie-globale-du-jeu.html"><code>strategie-globale-du-jeu.html</code></a></td><td>la stratégie du produit</td></tr><tr><td>11</td><td><a href="../strategies/strategie-globale-du-projet-entier.html"><code>strategie-globale-du-projet-entier.html</code></a></td><td>celle qui porte les deux autres</td></tr><tr><td>12</td><td><a href="travailler-a-distance.html"><code>travailler-a-distance.html</code></a></td><td>comment on échange depuis ton téléphone — et ce qui ne marche pas encore</td></tr><tr><td>13</td><td><a href="les-decisions-qui-t-attendent.html"><code>les-decisions-qui-t-attendent.html</code></a></td><td>la liste, à jour, de ce qui te revient</td></tr><tr><td>14</td><td><a href="le-pack-decouverte-point.html"><code>le-pack-decouverte-point.html</code></a></td><td>où en est le pack découverte</td></tr><tr><td>15</td><td><a href="les-six-registres-le-dossier.html"><code>les-six-registres-le-dossier.html</code></a></td><td>les six registres et ce qu'ils gardent</td></tr><tr><td>16</td><td><a href="les-quatre-decisions-anciennes.html"><code>les-quatre-decisions-anciennes.html</code></a></td><td>les vieilles décisions reprises une par une</td></tr><tr><td>17</td><td><a href="les-33-controles-qui-ne-peuvent-pas-echouer.html"><code>les-33-controles-qui-ne-peuvent-pas-echouer.html</code></a></td><td>les contrôles dont l'échec est impossible, et pourquoi c'est un problème</td></tr><tr><td>18</td><td><a href="la-nuit-du-2-au-3-octobre.html"><code>la-nuit-du-2-au-3-octobre.html</code></a></td><td>le rapport de la nuit précédente</td></tr></tbody></table>
+<h3>LOT 2 — LES 3 BONUS</h3>
+<p><em>Les trois documents que tu as dit ne pas connaître (ton point P36).</em></p>
+<table><thead><tr><th>Document</th><th>Ce que c'est</th></tr></thead><tbody><tr><td><a href="loi-de-l-agence.html"><code>loi-de-l-agence.html</code></a></td><td>ce qui fait loi dans l'Agence, et dans quel ordre</td></tr><tr><td><a href="manifeste-de-l-agence.html"><code>manifeste-de-l-agence.html</code></a></td><td>ce que l'Agence est, en un texte</td></tr><tr><td><a href="systeme-de-suivi.html"><code>systeme-de-suivi.html</code></a></td><td>comment le suivi des tâches fonctionne — c'est le document dont tu avais vu l'arborescence</td></tr></tbody></table>
+<h3>LOT 3 — LES 7 NOUVEAUX, PRODUITS CETTE NUIT</h3>
+<p><em>Ils n'existaient pas quand tu as fait ta liste. Le premier est celui à lire en premier.</em></p>
+<table><thead><tr><th>Document</th><th>Ce que c'est</th><th>Priorité</th></tr></thead><tbody><tr><td><a href="../rapports-gros-prompt/F-reponses-2026-10-03.html"><code>F-reponses-2026-10-03.html</code></a></td><td><strong>tes 96 points, répondus un par un</strong> — 83 retenus avec une tâche réelle, 12 écartés avec leur raison, 1 qui attend ta décision</td><td><strong>à lire d'abord</strong></td></tr><tr><td><a href="article-33-honnetete-texte-propose.html"><code>article-33-honnetete-texte-propose.html</code></a></td><td><strong>l'Article que tu m'as demandé</strong> — une réponse franche, jamais aménagée. PROPOSÉ, pas écrit : il attend tes deux confirmations</td><td><strong>il te revient</strong></td></tr><tr><td><a href="../the-king/tableau-des-convictions-2026-10-03.html"><code>tableau-des-convictions-2026-10-03.html</code></a></td><td>les 106 convictions du corpus, 5 par ligne comme demandé — dont 103 qu'aucun principe écrit ne porte</td><td></td></tr><tr><td><a href="carte-des-modules-2026-10-03.html"><code>carte-des-modules-2026-10-03.html</code></a></td><td>les deux cartes schématiques — et 71 des 76 prestations ne tiennent qu'à un seul outil</td><td></td></tr><tr><td><a href="consignes-de-session-2026-10-03.html"><code>consignes-de-session-2026-10-03.html</code></a></td><td>ce qui me gouverne sans venir de l'Agence : 15 contraintes, et ce qui partirait vraiment</td><td></td></tr><tr><td><a href="../modules/GABARIT-fiche-de-module.html"><code>GABARIT-fiche-de-module.html</code></a></td><td>tes six ajouts au format de fiche — et il n'existait pas de gabarit</td><td></td></tr><tr><td><a href="les-cinq-systemes-de-memoire.html"><code>les-cinq-systemes-de-memoire.html</code></a></td><td>quatre actions pour les rendre cohérents, et trois séries de noms à choisir</td><td><strong>tu nommes</strong></td></tr></tbody></table>
+<hr>
+<h3>LES 8 PAIRES QUI SE RESSEMBLENT — nommées, pas écartées</h3>
+<p>L'outil mesure un <strong>recouvrement de vocabulaire</strong>, jamais un sens. Deux documents du même domaine partagent forcément des mots sans rien se répéter. Ce sont donc des <strong>questions</strong>, pas des verdicts — et c'est à toi de dire, à la lecture, si l'un rend l'autre inutile.</p>
+<p>Les plus proches : <code>grands-axes-de-depart</code> ↔ <code>notes-des-echanges-de-depart</code> (33 %) · <code>reperes-2026-10-01</code> ↔ <code>ou-on-en-est</code> (28 %) · <code>rapport-de-nuit-2026-09-30</code> ↔ <code>ou-on-en-est</code> (27 %).</p>
+<p><strong>Un cas est propre</strong> : <code>fil-01</code> cite explicitement <code>les-trois-objectifs-ultimes</code>. Le recouvrement y est assumé, et c'est la forme qu'on voudrait pour les sept autres.</p>
+<hr>
+<h3>CE QUI RESTE ENTRE TES MAINS, EN UNE LISTE</h3>
+<ul><li><strong>L'Article 33</strong> — le texte sur l'honnêteté : tu le valides, ou tu le reformules. Deux confirmations, c'est l'Article 14 qui l'exige.</li><li><strong>Les 103 convictions hors boussole</strong> — les faire redescendre dans le document de gouvernance demande ton accord exprès.</li><li><strong>Le nom du groupe des cinq systèmes</strong> — trois séries proposées, à prendre ou à refuser entières.</li><li><strong>Laquelle des deux cartes cibles fait foi</strong> — celle par familles (2 octobre) ou celle par prestations (3 octobre). Elles ne répondent pas à la même question, et je ne tranche pas.</li><li><strong>« Le process ronde est pas propre »</strong> — six mots, et trois corrections possibles qui s'excluent. Je te poserai la question plutôt que de deviner.</li></ul></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/LIVRAISON-14H-2026-10-03.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>
