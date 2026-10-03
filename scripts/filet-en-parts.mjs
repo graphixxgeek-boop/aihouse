@@ -151,6 +151,210 @@ export function blocEstDuSocle(src = "", bloc = {}, { couplages = COUPLAGES_CONS
   return false;
 }
 
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+// LA SECONDE ESPÈCE D'UNITÉ DÉPLAÇABLE : L'APPEL (2026-10-03, tâche #1578)
+//
+// CE QUE LA MESURE A RENVERSÉ, ET C'EST LE PLAFOND LUI-MÊME. On croyait l'épine incompressible :
+// 120,4 s de code « écrit au niveau du fichier », rejoué dans les quatre parts, soit 49 % du
+// filet. En la DÉCOUPANT plutôt qu'en la contemplant, 115,1 de ces 120,4 s se trouvent à
+// l'intérieur de 147 corps de `async function testX() { … }`, chacune appelée EXACTEMENT UNE FOIS
+// par un `await testX();` seul sur sa ligne. Cinq secondes seulement sont du vrai code à plat.
+//
+// AUTREMENT DIT L'ÉPINE N'ÉTAIT PAS UN PLAFOND, C'ÉTAIT UN DÉFAUT DE DÉCOUPAGE : le runner ne
+// connaissait qu'une seule forme d'unité, le bloc `{` … `}` en colonne zéro, et tout ce qui ne
+// ressemblait pas à ça tombait dans « épine » par défaut. Une fonction est pourtant l'unité la
+// PLUS sûre qui soit — son corps est étanche par construction du langage, rien de ce qu'elle
+// déclare ne fuit, là où un bloc de niveau zéro, lui, partage le fichier.
+//
+// CE QUI BOUGE, ET C'EST LA SEULE CHOSE QUI BOUGE : l'APPEL. La DÉCLARATION reste dans toutes les
+// parts — définir une fonction ne coûte rien et garantit qu'aucune référence ne se casse. Seule la
+// ligne `await testX();` est retirée des parts qui ne la portent pas.
+//
+// LES QUATRE CONDITIONS, ET AUCUNE NE SE NÉGOCIE (c'est le filet : un faux positif ici rend un
+// vert sur du code que personne n'exécute, exactement la faute que ce runner ne doit jamais
+// commettre) :
+//   1. la fonction est déclarée au NIVEAU ZÉRO du fichier, hors de tout bloc ;
+//   2. son nom n'apparaît que DEUX fois dans tout le fichier — sa déclaration et son appel. Trois
+//      occurrences, et on ne sait plus qui l'appelle : on refuse ;
+//   3. l'appel est seul sur sa ligne, en colonne zéro, sans affectation de résultat ;
+//   4. son corps ne touche pas l'état commun, et n'AFFECTE aucun nom de niveau fichier.
+//
+// LA QUATRIÈME CONDITION EST CELLE QUI PROTÈGE RÉELLEMENT, et elle se trompe du bon côté : une
+// locale homonyme fait rester l'appel au socle, c'est-à-dire qu'il tourne partout comme avant.
+// On perd un peu de gain, jamais une vérification. C'est l'exact inverse du compromis refusé à
+// l'essai précédent, où se tromper du bon côté tuait le gain : ici le socle ne retient que les
+// fonctions qui ÉCRIVENT, et elles sont rares.
+
+// Une fonction déclarée en colonne zéro, avec la ligne de sa première accolade et celle de sa
+// fermeture, trouvées par PROFONDEUR (leçon L39 : un détecteur qui compte une profondeur est faux
+// jusqu'à preuve du contraire — celui-ci est contre-testé sur une imbrication fabriquée exprès).
+export const MOTIF_FONCTION_A_PLAT = /^(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/;
+
+export function fonctionsDeNiveauZero(src = "") {
+  const lignes = String(src).split("\n");
+  const fns = [];
+  for (let i = 0; i < lignes.length; i += 1) {
+    const m = MOTIF_FONCTION_A_PLAT.exec(lignes[i]);
+    if (!m) continue;
+    let profondeur = 0, demarre = false, fin = null;
+    for (let j = i; j < lignes.length; j += 1) {
+      for (const ch of lignes[j]) {
+        if (ch === "{") { profondeur += 1; demarre = true; } else if (ch === "}") profondeur -= 1;
+      }
+      if (demarre && profondeur <= 0) { fin = j + 1; break; }
+    }
+    if (!fin) continue;
+    fns.push({ nom: m[1], debut: i + 1, fin });
+    i = fin - 1;
+  }
+  return fns;
+}
+
+// L'APPEL SEUL SUR SA LIGNE, EN COLONNE ZÉRO. `await testX();` ou `testX();` — jamais
+// `const r = testX();`, jamais un appel indenté (donc imbriqué dans autre chose).
+export function lignesDAppelAPlat(src = "", nom = "") {
+  const motif = new RegExp(`^(?:await\\s+)?${nom.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(\\s*\\)\\s*;?\\s*$`);
+  const trouvees = [];
+  String(src).split("\n").forEach((l, i) => { if (motif.test(l)) trouvees.push(i + 1); });
+  return trouvees;
+}
+
+// Combien de fois un nom apparaît dans tout le fichier, en tant que MOT. Deux, et deux seulement :
+// la déclaration et l'appel. Au-delà, quelqu'un d'autre s'en sert et on ne déplace rien.
+export function occurrencesDuNom(src = "", nom = "") {
+  const motif = new RegExp(`\\b${nom.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g");
+  return (String(src).match(motif) ?? []).length;
+}
+
+// LES NOMS DE NIVEAU FICHIER : déclarés sur une ligne qui n'est ni dans un bloc, ni dans un corps
+// de fonction. Cette liste-là est PRÉCISE, là où toute tentative de deviner les portées à
+// l'intérieur d'un bloc a échoué deux fois aujourd'hui — parce qu'ici on ne cherche pas à savoir
+// d'où vient un nom employé, seulement où il est DÉCLARÉ, et une déclaration se lit.
+// LE PIÈGE QUI A FAILLI COÛTER QUARANTE SECONDES DE GAIN, ET IL EST EXACTEMENT LE MÊME QUE CELUI
+// DES DEUX DÉTECTEURS REFUSÉS PLUS HAUT — sauf qu'ici, pour une fois, il a une solution EXACTE.
+//
+// Le premier jet acceptait toute déclaration lue sur une ligne hors bloc et hors fonction. Il a
+// renvoyé 59 fonctions au socle, 40,7 s de gain perdu, pour cause d'écriture dans « r », « c »,
+// « p », « h », « n ». Or ces noms ne sont PAS de niveau fichier : ce sont des locales écrites à
+// l'intérieur d'une fonction fléchée posée sur une ligne à plat — `globalThis.fetch = async
+// (...args) => { const r = await simulatedFetch(...args); … }`. Le lecteur voyait un `const r`
+// sur une ligne de niveau fichier et en concluait une variable de niveau fichier.
+//
+// LA DIFFÉRENCE AVEC LES DEUX ÉCHECS PRÉCÉDENTS EST CE QUI REND CELUI-CI SOLUBLE : là-bas il
+// fallait savoir d'où venait un nom EMPLOYÉ, ce qui demande les portées ; ici il suffit de savoir
+// si une DÉCLARATION est imbriquée, et ça se lit sur la profondeur d'accolades — une grandeur
+// qu'on compte, pas qu'on devine. La profondeur est suivie sur tout le fichier, chaînes et
+// commentaires écartés, et seule une déclaration à la profondeur ZÉRO est de niveau fichier.
+export function profondeurDesLignes(src = "") {
+  const lignes = String(src).split("\n");
+  const profondeurs = [];
+  let profondeur = 0, dansUnCommentaire = false;
+  for (const ligne of lignes) {
+    profondeurs.push(profondeur);
+    let quote = null;
+    for (let i = 0; i < ligne.length; i += 1) {
+      const c = ligne[i];
+      if (dansUnCommentaire) { if (c === "*" && ligne[i + 1] === "/") { dansUnCommentaire = false; i += 1; } continue; }
+      if (quote) { if (c === "\\") i += 1; else if (c === quote) quote = null; continue; }
+      if (c === "/" && ligne[i + 1] === "/") break;
+      if (c === "/" && ligne[i + 1] === "*") { dansUnCommentaire = true; i += 1; continue; }
+      if (c === "'" || c === '"' || c === "`") { quote = c; continue; }
+      if (c === "{") profondeur += 1; else if (c === "}") profondeur -= 1;
+    }
+  }
+  return profondeurs;
+}
+
+// Les déclarations de la ligne qui se tiennent à la profondeur DONNÉE, les imbriquées écartées.
+export function nomsDeclaresAuNiveau(ligne = "", profondeurInitiale = 0) {
+  const out = [];
+  let profondeur = profondeurInitiale, quote = null, dansUnCommentaire = false;
+  const positionsAuNiveau = new Set();
+  for (let i = 0; i < ligne.length; i += 1) {
+    const c = ligne[i];
+    if (dansUnCommentaire) { if (c === "*" && ligne[i + 1] === "/") { dansUnCommentaire = false; i += 1; } continue; }
+    if (quote) { if (c === "\\") i += 1; else if (c === quote) quote = null; continue; }
+    if (c === "/" && ligne[i + 1] === "/") break;
+    if (c === "/" && ligne[i + 1] === "*") { dansUnCommentaire = true; i += 1; continue; }
+    if (c === "'" || c === '"' || c === "`") { quote = c; continue; }
+    if (c === "{") { profondeur += 1; continue; }
+    if (c === "}") { profondeur -= 1; continue; }
+    if (profondeur === 0) positionsAuNiveau.add(i);
+  }
+  for (const m of String(ligne).matchAll(MOTIF_DECLARATION_A_PLAT)) {
+    // La position du mot-clé `const`/`let`/`var`, jamais celle du début de la correspondance, qui
+    // peut inclure le `;` ou le `{` qui précède.
+    const motCle = m[0].search(/(?:const|let|var)\s/);
+    if (!positionsAuNiveau.has(m.index + Math.max(0, motCle))) continue;
+    const brut = m[1] ?? m[2] ?? m[3] ?? "";
+    for (const x of brut.split(",")) {
+      const nom = x.split(":").pop().split("=")[0].trim();
+      if (/^[A-Za-z_$][\w$]*$/.test(nom) && !out.includes(nom)) out.push(nom);
+    }
+  }
+  return out;
+}
+
+export function nomsDeNiveauFichier(src = "", { blocs = null, fonctions = null } = {}) {
+  const lignes = String(src).split("\n");
+  const bs = blocs ?? blocsDeNiveauZero(src);
+  const fs_ = fonctions ?? fonctionsDeNiveauZero(src);
+  const profondeurs = profondeurDesLignes(src);
+  const noms = new Set();
+  for (let n = 1; n <= lignes.length; n += 1) {
+    if (bs.some((b) => n >= b.debut && n <= b.fin)) continue;
+    if (fs_.some((f) => n >= f.debut && n <= f.fin)) continue;
+    for (const nom of nomsDeclaresAuNiveau(lignes[n - 1], profondeurs[n - 1] ?? 0)) noms.add(nom);
+  }
+  return noms;
+}
+
+// ÉCRIRE, c'est affecter, incrémenter, ou appeler une méthode qui mute. Le motif évite `==`,
+// `===` et `=>`, qui ne sont pas des affectations — trois faux positifs qu'un `=` nu aurait tous
+// attrapés.
+export function affecteCeNom(texte = "", nom = "") {
+  const n = nom.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    `\\b${n}\\s*(?:=[^=>]|\\+\\+|--|\\+=|-=|\\.\\w+\\s*=[^=>]|\\[[^\\]]*\\]\\s*=[^=>]|\\.(?:push|pop|shift|unshift|splice|set|add|delete|clear|sort|reverse|fill)\\s*\\()`,
+  ).test(String(texte));
+}
+
+// L'appel d'une fonction reste au socle — c'est-à-dire rejoué dans chaque part, comme avant — dès
+// qu'elle TOUCHE l'état commun ou qu'elle ÉCRIT dans un nom de niveau fichier. Se tromper ici ne
+// coûte que de la lenteur ; ne pas se tromper assez coûterait une vérification.
+export function appelEstDuSocle(src = "", fn = {}, { nomsFichier = null } = {}) {
+  const lignes = String(src).split("\n");
+  const corps = lignes.slice(fn.debut - 1, fn.fin).join("\n");
+  if (TOUCHES_L_ETAT_COMMUN.test(corps)) return { socle: true, pourquoi: "touche l'état commun du jeu" };
+  const noms = nomsFichier ?? nomsDeNiveauFichier(src);
+  for (const nom of noms) {
+    if (nom === fn.nom) continue;
+    if (affecteCeNom(corps, nom)) return { socle: true, pourquoi: `écrit dans « ${nom} », un nom de niveau fichier` };
+  }
+  return { socle: false, pourquoi: null };
+}
+
+// LES UNITÉS D'APPEL DÉPLAÇABLES, avec leur poids réel lu dans les mesures d'Ezechiel. Chacune
+// porte la ligne à retirer des autres parts et les raisons d'un refus, parce qu'un refus muet se
+// lit comme une absence de candidat (leçons L5/L11).
+export function unitesAppel(src = "", { mesures = [] } = {}) {
+  const blocs = blocsDeNiveauZero(src);
+  const fonctions = fonctionsDeNiveauZero(src).filter((f) => !blocs.some((b) => f.debut >= b.debut && f.debut <= b.fin));
+  const nomsFichier = nomsDeNiveauFichier(src, { blocs, fonctions });
+  const retenues = [], refusees = [];
+  for (const f of fonctions) {
+    const appels = lignesDAppelAPlat(src, f.nom).filter((l) => !blocs.some((b) => l >= b.debut && l <= b.fin));
+    const ms = mesures.filter((m) => m.ligne >= f.debut && m.ligne <= f.fin).reduce((s, m) => s + (m.ms ?? 0), 0);
+    if (appels.length !== 1) { refusees.push({ ...f, ms, pourquoi: `${appels.length} appel(s) à plat, il en faut exactement un` }); continue; }
+    const occ = occurrencesDuNom(src, f.nom);
+    if (occ !== 2) { refusees.push({ ...f, ms, pourquoi: `le nom apparaît ${occ} fois, pas 2 : quelqu'un d'autre s'en sert` }); continue; }
+    const verdict = appelEstDuSocle(src, f, { nomsFichier });
+    if (verdict.socle) { refusees.push({ ...f, ms, pourquoi: verdict.pourquoi }); continue; }
+    retenues.push({ kind: "appel", nom: f.nom, debut: appels[0], fin: appels[0], corpsDebut: f.debut, corpsFin: f.fin, ms });
+  }
+  return { retenues, refusees };
+}
+
 export function separerSocleEtDeplacables(src = "", blocs = []) {
   const socle = [], deplacables = [];
   for (const b of blocs) (blocEstDuSocle(src, b) ? socle : deplacables).push(b);
@@ -213,11 +417,17 @@ export function repartir(blocs = [], combien = PARTS_PAR_DEFAUT) {
 // `ReferenceError` immédiat, jamais un vert silencieux. Et le garde-fou qui compte vraiment est le
 // NOMBRE DE SUCCÈS DISTINCTS : s'il tombe sous celui du séquentiel, une vérification a disparu, et
 // c'est exactement la faute que ce gain ne doit jamais coûter.
-export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPreambule = 0, epineDansCettePart = true } = {}) {
+// `appelsRetires` — LES LIGNES D'APPEL QUI NE SONT PAS DE CETTE PART (2026-10-03, tâche #1578).
+// Seule la LIGNE D'APPEL disparaît ; la DÉCLARATION de la fonction reste dans toutes les parts.
+// C'est ce qui rend ce déplacement plus sûr que celui d'un bloc : définir une fonction ne coûte
+// rien, ne touche à rien, et garantit qu'aucune référence ne se casse — là où vider un bloc
+// supprime pour de bon ce qu'il déclarait.
+export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPreambule = 0, epineDansCettePart = true, appelsRetires = [] } = {}) {
   const lignes = String(src).split("\n");
   const tousLesBlocs = blocsDeNiveauZero(src);
   const garde = new Set();
   for (const b of [...blocsGardes, ...separerSocleEtDeplacables(src, tousLesBlocs).socle]) for (let n = b.debut; n <= b.fin; n++) garde.add(n);
+  const retires = new Set(appelsRetires);
   const sortie = lignes.map((l, i) => {
     const n = i + 1;
     const dansUnBloc = tousLesBlocs.some((b) => n >= b.debut && n <= b.fin);
@@ -225,6 +435,7 @@ export function genererLaPart(src = "", blocsGardes = [], { numero = 1, finDuPre
     // LE PRÉAMBULE RESTE PARTOUT, TOUJOURS : il porte les imports, l'ouverture de la base et les
     // fonctions d'aide. Le vider casserait tout, bruyamment, et pour rien.
     if (n <= finDuPreambule) return l;
+    if (retires.has(n)) return "";
     return epineDansCettePart ? l : "";
   });
   // LE DÉFAUT LE PLUS GRAVE DE CE RUNNER, ET IL ÉTAIT SILENCIEUX (2026-09-27, quatrième lancement
@@ -379,12 +590,20 @@ export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 
   const { socle, deplacables } = separerSocleEtDeplacables(src, blocs);
   const poids = (bs) => bs.reduce((a, b) => a + mesures.filter((m) => m.ligne >= b.debut && m.ligne <= b.fin).reduce((x, m) => x + (m.ms ?? 0), 0), 0);
   const msSocle = poids(socle);
-  const msDeplacables = poids(deplacables);
+  // LE PLANCHER COMPTE DÉSORMAIS LES DEUX ESPÈCES D'UNITÉ (#1578), et ne pas l'avoir fait aurait
+  // laissé cette fonction annoncer un plafond de 121 s une heure après qu'il soit tombé à 6 — le
+  // genre de chiffre faux, daté et parfaitement crédible que ce projet refuse (leçon L29 : deux
+  // porteurs des mêmes chiffres divergent toujours, donc celui-ci DÉRIVE du même découpage que le
+  // runner au lieu de le refaire à sa façon).
+  const uA = unitesAppel(src, { mesures });
+  const msAppels = uA.retenues.reduce((a, u) => a + (u.ms ?? 0), 0);
+  const msDeplacables = poids(deplacables) + msAppels;
   const total = mesures.reduce((a, m) => a + (m.ms ?? 0), 0);
   const msEpine = Math.max(0, total - msSocle - msDeplacables);
   const plancher = msSocle + msEpine;
   return {
     mesurable: true, total, msSocle, msDeplacables, msEpine, plancher,
+    msAppels, appels: uA.retenues.length, appelsRefuses: uA.refusees.length,
     blocs: blocs.length, socle: socle.length, deplacables: deplacables.length,
     partDeLEpine: total ? msEpine / total : 0,
     projection: parts.map((n) => ({ parts: n, msTheorique: plancher + msDeplacables / n })),
@@ -514,10 +733,11 @@ export function formatPlancherLines(p = {}) {
   if (!p.mesurable) return [`PAS MESURÉ — ${p.pourquoi}`];
   const s = (ms) => `${(ms / 1000).toFixed(1)} s`;
   const L = [];
-  L.push(`${p.blocs} bloc(s) · ${p.socle} du socle · ${p.deplacables} déplaçable(s) · total chronométré ${s(p.total)}`);
-  L.push(`  ÉPINE (hors blocs, rejouée dans CHAQUE part) : ${s(p.msEpine)} — ${Math.round(p.partDeLEpine * 100)} % du total`);
-  L.push(`  socle (blocs attachés à l'état commun)       : ${s(p.msSocle)}`);
-  L.push(`  travail réellement divisible                 : ${s(p.msDeplacables)}`);
+  L.push(`${p.blocs} bloc(s) · ${p.socle} du socle · ${p.deplacables} déplaçable(s) · ${p.appels ?? 0} appel(s) déplaçable(s) · total chronométré ${s(p.total)}`);
+  L.push(`  ÉPINE (ce qui reste rejoué dans CHAQUE part)  : ${s(p.msEpine)} — ${Math.round(p.partDeLEpine * 100)} % du total`);
+  L.push(`  socle (blocs attachés à l'état commun)        : ${s(p.msSocle)}`);
+  L.push(`  travail réellement divisible                  : ${s(p.msDeplacables)}`);
+  L.push(`    dont unités d'APPEL (#1578)                 : ${s(p.msAppels ?? 0)} sur ${p.appels ?? 0} appel(s), ${p.appelsRefuses ?? 0} refusé(s) et laissé(s) au socle`);
   L.push(`  PLANCHER = ${s(p.plancher)} — aucun nombre de parts ne descend en dessous.`);
   for (const x of p.projection) L.push(`    à ${x.parts} parts → ${s(x.msTheorique)} en théorie`);
   L.push(`  HORS PORTÉE : ${p.horsPortee}`);
@@ -584,15 +804,51 @@ async function main() {
   const src = readFileSync(new URL(`../${cheminDuFilet}`, import.meta.url), "utf8");
   const blocs = blocsDeNiveauZero(src);
   const finDuPreambule = blocs[0] ? blocs[0].debut - 1 : 0;
+
+  // `--plancher` — LE CALCUL DU PLAFOND, SANS RIEN LANCER (#1578). Il existait depuis le
+  // 2026-10-03 et n'était appelé QUE par la suite de tests : une capacité réelle branchée sur
+  // rien, c'est-à-dire la leçon L2 pour la seconde fois sur ce même outil. La fiche de l'outil
+  // promet cette commande comme la source à jour de ses chiffres ; elle existe donc pour de vrai.
+  if (process.argv.includes("--plancher")) {
+    let mes = [];
+    try { mes = JSON.parse(readFileSync(new URL(`../${MESURES}`, import.meta.url), "utf8")).mesures ?? []; } catch { /* le plancher dira lui-même qu'il n'est pas mesurable */ }
+    console.log("\n=== LE PLANCHER DU PARALLÉLISME ===");
+    for (const l of formatPlancherLines(plancherDuParallelisme({ src, mesures: mes }))) console.log(l);
+    console.log("\n=== LES COUPLAGES AVEC L'ÉPINE ===");
+    for (const l of formatCouplagesLines(couplagesAvecLEpine({ src }))) console.log(l);
+    return;
+  }
   const epineIsolee = process.argv.includes("--epine-isolee");
   let mesures = [];
   try { mesures = JSON.parse(readFileSync(new URL(`../${MESURES}`, import.meta.url), "utf8")).mesures ?? []; } catch { /* pas de mesure : on répartit au nombre de blocs */ }
   const { socle, deplacables } = separerSocleEtDeplacables(src, blocs);
-  const parts = repartir(poidsDesBlocs(deplacables, mesures), combien);
+
+  // LA SECONDE ESPÈCE D'UNITÉ, ET ELLE PÈSE PLUS LOURD QUE LA PREMIÈRE (2026-10-03, tâche #1578).
+  // `--appels-partout` revient au comportement d'avant : tous les appels dans toutes les parts.
+  // L'option de retour existe parce que ce runner a déjà cassé trois fois le filet qu'il lançait,
+  // et qu'une porte de sortie coûte une ligne.
+  const appelsPartout = process.argv.includes("--appels-partout");
+  const uA = appelsPartout ? { retenues: [], refusees: [] } : unitesAppel(src, { mesures });
+  const parts = repartir([...poidsDesBlocs(deplacables, mesures), ...uA.retenues], combien);
+  const toutesLesLignesDAppel = uA.retenues.map((u) => u.debut);
 
   console.log(`\n${blocs.length} bloc(s) au total · ${deplacables.length} déplaçable(s) · ${socle.length} du SOCLE (ils touchent l'état commun, rejoués dans chaque part avec le préambule, lignes 1 à ${finDuPreambule})`);
+  if (appelsPartout) {
+    console.log("↩️  `--appels-partout` : les appels de fonction restent dans toutes les parts, comme avant la tâche #1578. Le plancher remonte à l'épine entière.");
+  } else {
+    const poids = (a) => (a.reduce((t, x) => t + (x.ms ?? 0), 0) / 1000).toFixed(1);
+    console.log(`${uA.retenues.length} APPEL(S) déplaçable(s) — ${poids(uA.retenues)} s qui étaient rejoués dans chaque part. Seule la ligne d'appel bouge ; la déclaration de la fonction reste partout.`);
+    if (uA.refusees.length) {
+      console.log(`   ${uA.refusees.length} refusé(s) (${poids(uA.refusees)} s), et le refus se dit plutôt que de se taire :`);
+      for (const r of [...uA.refusees].sort((a, b) => b.ms - a.ms).slice(0, 5)) console.log(`     · ${r.nom} — ${r.pourquoi}`);
+      if (uA.refusees.length > 5) console.log(`     · … et ${uA.refusees.length - 5} autre(s), tous dans le socle, donc rejoués comme avant.`);
+    }
+  }
   if (!mesures.length) console.log("⚠️  aucune mesure de durée trouvée : la répartition se fait à l'aveugle, au nombre de blocs et non à leur poids — lancer `node scripts/ezechiel-les-tests.mjs sante` d'abord donnerait un équilibrage réel.");
-  for (const [i, p] of parts.entries()) console.log(`  part ${i + 1} : ${String(p.blocs.length).padStart(3)} bloc(s), ${(p.ms / 1000).toFixed(1)} s de blocs attendus`);
+  for (const [i, p] of parts.entries()) {
+    const appels = p.blocs.filter((b) => b.kind === "appel").length;
+    console.log(`  part ${i + 1} : ${String(p.blocs.length - appels).padStart(3)} bloc(s) + ${String(appels).padStart(3)} appel(s), ${(p.ms / 1000).toFixed(1)} s attendues`);
+  }
 
   // LES PARTS NE VIVENT PAS DANS `scripts/`, ET C'EST LE DEUXIÈME DÉFAUT TROUVÉ AU LANCEMENT RÉEL.
   // Les y écrire semblait le plus simple (les imports du filet sont relatifs à ce dossier), et ça a
@@ -608,7 +864,13 @@ async function main() {
     // L'ÉPINE NE TOURNE QUE DANS LA PREMIÈRE PART quand l'option est demandée. Elle reste PARTOUT
     // par défaut : ce runner a déjà cassé trois fois le filet qu'il lançait, et un gain de temps
     // qui se paierait d'une vérification perdue n'est pas un gain (Article 0 de l'outillage).
-    writeFileSync(chemin, genererLaPart(src, p.blocs, { numero: i + 1, finDuPreambule, epineDansCettePart: !epineIsolee || i === 0 }));
+    const siennes = new Set(p.blocs.filter((b) => b.kind === "appel").map((b) => b.debut));
+    writeFileSync(chemin, genererLaPart(src, p.blocs.filter((b) => b.kind !== "appel"), {
+      numero: i + 1,
+      finDuPreambule,
+      epineDansCettePart: !epineIsolee || i === 0,
+      appelsRetires: toutesLesLignesDAppel.filter((l) => !siennes.has(l)),
+    }));
     return chemin.pathname;
   });
 

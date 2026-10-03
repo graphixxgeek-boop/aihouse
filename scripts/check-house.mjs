@@ -27428,9 +27428,18 @@ async function testLeFiletEnPartsRepare() {
   assert.match(F.reecrireLesImportsFreres(melange), /\.\.\/scripts\/a\.mjs/, 'a real import on a line that also mentions another path is still rewritten');
 
   // ── 3. LE PLAFOND EST UN CHIFFRE, ET IL EST CORROBORÉ PAR DEUX CHEMINS INDÉPENDANTS.
-  // L'ÉPINE — le code écrit au niveau du fichier — se rejoue dans CHAQUE part. Elle pesait 18,6 s
-  // le 2026-09-29 et 120,4 s aujourd'hui : multipliée par 6,5 en quatre jours, sans que personne
-  // le mesure, parce que le runner était mort.
+  // L'ÉPINE — ce qui se rejoue dans CHAQUE part — pesait 18,6 s le 2026-09-29 et 120,4 s le
+  // 2026-10-03 : multipliée par 6,5 en quatre jours, sans que personne le mesure, parce que le
+  // runner était mort.
+  //
+  // ⚠️ CETTE ASSERTION A ÉTÉ RETOURNÉE LE SOIR MÊME, ET C'EST LE FILET QUI L'A ATTRAPÉE. Elle
+  // exigeait que l'épine pèse PLUS de 20 % du total, parce qu'on la tenait pour un plafond
+  // incompressible. La tâche #1578 a montré que 115 de ces 120 s vivaient dans des corps de
+  // fonction parfaitement déplaçables : l'épine réelle est tombée à 2 %, et cette ligne est
+  // devenue fausse en une heure. Elle vérifie désormais ce qui reste vrai — que le plancher
+  // existe, qu'il est inférieur au total et qu'aucune projection ne passe dessous — plutôt qu'une
+  // VALEUR que le travail en cours avait pour but de faire baisser. UN TEST QUI EXIGE QU'UN
+  // DÉFAUT RESTE GRAND EMPÊCHE DE LE CORRIGER.
   const plancherVide = F.plancherDuParallelisme({ src: 'const x = 1;' });
   assert.strictEqual(plancherVide.mesurable, false, 'no timing means no floor: a floor is a sharing of TIME, and without durations there is nothing to share');
   assert.strictEqual(F.plancherDuParallelisme({ mesures: [{ ligne: 1, ms: 1 }] }).mesurable, false, 'and no net to read either');
@@ -27440,7 +27449,8 @@ async function testLeFiletEnPartsRepare() {
   if (mes.presentes && mes.mesures.length) {
     const p = F.plancherDuParallelisme({ src, mesures: mes.mesures });
     assert.strictEqual(p.mesurable, true, 'against the real net the floor is measurable');
-    assert.ok(p.msEpine > 0 && p.partDeLEpine > 0.2, `and the spine really is the ceiling (${Math.round(p.partDeLEpine * 100)} % of the total) — this is what no number of parts can divide`);
+    assert.ok(p.plancher > 0 && p.plancher < p.total, `the floor exists and is below the total (${Math.round(p.plancher / 1000)} s of ${Math.round(p.total / 1000)} s): it is what no number of parts can divide, whatever its size on the day`);
+    assert.ok(p.msEpine + p.msSocle + p.msDeplacables === p.total, 'and the three shares really do add up to the measured total: a floor computed on a partial split would be a floor computed on nothing');
     assert.ok(p.projection.every((x, i, t) => i === 0 || x.msTheorique <= t[i - 1].msTheorique), 'more parts never costs more time, and the projection shows where the gain stops');
     assert.ok(p.projection[p.projection.length - 1].msTheorique > p.plancher, 'and no projection ever dips below the floor — which is the whole point of computing it');
     assert.ok(typeof p.horsPortee === 'string' && p.horsPortee.length > 40, 'the limit is declared with the result: the line→duration attribution rests on a pairing that declares itself incomplete');
@@ -27557,3 +27567,124 @@ async function testLeSocleApprisDesEchecs() {
   console.log('Passed: le socle s\'apprend d\'un échec réel, il ne se devine pas (2026-10-03, tâche #1577). SA CONSIGNE ÉTAIT « CREUSE LE DÉTECTEUR DE SOCLE », ET CREUSER A RENDU UN RÉSULTAT NÉGATIF MESURÉ, gardé ici en contre-test pour que personne ne refasse l\'essai. LE RAISONNEMENT QUI SEMBLAIT ÉVIDENT : un bloc qui emploie un nom né ailleurs doit rester dans toutes les parts, et se tromper du bon côté ne coûte que de la lenteur. MESURÉ SUR LE VRAI FILET : 129 blocs sur 167 passent au socle, le travail réellement divisible tombe de 126 s à 7 s, et le plancher MONTE de 121 s à 240 s — c\'est-à-dire que la parallélisation ne rend plus rien du tout. ET LA CAUSE EST DU BRUIT PUR : les noms qui envoient le plus de blocs au socle sont `path` (21 blocs), `texte` (18), `chemin` (17) — des variables locales ordinaires, déclarées sous une forme que le lecteur ne voit pas (paramètre de fonction fléchée, déstructuration dans un `for…of`). C\'EST LE MÊME MUR QUE LE DÉTECTEUR DE COUPLAGES UNE HEURE PLUS TÔT, et le nommer vaut mieux que de le réessayer : distinguer un nom de portée fichier d\'une locale homonyme demande une ANALYSE DE PORTÉES ; sans elle, tout élargissement par motif est soit trop étroit (le runner tombe), soit trop large (le gain disparaît), et il n\'y a pas de réglage entre les deux. LA VOIE SAINE EST L\'AUTRE : on n\'essaie plus de DEVINER le couplage, on l\'APPREND de la part qui tombe. `ReferenceError: X is not defined` nomme le coupable avec certitude, le bloc qui DÉCLARE X rejoint le socle, et le couplage est consigné avec la date et ce qu\'on a vu — un couplage sans son échec d\'origine est une supposition, et on vient d\'en refuser deux. Le lecteur de déclarations a dû apprendre le milieu de ligne au passage : c\'est précisément sous cette forme qu\'était écrit le seul couplage réellement constaté. VÉRIFIÉ SUR LE VRAI DÉPÔT : 167 blocs, 40 au socle, 127 déplaçables — le socle reste minoritaire, donc le gain survit.');
 }
 await testLeSocleApprisDesEchecs();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1578 — L'ÉPINE N'ÉTAIT PAS UN PLAFOND, C'ÉTAIT UN DÉFAUT DE DÉCOUPAGE
+async function testLesUnitesDAppel() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LA PROFONDEUR D'ACCOLADES EST CE QUI SAUVE CE DÉTECTEUR LÀ OÙ LES DEUX PRÉCÉDENTS ONT
+  // ÉCHOUÉ. Une déclaration posée à l'intérieur d'une fonction fléchée écrite sur une ligne à
+  // plat n'est PAS de niveau fichier — c'est tout l'écart entre 40 s de gain perdu et 0,2 s.
+  assert.deepStrictEqual(F.nomsDeclaresAuNiveau('const a = 1;'), ['a'], 'a plain flat declaration is file-level');
+  assert.deepStrictEqual(F.nomsDeclaresAuNiveau('globalThis.fetch = async (...x) => { const r = await f(x); return r; };'), [], 'a declaration INSIDE an arrow body written on a flat line is NOT file-level: this is the exact noise that sent 59 functions to the socle');
+  assert.deepStrictEqual(F.nomsDeclaresAuNiveau('const f = () => { let h = 0; }; const g = 2;'), ['f', 'g'], 'and coming back out of the body restores the level, so a declaration after the arrow is not lost either');
+  assert.deepStrictEqual(F.nomsDeclaresAuNiveau('// const commente = 1;'), [], 'a commented-out declaration declares nothing');
+  assert.deepStrictEqual(F.nomsDeclaresAuNiveau('ok("const dansUneChaine = 1;");'), [], 'and one quoted inside a string even less');
+  assert.deepStrictEqual(F.nomsDeclaresAuNiveau('const z = 9;', 1), [], 'at depth one, nothing on the line is file-level');
+
+  // ── LE SUIVI DE PROFONDEUR SUR TOUT LE FICHIER, chaînes et commentaires écartés : une accolade
+  // citée dans une chaîne n'ouvre rien, et c'est ce qui empêche le compte de dériver sur 27 000
+  // lignes — une dérive d'une seule unité rendrait le détecteur faux partout en dessous.
+  assert.deepStrictEqual(F.profondeurDesLignes('a\n{\nb\n}\nc'), [0, 0, 1, 1, 0], 'depth is the depth AT THE START of each line');
+  assert.deepStrictEqual(F.profondeurDesLignes('const s = "{";\nx'), [0, 0], 'a brace inside a string opens nothing');
+  assert.deepStrictEqual(F.profondeurDesLignes('// {\nx'), [0, 0], 'nor one in a line comment');
+  assert.deepStrictEqual(F.profondeurDesLignes('/* { */\nx'), [0, 0], 'nor one in a block comment');
+
+  // ── UNE FONCTION SE DÉLIMITE PAR PROFONDEUR, JAMAIS PAR LA PREMIÈRE ACCOLADE FERMANTE
+  // (leçon L39, déjà payée par le découpeur de blocs de ce même runner).
+  const avecImbrication = ['function a() {', '  if (x) {', '  }', '}', 'function b() {', '}'].join('\n');
+  assert.deepStrictEqual(F.fonctionsDeNiveauZero(avecImbrication).map((f) => [f.nom, f.debut, f.fin]), [['a', 1, 4], ['b', 5, 6]], 'a nested brace does not end the function');
+
+  // ── L'APPEL DOIT ÊTRE SEUL SUR SA LIGNE, EN COLONNE ZÉRO. Un appel indenté est imbriqué dans
+  // autre chose ; un appel dont on garde le résultat sert à quelqu'un. Les deux se refusent.
+  assert.deepStrictEqual(F.lignesDAppelAPlat('await t();\n  await t();\nconst r = t();\nt();', 't'), [1, 4], 'only the bare, column-zero call lines count');
+
+  // ── LES QUATRE CONDITIONS, CHACUNE CONTRE-TESTÉE. C'est le filet : un faux positif ici rend un
+  // vert sur du code que personne n'exécute, et c'est la seule faute que ce runner ne doit jamais
+  // commettre.
+  const unite = (lignes) => F.unitesAppel(lignes.join('\n'), { mesures: [] });
+  const bon = unite(['async function tA() {', '  assert.ok(1);', '}', 'await tA();']);
+  assert.deepStrictEqual(bon.retenues.map((u) => [u.nom, u.debut]), [['tA', 4]], 'a clean function called exactly once is movable, and it is its CALL LINE that moves');
+  assert.strictEqual(unite(['async function tA() {', '  assert.ok(1);', '}', 'await tA();', 'await tA();']).retenues.length, 0, 'called twice: refused');
+  assert.strictEqual(unite(['async function tA() {', '  tA;', '}', 'await tA();']).retenues.length, 0, 'the name appearing a third time anywhere: refused, because we no longer know who uses it');
+  assert.strictEqual(unite(['async function tA() {', '  world = 1;', '}', 'await tA();']).retenues.length, 0, 'touching the shared game state: refused');
+  assert.strictEqual(unite(['let compteur = 0;', 'async function tA() {', '  compteur = 1;', '}', 'await tA();']).retenues.length, 0, 'WRITING into a file-level name: refused — the one condition that actually protects');
+  assert.strictEqual(unite(['let compteur = 0;', 'async function tA() {', '  assert.ok(compteur === 0);', '}', 'await tA();']).retenues.length, 1, 'but merely READING one is fine: the declaration stays in every part, so the value is there');
+
+  // ── `==`, `===` ET `=>` NE SONT PAS DES AFFECTATIONS. Un `=` nu les aurait toutes prises pour
+  // des écritures, et aurait renvoyé au socle des fonctions qui ne font que comparer.
+  assert.strictEqual(F.affecteCeNom('x = 1', 'x'), true, 'assignment is a write');
+  assert.strictEqual(F.affecteCeNom('x.push(1)', 'x'), true, 'and so is a mutating method');
+  assert.strictEqual(F.affecteCeNom('x++', 'x'), true, 'and an increment');
+  assert.strictEqual(F.affecteCeNom('x === 1', 'x'), false, 'a comparison is not');
+  assert.strictEqual(F.affecteCeNom('x => 1', 'x'), false, 'nor an arrow parameter');
+  assert.strictEqual(F.affecteCeNom('y = 1', 'x'), false, 'and another name is another name');
+
+  // ── CE QUE LE GÉNÉRATEUR FAIT DE TOUT ÇA : la LIGNE D'APPEL disparaît des parts qui ne la
+  // portent pas, la DÉCLARATION reste partout. C'est ce qui rend ce déplacement plus sûr que
+  // celui d'un bloc — vider un bloc supprime pour de bon ce qu'il déclarait, retirer un appel ne
+  // supprime rien du tout.
+  const srcMini = ['import x from "y";', '{', '}', 'async function tA() {', '  assert.ok(1);', '}', 'await tA();'].join('\n');
+  const sans = F.genererLaPart(srcMini, [], { finDuPreambule: 1, appelsRetires: [7] }).split('\n');
+  assert.strictEqual(sans[6], '', 'the call line of another part is blanked');
+  assert.match(sans[3], /async function tA/, 'but the DECLARATION stays, so no reference can break');
+  const avec = F.genererLaPart(srcMini, [], { finDuPreambule: 1, appelsRetires: [] }).split('\n');
+  assert.match(avec[6], /await tA\(\);/, 'and the part that owns the call keeps it');
+
+  // ── LE PASSAGE RÉEL SUR LE VRAI FILET (Article 25) : c'est la seule mesure qui compte, et c'est
+  // elle qui a renversé le diagnostic de « plafond » en « défaut de découpage ».
+  const vrai = fs.readFileSync('scripts/check-house.mjs', 'utf8');
+  const reelles = F.unitesAppel(vrai, { mesures: [] });
+  assert.ok(reelles.retenues.length > 100, `the real net really does hold a crowd of movable call units (${reelles.retenues.length})`);
+  assert.ok(reelles.retenues.every((u) => u.debut === u.fin), 'each one is a single line, and that line is the call');
+  const nomsFichier = F.nomsDeNiveauFichier(vrai);
+  for (const bruit of ['r', 'c', 'p', 'h']) {
+    assert.ok(!nomsFichier.has(bruit), `MUST CATCH: « ${bruit} » is a local inside an arrow body written on a flat line, never a file-level name — reading it as one cost 40 s of the gain and sent 59 functions to the socle for nothing`);
+  }
+
+  console.log('Passed: l\'épine n\'était pas un plafond, c\'était un défaut de découpage (2026-10-03, tâche #1578). CE QUE LA MESURE A RENVERSÉ : on tenait l\'épine pour incompressible — 120,4 s de code « écrit au niveau du fichier », rejoué dans les quatre parts, 49 % du filet, et un plancher à 121 s qui rendait inutile de passer à huit parts. EN LA DÉCOUPANT PLUTÔT QU\'EN LA CONTEMPLANT, 115,1 de ces 120,4 s se trouvent à l\'intérieur de 147 corps de `async function testX() { … }`, chacune appelée EXACTEMENT UNE FOIS par un `await testX();` seul sur sa ligne. Cinq secondes seulement sont du vrai code à plat. Le runner ne connaissait qu\'une seule forme d\'unité — le bloc `{` … `}` en colonne zéro — et tout ce qui ne lui ressemblait pas tombait dans « épine » par défaut. UNE FONCTION EST POURTANT L\'UNITÉ LA PLUS SÛRE QUI SOIT : son corps est étanche par construction du langage, rien de ce qu\'elle déclare ne fuit, là où un bloc de niveau zéro partage le fichier. Et ce n\'est pas la fonction qui bouge, c\'est son APPEL : la déclaration reste dans toutes les parts, définir une fonction ne coûte rien et garantit qu\'aucune référence ne se casse. LA PROFONDEUR D\'ACCOLADES EST CE QUI SAUVE CE DÉTECTEUR LÀ OÙ LES DEUX PRÉCÉDENTS ONT ÉCHOUÉ, et la différence mérite d\'être nommée : ces deux-là devaient savoir d\'où venait un nom EMPLOYÉ, ce qui demande une analyse de portées ; celui-ci n\'a qu\'à savoir si une DÉCLARATION est imbriquée, et ça se COMPTE. Le premier jet l\'ignorait et renvoyait 59 fonctions au socle, 40,7 s de gain perdu, pour des « r », « c », « p » qui sont des locales de fonctions fléchées écrites sur une ligne à plat. Après correction : 138 appels déplaçables, 114,9 s, et 0,2 s refusés. MESURÉ EN VRAI, ET VÉRIFIÉ PLUS FINEMENT QUE PAR UN COMPTE : 4 parts vertes en 82,2 s contre 167,0 s avant et 266 s en séquentiel, et la liste des tests exécutés est IDENTIQUE à celle du séquentiel, sujet par sujet — les quatre lignes qui diffèrent sont des tests qui impriment un chiffre vivant, pas des tests perdus.');
+}
+await testLesUnitesDAppel();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1579 — UNE LIGNE DE REGISTRE ÉCRITE PUIS JAMAIS LUE SE CROIT PRISE EN COMPTE
+async function testLeRegistreDesPartsSaitCeQuIlNaPasLu() {
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+
+  // ── LA DURÉE S'ÉCRIT COMME UNE MAIN L'ÉCRIT. Le lecteur n'acceptait que des entiers nus ; deux
+  // lignes écrites le même soir avec une décimale et un gras — deux formes parfaitement ordinaires
+  // dans un registre dont l'en-tête dit « à remplir à la main » — n'ont pas été lues.
+  const lire = (md) => E.lignesDuRegistreDesParts(md);
+  assert.strictEqual(lire('| 2026-10-03 | 4 | 44 s | ✅ 78 s |').length, 1, 'a plain integer still reads');
+  assert.strictEqual(lire('| 2026-10-03 | 4 | 82,2 s | ✅ 248 s |')[0].partsSecondes, 82.2, 'a French decimal comma reads as a number');
+  assert.strictEqual(lire('| 2026-10-03 | 4 | 82.2 s | ✅ 248 s |')[0].partsSecondes, 82.2, 'and a decimal point too');
+  assert.strictEqual(lire('| 2026-10-03 | 4 | **82,2 s** | ✅ 248,5 s |')[0].partsSecondes, 82.2, 'markdown emphasis around the figure is not a reason to drop the row');
+  assert.strictEqual(lire('| 2026-10-03 | 4 | **82,2 s** | ✅ 248,5 s |')[0].sequentielAnnonce, 248.5, 'and the announced sequential reads with its decimal as well');
+
+  // ── LE VRAI DÉFAUT N'EST PAS LE REFUS, C'EST LE SILENCE (leçon L5). Une ligne écrite que
+  // personne ne lit se croit prise en compte, et la confrontation rendait « 1 ligne, confirmée »
+  // sur un registre qui en portait trois — ce qui se lit comme un registre entièrement vérifié.
+  assert.deepStrictEqual(E.lignesDePartIllisibles('| 2026-10-03 | 4 | 44 s | ✅ 78 s |'), [], 'a readable row is not reported');
+  assert.strictEqual(E.lignesDePartIllisibles('| 2026-10-03 | 4 | environ une minute | x |').length, 1, 'MUST CATCH: a row that BEGINS like a passage and cannot be read is named, never skipped');
+  assert.deepStrictEqual(E.lignesDePartIllisibles('| Date | Parts | Durée |\n|---|---|---|'), [], 'and a header or separator is not a failed passage row');
+
+  // ── LE SIGNALEMENT PASSE AVANT TOUT LE RESTE, Y COMPRIS AVANT UN « PAS MESURÉ » : les deux
+  // disent des choses différentes, et celui-ci est le seul qui accuse quelqu'un.
+  const avecIllisible = E.formatConfrontationDesPartsLines({ mesurable: false, pourquoi: 'rien', illisibles: ['| 2026-10-03 | 4 | une minute | x |'] });
+  assert.match(avecIllisible[0], /n'ont pas pu être lues/, 'the unreadable rows are announced first');
+  assert.match(avecIllisible.join('\n'), /PAS MESURÉ/, 'and the rest of the verdict still follows');
+  assert.ok(!E.formatConfrontationDesPartsLines({ mesurable: true, verdicts: [], confrontes: 0, total: 0, illisibles: [] }).join('\n').includes('pas pu être lues'), 'a clean registry says nothing about unreadable rows');
+
+  // ── LE PASSAGE RÉEL (Article 25) : le vrai registre se lit entièrement, et son chiffre tombe
+  // bien dans l'intervalle des passages séquentiels réellement chronométrés le jour dit.
+  const reel = E.confronterLesParts();
+  if (reel.mesurable) {
+    assert.deepStrictEqual(reel.illisibles, [], `MUST CATCH: every row of the real registry must be readable, and ${reel.illisibles.length} are not`);
+    assert.ok(reel.total >= 3, `the real registry holds its passages (${reel.total} rows read)`);
+    assert.ok(!reel.verdicts.some((v) => v.etat === 'à revoir'), 'and no announced figure falls outside the runs measured that day');
+  }
+
+  console.log('Passed: une ligne de registre écrite puis jamais lue se croit prise en compte (2026-10-03, tâche #1579). TROUVÉ EN ÉCRIVANT DEUX LIGNES PARFAITEMENT ORDINAIRES : le registre des passages en parts se remplit à la main — son en-tête le dit — et le lecteur n\'acceptait que des entiers nus. « 167,0 s » et « **82,2 s** », une décimale et un gras, n\'ont pas été lus. LE DÉFAUT N\'EST PAS LE REFUS, C\'EST LE SILENCE : la confrontation a rendu « 1 ligne confrontée sur 1, confirmée » sur un registre qui en portait TROIS, et cette phrase-là se lit comme un registre entièrement vérifié. C\'est la leçon L5 à l\'endroit exact où elle fait le plus de dégâts — une absence qui se lit comme une absence de problème — et c\'est aussi la leçon L4 par l\'autre bout : un garde-fou qui reproche à une main d\'écrire « 82,2 » plutôt que « 82 » cesse d\'être lu, exactement comme celui qui lui reprochait d\'arrondir avait dû être corrigé en septembre. DEUX CORRECTIONS, ET LA SECONDE EST LA SEULE QUI PROTÈGE VRAIMENT : le motif accepte désormais la décimale, la virgule française et l\'emphase ; et surtout, une ligne qui COMMENCE comme un passage — barre, date — sans pouvoir être lue est NOMMÉE en tête du rapport, avant même le verdict. Élargir un motif ne ferme jamais la classe : il y aura toujours une forme d\'écriture non prévue, et la seule protection durable est que le lecteur avoue ce qu\'il n\'a pas su lire. Vérifié sur le vrai registre : 3 lignes sur 3 lues, 0 illisible, les trois chiffres annoncés confirmés contre les passages séquentiels chronométrés le jour dit.');
+}
+await testLeRegistreDesPartsSaitCeQuIlNaPasLu();

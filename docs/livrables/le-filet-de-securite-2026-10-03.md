@@ -9,9 +9,9 @@
 | | |
 |---|---|
 | Le fichier | `scripts/check-house.mjs` |
-| Lignes de code | 27 245 |
-| Groupes de vérification | 411 |
-| Assertions (les vérifications élémentaires) | 8 075 |
+| Lignes de code | 27 639 |
+| Groupes de vérification | 418 |
+| Assertions (les vérifications élémentaires) | 8 200 |
 | Assertions par groupe, en moyenne | 19.6 |
 
 **Un GROUPE est une fonction de test qui se termine par une ligne `Passed:`** — c'est l'unité que
@@ -21,7 +21,7 @@ l'intérieur d'un groupe. Les deux comptent : un groupe dit CE QUI est protégé
 
 ### Où le volume se concentre
 
-Les **10 plus gros groupes** représentent **20 %** des 27 242 lignes de test.
+Les **10 plus gros groupes** représentent **19 %** des 27 636 lignes de test.
 
 | Lignes | Groupe |
 |---|---|
@@ -36,7 +36,7 @@ Les **10 plus gros groupes** représentent **20 %** des 27 242 lignes de test.
 | 326 | le système des index (2026-09-26, son point 4 — « vérifier l |
 | 315 | the Article 28 chain is now mechanically enforceable end to end (2026-09-23) — dates render in full letters fr… |
 
-**4 titre(s) en double** — deux groupes au même titre testent probablement la même chose deux fois, ou l'un a été copié puis modifié à moitié.
+**5 titre(s) en double** — deux groupes au même titre testent probablement la même chose deux fois, ou l'un a été copié puis modifié à moitié.
 
 ## ② COMMENT ON LE MANIPULE
 
@@ -95,10 +95,10 @@ une autre question.
 
 | État | Constat | Suite |
 |---|---|---|
-| ✅ MESURÉ | le filet porte 411 groupes et 8 075 assertions sur 27 245 lignes | #1547 |
+| ✅ MESURÉ | le filet porte 418 groupes et 8 200 assertions sur 27 639 lignes | #1547 |
 | ✅ MESURÉ | aucun groupe muet ni tautologique : l'allègement devra venir de la VITESSE, jamais du nombre de contrôles | #1547 |
 | → RETENU | le recollage chronomètre↔groupes est INCOMPLET : le total est juste, le détail par groupe serait faux. Le découpage doit compter les lignes `Passed`, pas les fonctions | #1547 |
-| ? À INSTRUIRE | 4 titre(s) de groupe en double : même chose testée deux fois, ou copie modifiée à moitié ? | #1547 |
+| ? À INSTRUIRE | 5 titre(s) de groupe en double : même chose testée deux fois, ou copie modifiée à moitié ? | #1547 |
 | ? À TRANCHER | le filet bloque au crochet *pre-commit* : faut-il le garder bloquant, ou le passer en partie après coup ? | #1485 |
 
 <!-- /DOCUMENT GÉNÉRÉ -->

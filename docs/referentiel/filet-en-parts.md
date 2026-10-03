@@ -20,16 +20,69 @@ donc du CALCUL — et contre du calcul, il n'y a qu'un levier.
 ## Ce qui se sépare ici, et ce qui refuse — mesuré, jamais supposé
 
 `obstaclesAuParallele()` d'Ezechiel a été écrit et lancé AVANT ce runner (arbitrage explicite de
-l'utilisateur : « Ezechiel cherche d'abord »). Chiffres réels sur `scripts/check-house.mjs` :
+l'utilisateur : « Ezechiel cherche d'abord »).
 
-- **156 blocs de niveau zéro** (`{` puis `}` seuls en colonne 0) ;
-- **115 déplaçables** — 45,8 s ;
-- **41 du socle** parce qu'ils touchent l'état commun — 0,9 s seulement, donc la prudence est
-  quasiment gratuite ;
-- **l'épine hors blocs** (préambule + ~70 tests écrits au niveau du fichier) — 18,6 s ;
-- **socle total rejoué dans chaque part : 19,5 s**, ce qui fixe le plancher.
+⚠️ **LES CHIFFRES DE CETTE SECTION SE RELISENT, ILS NE SE CROIENT PAS** (Article 24). Ils ont été
+périmés une fois, et de loin : la version du 2026-09-27 annonçait une épine de 18,6 s ; elle en
+pesait 120,4 quatre jours plus tard, sans qu'une ligne de ce document l'ait dit. La commande qui
+les rend à jour est `node scripts/filet-en-parts.mjs --plancher`, et c'est elle qui fait foi.
+
+**Chiffres réels sur `scripts/check-house.mjs`, relevés le 2026-10-03 :**
+
+- **167 blocs de niveau zéro** (`{` puis `}` seuls en colonne 0) ;
+- **127 déplaçables**, **40 du socle** parce qu'ils touchent l'état commun — 0,9 s seulement, donc
+  la prudence est quasiment gratuite ;
+- **138 unités d'APPEL déplaçables** — 114,9 s. C'est la seconde espèce d'unité, et elle pèse plus
+  lourd que la première (voir la section suivante) ;
+- **l'épine réellement à plat** — 5,5 s, contre 120,4 s avant qu'on sache la découper ;
 - **zéro collision d'écriture** sur un chemin lisible, 4 écritures dans un dossier temporaire unique
   par construction, 3 écritures dont le chemin reste illisible (déclarées NON MESURÉES).
+
+## Les deux espèces d'unité déplaçable, et la seconde est la plus sûre
+
+**LE BLOC** `{` … `}` en colonne zéro était la seule unité connue pendant quatre jours. Tout ce qui
+ne lui ressemblait pas tombait dans « l'épine » — le code rejoué dans chaque part — par défaut, et
+non par mesure. L'épine passait ainsi pour un plafond incompressible à 120,4 s, soit 49 % du filet.
+
+**L'APPEL** (#1578, 2026-10-03) a renversé ce diagnostic : 115,1 des 120,4 s de l'épine vivent dans
+147 corps de `async function testX() { … }`, chacune appelée exactement une fois par un
+`await testX();` seul sur sa ligne. **Une fonction est l'unité la plus sûre qui soit** — son corps
+est étanche par construction du langage, rien de ce qu'elle déclare ne fuit, là où un bloc de niveau
+zéro partage le fichier. Et ce n'est pas la fonction qui se déplace, c'est son APPEL : la
+déclaration reste dans toutes les parts, puisque définir une fonction ne coûte rien et garantit
+qu'aucune référence ne se casse.
+
+**Les quatre conditions, et aucune ne se négocie** : déclarée au niveau zéro · son nom n'apparaît
+que deux fois dans tout le fichier (sa déclaration et son appel) · l'appel est seul sur sa ligne, en
+colonne zéro, sans affectation de résultat · son corps ne touche pas l'état commun et n'ÉCRIT dans
+aucun nom de niveau fichier. La quatrième est celle qui protège réellement, et elle se trompe du bon
+côté : une locale homonyme fait rester l'appel au socle, c'est-à-dire qu'il tourne partout comme
+avant — on perd un peu de gain, jamais une vérification.
+
+**La profondeur d'accolades est ce qui sauve ce détecteur là où deux autres ont échoué le même
+jour**, et la différence vaut d'être nommée : ces deux-là devaient savoir d'où venait un nom
+EMPLOYÉ, ce qui demande une analyse de portées ; celui-ci n'a qu'à savoir si une DÉCLARATION est
+imbriquée, et ça se compte. Le premier jet l'ignorait, lisait les `const r` posés dans des fonctions
+fléchées écrites sur une ligne à plat comme des variables de niveau fichier, et renvoyait 59
+fonctions au socle — 40,7 s de gain perdu pour du bruit d'homonymes. Après correction : 0,2 s
+refusés.
+
+**Le retour en arrière tient en une option** : `--appels-partout` rend le comportement d'avant.
+
+| Étape | Durée du filet en 4 parts | Plancher théorique |
+|---|---|---|
+| séquentiel | 266 s | — |
+| runner réparé (blocs seuls) | 167,0 s | 121,3 s |
+| **+ unités d'appel** | **82,2 s** | **6,4 s** |
+
+**Le plancher change la forme du problème, pas seulement sa taille.** Tant qu'il valait 121 s,
+passer à huit parts n'avait aucun intérêt — la projection donnait 137 s, c'est-à-dire pire qu'à
+quatre. À 6,4 s, la même projection donne 36,6 s. Ce qui limite désormais le filet n'est plus sa
+structure, c'est le nombre de cœurs de la machine.
+
+**Et la vérification qui compte n'est pas la durée** : la liste des tests exécutés est IDENTIQUE à
+celle du séquentiel, sujet par sujet — 436 des deux côtés, les quatre lignes qui diffèrent étant des
+tests qui impriment un chiffre vivant.
 
 ## Les trois défauts trouvés aux trois premiers lancements réels
 

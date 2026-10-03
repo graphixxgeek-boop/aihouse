@@ -1424,8 +1424,20 @@ export function lireHistorique({ root = ROOT, lire = null } = {}) {
 // passages réellement chronométrés ce jour-là — un seuil que les mesures du jour fixent
 // elles-mêmes, ce qui évite d'en inventer un (BP5).
 export const REGISTRE_DES_PARTS = "docs/filet-en-parts/index.md";
-export const MOTIF_LIGNE_DE_PART = /^\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*(\d+)\s*\|\s*(\d+)\s*s\s*\|\s*([^|]*)\|/;
-export const MOTIF_SEQUENTIEL_ANNONCE = /(\d+)\s*s/;
+// LA DURÉE S'ÉCRIT COMME UNE MAIN L'ÉCRIT : « 44 s », « 167,0 s », « **82,2 s** » (2026-10-03).
+// La première version n'acceptait que des entiers nus. Deux lignes écrites le même soir, avec une
+// décimale et un gras parfaitement ordinaires dans un registre dont l'en-tête dit « à remplir à la
+// main », n'ont donc pas été lues — et le défaut n'est pas qu'elles soient refusées, c'est
+// qu'elles aient disparu SANS UN MOT : la confrontation rendait « 1 ligne, confirmée », ce qui se
+// lit comme un registre entièrement vérifié. Même classe que tout ce que ce projet ferme ailleurs
+// (leçon L5) : une absence qui se lit comme une absence de problème.
+export const MOTIF_LIGNE_DE_PART = /^\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*\**\s*(\d+)\s*\**\s*\|\s*\**\s*(\d+(?:[.,]\d+)?)\s*s\s*\**\s*\|\s*([^|]*)\|/;
+// Une ligne qui COMMENCE comme un passage — barre, date — mais que le motif complet refuse. Elle
+// est signalée nommément plutôt que sautée.
+export const MOTIF_LIGNE_DE_PART_APPROCHANTE = /^\|\s*\d{4}-\d{2}-\d{2}\s*\|/;
+export const MOTIF_SEQUENTIEL_ANNONCE = /(\d+(?:[.,]\d+)?)\s*s/;
+
+const nombreEcritALaMain = (x) => Number(String(x).replace(",", "."));
 
 export function lignesDuRegistreDesParts(markdown = "") {
   const out = [];
@@ -1433,9 +1445,16 @@ export function lignesDuRegistreDesParts(markdown = "") {
     const m = ligne.match(MOTIF_LIGNE_DE_PART);
     if (!m) continue;
     const annonce = m[4].match(MOTIF_SEQUENTIEL_ANNONCE);
-    out.push({ date: m[1], parts: Number(m[2]), partsSecondes: Number(m[3]), sequentielAnnonce: annonce ? Number(annonce[1]) : null });
+    out.push({ date: m[1], parts: Number(m[2]), partsSecondes: nombreEcritALaMain(m[3]), sequentielAnnonce: annonce ? nombreEcritALaMain(annonce[1]) : null });
   }
   return out;
+}
+
+// CE QUE LE LECTEUR N'A PAS SU LIRE, et le dire vaut mieux que de rendre un registre amputé.
+export function lignesDePartIllisibles(markdown = "") {
+  return String(markdown).split("\n")
+    .filter((l) => MOTIF_LIGNE_DE_PART_APPROCHANTE.test(l) && !MOTIF_LIGNE_DE_PART.test(l))
+    .map((l) => l.slice(0, 80));
 }
 
 export function confronterLesParts({ root = ROOT, lire = null, historique = null } = {}) {
@@ -1445,8 +1464,9 @@ export function confronterLesParts({ root = ROOT, lire = null, historique = null
     return { mesurable: false, pourquoi: `${REGISTRE_DES_PARTS} est illisible — sur un autre dépôt ce registre n'existe pas, et c'est un résultat, jamais un zéro` };
   }
   const lignes = lignesDuRegistreDesParts(brut);
+  const illisibles = lignesDePartIllisibles(brut);
   if (!lignes.length) {
-    return { mesurable: false, pourquoi: "aucune ligne de passage dans le registre des parts — rien à confronter, ce qui n'est pas la même chose qu'un accord" };
+    return { mesurable: false, illisibles, pourquoi: "aucune ligne de passage dans le registre des parts — rien à confronter, ce qui n'est pas la même chose qu'un accord" };
   }
   const releves = historique ?? lireHistorique({ root, lire });
   const verdicts = [];
@@ -1478,12 +1498,19 @@ export function confronterLesParts({ root = ROOT, lire = null, historique = null
         ? `${secondes.length} passage(s) séquentiel(s) chronométré(s) le ${l.date}, entre ${bas} et ${haut} s : le chiffre annoncé tombe dedans (le plus proche est à ${mesure} s, ${ecartPct} % d'écart)`
         : `${secondes.length} passage(s) séquentiel(s) chronométré(s) le ${l.date}, entre ${bas} et ${haut} s : ${l.sequentielAnnonce} s annoncés tombent HORS de cet intervalle — le chiffre ne vient pas d'un passage de ce jour-là` });
   }
-  return { mesurable: true, verdicts, confrontes: verdicts.filter((v) => v.etat === "confirmé" || v.etat === "à revoir").length, total: verdicts.length };
+  return { mesurable: true, verdicts, illisibles, confrontes: verdicts.filter((v) => v.etat === "confirmé" || v.etat === "à revoir").length, total: verdicts.length };
 }
 
 export function formatConfrontationDesPartsLines(c) {
-  if (!c?.mesurable) return [`FILET EN PARTS — 🚨 PAS MESURÉ : ${c?.pourquoi ?? "raison inconnue"}`];
-  const l = [`FILET EN PARTS — ${c.confrontes} ligne(s) confrontée(s) sur ${c.total} du registre écrit à la main :`];
+  // LES LIGNES ILLISIBLES SE DISENT AVANT TOUT LE RESTE, Y COMPRIS QUAND LE RESTE EST « PAS
+  // MESURÉ » : une ligne écrite puis jamais lue est pire qu'une ligne absente, parce que son
+  // auteur la croit prise en compte (2026-10-03).
+  const prefixe = (c?.illisibles?.length ?? 0)
+    ? [`FILET EN PARTS — 🚨 ${c.illisibles.length} ligne(s) du registre COMMENCENT comme un passage et n'ont pas pu être lues. Une ligne écrite que personne ne lit se croit prise en compte :`,
+       ...c.illisibles.map((x) => `     · ${x}`)]
+    : [];
+  if (!c?.mesurable) return [...prefixe, `FILET EN PARTS — 🚨 PAS MESURÉ : ${c?.pourquoi ?? "raison inconnue"}`];
+  const l = [...prefixe, `FILET EN PARTS — ${c.confrontes} ligne(s) confrontée(s) sur ${c.total} du registre écrit à la main :`];
   for (const v of c.verdicts) {
     const marque = v.etat === "confirmé" ? "✅" : v.etat === "à revoir" ? "⚠️" : "·";
     l.push(`  ${marque} ${v.date} — ${v.parts} parts en ${v.partsSecondes} s, séquentiel annoncé ${v.sequentielAnnonce ?? "—"} s : ${v.pourquoi}`);
