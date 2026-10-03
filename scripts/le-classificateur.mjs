@@ -1303,7 +1303,7 @@ export function carteDesAxes({ categories = AGENT_CATEGORIES, rangDe = rangDeLaC
 // mesuré depuis le 2026-09-23 sur 34 outils réels, sans que la classification l'ait jamais ramassé.
 export const AXES_DE_CLASSIFICATION = [
   { cle: "iceberg", quoi: "à quel groupe il appartient (membre, oublié, infrastructure, plomberie)", porteur: "classerIceberg()" },
-  { cle: "type", quoi: "ce que le fichier EST", porteur: "typeDuScript()" },
+  { cle: "type", quoi: "ce que le fichier EST", porteur: "typeDeScript()" },
   { cle: "moment", quoi: "QUAND il intervient", porteur: "momentsDeLOutil()" },
   { cle: "domaine", quoi: "SUR QUOI il regarde", porteur: "domainesDeLOutil()" },
   { cle: "destinataire", quoi: "À QUI le résultat sert", porteur: "destinatairesDeLOutil()" },
@@ -1429,6 +1429,63 @@ export function formatAxesDivergentsLines(r) {
   if (!r.codeSansDocument.length && !r.documentSansCode.length && !r.sansCle.length) {
     out.push("   ✅ Les deux listes disent la même chose, dans les deux sens.");
   }
+  return out;
+}
+
+// LE PORTEUR D'UN AXE PEUT MOURIR SANS QUE PERSONNE NE S'EN APERÇOIVE (2026-10-03, tâche #1529).
+// Trouvé en VÉRIFIANT, jamais en relisant : `AXES_DE_CLASSIFICATION` annonçait « typeDuScript() »
+// quand la fonction s'appelle `typeDeScript()` — une lettre, et le renvoi ne menait nulle part
+// depuis le jour du renommage. Rien ne cassait : le champ `porteur` est du TEXTE, lu par des
+// humains et par le document de classification, jamais appelé par le code.
+//
+// POURQUOI C'EST PIRE QU'UNE ABSENCE, et l'Article 28 le dit de la chaîne des tâches dans les
+// mêmes termes : « une référence morte ressemble à un lien ». Un axe sans porteur déclaré se voit ;
+// un axe qui en déclare un faux donne la certitude qu'on pourrait aller voir, et personne n'y va.
+// Le prochain agent qui cherche `typeDuScript` ne trouve rien et conclut que l'axe n'est plus porté.
+//
+// LA MESURE EST VOLONTAIREMENT LARGE : la fonction est cherchée dans TOUT `scripts/`, pas seulement
+// ici, parce que trois porteurs sur neuf vivent chez un autre outil (SAFE-EXPORT, HARMONIA) et que
+// c'est légitime — un axe peut être LU ailleurs plutôt que recalculé (leçon L29). Ce qui se vérifie
+// est donc « ce nom existe-t-il quelque part dans l'outillage », jamais « est-il défini ici ».
+export const MOTIF_NOM_DE_PORTEUR = /([A-Za-z_$][\w$]*)\s*\(\)/;
+
+export function nomDuPorteur(porteur) {
+  return String(porteur ?? "").match(MOTIF_NOM_DE_PORTEUR)?.[1] ?? null;
+}
+
+export function findPorteursInexistants({ axes = AXES_DE_CLASSIFICATION, root = ROOT, lire = lireFichierPartage, lireDossier = readdirSync } = {}) {
+  let fichiers;
+  try {
+    fichiers = lireDossier(join(root, "scripts")).filter((f) => f.endsWith(".mjs"));
+  } catch {
+    fichiers = [];
+  }
+  if (!fichiers.length) {
+    return { mesurable: false, pourquoi: "aucun fichier .mjs lu dans scripts/ — un parc vide rendrait TOUS les porteurs morts, ce qui serait un faux total, pas une mesure (leçon L11)" };
+  }
+  const definis = new Set();
+  for (const f of fichiers) {
+    let src = "";
+    try { src = lire(join(root, "scripts", f)); } catch { continue; }
+    for (const m of src.matchAll(/(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g)) definis.add(m[1]);
+    for (const m of src.matchAll(/(?:export\s+)?const\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?(?:\(|function)/g)) definis.add(m[1]);
+  }
+  const morts = [];
+  const sansNom = [];
+  for (const a of axes) {
+    const nom = nomDuPorteur(a.porteur);
+    if (!nom) { sansNom.push(a.cle); continue; }
+    if (!definis.has(nom)) morts.push({ cle: a.cle, nom, porteur: a.porteur });
+  }
+  return { mesurable: true, total: axes.length, fonctionsVues: definis.size, morts, sansNom };
+}
+
+export function formatPorteursInexistantsLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r.pourquoi}`];
+  const out = [`PORTEURS D'AXES — ${r.total} axe(s) déclaré(s), confrontés à ${r.fonctionsVues} fonction(s) réellement définies dans scripts/.`];
+  for (const m of r.morts) out.push(`   ⚠️ axe « ${m.cle} » annonce ${m.nom}() — cette fonction n'existe nulle part : une référence morte ressemble à un lien, ce qui est pire qu'une absence.`);
+  for (const c of r.sansNom) out.push(`   · axe « ${c} » ne nomme aucune fonction : son porteur n'est pas adressable, donc il échappe à cette vérification.`);
+  if (!r.morts.length && !r.sansNom.length) out.push("   ✅ Chaque axe nomme un porteur qui existe pour de vrai.");
   return out;
 }
 
@@ -1729,7 +1786,7 @@ export function postesDeTousLesOutils({ croise = null, derivees = OBLIGATIONS_DE
 export function blocsDeClassification({
   recensement = null, categories = AGENT_CATEGORIES, rangs = ORG_RANKS, types = TYPES_DE_SCRIPT,
   classes = CLASSES_TRANSVERSES, posteDuRang = POSTE_PAR_RANG, poste = POSTE_DE_TRAVAIL,
-  axes = AXES_DE_CLASSIFICATION, divergenceAxes = null, horodatage = null,
+  axes = AXES_DE_CLASSIFICATION, divergenceAxes = null, porteursMorts = null, horodatage = null,
 } = {}) {
   recensement ??= recenserLesScripts();
   divergenceAxes ??= axesDivergentDuReferentiel();
@@ -1940,6 +1997,23 @@ export function blocsDeClassification({
     "**Le référentiel et le code ne déclarent pas le même nombre d'axes**",
     divergenceAxes.pourquoi,
     "réécrire à la main le §1 de `docs/referentiel/organisation-agence.md` — la prose est humaine, seul l'écart est mécanique",
+  ]);
+
+  // LE PORTEUR DÉCLARÉ EXISTE-T-IL VRAIMENT ? Cette ligne-ci est née d'un cas réel : l'axe `type`
+  // a annoncé `typeDuScript()` pendant des jours alors que la fonction s'appelle `typeDeScript()`.
+  // Elle est posée DANS le document généré plutôt que dans un contrôle à part, parce que c'est ici
+  // qu'on vient lire « qui porte quoi » — un garde-fou qui crie ailleurs que là où la question se
+  // pose n'est pas lu.
+  const porteurs = porteursMorts ?? findPorteursInexistants({ axes });
+  if (!porteurs.mesurable) constats.push([
+    "**Les porteurs d'axes : 🚨 PAS MESURÉ**",
+    porteurs.pourquoi,
+    "rétablir la lecture de `scripts/` avant de conclure que les porteurs sont bons",
+  ]);
+  else for (const m of porteurs.morts) constats.push([
+    `**L'axe « ${m.cle} » annonce un porteur qui n'existe pas** — \`${m.nom}()\``,
+    "une référence morte ressemble à un lien, ce qui est pire qu'une absence : on croit pouvoir aller voir, et personne n'y va",
+    "corriger le nom dans `AXES_DE_CLASSIFICATION`, ou écrire le porteur s'il n'a jamais existé",
   ]);
 
   if (constats.length) {

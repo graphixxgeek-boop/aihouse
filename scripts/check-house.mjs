@@ -22218,6 +22218,59 @@ async function testAxesPubliesSansDoublon() {
 await testAxesPubliesSansDoublon();
 
 // =============================================================================================
+// #1529 — UN AXE QUI DÉCLARE UN PORTEUR QUI N'EXISTE PAS
+// =============================================================================================
+// TROUVÉ EN VÉRIFIANT, JAMAIS EN RELISANT : `AXES_DE_CLASSIFICATION` annonçait « typeDuScript() »
+// quand la fonction s'appelle `typeDeScript()`. Une lettre, et le renvoi ne menait nulle part
+// depuis le renommage. Rien ne cassait, parce que le champ `porteur` est du TEXTE : il est lu par
+// des humains et recopié dans le document de classification, jamais appelé par le code.
+//
+// C'EST PIRE QU'UNE ABSENCE, et l'Article 28 le dit déjà de la chaîne des tâches dans les mêmes
+// mots : « une référence morte ressemble à un lien ». Un axe sans porteur déclaré se voit ; un axe
+// qui en déclare un faux donne la certitude qu'on pourrait aller voir, et personne n'y va.
+async function testPorteursDAxesExistent() {
+  const LC = await import('../scripts/le-classificateur.mjs');
+
+  const r = LC.findPorteursInexistants();
+  assert.equal(r.mesurable, true, 'the guard must actually measure: a non-measure must never read as a green');
+  assert.ok(r.fonctionsVues > 100, `the function index must really be populated (${r.fonctionsVues} seen) — an empty index would make EVERY porteur dead, a false total rather than a measurement (L11)`);
+  assert.deepEqual(r.morts, [], 'checked live: every declared axis names a function that exists somewhere in scripts/');
+
+  // ET IL MORD ENCORE, dans les deux sens (BP4) : sans cette contre-épreuve, un garde-fou vert
+  // peut l'être parce qu'il ne regarde rien.
+  const casse = LC.findPorteursInexistants({ axes: [{ cle: 'faux', porteur: 'jeNExistePasDuTout()' }] });
+  assert.equal(casse.morts.length, 1, 'MUST STILL BITE on a dead reference — a guard that cannot accuse is decoration');
+  assert.equal(casse.morts[0].nom, 'jeNExistePasDuTout');
+
+  // UN PORTEUR QUI NE NOMME AUCUNE FONCTION N'EST PAS UNE ERREUR, mais il n'est pas vérifiable
+  // non plus : il est listé à part plutôt que compté comme bon, sans quoi « je ne sais pas »
+  // passerait pour « tout va bien ».
+  const muet = LC.findPorteursInexistants({ axes: [{ cle: 'muet', porteur: 'à la main, chez HARMONIA' }] });
+  assert.deepEqual(muet.morts, []);
+  assert.deepEqual(muet.sansNom, ['muet'], 'an unaddressable porteur is reported as unverifiable, never silently counted as sound');
+
+  // LE PORTEUR PEUT VIVRE CHEZ UN AUTRE OUTIL, et c'est légitime : trois des neuf axes sont LUS
+  // chez SAFE-EXPORT ou HARMONIA plutôt que recalculés ici (leçon L29). La recherche porte donc
+  // sur tout scripts/, et ce test l'épingle — la restreindre à ce fichier rendrait ces trois morts.
+  const ailleurs = LC.findPorteursInexistants({ axes: [{ cle: 'exportabilite', porteur: 'etatDuKit() — SAFE-EXPORT' }] });
+  assert.deepEqual(ailleurs.morts, [], 'a porteur living in ANOTHER tool is sound, not dead: that is the whole point of reading a measure instead of recomputing it (L29)');
+
+  // UN PARC VIDE DIT « PAS MESURÉ », jamais « tout va bien » (L5/L11).
+  const vide = LC.findPorteursInexistants({ lireDossier: () => [] });
+  assert.equal(vide.mesurable, false, 'an empty parc must refuse to conclude rather than declare every porteur dead or sound');
+  assert.ok(LC.formatPorteursInexistantsLines(vide)[0].includes('PAS MESURÉ'));
+
+  // ET LE CONSTAT REMONTE DANS LE DOCUMENT GÉNÉRÉ, là où l'on vient lire « qui porte quoi » :
+  // un garde-fou qui crie ailleurs que là où la question se pose n'est pas lu (L2).
+  const doc = LC.blocsDeClassification({ porteursMorts: { mesurable: true, total: 1, fonctionsVues: 9, morts: [{ cle: 'zz', nom: 'jamais', porteur: 'jamais()' }], sansNom: [] } });
+  const lignes = doc.blocs.filter((b) => b.type === 'table').flatMap((b) => b.rows ?? []);
+  assert.ok(lignes.some((l) => /« zz » annonce un porteur qui n'existe pas/.test(l[0])), 'the dead reference must surface in the generated classification document, not only in a function nobody calls (L2)');
+
+  console.log(`Passed: un axe de classification peut annoncer un porteur qui n'existe pas, et rien ne casse (#1529). L'axe « type » renvoyait à typeDuScript() quand la fonction s'appelle typeDeScript() — une lettre, morte depuis le renommage, invisible parce que le champ \`porteur\` est du TEXTE lu par des humains, jamais appelé par le code. UNE RÉFÉRENCE MORTE RESSEMBLE À UN LIEN, CE QUI EST PIRE QU'UNE ABSENCE (Article 28) : on croit pouvoir aller voir, et personne n'y va. Le garde-fou confronte les 9 axes aux ${r.fonctionsVues} fonctions réellement définies dans scripts/, accepte un porteur qui vit chez un autre outil (trois le font, et c'est voulu — L29), liste à part celui qui ne nomme aucune fonction au lieu de le compter bon, refuse de conclure sur un parc vide (L11), et remonte le constat dans le document généré plutôt que dans une fonction que personne n'appelle (L2). Mesure vivante : 0 référence morte sur 9.`);
+}
+await testPorteursDAxesExistent();
+
+// =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================
 // LE BILAN D'INVESTISSEMENT DIT « NON CONCLUANT » À CHAQUE COMMIT depuis des jours, et la tâche
