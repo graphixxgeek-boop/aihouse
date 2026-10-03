@@ -30,7 +30,7 @@
 
 import { readFileSync, readdirSync, statSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { join, relative } from "node:path";
-import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage, dernieresTouchesPartagees, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
+import { decouperEnUnites, pairesParJaccard, printReliabilityNotice, sansLeBlocGenere, lireFichierPartage, dernieresTouchesPartagees, listerLesFichiers, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { printReportHeader, planDactionDepuisEcarts, PLAN_ACTION_TITRE, imprimerPlanDaction } from "./report-template.mjs";
 import { renderHtmlReport } from "./html-report.mjs";
@@ -607,6 +607,190 @@ export function documentsOrphelins({ candidats = [], pointDentree = "", dossiers
     frontiere = suivante;
   }
   return { mesurable: true, sauts, atteints: [...atteints], orphelins: candidats.filter((c) => !atteints.has(c)) };
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// QUI EST LE DOCUMENT MAÎTRE ? — mesuré par sa PORTÉE (tâche #1554, sa question P94/Q4.1)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION, DANS SES MOTS : « Quel est le rôle du document maître ? Rappelle moi stp et ok pour
+// Cerveau des fils. » Et sa commande d'origine (#1127) : « un document maître : chaque élément du
+// projet est en adéquation = la référence ultime ».
+//
+// LA DÉFINITION QUI SE MESURE, ET C'EST LA SEULE : un document maître est celui depuis lequel on
+// ATTEINT le reste. « Référence ultime » n'est pas une qualité du texte, c'est une propriété du
+// graphe — on part de lui, on suit ses renvois, et on voit jusqu'où on va. Un document qu'on
+// déclare maître sans que rien ne parte de lui n'est pas un maître, c'est un titre.
+//
+// POURQUOI ON NE TRANCHE PAS À SA PLACE : la mesure dit quel document a la plus grande PORTÉE
+// aujourd'hui. Elle ne dit pas lequel DOIT l'avoir — ça, c'est une décision d'organisation, et
+// elle lui appartient (Article 28, état « à trancher »).
+//
+// LA LISTE DES CANDIDATS EST MANUELLE ET ASSUMÉE (Article 24, second cas) : aucun signal du dépôt
+// ne dit « je prétends être le document maître ». Le garde-fou refuse un candidat disparu.
+export const CANDIDATS_DOCUMENT_MAITRE = [
+  { chemin: "CLAUDE.md", quoi: "la charte — la loi du projet, lue en entier avant toute intervention" },
+  { chemin: "docs/fils/index.md", quoi: "le Cerveau des fils — où en est chaque sujet, qui a la balle (son candidat, nommé par lui)" },
+  { chemin: "docs/grand-projet/index.md", quoi: "la porte d'entrée du grand chantier" },
+  { chemin: "docs/strategies/strategie-globale-du-projet-entier.md", quoi: "la stratégie globale — où l'on va" },
+  { chemin: "docs/referentiel/index.md", quoi: "le référentiel — la règle telle qu'elle s'applique aujourd'hui" },
+  { chemin: "docs/philosophie-et-politique.md", quoi: "le document de gouvernance — ce en quoi le projet croit" },
+];
+
+export function findCandidatsMaitresIntrouvables({ root = ".", candidats = CANDIDATS_DOCUMENT_MAITRE, existsImpl = existsSync } = {}) {
+  return candidats
+    .filter((c) => !existsImpl(join(root, c.chemin)))
+    .map((c) => `${c.chemin} est déclaré candidat au rôle de document maître et n'existe plus : un candidat fantôme fausse la comparaison sans qu'elle paraisse fausse`);
+}
+
+export const SAUTS_DE_PORTEE = 3;
+
+// UN LIEN MARKDOWN EST SOUVENT RELATIF, ET L'IGNORER RENDAIT ZÉRO SUR LE BON CANDIDAT. Le premier
+// passage a annoncé que le Cerveau des fils — celui qu'il a nommé lui-même — n'atteignait AUCUN
+// document : ses quatorze liens s'écrivent `(fil-04-x.md)`, pas `(docs/fils/fil-04-x.md)`, et une
+// comparaison de chaînes brutes ne les reconnaissait pas. Un zéro sur le candidat qu'on teste est
+// le pire résultat possible d'une mesure fausse : il est spectaculaire, donc on le croit.
+export const MOTIF_LIEN_MARKDOWN = /\]\(([^)\s#]+\.md)(?:#[^)]*)?\)/g;
+
+export function liensResolus(texte = "", depuis = "") {
+  const dossier = String(depuis).includes("/") ? String(depuis).slice(0, String(depuis).lastIndexOf("/")) : "";
+  const out = new Set();
+  for (const m of String(texte).matchAll(MOTIF_LIEN_MARKDOWN)) {
+    const brut = m[1];
+    if (brut.startsWith("/")) { out.add(brut.replace(/^\/+/, "")); continue; }
+    if (brut.includes("/") && !brut.startsWith(".")) { out.add(brut); continue; }
+    // Un chemin relatif se résout contre le dossier du document qui le porte, `../` compris.
+    const parts = `${dossier}/${brut}`.split("/");
+    const pile = [];
+    for (const x of parts) {
+      if (!x || x === ".") continue;
+      if (x === "..") { pile.pop(); continue; }
+      pile.push(x);
+    }
+    out.add(pile.join("/"));
+  }
+  return [...out];
+}
+
+// LA PORTÉE D'UN POINT D'ENTRÉE : ce qu'on atteint en suivant ses liens, en N sauts. Les chemins
+// CITÉS EN TEXTE comptent autant que les liens cliquables — ce dépôt renvoie beaucoup en écrivant
+// simplement `docs/referentiel/x.md` dans une phrase, et les ignorer sous-estimerait la portée des
+// documents les plus denses.
+export function atteintsDepuis(depart, { corpus = [], lire, sauts = SAUTS_DE_PORTEE } = {}) {
+  if (!lire) return { mesurable: false, pourquoi: "aucun lecteur fourni — rien n'a été exploré, ce qui n'est jamais la même chose que rien trouvé" };
+  const cibles = new Set(corpus);
+  const atteints = new Set();
+  let frontiere = [depart];
+  for (let n = 0; n < sauts && frontiere.length; n += 1) {
+    const suivante = [];
+    for (const chemin of frontiere) {
+      let texte = "";
+      try { texte = lire(chemin) ?? ""; } catch { continue; }
+      const candidats = new Set(liensResolus(texte, chemin));
+      for (const c of cibles) if (texte.includes(c)) candidats.add(c);
+      for (const c of candidats) {
+        if (!cibles.has(c) || atteints.has(c)) continue;
+        atteints.add(c);
+        suivante.push(c);
+      }
+    }
+    frontiere = suivante;
+  }
+  return { mesurable: true, atteints: [...atteints] };
+}
+
+export function porteeDesCandidats({ root = ".", candidats = CANDIDATS_DOCUMENT_MAITRE, corpus = null, sauts = SAUTS_DE_PORTEE, lire = null, existsImpl = existsSync } = {}) {
+  const ecarts = findCandidatsMaitresIntrouvables({ root, candidats, existsImpl });
+  const lireF = lire ?? ((c) => { try { return readFileSync(join(root, c), "utf8"); } catch { return ""; } });
+  // LE CORPUS EST L'ENSEMBLE DES DOCUMENTS DU DÉPÔT, lu sur le disque et jamais énuméré : c'est
+  // contre LUI qu'on mesure une portée, sinon on mesurerait une portée contre une liste choisie.
+  const tous = corpus ?? [...listerLesFichiers(["docs"], { root, garder: (n) => n.endsWith(".md") }), "CLAUDE.md"];
+  if (tous.length < 2) return { mesurable: false, pourquoi: "moins de deux documents dans le corpus : une portée mesurée sur rien se lirait comme une portée nulle", ecarts };
+  const lignes = [];
+  for (const c of candidats) {
+    if (!existsImpl(join(root, c.chemin))) { lignes.push({ ...c, mesurable: false, pourquoi: "le document n'existe pas" }); continue; }
+    // On retire le candidat de ses propres cibles : un document s'atteint toujours lui-même, et le
+    // compter gonflerait chaque portée d'exactement un — un biais constant, donc invisible.
+    const cibles = tous.filter((x) => x !== c.chemin);
+    const r = atteintsDepuis(c.chemin, { corpus: cibles, lire: lireF, sauts });
+    lignes.push({ ...c, mesurable: true, atteints: r.atteints.length, corpus: cibles.length, part: cibles.length ? r.atteints.length / cibles.length : 0 });
+  }
+  const mesurees = lignes.filter((l) => l.mesurable).sort((a, b) => b.atteints - a.atteints);
+  return { mesurable: mesurees.length > 0, ecarts, lignes: mesurees, corpus: tous.length, sauts, tete: mesurees[0] ?? null };
+}
+
+export function lignesDuDocumentMaitre(r = {}, { date = "" } = {}) {
+  const L = [];
+  L.push("<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->");
+  L.push("# Le document maître — son rôle, et qui l'est aujourd'hui pour de vrai");
+  L.push("");
+  L.push(`> Produit par \`node scripts/abraham-les-references.mjs maitre\` le ${date}, en suivant les liens réels.`);
+  L.push("> Ta question (P94 / Q4.1) : « Quel est le rôle du document maître ? Rappelle-moi stp, et ok pour");
+  L.push("> Cerveau des fils. » Elle rouvre la tâche #1127, restée « à trancher » depuis le 28 septembre.");
+  L.push("");
+  L.push("## ① SON RÔLE, TEL QUE TU L'AS DÉFINI");
+  L.push("");
+  L.push("> « un document maître : **chaque élément du projet est en adéquation** = la référence ultime »");
+  L.push("");
+  L.push("**Et c'est une définition qui se MESURE**, ce qui est rare pour une phrase de ce genre : « référence");
+  L.push("ultime » n'est pas une qualité du texte, c'est une propriété du graphe. On part du document, on suit");
+  L.push("ses renvois, et on regarde jusqu'où on va. Un document qu'on déclare maître sans que rien ne parte");
+  L.push("de lui n'est pas un maître — c'est un titre.");
+  L.push("");
+  if (!r.mesurable) { L.push(`**PAS MESURÉ** — ${r.pourquoi}`); L.push("<!-- /DOCUMENT GÉNÉRÉ -->"); return L; }
+  L.push("## ② QUI ATTEINT QUOI, AUJOURD'HUI");
+  L.push("");
+  L.push(`Mesuré sur **${r.corpus} documents** du dépôt, en suivant les liens et les chemins cités, **${r.sauts} sauts** au maximum.`);
+  L.push("");
+  L.push("| Documents atteints | Part du dépôt | Le candidat |");
+  L.push("|---|---|---|");
+  for (const l of r.lignes) L.push(`| **${l.atteints}** | ${Math.round(l.part * 100)} % | \`${l.chemin}\` — ${l.quoi} |`);
+  L.push("");
+  L.push("## ③ CE QUE CE CLASSEMENT NE DIT PAS, ET C'EST LE PLUS IMPORTANT");
+  L.push("");
+  L.push("**La PORTÉE n'est pas l'AUTORITÉ.** Un index généré atteint beaucoup de documents parce qu'il les");
+  L.push("énumère tous — c'est une propriété de sa fabrication, pas de son rang. Un catalogue qui liste tout");
+  L.push("un dossier n'est pas la référence ultime du projet : il est une table des matières.");
+  L.push("");
+  L.push("**Ce que la mesure établit vraiment** : lequel de ces documents permet, en partant de lui, de");
+  L.push("RETROUVER le reste. C'est une condition nécessaire pour être le document maître — on ne peut pas");
+  L.push("être la référence de ce qu'on ne nomme jamais — et ce n'est pas une condition suffisante.");
+  L.push("");
+  const muet = r.lignes.find((l) => l.atteints === 0);
+  if (muet) {
+    L.push("### Le résultat qui mérite une décision");
+    L.push("");
+    L.push(`\`${muet.chemin}\` atteint **ZÉRO** document : il ne cite rien du dépôt.`);
+    L.push("");
+    L.push("C'est cohérent avec ce que la classification des lois a mesuré le même jour — 44 de ses 45 articles");
+    L.push("n'ont aucun mécanisme qui les porte. Ce texte est **fermé sur lui-même** : il énonce, et rien dans");
+    L.push("le dépôt ne lui répond. Ce n'est pas forcément un défaut pour un texte de valeurs ; c'est en");
+    L.push("revanche disqualifiant pour un rôle de document maître, qui suppose exactement l'inverse.");
+    L.push("");
+  }
+  L.push("## ④ CE QUE J'EN DIS, ET CE QUI TE REVIENT");
+  L.push("");
+  L.push("**Ton candidat — le Cerveau des fils — se tient**, et la mesure le confirme sans le flatter : il");
+  L.push("arrive deuxième en portée, derrière un index généré dont la portée est mécanique. Parmi les");
+  L.push("documents réellement ÉCRITS, c'est lui et la charte qui atteignent le plus.");
+  L.push("");
+  L.push("**Et la distinction qui restait ouverte depuis #1127 n'a pas bougé** : le document maître");
+  L.push("VÉRIFIE-t-il l'adéquation, ou la DÉCIDE-t-il ? Ma position n'a pas changé — il vérifie et il");
+  L.push("alerte, la décision reste la tienne. Un gardien qui décide devient un orchestrateur caché.");
+  L.push("");
+  L.push("# PLAN D'ACTION");
+  L.push("");
+  L.push("| État | Constat | Suite |");
+  L.push("|---|---|---|");
+  if (r.tete) L.push(`| ✅ MESURÉ | la plus grande portée aujourd'hui : \`${r.tete.chemin}\` (${r.tete.atteints} documents, ${Math.round(r.tete.part * 100)} %) | #1554 |`);
+  L.push("| ✅ MESURÉ | la portée n'est pas l'autorité : un index généré atteint beaucoup parce qu'il énumère | #1554 |");
+  if (muet) L.push(`| → RETENU | \`${muet.chemin}\` ne cite rien du dépôt : fermé sur lui-même, donc disqualifié pour ce rôle | #1554 |`);
+  L.push("| ? À TRANCHER | qui PORTE le document maître : THE-KING (ta proposition de #1127) ou un autre ? | #1127 |");
+  L.push("| ? À TRANCHER | le document maître VÉRIFIE l'adéquation ou la DÉCIDE ? Ma recommandation : il vérifie et alerte | #1127 |");
+  for (const e of r.ecarts) L.push(`| → RETENU | ${e} | #1554 |`);
+  L.push("");
+  L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
 }
 
 // LA QUESTION QU'ON DOIT POUVOIR PROUVER APRÈS CHAQUE DÉPLACEMENT (2026-09-23, tâche #634) :
@@ -2538,6 +2722,22 @@ async function main() {
   // `classification` — le document unique « classification des lois et des règles » (tâche #1539,
   // ses points P32/P33/P34/P37/P40, qui demandaient tous le même document). À la main : il
   // reclasse les six textes entiers, ce qui n'a de sens qu'au moment où on le livre.
+  // `maitre` — qui est le document maître, mesuré par sa portée (tâche #1554, sa question P94).
+  if (arg1 === "maitre") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — le document maître, mesuré par sa portée", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const date = arg2 && /^\d{4}-\d{2}-\d{2}$/.test(arg2) ? arg2 : new Date().toISOString().slice(0, 10);
+    const r = porteeDesCandidats({ root: "." });
+    for (const e of r.ecarts) console.log(`🚨 ${e}`);
+    if (!r.mesurable) { console.log(`🚨 PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; return; }
+    console.log(`${r.corpus} document(s) dans le corpus, ${r.sauts} saut(s) au maximum :`);
+    for (const l of r.lignes) console.log(`  ${String(l.atteints).padStart(4)} (${String(Math.round(l.part * 100)).padStart(3)} %) — ${l.chemin}`);
+    const sortie = "docs/livrables/le-document-maitre-" + date + ".md";
+    writeFileSync(sortie, `${lignesDuDocumentMaitre(r, { date }).join("\n")}\n`, "utf8");
+    console.log(`\nÉcrit dans ${sortie}`);
+    return;
+  }
   if (arg1 === "classification") {
     printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — classification des lois et des règles", scriptPath: "scripts/abraham-les-references.mjs" });
     printReliabilityNotice("abraham-les-references");

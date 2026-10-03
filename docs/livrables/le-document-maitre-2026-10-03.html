@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le document maître</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #1a1d24; --panel-border: #2a2e38;
+    --accent: #d99a4e; --accent2: #6ea8d9; --text: #e7e6e2; --muted: #9a9fab;
+    --ok: #6fbf73; --warn: #e0645a;
+    /* Identité des personnages, reprise telle quelle de app/globals.css (--lia/--noe du jeu
+       réel) — jamais une couleur de rapport inventée séparément (Article 15/17 appliqués aux
+       rapports : ce que le lecteur voit ici doit correspondre à ce qu'il voit dans le jeu).
+       RÈGLE PERMANENTE (2026-09-22, demande explicite de l'utilisateur) : ces deux valeurs DOIVENT
+       rester synchronisées avec --lia/--noe de app/globals.css, y compris quand la future charte
+       graphique de la refonte les changera — jamais un choix de couleur de rapport indépendant.
+       Vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs), qui compare ces
+       deux constantes au fichier réel à chaque exécution. */
+    --lia: #f29bc3; --noe: #55dbe5;
+  }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
+  * { box-sizing: border-box; }
+  /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
+     l'utilisateur, généralisée depuis une première demande limitée au seul transcript de
+     simulation) — vérifié mécaniquement par checkHtmlReportTheme() (scripts/doc-report.mjs). */
+  body { zoom: 1.5; }
+  body {
+    margin: 0; padding: 40px 20px 60px;
+    background: radial-gradient(circle at 20% -10%, #232733 0%, var(--bg) 55%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 8px; }
+  header .date {
+    color: var(--accent2); font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;
+  }
+  header h1 { font-size: 1.9rem; margin: 4px 0 6px; letter-spacing: 0.4px; }
+  header .sub { color: var(--muted); font-size: 0.95rem; max-width: 640px; margin: 0 auto; }
+  .divider { height: 1px; margin: 26px 0; background: linear-gradient(90deg, transparent, var(--panel-border), transparent); }
+  main h2 { font-size: 1.15rem; color: var(--accent2); margin: 26px 0 10px; }
+  main p { margin: 8px 0; }
+  main p.note {
+    font-style: italic; color: #c9b98f; border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 10px 0;
+  }
+  main .highlight {
+    background: var(--panel); border: 2px solid var(--accent); border-radius: 14px;
+    padding: 18px 22px; margin: 22px 0;
+  }
+  main .highlight h3 { margin: 0 0 10px; color: var(--accent); font-size: 1.05rem; }
+  main .highlight p { margin: 8px 0; }
+  main ul { padding-left: 22px; }
+  main li { margin: 4px 0; }
+  main li.tree-status-enCours { color: var(--accent); font-weight: 600; }
+  main li.tree-status-ouverte { color: var(--accent2); }
+  main li.tree-status-terminee { color: var(--muted); }
+  main li.tree-status-autre { color: var(--warn); font-weight: 600; }
+  table {
+    width: 100%; border-collapse: collapse; background: var(--panel);
+    border: 1px solid var(--panel-border); border-radius: 12px; overflow: hidden;
+    font-size: 0.88rem; margin: 10px 0;
+  }
+  th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--panel-border); }
+  th { color: var(--accent2); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:last-child td { border-bottom: none; }
+  main pre {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px;
+    padding: 12px 14px; overflow-x: auto; font-size: 0.82rem; margin: 10px 0;
+  }
+  main pre code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  main figure { margin: 14px 0; text-align: center; }
+  main figure img {
+    max-width: 100%; border-radius: 10px; border: 1px solid var(--panel-border);
+  }
+  main figure figcaption { color: var(--muted); font-size: 0.82rem; margin-top: 6px; font-style: italic; }
+  main p.dialogue { margin: 6px 0; padding-left: 10px; border-left: 2px solid var(--panel-border); }
+  main p.dialogue.speaker-lia { border-left-color: var(--lia); }
+  main p.dialogue.speaker-lia strong { color: var(--lia); }
+  main p.dialogue.speaker-noe { border-left-color: var(--noe); }
+  main p.dialogue.speaker-noe strong { color: var(--noe); }
+  main p.dialogue.speaker-other strong { color: var(--muted); }
+  /* La carte visuelle (type 'matrix') — la couleur porte le VERDICT du croisement, jamais une
+     décoration : c'est la seule chose qu'un tableau ne savait pas dire. */
+  table.matrix { table-layout: fixed; }
+  table.matrix th.matrix-corner { background: transparent; }
+  table.matrix th.matrix-row-label {
+    text-transform: none; font-size: 0.8rem; color: var(--text); width: 22%;
+    border-right: 1px solid var(--panel-border); vertical-align: middle;
+  }
+  table.matrix td.matrix-cell { vertical-align: middle; min-height: 34px; }
+  table.matrix .matrix-chip {
+    display: inline-block; margin: 2px 3px; padding: 1px 7px; border-radius: 999px;
+    background: rgba(255,255,255,0.08); font-size: 0.78rem; font-variant-numeric: tabular-nums;
+  }
+  table.matrix .matrix-empty { color: var(--panel-border); }
+  table.matrix td.matrix-critique { background: rgba(224,100,90,0.22); box-shadow: inset 0 0 0 1px var(--warn); }
+  table.matrix td.matrix-alerte   { background: rgba(217,154,78,0.18); }
+  table.matrix td.matrix-correct  { background: rgba(110,168,217,0.12); }
+  table.matrix td.matrix-bon      { background: rgba(111,191,115,0.15); }
+  table.matrix td.matrix-neutre   { background: transparent; }
+  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="date">2026-10-03T15:06:06.578Z</div>
+    <h1>Le document maître</h1>
+    <p class="sub">Son rôle, et qui l'est aujourd'hui pour de vrai</p>
+  </header>
+  <div class="divider"></div>
+  <main><div class="highlight"><p>Produit par <code>node scripts/abraham-les-references.mjs maitre</code> le 2026-10-03, en suivant les liens réels.
+Ta question (P94 / Q4.1) : « Quel est le rôle du document maître ? Rappelle-moi stp, et ok pour
+Cerveau des fils. » Elle rouvre la tâche #1127, restée « à trancher » depuis le 28 septembre.</p></div>
+<h3>① SON RÔLE, TEL QUE TU L'AS DÉFINI</h3>
+<div class="highlight"><p>« un document maître : <strong>chaque élément du projet est en adéquation</strong> = la référence ultime »</p></div>
+<p><strong>Et c'est une définition qui se MESURE</strong>, ce qui est rare pour une phrase de ce genre : « référence ultime » n'est pas une qualité du texte, c'est une propriété du graphe. On part du document, on suit ses renvois, et on regarde jusqu'où on va. Un document qu'on déclare maître sans que rien ne parte de lui n'est pas un maître — c'est un titre.</p>
+<h3>② QUI ATTEINT QUOI, AUJOURD'HUI</h3>
+<p>Mesuré sur <strong>668 documents</strong> du dépôt, en suivant les liens et les chemins cités, <strong>3 sauts</strong> au maximum.</p>
+<table><thead><tr><th>Documents atteints</th><th>Part du dépôt</th><th>Le candidat</th></tr></thead><tbody><tr><td><strong>412</strong></td><td>62 %</td><td><code>docs/referentiel/index.md</code> — le référentiel — la règle telle qu'elle s'applique aujourd'hui</td></tr><tr><td><strong>274</strong></td><td>41 %</td><td><code>docs/fils/index.md</code> — le Cerveau des fils — où en est chaque sujet, qui a la balle (son candidat, nommé par lui)</td></tr><tr><td><strong>241</strong></td><td>36 %</td><td><code>CLAUDE.md</code> — la charte — la loi du projet, lue en entier avant toute intervention</td></tr><tr><td><strong>143</strong></td><td>21 %</td><td><code>docs/grand-projet/index.md</code> — la porte d'entrée du grand chantier</td></tr><tr><td><strong>27</strong></td><td>4 %</td><td><code>docs/strategies/strategie-globale-du-projet-entier.md</code> — la stratégie globale — où l'on va</td></tr><tr><td><strong>0</strong></td><td>0 %</td><td><code>docs/philosophie-et-politique.md</code> — le document de gouvernance — ce en quoi le projet croit</td></tr></tbody></table>
+<h3>③ CE QUE CE CLASSEMENT NE DIT PAS, ET C'EST LE PLUS IMPORTANT</h3>
+<p><strong>La PORTÉE n'est pas l'AUTORITÉ.</strong> Un index généré atteint beaucoup de documents parce qu'il les énumère tous — c'est une propriété de sa fabrication, pas de son rang. Un catalogue qui liste tout un dossier n'est pas la référence ultime du projet : il est une table des matières.</p>
+<p><strong>Ce que la mesure établit vraiment</strong> : lequel de ces documents permet, en partant de lui, de RETROUVER le reste. C'est une condition nécessaire pour être le document maître — on ne peut pas être la référence de ce qu'on ne nomme jamais — et ce n'est pas une condition suffisante.</p>
+<h4>Le résultat qui mérite une décision</h4>
+<p><code>docs/philosophie-et-politique.md</code> atteint <strong>ZÉRO</strong> document : il ne cite rien du dépôt.</p>
+<p>C'est cohérent avec ce que la classification des lois a mesuré le même jour — 44 de ses 45 articles n'ont aucun mécanisme qui les porte. Ce texte est <strong>fermé sur lui-même</strong> : il énonce, et rien dans le dépôt ne lui répond. Ce n'est pas forcément un défaut pour un texte de valeurs ; c'est en revanche disqualifiant pour un rôle de document maître, qui suppose exactement l'inverse.</p>
+<h3>④ CE QUE J'EN DIS, ET CE QUI TE REVIENT</h3>
+<p><strong>Ton candidat — le Cerveau des fils — se tient</strong>, et la mesure le confirme sans le flatter : il arrive deuxième en portée, derrière un index généré dont la portée est mécanique. Parmi les documents réellement ÉCRITS, c'est lui et la charte qui atteignent le plus.</p>
+<p><strong>Et la distinction qui restait ouverte depuis #1127 n'a pas bougé</strong> : le document maître VÉRIFIE-t-il l'adéquation, ou la DÉCIDE-t-il ? Ma position n'a pas changé — il vérifie et il alerte, la décision reste la tienne. Un gardien qui décide devient un orchestrateur caché.</p>
+<h2>PLAN D'ACTION</h2>
+<table><thead><tr><th>État</th><th>Constat</th><th>Suite</th></tr></thead><tbody><tr><td>✅ MESURÉ</td><td>la plus grande portée aujourd'hui : <code>docs/referentiel/index.md</code> (412 documents, 62 %)</td><td>#1554</td></tr><tr><td>✅ MESURÉ</td><td>la portée n'est pas l'autorité : un index généré atteint beaucoup parce qu'il énumère</td><td>#1554</td></tr><tr><td>→ RETENU</td><td><code>docs/philosophie-et-politique.md</code> ne cite rien du dépôt : fermé sur lui-même, donc disqualifié pour ce rôle</td><td>#1554</td></tr><tr><td>? À TRANCHER</td><td>qui PORTE le document maître : THE-KING (ta proposition de #1127) ou un autre ?</td><td>#1127</td></tr><tr><td>? À TRANCHER</td><td>le document maître VÉRIFIE l'adéquation ou la DÉCIDE ? Ma recommandation : il vérifie et alerte</td><td>#1127</td></tr></tbody></table></main>
+  <div class="divider"></div><footer><p>Dérivé de docs/livrables/le-document-maitre-2026-10-03.md par doc-HTML. Toute correction se fait dans le Markdown, jamais ici.</p></footer>
+</div>
+</body>
+</html>

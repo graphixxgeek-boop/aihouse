@@ -123,3 +123,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/le-module-la-partie-indetachable-le-coeur-2026-10-03.html` | `docs/livrables/le-module-la-partie-indetachable-le-coeur-2026-10-03.md` | 12609 | 2026-10-03 12:46Z |
 | `docs/strategies/total-recall-strategie.html` | `docs/strategies/total-recall-strategie.md` | 14070 | 2026-10-03 14:07Z |
 | `docs/livrables/le-filet-de-securite-2026-10-03.html` | `docs/livrables/le-filet-de-securite-2026-10-03.md` | 14337 | 2026-10-03 14:48Z |
+| `docs/livrables/le-document-maitre-2026-10-03.html` | `docs/livrables/le-document-maitre-2026-10-03.md` | 12089 | 2026-10-03 15:06Z |

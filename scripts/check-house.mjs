@@ -27293,3 +27293,48 @@ async function testLeRapportDuFilet() {
   console.log('Passed: le rapport complet sur le filet, et les deux chiffres faux qu\'il a refusé de rendre (2026-10-03, tâche #1547, sa décision P66 option d). SON OBJECTIF : « maîtriser le sujet, sa manipulation, et sa rationalisation ». LE RAPPORT N\'EST PAS UN OUTIL DE PLUS : tout ce qu\'il faut mesurer existait déjà chez Ezechiel, réparti sur huit fonctions ; ce qui manquait est un endroit où ces mesures se lisent ENSEMBLE, avec ses trois questions (Article 31 : on étend, on n\'ajoute pas). LE RÉSULTAT QUI DÉCIDE DE LA TROISIÈME QUESTION : ZÉRO groupe muet, ZÉRO tautologie sur 411 groupes et 8 075 assertions — la seule population légitimement retirable est VIDE, donc tout allègement devra venir de la VITESSE et jamais du nombre de contrôles. Et le rapport refuse de proposer une liste à couper, parce qu\'un groupe LENT n\'est pas un groupe INUTILE : les contrôles les plus chers sont ceux qui lisent le vrai dépôt. DEUX CHIFFRES FAUX ONT ÉTÉ REFUSÉS EN CHEMIN, et les refuser est le vrai travail. ① Le relevé disponible portait sur 338 groupes quand le filet en comptait 411, et annonçait 94 s pour un filet qui en met 248 : périmé, donc refusé plutôt que présenté — un chiffre faux, daté et parfaitement crédible. ② Le recollage chronomètre↔groupes s\'est déclaré INCOMPLET, parce que certaines fonctions émettent plusieurs lignes « Passed » et que les deux listes se décalent : le détail par groupe aurait attribué chaque coût au mauvais groupe. Le TOTAL est rendu, le détail est retenu, et la raison est écrite. ET LA DONNÉE QUI PERMET DE LE SAVOIR ÉTAIT PERDUE PAR SON PROPRE LECTEUR : le fichier de mesure écrit `complet` depuis toujours et `mesuresEnregistrees()` ne le remontait pas — une donnée écrite que son lecteur laisse tomber est la forme la plus discrète d\'une mesure perdue.');
 }
 await testLeRapportDuFilet();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1554 — LE DOCUMENT MAÎTRE, MESURÉ PAR SA PORTÉE, ET LE ZÉRO QUI ÉTAIT UNE ERREUR DE MESURE
+async function testLeDocumentMaitre() {
+  const A = await import('../scripts/abraham-les-references.mjs');
+
+  // ── 1. UN LIEN MARKDOWN EST SOUVENT RELATIF, ET L'IGNORER RENDAIT ZÉRO SUR LE BON CANDIDAT.
+  // Le premier passage a annoncé que le Cerveau des fils — celui qu'il a nommé lui-même —
+  // n'atteignait AUCUN document : ses liens s'écrivent `(fil-04-x.md)`, pas le chemin complet.
+  // Un zéro spectaculaire sur le candidat qu'on teste est le pire résultat d'une mesure fausse,
+  // parce qu'il a l'air d'une trouvaille.
+  assert.deepStrictEqual(A.liensResolus('voir [le fil](fil-04-x.md)', 'docs/fils/index.md'), ['docs/fils/fil-04-x.md'], 'a relative link resolves against the folder of the document carrying it');
+  assert.deepStrictEqual(A.liensResolus('[x](../referentiel/y.md)', 'docs/fils/index.md'), ['docs/referentiel/y.md'], 'and ".." climbs one level');
+  assert.deepStrictEqual(A.liensResolus('[x](docs/a/b.md)', 'CLAUDE.md'), ['docs/a/b.md'], 'an already-complete path is left alone');
+  assert.deepStrictEqual(A.liensResolus('[x](a.md#ancre)', 'docs/i.md'), ['docs/a.md'], 'and an anchor is dropped rather than making the path unmatchable');
+
+  // ── 2. LA PORTÉE SUIT LES LIENS ET LES CHEMINS CITÉS EN TEXTE, sur plusieurs sauts. Ce dépôt
+  // renvoie beaucoup en écrivant simplement un chemin dans une phrase.
+  const corpus = ['a.md', 'b.md', 'c.md', 'seul.md'];
+  const textes = { 'depart.md': 'voir [a](a.md)', 'a.md': 'et le chemin b.md cité en texte', 'b.md': 'puis [c](c.md)', 'c.md': '', 'seul.md': '' };
+  const r2 = A.atteintsDepuis('depart.md', { corpus, lire: (c) => textes[c], sauts: 2 });
+  assert.deepStrictEqual(r2.atteints.sort(), ['a.md', 'b.md'], 'two hops reach two documents, never the third');
+  const r3 = A.atteintsDepuis('depart.md', { corpus, lire: (c) => textes[c], sauts: 3 });
+  assert.deepStrictEqual(r3.atteints.sort(), ['a.md', 'b.md', 'c.md'], 'and a third hop reaches the third — a document nobody links to stays out');
+  assert.strictEqual(A.atteintsDepuis('x', {}).mesurable, false, 'with no reader nothing was explored, which is never the same as nothing found');
+
+  // ── 3. UN CANDIDAT DISPARU FAUSSERAIT LA COMPARAISON SANS QU'ELLE PARAISSE FAUSSE.
+  assert.deepStrictEqual(A.findCandidatsMaitresIntrouvables({ root: '.' }), [], 'against the real repository every declared candidate exists');
+  assert.match(A.findCandidatsMaitresIntrouvables({ root: '.', candidats: [{ chemin: 'docs/parti.md' }], existsImpl: () => false })[0], /n'existe plus/, 'and a vanished one is named');
+
+  // ── 4. LE PASSAGE RÉEL (Article 25) : le classement existe, et il ne flatte pas son candidat.
+  const reel = A.porteeDesCandidats({ root: '.' });
+  assert.strictEqual(reel.mesurable, true, 'the real reach is measured');
+  assert.ok(reel.corpus > 500, `against the whole documentary corpus (${reel.corpus} documents)`);
+  const cerveau = reel.lignes.find((l) => l.chemin === 'docs/fils/index.md');
+  assert.ok(cerveau && cerveau.atteints > 100, `his own candidate, the Cerveau des fils, genuinely reaches a large share (${cerveau?.atteints}) — which is the finding the relative-link bug had hidden behind a zero`);
+  const gouv = reel.lignes.find((l) => l.chemin === 'docs/philosophie-et-politique.md');
+  assert.strictEqual(gouv.atteints, 0, 'while the governance document reaches ZERO: it cites nothing of the repository, which is consistent with 44 of its 45 articles having no carrier, and disqualifies it for a role that supposes exactly the opposite');
+
+  // ── 5. UN CORPUS VIDE N'EST PAS UNE PORTÉE NULLE (leçons L5/L11).
+  assert.strictEqual(A.porteeDesCandidats({ root: '.', corpus: ['un-seul.md'] }).mesurable, false, 'fewer than two documents is not a measurement');
+
+  console.log('Passed: le document maître, mesuré par sa PORTÉE plutôt que déclaré (2026-10-03, tâche #1554, sa question P94/Q4.1). SA DÉFINITION SE MESURE, ce qui est rare pour une phrase de ce genre : « chaque élément du projet est en adéquation = la référence ultime » n\'est pas une qualité du texte, c\'est une propriété du GRAPHE — on part du document, on suit ses renvois, on regarde jusqu\'où on va. Un document déclaré maître sans que rien ne parte de lui n\'est pas un maître, c\'est un titre. ET LE PREMIER PASSAGE A RENDU UN ZÉRO SPECTACULAIRE ET FAUX, sur le candidat qu\'il a nommé lui-même : le Cerveau des fils « n\'atteignait aucun document », parce que ses liens s\'écrivent `(fil-04-x.md)` et pas le chemin complet, et qu\'une comparaison de chaînes brutes ne les reconnaissait pas. C\'est le pire résultat possible d\'une mesure fausse — spectaculaire, donc crédible, donc on le garde. Les liens relatifs se résolvent désormais contre le dossier du document qui les porte, `../` compris, et le classement devient lisible : l\'index généré du référentiel en tête (62 %), le Cerveau des fils deuxième (41 %), la charte troisième (36 %). LA NUANCE QUI COMPTE EST ÉCRITE DANS LE RAPPORT : la PORTÉE N\'EST PAS L\'AUTORITÉ. Un index généré atteint beaucoup parce qu\'il énumère — c\'est une propriété de sa fabrication, pas de son rang. La mesure établit une condition NÉCESSAIRE (on ne peut pas être la référence de ce qu\'on ne nomme jamais), jamais suffisante. ET UN RÉSULTAT MÉRITE UNE DÉCISION : le document de gouvernance atteint ZÉRO — il ne cite rien du dépôt, ce qui est cohérent avec ses 44 articles sur 45 sans porteur mesurés le même jour, et le disqualifie pour un rôle qui suppose l\'inverse.');
+}
+await testLeDocumentMaitre();
