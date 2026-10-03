@@ -474,6 +474,16 @@ export function inventaireDesRapports({ root = ROOT, racine = "docs", lireDossie
   // de cet inventaire un outil qu'on n'ose plus lancer (L2, pris par l'autre bout : un outil trop
   // lent finit par ne plus sortir du tout).
   const corpus = Object.values(sources);
+  // UN SEUL GRAND TEXTE PLUTÔT QUE SEPT CENTS PETITS (2026-10-03, tâche #1594). La question posée
+  // plus bas — « ce fichier est-il NOMMÉ quelque part ailleurs ? » — relançait une recherche dans
+  // CHAQUE source, pour CHACUN des 428 fichiers : des centaines de milliers d'appels dont
+  // l'immense majorité ne trouve rien. Le profil du filet donne cette seule ligne à 10,4 s.
+  // LA JOINTURE SE FAIT SUR UN OCTET NUL, et ce n'est pas un détail de confort : coller les textes
+  // bout à bout ferait apparaître des correspondances À CHEVAL sur deux sources — la fin de l'une
+  // et le début de l'autre formant par hasard un nom de fichier. Un octet nul ne peut figurer dans
+  // aucun nom de fichier, donc aucune correspondance ne peut le traverser. Même raisonnement, et
+  // même octet, que la carte des dernières touches de `lib-shell`.
+  const corpusColle = corpus.join("\u0000");
   const empiler = (dossier) => {
     let noms = [];
     try { noms = lireDossier(join(root, dossier)); } catch { return; }
@@ -505,7 +515,7 @@ export function inventaireDesRapports({ root = ROOT, racine = "docs", lireDossie
     // par FICHIER : ce rapport-ci est-il nommé quelque part ailleurs que dans son propre dossier ?
     // Un rapport que personne ne cite n'est jamais rouvert individuellement — il n'est consultable
     // qu'en ouvrant le dossier au hasard, ce que personne ne fait.
-    const cites = txt.filter((f) => corpus.some((t) => t.includes(f)));
+    const cites = txt.filter((f) => corpusColle.includes(f));
     lignes.push({ dossier: chemin, combien: txt.length, octets, lecteurs, aUnIndex, etat,
       cites: cites.length, jamaisCites: txt.length - cites.length });
   }

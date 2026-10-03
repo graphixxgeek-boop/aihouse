@@ -1,5 +1,5 @@
 {
-  "quand": "2026-10-03T23:31:48.605Z",
+  "quand": "2026-10-03T23:44:36.933Z",
   "pourquoi": "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
   "sujets": [
     "Passed: 18 % du registre échappait à tous les contrôles, en ",
@@ -421,6 +421,7 @@
     "Passed: un réveil n'est pas un contrôle (2026-09-27, tâche #",
     "Passed: un schéma sans titre, et une règle déjà suivie à 92 ",
     "Passed: un script qui se tait n'a rien à mettre au gabarit (",
+    "Passed: un seul grand texte plutôt que sept cents petits, et",
     "Passed: un substitut gratuit manquant ne peut plus s'affiche",
     "Passed: un terrain coupé en deux qui passait quand même (202",
     "Passed: une accusation permanente qu'aucun travail ne pouvai",

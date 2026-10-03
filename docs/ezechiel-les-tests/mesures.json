@@ -1,14 +1,14 @@
 {
-  "quand": "2026-10-03T23:31:48.595Z",
+  "quand": "2026-10-03T23:44:36.922Z",
   "source": "exécution réelle du filet, horodatage des lignes Passed",
-  "totalMs": 196722,
+  "totalMs": 190650,
   "complet": true,
   "sante": {
     "mesurable": true,
     "code": 0,
-    "ms": 196722,
-    "succes": 447,
-    "attendus": 446,
+    "ms": 190650,
+    "succes": 448,
+    "attendus": 447,
     "anomalies": [
       {
         "cle": "experimental",
@@ -26,37 +26,37 @@
     {
       "ligne": 153,
       "titre": "day/night cycle math (round-based, midnight synchronized with the investigation ceiling) and the fatigue multiplier (night triples the passive rate, day reprodu",
-      "ms": 1710
+      "ms": 1629
     },
     {
       "ligne": 177,
       "titre": "age facts, love threshold, Lia stress growth, proposal pressure, stressed misreading, sleep allocation, sofa complaint and stress reaction. · individual needs, post-meal fatigue, initial personality differences, common activity bonus, rejection guard and preserved progress. · exact questions, Noé-first dialogue order, stable conversational turn taking and isolated visitor replies. · needs and room restrictions, reset and retries, stale session refusal, mutual affection threshold and refusal; plus migration and concurrency checks. · migration preserves Lia, independent memories, both AI turns, atomic failure, idempotent retry, multi-tab lease, stale-write fencing, input checks and every roo",
-      "ms": 18
+      "ms": 15
     },
     {
       "ligne": 204,
       "titre": "varied reset scenarios, word ages beyond context window, earned progressive revelation, no premature spoilers, attraction governed by room with flat model outpu",
-      "ms": 25
+      "ms": 24
     },
     {
       "ligne": 243,
       "titre": "real HTTP finale turn (4->5 evidence) actually inserts both shock-thought lines before the canonical reveal, in order, exactly once.",
-      "ms": 13
+      "ms": 12
     },
     {
       "ligne": 286,
       "titre": "certainty of being observed stays genuinely uncertain (negotiation/observer-standing/revealed all silent or false, a real doubt instruction fed to the model) un",
-      "ms": 20
+      "ms": 17
     },
     {
       "ligne": 317,
       "titre": "départ à deux confirmation is never silently dropped by the cross-room fingerprint registry, even when every short phrase already matched an unrelated earlier t",
-      "ms": 11
+      "ms": 9
     },
     {
       "ligne": 337,
       "titre": "once both characters have described each other\\'s appearance, they explicitly and unsettlingly realize they share the exact same nature of appearance exactly onc",
-      "ms": 17
+      "ms": 14
     },
     {
       "ligne": 353,
@@ -66,7 +66,7 @@
     {
       "ligne": 364,
       "titre": "physical encounter reassures only Noé, presentations reassure Lia, significant first shared meal relief, comment gate strictly under 30 and discussion/rest afte",
-      "ms": 25
+      "ms": 24
     },
     {
       "ligne": 373,
@@ -76,17 +76,17 @@
     {
       "ligne": 392,
       "titre": "a chat-mode room request accepted by the addressed character actually moves them the following turn.",
-      "ms": 17
+      "ms": 16
     },
     {
       "ligne": 397,
       "titre": "screen notice without duplicate, bureau zero attraction growth, salon bonus, stronger bedroom bonus and earned food regeneration observation.",
-      "ms": 39
+      "ms": 40
     },
     {
       "ligne": 407,
       "titre": "divergent needs produce private thoughts without remote speech or attraction bonus; human context excludes thoughts and busy moves consume no API call.",
-      "ms": 51
+      "ms": 50
     },
     {
       "ligne": 416,
@@ -96,7 +96,7 @@
     {
       "ligne": 435,
       "titre": "invented shared actions and repeated thoughts filtered; explicit non-urgent separation limited to two turns, reunion on third, then six coherent shared turns.",
-      "ms": 460
+      "ms": 479
     },
     {
       "ligne": 441,
@@ -116,67 +116,67 @@
     {
       "ligne": 468,
       "titre": "permanent introductions, known screen, grounded location and corrected memory, gentle-comment stress gate, planned Noé initiative, one-request mutual gesture an",
-      "ms": 113
+      "ms": 169
     },
     {
       "ligne": 478,
       "titre": "exact salon-to-bureau case, durable accepted move, frozen Gemini room schema, actual decoding only on arrival, consumed agreement, zero-call duplicate and recei",
-      "ms": 33
+      "ms": 31
     },
     {
       "ligne": 483,
       "titre": "urgent meal uses zero API calls, preserves the agreed destination and Noé post-meal fatigue; reunion resumes it, and received warmth uses Lia low-stress multipl",
-      "ms": 23
+      "ms": 20
     },
     {
       "ligne": 486,
       "titre": "simultaneous urgent needs are resolved locally for both residents with zero Gemini calls.",
-      "ms": 4
+      "ms": 2
     },
     {
       "ligne": 508,
       "titre": "odd-cycle Noé at 100% and Lia at 89% makes an explicit mutually accepted hug despite a queued bureau visit; cooldown, five-turn lounge pause, delayed ages and p",
-      "ms": 16
+      "ms": 15
     },
     {
       "ligne": 515,
       "titre": "Noé cannot plan a proposal at 79%, can attempt at 80% without sufficient mutual attraction, receives a refusal and never performs contact without reciprocity. · latest human message overrides resident continuation and generic positive replies cannot authorize physical contact.",
-      "ms": 12
+      "ms": 10
     },
     {
       "ligne": 568,
       "titre": "initial kitchen/bedroom discovery, regeneration/mirror, retained room stamps, two salon debriefs, TV, two-pass evidence and debrief, awake partner answers for a",
-      "ms": 519
+      "ms": 518
     },
     {
       "ligne": 576,
       "titre": "recovered sleepers wake through local turns with zero inference, shared evidence legend, persisted remote discovery and bounded animation wait.",
-      "ms": 22
+      "ms": 17
     },
     {
       "ligne": 599,
       "titre": "unnamed cold opening and two corridor ends use zero Gemini calls; no salon attraction bonus in corridor and two complete subsequent debrief turns.",
-      "ms": 47
+      "ms": 27
     },
     {
       "ligne": 613,
       "titre": "first approach raises both stress levels, refusal affects Noé attraction/hunger/fatigue, two debriefs block re-proposal and excessive model-generated pressure t",
-      "ms": 28
+      "ms": 22
     },
     {
       "ligne": 635,
       "titre": "personal-question memory, unique contextual attraction boost, no late unrelated bonus, accented gender agreement and local repetition guard.",
-      "ms": 24
+      "ms": 22
     },
     {
       "ligne": 716,
       "titre": "the two conclusion thoughts are grounded through the exact same truncation/register safety net as any spoken reply, never a separate weaker treatment.",
-      "ms": 41
+      "ms": 38
     },
     {
       "ligne": 722,
       "titre": "zero-call nickname and retry, no premature identity leak, durable personalised proof, label-injection-safe legend, shared appearance registry, room/time memorie",
-      "ms": 28
+      "ms": 27
     },
     {
       "ligne": 754,
@@ -196,7 +196,7 @@
     {
       "ligne": 831,
       "titre": "the mirror-discovery clue meant to seed the reversed enigma is reliably formatted as a « … » quoted aside on every one of the six variants, never lost.",
-      "ms": 12
+      "ms": 11
     },
     {
       "ligne": 867,
@@ -206,22 +206,22 @@
     {
       "ligne": 915,
       "titre": "live office sleeper repaired, silent sleeping partner during human chat, selected awake priority, attraction attachment floor, zero inference for blocked sleepe",
-      "ms": 30
+      "ms": 33
     },
     {
       "ligne": 929,
       "titre": "sleeping poses remain on actual furniture, remote-only tv on/off preserves discovery and final architecture signature stays canonical.",
-      "ms": 18
+      "ms": 15
     },
     {
       "ligne": 948,
       "titre": "garden access gates, persistent/idempotent zero-API unlock, unchanged round/epoch, open-only exterior paths, tree/right-door collision, reset relocks garden.",
-      "ms": 22
+      "ms": 25
     },
     {
       "ligne": 998,
       "titre": "the anti-echo retry is wired end to end (2026-09-23, task #594) — the detector built the day before could measure the echo and did nothing with it, which is the",
-      "ms": 18
+      "ms": 17
     },
     {
       "ligne": 1013,
@@ -231,7 +231,7 @@
     {
       "ligne": 1032,
       "titre": "minimum two zero-API sleep turns, one room-stamped dream narration, awake partner answers for a sleeping addressee, explicit food and cached speaker cues, motiv",
-      "ms": 20
+      "ms": 15
     },
     {
       "ligne": 1036,
@@ -261,37 +261,37 @@
     {
       "ligne": 1138,
       "titre": "insolite openings stay a minority, are internally distinct, seed the right agent\\'s needs/emotions, and actually surface in the scripted opening turn.",
-      "ms": 9
+      "ms": 8
     },
     {
       "ligne": 1174,
       "titre": "three close reconciliations open a real dispute with a visibly angry expression on both faces, suspend new gestures, and require a genuine shared reconciliation",
-      "ms": 25
+      "ms": 27
     },
     {
       "ligne": 1190,
       "titre": "anger reliability — faceExpression() reads real hostility from tension/comfort alone, not only from life.dispute\\'s angry flag.",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 1370,
       "titre": "bonus roulette locked before revelation, real zero-API grants for all 9 bonuses (food/calm/sleep/stoic/mute/trottoir/force_move/observer_mute/camera_hide) with",
-      "ms": 110
+      "ms": 102
     },
     {
       "ligne": 1476,
       "titre": "the observer-appreciation gauge reacts to the responding character\\'s own genuine trust reaction (not a lexical keyword list) with the required early-impression",
-      "ms": 61
+      "ms": 58
     },
     {
       "ligne": 1519,
       "titre": "appreciation is tracked per character; outside a dispute the two gauges are pulled back toward each other (solidarity by default), but an active interpersonal d",
-      "ms": 15
+      "ms": 22
     },
     {
       "ligne": 1618,
       "titre": "reversed-dossier traps asked one at a time and never reposed (including a muted fixed interlocutor deferring the trap rather than silently softlocking it), verb",
-      "ms": 240
+      "ms": 251
     },
     {
       "ligne": 1650,
@@ -301,17 +301,17 @@
     {
       "ligne": 1692,
       "titre": "Gemini model fallback stays completely inert unless GEMINI_FALLBACK_MODELS is explicitly configured (proven by every earlier test in this suite), and once confi",
-      "ms": 15
+      "ms": 12
     },
     {
       "ligne": 1735,
       "titre": "Gemini key fallback recovers from a primary-key 429 (the second character call benefits immediately from the same-turn discovery, never re-testing a key just fo",
-      "ms": 14
+      "ms": 16
     },
     {
       "ligne": 1800,
       "titre": "once observer-mute/camera-hide are drawn by the roulette, the surrounding behaviour stays intact — chat blocked only for the mute, the roulette itself respects",
-      "ms": 65
+      "ms": 56
     },
     {
       "ligne": 1847,
@@ -321,22 +321,22 @@
     {
       "ligne": 1923,
       "titre": "the private love-doubt thought surfaces exactly once when attraction first crosses 75 (never repeated), and loveDiscussable only turns on once a real intimate g",
-      "ms": 24
+      "ms": 27
     },
     {
       "ligne": 1980,
       "titre": "the affection-decision validation thought surfaces exactly once on a genuinely fresh proposal, and stays silent on a later turn carrying no fresh offer (Article",
-      "ms": 13
+      "ms": 12
     },
     {
       "ligne": 2034,
       "titre": "the validation-thought mechanism now also covers the organic (non-scripted) proposal path, so Noé — not just Lia — can be the one who receives a validation thou",
-      "ms": 9
+      "ms": 5
     },
     {
       "ligne": 2052,
       "titre": "the autonomous auto-tick floor is genuinely 20 seconds (not the former 85s) — throttled just under it, accepted right at it.",
-      "ms": 5
+      "ms": 4
     },
     {
       "ligne": 2092,
@@ -346,7 +346,7 @@
     {
       "ligne": 2124,
       "titre": "once the investigation is overdue (round>=20), the post-evidence debrief shortens from 2 turns to 1, closing part of the gap between the documented ~33-round ce",
-      "ms": 11
+      "ms": 10
     },
     {
       "ligne": 2139,
@@ -356,12 +356,12 @@
     {
       "ligne": 2179,
       "titre": "with several simultaneously healthy Gemini keys configured, traffic rotates across all of them instead of always landing on the same one, satisfying the explici",
-      "ms": 12
+      "ms": 15
     },
     {
       "ligne": 2210,
       "titre": "a key failing repeatedly gets an automatically escalating cooldown with no human tuning needed, and a single success instantly resets it back to the base delay.",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 2244,
@@ -381,22 +381,22 @@
     {
       "ligne": 2393,
       "titre": "midnight (round 35, synchronized with the investigation ceiling) reacts with genuine urgency while the investigation is open and switches to sarcastic ghost jok",
-      "ms": 16
+      "ms": 15
     },
     {
       "ligne": 2438,
       "titre": "a genuinely sleepless night (never once isSleeping() during the 9 night rounds) adds an exact, non-stacking +28 fatigue penalty at the next dawn, paired with an",
-      "ms": 15
+      "ms": 11
     },
     {
       "ligne": 2487,
       "titre": "an explicit \"non\" to a pending roulette request (from Lia/Noé asking the observer, never the reverse) clears the offer, now costs appreciation exactly like a si",
-      "ms": 25
+      "ms": 30
     },
     {
       "ligne": 2524,
       "titre": "genuineRespectStreak now tolerates a turn that merely stays flat/positive (no longer requires trust to keep climbing every single turn), while a genuine drop st",
-      "ms": 19
+      "ms": 21
     },
     {
       "ligne": 2560,
@@ -416,7 +416,7 @@
     {
       "ligne": 2694,
       "titre": "every kpi-report.mjs scoring function returns a correct percentage on well-formed data, and returns undefined — never NaN, Infinity, or a disguised 0% — on miss",
-      "ms": 20
+      "ms": 21
     },
     {
       "ligne": 2708,
@@ -426,22 +426,22 @@
     {
       "ligne": 2725,
       "titre": "buildKpiSynthesisHtml() renders the exact same compact synthesis already logged by main() as a complete self-contained HTML document, carrying the real run id a",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 2743,
       "titre": "fetchLiveMetrics() tries every known dev-server port in order and returns the first real success rather than stopping at the first connection failure, closing t",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 2774,
       "titre": "ARGUS's mechanical layer correctly flags a Life-type field that is genuinely never read elsewhere as a confirmed dead field, never flags a field with real, plen",
-      "ms": 68
+      "ms": 66
     },
     {
       "ligne": 2883,
       "titre": "HARMONIA\\'s mechanical layer correctly reconfirms a documented numeric claim against its real code constant — consistent numbers pass silently, a genuine mismatc",
-      "ms": 70
+      "ms": 77
     },
     {
       "ligne": 2910,
@@ -481,22 +481,22 @@
     {
       "ligne": 3105,
       "titre": "findOpenTasks() flags exactly the rows whose status is not \"terminée\" (an \"ouverte\" and an \"en cours\" row alike), reports each one\\'s real distinct status rather",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 3172,
       "titre": "estStatutTermine()/estStatutEcarte() donnent UNE seule définition de « close » et de « écartée » aux quatre lecteurs du suivi — les onze orthographes réelles du",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 3252,
       "titre": "CLONE-HUNTER voit maintenant la MÊME NOTION ÉCRITE PLUSIEURS FOIS, PRESQUE PAREIL (2026-09-29, tâche #1174) — le défaut qui ne duplique aucun bloc et que ses de",
-      "ms": 6097
+      "ms": 5848
     },
     {
       "ligne": 3357,
       "titre": "splitTableRow() treats an escaped \"\\\\|\" as a literal pipe character inside a cell rather than an extra column separator, restoring it correctly in the cell text",
-      "ms": 167
+      "ms": 173
     },
     {
       "ligne": 3400,
@@ -506,7 +506,7 @@
     {
       "ligne": 3416,
       "titre": "findClaimedFilesMissing() flags exactly a \"terminée\" row whose backtick-quoted repo file path does not really exist on disk, never a still-open row nor a comman",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 3422,
@@ -516,7 +516,7 @@
     {
       "ligne": 3468,
       "titre": "extractTaskNumbers() reads only real numeric task numbers (skipping headers, separators, and \"—\" pre-numbering placeholders), nextTaskNumber() returns the true",
-      "ms": 15
+      "ms": 16
     },
     {
       "ligne": 3538,
@@ -526,7 +526,7 @@
     {
       "ligne": 3653,
       "titre": "ecotoken measures an INSTRUCTION budget, not only a token weight (2026-09-23, task #208). The cost was never the real risk of a document reloaded at every messa · « Où on en est » carries a freshness fingerprint, born of a real mistake made the very hour the tool was built (2026-09-23) — the report was generated, five tas · a green obtained by looking at nothing is finally measurable (2026-09-23, task #206). Several tools already guarded against it, each in its own corner and namin · THE-SCREENER may clear exactly one window, by name (2026-09-23, task #186). What blocked a phase-2 capture was not the pseudonym window, already handled, but th · X6 is wired and the requirement scale tells three states apart (2026-09-23, task #585). The detector for X6 had been written, tested and never called by any mai · the echo between Lia and Noé is measurable at last — the shared run of consecutive words catches the real full_sim19 pair (the first words exchanged with the ob",
-      "ms": 300
+      "ms": 302
     },
     {
       "ligne": 3677,
@@ -551,7 +551,7 @@
     {
       "ligne": 3869,
       "titre": "findCommitsMissingSuiviUpdate() flags exactly the commits that touched real code, TypeScript, or the charter/method docs while never touching docs/suivi/ in the",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 3892,
@@ -561,32 +561,32 @@
     {
       "ligne": 4193,
       "titre": "data-archangel tells apart a source nobody reaches from one read through a table reader that DECLARES it and is corroborated by a real filesystem call — the sta",
-      "ms": 1658
+      "ms": 1585
     },
     {
       "ligne": 4351,
       "titre": "MOTIF_TACHE_ANNONCEE now recognises the bare « → **#818** » notation the repository actually writes, not only « tâche #818 » — it saw 47 of the 188 real RETENU",
-      "ms": 2828
+      "ms": 2751
     },
     {
       "ligne": 4487,
       "titre": "god-of-all-process is the tool-brain of processes — it matches a task to the process that really governs it (and honestly matches nothing when none does), deriv",
-      "ms": 17
+      "ms": 16
     },
     {
       "ligne": 4538,
       "titre": "the simulation-log summarizer correctly falls back to parsing the round number from the request label for the oldest logs (a real bug found and fixed while arch",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 4554,
       "titre": "the shared shell helper (extracted from three duplicated copies) returns real stdout on success, never throws on a failing command, and only surfaces the verbos",
-      "ms": 67
+      "ms": 69
     },
     {
       "ligne": 4562,
       "titre": "PERSONNAGES/assertNotAPersonnage() (task #245) correctly names both real characters and refuses, by name, any team-member check mistakenly pointed at one — the",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 4604,
@@ -601,7 +601,7 @@
     {
       "ligne": 4689,
       "titre": "AXA-CHECK's function-level V8 coverage extraction correctly excludes the whole-script pseudo-entry, maps byte offsets back to real 1-indexed source lines, and t",
-      "ms": 2
+      "ms": 3
     },
     {
       "ligne": 4707,
@@ -626,7 +626,7 @@
     {
       "ligne": 4854,
       "titre": "runNetworkCheck() runs end-to-end against the real repository state (with only the two subprocess calls stubbed) and produces all 13 expected rows with real, no",
-      "ms": 499
+      "ms": 498
     },
     {
       "ligne": 4863,
@@ -636,27 +636,27 @@
     {
       "ligne": 4897,
       "titre": "the named, historized catalog (task #154) gives every real prestation an actual name, renderNamedCatalog() surfaces it in its own table distinct from the everyd",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 4909,
       "titre": "buildCatalogDelivery() (task #154 follow-up) delivers the named catalog as real HTML exactly when recordCatalog() reports a genuine new version, and as plain te",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 5197,
       "titre": "the PRESTATIONS menu freshness guard reads the real tools table (backticks stripped, header/separator skipped), correctly tells a menu-worthy tool (real cost or",
-      "ms": 857
+      "ms": 818
     },
     {
       "ligne": 5271,
       "titre": "suggestPrestationsForTask() weighs the three real fields of a prestation (nom 2, demande 1, description 0,5) instead of reading demande alone — 69 of the 74 rea",
-      "ms": 53
+      "ms": 47
     },
     {
       "ligne": 5354,
       "titre": "suggestPrestationsForTask() turns the PRESTATIONS menu into a callable service for other scripts — matching on a real, honest keyword overlap (never a single-wo",
-      "ms": 4
+      "ms": 3
     },
     {
       "ligne": 5549,
@@ -681,27 +681,27 @@
     {
       "ligne": 5829,
       "titre": "the usage counter gained a fourth state, and it was the counter that was wrong (2026-09-25, task #763). The user refused to let me relaunch the big tools on a z",
-      "ms": 9112
+      "ms": 8935
     },
     {
       "ligne": 5875,
       "titre": "tool-brain.mjs (2026-09-21) generalizes find-brain to the whole PRESTATIONS catalogue via adviseToolBrain(), centralizes the 3 previously-scattered post-commit",
-      "ms": 654
+      "ms": 623
     },
     {
       "ligne": 6219,
       "titre": "check-tasks-details.mjs stays strictly read-only on docs/suivi/ while flattening every real session row (loadAllTaskRows), splits Sujet on the existing Thème/So",
-      "ms": 259
+      "ms": 282
     },
     {
       "ligne": 6910,
       "titre": "checkChantierFileFreshness() (task #185) correctly leaves a genuinely fresh preliminary file alone, flags a real gap by the exact task number and chantier respo",
-      "ms": 10131
+      "ms": 9833
     },
     {
       "ligne": 6978,
       "titre": "detectPendingIdeaCandidates()/loadIdeaDecisions()/findIdeasNeedingDecision() (2026-09-21) correctly detect only genuinely new \"Nouvel outil\"/\"Conception\" suivi",
-      "ms": 35
+      "ms": 37
     },
     {
       "ligne": 6995,
@@ -711,7 +711,7 @@
     {
       "ligne": 8097,
       "titre": "the XP process (2026-09-23, task #221, named by the user) closes the loop the register alone could not: a lesson is discovered, recorded, analysed at the Ronde, · the four improvements asked for once the chain worked (2026-09-23, task #222). ③ A file path now counts as much as the words of the sentence, because the same t · the transverse lessons register (2026-09-23, task #220) is no longer a text nothing re-reads — the trap it documents twice over (L2, a mechanism that never leav",
-      "ms": 3023
+      "ms": 2770
     },
     {
       "ligne": 8130,
@@ -731,27 +731,27 @@
     {
       "ligne": 8744,
       "titre": "CIRCLE-TASKS lists exactly its 18 free periodic items (profil, référentiels, KPI, ALWAYS-NEW-CODE signal, correctifs, Smart Conso API scan, SMART-CONSO-TOKEN sc",
-      "ms": 57
+      "ms": 58
     },
     {
       "ligne": 8820,
       "titre": "les 3 verrous d\\'ouverture de Ronde (numérotation du suivi #787, outil muet au compteur #778, registre hors Ronde #954) appliquent sa décision « bloquer la Ronde",
-      "ms": 687
+      "ms": 692
     },
     {
       "ligne": 8956,
       "titre": "la classification des rapports et des datas (2026-09-26, ses trois commandes liées #955/#956/#957) range 290 rapports réels sur trois axes — le SUJET (dérivé du",
-      "ms": 7483
+      "ms": 5228
     },
     {
       "ligne": 8999,
       "titre": "l'état des classifications (2026-09-26) répond enfin à sa question « est-ce que c'est terminé ? », qui ne l'était pas : chaque classification du dépôt était doc",
-      "ms": 4494
+      "ms": 3484
     },
     {
       "ligne": 9146,
       "titre": "les kits d'export, RÈGLE CORRIGÉE le 2026-09-26 par lui, et sa raison est imparable : « les optionnels de l'agence ne pourront pas être réinstallés correctement",
-      "ms": 1317
+      "ms": 1333
     },
     {
       "ligne": 9214,
@@ -761,82 +761,82 @@
     {
       "ligne": 9300,
       "titre": "le badge « pire des deux » et X-Port BLINDTEST (2026-09-26, ses deux demandes du soir). LE BADGE : sa règle — « dès qu'un élément de l'Agence, quel que soit son",
-      "ms": 666
+      "ms": 653
     },
     {
       "ligne": 9358,
       "titre": "la conformité mécanique des kits, l'inventaire nominatif et le kit dans le parcours d'intégration (2026-09-26, ses points 1 à 3). SON POINT 1 ÉTAIT EXACT ET LE",
-      "ms": 2813
+      "ms": 2791
     },
     {
       "ligne": 9469,
       "titre": "deux rapports qui disent la même chose (2026-09-26, le premier des trois trous qu'il a demandé de traiter). PERSONNE NE POUVAIT RÉPONDRE À SA QUESTION : CLONE-H",
-      "ms": 392
+      "ms": 409
     },
     {
       "ligne": 9635,
       "titre": "deux DOCUMENTS qui disent la même chose (2026-09-26, deuxième des trois trous qu'il a demandé de traiter). PERSONNE NE POUVAIT RÉPONDRE À SON POINT 4 : CLONE-HU",
-      "ms": 2121
+      "ms": 2097
     },
     {
       "ligne": 9818,
       "titre": "deux OUTILS qui se chevauchent (2026-09-26, troisième et dernier des trois trous qu'il a demandé de traiter). CE QUE LA REPRISE DES NOTES A CORRIGÉ DANS MON IDÉ",
-      "ms": 91
+      "ms": 89
     },
     {
       "ligne": 9897,
       "titre": "la carte des modules, et le nom qui désigne deux prestations (2026-10-03, tâche #1536). Sa demande : « une VRAIE carte schématique, pas un texte », en deux docu",
-      "ms": 3
+      "ms": 2
     },
     {
       "ligne": 9946,
       "titre": "ce qui part avec l'Agence, document par document (2026-09-26, sa demande « EN FINIR AVEC LA CLASSIFICATION »). SA QUESTION ÉTAIT « est-ce que la séparation exis",
-      "ms": 14
+      "ms": 13
     },
     {
       "ligne": 10272,
       "titre": "le système des index (2026-09-26, son point 4 — « vérifier l'indexation générale, est-ce que tous les fichiers sont bien équipés comme il se doit ? »). LE CHIFF",
-      "ms": 222
+      "ms": 184
     },
     {
       "ligne": 10349,
       "titre": "la circulation des données — deux faux négatifs de CLASSE corrigés le 2026-09-28 (tâches #490/#566). Le premier : la clé de dédoublonnage des lectures indirecte",
-      "ms": 896
+      "ms": 870
     },
     {
       "ligne": 10421,
       "titre": "le rapport EXPORT central (2026-09-28, tâche #1060) — sa demande était de CENTRALISER (« tout me semble éparpillé », et data-archangel compte 248 fichiers qui p",
-      "ms": 832
+      "ms": 861
     },
     {
       "ligne": 10512,
       "titre": "l'état du schéma en cinq étapes (2026-09-28, tâche #1056) répond à sa question du gros prompt — « ON EN EST OU PAR RAPPORT AU SCHEMA : TOUT EST BIEN OK ? » — pa",
-      "ms": 1647
+      "ms": 1688
     },
     {
       "ligne": 10643,
       "titre": "le croisement process ↔ règles de travail (2026-09-28, tâche #1057) répond à ses trois questions séparément — un process que rien ne porte, une règle qu'aucun p",
-      "ms": 3
+      "ms": 4
     },
     {
       "ligne": 10695,
       "titre": "un outil cité par son NOM compte désormais comme porteur (2026-09-28, tâche #659) — la troisième forme, celle que l'équipe emploie vraiment. Sa demande était de",
-      "ms": 389
+      "ms": 348
     },
     {
       "ligne": 10743,
       "titre": "les DEUX registres de « ceci ne part pas » sont désormais honorés par le détecteur de portabilité (2026-09-28, tâche #668). Le dépôt en portait deux, écrits à d",
-      "ms": 78
+      "ms": 79
     },
     {
       "ligne": 10804,
       "titre": "les quatre formes d'une cible remplaçable (2026-09-28, tâche #668) — instruire les huit derniers candidats UN PAR UN, comme l'Article 19 l'exige, a montré que l",
-      "ms": 76
+      "ms": 77
     },
     {
       "ligne": 10880,
       "titre": "chemin DÉCLARÉ contre chemin ENFOUI (2026-10-01, tâche #1323) — la portabilité enfin mesurée à la maille du LITTÉRAL, et non plus du fichier. Le 2026-10-01 au m",
-      "ms": 666
+      "ms": 651
     },
     {
       "ligne": 10957,
@@ -846,52 +846,52 @@
     {
       "ligne": 11010,
       "titre": "écrire dans une ligne du suivi sans la casser (2026-09-28, tâche #1071). Une ligne `| a | b | c |` découpée sur « | » rend [\\\"\\\", \\\"a\\\", \\\"b\\\", \\\"c\\\", \\\"\\\"] : le dernier",
-      "ms": 32
+      "ms": 29
     },
     {
       "ligne": 11056,
       "titre": "un item COÛTEUX n'est pas un item muet (2026-09-28, tâche #726) — quatre états au lieu de trois dans la tendance des signaux de Ronde. x-port-blindtest était ac",
-      "ms": 8
+      "ms": 9
     },
     {
       "ligne": 11099,
       "titre": "trois états de couverture chez AXA-CHECK, et une exemption qui porte sa raison (2026-09-28, tâche #994). « 0 % mesuré » dit que le code est exercé et mal couver",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 11146,
       "titre": "CLONE-HUNTER réunit désormais les alertes dont un bloc est CONTENU dans un autre (2026-09-28, tâche #995). Un parcours de dossier factorisé le 2026-09-27 était",
-      "ms": 4182
+      "ms": 4012
     },
     {
       "ligne": 11187,
       "titre": "les noms en attente de baptême sont présentés PAR FAMILLE (2026-09-28, tâche #1020). Sa contrainte de forme commande toute la fonction, et elle est citée mot po",
-      "ms": 3
+      "ms": 5
     },
     {
       "ligne": 11249,
       "titre": "les impacts INDIRECTS d'un renommage sont mesurés et imprimés dans le plan (2026-09-28, tâche #740). Le plan ne couvrait que l'impact technique — imports, chemi",
-      "ms": 569
+      "ms": 618
     },
     {
       "ligne": 11298,
       "titre": "une fiche atteignable par CONVENTION n'est pas orpheline (2026-09-28, tâche #629). Le verdict d'origine était faux et la tâche le soupçonnait : trois documents",
-      "ms": 475
+      "ms": 546
     },
     {
       "ligne": 11402,
       "titre": "THE-EQUALIZER (2026-09-23) reads its 29 requirements from docs/referentiel/standards.md rather than enumerating them in code (Article 24), names each level from",
-      "ms": 54
+      "ms": 59
     },
     {
       "ligne": 11459,
       "titre": "THE-GHOST (2026-09-21) owns exactly the autonomous-mode lifecycle and nothing else — it never reimplements check-tasks-details.mjs\\'s task-relevance judgment (re",
-      "ms": 3
+      "ms": 4
     },
     {
       "ligne": 11557,
       "titre": "html-report.mjs's escapeHtml() neutralizes every HTML-significant character (including a real <script> injection attempt) and handles a missing value honestly,",
-      "ms": 3
+      "ms": 2
     },
     {
       "ligne": 11584,
@@ -921,12 +921,12 @@
     {
       "ligne": 11718,
       "titre": "EL-PROFESSOR lit enfin le registre de check-spirit — depuis quand l'Article 0 a-t-il été RÉELLEMENT mesuré (2026-09-29, tâche #1187). check-spirit est le seul o",
-      "ms": 129
+      "ms": 112
     },
     {
       "ligne": 11753,
       "titre": "une simulation sans transcript ne peut pas être notée, et EL-PROFESSOR cesse de la réclamer sans fin (2026-09-29, tâche #1185). `full_sim` était signalée à chaq",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 11763,
@@ -936,17 +936,17 @@
     {
       "ligne": 11776,
       "titre": "moveReasonMismatchesDestination() flags a movement reason that names a different room than the real destination and never names the destination itself, but neve",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 11801,
       "titre": "THE-FINAL-JUDGE\\'s two mechanical guards work correctly — extractPersonaBlock() pulls the exact fixed persona text from its single source of truth with nothing a",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 11816,
       "titre": "judge-persona-shared.mjs correctly centralizes extractPersonaBlock() (the exact single source of truth both THE-FINAL-JUDGE and THE-DEEP-READER now import) and",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 11834,
@@ -956,7 +956,7 @@
     {
       "ligne": 11863,
       "titre": "findMissingAliasReplacements() correctly flags a real route.ts \"@/lib/X\" import with no matching replaceAll target in a given script\\'s transpile chain, and — ch",
-      "ms": 19
+      "ms": 18
     },
     {
       "ligne": 11915,
@@ -981,32 +981,32 @@
     {
       "ligne": 12207,
       "titre": "diagnoseAdviceAccuracy() mechanically flags a hard threshold likely unrespected (a same-type confirmed action mere seconds after a \"seuil_dur\" verdict) and surf",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 12264,
       "titre": "CLAUDE.MD.SPY (extractRuleUnits/countArticleCrossReferences/classifyRuleSensitivity/classifyRuleImportance/findRedundantRulePairs/buildClaudeMdRuleTable/renderC",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 12360,
       "titre": "a solitary turn now lets roughly half of a genuine attraction increase survive (still throttled by the existing 0.28 credit system, never a full pass-through) i",
-      "ms": 19
+      "ms": 17
     },
     {
       "ligne": 12443,
       "titre": "LE-RÉGISSEUR (2026-09-21) mechanically archives a simulation\\'s transcript/dossier/action-summary under the real flat naming convention (dossier omitted honestly",
-      "ms": 38
+      "ms": 37
     },
     {
       "ligne": 12558,
       "titre": "the tool-usage counter (task #166) records each real solicitation cumulatively and permanently (never reset per session, the user\\'s explicit choice), distinguis",
-      "ms": 190
+      "ms": 170
     },
     {
       "ligne": 12891,
       "titre": "check-tasks-details, the declared guardian of the etat-des-taches process, now really enforces the four mechanisms its own document promises — one of which (fin",
-      "ms": 2686
+      "ms": 2603
     },
     {
       "ligne": 12942,
@@ -1016,12 +1016,12 @@
     {
       "ligne": 12971,
       "titre": "the chain \"MEASURE -> FOLLOW-UP\" is now mechanical (2026-09-24, task #698), and it closes the link Article 28 left open. Article 28 wires report -> analysis ->",
-      "ms": 53
+      "ms": 47
     },
     {
       "ligne": 13037,
       "titre": "the iceberg splits the 77 scripts into four groups (2026-09-24, task #707), and the frontier is DERIVED rather than listed. The user asked for a split between w",
-      "ms": 4
+      "ms": 3
     },
     {
       "ligne": 13064,
@@ -1036,12 +1036,12 @@
     {
       "ligne": 13104,
       "titre": "the naming agent now finds a name that carries TWO definitions (2026-09-25, task #756) — Article 27 calls a proper noun with no reachable definition a handover",
-      "ms": 72
+      "ms": 66
     },
     {
       "ligne": 13857,
       "titre": "the weight of each tool and the gain of a reduction are measurable at last (2026-09-25, task #744) — \"on doit etre capable dans leur fiche complete d\\'indiquer l",
-      "ms": 7829
+      "ms": 6797
     },
     {
       "ligne": 13874,
@@ -1061,7 +1061,7 @@
     {
       "ligne": 13950,
       "titre": "a subject\\'s whole file can finally be gathered rather than looked up (2026-09-25, task #742) — he asked for \"un rapport complet de TOUTES les notes prises sur l",
-      "ms": 3
+      "ms": 2
     },
     {
       "ligne": 13980,
@@ -1071,7 +1071,7 @@
     {
       "ligne": 14012,
       "titre": "recovering the notes before opening a chantier is now a real command (2026-09-24, task #759), and the rule that demands it came from the user after he demonstra",
-      "ms": 324
+      "ms": 325
     },
     {
       "ligne": 14035,
@@ -1136,12 +1136,12 @@
     {
       "ligne": 14489,
       "titre": "Doc-Report (task #165) mechanically audits the already-decided HTML/texte choice against the real producing script\\'s source (never guessed from a tool\\'s name),",
-      "ms": 1249
+      "ms": 1230
     },
     {
       "ligne": 14509,
       "titre": "findOrphanReportFiles() (task #340, 2026-09-21) closes the real gap found the same night — ARGUS writes a genuine scan file on every run but nothing enforced in",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 14538,
@@ -1151,7 +1151,7 @@
     {
       "ligne": 14557,
       "titre": "Doc-Report\\'s local-journal extension (2026-09-21) answers the user\\'s direct question — the SAME tool, never a twin — inventories every real gitignored state/cac",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 14565,
@@ -1161,12 +1161,12 @@
     {
       "ligne": 14592,
       "titre": "flagFindBoosterCandidates() (2026-09-21) connects Doc-Report to find-booster\\'s own recommendFindBooster() — flags exactly the registries whose real producing sc",
-      "ms": 167
+      "ms": 139
     },
     {
       "ligne": 14903,
       "titre": "THE-KING\\'s philosophy revelation (task #1418) reads the real corpus of 200 normative files — charter, working rules, lessons, référentiel and every tool\\'s head · THE-KING (tasks #167, #196) reminds to consult docs/philosophie-et-politique.md before a high-stakes decision across exactly its 6 confirmed trigger categories",
-      "ms": 2334
+      "ms": 2423
     },
     {
       "ligne": 14954,
@@ -1176,7 +1176,7 @@
     {
       "ligne": 15076,
       "titre": "the unified report gabarit (task #199) gives text reports the single contract HTML reports already had — one definition, two renderings, never two parallel gaba",
-      "ms": 326
+      "ms": 329
     },
     {
       "ligne": 15132,
@@ -1201,42 +1201,42 @@
     {
       "ligne": 15309,
       "titre": "memory-audit (task #169) — role (a) mechanically detects a real chronological break in any round-numbered memory log (object-shaped like bonusLog/negotiationLog",
-      "ms": 742
+      "ms": 702
     },
     {
       "ligne": 15359,
       "titre": "lib/memento-weight.ts is the real observation point wired into lib/lia.ts::think() (a real token estimate returned and recorded per real call, capped at the sam",
-      "ms": 2
+      "ms": 3
     },
     {
       "ligne": 15395,
       "titre": "route-booster (2026-09-21) detects real candidate cut points in a giant function (a genuine `if (x.y === \"...\")` branch and a genuine comment-after-blank-line,",
-      "ms": 95
+      "ms": 93
     },
     {
       "ligne": 15547,
       "titre": "find-booster (2026-09-21, promoted the same night to a full Membre de l\\'équipe after proving itself on 4 real different files) indexes all four real structural",
-      "ms": 91
+      "ms": 96
     },
     {
       "ligne": 15590,
       "titre": "extractCommentedStatementIndex() (task #180) correctly ignores a single-line comment (too brief to be a real section header), never indexes a genuine multi-line",
-      "ms": 4
+      "ms": 5
     },
     {
       "ligne": 15650,
       "titre": "find-brain (2026-09-21) unifies find-booster and find-deep-booster (the real display nickname for route-booster.mjs, never a file rename) without reimplementing",
-      "ms": 345
+      "ms": 362
     },
     {
       "ligne": 15719,
       "titre": "CLONE-HUNTER (2026-09-21) — a real gap confirmed by reading ARGUS/HARMONIA/AXA-CHECK/CLEAN-DIRTY-OLD\\'s own exported functions one by one, none of which detects",
-      "ms": 509
+      "ms": 550
     },
     {
       "ligne": 15765,
       "titre": "CLONE-HUNTER v2 (2026-09-21, task #177) — detects a block that is the exact same logic under one single consistent bijective identifier renaming across the whol",
-      "ms": 1561
+      "ms": 1463
     },
     {
       "ligne": 15847,
@@ -1246,12 +1246,12 @@
     {
       "ligne": 15954,
       "titre": "the three \"OK GO\" CASSANDRA-RH signals (2026-09-21) — tokenInvestmentVerdict() honestly re-reads SMART-CONSO-TOKEN\\'s own recorded classification for a real cont",
-      "ms": 1325
+      "ms": 1246
     },
     {
       "ligne": 16088,
       "titre": "CASSANDRA-RH (2026-09-21, noyau fiabilisé + trous d\\'équipe) — the fixed persona text stays verbatim, parseKpiHistoryCsv()/latestKpiTrend() read kpi-historique.c",
-      "ms": 1535
+      "ms": 1551
     },
     {
       "ligne": 16153,
@@ -1261,17 +1261,17 @@
     {
       "ligne": 16629,
       "titre": "the « intégration à la Ronde » process (2026-09-23) exists separately from « intégration d'un outil », as the user required — and the night he asked for it, int",
-      "ms": 1489
+      "ms": 1458
     },
     {
       "ligne": 16911,
       "titre": "criticality and urgency are separated (2026-09-23) — the user was right and the proof was in the scale itself: URGENT-RETARD, a DELAY level, sat at rank 5 above",
-      "ms": 135
+      "ms": 114
     },
     {
       "ligne": 16979,
       "titre": "short messages never stop the work (2026-09-23, task #572) — the default is to CONTINUE and only an explicit stop request interrupts, which is written as forms · the three work modes are a read registry rather than a boolean copied 31 times (2026-09-23) — the old nightAutonomousMode answered two unrelated questions at on · the five written-but-unenforced rules of circle-process-guardian (2026-09-23) are now genuinely wired and covered — each of the five was IMPORTED and never CALL · circle-process-guardian (2026-09-22) verifies the full CIRCLE-TASKS Ronde process mechanically wherever the facts are observable from disk (fresh report artifac",
-      "ms": 2
+      "ms": 3
     },
     {
       "ligne": 17111,
@@ -1281,12 +1281,12 @@
     {
       "ligne": 17426,
       "titre": "the Article 28 chain is now mechanically enforceable end to end (2026-09-23) — dates render in full letters from ONE shared place reaching every report (UTC-sta",
-      "ms": 80
+      "ms": 78
     },
     {
       "ligne": 17458,
       "titre": "pure-gold-unity now carries the WHOLE report verdict (2026-09-23) rather than a third of it — answering \"whose responsibility is this?\" with a single place inst",
-      "ms": 3
+      "ms": 2
     },
     {
       "ligne": 17503,
@@ -1296,17 +1296,17 @@
     {
       "ligne": 17575,
       "titre": "the certification ceremony finally keeps its TEXT, not just a slug and a date (2026-09-23, task #210) — the hook demanded the block be shown \"TEL QUEL\", while t",
-      "ms": 2
+      "ms": 3
     },
     {
       "ligne": 17621,
       "titre": "ARGUS finally remembers its own verdicts (2026-09-23, task #214) — it had been re-reporting six candidates investigated and CLOSED on 2026-09-19, the conclusion",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 17771,
       "titre": "CLONE-HUNTER reports one alert per PROBLEM and gives each its own reason (2026-09-23, task #217) — it grouped by anchor, so the same duplication found from two",
-      "ms": 2098
+      "ms": 2077
     },
     {
       "ligne": 17863,
@@ -1316,47 +1316,47 @@
     {
       "ligne": 17906,
       "titre": "the three mute detectors are wired (2026-09-23, task #218), and the worst of them answered an explicit user request — \"assure-toi qu\\'un mécanisme vérifie que to",
-      "ms": 2671
+      "ms": 2673
     },
     {
       "ligne": 18055,
       "titre": "MOÏSE-TABLES-DE-LOI (2026-09-23, task #613) owns the charter perimeter and nothing else. Its porteur measure is the one worth keeping: the first version counted",
-      "ms": 1162
+      "ms": 1079
     },
     {
       "ligne": 18105,
       "titre": "the Article 19 guard exists at last (2026-09-23, task #616) — \"comprendre avant de toucher\" had 287 citations across this repository, the highest count of any r",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 18162,
       "titre": "MOÏSE-TABLES-DE-LOI now analyses PERTINENCE and LOGIC (2026-09-23), answering a direct question whose honest answer had been no — it measured weight, citations,",
-      "ms": 1065
+      "ms": 1040
     },
     {
       "ligne": 18369,
       "titre": "MOÏSE now produces the campaign report as a real command (2026-09-23, task #638), on a direct request — a report only the agent knows how to produce dies with t · the charter now protects itself mechanically (2026-09-23, task #631), answering a direct question from the user — it already ORDERED its own protection in two p · the three throwaway scripts of one charter analysis now live in the tools (2026-09-23, task #628) — counting obligations per rule, checking that no path is lost",
-      "ms": 273
+      "ms": 288
     },
     {
       "ligne": 18481,
       "titre": "AGENT-DU-TEMPS knows the time and, above all, never gives it without saying where it comes from (2026-09-24, chantier 3.1) — an AI has no clock: it infers the d",
-      "ms": 4358
+      "ms": 4120
     },
     {
       "ligne": 18976,
       "titre": "the Agence\\'s own scripts are classified by TYPE and by TRANSVERSE CLASS (2026-09-24, chantiers 1.3 and 1.4 of the night plan) — two axes neither of the existing",
-      "ms": 24516
+      "ms": 23597
     },
     {
       "ligne": 18999,
       "titre": "ABRAHAM-LES-REFERENCES is the master tool for ANY numbered-rule document (2026-09-23, task #619), and it exists because of a slicing error the user named better",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 19037,
       "titre": "tool combinations are measured at last (2026-09-23), answering a question nobody could answer — the counter recorded one toolSlug at a time, and across 1 184 ev",
-      "ms": 46
+      "ms": 49
     },
     {
       "ligne": 19095,
@@ -1366,7 +1366,7 @@
     {
       "ligne": 19139,
       "titre": "la ligne fantôme (2026-09-26, tâche #944) — une tâche faite dont la ligne dit encore « ouverte ». La règle était écrite depuis le 2026-09-19 (« à la clôture d'u",
-      "ms": 27
+      "ms": 29
     },
     {
       "ligne": 19188,
@@ -1386,12 +1386,12 @@
     {
       "ligne": 19320,
       "titre": "sept détecteurs qui ne parlaient nulle part (2026-09-26, tâche #919) — ils existaient, ils étaient testés, et aucun code hors de la suite de tests ne les appela",
-      "ms": 5
+      "ms": 6
     },
     {
       "ligne": 19354,
       "titre": "la fraîcheur des faits et le manuel qui n'est pas un fantôme (2026-09-27, tâches #1022 et #1023) — deux demandes du même jour, nées du même défaut mesuré. MOÏSE",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 19424,
@@ -1401,7 +1401,7 @@
     {
       "ligne": 19618,
       "titre": "EZECHIEL, LA VUE LARGE (2026-09-27, tâche #1026) — la demande complète de l'utilisateur, verrouillée point par point. La frontière à trois entre MOÏSE (la chart",
-      "ms": 7
+      "ms": 8
     },
     {
       "ligne": 19675,
@@ -1411,27 +1411,27 @@
     {
       "ligne": 19712,
       "titre": "exportable n'est pas portable (2026-09-27, tâche #1034) — la seconde moitié de l'export, que personne ne mesurait. La trouvaille tient en une phrase : « l'outil",
-      "ms": 73
+      "ms": 70
     },
     {
       "ligne": 19764,
       "titre": "le décor partagé (2026-09-27, chantier du filet) — la première marche de l'échelle standard du métier pour une suite lente, et la seule qui se prenne À PROTECTI",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 19816,
       "titre": "le filet ne s'écrit plus en dur, il se trouve (2026-09-27, tâche #1030). Sa question ÉTAIT la tâche — « est-ce que Ezechiel saura sinon quel fichier est le file",
-      "ms": 28
+      "ms": 26
     },
     {
       "ligne": 19857,
       "titre": "Ezechiel prescrit là où il n'y a rien (2026-09-27, tâche #1031). Sa demande était claire — « saura sinon suggérer la création d'un filet de sécurité avec la bon",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 19906,
       "titre": "ce que le projet témoin a trouvé, et qui n'aurait JAMAIS été trouvé ici (2026-09-27, tâche #1034). Huit outils de l'Agence lancés sur un dépôt ÉTRANGER — sindre",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 19945,
@@ -1441,27 +1441,27 @@
     {
       "ligne": 19973,
       "titre": "le coordinateur ne classait pas ses propres dossiers (2026-09-27). Trouvé sur sa question — « ou alors tout est centralisé chez Abraham pour la maintenance ? »",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 20029,
       "titre": "le banc d'essai a trouvé deux défauts, et l'un d'eux était DANS LE BANC (2026-09-27, tâche #1034). PREMIER — LE FAUX POSITIF DU MESUREUR : le banc lance chaque",
-      "ms": 4
+      "ms": 3
     },
     {
       "ligne": 20104,
       "titre": "le découpeur du filet est enfin testé (2026-09-29, tâche #1190) — 1 fonction exercée sur 9 quand AXA-CHECK a cessé d'être aveugle, alors que c'est LUI qui décid",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 20146,
       "titre": "les dates de git partagées (2026-09-27, chantier du filet, deuxième marche). La première marche partageait les LECTURES ; celle-ci partage les SOUS-PROCESSUS, e",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 20188,
       "titre": "la dette et le soupçon (2026-09-26, tâche #943) — le détecteur de dettes documentaires accusait à tort, et le coût s'est mesuré le jour même : un commit qui tou",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 20222,
@@ -1476,17 +1476,17 @@
     {
       "ligne": 20323,
       "titre": "« est-ce que ça existe déjà ? » (2026-09-26, tâche #746) — sa demande était qu'avant d'écrire une fonction, quelque chose vérifie qu'elle n'existe pas ailleurs.",
-      "ms": 305
+      "ms": 294
     },
     {
       "ligne": 20358,
       "titre": "« 28 outils sur 50 ne concluent pas » — le chiffre était faux (2026-09-26, tâche #803). La tâche demandait d'instruire lesquels des 28 devaient vraiment conclur",
-      "ms": 773
+      "ms": 758
     },
     {
       "ligne": 20402,
       "titre": "« 44 outils sans portée déclarée » — il y en avait UNE (2026-09-26, tâche #807). Le registre déclare en toutes lettres que tout ce qu'il ne nomme pas est de por",
-      "ms": 718
+      "ms": 705
     },
     {
       "ligne": 20451,
@@ -1496,7 +1496,7 @@
     {
       "ligne": 20532,
       "titre": "le compteur d'usage était aveugle aux appels par import (2026-09-27, tâche #1007). Le rapport de licenciements de CASSANDRA-RH désignait 10 outils comme candida",
-      "ms": 653
+      "ms": 659
     },
     {
       "ligne": 20582,
@@ -1506,12 +1506,12 @@
     {
       "ligne": 20671,
       "titre": "huit fausses dettes documentaires en un seul commit (2026-09-27, tâche #1014). Le détecteur de changement indirect jugeait sur le FICHIER TOUCHÉ, jamais sur ce",
-      "ms": 6581
+      "ms": 6466
     },
     {
       "ligne": 20720,
       "titre": "le « process primitif » était nommé partout et n'existait nulle part (2026-09-27, tâche #707). Le mot vivait dans le code de classerIceberg() et dans le message",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 20776,
@@ -1521,37 +1521,37 @@
     {
       "ligne": 20833,
       "titre": "quatre outils de l'Agence ne pouvaient pas partir (2026-09-27, tâche #668). SAFE-EXPORT les signalait depuis le chantier 3.5 : leurs cibles étaient écrites en d",
-      "ms": 108
+      "ms": 110
     },
     {
       "ligne": 20887,
       "titre": "les deux listes d'axes ne se parlaient pas (2026-09-27, tâche #439). docs/referentiel/organisation-agence.md DÉFINIT les axes de classification, AXES_DE_CLASSIF",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 20946,
       "titre": "un fichier retiré laissait vingt-et-un renvois qui ressemblaient à des liens morts (2026-09-27, tâche #1000). lib/reference.ts, le référentiel affiché en jeu, a",
-      "ms": 83
+      "ms": 62
     },
     {
       "ligne": 20997,
       "titre": "l'outil qui accompagne ses quinze tests (2026-09-27, tâche #1003). Sa question était « quel outil pourrait accompagner le passage des 15 tests » — les règles de",
-      "ms": 3
+      "ms": 1
     },
     {
       "ligne": 21045,
       "titre": "personne ne gardait l'histoire de l'Agence (2026-09-27, tâche #748). Sa question — « QUI garde et surveille l'histoire de l'agence ? » — avait pour réponse honn",
-      "ms": 2914
+      "ms": 3080
     },
     {
       "ligne": 21084,
       "titre": "importer check-spirit.mjs, c'était le LANCER (2026-09-27, tâche #996). Tout son code est au niveau du module, y compris la boucle de provocations qui appelle vr",
-      "ms": 3
+      "ms": 4
     },
     {
       "ligne": 21146,
       "titre": "la saisine elle-même n'était jamais archivée (2026-09-27, tâches #723 et #724). Le trou a été trouvé en essayant de répondre à une de ses questions, et c'est ce",
-      "ms": 3
+      "ms": 2
     },
     {
       "ligne": 21198,
@@ -1561,7 +1561,7 @@
     {
       "ligne": 21240,
       "titre": "un réveil n'est pas un contrôle (2026-09-27, tâche #732, seconde moitié). La première moitié était faite — le rappel est passé de 45 à 15 minutes, avec un filet",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 21298,
@@ -1586,7 +1586,7 @@
     {
       "ligne": 21538,
       "titre": "le gardien partagé accusait des process qu'il n'avait pas touchés (2026-09-27, vérification à froid des tâches #436 et #773). C'est la vérification à froid qui",
-      "ms": 5
+      "ms": 6
     },
     {
       "ligne": 21623,
@@ -1596,47 +1596,47 @@
     {
       "ligne": 21706,
       "titre": "le troisième registre du croisement process ↔ règles (2026-09-28, tâche #1069). LE CROISEMENT SUR-ACCUSAIT, et c'est la même famille d'erreur que toutes celles",
-      "ms": 39
+      "ms": 44
     },
     {
       "ligne": 21791,
       "titre": "le banc témoin mesurait pour personne (2026-09-28, tâche #902). LA LEÇON L2 DANS SA FORME LA PLUS PURE : le banc existe, il clone un vrai dépôt étranger, y inst",
-      "ms": 45
+      "ms": 44
     },
     {
       "ligne": 21864,
       "titre": "les deux verdicts qui manquaient au banc témoin (2026-09-28, tâche #902). LE BANC COMPTAIT HUIT ÉCHECS DONT SIX N'EN ÉTAIENT PAS, et les six sont des erreurs du",
-      "ms": 74
+      "ms": 76
     },
     {
       "ligne": 21914,
       "titre": "la septième dimension mesurait sans rendre de chiffre (2026-09-28, tâche #902). MÊME FAMILLE EXACTE QUE LE BANC TÉMOIN, LE MÊME JOUR, et c'est ce qui rend la le",
-      "ms": 4
+      "ms": 5
     },
     {
       "ligne": 21962,
       "titre": "l'étape 2 du plan de portabilité, écrite le 2026-09-27 et jamais faite (2026-09-28, tâche #902). Sa stratégie la nomme noir sur blanc — « c'est l'étape que pers",
-      "ms": 69
+      "ms": 68
     },
     {
       "ligne": 22029,
       "titre": "le rapport de circulation se contredisait lui-même (2026-09-28, tâches #490/#902). DEUX DÉFAUTS, ET LE SECOND EST LE PLUS COÛTEUX parce qu'invisible à la relect",
-      "ms": 935
+      "ms": 870
     },
     {
       "ligne": 22066,
       "titre": "un compte de zéro est l'absence du manque, jamais le manque (2026-09-28, tâche #699). La chaîne « mesure → suite » cherche dans les tâches CLOSES les constats c",
-      "ms": 69
+      "ms": 45
     },
     {
       "ligne": 22114,
       "titre": "un numéro de tâche n'est pas un décompte (2026-10-01, tâche #699). La chaîne « mesure → suite » repère un écart à la proximité d'un compte de choses et d'un mot",
-      "ms": 70
+      "ms": 42
     },
     {
       "ligne": 22155,
       "titre": "« SANS SUITE » contient « SUITE » (2026-10-01, tâche #699). Le motif de la suite acceptait n'importe quel caractère non-lettre avant le mot, et l'espace de « SA",
-      "ms": 65
+      "ms": 37
     },
     {
       "ligne": 22202,
@@ -1646,7 +1646,7 @@
     {
       "ligne": 22268,
       "titre": "tool-brain est-il vraiment le point d'entrée (2026-09-28, tâche #575). SA QUESTION : « c'est devenu ton point d'entree pour les outils ? tu utilises ? tout fonc",
-      "ms": 18
+      "ms": 20
     },
     {
       "ligne": 22302,
@@ -1656,22 +1656,22 @@
     {
       "ligne": 22355,
       "titre": "un axe de classification peut annoncer un porteur qui n'existe pas, et rien ne casse (#1529). L'axe « type » renvoyait à typeDuScript() quand la fonction s'appe",
-      "ms": 1788
+      "ms": 931
     },
     {
       "ligne": 22404,
       "titre": "la famille est-elle constatée, et ma première réponse était fausse (2026-10-03, tâche #1540). Sa question P35 — « combien de classifications sont INVENTÉES et n",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 22465,
       "titre": "ce que coûtent les pages HTML, et la mesure déplace sa question (2026-10-03, tâche #1544). Sa question P56 : « la livraison de docs HTML à cette fréquence est-e",
-      "ms": 9
+      "ms": 7
     },
     {
       "ligne": 22527,
       "titre": "un schéma sans titre, et une règle déjà suivie à 92 % sans être écrite (2026-10-03, tâche #1537). Ses consignes de format P25/P26/P49 : le schéma du module « ge",
-      "ms": 20
+      "ms": 21
     },
     {
       "ligne": 22580,
@@ -1686,22 +1686,22 @@
     {
       "ligne": 22685,
       "titre": "l'index des fils à chaque fin de Ronde, et l'item ne suffisait pas (2026-10-03, tâche #1543). Sa demande P52 : « voir l'index des fils à CHAQUE fin de Ronde, l'",
-      "ms": 3
+      "ms": 6
     },
     {
       "ligne": 22754,
       "titre": "trois états de remise, et le quatrième qu'il proposait ne se mesure pas (2026-10-03, tâche #1532). Ses trois points : une réponse vaut accusé de réception ET de",
-      "ms": 2
+      "ms": 3
     },
     {
       "ligne": 22817,
       "titre": "« elles commencent à me hanter » — le diagnostic de clé qui ne coûte rien (2026-10-03, tâche #1549). Sa question P68 : « as-tu la possibilité de tester ces clés",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 22882,
       "titre": "ce que JESUS voit du jeu, et ma réponse courte était fausse (2026-10-03, tâche #1550). J'avais écrit qu'il « regarde ce qui freine le TRAVAIL, pas le JEU ». FAU",
-      "ms": 832
+      "ms": 851
     },
     {
       "ligne": 22946,
@@ -1711,7 +1711,7 @@
     {
       "ligne": 23030,
       "titre": "ce qui ne marche que chez moi, et le filet lui-même en était (2026-10-03, tâche #1555). Sa peur P65 ne porte pas sur l'export en général mais sur le cas où des",
-      "ms": 57
+      "ms": 82
     },
     {
       "ligne": 23086,
@@ -1721,27 +1721,27 @@
     {
       "ligne": 23136,
       "titre": "une accusation permanente qu'aucun travail ne pouvait éteindre (2026-09-28, tâche #1076). TOOL-LEARNING reprochait à CLONE-HUNTER d'être « resté immobile depuis",
-      "ms": 80
+      "ms": 85
     },
     {
       "ligne": 23184,
       "titre": "21 Agents sur 54 accusés de n'avoir pas leur badge, tous complets (2026-09-28, tâche #1077). La cellule « Outil » de la table maîtresse porte son script entre p",
-      "ms": 7
+      "ms": 5
     },
     {
       "ligne": 23220,
       "titre": "la règle du nom propre vit à un seul endroit (2026-09-28, tâche #1077, suite). Le correctif de la tâche ferme le cas trouvé ; celui-ci ferme sa REPRODUCTION, et",
-      "ms": 75
+      "ms": 94
     },
     {
       "ligne": 23256,
       "titre": "un script qui se tait n'a rien à mettre au gabarit (2026-09-28, tâche #1080). pure-gold-unity comptait THE-DEEP-READER et THE-FINAL-JUDGE parmi les rapports « à",
-      "ms": 49
+      "ms": 41
     },
     {
       "ligne": 23282,
       "titre": "une copie du code n'est pas une mémoire (2026-09-28, tâche #1082). Trouvé en déroulant la Ronde, et c'est un conflit entre deux outils qui avaient chacun raison",
-      "ms": 213
+      "ms": 187
     },
     {
       "ligne": 23319,
@@ -1761,27 +1761,27 @@
     {
       "ligne": 23476,
       "titre": "les sautes silencieuses, une MESURE et jamais une alarme (2026-09-29, tache #1203). D'OU CA VIENT : CLONE-HUNTER signalait cinq lignes recopiees a trois endroit",
-      "ms": 31
+      "ms": 28
     },
     {
       "ligne": 23527,
       "titre": "la portee qui n'avait jamais ete choisie (2026-09-29, tache #1204). CINQUIEME DOUBLON CLONE-HUNTER INSTRUIT AVEC LA MEME REGLE, et il a encore mene ailleurs. au",
-      "ms": 31
+      "ms": 34
     },
     {
       "ligne": 23589,
       "titre": "la onzieme copie du chargeur JSON (2026-09-29, tache #1205). SIXIEME DOUBLON CLONE-HUNTER INSTRUIT, et c'est l'Article 27 pris en flagrant delit. lib-json.mjs a",
-      "ms": 444
+      "ms": 359
     },
     {
       "ligne": 23630,
       "titre": "la cle ecrite quatre fois (2026-09-29, tache #1206). SEPTIEME DOUBLON CLONE-HUNTER INSTRUIT. CE QUE L'OUTIL MONTRAIT : cinq lignes construisant le meme index de",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 23662,
       "titre": "les derniers doublons, chacun avec son verdict ecrit (2026-09-29, tache #1207). HUITIEME ET DERNIER LOT. DEUX CORRECTIONS REELLES : JESUS portait un TROISIEME d",
-      "ms": 5
+      "ms": 4
     },
     {
       "ligne": 23715,
@@ -1796,22 +1796,22 @@
     {
       "ligne": 23806,
       "titre": "un constat qui ne pouvait nommer aucun de ses sujets (2026-09-29, tache #1214). TROUVE EN VERIFIANT MON PROPRE TRAVAIL avec l'outil dont c'est le metier, comme",
-      "ms": 33
+      "ms": 32
     },
     {
       "ligne": 23848,
       "titre": "le ⚠️1 que rien ne pouvait eteindre (2026-09-29, tache #1215). CE QUE C'ETAIT : AXA-CHECK affichait un ⚠️1 a CHAQUE commit depuis la tache #1189, et c'etait sma",
-      "ms": 2
+      "ms": 1
     },
     {
       "ligne": 23931,
       "titre": "la page HTML est-elle encore celle de sa source (2026-09-29, tache #1218). LA REGLE EXISTAIT, RIEN NE LA VERIFIAIT : l'index du grand projet dit noir sur blanc",
-      "ms": 2143
+      "ms": 1908
     },
     {
       "ligne": 23991,
       "titre": "l'abstention calibrée — le droit de dire « je ne sais pas », avec un degré (2026-09-28, tâche #695, volet F des failles IA). CE QUE LA RECHERCHE DIT : avec la v",
-      "ms": 94
+      "ms": 81
     },
     {
       "ligne": 24034,
@@ -1826,7 +1826,7 @@
     {
       "ligne": 24121,
       "titre": "18 % du registre échappait à tous les contrôles, en silence (2026-09-28, tâche #1087). TROUVÉ EN RÉPARANT MA PROPRE ERREUR, et c'est ce qui rend le cas instruct",
-      "ms": 18
+      "ms": 19
     },
     {
       "ligne": 24164,
@@ -1836,12 +1836,12 @@
     {
       "ligne": 24209,
       "titre": "un avis OBLIGATOIRE fondé sur une donnée périmée (2026-09-28, tâche #1091). LE CONSTAT EST NET : le 2026-09-28, check-spirit a passé QUARANTE appels réels au mo",
-      "ms": 1
+      "ms": 2
     },
     {
       "ligne": 24255,
       "titre": "les deux fonctions que j'ai écrites aujourd'hui sans les couvrir (2026-09-28, tâche #1094). CASSANDRA a signalé « trous-de-couverture : EN DÉGRADATION » le jour",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 24299,
@@ -1856,12 +1856,12 @@
     {
       "ligne": 24394,
       "titre": "l'alerte qui affirmait « depuis des semaines » sans le mesurer (2026-09-28, tâche #1097). Le palier le plus grave de la relance de Ronde disait : « une trentain",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 24454,
       "titre": "l'alerte affirmait que rien n'avait tourné, et 37 outils avaient tourné (2026-10-01, tâche #1395). Deux jours après lui avoir retiré « depuis des semaines », le",
-      "ms": 1
+      "ms": 0
     },
     {
       "ligne": 24508,
@@ -1871,42 +1871,42 @@
     {
       "ligne": 24582,
       "titre": "le format déclaré ne décrivait pas les lignes réelles (2026-09-28, tâche #1099). `FORMAT_TACHE` annonçait `detail` en 7ᵉ position ; 270 des 374 lignes du regist",
-      "ms": 47
+      "ms": 66
     },
     {
       "ligne": 24812,
       "titre": "JESUS-LE-SAUVEUR, ce qui freine le projet, causes indirectes comprises (2026-09-28, tâche #1103). Sa demande : « un agent dédié à s'assurer que le projet avance",
-      "ms": 1305
+      "ms": 1304
     },
     {
       "ligne": 24887,
       "titre": "le trou de couverture documentaire (2026-09-28, tâche #1104). IL L'A TROUVÉ EN POSANT UNE AUTRE QUESTION, et c'est le plus gros trou de la journée : il s'interr",
-      "ms": 1398
+      "ms": 1265
     },
     {
       "ligne": 24970,
       "titre": "la couverture d'une commande — née de sa phrase du 2026-09-28, « j'ai l'impression que tu ne prends pas assez en compte mes consignes du document COMMANDE IMPOR",
-      "ms": 7
+      "ms": 8
     },
     {
       "ligne": 25030,
       "titre": "l'alignement en cascade, né de sa consigne du 2026-09-29 avant d'aller dormir — « des stratégies alignées, qui génèrent des stratégies de chantier alignées, des",
-      "ms": 8
+      "ms": 7
     },
     {
       "ligne": 25073,
       "titre": "« est-ce que l'agence m'aide, ou est-ce que je m'y perds ? » — sa question Q7, posée le 2026-09-28 avec « sois honnête, pas besoin de me ménager » et « cette me",
-      "ms": 730
+      "ms": 836
     },
     {
       "ligne": 25126,
       "titre": "une fiche en retard sur son script (2026-09-29, tâche #1159). NÉ D'UN CONSTAT DE LA NUIT MÊME : quatre outils avaient reçu une capacité nouvelle et AUCUN garde-",
-      "ms": 8805
+      "ms": 8420
     },
     {
       "ligne": 25179,
       "titre": "la carte des dossiers, second étage de #725 (2026-09-29). SA DEMANDE : « rien ne décrit la CARTE de la mémoire du projet — quel dossier sert à quoi, lequel s'éc",
-      "ms": 2028
+      "ms": 1888
     },
     {
       "ligne": 25227,
@@ -1916,7 +1916,7 @@
     {
       "ligne": 25493,
       "titre": "le chaînon manquant de l'Article 28, construit (2026-10-01, Ronde GOAT, tâche #1355). JESUS avait nommé l'impossibilité ET son remède — « que le plan d'action i",
-      "ms": 9
+      "ms": 6
     },
     {
       "ligne": 25550,
@@ -1926,7 +1926,7 @@
     {
       "ligne": 25614,
       "titre": "le chiffrage de la refonte (2026-10-01, tâche #1356). Sa proposition centrale est « tout reprendre à zéro », et la réponse honnête n'est ni oui ni non : c'est u",
-      "ms": 284
+      "ms": 285
     },
     {
       "ligne": 25662,
@@ -1936,7 +1936,7 @@
     {
       "ligne": 25724,
       "titre": "nos solutions partent avec l'Agence (2026-10-01, tâche #1342). Sa demande : « je voudrais que tu stockes tes solutions […] la future IA cliente profitera à la f",
-      "ms": 104
+      "ms": 103
     },
     {
       "ligne": 25762,
@@ -1946,7 +1946,7 @@
     {
       "ligne": 25822,
       "titre": "la carte CIBLE de l'organisation par modules (2026-10-02, tâche #1420). Sa demande datait du Word — « j'aimerais qu'elle coure vers une CARTE CIBLE : voilà où o",
-      "ms": 201
+      "ms": 197
     },
     {
       "ligne": 25871,
@@ -1956,12 +1956,12 @@
     {
       "ligne": 25932,
       "titre": "la thèse « le cœur de l'Agence est sa gouvernance » est ÉPROUVÉE plutôt qu'illustrée (2026-10-02, tâche #1444). Il l'a écrite dans son Word, et une thèse énoncé",
-      "ms": 87
+      "ms": 89
     },
     {
       "ligne": 25994,
       "titre": "le tableau des convictions, et le débris que son premier passage a sorti (2026-10-03, tâche #1534). Sa demande portait sur la FORME — « la liste des 104 convict",
-      "ms": 2332
+      "ms": 2267
     },
     {
       "ligne": 26077,
@@ -1971,7 +1971,7 @@
     {
       "ligne": 26146,
       "titre": "l'organisation des lois, et pourquoi elle n'était pas nécessaire il y a trois jours (2026-10-02, tâche #1445). Un seul texte de ce dépôt portait des Articles nu",
-      "ms": 245
+      "ms": 242
     },
     {
       "ligne": 26187,
@@ -1986,22 +1986,22 @@
     {
       "ligne": 26266,
       "titre": "la stratégie se révèle avec la MÊME machine que la philosophie, et seules trois choses changent (2026-10-02, tâche #1434). Construire un second moteur aurait cr",
-      "ms": 622
+      "ms": 619
     },
     {
       "ligne": 26320,
       "titre": "les décisions les plus fermes de ce projet étaient les plus invisibles, et c'est corrigé (2026-10-02, tâche #1438). LE DÉFAUT ÉTAIT STRUCTUREL ET SON SENS INVER",
-      "ms": 590
+      "ms": 652
     },
     {
       "ligne": 26373,
       "titre": "les onze destinations d'une note sont réellement alimentées, et c'est MESURÉ (2026-10-02, sa demande : « vérifie que tu as bien récolté toutes les données pour",
-      "ms": 656
+      "ms": 694
     },
     {
       "ligne": 26450,
       "titre": "l'alerte de tension avec le document de gouvernance (2026-10-02, tâche #1435). Sa question : « est-ce que, une fois que le doc philo et politique sera en vigueu",
-      "ms": 59
+      "ms": 54
     },
     {
       "ligne": 26499,
@@ -2011,27 +2011,27 @@
     {
       "ligne": 26561,
       "titre": "le raccord du bas de la cascade a enfin son instrument (2026-10-02, tâche #1421). LA STRATÉGIE GLOBALE L'APPELLE ELLE-MÊME « le vrai chantier de la cascade » :",
-      "ms": 89
+      "ms": 79
     },
     {
       "ligne": 26622,
       "titre": "l'Agence sait désormais PROPOSER les textes fondateurs d'un projet qui n'en a pas (2026-10-02, tâche #1428). Sa demande : « il génère tout […] car aucun projet",
-      "ms": 873
+      "ms": 887
     },
     {
       "ligne": 26677,
       "titre": "la DÉRIVATION reprend une réponse déjà écrite au lieu de la reconstruire plus faiblement (2026-10-02, tâche #1438, seconde moitié). CE QUE LA RÉVÉLATION FAIT ET",
-      "ms": 835
+      "ms": 897
     },
     {
       "ligne": 26722,
       "titre": "la convention « quoi / quoiFaire » ne se recopie plus, et un douzième outil en héritera (2026-10-02, tâche #993). CLONE-HUNTER signalait DEUX sites jumeaux — ce",
-      "ms": 76
+      "ms": 62
     },
     {
       "ligne": 26775,
       "titre": "un registre de decisions cite mais absent se signale desormais (2026-10-02, tache #1452). loadMemoire() est le mecanisme partage des decisions deja tranchees, e",
-      "ms": 19
+      "ms": 15
     },
     {
       "ligne": 26834,
@@ -2041,47 +2041,47 @@
     {
       "ligne": 26878,
       "titre": "le balayage des lignes de tâches accepte deux choses de plus, et un faux vert les a validées (2026-10-02, tâche #993). CLONE-HUNTER signalait deux boucles jumel",
-      "ms": 34
+      "ms": 39
     },
     {
       "ligne": 26945,
       "titre": "la liste du PACK DÉCOUVERTE est LUE dans sa COMMANDE IMPORTANTE, jamais recopiée (#1533). Ses onze sujets — onze, pas les dix que l\\'agent avait en tête, et c\\'es",
-      "ms": 69
+      "ms": 64
     },
     {
       "ligne": 27030,
       "titre": "la classification des lois et des règles, et le texte suprême qu\\'elle ne voyait pas (2026-10-03, tâche #1539). CINQ DE SES POINTS DEMANDAIENT LE MÊME DOCUMENT (",
-      "ms": 10760
+      "ms": 6866
     },
     {
       "ligne": 27084,
       "titre": "l\\'Agence projet contre l\\'Agence aide exécutive, mesurée plutôt que racontée (2026-10-03, tâche #1553). SES SIX QUESTIONS (P39) portaient sur l\\'écart entre ce qu",
-      "ms": 52
+      "ms": 60
     },
     {
       "ligne": 27142,
       "titre": "le module, la partie indétachable et le cœur — ses trois définitions mises à l\\'épreuve du graphe réel (2026-10-03, tâche #1538). SA PHRASE COMMANDAIT TOUT : « e",
-      "ms": 56
+      "ms": 60
     },
     {
       "ligne": 27206,
       "titre": "les fils alimentés par tout canal, et le faux vert posé sur son plus gros message (2026-10-03, tâche #1542). HUIT DE SES POINTS PORTAIENT SUR LA MÊME MÉCANIQUE",
-      "ms": 4
+      "ms": 3
     },
     {
       "ligne": 27264,
       "titre": "TOTAL RECALL, ce que « complet » coûte vraiment (2026-10-03, tâche #1545). SA CONSIGNE DE CADRAGE : comparer l\\'opération au système existant, et noter que c\\'est",
-      "ms": 41
+      "ms": 39
     },
     {
       "ligne": 27315,
       "titre": "le rapport complet sur le filet, et les deux chiffres faux qu\\'il a refusé de rendre (2026-10-03, tâche #1547, sa décision P66 option d). SON OBJECTIF : « maîtri",
-      "ms": 299
+      "ms": 259
     },
     {
       "ligne": 27360,
       "titre": "le document maître, mesuré par sa PORTÉE plutôt que déclaré (2026-10-03, tâche #1554, sa question P94/Q4.1). SA DÉFINITION SE MESURE, ce qui est rare pour une p",
-      "ms": 1469
+      "ms": 1442
     },
     {
       "ligne": 27409,
@@ -2091,7 +2091,7 @@
     {
       "ligne": 27483,
       "titre": "le runner parallèle était CASSÉ, et son plafond est désormais un chiffre (2026-10-03, tâche #1567). IL NE DÉMARRAIT PLUS DEPUIS QUATRE JOURS : le filet importe",
-      "ms": 2719
+      "ms": 2648
     },
     {
       "ligne": 27525,
@@ -2101,22 +2101,22 @@
     {
       "ligne": 27580,
       "titre": "le socle s\\'apprend d\\'un échec réel, il ne se devine pas (2026-10-03, tâche #1577). SA CONSIGNE ÉTAIT « CREUSE LE DÉTECTEUR DE SOCLE », ET CREUSER A RENDU UN RÉS",
-      "ms": 531
+      "ms": 517
     },
     {
       "ligne": 27659,
       "titre": "l\\'épine n\\'était pas un plafond, c\\'était un défaut de découpage (2026-10-03, tâche #1578). CE QUE LA MESURE A RENVERSÉ : on tenait l\\'épine pour incompressible —",
-      "ms": 2184
+      "ms": 2073
     },
     {
       "ligne": 27701,
       "titre": "une ligne de registre écrite puis jamais lue se croit prise en compte (2026-10-03, tâche #1579). TROUVÉ EN ÉCRIVANT DEUX LIGNES PARFAITEMENT ORDINAIRES : le reg",
-      "ms": 2
+      "ms": 0
     },
     {
       "ligne": 27743,
       "titre": "un compte ne voit pas « un test perdu, un test ajouté » (2026-10-03, tâche #1580). LE TROU EST DANS LE GARDE-FOU ÉCRIT LE MATIN MÊME : `verdictDeCompletude` com",
-      "ms": 0
+      "ms": 1
     },
     {
       "ligne": 27770,
@@ -2126,7 +2126,7 @@
     {
       "ligne": 27840,
       "titre": "l\\'exécution suit les appels, pas l\\'ordre du texte (2026-10-03, tâche #1582). LE PLUS GROS DÉFAUT DE MESURE TROUVÉ SUR CET OUTIL, ET IL ÉTAIT MASSIF : sur 421 gr",
-      "ms": 35
+      "ms": 36
     },
     {
       "ligne": 27886,
@@ -2141,22 +2141,27 @@
     {
       "ligne": 27994,
       "titre": "une unité ne se coupe pas en deux, et le plancher l\\'oubliait (2026-10-03, tâche #1589). LA FORMULE SUPPOSAIT UN TRAVAIL INFINIMENT DIVISIBLE : `socle + épine +",
-      "ms": 2588
+      "ms": 2684
     },
     {
       "ligne": 28050,
       "titre": "le test le plus lourd du filet faisait 57 millions de comparaisons pour rien (2026-10-03, tâche #1591). LE CHEMIN QUI MÈNE ICI EST CE QUI COMPTE, parce qu\\'aucun",
-      "ms": 2411
+      "ms": 2325
     },
     {
       "ligne": 28107,
       "titre": "soixante-douze processus pour un fichier de douze commits (2026-10-03, tâche #1592). TROUVÉ EN PROFILANT LE FILET ENTIER, ce qu\\'aucune lecture n\\'aurait donné :",
-      "ms": 5
+      "ms": 6
     },
     {
       "ligne": 28167,
       "titre": "trois économies exactes sur la comparaison de toutes les paires (2026-10-03, tâche #1593). LE PROFIL DU FILET ENTIER donne cette fonction à 13,3 s, soit 5 % du",
-      "ms": 1383
+      "ms": 1353
+    },
+    {
+      "ligne": 28206,
+      "titre": "un seul grand texte plutôt que sept cents petits, et l\\'octet qui l\\'autorise (2026-10-03, tâche #1594). TROISIÈME POSTE DU PROFIL DU FILET, à 10,4 s : une seule",
+      "ms": 7085
     }
   ]
 }

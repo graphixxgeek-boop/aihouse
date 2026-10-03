@@ -133,5 +133,14 @@
     "succes": 447,
     "anomalies": 1,
     "vert": false
+  },
+  {
+    "quand": "2026-10-03T23:44:36.944Z",
+    "totalMs": 190650,
+    "code": 0,
+    "groupes": 429,
+    "succes": 448,
+    "anomalies": 1,
+    "vert": false
   }
 ]

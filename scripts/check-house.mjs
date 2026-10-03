@@ -28167,3 +28167,42 @@ async function testJaccardSansApproximation() {
   console.log('Passed: trois économies exactes sur la comparaison de toutes les paires (2026-10-03, tâche #1593). LE PROFIL DU FILET ENTIER donne cette fonction à 13,3 s, soit 5 % du temps total — deuxième poste de coût après les processus enfants. Elle compare toutes les paires d\'ensembles de mots, et elle le faisait de la façon la plus chère possible. TROIS CORRECTIONS, ET AUCUNE N\'EST UNE APPROXIMATION. ① L\'UNION SE CALCULE, ELLE NE SE CONSTRUIT PAS : `new Set([...a, ...b]).size` allouait deux tableaux et un ensemble POUR CHAQUE PAIRE, alors que |A ∪ B| = |A| + |B| − |A ∩ B| et que l\'intersection vient d\'être comptée. ② ON PARCOURT LE PLUS PETIT DES DEUX : chercher 200 mots dans un ensemble de 3 coûte 200 recherches là où l\'inverse en coûte 3, pour le même résultat. ③ DEUX TAILLES TROP DIFFÉRENTES NE PEUVENT PAS ATTEINDRE LE SEUIL, et ça se DÉMONTRE : |A ∩ B| ≤ min et |A ∪ B| ≥ max, donc Jaccard ≤ min/max — une paire dont ce rapport est déjà sous le seuil est écartée sans calcul, jamais « probablement » mais mathématiquement. **6,5 fois plus rapide.** LA VÉRIFICATION EST CE QUI AUTORISE LE CHANGEMENT, et le juge est l\'implémentation D\'ORIGINE recopiée dans le test : comparer la nouvelle version à elle-même ne prouverait rien. Quinze comparaisons sur des corpus tirés au hasard à graine fixe, cinq seuils dont zéro et 0,9, plus le cas qui met la borne à l\'épreuve — un petit ensemble entièrement contenu dans un grand, là où l\'intersection est maximale et où une borne trop agressive couperait une vraie paire. Mêmes paires, même ordre, mêmes valeurs. ET L\'ORDRE COMPTE AUTANT QUE LE CONTENU : une optimisation qui réordonnerait sa sortie serait une optimisation qui change son résultat, leçon déjà payée le soir même sur l\'index des convictions.');
 }
 await testJaccardSansApproximation();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1594 — UN SEUL GRAND TEXTE PLUTÔT QUE SEPT CENTS PETITS, ET L'OCTET QUI L'AUTORISE
+async function testLeCorpusColle() {
+  const D = await import('../scripts/data-archangel.mjs');
+
+  // ── LA JOINTURE SUR UN OCTET NUL N'EST PAS UN DÉTAIL DE CONFORT. Coller les textes bout à bout
+  // ferait apparaître des correspondances À CHEVAL : la fin de l'un et le début de l'autre
+  // formant par hasard le nom cherché. Un octet nul ne peut figurer dans aucun nom de fichier.
+  const sources = ['… voir rapport', 'index.md et la suite'];
+  assert.strictEqual(sources.join('').includes('rapportindex.md'), true, 'MUST CATCH: glued end-to-end, two innocent sources invent a filename that exists in neither');
+  assert.strictEqual(sources.join('\u0000').includes('rapportindex.md'), false, 'the null byte makes that impossible, and no filename can ever contain one');
+  assert.strictEqual(sources.join('\u0000').includes('index.md'), true, 'while a name genuinely present is still found');
+
+  // ── LE PASSAGE RÉEL (Article 25), ET C'EST LUI QUI AUTORISE LE REMPLACEMENT : sur le vrai
+  // dépôt, la recherche collée doit répondre EXACTEMENT comme la recherche source par source.
+  const vraiesSources = {};
+  for (const f of fs.readdirSync('scripts')) {
+    if (!f.endsWith('.mjs')) continue;
+    try { vraiesSources[f] = fs.readFileSync(`scripts/${f}`, 'utf8'); } catch { /* illisible */ }
+  }
+  const corpus = Object.values(vraiesSources);
+  const colle = corpus.join('\u0000');
+  const inv = D.inventaireDesRapports();
+  assert.strictEqual(inv.mesurable, true, 'the real inventory still runs');
+  let verifies = 0;
+  for (const l of inv.lignes.slice(0, 20)) {
+    let noms = [];
+    try { noms = fs.readdirSync(l.dossier).filter((n) => /\.(md|html|json|txt)$/.test(n)); } catch { continue; }
+    for (const n of noms) {
+      verifies += 1;
+      assert.strictEqual(colle.includes(n), corpus.some((t) => t.includes(n)), `MUST CATCH: the glued corpus must answer exactly like the source-by-source scan — « ${n} »`);
+    }
+  }
+  assert.ok(verifies > 100, `and the comparison really ran against a crowd of real names (${verifies})`);
+
+  console.log('Passed: un seul grand texte plutôt que sept cents petits, et l\'octet qui l\'autorise (2026-10-03, tâche #1594). TROISIÈME POSTE DU PROFIL DU FILET, à 10,4 s : une seule ligne de l\'inventaire des rapports, qui demande pour CHACUN des 428 fichiers « est-il NOMMÉ quelque part ailleurs que dans son propre dossier ? » en relançant la recherche dans CHAQUE source. Des centaines de milliers de recherches dont l\'immense majorité ne trouve rien. ON COLLE LE CORPUS UNE FOIS, et la recherche se fait dans un seul texte. LA JOINTURE SE FAIT SUR UN OCTET NUL, ET CE N\'EST PAS UN DÉTAIL DE CONFORT : coller les textes bout à bout ferait apparaître des correspondances À CHEVAL sur deux sources — la fin de l\'une et le début de l\'autre formant par hasard un nom de fichier, qui n\'existe alors dans aucune des deux. Le contre-test le montre en deux lignes. Un octet nul ne peut figurer dans aucun nom de fichier, donc aucune correspondance ne peut le traverser ; c\'est le même raisonnement, et le même octet, que la carte des dernières touches de `lib-shell`. VÉRIFIÉ SUR LE VRAI DÉPÔT AVANT LE REMPLACEMENT : 735 noms de fichiers, ZÉRO écart entre la recherche collée et la recherche source par source. Le gain est plus modeste que les deux précédents — 3,8 s à 2,9 s par passage — et le dire vaut mieux que de l\'arrondir : toutes les optimisations ne se valent pas, et celle-ci reste la troisième d\'une liste où la première valait douze secondes.');
+}
+await testLeCorpusColle();
