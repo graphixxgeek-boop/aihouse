@@ -42,6 +42,7 @@ import { renderHtmlReport } from "./html-report.mjs";
 export { daysSince };
 import { extractPrincipleUnits, buildEvolutionDigest, findPossibleTensions, philosophyFreshnessDays, dateDEdition } from "./the-king.mjs";
 import { recordCliUsage, recordToolContribution } from "./tool-usage.mjs";
+import { lireLesFils } from "./fils-de-discussion.mjs";
 import { loadJsonArray } from "./lib-json.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -2115,6 +2116,42 @@ export function formatDerniersRapportsLines(r) {
   return L;
 }
 
+// L'INDEX DES FILS, À CHAQUE FIN DE RONDE — sa demande P52 (2026-10-03, tâche #1543)
+// ─────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE : « il veut voir l'index des fils à CHAQUE fin de Ronde — l'ajouter si pas déjà
+// fait ». VÉRIFIÉ, ET LA RÉPONSE EST « À MOITIÉ » : l'item de Ronde `fils-de-discussion` existe
+// bien depuis le 2026-10-01 et produit son rapport. Mais il n'apparaît dans le récapitulatif que
+// s'il a été COCHÉ — or la Ronde se coche item par item, et rien ne garantit que celui-là le soit.
+// « À chaque fin de Ronde » veut dire sans condition.
+//
+// LA DIFFÉRENCE N'EST PAS COSMÉTIQUE : un index qui n'apparaît que quand on a pensé à le demander
+// ne répond pas à la question « qui a la balle ? » les jours où l'on n'y a pas pensé — c'est-à-dire
+// exactement les jours où elle importe.
+//
+// CE QUI EST REPRIS ICI EST LE STRICT MINIMUM : le numéro, le titre, à qui est la balle et depuis
+// quand. Le détail reste dans le rapport de l'outil ; le dupliquer ferait deux porteurs du même
+// état (leçon L29). `lireLesFils` est INJECTABLE pour que le test n'ait pas besoin du vrai dossier.
+export function tableauDesFilsPourLaRonde({ lireImpl = null } = {}) {
+  let lu;
+  try {
+    lireImpl = lireImpl ?? lireLesFils;
+    lu = lireImpl();
+  } catch (e) {
+    return { mesurable: false, pourquoi: `les fils n'ont pas pu être lus (${e.message}) : un récapitulatif silencieux se lirait comme « aucun fil en attente », ce qui est l'inverse d'une mesure (leçons L5/L11)` };
+  }
+  if (!lu?.mesurable) return { mesurable: false, pourquoi: lu?.pourquoi ?? "les fils ne sont pas mesurables : l'absence se dit, elle ne se tait pas" };
+  const fils = lu.fils ?? [];
+  if (!fils.length) return { mesurable: false, pourquoi: "aucun fil lu : zéro fil n'est pas « rien en attente », c'est un dossier qu'on n'a pas su parcourir" };
+  const aLui = fils.filter((f) => /À TOI/i.test(String(f.balle ?? "")));
+  return {
+    mesurable: true,
+    total: fils.length,
+    aLui: aLui.length,
+    aMoi: fils.filter((f) => /À MOI/i.test(String(f.balle ?? ""))).length,
+    rows: fils.map((f) => [String(f.numero ?? "?"), String(f.titre ?? "").replace(/^FIL \d+ — /, ""), String(f.balle ?? "?"), String(f.date ?? "?")]),
+  };
+}
+
 export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_ITEMS, analysis, followUpTasks = [], reportLinks = [], executedByModel } = {}) {
   const blocks = [
     { type: "paragraph", text: `Index léger : ce qui a tourné et un pointeur vers la sortie déjà produite par chaque item, jamais son contenu dupliqué ici. ${REPORT_ICON} = produit un vrai rapport archivé et indexé — depuis le 2026-09-21, tous les items de la Ronde le font.` },
@@ -2144,6 +2181,18 @@ export function buildCircleRunSummaryHtml(entries, { dateLabel, items = CIRCLE_I
     blocks.push({ type: "list", items: liens });
   } else if (entries && entries.length) {
     blocks.push({ type: "note", text: "Aucun rapport individuel trouvé pour les items exécutés — ce n'est pas « rien à livrer », c'est un manque : chaque item de la Ronde est censé archiver le sien." });
+  }
+  // L'INDEX DES FILS, SANS CONDITION (2026-10-03, tâche #1543, sa demande P52). Il ne dépend pas
+  // des items cochés : « à chaque fin de Ronde » veut dire à chaque fois, y compris les jours où
+  // l'on n'a pas pensé à cocher l'item — c'est-à-dire exactement les jours où il sert.
+  const fils = tableauDesFilsPourLaRonde();
+  blocks.push({ type: "heading", text: "L'index des fils — qui a la balle, et depuis quand" });
+  if (!fils.mesurable) {
+    blocks.push({ type: "note", text: `❓ PAS MESURÉ — ${fils.pourquoi}` });
+  } else {
+    blocks.push({ type: "paragraph", text: `${fils.total} fil(s) ouverts · ${fils.aLui} attendent une réponse de TA part · ${fils.aMoi} attendent la mienne.` });
+    blocks.push({ type: "table", headers: ["#", "Sujet", "Balle", "Depuis"], rows: fils.rows });
+    blocks.push({ type: "note", text: "Un fil dont la balle est À MOI depuis longtemps est une dette de ma part, jamais une attente légitime. Un fil À TOI se rappelle, il ne se décide jamais à ta place. Le détail de chacun vit dans son fichier, jamais recopié ici." });
   }
   blocks.push({ type: "note", text: "CIRCLE-TASKS — la sélection des items reste toujours confirmée par une fenêtre à cocher avant exécution, jamais un tout-en-un silencieux." });
   return renderHtmlReport({ title: "CIRCLE-TASKS — récapitulatif de la Ronde", dateLabel: dateLabel ?? new Date().toISOString(), blocks });

@@ -22632,6 +22632,52 @@ async function testGabaritFicheDeModule() {
 }
 await testGabaritFicheDeModule();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1543 — L'INDEX DES FILS À CHAQUE FIN DE RONDE, ET L'ITEM NE SUFFISAIT PAS
+// ─────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE P52 : « il veut voir l'index des fils à CHAQUE fin de Ronde — l'ajouter si pas déjà
+// fait ». VÉRIFIÉ, ET LA RÉPONSE ÉTAIT « À MOITIÉ » : l'item de Ronde existait depuis le
+// 2026-10-01 et produisait son rapport, mais il n'apparaissait dans le récapitulatif que s'il
+// avait été COCHÉ. Or « à chaque fin de Ronde » veut dire sans condition — et un index qui
+// n'apparaît que quand on a pensé à le demander manque précisément les jours où il sert.
+async function testIndexDesFilsEnFinDeRonde() {
+  const CT = await import('../scripts/circle-tasks.mjs');
+
+  // L'ITEM EXISTE TOUJOURS : on n'a pas remplacé une moitié par l'autre.
+  assert.ok(CT.CIRCLE_ITEMS.some((i) => i.id === 'fils-de-discussion'), 'the Ronde item stays: the recap gives the state, the item gives the full report — they do not replace one another');
+
+  // LE REFUS PLUTÔT QUE LE SILENCE : un récapitulatif muet se lirait « aucun fil en attente ».
+  const casse = CT.tableauDesFilsPourLaRonde({ lireImpl: () => { throw new Error('dossier absent'); } });
+  assert.equal(casse.mesurable, false, 'an unreadable fils folder must say so, never stay silent (L11)');
+  assert.ok(casse.pourquoi.includes('dossier absent'), 'and carry the real reason, because "cannot read" and "nothing to read" call for opposite gestures');
+  assert.equal(CT.tableauDesFilsPourLaRonde({ lireImpl: () => ({ mesurable: true, fils: [] }) }).mesurable, false, 'zero fils is a folder nobody could walk, never "nothing pending"');
+
+  // LE COMPTE SÉPARE LES DEUX CAMPS, parce qu'ils appellent des gestes opposés : un fil À MOI est
+  // une dette, un fil À TOI est un rappel.
+  const f = CT.tableauDesFilsPourLaRonde({ lireImpl: () => ({ mesurable: true, fils: [
+    { numero: 1, titre: 'FIL 01 — Un sujet', balle: 'À TOI', date: '2026-10-01' },
+    { numero: 2, titre: 'FIL 02 — Un autre', balle: 'À MOI', date: '2026-09-28' },
+  ] }) });
+  assert.equal(f.aLui, 1);
+  assert.equal(f.aMoi, 1);
+  assert.equal(f.rows[0][1], 'Un sujet', 'the redundant "FIL 01 — " prefix is stripped: the number already has its own column');
+
+  // SANS CONDITION, et c'est tout l'objet de sa demande : le bloc apparaît même quand AUCUN item
+  // n'a été coché.
+  const vide = JSON.stringify(CT.buildCircleRunSummaryHtml([], { dateLabel: 'x' }));
+  assert.ok(vide.includes('index des fils'), 'MUST APPEAR even when no item was ticked — that is the difference between an item and an unconditional section');
+  assert.ok(vide.includes('Aucun item'), 'while the empty-run message stays: the two statements are not the same and neither replaces the other');
+
+  // EN DIRECT (Article 25) : les vrais fils doivent se lire.
+  const reel = CT.tableauDesFilsPourLaRonde();
+  assert.equal(reel.mesurable, true, 'the real fils folder must be readable');
+  assert.ok(reel.total > 5, `and carry the real threads (currently ${reel.total})`);
+  assert.equal(reel.aLui + reel.aMoi <= reel.total, true, 'a thread belongs to at most one camp');
+
+  console.log(`Passed: l'index des fils à chaque fin de Ronde, et l'item ne suffisait pas (2026-10-03, tâche #1543). Sa demande P52 : « voir l'index des fils à CHAQUE fin de Ronde, l'ajouter si pas déjà fait ». VÉRIFIÉ, ET LA RÉPONSE ÉTAIT « À MOITIÉ » : l'item de Ronde existait depuis le 2026-10-01 et produisait son rapport, mais il n'apparaissait dans le récapitulatif que s'il avait été COCHÉ — or la Ronde se coche item par item, et « à chaque fin de Ronde » veut dire sans condition. LA DIFFÉRENCE N'EST PAS COSMÉTIQUE : un index qui n'apparaît que quand on a pensé à le demander manque exactement les jours où la question « qui a la balle ? » importe. Le bloc est donc inconditionnel, et le test le vérifie sur un récapitulatif où AUCUN item n'a été coché. Ce qui y figure est le strict minimum — numéro, sujet, balle, depuis quand — parce que dupliquer le détail ferait deux porteurs du même état (L29). Mesure vivante : ${reel.total} fils, ${reel.aLui} attendent une réponse de sa part, ${reel.aMoi} la mienne. Un dossier illisible rend PAS MESURÉ avec sa raison, parce qu'un récapitulatif muet se lirait « aucun fil en attente », ce qui est l'inverse d'une mesure.`);
+}
+await testIndexDesFilsEnFinDeRonde();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================
