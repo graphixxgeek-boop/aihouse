@@ -1038,6 +1038,104 @@ export function findOffresConcurrentes(prestations = PRESTATIONS, { seuil = SEUI
 // LA CONCLUSION QUE ÇA DONNE À LA QUESTION « quels outils fusionner ? » : sur cet axe non plus,
 // il n'y a pas de candidat. Ce n'est pas un échec de la mesure — c'est la mesure.
 export const SEUIL_SCANNER = 40;
+// ————————————————————————————————————————————————————————————————————————
+// DEUX OUTILS QUI ÉCRIVENT LA MÊME CHOSE (2026-10-03, tâche #1460, son arbitrage du 2026-10-02)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SON ARBITRAGE, EN FENÊTRE DÉDIÉE : « mesurer le chevauchement autrement » — comparer ce que les
+// outils FONT plutôt que les mots de leur libellé. Le détecteur textuel (`findOffresConcurrentes`,
+// plus haut) a vu son seuil passer AU-DESSUS de sa propre distribution le 2026-10-01 : son zéro ne
+// mesurait plus rien. `findOutilsQuiLisentLesMemesSources()` a répondu pour la moitié ENTRÉE ; ceci
+// répond pour la moitié SORTIE, et les deux ensemble couvrent sa phrase.
+//
+// POURQUOI LA SORTIE DISCRIMINE MIEUX QUE L'ENTRÉE : tout le monde lit `scripts/`. Presque personne
+// n'écrit au même endroit — un registre appartient à son outil, c'est la convention du dépôt. Deux
+// outils qui écrivent le MÊME fichier ne se ressemblent pas, ils se marchent dessus.
+//
+// LA DISTRIBUTION A ÉTÉ MESURÉE AVANT QUE LE SEUIL NE SOIT POSÉ, et c'est la condition qu'il a
+// explicitement attachée à son arbitrage : sur 33 outils ayant une sortie déclarée, soit 528
+// paires — **523 paires à 0 sortie commune, 4 à 1, 1 à 2**. Le maximum réel est 2.
+//
+// LE SEUIL EST DONC 1, ET C'EST LE SEUL CHOIX HONNÊTE SUR CETTE DISTRIBUTION : il n'y a pas de trou
+// où poser une frontière plus haute, et une seule sortie partagée est déjà un fait qui se constate.
+// Le poser à 2 ferait exactement ce qui vient d'être corrigé chez son voisin — un seuil au-dessus
+// de presque toute sa distribution, dont le zéro ne voudrait rien dire (BP5).
+//
+// LE PREMIER JET NE DISCRIMINAIT RIEN, et c'est écrit ici parce que l'erreur est instructive : il
+// tronquait chaque chemin à son DOSSIER, si bien que 190 paires « partageaient docs/ ». Un signal
+// où la moitié des paires sont positives ne dit rien de plus qu'un signal où aucune ne l'est.
+export const SEUIL_SORTIE_PARTAGEE = 1;
+// La banalité se DÉRIVE du corpus (Article 24) : une sortie écrite par plus de 15 % des outils est
+// un emplacement commun, pas un chevauchement. Aucune ne l'atteint aujourd'hui — et c'est une
+// information, pas une raison de retirer le filtre : le jour où un emplacement devient commun, le
+// signal ne doit pas se mettre à accuser tout le monde (L4).
+export const PART_POUR_UNE_SORTIE_BANALE = 0.15;
+
+export const MOTIFS_D_ECRITURE = [
+  /(?:writeFileSync|appendFileSync|ecrireImpl|writeFileImpl)\s*\(\s*(?:join\s*\(\s*[A-Za-z_$][\w$]*\s*,\s*)?["'`]((?:docs|\.)[^"'`\n]+)["'`]/g,
+  /\b[A-Z_0-9]{3,}\s*=\s*["'`]((?:docs|\.)[^"'`\n]+)["'`]/g,
+];
+
+export function sortiesParOutil({ dossier = "scripts", listDirImpl = readdirSync, readFileImpl = readFileSync, root = ROOT_COORD } = {}) {
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, dossier)); }
+  catch { return { mesurable: false, pourquoi: `le dossier ${dossier} n'a pas pu être lu — zéro outil lu n'est jamais « aucun chevauchement » (L5)`, parOutil: {} }; }
+  const parOutil = {};
+  for (const f of fichiers) {
+    if (!f.endsWith(".mjs")) continue;
+    let src = "";
+    try { src = String(readFileImpl(join(root, dossier, f), "utf8")); } catch { continue; }
+    const sorties = new Set();
+    for (const motif of MOTIFS_D_ECRITURE) for (const m of src.matchAll(motif)) sorties.add(m[1]);
+    if (sorties.size) parOutil[f.replace(/\.mjs$/, "")] = [...sorties].sort();
+  }
+  return { mesurable: true, parOutil };
+}
+
+export function findOutilsQuiEcriventLaMemeChose({ seuil = SEUIL_SORTIE_PARTAGEE, partBanale = PART_POUR_UNE_SORTIE_BANALE, ...options } = {}) {
+  const rel = sortiesParOutil(options);
+  if (!rel.mesurable) return { mesurable: false, pourquoi: rel.pourquoi, paires: [] };
+  const noms = Object.keys(rel.parOutil);
+  if (noms.length < 2) return { mesurable: false, pourquoi: "moins de deux outils déclarent une sortie : il n'y a rien à comparer, et rendre « aucun chevauchement » sur rien serait un satisfecit sur du vide", paires: [] };
+  const popularite = {};
+  for (const n of noms) for (const c of rel.parOutil[n]) popularite[c] = (popularite[c] ?? 0) + 1;
+  const plancherBanal = Math.max(3, Math.round(noms.length * partBanale));
+  const banales = Object.keys(popularite).filter((c) => popularite[c] > plancherBanal);
+  const distribution = {}; const paires = [];
+  for (let i = 0; i < noms.length; i++) {
+    for (let j = i + 1; j < noms.length; j++) {
+      const communes = rel.parOutil[noms[i]].filter((c) => rel.parOutil[noms[j]].includes(c) && !banales.includes(c));
+      distribution[communes.length] = (distribution[communes.length] ?? 0) + 1;
+      if (communes.length >= seuil) paires.push({ a: noms[i], b: noms[j], communes });
+    }
+  }
+  const observes = Object.keys(distribution).map(Number).filter((n) => distribution[n] > 0);
+  const maxObserve = observes.length ? Math.max(...observes) : 0;
+  return {
+    mesurable: true, seuil, examines: noms.length, distribution, maxObserve, banales, plancherBanal,
+    // MÊME GARDE-FOU QUE CHEZ SON VOISIN, et pour la même raison : un seuil au-dessus de tout ce
+    // qu'on observe rend « aucun chevauchement » et « je ne peux pas en voir » avec les mêmes mots.
+    seuilAuDessusDeLaDistribution: maxObserve < seuil,
+    paires: paires.sort((x, y) => y.communes.length - x.communes.length),
+    horsPortee: "elle lit les chemins ÉCRITS EN DUR dans le code. Un chemin construit à l'exécution lui échappe, et deux outils qui écrivent au même endroit ne font pas forcément doublon — un registre partagé peut être une décision assumée. Elle NOMME une collision, elle ne juge jamais qu'elle est fautive.",
+  };
+}
+
+export function outilsQuiEcriventLaMemeChoseLines(r) {
+  if (!r?.mesurable) return [`— Deux outils qui ÉCRIVENT la même chose — PAS MESURÉ : ${r?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Deux outils qui ÉCRIVENT la même chose (${r.examines} outils ayant une sortie déclarée, seuil ${r.seuil}) —`];
+  L.push(`  Distribution des sorties communes : ${Object.entries(r.distribution).sort((a, b) => Number(a[0]) - Number(b[0])).map(([n, c]) => `${n} × ${c} paire(s)`).join(" · ")} — maximum observé : ${r.maxObserve}`);
+  if (r.seuilAuDessusDeLaDistribution) {
+    L.push(`  🚨 PAS MESURÉ — le seuil (${r.seuil}) est AU-DESSUS du maximum observé (${r.maxObserve}) : aucune paire ne PEUT l'atteindre, donc un zéro ici ne dirait rien (leçons L5/L11, BP5).`);
+    return L;
+  }
+  if (!r.paires.length) L.push("  ✅ aucune paire d'outils n'écrit au même endroit — et le seuil reste à l'intérieur de sa distribution, donc ce zéro mesure vraiment quelque chose.");
+  for (const p of r.paires) L.push(`  ⚠️  ${p.a} ↔ ${p.b} — ${p.communes.length} sortie(s) commune(s) : ${p.communes.join(", ")}`);
+  if (r.banales.length) L.push(`  ⚪ ${r.banales.length} emplacement(s) écarté(s) comme communs (écrits par plus de ${r.plancherBanal} outils) : ${r.banales.join(", ")}`);
+  L.push(`  HORS PORTÉE : ${r.horsPortee}`);
+  return L;
+}
+
 export const SEUIL_SOURCE_PARTAGEE = 7;
 export const SEUIL_SOURCES_COMMUNES = 10;
 export const MOTIF_SOURCE_LUE = /["'`]((?:docs|scripts|lib|app|components)\/[A-Za-z0-9._/-]*|CLAUDE\.md)["'`]/g;
@@ -2641,6 +2739,13 @@ function main() {
   if (sousCommande === "memes-sources") {
     const r = findOutilsQuiLisentLesMemesSources();
     console.log(formatOutilsMemesSourcesLines(r).join("\n"));
+    // LES DEUX MOITIÉS DE SA PHRASE, DANS LA MÊME SORTIE (2026-10-03, tâche #1460). Il a demandé de
+    // « mesurer le chevauchement autrement », en comparant ce que les outils FONT. L'entrée et la
+    // sortie sont les deux faces de ce « font », et les séparer en deux commandes ferait qu'on
+    // n'en lirait qu'une — exactement le sort du détecteur textuel, lu seul pendant des jours
+    // pendant que son zéro ne mesurait plus rien.
+    console.log("");
+    console.log(outilsQuiEcriventLaMemeChoseLines(findOutilsQuiEcriventLaMemeChose()).join("\n"));
     return;
   }
   if (sousCommande === "catalogue") {

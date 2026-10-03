@@ -9706,6 +9706,44 @@ async function testOffresConcurrentes() {
 
   assert.equal(lc.findOutilsQuiLisentLesMemesSources({ root: '/r/', listDirImpl: () => { throw new Error('ENOENT'); } }).mesurable, false, 'an unreadable scripts/ renders PAS MESURÉ, never "no overlap" (lessons L5 and L11)');
 
+  // L'AUTRE MOITIÉ DE « CE QUE LES OUTILS FONT » (2026-10-03, tâche #1460, son arbitrage du
+  // 2026-10-02 : « mesurer le chevauchement autrement »). Le détecteur textuel avait vu son seuil
+  // passer au-dessus de sa distribution ; celui des sources communes couvre l'ENTRÉE ; celui-ci
+  // couvre la SORTIE, et la sortie discrimine mieux parce que tout le monde lit scripts/ alors
+  // qu'un registre appartient normalement à un seul outil.
+  const faux = { root: '/r/', listDirImpl: () => ['a.mjs', 'b.mjs', 'c.mjs'],
+    readFileImpl: (p) => (String(p).endsWith('a.mjs') ? 'writeFileSync("docs/partage.json", x); writeFileSync("docs/a.json", y);'
+      : String(p).endsWith('b.mjs') ? 'writeFileSync("docs/partage.json", z);' : 'writeFileSync("docs/c.json", w);') };
+  const ecrivent = lc.findOutilsQuiEcriventLaMemeChose(faux);
+  assert.deepEqual(ecrivent.paires.map((x) => [x.a, x.b, x.communes]), [['a', 'b', ['docs/partage.json']]],
+    'two tools writing the SAME file are named: they do not merely resemble each other, they step on each other — and a registry belongs to one tool by this repo\'s own convention');
+  assert.equal(ecrivent.maxObserve, 1, 'the observed maximum is reported, so the next reader can see whether the threshold still sits inside the distribution (BP5)');
+
+  // CONTRE-TEST — IL DOIT POUVOIR ÊTRE VERT, sinon rouge ne veut rien dire (BP4).
+  const disjoints = lc.findOutilsQuiEcriventLaMemeChose({ root: '/r/', listDirImpl: () => ['x.mjs', 'y.mjs'],
+    readFileImpl: (p) => `writeFileSync("docs/${String(p).endsWith('x.mjs') ? 'x' : 'y'}.json", v);` });
+  assert.deepEqual([disjoints.mesurable, disjoints.paires.length, disjoints.maxObserve], [true, 0, 0],
+    'COUNTER-TEST: with disjoint outputs it reports a real zero — a detector that can only ever be red is indistinguishable from one that is broken');
+
+  // LE SEUIL AU-DESSUS DE SA PROPRE DISTRIBUTION — le défaut exact qu'on vient de corriger chez le
+  // voisin, refusé ici par construction plutôt que découvert dans six mois (L5/L11).
+  const trop = lc.findOutilsQuiEcriventLaMemeChose({ ...faux, seuil: 5 });
+  assert.equal(trop.seuilAuDessusDeLaDistribution, true, 'a threshold no pair can reach is DECLARED as such');
+  assert.ok(lc.outilsQuiEcriventLaMemeChoseLines(trop).join('\n').includes('PAS MESURÉ'),
+    'and the report says PAS MESURÉ instead of printing a zero that reads exactly like "no overlap" — the very confusion that left the textual detector green for days while measuring nothing');
+  assert.equal(lc.findOutilsQuiEcriventLaMemeChose({ root: '/r/', listDirImpl: () => { throw new Error('ENOENT'); } }).mesurable, false,
+    'an unreadable scripts/ renders PAS MESURÉ, never "nobody writes the same thing"');
+  assert.equal(lc.findOutilsQuiEcriventLaMemeChose({ root: '/r/', listDirImpl: () => ['seul.mjs'], readFileImpl: () => 'writeFileSync("docs/a.json", x);' }).mesurable, false,
+    'and fewer than two tools with a declared output is NOT MEASURED rather than a clean bill on nothing');
+
+  // LA BANALITÉ SE DÉRIVE DU CORPUS, jamais recopiée (Article 24) : un emplacement écrit par
+  // presque tout le monde est un lieu commun, pas un chevauchement — et sans ce filtre le signal
+  // accuserait tout le monde le jour où un tel emplacement apparaît (L4).
+  const banal = lc.findOutilsQuiEcriventLaMemeChose({ root: '/r/', partBanale: 0.1,
+    listDirImpl: () => ['a.mjs', 'b.mjs', 'c.mjs', 'd.mjs'], readFileImpl: () => 'writeFileSync("docs/commun.json", x);' });
+  assert.ok(banal.banales.includes('docs/commun.json') && banal.paires.length === 0,
+    'an output written by more than the derived share of tools is set aside as a common location, with the exclusion reported rather than silent');
+
   // ── EN DIRECT SUR LE VRAI DÉPÔT (Article 25) : la conclusion de #745 repose dessus.
   const memesReel = lc.findOutilsQuiLisentLesMemesSources();
   assert.equal(memesReel.mesurable, true, 'the probe must really run against the real repository');

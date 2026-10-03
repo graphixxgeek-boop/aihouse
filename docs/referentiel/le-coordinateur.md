@@ -251,3 +251,53 @@ souffle.
 *(Le garde-fou de #1377 est câblé dès le premier jour : il refuse de rendre un zéro quand son seuil
 dépasse ce qu'il observe. Sa limite déclarée : lire les mêmes fichiers n'est pas faire la même
 chose — ce sont des candidates à instruire, jamais un verdict de fusion.)*
+
+---
+
+## Deux outils qui ÉCRIVENT la même chose (2026-10-03, tâche #1460)
+
+**Son arbitrage du 2026-10-02, en fenêtre dédiée** : « mesurer le chevauchement autrement » —
+comparer ce que les outils **FONT** plutôt que les mots de leur libellé. Le détecteur textuel
+(`findOffresConcurrentes`) avait vu son seuil passer **au-dessus de sa propre distribution** :
+son zéro ne mesurait plus rien. `findOutilsQuiLisentLesMemesSources()` répondait déjà pour la
+moitié **ENTRÉE** ; celui-ci répond pour la moitié **SORTIE**, et les deux s'impriment dans la même
+commande (`node scripts/le-coordinateur.mjs memes-sources`) — les séparer ferait qu'on n'en lirait
+qu'une, exactement le sort du détecteur textuel.
+
+**Pourquoi la sortie discrimine mieux que l'entrée** : tout le monde lit `scripts/`. Presque
+personne n'écrit au même endroit — un registre appartient à son outil, c'est la convention du dépôt.
+Deux outils qui écrivent le même fichier ne se *ressemblent* pas : ils se marchent dessus.
+
+### La distribution a été mesurée AVANT que le seuil ne soit posé
+
+C'est la condition qu'il a explicitement attachée à son arbitrage. Sur **33 outils** ayant une
+sortie déclarée, soit 528 paires : **523 paires à 0 · 4 à 1 · 1 à 2**. Le maximum réel est **2**.
+
+**Le seuil est donc 1**, et c'est le seul choix honnête sur cette distribution : il n'y a pas de
+trou où poser une frontière plus haute, et une seule sortie partagée est déjà un fait qui se
+constate. Le poser à 2 referait exactement ce qu'on vient de corriger chez son voisin — un seuil
+au-dessus de presque toute sa distribution (BP5). Le rapport imprime le **maximum observé** à chaque
+passage, et bascule en `🚨 PAS MESURÉ` si le seuil le dépasse un jour.
+
+**Le premier jet ne discriminait rien, et l'erreur mérite d'être gardée** : il tronquait chaque
+chemin à son DOSSIER, si bien que **190 paires « partageaient docs/ »**. Un signal où la moitié des
+paires sont positives ne dit rien de plus qu'un signal où aucune ne l'est.
+
+### Les cinq paires réelles
+
+| Paires | Sortie commune |
+|---|---|
+| `check-house` ↔ `check-spirit` | `.sites-runtime/test-*.mjs` (2) |
+| `check-house` ↔ `tool-learning` | `docs/referentiel/lecons.md` |
+| `data-archangel` ↔ `fils-de-discussion` | `docs/livraisons.json` |
+| `ezechiel-les-tests` ↔ `filet-en-parts` | `docs/ezechiel-les-tests/mesures.json` |
+| `ou-on-en-est` ↔ `tool-learning` | `docs/suivi/sessions` |
+
+**Elle NOMME une collision, elle ne juge jamais qu'elle est fautive** : un registre partagé peut
+être une décision assumée — `docs/livraisons.json` l'est, et le filet vérifie déjà que les deux
+constantes restent égales. Les quatre autres sont à instruire.
+
+**Hors portée** : elle lit les chemins écrits **en dur** dans le code ; un chemin construit à
+l'exécution lui échappe. La banalité (un emplacement écrit par plus de 15 % des outils) se **dérive**
+du corpus et n'est atteinte par personne aujourd'hui — le filtre reste en place pour le jour où elle
+le sera, sans quoi le signal se mettrait à accuser tout le monde (leçon L4).
