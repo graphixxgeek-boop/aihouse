@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**30 fichier(s).**
+**32 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -16,6 +16,8 @@
 | [comprendre-le-poids-du-depot.md](comprendre-le-poids-du-depot.md) | — |
 | [l-agence-ailleurs.html](l-agence-ailleurs.html) | — |
 | [l-agence-ailleurs.md](l-agence-ailleurs.md) | — |
+| [la-nuit-du-2-au-3-octobre.html](la-nuit-du-2-au-3-octobre.html) | — |
+| [la-nuit-du-2-au-3-octobre.md](la-nuit-du-2-au-3-octobre.md) | — |
 | [le-pack-decouverte-point.html](le-pack-decouverte-point.html) | — |
 | [le-pack-decouverte-point.md](le-pack-decouverte-point.md) | — |
 | [les-11-destinations-dune-note.html](les-11-destinations-dune-note.html) | — |
