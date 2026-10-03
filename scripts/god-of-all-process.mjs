@@ -2755,6 +2755,65 @@ export function auditConstatsDeRegistre(registres = [], suiviText = null, { lire
   };
 }
 
+// LE REGISTRE DES POINTS FRAGILES EST UN REGISTRE DE CONSTATS, et il échappait à la chaîne
+// (2026-10-03, tâche #1528, sa question : « est-ce que je dois comprendre que ce sont aussi des
+// zones qui meritent une tache ouverte pour resoudre un probleme et que ces zones ne soient plus
+// fragiles ? »).
+//
+// SA QUESTION APPELAIT UNE MESURE, PAS UN AVIS, et la mesure est sévère : **13 des 14 points
+// fragiles ouverts ne citent AUCUNE tâche.** Une zone déclarée fragile que rien ne porte est une
+// zone qui restera fragile — et le registre dit lui-même qu'une entrée « se retire dès qu'elle est
+// résolue », ce qui suppose que quelqu'un la résolve.
+//
+// POURQUOI ICI PLUTÔT QUE DANS UN CONTRÔLE NEUF : c'est exactement la question de l'Article 28,
+// posée sur un registre de plus. `auditConstatsDeRegistre()` lit déjà les tables des index
+// d'outils ; celui-ci lit des PUCES sous un titre, même question, autre forme (Article 31 :
+// étendre plutôt qu'agir à côté).
+//
+// CE QU'IL NE DIT PAS, et la nuance compte : un point fragile sans tâche n'est pas forcément une
+// faute. Certains sont des IDÉES NON TRANCHÉES qui attendent sa décision, pas du travail. Le
+// contrôle NOMME, il ne reproche pas — et c'est à la relecture de séparer les deux.
+export const CHEMIN_POINTS_FRAGILES = "docs/referentiel/points-fragiles.md";
+export const TITRE_POINTS_OUVERTS = "## Points ouverts";
+
+export function auditPointsFragiles(texte = null, suiviText = null) {
+  if (texte == null) {
+    return { mesurable: false, pourquoi: `${CHEMIN_POINTS_FRAGILES} n'a pas pu être lu : zéro point fragile lu n'est jamais « aucun point fragile » (L5)` };
+  }
+  const corps = String(texte).includes(TITRE_POINTS_OUVERTS) ? String(texte).split(TITRE_POINTS_OUVERTS)[1] : String(texte);
+  // LE DRAPEAU `m` CHANGE LE SENS DE `$`, et ça a coûté une mesure fausse en direct : sous `m`,
+  // `$` signifie FIN DE LIGNE, pas fin de texte. Chaque puce était donc tronquée à sa première
+  // ligne, et le seul point fragile qui cite une tâche (#226, écrit à sa troisième ligne)
+  // ressortait « sans tâche ». Le contrôle accusait 14 sur 14 là où la réalité est 13 sur 14 —
+  // une sur-accusation, donc la forme de faux qui se fait voir ; l'inverse serait passé inaperçu.
+  const puces = [...corps.matchAll(/\n- ([\s\S]+?)(?=\n- |\n## |$)/g)].map((m) => m[1]);
+  if (!puces.length) return { mesurable: false, pourquoi: "aucune puce reconnue sous « Points ouverts » — le format a peut-être changé, et rendre « tout est chaîné » là-dessus serait un vert sur zéro donnée" };
+  const avecTache = []; const sansTache = []; const referencesMortes = [];
+  for (const p of puces) {
+    const resume = p.replace(/\s+/g, " ").trim().slice(0, 120);
+    const numeros = [...new Set([...p.matchAll(MOTIF_TACHE_ANNONCEE)].map((m) => m[1]))];
+    if (!numeros.length) { sansTache.push({ resume }); continue; }
+    if (suiviText == null) { avecTache.push({ resume, numeros }); continue; }
+    const mortes = numeros.filter((n) => !new RegExp(`\\|\\s*${n}\\s*\\|`).test(suiviText));
+    if (mortes.length) referencesMortes.push({ resume, mortes });
+    else avecTache.push({ resume, numeros });
+  }
+  return {
+    mesurable: true, total: puces.length, avecTache, sansTache, referencesMortes,
+    horsPortee: "un point fragile sans tâche n'est pas forcément une faute : plusieurs sont des IDÉES NON TRANCHÉES qui attendent une décision, pas du travail. Le contrôle NOMME, il ne reproche pas — séparer les deux demande de lire, et c'est le geste qu'il rend possible plutôt qu'il ne le remplace.",
+  };
+}
+
+export function pointsFragilesLines(a) {
+  if (!a?.mesurable) return [`— Points fragiles → tâches — PAS MESURÉ : ${a?.pourquoi ?? "aucune donnée"}`];
+  const L = [`— Chaîne points fragiles → tâches (${a.total} point(s) ouvert(s)) —`];
+  L.push(`  ${a.avecTache.length} portent une tâche vivante · ${a.sansTache.length} n'en nomment aucune · ${a.referencesMortes.length} référence(s) morte(s).`);
+  for (const c of a.sansTache) L.push(`  ❔ aucune tâche : « ${c.resume} »`);
+  for (const c of a.referencesMortes) L.push(`  ✗ annonce ${c.mortes.map((t) => `#${t}`).join(", ")}, introuvable(s) dans le suivi : « ${c.resume} »`);
+  L.push(`  HORS PORTÉE : ${a.horsPortee}`);
+  return L;
+}
+
 export function constatsDeRegistreLines(a) {
   if (!a?.mesurable) return [`— Chaîne registre → tâches — PAS MESURÉ : ${a?.pourquoi ?? "aucune donnée"}`];
   const L = [`— Chaîne registre d'outil → tâches (${a.lignesLues} ligne(s) de constat dans ${a.registresLus} index) —`];
@@ -3304,6 +3363,13 @@ function main() {
     } catch { /* absent : l'audit dira PAS MESURÉ plutôt que d'accuser */ }
     console.log("");
     for (const l of constatsDeRegistreLines(auditConstatsDeRegistre(registres, suivi))) console.log(l);
+    // LA QUATRIÈME MOITIÉ DU TERRAIN (2026-10-03, tâche #1528, sa question sur les zones fragiles).
+    // Même question que les trois autres chaînes, posée sur un registre de plus : un constat
+    // déclaré fragile que rien ne porte restera fragile.
+    let fragiles = null;
+    try { fragiles = readFileSync(join(ROOT, CHEMIN_POINTS_FRAGILES), "utf8"); } catch { /* illisible : PAS MESURÉ plutôt qu'un vert */ }
+    console.log("");
+    for (const l of pointsFragilesLines(auditPointsFragiles(fragiles, suivi))) console.log(l);
     return;
   }
   if (tache) {

@@ -7056,6 +7056,26 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     'and the three classes partition the registry exactly: an item that fell outside all three would be invisible to this control, which is the shape of defect it exists to end');
   assert.equal(CTsk.findItemsSansPreuve([]).mesurable, false,
     'zero items read is NOT MEASURED, never "every item is provable" (L5)');
+
+  // LA CHAÎNE DE L'ARTICLE 28 ATTEINT LES POINTS FRAGILES (2026-10-03, tâche #1528, sa question :
+  // « est-ce que je dois comprendre que ce sont aussi des zones qui meritent une tache ouverte
+  // pour resoudre un probleme et que ces zones ne soient plus fragiles ? »). Sa question appelait
+  // une MESURE, pas un avis, et la mesure est sévère : 13 des 14 points fragiles ouverts ne citent
+  // AUCUNE tâche. Une zone déclarée fragile que rien ne porte restera fragile.
+  const G28 = await import('../scripts/god-of-all-process.mjs');
+  const pf = '## Points ouverts\n\n- un point qui cite la tâche #818 sur sa\n  troisième ligne\n- un point qui ne cite personne\n- un point qui annonce #9999\n';
+  const suiviPourFragiles = '| 818 | 2026-09-25T11:43Z | x | y | z | UTILE | PROJET | d | Terminée |';
+  const apf = G28.auditPointsFragiles(pf, suiviPourFragiles);
+  assert.equal(apf.total, 3, 'each top-level bullet is one finding, however many lines it spans');
+  assert.deepEqual(apf.avecTache.map((x) => x.numeros), [['818']],
+    "a task cited on a LATER line of the bullet is found — the first version used the m flag, where $ means end of LINE and not end of text, so every bullet was truncated to its first line and the only real finding carrying a task (#226, written on its third line) was reported as carrying none");
+  assert.equal(apf.sansTache.length, 1, 'a finding naming nobody is the broken link this chain exists to surface');
+  assert.deepEqual(apf.referencesMortes.map((x) => x.mortes), [['9999']], 'and a task absent from the durable suivi is a dead reference, same doctrine as the three other chains');
+  assert.equal(G28.auditPointsFragiles(null).mesurable, false, 'an unreadable registry is NOT MEASURED, never "no fragile point" (L5)');
+  assert.equal(G28.auditPointsFragiles('## Points ouverts\n\naucune puce ici').mesurable, false,
+    'COUNTER-TEST: a format change that yields no bullet reports NOT MEASURED rather than a green — a parser that silently finds nothing is indistinguishable from a clean registry');
+  assert.ok(G28.pointsFragilesLines(apf).join('\n').includes('HORS PORTÉE'),
+    'and the section states its limit: a fragile point without a task is not necessarily a fault — several are UNDECIDED IDEAS awaiting his call, not work. It names, it does not reproach');
   assert.ok(CTsk.itemsSansPreuveLines(preuves).join('\n').includes('HORS PORTÉE'),
     'the section declares its own limit: it checks that a proof is DECLARED, never that it was produced — an item naming a journal it never writes passes here, and saying so beats letting that half look measured');
 
