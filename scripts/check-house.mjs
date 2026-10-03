@@ -28107,3 +28107,63 @@ async function testLePassageGroupeDeLHistoire() {
   console.log('Passed: soixante-douze processus pour un fichier de douze commits (2026-10-03, tâche #1592). TROUVÉ EN PROFILANT LE FILET ENTIER, ce qu\'aucune lecture n\'aurait donné : un passage ouvre **1 037 processus enfants** pour **42,8 s au total**, soit 18 % du temps, et UNE SEULE commande en pèse **15,9 s** — `git log -S<titre>`, lancée SOIXANTE-DOUZE fois. Soixante-douze processus pour interroger un fichier dont l\'historique complet tient en DOUZE commits. LA TECHNIQUE EST CELLE DE LA MARCHE #1038, appliquée à une autre question : on lit l\'historique UNE fois — douze `git show`, un par version — et on répond aux soixante-douze titres sur ces douze textes. **15,2 s deviennent 0,3 s.** LA SÉMANTIQUE EST CELLE DE `-S`, PAS UNE APPROXIMATION, et c\'est ce qui rend le remplacement légitime : la pioche de git rend les commits où le NOMBRE D\'OCCURRENCES de la chaîne a changé, et le code d\'origine en retient le plus ancien. On compte donc les occurrences dans chaque version successive et on retient la première où ce compte diffère. **Vérifié sur le vrai document : 71 réponses identiques sur 71**, mêmes dates et même ordre — c\'est cette comparaison qui autorise le changement, jamais le raisonnement qui la précède. LE CHEMIN PAR TITRE RESTE INTACT, et ce n\'est pas de la prudence gratuite : les tests du filet injectent un faux shell et vérifient la COMMANDE EXACTE qui en sort. Un passage groupé qui aurait remplacé `principleDateFromGit` aurait cassé ces tests tout en se croyant équivalent. ET LA CARTE REMPLACE L\'APPEL PLUTÔT QUE DE S\'Y AJOUTER : le contre-test fournit un shell qui EXPLOSE si on l\'appelle, parce qu\'une optimisation qui garderait l\'ancien chemin « au cas où » ne gagnerait rien du tout.');
 }
 await testLePassageGroupeDeLHistoire();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1593 — TROIS ÉCONOMIES EXACTES SUR LA COMPARAISON DE TOUTES LES PAIRES
+async function testJaccardSansApproximation() {
+  const L = await import('../scripts/lib-shell.mjs');
+
+  // ── LE JUGE EST L'IMPLÉMENTATION D'ORIGINE, recopiée ici exprès. Comparer la nouvelle version à
+  // elle-même ne prouverait rien ; la comparer à ce qu'elle remplace prouve tout.
+  const dOrigine = (ensembles, { seuil = 0.22 } = {}) => {
+    const paires = [];
+    for (let i = 0; i < ensembles.length; i++) {
+      for (let j = i + 1; j < ensembles.length; j++) {
+        const a = ensembles[i], b = ensembles[j];
+        if (!a?.size || !b?.size) continue;
+        const intersection = [...a].filter((w) => b.has(w)).length;
+        const union = new Set([...a, ...b]).size;
+        const jaccard = union ? intersection / union : 0;
+        if (jaccard >= seuil) paires.push({ i, j, jaccard, motsPartages: intersection });
+      }
+    }
+    return paires;
+  };
+
+  // ── UN CORPUS TIRÉ AU HASARD MAIS REPRODUCTIBLE : tailles très variées (c'est là que la borne
+  // par les tailles mord) et vocabulaire partiellement commun (c'est là qu'elle pourrait couper
+  // à tort). Une graine fixe, pour qu'un échec soit rejouable.
+  let graine = 1;
+  const tirage = () => (graine = (graine * 1103515245 + 12345) % 2147483648) / 2147483648;
+  for (let essai = 0; essai < 3; essai += 1) {
+    const ensembles = [];
+    for (let k = 0; k < 200; k += 1) {
+      const s = new Set();
+      const n = 1 + Math.floor(tirage() * 60);
+      for (let m = 0; m < n; m += 1) s.add(`mot${Math.floor(tirage() * 120)}`);
+      ensembles.push(s);
+    }
+    for (const seuil of [0, 0.05, 0.22, 0.5, 0.9]) {
+      assert.deepStrictEqual(
+        L.pairesParJaccard(ensembles, { seuil }), dOrigine(ensembles, { seuil }),
+        `MUST CATCH: the pruned version must return EXACTLY what the exhaustive one returns, same pairs, same order, same values (essai ${essai}, seuil ${seuil})`);
+    }
+  }
+
+  // ── LA BORNE PAR LES TAILLES EST UNE DÉMONSTRATION, PAS UNE HEURISTIQUE : |A∩B| ≤ min(|A|,|B|)
+  // et |A∪B| ≥ max(|A|,|B|), donc Jaccard ≤ min/max. Le cas qui le met à l'épreuve est celui d'un
+  // petit ensemble ENTIÈREMENT contenu dans un grand — l'intersection y est maximale, et c'est là
+  // qu'une borne trop agressive couperait une vraie paire.
+  const petit = new Set(['a', 'b']);
+  const grand = new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']);
+  assert.deepStrictEqual(L.pairesParJaccard([petit, grand], { seuil: 0.2 }), dOrigine([petit, grand], { seuil: 0.2 }), 'a small set fully contained in a large one is judged identically');
+  assert.deepStrictEqual(L.pairesParJaccard([petit, grand], { seuil: 0.21 }), [], 'and just above its real Jaccard (0.2) it drops out on both paths');
+
+  // ── LES CAS LIMITES : ensembles vides, trous dans la liste, seuil nul.
+  const bancals = [new Set(), new Set(['a']), null, undefined, new Set(['a', 'b'])];
+  assert.deepStrictEqual(L.pairesParJaccard(bancals, {}), dOrigine(bancals, {}), 'empty sets and holes in the list behave identically');
+  assert.deepStrictEqual(L.pairesParJaccard([], {}), [], 'and no sets at all yields no pairs rather than throwing');
+
+  console.log('Passed: trois économies exactes sur la comparaison de toutes les paires (2026-10-03, tâche #1593). LE PROFIL DU FILET ENTIER donne cette fonction à 13,3 s, soit 5 % du temps total — deuxième poste de coût après les processus enfants. Elle compare toutes les paires d\'ensembles de mots, et elle le faisait de la façon la plus chère possible. TROIS CORRECTIONS, ET AUCUNE N\'EST UNE APPROXIMATION. ① L\'UNION SE CALCULE, ELLE NE SE CONSTRUIT PAS : `new Set([...a, ...b]).size` allouait deux tableaux et un ensemble POUR CHAQUE PAIRE, alors que |A ∪ B| = |A| + |B| − |A ∩ B| et que l\'intersection vient d\'être comptée. ② ON PARCOURT LE PLUS PETIT DES DEUX : chercher 200 mots dans un ensemble de 3 coûte 200 recherches là où l\'inverse en coûte 3, pour le même résultat. ③ DEUX TAILLES TROP DIFFÉRENTES NE PEUVENT PAS ATTEINDRE LE SEUIL, et ça se DÉMONTRE : |A ∩ B| ≤ min et |A ∪ B| ≥ max, donc Jaccard ≤ min/max — une paire dont ce rapport est déjà sous le seuil est écartée sans calcul, jamais « probablement » mais mathématiquement. **6,5 fois plus rapide.** LA VÉRIFICATION EST CE QUI AUTORISE LE CHANGEMENT, et le juge est l\'implémentation D\'ORIGINE recopiée dans le test : comparer la nouvelle version à elle-même ne prouverait rien. Quinze comparaisons sur des corpus tirés au hasard à graine fixe, cinq seuils dont zéro et 0,9, plus le cas qui met la borne à l\'épreuve — un petit ensemble entièrement contenu dans un grand, là où l\'intersection est maximale et où une borne trop agressive couperait une vraie paire. Mêmes paires, même ordre, mêmes valeurs. ET L\'ORDRE COMPTE AUTANT QUE LE CONTENU : une optimisation qui réordonnerait sa sortie serait une optimisation qui change son résultat, leçon déjà payée le soir même sur l\'index des convictions.');
+}
+await testJaccardSansApproximation();

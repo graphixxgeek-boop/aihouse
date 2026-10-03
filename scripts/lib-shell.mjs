@@ -1009,14 +1009,39 @@ export const MARQUEUR_ABSOLU = /\btoujours\b/i;
 // CE QU'ELLE NE FAIT PAS : conclure. Deux appelants tirent des conclusions opposées du même chiffre
 // — l'un y voit une redondance à alléger, l'autre le TERRAIN COMMUN sur lequel chercher une tension.
 // Le seuil et la suite restent donc entièrement à l'appelant.
+// TROIS ÉCONOMIES EXACTES, AUCUNE APPROXIMATION (2026-10-03, tâche #1593). Le profil du filet
+// entier donne cette fonction à 13,3 s, soit 5 % du temps total — deuxième poste après les
+// processus enfants. Les trois corrections ne changent aucun résultat, et c'est vérifié en
+// comparant les deux implémentations sur des milliers de paires tirées au hasard.
+//
+// ① L'UNION SE CALCULE, ELLE NE SE CONSTRUIT PAS. `new Set([...a, ...b]).size` allouait deux
+//    tableaux et un ensemble POUR CHAQUE PAIRE. Or |A ∪ B| = |A| + |B| − |A ∩ B|, et
+//    l'intersection est déjà comptée juste au-dessus. C'est de l'arithmétique, pas une
+//    approximation.
+// ② ON PARCOURT LE PLUS PETIT DES DEUX. Le coût d'une intersection est celui de l'ensemble
+//    parcouru ; chercher 200 mots dans un ensemble de 3 coûte 200 recherches là où l'inverse en
+//    coûte 3. Le résultat est le même, l'intersection étant symétrique.
+// ③ DEUX TAILLES TROP DIFFÉRENTES NE PEUVENT PAS ATTEINDRE LE SEUIL, et ça se démontre :
+//    |A ∩ B| ≤ min(|A|,|B|) et |A ∪ B| ≥ max(|A|,|B|), donc Jaccard ≤ min/max. Si ce rapport est
+//    déjà sous le seuil, la paire est écartée SANS être calculée — jamais « probablement sous le
+//    seuil », mais mathématiquement impossible au-dessus.
+//
+// L'ORDRE DES PAIRES RENDUES NE CHANGE PAS : i croissant puis j croissant, comme avant. Une
+// optimisation qui réordonnerait sa sortie serait une optimisation qui change son résultat.
 export function pairesParJaccard(ensembles = [], { seuil = 0.22 } = {}) {
   const paires = [];
   for (let i = 0; i < ensembles.length; i++) {
+    const a = ensembles[i];
+    if (!a?.size) continue;
     for (let j = i + 1; j < ensembles.length; j++) {
-      const a = ensembles[i], b = ensembles[j];
-      if (!a?.size || !b?.size) continue;
-      const intersection = [...a].filter((w) => b.has(w)).length;
-      const union = new Set([...a, ...b]).size;
+      const b = ensembles[j];
+      if (!b?.size) continue;
+      const petit = a.size <= b.size ? a : b;
+      const grand = petit === a ? b : a;
+      if (petit.size / grand.size < seuil) continue; // ③ borne exacte
+      let intersection = 0;
+      for (const w of petit) if (grand.has(w)) intersection += 1; // ②
+      const union = a.size + b.size - intersection; // ①
       const jaccard = union ? intersection / union : 0;
       if (jaccard >= seuil) paires.push({ i, j, jaccard, motsPartages: intersection });
     }

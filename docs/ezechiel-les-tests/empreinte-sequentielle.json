@@ -1,5 +1,5 @@
 {
-  "quand": "2026-10-03T23:17:29.187Z",
+  "quand": "2026-10-03T23:31:48.605Z",
   "pourquoi": "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
   "sujets": [
     "Passed: 18 % du registre échappait à tous les contrôles, en ",
@@ -402,6 +402,7 @@
     "Passed: tool combinations are measured at last (2026-09-23),",
     "Passed: tool-brain est-il vraiment le point d'entrée (2026-0",
     "Passed: tool-brain.mjs (2026-09-21) generalizes find-brain t",
+    "Passed: trois économies exactes sur la comparaison de toutes",
     "Passed: trois états de couverture chez AXA-CHECK, et une exe",
     "Passed: trois états de remise, et le quatrième qu'il proposa",
     "Passed: un avis OBLIGATOIRE fondé sur une donnée périmée (20",
