@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**45 fichier(s).**
+**43 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -22,8 +22,6 @@
 | [comprendre-le-poids-du-depot.md](comprendre-le-poids-du-depot.md) | — |
 | [consignes-de-session-2026-10-03.html](consignes-de-session-2026-10-03.html) | — |
 | [consignes-de-session-2026-10-03.md](consignes-de-session-2026-10-03.md) | — |
-| [l-agence-ailleurs.html](l-agence-ailleurs.html) | — |
-| [l-agence-ailleurs.md](l-agence-ailleurs.md) | — |
 | [la-nuit-du-2-au-3-octobre.html](la-nuit-du-2-au-3-octobre.html) | — |
 | [la-nuit-du-2-au-3-octobre.md](la-nuit-du-2-au-3-octobre.md) | — |
 | [le-pack-decouverte-point.html](le-pack-decouverte-point.html) | — |

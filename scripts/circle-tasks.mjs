@@ -1105,6 +1105,17 @@ export const CIRCLE_AUTO_COVERED_REGISTRIES = {
   // outil arrive produirait invariablement « rien à signaler », c'est-à-dire du bruit qui apprend à
   // ne plus lire la Ronde. Son moment est celui de l'intégration, et il est porté par le process
   // « Intégration d'un nouvel outil » (god-of-all-process), jamais par un calendrier.
+  // essais-ailleurs (2026-10-03, tâche #1551) : EXCLUSION, et sa nature la justifie entièrement.
+  // Ce dossier garde les comptes rendus d'installation de l'Agence sur un AUTRE projet. Un essai
+  // est un ÉVÉNEMENT — on en fait un quand on décide d'en faire un, jamais tous les quinze jours.
+  // Un item de Ronde rendrait invariablement « aucun nouvel essai depuis la dernière fois »,
+  // c'est-à-dire du bruit qui apprend à sauter la Ronde (leçon L4), et il n'y a rien à vérifier
+  // sur un compte rendu daté qui ne changera plus.
+  //
+  // CE QUI EST SURVEILLÉ EST AILLEURS, ET C'EST LE BON ENDROIT : l'exportabilité elle-même est
+  // mesurée à chaque commit par SAFE-EXPORT, et c'est elle qui dira quand un nouvel essai vaut
+  // la peine — pas un calendrier.
+  "essais-ailleurs": "Comptes rendus d'installation de l'Agence sur un autre projet : un essai est un ÉVÉNEMENT, jamais un rendez-vous. Une Ronde qui demanderait « y a-t-il un nouvel essai ? » répondrait non presque toujours, et l'exportabilité est déjà mesurée à chaque commit par SAFE-EXPORT",
   "integration-outil": "Répond à un événement (un outil qui arrive), jamais à un calendrier : hors d'une intégration il n'aurait rien à dire, et une Ronde qui répète « rien à signaler » s'apprend à être sautée. Son obligation vit dans PROCESSES, pas dans CIRCLE_ITEMS",
   // eval-ia (2026-09-23) : registre créé avec EVAL-IA, le pendant d'EVAL-DEV. Couvert par l'item
   // `recap-evaluations`, qui produit désormais LES DEUX rapports d'évaluation (étape D de la

@@ -51,7 +51,7 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/referentiel/fils-de-discussion.html` | `docs/referentiel/fils-de-discussion.md` | 15548 | 2026-10-02 20:38Z |
 | `docs/fils/html/index.html` | `docs/fils/index.md` | 19980 | 2026-10-02 20:39Z |
 | `docs/reponses/reponses-gros-prompt-2026-10-02.html` | `docs/reponses/reponses-gros-prompt-2026-10-02.md` | 55864 | 2026-10-02 20:39Z |
-| `docs/livrables/l-agence-ailleurs.html` | `docs/livrables/l-agence-ailleurs.md` | 19557 | 2026-10-02 21:07Z |
+|  `docs/essais-ailleurs/2026-10-02-carnet-de-jardin.html` | `docs/essais-ailleurs/2026-10-02-carnet-de-jardin.md` *(déplacé le 2026-10-03, tâche #1551)* | 19557 | 2026-10-02 21:07Z |
 | `docs/livrables/choisir-une-licence.html` | `docs/livrables/choisir-une-licence.md` | 18254 | 2026-10-02 21:11Z |
 | `docs/livrables/outils-reductibles-en-extension.html` | `docs/livrables/outils-reductibles-en-extension.md` | 16117 | 2026-10-02 21:18Z |
 | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.html` | `docs/grand-projet/02-strategie/reponses-a-ses-49-questions.md` | 48606 | 2026-10-02 21:23Z |
@@ -115,3 +115,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/livrables/manifeste-de-l-agence.html` | `docs/manifeste-de-l-agence.md` | 13965 | 2026-10-03 09:47Z |
 | `docs/livrables/systeme-de-suivi.html` | `docs/systeme-de-suivi.md` | 45710 | 2026-10-03 09:47Z |
 | `docs/livrables/LIVRAISON-14H-2026-10-03.html` | `docs/livrables/LIVRAISON-14H-2026-10-03.md` | 17694 | 2026-10-03 09:48Z |
+| `docs/essais-ailleurs/index.html` | `docs/essais-ailleurs/index.md` | 10990 | 2026-10-03 10:17Z |
