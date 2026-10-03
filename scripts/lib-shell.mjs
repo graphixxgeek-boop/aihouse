@@ -334,11 +334,23 @@ export function sh(cmd, { cwd, verbose = false, env } = {}) {
 // doit être fourni SANS séparateur final (rappel trouvé le 2026-09-20 : un simple
 // `slice(root.length + 1)` grignotait la première lettre de "docs/", faussant silencieusement
 // toute vérification de registre en aval).
+// `root` est le PRÉFIXE À RETIRER, jamais un dossier de travail : ses appelants historiques passent
+// "" (chemins relatifs au dossier courant). Un appelant qui passait "." — ce qui paraît le même
+// chose — recevait des chemins amputés de leur première lettre ("ocs/livrables/…"), une corruption
+// silencieuse qui ne ressemble pas à une erreur : le chemin reste une chaîne plausible, et seul un
+// test d'exclusion qui ne se déclenchait pas l'a révélée (tâche #1533). Les deux formes qui veulent
+// dire « rien à retirer » sont donc traitées pareil, à la racine plutôt qu'à chaque appel
+// (Article 3).
+export function prefixeARetirer(root) {
+  return root === "." || root === "./" || root === undefined || root === null ? "" : String(root).replace(/[\\/]+$/, "");
+}
+
 export function walkDocsPaths(dir, root, out = new Set()) {
   if (!existsSync(dir)) return out;
+  const prefixe = prefixeARetirer(root);
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const full = join(dir, entry.name);
-    out.add(full.slice(root.length).replace(/^[\\/]/, "").replace(/\\/g, "/"));
+    out.add(full.slice(prefixe.length).replace(/^[\\/]/, "").replace(/\\/g, "/"));
     if (entry.isDirectory()) walkDocsPaths(full, root, out);
   }
   return out;

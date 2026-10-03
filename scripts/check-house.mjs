@@ -26856,3 +26856,70 @@ async function testLeBalayageEtendu() {
   console.log("Passed: le balayage des lignes de tâches accepte deux choses de plus, et un faux vert les a validées (2026-10-02, tâche #993). CLONE-HUNTER signalait deux boucles jumelles dans le même fichier, et elles l'étaient : un balayage partagé existait déjà, deux fonctions s'en servaient, et deux autres réécrivaient sa boucle à la main. POURQUOI ELLES NE POUVAIENT PAS S'EN SERVIR, et c'est la vraie question que « fondre deux blocs qui se ressemblent » ne pose jamais : l'une produit jusqu'à DEUX écarts par ligne — une case « ouverture » et une case « clôture » peuvent être fautives ensemble — et l'autre ignore les lignes restées à un format antérieur, que compter aurait gonflé son dénominateur de lignes sur lesquelles elle n'a rien regardé. Les laisser séparées avec une raison écrite aurait été légitime ; les réconcilier vaut mieux, parce que la PROCHAINE fonction qui aurait eu besoin de l'un de ces deux comportements aurait écrit une troisième copie (Article 24). ET LE PIÈGE A ÉTÉ PAYÉ EN DIRECT : passer les arguments étalés puis l'objet d'options place cet objet en position « dossier des sessions » quand l'appel ne porte aucun argument. La fonction lisait donc un dossier inexistant, rendait ZÉRO ligne lue, et son message disait tranquillement « aucune ligne au format complet : ce zéro ne certifie rien » — une absence de mesure présentée comme une mesure, sur le contrôle même qui existe pour l'empêcher, et un vert parfaitement crédible. Attrapé en comparant la sortie AVANT et APRÈS plutôt qu'en relisant le code : les deux fonctions rendent désormais un résultat identique au caractère près à celui d'avant la fusion.");
 }
 await testLeBalayageEtendu();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1533 — LA LISTE DU PACK DÉCOUVERTE, ET LE CHEMIN AMPUTÉ QU'ELLE A FAIT TOMBER
+async function testLaListeDuPackDecouverte() {
+  const I = await import('../scripts/ines-official.mjs');
+  const L = await import('../scripts/lib-shell.mjs');
+
+  // ── 1. LES SUJETS SONT LUS DANS SON DOCUMENT, JAMAIS RECOPIÉS ICI (Article 24). Les bornes
+  // encadrent la liste ; une phrase de contexte entre deux puces n'est pas un sujet.
+  const faux = [
+    'blabla je pense aux sujets qui touchent à :',
+    '',
+    '- la classification de l’Agence,',
+    'une phrase de contexte qui traîne au milieu',
+    '- la gouvernance de l’Agence',
+    '',
+    'Quel est le thème de cette liste ?',
+    '- une puce APRÈS la borne de fin, qui ne doit pas compter',
+  ].join('\n');
+  const sujets = I.sujetsDeDecouverte(faux);
+  assert.strictEqual(sujets.length, 2, 'only the bullets between the two bornes become subjects — not the prose line between them, not the bullet after the closing borne');
+  assert.deepStrictEqual(sujets.map((s) => s.libelle), ['la classification de l’Agence', 'la gouvernance de l’Agence'], 'and the trailing comma is stripped from the label');
+  assert.ok(!sujets[0].mots.includes('agence'), 'the words every document in the repository carries are dropped — keeping "agence" would have matched every subject to everything, which is a report that says nothing');
+
+  // ── 2. LA COMPARAISON SE FAIT SUR LE RADICAL, et le premier passage réel a montré pourquoi :
+  // « fonctions » cherché tel quel rendait ZÉRO document alors que le dépôt en porte plusieurs
+  // nommés « fonctionnement ». Un faux manque est pire qu'une absence de mesure (leçon L4).
+  assert.strictEqual(I.radicalDuMot('fonctions'), 'fonction', 'the stem of a word longer than the cut is the cut');
+  assert.ok('docs/x/fonctionnement-de-lagence.md'.includes(I.radicalDuMot('fonctions')), 'and that stem is what lets "fonctions" find "fonctionnement" — the exact false zero of the first real run');
+
+  // ── 3. UN SUJET SANS AUCUN DOCUMENT EST SA QUESTION, pas un détail : « Qu'est-ce qui manque et
+  // qui n'existe pas ? ». Il doit donc ressortir nommément, jamais se fondre dans un compte.
+  const parSujet = [{ libelle: 'a', documents: [{ chemin: 'x' }] }, { libelle: 'b', documents: [] }];
+  assert.deepStrictEqual(I.findSujetsSansDocument({ parSujet }), ['b'], 'a subject with zero documents is named, never counted');
+
+  // ── 4. LA LECTURE PEUT CASSER, ET SON SILENCE RESSEMBLERAIT À « AUCUN SUJET » (leçon L5). Les
+  // trois façons de la casser parlent chacune, et l'état réel du dépôt est muet.
+  const absent = I.findSourceDesSujetsIllisible({ root: '/tmp', source: 'nexiste-pas.md', existsImpl: () => false });
+  assert.strictEqual(absent.length, 1, 'a missing source file speaks');
+  const sansBorne = I.findSourceDesSujetsIllisible({ root: '.', existsImpl: () => true, readFileImpl: () => 'un document sans la moindre borne' });
+  assert.match(sansBorne[0], /borne de début/, 'a rewritten opening borne speaks');
+  const sansPuce = I.findSourceDesSujetsIllisible({ root: '.', existsImpl: () => true, readFileImpl: () => 'je pense aux sujets qui touchent à :\n\ndu texte sans puce\n\nQuel est le thème de cette liste ?' });
+  assert.match(sansPuce[0], /aucune puce/, 'bornes present but no bullet left speaks too — a zero is not the same thing as "no subject"');
+  assert.deepStrictEqual(I.findSourceDesSujetsIllisible({ root: '.' }), [], 'and against the project’s own real document, the reading currently works');
+
+  // ── 5. LE PASSAGE RÉEL, parce qu'un outil qui n'a jamais tourné contre le vrai dépôt est une
+  // intention (Article 25). Il doit lire SES sujets et balayer les VRAIS documents.
+  const reel = I.rapportDuPackDecouverte({ root: '.', date: '2026-10-03' });
+  assert.deepStrictEqual(reel.ecarts, [], 'the real run has nothing to report about its own reading');
+  assert.ok(reel.sujets.length >= 10, `his real list currently holds ${reel.sujets.length} subjects — and it is 11, not the 10 the agent had in mind, which is exactly why it is read rather than recopied`);
+  assert.ok(reel.fichiers > 500, `and the sweep sees the real corpus (${reel.fichiers} documents)`);
+  assert.ok(!reel.sujets.some((s) => s.documents.some((d) => d.chemin.startsWith(I.PREFIXE_DU_RAPPORT_PACK))), 'the report never counts itself: it lives in the very folder it sweeps, so without this exclusion the figure climbed by one at every pass');
+
+  // ── 6. ET LE VRAI PIÈGE, PAYÉ EN DIRECT. `walkDocsPaths(dir, root)` prend en `root` le PRÉFIXE À
+  // RETIRER, jamais un dossier de travail. Lui passer "." — qui paraît la même chose — rendait des
+  // chemins amputés de leur première lettre, « ocs/livrables/… » : une chaîne encore plausible, que
+  // rien ne signale, et qui a fait passer l'exclusion ci-dessus pour inopérante.
+  assert.strictEqual(L.prefixeARetirer('.'), '', '"." means nothing to strip');
+  assert.strictEqual(L.prefixeARetirer(''), '', 'so does the empty string its historical callers pass');
+  assert.strictEqual(L.prefixeARetirer('/a/b/'), '/a/b', 'and a real prefix loses only its trailing separator');
+  const avec = [...L.walkDocsPaths('docs/livrables', '.')];
+  assert.ok(avec.every((p) => p.startsWith('docs/livrables/')), 'with root "." the paths keep their first letter — the corruption that cost this hour');
+  assert.deepStrictEqual([...L.walkDocsPaths('docs/livrables', '')], avec, 'and "" gives exactly the same result, so no historical caller changes behaviour');
+
+  console.log('Passed: la liste du PACK DÉCOUVERTE est LUE dans sa COMMANDE IMPORTANTE, jamais recopiée (#1533). Ses onze sujets — onze, pas les dix que l\'agent avait en tête, et c\'est précisément l\'argument de l\'Article 24 — sont extraits entre deux bornes, une phrase de contexte au milieu des puces n\'en devient pas un, et les mots que tout document du dépôt porte sont écartés sans quoi chaque sujet aurait correspondu à tout. La comparaison se fait sur le RADICAL parce que le premier passage réel a rendu « fonctions : zéro document » alors que le dépôt en porte plusieurs nommés « fonctionnement » — un faux manque, pire qu\'une absence de mesure. Les trois façons de casser la lecture parlent chacune, un zéro de sujets ne pouvant pas se confondre avec « aucun sujet ». ET LE VRAI PIÈGE A ÉTÉ PAYÉ EN DIRECT : walkDocsPaths() prend en second argument le PRÉFIXE À RETIRER, jamais un dossier de travail, et lui passer "." rendait des chemins amputés de leur première lettre — « ocs/livrables/… », une chaîne parfaitement plausible que rien ne signale, qui n\'a été vue que parce qu\'une exclusion refusait de se déclencher. Corrigé à la racine plutôt que chez l\'appelant (Article 3) : les deux formes qui veulent dire « rien à retirer » sont désormais traitées pareil, et les six appelants historiques rendent le résultat identique.');
+}
+await testLaListeDuPackDecouverte();
