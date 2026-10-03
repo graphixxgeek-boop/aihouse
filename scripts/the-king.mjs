@@ -1193,6 +1193,110 @@ export function revelerLaPhilosophie({ root = ROOT, racines = RACINES_DU_CORPUS,
     boussole: { chemin, principes: unites.length },
   };
 }
+// ============================================================================
+// LE TABLEAU DES CONVICTIONS — sa demande de FORME (2026-10-03, tâche #1534)
+// ============================================================================
+// SA DEMANDE, MOT POUR MOT : « la liste des 104 convictions sous forme résumée, en tableau, 5 par
+// ligne ». Trois exigences dans une phrase, et chacune compte : RÉSUMÉE (une liste de 103 phrases
+// entières n'est pas une liste, c'est un document), EN TABLEAU, CINQ PAR LIGNE.
+//
+// POURQUOI LE RÉSUMÉ SE DÉRIVE ET NE S'ÉCRIT PAS. Résumer 103 phrases à la main prendrait une
+// heure et se périmerait au prochain passage de l'extracteur — le chiffre a déjà bougé trois fois
+// (102 le 1er octobre, 104 le 2, 103 le 3). Un tableau recopié à la main serait exactement la
+// copie non vérifiée que l'Article 24 interdit. Le résumé est donc une COUPE mécanique de la
+// phrase réelle, et la phrase entière reste donnée juste en dessous : un résumé qui remplacerait
+// sa source ferait perdre ce que la conviction dit vraiment.
+//
+// LA COUPE EST VOLONTAIREMENT BÊTE, et c'est ce qui la rend honnête : on prend le début de la
+// phrase jusqu'à une frontière de mot, et on marque la troncature. Un « résumé intelligent »
+// choisirait ce qui compte — donc mon interprétation prendrait la place de la conviction, et le
+// tableau dirait ce que j'ai compris plutôt que ce que le corpus dit.
+export const LONGUEUR_DU_RESUME = 52;
+export const MOTIF_AMORCE_FAIBLE = /^(?:et|mais|or|donc|car|ainsi|ensuite|puis|enfin|c'est|ce qui|ce que|cela|celui-ci|celle-ci|il|elle)\s+/i;
+
+export function resumerUneConviction(phrase, { longueur = LONGUEUR_DU_RESUME } = {}) {
+  let p = String(phrase ?? "").replace(/\s+/g, " ").trim();
+  // Une amorce de liaison ne dit rien de la conviction : la retirer rend les cinquante-deux
+  // caractères utiles plutôt que consommés par un « Et c'est ».
+  p = p.replace(MOTIF_AMORCE_FAIBLE, "");
+  if (!p) return "";
+  if (p.length <= longueur) return p;
+  const coupe = p.slice(0, longueur);
+  const dernier = coupe.lastIndexOf(" ");
+  // Un seul mot plus long que la fenêtre ne doit pas rendre une chaîne vide : on garde la coupe
+  // brute plutôt que rien, parce qu'une case vide se lit comme « rien à dire ».
+  return (dernier > longueur * 0.5 ? coupe.slice(0, dernier) : coupe).replace(/[\s,;:—-]+$/, "") + "…";
+}
+
+// LA BARRE VERTICALE EST UN DÉBRIS, JAMAIS UNE CONVICTION — et c'est le premier passage réel qui
+// l'a montré (2026-10-03). L'extracteur lit les lignes de tableau depuis la tâche #1438, ce qui
+// était la bonne décision (ce projet écrit ses décisions les plus fermes dans des tableaux) ; mais
+// 8 des 106 retenues sont des fragments de tableau classés « prose », du genre
+// « — | 2026-09-19T16:20Z | | Smart Breaker | Conception d'ARGUS ». Ce ne sont pas des convictions,
+// ce sont des lignes de registre.
+//
+// CE QU'ON EN FAIT, ET POURQUOI ON NE LES SUPPRIME PAS ICI : les retirer silencieusement ferait
+// passer le total de 106 à 98 sans que personne sache pourquoi, et surtout rendrait l'extracteur
+// plus propre qu'il ne l'est — la vraie correction lui appartient, pas au tableau qui l'affiche.
+// Ils sont donc COMPTÉS et SIGNALÉS, et la barre est échappée pour que le tableau reste lisible.
+export const MOTIF_DEBRIS_DE_TABLEAU = /\|/;
+
+export const CONVICTIONS_PAR_LIGNE = 5;
+
+export function tableauDesConvictions(revelation, { parLigne = CONVICTIONS_PAR_LIGNE, longueur = LONGUEUR_DU_RESUME } = {}) {
+  if (!revelation?.mesurable) {
+    return { mesurable: false, pourquoi: revelation?.pourquoi ?? "la révélation n'a pas été mesurée — un tableau construit sur une absence de mesure se lirait comme une liste exhaustive (leçons L5/L11)" };
+  }
+  const retenues = (revelation.cadre?.cases ?? []).flatMap((c) => (c.top ?? []).map((t) => ({ ...t, cas: c.cle })));
+  if (!retenues.length) {
+    return { mesurable: false, pourquoi: "aucune conviction retenue : le cadre est vide, et un tableau vide ne dit pas la même chose qu'un corpus sans conviction" };
+  }
+  const entrees = retenues.map((c, i) => ({
+    rang: i + 1,
+    cas: c.cas,
+    zone: c.zone ?? "?",
+    chemin: c.chemin ?? "",
+    polarite: c.polarite ?? "?",
+    // LA SEULE INFORMATION QUI COMPTE VRAIMENT DANS CE TABLEAU : cette conviction est-elle portée
+    // par un principe de la boussole, ou le corpus y croit-il sans que la boussole le dise ?
+    couverte: Boolean(c.boussole?.couverte),
+    debris: MOTIF_DEBRIS_DE_TABLEAU.test(String(c.phrase ?? "")),
+    resume: resumerUneConviction(c.phrase, { longueur }),
+    phrase: String(c.phrase ?? "").replace(/\s+/g, " ").trim(),
+  }));
+  const lignes = [];
+  for (let i = 0; i < entrees.length; i += parLigne) lignes.push(entrees.slice(i, i + parLigne));
+  return {
+    mesurable: true,
+    total: entrees.length,
+    inavouees: entrees.filter((e) => !e.couverte).length,
+    debris: entrees.filter((e) => e.debris).length,
+    parLigne, lignes, entrees,
+  };
+}
+
+export function formatTableauDesConvictionsLines(t) {
+  if (!t?.mesurable) return [`❓ PAS MESURÉ — ${t?.pourquoi}`];
+  const out = [];
+  out.push(`${t.total} conviction(s) retenue(s) par le cadre, dont ${t.inavouees} qu'AUCUN principe de la boussole ne porte.`);
+  out.push("");
+  out.push("| " + Array.from({ length: t.parLigne }, (_, i) => `#${i + 1}`).join(" | ") + " |");
+  out.push("|" + "---|".repeat(t.parLigne));
+  for (const ligne of t.lignes) {
+    // La barre est échappée au RENDU et jamais au stockage : une entrée nettoyée dans les données
+    // ferait croire que le débris n'existe pas, ce que le compteur ci-dessus dément.
+    const cases = ligne.map((e) => `**${e.rang}.** ${e.debris ? "🚫" : e.couverte ? "✅" : "⚠️"} ${e.resume.replace(/\|/g, "\\|")}`);
+    while (cases.length < t.parLigne) cases.push("");
+    out.push("| " + cases.join(" | ") + " |");
+  }
+  out.push("");
+  out.push("✅ = portée par un principe écrit de la boussole · ⚠️ = le corpus y croit, la boussole ne le dit pas · 🚫 = ce n'est pas une conviction mais un fragment de tableau, et c'est un défaut de l'extracteur, pas du corpus.");
+  if (t.debris) {
+    out.push("");
+    out.push(`⚠️ ${t.debris} entrée(s) sur ${t.total} ne sont pas des convictions : ce sont des lignes de registre ramassées par l'extracteur depuis qu'il lit les tableaux. Elles sont comptées et montrées plutôt que retirées — les retirer ici ferait passer le total sans dire pourquoi, et rendrait l'extracteur plus propre qu'il ne l'est.`);
+  }
+  return out;
+}
 
 // ============================================================================
 // LA THÈSE DU CŒUR — « le cœur de l'Agence est sa gouvernance » (tâche #1444)
@@ -1913,6 +2017,33 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
     for (const t of r.tensions ?? []) constats.push({ constat: `l'idée entre en opposition de polarité avec l'article ${t.numero} (${t.titre})`, etat: "a-trancher", tache: "vérifier à la main si c'est une vraie contradiction : le vocabulaire partagé est un signal, jamais une preuve" });
     for (const t of r.couvertes ?? []) constats.push({ constat: `l'idée est déjà contenue dans l'article ${t.numero} (${t.titre})`, etat: "ecarte", pourquoi: "ce n'est pas une idée neuve mais une redite — et le dire épargne un chantier" });
     if (!r.mesurable) constats.push({ constat: `pas de mesure possible : ${r.pourquoi}`, etat: "retenu", tache: "rétablir la lecture du document de gouvernance avant de conclure quoi que ce soit" });
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
+    return;
+  }
+  // SA DEMANDE DE FORME (2026-10-03, tâche #1534) : « la liste des 104 convictions sous forme
+  // résumée, en tableau, 5 par ligne ». Le livrable est le FICHIER, et il porte le tableau ET la
+  // liste intégrale : un résumé qui remplacerait sa source ferait perdre ce que la conviction dit.
+  if (process.argv[2] === "convictions") {
+    const t = tableauDesConvictions(revelerLaPhilosophie());
+    const lignes = formatTableauDesConvictionsLines(t);
+    for (const l of lignes) console.log(l);
+    const dossier = join(ROOT, "docs/the-king");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    const sortie = join(dossier, `tableau-des-convictions-${jour}.md`);
+    const corps = ["# Les convictions du corpus, en tableau", "", ...lignes, "", "## La liste intégrale, phrase par phrase", "",
+      "*(Le tableau ci-dessus COUPE chaque phrase à 52 caractères. Voici ce que chacune dit vraiment, et d'où elle vient.)*", "",
+      "| # | État | La conviction, en entier | Où elle est écrite |", "|---|---|---|---|",
+      ...(t.mesurable ? t.entrees.map((e) => `| ${e.rang} | ${e.debris ? "🚫" : e.couverte ? "✅" : "⚠️"} | ${e.phrase.replace(/\|/g, "\\|")} | \`${e.chemin}\`` + " |") : ["| — | — | pas mesuré | — |"])];
+    writeFileSync(sortie, corps.join("\n") + "\n", "utf8");
+    console.log(`\nRapport déposé : docs/the-king/tableau-des-convictions-${jour}.md`);
+    const constats = [];
+    if (!t.mesurable) constats.push({ constat: `pas de mesure : ${t.pourquoi}`, etat: "retenu", tache: 1534 });
+    else {
+      if (t.inavouees) constats.push({ constat: `${t.inavouees} conviction(s) sur ${t.total} ne sont portées par AUCUN principe écrit de la boussole`, etat: "a-trancher", pourquoi: "faire redescendre une conviction dans le document de gouvernance exige son accord exprès (Article 14) — ce n'est pas une décision d'agent" });
+      if (t.debris) constats.push({ constat: `${t.debris} entrée(s) sur ${t.total} ne sont pas des convictions mais des fragments de tableau ramassés par l'extracteur`, etat: "retenu", tache: 1534 });
+    }
     console.log("");
     imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "the-king" }));
     return;

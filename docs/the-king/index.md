@@ -11,7 +11,7 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**21 fichier(s)** dans ce dossier.
+**23 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -32,6 +32,8 @@ la fréquence potentielle des rappels rendrait ça inutile et bruyant.)*
 | [revelation-philosophie-2026-10-02.json](revelation-philosophie-2026-10-02.json) | — |
 | [revelation-philosophie-2026-10-02.txt](revelation-philosophie-2026-10-02.txt) | — |
 | [revelation-strategie-2026-10-02.txt](revelation-strategie-2026-10-02.txt) | — |
+| [tableau-des-convictions-2026-10-03.html](tableau-des-convictions-2026-10-03.html) | — |
+| [tableau-des-convictions-2026-10-03.md](tableau-des-convictions-2026-10-03.md) | — |
 | [these-du-coeur-2026-10-02.html](these-du-coeur-2026-10-02.html) | — |
 | [these-du-coeur-2026-10-02.txt](these-du-coeur-2026-10-02.txt) | — |
 | [philosophie-et-politique-cas-2-2026-10-02.html](versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.html) | versions-cas-2 |

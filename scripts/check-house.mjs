@@ -25159,6 +25159,68 @@ async function testLaTheseDuCoeur() {
 await testLaTheseDuCoeur();
 
 // ─────────────────────────────────────────────────────────────────────────────
+// #1534 — LE TABLEAU DES CONVICTIONS, ET LE DÉBRIS QUE SON PREMIER PASSAGE A SORTI
+// ─────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE DE FORME : « la liste des 104 convictions sous forme résumée, en tableau, 5 par
+// ligne ». Le résumé se DÉRIVE au lieu de s'écrire, parce que le chiffre a déjà bougé trois fois
+// en trois jours (102 → 104 → 103) et qu'un tableau recopié à la main serait exactement la copie
+// non vérifiée que l'Article 24 interdit.
+//
+// ET LE PREMIER PASSAGE RÉEL A SORTI AUTRE CHOSE QUE LE TABLEAU : 8 des 106 retenues ne sont pas
+// des convictions mais des fragments de ligne de registre (« — | 2026-09-19T16:20Z | | Smart
+// Breaker | … »), ramassés par l'extracteur depuis qu'il lit les tableaux. Ils sont COMPTÉS et
+// MONTRÉS plutôt que filtrés : les retirer ici ferait passer le total de 106 à 98 sans que
+// personne sache pourquoi, et surtout rendrait l'extracteur plus propre qu'il ne l'est.
+async function testTableauDesConvictions() {
+  const K = await import('../scripts/the-king.mjs');
+
+  // LA COUPE EST BÊTE EXPRÈS, et c'est ce qui la rend honnête : un « résumé intelligent »
+  // choisirait ce qui compte, donc mon interprétation prendrait la place de la conviction.
+  assert.equal(K.resumerUneConviction('Court.'), 'Court.', 'a phrase shorter than the window is returned untouched — truncating what already fits would only add noise');
+  const amorce = K.resumerUneConviction("Et c'est une amorce de liaison qui ne dit rien de la conviction elle-même");
+  assert.ok(!/^Et c'est/.test(amorce), 'a linking opener is dropped: it would eat the useful characters of the window without saying anything');
+  const long = K.resumerUneConviction('a'.repeat(200));
+  assert.ok(long.length <= K.LONGUEUR_DU_RESUME + 1, `a single word longer than the window must still be cut (got ${long.length})`);
+  assert.ok(long.endsWith('…'), 'and the truncation is MARKED, never silent — a cut phrase that looks whole misquotes the corpus');
+
+  // LE REFUS DE CONCLURE SUR UNE NON-MESURE (leçons L5/L11).
+  const pasMesure = K.tableauDesConvictions({ mesurable: false, pourquoi: 'rien à lire' });
+  assert.equal(pasMesure.mesurable, false, 'a table built on an unmeasured revelation must refuse, never render an empty list that reads as "no convictions"');
+  assert.match(K.formatTableauDesConvictionsLines(pasMesure).join('\n'), /PAS MESURÉ/);
+  const vide = K.tableauDesConvictions({ mesurable: true, cadre: { cases: [] } });
+  assert.equal(vide.mesurable, false, 'and so must an empty frame: "no conviction retained" and "nothing measured" call for opposite gestures');
+
+  // LA FORME QU'IL A DEMANDÉE, sur une fixture : cinq par ligne, et la dernière complétée.
+  const faux = { mesurable: true, cadre: { cases: [{ cle: 'c', top: Array.from({ length: 7 }, (_, i) => ({ phrase: `conviction numero ${i}`, chemin: 'docs/x.md', boussole: { couverte: i === 0 } })) }] } };
+  const t = K.tableauDesConvictions(faux);
+  assert.equal(t.total, 7);
+  assert.equal(t.lignes.length, 2, 'seven entries across five-per-line is two lines — the count he asked for, never a column that drifts');
+  assert.equal(t.lignes[1].length, 2);
+  assert.equal(t.inavouees, 6, 'and the only figure that matters is carried: how many convictions no written principle supports');
+  const rendu = K.formatTableauDesConvictionsLines(t);
+  assert.ok(rendu.some((l) => /\| #5 \|/.test(l)), 'the header really declares five columns');
+  assert.ok(rendu.at(-1).includes('fragment de tableau') || rendu.some((l) => l.includes('✅')), 'the legend explains the marks rather than leaving the reader to guess');
+
+  // LE DÉBRIS : détecté, compté, ÉCHAPPÉ au rendu, et jamais nettoyé dans les données.
+  const sale = K.tableauDesConvictions({ mesurable: true, cadre: { cases: [{ cle: 'c', top: [{ phrase: 'SMART-CONSO-TOKEN | Agent | rythme', chemin: 'docs/y.md', boussole: {} }] }] } });
+  assert.equal(sale.debris, 1, 'a registry table fragment is NOT a conviction, and it is counted as such');
+  assert.ok(sale.entrees[0].phrase.includes('|'), 'the stored phrase keeps its pipes: cleaning the data would make the extractor look healthier than it is');
+  const ligneSale = K.formatTableauDesConvictionsLines(sale).find((l) => l.includes('🚫'));
+  assert.ok(ligneSale && /\\\|/.test(ligneSale), 'but the RENDER escapes them, otherwise one debris entry shatters the whole markdown table into phantom columns');
+
+  // EN DIRECT SUR LE VRAI CORPUS (Article 25) — un outil qui n'a jamais tourné contre le vrai
+  // dépôt n'est pas un outil, c'est une intention.
+  const reel = K.tableauDesConvictions(K.revelerLaPhilosophie());
+  assert.equal(reel.mesurable, true, 'the table must actually build against the real corpus');
+  assert.ok(reel.total > 50, `and carry the real retained set (currently ${reel.total})`);
+  assert.ok(reel.inavouees > 0, 'the gap it exists to show is real, not a fixture');
+  assert.ok(reel.entrees.every((e) => e.resume.length > 0), 'no summary may come out empty — an empty cell reads as "nothing to say" rather than as a bug');
+
+  console.log(`Passed: le tableau des convictions, et le débris que son premier passage a sorti (2026-10-03, tâche #1534). Sa demande portait sur la FORME — « la liste des 104 convictions sous forme résumée, en tableau, 5 par ligne » — et le résumé se DÉRIVE au lieu de s'écrire : le chiffre a bougé trois fois en trois jours (102 → 104 → ${reel.total} retenues aujourd'hui, dont ${reel.inavouees} qu'aucun principe écrit ne porte), donc un tableau recopié à la main aurait été périmé avant d'être lu (Article 24). LA COUPE EST BÊTE EXPRÈS : un « résumé intelligent » choisirait ce qui compte, et mon interprétation prendrait la place de la conviction — la phrase entière est donnée juste en dessous, parce qu'un résumé qui remplace sa source fait perdre ce que la conviction dit. ET LE PREMIER PASSAGE RÉEL A TROUVÉ AUTRE CHOSE QUE CE QU'ON CHERCHAIT : ${reel.debris} entrées sur ${reel.total} ne sont pas des convictions mais des fragments de ligne de registre, ramassés depuis que l'extracteur lit les tableaux. Elles sont comptées et montrées plutôt que filtrées — les retirer ferait passer le total sans dire pourquoi, et rendrait l'extracteur plus propre qu'il ne l'est ; la barre verticale est échappée au RENDU et jamais dans les données, sans quoi un seul débris casserait tout le tableau en colonnes fantômes.`);
+}
+await testTableauDesConvictions();
+
+// ─────────────────────────────────────────────────────────────────────────────
 // L'ORGANISATION DES LOIS — numéroter n'est pas citer (2026-10-02, tâche #1445)
 // ─────────────────────────────────────────────────────────────────────────────
 async function testLOrganisationDesLois() {

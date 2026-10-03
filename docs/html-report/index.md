@@ -102,3 +102,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/strategies/strategie-globale-du-jeu.html` | `docs/strategies/strategie-globale-du-jeu.md` | 15718 | 2026-10-02 22:31Z |
 | `docs/livrables/les-six-registres-le-dossier.html` | `docs/livrables/les-six-registres-le-dossier.md` | 15183 | 2026-10-02 23:41Z |
 | `docs/livrables/article-33-honnetete-texte-propose.html` | `docs/livrables/article-33-honnetete-texte-propose.md` | 13546 | 2026-10-03 06:44Z |
+| `docs/the-king/tableau-des-convictions-2026-10-03.html` | `docs/the-king/tableau-des-convictions-2026-10-03.md` | 54025 | 2026-10-03 07:04Z |
