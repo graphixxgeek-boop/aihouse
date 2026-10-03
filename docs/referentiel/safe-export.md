@@ -1059,3 +1059,53 @@ La mesure porte sur les règles **déclarées**. Ce qui gouverne le comportement
 jamais été inscrit nulle part — consignes de session, outillage de l'éditeur, habitudes de travail
 jamais écrites — est par définition incomptable. Le seul remède est d'écrire les règles au lieu de
 les tenir de mémoire ; la garantie s'arrête là, et la promettre plus loin serait mentir.
+
+---
+
+## `fusion` — la raison d'exister séparément, avant toute fusion (2026-10-03, tâche #1497)
+
+**La question qu'il ferme** : à chaque revue de rationalisation revient « ce petit outil pourrait-il
+devenir une extension d'un autre ? ». La réponse se cherchait à la main, fichier par fichier. Or
+elle est mécanique à moitié : **avant de juger si une fusion est bonne, il faut savoir si quelqu'un
+a déjà écrit pourquoi ce fichier vit seul.** C'est le domaine exact de SAFE-EXPORT — le POURQUOI qui
+vit à côté du QUOI (Article 27, exigence X6), déjà porté ici par `findRaisonsPerdues()` et
+`findMecanismesSansRaison()`.
+
+**La commande** : `node scripts/safe-export.mjs fusion [noms…]`. Sans nom, les candidats se
+**dérivent** du dépôt réel — les scripts de moins de `LIGNES_MAX_ABSORBABLE` (300) lignes, seuil
+posé en le mesurant à la revue #1479 — jamais une liste recopiée qui se périmerait au prochain outil
+(Article 24).
+
+**Sept marqueurs de séparation**, cherchés dans les 40 premières lignes seulement : extraction
+datée · séparation demandée explicitement · décision ou formulation explicite de l'utilisateur ·
+scission déclarée · distinction déclarée avec un voisin · mécanisme partagé par plusieurs outils.
+**Seul l'en-tête est lu** : un commentaire près d'une fonction explique un geste, jamais l'existence
+du fichier — l'y chercher transformerait n'importe quelle mention en veto.
+
+### Ce qu'il a trouvé à son premier passage, et c'est la raison d'en faire un mécanisme
+
+Sur les **cinq rapprochements « qui se voient à l'œil nu »** notés dans #1497, **quatre portent une
+raison écrite de rester séparés**, dont **trois citent l'utilisateur**. Le plus évident des cinq —
+`memento-weight` dans `memento` — est une séparation qu'il a **demandée** le 2026-09-21 : « ces 2
+scripts ne doivent plus etre reunis dans le meme script, pour plus de clarté ». Le proposer aurait
+défait sa décision.
+
+Sur les 34 candidats dérivés du dépôt entier : **12 portent une raison écrite**, dont quatre que
+personne n'avait relevées à la main (`simulation-visiteur`, `corpus-mesure`, `route-booster`,
+`summarize-simulation-log`).
+
+### Ce qu'il ne fait pas, et la limite est nette
+
+**Il ne dit jamais qu'une fusion est bonne.** L'absence de raison écrite ne prouve rien : elle dit
+seulement que personne n'a encore écrit pourquoi, donc qu'il faut aller lire. C'est un **trieur**,
+jamais un juge — même discipline que `findReglesSansDomicile()`, qui nomme sans trancher. Il ne voit
+pas non plus une raison qui n'est pas dans l'en-tête : `check-profile` et `check-profil-utilisateur`
+traitent deux sujets sans rapport (le diagnostic psychologique des personnages d'un côté, l'index de
+la documentation du profil utilisateur de l'autre) et il les classe pourtant « sans raison écrite »,
+parce qu'aucun des deux en-têtes ne le dit.
+
+### Pourquoi il n'est pas dans le rapport automatique
+
+La question ne se pose qu'en revue de rationalisation. L'afficher à chaque commit accuserait des
+dizaines de petits scripts parfaitement légitimes — exactement le garde-fou qui accuse le geste
+normal et qu'on cesse de lire (leçon L4).

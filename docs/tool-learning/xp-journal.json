@@ -569,5 +569,14 @@
     "pourquoi": "C'est une confirmation de l'Article 31, pas une découverte — mais la confirmer sur quatre cas d'affilée dans la même journée lui donne un poids que l'argument théorique n'avait pas. Le corollaire pratique : quand je produis beaucoup, la relecture ne sert à rien et la passe d'outils sert à tout. Le temps de vérification va aux outils, jamais aux yeux.",
     "declencheur": "fin de compte rendu de travail",
     "date": "2026-10-02T22:45Z"
+  },
+  {
+    "nature": "captation",
+    "titre": "La quatrième nature du journal XP était écrite et jamais lue — la conclusion du 2026-09-23 confirmée sur le porteur de cette conclusion même",
+    "quoi": "jugement-agent a été ajoutée à l'écriture le 2026-10-02 au matin (#842) et au rapport le soir seulement (#1506). Entre les deux, le journal portait une entrée que formatXp() ne mentionnait pas et que analyseRemontees() filtrait hors de son calcul.",
+    "pourquoi": "C'est le travers nommé dans la conclusion de période du 2026-09-23 — « je construis le mécanisme et je m'arrête avant de le brancher » — reproduit le jour même sur l'outil qui ARCHIVE cette conclusion. Deux choses s'en déduisent, et la seconde est plus utile que la première : (1) écrire la conclusion ne suffit pas à corriger le travers qu'elle décrit ; (2) le défaut se produit toujours à la frontière écriture/lecture, jamais au milieu d'une fonction — donc la question à poser systématiquement après avoir ajouté une valeur quelque part est « QUI LA LIT ? », pas « est-ce que ça marche ? ». Troisième fait, du correctif : mon premier jet affichait « 0 appliquée · 0 pas appliquée » pour un jugement qui ne vise aucune entrée — la leçon L5 commise à l'intérieur du correctif de la leçon L2.",
+    "declencheur": "fin de compte rendu de travail",
+    "rienARetenir": false,
+    "date": "2026-10-03T00:05:56.625Z"
   }
 ]

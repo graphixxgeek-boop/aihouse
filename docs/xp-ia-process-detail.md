@@ -185,6 +185,17 @@ est formulé comme une question et non comme une condamnation.
 `enregistrerXp()` **refuse** une entrée de nature `jugement` qui ne porte pas `parUtilisateur: true`.
 Une mécanique ne peut pas prouver qu'un verdict vient de lui ; elle peut refuser de l'inventer.
 
+**Une quatrième nature existe depuis le 2026-10-02 — `jugement-agent` — et elle ne retire rien à la
+ligne ci-dessus.** Son compromis : je juge, il peut me démentir. Deux refus symétriques l'encadrent
+(un `jugement` sans sa marque est refusé ; un `jugement-agent` qui porterait `parUtilisateur: true`
+l'est aussi, sans quoi il aurait suffi de changer d'étiquette pour contourner le premier), et elle
+doit porter `contestable: true`.
+
+**Le rapport la lit depuis le même jour, sur sa propre ligne (tâche #1506).** Elle avait été câblée
+à l'écriture et pas à la lecture — exactement le travers que la conclusion de période du 2026-09-23
+décrit. La séparation d'affichage EST la garantie : fondue dans le compte des jugements de
+l'utilisateur, elle aurait rendu invisible la seule distinction que tout le dispositif protège.
+
 ---
 
 ## Partie 6 — Reprise par une autre IA

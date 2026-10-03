@@ -2022,6 +2022,23 @@ function main() {
   // faut-il chez l'hôte ? » depuis NOTRE dépôt ; la seconde répond « cette machine-ci convient-elle ? »
   // là où on la lance. Deux questions voisines et jamais la même : l'une se lit avant de vendre,
   // l'autre avant d'installer.
+  // LA COMMANDE « fusion » (2026-10-03, tâche #1497) — avant de proposer qu'un petit outil devienne
+  // l'extension d'un autre, savoir qui a déjà écrit pourquoi il vit seul. Sans nom, les candidats se
+  // DÉRIVENT du dépôt réel (les scripts courts, seuls absorbables à bas coût) plutôt que d'une liste
+  // recopiée qui se périmerait au prochain outil (Article 24).
+  //
+  // POURQUOI ELLE N'EST PAS DANS LE RAPPORT AUTOMATIQUE, et c'est délibéré : la question « ce
+  // fichier pourrait-il fusionner ? » ne se pose qu'en revue de rationalisation, et l'afficher à
+  // chaque commit accuserait des dizaines de petits scripts parfaitement légitimes — exactement le
+  // garde-fou qui accuse le geste normal et qu'on cesse de lire (leçon L4).
+  if (process.argv[2] === "fusion") {
+    recordCliUsage("safe-export");
+    const nommes = process.argv.slice(3).filter((a) => !a.startsWith("--"));
+    const candidats = nommes.length ? nommes : candidatsALaFusion();
+    if (!nommes.length) console.log(`(aucun nom donné — ${candidats.length} candidat(s) dérivés du dépôt : les scripts de moins de ${LIGNES_MAX_ABSORBABLE} lignes.)\n`);
+    for (const l of formatRaisonsDeSeparationLines(findRaisonsDeSeparation(candidats))) console.log(l);
+    return;
+  }
   if (process.argv[2] === "sautes") {
     recordCliUsage("safe-export");
     for (const l of formatSautesSilencieusesLines(sautesSilencieuses())) console.log(l);
@@ -2881,6 +2898,89 @@ export function formatReglesSansDomicileLines(r) {
   for (const x of r.inatteignables) L.push(`   🔴 ${x.id} — source déclarée introuvable : ${x.chemin}`);
   if (!r.sansDomicile.length && !r.inatteignables.length) L.push("   ✅ toutes ont un domicile atteignable dans le dépôt.");
   L.push("   Ce chiffre NOMME, il ne juge pas : une règle née d'un incident peut légitimement n'avoir jamais eu de document, et la loger d'autorité serait écrire à la place de son auteur.");
+  return L;
+}
+
+// ————————————————————————————————————————————————————————————————————————
+// LA RAISON D'EXISTER SÉPARÉMENT (2026-10-03, tâche #1497)
+// ————————————————————————————————————————————————————————————————————————
+// POURQUOI ICI, ET PAS DANS UN OUTIL DE PLUS. La question « ce petit outil peut-il devenir une
+// extension d'un autre ? » est posée à chaque revue de rationalisation, et la réponse se cherchait
+// à la main, fichier par fichier. Or elle est MÉCANIQUE à moitié : avant de juger si une fusion est
+// bonne, il faut savoir si quelqu'un a déjà écrit pourquoi ce fichier vit seul. C'est exactement le
+// domaine de SAFE-EXPORT — le POURQUOI qui vit à côté du QUOI (Article 27, exigence X6), déjà porté
+// ici par findRaisonsPerdues() et findMecanismesSansRaison().
+//
+// CE QUE ÇA A TROUVÉ DU PREMIER COUP, et c'est la raison d'en faire un mécanisme : sur les CINQ
+// rapprochements « qui se voient à l'œil nu » notés dans #1497, QUATRE portent une raison écrite de
+// rester séparés, dont TROIS citent l'utilisateur. Le plus évident des cinq — memento-weight dans
+// memento — est une séparation qu'il a DEMANDÉE le 2026-09-21 (« ces 2 scripts ne doivent plus etre
+// reunis dans le meme script, pour plus de clarté »). Le proposer serait défaire sa décision.
+//
+// CE QU'IL NE FAIT PAS, et la limite est nette : il ne dit JAMAIS qu'une fusion est bonne. L'absence
+// de raison écrite ne prouve rien — elle dit seulement que personne n'a encore écrit pourquoi, donc
+// qu'il faut aller lire. C'est un TRIEUR, pas un juge (même discipline que findReglesSansDomicile :
+// il nomme, il ne tranche pas).
+export const MARQUEURS_DE_SEPARATION = [
+  [/extrait de[^.\n]{0,60}(le|le\s)?\s*\d{4}-\d{2}-\d{2}/i, "extraction datée d'un autre fichier"],
+  [/ne doivent plus [êe]tre r[ée]unis|ne doit plus [êe]tre r[ée]uni/i, "séparation demandée explicitement"],
+  [/demande explicite de l'utilisateur/i, "décision explicite de l'utilisateur"],
+  [/formulation explicite de l'utilisateur/i, "décision explicite de l'utilisateur"],
+  [/scission|s[ée]par[ée] (de|d')/i, "scission déclarée"],
+  [/(jamais|ne) (confondre|confondu|se confondent)[^.\n]{0,60}(avec|et)/i, "distinction déclarée avec un voisin"],
+  [/m[ée]canisme PARTAG[ÉE]|logique commune|partag[ée] (par|entre)/i, "mécanisme partagé par plusieurs outils — l'absorber le retirerait aux autres"],
+];
+
+// Combien de lignes de tête on lit. Le POURQUOI de ce projet vit dans l'en-tête du fichier, par
+// convention tenue partout ; descendre plus bas attraperait des commentaires de fonction, qui
+// expliquent un geste et jamais l'existence du fichier.
+export const LIGNES_DEN_TETE = 40;
+
+// LE SEUIL VIENT DE LA REVUE #1479, qui l'a posé en le mesurant : au-delà, un fichier n'est plus
+// « absorbable à bas coût », il déplace sa complexité chez son hôte. Il est écrit ici une seule
+// fois plutôt que recopié dans chaque appelant.
+export const LIGNES_MAX_ABSORBABLE = 300;
+
+export function candidatsALaFusion({ root = ROOT, listDirImpl = readdirSync, readFileImpl = lireFichierPartage, maxLignes = LIGNES_MAX_ABSORBABLE } = {}) {
+  const noms = [];
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")); } catch { return []; }
+  for (const f of fichiers) {
+    if (!f.endsWith(".mjs")) continue;
+    let src = "";
+    try { src = String(readFileImpl(join(root, "scripts", f), "utf8")); } catch { continue; }
+    if (src.split("\n").length <= maxLignes) noms.push(f.replace(/\.mjs$/, ""));
+  }
+  return noms.sort();
+}
+
+export function findRaisonsDeSeparation(candidats = [], { root = ROOT, readFileImpl = lireFichierPartage } = {}) {
+  if (!candidats.length) {
+    return { mesurable: false, avec: [], sans: [], illisibles: [], pourquoi: "aucun candidat fourni — ce silence ne dit rien sur les fusions possibles, seulement qu'on n'a rien donné à instruire (leçon L13)" };
+  }
+  const avec = [], sans = [], illisibles = [];
+  for (const nom of candidats) {
+    const chemin = nom.includes("/") ? nom : `scripts/${nom}.mjs`;
+    let src = "";
+    try { src = String(readFileImpl(join(root, chemin), "utf8")); }
+    catch { illisibles.push({ nom, chemin, pourquoi: "fichier introuvable — jamais compté comme « sans raison »" }); continue; }
+    const tete = src.split("\n").slice(0, LIGNES_DEN_TETE).join("\n");
+    const trouves = MARQUEURS_DE_SEPARATION.filter(([motif]) => motif.test(tete)).map(([, quoi]) => quoi);
+    if (trouves.length) {
+      const phrase = tete.split("\n").find((l) => MARQUEURS_DE_SEPARATION.some(([m]) => m.test(l))) ?? "";
+      avec.push({ nom, chemin, raisons: [...new Set(trouves)], extrait: phrase.replace(/^\s*\/\/\s?/, "").trim().slice(0, 150) });
+    } else sans.push({ nom, chemin });
+  }
+  return { mesurable: true, avec, sans, illisibles, examines: candidats.length };
+}
+
+export function formatRaisonsDeSeparationLines(r) {
+  if (!r?.mesurable) return [`🧩 RAISONS DE RESTER SÉPARÉ : PAS MESURÉ — ${r?.pourquoi ?? "raison non fournie"}`];
+  const L = [`🧩 AVANT TOUTE FUSION — ${r.avec.length} candidat(s) sur ${r.examines} portent une raison ÉCRITE de vivre seuls.`];
+  for (const x of r.avec) L.push(`   🛑 ${x.nom} — ${x.raisons.join(" · ")} : « ${x.extrait} »`);
+  for (const x of r.sans) L.push(`   ❔ ${x.nom} — aucune raison écrite trouvée dans son en-tête : à LIRE, jamais à fusionner sur ce seul silence`);
+  for (const x of r.illisibles) L.push(`   ⚠️  ${x.nom} — ${x.pourquoi}`);
+  L.push("   Ce tri NOMME, il ne juge pas : une raison écrite n'interdit pas une fusion, elle oblige à la discuter ; son absence n'en autorise aucune.");
   return L;
 }
 

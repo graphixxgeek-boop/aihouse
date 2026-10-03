@@ -7376,6 +7376,31 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     // ZÉRO RÈGLE LUE N'EST PAS ZÉRO RÈGLE SANS DOMICILE (leçons L5/L11) — le refus de conclure.
     assert.equal(se.findReglesSansDomicile({ regles: [] }).mesurable, false, 'no rule read means NOT MEASURED, never "they all have a home"');
 
+    // AVANT TOUTE FUSION, LA RAISON D'EXISTER SÉPARÉMENT (2026-10-03, task #1497). Five "obvious to
+    // the eye" merge candidates had been noted; run against the real repo, FOUR of them carry a
+    // written reason to stay apart, three of which quote the user. The most obvious of all —
+    // memento-weight into memento — is a separation he explicitly ASKED for on 2026-09-21.
+    const fusion = se.findRaisonsDeSeparation(['a', 'b', 'c'], {
+      root: '/x',
+      readFileImpl: (chemin) => {
+        if (chemin.includes('a.mjs')) return '// extrait de scripts/hote.mjs le 2026-09-21 (demande explicite de l\'utilisateur)\nexport const x = 1;';
+        if (chemin.includes('b.mjs')) return '// un outil ordinaire, sans histoire\nexport const y = 2;';
+        throw new Error('ENOENT');
+      },
+    });
+    assert.deepEqual(fusion.avec.map((x) => x.nom), ['a'], 'a tool whose header records a dated extraction or an explicit user request is flagged BEFORE anyone proposes merging it back — proposing that merge would undo his own decision');
+    assert.deepEqual(fusion.sans.map((x) => x.nom), ['b'], 'and a tool with no written reason is listed separately, to be READ');
+    assert.deepEqual(fusion.illisibles.map((x) => x.nom), ['c'], 'COUNTER-TEST: an unreadable file is never counted among "no reason found" — absence of access is not absence of reason (L5)');
+    assert.equal(se.findRaisonsDeSeparation([]).mesurable, false, 'and an empty candidate list reports NOT MEASURED rather than "no reason anywhere", which would read as a green light to merge everything');
+    const partage = se.findRaisonsDeSeparation(['m'], { root: '/x', readFileImpl: () => '// SÉRIE — le mécanisme PARTAGÉ d\'historisation, utilisé par plusieurs rapports.' });
+    assert.ok(/retirerait aux autres/.test(partage.avec[0].raisons[0]), 'a shared mechanism is the strongest reason of all: absorbing it into one host would take it away from every other caller');
+    const horsEnTete = se.findRaisonsDeSeparation(['h'], { root: '/x', readFileImpl: () => Array.from({ length: se.LIGNES_DEN_TETE + 5 }, () => '// ligne de remplissage').join('\n') + '\n// demande explicite de l\'utilisateur' });
+    assert.equal(horsEnTete.sans.length, 1, 'COUNTER-TEST: only the HEADER is read — a reason written beside a function explains a gesture, never why the file exists, and counting it would turn any mention into a veto');
+    // La dérivation des candidats se LIT dans le dépôt, jamais recopiée (Article 24).
+    const derives = se.candidatsALaFusion({ root: '/x', listDirImpl: () => ['court.mjs', 'long.mjs', 'pas-un-script.md'],
+      readFileImpl: (c) => (c.includes('long') ? 'x\n'.repeat(se.LIGNES_MAX_ABSORBABLE + 10) : 'x\ny') });
+    assert.deepEqual(derives, ['court'], 'the candidate list is DERIVED from the real repo — a short script qualifies, a long one does not, and a non-script is ignored: a hand-copied list would go stale at the next tool (Article 24)');
+
     // LA BANNIÈRE DU CROCHET COMPTAIT CE QUI AVAIT DÉJÀ ÉTÉ TRANCHÉ (2026-10-02, tâche #1502).
     // Elle affichait « CLONE-HUNTER ⚠️4 » à CHAQUE commit pendant que l'outil lancé à la main
     // annonçait « aucun constat retenu ». Les deux disaient vrai : le bandeau comptait les
@@ -7842,6 +7867,34 @@ const {updateAudit}=await import('../.sites-runtime/test-update-audit.mjs');asse
     assert.equal(avecJugement.appliquees, 1, 'applied entries are counted from the user verdicts, never inferred from my own activity');
     const quePourRien = tl.analyseXp(Array.from({ length: 6 }, () => ({ nature: 'captation', rienARetenir: true })).concat([{ nature: 'conclusion', texte: 'x' }, { nature: 'jugement', verdict: 'appliquée', parUtilisateur: true }]), {});
     assert.ok(quePourRien.constats.some((c) => /sans une seule trouvaille/.test(c.constat)), '"rien à retenir" is a full answer and never counts against anyone — but six of them in a row is itself a signal: either nothing happens, or I stopped looking');
+
+    // LA QUATRIÈME NATURE EST LUE, PAS SEULEMENT ÉCRITE (tâche #1506, 2026-10-02). Elle a été ajoutée
+    // à l'écriture le matin même et le rapport ne la voyait pas : le journal en portait une, formatXp
+    // n'en disait rien — leçon L2 appliquée à mon propre travail du jour. Le test porte sur les DEUX
+    // moitiés, parce qu'une seule des deux aurait laissé passer exactement le défaut d'origine.
+    const avecAgent = [{ nature: 'captation' }, { nature: 'captation' }, { nature: 'captation' }, { nature: 'conclusion', texte: 'x' }, { nature: 'jugement-agent', contestable: true, verdict: 'appliquée', entree: 'L2' }];
+    const anAgent = tl.analyseXp(avecAgent, {});
+    assert.equal(anAgent.jugementsAgent, 1, 'the fourth XP nature is COUNTED by the analysis: writing it without reading it is a mechanism built and left unwired (L2)');
+    assert.equal(anAgent.jugements, 0, 'and it never joins the user count: the whole point of #842 is that my own judgement can never pass for his word');
+    assert.equal(anAgent.appliquees, 0, 'the "applied" figure stays strictly the user verdicts even when I judged the same entry applied myself');
+    assert.equal(anAgent.appliqueesAgent, 1, 'my own verdict is counted, separately, under its own name');
+    const sorti = tl.formatXp(anAgent).join('\n');
+    assert.ok(/Mes propres jugements/.test(sorti) && /contestables/.test(sorti), 'the report PRINTS the fourth nature on its own line and says it is contestable — a count that exists in the analysis but never reaches the page is the same defect one layer deeper');
+    assert.ok(!/1 jugement\(s\) de l'utilisateur/.test(sorti), "COUNTER-TEST: an agent judgement must never be printed inside the sentence that announces the user's judgements");
+    const [, , A_TRANCHER_XP] = (await import('../scripts/report-template.mjs')).ETATS_CONSTAT; // dérivé, jamais recopié (Article 24)
+    assert.ok(anAgent.constats.some((c) => c.etat === A_TRANCHER_XP && /contestables par construction/.test(c.constat)), 'with only agent judgements on file, the "nothing has been judged" finding says WHICH voice is still missing rather than claiming no judgement exists at all');
+    assert.ok(tl.analyseXp([{ nature: 'captation' }, { nature: 'captation' }, { nature: 'captation' }, { nature: 'conclusion', texte: 'x' }], {}).constats.some((c) => /le registre grossit/.test(c.constat)), 'and with no judgement of any kind the original wording is unchanged: the distinction only appears when there is something to distinguish');
+    const sansVerdict = tl.formatXp(tl.analyseXp([{ nature: 'jugement-agent', contestable: true, titre: 'sur ma façon de travailler' }], {})).join('\n');
+    assert.ok(/aucun ne vise une entrée précise/.test(sansVerdict) && !/appliquées selon moi : 0/.test(sansVerdict), 'an agent judgement about my own working habits targets no register entry: printing "0 applied · 0 not applied" would be a false measure dressed as a zero (L5)');
+
+    // L'EFFET SUR LE REGISTRE DES LEÇONS — même séparation, et le texte dit toujours QUI a jugé.
+    const cptAgent = { occasions: 40, entrees: { L2: { remontees: 9, occasionsALObservation: 0 } } };
+    const lecAgent = [{ id: 'L2', titre: 'x' }];
+    const vuParMoi = tl.analyseRemontees(cptAgent, lecAgent, [{ nature: 'jugement-agent', verdict: 'appliquée', entree: 'L2', contestable: true }]);
+    assert.equal(vuParMoi.sansEffet.length, 0, 'a lesson I judged applied myself is no longer reported as "serves with no known effect" — otherwise the fourth nature would change nothing anywhere');
+    assert.ok(/par moi/.test(vuParMoi.etats[0].detail) && /contestable/.test(vuParMoi.etats[0].detail), 'but the wording names me as the judge and says it is contestable: counting it is allowed, borrowing his authority is not');
+    const vuParLui = tl.analyseRemontees(cptAgent, lecAgent, [{ nature: 'jugement', verdict: 'appliquée', entree: 'L2', parUtilisateur: true }]);
+    assert.ok(/par l'utilisateur/.test(vuParLui.etats[0].detail), 'COUNTER-TEST: his verdict is still attributed to him, unchanged by the arrival of mine');
 
     // ③ LE TERRAIN PAR FICHIER (2026-09-23, tâche #222). Les mots de la phrase ne suffisent pas :
     // une même tâche se formule de dix façons, et le chemin du fichier ne ment pas sur ce qu'on
@@ -24311,6 +24364,23 @@ async function testLeNumeroDeLaTacheDansLePlan() {
   // deux sens d'erreur.
   assert.ok(!CTD4.estGareeParUneDecision({ statut: 'À trancher — après la Ronde' }), 'an explicit "à trancher" is never reclassified as parked, whatever else the status names');
   assert.ok(!CTD4.estGareeParUneDecision({ statut: 'Ouverte' }), 'an ordinary open task is neither');
+
+  // LA DÉCISION ÉCRITE DANS LA DESCRIPTION, PAS DANS LE STATUT (tâche #1507, 2026-10-03). Deux
+  // tâches réelles portaient un statut nu « En attente » et sa décision datée dans leur texte :
+  // elles lui étaient donc réclamées alors qu'il avait déjà répondu — un compte de décisions dues
+  // qui contient des décisions déjà prises lui fait porter un travail qu'il a fait.
+  assert.ok(CTD4.estGareeParUneDecision({ statut: 'En attente', detail: 'des chiffres. **REPORTÉ PAR LUI LE 2026-09-28** : « plus tard, pas maintenant ».' }),
+    'a bare "En attente" whose description records his dated postponement is PARKED: he already answered, and his answer was "later"');
+  assert.ok(CTD4.estGareeParUneDecision({ statut: 'En attente', detail: '**TRANCHÉ PAR LUI LE 2026-09-28** : les deux formes, jamais une seule.' }),
+    'same for a dated arbitration — the work is then mine to build, never a decision he still owes');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'En attente', detail: '**ROUVERTE PAR LUI LE 2026-09-28** après coup.' }),
+    'COUNTER-TEST: reopening is the exact opposite of parking, and the verb is what tells them apart — a pattern matching "par lui le <date>" alone would have inverted this real row');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'En attente', detail: 'le fichier déposé par lui le 2026-09-16 contient les prompts.' }),
+    'COUNTER-TEST: "deposited by him on <date>" decides nothing — an attribution is not an arbitration');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'En attente', detail: 'on verra ça plus tard, sans doute après la Ronde.' }),
+    'COUNTER-TEST: a loose "plus tard" in prose never parks a task — measured on the real registry first, it appears in 46 rows and would have wrongly parked genuine pending decisions (the reason this pattern demands a dated attribution)');
+  assert.ok(!CTD4.estGareeParUneDecision({ statut: 'À TRANCHER', detail: '**TRANCHÉ PAR LUI LE 2026-09-28** sur un autre point.' }),
+    'and an explicit "à trancher" still wins over a past decision mentioned in the text: a row that still asks for an arbitration asks for one');
 
   // ET LES DEUX POPULATIONS SE RENDENT SÉPARÉMENT, jamais fondues : une tâche garée pour un
   // chantier TERMINÉ est une tâche oubliée, pas une tâche réglée — l'effacer la perdrait.

@@ -1330,6 +1330,13 @@ export function analyseXp(journal = [], audit = {}, { rondesSansConclusion = nul
   const captations = par("captation");
   const conclusions = par("conclusion");
   const jugements = par("jugement");
+  // LA QUATRIÈME NATURE SE LIT À PART, ET C'EST TOUT LE COMPROMIS (tâche #842, câblée ici le
+  // 2026-10-02). Elle a été ajoutée à l'ÉCRITURE sans jamais l'être à la LECTURE : le journal en
+  // portait une, le rapport n'en parlait pas — leçon L2, un maillon écrit mais non branché n'existe
+  // pas. La fusionner avec `jugements` aurait été pire que l'oubli : elle serait devenue invisible
+  // DANS un compte qui s'annonce comme la parole de l'utilisateur, exactement ce que les deux refus
+  // symétriques de `enregistrerXp()` existent pour empêcher.
+  const jugementsAgent = par("jugement-agent");
   const derniereConclusion = conclusions.at(-1) ?? null;
   const rienARetenir = captations.filter((c) => c.rienARetenir === true).length;
   const constats = [];
@@ -1341,7 +1348,10 @@ export function analyseXp(journal = [], audit = {}, { rondesSansConclusion = nul
 
   // Un journal sans un seul jugement de l'utilisateur ne dit rien sur l'APPLICATION : il dit
   // seulement que j'ai écrit. C'est la moitié qui manque, et elle ne m'appartient pas.
-  if (captations.length >= 3 && !jugements.length) constats.push({ constat: "aucune entrée n'a encore été jugée appliquée ou non par l'utilisateur — le registre grossit sans qu'on sache s'il change quoi que ce soit", etat: A_TRANCHER, tache: "présenter les entrées à la Ronde pour que l'utilisateur dise lesquelles ont été réellement appliquées" });
+  if (captations.length >= 3 && !jugements.length) constats.push({ constat: jugementsAgent.length
+    ? `aucune entrée n'a encore été jugée par l'utilisateur — ${jugementsAgent.length} jugement(s) d'agent existe(nt), mais ils sont contestables par construction et ne valent jamais son verdict`
+    : "aucune entrée n'a encore été jugée appliquée ou non par l'utilisateur — le registre grossit sans qu'on sache s'il change quoi que ce soit",
+    etat: A_TRANCHER, tache: "présenter les entrées à la Ronde pour que l'utilisateur dise lesquelles ont été réellement appliquées" });
 
   // « Rien à retenir » est une réponse valable ; mais uniquement des « rien à retenir » sur une
   // longue série est un signal en soi — soit rien n'arrive, soit je ne regarde plus.
@@ -1349,8 +1359,11 @@ export function analyseXp(journal = [], audit = {}, { rondesSansConclusion = nul
 
   return {
     captations: captations.length, rienARetenir, conclusions: conclusions.length, jugements: jugements.length,
+    jugementsAgent: jugementsAgent.length,
     derniereConclusion, appliquees: jugements.filter((j) => j.verdict === "appliquée").length,
     nonAppliquees: jugements.filter((j) => j.verdict === "pas appliquée").length,
+    appliqueesAgent: jugementsAgent.filter((j) => j.verdict === "appliquée").length,
+    nonAppliqueesAgent: jugementsAgent.filter((j) => j.verdict === "pas appliquée").length,
     entrees: audit.total ?? null, constats,
   };
 }
@@ -1358,7 +1371,19 @@ export function analyseXp(journal = [], audit = {}, { rondesSansConclusion = nul
 export function formatXp(analyse, declencheurs = DECLENCHEURS_XP) {
   const l = [`Journal XP : ${analyse.captations} captation(s) dont ${analyse.rienARetenir} « rien à retenir », ${analyse.conclusions} conclusion(s) sur ma façon de travailler, ${analyse.jugements} jugement(s) de l'utilisateur.`];
   if (analyse.jugements) l.push(`Appliquées pour de vrai : ${analyse.appliquees} · pas appliquées : ${analyse.nonAppliquees} — verdict de l'utilisateur, jamais le mien.`);
-  else l.push("Aucun jugement d'application encore rendu : c'est l'utilisateur qui tranche, à la Ronde.");
+  else l.push("Aucun jugement d'application de l'utilisateur encore rendu : c'est lui qui tranche, à la Ronde.");
+  // SUR SA PROPRE LIGNE, TOUJOURS. Fondre ce compte dans celui du dessus suffirait à faire passer
+  // mon avis pour le sien — la seule chose que le dispositif de la tâche #842 interdit absolument.
+  if (analyse.jugementsAgent) {
+    // UN COMPTE « 0 · 0 » SERAIT UNE FAUSSE MESURE, PAS UN ZÉRO (leçon L5, vue sur ce rapport même
+    // le jour où il a été branché) : un jugement d'agent peut porter sur MA FAÇON DE TRAVAILLER et
+    // ne viser aucune entrée du registre — il n'a alors ni « appliquée » ni « pas appliquée » à
+    // rendre, et afficher deux zéros laisserait croire qu'il a été regardé puis trouvé sans effet.
+    const avecVerdict = analyse.appliqueesAgent + analyse.nonAppliqueesAgent;
+    l.push(`Mes propres jugements (contestables à la Ronde, jamais sa parole) : ${analyse.jugementsAgent}` + (avecVerdict
+      ? ` — appliquées selon moi : ${analyse.appliqueesAgent} · pas appliquées : ${analyse.nonAppliqueesAgent}.`
+      : `, dont aucun ne vise une entrée précise du registre : ce sont des constats sur ma façon de travailler, pas des verdicts d'application.`));
+  }
   if (analyse.derniereConclusion) l.push(`Dernière conclusion (${analyse.derniereConclusion.date?.slice(0, 10) ?? "?"}) : ${analyse.derniereConclusion.texte ?? "(vide)"}`);
   else l.push("Aucune conclusion écrite pour l'instant — le journal archive sans rien en tirer.");
   l.push("Moments où la question se pose : " + declencheurs.map((d) => d.cle).join(" · ") + ".");
@@ -1562,7 +1587,16 @@ export function citationsDansLeDepot(lecons = [], { root = ROOT, lister = null, 
 }
 
 export function analyseRemontees(compteur = { occasions: 0, entrees: {} }, lecons = [], jugements = [], { seuils = SEUILS_REMONTEES, citations = null } = {}) {
-  const appliquees = new Set(jugements.filter((j) => j.verdict === "appliquée" && j.entree).map((j) => j.entree));
+  // DEUX VOIX, DEUX ENSEMBLES, JAMAIS UN SEUL (tâche #842, câblé le 2026-10-02). Un jugement de
+  // l'agent compte comme un signe d'effet — sinon la quatrième nature ne servirait à rien — mais il
+  // ne rejoint JAMAIS l'ensemble qui se réclame de l'utilisateur : le texte rendu dit toujours qui
+  // a jugé. Une entrée que je crois appliquée et que lui n'a jamais vue n'est pas « jugée appliquée »,
+  // elle est « appliquée selon moi, et il peut me démentir ».
+  const retenues = (nat) => new Set(jugements.filter((j) => j.verdict === "appliquée" && j.entree && (nat === "agent" ? j.nature === "jugement-agent" : j.nature !== "jugement-agent")).map((j) => j.entree));
+  const appliquees = retenues("utilisateur");
+  const appliqueesAgent = retenues("agent");
+  const jugeeAppliquee = (id) => appliquees.has(id) || appliqueesAgent.has(id);
+  const quiLADit = (id) => (appliquees.has(id) ? "jugée appliquée au moins une fois par l'utilisateur" : "jugée appliquée par moi au moins une fois — contestable à la Ronde, ce n'est pas son verdict");
   // Les citations priment sur le silence du compteur, jamais l'inverse : une preuve écrite dans le
   // dépôt bat une occasion qui n'a pas été offerte. Sans mesure de citations, rien ne change.
   const citees = citations?.mesurable ? citations.parLecon : null;
@@ -1576,8 +1610,8 @@ export function analyseRemontees(compteur = { occasions: 0, entrees: {} }, lecon
     const nbCitations = citees?.get(l.id) ?? 0;
     if (!e.remontees && nbCitations > 0) return { id: l.id, etat: "appliquée sans être remontée", remontees: 0, citations: nbCitations, occasions, detail: `jamais remontée en ${occasions} occasions, mais CITÉE ${nbCitations} fois dans le dépôt — ce n'est donc pas la leçon qui est morte, c'est son TERRAIN qui ne l'atteint jamais (les mots qui la déclenchent ne sont pas ceux qu'on emploie en décrivant une tâche). À reformuler, jamais à retirer : la supprimer casserait ${nbCitations} renvois (Article 27)` };
     if (!e.remontees) return { id: l.id, etat: "jamais servie", remontees: 0, citations: nbCitations, occasions, detail: `jamais remontée en ${occasions} occasions${citees ? " ET jamais citée dans le dépôt" : ""} — soit son terrain est mal déclaré, soit elle n'a plus lieu d'être` };
-    if (e.remontees >= seuils.remonteesAvantDeDouter && !appliquees.has(l.id)) return { id: l.id, etat: "sert sans effet connu", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois et jamais jugée appliquée — soit elle ne sert à rien telle qu'elle est écrite, soit personne n'a encore tranché` };
-    return { id: l.id, etat: "vivante", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois${appliquees.has(l.id) ? ", et jugée appliquée au moins une fois" : ""}` };
+    if (e.remontees >= seuils.remonteesAvantDeDouter && !jugeeAppliquee(l.id)) return { id: l.id, etat: "sert sans effet connu", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois et jamais jugée appliquée — soit elle ne sert à rien telle qu'elle est écrite, soit personne n'a encore tranché` };
+    return { id: l.id, etat: "vivante", remontees: e.remontees, occasions, detail: `remontée ${e.remontees} fois${jugeeAppliquee(l.id) ? ", et " + quiLADit(l.id) : ""}` };
   });
   return { occasions: compteur.occasions, etats, citationsMesurees: Boolean(citees),
     aRetirer: etats.filter((e) => e.etat === "jamais servie").map((e) => e.id),
@@ -1712,7 +1746,7 @@ function main() {
   // s'affiche comme « poids mort » alors qu'il veut dire « son terrain ne l'atteint pas ».
   const lecComptees = auditL.mesure === "mesuré" ? auditL.lecons : [];
   const citations = citationsDansLeDepot(lecComptees);
-  const remontees = analyseRemontees(loadRemontees(), lecComptees, journalXp.filter((e) => e.nature === "jugement"), { citations });
+  const remontees = analyseRemontees(loadRemontees(), lecComptees, journalXp.filter((e) => e.nature === "jugement" || e.nature === "jugement-agent"), { citations });
   const groupes = auditL.mesure === "mesuré" ? groupesEquivalents(auditL.lecons) : [];
   console.log("");
   for (const l of formatRemontees(remontees, groupes)) console.log(l);

@@ -3049,12 +3049,31 @@ function strategieCli(argv) {
 // garée pour un chantier terminé est une tâche oubliée, jamais une tâche réglée.
 export const MOTIF_CONDITION_DE_REPRISE = /\bapr[èe]s\b/i;
 
+// LA SECONDE FAÇON D'ÊTRE GARÉE, ET ELLE NE S'ÉCRIT PAS DANS LE STATUT (tâche #1507, 2026-10-03).
+// Le premier motif lit le STATUT et y cherche une condition de reprise (« en attente APRÈS X »).
+// Deux tâches réelles échappaient à ce lecteur : #830, tranchée par lui le 2026-09-28, et #842,
+// reportée par lui le même jour — toutes deux portant un statut nu, « En attente », et la décision
+// écrite dans la DESCRIPTION. Elles figuraient donc parmi les décisions qu'il DOIT, alors qu'il
+// avait déjà répondu. Un compte de décisions dues qui inclut des décisions déjà prises est pire
+// qu'un compte absent : il fait peser sur lui un travail qu'il a déjà fait.
+//
+// POURQUOI CE MOTIF-LÀ, ET PAS « plus tard ». Mesuré sur le registre réel AVANT d'être écrit :
+// « plus tard » apparaît dans 46 lignes et en accuserait 4 parmi les dues, dont deux où
+// l'expression n'est que de la prose. L'attribution datée (« TRANCHÉ PAR LUI LE 2026-09-28 »)
+// apparaît 5 fois, dont exactement les 2 vraies — les 3 autres sont déjà terminées, donc hors
+// portée. Le verbe est exigé : « ROUVERTE PAR LUI LE … » existe aussi dans le registre et veut
+// dire l'exact contraire d'un garage, de même que « déposé par lui le … », qui ne décide rien.
+export const MOTIF_DECISION_DEJA_PRISE = /(tranch|report|valid|arbitr|chois)[^.|]{0,30}par (lui|l'utilisateur) le \d{4}-\d{2}-\d{2}/i;
+
 export function estGareeParUneDecision(row = {}) {
   const statut = String(row?.statut ?? "");
   // « à trancher » l'emporte toujours : un statut qui réclame explicitement sa décision n'est
-  // jamais une mise en attente, même s'il nomme une suite par ailleurs.
+  // jamais une mise en attente, même s'il nomme une suite par ailleurs. Il l'emporte aussi sur la
+  // décision datée ci-dessous : une ligne qui réclame encore un arbitrage en réclame un, quoi
+  // qu'elle raconte par ailleurs d'une décision passée.
   if (/trancher|décision|decision|présence|presence/i.test(statut)) return false;
-  return /attente/i.test(statut) && MOTIF_CONDITION_DE_REPRISE.test(statut);
+  if (/attente/i.test(statut) && MOTIF_CONDITION_DE_REPRISE.test(statut)) return true;
+  return MOTIF_DECISION_DEJA_PRISE.test(String(row?.detail ?? ""));
 }
 
 export function decisionsQuiAttendent(rows = [], { maintenant = null } = {}) {
@@ -3093,7 +3112,7 @@ function decisionsCli() {
   if (!r.mesurable) { console.log(`PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; return; }
   console.log(`=== ${r.lignes.length} DÉCISION(S) T'ATTENDENT, sur ${r.ouvertes} tâche(s) ouverte(s) ===\n`);
   if (r.garees?.length) {
-    console.log(`  (+ ${r.garees.length} tâche(s) GARÉES par une décision que tu as DÉJÀ prise — elles nomment leur condition de reprise, donc elles ne te doivent rien. Comptées à part, jamais effacées : une tâche garée pour un chantier terminé est une tâche oubliée.)\n`);
+    console.log(`  (+ ${r.garees.length} tâche(s) GARÉES par une décision que tu as DÉJÀ prise — elles nomment leur condition de reprise, ou portent ta décision datée dans leur description ; dans les deux cas elles ne te doivent rien. Comptées à part, jamais effacées : une tâche garée pour un chantier terminé est une tâche oubliée.)\n`);
   }
   console.log(`  Par signal : ${Object.entries(r.parSignal).map(([k, v]) => `${k} (${v})`).join(" · ")}`);
   if (r.plusVieille) console.log(`  La plus ancienne attend depuis le ${r.plusVieille}${r.joursDAttente != null ? ` — ${r.joursDAttente} jour(s)` : ""}.\n`);

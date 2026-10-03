@@ -108,12 +108,30 @@ remontée (avant la tâche ET au commit) en voyant lui-même le risque : le terr
 chaque entrée et jamais deviné · aucune correspondance = rien d'affiché · le plafond est strict
 (3 avant la tâche, 2 au commit — après coup la marge de manœuvre est plus étroite).
 
-**Le journal `docs/tool-learning/xp-journal.json`, trois natures qui ne se mélangent pas** :
+**Le journal `docs/tool-learning/xp-journal.json`, quatre natures qui ne se mélangent pas** :
 `captation` (un déclencheur est passé, j'ai répondu — « rien à retenir » compris), `conclusion` (ce
 que je tire de la période sur ma façon de travailler, écrit à la main), `jugement` (l'utilisateur
-dit si une entrée a été réellement appliquée). `enregistrerXp()` **refuse** un jugement sans
+dit si une entrée a été réellement appliquée), et `jugement-agent` (mon propre avis, ajouté le
+2026-10-02, tâche #842). `enregistrerXp()` **refuse** un jugement sans
 `parUtilisateur: true` : aucune mécanique ne peut prouver son origine, mais elle peut refuser de
 l'inventer.
+
+**La quatrième nature est LUE depuis le 2026-10-02 (tâche #1506), et elle l'est À PART.** Elle avait
+été câblée à l'écriture le matin même et oubliée à la lecture : le journal en portait une, le
+rapport n'en disait pas un mot — leçon L2 sur le travail du jour même. Ce qui a été branché, et la
+séparation n'est pas un détail de présentation :
+
+| Où | Ce qui est compté | Ce que le texte dit |
+|---|---|---|
+| `analyseXp()` | `jugementsAgent`, `appliqueesAgent`, `nonAppliqueesAgent` — jamais fondus dans `jugements`/`appliquees` | — |
+| `formatXp()` | une ligne **à part** | « Mes propres jugements (contestables à la Ronde, jamais sa parole) » |
+| constat « rien n'a été jugé » | reste `à trancher` | dit désormais lequel des deux manque, au lieu de prétendre qu'aucun jugement n'existe |
+| `analyseRemontees()` | deux ensembles, `appliquees` et `appliqueesAgent` | « jugée appliquée par moi… contestable à la Ronde, ce n'est pas son verdict » vs « …par l'utilisateur » |
+
+**Un jugement d'agent qui ne vise aucune entrée du registre n'affiche PAS « 0 appliquée · 0 pas
+appliquée »** : un constat sur ma façon de travailler n'a pas de verdict d'application à rendre, et
+deux zéros laisseraient croire qu'on a regardé et rien trouvé (leçon L5 — une absence de mesure
+n'est pas un zéro).
 
 **Première conclusion de période inscrite le 2026-09-23**, et elle est sévère parce qu'elle est
 juste : mon travers dominant est de construire le mécanisme et de m'arrêter avant de le brancher —
