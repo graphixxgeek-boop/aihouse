@@ -17,6 +17,7 @@ import { lastTouchDays } from "./clean-dirty-old.mjs";
 import { recordCliUsage } from "./tool-usage.mjs";
 import { sh, printReliabilityNotice, decouperEnUnites, pairesParJaccard, lireLeDocumentGouvernant, ligneDocumentAbsent, MARQUEUR_NEGATION, MARQUEUR_ABSOLU } from "./lib-shell.mjs";
 import { SEUIL_JACCARD_STRICT } from "./abraham-les-references.mjs";
+import { extractRuleUnits } from "./moise-tables-de-loi.mjs";
 import { readFileSync, writeFileSync, mkdirSync, readdirSync as fsReaddir, existsSync as fsExists } from "node:fs";
 import { join } from "node:path";
 import { printReportHeader, imprimerPlanDaction } from "./report-template.mjs";
@@ -1474,6 +1475,41 @@ export function contenanceParRacines(phrase, cible) {
 
 export const MARQUEUR_DE_PERMISSION = /\b(on peut|il suffit|suffirait|autoris[ée]|dispens[ée]|sans avoir|pas besoin|inutile de|on pourrait se passer)\b/i;
 
+// ————————————————————————————————————————————————————————————————————————
+// `tension` LIT AUSSI LA CHARTE (2026-10-03, tâche #1523, son GO du 2026-10-03 : « OUI GO »)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SA QUESTION ÉTAIT : « Veux-tu que tension lise aussi la charte ? » et j'avais répondu que c'était
+// « un petit changement, une ligne de corpus ». **C'ÉTAIT FAUX, et le dire vaut mieux que de le
+// taire** : l'extracteur de ce fichier rend **zéro unité** sur CLAUDE.md, parce que la charte
+// numérote ses règles autrement que le document de gouvernance. Une ligne de corpus n'aurait rien
+// ajouté du tout — elle aurait doublé la couverture annoncée en comparant l'idée à une liste vide,
+// ce qui est exactement le faux vert que ce projet traque partout.
+//
+// L'EXTRACTEUR DE LA CHARTE EXISTE DÉJÀ, chez MOÏSE, dont c'est le périmètre exclusif
+// (`extractRuleUnits`, 33 unités sur CLAUDE.md). On le RELAIE plutôt que d'en écrire un second ici,
+// qui divergerait au premier changement de format (Article 24, anti-doublon §7ter).
+//
+// DEUX CORPUS ET PAS SIX, ET LA RAISON EST ÉCRITE : des six textes qui font loi, seuls la charte et
+// le document de gouvernance NUMÉROTENT leurs règles. Les quatre autres n'ont pas d'article à
+// citer, donc une tension avec eux ne pourrait pas être localisée — la signaler sans pouvoir dire
+// OÙ serait une accusation qu'on ne peut pas instruire. Cette liste est volontairement manuelle, et
+// c'est pour ça qu'elle porte sa raison juste ici (Article 24).
+export const CORPUS_QUI_NUMEROTENT = [
+  { chemin: "docs/philosophie-et-politique.md", nom: "le document de gouvernance", extracteur: "principes" },
+  { chemin: "CLAUDE.md", nom: "la Charte", extracteur: "charte" },
+];
+
+export function unitesDuCorpus(texte, extracteur, { extractRuleUnitsImpl = null } = {}) {
+  if (extracteur === "charte") {
+    const f = extractRuleUnitsImpl ?? extractRuleUnits;
+    // MOÏSE nomme son champ `article` là où ce fichier attend `numero` : on normalise ICI, une
+    // fois, plutôt que de laisser chaque appelant deviner lequel des deux noms il recevra.
+    return (f(texte) ?? []).map((u) => ({ numero: u.article ?? u.numero, titre: u.titre, texte: u.texte }));
+  }
+  return extractPrincipleUnits(texte);
+}
+
 export function tensionAvecLaGouvernance(idee, { root = ROOT, chemin = DOCUMENT_OFFICIEL, lireImpl = null,
   seuil = SEUIL_D_ALERTE, seuilCouverture = SEUIL_CONTENANCE } = {}) {
   const texteIdee = String(idee ?? "").trim();
@@ -1481,11 +1517,28 @@ export function tensionAvecLaGouvernance(idee, { root = ROOT, chemin = DOCUMENT_
     return { mesurable: false, pourquoi: "l'idée fait moins de quinze caractères : trop courte pour partager un vocabulaire avec quoi que ce soit, et rendre « aucune tension » là-dessus serait un acquittement rendu sans regarder" };
   }
   const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  // LES DEUX CORPUS QUI NUMÉROTENT, et chaque unité GARDE LE NOM DE SON DOCUMENT : une tension
+  // qu'on ne peut pas localiser ne s'instruit pas. `chemin` reste accepté pour les appelants qui
+  // visent un seul document — aucun appel existant n'est cassé.
+  // UN APPELANT QUI VISE UN SEUL DOCUMENT GARDE SON EXTRACTEUR, et c'est un bug que le test a
+  // attrapé : la première version supposait « principes » pour tout chemin explicite, si bien
+  // qu'un appel visant CLAUDE.md rendait « pas mesurable » — un refus poli sur un document
+  // parfaitement lisible, par le seul fait qu'on l'avait nommé.
+  const corpus = chemin === DOCUMENT_OFFICIEL
+    ? CORPUS_QUI_NUMEROTENT
+    : [CORPUS_QUI_NUMEROTENT.find((c) => c.chemin === chemin) ?? { chemin, nom: chemin, extracteur: "principes" }];
   let unites = [];
-  try { unites = extractPrincipleUnits(lire(chemin)); } catch {
-    return { mesurable: false, pourquoi: `« ${chemin} » est illisible : sans les articles en vigueur, il n'y a pas d'absence de tension, il y a une absence de mesure` };
+  const illisibles = [];
+  for (const c of corpus) {
+    try {
+      const u = unitesDuCorpus(lire(c.chemin), c.extracteur);
+      for (const x of u) unites.push({ ...x, document: c.nom, cheminDocument: c.chemin });
+    } catch { illisibles.push(c.chemin); }
   }
-  if (!unites.length) return { mesurable: false, pourquoi: `aucun article reconnu dans « ${chemin} » — comparer à rien rendrait « aucune tension » sur zéro donnée` };
+  if (illisibles.length === corpus.length) {
+    return { mesurable: false, pourquoi: `${illisibles.join(" et ")} illisible(s) : sans les articles en vigueur, il n'y a pas d'absence de tension, il y a une absence de mesure` };
+  }
+  if (!unites.length) return { mesurable: false, pourquoi: `aucun article reconnu dans ${corpus.map((c) => c.chemin).join(" ni ")} — comparer à rien rendrait « aucune tension » sur zéro donnée` };
 
   const motsIdee = new Set(significantWords(texteIdee).filter((w) => w.length > 4));
   if (!motsIdee.size) return { mesurable: false, pourquoi: "l'idée ne porte aucun mot significatif de plus de quatre lettres : rien à comparer" };
@@ -1523,7 +1576,7 @@ export function tensionAvecLaGouvernance(idee, { root = ROOT, chemin = DOCUMENT_
     // l'article est exclue aussi : elle le répète, elle ne s'en dispense pas.
     const chocDePermission = MARQUEUR_DE_PERMISSION.test(texteIdee) && !absIdee && contenance < seuilCouverture;
     const choc = chocDePolarite || chocDePermission;
-    touches.push({ numero: u.numero, titre: u.titre, contenance: Math.round(contenance * 100) / 100,
+    touches.push({ numero: u.numero, titre: u.titre, document: u.document ?? null, contenance: Math.round(contenance * 100) / 100,
       choc, forme: chocDePolarite ? "polarité opposée" : chocDePermission ? "l'idée propose une dispense sur un sujet gouverné par cet article" : null,
       couverture: Math.round(contenance * 100) / 100, dejaCouverte: contenance >= seuilCouverture });
   }
@@ -1532,24 +1585,28 @@ export function tensionAvecLaGouvernance(idee, { root = ROOT, chemin = DOCUMENT_
   const couvertes = touches.filter((t) => t.dejaCouverte);
   const verdict = tensions.length ? "EN TENSION" : couvertes.length ? "DÉJÀ COUVERTE" : "NEUVE";
   return { mesurable: true, idee: texteIdee, chemin, articles: unites.length, seuil,
+    corpus: corpus.map((c) => c.nom).join(" et "), corpusLus: corpus.length, illisibles,
     touches, tensions, couvertes, verdict };
 }
 
 export function formatTensionLines(r) {
   if (!r?.mesurable) return ["=== ALERTE DE TENSION : PAS MESURÉ ===", `  ${r?.pourquoi}`];
-  const L = ["=== CETTE IDÉE EST-ELLE EN TENSION AVEC LE DOCUMENT DE GOUVERNANCE ? ===", "",
+  // LE TITRE NOMME LES DEUX CORPUS depuis son GO du 2026-10-03 : annoncer « le document de
+  // gouvernance » alors qu'on compare aussi à la Charte ferait croire à une couverture plus
+  // étroite que la vraie, et un lecteur n'irait pas chercher la seconde moitié.
+  const L = ["=== CETTE IDÉE EST-ELLE EN TENSION AVEC CE QUI FAIT LOI ? ===", "",
     `Idée examinée : « ${r.idee.slice(0, 160)}${r.idee.length > 160 ? "…" : ""} »`,
-    `Confrontée aux ${r.articles} articles en vigueur de « ${r.chemin} », seuil de contenance ${r.seuil}.`, ""];
+    `Confrontée aux ${r.articles} articles en vigueur de ${r.corpus ?? `« ${r.chemin} »`}, seuil de contenance ${r.seuil}.`, ""];
   L.push(`VERDICT : ${r.verdict}.`);
   L.push("");
   if (r.tensions.length) {
     L.push(`🚨 ${r.tensions.length} article(s) en OPPOSITION DE POLARITÉ sur un vocabulaire partagé :`);
-    for (const t of r.tensions) L.push(`     article ${t.numero} — ${t.titre} (contenance ${t.contenance} · ${t.forme})`);
+    for (const t of r.tensions) L.push(`     ${t.document ? t.document + ", " : ""}article ${t.numero} — ${t.titre} (contenance ${t.contenance} · ${t.forme})`);
     L.push("     À VÉRIFIER À LA MAIN : c'est un SIGNAL, jamais un verdict — mais c'est exactement ce qu'une relecture distraite laisse passer.");
   }
   if (r.couvertes.length) {
     L.push(`📎 ${r.couvertes.length} article(s) la contiennent DÉJÀ (taux de contenance ≥ ${SEUIL_CONTENANCE}) :`);
-    for (const t of r.couvertes) L.push(`     article ${t.numero} — ${t.titre} (contenance ${t.couverture})`);
+    for (const t of r.couvertes) L.push(`     ${t.document ? t.document + ", " : ""}article ${t.numero} — ${t.titre} (contenance ${t.couverture})`);
     L.push("     Ce n'est donc pas une idée neuve mais une redite — et le dire épargne un chantier.");
   }
   if (!r.tensions.length && !r.couvertes.length) {

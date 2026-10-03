@@ -3302,6 +3302,30 @@ export const EXEMPTES_DU_KIT = [
   { motif: /^scripts\/pnpm-install/, pourquoi: "il installe les dépendances de CE dépôt : il décrit la machine d'ici, jamais un outil à remonter ailleurs" },
   { motif: /^scripts\/hooks\//, pourquoi: "les crochets git sont le CÂBLAGE de l'Agence à ce dépôt-ci, pas des outils : ils se réinstallent par `hooks/install.mjs`, qui a lui-même son kit" },
   { motif: /^scripts\/run-framework/, pourquoi: "il lance le PRODUIT (le jeu), pas l'outillage — rang Hors Agence : ce qui part avec l'Agence n'a pas à emporter le camion de livraison" },
+
+  // ═══ SON DOUBLE « YES » DU 2026-10-03 (tâche #1496, construite ici en #1525) ═══
+  //
+  // CE QU'IL A TRANCHÉ, et pourquoi la décision lui revenait : dispenser une bibliothèque du kit
+  // revient à dire qu'elle ne part pas SEULE avec l'Agence, et l'exportabilité est la moitié du
+  // second projet. Ce n'était donc pas un rangement mais une décision de conception — d'où le
+  // « toujours me demander avant d'agir » qu'il avait posé sur ce sujet.
+  //
+  // GROUPE ① — SIX BIBLIOTHÈQUES. Ce ne sont pas des outils : ce sont des morceaux partagés que
+  // d'autres scripts IMPORTENT. Elles n'ont ni commande ni registre, et c'est normal. Leur avoir
+  // donné un blueprint et une fiche était l'erreur, jamais le fait qu'elles existent. Elles
+  // partent évidemment avec l'Agence — comme un organe part avec le corps, pas dans sa valise.
+  { motif: /^scripts\/lib-json\.mjs$/, pourquoi: "BIBLIOTHÈQUE, pas un outil : un morceau partagé que d'autres scripts importent, sans commande ni registre. Elle part avec l'Agence comme un organe part avec le corps — jamais comme un bagage à part (son YES du 2026-10-03, tâche #1496)" },
+  { motif: /^scripts\/lib-markdown-table\.mjs$/, pourquoi: "BIBLIOTHÈQUE, pas un outil : le lecteur de tables partagé par plusieurs scripts, extrait en 2026-09-19 précisément pour n'être écrit qu'une fois (son YES du 2026-10-03, tâche #1496)" },
+  { motif: /^scripts\/corpus-mesure\.mjs$/, pourquoi: "BIBLIOTHÈQUE, pas un outil : le mécanisme partagé qui empêche un Gardien sacré du code de dire « tout va bien » sur un corpus vide — il n'a de sens qu'appelé par eux (son YES du 2026-10-03, tâche #1496)" },
+  { motif: /^scripts\/judge-persona-shared\.mjs$/, pourquoi: "BIBLIOTHÈQUE, pas un outil : la moitié commune de THE-FINAL-JUDGE et THE-DEEP-READER, extraite en #152 pour ne pas diverger en deux copies (son YES du 2026-10-03, tâche #1496)" },
+  { motif: /^scripts\/execution-profile\.mjs$/, pourquoi: "BIBLIOTHÈQUE, pas un outil : un profil d'exécution lu par d'autres scripts, sans commande ni verdict propre (son YES du 2026-10-03, tâche #1496)" },
+  { motif: /^scripts\/find-brain\.mjs$/, pourquoi: "BIBLIOTHÈQUE, pas un outil : la couche interne de tool-brain, que la charte interdit explicitement d'appeler directement — un morceau partagé, jamais une porte d'entrée (son YES du 2026-10-03, tâche #1496)" },
+
+  // GROUPE ② — LES OUTILS D'ENVIRONNEMENT RESTANTS. `install-ci` et `pnpm-install` y étaient déjà
+  // depuis #902 ; il manquait les deux autres, et c'est encore la leçon L37 : la classe avait été
+  // nommée, deux de ses membres étaient restés dehors.
+  { motif: /^scripts\/sites-env\.mjs$/, pourquoi: "OUTIL D'ENVIRONNEMENT : il décrit la machine d'ici (les sites et leurs variables), jamais un outil à remonter ailleurs — même critère que install-ci et pnpm-install, qui y étaient déjà (son YES du 2026-10-03, tâche #1496)" },
+  { motif: /^scripts\/api-providers\.mjs$/, pourquoi: "OUTIL D'ENVIRONNEMENT : le registre des fournisseurs d'API sondables DEPUIS CE CONTENEUR, strictement de portée diagnostic — il décrit l'environnement, pas une capacité de l'Agence (son YES du 2026-10-03, tâche #1496)" },
 ];
 
 // CONSTRUIRE OU FAIRE TOURNER : LA PART DE L'AGENCE QUI NE SERT PLUS APRÈS L'INSTALLATION

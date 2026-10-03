@@ -272,6 +272,18 @@ export const THEME_CSS = `
        deux constantes au fichier réel à chaque exécution. */
     --lia: #f29bc3; --noe: #55dbe5;
   }
+  /* LES LIENS N'ÉTAIENT PAS STYLÉS DU TOUT (2026-10-03, tâche #1527, sa remarque sur l'index des
+     fils : « evite le bleu fonce sur fond noir, c'est peu visible »). Ce n'était pas une couleur
+     mal choisie — c'était une couleur JAMAIS choisie : sans règle de style sur les liens, le
+     navigateur applique son
+     bleu par défaut #0000EE, qui sur un fond #0f1115 donne un contraste d'environ 2:1, très
+     au-dessous du minimum lisible de 4,5:1. Le défaut était donc invisible à toute relecture de
+     la palette, puisque la couleur fautive n'y figurait pas.
+     --accent2 (#6ea8d9) est déjà dans la palette et monte à ~7:1 sur ce fond. Le soulignement est
+     gardé : la couleur seule ne doit jamais être le seul indice qu'un texte est cliquable. */
+  a { color: var(--accent2); text-decoration: underline; text-underline-offset: 2px; }
+  a:hover { color: var(--accent); }
+  a:visited { color: var(--accent2); opacity: 0.82; }
   * { box-sizing: border-box; }
   /* Zoom 150% à l'ouverture pour TOUS les rapports HTML (2026-09-22, demande explicite de
      l'utilisateur, généralisée depuis une première demande limitée au seul transcript de

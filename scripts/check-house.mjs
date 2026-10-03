@@ -9090,7 +9090,21 @@ async function testKitsDExport() {
   // fichier du parc est soit redevable d'un kit, soit dispensé avec sa raison — jamais absent.
   const parc = vitaliteDuParc().total;
   assert.equal(reel.total + reel.exemptes, parc, `and account for the whole fleet — every file is either owed a kit or dispensed with a written reason, never simply absent from the count (currently ${reel.total} owed + ${reel.exemptes} exempt = ${parc} in the fleet)`);
-  assert.ok(reel.exemptes > 0 && reel.exemptes < 15, `the exemptions must stay a short list of real cases (currently ${reel.exemptes} of ${parc}): a long one would mean the rule has become optional`);
+  // LE PLAFOND ÉTAIT UN NOMBRE RECOPIÉ, ET C'EST LE DÉFAUT QUE LE COMMENTAIRE JUSTE AU-DESSUS
+  // DÉCRIT (2026-10-03, tâche #1525). Il valait 15. Sa décision du 2026-10-03 — dispenser six
+  // bibliothèques et deux outils d'environnement, « #1496 YES » — a porté les exemptions à 18, et
+  // le test a donc PUNI SA DÉCISION : exactement « un nombre recopié punit une arrivée ou une
+  // réussite », écrit trois lignes plus haut, et appliqué à l'occurrence sans l'être à la classe
+  // (leçon L37, une fois de plus, dans le même bloc).
+  //
+  // CE QUI EST VRAIMENT EXIGÉ ne dépend d'aucun total : que les dispenses restent une MINORITÉ du
+  // parc — sans quoi la règle serait devenue optionnelle — et que chacune porte sa raison écrite.
+  // Le seuil se DÉRIVE donc du parc (Article 24), et une onzième décision légitime demain ne fera
+  // plus rougir le filet.
+  assert.ok(reel.exemptes > 0 && reel.exemptes < parc / 3,
+    `the exemptions must stay a MINORITY of the fleet, never a fixed count (currently ${reel.exemptes} of ${parc}, ceiling ${Math.floor(parc / 3)}): a majority would mean the rule has become optional, but a hardcoded ceiling punishes a legitimate decision — which is exactly what happened on 2026-10-03 when his "#1496 YES" pushed the list from 10 to 18 against a ceiling of 15`);
+  assert.ok(se.EXEMPTES_DU_KIT.every((e) => typeof e.pourquoi === 'string' && e.pourquoi.length > 40),
+    'and EVERY exemption carries a written reason long enough to be one: the count is not what protects the rule — an exemption without its reason is a hole, and ten of them with their reasons are a decision');
   // L'OPTIONNEL NE SE FILTRE PAS — l'angle mort exact qu'il a vu. L'assertion vit désormais sur une
   // FIXTURE et non sur l'état réel, et le déplacement est la bonne nouvelle : le 2026-09-26 à 20h,
   // les 82 kits dus sont tenus, donc plus AUCUN optionnel incomplet ne traîne dans le vrai dépôt.
@@ -14407,6 +14421,22 @@ console.log('Passed: Doc-Report (task #165) mechanically audits the already-deci
   const realTheme = checkHtmlReportTheme(fs.readFileSync('app/globals.css', 'utf8'), fs.readFileSync('scripts/html-report.mjs', 'utf8'));
   assert.deepEqual(realTheme.colorMismatches, [], 'checked live against the real files: html-report.mjs\'s colors must currently match app/globals.css exactly');
   assert.ok(realTheme.hasZoom, 'checked live: the real THEME_CSS must currently carry the 150% zoom rule for every report, not just the transcript');
+  // LES LIENS SONT STYLÉS (2026-10-03, tâche #1527, sa remarque sur l'index des fils : « evite le
+  // bleu fonce sur fond noir, c'est peu visible »). CE N'ÉTAIT PAS UNE COULEUR MAL CHOISIE, C'EN
+  // ÉTAIT UNE JAMAIS CHOISIE : le thème ne portait AUCUNE règle sur les liens, donc le navigateur
+  // appliquait son bleu par défaut #0000EE — 2,01:1 de contraste sur le fond #0f1115, contre un
+  // minimum lisible de 4,5:1. Mesuré, pas estimé. Le défaut échappait à toute relecture de la
+  // palette puisque la couleur fautive n'y figurait pas, et c'est pourquoi le contrôle porte sur
+  // la PRÉSENCE d'une règle et non sur une liste de couleurs interdites : une couleur absente ne
+  // se cherche pas dans une liste (corollaire de l'Article 17).
+  assert.ok(realTheme.styleLesLiens,
+    'checked live: the real THEME_CSS must style links — without it the browser falls back to #0000EE, which on the #0f1115 report background measures 2.01:1 against the 4.5:1 minimum, and no palette review can catch a colour that is not in the palette');
+  assert.equal(checkHtmlReportTheme('', 'body { color: red; }').styleLesLiens, false,
+    'COUNTER-TEST: a theme with no link rule is flagged — the guard must be able to go red, or its green says nothing');
+  assert.equal(checkHtmlReportTheme('', 'a { color: var(--accent2); }').styleLesLiens, true,
+    'and a theme that does style links passes, whatever colour it picks: the rule is that someone CHOSE, never which choice they made');
+  assert.equal(checkHtmlReportTheme('', '.dialogue a-propos { color: red; }').styleLesLiens, false,
+    'COUNTER-TEST: a class name merely containing the letter a is not a link rule — a guard that fires on any `a` would be green by accident forever');
   console.log('Passed: checkHtmlReportTheme() (2026-09-22) mechanically compares scripts/html-report.mjs\'s shared --lia/--noe colors against app/globals.css\'s real values (never a supposition), flags a genuine drift by name rather than silently accepting it, and confirms the 150% zoom rule is present — verified live against this actual repository to hold today, the exact two permanent rules the user asked for.');
 
   // LOCAL_JOURNALS (2026-09-21, direct question from the user: is Doc-Report itself capable of
@@ -25389,6 +25419,28 @@ async function testLAlerteDeTension() {
   const t4 = K.tensionAvecLaGouvernance("tout jugement rendu par un outil est assorti d un palier de confiance explicite");
   assert.strictEqual(t4.verdict, 'DÉJÀ COUVERTE', 'a restatement of an existing article is named as such');
   assert.ok(t4.couvertes.some((x) => x.numero === 58), 'with the article that already holds it');
+
+  // ── 5. `tension` LIT AUSSI LA CHARTE (2026-10-03, tâche #1523, son GO : « OUI GO »).
+  // MON ESTIMATION ÉTAIT FAUSSE, et c'est la partie à retenir : je lui avais annoncé « un petit
+  // changement, une ligne de corpus ». L'extracteur de ce fichier rend ZÉRO unité sur CLAUDE.md,
+  // parce que la charte numérote autrement. Une ligne de corpus aurait doublé la couverture
+  // ANNONCÉE en comparant à une liste vide — le faux vert exact que ce projet traque.
+  assert.equal(K.unitesDuCorpus(fs.readFileSync('CLAUDE.md', 'utf8'), 'charte').length > 20, true,
+    "the charter's own extractor comes from MOÏSE, whose perimeter it is — writing a second one here would diverge at the first format change (Article 24)");
+  assert.equal(K.unitesDuCorpus('pas un article', 'charte').length, 0, 'and a text with no rule yields nothing rather than a phantom unit');
+  const deuxCorpus = K.tensionAvecLaGouvernance('il faut toujours écarter une règle quand elle ralentit le travail');
+  assert.ok(deuxCorpus.articles > 95,
+    'the real run confronts the idea to BOTH corpora — 104 articles against 71 before, so the coverage genuinely grew instead of merely being announced bigger');
+  assert.ok(deuxCorpus.tensions.some((t) => t.document === 'la Charte'),
+    'and a tension found in the CHARTER is reported as such: an unlocatable tension cannot be instructed, so every unit carries its document');
+  assert.ok(K.formatTensionLines(deuxCorpus)[0].includes('CE QUI FAIT LOI'),
+    'the heading names both corpora rather than "the governance document" alone — announcing a narrower coverage than the real one sends the reader looking in the wrong half');
+  assert.equal(K.CORPUS_QUI_NUMEROTENT.length, 2,
+    'TWO corpora and not six, with the reason written beside the list (Article 24): of the six texts that make law, only these two NUMBER their rules — a tension with the others could not be located, and naming one without saying WHERE would be an accusation nobody can instruct');
+  // CONTRE-TEST : un appelant qui vise UN document précis n'est pas élargi de force.
+  const unSeul = K.tensionAvecLaGouvernance('il faut toujours écarter une règle quand elle ralentit le travail', { chemin: 'CLAUDE.md' });
+  assert.ok(unSeul.articles > 20 && unSeul.articles < 95,
+    'COUNTER-TEST: an explicit single-document call still reads that document alone — widening it silently would break every existing caller that asked a narrower question');
 
   // ── 5. UNE IDÉE TROP COURTE OU UN DOCUMENT ILLISIBLE N'EST PAS UNE ABSENCE DE TENSION (L5).
   assert.strictEqual(K.tensionAvecLaGouvernance('non').mesurable, false, 'a three-letter idea is PAS MESURÉ, never cleared');

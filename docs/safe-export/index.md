@@ -28,7 +28,7 @@ l'autre, jamais des rapports à lire.
 <!-- SOMMAIRE GÉNÉRÉ — ne rien écrire dans ce bloc, il se régénère -->
 ## Fichiers
 
-**29 fichier(s)** dans ce dossier.
+**30 fichier(s)** dans ce dossier.
 
 | Fichier | Sous-dossier |
 |---|---|
@@ -43,6 +43,7 @@ l'autre, jamais des rapports à lire.
 | [kits-2026-09-30.txt](kits-2026-09-30.txt) | — |
 | [kits-2026-10-01.txt](kits-2026-10-01.txt) | — |
 | [kits-2026-10-02.txt](kits-2026-10-02.txt) | — |
+| [kits-2026-10-03.txt](kits-2026-10-03.txt) | — |
 | [memoire.json](memoire.json) | — |
 | [rapport-export-central-2026-09-28-02-48.txt](rapport-export-central-2026-09-28-02-48.txt) | — |
 | [rapport-export-central-2026-09-28-02-49.txt](rapport-export-central-2026-09-28-02-49.txt) | — |

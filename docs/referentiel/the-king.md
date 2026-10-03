@@ -372,3 +372,45 @@ de décisions, pleins de convictions claires), il rendait **0 case sur 19**.
 une case avec une vraie conviction du corpus d'accueil ; et sur ce projet-ci rien ne change —
 seuil 3, plancher jamais rabaissé — ce que le filet vérifie explicitement plutôt que de le
 supposer.
+
+---
+
+## `tension` lit aussi la Charte (2026-10-03, tâche #1523)
+
+**Son GO du 2026-10-03 : « OUI GO ».** La question posée était : « Veux-tu que `tension` lise aussi
+la charte ? C'est un petit changement (une ligne de corpus) et ça double sa couverture sur ce qui
+fait loi. »
+
+### Mon estimation était fausse, et c'est la partie à retenir
+
+**Une ligne de corpus n'aurait rien ajouté du tout.** L'extracteur de THE-KING
+(`extractPrincipleUnits`) rend **zéro unité sur CLAUDE.md** : la Charte numérote ses règles
+autrement que le document de gouvernance. Ajouter CLAUDE.md à une liste de chemins aurait **doublé
+la couverture ANNONCÉE en comparant l'idée à une liste vide** — exactement le faux vert que ce
+projet traque partout ailleurs.
+
+**L'extracteur de la Charte existe déjà, chez MOÏSE**, dont c'est le périmètre exclusif
+(`extractRuleUnits`, 33 unités). Il est **relayé**, jamais réécrit ici : un second extracteur
+divergerait au premier changement de format (Article 24, anti-doublon §7ter). La seule chose
+écrite ici est la **normalisation** d'un nom de champ — Moïse dit `article` là où ce fichier
+attend `numero`, et le traduire une fois vaut mieux que de laisser chaque appelant deviner.
+
+### Deux corpus et pas six, avec la raison écrite
+
+Des six textes qui font loi, **seuls la Charte et le document de gouvernance NUMÉROTENT** leurs
+règles. Les quatre autres n'ont pas d'article à citer : une tension avec eux ne pourrait pas être
+localisée, et **la signaler sans pouvoir dire OÙ serait une accusation qu'on ne peut pas
+instruire**. La liste est volontairement manuelle, et porte donc sa raison juste à côté (Article 24).
+
+### Ce que ça change, mesuré
+
+**71 → 104 articles confrontés.** Sur l'idée d'essai « il faut toujours écarter une règle quand
+elle ralentit le travail » : **11 tensions, toutes dans la Charte** — logique, c'est elle qui porte
+les obligations de conduite, et c'est précisément la moitié du terrain que l'outil ne voyait pas.
+Chaque unité garde le **nom de son document**, et le titre du rapport nomme les deux corpus :
+annoncer « le document de gouvernance » en comparant aussi à la Charte enverrait le lecteur
+chercher dans la mauvaise moitié.
+
+**Un bug attrapé par son propre test** : la première version supposait l'extracteur « principes »
+pour tout chemin explicite, si bien qu'un appel visant CLAUDE.md rendait « pas mesurable » — un
+refus poli sur un document parfaitement lisible, par le seul fait qu'on l'avait nommé.

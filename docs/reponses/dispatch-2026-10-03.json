@@ -1,0 +1,770 @@
+[
+ [
+  "P01",
+  "Remarques d'ouverture",
+  "QUESTION",
+  "Existe-t-il, pour chaque stratégie, une « arborescence incluse » comme pour la GRANDE STRATÉGIE ?",
+  "docs/strategies/",
+  "répondre + vérifier l'arborescence réelle"
+ ],
+ [
+  "P02",
+  "Registre des remises",
+  "CONSIGNE",
+  "« si je réponds à un document, c'est que je l'ai bien reçu et lu » — une réponse vaut accusé de réception ET de lecture",
+  "data-archangel / registre des remises",
+  "brancher : une réponse de sa part marque le doc comme LU"
+ ],
+ [
+  "P03",
+  "Ordre des événements",
+  "DÉCISION",
+  "Il suit mon conseil : on RANGE l'idée du détecteur d'ordre, en attente d'un quatrième cas",
+  "docs/idees-a-trancher.md",
+  "ranger l'idée, ne pas ouvrir le chantier"
+ ],
+ [
+  "P04",
+  "PACK DÉCOUVERTE",
+  "QUESTION+CONSIGNE",
+  "Le pack existe déjà chez Cassandra ? C'est un process ? Il veut la LISTE EXHAUSTIVE, pas des pointillés",
+  "CASSANDRA-RH / #1136 / #1476",
+  "vérifier où vit le pack, rendre la liste exhaustive"
+ ],
+ [
+  "P05",
+  "PACK DÉCOUVERTE",
+  "DÉCISION",
+  "Supprimer l'idée d'une version « admin » : l'Agence est la même, seul son statut change (projet vs aide exécutive). Dans le pack, la présenter comme AIDE EXÉCUTIVE — sa forme finale",
+  "stratégie / pack découverte",
+  "acter la suppression de la version admin + vérifier la logique"
+ ],
+ [
+  "P06",
+  "PACK par thème",
+  "VALIDATION",
+  "« PARFAIT on s'est bien compris » sur la rationalisation par PACK — enregistrer l'idée",
+  "stratégie de rationalisation",
+  "enregistrer formellement"
+ ],
+ [
+  "P07",
+  "Marqueur lu",
+  "QUESTION",
+  "Peux-tu détecter que je CLIQUE sur le fichier ? C'est dans ton environnement",
+  "environnement / livraisons",
+  "répondre honnêtement (non)"
+ ],
+ [
+  "P08",
+  "Marqueur lu",
+  "IDÉE",
+  "Nouvel axe de classification des docs : ENVOYÉ, REÇU, OUVERT, LU — à mettre en place si utile et facile",
+  "data-archangel / registre des remises",
+  "instruire la faisabilité des 4 états"
+ ],
+ [
+  "P09",
+  "Zones fragiles",
+  "QUESTION",
+  "Les zones fragiles méritent-elles aussi une tâche ouverte pour qu'elles cessent d'être fragiles ?",
+  "docs/referentiel/points-fragiles.md",
+  "répondre + mesurer combien ont une tâche"
+ ],
+ [
+  "P10",
+  "Note à deux endroits",
+  "QUESTION",
+  "Une RÉPONSE que tu m'envoies peut-elle alimenter AUTOMATIQUEMENT un fil, en reprenant MA QUESTION + TA RÉPONSE, même si la réponse est dans un doc éphémère ?",
+  "fils-de-discussion",
+  "instruire la faisabilité"
+ ],
+ [
+  "P11",
+  "Git / sources",
+  "QUESTION",
+  "Enregistres-tu TOUS les docs que je t'envoie ? (question, pas consigne)",
+  "docs/sources/",
+  "répondre, mesurer"
+ ],
+ [
+  "P12",
+  "Mot INTELLIGENT dans PHILO",
+  "GO",
+  "« Tu as mon GO OUI » pour écrire le 4e mot d'ordre dans philosophie-et-politique.md",
+  "docs/philosophie-et-politique.md",
+  "montrer le diff AVANT d'écrire (Art. 14) — #1487"
+ ],
+ [
+  "P13",
+  "104 convictions",
+  "QUESTION",
+  "Il reformule pour que je corrige : PHILO/POLITIQUE ne contient pas les convictions des RÈGLES ? Nos règles ne sont pas cohérentes avec la vérité, ou avec philo-politique ?",
+  "the-king / philo",
+  "répondre en corrigeant sa reformulation"
+ ],
+ [
+  "P14",
+  "Honnêteté",
+  "RÈGLE NOUVELLE",
+  "« tu dois toujours répondre de manière honnête, même si la réponse est dure à entendre, jamais aménagée pour me plaire »",
+  "CLAUDE.md (Article nouveau)",
+  "montrer le texte AVANT (Art. 14, double confirmation)"
+ ],
+ [
+  "P15",
+  "104 convictions",
+  "CONSIGNE",
+  "Liste des 104 convictions sous forme résumée, en tableau, 5 par ligne",
+  "livrable",
+  "produire le tableau"
+ ],
+ [
+  "P16",
+  "104 convictions",
+  "VALIDATION",
+  "« Oui je suis d'accord c'est aussi une question d'export » + on refait le point à la prochaine réponse",
+  "the-king / export",
+  "noter"
+ ],
+ [
+  "P17",
+  "Ronde auto",
+  "DÉCISION",
+  "Trois bornes : autant de Rondes que utile · pas de limite API (clé gratuite) · les questions sautées n'ont plus de sens en circle auto, pas de livraison HTML, seule la Ronde principale livre",
+  "process mode auto / #1480",
+  "ATTENTION : corriger « pas de limite API » — quotas réels"
+ ],
+ [
+  "P18",
+  "the-king tension",
+  "GO",
+  "« OUI GO » : que `tension` lise aussi la charte",
+  "scripts/the-king.mjs / #1489",
+  "exécuter"
+ ],
+ [
+  "P19",
+  "Licence",
+  "QUESTION",
+  "Est-ce que c'est payant ?",
+  "licence / #1368",
+  "répondre"
+ ],
+ [
+  "P20",
+  "#1482",
+  "VALIDATION",
+  "OK tant que ça arrive dans les prochains temps",
+  "suivi",
+  "noter"
+ ],
+ [
+  "P21",
+  "#1485",
+  "CONSIGNE",
+  "Y rattacher une session d'allègement avec ÉZÉCHIEL pour réduire concrètement les impacts négatifs du filet ; grouper/fusionner avec une tâche existante si elle existe",
+  "#1485 + ezechiel",
+  "chercher la tâche jumelle et fusionner"
+ ],
+ [
+  "P22",
+  "Travail à distance",
+  "QUESTION",
+  "Dis-moi juste comment on peut travailler/échanger à distance depuis mon tel ou mail",
+  "livrable travailler-a-distance",
+  "répondre concrètement"
+ ],
+ [
+  "P23",
+  "Carte des modules",
+  "CONSIGNE",
+  "Il veut une VRAIE carte schématique, pas un texte. DEUX documents : carte ACTUELLE et carte CIBLE. Schéma en tête, pas de long texte, tout compréhensible par le visuel",
+  "docs/referentiel/",
+  "produire 2 documents à schéma"
+ ],
+ [
+  "P24",
+  "Carte des modules",
+  "PRÉCISION",
+  "La carte montre l'organisation de l'Agence : comment les modules interagissent entre eux",
+  "idem",
+  "cadrage"
+ ],
+ [
+  "P25",
+  "Schémas",
+  "CONSIGNE FORMAT",
+  "Le schéma du module « gestion des tâches » est EXACTEMENT ce qu'il attend. Ce type de schéma doit être utilisé DÉSORMAIS DE FAÇON RÉCURRENTE dans tous les docs pertinents",
+  "docs/regles-de-travail.md (format)",
+  "inscrire comme règle de format"
+ ],
+ [
+  "P26",
+  "Schémas",
+  "CONSIGNE FORMAT",
+  "Donner un TITRE au schéma",
+  "idem",
+  "inscrire"
+ ],
+ [
+  "P27",
+  "Tableau d'organisation",
+  "CONSIGNE",
+  "Sous le schéma, un tableau avec la VRAIE organisation : oublier les familles qu'il a créées, reprendre la classification par type et par axe transverse CONSTATÉS",
+  "le-classificateur",
+  "produire"
+ ],
+ [
+  "P28",
+  "Définition d'un module",
+  "DÉFINITION",
+  "« un ensemble d'agents qui œuvrent dans un sens commun pour produire UNE PRESTATION DE L'AGENCE »",
+  "stratégie modularisation",
+  "acter sa définition"
+ ],
+ [
+  "P29",
+  "Modules",
+  "QUESTIONS (7)",
+  "Rappelle les prestations · cette définition est-elle compatible avec « un module se constate » · les Gardiens Sacrés sont-ils un vrai module · les familles actuelles sont-elles constatées · une famille = un module · les familles sont-elles constatées à 100% · sait-on constater des familles par l'axe PRESTATION RENDUE",
+  "le-classificateur / modularisation",
+  "répondre point par point avec mesure"
+ ],
+ [
+  "P30",
+  "Détachable",
+  "DÉFINITION",
+  "Module = outils réunis autour d'UNE prestation · Partie indétachable = ce que toute prestation réclame · Partie détachable = un module qui se branche. Le cœur = cœur de la partie indétachable",
+  "stratégie export/modularisation",
+  "acter + reformuler pour vérifier qu'on s'est compris"
+ ],
+ [
+  "P31",
+  "Détachable",
+  "QUESTIONS (5)",
+  "As-tu compris la vision, peux-tu la reformuler · est-ce ça « rationalisation et modularisation » · s'est-on compris depuis le départ · est-ce réaliste · peux-tu m'aider à y penser de façon plus ordonnée",
+  "réponse",
+  "répondre"
+ ],
+ [
+  "P32",
+  "Classification des règles",
+  "QUESTION",
+  "As-tu réalisé la classification des RÈGLES, et ce document existe-t-il chez LE-CLASSIFICATEUR ou ailleurs ?",
+  "le-classificateur",
+  "vérifier et répondre"
+ ],
+ [
+  "P33",
+  "6 niveaux de protection",
+  "IDÉE",
+  "Les 6 niveaux de protection d'une règle sont déjà un axe de classement — à réutiliser",
+  "le-classificateur",
+  "instruire"
+ ],
+ [
+  "P34",
+  "6 textes de loi",
+  "CONSIGNE",
+  "Écrire quelque part, de façon DYNAMIQUE, le niveau de protection des 6 textes qui font loi ; mutualiser avec la classification des règles dans un même doc « classification des lois et des règles » — constatées, jamais inventées",
+  "le-classificateur",
+  "construire"
+ ],
+ [
+  "P35",
+  "Classifications inventées",
+  "VRAIE QUESTION",
+  "Combien de classifications sont INVENTÉES et non CONSTATÉES ? Il veut une classification propre, réelle, DYNAMIQUE : un outil modifié change de classe sans geste manuel",
+  "le-classificateur",
+  "MESURER, c'est le cœur de son inquiétude"
+ ],
+ [
+  "P36",
+  "3 docs inconnus",
+  "CONSIGNE",
+  "Il ne connaît pas systeme-de-suivi.md, loi-de-l-agence.md, manifeste-de-l-agence.md — les livrer",
+  "livraison 14h",
+  "FAIT (sources brutes) + versions HTML à produire"
+ ],
+ [
+  "P37",
+  "Convention de citation",
+  "CORRECTION",
+  "Format imposé : « Article N de la Charte (Art. N au sujet de S) » · idem gouvernance · les quatre autres par leur nom + « au sujet de S »",
+  "docs/referentiel/organisation-des-lois.md",
+  "appliquer sa correction"
+ ],
+ [
+  "P38",
+  "Rang des lois",
+  "QUESTION",
+  "La vraie vision est portée par philo-politique (le Projet Utilisateur prime, l'Agence n'est qu'une aide exécutive), la charte n'est qu'un moyen — compatible avec l'exportabilité des documents de gouvernance ?",
+  "organisation-des-lois",
+  "répondre"
+ ],
+ [
+  "P39",
+  "Version admin",
+  "VRAIES QUESTIONS (6)",
+  "Y a-t-il une différence philo/politique entre « agence = projet » et « agence = aide exécutive » ? Le projet jeu prime-t-il toujours ? A-t-on vraiment fait une séparation ? Qu'est-ce qui s'est passé dans le code ? Quand est-elle vraiment utile ?",
+  "philo-politique / stratégie",
+  "enquêter dans le code et répondre"
+ ],
+ [
+  "P40",
+  "#1445",
+  "QUESTIONS",
+  "Le doc organisation-des-lois est consigné chez qui ? Aux côtés de philo-politique dans le pack gouvernance ? Le pack gouvernance est-il inclus dans le pack gouvernance 360 ? Que contient le 360 ?",
+  "packs",
+  "répondre"
+ ],
+ [
+  "P41",
+  "Thèse du cœur",
+  "REJET",
+  "« Je n'ai rien compris à ce document, c'est trop abstrait pour moi. On passe à autre chose »",
+  "docs/livrables/",
+  "ne pas poursuivre ce format ; leçon de format"
+ ],
+ [
+  "P42",
+  "Format module",
+  "VALIDATION",
+  "Le format de la fiche module convient",
+  "format",
+  "acter"
+ ],
+ [
+  "P43",
+  "Philo et outils",
+  "QUESTION",
+  "Si le codage respecte philo-politique, en est-il de même pour les outils et modules ?",
+  "the-king",
+  "répondre"
+ ],
+ [
+  "P44",
+  "Entités dans le code",
+  "QUESTION",
+  "L'Agence en tant qu'entité dans le code : réglé ? Un MODULE est-il reconnu comme entité dans le code ?",
+  "le-classificateur",
+  "vérifier"
+ ],
+ [
+  "P45",
+  "Colonne refus",
+  "CONSIGNE",
+  "Mieux détailler « ce qu'il refuse » dans la fiche module",
+  "format fiche module",
+  "appliquer"
+ ],
+ [
+  "P46",
+  "Modules voisins",
+  "VALIDATION",
+  "Le découpage en modules voisins rejoint ce qu'il imagine — à noter dans « alignement de compréhension »",
+  "stratégie modularisation",
+  "noter"
+ ],
+ [
+  "P47",
+  "Script vs outil",
+  "QUESTION",
+  "Je n'ai toujours pas compris comment différencier un script d'un outil, et ce qui rend ça visible dans la classification. Combien de scripts, combien d'outils ?",
+  "le-classificateur",
+  "MESURER et répondre"
+ ],
+ [
+  "P48",
+  "Format fiche module",
+  "CONSIGNE (4)",
+  "Mieux mettre en avant LE PÉRIMÈTRE · dépend-il d'autres modules · pourrait-il être la seule prestation · quelle est sa classe (détachable/non) · tableau exhaustif des scripts qui lisent, pourquoi, utilité, produisent-ils un rapport",
+  "format fiche module",
+  "enrichir le gabarit"
+ ],
+ [
+  "P49",
+  "Listes",
+  "CONSIGNE FORMAT",
+  "Quand une fiche de module mentionne une liste, elle doit être EXHAUSTIVE et déroulée en tableau explicatif",
+  "format",
+  "inscrire"
+ ],
+ [
+  "P50",
+  "34 scripts",
+  "INTUITION",
+  "« le bazar que je soupçonnais est peut-être du côté de ces 34 scripts. J'enquête… »",
+  "le-classificateur",
+  "lui donner la matière"
+ ],
+ [
+  "P51",
+  "Tâche vs fil vs idée",
+  "QUESTION",
+  "Une tâche peut être « poser ou répondre à une question », et une tâche à trancher EST une question : comment l'outil s'y retrouve sans erreur ?",
+  "check-tasks-details / fils",
+  "répondre"
+ ],
+ [
+  "P52",
+  "Index des fils",
+  "CONSIGNE",
+  "Il veut voir l'index des fils à CHAQUE fin de Ronde — l'ajouter si pas déjà fait",
+  "circle-tasks",
+  "vérifier et ajouter"
+ ],
+ [
+  "P53",
+  "Index des fils",
+  "REMARQUE",
+  "« le process ronde est pas propre »",
+  "process ronde",
+  "noter, instruire"
+ ],
+ [
+  "P54",
+  "Lisibilité",
+  "CONSIGNE FORMAT",
+  "Éviter le bleu foncé sur fond noir, peu visible",
+  "html-report.mjs",
+  "corriger le thème"
+ ],
+ [
+  "P55",
+  "Fenêtres de calibrage",
+  "QUESTION",
+  "Si je réponds à une question de calibrage dans une fenêtre, ça alimente un fil ? Comment tu gères tout ça ?",
+  "fils-de-discussion",
+  "répondre"
+ ],
+ [
+  "P56",
+  "Coût des HTML",
+  "QUESTION",
+  "La livraison de docs HTML à cette fréquence est-elle un vrai coût pour moi, ou négligeable ?",
+  "smart-conso-token",
+  "MESURER et répondre"
+ ],
+ [
+  "P57",
+  "Q4.1",
+  "QUESTION",
+  "Quel est le rôle du document maître ? + OK pour « Cerveau des fils »",
+  "fil 04",
+  "répondre + acter le nom"
+ ],
+ [
+  "P58",
+  "Q4.2",
+  "PROPOSITION",
+  "Fil clos mais réouvrable = reste au catalogue ; clos définitivement = archivé, compressé, JAMAIS supprimé. « Ok comme ça ou il y a une meilleure solution ? »",
+  "fils-de-discussion",
+  "valider ou proposer mieux"
+ ],
+ [
+  "P59",
+  "Q4.4 / TOTAL RECALL",
+  "CONSIGNE",
+  "La soirée du 30/09 : j'ai perdu la mémoire de session parce qu'il a éteint son PC. Il prépare l'opération « TOTAL RECALL ». Tâche : se tenir informé de son évolution",
+  "nouvelle tâche",
+  "créer la tâche de veille"
+ ],
+ [
+  "P60",
+  "Q4.5",
+  "DÉCISION",
+  "Les réponses (a), (c) et (d) conviennent : un fil où c'est à lui, OU un fil où j'ai répondu en dernier mais qui n'a jamais été livré",
+  "fils-de-discussion",
+  "appliquer"
+ ],
+ [
+  "P61",
+  "Q4.6",
+  "CONSIGNE",
+  "Les questions de calibrage répondues doivent être renseignées dans les fils, quel que soit le canal (doc, conversation, fenêtre). Dans tous les cas le fil est alimenté",
+  "fils-de-discussion",
+  "construire"
+ ],
+ [
+  "P62",
+  "Q4.7",
+  "DÉCISION",
+  "(a)",
+  "fil 04",
+  "appliquer"
+ ],
+ [
+  "P63",
+  "Q6.2",
+  "QUESTION",
+  "Quel impact de n'avoir qu'une seule version ? Rappelle-le-moi",
+  "fil 06",
+  "répondre"
+ ],
+ [
+  "P64",
+  "Q6.3",
+  "QUESTION JEU",
+  "Peut-on mettre en place un système pour que l'utilisateur utilise sa propre clé API ?",
+  "fil 06 / jeu",
+  "répondre (périmètre jeu : réponse seulement)"
+ ],
+ [
+  "P65",
+  "Q6.4",
+  "PRÉCISION",
+  "Sa peur porte sur le cas où des fonctionnalités de l'Agence seraient en réalité des fonctions de MON périmètre Claude Code et non de l'Agence — mener l'enquête",
+  "safe-export",
+  "ENQUÊTE à mener"
+ ],
+ [
+  "P66",
+  "Q6.5",
+  "DÉCISION",
+  "(d) oui, rapport complet sur le filet : maîtriser le sujet, sa manipulation, sa rationalisation",
+  "nouvelle tâche",
+  "créer"
+ ],
+ [
+  "P67",
+  "Fil 08 / preuve juridique",
+  "CONSIGNE",
+  "Chaque data qui porte une preuve juridique doit être DÉCLARÉE comme telle (axe transverse) ; règle écrite quelque part ; renseigné dans la stratégie de rationalisation ; adapté pour les outils",
+  "le-classificateur + stratégie",
+  "construire l'axe transverse"
+ ],
+ [
+  "P68",
+  "Q8.2",
+  "QUESTION+DÉCISION",
+  "AS-TU LA POSSIBILITÉ DE TESTER CES CLÉS ? « elles commencent à me hanter » ; ensuite (a)",
+  "sécurité / clés",
+  "tester si possible, répondre"
+ ],
+ [
+  "P69",
+  "Q8.3",
+  "QUESTION",
+  "Explique-moi l'intérêt et comment ça se passe concrètement, est-ce payant ?",
+  "fil 08",
+  "répondre"
+ ],
+ [
+  "P70",
+  "Q8.7",
+  "DÉCISION",
+  "plutôt (b) mais (d) pour l'instant",
+  "fil 08",
+  "appliquer"
+ ],
+ [
+  "P71",
+  "Fil 09 / JESUS",
+  "QUESTIONS (5)",
+  "Jésus garantit que l'AGENCE ne ralentit pas le codage ; le jeu relève d'un autre outil ? Les lourdeurs du jeu qui impactent le codage global ? Les éléments partagés/fusionnés ? Les lourdeurs du jeu dans le jeu ? Les lourdeurs du jeu dans l'exécution de l'Agence ? Qu'est-ce que JESUS peut détecter, est-il assez équipé ?",
+  "jesus-le-sauveur",
+  "répondre point par point"
+ ],
+ [
+  "P72",
+  "Philo / lourdeurs",
+  "NOTE",
+  "Selon notre philo, on devrait permettre à l'utilisateur de détecter les lourdeurs dans le PROJET UTILISATEUR",
+  "philo / jesus",
+  "noter comme principe"
+ ],
+ [
+  "P73",
+  "Serveur / compilation",
+  "QUESTION",
+  "Comment on fait pour avoir un « serveur qui tourne », ça veut dire quoi, et « une compilation » c'est quoi ?",
+  "réponse pédagogique",
+  "expliquer simplement"
+ ],
+ [
+  "P74",
+  "Q9.2",
+  "QUESTION",
+  "Où as-tu historisé la leçon ?",
+  "lecons.md",
+  "répondre avec le chemin"
+ ],
+ [
+  "P75",
+  "Q9.3",
+  "DÉCISION",
+  "(c)",
+  "fil 09",
+  "appliquer"
+ ],
+ [
+  "P76",
+  "Q9.4",
+  "CONSIGNE",
+  "« essaie de me poser des questions uniquement quand c'est pertinent »",
+  "conduite / Article 16",
+  "noter — tension avec « mieux vaut trop de questions »"
+ ],
+ [
+  "P77",
+  "Q9.6",
+  "QUESTION",
+  "Comment on traduit ça en action ? On révèle les packs potentiels ? Module par module ?",
+  "rationalisation",
+  "répondre"
+ ],
+ [
+  "P78",
+  "Q9.7",
+  "DÉCISION",
+  "(c)",
+  "fil 09",
+  "appliquer"
+ ],
+ [
+  "P79",
+  "Fil 12 / TOTAL RECALL",
+  "CONSIGNE IMPORTANTE",
+  "Comparer TOTAL RECALL au système existant, rapport entre « où on en est » et « total recall ». TOTAL RECALL = rafraîchissement complet et FORCÉ de la mémoire, trop lourd pour « où on en est » ; une couche plus légère est prévue",
+  "stratégie total-recall",
+  "créer le document de stratégie"
+ ],
+ [
+  "P80",
+  "Fil 12 / 5 systèmes",
+  "QUESTION",
+  "Quelles actions pour rendre l'ensemble cohérent ? Comment nommer le groupe qui réunit ces 5 systèmes ?",
+  "fils / suivi / stratégies",
+  "répondre + proposer un nom"
+ ],
+ [
+  "P81",
+  "Q12.1",
+  "CORRECTION",
+  "Ma réponse est obsolète : les stratégies existent désormais. Compléter le doc « cerveau des fils » plutôt qu'un nouveau doc ?",
+  "fils",
+  "corriger et répondre"
+ ],
+ [
+  "P82",
+  "Q12.2",
+  "DÉCISION",
+  "les 4, et on en reparle à TOTAL RECALL",
+  "fil 12",
+  "appliquer"
+ ],
+ [
+  "P83",
+  "Q12.7",
+  "CORRECTION",
+  "dépassé, la cascade est actionnée",
+  "fil 12",
+  "vérifier"
+ ],
+ [
+  "P84",
+  "Q12.8",
+  "DÉCISION",
+  "(c)",
+  "fil 12",
+  "appliquer"
+ ],
+ [
+  "P85",
+  "Fil 14 / voie B",
+  "VALIDATION",
+  "Oui, reconstruire le NOYAU seulement, les outils devenant des modules — encore faut-il définir le cœur",
+  "stratégie refonte",
+  "acter"
+ ],
+ [
+  "P86",
+  "Q14.7",
+  "DÉCISION",
+  "Inès porte le PACK DÉCOUVERTE, et tiendra aussi le process TOTAL RECALL. Redonner la liste des documents du pack",
+  "ines-official",
+  "acter + livrer la liste"
+ ],
+ [
+  "P87",
+  "Q14.8",
+  "DÉCISION",
+  "(c) — l'écart était une marge, pas un blocage",
+  "fil 14",
+  "appliquer"
+ ],
+ [
+  "P88",
+  "L'Agence ailleurs",
+  "QUESTION+CONSIGNE",
+  "As-tu sauvegardé ce doc ? Il est chez qui ? Chaque expérience de ce type doit être historisée au même endroit, dans un dossier dédié",
+  "safe-export",
+  "construire le dossier d'XP"
+ ],
+ [
+  "P89",
+  "Consignes de session",
+  "CONSIGNE",
+  "Rapport éphémère sur : les consignes de ma session, l'outillage de l'éditeur, nos habitudes de travail jamais écrites. Identifier les règles à ajouter à l'Agence",
+  "rapport",
+  "PRODUIRE — c'est la limite déclarée de #1484"
+ ],
+ [
+  "P90",
+  "#1493",
+  "DÉCISION",
+  "Oui : écrire un document pour les 3 règles sans domicile, et me dire quelles elles sont",
+  "#1493",
+  "exécuter"
+ ],
+ [
+  "P91",
+  "#1485",
+  "CONSIGNE",
+  "Continue l'enquête — pense à CLAUDE.md et philo-politique aussi, mais enquête sur TOUT. Les opérations d'Ézéchiel ou Moïse comptent-elles comme de la rationalisation ? Liste de ce qui n'est pas exportable vs pas rationalisable vs pas améliorable",
+  "#1485",
+  "élargir l'enquête"
+ ],
+ [
+  "P92",
+  "Licence",
+  "DÉCISION",
+  "(b) mais « famille A, propriétaire, en trois lignes » suit-il bien mon conseil ? Le code est-il protégé par « tous droits réservés » pour l'instant ?",
+  "#1368",
+  "répondre + exécuter"
+ ],
+ [
+  "P93",
+  "#1494",
+  "DÉCISION",
+  "Tâche non prioritaire mais inscrite, oui",
+  "#1494",
+  "noter"
+ ],
+ [
+  "P94",
+  "Grand changement",
+  "CONSIGNE",
+  "« ÉTAGE 2 — le document maître et son porteur ne sont pas tranchés. Revoyons cette question »",
+  "#1127",
+  "rouvrir la question"
+ ],
+ [
+  "P95",
+  "Extensions",
+  "QUESTION",
+  "L'outil devenu extension et ses apports ne disparaissent pas ? Ni son nom ? Détaille pour que ce soit clair",
+  "#1479 / extensions",
+  "répondre"
+ ],
+ [
+  "P96",
+  "#1496",
+  "DÉCISION",
+  "YES (deux fois) — les 6 bibliothèques et les 4 outils d'environnement dispensés du kit",
+  "#1496",
+  "exécuter"
+ ]
+]

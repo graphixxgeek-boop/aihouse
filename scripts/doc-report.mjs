@@ -766,7 +766,16 @@ export function checkHtmlReportTheme(globalsCssText, htmlReportSource) {
   const reportColors = { lia: extractVar(htmlReportSource, "lia"), noe: extractVar(htmlReportSource, "noe") };
   const colorMismatches = ["lia", "noe"].filter((k) => gameColors[k] && reportColors[k] && gameColors[k] !== reportColors[k]);
   const hasZoom = /body\s*\{[^}]*zoom:\s*1\.5/.test(htmlReportSource);
-  return { gameColors, reportColors, colorMismatches, hasZoom };
+  // LES LIENS DOIVENT ÊTRE STYLÉS (2026-10-03, tâche #1527, sa remarque : « evite le bleu fonce
+  // sur fond noir, c'est peu visible »). CE N'ÉTAIT PAS UNE COULEUR MAL CHOISIE, C'EN ÉTAIT UNE
+  // JAMAIS CHOISIE : sans règle `a`, le navigateur applique son bleu par défaut #0000EE, qui sur
+  // le fond #0f1115 des rapports donne un contraste de 2,01:1 — très au-dessous du minimum
+  // lisible de 4,5:1. Le défaut échappait à toute relecture de la palette, puisque la couleur
+  // fautive n'y figurait PAS. C'est pourquoi le contrôle porte sur la PRÉSENCE d'une règle `a`
+  // et non sur une liste de couleurs interdites : une couleur absente ne se cherche pas dans une
+  // liste (corollaire de l'Article 17 : jamais une liste de termes, toujours un principe).
+  const styleLesLiens = /(^|[^-\w])a\s*\{[^}]*color\s*:/m.test(htmlReportSource);
+  return { gameColors, reportColors, colorMismatches, hasZoom, styleLesLiens };
 }
 
 // Âge du dernier rapport par registre, en jours (réutilise lastTouchDays() de clean-dirty-old.mjs,
