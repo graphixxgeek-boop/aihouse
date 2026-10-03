@@ -22747,6 +22747,69 @@ async function testEtatsDeRemise() {
 }
 await testEtatsDeRemise();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1549 — « ELLES COMMENCENT À ME HANTER » : LE DIAGNOSTIC DE CLÉ QUI NE COÛTE RIEN
+// ─────────────────────────────────────────────────────────────────────────────
+// SES MOTS, POINT P68 : « AS-TU LA POSSIBILITÉ DE TESTER CES CLÉS ? elles commencent à me
+// hanter ». La réponse courte est OUI et l'outil existait : check-gemini-quota sonde chacune pour
+// de vrai. Mais sonder est un APPEL RÉEL, donc soumis à l'Article 22 — et une inquiétude qui ne
+// peut être levée qu'au prix d'un appel finit par ne jamais être levée.
+//
+// CE QUI MANQUAIT EST LA COUCHE À COÛT ZÉRO : combien de clés, sont-elles vraiment DISTINCTES,
+// leur forme est-elle celle du fournisseur, depuis quand n'ont-elles pas bougé. La distinction est
+// la plus utile des quatre, et la charte la réclamait déjà sans que rien ne la vérifie.
+async function testDiagnosticDesCles() {
+  const AP = await import('../scripts/api-providers.mjs');
+
+  // AUCUNE VALEUR DE CLÉ NE SORT, JAMAIS — un diagnostic de secret qui imprime le secret est pire
+  // que pas de diagnostic du tout.
+  const secret = 'AQ.Ab8_un_secret_qui_ne_doit_jamais_apparaitre_xx';
+  const r = AP.diagnostiquerLesClesSansAppel([{ provider: 'gemini', key: secret }]);
+  const texte = AP.formatDiagnosticDesClesLines(r).join('\n');
+  assert.ok(!texte.includes(secret), 'the key value must NEVER be printed');
+  assert.ok(!texte.includes('un_secret_qui'), 'nor any recognisable fragment of it');
+  assert.ok(!JSON.stringify(r).includes(secret), 'nor survive in the returned object, which may be archived');
+
+  // L'EMPREINTE EST STABLE ET DISCRIMINANTE : sans l'une on ne peut pas comparer, sans l'autre on
+  // déclarerait identiques deux clés différentes.
+  assert.equal(AP.empreinteDeCle('abc'), AP.empreinteDeCle('abc'), 'same key, same fingerprint — otherwise nothing can be compared');
+  assert.notEqual(AP.empreinteDeCle('abc'), AP.empreinteDeCle('abd'), 'different keys, different fingerprints — a collision would declare a real fallback a duplicate');
+
+  // LE DOUBLON EST LE CONSTAT QUI COMPTE, et la charte le réclamait déjà : deux clés identiques
+  // déguisées en repli donnent l'illusion d'une redondance qui n'existe pas.
+  const doublon = AP.diagnostiquerLesClesSansAppel([
+    { provider: 'gemini', key: 'AQ.Ab8aaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    { provider: 'gemini', key: 'AQ.Ab8aaaaaaaaaaaaaaaaaaaaaaaaaa' },
+  ]);
+  assert.equal(doublon.total, 2);
+  assert.equal(doublon.distinctes, 1, 'MUST BITE: two identical keys are one key wearing two hats');
+  assert.equal(doublon.doublons.length, 1, 'and the SECOND occurrence is the one flagged — the first is the real key');
+  assert.ok(/tombent ensemble/.test(AP.formatDiagnosticDesClesLines(doublon).join('\n')), 'the report says what it costs, not just that it happened');
+
+  // UNE FORME INCONNUE EST SIGNALÉE SANS ÊTRE CONDAMNÉE : c'est la seule erreur qui se voie sans
+  // dépenser un appel, et ce n'est pas une preuve d'invalidité.
+  const forme = AP.diagnostiquerLesClesSansAppel([{ provider: 'gemini', key: 'pas-du-tout-une-cle' }]);
+  assert.equal(forme.formesInconnues.length, 1);
+  assert.ok(/pas une preuve d'invalidité/.test(AP.formatDiagnosticDesClesLines(forme).join('\n')));
+
+  // LE REFUS DE CONCLURE SUR RIEN.
+  assert.equal(AP.diagnostiquerLesClesSansAppel([]).mesurable, false, 'no key read means no configuration found, never "no key exists" — opposite gestures (L11)');
+  assert.equal(AP.diagnostiquerLesClesSansAppel([{ provider: 'gemini' }]).mesurable, false, 'an entry without a key value is not a key');
+
+  // LA LIMITE LA PLUS TRAÎTRE EST ÉCRITE : trois clés distinctes peuvent partager UN quota.
+  const bon = AP.diagnostiquerLesClesSansAppel([
+    { provider: 'gemini', key: 'AQ.Ab8aaaaaaaaaaaaaaaaaaaaaaaaaa' },
+    { provider: 'gemini', key: 'AQ.Ab8bbbbbbbbbbbbbbbbbbbbbbbbbb' },
+  ]);
+  assert.equal(bon.doublons.length, 0);
+  const t = AP.formatDiagnosticDesClesLines(bon).join('\n');
+  assert.ok(/MÊME PANIER DE QUOTA/.test(t), 'two distinct keys of the SAME Google project share one quota basket — the check proves the keys differ, never that the quotas do');
+  assert.ok(/pas la même chose que « toutes valides »/i.test(t), 'and a clean shape is never a clean bill of health');
+
+  console.log(`Passed: « elles commencent à me hanter » — le diagnostic de clé qui ne coûte rien (2026-10-03, tâche #1549). Sa question P68 : « as-tu la possibilité de tester ces clés ? ». OUI, et l'outil existait : check-gemini-quota les sonde pour de vrai. Mais sonder est un APPEL RÉEL, donc soumis à l'Article 22 — et une inquiétude qui ne peut être levée qu'au prix d'un appel finit par ne jamais être levée. D'où cette couche À COÛT ZÉRO : combien de clés, sont-elles vraiment DISTINCTES, leur forme est-elle celle du fournisseur, depuis quand n'ont-elles pas bougé. LA DISTINCTION EST LA PLUS UTILE DES QUATRE, et la charte la réclamait déjà sans que rien ne la vérifie : deux clés identiques déguisées en repli donnent l'illusion d'une redondance qui n'existe pas, et le jour du quota elles tombent ensemble. AUCUNE VALEUR DE CLÉ NE SORT JAMAIS — ni dans le texte, ni dans l'objet rendu : la comparaison passe par une empreinte tronquée et non réversible, donc le rapport se livre et s'archive sans rien exposer. ET LA LIMITE LA PLUS TRAÎTRE EST ÉCRITE PLUTÔT QUE TUE : deux clés DISTINCTES du même projet Google partagent le MÊME panier de quota. Cette couche prouve que les clés diffèrent ; elle ne prouve pas que les quotas le font.`);
+}
+await testDiagnosticDesCles();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

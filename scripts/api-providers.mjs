@@ -141,3 +141,98 @@ export function parseKeyEntry(raw) {
   if (m && PROVIDERS[m[1].toLowerCase()]) return { provider: m[1].toLowerCase(), key: m[2] };
   return { provider: "gemini", key: raw };
 }
+
+// ============================================================================
+// LE DIAGNOSTIC DES CLÉS QUI NE COÛTE RIEN (2026-10-03, tâche #1552bis → #1549)
+// ============================================================================
+// SES MOTS, ET ILS DISENT POURQUOI CETTE COUCHE MANQUAIT : « AS-TU LA POSSIBILITÉ DE TESTER CES
+// CLÉS ? elles commencent à me hanter » (point P68 du 2026-10-03).
+//
+// LA RÉPONSE COURTE EST OUI, ET L'OUTIL EXISTAIT DÉJÀ : `node scripts/check-gemini-quota.mjs`
+// sonde chaque clé pour de vrai. Mais le sonder est un APPEL RÉEL — donc soumis à l'Article 22,
+// donc pas quelque chose qu'on lance parce qu'une inquiétude revient. Et une inquiétude qui ne
+// peut être levée qu'au prix d'un appel finit par ne jamais être levée.
+//
+// CE QUI MANQUAIT EST DONC LA COUCHE À COÛT ZÉRO : tout ce qu'on peut savoir d'une clé SANS
+// l'utiliser — combien il y en a, si elles sont vraiment DISTINCTES, si leur forme est celle
+// qu'attend le fournisseur, et depuis quand elles n'ont pas bougé.
+//
+// LA DISTINCTION EST LA PLUS UTILE DES QUATRE, et la charte la réclamait déjà sans que rien ne la
+// vérifie : « si un second projet Google existe, vérifier D'ABORD qu'il est bien distinct — pas
+// une seconde clé du même projet ». Deux clés identiques déguisées en repli donnent l'illusion
+// d'une redondance qui n'existe pas : le jour du quota, les deux tombent ensemble.
+//
+// ⚠️ AUCUNE VALEUR DE CLÉ N'EST JAMAIS IMPRIMÉE NI RENDUE. La comparaison se fait sur une
+// EMPREINTE tronquée ; le rapport peut donc être livré, collé, archivé sans rien exposer. Un
+// diagnostic de secret qui imprime le secret est pire que pas de diagnostic du tout.
+export const FORMES_DE_CLE = [
+  { fournisseur: "gemini", motif: /^AQ\.[A-Za-z0-9_-]{20,}$/, quoi: "clé Gemini au format actuel (AQ.…)" },
+  { fournisseur: "gemini", motif: /^AIza[A-Za-z0-9_-]{30,}$/, quoi: "clé Google au format historique (AIza…)" },
+];
+
+export function empreinteDeCle(cle, { longueur = 10 } = {}) {
+  // Une empreinte stable et non réversible, calculée sans dépendance : la somme de contrôle d'un
+  // secret ne doit jamais pouvoir être retournée en secret.
+  let h1 = 0x811c9dc5; let h2 = 0x01000193;
+  const s = String(cle ?? "");
+  for (let i = 0; i < s.length; i += 1) {
+    h1 = Math.imul(h1 ^ s.charCodeAt(i), 0x01000193) >>> 0;
+    h2 = Math.imul(h2 + s.charCodeAt(i) + i, 0x85ebca6b) >>> 0;
+  }
+  return (h1.toString(16).padStart(8, "0") + h2.toString(16).padStart(8, "0")).slice(0, longueur);
+}
+
+export function diagnostiquerLesClesSansAppel(cles, { formes = FORMES_DE_CLE, ageJours = null } = {}) {
+  const liste = (cles ?? []).filter((c) => c?.key);
+  if (!liste.length) {
+    return { mesurable: false, pourquoi: "aucune clé lue : ce zéro dit qu'on n'a trouvé aucune configuration, jamais qu'aucune clé n'existe — et les deux appellent des gestes opposés (leçons L5/L11)" };
+  }
+  const vues = new Map();
+  const entrees = liste.map((c, i) => {
+    const emp = empreinteDeCle(c.key);
+    const forme = formes.find((f) => f.motif.test(String(c.key)));
+    const rang = (vues.get(emp) ?? 0) + 1;
+    vues.set(emp, rang);
+    return {
+      rang: i + 1,
+      fournisseur: c.provider ?? "gemini",
+      empreinte: emp,
+      longueur: String(c.key).length,
+      forme: forme?.quoi ?? null,
+      formeConnue: Boolean(forme),
+      // Un doublon est signalé sur la SECONDE occurrence : la première est la vraie clé.
+      doublon: rang > 1,
+    };
+  });
+  return {
+    mesurable: true,
+    total: entrees.length,
+    distinctes: vues.size,
+    doublons: entrees.filter((e) => e.doublon),
+    formesInconnues: entrees.filter((e) => !e.formeConnue),
+    ageJours,
+    entrees,
+    // CE QUI RESTE STRICTEMENT HORS DE PORTÉE, déclaré plutôt que tu (Article 27).
+    horsPortee: "une clé bien formée et unique peut être RÉVOQUÉE, ÉPUISÉE ou rattachée à un projet sans facturation : rien de tout cela ne se voit sans un appel réel. ET SURTOUT — c'est la limite la plus traître — DEUX CLÉS DISTINCTES DU MÊME PROJET GOOGLE PARTAGENT LE MÊME PANIER DE QUOTA (constaté empiriquement, cf. l'historique de Smart Breaker). Cette couche prouve que les clés sont différentes ; elle ne prouve PAS que les quotas le sont. Elle dit ce qui est faux à coup sûr, jamais que tout va bien.",
+  };
+}
+
+export function formatDiagnosticDesClesLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`CLÉS — ${r.total} configurée(s), ${r.distinctes} réellement distincte(s).`];
+  for (const e of r.entrees) {
+    const marque = e.doublon ? "🚨" : e.formeConnue ? "·" : "⚠️";
+    out.push(`   ${marque} #${e.rang} ${e.fournisseur} · empreinte ${e.empreinte} · ${e.longueur} caractères · ${e.forme ?? "FORME INCONNUE DU FOURNISSEUR"}${e.doublon ? " · DOUBLON d'une clé déjà listée" : ""}`);
+  }
+  if (r.doublons.length) {
+    out.push(`   🚨 ${r.doublons.length} clé(s) en double : une redondance qui n'en est pas. Le jour du quota, deux clés identiques tombent ensemble — et le repli donnera l'illusion d'avoir essayé autre chose.`);
+  }
+  if (r.formesInconnues.length) {
+    out.push(`   ⚠️ ${r.formesInconnues.length} clé(s) d'une forme que le fournisseur n'utilise pas : ce n'est pas une preuve d'invalidité, mais c'est la seule erreur qui se voie sans dépenser un appel.`);
+  }
+  if (r.ageJours != null) out.push(`   · dernière modification du fichier de clés : il y a ${r.ageJours} jour(s).`);
+  if (!r.doublons.length && !r.formesInconnues.length) out.push("   ✅ Toutes distinctes, toutes au format attendu — ce qui n'est PAS la même chose que « toutes valides », ni que « autant de quotas indépendants ».");
+  out.push(`   HORS PORTÉE : ${r.horsPortee}`);
+  out.push("   AUCUNE VALEUR DE CLÉ N'EST IMPRIMÉE : la comparaison passe par une empreinte tronquée et non réversible, donc ce rapport se livre et s'archive sans rien exposer.");
+  return out;
+}
