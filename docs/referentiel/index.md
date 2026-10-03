@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**127 fichier(s).**
+**129 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -31,6 +31,8 @@
 | [circle-process-guardian.md](circle-process-guardian.md) | — |
 | [circle-tasks.md](circle-tasks.md) | — |
 | [classification-agence.md](classification-agence.md) | — |
+| [classification-des-lois-et-des-regles.html](classification-des-lois-et-des-regles.html) | — |
+| [classification-des-lois-et-des-regles.md](classification-des-lois-et-des-regles.md) | — |
 | [classification-des-rapports-et-datas.md](classification-des-rapports-et-datas.md) | — |
 | [claude-md-asides-historique.md](claude-md-asides-historique.md) | — |
 | [claude-md-regles.md](claude-md-regles.md) | — |

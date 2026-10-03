@@ -2577,6 +2577,16 @@ export const A_TRANCHER_PAR_L_UTILISATEUR = /^docs\/strategies\//;
 // s'y trouve est ce que cet outil a écrit en tournant — un récit de passages, jamais une règle.
 export const MOTIF_DOSSIER_D_OUTIL = /^docs\/([a-z0-9-]+)\//;
 
+// LE MARQUEUR POSÉ PAR UN OUTIL QUI ÉCRIT TOUT UN DOCUMENT. Il vit déjà dans `BLOCS_GENERES`
+// (lib-shell), où il sert à ne pas compter deux rapports générés comme des jumeaux ; on le relit
+// ici pour l'axe d'exportabilité plutôt que de le recopier (leçon L29 : deux porteurs des mêmes
+// données divergent toujours).
+// PAS DE `\b` APRÈS « GÉNÉRÉ », ET LE PIÈGE VAUT D'ÊTRE ÉCRIT : en JavaScript, hors mode
+// Unicode, `\b` considère « É » comme un caractère NON-MOT. Entre « É » et l'espace qui suit il
+// n'y a donc aucune frontière de mot, et le motif ne correspondait à rien — sur un marqueur
+// français, la précaution habituelle devient exactement ce qui casse la détection.
+export const MOTIF_DOCUMENT_GENERE = /<!--\s*DOCUMENT GÉNÉRÉ/i;
+
 // ============================================================================================
 // L'AXE « NATURE » DES DOCUMENTS (2026-09-27, tâche #249 — son point 12)
 // ============================================================================================
@@ -2875,6 +2885,16 @@ export function classerUnDocument(chemin, texte = "", { alias = null, executable
   const dossier = c.match(MOTIF_DOSSIER_D_OUTIL);
   if (dossier && executables && executables.has(dossier[1])) {
     return { chemin: c, etat: "MEMOIRE", pourquoi: `déposé dans le registre de « ${dossier[1]} » : c'est ce que cet outil a écrit en tournant, jamais une règle`, source: "dossier d'outil" };
+  }
+  // UN DOCUMENT ENTIÈREMENT GÉNÉRÉ NE S'EMPORTE PAS : ON EMPORTE SON GÉNÉRATEUR (2026-10-03,
+  // tâche #1539). Le marqueur n'est pas une convention de nommage de plus — il est posé par
+  // l'outil qui écrit le fichier, et c'est le signal le plus fiable qu'on puisse avoir : le
+  // document est un INSTANTANÉ de l'état de CE dépôt, reproductible en relançant la commande.
+  // L'emporter livrerait les chiffres d'un autre projet ; ce qui voyage est le script, déjà
+  // classé PART par son propre kit. Dérivé du contenu, jamais d'une liste (Article 24) : un
+  // rapport généré créé demain est classé sans qu'on touche à ce fichier.
+  if (MOTIF_DOCUMENT_GENERE.test(texte)) {
+    return { chemin: c, etat: "MEMOIRE", pourquoi: "document produit intégralement par un outil : c'est un instantané de CE dépôt, reproductible en relançant la commande. Ce qui voyage est son générateur, jamais sa sortie", source: "marqueur de document généré" };
   }
   const mentions = compterMentionsDuJeu(texte);
   if (mentions >= seuilJeu) {

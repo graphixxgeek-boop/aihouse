@@ -1330,6 +1330,16 @@ export const FORMES_CONNUES = [
   { nom: "### N.N Titre", motif: /^### (\d+)\.(\d+) (.+?)\s*$/gm, prefixe: "§", champs: (m) => ({ numero: `${m[1]}.${m[2]}`, titre: m[3].trim() }) },
   { nom: "## N. Titre", motif: /^## (\d+\w*)\. (.+?)\s*$/gm, prefixe: "§", champs: (m) => ({ numero: m[1], titre: m[2].trim() }) },
   { nom: "### N. Titre", motif: /^### (\d+\w*)\. (.+?)\s*$/gm, prefixe: "§", champs: (m) => ({ numero: m[1], titre: m[2].trim() }) },
+  // AJOUTÉE LE 2026-10-03 (tâche #1539), ET SON ABSENCE ÉTAIT UN TROU MAJEUR : le document de
+  // GOUVERNANCE — le second texte suprême du projet, 71 articles — écrit ses articles en TITRE
+  // (`## Article N — Titre`) là où la charte les écrit en gras au fil du texte. Aucune des quatre
+  // formes connues ne le reconnaissait, donc la classification des règles rendait « aucune forme
+  // de numérotation reconnue » sur lui. Ce n'était pas faux — c'était PAS MESURÉ, honnêtement
+  // déclaré — mais ça laissait le texte qui tranche les conflits de valeurs hors de toute mesure
+  // de protection, sans que personne ne puisse le savoir en lisant le rapport. Corrigé en
+  // AJOUTANT LA FORME plutôt qu'en traitant ce document à part (leçon L37 : la classe, jamais
+  // l'occurrence) — tout document qui titrera ses articles ainsi est désormais classable.
+  { nom: "## Article N — Titre", motif: /^#{2,3} Article (\d+\w*)\s*[—–-]\s*(.+?)\s*$/gm, prefixe: "article", champs: (m) => ({ numero: m[1], titre: m[2].trim() }) },
 ];
 
 export const UNITES_MINIMUM = 3;
@@ -2227,6 +2237,262 @@ export function findCitationsSansLoi({ organisation, fichiers = new Map() } = {}
   return { mesurable: true, mortes, fichiersLus: fichiers.size };
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LA CLASSIFICATION DES LOIS ET DES RÈGLES (tâche #1539)
+// ————————————————————————————————————————————————————————————————————————
+//
+// CINQ DE SES POINTS DEMANDAIENT LE MÊME DOCUMENT (P32, P33, P34, P37, P40), et la mesure lui a
+// donné raison : `docs/referentiel/` porte neuf documents de règles et AUCUN n'est celui-là.
+//
+// CE QU'IL A LUI-MÊME TRANCHÉ, et c'est ce qui évite d'inventer une échelle de plus : « les six
+// niveaux de protection d'une règle sont DÉJÀ un axe de classement, à réutiliser plutôt qu'à
+// réinventer ». `NIVEAUX_GARANTIE` est donc repris tel quel — une seconde échelle aurait divergé
+// de la première au premier mécanisme nouveau (leçon L29).
+//
+// CE QUE CE BLOC AJOUTE ET QUE RIEN NE PORTAIT : la classification descendait jusqu'aux RÈGLES
+// d'un document, jamais jusqu'au DOCUMENT lui-même. On savait dire « l'Article 7 est à niveau 2 »
+// et on ne savait pas dire « la charte, dans son ensemble, est à tel niveau » — ce qui est
+// précisément sa demande (3) : « écrire, de façon DYNAMIQUE, le niveau de protection des six
+// textes qui font loi ».
+//
+// LE NIVEAU D'UN TEXTE EST LA MÉDIANE DE SES RÈGLES, jamais leur moyenne ni leur maximum, et le
+// choix se défend : une moyenne sur une échelle ordinale n'a pas de sens (il n'y a pas « 2,4 » de
+// protection), et un maximum dirait qu'une charte est bloquante parce qu'UNE de ses trente-trois
+// règles l'est. La médiane dit ce que vaut la règle du milieu, c'est-à-dire ce à quoi on peut
+// s'attendre en en ouvrant une au hasard. Le minimum est rendu À CÔTÉ, parce que c'est lui qui dit
+// où le document est le plus faible — et les deux ensemble valent mieux qu'un seul chiffre.
+
+// LES NOMS D'USAGE, parce que « CLAUDE.md » ne se cite pas dans une phrase. Liste MANUELLE et
+// assumée (Article 24, second cas d'exemption) : un nom d'usage ne se dérive d'aucun chemin — il
+// se décide. Le garde-fou `findLoisSansNomDUsage()` refuse qu'elle diverge du registre des lois
+// dans les DEUX sens (BP4) : une loi sans nom, et un nom qui désigne une loi disparue.
+export const NOMS_DUSAGE_DES_LOIS = {
+  "CLAUDE.md": { nom: "la Charte", prefixe: "Article", court: "Art." },
+  "docs/philosophie-et-politique.md": { nom: "le document de gouvernance", prefixe: "article", court: "art." },
+  "docs/regles-de-travail.md": { nom: "les règles de travail", prefixe: null, court: null },
+  "docs/systeme-de-suivi.md": { nom: "le système de suivi", prefixe: null, court: null },
+  "docs/loi-de-l-agence.md": { nom: "la loi de l'Agence", prefixe: null, court: null },
+  "docs/manifeste-de-l-agence.md": { nom: "le manifeste de l'Agence", prefixe: null, court: null },
+};
+
+export function findLoisSansNomDUsage({ lois = [], noms = NOMS_DUSAGE_DES_LOIS } = {}) {
+  const ecarts = [];
+  const chemins = new Set(lois.map((l) => l.chemin));
+  for (const l of lois) {
+    if (!noms[l.chemin]) ecarts.push(`${l.chemin} fait loi et n'a aucun nom d'usage : on ne peut pas le citer dans une phrase, donc il sera cité par son chemin — ce que sa correction de format (P37) interdit.`);
+  }
+  for (const chemin of Object.keys(noms)) {
+    if (!chemins.has(chemin)) ecarts.push(`${chemin} a un nom d'usage mais ne fait plus loi : un nom qui désigne un texte disparu ressemble à un renvoi, ce qui est pire qu'une absence.`);
+  }
+  return ecarts;
+}
+
+// SA CORRECTION DE FORMAT (P37), appliquée telle qu'il l'a écrite : « Article N de la Charte
+// (Art. N au sujet de S) » pour la charte, de même pour la gouvernance, et les quatre autres
+// textes par leur NOM suivi de « au sujet de S ». Un texte qui ne numérote pas n'a pas de numéro à
+// citer — lui en inventer un serait exactement la référence morte que l'Article 28 refuse.
+// « DE » SE CONTRACTE, ET LA PREMIÈRE VERSION RENDAIT « article 72 de LE document de gouvernance ».
+// Le filet l'a refusée : une citation fautive dans le document qui définit COMMENT citer aurait
+// été le pire endroit possible pour une faute de français. La contraction est faite une seule fois
+// ici plutôt qu'à chaque appel, parce que le prochain nom d'usage la referait à la main.
+export function deElide(texte = "") {
+  const t = String(texte).trim();
+  if (/^les\s/i.test(t)) return `des ${t.slice(4)}`;
+  if (/^le\s/i.test(t)) return `du ${t.slice(3)}`;
+  if (/^l['’]/i.test(t)) return `de ${t}`;
+  return `de ${t}`;
+}
+
+export function citationCanonique({ chemin, numero = null, sujet = "", noms = NOMS_DUSAGE_DES_LOIS } = {}) {
+  const n = noms[chemin];
+  if (!n) return { mesurable: false, pourquoi: `${chemin} n'a pas de nom d'usage : impossible de le citer dans une phrase` };
+  const s = String(sujet).trim();
+  if (!n.prefixe || numero === null || numero === undefined) {
+    return { mesurable: true, citation: s ? `${n.nom} au sujet ${deElide(s)}` : n.nom };
+  }
+  const tete = `${n.prefixe} ${numero} ${deElide(n.nom)}`;
+  const parenthese = s ? ` (${n.court} ${numero} au sujet ${deElide(s)})` : "";
+  return { mesurable: true, citation: `${tete}${parenthese}` };
+}
+
+export function medianeDesNiveaux(niveaux = []) {
+  if (!niveaux.length) return null;
+  const tries = [...niveaux].sort((a, b) => a - b);
+  const milieu = Math.floor(tries.length / 2);
+  // Sur une échelle ORDINALE, la médiane d'un compte pair se prend EN BAS plutôt qu'à la moyenne
+  // des deux du milieu : « 2,5 » de protection ne désigne aucun mécanisme réel, et arrondir vers
+  // le haut surestimerait la protection — l'erreur la plus coûteuse des deux.
+  return tries.length % 2 ? tries[milieu] : tries[milieu - 1];
+}
+
+export function niveauDUnTexte(classement = {}, { niveaux = NIVEAUX_GARANTIE } = {}) {
+  const lignes = classement.lignes ?? [];
+  if (!lignes.length) return { mesurable: false, pourquoi: "aucune règle mesurée dans ce texte — un niveau rendu sur zéro règle se lirait comme un verdict (leçon L5)" };
+  const g = lignes.map((l) => l.garantieNiveau).filter((n) => Number.isInteger(n));
+  if (!g.length) return { mesurable: false, pourquoi: "les règles ont été découpées mais aucune n'a reçu de niveau de garantie" };
+  const mediane = medianeDesNiveaux(g);
+  const minimum = Math.min(...g);
+  const libelle = (n) => (niveaux.find((x) => x.niveau === n) ?? {}).libelle ?? String(n);
+  const sansRien = g.filter((n) => n === 0).length;
+  return {
+    mesurable: true, regles: g.length, mediane, minimum,
+    medianeLibelle: libelle(mediane), minimumLibelle: libelle(minimum),
+    sansRien, partSansRien: g.length ? sansRien / g.length : 0,
+  };
+}
+
+// LES TROUS DE NUMÉROTATION, trouvés au premier passage réel et pas cherchés (tâche #1539) : le
+// document de gouvernance numérote ses articles de 2 à 72 et n'en porte que 45 — les numéros 38 à
+// 63 n'existent nulle part, sans qu'une ligne le dise. Ce n'est pas un détail de forme : dans un
+// texte qui fait loi, un numéro absent est une CITATION MORTE EN PUISSANCE — « article 45 du
+// document de gouvernance » a l'air d'un renvoi, et ne mène nulle part. Un trou DÉCLARÉ (une plage
+// réservée, une abrogation écrite) serait légitime ; c'est le silence qui ne l'est pas.
+export function findTrousDeNumerotation(numeros = []) {
+  const n = [...new Set(numeros.filter((x) => Number.isInteger(x)))].sort((a, b) => a - b);
+  if (n.length < 2) return [];
+  const trous = [];
+  for (let i = 1; i < n.length; i += 1) {
+    const ecart = n[i] - n[i - 1];
+    if (ecart > 1) trous.push({ apres: n[i - 1], avant: n[i], manquants: ecart - 1 });
+  }
+  return trous;
+}
+
+export function classificationDesLoisEtDesRegles({ lois = [], root = ".", lireImpl = null, fichiers = null } = {}) {
+  const ecarts = findLoisSansNomDUsage({ lois });
+  const lire = lireImpl ?? ((chemin) => readFileSync(join(root, chemin), "utf8"));
+  const corpus = fichiers ?? fichiersDuDepot({ racine: root });
+  const textes = [];
+  for (const loi of lois) {
+    let texte;
+    try { texte = lire(loi.chemin); } catch { textes.push({ ...loi, mesurable: false, pourquoi: "illisible ou absent du dépôt" }); continue; }
+    const nom = NOMS_DUSAGE_DES_LOIS[loi.chemin] ?? {};
+    const r = analyserDocument({ texte, chemin: loi.chemin, fichiers: corpus, forme: null });
+    if (!r.mesurable) {
+      // UN TEXTE QUI NE SE DÉCOUPE PAS N'EST PAS UN TEXTE SANS PROTECTION, et confondre les deux
+      // serait la faute que ce paysage corrige partout : il est PAS MESURÉ, et il le dit.
+      textes.push({ ...loi, nom: nom.nom ?? loi.chemin, mesurable: false, pourquoi: r.pourquoi ?? "aucune forme de règle numérotée ne ressort de ce texte" });
+      continue;
+    }
+    const classement = classerDocument(r.unites, corpus, { lire: (f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return ""; } }, prefixe: nom.prefixe ?? "Article" });
+    const numeros = r.unites.map((u) => Number(u.numero)).filter((x) => Number.isInteger(x));
+    textes.push({ ...loi, nom: nom.nom ?? loi.chemin, mesurable: true, forme: r.forme, classement, niveau: niveauDUnTexte(classement), trous: findTrousDeNumerotation(numeros) });
+  }
+  const mesures = textes.filter((t) => t.mesurable);
+  return {
+    ecarts, textes,
+    mesuresCount: mesures.length,
+    nonMesurees: textes.length - mesures.length,
+    reglesTotal: mesures.reduce((n, t) => n + (t.classement?.total ?? 0), 0),
+  };
+}
+
+export function lignesDeLaClassificationDesLois(r = {}, { date = "", niveaux = NIVEAUX_GARANTIE } = {}) {
+  const L = [];
+  L.push("<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->");
+  L.push("# Classification des lois et des règles");
+  L.push("");
+  L.push(`> Produit par \`node scripts/abraham-les-references.mjs classification\` le ${date}.`);
+  L.push("> Les six textes sont lus dans le registre du classificateur, leurs règles découpées et notées à chaque passage.");
+  L.push("");
+  L.push("## ① Les six niveaux de protection — l'échelle, et elle n'est pas inventée");
+  L.push("");
+  L.push("Chacun correspond à un mécanisme qui EXISTE dans ce dépôt et qu'on peut constater.");
+  L.push("");
+  L.push("| Niveau | Nom | Ce que c'est | Ce que ça ne protège pas |");
+  L.push("|---|---|---|---|");
+  for (const n of niveaux) L.push(`| ${n.niveau} | **${n.libelle}** | ${n.quoi} | ${n.cequecoute} |`);
+  L.push("");
+  L.push("## ② Le niveau de protection de chaque texte qui fait loi");
+  L.push("");
+  L.push("**La médiane, jamais la moyenne ni le maximum** : sur une échelle ordinale une moyenne ne désigne");
+  L.push("aucun mécanisme réel, et un maximum dirait qu'un texte est bloquant parce qu'UNE de ses règles l'est.");
+  L.push("Le minimum est donné à côté : c'est lui qui dit où le texte est le plus faible.");
+  L.push("");
+  L.push("| Texte | Règles | Niveau médian | Le plus faible | Règles sans aucun porteur |");
+  L.push("|---|---|---|---|---|");
+  for (const t of r.textes ?? []) {
+    if (!t.mesurable) { L.push(`| **${t.nom ?? t.chemin}** | — | *PAS MESURÉ* | — | — |`); continue; }
+    const n = t.niveau;
+    L.push(`| **${t.nom}** | ${t.classement.total} | ${n.mesurable ? `${n.mediane} — ${n.medianeLibelle}` : "*PAS MESURÉ*"} | ${n.mesurable ? `${n.minimum} — ${n.minimumLibelle}` : "—"} | ${n.mesurable ? `${n.sansRien} (${Math.round(n.partSansRien * 100)} %)` : "—"} |`);
+  }
+  L.push("");
+  const muets = (r.textes ?? []).filter((t) => !t.mesurable);
+  if (muets.length) {
+    L.push("### Ce qui n'a PAS pu être mesuré, et pourquoi");
+    L.push("");
+    L.push("Un texte qui ne se découpe pas n'est pas un texte sans protection : les deux se liraient pareil");
+    L.push("et appellent des gestes opposés.");
+    L.push("");
+    for (const t of muets) L.push(`- **${t.nom ?? t.chemin}** — ${t.pourquoi}`);
+    L.push("");
+  }
+  const avecTrous = (r.textes ?? []).filter((t) => t.mesurable && (t.trous ?? []).length);
+  if (avecTrous.length) {
+    L.push("### Les trous de numérotation");
+    L.push("");
+    L.push("Dans un texte qui fait loi, un numéro absent est une **citation morte en puissance** : « article 45 du");
+    L.push("document de gouvernance » a l'air d'un renvoi et ne mène nulle part. Un trou DÉCLARÉ serait légitime ;");
+    L.push("c'est le silence qui ne l'est pas.");
+    L.push("");
+    for (const t of avecTrous) {
+      const total = t.trous.reduce((n, x) => n + x.manquants, 0);
+      L.push(`- **${t.nom}** — ${total} numéro(s) manquant(s) : ${t.trous.map((x) => (x.manquants === 1 ? `${x.apres + 1}` : `${x.apres + 1} à ${x.avant - 1}`)).join(" · ")}`);
+    }
+    L.push("");
+  }
+  L.push("## ③ Comment citer une règle sans ambiguïté");
+  L.push("");
+  L.push("Sa correction de format, appliquée telle qu'il l'a écrite.");
+  L.push("");
+  L.push("| Texte | Comment on le cite |");
+  L.push("|---|---|");
+  for (const [chemin, n] of Object.entries(NOMS_DUSAGE_DES_LOIS)) {
+    const ex = citationCanonique({ chemin, numero: n.prefixe ? 19 : null, sujet: "comprendre avant de toucher" });
+    L.push(`| \`${chemin}\` | ${ex.mesurable ? ex.citation : ex.pourquoi} |`);
+  }
+  L.push("");
+  L.push("## ④ Le détail, texte par texte");
+  L.push("");
+  for (const t of r.textes ?? []) {
+    L.push(`### ${t.nom ?? t.chemin}`);
+    L.push("");
+    L.push(`\`${t.chemin}\` — ${t.pourquoi ?? ""}`);
+    L.push("");
+    if (!t.mesurable) { L.push("*PAS MESURÉ : ce texte ne se découpe pas en règles numérotées.*"); L.push(""); continue; }
+    L.push("| Niveau de protection | Nombre de règles |");
+    L.push("|---|---|");
+    for (const n of niveaux) {
+      const c = t.classement.lignes.filter((l) => l.garantieNiveau === n.niveau).length;
+      L.push(`| ${n.niveau} — ${n.libelle} | ${c} |`);
+    }
+    L.push("");
+  }
+  L.push("## ⑤ Ce que cette mesure NE dit pas");
+  L.push("");
+  L.push("**Un texte à niveau 0 n'est pas un texte mal écrit.** Le niveau mesure ce qui PORTE une règle —");
+  L.push("un test, un crochet, un contrôleur, ou une impossibilité déclarée. Un texte de valeurs qui tranche");
+  L.push("des conflits de principe ne nomme aucun mécanisme PAR CONSTRUCTION, et le lui reprocher serait le");
+  L.push("garde-fou qui accuse à tort. Ce que le chiffre dit, et c'est déjà beaucoup : si ce texte est enfreint,");
+  L.push("rien dans le dépôt ne s'en apercevra — il faudra qu'un humain le remarque.");
+  L.push("");
+  L.push("# PLAN D'ACTION");
+  L.push("");
+  L.push("| État | Constat | Suite |");
+  L.push("|---|---|---|");
+  L.push("| ✅ MESURÉ | les six niveaux de protection sont réutilisés tels quels, jamais une échelle de plus | #1539 |");
+  const gouv = (r.textes ?? []).find((t) => /gouvernance/.test(t.nom ?? ""));
+  if (gouv && gouv.mesurable) L.push(`| ? À INSTRUIRE | le document de gouvernance : ${gouv.niveau.sansRien} de ses ${gouv.classement.total} articles n'ont AUCUN porteur. Est-ce normal pour un texte de valeurs, ou faut-il en porter une partie ? | #1539 |`);
+  for (const t of avecTrous) {
+    const total = t.trous.reduce((n, x) => n + x.manquants, 0);
+    L.push(`| ? À TRANCHER | ${t.nom} : ${total} numéros manquants, non déclarés. Plage réservée, ou articles perdus ? | #1539 |`);
+  }
+  for (const t of muets) L.push(`| ? À INSTRUIRE | ${t.nom ?? t.chemin} fait loi et ne se découpe pas en règles : ses obligations sont hors de toute mesure de protection | #1539 |`);
+  L.push("");
+  L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
+}
+
 export function formatLoisLines(o, c) {
   if (!o?.mesurable) return ["=== L'ORGANISATION DES LOIS : PAS MESURÉ ===", `  ${o?.pourquoi}`];
   const L = ["=== L'ORGANISATION DES LOIS — qui numérote, et comment citer sans ambiguïté ===", "",
@@ -2269,6 +2535,27 @@ async function main() {
   // le second répond au premier, jamais à chaque commit.
   // `lois` — l'organisation des textes qui font loi (tâche #1445). À la main : la question ne se
   // pose qu'au moment où l'on cite, jamais à chaque commit.
+  // `classification` — le document unique « classification des lois et des règles » (tâche #1539,
+  // ses points P32/P33/P34/P37/P40, qui demandaient tous le même document). À la main : il
+  // reclasse les six textes entiers, ce qui n'a de sens qu'au moment où on le livre.
+  if (arg1 === "classification") {
+    printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — classification des lois et des règles", scriptPath: "scripts/abraham-les-references.mjs" });
+    printReliabilityNotice("abraham-les-references");
+    recordCliUsage("abraham-les-references");
+    const { DOCUMENTS_QUI_FONT_LOI } = await import("./le-classificateur.mjs");
+    const date = arg2 && /^\d{4}-\d{2}-\d{2}$/.test(arg2) ? arg2 : new Date().toISOString().slice(0, 10);
+    const r = classificationDesLoisEtDesRegles({ lois: DOCUMENTS_QUI_FONT_LOI, root: "." });
+    for (const e of r.ecarts) console.log(`🚨 ${e}`);
+    console.log(`${r.textes.length} texte(s) qui font loi · ${r.mesuresCount} mesuré(s) · ${r.nonMesurees} PAS MESURÉ · ${r.reglesTotal} règle(s) classées.`);
+    for (const t of r.textes) {
+      if (!t.mesurable) { console.log(`  PAS MESURÉ — ${t.nom ?? t.chemin} : ${t.pourquoi}`); continue; }
+      console.log(`  ${t.nom} — ${t.classement.total} règle(s), médiane ${t.niveau.mediane} (${t.niveau.medianeLibelle}), plus faible ${t.niveau.minimum}, ${t.niveau.sansRien} sans aucun porteur`);
+    }
+    const sortie = `docs/referentiel/classification-des-lois-et-des-regles.md`;
+    writeFileSync(sortie, `${lignesDeLaClassificationDesLois(r, { date }).join("\n")}\n`, "utf8");
+    console.log(`\nÉcrit dans ${sortie}`);
+    return;
+  }
   if (arg1 === "lois") {
     printReportHeader({ tool: "abraham-les-references", title: "ABRAHAM — l'organisation des lois", scriptPath: "scripts/abraham-les-references.mjs" });
     printReliabilityNotice("abraham-les-references");

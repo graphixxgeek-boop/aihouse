@@ -26923,3 +26923,88 @@ async function testLaListeDuPackDecouverte() {
   console.log('Passed: la liste du PACK DÉCOUVERTE est LUE dans sa COMMANDE IMPORTANTE, jamais recopiée (#1533). Ses onze sujets — onze, pas les dix que l\'agent avait en tête, et c\'est précisément l\'argument de l\'Article 24 — sont extraits entre deux bornes, une phrase de contexte au milieu des puces n\'en devient pas un, et les mots que tout document du dépôt porte sont écartés sans quoi chaque sujet aurait correspondu à tout. La comparaison se fait sur le RADICAL parce que le premier passage réel a rendu « fonctions : zéro document » alors que le dépôt en porte plusieurs nommés « fonctionnement » — un faux manque, pire qu\'une absence de mesure. Les trois façons de casser la lecture parlent chacune, un zéro de sujets ne pouvant pas se confondre avec « aucun sujet ». ET LE VRAI PIÈGE A ÉTÉ PAYÉ EN DIRECT : walkDocsPaths() prend en second argument le PRÉFIXE À RETIRER, jamais un dossier de travail, et lui passer "." rendait des chemins amputés de leur première lettre — « ocs/livrables/… », une chaîne parfaitement plausible que rien ne signale, qui n\'a été vue que parce qu\'une exclusion refusait de se déclencher. Corrigé à la racine plutôt que chez l\'appelant (Article 3) : les deux formes qui veulent dire « rien à retirer » sont désormais traitées pareil, et les six appelants historiques rendent le résultat identique.');
 }
 await testLaListeDuPackDecouverte();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1539 — LA CLASSIFICATION DES LOIS ET DES RÈGLES, ET LE TEXTE SUPRÊME QU'ELLE NE VOYAIT PAS
+async function testLaClassificationDesLois() {
+  const A = await import('../scripts/abraham-les-references.mjs');
+  const C = await import('../scripts/le-classificateur.mjs');
+
+  // ── 1. L'ÉCHELLE EST RÉUTILISÉE, JAMAIS RÉINVENTÉE. C'est sa consigne (P33), et une seconde
+  // échelle aurait divergé de la première au premier mécanisme nouveau (leçon L29).
+  assert.strictEqual(A.NIVEAUX_GARANTIE.length, 6, 'the six protection levels are the ones that already existed');
+
+  // ── 2. LE NIVEAU D'UN TEXTE EST LA MÉDIANE DE SES RÈGLES, et le choix se défend. Une moyenne sur
+  // une échelle ordinale ne désigne aucun mécanisme réel ; un maximum dirait qu'une charte est
+  // bloquante parce qu'UNE de ses trente-trois règles l'est.
+  assert.strictEqual(A.medianeDesNiveaux([0, 0, 5]), 0, 'the median is the middle rule, not the strongest one — a maximum would call a charter blocking on the strength of one rule');
+  assert.strictEqual(A.medianeDesNiveaux([0, 2, 4, 5]), 2, 'on an even count it takes the LOWER of the two middles: rounding up would overstate the protection, the costlier of the two errors');
+  assert.strictEqual(A.medianeDesNiveaux([]), null, 'and no rules means no level, never zero — the two read alike and mean opposite things');
+  const vide = A.niveauDUnTexte({ lignes: [] });
+  assert.strictEqual(vide.mesurable, false, 'a text with no measured rule is PAS MESURÉ, never level 0');
+
+  // ── 3. SA CORRECTION DE FORMAT (P37), appliquée telle qu'il l'a écrite — et un texte qui ne
+  // numérote pas n'a pas de numéro à citer : lui en inventer un serait une référence morte.
+  assert.strictEqual(A.citationCanonique({ chemin: 'CLAUDE.md', numero: 19, sujet: 'comprendre avant de toucher' }).citation,
+    'Article 19 de la Charte (Art. 19 au sujet de comprendre avant de toucher)', 'his exact format for the charter');
+  assert.strictEqual(A.citationCanonique({ chemin: 'docs/philosophie-et-politique.md', numero: 72, sujet: 'le contrôle de fidélité' }).citation,
+    'article 72 du document de gouvernance (art. 72 au sujet du contrôle de fidélité)', 'and the same shape for governance, lowercase as the document writes it');
+  assert.strictEqual(A.citationCanonique({ chemin: 'docs/loi-de-l-agence.md', sujet: 'la finalité du client' }).citation,
+    "la loi de l'Agence au sujet de la finalité du client", 'a text that does not number is cited by its name followed by its subject — never by an invented number');
+  // « DE » SE CONTRACTE, et la première version rendait « article 72 de LE document de
+  // gouvernance ». Le filet l'a refusée, et c'était le pire endroit possible pour une faute de
+  // français : le document qui définit comment citer.
+  assert.strictEqual(A.deElide('le document'), 'du document', '"de le" contracts');
+  assert.strictEqual(A.deElide('les règles'), 'des règles', 'so does "de les"');
+  assert.strictEqual(A.deElide("l'Agence"), "de l'Agence", 'an elided article keeps "de"');
+  assert.strictEqual(A.deElide('la Charte'), 'de la Charte', 'and the feminine is left alone');
+  assert.strictEqual(A.citationCanonique({ chemin: 'docs/inconnu.md' }).mesurable, false, 'and a text with no usage name says so rather than being cited by its path');
+
+  // ── 4. LE REGISTRE DES NOMS D'USAGE NE PEUT PAS DIVERGER DU REGISTRE DES LOIS, dans les deux
+  // sens (BP4) : une loi sans nom ne serait pas citable, un nom sans loi serait un faux renvoi.
+  assert.deepStrictEqual(A.findLoisSansNomDUsage({ lois: C.DOCUMENTS_QUI_FONT_LOI }), [], 'against the real registry the two agree today');
+  assert.match(A.findLoisSansNomDUsage({ lois: [{ chemin: 'docs/neuf.md' }], noms: {} })[0], /aucun nom d'usage/, 'a new law with no usage name is named');
+  assert.match(A.findLoisSansNomDUsage({ lois: [], noms: { 'docs/parti.md': { nom: 'x' } } })[0], /ne fait plus loi/, 'and a usage name pointing at a vanished law too');
+
+  // ── 5. LES TROUS DE NUMÉROTATION, trouvés au premier passage et pas cherchés. Dans un texte qui
+  // fait loi, un numéro absent est une citation morte en puissance.
+  assert.deepStrictEqual(A.findTrousDeNumerotation([1, 2, 3]), [], 'a continuous numbering has no hole');
+  assert.deepStrictEqual(A.findTrousDeNumerotation([1, 5]), [{ apres: 1, avant: 5, manquants: 3 }], 'and a gap is reported with its width');
+  assert.deepStrictEqual(A.findTrousDeNumerotation([7]), [], 'a single number cannot have a hole after it — guessing one would invent an upper bound');
+
+  // ── 6. ET LE VRAI TROU, TROUVÉ AU PREMIER PASSAGE RÉEL : le document de GOUVERNANCE — le second
+  // texte suprême du projet — titre ses articles (`## Article N — Titre`) là où la charte les
+  // écrit en gras au fil du texte. Aucune des quatre formes connues ne le reconnaissait, donc 45
+  // articles du texte qui tranche les conflits de valeurs étaient hors de toute mesure de
+  // protection. Corrigé en AJOUTANT LA FORME, jamais en traitant ce document à part (leçon L37).
+  // ── 6bis. UN DOCUMENT ENTIÈREMENT GÉNÉRÉ NE S'EMPORTE PAS : on emporte son générateur. Dérivé
+  // du MARQUEUR que l'outil pose lui-même, jamais d'une liste de chemins (Article 24).
+  const marque = "<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil -->\n# Rapport";
+  assert.strictEqual(C.classerUnDocument('docs/referentiel/x.md', marque).etat, 'MEMOIRE', 'a wholly generated document is a snapshot of THIS repository: shipping it would deliver another project’s figures');
+  assert.match(C.classerUnDocument('docs/referentiel/x.md', marque).source, /marqueur/, 'and it says which signal decided');
+  // LE PIÈGE, PAYÉ EN DIRECT : un `\b` après « GÉNÉRÉ » ne correspond à RIEN, parce que hors mode
+  // Unicode JavaScript tient « É » pour un caractère non-mot — il n'y a donc aucune frontière
+  // entre lui et l'espace suivant. Sur un marqueur français, la précaution habituelle casse la
+  // détection, et le motif rendait faux sur le document même qu'il venait d'écrire.
+  assert.ok(C.MOTIF_DOCUMENT_GENERE.test('<!-- DOCUMENT GÉNÉRÉ — produit par un outil -->'), 'the marker matches the real text an em-dash follows');
+  assert.ok(!C.MOTIF_DOCUMENT_GENERE.test('# Un document écrit à la main'), 'and never a hand-written one');
+
+  const titree = A.FORMES_CONNUES.find((f) => f.nom === '## Article N — Titre');
+  assert.ok(titree, 'the heading form exists');
+  const reel = A.classificationDesLoisEtDesRegles({ lois: C.DOCUMENTS_QUI_FONT_LOI, root: '.' });
+  assert.deepStrictEqual(reel.ecarts, [], 'the real run has nothing to report about its own registries');
+  assert.strictEqual(reel.textes.length, 6, 'the six law texts are read from the classifier registry, never recopied here');
+  const gouv = reel.textes.find((t) => /gouvernance/.test(t.nom));
+  assert.strictEqual(gouv.mesurable, true, 'and governance is now measured — before this form it returned "no numbering recognised", which was honest and left the project’s second supreme text entirely unclassified');
+  assert.ok(gouv.classement.total >= 40, `its ${gouv.classement.total} articles are classified`);
+  assert.ok(gouv.trous.length >= 1, 'its undeclared numbering gap is reported: 26 numbers nothing carries, in a text whose articles get cited by number');
+
+  // ── 7. ET TROIS TEXTES RESTENT PAS MESURÉ, ce qui n'est PAS la même chose que sans protection.
+  // Les confondre serait la faute que ce paysage corrige partout (leçon L5).
+  const muets = reel.textes.filter((t) => !t.mesurable);
+  assert.strictEqual(muets.length, 3, 'three law texts carry obligations in prose and cannot be cut into numbered rules');
+  assert.ok(muets.every((t) => t.pourquoi && t.pourquoi.length > 20), 'and each says why rather than returning a zero that would read as a clean bill of health');
+
+  console.log('Passed: la classification des lois et des règles, et le texte suprême qu\'elle ne voyait pas (2026-10-03, tâche #1539). CINQ DE SES POINTS DEMANDAIENT LE MÊME DOCUMENT (P32/P33/P34/P37/P40) et la mesure lui a donné raison : le référentiel portait neuf documents de règles et aucun n\'était celui-là. L\'ÉCHELLE EST RÉUTILISÉE TELLE QUELLE, comme il l\'a demandé — une seconde échelle aurait divergé de la première au premier mécanisme nouveau. LE NIVEAU D\'UN TEXTE EST LA MÉDIANE DE SES RÈGLES, jamais la moyenne (qui ne désigne aucun mécanisme réel sur une échelle ordinale) ni le maximum (qui dirait qu\'une charte est bloquante parce qu\'UNE de ses trente-trois règles l\'est), et sur un compte pair elle prend le bas, parce que surestimer la protection est la plus coûteuse des deux erreurs. ET LE PREMIER PASSAGE RÉEL A TROUVÉ LE TROU QUI COMPTE : le document de GOUVERNANCE — le second texte suprême du projet, celui qui tranche les conflits de valeurs — titre ses articles là où la charte les écrit en gras, et aucune des quatre formes connues ne le reconnaissait. Ses 45 articles étaient donc hors de toute mesure de protection, et le rapport disait « aucune forme reconnue », ce qui était honnête et illisible. Corrigé en AJOUTANT LA FORME plutôt qu\'en traitant ce document à part (leçon L37) : tout texte qui titrera ainsi est désormais classable. LA MESURE QUI EN SORT EST DURE ET ELLE EST RENDUE TELLE QUELLE : 44 de ses 45 articles n\'ont AUCUN porteur, et 26 numéros manquent entre 38 et 63 sans qu\'une ligne le déclare — dans un texte qui se cite par numéro, un numéro absent est une citation morte en puissance. Le rapport dit aussi ce que ce chiffre NE dit pas, parce qu\'un texte de valeurs ne nomme aucun mécanisme par construction et qu\'un garde-fou qui accuse à tort cesse d\'être lu (leçon L4).');
+}
+await testLaClassificationDesLois();
