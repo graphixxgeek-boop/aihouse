@@ -88,7 +88,18 @@ Sa phrase du 2026-10-02 : « raisonnablement l'agence ne peut pas débarquer ave
 d'atteinte** : même soixante-quatre parts simultanées auraient atterri à 123 s. Aujourd'hui, la
 même formule donne 30,5 s à dix parts et 26,5 s à douze.
 
-**La cible est devenue une question de machine, ce qu'elle n'était pas ce matin.**
+**ET J'AI DÛ CORRIGER ÇA AUSSI, une heure plus tard.** La formule supposait un travail infiniment
+divisible. Il ne l'est pas : **le test le plus lourd pèse 32,3 s à lui seul** et tombe dans une
+part, entière. Le vrai plancher est donc **52,3 s**, et aucun nombre de cœurs ne passera dessous.
+
+**La conclusion corrigée est plus utile que la fausse** : acheter des cœurs ne mènera jamais sous la
+demi-minute. Le prochain levier n'est plus le découpage, c'est le **coût des quelques tests qui
+balaient tout le dépôt** — dix d'entre eux pèsent 57 % du filet, vingt en pèsent 73 %.
+
+*(Et c'est la réparation du chronomètre qui a rendu ce plafond visible : tant que 83 % des durées
+étaient attribuées au mauvais test, « le test le plus lourd » ne voulait rien dire. Réparer une
+mesure fait apparaître un plafond que personne ne voyait — la projection à quatre parts annonce
+maintenant 80,8 s contre 80,5 s réellement mesurées, là où elle se trompait de quatorze secondes.)*
 
 ## La question qui reste, et elle est pour lui
 

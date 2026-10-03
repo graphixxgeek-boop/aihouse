@@ -709,13 +709,34 @@ export function plancherDuParallelisme({ src = "", mesures = [], parts = [2, 3, 
   const msDeplacables = poids(deplacables) + msAppels;
   const total = mesures.reduce((a, m) => a + (m.ms ?? 0), 0);
   const msEpine = Math.max(0, total - msSocle - msDeplacables);
-  const plancher = msSocle + msEpine;
+  // LE PLANCHER OUBLIAIT QU'UNE UNITÉ NE SE COUPE PAS EN DEUX (2026-10-03, tâche #1589).
+  //
+  // La formule `socle + épine + divisible ÷ parts` suppose un travail infiniment divisible. Il ne
+  // l'est pas : la plus grosse unité tombe dans UNE part, entière, et cette part ne peut pas finir
+  // avant elle. Le vrai plancher est donc `socle + épine + la plus lourde`.
+  //
+  // CE N'EST DEVENU VISIBLE QU'APRÈS #1582, et c'est l'enchaînement qui est instructif : tant que
+  // 83 % des durées étaient attribuées au mauvais groupe, « la plus lourde » ne voulait rien dire.
+  // Une fois les poids justes, elle se lit — 32,3 s pour un seul bloc — et elle fait passer le
+  // plancher de 20 s à 52 s. **Réparer une mesure fait apparaître un plafond que personne ne
+  // voyait**, ce qui est exactement l'inverse de ce qu'on attend d'une réparation.
+  //
+  // CE QUE ÇA CHANGE CONCRÈTEMENT : la projection « à 16 parts → 21 s » était un mensonge
+  // arithmétique. Aucun nombre de parts ne descendra sous 52 s tant qu'un seul test en coûtera 32.
+  // Le prochain levier n'est plus le découpage, c'est le COÛT des quelques tests qui balaient tout
+  // le dépôt — dix d'entre eux pèsent 57 % du filet.
+  const poidsUnite = (b) => mesures.filter((m) => m.ligne >= b.debut && m.ligne <= b.fin).reduce((x, m) => x + (m.ms ?? 0), 0);
+  const toutes = [...deplacables.map((b) => ({ ms: poidsUnite(b), quoi: `bloc ligne ${b.debut}` })), ...uA.retenues.map((u) => ({ ms: u.ms ?? 0, quoi: u.nom }))];
+  const plusLourde = toutes.sort((x, y) => y.ms - x.ms)[0] ?? { ms: 0, quoi: null };
+  const plancherSansGrain = msSocle + msEpine;
+  const plancher = plancherSansGrain + plusLourde.ms;
   return {
-    mesurable: true, total, msSocle, msDeplacables, msEpine, plancher,
+    mesurable: true, total, msSocle, msDeplacables, msEpine, plancher, plancherSansGrain,
+    plusLourdeMs: plusLourde.ms, plusLourde: plusLourde.quoi,
     msAppels, appels: uA.retenues.length, appelsRefuses: uA.refusees.length,
     blocs: blocs.length, socle: socle.length, deplacables: deplacables.length,
     partDeLEpine: total ? msEpine / total : 0,
-    projection: parts.map((n) => ({ parts: n, msTheorique: plancher + msDeplacables / n })),
+    projection: parts.map((n) => ({ parts: n, msTheorique: Math.max(plancher, plancherSansGrain + msDeplacables / n) })),
     // LA LIMITE EST DÉCLARÉE PLUTÔT QUE TUE : l'attribution ligne→durée vient du recollage
     // d'Ezechiel, qui se déclare INCOMPLET quand une fonction imprime plusieurs « Passed ». Le
     // TOTAL reste juste ; le partage entre épine et blocs ne vaut que corroboré par un lancement
@@ -847,7 +868,8 @@ export function formatPlancherLines(p = {}) {
   L.push(`  socle (blocs attachés à l'état commun)        : ${s(p.msSocle)}`);
   L.push(`  travail réellement divisible                  : ${s(p.msDeplacables)}`);
   L.push(`    dont unités d'APPEL (#1578)                 : ${s(p.msAppels ?? 0)} sur ${p.appels ?? 0} appel(s), ${p.appelsRefuses ?? 0} refusé(s) et laissé(s) au socle`);
-  L.push(`  PLANCHER = ${s(p.plancher)} — aucun nombre de parts ne descend en dessous.`);
+  L.push(`  l'unité la plus LOURDE                      : ${s(p.plusLourdeMs ?? 0)}${p.plusLourde ? ` (${p.plusLourde})` : ""} — elle tombe dans UNE part, entière`);
+  L.push(`  PLANCHER = ${s(p.plancher)} — aucun nombre de parts ne descend en dessous (${s(p.plancherSansGrain ?? 0)} d'indivisible + la plus lourde, qui ne se coupe pas en deux).`);
   for (const x of p.projection) L.push(`    à ${x.parts} parts → ${s(x.msTheorique)} en théorie`);
   L.push(`  HORS PORTÉE : ${p.horsPortee}`);
   return L;

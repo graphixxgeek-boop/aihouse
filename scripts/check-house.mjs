@@ -27460,7 +27460,12 @@ async function testLeFiletEnPartsRepare() {
     assert.ok(p.plancher > 0 && p.plancher < p.total, `the floor exists and is below the total (${Math.round(p.plancher / 1000)} s of ${Math.round(p.total / 1000)} s): it is what no number of parts can divide, whatever its size on the day`);
     assert.ok(p.msEpine + p.msSocle + p.msDeplacables === p.total, 'and the three shares really do add up to the measured total: a floor computed on a partial split would be a floor computed on nothing');
     assert.ok(p.projection.every((x, i, t) => i === 0 || x.msTheorique <= t[i - 1].msTheorique), 'more parts never costs more time, and the projection shows where the gain stops');
-    assert.ok(p.projection[p.projection.length - 1].msTheorique > p.plancher, 'and no projection ever dips below the floor — which is the whole point of computing it');
+    // DEPUIS #1589 LA DERNIÈRE PROJECTION TOUCHE LE PLANCHER AU LIEU DE LE SURVOLER, et c'est le
+    // correctif lui-même : à très grand nombre de parts, le temps tend vers l'indivisible PLUS la
+    // plus grosse unité, qui ne se coupe pas en deux. L'assertion vérifie donc qu'aucune
+    // projection ne PASSE SOUS le plancher — ce qui reste tout l'intérêt de le calculer — et non
+    // qu'elle reste au-dessus, ce qui n'était vrai que du modèle d'avant.
+    assert.ok(p.projection.every((x) => x.msTheorique >= p.plancher), 'and no projection ever dips below the floor — which is the whole point of computing it');
     assert.ok(typeof p.horsPortee === 'string' && p.horsPortee.length > 40, 'the limit is declared with the result: the line→duration attribution rests on a pairing that declares itself incomplete');
   }
 
@@ -27947,3 +27952,45 @@ async function testLeCrochetEnPartsEtLaBarreQuiVieillit() {
   console.log('Passed: le crochet passe au parallèle, et la barre de comparaison se met à vieillir (2026-10-03, tâche #1586). SA DÉCISION, PRISE EN FENÊTRE DÉDIÉE : « parallèle, repli auto si une part tombe ». Elle revient sur l\'arbitrage de septembre — « le séquentiel reste la référence » — et c\'est la MESURE qui l\'a rendue possible, jamais une préférence : le filet met 84 s en quatre parts contre 263 s en séquentiel, et la couverture lue est MEILLEURE en parallèle (41 outils à 81 % contre 30 à 42 %) depuis que le lecteur unit les relevés de processus. CE QUE LE REPLI PROTÈGE : quand une part tombe, on ne sait pas encore si la faute est au CODE ou au PARALLÉLISME, et le séquentiel est le seul juge. Le crochet le relance tout seul et ne bloque que si LUI aussi échoue — personne n\'a de décision à prendre le jour où ça arrive, ce qui est exactement ce qu\'on demande à un crochet. Le cas rare coûte 84 s + 263 s au lieu de 263 s, et ce prix ne se paie que sur un échec. ET LE RISQUE QUE CETTE DÉCISION CRÉE EST INVISIBLE SANS LE GARDE-FOU QUI L\'ACCOMPAGNE, c\'est pourquoi les deux sont livrés ensemble : plus rien ne produit de passage séquentiel vert spontanément, or c\'est LUI qui fait la barre de comparaison. Elle se fige au jour où elle a été prise, le filet continue de grossir, et la barre devient de plus en plus basse — un garde-fou qui s\'assouplit tout seul, c\'est-à-dire le contraire d\'un garde-fou. Le verdict afficherait « COMPLET, 460 succès contre 441 à la référence » et aurait l\'air parfaitement sain avec une référence de trois semaines. L\'ÂGE EST DONC IMPRIMÉ À CÔTÉ DU CHIFFRE, pour le compte comme pour la liste des sujets. IL NOMME, IL NE BLOQUE PAS : une référence vieille reste une référence, et refuser un commit sur l\'âge d\'un fichier serait crier au loup (leçon L4). Et une date illisible rend « je ne sais pas » plutôt que « tout frais » — les deux ne s\'écrivent jamais pareil.');
 }
 await testLeCrochetEnPartsEtLaBarreQuiVieillit();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1589 — UNE UNITÉ NE SE COUPE PAS EN DEUX, ET LE PLANCHER L'OUBLIAIT
+async function testLePlancherDuGrain() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LA FORMULE SUPPOSAIT UN TRAVAIL INFINIMENT DIVISIBLE. La plus grosse unité tombe pourtant
+  // dans UNE part, entière, et cette part ne peut pas finir avant elle.
+  const src = ['import x from "y";', '{', '  a();', '}', '{', '  b();', '}'].join('\n');
+  const mesures = [{ ligne: 3, ms: 30000 }, { ligne: 6, ms: 1000 }];
+  const p = F.plancherDuParallelisme({ src, mesures, parts: [2, 4, 8, 64] });
+  assert.strictEqual(p.mesurable, true, 'with a net and timings the floor is measurable');
+  assert.strictEqual(p.plusLourdeMs, 30000, 'the heaviest unit is identified');
+  assert.ok(p.plancher >= 30000, `MUST CATCH: no number of parts can go below the heaviest single unit (${p.plancher} ms)`);
+  assert.ok(p.projection.every((x) => x.msTheorique >= p.plusLourdeMs), 'and NO projection may promise less than that unit costs — the old formula promised 21 s on a net holding a 32 s test');
+  assert.strictEqual(p.projection[p.projection.length - 1].msTheorique, p.plancher, 'at a very large number of parts the projection lands exactly on the floor, never below');
+
+  // ── LE PLANCHER SE DÉCOMPOSE, et les deux moitiés disent des choses différentes : l'une est
+  // structurelle (ce qui se rejoue partout), l'autre est le GRAIN du découpage (le plus gros
+  // morceau). On ne les combat pas de la même façon.
+  assert.strictEqual(p.plancher, p.plancherSansGrain + p.plusLourdeMs, 'the floor is exactly the indivisible part plus the heaviest unit');
+
+  // ── UN FILET SANS MESURE N'A PAS DE PLANCHER NUL, IL N'EN A PAS (leçons L5/L11).
+  assert.strictEqual(F.plancherDuParallelisme({ src, mesures: [] }).mesurable, false, 'no timing means no floor at all');
+
+  // ── LE PASSAGE RÉEL (Article 25), ET C'EST LUI QUI VALIDE LE MODÈLE : sur le vrai filet, la
+  // projection à quatre parts doit tomber près du lancement réellement chronométré. L'ancienne
+  // formule annonçait 66,8 s pour un filet qui en met 80,5 ; la nouvelle annonce 80,8.
+  const E = await import('../scripts/ezechiel-les-tests.mjs');
+  const vrai = fs.readFileSync('scripts/check-house.mjs', 'utf8');
+  const mes = E.mesuresEnregistrees({ root: '.' });
+  if (mes.presentes && mes.mesures.length) {
+    const reel = F.plancherDuParallelisme({ src: vrai, mesures: mes.mesures });
+    assert.ok(reel.plusLourdeMs > 5000, `on the real net one single unit really does weigh a lot (${Math.round(reel.plusLourdeMs / 1000)} s)`);
+    assert.ok(reel.plancher > reel.plancherSansGrain, 'and the floor really is raised by it');
+    const a4 = reel.projection.find((x) => x.parts === 4);
+    if (a4) assert.ok(a4.msTheorique > reel.plusLourdeMs, 'the four-part projection stays above the heaviest unit, which is the whole point of this correction');
+  }
+
+  console.log('Passed: une unité ne se coupe pas en deux, et le plancher l\'oubliait (2026-10-03, tâche #1589). LA FORMULE SUPPOSAIT UN TRAVAIL INFINIMENT DIVISIBLE : `socle + épine + divisible ÷ parts`. Mais la plus grosse unité tombe dans UNE part, entière, et cette part ne peut pas finir avant elle. Le vrai plancher est donc `socle + épine + la plus lourde`. CE N\'EST DEVENU VISIBLE QU\'APRÈS LA RÉPARATION DU CHRONOMÈTRE (#1582), ET L\'ENCHAÎNEMENT EST CE QU\'IL FAUT RETENIR : tant que 83 % des durées étaient attribuées au mauvais groupe, « la plus lourde » ne voulait strictement rien dire. Une fois les poids justes, elle se lit — 32,3 s pour un seul bloc, celui qui fait parler THE-KING sur deux cents fichiers normatifs — et le plancher passe de 20 s à 52 s. **Réparer une mesure fait apparaître un plafond que personne ne voyait**, ce qui est l\'inverse de ce qu\'on attend d\'une réparation, et c\'est pourtant le cas le plus fréquent. CE QUE ÇA CORRIGE DE CONCRET : la projection « à 16 parts → 21 s » était un mensonge arithmétique, et j\'avais répondu sur cette base à sa contrainte des 30 secondes. Aucun nombre de parts ne descendra sous 52 s tant qu\'un seul test en coûtera 32. LA VALIDATION EST CE QUI REND CE CORRECTIF CROYABLE : l\'ancienne formule annonçait 66,8 s à quatre parts pour un filet qui en met réellement 80,5 ; la nouvelle annonce 80,8 s. Le modèle colle désormais au chronomètre à trois dixièmes de seconde, là où il se trompait de quatorze. ET LE PROCHAIN LEVIER N\'EST PLUS LE DÉCOUPAGE : c\'est le coût des quelques tests qui balaient tout le dépôt — dix d\'entre eux pèsent 57 % du filet, vingt en pèsent 73 %.');
+}
+await testLePlancherDuGrain();

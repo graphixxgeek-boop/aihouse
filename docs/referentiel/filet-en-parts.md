@@ -89,35 +89,33 @@ structure, c'est le nombre de cœurs de la machine (quatre ici).
 ### Ce que ça répond à sa contrainte des 30 secondes (tâche #1485)
 
 Sa phrase du 2026-10-02 : « raisonnablement l'agence ne peut pas débarquer avec un filet de plus de
-30 sec ». **Avec l'ancien plancher, cette cible était mathématiquement hors d'atteinte** — et pas
-« difficile » : hors d'atteinte. La formule `plancher + divisible ÷ parts` donnait 152,9 s à quatre
-parts, 137,1 s à huit, 129,2 s à seize et **123,3 s à soixante-quatre**. Aucun matériel ne pouvait
-sauver le filet, parce que ce n'était pas une question de matériel.
+30 sec ».
 
-| Parts | Avec l'ancien plancher (121,3 s) | Avec le plancher actuel (6,4 s) |
-|---|---|---|
-| 4 | 152,9 s | 66,8 s |
-| 8 | 137,1 s | 36,6 s |
-| **10** | — | **30,5 s** |
-| 12 | — | 26,5 s |
-| 16 | 129,2 s | 21,5 s |
-| 64 | 123,3 s | — |
+⚠️ **CETTE SECTION A DIT DEUX CHOSES FAUSSES AVANT DE DIRE LA BONNE, et les trois sont gardées
+parce que l'enchaînement est l'information** :
 
-**MESURÉ, ET LA PROJECTION NE SE VÉRIFIE PAS TELLE QUELLE SUR UNE MACHINE SATURÉE** : poussé à
-huit parts sur ces quatre cœurs, le filet met **107,9 s, c'est-à-dire PLUS que les 96,2 s à quatre
-parts**. La projection suppose un cœur disponible par part ; au-delà, la sur-réservation ajoute de
-la contention au lieu d'en retirer. Le runner plafonne donc par défaut au nombre de cœurs, et ce
-passage est ce qui permet de le dire au lieu de le supposer. Les lignes à 10, 12 et 16 parts du
-tableau décrivent une machine qui aurait ce nombre de cœurs — jamais celle-ci.
+1. **Avec le plancher d'origine (121 s), la cible était hors d'atteinte** — même soixante-quatre
+   parts atterrissaient à 123 s. Ça, c'était vrai.
+2. **Puis j'ai annoncé « dix cœurs passent sous la demi-minute »** sur un plancher ramené à 6,4 s.
+   **Faux** : la formule supposait un travail infiniment divisible.
+3. **Le vrai plancher est 52,3 s** (tâche #1589), parce qu'une unité ne se coupe pas en deux : le
+   test le plus lourd pèse **32,3 s à lui seul** et tombe dans une part, entière.
 
-**Dix cœurs passent sous la demi-minute.** La cible est donc devenue une question d'achat de
-machine, ce qu'elle n'était pas ce matin. Ce sont des projections, pas des mesures : le seul
-chiffre mesuré sur cette machine à quatre cœurs est 82,2 s, et l'écart avec les 66,8 s théoriques
-est le coût de démarrage des processus plus l'épine résiduelle rejouée quatre fois.
+| Parts | Projection corrigée |
+|---|---|
+| 2 | 141,5 s |
+| 4 | 80,8 s *(réel mesuré : 80,5 s)* |
+| 6 | 60,5 s |
+| 8 et au-delà | **52,3 s, et jamais moins** |
 
-**Et la vérification qui compte n'est pas la durée** : la liste des tests exécutés est IDENTIQUE à
-celle du séquentiel, sujet par sujet — 436 des deux côtés, les quatre lignes qui diffèrent étant des
-tests qui impriment un chiffre vivant.
+**La conséquence est plus utile que l'ancienne réponse** : acheter des cœurs ne mènera jamais sous
+la demi-minute. **Le prochain levier n'est plus le découpage, c'est le COÛT des quelques tests qui
+balaient tout le dépôt** — dix d'entre eux pèsent 57 % du filet, vingt en pèsent 73 %, et le plus
+gros à lui seul fixe le plancher.
+
+**Ce qui a rendu ce plafond visible est la réparation du chronomètre** (#1582) : tant que 83 % des
+durées étaient attribuées au mauvais groupe, « le test le plus lourd » ne voulait rien dire.
+Réparer une mesure fait apparaître un plafond que personne ne voyait.
 
 ## Les trois défauts trouvés aux trois premiers lancements réels
 

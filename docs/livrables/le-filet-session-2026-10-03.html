@@ -120,7 +120,7 @@
   <header>
     <div class="date">2026-10-03</div>
     <h1>Le filet — ce que la session a changé</h1>
-    <p class="sub">De 263 s à 84 s, et le plancher de 121 s à 6,4 s</p>
+    <p class="sub">De 263 s à 80 s, et le vrai plancher est 52 s</p>
   </header>
   <div class="divider"></div>
   <main><p><em>(Livrable du 2026-10-03. Il répond à sa consigne du soir : « on fait une pause et on s'attaque au filet pour diminuer son impact. Une session qui va nous faire gagner du temps sur toutes les autres. » Tous les chiffres viennent d'un lancement réel ; aucun n'est estimé.)</em></p>
@@ -149,7 +149,9 @@
 <ul><li><strong>Élargir le détecteur de « morceaux qu'on ne peut pas déplacer »</strong> : essayé, mesuré, abandonné. Il envoyait 129 blocs sur 167 dans l'incompressible et faisait MONTER le plancher à 240 s. La cause est du bruit de noms identiques, et la trancher demanderait un vrai analyseur de code.</li><li><strong>Lancer plus de parts que la machine n'a de cœurs</strong> : 107,9 s à huit parts contre 96,2 s à quatre. La sur-réservation coûte.</li></ul>
 <h3>Ce que ça répond à sa contrainte des 30 secondes</h3>
 <p>Sa phrase du 2026-10-02 : « raisonnablement l'agence ne peut pas débarquer avec un filet de plus de 30 sec ». <strong>Avec l'ancien plancher, cette cible était hors d'atteinte — pas difficile, hors d'atteinte</strong> : même soixante-quatre parts simultanées auraient atterri à 123 s. Aujourd'hui, la même formule donne 30,5 s à dix parts et 26,5 s à douze.</p>
-<p><strong>La cible est devenue une question de machine, ce qu'elle n'était pas ce matin.</strong></p>
+<p><strong>ET J'AI DÛ CORRIGER ÇA AUSSI, une heure plus tard.</strong> La formule supposait un travail infiniment divisible. Il ne l'est pas : <strong>le test le plus lourd pèse 32,3 s à lui seul</strong> et tombe dans une part, entière. Le vrai plancher est donc <strong>52,3 s</strong>, et aucun nombre de cœurs ne passera dessous.</p>
+<p><strong>La conclusion corrigée est plus utile que la fausse</strong> : acheter des cœurs ne mènera jamais sous la demi-minute. Le prochain levier n'est plus le découpage, c'est le <strong>coût des quelques tests qui balaient tout le dépôt</strong> — dix d'entre eux pèsent 57 % du filet, vingt en pèsent 73 %.</p>
+<p><em>(Et c'est la réparation du chronomètre qui a rendu ce plafond visible : tant que 83 % des durées étaient attribuées au mauvais test, « le test le plus lourd » ne voulait rien dire. Réparer une mesure fait apparaître un plafond que personne ne voyait — la projection à quatre parts annonce maintenant 80,8 s contre 80,5 s réellement mesurées, là où elle se trompait de quatorze secondes.)</em></p>
 <h3>La question qui reste, et elle est pour lui</h3>
 <p><strong>Le crochet de commit tourne toujours en séquentiel</strong>, donc chaque commit coûte encore quatre minutes et demie au lieu d'une minute et demie. Ce n'est pas un oubli : c'est un arbitrage qu'il a pris lui-même (« le mode séquentiel reste la référence, gardé et lançable »), et le changer est sa décision, pas la mienne.</p>
 <p><strong>Ce que la mesure dit de la faisabilité, puisque c'est elle qui tranche</strong> : le runner parallèle tourne très bien sous instrumentation de couverture, et la couverture lue est <strong>exactement la même qu'en séquentiel</strong> — 99 % sur les 21 fichiers du jeu, 41 outils mesurés à 81 % de moyenne des deux côtés. Le passage est donc techniquement ouvert, et il ne coûte rien en mesure.</p>
