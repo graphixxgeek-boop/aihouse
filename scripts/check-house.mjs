@@ -22810,6 +22810,71 @@ async function testDiagnosticDesCles() {
 }
 await testDiagnosticDesCles();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1550 — CE QUE JESUS VOIT DU JEU, ET MA RÉPONSE COURTE ÉTAIT FAUSSE
+// ─────────────────────────────────────────────────────────────────────────────
+// SES CINQ QUESTIONS P71 portent toutes sur le même angle mort, et la dernière est la vraie :
+// « qu'est-ce que JESUS peut réellement détecter, est-il assez équipé ? ».
+//
+// ⚠️ MA PREMIÈRE RÉPONSE COURTE ÉTAIT FAUSSE. J'avais écrit que JESUS « regarde ce qui freine le
+// TRAVAIL, pas le JEU ». Il a une sonde dédiée au jeu, elle tourne, et elle mesure le poste de
+// lenteur le PLUS important d'un tour — ~19 600 tokens par tour contre un repère de 8 000.
+//
+// CE QUE LA MESURE AJOUTE : la PART du jeu que cette porte laisse dehors. « Une seule porte » est
+// une impression ; « un fichier sur quatre-vingt-treize » est une mesure, et c'est elle qui
+// répond à sa question.
+async function testCouvertureDuJeuParJesus() {
+  const J = await import('../scripts/jesus-le-sauveur.mjs');
+
+  // LA SONDE DU JEU EXISTE ET MESURE POUR DE VRAI — c'est ce qui réfute ma réponse courte.
+  const jeu = J.ceQuiRalentitUnTourDeJeu();
+  assert.equal(jeu.mesurable, true, 'JESUS DOES probe the game: my short answer said it did not');
+  assert.ok(jeu.echantillons > 50, `on real samples (currently ${jeu.echantillons} turns)`);
+  assert.ok(jeu.moyenne > 0 && jeu.parTour > jeu.moyenne, 'and it accounts for the two brains per turn, which doubles the real weight');
+  assert.equal(jeu.horsPortee.length, 4, 'while naming what it cannot measure one by one, never lumped into "divers"');
+
+  // LA COUVERTURE SE MESURE, et le refus porte sur les deux côtés.
+  assert.equal(J.couvertureDuJeu({ source: '' }).mesurable, false, 'without its own source we cannot know which game files it cites — zero found would not mean zero cited (L11)');
+  assert.equal(J.couvertureDuJeu({ lireDir: () => [] }).mesurable, false, 'and no game file read means a sweep that found nothing, never a game that does not exist');
+
+  // UNE MENTION EN COMMENTAIRE N'EST PAS UNE LECTURE — ce dépôt a déjà payé cette confusion en
+  // comptant 34 lecteurs du suivi là où il y en avait 22.
+  const faux = J.couvertureDuJeu({
+    source: '// je parle de "lib/a.ts" dans un commentaire\nconst x = lire("lib/b.ts");',
+    lireDir: (d) => (d.endsWith('lib') ? [{ name: 'a.ts', isDirectory: () => false }, { name: 'b.ts', isDirectory: () => false }] : []),
+    lireFic: () => 'une ligne\nune autre',
+    dossiers: ['lib'],
+  });
+  assert.deepEqual(faux.vus, ['lib/b.ts'], 'a path cited only in a COMMENT is not seen — a mention is not a read');
+  assert.equal(faux.fichiers, 2);
+  assert.equal(faux.partFichiers, 50);
+
+  // EN DIRECT (Article 25) — et c'est le chiffre qui répond à sa question.
+  const c = J.couvertureDuJeu();
+  assert.equal(c.mesurable, true);
+  assert.ok(c.fichiers > 50, `the real game must be swept (currently ${c.fichiers} files)`);
+  assert.deepEqual(c.vus, ['app/api/lia/route.ts'], 'JESUS cites exactly ONE game file today, and naming it is the whole answer');
+  assert.ok(c.partFichiers < 5, `one file out of ${c.fichiers} is ${c.partFichiers} % — "a single door" is an impression, this is a measurement`);
+
+  // LA NUANCE EST OBLIGATOIRE, sans quoi le chiffre se lit comme un reproche : la porte unique
+  // est la BONNE porte.
+  const lignes = J.lignesDeLaCouvertureDuJeu(c).join('\n');
+  assert.ok(/C'EST LA BONNE/.test(lignes), 'the figure must carry its nuance: a tool reading all 93 files and missing this one would be more complete and less useful');
+  assert.ok(/surveillé par personne/i.test(lignes), 'and the real gap is named rather than softened');
+
+  // ET IL PARLE DANS LE RAPPORT QU'UN HUMAIN LIT (L2), juste sous la mesure du jeu — séparées,
+  // la première se lirait comme une couverture du jeu entier.
+  const p = J.passage();
+  assert.ok(p.couvertureJeu, 'the measure is part of the real passage, not an orphan export');
+  const texte = J.lignesDuPassage(p).join('\n');
+  const iJeu = texte.indexOf('⑤ LE JEU');
+  const iCouv = texte.indexOf('CE QUE JESUS VOIT DU JEU');
+  assert.ok(iJeu !== -1 && iCouv > iJeu, 'and it is printed immediately AFTER the game probe, never apart from it');
+
+  console.log(`Passed: ce que JESUS voit du jeu, et ma réponse courte était fausse (2026-10-03, tâche #1550). J'avais écrit qu'il « regarde ce qui freine le TRAVAIL, pas le JEU ». FAUX : sa sonde du jeu existe, tourne, et mesure le poste de lenteur le PLUS important d'un tour — ${jeu.echantillons} tours mesurés, ${jeu.moyenne} tokens en moyenne par personnage, deux cerveaux par tour, soit ~${jeu.parTour} tokens par tour contre un repère de 8 000. CE QUE LA MESURE AJOUTE répond à sa vraie question (« est-il assez équipé ? ») : JESUS cite ${c.vus.length} fichier du jeu sur ${c.fichiers} (${c.partFichiers} %, ${c.partLignes} % des lignes). « Une seule porte » était une impression ; « un fichier sur ${c.fichiers} » est une mesure. MAIS LE CHIFFRE N'EST PAS UN REPROCHE EN SOI, et la nuance est imprimée avec lui : la porte unique est la BONNE — un outil qui lirait les 93 fichiers et raterait celui-là serait plus complet et moins utile. CE QUI RESTE DEHORS EST NOMMÉ : la simulation, le rendu, les jauges, la mémoire des personnages — ${c.lignes - c.lignesVues} lignes que personne ne surveille. Une mention en COMMENTAIRE ne compte pas comme une lecture, parce que ce dépôt a déjà payé cette confusion ailleurs le jour même.`);
+}
+await testCouvertureDuJeuParJesus();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

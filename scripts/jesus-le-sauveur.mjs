@@ -1042,6 +1042,79 @@ export function ceQuiRalentitUnTourDeJeu({ samples = undefined, lireFichier = nu
   };
 }
 
+// ============================================================================
+// CE QUE JESUS VOIT DU JEU — ses cinq questions P71 (tâche #1550)
+// ============================================================================
+// SES CINQ QUESTIONS, et elles portent toutes sur le même angle mort : « le jeu relève-t-il d'un
+// autre outil · qu'en est-il des lourdeurs du jeu qui impactent le codage global · des éléments
+// partagés ou fusionnés · des lourdeurs du jeu DANS le jeu · des lourdeurs du jeu dans
+// l'exécution de l'Agence · et surtout : qu'est-ce que JESUS peut réellement détecter, est-il
+// assez équipé ? »
+//
+// ⚠️ MA PREMIÈRE RÉPONSE COURTE ÉTAIT FAUSSE, ET JE L'AI CORRIGÉE EN MESURANT. J'avais écrit que
+// JESUS « ne regarde que ce qui freine le TRAVAIL, pas le JEU ». C'est faux : `ceQuiRalentitUnTourDeJeu()`
+// existe, tourne, et mesure le poste de lenteur le PLUS important d'un tour — le poids en tokens
+// envoyé au modèle. La bonne réponse n'est donc pas « il ne regarde pas le jeu », c'est « il le
+// regarde par UNE SEULE PORTE, et c'est la bonne ».
+//
+// CE QUE CETTE MESURE AJOUTE : la PART du jeu que cette porte laisse dehors. Dire « une seule
+// porte » est une impression ; dire « un fichier sur quatre-vingt-treize » est une mesure, et
+// c'est elle qui répond à « est-il assez équipé ? ».
+export const DOSSIERS_DU_JEU = ["lib", "app", "components"];
+export const EXTENSIONS_DU_JEU = [".ts", ".tsx"];
+
+export function couvertureDuJeu({ root = ROOT, dossiers = DOSSIERS_DU_JEU, extensions = EXTENSIONS_DU_JEU, lireDir = readdirSync, lireFic = readFileSync, source = null } = {}) {
+  const src = source ?? (() => { try { return lireFic(join(root, "scripts/jesus-le-sauveur.mjs"), "utf8"); } catch { return ""; } })();
+  if (!src) return pasMesure("ce que JESUS voit du jeu", "son propre code est illisible — sans lui on ne peut pas savoir quels fichiers du jeu il cite, et zéro citation trouvée ne voudrait pas dire zéro citation réelle (leçons L5/L11)");
+  const fichiers = [];
+  const pile = [...dossiers];
+  while (pile.length) {
+    const d = pile.pop();
+    let entrees = [];
+    try { entrees = lireDir(join(root, d), { withFileTypes: true }); } catch { continue; }
+    for (const e of entrees) {
+      const chemin = `${d}/${e.name}`;
+      if (e.isDirectory()) { pile.push(chemin); continue; }
+      if (extensions.some((x) => e.name.endsWith(x))) {
+        let lignes = 0;
+        try { lignes = String(lireFic(join(root, chemin), "utf8")).split("\n").length; } catch { lignes = 0; }
+        fichiers.push({ chemin, lignes });
+      }
+    }
+  }
+  if (!fichiers.length) return pasMesure("ce que JESUS voit du jeu", "aucun fichier de jeu lu : ce zéro mesure un parcours qui n'a rien trouvé, jamais un jeu qui n'existe pas");
+  // UN FICHIER EST « VU » S'IL EST CITÉ DANS UNE CHAÎNE DU CODE DE JESUS — pas dans un commentaire :
+  // une mention n'est pas une lecture, et ce dépôt a déjà payé cette confusion en comptant 34
+  // lecteurs du suivi là où il y en avait 22.
+  const sansCommentaires = String(src).replace(/^\s*\/\/.*$/gm, "");
+  const vus = fichiers.filter((f) => new RegExp(`["'\`]${f.chemin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'\`]`).test(sansCommentaires));
+  const lignesTotal = fichiers.reduce((a, f) => a + f.lignes, 0);
+  const lignesVues = vus.reduce((a, f) => a + f.lignes, 0);
+  return {
+    mesurable: true,
+    fichiers: fichiers.length,
+    lignes: lignesTotal,
+    vus: vus.map((f) => f.chemin),
+    lignesVues,
+    partFichiers: Math.round((vus.length / fichiers.length) * 1000) / 10,
+    partLignes: Math.round((lignesVues / lignesTotal) * 1000) / 10,
+    // LA NUANCE QUI EMPÊCHE DE LIRE CE CHIFFRE COMME UN REPROCHE, et elle est décisive : la porte
+    // unique est la BONNE porte. Le poids en tokens d'un tour est le premier poste de lenteur,
+    // mesuré à ~19 600 tokens par tour contre un repère de 8 000. Un outil qui lirait les 93
+    // fichiers et raterait celui-là serait plus complet et moins utile.
+    pourquoi: `JESUS cite ${vus.length} fichier(s) du jeu sur ${fichiers.length} (${Math.round((vus.length / fichiers.length) * 1000) / 10} %), soit ${lignesVues} lignes sur ${lignesTotal}. CE CHIFFRE N'EST PAS UN REPROCHE EN SOI : la porte unique qu'il emploie est celle du POIDS D'UN TOUR, qui est le premier poste de lenteur réel. Un outil qui lirait tout le reste et raterait celui-là serait plus complet et moins utile.`,
+  };
+}
+
+export function lignesDeLaCouvertureDuJeu(c) {
+  if (!c?.mesurable) return [`❓ PAS MESURÉ — ${c?.pourquoi ?? c?.raison ?? "non mesurable"}`];
+  const out = [`CE QUE JESUS VOIT DU JEU — ${c.vus.length} fichier(s) sur ${c.fichiers} (${c.partFichiers} %), ${c.lignesVues} ligne(s) sur ${c.lignes} (${c.partLignes} %).`];
+  for (const v of c.vus) out.push(`   · ${v}`);
+  out.push("   LA PORTE EST UNIQUE, ET C'EST LA BONNE : le poids en tokens d'un tour est le premier poste de lenteur, loin devant le rendu. Un outil plus large qui raterait celui-là serait plus complet et moins utile.");
+  out.push("   CE QUI RESTE DEHORS, ET DONC SURVEILLÉ PAR PERSONNE : tout le reste du code du jeu — la simulation, le rendu, les jauges, la mémoire des personnages. Aucun outil de l'Agence ne regarde si ce code s'alourdit.");
+  return out;
+}
+
 export function passage(options = {}) {
   const filet = coutDuFilet(options);
   const remedes = outilsAbandonnesApresConstruction(options);
@@ -1054,8 +1127,12 @@ export function passage(options = {}) {
   const articles = coutDesArticlesVuDuDehors(options);
   const actionnabilite = tauxDActionnabilite(options);
   const jeu = ceQuiRalentitUnTourDeJeu(options);
+  // CE QUE JESUS VOIT DU JEU (2026-10-03, tâche #1550) : sa question « est-il assez équipé ? »
+  // n'a de réponse qu'en chiffres. « Une seule porte » est une impression ; « un fichier sur
+  // quatre-vingt-treize » est une mesure.
+  const couvertureJeu = couvertureDuJeu(options);
   const croisements = causesIndirectes({ filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite });
-  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite, jeu, croisements };
+  return { filet, remedes, arrivant, alertes, decisions, bruit, allersRetours, fluidite, articles, actionnabilite, jeu, couvertureJeu, croisements };
 }
 
 export function lignesDuPassage(p) {
@@ -1083,6 +1160,9 @@ export function lignesDuPassage(p) {
     ]);
   dire("⑤ LE JEU — ce qui ralentit un tour, et ce qui ne se mesure pas d'ici", p.jeu,
     (s) => (s.horsPortee ?? []).map((h) => `HORS PORTÉE : ${h.quoi} — ${h.pourquoi}`));
+  // LA PART DU JEU QUE JESUS VOIT, imprimée juste sous la mesure du jeu : séparées, on lirait la
+  // première comme une couverture du jeu entier, ce qu'elle n'est pas.
+  if (p.couvertureJeu) { for (const l of lignesDeLaCouvertureDuJeu(p.couvertureJeu)) L.push(`  ${l}`); L.push(""); }
   dire("④ LES FRICTIONS — mes propres allers-retours", p.allersRetours,
     (s) => (s.relances ?? []).slice(0, 6).map((r) => `· ${r.slug} : ${r.relances} relance(s) rapprochée(s) sans commit entre les deux`));
   dire("④ LA FLUIDITÉ — quelle part du délai est du travail, quelle part de l'attente", p.fluidite,

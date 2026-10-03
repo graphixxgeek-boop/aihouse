@@ -118,15 +118,15 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="date">2026-10-03T07:38:11.922Z</div>
+    <div class="date">2026-10-03T10:31:50.456Z</div>
     <h1>RAPPORT DE GROS PROMPT</h1>
     <p class="sub">Saisine du 2026-10-03, vers 04h30 Paris, juste avant d'aller dormir après une nuit blanche · 96 point(s) · 44 tâche(s) associée(s)</p>
   </header>
   <div class="divider"></div>
   <main><p class="note">⚠️  Attention, mes résultats peuvent être inexacts : il découpe une demande longue en points par des marqueurs de texte : une demande formulée sans marqueur ressort en un seul bloc. À vérifier avant d'agir, jamais un verdict acquis.</p>
 <p class="note">Version de Claude : claude-opus-5
-Produit le : samedi 3 octobre 2026 à 07h38 (UTC)
-État du code : 9fb3220 sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
+Produit le : samedi 3 octobre 2026 à 10h31 (UTC)
+État du code : 0de593b sur claude/jolly-bell-ks9lhb — ⚠️ des travaux n'étaient pas enregistrés, cet état n'est pas retrouvable tel quel
 Contexte de production : non précisé
 Outil : rapport-gros-prompt — date de dernière modification inconnue
 Santé de l'outil : 2/2 signal(aux) au vert
@@ -1145,7 +1145,7 @@ la-nuit-du-2-au-3-octobre.html
 <h2>Lourdeurs</h2>
 <p class="note">🟢 [P71] RETENU — #1550
    TA DEMANDE : « Jésus garantit que l'AGENCE ne ralentit pas le codage ; le jeu relève d'un autre outil ? Les lourdeurs du jeu qui impactent le codage global ? Les éléments partagés/fusionnés ? Les lourdeurs du jeu dans le jeu ? Les lourdeurs du jeu dans l'exécution de l'Agence ? Qu'est-ce que JESUS peut détecter, est-il assez équipé ? »
-   OÙ ÇA EN EST : Tes cinq questions sont dans #1550. La réponse courte, sans attendre : aujourd'hui JESUS regarde ce qui freine le TRAVAIL (l'outillage, les process, les commits), pas ce qui freine le JEU. Les lourdeurs du jeu dans le jeu ne sont donc surveillées par personne, et les lourdeurs partagées entre les deux tombent dans un angle mort.</p>
+   OÙ ÇA EN EST : **MA RÉPONSE COURTE DE CE MATIN ÉTAIT FAUSSE, ET LA MESURE L'A CORRIGÉE.** Je t'avais écrit que JESUS « regarde ce qui freine le TRAVAIL, pas le JEU ». Faux : il a une sonde dédiée au jeu, elle tourne, et elle mesure le poste de lenteur le PLUS important d'un tour. **LE CHIFFRE** : 310 tours mesurés, **9 821 tokens envoyés en moyenne par personnage**, deux cerveaux par tour, soit **~19 642 tokens par tour de jeu** — contre un repère de 8 000. C'est le premier poste de lenteur, loin devant le rendu. Tes cinq questions, maintenant : **(1) le jeu relève-t-il d'un autre outil ?** Non — JESUS le regarde lui-même, par une seule porte. **(2) Les lourdeurs du jeu qui impactent le codage global ?** Mesurées : c'est ce poids en tokens, et c'est aussi ce qui coûte en quota. **(3) Les éléments partagés ?** La sonde lit `app/api/lia/route.ts`, qui est exactement la frontière entre le jeu et l'Agence. **(4) Les lourdeurs du jeu DANS le jeu ?** Non surveillées. **(5) Est-il assez équipé ?** Voici la vraie mesure, et elle est sévère : **JESUS voit 1 fichier du jeu sur 93** (14,4 % des lignes). Tout le reste — la simulation, le rendu, les jauges, la mémoire des personnages, soit 12 624 lignes — n'est regardé par personne. **MAIS CE CHIFFRE N'EST PAS UN REPROCHE EN SOI** : la porte unique qu'il emploie est la BONNE. Un outil qui lirait les 93 fichiers et raterait celui-là serait plus complet et moins utile.</p>
 <p class="note">🟢 [P72] RETENU — #1550
    TA DEMANDE : « Selon notre philo, on devrait permettre à l'utilisateur de détecter les lourdeurs dans le PROJET UTILISATEUR »
    OÙ ÇA EN EST : Noté comme principe, et c'est plus fort qu'une note : selon notre philosophie, l'Agence doit servir TON projet avant de se servir elle-même. Un détecteur de lourdeurs qui ne regarde que l'outillage inverse exactement ce rapport.</p>
@@ -1167,14 +1167,14 @@ la-nuit-du-2-au-3-octobre.html
    TA DEMANDE : « Rapport éphémère sur : les consignes de ma session, l'outillage de l'éditeur, nos habitudes de travail jamais écrites. Identifier les règles à ajouter à l'Agence »
    OÙ ÇA EN EST : C'est exactement ce que #1484 avait déclaré hors de sa portée, et tu as raison de le demander quand même : c'est la seule façon de savoir ce qui, dans ce que tu crois être l'Agence, vient en réalité de mon environnement. #1552.</p>
 <h2>Plan d'action</h2>
-<p class="note">  → RETENU · [P01] ⬜ 🟠 docs/strategies/ — tâche [RECOMMANDEE] : 1531
-  → RETENU · [P02] ⬜ 🟠 data-archangel / livraisons — tâche [RECOMMANDEE] : 1532
+<p class="note">  → RETENU · [P01] ✅ 🟠 docs/strategies/ — tâche [RECOMMANDEE] : 1531
+  → RETENU · [P02] ✅ 🟠 data-archangel / livraisons — tâche [RECOMMANDEE] : 1532
   ✗ ÉCARTÉ · [P03] Ordre des événements — Rangé, chantier non ouvert, comme tu l'as décidé. L'idée attend un quatrième cas réel avant de valoir un outil : trois occurrences ne suffisent pas à distinguer un vrai motif d'une coïncidence, et un détecteur construit sur trois cas crie sur le quatrième.
   → RETENU · [P04] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
   → RETENU · [P05] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
   → RETENU · [P06] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
   ✗ ÉCARTÉ · [P07] Registre des remises — **NON, ET C'EST UN NON FRANC.** Rien dans mon environnement ne me dit qu'un fichier a été ouvert ou cliqué. Je sais seulement que je l'ai envoyé. Il n'y a pas de demi-réponse ici : si un jour je te disais « ouvert », ce serait une déduction déguisée en fait.
-  → RETENU · [P08] ⬜ 🟠 data-archangel / livraisons — tâche [RECOMMANDEE] : 1532
+  → RETENU · [P08] ✅ 🟠 data-archangel / livraisons — tâche [RECOMMANDEE] : 1532
   → RETENU · [P09] ✅ 🟠 god-of-all-process / Article 28 — tâche [RECOMMANDEE] : 1528
   → RETENU · [P10] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P11] ✅ 🔴 docs/grand-projet/00-sources / tâche #723 — tâche [RECOMMANDEE] : 1530
@@ -1194,19 +1194,19 @@ la-nuit-du-2-au-3-octobre.html
        + ⬜ 🟠 Trouvé le 2026-10-02 en répondant à sa question sur le travail à distance — tâche [RECOMMANDEE] : 1486
   → RETENU · [P23] ✅ 🔴 docs/referentiel/ / modularisation — tâche [RECOMMANDEE] : 1536
   → RETENU · [P24] ✅ 🔴 docs/referentiel/ / modularisation — tâche [RECOMMANDEE] : 1536
-  → RETENU · [P25] ⬜ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
-  → RETENU · [P26] ⬜ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
+  → RETENU · [P25] ✅ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
+  → RETENU · [P26] ✅ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
   → RETENU · [P27] ✅ 🔴 docs/referentiel/ / modularisation
-       + ⬜ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1536
+       + ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1536
   → RETENU · [P28] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   → RETENU · [P29] ⬜ 🔴 modularisation / export
-       + ⬜ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1538
+       + ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1538
   → RETENU · [P30] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   → RETENU · [P31] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   → RETENU · [P32] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
   → RETENU · [P33] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
   → RETENU · [P34] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
-  → RETENU · [P35] ⬜ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
+  → RETENU · [P35] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
   → RETENU · [P36] ✅ 🔴 Livrables / docs à livrer à son réveil
        + ⬜ 🔴 Livrables / livraison à heure fixe — tâche [RECOMMANDEE] : 1521
   → RETENU · [P37] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
@@ -1215,21 +1215,21 @@ la-nuit-du-2-au-3-octobre.html
   → RETENU · [P39] ⬜ 🟠 philosophie / code — tâche [RECOMMANDEE] : 1553
   → RETENU · [P40] ⬜ 🟠 le-classificateur / MOÏSE — tâche [RECOMMANDEE] : 1539
   ✗ ÉCARTÉ · [P41] Format des documents — Entendu, et la leçon est prise : ce document était trop abstrait, je ne poursuis pas ce format. Ce qui compte pour la suite, ce n'est pas d'avoir abandonné le document, c'est de retenir la règle — un document qui exige de l'abstraction pour être compris n'est pas un document de travail dans ce projet.
-  → RETENU · [P42] ⬜ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
+  → RETENU · [P42] ✅ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
   → RETENU · [P43] ✅ 🟠 the-king / philosophie — tâche [RECOMMANDEE] : 1534
-  → RETENU · [P44] ⬜ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
-  → RETENU · [P45] ⬜ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
+  → RETENU · [P44] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
+  → RETENU · [P45] ✅ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
   → RETENU · [P46] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
-  → RETENU · [P47] ⬜ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
-  → RETENU · [P48] ⬜ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
-  → RETENU · [P49] ⬜ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
-  → RETENU · [P50] ⬜ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
+  → RETENU · [P47] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
+  → RETENU · [P48] ✅ 🟠 gabarit de fiche de module — tâche [RECOMMANDEE] : 1541
+  → RETENU · [P49] ✅ 🟠 docs/regles-de-travail.md — tâche [RECOMMANDEE] : 1537
+  → RETENU · [P50] ✅ 🔴 le-classificateur — tâche [RECOMMANDEE] : 1540
   → RETENU · [P51] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P52] ⬜ 🟠 circle-tasks / Ronde — tâche [RECOMMANDEE] : 1543
-  → RETENU · [P53] ⬜ 🟠 circle-tasks / Ronde — tâche [RECOMMANDEE] : 1543
+  → RETENU · [P52] ✅ 🟠 circle-tasks / Ronde — tâche [RECOMMANDEE] : 1543
+  → RETENU · [P53] ✅ 🟠 circle-tasks / Ronde — tâche [RECOMMANDEE] : 1543
   → RETENU · [P54] ✅ ⚪ html-report / lisibilité — tâche [RECOMMANDEE] : 1527
   → RETENU · [P55] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P56] ⬜ ⚪ smart-conso-token — tâche [RECOMMANDEE] : 1544
+  → RETENU · [P56] ✅ ⚪ smart-conso-token — tâche [RECOMMANDEE] : 1544
   → RETENU · [P57] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P58] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P59] ⬜ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
@@ -1241,7 +1241,7 @@ la-nuit-du-2-au-3-octobre.html
   → RETENU · [P65] ⬜ 🔴 safe-export / #1484 — tâche [RECOMMANDEE] : 1555
   → RETENU · [P66] ⬜ 🟠 check-house / Ézéchiel — tâche [RECOMMANDEE] : 1547
   → RETENU · [P67] ⬜ 🟠 le-classificateur / stratégie — tâche [RECOMMANDEE] : 1548
-  → RETENU · [P68] ⬜ 🔴 clés / Smart Breaker — tâche [RECOMMANDEE] : 1549
+  → RETENU · [P68] ✅ 🔴 clés / Smart Breaker — tâche [RECOMMANDEE] : 1549
   ✗ ÉCARTÉ · [P69] Licence — Concrètement : tu écris un fichier LICENSE à la racine du dépôt, il dit qui détient les droits et ce qui est interdit, et il s'applique dès qu'il est publié avec le code. L'intérêt n'est pas d'empêcher la copie — rien ne l'empêche — c'est de rendre la copie attaquable. Ce n'est pas payant.
   → RETENU · [P70] ✅ 🔴 Sa demande ⑥ : « quel est le standard de livraison d'un code, pour que l'… — tâche [RECOMMANDEE] : 1368
   → RETENU · [P71] ⬜ 🟠 jesus-le-sauveur — tâche [RECOMMANDEE] : 1550
@@ -1253,7 +1253,7 @@ la-nuit-du-2-au-3-octobre.html
   → RETENU · [P77] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   → RETENU · [P78] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P79] ⬜ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
-  → RETENU · [P80] ⬜ 🟠 fils / suivi / stratégies — tâche [RECOMMANDEE] : 1546
+  → RETENU · [P80] ✅ 🟠 fils / suivi / stratégies — tâche [RECOMMANDEE] : 1546
   → RETENU · [P81] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
   → RETENU · [P82] ⬜ 🔴 docs/strategies/ / mémoire — tâche [RECOMMANDEE] : 1545
   ✗ ÉCARTÉ · [P83] Process — Vérifié : oui, la cascade est actionnée. Le point est effectivement dépassé, rien à faire.
@@ -1261,8 +1261,8 @@ la-nuit-du-2-au-3-octobre.html
   → RETENU · [P85] ⬜ 🔴 modularisation / export — tâche [RECOMMANDEE] : 1538
   → RETENU · [P86] ⬜ 🟠 pack découverte / INES-official — tâche [RECOMMANDEE] : 1533
   → RETENU · [P87] ⬜ 🔴 fils-de-discussion — tâche [RECOMMANDEE] : 1542
-  → RETENU · [P88] ⬜ 🟠 safe-export — tâche [RECOMMANDEE] : 1551
-  → RETENU · [P89] ⬜ 🟠 règles de travail — tâche [RECOMMANDEE] : 1552
+  → RETENU · [P88] ✅ 🟠 safe-export — tâche [RECOMMANDEE] : 1551
+  → RETENU · [P89] ✅ 🟠 règles de travail — tâche [RECOMMANDEE] : 1552
   → RETENU · [P90] ✅ 🟠 Mesure du 2026-10-02 par le garde-fou `findReglesSansDomicile()` de SAFE-…
        + ✅ 🟠 Règles de conduite / domicile — tâche [RECOMMANDEE] : 1493
   → RETENU · [P91] ⬜ 🟠 Ses quatre questions du 2026-10-02 sur le filet, et la liste « pas ration… — tâche [RECOMMANDEE] : 1485
