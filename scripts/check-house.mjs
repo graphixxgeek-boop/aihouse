@@ -27008,3 +27008,57 @@ async function testLaClassificationDesLois() {
   console.log('Passed: la classification des lois et des règles, et le texte suprême qu\'elle ne voyait pas (2026-10-03, tâche #1539). CINQ DE SES POINTS DEMANDAIENT LE MÊME DOCUMENT (P32/P33/P34/P37/P40) et la mesure lui a donné raison : le référentiel portait neuf documents de règles et aucun n\'était celui-là. L\'ÉCHELLE EST RÉUTILISÉE TELLE QUELLE, comme il l\'a demandé — une seconde échelle aurait divergé de la première au premier mécanisme nouveau. LE NIVEAU D\'UN TEXTE EST LA MÉDIANE DE SES RÈGLES, jamais la moyenne (qui ne désigne aucun mécanisme réel sur une échelle ordinale) ni le maximum (qui dirait qu\'une charte est bloquante parce qu\'UNE de ses trente-trois règles l\'est), et sur un compte pair elle prend le bas, parce que surestimer la protection est la plus coûteuse des deux erreurs. ET LE PREMIER PASSAGE RÉEL A TROUVÉ LE TROU QUI COMPTE : le document de GOUVERNANCE — le second texte suprême du projet, celui qui tranche les conflits de valeurs — titre ses articles là où la charte les écrit en gras, et aucune des quatre formes connues ne le reconnaissait. Ses 45 articles étaient donc hors de toute mesure de protection, et le rapport disait « aucune forme reconnue », ce qui était honnête et illisible. Corrigé en AJOUTANT LA FORME plutôt qu\'en traitant ce document à part (leçon L37) : tout texte qui titrera ainsi est désormais classable. LA MESURE QUI EN SORT EST DURE ET ELLE EST RENDUE TELLE QUELLE : 44 de ses 45 articles n\'ont AUCUN porteur, et 26 numéros manquent entre 38 et 63 sans qu\'une ligne le déclare — dans un texte qui se cite par numéro, un numéro absent est une citation morte en puissance. Le rapport dit aussi ce que ce chiffre NE dit pas, parce qu\'un texte de valeurs ne nomme aucun mécanisme par construction et qu\'un garde-fou qui accuse à tort cesse d\'être lu (leçon L4).');
 }
 await testLaClassificationDesLois();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1553 — L'AGENCE PROJET CONTRE L'AGENCE AIDE EXÉCUTIVE, MESURÉE PLUTÔT QUE RACONTÉE
+async function testLesDeuxCasDeFigure() {
+  const K = await import('../scripts/the-king.mjs');
+
+  // ── 1. LES ARTICLES SE LISENT EN TITRE. C'est la forme du document de gouvernance, et celle que
+  // la charte n'emploie pas — les deux coexistent, donc aucune ne se devine.
+  const art = K.articlesDUnTexte('## Article 2 — Les objectifs\n\ndu texte\n\n### Article 8 — Un sous-article\n\n## Pas un article\n');
+  assert.deepStrictEqual(art.map((a) => a.numero), ['2', '8'], 'both heading levels count, and a heading that is not an article does not');
+  assert.strictEqual(art[0].titre, 'Les objectifs', 'the title is kept, because it is what the matching runs on');
+
+  // ── 2. L'APPARIEMENT SE FAIT PAR TITRE, JAMAIS PAR NUMÉRO, et le premier passage réel a montré
+  // pourquoi : les deux versions emploient les MÊMES numéros pour des articles DIFFÉRENTS.
+  const paires = K.apparierParTitre(
+    [{ numero: '2', titre: 'Les trois objectifs ultimes' }, { numero: '9', titre: 'Une règle qui disparaît' }],
+    [{ numero: '7', titre: 'Les objectifs ultimes' }, { numero: '24', titre: 'Un engagement propre au cas 2' }],
+  );
+  const repris = paires.find((p) => p.cas1?.numero === '2');
+  assert.strictEqual(repris.cas2.numero, '7', 'an article matches its counterpart by subject even when the number moved');
+  assert.strictEqual(paires.find((p) => p.cas1?.numero === '9').etat, 'absent du cas 2', 'one with no counterpart is named absent, never silently dropped');
+  assert.strictEqual(paires.find((p) => p.etat === 'propre au cas 2').cas2.numero, '24', 'and one that exists only in case 2 is reported too — the comparison runs both ways (BP4)');
+
+  // ── 3. UN NUMÉRO PORTÉ PAR DEUX ARTICLES DIFFÉRENTS EST UNE AMBIGUÏTÉ DE CITATION, la même que
+  // la charte et la gouvernance avaient entre elles — revenue à l'intérieur d'un seul texte.
+  const coll = K.findNumerosEnCollision({
+    cas1: [{ numero: '24', titre: 'Un sujet' }],
+    cas2: [{ numero: '24', titre: 'Un tout autre sujet' }],
+    apparies: [],
+  });
+  assert.strictEqual(coll.length, 1, 'the same number carrying two different subjects is a collision');
+  assert.deepStrictEqual(K.findNumerosEnCollision({
+    cas1: [{ numero: '2', titre: 'Les objectifs' }],
+    cas2: [{ numero: '2', titre: 'Les objectifs' }],
+    apparies: [{ cas1: { numero: '2' }, cas2: { numero: '2' } }],
+  }), [], 'but the same number carrying the SAME article is not — accusing it would be the guard that cries wolf (leçon L4)');
+
+  // ── 4. UN DOCUMENT MANQUANT N'EST PAS « TOUT DIFFÈRE » (leçon L5).
+  const absent = K.comparaisonDesDeuxCas({ lireImpl: () => { throw new Error('absent'); } });
+  assert.strictEqual(absent.mesurable, false, 'a missing version is PAS MESURÉ, never a 100 % divergence');
+  const vide = K.comparaisonDesDeuxCas({ lireImpl: () => '# Un texte sans le moindre article' });
+  assert.strictEqual(vide.mesurable, false, 'and a text with no recognised article too — a zero here would read as "nothing in common"');
+
+  // ── 5. LE PASSAGE RÉEL, parce que sa question portait sur le dépôt réel et pas sur un principe.
+  const reel = K.comparaisonDesDeuxCas({ root: '.' });
+  assert.strictEqual(reel.mesurable, true, 'both versions exist and are read');
+  assert.ok(reel.cas[0].articles.length > reel.cas[1].articles.length, `case 1 is the longer of the two (${reel.cas[0].articles.length} against ${reel.cas[1].articles.length}) — so the separation is real, which was his first question`);
+  assert.ok(reel.collisions.length > 0, `and ${reel.collisions.length} numbers designate two different articles depending on the version`);
+  const cas2 = reel.lecteurs.find((l) => l.cle === '2');
+  assert.ok(cas2.scripts.filter((x) => x !== 'scripts/the-king.mjs').length === 0, 'and the answer to "what happened in the code": NOTHING reads the case-2 exemplar apart from the tool written today to measure it — it was hand-written once and nothing keeps it in step');
+
+  console.log('Passed: l\'Agence projet contre l\'Agence aide exécutive, mesurée plutôt que racontée (2026-10-03, tâche #1553). SES SIX QUESTIONS (P39) portaient sur l\'écart entre ce qu\'on a DIT et ce qu\'on a FAIT, et il a exigé que le code réponde plutôt que ma mémoire — ce qui est le bon réflexe, parce qu\'une réponse de mémoire reprendrait le dit. LA SÉPARATION EXISTE BIEN, et sa taille est maintenant un chiffre : 45 articles au cas 1, 22 au cas 2, dont 2 repris à l\'identique, 12 reformulés, 31 laissés de côté et 8 qui n\'existent qu\'au cas 2. L\'APPARIEMENT SE FAIT PAR TITRE, JAMAIS PAR NUMÉRO, et le premier passage a montré pourquoi : SEIZE numéros désignent deux articles différents selon la version, si bien que comparer par numéro aurait produit des correspondances fausses qui ressemblent trait pour trait à des justes — et c\'est au passage la même ambiguïté de citation que la charte et la gouvernance avaient entre elles, revenue À L\'INTÉRIEUR d\'un seul des deux textes. ET LA RÉPONSE À « QU\'EST-CE QUI S\'EST PASSÉ DANS LE CODE ? » EST LA PLUS NETTE : dix scripts lisent le cas 1 ; le cas 2 n\'est lu par AUCUN, sauf l\'outil écrit aujourd\'hui pour le mesurer. Le rapport refuse de compter ce lecteur-là, parce qu\'annoncer « lu par 1 script » serait vrai à la lettre et faux au fond — une couverture fabriquée par la mesure qui la constate. Il déclare aussi ce qu\'il ne mesure pas : il compare des TITRES, jamais le contenu, donc il établit l\'ampleur de la séparation et jamais sa justesse.');
+}
+await testLesDeuxCasDeFigure();

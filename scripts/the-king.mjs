@@ -2100,6 +2100,216 @@ export function formatDerivationLines(d) {
   return L;
 }
 
+// ————————————————————————————————————————————————————————————————————————
+// LES DEUX CAS DE FIGURE : L'AGENCE PROJET, L'AGENCE AIDE EXÉCUTIVE (tâche #1553)
+// ————————————————————————————————————————————————————————————————————————
+//
+// SES SIX QUESTIONS (P39), ET AUCUNE N'EST RHÉTORIQUE : « je ne pense pas qu'il y ait de
+// difference entre les versions cas 1 et cas 2 pour ce qui est de Philo et Politique ? […] Ou
+// est-ce que nous avons fait une separation ? QU'est-ce qui s'est passé dans le code à ce sujet ?
+// Quand est-il vraiment utile de faire une separation ? »
+//
+// IL A EXIGÉ QUE LA RÉPONSE VIENNE DU CODE, PAS DE MA MÉMOIRE — et c'est exactement le bon
+// réflexe, parce que la question porte sur l'écart entre ce qu'on a DIT et ce qu'on a FAIT. Une
+// réponse de mémoire reprendrait le dit.
+//
+// LA COMPARAISON SE FAIT PAR TITRE, JAMAIS PAR NUMÉRO, et le premier passage a montré pourquoi :
+// les deux versions emploient les MÊMES numéros pour des articles DIFFÉRENTS. Comparer par numéro
+// aurait apparié « Architecture normative » avec « Architecture », et aussi « Ce qui ne vous sera
+// jamais retiré » avec un article du cas 1 qui parle d'autre chose — une correspondance fausse qui
+// ressemble trait pour trait à une correspondance juste.
+export const CAS_DE_FIGURE = [
+  { cle: "1", quoi: "l'Agence est un PROJET de conception, menée en parallèle de l'œuvre", document: "docs/philosophie-et-politique.md" },
+  { cle: "2", quoi: "l'Agence est une AIDE EXÉCUTIVE, un produit livré à un utilisateur qui n'a pas participé à sa conception", document: "docs/the-king/versions-cas-2/philosophie-et-politique-cas-2-2026-10-02.md", gabarit: "docs/gabarits/philosophie-et-politique-gabarit-cas-2.md" },
+];
+
+export const MOTIF_ARTICLE_TITRE = /^#{2,3} Article (\d+\w*)\s*[—–-]\s*(.+?)\s*$/gm;
+
+export function articlesDUnTexte(texte = "", { motif = MOTIF_ARTICLE_TITRE } = {}) {
+  const out = [];
+  const m = new RegExp(motif.source, motif.flags);
+  let x;
+  while ((x = m.exec(String(texte))) !== null) out.push({ numero: x[1], titre: x[2].trim() });
+  return out;
+}
+
+// LE SEUIL DE RESSEMBLANCE EST CELUI D'ABRAHAM, jamais un second seuil écrit ici : deux porteurs
+// du même réglage divergent toujours (leçon L29).
+export function apparierParTitre(a = [], b = [], { seuil = SEUIL_JACCARD_STRICT } = {}) {
+  const motsDe = (t) => new Set(significantWords(t));
+  const restants = b.map((x) => ({ ...x, mots: motsDe(x.titre) }));
+  const pris = new Set();
+  const paires = [];
+  for (const art of a) {
+    const mots = motsDe(art.titre);
+    let meilleur = null;
+    let meilleurScore = 0;
+    for (let i = 0; i < restants.length; i += 1) {
+      if (pris.has(i)) continue;
+      const autre = restants[i];
+      const inter = [...mots].filter((w) => autre.mots.has(w)).length;
+      const union = new Set([...mots, ...autre.mots]).size;
+      const score = union ? inter / union : 0;
+      if (score > meilleurScore) { meilleurScore = score; meilleur = i; }
+    }
+    if (meilleur !== null && meilleurScore >= seuil) {
+      pris.add(meilleur);
+      paires.push({ cas1: art, cas2: restants[meilleur], score: meilleurScore, etat: meilleurScore >= 0.99 ? "identique" : "reformulé" });
+    } else {
+      paires.push({ cas1: art, cas2: null, score: meilleurScore, etat: "absent du cas 2" });
+    }
+  }
+  const propres = restants.filter((_, i) => !pris.has(i)).map((x) => ({ cas1: null, cas2: x, score: 0, etat: "propre au cas 2" }));
+  return [...paires, ...propres];
+}
+
+// LES NUMÉROS QUI DÉSIGNENT DEUX ARTICLES DIFFÉRENTS. C'est la trouvaille du premier passage, et
+// elle compte : « article 24 du document de gouvernance » ne désigne pas la même disposition selon
+// la version qu'on avait en tête — la même ambiguïté que la charte et la gouvernance avaient déjà
+// entre elles (tâche #1539), revenue À L'INTÉRIEUR d'un seul des deux textes.
+export function findNumerosEnCollision({ cas1 = [], cas2 = [], apparies = [] } = {}) {
+  const parNumero1 = new Map(cas1.map((a) => [String(a.numero), a]));
+  const memeTitre = new Map();
+  for (const p of apparies) if (p.cas1 && p.cas2) memeTitre.set(String(p.cas2.numero), String(p.cas1.numero));
+  const collisions = [];
+  for (const a of cas2) {
+    const n = String(a.numero);
+    const chez1 = parNumero1.get(n);
+    if (!chez1) continue;
+    const correspondant = memeTitre.get(n);
+    if (correspondant === n) continue;  // même numéro ET même sujet : aucune ambiguïté
+    collisions.push({ numero: n, cas1: chez1.titre, cas2: a.titre });
+  }
+  return collisions;
+}
+
+// « QU'EST-CE QUI S'EST PASSÉ DANS LE CODE À CE SUJET ? » — sa question (4), et elle se mesure :
+// on cherche qui, dans `scripts/`, cite l'un ou l'autre des deux documents. Un exemplaire qu'aucun
+// script ne lit ni n'écrit est un document écrit une fois à la main, que rien ne tient à jour.
+export function quiLitLesDeuxCas({ root = ".", cas = CAS_DE_FIGURE, listDirImpl = fsReaddir, readFileImpl = readFileSync } = {}) {
+  const resultat = cas.map((c) => ({ cle: c.cle, document: c.document, scripts: [] }));
+  let fichiers = [];
+  try { fichiers = listDirImpl(join(root, "scripts")).filter((n) => n.endsWith(".mjs")); } catch { fichiers = []; }
+  for (const nom of fichiers) {
+    let code = "";
+    try { code = readFileImpl(join(root, "scripts", nom), "utf8"); } catch { continue; }
+    for (const r of resultat) {
+      // On cherche le DOSSIER autant que le fichier : un script qui écrit dans
+      // `docs/the-king/versions-cas-2/` compte, même s'il ne nomme pas l'exemplaire daté.
+      const dossier = r.document.slice(0, r.document.lastIndexOf("/") + 1);
+      if (code.includes(r.document) || (dossier.length > 6 && code.includes(dossier))) r.scripts.push(`scripts/${nom}`);
+    }
+  }
+  return resultat;
+}
+
+export function comparaisonDesDeuxCas({ root = ".", cas = CAS_DE_FIGURE, lireImpl = null, listDirImpl = fsReaddir } = {}) {
+  const lire = lireImpl ?? ((c) => readFileSync(join(root, c), "utf8"));
+  const textes = [];
+  for (const c of cas) {
+    let texte = null;
+    try { texte = lire(c.document); } catch { texte = null; }
+    if (texte === null) return { mesurable: false, pourquoi: `${c.document} est illisible ou absent — comparer deux versions dont une manque rendrait « tout diffère », ce qui n'est pas une mesure` };
+    textes.push({ ...c, articles: articlesDUnTexte(texte) });
+  }
+  const [un, deux] = textes;
+  if (!un.articles.length || !deux.articles.length) {
+    return { mesurable: false, pourquoi: `l'un des deux textes ne porte aucun article reconnu (cas 1 : ${un.articles.length}, cas 2 : ${deux.articles.length}) — un zéro ici se lirait comme « rien en commun »` };
+  }
+  const apparies = apparierParTitre(un.articles, deux.articles);
+  const collisions = findNumerosEnCollision({ cas1: un.articles, cas2: deux.articles, apparies });
+  const lecteurs = quiLitLesDeuxCas({ root, cas, listDirImpl });
+  const compte = (etat) => apparies.filter((p) => p.etat === etat).length;
+  return {
+    mesurable: true, cas: textes, apparies, collisions, lecteurs,
+    communs: compte("identique") + compte("reformulé"),
+    identiques: compte("identique"), reformules: compte("reformulé"),
+    absentsDuCas2: compte("absent du cas 2"), propresAuCas2: compte("propre au cas 2"),
+  };
+}
+
+export function lignesDeLaComparaisonDesDeuxCas(r = {}, { date = "" } = {}) {
+  const L = [];
+  L.push("<!-- DOCUMENT GÉNÉRÉ — produit intégralement par un outil, aucune ligne n'est écrite à la main -->");
+  L.push("# L'Agence projet, l'Agence aide exécutive — ce qui change VRAIMENT");
+  L.push("");
+  L.push(`> Produit par \`node scripts/the-king.mjs deux-cas\` le ${date}, en lisant les deux documents réels.`);
+  L.push("> Ta question était « est-ce qu'on a VRAIMENT fait cette séparation, et qu'est-ce qui s'est passé dans le code ? ».");
+  L.push("");
+  if (!r.mesurable) { L.push(`**PAS MESURÉ** — ${r.pourquoi}`); L.push("<!-- /DOCUMENT GÉNÉRÉ -->"); return L; }
+  L.push("## ① Oui, la séparation existe — et voici sa taille exacte");
+  L.push("");
+  L.push("| | Nombre d'articles |");
+  L.push("|---|---|");
+  for (const c of r.cas) L.push(`| **Cas ${c.cle}** — ${c.quoi} | ${c.articles.length} |`);
+  L.push("");
+  L.push("| Ce que devient un article du cas 1 | Combien |");
+  L.push("|---|---|");
+  L.push(`| repris **à l'identique** | ${r.identiques} |`);
+  L.push(`| repris mais **reformulé** | ${r.reformules} |`);
+  L.push(`| **absent** du cas 2 | ${r.absentsDuCas2} |`);
+  L.push(`| **propre au cas 2**, sans équivalent au cas 1 | ${r.propresAuCas2} |`);
+  L.push("");
+  L.push("**L'appariement se fait par TITRE, jamais par numéro** : les deux versions emploient les mêmes");
+  L.push("numéros pour des articles différents, donc comparer par numéro aurait produit des correspondances");
+  L.push("fausses qui ressemblent trait pour trait à des justes.");
+  L.push("");
+  if (r.collisions.length) {
+    L.push("## ② Les numéros qui désignent DEUX articles différents");
+    L.push("");
+    L.push("« article N du document de gouvernance » ne désigne pas la même disposition selon la version qu'on");
+    L.push("avait en tête. C'est la même ambiguïté que la charte et la gouvernance avaient entre elles,");
+    L.push("revenue **à l'intérieur** d'un seul des deux textes.");
+    L.push("");
+    L.push("| Numéro | Au cas 1 | Au cas 2 |");
+    L.push("|---|---|---|");
+    for (const c of r.collisions) L.push(`| ${c.numero} | ${c.cas1} | ${c.cas2} |`);
+    L.push("");
+  }
+  L.push("## ③ Qu'est-ce qui s'est passé dans le code ?");
+  L.push("");
+  for (const l of r.lecteurs) {
+    // UNE NUANCE QUI CHANGE LA RÉPONSE : si le SEUL lecteur est l'outil de comparaison lui-même,
+    // alors avant ce rapport il n'y en avait aucun. Annoncer « lu par 1 script » serait vrai à la
+    // lettre et faux au fond — une couverture fabriquée par la mesure qui la constate.
+    const autres = l.scripts.filter((x) => x !== "scripts/the-king.mjs");
+    if (!l.scripts.length) L.push(`- **Cas ${l.cle}** (\`${l.document}\`) — **aucun script ne le lit ni ne l'écrit.** Il a été écrit une fois à la main, et rien ne le tient en phase avec l'autre.`);
+    else if (!autres.length) L.push(`- **Cas ${l.cle}** (\`${l.document}\`) — **le seul script qui le lit est celui qui a produit ce rapport.** Autrement dit : avant aujourd'hui, aucun. Rien ne le tient en phase avec l'autre version.`);
+    else L.push(`- **Cas ${l.cle}** (\`${l.document}\`) — lu ou écrit par ${autres.length} script(s) : ${autres.join(", ")}`);
+  }
+  L.push("");
+  L.push("## ④ Le détail, article par article");
+  L.push("");
+  L.push("| Cas 1 | Cas 2 | Ce qui se passe |");
+  L.push("|---|---|---|");
+  for (const p of r.apparies) {
+    const g = p.cas1 ? `${p.cas1.numero} — ${p.cas1.titre}` : "—";
+    const d = p.cas2 ? `${p.cas2.numero} — ${p.cas2.titre}` : "—";
+    L.push(`| ${g} | ${d} | ${p.etat} |`);
+  }
+  L.push("");
+  L.push("## ⑤ Ce que cette mesure NE dit pas");
+  L.push("");
+  L.push("Elle compare des TITRES, jamais le contenu des articles. Deux articles au même titre peuvent dire");
+  L.push("des choses différentes, et c'est même attendu ici puisque le registre change — le cas 1 énonce des");
+  L.push("convictions, le cas 2 des engagements envers un utilisateur. Ce que la mesure établit, c'est");
+  L.push("l'ampleur de la séparation, jamais sa justesse : celle-là se lit.");
+  L.push("");
+  L.push("# PLAN D'ACTION");
+  L.push("");
+  L.push("| État | Constat | Suite |");
+  L.push("|---|---|---|");
+  L.push(`| ✅ MESURÉ | la séparation existe bien : ${r.communs} article(s) en commun, ${r.absentsDuCas2} laissés de côté au cas 2, ${r.propresAuCas2} qui n'existent qu'au cas 2 | #1553 |`);
+  if (r.collisions.length) L.push(`| ? À TRANCHER | ${r.collisions.length} numéro(s) désignent deux articles différents selon la version : faut-il renuméroter le cas 2, ou toujours citer la version ? | #1553 |`);
+  for (const l of r.lecteurs) {
+    const autres = l.scripts.filter((x) => x !== "scripts/the-king.mjs");
+    if (!autres.length) L.push(`| ? À INSTRUIRE | le cas ${l.cle} n'est lu par aucun script autre que celui qui a produit ce rapport : rien ne détecte qu'il a pris du retard sur l'autre | #1553 |`);
+  }
+  L.push("");
+  L.push("<!-- /DOCUMENT GÉNÉRÉ -->");
+  return L;
+}
+
 function main({ chemin = PHILOSOPHY_PATH } = {}) {
   printReportHeader({ tool: "the-king", title: "THE-KING — veille philosophie et politique", scriptPath: "scripts/the-king.mjs" });
   recordCliUsage("the-king");
@@ -2108,6 +2318,21 @@ function main({ chemin = PHILOSOPHY_PATH } = {}) {
   // jamais quelque chose qu'on inflige à chaque passage de veille ordinaire.
   // SOUS-COMMANDE « these » (tâche #1444) — éprouver une thèse énoncée sur ce que l'Agence EST.
   // SOUS-COMMANDE « reveler-strategie » (tâche #1434) — même machine, autre corpus, autre cadre.
+  // SOUS-COMMANDE « deux-cas » (tâche #1553) — ses six questions sur la séparation projet / aide
+  // exécutive, auxquelles il a exigé que le CODE réponde plutôt que ma mémoire.
+  if (process.argv[2] === "deux-cas") {
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(process.argv[3] ?? "") ? process.argv[3] : new Date().toISOString().slice(0, 10);
+    const r = comparaisonDesDeuxCas({ root: ROOT });
+    if (!r.mesurable) { console.log(`🚨 PAS MESURÉ — ${r.pourquoi}`); process.exitCode = 1; return; }
+    console.log(`Cas 1 : ${r.cas[0].articles.length} article(s) · Cas 2 : ${r.cas[1].articles.length}`);
+    console.log(`  ${r.identiques} identique(s) · ${r.reformules} reformulé(s) · ${r.absentsDuCas2} absent(s) du cas 2 · ${r.propresAuCas2} propre(s) au cas 2`);
+    console.log(`  ${r.collisions.length} numéro(s) désignant deux articles différents selon la version`);
+    for (const l of r.lecteurs) console.log(`  cas ${l.cle} : ${l.scripts.length ? l.scripts.join(", ") : "AUCUN script ne le lit ni ne l'écrit"}`);
+    const sortie = join(ROOT, `docs/livrables/les-deux-cas-de-figure-${date}.md`);
+    writeFileSync(sortie, `${lignesDeLaComparaisonDesDeuxCas(r, { date }).join("\n")}\n`, "utf8");
+    console.log(`\nÉcrit dans ${sortie}`);
+    return;
+  }
   if (process.argv[2] === "reveler-strategie") {
     const r = revelerLaStrategie();
     const lignes = formatRevelationStrategieLines(r);

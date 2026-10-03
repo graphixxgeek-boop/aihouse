@@ -119,3 +119,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/strategies/export-et-commercialisation-strategie.html` | `docs/strategies/export-et-commercialisation-strategie.md` | 40448 | 2026-10-03 10:43Z |
 | `docs/livrables/pack-decouverte-liste-2026-10-03.html` | `docs/livrables/pack-decouverte-liste-2026-10-03.md` | 39166 | 2026-10-03 11:24Z |
 | `docs/referentiel/classification-des-lois-et-des-regles.html` | `docs/referentiel/classification-des-lois-et-des-regles.md` | 16698 | 2026-10-03 12:09Z |
+| `docs/livrables/les-deux-cas-de-figure-2026-10-03.html` | `docs/livrables/les-deux-cas-de-figure-2026-10-03.md` | 19026 | 2026-10-03 12:26Z |

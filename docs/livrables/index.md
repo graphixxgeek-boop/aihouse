@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**45 fichier(s).**
+**47 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -34,6 +34,8 @@
 | [les-cinq-systemes-de-memoire.md](les-cinq-systemes-de-memoire.md) | — |
 | [les-decisions-qui-t-attendent.html](les-decisions-qui-t-attendent.html) | — |
 | [les-decisions-qui-t-attendent.md](les-decisions-qui-t-attendent.md) | — |
+| [les-deux-cas-de-figure-2026-10-03.html](les-deux-cas-de-figure-2026-10-03.html) | — |
+| [les-deux-cas-de-figure-2026-10-03.md](les-deux-cas-de-figure-2026-10-03.md) | — |
 | [les-quatre-decisions-anciennes.html](les-quatre-decisions-anciennes.html) | — |
 | [les-quatre-decisions-anciennes.md](les-quatre-decisions-anciennes.md) | — |
 | [les-six-registres-le-dossier.html](les-six-registres-le-dossier.html) | — |
