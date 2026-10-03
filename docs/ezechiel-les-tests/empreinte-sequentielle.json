@@ -1,5 +1,5 @@
 {
-  "quand": "2026-10-03T22:41:11.575Z",
+  "quand": "2026-10-03T23:17:29.187Z",
   "pourquoi": "la liste des SUJETS vérifiés par le dernier filet séquentiel vert. Un COMPTE ne voit pas « un test perdu, un test ajouté » ; cette liste, si.",
   "sujets": [
     "Passed: 18 % du registre échappait à tous les contrôles, en ",
@@ -332,6 +332,7 @@
     "Passed: simultaneous urgent needs are resolved locally for b",
     "Passed: sleeping poses remain on actual furniture, remote-on",
     "Passed: smartConsoScore() averages only the genuinely measur",
+    "Passed: soixante-douze processus pour un fichier de douze co",
     "Passed: splitTableRow() treats an escaped \"\\|\" as a literal ",
     "Passed: suggestPrestationsForTask() turns the PRESTATIONS me",
     "Passed: suggestPrestationsForTask() weighs the three real fi",

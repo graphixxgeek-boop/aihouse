@@ -28050,3 +28050,60 @@ async function testLIndexDesConvictions() {
   console.log('Passed: le test le plus lourd du filet faisait 57 millions de comparaisons pour rien (2026-10-03, tâche #1591). LE CHEMIN QUI MÈNE ICI EST CE QUI COMPTE, parce qu\'aucune de ses étapes n\'était visible la veille : réparer le chronomètre (#1582) a rendu le classement des coûts fiable POUR LA PREMIÈRE FOIS ; ce classement a montré que DIX tests pèsent 57 % du filet ; corriger le plancher (#1589) a montré que le plus lourd d\'entre eux, à 32,3 s, fixe à lui seul le sol du parallélisme. Trois réparations de mesure pour arriver à un seul vrai coupable. CE QU\'IL FAISAIT : la révélation de la philosophie lit 383 fichiers normatifs et en extrait 7 565 convictions, puis demande pour chacune « combien d\'autres partagent assez de vocabulaire avec elle ? » EN LES VISITANT TOUTES. Cinquante-sept millions de paires, et deux fois — une pour dériver le seuil, une pour couvrir le cadre. LES LECTURES N\'Y SONT POUR RIEN, ET C\'EST MESURÉ : relancer avec tous les fichiers déjà en mémoire ne change pas la durée d\'un dixième. Le temps est du CALCUL, donc aucune couche de cache ne l\'aurait touché — c\'est exactement la conclusion que la marche #1040 avait tirée en septembre, vérifiée ici une seconde fois. LE RENVERSEMENT EST CLASSIQUE ET SANS PERTE : au lieu de demander à chaque conviction de visiter toutes les autres, on demande à chaque MOT quelles convictions le portent. La quasi-totalité des paires ne partage aucun mot et n\'est donc jamais visitée. **14,2 s → 2,3 s.** L\'INDEX EST OPTIONNEL, ET C\'EST CE QUI REND LE CHANGEMENT SÛR : sans lui, la fonction se comporte ligne pour ligne comme avant ; un index construit sur une autre liste est IGNORÉ plutôt que cru. ET LA VÉRIFICATION QUI DÉCIDE N\'EST PAS UNE ÉPROUVETTE : la sortie complète de la révélation sur le vrai corpus a été capturée avant et après, et comparée OCTET POUR OCTET. Le premier essai a échoué sur 304 lignes — même contenu, autre ordre, parce que `listeZones` sort d\'un Set et que le chemin indexé visitait les convictions dans l\'ordre des mots au lieu de l\'ordre du tableau. Une sortie qui change d\'ordre est une sortie qui change ; corrigé, puis identique octet pour octet.');
 }
 await testLIndexDesConvictions();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1592 — SOIXANTE-DOUZE PROCESSUS POUR UN FICHIER DE DOUZE COMMITS
+async function testLePassageGroupeDeLHistoire() {
+  const K = await import('../scripts/the-king.mjs');
+
+  // ── LA SÉMANTIQUE EST CELLE DE LA PIOCHE DE GIT, pas une approximation : `-S<chaîne>` rend les
+  // commits où le NOMBRE D'OCCURRENCES a changé, et le code d'origine en retient le plus ancien.
+  const versions = [
+    { sha: 'a', date: '2026-01-01', texte: 'rien ici' },
+    { sha: 'b', date: '2026-02-01', texte: 'rien ici\nUn principe' },
+    { sha: 'c', date: '2026-03-01', texte: 'rien ici\nUn principe reformulé' },
+  ];
+  const dates = K.datesDesTitres(['Un principe', 'Jamais écrit'], { versions });
+  assert.strictEqual(dates.get('Un principe'), '2026-02-01', 'the date is the FIRST version where the occurrence count changes, never the last one that touched the line');
+  assert.strictEqual(dates.get('Jamais écrit'), undefined, 'a title that never appears gets no date — and no date is not a date of zero');
+  assert.strictEqual(K.datesDesTitres(['x'], { versions: [] }).size, 0, 'with no history at all the map is empty rather than invented');
+  assert.strictEqual(K.datesDesTitres([''], { versions }).size, 0, 'an empty title is skipped, not matched against everything');
+
+  // ── UNE OCCURRENCE QUI DISPARAÎT EST AUSSI UN CHANGEMENT DE COMPTE, donc la pioche la voit — et
+  // si elle survient avant l'apparition, c'est bien la PREMIÈRE qui compte.
+  const reapparu = [
+    { sha: 'a', date: '2026-01-01', texte: 'Titre X' },
+    { sha: 'b', date: '2026-02-01', texte: 'rien' },
+    { sha: 'c', date: '2026-03-01', texte: 'Titre X' },
+  ];
+  assert.strictEqual(K.datesDesTitres(['Titre X'], { versions: reapparu }).get('Titre X'), '2026-01-01', 'the oldest change wins, exactly as taking the last line of the pickaxe output did');
+
+  // ── LE CHEMIN PAR TITRE RESTE INTACT, et ce n'est pas de la prudence gratuite : les tests du
+  // filet injectent un faux shell et vérifient la commande exacte qui en sort.
+  const appels = [];
+  K.principleDateFromGit({ titre: 'Un principe' }, { shImpl: (c) => { appels.push(c); return '2026-02-01\n'; } });
+  assert.strictEqual(appels.length, 1, 'the per-title path still spawns its own command');
+  assert.match(appels[0], /--diff-filter=AM/, 'and it is still the pickaxe, unchanged');
+
+  // ── LA CARTE DÉJÀ CONSTRUITE REMPLACE L'APPEL, ELLE NE S'Y AJOUTE PAS. Si `datesGit` est
+  // fournie, aucun processus ne doit être ouvert — c'est tout l'objet du changement.
+  const carte = new Map([['Un principe', '2026-02-01']]);
+  const sansSpawn = K.principleDate({ titre: 'Un principe', tag: '' }, { datesGit: carte, shImpl: () => { throw new Error('git must not be called'); } });
+  assert.deepStrictEqual(sansSpawn, { date: '2026-02-01', provenance: 'git' }, 'MUST CATCH: with a prebuilt map, not one process may be spawned');
+  const absentDeLaCarte = K.principleDate({ titre: 'absent', tag: '' }, { datesGit: new Map(), shImpl: () => { throw new Error('git must not be called'); }, dateDEdition: '2026-10-01' });
+  assert.strictEqual(absentDeLaCarte.provenance, 'édition', 'and a title absent from the map falls through to the edition date rather than spawning');
+
+  // ── LE PASSAGE RÉEL (Article 25) : sur le vrai document, les deux chemins doivent rendre LE
+  // MÊME DIGEST. C'est cette vérification — 71 principes sur 71 — qui a autorisé le remplacement.
+  const texte = fs.readFileSync('docs/philosophie-et-politique.md', 'utf8');
+  const unites = K.extractPrincipleUnits(texte);
+  const ed = K.dateDEdition(texte);
+  const groupe = K.buildEvolutionDigest(unites, { dateDEdition: ed });
+  assert.ok(groupe.length > 50, `the real digest still dates the real principles (${groupe.length})`);
+  assert.ok(groupe.every((l) => /^\d{4}-\d{2}-\d{2} — /.test(l)), 'every line still opens on a real date');
+  const parPassage = K.datesDesTitres(unites.map((p) => p.titre));
+  assert.ok(parPassage.size > 50, `and the grouped pass really answers for all of them at once (${parPassage.size})`);
+
+  console.log('Passed: soixante-douze processus pour un fichier de douze commits (2026-10-03, tâche #1592). TROUVÉ EN PROFILANT LE FILET ENTIER, ce qu\'aucune lecture n\'aurait donné : un passage ouvre **1 037 processus enfants** pour **42,8 s au total**, soit 18 % du temps, et UNE SEULE commande en pèse **15,9 s** — `git log -S<titre>`, lancée SOIXANTE-DOUZE fois. Soixante-douze processus pour interroger un fichier dont l\'historique complet tient en DOUZE commits. LA TECHNIQUE EST CELLE DE LA MARCHE #1038, appliquée à une autre question : on lit l\'historique UNE fois — douze `git show`, un par version — et on répond aux soixante-douze titres sur ces douze textes. **15,2 s deviennent 0,3 s.** LA SÉMANTIQUE EST CELLE DE `-S`, PAS UNE APPROXIMATION, et c\'est ce qui rend le remplacement légitime : la pioche de git rend les commits où le NOMBRE D\'OCCURRENCES de la chaîne a changé, et le code d\'origine en retient le plus ancien. On compte donc les occurrences dans chaque version successive et on retient la première où ce compte diffère. **Vérifié sur le vrai document : 71 réponses identiques sur 71**, mêmes dates et même ordre — c\'est cette comparaison qui autorise le changement, jamais le raisonnement qui la précède. LE CHEMIN PAR TITRE RESTE INTACT, et ce n\'est pas de la prudence gratuite : les tests du filet injectent un faux shell et vérifient la COMMANDE EXACTE qui en sort. Un passage groupé qui aurait remplacé `principleDateFromGit` aurait cassé ces tests tout en se croyant équivalent. ET LA CARTE REMPLACE L\'APPEL PLUTÔT QUE DE S\'Y AJOUTER : le contre-test fournit un shell qui EXPLOSE si on l\'appelle, parce qu\'une optimisation qui garderait l\'ancien chemin « au cas où » ne gagnerait rien du tout.');
+}
+await testLePassageGroupeDeLHistoire();

@@ -134,6 +134,68 @@ export function principleDateFromGit(principle, { shImpl = sh, fichier = PHILOSO
   return lignes.length ? lignes[lignes.length - 1] : undefined;
 }
 
+// UN PASSAGE POUR TOUS LES TITRES, AU LIEU D'UN PROCESSUS PAR TITRE (2026-10-03, tâche #1592).
+//
+// CE QUE LA MESURE A MONTRÉ, et elle a demandé un profil du filet entier pour apparaître : sur les
+// 1 037 processus enfants qu'un passage du filet ouvre, UNE SEULE commande en pèse 15,9 s — ce
+// `git log -S<titre>`, lancé SOIXANTE-DOUZE fois. Soixante-douze processus pour interroger un
+// fichier dont l'historique complet tient en DOUZE commits.
+//
+// LA TECHNIQUE EST CELLE DE LA MARCHE #1038, appliquée à une autre question : on lit l'historique
+// UNE fois — douze `git show`, un par version — et on répond aux soixante-douze titres sur ces
+// douze textes. 15,2 s deviennent 0,3 s.
+//
+// LA SÉMANTIQUE EST CELLE DE `-S`, PAS UNE APPROXIMATION : la pioche de git rend les commits où
+// le NOMBRE D'OCCURRENCES de la chaîne a changé, et le code d'origine en retient le plus ancien.
+// On compte donc les occurrences dans chaque version successive et on retient la première où ce
+// compte diffère de la précédente. Vérifié sur le vrai dépôt, les 71 principes du document :
+// **71 réponses identiques sur 71**, et c'est cette vérification qui autorise le remplacement.
+//
+// LE CHEMIN PAR TITRE RESTE INTACT, et ce n'est pas de la prudence gratuite : les tests du filet
+// injectent un faux shell et vérifient la COMMANDE EXACTE qui en sort. Un passage groupé qui
+// remplacerait `principleDateFromGit` casserait ces tests tout en se croyant équivalent.
+const CACHE_HISTOIRE = new Map();
+export function viderLHistoireDuFichier() { CACHE_HISTOIRE.clear(); }
+
+export function versionsSuccessives(fichier, { shImpl = sh } = {}) {
+  if (CACHE_HISTOIRE.has(fichier)) return CACHE_HISTOIRE.get(fichier);
+  let versions = [];
+  try {
+    // UNE LIGNE QUI NE RESSEMBLE PAS À UNE VERSION N'EN EST PAS UNE. Le filet injecte des faux
+    // shells qui rendent n'importe quoi — une date nue, par exemple — et accepter cette sortie
+    // fabriquerait un historique d'une version dont le contenu serait la date elle-même.
+    versions = String(shImpl(`git log --diff-filter=AM --format=%H%x09%ad --date=short -- ${fichier}`, { quiet: true }) ?? "")
+      .trim().split("\n").filter(Boolean)
+      .map((l) => { const [sha, date] = l.split("\t"); return { sha, date }; })
+      .filter((v) => /^[0-9a-f]{7,40}$/i.test(String(v.sha ?? "")) && /^\d{4}-\d{2}-\d{2}$/.test(String(v.date ?? "")))
+      .reverse();
+    for (const v of versions) {
+      try { v.texte = String(shImpl(`git show ${v.sha}:${fichier}`, { quiet: true }) ?? ""); } catch { v.texte = ""; }
+    }
+  } catch { versions = []; }
+  CACHE_HISTOIRE.set(fichier, versions);
+  return versions;
+}
+
+// LA PREMIÈRE VERSION OÙ LE COMPTE D'OCCURRENCES CHANGE — la définition même de la pioche.
+export function datesDesTitres(titres = [], { fichier = PHILOSOPHY_PATH, shImpl = sh, versions = null } = {}) {
+  const vs = versions ?? versionsSuccessives(fichier, { shImpl });
+  const out = new Map();
+  if (!vs.length) return out;
+  for (const titre of titres) {
+    const t = String(titre ?? "").trim();
+    if (!t) continue;
+    let precedent = 0, trouvee;
+    for (const v of vs) {
+      const n = String(v.texte ?? "").split(t).length - 1;
+      if (n !== precedent && trouvee === undefined) trouvee = v.date;
+      precedent = n;
+    }
+    if (trouvee !== undefined) out.set(t, trouvee);
+  }
+  return out;
+}
+
 // Réunit les deux sources, la déclarée primant toujours sur la dérivée : ce que l'auteur a écrit
 // vaut plus que ce que git déduit. `provenance` reste exposée pour que le lecteur sache laquelle
 // il regarde — jamais un mélange silencieux des deux.
@@ -164,7 +226,11 @@ export function dateDEdition(texte) {
 export function principleDate(principle, options = {}) {
   const declaree = extractPrincipleDate(principle);
   if (declaree) return { date: declaree, provenance: "déclarée" };
-  const git = principleDateFromGit(principle, options);
+  // `datesGit` — la carte déjà construite par un passage groupé. Absente, on retombe sur l'appel
+  // par titre, qui reste la référence et dont les tests vérifient la commande exacte.
+  const git = options.datesGit
+    ? options.datesGit.get(String(principle?.titre ?? "").trim())
+    : principleDateFromGit(principle, options);
   if (git) return { date: git, provenance: "git" };
   const edition = options.dateDEdition;
   if (edition) return { date: edition, provenance: "édition" };
@@ -177,10 +243,20 @@ export function principleDate(principle, options = {}) {
 // `avecGit` (2026-09-22, tâche #196) : par défaut le digest interroge l'historique réel pour les
 // principes sans date déclarée — sans quoi il ne racontait l'histoire que de 2 principes sur 19.
 // Désactivable (`avecGit: false`) pour les tests, qui ne doivent jamais dépendre de l'état du dépôt.
-export function buildEvolutionDigest(principles, { avecGit = true, shImpl = sh, dateDEdition: edition } = {}) {
+export function buildEvolutionDigest(principles, { avecGit = true, shImpl = sh, dateDEdition: edition, fichier = PHILOSOPHY_PATH, datesGit = null } = {}) {
+  // LE PASSAGE GROUPÉ SE FAIT ICI, UNE FOIS, et seulement quand on interroge vraiment git : c'est
+  // le seul endroit qui connaît TOUS les titres d'un coup, donc le seul qui puisse poser la
+  // question une fois pour toutes.
+  // LE REPLI SUR LE CHEMIN PAR TITRE N'EST PAS UNE PRÉCAUTION DÉCORATIVE : un passage groupé qui
+  // ne rend RIEN ne prouve pas que les principes n'ont pas de date — il prouve qu'on n'a pas su
+  // lire l'historique. C'est exactement le cas d'un faux shell injecté par un test, et c'est le
+  // filet qui l'a attrapé. Une carte vide retombe donc sur l'appel par titre, qui reste la
+  // référence ; une carte pleine économise soixante-douze processus.
+  let carte = avecGit ? (datesGit ?? datesDesTitres(principles.map((p) => p?.titre), { fichier, shImpl })) : null;
+  if (carte && !carte.size) carte = null;
   return principles
     .map((p) => {
-      const r = avecGit ? principleDate(p, { shImpl, dateDEdition: edition }) : { date: extractPrincipleDate(p), provenance: extractPrincipleDate(p) ? "déclarée" : undefined };
+      const r = avecGit ? principleDate(p, { shImpl, dateDEdition: edition, datesGit: carte }) : { date: extractPrincipleDate(p), provenance: extractPrincipleDate(p) ? "déclarée" : undefined };
       return { ...p, date: r.date, provenance: r.provenance };
     })
     .filter((p) => p.date)
