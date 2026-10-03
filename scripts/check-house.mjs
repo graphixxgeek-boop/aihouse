@@ -27184,3 +27184,61 @@ async function testLesFilsAlimentesParToutCanal() {
   console.log('Passed: les fils alimentés par tout canal, et le faux vert posé sur son plus gros message (2026-10-03, tâche #1542). HUIT DE SES POINTS PORTAIENT SUR LA MÊME MÉCANIQUE : une réponse qu\'il me donne, ou que je lui envoie, doit alimenter le fil concerné QUEL QUE SOIT LE CANAL. LES SIX CANAUX SONT DONC DÉCLARÉS UN PAR UN, et TROIS admettent ne pas être mesurables — la conversation, la fenêtre de calibrage, le document éphémère : aucun outil de ce dépôt ne peut les lire, et le déclarer est la seule protection possible (Article 27), là où le taire laisserait croire que le canal est couvert. LE FAUX VERT, ENSUITE, ET IL EST EXEMPLAIRE : le contrôle « chaque saisine est-elle rattachée à un sujet ? » ne vérifiait qu\'UN SENS, que chaque FIL nomme sa saisine. L\'autre sens n\'était vérifié par personne, et c\'était celui qui porte sa demande. Résultat : ✅ VERT pendant que `reponses-2026-10-03.md`, ses 96 points, n\'était cité par AUCUN fil. Un huitième contrôle le mesure, et le constat a été REFERMÉ le jour même en alimentant les cinq fils concernés. LE CATALOGUE EST DEVENU GÉNÉRÉ POUR LA MÊME RAISON : il annonçait 66 questions dont 40 pour lui, les fils en portent 101 dont 48, et le fil 01 était donné pour 5 quand il en porte 10. Il portait pourtant la mention « chiffres LUS, jamais recopiés » — une promesse écrite que rien ne faisait respecter (leçon L1), sur la première chose qu\'il lit pour savoir où il en est. Le bloc généré ne touche jamais la prose autour, refuse un marqueur d\'ouverture sans fermeture plutôt que de deviner, et ne s\'empile pas. ENFIN SA RÈGLE « JAMAIS SUPPRIMÉ » A SON GARDE-FOU : aucun mécanisme ne peut savoir si une clôture était définitive, mais il peut refuser la DISPARITION, qui est le seul geste qu\'elle interdit absolument.');
 }
 await testLesFilsAlimentesParToutCanal();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1545 — TOTAL RECALL : ce que « complet » coûte vraiment, et le fichier qui décide de tout
+async function testTotalRecall() {
+  const I = await import('../scripts/ines-official.mjs');
+
+  // ── 1. LES CINQ SYSTÈMES SONT DÉCLARÉS, et un chemin déclaré qui disparaît parle : une mémoire
+  // déclarée et absente se lit comme une mémoire vide, ce qui n'est pas la même chose (leçon L5).
+  assert.strictEqual(I.SYSTEMES_DE_MEMOIRE.length, 5, 'the five memory systems are the ones named in his own list');
+  assert.deepStrictEqual(I.findSystemesDeMemoireIntrouvables({ root: '.' }), [], 'and against the real repository they all exist');
+  assert.match(I.findSystemesDeMemoireIntrouvables({ root: '.', systemes: [{ cle: 'x', dossiers: ['docs/nexiste-pas'] }], existsImpl: () => false })[0], /n'existe pas/, 'a declared path that vanished speaks');
+
+  // ── 2. LA FRAÎCHEUR SE LIT DANS LE TEXTE, JAMAIS SUR LA DATE DU FICHIER. Un `git clone` réécrit
+  // toutes les dates de modification, donc un dépôt fraîchement transporté paraîtrait tout neuf —
+  // et le transport est exactement le cas d'usage de TOTAL RECALL.
+  const faux = I.mesurerLaMemoire({
+    root: '/x', systemes: [{ cle: 'a', quoi: 'A', dossiers: ['d'] }],
+    existsImpl: () => true,
+    walkImpl: () => ['d/un.md'],
+    readFileImpl: () => 'écrit le 2026-09-30, revu le 2026-10-01',
+  });
+  assert.strictEqual(faux.lignes[0].dernier, '2026-10-01', 'the freshest date WRITTEN in the document wins, never the file mtime');
+  assert.ok(faux.lignes[0].tokens > 0, 'and the token estimate comes from the real byte count');
+
+  // ── 3. UN CORPUS VIDE N'EST PAS « UNE MÉMOIRE LÉGÈRE ».
+  const vide = I.mesurerLaMemoire({ root: '/x', systemes: [{ cle: 'a', quoi: 'A', dossiers: ['d'] }], existsImpl: () => false });
+  assert.strictEqual(vide.mesurable, false, 'no document read is not a measurement');
+  assert.strictEqual(I.coucheLegere({ mesure: vide }).mesurable, false, 'and the light layer refuses to conclude on it rather than returning zero');
+
+  // ── 4. LA COUCHE LÉGÈRE PREND LE DOCUMENT RÉELLEMENT LE PLUS RÉCENT, jamais une moyenne. La
+  // première version moyennait, et la moyenne du suivi est faussée par onze fichiers dont un pèse
+  // presque tout : elle annonçait un coût qu'aucune relecture réelle n'aurait payé.
+  const deux = I.mesurerLaMemoire({
+    root: '/x', systemes: [{ cle: 'a', quoi: 'A', dossiers: ['d'] }],
+    existsImpl: () => true,
+    walkImpl: () => ['d/vieux.md', 'd/neuf.md'],
+    readFileImpl: (c) => (String(c).includes('neuf') ? 'le 2026-10-02, court' : `le 2026-09-01 ${'x'.repeat(5000)}`),
+  });
+  const lg = I.coucheLegere({ mesure: deux });
+  assert.match(lg.lignes[0].chemin, /neuf\.md$/, 'the light layer names the most recent document, not the biggest');
+  assert.ok(lg.tokens < deux.total.tokens, 'and it costs less than the whole system — otherwise there would be nothing light about it');
+
+  // ── 5. LE PASSAGE RÉEL (Article 25), ET LE CONSTAT QU'IL A SORTI SANS QU'ON LE CHERCHE : un
+  // seul fichier décide du résultat. Le fichier de session du suivi pèse plus que les quatre
+  // autres systèmes réunis, donc toute lecture « légère » du suivi est impossible par
+  // construction — son unité de découpage n'est pas une unité de lecture.
+  const reel = I.mesurerLaMemoire({ root: '.' });
+  assert.strictEqual(reel.mesurable, true, 'the real memory is measured');
+  assert.ok(reel.total.tokens > 500000, `a complete forced refresh is heavy, and now it is a number rather than an impression (currently ~${reel.total.tokens} tokens over ${reel.total.fichiers} documents)`);
+  assert.ok(!reel.lignes.some((l) => l.recent?.chemin === I.SORTIE_TOTAL_RECALL), 'the report never counts itself: it lives in docs/strategies/, which it sweeps');
+  const legere = I.coucheLegere({ mesure: reel });
+  assert.strictEqual(legere.mesurable, true, 'and the light layer is measurable against it');
+  assert.ok(legere.plusGros && legere.plusGros.tokens / legere.tokens > 0.5, `one single file decides the result (${legere.plusGros?.chemin}, ${Math.round((legere.plusGros?.tokens ?? 0) / legere.tokens * 100)} % of the light layer) — reported APART rather than drowned in a total, because drowned it disappears and apart it becomes the most actionable finding of the report`);
+  assert.ok(legere.sansLePlusGros < legere.tokens / 5, 'and without it the light layer falls to the order of magnitude one expects of something light');
+
+  console.log('Passed: TOTAL RECALL, ce que « complet » coûte vraiment (2026-10-03, tâche #1545). SA CONSIGNE DE CADRAGE : comparer l\'opération au système existant, et noter que c\'est « un rafraîchissement complet de la mémoire de l\'IA, forcé mécaniquement », trop lourd pour le seul périmètre « où on en est ». CE QUE CE PASSAGE AJOUTE EST LE CHIFFRE, parce que la décision qu\'il annonce se prend sur un coût et que personne ne pouvait le donner : un rafraîchissement complet représente ~1,68 MILLION de tokens sur 209 documents. Son intuition est donc confirmée durement — les deux opérations diffèrent d\'un ORDRE DE GRANDEUR, elles méritent deux mécanismes et non un curseur. LA FRAÎCHEUR SE LIT DANS LE TEXTE ET JAMAIS SUR LA DATE DU FICHIER, et la raison est exactement le cas d\'usage visé : un `git clone` réécrit toutes les dates de modification, donc un dépôt fraîchement transporté paraîtrait tout neuf. LA COUCHE LÉGÈRE PREND LE DOCUMENT RÉELLEMENT LE PLUS RÉCENT, jamais une moyenne — la première version moyennait, et la moyenne du suivi est faussée par onze fichiers dont un pèse presque tout : elle annonçait un coût qu\'aucune relecture réelle n\'aurait payé. ET LE PASSAGE RÉEL A SORTI LE CONSTAT QU\'ON NE CHERCHAIT PAS : UN SEUL FICHIER décide du résultat. Le fichier de session du suivi pèse à lui seul 94 % de la couche légère et 37 % de toute la mémoire du projet ; sans lui elle tomberait de 39 % à 2 % du complet. Le suivi se découpe par SESSION, et une session qui dure devient un fichier sans fin : son unité de découpage n\'est pas une unité de lecture. Ce n\'est pas un problème de TOTAL RECALL, c\'est un problème que TOTAL RECALL révèle — et le rapport le sort À PART plutôt que noyé dans un total, parce que noyé il disparaît.');
+}
+await testTotalRecall();

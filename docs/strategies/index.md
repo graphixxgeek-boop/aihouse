@@ -2,7 +2,7 @@
 
 *(Catalogue GÉNÉRÉ par `node scripts/data-archangel.mjs index --generer`, le 2026-10-03. Il liste ce que le dossier contient, rien de plus : n'y écrivez rien à la main, une régénération l'effacerait. Une note durable se met dans le fichier concerné, jamais ici.)*
 
-**20 fichier(s).**
+**22 fichier(s).**
 
 | Fichier | |
 |---|---|
@@ -26,3 +26,5 @@
 | [strategie-globale-du-jeu.md](strategie-globale-du-jeu.md) | — |
 | [strategie-globale-du-projet-entier.html](strategie-globale-du-projet-entier.html) | — |
 | [strategie-globale-du-projet-entier.md](strategie-globale-du-projet-entier.md) | — |
+| [total-recall-strategie.html](total-recall-strategie.html) | — |
+| [total-recall-strategie.md](total-recall-strategie.md) | — |

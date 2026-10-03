@@ -121,3 +121,4 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/referentiel/classification-des-lois-et-des-regles.html` | `docs/referentiel/classification-des-lois-et-des-regles.md` | 16698 | 2026-10-03 12:09Z |
 | `docs/livrables/les-deux-cas-de-figure-2026-10-03.html` | `docs/livrables/les-deux-cas-de-figure-2026-10-03.md` | 19026 | 2026-10-03 12:26Z |
 | `docs/livrables/le-module-la-partie-indetachable-le-coeur-2026-10-03.html` | `docs/livrables/le-module-la-partie-indetachable-le-coeur-2026-10-03.md` | 12609 | 2026-10-03 12:46Z |
+| `docs/strategies/total-recall-strategie.html` | `docs/strategies/total-recall-strategie.md` | 14070 | 2026-10-03 14:07Z |
