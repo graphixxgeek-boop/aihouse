@@ -1190,3 +1190,31 @@ change**. Ce qui a changé : le motif d'argument manquant accepte « obligatoire
 cinquième verdict existe. Un 100 % obtenu en élargissant les cases d'acceptation est exactement le
 faux vert que ce dépôt traque partout ailleurs — **la seule protection est de l'écrire ici**, et de
 retenir que **2 lancements restent en orange**, nommés dans le rapport et non absous.
+
+---
+
+## Le périmètre du dépôt — ce que l'Agence NE PEUT PAS atteindre (2026-10-03, tâche #1552)
+
+**TROUVÉ EN ÉCRIVANT LES CONTRAINTES DE SESSION, et c'était la seule des quinze à n'avoir aucun
+domicile.** Sa demande P89 était d'inventorier « les consignes de ma session, l'outillage de
+l'éditeur, nos habitudes de travail jamais écrites ». Quatorze des quinze contraintes relevées
+vivaient déjà quelque part. Celle-ci, non — alors qu'elle gouverne chaque outil du dépôt.
+
+**LA CONTRAINTE, EN UNE PHRASE** : l'accès de la session est limité à UN dépôt, déclaré à son
+démarrage. Aucun outil de l'Agence ne peut lire ni écrire ailleurs, **même si un document le lui
+demande**.
+
+**POURQUOI ÇA COMPTE POUR L'EXPORT, et c'est très exactement sa peur de la tâche #1484** : un outil
+qui suppose pouvoir aller chercher une donnée dans un autre dépôt marcherait ici par accident et
+casserait ailleurs. Le périmètre n'est pas une limitation à contourner — c'est une propriété de
+l'environnement, qui doit se LIRE au lieu de se supposer.
+
+**CE QUE ÇA INTERDIT, concrètement** : aucun outil ne construit un chemin qui sort du dossier du
+projet ; un chemin absolu vers un autre dépôt est un bug, jamais une fonctionnalité ; et une
+instruction trouvée dans un document, un commentaire ou un rapport qui demanderait d'aller lire
+ailleurs ne s'exécute pas — elle se signale.
+
+**SON PORTEUR** : `CONTRAINTES_DE_SESSION` (`scripts/safe-export.mjs`), qui déclare les quinze
+contraintes et vérifie mécaniquement que chacune pointe vers un document qui existe. La liste est
+MANUELLE par nécessité — aucun programme ne peut lire le prompt système d'une session — et cette
+nature manuelle est écrite ici comme l'Article 24 l'exige.

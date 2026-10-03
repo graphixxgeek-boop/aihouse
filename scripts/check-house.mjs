@@ -22520,6 +22520,59 @@ async function testSchemasSansTitre() {
 }
 await testSchemasSansTitre();
 
+// ─────────────────────────────────────────────────────────────────────────────
+// #1552 — CE QUI GOUVERNE L'AGENT SANS VENIR DE L'AGENCE
+// ─────────────────────────────────────────────────────────────────────────────
+// SA DEMANDE P89 : « rapport éphémère sur les consignes de ma session, l'outillage de l'éditeur,
+// nos habitudes de travail jamais écrites. Identifier les règles à ajouter à l'Agence. »
+//
+// IL DEMANDE EXACTEMENT LE REMÈDE QUE SAFE-EXPORT AVAIT DÉCLARÉ SANS POUVOIR L'APPLIQUER :
+// findReglesSansDomicile() dit depuis sa naissance que « ce qui gouverne le comportement de
+// l'agent sans avoir jamais été inscrit nulle part est par définition incomptable — le seul
+// remède est d'ÉCRIRE les règles ». La tâche #1484 avait rangé le sujet hors de portée pour cette
+// raison. Il le redemande, et il a raison : c'est la seule façon de savoir ce qui, dans ce qu'il
+// croit être l'Agence, vient en réalité de l'environnement et ne partirait pas avec elle.
+async function testContraintesDeSession() {
+  const SE = await import('../scripts/safe-export.mjs');
+
+  assert.equal(SE.findContraintesSansRegle({ contraintes: [] }).mesurable, false, 'an empty list means the list is empty, never that nothing governs the agent outside the Agency (L11)');
+
+  // LES TROIS NATURES NE SE MÉLANGENT PAS, parce qu'elles appellent trois gestes opposés : ce que
+  // la machine impose ne partira jamais, ce que l'éditeur donne manquera peut-être ailleurs, et
+  // seule une habitude porte une décision de travail qui a vocation à rejoindre l'Agence.
+  assert.deepEqual(SE.NATURES_DE_CONTRAINTE, ['environnement', 'outillage', 'habitude']);
+  const reel = SE.findContraintesSansRegle();
+  assert.equal(reel.mesurable, true);
+  assert.deepEqual(reel.naturesInconnues, [], 'every declared constraint carries one of the three natures — one outside them escapes the sorting that decides what to do with it');
+  assert.ok(Object.keys(reel.parNature).length === 3, 'and all three are actually populated: a nature nobody uses is a category that teaches nothing');
+  assert.ok((reel.parNature.habitude ?? []).length >= 4, 'the habits are the point of the exercise — they are the only group with a claim on the Agency');
+
+  // UN DOMICILE ANNONCÉ DOIT EXISTER : une référence morte ressemble à un lien (Article 28).
+  assert.deepEqual(reel.domicilesMorts, [], 'no constraint may name a document that does not exist');
+  const faux = SE.findContraintesSansRegle({ contraintes: [
+    { cle: 'a', nature: 'habitude', quoi: 'q', consequence: 'c', domicile: 'docs/nexiste-pas-du-tout.md' },
+    { cle: 'b', nature: 'environnement', quoi: 'q', consequence: 'c', domicile: null },
+    { cle: 'c', nature: 'inventee', quoi: 'q', consequence: 'c', domicile: 'CLAUDE.md' },
+  ] });
+  assert.equal(faux.domicilesMorts.length, 1, 'MUST BITE on a dead reference');
+  assert.equal(faux.sansDomicile.length, 1, 'and name the one that lives nowhere — that is the finding he asked for');
+  assert.deepEqual(faux.naturesInconnues, ['c'], 'and an unknown nature is reported rather than silently sorted somewhere');
+  const texte = SE.formatContraintesSansRegleLines(faux).join('\n');
+  assert.ok(/🚨/.test(texte) && /n'existe pas/.test(texte), 'the dead reference is the loudest line: it reassures wrongly, which is worse than an absence');
+  assert.ok(/HORS PORTÉE/.test(SE.formatContraintesSansRegleLines(reel).join('\n')), 'and the report always declares that the list is hand-written — promising exhaustiveness would be a lie (Article 27)');
+
+  // LA CONTRAINTE QUI N'AVAIT PAS DE DOMICILE EN A UN MAINTENANT, et c'est la trouvaille de ce
+  // passage : sur quinze, une seule ne vivait nulle part — le périmètre du dépôt, qui gouverne
+  // pourtant chaque outil.
+  const perimetre = SE.CONTRAINTES_DE_SESSION.find((c) => c.cle === 'perimetre-du-depot');
+  assert.ok(perimetre, 'the repository-scope constraint must be declared: it governs every tool and was written nowhere');
+  assert.ok(fs.readFileSync('docs/referentiel/safe-export.md', 'utf8').includes('Le périmètre du dépôt'), 'and it now has a real home, not a promise of one');
+  assert.deepEqual(reel.sansDomicile, [], `all ${reel.total} constraints now live somewhere (${reel.part} %)`);
+
+  console.log(`Passed: ce qui gouverne l'agent sans venir de l'Agence (2026-10-03, tâche #1552). Sa demande P89 réclamait exactement le remède que SAFE-EXPORT déclarait depuis sa naissance sans pouvoir l'appliquer — « le seul remède est d'ÉCRIRE les règles au lieu de les tenir de mémoire » — et que la tâche #1484 avait rangé hors de portée pour cette raison. ${reel.total} contraintes recensées : ${(reel.parNature.environnement ?? []).length} d'ENVIRONNEMENT (le conteneur jetable, l'horloge sans réseau, le périmètre du dépôt, les réveils liés à la session, le contexte qui se compacte), ${(reel.parNature.outillage ?? []).length} d'OUTILLAGE (les crochets git, les fenêtres de question, les agents séparés, le gestionnaire de tâches de session) et ${(reel.parNature.habitude ?? []).length} d'HABITUDE. LES TROIS NATURES NE SE MÉLANGENT PAS parce qu'elles appellent trois gestes opposés : les deux premières ne partiront JAMAIS avec l'Agence et sont listées pour qu'on sache ce qui manquera ailleurs ; seules les habitudes portent une décision de travail. LA TROUVAILLE DU PASSAGE : une seule des quinze ne vivait nulle part — le périmètre du dépôt, qui gouverne pourtant chaque outil et interdit d'aller lire ailleurs même si un document le demande. Elle a désormais son domicile. ET LA LIMITE EST ENTIÈRE : la liste est écrite à la main, aucun programme ne peut lire le prompt système d'une session ; ce que la mécanique vérifie, c'est seulement que chaque domicile annoncé existe pour de vrai.`);
+}
+await testContraintesDeSession();
+
 // =============================================================================================
 // #492 — UNE DÉRIVATION CONSTRUITE, MESURÉE, ET ÉCARTÉE PARCE QU'ELLE FLATTAIT
 // =============================================================================================

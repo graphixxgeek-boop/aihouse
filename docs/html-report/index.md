@@ -80,11 +80,8 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/ce-qui-reste-vraiment.html` | `docs/grand-projet/02-strategie/ce-qui-reste-vraiment.md` | 18074 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/charte-diffs-a-approuver.html` | `docs/plans/charte-diffs-a-approuver-2026-09-28.md` | 29228 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/decisions-qui-attendent.html` | `docs/grand-projet/02-strategie/decisions-qui-attendent.md` | 19047 | 2026-10-03 08:11Z |
-| `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 20657 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/la-cible.html` | `docs/grand-projet/02-strategie/la-cible-2026-09-29.md` | 19883 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/la-portabilite-vraiment-mesuree.html` | `docs/grand-projet/02-strategie/la-portabilite-vraiment-mesuree.md` | 14938 | 2026-10-03 08:11Z |
-| `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 20521 | 2026-10-03 08:11Z |
-| `docs/grand-projet/html/le-chemin.html` | `docs/grand-projet/02-strategie/le-chemin-2026-09-29.md` | 20988 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/le-filet-mord-il-vraiment.html` | `docs/grand-projet/02-strategie/le-filet-mord-il-vraiment.md` | 20778 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/le-noyau-est-il-vraiment-extractible.html` | `docs/grand-projet/02-strategie/le-noyau-est-il-vraiment-extractible.md` | 15748 | 2026-10-03 08:11Z |
 | `docs/grand-projet/html/les-cinq-impossibles.html` | `docs/grand-projet/02-strategie/les-cinq-impossibles.md` | 17698 | 2026-10-03 08:11Z |
@@ -106,3 +103,7 @@ sa source, jamais dans le HTML — la génération suivante l'écraserait.)*
 | `docs/grand-projet/html/vue-globale.html` | `docs/grand-projet/02-strategie/vue-globale-2026-09-28.md` | 27354 | 2026-10-03 08:11Z |
 | `docs/livrables/ou-en-est-le-grand-changement.html` | `docs/livrables/ou-en-est-le-grand-changement.md` | 14921 | 2026-10-03 08:24Z |
 | `docs/livrables/carte-des-modules-2026-10-03.html` | `docs/livrables/carte-des-modules-2026-10-03.md` | 13607 | 2026-10-03 08:25Z |
+| `docs/livrables/consignes-de-session-2026-10-03.html` | `docs/livrables/consignes-de-session-2026-10-03.md` | 13817 | 2026-10-03 08:39Z |
+| `docs/grand-projet/html/grands-axes-de-depart.html` | `docs/grand-projet/02-strategie/grands-axes-de-depart-2026-09-28.md` | 20781 | 2026-10-03 08:43Z |
+| `docs/grand-projet/html/la-route-vers-50-obligations.html` | `docs/grand-projet/02-strategie/la-route-vers-50-obligations.md` | 20637 | 2026-10-03 08:43Z |
+| `docs/grand-projet/html/le-chemin.html` | `docs/grand-projet/02-strategie/le-chemin-2026-09-29.md` | 21111 | 2026-10-03 08:43Z |

@@ -2031,6 +2031,43 @@ function main() {
   // fichier pourrait-il fusionner ? » ne se pose qu'en revue de rationalisation, et l'afficher à
   // chaque commit accuserait des dizaines de petits scripts parfaitement légitimes — exactement le
   // garde-fou qui accuse le geste normal et qu'on cesse de lire (leçon L4).
+  // `session` (2026-10-03, tâche #1552) — sa demande P89 : ce qui gouverne l'agent sans jamais
+  // avoir été inscrit dans l'Agence. C'est le remède que `findReglesSansDomicile()` nommait
+  // depuis sa naissance sans pouvoir l'appliquer : écrire les règles au lieu de les tenir de
+  // mémoire. Le livrable est le FICHIER (Article 31).
+  if (process.argv[2] === "session") {
+    recordCliUsage("safe-export");
+    const r = findContraintesSansRegle();
+    const lignes = formatContraintesSansRegleLines(r);
+    for (const l of lignes) console.log(l);
+    const corps = ["# Ce qui gouverne l'agent sans venir de l'Agence", "",
+      "*(Produit par `node scripts/safe-export.mjs session`, tâche #1552. Réponse à sa demande P89 du 2026-10-03.)*", "",
+      "**Pourquoi ce document existe** : une partie de ce qui dirige mon travail ne vient pas de l'Agence — elle vient de mon conteneur, de mon éditeur, ou de nos habitudes. Tant que ce n'est pas écrit, il est impossible de savoir ce qui, dans ce qu'il croit être l'Agence, partirait avec elle et ce qui resterait ici.", "",
+      ...lignes.map((l) => (l.startsWith("   ") ? l : `**${l}**`)), "",
+      "## Le détail, contrainte par contrainte", "",
+      "| Nature | Ce que c'est | Ce que ça impose | Où c'est écrit |", "|---|---|---|---|",
+      ...(r.mesurable ? CONTRAINTES_DE_SESSION.map((c) => `| ${c.nature} | ${c.quoi} | ${c.consequence} | ${c.domicile ? `\`${c.domicile}\`` : "**nulle part**"} |`) : ["| — | pas mesuré | — | — |"]), "",
+      "## Ce qu'il faut en retenir", "",
+      "**Les contraintes d'ENVIRONNEMENT et d'OUTILLAGE ne partiront JAMAIS avec l'Agence.** Elles sont listées ici pour qu'on sache ce qui manquera ailleurs, pas pour être emportées.", "",
+      "**Seules les HABITUDES ont vocation à rejoindre l'Agence**, parce qu'elles seules portent une décision de travail plutôt qu'une propriété de la machine.", "",
+      "**Et la limite est entière** : cette liste est écrite à la main. Une contrainte que personne n'a pensé à écrire reste invisible, et promettre l'exhaustivité serait mentir."];
+    const dossier = join(ROOT, "docs/livrables");
+    try { mkdirSync(dossier, { recursive: true }); } catch { /* déjà là */ }
+    const jour = new Date().toISOString().slice(0, 10);
+    writeFileSync(join(dossier, `consignes-de-session-${jour}.md`), corps.join("\n") + "\n", "utf8");
+    console.log(`\nRapport déposé : docs/livrables/consignes-de-session-${jour}.md`);
+    const constats = [];
+    if (!r.mesurable) constats.push({ constat: `pas de mesure : ${r.pourquoi}`, etat: "retenu", tache: 1552 });
+    else {
+      for (const c of r.domicilesMorts) constats.push({ constat: `la contrainte « ${c.cle} » annonce ${c.domicile}, qui n'existe pas`, etat: "retenu", tache: 1552 });
+      for (const c of r.sansDomicile) constats.push({ constat: `la contrainte « ${c.cle} » (${c.nature}) ne vit dans aucune règle écrite`, etat: "a-trancher", pourquoi: "l'écrire dans l'Agence est une décision : une contrainte d'environnement n'a pas forcément vocation à devenir une règle du projet" });
+      const habitudes = (r.parNature.habitude ?? []).length;
+      if (habitudes) constats.push({ constat: `${habitudes} habitude(s) de travail recensées — ce sont les seules qui ont vocation à rejoindre l'Agence`, etat: "ecarte", pourquoi: "elles sont déjà logées dans un document du dépôt ; les y recopier une seconde fois créerait deux porteurs de la même règle, qui finiraient par diverger (leçon L29)" });
+    }
+    console.log("");
+    imprimerPlanDaction(buildPlanDaction(constats, { toolSlug: "safe-export" }));
+    return;
+  }
   if (process.argv[2] === "fusion") {
     recordCliUsage("safe-export");
     const nommes = process.argv.slice(3).filter((a) => !a.startsWith("--"));
@@ -2870,6 +2907,104 @@ export function findConventionRecopiee({ root = ROOT, listDirImpl = readdirSync,
 // Certaines sont nées d'un incident et n'ont jamais eu de document — les loger d'autorité serait
 // écrire à la place de leur auteur. Il les NOMME, et la décision reste humaine.
 export const MOTIF_CHEMIN_DU_DEPOT = /(CLAUDE\.md|docs\/[A-Za-z0-9._/-]+|scripts\/[A-Za-z0-9._/-]+)/g;
+
+// ============================================================================
+// CE QUI GOUVERNE L'AGENT SANS ÊTRE ÉCRIT NULLE PART (2026-10-03, tâche #1552)
+// ============================================================================
+// SA DEMANDE P89, MOT POUR MOT : « rapport éphémère sur les consignes de ma session, l'outillage
+// de l'éditeur, nos habitudes de travail jamais écrites. Identifier les règles à ajouter à
+// l'Agence. »
+//
+// IL DEMANDE EXACTEMENT LE REMÈDE QUE CE FICHIER AVAIT DÉCLARÉ, ET C'EST POUR ÇA QUE LA TÂCHE
+// EXISTE. `findReglesSansDomicile()` déclare sa propre limite depuis sa naissance : « ce qui
+// gouverne le comportement de l'agent sans avoir jamais été inscrit nulle part est par définition
+// incomptable. Le seul remède est d'ÉCRIRE les règles au lieu de les tenir de mémoire. » La
+// tâche #1484 avait rangé le sujet hors de sa portée pour la même raison. Il le redemande quand
+// même, et il a raison : c'est la seule façon de savoir ce qui, dans ce qu'il croit être l'Agence,
+// vient en réalité de MON environnement et partirait sans elle.
+//
+// POURQUOI CETTE LISTE EST MANUELLE, ET POURQUOI C'EST LÉGITIME (Article 24, qui l'autorise à la
+// seule condition que sa nature manuelle soit écrite juste à côté) : aucun programme ne peut lire
+// le prompt système d'un agent ni les habitudes d'une conversation. Ce que PEUT faire une
+// mécanique, et ce qu'elle fait ci-dessous, c'est vérifier que chaque contrainte déclarée pointe
+// vers une règle qui EXISTE pour de vrai — une contrainte annonçant un domicile qui n'existe pas
+// est une référence morte, et une référence morte ressemble à un lien (Article 28).
+//
+// LES TROIS NATURES NE SE MÉLANGENT PAS, parce qu'elles appellent trois gestes opposés :
+//   · ENVIRONNEMENT — ce que mon conteneur impose. Ça ne partira JAMAIS avec l'Agence, et c'est
+//     exactement la peur qu'il a formulée en #1484 et #1555.
+//   · OUTILLAGE — ce que mon éditeur me donne. Une autre IA ne l'aura pas forcément.
+//   · HABITUDE — ce que nous avons appris à faire ensemble. C'est le SEUL groupe qui a vocation à
+//     rejoindre l'Agence, puisque c'est le seul qui porte une décision de travail.
+export const NATURES_DE_CONTRAINTE = ["environnement", "outillage", "habitude"];
+
+export const CONTRAINTES_DE_SESSION = [
+  // ── ENVIRONNEMENT — ce que le conteneur impose, et qui ne partira jamais avec l'Agence.
+  { cle: "conteneur-ephemere", nature: "environnement", quoi: "La session tourne dans un conteneur jetable : tout ce qui n'est pas commité disparaît quand il est repris.", consequence: "un travail non poussé est un travail perdu, et un brouillon de session n'est pas une archive", domicile: "docs/referentiel/safe-export.md" },
+  { cle: "horloge-sans-reseau", nature: "environnement", quoi: "Les deux API de temps répondent HTTP 403 depuis ce conteneur : l'heure vient toujours de l'horloge locale.", consequence: "la SOURCE de l'heure est « système » et jamais « réseau », et l'outil le dit à chaque passage plutôt que de le taire", domicile: "CLAUDE.md" },
+  { cle: "perimetre-du-depot", nature: "environnement", quoi: "L'accès GitHub de la session est limité à un seul dépôt, déclaré au démarrage.", consequence: "aucun outil ne peut lire ou écrire ailleurs, même si un document le lui demande", domicile: "docs/referentiel/safe-export.md" },
+  { cle: "reveils-lies-a-la-session", nature: "environnement", quoi: "Les réveils programmés sont attachés à CETTE session : si elle meurt, ils meurent avec elle.", consequence: "le mode ENDURANCE a besoin de plusieurs réveils indépendants, parce qu'un filet unique est un point de défaillance unique", domicile: "docs/referentiel/regles-nees-dune-conversation.md" },
+  { cle: "contexte-qui-se-compacte", nature: "environnement", quoi: "La conversation est résumée quand elle devient longue : le détail des échanges anciens n'est plus relisible.", consequence: "ce qui doit survivre va dans le dépôt, jamais dans la mémoire de session — c'est le fondement de l'Article 27", domicile: "CLAUDE.md" },
+
+  // ── OUTILLAGE — ce que mon éditeur me donne, et qu'une autre IA n'aura pas forcément.
+  { cle: "crochets-git", nature: "outillage", quoi: "Un crochet de pré-commit lance le filet de sécurité et refuse le commit s'il échoue ; un crochet de post-commit imprime les rappels de charte.", consequence: "une grande partie de la discipline du projet est tenue par git, pas par la mémoire de l'agent", domicile: "docs/referentiel/safe-export.md" },
+  { cle: "fenetres-de-question", nature: "outillage", quoi: "L'éditeur sait poser une question en fenêtre dédiée, avec deux à quatre options cliquables.", consequence: "la forme des questions de l'Article 16 dépend de cet outillage — une IA sans fenêtre devra poser la même question autrement", domicile: "docs/regles-de-travail.md" },
+  { cle: "agents-separes", nature: "outillage", quoi: "L'agent peut déléguer à un agent séparé, qui démarre sans aucun contexte de la conversation.", consequence: "un agent séparé coûte des tokens et re-découvre tout : c'est pourquoi SMART-CONSO-TOKEN se consulte avant", domicile: "docs/referentiel/smart-conso-token.md" },
+  { cle: "gestionnaire-de-taches-de-session", nature: "outillage", quoi: "L'éditeur offre un gestionnaire de tâches propre à la session, distinct du suivi du dépôt.", consequence: "il n'est JAMAIS une source de vérité durable — le suivi vit dans docs/suivi/, et la confusion entre les deux a déjà coûté des tâches perdues", domicile: "docs/systeme-de-suivi.md" },
+
+  // ── HABITUDE — ce que nous avons appris à faire ensemble. Le seul groupe qui a vocation à
+  //    rejoindre l'Agence, puisque c'est le seul qui porte une décision de travail.
+  { cle: "gros-fichier-de-reponses", nature: "habitude", quoi: "Il accumule ses idées, questions et décisions pendant qu'on travaille, et les envoie d'un bloc dans un gros fichier plutôt que par petits messages.", consequence: "le process de saisine existe pour ça, et son texte d'origine doit être archivé verbatim avant d'être découpé", domicile: "docs/rapport-gros-prompt-blueprint.md" },
+  { cle: "point-par-point", nature: "habitude", quoi: "Quand son message porte plusieurs demandes, la réponse les traite une par une, dans son ordre à lui, chaque point restant identifiable.", consequence: "une synthèse globale noie les points individuels, et il l'a dit explicitement", domicile: "CLAUDE.md" },
+  { cle: "il-nomme-par-series", nature: "habitude", quoi: "C'est lui qui nomme, et il nomme par SÉRIES dans une même famille, jamais au cas par cas.", consequence: "un outil ne propose jamais un nom isolé : il propose une série, ou il attend", domicile: "docs/referentiel/agent-des-noms.md" },
+  { cle: "continue-veut-dire-ne-tarrete-pas", nature: "habitude", quoi: "« Continue » n'est pas un accusé de réception : c'est l'ordre de ne pas s'arrêter, et un message court n'interrompt jamais le travail.", consequence: "seul un arrêt explicite arrête — la forme sûre de l'erreur est de continuer", domicile: "docs/regles-de-travail.md" },
+  { cle: "il-doute-dun-zero", nature: "habitude", quoi: "Devant un zéro qui l'étonne, il refuse la conclusion et demande la vérité : « tu retrouves la vérité ».", consequence: "un zéro est toujours suspect d'être un silence de l'instrument plutôt qu'une absence réelle — c'est l'origine des leçons L5 et L11", domicile: "docs/referentiel/lecons.md" },
+  { cle: "il-travaille-la-nuit", nature: "habitude", quoi: "Il travaille souvent la nuit et dort le jour : une question bloquante posée à trois heures du matin ne bloque pas dix secondes, elle bloque la nuit entière.", consequence: "le mode de travail en cours se consulte au lieu de se supposer, et les questions s'accumulent en un bloc", domicile: "CLAUDE.md" },
+];
+
+export function findContraintesSansRegle({ contraintes = CONTRAINTES_DE_SESSION, root = ROOT, existsImpl = existsSync, natures = NATURES_DE_CONTRAINTE } = {}) {
+  if (!contraintes?.length) {
+    return { mesurable: false, pourquoi: "aucune contrainte déclarée : ce zéro dit que la liste est vide, jamais que rien ne gouverne l'agent en dehors de l'Agence (leçons L5/L11)" };
+  }
+  const logees = [];
+  const sansDomicile = [];
+  const domicilesMorts = [];
+  const naturesInconnues = [];
+  for (const c of contraintes) {
+    if (!natures.includes(c.nature)) naturesInconnues.push(c.cle);
+    if (!c.domicile) { sansDomicile.push(c); continue; }
+    let existe = false;
+    try { existe = existsImpl(join(root, c.domicile)); } catch { existe = false; }
+    if (existe) logees.push(c);
+    // UNE RÉFÉRENCE MORTE EST PIRE QU'UNE ABSENCE (Article 28) : une contrainte annonçant un
+    // domicile inexistant donne la certitude qu'on pourrait aller voir, et personne n'y va.
+    else domicilesMorts.push(c);
+  }
+  const parNature = {};
+  for (const c of contraintes) (parNature[c.nature] ??= []).push(c.cle);
+  return {
+    mesurable: true,
+    total: contraintes.length,
+    logees, sansDomicile, domicilesMorts, naturesInconnues, parNature,
+    part: Math.round((logees.length / contraintes.length) * 100),
+  };
+}
+
+export function formatContraintesSansRegleLines(r) {
+  if (!r?.mesurable) return [`❓ PAS MESURÉ — ${r?.pourquoi}`];
+  const out = [`CONTRAINTES DE SESSION — ${r.total} déclarée(s), ${r.logees.length} logée(s) dans une règle écrite (${r.part} %).`];
+  for (const [n, cles] of Object.entries(r.parNature)) out.push(`   · ${n} : ${cles.length}`);
+  for (const c of r.domicilesMorts) out.push(`   🚨 « ${c.cle} » annonce ${c.domicile} — ce document n'existe pas : une référence morte ressemble à un lien, ce qui est pire qu'une absence.`);
+  for (const c of r.sansDomicile) {
+    out.push(`   ⚠️ « ${c.cle} » (${c.nature}) ne vit dans aucune règle écrite.`);
+    out.push(`      ${c.quoi}`);
+    out.push(`      Conséquence : ${c.consequence}`);
+  }
+  for (const c of r.naturesInconnues) out.push(`   ⚠️ « ${c} » porte une nature hors des trois prévues : elle échappe au tri qui décide quoi en faire.`);
+  if (!r.sansDomicile.length && !r.domicilesMorts.length) out.push("   ✅ Chaque contrainte connue vit quelque part dans le dépôt.");
+  out.push("   HORS PORTÉE, et c'est la limite de l'exercice : cette liste est ÉCRITE À LA MAIN par l'agent. Aucun programme ne peut lire le prompt système d'une session ni les habitudes d'une conversation — ce qu'une mécanique vérifie ici, c'est seulement que chaque domicile annoncé existe pour de vrai. Une contrainte que personne n'a pensé à écrire reste invisible, et le dire vaut mieux que de promettre l'exhaustivité.");
+  return out;
+}
 
 export function findReglesSansDomicile({ regles = null, root = ROOT, existsImpl = existsSync } = {}) {
   let liste = regles;
