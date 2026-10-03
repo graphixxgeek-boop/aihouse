@@ -85,9 +85,70 @@ export function blocsDeNiveauZero(src = "") {
 // prudence est quasiment gratuite — et l'inverse aurait coûté un faux rouge par lancement.
 // LE MOTIF NE SE RECOPIE PAS, il s'importe d'Ezechiel (Article 24) : le jour où il apprend un nom
 // de plus, ce runner en hérite sans qu'on y touche.
-export function blocEstDuSocle(src = "", bloc = {}) {
+// LE DÉTECTEUR DE SOCLE — DEUX ÉLARGISSEMENTS ESSAYÉS, DEUX ÉCHECS, ET LE MÊME MUR (2026-10-03).
+//
+// CE QU'IL VOIT : l'état du JEU — `post`, `sqlite`, `db`, `world`. CE QU'IL NE VOIT PAS : deux
+// blocs qui se passent une variable ordinaire. C'est ce qui a fait tomber trois parts sur quatre,
+// sur un `perceptionEpoch` déclaré dans un bloc et lu dans un autre.
+//
+// L'ARBITRAGE EST ASYMÉTRIQUE, et c'est ce qui rendait l'élargissement tentant : un FAUX POSITIF
+// met un bloc au socle, donc le runner est un peu plus lent ; un FAUX NÉGATIF le fait TOMBER.
+// Se tromper du bon côté valait la peine d'être essayé.
+//
+// ESSAI : un bloc est du socle s'il emploie un nom né ailleurs après le préambule. MESURÉ : 129
+// blocs sur 167 passent au socle, le travail divisible tombe de 126 s à 7 s, et le plancher monte
+// à 240 s — autrement dit le parallélisme ne rend plus rien. ET LA CAUSE EST DU BRUIT PUR : les
+// noms qui envoient le plus de blocs au socle sont `path` (21 blocs), `texte` (18), `chemin` (17),
+// `ligne`, `nom`, `cle` — des variables LOCALES ordinaires, déclarées dans chaque bloc sous une
+// forme que le lecteur de déclarations ne voit pas : paramètre de fonction fléchée, déstructuration
+// dans un `for…of`, argument de rappel.
+//
+// LE MUR EST LE MÊME QUE CELUI DU DÉTECTEUR DE COUPLAGES, UNE HEURE PLUS TÔT, ET LE DIRE ÉVITE UN
+// TROISIÈME ESSAI : distinguer un nom de portée fichier d'une locale homonyme demande une ANALYSE
+// DE PORTÉES. Tant qu'on n'en a pas, tout élargissement par motif est soit trop étroit (le runner
+// tombe), soit trop large (le gain disparaît). Il n'y a pas de réglage entre les deux.
+//
+// LA VOIE SAINE EST AILLEURS, ET ELLE EST ÉCRITE ICI POUR QUE LE PROCHAIN NE RECOMMENCE PAS : on
+// n'essaie plus de DEVINER le couplage, on l'APPREND des échecs réels. Une part qui tombe sur
+// `ReferenceError: X is not defined` nomme exactement le coupable ; le bloc qui déclare X rejoint
+// le socle, et le couplage est consigné. C'est fondé sur une exécution réelle plutôt que sur un
+// motif, ça se corrige tout seul au premier nouveau cas, et ça ne coûte que les blocs réellement
+// coupables. `COUPLAGES_CONSTATES` en est la graine.
+
+// LES COUPLAGES CONSTATÉS — appris d'un échec réel, jamais devinés (Article 24, second cas :
+// liste manuelle assumée, et son garde-fou est l'échec lui-même, qui est bruyant).
+export const COUPLAGES_CONSTATES = [
+  {
+    nom: "perceptionEpoch",
+    constateLe: "2026-10-03",
+    quoi: "déclaré en milieu de ligne dans un bloc, lu dans un autre. A fait tomber 3 parts sur 4 lors de l'essai d'épine isolée, sur un `ReferenceError` immédiat",
+  },
+];
+
+export function findCouplagesMalDeclares({ couplages = COUPLAGES_CONSTATES } = {}) {
+  return couplages
+    .filter((c) => !c.nom || !/^\d{4}-\d{2}-\d{2}$/.test(String(c.constateLe ?? "")) || !c.quoi || c.quoi.length < 40)
+    .map((c) => `le couplage « ${c.nom ?? "(sans nom)"} » n'est pas déclaré complètement : il faut le NOM, la DATE du constat et CE QU'ON A VU — un couplage sans son échec d'origine est une supposition, et on vient d'en refuser deux`);
+}
+
+// `ReferenceError: X is not defined` — la seule phrase qui nomme un couplage avec certitude.
+export const MOTIF_REFERENCE_ERROR = /ReferenceError:\s*([A-Za-z_$][\w$]*)\s+is not defined/g;
+
+export function couplagesAppris(sortieDUnePart = "") {
+  return [...new Set([...String(sortieDUnePart).matchAll(MOTIF_REFERENCE_ERROR)].map((m) => m[1]))];
+}
+
+export function blocEstDuSocle(src = "", bloc = {}, { couplages = COUPLAGES_CONSTATES } = {}) {
   const lignes = String(src).split("\n");
-  return TOUCHES_L_ETAT_COMMUN.test(lignes.slice(bloc.debut - 1, bloc.fin).join("\n"));
+  const texte = lignes.slice(bloc.debut - 1, bloc.fin).join("\n");
+  if (TOUCHES_L_ETAT_COMMUN.test(texte)) return true;
+  // Un bloc qui DÉCLARE un nom constaté couplant doit rester partout : c'est lui la source.
+  for (const c of couplages) {
+    for (let n = bloc.debut; n <= bloc.fin; n += 1) {
+      if (nomsDeclares(lignes[n - 1]).includes(c.nom)) return true;
+    }
+  }
+  return false;
 }
 
 export function separerSocleEtDeplacables(src = "", blocs = []) {

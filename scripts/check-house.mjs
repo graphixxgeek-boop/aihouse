@@ -27502,3 +27502,58 @@ async function testLaCompletudeDuFiletEnParts() {
   console.log('Passed: un filet plus rapide qui vérifie moins n\'est pas un gain (2026-10-03, tâche #1576). LE RUNNER IMPRIMAIT « 436 SUCCÈS DISTINCTS » ET NE LE COMPARAIT À RIEN. Une part qui aurait silencieusement perdu cinquante vérifications aurait affiché « 386 succès distincts · terminé en 169 s », et cette ligne-là se lit comme un succès. C\'EST LE SEUL DÉFAUT DE CET OUTIL QUI NE SE VOIT PAS, et c\'est ce qui le rend le plus dangereux de tous : les autres mordent — un import non résolu fait tomber la part, une variable manquante aussi, une collision d\'écriture finit par se manifester. Celui-ci rend un vert PLUS RAPIDE, c\'est-à-dire exactement ce qu\'on venait chercher, en ayant moins vérifié. C\'est la seule façon dont ce runner pouvait coûter au projet au lieu de lui rendre service. LA RÉFÉRENCE EST LE DERNIER PASSAGE SÉQUENTIEL VERT, lu dans l\'historique d\'Ezechiel et jamais un nombre écrit en dur qui se périmerait au prochain test ajouté (Article 24). UN PASSAGE ROUGE NE FAIT JAMAIS RÉFÉRENCE, si récent soit-il : il s\'est arrêté en route, donc son compte décrit un filet partiel et servirait de barre trop basse — un garde-fou calé sur un échec valide tous les échecs suivants. ET SANS RÉFÉRENCE LE VERDICT EST « PAS MESURÉ », jamais un succès par défaut : « je n\'ai rien à quoi comparer » et « rien n\'a été perdu » ne s\'écrivent pas pareil. Vérifié en vrai : 4 parts, 159,6 s, 437 succès distincts contre 430 à la référence — complet, et sept de plus parce que des tests ont été ajoutés dans la journée.');
 }
 await testLaCompletudeDuFiletEnParts();
+
+// ────────────────────────────────────────────────────────────────────────────────────────────────
+// #1577 — LE SOCLE S'APPREND D'UN ÉCHEC RÉEL, IL NE SE DEVINE PAS
+async function testLeSocleApprisDesEchecs() {
+  const F = await import('../scripts/filet-en-parts.mjs');
+
+  // ── LA SOURCE D'UN COUPLAGE CONSTATÉ RESTE PARTOUT, ET SEULEMENT ELLE. Le bloc qui DÉCLARE le
+  // nom est rejoué dans chaque part ; celui qui ne fait que le LIRE n'a aucune raison d'y rester,
+  // et un bloc étranger au couplage encore moins. C'est tout l'écart avec l'essai élargi.
+  const src = [
+    'const perceptionEpoch = 1; let compteur = 2;',
+    '{',
+    '  ok(perceptionEpoch);',
+    '}',
+    '{',
+    '  ok(1);',
+    '}',
+  ].join('\n');
+  assert.strictEqual(F.blocEstDuSocle(src, { debut: 1, fin: 1 }), true, 'the block DECLARING a constated coupling stays in every part: it is the source');
+  assert.strictEqual(F.blocEstDuSocle(src, { debut: 2, fin: 4 }), false, 'a block that merely READS it does not: duplicating readers is what killed the gain');
+  assert.strictEqual(F.blocEstDuSocle(src, { debut: 5, fin: 7 }), false, 'and a block unrelated to the coupling even less');
+
+  // ── LA DÉCLARATION EN MILIEU DE LIGNE EST LE CAS QUI A FAIT TOMBER TROIS PARTS SUR QUATRE. Le
+  // lecteur de déclarations ancré en colonne zéro ne voyait pas `let compteur` après un `;`, donc
+  // il ratait exactement le couplage connu tout en en inventant sept autres.
+  assert.deepStrictEqual(F.nomsDeclares('const perceptionEpoch = 1; let compteur = 2;'), ['perceptionEpoch', 'compteur'], 'a mid-line declaration is a declaration: this is the one the first detector missed');
+
+  // ── UN COUPLAGE SE DÉCLARE AVEC SON ÉCHEC D'ORIGINE, SINON C'EST UNE SUPPOSITION (Article 24,
+  // second cas : liste manuelle assumée, donc elle doit dire d'où vient chaque entrée).
+  assert.deepStrictEqual(F.findCouplagesMalDeclares(), [], 'the real list is completely declared');
+  assert.strictEqual(F.findCouplagesMalDeclares({ couplages: [{ nom: 'x', constateLe: 'hier', quoi: 'ça cassait' }] }).length, 1, 'a coupling without a real date and without what was actually seen is refused');
+  assert.strictEqual(F.findCouplagesMalDeclares({ couplages: [{ constateLe: '2026-10-03', quoi: 'x'.repeat(50) }] }).length, 1, 'and a nameless one too');
+
+  // ── CE QUI FAIT GRANDIR LA LISTE EST UNE SORTIE DE PART, JAMAIS UNE INTUITION.
+  // `ReferenceError: X is not defined` est la seule phrase qui nomme un coupable avec certitude.
+  assert.deepStrictEqual(
+    F.couplagesAppris('ok\nReferenceError: perceptionEpoch is not defined\n  at f\nReferenceError: perceptionEpoch is not defined'),
+    ['perceptionEpoch'],
+    'the same name twice is one coupling, not two');
+  assert.deepStrictEqual(F.couplagesAppris('tout est vert'), [], 'a green part teaches nothing, and says so rather than inventing');
+
+  // ── LE CONTRE-TEST DU RÉSULTAT NÉGATIF MESURÉ, et il est là pour qu'on ne refasse pas l'essai :
+  // élargir le critère à « tout bloc employant un nom né ailleurs » envoyait 129 blocs sur 167 au
+  // socle, faisait tomber le travail divisible de 126 s à 7 s et montait le plancher à 240 s. Le
+  // socle doit rester MINORITAIRE sur le vrai filet, sans quoi le parallélisme ne rend plus rien.
+  const vrai = fs.readFileSync('scripts/check-house.mjs', 'utf8');
+  const blocs = F.blocsDeNiveauZero(vrai);
+  const { socle, deplacables } = F.separerSocleEtDeplacables(vrai, blocs);
+  assert.ok(blocs.length > 100, `the real net really is split into level-zero blocks (${blocs.length})`);
+  assert.ok(socle.length * 2 < blocs.length, `the socle stays a minority of the blocks (${socle.length} of ${blocs.length}) — the widened criterion put 129 of 167 there and the parallel gain died`);
+  assert.ok(deplacables.length > 100, `and there is real work left to spread (${deplacables.length} movable blocks)`);
+
+  console.log('Passed: le socle s\'apprend d\'un échec réel, il ne se devine pas (2026-10-03, tâche #1577). SA CONSIGNE ÉTAIT « CREUSE LE DÉTECTEUR DE SOCLE », ET CREUSER A RENDU UN RÉSULTAT NÉGATIF MESURÉ, gardé ici en contre-test pour que personne ne refasse l\'essai. LE RAISONNEMENT QUI SEMBLAIT ÉVIDENT : un bloc qui emploie un nom né ailleurs doit rester dans toutes les parts, et se tromper du bon côté ne coûte que de la lenteur. MESURÉ SUR LE VRAI FILET : 129 blocs sur 167 passent au socle, le travail réellement divisible tombe de 126 s à 7 s, et le plancher MONTE de 121 s à 240 s — c\'est-à-dire que la parallélisation ne rend plus rien du tout. ET LA CAUSE EST DU BRUIT PUR : les noms qui envoient le plus de blocs au socle sont `path` (21 blocs), `texte` (18), `chemin` (17) — des variables locales ordinaires, déclarées sous une forme que le lecteur ne voit pas (paramètre de fonction fléchée, déstructuration dans un `for…of`). C\'EST LE MÊME MUR QUE LE DÉTECTEUR DE COUPLAGES UNE HEURE PLUS TÔT, et le nommer vaut mieux que de le réessayer : distinguer un nom de portée fichier d\'une locale homonyme demande une ANALYSE DE PORTÉES ; sans elle, tout élargissement par motif est soit trop étroit (le runner tombe), soit trop large (le gain disparaît), et il n\'y a pas de réglage entre les deux. LA VOIE SAINE EST L\'AUTRE : on n\'essaie plus de DEVINER le couplage, on l\'APPREND de la part qui tombe. `ReferenceError: X is not defined` nomme le coupable avec certitude, le bloc qui DÉCLARE X rejoint le socle, et le couplage est consigné avec la date et ce qu\'on a vu — un couplage sans son échec d\'origine est une supposition, et on vient d\'en refuser deux. Le lecteur de déclarations a dû apprendre le milieu de ligne au passage : c\'est précisément sous cette forme qu\'était écrit le seul couplage réellement constaté. VÉRIFIÉ SUR LE VRAI DÉPÔT : 167 blocs, 40 au socle, 127 déplaçables — le socle reste minoritaire, donc le gain survit.');
+}
+await testLeSocleApprisDesEchecs();
